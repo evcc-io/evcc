@@ -376,11 +376,23 @@ func (c *CmdConfigure) processParams(templateItem templates.Template, params []t
 				value := valueParam.Value
 				switch dep.Check {
 				case templates.DependencyCheckEmpty:
-					valid = value == ""
+					if additionalConfig[dep.Name] != nil {
+						valid = additionalConfig[dep.Name] == ""
+					} else {
+						valid = value == ""
+					}
 				case templates.DependencyCheckNotEmpty:
-					valid = value != ""
+					if additionalConfig[dep.Name] != nil {
+						valid = additionalConfig[dep.Name] != ""
+					} else {
+						valid = value != ""
+					}
 				case templates.DependencyCheckEqual:
-					valid = value == dep.Value
+					if additionalConfig[dep.Name] != nil {
+						valid = additionalConfig[dep.Name] == dep.Value
+					} else {
+						valid = value == dep.Value
+					}
 				}
 				if !valid {
 					break
