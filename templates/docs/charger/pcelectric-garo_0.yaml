@@ -1,0 +1,12 @@
+product:
+  brand: PC Electric
+  description: Garo
+description: |
+  Es können momentan nur als Master konfigurierte Geräte verwendet werden!
+
+render:
+- default: |
+    type: template
+    template: pcelectric-garo
+    host: # IP-Adresse oder Hostname  # Optional 
+    port: 8080  # Port  # Optional
