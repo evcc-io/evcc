@@ -39,11 +39,10 @@
 <script>
 import collector from "../mixins/collector";
 
-import authAPI from "../api";
+import authAPI from "../authapi";
 
 import VehicleSoc from "./VehicleSoc";
 import VehicleSubline from "./VehicleSubline";
-import func from 'vue-editor-bridge';
 
 export default {
 	name: "Vehicle",
