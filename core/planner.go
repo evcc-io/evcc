@@ -44,31 +44,12 @@ func NewPlanner(log *util.Logger, tariff api.Tariff) *Planner {
 	}
 }
 
-func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-
-	if end.Before(time.Now()) {
-		t.cheapactive = false
-		return false, nil
-	}
-
-	duration = time.Duration(float64(duration) * 1.05) // increase by 5%
-
-	// Save same duration until next price info update
-	if end.After(t.last) {
-		duration_old := duration
-		duration = time.Duration(float64(duration) * float64(time.Until(t.last)) / float64(time.Until(end)))
-		t.log.DEBUG.Printf("reduced duration from %s to %s until got new priceinfo after %s\n", duration_old.Round(time.Minute), duration.Round(time.Minute), t.last.Round(time.Minute))
-	}
-
-	t.log.DEBUG.Printf("charge duration: %s, end: %v, find best prices:\n", duration.Round(time.Minute), end.Round(time.Second))
-
+func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, error) {
+	cheapSlotNow := false
+	cntExpectedSlots := 0
+	curSlotNr := 0
 	var pi api.Rate
 	var sum time.Duration
-	cheap_slot := false
-	cnt_expected_slots := 0
-	cur_slot_nr := 0
 
 	data, err := t.tariff.Rates()
 	if err != nil {
@@ -92,7 +73,7 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 			continue
 		}
 
-		// timeslot already startet
+		// timeslot already started
 		pstart := pi.Start
 		if pstart.Before(time.Now()) {
 			pstart = time.Now()
@@ -104,7 +85,7 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 			pend = end
 		}
 
-		cnt_expected_slots++
+		cntExpectedSlots++
 		delta := pend.Sub(pstart)
 		sum += delta
 		t.log.TRACE.Printf("  Slot from: %v to %v price %f, timesum %s",
@@ -113,9 +94,9 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 
 		// current timeslot is a cheap one
 		if pi.Start.Before(time.Now()) && pi.End.After(time.Now()) && duration > 0 {
-			cheap_slot = true // rename to cheapSlotNow
-			cur_slot_nr = cnt_expected_slots
-			t.log.TRACE.Printf(" (now, slot number %v)", cur_slot_nr)
+			cheapSlotNow = true
+			curSlotNr = cntExpectedSlots
+			t.log.TRACE.Printf(" (now, slot number %v)", curSlotNr)
 		}
 
 		// we found all necessary cheap slots to charge to targetSoC
@@ -124,9 +105,9 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 		}
 	}
 
-	if cheap_slot {
+	if cheapSlotNow {
 		// use the most expensive slot as little as possible, but do not disable on last charging slot
-		if cur_slot_nr == cnt_expected_slots && !(t.cheapactive && cnt_expected_slots == 1) {
+		if curSlotNr == cntExpectedSlots && !(t.cheapactive && cntExpectedSlots == 1) {
 			if sum <= duration {
 				t.log.DEBUG.Printf("cheap timeslot, charging...\n")
 				t.cheapactive = true
@@ -136,7 +117,7 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 					t.cheapactive = false
 				}
 			}
-		} else { /* not most expensiv slot */
+		} else { /* not most expensive slot */
 			t.log.DEBUG.Printf("cheap timeslot, charging...\n")
 			t.cheapactive = true
 		}
@@ -145,14 +126,42 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 		t.cheapactive = false
 	}
 
-	if t.cheapactive {
+	return t.cheapactive, nil
+}
+
+func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
+	t.mux.Lock()
+	defer t.mux.Unlock()
+
+	if end.Before(time.Now()) {
+		t.cheapactive = false
+		return false, nil
+	}
+
+	duration = time.Duration(float64(duration) * 1.05) // increase by 5%
+
+	// Save same duration until next price info update
+	if end.After(t.last) {
+		duration_old := duration
+		duration = time.Duration(float64(duration) * float64(time.Until(t.last)) / float64(time.Until(end)))
+		t.log.DEBUG.Printf("reduced duration from %s to %s until got new priceinfo after %s\n", duration_old.Round(time.Minute), duration.Round(time.Minute), t.last.Round(time.Minute))
+	}
+
+	t.log.DEBUG.Printf("charge duration: %s, end: %v, find best prices:\n", duration.Round(time.Minute), end.Round(time.Second))
+
+	cheapactive, err := t.isCheapSlotNow(duration, end)
+	if err != nil {
+		return false, err
+	}
+
+	if cheapactive {
 		return true, nil
 	}
 
-	isCheap := pi.Price <= t.cheap // convert EUR/MWh to EUR/KWh
-	if isCheap {
+	isCheap, err := t.tariff.IsCheap()
+	if isCheap && err == nil {
 		t.log.DEBUG.Printf("low marketprice, charging")
 	}
 
-	return isCheap, nil
+	return isCheap, err
 }
