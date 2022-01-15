@@ -4,8 +4,8 @@ products:
   description:
     generic: We Connect
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: vin
   example: WVWZZZ...
 - name: capacity

@@ -119,7 +119,9 @@ func (t *TextLanguage) SetString(lang, value string) {
 }
 
 // Update the language specific texts
+//
 // always true to always update if the new value is not empty
+//
 // always false to update only if the old value is empty and the new value is not empty
 func (t *TextLanguage) Update(new TextLanguage, always bool) {
 	if (new.Generic != "" && always) || (!always && t.Generic == "" && new.Generic != "") {
@@ -160,58 +162,73 @@ type Dependency struct {
 }
 
 // Param is a proxy template parameter
+// Params can be defined:
+// 1. in the template: uses entries in 4. for default properties and values, can be overwritten here
+// 2. in defaults.yaml presets: can ne referenced in 1 and some values set here can be overwritten in 1. See OverwriteProperties method
+// 3. in defaults.yaml modbus section: are referenced in 1 by a `name:modbus` param entry. Some values here can be overwritten in 1.
+// 4. in defaults.yaml param section: defaults for some params
+// Generelle Reihenfolge der Werte (außer Description, Default, ValueType):
+// 1. defaults.yaml param section
+// 2. defaults.yaml presets
+// 3. defaults.yaml modbus section
+// 4. template
 type Param struct {
-	Base         string       // Reference a predefined se of params
-	Name         string       // Param name which is used for assigning defaults properties and referencing in render
-	Description  TextLanguage // language specific titles (presented in UI instead of Name)
-	Dependencies []Dependency // List of dependencies, when this param should be presented
-	Required     bool         // cli if the user has to provide a non empty value
-	Mask         bool         // cli if the value should be masked, e.g. for passwords
-	Advanced     bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Default      string       // default value if no user value is provided in the configuration
-	Example      string       // cli example value
-	Help         TextLanguage // cli configuration help
-	Test         string       // testing default value
-	Value        string       // user provided value via cli configuration
-	Values       []string     // user provided list of values
-	ValueType    string       // string representation of the value type, "string" is default
-	Choice       []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
-	Baudrate     int          // device specific default for modbus RS485 baudrate
-	Comset       string       // device specific default for modbus RS485 comset
-	Port         int          // device specific default for modbus TCPIP port
-	ID           int          // device specific default for modbus ID
+	Reference     bool         // if this is references another param definition
+	Referencename string       // name of the referenced param if it is not identical to the defined name
+	Preset        string       // Reference a predefined se of params
+	Name          string       // Param name which is used for assigning defaults properties and referencing in render
+	Description   TextLanguage // language specific titles (presented in UI instead of Name)
+	Dependencies  []Dependency // List of dependencies, when this param should be presented
+	Required      bool         // cli if the user has to provide a non empty value
+	Mask          bool         // cli if the value should be masked, e.g. for passwords
+	Advanced      bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Hidden        bool         // cli if the parameter should not be presented in the cli, the default value be assigned
+	Default       string       // default value if no user value is provided in the configuration
+	Example       string       // cli example value
+	Help          TextLanguage // cli configuration help
+	Test          string       // testing default value
+	Value         string       // user provided value via cli configuration
+	Values        []string     // user provided list of values
+	ValueType     string       // string representation of the value type, "string" is default
+	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	Baudrate      int          // device specific default for modbus RS485 baudrate
+	Comset        string       // device specific default for modbus RS485 comset
+	Port          int          // device specific default for modbus TCPIP port
+	ID            int          // device specific default for modbus ID
 }
 
-type ParamDefaultList struct {
-	Params []Param
-}
+// overwrite specific properties by using values from another param
+//
+// always overwrites if not provided empty: description, valuetype, default
+//
+// only overwrite if not provided empty and empty in param: help, example
+func (p *Param) OverwriteProperties(withParam Param) {
+	// always overwrite if defined
+	p.Description.Update(withParam.Description, true)
 
-// return the param with the given name
-func (p *ParamDefaultList) ParamByName(name string) (int, Param) {
-	for i, param := range p.Params {
-		if param.Name == name {
-			return i, param
-		}
+	if withParam.ValueType != "" {
+		p.ValueType = withParam.ValueType
 	}
-	return -1, Param{}
+
+	if withParam.Default != "" {
+		p.Default = withParam.Default
+	}
+
+	// only set if empty
+	p.Help.Update(withParam.Help, false)
+
+	if p.Example == "" && withParam.Example != "" {
+		p.Example = withParam.Example
+	}
 }
 
-var paramDefaultList ParamDefaultList
-
-type ParamBase struct {
-	Params []Param
-	Render string
-}
-
-var paramBaseList map[string]ParamBase
-
-var groupList map[string]TextLanguage
-
+// Product contains naming information about a product a template supports
 type Product struct {
 	Brand       string       // product brand
 	Description TextLanguage // product name
 }
 
+// TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
 	Products     []Product // list of products this template is compatible with

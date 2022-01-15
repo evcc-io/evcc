@@ -2,8 +2,8 @@ template: mini
 products:
 - brand: Mini
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: vin
   example: WBMW...
 - name: capacity

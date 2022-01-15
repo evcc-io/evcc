@@ -2,8 +2,8 @@ template: nissan
 products:
 - brand: Nissan
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: capacity
   default: 60
 render: |

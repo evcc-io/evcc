@@ -2,8 +2,8 @@ template: opel
 products:
 - brand: Opel
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: vin
   example: WP0...
 - name: capacity

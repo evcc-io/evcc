@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	templates = make(map[string][]Template)
+	templates      = make(map[string][]Template)
+	configDefaults = ConfigDefaults{}
 )
 
 const (
@@ -20,6 +21,8 @@ const (
 )
 
 func loadTemplates(class string) {
+	configDefaults.LoadDefaults()
+
 	if templates[class] != nil {
 		return
 	}
@@ -42,8 +45,11 @@ func loadTemplates(class string) {
 			return fmt.Errorf("reading template '%s' failed: %w", filepath, err)
 		}
 
-		tmpl := Template{TemplateDefinition: definition}
-		if err = tmpl.ResolveParamBases(); err != nil {
+		tmpl := Template{
+			TemplateDefinition: definition,
+			ConfigDefaults:     configDefaults,
+		}
+		if err = tmpl.ResolvePresets(); err != nil {
 			return err
 		}
 		if err = tmpl.ResolveGroup(); err != nil {

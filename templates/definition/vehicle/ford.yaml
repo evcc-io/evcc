@@ -2,8 +2,8 @@ template: ford
 products:
 - brand: Ford
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: vin
   example: WF0FXX...
 - name: capacity

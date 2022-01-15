@@ -272,6 +272,7 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 		for _, t := range tmpl.Titles(c.lang) {
 			titleTmpl := templates.Template{
 				TemplateDefinition: tmpl.TemplateDefinition,
+				ConfigDefaults:     tmpl.ConfigDefaults,
 				Lang:               c.lang,
 			}
 			title := t
@@ -337,15 +338,33 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 // Returns:
 //   a map with param name and values
 func (c *CmdConfigure) processConfig(templateItem templates.Template, deviceCategory DeviceCategory) map[string]interface{} {
-	usageFilter := DeviceCategories[deviceCategory].categoryFilter
-
-	additionalConfig := make(map[string]interface{})
-
 	fmt.Println()
 	fmt.Println(c.localizedString("Config_Title", nil))
 	fmt.Println()
 
-	for _, param := range templateItem.Params {
+	return c.processParams(templateItem, templateItem.Params, deviceCategory)
+}
+
+// process a list of params
+func (c *CmdConfigure) processParams(templateItem templates.Template, params []templates.Param, deviceCategory DeviceCategory) map[string]interface{} {
+	usageFilter := DeviceCategories[deviceCategory].categoryFilter
+
+	additionalConfig := make(map[string]interface{})
+
+	for _, param := range params {
+		// if this is a reference, get the referenced values and then overwrite it with the values defined here
+		if param.Reference {
+			finalName := param.Name
+			referencedItemName := param.Name
+			if param.Referencename != "" {
+				referencedItemName = param.Referencename
+			}
+			_, referencedParam := templateItem.ConfigDefaults.ParamByName(referencedItemName)
+			referencedParam.OverwriteProperties(param)
+			param = referencedParam
+			param.Name = finalName
+		}
+
 		if param.Dependencies != nil {
 			valid := true
 			for _, dep := range param.Dependencies {
@@ -374,13 +393,21 @@ func (c *CmdConfigure) processConfig(templateItem templates.Template, deviceCate
 
 		switch param.Name {
 		case templates.ParamModbus:
-			c.processModbusConfig(param, deviceCategory, additionalConfig)
+			additionals := c.processModbusConfig(templateItem, param, deviceCategory)
+			for k, v := range additionals {
+				additionalConfig[k] = v
+			}
 		case templates.ParamUsage:
 			if usageFilter != "" {
 				additionalConfig[param.Name] = usageFilter.String()
 			}
 		default:
 			if !c.advancedMode && param.Advanced {
+				continue
+			}
+
+			if param.Hidden && param.Default != "" {
+				additionalConfig[param.Name] = param.Default
 				continue
 			}
 
@@ -436,101 +463,37 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 }
 
 // handle user input for a device modbus configuration
-func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory DeviceCategory, additionalConfig map[string]interface{}) {
-	var selectedModbusKey string
-
-	// baudrate and comset defaults can be overwritten, as they are device specific
-	deviceDefaultBaudrate := templates.ModbusParamValueBaudrate
-	deviceDefaultComset := templates.ModbusParamValueComset
-	deviceDefaultPort := templates.ModbusParamValuePort
-	deviceDefaultId := templates.ModbusParamValueId
-
-	if param.Baudrate != 0 {
-		deviceDefaultBaudrate = param.Baudrate
-	}
-	if param.Comset != "" {
-		deviceDefaultComset = param.Comset
-	}
-	if param.Port != 0 {
-		deviceDefaultPort = param.Port
-	}
-	if param.ID != 0 {
-		deviceDefaultId = param.ID
-	}
-
+func (c *CmdConfigure) processModbusConfig(templateItem templates.Template, param templates.Param, deviceCategory DeviceCategory) map[string]interface{} {
 	var choices []string
-	var choiceKeys []string
+	var choiceTypes []string
+
+	config := templateItem.ConfigDefaults.Config.Modbus
 
 	for _, choice := range param.Choice {
-		switch choice {
-		case templates.ModbusChoiceRS485:
-			choices = append(choices, "Serial (USB-RS485 Adapter)")
-			choiceKeys = append(choiceKeys, templates.ModbusKeyRS485Serial)
-			choices = append(choices, "Serial (Ethernet-RS485 Adapter)")
-			choiceKeys = append(choiceKeys, templates.ModbusKeyRS485TCPIP)
-		case templates.ModbusChoiceTCPIP:
-			choices = append(choices, "TCP/IP")
-			choiceKeys = append(choiceKeys, templates.ModbusKeyTCPIP)
+		if config.Interfaces[choice] == nil {
+			continue
+		}
+
+		for _, itype := range config.Interfaces[choice] {
+			title := config.Types[itype].Description
+			choices = append(choices, title.String(c.lang))
+			choiceTypes = append(choiceTypes, itype)
 		}
 	}
 
-	if len(choices) > 0 {
-		// ask for modbus address
-		id := c.askValue(question{
-			label:        "ID",
-			help:         "Modbus ID",
-			defaultValue: deviceDefaultId,
-			valueType:    templates.ParamValueTypeNumber,
-			required:     true})
-		additionalConfig[templates.ModbusParamNameId] = id
-
-		// ask for modbus interface type
-		var index int
-		if len(choices) > 1 {
-			index, _ = c.askChoice(c.localizedString("Config_ModbusInterface", nil), choices)
-		}
-		selectedModbusKey = choiceKeys[index]
-		additionalConfig[templates.ParamModbus] = selectedModbusKey
-
-		switch selectedModbusKey {
-		case templates.ModbusKeyRS485Serial:
-			device := c.askValue(question{
-				label:        c.localizedString("UserFriendly_Device_Name", nil),
-				help:         c.localizedString("UserFriendly_Device_Help", nil),
-				exampleValue: templates.ModbusParamValueDevice,
-				required:     true})
-			additionalConfig[templates.ModbusParamNameDevice] = device
-
-			baudrate := c.askValue(question{
-				label:        c.localizedString("UserFriendly_Baudrate_Name", nil),
-				help:         c.localizedString("UserFriendly_Baudrate_Help", nil),
-				defaultValue: deviceDefaultBaudrate,
-				valueType:    templates.ParamValueTypeNumber,
-				required:     true})
-			additionalConfig[templates.ModbusParamNameBaudrate] = baudrate
-
-			comset := c.askValue(question{
-				label:        c.localizedString("UserFriendly_ComSet_Name", nil),
-				defaultValue: deviceDefaultComset,
-				required:     true})
-			additionalConfig[templates.ModbusParamNameComset] = comset
-
-		case templates.ModbusKeyRS485TCPIP, templates.ModbusKeyTCPIP:
-			if selectedModbusKey == templates.ModbusKeyRS485TCPIP {
-				additionalConfig[templates.ModbusParamNameRTU] = "true"
-			}
-			host := c.askValue(question{
-				label:        c.localizedString("UserFriendly_Host_Name", nil),
-				exampleValue: templates.ModbusParamValueHost,
-				required:     true})
-			additionalConfig[templates.ModbusParamNameHost] = host
-
-			port := c.askValue(question{
-				label:        c.localizedString("UserFriendly_Port_Name", nil),
-				defaultValue: deviceDefaultPort,
-				valueType:    templates.ParamValueTypeNumber,
-				required:     true})
-			additionalConfig[templates.ModbusParamNamePort] = port
-		}
+	if len(choices) == 0 {
+		return nil
 	}
+
+	// ask for modbus interface type
+	var index int
+	if len(choices) > 1 {
+		index, _ = c.askChoice(c.localizedString("Config_ModbusInterface", nil), choices)
+	}
+
+	selectedInterfaceType := config.Types[choiceTypes[index]]
+	additionalConfig := c.processParams(templateItem, selectedInterfaceType.Params, deviceCategory)
+	additionalConfig[templates.ParamModbus] = choiceTypes[index]
+
+	return additionalConfig
 }

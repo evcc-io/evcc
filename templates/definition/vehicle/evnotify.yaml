@@ -12,7 +12,7 @@ params:
 - name: capacity
   default: 64
   valuetype: float
-- base: vehicleidentify
+- preset: vehicleidentify
 render: |
   type: custom
   {{- if ne .title "" }}

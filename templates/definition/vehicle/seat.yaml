@@ -7,8 +7,8 @@ products:
   description:
     generic: Mii
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: capacity
   default: 10
 render: |

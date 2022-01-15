@@ -2,8 +2,8 @@ template: volvo
 products:
 - brand: Volvo
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: capacity
   default: 50
 render: |

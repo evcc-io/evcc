@@ -8,18 +8,15 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/evcc-io/evcc/templates/definition"
 	"github.com/evcc-io/evcc/util"
 	"github.com/thoas/go-funk"
-	"gopkg.in/yaml.v3"
 )
-
-//go:embed paramdefaults.yaml
-var paramDefaults string
 
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
 	TemplateDefinition
+
+	ConfigDefaults ConfigDefaults
 
 	Lang string
 
@@ -29,38 +26,20 @@ type Template struct {
 
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
-	if paramDefaultList.Params == nil {
-		err := yaml.Unmarshal([]byte(paramDefaults), &paramDefaultList)
-		if err != nil {
-			return err
-		}
-	}
-
 	for i, p := range t.Params {
 		if p.ValueType == "" || (p.ValueType != "" && !funk.ContainsString(ValidParamValueTypes, p.ValueType)) {
 			t.Params[i].ValueType = ParamValueTypeString
 		}
 
-		if index, resultMapItem := paramDefaultList.ParamByName(strings.ToLower(p.Name)); index > -1 {
-			// always overwrite if defined
-			t.Params[i].Description.Update(resultMapItem.Description, true)
-
-			if resultMapItem.ValueType != "" {
-				t.Params[i].ValueType = resultMapItem.ValueType
-			}
-
-			// only set if empty
-			t.Params[i].Help.Update(resultMapItem.Help, false)
-
-			if p.Example == "" && resultMapItem.Example != "" {
-				t.Params[i].Example = resultMapItem.Example
-			}
+		if index, resultMapItem := t.ConfigDefaults.ParamByName(strings.ToLower(p.Name)); index > -1 {
+			t.Params[i].OverwriteProperties(resultMapItem)
 		}
 	}
 
 	return nil
 }
 
+// validate the template (only rudimentary for now)
 func (t *Template) Validate() error {
 	for _, c := range t.Capabilities {
 		if !funk.ContainsString(ValidCapabilities, c) {
@@ -104,6 +83,7 @@ func (t *Template) Validate() error {
 	return nil
 }
 
+// set the language title by combining all product titles
 func (t *Template) SetCombinedTitle() {
 	if len(t.titles) == 0 {
 		t.resolveTitles()
@@ -119,14 +99,17 @@ func (t *Template) SetCombinedTitle() {
 	t.title = title
 }
 
+// set the title for this templates
 func (t *Template) SetTitle(title string) {
 	t.title = title
 }
 
+// return the title for this template
 func (t *Template) Title() string {
 	return t.title
 }
 
+// return a language specific product title
 func (t *Template) ProductTitle(p Product) string {
 	title := ""
 
@@ -145,6 +128,7 @@ func (t *Template) ProductTitle(p Product) string {
 	return title
 }
 
+// return the language specific product titles
 func (t *Template) Titles(lang string) []string {
 	t.Lang = lang
 
@@ -155,6 +139,7 @@ func (t *Template) Titles(lang string) []string {
 	return t.titles
 }
 
+// set the language specific product titles
 func (t *Template) resolveTitles() {
 	var titles []string
 
@@ -166,22 +151,15 @@ func (t *Template) resolveTitles() {
 }
 
 // add the referenced base Params and overwrite existing ones
-func (t *Template) ResolveParamBases() error {
-	if paramBaseList == nil {
-		err := yaml.Unmarshal([]byte(definition.ParamBaseListDefinition), &paramBaseList)
-		if err != nil {
-			return fmt.Errorf("Error: failed to parse paramBasesDefinition: %v\n", err)
-		}
-	}
-
+func (t *Template) ResolvePresets() error {
 	currentParams := make([]Param, len(t.Params))
 	copy(currentParams, t.Params)
 	t.Params = []Param{}
 	for _, p := range currentParams {
-		if p.Base != "" {
-			base, ok := paramBaseList[p.Base]
+		if p.Preset != "" {
+			base, ok := t.ConfigDefaults.Config.Presets[p.Preset]
 			if !ok {
-				return fmt.Errorf("Error: Could not find parambase definition: %s\n", p.Base)
+				return fmt.Errorf("Error: Could not find preset definition: %s\n", p.Preset)
 			}
 
 			t.Params = append(t.Params, base.Params...)
@@ -189,13 +167,7 @@ func (t *Template) ResolveParamBases() error {
 		}
 
 		if i, _ := t.ParamByName(p.Name); i > -1 {
-			// we only allow overwriting a few fields
-			if p.Default != "" {
-				t.Params[i].Default = p.Default
-			}
-			if p.Example != "" {
-				t.Params[i].Example = p.Example
-			}
+			t.Params[i].OverwriteProperties(p)
 		} else {
 			t.Params = append(t.Params, p)
 		}
@@ -204,19 +176,13 @@ func (t *Template) ResolveParamBases() error {
 	return nil
 }
 
+// check if the provided group exists
 func (t *Template) ResolveGroup() error {
-	if groupList == nil {
-		err := yaml.Unmarshal([]byte(definition.GroupListDefinition), &groupList)
-		if err != nil {
-			return fmt.Errorf("Error: failed to parse deviceGroupListDefinition: %v\n", err)
-		}
-	}
-
 	if t.Group == "" {
 		return nil
 	}
 
-	_, ok := groupList[t.Group]
+	_, ok := t.ConfigDefaults.Config.DeviceGroups[t.Group]
 	if !ok {
 		return fmt.Errorf("Error: Could not find devicegroup definition: %s\n", t.Group)
 	}
@@ -224,8 +190,9 @@ func (t *Template) ResolveGroup() error {
 	return nil
 }
 
+// return the language specific group title
 func (t *Template) GroupTitle() string {
-	tl := groupList[t.Group]
+	tl := t.ConfigDefaults.Config.DeviceGroups[t.Group]
 	return tl.String(t.Lang)
 }
 
@@ -355,7 +322,7 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 	t.ModbusValues(renderMode, values)
 
 	// add the common templates
-	for _, v := range paramBaseList {
+	for _, v := range t.ConfigDefaults.Config.Presets {
 		if !strings.Contains(t.Render, v.Render) {
 			t.Render = fmt.Sprintf("%s\n%s", t.Render, v.Render)
 		}
