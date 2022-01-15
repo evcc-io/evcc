@@ -20,3 +20,22 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+const auth = axios.create({
+  baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname + "auth/",
+  headers: {
+    Accept: "application/json",
+  },
+});
+
+// global error handling
+auth.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const url = error.config.baseURL + error.config.url;
+    const message = `${error.message}: API request failed ${url}`;
+    window.app.error({ message });
+  }
+);
+
+export default auth;

@@ -3,7 +3,7 @@
 		<div class="mb-3">
 			<div>
 				{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
-				<span v-if="showLogin">
+				<span class="" v-if="showLogin">
 					<span v-if="!vehicleProviderLoggedIn">
 						<button
 							v-if="!vehicleProviderLoggedIn"
@@ -39,10 +39,11 @@
 <script>
 import collector from "../mixins/collector";
 
-import axios from "axios";
+import auth from "../api";
 
 import VehicleSoc from "./VehicleSoc";
 import VehicleSubline from "./VehicleSubline";
+import func from 'vue-editor-bridge';
 
 export default {
 	name: "Vehicle",
@@ -87,22 +88,12 @@ export default {
 			this.$emit("target-time-removed");
 		},
 		providerLogin: async function () {
-			await axios
-				.post(this.vehicleProviderLoginPath)
-				.then(function (response) {
-					window.location.href = response.data.loginUri;
-				})
-				.catch(function (error) {
-					console.log("login failed ", error);
-				});
+			auth.post(this.vehicleProviderLoginPath).then(function (response) {
+				window.location.href = response.data.loginUri;
+			});
 		},
 		providerLogout: async function () {
-			await axios
-				.post(this.vehicleProviderLogoutPath)
-				.then(function () {})
-				.catch(function (error) {
-					console.log("logout failed ", error);
-				});
+			auth.post(this.vehicleProviderLogoutPath)
 		},
 	},
 };
