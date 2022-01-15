@@ -19,7 +19,7 @@ render: |
   title: {{ .title }}
   {{- end }}
   capacity: {{ .capacity }}
-  charge:
+  soc:
     type: http
     uri: https://app.evnotify.de/soc?akey={{ .akey }}&token={{ .token }} # evNotify Server + AKEY
     method: GET
