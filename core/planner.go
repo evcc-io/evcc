@@ -33,7 +33,6 @@ type Planner struct {
 	mux         sync.Mutex
 	cheap       float64
 	cheapactive bool
-	last        time.Time
 }
 
 func NewPlanner(log *util.Logger, tariff api.Tariff) *Planner {
@@ -55,6 +54,18 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 	if err != nil {
 		return false, err
 	}
+	last := data[len(data)-1].End
+
+	duration = time.Duration(float64(duration) * 1.05) // increase by 5%
+
+	// Save same duration until next price info update
+	if end.After(last) {
+		duration_old := duration
+		duration = time.Duration(float64(duration) * float64(time.Until(last)) / float64(time.Until(end)))
+		t.log.DEBUG.Printf("reduced duration from %s to %s until got new priceinfo after %s\n", duration_old.Round(time.Minute), duration.Round(time.Minute), last.Round(time.Minute))
+	}
+
+	t.log.DEBUG.Printf("charge duration: %s, end: %v, find best prices:\n", duration.Round(time.Minute), end.Round(time.Second))
 
 	sort.Sort(RatesByPrice(data))
 
@@ -137,17 +148,6 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 		t.cheapactive = false
 		return false, nil
 	}
-
-	duration = time.Duration(float64(duration) * 1.05) // increase by 5%
-
-	// Save same duration until next price info update
-	if end.After(t.last) {
-		duration_old := duration
-		duration = time.Duration(float64(duration) * float64(time.Until(t.last)) / float64(time.Until(end)))
-		t.log.DEBUG.Printf("reduced duration from %s to %s until got new priceinfo after %s\n", duration_old.Round(time.Minute), duration.Round(time.Minute), t.last.Round(time.Minute))
-	}
-
-	t.log.DEBUG.Printf("charge duration: %s, end: %v, find best prices:\n", duration.Round(time.Minute), end.Round(time.Second))
 
 	cheapactive, err := t.isCheapSlotNow(duration, end)
 	if err != nil {
