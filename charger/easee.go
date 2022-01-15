@@ -260,6 +260,8 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			c.log.ERROR.Println(err)
 			return
 		}
+	case easee.String:
+		value = res.Value
 	}
 
 	c.mux.L.Lock()
@@ -318,21 +320,24 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			value.(int) == easee.ModeReadyToCharge
 	}
 
-	c.log.TRACE.Printf("%s %s: %s %.4v", typ, res.Mid, res.ID, value)
+	c.log.TRACE.Printf("%s %s: %s %v", typ, res.Mid, res.ID, value)
 }
 
 // ProductUpdate implements the signalr receiver
 func (c *Easee) ProductUpdate(i json.RawMessage) {
+	c.log.TRACE.Printf("ProductUpdate %s", i)
 	c.observe("ProductUpdate", i)
 }
 
 // ChargerUpdate implements the signalr receiver
 func (c *Easee) ChargerUpdate(i json.RawMessage) {
+	c.log.TRACE.Printf("ChargerUpdate %s", i)
 	// c.observe("ChargerUpdate", i)
 }
 
 // CommandResponse implements the signalr receiver
 func (c *Easee) CommandResponse(i json.RawMessage) {
+	c.log.TRACE.Printf("CommandResponse %s", i)
 	// c.observe("CommandResponse", i)
 }
 
