@@ -102,17 +102,11 @@ func (v *API) RefreshRequest(vin string) (string, error) {
 
 // WakeUp performs a wakeup request
 func (v *API) WakeUp(vin string) error {
-	//	uri := fmt.Sprintf("%s/api/dashboard/v1/users/vehicles?language=EN&skipRecall=true&country=USA&region=US&wakeupVin=%s", TokenURI, vin)
-	/* uri := fmt.Sprintf("%s/api/dashboard/v1/users/vehicles?wakeupVin=%s", TokenURI, vin)
+	uri := fmt.Sprintf("%s/api/dashboard/v1/users/vehicles?wakeupVin=%s", TokenURI, vin)
 
 	res, err := v.GetBody(uri)
 
 	if err == nil && res == nil {
-		err = errors.New("wakeup failed")
-	}
-	*/
-	r, err := v.RefreshRequest(vin)
-	if err == nil && r == "" {
 		err = errors.New("wakeup failed")
 	}
 
