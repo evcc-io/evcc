@@ -501,6 +501,4 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, dev
 	templateItem.ModbusParams(choiceTypes[index], values)
 	// Update the modbus default values
 	templateItem.ModbusValues(templates.TemplateRenderModeInstance, values)
-
-	return
 }
