@@ -166,7 +166,7 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	}
 
 	if c.advancedMode && c.configuration.config.SponsorToken == "" {
-		_ = c.askSponsortoken(true)
+		_ = c.askSponsortoken(false)
 	}
 
 	yaml, err := c.configuration.RenderConfiguration()

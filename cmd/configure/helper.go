@@ -188,6 +188,9 @@ func (c *CmdConfigure) askSponsortoken(required bool) error {
 	if required {
 		fmt.Println()
 		fmt.Println(c.localizedString("Requirements_Sponsorship_Title", nil))
+	} else {
+		fmt.Println()
+		fmt.Println(c.localizedString("Requirements_Sponsorship_Optional_Title", nil))
 	}
 	fmt.Println()
 	if !c.askYesNo(c.localizedString("Requirements_Sponsorship_Token", nil)) {

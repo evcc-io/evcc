@@ -74,6 +74,7 @@ Requirements_Title = "The device has the following requirements:"
 Requirements_More = "Additional information:"
 
 Requirements_Sponsorship_Title = "This device requires an evcc sponsorship. Check the following link for what this is and how it works: https://docs.evcc.io/docs/sponsorship"
+Requirements_Sponsorship_Optional_Title = "The development of evcc can be supported via sponsoring. Check the following link for what this is and how it works: https://docs.evcc.io/docs/sponsorship"
 Requirements_Sponsorship_Token = "Are you already a sponsor?"
 Requirements_Sponsorship_Token_Input = "Please enter the sponsortoken"
 
