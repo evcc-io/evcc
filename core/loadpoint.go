@@ -1413,7 +1413,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		err = lp.setLimit(0, true)
 		// reset WakeUpCalled mode off
 		if !lp.wakeUpTimer.started.IsZero() || lp.wakeUpTimer.lastduration > 0 {
-			lp.log.DEBUG.Printf("reset WakeUpTimer - mode off - Active:%ds", lp.wakeUpTimer.duration())
+			lp.log.DEBUG.Printf("reset WakeUpTimer - mode off - WakeUpTimer active:%ds", int(lp.wakeUpTimer.duration().Seconds()))
 			lp.wakeUpTimer.Reset()
 		}
 
@@ -1466,14 +1466,14 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	// reset WakeUpCalled then car is charging again
 	if lp.status == api.StatusC && (lp.wakeUpTimer.lastduration > 0 || !lp.wakeUpTimer.started.IsZero()) {
-		lp.log.DEBUG.Printf("reset WakeUpTimer - charing - Active:%ds", lp.wakeUpTimer.duration())
+		lp.log.DEBUG.Printf("reset WakeUpTimer - charing - WakeUpTimer active:%ds", int(lp.wakeUpTimer.duration().Seconds()))
 		lp.wakeUpTimer.Reset()
 	}
 	// WakeUp checks
 	if lp.enabled && mode != api.ModeOff && lp.chargeCurrent > 0 && lp.vehicleSoc < 99 && lp.status == api.StatusB {
 		if !lp.wakeUpTimer.started.IsZero() {
 			if lp.wakeUpTimer.duration() > 30 {
-				lp.log.DEBUG.Printf("time for WakeUp calls - sleeping? Mode:%s LPStatus:%s Active:%ds SOC:%f Current:%f Power:%f ", mode, lp.status, int(lp.wakeUpTimer.duration().Seconds()), lp.vehicleSoc, lp.chargeCurrent, lp.chargePower)
+				lp.log.DEBUG.Printf("time for WakeUp calls - sleeping? WakeUpTimer active:%ds", int(lp.wakeUpTimer.duration().Seconds()))
 				// call the Charger WakeUp if available
 				if c, ok := lp.charger.(api.AlarmClock); ok {
 					if err := c.WakeUp(); err == nil {
