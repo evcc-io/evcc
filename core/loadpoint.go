@@ -1467,7 +1467,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	}
 	// WakeUp checks
 	if lp.enabled && lp.status == api.StatusB && lp.vehicleSoc < 100 {
-		lp.wakeUpTimer.WackUpCall(lp.charger, lp.vehicle, lp.log)
+		lp.wakeUpTimer.WakeUpCall(lp.charger, lp.vehicle, lp.log)
 	}
 
 	// stop an active target charging session if not currently evaluated
