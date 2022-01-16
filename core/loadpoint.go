@@ -60,7 +60,7 @@ type PollConfig struct {
 // SoCConfig defines soc settings, estimation and update behaviour
 type SoCConfig struct {
 	Poll     PollConfig `mapstructure:"poll"`
-	Estimate bool       `mapstructure:"estimate"`
+	Estimate string     `mapstructure:"estimate"`
 	Min      int        `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
 	Target   int        `mapstructure:"target"` // Default target SoC, guarded by mutex
 }
@@ -72,6 +72,13 @@ const (
 	pollAlways    = "always"
 
 	pollInterval = 60 * time.Minute
+)
+
+// estimate modes
+const (
+	estimateFull   = "full"
+	estimateSimple = "simple"
+	estimateOff    = "off"
 )
 
 // ThresholdConfig defines enable/disable hysteresis parameters
@@ -166,6 +173,18 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 			lp.log.WARN.Printf("invalid poll mode: %s", lp.SoC.Poll.Mode)
 		}
 		lp.SoC.Poll.Mode = pollConnected
+	}
+
+	// set estimate mode
+	switch lp.SoC.Estimate = strings.ToLower(lp.SoC.Estimate); lp.SoC.Estimate {
+	case estimateFull, "1":
+	case estimateSimple:
+	case estimateOff, "0":
+	default:
+		if lp.SoC.Estimate != "" {
+			lp.log.WARN.Printf("invalid estimate mode: %s", lp.SoC.Estimate)
+		}
+		lp.SoC.Estimate = estimateOff
 	}
 
 	if lp.OnIdentify_ != nil {
@@ -766,7 +785,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
 	if lp.vehicle = vehicle; vehicle != nil {
-		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, lp.SoC.Estimate)
+		estimate := lp.SoC.Estimate == estimateFull || lp.SoC.Estimate == estimateSimple
+		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, estimate, !(lp.SoC.Estimate == estimateSimple))
 
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())

@@ -18,6 +18,7 @@ type Estimator struct {
 	charger  api.Charger
 	vehicle  api.Vehicle
 	estimate bool
+	virtual  bool
 
 	capacity          float64 // vehicle capacity in Wh cached to simplify testing
 	virtualCapacity   float64 // estimated virtual vehicle capacity in Wh
@@ -28,12 +29,13 @@ type Estimator struct {
 }
 
 // NewEstimator creates new estimator
-func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool) *Estimator {
+func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool, virtual bool) *Estimator {
 	s := &Estimator{
 		log:      log,
 		charger:  charger,
 		vehicle:  vehicle,
 		estimate: estimate,
+		virtual:  virtual,
 	}
 
 	s.Reset()
@@ -171,7 +173,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			}
 
 			// calculate gradient, wh per soc %
-			if !invalid && socDelta > 2 && energyDelta > 0 && s.prevSoC > 0 {
+			if !invalid && socDelta > 2 && energyDelta > 0 && s.prevSoC > 0 && s.virtual {
 				s.energyPerSocStep = energyDelta / socDelta
 				s.virtualCapacity = s.energyPerSocStep * 100
 				s.log.DEBUG.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)

@@ -92,7 +92,7 @@ loadpoints:
       interval: 60m
     min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
     target: 100 # always charge to 100%
-    estimate: false # set true to interpolate between api updates
+    estimate: false # set true to interpolate between api updates, set to simple to disable battery capacity calculation
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
