@@ -17,7 +17,7 @@ func TestTimer(t *testing.T) {
 	at.Reset()
 	clck.Add(time.Minute)
 
-	if d := int(at.duration().Seconds()); d != int(time.Minute.Seconds()) {
+	if d := at.duration(); d != 0 {
 		t.Error(d)
 	}
 
