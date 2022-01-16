@@ -17,7 +17,7 @@ func TestTimer(t *testing.T) {
 	at.Reset()
 	clck.Add(time.Minute)
 
-	if d := at.duration(); d != 0 {
+	if d := at.lastduration; d != 0 {
 		t.Error(d)
 	}
 
@@ -26,7 +26,7 @@ func TestTimer(t *testing.T) {
 	clck.Add(2 * time.Minute)
 	at.Stop()
 
-	if d := int(at.duration().Seconds()); d != int(2*time.Minute.Seconds()) {
+	if d := int(at.lastduration.Seconds()); d != int(2*time.Minute.Seconds()) {
 		t.Error(d)
 	}
 	// continue
@@ -34,7 +34,7 @@ func TestTimer(t *testing.T) {
 	clck.Add(1 * time.Minute)
 	at.Stop()
 
-	if d := int(at.duration().Seconds()); d != int(time.Minute.Seconds()) {
+	if d := int(at.lastduration.Seconds()); d != int(time.Minute.Seconds()) {
 		t.Error(d)
 	}
 

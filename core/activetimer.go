@@ -5,6 +5,12 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+)
+
+const (
+	wakeUpWaitTime = 30
 )
 
 // ActiveTimer measures active time between start and stop events
@@ -51,13 +57,28 @@ func (m *ActiveTimer) Stop() {
 	}
 }
 
-// returns the duration of the last started timer
-func (m *ActiveTimer) duration() time.Duration {
-	m.Lock()
-	defer m.Unlock()
-
+// wakeUp logic
+func (m *ActiveTimer) WackUpCall(charger api.Charger, vehicle api.Vehicle, log *util.Logger) {
 	if !m.started.IsZero() {
-		return m.clck.Since(m.started)
+		if m.clck.Since(m.started).Seconds() > wakeUpWaitTime {
+			log.DEBUG.Printf("time for WakeUp calls - sleeping? WakeUpTimer active:%ds", int(m.clck.Since(m.started).Seconds()))
+			// call the Charger WakeUp if available
+			if c, ok := charger.(api.AlarmClock); ok {
+				if err := c.WakeUp(); err == nil {
+					log.DEBUG.Printf("charger WakeUp called")
+				}
+			}
+			// call the Vehicle WakeUp if available
+			if vs, ok := vehicle.(api.AlarmClock); ok {
+				if err := vs.WakeUp(); err == nil {
+					log.DEBUG.Printf("vehicle WakeUp API called")
+				}
+			}
+			m.Stop()
+		}
+	} else if m.lastduration == 0 {
+		log.DEBUG.Print("start WakeUpTimer")
+		m.Start()
 	}
-	return m.lastduration
+
 }
