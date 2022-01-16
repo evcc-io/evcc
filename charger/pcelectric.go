@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/charger/pcelectric"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // PCElectric charger implementation
@@ -62,6 +63,10 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error) {
 	log := util.NewLogger("pce")
 	uri = strings.TrimSuffix(strings.TrimRight(uri, "/"), "/servlet") + "/servlet/rest/chargebox"
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	wb := &PCElectric{
 		Helper:     request.NewHelper(log),
