@@ -38,7 +38,6 @@ const (
 	alphatecRegStatus     = 0
 	alphatecRegEnable     = 4
 	alphatecRegAmpsConfig = 5
-	alphatecEnabled       = 1 << 4
 )
 
 func init() {
@@ -109,14 +108,14 @@ func (wb *Alphatec) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return b[0]&alphatecEnabled > 0, nil
+	return binary.BigEndian.Uint16(b) > 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Alphatec) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
-		b[0] = alphatecEnabled
+		binary.BigEndian.PutUint16(b, 1)
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(alphatecRegEnable, 1, b)
