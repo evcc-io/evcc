@@ -60,7 +60,7 @@ func NewAlphatecFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewAlphatec creates Alphatec charger
 func NewAlphatec(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.TcpFormat, slaveID)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, slaveID)
 	if err != nil {
 		return nil, err
 	}
