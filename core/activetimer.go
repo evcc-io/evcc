@@ -58,7 +58,7 @@ func (m *ActiveTimer) Stop() {
 }
 
 // wakeUp logic
-func (m *ActiveTimer) WackUpCall(charger api.Charger, vehicle api.Vehicle, log *util.Logger) {
+func (m *ActiveTimer) WakeUpCall(charger api.Charger, vehicle api.Vehicle, log *util.Logger) {
 	if !m.started.IsZero() {
 		if m.clck.Since(m.started).Seconds() > wakeUpWaitTime {
 			log.DEBUG.Printf("time for WakeUp calls - sleeping? WakeUpTimer active:%ds", int(m.clck.Since(m.started).Seconds()))
