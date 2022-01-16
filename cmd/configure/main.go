@@ -261,11 +261,6 @@ func (c *CmdConfigure) configureSMAHems() {
 		return
 	}
 
-	// check if a battery system was added
-	if c.configuration.MetersOfCategory(DeviceCategoryBatteryMeter) == 0 {
-		return
-	}
-
 	fmt.Println()
 	fmt.Println(c.localizedString("Flow_SMAHems_Setup", nil))
 
