@@ -38,7 +38,27 @@ func (c *ConfigDefaults) LoadDefaults() {
 	if err := yaml.Unmarshal([]byte(definition.DefaultsContent), &c.Config); err != nil {
 		panic(fmt.Errorf("Error: failed to parse deviceGroupListDefinition: %v\n", err))
 	}
+
 	c.read = true
+
+	// resolve modbus param references
+	for k := range c.Config.Modbus.Types {
+		for i, p := range c.Config.Modbus.Types[k].Params {
+			// if this is a reference, get the referenced values and then overwrite it with the values defined here
+			if p.Reference {
+				finalName := p.Name
+				referencedItemName := p.Name
+				if p.Referencename != "" {
+					referencedItemName = p.Referencename
+				}
+				_, referencedParam := c.ParamByName(referencedItemName)
+				referencedParam.OverwriteProperties(p)
+				referencedParam.Name = finalName
+				p = referencedParam
+				c.Config.Modbus.Types[k].Params[i] = p
+			}
+		}
+	}
 }
 
 // return the param with the given name

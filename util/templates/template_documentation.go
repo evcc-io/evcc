@@ -7,7 +7,6 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/thoas/go-funk"
 )
 
 //go:embed documentation.tpl
@@ -44,47 +43,14 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 	modbusChoices := t.ModbusChoices()
 	modbusRender := ""
 	if len(modbusChoices) > 0 {
-		if i, modbusParam := t.ParamByName(ParamModbus); i > -1 {
+		if i, _ := t.ParamByName(ParamModbus); i > -1 {
 			modbusTmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(documentationModbusTmpl)
 			if err != nil {
 				panic(err)
 			}
 
-			modbusData := map[string]interface{}{
-				"id": modbusParam.ID,
-			}
-
-			// modbus defaults
-			for k, v := range map[string]interface{}{
-				ModbusParamNameId:       ModbusParamValueId,
-				ModbusParamNameHost:     ModbusParamValueHost,
-				ModbusParamNamePort:     ModbusParamValuePort,
-				ModbusParamNameDevice:   ModbusParamValueDevice,
-				ModbusParamNameBaudrate: ModbusParamValueBaudrate,
-				ModbusParamNameComset:   ModbusParamValueComset,
-			} {
-				modbusData[k] = v
-			}
-			if modbusParam.ID != 0 {
-				modbusData[ModbusParamNameId] = modbusParam.ID
-			}
-			if modbusParam.Port != 0 {
-				modbusData[ModbusParamNameDevice] = modbusParam.Port
-			}
-			if modbusParam.Baudrate != 0 {
-				modbusData[ModbusParamNameBaudrate] = modbusParam.Baudrate
-			}
-			if modbusParam.Comset != "" {
-				modbusData[ModbusParamNameComset] = modbusParam.Comset
-			}
-
-			if funk.ContainsString(modbusChoices, ModbusChoiceRS485) {
-				modbusData[ModbusRS485Serial] = true
-				modbusData[ModbusRS485TCPIP] = true
-			}
-			if funk.ContainsString(modbusChoices, ModbusChoiceTCPIP) {
-				modbusData[ModbusTCPIP] = true
-			}
+			modbusData := map[string]interface{}{}
+			t.ModbusValues(TemplateRenderModeDocs, modbusData)
 
 			modbusOut := new(bytes.Buffer)
 

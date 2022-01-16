@@ -46,9 +46,9 @@ func TestChargerTemplates(t *testing.T) {
 			modbusChoices := tmpl.ModbusChoices()
 			// we only test one modbus setup
 			if funk.ContainsString(modbusChoices, templates.ModbusChoiceTCPIP) {
-				values[templates.ModbusTCPIP] = true
+				values[templates.ModbusKeyTCPIP] = true
 			} else {
-				values[templates.ModbusRS485TCPIP] = true
+				values[templates.ModbusKeyRS485TCPIP] = true
 			}
 		}
 

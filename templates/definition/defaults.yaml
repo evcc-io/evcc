@@ -10,6 +10,7 @@ params:
   description:
     generic: Modbus ID
   default: 1
+  valuetype: number
 - name: modbusdevice
   description:
     de: Geräteadresse
@@ -26,6 +27,7 @@ params:
     de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
     en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
   default: 9600
+  valuetype: number
 - name: modbuscomset
   description:
     de: ComSet
@@ -41,6 +43,7 @@ params:
   help:
     de: IP-Adresse oder Hostname
     en: IP-Address or Hostname
+  example: "192.0.2.2"
 - name: port
   description:
     de: Port
@@ -224,10 +227,10 @@ presets:
 
 modbus:
   interfaces:
-    rs485: ["rs485usb", "rs485tcpip"]
+    rs485: ["rs485serial", "rs485tcpip"]
     tcpip: ["tcpip"]
   types:
-    rs485usb:
+    rs485serial:
       description:
         generic: Serial (USB-RS485 Adapter)
       params:

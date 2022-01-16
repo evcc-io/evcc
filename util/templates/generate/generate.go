@@ -54,21 +54,8 @@ func generateClass(class string) error {
 func writeTemplate(class string, index int, product templates.Product, tmpl templates.Template) error {
 	values := tmpl.Defaults(templates.TemplateRenderModeDocs)
 
-	modbusChoices := tmpl.ModbusChoices()
-
-	for _, modbusChoice := range modbusChoices {
-		switch modbusChoice {
-		case templates.ModbusChoiceRS485:
-			values[templates.ModbusRS485Serial] = true
-			values[templates.ModbusRS485TCPIP] = true
-		case templates.ModbusChoiceTCPIP:
-			values[templates.ModbusTCPIP] = true
-		}
-	}
 	b, err := tmpl.RenderDocumentation(product, values, "de")
-
 	if err != nil {
-		println(string(b))
 		return err
 	}
 

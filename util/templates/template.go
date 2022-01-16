@@ -200,25 +200,22 @@ func (t *Template) GroupTitle() string {
 func (t *Template) Defaults(renderMode string) map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
-		switch p.ValueType {
-		case ParamValueTypeStringList:
-			values[p.Name] = []string{}
-		case ParamValueTypeChargeModes:
-			values[p.Name] = ""
-		default:
-			if p.Test != "" {
-				values[p.Name] = p.Test
-			} else if p.Example != "" && funk.ContainsString([]string{TemplateRenderModeUnitTest}, renderMode) {
-				values[p.Name] = p.Example
-			} else if p.Example != "" && p.Default == "" && funk.ContainsString([]string{TemplateRenderModeDocs}, renderMode) {
-				values[p.Name] = p.Example
-			} else {
-				values[p.Name] = p.Default // may be empty
-			}
-		}
+		values[p.Name] = p.DefaultValue(renderMode)
 	}
 
 	return values
+}
+
+// Update the default value of a param
+//
+// Used for modbus params, which are dynamically added after selecting the interface
+func (t *Template) SetParamDefault(name string, value string) {
+	for i, p := range t.Params {
+		if p.Name == name {
+			t.Params[i].Default = value
+			return
+		}
+	}
 }
 
 // return the param with the given name
@@ -240,6 +237,7 @@ func (t *Template) Usages() []string {
 	return nil
 }
 
+// return all modbus choices defined in the template
 func (t *Template) ModbusChoices() []string {
 	if i, p := t.ParamByName(ParamModbus); i > -1 {
 		return p.Choice
@@ -258,7 +256,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 		panic(err)
 	}
 
-	t.ModbusParams(values)
+	t.ModbusParams("", values)
 
 	for index, p := range t.Params {
 		for k, v := range values {

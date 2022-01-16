@@ -342,6 +342,8 @@ func (c *CmdConfigure) processConfig(templateItem templates.Template, deviceCate
 	fmt.Println(c.localizedString("Config_Title", nil))
 	fmt.Println()
 
+	c.processModbusConfig(&templateItem, deviceCategory)
+
 	return c.processParams(templateItem, templateItem.Params, deviceCategory)
 }
 
@@ -352,19 +354,6 @@ func (c *CmdConfigure) processParams(templateItem templates.Template, params []t
 	additionalConfig := make(map[string]interface{})
 
 	for _, param := range params {
-		// if this is a reference, get the referenced values and then overwrite it with the values defined here
-		if param.Reference {
-			finalName := param.Name
-			referencedItemName := param.Name
-			if param.Referencename != "" {
-				referencedItemName = param.Referencename
-			}
-			_, referencedParam := templateItem.ConfigDefaults.ParamByName(referencedItemName)
-			referencedParam.OverwriteProperties(param)
-			param = referencedParam
-			param.Name = finalName
-		}
-
 		if param.Dependencies != nil {
 			valid := true
 			for _, dep := range param.Dependencies {
@@ -405,10 +394,8 @@ func (c *CmdConfigure) processParams(templateItem templates.Template, params []t
 
 		switch param.Name {
 		case templates.ParamModbus:
-			additionals := c.processModbusConfig(templateItem, param, deviceCategory)
-			for k, v := range additionals {
-				additionalConfig[k] = v
-			}
+			additionalConfig[param.Name] = param.Value
+
 		case templates.ParamUsage:
 			if usageFilter != "" {
 				additionalConfig[param.Name] = usageFilter.String()
@@ -475,13 +462,18 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 }
 
 // handle user input for a device modbus configuration
-func (c *CmdConfigure) processModbusConfig(templateItem templates.Template, param templates.Param, deviceCategory DeviceCategory) map[string]interface{} {
+func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, deviceCategory DeviceCategory) {
 	var choices []string
 	var choiceTypes []string
 
+	modbusIndex, modbusParam := templateItem.ParamByName(templates.ParamModbus)
+	if modbusIndex == -1 {
+		return
+	}
+
 	config := templateItem.ConfigDefaults.Config.Modbus
 
-	for _, choice := range param.Choice {
+	for _, choice := range modbusParam.Choice {
 		if config.Interfaces[choice] == nil {
 			continue
 		}
@@ -494,7 +486,7 @@ func (c *CmdConfigure) processModbusConfig(templateItem templates.Template, para
 	}
 
 	if len(choices) == 0 {
-		return nil
+		return
 	}
 
 	// ask for modbus interface type
@@ -503,9 +495,12 @@ func (c *CmdConfigure) processModbusConfig(templateItem templates.Template, para
 		index, _ = c.askChoice(c.localizedString("Config_ModbusInterface", nil), choices)
 	}
 
-	selectedInterfaceType := config.Types[choiceTypes[index]]
-	additionalConfig := c.processParams(templateItem, selectedInterfaceType.Params, deviceCategory)
-	additionalConfig[templates.ParamModbus] = choiceTypes[index]
+	values := make(map[string]interface{})
+	templateItem.Params[modbusIndex].Value = choiceTypes[index]
+	// add the interface type specific modbus params
+	templateItem.ModbusParams(choiceTypes[index], values)
+	// Update the modbus default values
+	templateItem.ModbusValues(templates.TemplateRenderModeInstance, values)
 
-	return additionalConfig
+	return
 }

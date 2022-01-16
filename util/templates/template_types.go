@@ -17,24 +17,14 @@ const (
 	ModbusKeyRS485TCPIP  = "rs485tcpip"
 	ModbusKeyTCPIP       = "tcpip"
 
-	ModbusRS485Serial = "modbusrs485serial"
-	ModbusRS485TCPIP  = "modbusrs485tcpip"
-	ModbusTCPIP       = "modbustcpip"
-
-	ModbusParamNameId        = "id"
-	ModbusParamValueId       = 1
-	ModbusParamNameDevice    = "device"
-	ModbusParamValueDevice   = "/dev/ttyUSB0"
-	ModbusParamNameBaudrate  = "baudrate"
-	ModbusParamValueBaudrate = 9600
-	ModbusParamNameComset    = "comset"
-	ModbusParamValueComset   = "8N1"
-	ModbusParamNameURI       = "uri"
-	ModbusParamNameHost      = "host"
-	ModbusParamValueHost     = "192.0.2.2"
-	ModbusParamNamePort      = "port"
-	ModbusParamValuePort     = 502
-	ModbusParamNameRTU       = "rtu"
+	ModbusParamNameId       = "id"
+	ModbusParamNameDevice   = "device"
+	ModbusParamNameBaudrate = "baudrate"
+	ModbusParamNameComset   = "comset"
+	ModbusParamNameURI      = "uri"
+	ModbusParamNameHost     = "host"
+	ModbusParamNamePort     = "port"
+	ModbusParamNameRTU      = "rtu"
 
 	TemplateRenderModeDocs     = "docs"
 	TemplateRenderModeUnitTest = "unittest"
@@ -83,7 +73,6 @@ var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementS
 var predefinedTemplateProperties = []string{"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
 	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusRS485Serial, ModbusRS485TCPIP, ModbusTCPIP,
 	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
@@ -191,10 +180,31 @@ type Param struct {
 	Values        []string     // user provided list of values
 	ValueType     string       // string representation of the value type, "string" is default
 	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
-	Baudrate      int          // device specific default for modbus RS485 baudrate
-	Comset        string       // device specific default for modbus RS485 comset
-	Port          int          // device specific default for modbus TCPIP port
-	ID            int          // device specific default for modbus ID
+
+	Baudrate int    // device specific default for modbus RS485 baudrate
+	Comset   string // device specific default for modbus RS485 comset
+	Port     int    // device specific default for modbus TCPIP port
+	ID       int    // device specific default for modbus ID
+}
+
+// return a default value or example value depending on the renderMode
+func (p *Param) DefaultValue(renderMode string) interface{} {
+	switch p.ValueType {
+	case ParamValueTypeStringList:
+		return []string{}
+	case ParamValueTypeChargeModes:
+		return ""
+	default:
+		if p.Test != "" {
+			return p.Test
+		} else if p.Example != "" && renderMode == TemplateRenderModeUnitTest {
+			return p.Example
+		} else if p.Example != "" && p.Default == "" && renderMode == TemplateRenderModeDocs {
+			return p.Example
+		} else {
+			return p.Default // may be empty
+		}
+	}
 }
 
 // overwrite specific properties by using values from another param
