@@ -119,7 +119,7 @@ func (wb *Alphatec) Enable(enable bool) error {
 		b[0] = alphatecEnabled
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(alphatecEnabled, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(alphatecRegEnable, 1, b)
 
 	return err
 }
