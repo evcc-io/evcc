@@ -1,6 +1,7 @@
 product:
   brand: PC Electric
   description: Garo
+requirements: ["sponsorship"]
 description: |
   Es können momentan nur als Master konfigurierte Geräte verwendet werden!
 
