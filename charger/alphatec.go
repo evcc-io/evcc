@@ -18,7 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
-	"errors"
+	"encoding/binary"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -35,12 +35,11 @@ type Alphatec struct {
 }
 
 const (
-	alphatecRegStatus = 0x03
-	alphatecRegEnale  = 0x10
-	alphatecEnabled   = 1 << 4
+	alphatecRegStatus     = 0
+	alphatecRegEnable     = 4
+	alphatecRegAmpsConfig = 5
+	alphatecEnabled       = 1 << 4
 )
-
-var AlphatecRegCurrents = []uint16{320, 322, 324}
 
 func init() {
 	registry.Add("alphatec", NewAlphatecFromConfig)
@@ -78,26 +77,8 @@ func NewAlphatec(uri, device, comset string, baudrate int, slaveID uint8) (api.C
 		conn: conn,
 	}
 
-	// go wb.heartbeat()
-
 	return wb, err
 }
-
-// heartbeat implements the api.ChargerEx interface
-// func (wb *Alphatec) heartbeat() {
-// 	for range time.NewTicker(time.Minute).C {
-// 		wb.mu.Lock()
-// 		var curr float64
-// 		if wb.enabled {
-// 			curr = wb.curr
-// 		}
-// 		wb.mu.Unlock()
-
-// 		if err := wb.setCurrent(curr); err != nil {
-// 			wb.log.ERROR.Println("heartbeat:", err)
-// 		}
-// 	}
-// }
 
 // Status implements the api.Charger interface
 func (wb *Alphatec) Status() (api.ChargeStatus, error) {
@@ -123,7 +104,7 @@ func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Alphatec) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(alphatecEnabled, 1)
+	b, err := wb.conn.ReadHoldingRegisters(alphatecRegEnable, 1)
 	if err != nil {
 		return false, err
 	}
@@ -145,5 +126,10 @@ func (wb *Alphatec) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Alphatec) MaxCurrent(current int64) error {
-	return errors.New("not implemented")
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(current))
+
+	_, err := wb.conn.WriteMultipleRegisters(alphatecRegAmpsConfig, 1, b)
+
+	return err
 }
