@@ -121,8 +121,8 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 				s.log.WARN.Printf("vehicle soc (charger): %v (ignored by estimator)", err)
 			}
 
-			s.vehicleSoc = f
 			fetchedSoC = &f
+			s.vehicleSoc = f
 		}
 	}
 
