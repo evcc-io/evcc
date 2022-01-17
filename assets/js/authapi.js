@@ -2,21 +2,21 @@ import axios from "axios";
 
 const { protocol, hostname, port, pathname } = window.location;
 
-const authAPI = axios.create({
-  baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname + "auth/",
+const baseAPI = axios.create({
+  baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname + "/",
   headers: {
     Accept: "application/json",
   },
 });
 
 // global error handling
-authAPI.interceptors.response.use(
+baseAPI.interceptors.response.use(
   (response) => response,
   (error) => {
     const url = error.config.baseURL + error.config.url;
-    const message = `${error.message}: auth API request failed ${url}`;
+    const message = `${error.message}: API request failed ${url}`;
     window.app.error({ message });
   }
 );
 
-export default authAPI;
+export default baseAPI;

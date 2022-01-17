@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -204,8 +206,9 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 	router := httpd.Router()
 	for _, v := range cp.vehicles {
 		if provider, ok := v.(api.ProviderLogin); ok {
-			// TODO: exchange 'mercedes' with something dynamic from the vehicle!
-			basePath := fmt.Sprintf("/auth/vehicles/%s", "mercedes")
+			title := url.QueryEscape(strings.ToLower(strings.ReplaceAll(v.Title(), " ", "_")))
+
+			basePath := fmt.Sprintf("/auth/vehicles/%s", title)
 			provider.SetBasePath(basePath)
 
 			callback := provider.Callback()
