@@ -326,7 +326,11 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	}
 
 	// add Active timer for wakeup check
-	lp.wakeUpTimer = NewActiveTimer()
+	wt := NewActiveTimer()
+	_ = lp.bus.Subscribe(evVehicleConnect, func() { wt.Reset() })
+	_ = lp.bus.Subscribe(evChargeStart, func() { wt.Reset() })
+	_ = lp.bus.Subscribe(evChargeStop, func() { wt.Reset() })
+	lp.wakeUpTimer = wt
 }
 
 // pushEvent sends push messages to clients
@@ -414,9 +418,6 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	if len(lp.vehicles) > 1 {
 		lp.setActiveVehicle(nil)
 	}
-
-	// reset the WakeUpTimer
-	lp.wakeUpTimer.Reset()
 
 	// keep single vehicle to allow poll mode: always
 	if len(lp.vehicles) == 1 {
@@ -1495,13 +1496,10 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		err = lp.setLimit(targetCurrent, required)
 	}
 
-	// reset WakeUpCalled then car is charging
-	if lp.status == api.StatusC {
-		lp.wakeUpTimer.Reset()
-	}
 	// WakeUp checks
 	if lp.enabled && lp.status == api.StatusB && lp.vehicleSoc < 100 {
-		lp.wakeUpTimer.WakeUpCall(lp.charger, lp.vehicle, lp.log)
+		lp.wakeUpTimer.Start(lp.log)
+		lp.wakeUpTimer.WakeUp(lp.charger, lp.vehicle, lp.log)
 	}
 
 	// stop an active target charging session if not currently evaluated
