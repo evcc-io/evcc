@@ -5,14 +5,15 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/util"
 )
 
 func TestTimer(t *testing.T) {
 	at := NewActiveTimer()
 	clck := clock.NewMock()
 	at.clck = clck
-
-	at.Start()
+	log := util.NewLogger("foo")
+	at.Start(log)
 	clck.Add(time.Minute)
 	at.Reset()
 	clck.Add(time.Minute)
@@ -22,7 +23,7 @@ func TestTimer(t *testing.T) {
 	}
 
 	// continue
-	at.Start()
+	at.Start(log)
 	clck.Add(2 * time.Minute)
 	at.Stop()
 
@@ -30,11 +31,11 @@ func TestTimer(t *testing.T) {
 		t.Error(d)
 	}
 	// continue
-	at.Start()
+	at.Start(log)
 	clck.Add(1 * time.Minute)
 	at.Stop()
 
-	if d := int(at.lastduration.Seconds()); d != int(time.Minute.Seconds()) {
+	if d := int(at.lastduration.Seconds()); d != int(2*time.Minute.Seconds()) {
 		t.Error(d)
 	}
 
