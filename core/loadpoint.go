@@ -1408,7 +1408,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	// track if remote disabled is actually active
 	remoteDisabled := loadpoint.RemoteEnable
 
-	// reset detection if soc timer needs be deactived after evaluating the loading strategy
+	// reset detection if soc timer needs be deactivated after evaluating the loading strategy
 	lp.socTimer.MustValidateDemand()
 
 	// execute loading strategy
