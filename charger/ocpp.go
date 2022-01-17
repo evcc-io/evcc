@@ -69,6 +69,11 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 
 	if err := ocpp.Instance().CS().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
 		options = resp.ConfigurationKey
+
+		for _, opt := range options {
+			c.log.TRACE.Printf("%s (%t): %s", opt.Key, opt.Readonly, *opt.Value)
+		}
+
 		rc <- err
 	}, []string{}); err != nil {
 		return nil, err
