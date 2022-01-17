@@ -1117,7 +1117,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 		}
 	}
 
-	// in MinPV mode return at least minCurrent
+	// in MinPV mode or under special conditions return at least minCurrent
 	if (mode == api.ModeMinPV || batteryBuffered || lp.climateActive()) && targetCurrent < minCurrent {
 		return minCurrent
 	}
