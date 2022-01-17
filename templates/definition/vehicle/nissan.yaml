@@ -1,6 +1,8 @@
 template: nissan
 products:
 - brand: Nissan
+  description:
+    generic: Leaf
 params:
 - preset: vehiclebase
 - preset: vehicleidentify
