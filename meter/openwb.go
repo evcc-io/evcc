@@ -56,13 +56,17 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		}
 	}
 
-	floatG := func(topic string) func() (float64, error) {
+	floatG := func(topic string, scaler ...float64) func() (float64, error) {
+		scale := 1.0
+		if len(scaler) == 1 {
+			scale = scaler[0]
+		}
 		g := provider.NewMqtt(log, client, topic, 1, 0).FloatGetter()
 		return func() (val float64, err error) {
 			if val, err = g(); err == nil {
 				_, err = timer()
 			}
-			return val, err
+			return scale * val, err
 		}
 	}
 
@@ -106,7 +110,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil, errors.New("battery not available")
 		}
 
-		power = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.PowerTopic))
+		power = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.PowerTopic), -1)
 		soc = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.SoCTopic))
 
 	default:
