@@ -96,9 +96,7 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 		uri = fmt.Sprintf("%s/mode2/%d", wb.uri, wb.serialNumber)
 		if err := wb.GetJSON(uri, &status); err == nil {
 			wb.mode2 = true
-			if status.Power == "undef" {
-				wb.Enable(false)
-			}
+			wb.Enable(false)
 		}
 	}
 
