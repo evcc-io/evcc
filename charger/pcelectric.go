@@ -9,10 +9,18 @@ import (
 	"github.com/evcc-io/evcc/charger/pcelectric"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // PCElectric charger implementation
+//
+// Author:  Stefan Schmaltz, OpenSprinklerShop
+// Version: 1.2
+//
+// History: 1.0 : 29.12.2021 Initial release
+//          1.1 : 15.01.2022 First public release
+//          1.2 : 16.01.2022 Added support for patched firmware, use when using slave box(es) with one master
+//                Patched firmware: https://ddownload.com/cdqhz1prmp9o/chargebox_185-patched-mode2.tgz
+//
 type PCElectric struct {
 	*request.Helper
 	log *util.Logger
@@ -21,8 +29,9 @@ type PCElectric struct {
 	slaveIndex int    // 0 = Master, 1..n Slave
 	meter      string // <CENTRAL100|CENTRAL101|INTERNAL|EXTERNAL|TWIN>
 
-	lbmode       bool // true/false (wird automatisch bestimmt)
-	serialNumber int  // 1234567
+	lbmode       bool  // true/false (wird automatisch bestimmt)
+	serialNumber int64 // 1234567
+	mode2        bool  // Patched Firmware
 }
 
 func init() {
@@ -47,7 +56,7 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 	}
 
 	wb, err := NewPCElectric(util.DefaultScheme(cc.URI, "http"), cc.SlaveIndex, cc.Meter)
-	if err == nil && wb.slaveIndex == 0 { // Nur Master hat den Zähler...leider
+	if err == nil {
 		var res pcelectric.MeterInfo
 		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
 			return decoratePCE(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
@@ -63,10 +72,6 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error) {
 	log := util.NewLogger("pce")
 	uri = strings.TrimSuffix(strings.TrimRight(uri, "/"), "/servlet") + "/servlet/rest/chargebox"
-
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
 
 	wb := &PCElectric{
 		Helper:     request.NewHelper(log),
@@ -85,6 +90,16 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 		wb.lbmode = lbconfig.MasterLoadBalanced
 		wb.serialNumber = lbconfig.Slaves[wb.slaveIndex].SerialNumber
 		log.DEBUG.Printf("lbmode: %t  serial: %d ", wb.lbmode, wb.serialNumber)
+
+		//Firmware gepatcht?
+		var status pcelectric.SlaveMode2
+		uri = fmt.Sprintf("%s/mode2/%d", wb.uri, wb.serialNumber)
+		if err := wb.GetJSON(uri, &status); err == nil {
+			wb.mode2 = true
+			if status.Power == "undef" {
+				wb.Enable(false)
+			}
+		}
 	}
 
 	return wb, nil
@@ -95,7 +110,15 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 	var chargeStatus int
 	var sessionStartTime int64
 
-	if wb.slaveIndex == 0 {
+	if wb.mode2 { //Firmware patched, POWER STATUS available:
+		var status pcelectric.SlaveMode2
+		uri := fmt.Sprintf("%s/mode2/%d", wb.uri, wb.serialNumber)
+		if err := wb.GetJSON(uri, &status); err != nil {
+			return api.StatusNone, err
+		}
+		chargeStatus = status.ChargeStatus
+		sessionStartTime = status.SessionStartTime
+	} else if wb.slaveIndex == 0 {
 		var status pcelectric.Status
 
 		uri := fmt.Sprintf("%s/status", wb.uri)
@@ -165,34 +188,59 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *PCElectric) Enabled() (bool, error) {
-	var res pcelectric.Status
-	uri := fmt.Sprintf("%s/status", wb.uri)
-	err := wb.GetJSON(uri, &res)
-	if err == nil && res.PowerMode == "ON" {
-		return true, err
+	if wb.mode2 { //Firmware patched, POWER STATUS available:
+		var status pcelectric.SlaveMode2
+		uri := fmt.Sprintf("%s/mode2/%d", wb.uri, wb.serialNumber)
+		err := wb.GetJSON(uri, &status)
+		if err == nil && status.Power == "ON" {
+			return true, err
+		}
+		return false, err
+	} else {
+		var res pcelectric.Status
+		uri := fmt.Sprintf("%s/status", wb.uri)
+		err := wb.GetJSON(uri, &res)
+		if err == nil && res.PowerMode == "ON" {
+			return true, err
+		}
+		return false, err
 	}
-	return false, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *PCElectric) Enable(enable bool) error {
-	if wb.slaveIndex > 0 {
-		return nil //Slave wird immer mit dem Master geschaltet!
-	}
+	if wb.mode2 { //Patched:
+		mode := "OFF"
+		if enable {
+			mode = "ON"
+		}
+		uri := fmt.Sprintf("%s/mode2/%d/%s", wb.uri, wb.serialNumber, mode)
+		req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+		if err == nil {
+			_, err = wb.DoBody(req)
+		}
 
-	// Master Only !!
-	mode := "ALWAYS_OFF"
-	if enable {
-		mode = "ALWAYS_ON"
-	}
+		return err
 
-	uri := fmt.Sprintf("%s/mode/%s", wb.uri, mode)
-	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
-	if err == nil {
-		_, err = wb.DoBody(req)
-	}
+	} else {
+		if wb.slaveIndex > 0 {
+			return nil //Slave wird immer mit dem Master geschaltet!
+		}
 
-	return err
+		// Master Only !!
+		mode := "ALWAYS_OFF"
+		if enable {
+			mode = "ALWAYS_ON"
+		}
+
+		uri := fmt.Sprintf("%s/mode/%s", wb.uri, mode)
+		req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+		if err == nil {
+			_, err = wb.DoBody(req)
+		}
+
+		return err
+	}
 }
 
 func (wb *PCElectric) MinCurrent(current int64) error {
@@ -215,9 +263,9 @@ func (wb *PCElectric) MinCurrent(current int64) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *PCElectric) MaxCurrent(current int64) error {
-	if wb.slaveIndex > 0 {
-		return nil //Slave wird immer mit dem Master geschaltet!
-	}
+	//if wb.slaveIndex > 0 {
+	//	return nil //Slave wird immer mit dem Master geschaltet!
+	//}
 
 	// Ohne Loadbalancer Regelung über currentlimit:
 	if !wb.lbmode {

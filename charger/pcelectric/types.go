@@ -21,7 +21,7 @@ type Status struct {
 	NrOfPhases             int    //  1,
 	MainCharger            struct {
 		Reference              string //  "Garage",
-		SerialNumber           int    //  2216247,
+		SerialNumber           int64  //  2216247,
 		LastContact            int64  //  1640781615305,
 		Online                 bool   //  false,
 		LoadBalanced           bool   //  true,
@@ -39,7 +39,7 @@ type Status struct {
 		CurrentChargingCurrent int    //  -1,
 		CurrentChargingPower   int    //  0,
 		NrOfPhases             int    //  1,
-		TwinSerial             int    //  -1,
+		TwinSerial             int64  //  -1,
 	}
 	TwinCharger interface{}
 }
@@ -47,7 +47,7 @@ type Status struct {
 // /servlet/rest/chargebox/slaves/false
 type SlaveStatus []struct {
 	Reference              string //  "Garage",
-	SerialNumber           int    //  2216247,
+	SerialNumber           int64  //  2216247,
 	LastContact            int64  //  1640781615305,
 	Online                 bool   //  false,
 	LoadBalanced           bool   //  true,
@@ -69,7 +69,7 @@ type SlaveStatus []struct {
 	CurrentChargingCurrent int    //  -1,
 	CurrentChargingPower   int    //  0,
 	NrOfPhases             int    //  1,
-	TwinSerial             int    //  -1,
+	TwinSerial             int64  //  -1,
 	CableLockMode          int    //  0
 	MinCurrentLimit        int    //  6
 	DipSwitchSettings      int    //  8188
@@ -125,7 +125,7 @@ type LbConfig struct {
 	MasterLoadBalanced    bool // true
 	Slaves                []struct {
 		Reference              string // "Garage"
-		SerialNumber           int    // 2216247
+		SerialNumber           int64  // 2216247
 		LastContact            int64  // 1640970181816
 		Online                 bool   // false
 		LoadBalanced           bool   // true
@@ -147,7 +147,7 @@ type LbConfig struct {
 		CurrentChargingCurrent int    // -1
 		CurrentChargingPower   int    // 0
 		NrOfPhases             int    // 1
-		TwinSerial             int    // -1
+		TwinSerial             int64  // -1
 		CableLockMode          int    // 0
 		MinCurrentLimit        int    // 6
 		DipSwitchSettings      int    // 8188
@@ -165,7 +165,7 @@ type Config struct {
 	LargeFirmwareVersion    int    // 7
 	LargeFirmwareRevision   int    // 9
 	LbVersion2              bool   // true
-	SerialNumber            int    // 2216247
+	SerialNumber            int64  // 2216247
 	MeterSerialNumber       string // ""
 	MeterType               int    // 0
 	FactoryChargeLimit      int    // 32
@@ -208,7 +208,7 @@ type Config struct {
 	Timezone             string // null
 	SlaveList            []struct {
 		Reference              string // Garage
-		SerialNumber           int    // 2216247
+		SerialNumber           int64  // 2216247
 		LastContact            int64  // 1640960502344
 		Online                 bool   // false
 		LoadBalanced           bool   // true
@@ -230,7 +230,7 @@ type Config struct {
 		CurrentChargingCurrent int    // -1
 		CurrentChargingPower   int    // 0
 		NrOfPhases             int    // 1
-		TwinSerial             int    // -1
+		TwinSerial             int64  // -1
 		CableLockMode          int    // 0
 		MinCurrentLimit        int    // 6
 		DipSwitchSettings      int    // 8188
@@ -238,7 +238,14 @@ type Config struct {
 }
 
 type MinCurrentLimitStruct []struct {
-	MinCurrentLimit int `json:"minCurrentLimit"`
-	SerialNumber    int `json:"serialNumber"`
-	TwinSerial      int `json:"twinSerial"` // -1
+	MinCurrentLimit int   `json:"minCurrentLimit"`
+	SerialNumber    int64 `json:"serialNumber"`
+	TwinSerial      int64 `json:"twinSerial"` // -1
+}
+
+type SlaveMode2 struct {
+	SerialNumber     int64  // 2216247
+	ChargeStatus     int    // 144
+	SessionStartTime int64  // 1640957660208
+	Power            string // ON|OFF|undef
 }
