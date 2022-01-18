@@ -321,7 +321,7 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 		lp.chargeTimer = ct
 	}
 
-	// add Active timer for wakeup check
+	// add wakeup timer
 	wt := NewActiveTimer(lp.log)
 	_ = lp.bus.Subscribe(evVehicleConnect, func() { wt.Reset() })
 	_ = lp.bus.Subscribe(evChargeStart, func() { wt.Reset() })
@@ -416,9 +416,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	if len(lp.vehicles) == 1 {
 		// but reset values if poll mode is not always (i.e. connected or charging)
 		if lp.SoC.Poll.Mode != pollAlways {
-			lp.publish("vehicleSoC", -1)
-			lp.publish("vehicleRange", -1)
-			lp.setRemainingDuration(-1)
+			lp.unpublishVehicle()
 		}
 	}
 
@@ -602,6 +600,9 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
+			// start vehicle wakeup countdown
+			lp.wakeUpTimer.Start()
+
 			// wake up vehicle
 			// TODO https://github.com/evcc-io/evcc/discussions/1929
 			// if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
@@ -783,8 +784,18 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleCapacity", int64(0))
 	}
 
+	lp.unpublishVehicle()
+}
+
+// unpublishVehicle resets published vehicle data
+func (lp *LoadPoint) unpublishVehicle() {
+	lp.vehicleSoc = 0
+
+	lp.publish("vehicleSoC", 0.0)
 	lp.publish("vehicleRange", int64(0))
 	lp.publish("vehicleOdometer", 0.0)
+
+	lp.setRemainingDuration(-1)
 }
 
 // startVehicleDetection resets connection timer and starts api refresh timer
@@ -1310,7 +1321,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			// range
 			if vs, ok := lp.vehicle.(api.VehicleRange); ok {
 				if rng, err := vs.Range(); err == nil {
-					lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
+					lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 					lp.publish("vehicleRange", rng)
 				}
 			}
@@ -1463,9 +1474,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	}
 
 	// WakeUp checks
-	if lp.enabled && lp.status == api.StatusB && lp.vehicleSoc < 100 {
-		lp.wakeUpTimer.Start()
-		lp.wakeUpTimer.WakeUp(lp.charger, lp.vehicle)
+	if lp.enabled && lp.status == api.StatusB && lp.vehicle != nil && lp.vehicleSoc < 100 {
+		lp.wakeUpTimer.WakeUpIfExpired(lp.charger, lp.vehicle)
 	}
 
 	// stop an active target charging session if not currently evaluated
