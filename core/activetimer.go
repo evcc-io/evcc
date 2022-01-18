@@ -71,7 +71,7 @@ func (m *ActiveTimer) Stop() {
 }
 
 // wakeUp logic
-func (m *ActiveTimer) WakeUp(charger api.Charger, vehicle api.Vehicle) {
+func (m *ActiveTimer) WakeUpIfExpired(charger api.Charger, vehicle api.Vehicle) {
 	if m.started.IsZero() {
 		return
 	}
