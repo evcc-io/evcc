@@ -142,7 +142,7 @@ func TestUpdatePowerZero(t *testing.T) {
 		clck := clock.NewMock()
 		ctrl := gomock.NewController(t)
 		charger := mock.NewMockCharger(ctrl)
-		wakeupTimer := NewActiveTimer(util.NewLogger("foo"))
+		wakeupTimer := NewTimer()
 
 		lp := &LoadPoint{
 			log:         util.NewLogger("foo"),
@@ -371,7 +371,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
 	vehicle := mock.NewMockVehicle(ctrl)
-	wakeupTimer := NewActiveTimer(util.NewLogger("foo"))
+	wakeupTimer := NewTimer()
 
 	// wrap vehicle with estimator
 	vehicle.EXPECT().Capacity().Return(int64(10))
@@ -448,7 +448,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
-	wakeupTimer := NewActiveTimer(util.NewLogger("foo"))
+	wakeupTimer := NewTimer()
 
 	lp := &LoadPoint{
 		log:         util.NewLogger("foo"),
@@ -521,7 +521,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
 	rater := mock.NewMockChargeRater(ctrl)
-	wakeupTimer := NewActiveTimer(util.NewLogger("foo"))
+	wakeupTimer := NewTimer()
 
 	lp := &LoadPoint{
 		log:         util.NewLogger("foo"),

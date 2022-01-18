@@ -5,12 +5,11 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTimer(t *testing.T) {
-	at := NewActiveTimer(util.NewLogger("foo"))
+	at := NewTimer()
 
 	clck := clock.NewMock()
 	at.clck = clck

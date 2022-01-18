@@ -123,9 +123,6 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	// wakeUp
-	wakeUpTimer *ActiveTimer
-
 	chargeMeter  api.Meter     // Charger usage meter
 	vehicle      api.Vehicle   // Currently active vehicle
 	vehicles     []api.Vehicle // Assigned vehicles
@@ -140,6 +137,7 @@ type LoadPoint struct {
 	connectedTime  time.Time              // Time when vehicle was connected
 	pvTimer        time.Time              // PV enabled/disable timer
 	phaseTimer     time.Time              // 1p3p switch timer
+	wakeUpTimer    *Timer                 // Vehicle wakeUp
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle SoC
@@ -322,7 +320,7 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	}
 
 	// add wakeup timer
-	wt := NewActiveTimer(lp.log)
+	wt := NewTimer()
 	_ = lp.bus.Subscribe(evVehicleConnect, func() { wt.Reset() })
 	_ = lp.bus.Subscribe(evChargeStart, func() { wt.Reset() })
 	_ = lp.bus.Subscribe(evChargeStop, func() { wt.Reset() })
@@ -785,6 +783,22 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	}
 
 	lp.unpublishVehicle()
+}
+
+func (lp *LoadPoint) wakeUpVehicle() {
+	// charger
+	if c, ok := lp.charger.(api.AlarmClock); ok {
+		if err := c.WakeUp(); err != nil {
+			lp.log.ERROR.Printf("wakeUp charger: %v", err)
+		}
+	}
+
+	// vehicle
+	if vs, ok := lp.vehicle.(api.AlarmClock); ok {
+		if err := vs.WakeUp(); err != nil {
+			lp.log.ERROR.Printf("wakeUp vehicle: %v", err)
+		}
+	}
 }
 
 // unpublishVehicle resets published vehicle data
@@ -1474,8 +1488,9 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	}
 
 	// WakeUp checks
-	if lp.enabled && lp.status == api.StatusB && lp.vehicle != nil && lp.vehicleSoc < 100 {
-		lp.wakeUpTimer.WakeUpIfExpired(lp.charger, lp.vehicle)
+	if lp.enabled && lp.status == api.StatusB &&
+		lp.vehicle != nil && lp.vehicleSoc < 100 && lp.wakeUpTimer.Expired() {
+		lp.wakeUpVehicle()
 	}
 
 	// stop an active target charging session if not currently evaluated
