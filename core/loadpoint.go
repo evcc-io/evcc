@@ -1117,8 +1117,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 		}
 	}
 
-	// in MinPV mode return at least minCurrent
-	if (mode == api.ModeMinPV || batteryBuffered) && targetCurrent < minCurrent {
+	// in MinPV mode or under special conditions return at least minCurrent
+	if (mode == api.ModeMinPV || batteryBuffered || lp.climateActive()) && targetCurrent < minCurrent {
 		return minCurrent
 	}
 
@@ -1462,7 +1462,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {
-			targetCurrent = lp.GetMaxCurrent()
+			lp.log.DEBUG.Println("climater active")
+			targetCurrent = lp.GetMinCurrent()
 			required = true
 		}
 
