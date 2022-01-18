@@ -9,11 +9,11 @@ import (
 )
 
 func TestTimer(t *testing.T) {
-	at := NewActiveTimer()
+	log := util.NewLogger("foo")
+	at := NewActiveTimer(log)
 	clck := clock.NewMock()
 	at.clck = clck
-	log := util.NewLogger("foo")
-	at.Start(log)
+	at.Start()
 	clck.Add(time.Minute)
 	at.Reset()
 	clck.Add(time.Minute)
@@ -23,15 +23,15 @@ func TestTimer(t *testing.T) {
 	}
 
 	// continue
-	at.Start(log)
+	at.Start()
 	clck.Add(2 * time.Minute)
 	at.Stop()
 
 	if d := int(at.lastduration.Seconds()); d != int(2*time.Minute.Seconds()) {
 		t.Error(d)
 	}
-	// continue
-	at.Start(log)
+	// continue - should do nothing as the timer was started allready
+	at.Start()
 	clck.Add(1 * time.Minute)
 	at.Stop()
 
