@@ -7,12 +7,11 @@ guidedsetup:
   enable: true
 params:
 - name: usage
-  choice: [ "pv", "battery" ]
+  choice: [ "pv" ]
 - name: modbus
   choice: ["tcpip"]
 render: |
   type: custom
-  {{- if eq .usage "pv" }}
   power:
     source: modbus
     {{include "modbus" . | indent 2}}
@@ -24,29 +23,3 @@ render: |
       address: 32080 # Active generation power
       type: holding
       decode: int32
-  {{- end }}
-  {{- if eq .usage "battery" }}
-  power:
-    source: modbus
-    {{include "modbus" . | indent 2}}
-    model: huawei
-    timeout: 30s
-    connectdelay: 5s
-    delay: 2s
-    register:
-      address: 37001
-      type: holding
-      decode: int32
-  soc:
-    source: modbus
-    {{include "modbus" . | indent 2}}
-    model: huawei
-    timeout: 30s
-    connectdelay: 5s
-    delay: 2s
-    register:
-      address: 37004
-      type: holding
-      decode: uint16
-    scale: 0.1
-  {{- end }}

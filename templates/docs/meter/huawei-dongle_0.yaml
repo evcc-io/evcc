@@ -13,13 +13,3 @@ render:
     # TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
     # Modbus End
-- usage: battery
-  default: |
-    type: template
-    template: huawei-dongle
-    usage: battery
-    # Modbus Start
-    id: 1
-    # TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End
