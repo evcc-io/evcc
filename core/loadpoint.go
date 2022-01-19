@@ -256,6 +256,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		MaxCurrent:    16,                             // A
 		SoC:           SoCConfig{Min: 0, Target: 100}, // %
 		GuardDuration: 5 * time.Minute,
+		progress:      NewProgress(0, 10), // soc progress indicator
 	}
 
 	return lp
@@ -786,7 +787,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 		lp.setVehiclePhases()
 
-		lp.progress = NewProgress(0, 10)
+		lp.progress.Reset()
 	} else {
 		lp.socEstimator = nil
 
