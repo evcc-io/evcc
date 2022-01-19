@@ -434,9 +434,8 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 }
 
 // evVehicleSoCProgressHandler sends external start event
-func (lp *LoadPoint) evVehicleSoCProgressHandler() {
-	if lp.progress.NextStep(lp.vehicleSoc) {
-		lp.publish("progress", lp.progress)
+func (lp *LoadPoint) evVehicleSoCProgressHandler(soc float64) {
+	if lp.progress.NextStep(soc) {
 		lp.pushEvent(evVehicleSoC)
 	}
 }
