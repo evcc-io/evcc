@@ -166,6 +166,9 @@ messaging:
     disconnect: # vehicle connected event
       title: Car disconnected
       msg: Car disconnected after ${connectedDuration}
+    soc: # vehicle soc update event
+      title: SoC updated
+      msg: Battery charged to ${vehicleSoC:%.0f}%
   services:
   # - type: pushover
   #   app: # app id

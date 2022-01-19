@@ -83,6 +83,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.1
+	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.9.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20220108103619-de9b2cf95ebe
