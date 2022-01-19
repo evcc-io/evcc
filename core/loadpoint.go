@@ -126,9 +126,6 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	// wakeUp
-	wakeUpTimer *ActiveTimer
-
 	chargeMeter  api.Meter     // Charger usage meter
 	vehicle      api.Vehicle   // Currently active vehicle
 	vehicles     []api.Vehicle // Assigned vehicles
