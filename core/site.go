@@ -17,7 +17,7 @@ import (
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
-	Update(availablePower float64, cheapRate bool, batteryBuffered bool)
+	Update(availablePower, constrainedMaxCurrent float64, cheapRate bool, batteryBuffered bool)
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -410,13 +410,22 @@ func (site *Site) update(lp Updater) {
 
 	// update all loadpoint's charge power
 	var totalChargePower float64
+	var activeLps int
 	for _, lp := range site.loadpoints {
 		lp.UpdateChargePower()
 		totalChargePower += lp.GetChargePower()
+		if lp.enabled {
+			activeLps++
+		}
+	}
+
+	var constrainedMaxCurrent float64
+	if activeLps > 0 {
+		constrainedMaxCurrent = site.gridMargin / float64(activeLps)
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
-		lp.Update(sitePower, cheap, site.batteryBuffered)
+		lp.Update(sitePower, constrainedMaxCurrent, cheap, site.batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower

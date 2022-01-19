@@ -1399,7 +1399,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool) {
+func (lp *LoadPoint) Update(sitePower float64, constrainedMaxCurrent float64, cheap bool, batteryBuffered bool) {
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 
