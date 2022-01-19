@@ -1470,7 +1470,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
-		// reset WakeUpCalled mode off
+		// stop waiting for wake up
 		lp.wakeUpTimer.Reset()
 
 	case lp.minSocNotReached():
