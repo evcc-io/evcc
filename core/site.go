@@ -38,6 +38,7 @@ type Site struct {
 	PrioritySoC                       float64      `mapstructure:"prioritySoC"`                       // prefer battery up to this SoC
 	BufferSoC                         float64      `mapstructure:"bufferSoC"`                         // ignore battery above this SoC
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	MaxCurrent                        float64      `mapstructure:"maxCurrent"`                        // limit currents to this value
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -49,10 +50,12 @@ type Site struct {
 	savings    *Savings       // Savings
 
 	// cached state
-	gridPower       float64 // Grid power
-	pvPower         float64 // PV power
-	batteryPower    float64 // Battery charge power
-	batteryBuffered bool    // Battery buffer active
+	gridCurrents    []float64 // Grid currents
+	gridMargin      float64   // Grid current margin to limit
+	gridPower       float64   // Grid power
+	pvPower         float64   // PV power
+	batteryPower    float64   // Battery charge power
+	batteryBuffered bool      // Battery buffer active
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -318,8 +321,14 @@ func (site *Site) updateMeters() error {
 	if phaseMeter, ok := site.gridMeter.(api.MeterCurrent); err == nil && ok {
 		i1, i2, i3, err := phaseMeter.Currents()
 		if err == nil {
+			site.gridCurrents = []float64{i1, i2, i3}
 			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
+
+			currentLoad := math.Max(math.Max(site.gridCurrents[1], site.gridCurrents[2]), site.gridCurrents[3])
+			site.gridMargin = site.MaxCurrent - currentLoad
+			site.log.DEBUG.Printf("grid margin: %.1fA @ %.1fA", site.gridMargin, site.MaxCurrent)
+			site.publish("gridMargin", site.gridMargin)
 		} else {
 			site.log.ERROR.Println(fmt.Errorf("grid meter currents: %v", err))
 		}
