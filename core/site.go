@@ -414,7 +414,7 @@ func (site *Site) update(lp Updater) {
 	for _, lp := range site.loadpoints {
 		lp.UpdateChargePower()
 		totalChargePower += lp.GetChargePower()
-		if lp.enabled {
+		if lp.enabled && lp.GetStatus() == api.StatusB || lp.GetStatus() == api.StatusC {
 			activeLps++
 		}
 	}
