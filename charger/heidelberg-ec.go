@@ -39,7 +39,6 @@ const (
 	hecRegTemperature   = 9   // Input
 	hecRegPower         = 14  // Input
 	hecRegEnergy        = 17  // Input
-	hecRegTimeout       = 257 // Holding
 	hecRegStandby       = 258 // Holding
 	hecRegRemoteLock    = 259 // Holding
 	hecRegAmpsConfig    = 261 // Holding
@@ -244,14 +243,11 @@ func (wb *HeidelbergEC) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(hecRegTemperature, 1); err == nil {
 		fmt.Printf("Temperature:\t%.1fC\n", float64(int16(binary.BigEndian.Uint16(b)))/10)
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(hecRegTimeout, 1); err == nil {
-		fmt.Printf("Timeout:\t%d\n", binary.BigEndian.Uint16(b))
-	}
 	if b, err := wb.conn.ReadHoldingRegisters(hecRegStandby, 1); err == nil {
 		fmt.Printf("Standby:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(hecRegStandby, 1); err == nil {
-		fmt.Printf("Failsafe:\t%d\n", binary.BigEndian.Uint16(b))
+	if b, err := wb.conn.ReadHoldingRegisters(hecRegRemoteLock, 1); err == nil {
+		fmt.Printf("Remote Lock:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 }
 
