@@ -29,9 +29,10 @@ type PCElectric struct {
 	slaveIndex int    // 0 = Master, 1..n Slave
 	meter      string // <CENTRAL100|CENTRAL101|INTERNAL|EXTERNAL|TWIN>
 
-	lbmode       bool  // true/false (wird automatisch bestimmt)
-	serialNumber int64 // 1234567
-	mode2        bool  // Patched Firmware
+	lastStatus   api.ChargeStatus // Letzer Status für 0x90
+	lbmode       bool             // true/false (wird automatisch bestimmt)
+	serialNumber int64            // 1234567
+	mode2        bool             // Patched Firmware
 }
 
 func init() {
@@ -79,6 +80,7 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 		uri:        uri,
 		slaveIndex: slaveIndex,
 		meter:      strings.ToUpper(meter),
+		lastStatus: api.StatusB,
 	}
 
 	// Nur Master: lb Config auslesen.
@@ -96,6 +98,7 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 		uri = fmt.Sprintf("%s/mode2/%d", wb.uri, wb.serialNumber)
 		if err := wb.GetJSON(uri, &status); err == nil {
 			wb.mode2 = true
+			log.DEBUG.Printf("Patched Firmware detected!")
 			wb.Enable(true)
 		}
 	}
@@ -156,7 +159,7 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 		if sessionStartTime > 0 {
 			res = api.StatusB
 		} else {
-			res = api.StatusF
+			res = wb.lastStatus
 		}
 	case 0x95, // dcfault
 		0x96, // dchardwarefault
@@ -180,6 +183,7 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 	default: // generalfault
 		res = api.StatusF
 	}
+	wb.lastStatus = res
 
 	return res, nil
 }
