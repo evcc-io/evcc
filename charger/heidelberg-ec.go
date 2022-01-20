@@ -20,7 +20,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -42,11 +41,10 @@ const (
 	hecRegEnergy        = 17  // Input
 	hecRegTimeout       = 257 // Holding
 	hecRegStandby       = 258 // Holding
+	hecRegRemoteLock    = 259 // Holding
 	hecRegAmpsConfig    = 261 // Holding
-	hecRegFailsafe      = 262 // Holding
 
 	hecStandbyDisabled = 4 // disable standby
-	hecFailsafeMode    = 0 // status F
 )
 
 var hecRegCurrents = []uint16{6, 7, 8}
@@ -88,12 +86,6 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, slaveID uint8) (a
 	wb := &HeidelbergEC{
 		conn:    conn,
 		current: 60, // assume min current
-	}
-
-	// fail-safe mode: status F
-	err = wb.set(hecRegFailsafe, hecFailsafeMode)
-	if err != nil {
-		return nil, err
 	}
 
 	// disable standby
@@ -267,10 +259,10 @@ func (wb *HeidelbergEC) Diagnose() {
 
 // WakeUp implements the api.AlarmClock interface
 func (wb *HeidelbergEC) WakeUp() error {
-	err := wb.set(hecRegTimeout, 1)
+	err := wb.set(hecRegRemoteLock, 0)
 	if err == nil {
-		time.Sleep(3 * time.Second)
-		err = wb.set(hecRegTimeout, 0)
+		//time.Sleep(3 * time.Second)
+		err = wb.set(hecRegRemoteLock, 1)
 	}
 	return err
 }
