@@ -419,13 +419,13 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
-	constrainedMaxCurrent := site.gridMargin
+	constrainCurrent := site.gridMargin
 	if activeLps > 0 {
-		constrainedMaxCurrent /= float64(activeLps)
+		constrainCurrent /= float64(activeLps)
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
-		lp.Update(sitePower, constrainedMaxCurrent, cheap, site.batteryBuffered)
+		lp.Update(sitePower, constrainCurrent, cheap, site.batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
