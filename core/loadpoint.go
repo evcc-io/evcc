@@ -589,7 +589,14 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 	// apply constrain current
 	if lp.ConstrainCurrent < 0 {
 		chargeCurrent += lp.ConstrainCurrent
-		// TODO: make sure to switch off immediately if required
+
+		// make sure to disable immediately if required
+		force = true
+	} else {
+		// make sure to enable only if free "current capacity" >= chargeCurrent
+		if !lp.enabled && lp.ConstrainCurrent < chargeCurrent {
+			chargeCurrent = 0
+		}
 	}
 
 	// set current
