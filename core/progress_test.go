@@ -28,10 +28,6 @@ func TestProgress(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		if tc.value >= 25 {
-			t.Log(tc)
-
-		}
 		require.Equal(t, tc.res, p.NextStep(tc.value), fmt.Sprintf("%.0f%%", tc.value))
 	}
 }
