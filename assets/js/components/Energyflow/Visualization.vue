@@ -6,10 +6,10 @@
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
-					<BatteryIcon :soc="batterySoC" discharge />
+					<BatteryIcon :soc="batterySoC" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
-					<GridIcon import />
+					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
 			</div>
 		</div>
@@ -60,10 +60,10 @@
 					<shopicon-regular-car3></shopicon-regular-car3>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoC" charge />
+					<BatteryIcon :soc="batterySoC" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
-					<GridIcon export />
+					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
 			</div>
 		</div>
@@ -74,7 +74,6 @@
 import "../../icons";
 import formatter from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
-import GridIcon from "./GridIcon.vue";
 import LabelBar from "./LabelBar.vue";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/sun";
@@ -82,7 +81,7 @@ import "@h2d2/shopicons/es/regular/home";
 
 export default {
 	name: "Visualization",
-	components: { BatteryIcon, LabelBar, GridIcon },
+	components: { BatteryIcon, LabelBar },
 	mixins: [formatter],
 	props: {
 		gridImport: { type: Number, default: 0 },
@@ -101,7 +100,7 @@ export default {
 	},
 	computed: {
 		gridExport: function () {
-			return this.pvExport;
+			return this.applyThreshold(this.pvExport);
 		},
 		totalRaw: function () {
 			return this.gridImport + this.selfConsumption + this.pvExport;
@@ -170,38 +169,13 @@ export default {
 		updateElementWidth() {
 			this.width = this.$refs.site_progress.getBoundingClientRect().width;
 		},
-		isLabelFirst(position, name) {
-			return this.isLabel(position, name, false);
-		},
-		isLabelLast(position, name) {
-			return this.isLabel(position, name, true);
-		},
-		isLabel(position, name, last) {
-			const labels = {
-				top: ["pvProduction", "batteryDischarge", "gridImport"],
-				bottom: ["homePower", "loadpoints", "batteryCharge", "gridExport"],
-			};
-			const entries = [...labels[position]];
-			if (last) {
-				entries.reverse();
-			}
-			for (let i = 0; i < entries.length; i++) {
-				const entry = entries[i];
-				if (this[entry] > 0) {
-					return entry === name;
-				}
-			}
-			return false;
-		},
 		labelBarProps(position, name) {
 			const value = this[name];
-			const minWidth = name.startsWith("battery") || name.startsWith("grid") ? 44 : 32;
+			const minWidth = 40;
 			return {
 				value,
 				hideIcon: this.hideLabelIcon(value, minWidth),
 				style: { width: this.widthTotal(value) },
-				first: this.isLabelFirst(position, name),
-				last: this.isLabelLast(position, name),
 				[position]: true,
 			};
 		},

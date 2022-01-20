@@ -64,23 +64,6 @@ export default {
 	border-bottom-right-radius: 10px;
 	border-top: none;
 }
-/*
-.label-bar--top.label-bar--first .label-bar-scale {
-	border-top-left-radius: 10px;
-}
-.label-bar--top.label-bar--last .label-bar-scale {
-	border-top-right-radius: 10px;
-}
-.label-bar--bottom.label-bar--first .label-bar-scale {
-	border-bottom-left-radius: 10px;
-}
-.label-bar--bottom.label-bar--last .label-bar-scale {
-	border-bottom-right-radius: 10px;
-}
-*/
-.label-bar:not(.label-bar--first) .label-bar-scale {
-	border-left: none;
-}
 .label-bar-icon {
 	background-color: white;
 	color: var(--bs-gray);
