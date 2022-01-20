@@ -1,7 +1,7 @@
 <template>
-	<div class="row energyflow pb-4">
+	<div class="row energyflow">
 		<Visualization
-			class="col-12"
+			class="col-12 mb-3"
 			:gridImport="gridImport"
 			:selfConsumption="selfConsumption"
 			:loadpoints="loadpointsPower"
@@ -13,7 +13,7 @@
 			:batterySoC="batterySoC"
 			:valuesInKw="valuesInKw"
 		/>
-		<div class="col-12 d-flex justify-content-between mb-4">
+		<div class="col-12 d-flex justify-content-between mb-5">
 			<div class="d-flex flex-nowrap">
 				<span class="color-self me-2"><fa-icon icon="square"></fa-icon></span>
 				<span>{{ $t("main.energyflow.selfConsumption") }}</span>
@@ -27,8 +27,11 @@
 				<span class="color-export ms-2"><fa-icon icon="square"></fa-icon></span>
 			</div>
 		</div>
-		<div class="col-6">
-			<h4>In</h4>
+		<div class="col-12 col-md-6 pe-lg-5 mb-4">
+			<div class="d-flex justify-content-between align-items-end mb-4">
+				<h4 class="fw-bold m-0">In</h4>
+				<span class="fw-bold text-muted">23,2 kW</span>
+			</div>
 			<EnergyflowEntry
 				:name="$t('main.energyflow.pvProduction')"
 				icon="sun"
@@ -53,8 +56,11 @@
 				type="source"
 			/>
 		</div>
-		<div class="col-6">
-			<h4>Out</h4>
+		<div class="col-12 col-md-6 ps-lg-5 mb-4">
+			<div class="d-flex justify-content-between align-items-end mb-4">
+				<h4 class="fw-bold m-0">Out</h4>
+				<span class="fw-bold text-muted">23,2 kW</span>
+			</div>
 			<EnergyflowEntry
 				:name="$t('main.energyflow.homePower')"
 				icon="home"

@@ -1,19 +1,21 @@
 <template>
-	<div class="d-flex justify-content-between">
-		<span class="d-flex text-muted flex-nowrap">
+	<div class="d-flex justify-content-between mb-2">
+		<span class="d-flex flex-nowrap">
 			<shopicon-regular-angledoublerightsmall
 				v-if="!isSource"
-				:class="arrowClasses"
+				class="arrow"
+				:class="{ 'arrow--active': active }"
 			></shopicon-regular-angledoublerightsmall>
 			<BatteryIcon v-if="isBattery" :soc="soc" />
 			<component :is="`shopicon-regular-${icon}`" v-else></component>
 			<shopicon-regular-angledoublerightsmall
 				v-if="isSource"
-				:class="arrowClasses"
+				class="arrow"
+				:class="{ 'arrow--active': active }"
 			></shopicon-regular-angledoublerightsmall>
 		</span>
 		<span class="text-nowrap flex-grow-1 ms-3">{{ name }}</span>
-		<span class="text-end text-nowrap ps-1"
+		<span class="text-end text-nowrap ps-1 fw-bold"
 			><span v-if="hasSoC">{{ soc }}% / </span>{{ kw(power) }}</span
 		>
 	</div>
@@ -53,9 +55,6 @@ export default {
 		hasSoC: function () {
 			return this.isBattery && !isNaN(this.soc);
 		},
-		arrowClasses: function () {
-			return { arrow: true, "opacity-0": !this.active };
-		},
 	},
 	methods: {
 		kw: function (watt) {
@@ -66,7 +65,15 @@ export default {
 </script>
 <style scoped>
 .arrow {
-	opacity: 100%;
-	transition: opacity 1s ease-in;
+	opacity: 0;
+	transform: translateX(-20%);
+	transition-property: opacity, transform;
+	transition-duration: 0.75s, 5s;
+	transition-timing-function: ease-in;
+}
+.arrow--active {
+	opacity: 1;
+	transform: translateX(0);
+	transition-duration: 0.75s, 0.5s;
 }
 </style>

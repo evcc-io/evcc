@@ -44,7 +44,7 @@ export default {
 	opacity: 0;
 }
 .label-bar-scale {
-	border: 1px solid var(--bs-gray);
+	border: 1px solid var(--bs-gray-dark);
 	height: 1rem;
 	background: none;
 	display: flex;
@@ -66,7 +66,7 @@ export default {
 }
 .label-bar-icon {
 	background-color: white;
-	color: var(--bs-gray);
+	color: var(--bs-gray-dark);
 	padding: 0 0.3rem;
 	opacity: 1;
 }

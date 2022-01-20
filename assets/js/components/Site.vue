@@ -1,7 +1,7 @@
 <template>
 	<div class="flex-grow-1 d-flex flex-column">
 		<div ref="upper" class="container" @click="toggleDetails">
-			<h3 class="d-none d-md-block my-4">
+			<h3 class="d-block my-4">
 				{{ siteTitle || "Home" }}
 			</h3>
 			<Energyflow v-bind="energyflow" />
@@ -66,7 +66,7 @@ export default {
 	},
 	computed: {
 		dragTopMargin: function () {
-			const visualizationHeight = 210;
+			const visualizationHeight = 175;
 			const min = -1 * this.upperHeight + visualizationHeight;
 			const max = 0;
 			return this.positionUp ? min : max;
