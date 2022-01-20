@@ -42,6 +42,15 @@ type StatusResponse struct {
 	Timestamp TimeMillis
 }
 
+type LocationResponse struct {
+	TimeStamp        TimeMillis
+	Longitude        float64
+	Latitude         float64
+	Altitude         float64
+	Bearing          float64
+	IsLocationApprox bool
+}
+
 type ActionResponse struct {
 	Name, Message string
 
