@@ -136,7 +136,7 @@ func (wb *Vestel) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	u := uint16(10 * current)
+	u := uint16(current)
 	_, err := wb.conn.WriteSingleRegister(vestelRegMaxCurrent, u)
 	if err == nil {
 		wb.current = u
@@ -200,12 +200,12 @@ var _ api.MeterCurrent = (*Vestel)(nil)
 func (wb *Vestel) Currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range vestelRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
+		b, err := wb.conn.ReadInputRegisters(regCurrent, 1)
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, float64(binary.BigEndian.Uint32(b))/1e3)
+		currents = append(currents, float64(binary.BigEndian.Uint16(b))/1e3)
 	}
 
 	return currents[0], currents[1], currents[2], nil
