@@ -1450,6 +1450,11 @@ func (lp *LoadPoint) Update(sitePower float64, constrainedMaxCurrent float64, ch
 	// reset detection if soc timer needs be deactivated after evaluating the loading strategy
 	lp.socTimer.MustValidateDemand()
 
+	// apply only limiting (=negative) current constraints
+	if constrainedMaxCurrent > 0 {
+		constrainedMaxCurrent = 0
+	}
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -1478,21 +1483,21 @@ func (lp *LoadPoint) Update(sitePower float64, constrainedMaxCurrent float64, ch
 	case lp.minSocNotReached():
 		// 3p if available
 		if err = lp.scalePhasesIfAvailable(3); err == nil {
-			err = lp.setLimit(lp.GetMaxCurrent(), true)
+			err = lp.setLimit(lp.GetMaxCurrent()+constrainedMaxCurrent, true)
 		}
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeNow:
 		// 3p if available
 		if err = lp.scalePhasesIfAvailable(3); err == nil {
-			err = lp.setLimit(lp.GetMaxCurrent(), true)
+			err = lp.setLimit(lp.GetMaxCurrent()+constrainedMaxCurrent, true)
 		}
 
 	// target charging
 	case lp.socTimer.DemandActive():
 		// 3p if available
 		if err = lp.scalePhasesIfAvailable(3); err == nil {
-			targetCurrent := lp.socTimer.Handle()
+			targetCurrent := lp.socTimer.Handle() + constrainedMaxCurrent
 			err = lp.setLimit(targetCurrent, true)
 		}
 
@@ -1508,7 +1513,7 @@ func (lp *LoadPoint) Update(sitePower float64, constrainedMaxCurrent float64, ch
 
 		// tariff
 		if cheap {
-			targetCurrent = lp.GetMaxCurrent()
+			targetCurrent = lp.GetMaxCurrent() + constrainedMaxCurrent
 			lp.log.DEBUG.Printf("cheap tariff: %.3gA", targetCurrent)
 			required = true
 		}

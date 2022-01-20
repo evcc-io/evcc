@@ -419,9 +419,9 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
-	var constrainedMaxCurrent float64
+	constrainedMaxCurrent := site.gridMargin
 	if activeLps > 0 {
-		constrainedMaxCurrent = site.gridMargin / float64(activeLps)
+		constrainedMaxCurrent /= float64(activeLps)
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
