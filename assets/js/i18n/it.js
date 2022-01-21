@@ -72,8 +72,8 @@ export default {
       mincharge: "carica minima fino a {soc}%",
     },
     provider: {
-      login: "Accedere",
-      logout: "Disconnettersi",
+      login: "accedere",
+      logout: "disconnettersi",
     },
     loadpointDetails: {
       power: "Potenza",

@@ -45,13 +45,14 @@
 											type="button"
 											@click="handleProviderAuthorization(login)"
 										>
-											{{ login.title }} ({{
+											{{ login.title }}
+											{{
 												$t(
 													login.loggedIn
 														? "main.provider.logout"
 														: "main.provider.login"
 												)
-											}})
+											}}
 										</button>
 									</li>
 								</ul>

@@ -94,8 +94,8 @@ export default {
       mincharge: "minimum charging to {soc}%",
     },
     provider: {
-      login: "Login",
-      logout: "Logout",
+      login: "login",
+      logout: "logout",
     },
     targetCharge: {
       inactiveLabel: "Target time",

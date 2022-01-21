@@ -95,8 +95,8 @@ export default {
       mincharge: "Mindestladung bis {soc}%",
     },
     provider: {
-      login: "Anmelden",
-      logout: "Abmelden",
+      login: "anmelden",
+      logout: "abmelden",
     },
     targetCharge: {
       inactiveLabel: "Zielzeit",
