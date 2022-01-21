@@ -14,24 +14,18 @@ func TestTimer(t *testing.T) {
 	clck := clock.NewMock()
 	at.clck = clck
 
+	// start
+	at.Start()
+	clck.Add(20 * time.Second)
+	require.Equal(t, at.Expired(), false)
+
+	// wait another 20 sec to expire the timer - this will reset the timer as well
+	clck.Add(20 * time.Second)
+	require.Equal(t, at.Expired(), true)
+
+	// start
 	at.Start()
 	clck.Add(time.Minute)
-	at.Reset()
-	clck.Add(time.Minute)
+	require.Equal(t, at.Expired(), true)
 
-	require.Equal(t, time.Duration(0), at.lastduration)
-
-	// continue
-	at.Start()
-	clck.Add(2 * time.Minute)
-	at.Stop()
-
-	require.Equal(t, time.Duration(2*time.Minute), at.lastduration)
-
-	// continue - should do nothing as the timer was started allready
-	at.Start()
-	clck.Add(1 * time.Minute)
-	at.Stop()
-
-	require.Equal(t, time.Duration(2*time.Minute), at.lastduration)
 }

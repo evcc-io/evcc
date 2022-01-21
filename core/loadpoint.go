@@ -327,11 +327,7 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	}
 
 	// add wakeup timer
-	wt := NewTimer()
-	_ = lp.bus.Subscribe(evVehicleConnect, func() { wt.Reset() })
-	_ = lp.bus.Subscribe(evChargeStart, func() { wt.Reset() })
-	_ = lp.bus.Subscribe(evChargeStop, func() { wt.Reset() })
-	lp.wakeUpTimer = wt
+	lp.wakeUpTimer = NewTimer()
 }
 
 // pushEvent sends push messages to clients
@@ -350,6 +346,10 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.pushEvent(evChargeStart)
+
+	// stop wakupTimer
+	lp.log.DEBUG.Printf("wakeuptimer: stop - charging")
+	lp.wakeUpTimer.Stop()
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -620,8 +620,14 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
-		// start vehicle wakeup countdown
-		lp.wakeUpTimer.Start()
+		// start/stop vehicle wakeup countdown
+		if enabled {
+			lp.log.DEBUG.Printf("wakeuptimer: start")
+			lp.wakeUpTimer.Start()
+		} else {
+			lp.log.DEBUG.Printf("wakeuptimer: stop")
+			lp.wakeUpTimer.Stop()
+		}
 
 		// wake up vehicle
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
@@ -1486,8 +1492,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
-		// stop waiting for wake up
-		lp.wakeUpTimer.Reset()
 
 	case lp.minSocNotReached():
 		// 3p if available
@@ -1540,6 +1544,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	// WakeUp checks
 	if lp.enabled && lp.status == api.StatusB &&
 		lp.vehicle != nil && lp.vehicleSoc < 100 && lp.wakeUpTimer.Expired() {
+		lp.log.DEBUG.Printf("wakeuptimer: expired")
 		lp.wakeUpVehicle()
 	}
 

@@ -12,9 +12,8 @@ const wakeupWaitTime = 30 * time.Second
 // Timer measures active time between start and stop events
 type Timer struct {
 	sync.Mutex
-	clck         clock.Clock
-	started      time.Time
-	lastduration time.Duration
+	clck    clock.Clock
+	started time.Time
 }
 
 // NewTimer creates timer that can expire
@@ -29,7 +28,7 @@ func (m *Timer) Start() {
 	m.Lock()
 	defer m.Unlock()
 
-	if !m.started.IsZero() || m.lastduration > 0 {
+	if !m.started.IsZero() {
 		return
 	}
 
@@ -37,19 +36,6 @@ func (m *Timer) Start() {
 }
 
 // Reset resets the timer
-func (m *Timer) Reset() {
-	m.Lock()
-	defer m.Unlock()
-
-	if m.started.IsZero() && m.lastduration == 0 {
-		return
-	}
-
-	m.lastduration = 0
-	m.started = time.Time{}
-}
-
-// Stop stops the timer and save the duration
 func (m *Timer) Stop() {
 	m.Lock()
 	defer m.Unlock()
@@ -58,7 +44,6 @@ func (m *Timer) Stop() {
 		return
 	}
 
-	m.lastduration = m.clck.Since(m.started)
 	m.started = time.Time{}
 }
 
@@ -70,7 +55,7 @@ func (m *Timer) Expired() bool {
 
 	res := m.clck.Since(m.started) >= wakeupWaitTime
 	if res {
-		m.Stop()
+		m.started = time.Time{}
 	}
 
 	return res
