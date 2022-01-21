@@ -143,4 +143,6 @@ func (v *Provider) Position() (float64, float64, error) {
 var _ api.AlarmClock = (*Provider)(nil)
 
 // WakeUp implements the api.AlarmClock interface
-func (v *Provider) WakeUp() error { return v.wakeup() }
+func (v *Provider) WakeUp() error {
+	return v.wakeup()
+}

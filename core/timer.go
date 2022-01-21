@@ -7,7 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-const wakeupWaitTime = 30 * time.Second
+const wakeupTimeout = 30 * time.Second
 
 // Timer measures active time between start and stop events
 type Timer struct {
@@ -49,11 +49,14 @@ func (m *Timer) Stop() {
 
 // Expired checks if the timer has elapsed and if resets its status
 func (m *Timer) Expired() bool {
+	m.Lock()
+	defer m.Unlock()
+
 	if m.started.IsZero() {
 		return false
 	}
 
-	res := m.clck.Since(m.started) >= wakeupWaitTime
+	res := m.clck.Since(m.started) >= wakeupTimeout
 	if res {
 		m.started = time.Time{}
 	}

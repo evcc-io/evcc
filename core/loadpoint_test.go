@@ -142,7 +142,6 @@ func TestUpdatePowerZero(t *testing.T) {
 		clck := clock.NewMock()
 		ctrl := gomock.NewController(t)
 		charger := mock.NewMockCharger(ctrl)
-		wakeupTimer := NewTimer()
 
 		lp := &LoadPoint{
 			log:         util.NewLogger("foo"),
@@ -152,7 +151,7 @@ func TestUpdatePowerZero(t *testing.T) {
 			chargeMeter: &Null{}, // silence nil panics
 			chargeRater: &Null{}, // silence nil panics
 			chargeTimer: &Null{}, // silence nil panics
-			wakeUpTimer: wakeupTimer,
+			wakeUpTimer: NewTimer(),
 			MinCurrent:  minA,
 			MaxCurrent:  maxA,
 			Phases:      1,
@@ -371,7 +370,6 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
 	vehicle := mock.NewMockVehicle(ctrl)
-	wakeupTimer := NewTimer()
 
 	// wrap vehicle with estimator
 	vehicle.EXPECT().Capacity().Return(int64(10))
@@ -386,7 +384,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		chargeRater:  &Null{},            // silence nil panics
 		chargeTimer:  &Null{},            // silence nil panics
 		progress:     NewProgress(0, 10), // silence nil panics
-		wakeUpTimer:  wakeupTimer,        // silence nil panics
+		wakeUpTimer:  NewTimer(),         // silence nil panics
 		MinCurrent:   minA,
 		MaxCurrent:   maxA,
 		vehicle:      vehicle,      // needed for targetSoC check
@@ -449,7 +447,6 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
-	wakeupTimer := NewTimer()
 
 	lp := &LoadPoint{
 		log:         util.NewLogger("foo"),
@@ -459,7 +456,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		chargeMeter: &Null{}, // silence nil panics
 		chargeRater: &Null{}, // silence nil panics
 		chargeTimer: &Null{}, // silence nil panics
-		wakeUpTimer: wakeupTimer,
+		wakeUpTimer: NewTimer(),
 		MinCurrent:  minA,
 		MaxCurrent:  maxA,
 		status:      api.StatusC,
@@ -522,7 +519,6 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
 	rater := mock.NewMockChargeRater(ctrl)
-	wakeupTimer := NewTimer()
 
 	lp := &LoadPoint{
 		log:         util.NewLogger("foo"),
@@ -532,7 +528,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		chargeMeter: &Null{}, // silence nil panics
 		chargeRater: rater,
 		chargeTimer: &Null{}, // silence nil panics
-		wakeUpTimer: wakeupTimer,
+		wakeUpTimer: NewTimer(),
 		MinCurrent:  minA,
 		MaxCurrent:  maxA,
 		status:      api.StatusC,
