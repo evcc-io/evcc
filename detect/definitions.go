@@ -154,20 +154,6 @@ func init() {
 		},
 	})
 
-	// TODO fix logic
-	taskList.Add(tasks.Task{
-		ID:      taskVestel,
-		Type:    tasks.Modbus,
-		Depends: TaskModbus,
-		Config: map[string]interface{}{
-			"ids":     []int{255},
-			"address": 1001,
-			"type":    "input",
-			"decode":  "uint16",
-			"values":  chargeStatus,
-		},
-	})
-
 	taskList.Add(tasks.Task{
 		ID:      taskPhoenixEMEth,
 		Type:    tasks.Modbus,
