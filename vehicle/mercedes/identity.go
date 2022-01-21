@@ -42,7 +42,7 @@ func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}
 	var err error
 	provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
 	if err != nil {
-		return nil, fmt.Errorf("failed to inizialize OIDC provider: %s", err)
+		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
 	}
 
 	v := &Identity{

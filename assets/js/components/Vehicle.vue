@@ -1,9 +1,7 @@
 <template>
 	<div>
 		<div class="mb-3">
-			<div>
-				{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
-			</div>
+			{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
 		</div>
 		<VehicleSoc v-bind="vehicleSocProps" @target-soc-updated="targetSocUpdated" />
 		<VehicleSubline
