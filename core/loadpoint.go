@@ -31,6 +31,7 @@ const (
 	evChargePower       = "power"      // update chargeRater
 	evVehicleConnect    = "connect"    // vehicle connected
 	evVehicleDisconnect = "disconnect" // vehicle disconnected
+	evVehicleSoC        = "soc"        // vehicle soc progress
 
 	pvTimer   = "pv"
 	pvEnable  = "enable"
@@ -148,6 +149,7 @@ type LoadPoint struct {
 	chargedEnergy           float64       // Charged energy while connected in Wh
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
+	progress                *Progress     // Step-wise progress indicator
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -255,6 +257,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		MaxCurrent:    16,                             // A
 		SoC:           SoCConfig{Min: 0, Target: 100}, // %
 		GuardDuration: 5 * time.Minute,
+		progress:      NewProgress(0, 10), // soc progress indicator
 	}
 
 	return lp
@@ -437,6 +440,13 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.socTimer.Reset()
 }
 
+// evVehicleSoCProgressHandler sends external start event
+func (lp *LoadPoint) evVehicleSoCProgressHandler(soc float64) {
+	if lp.progress.NextStep(soc) {
+		lp.pushEvent(evVehicleSoC)
+	}
+}
+
 // evChargeCurrentHandler publishes the charge current
 func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
 	if !lp.enabled {
@@ -501,6 +511,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evVehicleConnect, lp.evVehicleConnectHandler)
 	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
 	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
+	_ = lp.bus.Subscribe(evVehicleSoC, lp.evVehicleSoCProgressHandler)
 
 	// publish initial values
 	lp.publish("title", lp.Title)
@@ -784,6 +795,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.applyAction(vehicle.OnIdentified())
 
 		lp.setVehiclePhases()
+
+		lp.progress.Reset()
 	} else {
 		lp.socEstimator = nil
 
@@ -1381,6 +1394,9 @@ func (lp *LoadPoint) publishSoCAndRange() {
 					lp.publish("vehicleOdometer", odo)
 				}
 			}
+
+			// trigger message after variables are updated
+			lp.bus.Publish(evVehicleSoC, f)
 		} else {
 			if errors.Is(err, api.ErrMustRetry) {
 				lp.socUpdated = time.Time{}

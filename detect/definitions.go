@@ -28,6 +28,7 @@ const (
 	taskSonnen       = "sonnen"
 	taskPowerwall    = "powerwall"
 	taskWallbe       = "wallbe"
+	taskVestel       = "vestel"
 	taskPhoenixEMEth = "phx-em-eth"
 	taskPhoenixEVEth = "phx-ev-eth"
 	taskEVSEWifi     = "evsewifi"
