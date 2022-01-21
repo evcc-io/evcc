@@ -60,39 +60,18 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	// timeout handler
-	timer := provider.NewMqtt(log, client,
+	to := provider.NewTimeoutHandler(provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/system/%s", topic, openwb.TimestampTopic), 1, timeout,
-	).IntGetter()
+	).StringGetter())
 
-	// getters
 	boolG := func(topic string) func() (bool, error) {
 		g := provider.NewMqtt(log, client, topic, 1, 0).BoolGetter()
-		return func() (val bool, err error) {
-			if val, err = g(); err == nil {
-				_, err = timer()
-			}
-			return val, err
-		}
+		return to.BoolGetter(g)
 	}
-
-	// intG := func(topic string) func() (int64, error) {
-	// 	g := provider.NewMqtt(log, client, topic, 1, 0).IntGetter()
-	// 	return func() (val int64, err error) {
-	// 		if val, err = g(); err == nil {
-	// 			_, err = timer()
-	// 		}
-	// 		return val, err
-	// 	}
-	// }
 
 	floatG := func(topic string) func() (float64, error) {
 		g := provider.NewMqtt(log, client, topic, 1, 0).FloatGetter()
-		return func() (val float64, err error) {
-			if val, err = g(); err == nil {
-				_, err = timer()
-			}
-			return val, err
-		}
+		return to.FloatGetter(g)
 	}
 
 	// check if loadpoint configured

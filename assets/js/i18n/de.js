@@ -1,5 +1,10 @@
 export default {
-  header: { docs: "Dokumentation", blog: "Blog", github: "GitHub" },
+  header: {
+    docs: "Dokumentation",
+    blog: "Blog",
+    github: "GitHub",
+    login: "Anmeldungen",
+  },
   footer: {
     version: {
       versionShort: "v{installed}",
@@ -88,6 +93,10 @@ export default {
     },
     vehicleSubline: {
       mincharge: "Mindestladung bis {soc}%",
+    },
+    provider: {
+      login: "anmelden",
+      logout: "abmelden",
     },
     targetCharge: {
       inactiveLabel: "Zielzeit",

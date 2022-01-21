@@ -2,14 +2,16 @@ package api
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/fatih/structs"
+	"github.com/gorilla/mux"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,VehiclePhases,ChargeRater,Battery
 
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
@@ -170,6 +172,11 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
+// VehiclePhases returns the number of supported phases
+type VehiclePhases interface {
+	Phases() int
+}
+
 // VehicleStartCharge starts the charging session on the vehicle side
 type VehicleStartCharge interface {
 	StartCharge() error
@@ -183,4 +190,31 @@ type VehicleStopCharge interface {
 type Tariff interface {
 	IsCheap() (bool, error)
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
+}
+
+type WebController interface {
+	WebControl(*mux.Router)
+}
+
+type Callback struct {
+	Path    string
+	Handler RedirectHandlerFunc
+}
+
+// RedirectHandlerFunc should return an http.HandlerFunc responding with an http.Redirect(..., redirectURi, ...)
+type RedirectHandlerFunc func(redirectURI string) http.HandlerFunc
+type ProviderLogin interface {
+	SetBasePath(basePath string)
+
+	// Provides ....
+	Callback() Callback
+	SetOAuthCallbackURI(uri string)
+
+	LoggedIn() bool
+
+	LoginPath() string
+	LoginHandler() http.HandlerFunc
+
+	LogoutPath() string
+	LogoutHandler() http.HandlerFunc
 }
