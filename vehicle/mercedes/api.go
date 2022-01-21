@@ -23,7 +23,7 @@ type API struct {
 	api.ProviderLogin
 
 	updatedC chan struct{}
-	lock     sync.Mutex
+	mu       sync.Mutex
 }
 
 // NewAPI creates a new api client
@@ -33,7 +33,6 @@ func NewAPI(log *util.Logger, identity *Identity, updatedC chan struct{}) *API {
 		ProviderLogin: identity,
 
 		updatedC: updatedC,
-		lock:     sync.Mutex{},
 	}
 
 	// authenticated http client with logging injected to the Mercedes client
@@ -41,12 +40,12 @@ func NewAPI(log *util.Logger, identity *Identity, updatedC chan struct{}) *API {
 		for range v.updatedC {
 			log.TRACE.Println("update api client")
 
-			v.lock.Lock()
+			v.mu.Lock()
 
 			ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
 			v.Client = identity.AuthConfig.Client(ctx, identity.Token())
 
-			v.lock.Unlock()
+			v.mu.Unlock()
 
 			// TODO: hacky resetting all caches.
 			provider.ResetCached()
@@ -69,8 +68,8 @@ func (v *API) SoC(vin string) (EVResponse, error) {
 	var res EVResponse
 	uri := fmt.Sprintf("%s/vehicles/%s/resources/soc", BaseURI, vin)
 
-	v.lock.Lock()
-	defer v.lock.Unlock()
+	v.mu.Lock()
+	defer v.mu.Unlock()
 
 	err := v.GetJSON(uri, &res)
 
@@ -86,8 +85,8 @@ func (v *API) Range(vin string) (EVResponse, error) {
 	var res EVResponse
 	uri := fmt.Sprintf("%s/vehicles/%s/resources/rangeelectric", BaseURI, vin)
 
-	v.lock.Lock()
-	defer v.lock.Unlock()
+	v.mu.Lock()
+	defer v.mu.Unlock()
 
 	err := v.GetJSON(uri, &res)
 

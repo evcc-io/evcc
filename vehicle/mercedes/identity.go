@@ -139,6 +139,8 @@ func (v *Identity) LogoutPath() string {
 func (v *Identity) redirectHandler() api.RedirectHandlerFunc {
 	return func(redirectURI string) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
+			v.log.TRACE.Println("callback request retrieved")
+
 			data, err := url.ParseQuery(r.URL.RawQuery)
 			if err != nil {
 				fmt.Fprintln(w, "invalid response:", data)

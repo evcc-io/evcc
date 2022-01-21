@@ -3,27 +3,6 @@
 		<div class="mb-3">
 			<div>
 				{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
-				<span v-if="showLogin">
-					<span v-if="!vehicleProviderLoggedIn">
-						<button
-							v-if="!vehicleProviderLoggedIn"
-							type="button"
-							class="btn btn-outline-success btn-sm"
-							@click="providerLogin"
-						>
-							{{ $t("main.provider.login") }}
-						</button>
-					</span>
-					<span v-else>
-						<button
-							type="button"
-							class="btn btn-outline-danger btn-sm"
-							@click="providerLogout"
-						>
-							{{ $t("main.provider.logout") }}
-						</button>
-					</span>
-				</span>
 			</div>
 		</div>
 		<VehicleSoc v-bind="vehicleSocProps" @target-soc-updated="targetSocUpdated" />
@@ -38,8 +17,6 @@
 
 <script>
 import collector from "../mixins/collector";
-
-import authAPI from "../authapi";
 
 import VehicleSoc from "./VehicleSoc";
 import VehicleSubline from "./VehicleSubline";
@@ -61,9 +38,6 @@ export default {
 		targetTimeHourSuggestion: Number,
 		targetTime: String,
 		targetSoC: Number,
-		vehicleProviderLoggedIn: Boolean,
-		vehicleProviderLoginPath: String,
-		vehicleProviderLogoutPath: String,
 	},
 	computed: {
 		vehicleSocProps: function () {
@@ -71,9 +45,6 @@ export default {
 		},
 		vehicleSubline: function () {
 			return this.collectProps(VehicleSubline);
-		},
-		showLogin: function () {
-			return this.vehicleProviderLoginPath && this.vehicleProviderLogoutPath;
 		},
 	},
 	methods: {
@@ -85,14 +56,6 @@ export default {
 		},
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
-		},
-		providerLogin: async function () {
-			authAPI.post(this.vehicleProviderLoginPath).then(function (response) {
-				window.location.href = response.data.loginUri;
-			});
-		},
-		providerLogout: async function () {
-			authAPI.post(this.vehicleProviderLogoutPath);
 		},
 	},
 };

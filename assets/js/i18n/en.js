@@ -1,5 +1,10 @@
 export default {
-  header: { docs: "Documentation", blog: "Blog", github: "GitHub" },
+  header: {
+    docs: "Documentation",
+    blog: "Blog",
+    github: "GitHub",
+    login: "Logins",
+  },
   footer: {
     version: {
       versionShort: "v{installed}",

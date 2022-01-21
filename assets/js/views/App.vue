@@ -22,6 +22,40 @@
 					</div>
 					<div id="navbarNavAltMarkup" class="collapse navbar-collapse flex-grow-0">
 						<ul class="navbar-nav">
+							<li v-if="providerLogins.length > 0" class="nav-item dropdown">
+								<a
+									class="nav-link dropdown-toggle"
+									data-bs-toggle="dropdown"
+									href="#"
+									role="button"
+									aria-expanded="false"
+									>{{ $t("header.login") }}
+									<span v-if="logoutCount > 0" class="badge bg-secondary">{{
+										logoutCount
+									}}</span>
+								</a>
+								<ul class="dropdown-menu">
+									<li
+										v-for="login in providerLogins"
+										:key="login.title"
+										class="dropdown-item"
+									>
+										<button
+											class="dropdown-item"
+											type="button"
+											@click="handleProviderAuthorization(login)"
+										>
+											{{ login.title }} ({{
+												$t(
+													login.loggedIn
+														? "main.provider.logout"
+														: "main.provider.login"
+												)
+											}})
+										</button>
+									</li>
+								</ul>
+							</li>
 							<li class="nav-item">
 								<a
 									class="nav-link"
@@ -69,6 +103,8 @@ import Notifications from "../components/Notifications";
 
 import store from "../store";
 
+import authAPI from "../authapi";
+
 export default {
 	name: "App",
 	components: { Logo, Footer, Notifications },
@@ -113,6 +149,40 @@ export default {
 				feedInPrice: this.store.state.tariffFeedIn,
 				currency: this.store.state.currency,
 			};
+		},
+		logoutCount() {
+			let count = 0;
+
+			this.providerLogins.forEach(function (login) {
+				if (!login.loggedIn) {
+					count++;
+				}
+			});
+
+			return count;
+		},
+		providerLogins() {
+			let providerlogins = [];
+			this.store.state.loadpoints.forEach(function (lp) {
+				if (lp.vehicleProviderLoginPath && lp.vehicleProviderLogoutPath) {
+					console.log(
+						"Vehicle: " +
+							lp.vehicleTitle +
+							": " +
+							lp.vehicleProviderLoginPath +
+							" -> " +
+							lp.vehicleProviderLogoutPath
+					);
+					providerlogins.push({
+						title: lp.vehicleTitle,
+						loggedIn: lp.vehicleProviderLoggedIn,
+						loginPath: lp.vehicleProviderLoginPath,
+						logoutPath: lp.vehicleProviderLogoutPath,
+					});
+				}
+			});
+
+			return providerlogins;
 		},
 	},
 	created: function () {
@@ -159,6 +229,15 @@ export default {
 		},
 		reload() {
 			window.location.reload();
+		},
+		handleProviderAuthorization: async function (provider) {
+			if (provider.loggedIn) {
+				authAPI.post(provider.loginPath).then(function (response) {
+					window.location.href = response.data.loginUri;
+				});
+			} else {
+				authAPI.post(provider.logoutPath);
+			}
 		},
 	},
 	metaInfo() {
