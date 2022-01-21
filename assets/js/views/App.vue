@@ -211,7 +211,7 @@ export default {
 			window.location.reload();
 		},
 		handleProviderAuthorization: async function (provider) {
-			if (provider.loggedIn) {
+			if (!provider.loggedIn) {
 				authAPI.post(provider.loginPath).then(function (response) {
 					window.location.href = response.data.loginUri;
 				});
