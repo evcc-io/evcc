@@ -28,7 +28,6 @@ const (
 	taskSonnen       = "sonnen"
 	taskPowerwall    = "powerwall"
 	taskWallbe       = "wallbe"
-	taskVestel       = "vestel"
 	taskPhoenixEMEth = "phx-em-eth"
 	taskPhoenixEVEth = "phx-ev-eth"
 	taskEVSEWifi     = "evsewifi"
@@ -148,20 +147,6 @@ func init() {
 		Config: map[string]interface{}{
 			"ids":     []int{255},
 			"address": 100,
-			"type":    "input",
-			"decode":  "uint16",
-			"values":  chargeStatus,
-		},
-	})
-
-	// TODO fix logic
-	taskList.Add(tasks.Task{
-		ID:      taskVestel,
-		Type:    tasks.Modbus,
-		Depends: TaskModbus,
-		Config: map[string]interface{}{
-			"ids":     []int{255},
-			"address": 1001,
 			"type":    "input",
 			"decode":  "uint16",
 			"values":  chargeStatus,
