@@ -155,27 +155,14 @@ export default {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
 		providerLogins() {
-			let providerlogins = [];
-			this.store.state.loadpoints.forEach(function (lp) {
-				if (lp.vehicleProviderLoginPath && lp.vehicleProviderLogoutPath) {
-					console.log(
-						"Vehicle: " +
-							lp.vehicleTitle +
-							": " +
-							lp.vehicleProviderLoginPath +
-							" -> " +
-							lp.vehicleProviderLogoutPath
-					);
-					providerlogins.push({
-						title: lp.vehicleTitle,
-						loggedIn: lp.vehicleProviderLoggedIn,
-						loginPath: lp.vehicleProviderLoginPath,
-						logoutPath: lp.vehicleProviderLogoutPath,
-					});
-				}
-			});
-
-			return providerlogins;
+			return this.store.state.loadpoints
+				.filter((lp) => lp.vehicleProviderLoginPath && lp.vehicleProviderLogoutPath)
+				.map((lp) => ({
+					title: lp.vehicleTitle,
+					loggedIn: lp.vehicleProviderLoggedIn,
+					loginPath: lp.vehicleProviderLoginPath,
+					logoutPath: lp.vehicleProviderLogoutPath,
+				}));
 		},
 	},
 	created: function () {
