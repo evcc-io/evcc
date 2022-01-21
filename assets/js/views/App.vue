@@ -152,15 +152,7 @@ export default {
 			};
 		},
 		logoutCount() {
-			let count = 0;
-
-			this.providerLogins.forEach(function (login) {
-				if (!login.loggedIn) {
-					count++;
-				}
-			});
-
-			return count;
+			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
 		providerLogins() {
 			let providerlogins = [];
