@@ -11,9 +11,13 @@ import (
 
 const (
 	MQTT_SERVER      = "ssl://mwa.mpsa.com:8885"
+	MQTT_REQ_TOPIC   = "psa/RemoteServices/from/cid/"
 	MQTT_RESP_TOPIC  = "psa/RemoteServices/to/cid"
 	MQTT_EVENT_TOPIC = "psa/RemoteServices/events/MPHRTServices"
 	MQTT_TOKEN_TTL   = 890
+
+	PSA_CORRELATION_DATE_FORMAT = "%Y%m%d%H%M%S%f"
+	PSA_DATE_FORMAT             = "%Y-%m-%dT%H:%M:%SZ"
 )
 
 // var BRAND = {"com.psa.mym.myopel": {"realm": "clientsB2COpel", "brand_code": "OP", "app_name": "MyOpel"},
@@ -55,6 +59,31 @@ const (
 // def get_mqtt_customer_id(self):
 // 	brand_code = self.customer_id[:2]
 // 	return MQTT_BRANDCODE[brand_code] + self.customer_id[2:]
+
+// def __init__(self, topic, vin, req_parameters, customer_id):
+// 	self.customer_id = customer_id
+// 	self.topic = MQTT_REQ_TOPIC + self.customer_id + topic
+// 	self.vin = vin
+// 	self.req_parameters = req_parameters
+// 	self.date = datetime.now()
+// 	self.data = {}
+
+// def get_message_to_json(self, remote_access_token):
+// 	return json.dumps(self.get_message(remote_access_token))
+
+// def get_message(self, remote_access_token):
+// 	date = datetime.utcnow()
+// 	date_str = date.strftime(PSA_DATE_FORMAT)
+// 	self.data = {"access_token": remote_access_token, "customer_id": self.customer_id,
+// 			"correlation_id": self.__gen_correlation_id(date), "req_date": date_str, "vin": self.vin,
+// 			"req_parameters": self.req_parameters}
+// 	return self.data
+
+// def __gen_correlation_id(date):
+// 	date_str = date.strftime(PSA_CORRELATION_DATE_FORMAT)[:-3]
+// 	uuid_str = str(uuid4()).replace("-", "")
+// 	correlation_id = uuid_str + date_str
+// 	return correlation_id
 
 type Mqtt struct {
 	realm  string
