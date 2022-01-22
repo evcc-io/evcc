@@ -535,8 +535,9 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publishProviderLogins()
 
 	// read initial charger state to prevent immediately disabling charger
-	if enabled, err := lp.charger.Enabled(); err == nil {
-		if lp.enabled = enabled; enabled {
+	if status, err := lp.charger.Status(); err == nil {
+		if status == api.StatusC {
+			lp.enabled = true
 			lp.guardUpdated = lp.clock.Now()
 			// set defined current for use by pv mode
 			_ = lp.setLimit(lp.GetMinCurrent(), false)
@@ -548,25 +549,6 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// allow charger to  access loadpoint
 	if ctrl, ok := lp.charger.(loadpoint.Controller); ok {
 		ctrl.LoadpointControl(lp)
-	}
-}
-
-// syncCharger updates charger status and synchronizes it with expectations
-func (lp *LoadPoint) syncCharger() {
-	enabled, err := lp.charger.Enabled()
-	if err == nil {
-		if enabled != lp.enabled {
-			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
-			err = lp.charger.Enable(lp.enabled)
-		}
-
-		if !enabled && lp.GetStatus() == api.StatusC {
-			lp.log.WARN.Println("charger logic error: disabled but charging")
-		}
-	}
-
-	if err != nil {
-		lp.log.ERROR.Printf("charger: %v", err)
 	}
 }
 
@@ -852,6 +834,10 @@ func (lp *LoadPoint) updateChargerStatus() error {
 	}
 
 	lp.log.DEBUG.Printf("charger status: %s", status)
+
+	if !lp.enabled && status == api.StatusC {
+		lp.log.WARN.Println("charger logic error: disabled but charging")
+	}
 
 	if prevStatus := lp.GetStatus(); status != prevStatus {
 		lp.setStatus(status)
@@ -1420,9 +1406,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	// publish soc after updating charger status to make sure
 	// initial update of connected state matches charger status
 	lp.publishSoCAndRange()
-
-	// sync settings with charger
-	lp.syncCharger()
 
 	// check if car connected and ready for charging
 	var err error

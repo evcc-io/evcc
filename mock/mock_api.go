@@ -48,21 +48,6 @@ func (mr *MockChargerMockRecorder) Enable(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enable", reflect.TypeOf((*MockCharger)(nil).Enable), arg0)
 }
 
-// Enabled mocks base method.
-func (m *MockCharger) Enabled() (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Enabled")
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Enabled indicates an expected call of Enabled.
-func (mr *MockChargerMockRecorder) Enabled() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enabled", reflect.TypeOf((*MockCharger)(nil).Enabled))
-}
-
 // MaxCurrent mocks base method.
 func (m *MockCharger) MaxCurrent(arg0 int64) error {
 	m.ctrl.T.Helper()

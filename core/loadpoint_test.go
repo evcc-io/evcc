@@ -61,7 +61,6 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 	}()
 
 	if charger, ok := lp.charger.(*mock.MockCharger); ok && charger != nil {
-		charger.EXPECT().Enabled().Return(true, nil)
 		charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
 	}
 
@@ -161,7 +160,6 @@ func TestUpdatePowerZero(t *testing.T) {
 
 		// initial status
 		charger.EXPECT().Status().Return(tc.status, nil)
-		charger.EXPECT().Enabled().Return(true, nil)
 
 		if tc.expect != nil {
 			tc.expect(charger)
@@ -321,7 +319,6 @@ func TestPVHysteresis(t *testing.T) {
 				clck.Set(start.Add(se.delay))
 
 				// maxCurrent will read actual current and enabled state in PV mode
-				// charger.EXPECT().Enabled().Return(tc.enabled, nil)
 
 				lp.enabled = tc.enabled
 				current := lp.pvMaxCurrent(api.ModePV, se.site, false)
@@ -405,7 +402,6 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	t.Log("charging below soc target")
 	vehicle.EXPECT().SoC().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	lp.Update(500, false, false)
 
@@ -413,7 +409,6 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	clock.Add(5 * time.Minute)
 	vehicle.EXPECT().SoC().Return(90.0, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(500, false, false)
 
@@ -421,20 +416,17 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	clock.Add(5 * time.Minute)
 	vehicle.EXPECT().SoC().Return(95.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-5000, false, false)
 
 	t.Log("soc has fallen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-5000, false, false)
 
 	t.Log("soc has fallen below target - soc update timer expired")
 	clock.Add(pollInterval)
 	vehicle.EXPECT().SoC().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(true).Return(nil)
 	lp.Update(-5000, false, false)
 
@@ -472,14 +464,12 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	lp.Mode = api.ModeNow
 
 	t.Log("charging at min")
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	lp.Update(500, false, false)
 
 	t.Log("switch off when disconnected")
 	clock.Add(5 * time.Minute)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusA, nil)
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(-3000, false, false)
@@ -541,14 +531,12 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 
 	t.Log("start charging at 0 kWh")
 	rater.EXPECT().ChargedEnergy().Return(0.0, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	lp.Update(-1, false, false)
 
 	t.Log("at 1:00h charging at 5 kWh")
 	clock.Add(time.Hour)
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	lp.Update(-1, false, false)
 	expectCache("chargedEnergy", 5000.0)
@@ -556,7 +544,6 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	t.Log("at 1:00h stop charging at 5 kWh")
 	clock.Add(time.Second)
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	lp.Update(-1, false, false)
 	expectCache("chargedEnergy", 5000.0)
@@ -564,7 +551,6 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	t.Log("at 1:00h restart charging at 5 kWh")
 	clock.Add(time.Second)
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	lp.Update(-1, false, false)
 	expectCache("chargedEnergy", 5000.0)
@@ -572,7 +558,6 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	t.Log("at 1:30h continue charging at 7.5 kWh")
 	clock.Add(30 * time.Minute)
 	rater.EXPECT().ChargedEnergy().Return(7.5, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	lp.Update(-1, false, false)
 	expectCache("chargedEnergy", 7500.0)
@@ -580,7 +565,6 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	t.Log("at 2:00h stop charging at 10 kWh")
 	clock.Add(30 * time.Minute)
 	rater.EXPECT().ChargedEnergy().Return(10.0, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	lp.Update(-1, false, false)
 	expectCache("chargedEnergy", 10000.0)
