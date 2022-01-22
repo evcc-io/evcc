@@ -1,9 +1,9 @@
 <template>
 	<div class="loadpoint bg-white px-4 px-sm-5 py-4 mb-3 mb-sm-4">
 		<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-			<p class="h3 mb-2 me-2">
+			<h3 class="mb-2 me-2">
 				{{ title || $t("main.loadpoint.fallbackName") }}
-			</p>
+			</h3>
 			<Mode class="mb-2" :mode="mode" @updated="setTargetMode" />
 		</div>
 		<div v-if="remoteDisabled == 'soft'" class="alert alert-warning mt-4 mb-2" role="alert">
@@ -13,13 +13,13 @@
 			{{ $t("main.loadpoint.remoteDisabledHard", { source: remoteDisabledSource }) }}
 		</div>
 
+		<LoadpointDetails v-bind="details" />
 		<Vehicle
 			v-bind="vehicle"
 			@target-soc-updated="setTargetSoC"
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
 		/>
-		<LoadpointDetails v-bind="details" />
 	</div>
 </template>
 

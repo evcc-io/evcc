@@ -1,91 +1,66 @@
 <template>
-	<div>
-		<div class="row">
-			<div class="col-6 col-sm-3 col-lg-2 mt-3 offset-lg-4">
-				<div class="mb-2 value">
-					{{ $t("main.loadpointDetails.power") }}
-					<div
-						v-if="chargePower && activePhases"
-						v-tooltip="{ content: phaseTooltip }"
-						class="badge rounded-pill bg-secondary text-light cursor-pointer d-inline-flex align-items-center"
-						tabindex="0"
-					>
-						<div>{{ activePhases }}P</div>
-						<WaitingDots
-							v-if="phaseTimerVisible"
-							:direction="phaseAction === 'scale1p' ? 'down' : 'up'"
-						/>
-					</div>
-					<fa-icon
-						v-if="climater == 'heating'"
-						class="text-primary ms-1"
-						icon="temperature-low"
-					></fa-icon>
-					<fa-icon
-						v-if="climater == 'cooling'"
-						class="text-primary ms-1"
-						icon="temperature-high"
-					></fa-icon>
-					<fa-icon
-						v-if="climater == 'on'"
-						class="text-primary ms-1"
-						icon="thermometer-half"
-					></fa-icon>
+	<div class="details d-flex align-items-start mb-3">
+		<div>
+			<div class="mb-2 label">
+				{{ $t("main.loadpointDetails.power") }}
+				<div
+					v-if="chargePower && activePhases"
+					v-tooltip="{ content: phaseTooltip }"
+					class="badge rounded-pill bg-secondary text-light cursor-pointer d-inline-flex align-items-center"
+					tabindex="0"
+				>
+					<div>{{ activePhases }}P</div>
+					<WaitingDots
+						v-if="phaseTimerVisible"
+						:direction="phaseAction === 'scale1p' ? 'down' : 'up'"
+					/>
 				</div>
-				<h3 class="value">
-					{{ fmt(chargePower) }}
-					<small class="text-muted">{{ fmtUnit(chargePower) }}W</small
-					><small
-						v-if="pvTimerVisible"
-						v-tooltip="{
-							content: $t(`main.loadpointDetails.tooltip.pv.${pvAction}`, {
-								remaining: fmtShortDuration(pvRemainingInterpolated, true),
-							}),
-						}"
-						class="text-muted cursor-pointer d-inline-block align-bottom"
-						style="margin-bottom: 0.1em"
-						tabindex="0"
-					>
-						<WaitingDots :direction="pvAction === 'disable' ? 'down' : 'up'" />
-					</small>
-				</h3>
 			</div>
+			<h3 class="value">
+				{{ fmt(chargePower) }}
+				<small class="text-muted">{{ fmtUnit(chargePower) }}W</small
+				><small
+					v-if="pvTimerVisible"
+					v-tooltip="{
+						content: $t(`main.loadpointDetails.tooltip.pv.${pvAction}`, {
+							remaining: fmtShortDuration(pvRemainingInterpolated, true),
+						}),
+					}"
+					class="text-muted cursor-pointer d-inline-block align-bottom"
+					style="margin-bottom: 0.1em"
+					tabindex="0"
+				>
+					<WaitingDots :direction="pvAction === 'disable' ? 'down' : 'up'" />
+				</small>
+			</h3>
+		</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3">
-				<div class="mb-2 value">{{ $t("main.loadpointDetails.charged") }}</div>
-				<h3 class="value">
-					{{ fmt(chargedEnergy) }}
-					<small class="text-muted">{{ fmtUnit(chargedEnergy) }}Wh</small>
-				</h3>
-			</div>
+		<div>
+			<div class="mb-2 label">{{ $t("main.loadpointDetails.charged") }}</div>
+			<h3 class="value">
+				{{ fmt(chargedEnergy) }}
+				<small class="text-muted">{{ fmtUnit(chargedEnergy) }}Wh</small>
+			</h3>
+		</div>
 
-			<div v-if="vehicleRange && vehicleRange >= 0" class="col-6 col-sm-3 col-lg-2 mt-3">
-				<div class="mb-2 value">{{ $t("main.loadpointDetails.vehicleRange") }}</div>
-				<h3 class="value">
-					{{ Math.round(vehicleRange) }}
-					<small class="text-muted">km</small>
-				</h3>
-			</div>
+		<div v-if="vehiclePresent">
+			<div class="mb-2 label">{{ $t("main.loadpointDetails.remaining") }}</div>
+			<h3 class="value">
+				{{ fmtShortDuration(chargeRemainingDurationInterpolated) }}
+				<small class="text-muted">{{
+					fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)
+				}}</small>
+			</h3>
+		</div>
 
-			<div v-else class="col-6 col-sm-3 col-lg-2 mt-3">
-				<div class="mb-2 value">{{ $t("main.loadpointDetails.duration") }}</div>
-				<h3 class="value">
-					{{ fmtShortDuration(chargeDurationInterpolated) }}
-					<small class="text-muted">{{
-						fmtShortDurationUnit(chargeDurationInterpolated)
-					}}</small>
-				</h3>
-			</div>
-
-			<div v-if="vehiclePresent" class="col-6 col-sm-3 col-lg-2 mt-3">
-				<div class="mb-2 value">{{ $t("main.loadpointDetails.remaining") }}</div>
-				<h3 class="value">
-					{{ fmtShortDuration(chargeRemainingDurationInterpolated) }}
-					<small class="text-muted">{{
-						fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)
-					}}</small>
-				</h3>
-			</div>
+		<div v-else>
+			<div class="mb-2 label">{{ $t("main.loadpointDetails.duration") }}</div>
+			<h3 class="value">
+				{{ fmtShortDuration(chargeDurationInterpolated) }}
+				<small class="text-muted">{{
+					fmtShortDurationUnit(chargeDurationInterpolated)
+				}}</small>
+			</h3>
 		</div>
 	</div>
 </template>
@@ -199,3 +174,21 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.details > div {
+	flex-grow: 1;
+	flex-basis: 0;
+}
+.details > div:nth-child(2) {
+	text-align: center;
+}
+.details > div:nth-child(3) {
+	text-align: right;
+}
+.label {
+	text-transform: uppercase;
+	color: var(--bs-gray-medium);
+	font-size: 16px;
+}
+</style>
