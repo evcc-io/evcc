@@ -104,11 +104,7 @@ func (v *API) RefreshRequest(vin string) (string, error) {
 func (v *API) WakeUp(vin string) error {
 	uri := fmt.Sprintf("%s/api/dashboard/v1/users/vehicles?wakeupVin=%s", TokenURI, vin)
 
-	res, err := v.GetBody(uri)
-
-	if err == nil && res == nil {
-		err = errors.New("wakeup failed")
-	}
+	_, err := v.GetBody(uri)
 
 	return err
 }
