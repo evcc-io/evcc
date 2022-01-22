@@ -3,6 +3,9 @@ products:
 - brand: Heidelberg
   description:
     generic: Energy Control (Modbus RTU)
+- brand: Wahlter Werke
+  description:
+    generic: Basic Evo Pro
 requirements: 
   evcc: ["sponsorship"]
 params:
