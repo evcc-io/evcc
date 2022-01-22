@@ -1,8 +1,11 @@
 package push
 
 import (
+	"strings"
+	"text/template"
 	"time"
 
+	"github.com/Masterminds/sprig"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -10,6 +13,9 @@ import (
 type Event struct {
 	LoadPoint *int // optional loadpoint id
 	Event     string
+}
+
+type EventTemplateConfig struct {
 }
 
 // Hub subscribes to event notifications and sends them to client devices
@@ -20,11 +26,17 @@ type Hub struct {
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(definitions map[string]EventTemplate, cache *util.Cache) *Hub {
+func NewHub(definitions map[string]EventTemplateConfig, cache *util.Cache) *Hub {
 	h := &Hub{
 		definitions: definitions,
 		cache:       cache,
 	}
+
+	t, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl)
+	if err == nil {
+
+	}
+
 	return h
 }
 
@@ -34,7 +46,7 @@ func (h *Hub) Add(sender Sender) {
 }
 
 // apply applies the event template to the content to produce the actual message
-func (h *Hub) apply(ev Event, template string) (string, error) {
+func (h *Hub) apply(ev Event, tmpl *template.Template) (string, error) {
 	attr := make(map[string]interface{})
 
 	// let cache catch up, refs reverted https://github.com/evcc-io/evcc/pull/445
@@ -47,7 +59,12 @@ func (h *Hub) apply(ev Event, template string) (string, error) {
 		}
 	}
 
-	return util.ReplaceFormatted(template, attr)
+	applied := new(strings.Builder)
+	if err := tmpl.Execute(applied, attr); err != nil {
+		return "", err
+	}
+
+	return util.ReplaceFormatted(applied.String(), attr)
 }
 
 // Run is the Hub's main publishing loop
