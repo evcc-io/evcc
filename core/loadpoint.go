@@ -31,6 +31,7 @@ const (
 	evChargePower       = "power"      // update chargeRater
 	evVehicleConnect    = "connect"    // vehicle connected
 	evVehicleDisconnect = "disconnect" // vehicle disconnected
+	evVehicleSoC        = "soc"        // vehicle soc progress
 
 	pvTimer   = "pv"
 	pvEnable  = "enable"
@@ -147,6 +148,7 @@ type LoadPoint struct {
 	chargedEnergy           float64       // Charged energy while connected in Wh
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
+	progress                *Progress     // Step-wise progress indicator
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -254,6 +256,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		MaxCurrent:    16,                             // A
 		SoC:           SoCConfig{Min: 0, Target: 100}, // %
 		GuardDuration: 5 * time.Minute,
+		progress:      NewProgress(0, 10), // soc progress indicator
 	}
 
 	return lp
@@ -431,6 +434,13 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.socTimer.Reset()
 }
 
+// evVehicleSoCProgressHandler sends external start event
+func (lp *LoadPoint) evVehicleSoCProgressHandler(soc float64) {
+	if lp.progress.NextStep(soc) {
+		lp.pushEvent(evVehicleSoC)
+	}
+}
+
 // evChargeCurrentHandler publishes the charge current
 func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
 	if !lp.enabled {
@@ -495,6 +505,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evVehicleConnect, lp.evVehicleConnectHandler)
 	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
 	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
+	_ = lp.bus.Subscribe(evVehicleSoC, lp.evVehicleSoCProgressHandler)
 
 	// publish initial values
 	lp.publish("title", lp.Title)
@@ -519,6 +530,9 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	if len(lp.vehicles) > 1 {
 		lp.startVehicleDetection()
 	}
+
+	// publish providerLogins
+	lp.publishProviderLogins()
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
@@ -775,6 +789,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.applyAction(vehicle.OnIdentified())
 
 		lp.setVehiclePhases()
+
+		lp.progress.Reset()
 	} else {
 		lp.socEstimator = nil
 
@@ -1117,8 +1133,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 		}
 	}
 
-	// in MinPV mode return at least minCurrent
-	if (mode == api.ModeMinPV || batteryBuffered) && targetCurrent < minCurrent {
+	// in MinPV mode or under special conditions return at least minCurrent
+	if (mode == api.ModeMinPV || batteryBuffered || lp.climateActive()) && targetCurrent < minCurrent {
 		return minCurrent
 	}
 
@@ -1346,6 +1362,9 @@ func (lp *LoadPoint) publishSoCAndRange() {
 					lp.publish("vehicleOdometer", odo)
 				}
 			}
+
+			// trigger message after variables are updated
+			lp.bus.Publish(evVehicleSoC, f)
 		} else {
 			if errors.Is(err, api.ErrMustRetry) {
 				lp.socUpdated = time.Time{}
@@ -1373,6 +1392,9 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
+
+	// publish providerLogins
+	lp.publishProviderLogins()
 
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
@@ -1462,7 +1484,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {
-			targetCurrent = lp.GetMaxCurrent()
+			lp.log.DEBUG.Println("climater active")
+			targetCurrent = lp.GetMinCurrent()
 			required = true
 		}
 
@@ -1500,5 +1523,15 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		lp.updateChargeCurrents()
 	} else {
 		lp.log.ERROR.Println(err)
+	}
+}
+
+func (lp *LoadPoint) publishProviderLogins() {
+	for _, vehicle := range lp.vehicles {
+		if provider, ok := vehicle.(api.ProviderLogin); ok {
+			lp.publish("vehicleProviderLoggedIn", provider.LoggedIn())
+			lp.publish("vehicleProviderLoginPath", provider.LoginPath())
+			lp.publish("vehicleProviderLogoutPath", provider.LogoutPath())
+		}
 	}
 }

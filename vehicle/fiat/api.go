@@ -92,6 +92,19 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 	return res, err
 }
 
+func (v *API) Location(vin string) (LocationResponse, error) {
+	var res LocationResponse
+
+	uri := fmt.Sprintf("%s/v1/accounts/%s/vehicles/%s/location/lastknown", ApiURI, v.identity.UID(), vin)
+
+	req, err := v.request(http.MethodGet, uri, nil)
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return res, err
+}
+
 func (v *API) pinAuth(pin string) (string, error) {
 	var res PinAuthResponse
 

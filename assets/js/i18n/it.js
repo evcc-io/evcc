@@ -1,5 +1,10 @@
 export default {
-  header: { docs: "Documentazione", blog: "Blog", github: "GitHub" },
+  header: {
+    docs: "Documentazione",
+    blog: "Blog",
+    github: "GitHub",
+    login: "Iscrizioni",
+  },
   footer: {
     version: {
       version: "versione",
@@ -65,6 +70,10 @@ export default {
     },
     vehicleSubline: {
       mincharge: "carica minima fino a {soc}%",
+    },
+    provider: {
+      login: "accedere",
+      logout: "disconnettersi",
     },
     loadpointDetails: {
       power: "Potenza",
