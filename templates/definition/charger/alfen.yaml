@@ -8,7 +8,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
 - name: modbus
-  choice: ["rs485"]
+  choice: ["tcpip"]
 render: |
   type: alfen
   {{include "modbus" .}}
