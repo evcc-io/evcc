@@ -53,12 +53,7 @@ func NewAlphatecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	format := modbus.TcpFormat
-	if cc.RTU != nil && *cc.RTU {
-		format = modbus.RtuFormat
-	}
-
-	return NewAlphatec(cc.URI, cc.Device, cc.Comset, cc.Baudrate, format, cc.ID)
+	return NewAlphatec(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.WireFormatFromRTU(cc.RTU), cc.ID)
 }
 
 // NewAlphatec creates Alphatec charger

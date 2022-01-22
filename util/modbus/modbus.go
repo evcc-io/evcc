@@ -152,6 +152,14 @@ func registeredConnection(key string, newConn meters.Connection) meters.Connecti
 	return newConn
 }
 
+// WireFormatFromRTU identifies the wire format from the RTU setting
+func WireFormatFromRTU(rtu *bool) WireFormat {
+	if rtu != nil && *rtu {
+		return RtuFormat
+	}
+	return TcpFormat
+}
+
 // NewConnection creates physical modbus device from config
 func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, slaveID uint8) (*Connection, error) {
 	var conn meters.Connection

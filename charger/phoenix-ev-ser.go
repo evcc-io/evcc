@@ -26,24 +26,20 @@ func init() {
 
 // NewPhoenixEVSerFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEVSerFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			ID: 1,
-		},
+	cc := modbus.Settings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewPhoenixEVSer(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewPhoenixEVSer(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.WireFormatFromRTU(cc.RTU), cc.ID)
 }
 
 // NewPhoenixEVSer creates a Phoenix charger
-func NewPhoenixEVSer(uri, device, comset string, baudrate int, id uint8) (*PhoenixEVSer, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, id)
+func NewPhoenixEVSer(uri, device, comset string, baudrate int, format modbus.WireFormat, id uint8) (*PhoenixEVSer, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, format, id)
 	if err != nil {
 		return nil, err
 	}
