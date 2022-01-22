@@ -64,9 +64,10 @@ export default {
       pvExport: "Einspeisung",
     },
     mode: {
-      title: "Modus",
-      stop: "Stop",
-      now: "Sofort",
+      offShort: "Aus",
+      offLong: "Aus",
+      nowShort: "Sofort",
+      nowLong: "Sofort",
       minpvShort: "Min",
       minpvLong: "Min + PV",
       pvShort: "PV",

@@ -74,6 +74,6 @@ export default {
 .arrow--active {
 	opacity: 1;
 	transform: translateX(0);
-	transition-duration: 0.75s, 0.5s;
+	transition-duration: 0.75s, 0.75s;
 }
 </style>

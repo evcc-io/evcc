@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<button
-			class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap d-flex"
+			class="btn btn-link pe-0 text-decoration-none text-white text-nowrap d-flex"
 			data-bs-toggle="modal"
 			data-bs-target="#savingsModal"
 		>
@@ -16,7 +16,7 @@
 		<div
 			id="savingsModal"
 			ref="modal"
-			class="modal fade"
+			class="modal fade text-dark"
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"

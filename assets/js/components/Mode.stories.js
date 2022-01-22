@@ -17,11 +17,4 @@ const Template = (args, { argTypes }) => ({
 });
 
 export const Base = Template.bind({});
-Base.args = {};
-
-export const CaptionAndPV = Template.bind({});
-CaptionAndPV.args = {
-  caption: true,
-  pvConfigured: true,
-  mode: "pv",
-};
+Base.args = { mode: "pv" };

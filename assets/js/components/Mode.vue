@@ -1,40 +1,16 @@
 <template>
 	<div>
-		<div class="mb-3">{{ $t("main.mode.title") }}</div>
-		<div class="btn-group w-100" role="group">
+		<div class="mode-group border d-inline-flex" role="group">
 			<button
+				v-for="m in modes"
+				:key="m"
 				type="button"
-				class="btn btn-outline-secondary"
-				:class="{ active: mode == 'off' }"
-				@click="setTargetMode('off')"
+				class="btn btn-sm"
+				:class="{ active: mode == m }"
+				@click="setTargetMode(m)"
 			>
-				{{ $t("main.mode.stop") }}
-			</button>
-			<button
-				type="button"
-				class="btn btn-outline-secondary"
-				:class="{ active: mode == 'now' }"
-				@click="setTargetMode('now')"
-			>
-				{{ $t("main.mode.now") }}
-			</button>
-			<button
-				type="button"
-				class="btn btn-outline-secondary"
-				:class="{ active: mode == 'minpv' }"
-				@click="setTargetMode('minpv')"
-			>
-				<span class="d-inline d-sm-none"> {{ $t("main.mode.minpvShort") }} </span>
-				<span class="d-none d-sm-inline"> {{ $t("main.mode.minpvLong") }} </span>
-			</button>
-			<button
-				type="button"
-				class="btn btn-outline-secondary"
-				:class="{ active: mode == 'pv' }"
-				@click="setTargetMode('pv')"
-			>
-				<span class="d-inline d-sm-none"> {{ $t("main.mode.pvShort") }} </span>
-				<span class="d-none d-sm-inline"> {{ $t("main.mode.pvLong") }} </span>
+				<span class="d-inline d-sm-none"> {{ $t(`main.mode.${m}Short`) }} </span>
+				<span class="d-none d-sm-inline"> {{ $t(`main.mode.${m}Long`) }} </span>
 			</button>
 		</div>
 	</div>
@@ -46,6 +22,11 @@ export default {
 	props: {
 		mode: String,
 	},
+	data() {
+		return {
+			modes: ["off", "now", "minpv", "pv"],
+		};
+	},
 	methods: {
 		setTargetMode: function (mode) {
 			this.$emit("updated", mode);
@@ -54,10 +35,28 @@ export default {
 };
 </script>
 
+<style scoped></style>
+
 <style scoped>
+.mode-group {
+	border: 2px solid var(--bs-gray-medium);
+	background-color: var(--bs-white);
+	border-radius: 20px;
+	padding: 4px;
+}
+
 .btn {
 	/* equal width buttons */
 	flex-basis: 0;
 	white-space: nowrap;
+	border-radius: 18px;
+	padding: 0.1em 0.8em;
+}
+.btn.active {
+	background: var(--bs-gray-dark);
+	color: var(--bs-white);
+}
+.btn-group {
+	border-radius: 16px;
 }
 </style>

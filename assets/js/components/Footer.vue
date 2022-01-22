@@ -1,6 +1,6 @@
 <template>
-	<footer class="container">
-		<div class="py-3 py-md-5 mt-3 mt-md-5 border-top">
+	<footer class="footer">
+		<div class="container py-3">
 			<div class="d-flex justify-content-between">
 				<Version v-bind="version" />
 				<!-- Please don't mess with the sponsor status. You risk loosing your mojo. -->
@@ -24,3 +24,11 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.footer {
+	background-color: var(--bs-gray-dark);
+	border-top: 1px solid var(--bs-white);
+	color: var(--bs-white);
+}
+</style>

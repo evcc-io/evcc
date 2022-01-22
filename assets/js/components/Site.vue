@@ -1,9 +1,9 @@
 <template>
 	<div class="flex-grow-1 d-flex flex-column">
 		<div ref="upper" class="container" @click="toggleDetails">
-			<h3 class="d-block my-4">
+			<h2 class="d-block my-4">
 				{{ siteTitle || "Home" }}
-			</h3>
+			</h2>
 			<Energyflow v-bind="energyflow" />
 		</div>
 		<div
@@ -16,9 +16,9 @@
 					:class="`toggle-icon--${positionUp ? 'up' : 'down'}`"
 				></shopicon-regular-arrowup>
 			</div>
-			<div class="container">
+			<div class="container px-0">
+				<h2 class="mb-3 mb-sm-4 px-2 mx-1">Ladepunkte</h2>
 				<template v-for="(loadpoint, id) in loadpoints">
-					<hr v-if="id > 0" :key="id + '_hr'" class="w-100 my-4" />
 					<Loadpoint
 						v-bind="loadpoint"
 						:id="id"
@@ -112,7 +112,7 @@ export default {
 }
 .toggle-handle {
 	cursor: pointer;
-	color: var(--bs-gray-500);
+	color: var(--bs-gray-medium);
 }
 
 .toggle-icon {

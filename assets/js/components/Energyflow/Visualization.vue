@@ -184,7 +184,7 @@ export default {
 </script>
 <style scoped>
 .site-progress {
-	--height: 32px;
+	--height: 2.5rem;
 	height: var(--height);
 	border-radius: 10px;
 	display: flex;
@@ -196,7 +196,6 @@ export default {
 	align-items: center;
 	overflow: hidden;
 	position: relative;
-	font-size: 0.75rem;
 	width: 0;
 }
 .visualization--ready .site-progress-bar {

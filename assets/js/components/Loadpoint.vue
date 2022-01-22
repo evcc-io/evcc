@@ -1,8 +1,11 @@
 <template>
-	<div>
-		<p class="h3 mb-4 d-sm-block" :class="{ 'd-none': single }">
-			{{ title || $t("main.loadpoint.fallbackName") }}
-		</p>
+	<div class="loadpoint bg-white px-4 px-sm-5 py-4 mb-3 mb-sm-4">
+		<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+			<p class="h3 mb-2 me-2">
+				{{ title || $t("main.loadpoint.fallbackName") }}
+			</p>
+			<Mode class="mb-2" :mode="mode" @updated="setTargetMode" />
+		</div>
 		<div v-if="remoteDisabled == 'soft'" class="alert alert-warning mt-4 mb-2" role="alert">
 			{{ $t("main.loadpoint.remoteDisabledSoft", { source: remoteDisabledSource }) }}
 		</div>
@@ -10,16 +13,12 @@
 			{{ $t("main.loadpoint.remoteDisabledHard", { source: remoteDisabledSource }) }}
 		</div>
 
-		<div class="row">
-			<Mode class="col-12 col-md-6 col-lg-4 mb-4" :mode="mode" @updated="setTargetMode" />
-			<Vehicle
-				class="col-12 col-md-6 col-lg-8 mb-4"
-				v-bind="vehicle"
-				@target-soc-updated="setTargetSoC"
-				@target-time-updated="setTargetTime"
-				@target-time-removed="removeTargetTime"
-			/>
-		</div>
+		<Vehicle
+			v-bind="vehicle"
+			@target-soc-updated="setTargetSoC"
+			@target-time-updated="setTargetTime"
+			@target-time-removed="removeTargetTime"
+		/>
 		<LoadpointDetails v-bind="details" />
 	</div>
 </template>
@@ -113,3 +112,10 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.loadpoint {
+	border-radius: 20px;
+	color: var(--bs-gray-dark);
+}
+</style>

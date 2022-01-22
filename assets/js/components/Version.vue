@@ -5,13 +5,13 @@
 			href="#"
 			data-bs-toggle="modal"
 			data-bs-target="#updateModal"
-			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
+			class="btn btn-link ps-0 text-decoration-none text-white text-nowrap"
 		>
 			<fa-icon icon="gift" class="icon me-2"></fa-icon>v{{ installed }}
-			<span class="d-none d-xs-inline d-sm-none text-muted text-decoration-underline">
+			<span class="d-none d-xs-inline d-sm-none text-white text-decoration-underline">
 				{{ $t("footer.version.availableShort") }}
 			</span>
-			<span class="d-none d-sm-inline text-muted text-decoration-underline">
+			<span class="d-none d-sm-inline text-muted text-white text-decoration-underline">
 				{{ $t("footer.version.availableLong") }}
 			</span>
 		</button>
@@ -19,7 +19,7 @@
 			v-else
 			:href="releaseNotesUrl(installed)"
 			target="_blank"
-			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
+			class="btn btn-link text-white ps-0 text-decoration-none text-nowrap"
 		>
 			<span class="d-inline d-xs-none d-sm-none">{{
 				$t("footer.version.versionShort", { installed })
@@ -29,7 +29,13 @@
 			}}</span>
 		</a>
 
-		<div id="updateModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+		<div
+			id="updateModal"
+			class="modal fade text-dark"
+			tabindex="-1"
+			role="dialog"
+			aria-hidden="true"
+		>
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
 				<div class="modal-content">
 					<div class="modal-header">

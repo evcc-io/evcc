@@ -35,8 +35,7 @@ export default {
 .label-bar {
 	width: 0;
 	margin: 0;
-	height: 2.4rem;
-	padding: 0.6rem 0;
+	padding: 10px 0;
 	opacity: 1;
 	overflow: hidden;
 }
@@ -44,8 +43,8 @@ export default {
 	opacity: 0;
 }
 .label-bar-scale {
-	border: 1px solid var(--bs-gray-dark);
-	height: 1rem;
+	border: 1px solid var(--bs-gray-medium);
+	height: 14px;
 	background: none;
 	display: flex;
 	justify-content: center;
@@ -71,10 +70,10 @@ export default {
 	opacity: 1;
 }
 .label-bar--top .label-bar-icon {
-	margin-top: -6px;
+	margin-top: -12px;
 }
 .label-bar--bottom .label-bar-icon {
-	margin-top: 6px;
+	margin-top: 12px;
 }
 .label-bar--hide-icon .label-bar-icon {
 	opacity: 0;

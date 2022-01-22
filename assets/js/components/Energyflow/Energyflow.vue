@@ -27,10 +27,10 @@
 				<span class="color-export ms-2"><fa-icon icon="square"></fa-icon></span>
 			</div>
 		</div>
-		<div class="col-12 col-md-6 pe-lg-5 mb-4">
+		<div class="col-12 col-md-6 pe-md-5 mb-4">
 			<div class="d-flex justify-content-between align-items-end mb-4">
-				<h4 class="fw-bold m-0">In</h4>
-				<span class="fw-bold text-muted">23,2 kW</span>
+				<h3 class="m-0">In</h3>
+				<span class="fw-bold opacity-25">{{ kw(inPower) }}</span>
 			</div>
 			<EnergyflowEntry
 				:name="$t('main.energyflow.pvProduction')"
@@ -44,7 +44,7 @@
 				:name="$t('main.energyflow.batteryDischarge')"
 				icon="battery"
 				:soc="batterySoC"
-				:power="Math.abs(batteryDischarge)"
+				:power="batteryDischarge"
 				:valuesInKw="valuesInKw"
 				type="source"
 			/>
@@ -56,10 +56,10 @@
 				type="source"
 			/>
 		</div>
-		<div class="col-12 col-md-6 ps-lg-5 mb-4">
+		<div class="col-12 col-md-6 ps-md-5 mb-4">
 			<div class="d-flex justify-content-between align-items-end mb-4">
-				<h4 class="fw-bold m-0">Out</h4>
-				<span class="fw-bold text-muted">23,2 kW</span>
+				<h3 class="m-0">Out</h3>
+				<span class="fw-bold opacity-25">{{ kw(outPower) }}</span>
 			</div>
 			<EnergyflowEntry
 				:name="$t('main.energyflow.homePower')"
@@ -84,7 +84,7 @@
 				:name="$t('main.energyflow.batteryCharge')"
 				icon="battery"
 				:soc="batterySoC"
-				:power="Math.abs(batteryCharge)"
+				:power="batteryCharge"
 				:valuesInKw="valuesInKw"
 				type="consumer"
 			/>
@@ -102,10 +102,12 @@
 <script>
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
+import formatter from "../../mixins/formatter";
 
 export default {
 	name: "Energyflow",
 	components: { Visualization, EnergyflowEntry },
+	mixins: [formatter],
 	props: {
 		gridConfigured: Boolean,
 		gridPower: { type: Number, default: 0 },
@@ -130,10 +132,10 @@ export default {
 			return Math.abs(this.batteryPower) < batteryPowerThreshold ? 0 : this.batteryPower;
 		},
 		batteryDischarge: function () {
-			return Math.max(0, this.batteryPowerAdjusted);
+			return Math.abs(Math.max(0, this.batteryPowerAdjusted));
 		},
 		batteryCharge: function () {
-			return Math.min(0, this.batteryPowerAdjusted) * -1;
+			return Math.abs(Math.min(0, this.batteryPowerAdjusted) * -1);
 		},
 		selfConsumption: function () {
 			const ownPower = this.batteryDischarge + this.pvProduction;
@@ -145,6 +147,17 @@ export default {
 		},
 		valuesInKw: function () {
 			return this.gridImport + this.selfConsumption + this.pvExport > 1000;
+		},
+		inPower: function () {
+			return this.gridImport + this.pvProduction + this.batteryDischarge;
+		},
+		outPower: function () {
+			return this.homePower + this.loadpointsPower + this.pvExport + this.batteryCharge;
+		},
+	},
+	methods: {
+		kw: function (watt) {
+			return this.fmtKw(watt, this.valuesInKw);
 		},
 	},
 };
