@@ -211,8 +211,10 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 			basePath := fmt.Sprintf("auth/vehicles/%s", title)
 			callbackPath := fmt.Sprintf("%s/callback", basePath)
 
-			callbackURI := fmt.Sprintf("http://%s/%s", httpd.Addr, callbackPath)
-			provider.SetOAuthCallbackURI(callbackURI)
+			baseURI := fmt.Sprintf("http://%s", httpd.Addr)
+			redirectURI := fmt.Sprintf("%s/%s", baseURI, callbackPath)
+
+			provider.SetOAuthCallbackURI(redirectURI)
 			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
 
 			// TODO: how to handle multiple vehicles of the same type
@@ -227,7 +229,7 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 			router.
 				Methods(http.MethodGet).
 				Path(callbackPath).
-				HandlerFunc(provider.CallbackHandler(fmt.Sprintf("http://%s", httpd.Addr)))
+				HandlerFunc(provider.CallbackHandler(baseURI))
 
 			router.
 				Methods(http.MethodPost).

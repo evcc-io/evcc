@@ -114,7 +114,7 @@ func (v *Identity) LoggedIn() bool {
 	return v.token.Valid()
 }
 
-func (v *Identity) CallbackHandler(uri string) http.HandlerFunc {
+func (v *Identity) CallbackHandler(baseURI string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		v.log.TRACE.Println("callback request retrieved")
 
@@ -156,6 +156,6 @@ func (v *Identity) CallbackHandler(uri string) http.HandlerFunc {
 			v.loginUpdateC <- struct{}{}
 		}
 
-		http.Redirect(w, r, uri, http.StatusFound)
+		http.Redirect(w, r, baseURI, http.StatusFound)
 	}
 }

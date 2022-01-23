@@ -202,7 +202,7 @@ type ProviderLogin interface {
 
 	LoggedIn() bool
 
-	CallbackHandler(redirectURI string) http.HandlerFunc
+	CallbackHandler(baseURI string) http.HandlerFunc
 	LoginHandler() http.HandlerFunc
 	LogoutHandler() http.HandlerFunc
 }
