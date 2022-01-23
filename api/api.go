@@ -198,11 +198,10 @@ type WebController interface {
 
 type Callback struct {
 	Path    string
-	Handler RedirectHandlerFunc
+	Handler func(uri string) http.HandlerFunc
 }
 
-// RedirectHandlerFunc should return an http.HandlerFunc responding with an http.Redirect(..., redirectURi, ...)
-type RedirectHandlerFunc func(redirectURI string) http.HandlerFunc
+// ProviderLogin is the ability to provide OAuth authentication through the ui
 type ProviderLogin interface {
 	SetBasePath(basePath string)
 

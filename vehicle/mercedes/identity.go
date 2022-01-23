@@ -87,7 +87,7 @@ func (v *Identity) SetBasePath(basepath string) {
 func (v *Identity) Callback() api.Callback {
 	return api.Callback{
 		Path:    fmt.Sprintf("%s/callback", v.basePath),
-		Handler: v.redirectHandler(),
+		Handler: v.redirectHandler,
 	}
 }
 
@@ -136,50 +136,48 @@ func (v *Identity) LogoutPath() string {
 	return fmt.Sprintf("%s/logout", v.basePath)
 }
 
-func (v *Identity) redirectHandler() api.RedirectHandlerFunc {
-	return func(redirectURI string) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			v.log.TRACE.Println("callback request retrieved")
+func (v *Identity) redirectHandler(uri string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		v.log.TRACE.Println("callback request retrieved")
 
-			data, err := url.ParseQuery(r.URL.RawQuery)
-			if err != nil {
-				fmt.Fprintln(w, "invalid response:", data)
-				return
-			}
-
-			if error, ok := data["error"]; ok {
-				fmt.Fprintf(w, "error: %s: %s\n", error, data["error_description"])
-				return
-			}
-
-			states, ok := data["state"]
-			if !ok || len(states) != 1 {
-				fmt.Fprintln(w, "invalid state response:", data)
-				return
-			} else if err := Validate(states[0], v.sessionSecret); err != nil {
-				fmt.Fprintf(w, "failed state validation: %s", err)
-				return
-			}
-
-			codes, ok := data["code"]
-			if !ok || len(codes) != 1 {
-				fmt.Fprintln(w, "invalid response:", data)
-				return
-			}
-
-			token, err := v.AuthConfig.Exchange(context.Background(), codes[0])
-			if err != nil {
-				fmt.Fprintln(w, "token error:", err)
-				return
-			}
-
-			if token.Valid() {
-				v.token = token
-				v.log.TRACE.Println("sending login update...")
-				v.loginUpdateC <- struct{}{}
-			}
-
-			http.Redirect(w, r, redirectURI, http.StatusFound)
+		data, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			fmt.Fprintln(w, "invalid response:", data)
+			return
 		}
+
+		if error, ok := data["error"]; ok {
+			fmt.Fprintf(w, "error: %s: %s\n", error, data["error_description"])
+			return
+		}
+
+		states, ok := data["state"]
+		if !ok || len(states) != 1 {
+			fmt.Fprintln(w, "invalid state response:", data)
+			return
+		} else if err := Validate(states[0], v.sessionSecret); err != nil {
+			fmt.Fprintf(w, "failed state validation: %s", err)
+			return
+		}
+
+		codes, ok := data["code"]
+		if !ok || len(codes) != 1 {
+			fmt.Fprintln(w, "invalid response:", data)
+			return
+		}
+
+		token, err := v.AuthConfig.Exchange(context.Background(), codes[0])
+		if err != nil {
+			fmt.Fprintln(w, "token error:", err)
+			return
+		}
+
+		if token.Valid() {
+			v.token = token
+			v.log.TRACE.Println("sending login update...")
+			v.loginUpdateC <- struct{}{}
+		}
+
+		http.Redirect(w, r, uri, http.StatusFound)
 	}
 }

@@ -213,10 +213,8 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 
 			callback := provider.Callback()
 			callbackURI := fmt.Sprintf("http://%s%s", httpd.Addr, callback.Path)
-			{
-				provider.SetOAuthCallbackURI(callbackURI)
-				log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
-			}
+			provider.SetOAuthCallbackURI(callbackURI)
+			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
 
 			// TODO: how to handle multiple vehicles of the same type
 			//
