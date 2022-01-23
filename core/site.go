@@ -461,8 +461,8 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
 
 		// add loadpoint number
-		uid := id + 1
-		lp.publish("loadpoint", &uid)
+		num := id + 1
+		lp.publish("loadpoint", &num)
 	}
 }
 
