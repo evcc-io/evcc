@@ -159,6 +159,14 @@ func (wb *Innogy) MaxCurrentMillis(current float64) error {
 	return nil
 }
 
+var _ api.Meter = (*Innogy)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (wb *Innogy) CurrentPower() (float64, error) {
+	l1, l2, l3, err := wb.Currents()
+	return 230 * (l1 + l2 + l3), err
+}
+
 var _ api.MeterCurrent = (*Innogy)(nil)
 
 // Currents implements the api.MeterCurrent interface

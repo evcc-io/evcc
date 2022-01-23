@@ -1,0 +1,16 @@
+template: mercedes
+description: 
+  generic: Mercedes EQC
+params:
+- base: vehiclebase
+- base: vehicleidentify
+- name: clientId
+  example: b8f717b3-f1b7-4169-a8ef-7ffd80c5327c
+- name: clientSecret
+  mask: true
+  example: QxSNLrIepEmcjGFdZpeUczqyqoOrhmxhASDasdvhizjhxHSEWFDfunfbeu
+render: |
+  type: mercedes
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}
+

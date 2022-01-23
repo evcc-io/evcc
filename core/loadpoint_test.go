@@ -379,9 +379,10 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		bus:          evbus.New(),
 		clock:        clock,
 		charger:      charger,
-		chargeMeter:  &Null{}, // silence nil panics
-		chargeRater:  &Null{}, // silence nil panics
-		chargeTimer:  &Null{}, // silence nil panics
+		chargeMeter:  &Null{},            // silence nil panics
+		chargeRater:  &Null{},            // silence nil panics
+		chargeTimer:  &Null{},            // silence nil panics
+		progress:     NewProgress(0, 10), // silence nil panics
 		MinCurrent:   minA,
 		MaxCurrent:   maxA,
 		vehicle:      vehicle,      // needed for targetSoC check

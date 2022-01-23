@@ -9,8 +9,8 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
-// SimpleEVSE charger implementation
-type SimpleEVSE struct {
+// EvseDIN charger implementation
+type EvseDIN struct {
 	conn    *modbus.Connection
 	current int64
 }
@@ -21,13 +21,14 @@ const (
 )
 
 func init() {
-	registry.Add("simpleevse", NewSimpleEVSEFromConfig)
+	registry.Add("simpleevse", NewEvseDINFromConfig) // deprecated
+	registry.Add("evsedin", NewEvseDINFromConfig)
 }
 
 // https://files.ev-power.eu/inc/_doc/attach/StoItem/4418/evse-wb-din_Manual.pdf
 
-// NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
-func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewEvseDINFromConfig creates an EVSE DIN charger from generic config
+func NewEvseDINFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		Baudrate: 9600,
 		Comset:   "8N1",
@@ -37,11 +38,11 @@ func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
-	return NewSimpleEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, true, cc.ID)
+	return NewEvseDIN(cc.URI, cc.Device, cc.Comset, cc.Baudrate, true, cc.ID)
 }
 
-// NewSimpleEVSE creates SimpleEVSE charger
-func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (api.Charger, error) {
+// NewEvseDIN creates EVSE DIN charger
+func NewEvseDIN(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (api.Charger, error) {
 	log := util.NewLogger("evse")
 
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, slaveID)
@@ -52,7 +53,7 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	conn.Logger(log.TRACE)
 	conn.Delay(200 * time.Millisecond)
 
-	evse := &SimpleEVSE{
+	evse := &EvseDIN{
 		conn:    conn,
 		current: 6, // assume min current
 	}
@@ -61,7 +62,7 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 }
 
 // Status implements the api.Charger interface
-func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
+func (evse *EvseDIN) Status() (api.ChargeStatus, error) {
 	b, err := evse.conn.ReadHoldingRegisters(evseRegVehicleStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
@@ -84,7 +85,7 @@ func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (evse *SimpleEVSE) Enabled() (bool, error) {
+func (evse *EvseDIN) Enabled() (bool, error) {
 	b, err := evse.conn.ReadHoldingRegisters(evseRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
@@ -99,7 +100,7 @@ func (evse *SimpleEVSE) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (evse *SimpleEVSE) Enable(enable bool) error {
+func (evse *EvseDIN) Enable(enable bool) error {
 	b := []byte{0, 0}
 
 	if enable {
@@ -112,7 +113,7 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (evse *SimpleEVSE) MaxCurrent(current int64) error {
+func (evse *EvseDIN) MaxCurrent(current int64) error {
 	b := []byte{0, byte(current)}
 
 	_, err := evse.conn.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)

@@ -5,5 +5,5 @@ params:
 - name: modbus
   choice: ["rs485"]
 render: |
-  type: simpleevse
+  type: evsedin
   {{include "modbus" .}}
