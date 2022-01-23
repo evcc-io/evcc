@@ -211,6 +211,8 @@ func (wb *PCElectric) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *PCElectric) Enable(enable bool) error {
+	wb.lastStatus = api.StatusB
+
 	if wb.mode2 { //Patched:
 		mode := "OFF"
 		if enable {
