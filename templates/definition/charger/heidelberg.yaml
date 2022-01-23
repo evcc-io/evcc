@@ -3,7 +3,7 @@ products:
 - brand: Heidelberg
   description:
     generic: Energy Control (Modbus RTU)
-- brand: Wahlter Werke
+- brand: Walther Werke
   description:
     generic: Basic Evo Pro
 requirements: 
