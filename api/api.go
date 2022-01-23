@@ -196,11 +196,6 @@ type WebController interface {
 	WebControl(*mux.Router)
 }
 
-type Callback struct {
-	Path    string
-	Handler func(uri string) http.HandlerFunc
-}
-
 // ProviderLogin is the ability to provide OAuth authentication through the ui
 type ProviderLogin interface {
 	SetOAuthCallbackURI(uri string)
