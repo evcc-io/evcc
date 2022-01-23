@@ -203,17 +203,11 @@ type Callback struct {
 
 // ProviderLogin is the ability to provide OAuth authentication through the ui
 type ProviderLogin interface {
-	SetBasePath(basePath string)
-
-	// Provides ....
-	Callback() Callback
 	SetOAuthCallbackURI(uri string)
 
 	LoggedIn() bool
 
-	LoginPath() string
+	CallbackHandler(redirectURI string) http.HandlerFunc
 	LoginHandler() http.HandlerFunc
-
-	LogoutPath() string
 	LogoutHandler() http.HandlerFunc
 }

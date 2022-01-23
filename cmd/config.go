@@ -208,11 +208,10 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 		if provider, ok := v.(api.ProviderLogin); ok {
 			title := url.QueryEscape(strings.ToLower(strings.ReplaceAll(v.Title(), " ", "_")))
 
-			basePath := fmt.Sprintf("/auth/vehicles/%s", title)
-			provider.SetBasePath(basePath)
+			basePath := fmt.Sprintf("auth/vehicles/%s", title)
+			callbackPath := fmt.Sprintf("%s/callback", basePath)
 
-			callback := provider.Callback()
-			callbackURI := fmt.Sprintf("http://%s%s", httpd.Addr, callback.Path)
+			callbackURI := fmt.Sprintf("http://%s/%s", httpd.Addr, callbackPath)
 			provider.SetOAuthCallbackURI(callbackURI)
 			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
 
@@ -227,16 +226,16 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 			// TODO: what about https?
 			router.
 				Methods(http.MethodGet).
-				Path(callback.Path).
-				HandlerFunc(callback.Handler(fmt.Sprintf("http://%s", httpd.Addr)))
+				Path(callbackPath).
+				HandlerFunc(provider.CallbackHandler(fmt.Sprintf("http://%s", httpd.Addr)))
 
 			router.
 				Methods(http.MethodPost).
-				Path(provider.LoginPath()).
+				Path(fmt.Sprintf("%s/login", basePath)).
 				HandlerFunc(provider.LoginHandler())
 			router.
 				Methods(http.MethodPost).
-				Path(provider.LogoutPath()).
+				Path(fmt.Sprintf("%s/logout", basePath)).
 				HandlerFunc(provider.LogoutHandler())
 		}
 	}

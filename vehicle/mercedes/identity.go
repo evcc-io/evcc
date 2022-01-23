@@ -34,7 +34,6 @@ type Identity struct {
 	token      *oauth2.Token
 
 	loginUpdateC chan struct{}
-	basePath     string
 }
 
 // TODO: SessionSecret from config/persistence
@@ -80,17 +79,6 @@ func (v *Identity) Token() *oauth2.Token {
 
 var _ api.ProviderLogin = (*Identity)(nil)
 
-func (v *Identity) SetBasePath(basepath string) {
-	v.basePath = basepath
-}
-
-func (v *Identity) Callback() api.Callback {
-	return api.Callback{
-		Path:    fmt.Sprintf("%s/callback", v.basePath),
-		Handler: v.redirectHandler,
-	}
-}
-
 func (v *Identity) SetOAuthCallbackURI(uri string) {
 	v.AuthConfig.RedirectURL = uri
 }
@@ -126,17 +114,7 @@ func (v *Identity) LoggedIn() bool {
 	return v.token.Valid()
 }
 
-// LoginPath implements the api.ProviderLogin interface
-func (v *Identity) LoginPath() string {
-	return fmt.Sprintf("%s/login", v.basePath)
-}
-
-// LogoutPath implements the api.ProviderLogin interface
-func (v *Identity) LogoutPath() string {
-	return fmt.Sprintf("%s/logout", v.basePath)
-}
-
-func (v *Identity) redirectHandler(uri string) http.HandlerFunc {
+func (v *Identity) CallbackHandler(uri string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		v.log.TRACE.Println("callback request retrieved")
 
