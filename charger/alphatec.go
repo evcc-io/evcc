@@ -27,8 +27,6 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-// https://github.com/evcc-io/evcc/discussions/1965
-
 // Alphatec charger implementation
 type Alphatec struct {
 	log  *util.Logger
