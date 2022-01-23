@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
@@ -29,6 +30,7 @@ func (a RatesByPrice) Swap(i, j int) {
 
 type Planner struct {
 	log         *util.Logger
+	clock       clock.Clock // mockable time
 	tariff      api.Tariff
 	mux         sync.Mutex
 	cheap       float64
@@ -36,8 +38,10 @@ type Planner struct {
 }
 
 func NewPlanner(log *util.Logger, tariff api.Tariff) *Planner {
+	clock := clock.New()
 	return &Planner{
 		log:    log,
+		clock:  clock,
 		cheap:  0.2, // TODO
 		tariff: tariff,
 	}
@@ -72,22 +76,22 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 	for i := 0; i < len(data); i++ {
 		pi = data[i]
 
-		if pi.Start.Before(time.Now()) && pi.End.After(time.Now()) { // current slot
-			pi.Start = time.Now()
+		if pi.Start.Before(t.clock.Now()) && pi.End.After(t.clock.Now()) { // current slot
+			pi.Start = t.clock.Now()
 		}
 
-		if pi.End.Before(time.Now()) { // old data
+		if pi.End.Before(t.clock.Now()) { // old data
 			continue
 		}
 
-		if !(pi.Start.Before(end)) { // charge ends before
+		if !(pi.Start.Before(end)) { // charge should ends before
 			continue
 		}
 
 		// timeslot already started
 		pstart := pi.Start
-		if pstart.Before(time.Now()) {
-			pstart = time.Now()
+		if pstart.Before(t.clock.Now()) {
+			pstart = t.clock.Now()
 		}
 
 		// timeslot ends after charge finish time
@@ -104,7 +108,7 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 			pi.Price, sum)
 
 		// current timeslot is a cheap one
-		if pi.Start.Before(time.Now()) && pi.End.After(time.Now()) && duration > 0 {
+		if !pi.Start.After(t.clock.Now()) && pi.End.After(t.clock.Now()) && duration > 0 {
 			cheapSlotNow = true
 			curSlotNr = cntExpectedSlots
 			t.log.TRACE.Printf(" (now, slot number %v)", curSlotNr)
@@ -144,7 +148,7 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
-	if end.Before(time.Now()) {
+	if end.Before(t.clock.Now()) {
 		t.cheapactive = false
 		return false, nil
 	}
