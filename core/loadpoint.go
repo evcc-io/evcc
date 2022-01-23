@@ -100,8 +100,9 @@ type LoadPoint struct {
 	ChargerRef  string   `mapstructure:"charger"`  // Charger reference
 	VehicleRef  string   `mapstructure:"vehicle"`  // Vehicle reference
 	VehiclesRef []string `mapstructure:"vehicles"` // Vehicles reference
+	MeterRef    string   `mapstructure:"meter"`    // Charge meter reference
 	Meters      struct {
-		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
+		ChargeMeterRef string `mapstructure:"charge"` // deprecated
 	}
 	SoC               SoCConfig
 	OnDisconnect_     interface{} `mapstructure:"onDisconnect"`
@@ -198,8 +199,18 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	// store defaults
 	lp.collectDefaults()
 
+	if lp.MeterRef != "" {
+		lp.chargeMeter = cp.Meter(lp.MeterRef)
+	}
+
+	// deprecated
 	if lp.Meters.ChargeMeterRef != "" {
-		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
+		lp.log.WARN.Println("meters: charge: is deprecated. Use meter: instead")
+		if lp.chargeMeter == nil {
+			lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
+		} else {
+			lp.log.ERROR.Println("must not have meter: and meters: charge: both")
+		}
 	}
 
 	// multiple vehicles
