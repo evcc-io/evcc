@@ -1,8 +1,10 @@
 template: cfos
-description: 
-  generic: cFos PowerBrain Meter
-requirements:
-  sponsorship: true
+products:
+- brand: cFos
+  description:
+    generic: PowerBrain Meter
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: usage
   choice: [ "charge" ]

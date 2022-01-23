@@ -1,8 +1,13 @@
 template: heidelberg
-description: 
-  generic: Heidelberg Energy Control (Modbus RTU)
-requirements:
-  sponsorship: true
+products: 
+- brand: Heidelberg
+  description:
+    generic: Energy Control (Modbus RTU)
+- brand: Wahlter Werke
+  description:
+    generic: Basic Evo Pro
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: modbus
   choice: ["rs485"]

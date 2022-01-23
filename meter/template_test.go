@@ -21,9 +21,10 @@ var acceptable = []string{
 	"no ping response for 192.0.2.2", // SMA
 	"network is unreachable",
 	"[1ESY1161052714 1ESY1161229249 1EMH0008842285 1ESY1161978584 1EMH0004864048 1ESY1161979033 7ELS8135823805]", // Discovergy
-	"can only have either uri or device",                       // modbus
-	"(Client.Timeout exceeded while awaiting headers)",         // http
-	"cannot create meter 'discovergy': unexpected status: 401", //Discovergy Proxy
+	"can only have either uri or device",                                          // modbus
+	"(Client.Timeout exceeded while awaiting headers)",                            // http
+	"cannot create meter 'discovergy': unexpected status: 401",                    // Discovergy Proxy
+	"login failed: Put \"https://192.0.2.2/v1/login\": context deadline exceeded", // LG ESS
 }
 
 func TestMeterTemplates(t *testing.T) {
@@ -43,9 +44,9 @@ func TestMeterTemplates(t *testing.T) {
 			modbusChoices := tmpl.ModbusChoices()
 			// we only test one modbus setup
 			if funk.ContainsString(modbusChoices, templates.ModbusChoiceTCPIP) {
-				values[templates.ModbusTCPIP] = true
+				values[templates.ModbusKeyTCPIP] = true
 			} else {
-				values[templates.ModbusRS485TCPIP] = true
+				values[templates.ModbusKeyRS485TCPIP] = true
 			}
 		}
 

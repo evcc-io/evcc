@@ -1,6 +1,7 @@
 template: evsewifi
-description:
-  generic: EVSE-Wifi
+products:
+- description:
+    generic: EVSE-Wifi
 params:
 - name: host
   required: true

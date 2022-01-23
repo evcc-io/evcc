@@ -15,6 +15,9 @@ Flow_SingleDevice_Setup = "- Setup a device"
 Flow_SingleDevice_Select = "Choose one of the following device categories"
 Flow_SingleDevice_Config = "The configuration:"
 
+Flow_SMAHems_Setup = "- Setup SMA HEMS"
+Flow_SMAHems_Add = "Do you want to report your wallboxes to the SMA Home Manager anbinden, so that it can consider them e.g. for controlling the in-house battery?"
+
 ItemNotPresent = "My device is not in this list"
 
 AddDeviceInCategory = "Do you want to add {{ .Article }} {{ .Category }}?"
@@ -36,35 +39,6 @@ File_Error_SaveFailed = "The configuration could not be saved in the file {{ .Fi
 File_SaveSuccess = "The configuration was successfully saved in the file {{ .FileName }}"
 
 Choose = "Choose"
-
-UserFriendly_Title_Name = "Title"
-UserFriendly_Title_Help = "Will be displayed in the user interface"
-UserFriendly_Device_Name = "Device address"
-UserFriendly_Device_Help = "USB-RS485 Adapter address"
-UserFriendly_Baudrate_Name = "Baudrate"
-UserFriendly_Baudrate_Help = "Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200"
-UserFriendly_ComSet_Name = "ComSet"
-UserFriendly_Host_Name = "IP-Address or Hostname"
-UserFriendly_Port_Name = "Port"
-UserFriendly_User_Name = "Username"
-UserFriendly_Password_Name = "Password"
-UserFriendly_Capacity_Name = "Battery-Capacity in kWh"
-UserFriendly_Vin_Name = "Vehicle Identification Number"
-UserFriendly_Vin_Help = "Required if you own multiple vehicles of the same brand"
-UserFriendly_Cache_Name = "Cache"
-UserFriendly_Cache_Help = "Time interval with when data should be reloaded from the vehicle"
-UserFriendly_MinSoC_Name = "Minimum state of charge (SoC) in %"
-UserFriendly_MinSoC_Help = "Charge immediately with maximum power up to the defined state of charge, if the charge mode is not set to 'OFF'"
-UserFriendly_TargetSoC_Name = "Target state of charge (SoC) in %"
-UserFriendly_TargetSoC_Help = "Until which sate of charge (SoC) should the vehicle be charged"
-UserFriendly_MinCurrent_Name = "Minimum amperage (A)"
-UserFriendly_MinCurrent_Help = "The minimum amperage per connected phase with which the car should be charged"
-UserFriendly_MaxCurrent_Name = "Maximum amperage (A)"
-UserFriendly_MaxCurrent_Help = "The maximum amperage per connected phase with which the car shuold be charged"
-UserFriendly_Identifier_Name = "Identification"
-UserFriendly_Identifier_Help = "Mostly this can be added later, see: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
-UserFriendly_StandByPower_Name = "Standby power in W"
-UserFriendly_StandByPower_Help = "Power values above this value will be considered as charging power"
 
 Category_ChargerTitle = "wallbox"
 Category_ChargerArticle = "a"
@@ -96,10 +70,11 @@ TestingDevice_AddFailedUsage = "Testing of the {{ .Usage }} configuration of {{ 
 
 TestingMQTTFailed = "Testing the MQTT configuration failed. Do you want to repeat its configuration?"
 
-Requirements_Title = "The device needs to provide the following requirements:"
+Requirements_Title = "The device has the following requirements:"
 Requirements_More = "Additional information:"
 
 Requirements_Sponsorship_Title = "This device requires an evcc sponsorship. Check the following link for what this is and how it works: https://docs.evcc.io/docs/sponsorship"
+Requirements_Sponsorship_Optional_Title = "The development of evcc can be supported via sponsoring. Check the following link for what this is and how it works: https://docs.evcc.io/docs/sponsorship"
 Requirements_Sponsorship_Token = "Are you already a sponsor?"
 Requirements_Sponsorship_Token_Input = "Please enter the sponsortoken"
 

@@ -1,6 +1,9 @@
 template: shelly-3em
-description: 
-  generic: Shelly 3EM
+products:
+- brand: Shelly
+  description:
+    generic: 3EM
+group: sockets
 params:
 - name: usage
   choice: [ "grid" ]
