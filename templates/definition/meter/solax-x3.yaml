@@ -17,22 +17,39 @@ params:
 render: |
   type: custom
   power:
+  {{- if eq .usage "grid" }}
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 1
     register: # manual non-sunspec register configuration
-  {{- if eq .usage "grid" }}
       address: 192 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
       type: input
-      decode: int16
+      decode: int32
     scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
-      address: 188 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
-      type: input
-      decode: int16
+    source: calc
+    add:
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      register: # manual non-sunspec register configuration
+        address: 10 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+        type: input
+        decode: uint16
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      register: # manual non-sunspec register configuration
+        address: 11 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+        type: input
+        decode: uint16
   {{- end }}
   {{- if eq .usage "battery" }}
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register: # manual non-sunspec register configuration
       address: 22 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
       type: input
       decode: int16
