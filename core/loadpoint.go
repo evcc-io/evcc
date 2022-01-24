@@ -816,18 +816,24 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 func (lp *LoadPoint) wakeUpVehicle() {
 	// charger
-	if c, ok := lp.charger.(api.AlarmClock); ok {
-		if err := c.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wakeUp charger: %v", err)
+	if lp.wakeUpTimer.cnt == 1 {
+		if c, ok := lp.charger.(api.AlarmClock); ok {
+			if err := c.WakeUp(); err != nil {
+				lp.log.ERROR.Printf("wakeUp charger: %v", err)
+			}
+			return
 		}
 	}
 
 	// vehicle
-	if vs, ok := lp.vehicle.(api.AlarmClock); ok {
-		if err := vs.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wakeUp vehicle: %v", err)
+	if lp.vehicle != nil {
+		if vs, ok := lp.vehicle.(api.AlarmClock); ok {
+			if err := vs.WakeUp(); err != nil {
+				lp.log.ERROR.Printf("wakeUp vehicle: %v", err)
+			}
 		}
 	}
+	lp.wakeUpTimer.Stop()
 }
 
 // unpublishVehicle resets published vehicle data
@@ -1543,7 +1549,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	// WakeUp checks
 	if lp.enabled && lp.status == api.StatusB &&
-		lp.vehicle != nil && lp.vehicleSoc < 100 && lp.wakeUpTimer.Expired() {
+		lp.vehicleSoc < 100 && lp.wakeUpTimer.Expired() {
 		lp.log.DEBUG.Printf("wakeuptimer: expired")
 		lp.wakeUpVehicle()
 	}
