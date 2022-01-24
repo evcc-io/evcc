@@ -118,7 +118,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	if sb != 10 {
 		wb.wakeup = false
 	}
-	
+
 	switch sb {
 	case 2, 3:
 		return api.StatusA, nil
@@ -256,7 +256,7 @@ func (wb *HeidelbergEC) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(hecRegTimeoutConfig, 1); err == nil {
 		fmt.Printf("Timeout:\t%d\n", binary.BigEndian.Uint16(b))
-	}	
+	}
 	if b, err := wb.conn.ReadHoldingRegisters(hecRegStandbyConfig, 1); err == nil {
 		fmt.Printf("Standby:\t%d\n", binary.BigEndian.Uint16(b))
 	}
