@@ -225,7 +225,7 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 			redirectURI := fmt.Sprintf("%s/callback", baseURI)
 
 			// register vehicle
-			ap := cp.auth.Register(title, baseURI)
+			ap := cp.auth.Register(v.Title(), baseURI)
 
 			provider.SetCallbackParams(redirectURI, ap.Handler())
 			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), redirectURI)
