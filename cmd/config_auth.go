@@ -7,6 +7,7 @@ import (
 )
 
 type AuthCollection struct {
+	mu       sync.Mutex
 	paramC   chan<- util.Param
 	vehicles map[string]*AuthProvider
 }
@@ -16,12 +17,19 @@ func (ac *AuthCollection) Register(title, baseURI string) *AuthProvider {
 		ac:  ac,
 		Uri: baseURI,
 	}
+
+	ac.mu.Lock()
 	ac.vehicles[title] = ap
+	ac.mu.Unlock()
+
 	return ap
 }
 
 // publish routes and status
 func (ac *AuthCollection) Publish() {
+	ac.mu.Lock()
+	defer ac.mu.Unlock()
+
 	val := struct {
 		Vehicles map[string]*AuthProvider `json:"vehicles"`
 	}{
@@ -33,7 +41,6 @@ func (ac *AuthCollection) Publish() {
 
 type AuthProvider struct {
 	ac            *AuthCollection
-	mu            sync.Mutex
 	Uri           string `json:"uri"`
 	Authenticated bool   `json:"authenticated"`
 }
@@ -43,9 +50,9 @@ func (ap *AuthProvider) Handler() chan<- bool {
 
 	go func() {
 		for auth := range c {
-			ap.mu.Lock()
+			ap.ac.mu.Lock()
 			ap.Authenticated = auth
-			ap.mu.Unlock()
+			ap.ac.mu.Unlock()
 			ap.ac.Publish()
 		}
 	}()
