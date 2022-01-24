@@ -1,0 +1,26 @@
+product:
+  brand: Solax
+  description: Hybrid X3
+
+render:
+- usage: grid
+  default: |
+    type: template
+    template: solax-x3
+    usage: grid
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 502  # Port 
+- usage: pv
+  default: |
+    type: template
+    template: solax-x3
+    usage: pv
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 502  # Port 
+- usage: battery
+  default: |
+    type: template
+    template: solax-x3
+    usage: battery
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 502  # Port

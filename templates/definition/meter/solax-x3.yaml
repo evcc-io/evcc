@@ -1,0 +1,47 @@
+template: solax-x3
+products:
+- brand: Solax
+  description:
+    generic: Hybrid X3
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: port
+  required: true
+  default: 502
+render: |
+  type: custom
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register: # manual non-sunspec register configuration
+  {{- if eq .usage "grid" }}
+      address: 192 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+      type: input
+      decode: int16
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+      address: 188 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+      type: input
+      decode: int16
+  {{- end }}
+  {{- if eq .usage "battery" }}
+      address: 22 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+      type: input
+      decode: int16
+  soc:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register:
+      address: 28 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+      type: input
+      decode: Uint16
+  {{- end }}
