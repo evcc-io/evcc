@@ -1,15 +1,18 @@
-package cmd
+package util
 
-import (
-	"sync"
-
-	"github.com/evcc-io/evcc/util"
-)
+import "sync"
 
 type AuthCollection struct {
 	mu       sync.Mutex
-	paramC   chan<- util.Param
+	paramC   chan<- Param
 	vehicles map[string]*AuthProvider
+}
+
+func NewAuthCollection(paramC chan<- Param) *AuthCollection {
+	return &AuthCollection{
+		paramC:   paramC,
+		vehicles: make(map[string]*AuthProvider),
+	}
 }
 
 func (ac *AuthCollection) Register(title, baseURI string) *AuthProvider {
@@ -36,7 +39,7 @@ func (ac *AuthCollection) Publish() {
 		Vehicles: ac.vehicles,
 	}
 
-	ac.paramC <- util.Param{Key: "auth", Val: val}
+	ac.paramC <- Param{Key: "auth", Val: val}
 }
 
 type AuthProvider struct {

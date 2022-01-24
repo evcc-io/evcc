@@ -80,7 +80,7 @@ type ConfigProvider struct {
 	chargers map[string]api.Charger
 	vehicles map[string]api.Vehicle
 	visited  map[string]bool
-	auth     *AuthCollection
+	auth     *util.AuthCollection
 }
 
 func (cp *ConfigProvider) TrackVisitors() {
@@ -211,10 +211,7 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 	router := httpd.Router()
 
 	// initialize
-	cp.auth = &AuthCollection{
-		paramC:   paramC,
-		vehicles: make(map[string]*AuthProvider),
-	}
+	cp.auth = util.NewAuthCollection(paramC)
 
 	for _, v := range cp.vehicles {
 		if provider, ok := v.(api.ProviderLogin); ok {
