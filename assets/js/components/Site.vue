@@ -1,31 +1,31 @@
 <template>
 	<div class="flex-grow-1 d-flex flex-column">
-		<div ref="upper" class="container" @click="toggleDetails">
+		<div class="container" @click="toggleDetails">
 			<h2 class="d-block my-4">
 				{{ siteTitle || "Home" }}
 			</h2>
-			<Energyflow v-bind="energyflow" />
+			<Energyflow v-bind="energyflow" :details-visible="detailsVisible" />
 		</div>
-		<div
-			class="flex-grow-1 d-flex flex-column content-area"
-			:style="`margin-top: ${dragTopMargin}px`"
-		>
+		<div class="flex-grow-1 d-flex flex-column content-area">
 			<div class="toggle-handle py-3 d-flex justify-content-center" @click="toggleDetails">
 				<shopicon-regular-arrowup
 					class="toggle-icon"
-					:class="`toggle-icon--${positionUp ? 'up' : 'down'}`"
+					:class="`toggle-icon--${detailsVisible ? 'up' : 'down'}`"
 				></shopicon-regular-arrowup>
 			</div>
+			<div class="container">
+				<h2 class="mb-3 mb-sm-4">Ladepunkte</h2>
+			</div>
 			<div class="container px-0">
-				<h2 class="mb-3 mb-sm-4 px-2 mx-1">Ladepunkte</h2>
-				<template v-for="(loadpoint, id) in loadpoints">
-					<Loadpoint
-						v-bind="loadpoint"
-						:id="id"
+				<div class="d-block d-xl-flex flex-wrap">
+					<div
+						v-for="(loadpoint, id) in loadpoints"
 						:key="id"
-						:single="loadpoints.length === 1"
-					/>
-				</template>
+						class="flex-grow-1 me-xl-4 mx-xl-2 pb-2"
+					>
+						<Loadpoint v-bind="loadpoint" :id="id" :single="loadpoints.length === 1" />
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -60,17 +60,11 @@ export default {
 	},
 	data: function () {
 		return {
-			positionUp: false,
+			detailsVisible: false,
 			upperHeight: 0,
 		};
 	},
 	computed: {
-		dragTopMargin: function () {
-			const visualizationHeight = 175;
-			const min = -1 * this.upperHeight + visualizationHeight;
-			const max = 0;
-			return this.positionUp ? min : max;
-		},
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
@@ -84,19 +78,9 @@ export default {
 			}, 0);
 		},
 	},
-	mounted() {
-		this.updateUpperHeight();
-		window.addEventListener("resize", this.updateUpperHeight);
-	},
-	destroyed() {
-		window.removeEventListener("resize", this.updateUpperHeight);
-	},
 	methods: {
-		updateUpperHeight() {
-			this.upperHeight = this.$refs.upper.offsetHeight;
-		},
 		toggleDetails() {
-			this.positionUp = !this.positionUp;
+			this.detailsVisible = !this.detailsVisible;
 		},
 	},
 };
@@ -108,7 +92,6 @@ export default {
 	color: var(--bs-white);
 	z-index: 10;
 	min-height: 90vh;
-	transition: margin-top 0.4s cubic-bezier(0.5, 0.5, 0.5, 1.15);
 }
 .toggle-handle {
 	cursor: pointer;

@@ -6,14 +6,66 @@
 			</h3>
 			<Mode class="mb-2" :mode="mode" @updated="setTargetMode" />
 		</div>
-		<div v-if="remoteDisabled == 'soft'" class="alert alert-warning mt-4 mb-2" role="alert">
-			{{ $t("main.loadpoint.remoteDisabledSoft", { source: remoteDisabledSource }) }}
-		</div>
-		<div v-if="remoteDisabled == 'hard'" class="alert alert-danger mt-4 mb-2" role="alert">
-			{{ $t("main.loadpoint.remoteDisabledHard", { source: remoteDisabledSource }) }}
+
+		<div
+			v-if="remoteDisabled"
+			class="alert alert-warning my-4 py-2"
+			:class="`${remoteDisabled === 'hard' ? 'alert-danger' : 'alert-warning'}`"
+			role="alert"
+		>
+			{{
+				$t(
+					remoteDisabled === "hard"
+						? "main.loadpoint.remoteDisabledHard"
+						: "main.loadpoint.remoteDisabledSoft",
+					{ source: remoteDisabledSource }
+				)
+			}}
 		</div>
 
-		<LoadpointDetails v-bind="details" />
+		<div class="details d-flex align-items-start mb-3">
+			<div class="d-flex align-items-center">
+				<div>
+					<div class="mb-2 label">
+						{{ $t("main.loadpointDetails.power") }}
+					</div>
+					<h3 class="value">
+						{{ fmtKw(chargePower) }}
+					</h3>
+					<Phases
+						v-bind="phasesProps"
+						class="opacity-transiton"
+						:class="`opacity-${charging ? '100' : '0'}`"
+					/>
+				</div>
+				<shopicon-regular-lightning
+					class="text-evcc opacity-transiton"
+					:class="`opacity-${charging ? '100' : '0'}`"
+					size="m"
+				></shopicon-regular-lightning>
+			</div>
+
+			<div>
+				<div class="mb-2 label">{{ $t("main.loadpointDetails.charged") }}</div>
+				<h3 class="value">{{ fmtKw(chargedEnergy) }}h</h3>
+			</div>
+
+			<div v-if="chargeRemainingDurationInterpolated">
+				<div class="mb-2 label">{{ $t("main.loadpointDetails.remaining") }}</div>
+				<h3 class="value">
+					{{ fmtShortDuration(chargeRemainingDurationInterpolated) }}
+					{{ fmtShortDurationUnit(chargeRemainingDurationInterpolated, true) }}
+				</h3>
+			</div>
+			<div v-else>
+				<div class="mb-2 label">{{ $t("main.loadpointDetails.duration") }}</div>
+				<h3 class="value">
+					{{ fmtShortDuration(chargeDurationInterpolated) }}
+					{{ fmtShortDurationUnit(chargeDurationInterpolated) }}
+				</h3>
+			</div>
+		</div>
+
 		<Vehicle
 			v-bind="vehicle"
 			@target-soc-updated="setTargetSoC"
@@ -27,13 +79,14 @@
 import api from "../api";
 import Mode from "./Mode";
 import Vehicle from "./Vehicle";
-import LoadpointDetails from "./LoadpointDetails";
+import Phases from "./Phases";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
+import "@h2d2/shopicons/es/regular/lightning";
 
 export default {
 	name: "Loadpoint",
-	components: { LoadpointDetails, Mode, Vehicle },
+	components: { Mode, Vehicle, Phases },
 	mixins: [formatter, collector],
 	props: {
 		id: Number,
@@ -84,15 +137,77 @@ export default {
 		pvRemaining: Number,
 		pvAction: String,
 	},
+	data() {
+		return {
+			tickerHandler: null,
+			phaseRemainingInterpolated: this.phaseRemaining,
+			pvRemainingInterpolated: this.pvRemaining,
+			chargeDurationInterpolated: this.chargeDuration,
+			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
+		};
+	},
 	computed: {
-		details: function () {
-			return this.collectProps(LoadpointDetails);
+		phaseTooltip() {
+			if (["scale1p", "scale3p"].includes(this.phaseAction)) {
+				return this.$t(`main.loadpointDetails.tooltip.phases.${this.phaseAction}`, {
+					remaining: this.fmtShortDuration(this.phaseRemainingInterpolated, true),
+				});
+			}
+			return this.$t(`main.loadpointDetails.tooltip.phases.charge${this.activePhases}p`);
+		},
+		phaseTimerActive() {
+			return (
+				this.phaseRemainingInterpolated > 0 &&
+				["scale1p", "scale3p"].includes(this.phaseAction)
+			);
+		},
+		pvTimerActive() {
+			return (
+				this.pvRemainingInterpolated > 0 && ["enable", "disable"].includes(this.pvAction)
+			);
+		},
+		phasesProps: function () {
+			return this.collectProps(Phases);
 		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);
 		},
 	},
+	watch: {
+		phaseRemaining() {
+			this.phaseRemainingInterpolated = this.phaseRemaining;
+		},
+		pvRemaining() {
+			this.pvRemainingInterpolated = this.pvRemaining;
+		},
+		chargeDuration() {
+			this.chargeDurationInterpolated = this.chargeDuration;
+		},
+		chargeRemainingDuration() {
+			this.chargeDurationInterpolated = this.chargeRemainingDuration;
+		},
+	},
+	mounted() {
+		this.tickerHandler = setInterval(this.tick, 1000);
+	},
+	destroyed() {
+		clearInterval(this.tickerHandler);
+	},
 	methods: {
+		tick() {
+			if (this.phaseRemainingInterpolated > 0) {
+				this.phaseRemainingInterpolated--;
+			}
+			if (this.pvRemainingInterpolated > 0) {
+				this.pvRemainingInterpolated--;
+			}
+			if (this.chargeDurationInterpolated > 0 && this.charging) {
+				this.chargeDurationInterpolated++;
+			}
+			if (this.chargeRemainingDurationInterpolated > 0 && this.charging) {
+				this.chargeRemainingDurationInterpolated--;
+			}
+		},
 		apiPath: function (func) {
 			return "loadpoints/" + this.id + "/" + func;
 		},
@@ -117,5 +232,27 @@ export default {
 .loadpoint {
 	border-radius: 20px;
 	color: var(--bs-gray-dark);
+}
+
+.details > div {
+	flex-grow: 1;
+	flex-basis: 0;
+}
+.details > div:nth-child(2) {
+	text-align: center;
+}
+.details > div:nth-child(3) {
+	text-align: right;
+}
+.label {
+	text-transform: uppercase;
+	color: var(--bs-gray-medium);
+	font-size: 14px;
+}
+.value {
+	font-size: 18px;
+}
+.opacity-transiton {
+	transition: opacity 0.7w5s ease-in;
 }
 </style>

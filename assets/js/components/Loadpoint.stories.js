@@ -29,9 +29,29 @@ Base.args = {
   vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
+  mode: "pv",
   charging: true,
   vehicleSoC: 66,
   targetSoC: 90,
+  chargeCurrent: 7,
+  minCurrent: 6,
+  maxCurrent: 16,
+  activePhases: 2,
+};
+
+export const Idle = Template.bind({});
+Idle.args = {
+  id: 0,
+  chargePower: 0,
+  vehiclePresent: false,
+  enabled: false,
+  connected: false,
+  mode: "off",
+  charging: false,
+  chargeCurrent: 0,
+  minCurrent: 6,
+  maxCurrent: 16,
+  activePhases: 0,
 };
 
 export const Disabled = Template.bind({});
@@ -42,9 +62,16 @@ Disabled.args = {
   remoteDisabledSource: "Sunny Home Manager",
   vehiclePresent: true,
   vehicleTitle: "Mein Auto",
+  chargedEnergy: 31211,
   enabled: true,
+  mode: "now",
   connected: true,
   charging: false,
+  chargePower: 8112,
   vehicleSoC: 66,
   targetSoC: 100,
+  chargeCurrent: 7,
+  minCurrent: 6,
+  maxCurrent: 16,
+  activePhases: 3,
 };

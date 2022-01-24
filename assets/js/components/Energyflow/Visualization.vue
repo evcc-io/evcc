@@ -1,7 +1,7 @@
 <template>
 	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
-		<div class="label-scale">
-			<div class="d-flex justify-content-start">
+		<div class="label-scale d-flex">
+			<div class="d-flex justify-content-start flex-grow-1">
 				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
@@ -12,6 +12,7 @@
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
 			</div>
+			<div class="label-scale-name">In</div>
 		</div>
 		<div ref="site_progress" class="site-progress">
 			<div
@@ -51,8 +52,8 @@
 				<span>{{ $t("main.energyflow.noEnergy") }}</span>
 			</div>
 		</div>
-		<div class="label-scale">
-			<div class="d-flex justify-content-start">
+		<div class="label-scale d-flex">
+			<div class="d-flex justify-content-start flex-grow-1">
 				<LabelBar v-bind="labelBarProps('bottom', 'homePower')">
 					<shopicon-regular-home></shopicon-regular-home>
 				</LabelBar>
@@ -66,6 +67,7 @@
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
 			</div>
+			<div class="label-scale-name">Out</div>
 		</div>
 	</div>
 </template>
@@ -189,6 +191,16 @@ export default {
 	border-radius: 10px;
 	display: flex;
 	overflow: hidden;
+	margin-right: 1.2rem;
+}
+.label-scale-name {
+	color: var(--bs-gray-medium);
+	flex-basis: 1.2rem;
+	flex-grow: 0;
+	flex-shrink: 0;
+	writing-mode: tb-rl;
+	line-height: 1;
+	text-align: center;
 }
 .site-progress-bar {
 	display: flex;
