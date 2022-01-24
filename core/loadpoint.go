@@ -1404,9 +1404,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
 
-	// publish providerLogins
-	lp.publishProviderLogins()
-
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
 		lp.log.ERROR.Printf("charger: %v", err)
@@ -1534,15 +1531,5 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		lp.updateChargeCurrents()
 	} else {
 		lp.log.ERROR.Println(err)
-	}
-}
-
-func (lp *LoadPoint) publishProviderLogins() {
-	for _, vehicle := range lp.vehicles {
-		if provider, ok := vehicle.(api.ProviderLogin); ok {
-			lp.publish("vehicleProviderLoggedIn", provider.LoggedIn())
-			lp.publish("vehicleProviderLoginPath", provider.LoginPath())
-			lp.publish("vehicleProviderLogoutPath", provider.LogoutPath())
-		}
 	}
 }

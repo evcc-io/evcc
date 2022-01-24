@@ -198,11 +198,9 @@ type WebController interface {
 
 // ProviderLogin is the ability to provide OAuth authentication through the ui
 type ProviderLogin interface {
-	SetOAuthCallbackURI(uri string)
-
+	SetCallbackParams(uri string, authenticated chan<- bool)
 	LoggedIn() bool
-
-	CallbackHandler(baseURI string) http.HandlerFunc
 	LoginHandler() http.HandlerFunc
 	LogoutHandler() http.HandlerFunc
+	CallbackHandler(baseURI string) http.HandlerFunc
 }

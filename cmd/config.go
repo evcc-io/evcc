@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
@@ -79,6 +80,7 @@ type ConfigProvider struct {
 	chargers map[string]api.Charger
 	vehicles map[string]api.Vehicle
 	visited  map[string]bool
+	auth     *AuthCollection
 }
 
 func (cp *ConfigProvider) TrackVisitors() {
@@ -204,19 +206,31 @@ func canonicalName(s string) string {
 	return strings.ToLower(strings.ReplaceAll(s, " ", "_"))
 }
 
-// webControl handles implemented routes by devices.
-// for now only api.ProviderLogin related routes
-func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
+// webControl handles routing for devices. For now only api.ProviderLogin related routes
+func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Param) {
 	router := httpd.Router()
+
+	// initialize
+	cp.auth = &AuthCollection{
+		paramC:   paramC,
+		vehicles: make(map[string]*AuthProvider),
+	}
+
 	for _, v := range cp.vehicles {
 		if provider, ok := v.(api.ProviderLogin); ok {
 			title := url.QueryEscape(canonicalName(v.Title()))
 			basePath := fmt.Sprintf("auth/vehicles/%s", title)
 
-			baseURI := fmt.Sprintf("http://%s", httpd.Addr)
-			redirectURI := fmt.Sprintf("%s/%s/callback", baseURI, basePath)
+			// TODO make evccURI configurable, add warnings for any network/ localhost
+			evccURI := fmt.Sprintf("http://%s", httpd.Addr)
 
-			provider.SetOAuthCallbackURI(redirectURI)
+			baseURI := fmt.Sprintf("%s/%s", evccURI, basePath)
+			redirectURI := fmt.Sprintf("%s/callback", baseURI)
+
+			// register vehicle
+			ap := cp.auth.Register(title, baseURI)
+
+			provider.SetCallbackParams(redirectURI, ap.Handler())
 			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), redirectURI)
 
 			// TODO: how to handle multiple vehicles of the same type
@@ -227,19 +241,20 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 			// - or a general callback handler and the specific vehicle is transported in the state?
 			//   - callback handler needs an option to set the token at the right vehicle and use the right code exchange
 
-			// TODO: what about https?
 			router.
 				Methods(http.MethodGet).
-				Path(fmt.Sprintf("%s/callback", basePath)).
-				HandlerFunc(provider.CallbackHandler(baseURI))
+				Path(redirectURI).
+				HandlerFunc(provider.CallbackHandler(evccURI))
 			router.
 				Methods(http.MethodPost).
-				Path(fmt.Sprintf("%s/login", basePath)).
+				Path(fmt.Sprintf("%s/login", baseURI)).
 				HandlerFunc(provider.LoginHandler())
 			router.
 				Methods(http.MethodPost).
-				Path(fmt.Sprintf("%s/logout", basePath)).
+				Path(fmt.Sprintf("%s/logout", baseURI)).
 				HandlerFunc(provider.LogoutHandler())
 		}
 	}
+
+	cp.auth.Publish()
 }

@@ -155,14 +155,12 @@ export default {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
 		providerLogins() {
-			return this.store.state.loadpoints
-				.filter((lp) => lp.vehicleProviderLoginPath && lp.vehicleProviderLogoutPath)
-				.map((lp) => ({
-					title: lp.vehicleTitle,
-					loggedIn: lp.vehicleProviderLoggedIn,
-					loginPath: lp.vehicleProviderLoginPath,
-					logoutPath: lp.vehicleProviderLogoutPath,
-				}));
+			return this.store.state.auth.vehicles.map(([k, v]) => ({
+				title: k,
+				loggedIn: v.authenticated,
+				loginPath: v.uri + "/login",
+				logoutPath: v.uri + "/logout",
+			}));
 		},
 	},
 	created: function () {

@@ -30,6 +30,7 @@ type Identity struct {
 
 	sessionSecret []byte
 
+	authC      chan<- bool
 	AuthConfig *oauth2.Config
 	token      *oauth2.Token
 
@@ -38,7 +39,6 @@ type Identity struct {
 
 // TODO: SessionSecret from config/persistence
 func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}, options ...IdentityOptions) (*Identity, error) {
-	var err error
 	provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
@@ -79,8 +79,9 @@ func (v *Identity) Token() *oauth2.Token {
 
 var _ api.ProviderLogin = (*Identity)(nil)
 
-func (v *Identity) SetOAuthCallbackURI(uri string) {
+func (v *Identity) SetCallbackParams(uri string, authC chan<- bool) {
 	v.AuthConfig.RedirectURL = uri
+	v.authC = authC
 }
 
 func (v *Identity) LoginHandler() http.HandlerFunc {
@@ -103,6 +104,8 @@ func (v *Identity) LoginHandler() http.HandlerFunc {
 func (v *Identity) LogoutHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		v.token = nil
+
+		v.authC <- false
 
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(nil)
@@ -154,6 +157,7 @@ func (v *Identity) CallbackHandler(baseURI string) http.HandlerFunc {
 			v.token = token
 			v.log.TRACE.Println("sending login update...")
 			v.loginUpdateC <- struct{}{}
+			v.authC <- true
 		}
 
 		http.Redirect(w, r, baseURI, http.StatusFound)
