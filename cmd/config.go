@@ -233,7 +233,7 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 			provider.SetCallbackParams(redirectURI, ap.Handler())
 			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), redirectURI)
 
-			// TODO: how to handle multiple vehicles of the same type
+			// TODO how to handle multiple vehicles of the same type
 			//
 			// problems, thoughts and ideas:
 			// conflicting callbacks!

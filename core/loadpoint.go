@@ -542,9 +542,6 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		lp.startVehicleDetection()
 	}
 
-	// publish providerLogins
-	lp.publishProviderLogins()
-
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
 		if lp.enabled = enabled; enabled {

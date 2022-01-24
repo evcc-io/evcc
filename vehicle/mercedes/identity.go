@@ -19,35 +19,36 @@ type IdentityOptions func(c *Identity) error
 
 // WithToken provides an oauth2.Token to the client for auth.
 func WithToken(t *oauth2.Token) IdentityOptions {
-	return func(c *Identity) error {
-		c.token = t
+	return func(v *Identity) error {
+		v.ExpiringSource.Apply(t)
 		return nil
 	}
 }
 
 type Identity struct {
 	log *util.Logger
-
+	*ExpiringSource
 	sessionSecret []byte
-
-	authC      chan<- bool
-	AuthConfig *oauth2.Config
-	token      *oauth2.Token
-
-	loginUpdateC chan struct{}
+	authC         chan<- bool
+	AuthConfig    *oauth2.Config
 }
 
-// TODO: SessionSecret from config/persistence
-func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}, options ...IdentityOptions) (*Identity, error) {
+func generateSecret() ([]byte, error) {
+	var b [16]byte
+	_, err := io.ReadFull(rand.Reader, b[:])
+	return b[:], err
+}
+
+// TODO SessionSecret from config/persistence
+func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions) (*Identity, error) {
 	provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
 	}
 
 	v := &Identity{
-		log:           log,
-		loginUpdateC:  loginUpdateC,
-		sessionSecret: genSessionSecret(),
+		log:            log,
+		ExpiringSource: new(ExpiringSource),
 		AuthConfig: &oauth2.Config{
 			ClientID:     id,
 			ClientSecret: secret,
@@ -56,6 +57,8 @@ func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}
 		},
 	}
 
+	v.sessionSecret, err = generateSecret()
+
 	for _, o := range options {
 		if err == nil {
 			err = o(v)
@@ -63,18 +66,6 @@ func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}
 	}
 
 	return v, err
-}
-
-func genSessionSecret() []byte {
-	var b [16]byte
-	if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
-		panic(err)
-	}
-	return b[:]
-}
-
-func (v *Identity) Token() *oauth2.Token {
-	return v.token
 }
 
 var _ api.ProviderLogin = (*Identity)(nil)
@@ -103,18 +94,12 @@ func (v *Identity) LoginHandler() http.HandlerFunc {
 
 func (v *Identity) LogoutHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		v.token = nil
-
+		v.ExpiringSource.Apply(nil)
 		v.authC <- false
 
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(nil)
 	}
-}
-
-// LoggedIn implements the api.ProviderLogin interface
-func (v *Identity) LoggedIn() bool {
-	return v.token.Valid()
 }
 
 func (v *Identity) CallbackHandler(baseURI string) http.HandlerFunc {
@@ -154,9 +139,8 @@ func (v *Identity) CallbackHandler(baseURI string) http.HandlerFunc {
 		}
 
 		if token.Valid() {
-			v.token = token
 			v.log.TRACE.Println("sending login update...")
-			v.loginUpdateC <- struct{}{}
+			v.ExpiringSource.Apply(token)
 			v.authC <- true
 		}
 
