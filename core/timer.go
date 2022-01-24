@@ -14,7 +14,6 @@ type Timer struct {
 	sync.Mutex
 	clck    clock.Clock
 	started time.Time
-	cnt     int
 }
 
 // NewTimer creates timer that can expire
@@ -32,7 +31,6 @@ func (m *Timer) Start() {
 	if !m.started.IsZero() {
 		return
 	}
-	m.cnt = 0
 	m.started = m.clck.Now()
 }
 
@@ -44,7 +42,6 @@ func (m *Timer) Stop() {
 	if m.started.IsZero() {
 		return
 	}
-	m.cnt = 0
 	m.started = time.Time{}
 }
 
@@ -59,8 +56,7 @@ func (m *Timer) Expired() bool {
 
 	res := m.clck.Since(m.started) >= wakeupTimeout
 	if res {
-		m.started = m.clck.Now()
-		m.cnt++
+		m.started = time.Time{}
 	}
 
 	return res

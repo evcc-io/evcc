@@ -142,7 +142,7 @@ type LoadPoint struct {
 	pvTimer        time.Time              // PV enabled/disable timer
 	phaseTimer     time.Time              // 1p3p switch timer
 	wakeUpTimer    *Timer                 // Vehicle wakeUp
-
+	wakeUpTimerCnt int                    // wakeup called count
 	// charge progress
 	vehicleSoc              float64       // Vehicle SoC
 	chargeDuration          time.Duration // Charge duration
@@ -350,6 +350,7 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	// stop wakupTimer
 	lp.log.DEBUG.Printf("wakeuptimer: stop - charging")
 	lp.wakeUpTimer.Stop()
+	lp.wakeUpTimerCnt = 0
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -621,6 +622,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
 		// start/stop vehicle wakeup countdown
+		lp.wakeUpTimerCnt = 0
 		if enabled {
 			lp.log.DEBUG.Printf("wakeuptimer: start")
 			lp.wakeUpTimer.Start()
@@ -816,11 +818,13 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 func (lp *LoadPoint) wakeUpVehicle() {
 	// charger
-	if lp.wakeUpTimer.cnt == 1 {
+	if lp.wakeUpTimerCnt == 0 {
 		if c, ok := lp.charger.(api.AlarmClock); ok {
 			if err := c.WakeUp(); err != nil {
 				lp.log.ERROR.Printf("wakeUp charger: %v", err)
 			}
+			lp.wakeUpTimerCnt++
+			lp.wakeUpTimer.Start()
 			return
 		}
 	}
@@ -833,7 +837,6 @@ func (lp *LoadPoint) wakeUpVehicle() {
 			}
 		}
 	}
-	lp.wakeUpTimer.Stop()
 }
 
 // unpublishVehicle resets published vehicle data
