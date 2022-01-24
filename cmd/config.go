@@ -200,22 +200,24 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	return nil
 }
 
+func canonicalName(s string) string {
+	return strings.ToLower(strings.ReplaceAll(s, " ", "_"))
+}
+
 // webControl handles implemented routes by devices.
 // for now only api.ProviderLogin related routes
 func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 	router := httpd.Router()
 	for _, v := range cp.vehicles {
 		if provider, ok := v.(api.ProviderLogin); ok {
-			title := url.QueryEscape(strings.ToLower(strings.ReplaceAll(v.Title(), " ", "_")))
-
+			title := url.QueryEscape(canonicalName(v.Title()))
 			basePath := fmt.Sprintf("auth/vehicles/%s", title)
-			callbackPath := fmt.Sprintf("%s/callback", basePath)
 
 			baseURI := fmt.Sprintf("http://%s", httpd.Addr)
-			redirectURI := fmt.Sprintf("%s/%s", baseURI, callbackPath)
+			redirectURI := fmt.Sprintf("%s/%s/callback", baseURI, basePath)
 
 			provider.SetOAuthCallbackURI(redirectURI)
-			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
+			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), redirectURI)
 
 			// TODO: how to handle multiple vehicles of the same type
 			//
@@ -228,9 +230,8 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 			// TODO: what about https?
 			router.
 				Methods(http.MethodGet).
-				Path(callbackPath).
+				Path(fmt.Sprintf("%s/callback", basePath)).
 				HandlerFunc(provider.CallbackHandler(baseURI))
-
 			router.
 				Methods(http.MethodPost).
 				Path(fmt.Sprintf("%s/login", basePath)).
