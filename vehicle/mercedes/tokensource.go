@@ -33,6 +33,6 @@ func (ts *ExpiringSource) Token() (*oauth2.Token, error) {
 
 func (ts *ExpiringSource) Apply(t *oauth2.Token) {
 	ts.mu.Lock()
-	defer ts.mu.Unlock()
 	ts.t = t
+	ts.mu.Unlock()
 }
