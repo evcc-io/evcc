@@ -155,11 +155,11 @@ export default {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
 		providerLogins() {
-			return this.store.state.auth ? Object.entries(this.store.state.auth.vehicles).map((e) => ( {
-				title: e[0],
-				loggedIn: e[1].authenticated,
-				loginPath: e[1].uri + "/login",
-				logoutPath: e[1].uri + "/logout",
+			return this.store.state.auth ? Object.entries(this.store.state.auth.vehicles).map(([k,v]) => ({
+				title: k,
+				loggedIn: v.authenticated,
+				loginPath: v.uri + "/login",
+				logoutPath: v.uri + "/logout",
 			})) : [];
 		},
 	},
