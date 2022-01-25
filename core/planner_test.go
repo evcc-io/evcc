@@ -12,25 +12,15 @@ import (
 type MockTariff struct {
 	api.Tariff
 	start        time.Time
-	feature      string
+	prices       []float64
 	isCheapPrice bool
 }
 
 func (m MockTariff) Rates() ([]api.Rate, error) {
-	var r []float64
 	start := m.start
 
-	switch m.feature {
-	case "falling":
-		r = []float64{5, 4, 3, 2, 1, 0, 0, 0}
-	case "raising":
-		r = []float64{1, 2, 3, 4, 5, 6, 7, 8}
-	default:
-		r = []float64{}
-	}
-
 	var res []api.Rate
-	for _, v := range r {
+	for _, v := range m.prices {
 		ar := api.Rate{
 			Start: start,
 			End:   start.Add(1 * time.Hour),
@@ -56,13 +46,12 @@ func TestIsCheapSlotNow(t *testing.T) {
 	}
 	dt := time.Hour
 	tc := []struct {
-		desc        string
-		feature     string
-		cheapactive bool
-		end         time.Duration
-		series      []se
+		desc   string
+		prices []float64
+		end    time.Duration
+		series []se
 	}{
-		{"falling prices, 20min", "falling", false, 5 * time.Hour, []se{
+		{"falling prices", []float64{5, 4, 3, 2, 1, 0, 0, 0}, 5 * time.Hour, []se{
 			{1, 1*dt - 1, 20 * time.Minute, false},
 			{2, 2*dt - 1, 20 * time.Minute, false},
 			{3, 3*dt - 1, 20 * time.Minute, false},
@@ -72,27 +61,52 @@ func TestIsCheapSlotNow(t *testing.T) {
 			{7, 5*dt - 20*time.Minute, 20 * time.Minute, true},
 			{8, 5*dt + 1, 5 * time.Minute, false}, // after desired charge timer,
 		}},
-		{"raising prices, 1h", "raising", false, 5 * time.Hour, []se{
+		{"raising prices", []float64{1, 2, 3, 4, 5, 6, 7, 8}, 5 * time.Hour, []se{
 			{1, 1*dt - 1, time.Hour, true},
 			{2, 2*dt - 1, 5 * time.Minute, true}, // charging took longer than expected
 			{3, 3*dt - 1, 0, false},
 			{4, 5*dt + 1, 0, false}, // after desired charge timer
 		}},
-		{"after known prices, 1h", "falling", false, 5 * time.Hour, []se{
+		{"last slot", []float64{5, 2, 5, 4, 3, 5, 5, 5}, 5 * time.Hour, []se{
+			{1, 1*dt - 1, 70 * time.Minute, false},
+			{2, 2*dt - 1, 70 * time.Minute, true},
+			{3, 3*dt - 1, 20 * time.Minute, false},
+			{4, 4*dt - 1, 20 * time.Minute, false},
+			{5, 4*dt + 1, 20 * time.Minute, true}, // start as late as possible
+			{6, 4*dt + 40*time.Minute, 20 * time.Minute, true},
+		}},
+		{"don't stop for last slot", []float64{5, 4, 5, 2, 3, 5, 5, 5}, 5 * time.Hour, []se{
+			{1, 1*dt - 1, 70 * time.Minute, false},
+			{2, 2*dt - 1, 70 * time.Minute, false},
+			{3, 3*dt - 1, 70 * time.Minute, false},
+			{4, 4*dt - 1, 20 * time.Minute, true}, // don't pause last slot
+			{5, 4*dt + 1, 20 * time.Minute, true},
+		}},
+		{"delay expensiv middle", []float64{5, 4, 3, 5, 5, 5, 5, 5}, 5 * time.Hour, []se{
+			{1, 1*dt - 1, 70 * time.Minute, false},
+			{1, 1*dt + 1, 70 * time.Minute, false},
+			{2, 2*dt - 1, 61 * time.Minute, true}, // delayed start on expensiv slot
+			{3, 3*dt - 1, 60 * time.Minute, true}, // cheapest slot
+		}},
+		{"disable after known prices, 1h", []float64{5, 4, 3, 2, 1, 0, 0, 0}, 5 * time.Hour, []se{
 			{1, 20 * dt, time.Hour, false},
+		}},
+		{"fixed tariff", []float64{2}, 5 * time.Hour, []se{
+			{1, 0, 2 * time.Hour, true},
+			{1, 0, 10 * time.Minute, true},
 		}},
 	}
 
 	clck := clock.NewMock()
 	start := clck.Now()
 	for _, tc := range tc {
+		t.Logf("%+v", tc.desc)
 		clck.Set(start)
 
 		p := &Planner{
-			log:         util.NewLogger("foo"),
-			clock:       clck,
-			cheapactive: tc.cheapactive,
-			tariff:      MockTariff{feature: tc.feature, start: start, isCheapPrice: false},
+			log:    util.NewLogger("foo"),
+			clock:  clck,
+			tariff: MockTariff{prices: tc.prices, start: start, isCheapPrice: false},
 		}
 
 		for _, se := range tc.series {
@@ -114,21 +128,20 @@ func TestIsCheap(t *testing.T) {
 	}
 	dt := time.Hour
 	tc := []struct {
-		desc        string
-		feature     string
-		cheapactive bool
-		end         time.Duration
-		isCheap     bool
-		series      []se
+		desc    string
+		prices  []float64
+		end     time.Duration
+		isCheap bool
+		series  []se
 	}{
-		{"always cheap", "falling", false, 5 * time.Hour, true, []se{
+		{"always cheap", []float64{5, 4, 3, 2, 1, 0, 0, 0}, 5 * time.Hour, true, []se{
 			{1, 1*dt - 1, time.Minute, true},
 			{2, 2*dt - 1, time.Minute, true},
 			{3, 3*dt - 1, time.Minute, true},
 			{4, 4*dt - 1, time.Minute, true},
 			{5, 5*dt - 1, time.Minute, true},
 		}},
-		{"always expensive", "falling", true, 5 * time.Hour, false, []se{
+		{"always expensive", []float64{5, 4, 3, 2, 1, 0, 0, 0}, 5 * time.Hour, false, []se{
 			{1, 1*dt - 1, time.Minute, false},
 			{2, 2*dt - 1, time.Minute, false},
 			{3, 3*dt - 1, time.Minute, false},
@@ -140,13 +153,13 @@ func TestIsCheap(t *testing.T) {
 	clck := clock.NewMock()
 	start := clck.Now()
 	for _, tc := range tc {
+		t.Logf("%+v", tc.desc)
 		clck.Set(start)
 
 		p := &Planner{
-			log:         util.NewLogger("foo"),
-			clock:       clck,
-			cheapactive: tc.cheapactive,
-			tariff:      MockTariff{feature: tc.feature, start: start, isCheapPrice: tc.isCheap},
+			log:    util.NewLogger("foo"),
+			clock:  clck,
+			tariff: MockTariff{prices: tc.prices, start: start, isCheapPrice: tc.isCheap},
 		}
 
 		for _, se := range tc.series {
