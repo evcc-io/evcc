@@ -40,6 +40,7 @@ render: |
     source: http
     uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId=={{ .tokenid }}&sn={{ .serial}}
     jq: .result.feedinpower
+    cache: 2m30s
   {{- end}}
   {{- if eq .usage "pv" }}
     source: calc
