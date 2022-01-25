@@ -104,7 +104,7 @@ import Notifications from "../components/Notifications";
 
 import store from "../store";
 
-import authAPI from "../authapi";
+import baseAPI from "../baseapi";
 
 export default {
 	name: "App",
@@ -212,11 +212,11 @@ export default {
 		},
 		handleProviderAuthorization: async function (provider) {
 			if (!provider.loggedIn) {
-				authAPI.post(provider.loginPath).then(function (response) {
+				baseAPI.post(provider.loginPath).then(function (response) {
 					window.location.href = response.data.loginUri;
 				});
 			} else {
-				authAPI.post(provider.logoutPath);
+				baseAPI.post(provider.logoutPath);
 			}
 		},
 	},
