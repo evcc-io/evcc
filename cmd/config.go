@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
+	"github.com/gorilla/handlers"
 )
 
 type config struct {
@@ -210,23 +211,28 @@ func canonicalName(s string) string {
 func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Param) {
 	router := httpd.Router()
 
+	auth := router.PathPrefix("/auth").Subrouter()
+	auth.Use(handlers.CompressHandler)
+	auth.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
 	// initialize
 	cp.auth = util.NewAuthCollection(paramC)
 
 	for _, v := range cp.vehicles {
 		if provider, ok := v.(api.ProviderLogin); ok {
 			title := url.QueryEscape(canonicalName(v.Title()))
-			basePath := fmt.Sprintf("auth/vehicles/%s", title)
+			basePath := fmt.Sprintf("vehicles/%s", title)
 
 			// TODO make evccURI configurable, add warnings for any network/ localhost
 			evccURI := fmt.Sprintf("http://%s", httpd.Addr)
-
-			baseURI := fmt.Sprintf("%s/%s", evccURI, basePath)
-			redirectURI := fmt.Sprintf("%s/callback", baseURI)
+			baseURI := fmt.Sprintf("%s/auth/%s", evccURI, basePath)
 
 			// register vehicle
 			ap := cp.auth.Register(v.Title(), baseURI)
 
+			redirectURI := fmt.Sprintf("%s/callback", baseURI)
 			provider.SetCallbackParams(redirectURI, ap.Handler())
 			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), redirectURI)
 
@@ -238,17 +244,17 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 			// - or a general callback handler and the specific vehicle is transported in the state?
 			//   - callback handler needs an option to set the token at the right vehicle and use the right code exchange
 
-			router.
+			auth.
 				Methods(http.MethodGet).
-				Path(redirectURI).
+				Path(fmt.Sprintf("/%s/callback", basePath)).
 				HandlerFunc(provider.CallbackHandler(evccURI))
-			router.
+			auth.
 				Methods(http.MethodPost).
-				Path(fmt.Sprintf("%s/login", baseURI)).
+				Path(fmt.Sprintf("/%s/login", basePath)).
 				HandlerFunc(provider.LoginHandler())
-			router.
+			auth.
 				Methods(http.MethodPost).
-				Path(fmt.Sprintf("%s/logout", baseURI)).
+				Path(fmt.Sprintf("/%s/logout", basePath)).
 				HandlerFunc(provider.LogoutHandler())
 		}
 	}
