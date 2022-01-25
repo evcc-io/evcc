@@ -7,31 +7,28 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var (
-	ErrNotLoggedIn = fmt.Errorf("not logged in")
-	ErrExpired     = fmt.Errorf("token expired")
-)
+var ErrNotLoggedIn = fmt.Errorf("not logged in")
 
-type ExpiringSource struct {
+type ReuseTokenSource struct {
 	mu sync.Mutex
 	t  *oauth2.Token
+	cb func()
 }
 
-func (ts *ExpiringSource) Token() (*oauth2.Token, error) {
+func (ts *ReuseTokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
-	var err error
-	if ts.t == nil {
-		err = ErrNotLoggedIn
-	} else if !ts.t.Valid() {
-		err = ErrExpired
+	if ts.t.Valid() {
+		return ts.t, nil
 	}
 
-	return ts.t, err
+	ts.cb() // invalid token callback
+
+	return nil, ErrNotLoggedIn
 }
 
-func (ts *ExpiringSource) Apply(t *oauth2.Token) {
+func (ts *ReuseTokenSource) Apply(t *oauth2.Token) {
 	ts.mu.Lock()
 	ts.t = t
 	ts.mu.Unlock()

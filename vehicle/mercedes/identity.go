@@ -20,14 +20,14 @@ type IdentityOptions func(c *Identity) error
 // WithToken provides an oauth2.Token to the client for auth.
 func WithToken(t *oauth2.Token) IdentityOptions {
 	return func(v *Identity) error {
-		v.ExpiringSource.Apply(t)
+		v.ReuseTokenSource.Apply(t)
 		return nil
 	}
 }
 
 type Identity struct {
 	log *util.Logger
-	*ExpiringSource
+	*ReuseTokenSource
 	sessionSecret []byte
 	authC         chan<- bool
 	AuthConfig    *oauth2.Config
@@ -47,8 +47,7 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 	}
 
 	v := &Identity{
-		log:            log,
-		ExpiringSource: new(ExpiringSource),
+		log: log,
 		AuthConfig: &oauth2.Config{
 			ClientID:     id,
 			ClientSecret: secret,
@@ -57,6 +56,7 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 		},
 	}
 
+	v.ReuseTokenSource = &ReuseTokenSource{cb: v.invalidToken}
 	v.sessionSecret, err = generateSecret()
 
 	for _, o := range options {
@@ -66,6 +66,13 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 	}
 
 	return v, err
+}
+
+// invalidToken is the callback for the token source when token expires
+func (v *Identity) invalidToken() {
+	if v.authC != nil {
+		v.authC <- false
+	}
 }
 
 var _ api.ProviderLogin = (*Identity)(nil)
@@ -94,7 +101,7 @@ func (v *Identity) LoginHandler() http.HandlerFunc {
 
 func (v *Identity) LogoutHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		v.ExpiringSource.Apply(nil)
+		v.ReuseTokenSource.Apply(nil)
 		v.authC <- false
 
 		w.WriteHeader(http.StatusOK)
@@ -140,7 +147,7 @@ func (v *Identity) CallbackHandler(baseURI string) http.HandlerFunc {
 
 		if token.Valid() {
 			v.log.TRACE.Println("sending login update...")
-			v.ExpiringSource.Apply(token)
+			v.ReuseTokenSource.Apply(token)
 			v.authC <- true
 		}
 
