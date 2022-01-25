@@ -1,6 +1,8 @@
 product:
   brand: Solax
   description: Hybrid X3
+description: |
+  Der Solax Inverter muss via Ethernet an das lokale Netzwerk angeschlossen sein.
 
 render:
 - usage: grid
