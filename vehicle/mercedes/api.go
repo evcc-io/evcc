@@ -1,7 +1,6 @@
 package mercedes
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -28,8 +27,11 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 		ProviderLogin: identity,
 	}
 
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-	v.Client = oauth2.NewClient(ctx, identity)
+	// replace client transport with authenticated transport
+	v.Client.Transport = &oauth2.Transport{
+		Source: identity,
+		Base:   v.Client.Transport,
+	}
 
 	return v
 }
