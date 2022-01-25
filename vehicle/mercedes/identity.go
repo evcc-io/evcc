@@ -30,7 +30,7 @@ type Identity struct {
 	*ReuseTokenSource
 	sessionSecret []byte
 	authC         chan<- bool
-	AuthConfig    *oauth2.Config
+	oc            *oauth2.Config
 }
 
 func generateSecret() ([]byte, error) {
@@ -48,7 +48,7 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 
 	v := &Identity{
 		log: log,
-		AuthConfig: &oauth2.Config{
+		oc: &oauth2.Config{
 			ClientID:     id,
 			ClientSecret: secret,
 			Endpoint:     provider.Endpoint(),
@@ -78,7 +78,7 @@ func (v *Identity) invalidToken() {
 var _ api.ProviderLogin = (*Identity)(nil)
 
 func (v *Identity) SetCallbackParams(uri string, authC chan<- bool) {
-	v.AuthConfig.RedirectURL = uri
+	v.oc.RedirectURL = uri
 	v.authC = authC
 }
 
@@ -89,7 +89,7 @@ func (v *Identity) LoginHandler() http.HandlerFunc {
 		b, _ := json.Marshal(struct {
 			LoginUri string `json:"loginUri"`
 		}{
-			LoginUri: v.AuthConfig.AuthCodeURL(state.Encrypt(), oauth2.AccessTypeOffline,
+			LoginUri: v.oc.AuthCodeURL(state.Encrypt(), oauth2.AccessTypeOffline,
 				oauth2.SetAuthURLParam("prompt", "login consent"),
 			),
 		})
@@ -139,7 +139,7 @@ func (v *Identity) CallbackHandler(baseURI string) http.HandlerFunc {
 			return
 		}
 
-		token, err := v.AuthConfig.Exchange(context.Background(), codes[0])
+		token, err := v.oc.Exchange(context.Background(), codes[0])
 		if err != nil {
 			fmt.Fprintln(w, "token error:", err)
 			return
