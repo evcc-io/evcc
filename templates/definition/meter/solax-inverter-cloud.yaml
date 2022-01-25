@@ -22,8 +22,16 @@ params:
   description:
     generic: SolaxCloud TokenID
   help:
-    de: Auf http://solaxcloud.com im Haupmenü "Service" auswählen. Auf dieser Seite den Wert von "ObtaintokenID" hier eintragen.
-    en: Go to http://solaxcloud.com and select "Service" in the main menu. Enter the value of "ObtaintokenID" in this field.
+    de: Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
+    en: Go to https://www.solaxcloud.com/#/api and take the value of "ObtaintokenID".
+- name: serial
+  required: true
+  description:
+    de: Seriennummer
+    en: Serial number
+  help:
+    de: Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+    en: Go to https://www.solaxcloud.com/#/inverter and take the value of registration number
 render: |
   type: custom
   power:
@@ -31,7 +39,7 @@ render: |
     # Mini WR  XXXXXXXXXXXX
     # AC Power
     source: http
-    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}
+    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
     jq: if .result.acpower < 10 then 0 else .result.acpower end   Solax API Inverter.AC.power.total
     cache: 2m30s
   {{- end }}

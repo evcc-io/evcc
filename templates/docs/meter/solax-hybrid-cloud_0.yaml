@@ -8,15 +8,24 @@ description: |
   
 
 render:
+- usage: grid
+  default: |
+    type: template
+    template: solax-hybrid-cloud
+    usage: grid
+    tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen. 
+    serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen. 
 - usage: pv
   default: |
     type: template
     template: solax-hybrid-cloud
     usage: pv
-    tokenid: # Auf http://solaxcloud.com im Haupmenü "Service" auswählen. Auf dieser Seite den Wert von "ObtaintokenID" hier eintragen. 
+    tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen. 
+    serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen. 
 - usage: battery
   default: |
     type: template
     template: solax-hybrid-cloud
     usage: battery
-    tokenid: # Auf http://solaxcloud.com im Haupmenü "Service" auswählen. Auf dieser Seite den Wert von "ObtaintokenID" hier eintragen.
+    tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen. 
+    serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.

@@ -13,4 +13,5 @@ render:
     type: template
     template: solax-inverter-cloud
     usage: pv
-    tokenid: # Auf http://solaxcloud.com im Haupmenü "Service" auswählen. Auf dieser Seite den Wert von "ObtaintokenID" hier eintragen.
+    tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen. 
+    serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
