@@ -3,7 +3,6 @@ package mercedes
 import (
 	"fmt"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -17,14 +16,12 @@ const BaseURI = "https://api.mercedes-benz.com/vehicledata/v2"
 // API is the Mercedes api client
 type API struct {
 	*request.Helper
-	api.ProviderLogin
 }
 
 // NewAPI creates a new api client
 func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
-		Helper:        request.NewHelper(log),
-		ProviderLogin: identity,
+		Helper: request.NewHelper(log),
 	}
 
 	// replace client transport with authenticated transport
