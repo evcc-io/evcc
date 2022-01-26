@@ -196,25 +196,10 @@ type WebController interface {
 	WebControl(*mux.Router)
 }
 
-type Callback struct {
-	Path    string
-	Handler RedirectHandlerFunc
-}
-
-// RedirectHandlerFunc should return an http.HandlerFunc responding with an http.Redirect(..., redirectURi, ...)
-type RedirectHandlerFunc func(redirectURI string) http.HandlerFunc
+// ProviderLogin is the ability to provide OAuth authentication through the ui
 type ProviderLogin interface {
-	SetBasePath(basePath string)
-
-	// Provides ....
-	Callback() Callback
-	SetOAuthCallbackURI(uri string)
-
-	LoggedIn() bool
-
-	LoginPath() string
+	SetCallbackParams(uri string, authenticated chan<- bool)
 	LoginHandler() http.HandlerFunc
-
-	LogoutPath() string
 	LogoutHandler() http.HandlerFunc
+	CallbackHandler(baseURI string) http.HandlerFunc
 }

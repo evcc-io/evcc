@@ -104,7 +104,7 @@ import Notifications from "../components/Notifications";
 
 import store from "../store";
 
-import authAPI from "../authapi";
+import baseAPI from "../baseapi";
 
 export default {
 	name: "App",
@@ -155,14 +155,14 @@ export default {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
 		providerLogins() {
-			return this.store.state.loadpoints
-				.filter((lp) => lp.vehicleProviderLoginPath && lp.vehicleProviderLogoutPath)
-				.map((lp) => ({
-					title: lp.vehicleTitle,
-					loggedIn: lp.vehicleProviderLoggedIn,
-					loginPath: lp.vehicleProviderLoginPath,
-					logoutPath: lp.vehicleProviderLogoutPath,
-				}));
+			return this.store.state.auth
+				? Object.entries(this.store.state.auth.vehicles).map(([k, v]) => ({
+						title: k,
+						loggedIn: v.authenticated,
+						loginPath: v.uri + "/login",
+						logoutPath: v.uri + "/logout",
+				  }))
+				: [];
 		},
 	},
 	created: function () {
@@ -212,11 +212,11 @@ export default {
 		},
 		handleProviderAuthorization: async function (provider) {
 			if (!provider.loggedIn) {
-				authAPI.post(provider.loginPath).then(function (response) {
+				baseAPI.post(provider.loginPath).then(function (response) {
 					window.location.href = response.data.loginUri;
 				});
 			} else {
-				authAPI.post(provider.logoutPath);
+				baseAPI.post(provider.logoutPath);
 			}
 		},
 	},

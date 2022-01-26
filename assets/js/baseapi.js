@@ -4,9 +4,6 @@ const { protocol, hostname, port, pathname } = window.location;
 
 const baseAPI = axios.create({
   baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname + "/",
-  headers: {
-    Accept: "application/json",
-  },
 });
 
 // global error handling
