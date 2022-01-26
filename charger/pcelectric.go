@@ -58,7 +58,8 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 	wb, err := NewPCElectric(util.DefaultScheme(cc.URI, "http"), cc.SlaveIndex, cc.Meter)
 	if err == nil {
 		var res pcelectric.MeterInfo
-		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
+		uri := fmt.Sprintf("%s/meterinfo/%s", wb.uri, wb.meter)
+		if err := wb.GetJSON(uri, &res); err == nil && res.MeterSerial != "" {
 			return decoratePCE(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
 		}
 
@@ -107,7 +108,6 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 // Status implements the api.Charger interface
 func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 	var chargeStatus int
-	var sessionStartTime int64
 
 	if wb.mode2 { //Firmware patched, POWER STATUS available:
 		var status pcelectric.SlaveMode2
@@ -116,7 +116,6 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 			return api.StatusNone, err
 		}
 		chargeStatus = status.ChargeStatus
-		sessionStartTime = status.SessionStartTime
 	} else if wb.slaveIndex == 0 {
 		var status pcelectric.Status
 
@@ -125,7 +124,6 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 			return api.StatusNone, err
 		}
 		chargeStatus = status.ChargeStatus
-		sessionStartTime = status.SessionStartTime
 	} else {
 		var status pcelectric.SlaveStatus
 
@@ -137,7 +135,6 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 			return api.StatusNone, nil
 		}
 		chargeStatus = status[wb.slaveIndex].ChargeStatus
-		sessionStartTime = status[wb.slaveIndex].SessionStartTime
 	}
 	wb.log.DEBUG.Printf("chargeStatus: %d", chargeStatus)
 
