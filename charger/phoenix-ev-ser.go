@@ -38,8 +38,8 @@ func NewPhoenixEVSerFromConfig(other map[string]interface{}) (api.Charger, error
 }
 
 // NewPhoenixEVSer creates a Phoenix charger
-func NewPhoenixEVSer(uri, device, comset string, baudrate int, format modbus.Protocol, id uint8) (*PhoenixEVSer, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, format, id)
+func NewPhoenixEVSer(uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (*PhoenixEVSer, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, id)
 	if err != nil {
 		return nil, err
 	}
