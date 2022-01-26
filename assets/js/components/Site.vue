@@ -1,16 +1,22 @@
 <template>
-	<div class="flex-grow-1 d-flex flex-column">
+	<div class="d-flex flex-column top-area">
 		<div class="container" @click="toggleDetails">
 			<h2 class="d-block my-4">
 				{{ siteTitle || "Home" }}
 			</h2>
-			<Energyflow v-bind="energyflow" :details-visible="detailsVisible" />
+			<Energyflow v-bind="energyflow" />
 		</div>
-		<div class="flex-grow-1 d-flex flex-column content-area">
+		<div
+			class="d-flex flex-column content-area"
+			:style="{
+				transform: `translateY(${detailsVisible ? detailsHeight : 10}px)`,
+				'padding-bottom': `${detailsVisible ? detailsHeight : 10}px`,
+			}"
+		>
 			<div class="toggle-handle py-3 d-flex justify-content-center" @click="toggleDetails">
 				<shopicon-regular-arrowup
 					class="toggle-icon"
-					:class="`toggle-icon--${detailsVisible ? 'up' : 'down'}`"
+					:class="`toggle-icon--${detailsVisible ? 'down' : 'up'}`"
 				></shopicon-regular-arrowup>
 			</div>
 			<div class="container">
@@ -27,6 +33,7 @@
 					</div>
 				</div>
 			</div>
+			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
 </template>
@@ -34,13 +41,14 @@
 <script>
 import "@h2d2/shopicons/es/regular/arrowup";
 import Energyflow from "./Energyflow";
+import Footer from "./Footer";
 import Loadpoint from "./Loadpoint";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
-	components: { Loadpoint, Energyflow },
+	components: { Loadpoint, Energyflow, Footer },
 	mixins: [formatter, collector],
 	props: {
 		loadpoints: Array,
@@ -57,11 +65,23 @@ export default {
 		gridCurrents: Array,
 		prioritySoC: Number,
 		siteTitle: String,
+
+		// footer
+		currency: String,
+		savingsAmount: Number,
+		savingsEffectivePrice: Number,
+		savingsGridCharged: Number,
+		savingsSelfConsumptionCharged: Number,
+		savingsSelfConsumptionPercent: Number,
+		savingsSince: Number,
+		savingsTotalCharged: Number,
+		tariffFeedIn: Number,
+		tariffGrid: Number,
 	},
 	data: function () {
 		return {
 			detailsVisible: false,
-			upperHeight: 0,
+			detailsHeight: 0,
 		};
 	},
 	computed: {
@@ -77,27 +97,68 @@ export default {
 				return sum;
 			}, 0);
 		},
+		footer: function () {
+			return {
+				version: {
+					installed: window.evcc.version,
+					available: this.availableVersion,
+					releaseNotes: this.releaseNotes,
+					hasUpdater: this.hasUpdater,
+					uploadMessage: this.uploadMessage,
+					uploadProgress: this.uploadProgress,
+				},
+				sponsor: this.sponsor,
+				savings: {
+					since: this.savingsSince,
+					totalCharged: this.savingsTotalCharged,
+					gridCharged: this.savingsGridCharged,
+					selfConsumptionCharged: this.savingsSelfConsumptionCharged,
+					amount: this.savingsAmount,
+					effectivePrice: this.savingsEffectivePrice,
+					selfConsumptionPercent: this.savingsSelfConsumptionPercent,
+					gridPrice: this.tariffGrid,
+					feedInPrice: this.tariffFeedIn,
+					currency: this.currency,
+				},
+			};
+		},
+	},
+
+	mounted() {
+		this.updateDetailHeight();
+		window.addEventListener("resize", this.updateDetailHeight);
+	},
+	destroyed() {
+		window.removeEventListener("resize", this.updateDetailHeight);
 	},
 	methods: {
+		updateDetailHeight: function () {
+			this.detailsHeight = this.$el.querySelector("[data-collapsible-details]").offsetHeight;
+		},
 		toggleDetails() {
+			this.updateDetailHeight();
 			this.detailsVisible = !this.detailsVisible;
 		},
 	},
 };
 </script>
 <style scoped>
+.top-area {
+	background: var(--bs-white);
+}
 .content-area {
 	background-color: var(--bs-gray-dark);
 	border-radius: 20px 20px 0 0;
 	color: var(--bs-white);
-	z-index: 10;
-	min-height: 90vh;
+	transform: translateY(0);
+	transition-property: transform;
+	transition-duration: 0.5s;
+	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);
 }
 .toggle-handle {
 	cursor: pointer;
 	color: var(--bs-gray-medium);
 }
-
 .toggle-icon {
 	transition: transform 0.3s linear;
 }

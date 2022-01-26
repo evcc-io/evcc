@@ -5,7 +5,7 @@
 			href="#"
 			data-bs-toggle="modal"
 			data-bs-target="#notificationModal"
-			class="btn btn-link text-decoration-none link-light text-nowrap"
+			class="btn btn-sm btn-link text-decoration-none link-light text-nowrap"
 		>
 			<shopicon-regular-exclamationtriangle
 				:class="iconClass"
@@ -14,10 +14,11 @@
 
 		<div
 			id="notificationModal"
-			class="modal fade"
+			class="modal fade text-dark"
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
+			data-bs-backdrop="false"
 		>
 			<div
 				class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"

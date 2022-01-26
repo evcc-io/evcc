@@ -27,8 +27,6 @@ export default {
 
 <style scoped>
 .footer {
-	background-color: var(--bs-gray-dark);
-	border-top: 1px solid var(--bs-white);
 	color: var(--bs-white);
 }
 </style>

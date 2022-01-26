@@ -1,118 +1,60 @@
 <template>
-	<div class="app d-flex flex-column justify-content-between overflow-hidden">
-		<div class="flex-grow-1 d-flex flex-column justify-content-between">
-			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-				<div class="container">
-					<a class="navbar-brand" href="https://evcc.io/" target="_blank">
-						<Logo class="logo"></Logo>
+	<div class="app overflow-hidden">
+		<div class="position-absolute top-0 end-0 d-flex px-3 py-4 align-items-center">
+			<Notifications :notifications="notifications" class="me-2" />
+			<button
+				type="button"
+				data-bs-toggle="dropdown"
+				data-bs-target="#navbarNavAltMarkup"
+				aria-controls="navbarNavAltMarkup"
+				aria-expanded="false"
+				aria-label="Toggle navigation"
+				class="btn btn-sm btn-outline-secondary"
+			>
+				<shopicon-regular-menu></shopicon-regular-menu>
+			</button>
+			<ul class="dropdown-menu dropdown-menu-end">
+				<li>
+					<a class="dropdown-item" href="https://docs.evcc.io/blog/" target="_blank">
+						{{ $t("header.blog") }}
 					</a>
-					<div class="d-flex flex-grow-1 justify-content-end">
-						<Notifications :notifications="notifications" />
-						<button
-							class="navbar-toggler"
-							type="button"
-							data-bs-toggle="collapse"
-							data-bs-target="#navbarNavAltMarkup"
-							aria-controls="navbarNavAltMarkup"
-							aria-expanded="false"
-							aria-label="Toggle navigation"
-						>
-							<span class="navbar-toggler-icon"></span>
-						</button>
-					</div>
-					<div id="navbarNavAltMarkup" class="collapse navbar-collapse flex-grow-0">
-						<ul class="navbar-nav">
-							<li class="nav-item">
-								<a
-									class="nav-link"
-									href="https://docs.evcc.io/blog/"
-									target="_blank"
-								>
-									{{ $t("header.blog") }}
-								</a>
-							</li>
-							<li class="nav-item">
-								<a
-									class="nav-link"
-									href="https://docs.evcc.io/docs/Home/"
-									target="_blank"
-								>
-									{{ $t("header.docs") }}
-								</a>
-							</li>
-							<li class="nav-item">
-								<a
-									class="nav-link"
-									href="https://github.com/evcc-io/evcc"
-									target="_blank"
-								>
-									{{ $t("header.github") }}
-								</a>
-							</li>
-						</ul>
-					</div>
-				</div>
-			</nav>
-			<router-view
-				class="flex-grow-1 d-flex flex-column justify-content-stretch"
-			></router-view>
+				</li>
+				<li>
+					<a class="dropdown-item" href="https://docs.evcc.io/docs/Home/" target="_blank">
+						{{ $t("header.docs") }}
+					</a>
+				</li>
+				<li>
+					<a class="dropdown-item" href="https://github.com/evcc-io/evcc" target="_blank">
+						{{ $t("header.github") }}
+					</a>
+				</li>
+			</ul>
 		</div>
-		<Footer :version="version" :sponsor="sponsor" :savings="savings"></Footer>
+		<router-view class="flex-grow-1 d-flex flex-column justify-content-stretch"></router-view>
 	</div>
 </template>
 
 <script>
-import "../icons";
-import Logo from "../components/Logo";
-import Footer from "../components/Footer";
 import Notifications from "../components/Notifications";
+import "@h2d2/shopicons/es/regular/menu";
 
 import store from "../store";
 
 export default {
 	name: "App",
-	components: { Logo, Footer, Notifications },
+	components: { Notifications },
 	props: {
 		notifications: Array,
 	},
 	data: function () {
 		return {
-			compact: false,
 			store: this.$root.$data.store,
-			installedVersion: window.evcc.version,
-			commit: window.evcc.commit,
 		};
 	},
 	computed: {
-		version: function () {
-			return {
-				installed: this.installedVersion,
-				available: this.store.state.availableVersion,
-				releaseNotes: this.store.state.releaseNotes,
-				hasUpdater: this.store.state.hasUpdater,
-				uploadMessage: this.store.state.uploadMessage,
-				uploadProgress: this.store.state.uploadProgress,
-			};
-		},
 		title: function () {
 			return this.store.state.siteTitle;
-		},
-		sponsor: function () {
-			return this.store.state.sponsor;
-		},
-		savings: function () {
-			return {
-				since: this.store.state.savingsSince,
-				totalCharged: this.store.state.savingsTotalCharged,
-				gridCharged: this.store.state.savingsGridCharged,
-				selfConsumptionCharged: this.store.state.savingsSelfConsumptionCharged,
-				amount: this.store.state.savingsAmount,
-				effectivePrice: this.store.state.savingsEffectivePrice,
-				selfConsumptionPercent: this.store.state.savingsSelfConsumptionPercent,
-				gridPrice: this.store.state.tariffGrid,
-				feedInPrice: this.store.state.tariffFeedIn,
-				currency: this.store.state.currency,
-			};
 		},
 	},
 	created: function () {
@@ -174,9 +116,6 @@ export default {
 }
 .app {
 	min-height: 100vh;
-}
-.title {
-	position: relative;
-	top: 0.1rem;
+	background-color: var(--bs-gray-dark);
 }
 </style>

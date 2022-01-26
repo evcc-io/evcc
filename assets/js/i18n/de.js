@@ -2,8 +2,8 @@ export default {
   header: { docs: "Dokumentation", blog: "Blog", github: "GitHub" },
   footer: {
     version: {
-      versionShort: "v{installed}",
-      versionLong: "Version {installed}",
+      versionShort: "evcc v{installed}",
+      versionLong: "evcc {installed}",
       availableShort: "Update",
       availableLong: "Update verfügbar",
       modalTitle: "Update verfügbar",

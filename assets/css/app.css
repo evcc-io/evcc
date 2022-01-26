@@ -86,6 +86,12 @@ a {
 .text-grid {
 	color: var(--evcc-grid);
 }
+.text-dark {
+	color: var(--bs-gray-dark);
+}
+.bg-dark {
+	background-color: var(--bs-gray-dark) !important;
+}
 
 @media screen and (min-width: 400px) and (max-width: 574px) {
 	.d-xs-none {

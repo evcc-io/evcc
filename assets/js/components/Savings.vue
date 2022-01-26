@@ -17,6 +17,7 @@
 			id="savingsModal"
 			ref="modal"
 			class="modal fade text-dark"
+			data-bs-backdrop="false"
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
