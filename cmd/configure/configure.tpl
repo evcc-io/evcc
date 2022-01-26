@@ -30,8 +30,7 @@ loadpoints:
 - title: {{ .Title }}
   charger: {{ .Charger }}
 {{-     if .ChargeMeter }}
-  meters:
-    charge: {{ .ChargeMeter }}
+  meter: {{ .ChargeMeter }}
 {{-     end }}
 {{-     if ne (len .Vehicles) 0 }}
   vehicles:

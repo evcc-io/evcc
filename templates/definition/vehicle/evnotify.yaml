@@ -1,7 +1,8 @@
 template: evnotify
-description: 
-  generic: evNotify
-generic: true
+products:
+- description:
+    generic: evNotify
+group: generic
 params:
 - name: title
 - name: akey
@@ -11,7 +12,7 @@ params:
 - name: capacity
   default: 64
   valuetype: float
-- base: vehicleidentify
+- preset: vehicleidentify
 render: |
   type: custom
   {{- if ne .title "" }}

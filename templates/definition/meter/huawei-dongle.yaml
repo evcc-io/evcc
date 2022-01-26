@@ -1,0 +1,25 @@
+template: huawei-dongle
+products:
+- brand: Huawei
+  description:
+    generic: SUN2000 with Sdongle
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "pv" ]
+- name: modbus
+  choice: ["tcpip"]
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{include "modbus" . | indent 2}}
+    model: huawei
+    timeout: 30s
+    connectdelay: 5s
+    delay: 2s
+    register:
+      address: 32080 # Active generation power
+      type: holding
+      decode: int32

@@ -1,7 +1,8 @@
 template: ovms
-description: 
-  generic: Open Vehicle Monitoring System
-generic: true
+products:
+- description:
+    generic: Open Vehicle Monitoring System
+group: generic
 params:
 - name: title
 - name: user
@@ -13,7 +14,7 @@ params:
   required: true
 - name: capacity
   default: 12
-- base: vehicleidentify
+- preset: vehicleidentify
 render: |
   type: ovms
   {{- if ne .title "" }}

@@ -1,9 +1,11 @@
 template: enyaq
-description: 
-  generic: Skoda (Enyaq)
+products:
+- brand: Skoda
+  description:
+    generic: Enyaq
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: capacity
   default: 50
 render: |

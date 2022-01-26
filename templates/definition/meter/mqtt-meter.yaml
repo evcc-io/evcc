@@ -1,10 +1,11 @@
 template: mqtt-meter
-description: 
-  de: MQTT Strommessgerät
-  en: MQTT Meter
-generic: true
-requirements:
-  mqtt: true
+products:
+- description:
+    de: MQTT Strommessgerät
+    en: MQTT Meter
+group: generic
+requirements: 
+  evcc: ["mqtt"]
 params:
 - name: usage
   choice: [ "grid", "pv", "charge", "battery" ]

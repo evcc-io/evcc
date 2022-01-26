@@ -1,6 +1,8 @@
 template: smart
-description: 
-  generic: Smart EQ
+products:
+- brand: Smart
+  description:
+    generic: EQ
 params:
 - base: vehiclebase
 - base: vehicleidentify

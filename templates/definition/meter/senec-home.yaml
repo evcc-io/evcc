@@ -1,6 +1,8 @@
 template: senec-home
-description: 
-  generic: SENEC.Home
+products:
+- brand: SENEC
+  description:
+    generic: .Home
 guidedsetup:
   enable: true
 params:

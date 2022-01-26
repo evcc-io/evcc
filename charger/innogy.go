@@ -70,7 +70,7 @@ func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewInnogy creates a Innogy charger
 func NewInnogy(uri string, id uint8) (*Innogy, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

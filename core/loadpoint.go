@@ -100,8 +100,9 @@ type LoadPoint struct {
 	ChargerRef  string   `mapstructure:"charger"`  // Charger reference
 	VehicleRef  string   `mapstructure:"vehicle"`  // Vehicle reference
 	VehiclesRef []string `mapstructure:"vehicles"` // Vehicles reference
+	MeterRef    string   `mapstructure:"meter"`    // Charge meter reference
 	Meters      struct {
-		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
+		ChargeMeterRef string `mapstructure:"charge"` // deprecated
 	}
 	SoC               SoCConfig
 	OnDisconnect_     interface{} `mapstructure:"onDisconnect"`
@@ -198,8 +199,18 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	// store defaults
 	lp.collectDefaults()
 
+	if lp.MeterRef != "" {
+		lp.chargeMeter = cp.Meter(lp.MeterRef)
+	}
+
+	// deprecated
 	if lp.Meters.ChargeMeterRef != "" {
-		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
+		lp.log.WARN.Println("meters: charge: is deprecated. Use meter: instead")
+		if lp.chargeMeter == nil {
+			lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
+		} else {
+			lp.log.ERROR.Println("must not have meter: and meters: charge: both")
+		}
 	}
 
 	// multiple vehicles
@@ -530,9 +541,6 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	if len(lp.vehicles) > 1 {
 		lp.startVehicleDetection()
 	}
-
-	// publish providerLogins
-	lp.publishProviderLogins()
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
@@ -1393,9 +1401,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
 
-	// publish providerLogins
-	lp.publishProviderLogins()
-
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
 		lp.log.ERROR.Printf("charger: %v", err)
@@ -1523,15 +1528,5 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		lp.updateChargeCurrents()
 	} else {
 		lp.log.ERROR.Println(err)
-	}
-}
-
-func (lp *LoadPoint) publishProviderLogins() {
-	for _, vehicle := range lp.vehicles {
-		if provider, ok := vehicle.(api.ProviderLogin); ok {
-			lp.publish("vehicleProviderLoggedIn", provider.LoggedIn())
-			lp.publish("vehicleProviderLoginPath", provider.LoginPath())
-			lp.publish("vehicleProviderLogoutPath", provider.LogoutPath())
-		}
 	}
 }

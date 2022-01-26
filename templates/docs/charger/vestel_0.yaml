@@ -1,0 +1,14 @@
+product:
+  brand: Vestel
+  description: EVC04
+requirements: ["sponsorship"]
+
+render:
+- default: |
+    type: template
+    template: vestel
+    # Modbus Start
+    id: 255
+    # TCPIP
+    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+    # Modbus End
