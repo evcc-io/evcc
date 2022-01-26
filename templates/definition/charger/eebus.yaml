@@ -1,12 +1,12 @@
 template: eebus
-description:
-  de: EEBUS kompatible Wallbox
-  en: EEBUS compatible Wallbox
-generic: true
-capabilities:
-  iso151182: true
-requirements:
-  eebus: true
+products:
+- description:
+    de: EEBUS kompatible Wallbox
+    en: EEBUS compatible Wallbox
+group: generic
+capabilities: ["iso151182"]
+requirements: 
+  evcc: ["eebus"]
 params:
 - name: ski
   required: true

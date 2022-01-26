@@ -20,7 +20,7 @@ type State struct {
 	Time time.Time
 }
 
-// TODO: Move to another more general place in the repo
+// TODO Move to another more general place in the repo
 func NewState(key []byte) State {
 	return State{
 		key:  key,

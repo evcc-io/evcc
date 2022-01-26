@@ -1,9 +1,9 @@
 template: kia
-description: 
-  generic: Kia
+products:
+- brand: Kia
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: capacity
   default: 64
 render: |

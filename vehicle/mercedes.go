@@ -42,7 +42,7 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	var options []mercedes.IdentityOptions
 
-	// TODO: Load tokens from a persistence storage and use those during startup
+	// TODO Load tokens from a persistence storage and use those during startup
 	// e.g. persistence.Load("key")
 	// if tokens != nil {
 	// 	options = append(options, mercedes.WithToken(&oauth2.Token{
@@ -54,15 +54,13 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("mercedes")
 
-	updateC := make(chan struct{})
-
-	// TODO: session secret from config/persistence
-	identity, err := mercedes.NewIdentity(log, cc.ClientID, cc.ClientSecret, updateC, options...)
+	// TODO session secret from config/persistence
+	identity, err := mercedes.NewIdentity(log, cc.ClientID, cc.ClientSecret, options...)
 	if err != nil {
 		return nil, err
 	}
 
-	api := mercedes.NewAPI(log, identity, updateC)
+	api := mercedes.NewAPI(log, identity)
 
 	v := &Mercedes{
 		embed:    &cc.embed,

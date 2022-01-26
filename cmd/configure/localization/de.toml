@@ -15,6 +15,9 @@ Flow_SingleDevice_Setup = "- Ein Gerät konfigurieren"
 Flow_SingleDevice_Select = "Wähle eines der folgenden Gerätekategorien aus"
 Flow_SingleDevice_Config = "Die Konfiguration lautet:"
 
+Flow_SMAHems_Setup = "- SMA HEMS konfigurieren"
+Flow_SMAHems_Add = "Möchtest du die Wallboxen an den SMA Home Manager anbinden, damit diese z.B. für die Steuerung der Hausbatterie berücksichtigt werden können?"
+
 ItemNotPresent = "Mein Gerät ist nicht in der Liste"
 
 AddDeviceInCategory = "Möchtest du {{ .Article }} {{ .Category }} hinzufügen?"
@@ -36,35 +39,6 @@ File_Error_SaveFailed = "Die Konfiguration konnte nicht in der Datei {{ .FileNam
 File_SaveSuccess = "Die Konfiguration wurde erfolgreich in der Datei {{ .FileName }} gespeichert"
 
 Choose = "Wähle"
-
-UserFriendly_Title_Name = "Titel"
-UserFriendly_Title_Help = "Wird in der Benutzeroberfläche angezeigt"
-UserFriendly_Device_Name = "Geräteadresse"
-UserFriendly_Device_Help = "USB-RS485 Adapter Adresse"
-UserFriendly_Baudrate_Name = "Baudrate"
-UserFriendly_Baudrate_Help = "Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200"
-UserFriendly_ComSet_Name = "ComSet"
-UserFriendly_Host_Name = "IP-Adresse oder Hostname"
-UserFriendly_Port_Name = "Port"
-UserFriendly_User_Name = "Benutzername"
-UserFriendly_Password_Name = "Passwort"
-UserFriendly_Capacity_Name = "Akku-Kapazität in kWh"
-UserFriendly_Vin_Name = "Fahrzeugidentifikationsnummer"
-UserFriendly_Vin_Help = "Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind"
-UserFriendly_Cache_Name = "Cache"
-UserFriendly_Cache_Help = "Das zeitliche Interval, in welchem Daten vom Fahrzeug neu geladen werden soll"
-UserFriendly_MinSoC_Name = "Minimaler Ladestand (SoC) in %"
-UserFriendly_MinSoC_Help = "Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht"
-UserFriendly_TargetSoC_Name = "Ziel-Ladestand (SoC) in %"
-UserFriendly_TargetSoC_Help = "Bis zu welchem Ladestand (SoC) soll das Fahrzeug geladen werden"
-UserFriendly_MinCurrent_Name = "Minimale Stromstärke in Ampere (A)"
-UserFriendly_MinCurrent_Help = "Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll"
-UserFriendly_MaxCurrent_Name = "Maximale Stromstärke in Ampere (A)"
-UserFriendly_MaxCurrent_Help = "Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll"
-UserFriendly_Identifier_Name = "Identifikationsnummer"
-UserFriendly_Identifier_Help = "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
-UserFriendly_StandByPower_Name = "Standby-Leistung in W"
-UserFriendly_StandByPower_Help = "Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet"
 
 Category_ChargerTitle = "Wallbox"
 Category_ChargerArticle = "eine"
@@ -96,10 +70,11 @@ TestingDevice_AddFailedUsage = "Der Test der {{ .Usage }} Konfiguration von {{ .
 
 TestingMQTTFailed = "Der Test der MQTT Konfiguration ist fehlgeschlagen. Möchten Sie die Konfiguration wiederholen?"
 
-Requirements_Title = "Das Gerät muss die folgenden Voraussetzungen erfüllen:"
+Requirements_Title = "Das Gerät hat die folgenden Voraussetzungen:"
 Requirements_More = "Weitere Informationen:"
 
 Requirements_Sponsorship_Title = "Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship"
+Requirements_Sponsorship_Optional_Title = "Die Entwicklung von evcc kann über Sponsoring unterstützt werden. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship"
 Requirements_Sponsorship_Token = "Bist du ein Sponsor?"
 Requirements_Sponsorship_Token_Input = "Bitte gib das Sponsortoken ein"
 

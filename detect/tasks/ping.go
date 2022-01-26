@@ -37,6 +37,7 @@ func (h *PingHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 	}
 
 	if runtime.GOOS == "windows" {
+		pinger.Size = 548 // https://github.com/go-ping/ping/issues/168
 		pinger.SetPrivileged(true)
 	}
 

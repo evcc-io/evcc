@@ -1,6 +1,8 @@
 template: rct-power
-description: 
-  generic: RCT Power
+products:
+- brand: RCT
+  description:
+    generic: Power
 guidedsetup:
   enable: true
 params:

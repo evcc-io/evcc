@@ -125,7 +125,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	// heartbeat
 	go func() {
 		heartbeatS := provider.NewMqtt(log, client,
-			fmt.Sprintf("%s/set/lp%d/%s", topic, id, openwb.SlaveHeartbeatTopic),
+			fmt.Sprintf("%s/set/isss/%s", topic, openwb.SlaveHeartbeatTopic),
 			1, timeout).IntSetter("heartbeat")
 
 		for range time.NewTicker(openwb.HeartbeatInterval).C {

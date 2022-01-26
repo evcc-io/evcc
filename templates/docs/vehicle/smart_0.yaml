@@ -1,0 +1,10 @@
+product:
+  brand: Smart
+  description: EQ
+
+render:
+- default: |
+    type: template
+    template: smart
+    : # Optional 
+    capacity: 17.6  # Akku-Kapazität in kWh  # Optional

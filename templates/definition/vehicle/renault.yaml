@@ -1,9 +1,9 @@
 template: renault
-description: 
-  generic: Renault
+products:
+- brand: Renault
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: vin
   example: WREN...
 - name: capacity

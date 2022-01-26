@@ -1,0 +1,27 @@
+product:
+  brand: DS
+
+render:
+- default: |
+    type: template
+    template: ds
+    title: # Wird in der Benutzeroberfläche angezeigt  # Optional 
+    user: # Benutzername um auf das Gerät zuzugreifen 
+    password: # Passwort des Benutzerkontos 
+    vin: W...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
+    capacity: 50  # Akku-Kapazität in kWh  # Optional 
+  advanced: |
+    type: template
+    template: ds
+    title: # Wird in der Benutzeroberfläche angezeigt  # Optional 
+    user: # Benutzername um auf das Gerät zuzugreifen 
+    password: # Passwort des Benutzerkontos 
+    vin: W...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
+    capacity: 50  # Akku-Kapazität in kWh  # Optional 
+    cache: 5m  # Das zeitliche Interval, in welchem Daten vom Fahrzeug neu geladen werden soll  # Optional 
+    mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll  # Optional 
+    minSoC: 25  # Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht  # Optional 
+    targetSoC: 80  # Bis zu welchem Ladestand (SoC) soll das Fahrzeug geladen werden  # Optional 
+    minCurrent: 6  # Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll  # Optional 
+    maxCurrent: 16  # Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll  # Optional 
+    identifiers: # Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox  # Optional

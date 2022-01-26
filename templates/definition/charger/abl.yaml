@@ -1,8 +1,13 @@
 template: abl
-description:
-  generic: ABL eMH / SENEC.Wallbox pro
-requirements:
-  sponsorship: true
+products:
+- brand: ABL
+  description:
+    generic: eMH
+- brand: SENEC
+  description:
+    generic: Wallbox pro
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: modbus
   choice: ["rs485"]

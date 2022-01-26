@@ -1,5 +1,0 @@
-type: template
-template: sma-inverter
-description: SMA Wechselrichter
-usage: battery 
-host: 192.0.2.2

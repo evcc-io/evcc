@@ -1,6 +1,0 @@
-type: template
-template: victron-energy
-description: Victron Energy
-usage: grid 
-host: 192.0.2.2 
-port: 502
