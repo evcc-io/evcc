@@ -71,7 +71,7 @@ func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewAlfen creates Alfen charger
 func NewAlfen(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.TcpFormat, slaveID)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}
