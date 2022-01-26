@@ -54,7 +54,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.RTU = &b
 	}
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.WireFormatFromRTU(cc.RTU), cc.ID)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 	if err != nil {
 		return nil, err
 	}

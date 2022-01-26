@@ -53,11 +53,11 @@ func NewAlphatecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAlphatec(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.WireFormatFromRTU(cc.RTU), cc.ID)
+	return NewAlphatec(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 }
 
 // NewAlphatec creates Alphatec charger
-func NewAlphatec(uri, device, comset string, baudrate int, format modbus.WireFormat, slaveID uint8) (api.Charger, error) {
+func NewAlphatec(uri, device, comset string, baudrate int, format modbus.Protocol, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, format, slaveID)
 	if err != nil {
 		return nil, err

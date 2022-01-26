@@ -64,11 +64,11 @@ func NewHeidelbergECFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.WireFormatFromRTU(cc.RTU), cc.ID)
+	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 }
 
 // NewHeidelbergEC creates HeidelbergEC charger
-func NewHeidelbergEC(uri, device, comset string, baudrate int, format modbus.WireFormat, slaveID uint8) (api.Charger, error) {
+func NewHeidelbergEC(uri, device, comset string, baudrate int, format modbus.Protocol, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, format, slaveID)
 	if err != nil {
 		return nil, err
