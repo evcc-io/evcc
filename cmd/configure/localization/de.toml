@@ -110,7 +110,7 @@ Loadpoint_DefaultTitle = "Garage"
 
 Loadpoint_ResetOnDisconnect = "Soll beim Abstecken des Ladekables von einem Fahrzeug, die Lade-Standardeinstellungen wieder hergestellt werden?"
 
-Loadpoint_WallboxWOMeter = "Die Wallbox hat keinen Ladestromzähler. Hast du einen externen Zähler dafür installiert, der verwendet werden kann?"
+Loadpoint_WallboxWOMeter = "Das System konnte nicht erkennen ob ein Ladestromzähler in der Wallbox eingebaut ist. Möchtest du einen externen Ladestromzähler hinzufügen?"
 Loadpoint_WallboxMaxPower = "Was ist die maximale Leistung, welche die Wallbox zur Verfügung stellen kann?"
 Loadpoint_WallboxMinAmperage = "Was ist die MINIMALE Stromstärke, welche die Wallbox auf einer Phase zur Verfügung stellen kann?"
 Loadpoint_WallboxMaxAmperage = "Was ist die MAXIMALE Stromstärke, welche die Wallbox auf einer Phase zur Verfügung stellen kann?"
