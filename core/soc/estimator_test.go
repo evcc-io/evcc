@@ -141,28 +141,6 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 		{1200, 32.0, 32.0, 10000, false, nil, nil},
 		{1900, 39.0, 39.0, 10000, false, nil, nil},
 		{2000, 40.0, 40.0, 10000, false, nil, nil},
-		{4000, 50.0, 50.0, 20000, false, nil, nil}, // 2kWh add 10% -> 20kWh battery
-		{6000, 60.0, 60.0, 20000, false, nil, nil}, // 2kWh add 10% -> 20kWh battery
-		{6500, 65.0, 65.0, 10000, false, nil, nil},
-		{7000, 65.0, 70.0, 10000, false, nil, nil},
-		// move to SoC from vehicle
-		{7000, 0.0, 70.0, 10000, true, api.ErrNotAvailable, errors.New("some error")},
-		{7100, 0.0, 71.0, 10000, true, api.ErrNotAvailable, api.ErrMustRetry},
-		{7100, 71.0, 71.0, 10000, true, api.ErrNotAvailable, nil},
-		{7300, 72.0, 72.0, 10000, true, api.ErrNotAvailable, nil},
-		{7400, 0.0, 73.0, 10000, true, api.ErrNotAvailable, errors.New("another error")},
-		{7400, 73.0, 73.0, 10000, true, api.ErrNotAvailable, nil},
-		{7700, 75.0, 75.0, 10000, true, api.ErrNotAvailable, nil},
-		{8200, 80.0, 80.0, 10000, true, api.ErrNotAvailable, nil},
-		{0, 25.0, 25.0, 10000, true, api.ErrNotAvailable, nil},
-		{2500, 25.0, 50.0, 10000, true, api.ErrNotAvailable, nil},
-		{0, 50.0, 50.0, 10000, true, api.ErrNotAvailable, nil}, // -10000
-		{4990, 50.0, 99.9, 10000, true, api.ErrNotAvailable, nil},
-		{5000, 50.0, 100.0, 10000, true, api.ErrNotAvailable, nil},
-		// back to SoC from charger
-		{5001, 50.0, 100.0, 10000, false, nil, nil},
-		{0, 0.0, 0.0, 10000, false, nil, nil},
-		{1000, 0.0, 10.0, 10000, false, nil, nil},
 	}
 
 	for _, tc := range tc {
