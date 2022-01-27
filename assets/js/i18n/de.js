@@ -1,5 +1,5 @@
 export default {
-  header: { docs: "Dokumentation", blog: "Blog", github: "GitHub" },
+  header: { docs: "Dokumentation", blog: "Blog", github: "GitHub", about: "Über evcc" },
   footer: {
     version: {
       versionShort: "evcc v{installed}",

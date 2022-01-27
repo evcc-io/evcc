@@ -20,6 +20,7 @@
     "axios": "^0.24.0",
     "bootstrap": "^5.1.3",
     "canvas-confetti": "^1.4.0",
+    "smoothscroll-polyfill": "^0.4.4",
     "v-tooltip": "^3.0.0-beta.4",
     "vue": "^2.6.14",
     "vue-hot-reload-api": "^2.3.4",

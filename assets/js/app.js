@@ -1,5 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap";
+import smoothscroll from "smoothscroll-polyfill";
 import "../css/app.css";
 import Vue from "vue";
 import VueMeta from "vue-meta";
@@ -9,6 +10,8 @@ import router from "./router";
 import i18n from "./i18n";
 import "./tooltip";
 import store from "./store";
+
+smoothscroll.polyfill();
 
 Vue.use(VueMeta);
 

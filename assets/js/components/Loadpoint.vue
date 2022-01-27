@@ -1,5 +1,5 @@
 <template>
-	<div class="loadpoint bg-white px-4 px-sm-5 py-4 mb-3 mb-sm-4">
+	<div class="loadpoint bg-white px-4 px-sm-5 py-4">
 		<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
 			<h3 class="mb-2 me-2">
 				{{ title || $t("main.loadpoint.fallbackName") }}

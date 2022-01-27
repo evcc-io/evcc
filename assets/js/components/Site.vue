@@ -1,9 +1,15 @@
 <template>
 	<div class="d-flex flex-column top-area">
-		<div class="container" @click="toggleDetails">
-			<h2 class="d-block my-4">
-				{{ siteTitle || "Home" }}
-			</h2>
+		<div class="container">
+			<div class="d-flex justify-content-between align-items-center">
+				<h2 class="d-block my-4">
+					{{ siteTitle || "Home" }}
+				</h2>
+				<div class="py-1">
+					<!--<Notifications :notifications="notifications" class="me-2" />-->
+					<TopNavigation />
+				</div>
+			</div>
 			<Energyflow v-bind="energyflow" />
 		</div>
 		<div
@@ -22,16 +28,9 @@
 			<div class="container">
 				<h2 class="mb-3 mb-sm-4">Ladepunkte</h2>
 			</div>
-			<div class="container px-0">
-				<div class="d-block d-xl-flex flex-wrap">
-					<div
-						v-for="(loadpoint, id) in loadpoints"
-						:key="id"
-						class="flex-grow-1 me-xl-4 mx-xl-2 pb-2"
-					>
-						<Loadpoint v-bind="loadpoint" :id="id" :single="loadpoints.length === 1" />
-					</div>
-				</div>
+			<Loadpoints :loadpoints="loadpoints" />
+			<div class="container">
+				<h2 class="mt-5 mb-3 mb-sm-4">Meine Fahrzeuge</h2>
 			</div>
 			<Footer v-bind="footer"></Footer>
 		</div>
@@ -40,15 +39,16 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/arrowup";
+import TopNavigation from "./TopNavigation";
 import Energyflow from "./Energyflow";
+import Loadpoints from "./Loadpoints";
 import Footer from "./Footer";
-import Loadpoint from "./Loadpoint";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
-	components: { Loadpoint, Energyflow, Footer },
+	components: { Loadpoints, Energyflow, Footer, TopNavigation },
 	mixins: [formatter, collector],
 	props: {
 		loadpoints: Array,
