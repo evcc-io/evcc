@@ -176,6 +176,7 @@ presets:
       advanced: true
     - name: cache
       advanced: true
+      deprecated: true
     render: |
       {{define "vehicle-base"}}
       {{- if ne .title "" }}

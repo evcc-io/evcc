@@ -408,6 +408,10 @@ func (c *CmdConfigure) processParams(templateItem templates.Template, params []t
 				continue
 			}
 
+			if param.Deprecated {
+				continue
+			}
+
 			if param.Hidden && param.Default != "" {
 				additionalConfig[param.Name] = param.Default
 				continue
