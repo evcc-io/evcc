@@ -11,6 +11,7 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
@@ -149,6 +150,8 @@ func (v *Identity) CallbackHandler(baseURI string) http.HandlerFunc {
 			v.log.TRACE.Println("sending login update...")
 			v.ReuseTokenSource.Apply(token)
 			v.authC <- true
+
+			provider.ResetCached()
 		}
 
 		http.Redirect(w, r, baseURI, http.StatusFound)
