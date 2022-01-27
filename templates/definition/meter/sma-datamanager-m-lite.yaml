@@ -1,8 +1,8 @@
-template: sma-data-manager-m
+template: sma-data-manager-m-lite
 products:
 - brand: SMA
   description:
-    generic: Data Manager M
+    generic: Data Manager M Lite
 guidedsetup:
   enable: true
   linked: 
