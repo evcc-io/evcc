@@ -1,0 +1,14 @@
+product:
+  brand: SMA
+  description: Data Manager M
+description: |
+  In der Weboberfläche des SMA Data Manager muss im Bereich "Externe Kommunikation" muss "Modbus Server aktivieren" eingeschaltet sein.
+
+render:
+- usage: pv
+  default: |
+    type: template
+    template: sma-data-manager-m
+    usage: pv
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 502  # Port  # Optional
