@@ -22,8 +22,8 @@ type Estimator struct {
 	capacity         float64 // vehicle capacity in Wh cached to simplify testing
 	virtualCapacity  float64 // estimated virtual vehicle capacity in Wh
 	vehicleSoc       float64 // estimated vehicle SoC
-	initialSoC       float64 // first received valid vehicle SoC
-	prevSoC          float64 // previous vehicle SoC in %
+	initialSoc       float64 // first received valid vehicle SoC
+	prevSoc          float64 // previous vehicle SoC in %
 	energyPerSocStep float64 // Energy per SoC percent in Wh
 }
 
@@ -43,8 +43,8 @@ func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, es
 
 // Reset resets the estimation process to default values
 func (s *Estimator) Reset() {
-	s.prevSoC = 0
-	s.initialSoC = 0
+	s.prevSoc = 0
+	s.initialSoc = 0
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
 	s.virtualCapacity = s.capacity / chargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
@@ -112,12 +112,12 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 		if err == nil || !errors.Is(err, api.ErrNotAvailable) {
 			if err != nil {
 				// never received a soc value
-				if s.prevSoC == 0 {
+				if s.prevSoc == 0 {
 					return 0, err
 				}
 
 				// recover from temporary api errors
-				f = s.prevSoC
+				f = s.prevSoc
 				s.log.WARN.Printf("vehicle soc (charger): %v (ignored by estimator)", err)
 			}
 
@@ -135,12 +135,12 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			}
 
 			// never received a soc value
-			if s.prevSoC == 0 {
+			if s.prevSoc == 0 {
 				return 0, err
 			}
 
 			// recover from temporary api errors
-			f = s.prevSoC
+			f = s.prevSoc
 			s.log.WARN.Printf("vehicle soc: %v (ignored by estimator)", err)
 		}
 
@@ -149,7 +149,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 	}
 
 	if s.estimate {
-		socDelta := s.vehicleSoc - s.initialSoC
+		socDelta := s.vehicleSoc - s.initialSoc
 		energyDelta := math.Max(chargedEnergy, 0)
 
 		if socDelta != 0 { // soc value change
@@ -170,18 +170,18 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 				invalid = vcs != ccs
 			}
 
-			if !invalid && s.initialSoC == 0 {
-				s.initialSoC = s.vehicleSoc
+			if !invalid && s.initialSoc == 0 {
+				s.initialSoc = s.vehicleSoc
 			}
 
 			// recalculate gradient, wh per soc %
-			if !invalid && socDelta > 0 && energyDelta > 0 && s.prevSoC > 0 {
+			if !invalid && socDelta > 0 && energyDelta > 0 && s.prevSoc > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
 				s.virtualCapacity = s.energyPerSocStep * 100
 				s.log.DEBUG.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)
 			}
 
-			s.prevSoC = s.vehicleSoc
+			s.prevSoc = s.vehicleSoc
 		} else {
 			s.vehicleSoc = math.Min(*fetchedSoC+energyDelta/s.energyPerSocStep, 100)
 			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoC)
