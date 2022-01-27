@@ -34,18 +34,19 @@ func NewEvseDINFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Comset:   "8N1",
 		ID:       1,
 	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEvseDIN(cc.URI, cc.Device, cc.Comset, cc.Baudrate, true, cc.ID)
+	return NewEvseDIN(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 }
 
 // NewEvseDIN creates EVSE DIN charger
-func NewEvseDIN(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (api.Charger, error) {
+func NewEvseDIN(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
 	log := util.NewLogger("evse")
 
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, slaveID)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}

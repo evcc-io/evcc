@@ -54,12 +54,7 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 		cc.RTU = &b
 	}
 
-	format := modbus.TcpFormat
-	if cc.RTU != nil && *cc.RTU {
-		format = modbus.RtuFormat
-	}
-
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, format, cc.ID)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 	if err != nil {
 		return nil, err
 	}

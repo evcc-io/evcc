@@ -14,12 +14,12 @@ import (
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
-type WireFormat int
+type Protocol int
 
 const (
-	TcpFormat WireFormat = iota
-	RtuFormat
-	AsciiFormat
+	Tcp Protocol = iota
+	Rtu
+	Ascii
 
 	CoilOn uint16 = 0xFF00
 )
@@ -152,8 +152,16 @@ func registeredConnection(key string, newConn meters.Connection) meters.Connecti
 	return newConn
 }
 
+// ProtocolFromRTU identifies the wire format from the RTU setting
+func ProtocolFromRTU(rtu *bool) Protocol {
+	if rtu != nil && *rtu {
+		return Rtu
+	}
+	return Tcp
+}
+
 // NewConnection creates physical modbus device from config
-func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, slaveID uint8) (*Connection, error) {
+func NewConnection(uri, device, comset string, baudrate int, wire Protocol, slaveID uint8) (*Connection, error) {
 	var conn meters.Connection
 
 	if device != "" && uri != "" {
@@ -173,7 +181,7 @@ func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, sl
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
 
-		if wire == RtuFormat {
+		if wire == Rtu {
 			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 		} else {
 			conn = registeredConnection(uri, meters.NewASCII(device, baudrate, comset))
@@ -184,9 +192,9 @@ func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, sl
 		uri = util.DefaultPort(uri, 502)
 
 		switch wire {
-		case RtuFormat:
+		case Rtu:
 			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
-		case AsciiFormat:
+		case Ascii:
 			conn = registeredConnection(uri, meters.NewASCIIOverTCP(uri))
 		default:
 			conn = registeredConnection(uri, meters.NewTCP(uri))

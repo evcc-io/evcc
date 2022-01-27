@@ -73,7 +73,7 @@ func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error
 
 // NewPhoenixEMEth creates a Phoenix charger
 func NewPhoenixEMEth(uri string, id uint8) (*PhoenixEMEth, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
