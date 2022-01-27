@@ -59,7 +59,7 @@ func NewFritzDECT(uri, ain, user, password string, standbypower float64, powerle
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
 	var present bool
-	var on bool
+	var Ison bool
 	var power float64
 
 	resp, err := c.fritzdect.ExecCmd("getswitchpresent")
@@ -74,7 +74,7 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	}
 
 	if c.powerless {
-		on, err = c.Enabled()
+		Ison, err = c.Enabled()
 		if err != nil {
 			return api.StatusNone, err
 		}
@@ -92,9 +92,9 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	case !c.powerless && power > c.standbypower:
 		return api.StatusC, err
 	// Simple powerless switch status rules
-	case c.powerless && !on:
+	case c.powerless && !Ison:
 		return api.StatusB, err
-	case c.powerless && on:
+	case c.powerless && Ison:
 		return api.StatusC, err
 	default:
 		return api.StatusNone, api.ErrNotAvailable
@@ -126,17 +126,17 @@ func (c *FritzDECT) Enable(enable bool) error {
 	// on 0/1 - DECT Switch state off/on (empty if unknown or error)
 	resp, err := c.fritzdect.ExecCmd(cmd)
 
-	var on bool
+	var Ison bool
 	if err == nil {
-		on, err = strconv.ParseBool(resp)
+		Ison, err = strconv.ParseBool(resp)
 	}
 
 	switch {
 	case err != nil:
 		return err
-	case enable && !on:
+	case enable && !Ison:
 		return errors.New("switchOn failed")
-	case !enable && on:
+	case !enable && Ison:
 		return errors.New("switchOff failed")
 	default:
 		return nil
