@@ -87,7 +87,7 @@ Config_AddAnotherValue = "Möchtest du einen weiteren Wert hinzufügen?"
 Config_Yes = "Ja"
 Config_No = "Nein"
 
-Cancel = "Die Konfiguration wurde abgebrochen.\n\nFalls diese geführte Konfiguration für dich noch nicht funktioniert, versuche es doch mal mit der manuellen Konfiguration. Details findest du auf der folgenden Webseite: https://docs.evcc.io/docs/installation/configuration\n"
+Cancel = "Die Konfiguration wurde abgebrochen.\n\nFalls diese geführte Konfiguration für dich noch nicht funktioniert, versuche es doch mal mit der manuellen Konfiguration. Details findest du auf der folgenden Webseite: https://docs.evcc.io/docs/\n"
 InputError = "Bei der Eingabe ist ein Fehler aufgetreten:"
 
 Value_Required = "erforderlich"
