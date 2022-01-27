@@ -30,8 +30,8 @@ type Identity struct {
 	log *util.Logger
 	*ReuseTokenSource
 	sessionSecret []byte
-	authC         chan<- bool
 	oc            *oauth2.Config
+	authC         chan<- bool
 }
 
 func generateSecret() ([]byte, error) {
@@ -47,17 +47,25 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
 	}
 
-	v := &Identity{
-		log: log,
-		oc: &oauth2.Config{
-			ClientID:     id,
-			ClientSecret: secret,
-			Endpoint:     provider.Endpoint(),
-			Scopes:       []string{oidc.ScopeOfflineAccess, "mb:vehicle:mbdata:evstatus"},
-		},
+	oc := &oauth2.Config{
+		ClientID:     id,
+		ClientSecret: secret,
+		Endpoint:     provider.Endpoint(),
+		Scopes:       []string{oidc.ScopeOfflineAccess, "mb:vehicle:mbdata:evstatus"},
 	}
 
-	v.ReuseTokenSource = &ReuseTokenSource{cb: v.invalidToken}
+	v := &Identity{
+		log: log,
+		oc:  oc,
+	}
+
+	ts := &ReuseTokenSource{
+		oc: oc,
+		cb: v.invalidToken,
+	}
+	ts.Apply(nil)
+
+	v.ReuseTokenSource = ts
 	v.sessionSecret, err = generateSecret()
 
 	for _, o := range options {
