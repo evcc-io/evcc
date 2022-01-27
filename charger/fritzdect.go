@@ -164,6 +164,11 @@ var _ api.ChargeRater = (*FritzDECT)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *FritzDECT) ChargedEnergy() (float64, error) {
+	// no charge in case of powerless use
+	if c.powerless {
+		return 0, nil
+	}
+
 	// fetch basicdevicestats
 	resp, err := c.fritzdect.ExecCmd("getbasicdevicestats")
 	if err != nil {
