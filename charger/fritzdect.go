@@ -18,6 +18,7 @@ import (
 type FritzDECT struct {
 	fritzdect    *fritzdect.Connection
 	standbypower float64
+	powerless    bool
 }
 
 func init() {
@@ -32,15 +33,16 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User         string
 		Password     string
 		StandbyPower float64
+		Powerless    bool
 	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower)
+	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower, cc.Powerless)
 }
 
 // NewFritzDECT creates a new connection with standbypower for charger
-func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
+func NewFritzDECT(uri, ain, user, password string, standbypower float64, powerless bool) (*FritzDECT, error) {
 	fritzdect, err := fritzdect.NewConnection(uri, ain, user, password)
 	if err != nil {
 		return nil, err
@@ -48,6 +50,7 @@ func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*Fritz
 	fd := &FritzDECT{
 		fritzdect:    fritzdect,
 		standbypower: standbypower,
+		powerless:    powerless,
 	}
 	return fd, nil
 }
@@ -55,21 +58,43 @@ func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*Fritz
 // Status implements the api.Charger interface
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
-	var present int64
+	var present bool
+	var on bool
+	var power float64
+
 	resp, err := c.fritzdect.ExecCmd("getswitchpresent")
 	if err == nil {
-		present, err = strconv.ParseInt(resp, 10, 64)
+		present, err = strconv.ParseBool(resp)
+		if err != nil {
+			return api.StatusNone, err
+		}
+	}
+	if !present {
+		return api.StatusNone, api.ErrNotAvailable
+	}
+
+	if c.powerless {
+		on, err = c.Enabled()
+		if err != nil {
+			return api.StatusNone, err
+		}
+	} else {
+		power, err = c.fritzdect.CurrentPower()
 		if err != nil {
 			return api.StatusNone, err
 		}
 	}
 
-	power, err := c.fritzdect.CurrentPower()
-
 	switch {
-	case present == 1 && power <= c.standbypower:
+	// Charger status rules
+	case !c.powerless && power <= c.standbypower:
 		return api.StatusB, err
-	case present == 1 && power > c.standbypower:
+	case !c.powerless && power > c.standbypower:
+		return api.StatusC, err
+	// Simple powerless switch status rules
+	case c.powerless && !on:
+		return api.StatusB, err
+	case c.powerless && on:
 		return api.StatusC, err
 	default:
 		return api.StatusNone, api.ErrNotAvailable
@@ -88,9 +113,7 @@ func (c *FritzDECT) Enabled() (bool, error) {
 		return false, api.ErrNotAvailable
 	}
 
-	state, err := strconv.ParseInt(resp, 10, 32)
-
-	return state == 1, err
+	return strconv.ParseBool(resp)
 }
 
 // Enable implements the api.Charger interface
@@ -100,20 +123,20 @@ func (c *FritzDECT) Enable(enable bool) error {
 		cmd = "setswitchon"
 	}
 
-	// state 0/1 - DECT Switch state off/on (empty if unknown or error)
+	// on 0/1 - DECT Switch state off/on (empty if unknown or error)
 	resp, err := c.fritzdect.ExecCmd(cmd)
 
-	var state int64
+	var on bool
 	if err == nil {
-		state, err = strconv.ParseInt(resp, 10, 32)
+		on, err = strconv.ParseBool(resp)
 	}
 
 	switch {
 	case err != nil:
 		return err
-	case enable && state == 0:
+	case enable && !on:
 		return errors.New("switchOn failed")
-	case !enable && state == 1:
+	case !enable && on:
 		return errors.New("switchOff failed")
 	default:
 		return nil
