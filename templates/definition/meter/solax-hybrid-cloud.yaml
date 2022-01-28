@@ -1,0 +1,70 @@
+template: solax-hybrid-cloud
+products:
+- brand: Solax
+  description:
+    generic: Hybrid (Cloud)
+requirements:
+  description:
+    de: |
+      Der Solax Inverter muss in der SolaxCloud angemeldet sein.
+
+      **Achtung**: Die Werte können nur alle 150s abgerufen werden und dann auch 5 Minuten alt sein. Die Laderegelung nach PV kann hiermit nicht optimal gesteuert werden!
+    en: |
+      The Solax inverter has to be registered in the SolaxCloud.
+
+      **Attention**: Values can only be fetched every 150s and then also can be 5 minutes old. Charging by PV will not be optimal because of this!
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: tokenid
+  required: true
+  description:
+    generic: SolaxCloud TokenID
+  help:
+    de: Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
+    en: Go to https://www.solaxcloud.com/#/api and take the value of "ObtaintokenID".
+- name: serial
+  required: true
+  description:
+    de: Seriennummer
+    en: Serial number
+  help:
+    de: Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+    en: Go to https://www.solaxcloud.com/#/inverter and take the value of registration number
+render: |
+  type: custom
+  power:
+  {{- if eq .usage "grid" }}
+    source: http
+    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId=={{ .tokenid }}&sn={{ .serial}}
+    jq: .result.feedinpower
+    cache: 2m30s
+  {{- end}}
+  {{- if eq .usage "pv" }}
+    source: calc
+    add:
+    # Hybrid WR XXXXXXXXXXXXXX
+    # DC MPPT1 + MPPT2
+    - source: http
+      uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+      jq: .result.powerdc1  # Solax API Inverter.DC.PV.power.MPPT1
+      cache: 2m30s
+    - source: http
+      uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+      jq: .result.powerdc2  # Solax API Inverter.DC.PV.power.MPPT2
+      cache: 2m30s
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    source: http
+    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+    jq: .result.batPower  # Solax API inverter.DC.battery.power.total
+    scale: -1
+    cache: 2m30s
+  soc:
+    source: http
+    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+    jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
+    cache: 2m30s
+  {{- end }}

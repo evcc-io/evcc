@@ -3,6 +3,9 @@ products:
 - brand: Heidelberg
   description:
     generic: Energy Control (Modbus RTU)
+- brand: SENEC
+  description:
+    generic: Wallbox pro s
 - brand: Walther Werke
   description:
     generic: Basic Evo Pro

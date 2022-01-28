@@ -172,6 +172,7 @@ type Param struct {
 	Mask          bool         // cli if the value should be masked, e.g. for passwords
 	Advanced      bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
 	Hidden        bool         // cli if the parameter should not be presented in the cli, the default value be assigned
+	Deprecated    bool         // if the parameter is deprecated and thus should not be presented in the cli or docs
 	Default       string       // default value if no user value is provided in the configuration
 	Example       string       // cli example value
 	Help          TextLanguage // cli configuration help
