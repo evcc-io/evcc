@@ -48,8 +48,16 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	api := porsche.NewAPI(log, identity.DefaultSource)
+	mobile := porsche.NewMobileAPI(log, identity.MobileSource)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
+		mobileVehicles, err := mobile.Vehicles()
+		if err == nil {
+			return funk.Map(mobileVehicles, func(v porsche.StatusResponseMobile) string {
+				return v.VIN
+			}).([]string), err
+		}
+
 		vehicles, err := api.Vehicles()
 		return funk.Map(vehicles, func(v porsche.Vehicle) string {
 			return v.VIN
@@ -61,13 +69,22 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// check if vehicle is paired
-	if res, err := api.PairingStatus(cc.VIN); err == nil && res.Status != porsche.PairingComplete {
-		return nil, errors.New("vehicle is not paired with the My Porsche account")
-	}
+	// if res, err := api.PairingStatus(cc.VIN); err == nil && res.Status != porsche.PairingComplete {
+	// 	return nil, errors.New("vehicle is not paired with the My Porsche account")
+	// }
 
 	// check if vehicle provides status:
 	// some PHEVs do not provide any data
-	if _, err := api.Status(cc.VIN); err != nil {
+	statusAvailable := false
+	if _, err := mobile.Status(cc.VIN); err == nil {
+		statusAvailable = true
+	}
+
+	if _, err := api.Status(cc.VIN); err == nil {
+		statusAvailable = true
+	}
+
+	if !statusAvailable {
 		return nil, errors.New("vehicle is not capable of providing data")
 	}
 
@@ -77,17 +94,14 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	//   call to status() as it otherwise returns an HTTP 502 error.
 	//   The reason is unknown, even when tested with 100% identical Headers.
 	//   It seems to be a new backend related issue.
-	if _, err := api.Status(cc.VIN); err != nil {
-		return nil, err
+	var emobility *porsche.EmobilityAPI
+	var capabilities porsche.CapabilitiesResponse
+	if _, err := api.Status(cc.VIN); err == nil {
+		emobility = porsche.NewEmobilityAPI(log, identity.EmobilitySource)
+		capabilities, _ = emobility.Capabilities(cc.VIN)
 	}
 
-	emobility := porsche.NewEmobilityAPI(log, identity.EmobilitySource)
-	capabilities, err := emobility.Capabilities(cc.VIN)
-	if err != nil {
-		return nil, err
-	}
-
-	provider := porsche.NewProvider(log, api, emobility, cc.VIN, capabilities.CarModel, cc.Cache)
+	provider := porsche.NewProvider(log, api, emobility, mobile, cc.VIN, capabilities, cc.Cache)
 
 	v := &Porsche{
 		embed:    &cc.embed,
