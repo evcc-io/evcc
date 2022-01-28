@@ -1556,7 +1556,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	// Wake-up checks
 	if lp.enabled && lp.status == api.StatusB &&
-		lp.vehicleSoc < lp.SoC.Target && lp.wakeUpTimer.Expired() {
+	int(lp.vehicleSoc) < lp.SoC.Target && lp.wakeUpTimer.Expired() {
 		lp.wakeUpVehicle()
 	}
 
