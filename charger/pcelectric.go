@@ -87,7 +87,8 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 	// Mit Loadbalander: Steuerung über loadBalancingFuse
 	var lbconfig pcelectric.LbConfig
 	uri = fmt.Sprintf("%s/lbconfig/false", wb.uri)
-	if err := wb.GetJSON(uri, &lbconfig); err == nil {
+	err := wb.GetJSON(uri, &lbconfig)
+	if err == nil {
 		wb.lbmode = lbconfig.MasterLoadBalanced
 		wb.serialNumber = lbconfig.Slaves[wb.slaveIndex].SerialNumber
 		log.DEBUG.Printf("lbmode: %t  serial: %d ", wb.lbmode, wb.serialNumber)
@@ -98,11 +99,16 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 		if err := wb.GetJSON(uri, &status); err == nil {
 			wb.mode2 = true
 			log.DEBUG.Printf("Patched Firmware detected!")
-			wb.Enable(true)
+			err = wb.Enable(true)
+			if err != nil {
+				return wb, err
+			}
+
 		}
+		err = nil //Unpatched Firmware
 	}
 
-	return wb, nil
+	return wb, err
 }
 
 // Status implements the api.Charger interface
