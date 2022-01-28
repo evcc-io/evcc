@@ -43,6 +43,8 @@ var (
 	igyRegCurrents    = []uint16{1006, 1008, 1010} // current readings per phase
 )
 
+// https://www.innogy-emobility.com/content/dam/revu-global/emobility-solutions/neue-website-feb-2021/downloadcenter/digital-services/eld_instman_modbustcpde.pdf
+
 // Innogy is an api.Charger implementation for Innogy eBox wallboxes.
 type Innogy struct {
 	conn *modbus.Connection
