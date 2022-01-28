@@ -28,10 +28,9 @@ func WithToken(t *oauth2.Token) IdentityOptions {
 type Identity struct {
 	log *util.Logger
 	*ReuseTokenSource
-	sessionSecret []byte
-	oc            *oauth2.Config
-	baseURL       string
-	authC         chan<- bool
+	oc      *oauth2.Config
+	baseURL string
+	authC   chan<- bool
 }
 
 // TODO SessionSecret from config/persistence
