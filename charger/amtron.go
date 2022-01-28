@@ -51,19 +51,19 @@ func init() {
 // NewAmtronFromConfig creates a Mennekes Amtron charger from generic config
 func NewAmtronFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
-		ID: 1,
+		ID: 0xff,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewAmtron(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewAmtron(cc.URI, cc.Device, "", 0, cc.ID)
 }
 
 // NewAmtron creates Amtron charger
 func NewAmtron(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.TcpFormat, slaveID)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}
