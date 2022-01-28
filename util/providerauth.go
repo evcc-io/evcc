@@ -15,7 +15,7 @@ func NewAuthCollection(paramC chan<- Param) *AuthCollection {
 	}
 }
 
-func (ac *AuthCollection) Register(title, baseURI string) *AuthProvider {
+func (ac *AuthCollection) Register(baseURI, title string) *AuthProvider {
 	ap := &AuthProvider{
 		ac:  ac,
 		Uri: baseURI,
