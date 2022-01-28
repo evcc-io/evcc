@@ -16,6 +16,19 @@
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
 		/>
+		<div class="d-flex">
+			<LabelAndValue
+				class="flex-grow-1"
+				:label="$t('main.vehicle.vehicleSoC')"
+				:value="`${vehicleSoC} %`"
+				:extraValue="vehicleRange ? `${vehicleRange} km` : null"
+			/>
+			<LabelAndValue
+				class="flex-grow-1"
+				:label="$t('main.vehicle.targetSoC')"
+				:value="`${displayTargetSoC} %`"
+			/>
+		</div>
 	</div>
 </template>
 
@@ -23,6 +36,7 @@
 import "@h2d2/shopicons/es/filled/options";
 import "@h2d2/shopicons/es/regular/car3";
 
+import LabelAndValue from "./LabelAndValue";
 import collector from "../mixins/collector";
 
 import VehicleSoc from "./VehicleSoc";
@@ -30,7 +44,7 @@ import VehicleSubline from "./VehicleSubline";
 
 export default {
 	name: "Vehicle",
-	components: { VehicleSoc, VehicleSubline },
+	components: { VehicleSoc, VehicleSubline, LabelAndValue },
 	mixins: [collector],
 	props: {
 		id: Number,
@@ -40,11 +54,17 @@ export default {
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
+		vehicleRange: String,
 		vehicleTitle: String,
 		targetTimeActive: Boolean,
 		targetTimeHourSuggestion: Number,
 		targetTime: String,
 		targetSoC: Number,
+	},
+	data() {
+		return {
+			displayTargetSoC: this.targetSoC,
+		};
 	},
 	computed: {
 		vehicleSocProps: function () {
@@ -56,6 +76,7 @@ export default {
 	},
 	methods: {
 		targetSocUpdated: function (targetSoC) {
+			this.displayTargetSoC = targetSoC;
 			this.$emit("target-soc-updated", targetSoC);
 		},
 		setTargetTime: function (targetTime) {

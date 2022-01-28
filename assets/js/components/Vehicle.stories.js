@@ -20,6 +20,7 @@ Base.args = {
   connected: true,
   vehiclePresent: true,
   vehicleSoC: 42,
+  vehicleRange: 231,
   targetSoC: 90,
   id: 0,
 };

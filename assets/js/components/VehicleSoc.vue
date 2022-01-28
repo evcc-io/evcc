@@ -4,36 +4,22 @@
 			<div
 				class="progress-bar"
 				role="progressbar"
-				:class="{
-					'progress-bar-striped': charging,
-					'progress-bar-animated': charging,
-					[progressColor]: true,
-				}"
+				:class="progressColor"
 				:style="{ width: `${vehicleSoCDisplayWidth}%` }"
-			>
-				{{ vehicleSoCDisplayValue }}
-			</div>
+			></div>
 			<div
 				v-if="remainingSoCWidth > 0 && enabled"
-				class="progress-bar"
+				class="progress-bar bg-muted"
 				role="progressbar"
-				:class="{
-					[progressColor]: true,
-					'bg-muted': true,
-				}"
+				:class="progressColor"
 				:style="{ width: `${remainingSoCWidth}%`, transition: 'none' }"
 			></div>
 		</div>
-		<div
-			class="target"
-			:class="{ 'target--slider-hidden': allowSliderHiding && visibleTargetSoC === 100 }"
-		>
+		<div class="target">
 			<div
 				class="target-label d-flex align-items-center justify-content-center"
 				:style="{ left: `${visibleTargetSoC}%` }"
-			>
-				{{ visibleTargetSoC }}%
-			</div>
+			></div>
 			<input
 				type="range"
 				min="0"
@@ -66,7 +52,6 @@ export default {
 	data: function () {
 		return {
 			selectedTargetSoC: null,
-			allowSliderHiding: false,
 			interactionStartScreenY: null,
 		};
 	},
@@ -77,7 +62,7 @@ export default {
 			}
 			return 100;
 		},
-		vehicleSoCDisplayValue: function () {
+		vehicleStatus: function () {
 			// no soc or no soc value
 			if (!this.vehiclePresent || !this.vehicleSoC || this.vehicleSoC < 0) {
 				let chargeStatus = this.$t("main.vehicleSoC.disconnected");
@@ -90,13 +75,7 @@ export default {
 				}
 				return chargeStatus;
 			}
-
-			// percent value if enough space
-			let vehicleSoC = this.vehicleSoC;
-			if (vehicleSoC >= 10) {
-				vehicleSoC += "%";
-			}
-			return vehicleSoC;
+			return null;
 		},
 		progressColor: function () {
 			if (!this.connected) {
@@ -130,11 +109,6 @@ export default {
 		targetSoC: function () {
 			this.selectedTargetSoC = this.targetSoC;
 		},
-	},
-	mounted: function () {
-		setTimeout(() => {
-			this.allowSliderHiding = true;
-		}, 1000);
 	},
 	methods: {
 		changeTargetSoCStart: function (e) {
@@ -172,9 +146,9 @@ export default {
 </script>
 <style scoped>
 .vehicle-soc {
-	--height: 38px;
-	--thumb-overlap: 3px;
-	--thumb-width: 3px;
+	--height: 32px;
+	--thumb-overlap: 6px;
+	--thumb-width: 12px;
 	--thumb-horizontal-padding: 15px;
 	--label-height: 26px;
 	position: relative;
@@ -231,50 +205,26 @@ export default {
 .target-slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	position: relative;
-	top: calc(var(--label-height) * -1);
+	margin-left: calc(var(--thumb-width) / 2 * -1);
 	height: 100%;
 	width: var(--thumb-width);
-	padding: var(--label-height) var(--thumb-horizontal-padding) 0;
-	box-sizing: content-box;
-	background-clip: content-box;
-	background-color: var(--bs-gray-dark);
+	background-color: var(--evcc-dark-green);
 	cursor: grab;
 	border: none;
 	opacity: 1;
-	transition: opacity 0.2s ease 1s;
+	border-radius: var(--thumb-overlap);
 	box-shadow: none;
 }
 .target-slider::-moz-range-thumb {
 	position: relative;
-	top: calc(var(--label-height) * -1);
+	margin-left: calc(var(--thumb-width) / 2 * -1);
 	height: 100%;
 	width: var(--thumb-width);
-	padding: 0 var(--thumb-horizontal-padding) 0;
-	box-sizing: content-box;
-	background-clip: content-box;
-	background-color: var(--bs-gray-dark);
+	background-color: var(--evcc-dark-green);
 	cursor: grab;
 	border: none;
 	opacity: 1;
-	transition: opacity 0.5s ease 1s;
-}
-/* auto-hide targetSoC marker at 100% */
-.target--slider-hidden .target-slider::-webkit-slider-thumb,
-.target--slider-hidden .target-label {
-	opacity: 0;
-}
-.target--slider-hidden .target-slider::-moz-range-thumb,
-.target--slider-hidden .target-label {
-	opacity: 0;
-}
-.target:hover .target-slider::-webkit-slider-thumb,
-.target:hover .target-label {
-	opacity: 1;
-	transition-delay: 0s;
-}
-.target:hover .target-slider::-moz-range-thumb,
-.target:hover .target-label {
-	opacity: 1;
-	transition-delay: 0s;
+	border-radius: var(--thumb-overlap);
+	box-shadow: none;
 }
 </style>

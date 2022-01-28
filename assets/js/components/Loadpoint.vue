@@ -26,12 +26,10 @@
 		<div class="details d-flex align-items-start mb-3">
 			<div class="d-flex align-items-center">
 				<div>
-					<div class="mb-2 label">
-						{{ $t("main.loadpointDetails.power") }}
-					</div>
-					<h3 class="value">
-						{{ fmtKw(chargePower) }}
-					</h3>
+					<LabelAndValue
+						:label="$t('main.loadpointDetails.power')"
+						:value="fmtKw(chargePower)"
+					/>
 					<Phases
 						v-bind="phasesProps"
 						class="opacity-transiton"
@@ -44,26 +42,24 @@
 					size="m"
 				></shopicon-regular-lightning>
 			</div>
-
-			<div>
-				<div class="mb-2 label">{{ $t("main.loadpointDetails.charged") }}</div>
-				<h3 class="value">{{ fmtKw(chargedEnergy) }}h</h3>
-			</div>
-
-			<div v-if="chargeRemainingDurationInterpolated">
-				<div class="mb-2 label">{{ $t("main.loadpointDetails.remaining") }}</div>
-				<h3 class="value">
-					{{ fmtShortDuration(chargeRemainingDurationInterpolated) }}
-					{{ fmtShortDurationUnit(chargeRemainingDurationInterpolated, true) }}
-				</h3>
-			</div>
-			<div v-else>
-				<div class="mb-2 label">{{ $t("main.loadpointDetails.duration") }}</div>
-				<h3 class="value">
-					{{ fmtShortDuration(chargeDurationInterpolated) }}
-					{{ fmtShortDurationUnit(chargeDurationInterpolated) }}
-				</h3>
-			</div>
+			<LabelAndValue
+				:label="$t('main.loadpointDetails.charged')"
+				:value="fmtKw(chargedEnergy)"
+			/>
+			<LabelAndValue
+				v-if="chargeRemainingDurationInterpolated"
+				:label="$t('main.loadpointDetails.remaining')"
+				:value="`
+					${fmtShortDuration(chargeRemainingDurationInterpolated)}
+					${fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)}`"
+			/>
+			<LabelAndValue
+				v-else
+				:label="$t('main.loadpointDetails.duration')"
+				:value="`
+					${fmtShortDuration(chargeDurationInterpolated)}
+					${fmtShortDurationUnit(chargeDurationInterpolated)}`"
+			/>
 		</div>
 
 		<Vehicle
@@ -80,13 +76,14 @@ import api from "../api";
 import Mode from "./Mode";
 import Vehicle from "./Vehicle";
 import Phases from "./Phases";
+import LabelAndValue from "./LabelAndValue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import "@h2d2/shopicons/es/regular/lightning";
 
 export default {
 	name: "Loadpoint",
-	components: { Mode, Vehicle, Phases },
+	components: { Mode, Vehicle, Phases, LabelAndValue },
 	mixins: [formatter, collector],
 	props: {
 		id: Number,
@@ -243,14 +240,6 @@ export default {
 }
 .details > div:nth-child(3) {
 	text-align: right;
-}
-.label {
-	text-transform: uppercase;
-	color: var(--bs-gray-medium);
-	font-size: 14px;
-}
-.value {
-	font-size: 18px;
 }
 .opacity-transiton {
 	transition: opacity 0.7w5s ease-in;
