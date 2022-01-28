@@ -355,7 +355,7 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	}
 	lp.wakeUpRetry = false
 	lp.wakeUpTimer.Stop()
-	
+
 	// soc update reset
 	lp.socUpdated = time.Time{}
 }
