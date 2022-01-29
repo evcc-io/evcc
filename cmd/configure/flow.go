@@ -53,7 +53,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 		// we only ask for the configuration for the first usage
 		deviceCategory = supportedDeviceCategories[0]
 
-		values = c.processConfig(templateItem, deviceCategory)
+		values = c.processConfig(&templateItem, deviceCategory)
 
 		deviceItem, err = c.processDeviceValues(values, templateItem, deviceItem, deviceCategory)
 		if err != nil {
@@ -158,7 +158,7 @@ func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, 
 	for ok := true; ok; {
 		deviceItem := device{}
 
-		values := c.processConfig(templateItem, category)
+		values := c.processConfig(&templateItem, category)
 		deviceItem, err := c.processDeviceValues(values, templateItem, deviceItem, category)
 		if err != nil {
 			if !errors.Is(err, c.errDeviceNotValid) {
@@ -206,8 +206,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 
 		deviceDescription = templateItem.Title()
 		capabilities = templateItem.Capabilities
-		values := c.processConfig(templateItem, deviceCategory)
-
+		values := c.processConfig(&templateItem, deviceCategory)
 		device, err = c.processDeviceValues(values, templateItem, device, deviceCategory)
 		if err != nil {
 			if err != c.errDeviceNotValid {

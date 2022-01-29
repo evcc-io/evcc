@@ -29,10 +29,10 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 }
 
 // set the modbus values required from modbus.tpl and and the template to the render
-func (t *Template) ModbusValues(renderMode string, values map[string]interface{}) {
+func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[string]interface{}) map[string]interface{} {
 	choices := t.ModbusChoices()
 	if len(choices) == 0 {
-		return
+		return values
 	}
 
 	// only add the template once, when testing multiple usages, it might already be present
@@ -40,11 +40,8 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 		t.Render = fmt.Sprintf("%s\n%s", t.Render, modbusTmpl)
 	}
 
-	// either modbus param is defined, which means it ran through configuration
-	// or defaults for all modbus choices need to be set for rendering all cases for documentation
-	if modbusValue := values[ParamModbus]; renderMode != TemplateRenderModeInstance && modbusValue != nil && modbusValue != "" {
-		values[fmt.Sprintf("%s", modbusValue)] = true
-		return
+	if !setDefaults {
+		return values
 	}
 
 	modbusConfig := t.ConfigDefaults.Config.Modbus
@@ -96,4 +93,6 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 			values[iface] = true
 		}
 	}
+
+	return values
 }

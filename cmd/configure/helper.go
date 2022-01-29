@@ -340,23 +340,23 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 // processConfig processes an EVCC configuration item
 // Returns:
 //   a map with param name and values
-func (c *CmdConfigure) processConfig(templateItem templates.Template, deviceCategory DeviceCategory) map[string]interface{} {
+func (c *CmdConfigure) processConfig(templateItem *templates.Template, deviceCategory DeviceCategory) map[string]interface{} {
 	fmt.Println()
 	fmt.Println(c.localizedString("Config_Title", nil))
 	fmt.Println()
 
-	c.processModbusConfig(&templateItem, deviceCategory)
+	c.processModbusConfig(templateItem, deviceCategory)
 
-	return c.processParams(templateItem, templateItem.Params, deviceCategory)
+	return c.processParams(templateItem, deviceCategory)
 }
 
 // process a list of params
-func (c *CmdConfigure) processParams(templateItem templates.Template, params []templates.Param, deviceCategory DeviceCategory) map[string]interface{} {
+func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCategory DeviceCategory) map[string]interface{} {
 	usageFilter := DeviceCategories[deviceCategory].categoryFilter
 
 	additionalConfig := make(map[string]interface{})
 
-	for _, param := range params {
+	for _, param := range templateItem.Params {
 		if param.Dependencies != nil {
 			valid := true
 			for _, dep := range param.Dependencies {
@@ -507,5 +507,5 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, dev
 	// add the interface type specific modbus params
 	templateItem.ModbusParams(choiceTypes[index], values)
 	// Update the modbus default values
-	templateItem.ModbusValues(templates.TemplateRenderModeInstance, values)
+	_ = templateItem.ModbusValues(templates.TemplateRenderModeInstance, true, values)
 }

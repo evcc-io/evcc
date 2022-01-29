@@ -50,7 +50,7 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 			}
 
 			modbusData := map[string]interface{}{}
-			t.ModbusValues(TemplateRenderModeDocs, modbusData)
+			modbusData = t.ModbusValues(TemplateRenderModeDocs, true, modbusData)
 
 			modbusOut := new(bytes.Buffer)
 

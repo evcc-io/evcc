@@ -317,7 +317,7 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 		return nil, values, err
 	}
 
-	t.ModbusValues(renderMode, values)
+	values = t.ModbusValues(renderMode, false, values)
 
 	// add the common templates
 	for _, v := range t.ConfigDefaults.Config.Presets {
