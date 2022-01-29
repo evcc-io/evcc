@@ -13,6 +13,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// https://identity.vwgroup.io/.well-known/openid-configuration
+
 const (
 	// IdentityURI is the VW OIDC identity provider uri
 	IdentityURI = "https://identity.vwgroup.io"
