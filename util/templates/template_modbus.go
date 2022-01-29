@@ -57,20 +57,20 @@ func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[
 		for _, p := range typeParams {
 			values[p.Name] = p.DefaultValue(renderMode)
 
-			var defaultValue interface{}
+			var defaultValue string
 
 			switch p.Name {
 			case ModbusParamNameId:
 				if modbusParam.ID != 0 {
-					defaultValue = modbusParam.ID
+					defaultValue = fmt.Sprintf("%d", modbusParam.ID)
 				}
 			case ModbusParamNamePort:
 				if modbusParam.Port != 0 {
-					defaultValue = modbusParam.Port
+					defaultValue = fmt.Sprintf("%d", modbusParam.Port)
 				}
 			case ModbusParamNameBaudrate:
 				if modbusParam.Baudrate != 0 {
-					defaultValue = modbusParam.Baudrate
+					defaultValue = fmt.Sprintf("%d", modbusParam.Baudrate)
 				}
 			case ModbusParamNameComset:
 				if modbusParam.Comset != "" {
@@ -78,12 +78,12 @@ func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[
 				}
 			}
 
-			if defaultValue == nil {
+			if defaultValue == "" {
 				continue
 			}
 
 			if renderMode == TemplateRenderModeInstance {
-				t.SetParamDefault(p.Name, fmt.Sprintf("%d", defaultValue))
+				t.SetParamDefault(p.Name, defaultValue)
 			} else {
 				values[p.Name] = defaultValue
 			}

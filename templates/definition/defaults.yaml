@@ -35,7 +35,7 @@ params:
   help:
     de: Kommunikationsparameter für den Adapter
     en: Communication parameter for the adapter
-  default: "8N1"
+  default: 8N1
 - name: host
   description:
     de: IP-Adresse oder Hostname

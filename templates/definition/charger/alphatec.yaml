@@ -9,7 +9,7 @@ params:
 - name: modbus
   choice: ["rs485"]
   baudrate: 9600
-  comset: "8N1"
+  comset: 8N1
 render: |
   type: alphatec
   {{include "modbus" .}}
