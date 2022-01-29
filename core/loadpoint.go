@@ -821,12 +821,23 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	} else {
 		lp.socEstimator = nil
 
-		lp.publish("vehiclePresent", false)
-		lp.publish("vehicleTitle", "")
-		lp.publish("vehicleCapacity", int64(0))
+		lp.publish("vehiclePresent", nil)
+		lp.publish("vehicleTitle", nil)
+		lp.publish("vehicleCapacity", nil)
 	}
 
 	lp.unpublishVehicle()
+}
+
+// unpublishVehicle resets published vehicle data
+func (lp *LoadPoint) unpublishVehicle() {
+	lp.vehicleSoc = 0
+
+	lp.publish("vehicleSoC", nil)
+	lp.publish("vehicleRange", nil)
+	lp.publish("vehicleOdometer", nil)
+
+	lp.setRemainingDuration(-1)
 }
 
 func (lp *LoadPoint) wakeUpVehicle() {
@@ -846,17 +857,6 @@ func (lp *LoadPoint) wakeUpVehicle() {
 			}
 		}
 	}
-}
-
-// unpublishVehicle resets published vehicle data
-func (lp *LoadPoint) unpublishVehicle() {
-	lp.vehicleSoc = 0
-
-	lp.publish("vehicleSoC", 0.0)
-	lp.publish("vehicleRange", int64(0))
-	lp.publish("vehicleOdometer", 0.0)
-
-	lp.setRemainingDuration(-1)
 }
 
 // startVehicleDetection resets connection timer and starts api refresh timer
