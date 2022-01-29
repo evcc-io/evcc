@@ -84,7 +84,9 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 
 		uri = IdentityURI + vars.Action
 		if resp, err = v.PostForm(uri, data); err == nil {
-			params, err = ParseCredentialsPage(resp.Body)
+			if params, err = ParseCredentialsPage(resp.Body); err == nil && params.TemplateModel.Error != "" {
+				err = errors.New(params.TemplateModel.Error)
+			}
 			resp.Body.Close()
 		}
 	}

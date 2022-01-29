@@ -83,12 +83,11 @@ func ParseCredentialsPage(r io.ReadCloser) (CredentialParams, error) {
 	match := re.FindAllStringSubmatch(buf.String(), -1)
 
 	tmpl := strings.ReplaceAll(match[0][1], `'`, `"`)
-	for _, v := range []string{`templateModel`, `currentLocale`, `csrf_parameterName`, `csrf_token`} {
+	for _, v := range []string{"templateModel", "currentLocale", "csrf_parameterName", "csrf_token"} {
 		tmpl = strings.Replace(tmpl, v, fmt.Sprintf(`"%s"`, v), 1)
 	}
 
 	err := json.Unmarshal([]byte(tmpl), &res)
-	fmt.Printf("%+v\n", res)
 
 	return res, err
 }
