@@ -48,6 +48,7 @@ func TestMeterTemplates(t *testing.T) {
 			} else {
 				values[templates.ModbusKeyRS485TCPIP] = true
 			}
+			values = tmpl.ModbusValues(templates.TemplateRenderModeInstance, true, values)
 		}
 
 		usages := tmpl.Usages()
