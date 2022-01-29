@@ -191,7 +191,7 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 	if uri != "" {
 		uri = util.DefaultPort(uri, 502)
 
-		switch wire {
+		switch proto {
 		case Rtu:
 			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
 		case Ascii:
