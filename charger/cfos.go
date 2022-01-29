@@ -51,6 +51,10 @@ func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 		return nil, err
 	}
 
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	log := util.NewLogger("cfos")
 	conn.Logger(log.TRACE)
 

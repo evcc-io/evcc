@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2021 andig
+// Copyright (c) 2019-2022 andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -63,6 +63,8 @@ func NewAmtronFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewAmtron creates Amtron charger
 func NewAmtron(uri string, slaveID uint8) (api.Charger, error) {
+	uri = util.DefaultPort(uri, 502)
+
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
