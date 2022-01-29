@@ -27,9 +27,9 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-// https://github.com/evcc-io/evcc/discussions/1965
+// https://update.mennekes.de/hcc3/1.13/Description%20Modbus_AMTRON%20HCC3_v01_2021-06-25_en.pdf
 
-// Amtron charger implementation
+// Amtron Xtra/Premium charger implementation
 type Amtron struct {
 	conn *modbus.Connection
 }
@@ -58,12 +58,12 @@ func NewAmtronFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAmtron(cc.URI, cc.Device, "", 0, cc.ID)
+	return NewAmtron(cc.URI, cc.ID)
 }
 
 // NewAmtron creates Amtron charger
-func NewAmtron(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Tcp, slaveID)
+func NewAmtron(uri string, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}
