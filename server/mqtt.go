@@ -40,6 +40,9 @@ func (m *MQTT) encode(v interface{}) string {
 		s = fmt.Sprintf("%.5g", val)
 	default:
 		s = fmt.Sprintf("%v", val)
+		if v == nil {
+			s = ""
+		}
 	}
 	return s
 }
