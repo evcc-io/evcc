@@ -58,7 +58,7 @@ func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*Fritz
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
 	var present bool
-	var isOn bool
+	var on bool
 	var power float64
 
 	resp, err := c.fritzdect.ExecCmd("getswitchpresent")
@@ -73,15 +73,15 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	}
 
 	if c.staticmode {
-		isOn, err = c.Enabled()
+		on, err = c.Enabled()
 		if err != nil {
 			return api.StatusNone, err
 		}
 		switch {
 		// Simple staticmode switch status rules
-		case !isOn:
+		case !on:
 			return api.StatusB, err
-		case isOn:
+		case on:
 			return api.StatusC, err
 		}
 	} else {
@@ -126,17 +126,17 @@ func (c *FritzDECT) Enable(enable bool) error {
 	// on 0/1 - DECT Switch state off/on (empty if unknown or error)
 	resp, err := c.fritzdect.ExecCmd(cmd)
 
-	var isOn bool
+	var on bool
 	if err == nil {
-		isOn, err = strconv.ParseBool(resp)
+		on, err = strconv.ParseBool(resp)
 	}
 
 	switch {
 	case err != nil:
 		return err
-	case enable && !isOn:
+	case enable && !on:
 		return errors.New("switchOn failed")
-	case !enable && isOn:
+	case !enable && on:
 		return errors.New("switchOff failed")
 	default:
 		return nil
