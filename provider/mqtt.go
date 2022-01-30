@@ -13,6 +13,7 @@ type Mqtt struct {
 	log      *util.Logger
 	client   *mqtt.Client
 	topic    string
+	retained bool
 	payload  string
 	scale    float64
 	timeout  time.Duration
@@ -28,6 +29,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
 		mqtt.Config       `mapstructure:",squash"`
 		Topic, Payload    string // Payload only applies to setters
+		Retained          bool
 		Scale             float64
 		Timeout           time.Duration
 		pipeline.Settings `mapstructure:",squash"`
@@ -47,6 +49,9 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 	}
 
 	m := NewMqtt(log, client, cc.Topic, cc.Scale, cc.Timeout).WithPayload(cc.Payload)
+	if cc.Retained {
+		m = m.WithRetained()
+	}
 
 	pipe, err := pipeline.New(cc.Settings)
 	if err == nil {
@@ -72,6 +77,12 @@ func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, scale float64,
 // WithPayload adds payload for setters
 func (m *Mqtt) WithPayload(payload string) *Mqtt {
 	m.payload = payload
+	return m
+}
+
+// WithRetained adds retained flag for setters
+func (m *Mqtt) WithRetained() *Mqtt {
+	m.retained = true
 	return m
 }
 
@@ -138,7 +149,7 @@ func (m *Mqtt) IntSetter(param string) func(int64) error {
 			return err
 		}
 
-		return m.client.Publish(m.topic, false, payload)
+		return m.client.Publish(m.topic, m.retained, payload)
 	}
 }
 
@@ -152,7 +163,7 @@ func (m *Mqtt) BoolSetter(param string) func(bool) error {
 			return err
 		}
 
-		return m.client.Publish(m.topic, false, payload)
+		return m.client.Publish(m.topic, m.retained, payload)
 	}
 }
 
@@ -166,6 +177,6 @@ func (m *Mqtt) StringSetter(param string) func(string) error {
 			return err
 		}
 
-		return m.client.Publish(m.topic, false, payload)
+		return m.client.Publish(m.topic, m.retained, payload)
 	}
 }
