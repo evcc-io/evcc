@@ -58,7 +58,7 @@ func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*Fritz
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
 	var present bool
-	var Ison bool
+	var isOn bool
 	var power float64
 
 	resp, err := c.fritzdect.ExecCmd("getswitchpresent")
@@ -69,35 +69,36 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 		}
 	}
 	if !present {
-		return api.StatusNone, api.ErrNotAvailable
+		return api.StatusA, err
 	}
 
 	if c.staticmode {
-		Ison, err = c.Enabled()
+		isOn, err = c.Enabled()
 		if err != nil {
 			return api.StatusNone, err
 		}
+		switch {
+		// Simple staticmode switch status rules
+		case !isOn:
+			return api.StatusB, err
+		case isOn:
+			return api.StatusC, err
+		}
 	} else {
+		// Charger status rules
 		power, err = c.fritzdect.CurrentPower()
 		if err != nil {
 			return api.StatusNone, err
 		}
+		switch {
+		case power <= c.standbypower:
+			return api.StatusB, err
+		case power > c.standbypower:
+			return api.StatusC, err
+		}
 	}
 
-	switch {
-	// Charger status rules
-	case !c.staticmode && power <= c.standbypower:
-		return api.StatusB, err
-	case !c.staticmode && power > c.standbypower:
-		return api.StatusC, err
-	// Simple staticmode switch status rules
-	case c.staticmode && !Ison:
-		return api.StatusB, err
-	case c.staticmode && Ison:
-		return api.StatusC, err
-	default:
-		return api.StatusNone, api.ErrNotAvailable
-	}
+	return api.StatusNone, api.ErrNotAvailable
 }
 
 // Enabled implements the api.Charger interface
@@ -125,17 +126,17 @@ func (c *FritzDECT) Enable(enable bool) error {
 	// on 0/1 - DECT Switch state off/on (empty if unknown or error)
 	resp, err := c.fritzdect.ExecCmd(cmd)
 
-	var Ison bool
+	var isOn bool
 	if err == nil {
-		Ison, err = strconv.ParseBool(resp)
+		isOn, err = strconv.ParseBool(resp)
 	}
 
 	switch {
 	case err != nil:
 		return err
-	case enable && !Ison:
+	case enable && !isOn:
 		return errors.New("switchOn failed")
-	case !enable && Ison:
+	case !enable && isOn:
 		return errors.New("switchOff failed")
 	default:
 		return nil
@@ -152,7 +153,7 @@ var _ api.Meter = (*FritzDECT)(nil)
 // CurrentPower implements the api.Meter interface
 func (c *FritzDECT) CurrentPower() (float64, error) {
 	power, err := c.fritzdect.CurrentPower()
-	if power < c.standbypower && !c.staticmode {
+	if power < c.standbypower {
 		power = 0
 	}
 
