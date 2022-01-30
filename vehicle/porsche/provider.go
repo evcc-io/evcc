@@ -149,7 +149,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 				case "CHARGING_ERROR":
 					return api.StatusF, nil
 				default:
-					return api.StatusNone, errors.New("unknown status: " + m.Value.Status)
+					return api.StatusNone, errors.New("mobile - unknown charging status: " + m.Value.Status)
 				}
 			}
 		}
@@ -170,10 +170,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 				return api.StatusF, nil
 			case "OFF", "COMPLETED":
 				return api.StatusB, nil
-			case "ON":
+			case "ON", "CHARGING":
 				return api.StatusC, nil
 			default:
-				return api.StatusNone, errors.New("unknown state: " + res.BatteryChargeStatus.ChargingState)
+				return api.StatusNone, errors.New("emobility - unknown charging state: " + res.BatteryChargeStatus.ChargingState)
 			}
 		}
 	}
@@ -205,7 +205,7 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 		case "ON":
 			return true, 20, 20, nil
 		default:
-			return active, outsideTemp, targetTemp, errors.New("unknown state: " + res.DirectClimatisation.ClimatisationState)
+			return active, outsideTemp, targetTemp, errors.New("emobility - unknown climate state: " + res.DirectClimatisation.ClimatisationState)
 		}
 	}
 
