@@ -152,7 +152,7 @@ var _ api.Meter = (*FritzDECT)(nil)
 // CurrentPower implements the api.Meter interface
 func (c *FritzDECT) CurrentPower() (float64, error) {
 	power, err := c.fritzdect.CurrentPower()
-	if power < c.standbypower || c.staticmode {
+	if power < c.standbypower && !c.staticmode {
 		power = 0
 	}
 
