@@ -18,7 +18,7 @@ import (
 type FritzDECT struct {
 	fritzdect    *fritzdect.Connection
 	standbypower float64
-	powerless    bool
+	staticmode   bool
 }
 
 func init() {
@@ -33,16 +33,15 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User         string
 		Password     string
 		StandbyPower float64
-		Powerless    bool
 	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower, cc.Powerless)
+	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower)
 }
 
 // NewFritzDECT creates a new connection with standbypower for charger
-func NewFritzDECT(uri, ain, user, password string, standbypower float64, powerless bool) (*FritzDECT, error) {
+func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
 	fritzdect, err := fritzdect.NewConnection(uri, ain, user, password)
 	if err != nil {
 		return nil, err
@@ -50,7 +49,7 @@ func NewFritzDECT(uri, ain, user, password string, standbypower float64, powerle
 	fd := &FritzDECT{
 		fritzdect:    fritzdect,
 		standbypower: standbypower,
-		powerless:    powerless,
+		staticmode:   standbypower < 0,
 	}
 	return fd, nil
 }
@@ -73,7 +72,7 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, api.ErrNotAvailable
 	}
 
-	if c.powerless {
+	if c.staticmode {
 		Ison, err = c.Enabled()
 		if err != nil {
 			return api.StatusNone, err
@@ -87,14 +86,14 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 
 	switch {
 	// Charger status rules
-	case !c.powerless && power <= c.standbypower:
+	case !c.staticmode && power <= c.standbypower:
 		return api.StatusB, err
-	case !c.powerless && power > c.standbypower:
+	case !c.staticmode && power > c.standbypower:
 		return api.StatusC, err
-	// Simple powerless switch status rules
-	case c.powerless && !Ison:
+	// Simple staticmode switch status rules
+	case c.staticmode && !Ison:
 		return api.StatusB, err
-	case c.powerless && Ison:
+	case c.staticmode && Ison:
 		return api.StatusC, err
 	default:
 		return api.StatusNone, api.ErrNotAvailable
@@ -153,7 +152,7 @@ var _ api.Meter = (*FritzDECT)(nil)
 // CurrentPower implements the api.Meter interface
 func (c *FritzDECT) CurrentPower() (float64, error) {
 	power, err := c.fritzdect.CurrentPower()
-	if power < c.standbypower || c.powerless {
+	if power < c.standbypower || c.staticmode {
 		power = 0
 	}
 
@@ -164,11 +163,6 @@ var _ api.ChargeRater = (*FritzDECT)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *FritzDECT) ChargedEnergy() (float64, error) {
-	// no charge in case of powerless use
-	if c.powerless {
-		return 0, nil
-	}
-
 	// fetch basicdevicestats
 	resp, err := c.fritzdect.ExecCmd("getbasicdevicestats")
 	if err != nil {
