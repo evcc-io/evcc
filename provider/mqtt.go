@@ -48,7 +48,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, err
 	}
 
-	m := NewMqtt(log, client, cc.Topic, cc.Scale, cc.Timeout).WithPayload(cc.Payload)
+	m := NewMqtt(log, client, cc.Topic, cc.Timeout).WithScale(cc.Scale).WithPayload(cc.Payload)
 	if cc.Retained {
 		m = m.WithRetained()
 	}
@@ -62,12 +62,12 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 }
 
 // NewMqtt creates mqtt provider for given topic
-func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, scale float64, timeout time.Duration) *Mqtt {
+func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, timeout time.Duration) *Mqtt {
 	m := &Mqtt{
 		log:     log,
 		client:  client,
 		topic:   topic,
-		scale:   scale,
+		scale:   1,
 		timeout: timeout,
 	}
 
@@ -83,6 +83,12 @@ func (m *Mqtt) WithPayload(payload string) *Mqtt {
 // WithRetained adds retained flag for setters
 func (m *Mqtt) WithRetained() *Mqtt {
 	m.retained = true
+	return m
+}
+
+// WithScale sets scaler for getters
+func (m *Mqtt) WithScale(scale float64) *Mqtt {
+	m.scale = scale
 	return m
 }
 
