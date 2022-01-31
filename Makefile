@@ -64,57 +64,57 @@ release-test:
 release:
 	goreleaser --rm-dist
 
-docker:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	docker build --tag $(DOCKER_IMAGE):testing .
-
-publish-testing:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+#docker:
+#	@echo Version: $(VERSION) $(BUILD_DATE)#
+#	docker build --tag $(DOCKER_IMAGE):testing .
+#
+#publish-testing:
+#	@echo Version: $(VERSION) $(BUILD_DATE)
+#	seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "testing" --targets=$(TARGETS)
-
-publish-latest:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+#
+#publish-latest:
+#	@echo Version: $(VERSION) $(BUILD_DATE)
+#	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" --targets=$(TARGETS)
-
-publish-latest-ci:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+#
+#publish-latest-ci:
+#	@echo Version: $(VERSION) $(BUILD_DATE)
+#	seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "nightly" --targets=$(TARGETS)
 
 # TODO: -v "0" needs to be replaced by MAJOR, MINOR and PATCH as soon as we made it to semantic versioning
-publish-images:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+#publish-images:
+#	@echo Version: $(VERSION) $(BUILD_DATE)
+#	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
 # gokrazy image
-prepare-image:
-	go install github.com/gokrazy/tools/cmd/gokr-packer@latest
-	mkdir -p flags/github.com/gokrazy/breakglass
-	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
-	mkdir -p buildflags/github.com/evcc-io/evcc
-	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
-	echo "$(BUILD_ARGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
+#prepare-image:
+#	go install github.com/gokrazy/tools/cmd/gokr-packer@latest
+#	mkdir -p flags/github.com/gokrazy/breakglass
+#	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
+#	mkdir -p buildflags/github.com/evcc-io/evcc
+#	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
+#	echo "$(BUILD_ARGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
 
-image:
-	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
-	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); sudo mkfs.ext4 $${loop}p4
-	gzip -f $(IMAGE_FILE)
+#image:
+#	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
+#	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); sudo mkfs.ext4 $${loop}p4
+#	gzip -f $(IMAGE_FILE)
 
-image-rootfs:
-	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
-	gzip -f $(IMAGE_ROOTFS)
+#image-rootfs:
+#	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
+#	gzip -f $(IMAGE_ROOTFS)
 
-image-update:
-	gokr-packer -update yes $(IMAGE_OPTIONS)
+#image-update:
+#	gokr-packer -update yes $(IMAGE_OPTIONS)
 
-soc:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
+#soc:
+#	@echo Version: $(VERSION) $(BUILD_DATE)
+#	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
 
-stamps:
-	docker pull hacksore/hks
-	docker run --platform linux/amd64 --rm hacksore/hks hyundai list 014d2225-8495-4735-812d-2616334fd15d | head -n 101 | tail -n 100 > vehicle/bluelink/014d2225-8495-4735-812d-2616334fd15d
-	docker run --platform linux/amd64 --rm hacksore/hks kia list 693a33fa-c117-43f2-ae3b-61a02d24f417 | head -n 101 | tail -n 100 > vehicle/bluelink/693a33fa-c117-43f2-ae3b-61a02d24f417
+#stamps:
+#	docker pull hacksore/hks
+#	docker run --platform linux/amd64 --rm hacksore/hks hyundai list 014d2225-8495-4735-812d-2616334fd15d | head -n 101 | tail -n 100 > vehicle/bluelink/014d2225-8495-4735-812d-2616334fd15d
+#	docker run --platform linux/amd64 --rm hacksore/hks kia list 693a33fa-c117-43f2-ae3b-61a02d24f417 | head -n 101 | tail -n 100 > vehicle/bluelink/693a33fa-c117-43f2-ae3b-61a02d24f417
