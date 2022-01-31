@@ -31,6 +31,7 @@ func (m *Timer) Start() {
 	if !m.started.IsZero() {
 		return
 	}
+
 	m.started = m.clck.Now()
 }
 
@@ -39,9 +40,6 @@ func (m *Timer) Stop() {
 	m.Lock()
 	defer m.Unlock()
 
-	if m.started.IsZero() {
-		return
-	}
 	m.started = time.Time{}
 }
 
@@ -50,11 +48,7 @@ func (m *Timer) Expired() bool {
 	m.Lock()
 	defer m.Unlock()
 
-	if m.started.IsZero() {
-		return false
-	}
-
-	res := m.clck.Since(m.started) >= wakeupTimeout
+	res := !m.started.IsZero() && (m.clck.Since(m.started) >= wakeupTimeout)
 	if res {
 		m.started = time.Time{}
 	}

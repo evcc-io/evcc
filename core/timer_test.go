@@ -27,5 +27,4 @@ func TestTimer(t *testing.T) {
 	at.Start()
 	clck.Add(time.Minute)
 	require.Equal(t, at.Expired(), true)
-
 }
