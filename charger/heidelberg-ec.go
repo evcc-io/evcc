@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2021 andig
+// Copyright (c) 2019-2022 andig
 // Copyright (c) 2022 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
@@ -69,12 +69,12 @@ func NewHeidelbergECFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 }
 
 // NewHeidelbergEC creates HeidelbergEC charger
-func NewHeidelbergEC(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, slaveID)
+func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +268,7 @@ func (wb *HeidelbergEC) Diagnose() {
 	}
 }
 
-// var _ api.AlarmClock = (wb *HeidelbergEC)(nil)
+var _ api.AlarmClock = (*HeidelbergEC)(nil)
 
 // WakeUp implements the api.AlarmClock interface
 func (wb *HeidelbergEC) WakeUp() error {
