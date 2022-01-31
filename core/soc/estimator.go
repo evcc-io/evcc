@@ -150,9 +150,8 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 
 	if s.estimate {
 		socDelta := s.vehicleSoc - s.initialSoc
-		energyDelta := math.Max(chargedEnergy, 0)
 
-		if socDelta != 0 { // soc value change
+		if s.vehicleSoc != s.prevSoc { // soc value change
 			// compare ChargeState of vehicle and charger
 			var invalid bool
 
@@ -175,15 +174,15 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			}
 
 			// recalculate gradient, wh per soc %
-			if !invalid && socDelta > 0 && energyDelta > 0 && s.prevSoc > 0 {
-				s.energyPerSocStep = energyDelta / socDelta
+			if !invalid && socDelta > 0 && chargedEnergy > 0 {
+				s.energyPerSocStep = chargedEnergy / socDelta
 				s.virtualCapacity = s.energyPerSocStep * 100
-				s.log.DEBUG.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)
+				s.log.DEBUG.Printf("soc gradient updated: socDelta: %0.0f%%, chargedEnergy: %0.0fWh, energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", socDelta, chargedEnergy, s.energyPerSocStep, s.virtualCapacity)
 			}
 
 			s.prevSoc = s.vehicleSoc
 		} else {
-			s.vehicleSoc = math.Min(*fetchedSoC+energyDelta/s.energyPerSocStep, 100)
+			s.vehicleSoc = math.Min(*fetchedSoC+chargedEnergy/s.energyPerSocStep, 100)
 			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoC)
 		}
 	}
