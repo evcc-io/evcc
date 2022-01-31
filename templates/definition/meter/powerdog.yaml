@@ -30,7 +30,7 @@ render: |
       scale: -1 #scale with -1 to get a substraction
   {{- end }}
   {{- if eq .usage "pv" }}
-    type: modbus
+    source: modbus
     {{ include "modbus" . | indent 2 }}
     register:
       address: 40002 #register for pv effort

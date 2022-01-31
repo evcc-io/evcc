@@ -112,7 +112,7 @@ func (c *CmdConfigure) askYesNo(label string) bool {
 
 type question struct {
 	label, help                    string
-	defaultValue, exampleValue     interface{}
+	defaultValue, exampleValue     string
 	invalidValues                  []string
 	valueType                      string
 	minNumberValue, maxNumberValue int64
@@ -206,7 +206,7 @@ func (c *CmdConfigure) askValue(q question) string {
 	} else {
 		help += " (" + c.localizedString("Value_Optional", nil) + ")"
 	}
-	if q.exampleValue != nil && q.exampleValue != "" {
+	if q.exampleValue != "" {
 		help += fmt.Sprintf(" ("+c.localizedString("Value_Sample", nil)+": %s)", q.exampleValue)
 	}
 
@@ -220,17 +220,8 @@ func (c *CmdConfigure) askValue(q question) string {
 	} else {
 		prompt := &survey.Input{
 			Message: q.label,
+			Default: q.defaultValue,
 			Help:    help,
-		}
-		if q.defaultValue != nil {
-			switch q.defaultValue.(type) {
-			case string:
-				prompt.Default = q.defaultValue.(string)
-			case int:
-				prompt.Default = strconv.Itoa(q.defaultValue.(int))
-			case bool:
-				prompt.Default = strconv.FormatBool(q.defaultValue.(bool))
-			}
 		}
 		err = c.surveyAskOne(prompt, &input, survey.WithValidator(validate))
 	}

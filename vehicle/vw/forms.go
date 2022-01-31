@@ -1,8 +1,12 @@
 package vw
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"regexp"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -52,4 +56,38 @@ func FormValues(reader io.Reader, id string) (FormVars, error) {
 	}
 
 	return vars, err
+}
+
+type CredentialParams struct {
+	TemplateModel struct {
+		Hmac          string `json:"hmac"`
+		RelayState    string `json:"relayState"`
+		PostAction    string `json:"postAction"`
+		IdentifierUrl string `json:"identifierUrl"`
+		Error         string `json:"error"`
+	} `json:"templateModel"`
+	CurrentLocale     string `json:"currentLocale"`
+	CsrfParameterName string `json:"csrf_parameterName"`
+	CsrfToken         string `json:"csrf_token"`
+}
+
+func ParseCredentialsPage(r io.ReadCloser) (CredentialParams, error) {
+	var res CredentialParams
+
+	buf := new(strings.Builder)
+	if _, err := io.Copy(buf, r); err != nil {
+		return res, err
+	}
+
+	re := regexp.MustCompile(`(?s)window._IDK\s*=\s*(.*?);`)
+	match := re.FindAllStringSubmatch(buf.String(), -1)
+
+	tmpl := strings.ReplaceAll(match[0][1], `'`, `"`)
+	for _, v := range []string{"templateModel", "currentLocale", "csrf_parameterName", "csrf_token"} {
+		tmpl = strings.Replace(tmpl, v, fmt.Sprintf(`"%s"`, v), 1)
+	}
+
+	err := json.Unmarshal([]byte(tmpl), &res)
+
+	return res, err
 }

@@ -161,7 +161,7 @@ func ProtocolFromRTU(rtu *bool) Protocol {
 }
 
 // NewConnection creates physical modbus device from config
-func NewConnection(uri, device, comset string, baudrate int, wire Protocol, slaveID uint8) (*Connection, error) {
+func NewConnection(uri, device, comset string, baudrate int, proto Protocol, slaveID uint8) (*Connection, error) {
 	var conn meters.Connection
 
 	if device != "" && uri != "" {
@@ -181,17 +181,17 @@ func NewConnection(uri, device, comset string, baudrate int, wire Protocol, slav
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
 
-		if wire == Rtu {
-			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+		if proto == Ascii {
+			conn = registeredConnection(device, meters.NewASCII(device, baudrate, comset))
 		} else {
-			conn = registeredConnection(uri, meters.NewASCII(device, baudrate, comset))
+			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 		}
 	}
 
 	if uri != "" {
 		uri = util.DefaultPort(uri, 502)
 
-		switch wire {
+		switch proto {
 		case Rtu:
 			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
 		case Ascii:
