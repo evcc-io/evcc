@@ -29,13 +29,12 @@ import (
 )
 
 const (
-	igyRegID           = 0    // Input
-	igyRegSerial       = 25   // Input
-	igyRegProtocol     = 50   // Input
-	igyRegManufacturer = 100  // Input
-	igyRegFirmware     = 200  // Input
-	igyRegStatus       = 275  // Input
-	igyRegEnable       = 1028 // Holding
+	igyRegID           = 0   // Input
+	igyRegSerial       = 25  // Input
+	igyRegProtocol     = 50  // Input
+	igyRegManufacturer = 100 // Input
+	igyRegFirmware     = 200 // Input
+	igyRegStatus       = 275 // Input
 )
 
 var (
@@ -47,7 +46,8 @@ var (
 
 // Innogy is an api.Charger implementation for Innogy eBox wallboxes.
 type Innogy struct {
-	conn *modbus.Connection
+	conn    *modbus.Connection
+	current float64
 }
 
 func init() {
@@ -85,7 +85,8 @@ func NewInnogy(uri string, id uint8) (*Innogy, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Innogy{
-		conn: conn,
+		conn:    conn,
+		current: 6,
 	}
 
 	return wb, nil
@@ -114,26 +115,35 @@ func (wb *Innogy) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Innogy) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(igyRegEnable, 1)
+	b, err := wb.conn.ReadHoldingRegisters(igyRegMaxCurrents[0], 2)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	return math.Float32frombits(binary.BigEndian.Uint32(b)) >= 6, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Innogy) Enable(enable bool) error {
-	var u uint16
+	var current float64
 	if enable {
-		u = 1
+		current = wb.current
 	}
 
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, u)
-	_, err := wb.conn.WriteMultipleRegisters(igyRegEnable, 1, b)
+	return wb.setCurrent(current)
+}
 
-	return err
+func (wb *Innogy) setCurrent(current float64) error {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
+
+	for _, reg := range igyRegMaxCurrents {
+		if _, err := wb.conn.WriteMultipleRegisters(reg, 2, b); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -149,16 +159,12 @@ func (wb *Innogy) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
 
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
-
-	for _, reg := range igyRegMaxCurrents {
-		if _, err := wb.conn.WriteMultipleRegisters(reg, 2, b); err != nil {
-			return err
-		}
+	err := wb.setCurrent(current)
+	if err == nil {
+		wb.current = current
 	}
 
-	return nil
+	return err
 }
 
 var _ api.Meter = (*Innogy)(nil)
