@@ -50,6 +50,7 @@ func TestChargerTemplates(t *testing.T) {
 			} else {
 				values[templates.ModbusKeyRS485TCPIP] = true
 			}
+			values = tmpl.ModbusValues(templates.TemplateRenderModeInstance, true, values)
 		}
 
 		t.Run(tmpl.Template, func(t *testing.T) {

@@ -1,6 +1,6 @@
 product:
-  brand: SENEC
-  description: Wallbox pro s
+  brand: Walther Werke
+  description: Basic Evo Pro
 requirements: ["sponsorship"]
 
 render:

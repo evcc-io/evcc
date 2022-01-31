@@ -1,17 +1,16 @@
 package mercedes
 
 import (
-	"fmt"
+	"context"
 	"sync"
 
 	"golang.org/x/oauth2"
 )
 
-var ErrNotLoggedIn = fmt.Errorf("not logged in")
-
 type ReuseTokenSource struct {
 	mu sync.Mutex
-	t  *oauth2.Token
+	oc *oauth2.Config
+	ts oauth2.TokenSource
 	cb func()
 }
 
@@ -19,17 +18,17 @@ func (ts *ReuseTokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
-	if ts.t.Valid() {
-		return ts.t, nil
+	t, err := ts.ts.Token()
+	if err != nil || !t.Valid() {
+		// invalid token callback
+		ts.cb()
 	}
 
-	ts.cb() // invalid token callback
-
-	return nil, ErrNotLoggedIn
+	return t, err
 }
 
 func (ts *ReuseTokenSource) Apply(t *oauth2.Token) {
 	ts.mu.Lock()
-	ts.t = t
+	ts.ts = ts.oc.TokenSource(context.Background(), t)
 	ts.mu.Unlock()
 }

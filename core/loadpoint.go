@@ -1027,7 +1027,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	phases := lp.GetPhases()
 
 	// observed phase state inconsistency (https://github.com/evcc-io/evcc/issues/1572, https://github.com/evcc-io/evcc/issues/2230)
-	if phases < lp.activePhases {
+	if phases > 0 && phases < lp.activePhases {
 		lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, lp.activePhases)
 	}
 

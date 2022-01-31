@@ -12,6 +12,8 @@ params:
 - name: capacity
   default: 64
   valuetype: float
+- name: phases
+  advanced: true
 - preset: vehicleidentify
 render: |
   type: custom
@@ -19,6 +21,9 @@ render: |
   title: {{ .title }}
   {{- end }}
   capacity: {{ .capacity }}
+  {{- if ne .phases "" }}
+  phases: {{ .phases }}
+  {{- end }}
   soc:
     type: http
     uri: https://app.evnotify.de/soc?akey={{ .akey }}&token={{ .token }} # evNotify Server + AKEY

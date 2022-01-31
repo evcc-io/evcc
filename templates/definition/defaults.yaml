@@ -35,7 +35,7 @@ params:
   help:
     de: Kommunikationsparameter für den Adapter
     en: Communication parameter for the adapter
-  default: "8N1"
+  default: 8N1
 - name: host
   description:
     de: IP-Adresse oder Hostname
@@ -84,6 +84,15 @@ params:
     de: Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
     en: Required if you own multiple vehicles of the same brand
   example: W...
+- name: phases
+  description:
+    de: Maximale Phasenanzahl
+    en: Maximum number of phases
+  help:
+    de: Die maximale Anzahl der Phasen welche genutzt werden können
+    en: The maximum number of phases which can be used
+  example: 3
+  valuetype: number
 - name: cache
   description:
     de: Cache
@@ -163,8 +172,11 @@ presets:
       required: true
     - name: vin
     - name: capacity
+    - name: phases
+      advanced: true
     - name: cache
       advanced: true
+      deprecated: true
     render: |
       {{define "vehicle-base"}}
       {{- if ne .title "" }}
@@ -177,6 +189,9 @@ presets:
       {{- end }}
       {{- if ne .vin "" }}
       vin: {{ .vin }}
+      {{- end }}
+      {{- if ne .phases "" }}
+      phases: {{ .phases }}
       {{- end }}
       {{- if ne .cache "" }}
       cache: {{ .cache }}

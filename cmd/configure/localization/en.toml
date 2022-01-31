@@ -87,7 +87,7 @@ Config_AddAnotherValue = "Do you want to add another value?"
 Config_Yes = "Yes"
 Config_No = "No"
 
-Cancel = "The configuration was cancelled.\n\nIf this guided configuration process doesn't work for you yet, please try the manual configuration. You can find more details about that on our website: https://docs.evcc.io/docs/installation/configuration\n"
+Cancel = "The configuration was cancelled.\n\nIf this guided configuration process doesn't work for you yet, please try the manual configuration. You can find more details about that on our website: https://docs.evcc.io/docs/\n"
 InputError = "An input error occurred:"
 
 Value_Required = "required"
@@ -110,7 +110,7 @@ Loadpoint_DefaultTitle = "Garage"
 
 Loadpoint_ResetOnDisconnect = "Shall disconnecting the charging cable from the vehicle reset the charging settings to the defaults?"
 
-Loadpoint_WallboxWOMeter = "The wallbox does not provide power data. Do you have an external meter that can be used?"
+Loadpoint_WallboxWOMeter = "The system could not detect if the wallbox provides power data. Do you want to add an external meter instead?"
 Loadpoint_WallboxMaxPower = "What is the maximum power your wallbox can provide?"
 Loadpoint_WallboxMinAmperage = "What is the MINIMUM amperage your wallbox can provide on a single phase?"
 Loadpoint_WallboxMaxAmperage = "What is the MAXIMUM amperage your wallbox can provide on a single phase?"
