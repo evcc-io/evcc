@@ -276,6 +276,7 @@ var _ api.AlarmClock = (*EVSEWifi)(nil)
 
 // WakeUp implements the AlarmClock interface
 func (wb *EVSEWifi) WakeUp() error {
-	_, err := wb.getParameters()
+	uri := fmt.Sprintf("%s/interruptCp", wb.uri)
+	_, err := wb.GetBody(uri)
 	return err
 }
