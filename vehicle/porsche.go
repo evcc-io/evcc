@@ -101,7 +101,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		capabilities, _ = emobility.Capabilities(cc.VIN)
 	}
 
-	provider := porsche.NewProvider(log, api, emobility, mobile, cc.VIN, capabilities, cc.Cache)
+	provider := porsche.NewProvider(log, api, emobility, mobile, cc.VIN, capabilities.CarModel, cc.Cache)
 
 	v := &Porsche{
 		embed:    &cc.embed,

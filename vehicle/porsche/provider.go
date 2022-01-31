@@ -17,18 +17,17 @@ type Provider struct {
 }
 
 // NewProvider creates a new vehicle
-func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *MobileAPI, vin string, capabilities CapabilitiesResponse, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *MobileAPI, vin string, carModel string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(vin)
 		}, cache).InterfaceGetter(),
 
 		emobilityG: provider.NewCached(func() (interface{}, error) {
-			if capabilities.CarModel != "" {
-				return emobility.Status(vin, capabilities.CarModel)
-			} else {
-				return EmobilityResponse{}, errors.New("no car model")
+			if carModel != "" {
+				return emobility.Status(vin, carModel)
 			}
+			return EmobilityResponse{}, errors.New("no car model")
 		}, cache).InterfaceGetter(),
 
 		mobileG: provider.NewCached(func() (interface{}, error) {
@@ -45,13 +44,12 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.mobileG()
 	if res, ok := res.(StatusResponseMobile); err == nil && ok {
-		for _, m := range res.Measurements {
-			if m.Key == "BATTERY_LEVEL" {
-				if !m.Status.IsEnabled {
-					return 0, errors.New(m.Status.Cause)
-				}
-				return float64(m.Value.Percent), nil
-			}
+		m, err := res.MeasurementByKey("BATTERY_LEVEL")
+		if err != nil && err != api.ErrNotAvailable {
+			return 0, err
+		}
+		if err != api.ErrNotAvailable {
+			return float64(m.Value.Percent), nil
 		}
 	}
 
@@ -74,13 +72,12 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.mobileG()
 	if res, ok := res.(StatusResponseMobile); err == nil && ok {
-		for _, m := range res.Measurements {
-			if m.Key == "E_RANGE" {
-				if !m.Status.IsEnabled {
-					return 0, errors.New(m.Status.Cause)
-				}
-				return int64(m.Value.Kilometers), nil
-			}
+		m, err := res.MeasurementByKey("E_RANGE")
+		if err != nil && err != api.ErrNotAvailable {
+			return 0, err
+		}
+		if err != api.ErrNotAvailable {
+			return int64(m.Value.Kilometers), nil
 		}
 	}
 
@@ -103,19 +100,18 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.mobileG()
 	if res, ok := res.(StatusResponseMobile); err == nil && ok {
-		for _, m := range res.Measurements {
-			if m.Key == "BATTERY_CHARGING_STATE" {
-				if !m.Status.IsEnabled {
-					return time.Time{}, errors.New(m.Status.Cause)
+		m, err := res.MeasurementByKey("BATTERY_CHARGING_STATE")
+		if err != nil && err != api.ErrNotAvailable {
+			return time.Time{}, err
+		}
+		if err != api.ErrNotAvailable {
+			if m.Value.EndsAt == "" {
+				if m.Value.LastModified != "" {
+					return time.Parse(time.RFC3339, m.Value.LastModified)
 				}
-				if m.Value.EndsAt == "" {
-					if m.Value.LastModified != "" {
-						return time.Parse(time.RFC3339, m.Value.LastModified)
-					}
-					return time.Time{}, nil
-				}
-				return time.Parse(time.RFC3339, m.Value.EndsAt)
+				return time.Time{}, nil
 			}
+			return time.Parse(time.RFC3339, m.Value.EndsAt)
 		}
 	}
 
@@ -133,24 +129,23 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.mobileG()
 	if res, ok := res.(StatusResponseMobile); err == nil && ok {
-		for _, m := range res.Measurements {
-			if m.Key == "BATTERY_CHARGING_STATE" {
-				if !m.Status.IsEnabled {
-					return api.StatusNone, errors.New(m.Status.Cause)
-				}
-				switch m.Value.Status {
-				case "FAST_CHARGING", "NOT_PLUGGED", "UNKNOWN":
-					return api.StatusA, nil
-				case "CHARGING_COMPLETED", "CHARGING_PAUSED", "READY_TO_CHARGE", "SOC_REACHED",
-					"INITIALISING", "STANDBY", "SUSPENDED", "PLUGGED_LOCKED", "PLUGGED_NOT_LOCKED":
-					return api.StatusB, nil
-				case "CHARGING":
-					return api.StatusC, nil
-				case "CHARGING_ERROR":
-					return api.StatusF, nil
-				default:
-					return api.StatusNone, errors.New("mobile - unknown charging status: " + m.Value.Status)
-				}
+		m, err := res.MeasurementByKey("BATTERY_CHARGING_STATE")
+		if err != nil && err != api.ErrNotAvailable {
+			return api.StatusNone, err
+		}
+		if err != api.ErrNotAvailable {
+			switch m.Value.Status {
+			case "FAST_CHARGING", "NOT_PLUGGED", "UNKNOWN":
+				return api.StatusA, nil
+			case "CHARGING_COMPLETED", "CHARGING_PAUSED", "READY_TO_CHARGE", "SOC_REACHED",
+				"INITIALISING", "STANDBY", "SUSPENDED", "PLUGGED_LOCKED", "PLUGGED_NOT_LOCKED":
+				return api.StatusB, nil
+			case "CHARGING":
+				return api.StatusC, nil
+			case "CHARGING_ERROR":
+				return api.StatusF, nil
+			default:
+				return api.StatusNone, errors.New("mobile - unknown charging status: " + m.Value.Status)
 			}
 		}
 	}
@@ -187,13 +182,12 @@ var _ api.VehicleClimater = (*Provider)(nil)
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.mobileG()
 	if res, ok := res.(StatusResponseMobile); err == nil && ok {
-		for _, m := range res.Measurements {
-			if m.Key == "CLIMATIZER_STATE" {
-				if !m.Status.IsEnabled {
-					return active, 20, 20, errors.New(m.Status.Cause)
-				}
-				return m.Value.IsOn, 20, 20, err
-			}
+		m, err := res.MeasurementByKey("CLIMATIZER_STATE")
+		if err != nil && err != api.ErrNotAvailable {
+			return active, 20, 20, err
+		}
+		if err != api.ErrNotAvailable {
+			return m.Value.IsOn, 20, 20, err
 		}
 	}
 
@@ -218,13 +212,12 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.mobileG()
 	if res, ok := res.(StatusResponseMobile); err == nil && ok {
-		for _, m := range res.Measurements {
-			if m.Key == "MILEAGE" {
-				if !m.Status.IsEnabled {
-					return 0, errors.New(m.Status.Cause)
-				}
-				return float64(m.Value.Kilometers), nil
-			}
+		m, err := res.MeasurementByKey("MILEAGE")
+		if err != nil && err != api.ErrNotAvailable {
+			return 0, err
+		}
+		if err != api.ErrNotAvailable {
+			return float64(m.Value.Kilometers), nil
 		}
 	}
 
