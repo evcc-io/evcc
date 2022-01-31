@@ -149,8 +149,6 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 	}
 
 	if s.estimate {
-		socDelta := s.vehicleSoc - s.initialSoc
-
 		if s.vehicleSoc != s.prevSoc { // soc value change
 			// compare ChargeState of vehicle and charger
 			var invalid bool
@@ -172,6 +170,8 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			if !invalid && s.initialSoc == 0 {
 				s.initialSoc = s.vehicleSoc
 			}
+
+			socDelta := s.vehicleSoc - s.initialSoc
 
 			// recalculate gradient, wh per soc %
 			if !invalid && socDelta > 0 && chargedEnergy > 0 {
