@@ -92,18 +92,13 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	}
 
 	// timeout handler
-	timer := provider.NewMqtt(log, client,
+	to := provider.NewTimeoutHandler(provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/evse/state", topic), 1, timeout,
-	).StringGetter()
+	).StringGetter())
 
 	stringG := func(topic string) func() (string, error) {
 		g := provider.NewMqtt(log, client, topic, 1, 0).StringGetter()
-		return func() (val string, err error) {
-			if val, err = g(); err == nil {
-				_, err = timer()
-			}
-			return val, err
-		}
+		return to.StringGetter(g)
 	}
 
 	wb.enabledG = stringG(fmt.Sprintf("%s/evse/auto_start_charging", topic))

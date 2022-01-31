@@ -1,0 +1,45 @@
+template: solax-inverter-cloud
+products:
+- brand: Solax
+  description:
+    de: Wechselrichter (Cloud)
+    en: Inverter (Cloud)
+requirements:
+  description:
+    de: |
+      Der Solax Inverter muss in der SolaxCloud angemeldet sein.
+
+      **Achtung**: Die Werte können nur alle 150s abgerufen werden und dann auch 5 Minuten alt sein. Die Laderegelung nach PV kann hiermit nicht optimal gesteuert werden!
+    en: |
+      The Solax inverter has to be registered in the SolaxCloud.
+
+      **Attention**: Values can only be fetched every 150s and then also can be 5 minutes old. Charging by PV will not be optimal because of this!
+params:
+- name: usage
+  choice: [ "pv" ]
+- name: tokenid
+  required: true
+  description:
+    generic: SolaxCloud TokenID
+  help:
+    de: Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
+    en: Go to https://www.solaxcloud.com/#/api and take the value of "ObtaintokenID".
+- name: serial
+  required: true
+  description:
+    de: Seriennummer
+    en: Serial number
+  help:
+    de: Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+    en: Go to https://www.solaxcloud.com/#/inverter and take the value of registration number
+render: |
+  type: custom
+  power:
+  {{- if eq .usage "pv" }}
+    # Mini WR  XXXXXXXXXXXX
+    # AC Power
+    source: http
+    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+    jq: if .result.acpower < 10 then 0 else .result.acpower end  # Solax API Inverter.AC.power.total
+    cache: 2m30s
+  {{- end }}

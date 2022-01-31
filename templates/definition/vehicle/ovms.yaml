@@ -1,7 +1,8 @@
 template: ovms
-description: 
-  generic: Open Vehicle Monitoring System
-generic: true
+products:
+- description:
+    generic: Open Vehicle Monitoring System
+group: generic
 params:
 - name: title
 - name: user
@@ -13,7 +14,9 @@ params:
   required: true
 - name: capacity
   default: 12
-- base: vehicleidentify
+- name: phases
+  advanced: true
+- preset: vehicleidentify
 render: |
   type: ovms
   {{- if ne .title "" }}
@@ -23,5 +26,8 @@ render: |
   password: {{ .password }}
   vehicleid: {{ .vehicleid }} # vehicle id
   capacity: {{ .capacity }}
+  {{- if ne .phases "" }}
+  phases: {{ .phases }}
+  {{- end }}
   server: dexters-web.de # used ovms server [dexters-web.de or api.openvehicles.com]
 

@@ -1,11 +1,18 @@
 template: go-e
-description: 
-  generic: go-eCharger Home/Pro/V3
+products:
+- brand: go-e
+  description:
+    generic: Charger HOME+
+- brand: go-e
+  description:
+    generic: Charger HOMEfix
+- brand: go-e
+  description:
+    generic: Charger Pro
 requirements:
   description:
-    en: Home und PRO require firmware 040.0 or later, V3 requires firmware 052.1 or later.
-    de: Home und PRO benötigen mindestens Firmware 040.0 oder neuer, V3 benötigt mindestens Firmware 052.1 oder neuer.
-  uri: https://docs.evcc.io/docs/devices/chargers#go-echarger-homeprov3
+    en: Require firmware 040.0 or later.
+    de: Benötigen mindestens Firmware 040.0 oder neuer.
 params:
 - name: host
   required: true

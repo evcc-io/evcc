@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -11,8 +12,11 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	autoauth "github.com/evcc-io/evcc/server/auth"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
+	"github.com/gorilla/handlers"
 )
 
 type config struct {
@@ -76,6 +80,7 @@ type ConfigProvider struct {
 	chargers map[string]api.Charger
 	vehicles map[string]api.Vehicle
 	visited  map[string]bool
+	auth     *util.AuthCollection
 }
 
 func (cp *ConfigProvider) TrackVisitors() {
@@ -195,4 +200,55 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	}
 
 	return nil
+}
+
+// webControl handles routing for devices. For now only api.ProviderLogin related routes
+func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Param) {
+	router := httpd.Router()
+
+	auth := router.PathPrefix("/oauth").Subrouter()
+	auth.Use(handlers.CompressHandler)
+	auth.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
+	// wire the handler
+	autoauth.Setup(auth)
+
+	// initialize
+	cp.auth = util.NewAuthCollection(paramC)
+
+	// TODO make evccURI configurable, add warnings for any network/ localhost
+	evccURI := fmt.Sprintf("http://%s", httpd.Addr)
+	authURI := fmt.Sprintf("%s/oauth", evccURI)
+
+	var id int
+	for _, v := range cp.vehicles {
+		if provider, ok := v.(api.ProviderLogin); ok {
+			id += 1
+
+			basePath := fmt.Sprintf("vehicles/%d", id)
+			baseURI := fmt.Sprintf("%s/auth/%s", evccURI, basePath)
+
+			// register vehicle
+			ap := cp.auth.Register(baseURI, v.Title())
+
+			provider.SetCallbackParams(evccURI, authURI, ap.Handler())
+
+			auth.
+				Methods(http.MethodPost).
+				Path(fmt.Sprintf("/%s/login", basePath)).
+				HandlerFunc(provider.LoginHandler())
+			auth.
+				Methods(http.MethodPost).
+				Path(fmt.Sprintf("/%s/logout", basePath)).
+				HandlerFunc(provider.LogoutHandler())
+		}
+	}
+
+	if id > 0 {
+		log.INFO.Printf("ensure the oauth client redirect/callback is configured for: %s", authURI)
+	}
+
+	cp.auth.Publish()
 }

@@ -1,6 +1,0 @@
-type: template
-template: lg-ess-home-8-10
-description: LG ESS Home 8/10
-usage: battery 
-host: 192.0.2.2 
-registration: DE200...  # Registriernummer des LG ESS HOME Wechselrichters.

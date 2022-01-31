@@ -1,9 +1,9 @@
 template: ds
-description: 
-  generic: DS
+products:
+- brand: DS
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: capacity
   default: 50
 render: |

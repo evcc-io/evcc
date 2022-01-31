@@ -1,9 +1,10 @@
 template: tronity
-description: 
-  generic: Tronity
-generic: true
-requirements:
-  sponsorship: true
+products:
+- description:
+    generic: Tronity
+group: generic
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: title
 - name: userid
@@ -18,7 +19,9 @@ params:
   example: W...
 - name: capacity
   default: 10
-- base: vehicleidentify
+- name: phases
+  advanced: true
+- preset: vehicleidentify
 render: |
   type: tronity
   {{- if ne .title "" }}
@@ -31,6 +34,9 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   capacity: {{ .capacity }}
+  {{- if ne .phases "" }}
+  phases: {{ .phases }}
+  {{- end }}
   {{- if ne .vin "" }}
   vin: {{ .vin }}
   {{- end }}

@@ -70,8 +70,7 @@ site:
 loadpoints:
 - title: Garage # display name for UI
   charger: wallbe # charger
-  meters:
-    charge: charge # charge meter
+  meter: charge # charge meter
   vehicle: audi
   # vehicles: # use if multiple vehicles allowed to charge on this loadpoint
   # - ID.3
@@ -166,6 +165,9 @@ messaging:
     disconnect: # vehicle connected event
       title: Car disconnected
       msg: Car disconnected after ${connectedDuration}
+    soc: # vehicle soc update event
+      title: SoC updated
+      msg: Battery charged to ${vehicleSoC:%.0f}%
   services:
   # - type: pushover
   #   app: # app id

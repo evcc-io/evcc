@@ -1,19 +1,8 @@
 package charger
 
-import (
-	"errors"
-	"fmt"
-	"time"
-
-	"github.com/evcc-io/evcc/api"
-	goe "github.com/evcc-io/evcc/charger/go-e"
-	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/sponsor"
-)
-
 // LICENSE
 
-// Copyright (c) 2019-2021 andig
+// Copyright (c) 2019-2022 andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -27,6 +16,17 @@ import (
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+
+import (
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+	goe "github.com/evcc-io/evcc/charger/go-e"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
+)
 
 // https://go-e.co/app/api.pdf
 // https://github.com/goecharger/go-eCharger-API-v1/

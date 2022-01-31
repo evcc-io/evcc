@@ -1,8 +1,10 @@
 template: innogy-ebox
-description: 
-  generic: Innogy eBox
-requirements:
-  sponsorship: true
+products:
+- brand: Innogy
+  description:
+    generic: eBox
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: modbus
   choice: ["tcpip"]

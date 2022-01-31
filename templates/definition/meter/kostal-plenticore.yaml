@@ -1,6 +1,8 @@
 template: kostal-plenticore
-description: 
-  generic: Kostal Plenticore Hybrid
+products:
+- brand: Kostal
+  description:
+    generic: Plenticore Hybrid
 guidedsetup:
   enable: true
   linked:

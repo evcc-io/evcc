@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2021 andig
+// Copyright (c) 2019-2022 andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -91,7 +91,7 @@ func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewABLeMH creates ABLeMH charger
 func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.AsciiFormat, slaveID)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Ascii, slaveID)
 	if err != nil {
 		return nil, err
 	}

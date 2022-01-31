@@ -1,0 +1,14 @@
+template: smart
+products:
+- brand: Smart
+  description:
+    generic: EQ
+params:
+- base: vehiclebase
+- base: vehicleidentify
+- name: capacity
+  default: 17.6
+render: |
+  type: smart
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

@@ -1,6 +1,9 @@
 template: fritzdect
-description: 
-  generic: FritzDECT
+products:
+- brand: AVM
+  description:
+    generic: FritzDECT
+group: switchsockets
 params:
 - name: uri
   default: https://fritz.box

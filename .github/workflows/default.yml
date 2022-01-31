@@ -1,6 +1,11 @@
 name: Default
 
-on: [push, pull_request, workflow_call]
+on: 
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_call:
 
 jobs:
 

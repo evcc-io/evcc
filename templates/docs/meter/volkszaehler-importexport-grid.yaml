@@ -1,8 +1,0 @@
-type: template
-template: volkszaehler-importexport
-description: Volkszähler (HTTP API, Import & Export)
-usage: grid 
-host: 192.0.2.2 
-port: 80 
-importuuid:
-exportuuid:

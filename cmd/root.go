@@ -216,6 +216,9 @@ func run(cmd *cobra.Command, args []string) {
 		valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}
 	}
 
+	// allow web access for vehicles
+	cp.webControl(httpd, valueChan)
+
 	// version check
 	go updater.Run(log, httpd, tee, valueChan)
 

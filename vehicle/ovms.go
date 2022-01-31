@@ -15,16 +15,16 @@ import (
 )
 
 type ovmsStatusResponse struct {
-	Odometer string `json:"odometer"`
+	Odometer float64 `json:"odometer,string"`
 }
 
 type ovmsChargeResponse struct {
-	ChargeEtrFull    string `json:"charge_etr_full"`
-	ChargeState      string `json:"chargestate"`
-	ChargePortOpen   int    `json:"cp_dooropen"`
-	EstimatedRange   string `json:"estimatedrange"`
-	MessageAgeServer int    `json:"m_msgage_s"`
-	Soc              string `json:"soc"`
+	ChargeEtrFull    int64   `json:"charge_etr_full,string"`
+	ChargeState      string  `json:"chargestate"`
+	ChargePortOpen   int     `json:"cp_dooropen"`
+	EstimatedRange   string  `json:"estimatedrange"`
+	MessageAgeServer int     `json:"m_msgage_s"`
+	Soc              float64 `json:"soc,string"`
 }
 
 type ovmsConnectResponse struct {
@@ -167,7 +167,7 @@ func (v *Ovms) SoC() (float64, error) {
 	res, err := v.chargeG()
 
 	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
-		return strconv.ParseFloat(res.Soc, 64)
+		return res.Soc, nil
 	}
 
 	return 0, err
@@ -212,10 +212,7 @@ func (v *Ovms) Odometer() (float64, error) {
 	res, err := v.statusG()
 
 	if res, ok := res.(ovmsStatusResponse); err == nil && ok {
-		odometer, err := strconv.ParseFloat(res.Odometer, 64)
-		if err == nil {
-			return odometer / 10, nil
-		}
+		return res.Odometer / 10, nil
 	}
 
 	return 0, err
@@ -228,10 +225,7 @@ func (v *Ovms) FinishTime() (time.Time, error) {
 	res, err := v.chargeG()
 
 	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
-		cef, err := strconv.ParseInt(res.ChargeEtrFull, 0, 64)
-		if err == nil {
-			return time.Now().Add(time.Duration(cef) * time.Minute), nil
-		}
+		return time.Now().Add(time.Duration(res.ChargeEtrFull) * time.Minute), nil
 	}
 
 	return time.Time{}, err

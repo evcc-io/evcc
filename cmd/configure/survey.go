@@ -63,16 +63,16 @@ func (c *CmdConfigure) askSelection(message string, items []string) (error, stri
 
 // selectItem selects item from list
 func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Template {
-	var emptyItem templates.Template
-	emptyItem.Description.SetString(c.localizedString("ItemNotPresent", nil), c.lang)
+	emptyItem := templates.Template{Lang: c.lang}
+	emptyItem.SetTitle(c.localizedString("ItemNotPresent", nil))
 
 	elements := c.fetchElements(deviceCategory)
 	elements = append(elements, emptyItem)
 
 	var items []string
 	for _, item := range elements {
-		if item.Description.String(c.lang) != "" {
-			items = append(items, item.Description.String(c.lang))
+		if item.Title() != "" {
+			items = append(items, item.Title())
 		}
 	}
 
@@ -112,7 +112,7 @@ func (c *CmdConfigure) askYesNo(label string) bool {
 
 type question struct {
 	label, help                    string
-	defaultValue, exampleValue     interface{}
+	defaultValue, exampleValue     string
 	invalidValues                  []string
 	valueType                      string
 	minNumberValue, maxNumberValue int64
@@ -206,7 +206,7 @@ func (c *CmdConfigure) askValue(q question) string {
 	} else {
 		help += " (" + c.localizedString("Value_Optional", nil) + ")"
 	}
-	if q.exampleValue != nil && q.exampleValue != "" {
+	if q.exampleValue != "" {
 		help += fmt.Sprintf(" ("+c.localizedString("Value_Sample", nil)+": %s)", q.exampleValue)
 	}
 
@@ -220,17 +220,8 @@ func (c *CmdConfigure) askValue(q question) string {
 	} else {
 		prompt := &survey.Input{
 			Message: q.label,
+			Default: q.defaultValue,
 			Help:    help,
-		}
-		if q.defaultValue != nil {
-			switch q.defaultValue.(type) {
-			case string:
-				prompt.Default = q.defaultValue.(string)
-			case int:
-				prompt.Default = strconv.Itoa(q.defaultValue.(int))
-			case bool:
-				prompt.Default = strconv.FormatBool(q.defaultValue.(bool))
-			}
 		}
 		err = c.surveyAskOne(prompt, &input, survey.WithValidator(validate))
 	}
