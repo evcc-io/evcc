@@ -13,23 +13,49 @@ params:
 render: |
   type: custom
   power:
+  {{- if eq .usage "grid" }}
     source: modbus
     {{include "modbus" . | indent 2}}
     register:
       type: input
-  {{- if eq .usage "grid" }}
       address: 13009 # Export power
       decode: int32s
     scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
+    source: modbus
+    {{include "modbus" . | indent 2}}
+    register:
+      type: input
       address: 5016 # Total DC power
       decode: uint32s
   {{- end }}
   {{- if eq .usage "battery" }}
-      address: 13021 # Battery power
-      decode: int16
-    #scale: -1 # charging sign form 13000 & 0x2
+    source: calc
+    mul:
+    - source: modbus
+      {{include "modbus" . | indent 4}}
+      register:
+        type: holding
+        address: 13022 # Battery power
+        decode: int16
+    - source: calc
+      add:
+      - source: modbus
+        {{include "modbus" . | indent 6}}
+        register:
+          type: holding
+          address: 13001 # Battery running state
+          decode: bool16
+          bitmask: 2 # Charging
+        scale: -1
+      - source: modbus
+        {{include "modbus" . | indent 6}}
+        register:
+          type: holding
+          address: 13001 # Battery running state
+          decode: bool16
+          bitmask: 4 # Discharging
   soc:
     source: modbus
     {{include "modbus" . | indent 2}}
