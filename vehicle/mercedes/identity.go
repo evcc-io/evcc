@@ -2,16 +2,15 @@ package mercedes
 
 import (
 	"context"
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
 	"github.com/coreos/go-oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/server/auth"
 	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
@@ -29,15 +28,9 @@ func WithToken(t *oauth2.Token) IdentityOptions {
 type Identity struct {
 	log *util.Logger
 	*ReuseTokenSource
-	sessionSecret []byte
-	oc            *oauth2.Config
-	authC         chan<- bool
-}
-
-func generateSecret() ([]byte, error) {
-	var b [16]byte
-	_, err := io.ReadFull(rand.Reader, b[:])
-	return b[:], err
+	oc      *oauth2.Config
+	baseURL string
+	authC   chan<- bool
 }
 
 // TODO SessionSecret from config/persistence
@@ -66,7 +59,6 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 	ts.Apply(nil)
 
 	v.ReuseTokenSource = ts
-	v.sessionSecret, err = generateSecret()
 
 	for _, o := range options {
 		if err == nil {
@@ -86,19 +78,20 @@ func (v *Identity) invalidToken() {
 
 var _ api.ProviderLogin = (*Identity)(nil)
 
-func (v *Identity) SetCallbackParams(uri string, authC chan<- bool) {
-	v.oc.RedirectURL = uri
+func (v *Identity) SetCallbackParams(baseURL, redirectURL string, authC chan<- bool) {
+	v.baseURL = baseURL
+	v.oc.RedirectURL = redirectURL
 	v.authC = authC
 }
 
 func (v *Identity) LoginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		state := NewState(v.sessionSecret)
+		state := auth.Register(v.callbackHandler)
 
 		b, _ := json.Marshal(struct {
 			LoginUri string `json:"loginUri"`
 		}{
-			LoginUri: v.oc.AuthCodeURL(state.Encrypt(), oauth2.AccessTypeOffline,
+			LoginUri: v.oc.AuthCodeURL(state, oauth2.AccessTypeOffline,
 				oauth2.SetAuthURLParam("prompt", "login consent"),
 			),
 		})
@@ -118,50 +111,34 @@ func (v *Identity) LogoutHandler() http.HandlerFunc {
 	}
 }
 
-func (v *Identity) CallbackHandler(baseURI string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		v.log.TRACE.Println("callback request retrieved")
+func (v *Identity) callbackHandler(w http.ResponseWriter, r *http.Request) {
+	v.log.TRACE.Println("callback request retrieved")
 
-		data, err := url.ParseQuery(r.URL.RawQuery)
-		if err != nil {
-			fmt.Fprintln(w, "invalid response:", data)
-			return
-		}
-
-		if error, ok := data["error"]; ok {
-			fmt.Fprintf(w, "error: %s: %s\n", error, data["error_description"])
-			return
-		}
-
-		states, ok := data["state"]
-		if !ok || len(states) != 1 {
-			fmt.Fprintln(w, "invalid state response:", data)
-			return
-		} else if err := Validate(states[0], v.sessionSecret); err != nil {
-			fmt.Fprintf(w, "failed state validation: %s", err)
-			return
-		}
-
-		codes, ok := data["code"]
-		if !ok || len(codes) != 1 {
-			fmt.Fprintln(w, "invalid response:", data)
-			return
-		}
-
-		token, err := v.oc.Exchange(context.Background(), codes[0])
-		if err != nil {
-			fmt.Fprintln(w, "token error:", err)
-			return
-		}
-
-		if token.Valid() {
-			v.log.TRACE.Println("sending login update...")
-			v.ReuseTokenSource.Apply(token)
-			v.authC <- true
-
-			provider.ResetCached()
-		}
-
-		http.Redirect(w, r, baseURI, http.StatusFound)
+	data, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		fmt.Fprintln(w, "invalid response:", data)
+		return
 	}
+
+	codes, ok := data["code"]
+	if !ok || len(codes) != 1 {
+		fmt.Fprintln(w, "invalid response:", data)
+		return
+	}
+
+	token, err := v.oc.Exchange(context.Background(), codes[0])
+	if err != nil {
+		fmt.Fprintln(w, "token error:", err)
+		return
+	}
+
+	if token.Valid() {
+		v.log.TRACE.Println("sending login update...")
+		v.ReuseTokenSource.Apply(token)
+		v.authC <- true
+
+		provider.ResetCached()
+	}
+
+	http.Redirect(w, r, v.baseURL, http.StatusFound)
 }
