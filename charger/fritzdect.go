@@ -18,7 +18,6 @@ import (
 type FritzDECT struct {
 	fritzdect    *fritzdect.Connection
 	standbypower float64
-	staticmode   bool
 }
 
 func init() {
@@ -43,67 +42,53 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewFritzDECT creates a new connection with standbypower for charger
 func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
 	fritzdect, err := fritzdect.NewConnection(uri, ain, user, password)
-	if err != nil {
-		return nil, err
-	}
+
 	fd := &FritzDECT{
 		fritzdect:    fritzdect,
 		standbypower: standbypower,
-		staticmode:   standbypower < 0,
 	}
-	return fd, nil
+
+	return fd, err
 }
 
 // Status implements the api.Charger interface
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
-	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
-	var present bool
-	var on bool
-	var power float64
-
 	resp, err := c.fritzdect.ExecCmd("getswitchpresent")
+
 	if err == nil {
+		var present bool
 		present, err = strconv.ParseBool(resp)
-		if err != nil {
-			return api.StatusNone, err
+		if err == nil && !present {
+			err = api.ErrNotAvailable
 		}
 	}
-	if !present {
-		return api.StatusA, err
-	}
-
-	if c.staticmode {
-		on, err = c.Enabled()
-		if err != nil {
-			return api.StatusNone, err
-		}
-		switch {
-		// Simple staticmode switch status rules
-		case !on:
-			return api.StatusB, err
-		case on:
-			return api.StatusC, err
-		}
-	} else {
-		// Charger status rules
-		power, err = c.fritzdect.CurrentPower()
-		if err != nil {
-			return api.StatusNone, err
-		}
-		switch {
-		case power <= c.standbypower:
-			return api.StatusB, err
-		case power > c.standbypower:
-			return api.StatusC, err
-		}
+	if err != nil {
+		return api.StatusNone, err
 	}
 
-	return api.StatusNone, api.ErrNotAvailable
+	res := api.StatusB
+
+	// static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if on {
+			res = api.StatusC
+		}
+
+		return res, err
+	}
+
+	// standby power mode
+	power, err := c.fritzdect.CurrentPower()
+	if power > c.standbypower {
+		res = api.StatusC
+	}
+
+	return res, err
 }
 
 // Enabled implements the api.Charger interface
 func (c *FritzDECT) Enabled() (bool, error) {
-	// state 0/1 - DECT Switch state off/on (empty if unknown or error)
 	resp, err := c.fritzdect.ExecCmd("getswitchstate")
 	if err != nil {
 		return false, err
@@ -129,18 +114,12 @@ func (c *FritzDECT) Enable(enable bool) error {
 	var on bool
 	if err == nil {
 		on, err = strconv.ParseBool(resp)
+		if err == nil && enable != on {
+			err = errors.New("switch failed")
+		}
 	}
 
-	switch {
-	case err != nil:
-		return err
-	case enable && !on:
-		return errors.New("switchOn failed")
-	case !enable && on:
-		return errors.New("switchOff failed")
-	default:
-		return nil
-	}
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -180,6 +159,7 @@ func (c *FritzDECT) ChargedEnergy() (float64, error) {
 	if len(stats.Energy.Values) == 0 {
 		return 0, api.ErrNotAvailable
 	}
+
 	energylist := strings.Split(stats.Energy.Values[1], ",")
 	energy, err := strconv.ParseFloat(energylist[0], 64)
 
