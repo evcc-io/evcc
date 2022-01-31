@@ -155,7 +155,7 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 		{3100, 0.0, 71.0, 10000, true, api.ErrNotAvailable, api.ErrMustRetry},
 		{5100, 71.0, 71.0, 10000, true, api.ErrNotAvailable, nil},
 		{5200, 72.0, 72.0, 10000, true, api.ErrNotAvailable, nil},
-		{5300, 0.0, 73.0, 10000, true, api.ErrNotAvailable, errors.New("another error")},
+		{100, 0.0, 73.0, 10000, true, api.ErrNotAvailable, errors.New("another error")},
 		{5300, 73.0, 73.0, 10000, true, api.ErrNotAvailable, nil},
 		{5500, 75.0, 75.0, 10000, true, api.ErrNotAvailable, nil},
 		{6000, 80.0, 80.0, 10000, true, api.ErrNotAvailable, nil},
