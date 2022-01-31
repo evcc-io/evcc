@@ -15,7 +15,7 @@ Evcc is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - multiple [chargers](https://docs.evcc.io/docs/devices/chargers):
-  - Open source: [openWB](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
+  - Open source: [openWB (including Pro)](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
   - Other commercial: ABL eMH1, Alfen Eve, cFos PowerBrain, Daheimladen, go-eCharger, Heidelberg Energy Control, Innogy eBox, KEBA/BMW, Menneckes  Amtron (Xtra/Premium), NRGkick, PC Electric (includes Garo), Wallbe, Mobile Charger Connect, EEBUS (experimental)
   - Build-your-own: Phoenix (includes ESL Walli), [EVSE DIN](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
