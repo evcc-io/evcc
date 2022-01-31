@@ -187,6 +187,11 @@ type VehicleStopCharge interface {
 	StopCharge() error
 }
 
+// AlarmClock provides wakeup calls to the vehicle with an API call or a CP interrupt from the charger
+type AlarmClock interface {
+	WakeUp() error
+}
+
 type Tariff interface {
 	IsCheap() (bool, error)
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...

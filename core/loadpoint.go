@@ -142,6 +142,7 @@ type LoadPoint struct {
 	connectedTime  time.Time              // Time when vehicle was connected
 	pvTimer        time.Time              // PV enabled/disable timer
 	phaseTimer     time.Time              // 1p3p switch timer
+	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle SoC
@@ -335,6 +336,9 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 		_ = lp.bus.Subscribe(evChargeStop, ct.StopCharge)
 		lp.chargeTimer = ct
 	}
+
+	// add wakeup timer
+	lp.wakeUpTimer = NewTimer()
 }
 
 // pushEvent sends push messages to clients
@@ -353,6 +357,8 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.pushEvent(evChargeStart)
+
+	lp.wakeUpTimer.Stop()
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -427,9 +433,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	if len(lp.vehicles) == 1 {
 		// but reset values if poll mode is not always (i.e. connected or charging)
 		if lp.SoC.Poll.Mode != pollAlways {
-			lp.publish("vehicleSoC", -1)
-			lp.publish("vehicleRange", -1)
-			lp.setRemainingDuration(-1)
+			lp.unpublishVehicle()
 		}
 	}
 
@@ -606,7 +610,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 			return nil
 		}
 
-		// sleep vehicle
+		// remote stop
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
 		// if car, ok := lp.vehicle.(api.VehicleStopCharge); !enabled && ok {
 		// 	// log but don't propagate
@@ -625,7 +629,16 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
-		// wake up vehicle
+		// start/stop vehicle wake-up timer
+		if enabled {
+			lp.log.DEBUG.Printf("wake-up timer: start")
+			lp.wakeUpTimer.Start()
+		} else {
+			lp.log.DEBUG.Printf("wake-up timer: stop")
+			lp.wakeUpTimer.Stop()
+		}
+
+		// remote start
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
 		// if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
 		// 	// log but don't propagate
@@ -807,8 +820,37 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleCapacity", int64(0))
 	}
 
+	lp.unpublishVehicle()
+}
+
+func (lp *LoadPoint) wakeUpVehicle() {
+	// charger
+	if c, ok := lp.charger.(api.AlarmClock); ok {
+		if err := c.WakeUp(); err != nil {
+			lp.log.ERROR.Printf("wake-up charger: %v", err)
+		}
+		return
+	}
+
+	// vehicle
+	if lp.vehicle != nil {
+		if vs, ok := lp.vehicle.(api.AlarmClock); ok {
+			if err := vs.WakeUp(); err != nil {
+				lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+			}
+		}
+	}
+}
+
+// unpublishVehicle resets published vehicle data
+func (lp *LoadPoint) unpublishVehicle() {
+	lp.vehicleSoc = 0
+
+	lp.publish("vehicleSoC", 0.0)
 	lp.publish("vehicleRange", int64(0))
 	lp.publish("vehicleOdometer", 0.0)
+
+	lp.setRemainingDuration(-1)
 }
 
 // startVehicleDetection resets connection timer and starts api refresh timer
@@ -1357,7 +1399,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			// range
 			if vs, ok := lp.vehicle.(api.VehicleRange); ok {
 				if rng, err := vs.Range(); err == nil {
-					lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
+					lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 					lp.publish("vehicleRange", rng)
 				}
 			}
@@ -1509,6 +1551,12 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		}
 
 		err = lp.setLimit(targetCurrent, required)
+	}
+
+	// Wake-up checks
+	if lp.enabled && lp.status == api.StatusB &&
+		int(lp.vehicleSoc) < lp.SoC.Target && lp.wakeUpTimer.Expired() {
+		lp.wakeUpVehicle()
 	}
 
 	// stop an active target charging session if not currently evaluated
