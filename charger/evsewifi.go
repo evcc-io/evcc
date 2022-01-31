@@ -271,3 +271,11 @@ func (wb *EVSEWifi) identify() (string, error) {
 // 	params, err := wb.getParameters()
 // 	return params.Energy, err
 // }
+
+var _ api.AlarmClock = (*EVSEWifi)(nil)
+
+// ChargedEnergy implements the ChargeRater interface
+func (wb *EVSEWifi) WakeUp() error {
+	_, err := wb.getParameters()
+	return err
+}
