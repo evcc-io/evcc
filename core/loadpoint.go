@@ -135,14 +135,15 @@ type LoadPoint struct {
 	socTimer     *soc.Timer
 
 	// cached state
-	status         api.ChargeStatus       // Charger status
-	remoteDemand   loadpoint.RemoteDemand // External status demand
-	chargePower    float64                // Charging power
-	chargeCurrents []float64              // Phase currents
-	connectedTime  time.Time              // Time when vehicle was connected
-	pvTimer        time.Time              // PV enabled/disable timer
-	phaseTimer     time.Time              // 1p3p switch timer
-	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
+	status           api.ChargeStatus       // Charger status
+	remoteDemand     loadpoint.RemoteDemand // External status demand
+	chargePower      float64                // Charging power
+	chargeCurrents   []float64              // Phase currents
+	connectedTime    time.Time              // Time when vehicle was connected
+	pvTimer          time.Time              // PV enabled/disable timer
+	phaseTimer       time.Time              // 1p3p switch timer
+	wakeUpTimer      *Timer                 // Vehicle wake-up timeout
+	wakeUpUseVehicle bool                   // Wake-up by vehicle API
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle SoC
@@ -358,6 +359,10 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.pushEvent(evChargeStart)
 
+	if lp.wakeUpUseVehicle && !lp.wakeUpTimer.Expired() {
+		// Reset to use charger wake-up
+		lp.wakeUpUseVehicle = false
+	}
 	lp.wakeUpTimer.Stop()
 
 	// soc update reset
@@ -824,19 +829,22 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 }
 
 func (lp *LoadPoint) wakeUpVehicle() {
-	// charger
-	if c, ok := lp.charger.(api.AlarmClock); ok {
-		if err := c.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wake-up charger: %v", err)
+	if !lp.wakeUpUseVehicle {
+		// charger
+		if c, ok := lp.charger.(api.AlarmClock); ok {
+			if err := c.WakeUp(); err != nil {
+				lp.log.ERROR.Printf("wake-up charger: %v", err)
+			}
+			lp.wakeUpUseVehicle = true
+			lp.wakeUpTimer.Start()
 		}
-		return
-	}
-
-	// vehicle
-	if lp.vehicle != nil {
-		if vs, ok := lp.vehicle.(api.AlarmClock); ok {
-			if err := vs.WakeUp(); err != nil {
-				lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+	} else {
+		// vehicle
+		if lp.vehicle != nil {
+			if vs, ok := lp.vehicle.(api.AlarmClock); ok {
+				if err := vs.WakeUp(); err != nil {
+					lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+				}
 			}
 		}
 	}
