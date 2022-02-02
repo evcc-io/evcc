@@ -27,24 +27,13 @@ func NewAPI(log *util.Logger, device string, ts oauth2.TokenSource) *API {
 		Helper: request.NewHelper(log),
 	}
 
-	// v.Client.Transport = &transport.Decorator{
-	// 	Base: &oauth2.Transport{
-	// 		Source: oauth2.StaticTokenSource(&t.Token),
-	// 		Base:   v.Transport,
-	// 	},
-	// 	Decorator: transport.DecorateHeaders(map[string]string{
-	// 		"X-Device-Id":             device,
-	// 		"x-telematicsprogramtype": "jlrpy",
-	// 	}),
-	// }
-
 	v.Client.Transport = &transport.Decorator{
 		Decorator: func(req *http.Request) error {
 			token, err := ts.Token()
 			if err == nil {
 				for k, v := range map[string]string{
 					"Authorization":           fmt.Sprintf("Bearer %s", token.AccessToken),
-					"Content-type":            request.JSONContent,
+					"Content-Type":            request.JSONContent,
 					"X-Device-Id":             device,
 					"x-telematicsprogramtype": "jlrpy",
 				} {
@@ -64,7 +53,7 @@ func (v *API) User(name string) (User, error) {
 
 	uri := fmt.Sprintf("%s/users?loginName=%s", IF9_BASE_URL, url.QueryEscape(name))
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Content-Type": "application/json",
+		"Content-Type": request.JSONContent,
 		"Accept":       "application/vnd.wirelesscar.ngtp.if9.User-v3+json",
 	})
 
