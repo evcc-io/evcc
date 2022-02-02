@@ -13,9 +13,7 @@ import (
 
 // https://github.com/ardevd/jlrpy
 
-const (
-	IFAS_BASE_URL = "https://ifas.prod-row.jlrmotor.com/ifas/jlr"
-)
+const IFAS_BASE_URL = "https://ifas.prod-row.jlrmotor.com/ifas/jlr"
 
 type Identity struct {
 	*request.Helper
@@ -33,6 +31,7 @@ func NewIdentity(log *util.Logger, user, password, device string) *Identity {
 	}
 }
 
+// Login authenticates with given payload
 func (v *Identity) login(data map[string]string) (Token, error) {
 	uri := fmt.Sprintf("%s/tokens", IFAS_BASE_URL)
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
@@ -50,7 +49,7 @@ func (v *Identity) login(data map[string]string) (Token, error) {
 	return token, err
 }
 
-// Login authenticates with username/password to get new aws credentials
+// Login authenticates with username/password
 func (v *Identity) Login() (Token, error) {
 	data := map[string]string{
 		"grant_type": "password",
