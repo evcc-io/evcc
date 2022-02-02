@@ -8,13 +8,17 @@ import (
 )
 
 type Provider struct {
-	statusG func() (interface{}, error)
+	statusG   func() (interface{}, error)
+	positionG func() (interface{}, error)
 }
 
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(vin)
+		}, cache).InterfaceGetter(),
+		positionG: provider.NewCached(func() (interface{}, error) {
+			return api.Position(vin)
 		}, cache).InterfaceGetter(),
 	}
 
@@ -94,4 +98,18 @@ func (v *Provider) Odometer() (float64, error) {
 	}
 
 	return val / 1e3, err
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	// var val float64
+	res, err := v.positionG()
+	if res, ok := res.(StatusResponse); err == nil && ok {
+		// val, err = res.VehicleStatus.CoreStatus.FloatVal("ODOMETER")
+		_ = res
+	}
+
+	return 0, 0, err
 }

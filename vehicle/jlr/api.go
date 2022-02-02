@@ -96,3 +96,20 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 
 	return status, err
 }
+
+// Position returns the vehicle position
+func (v *API) Position(vin string) (StatusResponse, error) {
+	var status StatusResponse
+
+	uri := fmt.Sprintf("%s/vehicles/%s/position", IF9_BASE_URL, vin)
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Content-Type": "application/json",
+		// "Accept":       "application/vnd.ngtp.org.if9.healthstatus-v3+json",
+	})
+
+	if err == nil {
+		err = v.DoJSON(req, &status)
+	}
+
+	return status, err
+}
