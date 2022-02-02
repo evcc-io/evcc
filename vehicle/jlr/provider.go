@@ -55,14 +55,15 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
-		if s, err := res.VehicleStatus.EvStatus.StringVal("EV_IS_PLUGGED_IN"); err == nil && s == "CONNECTED" {
-			// fmt.Println("EV_IS_PLUGGED_IN", s, err)
-			status = api.StatusB
-		}
-
-		if s, err := res.VehicleStatus.EvStatus.StringVal("EV_CHARGING_STATUS"); err == nil && s == "CHARGING" {
-			// fmt.Println("EV_CHARGING_STATUS", s, err)
-			status = api.StatusC
+		if s, err := res.VehicleStatus.EvStatus.StringVal("EV_CHARGING_STATUS"); err == nil {
+			switch s {
+			case "NOTCONNECTED":
+				status = api.StatusA
+			case "INITIALIZATION", "PAUSED":
+				status = api.StatusB
+			case "CHARGING":
+				status = api.StatusC
+			}
 		}
 	}
 
