@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/jlr"
+	"github.com/google/uuid"
 )
 
 // https://github.com/ardevd/jlrpy
@@ -17,9 +18,7 @@ import (
 // JLR is an api.Vehicle implementation for Jaguar LandRover cars
 type JLR struct {
 	*embed
-	// *JLR.Provider
-	*request.Helper
-	user, password string
+	*jlr.Provider
 }
 
 func init() {
@@ -52,23 +51,30 @@ func NewJLRFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("jlr").Redact(cc.User, cc.Password, cc.VIN, cc.DeviceID)
-
-	// uid := uuid.New()
-	// deviceId := uid.String()
-	// fmt.Println("use this deviceid:", deviceId)
-	cc.DeviceID = "d565375c-49a1-4b3d-93f6-79044033c414"
-
+	log := util.NewLogger("jlr")
+	// .Redact(cc.User, cc.Password, cc.VIN, cc.DeviceID)
 	identity := jlr.NewIdentity(log, cc.User, cc.Password, cc.DeviceID)
 
-	err := identity.Login()
+	token, err := identity.Login()
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
+	// cc.DeviceID = "d565375c-49a1-4b3d-93f6-79044033c414"
+	if cc.DeviceID == "" {
+		uid := uuid.New()
+		cc.DeviceID = uid.String()
+
+		if err := v.RegisterDevice(log, cc.User, cc.DeviceID, token); err != nil {
+			return nil, fmt.Errorf("device registry failed: %w", err)
+		}
+
+		log.WARN.Println("new device id registered, add to config:", cc.DeviceID)
+	}
+
 	api := jlr.NewAPI(log, cc.DeviceID, identity)
 
-	user, err := api.User(v.user)
+	user, err := api.User(cc.User)
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
@@ -77,15 +83,15 @@ func NewJLRFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return api.Vehicles(user.UserId)
 	})
 
-	// if err == nil {
-	// 	v.Provider = jlr.NewProvider(api, cc.VIN, cc.Expiry, cc.Cache)
-	// }
+	if err == nil {
+		v.Provider = jlr.NewProvider(api, cc.VIN, cc.Cache)
+	}
 
 	return v, err
 }
 
-func (v *JLR) RegisterDevice(device string) error {
-	var t jlr.Token
+func (v *JLR) RegisterDevice(log *util.Logger, user, device string, t jlr.Token) error {
+	c := request.NewHelper(log)
 
 	data := map[string]string{
 		"access_token":        t.AccessToken,
@@ -93,11 +99,17 @@ func (v *JLR) RegisterDevice(device string) error {
 		"expires_in":          "86400",
 		"deviceID":            device}
 
-	uri := fmt.Sprintf("%s/users/%s/clients", jlr.IFOP_BASE_URL, url.PathEscape(v.user))
+	uri := fmt.Sprintf("%s/users/%s/clients", jlr.IFOP_BASE_URL, url.PathEscape(user))
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
+		"Authorization":           "Bearer " + t.AccessToken,
+		"Content-type":            "application/json",
+		"Accept":                  "application/json",
+		"X-Device-Id":             device,
+		"x-telematicsprogramtype": "jlrpy",
+	})
 	if err == nil {
-		err = v.DoJSON(req, nil)
+		_, err = c.DoBody(req)
 	}
 
 	return err

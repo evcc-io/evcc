@@ -3,6 +3,7 @@ package jlr
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -43,13 +44,14 @@ func (v *Identity) login(data map[string]string) (Token, error) {
 	var token Token
 	if err == nil {
 		err = v.DoJSON(req, &token)
+		token.Expiry = time.Now().Add(time.Duration(token.ExpiresIn) * time.Second)
 	}
 
 	return token, err
 }
 
 // Login authenticates with username/password to get new aws credentials
-func (v *Identity) Login() error {
+func (v *Identity) Login() (Token, error) {
 	data := map[string]string{
 		"grant_type": "password",
 		"username":   v.user,
@@ -61,7 +63,7 @@ func (v *Identity) Login() error {
 		v.TokenSource = oauth.RefreshTokenSource(&token.Token, v)
 	}
 
-	return err
+	return token, err
 }
 
 // RefreshToken implements oauth.TokenRefresher

@@ -11,7 +11,7 @@ type Provider struct {
 	statusG func() (interface{}, error)
 }
 
-func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
+func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(vin)
@@ -25,53 +25,59 @@ var _ api.Battery = (*Provider)(nil)
 
 // SoC implements the api.Battery interface
 func (v *Provider) SoC() (float64, error) {
+	var val float64
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
-		return res.VehicleStatus.BatteryFillLevel.Value, nil
+		val, err = res.VehicleStatus.EvStatus.FloatVal("EV_RANGE_VSC_INITIAL_HV_BATT_ENERGYx100")
 	}
 
-	return 0, err
+	return val, err
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
+	var val int64
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
-		return int64(res.VehicleStatus.ElVehDTE.Value), nil
+		val, err = res.VehicleStatus.EvStatus.IntVal("EV_RANGE_ON_BATTERY_KM")
 	}
 
-	return 0, err
+	return val, err
 }
 
-// var _ api.ChargeState = (*Provider)(nil)
+var _ api.ChargeState = (*Provider)(nil)
 
-// // Status implements the api.ChargeState interface
-// func (v *Provider) Status() (api.ChargeStatus, error) {
-// 	status := api.StatusA // disconnected
+// Status implements the api.ChargeState interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
 
-// 	res, err := v.statusG()
-// 	if res, ok := res.(StatusResponse); err == nil && ok {
-// 		if res.VehicleStatus.PlugStatus.Value == 1 {
-// 			status = api.StatusB // connected, not charging
-// 		}
-// 		if res.VehicleStatus.ChargingStatus.Value == "ChargingAC" {
-// 			status = api.StatusC // charging
-// 		}
-// 	}
+	res, err := v.statusG()
+	if res, ok := res.(StatusResponse); err == nil && ok {
+		if s, err := res.VehicleStatus.EvStatus.StringVal("EV_IS_PLUGGED_IN"); err == nil && s == "CONNECTED" {
+			// fmt.Println("EV_IS_PLUGGED_IN", s, err)
+			status = api.StatusB
+		}
 
-// 	return status, err
-// }
+		if s, err := res.VehicleStatus.EvStatus.StringVal("EV_CHARGING_STATUS"); err == nil && s == "CHARGING" {
+			// fmt.Println("EV_CHARGING_STATUS", s, err)
+			status = api.StatusC
+		}
+	}
 
-// var _ api.VehicleOdometer = (*Provider)(nil)
+	return status, err
+}
 
-// // Odometer implements the api.VehicleOdometer interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.statusG()
-// 	if res, ok := res.(StatusResponse); err == nil && ok {
-// 		return res.VehicleStatus.Odometer.Value, nil
-// 	}
+var _ api.VehicleOdometer = (*Provider)(nil)
 
-// 	return 0, err
-// }
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	var val float64
+	res, err := v.statusG()
+	if res, ok := res.(StatusResponse); err == nil && ok {
+		val, err = res.VehicleStatus.CoreStatus.FloatVal("ODOMETER")
+	}
+
+	return val / 1e3, err
+}

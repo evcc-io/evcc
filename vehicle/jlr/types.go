@@ -9,6 +9,7 @@ import (
 
 type Token struct {
 	AuthToken string `json:"authorization_token"`
+	ExpiresIn int    `json:"expires_in,string"`
 	oauth2.Token
 }
 
