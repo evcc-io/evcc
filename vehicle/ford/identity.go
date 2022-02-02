@@ -82,7 +82,7 @@ func (v *Identity) login() (oauth.Token, error) {
 	return token, err
 }
 
-// Refresh implements oauth.TokenRefresher
+// RefreshToken implements oauth.TokenRefresher
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := map[string]string{
 		"refresh_token": token.RefreshToken,

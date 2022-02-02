@@ -14,13 +14,6 @@ import (
 // Ford is an api.Vehicle implementation for Ford cars
 type Ford struct {
 	*embed
-	// *request.Helper
-	// log         *util.Logger
-	// vin         string
-	// tokenSource oauth2.TokenSource
-	// statusG     func() (interface{}, error)
-	// refreshId   string
-	// refreshTime time.Time
 	*ford.Provider
 }
 

@@ -187,6 +187,11 @@ type VehicleStopCharge interface {
 	StopCharge() error
 }
 
+// AlarmClock provides wakeup calls to the vehicle with an API call or a CP interrupt from the charger
+type AlarmClock interface {
+	WakeUp() error
+}
+
 type Tariff interface {
 	IsCheap() (bool, error)
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
@@ -198,8 +203,7 @@ type WebController interface {
 
 // ProviderLogin is the ability to provide OAuth authentication through the ui
 type ProviderLogin interface {
-	SetCallbackParams(uri string, authenticated chan<- bool)
+	SetCallbackParams(baseURL, redirectURL string, authenticated chan<- bool)
 	LoginHandler() http.HandlerFunc
 	LogoutHandler() http.HandlerFunc
-	CallbackHandler(baseURI string) http.HandlerFunc
 }

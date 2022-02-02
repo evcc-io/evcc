@@ -156,7 +156,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.locationG()
 	if res, ok := res.(LocationResponse); err == nil && ok {
-		return res.Latitude, res.Latitude, nil
+		return res.Latitude, res.Longitude, nil
 	}
 
 	return 0, 0, err

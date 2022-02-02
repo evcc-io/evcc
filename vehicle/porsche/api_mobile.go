@@ -10,19 +10,17 @@ import (
 )
 
 const (
-	ApiURI = "https://api.porsche.com"
-
-	PairingComplete = "PAIRINGCOMPLETE"
+	MobileApiURI = "https://api.ppa.porsche.com"
 )
 
 // API is an api.Vehicle implementation for Porsche PHEV cars
-type API struct {
+type MobileAPI struct {
 	*request.Helper
 }
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
-	v := &API{
+func NewMobileAPI(log *util.Logger, identity oauth2.TokenSource) *MobileAPI {
+	v := &MobileAPI{
 		Helper: request.NewHelper(log),
 	}
 
@@ -41,25 +39,17 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 }
 
 // Vehicles implements the vehicle list response
-func (v *API) Vehicles() ([]Vehicle, error) {
-	var res []Vehicle
-	uri := fmt.Sprintf("%s/core/api/v3/de/de_DE/vehicles", ApiURI)
-	err := v.GetJSON(uri, &res)
-	return res, err
-}
-
-// PairingStatus implements the vehicle pairing status response
-func (v *API) PairingStatus(vin string) (VehiclePairingResponse, error) {
-	var res VehiclePairingResponse
-	uri := fmt.Sprintf("%s/core/api/v3/de/de_DE/vehicles/%s/pairing", ApiURI, vin)
+func (v *MobileAPI) Vehicles() ([]StatusResponseMobile, error) {
+	var res []StatusResponseMobile
+	uri := fmt.Sprintf("%s/app/connect/v1/vehicles", MobileApiURI)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
 
 // Status implements the vehicle status response
-func (v *API) Status(vin string) (StatusResponse, error) {
-	var res StatusResponse
-	uri := fmt.Sprintf("%s/vehicle-data/de/de_DE/status/%s", ApiURI, vin)
+func (v *MobileAPI) Status(vin string) (StatusResponseMobile, error) {
+	var res StatusResponseMobile
+	uri := fmt.Sprintf("%s/app/connect/v1/vehicles/%s?mf=*", MobileApiURI, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
