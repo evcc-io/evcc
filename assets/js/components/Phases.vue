@@ -3,12 +3,7 @@
 		class="phases d-flex flex-column justify-content-between"
 		:class="`active-phases-${activePhases}`"
 	>
-		<div
-			v-for="num in [1, 2, 3]"
-			:key="num"
-			class="phase"
-			:class="{ [`phase-${num}`]: true, 'd-none': inactive(num) }"
-		>
+		<div v-for="num in [1, 2, 3]" :key="num" class="phase" :class="{ inactive: inactive(num) }">
 			<div class="inner" :style="{ width: `${width(num)}%` }"></div>
 		</div>
 	</div>
@@ -67,18 +62,14 @@ export default {
 }
 .phase {
 	background-color: var(--evcc-green);
-}
-.active-phases-1 .phase {
-	height: 10px;
-}
-.active-phases-2 .phase {
-	height: 4px;
-}
-.active-phases-3 .phase {
 	height: 2px;
 }
 .inner {
 	height: 100%;
 	background-color: var(--evcc-dark-green);
+}
+.phase.inactive,
+.phase.inactive .inner {
+	background-color: var(--bs-gray-200);
 }
 </style>

@@ -111,6 +111,38 @@ MinCharge.args = {
   id: 0,
 };
 
+export const TimerPvEnable = Template.bind({});
+TimerPvEnable.args = {
+  vehicleTitle: "Mein Auto",
+  enabled: false,
+  connected: true,
+  vehiclePresent: true,
+  vehicleSoC: 17,
+  charging: false,
+  targetSoC: 90,
+  phaseAction: "inactive",
+  phaseRemainingInterpolated: 0,
+  pvAction: "enable",
+  pvRemainingInterpolated: 32,
+  id: 0,
+};
+
+export const TimerPvDisable = Template.bind({});
+TimerPvDisable.args = {
+  vehicleTitle: "Mein Auto",
+  enabled: true,
+  connected: true,
+  vehiclePresent: true,
+  vehicleSoC: 17,
+  charging: true,
+  targetSoC: 90,
+  phaseAction: "inactive",
+  phaseRemainingInterpolated: 0,
+  pvAction: "disable",
+  pvRemainingInterpolated: 155,
+  id: 0,
+};
+
 export const UnknownVehicleConnected = Template.bind({});
 UnknownVehicleConnected.args = {
   vehicleTitle: "Mein Auto",

@@ -61,7 +61,6 @@
 					${fmtShortDurationUnit(chargeDurationInterpolated)}`"
 			/>
 		</div>
-
 		<Vehicle
 			v-bind="vehicle"
 			@target-soc-updated="setTargetSoC"

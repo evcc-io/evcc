@@ -89,6 +89,9 @@ a {
 .text-dark {
 	color: var(--bs-gray-dark);
 }
+.text-gray {
+	color: var(--bs-gray-medium);
+}
 .bg-dark {
 	background-color: var(--bs-gray-dark) !important;
 }

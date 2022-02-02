@@ -89,8 +89,17 @@ export default {
       ready: "bereit",
       connected: "verbunden",
     },
-    vehicleSubline: {
-      mincharge: "Mindestladung bis {soc}%",
+    vehicleStatus: {
+      minCharge: "Mindestladung bis {soc}%.",
+      waitForVehicle: "Ladebereit. Warte auf Fahrzeug.",
+      charging: "Ladevorgang aktiv.",
+      targetChargePlanned: "Zielladen geplant. Ladung startet bald.",
+      targetChargeWaitForVehicle: "Zielladen bereit. Warte auf Fahrzeug.",
+      targetChargeActive: "Zielladen aktiv.",
+      connected: "Verbunden.",
+      pvDisable: "Zu wenig Überschuss. Pausiere in {remaining}.",
+      pvEnable: "Überschuss verfügbar. Starte in {remaining}.",
+      unknown: "",
     },
     targetCharge: {
       inactiveLabel: "Zielzeit",

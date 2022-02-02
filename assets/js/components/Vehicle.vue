@@ -1,7 +1,7 @@
 <template>
 	<div class="vehicle p-4">
-		<div class="d-flex justify-content-between mb-3 align-items-center">
-			<h4 class="d-flex align-items-center">
+		<div class="d-flex justify-content-between mb-2 align-items-center">
+			<h4 class="d-flex align-items-center m-0">
 				<shopicon-regular-car3 size="m" class="me-2"></shopicon-regular-car3>
 				{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
 			</h4>
@@ -9,13 +9,13 @@
 				<shopicon-filled-options size="s"></shopicon-filled-options>
 			</button>
 		</div>
-		<VehicleSoc v-bind="vehicleSocProps" @target-soc-updated="targetSocUpdated" />
-		<VehicleSubline
-			v-bind="vehicleSubline"
-			class="my-1"
+		<VehicleStatus
+			v-bind="vehicleStatus"
+			class="mb-2"
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
 		/>
+		<VehicleSoc v-bind="vehicleSocProps" class="mb-4" @target-soc-updated="targetSocUpdated" />
 		<div class="d-flex">
 			<LabelAndValue
 				class="flex-grow-1"
@@ -29,6 +29,11 @@
 				:value="`${displayTargetSoC} %`"
 			/>
 		</div>
+		<TargetCharge
+			v-bind="targetCharge"
+			@target-time-updated="setTargetTime"
+			@target-time-removed="removeTargetTime"
+		/>
 	</div>
 </template>
 
@@ -40,11 +45,12 @@ import LabelAndValue from "./LabelAndValue";
 import collector from "../mixins/collector";
 
 import VehicleSoc from "./VehicleSoc";
-import VehicleSubline from "./VehicleSubline";
+import VehicleStatus from "./VehicleStatus";
+import TargetCharge from "./TargetCharge";
 
 export default {
 	name: "Vehicle",
-	components: { VehicleSoc, VehicleSubline, LabelAndValue },
+	components: { VehicleSoc, VehicleStatus, LabelAndValue, TargetCharge },
 	mixins: [collector],
 	props: {
 		id: Number,
@@ -54,12 +60,16 @@ export default {
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
-		vehicleRange: String,
+		vehicleRange: Number,
 		vehicleTitle: String,
 		targetTimeActive: Boolean,
 		targetTimeHourSuggestion: Number,
 		targetTime: String,
 		targetSoC: Number,
+		phaseAction: String,
+		phaseRemainingInterpolated: Number,
+		pvAction: String,
+		pvRemainingInterpolated: Number,
 	},
 	data() {
 		return {
@@ -70,8 +80,11 @@ export default {
 		vehicleSocProps: function () {
 			return this.collectProps(VehicleSoc);
 		},
-		vehicleSubline: function () {
-			return this.collectProps(VehicleSubline);
+		vehicleStatus: function () {
+			return this.collectProps(VehicleStatus);
+		},
+		targetCharge: function () {
+			return this.collectProps(TargetCharge);
 		},
 	},
 	methods: {
