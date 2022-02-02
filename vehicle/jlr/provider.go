@@ -28,7 +28,7 @@ func (v *Provider) SoC() (float64, error) {
 	var val float64
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
-		val, err = res.VehicleStatus.EvStatus.FloatVal("EV_RANGE_VSC_INITIAL_HV_BATT_ENERGYx100")
+		val, err = res.VehicleStatus.EvStatus.FloatVal("EV_STATE_OF_CHARGE")
 	}
 
 	return val, err
@@ -67,6 +67,19 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	return status, err
+}
+
+var _ api.VehicleFinishTimer = (*Provider)(nil)
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	res, err := v.statusG()
+	if res, ok := res.(StatusResponse); err == nil && ok {
+		i, err := res.VehicleStatus.CoreStatus.IntVal("EV_MINUTES_TO_FULLY_CHARGED")
+		return time.Now().Add(time.Duration(i) * time.Minute), err
+	}
+
+	return time.Time{}, err
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)

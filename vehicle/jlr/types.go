@@ -1,9 +1,9 @@
 package jlr
 
 import (
-	"errors"
 	"strconv"
 
+	"github.com/evcc-io/evcc/api"
 	"golang.org/x/oauth2"
 )
 
@@ -47,7 +47,7 @@ func (l KeyValueList) StringVal(key string) (string, error) {
 			return el.Value, nil
 		}
 	}
-	return "", errors.New("key not found")
+	return "", api.ErrNotAvailable
 }
 
 func (l KeyValueList) FloatVal(key string) (float64, error) {
