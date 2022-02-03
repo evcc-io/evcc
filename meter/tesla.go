@@ -59,8 +59,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 // NewTesla creates a Tesla Meter
 func NewTesla(uri, usage, user, password string) (api.Meter, error) {
-	log := util.NewLogger("tesla").Redact(password)
-
 	client := powerwall.NewClient(uri, user, password)
 	if _, err := client.GetStatus(); err != nil {
 		return nil, err
