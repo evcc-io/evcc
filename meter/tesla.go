@@ -3,7 +3,6 @@ package meter
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -39,11 +38,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if cc.Password == "" {
 		return nil, errors.New("missing password")
-	}
-
-	_, err := url.Parse(cc.URI)
-	if err != nil {
-		return nil, fmt.Errorf("%s is invalid: %s", cc.URI, err)
 	}
 
 	// support default meter names
