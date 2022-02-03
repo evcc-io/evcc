@@ -134,10 +134,10 @@ func (c *TPLink) CurrentPower() (float64, error) {
 	return power, nil
 }
 
-var _ api.ChargeRater = (*TPLink)(nil)
+var _ api.MeterEnergy = (*TPLink)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *TPLink) ChargedEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *TPLink) TotalEnergy() (float64, error) {
 	var resp tplink.DayStatResponse
 	year, month, day := time.Now().Date()
 	cmd := fmt.Sprintf(`{"emeter":{"get_daystat":{"day":%v,"month":%v,"year":%v}}}`, day, int(month), year)
