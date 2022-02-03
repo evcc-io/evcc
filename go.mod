@@ -26,6 +26,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/evcc-io/eebus v0.0.0-20211108130022-5536fd4b8fa1
 	github.com/fatih/structs v1.1.0
+	github.com/foogod/go-powerwall v0.2.0 // indirect
 	github.com/go-ping/ping v0.0.0-20211130115550-779d1e919534
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/godbus/dbus/v5 v5.0.6
