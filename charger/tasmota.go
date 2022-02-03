@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/tasmota"
@@ -53,11 +52,12 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 	log := util.NewLogger("tasmota")
 	c := &Tasmota{
 		Helper:       request.NewHelper(log),
-		uri:          strings.TrimRight(uri, "/"),
+		uri:          util.DefaultScheme(uri, "http"),
 		user:         user,
 		password:     password,
 		standbypower: standbypower,
 	}
+
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 	return c, nil
@@ -132,7 +132,7 @@ func (c *Tasmota) TotalEnergy() (float64, error) {
 	var resp tasmota.StatusSNSResponse
 	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
 
-	return resp.StatusSNS.Energy.Today, err
+	return resp.StatusSNS.Energy.Total, err
 }
 
 // cmdUri creates the Tasmota command web request
