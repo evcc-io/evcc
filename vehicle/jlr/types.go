@@ -29,7 +29,8 @@ type VehiclesResponse struct {
 }
 
 type KeyValue struct {
-	Key, Value string
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 type KeyValueList []KeyValue
@@ -39,6 +40,25 @@ type StatusResponse struct {
 		CoreStatus KeyValueList
 		EvStatus   KeyValueList
 	}
+}
+
+type PositionResponse struct {
+	Position struct {
+		Latitude        float64
+		Longitude       float64
+		Timestamp       string
+		Speed           float64
+		Heading         float64
+		PositionQuality interface{}
+	}
+}
+
+type PinResponse struct {
+	Token string
+}
+
+type ActionResponse struct {
+	FailureDescription string
 }
 
 func (l KeyValueList) StringVal(key string) (string, error) {

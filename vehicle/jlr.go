@@ -82,7 +82,10 @@ func NewJLRFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	})
 
 	if err == nil {
-		v.Provider = jlr.NewProvider(api, cc.VIN, cc.Cache)
+		v.Provider = jlr.NewProvider(api, cc.VIN, user.UserId, cc.Cache)
+
+		v.Provider.Position()
+		v.Provider.StartCharge()
 	}
 
 	return v, err

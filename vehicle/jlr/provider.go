@@ -10,9 +10,10 @@ import (
 type Provider struct {
 	statusG   func() (interface{}, error)
 	positionG func() (interface{}, error)
+	actionS   func(bool) error
 }
 
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(api *API, vin, user string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(vin)
@@ -20,6 +21,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		positionG: provider.NewCached(func() (interface{}, error) {
 			return api.Position(vin)
 		}, cache).InterfaceGetter(),
+		actionS: func(start bool) error {
+			return api.ChargeAction(vin, user, start)
+		},
 	}
 
 	return impl
@@ -104,12 +108,24 @@ var _ api.VehiclePosition = (*Provider)(nil)
 
 // Position implements the api.VehiclePosition interface
 func (v *Provider) Position() (float64, float64, error) {
-	// var val float64
 	res, err := v.positionG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		// val, err = res.VehicleStatus.CoreStatus.FloatVal("ODOMETER")
-		_ = res
+	if res, ok := res.(PositionResponse); err == nil && ok {
+		return res.Position.Latitude, res.Position.Longitude, nil
 	}
 
 	return 0, 0, err
+}
+
+var _ api.VehicleStartCharge = (*Provider)(nil)
+
+// StartCharge implements the api.VehicleStartCharge interface
+func (v *Provider) StartCharge() error {
+	return v.actionS(true)
+}
+
+var _ api.VehicleStopCharge = (*Provider)(nil)
+
+// StopCharge implements the api.VehicleStopCharge interface
+func (v *Provider) StopCharge() error {
+	return v.actionS(false)
 }
