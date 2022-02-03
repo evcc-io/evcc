@@ -174,10 +174,10 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			socDelta := s.vehicleSoc - s.initialSoc
 
 			// recalculate gradient, wh per soc %
-			if !invalid && socDelta > 0 && chargedEnergy > 0 {
+			if !invalid && socDelta >= 10 && chargedEnergy > 0 {
 				s.energyPerSocStep = chargedEnergy / socDelta
 				s.virtualCapacity = s.energyPerSocStep * 100
-				s.log.DEBUG.Printf("soc gradient updated: socDelta: %0.0f%%, chargedEnergy: %0.0fWh, energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", socDelta, chargedEnergy, s.energyPerSocStep, s.virtualCapacity)
+				s.log.DEBUG.Printf("soc gradient updated: socDelta: %.2f%%, chargedEnergy: %.2fWh, energyPerSocStep: %.2fWh, virtualCapacity: %.2fWh", socDelta, chargedEnergy, s.energyPerSocStep, s.virtualCapacity)
 			}
 
 			s.prevSoc = s.vehicleSoc
