@@ -120,28 +120,28 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 		}
 	}
 
+	var cheapactive bool
 	if cheapSlotNow {
-		// use the most expensive slot as little as possible, but do not disable on last charging slot
-		if curSlotNr == cntExpectedSlots && !(t.cheapactive && cntExpectedSlots == 1) {
-			if sum <= duration {
-				t.log.DEBUG.Printf("cheap timeslot, charging...\n")
-				t.cheapactive = true
-			} else {
-				if t.cheapactive && sum > duration+10*time.Minute {
-					t.log.DEBUG.Printf("cheap timeslot, delayed start for %s\n", (sum - duration).Round(time.Minute))
-					t.cheapactive = false
+		if curSlotNr == cntExpectedSlots { // delay most expensiv slot if not last slot
+			if cntExpectedSlots == 1 { // last slot
+				t.log.DEBUG.Printf("continue charging in last slot\n")
+				cheapactive = true
+			} else { // expensiv and not last slot, delay
+				if sum > duration+5*time.Minute {
+					t.log.DEBUG.Printf("cheap timeslot, delayed for %s\n", (sum - duration).Round(time.Minute))
+					cheapactive = false
+				} else {
+					t.log.DEBUG.Printf("charing in most expensiv timeslot after delay")
+					cheapactive = true
 				}
 			}
-		} else { /* not most expensive slot */
+		} else { // not most expensiv slot
 			t.log.DEBUG.Printf("cheap timeslot, charging...\n")
-			t.cheapactive = true
+			cheapactive = true
 		}
-	} else {
-		t.log.DEBUG.Printf("not cheap, not charging...\n")
-		t.cheapactive = false
 	}
 
-	return t.cheapactive, nil
+	return cheapactive, nil
 }
 
 func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
