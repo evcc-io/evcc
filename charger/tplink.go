@@ -147,12 +147,12 @@ func (c *TPLink) TotalEnergy() (float64, error) {
 		return 0, fmt.Errorf("get_realtime error %d", err)
 	}
 
-	power := resp.Emeter.GetRealtime.TotalWh / 1000
-	if power == 0 {
-		power = resp.Emeter.GetRealtime.Total
+	energy := resp.Emeter.GetRealtime.TotalWh / 1000
+	if energy == 0 {
+		energy = resp.Emeter.GetRealtime.Total
 	}
 
-	return power, nil
+	return energy, nil
 }
 
 // execCmd executes an TP-Link Smart Home Protocol command and provides the response
