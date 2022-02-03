@@ -1,6 +1,7 @@
 package jlr
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -33,7 +34,6 @@ func NewAPI(log *util.Logger, device string, ts oauth2.TokenSource) *API {
 			if err == nil {
 				for k, v := range map[string]string{
 					"Authorization":           fmt.Sprintf("Bearer %s", token.AccessToken),
-					"Content-Type":            request.JSONContent,
 					"X-Device-Id":             device,
 					"x-telematicsprogramtype": "jlrpy",
 				} {
@@ -95,4 +95,68 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 	}
 
 	return status, err
+}
+
+// Position returns the vehicle position
+func (v *API) Position(vin string) (PositionResponse, error) {
+	var status PositionResponse
+
+	uri := fmt.Sprintf("%s/vehicles/%s/position", IF9_BASE_URL, vin)
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Content-Type": "application/json",
+	})
+
+	if err == nil {
+		err = v.DoJSON(req, &status)
+	}
+
+	return status, err
+}
+
+func (v *API) AuthenticateVinService(vin, user, service string) (PinResponse, error) {
+	pin := vin[len(vin)-4:]
+	data := map[string]string{
+		"serviceName": service,
+		"pin":         pin}
+
+	uri := fmt.Sprintf("%s/vehicles/%s/users/%s/authenticate", IF9_BASE_URL, vin, user)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
+		"Content-Type": "application/vnd.wirelesscar.ngtp.if9.AuthenticateRequest-v2+json",
+	})
+
+	var res PinResponse
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return res, err
+}
+
+func (v *API) ChargeAction(vin, user string, start bool) error {
+	var data map[string]interface{}
+
+	pin, err := v.AuthenticateVinService(vin, user, "CP")
+	if err == nil {
+		onoff := map[bool]string{false: "FORCE_OFF", true: "FORCE_ON"}
+
+		data = map[string]interface{}{
+			"token":             pin.Token,
+			"serviceParameters": []KeyValue{{"CHARGE_NOW_SETTING", onoff[start]}},
+		}
+	}
+
+	uri := fmt.Sprintf("%s/vehicles/%s/chargeProfile", IF9_BASE_URL, vin)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
+		"Content-Type": "application/vnd.wirelesscar.ngtp.if9.PhevService-v1+json",
+		"Accept":       "application/vnd.wirelesscar.ngtp.if9.ServiceStatus-v5+json",
+	})
+
+	var res ActionResponse
+	if err == nil {
+		if err = v.DoJSON(req, &res); err == nil && res.FailureDescription != "" {
+			err = errors.New(res.FailureDescription)
+		}
+	}
+
+	return err
 }
