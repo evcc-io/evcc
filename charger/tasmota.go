@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/tasmota"
@@ -52,7 +53,7 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 	log := util.NewLogger("tasmota")
 	c := &Tasmota{
 		Helper:       request.NewHelper(log),
-		uri:          util.DefaultScheme(uri, "http"),
+		uri:          util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		user:         user,
 		password:     password,
 		standbypower: standbypower,

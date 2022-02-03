@@ -138,23 +138,21 @@ var _ api.MeterEnergy = (*TPLink)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *TPLink) TotalEnergy() (float64, error) {
-	var resp tplink.DayStatResponse
-	year, month, day := time.Now().Date()
-	cmd := fmt.Sprintf(`{"emeter":{"get_daystat":{"day":%v,"month":%v,"year":%v}}}`, day, int(month), year)
-	if err := c.execCmd(cmd, &resp); err != nil {
+	var resp tplink.EmeterResponse
+	if err := c.execCmd(`{"emeter":{"get_realtime":null}}`, &resp); err != nil {
 		return 0, err
 	}
 
-	if err := resp.Emeter.GetDaystat.ErrCode; err != 0 {
-		return 0, fmt.Errorf("get_daystat error %d", err)
+	if err := resp.Emeter.GetRealtime.ErrCode; err != 0 {
+		return 0, fmt.Errorf("get_realtime error %d", err)
 	}
 
-	energy := resp.Emeter.GetDaystat.DayList[len(resp.Emeter.GetDaystat.DayList)-1].EnergyWh / 1000
-	if energy == 0 {
-		energy = resp.Emeter.GetDaystat.DayList[len(resp.Emeter.GetDaystat.DayList)-1].Energy
+	power := resp.Emeter.GetRealtime.TotalWh / 1000
+	if power == 0 {
+		power = resp.Emeter.GetRealtime.Total
 	}
 
-	return energy, nil
+	return power, nil
 }
 
 // execCmd executes an TP-Link Smart Home Protocol command and provides the response
