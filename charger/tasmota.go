@@ -125,10 +125,10 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	return power, err
 }
 
-var _ api.ChargeRater = (*Tasmota)(nil)
+var _ api.MeterEnergy = (*Tasmota)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *Tasmota) ChargedEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *Tasmota) TotalEnergy() (float64, error) {
 	var resp tasmota.StatusSNSResponse
 	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
 

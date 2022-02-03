@@ -139,10 +139,10 @@ func (c *FritzDECT) CurrentPower() (float64, error) {
 	return power, err
 }
 
-var _ api.ChargeRater = (*FritzDECT)(nil)
+var _ api.MeterEnergy = (*FritzDECT)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *FritzDECT) ChargedEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *FritzDECT) TotalEnergy() (float64, error) {
 	// fetch basicdevicestats
 	resp, err := c.fritzdect.ExecCmd("getbasicdevicestats")
 	if err != nil {
