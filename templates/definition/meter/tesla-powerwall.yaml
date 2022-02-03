@@ -14,11 +14,12 @@ params:
 - name: password
   required: true
   mask: true
-  help: 
-    en: Password of the user customer
-    de: Passwort des Benutzers Kunde
+  help:
+    en: Password of the user "customer"
+    de: Passwort des Benutzers "Kunde"
 render: |
   type: tesla
-  uri: https://{{ .host }}/
+  uri: {{ .host }}
   usage: {{ .usage }}
+  user: customer
   password: {{ .password }} # for user 'customer'
