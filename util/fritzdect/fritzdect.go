@@ -99,7 +99,7 @@ func (fd *Connection) ExecCmd(function string) (string, error) {
 	return strings.TrimSpace(string(response)), err
 }
 
-// CurrentPower implements the api interface
+// CurrentPower implements the api.Meter interface
 func (fd *Connection) CurrentPower() (float64, error) {
 	// power value in 0,001 W (current switch power, refresh approximately every 2 minutes)
 	resp, err := fd.ExecCmd("getswitchpower")
@@ -110,9 +110,29 @@ func (fd *Connection) CurrentPower() (float64, error) {
 	if resp == "inval" {
 		return 0, api.ErrNotAvailable
 	}
+
 	power, err := strconv.ParseFloat(resp, 64)
 
 	return power / 1000, err // mW ==> W
+}
+
+var _ api.MeterEnergy = (*Connection)(nil)
+
+// CurrentPower implements the api.MeterEnergy interface
+func (fd *Connection) TotalEnergy() (float64, error) {
+	// Energy value in Wh (total switch energy, refresh approximately every 2 minutes)
+	resp, err := fd.ExecCmd("getswitchenergy")
+	if err != nil {
+		return 0, err
+	}
+
+	if resp == "inval" {
+		return 0, api.ErrNotAvailable
+	}
+
+	energy, err := strconv.ParseFloat(resp, 64)
+
+	return energy / 1000, err // Wh ==> KWh
 }
 
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)
