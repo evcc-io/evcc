@@ -69,9 +69,9 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// check if vehicle is paired
-	// if res, err := api.PairingStatus(cc.VIN); err == nil && res.Status != porsche.PairingComplete {
-	// 	return nil, errors.New("vehicle is not paired with the My Porsche account")
-	// }
+	if res, err := api.PairingStatus(cc.VIN); err == nil && res.Status != porsche.PairingComplete {
+		return nil, errors.New("vehicle is not paired with the My Porsche account")
+	}
 
 	// check if vehicle provides status:
 	// some PHEVs do not provide any data
