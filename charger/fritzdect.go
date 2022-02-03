@@ -143,25 +143,16 @@ var _ api.MeterEnergy = (*FritzDECT)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *FritzDECT) TotalEnergy() (float64, error) {
-	// fetch basicdevicestats
-	resp, err := c.fritzdect.ExecCmd("getbasicdevicestats")
+	// Energy value in Wh (total switch energy, refresh approximately every 2 minutes)
+	resp, err := fd.ExecCmd("getswitchenergy")
 	if err != nil {
 		return 0, err
 	}
 
-	// unmarshal devicestats
-	var stats fritzdect.Devicestats
-	if err = xml.Unmarshal([]byte(resp), &stats); err != nil {
-		return 0, err
-	}
-
-	// select energy value of current day
-	if len(stats.Energy.Values) == 0 {
+	if resp == "inval" {
 		return 0, api.ErrNotAvailable
 	}
+	energy, err := strconv.ParseFloat(resp, 64)
 
-	energylist := strings.Split(stats.Energy.Values[1], ",")
-	energy, err := strconv.ParseFloat(energylist[0], 64)
-
-	return energy / 1000, err
+	return energy / 1000, err // Wh ==> KWh	
 }
