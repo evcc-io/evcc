@@ -27,6 +27,11 @@ type ovmsChargeResponse struct {
 	Soc              float64 `json:"soc,string"`
 }
 
+type ovmsLocationResponse struct {
+	Latitude  float64 `json:"latitude,string"`
+	Longitude float64 `json:"longitude,string"`
+}
+
 type ovmsConnectResponse struct {
 	NetConnected int `json:"v_net_connected"`
 }
@@ -40,6 +45,7 @@ type Ovms struct {
 	isOnline                          bool
 	chargeG                           func() (interface{}, error)
 	statusG                           func() (interface{}, error)
+	locationG                         func() (interface{}, error)
 }
 
 func init() {
@@ -74,6 +80,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
 	v.statusG = provider.NewCached(v.statusAPI, cc.Cache).InterfaceGetter()
+	v.locationG = provider.NewCached(v.locationAPI, cc.Cache).InterfaceGetter()
 
 	var err error
 	v.Jar, err = cookiejar.New(&cookiejar.Options{
@@ -111,6 +118,13 @@ func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
 func (v *Ovms) statusRequest() (ovmsStatusResponse, error) {
 	uri := fmt.Sprintf("https://%s:6869/api/status/%s", v.server, v.vehicleId)
 	var res ovmsStatusResponse
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
+func (v *Ovms) locationRequest() (ovmsLocationResponse, error) {
+	uri := fmt.Sprintf("https://%s:6869/api/location/%s", v.server, v.vehicleId)
+	var res ovmsLocationResponse
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
@@ -156,6 +170,21 @@ func (v *Ovms) statusAPI() (interface{}, error) {
 		err = v.authFlow()
 		if err == nil {
 			resp, err = v.statusRequest()
+		}
+	}
+
+	return resp, err
+}
+
+// location API provides vehicle position api response
+func (v *Ovms) locationAPI() (interface{}, error) {
+	var resp ovmsLocationResponse
+
+	resp, err := v.locationRequest()
+	if err != nil {
+		err = v.authFlow()
+		if err == nil {
+			resp, err = v.locationRequest()
 		}
 	}
 
@@ -229,4 +258,15 @@ func (v *Ovms) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
+}
+
+// VehiclePosition returns the vehicles position in latitude and longitude
+func (v *Ovms) Position() (float64, float64, error) {
+	res, err := v.locationG()
+
+	if res, ok := res.(ovmsLocationResponse); err == nil && ok {
+		return res.Latitude, res.Longitude, nil
+	}
+
+	return 0, 0, err
 }
