@@ -77,6 +77,10 @@ export default {
       fallbackName: "Ladepunkt",
       remoteDisabledSoft: "{source}: Adaptives PV-Laden deaktiviert",
       remoteDisabledHard: "{source}: Deaktiviert",
+      power: "Leistung",
+      charged: "Geladen",
+      duration: "Dauer",
+      remaining: "Restzeit",
     },
     vehicle: {
       fallbackName: "Fahrzeug",
@@ -99,9 +103,12 @@ export default {
       connected: "Verbunden.",
       pvDisable: "Zu wenig Überschuss. Pausiere in {remaining}.",
       pvEnable: "Überschuss verfügbar. Starte in {remaining}.",
+      scale1p: "Reduziere auf einphasig in {remaining}.",
+      scale3p: "Erhöhe auf dreiphasig in {remaining}.",
       unknown: "",
     },
     targetCharge: {
+      title: "Zielzeit",
       inactiveLabel: "Zielzeit",
       activeLabel: "bis {time} Uhr",
       modalTitle: "Zielzeit festlegen",
@@ -119,26 +126,6 @@ export default {
         zu sehr auf diese Funktion. Wir freuen uns aber über deine
         Erfahrungen und Verbessungsvorschläge in den
       `,
-    },
-    loadpointDetails: {
-      power: "Leistung",
-      vehicleRange: "Reichweite",
-      charged: "Geladen",
-      duration: "Dauer",
-      remaining: "Restzeit",
-      tooltip: {
-        phases: {
-          scale1p: "Herunterschalten auf einphasig in {remaining}.",
-          scale3p: "Hochschalten auf dreiphasig in {remaining}.",
-          charge1p: "Lädt einphasig.",
-          charge2p: "Lädt zweiphasig.",
-          charge3p: "Lädt dreiphasig.",
-        },
-        pv: {
-          enable: "Überschuss verfügbar. Ladung startet in {remaining}.",
-          disable: "Zu wenig Überschuss. Ladung pausiert in {remaining}.",
-        },
-      },
     },
   },
 };

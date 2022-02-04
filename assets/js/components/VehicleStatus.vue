@@ -22,6 +22,18 @@ export default {
 		pvRemainingInterpolated: Number,
 	},
 	computed: {
+		phaseTimerActive() {
+			return (
+				this.charging &&
+				this.phaseRemainingInterpolated > 0 &&
+				["scale1p", "scale3p"].includes(this.phaseAction)
+			);
+		},
+		pvTimerActive() {
+			return (
+				this.pvRemainingInterpolated > 0 && ["enable", "disable"].includes(this.pvAction)
+			);
+		},
 		message: function () {
 			const t = (key, data) => {
 				return this.$t(`main.vehicleStatus.${key}`, data);
@@ -47,7 +59,7 @@ export default {
 			}
 
 			// pv enable
-			if (!this.enabled && this.pvAction === "enable") {
+			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {
 				return t("pvEnable", {
 					remaining: this.fmtShortDuration(this.pvRemainingInterpolated, true),
 				});
@@ -58,10 +70,17 @@ export default {
 				return t("waitForVehicle");
 			}
 
-			// pv enable
-			if (this.charging && this.pvAction === "disable") {
+			// pv disable
+			if (this.pvTimerActive && this.charging && this.pvAction === "disable") {
 				return t("pvDisable", {
 					remaining: this.fmtShortDuration(this.pvRemainingInterpolated, true),
+				});
+			}
+
+			// phase timer
+			if (this.phaseTimerActive) {
+				return t(this.phaseAction, {
+					remaining: this.fmtShortDuration(this.phaseRemainingInterpolated, true),
 				});
 			}
 

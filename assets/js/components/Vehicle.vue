@@ -29,6 +29,7 @@
 				:value="`${displayTargetSoC} %`"
 			/>
 		</div>
+		<hr class="divider my-3" />
 		<TargetCharge
 			v-bind="targetCharge"
 			@target-time-updated="setTargetTime"
@@ -107,5 +108,9 @@ export default {
 	background-color: var(--bs-gray-dark);
 	border-radius: 20px;
 	color: var(--bs-white);
+}
+.divider {
+	border: none;
+	border-top: 1px solid var(--bs-gray-medium);
 }
 </style>

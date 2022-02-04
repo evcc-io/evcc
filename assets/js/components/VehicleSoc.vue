@@ -62,21 +62,6 @@ export default {
 			}
 			return 100;
 		},
-		vehicleStatus: function () {
-			// no soc or no soc value
-			if (!this.vehiclePresent || !this.vehicleSoC || this.vehicleSoC < 0) {
-				let chargeStatus = this.$t("main.vehicleSoC.disconnected");
-				if (this.charging) {
-					chargeStatus = this.$t("main.vehicleSoC.charging");
-				} else if (this.enabled) {
-					chargeStatus = this.$t("main.vehicleSoC.ready");
-				} else if (this.connected) {
-					chargeStatus = this.$t("main.vehicleSoC.connected");
-				}
-				return chargeStatus;
-			}
-			return null;
-		},
 		progressColor: function () {
 			if (!this.connected) {
 				return "bg-light border";

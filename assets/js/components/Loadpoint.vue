@@ -27,7 +27,7 @@
 			<div class="d-flex align-items-center">
 				<div>
 					<LabelAndValue
-						:label="$t('main.loadpointDetails.power')"
+						:label="$t('main.loadpoint.power')"
 						:value="fmtKw(chargePower)"
 					/>
 					<Phases
@@ -42,20 +42,17 @@
 					size="m"
 				></shopicon-regular-lightning>
 			</div>
-			<LabelAndValue
-				:label="$t('main.loadpointDetails.charged')"
-				:value="fmtKw(chargedEnergy)"
-			/>
+			<LabelAndValue :label="$t('main.loadpoint.charged')" :value="fmtKw(chargedEnergy)" />
 			<LabelAndValue
 				v-if="chargeRemainingDurationInterpolated"
-				:label="$t('main.loadpointDetails.remaining')"
+				:label="$t('main.loadpoint.remaining')"
 				:value="`
 					${fmtShortDuration(chargeRemainingDurationInterpolated)}
 					${fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)}`"
 			/>
 			<LabelAndValue
 				v-else
-				:label="$t('main.loadpointDetails.duration')"
+				:label="$t('main.loadpoint.duration')"
 				:value="`
 					${fmtShortDuration(chargeDurationInterpolated)}
 					${fmtShortDurationUnit(chargeDurationInterpolated)}`"
@@ -143,25 +140,6 @@ export default {
 		};
 	},
 	computed: {
-		phaseTooltip() {
-			if (["scale1p", "scale3p"].includes(this.phaseAction)) {
-				return this.$t(`main.loadpointDetails.tooltip.phases.${this.phaseAction}`, {
-					remaining: this.fmtShortDuration(this.phaseRemainingInterpolated, true),
-				});
-			}
-			return this.$t(`main.loadpointDetails.tooltip.phases.charge${this.activePhases}p`);
-		},
-		phaseTimerActive() {
-			return (
-				this.phaseRemainingInterpolated > 0 &&
-				["scale1p", "scale3p"].includes(this.phaseAction)
-			);
-		},
-		pvTimerActive() {
-			return (
-				this.pvRemainingInterpolated > 0 && ["enable", "disable"].includes(this.pvAction)
-			);
-		},
 		phasesProps: function () {
 			return this.collectProps(Phases);
 		},

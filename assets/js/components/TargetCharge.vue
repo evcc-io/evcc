@@ -1,17 +1,32 @@
 <template>
 	<div>
-		<button
-			class="target-time-button btn btn-link btn-sm pe-0"
-			:class="{
-				invisible: !targetSoC,
-				'text-dark': targetTimeActive,
-				'text-secondary': !targetTimeActive,
-			}"
-			data-bs-toggle="modal"
-			:data-bs-target="`#${modalId}`"
+		<div class="d-flex justify-content-between justify-content-center">
+			<h5 class="title text-gray-medium text-uppercase">
+				{{ $t("main.targetCharge.title") }}
+			</h5>
+			<button
+				v-if="!targetChargeEnabled"
+				class="btn btn-link text-gray-medium p-0"
+				data-bs-toggle="modal"
+				:data-bs-target="`#${modalId}`"
+			>
+				<shopicon-filled-plus size="s"></shopicon-filled-plus>
+			</button>
+		</div>
+		<div
+			v-if="targetChargeEnabled"
+			class="d-flex justify-content-between justify-content-center"
 		>
-			{{ targetTimeLabel() }}<fa-icon class="ms-1" icon="clock"></fa-icon>
-		</button>
+			<p class="my-2">{{ targetTime }}</p>
+			<button
+				class="btn btn-link text-gray-medium p-0"
+				data-bs-toggle="modal"
+				:data-bs-target="`#${modalId}`"
+			>
+				<shopicon-filled-edit size="s"></shopicon-filled-edit>
+			</button>
+		</div>
+		<p v-else class="my-2">{{ $t("main.targetCharge.noTargetTime") }}</p>
 		<div
 			:id="modalId"
 			class="modal fade text-dark"
@@ -113,6 +128,9 @@
 </template>
 
 <script>
+import "@h2d2/shopicons/es/filled/plus";
+import "@h2d2/shopicons/es/filled/edit";
+
 import formatter from "../mixins/formatter";
 
 const DEFAULT_TARGET_HOUR = 7;
@@ -223,3 +241,9 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.title {
+	font-size: 14px;
+}
+</style>
