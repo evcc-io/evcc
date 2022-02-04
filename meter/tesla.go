@@ -3,24 +3,17 @@ package meter
 import (
 	"errors"
 	"fmt"
-	"net/http"
-	"net/http/cookiejar"
-	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/meter/powerwall"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
+	"github.com/foogod/go-powerwall"
 )
-
-// credits to https://github.com/vloschiavo/powerwall2
 
 // Tesla is the tesla powerwall meter
 type Tesla struct {
-	*request.Helper
-	uri, usage, password string
+	usage  string
+	client *powerwall.Client
 }
 
 func init() {
@@ -32,7 +25,7 @@ func init() {
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Usage, Password string
+		URI, Usage, User, Password string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -47,11 +40,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing password")
 	}
 
-	_, err := url.Parse(cc.URI)
-	if err != nil {
-		return nil, fmt.Errorf("%s is invalid: %s", cc.URI, err)
-	}
-
 	// support default meter names
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
@@ -60,27 +48,19 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewTesla(cc.URI, cc.Usage, cc.Password)
+	return NewTesla(cc.URI, cc.Usage, cc.User, cc.Password)
 }
 
 // NewTesla creates a Tesla Meter
-func NewTesla(uri, usage, password string) (api.Meter, error) {
-	log := util.NewLogger("tesla").Redact(password)
-
-	m := &Tesla{
-		Helper:   request.NewHelper(log),
-		uri:      util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https"),
-		usage:    strings.ToLower(usage),
-		password: password,
+func NewTesla(uri, usage, user, password string) (api.Meter, error) {
+	client := powerwall.NewClient(uri, user, password)
+	if _, err := client.GetStatus(); err != nil {
+		return nil, err
 	}
 
-	// ignore the self signed certificate
-	m.Client.Transport = request.NewTripper(log, transport.Insecure())
-	// create cookie jar to save login tokens
-	m.Client.Jar, _ = cookiejar.New(nil)
-
-	if err := m.Login(); err != nil {
-		return nil, err
+	m := &Tesla{
+		client: client,
+		usage:  strings.ToLower(usage),
 	}
 
 	// decorate api.MeterEnergy
@@ -98,35 +78,17 @@ func NewTesla(uri, usage, password string) (api.Meter, error) {
 	return decorateTesla(m, totalEnergy, batterySoC), nil
 }
 
-// Login calls login and saves the returned cookie
-func (m *Tesla) Login() error {
-	data := map[string]interface{}{
-		"username": "customer",
-		"password": m.password,
-	}
-
-	req, err := request.New(http.MethodPost, m.uri+powerwall.LoginURI, request.MarshalJSON(data), request.JSONEncoding)
-	if err == nil {
-		// use DoBody as it will close the response body
-		if _, err = m.DoBody(req); err != nil {
-			err = fmt.Errorf("login failed: %w", err)
-		}
-	}
-
-	return err
-}
-
 var _ api.Meter = (*Tesla)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (m *Tesla) CurrentPower() (float64, error) {
-	var res powerwall.MeterResponse
-	if err := m.GetJSON(m.uri+powerwall.MeterURI, &res); err != nil {
+	res, err := m.client.GetMetersAggregates()
+	if err != nil {
 		return 0, err
 	}
 
-	if o, ok := res[m.usage]; ok {
-		return o.InstantPower, nil
+	if o, ok := (*res)[m.usage]; ok {
+		return float64(o.InstantPower), nil
 	}
 
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
@@ -134,17 +96,17 @@ func (m *Tesla) CurrentPower() (float64, error) {
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *Tesla) totalEnergy() (float64, error) {
-	var res powerwall.MeterResponse
-	if err := m.GetJSON(m.uri+powerwall.MeterURI, &res); err != nil {
+	res, err := m.client.GetMetersAggregates()
+	if err != nil {
 		return 0, err
 	}
 
-	if o, ok := res[m.usage]; ok {
-		if m.usage == "load" {
-			return o.EnergyImported, nil
-		}
-		if m.usage == "solar" {
-			return o.EnergyExported, nil
+	if o, ok := (*res)[m.usage]; ok {
+		switch m.usage {
+		case "load":
+			return float64(o.EnergyImported), nil
+		case "solar":
+			return float64(o.EnergyExported), nil
 		}
 	}
 
@@ -153,8 +115,10 @@ func (m *Tesla) totalEnergy() (float64, error) {
 
 // batterySoC implements the api.Battery interface
 func (m *Tesla) batterySoC() (float64, error) {
-	var res powerwall.BatteryResponse
-	err := m.GetJSON(m.uri+powerwall.BatteryURI, &res)
+	res, err := m.client.GetSOE()
+	if err != nil {
+		return 0, err
+	}
 
-	return res.Percentage, err
+	return float64(res.Percentage), err
 }
