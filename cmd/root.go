@@ -237,6 +237,9 @@ func run(cmd *cobra.Command, args []string) {
 
 	go func() {
 		site.Run(stopC, conf.Interval)
+		if server.EEBusInstance != nil {
+			server.EEBusInstance.Shutdown()
+		}
 		close(exitC)
 	}()
 
