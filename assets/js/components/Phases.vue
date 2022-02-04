@@ -4,7 +4,8 @@
 		:class="`active-phases-${activePhases}`"
 	>
 		<div v-for="num in [1, 2, 3]" :key="num" class="phase" :class="{ inactive: inactive(num) }">
-			<div class="inner" :style="{ width: `${width(num)}%` }"></div>
+			<div class="target" :style="{ width: `${targetWidth()}%` }"></div>
+			<div class="real" :style="{ width: `${realWidth(num)}%` }"></div>
 		</div>
 	</div>
 </template>
@@ -45,12 +46,16 @@ export default {
 		inactive(num) {
 			return num > this.activePhases;
 		},
-		width(num) {
+		targetWidth() {
 			let current = Math.min(Math.max(this.minCurrent, this.chargeCurrent), this.maxCurrent);
-			if (this.chargeCurrents) {
-				current = this.chargeCurrents[num - 1] || 0;
-			}
 			return (100 / this.maxCurrent) * current;
+		},
+		realWidth(num) {
+			if (this.chargeCurrents) {
+				const current = this.chargeCurrents[num - 1] || 0;
+				return (100 / this.maxCurrent) * current;
+			}
+			return this.targetWidth();
 		},
 	},
 };
@@ -61,15 +66,27 @@ export default {
 	height: 10px;
 }
 .phase {
-	background-color: var(--evcc-green);
+	background-color: var(--bs-gray-200);
 	height: 2px;
+	width: 100%;
+	position: relative;
 }
-.inner {
-	height: 100%;
+.target,
+.real {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+}
+.target {
+	background-color: var(--evcc-green);
+}
+.real {
 	background-color: var(--evcc-dark-green);
 }
 .phase.inactive,
-.phase.inactive .inner {
+.phase.inactive .inner,
+.phase.inactive .real {
 	background-color: var(--bs-gray-200);
 }
 </style>

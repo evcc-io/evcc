@@ -52,6 +52,6 @@ RealCurrents.args = {
   activePhases: 3,
   minCurrent: 6,
   maxCurrent: 32,
-  chargeCurrent: 32,
+  chargeCurrent: 16.5,
   chargeCurrents: [15.2, 15.76, 14.5],
 };
