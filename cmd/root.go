@@ -154,7 +154,9 @@ func run(cmd *cobra.Command, args []string) {
 	log.INFO.Println("listening at", uri)
 
 	// setup environment
-	if err := configureEnvironment(conf); err != nil {
+	stopC := make(chan struct{})
+
+	if err := configureEnvironment(conf, stopC); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -232,14 +234,10 @@ func run(cmd *cobra.Command, args []string) {
 	site.DumpConfig()
 	site.Prepare(valueChan, pushChan)
 
-	stopC := make(chan struct{})
 	exitC := make(chan struct{})
 
 	go func() {
 		site.Run(stopC, conf.Interval)
-		if server.EEBusInstance != nil {
-			server.EEBusInstance.Shutdown()
-		}
 		close(exitC)
 	}()
 

@@ -161,8 +161,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 				return fmt.Errorf("%s: %s", c.localizedString("Requirements_EEBUS_Cert_Error", nil), err)
 			}
 
-			err = c.configureEEBus(eebusConfig)
-			if err != nil {
+			if err := c.configureEEBus(eebusConfig); err != nil {
 				return err
 			}
 
@@ -170,6 +169,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 			if err != nil {
 				return err
 			}
+
 			c.configuration.config.EEBUS = string(eebusYaml)
 			fmt.Println()
 			fmt.Println("--------------------------------------------")

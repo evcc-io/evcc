@@ -48,7 +48,7 @@ func loadConfigFile(cfgFile string) (conf config, err error) {
 	return conf, err
 }
 
-func configureEnvironment(conf config) (err error) {
+func configureEnvironment(conf config, stopC chan struct{}) (err error) {
 	// setup sponsorship
 	if conf.SponsorToken != "" {
 		err = configureSponsorship(conf.SponsorToken)
@@ -66,7 +66,7 @@ func configureEnvironment(conf config) (err error) {
 
 	// setup EEBus server
 	if err == nil && conf.EEBus != nil {
-		err = configureEEBus(conf.EEBus)
+		err = configureEEBus(conf.EEBus, stopC)
 	}
 
 	return
@@ -160,10 +160,10 @@ func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) hems.
 }
 
 // setup EEBus
-func configureEEBus(conf map[string]interface{}) error {
+func configureEEBus(conf map[string]interface{}, stopC <-chan struct{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
-		go server.EEBusInstance.Run()
+		go server.EEBusInstance.Run(stopC)
 	}
 
 	return nil
