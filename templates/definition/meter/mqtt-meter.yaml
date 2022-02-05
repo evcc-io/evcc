@@ -75,7 +75,7 @@ render: |
     topic: {{ .power }}
     scale: {{ .scalepower }}
     timeout: {{ .timeout }}
-  {{- if ne .energy1 "" }}
+  {{- if ne .energy "" }}
   energy:
     source: mqtt
     topic: {{ .energy }}
