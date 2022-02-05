@@ -38,9 +38,10 @@ const (
 	ParamValueTypeBool        = "bool"
 	ParamValueTypeStringList  = "stringlist"
 	ParamValueTypeChargeModes = "chargemodes"
+	ParamValueTypeDuration    = "duration"
 )
 
-var ValidParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes}
+var ValidParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes, ParamValueTypeDuration}
 
 var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
 var ValidUsageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}

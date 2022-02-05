@@ -64,10 +64,7 @@ params:
     - name: currentp1
       check: notempty
 - name: timeout
-  default: 30
-  help:
-    de: Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist 
-    en: Don't accept values older than this value in seconds
+  default: 30s
 render: |
   type: custom
   power:
