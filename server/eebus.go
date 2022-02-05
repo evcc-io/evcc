@@ -125,7 +125,7 @@ func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) 
 	c.handleDiscoveredSKI(ski)
 }
 
-func (c *EEBus) Run(stopC <-chan struct{}) {
+func (c *EEBus) Run() {
 	entries := make(chan *zeroconf.ServiceEntry)
 	go c.discoverDNS(entries, func(entry *zeroconf.ServiceEntry) {
 		c.addDisoveredEntry(entry)
@@ -144,12 +144,6 @@ func (c *EEBus) Run(stopC <-chan struct{}) {
 		panic(fmt.Errorf("failed to browse: %w", err))
 	}
 
-	// unpublish mDNS on exit
-	go func() {
-		<-stopC
-		c.zc.Shutdown()
-	}()
-
 	ln := &server.Listener{
 		Log:          c.log.TRACE,
 		AccessMethod: c.id,
@@ -159,6 +153,10 @@ func (c *EEBus) Run(stopC <-chan struct{}) {
 	if err := c.srv.Listen(ln, c.certificateHandler); err != nil {
 		c.log.ERROR.Println("eebus listen:", err)
 	}
+}
+
+func (c *EEBus) Shutdown() {
+	c.zc.Shutdown()
 }
 
 func (c *EEBus) addDisoveredEntry(entry *zeroconf.ServiceEntry) {

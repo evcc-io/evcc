@@ -164,9 +164,8 @@ func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) hems.
 func configureEEBus(conf map[string]interface{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
-		stopC := make(chan struct{})
-		shutdown.Register(func() { close(stopC) })
-		go server.EEBusInstance.Run(stopC)
+		go server.EEBusInstance.Run()
+		shutdown.Register(func() { server.EEBusInstance.Shutdown() })
 	}
 
 	return nil

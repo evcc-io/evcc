@@ -35,13 +35,9 @@ func Run(stopC <-chan struct{}) {
 
 	wg.Wait()
 	close(exitC)
-
-	println("Run wg.Wait exitC")
 }
 
 func Done(timeout ...time.Duration) <-chan struct{} {
-	println("Done")
-
 	to := time.Second
 	if len(timeout) == 1 {
 		to = timeout[0]
@@ -49,10 +45,8 @@ func Done(timeout ...time.Duration) <-chan struct{} {
 
 	select {
 	case <-exitC:
-		println("Done exitC closed")
 		return exitC
 	case <-time.After(to):
-		println("Done timeout")
 		exitC := make(chan struct{})
 		close(exitC)
 		return exitC
