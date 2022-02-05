@@ -161,12 +161,25 @@ func (c *Shelly) MaxCurrent(current int64) error {
 
 // Status implements the api.Charger interface
 func (c *Shelly) Status() (api.ChargeStatus, error) {
-	power, err := c.CurrentPower()
-	if power > c.standbypower {
-		return api.StatusC, err
+	res := api.StatusB
+
+	// static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if on {
+			res = api.StatusC
+		}
+
+		return res, err
 	}
 
-	return api.StatusB, err
+	// standby power mode
+	power, err := c.CurrentPower()
+	if power > c.standbypower {
+		res = api.StatusC
+	}
+
+	return res, err
 }
 
 var _ api.Meter = (*Shelly)(nil)
