@@ -11,6 +11,7 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/proto/pb"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/hems"
@@ -163,7 +164,9 @@ func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) hems.
 func configureEEBus(conf map[string]interface{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
-		go server.EEBusInstance.Run()
+		stopC := make(chan struct{})
+		shutdown.Register(func() { close(stopC) })
+		go server.EEBusInstance.Run(stopC)
 	}
 
 	return nil

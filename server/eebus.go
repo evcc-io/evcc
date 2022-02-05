@@ -17,7 +17,6 @@ import (
 	"github.com/evcc-io/eebus/ship"
 	"github.com/evcc-io/eebus/spine/model"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/shutdown"
 	"github.com/grandcat/zeroconf"
 )
 
@@ -126,7 +125,7 @@ func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) 
 	c.handleDiscoveredSKI(ski)
 }
 
-func (c *EEBus) Run() {
+func (c *EEBus) Run(stopC <-chan struct{}) {
 	entries := make(chan *zeroconf.ServiceEntry)
 	go c.discoverDNS(entries, func(entry *zeroconf.ServiceEntry) {
 		c.addDisoveredEntry(entry)
@@ -145,7 +144,11 @@ func (c *EEBus) Run() {
 		panic(fmt.Errorf("failed to browse: %w", err))
 	}
 
-	shutdown.Register(c.zc.Shutdown)
+	// unpublish mDNS on exit
+	go func() {
+		<-stopC
+		c.zc.Shutdown()
+	}()
 
 	ln := &server.Listener{
 		Log:          c.log.TRACE,

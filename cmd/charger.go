@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/shutdown"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

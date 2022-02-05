@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	certhelper "github.com/evcc-io/eebus/cert"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 )
 
@@ -12,7 +13,9 @@ import (
 func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
-		go server.EEBusInstance.Run()
+		stopC := make(chan struct{})
+		shutdown.Register(func() { close(stopC) })
+		go server.EEBusInstance.Run(stopC)
 	}
 
 	return nil
