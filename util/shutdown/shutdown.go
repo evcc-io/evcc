@@ -47,6 +47,8 @@ func Done(timeout ...time.Duration) <-chan struct{} {
 	case <-exitC:
 		return exitC
 	case <-time.After(to):
-		return nil
+		exitC := make(chan struct{})
+		close(exitC)
+		return exitC
 	}
 }
