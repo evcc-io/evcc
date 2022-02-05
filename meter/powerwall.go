@@ -3,27 +3,31 @@ package meter
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/foogod/go-powerwall"
 )
 
-// Tesla is the tesla powerwall meter
-type Tesla struct {
+// PowerWall is the tesla powerwall meter
+type PowerWall struct {
 	usage  string
 	client *powerwall.Client
 }
 
 func init() {
-	registry.Add("tesla", NewTeslaFromConfig)
+	registry.Add("tesla", NewPowerWallFromConfig)
+	registry.Add("powerwall", NewPowerWallFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateTesla -b *Tesla -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePowerWall -b *PowerWall -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
-// NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
-func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
+// NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
+func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Usage, User, Password string
 	}{}
@@ -48,17 +52,24 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewTesla(cc.URI, cc.Usage, cc.User, cc.Password)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password)
 }
 
-// NewTesla creates a Tesla Meter
-func NewTesla(uri, usage, user, password string) (api.Meter, error) {
-	client := powerwall.NewClient(uri, user, password)
+// NewPowerWall creates a Tesla PowerWall Meter
+func NewPowerWall(uri, usage, user, password string) (api.Meter, error) {
+	log := util.NewLogger("tesla")
+
+	httpClient := &http.Client{
+		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
+		Timeout:   time.Second * 2, // Timeout after 2 seconds
+	}
+
+	client := powerwall.NewClient(uri, user, password, powerwall.WithHttpClient(httpClient))
 	if _, err := client.GetStatus(); err != nil {
 		return nil, err
 	}
 
-	m := &Tesla{
+	m := &PowerWall{
 		client: client,
 		usage:  strings.ToLower(usage),
 	}
@@ -75,19 +86,19 @@ func NewTesla(uri, usage, user, password string) (api.Meter, error) {
 		batterySoC = m.batterySoC
 	}
 
-	return decorateTesla(m, totalEnergy, batterySoC), nil
+	return decoratePowerWall(m, totalEnergy, batterySoC), nil
 }
 
-var _ api.Meter = (*Tesla)(nil)
+var _ api.Meter = (*PowerWall)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (m *Tesla) CurrentPower() (float64, error) {
+func (m *PowerWall) CurrentPower() (float64, error) {
 	res, err := m.client.GetMetersAggregates()
 	if err != nil {
 		return 0, err
 	}
 
-	if o, ok := (*res)[m.usage]; ok {
+	if o, ok := res[m.usage]; ok {
 		return float64(o.InstantPower), nil
 	}
 
@@ -95,13 +106,13 @@ func (m *Tesla) CurrentPower() (float64, error) {
 }
 
 // totalEnergy implements the api.MeterEnergy interface
-func (m *Tesla) totalEnergy() (float64, error) {
+func (m *PowerWall) totalEnergy() (float64, error) {
 	res, err := m.client.GetMetersAggregates()
 	if err != nil {
 		return 0, err
 	}
 
-	if o, ok := (*res)[m.usage]; ok {
+	if o, ok := res[m.usage]; ok {
 		switch m.usage {
 		case "load":
 			return float64(o.EnergyImported), nil
@@ -114,7 +125,7 @@ func (m *Tesla) totalEnergy() (float64, error) {
 }
 
 // batterySoC implements the api.Battery interface
-func (m *Tesla) batterySoC() (float64, error) {
+func (m *PowerWall) batterySoC() (float64, error) {
 	res, err := m.client.GetSOE()
 	if err != nil {
 		return 0, err

@@ -99,6 +99,7 @@ ValueError_Float = "Der Wert muss eine Zahl sein. Nachkommastellen mit . anstatt
 ValueError_Number = "Der Wert muss eine ganzzahlige Zahl sein."
 ValueError_NumberLowerThanMin = "Der Wert muss größer oder gleich {{ .Min }} sein."
 ValueError_NumberBiggerThanMax = "Der Wert muss kleiner oder gleich {{ .Max }} sein."
+ValueError_Duration = "Der Wert muss eine Zeitdauer angeben. Zum Beispiel: 1s, 1m, 1h"
 
 Device_Configure = "Konfiguration"
 Device_Added = "wurde erfolgreich hinzugefügt."

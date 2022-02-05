@@ -99,6 +99,7 @@ ValueError_Float = "The value has to be a number."
 ValueError_Number = "The value has to be an integer."
 ValueError_NumberLowerThanMin = "The value must be bigger or equal to {{ .Min }}."
 ValueError_NumberBiggerThanMax = "The value must be smaller or equal to {{ .Max }}."
+ValueError_Duration = "The value has to provide a duration. For example: 1s, 1m, 1h"
 
 Device_Configure = "Configuration"
 Device_Added = "was successfully added."

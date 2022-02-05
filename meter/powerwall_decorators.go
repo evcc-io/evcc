@@ -6,44 +6,44 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateTesla(base *Tesla, meterEnergy func() (float64, error), battery func() (float64, error)) api.Meter {
+func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), battery func() (float64, error)) api.Meter {
 	switch {
 	case battery == nil && meterEnergy == nil:
 		return base
 
 	case battery == nil && meterEnergy != nil:
 		return &struct {
-			*Tesla
+			*PowerWall
 			api.MeterEnergy
 		}{
-			Tesla: base,
-			MeterEnergy: &decorateTeslaMeterEnergyImpl{
+			PowerWall: base,
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
 
 	case battery != nil && meterEnergy == nil:
 		return &struct {
-			*Tesla
+			*PowerWall
 			api.Battery
 		}{
-			Tesla: base,
-			Battery: &decorateTeslaBatteryImpl{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
 				battery: battery,
 			},
 		}
 
 	case battery != nil && meterEnergy != nil:
 		return &struct {
-			*Tesla
+			*PowerWall
 			api.Battery
 			api.MeterEnergy
 		}{
-			Tesla: base,
-			Battery: &decorateTeslaBatteryImpl{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateTeslaMeterEnergyImpl{
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -52,18 +52,18 @@ func decorateTesla(base *Tesla, meterEnergy func() (float64, error), battery fun
 	return nil
 }
 
-type decorateTeslaBatteryImpl struct {
+type decoratePowerWallBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateTeslaBatteryImpl) SoC() (float64, error) {
+func (impl *decoratePowerWallBatteryImpl) SoC() (float64, error) {
 	return impl.battery()
 }
 
-type decorateTeslaMeterEnergyImpl struct {
+type decoratePowerWallMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decorateTeslaMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decoratePowerWallMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }

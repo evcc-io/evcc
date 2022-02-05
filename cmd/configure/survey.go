@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -170,10 +171,11 @@ func (c *CmdConfigure) askValue(q question) string {
 			return errors.New(c.localizedString("ValueError_Empty", nil))
 		}
 
+		if !q.required && len(value) == 0 {
+			return nil
+		}
+
 		if q.valueType == templates.ParamValueTypeFloat {
-			if value == "" && !q.required {
-				return nil
-			}
 			_, err := strconv.ParseFloat(value, 64)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Float", nil))
@@ -181,10 +183,6 @@ func (c *CmdConfigure) askValue(q question) string {
 		}
 
 		if q.valueType == templates.ParamValueTypeNumber {
-			if value == "" && !q.required {
-				return nil
-			}
-
 			intValue, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Number", nil))
@@ -194,6 +192,13 @@ func (c *CmdConfigure) askValue(q question) string {
 			}
 			if q.maxNumberValue != 0 && intValue > q.maxNumberValue {
 				return errors.New(c.localizedString("ValueError_NumberBiggerThanMax", localizeMap{"Max": q.maxNumberValue}))
+			}
+		}
+
+		if q.valueType == templates.ParamValueTypeDuration {
+			_, err := time.ParseDuration(value)
+			if err != nil {
+				return errors.New(c.localizedString("ValueError_Duration", nil))
 			}
 		}
 
