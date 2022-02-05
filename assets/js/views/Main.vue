@@ -80,7 +80,7 @@
 </template>
 
 <script>
-import Site from "../components/Site";
+import Site from "../components/Site.vue";
 
 export default {
 	name: "Main",

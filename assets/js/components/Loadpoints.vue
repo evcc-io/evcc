@@ -41,7 +41,7 @@
 import "@h2d2/shopicons/es/light/lightning";
 import "@h2d2/shopicons/es/bold/lightning";
 
-import Loadpoint from "./Loadpoint";
+import Loadpoint from "./Loadpoint.vue";
 import collector from "../mixins/collector";
 
 export default {

@@ -68,14 +68,14 @@
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/lightning";
 import api from "../api";
-import Mode from "./Mode";
-import Vehicle from "./Vehicle";
-import Phases from "./Phases";
-import LabelAndValue from "./LabelAndValue";
+import Mode from "./Mode.vue";
+import Vehicle from "./Vehicle.vue";
+import Phases from "./Phases.vue";
+import LabelAndValue from "./LabelAndValue.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
-import "@h2d2/shopicons/es/regular/lightning";
 
 export default {
 	name: "Loadpoint",

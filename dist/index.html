@@ -1,5 +1,40 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="EV Charge Controller"><meta name="author" content="andig"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="#28293e"><link rel="apple-touch-icon" sizes="180x180" href="ico/apple-touch-icon.png?[[.Version]]"><link rel="icon" type="image/png" sizes="32x32" href="ico/favicon-32x32.png?[[.Version]]"><link rel="icon" type="image/png" sizes="16x16" href="ico/favicon-16x16.png?[[.Version]]"><link rel="manifest" href="ico/site.webmanifest"><link rel="mask-icon" href="ico/safari-pinned-tab.svg?[[.Version]]" color="#28293e"><link rel="shortcut icon" href="ico/favicon.ico?[[.Version]]"><meta name="apple-mobile-web-app-title" content="evcc"><meta name="application-name" content="evcc"><meta name="msapplication-TileColor" content="#28293e"><meta name="msapplication-config" content="ico/browserconfig.xml"><meta name="theme-color" content="#28293e"><title>evcc</title><link href="css/chunk-vendors.4692b1e2.css" rel="preload" as="style"><link href="css/index.d1ca2c62.css" rel="preload" as="style"><link href="js/chunk-vendors.4c83496d.js" rel="preload" as="script"><link href="js/index.39ac47a1.js" rel="preload" as="script"><link href="css/chunk-vendors.4692b1e2.css" rel="stylesheet"><link href="css/index.d1ca2c62.css" rel="stylesheet"></head><body><script>window.evcc = {
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="EV Charge Controller" />
+    <meta name="author" content="andig" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="#28293e" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.06a6da36.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAApVBMVEUAAAAP3kMP3kIP3UIS20AP3UIP3UIL3kMQ3kMO3UEA1VUP3UIO3EMP3EIO3UIR3kMP3UIP3UIN2UAU2DsP3UIP3UIP3UIP3kMO3EIP3UIA/wAP3EIP3UIP3EIP3UIQ30AP3kIP3UIP3UIP3UIP3UIM2z0P3UIO3UIP3UIV1UAT2UIO3kIAzDMP3UIO3UIO3UIP3UIP3kEP3kMA20kQ20QP3UL////H8iNnAAAANXRSTlMAmd13HPv1F4KNBudYjMIul/MUDfHbiFRt/QHWpUL4IGWq2JamFc1/9AwbbAVpWZDMt0UHMV0Yua4AAAABYktHRDZHv4jRAAAACXBIWXMAAAY3AAAGNwEEQMgNAAAAB3RJTUUH5QMJFQYxrZzT7AAAAJdJREFUOMvVj8cSwjAMBRU6BEiAxIDpoff6/v/XsBlys+Qr7HV33khEf0hQsBRZXyrDUKmyQc161FnfCD0Dzc9Aiz+x7RmIfAOx9Z0u63uJDVKlVN8dDPBlGDm9HuXB2D0wyf105g7mC0NmgiUJrIBkLQUbYCt5vUO4l4IDcJS8+SQ9icEZF9HT9abl4P6QPQUe/3zRL/IGp6gVaWK4BgQAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjEtMDMtMDlUMjE6MDY6NDkrMDE6MDD9EctmAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIxLTAzLTA5VDIxOjA2OjQ5KzAxOjAwjExz2gAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAABXelRYdFJhdyBwcm9maWxlIHR5cGUgaXB0YwAAeJzj8gwIcVYoKMpPy8xJ5VIAAyMLLmMLEyMTS5MUAxMgRIA0w2QDI7NUIMvY1MjEzMQcxAfLgEigSi4A6hcRdPJCNZUAAAAASUVORK5CYII=" />
+    <link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAaVBMVEUAAAAM4EQP3UIO3kMP3UIP3kMT2UIP3UIP3kIAzDMO3UIP3kIAv0AP3UEP3UIO3UEO30EP3kIP3kIO3UEP3UIP3UIP3UIa5k0Q3EEQ3EIP3EEP3UMA/4AP3UMN3UMQ3kMR3kMP3UL///8rWClTAAAAIXRSTlMAKXdcqmMb+90Ff2QE4vRLN1V0jcza5ApeYIXPAqxMkS7+5+AvAAAAAWJLR0QiXWVcrAAAAAlwSFlzAAADHAAAAxwBS6gt3QAAAAd0SU1FB+UDCRUGMNqb43oAAABQSURBVBjTjY+3AcAwEALfcs45y4H9l7RLXpXo7hpAxDeBMaESERAzJymynEUBlMxVjabtSPT4M5AYpxnLqlo27HrHcVotrttZ+jhsX++T8gH6bgO7MnNaDwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMS0wMy0wOVQyMTowNjo0OCswMTowMFtmwNIAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjEtMDMtMDlUMjE6MDY6NDgrMDE6MDAqO3huAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAFd6VFh0UmF3IHByb2ZpbGUgdHlwZSBpcHRjAAB4nOPyDAhxVigoyk/LzEnlUgADIwsuYwsTIxNLkxQDEyBEgDTDZAMjs1Qgy9jUyMTMxBzEB8uASKBKLgDqFxF08kI1lQAAAABJRU5ErkJggg==" />
+    <link rel="manifest" href="data:application/manifest+json;base64,ewoJInN0YXJ0X3VybCI6ICIuLi8iLAoJIm5hbWUiOiAiZXZjYyIsCgkic2hvcnRfbmFtZSI6ICJldmNjIiwKCSJ0aGVtZV9jb2xvciI6ICIjMTgxOTFhIiwKCSJiYWNrZ3JvdW5kX2NvbG9yIjogIiMxODE5MWEiLAoJImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCgkiaWNvbnMiOiBbCgkJewoJCQkic3JjIjogImFuZHJvaWQtY2hyb21lLTE5MngxOTIucG5nIiwKCQkJInNpemVzIjogIjE5MngxOTIiLAoJCQkidHlwZSI6ICJpbWFnZS9wbmciCgkJfSwKCQl7CgkJCSJzcmMiOiAiYW5kcm9pZC1jaHJvbWUtNTEyeDUxMi5wbmciLAoJCQkic2l6ZXMiOiAiNTEyeDUxMiIsCgkJCSJ0eXBlIjogImltYWdlL3BuZyIKCQl9CgldCn0K" />
+    <link rel="mask-icon" href="./assets/safari-pinned-tab.a4b65658.svg" color="#28293e" />
+    <link rel="shortcut icon" href="./assets/favicon.cbadeefb.ico" />
+    <meta name="apple-mobile-web-app-title" content="evcc" />
+    <meta name="application-name" content="evcc" />
+    <meta name="msapplication-TileColor" content="#28293e" />
+    <meta name="msapplication-config" content="ico/browserconfig.xml" />
+    <meta name="theme-color" content="#28293e" />
+
+    <title>evcc</title>
+    <script type="module" crossorigin src="./assets/index.598d8ee7.js"></script>
+    <link rel="modulepreload" href="./assets/vendor.e59cba19.js">
+    <link rel="stylesheet" href="./assets/index.aff611bf.css">
+  </head>
+  <body>
+    <script>
+      window.evcc = {
         version: "[[.Version]]",
         configured: "[[.Configured]]",
         commit: "[[.Commit]]",
-      };</script><div id="app"></div><script src="js/chunk-vendors.4c83496d.js"></script><script src="js/index.39ac47a1.js"></script></body></html>
+      };
+    </script>
+
+    <div id="app"></div>
+    
+  </body>
+</html>

@@ -42,12 +42,11 @@
 import "@h2d2/shopicons/es/filled/options";
 import "@h2d2/shopicons/es/regular/car3";
 
-import LabelAndValue from "./LabelAndValue";
 import collector from "../mixins/collector";
-
-import VehicleSoc from "./VehicleSoc";
-import VehicleStatus from "./VehicleStatus";
-import TargetCharge from "./TargetCharge";
+import LabelAndValue from "./LabelAndValue.vue";
+import VehicleSoc from "./VehicleSoc.vue";
+import VehicleStatus from "./VehicleStatus.vue";
+import TargetCharge from "./TargetCharge.vue";
 
 export default {
 	name: "Vehicle",

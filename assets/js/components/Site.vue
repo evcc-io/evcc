@@ -39,10 +39,10 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/arrowup";
-import TopNavigation from "./TopNavigation";
-import Energyflow from "./Energyflow";
-import Loadpoints from "./Loadpoints";
-import Footer from "./Footer";
+import TopNavigation from "./TopNavigation.vue";
+import Energyflow from "./Energyflow/Energyflow.vue";
+import Loadpoints from "./Loadpoints.vue";
+import Footer from "./Footer.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 

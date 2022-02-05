@@ -5,7 +5,7 @@ import "../css/app.css";
 import Vue from "vue";
 import VueMeta from "vue-meta";
 import api from "./api";
-import App from "./views/App";
+import App from "./views/App.vue";
 import router from "./router";
 import i18n from "./i18n";
 import "./tooltip";

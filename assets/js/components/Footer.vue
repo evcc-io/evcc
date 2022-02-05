@@ -11,8 +11,8 @@
 </template>
 
 <script>
-import Version from "./Version";
-import Savings from "./Savings";
+import Version from "./Version.vue";
+import Savings from "./Savings.vue";
 
 export default {
 	name: "Footer",
