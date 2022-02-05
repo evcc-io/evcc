@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/shutdown"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
@@ -154,9 +155,7 @@ func run(cmd *cobra.Command, args []string) {
 	log.INFO.Println("listening at", uri)
 
 	// setup environment
-	stopC := make(chan struct{})
-
-	if err := configureEnvironment(conf, stopC); err != nil {
+	if err := configureEnvironment(conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -234,7 +233,11 @@ func run(cmd *cobra.Command, args []string) {
 	site.DumpConfig()
 	site.Prepare(valueChan, pushChan)
 
+	stopC := make(chan struct{})
 	exitC := make(chan struct{})
+
+	// TODO join waiting for shutdown handler
+	go shutdown.Run(stopC)
 
 	go func() {
 		site.Run(stopC, conf.Interval)

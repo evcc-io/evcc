@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/cmd/configure"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/shutdown"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -43,5 +44,11 @@ func runConfigure(cmd *cobra.Command, args []string) {
 
 	util.LogLevel(viper.GetString("log"), nil)
 
+	stopC := make(chan struct{})
+	go shutdown.Run(stopC)
+
 	impl.Run(log, lang, advanced, expand)
+
+	close(stopC)
+	<-shutdown.Done()
 }
