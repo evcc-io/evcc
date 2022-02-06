@@ -14,7 +14,7 @@ func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
 		go server.EEBusInstance.Run()
-		shutdown.Register(func() { server.EEBusInstance.Shutdown() })
+		shutdown.Register(server.EEBusInstance.Shutdown)
 	}
 
 	return nil
