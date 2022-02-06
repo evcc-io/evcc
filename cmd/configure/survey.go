@@ -38,16 +38,15 @@ func (c *CmdConfigure) askConfigFailureNextStep() bool {
 }
 
 // select item from list
-func (c *CmdConfigure) askSelection(message string, items []string) (error, string, int) {
+func (c *CmdConfigure) askSelection(message string, items []string) (string, int, error) {
 	selection := ""
 	prompt := &survey.Select{
 		Message: message,
 		Options: items,
 	}
 
-	err := c.surveyAskOne(prompt, &selection)
-	if err != nil {
-		return err, "", 0
+	if err := c.surveyAskOne(prompt, &selection); err != nil {
+		return "", 0, err
 	}
 
 	var selectedIndex int
@@ -58,7 +57,7 @@ func (c *CmdConfigure) askSelection(message string, items []string) (error, stri
 		}
 	}
 
-	return err, selection, selectedIndex
+	return selection, selectedIndex, nil
 }
 
 // selectItem selects item from list
@@ -77,7 +76,7 @@ func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Templ
 	}
 
 	text := fmt.Sprintf("%s %s %s:", c.localizedString("Choose", nil), DeviceCategories[deviceCategory].article, DeviceCategories[deviceCategory].title)
-	err, _, selected := c.askSelection(text, items)
+	_, selected, err := c.askSelection(text, items)
 	if err != nil {
 		c.log.FATAL.Fatal(err)
 	}
@@ -87,7 +86,7 @@ func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Templ
 
 // askChoice selects item from list
 func (c *CmdConfigure) askChoice(label string, choices []string) (int, string) {
-	err, selection, index := c.askSelection(label, choices)
+	selection, index, err := c.askSelection(label, choices)
 	if err != nil {
 		c.log.FATAL.Fatal(err)
 	}
