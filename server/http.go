@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/grandcat/zeroconf"
 )
 
 // Assets is the embedded assets file system
@@ -41,7 +40,7 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
-	url string
+	Port int
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
@@ -110,7 +109,7 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 		},
 	}
 	srv.SetKeepAlivesEnabled(true)
-	srv.url = url
+	srv.SetPort(url)
 
 	return srv
 }
@@ -120,16 +119,16 @@ func (s *HTTPd) Router() *mux.Router {
 	return s.Handler.(*mux.Router)
 }
 
-func (s *HTTPd) Announce() (*zeroconf.Server, error) {
-	_, port, err := net.SplitHostPort(s.url)
+func (s *HTTPd) SetPort(url string) {
+	_, port, err := net.SplitHostPort(url)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	portInt, err := strconv.Atoi(port)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return zeroconf.RegisterProxy("evcc Website", "_http._tcp", "local.", portInt, "evcc", nil, []string{}, nil)
+	s.Port = portInt
 }

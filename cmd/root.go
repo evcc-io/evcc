@@ -189,14 +189,18 @@ func run(cmd *cobra.Command, args []string) {
 	// create webserver
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, site, socketHub, cache)
-	httpzc, err := httpd.Announce()
-	if err != nil {
-		log.ERROR.Printf("failed to announce webserver: %s", err)
-	}
 
-	shutdown.Register(func() {
-		httpzc.Shutdown()
-	})
+	// announce webserver on mDNS
+	if port := httpd.Port; port > 0 {
+		zc, err := server.AnnounceMDNS("evcc Website", "_http._tcp", "evcc", port)
+		if err != nil {
+			log.ERROR.Printf("failed to announce webserver: %s", err)
+		}
+
+		shutdown.Register(func() {
+			zc.Shutdown()
+		})
+	}
 
 	// metrics
 	if viper.GetBool("metrics") {
