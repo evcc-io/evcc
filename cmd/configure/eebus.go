@@ -20,8 +20,7 @@ func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 	return nil
 }
 
-// eebusCertificate setup EEBUS certificate
-// returns privagte key, public key and error
+// eebusCertificate creates EEBUS certificate and returns private/public key
 func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
 	details := server.EEBUSDetails
 

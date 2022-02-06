@@ -18,12 +18,10 @@ func Register(cb func()) {
 }
 
 func Run(stopC <-chan struct{}) {
-	mu.Lock()
-	defer mu.Unlock()
-
 	<-stopC
 	wg := new(sync.WaitGroup)
 
+	mu.Lock()
 	for _, cb := range handlers {
 		wg.Add(1)
 
@@ -32,6 +30,7 @@ func Run(stopC <-chan struct{}) {
 			wg.Done()
 		}(cb)
 	}
+	mu.Unlock()
 
 	wg.Wait()
 	close(exitC)
