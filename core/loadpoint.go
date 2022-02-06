@@ -21,7 +21,6 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v3"
 	"github.com/benbjohnson/clock"
-	"github.com/cjrd/allocate"
 )
 
 const (
@@ -101,12 +100,12 @@ type LoadPoint struct {
 	VehiclesRef []string `mapstructure:"vehicles"` // Vehicles reference
 	MeterRef    string   `mapstructure:"meter"`    // Charge meter reference
 	Meters      struct {
-		ChargeMeterRef string `mapstructure:"charge"` // deprecated
+		ChargeMeterRef string `mapstructure:"charge"` // TODO deprecated
 	}
 	SoC               SoCConfig
 	Enable, Disable   ThresholdConfig
-	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
-	onDisconnect      api.ActionConfig
+	ResetOnDisconnect interface{}       // TODO deprecated
+	OnDisconnect      *api.ActionConfig `mapstructure:"onDisconnect"`
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
@@ -186,9 +185,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
 	}
 
-	// store defaults
-	lp.collectDefaults()
-
 	if lp.MeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.MeterRef)
 	}
@@ -238,6 +234,11 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
 
+	// apply user defaults from onDisconnect configuration
+	if lp.OnDisconnect != nil {
+		lp.applyAction(*lp.OnDisconnect)
+	}
+
 	return lp, nil
 }
 
@@ -261,24 +262,6 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	}
 
 	return lp
-}
-
-// collectDefaults collects default values for use on disconnect
-func (lp *LoadPoint) collectDefaults() {
-	// get reference to action config
-	actionCfg := &lp.onDisconnect
-
-	// allocate action config such that all pointer fields are fully allocated
-	if err := allocate.Zero(actionCfg); err == nil {
-		// initialize with default values
-		*actionCfg.Mode = lp.GetMode()
-		*actionCfg.MinCurrent = lp.GetMinCurrent()
-		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
-		*actionCfg.MinSoC = lp.GetMinSoC()
-		*actionCfg.TargetSoC = lp.GetTargetSoC()
-	} else {
-		lp.log.ERROR.Printf("error allocating action config: %v", err)
-	}
 }
 
 // requestUpdate requests site to update this loadpoint
@@ -436,8 +419,8 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	}
 
 	// set default mode on disconnect
-	if lp.ResetOnDisconnect {
-		lp.applyAction(lp.onDisconnect)
+	if lp.OnDisconnect != nil {
+		lp.applyAction(*lp.OnDisconnect)
 	}
 
 	// soc update reset
