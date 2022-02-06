@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	certhelper "github.com/evcc-io/eebus/cert"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 )
 
@@ -13,13 +14,13 @@ func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
 		go server.EEBusInstance.Run()
+		shutdown.Register(server.EEBusInstance.Shutdown)
 	}
 
 	return nil
 }
 
-// eebusCertificate setup EEBUS certificate
-// returns privagte key, public key and error
+// eebusCertificate creates EEBUS certificate and returns private/public key
 func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
 	details := server.EEBUSDetails
 

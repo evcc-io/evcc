@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
@@ -38,6 +39,9 @@ func runCharger(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
+	stopC := make(chan struct{})
+	go shutdown.Run(stopC)
+
 	chargers := cp.chargers
 	if len(args) == 1 {
 		arg := args[0]
@@ -48,4 +52,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 	for name, v := range chargers {
 		d.DumpWithHeader(name, v)
 	}
+
+	close(stopC)
+	<-shutdown.Done()
 }

@@ -6,9 +6,11 @@ import (
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
@@ -233,15 +235,16 @@ func run(cmd *cobra.Command, args []string) {
 	site.Prepare(valueChan, pushChan)
 
 	stopC := make(chan struct{})
-	exitC := make(chan struct{})
+	go shutdown.Run(stopC)
 
+	siteC := make(chan struct{})
 	go func() {
 		site.Run(stopC, conf.Interval)
-		close(exitC)
+		close(siteC)
 	}()
 
 	// uds health check listener
-	go server.HealthListener(site, exitC)
+	go server.HealthListener(site, siteC)
 
 	// catch signals
 	go func() {
@@ -250,6 +253,15 @@ func run(cmd *cobra.Command, args []string) {
 
 		<-signalC    // wait for signal
 		close(stopC) // signal loop to end
+
+		exitC := make(chan struct{})
+		wg := new(sync.WaitGroup)
+		wg.Add(2)
+
+		// wait for main loop and shutdown functions to finish
+		go func() { <-shutdown.Done(conf.Interval); wg.Done() }()
+		go func() { <-siteC; wg.Done() }()
+		go func() { wg.Wait(); close(exitC) }()
 
 		select {
 		case <-exitC: // wait for loop to end
