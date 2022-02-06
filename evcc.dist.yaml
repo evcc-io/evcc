@@ -75,8 +75,12 @@ loadpoints:
   # vehicles: # use if multiple vehicles allowed to charge on this loadpoint
   # - ID.3
   # - e-Up
-  mode: pv
-  resetOnDisconnect: true # set defaults when vehicle disconnects
+  onDisconnect: # set defaults when vehicle is disconnected
+    mode: "off"
+    minSoC: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
+    targetSoC: 100 # always charge to 100%
+    minCurrent: 6 # minimum charge current (default 6A)
+    maxCurrent: 16 # maximum charge current (default 16A)
   soc:
     # polling defines usage of the vehicle APIs
     # Modifying the default settings it NOT recommended. It MAY deplete your vehicle's battery
@@ -89,8 +93,6 @@ loadpoints:
       mode: charging
       # poll interval defines how often the vehicle API may be polled if NOT charging
       interval: 60m
-    min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
-    target: 100 # always charge to 100%
     estimate: false # set true to interpolate between api updates
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
@@ -100,8 +102,7 @@ loadpoints:
     delay: 10m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)
   guardDuration: 5m # switch charger contactor not more often than this (default 10m)
-  minCurrent: 6 # minimum charge current (default 6A)
-  maxCurrent: 16 # maximum charge current (default 16A)
+
 
 # tariffs are the fixed or variable tariffs
 # cheap (tibber/awattar) can be used to define a tariff rate considered cheap enough for charging
