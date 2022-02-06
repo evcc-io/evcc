@@ -45,19 +45,12 @@ func (c *CmdConfigure) askSelection(message string, items []string) (string, int
 		Options: items,
 	}
 
-	if err := c.surveyAskOne(prompt, &selection); err != nil {
-		return "", 0, err
+	err := c.surveyAskOne(prompt, &selection)
+	if err == nil {
+		return selection, funk.IndexOf(items, selection), nil
 	}
 
-	var selectedIndex int
-	for index, item := range items {
-		if item == selection {
-			selectedIndex = index
-			break
-		}
-	}
-
-	return selection, selectedIndex, nil
+	return "", 0, err
 }
 
 // selectItem selects item from list
