@@ -189,6 +189,14 @@ func run(cmd *cobra.Command, args []string) {
 	// create webserver
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, site, socketHub, cache)
+	httpzc, err := httpd.Announce()
+	if err != nil {
+		log.ERROR.Printf("failed to announce webserver: %s", err)
+	}
+
+	shutdown.Register(func() {
+		httpzc.Shutdown()
+	})
 
 	// metrics
 	if viper.GetBool("metrics") {
