@@ -452,6 +452,8 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
 
+	cfgMode := api.ModeOff
+
 	lp := &LoadPoint{
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
@@ -464,15 +466,16 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		MinCurrent:  minA,
 		MaxCurrent:  maxA,
 		status:      api.StatusC,
-		Mode:        api.ModeOff,
+		Mode:        cfgMode,
 		SoC: SoCConfig{
 			Target: 70,
 		},
-		ResetOnDisconnect: true,
+		OnDisconnect: &api.ActionConfig{
+			Mode: &cfgMode,
+		},
 	}
 
 	attachListeners(t, lp)
-	lp.collectDefaults()
 
 	lp.enabled = true
 	lp.chargeCurrent = float64(minA)
