@@ -3,9 +3,7 @@ package server
 import (
 	"fmt"
 	"io/fs"
-	"net"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/core/site"
@@ -40,7 +38,6 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
-	Port int
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
@@ -109,7 +106,6 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 		},
 	}
 	srv.SetKeepAlivesEnabled(true)
-	srv.SetPort(url)
 
 	return srv
 }
@@ -117,18 +113,4 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 // Router returns the main router
 func (s *HTTPd) Router() *mux.Router {
 	return s.Handler.(*mux.Router)
-}
-
-func (s *HTTPd) SetPort(url string) {
-	_, port, err := net.SplitHostPort(url)
-	if err != nil {
-		return
-	}
-
-	portInt, err := strconv.Atoi(port)
-	if err != nil {
-		return
-	}
-
-	s.Port = portInt
 }

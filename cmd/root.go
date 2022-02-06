@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -191,15 +193,18 @@ func run(cmd *cobra.Command, args []string) {
 	httpd := server.NewHTTPd(uri, site, socketHub, cache)
 
 	// announce webserver on mDNS
-	if port := httpd.Port; port > 0 {
-		zc, err := server.AnnounceMDNS("evcc Website", "_http._tcp", "evcc", port)
-		if err != nil {
-			log.ERROR.Printf("failed to announce webserver: %s", err)
-		}
+	if _, port, err := net.SplitHostPort(uri); err == nil {
+		portInt, err := strconv.Atoi(port)
+		if err == nil {
+			zc, err := server.AnnounceMDNS("evcc Website", "_http._tcp", "evcc", portInt)
+			if err != nil {
+				log.ERROR.Printf("failed to announce webserver: %s", err)
+			}
 
-		shutdown.Register(func() {
-			zc.Shutdown()
-		})
+			shutdown.Register(func() {
+				zc.Shutdown()
+			})
+		}
 	}
 
 	// metrics
