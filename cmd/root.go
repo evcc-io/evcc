@@ -194,16 +194,12 @@ func run(cmd *cobra.Command, args []string) {
 
 	// announce webserver on mDNS
 	if _, port, err := net.SplitHostPort(uri); err == nil {
-		portInt, err := strconv.Atoi(port)
-		if err == nil {
-			zc, err := server.AnnounceMDNS("evcc Website", "_http._tcp", "evcc", portInt)
-			if err != nil {
-				log.ERROR.Printf("failed to announce webserver: %s", err)
+		if portInt, err := strconv.Atoi(port); err == nil {
+			if zc, err := server.AnnounceMDNS("evcc Website", "_http._tcp", "evcc", portInt); err == nil {
+				shutdown.Register(zc.Shutdown)
+			} else {
+				log.ERROR.Printf("failed to announce webserver on mDNS: %s", err)
 			}
-
-			shutdown.Register(func() {
-				zc.Shutdown()
-			})
 		}
 	}
 
