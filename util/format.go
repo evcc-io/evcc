@@ -1,7 +1,9 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"regexp"
 	"strings"
 	"time"
@@ -46,6 +48,18 @@ func FormatValue(format string, val interface{}) string {
 
 // ReplaceFormatted replaces all occurrences of ${key} with formatted val from the kv map
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
+	// New golang template logic
+	if strings.Contains(s, "{{") {
+		tmpl, err := template.New("evcc.tpl").Parse(s)
+		if err != nil {
+			return s, nil
+		}
+		var rs bytes.Buffer
+		err = tmpl.Execute(&rs, kv)
+		return rs.String(), err
+	}
+
+	// Deprecated regex logic
 	wanted := make([]string, 0)
 
 	for m := re.FindStringSubmatch(s); m != nil; m = re.FindStringSubmatch(s) {

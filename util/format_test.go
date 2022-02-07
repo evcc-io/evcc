@@ -69,3 +69,16 @@ func TestReplaceNoMatch(t *testing.T) {
 		t.Error(s, err)
 	}
 }
+
+func TestTemplateReplaceFormatted(t *testing.T) {
+	msg := "Wallbox {{.title}} started charging {{.vehicleTitle}} in {{.mode}} mode"
+	s, err := ReplaceFormatted(msg, map[string]interface{}{
+		"title":        "go-e",
+		"vehicleTitle": "Zoe",
+		"mode":         "pv",
+	})
+
+	if err != nil {
+		t.Error(s, err)
+	}
+}
