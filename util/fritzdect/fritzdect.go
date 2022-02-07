@@ -18,7 +18,7 @@ import (
 	"golang.org/x/text/encoding/unicode"
 )
 
-// AVM FritzBox AHA interface and authentification specifications:
+// AVM FritzBox AHA interface and authentication specifications:
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
 
