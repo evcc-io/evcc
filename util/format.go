@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Masterminds/sprig/v3"
 )
 
 var re = regexp.MustCompile(`\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
@@ -50,12 +52,10 @@ func FormatValue(format string, val interface{}) string {
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	// New golang template logic
 	if strings.Contains(s, "{{") {
-		tmpl, err := template.New("evcc.tpl").Parse(s)
-		if err != nil {
-			return s, nil
-		}
+		tpl := template.Must(
+			template.New("base").Funcs(sprig.FuncMap()).Parse(s))
 		var rs bytes.Buffer
-		err = tmpl.Execute(&rs, kv)
+		err := tpl.Execute(&rs, kv)
 		return rs.String(), err
 	}
 
