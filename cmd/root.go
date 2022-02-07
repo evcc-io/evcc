@@ -30,7 +30,7 @@ var (
 	cfgFile string
 
 	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
-	ignoreMqtt   = []string{"releaseNotes"}           // excessive size may crash certain brokers
+	ignoreMqtt   = []string{"auth", "releaseNotes"}   // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
