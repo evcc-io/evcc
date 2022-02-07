@@ -1081,6 +1081,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 	// this can happen the first time for a 1p3p-capable charger, see https://github.com/evcc-io/evcc/issues/2520
 	if phases == 0 && lp.activePhases == 0 {
+		lp.log.DEBUG.Printf("assuming initial phase state: 3p")
 		lp.phaseTimer = elapsed
 		lp.activePhases = 3
 	}
