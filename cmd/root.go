@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/grandcat/zeroconf"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -195,10 +196,10 @@ func run(cmd *cobra.Command, args []string) {
 	// announce webserver on mDNS
 	if _, port, err := net.SplitHostPort(uri); err == nil {
 		if portInt, err := strconv.Atoi(port); err == nil {
-			if zc, err := server.AnnounceMDNS("evcc Website", "_http._tcp", "evcc", portInt); err == nil {
+			if zc, err := zeroconf.RegisterProxy("evcc Website", "_http._tcp", "local.", portInt, "evcc", nil, []string{}, nil); err == nil {
 				shutdown.Register(zc.Shutdown)
 			} else {
-				log.ERROR.Printf("failed to announce webserver on mDNS: %s", err)
+				log.ERROR.Printf("mDNS announcement: %s", err)
 			}
 		}
 	}
