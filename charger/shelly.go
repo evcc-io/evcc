@@ -87,6 +87,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 			log.Redact(transport.BasicAuthHeader(user, password))
 			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 		}
+		// Shelly 1 has no meter id; if c.standypower > 0 return with error
 
 		if resp.NumMeters == 0 {
 			return c, fmt.Errorf("%s (%s) gen1 missing power meter ", resp.Model, resp.Mac)
