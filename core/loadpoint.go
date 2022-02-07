@@ -1079,8 +1079,14 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, lp.activePhases)
 	}
 
+	// this can happen the first time for a 1p3p-capable charger, see https://github.com/evcc-io/evcc/issues/2520
+	if phases == 0 && lp.activePhases == 0 {
+		lp.phaseTimer = elapsed
+		lp.activePhases = 3
+	}
+
 	var waiting bool
-	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
+	targetCurrent := powerToCurrent(availablePower, lp.activePhases)
 
 	// scale down phases
 	if targetCurrent < minCurrent && (phases == 0 || phases == 3) && lp.activePhases > 1 {
@@ -1172,13 +1178,6 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	minCurrent := lp.GetMinCurrent()
 	maxCurrent := lp.GetMaxCurrent()
 
-	// calculate target charge current from delta power and actual current
-	effectiveCurrent := lp.effectiveCurrent()
-	deltaCurrent := powerToCurrent(-sitePower, lp.activePhases)
-	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
-
-	lp.log.DEBUG.Printf("max charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.activePhases)
-
 	// switch phases up/down
 	if _, ok := lp.charger.(api.ChargePhases); ok {
 		availablePower := -sitePower + lp.chargePower
@@ -1188,6 +1187,13 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			return 0
 		}
 	}
+
+	// calculate target charge current from delta power and actual current
+	effectiveCurrent := lp.effectiveCurrent()
+	deltaCurrent := powerToCurrent(-sitePower, lp.activePhases)
+	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
+
+	lp.log.DEBUG.Printf("max charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.activePhases)
 
 	// in MinPV mode or under special conditions return at least minCurrent
 	if (mode == api.ModeMinPV || batteryBuffered || lp.climateActive()) && targetCurrent < minCurrent {
