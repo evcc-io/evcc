@@ -22,7 +22,7 @@ render: |
     jq: .FData.PGrid
   {{- end }}
   {{- if eq .usage "pv" }}
-    jq: .FData.IPV * .FData.VPV
+    jq: .FData.IBat * .FData.VBa * -1
   {{- end }}
   {{- if eq .usage "battery" }}
     jq: .FData.IBat * .FData.VBat
