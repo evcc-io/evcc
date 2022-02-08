@@ -51,13 +51,17 @@ func FormatValue(format string, val interface{}) string {
 // ReplaceFormatted replaces all occurrences of ${key} with formatted val from the kv map
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	// Enhanced golang template logic
-	if strings.Contains(s, "{{") {
-		tpl := template.Must(
-			template.New("base").Funcs(sprig.FuncMap()).Parse(s))
-		var rs bytes.Buffer
-		err := tpl.Execute(&rs, kv)
-		return rs.String(), err
+	tpl, err := template.New("base").Funcs(sprig.FuncMap()).Parse(s)
+	if err != nil {
+		return s, err
 	}
+
+	var rs bytes.Buffer
+	err = tpl.Execute(&rs, kv)
+	if err != nil {
+		return s, err
+	}
+	s = rs.String()
 
 	// Regex logic for backward compatibility
 	wanted := make([]string, 0)
@@ -79,7 +83,6 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	}
 
 	// return missing keys
-	var err error
 	if len(wanted) > 0 {
 		got := make([]string, 0)
 		for k := range kv {
