@@ -177,12 +177,14 @@ func (m *Modbus) floatGetter() (float64, error) {
 			// client := m.conn.ModbusClient()
 			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
 		} else {
-			res, err = dev.QueryPoint(
+			if res, err = dev.QueryPoint(
 				m.conn,
 				m.op.SunSpec.Model,
 				m.op.SunSpec.Block,
 				m.op.SunSpec.Point,
-			)
+			); err != nil {
+				err = fmt.Errorf("model %d block %d point %s: %w", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, err)
+			}
 		}
 	}
 
