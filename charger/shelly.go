@@ -20,6 +20,7 @@ type Shelly struct {
 	log          *util.Logger
 	uri          string
 	gen          int // Shelly api generation
+	nummeters    int // Shelly # of meters
 	channel      int
 	standbypower float64
 }
@@ -70,6 +71,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		channel:      channel,
 		standbypower: standbypower,
 		gen:          resp.Gen,
+		nummeters:    resp.NumMeters,
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -88,9 +90,8 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 		}
 		// Shelly 1 has no meter id; if c.standypower > 0 return with error
-
-		if resp.NumMeters == 0 {
-			return c, fmt.Errorf("%s (%s) gen1 missing power meter ", resp.Model, resp.Mac)
+		if c.nummeters == 0 && c.standbypower >= 0 {
+			return c, fmt.Errorf("%s (%s) gen1 missing power meter, Shelly1:standbypower<0 required ", resp.Model, resp.Mac)
 		}
 
 	case 2:
@@ -195,7 +196,14 @@ func (c *Shelly) CurrentPower() (float64, error) {
 		if err := c.GetJSON(uri, &resp); err != nil {
 			return 0, err
 		}
-
+		// Shelly1: c.meters == 0, return -standbypower as a dummypower if Enabled, else 0
+		if c.nummeters == 0 && c.standbypower < 0 {
+			on, err := c.Enabled()
+			if on {
+				return -c.standbypower, err
+			}
+			return 0, err
+		}
 		if c.channel >= len(resp.Meters) {
 			return 0, errors.New("invalid channel, missing power meter")
 		}
