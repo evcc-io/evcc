@@ -1,8 +1,11 @@
 package push
 
 import (
+	"strings"
+	"text/template"
 	"time"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -10,6 +13,11 @@ import (
 type Event struct {
 	LoadPoint *int // optional loadpoint id
 	Event     string
+}
+
+// EventTemplate is the push message template for an event
+type EventTemplate struct {
+	Title, Msg string
 }
 
 // Hub subscribes to event notifications and sends them to client devices
@@ -34,7 +42,7 @@ func (h *Hub) Add(sender Sender) {
 }
 
 // apply applies the event template to the content to produce the actual message
-func (h *Hub) apply(ev Event, template string) (string, error) {
+func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 	attr := make(map[string]interface{})
 
 	// let cache catch up, refs reverted https://github.com/evcc-io/evcc/pull/445
@@ -47,7 +55,19 @@ func (h *Hub) apply(ev Event, template string) (string, error) {
 		}
 	}
 
-	return util.ReplaceFormatted(template, attr)
+	// init golang text template
+	t, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl)
+	if err != nil {
+		return tmpl, err
+	}
+
+	// apply data attributes to template using sprig functions
+	applied := new(strings.Builder)
+	if err := t.Execute(applied, attr); err != nil {
+		return "", err
+	}
+
+	return util.ReplaceFormatted(applied.String(), attr)
 }
 
 // Run is the Hub's main publishing loop

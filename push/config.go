@@ -12,11 +12,6 @@ type Sender interface {
 	Send(title, msg string)
 }
 
-// EventTemplate is the push message template for an event
-type EventTemplate struct {
-	Title, Msg string
-}
-
 var log = util.NewLogger("push")
 
 // NewMessengerFromConfig creates a new messenger

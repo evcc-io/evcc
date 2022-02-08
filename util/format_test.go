@@ -37,8 +37,6 @@ func TestReplace(t *testing.T) {
 		{"foo", true, "${foo}", "true"},
 		{"foo", "1", "abc${foo}${foo}", "abc11"},
 		{"foo", math.Pi, "${foo:%.2f}", "3.14"},
-		// template + sprig func tests
-		{"foo", "lower2upper", "{{ .foo | upper }}", "LOWER2UPPER"},
 	}
 
 	for _, c := range cases {
