@@ -1,11 +1,8 @@
 package bluelink
 
 import (
-	"bufio"
-	_ "embed" // embedded files
 	"fmt"
 	"math/rand"
-	"strings"
 	"sync"
 	"time"
 
@@ -13,23 +10,23 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-//go:embed 693a33fa-c117-43f2-ae3b-61a02d24f417
-var kia string
-
-//go:embed 014d2225-8495-4735-812d-2616334fd15d
-var hyundai string
-
-// StampsRegistry collects stamps for a single brand
-type StampsRegistry map[string][]string
-
 const (
-	KiaAppID     = "693a33fa-c117-43f2-ae3b-61a02d24f417"
+	KiaAppID     = "e7bcd186-a5fd-410d-92cb-6876a42288bd"
 	HyundaiAppID = "014d2225-8495-4735-812d-2616334fd15d"
 )
 
+// StampsRegistry collects stamps for a single brand
+type StampsRegistry map[string]*StampCollection
+
+type StampCollection struct {
+	Stamps    []string
+	Generated time.Time
+	Frequency float64
+}
+
 var Stamps = StampsRegistry{
-	KiaAppID:     unpack(kia),
-	HyundaiAppID: unpack(hyundai),
+	KiaAppID:     nil,
+	HyundaiAppID: nil,
 }
 
 var (
@@ -44,21 +41,16 @@ var (
 )
 
 func download(log *util.Logger, id, brand string) {
-	var res []string
-	uri := fmt.Sprintf("https://raw.githubusercontent.com/neoPix/bluelinky-stamps/master/%s.json", brand)
+	var res StampCollection
+	uri := fmt.Sprintf("https://raw.githubusercontent.com/neoPix/bluelinky-stamps/master/%s-%s.v2.json", brand, id)
 
-	err := client.GetJSON(uri, &res)
-	if err != nil {
+	if err := client.GetJSON(uri, &res); err != nil {
 		log.ERROR.Println(err)
 		return
 	}
 
-	if len(res) < 100 {
-		return
-	}
-
 	mu.Lock()
-	Stamps[id] = res
+	Stamps[id] = &res
 	mu.Unlock()
 }
 
@@ -78,25 +70,17 @@ func updateStamps(log *util.Logger, id string) {
 	}()
 }
 
-func unpack(source string) (res []string) {
-	scanner := bufio.NewScanner(strings.NewReader(source))
-	for scanner.Scan() {
-		res = append(res, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		panic(err)
-	}
-	return
-}
-
 // New creates a new stamp
 func (s StampsRegistry) New(id string) string {
 	mu.Lock()
 	defer mu.Unlock()
 
-	source, ok := s[id]
-	if !ok {
+	source := s[id]
+	if source == nil {
 		panic(id)
 	}
-	return source[rand.Intn(len(source))]
+
+	position := float64(time.Since(source.Generated).Milliseconds()) / source.Frequency
+
+	return source.Stamps[int64(position+5*rand.Float64())]
 }
