@@ -89,7 +89,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 			log.Redact(transport.BasicAuthHeader(user, password))
 			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 		}
-		// Shelly 1 has no meter id; if c.standypower > 0 return with error
+		// Shelly1 has no meter id; if c.standypower > 0 return with error
 		if c.nummeters == 0 && c.standbypower >= 0 {
 			return c, fmt.Errorf("%s (%s) gen1 missing power meter, Shelly1:standbypower<0 required ", resp.Model, resp.Mac)
 		}
@@ -196,7 +196,7 @@ func (c *Shelly) CurrentPower() (float64, error) {
 		if err := c.GetJSON(uri, &resp); err != nil {
 			return 0, err
 		}
-		// Shelly1: c.meters == 0, return -standbypower as a dummypower if Enabled, else 0
+		// Shelly1: c.meters == 0, return -standbypower as dummy power if enabled, else 0
 		if c.nummeters == 0 && c.standbypower < 0 {
 			on, err := c.Enabled()
 			if on {
