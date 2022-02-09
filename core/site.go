@@ -19,7 +19,7 @@ import (
 type Updater interface {
 	Update(availablePower float64, cheapRate bool, batteryBuffered bool)
 	GetAssumedDuration() time.Duration
-	GetFinishAt() time.Time
+	GetTargetTime() time.Time
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -395,7 +395,7 @@ func (site *Site) update(lp Updater) {
 	var err error
 	if site.tariffs.Grid != nil {
 		p := NewPlanner(site.log, site.tariffs.Grid)
-		cheap, err = p.IsCheap(lp.GetAssumedDuration(), lp.GetFinishAt())
+		cheap, err = p.IsCheap(lp.GetAssumedDuration(), lp.GetTargetTime())
 		if err != nil {
 			cheap = false
 		}

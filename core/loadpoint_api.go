@@ -246,8 +246,8 @@ func (lp *LoadPoint) GetRemainingEnergy() float64 {
 	return lp.chargeRemainingEnergy
 }
 
-// GetFinishAt returns the charge finish time
-func (lp *LoadPoint) GetFinishAt() time.Time {
+// GetTargetTime returns the charge target time
+func (lp *LoadPoint) GetTargetTime() time.Time {
 	return lp.socTimer.Time
 }
 
