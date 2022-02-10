@@ -39,15 +39,11 @@ func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) 
 	// instantiate all event templates
 	for k, v := range cc {
 		var def EventTemplate
+		var err error
 
-		t, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Title)
+		def.Title, err = template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Title)
 		if err == nil {
-			def.Title = t
-
-			t, err = template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Msg)
-			if err == nil {
-				def.Msg = t
-			}
+			def.Msg, err = template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Msg)
 		}
 
 		if err != nil {
