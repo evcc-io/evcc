@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
 const (
@@ -43,9 +44,23 @@ func Types() []string {
 
 // NewFromConfig creates vehicle from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
+	cc := struct {
+		Cloud bool
+		Other map[string]interface{} `mapstructure:",remain"`
+	}{}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	if cc.Cloud {
+		cc.Other["brand"] = typ
+		typ = "cloud"
+	}
+
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
-		if v, err = factory(other); err != nil {
+		if v, err = factory(cc.Other); err != nil {
 			err = fmt.Errorf("cannot create vehicle '%s': %w", typ, err)
 		}
 	} else {
