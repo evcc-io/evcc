@@ -15,11 +15,12 @@ type Event struct {
 	Event     string
 }
 
-// EventTemplateConfig is the push message template for an event
+// EventTemplateConfig is the push message configuration for an event
 type EventTemplateConfig struct {
 	Title, Msg string
 }
 
+// EventTemplate is the push message template for an event
 type EventTemplate struct {
 	Title, Msg *template.Template
 }
