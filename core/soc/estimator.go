@@ -182,7 +182,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 
 			s.prevSoc = s.vehicleSoc
 		} else {
-			s.vehicleSoc = math.Min(*fetchedSoC+chargedEnergy/s.energyPerSocStep, 100)
+			s.vehicleSoc = math.Min(s.initialSoc+chargedEnergy/s.energyPerSocStep, 100)
 			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoC)
 		}
 	}
