@@ -13,7 +13,6 @@ type MockTariff struct {
 	api.Tariff
 	start        time.Time
 	prices       []float64
-	isCheapPrice bool
 }
 
 func (m MockTariff) Rates() ([]api.Rate, error) {
@@ -31,10 +30,6 @@ func (m MockTariff) Rates() ([]api.Rate, error) {
 	}
 
 	return res, nil
-}
-
-func (m MockTariff) IsCheap() (bool, error) {
-	return m.isCheapPrice, nil
 }
 
 func TestIsCheapSlotNow(t *testing.T) {
@@ -106,7 +101,7 @@ func TestIsCheapSlotNow(t *testing.T) {
 		p := &Planner{
 			log:    util.NewLogger("foo"),
 			clock:  clck,
-			tariff: MockTariff{prices: tc.prices, start: start, isCheapPrice: false},
+			tariff: MockTariff{prices: tc.prices, start: start},
 		}
 
 		for _, se := range tc.series {
@@ -131,17 +126,9 @@ func TestIsCheap(t *testing.T) {
 		desc    string
 		prices  []float64
 		end     time.Duration
-		isCheap bool
 		series  []se
 	}{
-		{"always cheap", []float64{5, 4, 3, 2, 1, 0, 0, 0}, 5 * time.Hour, true, []se{
-			{1, 1*dt - 1, time.Minute, true},
-			{2, 2*dt - 1, time.Minute, true},
-			{3, 3*dt - 1, time.Minute, true},
-			{4, 4*dt - 1, time.Minute, true},
-			{5, 5*dt - 1, time.Minute, true},
-		}},
-		{"always expensive", []float64{5, 4, 3, 2, 1, 0, 0, 0}, 5 * time.Hour, false, []se{
+		{"always expensive", []float64{5, 4, 3, 2, 1, 0, 0, 0}, 5 * time.Hour, []se{
 			{1, 1*dt - 1, time.Minute, false},
 			{2, 2*dt - 1, time.Minute, false},
 			{3, 3*dt - 1, time.Minute, false},
@@ -159,7 +146,7 @@ func TestIsCheap(t *testing.T) {
 		p := &Planner{
 			log:    util.NewLogger("foo"),
 			clock:  clck,
-			tariff: MockTariff{prices: tc.prices, start: start, isCheapPrice: tc.isCheap},
+			tariff: MockTariff{prices: tc.prices, start: start},
 		}
 
 		for _, se := range tc.series {

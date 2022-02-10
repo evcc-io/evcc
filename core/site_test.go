@@ -25,4 +25,5 @@ func TestSitePower(t *testing.T) {
 	}
 }
 
+// TODO add test case for cheapRate
 // TODO add test case for battery priority charging
