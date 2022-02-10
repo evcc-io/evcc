@@ -39,6 +39,7 @@ type Site struct {
 	Meters        MetersConfig // Meter references
 	PrioritySoC   float64      `mapstructure:"prioritySoC"` // prefer battery up to this SoC
 	BufferSoC     float64      `mapstructure:"bufferSoC"`   // ignore battery above this SoC
+	CheapRate     float64      `mapstructure:"cheapRate"`   // charge immediately if grid tariff below this rate
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -47,6 +48,7 @@ type Site struct {
 
 	tariffs    tariff.Tariffs // Tariff
 	loadpoints []*LoadPoint   // Loadpoints
+	planner    *Planner       // Planner
 	savings    *Savings       // Savings
 
 	// cached state
@@ -80,8 +82,13 @@ func NewSiteFromConfig(
 
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
+
 	site.tariffs = tariffs
 	site.savings = NewSavings(tariffs)
+
+	if gridTariff := site.tariffs.Grid; gridTariff != nil {
+		site.planner = NewPlanner(log, gridTariff)
+	}
 
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
@@ -392,12 +399,19 @@ func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
 	var cheap bool
-	var err error
-	if site.tariffs.Grid != nil {
-		p := NewPlanner(site.log, site.tariffs.Grid)
-		cheap, err = p.IsCheap(lp.GetAssumedDuration(), lp.GetTargetTime())
+	if gridTariff := site.tariffs.Grid; gridTariff != nil {
+		price, err := gridTariff.CurrentPrice()
+
+		if err == nil {
+			cheap = price <= site.CheapRate
+		}
+
+		if err == nil && !cheap {
+			cheap, err = site.planner.PlanActive(lp.GetAssumedDuration(), lp.GetTargetTime())
+		}
+
 		if err != nil {
-			cheap = false
+			site.log.ERROR.Println(err)
 		}
 	}
 

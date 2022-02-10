@@ -27,10 +27,6 @@ func (t *Fixed) CurrentPrice() (float64, error) {
 	return t.Price, nil
 }
 
-func (t *Fixed) IsCheap() (bool, error) {
-	return false, nil
-}
-
 func (t *Fixed) Rates() ([]api.Rate, error) {
 	ar := api.Rate{
 		Start: time.Now(),

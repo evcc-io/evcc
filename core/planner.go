@@ -33,7 +33,6 @@ type Planner struct {
 	clock       clock.Clock // mockable time
 	tariff      api.Tariff
 	mux         sync.Mutex
-	cheap       float64
 	cheapactive bool
 }
 
@@ -42,7 +41,6 @@ func NewPlanner(log *util.Logger, tariff api.Tariff) *Planner {
 	return &Planner{
 		log:    log,
 		clock:  clock,
-		cheap:  0.2, // TODO
 		tariff: tariff,
 	}
 }
@@ -144,7 +142,7 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 	return cheapactive, nil
 }
 
-func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
+func (t *Planner) PlanActive(duration time.Duration, end time.Time) (bool, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
@@ -153,19 +151,5 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 		return false, nil
 	}
 
-	cheapactive, err := t.isCheapSlotNow(duration, end)
-	if err != nil {
-		return false, err
-	}
-
-	if cheapactive {
-		return true, nil
-	}
-
-	isCheap, err := t.tariff.IsCheap()
-	if isCheap && err == nil {
-		t.log.DEBUG.Printf("low marketprice, charging")
-	}
-
-	return isCheap, err
+	return t.isCheapSlotNow(duration, end)
 }

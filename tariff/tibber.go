@@ -20,7 +20,6 @@ type Tibber struct {
 	log    *util.Logger
 	Token  string
 	HomeID string
-	Cheap  float64
 	client *graphql.Client
 	data   []tibber.PriceInfo
 }
@@ -110,11 +109,6 @@ func (t *Tibber) CurrentPrice() (float64, error) {
 		}
 	}
 	return 0, errors.New("unable to find current tibber price")
-}
-
-func (t *Tibber) IsCheap() (bool, error) {
-	price, err := t.CurrentPrice()
-	return price <= t.Cheap, err
 }
 
 func (t *Tibber) Rates() ([]api.Rate, error) {

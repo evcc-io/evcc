@@ -16,11 +16,10 @@ import (
 )
 
 type Awattar struct {
-	mux   sync.Mutex
-	log   *util.Logger
-	uri   string
-	cheap float64
-	data  []awattar.PriceInfo
+	mux  sync.Mutex
+	log  *util.Logger
+	uri  string
+	data []awattar.PriceInfo
 }
 
 var _ api.Tariff = (*Awattar)(nil)
@@ -59,9 +58,8 @@ func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 	}
 
 	t := &Awattar{
-		log:   util.NewLogger("awattar"),
-		cheap: cc.Cheap,
-		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
+		log: util.NewLogger("awattar"),
+		uri: fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
 
 	//t.data = fakeAwattar().Data
@@ -99,11 +97,6 @@ func (t *Awattar) CurrentPrice() (float64, error) {
 	}
 
 	return 0, errors.New("unable to find current awattar price")
-}
-
-func (t *Awattar) IsCheap() (bool, error) {
-	price, err := t.CurrentPrice()
-	return price <= t.cheap, err
 }
 
 func (t *Awattar) Rates() ([]api.Rate, error) {

@@ -198,7 +198,6 @@ type Rate struct {
 }
 
 type Tariff interface {
-	IsCheap() (bool, error)
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
 	Rates() ([]Rate, error)
 }
