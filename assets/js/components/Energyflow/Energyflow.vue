@@ -1,6 +1,6 @@
 <template>
 	<div class="energyflow">
-		<div class="row">
+		<div class="row cursor-pointer" @click="toggleDetails">
 			<Visualization
 				class="col-12 mb-3"
 				:gridImport="gridImport"
@@ -19,16 +19,22 @@
 			<div class="details-inner row" data-collapsible-details>
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
 					<div class="d-flex flex-nowrap">
-						<span class="color-self me-2"><fa-icon icon="square"></fa-icon></span>
+						<span class="color-self me-2"
+							><shopicon-filled-square></shopicon-filled-square
+						></span>
 						<span>{{ $t("main.energyflow.selfConsumption") }}</span>
 					</div>
 					<div v-if="gridImport > 0" class="d-flex flex-nowrap">
 						<span>{{ $t("main.energyflow.gridImport") }}</span>
-						<span class="color-grid ms-2"><fa-icon icon="square"></fa-icon></span>
+						<span class="color-grid ms-2"
+							><shopicon-filled-square></shopicon-filled-square
+						></span>
 					</div>
 					<div v-else class="d-flex flex-nowrap">
 						<span>{{ $t("main.energyflow.pvExport") }}</span>
-						<span class="color-export ms-2"><fa-icon icon="square"></fa-icon></span>
+						<span class="color-export ms-2"
+							><shopicon-filled-square></shopicon-filled-square
+						></span>
 					</div>
 				</div>
 				<div
@@ -114,6 +120,7 @@
 </template>
 
 <script>
+import "@h2d2/shopicons/es/filled/square";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
 import formatter from "../../mixins/formatter";
@@ -173,12 +180,14 @@ export default {
 		kw: function (watt) {
 			return this.fmtKw(watt, this.valuesInKw);
 		},
+		toggleDetails: function () {
+			this.$emit("toggle-details");
+		},
 	},
 };
 </script>
 <style scoped>
 .energyflow {
-	cursor: pointer;
 	background: var(--bs-white);
 }
 .details {

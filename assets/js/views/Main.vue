@@ -81,12 +81,13 @@
 
 <script>
 import Site from "../components/Site.vue";
+import store from "../store";
 
 export default {
 	name: "Main",
 	components: { Site },
 	data: function () {
-		return this.$root.$data.store; // global state
+		return store;
 	},
 	computed: {
 		configured: function () {

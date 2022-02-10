@@ -3,14 +3,14 @@
 		<div class="container">
 			<div class="d-flex justify-content-between align-items-center">
 				<h2 class="d-block my-4">
-					{{ siteTitle || "Home" }}
+					{{ siteTitle || "evcc" }}
 				</h2>
 				<div class="py-1">
 					<!--<Notifications :notifications="notifications" class="me-2" />-->
 					<TopNavigation />
 				</div>
 			</div>
-			<Energyflow v-bind="energyflow" />
+			<Energyflow v-bind="energyflow" @toggle-details="toggleDetails" />
 		</div>
 		<div
 			class="d-flex flex-column content-area"
@@ -123,12 +123,11 @@ export default {
 			};
 		},
 	},
-
 	mounted() {
 		this.updateDetailHeight();
 		window.addEventListener("resize", this.updateDetailHeight);
 	},
-	destroyed() {
+	unmounted() {
 		window.removeEventListener("resize", this.updateDetailHeight);
 	},
 	methods: {

@@ -1,6 +1,5 @@
 import Phases from "./Phases.vue";
 import i18n from "../i18n";
-import "../tooltip";
 
 export default {
   title: "Main/Phases",

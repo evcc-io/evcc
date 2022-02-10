@@ -73,7 +73,6 @@
 </template>
 
 <script>
-import "../../icons";
 import formatter from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import LabelBar from "./LabelBar.vue";

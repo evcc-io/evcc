@@ -2,24 +2,21 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap";
 import smoothscroll from "smoothscroll-polyfill";
 import "../css/app.css";
-import Vue from "vue";
+import { createApp, h } from "vue";
 import VueMeta from "vue-meta";
 import api from "./api";
 import App from "./views/App.vue";
 import router from "./router";
 import i18n from "./i18n";
-import "./tooltip";
-import store from "./store";
 
 smoothscroll.polyfill();
 
-Vue.use(VueMeta);
+//Vue.use(VueMeta);
 
-window.app = new Vue({
-  el: "#app",
-  router,
-  i18n,
-  data: { store, notifications: [] },
+const app = createApp({
+  data() {
+    return { notifications: [] };
+  },
   methods: {
     raise: function (msg) {
       console[msg.type](msg);
@@ -51,10 +48,14 @@ window.app = new Vue({
       this.raise(msg);
     },
   },
-  render: function (h) {
+  render: function () {
     return h(App, { props: { notifications: this.notifications } });
   },
 });
+
+app.use(i18n);
+app.use(router);
+window.app = app.mount("#app");
 
 window.setInterval(function () {
   api.get("health").catch(function () {

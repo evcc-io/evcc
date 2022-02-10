@@ -78,7 +78,6 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/exclamationtriangle";
-import "../icons";
 import formatter from "../mixins/formatter";
 
 export default {

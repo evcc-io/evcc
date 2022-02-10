@@ -9,6 +9,7 @@ module.exports = {
     "plugin:vue/recommended",
     "plugin:prettier/recommended",
     "prettier",
+    "plugin:storybook/recommended",
   ],
   rules: {
     "vue/require-default-prop": "off",

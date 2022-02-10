@@ -12,14 +12,9 @@ export default {
 	props: {
 		notifications: Array,
 	},
-	data: function () {
-		return {
-			store: this.$root.$data.store,
-		};
-	},
 	computed: {
 		title: function () {
-			return this.store.state.siteTitle;
+			return store.state.siteTitle;
 		},
 	},
 	created: function () {

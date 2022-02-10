@@ -1,8 +1,7 @@
 import { defineConfig } from "vite";
-import { createVuePlugin } from "vite-plugin-vue2";
+import vuePlugin from "@vitejs/plugin-vue";
 
 export default defineConfig({
-  plugins: [createVuePlugin()],
   root: "./assets",
   publicDir: "public",
   base: "./",
@@ -11,4 +10,20 @@ export default defineConfig({
     emptyOutDir: true,
     assetsInlineLimit: 1024,
   },
+  resolve: {
+    alias: {
+      vue: "@vue/compat",
+    },
+  },
+  plugins: [
+    vuePlugin({
+      template: {
+        compilerOptions: {
+          compatConfig: {
+            MODE: 2,
+          },
+        },
+      },
+    }),
+  ],
 });

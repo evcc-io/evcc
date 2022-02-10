@@ -116,7 +116,6 @@
 
 <script>
 import api from "../api";
-import "../icons";
 
 export default {
 	name: "Version",
