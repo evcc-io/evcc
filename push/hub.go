@@ -15,8 +15,8 @@ type Event struct {
 	Event     string
 }
 
-// EventTemplate is the push message template for an event
-type EventTemplate struct {
+// EventTemplateConfig is the push message template for an event
+type EventTemplateConfig struct {
 	Title, Msg string
 }
 
@@ -28,12 +28,36 @@ type Hub struct {
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(definitions map[string]EventTemplate, cache *util.Cache) *Hub {
+func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) {
+	definitions := make(map[string]EventTemplate)
+
+	// instantiate all event templates
+	for k, v := range cc {
+		var def EventTemplate
+
+		t, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Title)
+		if err == nil {
+			def.Title = t
+
+			t, err = template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Msg)
+			if err == nil {
+				def.Msg = t
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		definitions[k] = def
+	}
+
 	h := &Hub{
 		definitions: definitions,
 		cache:       cache,
 	}
-	return h
+
+	return h, nil
 }
 
 // Add adds a sender to the list of senders
@@ -42,7 +66,7 @@ func (h *Hub) Add(sender Sender) {
 }
 
 // apply applies the event template to the content to produce the actual message
-func (h *Hub) apply(ev Event, tmpl string) (string, error) {
+func (h *Hub) apply(ev Event, tmpl *template.Template) (string, error) {
 	attr := make(map[string]interface{})
 
 	// let cache catch up, refs reverted https://github.com/evcc-io/evcc/pull/445
@@ -55,15 +79,9 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 		}
 	}
 
-	// init golang text template
-	t, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl)
-	if err != nil {
-		return tmpl, err
-	}
-
 	// apply data attributes to template using sprig functions
 	applied := new(strings.Builder)
-	if err := t.Execute(applied, attr); err != nil {
+	if err := tmpl.Execute(applied, attr); err != nil {
 		return "", err
 	}
 
