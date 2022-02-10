@@ -20,6 +20,10 @@ type EventTemplateConfig struct {
 	Title, Msg string
 }
 
+type EventTemplate struct {
+	Title, Msg *template.Template
+}
+
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
 	definitions map[string]EventTemplate

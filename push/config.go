@@ -3,7 +3,6 @@ package push
 import (
 	"fmt"
 	"strings"
-	"text/template"
 
 	"github.com/evcc-io/evcc/util"
 )
@@ -11,10 +10,6 @@ import (
 // Sender implements message sending
 type Sender interface {
 	Send(title, msg string)
-}
-
-type EventTemplate struct {
-	Title, Msg *template.Template
 }
 
 var log = util.NewLogger("push")

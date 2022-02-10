@@ -174,7 +174,7 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 	notificationChan := make(chan push.Event, 1)
 	notificationHub, err := push.NewHub(conf.Events, cache)
 	if err != nil {
-		log.FATAL.Fatalf("failed configuring hems: %v", err)
+		log.FATAL.Fatalf("failed configuring push services: %v", err)
 	}
 
 	for _, service := range conf.Services {
