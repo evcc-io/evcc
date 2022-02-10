@@ -140,14 +140,15 @@ type LoadPoint struct {
 	socTimer       *soc.Timer
 
 	// cached state
-	status         api.ChargeStatus       // Charger status
-	remoteDemand   loadpoint.RemoteDemand // External status demand
-	chargePower    float64                // Charging power
-	chargeCurrents []float64              // Phase currents
-	connectedTime  time.Time              // Time when vehicle was connected
-	pvTimer        time.Time              // PV enabled/disable timer
-	phaseTimer     time.Time              // 1p3p switch timer
-	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
+	status           api.ChargeStatus       // Charger status
+	remoteDemand     loadpoint.RemoteDemand // External status demand
+	chargePower      float64                // Charging power
+	chargeCurrents   []float64              // Phase currents
+	connectedTime    time.Time              // Time when vehicle was connected
+	pvTimer          time.Time              // PV enabled/disable timer
+	phaseTimer       time.Time              // 1p3p switch timer
+	wakeUpTimer      *Timer                 // Vehicle wake-up timeout
+	wakeUpUseVehicle bool                   // Wake-up by vehicle API
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle SoC
@@ -368,6 +369,10 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.pushEvent(evChargeStart)
 
+	if lp.wakeUpUseVehicle && !lp.wakeUpTimer.Expired() {
+		// reset to use successful charger wake-up next time
+		lp.wakeUpUseVehicle = false
+	}
 	lp.wakeUpTimer.Stop()
 
 	// soc update reset
@@ -860,19 +865,30 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.unpublishVehicle()
 }
 
+// wakeUpVehicle calls the next available wake-up method
 func (lp *LoadPoint) wakeUpVehicle() {
-	// charger
-	if c, ok := lp.charger.(api.Resurrector); ok {
-		if err := c.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wake-up charger: %v", err)
+	if !lp.wakeUpUseVehicle {
+		// try the chargers explicit car wake-up method first
+		if c, ok := lp.charger.(api.Resurrector); ok {
+			if err := c.WakeUp(); err != nil {
+				lp.log.ERROR.Printf("wake-up charger: %v", err)
+			}
 		}
-		return
-	}
+		// if not available, the charger may have an automatic
+		// internal car wake-up method that is already running
+		// in the background and has to be simply waited for.
 
-	// vehicle
-	if vs, ok := lp.vehicle.(api.Resurrector); ok {
-		if err := vs.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+		// wait for vehicle wake-up again before trying the next wake-up method.
+		lp.wakeUpUseVehicle = true
+		lp.wakeUpTimer.Start()
+	} else {
+		// try vehicle remote wake-up
+		if lp.vehicle != nil {
+			if vs, ok := lp.vehicle.(api.Resurrector); ok {
+				if err := vs.WakeUp(); err != nil {
+					lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+				}
+			}
 		}
 	}
 }
