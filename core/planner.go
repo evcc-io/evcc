@@ -10,6 +10,11 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+const (
+	chargeEfficiency = 0.95
+	hysteresisDuration = 5*time.Minute
+)
+
 // RatesByPrice implements sort.Interface based on price
 type RatesByPrice []api.Rate
 
@@ -33,7 +38,6 @@ type Planner struct {
 	clock       clock.Clock // mockable time
 	tariff      api.Tariff
 	mux         sync.Mutex
-	cheapactive bool
 }
 
 func NewPlanner(log *util.Logger, tariff api.Tariff) *Planner {
@@ -58,7 +62,7 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 	}
 	last := data[len(data)-1].End
 
-	duration = time.Duration(float64(duration) * 1.05) // increase by 5%
+	duration = time.Duration(float64(duration) / chargeEfficiency)
 
 	// Save same duration until next price info update
 	if end.After(last) {
@@ -125,7 +129,7 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 				t.log.DEBUG.Printf("continue charging in last slot\n")
 				cheapactive = true
 			} else { // expensiv and not last slot, delay
-				if sum > duration+5*time.Minute {
+				if sum > duration+hysteresisDuration {
 					t.log.DEBUG.Printf("cheap timeslot, delayed for %s\n", (sum - duration).Round(time.Minute))
 					cheapactive = false
 				} else {
@@ -147,7 +151,6 @@ func (t *Planner) PlanActive(duration time.Duration, end time.Time) (bool, error
 	defer t.mux.Unlock()
 
 	if end.Before(t.clock.Now()) {
-		t.cheapactive = false
 		return false, nil
 	}
 
