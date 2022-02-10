@@ -92,9 +92,8 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		if resp.NumMeters == 0 {
 			// Shelly1 force static mode with fake power http://192.168.178.xxx/settings/power/0?power=standbypower+1
 			uri := fmt.Sprintf("%s/settings/power/%d?power=%d", c.uri, c.channel, int(math.Abs(c.standbypower)+1))
-			err := c.GetJSON(uri, &resp)
-			if err != nil {
-				return c, fmt.Errorf("%s (%s) gen1 cant set default on power ", resp.Model, resp.Mac)
+			if err := c.GetJSON(uri, &resp); err != nil {
+				return c, err
 			}
 		}
 
