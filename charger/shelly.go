@@ -88,6 +88,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 			log.Redact(transport.BasicAuthHeader(user, password))
 			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 		}
+
 		if resp.NumMeters == 0 {
 			// Shelly1 force static mode with fake power http://192.168.178.xxx/settings/power/0?power=standbypower+1
 			uri := fmt.Sprintf("%s/settings/power/%d?power=%d", c.uri, c.channel, int(math.Abs(c.standbypower)+1))
@@ -118,7 +119,6 @@ func (c *Shelly) Enabled() (bool, error) {
 	case 0, 1:
 		var resp shelly.Gen1SwitchResponse
 		uri := fmt.Sprintf("%s/relay/%d", c.uri, c.channel)
-		fmt.Printf("Get Status %s \n", uri)
 		err := c.GetJSON(uri, &resp)
 		return resp.Ison, err
 
