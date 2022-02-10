@@ -11,8 +11,8 @@ import (
 
 type MockTariff struct {
 	api.Tariff
-	start        time.Time
-	prices       []float64
+	start  time.Time
+	prices []float64
 }
 
 func (m MockTariff) Rates() ([]api.Rate, error) {
@@ -123,10 +123,10 @@ func TestIsCheap(t *testing.T) {
 	}
 	dt := time.Hour
 	tc := []struct {
-		desc    string
-		prices  []float64
-		end     time.Duration
-		series  []se
+		desc   string
+		prices []float64
+		end    time.Duration
+		series []se
 	}{
 		{"always expensive", []float64{5, 4, 3, 2, 1, 0, 0, 0}, 5 * time.Hour, []se{
 			{1, 1*dt - 1, time.Minute, false},

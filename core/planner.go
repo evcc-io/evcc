@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	chargeEfficiency = 0.95
-	hysteresisDuration = 5*time.Minute
+	chargeEfficiency   = 0.95
+	hysteresisDuration = 5 * time.Minute
 )
 
 // RatesByPrice implements sort.Interface based on price
@@ -34,10 +34,10 @@ func (a RatesByPrice) Swap(i, j int) {
 }
 
 type Planner struct {
-	log         *util.Logger
-	clock       clock.Clock // mockable time
-	tariff      api.Tariff
-	mux         sync.Mutex
+	log    *util.Logger
+	clock  clock.Clock // mockable time
+	tariff api.Tariff
+	mux    sync.Mutex
 }
 
 func NewPlanner(log *util.Logger, tariff api.Tariff) *Planner {
