@@ -60,17 +60,15 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	// timeout handler
-	to := provider.NewTimeoutHandler(provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/system/%s", topic, openwb.TimestampTopic), 1, timeout,
-	).StringGetter())
+	to := provider.NewTimeoutHandler(provider.NewMqtt(log, client, fmt.Sprintf("%s/system/%s", topic, openwb.TimestampTopic), timeout).StringGetter())
 
 	boolG := func(topic string) func() (bool, error) {
-		g := provider.NewMqtt(log, client, topic, 1, 0).BoolGetter()
+		g := provider.NewMqtt(log, client, topic, 0).BoolGetter()
 		return to.BoolGetter(g)
 	}
 
 	floatG := func(topic string) func() (float64, error) {
-		g := provider.NewMqtt(log, client, topic, 1, 0).FloatGetter()
+		g := provider.NewMqtt(log, client, topic, 0).FloatGetter()
 		return to.FloatGetter(g)
 	}
 
@@ -94,13 +92,11 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		// TODO remove after https://github.com/snaptec/openWB/issues/1757
 		currentTopic = "Lp2" + openwb.SlaveChargeCurrentTopic
 	}
-	currentS := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/set/isss/%s", topic, currentTopic),
-		1, timeout).IntSetter("current")
+	currentS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, currentTopic),
+		timeout).WithRetained().IntSetter("current")
 
-	authS := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/set/chargepoint/%d/get/%s", topic, id, openwb.RfidTopic),
-		1, timeout).StringSetter("rfid")
+	authS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/chargepoint/%d/get/%s", topic, id, openwb.RfidTopic),
+		timeout).WithRetained().StringSetter("rfid")
 
 	// meter getters
 	currentPowerG := floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargePowerTopic))
@@ -124,9 +120,8 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 
 	// heartbeat
 	go func() {
-		heartbeatS := provider.NewMqtt(log, client,
-			fmt.Sprintf("%s/set/isss/%s", topic, openwb.SlaveHeartbeatTopic),
-			1, timeout).IntSetter("heartbeat")
+		heartbeatS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, openwb.SlaveHeartbeatTopic),
+			timeout).WithRetained().IntSetter("heartbeat")
 
 		for range time.NewTicker(openwb.HeartbeatInterval).C {
 			if err := heartbeatS(1); err != nil {
@@ -144,9 +139,8 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 			// TODO remove after https://github.com/snaptec/openWB/issues/1757
 			phasesTopic += "Lp2"
 		}
-		phasesS := provider.NewMqtt(log, client,
-			fmt.Sprintf("%s/set/isss/%s", topic, phasesTopic),
-			1, timeout).IntSetter("phases")
+		phasesS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, phasesTopic),
+			timeout).WithRetained().IntSetter("phases")
 
 		phases = func(phases int) error {
 			return phasesS(int64(phases))

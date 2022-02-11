@@ -302,12 +302,16 @@ func (lp *LoadPoint) requestUpdate() {
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *LoadPoint) configureChargerType(charger api.Charger) {
+	var integrated bool
+
 	// ensure charge meter exists
 	if lp.chargeMeter == nil {
+		integrated = true
+
 		if mt, ok := charger.(api.Meter); ok {
 			lp.chargeMeter = mt
 		} else {
-			mt := &wrapper.ChargeMeter{}
+			mt := new(wrapper.ChargeMeter)
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
 			_ = lp.bus.Subscribe(evChargeStop, func() { mt.SetPower(0) })
 			lp.chargeMeter = mt
@@ -315,7 +319,9 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	}
 
 	// ensure charge rater exists
-	if rt, ok := charger.(api.ChargeRater); ok {
+	// measurement are obtained from separate charge meter if defined
+	// (https://github.com/evcc-io/evcc/issues/2469)
+	if rt, ok := charger.(api.ChargeRater); ok && integrated {
 		lp.chargeRater = rt
 	} else {
 		rt := wrapper.NewChargeRater(lp.log, lp.chargeMeter)
@@ -1073,8 +1079,15 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, lp.activePhases)
 	}
 
+	// this can happen the first time for a 1p3p-capable charger, see https://github.com/evcc-io/evcc/issues/2520
+	if phases == 0 && lp.activePhases == 0 {
+		lp.log.DEBUG.Printf("assuming initial phase state: 3p")
+		lp.phaseTimer = elapsed
+		lp.activePhases = 3
+	}
+
 	var waiting bool
-	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
+	targetCurrent := powerToCurrent(availablePower, lp.activePhases)
 
 	// scale down phases
 	if targetCurrent < minCurrent && (phases == 0 || phases == 3) && lp.activePhases > 1 {
@@ -1166,13 +1179,6 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	minCurrent := lp.GetMinCurrent()
 	maxCurrent := lp.GetMaxCurrent()
 
-	// calculate target charge current from delta power and actual current
-	effectiveCurrent := lp.effectiveCurrent()
-	deltaCurrent := powerToCurrent(-sitePower, lp.activePhases)
-	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
-
-	lp.log.DEBUG.Printf("max charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.activePhases)
-
 	// switch phases up/down
 	if _, ok := lp.charger.(api.ChargePhases); ok {
 		availablePower := -sitePower + lp.chargePower
@@ -1182,6 +1188,13 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			return 0
 		}
 	}
+
+	// calculate target charge current from delta power and actual current
+	effectiveCurrent := lp.effectiveCurrent()
+	deltaCurrent := powerToCurrent(-sitePower, lp.activePhases)
+	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
+
+	lp.log.DEBUG.Printf("max charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.activePhases)
 
 	// in MinPV mode or under special conditions return at least minCurrent
 	if (mode == api.ModeMinPV || batteryBuffered || lp.climateActive()) && targetCurrent < minCurrent {
@@ -1288,21 +1301,10 @@ func (lp *LoadPoint) updateChargePower() {
 // updateChargeCurrents uses MeterCurrent interface to count phases with current >=1A
 func (lp *LoadPoint) updateChargeCurrents() {
 	lp.chargeCurrents = nil
+
 	phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent)
 	if !ok {
-		// Guess active phases from power consumption. Assumes that chargePower has been
-		// updated before. Discussion in https://github.com/evcc-io/evcc/issues/2146 and
-		// https://github.com/evcc-io/evcc/issues/2177
-		if lp.charging() && lp.chargeCurrent > 0 {
-			phases := int(math.Ceil(lp.chargePower/Voltage/lp.chargeCurrent - 0.05))
-			if phases >= 1 && phases <= 3 {
-				lp.activePhases = phases
-				lp.log.DEBUG.Printf("detected phases: %dp (%.1fA @ %.0fW)", lp.activePhases, lp.chargeCurrent, lp.chargePower)
-				lp.publish("activePhases", lp.activePhases)
-			}
-		}
-
-		return
+		return // don't guess
 	}
 
 	i1, i2, i3, err := phaseMeter.Currents()

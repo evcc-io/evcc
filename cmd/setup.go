@@ -11,6 +11,7 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/proto/pb"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/hems"
@@ -85,10 +86,9 @@ func configureSponsorship(token string) error {
 	defer cancel()
 
 	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
-	if err == nil {
-		if res.Authorized {
-			sponsor.Subject = res.Subject
-		}
+	if err == nil && res.Authorized {
+		sponsor.Subject = res.Subject
+		sponsor.Token = token
 	}
 
 	if err != nil {
@@ -164,6 +164,7 @@ func configureEEBus(conf map[string]interface{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
 		go server.EEBusInstance.Run()
+		shutdown.Register(server.EEBusInstance.Shutdown)
 	}
 
 	return nil

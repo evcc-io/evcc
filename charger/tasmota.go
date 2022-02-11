@@ -53,11 +53,12 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 	log := util.NewLogger("tasmota")
 	c := &Tasmota{
 		Helper:       request.NewHelper(log),
-		uri:          strings.TrimRight(uri, "/"),
+		uri:          util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		user:         user,
 		password:     password,
 		standbypower: standbypower,
 	}
+
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 	return c, nil
@@ -99,14 +100,25 @@ func (c *Tasmota) MaxCurrent(current int64) error {
 
 // Status implements the api.Charger interface
 func (c *Tasmota) Status() (api.ChargeStatus, error) {
-	power, err := c.CurrentPower()
+	res := api.StatusB
 
-	switch {
-	case power > 0:
-		return api.StatusC, err
-	default:
-		return api.StatusB, err
+	// static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if on {
+			res = api.StatusC
+		}
+
+		return res, err
 	}
+
+	// standby power mode
+	power, err := c.CurrentPower()
+	if power > c.standbypower {
+		res = api.StatusC
+	}
+
+	return res, err
 }
 
 var _ api.Meter = (*Tasmota)(nil)
@@ -125,14 +137,14 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	return power, err
 }
 
-var _ api.ChargeRater = (*Tasmota)(nil)
+var _ api.MeterEnergy = (*Tasmota)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *Tasmota) ChargedEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *Tasmota) TotalEnergy() (float64, error) {
 	var resp tasmota.StatusSNSResponse
 	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
 
-	return resp.StatusSNS.Energy.Today, err
+	return resp.StatusSNS.Energy.Total, err
 }
 
 // cmdUri creates the Tasmota command web request

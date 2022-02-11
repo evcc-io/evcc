@@ -11,6 +11,6 @@ params:
 - name: standbypower
   default: 15
 render: |
-  type: tasmota
+  type: tplink
   uri: {{ .host }}
   standbypower: {{ .standbypower }}  # treat as charging above this power

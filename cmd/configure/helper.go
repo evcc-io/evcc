@@ -136,7 +136,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	// check if we need to setup an MQTT broker
 	if funk.ContainsString(templateItem.Requirements.EVCC, templates.RequirementMQTT) {
 		if c.configuration.config.MQTT == "" {
-			mqttConfig, err := c.configureMQTT()
+			mqttConfig, err := c.configureMQTT(templateItem)
 			if err != nil {
 				return err
 			}
@@ -161,8 +161,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 				return fmt.Errorf("%s: %s", c.localizedString("Requirements_EEBUS_Cert_Error", nil), err)
 			}
 
-			err = c.configureEEBus(eebusConfig)
-			if err != nil {
+			if err := c.configureEEBus(eebusConfig); err != nil {
 				return err
 			}
 
@@ -170,6 +169,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 			if err != nil {
 				return err
 			}
+
 			c.configuration.config.EEBUS = string(eebusYaml)
 			fmt.Println()
 			fmt.Println("--------------------------------------------")
@@ -209,7 +209,7 @@ func (c *CmdConfigure) askSponsortoken(required bool) error {
 	return nil
 }
 
-func (c *CmdConfigure) configureMQTT() (map[string]interface{}, error) {
+func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[string]interface{}, error) {
 	fmt.Println()
 	fmt.Println("-- MQTT Broker ----------------------------")
 
@@ -217,23 +217,27 @@ func (c *CmdConfigure) configureMQTT() (map[string]interface{}, error) {
 
 	for ok := true; ok; {
 		fmt.Println()
+		_, paramHost := templateItem.ConfigDefaults.ParamByName("host")
+		_, paramPort := templateItem.ConfigDefaults.ParamByName("port")
+		_, paramUser := templateItem.ConfigDefaults.ParamByName("user")
+		_, paramPassword := templateItem.ConfigDefaults.ParamByName("password")
 		host := c.askValue(question{
-			label:    c.localizedString("UserFriendly_Host_Name", nil),
+			label:    paramHost.Description.String(c.lang),
 			mask:     false,
 			required: true})
 
 		port := c.askValue(question{
-			label:    c.localizedString("UserFriendly_Port_Name", nil),
+			label:    paramPort.Description.String(c.lang),
 			mask:     false,
 			required: true})
 
 		user := c.askValue(question{
-			label:    c.localizedString("UserFriendly_User_Name", nil),
+			label:    paramUser.Description.String(c.lang),
 			mask:     false,
 			required: false})
 
 		password := c.askValue(question{
-			label:    c.localizedString("UserFriendly_Password_Name", nil),
+			label:    paramPassword.Description.String(c.lang),
 			mask:     true,
 			required: false})
 

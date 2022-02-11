@@ -26,6 +26,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/evcc-io/eebus v0.0.0-20211108130022-5536fd4b8fa1
 	github.com/fatih/structs v1.1.0
+	github.com/foogod/go-powerwall v0.2.0
 	github.com/go-ping/ping v0.0.0-20211130115550-779d1e919534
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/godbus/dbus/v5 v5.0.6
@@ -88,7 +89,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.9.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20220108103619-de9b2cf95ebe
+	github.com/volkszaehler/mbmd v0.0.0-20220208145932-d2d3cba909f5
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
@@ -105,3 +106,5 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
+
+replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20220205120646-e5220ad9a9a0

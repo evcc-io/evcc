@@ -106,6 +106,10 @@ func (lp *LoadPoint) GetPhases() int {
 
 // SetPhases sets loadpoint enabled phases
 func (lp *LoadPoint) SetPhases(phases int) error {
+	if _, ok := lp.charger.(api.ChargePhases); !ok {
+		lp.setPhases(phases)
+		return nil
+	}
 	return lp.scalePhases(phases)
 }
 

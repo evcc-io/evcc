@@ -2,18 +2,23 @@ package cmd
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
+	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/grandcat/zeroconf"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -25,7 +30,7 @@ var (
 	cfgFile string
 
 	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
-	ignoreMqtt   = []string{"releaseNotes"}           // excessive size may crash certain brokers
+	ignoreMqtt   = []string{"auth", "releaseNotes"}   // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -188,6 +193,17 @@ func run(cmd *cobra.Command, args []string) {
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, site, socketHub, cache)
 
+	// announce webserver on mDNS
+	if _, port, err := net.SplitHostPort(uri); err == nil {
+		if portInt, err := strconv.Atoi(port); err == nil {
+			if zc, err := zeroconf.RegisterProxy("evcc Website", "_http._tcp", "local.", portInt, "evcc", nil, []string{}, nil); err == nil {
+				shutdown.Register(zc.Shutdown)
+			} else {
+				log.ERROR.Printf("mDNS announcement: %s", err)
+			}
+		}
+	}
+
 	// metrics
 	if viper.GetBool("metrics") {
 		httpd.Router().Handle("/metrics", promhttp.Handler())
@@ -233,15 +249,16 @@ func run(cmd *cobra.Command, args []string) {
 	site.Prepare(valueChan, pushChan)
 
 	stopC := make(chan struct{})
-	exitC := make(chan struct{})
+	go shutdown.Run(stopC)
 
+	siteC := make(chan struct{})
 	go func() {
 		site.Run(stopC, conf.Interval)
-		close(exitC)
+		close(siteC)
 	}()
 
 	// uds health check listener
-	go server.HealthListener(site, exitC)
+	go server.HealthListener(site, siteC)
 
 	// catch signals
 	go func() {
@@ -250,6 +267,15 @@ func run(cmd *cobra.Command, args []string) {
 
 		<-signalC    // wait for signal
 		close(stopC) // signal loop to end
+
+		exitC := make(chan struct{})
+		wg := new(sync.WaitGroup)
+		wg.Add(2)
+
+		// wait for main loop and shutdown functions to finish
+		go func() { <-shutdown.Done(conf.Interval); wg.Done() }()
+		go func() { <-siteC; wg.Done() }()
+		go func() { wg.Wait(); close(exitC) }()
 
 		select {
 		case <-exitC: // wait for loop to end
