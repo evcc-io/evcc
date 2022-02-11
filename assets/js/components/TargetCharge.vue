@@ -13,117 +13,129 @@
 				<shopicon-filled-plus size="s"></shopicon-filled-plus>
 			</button>
 		</div>
-		<div
-			v-if="targetChargeEnabled"
-			class="d-flex justify-content-between justify-content-center"
-		>
-			<p class="my-2">{{ targetTime }}</p>
+		<div v-if="targetChargeEnabled">
+			<p class="my-2">
+				{{ targetTime }}
+				<button
+					class="btn btn-link text-gray-medium p-0"
+					data-bs-toggle="modal"
+					:data-bs-target="`#${modalId}`"
+				>
+					ändern
+				</button>
+			</p>
+		</div>
+		<p v-else class="my-2">
 			<button
-				class="btn btn-link text-gray-medium p-0"
+				class="btn btn-link text-white px-0"
 				data-bs-toggle="modal"
 				:data-bs-target="`#${modalId}`"
 			>
-				<shopicon-filled-edit size="s"></shopicon-filled-edit>
+				{{ $t("main.targetCharge.setTargetTime") }}
 			</button>
-		</div>
-		<p v-else class="my-2">{{ $t("main.targetCharge.noTargetTime") }}</p>
-		<div
-			:id="modalId"
-			class="modal fade text-dark"
-			data-bs-backdrop="false"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-		>
-			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">
-							{{ $t("main.targetCharge.modalTitle") }}
-						</h5>
-						<button
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
-					</div>
-					<form @submit.prevent="setTargetTime">
-						<div class="modal-body">
-							<div class="form-group">
-								<!-- eslint-disable vue/no-v-html -->
-								<label
-									for="targetTimeLabel"
-									class="mb-3"
-									v-html="$t('main.targetCharge.description', { targetSoC })"
-								>
-								</label>
-								<!-- eslint-enable vue/no-v-html -->
-								<div
-									class="d-flex justify-content-between"
-									:style="{ 'max-width': '350px' }"
-								>
-									<select
-										v-model="selectedDay"
-										class="form-select me-2"
-										:style="{ 'flex-basis': '60%' }"
-									>
-										<option
-											v-for="opt in dayOptions()"
-											:key="opt.value"
-											:value="opt.value"
-										>
-											{{ opt.name }}
-										</option>
-									</select>
-									<input
-										v-model="selectedTime"
-										type="time"
-										class="form-control ms-2"
-										:style="{ 'flex-basis': '40%' }"
-										:step="60 * 5"
-										required
-									/>
-								</div>
-							</div>
-							<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
-								{{ $t("main.targetCharge.targetIsInThePast") }}
-							</p>
-							<p class="small mt-3 text-muted">
-								<strong class="text-primary">
-									<fa-icon icon="flask"></fa-icon>
-									{{ $t("main.targetCharge.experimentalLabel") }}:
-								</strong>
-								{{ $t("main.targetCharge.experimentalText") }}
-								<a
-									href="https://github.com/evcc-io/evcc/discussions/1433"
-									target="_blank"
-									>GitHub Discussions</a
-								>.
-							</p>
-						</div>
-						<div class="modal-footer d-flex justify-content-between">
+		</p>
+
+		<Teleport to="body">
+			<div
+				:id="modalId"
+				class="modal fade text-dark"
+				data-bs-backdrop="true"
+				tabindex="-1"
+				role="dialog"
+				aria-hidden="true"
+			>
+				<div
+					class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+					role="document"
+				>
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">
+								{{ $t("main.targetCharge.modalTitle") }}
+							</h5>
 							<button
 								type="button"
-								class="btn btn-outline-secondary"
+								class="btn-close"
 								data-bs-dismiss="modal"
-								@click="removeTargetTime"
-							>
-								{{ $t("main.targetCharge.remove") }}
-							</button>
-							<button
-								type="submit"
-								class="btn btn-primary"
-								data-bs-dismiss="modal"
-								:disabled="!selectedTargetTimeValid"
-							>
-								{{ $t("main.targetCharge.activate") }}
-							</button>
+								aria-label="Close"
+							></button>
 						</div>
-					</form>
+						<form @submit.prevent="setTargetTime">
+							<div class="modal-body">
+								<div class="form-group">
+									<!-- eslint-disable vue/no-v-html -->
+									<label
+										for="targetTimeLabel"
+										class="mb-3"
+										v-html="$t('main.targetCharge.description', { targetSoC })"
+									>
+									</label>
+									<!-- eslint-enable vue/no-v-html -->
+									<div
+										class="d-flex justify-content-between"
+										:style="{ 'max-width': '350px' }"
+									>
+										<select
+											v-model="selectedDay"
+											class="form-select me-2"
+											:style="{ 'flex-basis': '60%' }"
+										>
+											<option
+												v-for="opt in dayOptions()"
+												:key="opt.value"
+												:value="opt.value"
+											>
+												{{ opt.name }}
+											</option>
+										</select>
+										<input
+											v-model="selectedTime"
+											type="time"
+											class="form-control ms-2"
+											:style="{ 'flex-basis': '40%' }"
+											:step="60 * 5"
+											required
+										/>
+									</div>
+								</div>
+								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
+									{{ $t("main.targetCharge.targetIsInThePast") }}
+								</p>
+								<p class="small mt-3 text-muted">
+									<strong class="text-evcc">
+										{{ $t("main.targetCharge.experimentalLabel") }}:
+									</strong>
+									{{ $t("main.targetCharge.experimentalText") }}
+									<a
+										href="https://github.com/evcc-io/evcc/discussions/1433"
+										target="_blank"
+										>GitHub Discussions</a
+									>.
+								</p>
+							</div>
+							<div class="modal-footer d-flex justify-content-between">
+								<button
+									type="button"
+									class="btn btn-outline-secondary"
+									data-bs-dismiss="modal"
+									@click="removeTargetTime"
+								>
+									{{ $t("main.targetCharge.remove") }}
+								</button>
+								<button
+									type="submit"
+									class="btn btn-primary"
+									data-bs-dismiss="modal"
+									:disabled="!selectedTargetTimeValid"
+								>
+									{{ $t("main.targetCharge.activate") }}
+								</button>
+							</div>
+						</form>
+					</div>
 				</div>
 			</div>
-		</div>
+		</Teleport>
 	</div>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-	<div v-if="sponsor">
+	<div v-if="sponsor || true">
 		<p class="mb-3">
 			{{ $t("footer.sponsor.thanks", { sponsor }) }}
 		</p>
@@ -9,7 +9,7 @@
 				class="btn btn-primary mb-2 confetti-button bg-evcc"
 				@click="surprise"
 			>
-				<fa-icon :icon="['fas', 'heart']" class="icon me-1 solid"></fa-icon>
+				<shopicon-filled-heart class="me-1 d-inline-block"></shopicon-filled-heart>
 				{{ $t("footer.sponsor.confetti") }}
 			</button>
 			<a href="https://evcc.io/sticker" target="_blank" class="small text-muted text-center">
@@ -27,7 +27,7 @@
 				href="https://github.com/sponsors/andig"
 				class="btn btn-outline-primary mb-2"
 			>
-				<fa-icon :icon="['far', 'heart']" class="icon me-1"></fa-icon>
+				<shopicon-regular-heart class="me-1 d-inline-block"></shopicon-regular-heart>
 				{{ $t("footer.sponsor.becomeSponsor") }}
 			</a>
 			<div class="small text-muted text-center">
@@ -39,6 +39,8 @@
 
 <script>
 import confetti from "canvas-confetti";
+import "@h2d2/shopicons/es/regular/heart";
+import "@h2d2/shopicons/es/filled/heart";
 
 export default {
 	name: "Sponsor",

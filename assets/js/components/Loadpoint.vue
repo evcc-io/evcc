@@ -164,7 +164,7 @@ export default {
 	mounted() {
 		this.tickerHandler = setInterval(this.tick, 1000);
 	},
-	destroyed() {
+	unmounted() {
 		clearInterval(this.tickerHandler);
 	},
 	methods: {

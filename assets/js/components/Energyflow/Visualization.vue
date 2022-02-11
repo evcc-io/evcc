@@ -133,7 +133,7 @@ export default {
 			this.updateElementWidth();
 		});
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		window.removeEventListener("resize", this.updateElementWidth);
 	},
 	methods: {

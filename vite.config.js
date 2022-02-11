@@ -10,18 +10,18 @@ export default defineConfig({
     emptyOutDir: true,
     assetsInlineLimit: 1024,
   },
-  resolve: {
-    alias: {
-      vue: "@vue/compat",
+  server: {
+    port: 7071,
+    proxy: {
+      "/api": "http://localhost:7070",
+      "/ws": { target: "ws://localhost:7070", ws: true },
     },
   },
   plugins: [
     vuePlugin({
       template: {
         compilerOptions: {
-          compatConfig: {
-            MODE: 2,
-          },
+          isCustomElement: (tag) => tag.startsWith("shopicon-"),
         },
       },
     }),

@@ -32,7 +32,7 @@ export default {
       modalExplainationFeedIn: "Einspeisung {feedInPrice}",
       modalServerStart: "Seit Serverstart {since}.",
       modalNoData: "noch nicht geladen",
-      experimentalLabel: "experimentell",
+      experimentalLabel: "Experimentell",
       experimentalText: "Unplausible Werte? Fragen zur Ansicht? Meld dich gerne in den",
     },
     sponsor: {
@@ -112,13 +112,14 @@ export default {
       inactiveLabel: "Zielzeit",
       activeLabel: "bis {time} Uhr",
       modalTitle: "Zielzeit festlegen",
+      setTargetTime: "Zielzeit festlagen",
       description: "Wann soll das Fahrzeug auf <strong>{targetSoC}%</strong> geladen sein?",
       today: "heute",
       tomorrow: "morgen",
       targetIsInThePast: "Zeitpunkt liegt in der Vergangenheit.",
       remove: "Keine Zielzeit",
       activate: "Zielzeit aktivieren",
-      experimentalLabel: "experimentell",
+      experimentalLabel: "Experimentell",
       experimentalText: `
         Diese Funktion ist in einem frühen Stadium. Der Algorithmus ist noch
         nicht perfekt. Die Zielzeit wird aktuell nicht persistiert - das

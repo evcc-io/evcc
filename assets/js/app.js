@@ -3,15 +3,13 @@ import "bootstrap";
 import smoothscroll from "smoothscroll-polyfill";
 import "../css/app.css";
 import { createApp, h } from "vue";
-import VueMeta from "vue-meta";
+import { createMetaManager } from "vue-meta";
 import api from "./api";
 import App from "./views/App.vue";
 import router from "./router";
 import i18n from "./i18n";
 
 smoothscroll.polyfill();
-
-//Vue.use(VueMeta);
 
 const app = createApp({
   data() {
@@ -49,12 +47,13 @@ const app = createApp({
     },
   },
   render: function () {
-    return h(App, { props: { notifications: this.notifications } });
+    return h(App);
   },
 });
 
 app.use(i18n);
 app.use(router);
+app.use(createMetaManager());
 window.app = app.mount("#app");
 
 window.setInterval(function () {

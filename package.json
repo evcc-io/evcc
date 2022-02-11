@@ -7,7 +7,7 @@
     "test": "jest",
     "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "build-storybook": "build-storybook",
-    "dev": "vite build --watch",
+    "dev": "vite",
     "storybook": "start-storybook -p 6006 -s assets,node_modules/bootstrap/dist"
   },
   "main": "index.js",
@@ -21,8 +21,8 @@
     "smoothscroll-polyfill": "^0.4.4",
     "vue": "^3.2.29",
     "vue-hot-reload-api": "^2.3.4",
-    "vue-i18n": "^9.2.0-beta.30",
-    "vue-meta": "^2.4.0",
+    "vue-i18n": "^9.1.9",
+    "vue-meta": "^3.0.0-alpha.2",
     "vue-router": "^4.0.12"
   },
   "devDependencies": {

@@ -101,7 +101,7 @@ export default {
 			this.$forceUpdate();
 		}, 10 * 1000);
 	},
-	destroyed: function () {
+	unmounted: function () {
 		clearTimeout(this.interval);
 	},
 	methods: {

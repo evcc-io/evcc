@@ -32,7 +32,7 @@ export default {
       modalExplainationFeedIn: "feed-in rate {feedInPrice}",
       modalServerStart: "since server start {since}.",
       modalNoData: "nothing charged yet",
-      experimentalLabel: "experimental",
+      experimentalLabel: "Experimental",
       experimentalText: "Implausible values? Questions about this view? Feel free to join our ",
     },
     sponsor: {
@@ -98,7 +98,7 @@ export default {
       targetIsInThePast: "The chosen time is in the past.",
       remove: "Remove",
       activate: "Activate",
-      experimentalLabel: "experimental",
+      experimentalLabel: "Experimental",
       experimentalText: `
         This function is at an early stage.
         The algorithm is not perfect yet.

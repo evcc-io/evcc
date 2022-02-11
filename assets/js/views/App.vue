@@ -1,6 +1,6 @@
 <template>
 	<div class="app overflow-hidden">
-		<router-view class="flex-grow-1 d-flex flex-column justify-content-stretch"></router-view>
+		<router-view></router-view>
 	</div>
 </template>
 

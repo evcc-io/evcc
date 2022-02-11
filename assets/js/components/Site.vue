@@ -82,6 +82,12 @@ export default {
 		return {
 			detailsVisible: false,
 			detailsHeight: 0,
+			availableVersion: null,
+			releaseNotes: null,
+			hasUpdater: null,
+			uploadMessage: null,
+			uploadProgress: null,
+			sponsor: null,
 		};
 	},
 	computed: {

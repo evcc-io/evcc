@@ -119,3 +119,9 @@ a {
 .v-popper__inner {
 	margin: 0 12px !important;
 }
+
+.small,
+small {
+	font-size: var(--bs-body-font-size);
+	color: var(--bs-gray-medium) !important;
+}
