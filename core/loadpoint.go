@@ -1301,21 +1301,10 @@ func (lp *LoadPoint) updateChargePower() {
 // updateChargeCurrents uses MeterCurrent interface to count phases with current >=1A
 func (lp *LoadPoint) updateChargeCurrents() {
 	lp.chargeCurrents = nil
+
 	phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent)
 	if !ok {
-		// Guess active phases from power consumption. Assumes that chargePower has been
-		// updated before. Discussion in https://github.com/evcc-io/evcc/issues/2146 and
-		// https://github.com/evcc-io/evcc/issues/2177
-		if lp.charging() && lp.chargeCurrent > 0 {
-			phases := int(math.Ceil(lp.chargePower/Voltage/lp.chargeCurrent - 0.05))
-			if phases >= 1 && phases <= 3 {
-				lp.activePhases = phases
-				lp.log.DEBUG.Printf("detected phases: %dp (%.1fA @ %.0fW)", lp.activePhases, lp.chargeCurrent, lp.chargePower)
-				lp.publish("activePhases", lp.activePhases)
-			}
-		}
-
-		return
+		return // don't guess
 	}
 
 	i1, i2, i3, err := phaseMeter.Currents()
