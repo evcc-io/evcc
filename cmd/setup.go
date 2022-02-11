@@ -86,10 +86,9 @@ func configureSponsorship(token string) error {
 	defer cancel()
 
 	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
-	if err == nil {
-		if res.Authorized {
-			sponsor.Subject = res.Subject
-		}
+	if err == nil && res.Authorized {
+		sponsor.Subject = res.Subject
+		sponsor.Token = token
 	}
 
 	if err != nil {
