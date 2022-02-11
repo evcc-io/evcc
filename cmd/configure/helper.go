@@ -542,6 +542,7 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 
 	if param.ValueType == templates.ParamValueTypeBool && value == "true" {
 		if err := c.processParamRequirements(param); err != nil {
+			return "false"
 		}
 	}
 
