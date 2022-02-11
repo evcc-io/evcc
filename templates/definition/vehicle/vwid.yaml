@@ -10,7 +10,9 @@ params:
   example: WVWZZZ...
 - name: capacity
   default: 50
+- preset: vehiclecloud
 render: |
   type: id
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

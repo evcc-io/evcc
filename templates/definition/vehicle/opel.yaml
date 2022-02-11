@@ -8,7 +8,9 @@ params:
   example: WP0...
 - name: capacity
   default: 50
+- preset: vehiclecloud
 render: |
   type: opel
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

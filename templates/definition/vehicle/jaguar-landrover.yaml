@@ -8,8 +8,10 @@ params:
 - name: vin
   example: W...
 - name: capacity
+- preset: vehiclecloud
   default: 60
 render: |
   type: jaguar
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

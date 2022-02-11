@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/thoas/go-funk"
+	stripmd "github.com/writeas/go-strip-markdown"
 )
 
 // surveyAskOne asks the user for input
@@ -127,7 +128,11 @@ func (c *CmdConfigure) askValue(q question) string {
 	if q.valueType == templates.ParamValueTypeBool {
 		label := q.label
 		if q.help != "" {
-			label = q.help
+			helpDescription := stripmd.Strip(q.help)
+			fmt.Println("-------------------------------------------------")
+			fmt.Println(c.localizedString("Value_Help", nil))
+			fmt.Println(helpDescription)
+			fmt.Println("-------------------------------------------------")
 		}
 
 		return c.askBoolValue(label)

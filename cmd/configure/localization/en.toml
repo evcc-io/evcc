@@ -75,6 +75,7 @@ Requirements_More = "Additional information:"
 
 Requirements_Sponsorship_Title = "This device requires an evcc sponsorship. Check the following link for what this is and how it works: https://docs.evcc.io/docs/sponsorship"
 Requirements_Sponsorship_Optional_Title = "The development of evcc can be supported via sponsoring. Check the following link for what this is and how it works: https://docs.evcc.io/docs/sponsorship"
+Requirements_Sponsorship_Feature_Title = "To use this feature a evcc sponsorship is required. Check the following link for what this is and how it works: https://docs.evcc.io/docs/sponsorship"
 Requirements_Sponsorship_Token = "Are you already a sponsor?"
 Requirements_Sponsorship_Token_Input = "Please enter the sponsortoken"
 
@@ -90,6 +91,7 @@ Config_No = "No"
 Cancel = "The configuration was cancelled.\n\nIf this guided configuration process doesn't work for you yet, please try the manual configuration. You can find more details about that on our website: https://docs.evcc.io/docs/\n"
 InputError = "An input error occurred:"
 
+Value_Help = "Help:"
 Value_Required = "required"
 Value_Optional = "optional"
 Value_Sample = "Example"

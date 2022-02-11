@@ -6,7 +6,9 @@ params:
 - preset: vehicleidentify
 - name: capacity
   default: 64
+- preset: vehiclecloud
 render: |
   type: hyundai
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

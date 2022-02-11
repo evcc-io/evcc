@@ -8,7 +8,9 @@ params:
 - base: vehicleidentify
 - name: capacity
   default: 17.6
+- preset: vehiclecloud
 render: |
   type: smart
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

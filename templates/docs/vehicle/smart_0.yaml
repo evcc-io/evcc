@@ -7,4 +7,5 @@ render:
     type: template
     template: smart
     : # Optional 
-    capacity: 17.6  # Akku-Kapazität in kWh  # Optional
+    capacity: 17.6  # Akku-Kapazität in kWh  # Optional 
+    cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,...  # Optional
