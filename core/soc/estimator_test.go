@@ -62,11 +62,11 @@ func TestSoCEstimation(t *testing.T) {
 		{2000, 40.0, 40.0, 10000},
 		{6000, 80.0, 80.0, 10000},
 		{0, 25.0, 25.0, 10000},
-		{2500, 25.0, 45.0, 10000},
+		{2500, 25.0, 50.0, 10000},
 		{0, 50.0, 50.0, 10000}, // -10000
-		{4990, 50.0, 69.9, 10000},
-		{8000, 50.0, 100.0, 10000},
-		{8001, 50.0, 100.0, 10000},
+		{4990, 50.0, 99.9, 10000},
+		{5000, 50.0, 100.0, 10000},
+		{5001, 50.0, 100.0, 10000},
 		{0, 20.0, 20.0, 10000},
 		{1000, 30.0, 30.0, 10000},
 	}
@@ -160,12 +160,12 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 		{5500, 75.0, 75.0, 10000, true, api.ErrNotAvailable, nil},
 		{6000, 80.0, 80.0, 10000, true, api.ErrNotAvailable, nil},
 		{0, 25.0, 25.0, 10000, true, api.ErrNotAvailable, nil},
-		{2500, 25.0, 45.0, 10000, true, api.ErrNotAvailable, nil},
+		{2500, 25.0, 50.0, 10000, true, api.ErrNotAvailable, nil},
 		{0, 50.0, 50.0, 10000, true, api.ErrNotAvailable, nil}, // -10000
-		{4990, 50.0, 69.9, 10000, true, api.ErrNotAvailable, nil},
-		{8000, 50.0, 100.0, 10000, true, api.ErrNotAvailable, nil},
+		{4990, 50.0, 99.9, 10000, true, api.ErrNotAvailable, nil},
+		{5000, 50.0, 100.0, 10000, true, api.ErrNotAvailable, nil},
 		// back to SoC from charger
-		{8001, 50.0, 100.0, 10000, false, nil, nil},
+		{5001, 50.0, 100.0, 10000, false, nil, nil},
 		{0, 20.0, 20.0, 10000, false, nil, nil},
 		{1000, 30.0, 30.0, 10000, false, nil, nil},
 	}
