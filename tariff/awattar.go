@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"math/rand"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/awattar"
 	"github.com/evcc-io/evcc/util"
@@ -23,27 +21,6 @@ type Awattar struct {
 }
 
 var _ api.Tariff = (*Awattar)(nil)
-
-func fakeAwattar() awattar.Prices {
-	start := time.Now()
-	start = start.Add(-2 * time.Minute)
-
-	f := new(awattar.Prices)
-
-	for i := 0; i < 20; i++ {
-		p := new(awattar.PriceInfo)
-		p.StartTimestamp = start
-		start = start.Add(1 * time.Minute)
-		p.EndTimestamp = start
-		p.Marketprice = float64(100 + rand.Intn(40))
-		p.Unit = "Eur/MWh"
-		f.Data = append(f.Data, *p)
-	}
-
-	return *f
-}
-
-var _ = fakeAwattar
 
 func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 	cc := struct {
@@ -62,7 +39,6 @@ func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 		uri: fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
 
-	//t.data = fakeAwattar().Data
 	go t.Run()
 
 	return t, nil
