@@ -82,29 +82,17 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 			pi.Start = t.clock.Now()
 		}
 
-		if pi.End.Before(t.clock.Now()) { // old data
-			continue
-		}
-
-		if !(pi.Start.Before(end)) { // charge should ends before
-			continue
-		}
-
-		// timeslot already started
-		pstart := pi.Start
-		if pstart.Before(t.clock.Now()) {
-			pstart = t.clock.Now()
-		}
-
 		// timeslot ends after charge finish time
-		pend := pi.End
-		if pend.After(end) {
-			pend = end
+		if pi.End.After(end) {
+			pi.End = end
+		}
+
+		if !(pi.Start.Before(end)) || pi.End.Before(t.clock.Now()) { // charge should ends before || old data
+			continue
 		}
 
 		cntExpectedSlots++
-		delta := pend.Sub(pstart)
-		sum += delta
+		sum += pi.End.Sub(pi.Start)
 		t.log.TRACE.Printf("  Slot from: %v to %v price %f, timesum %s",
 			pi.Start.Round(time.Second), pi.End.Round(time.Second),
 			pi.Price, sum)

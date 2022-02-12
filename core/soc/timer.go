@@ -63,9 +63,7 @@ func (lp *Timer) RemainingDuration() time.Duration {
 		power *= lp.current / lp.GetMaxCurrent()
 	}
 
-	remainingDuration := se.RemainingChargeDuration(power, lp.SoC)
-
-	return remainingDuration
+	return se.RemainingChargeDuration(power, lp.SoC)
 }
 
 // Stop stops the target charging request
