@@ -53,7 +53,7 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 	cheapSlotNow := false
 	cntExpectedSlots := 0
 	curSlotNr := 0
-	var pi api.Rate
+	var pData api.Rate
 	var sum time.Duration
 
 	data, err := t.tariff.Rates()
@@ -76,29 +76,29 @@ func (t *Planner) isCheapSlotNow(duration time.Duration, end time.Time) (bool, e
 	sort.Sort(RatesByPrice(data))
 
 	for i := 0; i < len(data); i++ {
-		pi = data[i]
+		pData = data[i]
 
-		if pi.Start.Before(t.clock.Now()) && pi.End.After(t.clock.Now()) { // current slot
-			pi.Start = t.clock.Now()
+		if pData.Start.Before(t.clock.Now()) && pData.End.After(t.clock.Now()) { // current slot
+			pData.Start = t.clock.Now()
 		}
 
 		// timeslot ends after charge finish time
-		if pi.End.After(end) {
-			pi.End = end
+		if pData.End.After(end) {
+			pData.End = end
 		}
 
-		if !(pi.Start.Before(end)) || pi.End.Before(t.clock.Now()) { // charge should ends before || old data
+		if !(pData.Start.Before(end)) || pData.End.Before(t.clock.Now()) { // charge should ends before || old data
 			continue
 		}
 
 		cntExpectedSlots++
-		sum += pi.End.Sub(pi.Start)
+		sum += pData.End.Sub(pData.Start)
 		t.log.TRACE.Printf("  Slot from: %v to %v price %f, timesum %s",
-			pi.Start.Round(time.Second), pi.End.Round(time.Second),
-			pi.Price, sum)
+			pData.Start.Round(time.Second), pData.End.Round(time.Second),
+			pData.Price, sum)
 
 		// current timeslot is a cheap one
-		if !pi.Start.After(t.clock.Now()) && pi.End.After(t.clock.Now()) && duration > 0 {
+		if !pData.Start.After(t.clock.Now()) && pData.End.After(t.clock.Now()) && duration > 0 {
 			cheapSlotNow = true
 			curSlotNr = cntExpectedSlots
 			t.log.TRACE.Printf(" (now, slot number %v)", curSlotNr)
