@@ -90,7 +90,7 @@ export default {
     },
     targetCharge: {
       inactiveLabel: "Target time",
-      activeLabel: "until {time}",
+      activeLabel: "{time}",
       modalTitle: "Set Target Time",
       description: "When should the vehicle be charged to <strong>{targetSoC}%</strong>?",
       today: "today",

@@ -1,9 +1,11 @@
 <template>
 	<div>
 		<div class="mb-2 label">{{ label }}</div>
-		<h3 class="value">
-			{{ value }}<span v-if="extraValue" class="extraValue"> / {{ extraValue }}</span>
-		</h3>
+		<slot>
+			<h3 class="value mb-4">
+				{{ value }}<span v-if="extraValue" class="extraValue"> / {{ extraValue }}</span>
+			</h3>
+		</slot>
 	</div>
 </template>
 

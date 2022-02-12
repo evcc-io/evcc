@@ -1,39 +1,16 @@
 <template>
 	<div>
-		<div class="d-flex justify-content-between justify-content-center">
-			<h5 class="title text-gray-medium text-uppercase">
-				{{ $t("main.targetCharge.title") }}
-			</h5>
+		<LabelAndValue class="flex-grow-1" :label="$t('main.targetCharge.title')">
 			<button
-				v-if="!targetChargeEnabled"
-				class="btn btn-link text-gray-medium p-0"
+				class="btn btn-link p-0 value mb-4"
+				:class="targetChargeEnabled ? 'text-white' : 'text-gray'"
 				data-bs-toggle="modal"
 				:data-bs-target="`#${modalId}`"
 			>
-				<shopicon-filled-plus size="s"></shopicon-filled-plus>
+				<strong v-if="targetChargeEnabled">{{ targetTimeLabel() }}</strong>
+				<span v-else>{{ $t("main.targetCharge.setTargetTime") }}</span>
 			</button>
-		</div>
-		<div v-if="targetChargeEnabled">
-			<p class="my-2">
-				{{ targetTime }}
-				<button
-					class="btn btn-link text-gray-medium p-0"
-					data-bs-toggle="modal"
-					:data-bs-target="`#${modalId}`"
-				>
-					ändern
-				</button>
-			</p>
-		</div>
-		<p v-else class="my-2">
-			<button
-				class="btn btn-link text-white px-0"
-				data-bs-toggle="modal"
-				:data-bs-target="`#${modalId}`"
-			>
-				{{ $t("main.targetCharge.setTargetTime") }}
-			</button>
-		</p>
+		</LabelAndValue>
 
 		<Teleport to="body">
 			<div
@@ -142,6 +119,7 @@
 <script>
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
+import LabelAndValue from "./LabelAndValue.vue";
 
 import formatter from "../mixins/formatter";
 
@@ -149,6 +127,7 @@ const DEFAULT_TARGET_HOUR = 7;
 
 export default {
 	name: "TargetCharge",
+	components: { LabelAndValue },
 	mixins: [formatter],
 	props: {
 		id: Number,
@@ -176,6 +155,12 @@ export default {
 		},
 	},
 	watch: {
+		targetTimeLabel: function () {
+			const targetDate = new Date(this.targetTime);
+			return this.$t("main.targetCharge.activeLabel", {
+				time: this.fmtAbsoluteDate(targetDate),
+			});
+		},
 		targetTime() {
 			this.initInputFields();
 		},
@@ -255,7 +240,12 @@ export default {
 </script>
 
 <style scoped>
-.title {
-	font-size: 14px;
+.value {
+	font-size: 18px;
+	line-height: 1.2;
+	border: none;
+}
+.value:hover {
+	color: var(--bs-color-white);
 }
 </style>

@@ -16,25 +16,25 @@
 			@target-time-removed="removeTargetTime"
 		/>
 		<VehicleSoc v-bind="vehicleSocProps" class="mb-4" @target-soc-updated="targetSocUpdated" />
-		<div class="d-flex">
+		<div class="d-flex flex-wrap justify-content-between">
 			<LabelAndValue
-				class="flex-grow-1"
+				class="flex-grow-1 text-start flex-basis-0"
 				:label="$t('main.vehicle.vehicleSoC')"
 				:value="`${vehicleSoC} %`"
 				:extraValue="vehicleRange ? `${vehicleRange} km` : null"
 			/>
 			<LabelAndValue
-				class="flex-grow-1"
+				class="flex-grow-1 text-end text-sm-center flex-basis-0"
 				:label="$t('main.vehicle.targetSoC')"
 				:value="`${displayTargetSoC} %`"
 			/>
+			<TargetCharge
+				class="flex-grow-1 text-sm-end target-charge flex-basis-0"
+				v-bind="targetCharge"
+				@target-time-updated="setTargetTime"
+				@target-time-removed="removeTargetTime"
+			/>
 		</div>
-		<hr class="divider my-3" />
-		<TargetCharge
-			v-bind="targetCharge"
-			@target-time-updated="setTargetTime"
-			@target-time-removed="removeTargetTime"
-		/>
 	</div>
 </template>
 
@@ -108,8 +108,15 @@ export default {
 	border-radius: 20px;
 	color: var(--bs-white);
 }
-.divider {
-	border: none;
-	border-top: 1px solid var(--bs-gray-medium);
+.flex-basis-0 {
+	flex-basis: 0;
+}
+.target-charge {
+	min-width: 100%;
+}
+@media (min-width: 576px) {
+	.target-charge {
+		min-width: auto;
+	}
 }
 </style>
