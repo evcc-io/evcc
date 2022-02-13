@@ -107,7 +107,7 @@ func TestIsCheapSlotNow(t *testing.T) {
 		for _, se := range tc.series {
 			clck.Set(start.Add(se.delay))
 
-			if res, _ := p.isCheapSlotNow(se.cDuration, start.Add(tc.end)); se.res != res {
+			if res, _ := p.PlanActive(se.cDuration, start.Add(tc.end)); se.res != res {
 				t.Errorf("%s case %v: expected %v, got %v", tc.desc, se.caseNr, se.res, res)
 			}
 		}
