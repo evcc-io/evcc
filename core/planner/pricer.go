@@ -47,6 +47,10 @@ func NewPricer(log *util.Logger, tariff api.Tariff) *Pricer {
 }
 
 func (t *Pricer) PlanActive(requiredDuration time.Duration, targetTime time.Time) (bool, error) {
+	if t == nil {
+		return false, nil
+	}
+
 	if targetTime.Before(t.clock.Now()) || requiredDuration <= 0 {
 		return false, nil
 	}
