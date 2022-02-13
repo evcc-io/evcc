@@ -403,11 +403,9 @@ func (site *Site) update(lp Updater) {
 		price, err := gridTariff.CurrentPrice()
 
 		if err == nil {
-			cheap = price <= site.CheapRate
-		}
-
-		if err == nil && !cheap {
-			cheap, err = site.planner.PlanActive(lp.GetAssumedDuration(), lp.GetTargetTime())
+			if cheap = price <= site.CheapRate; !cheap {
+				cheap, err = site.planner.PlanActive(lp.GetAssumedDuration(), lp.GetTargetTime())
+			}
 		}
 
 		if err != nil {
