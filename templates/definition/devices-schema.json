@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "title": "EVCC device templates schema",
+  "$ref": "#/definitions/root",
+  "definitions": {
+    "root": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Product"
+          }
+        },
+        "group": {
+          "$ref": "#/definitions/Groups"
+        },
+        "guidedsetup": {
+          "$ref": "#/definitions/GuidedSetup"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Capability"
+          }
+        },
+        "requirements": {
+          "$ref": "common-schema.json#/definitions/Requirements"
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "common-schema.json#/definitions/ParamDevice"
+          }
+        },
+        "render": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "template",
+        "products",
+        "params",
+        "render"
+      ]
+    },
+    "Product": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brand": {
+          "type": "string"
+        },
+        "description": {
+          "$ref": "common-schema.json#/definitions/LanguageText"
+        }
+      },
+      "anyOf": [
+        {"required": ["brand"]},
+        {"required": ["description"]}
+      ],
+      "title": "Product"
+    },
+    "Groups": {
+      "type": "string",
+      "enum": ["generic", "switchsockets", "sockets"]
+    },
+    "GuidedSetup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enable": {
+          "type": "boolean"
+        },
+        "linked": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Linked"
+          }
+        }
+      },
+      "required": ["enable"]
+    },
+    "Linked": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "template": {
+          "type": "string",
+          "minLength": 1
+        },
+        "usage": {
+          "type": "string",
+          "enum": ["grid", "pv", "battery"]
+        },
+        "multiple": {
+          "type": "boolean"
+        },
+        "excludetemplate": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["template", "usage"]
+    },
+    "Capability": {
+      "type": "string",
+      "enum": ["1p3p", "iso151182", "rfid", "smahems"]
+    }
+  }
+}
