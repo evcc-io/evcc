@@ -75,7 +75,7 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 	t.log.DEBUG.Printf("charge duration: %s, end: %v, find best prices:\n", requiredDuration.Round(time.Minute), targetTime.Round(time.Minute))
 
 	var cheapSlotNow bool
-	var cntExpectedSlots, curSlotNr int
+	var plannedSlots, currentSlot int
 	var plannedDuration time.Duration
 
 	for _, slot := range data {
@@ -86,16 +86,17 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 
 		// current slot
 		if slot.Start.Before(t.clock.Now()) && slot.End.After(t.clock.Now()) {
-			slot.Start = t.clock.Now()
+			slot.Start = t.clock.Now().Add(-1)
 		}
 
 		// slot ends after target time
 		if slot.End.After(targetTime) {
-			slot.End = targetTime
+			slot.End = targetTime.Add(1)
 		}
 
-		cntExpectedSlots++
+		plannedSlots++
 		plannedDuration += slot.End.Sub(slot.Start)
+
 		t.log.TRACE.Printf("  Slot from: %v to %v price %f, timesum %s",
 			slot.Start.Round(time.Second), slot.End.Round(time.Second),
 			slot.Price, plannedDuration)
@@ -103,8 +104,8 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 		// current timeslot is a cheap one
 		if slot.Start.Before(t.clock.Now()) && slot.End.After(t.clock.Now()) {
 			cheapSlotNow = true
-			curSlotNr = cntExpectedSlots
-			t.log.TRACE.Printf(" (now, slot number %v)", curSlotNr)
+			currentSlot = plannedSlots
+			t.log.TRACE.Printf(" (now, slot number %v)", currentSlot)
 		}
 
 		// we found all necessary cheap slots to charge to targetSoC
@@ -115,7 +116,7 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 
 	// delay start of most expensiv slot as long as possible
 	cheapactive := cheapSlotNow
-	if curSlotNr == cntExpectedSlots && cntExpectedSlots != 1 && plannedDuration > requiredDuration+hysteresisDuration {
+	if currentSlot == plannedSlots && plannedSlots != 1 && plannedDuration > requiredDuration+hysteresisDuration {
 		t.log.DEBUG.Printf("cheap timeslot, delayed for %s\n", (plannedDuration - requiredDuration).Round(time.Minute))
 		cheapactive = false
 	}
