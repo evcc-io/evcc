@@ -399,7 +399,8 @@ func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
 	var cheap bool
-	if gridTariff := site.tariffs.Grid; gridTariff != nil {
+	gridTariff := site.tariffs.Grid
+	if _, ok := gridTariff.(*tariff.Fixed); gridTariff != nil && !ok {
 		price, err := gridTariff.CurrentPrice()
 
 		if err == nil {
