@@ -56,7 +56,7 @@ test:
 
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
+	go build -race -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 release-test:
 	goreleaser --snapshot --skip-publish --rm-dist

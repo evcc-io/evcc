@@ -1281,7 +1281,10 @@ func (lp *LoadPoint) updateChargePower() {
 			return err
 		}
 
+		lp.Lock()
 		lp.chargePower = value // update value if no error
+		lp.Unlock()
+
 		lp.log.DEBUG.Printf("charge power: %.0fW", value)
 		lp.publish("chargePower", value)
 
