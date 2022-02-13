@@ -87,8 +87,8 @@ func TestIsCheapSlotNow(t *testing.T) {
 			{1, 20 * dt, time.Hour, false},
 		}},
 		{"fixed tariff", []float64{2}, 5 * time.Hour, []se{
-			{1, time.Minute, 2 * time.Hour, true},
-			{1, time.Minute, 10 * time.Minute, true},
+			{1, 1, 2 * time.Hour, true},
+			{2, 1, 10 * time.Minute, true},
 		}},
 	}
 
