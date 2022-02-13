@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const chargeEfficiency = 0.9 // assume charge 90% efficiency
+const ChargeEfficiency = 0.9 // assume charge 90% efficiency
 
 // Estimator provides vehicle soc and charge duration
 // Vehicle SoC can be estimated to provide more granularity
@@ -46,7 +46,7 @@ func (s *Estimator) Reset() {
 	s.prevSoC = 0
 	s.prevChargedEnergy = 0
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
-	s.virtualCapacity = s.capacity / chargeEfficiency // initial capacity taking efficiency into account
+	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
 }
 

@@ -1,10 +1,11 @@
 package core
 
 import (
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/soc"
 )
 
-var _ soc.Adapter = (*adapter)(nil)
+var _ planner.Adapter = (*adapter)(nil)
 
 type adapter struct {
 	*LoadPoint

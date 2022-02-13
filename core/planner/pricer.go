@@ -1,4 +1,4 @@
-package core
+package planner
 
 import (
 	"sort"
@@ -6,13 +6,11 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/util"
 )
 
-const (
-	chargeEfficiency   = 0.95
-	hysteresisDuration = 5 * time.Minute
-)
+const hysteresisDuration = 5 * time.Minute
 
 // RatesByPrice implements sort.Interface based on price
 type RatesByPrice []api.Rate
@@ -32,22 +30,23 @@ func (a RatesByPrice) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
-type Planner struct {
+type Pricer struct {
 	log    *util.Logger
 	clock  clock.Clock // mockable time
 	tariff api.Tariff
 }
 
-func NewPlanner(log *util.Logger, tariff api.Tariff) *Planner {
+// NewPricer creates a price planner
+func NewPricer(log *util.Logger, tariff api.Tariff) *Pricer {
 	clock := clock.New()
-	return &Planner{
+	return &Pricer{
 		log:    log,
 		clock:  clock,
 		tariff: tariff,
 	}
 }
 
-func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Time) (bool, error) {
+func (t *Pricer) PlanActive(requiredDuration time.Duration, targetTime time.Time) (bool, error) {
 	if targetTime.Before(t.clock.Now()) || requiredDuration <= 0 {
 		return false, nil
 	}
@@ -63,7 +62,7 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 	// sort rates by price
 	sort.Sort(RatesByPrice(data))
 
-	requiredDuration = time.Duration(float64(requiredDuration) / chargeEfficiency)
+	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 
 	// Save same duration until next price info update
 	if targetTime.After(last) {

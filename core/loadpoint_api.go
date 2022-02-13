@@ -57,7 +57,7 @@ func (lp *LoadPoint) GetTargetSoC() int {
 
 func (lp *LoadPoint) setTargetSoC(soc int) {
 	lp.SoC.Target = soc
-	lp.socTimer.SoC = soc
+	lp.timePlanner.SoC = soc
 	lp.publish("targetSoC", soc)
 }
 
@@ -117,8 +117,8 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 	lp.log.DEBUG.Printf("set target charge: %d @ %v", soc, finishAt)
 
 	// apply immediately
-	if lp.socTimer.Time != finishAt || lp.SoC.Target != soc {
-		lp.socTimer.Set(finishAt)
+	if lp.timePlanner.Time != finishAt || lp.SoC.Target != soc {
+		lp.timePlanner.Set(finishAt)
 
 		// don't remove soc
 		if !finishAt.IsZero() {
@@ -248,7 +248,7 @@ func (lp *LoadPoint) GetRemainingEnergy() float64 {
 
 // GetTargetTime returns the charge target time
 func (lp *LoadPoint) GetTargetTime() time.Time {
-	return lp.socTimer.Time
+	return lp.timePlanner.Time
 }
 
 // GetAssumedDuration is the estimated remaining charging duration

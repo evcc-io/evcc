@@ -10,6 +10,7 @@ import (
 	"github.com/avast/retry-go/v3"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
@@ -46,10 +47,10 @@ type Site struct {
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
 
-	tariffs    tariff.Tariffs // Tariff
-	loadpoints []*LoadPoint   // Loadpoints
-	planner    *Planner       // Planner
-	savings    *Savings       // Savings
+	tariffs    tariff.Tariffs  // Tariff
+	loadpoints []*LoadPoint    // Loadpoints
+	planner    *planner.Pricer // Planner
+	savings    *Savings        // Savings
 
 	// cached state
 	gridPower       float64 // Grid power
@@ -87,7 +88,7 @@ func NewSiteFromConfig(
 	site.savings = NewSavings(tariffs)
 
 	if gridTariff := site.tariffs.Grid; gridTariff != nil {
-		site.planner = NewPlanner(log, gridTariff)
+		site.planner = planner.NewPricer(log, gridTariff)
 	}
 
 	if site.Meters.GridMeterRef != "" {

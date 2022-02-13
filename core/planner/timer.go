@@ -1,10 +1,11 @@
-package soc
+package planner
 
 import (
 	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -24,7 +25,7 @@ type Timer struct {
 	validated bool
 }
 
-// NewTimer creates a Timer
+// NewTimer creates a time planner
 func NewTimer(log *util.Logger, api Adapter) *Timer {
 	lp := &Timer{
 		log:     log,
@@ -121,7 +122,7 @@ func (lp *Timer) DemandActive() bool {
 	}
 
 	// time
-	remainingDuration := time.Duration(float64(se.AssumedChargeDuration(lp.SoC, power)) / chargeEfficiency)
+	remainingDuration := time.Duration(float64(se.AssumedChargeDuration(lp.SoC, power)) / soc.ChargeEfficiency)
 	lp.finishAt = time.Now().Add(remainingDuration).Round(time.Minute)
 
 	lp.log.DEBUG.Printf("estimated charge duration: %v to %d%% at %.0fW", remainingDuration.Round(time.Minute), lp.SoC, power)

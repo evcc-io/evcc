@@ -1,4 +1,4 @@
-package core
+package planner
 
 import (
 	"testing"
@@ -98,7 +98,7 @@ func TestIsCheapSlotNow(t *testing.T) {
 		t.Logf("%+v", tc.desc)
 		clck.Set(start)
 
-		p := &Planner{
+		p := &Pricer{
 			log:    util.NewLogger("foo"),
 			clock:  clck,
 			tariff: MockTariff{prices: tc.prices, start: start},
@@ -143,7 +143,7 @@ func TestIsCheap(t *testing.T) {
 		t.Logf("%+v", tc.desc)
 		clck.Set(start)
 
-		p := &Planner{
+		p := &Pricer{
 			log:    util.NewLogger("foo"),
 			clock:  clck,
 			tariff: MockTariff{prices: tc.prices, start: start},

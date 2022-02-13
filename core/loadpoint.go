@@ -11,6 +11,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/provider"
@@ -132,7 +133,8 @@ type LoadPoint struct {
 	vehicle      api.Vehicle   // Currently active vehicle
 	vehicles     []api.Vehicle // Assigned vehicles
 	socEstimator *soc.Estimator
-	socTimer     *soc.Timer
+	timePlanner  *planner.Timer
+	pricePlanner *planner.Pricer
 
 	// cached state
 	status         api.ChargeStatus       // Charger status
@@ -242,7 +244,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 
 	// allow target charge handler to access loadpoint
-	lp.socTimer = soc.NewTimer(lp.log, &adapter{LoadPoint: lp})
+	lp.timePlanner = planner.NewTimer(lp.log, &adapter{LoadPoint: lp})
 	if lp.Enable.Threshold > lp.Disable.Threshold {
 		lp.log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
 	} else if lp.Enable.Threshold > 0 {
@@ -452,7 +454,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.socUpdated = time.Time{}
 
 	// reset timer when vehicle is removed
-	lp.socTimer.Reset()
+	lp.timePlanner.Reset()
 }
 
 // evVehicleSoCProgressHandler sends external start event
@@ -1484,7 +1486,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	remoteDisabled := loadpoint.RemoteEnable
 
 	// reset detection if soc timer needs be deactivated after evaluating the loading strategy
-	lp.socTimer.MustValidateDemand()
+	lp.timePlanner.MustValidateDemand()
 
 	// execute loading strategy
 	switch {
@@ -1501,7 +1503,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 			targetCurrent = lp.GetMinCurrent()
 		}
 		err = lp.setLimit(targetCurrent, true)
-		lp.socTimer.Reset() // once SoC is reached, the target charge request is removed
+		lp.timePlanner.Reset() // once SoC is reached, the target charge request is removed
 
 	// OCPP has priority over target charging
 	case lp.remoteControlled(loadpoint.RemoteHardDisable):
@@ -1525,10 +1527,10 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		}
 
 	// target charging
-	case lp.socTimer.DemandActive():
+	case lp.timePlanner.DemandActive():
 		// 3p if available
 		if err = lp.scalePhasesIfAvailable(3); err == nil {
-			targetCurrent := lp.socTimer.Handle()
+			targetCurrent := lp.timePlanner.Handle()
 			err = lp.setLimit(targetCurrent, true)
 		}
 
@@ -1566,8 +1568,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	}
 
 	// stop an active target charging session if not currently evaluated
-	if !lp.socTimer.DemandValidated() {
-		lp.socTimer.Stop()
+	if !lp.timePlanner.DemandValidated() {
+		lp.timePlanner.Stop()
 	}
 
 	// effective disabled status
