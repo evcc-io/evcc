@@ -113,25 +113,11 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 		}
 	}
 
-	var cheapactive bool
-	if cheapSlotNow {
-		if curSlotNr == cntExpectedSlots { // delay most expensive slot if not last slot
-			if cntExpectedSlots == 1 { // last slot
-				t.log.DEBUG.Printf("continue charging in last slot\n")
-				cheapactive = true
-			} else { // expensiv and not last slot, delay
-				if plannedDuration > requiredDuration+hysteresisDuration {
-					t.log.DEBUG.Printf("cheap timeslot, delayed for %s\n", (plannedDuration - requiredDuration).Round(time.Minute))
-					cheapactive = false
-				} else {
-					t.log.DEBUG.Printf("charing in most expensiv timeslot after delay")
-					cheapactive = true
-				}
-			}
-		} else { // not most expensiv slot
-			t.log.DEBUG.Printf("cheap timeslot, charging...\n")
-			cheapactive = true
-		}
+	// delay start of most expensiv slot as long as possible
+	cheapactive := cheapSlotNow
+	if curSlotNr == cntExpectedSlots && cntExpectedSlots != 1 && plannedDuration > requiredDuration+hysteresisDuration {
+		t.log.DEBUG.Printf("cheap timeslot, delayed for %s\n", (plannedDuration - requiredDuration).Round(time.Minute))
+		cheapactive = false
 	}
 
 	return cheapactive, nil
