@@ -74,12 +74,12 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 
 	t.log.DEBUG.Printf("charge duration: %s, end: %v, find best prices:\n", requiredDuration.Round(time.Minute), targetTime.Round(time.Minute))
 
-	var cheapSlotNow bool
+	var cheapActive bool
 	var plannedSlots, currentSlot int
 	var plannedDuration time.Duration
 
 	for _, slot := range data {
-		// timeslot not relevant
+		// slot not relevant
 		if slot.Start.After(targetTime) || slot.End.Before(t.clock.Now()) {
 			continue
 		}
@@ -101,9 +101,9 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 			slot.Start.Round(time.Second), slot.End.Round(time.Second),
 			slot.Price, plannedDuration)
 
-		// current timeslot is a cheap one
+		// plan covers current slot
 		if slot.Start.Before(t.clock.Now()) && slot.End.After(t.clock.Now()) {
-			cheapSlotNow = true
+			cheapActive = true
 			currentSlot = plannedSlots
 			t.log.TRACE.Printf(" (now, slot number %v)", currentSlot)
 		}
@@ -114,12 +114,11 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 		}
 	}
 
-	// delay start of most expensiv slot as long as possible
-	cheapactive := cheapSlotNow
-	if currentSlot == plannedSlots && plannedSlots != 1 && plannedDuration > requiredDuration+hysteresisDuration {
+	// delay start of most expensive slot as long as possible
+	if currentSlot == plannedSlots && plannedSlots > 1 && plannedDuration > requiredDuration+hysteresisDuration {
 		t.log.DEBUG.Printf("cheap timeslot, delayed for %s\n", (plannedDuration - requiredDuration).Round(time.Minute))
-		cheapactive = false
+		cheapActive = false
 	}
 
-	return cheapactive, nil
+	return cheapActive, nil
 }
