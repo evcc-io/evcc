@@ -244,7 +244,7 @@ presets:
       advanced: true
     - name: identifiers
       advanced: true
-      valueType: stringlist
+      valuetype: stringlist
     render: |
       {{define "vehicle-identify"}}
       {{- if or (ne .mode "") (ne .minSoC "") (ne .targetSoC "") (ne .minCurrent "") (ne .maxCurrent "") }}

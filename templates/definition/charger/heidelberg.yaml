@@ -1,5 +1,5 @@
 template: heidelberg
-products: 
+products:
 - brand: Heidelberg
   description:
     generic: Energy Control (Modbus RTU)
