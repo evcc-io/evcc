@@ -102,7 +102,7 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 			slot.Price, plannedDuration)
 
 		// plan covers current slot
-		if slot.Start.Before(t.clock.Now()) && slot.End.After(t.clock.Now()) {
+		if slot.Start.Before(t.clock.Now().Add(1)) && slot.End.After(t.clock.Now()) {
 			cheapActive = true
 			currentSlot = plannedSlots
 			t.log.TRACE.Printf(" (now, slot number %v)", currentSlot)
