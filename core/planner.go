@@ -109,7 +109,7 @@ func (t *Planner) PlanActive(requiredDuration time.Duration, targetTime time.Tim
 		}
 
 		// we found all necessary cheap slots to charge to targetSoC
-		if plannedDuration > requiredDuration {
+		if plannedDuration >= requiredDuration {
 			break
 		}
 	}
