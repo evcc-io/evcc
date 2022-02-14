@@ -34,7 +34,7 @@
           }
         },
         "description": {
-          "$ref": "common-schema.json#/definitions/Description"
+          "$ref": "#/definitions/LanguageText"
         },
         "uri": {
           "type": "string",
