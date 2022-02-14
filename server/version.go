@@ -12,4 +12,7 @@ var (
 
 	// Commit of executable
 	Commit = "HEAD"
+
+	// Nightly build
+	Nightly = "false"
 )

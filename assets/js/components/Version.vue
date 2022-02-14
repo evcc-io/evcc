@@ -21,12 +21,12 @@
 			target="_blank"
 			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
 		>
-			<span class="d-inline d-xs-none d-sm-none">{{
-				$t("footer.version.versionShort", { installed })
-			}}</span>
-			<span class="d-none d-xs-inline d-sm-inline">{{
-				$t("footer.version.versionLong", { installed })
-			}}</span>
+			<span class="d-inline d-xs-none d-sm-none">
+				{{ $t("footer.version.versionShort", { installed, installedCommit }) }}
+			</span>
+			<span class="d-none d-xs-inline d-sm-inline">
+				{{ $t("footer.version.versionLong", { installed, installedCommit }) }}
+			</span>
 		</a>
 
 		<div id="updateModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
@@ -116,6 +116,7 @@ export default {
 	name: "Version",
 	props: {
 		installed: String,
+		installedCommit: String,
 		available: String,
 		releaseNotes: String,
 		commit: String,

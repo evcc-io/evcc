@@ -118,12 +118,15 @@ export default {
 			store: this.$root.$data.store,
 			installedVersion: window.evcc.version,
 			commit: window.evcc.commit,
+			nightly: window.evcc.nightly,
 		};
 	},
 	computed: {
 		version: function () {
 			return {
 				installed: this.installedVersion,
+				installedCommit: this.commit,
+				nightlyBuild: this.nightly,
 				available: this.store.state.availableVersion,
 				releaseNotes: this.store.state.releaseNotes,
 				hasUpdater: this.store.state.hasUpdater,
