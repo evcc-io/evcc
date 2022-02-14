@@ -21,12 +21,13 @@
 			target="_blank"
 			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
 		>
-			<span class="d-inline d-xs-none d-sm-none">
-				{{ $t("footer.version.versionShort", { installed, installedCommit }) }}
-			</span>
-			<span class="d-none d-xs-inline d-sm-inline">
-				{{ $t("footer.version.versionLong", { installed, installedCommit }) }}
-			</span>
+			<span class="d-inline d-xs-none d-sm-none">{{
+				$t("footer.version.versionShort", { installed })
+			}}</span>
+			<span class="d-none d-xs-inline d-sm-inline">{{
+				$t("footer.version.versionLong", { installed })
+			}}</span
+			><span v-if="isNightly"> ({{ installedCommit }})</span>
 		</a>
 
 		<div id="updateModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
@@ -120,6 +121,7 @@ export default {
 		available: String,
 		releaseNotes: String,
 		commit: String,
+		isNightly: Boolean,
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
@@ -137,6 +139,7 @@ export default {
 		newVersionAvailable: function () {
 			return (
 				this.available && // available version already computed?
+				!this.isNightly && // not a nightly
 				this.installed != "[[.Version]]" && // go template parsed?
 				this.installed != "0.0.1-alpha" && // make used?
 				this.available != this.installed

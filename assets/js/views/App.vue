@@ -126,7 +126,7 @@ export default {
 			return {
 				installed: this.installedVersion,
 				installedCommit: this.commit,
-				nightlyBuild: this.nightly,
+				isNightly: this.nightly === "true",
 				available: this.store.state.availableVersion,
 				releaseNotes: this.store.state.releaseNotes,
 				hasUpdater: this.store.state.hasUpdater,

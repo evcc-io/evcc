@@ -8,7 +8,7 @@ export default {
   footer: {
     version: {
       versionShort: "v{installed}",
-      versionLong: "Version {installed} ({installedCommit})",
+      versionLong: "Version {installed}",
       availableShort: "update",
       availableLong: "update available",
       modalTitle: "Update available",
