@@ -1,5 +1,4 @@
 import Loadpoint from "./Loadpoint.vue";
-import i18n from "../i18n";
 
 export default {
   title: "Main/Loadpoint",
@@ -11,11 +10,12 @@ export default {
   },
 };
 
-const Template = (args, { argTypes }) => ({
-  i18n,
-  props: Object.keys(argTypes),
+const Template = (args) => ({
+  setup() {
+    return { args };
+  },
   components: { Loadpoint },
-  template: '<Loadpoint v-bind="$props"></Loadpoint>',
+  template: '<Loadpoint v-bind="args"></Loadpoint>',
 });
 
 export const Base = Template.bind({});

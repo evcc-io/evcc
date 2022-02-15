@@ -1,14 +1,17 @@
 import Phases from "./Phases.vue";
-import i18n from "../i18n";
 
 export default {
   title: "Main/Phases",
   component: Phases,
   argTypes: {},
+  parameters: {
+    backgrounds: {
+      default: "light",
+    },
+  },
 };
 
 const Template = (args, { argTypes }) => ({
-  i18n,
   props: Object.keys(argTypes),
   components: { Phases },
   template: '<Phases v-bind="$props"></Phases>',

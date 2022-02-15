@@ -8,7 +8,7 @@
     "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "build-storybook": "build-storybook",
     "dev": "vite",
-    "storybook": "start-storybook -p 6006 -s assets,node_modules/bootstrap/dist"
+    "storybook": "start-storybook -p 6006"
   },
   "main": "index.js",
   "dependencies": {
