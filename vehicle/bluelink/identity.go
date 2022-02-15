@@ -120,9 +120,9 @@ func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
 	return cookieClient, err
 }
 
-func (v *Identity) setLanguage(cookieClient *request.Helper) error {
+func (v *Identity) setLanguage(cookieClient *request.Helper, language string) error {
 	data := map[string]interface{}{
-		"lang": "en",
+		"lang": language,
 	}
 
 	req, err := request.New(http.MethodPost, v.config.URI+LanguageURL, request.MarshalJSON(data), request.JSONEncoding)
@@ -322,7 +322,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return (*oauth2.Token)(&res), err
 }
 
-func (v *Identity) Login(user, password string) (err error) {
+func (v *Identity) Login(user, password, language string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
@@ -335,7 +335,7 @@ func (v *Identity) Login(user, password string) (err error) {
 	}
 
 	if err == nil {
-		err = v.setLanguage(cookieClient)
+		err = v.setLanguage(cookieClient, language)
 	}
 
 	var code string
