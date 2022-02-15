@@ -20,7 +20,7 @@
 			<LabelAndValue
 				class="flex-grow-1 text-start flex-basis-0"
 				:label="$t('main.vehicle.vehicleSoC')"
-				:value="`${vehicleSoC} %`"
+				:value="`${vehicleSoC || '--'} %`"
 				:extraValue="vehicleRange ? `${vehicleRange} km` : null"
 			/>
 			<LabelAndValue

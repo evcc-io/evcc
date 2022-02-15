@@ -6,10 +6,12 @@ export default {
   argTypes: {},
 };
 
-const Template = (args, { argTypes }) => ({
-  props: Object.keys(argTypes),
+const Template = (args) => ({
+  setup() {
+    return { args };
+  },
   components: { Version },
-  template: '<Version v-bind="$props"></Version>',
+  template: '<Version v-bind="args"></Version>',
 });
 
 const releaseNotes =

@@ -5,13 +5,14 @@
 			href="#"
 			data-bs-toggle="modal"
 			data-bs-target="#updateModal"
-			class="btn btn-link ps-0 text-decoration-none text-white text-nowrap"
+			class="btn btn-link ps-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
 		>
-			<fa-icon icon="gift" class="icon me-2"></fa-icon>v{{ installed }}
-			<span class="d-none d-xs-inline d-sm-none text-white text-decoration-underline">
+			<shopicon-regular-gift class="me-2 text-evcc"></shopicon-regular-gift>
+			v{{ installed }}
+			<span class="ms-2 d-none d-xs-block d-sm-none text-white text-decoration-underline">
 				{{ $t("footer.version.availableShort") }}
 			</span>
-			<span class="d-none d-sm-inline text-muted text-white text-decoration-underline">
+			<span class="ms-2 d-none d-sm-block text-muted text-white text-decoration-underline">
 				{{ $t("footer.version.availableLong") }}
 			</span>
 		</button>
@@ -19,7 +20,7 @@
 			v-else
 			:href="releaseNotesUrl(installed)"
 			target="_blank"
-			class="btn btn-link text-white ps-0 text-decoration-none text-nowrap"
+			class="btn btn-link text-white ps-0 text-decoration-none text-nowrap d-flex align-items-end"
 		>
 			<span class="d-inline d-xs-none d-sm-none">{{
 				$t("footer.version.versionShort", { installed })
@@ -116,6 +117,7 @@
 
 <script>
 import api from "../api";
+import "@h2d2/shopicons/es/regular/gift";
 
 export default {
 	name: "Version",

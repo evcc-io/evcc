@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<button
-			class="btn btn-link pe-0 text-decoration-none text-white text-nowrap d-flex"
+			class="btn btn-link pe-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
 			data-bs-toggle="modal"
 			data-bs-target="#savingsModal"
 		>
@@ -175,6 +175,7 @@
 import formatter from "../mixins/formatter";
 import Sponsor from "./Sponsor.vue";
 import "@h2d2/shopicons/es/filled/square";
+import "@h2d2/shopicons/es/regular/sun";
 
 export default {
 	name: "Savings",
