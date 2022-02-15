@@ -181,8 +181,9 @@ type Param struct {
 	Help          TextLanguage // cli configuration help
 	Test          string       // testing default value
 	Value         string       // user provided value via cli configuration
-	Values        []string     // user provided list of values
+	Values        []string     // user provided list of values e.g. for ValueType "stringlist"
 	ValueType     string       // string representation of the value type, "string" is default
+	ValidValues   []string     // list of valid values the user can provide
 	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	Requirements  Requirements // requirements for this param to be usable, only supported via ValueType "bool"
 
@@ -238,6 +239,10 @@ func (p *Param) OverwriteProperties(withParam Param) {
 
 	if p.Example == "" && withParam.Example != "" {
 		p.Example = withParam.Example
+	}
+
+	if p.ValidValues == nil && withParam.ValidValues != nil {
+		p.ValidValues = withParam.ValidValues
 	}
 
 	if reflect.DeepEqual(p.Requirements, Requirements{}) {

@@ -1,5 +1,6 @@
 product:
   brand: Kia
+  description: Bluelink
 
 render:
 - default: |

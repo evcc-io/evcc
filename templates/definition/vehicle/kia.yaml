@@ -1,16 +1,11 @@
 template: kia
 products:
 - brand: Kia
+  description:
+    generic: Bluelink  
 params:
 - preset: vehiclebase
-- name: language
-  description:
-    de: Sprache
-    en: language
-  help:
-    de: "'de' für Deutsch und 'en' für Englisch"
-    en: "'en' for English and 'de' for German"
-  default: en
+- preset: vehiclelanguage
 - preset: vehicleidentify
 - name: capacity
   default: 64
@@ -18,6 +13,6 @@ params:
 render: |
   type: kia
   {{include "vehicle-base" .}}
-  language: {{ .language }}
+  {{include "vehicle-language" .}}
   {{include "vehicle-identify" .}}
   {{include "vehicle-cloud" .}}

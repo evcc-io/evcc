@@ -1,5 +1,6 @@
 product:
   brand: Hyundai
+  description: Bluelink
 
 render:
 - default: |

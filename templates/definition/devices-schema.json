@@ -8,7 +8,7 @@
       "additionalProperties": false,
       "properties": {
         "template": {
-          "type": "string"
+          "$": "#/definitions/Template"
         },
         "products": {
           "type": "array",
@@ -48,6 +48,17 @@
         "render"
       ]
     },
+    "Template": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": ["name"],
+      "title": "Template"
+  },
     "Product": {
       "type": "object",
       "additionalProperties": false,

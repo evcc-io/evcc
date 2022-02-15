@@ -194,6 +194,15 @@ params:
     de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
     en: Power values above this value will be considered as charging pow
   valuetype: number
+- name: language
+  description:
+    de: Sprache
+    en: Language
+  help:
+    de: "'de' für Deutsch und 'en' für Englisch"
+    en: "'en' for English and 'de' for German"
+  default: en
+  validvalues: ["de", "en"]
 
 presets:
   vehiclebase:
@@ -272,6 +281,14 @@ presets:
       {{-   end }}
       {{- end }}
       {{end}}
+  vehiclelanguage:
+    params:
+    - name: language
+    render: |
+      {{define "vehicle-language"}}
+      language: {{ .language }}
+      {{end}}
+      
   vehiclecloud:
     params:
     - name: cloud

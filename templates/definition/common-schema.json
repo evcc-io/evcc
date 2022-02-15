@@ -41,17 +41,17 @@
           "format": "uri"
         }
       },
-      "oneOf":[
+      "anyOf":[
         {"required": ["evcc"]},
         {"required": ["description"]}
       ],
       "title": "Requirements"
     },
     "ParamDevice": {
-      "oneOf": [
+      "anyOf": [
+        {"$ref": "#/definitions/ParamTemplate"},
         {"$ref": "#/definitions/ParamUsage"},
-        {"$ref": "#/definitions/ParamModbus"},
-        {"$ref": "#/definitions/ParamTemplate"}
+        {"$ref": "#/definitions/ParamModbus"}
       ]
     },
     "ParamUsage": {
@@ -74,7 +74,7 @@
         "name",
         "choice"
       ],
-      "title": "ParamChoice"
+      "title": "ParamUsage"
     },
     "ParamModbus": {
       "type": "object",
@@ -120,7 +120,7 @@
       "properties": {
         "preset": {
           "type": "string",
-          "enum": ["vehiclebase", "vehicleidentify", "vehiclecloud"]
+          "minLength": 1
         },
         "name": {
           "type": "string",
@@ -150,6 +150,18 @@
         "valuetype": {
           "type": "string",
           "enum": ["string", "bool", "number", "float", "stringlist", "chargemodes", "duration"]
+        },
+        "validvalues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "choice": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "dependencies": {
           "type": "array",
@@ -210,6 +222,12 @@
           "type": "string",
           "enum": ["string", "bool", "number", "float", "stringlist", "chargemodes", "duration"]
         },
+        "validvalues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "dependencies": {
           "type": "array",
           "items": {
@@ -249,7 +267,7 @@
         "name",
         "check"
       ],
-      "oneOf": [
+      "anyOf": [
         {
           "properties": {
             "check": {

@@ -108,6 +108,7 @@ type question struct {
 	label, help                    string
 	defaultValue, exampleValue     string
 	invalidValues                  []string
+	validValues                    []string
 	valueType                      string
 	minNumberValue, maxNumberValue int64
 	mask, required                 bool
@@ -162,6 +163,10 @@ func (c *CmdConfigure) askValue(q question) string {
 		value := val.(string)
 		if q.invalidValues != nil && funk.ContainsString(q.invalidValues, value) {
 			return errors.New(c.localizedString("ValueError_Used", nil))
+		}
+
+		if q.validValues != nil && !funk.ContainsString(q.validValues, value) {
+			return errors.New(c.localizedString("ValueError_Invalid", nil))
 		}
 
 		if q.required && len(value) == 0 {
