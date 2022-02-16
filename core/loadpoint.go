@@ -975,7 +975,7 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 
 	msg := "pv timer reset"
 	if len(typ) == 1 {
-		msg = fmt.Sprintf("pv %s timer reset", typ)
+		msg = fmt.Sprintf("pv %s timer reset", typ[0])
 	}
 	lp.log.DEBUG.Printf(msg)
 
