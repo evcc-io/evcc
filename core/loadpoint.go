@@ -1077,6 +1077,11 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	// observed phase state inconsistency (https://github.com/evcc-io/evcc/issues/1572, https://github.com/evcc-io/evcc/issues/2230)
 	if phases > 0 && phases < lp.activePhases {
 		lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, lp.activePhases)
+
+		// if 3p->1p change is slow and we're no longer charging, we'll correct the observed phases here
+		if lp.GetStatus() == api.StatusB {
+			lp.activePhases = 1
+		}
 	}
 
 	// this can happen the first time for a 1p3p-capable charger, see https://github.com/evcc-io/evcc/issues/2520
