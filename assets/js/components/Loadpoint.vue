@@ -219,6 +219,6 @@ export default {
 	text-align: right;
 }
 .opacity-transiton {
-	transition: opacity 0.7w5s ease-in;
+	transition: opacity 0.75s ease-in;
 }
 </style>

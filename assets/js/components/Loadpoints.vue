@@ -10,36 +10,26 @@
 					v-bind="loadpoint"
 					:id="index"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
+					@click="scrollTo(index)"
 				/>
 			</div>
 		</div>
-		<div class="d-flex d-lg-none justify-content-center">
+		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center">
 			<button
 				v-for="(loadpoint, index) in loadpoints"
 				:key="index"
 				class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center text-white"
+				:class="{ 'indicator--selected': selected(index) }"
 				@click="scrollTo(index)"
 			>
-				<!--<shopicon-bold-lightning
-					v-if="loadpoint.charging && selected(index)"
-					size="s"
-				></shopicon-bold-lightning>
-				<shopicon-light-lightning
-					v-if="loadpoint.charging && !selected(index)"
-					size="s"
-				></shopicon-light-lightning>-->
-				<div
-					class="indicator--dot rounded-circle"
-					:class="{ 'bg-white': selected(index) }"
-				></div>
+				<shopicon-filled-circle class="indicator-icon"></shopicon-filled-circle>
 			</button>
 		</div>
 	</div>
 </template>
 
 <script>
-import "@h2d2/shopicons/es/light/lightning";
-import "@h2d2/shopicons/es/bold/lightning";
+import "@h2d2/shopicons/es/filled/circle";
 
 import Loadpoint from "./Loadpoint.vue";
 import collector from "../mixins/collector";
@@ -69,6 +59,10 @@ export default {
 			return this.selectedIndex === index;
 		},
 		scrollTo(index) {
+			if (this.selectedIndex === index) {
+				return;
+			}
+			this.selectedIndex = index;
 			const $carousel = this.$refs.carousel;
 			const width = $carousel.offsetWidth;
 			$carousel.style.scrollSnapType = "none";
@@ -101,11 +95,14 @@ export default {
 	.indicator {
 		width: 32px;
 		height: 32px;
+		opacity: 0.3;
+		transition: opacity 0.2s ease-in;
 	}
-	.indicator--dot {
-		width: 10px;
-		height: 10px;
-		border: 1px solid var(--bs-white);
+	.indicator--selected {
+		opacity: 1;
+	}
+	.indicator-icon {
+		width: 18px;
 	}
 	.loadpoint {
 		opacity: 1;
@@ -116,7 +113,42 @@ export default {
 	}
 	.loadpoint-unselected {
 		transform: scale(0.95);
-		opacity: 0.8;
+		opacity: 0.5;
+	}
+}
+
+/* show truncated tiles on breakpoind sm,md */
+@media (min-width: 576px) and (max-width: 991.98px) {
+	.container {
+		max-width: none;
+	}
+	.carousel > *:first-child {
+		margin-left: calc((100vw - var(--slide-width)) / 2);
+	}
+	.carousel > *:last-child {
+		margin-right: calc((100vw - var(--slide-width)) / 2);
+	}
+	/* fixes safari issue with end-side padding https://webplatform.news/issues/2019-08-07 */
+	.carousel::after {
+		content: "";
+		padding-right: 0.02px;
+	}
+	.carousel > * {
+		min-width: var(--slide-width);
+	}
+}
+
+/* breakpoind sm */
+@media (min-width: 576px) and (max-width: 767.98px) {
+	.carousel {
+		--slide-width: 540px;
+	}
+}
+
+/* breakpoind md */
+@media (min-width: 768px) and (max-width: 991.98px) {
+	.carousel {
+		--slide-width: 720px;
 	}
 }
 </style>
