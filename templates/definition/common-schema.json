@@ -1,0 +1,284 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "title": "EVCC common templates schema",
+  "definitions": {
+    "LanguageText": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "generic": {
+          "type": "string"
+        },
+        "de": {
+          "type": "string"
+        },
+        "en": {
+          "type": "string"
+        }
+      },
+      "oneOf": [
+        {"required": ["generic"]},
+        {"required": ["de", "en"]}
+      ],
+      "title": "LanguageText"
+    },
+    "Requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evcc": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["sponsorship", "eebus", "mqtt"]
+          }
+        },
+        "description": {
+          "$ref": "#/definitions/LanguageText"
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "anyOf":[
+        {"required": ["evcc"]},
+        {"required": ["description"]}
+      ],
+      "title": "Requirements"
+    },
+    "ParamDevice": {
+      "anyOf": [
+        {"$ref": "#/definitions/ParamTemplate"},
+        {"$ref": "#/definitions/ParamUsage"},
+        {"$ref": "#/definitions/ParamModbus"}
+      ]
+    },
+    "ParamUsage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "usage"
+        },
+        "choice": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["charge", "grid", "pv", "battery"]
+          }
+        }
+      },
+      "required": [
+        "name",
+        "choice"
+      ],
+      "title": "ParamUsage"
+    },
+    "ParamModbus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "modbus"
+        },
+        "choice": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["tcpip", "rs485"]
+          }
+        },
+        "id": {
+          "type": "integer"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "baudrate": {
+          "type": "integer",
+          "enum": [9600, 19200, 38400, 57600, 115200]
+        },
+        "comset": {
+          "enum": [8E1, "8N1"]
+        },
+        "help": {
+          "$ref": "#/definitions/LanguageText"
+        }
+      },
+      "required": [
+        "name",
+        "choice"
+      ],
+      "title": "ParamModbus"
+    },
+    "ParamTemplate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mask": {
+          "type": "boolean"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "advanced": {
+          "type": "boolean"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "example": {
+          "minLength": 1
+        },
+        "default": {
+          "minLength": 1
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "valuetype": {
+          "type": "string",
+          "enum": ["string", "bool", "number", "float", "stringlist", "chargemodes", "duration"]
+        },
+        "validvalues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "choice": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ParamDependency"
+          }
+        },
+        "description": {
+          "$ref": "#/definitions/LanguageText"
+        },
+        "help": {
+          "$ref": "#/definitions/LanguageText"
+        },
+        "requirements": {
+          "$ref": "#/definitions/Requirements"
+        }
+      },
+      "oneOf": [
+        {"required": ["name"]},
+        {"required": ["preset"]}
+      ],
+      "title": "ParamTemplate"
+    },
+    "ParamDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "boolean"
+        },
+        "referencename": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mask": {
+          "type": "boolean"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "advanced": {
+          "type": "boolean"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "example": {
+          "minLength": 1
+        },
+        "default": {
+          "minLength": 1
+        },
+        "valuetype": {
+          "type": "string",
+          "enum": ["string", "bool", "number", "float", "stringlist", "chargemodes", "duration"]
+        },
+        "validvalues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ParamDependency"
+          }
+        },
+        "description": {
+          "$ref": "#/definitions/LanguageText"
+        },
+        "help": {
+          "$ref": "#/definitions/LanguageText"
+        },
+        "requirements": {
+          "$ref": "#/definitions/Requirements"
+        }
+      },
+      "required": ["name"],
+      "title": "ParamDefaults"
+    },
+    "ParamDependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "check": {
+          "type": "string",
+          "enum": ["empty", "notempty", "equal"]
+        },
+        "value": {
+          "minLength": 1
+        }
+      },
+      "required": [
+        "name",
+        "check"
+      ],
+      "anyOf": [
+        {
+          "properties": {
+            "check": {
+              "value": "equal"
+            }
+          },
+          "required": ["value"]
+        },
+        {"required": ["check"]}
+      ],
+      "title": "ParamDependency"
+    }
+  }
+}

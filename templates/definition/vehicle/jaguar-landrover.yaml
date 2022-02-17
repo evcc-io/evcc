@@ -1,18 +1,17 @@
-template: kia
+template: jaguar-landrover
 products:
-- brand: Kia
-  description:
-    generic: Bluelink  
+- brand: Jaguar
+- brand: Land Rover
 params:
 - preset: vehiclebase
-- preset: vehiclelanguage
 - preset: vehicleidentify
+- name: vin
+  example: W...
 - name: capacity
-  default: 64
 - preset: vehiclecloud
+  default: 60
 render: |
-  type: kia
+  type: jaguar
   {{include "vehicle-base" .}}
-  {{include "vehicle-language" .}}
   {{include "vehicle-identify" .}}
   {{include "vehicle-cloud" .}}

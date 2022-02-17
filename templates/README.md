@@ -108,9 +108,9 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 `params` describes the set of parameters the user needs to provide a value for.
 
-## `base`
+## `preset`
 
-`base` reference value of a predefined params set defined in `parambaselist.yaml`, so these params don't need to be redefined in each template. The `example` and `default` values for each predefined value can be overwritten.
+`preset` reference value of a predefined params set defined in `parambaselist.yaml`, so these params don't need to be redefined in each template. The `example` and `default` values for each predefined value can be overwritten.
 
 ### `name`
 

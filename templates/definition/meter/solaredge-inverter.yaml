@@ -16,12 +16,14 @@ params:
 - name: timeout
   default: 3s
 render: |
-  type: modbus
-  model: sunspec
-  {{ include "modbus" . }}
-  timeout: {{ .timeout }}
+  type: custom
+  power:
+    source: modbus
+    model: sunspec
+    {{ include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
   {{- if eq .usage "grid" }}
-  subdevice: 1
-  power: 203:W # sunspec 3-phase meter power reading
-  scale: -1
+    subdevice: 1
+    value: 203:W # sunspec 3-phase meter power reading
+    scale: -1
   {{- end -}}

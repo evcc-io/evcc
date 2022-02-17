@@ -1,6 +1,8 @@
 package util
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 // RandomString creates random string of N integers
 func RandomString(n int) string {

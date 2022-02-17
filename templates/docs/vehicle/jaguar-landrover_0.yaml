@@ -1,25 +1,24 @@
 product:
-  brand: Volkswagen
-  description: We Connect ID
+  brand: Jaguar
 
 render:
 - default: |
     type: template
-    template: id
+    template: jaguar-landrover
     title: # Wird in der Benutzeroberfläche angezeigt  # Optional 
     user: # Benutzername um auf das Gerät zuzugreifen 
     password: # Passwort des Benutzerkontos 
-    vin: WVWZZZ...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
-    capacity: 50  # Akku-Kapazität in kWh  # Optional 
+    vin: W...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
+    capacity: 41.5  # Akku-Kapazität in kWh  # Optional 
     cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,...  # Optional 
   advanced: |
     type: template
-    template: id
+    template: jaguar-landrover
     title: # Wird in der Benutzeroberfläche angezeigt  # Optional 
     user: # Benutzername um auf das Gerät zuzugreifen 
     password: # Passwort des Benutzerkontos 
-    vin: WVWZZZ...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
-    capacity: 50  # Akku-Kapazität in kWh  # Optional 
+    vin: W...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
+    capacity: 41.5  # Akku-Kapazität in kWh  # Optional 
     phases: 3  # Die maximale Anzahl der Phasen welche genutzt werden können  # Optional 
     mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll  # Optional 
     minSoC: 25  # Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht  # Optional 

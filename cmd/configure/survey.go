@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/thoas/go-funk"
+	stripmd "github.com/writeas/go-strip-markdown"
 )
 
 // surveyAskOne asks the user for input
@@ -107,6 +108,7 @@ type question struct {
 	label, help                    string
 	defaultValue, exampleValue     string
 	invalidValues                  []string
+	validValues                    []string
 	valueType                      string
 	minNumberValue, maxNumberValue int64
 	mask, required                 bool
@@ -127,7 +129,11 @@ func (c *CmdConfigure) askValue(q question) string {
 	if q.valueType == templates.ParamValueTypeBool {
 		label := q.label
 		if q.help != "" {
-			label = q.help
+			helpDescription := stripmd.Strip(q.help)
+			fmt.Println("-------------------------------------------------")
+			fmt.Println(c.localizedString("Value_Help", nil))
+			fmt.Println(helpDescription)
+			fmt.Println("-------------------------------------------------")
 		}
 
 		return c.askBoolValue(label)
@@ -157,6 +163,10 @@ func (c *CmdConfigure) askValue(q question) string {
 		value := val.(string)
 		if q.invalidValues != nil && funk.ContainsString(q.invalidValues, value) {
 			return errors.New(c.localizedString("ValueError_Used", nil))
+		}
+
+		if q.validValues != nil && !funk.ContainsString(q.validValues, value) {
+			return errors.New(c.localizedString("ValueError_Invalid", nil))
 		}
 
 		if q.required && len(value) == 0 {

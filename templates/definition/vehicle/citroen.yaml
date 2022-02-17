@@ -6,7 +6,9 @@ params:
 - preset: vehicleidentify
 - name: capacity
   default: 50
+- preset: vehiclecloud
 render: |
   type: citroen
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}
