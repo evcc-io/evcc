@@ -134,7 +134,6 @@ type LoadPoint struct {
 	vehicles     []api.Vehicle // Assigned vehicles
 	socEstimator *soc.Estimator
 	timePlanner  *planner.Timer
-	pricePlanner *planner.Pricer
 
 	// cached state
 	status         api.ChargeStatus       // Charger status
