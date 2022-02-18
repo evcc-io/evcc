@@ -14,7 +14,7 @@ BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := andig/evcc
-ALPINE_VERSION := 3.13
+ALPINE_VERSION := 3.15
 TARGETS := arm.v6,arm.v8,amd64
 
 # gokrazy image

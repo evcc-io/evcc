@@ -47,7 +47,7 @@ RUN make build
 
 
 # STEP 3 build a small image including module support
-FROM alpine:3.13
+FROM alpine:3.15
 
 WORKDIR /app
 
