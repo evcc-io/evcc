@@ -125,8 +125,7 @@ export default {
 		version: function () {
 			return {
 				installed: this.installedVersion,
-				installedCommit: this.commit,
-				isNightly: this.nightly === "true",
+				commit: this.commit,
 				available: this.store.state.availableVersion,
 				releaseNotes: this.store.state.releaseNotes,
 				hasUpdater: this.store.state.hasUpdater,

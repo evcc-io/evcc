@@ -37,7 +37,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:     "evcc",
 	Short:   "EV Charge Controller",
-	Version: fmt.Sprintf("%s (%s)", server.Version, server.Commit),
+	Version: server.FormattedVersion(),
 	Run:     run,
 }
 
@@ -144,7 +144,7 @@ func Execute() {
 
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config and re-configure logging after reading config file
 	conf, err := loadConfigFile(cfgFile)
