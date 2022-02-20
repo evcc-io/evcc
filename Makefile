@@ -7,7 +7,7 @@
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
 COMMIT := $(SHA)
-# hide committ for releases
+# hide commit for releases
 ifeq ($(RELEASE),1)
     COMMIT :=
 endif
@@ -26,11 +26,6 @@ TARGETS := arm.v6,arm.v8,amd64
 IMAGE_FILE := evcc_$(TAG_NAME).image
 IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
 IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/evcc-io/evcc
-
-foo:
-	@echo NIGHTLY: $(NIGHTLY)
-	@echo RELEASE: $(RELEASE)
-	@echo COMMIT: $(COMMIT)
 
 default: build
 
