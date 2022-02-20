@@ -38,9 +38,12 @@ type LocalAPI struct {
 
 var _ API = (*LocalAPI)(nil)
 
+var _log = (*util.Logger)(nil)
+
 func NewLocal(log *util.Logger, uri string) *LocalAPI {
 	uri = strings.TrimRight(uri, "/")
 	uri = strings.TrimSuffix(uri, "/api")
+	_log = log
 
 	api := &LocalAPI{
 		Helper: request.NewHelper(log),
@@ -78,11 +81,31 @@ func (c *LocalAPI) response(partial string, res interface{}) error {
 }
 
 // Status reads a v1/v2 api response
+var cnt = 0
+var s = (*StatusResponse2)(nil)
 func (c *LocalAPI) Status() (Response, error) {
 	if c.v2 {
-		res := new(StatusResponse2)
-		err := c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &res)
-		return res, err
+		if cnt == 0 {
+			_log.TRACE.Println("------------------", "Request", "----------------------")
+			res := new(StatusResponse2)
+			err := c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &res)
+			s = res
+			cnt = 1
+
+			t1 := time.NewTimer(2 * time.Second)
+			go func() {
+				<-t1.C
+				cnt = 0
+				_log.TRACE.Println("------------------", "Timer expiered", "----------------------")
+			}()
+
+			return res, err
+		} else {
+			_log.TRACE.Println("------------------", "Cache", cnt, "----------------------")
+			res := s
+			cnt += 1
+			return res, nil
+		}
 	}
 
 	res := new(StatusResponse)
