@@ -118,7 +118,6 @@ export default {
 			store: this.$root.$data.store,
 			installedVersion: window.evcc.version,
 			commit: window.evcc.commit,
-			nightly: window.evcc.nightly,
 		};
 	},
 	computed: {
