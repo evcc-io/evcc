@@ -28,6 +28,7 @@ render: |
     {{include "modbus" . | indent 2}}
     register:
       address: 5016 # Total DC power
+      type: input
       decode: uint32s
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -36,6 +37,7 @@ render: |
     {{include "modbus" . | indent 2}}
     register:
       address: 13021 # Battery power
+      type: input
       decode: int16
     #scale: -1 # charging sign form 13000 & 0x2
   soc:
