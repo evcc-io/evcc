@@ -1,8 +1,8 @@
 <template>
-	<div>
+	<div class="root">
 		<div class="mb-2 label">{{ label }}</div>
 		<slot>
-			<h3 class="value mb-4">
+			<h3 class="value">
 				{{ value }}<span v-if="extraValue" class="extraValue"> / {{ extraValue }}</span>
 			</h3>
 		</slot>
@@ -20,6 +20,9 @@ export default {
 };
 </script>
 <style scoped>
+.root {
+	margin-bottom: 1rem;
+}
 .label {
 	text-transform: uppercase;
 	color: var(--bs-gray-medium);

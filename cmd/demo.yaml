@@ -1,112 +1,138 @@
-log: info
+uri: 0.0.0.0:7070
+interval: 10s
+sponsortoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1pY2hhZWwgR2VlcnMiLCJleHAiOjE2NTA5MTAzMDEsInN1YiI6Im5hbHRhdGlzIn0.7QnUr9Hz5nF8SXQ8QdfIbbvC_mnehdgUNmFc2IBRX5s
 
-javascript:
-- vm: shared
-  script: |
-    state = {
-      residualpower: 200,
-      pvpower: -3000,
-      batterypower: 200,
-      gridpower: -2000,
-      chargepower: 0,
-      maxcurrent: 0,
-      battery: 63, // car
-    };
-    function get() {
-      console.log("state:", JSON.stringify(state));
-    }
-    function set() {
-      console.log(param+":", val);
-      console.log("state:", JSON.stringify(state));
-    }
+log: debug
+levels:
+  cache: debug
+  exec: debug
+  script: debug
+  savings: debug
+
+# mqtt:
+#   broker: localhost
+
+#tariffs:
+#  currency: EUR
+#  grid:
+#    type: fixed
+#    price: 0.3 # EUR/kWh
+#  feedin:
+#    type: fixed
+#    price: 0.08 # EUR/kWh
+
+#hems:
+#  type: shm
 
 meters:
-- name: grid
-  type: custom
-  power:
-    type: js
-    vm: shared
-    script: state.gridpower = state.pvpower + state.chargepower + state.residualpower + state.batterypower;
-
-- name: pv
-  type: custom
-  power:
-    type: js
-    vm: shared
-    script: state.pvpower += 100*Math.random();
-
-- name: battery
-  type: custom
-  power:
-    type: js
-    vm: shared
-    script: state.batterypower;
-  soc:
-    type: js
-    vm: shared
-    script: "30"
-- name: charge
-  type: custom
-  power:
-    type: js
-    vm: shared
-    script: state.chargepower;
-  soc:
-    type: js
-    vm: shared
-    script: "30"
+  - name: grid
+    type: custom
+    power:
+      type: script
+      cmd: /bin/sh -c 'echo $(((RANDOM%9000)-4000))'
+  - name: pv
+    type: custom
+    power:
+      type: script
+      cmd: /bin/sh -c 'echo $(((RANDOM%15000)+2000))'
+  - name: battery
+    type: custom
+    power:
+      type: script
+      cmd: /bin/sh -c 'echo $(((RANDOM%1000)-500))'
+    energy:
+      type: script
+      cmd: /bin/sh -c 'echo 1000'
+    soc:
+      type: script
+      cmd: /bin/sh -c 'echo 66'
+  - name: charge-1
+    type: custom
+    power:
+      type: script
+      cmd: /bin/sh -c 'echo 7000'
+    currents:
+      - type: script
+        cmd: /bin/sh -c 'echo 10.1'
+      - type: script
+        cmd: /bin/sh -c 'echo 10.4'
+      - type: script
+        cmd: /bin/sh -c 'echo 10'
+  - name: charge-2
+    type: custom
+    power:
+      type: script
+      cmd: /bin/sh -c 'echo 3110'
+    currents:
+      - type: script
+        cmd: /bin/sh -c 'echo 13'
+      - type: script
+        cmd: /bin/sh -c 'echo 0'
+      - type: script
+        cmd: /bin/sh -c 'echo 0'
 
 chargers:
-- name: demo
-  type: custom
-  enable:
-    type: js
-    vm: shared
-    script: |
-      set();
-      state.enabled = val;
-      if (state.enabled) state.chargepower = state.maxcurrent * 230; else state.chargepower = 0;
-  enabled:
-    type: js
-    vm: shared
-    script: |
-      state.enabled;
-  status:
-    type: js
-    vm: shared
-    script: |
-      if (state.enabled) "C"; else "B";
-  maxcurrent:
-    type: js
-    vm: shared
-    script: |
-      set();
-      state.maxcurrent = val;
-      if (state.enabled) state.chargepower = state.maxcurrent * 230;
+  - name: charger-1
+    type: custom
+    enable:
+      type: script
+      cmd: /bin/sh -c 'echo 1'
+    enabled:
+      type: script
+      cmd: /bin/sh -c 'echo 1'
+    status:
+      type: script
+      cmd: /bin/sh -c 'echo C'
+    maxcurrent:
+      type: script
+      cmd: /bin/sh -c 'echo 20'
 
 vehicles:
-- name: demo
-  title: e-Golf
-  type: custom
-  soc:
-    type: js
-    vm: shared
-    script: |
-      if (state.chargepower > 0) state.battery++; else state.battery--;
-      if (state.battery < 15) state.battery = 15;
-      if (state.battery > 100) state.battery = 100;
-      state.battery;
+  - name: audi
+    title: Skoda Enyaq
+    type: custom
+    soc:
+      type: script
+      cmd: /bin/sh -c 'echo 15'
+    status:
+      type: script
+      cmd: /bin/sh -c 'echo A'
+  - name: zoe
+    title: Blaue Zoe
+    type: custom
+    soc:
+      type: script
+      cmd: /bin/sh -c 'echo 32'
+    status:
+      type: script
+      cmd: /bin/sh -c 'echo B'
 
 site:
-  title: Demo
+  title: Ferienhaus
   meters:
     grid: grid
-    pv: pv
+    pvs: [pv]
     battery: battery
+  residualpower: 50
 
 loadpoints:
-- title: Carport
-  charger: demo
-  meters:
-    charge: charge
-  vehicle: demo
+  - title: eins
+    mode: pv
+    charger: charger-1
+    soc:
+      target: 80
+    meters:
+      charge: charge-1
+    vehicles:
+      - audi
+      - zoe
+  - title: zwo
+    mode: pv
+    charger: charger-1
+    soc:
+      target: 70
+    meters:
+      charge: charge-2
+    vehicle: audi
+    maxcurrent: 16
+    phases: 1

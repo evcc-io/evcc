@@ -29,6 +29,7 @@
 					<LabelAndValue
 						:label="$t('main.loadpoint.power')"
 						:value="fmtKw(chargePower)"
+						class="mb-2"
 					/>
 					<Phases
 						v-bind="phasesProps"

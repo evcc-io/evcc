@@ -63,11 +63,11 @@ export default {
 
 <style scoped>
 .phases {
-	height: 10px;
+	height: 11px;
 }
 .phase {
 	background-color: var(--bs-gray-200);
-	height: 2px;
+	height: 3px;
 	width: 100%;
 	position: relative;
 }

@@ -112,7 +112,7 @@ export default {
       inactiveLabel: "Zielzeit",
       activeLabel: "{time} Uhr",
       modalTitle: "Zielzeit festlegen",
-      setTargetTime: "festlegen",
+      setTargetTime: "keine",
       description: "Wann soll das Fahrzeug auf <strong>{targetSoC}%</strong> geladen sein?",
       today: "heute",
       tomorrow: "morgen",
