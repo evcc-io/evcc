@@ -45,7 +45,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	c.advancedMode = advancedMode
 	c.expandedMode = expandedMode
 
-	c.log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	c.log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	bundle := i18n.NewBundle(language.German)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)

@@ -1,7 +1,7 @@
 # STEP 1 build ui
 FROM node:16-alpine as node
 
-RUN apk update && apk add --no-cache make
+RUN apk update && apk add --no-cache make alpine-sdk python3
 
 WORKDIR /build
 
@@ -27,6 +27,9 @@ RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && up
 
 WORKDIR /build
 
+# define --build-arg RELEASE=1 to hide commit hash
+ARG RELEASE
+
 # install go tools and cache modules
 COPY Makefile .
 COPY go.mod .
@@ -43,7 +46,7 @@ RUN make assets
 COPY --from=node /build/dist /build/dist
 
 # build
-RUN make build
+RUN RELEASE=${RELEASE} make build
 
 
 # STEP 3 build a small image including module support

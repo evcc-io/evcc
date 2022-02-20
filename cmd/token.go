@@ -25,7 +25,7 @@ func init() {
 
 func runToken(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
 	conf, err := loadConfigFile(cfgFile)

@@ -26,7 +26,8 @@
 			}}</span>
 			<span class="d-none d-xs-inline d-sm-inline">{{
 				$t("footer.version.versionLong", { installed })
-			}}</span>
+			}}</span
+			><span v-if="commit"> ({{ commit }})</span>
 		</a>
 
 		<div id="updateModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">

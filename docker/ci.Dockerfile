@@ -1,5 +1,10 @@
+# executes binary build excluding UI
+
 # STEP 2 build executable binary
 FROM golang:1.16-alpine as builder
+
+# define RELEASE=1 to hide commit hash
+ARG RELEASE={{ env "RELEASE" }}
 
 WORKDIR /build
 
@@ -19,7 +24,7 @@ RUN go mod download
 # build
 COPY . .
 RUN make assets
-RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
+RUN RELEASE=${RELEASE} GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
 
 
 # STEP 3 build a small image including module support
