@@ -63,7 +63,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/mlnoga/rct v0.1.2-0.20211011124352-7e995f76b592
-	github.com/muka/go-bluetooth v0.0.0-20211227073548-985739196620
+	github.com/muka/go-bluetooth v0.0.0-20220219050759-674a63b8741a
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.1.2
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
