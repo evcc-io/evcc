@@ -33,13 +33,31 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
-    source: modbus
-    {{include "modbus" . | indent 2}}
-    register:
-      address: 13021 # Battery power
-      type: input
-      decode: int16
-    #scale: -1 # charging sign form 13000 & 0x2
+    source: calc
+    mul:
+    - source: modbus
+      {{include "modbus" . | indent 2}}
+      register:
+        address: 13021 # Battery power
+        type: input
+        decode: int16
+    - source: calc
+      add:
+      - source: modbus
+        {{include "modbus" . | indent 6}}
+        register:
+          type: input
+          address: 13000 # Battery running state
+          decode: bool16
+          bitmask: 2 # Charging
+        scale: -1
+      - source: modbus
+        {{include "modbus" . | indent 6}}
+        register:
+          type: input
+          address: 13000 # Battery running state
+          decode: bool16
+          bitmask: 4 # Discharging
   soc:
     source: modbus
     {{include "modbus" . | indent 2}}
