@@ -119,12 +119,12 @@ func (wb *OpenWBPro) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *OpenWBPro) Enable(enable bool) error {
-	var current float64
+	payload := "ampere=0"
 	if enable {
-		current = float64(wb.current)
+		payload = fmt.Sprintf("ampere=%.1f", wb.current)
 	}
 
-	return wb.set(fmt.Sprintf("ampere=%.1f", current))
+	return wb.set(payload)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -148,7 +148,7 @@ var _ api.Meter = (*OpenWBPro)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *OpenWBPro) CurrentPower() (float64, error) {
 	res, err := wb.get()
-	return res.PowerAll * 1e3, err
+	return res.PowerAll, err
 }
 
 var _ api.MeterEnergy = (*OpenWBPro)(nil)
@@ -156,7 +156,7 @@ var _ api.MeterEnergy = (*OpenWBPro)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *OpenWBPro) TotalEnergy() (float64, error) {
 	res, err := wb.get()
-	return res.Imported, err
+	return res.Imported / 1e3, err
 }
 
 var _ api.MeterCurrent = (*OpenWBPro)(nil)
