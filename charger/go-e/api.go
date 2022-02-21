@@ -32,12 +32,12 @@ type API interface {
 
 type LocalAPI struct {
 	*request.Helper
-	uri string
-	v2  bool
-	status Response
-	log *util.Logger
+	uri     string
+	v2      bool
+	status  Response
+	log     *util.Logger
 	updated time.Time
-	cache int64
+	cache   int64
 }
 
 var _ API = (*LocalAPI)(nil)
@@ -49,8 +49,8 @@ func NewLocal(log *util.Logger, uri string) *LocalAPI {
 	api := &LocalAPI{
 		Helper: request.NewHelper(log),
 		uri:    uri,
-		log: log,
-		cache: 2000,
+		log:    log,
+		cache:  2000,
 	}
 
 	api.upgradeV2()
