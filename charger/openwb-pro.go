@@ -119,12 +119,12 @@ func (wb *OpenWBPro) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *OpenWBPro) Enable(enable bool) error {
-	var current float64
+	payload := "ampere=0"
 	if enable {
-		current = float64(wb.current)
+		payload = fmt.Sprintf("ampere=%.1f", wb.current)
 	}
 
-	return wb.set(fmt.Sprintf("ampere=%.1f", current))
+	return wb.set(payload)
 }
 
 // MaxCurrent implements the api.Charger interface
