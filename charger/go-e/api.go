@@ -34,20 +34,23 @@ type LocalAPI struct {
 	*request.Helper
 	uri string
 	v2  bool
+	status Response
+	log *util.Logger
+	updated time.Time
+	cache int64
 }
 
 var _ API = (*LocalAPI)(nil)
 
-var _log = (*util.Logger)(nil)
-
 func NewLocal(log *util.Logger, uri string) *LocalAPI {
 	uri = strings.TrimRight(uri, "/")
 	uri = strings.TrimSuffix(uri, "/api")
-	_log = log
 
 	api := &LocalAPI{
 		Helper: request.NewHelper(log),
 		uri:    uri,
+		log: log,
+		cache: 2000,
 	}
 
 	api.upgradeV2()
@@ -81,36 +84,27 @@ func (c *LocalAPI) response(partial string, res interface{}) error {
 }
 
 // Status reads a v1/v2 api response
-var cnt = 0
-var s = (*StatusResponse2)(nil)
-func (c *LocalAPI) Status() (Response, error) {
-	if c.v2 {
-		if cnt == 0 {
-			_log.TRACE.Println("------------------", "Request", "----------------------")
-			res := new(StatusResponse2)
-			err := c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &res)
-			s = res
-			cnt = 1
+func (c *LocalAPI) Status() (res Response, err error) {
+	if time.Since(c.updated).Milliseconds() > c.cache {
+		c.log.TRACE.Println("Native Response, cache age:", time.Since(c.updated).Milliseconds(), "ms /", c.cache, "ms")
 
-			t1 := time.NewTimer(2 * time.Second)
-			go func() {
-				<-t1.C
-				cnt = 0
-				_log.TRACE.Println("------------------", "Timer expiered", "----------------------")
-			}()
-
-			return res, err
+		// fork API V2
+		if c.v2 {
+			c.status = new(StatusResponse2)
+			err = c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &c.status)
 		} else {
-			_log.TRACE.Println("------------------", "Cache", cnt, "----------------------")
-			res := s
-			cnt += 1
-			return res, nil
+			c.status = new(StatusResponse)
+			err = c.response("status", &c.status)
 		}
-	}
 
-	res := new(StatusResponse)
-	err := c.response("status", &res)
-	return res, err
+		if err == nil {
+			c.updated = time.Now()
+		}
+
+	} else {
+		c.log.TRACE.Println("Cached Response, cache age:", time.Since(c.updated).Milliseconds(), "ms /", c.cache, "ms")
+	}
+	return c.status, err
 }
 
 // Update executes a v1/v2 api update and returns the response
