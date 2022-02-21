@@ -2,7 +2,7 @@
 	<div>
 		<LabelAndValue class="flex-grow-1" :label="$t('main.targetCharge.title')">
 			<button
-				class="btn btn-link p-0 value mb-4"
+				class="btn btn-link p-0 value"
 				:class="targetChargeEnabled ? 'text-white' : 'text-gray'"
 				data-bs-toggle="modal"
 				:data-bs-target="`#${modalId}`"

@@ -1,6 +1,6 @@
 <template>
 	<div class="d-flex flex-column top-area">
-		<div class="container">
+		<div class="container px-4">
 			<div class="d-flex justify-content-between align-items-center">
 				<h2 class="d-block my-4">
 					{{ siteTitle || "evcc" }}
@@ -25,13 +25,14 @@
 					:class="`toggle-icon--${detailsVisible ? 'down' : 'up'}`"
 				></shopicon-regular-arrowup>
 			</div>
-			<div class="container">
+			<div class="container px-4">
 				<h2 class="mb-3 mb-sm-4">Ladepunkte</h2>
 			</div>
 			<Loadpoints :loadpoints="loadpoints" />
-			<div class="container">
-				<h2 class="mt-5 mb-3 mb-sm-4">Parkplatz</h2>
+			<div class="container px-4 px-md-5">
+				<h2 class="mt-5 mb-4">Parkplatz</h2>
 			</div>
+			<Vehicles />
 			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
@@ -42,13 +43,14 @@ import "@h2d2/shopicons/es/regular/arrowup";
 import TopNavigation from "./TopNavigation.vue";
 import Energyflow from "./Energyflow/Energyflow.vue";
 import Loadpoints from "./Loadpoints.vue";
+import Vehicles from "./Vehicles.vue";
 import Footer from "./Footer.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
-	components: { Loadpoints, Energyflow, Footer, TopNavigation },
+	components: { Loadpoints, Energyflow, Footer, TopNavigation, Vehicles },
 	mixins: [formatter, collector],
 	props: {
 		loadpoints: Array,
