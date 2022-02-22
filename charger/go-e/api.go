@@ -109,6 +109,7 @@ func (c *LocalAPI) Status() (res Response, err error) {
 
 // Update executes a v1/v2 api update and returns the response
 func (c *LocalAPI) Update(payload string) error {
+	c.updated = time.Time{}
 	res := new(UpdateResponse)
 
 	if c.v2 {
