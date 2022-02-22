@@ -1,0 +1,26 @@
+product:
+  brand: OpenEMS
+  description: z. B. Stromspeichersysteme von FENECON
+
+render:
+- usage: grid
+  default: |
+    type: template
+    template: openems
+    usage: grid
+    host: 192.168.100.100  # IP-Adresse oder Hostname 
+    password: # Passwort, z. B. "user"
+- usage: pv
+  default: |
+    type: template
+    template: openems
+    usage: pv
+    host: 192.168.100.100  # IP-Adresse oder Hostname 
+    password: # Passwort, z. B. "user"
+- usage: battery
+  default: |
+    type: template
+    template: openems
+    usage: battery
+    host: 192.168.100.100  # IP-Adresse oder Hostname 
+    password: # Passwort, z. B. "user"

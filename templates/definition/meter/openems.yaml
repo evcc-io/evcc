@@ -1,0 +1,42 @@
+template: openems
+products:
+- brand: OpenEMS
+- brand: FENECON
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: host
+  required: true
+  example: 192.168.100.100
+- name: password
+  mask: true
+  default: user
+  advanced: true
+render: |
+  type: custom
+  power:
+    source: http
+    {{- if eq .usage "grid" }}
+    uri: http://{{ .host }}/rest/channel/_sum/GridActivePower
+    {{- end }}
+    {{- if eq .usage "pv" }}
+    uri: http://{{ .host }}/rest/channel/_sum/ProductionActivePower
+    {{- end }}
+    {{- if eq .usage "battery" }}
+    uri: http://{{ .host }}/rest/channel/_sum/EssDischargePower
+    {{- end }}
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: .value
+  soc:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/EssSoc
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: .value
