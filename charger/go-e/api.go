@@ -35,9 +35,8 @@ type LocalAPI struct {
 	uri     string
 	v2      bool
 	status  Response
-	log     *util.Logger
 	updated time.Time
-	cache   int64
+	cache   time.Duration
 }
 
 var _ API = (*LocalAPI)(nil)
@@ -49,8 +48,7 @@ func NewLocal(log *util.Logger, uri string) *LocalAPI {
 	api := &LocalAPI{
 		Helper: request.NewHelper(log),
 		uri:    uri,
-		log:    log,
-		cache:  2000,
+		cache:  time.Duration(2000) * time.Millisecond,
 	}
 
 	api.upgradeV2()
@@ -85,8 +83,7 @@ func (c *LocalAPI) response(partial string, res interface{}) error {
 
 // Status reads a v1/v2 api response
 func (c *LocalAPI) Status() (res Response, err error) {
-	if time.Since(c.updated).Milliseconds() > c.cache {
-		c.log.TRACE.Println("Native Response, cache age:", time.Since(c.updated).Milliseconds(), "ms /", c.cache, "ms")
+	if time.Since(c.updated) > c.cache {
 
 		// fork API V2
 		if c.v2 {
@@ -100,9 +97,6 @@ func (c *LocalAPI) Status() (res Response, err error) {
 		if err == nil {
 			c.updated = time.Now()
 		}
-
-	} else {
-		c.log.TRACE.Println("Cached Response, cache age:", time.Since(c.updated).Milliseconds(), "ms /", c.cache, "ms")
 	}
 	return c.status, err
 }
