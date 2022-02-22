@@ -30,7 +30,7 @@
 			</div>
 			<Loadpoints :loadpoints="loadpoints" />
 			<div class="container px-4 px-md-5">
-				<h2 class="mt-5 mb-4">Parkplatz</h2>
+				<h2 class="mt-5 mb-5">Parkplatz</h2>
 			</div>
 			<Vehicles />
 			<Footer v-bind="footer"></Footer>
