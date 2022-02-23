@@ -24,13 +24,13 @@ type openwbProStatus struct {
 	Currents       []float64
 	Imported       float64
 	Exported       float64
-	PlugState      bool   `json:"plug_state"`
-	ChargeState    bool   `json:"charge_state"`
-	PhasesActual   int    `json:"phases_actual"`
-	PhasesTarget   int    `json:"phases_target"`
-	PhasesInUse    int    `json:"phases_in_use"`
-	OfferedCurrent int    `json:"offered_current"`
-	EvseSignaling  string `json:"evse_signaling"`
+	PlugState      bool    `json:"plug_state"`
+	ChargeState    bool    `json:"charge_state"`
+	PhasesActual   int     `json:"phases_actual"`
+	PhasesTarget   int     `json:"phases_target"`
+	PhasesInUse    int     `json:"phases_in_use"`
+	OfferedCurrent float64 `json:"offered_current"`
+	EvseSignaling  string  `json:"evse_signaling"`
 	Serial         string
 }
 
