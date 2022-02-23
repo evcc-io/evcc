@@ -9,7 +9,7 @@ params:
   choice: [ "grid", "pv", "battery" ]
 - name: host
   required: true
-  example: 192.168.100.100
+  example: 192.0.2.2
 - name: password
   mask: true
   default: user
