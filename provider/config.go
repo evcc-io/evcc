@@ -3,6 +3,8 @@ package provider
 import (
 	"fmt"
 	"strings"
+
+	"github.com/evcc-io/evcc/util"
 )
 
 // provider types
@@ -54,6 +56,13 @@ type Config struct {
 	Source string
 	Type   string                 // TODO remove deprecated
 	Other  map[string]interface{} `mapstructure:",remain"`
+}
+
+// TODO prepare for removing deprecated type attribute
+func (c *Config) Deprecate(log *util.Logger) {
+	if c != nil && c.Type != "" {
+		log.WARN.Printf("type:%s is deprecated, use source:%s instead", c.Type, c.Type)
+	}
 }
 
 // PluginType returns the plugin type in a legacy-aware way

@@ -36,6 +36,13 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
+	// TODO deprecate
+	log := util.NewLogger("charger")
+	cc.Soc.Deprecate(log)
+	cc.Status.Deprecate(log)
+	cc.Range.Deprecate(log)
+	cc.Odometer.Deprecate(log)
+
 	if cc.Cache != nil {
 		util.NewLogger("vehicle").WARN.Println("cache is deprecated and will be removed in a future release")
 	}
