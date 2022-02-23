@@ -37,7 +37,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	}
 
 	// TODO deprecate
-	log := util.NewLogger("charger")
+	log := util.NewLogger("vehicle")
 	cc.Soc.Deprecate(log)
 	cc.Status.Deprecate(log)
 	cc.Range.Deprecate(log)
