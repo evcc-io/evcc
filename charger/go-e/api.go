@@ -84,8 +84,6 @@ func (c *LocalAPI) response(partial string, res interface{}) error {
 // Status reads a v1/v2 api response
 func (c *LocalAPI) Status() (res Response, err error) {
 	if time.Since(c.updated) > c.cache {
-
-		// fork API V2
 		if c.v2 {
 			c.status = new(StatusResponse2)
 			err = c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &c.status)
@@ -93,7 +91,6 @@ func (c *LocalAPI) Status() (res Response, err error) {
 			c.status = new(StatusResponse)
 			err = c.response("status", &c.status)
 		}
-
 		if err == nil {
 			c.updated = time.Now()
 		}
