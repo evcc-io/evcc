@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 )
@@ -38,7 +37,7 @@ func TestLocalV1(t *testing.T) {
 	srv := httptest.NewServer(h)
 
 	// h.expect("/api/status?filter=alw")
-	local := NewLocal(util.NewLogger("foo"), srv.URL, time.Duration(0))
+	local := NewLocal(util.NewLogger("foo"), srv.URL, 0)
 
 	h.expect("/status")
 	if _, err := local.Status(); err != nil {
@@ -55,7 +54,7 @@ func TestLocalV2(t *testing.T) {
 	srv := httptest.NewServer(h)
 
 	h.expect("/api/status?filter=alw")
-	local := NewLocal(util.NewLogger("foo"), srv.URL, time.Duration(0))
+	local := NewLocal(util.NewLogger("foo"), srv.URL, 0)
 
 	h.expect("/api/status?filter=alw,car,eto,nrg,wh,trx,cards")
 	if _, err := local.Status(); err != nil {
