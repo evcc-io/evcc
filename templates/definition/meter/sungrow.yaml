@@ -33,7 +33,7 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
-    type: calc
+    source: calc
     mul:
     - source: modbus
       {{include "modbus" . | indent 4}}
@@ -41,7 +41,7 @@ render: |
         address: 13021 # Battery power
         type: input
         decode: int16
-    - type: calc
+    - source: calc
       add:
       - source: modbus
         {{include "modbus" . | indent 6}}

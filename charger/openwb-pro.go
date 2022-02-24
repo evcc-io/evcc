@@ -19,18 +19,19 @@ func init() {
 type openwbProStatus struct {
 	Date           string
 	Timestamp      int64
+	Currents       []float64
 	Powers         []float64
 	PowerAll       float64 `json:"power_all"`
-	Currents       []float64
 	Imported       float64
 	Exported       float64
-	PlugState      bool   `json:"plug_state"`
-	ChargeState    bool   `json:"charge_state"`
-	PhasesActual   int    `json:"phases_actual"`
-	PhasesTarget   int    `json:"phases_target"`
-	PhasesInUse    int    `json:"phases_in_use"`
-	OfferedCurrent int    `json:"offered_current"`
-	EvseSignaling  string `json:"evse_signaling"`
+	PlugState      bool    `json:"plug_state"`
+	ChargeState    bool    `json:"charge_state"`
+	PhasesActual   int     `json:"phases_actual"`
+	PhasesTarget   int     `json:"phases_target"`
+	PhasesInUse    int     `json:"phases_in_use"`
+	OfferedCurrent float64 `json:"offered_current"`
+	EvseSignaling  string  `json:"evse_signaling"`
+	VehicleID      string  `json:"vehicle_id"`
 	Serial         string
 }
 
@@ -56,7 +57,7 @@ func NewOpenWBProFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewOpenWBPro creates OpenWBPro charger
 func NewOpenWBPro(uri string) (*OpenWBPro, error) {
-	log := util.NewLogger("openwbpro")
+	log := util.NewLogger("owbpro")
 
 	wb := &OpenWBPro{
 		Helper:  request.NewHelper(log),
@@ -86,7 +87,7 @@ func (wb *OpenWBPro) get() (openwbProStatus, error) {
 
 func (wb *OpenWBPro) set(payload string) error {
 	uri := fmt.Sprintf("%s/%s", wb.uri, "connect.php")
-	resp, err := wb.Post(uri, "text/plain", strings.NewReader(payload))
+	resp, err := wb.Post(uri, "application/x-www-form-urlencoded", strings.NewReader(payload))
 	if err == nil {
 		resp.Body.Close()
 	}
@@ -180,4 +181,16 @@ var _ api.ChargePhases = (*OpenWBPro)(nil)
 // Phases1p3p implements the api.ChargePhases interface
 func (wb *OpenWBPro) Phases1p3p(phases int) error {
 	return wb.set(fmt.Sprintf("phasetarget=%d", phases))
+}
+
+var _ api.Identifier = (*OpenWBPro)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *OpenWBPro) Identify() (string, error) {
+	res, err := wb.get()
+	if err != nil || res.VehicleID == "--" {
+		return "", err
+	}
+
+	return res.VehicleID, err
 }

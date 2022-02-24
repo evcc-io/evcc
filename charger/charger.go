@@ -27,6 +27,13 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
+	// TODO deprecate
+	log := util.NewLogger("charger")
+	cc.Status.Deprecate(log)
+	cc.Enable.Deprecate(log)
+	cc.Enabled.Deprecate(log)
+	cc.MaxCurrent.Deprecate(log)
+
 	status, err := provider.NewStringGetterFromConfig(cc.Status)
 	if err != nil {
 		return nil, fmt.Errorf("status: %w", err)

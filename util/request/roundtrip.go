@@ -2,6 +2,7 @@ package request
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
@@ -20,8 +21,9 @@ type roundTripper struct {
 const max = 1024 * 64
 
 var (
-	reqMetric *prometheus.SummaryVec
-	resMetric *prometheus.CounterVec
+	LogHeaders bool
+	reqMetric  *prometheus.SummaryVec
+	resMetric  *prometheus.CounterVec
 )
 
 func init() {
@@ -66,13 +68,55 @@ func min(a, b int) int {
 	return b
 }
 
+// copy of http.drainBody
+func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
+	if b == nil || b == http.NoBody {
+		// No copying needed. Preserve the magic sentinel meaning of NoBody.
+		return http.NoBody, http.NoBody, nil
+	}
+	var buf bytes.Buffer
+	if _, err = buf.ReadFrom(b); err != nil {
+		return nil, b, err
+	}
+	if err = b.Close(); err != nil {
+		return nil, b, err
+	}
+	return io.NopCloser(&buf), io.NopCloser(bytes.NewReader(buf.Bytes())), nil
+}
+
+// dump http request/response body
+func dump(r io.ReadCloser, w *strings.Builder) error {
+	body, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+	if w.Len() > 0 && len(body) > 0 {
+		w.WriteString("\n--\n")
+	}
+	_, err = w.Write(bytes.TrimSpace(body[:min(max, len(body))]))
+	return err
+}
+
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
 
-	var bld strings.Builder
-	if body, err := httputil.DumpRequestOut(req, true); err == nil {
-		bld.WriteString("\n")
-		bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
+	// dump without headers
+	var err error
+	var save io.ReadCloser
+
+	bld := new(strings.Builder)
+	if LogHeaders {
+		if body, err := httputil.DumpRequestOut(req, true); err == nil {
+			bld.WriteString("\n")
+			bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
+		}
+	} else {
+		if save, req.Body, err = drainBody(req.Body); err == nil {
+			err = dump(save, bld)
+		}
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	startTime := time.Now()
@@ -83,9 +127,18 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err == nil {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
 
-		if body, err := httputil.DumpResponse(resp, true); err == nil {
-			bld.WriteString("\n\n")
-			bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
+		if LogHeaders {
+			if body, err := httputil.DumpResponse(resp, true); err == nil {
+				bld.WriteString("\n\n")
+				bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
+			}
+		} else {
+			if save, resp.Body, err = drainBody(resp.Body); err == nil {
+				err = dump(save, bld)
+			}
+			if err != nil {
+				return nil, err
+			}
 		}
 	} else {
 		resMetric.WithLabelValues(req.URL.Hostname(), "999").Add(1)
