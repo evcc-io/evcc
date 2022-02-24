@@ -41,14 +41,14 @@ type LocalAPI struct {
 
 var _ API = (*LocalAPI)(nil)
 
-func NewLocal(log *util.Logger, uri string) *LocalAPI {
+func NewLocal(log *util.Logger, uri string, cache time.Duration) *LocalAPI {
 	uri = strings.TrimRight(uri, "/")
 	uri = strings.TrimSuffix(uri, "/api")
 
 	api := &LocalAPI{
 		Helper: request.NewHelper(log),
 		uri:    uri,
-		cache:  time.Duration(2000) * time.Millisecond,
+		cache:  cache,
 	}
 
 	api.upgradeV2()
