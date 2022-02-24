@@ -1,9 +1,11 @@
 package templates
 
 import (
+	"bufio"
 	"bytes"
 	_ "embed"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -67,6 +69,25 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 	var hasAdvancedParam bool
 	var newParams []Param
 	for _, param := range t.Params {
+		// reduce help texts to one line and add ...
+		help := param.Help.String(lang)
+		if help != "" {
+			scanner := bufio.NewScanner(strings.NewReader(help))
+			line := 0
+			for scanner.Scan() {
+				line++
+				if line == 1 {
+					help = scanner.Text()
+				} else {
+					help += "..."
+					break
+				}
+			}
+			if help != param.Help.String(lang) {
+				param.Help.SetString(lang, help)
+			}
+		}
+
 		if param.Deprecated || param.Name == ParamUsage {
 			continue
 		}

@@ -976,7 +976,7 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 
 	msg := "pv timer reset"
 	if len(typ) == 1 {
-		msg = fmt.Sprintf("pv %s timer reset", typ)
+		msg = fmt.Sprintf("pv %s timer reset", typ[0])
 	}
 	lp.log.DEBUG.Printf(msg)
 
@@ -1078,10 +1078,22 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	// observed phase state inconsistency (https://github.com/evcc-io/evcc/issues/1572, https://github.com/evcc-io/evcc/issues/2230)
 	if phases > 0 && phases < lp.activePhases {
 		lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, lp.activePhases)
+
+		// if 3p->1p change is slow and we're no longer charging, we'll correct the observed phases here
+		if lp.GetStatus() == api.StatusB {
+			lp.activePhases = 1
+		}
+	}
+
+	// this can happen the first time for a 1p3p-capable charger, see https://github.com/evcc-io/evcc/issues/2520
+	if phases == 0 && lp.activePhases == 0 {
+		lp.log.DEBUG.Printf("assuming initial phase state: 3p")
+		lp.phaseTimer = elapsed
+		lp.activePhases = 3
 	}
 
 	var waiting bool
-	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
+	targetCurrent := powerToCurrent(availablePower, lp.activePhases)
 
 	// scale down phases
 	if targetCurrent < minCurrent && (phases == 0 || phases == 3) && lp.activePhases > 1 {
@@ -1173,13 +1185,6 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	minCurrent := lp.GetMinCurrent()
 	maxCurrent := lp.GetMaxCurrent()
 
-	// calculate target charge current from delta power and actual current
-	effectiveCurrent := lp.effectiveCurrent()
-	deltaCurrent := powerToCurrent(-sitePower, lp.activePhases)
-	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
-
-	lp.log.DEBUG.Printf("max charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.activePhases)
-
 	// switch phases up/down
 	if _, ok := lp.charger.(api.ChargePhases); ok {
 		availablePower := -sitePower + lp.chargePower
@@ -1189,6 +1194,13 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			return 0
 		}
 	}
+
+	// calculate target charge current from delta power and actual current
+	effectiveCurrent := lp.effectiveCurrent()
+	deltaCurrent := powerToCurrent(-sitePower, lp.activePhases)
+	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
+
+	lp.log.DEBUG.Printf("max charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.activePhases)
 
 	// in MinPV mode or under special conditions return at least minCurrent
 	if (mode == api.ModeMinPV || batteryBuffered || lp.climateActive()) && targetCurrent < minCurrent {
@@ -1275,7 +1287,10 @@ func (lp *LoadPoint) updateChargePower() {
 			return err
 		}
 
+		lp.Lock()
 		lp.chargePower = value // update value if no error
+		lp.Unlock()
+
 		lp.log.DEBUG.Printf("charge power: %.0fW", value)
 		lp.publish("chargePower", value)
 
@@ -1295,21 +1310,10 @@ func (lp *LoadPoint) updateChargePower() {
 // updateChargeCurrents uses MeterCurrent interface to count phases with current >=1A
 func (lp *LoadPoint) updateChargeCurrents() {
 	lp.chargeCurrents = nil
+
 	phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent)
 	if !ok {
-		// Guess active phases from power consumption. Assumes that chargePower has been
-		// updated before. Discussion in https://github.com/evcc-io/evcc/issues/2146 and
-		// https://github.com/evcc-io/evcc/issues/2177
-		if lp.charging() && lp.chargeCurrent > 0 {
-			phases := int(math.Ceil(lp.chargePower/Voltage/lp.chargeCurrent - 0.05))
-			if phases >= 1 && phases <= 3 {
-				lp.activePhases = phases
-				lp.log.DEBUG.Printf("detected phases: %dp (%.1fA @ %.0fW)", lp.activePhases, lp.chargeCurrent, lp.chargePower)
-				lp.publish("activePhases", lp.activePhases)
-			}
-		}
-
-		return
+		return // don't guess
 	}
 
 	i1, i2, i3, err := phaseMeter.Currents()

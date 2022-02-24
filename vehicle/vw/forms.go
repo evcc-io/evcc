@@ -79,7 +79,7 @@ func ParseCredentialsPage(r io.ReadCloser) (CredentialParams, error) {
 		return res, err
 	}
 
-	re := regexp.MustCompile(`(?s)window._IDK\s*=\s*(.*?);`)
+	re := regexp.MustCompile(`(?s)window._IDK\s*=\s*(.*?)[;<]`)
 	match := re.FindAllStringSubmatch(buf.String(), -1)
 
 	tmpl := strings.ReplaceAll(match[0][1], `'`, `"`)

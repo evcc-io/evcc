@@ -8,7 +8,9 @@ params:
   example: WREN...
 - name: capacity
   default: 60
+- preset: vehiclecloud
 render: |
   type: renault
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

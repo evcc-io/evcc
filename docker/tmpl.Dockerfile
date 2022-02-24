@@ -1,7 +1,9 @@
-# STEP 1 build ui
-FROM node:14-alpine as node
+# executes entire build including UI
 
-RUN apk update && apk add --no-cache make
+# STEP 1 build ui
+FROM node:16-alpine as node
+
+RUN apk update && apk add --no-cache make alpine-sdk python3
 
 WORKDIR /build
 
@@ -20,6 +22,9 @@ RUN make clean ui
 # STEP 2 build executable binary
 FROM golang:1.16-alpine as builder
 
+# define RELEASE=1 to hide commit hash
+ARG RELEASE={{ env "RELEASE" }}
+
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
 # Ca-certificates is required to call HTTPS endpoints.
@@ -35,17 +40,13 @@ COPY tools.go .
 RUN make install
 RUN go mod download
 
-# prepare
-COPY . .
-RUN make assets
-
 # copy ui
 COPY --from=node /build/dist /build/dist
 
 # build
 COPY . .
 RUN make assets
-RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
+RUN RELEASE=${RELEASE} GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
 
 
 # STEP 3 build a small image including module support

@@ -1,20 +1,25 @@
 .PHONY: default all clean install install-ui ui assets lint test-ui lint-ui test build test-release release
-.PHONY: docker publish-testing publish-latest publish-images
+.PHONY: docker publish-testing publish-latest publish-nightly publish-release
 .PHONY: prepare-image image-rootfs image-update
 .PHONY: soc stamps
 
 # build vars
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
+COMMIT := $(SHA)
+# hide commit for releases
+ifeq ($(RELEASE),1)
+    COMMIT :=
+endif
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
-LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(SHA) -s -w
+LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -s -w
 BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := andig/evcc
-ALPINE_VERSION := 3.13
+ALPINE_VERSION := 3.15
 TARGETS := arm.v6,arm.v8,amd64
 
 # gokrazy image
@@ -55,7 +60,7 @@ test:
 	go test ./...
 
 build:
-	@echo Version: $(VERSION) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 release-test:
@@ -65,28 +70,27 @@ release:
 	goreleaser --rm-dist
 
 docker:
-	@echo Version: $(VERSION) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	docker build --tag $(DOCKER_IMAGE):testing .
 
 publish-testing:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "testing" --targets=$(TARGETS)
 
 publish-latest:
-	@echo Version: $(VERSION) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" --targets=$(TARGETS)
 
-publish-latest-ci:
-	@echo Version: $(VERSION) $(BUILD_DATE)
+publish-nightly:
+	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "nightly" --targets=$(TARGETS)
 
-# TODO: -v "0" needs to be replaced by MAJOR, MINOR and PATCH as soon as we made it to semantic versioning
-publish-images:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+publish-release:
+	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	RELEASE=1 seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
 # gokrazy image
@@ -111,7 +115,7 @@ image-update:
 	gokr-packer -update yes $(IMAGE_OPTIONS)
 
 soc:
-	@echo Version: $(VERSION) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
 
 stamps:

@@ -25,7 +25,8 @@ var acceptable = []string{
 	"can only have either uri or device", // modbus
 	"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
 	"eebus not configured",
-	"unexpected status: 400", // easee
+	"Get \"http://192.0.2.2/shelly\": context deadline exceeded",        // shelly
+	"unexpected status: 400",                                            // easee
 	"Get \"http://192.0.2.2/getParameters\": context deadline exceeded", // evsewifi
 }
 

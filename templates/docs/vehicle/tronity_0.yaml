@@ -10,8 +10,6 @@ render:
     title: # Wird in der Benutzeroberfläche angezeigt  # Optional 
     userid:
     secret:
-    accessToken:
-    refreshToken:
     vin: W...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
     capacity: 10  # Akku-Kapazität in kWh  # Optional 
   advanced: |
@@ -20,8 +18,6 @@ render:
     title: # Wird in der Benutzeroberfläche angezeigt  # Optional 
     userid:
     secret:
-    accessToken:
-    refreshToken:
     vin: W...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
     capacity: 10  # Akku-Kapazität in kWh  # Optional 
     phases: 3  # Die maximale Anzahl der Phasen welche genutzt werden können  # Optional 

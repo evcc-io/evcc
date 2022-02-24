@@ -172,7 +172,7 @@ export default {
 			this.chargeDurationInterpolated = this.chargeDuration;
 		},
 		chargeRemainingDuration() {
-			this.chargeDurationInterpolated = this.chargeRemainingDuration;
+			this.chargeRemainingDurationInterpolated = this.chargeRemainingDuration;
 		},
 	},
 	mounted() {

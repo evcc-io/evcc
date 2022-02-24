@@ -137,7 +137,6 @@ func NewSiteFromConfig(
 func NewSite() *Site {
 	lp := &Site{
 		log:     util.NewLogger("site"),
-		Health:  NewHealth(60 * time.Second),
 		Voltage: 230, // V
 	}
 
@@ -493,6 +492,8 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 // Run is the main control loop. It reacts to trigger events by
 // updating measurements and executing control logic.
 func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
+	site.Health = NewHealth(time.Minute + interval)
+
 	loadpointChan := make(chan Updater)
 	go site.loopLoadpoints(loadpointChan)
 

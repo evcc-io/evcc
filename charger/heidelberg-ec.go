@@ -132,7 +132,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 		return api.StatusE, nil
 	case 10:
 		if wb.wakeup {
-			// Keep Status B2 during Wakeup
+			// keep status B2 during wakeup
 			return api.StatusB, nil
 		}
 		return api.StatusF, nil
@@ -272,13 +272,13 @@ var _ api.AlarmClock = (*HeidelbergEC)(nil)
 
 // WakeUp implements the api.AlarmClock interface
 func (wb *HeidelbergEC) WakeUp() error {
-	// Force Status F by locking
+	// force status F by locking
 	err := wb.set(hecRegRemoteLock, 0)
 	if err == nil {
 		// Always takes at least ~10 sec to return to normal operation
 		// after locking even if unlocking immediately.
 		wb.wakeup = true
-		// Return to normal operation by unlocking after ~10 sec
+		// return to normal operation by unlocking after ~10 sec
 		err = wb.set(hecRegRemoteLock, 1)
 	}
 	return err
