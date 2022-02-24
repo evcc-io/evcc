@@ -1,138 +1,221 @@
-uri: 0.0.0.0:7070
-interval: 10s
-sponsortoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1pY2hhZWwgR2VlcnMiLCJleHAiOjE2NTA5MTAzMDEsInN1YiI6Im5hbHRhdGlzIn0.7QnUr9Hz5nF8SXQ8QdfIbbvC_mnehdgUNmFc2IBRX5s
+log: info
 
-log: debug
-levels:
-  cache: debug
-  exec: debug
-  script: debug
-  savings: debug
-
-# mqtt:
-#   broker: localhost
-
-#tariffs:
-#  currency: EUR
-#  grid:
-#    type: fixed
-#    price: 0.3 # EUR/kWh
-#  feedin:
-#    type: fixed
-#    price: 0.08 # EUR/kWh
-
-#hems:
-#  type: shm
+javascript:
+  - vm: shared
+    script: |
+      state = {
+        residualpower: 500,
+        pvpower: 5000,
+        batterypower: -750,
+        batterySoC: 55,
+        gridpower: -1000,
+        loadpoints: [
+          { enabled: true, vehicleSoC: 62, maxcurrent: 0, phases: 1, chargepower: 0 },
+          { enabled: false, vehicleSoC: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
+        ]
+      };
+      function get() {
+        console.log("state:", JSON.stringify(state));
+      }
+      function set() {
+        console.log(param+":", val);
+        console.log("state:", JSON.stringify(state));
+      }
 
 meters:
   - name: grid
     type: custom
     power:
-      type: script
-      cmd: /bin/sh -c 'echo $(((RANDOM%9000)-4000))'
+      source: js
+      vm: shared
+      script: |
+        state.pvpower = 8000+500*Math.random();
+        state.batterypower = state.gridpower > 0 ? 1500 : -700;
+        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - state.batterypower - state.pvpower;
+        state.gridpower;
+
   - name: pv
     type: custom
     power:
-      type: script
-      cmd: /bin/sh -c 'echo $(((RANDOM%15000)+2000))'
+      source: js
+      vm: shared
+      script: state.pvpower;
+
   - name: battery
     type: custom
     power:
-      type: script
-      cmd: /bin/sh -c 'echo $(((RANDOM%1000)-500))'
-    energy:
-      type: script
-      cmd: /bin/sh -c 'echo 1000'
+      source: js
+      vm: shared
+      script: state.batterypower;
     soc:
-      type: script
-      cmd: /bin/sh -c 'echo 66'
-  - name: charge-1
+      source: js
+      vm: shared
+      script: |
+        if (state.batterypower < 0) state.batterySoC++; else state.batterySoC--;
+        if (state.batterySoC < 10) state.batterySoC = 10;
+        if (state.batterySoC > 90) state.batterySoC = 90;
+        state.batterySoC;
+  - name: meter_charger_1
     type: custom
     power:
-      type: script
-      cmd: /bin/sh -c 'echo 7000'
-    currents:
-      - type: script
-        cmd: /bin/sh -c 'echo 10.1'
-      - type: script
-        cmd: /bin/sh -c 'echo 10.4'
-      - type: script
-        cmd: /bin/sh -c 'echo 10'
-  - name: charge-2
+      source: js
+      vm: shared
+      script: state.loadpoints[0].chargepower;
+  - name: meter_charger_2
     type: custom
     power:
-      type: script
-      cmd: /bin/sh -c 'echo 3110'
-    currents:
-      - type: script
-        cmd: /bin/sh -c 'echo 13'
-      - type: script
-        cmd: /bin/sh -c 'echo 0'
-      - type: script
-        cmd: /bin/sh -c 'echo 0'
-
+      source: js
+      vm: shared
+      script: state.loadpoints[1].chargepower;
+  - name: meter_charger_3
+    type: custom
+    power:
+      source: js
+      script: 0
 chargers:
-  - name: charger-1
+  - name: charger_1
     type: custom
     enable:
-      type: script
-      cmd: /bin/sh -c 'echo 1'
+      source: js
+      vm: shared
+      script: |
+        set();
+        var lp = state.loadpoints[0];
+        lp.enabled = val;
+        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
     enabled:
-      type: script
-      cmd: /bin/sh -c 'echo 1'
+      source: js
+      vm: shared
+      script: |
+        state.loadpoints[0].enabled;
     status:
-      type: script
-      cmd: /bin/sh -c 'echo C'
+      source: js
+      vm: shared
+      script: |
+        if (state.loadpoints[0].enabled) "C"; else "B";
     maxcurrent:
-      type: script
-      cmd: /bin/sh -c 'echo 20'
+      source: js
+      vm: shared
+      script: |
+        set();
+        var lp = state.loadpoints[0];
+        lp.maxcurrent = val;
+        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+  - name: charger_2
+    type: custom
+    enable:
+      source: js
+      vm: shared
+      script: |
+        set();
+        var lp = state.loadpoints[1];
+        lp.enabled = val;
+        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+    enabled:
+      source: js
+      vm: shared
+      script: |
+        state.loadpoints[1].enabled;
+    status:
+      source: js
+      vm: shared
+      script: |
+        if (state.loadpoints[1].enabled) "C"; else "B";
+    maxcurrent:
+      source: js
+      vm: shared
+      script: |
+        set();
+        var lp = state.loadpoints[1];
+        lp.maxcurrent = val;
+        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+  - name: charger_3
+    type: custom
+    enable:
+      source: js
+      vm: shared
+      script:
+    enabled:
+      source: js
+      vm: shared
+      script: false
+    status:
+      source: js
+      vm: shared
+      script: "'A'"
+    maxcurrent:
+      source: js
+      vm: shared
+      script: 16
 
 vehicles:
-  - name: audi
-    title: Skoda Enyaq
+  - name: vehicle_1
+    title: blauer e-Golf
     type: custom
     soc:
-      type: script
-      cmd: /bin/sh -c 'echo 15'
-    status:
-      type: script
-      cmd: /bin/sh -c 'echo A'
-  - name: zoe
-    title: Blaue Zoe
+      source: js
+      vm: shared
+      script: |
+        var lp = state.loadpoints[0];
+        if (lp.chargepower > 0) lp.vehicleSoC++; else lp.vehicleSoC--;
+        if (lp.vehicleSoC < 15) lp.vehicleSoC = 15;
+        if (lp.vehicleSoC > 100) lp.vehicleSoC = 100;
+        lp.vehicleSoC;
+    range:
+      source: js
+      vm: shared
+      script: |
+        var lp = state.loadpoints[0]
+        var range = (44 * lp.vehicleSoC) / 15;
+        range
+    capacity: 44
+  - name: vehicle_2
+    title: weißer Model 3
     type: custom
     soc:
-      type: script
-      cmd: /bin/sh -c 'echo 32'
-    status:
-      type: script
-      cmd: /bin/sh -c 'echo B'
+      source: js
+      vm: shared
+      script: |
+        var lp = state.loadpoints[1];
+        if (lp.chargepower > 0) lp.vehicleSoC++; else lp.vehicleSoC--;
+        if (lp.vehicleSoC < 15) lp.vehicleSoC = 75;
+        if (lp.vehicleSoC > 75) lp.vehicleSoC = 15;
+        lp.vehicleSoC;
+    range:
+      source: js
+      vm: shared
+      script: |
+        var lp = state.loadpoints[1]
+        var range = (80 * lp.vehicleSoC) / 17;
+        range
+    capacity: 80
 
 site:
-  title: Ferienhaus
+  title: Demo
   meters:
     grid: grid
-    pvs: [pv]
+    pv: pv
     battery: battery
-  residualpower: 50
 
 loadpoints:
-  - title: eins
+  - title: Carport
+    charger: charger_1
     mode: pv
-    charger: charger-1
     soc:
-      target: 80
+      target: 90
     meters:
-      charge: charge-1
-    vehicles:
-      - audi
-      - zoe
-  - title: zwo
-    mode: pv
-    charger: charger-1
+      charge: meter_charger_1
+    vehicle: vehicle_1
+  - title: Garage links
+    charger: charger_2
     soc:
-      target: 70
+      target: 75
+    mode: "off"
     meters:
-      charge: charge-2
-    vehicle: audi
-    maxcurrent: 16
-    phases: 1
+      charge: meter_charger_2
+    vehicle: vehicle_2
+  - title: Garage rechts
+    charger: charger_3
+    mode: "off"
+    meters:
+      charge: meter_charger_3
