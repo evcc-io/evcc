@@ -1,22 +1,23 @@
 <template>
-	<div class="vehicle p-4">
-		<div class="d-flex justify-content-between mb-2 align-items-center">
-			<h4 class="d-flex align-items-center m-0">
-				<shopicon-regular-car3 size="m" class="me-2"></shopicon-regular-car3>
-				{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
+	<div class="vehicle p-4 pb-3">
+		<div class="d-flex justify-content-between mb-3 align-items-center">
+			<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
+				<shopicon-regular-car3 size="m" class="me-2 flex-shrink-0"></shopicon-regular-car3>
+				<span class="flex-grow-1 text-truncate">
+					{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
+				</span>
 			</h4>
-			<button class="btn btn-link text-white p-0">
+			<button class="btn btn-link text-white p-0 flex-shrink-0">
 				<shopicon-filled-options size="s"></shopicon-filled-options>
 			</button>
 		</div>
-		<VehicleStatus
-			v-bind="vehicleStatus"
-			class="mb-2"
-			@target-time-updated="setTargetTime"
-			@target-time-removed="removeTargetTime"
+		<VehicleStatus v-if="connected" v-bind="vehicleStatus" class="mb-2" />
+		<VehicleSoc
+			v-bind="vehicleSocProps"
+			class="mt-2 mb-4"
+			@target-soc-updated="targetSocUpdated"
 		/>
-		<VehicleSoc v-bind="vehicleSocProps" class="mb-4" @target-soc-updated="targetSocUpdated" />
-		<div class="d-flex flex-wrap justify-content-between">
+		<div v-if="vehiclePresent" class="d-flex flex-wrap justify-content-between">
 			<LabelAndValue
 				class="flex-grow-1 text-start flex-basis-0"
 				:label="$t('main.vehicle.vehicleSoC')"

@@ -53,8 +53,8 @@ export default {
     energyflow: {
       noEnergy: "No Energyflow",
       homePower: "Consumption",
-      loadpoints: "Loadpoint | Loadpoint | {count} Loadpoints",
       pvProduction: "Production",
+      loadpoints: "Loadpoint | Loadpoint | {count} Loadpoints",
       battery: "Battery",
       batteryCharge: "Battery charge",
       batteryDischarge: "Battery discharge",
@@ -63,9 +63,10 @@ export default {
       pvExport: "Grid export",
     },
     mode: {
-      title: "Mode",
-      stop: "Stop",
-      now: "Now",
+      offShort: "Stop",
+      offLong: "Stop",
+      nowShort: "Now",
+      nowLong: "Now",
       minpvShort: "Min",
       minpvLong: "Min + PV",
       pvShort: "PV",
@@ -75,9 +76,15 @@ export default {
       fallbackName: "Loadpoint",
       remoteDisabledSoft: "{source}: adaptive PV charging disabled",
       remoteDisabledHard: "{source}: disabled",
+      power: "Power",
+      charged: "Charged",
+      duration: "Duration",
+      remaining: "Remaining",
     },
     vehicle: {
-      fallbackName: "Vehicle",
+      fallbackName: "Anonymous Vehicle",
+      vehicleSoC: "SoC",
+      targetSoC: "Limit",
     },
     vehicleSoC: {
       disconnected: "disconnected",
@@ -85,10 +92,22 @@ export default {
       ready: "ready",
       connected: "connected",
     },
-    vehicleSubline: {
-      mincharge: "minimum charging to {soc}%",
+    vehicleStatus: {
+      minCharge: "minimum charging to {soc}%.",
+      waitForVehicle: "Ready. Waiting for vehicle.",
+      charging: "Charging.",
+      targetChargePlanned: "Target charge planned. Charge starts soon.",
+      targetChargeWaitForVehicle: "Target charge ready. Wait for vehicle.",
+      targetChargeActive: "Target charge active.",
+      connected: "Connected.",
+      pvDisable: "Not enough surplus. Pausing in {remaining}.",
+      pvEnable: "Surplus available. Starging in {remaining}.",
+      scale1p: "Reduce to single phase in {remaining}.",
+      scale3p: "Increase to three phase in {remaining}.",
+      unknown: "",
     },
     targetCharge: {
+      title: "Target Time",
       inactiveLabel: "Target time",
       activeLabel: "{time}",
       modalTitle: "Set Target Time",
@@ -107,26 +126,6 @@ export default {
         So do not rely too much on this function.
         However, we look forward to your experiences and suggestions for improvement in the
       `,
-    },
-    loadpointDetails: {
-      power: "Power",
-      vehicleRange: "Range",
-      charged: "Charged",
-      duration: "Duration",
-      remaining: "Remaining",
-      tooltip: {
-        phases: {
-          scale1p: "Switching to single-phase in {remaining}.",
-          scale3p: "Switching to three-phase in {remaining}.",
-          charge1p: "Single-phase charging.",
-          charge2p: "Two-phase charging.",
-          charge3p: "Three-phase charging.",
-        },
-        pv: {
-          enable: "Solar available. Resume charging in {remaining}.",
-          disable: "Not enough solar. Pause charging in {remaining}.",
-        },
-      },
     },
   },
 };

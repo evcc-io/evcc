@@ -83,7 +83,7 @@ export default {
       remaining: "Restzeit",
     },
     vehicle: {
-      fallbackName: "Fahrzeug",
+      fallbackName: "Unbekanntes Fahrzeug",
       vehicleSoC: "Ladestand",
       targetSoC: "Ladeziel",
     },

@@ -10,7 +10,7 @@ javascript:
         batterySoC: 55,
         gridpower: -1000,
         loadpoints: [
-          { enabled: true, vehicleSoC: 62, maxcurrent: 0, phases: 1, chargepower: 0 },
+          { enabled: true, vehicleSoC: 62, maxcurrent: 6, phases: 1, chargepower: 230*6 },
           { enabled: false, vehicleSoC: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
         ]
       };
@@ -52,8 +52,8 @@ meters:
       vm: shared
       script: |
         if (state.batterypower < 0) state.batterySoC++; else state.batterySoC--;
-        if (state.batterySoC < 10) state.batterySoC = 10;
-        if (state.batterySoC > 90) state.batterySoC = 90;
+        if (state.batterySoC < 10) state.batterySoC = 90;
+        if (state.batterySoC > 90) state.batterySoC = 10;
         state.batterySoC;
   - name: meter_charger_1
     type: custom
@@ -158,8 +158,8 @@ vehicles:
       script: |
         var lp = state.loadpoints[0];
         if (lp.chargepower > 0) lp.vehicleSoC++; else lp.vehicleSoC--;
-        if (lp.vehicleSoC < 15) lp.vehicleSoC = 15;
-        if (lp.vehicleSoC > 100) lp.vehicleSoC = 100;
+        if (lp.vehicleSoC < 15) lp.vehicleSoC = 80;
+        if (lp.vehicleSoC > 80) lp.vehicleSoC = 15;
         lp.vehicleSoC;
     range:
       source: js

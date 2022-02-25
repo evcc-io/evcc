@@ -2,8 +2,11 @@
 	<div class="root">
 		<div class="mb-2 label">{{ label }}</div>
 		<slot>
-			<h3 class="value">
-				{{ value }}<span v-if="extraValue" class="extraValue"> / {{ extraValue }}</span>
+			<h3 class="value m-0">
+				{{ value }}
+				<span v-if="extraValue" class="extraValue">
+					/ <span class="text-nowrap">{{ extraValue }}</span>
+				</span>
 			</h3>
 		</slot>
 	</div>

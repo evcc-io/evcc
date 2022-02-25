@@ -90,14 +90,14 @@
 								>
 									<div
 										v-if="totalCharged > 0"
-										class="chart-item chart-item--self d-flex justify-content-center text-white flex-shrink-1"
+										class="chart-item chart-item--self d-flex justify-content-center align-items-center text-white flex-shrink-1"
 										:style="{ width: `${percent}%` }"
 									>
 										<span class="text-truncate"> {{ percent }}% </span>
 									</div>
 									<div
 										v-if="totalCharged > 0"
-										class="chart-item chart-item--grid d-flex justify-content-center text-white flex-shrink-1"
+										class="chart-item chart-item--grid d-flex justify-content-center align-items-center text-white flex-shrink-1"
 										:style="{ width: `${100 - percent}%` }"
 									>
 										<span class="text-truncate"> {{ 100 - percent }}% </span>
@@ -224,12 +224,13 @@ export default {
 		height: calc(100% - 0.5rem);
 	}
 	.modal-content {
-		border-radius: 1rem 1rem 0 0;
+		border-end-end-radius: 0;
+		border-end-start-radius: 0;
 	}
 }
 
 .chart {
-	height: 1.6rem;
+	height: 2.5rem;
 }
 
 .chart-item--self {

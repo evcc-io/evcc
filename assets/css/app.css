@@ -49,6 +49,10 @@ h3 {
 	font-size: 24px;
 }
 
+h4 {
+	font-size: 22px;
+}
+
 .bg-primary {
 	background-color: var(--evcc-dark-green) !important;
 }
@@ -65,22 +69,25 @@ a {
 	opacity: 0.25;
 }
 
+.rounded {
+	border-radius: 10px !important;
+}
+
 .btn-primary,
 .btn-primary:focus {
 	background-color: var(--bs-gray-dark);
 	border-color: var(--bs-gray-dark);
 }
-.btn-primary:hover,
 .btn-primary:active {
 	background-color: var(--evcc-dark-green);
 	border-color: var(--evcc-dark-green);
 }
-.btn-outline-primary {
-	color: var(--bs-gray-dark);
-	border-color: var(--bs-gray-dark);
-}
-.btn-outline-primary:hover {
-	background-color: var(--evcc-dark-green);
+.btn-outline-primary,
+.btn-outline-primary:hover,
+.btn-outline-primary:active {
+	color: var(--evcc-dark-green);
+	background-color: transparent;
+	border-width: 2px;
 	border-color: var(--evcc-dark-green);
 }
 .text-evcc {
@@ -112,6 +119,33 @@ a {
 	}
 }
 
+.modal-backdrop.show {
+	opacity: 0.8;
+}
+
+.modal-header {
+	padding-bottom: 1.5rem;
+}
+
+.modal-title {
+	font-weight: bold;
+	font-size: 22px;
+}
+
+.modal-content {
+	border-radius: 1rem;
+	padding: 1rem;
+}
+
+.modal-body {
+	padding-top: 1.5rem;
+	padding-bottom: 1.5rem;
+}
+
+.modal-footer {
+	padding-top: 1.5rem;
+}
+
 .cursor-pointer {
 	cursor: pointer;
 }
@@ -124,4 +158,8 @@ a {
 small {
 	font-size: var(--bs-body-font-size);
 	color: var(--bs-gray-medium) !important;
+}
+
+.btn-close {
+	opacity: 1;
 }

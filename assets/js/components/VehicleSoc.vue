@@ -4,7 +4,11 @@
 			<div
 				class="progress-bar"
 				role="progressbar"
-				:class="progressColor"
+				:class="{
+					[progressColor]: true,
+					'progress-bar-striped': charging,
+					'progress-bar-animated': charging,
+				}"
 				:style="{ width: `${vehicleSoCDisplayWidth}%` }"
 			></div>
 			<div
@@ -21,6 +25,7 @@
 				:style="{ left: `${visibleTargetSoC}%` }"
 			></div>
 			<input
+				v-if="vehiclePresent"
 				type="range"
 				min="0"
 				max="100"
@@ -63,9 +68,6 @@ export default {
 			return 100;
 		},
 		progressColor: function () {
-			if (!this.connected) {
-				return "bg-light border";
-			}
 			if (this.minSoCActive) {
 				return "bg-danger";
 			}

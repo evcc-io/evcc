@@ -1,5 +1,5 @@
 <template>
-	<div class="container p-0 vehicles px-2 px-lg-5 mb-5">
+	<div class="container vehicles px-0 mb-5">
 		<Vehicle
 			v-for="(vehicle, index) in vehicles"
 			v-bind="vehicle"
@@ -23,7 +23,6 @@ export default {
 		return {
 			vehicles: [
 				{
-					connected: true,
 					vehiclePresent: true,
 					vehicleTitle: "Ford Mustang Mach-E",
 					vehicleSoC: 46,
@@ -31,7 +30,6 @@ export default {
 					targetSoC: 100,
 				},
 				{
-					connected: true,
 					vehiclePresent: true,
 					vehicleTitle: "Renault Twingo Electric",
 					vehicleSoC: 77,
@@ -39,7 +37,6 @@ export default {
 					targetSoC: 90,
 				},
 				{
-					connected: true,
 					vehiclePresent: true,
 					vehicleTitle: "Blauer VW ID.4",
 					vehicleSoC: 16,
@@ -56,8 +53,8 @@ export default {
 <style scoped>
 .vehicles {
 	display: grid;
-	grid-gap: 4rem;
-	grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+	grid-gap: 3rem;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 .vehicle {
 	border: 4px solid white;

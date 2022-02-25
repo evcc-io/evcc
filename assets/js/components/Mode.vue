@@ -5,7 +5,7 @@
 				v-for="m in modes"
 				:key="m"
 				type="button"
-				class="btn btn-sm"
+				class="btn"
 				:class="{ active: mode == m }"
 				@click="setTargetMode(m)"
 			>

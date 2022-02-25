@@ -4,11 +4,12 @@
 			<div
 				v-for="(loadpoint, index) in loadpoints"
 				:key="index"
-				class="flex-grow-1 mb-3 me-lg-4 mx-lg-2 pb-lg-2"
+				class="flex-grow-1 mb-3 m-lg-0 p-lg-0"
 			>
 				<Loadpoint
 					v-bind="loadpoint"
 					:id="index"
+					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
 				/>
@@ -149,6 +150,15 @@ export default {
 @media (min-width: 768px) and (max-width: 991.98px) {
 	.carousel {
 		--slide-width: 720px;
+	}
+}
+
+/* breakpoind lg */
+@media (min-width: 992px) {
+	.carousel {
+		display: grid !important;
+		grid-gap: 3rem;
+		grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
 	}
 }
 </style>

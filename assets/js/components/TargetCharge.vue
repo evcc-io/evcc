@@ -78,7 +78,7 @@
 								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
 									{{ $t("main.targetCharge.targetIsInThePast") }}
 								</p>
-								<p class="small mt-3 text-muted">
+								<p class="small mt-3 text-muted mb-0">
 									<strong class="text-evcc">
 										{{ $t("main.targetCharge.experimentalLabel") }}:
 									</strong>
