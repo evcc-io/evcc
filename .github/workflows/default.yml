@@ -1,6 +1,6 @@
 name: Default
 
-on: 
+on:
   push:
     branches:
       - master
@@ -59,12 +59,9 @@ jobs:
       run: make build
 
     - name: Lint
-      uses: golangci/golangci-lint-action@v2
+      uses: golangci/golangci-lint-action@v3
       with:
         version: latest
-        skip-go-installation: true
-        skip-pkg-cache: true
-        skip-build-cache: true
 
     - name: Test
       run: make test
