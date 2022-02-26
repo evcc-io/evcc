@@ -48,7 +48,7 @@ require (
 	github.com/itchyny/gojq v0.12.6
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.3.4
-	github.com/joeshaw/carwings v0.0.0-20210629130626-7ce4ec17db73
+	github.com/joeshaw/carwings v0.0.0-20220225151533-185ade10e0de
 	github.com/jpfielding/go-http-digest v0.0.0-20211006141426-fbc93758452e
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/klauspost/compress v1.14.1 // indirect
@@ -92,7 +92,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20220208145932-d2d3cba909f5
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
-	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
