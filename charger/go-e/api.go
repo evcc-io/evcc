@@ -3,6 +3,7 @@ package goe
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,6 +27,7 @@ type UpdateResponse map[string]interface{}
 
 type API interface {
 	IsV2() bool
+	HasAmx() bool
 	Status() (Response, error)
 	Update(payload string) error
 }
@@ -34,6 +36,7 @@ type LocalAPI struct {
 	*request.Helper
 	uri string
 	v2  bool
+	amx bool
 }
 
 var _ API = (*LocalAPI)(nil)
@@ -54,7 +57,8 @@ func NewLocal(log *util.Logger, uri string) *LocalAPI {
 
 // upgradeV2 will switch to use the v2 api and revert if not available
 func (c *LocalAPI) upgradeV2() {
-	c.v2 = true // use v2 response struct
+	c.v2 = true   // use v2 response struct
+	c.amx = false // can use the amx parameter
 
 	res := new(StatusResponse2)
 	err := c.response("api/status?filter=alw", &res)
@@ -63,12 +67,20 @@ func (c *LocalAPI) upgradeV2() {
 		c.uri = c.uri + "/api"
 	} else {
 		c.v2 = false
+		if i, _ := strconv.Atoi(res.Fwv); i > 33 {
+			c.amx = true
+		}
 	}
 }
 
 // IsV2 returns v2 api usage
 func (c *LocalAPI) IsV2() bool {
 	return c.v2
+}
+
+// HasAmx returns if the "amx" parameter can be used
+func (c *LocalAPI) HasAmx() bool {
+	return c.amx
 }
 
 // response returns a v1/v2 api response
@@ -122,6 +134,10 @@ func NewCloud(log *util.Logger, token string, cache time.Duration) API {
 }
 
 func (c *cloud) IsV2() bool {
+	return false
+}
+
+func (c *cloud) HasAmx() bool {
 	return false
 }
 

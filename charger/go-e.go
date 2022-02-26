@@ -137,7 +137,7 @@ func (c *GoE) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
-	param := map[bool]string{false: "amx", true: "amp"}[c.api.IsV2()]
+	param := map[bool]string{true: "amx", false: "amp"}[c.api.HasAmx()]
 	return c.api.Update(fmt.Sprintf("%s=%d", param, current))
 }
 
