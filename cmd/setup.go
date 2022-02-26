@@ -138,7 +138,10 @@ func configureEEBus(conf map[string]interface{}) error {
 // setup messaging
 func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Event {
 	notificationChan := make(chan push.Event, 1)
-	notificationHub := push.NewHub(conf.Events, cache)
+	notificationHub, err := push.NewHub(conf.Events, cache)
+	if err != nil {
+		log.FATAL.Fatalf("failed configuring push services: %v", err)
+	}
 
 	for _, service := range conf.Services {
 		impl, err := push.NewMessengerFromConfig(service.Type, service.Other)

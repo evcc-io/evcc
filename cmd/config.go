@@ -64,7 +64,7 @@ type typedConfig struct {
 }
 
 type messagingConfig struct {
-	Events   map[string]push.EventTemplate
+	Events   map[string]push.EventTemplateConfig
 	Services []typedConfig
 }
 

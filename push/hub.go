@@ -1,8 +1,11 @@
 package push
 
 import (
+	"strings"
+	"text/template"
 	"time"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -10,6 +13,16 @@ import (
 type Event struct {
 	LoadPoint *int // optional loadpoint id
 	Event     string
+}
+
+// EventTemplateConfig is the push message configuration for an event
+type EventTemplateConfig struct {
+	Title, Msg string
+}
+
+// EventTemplate is the push message template for an event
+type EventTemplate struct {
+	Title, Msg *template.Template
 }
 
 // Hub subscribes to event notifications and sends them to client devices
@@ -20,12 +33,32 @@ type Hub struct {
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(definitions map[string]EventTemplate, cache *util.Cache) *Hub {
+func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) {
+	definitions := make(map[string]EventTemplate)
+
+	// instantiate all event templates
+	for k, v := range cc {
+		var def EventTemplate
+		var err error
+
+		def.Title, err = template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Title)
+		if err == nil {
+			def.Msg, err = template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Msg)
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		definitions[k] = def
+	}
+
 	h := &Hub{
 		definitions: definitions,
 		cache:       cache,
 	}
-	return h
+
+	return h, nil
 }
 
 // Add adds a sender to the list of senders
@@ -34,7 +67,7 @@ func (h *Hub) Add(sender Sender) {
 }
 
 // apply applies the event template to the content to produce the actual message
-func (h *Hub) apply(ev Event, template string) (string, error) {
+func (h *Hub) apply(ev Event, tmpl *template.Template) (string, error) {
 	attr := make(map[string]interface{})
 
 	// let cache catch up, refs reverted https://github.com/evcc-io/evcc/pull/445
@@ -47,7 +80,13 @@ func (h *Hub) apply(ev Event, template string) (string, error) {
 		}
 	}
 
-	return util.ReplaceFormatted(template, attr)
+	// apply data attributes to template using sprig functions
+	applied := new(strings.Builder)
+	if err := tmpl.Execute(applied, attr); err != nil {
+		return "", err
+	}
+
+	return util.ReplaceFormatted(applied.String(), attr)
 }
 
 // Run is the Hub's main publishing loop
