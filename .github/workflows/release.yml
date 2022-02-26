@@ -99,7 +99,7 @@ jobs:
         version: latest
         args: release --rm-dist
       env:
-        GITHUB_TOKEN: ${{ secrets.GH_GORELEASER }}
+        GITHUB_TOKEN: ${{ secrets.GH_REPO }}
 
     - name: Publish .deb to Cloudsmith
       env:
