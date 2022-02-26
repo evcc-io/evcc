@@ -1327,8 +1327,11 @@ func (lp *LoadPoint) updateChargeCurrents() {
 
 	if lp.charging() {
 		var phases int
-		for _, i := range lp.chargeCurrents {
+		for l, i := range lp.chargeCurrents {
 			if i >= minActiveCurrent {
+				if l > 0 && phases == 0 {
+					lp.log.WARN.Printf("invalid wiring: phase %d observed active should be first phase", l+1)
+				}
 				phases++
 			}
 		}
