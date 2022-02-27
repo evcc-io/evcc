@@ -1,7 +1,7 @@
 # executes binary build excluding UI
 
 # STEP 2 build executable binary
-FROM golang:1.16-alpine as builder
+FROM golang:1.17-alpine as builder
 
 # define RELEASE=1 to hide commit hash
 ARG RELEASE={{ env "RELEASE" }}

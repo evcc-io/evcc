@@ -33,7 +33,7 @@ You'll find everything you need in our [documentation](https://docs.evcc.io/) (G
 
 ## Build
 
-To build EVCC from source, [Go][2] 1.16 and [Node][3] 16 are required:
+To build EVCC from source, [Go][2] 1.17 and [Node][3] 16 are required:
 
 ```sh
 make
