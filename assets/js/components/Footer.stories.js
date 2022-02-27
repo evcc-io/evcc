@@ -84,18 +84,3 @@ Upgrade.args = {
     selfConsumptionPercent: 0,
   },
 };
-
-export const Savings = Template.bind({});
-Savings.args = {
-  version: {
-    installed: "0.36",
-    available: "0.40",
-    hasUpdater: true,
-  },
-  savings: {
-    since: 82800,
-    totalCharged: 15231,
-    selfConsumptionCharged: 12231,
-    selfConsumptionPercent: 80.3,
-  },
-};

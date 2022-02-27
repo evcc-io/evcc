@@ -1,12 +1,14 @@
 template: citroen
-description: 
-  generic: Citroen
+products:
+- brand: Citroen
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: capacity
   default: 50
+- preset: vehiclecloud
 render: |
   type: citroen
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

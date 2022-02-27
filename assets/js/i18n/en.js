@@ -1,9 +1,13 @@
 export default {
-  header: { docs: "Documentation", blog: "Blog", github: "GitHub", about: "About evcc" },
+  header: {
+    docs: "Documentation",
+    blog: "Blog",
+    github: "GitHub",
+    login: "Logins",
+    about: "About evcc",
+  },
   footer: {
     version: {
-      versionShort: "v{installed}",
-      versionLong: "Version {installed}",
       availableShort: "update",
       availableLong: "update available",
       modalTitle: "Update available",
@@ -107,6 +111,10 @@ export default {
       scale1p: "Reduce to single phase in {remaining}.",
       scale3p: "Increase to three phase in {remaining}.",
       unknown: "",
+    },
+    provider: {
+      login: "login",
+      logout: "logout",
     },
     targetCharge: {
       title: "Target Time",

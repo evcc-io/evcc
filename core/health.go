@@ -19,6 +19,10 @@ func NewHealth(timeout time.Duration) (health *Health) {
 
 // Healthy returns health status based on last update timestamp
 func (health *Health) Healthy() bool {
+	if health == nil {
+		return false
+	}
+
 	start := time.Now()
 
 	for time.Since(start) < time.Second {
@@ -35,6 +39,10 @@ func (health *Health) Healthy() bool {
 
 // Update updates the health timer on each loadpoint update
 func (health *Health) Update() {
+	if health == nil {
+		return
+	}
+
 	start := time.Now()
 
 	for time.Since(start) < time.Second {

@@ -78,11 +78,19 @@ a {
 	background-color: var(--bs-gray-dark);
 	border-color: var(--bs-gray-dark);
 }
+
+.btn-primary:hover,
 .btn-primary:active {
 	background-color: var(--evcc-dark-green);
 	border-color: var(--evcc-dark-green);
 }
 .btn-outline-primary,
+.btn-outline-primary:focus {
+	color: var(--bs-gray-dark);
+	background-color: transparent;
+	border-width: 2px;
+	border-color: var(--bs-gray-dark);
+}
 .btn-outline-primary:hover,
 .btn-outline-primary:active {
 	color: var(--evcc-dark-green);

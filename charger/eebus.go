@@ -465,7 +465,7 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 
 var _ api.Identifier = (*EEBus)(nil)
 
-// Identifier implements the api.Identifier interface
+// Identify implements the api.Identifier interface
 func (c *EEBus) Identify() (string, error) {
 	data, err := c.cc.GetData()
 	if err != nil {

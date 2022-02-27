@@ -1,13 +1,14 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/util"
 )
 
 type calcProvider struct {
-	add []func() (float64, error)
+	add, mul []func() (float64, error)
 }
 
 func init() {
@@ -18,6 +19,7 @@ func init() {
 func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
 		Add []Config
+		Mul []Config
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -26,12 +28,24 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 	o := &calcProvider{}
 
+	if len(cc.Add) > 0 && len(cc.Mul) > 0 {
+		return nil, errors.New("can only have either add or mul")
+	}
+
 	for idx, cc := range cc.Add {
 		f, err := NewFloatGetterFromConfig(cc)
 		if err != nil {
 			return nil, fmt.Errorf("add[%d]: %w", idx, err)
 		}
 		o.add = append(o.add, f)
+	}
+
+	for idx, cc := range cc.Mul {
+		f, err := NewFloatGetterFromConfig(cc)
+		if err != nil {
+			return nil, fmt.Errorf("mul[%d]: %w", idx, err)
+		}
+		o.mul = append(o.mul, f)
 	}
 
 	return o, nil
@@ -56,14 +70,26 @@ func (o *calcProvider) FloatGetter() func() (float64, error) {
 }
 
 func (o *calcProvider) floatGetter() (float64, error) {
-	var sum float64
-	for idx, p := range o.add {
-		v, err := p()
-		if err != nil {
-			return 0, fmt.Errorf("add[%d]: %w", idx, err)
+	var res float64
+
+	if len(o.mul) > 0 {
+		res = 1
+		for idx, p := range o.mul {
+			v, err := p()
+			if err != nil {
+				return 0, fmt.Errorf("mul[%d]: %w", idx, err)
+			}
+			res *= v
 		}
-		sum += v
+	} else {
+		for idx, p := range o.add {
+			v, err := p()
+			if err != nil {
+				return 0, fmt.Errorf("add[%d]: %w", idx, err)
+			}
+			res += v
+		}
 	}
 
-	return sum, nil
+	return res, nil
 }

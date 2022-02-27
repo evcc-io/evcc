@@ -1,6 +1,8 @@
 template: tesla-powerwall
-description: 
-  generic: Tesla Powerwall
+products:
+- brand: Tesla
+  description:
+    generic: Powerwall
 guidedsetup:
   enable: true
 params:
@@ -12,11 +14,12 @@ params:
 - name: password
   required: true
   mask: true
-  help: 
-    en: Password of the user customer
-    de: Passwort des Benutzers Kunde
+  help:
+    en: Password of the user "customer"
+    de: Passwort des Benutzers "Kunde"
 render: |
   type: tesla
-  uri: https://{{ .host }}/
+  uri: {{ .host }}
   usage: {{ .usage }}
+  user: customer
   password: {{ .password }} # for user 'customer'

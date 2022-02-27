@@ -1,6 +1,11 @@
 name: Default
 
-on: [push, pull_request, workflow_call]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_call:
 
 jobs:
 
@@ -54,13 +59,12 @@ jobs:
       run: make build
 
     - name: Lint
-      uses: golangci/golangci-lint-action@v2
+      uses: golangci/golangci-lint-action@v3
       with:
         version: latest
         skip-go-installation: true
         skip-pkg-cache: true
         skip-build-cache: true
-
     - name: Test
       run: make test
 

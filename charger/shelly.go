@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 
@@ -89,7 +90,11 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		}
 
 		if resp.NumMeters == 0 {
-			return c, fmt.Errorf("%s (%s) gen1 missing power meter ", resp.Model, resp.Mac)
+			// Shelly1 force static mode with fake power http://192.168.178.xxx/settings/power/0?power=standbypower+1
+			uri := fmt.Sprintf("%s/settings/power/%d?power=%d", c.uri, c.channel, int(math.Abs(c.standbypower)))
+			if err := c.GetJSON(uri, &resp); err != nil {
+				return c, err
+			}
 		}
 
 	case 2:
@@ -161,12 +166,25 @@ func (c *Shelly) MaxCurrent(current int64) error {
 
 // Status implements the api.Charger interface
 func (c *Shelly) Status() (api.ChargeStatus, error) {
-	power, err := c.CurrentPower()
-	if power > c.standbypower {
-		return api.StatusC, err
+	res := api.StatusB
+
+	// static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if on {
+			res = api.StatusC
+		}
+
+		return res, err
 	}
 
-	return api.StatusB, err
+	// standby power mode
+	power, err := c.CurrentPower()
+	if power > c.standbypower {
+		res = api.StatusC
+	}
+
+	return res, err
 }
 
 var _ api.Meter = (*Shelly)(nil)

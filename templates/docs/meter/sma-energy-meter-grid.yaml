@@ -1,5 +1,0 @@
-type: template
-template: sma-energy-meter
-description: SMA Energy Meter (Produktname)
-usage: grid 
-host: 192.0.2.2

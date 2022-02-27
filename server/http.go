@@ -66,9 +66,7 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 	api.Use(jsonHandler)
 	api.Use(handlers.CompressHandler)
 	api.Use(handlers.CORS(
-		handlers.AllowedHeaders([]string{
-			"Accept", "Accept-Language", "Content-Language", "Content-Type", "Origin",
-		}),
+		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
 	// site api

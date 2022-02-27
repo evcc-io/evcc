@@ -98,7 +98,7 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewWallbe creates a Wallbe charger
 func NewWallbe(uri string) (*Wallbe, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, wbSlaveID)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, wbSlaveID)
 	if err != nil {
 		return nil, err
 	}

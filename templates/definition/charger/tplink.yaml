@@ -1,6 +1,9 @@
 template: tplink
-description: 
-  generic: TP-LINK Smart Plug
+products:
+- brand: TP-LINK
+  description:
+    generic: Smart Plug
+group: switchsockets
 params:
 - name: host
   required: true
@@ -8,6 +11,6 @@ params:
 - name: standbypower
   default: 15
 render: |
-  type: tasmota
+  type: tplink
   uri: {{ .host }}
   standbypower: {{ .standbypower }}  # treat as charging above this power

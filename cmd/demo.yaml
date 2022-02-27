@@ -1,5 +1,7 @@
 log: info
 
+interval: 3s
+
 javascript:
   - vm: shared
     script: |

@@ -60,9 +60,13 @@
 								<div
 									class="chart-legend d-flex flex-wrap justify-content-between mb-1"
 								>
-									<div class="text-nowrap">
+									<div
+										class="text-nowrap"
+										:class="{ 'text-gray-medium': noData }"
+									>
 										<shopicon-filled-square
 											class="text-evcc d-inline-block"
+											:class="{ 'text-gray-medium': noData }"
 										></shopicon-filled-square>
 										{{
 											$t("footer.savings.modalChartSelf", {
@@ -74,7 +78,10 @@
 											})
 										}}
 									</div>
-									<div class="text-nowrap">
+									<div
+										class="text-nowrap"
+										:class="{ 'text-gray-medium': noData }"
+									>
 										{{
 											$t("footer.savings.modalChartGrid", {
 												grid: fmtKw(gridCharged * 1000, true, false),
@@ -82,6 +89,7 @@
 										}}
 										<shopicon-filled-square
 											class="text-grid d-inline-block"
+											:class="{ 'text-gray-medium': noData }"
 										></shopicon-filled-square>
 									</div>
 								</div>
@@ -89,22 +97,22 @@
 									class="chart d-flex justify-content-stretch mb-1 rounded overflow-hidden"
 								>
 									<div
-										v-if="totalCharged > 0"
+										v-if="!noData"
 										class="chart-item chart-item--self d-flex justify-content-center align-items-center text-white flex-shrink-1"
 										:style="{ width: `${percent}%` }"
 									>
 										<span class="text-truncate"> {{ percent }}% </span>
 									</div>
 									<div
-										v-if="totalCharged > 0"
+										v-if="!noData"
 										class="chart-item chart-item--grid d-flex justify-content-center align-items-center text-white flex-shrink-1"
 										:style="{ width: `${100 - percent}%` }"
 									>
 										<span class="text-truncate"> {{ 100 - percent }}% </span>
 									</div>
 									<div
-										v-if="totalCharged === 0"
-										class="chart-item chart-item--no-data d-flex justify-content-center text-white w-100"
+										v-if="noData"
+										class="chart-item chart-item--no-data d-flex justify-content-center align-items-center text-white w-100"
 									>
 										<span>{{ $t("footer.savings.modalNoData") }}</span>
 									</div>
@@ -198,6 +206,9 @@ export default {
 		percent() {
 			return Math.round(this.selfConsumptionPercent) || 0;
 		},
+		noData() {
+			return this.totalCharged === 0;
+		},
 	},
 	methods: {
 		secondsSinceStart() {
@@ -240,7 +251,7 @@ export default {
 	background-color: var(--evcc-grid);
 }
 .chart-item--no-data {
-	background-color: var(--bs-gray);
+	background-color: var(--bs-gray-medium);
 }
 
 .chart-item {

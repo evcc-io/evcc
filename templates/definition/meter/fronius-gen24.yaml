@@ -1,6 +1,8 @@
 template: fronius-gen24
-description: 
-  generic: Fronius Symo GEN24 Plus
+products:
+- brand: Fronius
+  description:
+    generic: Symo GEN24 Plus
 guidedsetup:
   enable: true
 params:
@@ -19,7 +21,23 @@ render: |
   id: 200
   power: 213:W # sunspec model 203 meter
   {{- end }}
-  {{- if or (eq .usage "pv") (eq .usage "battery") }}
+  {{- if eq .usage "pv" }}
+  type: custom
+  power:
+    source: calc
+    add:
+    - source: modbus
+      model: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      value: 160:1:DCW # mppt 1
+    - source: modbus
+      model: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      value: 160:2:DCW # mppt 2
+  {{- end }}
+  {{- if eq .usage "battery" }}
   type: custom
   power:
     source: calc
@@ -35,8 +53,6 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       value: 160:4:DCW # mppt 4 discharge
-  {{- end }}
-  {{- if eq .usage "battery" }}
   soc:
     source: modbus
     model: sunspec

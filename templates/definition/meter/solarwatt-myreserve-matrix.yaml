@@ -1,0 +1,33 @@
+template: solarwatt-myreserve-matrix
+products:
+- brand: Solarwatt
+  description:
+    generic: MyReserve Matrix (LAN oder PowerGateway)
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: port
+  default: 8080
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/
+  {{- if eq .usage "grid" }}
+    jq: .FData.PGrid
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    jq: .FData.IBat * .FData.VBa * -1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    jq: .FData.IBat * .FData.VBat
+  soc: 
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/
+    jq: .SData.SoC
+  {{- end }}

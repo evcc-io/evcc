@@ -37,6 +37,7 @@ type EEBus struct {
 	log               *util.Logger
 	srv               *server.Server
 	id                string
+	zc                *zeroconf.Server
 	clients           map[string]EEBusClientCBs
 	connectedClients  map[string]ship.Conn
 	discoveredClients map[string]*zeroconf.ServiceEntry
@@ -90,11 +91,13 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		Register:    true,
 	}
 
-	if _, err = srv.Announce(); err != nil {
+	zc, err := srv.Announce()
+	if err != nil {
 		return nil, err
 	}
 
 	c := &EEBus{
+		zc:                zc,
 		log:               log,
 		srv:               srv,
 		id:                id,
@@ -150,6 +153,10 @@ func (c *EEBus) Run() {
 	if err := c.srv.Listen(ln, c.certificateHandler); err != nil {
 		c.log.ERROR.Println("eebus listen:", err)
 	}
+}
+
+func (c *EEBus) Shutdown() {
+	c.zc.Shutdown()
 }
 
 func (c *EEBus) addDisoveredEntry(entry *zeroconf.ServiceEntry) {

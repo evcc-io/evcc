@@ -1,12 +1,16 @@
 template: carwings
-description: 
-  generic: Nissan Leaf (pre 2019)
+products:
+- brand: Nissan
+  description:
+    generic: Leaf (pre 2019)
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: capacity
   default: 50
+- preset: vehiclecloud
 render: |
   type: carwings
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

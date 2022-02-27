@@ -12,6 +12,7 @@ StartLimitBurst=10
 [Service]
 ExecStart=/usr/local/bin/evcc
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

@@ -1,17 +1,29 @@
 template: solaredge-inverter
-description: 
-  de: Solaredge Wechselrichter
-  en: Solaredge Inverter
+products:
+- brand: Solaredge
+  description:
+    de: Wechselrichter
+    en: Inverter
 guidedsetup:
   enable: true
 params:
 - name: usage
-  choice: [ "pv" ]
+  choice: [ "grid", "pv" ]
 - name: modbus
   choice: [ "tcpip" ]
   id: 1
   port: 1502
+- name: timeout
+  default: 3s
 render: |
-  type: modbus
-  model: sunspec
-  {{ include "modbus" . }}
+  type: custom
+  power:
+    source: modbus
+    model: sunspec
+    {{ include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+  {{- if eq .usage "grid" }}
+    subdevice: 1
+    value: 203:W # sunspec 3-phase meter power reading
+    scale: -1
+  {{- end -}}

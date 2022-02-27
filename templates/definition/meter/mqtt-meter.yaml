@@ -1,10 +1,11 @@
 template: mqtt-meter
-description: 
-  de: MQTT Strommessgerät
-  en: MQTT Meter
-generic: true
-requirements:
-  mqtt: true
+products:
+- description:
+    de: MQTT Strommessgerät
+    en: MQTT Meter
+group: generic
+requirements: 
+  evcc: ["mqtt"]
 params:
 - name: usage
   choice: [ "grid", "pv", "charge", "battery" ]
@@ -63,10 +64,7 @@ params:
     - name: currentp1
       check: notempty
 - name: timeout
-  default: 30
-  help:
-    de: Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist 
-    en: Don't accept values older than this value in seconds
+  default: 30s
 render: |
   type: custom
   power:
@@ -74,7 +72,7 @@ render: |
     topic: {{ .power }}
     scale: {{ .scalepower }}
     timeout: {{ .timeout }}
-  {{- if ne .energy1 "" }}
+  {{- if ne .energy "" }}
   energy:
     source: mqtt
     topic: {{ .energy }}

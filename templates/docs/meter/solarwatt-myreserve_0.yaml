@@ -1,0 +1,23 @@
+product:
+  brand: Solarwatt
+  description: MyReserve
+
+render:
+- usage: grid
+  default: |
+    type: template
+    template: solarwatt-myreserve
+    usage: grid
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+- usage: pv
+  default: |
+    type: template
+    template: solarwatt-myreserve
+    usage: pv
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+- usage: battery
+  default: |
+    type: template
+    template: solarwatt-myreserve
+    usage: battery
+    host: 192.0.2.2  # IP-Adresse oder Hostname

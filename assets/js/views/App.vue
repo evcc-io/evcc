@@ -10,6 +10,8 @@
 <script>
 import store from "../store";
 
+import baseAPI from "../baseapi";
+
 export default {
 	name: "App",
 	props: {
@@ -59,6 +61,15 @@ export default {
 		},
 		reload() {
 			window.location.reload();
+		},
+		handleProviderAuthorization: async function (provider) {
+			if (!provider.loggedIn) {
+				baseAPI.post(provider.loginPath).then(function (response) {
+					window.location.href = response.data.loginUri;
+				});
+			} else {
+				baseAPI.post(provider.logoutPath);
+			}
 		},
 	},
 	metaInfo() {

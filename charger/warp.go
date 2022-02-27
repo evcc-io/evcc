@@ -92,18 +92,13 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	}
 
 	// timeout handler
-	timer := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/state", topic), 1, timeout,
-	).StringGetter()
+	to := provider.NewTimeoutHandler(provider.NewMqtt(log, client,
+		fmt.Sprintf("%s/evse/state", topic), timeout,
+	).StringGetter())
 
 	stringG := func(topic string) func() (string, error) {
-		g := provider.NewMqtt(log, client, topic, 1, 0).StringGetter()
-		return func() (val string, err error) {
-			if val, err = g(); err == nil {
-				_, err = timer()
-			}
-			return val, err
-		}
+		g := provider.NewMqtt(log, client, topic, 0).StringGetter()
+		return to.StringGetter(g)
 	}
 
 	wb.enabledG = stringG(fmt.Sprintf("%s/evse/auto_start_charging", topic))
@@ -112,12 +107,12 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	wb.meterDetailsG = stringG(fmt.Sprintf("%s/meter/detailed_values", topic))
 
 	wb.enableS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/auto_start_charging_update", topic), 1, 0).
+		fmt.Sprintf("%s/evse/auto_start_charging_update", topic), 0).
 		WithPayload(`{ "auto_start_charging": ${enable} }`).
 		BoolSetter("enable")
 
 	wb.maxcurrentS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/current_limit", topic), 1, 0).
+		fmt.Sprintf("%s/evse/current_limit", topic), 0).
 		WithPayload(`{ "current": ${maxcurrent} }`).
 		IntSetter("maxcurrent")
 
@@ -125,9 +120,9 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 }
 
 func (wb *Warp) hasMeter() bool {
-	if state, err := provider.NewMqtt(wb.log, wb.client,
-		fmt.Sprintf("%s/meter/state", wb.root), 1, 0,
-	).StringGetter()(); err == nil {
+	topic := fmt.Sprintf("%s/meter/state", wb.root)
+
+	if state, err := provider.NewMqtt(wb.log, wb.client, topic, 0).StringGetter()(); err == nil {
 		var res warp.MeterState
 		if err := json.Unmarshal([]byte(state), &res); err == nil {
 			return res.State == 2 || len(res.PhasesConnected) > 0
@@ -138,9 +133,9 @@ func (wb *Warp) hasMeter() bool {
 }
 
 func (wb *Warp) hasCurrents() bool {
-	if state, err := provider.NewMqtt(wb.log, wb.client,
-		fmt.Sprintf("%s/meter/detailed_values", wb.root), 1, 0,
-	).StringGetter()(); err == nil {
+	topic := fmt.Sprintf("%s/meter/detailed_values", wb.root)
+
+	if state, err := provider.NewMqtt(wb.log, wb.client, topic, 0).StringGetter()(); err == nil {
 		var res []float64
 		if err := json.Unmarshal([]byte(state), &res); err == nil {
 			return len(res) > 5

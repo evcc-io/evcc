@@ -127,7 +127,6 @@ func NewSiteFromConfig(
 func NewSite() *Site {
 	lp := &Site{
 		log:     util.NewLogger("site"),
-		Health:  NewHealth(60 * time.Second),
 		Voltage: 230, // V
 	}
 
@@ -149,7 +148,7 @@ func meterCapabilities(name string, meter interface{}) string {
 	_, currents := meter.(api.MeterCurrent)
 
 	name += ":"
-	return fmt.Sprintf("    %-8s power %s energy %s currents %s",
+	return fmt.Sprintf("    %-10s power %s energy %s currents %s",
 		name,
 		presence[power],
 		presence[energy],
@@ -159,28 +158,23 @@ func meterCapabilities(name string, meter interface{}) string {
 
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
-	site.publish("siteTitle", site.Title)
-
 	site.log.INFO.Println("site config:")
-	site.log.INFO.Printf("  meters:    grid %s pv %s battery %s",
+	site.log.INFO.Printf("  meters:      grid %s pv %s battery %s",
 		presence[site.gridMeter != nil],
 		presence[len(site.pvMeters) > 0],
 		presence[len(site.batteryMeters) > 0],
 	)
 
-	site.publish("gridConfigured", site.gridMeter != nil)
 	if site.gridMeter != nil {
 		site.log.INFO.Println(meterCapabilities("grid", site.gridMeter))
 	}
 
-	site.publish("pvConfigured", len(site.pvMeters) > 0)
 	if len(site.pvMeters) > 0 {
 		for i, pv := range site.pvMeters {
 			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i), pv))
 		}
 	}
 
-	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
 	if len(site.batteryMeters) > 0 {
 		for i, battery := range site.batteryMeters {
 			_, ok := battery.(api.Battery)
@@ -188,45 +182,40 @@ func (site *Site) DumpConfig() {
 				meterCapabilities(fmt.Sprintf("battery %d", i), battery),
 				fmt.Sprintf("soc %s", presence[ok]),
 			)
-
-			if ok {
-				site.publish("prioritySoC", site.PrioritySoC)
-			}
 		}
 	}
 
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
-
-		lp.log.INFO.Printf("  mode:      %s", lp.GetMode())
+		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
 		_, power := lp.charger.(api.Meter)
 		_, energy := lp.charger.(api.MeterEnergy)
 		_, currents := lp.charger.(api.MeterCurrent)
-		_, timer := lp.charger.(api.ChargeTimer)
+		_, phases := lp.charger.(api.ChargePhases)
 
-		lp.log.INFO.Printf("  charger:   power %s energy %s currents %s timer %s",
+		lp.log.INFO.Printf("  charger:     power %s energy %s currents %s phases %s",
 			presence[power],
 			presence[energy],
 			presence[currents],
-			presence[timer],
+			presence[phases],
 		)
 
-		lp.log.INFO.Printf("  meters:    charge %s", presence[lp.HasChargeMeter()])
+		lp.log.INFO.Printf("  meters:      charge %s", presence[lp.HasChargeMeter()])
 
 		lp.publish("chargeConfigured", lp.HasChargeMeter())
 		if lp.HasChargeMeter() {
 			lp.log.INFO.Printf(meterCapabilities("charge", lp.chargeMeter))
 		}
 
-		lp.log.INFO.Printf("  vehicles:  %s", presence[len(lp.vehicles) > 0])
+		lp.log.INFO.Printf("  vehicles:    %s", presence[len(lp.vehicles) > 0])
 
 		for i, v := range lp.vehicles {
 			_, rng := v.(api.VehicleRange)
 			_, finish := v.(api.VehicleFinishTimer)
 			_, status := v.(api.ChargeState)
 			_, climate := v.(api.VehicleClimater)
-			lp.log.INFO.Printf("    car %d:   range %s finish %s status %s climate %s",
+			lp.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s",
 				i, presence[rng], presence[finish], presence[status], presence[climate],
 			)
 		}
@@ -278,6 +267,8 @@ func (site *Site) updateMeters() error {
 		return err
 	}
 
+	err := retryMeter("grid", site.gridMeter, &site.gridPower)
+
 	if len(site.pvMeters) > 0 {
 		site.pvPower = 0
 
@@ -299,8 +290,6 @@ func (site *Site) updateMeters() error {
 		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 		site.publish("pvPower", site.pvPower)
 	}
-
-	err := retryMeter("grid", site.gridMeter, &site.gridPower)
 
 	if len(site.batteryMeters) > 0 {
 		site.batteryPower = 0
@@ -431,6 +420,13 @@ func (site *Site) update(lp Updater) {
 
 // prepare publishes initial values
 func (site *Site) prepare() {
+	site.publish("siteTitle", site.Title)
+
+	site.publish("gridConfigured", site.gridMeter != nil)
+	site.publish("pvConfigured", len(site.pvMeters) > 0)
+	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
+	site.publish("prioritySoC", site.PrioritySoC)
+
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since().Unix())
 }
@@ -461,6 +457,9 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 		}(id)
 
 		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
+
+		// add loadpoint number
+		lp.publish("loadpoint", id+1)
 	}
 }
 
@@ -476,6 +475,8 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 // Run is the main control loop. It reacts to trigger events by
 // updating measurements and executing control logic.
 func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
+	site.Health = NewHealth(time.Minute + interval)
+
 	loadpointChan := make(chan Updater)
 	go site.loopLoadpoints(loadpointChan)
 

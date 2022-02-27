@@ -1,5 +1,0 @@
-type: template
-template: tasmota
-description: Tasmota
-host: 192.0.2.2 
-standbypower: 15

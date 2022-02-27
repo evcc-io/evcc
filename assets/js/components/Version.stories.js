@@ -44,3 +44,10 @@ KeineReleaseNotes.args = {
   available: "0.40",
   hasUpdater: true,
 };
+
+export const Nightly = Template.bind({});
+Nightly.args = {
+  installed: "0.40",
+  available: "0.40",
+  commit: "5ce7be4",
+};

@@ -1,7 +1,17 @@
 <template>
 	<div>
+		<a
+			v-if="commit"
+			:href="githubHashUrl"
+			target="_blank"
+			class="btn btn-link ps-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
+		>
+			<shopicon-regular-moonstars class="me-2 text-gray-medium"></shopicon-regular-moonstars>
+			v{{ installed }}
+			<span class="ms-2 text-gray-medium">[{{ commit }}]</span>
+		</a>
 		<button
-			v-if="newVersionAvailable"
+			v-else-if="newVersionAvailable"
 			href="#"
 			data-bs-toggle="modal"
 			data-bs-target="#updateModal"
@@ -9,10 +19,10 @@
 		>
 			<shopicon-regular-gift class="me-2 text-evcc"></shopicon-regular-gift>
 			v{{ installed }}
-			<span class="ms-2 d-none d-xs-block d-sm-none text-white text-decoration-underline">
+			<span class="ms-2 d-none d-xs-block d-sm-none text-decoration-underline">
 				{{ $t("footer.version.availableShort") }}
 			</span>
-			<span class="ms-2 d-none d-sm-block text-muted text-white text-decoration-underline">
+			<span class="ms-2 d-none d-sm-block text-gray-medium text-decoration-underline">
 				{{ $t("footer.version.availableLong") }}
 			</span>
 		</button>
@@ -22,12 +32,8 @@
 			target="_blank"
 			class="btn btn-link text-white ps-0 text-decoration-none text-nowrap d-flex align-items-end"
 		>
-			<span class="d-inline d-xs-none d-sm-none">{{
-				$t("footer.version.versionShort", { installed })
-			}}</span>
-			<span class="d-none d-xs-inline d-sm-inline">{{
-				$t("footer.version.versionLong", { installed })
-			}}</span>
+			<span class="text-gray-medium me-2">evcc</span>
+			v{{ installed }}
 		</a>
 
 		<div
@@ -118,6 +124,7 @@
 <script>
 import api from "../api";
 import "@h2d2/shopicons/es/regular/gift";
+import "@h2d2/shopicons/es/regular/moonstars";
 
 export default {
 	name: "Version",

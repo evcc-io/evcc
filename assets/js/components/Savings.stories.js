@@ -15,7 +15,15 @@ const Template = (args) => ({
 });
 
 export const Default = Template.bind({});
-Default.args = {};
+Default.args = {
+  since: 82800,
+  totalCharged: 15231,
+  selfConsumptionCharged: 12231,
+  selfConsumptionPercent: 80.3,
+};
 
-export const Default2 = Template.bind({});
-Default2.args = {};
+export const NoCharge = Template.bind({});
+NoCharge.args = {
+  since: 82800,
+  totalCharged: 0,
+};

@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2021 andig
+// Copyright (c) 2019-2022 andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -66,12 +66,12 @@ func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAlfen(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewAlfen(cc.URI, cc.ID)
 }
 
 // NewAlfen creates Alfen charger
-func NewAlfen(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.TcpFormat, slaveID)
+func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

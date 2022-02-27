@@ -23,7 +23,7 @@ func init() {
 
 func runDump(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
 	conf, err := loadConfigFile(cfgFile)
@@ -69,7 +69,7 @@ func runDump(cmd *cobra.Command, args []string) {
 	} else {
 		for id, name := range site.Meters.BatteryMetersRef {
 			if name != "" {
-				d.DumpWithHeader(fmt.Sprintf("Battery %d: %s", id, name), cp.Meter(name))
+				d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id, name), cp.Meter(name))
 			}
 		}
 	}

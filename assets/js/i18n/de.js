@@ -1,9 +1,13 @@
 export default {
-  header: { docs: "Dokumentation", blog: "Blog", github: "GitHub", about: "Über evcc" },
+  header: {
+    docs: "Dokumentation",
+    blog: "Blog",
+    github: "GitHub",
+    login: "Anmeldungen",
+    about: "Über evcc",
+  },
   footer: {
     version: {
-      versionShort: "v{installed}",
-      versionLong: "Version {installed}",
       availableShort: "Update",
       availableLong: "Update verfügbar",
       modalTitle: "Update verfügbar",
@@ -107,6 +111,10 @@ export default {
       scale1p: "Reduziere auf einphasig in {remaining}.",
       scale3p: "Erhöhe auf dreiphasig in {remaining}.",
       unknown: "",
+    },
+    provider: {
+      login: "anmelden",
+      logout: "abmelden",
     },
     targetCharge: {
       title: "Zielzeit",

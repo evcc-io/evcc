@@ -42,7 +42,7 @@ func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Meter, error
 
 // NewCfosPowerBrain creates a cFos meter
 func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

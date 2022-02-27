@@ -1,12 +1,16 @@
 template: nissan
-description: 
-  generic: Nissan
+products:
+- brand: Nissan
+  description:
+    generic: Leaf
 params:
-- base: vehiclebase
-- base: vehicleidentify
+- preset: vehiclebase
+- preset: vehicleidentify
 - name: capacity
   default: 60
+- preset: vehiclecloud
 render: |
   type: nissan
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

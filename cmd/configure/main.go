@@ -11,10 +11,12 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
+	"github.com/evcc-io/evcc/hems/semp"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/thoas/go-funk"
 	"golang.org/x/text/language"
 )
 
@@ -33,6 +35,8 @@ type CmdConfigure struct {
 	advancedMode, expandedMode           bool
 	addedDeviceIndex                     int
 	errItemNotPresent, errDeviceNotValid error
+
+	capabilitySMAHems bool
 }
 
 // Run starts the interactive configuration
@@ -41,7 +45,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	c.advancedMode = advancedMode
 	c.expandedMode = expandedMode
 
-	c.log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	c.log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	bundle := i18n.NewBundle(language.German)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
@@ -152,11 +156,17 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	_ = c.configureDevices(DeviceCategoryPVMeter, true, true)
 	_ = c.configureDevices(DeviceCategoryBatteryMeter, true, true)
 	_ = c.configureDevices(DeviceCategoryVehicle, true, true)
+
 	c.configureLoadpoints()
 	c.configureSite()
 
+	// check if SMA HEMS is available and ask the user if it should be added
+	if c.capabilitySMAHems {
+		c.configureSMAHems()
+	}
+
 	if c.advancedMode && c.configuration.config.SponsorToken == "" {
-		_ = c.askSponsortoken(true)
+		_ = c.askSponsortoken(false, false)
 	}
 
 	yaml, err := c.configuration.RenderConfiguration()
@@ -223,11 +233,13 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askAdding
 	}
 
 	for ok := true; ok; {
-		device, _, err := c.configureDeviceCategory(deviceCategory)
+		device, capabilities, err := c.configureDeviceCategory(deviceCategory)
 		if err != nil {
 			break
 		}
 		devices = append(devices, device)
+
+		c.processDeviceCapabilities(capabilities)
 
 		if !askMultiple {
 			break
@@ -240,6 +252,25 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askAdding
 	}
 
 	return devices
+}
+
+// configureSMAHems asks the user if he wants to add the SMA HEMS
+func (c *CmdConfigure) configureSMAHems() {
+	// check if the system provides a machine-id
+	if _, err := semp.UniqueDeviceID(); err != nil {
+		return
+	}
+
+	fmt.Println()
+	fmt.Println(c.localizedString("Flow_SMAHems_Setup", nil))
+
+	fmt.Println()
+	if !c.askYesNo(c.localizedString("Flow_SMAHems_Add", nil)) {
+		return
+	}
+
+	// check if we need to setup a HEMS
+	c.configuration.config.Hems = "type: sma\nAllowControl: false\n"
 }
 
 // configureLoadpoints asks loadpoint specific questions
@@ -289,7 +320,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		var minValue int = 6
-		if capabilities.ISO151182 {
+		if funk.ContainsString(capabilities, templates.CapabilityISO151182) {
 			minValue = 2
 		}
 

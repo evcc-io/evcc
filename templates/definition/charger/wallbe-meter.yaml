@@ -1,7 +1,13 @@
 template: wallbe-meter
-description:
-  de: Wallbe (Eco, Pro) mit Strommessgerät
-  en: Wallbe (Eco, Pro) with Meter
+products:
+- brand: Wallbe
+  description:
+    de: Eco (mit Strommessgerät)
+    en: Eco (with Meter)
+- brand: Wallbe
+  description:
+    de: Pro (mit Strommessgerät)
+    en: Pro (with Meter)
 requirements:
   description:
     en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.

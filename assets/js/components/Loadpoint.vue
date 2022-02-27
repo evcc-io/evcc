@@ -107,6 +107,9 @@ export default {
 		targetTime: String,
 		targetTimeActive: Boolean,
 		targetTimeHourSuggestion: Number,
+		vehicleProviderLoggedIn: Boolean,
+		vehicleProviderLoginPath: String,
+		vehicleProviderLogoutPath: String,
 
 		// details
 		chargePower: Number,
@@ -159,7 +162,7 @@ export default {
 			this.chargeDurationInterpolated = this.chargeDuration;
 		},
 		chargeRemainingDuration() {
-			this.chargeDurationInterpolated = this.chargeRemainingDuration;
+			this.chargeRemainingDurationInterpolated = this.chargeRemainingDuration;
 		},
 	},
 	mounted() {

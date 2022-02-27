@@ -1,6 +1,8 @@
 template: niu-e-scooter
-description: 
-  generic: NIU E-Scooter
+products:
+- brand: NIU
+  description:
+    generic: E-Scooter
 params:
 - name: title
 - name: user
@@ -10,7 +12,7 @@ params:
   mask: true
 - name: serial
   required: true
-- base: vehicleidentify
+- preset: vehicleidentify
 render: |
   type: niu
   {{- if ne .title "" }}

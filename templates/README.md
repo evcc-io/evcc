@@ -16,13 +16,20 @@ The following describes each possible element in a yaml file
 
 `template` expects a unique template name for the current device class (charger, meter, vehicle are device classes)
 
-## `description`
+## `products`
 
-`description` expects a human readable description of the device, best containing the name of the product. Values are language specific names via `de`, `en`, `generic` (if string is language independent)
+`products` expects a list of products that work with this template.
 
-## `generic`
+Each product contains:
 
-`generic: true` defines templates that are typically not a hardware product, but rather generic implementations that can be used by a variety of products (e.g. inverters with sunspec support) or for software components like vzlogger.
+- `brand`: an optional brand description of the product
+- `description`: an optional description e.g. of the product model. Expects `generic`, `de`, `en`: an optional description of the product
+
+Either `brand`, or `description` need to be set.
+
+## `group`
+
+`group` contains the reference to a `groups.yaml` entry. This is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
 
 ## `guidedsetup`
 
@@ -62,23 +69,36 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 ## `capabilities`
 
-`capabilities` provides an option to define special capabilities of the devie
+`capabilities` provides an option to define special capabilities of the device as a list of strings
 
 **Possible Values**:
 
-- `iso151182: true`: If the charger supports communicating via ISO15118-2
+- `iso151182`: If the charger supports communicating via ISO15118-2
+- `rfid`: If the charger supports RFID
+- `1p3p`: If the charger supports 1P/3P-phase switching
+- `smahems`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
 
 ## `requirements`
 
 `requirements` provides an option to define various requirements / dependencies that need to be setup
 
+### `evcc`
+
+`evcc` is a list of evcc specific system requirements
+
 **Possible Values**:
 
-- `sponsorshipt: true`: If the device requires a sponsorship token
-- `eebus: true`: If the device is accessed via the eebus protocol and thus requires the corresponding setup
-- `hems: sma`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
-- `description`: expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements
-- `uri`: a link providing more help on the requirements
+- `sponsorship`: If the device requires a sponsorship token
+- `eebus`: If the device is accessed via the eebus protocol and thus requires the corresponding setup
+- `mqtt`: If the device a MQTT setup
+
+### `description`
+
+`description` expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements. The content can be multiline and Markdown
+
+### `uri`
+
+`uri` is a link providing more help on the requirements
 
 ## `loglevel`
 
@@ -88,9 +108,9 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 `params` describes the set of parameters the user needs to provide a value for.
 
-## `base`
+## `preset`
 
-`base` reference value of a predefined params set defined in `parambaselist.yaml`, so these params don't need to be redefined in each template. The `example` and `default` values for each predefined value can be overwritten.
+`preset` reference value of a predefined params set defined in `parambaselist.yaml`, so these params don't need to be redefined in each template. The `example` and `default` values for each predefined value can be overwritten.
 
 ### `name`
 
@@ -171,7 +191,7 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 ### `help`
 
-`help` expects language specific help texts via `de`, `en`
+`help` expects language specific help texts via `generic` (language independent), `de`, `en`
 
 ## `render`
 
