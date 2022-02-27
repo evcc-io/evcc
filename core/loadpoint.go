@@ -1117,6 +1117,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	return false
 }
 
+// TODO move up to timer functions
 func (lp *LoadPoint) publishTimer(name string, delay time.Duration, action string) {
 	timer := lp.pvTimer
 	if name == phaseTimer {
