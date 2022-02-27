@@ -21,7 +21,7 @@ meters:
 - name: grid
   type: custom
   power:
-    type: js
+    source: js
     vm: shared
     script: |
       state.pvpower += 200*(Math.random()-0.5);
@@ -45,28 +45,28 @@ meters:
 - name: pv
   type: custom
   power:
-    type: js
+    source: js
     vm: shared
     script: state.pvpower
 
 - name: battery
   type: custom
   power:
-    type: js
+    source: js
     vm: shared
     script: state.batterypower;
   soc:
-    type: js
+    source: js
     vm: shared
     script: "30"
 - name: charge
   type: custom
   power:
-    type: js
+    source: js
     vm: shared
     script: state.chargepower;
   soc:
-    type: js
+    source: js
     vm: shared
     script: "30"
 
@@ -74,21 +74,21 @@ chargers:
 - name: demo
   type: custom
   enable:
-    type: js
+    source: js
     vm: shared
     script: state.enabled = val;
   enabled:
-    type: js
+    source: js
     vm: shared
     script: |
       state.enabled;
   status:
-    type: js
+    source: js
     vm: shared
     script: |
       if (state.enabled) "C"; else "B";
   maxcurrent:
-    type: js
+    source: js
     vm: shared
     script: state.maxcurrent = val;
 
@@ -97,7 +97,7 @@ vehicles:
   title: e-Golf
   type: custom
   soc:
-    type: js
+    source: js
     vm: shared
     script: |
       if (state.chargepower > 0) state.battery++; else state.battery--;

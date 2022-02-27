@@ -17,7 +17,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.16
+        go-version: ^1.17
       id: go
 
     - name: Set up Node
@@ -62,7 +62,8 @@ jobs:
       uses: golangci/golangci-lint-action@v3
       with:
         version: latest
-
+        skip-pkg-cache: true
+        skip-build-cache: true
     - name: Test
       run: make test
 
