@@ -995,8 +995,11 @@ func (lp *LoadPoint) setPhases(phases int) {
 	if lp.GetPhases() != phases {
 		lp.Lock()
 		lp.Phases = phases
+		lp.phaseTimer = time.Time{}
 		lp.Unlock()
+
 		lp.publish("phases", lp.Phases)
+		lp.publishTimer(phaseTimer, 0, timerInactive)
 
 		lp.resetMeasuredPhases()
 	}
@@ -1023,9 +1026,6 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 
 		// update setting
 		lp.setPhases(phases)
-
-		// disable phase timer
-		lp.phaseTimer = time.Time{}
 
 		// allow pv mode to re-enable charger right away
 		lp.elapsePVTimer()
