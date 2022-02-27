@@ -50,7 +50,7 @@ export default {
 	}
 }
 
-.root >>> svg {
+.root ::v-deep(svg) {
 	display: block;
 }
 </style>

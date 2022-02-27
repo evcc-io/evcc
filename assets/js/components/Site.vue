@@ -26,11 +26,11 @@
 				></shopicon-regular-arrowup>
 			</div>
 			<div class="container px-4">
-				<h2 class="mb-3 mb-sm-4">Ladepunkte</h2>
+				<h2 class="mb-3 mb-sm-4">{{ $t("main.loadpoints") }}</h2>
 			</div>
 			<Loadpoints :loadpoints="loadpoints" class="mb-5" />
 			<div class="container px-4">
-				<h2 class="mb-3 mb-sm-4">Parkplatz</h2>
+				<h2 class="mb-3 mb-sm-4">{{ $t("main.vehicles") }}</h2>
 			</div>
 			<Vehicles />
 			<Footer v-bind="footer"></Footer>

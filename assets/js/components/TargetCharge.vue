@@ -41,11 +41,8 @@
 							<div class="modal-body">
 								<div class="form-group">
 									<!-- eslint-disable vue/no-v-html -->
-									<label
-										for="targetTimeLabel"
-										class="mb-3"
-										v-html="$t('main.targetCharge.description', { targetSoC })"
-									>
+									<label for="targetTimeLabel" class="mb-3">
+										{{ $t("main.targetCharge.description", { targetSoC }) }}
 									</label>
 									<!-- eslint-enable vue/no-v-html -->
 									<div
@@ -130,7 +127,7 @@ export default {
 	components: { LabelAndValue },
 	mixins: [formatter],
 	props: {
-		id: Number,
+		id: [String, Number],
 		targetTime: String,
 		targetTimeActive: Boolean,
 		targetTimeHourSuggestion: Number,

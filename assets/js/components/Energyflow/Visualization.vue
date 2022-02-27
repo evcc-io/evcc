@@ -232,12 +232,12 @@ export default {
 	white-space: nowrap;
 	overflow: hidden;
 }
-.visualization--ready >>> .label-bar {
+.visualization--ready ::v-deep(.label-bar) {
 	transition-property: width, opacity;
 	transition-duration: 500ms, 250ms;
 	transition-timing-function: linear, ease;
 }
-.visualization--ready >>> .label-bar-icon {
+.visualization--ready ::v-deep(.label-bar-icon) {
 	transition: opacity 250ms ease-in;
 }
 </style>

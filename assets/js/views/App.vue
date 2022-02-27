@@ -1,5 +1,8 @@
 <template>
 	<div class="app overflow-hidden">
+		<metainfo>
+			<template #title="{ content }">{{ content ? `${content} | evcc` : `evcc` }}</template>
+		</metainfo>
 		<router-view></router-view>
 	</div>
 </template>
@@ -11,11 +14,6 @@ export default {
 	name: "App",
 	props: {
 		notifications: Array,
-	},
-	computed: {
-		title: function () {
-			return store.state.siteTitle;
-		},
 	},
 	created: function () {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -64,9 +62,7 @@ export default {
 		},
 	},
 	metaInfo() {
-		return {
-			title: this.title ? `evcc | ${this.title}` : "evcc",
-		};
+		return { title: store.state.siteTitle || "" };
 	},
 };
 </script>

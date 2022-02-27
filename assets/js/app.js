@@ -3,7 +3,7 @@ import "bootstrap";
 import smoothscroll from "smoothscroll-polyfill";
 import "../css/app.css";
 import { createApp, h } from "vue";
-import { createMetaManager } from "vue-meta";
+import { createMetaManager, plugin as metaPlugin } from "vue-meta";
 import api from "./api";
 import App from "./views/App.vue";
 import router from "./router";
@@ -54,6 +54,7 @@ const app = createApp({
 app.use(i18n);
 app.use(router);
 app.use(createMetaManager());
+app.use(metaPlugin);
 window.app = app.mount("#app");
 
 window.setInterval(function () {

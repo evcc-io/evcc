@@ -3,7 +3,7 @@
 		<Vehicle
 			v-for="(vehicle, index) in vehicles"
 			v-bind="vehicle"
-			:id="index"
+			:id="`vehicle_${index}`"
 			:key="index"
 			class="vehicle"
 		/>

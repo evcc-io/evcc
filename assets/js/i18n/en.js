@@ -72,6 +72,7 @@ export default {
       pvShort: "PV",
       pvLong: "PV only",
     },
+    loadpoints: "Loadpoints",
     loadpoint: {
       fallbackName: "Loadpoint",
       remoteDisabledSoft: "{source}: adaptive PV charging disabled",
@@ -81,6 +82,7 @@ export default {
       duration: "Duration",
       remaining: "Remaining",
     },
+    vehicles: "Parking",
     vehicle: {
       fallbackName: "Anonymous Vehicle",
       vehicleSoC: "SoC",
@@ -112,7 +114,7 @@ export default {
       activeLabel: "{time}",
       modalTitle: "Set Target Time",
       setTargetTime: "none",
-      description: "When should the vehicle be charged to <strong>{targetSoC}%</strong>?",
+      description: "When should the vehicle be charged to {targetSoC}%?",
       today: "today",
       tomorrow: "tomorrow",
       targetIsInThePast: "The chosen time is in the past.",

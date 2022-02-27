@@ -49,7 +49,6 @@ export default {
     modalTitle: "Meldungen",
     dismissAll: "Meldungen entfernen",
   },
-
   main: {
     energyflow: {
       noEnergy: "Kein Energiefluss",
@@ -73,6 +72,7 @@ export default {
       pvShort: "PV",
       pvLong: "Nur PV",
     },
+    loadpoints: "Charge Points",
     loadpoint: {
       fallbackName: "Ladepunkt",
       remoteDisabledSoft: "{source}: Adaptives PV-Laden deaktiviert",
@@ -82,6 +82,7 @@ export default {
       duration: "Dauer",
       remaining: "Restzeit",
     },
+    vehicles: "Parkplatz",
     vehicle: {
       fallbackName: "Unbekanntes Fahrzeug",
       vehicleSoC: "Ladestand",
@@ -113,7 +114,7 @@ export default {
       activeLabel: "{time} Uhr",
       modalTitle: "Zielzeit festlegen",
       setTargetTime: "keine",
-      description: "Wann soll das Fahrzeug auf <strong>{targetSoC}%</strong> geladen sein?",
+      description: "Wann soll das Fahrzeug auf {targetSoC}% geladen sein?",
       today: "heute",
       tomorrow: "morgen",
       targetIsInThePast: "Zeitpunkt liegt in der Vergangenheit.",

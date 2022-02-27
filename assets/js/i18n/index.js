@@ -1,4 +1,4 @@
-import { createI18n } from "vue-i18n";
+import { createI18n } from "vue-i18n/index";
 import de from "./de";
 import en from "./en";
 import it from "./it";
@@ -9,9 +9,7 @@ function getBrowserLocale() {
   if (!navigatorLocale) {
     return undefined;
   }
-  const trimmedLocale = navigatorLocale.trim().split(/-|_/)[0];
-  console.log(trimmedLocale);
-  return trimmedLocale;
+  return navigatorLocale.trim().split(/-|_/)[0];
 }
 
 export default createI18n({

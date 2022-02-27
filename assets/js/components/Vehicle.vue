@@ -54,7 +54,7 @@ export default {
 	components: { VehicleSoc, VehicleStatus, LabelAndValue, TargetCharge },
 	mixins: [collector],
 	props: {
-		id: Number,
+		id: [String, Number],
 		connected: Boolean,
 		vehiclePresent: Boolean,
 		vehicleSoC: Number,
