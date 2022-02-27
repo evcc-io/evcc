@@ -3,7 +3,7 @@ export default {
     docs: "Documentation",
     blog: "Blog",
     github: "GitHub",
-    login: "Logins",
+    login: "Vehicle Logins",
     about: "About evcc",
   },
   footer: {

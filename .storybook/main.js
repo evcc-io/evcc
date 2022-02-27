@@ -8,7 +8,7 @@ module.exports = {
   core: {
     builder: "storybook-builder-vite",
   },
-  staticDirs: ["../assets", "../node_modules/bootstrap/dist"],
+  staticDirs: ["../assets"],
   async viteFinal(config, b) {
     const { config: userConfig } = await loadConfigFromFile(
       path.resolve(__dirname, "../vite.config.ts")

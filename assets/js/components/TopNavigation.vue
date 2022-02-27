@@ -7,36 +7,17 @@
 			aria-controls="navbarNavAltMarkup"
 			aria-expanded="false"
 			aria-label="Toggle navigation"
-			class="btn btn-sm btn-outline-secondary"
+			class="btn btn-sm btn-outline-secondary position-relative"
 		>
+			<span
+				v-if="logoutCount > 0"
+				class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle"
+			>
+				<span class="visually-hidden">login available</span>
+			</span>
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</button>
 		<ul class="dropdown-menu dropdown-menu-end">
-			<li v-if="providerLogins.length > 0" class="nav-item dropdown">
-				<a
-					class="nav-link dropdown-toggle"
-					data-bs-toggle="dropdown"
-					href="#"
-					role="button"
-					aria-expanded="false"
-					>{{ $t("header.login") }}
-					<span v-if="logoutCount > 0" class="badge bg-secondary">{{ logoutCount }}</span>
-				</a>
-				<ul class="dropdown-menu">
-					<li v-for="login in providerLogins" :key="login.title" class="dropdown-item">
-						<button
-							class="dropdown-item"
-							type="button"
-							@click="handleProviderAuthorization(login)"
-						>
-							{{ login.title }}
-							{{
-								$t(login.loggedIn ? "main.provider.logout" : "main.provider.login")
-							}}
-						</button>
-					</li>
-				</ul>
-			</li>
 			<li>
 				<a class="dropdown-item" href="https://docs.evcc.io/blog/" target="_blank">
 					{{ $t("header.blog") }}
@@ -57,28 +38,66 @@
 					{{ $t("header.about") }}
 				</a>
 			</li>
+			<template v-if="providerLogins.length > 0">
+				<li><hr class="dropdown-divider" /></li>
+				<li>
+					<h6 class="dropdown-header">{{ $t("header.login") }}</h6>
+				</li>
+				<li v-for="login in providerLogins" :key="login.title">
+					<button
+						type="button"
+						class="dropdown-item"
+						@click="handleProviderAuthorization(login)"
+					>
+						<span
+							v-if="!login.loggedIn"
+							class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
+						></span>
+						{{ login.title }}
+						{{ $t(login.loggedIn ? "main.provider.logout" : "main.provider.login") }}
+					</button>
+				</li>
+			</template>
 		</ul>
 	</div>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/regular/menu";
+import baseAPI from "../baseapi";
 
 export default {
 	name: "TopNavigation",
+	props: {
+		vehicleLogins: {
+			type: Object,
+			default: () => {
+				return {};
+			},
+		},
+	},
 	computed: {
 		logoutCount() {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
 		providerLogins() {
-			return this.store.state.auth
-				? Object.entries(this.store.state.auth.vehicles).map(([k, v]) => ({
-						title: k,
-						loggedIn: v.authenticated,
-						loginPath: v.uri + "/login",
-						logoutPath: v.uri + "/logout",
-				  }))
-				: [];
+			return Object.entries(this.vehicleLogins).map(([k, v]) => ({
+				title: k,
+				loggedIn: v.authenticated,
+				loginPath: v.uri + "/login",
+				logoutPath: v.uri + "/logout",
+			}));
+		},
+	},
+	methods: {
+		handleProviderAuthorization: async function (provider) {
+			if (!provider.loggedIn) {
+				baseAPI.post(provider.loginPath).then(function (response) {
+					window.location.href = response.data.loginUri;
+				});
+			} else {
+				baseAPI.post(provider.logoutPath);
+			}
 		},
 	},
 };

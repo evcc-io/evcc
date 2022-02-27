@@ -11,7 +11,7 @@ const Template = (args) => ({
     return { args };
   },
   components: { Savings },
-  template: '<Savings v-bind="args"></Savings>',
+  template: '<div class="d-flex justify-content-end"><Savings v-bind="args"></Savings></div>',
 });
 
 export const Default = Template.bind({});

@@ -7,7 +7,7 @@
 				</h2>
 				<div class="py-1">
 					<!--<Notifications :notifications="notifications" class="me-2" />-->
-					<TopNavigation />
+					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
 			<Energyflow v-bind="energyflow" @toggle-details="toggleDetails" />
@@ -68,6 +68,8 @@ export default {
 		prioritySoC: Number,
 		siteTitle: String,
 
+		auth: Object,
+
 		// footer
 		currency: String,
 		savingsAmount: Number,
@@ -104,6 +106,10 @@ export default {
 				sum += lp.chargePower || 0;
 				return sum;
 			}, 0);
+		},
+		topNavigation: function () {
+			const vehicleLogins = this.auth ? this.auth.vehicles : {};
+			return { vehicleLogins };
 		},
 		footer: function () {
 			return {
