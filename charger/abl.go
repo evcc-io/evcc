@@ -215,7 +215,7 @@ func (wb *ABLeMH) currents() (float64, float64, float64, error) {
 		currents = append(currents, float64(u)/10)
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return currents[2], currents[1], currents[1], nil
 }
 
 var _ api.Diagnosis = (*ABLeMH)(nil)
