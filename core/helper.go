@@ -31,5 +31,8 @@ func powerToCurrent(power float64, phases int) float64 {
 // sitePower returns the available delta power that the charger might additionally consume
 // negative value: available power (grid export), positive value: grid import
 func sitePower(grid, battery, residual float64) float64 {
+	if grid > 0 && battery < 0 {
+		battery += grid
+	}
 	return grid + battery + residual
 }
