@@ -76,7 +76,7 @@ export default {
       pvShort: "PV",
       pvLong: "Nur PV",
     },
-    loadpoints: "Charge Points",
+    loadpoints: "Wallbox",
     loadpoint: {
       fallbackName: "Ladepunkt",
       remoteDisabledSoft: "{source}: Adaptives PV-Laden deaktiviert",
