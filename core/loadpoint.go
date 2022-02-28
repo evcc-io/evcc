@@ -1056,7 +1056,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		lp.log.DEBUG.Printf("available power below %dp min threshold of %.0fW", activePhases, float64(activePhases)*Voltage*minCurrent)
 
 		if lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Printf("start phase disable timer: %v", lp.Disable.Delay)
+			lp.log.DEBUG.Println("start phase disable timer")
 			lp.phaseTimer = lp.clock.Now()
 		}
 
@@ -1067,14 +1067,13 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 			lp.log.DEBUG.Println("phase disable timer elapsed")
 			if err := lp.scalePhases(1); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 1p @ %.0fW", availablePower)
-				return true
 			} else {
 				lp.log.ERROR.Printf("switch phases: %v", err)
 			}
+			return true
 		}
 
 		waiting = true
-		lp.log.DEBUG.Printf("phase disable timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
 	}
 
 	maxPhases := lp.maxActivePhases()
@@ -1085,7 +1084,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		lp.log.DEBUG.Printf("available power above 3p min threshold of %.0fW", 3*Voltage*minCurrent)
 
 		if lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Printf("start phase enable timer: %v", lp.Enable.Delay)
+			lp.log.DEBUG.Println("start phase enable timer")
 			lp.phaseTimer = lp.clock.Now()
 		}
 
@@ -1096,14 +1095,13 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 			lp.log.DEBUG.Println("phase enable timer elapsed")
 			if err := lp.scalePhases(3); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 3p @ %.0fW", availablePower)
-				return true
 			} else {
 				lp.log.ERROR.Printf("switch phases: %v", err)
 			}
+			return true
 		}
 
 		waiting = true
-		lp.log.DEBUG.Printf("phase enable timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
 	}
 
 	// reset timer to disabled state
