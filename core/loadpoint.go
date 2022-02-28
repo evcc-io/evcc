@@ -46,7 +46,6 @@ const (
 	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
 	vehicleDetectInterval = 3 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
-	settleDuration        = 100 * time.Millisecond
 )
 
 // elapsed is the time an expired timer will be set to
@@ -1053,10 +1052,10 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 	// scale down phases
 	if targetCurrent < minCurrent && activePhases > 1 {
-		lp.log.DEBUG.Printf("available power below %dp min threshold of %.0fW", activePhases, float64(activePhases)*Voltage*minCurrent)
+		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 
 		if lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Println("start phase disable timer")
+			lp.log.DEBUG.Printf("start phase %s timer", phaseScale1p)
 			lp.phaseTimer = lp.clock.Now()
 		}
 
@@ -1064,7 +1063,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 		elapsed := lp.clock.Since(lp.phaseTimer)
 		if elapsed >= lp.Disable.Delay {
-			lp.log.DEBUG.Println("phase disable timer elapsed")
+			lp.log.DEBUG.Printf("phase %s timer elapsed", phaseScale1p)
 			if err := lp.scalePhases(1); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 1p @ %.0fW", availablePower)
 			} else {
@@ -1081,10 +1080,10 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 	// scale up phases
 	if min3pCurrent := powerToCurrent(availablePower, 3); min3pCurrent >= minCurrent && scalable {
-		lp.log.DEBUG.Printf("available power above 3p min threshold of %.0fW", 3*Voltage*minCurrent)
+		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, 3*Voltage*minCurrent, maxPhases)
 
 		if lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Println("start phase enable timer")
+			lp.log.DEBUG.Printf("start phase %s timer", phaseScale3p)
 			lp.phaseTimer = lp.clock.Now()
 		}
 
@@ -1092,7 +1091,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 		elapsed := lp.clock.Since(lp.phaseTimer)
 		if elapsed >= lp.Enable.Delay {
-			lp.log.DEBUG.Println("phase enable timer elapsed")
+			lp.log.DEBUG.Printf("phase %s timer elapsed", phaseScale3p)
 			if err := lp.scalePhases(3); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 3p @ %.0fW", availablePower)
 			} else {
@@ -1131,9 +1130,9 @@ func (lp *LoadPoint) publishTimer(name string, delay time.Duration, action strin
 	lp.publish(name+"Remaining", remaining)
 
 	if action == timerInactive {
-		lp.log.DEBUG.Printf("%s action: %s", name, action)
+		lp.log.DEBUG.Printf("%s timer %s", name, action)
 	} else {
-		lp.log.DEBUG.Printf("%s action: %s in %v", name, action, remaining.Round(time.Second))
+		lp.log.DEBUG.Printf("%s %s in %v", name, action, remaining.Round(time.Second))
 	}
 }
 
@@ -1159,7 +1158,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
 	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
 
-	lp.log.DEBUG.Printf("max charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
+	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
 
 	// in MinPV mode or under special conditions return at least minCurrent
 	if (mode == api.ModeMinPV || batteryBuffered || lp.climateActive()) && targetCurrent < minCurrent {
@@ -1169,7 +1168,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		// kick off disable sequence
 		if sitePower >= lp.Disable.Threshold {
-			lp.log.DEBUG.Printf("site power %.0fW >= disable threshold %.0fW", sitePower, lp.Disable.Threshold)
+			lp.log.DEBUG.Printf("site power %.0fW >= %.0fW disable threshold", sitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.Disable.Delay)
@@ -1201,7 +1200,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 		// kick off enable sequence
 		if (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-			lp.log.DEBUG.Printf("site power %.0fW < enable threshold %.0fW", sitePower, lp.Enable.Threshold)
+			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.Enable.Delay)
@@ -1545,12 +1544,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		lp.publish("remoteDisabled", remoteDisabled)
 	}
 
-	// read and publish meters after settings are applied
-	if err == nil {
-		time.Sleep(settleDuration)
-		lp.updateChargePower()
-		lp.updateChargeCurrents()
-	} else {
+	// log any error
+	if err != nil {
 		lp.log.ERROR.Println(err)
 	}
 }

@@ -260,14 +260,12 @@ func (site *Site) updateMeters() error {
 			site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
 			site.publish(name+"Power", *power)
 		} else {
-			err = fmt.Errorf("updating %s meter: %v", name, err)
+			err = fmt.Errorf("%s meter: %v", name, err)
 			site.log.ERROR.Println(err)
 		}
 
 		return err
 	}
-
-	err := retryMeter("grid", site.gridMeter, &site.gridPower)
 
 	if len(site.pvMeters) > 0 {
 		site.pvPower = 0
@@ -282,7 +280,7 @@ func (site *Site) updateMeters() error {
 					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", id, power)
 				}
 			} else {
-				err = fmt.Errorf("updating pv meter %d: %v", id, err)
+				err = fmt.Errorf("pv meter %d: %v", id, err)
 				site.log.ERROR.Println(err)
 			}
 		}
@@ -301,13 +299,15 @@ func (site *Site) updateMeters() error {
 			if err == nil {
 				site.batteryPower += power
 			} else {
-				site.log.ERROR.Println(fmt.Errorf("updating battery meter %d: %v", id, err))
+				site.log.ERROR.Println(fmt.Errorf("battery meter %d: %v", id, err))
 			}
 		}
 
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 		site.publish("batteryPower", site.batteryPower)
 	}
+
+	err := retryMeter("grid", site.gridMeter, &site.gridPower)
 
 	// currents
 	if phaseMeter, ok := site.gridMeter.(api.MeterCurrent); err == nil && ok {
@@ -316,7 +316,7 @@ func (site *Site) updateMeters() error {
 			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		} else {
-			site.log.ERROR.Println(fmt.Errorf("updating grid meter currents: %v", err))
+			site.log.ERROR.Println(fmt.Errorf("grid meter currents: %v", err))
 		}
 	}
 
@@ -326,7 +326,7 @@ func (site *Site) updateMeters() error {
 		if err == nil {
 			site.publish("gridEnergy", val)
 		} else {
-			site.log.ERROR.Println(fmt.Errorf("updating grid meter energy: %v", err))
+			site.log.ERROR.Println(fmt.Errorf("grid meter energy: %v", err))
 		}
 	}
 
