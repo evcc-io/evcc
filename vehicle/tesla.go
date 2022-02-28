@@ -115,7 +115,7 @@ func (v *Tesla) SoC() (float64, error) {
 	res, err := v.chargeStateG()
 
 	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
-		return float64(res.BatteryLevel), nil
+		return float64(res.UsableBatteryLevel), nil
 	}
 
 	return 0, err
