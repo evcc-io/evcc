@@ -176,7 +176,8 @@ func TestUpdatePowerZero(t *testing.T) {
 }
 
 func TestPVHysteresis(t *testing.T) {
-	dt := time.Minute
+	const dt = time.Minute
+	const phases = 3
 	type se struct {
 		site    float64
 		delay   time.Duration // test case delay since start
@@ -196,10 +197,10 @@ func TestPVHysteresis(t *testing.T) {
 		}},
 		// enable when threshold not configured but min power met
 		{false, 0, 0, []se{
-			{-6 * 100 * 10, 0, 0},
-			{-6 * 100 * 10, 1, 0},
-			{-6 * 100 * 10, dt - 1, 0},
-			{-6 * 100 * 10, dt + 1, minA},
+			{-6 * 100 * phases, 0, 0},
+			{-6 * 100 * phases, 1, 0},
+			{-6 * 100 * phases, dt - 1, 0},
+			{-6 * 100 * phases, dt + 1, minA},
 		}},
 		// keep disabled when threshold not configured
 		{false, 0, 0, []se{
@@ -216,11 +217,11 @@ func TestPVHysteresis(t *testing.T) {
 			{-400, dt + 1, 0},
 		}},
 		// keep disabled when threshold (higher minCurrent) not met
-		{false, -7 * 100 * 10, 0, []se{
-			{-6 * 100 * 10, 0, 0},
-			{-6 * 100 * 10, 1, 0},
-			{-6 * 100 * 10, dt - 1, 0},
-			{-6 * 100 * 10, dt + 1, 0},
+		{false, -7 * 100 * phases, 0, []se{
+			{-6 * 100 * phases, 0, 0},
+			{-6 * 100 * phases, 1, 0},
+			{-6 * 100 * phases, dt - 1, 0},
+			{-6 * 100 * phases, dt + 1, 0},
 		}},
 		// enable when threshold met
 		{false, -500, 0, []se{
@@ -231,17 +232,17 @@ func TestPVHysteresis(t *testing.T) {
 		}},
 		// keep enabled at max
 		{true, 500, 0, []se{
-			{-16 * 100 * 10, 0, maxA},
-			{-16 * 100 * 10, 1, maxA},
-			{-16 * 100 * 10, dt - 1, maxA},
-			{-16 * 100 * 10, dt + 1, maxA},
+			{-16 * 100 * phases, 0, maxA},
+			{-16 * 100 * phases, 1, maxA},
+			{-16 * 100 * phases, dt - 1, maxA},
+			{-16 * 100 * phases, dt + 1, maxA},
 		}},
 		// keep enabled at min
 		{true, 500, 0, []se{
-			{-6 * 100 * 10, 0, minA},
-			{-6 * 100 * 10, 1, minA},
-			{-6 * 100 * 10, dt - 1, minA},
-			{-6 * 100 * 10, dt + 1, minA},
+			{-6 * 100 * phases, 0, minA},
+			{-6 * 100 * phases, 1, minA},
+			{-6 * 100 * phases, dt - 1, minA},
+			{-6 * 100 * phases, dt + 1, minA},
 		}},
 		// keep enabled at min (negative threshold)
 		{true, 0, 500, []se{
@@ -269,10 +270,10 @@ func TestPVHysteresis(t *testing.T) {
 		// reset enable timer when threshold not met while timer active and threshold not configured
 		{false, 0, 0, []se{
 			{-6*100*10 - 1, dt + 1, 0},
-			{-6 * 100 * 10, dt + 1, 0},
-			{-6 * 100 * 10, dt + 2, 0},
-			{-6 * 100 * 10, 2 * dt, 0},
-			{-6 * 100 * 10, 2*dt + 1, minA},
+			{-6 * 100 * phases, dt + 1, 0},
+			{-6 * 100 * phases, dt + 2, 0},
+			{-6 * 100 * phases, 2 * dt, 0},
+			{-6 * 100 * phases, 2*dt + 1, minA},
 		}},
 		// reset disable timer when threshold not met while timer active
 		{true, 0, 500, []se{
@@ -296,13 +297,13 @@ func TestPVHysteresis(t *testing.T) {
 
 			Voltage = 100
 			lp := &LoadPoint{
-				log:          util.NewLogger("foo"),
-				clock:        clck,
-				charger:      charger,
-				MinCurrent:   minA,
-				MaxCurrent:   maxA,
-				Phases:       10,
-				activePhases: 10,
+				log:            util.NewLogger("foo"),
+				clock:          clck,
+				charger:        charger,
+				MinCurrent:     minA,
+				MaxCurrent:     maxA,
+				Phases:         phases,
+				measuredPhases: phases,
 				Enable: ThresholdConfig{
 					Threshold: tc.enable,
 					Delay:     dt,
@@ -338,24 +339,26 @@ func TestPVHysteresis(t *testing.T) {
 }
 
 func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
+	const phases = 3
+
 	clck := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
 	Voltage = 100
 	lp := &LoadPoint{
-		log:          util.NewLogger("foo"),
-		clock:        clck,
-		MinCurrent:   minA,
-		MaxCurrent:   maxA,
-		Phases:       10,
-		activePhases: 10,
+		log:            util.NewLogger("foo"),
+		clock:          clck,
+		MinCurrent:     minA,
+		MaxCurrent:     maxA,
+		Phases:         phases,
+		measuredPhases: phases,
 	}
 
 	// not connected, test PV mode logic  short-circuited
 	lp.status = api.StatusA
 
 	// maxCurrent will read enabled state in PV mode
-	sitePower := -float64(lp.Phases)*minA*Voltage + 1 // 1W below min power
+	sitePower := -float64(phases)*minA*Voltage + 1 // 1W below min power
 	current := lp.pvMaxCurrent(api.ModePV, sitePower, false)
 
 	if current != 0 {
@@ -373,6 +376,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	// wrap vehicle with estimator
 	vehicle.EXPECT().Capacity().Return(int64(10))
+	vehicle.EXPECT().Phases().Return(0).AnyTimes()
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
 	lp := &LoadPoint{
@@ -814,173 +818,6 @@ func TestVehicleDetectByID(t *testing.T) {
 
 		if res := lp.selectVehicleByID(tc.id); tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
-		}
-	}
-}
-
-func TestScalePhases(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	charger := &struct {
-		*mock.MockCharger
-		*mock.MockChargePhases
-	}{
-		mock.NewMockCharger(ctrl),
-		mock.NewMockChargePhases(ctrl),
-	}
-
-	dt := time.Minute
-	Voltage = 230 // V
-
-	tc := []struct {
-		desc                 string
-		phases, activePhases int
-		availablePower       float64
-		toPhases             int
-		res                  bool
-		prepare              func(lp *LoadPoint)
-	}{
-		// switch up from 1p/1p configured/active
-		{"1/1->3, not enough power", 1, 1, 0, 1, false, nil},
-		{"1/1->3, kickoff", 1, 1, 3 * Voltage * minA, 1, false, func(lp *LoadPoint) {
-			lp.phaseTimer = time.Time{}
-		}},
-		{"1/1->3, timer running", 1, 1, 3 * Voltage * minA, 1, false, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now()
-		}},
-		{"1/1->3, timer elapsed", 1, 1, 3 * Voltage * minA, 3, true, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
-		}},
-
-		// omit to switch up (again) from 3p/1p configured/active
-		{"3/1->3, not enough power", 3, 1, 0, 3, false, nil},
-		{"3/1->3, kickoff", 3, 1, 3 * Voltage * minA, 3, false, func(lp *LoadPoint) {
-			lp.phaseTimer = time.Time{}
-		}},
-		{"3/1->3, timer running", 3, 1, 3 * Voltage * minA, 3, false, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now()
-		}},
-		{"3/1->3, timer elapsed", 3, 1, 3 * Voltage * minA, 3, false, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
-		}},
-
-		// omit to switch down from 3p/1p configured/active
-		{"3/1->1, not enough power", 3, 1, 0, 3, false, nil},
-		{"3/1->1, kickoff", 3, 1, 1 * Voltage * minA, 3, false, func(lp *LoadPoint) {
-			lp.phaseTimer = time.Time{}
-		}},
-		{"3/1->1, timer running", 3, 1, 1 * Voltage * minA, 3, false, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now()
-		}},
-		{"3/1->1, timer elapsed", 3, 1, 1 * Voltage * minA, 3, false, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
-		}},
-
-		// switch down from 3p/3p configured/active
-		{"3/3->1, enough power", 3, 3, 1 * Voltage * maxA, 3, false, nil},
-		{"3/3->1, kickoff", 3, 3, 1 * Voltage * maxA, 3, false, func(lp *LoadPoint) {
-			lp.phaseTimer = time.Time{}
-		}},
-		{"3/3->1, timer running", 3, 3, 1 * Voltage * maxA, 3, false, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now()
-		}},
-		{"3/3->1, timer elapsed", 3, 3, 1 * Voltage * maxA, 1, true, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
-		}},
-
-		// error states from 1p/3p misconfig - no correction for time being (stay at 1p)
-		{"1/3->1, enough power", 1, 3, 1 * Voltage * maxA, 1, false, nil},
-		{"1/3->1, kickoff, correct phase setting", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *LoadPoint) {
-			lp.phaseTimer = time.Time{}
-		}},
-		{"1/3->1, timer running, correct phase setting", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now()
-		}},
-		{"1/3->1, switch not executed", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *LoadPoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
-		}},
-	}
-
-	for _, tc := range tc {
-		t.Logf("%+v", tc)
-		clock := clock.NewMock()
-
-		lp := &LoadPoint{
-			log:          util.NewLogger("foo"),
-			clock:        clock,
-			charger:      charger,
-			MinCurrent:   minA,
-			MaxCurrent:   maxA,
-			Phases:       tc.phases,
-			activePhases: tc.activePhases,
-			Enable: ThresholdConfig{
-				Delay: dt,
-			},
-			Disable: ThresholdConfig{
-				Delay: dt,
-			},
-		}
-
-		if tc.prepare != nil {
-			tc.prepare(lp)
-		}
-
-		if tc.res {
-			charger.MockChargePhases.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
-		}
-
-		if res := lp.pvScalePhases(tc.availablePower, minA, maxA); tc.res != res {
-			t.Errorf("expected %v, got %v", tc.res, res)
-		} else {
-			if lp.Phases != tc.toPhases {
-				t.Errorf("expected %dp, got %dp", tc.toPhases, lp.Phases)
-			}
-		}
-	}
-}
-
-func TestVehiclePhases(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	vehicle := &struct {
-		*mock.MockVehicle
-		*mock.MockVehiclePhases
-	}{
-		mock.NewMockVehicle(ctrl),
-		mock.NewMockVehiclePhases(ctrl),
-	}
-
-	tc := []struct {
-		phases, activePhases, vehiclePhases int
-		res                                 int
-	}{
-		{1, 1, 0, 1}, // leave as-is
-		{3, 1, 0, 1}, // leave as-is
-		{3, 3, 0, 3}, // leave as-is
-		{1, 1, 1, 1}, // leave as-is
-		{3, 1, 1, 1}, // leave as-is
-		{3, 3, 1, 1}, // limit to 1p
-		{1, 1, 2, 1}, // leave as-is
-		{3, 1, 2, 2}, // limit to 2p
-		{3, 3, 2, 2}, // limit to 2p
-		{1, 1, 3, 1}, // leave as-is
-		{3, 1, 3, 3}, // limit to 3p
-		{3, 3, 3, 3}, // leave as-is
-	}
-
-	for _, tc := range tc {
-		t.Logf("%+v", tc)
-
-		lp := &LoadPoint{
-			log:          util.NewLogger("foo"),
-			vehicle:      vehicle,
-			Phases:       tc.phases,
-			activePhases: tc.activePhases,
-		}
-
-		vehicle.MockVehiclePhases.EXPECT().Phases().Return(tc.vehiclePhases)
-
-		lp.setVehiclePhases()
-		if lp.activePhases != tc.res {
-			t.Errorf("expected %v, got %v", tc.res, lp.activePhases)
 		}
 	}
 }
