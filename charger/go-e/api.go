@@ -32,19 +32,23 @@ type API interface {
 
 type LocalAPI struct {
 	*request.Helper
-	uri string
-	v2  bool
+	uri     string
+	v2      bool
+	status  Response
+	updated time.Time
+	cache   time.Duration
 }
 
 var _ API = (*LocalAPI)(nil)
 
-func NewLocal(log *util.Logger, uri string) *LocalAPI {
+func NewLocal(log *util.Logger, uri string, cache time.Duration) *LocalAPI {
 	uri = strings.TrimRight(uri, "/")
 	uri = strings.TrimSuffix(uri, "/api")
 
 	api := &LocalAPI{
 		Helper: request.NewHelper(log),
 		uri:    uri,
+		cache:  cache,
 	}
 
 	api.upgradeV2()
@@ -78,20 +82,25 @@ func (c *LocalAPI) response(partial string, res interface{}) error {
 }
 
 // Status reads a v1/v2 api response
-func (c *LocalAPI) Status() (Response, error) {
-	if c.v2 {
-		res := new(StatusResponse2)
-		err := c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &res)
-		return res, err
+func (c *LocalAPI) Status() (res Response, err error) {
+	if time.Since(c.updated) > c.cache {
+		if c.v2 {
+			c.status = new(StatusResponse2)
+			err = c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &c.status)
+		} else {
+			c.status = new(StatusResponse)
+			err = c.response("status", &c.status)
+		}
+		if err == nil {
+			c.updated = time.Now()
+		}
 	}
-
-	res := new(StatusResponse)
-	err := c.response("status", &res)
-	return res, err
+	return c.status, err
 }
 
 // Update executes a v1/v2 api update and returns the response
 func (c *LocalAPI) Update(payload string) error {
+	c.updated = time.Time{}
 	res := new(UpdateResponse)
 
 	if c.v2 {

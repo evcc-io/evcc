@@ -37,7 +37,7 @@ func TestLocalV1(t *testing.T) {
 	srv := httptest.NewServer(h)
 
 	// h.expect("/api/status?filter=alw")
-	local := NewLocal(util.NewLogger("foo"), srv.URL)
+	local := NewLocal(util.NewLogger("foo"), srv.URL, 0)
 
 	h.expect("/status")
 	if _, err := local.Status(); err != nil {
@@ -54,7 +54,7 @@ func TestLocalV2(t *testing.T) {
 	srv := httptest.NewServer(h)
 
 	h.expect("/api/status?filter=alw")
-	local := NewLocal(util.NewLogger("foo"), srv.URL)
+	local := NewLocal(util.NewLogger("foo"), srv.URL, 0)
 
 	h.expect("/api/status?filter=alw,car,eto,nrg,wh,trx,cards")
 	if _, err := local.Status(); err != nil {
