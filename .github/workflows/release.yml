@@ -54,7 +54,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          ~/go/pkg/mod
+          ~/go/pkg
           ~/.cache/go-build
         key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
