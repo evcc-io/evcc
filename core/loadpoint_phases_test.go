@@ -260,6 +260,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 		clock := clock.NewMock()
+		clock.Add(time.Hour) // avoid time.IsZero
 
 		lp := &LoadPoint{
 			log:            util.NewLogger("foo"),
@@ -285,12 +286,13 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			charger.MockChargePhases.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
 		}
 
-		if res := lp.pvScalePhases(tc.availablePower, minA, maxA); tc.res != res {
+		res := lp.pvScalePhases(tc.availablePower, minA, maxA)
+
+		switch {
+		case tc.res != res:
 			t.Errorf("expected %v, got %v", tc.res, res)
-		} else {
-			if lp.Phases != tc.toPhases {
-				t.Errorf("expected %dp, got %dp", tc.toPhases, lp.Phases)
-			}
+		case lp.Phases != tc.toPhases:
+			t.Errorf("expected %dp, got %dp", tc.toPhases, lp.Phases)
 		}
 	}
 }
