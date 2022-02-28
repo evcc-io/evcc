@@ -1303,7 +1303,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 			lp.measuredPhases = phases
 			lp.Unlock()
 
-			lp.log.DEBUG.Printf("detected phases: %dp %.3gA", phases, lp.chargeCurrents)
+			lp.log.DEBUG.Printf("detected phases: %dp", phases)
 			lp.publish("activePhases", phases)
 		}
 	}
