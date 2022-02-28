@@ -1089,10 +1089,10 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 			lp.phaseTimer = lp.clock.Now()
 		}
 
-		lp.publishTimer(phaseTimer, lp.Disable.Delay, phaseScale3p)
+		lp.publishTimer(phaseTimer, lp.Enable.Delay, phaseScale3p)
 
 		elapsed := lp.clock.Since(lp.phaseTimer)
-		if elapsed >= lp.Disable.Delay {
+		if elapsed >= lp.Enable.Delay {
 			lp.log.DEBUG.Println("phase enable timer elapsed")
 			if err := lp.scalePhases(3); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 3p @ %.0fW", availablePower)
