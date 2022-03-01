@@ -139,6 +139,14 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 	}
 }
 
+// SetVehicle sets the active vehicle
+func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.setActiveVehicle(vehicle)
+}
+
 // RemoteControl sets remote status demand
 func (lp *LoadPoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()
