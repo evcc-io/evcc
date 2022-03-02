@@ -6,7 +6,7 @@ builds:
 - id: evcc
   main: main.go
   flags:
-  - -tags=release
+  - -tags=release,viper_yaml3
   ldflags:
   - -X github.com/evcc-io/evcc/server.Version={{.Version}} -X github.com/evcc-io/evcc/server.Commit={{.ShortCommit}} -s -w
   env:
