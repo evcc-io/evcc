@@ -162,9 +162,12 @@ func TestPvScalePhases(t *testing.T) {
 			ctrl.Finish()
 
 			// scale up
-			min3p := 3 * minA * Voltage
+			min3p := float64(tc.maxExpected) * minA * Voltage
 			lp.phaseTimer = time.Time{}
-			lp.Phases = tc.physical // reset to initial state
+
+			// reset to initial state
+			lp.Phases = tc.physical
+			lp.measuredPhases = tc.measuredPhases
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
