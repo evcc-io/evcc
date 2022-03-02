@@ -74,7 +74,7 @@ const (
 	wblRegComTimeout           = 2002 // Communication timeout
 	wblRegChargePower          = 5000 // Charge power
 	wblRegChargeCurrent        = 5004 // Charge current
-	wblRegLifeBit              = 6000 // Communication monitoring 0/1 Toggle-Bit EM writes 1, Live deletes it and puts it on 0.
+	//wblRegLifeBit              = 6000 // Communication monitoring 0/1 Toggle-Bit EM writes 1, Live deletes it and puts it on 0.
 )
 
 var wblRegCurrents = []uint16{wblRegCurrentL1, wblRegCurrentL2, wblRegCurrentL3}
