@@ -6,6 +6,8 @@ import it from "./it";
 
 Vue.use(VueI18n);
 
+const PREFERRED_LOCALE_KEY = "preferred_locale";
+
 function getBrowserLocale() {
   const navigatorLocale =
     navigator.languages !== undefined ? navigator.languages[0] : navigator.language;
@@ -17,7 +19,7 @@ function getBrowserLocale() {
 }
 
 export default new VueI18n({
-  locale: getBrowserLocale(),
+  locale: window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale(),
   fallbackLocale: "en",
   messages: { de, en, it },
 });
