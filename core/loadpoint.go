@@ -1285,12 +1285,14 @@ func (lp *LoadPoint) updateChargeCurrents() {
 	lp.publish("chargeCurrents", lp.chargeCurrents)
 
 	if lp.charging() {
+		// Quine-McCluskey for (¬L1∧L2∧¬L3) ∨ (¬L1∧¬L2∧L3) ∨ (L1∧¬L2∧L3) ∨ (¬L1∧L2∧L3) -> ¬L1 ∧ L2 ∨ ¬L2 ∧ L3
+		if !(i1 > minActiveCurrent) && (i2 > minActiveCurrent) || !(i2 > minActiveCurrent) && (i3 > minActiveCurrent) {
+			lp.log.WARN.Printf("invalid phase wiring between charge meter and vehicle")
+		}
+
 		var phases int
-		for l, i := range lp.chargeCurrents {
-			if i >= minActiveCurrent {
-				if l > 0 && phases == 0 {
-					lp.log.WARN.Printf("invalid wiring: phase %d observed active should be first phase", l+1)
-				}
+		for _, i := range lp.chargeCurrents {
+			if i > minActiveCurrent {
 				phases++
 			}
 		}
