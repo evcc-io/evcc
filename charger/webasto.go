@@ -114,15 +114,6 @@ func NewWebastoLive(uri, device, comset string, baudrate int, proto modbus.Proto
 	return wb, err
 }
 
-func (wb *WebastoLive) set(reg, val uint16) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, val)
-
-	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
-
-	return err
-}
-
 // Status implements the api.Charger interface
 func (wb *WebastoLive) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wblRegChargePointState, 1)
