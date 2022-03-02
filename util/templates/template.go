@@ -89,14 +89,7 @@ func (t *Template) SetCombinedTitle() {
 		t.resolveTitles()
 	}
 
-	title := ""
-	for _, t := range t.titles {
-		if title != "" {
-			title += "/"
-		}
-		title += t
-	}
-	t.title = title
+	t.title = strings.Join(t.titles, "/")
 }
 
 // set the title for this templates
@@ -111,21 +104,7 @@ func (t *Template) Title() string {
 
 // return a language specific product title
 func (t *Template) ProductTitle(p Product) string {
-	title := ""
-
-	if p.Brand != "" {
-		title += p.Brand
-	}
-
-	description := p.Description.String(t.Lang)
-	if description != "" {
-		if title != "" {
-			title += " "
-		}
-		title += description
-	}
-
-	return title
+	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(t.Lang)))
 }
 
 // return the language specific product titles
@@ -141,13 +120,9 @@ func (t *Template) Titles(lang string) []string {
 
 // set the language specific product titles
 func (t *Template) resolveTitles() {
-	var titles []string
-
 	for _, p := range t.Products {
-		titles = append(titles, t.ProductTitle(p))
+		t.titles = append(t.titles, t.ProductTitle(p))
 	}
-
-	t.titles = titles
 }
 
 // add the referenced base Params and overwrite existing ones

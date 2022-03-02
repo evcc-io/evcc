@@ -27,9 +27,7 @@ var acceptable = []string{
 	"login failed: Put \"https://192.0.2.2/v1/login\": context deadline exceeded", // LG ESS
 }
 
-func TestMeterTemplates(t *testing.T) {
-	test.SkipCI(t)
-
+func TestTemplates(t *testing.T) {
 	for _, tmpl := range templates.ByClass(templates.Meter) {
 		tmpl := tmpl
 
@@ -51,39 +49,10 @@ func TestMeterTemplates(t *testing.T) {
 			values = tmpl.ModbusValues(templates.TemplateRenderModeInstance, true, values)
 		}
 
-		usages := tmpl.Usages()
-		if len(usages) == 0 {
-			runTest(t, tmpl, values)
-		} else {
-			// test all usages
-			for _, usage := range usages {
-
-				// set the usage param value
-				if usage != "" {
-					values[templates.ParamUsage] = usage
-				}
-
-				runTest(t, tmpl, values)
+		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {
+			if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
+				t.Error(err)
 			}
-		}
+		})
 	}
-}
-
-func runTest(t *testing.T, tmpl templates.Template, values map[string]interface{}) {
-	t.Run(tmpl.Template, func(t *testing.T) {
-		t.Parallel()
-
-		b, values, err := tmpl.RenderResult(templates.TemplateRenderModeUnitTest, values)
-		if err != nil {
-			t.Logf("Template: %s", tmpl.Template)
-			t.Logf("%s", string(b))
-			t.Error(err)
-		}
-
-		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
-			t.Logf("Template: %s", tmpl.Template)
-			t.Logf("%s", string(b))
-			t.Error(err)
-		}
-	})
 }
