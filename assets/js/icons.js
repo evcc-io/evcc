@@ -1,7 +1,7 @@
 import Vue from "vue";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
-
+import { faRightLeft } from "@fortawesome/free-solid-svg-icons/faRightLeft";
 import { faBatteryEmpty } from "@fortawesome/free-solid-svg-icons/faBatteryEmpty";
 import { faBatteryFull } from "@fortawesome/free-solid-svg-icons/faBatteryFull";
 import { faBatteryHalf } from "@fortawesome/free-solid-svg-icons/faBatteryHalf";
@@ -34,6 +34,7 @@ import { faAngleDoubleRight } from "@fortawesome/free-solid-svg-icons/faAngleDou
 library.add(
   faAngleDown,
   faAngleUp,
+  faRightLeft,
   faBatteryEmpty,
   faBatteryFull,
   faBatteryHalf,

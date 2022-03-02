@@ -18,6 +18,7 @@
 				@target-soc-updated="setTargetSoC"
 				@target-time-updated="setTargetTime"
 				@target-time-removed="removeTargetTime"
+				@vehicle-removed="removeVehicle"
 			/>
 		</div>
 		<LoadpointDetails v-bind="details" />
@@ -112,6 +113,9 @@ export default {
 		},
 		removeTargetTime: function () {
 			api.delete(this.apiPath("targetcharge"));
+		},
+		removeVehicle: function () {
+			api.delete(this.apiPath("vehicle"));
 		},
 	},
 };

@@ -10,6 +10,8 @@ import i18n from "./i18n";
 import "./tooltip";
 import store from "./store";
 
+Vue.prototype.$hiddenFeatures = window.localStorage["hidden_features"] === "true";
+
 Vue.use(VueMeta);
 
 window.app = new Vue({
