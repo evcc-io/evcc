@@ -41,19 +41,30 @@ func NewAPI(log *util.Logger, brand string, identity oauth2.TokenSource) *API {
 	return v
 }
 
+func (v *API) eadrax() (VehiclesStatusResponse, error) {
+	var res VehiclesStatusResponse
+	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=60&appDateTime=%d", CocoApiURI, time.Now().Unix())
+
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Content-Type": request.JSONContent,
+		"X-User-Agent": v.xUserAgent,
+	})
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return res, err
+}
+
 // Vehicles implements returns the /user/vehicles api
 func (v *API) Vehicles() ([]string, error) {
-	var resp VehiclesResponse
-	uri := fmt.Sprintf("%s/user/vehicles", ApiURI)
-	// uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles", CocoApiURI, vin)
-
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
-	if err == nil {
-		err = v.DoJSON(req, &resp)
+	resp, err := v.eadrax()
+	if err != nil {
+		return nil, err
 	}
 
 	var vehicles []string
-	for _, v := range resp.Vehicles {
+	for _, v := range resp {
 		vehicles = append(vehicles, v.VIN)
 	}
 
@@ -62,16 +73,7 @@ func (v *API) Vehicles() ([]string, error) {
 
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status(vin string) (VehicleStatus, error) {
-	var resp VehiclesStatusResponse
-	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=60&appDateTime=%d", CocoApiURI, time.Now().Unix())
-
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"X-User-Agent": v.xUserAgent,
-	})
-	if err == nil {
-		err = v.DoJSON(req, &resp)
-	}
-
+	resp, err := v.eadrax()
 	if err == nil {
 		for _, res := range resp {
 			if res.VIN == vin {
