@@ -47,7 +47,13 @@ func (v *API) Vehicles() ([]string, error) {
 	uri := fmt.Sprintf("%s/user/vehicles", ApiURI)
 	// uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles", CocoApiURI, vin)
 
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Content-Type":    request.JSONContent,
+		"X-User-Agent":    v.xUserAgent,
+		"Accept-language": "de-DE",
+		"user-agent":      "Dart/2.10 (dart:io)",
+		"24-hour-format":  "true",
+	})
 	if err == nil {
 		err = v.DoJSON(req, &resp)
 	}
@@ -65,9 +71,7 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 	var resp VehiclesStatusResponse
 	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=60&appDateTime=%d", CocoApiURI, time.Now().Unix())
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"X-User-Agent": v.xUserAgent,
-	})
+	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
 	if err == nil {
 		err = v.DoJSON(req, &resp)
 	}
