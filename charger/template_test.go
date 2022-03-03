@@ -31,8 +31,6 @@ var acceptable = []string{
 }
 
 func TestTemplates(t *testing.T) {
-	test.SkipCI(t)
-
 	for _, tmpl := range templates.ByClass(templates.Charger) {
 		tmpl := tmpl
 
