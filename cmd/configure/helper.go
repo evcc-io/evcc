@@ -254,7 +254,7 @@ func (c *CmdConfigure) askSponsortoken(required bool, feature bool) error {
 		required: true})
 
 	err := sponsor.ConfigureSponsorship(sponsortoken)
-	if err != nil {
+	if err == nil {
 		c.configuration.config.SponsorToken = sponsortoken
 	}
 

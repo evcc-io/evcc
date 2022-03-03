@@ -54,7 +54,7 @@ type DeviceCategoryData struct {
 	defaultName                string
 }
 
-var DeviceCategories map[DeviceCategory]DeviceCategoryData = map[DeviceCategory]DeviceCategoryData{
+var DeviceCategories = map[DeviceCategory]DeviceCategoryData{
 	DeviceCategoryCharger: {
 		class:       DeviceClassCharger,
 		defaultName: defaultNameCharger},
