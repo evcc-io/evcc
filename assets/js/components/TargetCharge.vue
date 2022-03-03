@@ -208,10 +208,10 @@ export default {
 			return new Date().toISOString().split("T")[1].slice(0, -8);
 		},
 		setTargetTime: function () {
-			this.$emit("target-time-updated", this.selectedTargetTime);
+			this.$emit("target-time-update", this.selectedTargetTime);
 		},
 		removeTargetTime: function () {
-			this.$emit("target-time-removed");
+			this.$emit("target-time-remove");
 		},
 	},
 };

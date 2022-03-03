@@ -8,8 +8,8 @@
 		</small>
 		<TargetCharge
 			v-bind="targetCharge"
-			@target-time-updated="setTargetTime"
-			@target-time-removed="removeTargetTime"
+			@target-time-update="setTargetTime"
+			@target-time-remove="removeTargetTime"
 		/>
 	</div>
 </template>
@@ -41,10 +41,10 @@ export default {
 	},
 	methods: {
 		setTargetTime: function (targetTime) {
-			this.$emit("target-time-updated", targetTime);
+			this.$emit("target-time-update", targetTime);
 		},
 		removeTargetTime: function () {
-			this.$emit("target-time-removed");
+			this.$emit("target-time-remove");
 		},
 	},
 };

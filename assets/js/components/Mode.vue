@@ -48,7 +48,7 @@ export default {
 	},
 	methods: {
 		setTargetMode: function (mode) {
-			this.$emit("updated", mode);
+			this.$emit("update", mode);
 		},
 	},
 };

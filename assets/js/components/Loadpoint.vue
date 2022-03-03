@@ -11,14 +11,14 @@
 		</div>
 
 		<div class="row">
-			<Mode class="col-12 col-md-6 col-lg-4 mb-4" :mode="mode" @updated="setTargetMode" />
+			<Mode class="col-12 col-md-6 col-lg-4 mb-4" :mode="mode" @update="setTargetMode" />
 			<Vehicle
 				class="col-12 col-md-6 col-lg-8 mb-4"
 				v-bind="vehicle"
-				@target-soc-updated="setTargetSoC"
-				@target-time-updated="setTargetTime"
-				@target-time-removed="removeTargetTime"
-				@vehicle-removed="removeVehicle"
+				@target-soc-update="setTargetSoC"
+				@target-time-update="setTargetTime"
+				@target-time-remove="removeTargetTime"
+				@vehicle-remove="removeVehicle"
 			/>
 		</div>
 		<LoadpointDetails v-bind="details" />

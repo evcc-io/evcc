@@ -4,7 +4,7 @@
 			<div class="mb-3">
 				{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
 			</div>
-			<div v-if="$hiddenFeatures" class="dropdown ms-2" style="margin-top: -0.1rem">
+			<div v-if="$hiddenFeatures" class="dropdown ms-2" style="margin-top: -0.2rem">
 				<button
 					:id="`vehicle_dropdown_${id}`"
 					class="btn btn-sm btn-link text-muted"
@@ -16,24 +16,25 @@
 				</button>
 				<ul class="dropdown-menu" :aria-labelledby="`vehicle_dropdown_${id}`">
 					<h6 class="dropdown-header">Fahrzeug wechseln</h6>
-					<button class="dropdown-item" type="button" @click="removeVehicle">
-						Gastfahrzeug
-					</button>
 					<button class="dropdown-item" type="button" @click="changeVehicle">
 						blaues Model 3
 					</button>
 					<button class="dropdown-item" type="button" @click="changeVehicle">
 						Lenas e-Niro
 					</button>
+					<li><hr class="dropdown-divider mx-3" /></li>
+					<button class="dropdown-item" type="button" @click="removeVehicle">
+						Gastfahrzeug
+					</button>
 				</ul>
 			</div>
 		</div>
-		<VehicleSoc v-bind="vehicleSocProps" @target-soc-updated="targetSocUpdated" />
+		<VehicleSoc v-bind="vehicleSocProps" @target-soc-update="targetSocUpdated" />
 		<VehicleSubline
 			v-bind="vehicleSubline"
 			class="my-1"
-			@target-time-updated="setTargetTime"
-			@target-time-removed="removeTargetTime"
+			@target-time-update="setTargetTime"
+			@target-time-remove="removeTargetTime"
 		/>
 	</div>
 </template>
@@ -72,16 +73,16 @@ export default {
 	},
 	methods: {
 		targetSocUpdated: function (targetSoC) {
-			this.$emit("target-soc-updated", targetSoC);
+			this.$emit("target-soc-update", targetSoC);
 		},
 		setTargetTime: function (targetTime) {
-			this.$emit("target-time-updated", targetTime);
+			this.$emit("target-time-update", targetTime);
 		},
 		removeTargetTime: function () {
-			this.$emit("target-time-removed");
+			this.$emit("target-time-remove");
 		},
 		removeVehicle: function () {
-			this.$emit("vehicle-removed");
+			this.$emit("vehicle-remove");
 		},
 		changeVehicle: function () {
 			window.alert("Fahrzeug wechseln");

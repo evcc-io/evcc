@@ -153,7 +153,7 @@ export default {
 			}
 			// value changed
 			if (e.target.value !== this.targetSoC) {
-				this.$emit("target-soc-updated", e.target.value);
+				this.$emit("target-soc-update", e.target.value);
 			}
 		},
 		movedTargetSoC: function (e) {
