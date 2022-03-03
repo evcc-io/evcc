@@ -50,7 +50,47 @@ func (v *Identity) Login(user, password string) error {
 	return err
 }
 
-func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
+	var tok struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		ExpiresIn    int    `json:"expires_in"`
+	}
+
+	uri := fmt.Sprintf("%s/token", AuthURI)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type":  request.FormContent,
+		"Authorization": "Basic MzFjMzU3YTAtN2ExZC00NTkwLWFhOTktMzNiOTcyNDRkMDQ4OmMwZTMzOTNkLTcwYTItNGY2Zi05ZDNjLTg1MzBhZjY0ZDU1Mg==",
+	})
+
+	if err == nil {
+		err = v.DoJSON(req, &tok)
+	}
+
+	token := &oauth2.Token{
+		AccessToken:  tok.AccessToken,
+		RefreshToken: tok.RefreshToken,
+		Expiry:       time.Now().Add(time.Duration(tok.ExpiresIn) * time.Second),
+	}
+
+	return token, err
+}
+
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	if token == nil || token.RefreshToken == "" {
+		return v.login()
+	}
+
+	data := url.Values{
+		"redirect_uri":  []string{RedirectURI},
+		"refresh_token": []string{token.RefreshToken},
+		"grant_type":    []string{"refresh_token"},
+	}
+
+	return v.retrieveToken(data)
+}
+
+func (v *Identity) login() (*oauth2.Token, error) {
 	// don't follow redirects
 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
 	defer func() { v.Client.CheckRedirect = nil }()
@@ -138,26 +178,5 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		"code_verifier": []string{cv.CodeChallengePlain()},
 	}
 
-	var tok struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		ExpiresIn    int    `json:"expires_in"`
-	}
-
-	uri = fmt.Sprintf("%s/token", AuthURI)
-	req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  request.FormContent,
-		"Authorization": "Basic MzFjMzU3YTAtN2ExZC00NTkwLWFhOTktMzNiOTcyNDRkMDQ4OmMwZTMzOTNkLTcwYTItNGY2Zi05ZDNjLTg1MzBhZjY0ZDU1Mg==",
-	})
-	if err == nil {
-		err = v.DoJSON(req, &tok)
-	}
-
-	token := &oauth2.Token{
-		AccessToken:  tok.AccessToken,
-		RefreshToken: tok.RefreshToken,
-		Expiry:       time.Now().Add(time.Duration(tok.ExpiresIn) * time.Second),
-	}
-
-	return token, nil
+	return v.retrieveToken(data)
 }
