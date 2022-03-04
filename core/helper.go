@@ -32,7 +32,7 @@ func powerToCurrent(power float64, phases int) float64 {
 // negative value: available power (grid export), positive value: grid import
 func sitePower(grid, battery, residual float64) float64 {
 	if grid > 0 && battery < 0 {
-		battery += grid
+		return grid + residual
 	}
 	return grid + battery + residual
 }
