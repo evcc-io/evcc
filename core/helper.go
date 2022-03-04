@@ -31,7 +31,7 @@ func sitePower(grid, battery, residual float64) float64 {
 	// available site power.
 	// (https://github.com/evcc-io/evcc/issues/2734)
 	if grid > 0 && battery < 0 {
-		battery += grid
+		battery = 0
 	}
 	return grid + battery + residual
 }
