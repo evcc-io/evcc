@@ -81,8 +81,8 @@ func testScale(t *testing.T, lp *LoadPoint, power float64, direction string, tc 
 				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
 			}
 
-			// we've verified scale-up here- next test should not scale
-			testExpectation = strings.ReplaceAll(testExpectation, "u", "")
+			// we've verified scale-up here so next test should not scale
+			testExpectation = strings.ReplaceAll(testExpectation, testDirection, "")
 		}
 	}
 
