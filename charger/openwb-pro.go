@@ -3,6 +3,7 @@ package charger
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -20,6 +21,7 @@ func init() {
 // OpenWBPro charger implementation
 type OpenWBPro struct {
 	*request.Helper
+	mu      sync.Mutex
 	uri     string
 	current float64
 	status  pro.Status
@@ -66,6 +68,9 @@ func (wb *OpenWBPro) hearbeat(log *util.Logger) {
 }
 
 func (wb *OpenWBPro) get() (pro.Status, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	if time.Since(wb.updated) < wb.cache {
 		return wb.status, nil
 	}
@@ -87,7 +92,9 @@ func (wb *OpenWBPro) set(payload string) error {
 	if err == nil {
 		resp.Body.Close()
 	}
+	wb.mu.Lock()
 	wb.updated = time.Time{}
+	wb.mu.Unlock()
 	return err
 }
 
