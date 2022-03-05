@@ -80,7 +80,7 @@ func display(res []tasks.Result) {
 			continue
 
 		default:
-			host := ""
+			var host string
 			hosts, err := net.LookupAddr(hit.ResultDetails.IP)
 			if err == nil && len(hosts) > 0 {
 				host = strings.TrimSuffix(hosts[0], ".")

@@ -303,7 +303,7 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 			required: false})
 
 		fmt.Println()
-		fmt.Println("-------------------------------------------")
+		fmt.Println("--------------------------------------------")
 
 		broker := fmt.Sprintf("%s:%s", host, port)
 
