@@ -28,10 +28,7 @@ func init() {
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
 func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		URI string
-		ID  uint8
-	}{
+	cc := modbus.TcpSettings{
 		ID: 1,
 	}
 
