@@ -37,6 +37,10 @@ type API interface {
 	GetTargetSoC() int
 	// SetTargetSoC sets the charge target soc
 	SetTargetSoC(int)
+	// GetTargetTime returns the charge target time
+	GetTargetTime() time.Time
+	// SetTargetTime sets the charge target time
+	SetTargetTime(time.Time)
 	// GetMinSoC returns the charge minimum soc
 	GetMinSoC() int
 	// SetMinSoC sets the charge minimum soc

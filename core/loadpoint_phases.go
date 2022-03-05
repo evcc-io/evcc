@@ -6,13 +6,18 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// resetMeasuredPhases resets measured phases to unknown on vehicle disconnect, phase switch or phase api call
-func (lp *LoadPoint) resetMeasuredPhases() {
+// setMeasuredPhases provides synchronized access to measuredPhases
+func (lp *LoadPoint) setMeasuredPhases(phases int) {
 	lp.Lock()
-	lp.measuredPhases = 0
+	lp.measuredPhases = phases
 	lp.Unlock()
 
-	lp.publish("activePhases", lp.activePhases())
+	// publish best guess if phases are reset
+	if phases == 0 {
+		phases = lp.activePhases(false)
+	}
+
+	lp.publish("activePhases", phases)
 }
 
 // getMeasuredPhases provides synchronized access to measuredPhases
@@ -43,37 +48,31 @@ func expect(phases int) int {
 }
 
 // activePhases returns the number of expectedly active phases for the meter.
+// If max is true, the maximum number of active phases is returned.
 // If unknown for 1p3p chargers during startup it will assume 3p.
-func (lp *LoadPoint) activePhases() int {
-	physical := lp.GetPhases()
-	vehicle := lp.getVehiclePhases()
-	measured := lp.getMeasuredPhases()
-
-	return min(expect(vehicle), expect(physical), expect(measured))
-}
-
-// maxActivePhases returns the maximum number of active phases for the meter.
-func (lp *LoadPoint) maxActivePhases() int {
+func (lp *LoadPoint) activePhases(max bool) int {
 	physical := lp.GetPhases()
 	measured := lp.getMeasuredPhases()
 	vehicle := lp.getVehiclePhases()
 
-	// during 1p or unknown config, 1p measured is not a restriction
-	if physical <= 1 || vehicle == 1 {
-		measured = 0
-	}
+	if max {
+		// during 1p or unknown config, 1p measured is not a restriction
+		if physical <= 1 || vehicle == 1 {
+			measured = 0
+		}
 
-	// if 1p3p supported then assume 3p
-	if _, ok := lp.charger.(api.ChargePhases); ok {
-		physical = 3
+		// if 1p3p supported then assume 3p
+		if _, ok := lp.charger.(api.ChargePhases); ok {
+			physical = 3
+		}
 	}
 
 	return min(expect(vehicle), expect(physical), expect(measured))
 }
 
 func (lp *LoadPoint) getVehiclePhases() int {
-	if lp.vehicle != nil {
-		return lp.vehicle.Phases()
+	if vehicle := lp.getVehicle(); vehicle != nil {
+		return vehicle.Phases()
 	}
 
 	return 0

@@ -71,17 +71,17 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 func TestNew(t *testing.T) {
 	lp := NewLoadPoint(util.NewLogger("foo"))
 
-	if lp.Phases != 3 {
-		t.Errorf("Phases %v", lp.Phases)
+	if lp.GetPhases() != 3 {
+		t.Errorf("Phases %v", lp.GetPhases())
 	}
-	if lp.MinCurrent != minA {
-		t.Errorf("MinCurrent %v", lp.MinCurrent)
+	if lp.GetMinCurrent() != minA {
+		t.Errorf("MinCurrent %v", lp.GetMinCurrent())
 	}
-	if lp.MaxCurrent != maxA {
-		t.Errorf("MaxCurrent %v", lp.MaxCurrent)
+	if lp.GetMaxCurrent() != maxA {
+		t.Errorf("MaxCurrent %v", lp.GetMaxCurrent())
 	}
-	if lp.status != api.StatusNone {
-		t.Errorf("status %v", lp.status)
+	if lp.GetStatus() != api.StatusNone {
+		t.Errorf("status %v", lp.GetStatus())
 	}
 	if lp.charging() {
 		t.Errorf("charging %v", lp.charging())
@@ -158,6 +158,8 @@ func TestUpdatePowerZero(t *testing.T) {
 			status:      tc.status, // no status change
 		}
 
+		lp.socTimer = soc.NewTimer(lp.log, &adapter{LoadPoint: lp})
+
 		attachListeners(t, lp)
 
 		// initial status
@@ -168,7 +170,7 @@ func TestUpdatePowerZero(t *testing.T) {
 			tc.expect(charger)
 		}
 
-		lp.Mode = tc.mode
+		lp.setMode(tc.mode)
 		lp.Update(0, false, false) // sitePower 0
 
 		ctrl.Finish()
@@ -315,7 +317,7 @@ func TestPVHysteresis(t *testing.T) {
 			}
 
 			// charging, otherwise PV mode logic is short-circuited
-			lp.status = status
+			lp.setStatus(status)
 
 			start := clck.Now()
 
@@ -355,7 +357,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	}
 
 	// not connected, test PV mode logic  short-circuited
-	lp.status = api.StatusA
+	lp.setStatus(api.StatusA)
 
 	// maxCurrent will read enabled state in PV mode
 	sitePower := -float64(phases)*minA*Voltage + 1 // 1W below min power
@@ -402,6 +404,8 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 			},
 		},
 	}
+
+	lp.socTimer = soc.NewTimer(lp.log, &adapter{LoadPoint: lp})
 
 	attachListeners(t, lp)
 
@@ -471,12 +475,14 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		ResetOnDisconnect: true,
 	}
 
+	lp.socTimer = soc.NewTimer(lp.log, &adapter{LoadPoint: lp})
+
 	attachListeners(t, lp)
 	lp.collectDefaults()
 
 	lp.enabled = true
 	lp.chargeCurrent = float64(minA)
-	lp.Mode = api.ModeNow
+	lp.setMode(api.ModeNow)
 
 	t.Log("charging at min")
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
@@ -491,8 +497,8 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(-3000, false, false)
 
-	if lp.Mode != api.ModeOff {
-		t.Error("unexpected mode", lp.Mode)
+	if lp.GetMode() != api.ModeOff {
+		t.Error("unexpected mode", lp.GetMode())
 	}
 
 	ctrl.Finish()
@@ -538,11 +544,13 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		status:      api.StatusC,
 	}
 
+	lp.socTimer = soc.NewTimer(lp.log, &adapter{LoadPoint: lp})
+
 	attachListeners(t, lp)
 
 	lp.enabled = true
 	lp.chargeCurrent = float64(maxA)
-	lp.Mode = api.ModeNow
+	lp.setMode(api.ModeNow)
 
 	// attach cache for verifying values
 	_, expectCache := cacheExpecter(t, lp)
@@ -705,7 +713,7 @@ func TestSoCPoll(t *testing.T) {
 		}
 
 		lp.SoC.Poll.Mode = tc.mode
-		lp.status = tc.status
+		lp.setStatus(tc.status)
 
 		res := lp.socPollAllowed()
 		if res {

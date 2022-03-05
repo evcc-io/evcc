@@ -66,8 +66,8 @@ var (
 )
 
 func testScale(t *testing.T, lp *LoadPoint, power float64, direction string, tc testCase) {
-	act := lp.activePhases()
-	max := lp.maxActivePhases()
+	act := lp.activePhases(false)
+	max := lp.activePhases(true)
 
 	testDirection := direction[0:1] // (d)own or (u)p
 	testExpectation := tc.scale
@@ -150,19 +150,19 @@ func TestPvScalePhases(t *testing.T) {
 
 		attachListeners(t, lp)
 
-		lp.measuredPhases = tc.measuredPhases
+		lp.setMeasuredPhases(tc.measuredPhases)
 		if tc.measuredPhases > 0 && tc.vehicle > 0 {
 			t.Fatalf("%v invalid test case", tc)
 		}
 
-		if lp.Phases != tc.physical {
-			t.Error("wrong phases", lp.Phases, tc.physical)
+		if lp.GetPhases() != tc.physical {
+			t.Error("wrong phases", lp.GetPhases(), tc.physical)
 		}
 
-		if phs := lp.activePhases(); phs != tc.actExpected {
+		if phs := lp.activePhases(false); phs != tc.actExpected {
 			t.Errorf("expected active %d, got %d", tc.actExpected, phs)
 		}
-		if phs := lp.maxActivePhases(); phs != tc.maxExpected {
+		if phs := lp.activePhases(true); phs != tc.maxExpected {
 			t.Errorf("expected max %d, got %d", tc.maxExpected, phs)
 		}
 		ctrl.Finish()
@@ -184,8 +184,8 @@ func TestPvScalePhases(t *testing.T) {
 			lp.phaseTimer = time.Time{}
 
 			// reset to initial state
-			lp.Phases = tc.physical
-			lp.measuredPhases = tc.measuredPhases
+			lp.setPhases(tc.physical)
+			lp.setMeasuredPhases(tc.measuredPhases)
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
@@ -312,8 +312,8 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		switch {
 		case tc.res != res:
 			t.Errorf("expected %v, got %v", tc.res, res)
-		case lp.Phases != tc.toPhases:
-			t.Errorf("expected %dp, got %dp", tc.toPhases, lp.Phases)
+		case lp.GetPhases() != tc.toPhases:
+			t.Errorf("expected %dp, got %dp", tc.toPhases, lp.GetPhases())
 		}
 	}
 }

@@ -415,7 +415,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// update savings
-	// TODO: use energy instead of current power for better results
+	// TODO use energy instead of current power for better results
 	site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
 }
 
