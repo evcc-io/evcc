@@ -50,7 +50,7 @@ func init() {
 
 // NewAmtronFromConfig creates a Mennekes Amtron charger from generic config
 func NewAmtronFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
+	cc := modbus.TcpSettings{
 		ID: 0xff,
 	}
 

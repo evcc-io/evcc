@@ -24,6 +24,12 @@ const (
 	CoilOn uint16 = 0xFF00
 )
 
+// Settings contains the ModBus TCP settings
+type TcpSettings struct {
+	URI string
+	ID  uint8
+}
+
 // Settings contains the ModBus settings
 type Settings struct {
 	ID                  uint8

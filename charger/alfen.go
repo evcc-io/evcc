@@ -58,7 +58,7 @@ func init() {
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
 func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
+	cc := modbus.TcpSettings{
 		ID: 1,
 	}
 

@@ -85,7 +85,7 @@ func init() {
 
 // NewWebastoLiveFromConfig creates a WebastoLive charger from generic config
 func NewWebastoLiveFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
+	cc := modbus.TcpSettings{
 		ID: 255,
 	}
 
@@ -93,12 +93,12 @@ func NewWebastoLiveFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewWebastoLive(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	return NewWebastoLive(cc.URI, cc.ID)
 }
 
 // NewWebastoLive creates WebastoLive charger
-func NewWebastoLive(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
+func NewWebastoLive(uri string, id uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

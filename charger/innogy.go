@@ -56,10 +56,7 @@ func init() {
 
 // NewInnogyFromConfig creates a Innogy charger from generic config
 func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		URI string
-		ID  uint8
-	}{
+	cc := modbus.TcpSettings{
 		ID: 1,
 	}
 
