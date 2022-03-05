@@ -83,9 +83,9 @@ export default {
 }
 .label-bar--hide-icon .label-bar-icon {
 	background-color: var(--bs-gray-dark);
-	transform: translateY(0.05rem) scale(0.25);
+	transform: translateY(0.05rem) scale(0.15);
 	border-radius: 100%;
-	border-width: 0.75rem;
+	border-width: 1.25rem;
 	transition-delay: 400ms, 0s;
 }
 .label-bar--hidden {
