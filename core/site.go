@@ -72,7 +72,7 @@ func NewSiteFromConfig(
 	tariffs tariff.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
-	if err := util.DecodeOther(other, &site); err != nil {
+	if err := util.DecodeOther(other, site); err != nil {
 		return nil, err
 	}
 
