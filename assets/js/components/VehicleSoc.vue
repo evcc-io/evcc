@@ -200,7 +200,7 @@ export default {
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
-	box-shadow: none;
+	box-shadow: 0 0 6px var(--bs-gray-dark);
 }
 .target-slider::-moz-range-thumb {
 	position: relative;
@@ -212,6 +212,6 @@ export default {
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
-	box-shadow: none;
+	box-shadow: 0 0 6px var(--bs-gray-dark);
 }
 </style>

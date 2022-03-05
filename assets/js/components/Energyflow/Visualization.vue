@@ -238,6 +238,6 @@ export default {
 	transition-timing-function: linear, ease;
 }
 .visualization--ready ::v-deep(.label-bar-icon) {
-	transition: opacity 250ms ease-in;
+	transition-duration: 100ms, 500ms;
 }
 </style>

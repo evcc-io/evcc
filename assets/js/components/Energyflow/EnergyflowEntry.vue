@@ -1,18 +1,8 @@
 <template>
-	<div class="d-flex justify-content-between mb-2">
+	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'opacity-25': !active }">
 		<span class="d-flex flex-nowrap">
-			<shopicon-regular-angledoublerightsmall
-				v-if="!isSource"
-				class="arrow"
-				:class="{ 'arrow--active': active }"
-			></shopicon-regular-angledoublerightsmall>
 			<BatteryIcon v-if="isBattery" :soc="soc" />
 			<component :is="`shopicon-regular-${icon}`" v-else></component>
-			<shopicon-regular-angledoublerightsmall
-				v-if="isSource"
-				class="arrow"
-				:class="{ 'arrow--active': active }"
-			></shopicon-regular-angledoublerightsmall>
 		</span>
 		<span class="text-nowrap flex-grow-1 ms-3">{{ name }}</span>
 		<span class="text-end text-nowrap ps-1 fw-bold"
@@ -22,7 +12,6 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
@@ -39,15 +28,11 @@ export default {
 		icon: { type: String },
 		power: { type: Number },
 		soc: { type: Number },
-		type: { type: String }, // source, consumer
 		valuesInKw: { type: Boolean },
 	},
 	computed: {
 		active: function () {
 			return this.power > 10;
-		},
-		isSource: function () {
-			return this.type === "source";
 		},
 		isBattery: function () {
 			return this.icon === "battery";
@@ -64,16 +49,7 @@ export default {
 };
 </script>
 <style scoped>
-.arrow {
-	opacity: 0;
-	transform: translateX(-20%);
-	transition-property: opacity, transform;
-	transition-duration: 0.75s, 5s;
-	transition-timing-function: ease-in;
-}
-.arrow--active {
-	opacity: 1;
-	transform: translateX(0);
-	transition-duration: 0.75s, 0.75s;
+.entry {
+	transition: opacity 500ms linear;
 }
 </style>

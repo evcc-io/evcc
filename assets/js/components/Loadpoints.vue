@@ -157,7 +157,7 @@ export default {
 @media (min-width: 992px) {
 	.carousel {
 		display: grid !important;
-		grid-gap: 3rem;
+		grid-gap: 2rem;
 		grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
 	}
 }

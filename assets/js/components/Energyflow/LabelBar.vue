@@ -65,9 +65,15 @@ export default {
 }
 .label-bar-icon {
 	background-color: white;
+	transform: translateY(0) scale(1);
 	color: var(--bs-gray-dark);
-	padding: 0 0.3rem;
-	opacity: 1;
+	border-radius: 0;
+	border: 0.3rem solid white;
+	transition-property: background-color, transform, border-radius, border;
+	/* will be overwritten by parent component to avoid initial transition */
+	transition-duration: 0s;
+	transition-delay: 0s;
+	transition-timing-function: linear;
 }
 .label-bar--top .label-bar-icon {
 	margin-top: -12px;
@@ -76,7 +82,11 @@ export default {
 	margin-top: 12px;
 }
 .label-bar--hide-icon .label-bar-icon {
-	opacity: 0;
+	background-color: var(--bs-gray-dark);
+	transform: translateY(0.05rem) scale(0.25);
+	border-radius: 100%;
+	border-width: 0.75rem;
+	transition-delay: 400ms, 0s;
 }
 .label-bar--hidden {
 	opacity: 0;

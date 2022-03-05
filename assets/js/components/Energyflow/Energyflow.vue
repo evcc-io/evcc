@@ -50,7 +50,6 @@
 							icon="sun"
 							:power="pvProduction"
 							:valuesInKw="valuesInKw"
-							type="source"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -59,14 +58,12 @@
 							:soc="batterySoC"
 							:power="batteryDischarge"
 							:valuesInKw="valuesInKw"
-							type="source"
 						/>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.gridImport')"
 							icon="powersupply"
 							:power="gridImport"
 							:valuesInKw="valuesInKw"
-							type="source"
 						/>
 					</div>
 				</div>
@@ -83,7 +80,6 @@
 							icon="home"
 							:power="homePower"
 							:valuesInKw="valuesInKw"
-							type="consumer"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -94,7 +90,6 @@
 							icon="car3"
 							:power="loadpointsPower"
 							:valuesInKw="valuesInKw"
-							type="consumer"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -103,14 +98,12 @@
 							:soc="batterySoC"
 							:power="batteryCharge"
 							:valuesInKw="valuesInKw"
-							type="consumer"
 						/>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.pvExport')"
 							icon="powersupply"
 							:power="pvExport"
 							:valuesInKw="valuesInKw"
-							type="consumer"
 						/>
 					</div>
 				</div>

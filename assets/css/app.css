@@ -35,22 +35,22 @@ body {
 	background-color: white;
 }
 
+h1,
 h2,
 h3,
 h4 {
 	font-weight: bold;
 }
 
+h1,
 h2 {
-	font-size: 28px;
+	font-size: 1.25rem;
+	text-transform: uppercase;
 }
 
-h3 {
-	font-size: 24px;
-}
-
+h3,
 h4 {
-	font-size: 22px;
+	font-size: 1.25rem;
 }
 
 .bg-primary {

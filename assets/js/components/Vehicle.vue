@@ -2,7 +2,7 @@
 	<div class="vehicle p-4 pb-3">
 		<div class="d-flex justify-content-between mb-3 align-items-center">
 			<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
-				<shopicon-regular-car3 size="m" class="me-2 flex-shrink-0"></shopicon-regular-car3>
+				<shopicon-regular-car3 class="me-2 flex-shrink-0 car-icon"></shopicon-regular-car3>
 				<span class="flex-grow-1 text-truncate">
 					{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
 				</span>
@@ -108,6 +108,9 @@ export default {
 	background-color: var(--bs-gray-dark);
 	border-radius: 20px;
 	color: var(--bs-white);
+}
+.car-icon {
+	width: 1.75rem;
 }
 .flex-basis-0 {
 	flex-basis: 0;

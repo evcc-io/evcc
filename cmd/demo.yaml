@@ -172,7 +172,7 @@ vehicles:
         range
     capacity: 44
   - name: vehicle_2
-    title: weißer Model 3
+    title: weißes Model 3
     type: custom
     soc:
       source: js

@@ -2,9 +2,9 @@
 	<div class="d-flex flex-column top-area">
 		<div class="container px-4">
 			<div class="d-flex justify-content-between align-items-center">
-				<h2 class="d-block my-4">
+				<h1 class="d-block my-4">
 					{{ siteTitle || "evcc" }}
-				</h2>
+				</h1>
 				<div class="py-1">
 					<!--<Notifications :notifications="notifications" class="me-2" />-->
 					<TopNavigation v-bind="topNavigation" />
@@ -20,13 +20,10 @@
 			}"
 		>
 			<div class="toggle-handle py-3 d-flex justify-content-center" @click="toggleDetails">
-				<shopicon-regular-arrowup
-					class="toggle-icon"
-					:class="`toggle-icon--${detailsVisible ? 'down' : 'up'}`"
-				></shopicon-regular-arrowup>
+				<hr class="toggle-handle-icon bg-white m-0 p-0" />
 			</div>
 			<div class="container px-4">
-				<h2 class="mb-3 mb-sm-4">{{ $t("main.loadpoints") }}</h2>
+				<h2 class="mb-3">{{ $t("main.loadpoints") }}</h2>
 			</div>
 			<Loadpoints :loadpoints="loadpoints" class="mb-5" />
 			<div class="container px-4">
@@ -161,7 +158,6 @@ export default {
 }
 .content-area {
 	background-color: var(--bs-gray-dark);
-	border-radius: 20px 20px 0 0;
 	color: var(--bs-white);
 	transform: translateY(0);
 	transition-property: transform;
@@ -172,13 +168,9 @@ export default {
 	cursor: pointer;
 	color: var(--bs-gray-medium);
 }
-.toggle-icon {
-	transition: transform 0.3s linear;
-}
-.toggle-icon--up {
-	transform: scaleY(-1);
-}
-.toggle-icon--down {
-	transform: scaleY(1);
+.toggle-handle-icon {
+	border: none;
+	width: 1.75rem;
+	height: 2px;
 }
 </style>

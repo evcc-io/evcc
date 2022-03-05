@@ -53,7 +53,7 @@ export default {
 <style scoped>
 .vehicles {
 	display: grid;
-	grid-gap: 3rem;
+	grid-gap: 2rem;
 	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 .vehicle {
