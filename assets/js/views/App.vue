@@ -3,7 +3,7 @@
 		<metainfo>
 			<template #title="{ content }">{{ content ? `${content} | evcc` : `evcc` }}</template>
 		</metainfo>
-		<router-view></router-view>
+		<router-view :notifications="notifications"></router-view>
 	</div>
 </template>
 

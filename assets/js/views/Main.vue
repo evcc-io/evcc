@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<Site v-if="configured" v-bind="state"></Site>
+		<Site v-if="configured" :notifications="notifications" v-bind="state"></Site>
 		<div v-else class="container">
 			<div class="row py-5">
 				<div class="col12">
@@ -86,6 +86,9 @@ import store from "../store";
 export default {
 	name: "Main",
 	components: { Site },
+	props: {
+		notifications: Array,
+	},
 	data: function () {
 		return store;
 	},

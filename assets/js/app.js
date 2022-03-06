@@ -47,7 +47,7 @@ const app = createApp({
     },
   },
   render: function () {
-    return h(App);
+    return h(App, { notifications: this.notifications });
   },
 });
 

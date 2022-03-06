@@ -5,8 +5,8 @@
 				<h1 class="d-block my-4">
 					{{ siteTitle || "evcc" }}
 				</h1>
-				<div class="py-1">
-					<!--<Notifications :notifications="notifications" class="me-2" />-->
+				<div class="py-1 d-flex">
+					<Notifications :notifications="notifications" class="me-2" />
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
@@ -32,6 +32,7 @@
 <script>
 import "@h2d2/shopicons/es/regular/arrowup";
 import TopNavigation from "./TopNavigation.vue";
+import Notifications from "./Notifications.vue";
 import Energyflow from "./Energyflow/Energyflow.vue";
 import Loadpoints from "./Loadpoints.vue";
 import Vehicles from "./Vehicles.vue";
@@ -41,10 +42,12 @@ import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
-	components: { Loadpoints, Energyflow, Footer, TopNavigation, Vehicles },
+	components: { Loadpoints, Energyflow, Footer, Notifications, TopNavigation, Vehicles },
 	mixins: [formatter, collector],
 	props: {
 		loadpoints: Array,
+
+		notifications: Array,
 
 		// details
 		gridConfigured: Boolean,
