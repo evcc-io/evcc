@@ -68,9 +68,27 @@ var (
 func testScale(t *testing.T, lp *LoadPoint, power float64, direction string, tc testCase) {
 	act := lp.activePhases()
 	max := lp.maxActivePhases()
+
+	testDirection := direction[0:1] // (d)own or (u)p
+	testExpectation := tc.scale
+
+	// up-scale expected
+	if testDirection == "u" && strings.Contains(testExpectation, testDirection) {
+		// scale-up should only execute when the 1p max current is exceeded
+		// we're testing this here and remove the upscale expectation for the following test below 1p max current
+		if maxAmp := power / Voltage; maxAmp < maxA {
+			if scaled := lp.pvScalePhases(power, minA, maxAmp-0.0001); !scaled {
+				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
+			}
+
+			// we've verified scale-up here so next test should not scale
+			testExpectation = strings.ReplaceAll(testExpectation, testDirection, "")
+		}
+	}
+
 	scaled := lp.pvScalePhases(power, minA, maxA)
 
-	if strings.Contains(tc.scale, direction[0:1]) {
+	if strings.Contains(testExpectation, testDirection) {
 		if !scaled {
 			t.Errorf("%v act=%d max=%d missing scale %s", tc, act, max, direction)
 		}
