@@ -17,24 +17,29 @@
 			class="mt-2 mb-4"
 			@target-soc-updated="targetSocUpdated"
 		/>
-		<div v-if="vehiclePresent" class="d-flex flex-wrap justify-content-between">
-			<LabelAndValue
-				class="flex-grow-1 text-start flex-basis-0"
-				:label="$t('main.vehicle.vehicleSoC')"
-				:value="`${vehicleSoC || '--'} %`"
-				:extraValue="vehicleRange ? `${vehicleRange} km` : null"
-			/>
-			<LabelAndValue
-				class="flex-grow-1 text-end text-sm-center flex-basis-0"
-				:label="$t('main.vehicle.targetSoC')"
-				:value="`${displayTargetSoC} %`"
-			/>
-			<TargetCharge
-				class="flex-grow-1 text-sm-end target-charge flex-basis-0"
-				v-bind="targetCharge"
-				@target-time-updated="setTargetTime"
-				@target-time-removed="removeTargetTime"
-			/>
+		<div v-if="vehiclePresent">
+			<div class="d-flex flex-wrap justify-content-between">
+				<LabelAndValue
+					class="flex-grow-1 text-start flex-basis-0"
+					:label="$t('main.vehicle.vehicleSoC')"
+					:value="`${vehicleSoC || '--'} %`"
+					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
+				/>
+				<LabelAndValue
+					class="flex-grow-1 text-end text-sm-center flex-basis-0"
+					:label="$t('main.vehicle.targetSoC')"
+					:value="`${displayTargetSoC} %`"
+				/>
+				<TargetCharge
+					class="flex-grow-1 text-sm-end target-charge flex-basis-0"
+					v-bind="targetCharge"
+					@target-time-updated="setTargetTime"
+					@target-time-removed="removeTargetTime"
+				/>
+			</div>
+			<div class="d-flex justify-content-start">
+				<small>vor 5 Stunden</small>
+			</div>
 		</div>
 	</div>
 </template>

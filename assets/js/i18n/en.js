@@ -74,7 +74,7 @@ export default {
       minpvShort: "Min",
       minpvLong: "Min + PV",
       pvShort: "PV",
-      pvLong: "PV only",
+      pvLong: "PV",
     },
     loadpoints: "Wallbox",
     loadpoint: {

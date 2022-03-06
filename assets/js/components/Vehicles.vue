@@ -1,18 +1,35 @@
 <template>
-	<div class="container vehicles px-0 mb-5">
-		<Vehicle
-			v-for="(vehicle, index) in vehicles"
-			v-bind="vehicle"
-			:id="`vehicle_${index}`"
-			:key="index"
-			class="vehicle"
-		/>
+	<div>
+		<div class="container px-4 mb-3 mb-sm-4 d-flex justify-content-start align-items-center">
+			<h2 class="m-0">{{ $t("main.vehicles") }}</h2>
+			<button
+				class="btn btn-link d-flex text-white p-2 ms-1 refresh"
+				:class="{
+					'refresh--in-progress': refreshing,
+				}"
+				:disabled="refreshing"
+				@click="refresh"
+			>
+				<shopicon-regular-return class="refresh-icon"></shopicon-regular-return>
+			</button>
+		</div>
+
+		<div class="container vehicles px-0 mb-5" :class="`vehicles-${vehicles.length}`">
+			<Vehicle
+				v-for="(vehicle, index) in vehicles"
+				v-bind="vehicle"
+				:id="`vehicle_${index}`"
+				:key="index"
+				class="vehicle"
+			/>
+		</div>
 	</div>
 </template>
 
 <script>
 import Vehicle from "./Vehicle.vue";
 import collector from "../mixins/collector";
+import "@h2d2/shopicons/es/regular/return";
 
 export default {
 	name: "Vehicles",
@@ -21,6 +38,8 @@ export default {
 
 	data() {
 		return {
+			refreshing: false,
+			// TODO: mock data for development
 			vehicles: [
 				{
 					vehiclePresent: true,
@@ -47,16 +66,38 @@ export default {
 			],
 		};
 	},
-	methods: {},
+	methods: {
+		refresh() {
+			this.refreshing = true;
+			// TODO: insert real implementation here
+			window.setTimeout(() => {
+				this.refreshing = false;
+			}, 5000);
+		},
+	},
 };
 </script>
 <style scoped>
 .vehicles {
 	display: grid;
 	grid-gap: 2rem;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
 }
 .vehicle {
 	border: 4px solid white;
+}
+.refresh--in-progress {
+	animation: rotation 1s infinite cubic-bezier(0.37, 0, 0.63, 1);
+}
+.refresh-icon {
+	transform: translateY(-1px);
+}
+@keyframes rotation {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(-360deg);
+	}
 }
 </style>

@@ -32,7 +32,7 @@
 			target="_blank"
 			class="btn btn-link text-white ps-0 text-decoration-none text-nowrap d-flex align-items-end"
 		>
-			<span class="text-gray-medium me-2">evcc</span>
+			<Logo class="logo me-2" />
 			v{{ installed }}
 		</a>
 
@@ -123,11 +123,14 @@
 
 <script>
 import api from "../api";
+import Logo from "./Logo.vue";
+
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
 
 export default {
 	name: "Version",
+	components: { Logo },
 	props: {
 		installed: String,
 		available: String,
@@ -176,5 +179,9 @@ export default {
 <style scoped>
 .icon {
 	color: var(--evcc-dark-green);
+}
+.logo {
+	height: 1.1rem;
+	margin-bottom: 0.2rem;
 }
 </style>

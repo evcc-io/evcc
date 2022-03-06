@@ -1,30 +1,35 @@
 <template>
-	<div class="container px-0">
-		<div ref="carousel" class="carousel d-lg-flex flex-wrap">
-			<div
-				v-for="(loadpoint, index) in loadpoints"
-				:key="index"
-				class="flex-grow-1 mb-3 m-lg-0 p-lg-0"
-			>
-				<Loadpoint
-					v-bind="loadpoint"
-					:id="index"
-					class="h-100"
-					:class="{ 'loadpoint-unselected': !selected(index) }"
-					@click="scrollTo(index)"
-				/>
-			</div>
+	<div>
+		<div class="container px-4">
+			<h2 class="mb-3">{{ $t("main.loadpoints") }}</h2>
 		</div>
-		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center">
-			<button
-				v-for="(loadpoint, index) in loadpoints"
-				:key="index"
-				class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center text-white"
-				:class="{ 'indicator--selected': selected(index) }"
-				@click="scrollTo(index)"
-			>
-				<shopicon-filled-circle class="indicator-icon"></shopicon-filled-circle>
-			</button>
+		<div class="container px-0">
+			<div ref="carousel" class="carousel d-lg-flex flex-wrap">
+				<div
+					v-for="(loadpoint, index) in loadpoints"
+					:key="index"
+					class="flex-grow-1 mb-3 m-lg-0 p-lg-0"
+				>
+					<Loadpoint
+						v-bind="loadpoint"
+						:id="index"
+						class="h-100"
+						:class="{ 'loadpoint-unselected': !selected(index) }"
+						@click="scrollTo(index)"
+					/>
+				</div>
+			</div>
+			<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center">
+				<button
+					v-for="(loadpoint, index) in loadpoints"
+					:key="index"
+					class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center text-white"
+					:class="{ 'indicator--selected': selected(index) }"
+					@click="scrollTo(index)"
+				>
+					<shopicon-filled-circle class="indicator-icon"></shopicon-filled-circle>
+				</button>
+			</div>
 		</div>
 	</div>
 </template>
@@ -43,7 +48,7 @@ export default {
 		loadpoints: Array,
 	},
 	data() {
-		return { selectedIndex: 0 };
+		return { selectedIndex: 0, snapTimeout: null };
 	},
 	mounted() {
 		this.$refs.carousel.addEventListener("scroll", this.handleCarouselScroll, false);
@@ -53,8 +58,9 @@ export default {
 	},
 	methods: {
 		handleCarouselScroll() {
-			const { offsetWidth, scrollLeft } = this.$refs.carousel;
-			this.selectedIndex = Math.round(scrollLeft / offsetWidth);
+			const { scrollLeft } = this.$refs.carousel;
+			const { offsetWidth } = this.$refs.carousel.children[0];
+			this.selectedIndex = Math.round((scrollLeft - 7.5) / offsetWidth);
 		},
 		selected(index) {
 			return this.selectedIndex === index;
@@ -65,13 +71,14 @@ export default {
 			}
 			this.selectedIndex = index;
 			const $carousel = this.$refs.carousel;
-			const width = $carousel.offsetWidth;
+			const width = $carousel.children[0].offsetWidth;
 			$carousel.style.scrollSnapType = "none";
-			$carousel.scrollTo({ top: 0, left: width * index, behavior: "smooth" });
+			$carousel.scrollTo({ top: 0, left: 7.5 + width * index, behavior: "smooth" });
 
-			setTimeout(() => {
+			clearTimeout(this.snapTimeout);
+			this.snapTimeout = setTimeout(() => {
 				this.$refs.carousel.style.scrollSnapType = "x mandatory";
-			}, 500);
+			}, 1000);
 		},
 	},
 };
@@ -158,7 +165,7 @@ export default {
 	.carousel {
 		display: grid !important;
 		grid-gap: 2rem;
-		grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
 	}
 }
 </style>
