@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // https://update.mennekes.de/hcc3/1.13/Description%20Modbus_AMTRON%20HCC3_v01_2021-06-25_en.pdf
@@ -36,12 +37,13 @@ type Amtron struct {
 
 const (
 	amtronRegStatus     = 0x0302
+	amtronRegPhases     = 0x0308
+	amtronRegSerial     = 0x030B
 	amtronRegEnergy     = 0x030D
+	amtronRegName       = 0x0311
 	amtronRegPower      = 0x030F
 	amtronRegEnabled    = 0x0401
 	amtronRegAmpsConfig = 0x0400
-	amtronRegSerial     = 0x030B
-	amtronRegName       = 0x0311
 )
 
 func init() {
@@ -152,7 +154,7 @@ func (wb *Amtron) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.LittleEndian.Uint32(b)), err
+	return rs485.RTUUint32ToFloat64Swapped(b), nil
 }
 
 var _ api.ChargeRater = (*Amtron)(nil)
@@ -164,24 +166,19 @@ func (wb *Amtron) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	fmt.Printf("energy: %0 x\n", b)
-	return float64(binary.LittleEndian.Uint32(b)) / 1e3, err
+	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, nil
 }
-
-// var _ api.ChargePhases = (*Amtron)(nil)
-
-// // Phases1p3p implements the api.ChargePhases interface
-// func (c *Amtron) Phases1p3p(phases int) error {
-// 	_, err := c.conn.WriteSingleRegister(amtronRegPhases, uint16(phases))
-// 	return err
-// }
 
 var _ api.Diagnosis = (*Amtron)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Amtron) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(amtronRegName, 11); err == nil {
-		fmt.Printf("Name: %s\n", string(b))
+		fmt.Printf("Name: %s\n", modbus.RTUStringSwapped(b))
+	}
+
+	if b, err := wb.conn.ReadInputRegisters(amtronRegPhases, 1); err == nil {
+		fmt.Printf("Phases: %d\n", binary.BigEndian.Uint16(b))
 	}
 
 	if b, err := wb.conn.ReadInputRegisters(amtronRegSerial, 2); err == nil {
