@@ -1,5 +1,5 @@
 <template>
-	<div class="loadpoint bg-white p-4 px-sm-5">
+	<div class="loadpoint bg-white p-4">
 		<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
 			<h3 class="mb-2 me-2">
 				{{ title || $t("main.loadpoint.fallbackName") }}
@@ -208,7 +208,7 @@ export default {
 
 <style scoped>
 .loadpoint {
-	border-radius: 20px;
+	border-radius: 2rem;
 	color: var(--bs-gray-dark);
 }
 

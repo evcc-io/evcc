@@ -32,7 +32,7 @@
 }
 
 body {
-	background-color: var(--evcc-dark-green);
+	background-color: var(--bs-gray-dark);
 }
 
 h1,

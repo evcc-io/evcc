@@ -1,9 +1,9 @@
 <template>
 	<div>
-		<div class="container px-4">
+		<div class="container px-4 mb-3 mb-sm-4">
 			<h2 class="mb-3">{{ $t("main.loadpoints") }}</h2>
 		</div>
-		<div class="container px-0">
+		<div class="container container--loadpoint px-0">
 			<div ref="carousel" class="carousel d-lg-flex flex-wrap">
 				<div
 					v-for="(loadpoint, index) in loadpoints"
@@ -127,7 +127,7 @@ export default {
 
 /* show truncated tiles on breakpoind sm,md */
 @media (min-width: 576px) and (max-width: 991.98px) {
-	.container {
+	.container--loadpoint {
 		max-width: none;
 	}
 	.carousel > *:first-child {

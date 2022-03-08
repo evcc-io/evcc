@@ -111,7 +111,7 @@ export default {
 <style scoped>
 .vehicle {
 	background-color: var(--bs-gray-dark);
-	border-radius: 20px;
+	border-radius: 1rem;
 	color: var(--bs-white);
 }
 .car-icon {

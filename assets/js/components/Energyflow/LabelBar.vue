@@ -65,10 +65,10 @@ export default {
 }
 .label-bar-icon {
 	background-color: white;
-	transform: translateY(0) scale(1);
+	transform: scale(1);
 	color: var(--bs-gray-dark);
 	border-radius: 0;
-	border: 0.3rem solid white;
+	border: 0.25rem solid white;
 	transition-property: background-color, transform, border-radius, border;
 	/* will be overwritten by parent component to avoid initial transition */
 	transition-duration: 0s;
@@ -83,9 +83,9 @@ export default {
 }
 .label-bar--hide-icon .label-bar-icon {
 	background-color: var(--bs-gray-dark);
-	transform: translateY(0.05rem) scale(0.15);
+	transform: scale(0.1666666);
 	border-radius: 100%;
-	border-width: 1.25rem;
+	border-width: 1.5rem;
 	transition-delay: 400ms, 0s;
 }
 .label-bar--hidden {
