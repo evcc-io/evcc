@@ -35,9 +35,9 @@ type Amtron struct {
 }
 
 const (
+	amtronRegStatus     = 0x0302
 	amtronRegEnergy     = 0x030D
 	amtronRegPower      = 0x030F
-	amtronRegStatus     = 0x0312
 	amtronRegEnabled    = 0x0401
 	amtronRegAmpsConfig = 0x0400
 	amtronRegSerial     = 0x030B
@@ -94,10 +94,9 @@ func (wb *Amtron) Status() (api.ChargeStatus, error) {
 	switch b[0] {
 	case 1, 2:
 		return api.StatusA, nil
-	case 3, 4:
+	case 3, 4, 5:
 		return api.StatusB, nil
-	case 5, 6:
-		// TODO check C1 -> B?
+	case 6:
 		return api.StatusC, nil
 	case 7, 8:
 		return api.StatusD, nil
