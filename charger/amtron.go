@@ -91,7 +91,7 @@ func (wb *Amtron) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch b[0] {
+	switch b[1] {
 	case 1, 2:
 		return api.StatusA, nil
 	case 3, 4, 5:
@@ -101,7 +101,7 @@ func (wb *Amtron) Status() (api.ChargeStatus, error) {
 	case 7, 8:
 		return api.StatusD, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[:1])
+		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[1])
 	}
 }
 
@@ -113,7 +113,7 @@ func (wb *Amtron) Enabled() (bool, error) {
 	}
 
 	var res bool
-	switch b[0] {
+	switch b[1] {
 	case 0, 4:
 		res = true
 	}
@@ -125,7 +125,7 @@ func (wb *Amtron) Enabled() (bool, error) {
 func (wb *Amtron) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
-		b[0] = 0x04
+		b[1] = 0x04
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(amtronRegEnabled, 1, b)
@@ -136,7 +136,7 @@ func (wb *Amtron) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *Amtron) MaxCurrent(current int64) error {
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(current))
+	binary.LittleEndian.PutUint16(b, uint16(current))
 
 	_, err := wb.conn.WriteMultipleRegisters(amtronRegAmpsConfig, 1, b)
 
@@ -155,15 +155,16 @@ func (wb *Amtron) CurrentPower() (float64, error) {
 	return float64(binary.LittleEndian.Uint32(b)), err
 }
 
-var _ api.MeterEnergy = (*Amtron)(nil)
+var _ api.ChargeRater = (*Amtron)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Amtron) TotalEnergy() (float64, error) {
+// ChargedEnergy implements the api.MeterEnergy interface
+func (wb *Amtron) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(amtronRegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
 
+	fmt.Printf("energy: %0 x\n", b)
 	return float64(binary.LittleEndian.Uint32(b)) / 1e3, err
 }
 
