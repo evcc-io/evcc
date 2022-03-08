@@ -93,7 +93,7 @@ func (wb *Amtron) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch b[1] {
+	switch binary.BigEndian.Uint16(b) {
 	case 1, 2:
 		return api.StatusA, nil
 	case 3, 4, 5:
@@ -115,7 +115,7 @@ func (wb *Amtron) Enabled() (bool, error) {
 	}
 
 	var res bool
-	switch b[1] {
+	switch binary.BigEndian.Uint16(b) {
 	case 0, 4:
 		res = true
 	}
@@ -127,7 +127,7 @@ func (wb *Amtron) Enabled() (bool, error) {
 func (wb *Amtron) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
-		b[1] = 0x04
+		binary.BigEndian.PutUint16(b, 0x04)
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(amtronRegEnabled, 1, b)
