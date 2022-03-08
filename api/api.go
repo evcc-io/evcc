@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,VehiclePhases,ChargeRater,Battery
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
@@ -143,6 +143,7 @@ type Vehicle interface {
 	Battery
 	Title() string
 	Capacity() int64
+	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
 }
@@ -170,11 +171,6 @@ type VehicleOdometer interface {
 // VehiclePosition returns the vehicles position in latitude and longitude
 type VehiclePosition interface {
 	Position() (float64, float64, error)
-}
-
-// VehiclePhases returns the number of supported phases
-type VehiclePhases interface {
-	Phases() int
 }
 
 // VehicleStartCharge starts the charging session on the vehicle side

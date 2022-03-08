@@ -41,18 +41,15 @@ func (c *CmdConfigure) askConfigFailureNextStep() bool {
 
 // select item from list
 func (c *CmdConfigure) askSelection(message string, items []string) (string, int, error) {
-	selection := ""
 	prompt := &survey.Select{
 		Message: message,
 		Options: items,
 	}
 
+	var selection string
 	err := c.surveyAskOne(prompt, &selection)
-	if err == nil {
-		return selection, funk.IndexOf(items, selection), nil
-	}
 
-	return "", 0, err
+	return selection, funk.IndexOf(items, selection), err
 }
 
 // selectItem selects item from list
@@ -91,13 +88,12 @@ func (c *CmdConfigure) askChoice(label string, choices []string) (int, string) {
 
 // askYesNo asks yes/no question, return true if yes is selected
 func (c *CmdConfigure) askYesNo(label string) bool {
-	confirmation := false
 	prompt := &survey.Confirm{
 		Message: label,
 	}
 
-	err := c.surveyAskOne(prompt, &confirmation)
-	if err != nil {
+	var confirmation bool
+	if err := c.surveyAskOne(prompt, &confirmation); err != nil {
 		c.log.FATAL.Fatal(err)
 	}
 
@@ -154,10 +150,6 @@ func (c *CmdConfigure) askValue(q question) string {
 		modeChoice, _ := c.askChoice(c.localizedString("ChargeMode_Question", nil), chargeModes)
 		return chargingModes[modeChoice]
 	}
-
-	input := ""
-
-	var err error
 
 	validate := func(val interface{}) error {
 		value := val.(string)
@@ -217,23 +209,22 @@ func (c *CmdConfigure) askValue(q question) string {
 		help += fmt.Sprintf(" ("+c.localizedString("Value_Sample", nil)+": %s)", q.exampleValue)
 	}
 
+	var prompt survey.Prompt
 	if q.mask {
-		prompt := &survey.Password{
+		prompt = &survey.Password{
 			Message: q.label,
 			Help:    help,
 		}
-		err = c.surveyAskOne(prompt, &input, survey.WithValidator(validate))
-
 	} else {
-		prompt := &survey.Input{
+		prompt = &survey.Input{
 			Message: q.label,
 			Default: q.defaultValue,
 			Help:    help,
 		}
-		err = c.surveyAskOne(prompt, &input, survey.WithValidator(validate))
 	}
 
-	if err != nil {
+	var input string
+	if err := c.surveyAskOne(prompt, &input, survey.WithValidator(validate)); err != nil {
 		c.log.FATAL.Fatal(err)
 	}
 

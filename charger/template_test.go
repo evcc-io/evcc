@@ -30,9 +30,7 @@ var acceptable = []string{
 	"Get \"http://192.0.2.2/getParameters\": context deadline exceeded", // evsewifi
 }
 
-func TestChargerTemplates(t *testing.T) {
-	test.SkipCI(t)
-
+func TestTemplates(t *testing.T) {
 	for _, tmpl := range templates.ByClass(templates.Charger) {
 		tmpl := tmpl
 
@@ -54,20 +52,8 @@ func TestChargerTemplates(t *testing.T) {
 			values = tmpl.ModbusValues(templates.TemplateRenderModeInstance, true, values)
 		}
 
-		t.Run(tmpl.Template, func(t *testing.T) {
-			t.Parallel()
-
-			b, values, err := tmpl.RenderResult(templates.TemplateRenderModeUnitTest, values)
-			if err != nil {
-				t.Logf("Template: %s", tmpl.Template)
-				t.Logf("%s", string(b))
-				t.Error(err)
-			}
-
-			_, err = NewFromConfig("template", values)
-			if err != nil && !test.Acceptable(err, acceptable) {
-				t.Logf("Template: %s", tmpl.Template)
-				t.Logf("%s", string(b))
+		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {
+			if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
 				t.Error(err)
 			}
 		})

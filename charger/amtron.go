@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // https://update.mennekes.de/hcc3/1.13/Description%20Modbus_AMTRON%20HCC3_v01_2021-06-25_en.pdf
@@ -35,13 +36,14 @@ type Amtron struct {
 }
 
 const (
+	amtronRegStatus     = 0x0302
+	amtronRegPhases     = 0x0308
+	amtronRegSerial     = 0x030B
 	amtronRegEnergy     = 0x030D
+	amtronRegName       = 0x0311
 	amtronRegPower      = 0x030F
-	amtronRegStatus     = 0x0312
 	amtronRegEnabled    = 0x0401
 	amtronRegAmpsConfig = 0x0400
-	amtronRegSerial     = 0x030B
-	amtronRegName       = 0x0311
 )
 
 func init() {
@@ -50,7 +52,7 @@ func init() {
 
 // NewAmtronFromConfig creates a Mennekes Amtron charger from generic config
 func NewAmtronFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
+	cc := modbus.TcpSettings{
 		ID: 0xff,
 	}
 
@@ -91,18 +93,17 @@ func (wb *Amtron) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch b[0] {
+	switch binary.BigEndian.Uint16(b) {
 	case 1, 2:
 		return api.StatusA, nil
 	case 3, 4:
 		return api.StatusB, nil
 	case 5, 6:
-		// TODO check C1 -> B?
 		return api.StatusC, nil
 	case 7, 8:
 		return api.StatusD, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[:1])
+		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[1])
 	}
 }
 
@@ -114,7 +115,7 @@ func (wb *Amtron) Enabled() (bool, error) {
 	}
 
 	var res bool
-	switch b[0] {
+	switch binary.BigEndian.Uint16(b) {
 	case 0, 4:
 		res = true
 	}
@@ -126,7 +127,7 @@ func (wb *Amtron) Enabled() (bool, error) {
 func (wb *Amtron) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
-		b[0] = 0x04
+		binary.BigEndian.PutUint16(b, 0x04)
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(amtronRegEnabled, 1, b)
@@ -137,7 +138,7 @@ func (wb *Amtron) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *Amtron) MaxCurrent(current int64) error {
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(current))
+	binary.LittleEndian.PutUint16(b, uint16(current))
 
 	_, err := wb.conn.WriteMultipleRegisters(amtronRegAmpsConfig, 1, b)
 
@@ -153,35 +154,31 @@ func (wb *Amtron) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.LittleEndian.Uint32(b)), err
+	return rs485.RTUUint32ToFloat64Swapped(b), nil
 }
 
-var _ api.MeterEnergy = (*Amtron)(nil)
+var _ api.ChargeRater = (*Amtron)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Amtron) TotalEnergy() (float64, error) {
+// ChargedEnergy implements the api.MeterEnergy interface
+func (wb *Amtron) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(amtronRegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(binary.LittleEndian.Uint32(b)) / 1e3, err
+	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, nil
 }
-
-// var _ api.ChargePhases = (*Amtron)(nil)
-
-// // Phases1p3p implements the api.ChargePhases interface
-// func (c *Amtron) Phases1p3p(phases int) error {
-// 	_, err := c.conn.WriteSingleRegister(amtronRegPhases, uint16(phases))
-// 	return err
-// }
 
 var _ api.Diagnosis = (*Amtron)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Amtron) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(amtronRegName, 11); err == nil {
-		fmt.Printf("Name: %s\n", string(b))
+		fmt.Printf("Name: %s\n", modbus.RTUStringSwapped(b))
+	}
+
+	if b, err := wb.conn.ReadInputRegisters(amtronRegPhases, 1); err == nil {
+		fmt.Printf("Phases: %d\n", binary.BigEndian.Uint16(b))
 	}
 
 	if b, err := wb.conn.ReadInputRegisters(amtronRegSerial, 2); err == nil {

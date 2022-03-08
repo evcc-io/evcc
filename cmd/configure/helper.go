@@ -255,6 +255,12 @@ func (c *CmdConfigure) askSponsortoken(required bool, feature bool) error {
 
 	err := sponsor.ConfigureSponsorship(sponsortoken)
 	if err != nil {
+		question := c.localizedString("TestingDevice_AddFailed", localizeMap{"Device": "Sponsorship Token"})
+		if c.askYesNo(question) {
+			err = nil
+		}
+	}
+	if err == nil {
 		c.configuration.config.SponsorToken = sponsortoken
 	}
 
@@ -297,7 +303,7 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 			required: false})
 
 		fmt.Println()
-		fmt.Println("-------------------------------------------")
+		fmt.Println("--------------------------------------------")
 
 		broker := fmt.Sprintf("%s:%s", host, port)
 

@@ -57,7 +57,7 @@ func (s *Estimator) Reset() {
 func (s *Estimator) AssumedChargeDuration(targetSoC int, chargePower float64) time.Duration {
 	percentRemaining := float64(targetSoC) - s.vehicleSoc
 
-	if percentRemaining <= 0 {
+	if percentRemaining <= 0 || s.virtualCapacity <= 0 {
 		return 0
 	}
 
@@ -95,7 +95,7 @@ func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
 func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 	percentRemaining := float64(targetSoC) - s.vehicleSoc
-	if percentRemaining <= 0 {
+	if percentRemaining <= 0 || s.virtualCapacity <= 0 {
 		return 0
 	}
 
@@ -151,7 +151,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 		s.vehicleSoc = f
 	}
 
-	if s.estimate {
+	if s.estimate && s.virtualCapacity > 0 {
 		socDelta := s.vehicleSoc - s.prevSoc
 		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
 

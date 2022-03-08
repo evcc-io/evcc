@@ -3,6 +3,8 @@ import de from "./de";
 import en from "./en";
 import it from "./it";
 
+const PREFERRED_LOCALE_KEY = "preferred_locale";
+
 function getBrowserLocale() {
   const navigatorLocale =
     navigator.languages !== undefined ? navigator.languages[0] : navigator.language;
@@ -13,7 +15,7 @@ function getBrowserLocale() {
 }
 
 export default createI18n({
-  locale: getBrowserLocale(),
+  locale: window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale(),
   fallbackLocale: "en",
   messages: { de, en, it },
 });

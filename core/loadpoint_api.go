@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -106,11 +107,16 @@ func (lp *LoadPoint) GetPhases() int {
 
 // SetPhases sets loadpoint enabled phases
 func (lp *LoadPoint) SetPhases(phases int) error {
-	if _, ok := lp.charger.(api.ChargePhases); !ok {
-		lp.setPhases(phases)
-		return nil
+	if phases != 1 && phases != 3 {
+		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
-	return lp.scalePhases(phases)
+
+	if _, ok := lp.charger.(api.ChargePhases); ok {
+		return lp.scalePhases(phases)
+	}
+
+	lp.setPhases(phases)
+	return nil
 }
 
 // SetTargetCharge sets loadpoint charge targetSoC
@@ -131,6 +137,14 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 			lp.requestUpdate()
 		}
 	}
+}
+
+// SetVehicle sets the active vehicle
+func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.setActiveVehicle(vehicle)
 }
 
 // RemoteControl sets remote status demand
@@ -209,9 +223,9 @@ func (lp *LoadPoint) GetMinPower() float64 {
 	return Voltage * lp.GetMinCurrent()
 }
 
-// GetMaxPower returns the max loadpoint power taking active phases into account
+// GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
 func (lp *LoadPoint) GetMaxPower() float64 {
-	return Voltage * lp.GetMaxCurrent() * float64(lp.GetPhases())
+	return Voltage * lp.GetMaxCurrent() * float64(lp.maxActivePhases())
 }
 
 // setRemainingDuration sets the estimated remaining charging duration

@@ -24,6 +24,12 @@ const (
 	CoilOn uint16 = 0xFF00
 )
 
+// Settings contains the ModBus TCP settings
+type TcpSettings struct {
+	URI string
+	ID  uint8
+}
+
 // Settings contains the ModBus settings
 type Settings struct {
 	ID                  uint8
@@ -314,6 +320,15 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	}
 
 	return op, nil
+}
+
+func RTUStringSwapped(b []byte) string {
+	s := new(strings.Builder)
+	for i := 0; i < len(b); i += 2 {
+		s.WriteByte(b[i+1])
+		s.WriteByte(b[i])
+	}
+	return s.String()
 }
 
 // SunSpecOperation is a sunspec modbus operation
