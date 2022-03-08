@@ -96,9 +96,9 @@ func (wb *Amtron) Status() (api.ChargeStatus, error) {
 	switch binary.BigEndian.Uint16(b) {
 	case 1, 2:
 		return api.StatusA, nil
-	case 3, 4, 5:
+	case 3, 4:
 		return api.StatusB, nil
-	case 6:
+	case 5, 6:
 		return api.StatusC, nil
 	case 7, 8:
 		return api.StatusD, nil
