@@ -14,7 +14,10 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const maxIdRequestTimespan = time.Second * 120
+const (
+	maxIdRequestTimespan = time.Second * 120
+	idleFactor           = 0.6
+)
 
 type EEBus struct {
 	log           *util.Logger
@@ -184,6 +187,12 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	}
 }
 
+func isActive(d communication.EVDataType) bool {
+	return d.Measurements.PowerL1 > d.LimitsL1.Min*idleFactor ||
+		d.Measurements.PowerL2 > d.LimitsL2.Min*idleFactor ||
+		d.Measurements.PowerL3 > d.LimitsL3.Min*idleFactor
+}
+
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (api.ChargeStatus, error) {
 	data, err := c.cc.GetData()
@@ -211,7 +220,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 	case communication.EVChargeStateEnumTypeError: // Error
 		return api.StatusF, nil
 	case communication.EVChargeStateEnumTypeActive: // Active
-		if data.EVData.Measurements.PowerL1 > 50 || data.EVData.Measurements.PowerL2 > 50 || data.EVData.Measurements.PowerL3 > 50 {
+		if isActive(data.EVData) {
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
@@ -233,7 +242,7 @@ func (c *EEBus) Enabled() (bool, error) {
 			chargeState, _ := c.Status()
 			if chargeState == api.StatusB || chargeState == api.StatusC {
 				// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
-				if data.EVData.Measurements.PowerL1 > 50 || data.EVData.Measurements.PowerL2 > 50 || data.EVData.Measurements.PowerL3 > 50 {
+				if isActive(data.EVData) {
 					c.expectedEnableState = true
 				}
 			}
