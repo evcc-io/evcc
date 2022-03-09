@@ -1237,8 +1237,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	return targetCurrent
 }
 
-// updateChargePower updates charge meter power
-func (lp *LoadPoint) updateChargePower() {
+// UpdateChargePower updates charge meter power
+func (lp *LoadPoint) UpdateChargePower() {
 	err := retry.Do(func() error {
 		value, err := lp.chargeMeter.CurrentPower()
 		if err != nil {
@@ -1410,7 +1410,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	lp.publish("mode", mode)
 
 	// read and publish meters first
-	lp.updateChargePower()
+	lp.UpdateChargePower()
 	lp.updateChargeCurrents()
 
 	// update ChargeRater here to make sure initial meter update is caught

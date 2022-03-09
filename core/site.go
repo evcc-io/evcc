@@ -335,6 +335,7 @@ func (site *Site) updateMeters() error {
 		site.gridPower = -site.pvPower
 
 		for _, lp := range site.loadpoints {
+			lp.UpdateChargePower()
 			site.gridPower += lp.GetChargePower()
 		}
 	}
