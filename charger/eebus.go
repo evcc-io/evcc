@@ -209,22 +209,20 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 	}
 
 	switch currentState {
-	case communication.EVChargeStateEnumTypeUnknown:
-		c.evConnectedTime = time.Now()
-		return api.StatusA, nil
-	case communication.EVChargeStateEnumTypeUnplugged: // Unplugged
+	case communication.EVChargeStateEnumTypeUnknown, communication.EVChargeStateEnumTypeUnplugged: // Unplugged
 		c.evConnectedTime = time.Now()
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
 		return api.StatusB, nil
-	case communication.EVChargeStateEnumTypeError: // Error
-		return api.StatusF, nil
 	case communication.EVChargeStateEnumTypeActive: // Active
 		if isActive(data.EVData) {
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
+	case communication.EVChargeStateEnumTypeError: // Error
+		return api.StatusF, nil
 	}
+
 	return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
 }
 
@@ -242,9 +240,7 @@ func (c *EEBus) Enabled() (bool, error) {
 			chargeState, _ := c.Status()
 			if chargeState == api.StatusB || chargeState == api.StatusC {
 				// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
-				if isActive(data.EVData) {
-					c.expectedEnableState = true
-				}
+				c.expectedEnableState = isActive(data.EVData)
 			}
 		}
 	}
