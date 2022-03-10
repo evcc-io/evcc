@@ -42,8 +42,8 @@ const (
 	amtronRegEnergy     = 0x030D
 	amtronRegName       = 0x0311
 	amtronRegPower      = 0x030F
-	amtronRegEnabled    = 0x0401
 	amtronRegAmpsConfig = 0x0400
+	amtronRegEnabled    = 0x0401
 )
 
 func init() {
@@ -125,23 +125,19 @@ func (wb *Amtron) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Amtron) Enable(enable bool) error {
-	b := make([]byte, 2)
+	var u uint16
 	if enable {
-		binary.BigEndian.PutUint16(b, 0x04)
+		u = 0x04
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(amtronRegEnabled, 1, b)
+	_, err := wb.conn.WriteSingleRegister(amtronRegEnabled, u)
 
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Amtron) MaxCurrent(current int64) error {
-	b := make([]byte, 2)
-	binary.LittleEndian.PutUint16(b, uint16(current))
-
-	_, err := wb.conn.WriteMultipleRegisters(amtronRegAmpsConfig, 1, b)
-
+	_, err := wb.conn.WriteSingleRegister(amtronRegAmpsConfig, uint16(current))
 	return err
 }
 
