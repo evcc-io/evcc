@@ -17,7 +17,7 @@ var meterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(meterCmd)
-	meterCmd.PersistentFlags().StringP("name", "n", "", "meter name)")
+	meterCmd.PersistentFlags().StringP("name", "n", "", "select meter by name")
 }
 
 func runMeter(cmd *cobra.Command, args []string) {

@@ -17,7 +17,7 @@ var vehicleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
-	vehicleCmd.PersistentFlags().StringP("name", "n", "", "vehicle name)")
+	vehicleCmd.PersistentFlags().StringP("name", "n", "", "select vehicle by name")
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {

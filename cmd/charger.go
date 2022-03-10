@@ -18,7 +18,7 @@ var chargerCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(chargerCmd)
-	chargerCmd.PersistentFlags().StringP("name", "n", "", "charger name)")
+	chargerCmd.PersistentFlags().StringP("name", "n", "", "select charger by name")
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
