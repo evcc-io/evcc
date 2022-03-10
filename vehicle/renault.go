@@ -463,7 +463,8 @@ var _ api.AlarmClock = (*Renault)(nil)
 
 // WakeUp implements the api.AlarmClock interface
 func (v *Renault) WakeUp() error {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/actions/charging-start", v.kamereon.Target, v.accountID, v.vin)
+	// ToDo: POST Body: {"data":{"type":"ChargingStart","attributes":{"action":"start"}}}
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/actions/charging-start", v.kamereon.Target, v.accountID, v.vin)
 	_, err := v.kamereonRequest(uri)
 
 	// repeat auth if error
