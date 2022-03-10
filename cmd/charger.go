@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
@@ -19,6 +22,9 @@ var chargerCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(chargerCmd)
 	chargerCmd.PersistentFlags().StringP("name", "n", "", "select charger by name")
+	chargerCmd.PersistentFlags().IntP("current", "I", -1, "set current")
+	chargerCmd.PersistentFlags().BoolP("enable", "e", false, "enable")
+	chargerCmd.PersistentFlags().BoolP("disable", "d", false, "disable")
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -61,6 +67,30 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 	d := dumper{len: len(chargers)}
 	for name, v := range chargers {
+		if flag := cmd.PersistentFlags().Lookup("current").Value.String(); flag != "-1" {
+			val, err := strconv.ParseInt(flag, 10, 64)
+			if err != nil {
+				log.ERROR.Println(err)
+			} else {
+				fmt.Println("Set current:", val)
+				if err := v.MaxCurrent(val); err != nil {
+					log.ERROR.Println(err)
+				}
+			}
+		}
+		if flag := cmd.PersistentFlags().Lookup("enable").Value.String(); flag == "true" {
+			fmt.Println("Enable(true)")
+			if err := v.Enable(true); err != nil {
+				log.ERROR.Println(err)
+			}
+		}
+		if flag := cmd.PersistentFlags().Lookup("disable").Value.String(); flag == "true" {
+			fmt.Println("Enable(false)")
+			if err := v.Enable(false); err != nil {
+				log.ERROR.Println(err)
+			}
+		}
+
 		d.DumpWithHeader(name, v)
 	}
 
