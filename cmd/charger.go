@@ -84,14 +84,14 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 
 		if flag := cmd.PersistentFlags().Lookup("enable").Value.String(); flag == "true" {
-			fmt.Println("Enable(true)")
+			fmt.Println("Set enabled")
 			if err := v.Enable(true); err != nil {
 				log.ERROR.Println(err)
 			}
 		}
 
 		if flag := cmd.PersistentFlags().Lookup("disable").Value.String(); flag == "true" {
-			fmt.Println("Enable(false)")
+			fmt.Println("Set disabled")
 			if err := v.Enable(false); err != nil {
 				log.ERROR.Println(err)
 			}
