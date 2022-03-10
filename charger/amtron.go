@@ -116,7 +116,7 @@ func (wb *Amtron) Enabled() (bool, error) {
 
 	var res bool
 	switch binary.BigEndian.Uint16(b) {
-	case 0, 4:
+	case 0, 2, 4:
 		res = true
 	}
 
@@ -125,9 +125,9 @@ func (wb *Amtron) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Amtron) Enable(enable bool) error {
-	var u uint16
+	u := uint16(0x01)
 	if enable {
-		u = 0x04
+		u = 0x02
 	}
 
 	_, err := wb.conn.WriteSingleRegister(amtronRegEnabled, u)
