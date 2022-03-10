@@ -16,11 +16,11 @@ import (
 )
 
 // Credits to
+//  https://github.com/hacf-fr/renault-api
 //  https://github.com/edent/Renault-Zoe-API/issues/18
 //  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
-//  https://github.com/hacf-fr/renault-api
-// https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
+//  https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
 
 const (
 	keyStore = "https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_%s.json"
@@ -457,4 +457,21 @@ func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float
 	}
 
 	return false, 0, 0, err
+}
+
+var _ api.AlarmClock = (*Renault)(nil)
+
+// WakeUp implements the api.AlarmClock interface
+func (v *Renault) WakeUp() error {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/actions/charging-start", v.kamereon.Target, v.accountID, v.vin)
+	_, err := v.kamereonRequest(uri)
+
+	// repeat auth if error
+	if err != nil {
+		if err = v.authFlow(); err == nil {
+			_, err = v.kamereonRequest(uri)
+		}
+	}
+
+	return err
 }
