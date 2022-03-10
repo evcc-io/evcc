@@ -18,6 +18,7 @@ var chargerCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(chargerCmd)
+	chargerCmd.PersistentFlags().StringP("name", "n", "", "select charger by name")
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -33,6 +34,16 @@ func runCharger(cmd *cobra.Command, args []string) {
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
 		log.FATAL.Fatal(err)
+	}
+
+	// select single charger
+	if name := cmd.PersistentFlags().Lookup("name").Value.String(); name != "" {
+		for _, cfg := range conf.Chargers {
+			if cfg.Name == name {
+				conf.Chargers = []qualifiedConfig{cfg}
+				break
+			}
+		}
 	}
 
 	if err := cp.configureChargers(conf); err != nil {

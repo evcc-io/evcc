@@ -17,6 +17,7 @@ var vehicleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
+	vehicleCmd.PersistentFlags().StringP("name", "n", "", "select vehicle by name")
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
@@ -32,6 +33,16 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
 		log.FATAL.Fatal(err)
+	}
+
+	// select single charger
+	if name := cmd.PersistentFlags().Lookup("name").Value.String(); name != "" {
+		for _, cfg := range conf.Vehicles {
+			if cfg.Name == name {
+				conf.Vehicles = []qualifiedConfig{cfg}
+				break
+			}
+		}
 	}
 
 	if err := cp.configureVehicles(conf); err != nil {
