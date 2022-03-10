@@ -837,10 +837,14 @@ func (lp *LoadPoint) wakeUpVehicle() {
 
 	// vehicle
 	if lp.vehicle != nil {
-		if vs, ok := lp.vehicle.(api.AlarmClock); ok {
-			if err := vs.WakeUp(); err != nil {
-				lp.log.ERROR.Printf("wake-up vehicle: %v", err)
-			}
+		var err error
+		if v, ok := lp.vehicle.(api.AlarmClock); ok {
+			err = v.WakeUp()
+		} else if v, ok := lp.vehicle.(api.VehicleStartCharge); ok {
+			err = v.StartCharge()
+		}
+		if err != nil {
+			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
 		}
 	}
 }
