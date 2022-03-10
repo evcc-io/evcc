@@ -65,25 +65,31 @@ func runCharger(cmd *cobra.Command, args []string) {
 		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
 	}
 
+	var current int64
+	if flag := cmd.PersistentFlags().Lookup("current").Value.String(); flag != "-1" {
+		var err error
+		current, err = strconv.ParseInt(flag, 10, 64)
+		if err != nil {
+			log.ERROR.Fatalln(err)
+		}
+	}
+
 	d := dumper{len: len(chargers)}
 	for name, v := range chargers {
-		if flag := cmd.PersistentFlags().Lookup("current").Value.String(); flag != "-1" {
-			val, err := strconv.ParseInt(flag, 10, 64)
-			if err != nil {
+		if current >= 0 {
+			fmt.Println("Set current:", current)
+			if err := v.MaxCurrent(current); err != nil {
 				log.ERROR.Println(err)
-			} else {
-				fmt.Println("Set current:", val)
-				if err := v.MaxCurrent(val); err != nil {
-					log.ERROR.Println(err)
-				}
 			}
 		}
+
 		if flag := cmd.PersistentFlags().Lookup("enable").Value.String(); flag == "true" {
 			fmt.Println("Enable(true)")
 			if err := v.Enable(true); err != nil {
 				log.ERROR.Println(err)
 			}
 		}
+
 		if flag := cmd.PersistentFlags().Lookup("disable").Value.String(); flag == "true" {
 			fmt.Println("Enable(false)")
 			if err := v.Enable(false); err != nil {
