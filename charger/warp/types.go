@@ -5,6 +5,10 @@ import "time"
 const (
 	RootTopic = "warp"
 	Timeout   = 30 * time.Second
+
+	FeatureMeter       = "meter"
+	FeatureMeterPhases = "meter_phases"
+	FeatureNfc         = "nfc"
 )
 
 // https://www.warp-charger.com/api.html#evse_state
@@ -39,4 +43,10 @@ type MeterState struct {
 	EnergyAbs       float64 `json:"energy_abs"`
 	PhasesActive    []bool  `json:"phases_active"`
 	PhasesConnected []bool  `json:"phases_connected"`
+}
+
+type LastNfcTag struct {
+	UserID int    `json:"user_id"`
+	Type   int    `json:"tag_type"`
+	ID     string `json:"tag_id"`
 }
