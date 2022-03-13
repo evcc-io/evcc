@@ -65,6 +65,7 @@ func NewHardyBarth(uri string, chargecontrol int, cache time.Duration) (api.Char
 
 	wb := &HardyBarth{
 		Helper:        request.NewHelper(log),
+		uri:           util.DefaultScheme(uri, "http"),
 		chargecontrol: chargecontrol,
 		cache:         cache,
 	}
