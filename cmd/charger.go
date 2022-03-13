@@ -18,20 +18,13 @@ var chargerCmd = &cobra.Command{
 	Run:   runCharger,
 }
 
-const (
-	pCurrent = "current"
-	pEnable  = "enable"
-	pDisable = "disable"
-	pWakeup  = "wakeup"
-)
-
 func init() {
 	rootCmd.AddCommand(chargerCmd)
-	chargerCmd.PersistentFlags().StringP("name", "n", "", "select charger by name")
-	chargerCmd.PersistentFlags().IntP(pCurrent, "I", -1, "set current")
-	chargerCmd.PersistentFlags().BoolP(pEnable, "e", false, pEnable)
-	chargerCmd.PersistentFlags().BoolP(pDisable, "d", false, pDisable)
-	chargerCmd.PersistentFlags().BoolP(pWakeup, "w", false, pWakeup)
+	chargerCmd.PersistentFlags().StringP(flagName, "n", "", "select charger by name")
+	chargerCmd.PersistentFlags().IntP(flagCurrent, "I", -1, "set current")
+	chargerCmd.PersistentFlags().BoolP(flagEnable, "e", false, flagEnable)
+	chargerCmd.PersistentFlags().BoolP(flagDisable, "d", false, flagDisable)
+	chargerCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeup)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -50,7 +43,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	// select single charger
-	if name := cmd.PersistentFlags().Lookup("name").Value.String(); name != "" {
+	if name := cmd.PersistentFlags().Lookup(flagName).Value.String(); name != "" {
 		for _, cfg := range conf.Chargers {
 			if cfg.Name == name {
 				conf.Chargers = []qualifiedConfig{cfg}
@@ -73,35 +66,43 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	var current int64
-	if flag := cmd.PersistentFlags().Lookup(pCurrent).Value.String(); flag != "-1" {
+	if flag := cmd.PersistentFlags().Lookup(flagCurrent); flag.Changed {
 		var err error
-		current, err = strconv.ParseInt(flag, 10, 64)
+		current, err = strconv.ParseInt(flag.Value.String(), 10, 64)
 		if err != nil {
 			log.ERROR.Fatalln(err)
 		}
 	}
 
-	d := dumper{len: len(chargers)}
-	for name, v := range chargers {
+	var flagUsed bool
+	for _, v := range chargers {
 		if current >= 0 {
+			flagUsed = true
+
 			if err := v.MaxCurrent(current); err != nil {
 				log.ERROR.Println("set current:", err)
 			}
 		}
 
-		if flag := cmd.PersistentFlags().Lookup(pEnable).Value.String(); flag == "true" {
+		if cmd.PersistentFlags().Lookup(flagEnable).Changed {
+			flagUsed = true
+
 			if err := v.Enable(true); err != nil {
 				log.ERROR.Println("enable:", err)
 			}
 		}
 
-		if flag := cmd.PersistentFlags().Lookup(pDisable).Value.String(); flag == "true" {
+		if cmd.PersistentFlags().Lookup(flagDisable).Changed {
+			flagUsed = true
+
 			if err := v.Enable(false); err != nil {
 				log.ERROR.Println("disable:", err)
 			}
 		}
 
-		if flag := cmd.PersistentFlags().Lookup(pWakeup).Value.String(); flag == "true" {
+		if cmd.PersistentFlags().Lookup(flagWakeup).Changed {
+			flagUsed = true
+
 			if vv, ok := v.(api.AlarmClock); ok {
 				if err := vv.WakeUp(); err != nil {
 					log.ERROR.Println("wakeup:", err)
@@ -110,8 +111,13 @@ func runCharger(cmd *cobra.Command, args []string) {
 				log.ERROR.Println("wakeup: not implemented")
 			}
 		}
+	}
 
-		d.DumpWithHeader(name, v)
+	if !flagUsed {
+		d := dumper{len: len(chargers)}
+		for name, v := range chargers {
+			d.DumpWithHeader(name, v)
+		}
 	}
 
 	close(stopC)
