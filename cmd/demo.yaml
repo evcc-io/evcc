@@ -203,6 +203,7 @@ loadpoints:
   - title: Carport
     charger: charger_1
     mode: pv
+    phases: 1
     soc:
       target: 90
     meters:

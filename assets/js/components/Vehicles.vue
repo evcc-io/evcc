@@ -10,7 +10,7 @@
 				:disabled="refreshing"
 				@click="refresh"
 			>
-				<shopicon-regular-return class="refresh-icon"></shopicon-regular-return>
+				<shopicon-regular-refresh class="refresh-icon"></shopicon-regular-refresh>
 			</button>
 		</div>
 
@@ -29,7 +29,7 @@
 <script>
 import Vehicle from "./Vehicle.vue";
 import collector from "../mixins/collector";
-import "@h2d2/shopicons/es/regular/return";
+import "@h2d2/shopicons/es/regular/refresh";
 
 export default {
 	name: "Vehicles",
@@ -90,14 +90,14 @@ export default {
 	animation: rotation 1s infinite cubic-bezier(0.37, 0, 0.63, 1);
 }
 .refresh-icon {
-	transform: translateY(-1px);
+	transform: translateY(-2px);
 }
 @keyframes rotation {
 	from {
 		transform: rotate(0deg);
 	}
 	to {
-		transform: rotate(-360deg);
+		transform: rotate(360deg);
 	}
 }
 </style>
