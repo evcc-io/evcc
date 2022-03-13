@@ -275,8 +275,9 @@ func (site *Site) updateMeters() error {
 			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
 
 			if err == nil {
-				site.pvPower += power
-				if power < -1000 {
+				// ignore negative values which represent self-consumption
+				site.pvPower += math.Max(0, power)
+				if power < -500 {
 					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", id, power)
 				}
 			} else {
@@ -358,7 +359,7 @@ func (site *Site) sitePower() (float64, error) {
 		for id, battery := range site.batteryMeters {
 			soc, err := battery.(api.Battery).SoC()
 			if err != nil {
-				err = fmt.Errorf("updating battery soc %d: %v", id, err)
+				err = fmt.Errorf("battery soc %d: %v", id, err)
 				site.log.ERROR.Println(err)
 			} else {
 				site.log.DEBUG.Printf("battery soc %d: %.0f%%", id, soc)
@@ -372,7 +373,7 @@ func (site *Site) sitePower() (float64, error) {
 
 		// if battery is charging below prioritySoC give it priority
 		if socs < site.PrioritySoC && batteryPower < 0 {
-			site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f", socs)
+			site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f%%", socs)
 			batteryPower = 0
 		}
 
