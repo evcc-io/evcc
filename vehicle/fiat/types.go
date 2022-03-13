@@ -1,9 +1,24 @@
 package fiat
 
 import (
+	"fmt"
+	"html"
 	"strconv"
 	"time"
 )
+
+type ErrorInfo struct {
+	ErrorCode    int
+	ErrorMessage string
+	ErrorDetails string
+}
+
+func (e ErrorInfo) Error() error {
+	if e.ErrorCode == 0 {
+		return nil
+	}
+	return fmt.Errorf("%s: %s", e.ErrorMessage, html.UnescapeString(e.ErrorDetails))
+}
 
 type VehiclesResponse struct {
 	Vehicles []Vehicle
