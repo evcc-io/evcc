@@ -51,7 +51,6 @@ func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) 
 		URI           string
 		ChargeControl int
 		Meter         int
-		Cache         time.Duration
 	}{
 		ChargeControl: 1,
 		Meter:         1,
@@ -61,11 +60,11 @@ func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
-	return NewHardyBarth(cc.URI, cc.ChargeControl, cc.Meter, cc.Cache)
+	return NewHardyBarth(cc.URI, cc.ChargeControl, cc.Meter)
 }
 
 // NewHardyBarth creates HardyBarth charger
-func NewHardyBarth(uri string, chargecontrol, meter int, cache time.Duration) (api.Charger, error) {
+func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 	log := util.NewLogger("hardybarth")
 
 	wb := &HardyBarth{
@@ -74,8 +73,11 @@ func NewHardyBarth(uri string, chargecontrol, meter int, cache time.Duration) (a
 		chargecontrol: chargecontrol,
 		meter:         meter,
 		current:       6,
-		cache:         cache,
 	}
+
+	// if !sponsor.IsAuthorized() {
+	// 	return nil, api.ErrSponsorRequired
+	// }
 
 	uri = fmt.Sprintf("%s/api/v1/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
 	data := url.Values{"mode": {echarge.ModeManual}}
