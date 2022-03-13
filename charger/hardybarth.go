@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
@@ -68,7 +69,7 @@ func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 
 	wb := &HardyBarth{
 		Helper:        request.NewHelper(log),
-		uri:           util.DefaultScheme(uri, "http"),
+		uri:           util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 		chargecontrol: chargecontrol,
 		meter:         meter,
 		current:       6,
