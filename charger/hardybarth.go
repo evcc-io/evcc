@@ -137,7 +137,7 @@ func (wb *HardyBarth) Enable(enable bool) error {
 func (wb *HardyBarth) post(uri string, data url.Values) error {
 	resp, err := wb.PostForm(uri, data)
 	if err == nil {
-		resp.Body.Close()
+		defer resp.Body.Close()
 	}
 
 	if resp.StatusCode >= 300 {
