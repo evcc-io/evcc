@@ -20,33 +20,17 @@ type ChargeControl struct {
 }
 
 type Rfid struct {
+	ID   int
+	Name string
+	Data struct {
+		Tag string
+	}
 }
 
 type All struct {
 	Network        struct{}
 	System         struct{}
-	Meters         Meters
-	ChargeControls ChargeControls
-}
-
-type Meters []Meter
-
-func (s Meters) ByName(name string) Meter {
-	for _, e := range s {
-		if e.Name == name {
-			return e
-		}
-	}
-	return Meter{}
-}
-
-type ChargeControls []ChargeControl
-
-func (s ChargeControls) ByName(name string) ChargeControl {
-	for _, e := range s {
-		if e.Name == name {
-			return e
-		}
-	}
-	return ChargeControl{}
+	Meters         []Meter
+	ChargeControls []ChargeControl
+	Rfid           []Rfid
 }

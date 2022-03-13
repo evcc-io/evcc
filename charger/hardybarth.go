@@ -201,9 +201,9 @@ func (wb *HardyBarth) CurrentPower() (float64, error) {
 // 	return 0, api.ErrNotAvailable
 // }
 
-var _ api.Identifier = (*HardyBarth)(nil)
+// var _ api.Identifier = (*HardyBarth)(nil)
 
-// Identify implements the api.Identifier interface
-func (wb *HardyBarth) Identify() (string, error) {
-	return "", api.ErrNotAvailable
-}
+// // Identify implements the api.Identifier interface
+// func (wb *HardyBarth) Identify() (string, error) {
+// 	return "", api.ErrNotAvailable
+// }
