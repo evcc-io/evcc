@@ -38,7 +38,6 @@ type HardyBarth struct {
 	chargecontrol int
 	meter         int
 	current       int64
-	cache         time.Duration
 }
 
 func init() {
