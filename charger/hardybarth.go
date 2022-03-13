@@ -18,9 +18,11 @@ package charger
 // SOFTWARE.
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/echarge"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -31,7 +33,9 @@ import (
 // HardyBarth charger implementation
 type HardyBarth struct {
 	*request.Helper
-	cache time.Duration
+	uri           string
+	chargecontrol int
+	cache         time.Duration
 }
 
 func init() {
@@ -41,24 +45,28 @@ func init() {
 // NewHardyBarthFromConfig creates a HardyBarth cPH1 charger from generic config
 func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI   string
-		Cache time.Duration
-	}{}
+		URI           string
+		ChargeControl int
+		Cache         time.Duration
+	}{
+		ChargeControl: 1,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewHardyBarth(cc.URI, cc.Cache)
+	return NewHardyBarth(cc.URI, cc.ChargeControl, cc.Cache)
 }
 
 // NewHardyBarth creates HardyBarth charger
-func NewHardyBarth(uri string, cache time.Duration) (api.Charger, error) {
+func NewHardyBarth(uri string, chargecontrol int, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("hardybarth")
 
 	wb := &HardyBarth{
-		Helper: request.NewHelper(log),
-		cache:  cache,
+		Helper:        request.NewHelper(log),
+		chargecontrol: chargecontrol,
+		cache:         cache,
 	}
 
 	return wb, nil
@@ -66,7 +74,25 @@ func NewHardyBarth(uri string, cache time.Duration) (api.Charger, error) {
 
 // Status implements the api.Charger interface
 func (wb *HardyBarth) Status() (api.ChargeStatus, error) {
-	return api.StatusNone, api.ErrNotAvailable
+	uri := fmt.Sprintf("%s/api/v1/chargecontrols/%d", wb.uri, wb.chargecontrol)
+
+	res := struct {
+		ChargeControl struct {
+			echarge.ChargeControl
+		}
+	}{}
+
+	err := wb.GetJSON(uri, &res)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	switch s := res.ChargeControl.ChargeControl.State[:1]; s {
+	case "A", "B", "C":
+		return api.ChargeStatus(s), nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid state: %s", s)
+	}
 }
 
 // Enabled implements the api.Charger interface

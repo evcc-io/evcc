@@ -6,8 +6,9 @@ type Meter struct {
 }
 
 type ChargeControl struct {
-	ID   int
-	Name string
+	ID    int
+	Name  string
+	State string
 }
 
 type Rfid struct {
