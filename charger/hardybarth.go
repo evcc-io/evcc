@@ -19,6 +19,7 @@ package charger
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/evcc-io/evcc/api"
@@ -136,13 +137,13 @@ func (wb *HardyBarth) post(uri string, data url.Values) error {
 	resp, err := wb.PostForm(uri, data)
 	if err == nil {
 		defer resp.Body.Close()
+
+		if resp.StatusCode >= http.StatusBadRequest {
+			err = fmt.Errorf("invalid status: %s", resp.Status)
+		}
 	}
 
-	if resp.StatusCode >= 300 {
-		return fmt.Errorf("invalid status: %s", resp.Status)
-	}
-
-	return nil
+	return err
 }
 
 func (wb *HardyBarth) setCurrent(current int64) error {
