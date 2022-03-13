@@ -20,7 +20,6 @@ package charger
 import (
 	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
