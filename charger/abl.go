@@ -21,6 +21,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -35,14 +36,18 @@ type ABLeMH struct {
 }
 
 const (
-	ablRegFirmware   = 0x01
-	ablRegStatus     = 0x04
-	ablRegEnabled    = 0x0F
-	ablRegAmpsConfig = 0x14
-	ablRegStatusLong = 0x2E
+	ablRegFirmware    = 0x01
+	ablRegStatus      = 0x04
+	ablRegOutletState = 0x05
+	ablRegEnabled     = 0x0F
+	ablRegAmpsConfig  = 0x14
+	ablRegStatusLong  = 0x2E
 
-	ablAmpsDisabled  uint16 = 0x03E8
-	ablSensorPresent        = 1 << 5
+	ablAmpsDisabled   uint16 = 0x03E8
+	ablOutletWaiting  uint16 = 0xA1A1
+	ablOutletDisabled uint16 = 0xE0E0
+
+	ablSensorPresent = 1 << 5
 )
 
 var ablStatus = map[byte]string{
@@ -234,4 +239,19 @@ func (wb *ABLeMH) Diagnose() {
 	if err == nil {
 		fmt.Printf("Firmware: %0 x\n", b)
 	}
+}
+
+var _ api.AlarmClock = (*ABLeMH)(nil)
+
+// WakeUp implements the api.AlarmClock interface
+func (wb *ABLeMH) WakeUp() error {
+	// force status E0 by activating Outlet locking
+	err := wb.set(ablRegOutletState, ablOutletDisabled)
+	if err == nil {
+		time.Sleep(3 * time.Second)
+		// return to state A1 (vehicle disconnected)
+		err = wb.set(ablRegOutletState, ablOutletWaiting)
+	}
+
+	return err
 }
