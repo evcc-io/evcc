@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -22,11 +25,12 @@ const noCurrent = -1
 
 func init() {
 	rootCmd.AddCommand(chargerCmd)
-	chargerCmd.PersistentFlags().StringP(flagName, "n", "", "select charger by name")
-	chargerCmd.PersistentFlags().IntP(flagCurrent, "I", noCurrent, "set current")
-	chargerCmd.PersistentFlags().BoolP(flagEnable, "e", false, flagEnable)
-	chargerCmd.PersistentFlags().BoolP(flagDisable, "d", false, flagDisable)
-	chargerCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeup)
+	chargerCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
+	chargerCmd.PersistentFlags().IntP(flagCurrent, "I", noCurrent, flagCurrentDescription)
+	chargerCmd.PersistentFlags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
+	chargerCmd.PersistentFlags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
+	chargerCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
+	chargerCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -42,6 +46,11 @@ func runCharger(cmd *cobra.Command, args []string) {
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
 		log.FATAL.Fatal(err)
+	}
+
+	// full http request log
+	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
 	}
 
 	// select single charger
