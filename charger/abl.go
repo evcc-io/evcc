@@ -115,8 +115,7 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 		curr: uint16(6 / 0.06),
 	}
 
-	_, _ = wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
-	b, err := wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
+	b, err := wb.get(ablRegFirmware, 2)
 
 	// check presence of current sensor
 	if err == nil && (b[3]&ablSensorPresent != 0) {
