@@ -38,14 +38,12 @@ type ABLeMH struct {
 const (
 	ablRegFirmware    = 0x01
 	ablRegStatus      = 0x04
-	ablRegOutletState = 0x05
+	ablRegModifyState = 0x05
 	ablRegEnabled     = 0x0F
 	ablRegAmpsConfig  = 0x14
 	ablRegStatusLong  = 0x2E
 
-	ablAmpsDisabled   uint16 = 0x03E8
-	ablOutletWaiting  uint16 = 0xA1A1
-	ablOutletDisabled uint16 = 0xE0E0
+	ablAmpsDisabled uint16 = 0x03E8
 
 	ablSensorPresent = 1 << 5
 )
@@ -256,12 +254,12 @@ var _ api.AlarmClock = (*ABLeMH)(nil)
 
 // WakeUp implements the api.AlarmClock interface
 func (wb *ABLeMH) WakeUp() error {
-	// force status E0 by activating Outlet locking
-	err := wb.set(ablRegOutletState, ablOutletDisabled)
+	// temporary jump to status E0 (Outlet disabled)
+	err := wb.set(ablRegModifyState, 0xE0E0)
 	if err == nil {
 		time.Sleep(3 * time.Second)
-		// return to state A1 (vehicle disconnected)
-		err = wb.set(ablRegOutletState, ablOutletWaiting)
+		// jump back to state A1 (Waiting for EV)
+		err = wb.set(ablRegModifyState, 0xA1A1)
 	}
 
 	return err
