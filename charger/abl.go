@@ -3,6 +3,7 @@ package charger
 // LICENSE
 
 // Copyright (c) 2019-2022 andig
+// Copyright (c) 2022 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -103,7 +104,7 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 	}
 
 	if !sponsor.IsAuthorized() {
-		//return nil, api.ErrSponsorRequired
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("abl")
