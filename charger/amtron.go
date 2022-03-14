@@ -3,6 +3,7 @@ package charger
 // LICENSE
 
 // Copyright (c) 2019-2022 andig
+// Copyright (c) 2022 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -33,6 +34,7 @@ import (
 // Amtron Xtra/Premium charger implementation
 type Amtron struct {
 	conn *modbus.Connection
+	curr uint16
 }
 
 const (
@@ -43,7 +45,6 @@ const (
 	amtronRegName       = 0x0311
 	amtronRegPower      = 0x030F
 	amtronRegAmpsConfig = 0x0400
-	amtronRegEnabled    = 0x0401
 )
 
 func init() {
@@ -81,6 +82,7 @@ func NewAmtron(uri string, slaveID uint8) (api.Charger, error) {
 
 	wb := &Amtron{
 		conn: conn,
+		curr: 6,
 	}
 
 	return wb, err
@@ -109,35 +111,31 @@ func (wb *Amtron) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Amtron) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(amtronRegEnabled, 1)
+	b, err := wb.conn.ReadHoldingRegisters(amtronRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
 	}
 
-	var res bool
-	switch binary.BigEndian.Uint16(b) {
-	case 0, 4:
-		res = true
-	}
+	u := binary.BigEndian.Uint16(b)
 
-	return res, nil
+	return u != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Amtron) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 0x04
+		u = wb.curr
 	}
 
-	_, err := wb.conn.WriteSingleRegister(amtronRegEnabled, u)
-
+	_, err := wb.conn.WriteSingleRegister(amtronRegAmpsConfig, u)
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Amtron) MaxCurrent(current int64) error {
-	_, err := wb.conn.WriteSingleRegister(amtronRegAmpsConfig, uint16(current))
+	wb.curr = uint16(current)
+	_, err := wb.conn.WriteSingleRegister(amtronRegAmpsConfig, wb.curr)
 	return err
 }
 
