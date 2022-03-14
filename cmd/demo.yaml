@@ -32,7 +32,7 @@ meters:
       vm: shared
       script: |
         state.pvpower = 8000+500*Math.random();
-        state.batterypower = state.gridpower > 0 ? 1500 : -700;
+        state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
         state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - state.batterypower - state.pvpower;
         state.gridpower;
 
@@ -84,7 +84,6 @@ chargers:
         set();
         var lp = state.loadpoints[0];
         lp.enabled = val;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
     enabled:
       source: js
       vm: shared
@@ -193,7 +192,7 @@ vehicles:
     capacity: 80
 
 site:
-  title: Demo
+  title: Zuhause
   meters:
     grid: grid
     pv: pv

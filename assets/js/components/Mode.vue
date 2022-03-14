@@ -1,30 +1,28 @@
 <template>
-	<div>
-		<div v-if="false" class="mode-group border d-inline-flex" role="group">
-			<button
-				v-for="m in modes"
-				:key="m"
-				type="button"
-				class="btn"
-				:class="{ active: isActive(mode) }"
-				@click="setTargetMode(m)"
-			>
-				<span class="d-inline d-sm-none"> {{ $t(`main.mode.${m}Short`) }} </span>
-				<span class="d-none d-sm-inline"> {{ $t(`main.mode.${m}Long`) }} </span>
-			</button>
-		</div>
-		<div v-else class="mode-group border d-inline-flex" role="group">
-			<button
-				v-for="m in ['fast', 'cheap']"
-				:key="m"
-				type="button"
-				class="btn"
-				:class="{ active: isActive(m) }"
-				@click="setTargetMode(m)"
-			>
-				{{ $t(`main.mode.${m}`) }}
-			</button>
-		</div>
+	<div v-if="$hiddenFeatures" class="mode-group border d-inline-flex" role="group">
+		<button
+			v-for="m in ['fast', 'cheap']"
+			:key="m"
+			type="button"
+			class="btn"
+			:class="{ active: isActive(m) }"
+			@click="setTargetMode(m)"
+		>
+			{{ $t(`main.mode.${m}`) }}
+		</button>
+	</div>
+	<div v-else class="mode-group border d-inline-flex" role="group">
+		<button
+			v-for="m in modes"
+			:key="m"
+			type="button"
+			class="btn"
+			:class="{ active: isActive(m) }"
+			@click="setTargetMode(m)"
+		>
+			<span class="d-inline d-sm-none"> {{ $t(`main.mode.${m}Short`) }} </span>
+			<span class="d-none d-sm-inline"> {{ $t(`main.mode.${m}Long`) }} </span>
+		</button>
 	</div>
 </template>
 

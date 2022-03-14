@@ -15,15 +15,15 @@
 		<div
 			class="d-flex flex-column content-area"
 			:style="{
-				transform: `translateY(${detailsVisible ? detailsHeight : 10}px)`,
-				'padding-bottom': `${detailsVisible ? detailsHeight : 10}px`,
+				transform: `translateY(${detailsVisible ? detailsHeight : 3}px)`,
+				'padding-bottom': `${detailsVisible ? detailsHeight : 3}px`,
 			}"
 		>
 			<div class="toggle-handle py-3 d-flex justify-content-center" @click="toggleDetails">
 				<hr class="toggle-handle-icon bg-white m-0 p-0" />
 			</div>
 			<Loadpoints :loadpoints="loadpoints" class="mb-5" />
-			<Vehicles />
+			<Vehicles v-if="$hiddenFeatures" />
 			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>

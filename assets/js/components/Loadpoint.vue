@@ -1,10 +1,13 @@
 <template>
 	<div class="loadpoint bg-white p-4">
-		<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-			<h3 class="mb-2 me-2">
+		<div class="d-flex justify-content-between align-items-center mb-3">
+			<h3 class="mb-3 me-2 text-truncate">
 				{{ title || $t("main.loadpoint.fallbackName") }}
 			</h3>
-			<Mode class="mb-2" :mode="mode" @updated="setTargetMode" />
+			<Mode class="mb-3" :mode="mode" @updated="setTargetMode" />
+			<button v-if="$hiddenFeatures" class="mb-3 btn btn-link text-dark p-0 flex-shrink-0">
+				<shopicon-filled-options size="s"></shopicon-filled-options>
+			</button>
 		</div>
 
 		<div
@@ -70,6 +73,7 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/lightning";
+import "@h2d2/shopicons/es/filled/options";
 import api from "../api";
 import Mode from "./Mode.vue";
 import Vehicle from "./Vehicle.vue";

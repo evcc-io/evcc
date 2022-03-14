@@ -7,7 +7,7 @@
 					{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
 				</span>
 			</h4>
-			<button class="btn btn-link text-white p-0 flex-shrink-0">
+			<button v-if="$hiddenFeatures" class="btn btn-link text-white p-0 flex-shrink-0">
 				<shopicon-filled-options size="s"></shopicon-filled-options>
 			</button>
 		</div>
@@ -37,7 +37,7 @@
 					@target-time-removed="removeTargetTime"
 				/>
 			</div>
-			<div class="d-flex justify-content-start">
+			<div v-if="$hiddenFeatures" class="d-flex justify-content-start">
 				<small>vor 5 Stunden</small>
 			</div>
 		</div>
