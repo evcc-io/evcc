@@ -18,10 +18,12 @@ var chargerCmd = &cobra.Command{
 	Run:   runCharger,
 }
 
+const noCurrent = -1
+
 func init() {
 	rootCmd.AddCommand(chargerCmd)
 	chargerCmd.PersistentFlags().StringP(flagName, "n", "", "select charger by name")
-	chargerCmd.PersistentFlags().IntP(flagCurrent, "I", -1, "set current")
+	chargerCmd.PersistentFlags().IntP(flagCurrent, "I", noCurrent, "set current")
 	chargerCmd.PersistentFlags().BoolP(flagEnable, "e", false, flagEnable)
 	chargerCmd.PersistentFlags().BoolP(flagDisable, "d", false, flagDisable)
 	chargerCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeup)
@@ -65,7 +67,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
 	}
 
-	var current int64
+	current := int64(noCurrent)
 	if flag := cmd.PersistentFlags().Lookup(flagCurrent); flag.Changed {
 		var err error
 		current, err = strconv.ParseInt(flag.Value.String(), 10, 64)
