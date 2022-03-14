@@ -44,7 +44,6 @@ const (
 	ablRegStatusLong  = 0x2E
 
 	ablAmpsDisabled   uint16 = 0x03E8
-	ablOutletReset    uint16 = 0x5A5A
 	ablOutletWaiting  uint16 = 0xA1A1
 	ablOutletDisabled uint16 = 0xE0E0
 
