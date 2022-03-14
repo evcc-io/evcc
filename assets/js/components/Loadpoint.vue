@@ -4,10 +4,12 @@
 			<h3 class="mb-3 me-2 text-truncate">
 				{{ title || $t("main.loadpoint.fallbackName") }}
 			</h3>
-			<Mode class="mb-3" :mode="mode" @updated="setTargetMode" />
-			<button v-if="$hiddenFeatures" class="mb-3 btn btn-link text-dark p-0 flex-shrink-0">
-				<shopicon-filled-options size="s"></shopicon-filled-options>
-			</button>
+			<div class="mb-3 d-flex align-items-center">
+				<Mode :mode="mode" @updated="setTargetMode" />
+				<button v-if="$hiddenFeatures" class="btn btn-link text-gray p-0 flex-shrink-0">
+					<shopicon-filled-options size="s"></shopicon-filled-options>
+				</button>
+			</div>
 		</div>
 
 		<div
