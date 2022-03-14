@@ -20,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -145,8 +146,7 @@ func (wb *ABLeMH) get(reg, count uint16) ([]byte, error) {
 
 // Status implements the api.Charger interface
 func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
-	_, _ = wb.conn.ReadHoldingRegisters(ablRegStatus, 1)
-	b, err := wb.conn.ReadHoldingRegisters(ablRegStatus, 1)
+	b, err := wb.get(ablRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -168,8 +168,7 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABLeMH) Enabled() (bool, error) {
-	_, _ = wb.conn.ReadHoldingRegisters(ablRegEnabled, 5)
-	b, err := wb.conn.ReadHoldingRegisters(ablRegEnabled, 5)
+	b, err := wb.get(ablRegEnabled, 5)
 	if err != nil {
 		return false, err
 	}
@@ -180,18 +179,14 @@ func (wb *ABLeMH) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *ABLeMH) Enable(enable bool) error {
-	/* 	u := ablAmpsDisabled
-	   	if enable {
-	   		u = wb.curr
-	   	}
+	u := ablAmpsDisabled
+	if enable {
+		u = wb.curr
+	}
 
-	   	b := make([]byte, 2)
-	   	binary.BigEndian.PutUint16(b, u)
+	err := wb.set(ablRegAmpsConfig, u)
 
-	   	_, _ = wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
-	   	_, err := wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
-	*/
-	return nil
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -206,13 +201,9 @@ func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
 	// calculate duty cycle according to https://www.goingelectric.de/forum/viewtopic.php?p=1575287#p1575287
 	wb.curr = uint16(current / 0.06)
 
-	/* 	b := make([]byte, 2)
-	   	binary.BigEndian.PutUint16(b, wb.curr)
+	err := wb.set(ablRegAmpsConfig, wb.curr)
 
-	   	_, _ = wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
-	   	_, err := wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
-	*/
-	return nil
+	return err
 }
 
 // currentPower implements the api.Meter interface
@@ -223,8 +214,7 @@ func (wb *ABLeMH) currentPower() (float64, error) {
 
 // Currents implements the api.MeterCurrent interface
 func (wb *ABLeMH) currents() (float64, float64, float64, error) {
-	_, _ = wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
-	b, err := wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
+	b, err := wb.get(ablRegStatusLong, 5)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -246,8 +236,7 @@ var _ api.Diagnosis = (*ABLeMH)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *ABLeMH) Diagnose() {
-	_, _ = wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
-	b, err := wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
+	b, err := wb.get(ablRegFirmware, 2)
 	if err == nil {
 		fmt.Printf("Firmware: %0 x\n", b)
 	}
@@ -257,18 +246,13 @@ var _ api.AlarmClock = (*ABLeMH)(nil)
 
 // WakeUp implements the api.AlarmClock interface
 func (wb *ABLeMH) WakeUp() error {
-	// try simple outlet reset first
-	//err := wb.set(ablRegOutletState, ablOutletReset)
-	//err := wb.set(ablRegOutletState, ablOutletDisabled)
-	err := wb.set(ablRegOutletState, ablOutletWaiting)
-
 	// force status E0 by activating Outlet locking
-	//err := wb.set(ablRegOutletState, ablOutletDisabled)
-	//if err == nil {
-	//	time.Sleep(3 * time.Second)
-	//	err = wb.set(ablRegOutletState, ablOutletReset)
-	//	// return to state A1 (vehicle disconnected)
-	//	err = wb.set(ablRegOutletState, ablOutletWaiting)
-	//}
+	err := wb.set(ablRegOutletState, ablOutletDisabled)
+	if err == nil {
+		time.Sleep(3 * time.Second)
+		// return to state A1 (vehicle disconnected)
+		err = wb.set(ablRegOutletState, ablOutletWaiting)
+	}
+
 	return err
 }
