@@ -330,24 +330,19 @@ func (site *Site) updateMeters() error {
 		}
 	}
 
-	// allow using PV as estimate for grid power
-	if site.gridMeter == nil {
-		site.gridPower = -site.pvPower
-
-		for _, lp := range site.loadpoints {
-			lp.UpdateChargePower()
-			site.gridPower += lp.GetChargePower()
-		}
-	}
-
 	return err
 }
 
 // sitePower returns the net power exported by the site minus a residual margin.
 // negative values mean grid: export, battery: charging
-func (site *Site) sitePower() (float64, error) {
+func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	if err := site.updateMeters(); err != nil {
 		return 0, err
+	}
+
+	// allow using PV as estimate for grid power
+	if site.gridMeter == nil {
+		site.gridPower = totalChargePower - site.pvPower
 	}
 
 	// honour battery priority
@@ -398,12 +393,14 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
+	// update all loadpoint's charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
+		lp.UpdateChargePower()
 		totalChargePower += lp.GetChargePower()
 	}
 
-	if sitePower, err := site.sitePower(); err == nil {
+	if sitePower, err := site.sitePower(totalChargePower); err == nil {
 		lp.Update(sitePower, cheap, site.batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
