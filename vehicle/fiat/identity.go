@@ -70,7 +70,7 @@ func (v *Identity) Login() error {
 	}
 
 	var res struct {
-		ErrorCode    int
+		ErrorInfo
 		UID          string
 		StatusReason string
 		SessionInfo  struct {
@@ -107,13 +107,14 @@ func (v *Identity) Login() error {
 
 		if req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers); err == nil {
 			if err = v.DoJSON(req, &res); err == nil {
+				err = res.ErrorInfo.Error()
 				v.uid = res.UID
 			}
 		}
 	}
 
 	var token struct {
-		ErrorCode    int `json:"errorCode"`
+		ErrorInfo
 		StatusReason string
 		IDToken      string `json:"id_token"`
 	}
@@ -138,7 +139,9 @@ func (v *Identity) Login() error {
 
 		if req, err = request.New(http.MethodGet, uri, nil, headers); err == nil {
 			req.URL.RawQuery = data.Encode()
-			err = v.DoJSON(req, &token)
+			if err = v.DoJSON(req, &token); err == nil {
+				err = token.ErrorInfo.Error()
+			}
 		}
 	}
 

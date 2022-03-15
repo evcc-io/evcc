@@ -3,15 +3,15 @@ products:
 - brand: Wallbe
   description:
     de: Eco (mit Strommessgerät)
-    en: Eco (with Meter)
+    en: Eco (with meter)
 - brand: Wallbe
   description:
     de: Pro (mit Strommessgerät)
-    en: Pro (with Meter)
+    en: Pro (with meter)
 requirements:
   description:
-    en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.
-    de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
+    en: DIP switch 10 must be set to 'ON'.
+    de: Im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
   uri: https://docs.evcc.io/docs/devices/chargers#wallbe-ecopro
 params:
 - name: host
@@ -26,4 +26,3 @@ render: |
     power: true
     energy: true
     currents: true
-  
