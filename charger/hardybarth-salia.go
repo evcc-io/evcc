@@ -25,7 +25,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
-	"github.com/evcc-io/evcc/charger/obis"
+	"github.com/evcc-io/evcc/charger/echarge/salia"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -68,9 +68,11 @@ func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewSalia(uri string, chargecontrol, meter int) (api.Charger, error) {
 	log := util.NewLogger("salia")
 
+	uri = strings.TrimSuffix(uri, "/") + "/api"
+
 	wb := &Salia{
 		Helper:        request.NewHelper(log),
-		uri:           util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		uri:           util.DefaultScheme(uri, "http"),
 		chargecontrol: chargecontrol,
 		meter:         meter,
 		current:       6,
@@ -84,31 +86,26 @@ func NewSalia(uri string, chargecontrol, meter int) (api.Charger, error) {
 	data := url.Values{"mode": {echarge.ModeManual}}
 	err := wb.post(uri, data)
 
+	res, err := wb.get()
+	fmt.Printf("%+v", res)
+
 	return wb, err
 }
 
-func (wb *Salia) getChargeControl() (salia.ChargeControl, error) {
-	uri := fmt.Sprintf("%s/api/v1/chargecontrols/%d", wb.uri, wb.chargecontrol)
-
-	var res struct {
-		ChargeControl struct {
-			salia.ChargeControl
-		}
-	}
-
-	err := wb.GetJSON(uri, &res)
-
-	return res.ChargeControl.ChargeControl, err
+func (wb *Salia) get() (salia.Api, error) {
+	var res salia.Api
+	err := wb.GetJSON(wb.uri, &res)
+	return res, err
 }
 
 // Status implements the api.Charger interface
 func (wb *Salia) Status() (api.ChargeStatus, error) {
-	res, err := wb.getChargeControl()
+	res, err := wb.get()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch s := res.State[:1]; s {
+	switch s := res.Secc.Port0.Ci.Charge.Cp.Status; s {
 	case "A", "B", "C":
 		return api.ChargeStatus(s), nil
 	default:
@@ -118,11 +115,11 @@ func (wb *Salia) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Salia) Enabled() (bool, error) {
-	res, err := wb.getChargeControl()
-	if err == nil && res.Mode != echarge.ModeManual {
-		err = fmt.Errorf("invalid mode: %s", res.Mode)
+	res, err := wb.get()
+	if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
+		err = fmt.Errorf("invalid mode: %s", res.Secc.Port0.Salia.ChargeMode)
 	}
-	return res.ManualModeAmp > 0, err
+	return res.Secc.Port0.Ci.Evse.Basic.OfferedCurrentLimit > 0, err
 }
 
 // Enable implements the api.Charger interface
@@ -163,54 +160,29 @@ func (wb *Salia) MaxCurrent(current int64) error {
 	return err
 }
 
-func (wb *Salia) getMeter() (salia.Meter, error) {
-	uri := fmt.Sprintf("%s/api/v1/meters/%d", wb.uri, wb.meter)
-
-	var res struct {
-		Meter struct {
-			salia.Meter
-		}
-	}
-
-	err := wb.GetJSON(uri, &res)
-
-	return res.Meter.Meter, err
-}
-
 var _ api.Meter = (*Salia)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Salia) CurrentPower() (float64, error) {
-	res, err := wb.getMeter()
-	if err != nil {
-		return 0, err
-	}
-
-	return res.Data[obis.PowerConsumption], nil
+	res, err := wb.get()
+	return res.Secc.Port0.Metering.Power.ActiveTotal.Actual / 10, err
 }
 
 var _ api.MeterEnergy = (*Salia)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Salia) TotalEnergy() (float64, error) {
-	res, err := wb.getMeter()
-	if err != nil {
-		return 0, err
-	}
-
-	return res.Data[obis.EnergyConsumption], nil
+	res, err := wb.get()
+	return res.Secc.Port0.Metering.Energy.ActiveImport.Actual / 1e3, err
 }
 
 var _ api.MeterCurrent = (*Salia)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Salia) Currents() (float64, float64, float64, error) {
-	res, err := wb.getMeter()
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return res.Data[obis.CurrentL1], res.Data[obis.CurrentL2], res.Data[obis.CurrentL3], nil
+	res, err := wb.get()
+	i := res.Secc.Port0.Metering.Current.AC
+	return i.L1.Actual / 1e3, i.L2.Actual / 1e3, i.L3.Actual / 1e3, err
 }
 
 // var _ api.Identifier = (*Salia)(nil)

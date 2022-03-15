@@ -70,9 +70,11 @@ func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) 
 func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 	log := util.NewLogger("ecb1")
 
+	uri = strings.TrimSuffix(uri, "/") + "/api/v1"
+
 	wb := &HardyBarth{
 		Helper:        request.NewHelper(log),
-		uri:           util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		uri:           util.DefaultScheme(uri, "http"),
 		chargecontrol: chargecontrol,
 		meter:         meter,
 		current:       6,
@@ -82,7 +84,7 @@ func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	uri = fmt.Sprintf("%s/api/v1/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
+	uri = fmt.Sprintf("%s/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
 	data := url.Values{"mode": {echarge.ModeManual}}
 	err := wb.post(uri, data)
 
@@ -90,7 +92,7 @@ func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 }
 
 func (wb *HardyBarth) getChargeControl() (ecb1.ChargeControl, error) {
-	uri := fmt.Sprintf("%s/api/v1/chargecontrols/%d", wb.uri, wb.chargecontrol)
+	uri := fmt.Sprintf("%s/chargecontrols/%d", wb.uri, wb.chargecontrol)
 
 	var res struct {
 		ChargeControl struct {
@@ -151,7 +153,7 @@ func (wb *HardyBarth) post(uri string, data url.Values) error {
 }
 
 func (wb *HardyBarth) setCurrent(current int64) error {
-	uri := fmt.Sprintf("%s/api/v1/chargecontrols/%d/mode/manual/ampere", wb.uri, wb.chargecontrol)
+	uri := fmt.Sprintf("%s/chargecontrols/%d/mode/manual/ampere", wb.uri, wb.chargecontrol)
 	data := url.Values{"manualmodeamp": {fmt.Sprintf("%d", current)}}
 	return wb.post(uri, data)
 }
@@ -166,7 +168,7 @@ func (wb *HardyBarth) MaxCurrent(current int64) error {
 }
 
 func (wb *HardyBarth) getMeter() (ecb1.Meter, error) {
-	uri := fmt.Sprintf("%s/api/v1/meters/%d", wb.uri, wb.meter)
+	uri := fmt.Sprintf("%s/meters/%d", wb.uri, wb.meter)
 
 	var res struct {
 		Meter struct {
