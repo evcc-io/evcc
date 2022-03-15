@@ -25,9 +25,10 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
-	"github.com/evcc-io/evcc/charger/obis"
+	"github.com/evcc-io/evcc/meter/obis"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // http://apidoc.ecb1.de
@@ -66,7 +67,7 @@ func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) 
 
 // NewHardyBarth creates HardyBarth charger
 func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
-	log := util.NewLogger("hardybarth")
+	log := util.NewLogger("hardy")
 
 	wb := &HardyBarth{
 		Helper:        request.NewHelper(log),
@@ -76,9 +77,9 @@ func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 		current:       6,
 	}
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, api.ErrSponsorRequired
-	// }
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	uri = fmt.Sprintf("%s/api/v1/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
 	data := url.Values{"mode": {echarge.ModeManual}}
