@@ -25,6 +25,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
+	"github.com/evcc-io/evcc/charger/echarge/ecb1"
 	"github.com/evcc-io/evcc/meter/obis"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -44,7 +45,7 @@ type HardyBarth struct {
 }
 
 func init() {
-	registry.Add("hardybarth", NewHardyBarthFromConfig)
+	registry.Add("hardybarth-ecb1", NewHardyBarthFromConfig)
 }
 
 // NewHardyBarthFromConfig creates a HardyBarth cPH1 charger from generic config
@@ -67,7 +68,7 @@ func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) 
 
 // NewHardyBarth creates HardyBarth charger
 func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
-	log := util.NewLogger("hardy")
+	log := util.NewLogger("ecb1")
 
 	wb := &HardyBarth{
 		Helper:        request.NewHelper(log),
@@ -88,12 +89,12 @@ func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 	return wb, err
 }
 
-func (wb *HardyBarth) getChargeControl() (echarge.ChargeControl, error) {
+func (wb *HardyBarth) getChargeControl() (ecb1.ChargeControl, error) {
 	uri := fmt.Sprintf("%s/api/v1/chargecontrols/%d", wb.uri, wb.chargecontrol)
 
 	var res struct {
 		ChargeControl struct {
-			echarge.ChargeControl
+			ecb1.ChargeControl
 		}
 	}
 
@@ -164,12 +165,12 @@ func (wb *HardyBarth) MaxCurrent(current int64) error {
 	return err
 }
 
-func (wb *HardyBarth) getMeter() (echarge.Meter, error) {
+func (wb *HardyBarth) getMeter() (ecb1.Meter, error) {
 	uri := fmt.Sprintf("%s/api/v1/meters/%d", wb.uri, wb.meter)
 
 	var res struct {
 		Meter struct {
-			echarge.Meter
+			ecb1.Meter
 		}
 	}
 
