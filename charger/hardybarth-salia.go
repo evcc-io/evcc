@@ -49,6 +49,8 @@ func init() {
 	registry.Add("hardybarth-salia", NewSaliaFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+
 // NewSaliaFromConfig creates a Salia cPH1 charger from generic config
 func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
@@ -89,9 +91,14 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 	err := wb.post(salia.ChargeMode, echarge.ModeManual)
 	if err == nil {
 		go wb.heartbeat()
+
+		res, err := wb.get()
+		if err == nil && res.Secc.Port0.Metering.Meter.Available > 0 {
+			return decorateSalia(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
+		}
 	}
 
-	return wb, err
+	return nil, err
 }
 
 func (wb *Salia) heartbeat() {
@@ -193,26 +200,20 @@ func (wb *Salia) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.Meter = (*Salia)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (wb *Salia) CurrentPower() (float64, error) {
+// currentPower implements the api.Meter interface
+func (wb *Salia) currentPower() (float64, error) {
 	res, err := wb.get()
 	return res.Secc.Port0.Metering.Power.ActiveTotal.Actual / 10, err
 }
 
-var _ api.MeterEnergy = (*Salia)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Salia) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterEnergy interface
+func (wb *Salia) totalEnergy() (float64, error) {
 	res, err := wb.get()
 	return res.Secc.Port0.Metering.Energy.ActiveImport.Actual / 1e3, err
 }
 
-var _ api.MeterCurrent = (*Salia)(nil)
-
-// Currents implements the api.MeterCurrent interface
-func (wb *Salia) Currents() (float64, float64, float64, error) {
+// currents implements the api.MeterCurrent interface
+func (wb *Salia) currents() (float64, float64, float64, error) {
 	res, err := wb.get()
 	i := res.Secc.Port0.Metering.Current.AC
 	return i.L1.Actual / 1e3, i.L2.Actual / 1e3, i.L3.Actual / 1e3, err
