@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/grandcat/zeroconf"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -71,33 +72,19 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	configureCommand(rootCmd)
 
-	rootCmd.PersistentFlags().StringP(
-		"uri", "u",
-		"0.0.0.0:7070",
-		"Listen address",
-	)
+	rootCmd.PersistentFlags().StringP("uri", "u", "0.0.0.0:7070", "Listen address")
 	bind(rootCmd, "uri")
 
-	rootCmd.PersistentFlags().DurationP(
-		"interval", "i",
-		10*time.Second,
-		"Update interval",
-	)
+	rootCmd.PersistentFlags().DurationP("interval", "i", 10*time.Second, "Update interval")
 	bind(rootCmd, "interval")
 
-	rootCmd.PersistentFlags().Bool(
-		"metrics",
-		false,
-		"Expose metrics",
-	)
+	rootCmd.PersistentFlags().Bool("metrics", false, "Expose metrics")
 	bind(rootCmd, "metrics")
 
-	rootCmd.PersistentFlags().Bool(
-		"profile",
-		false,
-		"Expose pprof profiles",
-	)
+	rootCmd.PersistentFlags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
+
+	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -161,6 +148,11 @@ func run(cmd *cobra.Command, args []string) {
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
 		log.FATAL.Fatal(err)
+	}
+
+	// full http request log
+	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
 	}
 
 	// setup loadpoints
