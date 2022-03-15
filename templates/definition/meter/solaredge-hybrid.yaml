@@ -17,11 +17,10 @@ params:
   example: 192.0.2.2
 - name: port
   default: 502
-  help: 
+  help:
     en: Port 502 (SetApp) or 1502 (LCD)
     de: Port 502 (SetApp) oder 1502 (LCD)
 - name: timeout
-  default: 3s
 render: |
   type: custom
   power:
