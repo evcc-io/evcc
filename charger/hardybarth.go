@@ -25,7 +25,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
-	"github.com/evcc-io/evcc/charger/obis"
+	"github.com/evcc-io/evcc/meter/obis"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
