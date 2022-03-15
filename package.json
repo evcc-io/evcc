@@ -4,7 +4,7 @@
   "author": "naltatis & andig",
   "scripts": {
     "build": "vite build --mode prod",
-    "test": "jest",
+    "test": "",
     "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "build-storybook": "build-storybook",
     "dev": "vite",
