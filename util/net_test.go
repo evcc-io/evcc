@@ -38,3 +38,10 @@ func TestDefaultScheme(t *testing.T) {
 		t.Errorf("expected %s, got %s", expect, uri)
 	}
 }
+func TestDefaultSchemeWithEmptyUri(t *testing.T) {
+	expect := ""
+
+	if uri := DefaultScheme("", "http"); uri != expect {
+		t.Errorf("expected %s, got %s", expect, uri)
+	}
+}

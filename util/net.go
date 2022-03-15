@@ -28,6 +28,9 @@ func DefaultScheme(uri string, scheme string) string {
 	}
 
 	switch {
+	case u.String() == "":
+		return ""
+
 	case u.Scheme == "":
 		// scheme missing
 		u.Scheme = scheme
