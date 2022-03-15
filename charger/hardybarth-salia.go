@@ -20,8 +20,9 @@ package charger
 import (
 	"fmt"
 	"net/http"
-	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
@@ -36,10 +37,12 @@ import (
 // Salia charger implementation
 type Salia struct {
 	*request.Helper
-	uri           string
-	chargecontrol int
-	meter         int
-	current       int64
+	log     *util.Logger
+	uri     string
+	current int64
+	res     salia.Api
+	cache   time.Duration
+	updated time.Time
 }
 
 func init() {
@@ -52,6 +55,7 @@ func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		URI           string
 		ChargeControl int
 		Meter         int
+		Cache         time.Duration
 	}{
 		ChargeControl: 1,
 		Meter:         1,
@@ -61,41 +65,75 @@ func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewSalia(cc.URI, cc.ChargeControl, cc.Meter)
+	return NewSalia(cc.URI, cc.Cache)
 }
 
 // NewSalia creates Hardy Barth charger with Salia controller
-func NewSalia(uri string, chargecontrol, meter int) (api.Charger, error) {
+func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("salia")
 
 	uri = strings.TrimSuffix(uri, "/") + "/api"
 
 	wb := &Salia{
-		Helper:        request.NewHelper(log),
-		uri:           util.DefaultScheme(uri, "http"),
-		chargecontrol: chargecontrol,
-		meter:         meter,
-		current:       6,
+		log:     log,
+		Helper:  request.NewHelper(log),
+		uri:     util.DefaultScheme(uri, "http"),
+		current: 6,
+		cache:   cache,
 	}
 
 	// if !sponsor.IsAuthorized() {
 	// 	return nil, api.ErrSponsorRequired
 	// }
 
-	uri = fmt.Sprintf("%s/api/v1/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
-	data := url.Values{"mode": {echarge.ModeManual}}
-	err := wb.post(uri, data)
-
-	res, err := wb.get()
-	fmt.Printf("%+v", res)
+	err := wb.post(salia.ChargeMode, echarge.ModeManual)
+	if err == nil {
+		go wb.heartbeat()
+	}
 
 	return wb, err
 }
 
+func (wb *Salia) heartbeat() {
+	wb.post(salia.HeartBeat, "alive")
+	for range time.NewTicker(30 * time.Second).C {
+		if err := wb.post(salia.HeartBeat, "alive"); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
+}
+
 func (wb *Salia) get() (salia.Api, error) {
-	var res salia.Api
-	err := wb.GetJSON(wb.uri, &res)
-	return res, err
+	if time.Since(wb.updated) < wb.cache {
+		return wb.res, nil
+	}
+
+	err := wb.GetJSON(wb.uri, &wb.res)
+	if err == nil {
+		wb.updated = time.Now()
+	}
+
+	return wb.res, err
+}
+
+func (wb *Salia) post(key, val string) error {
+	data := map[string]string{key: val}
+	uri := fmt.Sprintf("%s/secc", wb.uri)
+
+	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		var res struct {
+			Result string
+		}
+
+		if err = wb.DoJSON(req, &res); err == nil {
+			if res.Result != "ok" {
+				err = fmt.Errorf("invalid result: %s", res.Result)
+			}
+		}
+	}
+
+	return err
 }
 
 // Status implements the api.Charger interface
@@ -119,7 +157,7 @@ func (wb *Salia) Enabled() (bool, error) {
 	if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
 		err = fmt.Errorf("invalid mode: %s", res.Secc.Port0.Salia.ChargeMode)
 	}
-	return res.Secc.Port0.Ci.Evse.Basic.OfferedCurrentLimit > 0, err
+	return res.Secc.Port0.GridCurrentLimit > 0, err
 }
 
 // Enable implements the api.Charger interface
@@ -129,26 +167,21 @@ func (wb *Salia) Enable(enable bool) error {
 		current = wb.current
 	}
 
-	return wb.setCurrent(current)
-}
-
-func (wb *Salia) post(uri string, data url.Values) error {
-	resp, err := wb.PostForm(uri, data)
+	err := wb.setCurrent(current)
 	if err == nil {
-		defer resp.Body.Close()
-
-		if resp.StatusCode >= http.StatusBadRequest {
-			err = fmt.Errorf("invalid status: %s", resp.Status)
-		}
+		wb.updated = time.Time{}
 	}
 
 	return err
 }
 
 func (wb *Salia) setCurrent(current int64) error {
-	uri := fmt.Sprintf("%s/api/v1/chargecontrols/%d/mode/manual/ampere", wb.uri, wb.chargecontrol)
-	data := url.Values{"manualmodeamp": {fmt.Sprintf("%d", current)}}
-	return wb.post(uri, data)
+	err := wb.post(salia.GridCurrentLimit, strconv.Itoa(int(current)))
+	if err == nil {
+		wb.updated = time.Time{}
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -191,3 +224,14 @@ func (wb *Salia) Currents() (float64, float64, float64, error) {
 // func (wb *Salia) Identify() (string, error) {
 // 	return "", api.ErrNotAvailable
 // }
+
+var _ api.Diagnosis = (*Salia)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *Salia) Diagnose() {
+	res, err := wb.get()
+	if err == nil {
+		fmt.Printf("Model name: %s\n", res.Device.ModelName)
+		fmt.Printf("Software version: %s\n", res.Device.SoftwareVersion)
+	}
+}

@@ -1,8 +1,17 @@
 package salia
 
+const (
+	HeartBeat        = "salia/heartbeat"
+	ChargeMode       = "salia/chargemode"
+	GridCurrentLimit = "grid_current_limit"
+)
+
 type Api struct {
-	Device struct{}
-	Secc   Secc
+	Device struct {
+		ModelName       string
+		SoftwareVersion string `json:"software_version"`
+	}
+	Secc Secc
 }
 
 type Secc struct {
@@ -26,6 +35,10 @@ type Port struct {
 		ChargeMode string
 	}
 	Metering struct {
+		Meter struct {
+			Type      string
+			Available int `json:",string"`
+		}
 		Power struct {
 			ActiveTotal struct {
 				Actual float64 `json:",string"`
@@ -63,4 +76,7 @@ type Port struct {
 			}
 		}
 	}
+	EvPresent        int `json:"ev_present,string"`
+	Charging         int `json:",string"`
+	GridCurrentLimit int `json:"grid_current_limit,string"`
 }

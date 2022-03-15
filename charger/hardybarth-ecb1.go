@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -110,6 +111,10 @@ func (wb *HardyBarth) Status() (api.ChargeStatus, error) {
 	res, err := wb.getChargeControl()
 	if err != nil {
 		return api.StatusNone, err
+	}
+
+	if res.State == "" {
+		return api.StatusNone, errors.New("invalid state- check controller type (eCB1 vs Salia)")
 	}
 
 	switch s := res.State[:1]; s {
