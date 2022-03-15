@@ -48,7 +48,7 @@
 					size="m"
 				></shopicon-regular-lightning>
 			</div>
-			<LabelAndValue :label="$t('main.loadpoint.charged')" :value="fmtKw(chargedEnergy)" />
+			<LabelAndValue :label="$t('main.loadpoint.charged')" :value="fmtKWh(chargedEnergy)" />
 			<LabelAndValue
 				v-if="chargeRemainingDurationInterpolated"
 				:label="$t('main.loadpoint.remaining')"

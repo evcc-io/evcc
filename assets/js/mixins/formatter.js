@@ -30,6 +30,9 @@ export default {
         maximumFractionDigits: digits,
       }).format(value)}${unit}`;
     },
+    fmtKWh: function (val) {
+      return this.fmtKw(val) + "h";
+    },
     fmtUnit: function (val) {
       return Math.abs(val) >= this.fmtLimit ? "k" : "";
     },

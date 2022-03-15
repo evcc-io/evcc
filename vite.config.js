@@ -9,6 +9,11 @@ export default defineConfig({
     outDir: "../dist/",
     emptyOutDir: true,
     assetsInlineLimit: 1024,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
   },
   server: {
     port: 7071,

@@ -29,6 +29,7 @@
 					class="flex-grow-1 text-end text-sm-center flex-basis-0"
 					:label="$t('main.vehicle.targetSoC')"
 					:value="`${displayTargetSoC} %`"
+					:extraValue="estimatedTargetRange"
 				/>
 				<TargetCharge
 					class="flex-grow-1 text-sm-end target-charge flex-basis-0"
@@ -91,6 +92,15 @@ export default {
 		},
 		targetCharge: function () {
 			return this.collectProps(TargetCharge);
+		},
+		estimatedTargetRange: function () {
+			if (this.vehicleSoC && this.vehicleRange) {
+				return (
+					Math.round(this.displayTargetSoC * (this.vehicleRange / this.vehicleSoC)) +
+					" km"
+				);
+			}
+			return null;
 		},
 	},
 	methods: {
