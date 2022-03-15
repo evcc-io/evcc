@@ -1,0 +1,9 @@
+product:
+  brand: hardybarth-cph1
+  description: HardyBarth cPH1
+
+render:
+- default: |
+    type: template
+    template: hardybarth-cph1
+    host: 192.0.2.2  # IP-Adresse oder Hostname
