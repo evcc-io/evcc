@@ -203,8 +203,6 @@ func (p *Param) DefaultValue(renderMode string) interface{} {
 	default:
 		if p.Test != "" {
 			return p.Test
-		} else if p.Example != "" && renderMode == TemplateRenderModeUnitTest {
-			return p.Example
 		} else if p.Example != "" && p.Default == "" && renderMode == TemplateRenderModeDocs {
 			return p.Example
 		} else {

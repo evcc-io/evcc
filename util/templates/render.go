@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
 )
 
@@ -21,9 +22,16 @@ func RenderTest(t *testing.T, tmpl Template, values map[string]interface{}, cb f
 		// instantiate all usage variants
 		for _, u := range tmpl.Usages() {
 			t.Run(u, func(t *testing.T) {
-				values[ParamUsage] = u
+				// t.Parallel()
 
-				b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, values)
+				// create a copy of the map for parallel execution
+				usageValues := make(map[string]interface{}, len(values)+1)
+				if err := copier.Copy(&usageValues, values); err != nil {
+					panic(err)
+				}
+				usageValues[ParamUsage] = u
+
+				b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, usageValues)
 				if err != nil {
 					t.Errorf("usage: %s, result: %v", u, err)
 				}
@@ -35,7 +43,7 @@ func RenderTest(t *testing.T, tmpl Template, values map[string]interface{}, cb f
 
 				// actually run the instance if not on CI
 				if os.Getenv("CI") == "" {
-					cb(values)
+					cb(usageValues)
 				}
 			})
 		}

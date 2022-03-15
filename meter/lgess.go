@@ -57,7 +57,7 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 		URI, Usage, Password string
 		Cache                time.Duration
 	}{
-		Cache: 2 * time.Second,
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
