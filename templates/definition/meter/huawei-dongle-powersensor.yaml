@@ -2,7 +2,7 @@ template: huawei-dongle-powersensor
 products:
 - brand: Huawei
   description:
-    generic: SUN2000 with Sdongle & Power Sensor
+    generic: SUN2000 with SDongle & Power Sensor
 guidedsetup:
   enable: true
 params:
