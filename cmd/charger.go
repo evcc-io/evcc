@@ -78,7 +78,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 	var flagUsed bool
 	for _, v := range chargers {
-		if current >= 6 {
+		if current != noCurrent {
 			flagUsed = true
 
 			if err := v.MaxCurrent(current); err != nil {
