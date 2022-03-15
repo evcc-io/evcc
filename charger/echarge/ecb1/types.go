@@ -1,17 +1,17 @@
 package ecb1
 
 type Meter struct {
-	ID              int
-	Name            string
-	Data            map[string]float64
+	ID   int
+	Name string
+	Data map[string]float64
 }
 
 type ChargeControl struct {
-	ID              int
-	Name            string
-	State           string
-	Mode            string
-	ManualModeAmp   float64
+	ID            int
+	Name          string
+	State         string
+	Mode          string
+	ManualModeAmp float64
 }
 
 type Rfid struct {
