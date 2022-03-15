@@ -54,13 +54,8 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	// select single charger
-	if name := cmd.PersistentFlags().Lookup(flagName).Value.String(); name != "" {
-		for _, cfg := range conf.Chargers {
-			if cfg.Name == name {
-				conf.Chargers = []qualifiedConfig{cfg}
-				break
-			}
-		}
+	if err := selectByName(cmd, &conf.Chargers); err != nil {
+		log.FATAL.Fatal(err)
 	}
 
 	if err := cp.configureChargers(conf); err != nil {

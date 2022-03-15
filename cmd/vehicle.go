@@ -47,14 +47,9 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		request.LogHeaders = true
 	}
 
-	// select single charger
-	if name := cmd.PersistentFlags().Lookup(flagName).Value.String(); name != "" {
-		for _, cfg := range conf.Vehicles {
-			if cfg.Name == name {
-				conf.Vehicles = []qualifiedConfig{cfg}
-				break
-			}
-		}
+	// select single vehicle
+	if err := selectByName(cmd, &conf.Vehicles); err != nil {
+		log.FATAL.Fatal(err)
 	}
 
 	if err := cp.configureVehicles(conf); err != nil {

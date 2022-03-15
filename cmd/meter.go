@@ -45,13 +45,8 @@ func runMeter(cmd *cobra.Command, args []string) {
 	}
 
 	// select single meter
-	if name := cmd.PersistentFlags().Lookup("name").Value.String(); name != "" {
-		for _, cfg := range conf.Meters {
-			if cfg.Name == name {
-				conf.Meters = []qualifiedConfig{cfg}
-				break
-			}
-		}
+	if err := selectByName(cmd, &conf.Meters); err != nil {
+		log.FATAL.Fatal(err)
 	}
 
 	if err := cp.configureMeters(conf); err != nil {
