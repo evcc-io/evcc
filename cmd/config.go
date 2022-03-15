@@ -3,8 +3,6 @@ package cmd
 import (
 	"fmt"
 	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -14,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	autoauth "github.com/evcc-io/evcc/server/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
@@ -65,7 +64,7 @@ type typedConfig struct {
 }
 
 type messagingConfig struct {
-	Events   map[string]push.EventTemplate
+	Events   map[string]push.EventTemplateConfig
 	Services []typedConfig
 }
 
@@ -203,51 +202,39 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	return nil
 }
 
-func canonicalName(s string) string {
-	return strings.ToLower(strings.ReplaceAll(s, " ", "_"))
-}
-
 // webControl handles routing for devices. For now only api.ProviderLogin related routes
 func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Param) {
 	router := httpd.Router()
 
-	auth := router.PathPrefix("/auth").Subrouter()
+	auth := router.PathPrefix("/oauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
+	// wire the handler
+	autoauth.Setup(auth)
+
 	// initialize
 	cp.auth = util.NewAuthCollection(paramC)
 
+	// TODO make evccURI configurable, add warnings for any network/ localhost
+	evccURI := fmt.Sprintf("http://%s", httpd.Addr)
+	authURI := fmt.Sprintf("%s/oauth", evccURI)
+
+	var id int
 	for _, v := range cp.vehicles {
 		if provider, ok := v.(api.ProviderLogin); ok {
-			title := url.QueryEscape(canonicalName(v.Title()))
-			basePath := fmt.Sprintf("vehicles/%s", title)
+			id += 1
 
-			// TODO make evccURI configurable, add warnings for any network/ localhost
-			evccURI := fmt.Sprintf("http://%s", httpd.Addr)
+			basePath := fmt.Sprintf("vehicles/%d", id)
 			baseURI := fmt.Sprintf("%s/auth/%s", evccURI, basePath)
 
 			// register vehicle
-			ap := cp.auth.Register(v.Title(), baseURI)
+			ap := cp.auth.Register(baseURI, v.Title())
 
-			redirectURI := fmt.Sprintf("%s/callback", baseURI)
-			provider.SetCallbackParams(redirectURI, ap.Handler())
-			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), redirectURI)
+			provider.SetCallbackParams(evccURI, authURI, ap.Handler())
 
-			// TODO how to handle multiple vehicles of the same type
-			//
-			// problems, thoughts and ideas:
-			// conflicting callbacks!
-			// - some unique part has to be added.
-			// - or a general callback handler and the specific vehicle is transported in the state?
-			//   - callback handler needs an option to set the token at the right vehicle and use the right code exchange
-
-			auth.
-				Methods(http.MethodGet).
-				Path(fmt.Sprintf("/%s/callback", basePath)).
-				HandlerFunc(provider.CallbackHandler(evccURI))
 			auth.
 				Methods(http.MethodPost).
 				Path(fmt.Sprintf("/%s/login", basePath)).
@@ -257,6 +244,10 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 				Path(fmt.Sprintf("/%s/logout", basePath)).
 				HandlerFunc(provider.LogoutHandler())
 		}
+	}
+
+	if id > 0 {
+		log.INFO.Printf("ensure the oauth client redirect/callback is configured for: %s", authURI)
 	}
 
 	cp.auth.Publish()

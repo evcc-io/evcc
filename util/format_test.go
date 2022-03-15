@@ -33,6 +33,7 @@ func TestReplace(t *testing.T) {
 		v             interface{}
 		fmt, expected string
 	}{
+		// regex tests
 		{"foo", true, "${foo}", "true"},
 		{"foo", "1", "abc${foo}${foo}", "abc11"},
 		{"foo", math.Pi, "${foo:%.2f}", "3.14"},

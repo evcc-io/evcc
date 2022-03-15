@@ -11,8 +11,8 @@ products:
     generic: Charger Pro
 requirements:
   description:
-    en: Require firmware 040.0 or later.
-    de: Benötigen mindestens Firmware 040.0 oder neuer.
+    en: Requires firmware 040.0 or later.
+    de: Benötigt mindestens Firmware 040.0 oder neuer.
 params:
 - name: host
   required: true

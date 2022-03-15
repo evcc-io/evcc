@@ -1,6 +1,7 @@
 package vw
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -70,6 +71,8 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 		resp.Body.Close()
 	}
 
+	var params CredentialParams
+
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
 	if err == nil {
 		data := url.Values(map[string][]string{
@@ -81,7 +84,9 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 
 		uri = IdentityURI + vars.Action
 		if resp, err = v.PostForm(uri, data); err == nil {
-			vars, err = FormValues(resp.Body, "form#credentialsForm")
+			if params, err = ParseCredentialsPage(resp.Body); err == nil && params.TemplateModel.Error != "" {
+				err = errors.New(params.TemplateModel.Error)
+			}
 			resp.Body.Close()
 		}
 	}
@@ -89,17 +94,25 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
 	if err == nil {
 		data := url.Values(map[string][]string{
-			"_csrf":      {vars.Inputs["_csrf"]},
-			"relayState": {vars.Inputs["relayState"]},
-			"hmac":       {vars.Inputs["hmac"]},
+			"_csrf":      {params.CsrfToken},
+			"relayState": {params.TemplateModel.RelayState},
+			"hmac":       {params.TemplateModel.Hmac},
 			"email":      {v.user},
 			"password":   {v.password},
 		})
 
-		uri = IdentityURI + vars.Action
+		// reuse url from identifier step before
+		uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
+
 		if resp, err = v.PostForm(uri, data); err == nil {
 			resp.Body.Close()
 
+			if resp.StatusCode >= http.StatusBadRequest {
+				err = errors.New(resp.Status)
+			}
+		}
+
+		if err == nil {
 			if e := resp.Request.URL.Query().Get("error"); e != "" {
 				err = fmt.Errorf(e)
 			}

@@ -3,16 +3,14 @@ release:
   github:
     owner: evcc-io
     name: evcc
-#  extra_files:
-#  - glob: evcc_*.image.gz
-#  - glob: evcc_*.rootfs.gz
+
 builds:
 - id: evcc
   main: main.go
   flags:
-  - -tags=release
+  - -tags=release,viper_yaml3
   ldflags:
-  - -X github.com/evcc-io/evcc/server.Version={{.Version}} -X github.com/evcc-io/evcc/server.Commit={{.ShortCommit}} -s -w
+  - -X github.com/evcc-io/evcc/server.Version={{.Version}} -s -w
   env:
   - CGO_ENABLED=0
   goos:
@@ -25,6 +23,12 @@ builds:
   - arm64
   goarm:
   - "6"
+  ignore:
+  - goos: windows
+    goarch: arm
+  - goos: windows
+    goarch: arm64
+
 archives:
 - builds:
   - evcc
@@ -36,12 +40,16 @@ archives:
     format: zip
   files:
   - evcc.dist.yaml
+
 universal_binaries:
 - replace: true
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
   name_template: "{{ .Tag }}-next"
+
 changelog:
   sort: asc
   filters:
@@ -50,6 +58,7 @@ changelog:
     - '^bump'
     - '^docs:'
     - '^test:'
+
 nfpms:
 - id: default
   package_name: evcc
@@ -72,6 +81,7 @@ nfpms:
     postinstall: ./packaging/scripts/postinstall.sh
     preremove: ./packaging/scripts/preremove.sh
     postremove: ./packaging/scripts/postremove.sh
+
 brews:
 - tap:
     owner: evcc-io

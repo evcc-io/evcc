@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -10,7 +9,7 @@ import (
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/api/proto/pb"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/hems"
@@ -20,13 +19,10 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/cloud"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func init() {
@@ -51,7 +47,7 @@ func loadConfigFile(cfgFile string) (conf config, err error) {
 func configureEnvironment(conf config) (err error) {
 	// setup sponsorship
 	if conf.SponsorToken != "" {
-		err = configureSponsorship(conf.SponsorToken)
+		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
 	// setup mqtt client listener
@@ -70,37 +66,6 @@ func configureEnvironment(conf config) (err error) {
 	}
 
 	return
-}
-
-func configureSponsorship(token string) error {
-	host := util.Getenv("GRPC_URI", cloud.Host)
-	conn, err := cloud.Connection(host)
-	if err != nil {
-		return err
-	}
-
-	client := pb.NewAuthClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
-	if err == nil {
-		if res.Authorized {
-			sponsor.Subject = res.Subject
-		}
-	}
-
-	if err != nil {
-		if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
-			sponsor.Subject = "sponsorship unavailable"
-			err = nil
-		} else {
-			err = fmt.Errorf("sponsortoken: %w", err)
-		}
-	}
-
-	return err
 }
 
 // setup influx database
@@ -164,6 +129,7 @@ func configureEEBus(conf map[string]interface{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
 		go server.EEBusInstance.Run()
+		shutdown.Register(server.EEBusInstance.Shutdown)
 	}
 
 	return nil
@@ -172,7 +138,10 @@ func configureEEBus(conf map[string]interface{}) error {
 // setup messaging
 func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Event {
 	notificationChan := make(chan push.Event, 1)
-	notificationHub := push.NewHub(conf.Events, cache)
+	notificationHub, err := push.NewHub(conf.Events, cache)
+	if err != nil {
+		log.FATAL.Fatalf("failed configuring push services: %v", err)
+	}
 
 	for _, service := range conf.Services {
 		impl, err := push.NewMessengerFromConfig(service.Type, service.Other)

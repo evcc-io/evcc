@@ -48,6 +48,8 @@ type API interface {
 
 	// SetTargetCharge sets the charge targetSoC
 	SetTargetCharge(time.Time, int)
+	// SetVehicle sets the active vehicle
+	SetVehicle(vehicle api.Vehicle)
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
 

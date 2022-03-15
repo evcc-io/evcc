@@ -20,6 +20,8 @@ func New(w api.Vehicle, err error) (api.Vehicle, error) {
 	return v, nil
 }
 
+var _ api.Vehicle = (*Wrapper)(nil)
+
 // Title implements the api.Vehicle interface
 func (v *Wrapper) Title() string {
 	return "unavailable"
@@ -27,6 +29,11 @@ func (v *Wrapper) Title() string {
 
 // Capacity implements the api.Vehicle interface
 func (v *Wrapper) Capacity() int64 {
+	return 0
+}
+
+// Phases implements the api.Vehicle interface
+func (v *Wrapper) Phases() int {
 	return 0
 }
 

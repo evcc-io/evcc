@@ -1,6 +1,6 @@
 name: Nightly Build
 
-on: 
+on:
   schedule: # runs on the default branch: master
     - cron: '0 2 * * *' # run at 2 AM UTC
   workflow_dispatch:
@@ -21,7 +21,7 @@ jobs:
         name: check latest commit is less than a day
         if: ${{ github.event_name == 'schedule' }}
         run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "::set-output name=should_run::false"
-  
+
   call-build-workflow:
     name: Call Build
     needs: check_date
@@ -31,8 +31,8 @@ jobs:
       && ! contains(github.head_ref, 'refs/heads/chore/')
     uses: evcc-io/evcc/.github/workflows/default.yml@master
 
-  dockerlatest:
-    name: Publish Docker :latest
+  docker:
+    name: Publish Docker :nightly
     needs:
     - call-build-workflow
     runs-on: ubuntu-latest
@@ -45,7 +45,7 @@ jobs:
 
     - name: Install
       env:
-        SEIHON_VERSION: v0.8.4
+        SEIHON_VERSION: v0.9.0
       run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin ${SEIHON_VERSION}
 
     - name: Login
@@ -55,9 +55,10 @@ jobs:
         password: ${{ secrets.DOCKER_PASS }}
 
     - name: Publish
-      run: make publish-latest-ci
+      run: make publish-nightly
 
-  nightly:
+
+  apt:
     name: Publish APT nightly
     needs:
     - call-build-workflow
@@ -73,7 +74,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          ~/go/pkg/mod
+          ~/go/pkg
           ~/.cache/go-build
         key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
@@ -82,9 +83,9 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.16
+        go-version: ^1.17
       id: go
-      
+
     - name: Set up Node
       uses: actions/setup-node@v2
       with:
@@ -111,13 +112,6 @@ jobs:
         CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
       run: |
         for filename in release/*.deb; do
-          # goreleaser creates armel packages for armv6, which is wrong
-          # until this is fixed, ignore armv6 
-          if [[ "$filename" == *"armv6"* ]]; then
-            echo "Skipping $filename"
-            continue
-          fi
-
           echo "Pushing $filename to 'unstable'"
           cloudsmith push deb evcc/unstable/any-distro/any-version $filename
         done

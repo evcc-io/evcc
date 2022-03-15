@@ -1,0 +1,14 @@
+template: webasto
+products:
+- brand: Webasto
+  description:
+    generic: Live
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: port
+  default: 502
+render: |
+  type: webasto
+  uri: {{ .host }}:{{ .port }}

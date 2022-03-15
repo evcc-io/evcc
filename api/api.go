@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,VehiclePhases,ChargeRater,Battery
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
@@ -143,6 +143,7 @@ type Vehicle interface {
 	Battery
 	Title() string
 	Capacity() int64
+	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
 }
@@ -172,11 +173,6 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
-// VehiclePhases returns the number of supported phases
-type VehiclePhases interface {
-	Phases() int
-}
-
 // VehicleStartCharge starts the charging session on the vehicle side
 type VehicleStartCharge interface {
 	StartCharge() error
@@ -185,6 +181,11 @@ type VehicleStartCharge interface {
 // VehicleStopCharge stops the charging session on the vehicle side
 type VehicleStopCharge interface {
 	StopCharge() error
+}
+
+// AlarmClock provides wakeup calls to the vehicle with an API call or a CP interrupt from the charger
+type AlarmClock interface {
+	WakeUp() error
 }
 
 type Tariff interface {
@@ -198,8 +199,7 @@ type WebController interface {
 
 // ProviderLogin is the ability to provide OAuth authentication through the ui
 type ProviderLogin interface {
-	SetCallbackParams(uri string, authenticated chan<- bool)
+	SetCallbackParams(baseURL, redirectURL string, authenticated chan<- bool)
 	LoginHandler() http.HandlerFunc
 	LogoutHandler() http.HandlerFunc
-	CallbackHandler(baseURI string) http.HandlerFunc
 }

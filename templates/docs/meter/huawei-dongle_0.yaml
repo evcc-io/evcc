@@ -1,6 +1,6 @@
 product:
   brand: Huawei
-  description: SUN2000 with Sdongle
+  description: SUN2000 with SDongle
 
 render:
 - usage: pv

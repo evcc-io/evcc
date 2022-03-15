@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2021 andig
+// Copyright (c) 2019-2022 andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -58,7 +58,7 @@ func init() {
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
 func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
+	cc := modbus.TcpSettings{
 		ID: 1,
 	}
 
@@ -66,12 +66,12 @@ func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAlfen(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewAlfen(cc.URI, cc.ID)
 }
 
 // NewAlfen creates Alfen charger
-func NewAlfen(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Tcp, slaveID)
+func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,14 +117,8 @@ func (wb *Alfen) Status() (api.ChargeStatus, error) {
 	}
 
 	switch r := rune(b[0]); r {
-	case 'A', 'B', 'D', 'E', 'F':
+	case 'A', 'B', 'C', 'D', 'E', 'F':
 		return api.ChargeStatus(r), nil
-	case 'C':
-		// C1 is "connected"
-		if rune(b[1]) == '1' {
-			return api.StatusB, nil
-		}
-		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[:1])
 	}

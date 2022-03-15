@@ -1,7 +1,7 @@
 # STEP 1 build ui
 FROM node:16-alpine as node
 
-RUN apk update && apk add --no-cache make
+RUN apk update && apk add --no-cache make alpine-sdk python3
 
 WORKDIR /build
 
@@ -18,7 +18,7 @@ RUN make clean ui
 
 
 # STEP 2 build executable binary
-FROM golang:1.16-alpine as builder
+FROM golang:1.17-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -26,6 +26,9 @@ FROM golang:1.16-alpine as builder
 RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && update-ca-certificates
 
 WORKDIR /build
+
+# define --build-arg RELEASE=1 to hide commit hash
+ARG RELEASE
 
 # install go tools and cache modules
 COPY Makefile .
@@ -43,11 +46,11 @@ RUN make assets
 COPY --from=node /build/dist /build/dist
 
 # build
-RUN make build
+RUN RELEASE=${RELEASE} make build
 
 
 # STEP 3 build a small image including module support
-FROM alpine:3.13
+FROM alpine:3.15
 
 WORKDIR /app
 

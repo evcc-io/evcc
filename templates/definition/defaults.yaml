@@ -35,7 +35,7 @@ params:
   help:
     de: Kommunikationsparameter für den Adapter
     en: Communication parameter for the adapter
-  default: "8N1"
+  default: 8N1
 - name: host
   description:
     de: IP-Adresse oder Hostname
@@ -84,6 +84,15 @@ params:
     de: Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
     en: Required if you own multiple vehicles of the same brand
   example: W...
+- name: phases
+  description:
+    de: Maximale Phasenanzahl
+    en: Maximum number of phases
+  help:
+    de: Die maximale Anzahl der Phasen welche genutzt werden können
+    en: The maximum number of phases which can be used
+  example: 3
+  valuetype: number
 - name: cache
   description:
     de: Cache
@@ -92,6 +101,39 @@ params:
     de: Das zeitliche Interval, in welchem Daten vom Fahrzeug neu geladen werden soll
     en: Time interval with when data should be reloaded from the vehicle
   example: 5m
+- name: cloud
+  description:
+    de: evcc Cloud
+    en: evcc Cloud
+  help:
+    de: |
+      Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,
+      wird dies über die evcc Cloud gemacht. Die Zugangsdaten und VIN werden sicher und verschlüsselt
+      übertragen und in der Cloud nicht gespeichert.
+
+      Die Vorteile sind:
+      - Falls sich etwas an der Online API des Fahrzeugherstellers ändert, können Updates für alle Benutzer viel schneller zur Verfügung gestellt werden
+      - Man muss nicht auf eine neue Version von evcc warten und dann ein lokales Update von evcc durchführen
+    en: |
+      Instead of connecting to the vehicle manufacturers online API from your local installation,
+      this will use the evcc Cloud instead. Your credentials and VIN will be transfered encrypted and
+      securely and won't be stored in the cloud.
+
+      The benefits are:
+      - If the vehicles online API changes, we can update this for all users more quickly
+      - No waiting for a new evcc version in this case and then requiring an update
+  requirements:
+    evcc: ["sponsorship"]
+  valuetype: bool
+- name: timeout
+  description:
+    de: Zeitüberschreitung
+    en: Timeout
+  help:
+    de: Akzeptiere keine Daten die älter als dieser Wert ist
+    en: Don't accept values older than this value in seconds
+  example: 30s
+  valuetype: duration
 - name: mode
   description:
     de: Standard-Lademodus, wenn ein Fahrzeug angeschlossen ist
@@ -152,6 +194,15 @@ params:
     de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
     en: Power values above this value will be considered as charging pow
   valuetype: number
+- name: language
+  description:
+    de: Sprache
+    en: Language
+  help:
+    de: "'de' für Deutsch und 'en' für Englisch"
+    en: "'en' for English and 'de' for German"
+  default: en
+  validvalues: ["de", "en"]
 
 presets:
   vehiclebase:
@@ -163,8 +214,11 @@ presets:
       required: true
     - name: vin
     - name: capacity
+    - name: phases
+      advanced: true
     - name: cache
       advanced: true
+      deprecated: true
     render: |
       {{define "vehicle-base"}}
       {{- if ne .title "" }}
@@ -177,6 +231,9 @@ presets:
       {{- end }}
       {{- if ne .vin "" }}
       vin: {{ .vin }}
+      {{- end }}
+      {{- if ne .phases "" }}
+      phases: {{ .phases }}
       {{- end }}
       {{- if ne .cache "" }}
       cache: {{ .cache }}
@@ -196,7 +253,7 @@ presets:
       advanced: true
     - name: identifiers
       advanced: true
-      valueType: stringlist
+      valuetype: stringlist
     render: |
       {{define "vehicle-identify"}}
       {{- if or (ne .mode "") (ne .minSoC "") (ne .targetSoC "") (ne .minCurrent "") (ne .maxCurrent "") }}
@@ -223,6 +280,21 @@ presets:
       - {{ . }}
       {{-   end }}
       {{- end }}
+      {{end}}
+  vehiclelanguage:
+    params:
+    - name: language
+    render: |
+      {{define "vehicle-language"}}
+      language: {{ .language }}
+      {{end}}
+      
+  vehiclecloud:
+    params:
+    - name: cloud
+    render: |
+      {{define "vehicle-cloud"}}
+      cloud: {{ .cloud }}
       {{end}}
 
 modbus:

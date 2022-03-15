@@ -14,6 +14,7 @@ type Provider struct {
 	expiry      time.Duration
 	refreshTime time.Time
 	refreshId   string
+	wakeup      func() error
 }
 
 func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
@@ -28,6 +29,8 @@ func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
 			func() (string, error) { return api.RefreshRequest(vin) },
 		)
 	}, cache).InterfaceGetter()
+
+	impl.wakeup = func() error { return api.WakeUp(vin) }
 
 	return impl
 }
@@ -135,4 +138,11 @@ func (v *Provider) Position() (float64, float64, error) {
 	}
 
 	return 0, 0, err
+}
+
+var _ api.AlarmClock = (*Provider)(nil)
+
+// WakeUp implements the api.AlarmClock interface
+func (v *Provider) WakeUp() error {
+	return v.wakeup()
 }

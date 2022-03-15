@@ -31,7 +31,7 @@ func init() {
 
 func runHealth(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	u := &httpunix.Transport{
 		DialTimeout:           100 * time.Millisecond,

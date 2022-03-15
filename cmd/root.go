@@ -2,18 +2,24 @@ package cmd
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
+	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/grandcat/zeroconf"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -25,14 +31,14 @@ var (
 	cfgFile string
 
 	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
-	ignoreMqtt   = []string{"releaseNotes"}           // excessive size may crash certain brokers
+	ignoreMqtt   = []string{"auth", "releaseNotes"}   // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "evcc",
 	Short:   "EV Charge Controller",
-	Version: fmt.Sprintf("%s (%s)", server.Version, server.Commit),
+	Version: server.FormattedVersion(),
 	Run:     run,
 }
 
@@ -66,33 +72,19 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	configureCommand(rootCmd)
 
-	rootCmd.PersistentFlags().StringP(
-		"uri", "u",
-		"0.0.0.0:7070",
-		"Listen address",
-	)
+	rootCmd.PersistentFlags().StringP("uri", "u", "0.0.0.0:7070", "Listen address")
 	bind(rootCmd, "uri")
 
-	rootCmd.PersistentFlags().DurationP(
-		"interval", "i",
-		10*time.Second,
-		"Update interval",
-	)
+	rootCmd.PersistentFlags().DurationP("interval", "i", 10*time.Second, "Update interval")
 	bind(rootCmd, "interval")
 
-	rootCmd.PersistentFlags().Bool(
-		"metrics",
-		false,
-		"Expose metrics",
-	)
+	rootCmd.PersistentFlags().Bool("metrics", false, "Expose metrics")
 	bind(rootCmd, "metrics")
 
-	rootCmd.PersistentFlags().Bool(
-		"profile",
-		false,
-		"Expose pprof profiles",
-	)
+	rootCmd.PersistentFlags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
+
+	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -139,7 +131,7 @@ func Execute() {
 
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config and re-configure logging after reading config file
 	conf, err := loadConfigFile(cfgFile)
@@ -156,6 +148,11 @@ func run(cmd *cobra.Command, args []string) {
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
 		log.FATAL.Fatal(err)
+	}
+
+	// full http request log
+	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
 	}
 
 	// setup loadpoints
@@ -187,6 +184,17 @@ func run(cmd *cobra.Command, args []string) {
 	// create webserver
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, site, socketHub, cache)
+
+	// announce webserver on mDNS
+	if _, port, err := net.SplitHostPort(uri); err == nil {
+		if portInt, err := strconv.Atoi(port); err == nil {
+			if zc, err := zeroconf.RegisterProxy("evcc Website", "_http._tcp", "local.", portInt, "evcc", nil, []string{}, nil); err == nil {
+				shutdown.Register(zc.Shutdown)
+			} else {
+				log.ERROR.Printf("mDNS announcement: %s", err)
+			}
+		}
+	}
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -233,15 +241,16 @@ func run(cmd *cobra.Command, args []string) {
 	site.Prepare(valueChan, pushChan)
 
 	stopC := make(chan struct{})
-	exitC := make(chan struct{})
+	go shutdown.Run(stopC)
 
+	siteC := make(chan struct{})
 	go func() {
 		site.Run(stopC, conf.Interval)
-		close(exitC)
+		close(siteC)
 	}()
 
 	// uds health check listener
-	go server.HealthListener(site, exitC)
+	go server.HealthListener(site, siteC)
 
 	// catch signals
 	go func() {
@@ -250,6 +259,15 @@ func run(cmd *cobra.Command, args []string) {
 
 		<-signalC    // wait for signal
 		close(stopC) // signal loop to end
+
+		exitC := make(chan struct{})
+		wg := new(sync.WaitGroup)
+		wg.Add(2)
+
+		// wait for main loop and shutdown functions to finish
+		go func() { <-shutdown.Done(conf.Interval); wg.Done() }()
+		go func() { <-siteC; wg.Done() }()
+		go func() { wg.Wait(); close(exitC) }()
 
 		select {
 		case <-exitC: // wait for loop to end

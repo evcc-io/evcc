@@ -44,7 +44,7 @@ func TestSoCEstimation(t *testing.T) {
 	vehicle.EXPECT().Capacity().Return(capacity)
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
-	ce.vehicleSoc = 20.0
+	ce.vehicleSoc = 0.0
 
 	tc := []struct {
 		chargedEnergy   float64
@@ -52,7 +52,7 @@ func TestSoCEstimation(t *testing.T) {
 		estimatedSoC    float64
 		virtualCapacity float64
 	}{
-		{10, 20.0, 20.0, 10000},
+		{0, 0.0, 0.0, 10000},
 		{0, 20.0, 20.0, 10000},
 		{123, 20.0, 21.23, 10000},
 		{1000, 20.0, 30.0, 10000},
@@ -60,23 +60,15 @@ func TestSoCEstimation(t *testing.T) {
 		{1200, 32.0, 32.0, 10000},
 		{1900, 39.0, 39.0, 10000},
 		{2000, 40.0, 40.0, 10000},
-		{4000, 50.0, 50.0, 20000}, // 2kWh add 10% -> 20kWh battery
-		{6000, 60.0, 60.0, 20000}, // 2kWh add 10% -> 20kWh battery
-		{6500, 65.0, 65.0, 10000},
-		{7000, 65.0, 70.0, 10000},
-		{7100, 71.0, 71.0, 10000},
-		{7300, 72.0, 72.0, 10000},
-		{7400, 73.0, 73.0, 10000},
-		{7700, 75.0, 75.0, 10000},
-		{8200, 80.0, 80.0, 10000},
+		{6000, 80.0, 80.0, 10000},
 		{0, 25.0, 25.0, 10000},
 		{2500, 25.0, 50.0, 10000},
 		{0, 50.0, 50.0, 10000}, // -10000
 		{4990, 50.0, 99.9, 10000},
 		{5000, 50.0, 100.0, 10000},
 		{5001, 50.0, 100.0, 10000},
-		{0, 0.0, 0.0, 10000},
-		{1000, 0.0, 10.0, 10000},
+		{0, 20.0, 20.0, 10000},
+		{1000, 30.0, 30.0, 10000},
 	}
 
 	for i := 1; i < 3; i++ {
@@ -149,8 +141,7 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 	}{
 		// start with SoC from charger and errors
 		{0, 0.0, 0.0, 10000, false, errors.New("some error"), nil},
-		{10, 0.0, 20.0, 10000, false, api.ErrMustRetry, nil},
-		{10, 20.0, 20.0, 10000, false, nil, nil},
+		{0, 0.0, 20.0, 10000, false, api.ErrMustRetry, nil},
 		{0, 20.0, 20.0, 10000, false, nil, nil},
 		{123, 20.0, 21.23, 10000, false, nil, nil},
 		{123, 0.0, 21.23, 10000, false, errors.New("another error"), nil},
@@ -159,19 +150,15 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 		{1200, 32.0, 32.0, 10000, false, nil, nil},
 		{1900, 39.0, 39.0, 10000, false, nil, nil},
 		{2000, 40.0, 40.0, 10000, false, nil, nil},
-		{4000, 50.0, 50.0, 20000, false, nil, nil}, // 2kWh add 10% -> 20kWh battery
-		{6000, 60.0, 60.0, 20000, false, nil, nil}, // 2kWh add 10% -> 20kWh battery
-		{6500, 65.0, 65.0, 10000, false, nil, nil},
-		{7000, 65.0, 70.0, 10000, false, nil, nil},
 		// move to SoC from vehicle
-		{7000, 0.0, 70.0, 10000, true, api.ErrNotAvailable, errors.New("some error")},
-		{7100, 0.0, 71.0, 10000, true, api.ErrNotAvailable, api.ErrMustRetry},
-		{7100, 71.0, 71.0, 10000, true, api.ErrNotAvailable, nil},
-		{7300, 72.0, 72.0, 10000, true, api.ErrNotAvailable, nil},
-		{7400, 0.0, 73.0, 10000, true, api.ErrNotAvailable, errors.New("another error")},
-		{7400, 73.0, 73.0, 10000, true, api.ErrNotAvailable, nil},
-		{7700, 75.0, 75.0, 10000, true, api.ErrNotAvailable, nil},
-		{8200, 80.0, 80.0, 10000, true, api.ErrNotAvailable, nil},
+		{3000, 0.0, 50.0, 10000, true, api.ErrNotAvailable, errors.New("some error")},
+		{3100, 0.0, 51.0, 10000, true, api.ErrNotAvailable, api.ErrMustRetry},
+		{5100, 71.0, 71.0, 10000, true, api.ErrNotAvailable, nil},
+		{5200, 72.0, 72.0, 10000, true, api.ErrNotAvailable, nil},
+		{5300, 0.0, 73.0, 10000, true, api.ErrNotAvailable, errors.New("another error")},
+		{5300, 73.0, 73.0, 10000, true, api.ErrNotAvailable, nil},
+		{5500, 75.0, 75.0, 10000, true, api.ErrNotAvailable, nil},
+		{6000, 80.0, 80.0, 10000, true, api.ErrNotAvailable, nil},
 		{0, 25.0, 25.0, 10000, true, api.ErrNotAvailable, nil},
 		{2500, 25.0, 50.0, 10000, true, api.ErrNotAvailable, nil},
 		{0, 50.0, 50.0, 10000, true, api.ErrNotAvailable, nil}, // -10000
@@ -179,8 +166,8 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 		{5000, 50.0, 100.0, 10000, true, api.ErrNotAvailable, nil},
 		// back to SoC from charger
 		{5001, 50.0, 100.0, 10000, false, nil, nil},
-		{0, 0.0, 0.0, 10000, false, nil, nil},
-		{1000, 0.0, 10.0, 10000, false, nil, nil},
+		{0, 20.0, 20.0, 10000, false, nil, nil},
+		{1000, 30.0, 30.0, 10000, false, nil, nil},
 	}
 
 	for _, tc := range tc {

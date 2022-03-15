@@ -1,5 +1,7 @@
 package templates
 
+import "reflect"
+
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
@@ -38,9 +40,10 @@ const (
 	ParamValueTypeBool        = "bool"
 	ParamValueTypeStringList  = "stringlist"
 	ParamValueTypeChargeModes = "chargemodes"
+	ParamValueTypeDuration    = "duration"
 )
 
-var ValidParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes}
+var ValidParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes, ParamValueTypeDuration}
 
 var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
 var ValidUsageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
@@ -126,7 +129,7 @@ func (t *TextLanguage) Update(new TextLanguage, always bool) {
 
 // Requirements
 type Requirements struct {
-	EVCC        []string
+	EVCC        []string     // EVCC requirements, e.g. sponsorship
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
 	URI         string       // URI to a webpage with more details about the preparation requirements
 }
@@ -172,14 +175,17 @@ type Param struct {
 	Mask          bool         // cli if the value should be masked, e.g. for passwords
 	Advanced      bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
 	Hidden        bool         // cli if the parameter should not be presented in the cli, the default value be assigned
+	Deprecated    bool         // if the parameter is deprecated and thus should not be presented in the cli or docs
 	Default       string       // default value if no user value is provided in the configuration
 	Example       string       // cli example value
 	Help          TextLanguage // cli configuration help
 	Test          string       // testing default value
 	Value         string       // user provided value via cli configuration
-	Values        []string     // user provided list of values
+	Values        []string     // user provided list of values e.g. for ValueType "stringlist"
 	ValueType     string       // string representation of the value type, "string" is default
+	ValidValues   []string     // list of valid values the user can provide
 	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	Requirements  Requirements // requirements for this param to be usable, only supported via ValueType "bool"
 
 	Baudrate int    // device specific default for modbus RS485 baudrate
 	Comset   string // device specific default for modbus RS485 comset
@@ -209,9 +215,9 @@ func (p *Param) DefaultValue(renderMode string) interface{} {
 
 // overwrite specific properties by using values from another param
 //
-// always overwrites if not provided empty: description, valuetype, default
+// always overwrites if not provided empty: description, valuetype, default, mask
 //
-// only overwrite if not provided empty and empty in param: help, example
+// only overwrite if not provided empty and empty in param: help, example, requirements
 func (p *Param) OverwriteProperties(withParam Param) {
 	// always overwrite if defined
 	p.Description.Update(withParam.Description, true)
@@ -224,11 +230,23 @@ func (p *Param) OverwriteProperties(withParam Param) {
 		p.Default = withParam.Default
 	}
 
+	if withParam.Mask {
+		p.Mask = withParam.Mask
+	}
+
 	// only set if empty
 	p.Help.Update(withParam.Help, false)
 
 	if p.Example == "" && withParam.Example != "" {
 		p.Example = withParam.Example
+	}
+
+	if p.ValidValues == nil && withParam.ValidValues != nil {
+		p.ValidValues = withParam.ValidValues
+	}
+
+	if reflect.DeepEqual(p.Requirements, Requirements{}) {
+		p.Requirements = withParam.Requirements
 	}
 }
 

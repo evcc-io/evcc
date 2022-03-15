@@ -24,6 +24,12 @@ const (
 	CoilOn uint16 = 0xFF00
 )
 
+// Settings contains the ModBus TCP settings
+type TcpSettings struct {
+	URI string
+	ID  uint8
+}
+
 // Settings contains the ModBus settings
 type Settings struct {
 	ID                  uint8
@@ -161,7 +167,7 @@ func ProtocolFromRTU(rtu *bool) Protocol {
 }
 
 // NewConnection creates physical modbus device from config
-func NewConnection(uri, device, comset string, baudrate int, wire Protocol, slaveID uint8) (*Connection, error) {
+func NewConnection(uri, device, comset string, baudrate int, proto Protocol, slaveID uint8) (*Connection, error) {
 	var conn meters.Connection
 
 	if device != "" && uri != "" {
@@ -181,17 +187,17 @@ func NewConnection(uri, device, comset string, baudrate int, wire Protocol, slav
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
 
-		if wire == Rtu {
-			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+		if proto == Ascii {
+			conn = registeredConnection(device, meters.NewASCII(device, baudrate, comset))
 		} else {
-			conn = registeredConnection(uri, meters.NewASCII(device, baudrate, comset))
+			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 		}
 	}
 
 	if uri != "" {
 		uri = util.DefaultPort(uri, 502)
 
-		switch wire {
+		switch proto {
 		case Rtu:
 			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
 		case Ascii:
@@ -314,6 +320,15 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	}
 
 	return op, nil
+}
+
+func RTUStringSwapped(b []byte) string {
+	s := new(strings.Builder)
+	for i := 0; i < len(b); i += 2 {
+		s.WriteByte(b[i+1])
+		s.WriteByte(b[i])
+	}
+	return s.String()
 }
 
 // SunSpecOperation is a sunspec modbus operation

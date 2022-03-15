@@ -98,14 +98,25 @@ func (c *TPLink) MaxCurrent(current int64) error {
 
 // Status implements the api.Charger interface
 func (c *TPLink) Status() (api.ChargeStatus, error) {
-	power, err := c.CurrentPower()
+	res := api.StatusB
 
-	switch {
-	case power > 0:
-		return api.StatusC, err
-	default:
-		return api.StatusB, err
+	// static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if on {
+			res = api.StatusC
+		}
+
+		return res, err
 	}
+
+	// standby power mode
+	power, err := c.CurrentPower()
+	if power > c.standbypower {
+		res = api.StatusC
+	}
+
+	return res, err
 }
 
 var _ api.Meter = (*TPLink)(nil)
@@ -134,24 +145,22 @@ func (c *TPLink) CurrentPower() (float64, error) {
 	return power, nil
 }
 
-var _ api.ChargeRater = (*TPLink)(nil)
+var _ api.MeterEnergy = (*TPLink)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *TPLink) ChargedEnergy() (float64, error) {
-	var resp tplink.DayStatResponse
-	year, month, day := time.Now().Date()
-	cmd := fmt.Sprintf(`{"emeter":{"get_daystat":{"day":%v,"month":%v,"year":%v}}}`, day, int(month), year)
-	if err := c.execCmd(cmd, &resp); err != nil {
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *TPLink) TotalEnergy() (float64, error) {
+	var resp tplink.EmeterResponse
+	if err := c.execCmd(`{"emeter":{"get_realtime":null}}`, &resp); err != nil {
 		return 0, err
 	}
 
-	if err := resp.Emeter.GetDaystat.ErrCode; err != 0 {
-		return 0, fmt.Errorf("get_daystat error %d", err)
+	if err := resp.Emeter.GetRealtime.ErrCode; err != 0 {
+		return 0, fmt.Errorf("get_realtime error %d", err)
 	}
 
-	energy := resp.Emeter.GetDaystat.DayList[len(resp.Emeter.GetDaystat.DayList)-1].EnergyWh / 1000
+	energy := resp.Emeter.GetRealtime.TotalWh / 1000
 	if energy == 0 {
-		energy = resp.Emeter.GetDaystat.DayList[len(resp.Emeter.GetDaystat.DayList)-1].Energy
+		energy = resp.Emeter.GetRealtime.Total
 	}
 
 	return energy, nil

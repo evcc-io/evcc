@@ -13,7 +13,7 @@ render:
     # TCPIP
     uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
     # Modbus End
-    timeout: 3s  # Optional 
+    timeout: 3s  # Akzeptiere keine Daten die älter als dieser Wert ist  # Optional 
 - usage: pv
   default: |
     type: template
@@ -24,4 +24,4 @@ render:
     # TCPIP
     uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
     # Modbus End
-    timeout: 3s  # Optional
+    timeout: 3s  # Akzeptiere keine Daten die älter als dieser Wert ist  # Optional

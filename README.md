@@ -15,12 +15,12 @@ Evcc is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - multiple [chargers](https://docs.evcc.io/docs/devices/chargers):
-  - Open source: [openWB](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
-  - Other commercial: ABL eMH1, Alfen Eve, cFos PowerBrain, Daheimladen, go-eCharger, Heidelberg Energy Control, Innogy eBox, KEBA/BMW, NRGkick, PC Electric (includes Garo), Wallbe, Mobile Charger Connect, EEBUS (experimental)
+  - Open source: [openWB (including Pro)](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
+  - Other commercial: ABL eMH1, Alfen Eve, cFos PowerBrain, Daheimladen, go-eCharger, Heidelberg Energy Control, Innogy eBox, KEBA/BMW, Menneckes  Amtron (Xtra/Premium), NRGkick, PC Electric (includes Garo), Wallbe, Webasto Live, Mobile Charger Connect, EEBUS (experimental)
   - Build-your-own: Phoenix (includes ESL Walli), [EVSE DIN](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
-- multiple [meters](https://docs.evcc.io/docs/devices/meters): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall, LG ESS HOME
-- wide support of vendor-specific [vehicles](https://docs.evcc.io/docs/devices/vehicles) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Fiat, Ford, Hyundai, Kia, Mini, Nissan, Niu, Porsche, Renault, Seat, Smart, Skoda, Tesla, Volkswagen, Volvo, Tronity
+- multiple [meters](https://docs.evcc.io/docs/devices/meters): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall, LG ESS HOME, OpenEMS (FENECON)
+- wide support of vendor-specific [vehicles](https://docs.evcc.io/docs/devices/vehicles) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Fiat, Ford, Hyundai, Jaguar, Kia, Landrover, Mini, Nissan, Niu, Porsche, Renault, Seat, Smart, Skoda, Tesla, Volkswagen, Volvo, Tronity
 - [plugins](https://docs.evcc.io/docs/reference/plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status [notifications](https://docs.evcc.io/docs/reference/configuration/messaging) using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
@@ -33,7 +33,7 @@ You'll find everything you need in our [documentation](https://docs.evcc.io/) (G
 
 ## Build
 
-To build EVCC from source, [Go][2] 1.16 and [Node][3] 16 are required:
+To build EVCC from source, [Go][2] 1.17 and [Node][3] 16 are required:
 
 ```sh
 make
@@ -44,7 +44,7 @@ make
 Evcc believes in open source software. We're committed to provide best in class EV charging experience.
 Maintaining evcc consumes time and effort. With the vast amount of different devices to support, we depend on community and vendor support to keep EVCC alive.
 
-While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like hours that provide additional value to otherwised closed hardware. Where this is not the case, EVCC requires "sponsor token" to finance ongoing development and support of evcc.
+While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwised closed hardware. Where this is not the case, EVCC requires "sponsor token" to finance ongoing development and support of evcc.
 
 The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/andig) and can be requested at [cloud.evcc.io](https://cloud.evcc.io/). A sponsor token is valid for one year and can be renewed any time with active sponsorship.
 

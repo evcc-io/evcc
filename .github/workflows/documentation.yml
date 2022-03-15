@@ -1,6 +1,6 @@
 name: Deploy updated templates
 
-on: 
+on:
   workflow_dispatch:
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
     - name: Deploy to docs repo
       uses: peaceiris/actions-gh-pages@v3
       with:
-        personal_token: ${{ secrets.GH_API_DOCS_TOKEN }}
+        personal_token: ${{ secrets.GH_REPO }}
         publish_dir: ./templates/docs
         external_repository: evcc-io/docs
         publish_branch: main

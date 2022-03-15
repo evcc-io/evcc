@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cloud"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // Cloud is an api.Vehicle implementation
@@ -32,7 +32,6 @@ func init() {
 // NewCloudFromConfig creates a new vehicle
 func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Token string
 		embed `mapstructure:",squash"`
 		Brand string
 		Other map[string]string `mapstructure:",remain"`
@@ -45,8 +44,8 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.Token == "" {
-		return nil, errors.New("missing required token")
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	host := util.Getenv("GRPC_URI", cloud.Host)
@@ -57,7 +56,7 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Cloud{
 		embed:  &cc.embed,
-		token:  cc.Token,
+		token:  sponsor.Token,
 		brand:  cc.Brand,
 		config: cc.Other,
 		client: pb.NewVehicleClient(conn),

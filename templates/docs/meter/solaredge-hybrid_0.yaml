@@ -12,7 +12,7 @@ render:
     usage: grid
     host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 502  # Port 502 (SetApp) oder 1502 (LCD)  # Optional 
-    timeout: 3s  # Optional 
+    timeout: 3s  # Akzeptiere keine Daten die älter als dieser Wert ist  # Optional 
 - usage: pv
   default: |
     type: template
@@ -20,7 +20,7 @@ render:
     usage: pv
     host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 502  # Port 502 (SetApp) oder 1502 (LCD)  # Optional 
-    timeout: 3s  # Optional 
+    timeout: 3s  # Akzeptiere keine Daten die älter als dieser Wert ist  # Optional 
 - usage: battery
   default: |
     type: template
@@ -28,4 +28,4 @@ render:
     usage: battery
     host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 502  # Port 502 (SetApp) oder 1502 (LCD)  # Optional 
-    timeout: 3s  # Optional
+    timeout: 3s  # Akzeptiere keine Daten die älter als dieser Wert ist  # Optional

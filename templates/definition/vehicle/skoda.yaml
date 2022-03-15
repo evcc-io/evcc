@@ -8,7 +8,9 @@ params:
 - preset: vehicleidentify
 - name: capacity
   default: 10
+- preset: vehiclecloud
 render: |
   type: skoda
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

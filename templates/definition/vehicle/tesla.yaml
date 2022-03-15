@@ -33,7 +33,10 @@ params:
   example: W...
 - name: capacity
   default: 90
+- name: phases
+  advanced: true
 - preset: vehicleidentify
+- preset: vehiclecloud
 render: |
   type: tesla
   {{- if ne .title "" }}
@@ -43,7 +46,11 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   capacity: {{ .capacity }}
+  {{- if ne .phases "" }}
+  phases: {{ .phases }}
+  {{- end }}
   {{- if ne .vin "" }}
   vin: {{ .vin }}
   {{- end }}
   {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}

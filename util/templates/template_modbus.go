@@ -23,16 +23,22 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 		return
 	}
 
+	// check if the modbus params are already added
+	if index, _ := t.ParamByName("id"); index >= 0 {
+		return
+	}
+
 	modbusParams := t.ConfigDefaults.Config.Modbus.Types[values[ParamModbus].(string)].Params
+
 	// add the modbus params at the beginning
 	t.Params = append(modbusParams, t.Params...)
 }
 
 // set the modbus values required from modbus.tpl and and the template to the render
-func (t *Template) ModbusValues(renderMode string, values map[string]interface{}) {
+func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[string]interface{}) map[string]interface{} {
 	choices := t.ModbusChoices()
 	if len(choices) == 0 {
-		return
+		return values
 	}
 
 	// only add the template once, when testing multiple usages, it might already be present
@@ -40,11 +46,8 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 		t.Render = fmt.Sprintf("%s\n%s", t.Render, modbusTmpl)
 	}
 
-	// either modbus param is defined, which means it ran through configuration
-	// or defaults for all modbus choices need to be set for rendering all cases for documentation
-	if modbusValue := values[ParamModbus]; renderMode != TemplateRenderModeInstance && modbusValue != nil && modbusValue != "" {
-		values[fmt.Sprintf("%s", modbusValue)] = true
-		return
+	if !setDefaults {
+		return values
 	}
 
 	modbusConfig := t.ConfigDefaults.Config.Modbus
@@ -60,20 +63,20 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 		for _, p := range typeParams {
 			values[p.Name] = p.DefaultValue(renderMode)
 
-			var defaultValue interface{}
+			var defaultValue string
 
 			switch p.Name {
 			case ModbusParamNameId:
 				if modbusParam.ID != 0 {
-					defaultValue = modbusParam.ID
+					defaultValue = fmt.Sprintf("%d", modbusParam.ID)
 				}
 			case ModbusParamNamePort:
 				if modbusParam.Port != 0 {
-					defaultValue = modbusParam.Port
+					defaultValue = fmt.Sprintf("%d", modbusParam.Port)
 				}
 			case ModbusParamNameBaudrate:
 				if modbusParam.Baudrate != 0 {
-					defaultValue = modbusParam.Baudrate
+					defaultValue = fmt.Sprintf("%d", modbusParam.Baudrate)
 				}
 			case ModbusParamNameComset:
 				if modbusParam.Comset != "" {
@@ -81,12 +84,12 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 				}
 			}
 
-			if defaultValue == nil {
+			if defaultValue == "" {
 				continue
 			}
 
 			if renderMode == TemplateRenderModeInstance {
-				t.SetParamDefault(p.Name, fmt.Sprintf("%d", defaultValue))
+				t.SetParamDefault(p.Name, defaultValue)
 			} else {
 				values[p.Name] = defaultValue
 			}
@@ -96,4 +99,6 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 			values[iface] = true
 		}
 	}
+
+	return values
 }

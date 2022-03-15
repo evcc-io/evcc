@@ -274,6 +274,15 @@ func targetChargeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
 	}
 }
 
+// vehicleRemoveHandler removes vehicle
+func vehicleRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		loadpoint.SetVehicle(nil)
+		res := struct{}{}
+		jsonResult(w, res)
+	}
+}
+
 // socketHandler attaches websocket handler to uri
 func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
