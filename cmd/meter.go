@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -17,7 +20,8 @@ var meterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(meterCmd)
-	meterCmd.PersistentFlags().StringP("name", "n", "", "select meter by name")
+	meterCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "meter"))
+	meterCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
@@ -35,14 +39,14 @@ func runMeter(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
+	// full http request log
+	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
+	}
+
 	// select single meter
-	if name := cmd.PersistentFlags().Lookup("name").Value.String(); name != "" {
-		for _, cfg := range conf.Meters {
-			if cfg.Name == name {
-				conf.Meters = []qualifiedConfig{cfg}
-				break
-			}
-		}
+	if err := selectByName(cmd, &conf.Meters); err != nil {
+		log.FATAL.Fatal(err)
 	}
 
 	if err := cp.configureMeters(conf); err != nil {

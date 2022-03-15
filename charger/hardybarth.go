@@ -25,8 +25,10 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
+	"github.com/evcc-io/evcc/meter/obis"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // http://apidoc.ecb1.de
@@ -65,7 +67,7 @@ func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) 
 
 // NewHardyBarth creates HardyBarth charger
 func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
-	log := util.NewLogger("hardybarth")
+	log := util.NewLogger("hardy")
 
 	wb := &HardyBarth{
 		Helper:        request.NewHelper(log),
@@ -75,9 +77,9 @@ func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 		current:       6,
 	}
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, api.ErrSponsorRequired
-	// }
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	uri = fmt.Sprintf("%s/api/v1/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
 	data := url.Values{"mode": {echarge.ModeManual}}
@@ -89,11 +91,11 @@ func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 func (wb *HardyBarth) getChargeControl() (echarge.ChargeControl, error) {
 	uri := fmt.Sprintf("%s/api/v1/chargecontrols/%d", wb.uri, wb.chargecontrol)
 
-	res := struct {
+	var res struct {
 		ChargeControl struct {
 			echarge.ChargeControl
 		}
-	}{}
+	}
 
 	err := wb.GetJSON(uri, &res)
 
@@ -162,46 +164,55 @@ func (wb *HardyBarth) MaxCurrent(current int64) error {
 	return err
 }
 
+func (wb *HardyBarth) getMeter() (echarge.Meter, error) {
+	uri := fmt.Sprintf("%s/api/v1/meters/%d", wb.uri, wb.meter)
+
+	var res struct {
+		Meter struct {
+			echarge.Meter
+		}
+	}
+
+	err := wb.GetJSON(uri, &res)
+
+	return res.Meter.Meter, err
+}
+
 var _ api.Meter = (*HardyBarth)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *HardyBarth) CurrentPower() (float64, error) {
-	uri := fmt.Sprintf("%s/api/v1/meters/%d", wb.uri, wb.meter)
-
-	res := struct {
-		Meter struct {
-			echarge.Meter
-		}
-	}{}
-
-	err := wb.GetJSON(uri, &res)
+	res, err := wb.getMeter()
 	if err != nil {
 		return 0, err
 	}
 
-	return res.Meter.Meter.Data["1-0:1.4.0"], nil
+	return res.Data[obis.PowerConsumption], nil
 }
 
-// var _ api.ChargeRater = (*HardyBarth)(nil)
+var _ api.MeterEnergy = (*HardyBarth)(nil)
 
-// // ChargedEnergy implements the api.ChargeRater interface
-// func (wb *HardyBarth) ChargedEnergy() (float64, error) {
-// 	return 0, api.ErrNotAvailable
-// }
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *HardyBarth) TotalEnergy() (float64, error) {
+	res, err := wb.getMeter()
+	if err != nil {
+		return 0, err
+	}
 
-// var _ api.MeterCurrent = (*HardyBarth)(nil)
+	return res.Data[obis.EnergyConsumption], nil
+}
 
-// // Currents implements the api.MeterCurrent interface
-// func (wb *HardyBarth) Currents() (float64, float64, float64, error) {
-// 	return 0, 0, 0, api.ErrNotAvailable
-// }
+var _ api.MeterCurrent = (*HardyBarth)(nil)
 
-// var _ api.MeterEnergy = (*HardyBarth)(nil)
+// Currents implements the api.MeterCurrent interface
+func (wb *HardyBarth) Currents() (float64, float64, float64, error) {
+	res, err := wb.getMeter()
+	if err != nil {
+		return 0, 0, 0, err
+	}
 
-// // TotalEnergy implements the api.MeterEnergy interface - v2 only
-// func (wb *HardyBarth) TotalEnergy() (float64, error) {
-// 	return 0, api.ErrNotAvailable
-// }
+	return res.Data[obis.CurrentL1], res.Data[obis.CurrentL2], res.Data[obis.CurrentL3], nil
+}
 
 // var _ api.Identifier = (*HardyBarth)(nil)
 

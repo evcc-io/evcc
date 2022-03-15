@@ -275,8 +275,9 @@ func (site *Site) updateMeters() error {
 			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
 
 			if err == nil {
-				site.pvPower += power
-				if power < -1000 {
+				// ignore negative values which represent self-consumption
+				site.pvPower += math.Max(0, power)
+				if power < -500 {
 					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", id, power)
 				}
 			} else {
@@ -330,24 +331,19 @@ func (site *Site) updateMeters() error {
 		}
 	}
 
-	// allow using PV as estimate for grid power
-	if site.gridMeter == nil {
-		site.gridPower = -site.pvPower
-
-		for _, lp := range site.loadpoints {
-			lp.UpdateChargePower()
-			site.gridPower += lp.GetChargePower()
-		}
-	}
-
 	return err
 }
 
 // sitePower returns the net power exported by the site minus a residual margin.
 // negative values mean grid: export, battery: charging
-func (site *Site) sitePower() (float64, error) {
+func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	if err := site.updateMeters(); err != nil {
 		return 0, err
+	}
+
+	// allow using PV as estimate for grid power
+	if site.gridMeter == nil {
+		site.gridPower = totalChargePower - site.pvPower
 	}
 
 	// honour battery priority
@@ -358,7 +354,7 @@ func (site *Site) sitePower() (float64, error) {
 		for id, battery := range site.batteryMeters {
 			soc, err := battery.(api.Battery).SoC()
 			if err != nil {
-				err = fmt.Errorf("updating battery soc %d: %v", id, err)
+				err = fmt.Errorf("battery soc %d: %v", id, err)
 				site.log.ERROR.Println(err)
 			} else {
 				site.log.DEBUG.Printf("battery soc %d: %.0f%%", id, soc)
@@ -372,7 +368,7 @@ func (site *Site) sitePower() (float64, error) {
 
 		// if battery is charging below prioritySoC give it priority
 		if socs < site.PrioritySoC && batteryPower < 0 {
-			site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f", socs)
+			site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f%%", socs)
 			batteryPower = 0
 		}
 
@@ -398,12 +394,14 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
+	// update all loadpoint's charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
+		lp.UpdateChargePower()
 		totalChargePower += lp.GetChargePower()
 	}
 
-	if sitePower, err := site.sitePower(); err == nil {
+	if sitePower, err := site.sitePower(totalChargePower); err == nil {
 		lp.Update(sitePower, cheap, site.batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption

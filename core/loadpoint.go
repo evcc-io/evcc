@@ -1409,8 +1409,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 
-	// read and publish meters first
-	lp.UpdateChargePower()
+	// read and publish meters first- charge power has already been updated by the site
 	lp.updateChargeCurrents()
 
 	// update ChargeRater here to make sure initial meter update is caught

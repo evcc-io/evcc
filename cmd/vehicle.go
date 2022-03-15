@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -17,10 +20,11 @@ var vehicleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
-	vehicleCmd.PersistentFlags().StringP(flagName, "n", "", "select vehicle by name")
-	vehicleCmd.PersistentFlags().BoolP(flagStart, "a", false, "start charge")
-	vehicleCmd.PersistentFlags().BoolP(flagStop, "o", false, "stop charge")
-	vehicleCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeup)
+	vehicleCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "vehicle"))
+	vehicleCmd.PersistentFlags().BoolP(flagStart, "a", false, flagStartDescription)
+	vehicleCmd.PersistentFlags().BoolP(flagStop, "o", false, flagStopDescription)
+	vehicleCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
+	vehicleCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
@@ -38,14 +42,14 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// select single charger
-	if name := cmd.PersistentFlags().Lookup(flagName).Value.String(); name != "" {
-		for _, cfg := range conf.Vehicles {
-			if cfg.Name == name {
-				conf.Vehicles = []qualifiedConfig{cfg}
-				break
-			}
-		}
+	// full http request log
+	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
+	}
+
+	// select single vehicle
+	if err := selectByName(cmd, &conf.Vehicles); err != nil {
+		log.FATAL.Fatal(err)
 	}
 
 	if err := cp.configureVehicles(conf); err != nil {
