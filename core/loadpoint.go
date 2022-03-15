@@ -104,8 +104,6 @@ type LoadPoint struct {
 		ChargeMeterRef string `mapstructure:"charge"` // deprecated
 	}
 	SoC               SoCConfig
-	OnDisconnect_     interface{} `mapstructure:"onDisconnect"`
-	OnIdentify_       interface{} `mapstructure:"onIdentify"`
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
 	onDisconnect      api.ActionConfig
@@ -169,14 +167,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 			lp.log.WARN.Printf("invalid poll mode: %s", lp.SoC.Poll.Mode)
 		}
 		lp.SoC.Poll.Mode = pollConnected
-	}
-
-	if lp.OnIdentify_ != nil {
-		lp.log.WARN.Printf("loadpoint.onIdentify is deprecated and will be removed in a future release. Use vehicle.onIdentify instead.")
-	}
-
-	if lp.OnDisconnect_ != nil {
-		lp.log.WARN.Printf("loadpoint.onDisconnect is deprecated and will be removed in a future release. Use loadpoint.resetOnDisconnect instead.")
 	}
 
 	// set vehicle polling interval
