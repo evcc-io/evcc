@@ -47,7 +47,7 @@ export default {
 					vehicleSoC: 46,
 					vehicleRange: 182,
 					targetSoC: 100,
-				},
+				} /*
 				{
 					vehiclePresent: true,
 					vehicleTitle: "Renault Twingo Electric",
@@ -62,7 +62,7 @@ export default {
 					vehicleRange: 52,
 					minSoC: 35,
 					targetSoC: 60,
-				},
+				},*/,
 			],
 		};
 	},
