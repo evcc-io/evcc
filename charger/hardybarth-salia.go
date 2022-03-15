@@ -102,7 +102,7 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 }
 
 func (wb *Salia) heartbeat() {
-	wb.post(salia.HeartBeat, "alive")
+	_ = wb.post(salia.HeartBeat, "alive")
 	for range time.NewTicker(30 * time.Second).C {
 		if err := wb.post(salia.HeartBeat, "alive"); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
