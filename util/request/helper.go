@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Timeout is the default request timeout used by the Helper
@@ -21,7 +22,7 @@ func NewHelper(log *util.Logger) *Helper {
 	r := &Helper{
 		Client: &http.Client{
 			Timeout:   Timeout,
-			Transport: NewTripper(log, http.DefaultTransport),
+			Transport: NewTripper(log, transport.Default()),
 		},
 	}
 
