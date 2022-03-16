@@ -67,17 +67,25 @@ func (a *Auth) handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state, err := util.DecryptState(vars["state"], a.secret)
-	if err == nil {
-		err = state.Validate()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "failed to decrypt state")
+		return
+	}
+
+	if err := state.Validate(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "invalid state")
+		return
 	}
 
 	a.mu.Lock()
 	handler := a.routes[vars["state"]]
 	a.mu.Unlock()
 
-	if err != nil || handler == nil {
+	if handler == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid state")
+		fmt.Fprintf(w, "no handler found")
 		return
 	}
 

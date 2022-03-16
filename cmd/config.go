@@ -220,7 +220,7 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 
 	// TODO make evccURI configurable, add warnings for any network/ localhost
 	evccURI := fmt.Sprintf("http://%s", httpd.Addr)
-	authURI := fmt.Sprintf("%s/oauth", evccURI)
+	baseAuthURI := fmt.Sprintf("%s/oauth", evccURI)
 
 	var id int
 	for _, v := range cp.vehicles {
@@ -228,12 +228,13 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 			id += 1
 
 			basePath := fmt.Sprintf("vehicles/%d", id)
-			baseURI := fmt.Sprintf("%s/auth/%s", evccURI, basePath)
+			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
+			// baseURI := fmt.Sprintf("%s/oauth/%s", evccURI, basePath)
 
 			// register vehicle
-			ap := cp.auth.Register(baseURI, v.Title())
+			ap := cp.auth.Register(fmt.Sprintf("oauth/%s", basePath), v.Title())
 
-			provider.SetCallbackParams(evccURI, authURI, ap.Handler())
+			provider.SetCallbackParams(evccURI, callbackURI, ap.Handler())
 
 			auth.
 				Methods(http.MethodPost).
@@ -243,11 +244,9 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 				Methods(http.MethodPost).
 				Path(fmt.Sprintf("/%s/logout", basePath)).
 				HandlerFunc(provider.LogoutHandler())
-		}
-	}
 
-	if id > 0 {
-		log.INFO.Printf("ensure the oauth client redirect/callback is configured for: %s", authURI)
+			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
+		}
 	}
 
 	cp.auth.Publish()

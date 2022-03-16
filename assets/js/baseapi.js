@@ -3,7 +3,7 @@ import axios from "axios";
 const { protocol, hostname, port, pathname } = window.location;
 
 const baseAPI = axios.create({
-  baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname + "/",
+  baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname,
 });
 
 // global error handling
