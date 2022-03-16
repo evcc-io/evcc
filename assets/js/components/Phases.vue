@@ -77,7 +77,10 @@ export default {
 	left: 0;
 	top: 0;
 	bottom: 0;
-	transition: width 0.75s ease-in;
+	transition-property: width, opacity;
+	transition-duration: 0.75s;
+	transition-timing-function: ease-in;
+	opacity: 1;
 }
 .target {
 	background-color: var(--evcc-green);
@@ -85,9 +88,8 @@ export default {
 .real {
 	background-color: var(--evcc-dark-green);
 }
-.phase.inactive,
-.phase.inactive .inner,
+.phase.inactive .target,
 .phase.inactive .real {
-	background-color: var(--bs-gray-200);
+	opacity: 0;
 }
 </style>
