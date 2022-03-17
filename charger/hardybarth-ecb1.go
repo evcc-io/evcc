@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
+	"github.com/evcc-io/evcc/charger/echarge/ecb1"
 	"github.com/evcc-io/evcc/meter/obis"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -44,7 +46,7 @@ type HardyBarth struct {
 }
 
 func init() {
-	registry.Add("hardybarth", NewHardyBarthFromConfig)
+	registry.Add("hardybarth-ecb1", NewHardyBarthFromConfig)
 }
 
 // NewHardyBarthFromConfig creates a HardyBarth cPH1 charger from generic config
@@ -67,11 +69,13 @@ func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) 
 
 // NewHardyBarth creates HardyBarth charger
 func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
-	log := util.NewLogger("hardy")
+	log := util.NewLogger("ecb1")
+
+	uri = strings.TrimSuffix(uri, "/") + "/api/v1"
 
 	wb := &HardyBarth{
 		Helper:        request.NewHelper(log),
-		uri:           util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		uri:           util.DefaultScheme(uri, "http"),
 		chargecontrol: chargecontrol,
 		meter:         meter,
 		current:       6,
@@ -81,19 +85,19 @@ func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	uri = fmt.Sprintf("%s/api/v1/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
+	uri = fmt.Sprintf("%s/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
 	data := url.Values{"mode": {echarge.ModeManual}}
 	err := wb.post(uri, data)
 
 	return wb, err
 }
 
-func (wb *HardyBarth) getChargeControl() (echarge.ChargeControl, error) {
-	uri := fmt.Sprintf("%s/api/v1/chargecontrols/%d", wb.uri, wb.chargecontrol)
+func (wb *HardyBarth) getChargeControl() (ecb1.ChargeControl, error) {
+	uri := fmt.Sprintf("%s/chargecontrols/%d", wb.uri, wb.chargecontrol)
 
 	var res struct {
 		ChargeControl struct {
-			echarge.ChargeControl
+			ecb1.ChargeControl
 		}
 	}
 
@@ -107,6 +111,10 @@ func (wb *HardyBarth) Status() (api.ChargeStatus, error) {
 	res, err := wb.getChargeControl()
 	if err != nil {
 		return api.StatusNone, err
+	}
+
+	if res.State == "" {
+		return api.StatusNone, errors.New("invalid state- check controller type (eCB1 vs Salia)")
 	}
 
 	switch s := res.State[:1]; s {
@@ -150,7 +158,7 @@ func (wb *HardyBarth) post(uri string, data url.Values) error {
 }
 
 func (wb *HardyBarth) setCurrent(current int64) error {
-	uri := fmt.Sprintf("%s/api/v1/chargecontrols/%d/mode/manual/ampere", wb.uri, wb.chargecontrol)
+	uri := fmt.Sprintf("%s/chargecontrols/%d/mode/manual/ampere", wb.uri, wb.chargecontrol)
 	data := url.Values{"manualmodeamp": {fmt.Sprintf("%d", current)}}
 	return wb.post(uri, data)
 }
@@ -164,12 +172,12 @@ func (wb *HardyBarth) MaxCurrent(current int64) error {
 	return err
 }
 
-func (wb *HardyBarth) getMeter() (echarge.Meter, error) {
-	uri := fmt.Sprintf("%s/api/v1/meters/%d", wb.uri, wb.meter)
+func (wb *HardyBarth) getMeter() (ecb1.Meter, error) {
+	uri := fmt.Sprintf("%s/meters/%d", wb.uri, wb.meter)
 
 	var res struct {
 		Meter struct {
-			echarge.Meter
+			ecb1.Meter
 		}
 	}
 

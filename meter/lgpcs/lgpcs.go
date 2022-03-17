@@ -47,56 +47,55 @@ type Com struct {
 	cachedData func() (interface{}, error)
 }
 
-var once sync.Once
-var instance *Com
+var (
+	once     sync.Once
+	mu       sync.Mutex
+	instance *Com
+)
 
 // GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
 func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
-	const emptyUri = "https:"
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
+	var err error
 	once.Do(func() {
 		log := util.NewLogger("lgess")
-		instance = &Com{
+		inst := &Com{
 			Helper:   request.NewHelper(log),
 			uri:      uri,
 			password: password,
 		}
 
 		// ignore the self signed certificate
-		instance.Client.Transport = request.NewTripper(log, transport.Insecure())
+		inst.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 		// caches the data access for the "cache" time duration
 		// sends a new request to the pcs if the cache is expired and Data() requested
-		instance.cachedData = provider.NewCached(func() (interface{}, error) {
-			return instance.refreshData()
+		inst.cachedData = provider.NewCached(func() (interface{}, error) {
+			return inst.refreshData()
 		}, cache).InterfaceGetter()
+
+		// do first login if no authKey exists and uri and password exist
+		if inst.authKey == "" && inst.uri != "" && inst.password != "" {
+			err = instance.Login()
+		}
+
+		mu.Lock()
+		instance = inst
+		mu.Unlock()
 	})
 
-	// it is sufficient to provide the uri once ... if not provided yet set uri now
-	if instance.uri == emptyUri {
-		instance.uri = uri
-	}
+	mu.Lock()
+	defer mu.Unlock()
 
 	// check if different uris are provided
-	if uri != emptyUri && instance.uri != uri {
+	if uri != "" && instance.uri != uri {
 		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
-	}
-
-	// it is sufficient to provide the password once ... if not provided yet set password now
-	if instance.password == "" {
-		instance.password = password
 	}
 
 	// check if different passwords are provided
 	if password != "" && instance.password != password {
 		return nil, errors.New("password mismatch")
-	}
-
-	// do first login if no authKey exists and uri and password exist
-	var err error
-	if instance.authKey == "" && instance.uri != emptyUri && instance.password != "" {
-		err = instance.Login()
 	}
 
 	return instance, err

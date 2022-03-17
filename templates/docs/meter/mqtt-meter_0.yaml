@@ -17,7 +17,7 @@ render:
     currentp1: # Optional 
     currentp2: # Optional 
     currentp3: # Optional 
-    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert ist  # Optional 
+    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional 
 - usage: pv
   default: |
     type: template
@@ -31,7 +31,7 @@ render:
     currentp1: # Optional 
     currentp2: # Optional 
     currentp3: # Optional 
-    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert ist  # Optional 
+    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional 
 - usage: charge
   default: |
     type: template
@@ -45,7 +45,7 @@ render:
     currentp1: # Optional 
     currentp2: # Optional 
     currentp3: # Optional 
-    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert ist  # Optional 
+    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional 
 - usage: battery
   default: |
     type: template
@@ -59,4 +59,4 @@ render:
     currentp1: # Optional 
     currentp2: # Optional 
     currentp3: # Optional 
-    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert ist  # Optional
+    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional

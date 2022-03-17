@@ -20,7 +20,7 @@ Evcc is an extensible EV Charge Controller with PV integration implemented in [G
   - Build-your-own: Phoenix (includes ESL Walli), [EVSE DIN](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](https://docs.evcc.io/docs/devices/meters): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall, LG ESS HOME, OpenEMS (FENECON)
-- wide support of vendor-specific [vehicles](https://docs.evcc.io/docs/devices/vehicles) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Fiat, Ford, Hyundai, Jaguar, Kia, Landrover, Mini, Nissan, Niu, Porsche, Renault, Seat, Smart, Skoda, Tesla, Volkswagen, Volvo, Tronity
+- wide support of vendor-specific [vehicles](https://docs.evcc.io/docs/devices/vehicles) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Fiat, Ford, Hyundai, Jaguar, Kia, Landrover, Mini, Nissan, Niu, Porsche, Renault, Seat, Silence, Smart, Skoda, Tesla, Volkswagen, Volvo, Tronity
 - [plugins](https://docs.evcc.io/docs/reference/plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status [notifications](https://docs.evcc.io/docs/reference/configuration/messaging) using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)

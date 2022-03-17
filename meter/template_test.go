@@ -16,14 +16,15 @@ var acceptable = []string{
 	"missing password", // Powerwall
 	"connect: no route to host",
 	"connect: connection refused",
-	"i/o timeout",
 	"connect: network is unreachable",
-	"no ping response for 192.0.2.2", // SMA
-	"network is unreachable",
+	"i/o timeout",
+	"'sma': missing uri or serial", // SMA
+	"'fritzdect': missing ain",     // FritzDect
 	"[1ESY1161052714 1ESY1161229249 1EMH0008842285 1ESY1161978584 1EMH0004864048 1ESY1161979033 7ELS8135823805]", // Discovergy
 	"can only have either uri or device",                                          // modbus
 	"(Client.Timeout exceeded while awaiting headers)",                            // http
-	"cannot create meter 'discovergy': unexpected status: 401",                    // Discovergy Proxy
+	"unexpected status: 401",                                                      // Discovergy
+	"unexpected status: 503",                                                      // Discovergy
 	"login failed: Put \"https://192.0.2.2/v1/login\": context deadline exceeded", // LG ESS
 }
 

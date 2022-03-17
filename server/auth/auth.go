@@ -58,26 +58,34 @@ func (a *Auth) register(handler http.HandlerFunc) string {
 }
 
 func (a *Auth) handle(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+	q := r.URL.Query()
 
-	if error, ok := vars["error"]; ok {
+	if q.Has("error") {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "error: %s: %s\n", error, vars["error_description"])
+		fmt.Fprintf(w, "error: %s: %s\n", q.Get("error"), q.Get("error_description"))
 		return
 	}
 
-	state, err := util.DecryptState(vars["state"], a.secret)
-	if err == nil {
-		err = state.Validate()
+	state, err := util.DecryptState(q.Get("state"), a.secret)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "failed to decrypt state")
+		return
+	}
+
+	if err := state.Validate(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "invalid state")
+		return
 	}
 
 	a.mu.Lock()
-	handler := a.routes[vars["state"]]
+	handler := a.routes[q.Get("state")]
 	a.mu.Unlock()
 
-	if err != nil || handler == nil {
+	if handler == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid state")
+		fmt.Fprintf(w, "no handler found")
 		return
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -146,9 +147,15 @@ func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) 
 	return mb.handle(mb.conn.ModbusClient().ReadFIFOQueue(address))
 }
 
-var connections = make(map[string]meters.Connection)
+var (
+	connections = make(map[string]meters.Connection)
+	mu          sync.Mutex
+)
 
 func registeredConnection(key string, newConn meters.Connection) meters.Connection {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if conn, ok := connections[key]; ok {
 		return conn
 	}
