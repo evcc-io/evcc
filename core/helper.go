@@ -23,13 +23,15 @@ func powerToCurrent(power float64, phases int) float64 {
 	return power / (float64(phases) * Voltage)
 }
 
-// consumedPower estimates how much power the charger might have consumed given it was the only load
-// func consumedPower(pv, battery, grid float64) float64 {
-// 	return math.Abs(pv) + battery + grid
-// }
-
 // sitePower returns the available delta power that the charger might additionally consume
 // negative value: available power (grid export), positive value: grid import
 func sitePower(grid, battery, residual float64) float64 {
+	// For hybrid inverters, battery can be charged from DC power in excess of
+	// inverter AC rating. This must be offset by the grid consumption when calculating
+	// available site power.
+	// (https://github.com/evcc-io/evcc/issues/2734)
+	if grid > 0 && battery < 0 && grid-battery > 50 {
+		battery = 0
+	}
 	return grid + battery + residual
 }
