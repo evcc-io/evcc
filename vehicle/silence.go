@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"context"
 	"errors"
 	"strings"
 	"time"
@@ -13,9 +12,6 @@ import (
 	"github.com/evcc-io/evcc/vehicle/silence"
 	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
-	"google.golang.org/api/googleapi"
-	identitytoolkit "google.golang.org/api/identitytoolkit/v3"
-	"google.golang.org/api/option"
 )
 
 // Silence is an api.Vehicle implementation for Silence S01 vehicles
@@ -52,36 +48,15 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("s01").Redact(cc.User, cc.Password)
 	helper := request.NewHelper(log)
 
-	ctx := context.Background()
-	identitytoolkitService, err := identitytoolkit.NewService(ctx, option.WithHTTPClient(helper.Client))
-	if err != nil {
-		return nil, err
-	}
-
-	pwdReq := &identitytoolkit.IdentitytoolkitRelyingpartyVerifyPasswordRequest{
-		Email:             cc.User,
-		Password:          cc.Password,
-		ReturnSecureToken: true,
-	}
-
-	call := identitytoolkitService.Relyingparty.VerifyPassword(pwdReq)
-
-	pwdResp, err := call.Do(googleapi.QueryParameter("key", "AIzaSyCQYZCPvfl-y5QmzRrbUrCwR0RVNbyKqwI"))
-	if err != nil {
-		return nil, err
-	}
-
 	v := &Silence{
 		embed:  &cc.embed,
 		Helper: helper,
 	}
 
-	// TODO token refresh
-	ts := oauth2.StaticTokenSource(&oauth2.Token{
-		AccessToken:  pwdResp.IdToken,
-		RefreshToken: pwdResp.RefreshToken,
-		Expiry:       time.Now().Add(time.Duration(pwdResp.ExpiresIn) * time.Second),
-	})
+	ts, err := silence.TokenSource(log, cc.User, cc.Password)
+	if err != nil {
+		return nil, err
+	}
 
 	v.Client.Transport = &oauth2.Transport{
 		Source: ts,

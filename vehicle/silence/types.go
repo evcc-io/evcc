@@ -1,6 +1,9 @@
 package silence
 
-const ApiUri = "https://api.connectivity.silence.eco/api/v1/me/scooters?details=true&dynamic=true"
+const (
+	ApiUri = "https://api.connectivity.silence.eco/api/v1/me/scooters?details=true&dynamic=true"
+	ApiKey = "AIzaSyCQYZCPvfl-y5QmzRrbUrCwR0RVNbyKqwI"
+)
 
 type Vehicle struct {
 	ID           string
