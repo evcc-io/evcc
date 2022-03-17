@@ -13,9 +13,9 @@ func RenderTest(t *testing.T, tmpl Template, values map[string]interface{}, cb f
 	t.Run(tmpl.Template, func(t *testing.T) {
 		t.Parallel()
 
-		b, values, err := tmpl.RenderResult(TemplateRenderModeUnitTest, values)
+		_, values, err := tmpl.RenderResult(TemplateRenderModeUnitTest, values)
 		if err != nil {
-			t.Log(string(b))
+			t.Log(tmpl.Render)
 			t.Error(err)
 		}
 
