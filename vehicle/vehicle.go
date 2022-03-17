@@ -29,7 +29,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		Status   *provider.Config
 		Range    *provider.Config
 		Odometer *provider.Config
-		Cache    interface{}
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -42,10 +41,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	cc.Status.Deprecate(log)
 	cc.Range.Deprecate(log)
 	cc.Odometer.Deprecate(log)
-
-	if cc.Cache != nil {
-		util.NewLogger("vehicle").WARN.Println("cache is deprecated and will be removed in a future release")
-	}
 
 	socG, err := provider.NewFloatGetterFromConfig(cc.Soc)
 	if err != nil {
