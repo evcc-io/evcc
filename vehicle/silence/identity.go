@@ -13,15 +13,15 @@ import (
 	"google.golang.org/api/option"
 )
 
-// tokenSource is an oauth2.TokenSource
-type tokenSource struct {
+// Identity is an oauth2.TokenSource
+type Identity struct {
 	identitytoolkitService *identitytoolkit.Service
 	user, password         string
 	oauth2.TokenSource
 }
 
-// TokenSource creates an STS token source
-func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
+// NewIdentity creates an STS token source
+func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	ctx := context.Background()
 	helper := request.NewHelper(log)
 
@@ -30,7 +30,7 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 		return nil, err
 	}
 
-	c := &tokenSource{
+	c := &Identity{
 		identitytoolkitService: identitytoolkitService,
 		user:                   user,
 		password:               password,
@@ -44,7 +44,7 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 	return c, err
 }
 
-func (c *tokenSource) Login() (*oauth2.Token, error) {
+func (c *Identity) Login() (*oauth2.Token, error) {
 	req := &identitytoolkit.IdentitytoolkitRelyingpartyVerifyPasswordRequest{
 		Email:             c.user,
 		Password:          c.password,
@@ -67,6 +67,6 @@ func (c *tokenSource) Login() (*oauth2.Token, error) {
 	return token, nil
 }
 
-func (c *tokenSource) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (c *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	return c.Login()
 }

@@ -8,17 +8,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/silence"
-	"github.com/thoas/go-funk"
-	"golang.org/x/oauth2"
 )
 
 // Silence is an api.Vehicle implementation for Silence S01 vehicles
 type Silence struct {
 	*embed
-	*request.Helper
-	vin  string
 	apiG func() (interface{}, error)
 }
 
@@ -46,66 +41,26 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("s01").Redact(cc.User, cc.Password)
-	helper := request.NewHelper(log)
 
 	v := &Silence{
-		embed:  &cc.embed,
-		Helper: helper,
+		embed: &cc.embed,
 	}
 
-	ts, err := silence.TokenSource(log, cc.User, cc.Password)
+	identity, err := silence.NewIdentity(log, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	v.Client.Transport = &oauth2.Transport{
-		Source: ts,
-		Base:   v.Client.Transport,
+	api := silence.NewAPI(log, identity)
+	vin, err := ensureVehicle(strings.ToLower(cc.VIN), api.Vehicles)
+
+	if err == nil {
+		v.apiG = provider.NewCached(func() (interface{}, error) {
+			return api.Status(vin)
+		}, cc.Cache).InterfaceGetter()
 	}
-
-	v.vin, err = ensureVehicle(strings.ToLower(cc.VIN), v.Vehicles)
-
-	v.apiG = provider.NewCached(v.api, cc.Cache).InterfaceGetter()
 
 	return v, err
-}
-
-// vehicles provides list of vehicles response
-func (v *Silence) vehicles() ([]silence.Vehicle, error) {
-	var resp []silence.Vehicle
-	err := v.GetJSON(silence.ApiUri, &resp)
-	return resp, err
-}
-
-// api provides the vehicle api response
-func (v *Silence) api() (interface{}, error) {
-	resp, err := v.vehicles()
-
-	if err == nil {
-		for _, vv := range resp {
-			if vv.FrameNo == v.vin {
-				return vv, nil
-			}
-		}
-
-		err = errors.New("vehicle not found")
-	}
-
-	return nil, err
-}
-
-// Vehicles provides list of Vehicle IDs
-func (v *Silence) Vehicles() ([]string, error) {
-	var resp []silence.Vehicle
-
-	err := v.GetJSON(silence.ApiUri, &resp)
-	if err == nil {
-		return funk.Map(resp, func(v silence.Vehicle) string {
-			return v.FrameNo
-		}).([]string), nil
-	}
-
-	return nil, err
 }
 
 // SoC implements the api.Vehicle interface
