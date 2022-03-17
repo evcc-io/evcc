@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -186,6 +187,20 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
 		}
 
+		// ensure vehicle config has title
+		ccWithTitle := struct {
+			Title string
+			Other map[string]interface{} `mapstructure:",remain"`
+		}{}
+
+		if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
+			return err
+		}
+
+		if ccWithTitle.Title == "" {
+			cc.Other["title"] = strings.Title(cc.Name)
+		}
+
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			// wrap any created errors to prevent fatals
@@ -220,7 +235,7 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 
 	// TODO make evccURI configurable, add warnings for any network/ localhost
 	evccURI := fmt.Sprintf("http://%s", httpd.Addr)
-	authURI := fmt.Sprintf("%s/oauth", evccURI)
+	baseAuthURI := fmt.Sprintf("%s/oauth", evccURI)
 
 	var id int
 	for _, v := range cp.vehicles {
@@ -228,12 +243,16 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 			id += 1
 
 			basePath := fmt.Sprintf("vehicles/%d", id)
-			baseURI := fmt.Sprintf("%s/auth/%s", evccURI, basePath)
+			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
+
+			// replace interface designator with address
+			// TODO fix when evccURI becomes configurable
+			callbackURI = strings.ReplaceAll(callbackURI, "0.0.0.0", "localhost")
 
 			// register vehicle
-			ap := cp.auth.Register(baseURI, v.Title())
+			ap := cp.auth.Register(fmt.Sprintf("oauth/%s", basePath), v.Title())
 
-			provider.SetCallbackParams(evccURI, authURI, ap.Handler())
+			provider.SetCallbackParams(evccURI, callbackURI, ap.Handler())
 
 			auth.
 				Methods(http.MethodPost).
@@ -243,11 +262,9 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 				Methods(http.MethodPost).
 				Path(fmt.Sprintf("/%s/logout", basePath)).
 				HandlerFunc(provider.LogoutHandler())
-		}
-	}
 
-	if id > 0 {
-		log.INFO.Printf("ensure the oauth client redirect/callback is configured for: %s", authURI)
+			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
+		}
 	}
 
 	cp.auth.Publish()

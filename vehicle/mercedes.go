@@ -27,6 +27,7 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed                  `mapstructure:",squash"`
 		ClientID, ClientSecret string
 		VIN                    string
+		Sandbox                bool
 		Cache                  time.Duration
 	}{
 		Cache: interval,
@@ -60,7 +61,7 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := mercedes.NewAPI(log, identity)
+	api := mercedes.NewAPI(log, identity, cc.Sandbox)
 
 	v := &Mercedes{
 		embed:    &cc.embed,
