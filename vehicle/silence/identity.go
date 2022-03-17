@@ -15,8 +15,8 @@ import (
 
 // Identity is an oauth2.TokenSource
 type Identity struct {
-	identitytoolkitService *identitytoolkit.Service
-	user, password         string
+	idkService     *identitytoolkit.Service
+	user, password string
 	oauth2.TokenSource
 }
 
@@ -25,15 +25,15 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	ctx := context.Background()
 	helper := request.NewHelper(log)
 
-	identitytoolkitService, err := identitytoolkit.NewService(ctx, option.WithHTTPClient(helper.Client))
+	idkService, err := identitytoolkit.NewService(ctx, option.WithHTTPClient(helper.Client))
 	if err != nil {
 		return nil, err
 	}
 
 	c := &Identity{
-		identitytoolkitService: identitytoolkitService,
-		user:                   user,
-		password:               password,
+		idkService: idkService,
+		user:       user,
+		password:   password,
 	}
 
 	token, err := c.Login()
@@ -51,7 +51,7 @@ func (c *Identity) Login() (*oauth2.Token, error) {
 		ReturnSecureToken: true,
 	}
 
-	call := c.identitytoolkitService.Relyingparty.VerifyPassword(req)
+	call := c.idkService.Relyingparty.VerifyPassword(req)
 
 	resp, err := call.Do(googleapi.QueryParameter("key", ApiKey))
 	if err != nil {
