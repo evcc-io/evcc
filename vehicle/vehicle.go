@@ -35,13 +35,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	// TODO deprecate
-	log := util.NewLogger("vehicle")
-	cc.Soc.Deprecate(log)
-	cc.Status.Deprecate(log)
-	cc.Range.Deprecate(log)
-	cc.Odometer.Deprecate(log)
-
 	socG, err := provider.NewFloatGetterFromConfig(cc.Soc)
 	if err != nil {
 		return nil, fmt.Errorf("soc: %w", err)
