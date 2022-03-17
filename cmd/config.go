@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -186,6 +187,20 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
 		}
 
+		// ensure vehicle config has title
+		ccWithTitle := struct {
+			Title string
+			Other map[string]interface{} `mapstructure:",remain"`
+		}{}
+
+		if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
+			return err
+		}
+
+		if ccWithTitle.Title == "" {
+			cc.Other["title"] = strings.Title(cc.Name)
+		}
+
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			// wrap any created errors to prevent fatals
@@ -229,7 +244,10 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 
 			basePath := fmt.Sprintf("vehicles/%d", id)
 			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
-			// baseURI := fmt.Sprintf("%s/oauth/%s", evccURI, basePath)
+
+			// replace interface designator with address
+			// TODO fix when evccURI becomes configurable
+			callbackURI = strings.ReplaceAll(callbackURI, "0.0.0.0", "localhost")
 
 			// register vehicle
 			ap := cp.auth.Register(fmt.Sprintf("oauth/%s", basePath), v.Title())
