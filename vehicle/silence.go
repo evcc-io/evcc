@@ -23,7 +23,7 @@ type Silence struct {
 	*embed
 	*request.Helper
 	identitytoolkitService *identitytoolkit.Service
-	frameNo                string
+	vin                    string
 	apiG                   func() (interface{}, error)
 }
 
@@ -36,7 +36,7 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
-		FrameNo        string
+		VIN            string
 		Cache          time.Duration
 	}{
 		Cache: interval,
@@ -90,7 +90,7 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Base:   v.Client.Transport,
 	}
 
-	v.frameNo, err = ensureVehicle(strings.ToLower(cc.FrameNo), v.Vehicles)
+	v.vin, err = ensureVehicle(strings.ToLower(cc.VIN), v.Vehicles)
 
 	v.apiG = provider.NewCached(v.api, cc.Cache).InterfaceGetter()
 
@@ -110,7 +110,7 @@ func (v *Silence) api() (interface{}, error) {
 
 	if err == nil {
 		for _, vv := range resp {
-			if vv.FrameNo == v.frameNo {
+			if vv.FrameNo == v.vin {
 				return vv, nil
 			}
 		}
