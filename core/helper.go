@@ -30,7 +30,7 @@ func sitePower(grid, battery, residual float64) float64 {
 	// inverter AC rating. This must be offset by the grid consumption when calculating
 	// available site power.
 	// (https://github.com/evcc-io/evcc/issues/2734)
-	if grid > 0 && battery < 0 {
+	if grid > 0 && battery < 0 && grid-battery > 50 {
 		battery = 0
 	}
 	return grid + battery + residual
