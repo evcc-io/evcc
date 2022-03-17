@@ -126,6 +126,8 @@ export default {
 				return false;
 			}
 			this.selectedTargetSoC = e.target.value;
+
+			this.$emit("target-soc-drag", this.selectedTargetSoC);
 			return true;
 		},
 	},

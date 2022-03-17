@@ -16,6 +16,7 @@
 			v-bind="vehicleSocProps"
 			class="mt-2 mb-4"
 			@target-soc-updated="targetSocUpdated"
+			@target-soc-drag="targetSocDrag"
 		/>
 		<div v-if="vehiclePresent">
 			<div class="d-flex flex-wrap justify-content-between">
@@ -103,7 +104,15 @@ export default {
 			return null;
 		},
 	},
+	watch: {
+		targetSoC: function () {
+			this.displayTargetSoC = this.targetSoC;
+		},
+	},
 	methods: {
+		targetSocDrag: function (targetSoC) {
+			this.displayTargetSoC = targetSoC;
+		},
 		targetSocUpdated: function (targetSoC) {
 			this.displayTargetSoC = targetSoC;
 			this.$emit("target-soc-updated", targetSoC);
