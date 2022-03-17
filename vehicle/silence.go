@@ -22,9 +22,8 @@ import (
 type Silence struct {
 	*embed
 	*request.Helper
-	identitytoolkitService *identitytoolkit.Service
-	vin                    string
-	apiG                   func() (interface{}, error)
+	vin  string
+	apiG func() (interface{}, error)
 }
 
 func init() {
@@ -73,9 +72,8 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Silence{
-		embed:                  &cc.embed,
-		Helper:                 helper,
-		identitytoolkitService: identitytoolkitService,
+		embed:  &cc.embed,
+		Helper: helper,
 	}
 
 	// TODO token refresh
