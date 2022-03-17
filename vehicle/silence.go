@@ -10,6 +10,8 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/silence"
+	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	identitytoolkit "google.golang.org/api/identitytoolkit/v3"
@@ -21,38 +23,9 @@ type Silence struct {
 	*embed
 	*request.Helper
 	identitytoolkitService *identitytoolkit.Service
-	pwdResp                *identitytoolkit.VerifyPasswordResponse
-	user, password         string
-	id                     string
+	frameNo                string
 	apiG                   func() (interface{}, error)
 }
-
-type silenceVehicle struct {
-	ID           string
-	Model        string
-	Name         string
-	BatteryOut   bool
-	Charging     bool
-	LastLocation struct {
-		Latitude     float64
-		Longitude    float64
-		Altitude     int
-		CurrentSpeed int
-		Time         string
-	}
-	BatterySoc          int
-	Odometer            int
-	BatteryTemperature  int
-	MotorTemperature    int
-	InverterTemperature int
-	Range               int
-	Velocity            int
-	Status              int
-	LastReportTime      string
-	LastConnection      string
-}
-
-const silenceApi = "https://api.connectivity.silence.eco/api/v1/me/scooters?details=true&dynamic=true"
 
 func init() {
 	registry.Add("silence", NewSilenceFromConfig)
@@ -61,9 +34,10 @@ func init() {
 // NewFordFromConfig creates a new vehicle
 func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed              `mapstructure:",squash"`
-		User, Password, ID string
-		Cache              time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string
+		FrameNo        string
+		Cache          time.Duration
 	}{
 		Cache: interval,
 	}
@@ -102,60 +76,70 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed:                  &cc.embed,
 		Helper:                 helper,
 		identitytoolkitService: identitytoolkitService,
-		pwdResp:                pwdResp,
-		// user:     cc.User,
-		// password: cc.Password,
-		id: strings.ToLower(cc.ID),
 	}
 
-	token := &oauth2.Token{
+	// TODO token refresh
+	ts := oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken:  pwdResp.IdToken,
 		RefreshToken: pwdResp.RefreshToken,
 		Expiry:       time.Now().Add(time.Duration(pwdResp.ExpiresIn) * time.Second),
-	}
+	})
 
-	ts := oauth2.StaticTokenSource(token)
 	v.Client.Transport = &oauth2.Transport{
 		Source: ts,
 		Base:   v.Client.Transport,
 	}
 
-	vehicles, err := v.vehicles()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(vehicles) > 1 {
-		return nil, errors.New("missing id")
-	}
+	v.frameNo, err = ensureVehicle(strings.ToLower(cc.FrameNo), v.Vehicles)
 
 	v.apiG = provider.NewCached(v.api, cc.Cache).InterfaceGetter()
 
-	return v, nil
+	return v, err
 }
 
 // vehicles provides list of vehicles response
-func (v *Silence) vehicles() ([]silenceVehicle, error) {
-	var resp []silenceVehicle
-	err := v.GetJSON(silenceApi, &resp)
+func (v *Silence) vehicles() ([]silence.Vehicle, error) {
+	var resp []silence.Vehicle
+	err := v.GetJSON(silence.ApiUri, &resp)
 	return resp, err
 }
 
 // api provides the vehicle api response
 func (v *Silence) api() (interface{}, error) {
 	resp, err := v.vehicles()
-	if err != nil {
-		return nil, err
+
+	if err == nil {
+		for _, vv := range resp {
+			if vv.FrameNo == v.frameNo {
+				return vv, nil
+			}
+		}
+
+		err = errors.New("vehicle not found")
 	}
 
-	return resp[0], err
+	return nil, err
+}
+
+// Vehicles provides list of Vehicle IDs
+func (v *Silence) Vehicles() ([]string, error) {
+	var resp []silence.Vehicle
+
+	err := v.GetJSON(silence.ApiUri, &resp)
+	if err == nil {
+		return funk.Map(resp, func(v silence.Vehicle) string {
+			return v.FrameNo
+		}).([]string), nil
+	}
+
+	return nil, err
 }
 
 // SoC implements the api.Vehicle interface
 func (v *Silence) SoC() (float64, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(silenceVehicle); err == nil && ok {
+	if res, ok := res.(silence.Vehicle); err == nil && ok {
 		return float64(res.BatterySoc), nil
 	}
 
@@ -168,7 +152,7 @@ var _ api.VehicleRange = (*Silence)(nil)
 func (v *Silence) Range() (int64, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(silenceVehicle); err == nil && ok {
+	if res, ok := res.(silence.Vehicle); err == nil && ok {
 		return int64(res.Range), nil
 	}
 
@@ -181,7 +165,7 @@ var _ api.VehicleOdometer = (*Silence)(nil)
 func (v *Silence) Odometer() (float64, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(silenceVehicle); err == nil && ok {
+	if res, ok := res.(silence.Vehicle); err == nil && ok {
 		return float64(res.Odometer), nil
 	}
 
