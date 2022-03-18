@@ -28,18 +28,20 @@ const (
 
 type Identity struct {
 	*request.Helper
-	idtp     *IDTokenProvider
-	clientID string
 	oauth2.TokenSource
+	idtp      *IDTokenProvider
+	clientID  string
+	refresher oauth.TokenRefresher
 }
 
 func NewIdentity(log *util.Logger, clientID string, query url.Values, user, password string) *Identity {
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
 	return &Identity{
-		Helper:   request.NewHelper(log),
-		idtp:     NewIDTokenProvider(log, uri, user, password),
-		clientID: clientID,
+		Helper:    request.NewHelper(log),
+		clientID:  clientID,
+		idtp:      NewIDTokenProvider(log, uri, user, password),
+		refresher: NewTokenRefresher(log, clientID),
 	}
 }
 
@@ -92,22 +94,13 @@ func (v *Identity) login() (Token, error) {
 
 // RefreshToken implements oauth.TokenRefresher
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := url.Values(map[string][]string{
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {token.RefreshToken},
-		"scope":         {"sc2:fal"},
-	})
-
-	req, err := request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-		"X-Client-Id":  v.clientID,
-	})
-
-	var res Token
+	token, err := v.refresher.RefreshToken(token)
 	if err == nil {
-		err = v.DoJSON(req, &res)
+		return token, nil
 	}
 
+	// re-login
+	var res Token
 	if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden) {
 		res, err = v.login()
 	}
