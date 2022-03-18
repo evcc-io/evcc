@@ -24,50 +24,58 @@ type StampCollection struct {
 	Frequency float64
 }
 
-var Stamps = StampsRegistry{
-	KiaAppID:     nil,
-	HyundaiAppID: nil,
-}
-
 var (
-	mu      sync.Mutex
-	updater map[string]struct{} = make(map[string]struct{})
-
 	client = request.NewHelper(util.NewLogger("http"))
+
 	brands = map[string]string{
 		KiaAppID:     "kia",
 		HyundaiAppID: "hyundai",
 	}
+
+	mu     sync.Mutex
+	Stamps = StampsRegistry{
+		KiaAppID:     nil,
+		HyundaiAppID: nil,
+	}
 )
 
-func download(log *util.Logger, id, brand string) {
+func download(log *util.Logger, id, brand string) error {
 	var res StampCollection
 	uri := fmt.Sprintf("https://raw.githubusercontent.com/neoPix/bluelinky-stamps/master/%s-%s.v2.json", brand, id)
 
 	if err := client.GetJSON(uri, &res); err != nil {
-		log.ERROR.Println(err)
-		return
+		return fmt.Errorf("failed to download stamps: %w", err)
 	}
 
 	mu.Lock()
 	Stamps[id] = &res
 	mu.Unlock()
+
+	return nil
 }
 
 // updateStamps updates stamps according to https://github.com/Hacksore/bluelinky/pull/144
-func updateStamps(log *util.Logger, id string) {
-	if _, ok := updater[id]; ok {
-		return
+func updateStamps(log *util.Logger, id string) error {
+	mu.Lock()
+	if Stamps[id] != nil {
+		mu.Unlock()
+		return nil
+	}
+	mu.Unlock()
+
+	if err := download(log, id, brands[id]); err != nil {
+		return err
 	}
 
-	updater[id] = struct{}{}
-	download(log, id, brands[id])
-
 	go func() {
-		for range time.NewTicker(24 * time.Hour).C {
-			download(log, id, brands[id])
+		for range time.NewTicker(12 * time.Hour).C {
+			if err := download(log, id, brands[id]); err != nil {
+				log.ERROR.Println(err)
+			}
 		}
 	}()
+
+	return nil
 }
 
 // New creates a new stamp
