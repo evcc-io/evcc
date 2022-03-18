@@ -30,7 +30,6 @@ type Warp2 struct {
 	userconfigG   func() (string, error)
 	maxcurrentS   func(int64) error
 	current       int64
-	enabled       bool // cache
 }
 
 func init() {
