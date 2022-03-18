@@ -1,4 +1,4 @@
-package warp
+package v1
 
 import "time"
 
@@ -43,10 +43,4 @@ type MeterState struct {
 	EnergyAbs       float64 `json:"energy_abs"`
 	PhasesActive    []bool  `json:"phases_active"`
 	PhasesConnected []bool  `json:"phases_connected"`
-}
-
-type LastNfcTag struct {
-	UserID int    `json:"user_id"`
-	Type   int    `json:"tag_type"`
-	ID     string `json:"tag_id"`
 }

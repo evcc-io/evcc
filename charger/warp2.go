@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/warp"
+	v2 "github.com/evcc-io/evcc/charger/warp/v2"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
@@ -20,13 +22,14 @@ type Warp2 struct {
 	root          string
 	client        *mqtt.Client
 	features      []string
-	enabledG      func() (string, error)
+	maxcurrentG   func() (string, error)
 	statusG       func() (string, error)
 	meterG        func() (string, error)
 	meterDetailsG func() (string, error)
-	nfcG          func() (string, error)
-	enableS       func(bool) error
+	chargeG       func() (string, error)
+	userconfigG   func() (string, error)
 	maxcurrentS   func(int64) error
+	current       int64
 	enabled       bool // cache
 }
 
@@ -57,18 +60,18 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	var currentPower, totalEnergy func() (float64, error)
-	if wb.hasFeature(warp.FeatureMeter) {
+	if wb.hasFeature(v2.FeatureMeter) {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 	}
 
 	var currents func() (float64, float64, float64, error)
-	if wb.hasFeature(warp.FeatureMeterPhases) {
+	if wb.hasFeature(v2.FeatureMeterPhases) {
 		currents = wb.currents
 	}
 
 	var identity func() (string, error)
-	if wb.hasFeature(warp.FeatureNfc) {
+	if wb.hasFeature(v2.FeatureNfc) {
 		identity = wb.identify
 	}
 
@@ -85,9 +88,10 @@ func NewWarp2(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp2
 	}
 
 	wb := &Warp2{
-		log:    log,
-		root:   topic,
-		client: client,
+		log:     log,
+		root:    topic,
+		client:  client,
+		current: 6000, // mA
 	}
 
 	// timeout handler
@@ -100,19 +104,15 @@ func NewWarp2(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp2
 		return to.StringGetter(g)
 	}
 
-	wb.enabledG = stringG(fmt.Sprintf("%s/evse/auto_start_charging", topic))
+	wb.maxcurrentG = stringG(fmt.Sprintf("%s/evse/external_current", topic))
 	wb.statusG = stringG(fmt.Sprintf("%s/evse/state", topic))
-	wb.meterG = stringG(fmt.Sprintf("%s/meter/state", topic))
-	wb.meterDetailsG = stringG(fmt.Sprintf("%s/meter/detailed_values", topic))
-	wb.nfcG = stringG(fmt.Sprintf("%s/nfc/last_tag", topic))
-
-	wb.enableS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/auto_start_charging_update", topic), 0).
-		WithPayload(`{ "auto_start_charging": ${enable} }`).
-		BoolSetter("enable")
+	wb.meterG = stringG(fmt.Sprintf("%s/meter/values", topic))
+	wb.meterDetailsG = stringG(fmt.Sprintf("%s/meter/all_values", topic))
+	wb.chargeG = stringG(fmt.Sprintf("%s/charge_tracker/current_charge", topic))
+	wb.userconfigG = stringG(fmt.Sprintf("%s/users/config", topic))
 
 	wb.maxcurrentS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/current_limit", topic), 0).
+		fmt.Sprintf("%s/evse/external_current", topic), 0).
 		WithPayload(`{ "current": ${maxcurrent} }`).
 		IntSetter("maxcurrent")
 
@@ -137,100 +137,28 @@ func (wb *Warp2) hasFeature(feature string) bool {
 
 // Enable implements the api.Charger interface
 func (wb *Warp2) Enable(enable bool) error {
-	// set auto_start_charging
-	if err := wb.enableS(enable); err != nil {
-		return err
-	}
-
-	// trigger start/stop
-	action := "stop_charging"
+	var current int64
 	if enable {
-		action = "start_charging"
+		current = wb.current
 	}
-
-	topic := fmt.Sprintf("%s/%s/%s", wb.root, "evse", action)
-
-	err := wb.client.Publish(topic, false, "null")
-	if err == nil {
-		wb.enabled = enable
-	}
-
-	return err
-}
-
-func (wb *Warp2) status() (warp.EvseState, error) {
-	var res warp.EvseState
-
-	s, err := wb.statusG()
-	if err == nil {
-		err = json.Unmarshal([]byte(s), &res)
-	}
-
-	return res, err
-}
-
-// autostart reads the enabled state from charger
-// use function instead of jq to honor evse/state updates
-func (wb *Warp2) autostart() (bool, error) {
-	var res struct {
-		AutoStartCharging bool `json:"auto_start_charging"`
-	}
-
-	s, err := wb.enabledG()
-	if err == nil {
-		err = json.Unmarshal([]byte(s), &res)
-	}
-
-	return res.AutoStartCharging, err
-}
-
-// isEnabled reads enabled status from mqtt
-func (wb *Warp2) isEnabled() (bool, error) {
-	enabled, err := wb.autostart()
-
-	var status warp.EvseState
-	if err == nil {
-		status, err = wb.status()
-	}
-
-	if enabled {
-		// check that charge_release is not blocked
-		enabled = status.ChargeRelease != 2
-	} else {
-		// check that vehicle is really not charging
-		enabled = status.VehicleState == 2
-	}
-
-	return enabled, err
+	return wb.maxcurrentS(current)
 }
 
 // Enabled implements the api.Charger interface
 func (wb *Warp2) Enabled() (bool, error) {
-	enabled, err := wb.isEnabled()
+	var res v2.EvseExternalCurrent
 
-	if err == nil && enabled != wb.enabled {
-		start := time.Now()
-
-		// retry to avoid out of sync errors in case of slow warp updates
-		for time.Since(start) <= 2*time.Second {
-			if enabled, err = wb.isEnabled(); err != nil {
-				break
-			}
-
-			if enabled == wb.enabled {
-				break
-			}
-
-			time.Sleep(50 * time.Millisecond)
-		}
+	s, err := wb.maxcurrentG()
+	if err == nil {
+		err = json.Unmarshal([]byte(s), &res)
 	}
 
-	return enabled, err
+	return res.Current >= 6000, err
 }
 
 // Status implements the api.Charger interface
 func (wb *Warp2) Status() (api.ChargeStatus, error) {
-	var status warp.EvseState
+	var status v2.EvseState
 
 	s, err := wb.statusG()
 	if err == nil {
@@ -238,7 +166,7 @@ func (wb *Warp2) Status() (api.ChargeStatus, error) {
 	}
 
 	res := api.StatusNone
-	switch status.VehicleState {
+	switch status.Iec61851State {
 	case 0:
 		res = api.StatusA
 	case 1:
@@ -247,28 +175,37 @@ func (wb *Warp2) Status() (api.ChargeStatus, error) {
 		res = api.StatusC
 	default:
 		if err == nil {
-			err = fmt.Errorf("invalid status: %d", status.VehicleState)
+			err = fmt.Errorf("invalid status: %d", status.Iec61851State)
 		}
 	}
 
 	return res, err
 }
 
+// setCurrentMA sets the current in mA
+func (wb *Warp2) setCurrentMA(current int64) error {
+	err := wb.maxcurrentS(current)
+	if err == nil {
+		wb.current = current
+	}
+	return err
+}
+
 // MaxCurrent implements the api.Charger interface
 func (wb *Warp2) MaxCurrent(current int64) error {
-	return wb.maxcurrentS(1000 * current)
+	return wb.setCurrentMA(1000 * current)
 }
 
 var _ api.ChargerEx = (*Warp2)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Warp2) MaxCurrentMillis(current float64) error {
-	return wb.maxcurrentS(int64(1000 * current))
+	return wb.setCurrentMA(int64(1000 * current))
 }
 
 // CurrentPower implements the api.Meter interface
 func (wb *Warp2) currentPower() (float64, error) {
-	var res warp.MeterState
+	var res v2.MeterValues
 
 	s, err := wb.meterG()
 	if err == nil {
@@ -280,7 +217,7 @@ func (wb *Warp2) currentPower() (float64, error) {
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Warp2) totalEnergy() (float64, error) {
-	var res warp.MeterState
+	var res v2.MeterValues
 
 	s, err := wb.meterG()
 	if err == nil {
@@ -309,12 +246,17 @@ func (wb *Warp2) currents() (float64, float64, float64, error) {
 }
 
 func (wb *Warp2) identify() (string, error) {
-	var tag warp.LastNfcTag
+	var res v2.ChargeTrackerCurrentCharge
 
-	s, err := wb.nfcG()
+	s, err := wb.chargeG()
 	if err == nil {
-		err = json.Unmarshal([]byte(s), &tag)
+		err = json.Unmarshal([]byte(s), &res)
 	}
 
-	return tag.ID, err
+	var id string
+	if res.UserID > 0 {
+		id = strconv.Itoa(res.UserID)
+	}
+
+	return id, err
 }

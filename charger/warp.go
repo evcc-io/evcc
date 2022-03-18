@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/warp"
+	v1 "github.com/evcc-io/evcc/charger/warp/v1"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
@@ -39,7 +40,6 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 		mqtt.Config `mapstructure:",squash"`
 		Topic       string
 		Timeout     time.Duration
-		UseMeter    interface{}
 	}{
 		Topic:   warp.RootTopic,
 		Timeout: warp.Timeout,
@@ -52,11 +52,6 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 	wb, err := NewWarp(cc.Config, cc.Topic, cc.Timeout)
 	if err != nil {
 		return nil, err
-	}
-
-	if cc.UseMeter != nil {
-		// TODO deprecated
-		util.NewLogger("warp").WARN.Println("usemeter is deprecated and will be removed in a future release")
 	}
 
 	hasMeter := wb.hasMeter()
@@ -122,7 +117,7 @@ func (wb *Warp) hasMeter() bool {
 	topic := fmt.Sprintf("%s/meter/state", wb.root)
 
 	if state, err := provider.NewMqtt(wb.log, wb.client, topic, 0).StringGetter()(); err == nil {
-		var res warp.MeterState
+		var res v1.MeterState
 		if err := json.Unmarshal([]byte(state), &res); err == nil {
 			return res.State == 2 || len(res.PhasesConnected) > 0
 		}
@@ -167,8 +162,8 @@ func (wb *Warp) Enable(enable bool) error {
 	return err
 }
 
-func (wb *Warp) status() (warp.EvseState, error) {
-	var res warp.EvseState
+func (wb *Warp) status() (v1.EvseState, error) {
+	var res v1.EvseState
 
 	s, err := wb.statusG()
 	if err == nil {
@@ -197,7 +192,7 @@ func (wb *Warp) autostart() (bool, error) {
 func (wb *Warp) isEnabled() (bool, error) {
 	enabled, err := wb.autostart()
 
-	var status warp.EvseState
+	var status v1.EvseState
 	if err == nil {
 		status, err = wb.status()
 	}
@@ -239,7 +234,7 @@ func (wb *Warp) Enabled() (bool, error) {
 
 // Status implements the api.Charger interface
 func (wb *Warp) Status() (api.ChargeStatus, error) {
-	var status warp.EvseState
+	var status v1.EvseState
 
 	s, err := wb.statusG()
 	if err == nil {
@@ -277,7 +272,7 @@ func (wb *Warp) MaxCurrentMillis(current float64) error {
 
 // CurrentPower implements the api.Meter interface
 func (wb *Warp) currentPower() (float64, error) {
-	var res warp.MeterState
+	var res v1.MeterState
 
 	s, err := wb.meterG()
 	if err == nil {
@@ -289,7 +284,7 @@ func (wb *Warp) currentPower() (float64, error) {
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Warp) totalEnergy() (float64, error) {
-	var res warp.MeterState
+	var res v1.MeterState
 
 	s, err := wb.meterG()
 	if err == nil {
