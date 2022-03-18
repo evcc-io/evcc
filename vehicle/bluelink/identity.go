@@ -56,7 +56,9 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 	}
 
 	// fetch updated stamps
-	updateStamps(log, config.CCSPApplicationID)
+	if err := updateStamps(log, config.CCSPApplicationID); err != nil {
+		log.ERROR.Println(err)
+	}
 
 	return v
 }
