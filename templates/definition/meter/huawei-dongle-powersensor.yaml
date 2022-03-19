@@ -17,9 +17,8 @@ render: |
     source: modbus
     {{include "modbus" . | indent 2}}
     model: huawei
-    timeout: 30s
-    connectdelay: 5
-    delay: 2s
+    timeout: 10s
+    connectdelay: 1s
     register:
       address: 37113 # Grid import export power
       type: holding
@@ -29,11 +28,9 @@ render: |
     source: modbus
     {{include "modbus" . | indent 2}}
     model: huawei
-    timeout: 30s
-    connectdelay: 5
-    delay: 2s
+    timeout: 10s
     register:
-      address: 37121 # Grid active energy
+      address: 37121 # Active energy import from the grid
       type: holding
       decode: int32
     scale: 0.01
@@ -41,6 +38,7 @@ render: |
   - source: modbus
     {{include "modbus" . | indent 2}}
     model: huawei
+    timeout: 10s
     register:
       address: 37107 # Huawei phase A grid current
       type: holding
@@ -49,6 +47,7 @@ render: |
   - source: modbus
     {{include "modbus" . | indent 2}}
     model: huawei
+    timeout: 10s
     register:
       address: 37109 # Huawei phase B grid current
       type: holding
@@ -57,6 +56,7 @@ render: |
   - source: modbus
     {{include "modbus" . | indent 2}}
     model: huawei
+    timeout: 10s
     register:
       address: 37111 # Huawei phase C grid current
       type: holding
@@ -68,9 +68,8 @@ render: |
     source: modbus
     {{include "modbus" . | indent 2}}
     model: huawei
-    timeout: 30s
-    connectdelay: 5
-    delay: 2s
+    timeout: 10s
+    connectdelay: 1s
     register:
       address: 32080 # Active generation power
       type: holding
@@ -81,9 +80,8 @@ render: |
     source: modbus
     {{include "modbus" . | indent 2}}
     model: huawei
-    timeout: 30s
-    connectdelay: 5
-    delay: 2s
+    timeout: 10s
+    connectdelay: 1s
     register:
       address: 37001
       type: holding
@@ -92,9 +90,7 @@ render: |
     source: modbus
     {{include "modbus" . | indent 2}}
     model: huawei
-    timeout: 30s
-    connectdelay: 5
-    delay: 2s
+    timeout: 10s
     register:
       address: 37004
       type: holding
