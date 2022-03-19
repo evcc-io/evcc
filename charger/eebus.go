@@ -219,6 +219,8 @@ func updateState() (api.ChargeStatus, error) {
 		if isCharging(data.EVData) {
 			// we might already be enabled and charging due to connection issues
 			c.expectedEnableState = true
+			// shouldn't we update evConnectedTime here???
+			// c.evConnectedTime = time.Now()
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
@@ -237,9 +239,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 // should return true if the charger allows the EV to draw power
 func (c *EEBus) Enabled() (bool, error) {
-	var status api.ChargeStatus
-	status, err = updateState
-	// return the saved enable state as we assume enabling/disabling always works
+	status, err := updateState
 	return c.expectedEnableState, err
 }
 
