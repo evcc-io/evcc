@@ -30,7 +30,7 @@ render: |
     model: huawei
     timeout: 10s
     register:
-      address: 37121 # Grid active energy import from the grid
+      address: 37121 # Active energy import from the grid
       type: holding
       decode: int32
     scale: 0.01
