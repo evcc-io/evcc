@@ -111,7 +111,7 @@ func NewWarp2(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp2
 	wb.userconfigG = stringG(fmt.Sprintf("%s/users/config", topic))
 
 	wb.maxcurrentS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/external_current", topic), 0).
+		fmt.Sprintf("%s/evse/external_current_update", topic), 0).
 		WithPayload(`{ "current": ${maxcurrent} }`).
 		IntSetter("maxcurrent")
 
