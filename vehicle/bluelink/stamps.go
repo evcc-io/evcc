@@ -15,80 +15,62 @@ const (
 	HyundaiAppID = "014d2225-8495-4735-812d-2616334fd15d"
 )
 
-// StampsRegistry collects stamps for a single brand
-type StampsRegistry map[string]*StampCollection
-
-type StampCollection struct {
-	Stamps    []string
-	Generated time.Time
-	Frequency float64
+type stampCollection struct {
+	mu           sync.Mutex
+	log          *util.Logger
+	AppID, Brand string
+	Stamps       []string
+	Generated    time.Time
+	Frequency    float64
+	updated      time.Time
 }
 
 var (
 	client = request.NewHelper(util.NewLogger("http"))
 
-	brands = map[string]string{
-		KiaAppID:     "kia",
-		HyundaiAppID: "hyundai",
-	}
-
-	mu     sync.Mutex
-	Stamps = StampsRegistry{
-		KiaAppID:     nil,
-		HyundaiAppID: nil,
+	Stamps = map[string]*stampCollection{
+		KiaAppID:     {log: util.NewLogger("kia"), AppID: KiaAppID, Brand: "kia"},
+		HyundaiAppID: {log: util.NewLogger("hyundai"), AppID: HyundaiAppID, Brand: "hyundai"},
 	}
 )
 
-func download(log *util.Logger, id, brand string) error {
-	var res StampCollection
-	uri := fmt.Sprintf("https://raw.githubusercontent.com/neoPix/bluelinky-stamps/master/%s-%s.v2.json", brand, id)
+// New creates a new stamp
+func (c *stampCollection) Get() (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	if err := client.GetJSON(uri, &res); err != nil {
-		return fmt.Errorf("failed to download stamps: %w", err)
+	length := float64(len(c.Stamps))
+	position := float64(time.Since(c.Generated).Milliseconds()) / c.Frequency
+
+	// download
+	if position >= 0.9*length {
+		if time.Since(c.updated) > 15*time.Minute {
+			c.log.TRACE.Printf("retry stamps download, last attempt: %v", c.updated)
+			if err := c.download(); err != nil {
+				return "", err
+			}
+		}
+
+		length = float64(len(c.Stamps))
+		position = float64(time.Since(c.Generated).Milliseconds()) / c.Frequency
 	}
 
-	mu.Lock()
-	Stamps[id] = &res
-	mu.Unlock()
+	if position >= length {
+		position = length - 1
+	}
 
-	return nil
+	return c.Stamps[int64(position+5*rand.Float64())], nil
 }
 
 // updateStamps updates stamps according to https://github.com/Hacksore/bluelinky/pull/144
-func updateStamps(log *util.Logger, id string) error {
-	mu.Lock()
-	if Stamps[id] != nil {
-		mu.Unlock()
-		return nil
-	}
-	mu.Unlock()
+func (c *stampCollection) download() error {
+	c.updated = time.Now()
 
-	if err := download(log, id, brands[id]); err != nil {
-		return err
-	}
+	uri := fmt.Sprintf("https://raw.githubusercontent.com/neoPix/bluelinky-stamps/master/%s-%s.v2.json", c.Brand, c.AppID)
 
-	go func() {
-		for range time.NewTicker(12 * time.Hour).C {
-			if err := download(log, id, brands[id]); err != nil {
-				log.ERROR.Println(err)
-			}
-		}
-	}()
+	if err := client.GetJSON(uri, &c); err != nil {
+		return fmt.Errorf("failed to download stamps: %w", err)
+	}
 
 	return nil
-}
-
-// New creates a new stamp
-func (s StampsRegistry) New(id string) string {
-	mu.Lock()
-	defer mu.Unlock()
-
-	source := s[id]
-	if source == nil {
-		panic(id)
-	}
-
-	position := float64(time.Since(source.Generated).Milliseconds()) / source.Frequency
-
-	return source.Stamps[int64(position+5*rand.Float64())]
 }

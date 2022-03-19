@@ -55,21 +55,15 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 		config: config,
 	}
 
-	// fetch updated stamps
-	if err := updateStamps(log, config.CCSPApplicationID); err != nil {
-		log.ERROR.Println(err)
-	}
-
 	return v
 }
 
-// Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
-
-func (v *Identity) stamp() string {
-	return Stamps.New(v.config.CCSPApplicationID)
-}
-
 func (v *Identity) getDeviceID() (string, error) {
+	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	if err != nil {
+		return "", err
+	}
+
 	uniID, _ := uuid.NewUUID()
 	data := map[string]interface{}{
 		"pushRegId": "1",
@@ -81,7 +75,7 @@ func (v *Identity) getDeviceID() (string, error) {
 		"ccsp-service-id": v.config.CCSPServiceID,
 		"Content-type":    "application/json;charset=UTF-8",
 		"User-Agent":      "okhttp/3.10.0",
-		"Stamp":           v.stamp(),
+		"Stamp":           stamp,
 	}
 
 	var resp struct {
@@ -364,6 +358,11 @@ func (v *Identity) Login(user, password, language string) (err error) {
 
 // Request decorates requests with authorization headers
 func (v *Identity) Request(req *http.Request) error {
+	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	if err != nil {
+		return err
+	}
+
 	token, err := v.Token()
 	if err != nil {
 		return err
@@ -375,7 +374,7 @@ func (v *Identity) Request(req *http.Request) error {
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
-		"Stamp":               v.stamp(),
+		"Stamp":               stamp,
 	} {
 		req.Header.Set(k, v)
 	}
