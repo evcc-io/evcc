@@ -2,7 +2,6 @@ package bluelink
 
 import (
 	"fmt"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -21,7 +20,7 @@ type stampCollection struct {
 	AppID, Brand string
 	Stamps       []string
 	Generated    time.Time
-	Frequency    float64
+	Frequency    int
 	updated      time.Time
 }
 
@@ -39,11 +38,13 @@ func (c *stampCollection) Get() (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	length := float64(len(c.Stamps))
-	position := float64(time.Since(c.Generated).Milliseconds()) / c.Frequency
+	var position int
+	if c.Frequency > 0 {
+		position = int(time.Since(c.Generated).Milliseconds()) / c.Frequency
+	}
 
 	// download
-	if position >= 0.9*length {
+	if position >= len(c.Stamps)*9/10 {
 		if time.Since(c.updated) > 15*time.Minute {
 			c.log.TRACE.Printf("retry stamps download, last attempt: %v", c.updated)
 			if err := c.download(); err != nil {
@@ -51,15 +52,14 @@ func (c *stampCollection) Get() (string, error) {
 			}
 		}
 
-		length = float64(len(c.Stamps))
-		position = float64(time.Since(c.Generated).Milliseconds()) / c.Frequency
+		position = int(time.Since(c.Generated).Milliseconds()) / c.Frequency
 	}
 
-	if position >= length {
-		position = length - 1
+	if position >= len(c.Stamps) {
+		position = len(c.Stamps) - 1
 	}
 
-	return c.Stamps[int64(position+5*rand.Float64())], nil
+	return c.Stamps[position], nil
 }
 
 // updateStamps updates stamps according to https://github.com/Hacksore/bluelinky/pull/144
