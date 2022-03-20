@@ -243,7 +243,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 // should return true if the charger allows the EV to draw power
 func (c *EEBus) Enabled() (bool, error) {
-	status, err := c.updateState()
+	_, err := c.updateState()
 	return c.expectedEnableState, err
 }
 
