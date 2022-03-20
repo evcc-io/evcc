@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -13,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/tapo"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -132,8 +134,8 @@ func TapoRSAKeyGen(rsabits int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	return key, key.Public().(*rsa.PublicKey), nil
 }
 
-func TapoRSAPEMDump(pubKey *rsa.PublicKey) ([]byte, error) {
-	pubKeyPKIX, err := x509.MarshalPKIXPublicKey(pubKey)
+func TapoRSAPEMDump(publicKey *rsa.PublicKey) ([]byte, error) {
+	publicKeyPKIX, err := x509.MarshalPKIXPublicKey(publicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -141,18 +143,18 @@ func TapoRSAPEMDump(pubKey *rsa.PublicKey) ([]byte, error) {
 	return pem.EncodeToMemory(
 		&pem.Block{
 			Type:  "PUBLIC KEY",
-			Bytes: pubKeyPKIX,
+			Bytes: publicKeyPKIX,
 		},
 	), nil
 }
 
 func (c *Tapo) TapoHandshake() error {
-	_, pubKey, err := TapoRSAKeyGen(1024)
+	privateKey, publicKey, err := TapoRSAKeyGen(1024)
 	if err != nil {
 		return err
 	}
 
-	pubPEM, err := TapoRSAPEMDump(pubKey)
+	pubPEM, err := TapoRSAPEMDump(publicKey)
 	if err != nil {
 		return err
 	}
@@ -165,7 +167,29 @@ func (c *Tapo) TapoHandshake() error {
 		},
 	})
 
-	return fmt.Errorf(string(payload))
+	// Tapo post start
+	res := `{
+		"error_code":0,
+		"result":{
+		   "key":"ZvHUZ2EZ1LLkrh9YG0ShBINL59Rna1++j8iW2r44klFseH17A6C8HH2TqN8UkNpi+MHxFgQ4Jvs/nvz8QoNPgVxWCsgVBI01GTtDdwHtaRXRNh2VuIp6NDUJ0/1NSydiMfeUs1AZT2vwxSg7/cI1DVHFzL7jNr1WNHEsDiYtm48="
+		}
+	 }`
+
+	var hsres tapo.HandshakeResponse
+	err = json.Unmarshal([]byte(res), &hsres)
+	// Tapo post end
+
+	encryptedEncryptionKey, _ := base64.StdEncoding.DecodeString(hsres.Result.Key)
+	encryptionKey, _ := rsa.DecryptPKCS1v15(rand.Reader, privateKey, []byte(encryptedEncryptionKey))
+
+	encryptionKey = []byte(hsres.Result.Key)
+
+	c.cipher = &TapoCipher{
+		key: encryptionKey[:16],
+		val: encryptionKey[16:],
+	}
+
+	return fmt.Errorf("payload:\n%v\nhsres:\n%s\nkey:\n%s\nval:%s\n", string(payload), string(hsres.Result.Key), string(c.cipher.key), string(c.cipher.val))
 
 }
 

@@ -4,6 +4,14 @@ package tapo
 // https://www.tapo.com/de/
 
 // https://k4czp3r.xyz/reverse-engineering/tp-link/tapo/2020/10/15/reverse-engineering-tp-link-tapo.html
+
+type HandshakeResponse struct {
+	ErrorCode int `json:"error_code"`
+	Result    struct {
+		Key string `json:"key"`
+	} `json:"result"`
+}
+
 type DeviceInfo struct {
 	Result struct {
 		DeviceID           string `json:"device_id"`
