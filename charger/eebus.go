@@ -74,14 +74,14 @@ func NewEEBus(ski string, forcePVLimits bool) (*EEBus, error) {
 }
 
 func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
-	c.log.TRACE.Println("!! onCconnect invoked on ski ", ski)
+	c.log.TRACE.Println("!! onConnect invoked on ski ", ski)
 
 	eebusDevice := app.HEMS(server.EEBusInstance.DeviceInfo())
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
 	c.cc.SetDataUpdateHandler(c.dataUpdateHandler)
 
-	c.connected = true
 	c.setDefaultValues()
+	c.setConnected(true)
 
 	err := c.cc.Boot()
 
@@ -91,7 +91,7 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 func (c *EEBus) onDisconnect(ski string) {
 	c.log.TRACE.Println("!! onDisconnect invoked on ski ", ski)
 
-	c.connected = false
+	c.setConnected(false)
 	c.setDefaultValues()
 }
 
@@ -100,6 +100,13 @@ func (c *EEBus) setDefaultValues() {
 	c.communicationStandard = communication.EVCommunicationStandardEnumTypeUnknown
 	c.socSupportAvailable = false
 	c.selfConsumptionSupportAvailable = false
+}
+
+func (c *EEBus) setConnected(connected bool) {
+	if connected && !c.connected {
+		c.evConnectedTime = time.Now()
+	}
+	c.connected = connected
 }
 
 func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType) {
@@ -154,7 +161,7 @@ func (c *EEBus) showCurrentChargingSetup() {
 
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
 	// we receive data, so it is connected
-	c.connected = true
+	c.setConnected(true)
 
 	c.showCurrentChargingSetup()
 
@@ -211,7 +218,6 @@ func updateState() (api.ChargeStatus, error) {
 	switch currentState {
 	case communication.EVChargeStateEnumTypeUnknown, communication.EVChargeStateEnumTypeUnplugged: // Unplugged
 		c.expectedEnableState = false
-		c.evConnectedTime = time.Now()
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
 		return api.StatusB, nil
@@ -219,8 +225,6 @@ func updateState() (api.ChargeStatus, error) {
 		if isCharging(data.EVData) {
 			// we might already be enabled and charging due to connection issues
 			c.expectedEnableState = true
-			// shouldn't we update evConnectedTime here???
-			// c.evConnectedTime = time.Now()
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
