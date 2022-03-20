@@ -201,7 +201,7 @@ func isCharging(d communication.EVDataType) bool {
 		d.Measurements.PowerL3 > d.LimitsL3.Min*idleFactor
 }
 
-func updateState() (api.ChargeStatus, error) {
+func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		c.log.TRACE.Printf("!! status: no eebus data available yet")
@@ -237,13 +237,13 @@ func updateState() (api.ChargeStatus, error) {
 
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (api.ChargeStatus, error) {
-	return updateState
+	return c.updateState
 }
 
 // Enabled implements the api.Charger interface
 // should return true if the charger allows the EV to draw power
 func (c *EEBus) Enabled() (bool, error) {
-	status, err := updateState
+	status, err := c.updateState
 	return c.expectedEnableState, err
 }
 
