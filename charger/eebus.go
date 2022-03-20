@@ -31,6 +31,7 @@ type EEBus struct {
 
 	maxCurrent float64
 	connected  bool
+	expectedEnableState bool
 
 	evConnectedTime time.Time
 }
@@ -73,14 +74,14 @@ func NewEEBus(ski string, forcePVLimits bool) (*EEBus, error) {
 }
 
 func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
-	c.log.TRACE.Println("!! onCconnect invoked on ski ", ski)
+	c.log.TRACE.Println("!! onConnect invoked on ski ", ski)
 
 	eebusDevice := app.HEMS(server.EEBusInstance.DeviceInfo())
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
 	c.cc.SetDataUpdateHandler(c.dataUpdateHandler)
 
-	c.connected = true
 	c.setDefaultValues()
+	c.setConnected(true)
 
 	err := c.cc.Boot()
 
@@ -90,14 +91,22 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 func (c *EEBus) onDisconnect(ski string) {
 	c.log.TRACE.Println("!! onDisconnect invoked on ski ", ski)
 
-	c.connected = false
+	c.setConnected(false)
 	c.setDefaultValues()
 }
 
 func (c *EEBus) setDefaultValues() {
+	c.expectedEnableState = false
 	c.communicationStandard = communication.EVCommunicationStandardEnumTypeUnknown
 	c.socSupportAvailable = false
 	c.selfConsumptionSupportAvailable = false
+}
+
+func (c *EEBus) setConnected(connected bool) {
+	if connected && !c.connected {
+		c.evConnectedTime = time.Now()
+	}
+	c.connected = connected
 }
 
 func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType) {
@@ -152,7 +161,7 @@ func (c *EEBus) showCurrentChargingSetup() {
 
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
 	// we receive data, so it is connected
-	c.connected = true
+	c.setConnected(true)
 
 	c.showCurrentChargingSetup()
 
@@ -165,6 +174,9 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 		}
 	// case communication.EVDataElementUpdateUseCaseSoC:
 	case communication.EVDataElementUpdateEVConnectionState:
+		if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+			c.expectedEnableState = false
+		}
 		c.setLoadpointMinMaxLimits(data)
 	case communication.EVDataElementUpdateCommunicationStandard:
 		c.communicationStandard = data.EVData.CommunicationStandard
@@ -189,8 +201,7 @@ func isCharging(d communication.EVDataType) bool {
 		d.Measurements.PowerL3 > d.LimitsL3.Min*idleFactor
 }
 
-// Status implements the api.Charger interface
-func (c *EEBus) Status() (api.ChargeStatus, error) {
+func updateState() (api.ChargeStatus, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		c.log.TRACE.Printf("!! status: no eebus data available yet")
@@ -206,12 +217,14 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 
 	switch currentState {
 	case communication.EVChargeStateEnumTypeUnknown, communication.EVChargeStateEnumTypeUnplugged: // Unplugged
-		c.evConnectedTime = time.Now()
+		c.expectedEnableState = false
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
 		return api.StatusB, nil
 	case communication.EVChargeStateEnumTypeActive: // Active
 		if isCharging(data.EVData) {
+			// we might already be enabled and charging due to connection issues
+			c.expectedEnableState = true
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
@@ -222,29 +235,16 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 	return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
 }
 
+// Status implements the api.Charger interface
+func (c *EEBus) Status() (api.ChargeStatus, error) {
+	return updateState
+}
+
 // Enabled implements the api.Charger interface
 // should return true if the charger allows the EV to draw power
 func (c *EEBus) Enabled() (bool, error) {
-	var res bool
-
-	// we might already be enabled and charging due to connection issues
-	data, err := c.cc.GetData()
-	if err == nil {
-		// handle ev being disconnected
-		if data.EVData.ChargeState != communication.EVChargeStateEnumTypeUnplugged &&
-			data.EVData.ChargeState != communication.EVChargeStateEnumTypeUnknown {
-
-			var status api.ChargeStatus
-			if status, err = c.Status(); err == nil {
-				if status == api.StatusB || status == api.StatusC {
-					res = isCharging(data.EVData)
-				}
-			}
-		}
-	}
-
-	// return the save enable state as we assume enabling/disabling always works
-	return res, err
+	status, err := updateState
+	return c.expectedEnableState, err
 }
 
 // Enable implements the api.Charger interface
@@ -274,6 +274,8 @@ func (c *EEBus) Enable(enable bool) error {
 		c.log.TRACE.Printf("!! enable: cannot enable or disable as communication standard is not yet known")
 		return api.ErrMustRetry
 	}
+
+	c.expectedEnableState = enable
 
 	if !enable {
 		// Important notes on enabling/disabling!!
