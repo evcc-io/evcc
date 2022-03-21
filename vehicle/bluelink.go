@@ -1,8 +1,6 @@
 package vehicle
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -77,25 +75,15 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 
 	api := bluelink.NewAPI(log, settings.URI, identity, cc.Cache)
 
-	vehicles, err := api.Vehicles()
+	_, vehicle, err := ensureVehicleWithFeature(
+		cc.VIN, api.Vehicles,
+		func(v bluelink.Vehicle) (string, bluelink.Vehicle) {
+			return v.VIN, v
+		},
+	)
+
 	if err != nil {
 		return nil, err
-	}
-
-	var vehicle bluelink.Vehicle
-	if cc.VIN == "" && len(vehicles) == 1 {
-		vehicle = vehicles[0]
-		log.DEBUG.Printf("found vehicle: %v", vehicle.VIN)
-	} else {
-		for _, v := range vehicles {
-			if v.VIN == strings.ToUpper(cc.VIN) {
-				vehicle = v
-			}
-		}
-	}
-
-	if len(vehicle.VIN) == 0 {
-		return nil, fmt.Errorf("cannot find vehicle: %v", vehicles)
 	}
 
 	v := &Bluelink{

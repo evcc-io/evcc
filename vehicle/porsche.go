@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/porsche"
-	"github.com/thoas/go-funk"
 )
 
 // Porsche is an api.Vehicle implementation for Porsche cars
@@ -53,15 +52,15 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
 		mobileVehicles, err := mobile.Vehicles()
 		if err == nil {
-			return funk.Map(mobileVehicles, func(v porsche.StatusResponseMobile) string {
+			return util.Map(mobileVehicles, func(v porsche.StatusResponseMobile) string {
 				return v.VIN
-			}).([]string), err
+			}), err
 		}
 
 		vehicles, err := api.Vehicles()
-		return funk.Map(vehicles, func(v porsche.Vehicle) string {
+		return util.Map(vehicles, func(v porsche.Vehicle) string {
 			return v.VIN
-		}).([]string), err
+		}), err
 	})
 
 	if err != nil {

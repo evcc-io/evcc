@@ -7,7 +7,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/mb"
-	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
 
@@ -69,9 +68,9 @@ func (v *API) Vehicles() ([]string, error) {
 		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
 	}
 
-	vehicles := funk.Map(res.LicensePlates, func(v vehicle) string {
+	vehicles := util.Map(res.LicensePlates, func(v vehicle) string {
 		return v.FIN
-	}).([]string)
+	})
 
 	return vehicles, err
 }

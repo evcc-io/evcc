@@ -3,44 +3,46 @@ package vehicle
 import (
 	"fmt"
 	"strings"
-
-	"github.com/thoas/go-funk"
 )
 
-// findVehicle finds the first vehicle in the list of VINs or returns an error
-func findVehicle(vehicles []string, err error) (string, error) {
-	if err != nil {
-		return "", fmt.Errorf("cannot get vehicles: %w", err)
-	}
+// ensureVehicleWithFeature extracts VIN from list of VINs returned from `list`` function
+func ensureVehicle(vin string, list func() ([]string, error)) (string, error) {
+	vin, _, err := ensureVehicleWithFeature(vin, list, func(v string) (string, string) {
+		return v, ""
+	})
 
-	if len(vehicles) != 1 {
-		return "", fmt.Errorf("cannot find vehicle: %v", vehicles)
-	}
-
-	vin := strings.TrimSpace(vehicles[0])
-	if vin == "" {
-		return "", fmt.Errorf("cannot find vehicle: %v", vehicles)
-	}
-
-	return vin, nil
+	return vin, err
 }
 
-// ensureVehicle ensures that the vehicle is available on the api and returns the VIN
-func ensureVehicle(vin string, fun func() ([]string, error)) (string, error) {
-	vehicles, err := fun()
+// ensureVehicleWithFeature extracts VIN and feature from list of vehicles of type V returned from `list`` function
+func ensureVehicleWithFeature[Vehicle, Feature any](
+	vin string,
+	list func() ([]Vehicle, error),
+	extract func(Vehicle) (string, Feature),
+) (string, Feature, error) {
+	vehicles, err := list()
 	if err != nil {
-		return "", fmt.Errorf("cannot get vehicles: %w", err)
+		return "", *new(Feature), fmt.Errorf("cannot get vehicles: %w", err)
 	}
 
 	if vin = strings.ToUpper(vin); vin != "" {
-		// vin defined but doesn't exist
-		if !funk.ContainsString(vehicles, vin) {
-			err = fmt.Errorf("cannot find vehicle: %s", vin)
+		for _, vehicle := range vehicles {
+			if v, res := extract(vehicle); v == vin {
+				return v, res, nil
+			}
 		}
+
+		// vin defined but doesn't exist
+		err = fmt.Errorf("cannot find vehicle: %s", vin)
 	} else {
 		// vin empty
-		vin, err = findVehicle(vehicles, nil)
+		if len(vehicles) == 1 {
+			vin, res := extract(vehicles[0])
+			return vin, res, nil
+		}
+
+		err = fmt.Errorf("cannot find vehicle: %v", vehicles)
 	}
 
-	return vin, err
+	return "", *new(Feature), err
 }

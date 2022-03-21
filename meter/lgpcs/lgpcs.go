@@ -41,10 +41,10 @@ type EssData struct {
 
 type Com struct {
 	*request.Helper
-	uri        string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
-	password   string // registration number of the LG ESS Inverter - e.g. "DE2001..."
-	authKey    string // auth_key returned during login and renewed with new login after expiration
-	cachedData func() (interface{}, error)
+	uri      string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
+	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
+	authKey  string // auth_key returned during login and renewed with new login after expiration
+	dataG    func() (EssData, error)
 }
 
 var (
@@ -70,9 +70,7 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 
 		// caches the data access for the "cache" time duration
 		// sends a new request to the pcs if the cache is expired and Data() requested
-		instance.cachedData = provider.NewCached(func() (interface{}, error) {
-			return instance.refreshData()
-		}, cache).InterfaceGetter()
+		instance.dataG = provider.Cached(instance.refreshData, cache)
 
 		// do first login if no authKey exists and uri and password exist
 		if instance.authKey == "" && instance.uri != "" && instance.password != "" {
@@ -127,8 +125,7 @@ func (m *Com) Login() error {
 
 // Data gives the data read from the pcs.
 func (m *Com) Data() (EssData, error) {
-	res, err := m.cachedData()
-	return res.(EssData), err
+	return m.dataG()
 }
 
 // refreshData reads data from lgess pcs. Tries to re-login if "405" auth_key expired is returned

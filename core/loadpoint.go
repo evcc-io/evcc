@@ -16,7 +16,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v3"
@@ -760,7 +760,7 @@ func (lp *LoadPoint) identifyVehicle() {
 func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 	// find exact match
 	for _, vehicle := range lp.vehicles {
-		if funk.ContainsString(vehicle.Identifiers(), id) {
+		if slices.Contains(vehicle.Identifiers(), id) {
 			return vehicle
 		}
 	}

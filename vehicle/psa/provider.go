@@ -10,15 +10,15 @@ import (
 
 // Provider is an api.Vehicle implementation for PSA cars
 type Provider struct {
-	statusG func() (interface{}, error)
+	statusG func() (Status, error)
 }
 
 // NewProvider creates a new vehicle
 func NewProvider(api *API, vid string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.NewCached(func() (interface{}, error) {
+		statusG: provider.Cached(func() (Status, error) {
 			return api.Status(vid)
-		}, cache).InterfaceGetter(),
+		}, cache),
 	}
 	return impl
 }
@@ -28,7 +28,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		for _, e := range res.Energy {
 			if e.Type != "Electric" {
 				continue
@@ -48,7 +48,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		for _, e := range res.Energy {
 			if e.Type != "Electric" {
 				continue
@@ -69,7 +69,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
 
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		return res.Odometer.Mileage, nil
 	}
 
@@ -81,7 +81,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		for _, e := range res.Energy {
 			if e.Type != "Electric" {
 				continue
@@ -101,7 +101,7 @@ var _ api.ChargeState = (*Provider)(nil)
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		for _, e := range res.Energy {
 			if e.Type != "Electric" {
 				continue
@@ -131,7 +131,7 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		active := strings.ToLower(res.Preconditionning.AirConditioning.Status) != "disabled"
 		return active, 20, 20, nil
 	}
@@ -144,7 +144,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 // Position implements the api.VehiclePosition interface
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		if coord := res.LastPosition.Geometry.Coordinates; len(coord) == 2 {
 			return coord[0], coord[1], nil
 		}

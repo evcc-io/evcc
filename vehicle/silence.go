@@ -14,7 +14,7 @@ import (
 // Silence is an api.Vehicle implementation for Silence S01 vehicles
 type Silence struct {
 	*embed
-	apiG func() (interface{}, error)
+	apiG func() (silence.Vehicle, error)
 }
 
 func init() {
@@ -55,9 +55,9 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	vin, err := ensureVehicle(strings.ToLower(cc.VIN), api.Vehicles)
 
 	if err == nil {
-		v.apiG = provider.NewCached(func() (interface{}, error) {
+		v.apiG = provider.Cached(func() (silence.Vehicle, error) {
 			return api.Status(vin)
-		}, cc.Cache).InterfaceGetter()
+		}, cc.Cache)
 	}
 
 	return v, err
@@ -66,12 +66,7 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 // SoC implements the api.Vehicle interface
 func (v *Silence) SoC() (float64, error) {
 	res, err := v.apiG()
-
-	if res, ok := res.(silence.Vehicle); err == nil && ok {
-		return float64(res.BatterySoc), nil
-	}
-
-	return 0, err
+	return float64(res.BatterySoc), err
 }
 
 var _ api.VehicleRange = (*Silence)(nil)
@@ -79,12 +74,7 @@ var _ api.VehicleRange = (*Silence)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Silence) Range() (int64, error) {
 	res, err := v.apiG()
-
-	if res, ok := res.(silence.Vehicle); err == nil && ok {
-		return int64(res.Range), nil
-	}
-
-	return 0, err
+	return int64(res.Range), err
 }
 
 var _ api.VehicleOdometer = (*Silence)(nil)
@@ -92,10 +82,5 @@ var _ api.VehicleOdometer = (*Silence)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Silence) Odometer() (float64, error) {
 	res, err := v.apiG()
-
-	if res, ok := res.(silence.Vehicle); err == nil && ok {
-		return float64(res.Odometer), nil
-	}
-
-	return 0, err
+	return float64(res.Odometer), err
 }

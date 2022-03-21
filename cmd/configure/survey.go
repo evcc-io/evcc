@@ -11,8 +11,8 @@ import (
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
-	"github.com/thoas/go-funk"
 	stripmd "github.com/writeas/go-strip-markdown"
+	"golang.org/x/exp/slices"
 )
 
 // surveyAskOne asks the user for input
@@ -49,7 +49,7 @@ func (c *CmdConfigure) askSelection(message string, items []string) (string, int
 	var selection string
 	err := c.surveyAskOne(prompt, &selection)
 
-	return selection, funk.IndexOf(items, selection), err
+	return selection, slices.Index(items, selection), err
 }
 
 // selectItem selects item from list
@@ -153,11 +153,11 @@ func (c *CmdConfigure) askValue(q question) string {
 
 	validate := func(val interface{}) error {
 		value := val.(string)
-		if q.invalidValues != nil && funk.ContainsString(q.invalidValues, value) {
+		if q.invalidValues != nil && slices.Contains(q.invalidValues, value) {
 			return errors.New(c.localizedString("ValueError_Used", nil))
 		}
 
-		if q.validValues != nil && !funk.ContainsString(q.validValues, value) {
+		if q.validValues != nil && !slices.Contains(q.validValues, value) {
 			return errors.New(c.localizedString("ValueError_Invalid", nil))
 		}
 

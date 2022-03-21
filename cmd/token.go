@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 	"golang.org/x/oauth2"
 )
 
@@ -37,15 +37,19 @@ func runToken(cmd *cobra.Command, args []string) {
 	if len(conf.Vehicles) == 1 {
 		vehicleConf = conf.Vehicles[0]
 	} else if len(args) == 1 {
-		vehicleConf = funk.Find(conf.Vehicles, func(v qualifiedConfig) bool {
+		idx := slices.IndexFunc(conf.Vehicles, func(v qualifiedConfig) bool {
 			return strings.EqualFold(v.Name, args[0])
-		}).(qualifiedConfig)
+		})
+
+		if idx >= 0 {
+			vehicleConf = conf.Vehicles[idx]
+		}
 	}
 
 	if vehicleConf.Name == "" {
-		vehicles := funk.Map(conf.Vehicles, func(v qualifiedConfig) string {
+		vehicles := util.Map(conf.Vehicles, func(v qualifiedConfig) string {
 			return v.Name
-		}).([]string)
+		})
 		log.FATAL.Fatalf("vehicle not found, have %v", vehicles)
 	}
 

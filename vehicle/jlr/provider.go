@@ -8,19 +8,19 @@ import (
 )
 
 type Provider struct {
-	statusG   func() (interface{}, error)
-	positionG func() (interface{}, error)
+	statusG   func() (StatusResponse, error)
+	positionG func() (PositionResponse, error)
 	actionS   func(bool) error
 }
 
 func NewProvider(api *API, vin, user string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.NewCached(func() (interface{}, error) {
+		statusG: provider.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
-		}, cache).InterfaceGetter(),
-		positionG: provider.NewCached(func() (interface{}, error) {
+		}, cache),
+		positionG: provider.Cached(func() (PositionResponse, error) {
 			return api.Position(vin)
-		}, cache).InterfaceGetter(),
+		}, cache),
 		actionS: func(start bool) error {
 			return api.ChargeAction(vin, user, start)
 		},
@@ -35,7 +35,7 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) SoC() (float64, error) {
 	var val float64
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		val, err = res.VehicleStatus.EvStatus.FloatVal("EV_STATE_OF_CHARGE")
 	}
 
@@ -48,7 +48,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	var val int64
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		val, err = res.VehicleStatus.EvStatus.IntVal("EV_RANGE_ON_BATTERY_KM")
 	}
 
@@ -62,7 +62,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		if s, err := res.VehicleStatus.EvStatus.StringVal("EV_CHARGING_STATUS"); err == nil {
 			switch s {
 			case "NOTCONNECTED":
@@ -83,7 +83,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		i, err := res.VehicleStatus.CoreStatus.IntVal("EV_MINUTES_TO_FULLY_CHARGED")
 		return time.Now().Add(time.Duration(i) * time.Minute), err
 	}
@@ -97,7 +97,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 func (v *Provider) Odometer() (float64, error) {
 	var val float64
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		val, err = res.VehicleStatus.CoreStatus.FloatVal("ODOMETER")
 	}
 
@@ -109,7 +109,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 // Position implements the api.VehiclePosition interface
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.positionG()
-	if res, ok := res.(PositionResponse); err == nil && ok {
+	if err == nil {
 		return res.Position.Latitude, res.Position.Longitude, nil
 	}
 
