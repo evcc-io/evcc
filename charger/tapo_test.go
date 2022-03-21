@@ -4,8 +4,9 @@ import "testing"
 
 func TestTapoHandshake(t *testing.T) {
 	tp := &Tapo{
+		uri:      "http://192.168.178.114/app",
 		email:    "m.thierolf@googlemail.com",
-		password: "tapo123",
+		password: "tapo1234",
 	}
 
 	err := tp.TapoHandshake()

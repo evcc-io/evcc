@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -11,6 +12,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -159,7 +161,7 @@ func (c *Tapo) TapoHandshake() error {
 		return err
 	}
 
-	payload, _ := json.Marshal(map[string]interface{}{
+	data, _ := json.Marshal(map[string]interface{}{
 		"method": "handshake",
 		"params": map[string]interface{}{
 			"key":             string(pubPEM),
@@ -167,30 +169,28 @@ func (c *Tapo) TapoHandshake() error {
 		},
 	})
 
-	// Tapo post start
-	res := `{
-		"error_code":0,
-		"result":{
-		   "key":"ZvHUZ2EZ1LLkrh9YG0ShBINL59Rna1++j8iW2r44klFseH17A6C8HH2TqN8UkNpi+MHxFgQ4Jvs/nvz8QoNPgVxWCsgVBI01GTtDdwHtaRXRNh2VuIp6NDUJ0/1NSydiMfeUs1AZT2vwxSg7/cI1DVHFzL7jNr1WNHEsDiYtm48="
-		}
-	 }`
+	var hsresp tapo.HandshakeResponse
 
-	var hsres tapo.HandshakeResponse
-	err = json.Unmarshal([]byte(res), &hsres)
-	// Tapo post end
+	resp, err := http.Post(c.uri, "", bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
 
-	encryptedEncryptionKey, _ := base64.StdEncoding.DecodeString(hsres.Result.Key)
+	defer resp.Body.Close()
+
+	json.NewDecoder(resp.Body).Decode(&hsresp)
+
+	encryptedEncryptionKey, _ := base64.StdEncoding.DecodeString(hsresp.Result.Key)
 	encryptionKey, _ := rsa.DecryptPKCS1v15(rand.Reader, privateKey, []byte(encryptedEncryptionKey))
-
-	encryptionKey = []byte(hsres.Result.Key)
 
 	c.cipher = &TapoCipher{
 		key: encryptionKey[:16],
 		val: encryptionKey[16:],
 	}
 
-	return fmt.Errorf("payload:\n%v\nhsres:\n%s\nkey:\n%s\nval:%s\n", string(payload), string(hsres.Result.Key), string(c.cipher.key), string(c.cipher.val))
+	c.sessionID = strings.Split(resp.Header.Get("Set-Cookie"), ";")[0]
 
+	return fmt.Errorf("data:\n%v\nkey:\n%s\nval:\n%s\nsessionId:\n%s\n", string(data), string(c.cipher.key), string(c.cipher.val), c.sessionID)
 }
 
 func (tc *TapoCipher) TapoEncrypt(payload []byte) []byte {
