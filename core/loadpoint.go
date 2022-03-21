@@ -564,8 +564,10 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 func (lp *LoadPoint) syncCharger() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil {
-		if enabled != lp.enabled && time.Since(lp.guardUpdated) > guardGracePeriod {
-			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
+		if enabled != lp.enabled {
+			if time.Since(lp.guardUpdated) > guardGracePeriod {
+				lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
+			}
 			err = lp.charger.Enable(lp.enabled)
 		}
 
