@@ -52,6 +52,7 @@ func TestTemplates(t *testing.T) {
 
 		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {
 			if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
+				t.Log(values)
 				t.Error(err)
 			}
 		})

@@ -22,13 +22,13 @@ render: |
   {{- if eq .usage "pv" }}
   type: custom
   power:
-    type: calc
+    source: calc
     add: # The add plugin sums up both string values
-    - type: modbus
+    - source: modbus
       model: sunspec
   {{ include "modbus" . | indent 4 }}
       value: 160:1:DCW # string 1
-    - type: modbus
+    - source: modbus
       model: sunspec
   {{ include "modbus" . | indent 4 }}
       value: 160:2:DCW # string 2
