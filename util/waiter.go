@@ -27,7 +27,7 @@ func NewWaiter(timeout time.Duration, logInitialWait func()) *Waiter {
 }
 
 // Update is called when client has received data. Update resets the timeout counter.
-// It is client responsibility to ensure that the waiter is not locked when Update is called.
+// Waiter MUST be locked when calling Update.
 func (p *Waiter) Update() {
 	p.updated = time.Now()
 	p.cond.Broadcast()
@@ -43,18 +43,25 @@ func (p *Waiter) Overdue() time.Duration {
 
 		go func() {
 			defer close(c)
+			p.Lock() // establish lock once go routine has started
 			for p.updated.IsZero() {
 				p.cond.Wait()
 			}
 		}()
 
+		// release lock so external updates can occur
+		p.Unlock()
+
 		select {
 		case <-c:
 			// initial value received, lock established
 		case <-time.After(waitInitialTimeout):
-			p.Update()              // unblock the sync.Cond
+			// establish lock per contract of `Update()``
+			p.Lock()
+			p.Update() // unblock the sync.Cond
+			p.Unlock()
 			<-c                     // wait for goroutine, re-establish lock
-			p.updated = time.Time{} // reset updated to initial value missing
+			p.updated = time.Time{} // reset to "initial value missing"
 			return waitInitialTimeout
 		}
 	}
