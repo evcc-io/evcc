@@ -70,8 +70,8 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 
 		// caches the data access for the "cache" time duration
 		// sends a new request to the pcs if the cache is expired and Data() requested
-		inst.cachedData = provider.NewCached(func() (interface{}, error) {
-			return inst.refreshData()
+		instance.cachedData = provider.NewCached(func() (interface{}, error) {
+			return instance.refreshData()
 		}, cache).InterfaceGetter()
 
 		// do first login if no authKey exists and uri and password exist
