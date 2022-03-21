@@ -2,3 +2,7 @@ issues:
   exclude:
   - .regActualCurrent. is unused
   - "`routeLogger` is unused"
+linters-settings:
+  staticcheck:
+    checks:
+      - '-SA1019'
