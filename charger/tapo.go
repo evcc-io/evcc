@@ -29,7 +29,7 @@ import (
 // Chiper stores the Tapo handshake response cipher
 type TapoCipher struct {
 	key []byte
-	val []byte
+	iv  []byte
 }
 
 // TP-Link Tapo charger implementation
@@ -161,6 +161,49 @@ func TapoErrorCode(errorCode int) error {
 	return nil
 }
 
+func (c *Tapo) Handshake() (err error) {
+	privKey, pubKey, _ := TapoRSAKeyGen(1024)
+
+	pubPEM, _ := TapoRSAPEMDump(pubKey)
+	payload, _ := json.Marshal(map[string]interface{}{
+		"method": "handshake",
+		"params": map[string]interface{}{
+			"key":             string(pubPEM),
+			"requestTimeMils": 0,
+		},
+	})
+
+	resp, err := http.Post(c.GetURL(), "application/json", bytes.NewBuffer(payload))
+	if err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+
+	var jsonResp struct {
+		ErrorCode int `json:"error_code"`
+		Result    struct {
+			Key string `json:"key"`
+		} `json:"result"`
+	}
+
+	json.NewDecoder(resp.Body).Decode(&jsonResp)
+	if err = TapoErrorCode(jsonResp.ErrorCode); err != nil {
+		return
+	}
+
+	encryptedEncryptionKey, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Key)
+	encryptionKey, _ := rsa.DecryptPKCS1v15(rand.Reader, privKey, encryptedEncryptionKey)
+	c.cipher = &TapoCipher{
+		key: encryptionKey[:16],
+		iv:  encryptionKey[16:],
+	}
+
+	c.sessionID = strings.Split(resp.Header.Get("Set-Cookie"), ";")[0]
+
+	return
+}
+
 func (c *Tapo) TapoHandshake() error {
 	privateKey, publicKey, err := TapoRSAKeyGen(1024)
 	if err != nil {
@@ -199,54 +242,64 @@ func (c *Tapo) TapoHandshake() error {
 
 	c.cipher = &TapoCipher{
 		key: encryptionKey[:16],
-		val: encryptionKey[16:],
+		iv:  encryptionKey[16:],
 	}
 
 	c.sessionID = strings.Split(resp.Header.Get("Set-Cookie"), ";")[0]
 
-	return fmt.Errorf("data:\n%v\nkey:\n%s\nval:\n%s\nsessionId:\n%s\n", string(data), string(c.cipher.key), string(c.cipher.val), c.sessionID)
+	fmt.Printf("data:\n%v\nkey:\n%s\nval:\n%s\nsessionId:\n%s\n", string(data), string(c.cipher.key), string(c.cipher.iv), c.sessionID)
+
+	return nil
 }
 
-func (c *Tapo) TapoLogin() error {
-	err := c.TapoHandshake()
-	if err != nil {
-		return err
+func (c *Tapo) TapoLogin() (err error) {
+	if c.cipher == nil {
+		return errors.New("Handshake was not performed")
 	}
 
 	h := sha1.New()
 	h.Write([]byte(c.email))
-
-	data, _ := json.Marshal(map[string]interface{}{
+	payload, _ := json.Marshal(map[string]interface{}{
 		"method": "login_device",
 		"params": map[string]interface{}{
 			"username": base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(h.Sum(nil)))),
 			"password": base64.StdEncoding.EncodeToString([]byte(c.password)),
 		},
 	})
+	fmt.Printf("payload:\n%s\n", string(payload))
 
-	var deviceResp tapo.DeviceResponse
-
-	resp, err := http.Post(c.uri, "", bytes.NewBuffer(data))
+	payload, err = c.TapoRequest(payload)
 	if err != nil {
-		return err
+		return
 	}
 
-	defer resp.Body.Close()
+	var jsonResp struct {
+		ErrorCode int `json:"error_code"`
+		Result    struct {
+			Token string `json:"token"`
+		} `json:"result"`
+	}
 
-	json.NewDecoder(resp.Body).Decode(&deviceResp)
+	json.NewDecoder(bytes.NewBuffer(payload)).Decode(&jsonResp)
+	if err = TapoErrorCode(jsonResp.ErrorCode); err != nil {
+		return
+	}
 
-	return nil
+	c.token = &jsonResp.Result.Token
+	return
 }
 
-func (c *Tapo) TapoRequest(data []byte) ([]byte, error) {
-	securedData, _ := json.Marshal(map[string]interface{}{
+func (c *Tapo) TapoRequest(payload []byte) ([]byte, error) {
+	securedPayload, _ := json.Marshal(map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
-			"request": base64.StdEncoding.EncodeToString(c.cipher.TapoEncrypt(data)),
+			"request": base64.StdEncoding.EncodeToString(c.cipher.Encrypt(payload)),
 		},
 	})
 
-	req, _ := http.NewRequest("POST", c.uri, bytes.NewBuffer(securedData))
+	fmt.Printf("securedPayload:\n%s\n", string(securedPayload))
+
+	req, _ := http.NewRequest("POST", c.GetURL(), bytes.NewBuffer(securedPayload))
 	req.Header.Set("Cookie", c.sessionID)
 	req.Close = true
 
@@ -257,22 +310,35 @@ func (c *Tapo) TapoRequest(data []byte) ([]byte, error) {
 
 	defer resp.Body.Close()
 
-	var deviceResp tapo.DeviceResponse
+	var jsonResp struct {
+		ErrorCode int `json:"error_code"`
+		Result    struct {
+			Response string `json:"response"`
+		} `json:"result"`
+	}
 
-	json.NewDecoder(resp.Body).Decode(&deviceResp)
+	json.NewDecoder(resp.Body).Decode(&jsonResp)
 
-	if err = TapoErrorCode(deviceResp.ErrorCode); err != nil {
+	if err = TapoErrorCode(jsonResp.ErrorCode); err != nil {
 		return nil, err
 	}
 
-	encryptedResponse, _ := base64.StdEncoding.DecodeString(deviceResp.Result.Response)
+	encryptedResponse, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Response)
 
-	return c.cipher.TapoDecrypt(encryptedResponse), nil
+	return c.cipher.Decrypt(encryptedResponse), nil
 }
 
-func (tc *TapoCipher) TapoEncrypt(payload []byte) []byte {
-	block, _ := aes.NewCipher(tc.key)
-	encrypter := cipher.NewCBCEncrypter(block, tc.val)
+func (c *Tapo) GetURL() string {
+	if c.token == nil {
+		return fmt.Sprintf("http://%s/app", c.uri)
+	} else {
+		return fmt.Sprintf("http://%s/app?token=%s", c.uri, *c.token)
+	}
+}
+
+func (c *TapoCipher) Encrypt(payload []byte) []byte {
+	block, _ := aes.NewCipher(c.key)
+	encrypter := cipher.NewCBCEncrypter(block, c.iv)
 
 	paddedPayload, _ := pkcs7.Pad(payload, aes.BlockSize)
 	encryptedPayload := make([]byte, len(paddedPayload))
@@ -281,9 +347,9 @@ func (tc *TapoCipher) TapoEncrypt(payload []byte) []byte {
 	return encryptedPayload
 }
 
-func (tc *TapoCipher) TapoDecrypt(payload []byte) []byte {
-	block, _ := aes.NewCipher(tc.key)
-	encrypter := cipher.NewCBCDecrypter(block, tc.val)
+func (c *TapoCipher) Decrypt(payload []byte) []byte {
+	block, _ := aes.NewCipher(c.key)
+	encrypter := cipher.NewCBCDecrypter(block, c.iv)
 
 	decryptedPayload := make([]byte, len(payload))
 	encrypter.CryptBlocks(decryptedPayload, payload)

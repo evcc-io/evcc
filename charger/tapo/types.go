@@ -1,15 +1,33 @@
 package tapo
 
+import "net/http"
+
 // Tapo homepage + api reverse engineering results
 // https://www.tapo.com/de/
 
 // https://k4czp3r.xyz/reverse-engineering/tp-link/tapo/2020/10/15/reverse-engineering-tp-link-tapo.html
+
+type Device struct {
+	ip              string
+	encodedEmail    string
+	encodedPassword string
+	cipher          *DeviceCipher
+	sessionID       string
+	token           *string
+	client          *http.Client
+}
+
+type DeviceCipher struct {
+	key []byte
+	iv  []byte
+}
 
 type DeviceResponse struct {
 	ErrorCode int `json:"error_code"`
 	Result    struct {
 		Key      string `json:"key"`
 		Response string `json:"response"`
+		Token    string `json:"token"`
 	} `json:"result"`
 }
 
