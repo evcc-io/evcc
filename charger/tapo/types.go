@@ -5,10 +5,11 @@ package tapo
 
 // https://k4czp3r.xyz/reverse-engineering/tp-link/tapo/2020/10/15/reverse-engineering-tp-link-tapo.html
 
-type HandshakeResponse struct {
+type DeviceResponse struct {
 	ErrorCode int `json:"error_code"`
 	Result    struct {
-		Key string `json:"key"`
+		Key      string `json:"key"`
+		Response string `json:"response"`
 	} `json:"result"`
 }
 
