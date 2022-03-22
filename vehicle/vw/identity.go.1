@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -88,43 +86,44 @@ func (v *Identity) login() (Token, error) {
 	// at this stage we have the IDK tokens
 	idToken := q.Get("id_token")
 	code := q.Get("code")
+	_ = code
 
 	if err == nil && idToken == "" {
 		err = errors.New("missing id_token")
 	}
 
-	if err == nil && code != "" {
-		data := url.Values(map[string][]string{
-			"code_verifier": {v.cvc.CodeChallengePlain()},
-		})
+	// if err == nil && code != "" {
+	// 	data := url.Values(map[string][]string{
+	// 		"code_verifier": {v.cvc.CodeChallengePlain()},
+	// 	})
 
-		t, err := v.ts.Exchange(data, idToken, code)
-		fmt.Printf("%+v\n", t)
+	// 	t, err := v.ts.Exchange(data, idToken, code)
+	// 	fmt.Printf("%+v\n", t)
 
-		t, err = v.ts.Refresh(nil, t)
-		fmt.Printf("%+v\n", t)
+	// 	t, err = v.ts.Refresh(nil, t)
+	// 	fmt.Printf("%+v\n", t)
 
-		panic(err)
-	}
+	// 	panic(err)
+	// }
 
-	if v.clientID == "" {
-		accessToken := q.Get("access_token")
-		if err == nil && accessToken == "" {
-			err = errors.New("missing access_token")
-		}
+	// if v.clientID == "" {
+	// 	accessToken := q.Get("access_token")
+	// 	if err == nil && accessToken == "" {
+	// 		err = errors.New("missing access_token")
+	// 	}
 
-		var expires int
-		if err == nil {
-			expires, err = strconv.Atoi(q.Get("expires_in"))
-		}
+	// 	var expires int
+	// 	if err == nil {
+	// 		expires, err = strconv.Atoi(q.Get("expires_in"))
+	// 	}
 
-		return Token{
-			Token: oauth2.Token{
-				AccessToken: accessToken,
-				Expiry:      time.Now().Add(time.Duration(expires) * time.Second),
-			},
-		}, err
-	}
+	// 	return Token{
+	// 		Token: oauth2.Token{
+	// 			AccessToken: accessToken,
+	// 			Expiry:      time.Now().Add(time.Duration(expires) * time.Second),
+	// 		},
+	// 	}, err
+	// }
 
 	var token Token
 	if err == nil {
@@ -132,8 +131,6 @@ func (v *Identity) login() (Token, error) {
 			"grant_type": {"id_token"},
 			"scope":      {"sc2:fal"},
 			"token":      {idToken},
-			// "grant_type": {"code"},
-			// "token":      {q.Get("code")},
 		})
 
 		var req *http.Request

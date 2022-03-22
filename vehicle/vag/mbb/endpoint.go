@@ -7,8 +7,10 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vag"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -28,10 +30,14 @@ func New(log *util.Logger, clientID string) *Service {
 	}
 }
 
-func (v *Service) Exchange(idToken, code string) (*vag.Token, error) {
+func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
+	if err := util.RequireValues(q, "id_token"); err != nil {
+		return nil, err
+	}
+
 	data := url.Values(map[string][]string{
 		"grant_type": {"id_token"},
-		"token":      {idToken},
+		"token":      {q.Get("id_token")},
 		"scope":      {"sc2:fal"},
 	})
 
@@ -71,4 +77,22 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 	}
 
 	return &res, err
+}
+
+// RefreshToken implements oauth.TokenRefresher
+func (v *Service) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	res, err := v.Refresh(&vag.Token{
+		Token: *token,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &res.Token, err
+}
+
+// TokenSource creates a refreshing OAuth2 token source
+func (v *Service) TokenSource(token *vag.Token) oauth2.TokenSource {
+	return oauth.RefreshTokenSource(&token.Token, v)
 }

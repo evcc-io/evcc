@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -45,14 +44,12 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("audi").Redact(cc.User, cc.Password, cc.VIN)
-	identity := vw.NewIdentity(log, audi.AuthClientID, audi.AuthParams, cc.User, cc.Password)
-
-	err := identity.Login()
+	ts, err := vw.MbbTokenSource(log, audi.AuthClientID, audi.AuthParams, cc.User, cc.Password)
 	if err != nil {
-		return v, fmt.Errorf("login failed: %w", err)
+		return nil, err
 	}
 
-	api := vw.NewAPI(log, identity, audi.Brand, audi.Country)
+	api := vw.NewAPI(log, ts, audi.Brand, audi.Country)
 	api.Client.Timeout = cc.Timeout
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)

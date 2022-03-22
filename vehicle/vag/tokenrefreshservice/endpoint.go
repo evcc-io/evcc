@@ -1,14 +1,15 @@
 package tokenrefreshservice
 
 import (
-	"errors"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vag"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -27,17 +28,15 @@ func New(log *util.Logger) *Service {
 	}
 }
 
-func (v *Service) Exchange(q url.Values, idToken, code string) (*vag.Token, error) {
-	if idToken == "" {
-		return nil, errors.New("missing id_token")
-	}
-	if code == "" {
-		return nil, errors.New("missing code")
+func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
+	if err := util.RequireValues(q, "id_token", "code"); err != nil {
+		return nil, err
 	}
 
 	data := url.Values{
-		"auth_code": {code},
-		"id_token":  {idToken},
+		"auth_code": {q.Get("code")},
+		"id_token":  {q.Get("id_token")},
+		"brand":     {"skoda"}, // TODO parametrize
 	}
 
 	for k, v := range q {
@@ -54,10 +53,11 @@ func (v *Service) Exchange(q url.Values, idToken, code string) (*vag.Token, erro
 	return &res, err
 }
 
-func (v *Service) Refresh(q url.Values, token *vag.Token) (*vag.Token, error) {
+func (v *Service) Refresh(token *vag.Token, q url.Values) (*vag.Token, error) {
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},
+		"brand":         {"skoda"}, // TODO parametrize
 	}
 
 	for k, v := range q {
@@ -72,4 +72,22 @@ func (v *Service) Refresh(q url.Values, token *vag.Token) (*vag.Token, error) {
 	}
 
 	return &res, err
+}
+
+// RefreshToken implements oauth.TokenRefresher
+func (v *Service) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	res, err := v.Refresh(&vag.Token{
+		Token: *token,
+	}, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &res.Token, err
+}
+
+// TokenSource creates a refreshing OAuth2 token source
+func (v *Service) TokenSource(token *vag.Token) oauth2.TokenSource {
+	return oauth.RefreshTokenSource(&token.Token, v)
 }
