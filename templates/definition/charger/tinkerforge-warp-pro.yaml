@@ -28,5 +28,4 @@ render: |
   type: warp
   broker: {{ .host }}:{{ .port }}
   topic: {{ .topic }}
-  useMeter: true
   timeout: {{ .timeout }}
