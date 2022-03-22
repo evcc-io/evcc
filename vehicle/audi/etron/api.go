@@ -14,7 +14,6 @@ const ApiURI = "https://app-api.live-my.audi.com/vgql/v1/graphql"
 
 // API is the VW api client
 type API struct {
-	*request.Helper
 	client *graphql.Client
 }
 

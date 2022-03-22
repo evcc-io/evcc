@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -9,13 +8,15 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/audi/etron"
 	"github.com/evcc-io/evcc/vehicle/id"
-	"github.com/evcc-io/evcc/vehicle/vw"
+	"github.com/evcc-io/evcc/vehicle/vag/aazsproxy"
+	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
+	"golang.org/x/oauth2"
 )
 
 // https://github.com/TA2k/ioBroker.vw-connect
 // https://github.com/arjenvrh/audi_connect_ha/blob/master/custom_components/audiconnect/audi_services.py
 
-// Etron is an api.Vehicle implementation for Etron cars
+// Etron is an api.Vehicle implementation for Audi eTron cars
 type Etron struct {
 	*embed
 	*id.Provider // provides the api implementations
@@ -46,23 +47,44 @@ func NewEtronFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("etron").Redact(cc.User, cc.Password, cc.VIN)
-	identity := vw.NewIdentity(log, "", etron.AuthParams, cc.User, cc.Password)
 
-	err := identity.Login()
+	// // add code challenge
+	// cvc, _ := cv.CreateCodeVerifier()
+
+	// q := url.Values{
+	// 	"code_challenge_method": {"S256"},
+	// 	"code_challenge":        {cvc.CodeChallengeS256()},
+	// }
+
+	// for k, v := range etron.AuthParams {
+	// 	q[k] = v
+	// }
+
+	vwi := vwidentity.New(log)
+	uri := vwidentity.LoginURL(vwidentity.Endpoint.AuthURL, etron.AuthParams)
+	q, err := vwi.Login(uri, cc.User, cc.Password)
 	if err != nil {
-		return v, fmt.Errorf("login failed: %w", err)
+		return nil, err
 	}
 
-	etronIdentity := etron.NewIdentity(log, identity)
-	api := etron.NewAPI(log, etronIdentity)
+	aaz := aazsproxy.New(log)
+	token, err := aaz.Exchange(q)
+	if err != nil {
+		return nil, err
+	}
+
+	api := etron.NewAPI(log, aaz.TokenSource(token))
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
-		idApi := id.NewAPI(log, identity)
-		fmt.Println(idApi.Status(cc.VIN))
+		// TODO build token source
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: q.Get("id_token")})
+		api := id.NewAPI(log, ts)
 
-		v.Provider = id.NewProvider(idApi, cc.VIN, cc.Cache)
+		api.Client.Timeout = cc.Timeout
+
+		v.Provider = id.NewProvider(api, cc.VIN, cc.Cache)
 	}
 
 	return v, err

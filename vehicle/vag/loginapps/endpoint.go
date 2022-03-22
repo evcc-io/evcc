@@ -21,7 +21,6 @@ var Endpoint = &oauth2.Endpoint{
 
 type Service struct {
 	*request.Helper
-	clientID string
 }
 
 func New(log *util.Logger) *Service {
