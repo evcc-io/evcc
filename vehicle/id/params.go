@@ -1,6 +1,12 @@
 package id
 
-import "net/url"
+import (
+	"net/url"
+
+	"github.com/evcc-io/evcc/vehicle/vag/loginapps"
+)
+
+const LoginURL = loginapps.BaseURL + "/authorize"
 
 var AuthParams = url.Values(map[string][]string{
 	"response_type": {"code id_token token"},

@@ -27,14 +27,17 @@ var Endpoint = &oauth2.Endpoint{
 
 type Service struct {
 	*request.Helper
-	log *util.Logger
 }
 
-func New(log *util.Logger, uri string) *Service {
+func New(log *util.Logger) *Service {
 	return &Service{
-		log:    log,
 		Helper: request.NewHelper(log),
 	}
+}
+
+// LoginURL combines base url and query params
+func LoginURL(uri string, q url.Values) string {
+	return fmt.Sprintf("%s?%s", uri, q.Encode())
 }
 
 // Login performs the identity.vwgroup.io login
@@ -118,10 +121,9 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 
 			if u := resp.Request.URL.Query().Get("updated"); err == nil && u != "" {
 				err = errors.New("updated ToS")
-				// log.WARN.Println("accepting updated tos", u)
-				// if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
-				// 	resp.Body.Close()
-				// }
+				if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
+					resp.Body.Close()
+				}
 			}
 		}
 	}

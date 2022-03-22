@@ -1,7 +1,6 @@
 package id
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -47,21 +46,16 @@ func (v *Identity) login() (Token, error) {
 	q, err := v.idtp.Login()
 
 	if err == nil {
-		for _, k := range []string{"state", "id_token", "access_token", "code"} {
-			if q.Get(k) == "" {
-				err = errors.New("missing " + k)
-				break
-			}
-		}
+		err = util.RequireValues(q, "state", "id_token", "access_token", "code")
 	}
 
 	var token Token
 	if err == nil {
 		data := map[string]string{
+			"region":            "emea",
+			"redirect_uri":      "weconnect://authenticated",
 			"state":             q.Get("state"),
 			"id_token":          q.Get("id_token"),
-			"redirect_uri":      "weconnect://authenticated",
-			"region":            "emea",
 			"access_token":      q.Get("access_token"),
 			"authorizationCode": q.Get("code"),
 		}
