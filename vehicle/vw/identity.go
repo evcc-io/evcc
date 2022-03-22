@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -61,8 +63,29 @@ func (v *Identity) Login() error {
 func (v *Identity) login() (Token, error) {
 	q, err := v.idtp.Login()
 
-	if err == nil && q.Get("id_token") == "" {
+	// at this stage we have the IDK tokens
+	idToken := q.Get("id_token")
+	if err == nil && idToken == "" {
 		err = errors.New("missing id_token")
+	}
+
+	if v.clientID == "" {
+		accessToken := q.Get("access_token")
+		if err == nil && accessToken == "" {
+			err = errors.New("missing access_token")
+		}
+
+		var expires int
+		if err == nil {
+			expires, err = strconv.Atoi(q.Get("expires_in"))
+		}
+
+		return Token{
+			Token: oauth2.Token{
+				AccessToken: accessToken,
+				Expiry:      time.Now().Add(time.Duration(expires) * time.Second),
+			},
+		}, err
 	}
 
 	var token Token
@@ -70,7 +93,7 @@ func (v *Identity) login() (Token, error) {
 		data := url.Values(map[string][]string{
 			"grant_type": {"id_token"},
 			"scope":      {"sc2:fal"},
-			"token":      {q.Get("id_token")},
+			"token":      {idToken},
 		})
 
 		var req *http.Request

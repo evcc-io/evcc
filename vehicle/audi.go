@@ -18,7 +18,6 @@ import (
 type Audi struct {
 	*embed
 	*vw.Provider // provides the api implementations
-	// audiProvider *audi.Provider
 }
 
 func init() {
