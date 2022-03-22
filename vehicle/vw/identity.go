@@ -12,6 +12,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
+	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/oauth2"
 )
 
@@ -32,18 +34,36 @@ type Identity struct {
 	*request.Helper
 	oauth2.TokenSource
 	idtp      *IDTokenProvider
+	cvc       *cv.CodeVerifier
 	clientID  string
 	refresher oauth.TokenRefresher
 }
 
 func NewIdentity(log *util.Logger, clientID string, query url.Values, user, password string) *Identity {
+	rt := query.Get("response_type")
+	fmt.Println(rt)
+
+	var cvc *cv.CodeVerifier
+	if strings.Contains(rt, "code") {
+		var err error
+		cvc, err = cv.CreateCodeVerifier()
+		if err != nil {
+			panic(err) // should not happen
+		}
+
+		query.Set("code_challenge_method", "S256")
+		query.Set("code_challenge", cvc.CodeChallengeS256())
+	}
+
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
+	fmt.Println(uri)
 
 	return &Identity{
 		Helper:    request.NewHelper(log),
 		clientID:  clientID,
 		idtp:      NewIDTokenProvider(log, uri, user, password),
 		refresher: NewTokenRefresher(log, clientID),
+		cvc:       cvc,
 	}
 }
 
@@ -67,6 +87,33 @@ func (v *Identity) login() (Token, error) {
 	idToken := q.Get("id_token")
 	if err == nil && idToken == "" {
 		err = errors.New("missing id_token")
+	}
+
+	if err == nil {
+		data := url.Values(map[string][]string{
+			"auth_code":     {q.Get("code")},
+			"id_token":      {idToken},
+			"code_verifier": {v.cvc.CodeChallengePlain()},
+		})
+
+		var req *http.Request
+		req, err = request.New(http.MethodPost, tokenrefreshservice.CodeExchangeURL, strings.NewReader(data.Encode()), map[string]string{
+			"Content-Type": "application/x-www-form-urlencoded",
+			"X-Client-Id":  v.clientID,
+		})
+
+		var token Token
+
+		if err == nil {
+			err = v.DoJSON(req, &token)
+		}
+
+		// check if token response contained error
+		if errT := token.Error(); err != nil && errT != nil {
+			err = fmt.Errorf("token exchange: %w", errT)
+		}
+
+		panic(0)
 	}
 
 	if v.clientID == "" {
@@ -94,6 +141,8 @@ func (v *Identity) login() (Token, error) {
 			"grant_type": {"id_token"},
 			"scope":      {"sc2:fal"},
 			"token":      {idToken},
+			// "grant_type": {"code"},
+			// "token":      {q.Get("code")},
 		})
 
 		var req *http.Request

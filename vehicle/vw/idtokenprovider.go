@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/google/uuid"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -60,7 +61,7 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 	// add nonce and state
 	query := url.Values{
 		"nonce": []string{util.RandomString(43)},
-		"state": []string{util.RandomString(43)},
+		"state": []string{uuid.NewString()},
 	}
 	uri := v.uri + "&" + query.Encode()
 

@@ -1,7 +1,6 @@
 package skoda
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -49,12 +48,7 @@ func (v *Identity) login() (vw.Token, error) {
 	q, err := v.idtp.Login()
 
 	if err == nil {
-		for _, k := range []string{"id_token", "code"} {
-			if q.Get(k) == "" {
-				err = errors.New("missing " + k)
-				break
-			}
-		}
+		err = util.RequireValues(q, "id_token", "code")
 	}
 
 	var token vw.Token
