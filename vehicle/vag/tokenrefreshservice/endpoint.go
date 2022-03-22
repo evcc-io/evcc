@@ -8,7 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/oauth2"
+	"github.com/evcc-io/evcc/vehicle/vag"
 )
 
 const (
@@ -17,20 +17,17 @@ const (
 	RefreshTokenURL = BaseURL + "/refreshTokens"
 )
 
-type Token oauth2.Token
-
 type Service struct {
 	*request.Helper
 }
 
-func New(log *util.Logger) (*Service, error) {
-	v := &Service{
+func New(log *util.Logger) *Service {
+	return &Service{
 		Helper: request.NewHelper(log),
 	}
-	return v, nil
 }
 
-func (v *Service) Exchange(q url.Values, idToken, code string) (*Token, error) {
+func (v *Service) Exchange(q url.Values, idToken, code string) (*vag.Token, error) {
 	if idToken == "" {
 		return nil, errors.New("missing id_token")
 	}
@@ -47,7 +44,7 @@ func (v *Service) Exchange(q url.Values, idToken, code string) (*Token, error) {
 		data[k] = v
 	}
 
-	var res Token
+	var res vag.Token
 
 	req, err := request.New(http.MethodPost, CodeExchangeURL, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err == nil {
@@ -57,7 +54,7 @@ func (v *Service) Exchange(q url.Values, idToken, code string) (*Token, error) {
 	return &res, err
 }
 
-func (v *Service) Refresh(q url.Values, token *Token) (*Token, error) {
+func (v *Service) Refresh(q url.Values, token *vag.Token) (*vag.Token, error) {
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},
@@ -67,7 +64,7 @@ func (v *Service) Refresh(q url.Values, token *Token) (*Token, error) {
 		data[k] = v
 	}
 
-	var res Token
+	var res vag.Token
 
 	req, err := request.New(http.MethodPost, RefreshTokenURL, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err == nil {

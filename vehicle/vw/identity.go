@@ -37,6 +37,7 @@ type Identity struct {
 	cvc       *cv.CodeVerifier
 	clientID  string
 	refresher oauth.TokenRefresher
+	ts        *tokenrefreshservice.Service
 }
 
 func NewIdentity(log *util.Logger, clientID string, query url.Values, user, password string) *Identity {
@@ -64,6 +65,7 @@ func NewIdentity(log *util.Logger, clientID string, query url.Values, user, pass
 		idtp:      NewIDTokenProvider(log, uri, user, password),
 		refresher: NewTokenRefresher(log, clientID),
 		cvc:       cvc,
+		ts:        tokenrefreshservice.New(log),
 	}
 }
 
@@ -85,35 +87,24 @@ func (v *Identity) login() (Token, error) {
 
 	// at this stage we have the IDK tokens
 	idToken := q.Get("id_token")
+	code := q.Get("code")
+
 	if err == nil && idToken == "" {
 		err = errors.New("missing id_token")
 	}
 
-	if err == nil {
+	if err == nil && code != "" {
 		data := url.Values(map[string][]string{
-			"auth_code":     {q.Get("code")},
-			"id_token":      {idToken},
 			"code_verifier": {v.cvc.CodeChallengePlain()},
 		})
 
-		var req *http.Request
-		req, err = request.New(http.MethodPost, tokenrefreshservice.CodeExchangeURL, strings.NewReader(data.Encode()), map[string]string{
-			"Content-Type": "application/x-www-form-urlencoded",
-			"X-Client-Id":  v.clientID,
-		})
+		t, err := v.ts.Exchange(data, idToken, code)
+		fmt.Printf("%+v\n", t)
 
-		var token Token
+		t, err = v.ts.Refresh(nil, t)
+		fmt.Printf("%+v\n", t)
 
-		if err == nil {
-			err = v.DoJSON(req, &token)
-		}
-
-		// check if token response contained error
-		if errT := token.Error(); err != nil && errT != nil {
-			err = fmt.Errorf("token exchange: %w", errT)
-		}
-
-		panic(0)
+		panic(err)
 	}
 
 	if v.clientID == "" {
