@@ -10,6 +10,8 @@ import (
 )
 
 func MbbTokenSource(log *util.Logger, clientID string, q url.Values, user, password string) (oauth2.TokenSource, error) {
+	// verify := vag.ChallengeAndVerifier(q)
+
 	vwi := vwidentity.New(log)
 	uri := vwidentity.LoginURL(vwidentity.Endpoint.AuthURL, q)
 	q, err := vwi.Login(uri, user, password)
@@ -22,6 +24,14 @@ func MbbTokenSource(log *util.Logger, clientID string, q url.Values, user, passw
 	if err != nil {
 		return nil, err
 	}
+
+	// verify(q)
+
+	// trs := tokenrefreshservice.New(log)
+	// token, err := trs.Exchange(q)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return mbb.TokenSource(token), nil
 }

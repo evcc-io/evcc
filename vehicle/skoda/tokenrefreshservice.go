@@ -17,7 +17,11 @@ func TokenRefreshServiceTokenSource(log *util.Logger, q url.Values, user, passwo
 		return nil, err
 	}
 
-	trs := tokenrefreshservice.New(log)
+	data := url.Values{
+		"brand": {"skoda"},
+	}
+
+	trs := tokenrefreshservice.New(log, data)
 	token, err := trs.Exchange(q)
 	if err != nil {
 		return nil, err

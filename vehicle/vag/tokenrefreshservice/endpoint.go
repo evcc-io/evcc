@@ -20,11 +20,21 @@ const (
 
 type Service struct {
 	*request.Helper
+	data url.Values
 }
 
-func New(log *util.Logger) *Service {
+func New(log *util.Logger, q url.Values) *Service {
 	return &Service{
 		Helper: request.NewHelper(log),
+		data:   q,
+	}
+}
+
+func enrich(to url.Values, from ...url.Values) {
+	for _, vv := range from {
+		for k, v := range vv {
+			to[k] = v
+		}
 	}
 }
 
@@ -36,12 +46,9 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	data := url.Values{
 		"auth_code": {q.Get("code")},
 		"id_token":  {q.Get("id_token")},
-		"brand":     {"skoda"}, // TODO parametrize
 	}
 
-	for k, v := range q {
-		data[k] = v
-	}
+	enrich(data, v.data, q)
 
 	var res vag.Token
 
@@ -53,16 +60,13 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	return &res, err
 }
 
-func (v *Service) Refresh(token *vag.Token, q url.Values) (*vag.Token, error) {
+func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},
-		"brand":         {"skoda"}, // TODO parametrize
 	}
 
-	for k, v := range q {
-		data[k] = v
-	}
+	enrich(data, v.data)
 
 	var res vag.Token
 
@@ -78,7 +82,7 @@ func (v *Service) Refresh(token *vag.Token, q url.Values) (*vag.Token, error) {
 func (v *Service) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	res, err := v.Refresh(&vag.Token{
 		Token: *token,
-	}, nil)
+	})
 
 	if err != nil {
 		return nil, err
