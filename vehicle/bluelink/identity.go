@@ -64,11 +64,11 @@ func (v *Identity) getDeviceID() (string, error) {
 		return "", err
 	}
 
-	uniID, _ := uuid.NewUUID()
+	uuid := uuid.NewString()
 	data := map[string]interface{}{
 		"pushRegId": "1",
 		"pushType":  "GCM",
-		"uuid":      uniID.String(),
+		"uuid":      uuid,
 	}
 
 	headers := map[string]string{
