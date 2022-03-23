@@ -7,7 +7,7 @@ import "net/http"
 
 // https://k4czp3r.xyz/reverse-engineering/tp-link/tapo/2020/10/15/reverse-engineering-tp-link-tapo.html
 
-type Device struct {
+type Connection struct {
 	ip              string
 	encodedEmail    string
 	encodedPassword string

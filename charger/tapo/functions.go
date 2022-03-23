@@ -23,10 +23,10 @@ import (
 
 const Timeout = time.Second * 15
 
-func New(ip, email, password string) *Device {
+func New(ip, email, password string) *Connection {
 	h := sha1.New()
 	h.Write([]byte(email))
-	return &Device{
+	return &Connection{
 		ip:              ip,
 		encodedEmail:    base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(h.Sum(nil)))),
 		encodedPassword: base64.StdEncoding.EncodeToString([]byte(password)),
@@ -34,7 +34,7 @@ func New(ip, email, password string) *Device {
 	}
 }
 
-func (d *Device) GetURL() string {
+func (d *Connection) GetURL() string {
 	if d.token == nil {
 		return fmt.Sprintf("http://%s/app", d.ip)
 	} else {
@@ -42,7 +42,7 @@ func (d *Device) GetURL() string {
 	}
 }
 
-func (d *Device) DoRequest(payload []byte) ([]byte, error) {
+func (d *Connection) DoRequest(payload []byte) ([]byte, error) {
 	securedPayload, _ := json.Marshal(map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
@@ -74,7 +74,7 @@ func (d *Device) DoRequest(payload []byte) ([]byte, error) {
 	return d.cipher.Decrypt(encryptedResponse), nil
 }
 
-func (d *Device) CheckErrorCode(errorCode int) error {
+func (d *Connection) CheckErrorCode(errorCode int) error {
 	if errorCode != 0 {
 		return errors.New(fmt.Sprintf("Got error code %d", errorCode))
 	}
@@ -82,7 +82,7 @@ func (d *Device) CheckErrorCode(errorCode int) error {
 	return nil
 }
 
-func (d *Device) Handshake() (err error) {
+func (d *Connection) Handshake() (err error) {
 	privKey, pubKey := GenerateRSAKeys()
 
 	pubPEM := DumpRSAPEM(pubKey)
@@ -119,7 +119,7 @@ func (d *Device) Handshake() (err error) {
 	return
 }
 
-func (d *Device) Login() (err error) {
+func (d *Connection) Login() (err error) {
 	if d.cipher == nil {
 		return errors.New("Handshake was not performed")
 	}
@@ -148,7 +148,7 @@ func (d *Device) Login() (err error) {
 	return
 }
 
-func (d *Device) GetDeviceInfo() (*DeviceInfo, error) {
+func (d *Connection) GetDeviceInfo() (*DeviceInfo, error) {
 	if d.token == nil {
 		return nil, errors.New("Login was not performed")
 	}
