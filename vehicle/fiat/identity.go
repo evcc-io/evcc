@@ -47,13 +47,13 @@ func (v *Identity) Login() error {
 
 	uri := fmt.Sprintf("%s/accounts.webSdkBootstrap", LoginURI)
 
-	data := url.Values(map[string][]string{
+	data := url.Values{
 		"APIKey":   {ApiKey},
 		"pageURL":  {"https://myuconnect.fiat.com/de/de/vehicle-services"},
 		"sdk":      {"js_latest"},
 		"sdkBuild": {"12234"},
 		"format":   {"json"},
-	})
+	}
 
 	headers := map[string]string{
 		"Accept": "*/*",
@@ -82,7 +82,7 @@ func (v *Identity) Login() error {
 	if err == nil {
 		uri = fmt.Sprintf("%s/accounts.login", LoginURI)
 
-		data := url.Values(map[string][]string{
+		data := url.Values{
 			"loginID":           {v.user},
 			"password":          {v.password},
 			"sessionExpiration": {"7776000"},
@@ -98,7 +98,7 @@ func (v *Identity) Login() error {
 			"lang":              {"de0de"},
 			"source":            {"showScreenSet"},
 			"authMode":          {"cookie"},
-		})
+		}
 
 		headers := map[string]string{
 			"Accept":       "*/*",
@@ -122,7 +122,7 @@ func (v *Identity) Login() error {
 	if err == nil {
 		uri = fmt.Sprintf("%s/accounts.getJWT", LoginURI)
 
-		data := url.Values(map[string][]string{
+		data := url.Values{
 			"fields":      {"profile.firstName,profile.lastName,profile.email,country,locale,data.disclaimerCodeGSDP"}, // data.GSDPisVerified
 			"APIKey":      {ApiKey},
 			"pageURL":     {"https://myuconnect.fiat.com/de/de/dashboard"},
@@ -131,7 +131,7 @@ func (v *Identity) Login() error {
 			"format":      {"json"},
 			"login_token": {res.SessionInfo.LoginToken},
 			"authMode":    {"cookie"},
-		})
+		}
 
 		headers := map[string]string{
 			"Accept": "*/*",

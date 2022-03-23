@@ -278,11 +278,11 @@ func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
 		"User-Agent":    "okhttp/3.10.0",
 	}
 
-	data := url.Values(map[string][]string{
+	data := url.Values{
 		"grant_type":   {"authorization_code"},
 		"redirect_uri": {v.config.URI + "/api/v1/user/oauth2/redirect"},
 		"code":         {accCode},
-	})
+	}
 
 	var token oauth.Token
 
@@ -302,11 +302,11 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"User-Agent":    "okhttp/3.10.0",
 	}
 
-	data := url.Values(map[string][]string{
+	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"redirect_uri":  {"https://www.getpostman.com/oauth2/callback"},
 		"refresh_token": {token.RefreshToken},
-	})
+	}
 
 	req, err := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
 
