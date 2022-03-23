@@ -1,20 +1,30 @@
 package tapo
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 // Tapo homepage + api reverse engineering results
 // https://www.tapo.com/de/
 
 // https://k4czp3r.xyz/reverse-engineering/tp-link/tapo/2020/10/15/reverse-engineering-tp-link-tapo.html
 
+// FritzDECT settings
+type Settings struct {
+	URI, User, Password string
+}
+
+// FritzDECT connection
 type Connection struct {
-	URI             string
+	*Settings
 	EncodedUser     string
 	EncodedPassword string
 	Cipher          *ConnectionCipher
 	SessionID       string
 	Token           *string
 	Client          *http.Client
+	Updated         time.Time
 }
 
 type ConnectionCipher struct {

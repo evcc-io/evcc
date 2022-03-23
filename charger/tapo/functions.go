@@ -24,14 +24,24 @@ import (
 const Timeout = time.Second * 15
 
 func NewConnection(uri, user, password string) *Connection {
+
+	settings := &Settings{
+		URI:      strings.TrimRight(uri, "/"),
+		User:     user,
+		Password: password,
+	}
+
 	h := sha1.New()
 	h.Write([]byte(user))
-	return &Connection{
-		URI:             uri,
+
+	tapo := &Connection{
+		Settings:        settings,
 		EncodedUser:     base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(h.Sum(nil)))),
 		EncodedPassword: base64.StdEncoding.EncodeToString([]byte(password)),
 		Client:          &http.Client{Timeout: Timeout},
 	}
+
+	return tapo
 }
 
 func (d *Connection) GetURL() string {
