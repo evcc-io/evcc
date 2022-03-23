@@ -156,18 +156,18 @@ func (d *Connection) GetDeviceInfo() (*DeviceInfo, error) {
 		return nil, errors.New("Login was not performed")
 	}
 
-	payload, _ := json.Marshal(map[string]interface{}{
+	req, _ := json.Marshal(map[string]interface{}{
 		"method": "get_device_info",
 	})
 
-	payload, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), payload)
+	resp, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
 	if err != nil {
 		return nil, err
 	}
 
 	status := &DeviceInfo{}
 
-	json.NewDecoder(bytes.NewBuffer(payload)).Decode(status)
+	json.NewDecoder(bytes.NewBuffer(resp)).Decode(status)
 	if err = d.CheckErrorCode(status.ErrorCode); err != nil {
 		return nil, err
 	}
