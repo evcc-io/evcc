@@ -63,7 +63,7 @@ func (d *Device) DoRequest(payload []byte) ([]byte, error) {
 
 	defer resp.Body.Close()
 
-	var jsonResp deviceResponse
+	var jsonResp DeviceResponse
 	json.NewDecoder(resp.Body).Decode(&jsonResp)
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (d *Device) Handshake() (err error) {
 
 	defer resp.Body.Close()
 
-	var jsonResp deviceResponse
+	var jsonResp DeviceResponse
 	json.NewDecoder(resp.Body).Decode(&jsonResp)
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return
@@ -138,7 +138,7 @@ func (d *Device) Login() (err error) {
 		return
 	}
 
-	var jsonResp deviceResponse
+	var jsonResp DeviceResponse
 	json.NewDecoder(bytes.NewBuffer(payload)).Decode(&jsonResp)
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return
