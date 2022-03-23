@@ -3,33 +3,17 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/tapo"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
-// Chiper stores the Tapo handshake response cipher
-type TapoCipher struct {
-	key []byte
-	iv  []byte
-}
-
 // TP-Link Tapo charger implementation
+// FritzDECT charger implementation
 type Tapo struct {
-	*request.Helper
-	client       *http.Client
-	log          *util.Logger
-	uri          string
-	email        string
-	password     string
-	cipher       *TapoCipher
-	sessionID    string
-	token        *string
+	conn         *tapo.Connection
 	standbypower float64
 }
 
@@ -63,26 +47,19 @@ func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
 		uri = strings.TrimSuffix(uri, suffix)
 	}
 
-	log := util.NewLogger("tapo")
-	client := request.NewHelper(log)
+	//	log := util.NewLogger("tapo")
+	//	client := request.NewHelper(log)
 
 	c := &Tapo{
-		Helper:       client,
-		log:          log,
+		//		Helper:       client,
+		//		log:          log,
 		standbypower: standbypower,
 	}
 
-	c.Client.Transport = request.NewTripper(log, transport.Insecure())
+	//	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 	if user == "" || password == "" {
 		return c, fmt.Errorf("missing user/password")
-	}
-
-	// TP-Link Tapo API
-	// https://k4czp3r.xyz/reverse-engineering/tp-link/tapo/2020/10/15/reverse-engineering-tp-link-tapo.html
-	c.uri = fmt.Sprintf("%s/app", util.DefaultScheme(uri, "http"))
-	if user != "" {
-		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 	}
 
 	return c, nil

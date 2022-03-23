@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/mergermarket/go-pkcs7"
 )
 
@@ -26,7 +27,7 @@ const Timeout = time.Second * 15
 func NewConnection(uri, user, password string) *Connection {
 
 	settings := &Settings{
-		URI:      fmt.Sprintf("http://%s/app", strings.TrimRight(uri, "/")),
+		URI:      fmt.Sprintf("%s/app", util.DefaultScheme(uri, "http")),
 		User:     user,
 		Password: password,
 	}
