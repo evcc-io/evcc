@@ -26,7 +26,7 @@ const Timeout = time.Second * 15
 func NewConnection(uri, user, password string) *Connection {
 
 	settings := &Settings{
-		URI:      strings.TrimRight(uri, "/"),
+		URI:      fmt.Sprintf("http://%s/app", strings.TrimRight(uri, "/")),
 		User:     user,
 		Password: password,
 	}
@@ -44,15 +44,7 @@ func NewConnection(uri, user, password string) *Connection {
 	return tapo
 }
 
-func (d *Connection) GetURL() string {
-	if d.Token == nil {
-		return fmt.Sprintf("http://%s/app", d.URI)
-	} else {
-		return fmt.Sprintf("http://%s/app?token=%s", d.URI, *d.Token)
-	}
-}
-
-func (d *Connection) DoRequest(payload []byte) ([]byte, error) {
+func (d *Connection) DoRequest(uri string, payload []byte) ([]byte, error) {
 	securedPayload, _ := json.Marshal(map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
@@ -62,7 +54,7 @@ func (d *Connection) DoRequest(payload []byte) ([]byte, error) {
 
 	fmt.Printf("securedPayload:\n%s\n", string(securedPayload))
 
-	req, _ := http.NewRequest("POST", d.GetURL(), bytes.NewBuffer(securedPayload))
+	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(securedPayload))
 	req.Header.Set("Cookie", d.SessionID)
 	req.Close = true
 
@@ -104,7 +96,7 @@ func (d *Connection) Handshake() (err error) {
 		},
 	})
 
-	resp, err := http.Post(d.GetURL(), "application/json", bytes.NewBuffer(payload))
+	resp, err := http.Post(d.URI, "application/json", bytes.NewBuffer(payload))
 	if err != nil {
 		return
 	}
@@ -143,7 +135,7 @@ func (d *Connection) Login() (err error) {
 	})
 	fmt.Printf("payload:\n%s\n", string(payload))
 
-	payload, err = d.DoRequest(payload)
+	payload, err = d.DoRequest(d.URI, payload)
 	if err != nil {
 		return
 	}
@@ -167,7 +159,7 @@ func (d *Connection) GetDeviceInfo() (*DeviceInfo, error) {
 		"method": "get_device_info",
 	})
 
-	payload, err := d.DoRequest(payload)
+	payload, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), payload)
 	if err != nil {
 		return nil, err
 	}
