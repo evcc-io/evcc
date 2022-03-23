@@ -151,7 +151,7 @@ func (d *Connection) Login() (err error) {
 	return
 }
 
-func (d *Connection) GetDeviceInfo() (*DeviceInfo, error) {
+func (d *Connection) GetDeviceInfo() (*DeviceResponse, error) {
 	if d.Token == nil {
 		return nil, errors.New("Login was not performed")
 	}
@@ -165,26 +165,50 @@ func (d *Connection) GetDeviceInfo() (*DeviceInfo, error) {
 		return nil, err
 	}
 
-	status := &DeviceInfo{}
-
+	status := &DeviceResponse{}
 	json.NewDecoder(bytes.NewBuffer(resp)).Decode(status)
 	if err = d.CheckErrorCode(status.ErrorCode); err != nil {
 		return nil, err
 	}
-
-	nicknameEncoded, _ := base64.StdEncoding.DecodeString(status.Result.Nickname)
-	status.Result.Nickname = string(nicknameEncoded)
-
-	SSIDEncoded, _ := base64.StdEncoding.DecodeString(status.Result.SSID)
-	status.Result.SSID = string(SSIDEncoded)
+	nicknameDecoded, _ := base64.StdEncoding.DecodeString(status.Result.Nickname)
+	status.Result.Nickname = string(nicknameDecoded)
+	SSIDDecoded, _ := base64.StdEncoding.DecodeString(status.Result.SSID)
+	status.Result.SSID = string(SSIDDecoded)
 
 	return status, nil
 }
 
-func (d *Connection) ExecMethod(method string) (map[string]interface{}, error) {
-	if method == "get_device_info" {
+func (d *Connection) ExecMethod(method string) (*DeviceResponse, error) {
+	if d.Token == nil {
+		return nil, errors.New("Tapo login was not performed")
 	}
-	return nil, nil
+
+	req, _ := json.Marshal(map[string]interface{}{
+		"method": method,
+	})
+
+	resp, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
+	if err != nil {
+		return nil, err
+	}
+
+	taporesp := &DeviceResponse{}
+	json.NewDecoder(bytes.NewBuffer(resp)).Decode(taporesp)
+	if err = d.CheckErrorCode(taporesp.ErrorCode); err != nil {
+		return nil, err
+	}
+
+	switch method {
+	case "get_device_info":
+		nicknameEncoded, _ := base64.StdEncoding.DecodeString(taporesp.Result.Nickname)
+		taporesp.Result.Nickname = string(nicknameEncoded)
+		SSIDEncoded, _ := base64.StdEncoding.DecodeString(taporesp.Result.SSID)
+		taporesp.Result.SSID = string(SSIDEncoded)
+	default:
+		return nil, fmt.Errorf("Unknown Tapo method: %s", method)
+	}
+
+	return taporesp, nil
 }
 
 func (c *ConnectionCipher) Encrypt(payload []byte) []byte {

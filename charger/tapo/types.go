@@ -15,7 +15,7 @@ type Settings struct {
 	URI, User, Password string
 }
 
-// FritzDECT connection
+// Tapo connection
 type Connection struct {
 	*Settings
 	EncodedUser     string
@@ -27,21 +27,14 @@ type Connection struct {
 	Updated         time.Time
 }
 
+// Tapo connection cipher
 type ConnectionCipher struct {
 	Key []byte
 	Iv  []byte
 }
 
+// Tapo device response
 type DeviceResponse struct {
-	ErrorCode int `json:"error_code"`
-	Result    struct {
-		Key      string `json:"key"`
-		Response string `json:"response"`
-		Token    string `json:"token"`
-	} `json:"result"`
-}
-
-type DeviceInfo struct {
 	Result struct {
 		DeviceID           string `json:"device_id"`
 		FWVersion          string `json:"fw_ver"`
@@ -69,6 +62,9 @@ type DeviceInfo struct {
 		Region             string `json:"Europe/Kiev"`
 		TimeDiff           int    `json:"time_diff"`
 		Lang               string `json:"lang"`
+		Key                string `json:"key"`
+		Response           string `json:"response"`
+		Token              string `json:"token"`
 	} `json:"result"`
 	ErrorCode int `json:"error_code"`
 }

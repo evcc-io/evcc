@@ -17,7 +17,8 @@ func TestLogin(t *testing.T) {
 		t.Errorf("Login:\n%v\n", err)
 	}
 
-	deviceInfo, err := device.GetDeviceInfo()
+	// deviceInfo, err := device.GetDeviceInfo()
+	deviceInfo, err := device.ExecMethod("get_device_info")
 	if err != nil {
 		t.Errorf("deviceInfo:\n%v\nerror:\n%v", deviceInfo, err)
 	}
