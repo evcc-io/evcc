@@ -23,7 +23,8 @@ func TestLogin(t *testing.T) {
 		t.Errorf("deviceInfo:\n%v\nerror:\n%v", deviceInfo, err)
 	}
 
-	t.Errorf("\ndeviceON:\n%v\n", deviceInfo.Result.DeviceON)
+	t.Errorf("\ndeviceInfo:\n%v\n", deviceInfo)
+	//t.Errorf("\ndeviceON:\n%v\n", deviceInfo.Result.DeviceON)
 	// device.Switch(true)
 
 }

@@ -165,17 +165,17 @@ func (d *Connection) GetDeviceInfo() (*DeviceResponse, error) {
 		return nil, err
 	}
 
-	status := &DeviceResponse{}
-	json.NewDecoder(bytes.NewBuffer(resp)).Decode(status)
-	if err = d.CheckErrorCode(status.ErrorCode); err != nil {
+	jsonResp := &DeviceResponse{}
+	json.NewDecoder(bytes.NewBuffer(resp)).Decode(jsonResp)
+	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return nil, err
 	}
-	nicknameDecoded, _ := base64.StdEncoding.DecodeString(status.Result.Nickname)
-	status.Result.Nickname = string(nicknameDecoded)
-	SSIDDecoded, _ := base64.StdEncoding.DecodeString(status.Result.SSID)
-	status.Result.SSID = string(SSIDDecoded)
+	nicknameDecoded, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Nickname)
+	jsonResp.Result.Nickname = string(nicknameDecoded)
+	SSIDDecoded, _ := base64.StdEncoding.DecodeString(jsonResp.Result.SSID)
+	jsonResp.Result.SSID = string(SSIDDecoded)
 
-	return status, nil
+	return jsonResp, nil
 }
 
 func (d *Connection) ExecMethod(method string) (*DeviceResponse, error) {
@@ -200,10 +200,8 @@ func (d *Connection) ExecMethod(method string) (*DeviceResponse, error) {
 
 	switch method {
 	case "get_device_info":
-		nicknameEncoded, _ := base64.StdEncoding.DecodeString(taporesp.Result.Nickname)
-		taporesp.Result.Nickname = string(nicknameEncoded)
-		SSIDEncoded, _ := base64.StdEncoding.DecodeString(taporesp.Result.SSID)
-		taporesp.Result.SSID = string(SSIDEncoded)
+		taporesp.Result.Nickname = base64Decode(taporesp.Result.Nickname)
+		taporesp.Result.SSID = base64Decode(taporesp.Result.SSID)
 	default:
 		return nil, fmt.Errorf("Unknown Tapo method: %s", method)
 	}
@@ -254,4 +252,9 @@ func GenerateRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey) {
 	}
 
 	return key, key.Public().(*rsa.PublicKey)
+}
+
+func base64Decode(base64String string) string {
+	decodedString, _ := base64.StdEncoding.DecodeString(base64String)
+	return string(decodedString)
 }
