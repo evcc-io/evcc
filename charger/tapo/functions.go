@@ -23,22 +23,22 @@ import (
 
 const Timeout = time.Second * 15
 
-func NewConnection(uri, email, password string) *Connection {
+func NewConnection(uri, user, password string) *Connection {
 	h := sha1.New()
-	h.Write([]byte(email))
+	h.Write([]byte(user))
 	return &Connection{
-		uri:             uri,
-		encodedEmail:    base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(h.Sum(nil)))),
-		encodedPassword: base64.StdEncoding.EncodeToString([]byte(password)),
-		client:          &http.Client{Timeout: Timeout},
+		URI:             uri,
+		EncodedUser:     base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(h.Sum(nil)))),
+		EncodedPassword: base64.StdEncoding.EncodeToString([]byte(password)),
+		Client:          &http.Client{Timeout: Timeout},
 	}
 }
 
 func (d *Connection) GetURL() string {
-	if d.token == nil {
-		return fmt.Sprintf("http://%s/app", d.uri)
+	if d.Token == nil {
+		return fmt.Sprintf("http://%s/app", d.URI)
 	} else {
-		return fmt.Sprintf("http://%s/app?token=%s", d.uri, *d.token)
+		return fmt.Sprintf("http://%s/app?token=%s", d.URI, *d.Token)
 	}
 }
 
@@ -46,17 +46,17 @@ func (d *Connection) DoRequest(payload []byte) ([]byte, error) {
 	securedPayload, _ := json.Marshal(map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
-			"request": base64.StdEncoding.EncodeToString(d.cipher.Encrypt(payload)),
+			"request": base64.StdEncoding.EncodeToString(d.Cipher.Encrypt(payload)),
 		},
 	})
 
 	fmt.Printf("securedPayload:\n%s\n", string(securedPayload))
 
 	req, _ := http.NewRequest("POST", d.GetURL(), bytes.NewBuffer(securedPayload))
-	req.Header.Set("Cookie", d.sessionID)
+	req.Header.Set("Cookie", d.SessionID)
 	req.Close = true
 
-	resp, err := d.client.Do(req)
+	resp, err := d.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (d *Connection) DoRequest(payload []byte) ([]byte, error) {
 
 	encryptedResponse, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Response)
 
-	return d.cipher.Decrypt(encryptedResponse), nil
+	return d.Cipher.Decrypt(encryptedResponse), nil
 }
 
 func (d *Connection) CheckErrorCode(errorCode int) error {
@@ -109,26 +109,26 @@ func (d *Connection) Handshake() (err error) {
 
 	encryptedEncryptionKey, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Key)
 	encryptionKey, _ := rsa.DecryptPKCS1v15(rand.Reader, privKey, encryptedEncryptionKey)
-	d.cipher = &DeviceCipher{
-		key: encryptionKey[:16],
-		iv:  encryptionKey[16:],
+	d.Cipher = &ConnectionCipher{
+		Key: encryptionKey[:16],
+		Iv:  encryptionKey[16:],
 	}
 
-	d.sessionID = strings.Split(resp.Header.Get("Set-Cookie"), ";")[0]
+	d.SessionID = strings.Split(resp.Header.Get("Set-Cookie"), ";")[0]
 
 	return
 }
 
 func (d *Connection) Login() (err error) {
-	if d.cipher == nil {
+	if d.Cipher == nil {
 		return errors.New("Handshake was not performed")
 	}
 
 	payload, _ := json.Marshal(map[string]interface{}{
 		"method": "login_device",
 		"params": map[string]interface{}{
-			"username": d.encodedEmail,
-			"password": d.encodedPassword,
+			"username": d.EncodedUser,
+			"password": d.EncodedPassword,
 		},
 	})
 	fmt.Printf("payload:\n%s\n", string(payload))
@@ -144,12 +144,12 @@ func (d *Connection) Login() (err error) {
 		return
 	}
 
-	d.token = &jsonResp.Result.Token
+	d.Token = &jsonResp.Result.Token
 	return
 }
 
 func (d *Connection) GetDeviceInfo() (*DeviceInfo, error) {
-	if d.token == nil {
+	if d.Token == nil {
 		return nil, errors.New("Login was not performed")
 	}
 
@@ -178,9 +178,9 @@ func (d *Connection) GetDeviceInfo() (*DeviceInfo, error) {
 	return status, nil
 }
 
-func (c *DeviceCipher) Encrypt(payload []byte) []byte {
-	block, _ := aes.NewCipher(c.key)
-	encrypter := cipher.NewCBCEncrypter(block, c.iv)
+func (c *ConnectionCipher) Encrypt(payload []byte) []byte {
+	block, _ := aes.NewCipher(c.Key)
+	encrypter := cipher.NewCBCEncrypter(block, c.Iv)
 
 	paddedPayload, _ := pkcs7.Pad(payload, aes.BlockSize)
 	encryptedPayload := make([]byte, len(paddedPayload))
@@ -189,9 +189,9 @@ func (c *DeviceCipher) Encrypt(payload []byte) []byte {
 	return encryptedPayload
 }
 
-func (c *DeviceCipher) Decrypt(payload []byte) []byte {
-	block, _ := aes.NewCipher(c.key)
-	encrypter := cipher.NewCBCDecrypter(block, c.iv)
+func (c *ConnectionCipher) Decrypt(payload []byte) []byte {
+	block, _ := aes.NewCipher(c.Key)
+	encrypter := cipher.NewCBCDecrypter(block, c.Iv)
 
 	decryptedPayload := make([]byte, len(payload))
 	encrypter.CryptBlocks(decryptedPayload, payload)

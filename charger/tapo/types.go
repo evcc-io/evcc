@@ -8,18 +8,18 @@ import "net/http"
 // https://k4czp3r.xyz/reverse-engineering/tp-link/tapo/2020/10/15/reverse-engineering-tp-link-tapo.html
 
 type Connection struct {
-	uri             string
-	encodedEmail    string
-	encodedPassword string
-	cipher          *DeviceCipher
-	sessionID       string
-	token           *string
-	client          *http.Client
+	URI             string
+	EncodedUser     string
+	EncodedPassword string
+	Cipher          *ConnectionCipher
+	SessionID       string
+	Token           *string
+	Client          *http.Client
 }
 
-type DeviceCipher struct {
-	key []byte
-	iv  []byte
+type ConnectionCipher struct {
+	Key []byte
+	Iv  []byte
 }
 
 type DeviceResponse struct {
