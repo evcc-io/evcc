@@ -1,5 +1,5 @@
 <template>
-	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'opacity-25': !active }">
+	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'text-gray-medium': !active }">
 		<span class="d-flex flex-nowrap">
 			<BatteryIcon v-if="isBattery" :soc="soc" />
 			<component :is="`shopicon-regular-${icon}`" v-else></component>
@@ -50,6 +50,6 @@ export default {
 </script>
 <style scoped>
 .entry {
-	transition: opacity 500ms linear;
+	transition: color 500ms linear;
 }
 </style>

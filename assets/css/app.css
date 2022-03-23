@@ -16,7 +16,7 @@
 	--evcc-dark-green: #0fde41;
 	--evcc-yellow: #faf000;
 	--bs-gray-dark: #28293e;
-	--bs-gray-medium: var(--bs-gray-500);
+	--bs-gray-medium: #93949e;
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
