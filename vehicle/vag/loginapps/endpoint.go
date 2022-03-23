@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/urlvalues"
 	"golang.org/x/oauth2"
 )
 
@@ -30,7 +31,7 @@ func New(log *util.Logger) *Service {
 }
 
 func (v *Service) Exchange(q url.Values) (*Token, error) {
-	if err := util.RequireValues(q, "state", "id_token", "access_token", "code"); err != nil {
+	if err := urlvalues.Require(q, "state", "id_token", "access_token", "code"); err != nil {
 		return nil, err
 	}
 

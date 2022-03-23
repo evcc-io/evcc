@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"golang.org/x/oauth2"
 )
@@ -30,16 +31,8 @@ func New(log *util.Logger, q url.Values) *Service {
 	}
 }
 
-func enrich(to url.Values, from ...url.Values) {
-	for _, vv := range from {
-		for k, v := range vv {
-			to[k] = v
-		}
-	}
-}
-
 func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
-	if err := util.RequireValues(q, "id_token", "code"); err != nil {
+	if err := urlvalues.Require(q, "id_token", "code"); err != nil {
 		return nil, err
 	}
 
@@ -48,7 +41,7 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 		"id_token":  {q.Get("id_token")},
 	}
 
-	enrich(data, v.data, q)
+	urlvalues.Merge(data, v.data, q)
 
 	var res vag.Token
 
@@ -66,7 +59,7 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 		"refresh_token": {token.RefreshToken},
 	}
 
-	enrich(data, v.data)
+	urlvalues.Merge(data, v.data)
 
 	var res vag.Token
 
