@@ -9,10 +9,9 @@ import (
 	"github.com/evcc-io/evcc/vehicle/vag/idkproxy"
 	"github.com/evcc-io/evcc/vehicle/vag/mbb"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
-	"golang.org/x/oauth2"
 )
 
-func MbbTokenSource(log *util.Logger, clientID string, q url.Values, user, password string) (oauth2.TokenSource, error) {
+func MbbTokenSource(log *util.Logger, clientID string, q url.Values, user, password string) (vag.TokenSource, error) {
 	vwi := vwidentity.New(log)
 	uri := vwidentity.LoginURL(vwidentity.Endpoint.AuthURL, q)
 	q, err := vwi.Login(uri, user, password)
@@ -29,7 +28,7 @@ func MbbTokenSource(log *util.Logger, clientID string, q url.Values, user, passw
 	return mbb.TokenSource(token), nil
 }
 
-func MbbIDKTokenSource(log *util.Logger, clientID string, q url.Values, user, password string) (oauth2.TokenSource, error) {
+func MbbIDKTokenSource(log *util.Logger, clientID string, q url.Values, user, password string) (vag.TokenSource, error) {
 	verify := vag.ChallengeAndVerifier(q)
 
 	vwi := vwidentity.New(log)

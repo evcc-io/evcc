@@ -73,7 +73,8 @@ func NewEtronFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := etron.NewAPI(log, azs.TokenSource(token))
+	// TODO build token source
+	api := etron.NewAPI(log, oauth2.StaticTokenSource(&token.Token))
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
