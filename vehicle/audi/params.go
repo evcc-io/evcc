@@ -12,10 +12,15 @@ const (
 
 // Authorization parameters
 var AuthParams = url.Values{
-	"response_type": {"id_token token"},
+	"response_type": {"code id_token token"},
 	"client_id":     {"09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"},
 	"redirect_uri":  {"myaudi:///"},
 	"scope":         {"openid profile mbb"}, // vin badge birthdate nickname email address phone name picture
 	"prompt":        {"login"},
 	"ui_locales":    {"de-DE"},
+}
+
+var IDKParams = url.Values{
+	"client_id":    {"09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"},
+	"redirect_uri": {"myaudi:///"},
 }

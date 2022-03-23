@@ -13,10 +13,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	BaseURL  = "https://aazsproxy-service.apps.emea.vwapps.io"
-	TokenURI = BaseURL + "/token"
-)
+const BaseURL = "https://aazsproxy-service.apps.emea.vwapps.io"
 
 var Endpoint = &oauth2.Endpoint{
 	AuthURL: BaseURL + "/token",
@@ -61,6 +58,7 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	return &res, err
 }
 
+// TODO implement
 func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 	// req, err := request.New(http.MethodGet, Endpoint.TokenURL, nil, map[string]string{
 	// 	"Accept":        "application/json",
@@ -79,6 +77,7 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 
 // RefreshToken implements oauth.TokenRefresher
 func (v *Service) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	// TODO implement
 	return nil, api.ErrNotAvailable
 }
 

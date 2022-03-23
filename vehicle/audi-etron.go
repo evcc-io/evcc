@@ -67,13 +67,13 @@ func NewEtronFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	aaz := aazsproxy.New(log)
-	token, err := aaz.Exchange(q)
+	azs := aazsproxy.New(log)
+	token, err := azs.Exchange(q)
 	if err != nil {
 		return nil, err
 	}
 
-	api := etron.NewAPI(log, aaz.TokenSource(token))
+	api := etron.NewAPI(log, azs.TokenSource(token))
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
