@@ -23,11 +23,11 @@ import (
 
 const Timeout = time.Second * 15
 
-func New(ip, email, password string) *Connection {
+func NewConnection(uri, email, password string) *Connection {
 	h := sha1.New()
 	h.Write([]byte(email))
 	return &Connection{
-		ip:              ip,
+		uri:             uri,
 		encodedEmail:    base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(h.Sum(nil)))),
 		encodedPassword: base64.StdEncoding.EncodeToString([]byte(password)),
 		client:          &http.Client{Timeout: Timeout},
@@ -36,9 +36,9 @@ func New(ip, email, password string) *Connection {
 
 func (d *Connection) GetURL() string {
 	if d.token == nil {
-		return fmt.Sprintf("http://%s/app", d.ip)
+		return fmt.Sprintf("http://%s/app", d.uri)
 	} else {
-		return fmt.Sprintf("http://%s/app?token=%s", d.ip, *d.token)
+		return fmt.Sprintf("http://%s/app?token=%s", d.uri, *d.token)
 	}
 }
 

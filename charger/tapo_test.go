@@ -7,7 +7,7 @@ import (
 )
 
 func TestLogin(t *testing.T) {
-	device := tapo.New("192.168.178.114", "m.thierolf@googlemail.com", "tapo1234")
+	device := tapo.NewConnection("192.168.178.114", "m.thierolf@googlemail.com", "tapo1234")
 
 	if err := device.Handshake(); err != nil {
 		t.Errorf("Handshake:\n%v\n", err)
