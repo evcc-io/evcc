@@ -6,6 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
@@ -43,7 +44,7 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("vw").Redact(cc.User, cc.Password, cc.VIN)
-	ts, err := vw.MbbTokenSource(log, vw.AuthClientID, vw.AuthParams, cc.User, cc.Password)
+	ts, err := service.MbbTokenSource(log, vw.AuthClientID, vw.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

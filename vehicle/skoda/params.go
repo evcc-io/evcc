@@ -11,9 +11,14 @@ const (
 )
 
 // Skoda native api
-var AuthParams = url.Values(map[string][]string{
+var AuthParams = url.Values{
 	"response_type": {"code id_token"},
 	"client_id":     {"f9a2359a-b776-46d9-bd0c-db1904343117@apps_vw-dilab_com"},
 	"redirect_uri":  {"skodaconnect://oidc.login/"},
 	"scope":         {"openid mbb profile"},
-})
+}
+
+// TokenServiceParams are the parameters for the vag tokenservice
+var TokenServiceParams = url.Values{
+	"brand": {"skoda"},
+}

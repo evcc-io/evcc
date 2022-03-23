@@ -35,11 +35,11 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 		return nil, err
 	}
 
-	data := url.Values(map[string][]string{
+	data := url.Values{
 		"grant_type": {"id_token"},
 		"token":      {q.Get("id_token")},
 		"scope":      {"sc2:fal"},
-	})
+	}
 
 	req, err := request.New(http.MethodPost, TokenURL, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",

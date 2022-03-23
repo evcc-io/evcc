@@ -1,4 +1,4 @@
-package skoda
+package service
 
 import (
 	"net/url"
@@ -9,16 +9,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func TokenRefreshServiceTokenSource(log *util.Logger, q url.Values, user, password string) (oauth2.TokenSource, error) {
+func TokenRefreshServiceTokenSource(log *util.Logger, q, data url.Values, user, password string) (oauth2.TokenSource, error) {
 	vwi := vwidentity.New(log)
 	uri := vwidentity.LoginURL(vwidentity.Endpoint.AuthURL, q)
 	q, err := vwi.Login(uri, user, password)
 	if err != nil {
 		return nil, err
-	}
-
-	data := url.Values{
-		"brand": {"skoda"},
 	}
 
 	trs := tokenrefreshservice.New(log, data)

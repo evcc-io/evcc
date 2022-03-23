@@ -1,4 +1,4 @@
-package vw
+package service
 
 import (
 	"net/url"

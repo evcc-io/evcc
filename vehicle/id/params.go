@@ -8,9 +8,9 @@ import (
 
 const LoginURL = loginapps.BaseURL + "/authorize"
 
-var AuthParams = url.Values(map[string][]string{
+var AuthParams = url.Values{
 	"response_type": {"code id_token token"},
 	"client_id":     {"a24fba63-34b3-4d43-b181-942111e6bda8@apps_vw-dilab_com"},
 	"redirect_uri":  {"weconnect://authenticated"},
 	"scope":         {"openid profile badge cars vin"}, // dealers
-})
+}

@@ -77,12 +77,12 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
 	if err == nil {
-		data := url.Values(map[string][]string{
+		data := url.Values{
 			"_csrf":      {vars.Inputs["_csrf"]},
 			"relayState": {vars.Inputs["relayState"]},
 			"hmac":       {vars.Inputs["hmac"]},
 			"email":      {user},
-		})
+		}
 
 		uri = BaseURL + vars.Action
 		if resp, err = v.PostForm(uri, data); err == nil {
@@ -95,13 +95,13 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
 	if err == nil {
-		data := url.Values(map[string][]string{
+		data := url.Values{
 			"_csrf":      {params.CsrfToken},
 			"relayState": {params.TemplateModel.RelayState},
 			"hmac":       {params.TemplateModel.Hmac},
 			"email":      {user},
 			"password":   {password},
-		})
+		}
 
 		// reuse url from identifier step before
 		uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
