@@ -63,15 +63,8 @@ func (d *Device) DoRequest(payload []byte) ([]byte, error) {
 
 	defer resp.Body.Close()
 
-	var jsonResp struct {
-		ErrorCode int `json:"error_code"`
-		Result    struct {
-			Response string `json:"response"`
-		} `json:"result"`
-	}
-
+	var jsonResp deviceResponse
 	json.NewDecoder(resp.Body).Decode(&jsonResp)
-
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return nil, err
 	}
@@ -108,13 +101,7 @@ func (d *Device) Handshake() (err error) {
 
 	defer resp.Body.Close()
 
-	var jsonResp struct {
-		ErrorCode int `json:"error_code"`
-		Result    struct {
-			Key string `json:"key"`
-		} `json:"result"`
-	}
-
+	var jsonResp deviceResponse
 	json.NewDecoder(resp.Body).Decode(&jsonResp)
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return
@@ -151,13 +138,7 @@ func (d *Device) Login() (err error) {
 		return
 	}
 
-	var jsonResp struct {
-		ErrorCode int `json:"error_code"`
-		Result    struct {
-			Token string `json:"token"`
-		} `json:"result"`
-	}
-
+	var jsonResp deviceResponse
 	json.NewDecoder(bytes.NewBuffer(payload)).Decode(&jsonResp)
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return

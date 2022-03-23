@@ -22,7 +22,7 @@ type DeviceCipher struct {
 	iv  []byte
 }
 
-type DeviceResponse struct {
+type deviceResponse struct {
 	ErrorCode int `json:"error_code"`
 	Result    struct {
 		Key      string `json:"key"`
