@@ -45,17 +45,17 @@ func NewConnection(uri, user, password string) *Connection {
 	return tapo
 }
 
-func (d *Connection) DoRequest(uri string, payload []byte) ([]byte, error) {
-	securedPayload, _ := json.Marshal(map[string]interface{}{
+func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
+	securedReq, _ := json.Marshal(map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
-			"request": base64.StdEncoding.EncodeToString(d.Cipher.Encrypt(payload)),
+			"request": base64.StdEncoding.EncodeToString(d.Cipher.Encrypt(request)),
 		},
 	})
 
-	fmt.Printf("securedPayload:\n%s\n", string(securedPayload))
+	fmt.Printf("securedReq:\n%s\n", string(securedReq))
 
-	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(securedPayload))
+	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(securedReq))
 	req.Header.Set("Cookie", d.SessionID)
 	req.Close = true
 
@@ -89,7 +89,7 @@ func (d *Connection) Handshake() (err error) {
 	privKey, pubKey := GenerateRSAKeys()
 
 	pubPEM := DumpRSAPEM(pubKey)
-	payload, _ := json.Marshal(map[string]interface{}{
+	req, _ := json.Marshal(map[string]interface{}{
 		"method": "handshake",
 		"params": map[string]interface{}{
 			"key":             string(pubPEM),
@@ -97,7 +97,7 @@ func (d *Connection) Handshake() (err error) {
 		},
 	})
 
-	resp, err := http.Post(d.URI, "application/json", bytes.NewBuffer(payload))
+	resp, err := http.Post(d.URI, "application/json", bytes.NewBuffer(req))
 	if err != nil {
 		return
 	}
@@ -179,6 +179,12 @@ func (d *Connection) GetDeviceInfo() (*DeviceInfo, error) {
 	status.Result.SSID = string(SSIDEncoded)
 
 	return status, nil
+}
+
+func (d *Connection) ExecMethod(method string) (map[string]interface{}, error) {
+	if method == "get_device_info" {
+	}
+	return nil, nil
 }
 
 func (c *ConnectionCipher) Encrypt(payload []byte) []byte {
