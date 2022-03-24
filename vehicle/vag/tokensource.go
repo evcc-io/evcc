@@ -126,6 +126,7 @@ func (ts *idTokenSource) Token() (*oauth2.Token, error) {
 	}
 
 	idToken := &oauth2.Token{
+		TokenType:   token.TokenType,
 		AccessToken: token.IDToken,
 		Expiry:      token.Expiry,
 	}

@@ -12,9 +12,7 @@ import (
 )
 
 func MbbTokenSource(log *util.Logger, clientID string, q url.Values, user, password string) (vag.TokenSource, error) {
-	vwi := vwidentity.New(log)
-	uri := vwidentity.LoginURL(vwidentity.Endpoint.AuthURL, q)
-	q, err := vwi.Login(uri, user, password)
+	q, err := vwidentity.Login(log, q, user, password)
 	if err != nil {
 		return nil, err
 	}
@@ -29,16 +27,10 @@ func MbbTokenSource(log *util.Logger, clientID string, q url.Values, user, passw
 }
 
 func MbbIDKTokenSource(log *util.Logger, clientID string, q url.Values, user, password string) (vag.TokenSource, error) {
-	verify := vag.ChallengeAndVerifier(q)
-
-	vwi := vwidentity.New(log)
-	uri := vwidentity.LoginURL(vwidentity.Endpoint.AuthURL, q)
-	q, err := vwi.Login(uri, user, password)
+	q, err := vwidentity.Login(log, q, user, password)
 	if err != nil {
 		return nil, err
 	}
-
-	verify(q)
 
 	idk := idkproxy.New(log, audi.IDKParams)
 	token, err := idk.Exchange(q)

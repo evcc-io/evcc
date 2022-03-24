@@ -7,7 +7,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/audi/etron"
 	"github.com/evcc-io/evcc/vehicle/id"
 	"github.com/evcc-io/evcc/vehicle/vag"
@@ -52,17 +51,10 @@ func NewEtronFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("etron").Redact(cc.User, cc.Password, cc.VIN)
 
 	// get initial VW identity id_token
-	q := urlvalues.Copy(etron.AuthParams)
-	verify := vag.ChallengeAndVerifier(q)
-
-	vwi := vwidentity.New(log)
-	uri := vwidentity.LoginURL(vwidentity.Endpoint.AuthURL, q)
-	q, err := vwi.Login(uri, cc.User, cc.Password)
+	q, err := vwidentity.Login(log, etron.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
-
-	verify(q)
 
 	// exchange initial VW identity id_token for Audi IDK token
 	idk := idkproxy.New(log, etron.IDKParams)

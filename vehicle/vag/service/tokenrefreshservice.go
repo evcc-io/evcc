@@ -10,9 +10,7 @@ import (
 )
 
 func TokenRefreshServiceTokenSource(log *util.Logger, q, data url.Values, user, password string) (oauth2.TokenSource, error) {
-	vwi := vwidentity.New(log)
-	uri := vwidentity.LoginURL(vwidentity.Endpoint.AuthURL, q)
-	q, err := vwi.Login(uri, user, password)
+	q, err := vwidentity.Login(log, q, user, password)
 	if err != nil {
 		return nil, err
 	}

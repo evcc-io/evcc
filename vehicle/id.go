@@ -45,9 +45,7 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("id").Redact(cc.User, cc.Password, cc.VIN)
 
-	vwi := vwidentity.New(log)
-	uri := vwidentity.LoginURL(id.LoginURL, id.AuthParams)
-	q, err := vwi.Login(uri, cc.User, cc.Password)
+	q, err := vwidentity.LoginWithAuthURL(log, id.LoginURL, id.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

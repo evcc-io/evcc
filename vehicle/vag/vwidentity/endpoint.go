@@ -10,6 +10,8 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/urlvalues"
+	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/google/uuid"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
@@ -25,6 +27,35 @@ var Endpoint = &oauth2.Endpoint{
 	TokenURL: BaseURL + "/oidc/v1/token",
 }
 
+// Login performs VW identity login with optional code challenge
+func Login(log *util.Logger, q url.Values, user, password string) (url.Values, error) {
+	return LoginWithAuthURL(log, Endpoint.AuthURL, q, user, password)
+}
+
+func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password string) (url.Values, error) {
+	var verify func(url.Values)
+
+	// add code challenge
+	q = urlvalues.Copy(q)
+	if rt := q.Get("response_type"); strings.Contains(rt, "code") {
+		verify = vag.ChallengeAndVerifier(q)
+	}
+
+	uri = fmt.Sprintf("%s?%s", uri, q.Encode())
+
+	vwi := New(log)
+	q, err := vwi.Login(uri, user, password)
+	if err != nil {
+		return nil, err
+	}
+
+	if verify != nil {
+		verify(q)
+	}
+
+	return q, nil
+}
+
 type Service struct {
 	*request.Helper
 }
@@ -33,11 +64,6 @@ func New(log *util.Logger) *Service {
 	return &Service{
 		Helper: request.NewHelper(log),
 	}
-}
-
-// LoginURL combines base url and query params
-func LoginURL(uri string, q url.Values) string {
-	return fmt.Sprintf("%s?%s", uri, q.Encode())
 }
 
 // Login performs the identity.vwgroup.io login
