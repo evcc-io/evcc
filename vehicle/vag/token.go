@@ -1,4 +1,4 @@
-package vw
+package vag
 
 import (
 	"encoding/json"
@@ -11,13 +11,15 @@ import (
 // Token is an OAuth2-compatible token that supports the expires_in attribute
 type Token struct {
 	oauth2.Token
-	err error
+	IDToken string `json:"id_token,omitempty"`
+	err     error
 }
 
 func (t *Token) UnmarshalJSON(data []byte) error {
 	var s struct {
 		oauth2.Token
-		ExpiresIn        int64 `json:"expires_in,omitempty"`
+		IDToken          string `json:"id_token,omitempty"`
+		ExpiresIn        int64  `json:"expires_in,omitempty"`
 		Error            *string
 		ErrorDescription *string `json:"error_description"`
 	}
@@ -25,6 +27,7 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &s)
 	if err == nil {
 		t.Token = s.Token
+		t.IDToken = s.IDToken
 
 		if s.Expiry.IsZero() && s.ExpiresIn != 0 {
 			t.Expiry = time.Now().Add(time.Second * time.Duration(s.ExpiresIn))

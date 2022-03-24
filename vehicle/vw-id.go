@@ -1,13 +1,14 @@
 package vehicle
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/id"
+	"github.com/evcc-io/evcc/vehicle/vag/loginapps"
+	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 )
 
 // https://github.com/TA2k/ioBroker.vw-connect
@@ -43,14 +44,19 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("id").Redact(cc.User, cc.Password, cc.VIN)
-	identity := id.NewIdentity(log, cc.User, cc.Password)
 
-	err := identity.Login()
+	q, err := vwidentity.LoginWithAuthURL(log, id.LoginURL, id.AuthParams, cc.User, cc.Password)
 	if err != nil {
-		return v, fmt.Errorf("login failed: %w", err)
+		return nil, err
 	}
 
-	api := id.NewAPI(log, identity)
+	apps := loginapps.New(log)
+	token, err := apps.Exchange(q)
+	if err != nil {
+		return nil, err
+	}
+
+	api := id.NewAPI(log, apps.TokenSource(token))
 	api.Client.Timeout = cc.Timeout
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)

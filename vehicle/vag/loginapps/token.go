@@ -1,4 +1,4 @@
-package id
+package loginapps
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Token is the VW ID token
+// Token is the loginapps token
 type Token oauth2.Token
 
 func (t *Token) UnmarshalJSON(data []byte) error {
