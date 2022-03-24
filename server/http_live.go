@@ -1,4 +1,5 @@
 //go:build !release
+// +build !release
 
 package server
 
