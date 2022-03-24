@@ -138,7 +138,7 @@ func (d *Connection) Login() (err error) {
 
 	payload, err = d.DoRequest(d.URI, payload)
 	if err != nil {
-		return
+		return err
 	}
 
 	var jsonResp DeviceResponse
@@ -148,7 +148,14 @@ func (d *Connection) Login() (err error) {
 	}
 
 	d.Token = &jsonResp.Result.Token
-	return
+
+	deviceResponse, err := d.ExecMethod("get_device_info", false)
+	if err != nil {
+		return err
+	}
+	d.TerminalUUID = deviceResponse.Result.MAC
+
+	return nil
 }
 
 func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, error) {
@@ -169,7 +176,7 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 				"device_on": deviceOn,
 			},
 			"requestTimeMils": int(time.Now().Unix() * 1000),
-			"terminalUUID":    "54-AF-97-1D-5E-98",
+			"terminalUUID":    d.TerminalUUID,
 		})
 	default:
 		return nil, fmt.Errorf("Unknown Tapo method: %s", method)

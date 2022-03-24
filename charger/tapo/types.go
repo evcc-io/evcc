@@ -24,6 +24,7 @@ type Connection struct {
 	SessionID       string
 	Token           *string
 	Client          *http.Client
+	TerminalUUID    string
 	Updated         time.Time
 }
 
