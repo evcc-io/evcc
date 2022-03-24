@@ -22,8 +22,18 @@ import (
 	"github.com/mergermarket/go-pkcs7"
 )
 
+// Tapo homepage + api reverse engineering results
+// https://www.tapo.com/de/
+// Credits to & inspired by:
+// https://k4czp3r.xyz/reverse-engineering/tp-link/tapo/2020/10/15/reverse-engineering-tp-link-tapo.html
+// https://github.com/fishbigger/TapoP100
+// https://github.com/artemvang/p100-go
+
 const Timeout = time.Second * 15
 
+// NewConnection creates a new Tapo device connection.
+// User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
+// Password is directly B64 encoded.
 func NewConnection(uri, user, password string) *Connection {
 
 	settings := &Settings{
@@ -45,6 +55,7 @@ func NewConnection(uri, user, password string) *Connection {
 	return tapo
 }
 
+// Login provides the Tapo device session token and MAC address (TerminalUUID).
 func (d *Connection) Login() error {
 	err := d.Handshake()
 	if err != nil {
@@ -82,6 +93,7 @@ func (d *Connection) Login() error {
 	return nil
 }
 
+// Handshake provides the Tapo device session cookie and encryption cipher.
 func (d *Connection) Handshake() error {
 	privKey, pubKey := GenerateRSAKeys()
 
@@ -119,6 +131,7 @@ func (d *Connection) Handshake() error {
 	return nil
 }
 
+// ExecMethod executes a Tapo device command method and provides the corresponding response.
 func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, error) {
 	var req []byte
 	switch method {
@@ -157,6 +170,7 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 	return tapoResp, nil
 }
 
+// DoRequest executes a Tapo device request by encding the request and decoding its response.
 func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
 	securedReq, _ := json.Marshal(map[string]interface{}{
 		"method": "securePassthrough",
@@ -186,6 +200,8 @@ func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
 
 	return d.Cipher.Decrypt(encryptedResponse), nil
 }
+
+// Tapo helper functions
 
 func (d *Connection) CheckErrorCode(errorCode int) error {
 	errorDesc := map[int]string{
