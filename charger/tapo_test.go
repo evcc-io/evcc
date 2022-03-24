@@ -17,14 +17,15 @@ func TestLogin(t *testing.T) {
 		t.Errorf("Login:\n%v\n", err)
 	}
 
-	// deviceInfo, err := device.GetDeviceInfo()
-	deviceInfo, err := device.ExecMethod("get_device_info")
+	deviceResponse, err := device.ExecMethod("set_device_info", "device_on", "true")
+	// deviceResponse, err := device.ExecMethod("get_device_info", "", "")
 	if err != nil {
-		t.Errorf("deviceInfo:\n%v\nerror:\n%v", deviceInfo, err)
+		t.Errorf("deviceResponse:\n%v\nerror:\n%v", deviceResponse, err)
 	}
 
-	t.Errorf("\ndeviceInfo:\n%v\n", deviceInfo)
-	//t.Errorf("\ndeviceON:\n%v\n", deviceInfo.Result.DeviceON)
+	//t.Errorf("\ndeviceResponse:\n%v\n", deviceResponse)
+	//t.Errorf("\ndeviceON:\n%v\n", deviceResponse.Result.DeviceON)
+	t.Errorf("\nMAC:\n%v\n", deviceResponse.Result.MAC)
 	// device.Switch(true)
 
 }

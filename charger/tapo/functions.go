@@ -79,7 +79,7 @@ func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
 
 func (d *Connection) CheckErrorCode(errorCode int) error {
 	if errorCode != 0 {
-		return errors.New(fmt.Sprintf("Got error code %d", errorCode))
+		return errors.New(fmt.Sprintf("Tapo got error code %d", errorCode))
 	}
 
 	return nil
@@ -151,41 +151,28 @@ func (d *Connection) Login() (err error) {
 	return
 }
 
-func (d *Connection) GetDeviceInfo() (*DeviceResponse, error) {
-	if d.Token == nil {
-		return nil, errors.New("Login was not performed")
-	}
-
-	req, _ := json.Marshal(map[string]interface{}{
-		"method": "get_device_info",
-	})
-
-	resp, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
-	if err != nil {
-		return nil, err
-	}
-
-	jsonResp := &DeviceResponse{}
-	json.NewDecoder(bytes.NewBuffer(resp)).Decode(jsonResp)
-	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
-		return nil, err
-	}
-	nicknameDecoded, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Nickname)
-	jsonResp.Result.Nickname = string(nicknameDecoded)
-	SSIDDecoded, _ := base64.StdEncoding.DecodeString(jsonResp.Result.SSID)
-	jsonResp.Result.SSID = string(SSIDDecoded)
-
-	return jsonResp, nil
-}
-
-func (d *Connection) ExecMethod(method string) (*DeviceResponse, error) {
+func (d *Connection) ExecMethod(method, parameter, value string) (*DeviceResponse, error) {
 	if d.Token == nil {
 		return nil, errors.New("Tapo login was not performed")
 	}
 
-	req, _ := json.Marshal(map[string]interface{}{
-		"method": method,
-	})
+	var req []byte
+	switch method {
+	case "get_device_info":
+		req, _ = json.Marshal(map[string]interface{}{
+			"method": method,
+		})
+	case "set_device_info":
+		req, _ = json.Marshal(map[string]interface{}{
+			"method": method,
+			"params": map[string]interface{}{
+				parameter: value,
+			},
+			"terminalUUID": "54-AF-97-1D-5E-98",
+		})
+	default:
+		return nil, fmt.Errorf("Unknown Tapo method: %s", method)
+	}
 
 	resp, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
 	if err != nil {
