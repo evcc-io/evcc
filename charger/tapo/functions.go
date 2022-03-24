@@ -151,7 +151,7 @@ func (d *Connection) Login() (err error) {
 	return
 }
 
-func (d *Connection) ExecMethod(method, parameter, value string) (*DeviceResponse, error) {
+func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, error) {
 	if d.Token == nil {
 		return nil, errors.New("Tapo login was not performed")
 	}
@@ -166,13 +166,16 @@ func (d *Connection) ExecMethod(method, parameter, value string) (*DeviceRespons
 		req, _ = json.Marshal(map[string]interface{}{
 			"method": method,
 			"params": map[string]interface{}{
-				parameter: value,
+				"device_on": deviceOn,
 			},
-			"terminalUUID": "54-AF-97-1D-5E-98",
+			"requestTimeMils": int(time.Now().Unix() * 1000),
+			"terminalUUID":    "54-AF-97-1D-5E-98",
 		})
 	default:
 		return nil, fmt.Errorf("Unknown Tapo method: %s", method)
 	}
+
+	fmt.Printf("req:\n%s\n", string(req))
 
 	resp, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
 	if err != nil {
