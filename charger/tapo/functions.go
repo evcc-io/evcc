@@ -182,6 +182,8 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 		return nil, err
 	}
 
+	fmt.Printf("resp:\n%s\n", string(resp))
+
 	taporesp := &DeviceResponse{}
 	json.NewDecoder(bytes.NewBuffer(resp)).Decode(taporesp)
 	if err = d.CheckErrorCode(taporesp.ErrorCode); err != nil {
@@ -192,11 +194,12 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 	case "get_device_info":
 		taporesp.Result.Nickname = base64Decode(taporesp.Result.Nickname)
 		taporesp.Result.SSID = base64Decode(taporesp.Result.SSID)
+		return taporesp, nil
+	case "set_device_info":
+		return taporesp, nil
 	default:
 		return nil, fmt.Errorf("Unknown Tapo method: %s", method)
 	}
-
-	return taporesp, nil
 }
 
 func (c *ConnectionCipher) Encrypt(payload []byte) []byte {
