@@ -2,11 +2,9 @@ package aazsproxy
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"golang.org/x/oauth2"
 )
@@ -28,11 +26,7 @@ func New(log *util.Logger) *Service {
 }
 
 // Exchange exchanges an VAG identity or IDK token for an AAZS token
-func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
-	if err := urlvalues.Require(q, "id_token"); err != nil {
-		return nil, err
-	}
-
+func (v *Service) Exchange(config, token string) (*vag.Token, error) {
 	// TODO make configurable
 	data := struct {
 		Token     string `json:"token"`
@@ -40,10 +34,10 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 		Stage     string `json:"stage"`
 		Config    string `json:"config"`
 	}{
-		Token:     q.Get("id_token"),
+		Token:     token,
 		GrantType: "id_token",
 		Stage:     "live",
-		Config:    "myaudi",
+		Config:    config,
 	}
 
 	var res vag.Token
