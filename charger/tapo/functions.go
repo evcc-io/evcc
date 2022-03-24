@@ -51,22 +51,21 @@ func (d *Connection) Login() error {
 		return err
 	}
 
-	payload, _ := json.Marshal(map[string]interface{}{
+	req, _ := json.Marshal(map[string]interface{}{
 		"method": "login_device",
 		"params": map[string]interface{}{
 			"username": d.EncodedUser,
 			"password": d.EncodedPassword,
 		},
 	})
-	fmt.Printf("payload:\n%s\n", string(payload))
 
-	payload, err = d.DoRequest(d.URI, payload)
+	res, err := d.DoRequest(d.URI, req)
 	if err != nil {
 		return err
 	}
 
 	var jsonResp DeviceResponse
-	json.NewDecoder(bytes.NewBuffer(payload)).Decode(&jsonResp)
+	json.NewDecoder(bytes.NewBuffer(res)).Decode(&jsonResp)
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return err
 	}
@@ -77,6 +76,7 @@ func (d *Connection) Login() error {
 	if err != nil {
 		return err
 	}
+
 	d.TerminalUUID = deviceResponse.Result.MAC
 
 	return nil
@@ -94,15 +94,15 @@ func (d *Connection) Handshake() error {
 		},
 	})
 
-	resp, err := http.Post(d.URI, "application/json", bytes.NewBuffer(req))
+	res, err := http.Post(d.URI, "application/json", bytes.NewBuffer(req))
 	if err != nil {
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
 	var jsonResp DeviceResponse
-	json.NewDecoder(resp.Body).Decode(&jsonResp)
+	json.NewDecoder(res.Body).Decode(&jsonResp)
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (d *Connection) Handshake() error {
 		Iv:  encryptionKey[16:],
 	}
 
-	d.SessionID = strings.Split(resp.Header.Get("Set-Cookie"), ";")[0]
+	d.SessionID = strings.Split(res.Header.Get("Set-Cookie"), ";")[0]
 
 	return nil
 }
@@ -138,27 +138,23 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 		})
 	}
 
-	fmt.Printf("req:\n%s\n", string(req))
-
-	resp, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
+	res, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("resp:\n%s\n", string(resp))
-
-	taporesp := &DeviceResponse{}
-	json.NewDecoder(bytes.NewBuffer(resp)).Decode(taporesp)
-	if err = d.CheckErrorCode(taporesp.ErrorCode); err != nil {
-		return taporesp, err
+	tapoResp := &DeviceResponse{}
+	json.NewDecoder(bytes.NewBuffer(res)).Decode(tapoResp)
+	if err = d.CheckErrorCode(tapoResp.ErrorCode); err != nil {
+		return tapoResp, err
 	}
 
 	if method == "get_device_info" {
-		taporesp.Result.Nickname = base64Decode(taporesp.Result.Nickname)
-		taporesp.Result.SSID = base64Decode(taporesp.Result.SSID)
+		tapoResp.Result.Nickname = base64Decode(tapoResp.Result.Nickname)
+		tapoResp.Result.SSID = base64Decode(tapoResp.Result.SSID)
 	}
 
-	return taporesp, nil
+	return tapoResp, nil
 }
 
 func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
@@ -168,8 +164,6 @@ func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
 			"request": base64.StdEncoding.EncodeToString(d.Cipher.Encrypt(request)),
 		},
 	})
-
-	fmt.Printf("securedReq:\n%s\n", string(securedReq))
 
 	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(securedReq))
 	req.Header.Set("Cookie", d.SessionID)

@@ -14,8 +14,8 @@ func TestLogin(t *testing.T) {
 	}
 
 	// deviceResponse, err := device.ExecMethod("get_device_info", false)
-	deviceResponse, err := device.ExecMethod("set_device_info", false)
-	// deviceResponse, err := device.ExecMethod("get_energy_usage", false)
+	// deviceResponse, err := device.ExecMethod("set_device_info", false)
+	deviceResponse, err := device.ExecMethod("get_energy_usage", false)
 	if err != nil {
 		t.Errorf("deviceResponse:\n%v\nerror:\n%v", deviceResponse, err)
 	}
