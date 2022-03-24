@@ -2,6 +2,8 @@ package tapo
 
 import (
 	"net/http"
+
+	"github.com/evcc-io/evcc/util"
 )
 
 // Tapo homepage + api reverse engineering results
@@ -18,6 +20,7 @@ type Settings struct {
 
 // Tapo connection
 type Connection struct {
+	log *util.Logger
 	*Settings
 	EncodedUser     string
 	EncodedPassword string

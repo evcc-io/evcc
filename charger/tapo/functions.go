@@ -46,6 +46,7 @@ func NewConnection(uri, user, password string) *Connection {
 	h.Write([]byte(user))
 
 	tapo := &Connection{
+		log:             util.NewLogger("tapo"),
 		Settings:        settings,
 		EncodedUser:     base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(h.Sum(nil)))),
 		EncodedPassword: base64.StdEncoding.EncodeToString([]byte(password)),
@@ -151,10 +152,14 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 		})
 	}
 
+	d.log.TRACE.Printf("request: %v", string(req))
+
 	res, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
 	if err != nil {
 		return nil, err
 	}
+
+	d.log.TRACE.Printf("response: %v", string(res))
 
 	tapoResp := &DeviceResponse{}
 	json.NewDecoder(bytes.NewBuffer(res)).Decode(tapoResp)
