@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/tapo"
@@ -15,6 +16,7 @@ import (
 type Tapo struct {
 	conn         *tapo.Connection
 	standbypower float64
+	Updated      time.Time
 }
 
 func init() {
@@ -47,32 +49,30 @@ func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
 		uri = strings.TrimSuffix(uri, suffix)
 	}
 
-	//	log := util.NewLogger("tapo")
-	//	client := request.NewHelper(log)
+	conn := tapo.NewConnection(uri, user, password)
 
-	c := &Tapo{
-		//		Helper:       client,
-		//		log:          log,
+	tapo := &Tapo{
+		conn:         conn,
 		standbypower: standbypower,
 	}
 
-	//	c.Client.Transport = request.NewTripper(log, transport.Insecure())
-
 	if user == "" || password == "" {
-		return c, fmt.Errorf("missing user/password")
+		return tapo, fmt.Errorf("missing user/password")
 	}
 
-	return c, nil
+	return tapo, nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *Tapo) Enabled() (bool, error) {
-	return true, nil
+	resp, err := c.execTapoCmd("get_device_info", false)
+	return resp.Result.DeviceON, err
 }
 
 // Enable implements the api.Charger interface
 func (c *Tapo) Enable(enable bool) error {
-	return nil
+	_, err := c.execTapoCmd("set_device_info", enable)
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -83,12 +83,45 @@ func (c *Tapo) MaxCurrent(current int64) error {
 // Status implements the api.Charger interface
 func (c *Tapo) Status() (api.ChargeStatus, error) {
 	res := api.StatusB
-	return res, nil
+
+	// static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if on {
+			res = api.StatusC
+		}
+
+		return res, err
+	}
+
+	// standby power mode
+	power, err := c.CurrentPower()
+	if power > c.standbypower {
+		res = api.StatusC
+	}
+
+	return res, err
 }
 
 var _ api.Meter = (*Tapo)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Tapo) CurrentPower() (float64, error) {
-	return 0, nil
+	resp, err := c.execTapoCmd("get_energy_usage", false)
+	return float64(resp.Result.Current_Power) / 1000, err
+}
+
+// execTapoCmd executes a Tapo api command and provides the response
+func (c *Tapo) execTapoCmd(method string, enable bool) (*tapo.DeviceResponse, error) {
+	// refresh Tapo session id
+	if time.Since(c.Updated) >= 600*time.Minute {
+		err := c.conn.Login()
+		if err != nil {
+			return nil, err
+		}
+		// update session timestamp
+		c.Updated = time.Now()
+	}
+
+	return c.conn.ExecMethod(method, enable)
 }

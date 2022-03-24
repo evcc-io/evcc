@@ -14,15 +14,15 @@ func TestLogin(t *testing.T) {
 	}
 
 	// deviceResponse, err := device.ExecMethod("get_device_info", false)
-	//deviceResponse, err := device.ExecMethod("set_device_info", true)
-	deviceResponse, err := device.ExecMethod("gut_energy_usage", false)
+	deviceResponse, err := device.ExecMethod("set_device_info", false)
+	// deviceResponse, err := device.ExecMethod("get_energy_usage", false)
 	if err != nil {
 		t.Errorf("deviceResponse:\n%v\nerror:\n%v", deviceResponse, err)
 	}
 
 	t.Errorf("\ndeviceResponse:\n%v\n", deviceResponse)
 	//t.Errorf("\ndeviceON:\n%v\n", deviceResponse.Result.DeviceON)
-	t.Errorf("\nMAC:\n%v\ndeviceON:\n%v\n", deviceResponse.Result.MAC, deviceResponse.Result.DeviceON)
+	t.Errorf("\nMAC:\n%v\ndeviceON:\n%v\nCurrent_Power:\n%d\n", deviceResponse.Result.MAC, deviceResponse.Result.DeviceON, deviceResponse.Result.Current_Power)
 	// device.Switch(true)
 
 }

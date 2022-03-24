@@ -120,10 +120,6 @@ func (d *Connection) Handshake() error {
 }
 
 func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, error) {
-	if d.Token == nil {
-		return nil, errors.New("Tapo login was not performed")
-	}
-
 	var req []byte
 	switch method {
 	case "set_device_info":

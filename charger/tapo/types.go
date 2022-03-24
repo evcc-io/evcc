@@ -2,7 +2,6 @@ package tapo
 
 import (
 	"net/http"
-	"time"
 )
 
 // Tapo homepage + api reverse engineering results
@@ -25,7 +24,6 @@ type Connection struct {
 	Token           *string
 	Client          *http.Client
 	TerminalUUID    string
-	Updated         time.Time
 }
 
 // Tapo connection cipher
@@ -66,6 +64,7 @@ type DeviceResponse struct {
 		Key                string `json:"key"`
 		Response           string `json:"response"`
 		Token              string `json:"token"`
+		Current_Power      int    `json:"current_power"`
 	} `json:"result"`
 	ErrorCode int `json:"error_code"`
 }
