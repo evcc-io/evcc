@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -44,8 +43,6 @@ func New(log *util.Logger, q url.Values) *Service {
 var secret = []byte{55, 24, 256 - 56, 256 - 96, 256 - 72, 256 - 110, 57, 256 - 87, 3, 256 - 86, 256 - 41, 256 - 103, 33, 256 - 30, 99, 103, 81, 125, 256 - 39, 256 - 39, 71, 18, 256 - 107, 256 - 112, 256 - 120, 256 - 12, 256 - 104, 89, 103, 113, 256 - 128, 256 - 91}
 
 func qmauth(ts int64) string {
-	fmt.Println(ts)
-
 	hash := hmac.New(sha256.New, secret)
 	hash.Write([]byte(strconv.FormatInt(ts, 10)))
 	b := hash.Sum(nil)
@@ -54,8 +51,7 @@ func qmauth(ts int64) string {
 }
 
 func qmauthNow() string {
-	ts := time.Now().Unix() / 100
-	return "v1:55f755b0:" + qmauth(ts)
+	return "v1:55f755b0:" + qmauth(time.Now().Unix()/100)
 }
 
 // Exchange exchanges an VAG identity token for an IDK token
