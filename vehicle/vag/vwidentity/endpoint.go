@@ -120,9 +120,10 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 			}
 
 			if u := resp.Request.URL.Query().Get("updated"); err == nil && u != "" {
-				err = errors.New("updated ToS")
 				if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
 					resp.Body.Close()
+				} else {
+					err = fmt.Errorf("updated ToS: %w", err)
 				}
 			}
 		}
