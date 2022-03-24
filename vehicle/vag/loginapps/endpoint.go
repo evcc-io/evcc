@@ -74,7 +74,7 @@ func (v *Service) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return (*oauth2.Token)(res), err
 }
 
-// TokenSource creates a refreshing OAuth2 token source
+// TokenSource creates a refreshing oauth2 token source
 func (v *Service) TokenSource(token *Token) oauth2.TokenSource {
 	return oauth.RefreshTokenSource((*oauth2.Token)(token), v)
 }

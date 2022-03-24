@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
@@ -16,7 +15,6 @@ const BaseURL = "https://aazsproxy-service.apps.emea.vwapps.io"
 
 var Endpoint = &oauth2.Endpoint{
 	AuthURL: BaseURL + "/token",
-	// TokenURL: BaseURL + "/refresh/v1",
 }
 
 type Service struct {
@@ -29,6 +27,7 @@ func New(log *util.Logger) *Service {
 	}
 }
 
+// Exchange exchanges an VAG identity or IDK token for an AAZS token
 func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	if err := urlvalues.Require(q, "id_token"); err != nil {
 		return nil, err
@@ -57,24 +56,7 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	return &res, err
 }
 
-// TODO implement
-func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
-	// req, err := request.New(http.MethodGet, Endpoint.TokenURL, nil, map[string]string{
-	// 	"Accept":        "application/json",
-	// 	"Authorization": "Bearer " + token.RefreshToken,
-	// })
-
-	// var res Token
-	// if err == nil {
-	// 	err = v.DoJSON(req, &res)
-	// }
-
-	// return &res, err
-
-	return nil, api.ErrNotAvailable
+// TokenSource creates token source. Token is NOT refreshed but will expire.
+func (v *Service) TokenSource(token *vag.Token) vag.TokenSource {
+	return vag.RefreshTokenSource(token, nil)
 }
-
-// // TokenSource creates token source. Token is refreshed automatically.
-// func (v *Service) TokenSource(token *vag.Token) vag.TokenSource {
-// 	return vag.RefreshTokenSource(token, v.Refresh)
-// }

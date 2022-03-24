@@ -40,40 +40,32 @@ func MbbIDKTokenSource(log *util.Logger, clientID string, q url.Values, user, pa
 
 	verify(q)
 
-	// trs := tokenrefreshservice.New(log)
-	// token, err := trs.Exchange(q)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	idk := idkproxy.New(log, audi.IDKParams)
 	token, err := idk.Exchange(q)
 	if err != nil {
 		return nil, err
 	}
 
-	// token, err = idk.Refresh(token)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// token.Expiry = time.Now()
-	// token, err = idk.TokenSource(token).Token()
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// azs := aazsproxy.New(log)
-	// token, err = azs.Exchange(url.Values{"id_token": {token.AccessToken}})
-	// if err != nil {
-	// 	return nil, err
-	// }
-
+	its := idk.TokenSource(token)
 	mbb := mbb.New(log, clientID)
-	token, err = mbb.Exchange(url.Values{"id_token": {token.IDToken}})
-	if err != nil {
-		return nil, err
-	}
 
-	return mbb.TokenSource(token), nil
+	mts := vag.MetaTokenSource(func() (*vag.Token, error) {
+		// get IDK token from refreshing IDK token source
+		itoken, err := its.TokenEx()
+		if err != nil {
+			return nil, err
+		}
+
+		// exchange IDK id_token for MBB token
+		mtoken, err := mbb.Exchange(url.Values{"id_token": {itoken.IDToken}})
+		if err != nil {
+			return nil, err
+		}
+
+		return mtoken, err
+
+		// produce tokens from refresh MBB token source
+	}, mbb.TokenSource)
+
+	return mts, nil
 }

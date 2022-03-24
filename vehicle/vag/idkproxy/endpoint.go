@@ -58,6 +58,7 @@ func qmauthNow() string {
 	return "v1:55f755b0:" + qmauth(ts)
 }
 
+// Exchange exchanges an VAG identity token for an IDK token
 func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	if err := urlvalues.Require(q, "code", "code_verifier"); err != nil {
 		return nil, err
@@ -86,6 +87,7 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	return &res, err
 }
 
+// Refresh refreshes an IDK token
 func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
