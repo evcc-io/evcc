@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/seat"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
+	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
@@ -45,7 +46,9 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("seat").Redact(cc.User, cc.Password, cc.VIN)
-	ts, err := service.MbbTokenSource(log, seat.AuthClientID, seat.AuthParams, cc.User, cc.Password)
+
+	trs := tokenrefreshservice.New(log, seat.TRSParams)
+	ts, err := service.MbbTokenSource(log, trs, seat.AuthClientID, seat.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

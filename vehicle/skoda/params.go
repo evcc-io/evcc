@@ -18,7 +18,7 @@ var AuthParams = url.Values{
 	"scope":         {"openid mbb profile"},
 }
 
-// TokenServiceParams are the parameters for the vag tokenservice
-var TokenServiceParams = url.Values{
+// TokenRefreshService parameters
+var TRSParams = url.Values{
 	"brand": {"skoda"},
 }

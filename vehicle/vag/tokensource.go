@@ -1,6 +1,7 @@
 package vag
 
 import (
+	"net/url"
 	"sync"
 	"time"
 
@@ -8,14 +9,22 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type TokenRefresher func(*Token) (*Token, error)
-
+// TokenSource is a VAG token source compatible with oauth2.TokenSource
 type TokenSource interface {
 	// Token returns an OAuth2 compatible token (id_token omitted)
 	Token() (*oauth2.Token, error)
 	// TokenEx returns the extended VAG token (id_token included)
 	TokenEx() (*Token, error)
 }
+
+// TokenExchanger exchanges a VW identity response into a (refreshing) VAG token source
+type TokenExchanger interface {
+	Exchange(q url.Values) (*Token, error)
+	TokenSource(token *Token) TokenSource
+}
+
+// TokenRefresher refreshes a token
+type TokenRefresher func(*Token) (*Token, error)
 
 var _ TokenSource = (*tokenSource)(nil)
 
