@@ -9,16 +9,13 @@ import (
 func TestLogin(t *testing.T) {
 	device := tapo.NewConnection("192.168.178.114", "m.thierolf@googlemail.com", "tapo1234")
 
-	if err := device.Handshake(); err != nil {
-		t.Errorf("Handshake:\n%v\n", err)
-	}
-
 	if err := device.Login(); err != nil {
 		t.Errorf("Login:\n%v\n", err)
 	}
 
-	deviceResponse, err := device.ExecMethod("set_device_info", true)
 	// deviceResponse, err := device.ExecMethod("get_device_info", false)
+	//deviceResponse, err := device.ExecMethod("set_device_info", true)
+	deviceResponse, err := device.ExecMethod("gut_energy_usage", false)
 	if err != nil {
 		t.Errorf("deviceResponse:\n%v\nerror:\n%v", deviceResponse, err)
 	}

@@ -45,6 +45,126 @@ func NewConnection(uri, user, password string) *Connection {
 	return tapo
 }
 
+func (d *Connection) Login() error {
+	err := d.Handshake()
+	if err != nil {
+		return err
+	}
+
+	payload, _ := json.Marshal(map[string]interface{}{
+		"method": "login_device",
+		"params": map[string]interface{}{
+			"username": d.EncodedUser,
+			"password": d.EncodedPassword,
+		},
+	})
+	fmt.Printf("payload:\n%s\n", string(payload))
+
+	payload, err = d.DoRequest(d.URI, payload)
+	if err != nil {
+		return err
+	}
+
+	var jsonResp DeviceResponse
+	json.NewDecoder(bytes.NewBuffer(payload)).Decode(&jsonResp)
+	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
+		return err
+	}
+
+	d.Token = &jsonResp.Result.Token
+
+	deviceResponse, err := d.ExecMethod("get_device_info", false)
+	if err != nil {
+		return err
+	}
+	d.TerminalUUID = deviceResponse.Result.MAC
+
+	return nil
+}
+
+func (d *Connection) Handshake() error {
+	privKey, pubKey := GenerateRSAKeys()
+
+	pubPEM := DumpRSAPEM(pubKey)
+	req, _ := json.Marshal(map[string]interface{}{
+		"method": "handshake",
+		"params": map[string]interface{}{
+			"key":             string(pubPEM),
+			"requestTimeMils": 0,
+		},
+	})
+
+	resp, err := http.Post(d.URI, "application/json", bytes.NewBuffer(req))
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	var jsonResp DeviceResponse
+	json.NewDecoder(resp.Body).Decode(&jsonResp)
+	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
+		return err
+	}
+
+	encryptedEncryptionKey, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Key)
+	encryptionKey, _ := rsa.DecryptPKCS1v15(rand.Reader, privKey, encryptedEncryptionKey)
+	d.Cipher = &ConnectionCipher{
+		Key: encryptionKey[:16],
+		Iv:  encryptionKey[16:],
+	}
+
+	d.SessionID = strings.Split(resp.Header.Get("Set-Cookie"), ";")[0]
+
+	return nil
+}
+
+func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, error) {
+	if d.Token == nil {
+		return nil, errors.New("Tapo login was not performed")
+	}
+
+	var req []byte
+	switch method {
+	case "set_device_info":
+		req, _ = json.Marshal(map[string]interface{}{
+			"method": method,
+			"params": map[string]interface{}{
+				"device_on": deviceOn,
+			},
+			"requestTimeMils": int(time.Now().Unix() * 1000),
+			"terminalUUID":    d.TerminalUUID,
+		})
+	default:
+		req, _ = json.Marshal(map[string]interface{}{
+			"method":          method,
+			"requestTimeMils": int(time.Now().Unix() * 1000),
+		})
+	}
+
+	fmt.Printf("req:\n%s\n", string(req))
+
+	resp, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("resp:\n%s\n", string(resp))
+
+	taporesp := &DeviceResponse{}
+	json.NewDecoder(bytes.NewBuffer(resp)).Decode(taporesp)
+	if err = d.CheckErrorCode(taporesp.ErrorCode); err != nil {
+		return taporesp, err
+	}
+
+	if method == "get_device_info" {
+		taporesp.Result.Nickname = base64Decode(taporesp.Result.Nickname)
+		taporesp.Result.SSID = base64Decode(taporesp.Result.SSID)
+	}
+
+	return taporesp, nil
+}
+
 func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
 	securedReq, _ := json.Marshal(map[string]interface{}{
 		"method": "securePassthrough",
@@ -69,7 +189,7 @@ func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
 	var jsonResp DeviceResponse
 	json.NewDecoder(resp.Body).Decode(&jsonResp)
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
-		return nil, err
+		return []byte(fmt.Sprintf("{\"error_code\":%v}", jsonResp.ErrorCode)), err
 	}
 
 	encryptedResponse, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Response)
@@ -78,135 +198,20 @@ func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
 }
 
 func (d *Connection) CheckErrorCode(errorCode int) error {
+	errorDesc := map[int]string{
+		0:     "Success",
+		-1002: "Incorrect Request/Method",
+		-1003: "JSON formatting error ",
+		-1010: "Invalid Public Key Length",
+		-1012: "Invalid terminalUUID",
+		-1501: "Invalid Request or Credentials",
+	}
+
 	if errorCode != 0 {
-		return errors.New(fmt.Sprintf("Tapo got error code %d", errorCode))
+		return errors.New(fmt.Sprintf("Tapo error %d: %s", errorCode, errorDesc[errorCode]))
 	}
 
 	return nil
-}
-
-func (d *Connection) Handshake() (err error) {
-	privKey, pubKey := GenerateRSAKeys()
-
-	pubPEM := DumpRSAPEM(pubKey)
-	req, _ := json.Marshal(map[string]interface{}{
-		"method": "handshake",
-		"params": map[string]interface{}{
-			"key":             string(pubPEM),
-			"requestTimeMils": 0,
-		},
-	})
-
-	resp, err := http.Post(d.URI, "application/json", bytes.NewBuffer(req))
-	if err != nil {
-		return
-	}
-
-	defer resp.Body.Close()
-
-	var jsonResp DeviceResponse
-	json.NewDecoder(resp.Body).Decode(&jsonResp)
-	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
-		return
-	}
-
-	encryptedEncryptionKey, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Key)
-	encryptionKey, _ := rsa.DecryptPKCS1v15(rand.Reader, privKey, encryptedEncryptionKey)
-	d.Cipher = &ConnectionCipher{
-		Key: encryptionKey[:16],
-		Iv:  encryptionKey[16:],
-	}
-
-	d.SessionID = strings.Split(resp.Header.Get("Set-Cookie"), ";")[0]
-
-	return
-}
-
-func (d *Connection) Login() (err error) {
-	if d.Cipher == nil {
-		return errors.New("Handshake was not performed")
-	}
-
-	payload, _ := json.Marshal(map[string]interface{}{
-		"method": "login_device",
-		"params": map[string]interface{}{
-			"username": d.EncodedUser,
-			"password": d.EncodedPassword,
-		},
-	})
-	fmt.Printf("payload:\n%s\n", string(payload))
-
-	payload, err = d.DoRequest(d.URI, payload)
-	if err != nil {
-		return err
-	}
-
-	var jsonResp DeviceResponse
-	json.NewDecoder(bytes.NewBuffer(payload)).Decode(&jsonResp)
-	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
-		return
-	}
-
-	d.Token = &jsonResp.Result.Token
-
-	deviceResponse, err := d.ExecMethod("get_device_info", false)
-	if err != nil {
-		return err
-	}
-	d.TerminalUUID = deviceResponse.Result.MAC
-
-	return nil
-}
-
-func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, error) {
-	if d.Token == nil {
-		return nil, errors.New("Tapo login was not performed")
-	}
-
-	var req []byte
-	switch method {
-	case "get_device_info":
-		req, _ = json.Marshal(map[string]interface{}{
-			"method": method,
-		})
-	case "set_device_info":
-		req, _ = json.Marshal(map[string]interface{}{
-			"method": method,
-			"params": map[string]interface{}{
-				"device_on": deviceOn,
-			},
-			"requestTimeMils": int(time.Now().Unix() * 1000),
-			"terminalUUID":    d.TerminalUUID,
-		})
-	default:
-		return nil, fmt.Errorf("Unknown Tapo method: %s", method)
-	}
-
-	fmt.Printf("req:\n%s\n", string(req))
-
-	resp, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("resp:\n%s\n", string(resp))
-
-	taporesp := &DeviceResponse{}
-	json.NewDecoder(bytes.NewBuffer(resp)).Decode(taporesp)
-	if err = d.CheckErrorCode(taporesp.ErrorCode); err != nil {
-		return nil, err
-	}
-
-	switch method {
-	case "get_device_info":
-		taporesp.Result.Nickname = base64Decode(taporesp.Result.Nickname)
-		taporesp.Result.SSID = base64Decode(taporesp.Result.SSID)
-		return taporesp, nil
-	case "set_device_info":
-		return taporesp, nil
-	default:
-		return nil, fmt.Errorf("Unknown Tapo method: %s", method)
-	}
 }
 
 func (c *ConnectionCipher) Encrypt(payload []byte) []byte {
