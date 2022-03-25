@@ -1,4 +1,4 @@
-package vw
+package vag
 
 import (
 	"encoding/json"
@@ -7,10 +7,14 @@ import (
 
 func TestUnmarshalJSON(t *testing.T) {
 	var tok Token
-	data := `{"access_token":"access","refresh_token":"refresh","token_type":"bearer","expires_in":3600}`
+	data := `{"id_token":"id","access_token":"access","refresh_token":"refresh","token_type":"bearer","expires_in":3600}`
 
 	if err := json.Unmarshal([]byte(data), &tok); err != nil {
 		t.Error(err)
+	}
+
+	if tok.IDToken != "id" {
+		t.Error("IDToken")
 	}
 
 	if tok.AccessToken != "access" {

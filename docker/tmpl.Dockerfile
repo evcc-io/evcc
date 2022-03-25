@@ -20,10 +20,10 @@ RUN make clean ui
 
 
 # STEP 2 build executable binary
-FROM golang:1.17-alpine as builder
 
 # define RELEASE=1 to hide commit hash
 ARG RELEASE={{ env "RELEASE" }}
+FROM golang:1.18-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.

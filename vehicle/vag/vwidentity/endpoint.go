@@ -1,4 +1,4 @@
-package vw
+package vwidentity
 
 import (
 	"errors"
@@ -8,38 +8,66 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/urlvalues"
+	"github.com/evcc-io/evcc/vehicle/vag"
+	"github.com/google/uuid"
 	"golang.org/x/net/publicsuffix"
+	"golang.org/x/oauth2"
 )
 
-// IDTokenProvider provides the identity.vwgroup.io login token source
-type IDTokenProvider struct {
-	log *util.Logger
-	*request.Helper
-	uri, user, password string
+const (
+	BaseURL   = "https://identity.vwgroup.io"
+	WellKnown = BaseURL + "/.well-known/openid-configuration"
+)
+
+var Endpoint = &oauth2.Endpoint{
+	AuthURL:  BaseURL + "/oidc/v1/authorize",
+	TokenURL: BaseURL + "/oidc/v1/token",
 }
 
-// NewIDTokenProvider creates VW identity
-func NewIDTokenProvider(log *util.Logger, uri, user, password string) *IDTokenProvider {
-	v := &IDTokenProvider{
-		log:      log,
-		Helper:   request.NewHelper(log),
-		uri:      uri,
-		user:     user,
-		password: password,
+// Login performs VW identity login with optional code challenge
+func Login(log *util.Logger, q url.Values, user, password string) (url.Values, error) {
+	return LoginWithAuthURL(log, Endpoint.AuthURL, q, user, password)
+}
+
+func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password string) (url.Values, error) {
+	var verify func(url.Values)
+
+	// add code challenge
+	q = urlvalues.Copy(q)
+	if rt := q.Get("response_type"); strings.Contains(rt, "code") {
+		verify = vag.ChallengeAndVerifier(q)
 	}
 
-	return v
+	uri = fmt.Sprintf("%s?%s", uri, q.Encode())
+
+	vwi := New(log)
+	q, err := vwi.Login(uri, user, password)
+	if err != nil {
+		return nil, err
+	}
+
+	if verify != nil {
+		verify(q)
+	}
+
+	return q, nil
+}
+
+type Service struct {
+	*request.Helper
+}
+
+func New(log *util.Logger) *Service {
+	return &Service{
+		Helper: request.NewHelper(log),
+	}
 }
 
 // Login performs the identity.vwgroup.io login
-func (v *IDTokenProvider) Login() (url.Values, error) {
-	if v.user == "" || v.password == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
+func (v *Service) Login(uri, user, password string) (url.Values, error) {
 	// track cookies and don't follow redirects
 	jar, _ := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
@@ -55,14 +83,14 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 		return nil
 	}
 
-	var vars FormVars
-
 	// add nonce and state
 	query := url.Values{
 		"nonce": []string{util.RandomString(43)},
-		"state": []string{util.RandomString(43)},
+		"state": []string{uuid.NewString()},
 	}
-	uri := v.uri + "&" + query.Encode()
+
+	var vars FormVars
+	uri = uri + "&" + query.Encode()
 
 	// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
 	resp, err := v.Get(uri)
@@ -75,14 +103,14 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
 	if err == nil {
-		data := url.Values(map[string][]string{
+		data := url.Values{
 			"_csrf":      {vars.Inputs["_csrf"]},
 			"relayState": {vars.Inputs["relayState"]},
 			"hmac":       {vars.Inputs["hmac"]},
-			"email":      {v.user},
-		})
+			"email":      {user},
+		}
 
-		uri = IdentityURI + vars.Action
+		uri = BaseURL + vars.Action
 		if resp, err = v.PostForm(uri, data); err == nil {
 			if params, err = ParseCredentialsPage(resp.Body); err == nil && params.TemplateModel.Error != "" {
 				err = errors.New(params.TemplateModel.Error)
@@ -93,13 +121,13 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
 	if err == nil {
-		data := url.Values(map[string][]string{
+		data := url.Values{
 			"_csrf":      {params.CsrfToken},
 			"relayState": {params.TemplateModel.RelayState},
 			"hmac":       {params.TemplateModel.Hmac},
-			"email":      {v.user},
-			"password":   {v.password},
-		})
+			"email":      {user},
+			"password":   {password},
+		}
 
 		// reuse url from identifier step before
 		uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
@@ -118,9 +146,10 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 			}
 
 			if u := resp.Request.URL.Query().Get("updated"); err == nil && u != "" {
-				v.log.WARN.Println("accepting updated tos", u)
 				if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
 					resp.Body.Close()
+				} else {
+					err = fmt.Errorf("updated ToS: %w", err)
 				}
 			}
 		}
@@ -141,7 +170,7 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 	return nil, err
 }
 
-func (v *IDTokenProvider) postTos(uri string) (*http.Response, error) {
+func (v *Service) postTos(uri string) (*http.Response, error) {
 	var vars FormVars
 	resp, err := v.Get(uri)
 	if err == nil {
@@ -154,7 +183,7 @@ func (v *IDTokenProvider) postTos(uri string) (*http.Response, error) {
 			data.Set(k, v)
 		}
 
-		uri := IdentityURI + vars.Action
+		uri := BaseURL + vars.Action
 		resp, err = v.PostForm(uri, data)
 	}
 

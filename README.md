@@ -1,6 +1,6 @@
 # evcc 🚘☀️
 
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/evcc-io/evcc)
+[![Open in Visual Studio Code](https://img.shields.io/static/v1?logo=visualstudiocode&label=&message=Open%20in%20Visual%20Studio%20Code&labelColor=2c2c32&color=007acc&logoColor=007acc)](https://open.vscode.dev/evcc-io/evcc)
 [![Build Status](https://github.com/evcc-io/evcc/workflows/Build/badge.svg)](https://github.com/evcc-io/evcc/actions?query=workflow%3ABuild)
 [![Code Quality](https://goreportcard.com/badge/github.com/evcc-io/evcc)](https://goreportcard.com/report/github.com/evcc-io/evcc)
 [![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)
@@ -14,18 +14,27 @@ Evcc is an extensible EV Charge Controller with PV integration implemented in [G
 ## Features
 
 - simple and clean user interface
-- multiple [chargers](https://docs.evcc.io/docs/devices/chargers):
-  - Open source: [openWB (including Pro)](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
-  - Other commercial: ABL eMH1, Alfen Eve, cFos PowerBrain, Daheimladen, go-eCharger, Heidelberg Energy Control, Innogy eBox, KEBA/BMW, Menneckes  Amtron (Xtra/Premium), NRGkick, PC Electric (includes Garo), Wallbe, Webasto Live, Mobile Charger Connect, EEBUS (experimental)
+- wide range of supported [chargers](https://docs.evcc.io/docs/devices/chargers):
+  - ABL eMH1, Alfen Eve, cFos PowerBrain, Daheimladen, [EVSEWifi/ smartWB](https://www.evse-wifi.de), go-eCharger, HardyBarth (eCB1, cPH1, cPH2) Heidelberg Energy Control, Innogy (eBox), KEBA/BMW, Menneckes  Amtron (Xtra/Premium), NRGkick, [openWB (includes Pro)](https://openwb.de/), PC Electric (includes Garo), Vestel, Wallbe, Webasto Live, Mobile Charger Connect
+  - experimental EEBus support (PMCC)
   - Build-your-own: Phoenix (includes ESL Walli), [EVSE DIN](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
-- multiple [meters](https://docs.evcc.io/docs/devices/meters): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall, LG ESS HOME, OpenEMS (FENECON)
-- wide support of vendor-specific [vehicles](https://docs.evcc.io/docs/devices/vehicles) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Fiat, Ford, Hyundai, Jaguar, Kia, Landrover, Mini, Nissan, Niu, Porsche, Renault, Seat, Silence, Smart, Skoda, Tesla, Volkswagen, Volvo, Tronity
-- [plugins](https://docs.evcc.io/docs/reference/plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
+- wide range of supported [meters](https://docs.evcc.io/docs/devices/meters) for grid, pv, battery and charger:
+  - ModBus: Eastron SDM, MPM3PM, ORNO WE, SBC ALE3 and many more, see <https://github.com/volkszaehler/mbmd#supported-devices> for a complete list
+  - Integrated systems: SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx)
+  - Sunspec-compatible inverter or home battery devices: Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...
+  - and various others: Discovergy, Tesla PowerWall, LG ESS HOME, OpenEMS (FENECON)
+- [vehicle](https://docs.evcc.io/docs/devices/vehicles) integration (state of charge, remote charge, battery and preconditioning status):
+  - Audi, BMW, Citroën, Dacia, Fiat, Ford, Hyundai, Jaguar, Kia, Landrover, Mercedes, Mini, Nissan, Opel, Peugeot, Porsche, Renault, Seat, Smart, Skoda, Tesla, Volkswagen, Volvo
+  - Services: OVMS, Tronity
+  - Scooters: Niu, Silence
+- [plugins](https://docs.evcc.io/docs/reference/plugins) for integrating with any charger/ meter/ vehicle:
+  - Modbus, HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status [notifications](https://docs.evcc.io/docs/reference/configuration/messaging) using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
 - granular charge power control down to mA steps with supported chargers (labeled by e.g. smartWB als [OLC](https://board.evse-wifi.de/viewtopic.php?f=16&t=187))
-- REST and MQTT [APIs](https://docs.evcc.io/docs/reference/api) for integration with home automation systems (e.g. [HomeAssistant](https://github.com/evcc-io/evcc-hassio-addon))
+- REST and MQTT [APIs](https://docs.evcc.io/docs/reference/api) for integration with home automation systems
+- HomeAssistant [add-on](https://github.com/evcc-io/evcc-hassio-addon)
 
 ## Getting Started
 

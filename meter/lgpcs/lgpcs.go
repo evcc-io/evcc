@@ -49,7 +49,6 @@ type Com struct {
 
 var (
 	once     sync.Once
-	mu       sync.Mutex
 	instance *Com
 )
 
@@ -60,33 +59,26 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 	var err error
 	once.Do(func() {
 		log := util.NewLogger("lgess")
-		inst := &Com{
+		instance = &Com{
 			Helper:   request.NewHelper(log),
 			uri:      uri,
 			password: password,
 		}
 
 		// ignore the self signed certificate
-		inst.Client.Transport = request.NewTripper(log, transport.Insecure())
+		instance.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 		// caches the data access for the "cache" time duration
 		// sends a new request to the pcs if the cache is expired and Data() requested
-		inst.cachedData = provider.NewCached(func() (interface{}, error) {
-			return inst.refreshData()
+		instance.cachedData = provider.NewCached(func() (interface{}, error) {
+			return instance.refreshData()
 		}, cache).InterfaceGetter()
 
 		// do first login if no authKey exists and uri and password exist
-		if inst.authKey == "" && inst.uri != "" && inst.password != "" {
+		if instance.authKey == "" && instance.uri != "" && instance.password != "" {
 			err = instance.Login()
 		}
-
-		mu.Lock()
-		instance = inst
-		mu.Unlock()
 	})
-
-	mu.Lock()
-	defer mu.Unlock()
 
 	// check if different uris are provided
 	if uri != "" && instance.uri != uri {

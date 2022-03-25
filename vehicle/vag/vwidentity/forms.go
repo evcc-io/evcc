@@ -1,4 +1,4 @@
-package vw
+package vwidentity
 
 import (
 	"encoding/json"
