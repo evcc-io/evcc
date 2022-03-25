@@ -113,14 +113,12 @@ func (v *Provider) Range() (rng int64, err error) {
 // 	return active, outsideTemp, targetTemp, err
 // }
 
-var _ api.VehicleStartCharge = (*Provider)(nil)
+var _ api.VehicleChargeController = (*Provider)(nil)
 
 // StartCharge implements the api.VehicleStartCharge interface
 func (v *Provider) StartCharge() error {
 	return v.action(ActionCharge, ActionChargeStart)
 }
-
-var _ api.VehicleStopCharge = (*Provider)(nil)
 
 // StopCharge implements the api.VehicleStopCharge interface
 func (v *Provider) StopCharge() error {
