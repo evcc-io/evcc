@@ -27,7 +27,6 @@ func New(log *util.Logger) *Service {
 
 // Exchange exchanges an VAG identity or IDK token for an AAZS token
 func (v *Service) Exchange(config, token string) (*vag.Token, error) {
-	// TODO make configurable
 	data := struct {
 		Token     string `json:"token"`
 		GrantType string `json:"grant_type"`
