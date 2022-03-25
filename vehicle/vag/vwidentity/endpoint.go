@@ -18,10 +18,12 @@ import (
 )
 
 const (
-	BaseURL   = "https://identity.vwgroup.io"
-	WellKnown = BaseURL + "/.well-known/openid-configuration"
+	BaseURL     = "https://identity.vwgroup.io"
+	WellKnown   = "https://identity.vwgroup.io/.well-known/openid-configuration"
+	UserInfoURL = "https://identity-userinfo.vwgroup.io/oidc/userinfo"
 )
 
+// TODO use OIDC provider instead
 var Endpoint = &oauth2.Endpoint{
 	AuthURL:  BaseURL + "/oidc/v1/authorize",
 	TokenURL: BaseURL + "/oidc/v1/token",
