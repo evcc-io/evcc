@@ -211,9 +211,9 @@ func (v *Tesla) Position() (float64, float64, error) {
 	return 0, 0, err
 }
 
-var _ api.VehicleStartCharge = (*Tesla)(nil)
+var _ api.VehicleChargeController = (*Tesla)(nil)
 
-// StartCharge implements the api.VehicleStartCharge interface
+// StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StartCharge() error {
 	err := v.vehicle.StartCharging()
 
@@ -240,9 +240,7 @@ func (v *Tesla) StartCharge() error {
 	return err
 }
 
-var _ api.VehicleStopCharge = (*Tesla)(nil)
-
-// StopCharge implements the api.VehicleStopCharge interface
+// StopCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StopCharge() error {
 	err := v.vehicle.StopCharging()
 

@@ -141,16 +141,14 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-var _ api.VehicleStartCharge = (*Provider)(nil)
+var _ api.VehicleChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleStartCharge interface
+// StartCharge implements the api.VehicleChargeController interface
 func (v *Provider) StartCharge() error {
 	return v.action(ActionChargeStart)
 }
 
-var _ api.VehicleStopCharge = (*Provider)(nil)
-
-// StopCharge implements the api.VehicleStopCharge interface
+// StopCharge implements the api.VehicleChargeController interface
 func (v *Provider) StopCharge() error {
 	return v.action(ActionChargeStop)
 }

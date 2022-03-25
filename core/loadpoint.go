@@ -611,7 +611,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 
 		// remote stop
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
-		// if car, ok := lp.vehicle.(api.VehicleStopCharge); !enabled && ok {
+		// if car, ok := lp.vehicle.(api.VehicleChargeController); !enabled && ok {
 		// 	// log but don't propagate
 		// 	if err := car.StopCharge(); err != nil {
 		// 		lp.log.ERROR.Printf("vehicle remote charge stop: %v", err)
@@ -639,7 +639,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 
 		// remote start
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
-		// if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
+		// if car, ok := lp.vehicle.(api.VehicleChargeController); enabled && ok {
 		// 	// log but don't propagate
 		// 	if err := car.StartCharge(); err != nil {
 		// 		lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
