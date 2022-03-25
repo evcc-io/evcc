@@ -180,7 +180,7 @@ params:
   valuetype: number
 - name: identifiers
   description:
-    de: Identifikationsnummer
+    de: Identifikation
     en: Identification
   help:
     de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"

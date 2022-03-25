@@ -1,0 +1,18 @@
+template: etron
+products:
+- brand: Audi
+  description:
+    generic: e-tron
+params:
+- preset: vehiclebase
+- preset: vehicleidentify
+- name: vin
+  example: WAUZZZ...
+- name: capacity
+  default: 60
+- preset: vehiclecloud
+render: |
+  type: etron
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}
+  {{include "vehicle-cloud" .}}
