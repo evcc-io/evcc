@@ -16,7 +16,8 @@ import (
 type Tapo struct {
 	conn         *tapo.Connection
 	standbypower float64
-	Updated      time.Time
+	updated      time.Time
+	energy       int64
 }
 
 func init() {
@@ -111,16 +112,32 @@ func (c *Tapo) CurrentPower() (float64, error) {
 	return float64(resp.Result.Current_Power) / 1000, err
 }
 
+var _ api.ChargeRater = (*Vestel)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (c *Tapo) ChargedEnergy() (float64, error) {
+	resp, err := c.execTapoCmd("get_energy_usage", false)
+	if err != nil {
+		return 0, err
+	}
+
+	if resp.Result.Today_Energy-c.energy > 0 {
+		c.energy = c.energy + (resp.Result.Today_Energy - c.energy)
+	}
+
+	return float64(c.energy) / 1000, nil
+}
+
 // execTapoCmd executes a Tapo api command and provides the response
 func (c *Tapo) execTapoCmd(method string, enable bool) (*tapo.DeviceResponse, error) {
 	// refresh Tapo session id
-	if time.Since(c.Updated) >= 600*time.Minute {
+	if time.Since(c.updated) >= 600*time.Minute {
 		err := c.conn.Login()
 		if err != nil {
 			return nil, err
 		}
 		// update session timestamp
-		c.Updated = time.Now()
+		c.updated = time.Now()
 	}
 
 	return c.conn.ExecMethod(method, enable)

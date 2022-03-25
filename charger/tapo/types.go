@@ -51,25 +51,26 @@ type DeviceResponse struct {
 		OEMID              string `json:"oem_id"`
 		Specs              string `json:"specs"`
 		DeviceON           bool   `json:"device_on"`
-		OnTime             int    `json:"on_time"`
+		OnTime             int64  `json:"on_time"`
 		OverHeated         bool   `json:"overheated"`
 		Nickname           string `json:"nickname"`
 		Location           string `json:"location"`
 		Avatar             string `json:"avatar"`
-		Longitude          int    `json:"longitude"`
-		Latitude           int    `json:"latitude"`
+		Longitude          int64  `json:"longitude"`
+		Latitude           int64  `json:"latitude"`
 		HasSetLocationInfo bool   `json:"has_set_location_info"`
 		IP                 string `json:"ip"`
 		SSID               string `json:"ssid"`
-		SignalLevel        int    `json:"signal_level"`
-		RSSI               int    `json:"rssi"`
+		SignalLevel        int64  `json:"signal_level"`
+		RSSI               int64  `json:"rssi"`
 		Region             string `json:"Europe/Kiev"`
-		TimeDiff           int    `json:"time_diff"`
+		TimeDiff           int64  `json:"time_diff"`
 		Lang               string `json:"lang"`
 		Key                string `json:"key"`
 		Response           string `json:"response"`
 		Token              string `json:"token"`
-		Current_Power      int    `json:"current_power"`
+		Current_Power      int64  `json:"current_power"`
+		Today_Energy       int64  `json:"today_energy"`
 	} `json:"result"`
 	ErrorCode int `json:"error_code"`
 }
