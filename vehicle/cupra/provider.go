@@ -10,6 +10,7 @@ import (
 // Provider is an api.Vehicle implementation for Seat Cupra cars
 type Provider struct {
 	statusG func() (interface{}, error)
+	action  func(string, string) error
 }
 
 // NewProvider creates a new vehicle
@@ -18,6 +19,9 @@ func NewProvider(api *API, userID, vin string, cache time.Duration) *Provider {
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(userID, vin)
 		}, cache).InterfaceGetter(),
+		action: func(action, cmd string) error {
+			return api.Action(vin, action, cmd)
+		},
 	}
 	return impl
 }
@@ -97,4 +101,18 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 	}
 
 	return active, 21, 21, err
+}
+
+var _ api.VehicleStartCharge = (*Provider)(nil)
+
+// StartCharge implements the api.VehicleStartCharge interface
+func (v *Provider) StartCharge() error {
+	return v.action(ActionCharge, ActionChargeStart)
+}
+
+var _ api.VehicleStopCharge = (*Provider)(nil)
+
+// StopCharge implements the api.VehicleStopCharge interface
+func (v *Provider) StopCharge() error {
+	return v.action(ActionCharge, ActionChargeStop)
 }
