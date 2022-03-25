@@ -1,6 +1,7 @@
 package cupra
 
 import (
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -46,10 +47,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
-		if res.Services.Charging.Status == "Connected" {
+		switch strings.ToLower(res.Services.Charging.Status) {
+		case "connected":
 			status = api.StatusB
-		}
-		if res.Services.Charging.Status == "Charging" {
+		case "charging":
 			status = api.StatusC
 		}
 	}
