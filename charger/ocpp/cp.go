@@ -12,7 +12,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 )
 
-const timeout = time.Minute
+const timeout = 2 * time.Minute
 
 // txnCount is the global transaction id counter
 var txnCount int64

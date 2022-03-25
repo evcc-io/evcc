@@ -147,7 +147,8 @@ func (c *OCPP) Enable(enable bool) error {
 }
 
 func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfile) error {
-	c.log.TRACE.Printf("SetChargingPriofileRequest %T: %+v", profile, profile)
+	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile, profile)
+	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile.ChargingSchedule, profile.ChargingSchedule)
 
 	rc := make(chan error, 1)
 	err := ocpp.Instance().CS().SetChargingProfile(c.id, func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
@@ -166,6 +167,7 @@ func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfil
 func (c *OCPP) setPeriod(current float64, phases int) error {
 	period := types.NewChargingSchedulePeriod(0, current)
 
+	c.log.TRACE.Printf("current phases: %d, current current: %f", phases, current)
 	if phases > 0 {
 		period.NumberPhases = &phases
 	}
