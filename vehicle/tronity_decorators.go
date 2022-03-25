@@ -54,7 +54,7 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			api.VehicleChargeController
 		}{
 			Tronity: base,
-			VehicleChargeControl: &decorateTronityVehicleChargeControllerImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
 			},
 		}
@@ -65,7 +65,7 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			api.VehicleChargeController
 		}{
 			Tronity: base,
-			VehicleChargeControl: &decorateTronityVehicleChargeControllerImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
 				vehicleStopCharge:  vehicleStopCharge,
 			},
@@ -81,7 +81,7 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			ChargeState: &decorateTronityChargeStateImpl{
 				chargeState: chargeState,
 			},
-			VehicleChargeControl: &decorateTronityVehicleChargeControllerImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
 				vehicleStopCharge:  vehicleStopCharge,
 			},
@@ -97,7 +97,7 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			VehicleOdometer: &decorateTronityVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
 			},
-			VehicleChargeControl: &decorateTronityVehicleChargeControllerImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
 				vehicleStopCharge:  vehicleStopCharge,
 			},
@@ -117,7 +117,7 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			VehicleOdometer: &decorateTronityVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
 			},
-			VehicleChargeControl: &decorateTronityVehicleChargeControllerImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
 				vehicleStopCharge:  vehicleStopCharge,
 			},
