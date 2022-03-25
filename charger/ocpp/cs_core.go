@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	core "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 )
 
 func (cs *CS) OnAuthorize(chargePointId string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
@@ -36,6 +37,16 @@ func (cs *CS) OnHeartbeat(chargePointId string, request *core.HeartbeatRequest) 
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		callback := func(request *remotetrigger.TriggerMessageConfirmation, err error) {
+			cs.log.TRACE.Printf("TriggerMessageRequest %T: %+v", request, request)
+		}
+
+		if err := cs.cs.TriggerMessage(cp.id, callback, core.MeterValuesFeatureName); err != nil {
+			cs.log.DEBUG.Printf("failed sending TriggerMessageRequest: %s", err)
+		}
+	}()
 
 	return cp.Heartbeat(request)
 }

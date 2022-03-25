@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 const timeout = 2 * time.Minute
@@ -53,7 +54,8 @@ type CP struct {
 	initialized *sync.Cond
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
-	meterValues *core.MeterValuesRequest
+
+	measureands map[string]types.SampledValue
 
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
@@ -225,4 +227,42 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	}
 
 	return res, nil
+}
+
+func (cp *CP) CurrentPower() (float64, error) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	return strconv.ParseFloat(cp.measureands[string(types.MeasurandPowerActiveImport)].Value, 64)
+}
+
+func (cp *CP) TotalEnergy() (float64, error) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	return strconv.ParseFloat(cp.measureands[string(types.MeasurandEnergyActiveImportRegister)].Value, 64)
+}
+
+func getKeyCurrentPhase(phase int) string {
+	return string(types.MeasurandCurrentImport) + "@L" + strconv.Itoa(phase)
+}
+
+func (cp *CP) Currents() (float64, float64, float64, error) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	var (
+		currents = make(map[int]float64)
+
+		err error
+	)
+
+	for _, phase := range []int{1, 2, 3} {
+		currents[phase], err = strconv.ParseFloat(cp.measureands[getKeyCurrentPhase(phase)].Value, 64)
+		if err != nil {
+			return 0, 0, 0, fmt.Errorf("failed to convert current for phase %d: %w", phase, err)
+		}
+	}
+
+	return currents[1], currents[2], currents[3], nil
 }

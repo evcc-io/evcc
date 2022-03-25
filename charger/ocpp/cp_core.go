@@ -87,11 +87,27 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 
 	if request != nil {
 		cp.mu.Lock()
-		cp.meterValues = request
+		cp.setMeterValues(request)
 		cp.mu.Unlock()
 	}
 
 	return new(core.MeterValuesConfirmation), nil
+}
+
+func getSampleKey(s types.SampledValue) string {
+	if s.Phase != "" {
+		return string(s.Measurand) + "@" + string(s.Phase)
+	}
+
+	return string(s.Measurand)
+}
+
+func (cp *CP) setMeterValues(request *core.MeterValuesRequest) {
+	for _, meterValue := range request.MeterValue {
+		for _, sample := range meterValue.SampledValue {
+			cp.measureands[getSampleKey(sample)] = sample
+		}
+	}
 }
 
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {

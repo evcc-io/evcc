@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 type CS struct {
@@ -17,8 +18,9 @@ type CS struct {
 
 func (cs *CS) Register(id string) *CP {
 	cp := &CP{
-		id:  id,
-		log: util.NewLogger("ocpp-cp"),
+		id:          id,
+		log:         util.NewLogger("ocpp-cp"),
+		measureands: make(map[string]types.SampledValue),
 	}
 
 	cp.initialized = sync.NewCond(&cp.mu)

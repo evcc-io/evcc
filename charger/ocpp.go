@@ -14,6 +14,11 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
+const KeyMeterValuesSampledData = "MeterValuesSampledData"
+
+// TODO: Maybe move this to the config?
+const ValuePreferedMeterValuesSampleData = "Current.Import.L1,Current.Import.L2,Current.Import.L3,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature"
+
 // OCPP charger implementation
 type OCPP struct {
 	log       *util.Logger
@@ -62,9 +67,10 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 	}
 
 	var (
-		rc      = make(chan error, 1)
-		err     error
-		options []core.ConfigurationKey
+		rc                           = make(chan error, 1)
+		err                          error
+		options                      []core.ConfigurationKey
+		meterValuesSampledDataString string
 	)
 
 	if err := ocpp.Instance().CS().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
@@ -72,6 +78,9 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 
 		for _, opt := range options {
 			c.log.TRACE.Printf("%s (%t): %s", opt.Key, opt.Readonly, *opt.Value)
+			if opt.Key == KeyMeterValuesSampledData {
+				meterValuesSampledDataString = *opt.Value
+			}
 		}
 
 		rc <- err
@@ -91,6 +100,34 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 		supported := cp.GetNumberOfSupportedConnectors()
 		if c.connector > supported {
 			return nil, fmt.Errorf("configured connector is not available, max available connectors %d", supported)
+		}
+	}
+	if meterValuesSampledDataString != ValuePreferedMeterValuesSampleData {
+		rc = make(chan error, 1)
+		if err := ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
+			c.log.TRACE.Printf("ChangeConfigurationRequest %T: %+v", resp, resp)
+
+			if resp.Status == core.ConfigurationStatusRejected {
+				rc <- fmt.Errorf("configuration change rejected")
+			}
+		}, KeyMeterValuesSampledData, ValuePreferedMeterValuesSampleData); err != nil {
+			return nil, err
+		}
+
+		if err := ocpp.Instance().CS().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
+			options = resp.ConfigurationKey
+
+			for _, opt := range options {
+				c.log.TRACE.Printf("%s (%t): %s", opt.Key, opt.Readonly, *opt.Value)
+			}
+
+			rc <- err
+		}, []string{}); err != nil {
+			return nil, err
+		}
+
+		if err := c.wait(err, rc); err != nil {
+			return nil, err
 		}
 	}
 
@@ -225,26 +262,26 @@ func (c *OCPP) Phases1p3p(phases int) error {
 	return err
 }
 
-// var _ api.Meter = (*OCPP)(nil)
+var _ api.Meter = (*OCPP)(nil)
 
-// // CurrentPower implements the api.Meter interface
-// func (c *OCPP) CurrentPower() (float64, error) {
-// 	return 0, errors.New("not implemented")
-// }
+// CurrentPower implements the api.Meter interface
+func (c *OCPP) CurrentPower() (float64, error) {
+	return c.cp.CurrentPower()
+}
 
-// var _ api.MeterEnergy = (*OCPP)(nil)
+var _ api.MeterEnergy = (*OCPP)(nil)
 
-// // TotalEnergy implements the api.MeterMeterEnergy interface
-// func (c *OCPP) TotalEnergy() (float64, error) {
-// 	return 0, errors.New("not implemented")
-// }
+// TotalEnergy implements the api.MeterMeterEnergy interface
+func (c *OCPP) TotalEnergy() (float64, error) {
+	return c.cp.TotalEnergy()
+}
 
-// var _ api.MeterCurrent = (*OCPP)(nil)
+var _ api.MeterCurrent = (*OCPP)(nil)
 
-// // Currents implements the api.MeterCurrent interface
-// func (c *OCPP) Currents() (float64, float64, float64, error) {
-// 	return 0, 0, 0, errors.New("not implemented")
-// }
+// Currents implements the api.MeterCurrent interface
+func (c *OCPP) Currents() (float64, float64, float64, error) {
+	return c.cp.Currents()
+}
 
 // var _ api.Identifier = (*OCPP)(nil)
 
