@@ -59,7 +59,16 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
-		rt := res.Services.Charging.RemainingTime
+		rsc := res.Services.Charging
+		if !rsc.Active {
+			return time.Time{}, api.ErrNotAvailable
+		}
+
+		rt := rsc.RemainingTime
+		if rsc.TargetPct > 0 && rsc.TargetPct < 100 {
+			rt = rt * 100 / int64(rsc.TargetPct)
+		}
+
 		return time.Now().Add(time.Duration(rt) * time.Minute), err
 	}
 
