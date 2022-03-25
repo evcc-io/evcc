@@ -72,7 +72,7 @@ func main() {
 
 	switch action {
 	case "wakeup":
-		vv, ok := v.(api.VehicleStartCharge)
+		vv, ok := v.(api.VehicleChargeController)
 		if !ok {
 			log.Fatal("not supported:", action)
 		}
