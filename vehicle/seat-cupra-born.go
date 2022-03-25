@@ -1,10 +1,8 @@
 package vehicle
 
 import (
-	"net/http"
 	"time"
 
-	"github.com/coreos/go-oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -58,14 +56,9 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	var ui oidc.UserInfo
-
-	req, err := request.New(http.MethodGet, vwidentity.UserInfoURL, nil, map[string]string{
-		"Authorization": "Bearer " + token.AccessToken,
-		"Accept":        "application/json",
-	})
-	if err == nil {
-		err = request.NewHelper(log).DoJSON(req, &ui)
+	ui, err := vwidentity.UserInfo(log, token)
+	if err != nil {
+		return nil, err
 	}
 
 	api := cupra.NewAPI(log, trs.TokenSource(token))

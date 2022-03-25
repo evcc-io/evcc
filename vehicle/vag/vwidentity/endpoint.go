@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/coreos/go-oidc"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
@@ -33,7 +34,6 @@ var Endpoint = &oauth2.Endpoint{
 func Login(log *util.Logger, q url.Values, user, password string) (url.Values, error) {
 	return LoginWithAuthURL(log, Endpoint.AuthURL, q, user, password)
 }
-
 func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password string) (url.Values, error) {
 	var verify func(url.Values)
 
@@ -56,6 +56,21 @@ func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password
 	}
 
 	return q, nil
+}
+
+// UserInfo returns the OIDS user information
+func UserInfo(log *util.Logger, token *vag.Token) (oidc.UserInfo, error) {
+	var ui oidc.UserInfo
+
+	req, err := request.New(http.MethodGet, UserInfoURL, nil, map[string]string{
+		"Authorization": "Bearer " + token.AccessToken,
+		"Accept":        "application/json",
+	})
+	if err == nil {
+		err = request.NewHelper(log).DoJSON(req, &ui)
+	}
+
+	return ui, err
 }
 
 type Service struct {
