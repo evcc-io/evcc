@@ -233,14 +233,22 @@ func (cp *CP) CurrentPower() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	return strconv.ParseFloat(cp.measureands[string(types.MeasurandPowerActiveImport)].Value, 64)
+	if power, ok := cp.measureands[string(types.MeasurandPowerActiveImport)]; ok {
+		return strconv.ParseFloat(power.Value, 64)
+	}
+
+	return 0, nil
 }
 
 func (cp *CP) TotalEnergy() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	return strconv.ParseFloat(cp.measureands[string(types.MeasurandEnergyActiveImportRegister)].Value, 64)
+	if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+		return strconv.ParseFloat(energy.Value, 64)
+	}
+
+	return 0, nil
 }
 
 func getKeyCurrentPhase(phase int) string {
@@ -258,9 +266,11 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 	)
 
 	for _, phase := range []int{1, 2, 3} {
-		currents[phase], err = strconv.ParseFloat(cp.measureands[getKeyCurrentPhase(phase)].Value, 64)
-		if err != nil {
-			return 0, 0, 0, fmt.Errorf("failed to convert current for phase %d: %w", phase, err)
+		if current, ok := cp.measureands[getKeyCurrentPhase(phase)]; ok {
+			currents[phase], err = strconv.ParseFloat(current.Value, 64)
+			if err != nil {
+				return 0, 0, 0, fmt.Errorf("failed to convert current for phase %d: %w", phase, err)
+			}
 		}
 	}
 
