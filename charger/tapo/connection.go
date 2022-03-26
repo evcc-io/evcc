@@ -128,7 +128,11 @@ func (d *Connection) Handshake() error {
 	defer res.Body.Close()
 
 	var jsonResp DeviceResponse
-	json.NewDecoder(res.Body).Decode(&jsonResp)
+
+	if err = json.NewDecoder(res.Body).Decode(&jsonResp); err != nil {
+		return err
+	}
+
 	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
 		return err
 	}
