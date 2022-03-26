@@ -67,7 +67,10 @@ func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
 // Enabled implements the api.Charger interface
 func (c *Tapo) Enabled() (bool, error) {
 	resp, err := c.execTapoCmd("get_device_info", false)
-	return resp.Result.DeviceON, err
+	if err != nil {
+		return false, err
+	}
+	return resp.Result.DeviceON, nil
 }
 
 // Enable implements the api.Charger interface
@@ -113,7 +116,10 @@ var _ api.Meter = (*Tapo)(nil)
 // CurrentPower implements the api.Meter interface
 func (c *Tapo) CurrentPower() (float64, error) {
 	resp, err := c.execTapoCmd("get_energy_usage", false)
-	return float64(resp.Result.Current_Power) / 1000, err
+	if err != nil {
+		return 0, err
+	}
+	return float64(resp.Result.Current_Power) / 1000, nil
 }
 
 var _ api.ChargeRater = (*Vestel)(nil)
