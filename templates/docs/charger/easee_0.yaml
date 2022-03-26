@@ -1,6 +1,6 @@
 product:
   brand: Easee
-  description: Home (Cloud API)
+  description: Home
 capabilities: ["1p3p"]
 requirements: ["sponsorship"]
 
