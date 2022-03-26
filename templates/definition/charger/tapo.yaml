@@ -2,7 +2,7 @@ template: tapo
 products:
 - brand: TP-Link
   description:
-    generic: TP-Link Tapo
+    generic: Tapo
 group: switchsockets
 params:
 - name: uri
