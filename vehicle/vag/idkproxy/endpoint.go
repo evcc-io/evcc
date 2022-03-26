@@ -10,22 +10,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
-	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
-	"golang.org/x/oauth2"
 )
 
 const (
 	BaseURL   = "https://idkproxy-service.apps.emea.vwapps.io"
-	WellKnown = BaseURL + "/v1/emea/openid-configuration"
+	WellKnown = "https://idkproxy-service.apps.emea.vwapps.io/v1/emea/openid-configuration"
 )
 
-var Endpoint = &oauth2.Endpoint{
-	AuthURL:  vwidentity.Endpoint.AuthURL,
-	TokenURL: BaseURL + "/v1/emea/token",
+var Config = &oidc.ProviderConfig{
+	AuthURL:  "https://identity.vwgroup.io/oidc/v1/authorize",
+	TokenURL: "https://idkproxy-service.apps.emea.vwapps.io/v1/emea/token",
 }
 
 type Service struct {
@@ -71,7 +70,7 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 
 	var res vag.Token
 
-	req, err := request.New(http.MethodPost, Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
+	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type": request.FormContent,
 		"Accept":       request.JSONContent,
 		"x-qmauth":     qmauthNow(),
@@ -95,7 +94,7 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 
 	var res vag.Token
 
-	req, err := request.New(http.MethodPost, Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
+	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type": request.FormContent,
 		"Accept":       request.JSONContent,
 		"x-qmauth":     qmauthNow(),
