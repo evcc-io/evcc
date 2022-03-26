@@ -95,13 +95,7 @@ func (d *Connection) Login() error {
 		return err
 	}
 
-	var jsonResp DeviceResponse
-	json.NewDecoder(bytes.NewBuffer(res)).Decode(&jsonResp)
-	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
-		return err
-	}
-
-	d.Token = &jsonResp.Result.Token
+	d.Token = &res.Result.Token
 
 	deviceResponse, err := d.ExecMethod("get_device_info", false)
 	if err != nil {
@@ -176,21 +170,16 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 		return nil, err
 	}
 
-	d.log.TRACE.Printf("%v", string(res))
-
-	tapoResp := &DeviceResponse{}
-	json.NewDecoder(bytes.NewBuffer(res)).Decode(tapoResp)
-
 	if method == "get_device_info" {
-		tapoResp.Result.Nickname = base64Decode(tapoResp.Result.Nickname)
-		tapoResp.Result.SSID = base64Decode(tapoResp.Result.SSID)
+		res.Result.Nickname = base64Decode(res.Result.Nickname)
+		res.Result.SSID = base64Decode(res.Result.SSID)
 	}
 
-	return tapoResp, nil
+	return res, nil
 }
 
 // DoSecureRequest executes a Tapo device request by encding the request and decoding its response.
-func (d *Connection) DoSecureRequest(uri string, taporequest []byte) ([]byte, error) {
+func (d *Connection) DoSecureRequest(uri string, taporequest []byte) (*DeviceResponse, error) {
 	securedReq := map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
@@ -202,18 +191,23 @@ func (d *Connection) DoSecureRequest(uri string, taporequest []byte) ([]byte, er
 		"Cookie": d.SessionID,
 	})
 
-	var res DeviceResponse
+	var res *DeviceResponse
 	if err == nil {
 		err = d.DoJSON(req, &res)
 	}
 
 	if err = d.CheckErrorCode(res.ErrorCode); err != nil {
-		return []byte(fmt.Sprintf("{\"error_code\":%v}", res.ErrorCode)), err
+		return nil, err
 	}
 
 	encryptedResponse, _ := base64.StdEncoding.DecodeString(res.Result.Response)
 
-	return d.Cipher.Decrypt(encryptedResponse), nil
+	var jsonResp *DeviceResponse
+	if err = json.Unmarshal(d.Cipher.Decrypt(encryptedResponse), &jsonResp); err != nil {
+		return jsonResp, err
+	}
+
+	return jsonResp, nil
 }
 
 // Tapo helper functions
