@@ -12,7 +12,6 @@ import (
 )
 
 // TP-Link Tapo charger implementation
-// FritzDECT charger implementation
 type Tapo struct {
 	conn            *tapo.Connection
 	standbypower    float64
