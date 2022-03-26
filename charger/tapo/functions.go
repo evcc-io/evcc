@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/mergermarket/go-pkcs7"
 )
 
@@ -36,6 +37,9 @@ const Timeout = time.Second * 15
 // Password is directly B64 encoded.
 func NewConnection(uri, user, password string) *Connection {
 
+	log := util.NewLogger("tapo")
+	client := request.NewHelper(log)
+
 	settings := &Settings{
 		URI:      fmt.Sprintf("%s/app", util.DefaultScheme(uri, "http")),
 		User:     user,
@@ -46,6 +50,7 @@ func NewConnection(uri, user, password string) *Connection {
 	h.Write([]byte(user))
 
 	tapo := &Connection{
+		Helper:          client,
 		log:             util.NewLogger("tapo"),
 		Settings:        settings,
 		EncodedUser:     base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(h.Sum(nil)))),
@@ -71,7 +76,7 @@ func (d *Connection) Login() error {
 		},
 	})
 
-	res, err := d.DoRequest(d.URI, req)
+	res, err := d.DoSecureRequest(d.URI, req)
 	if err != nil {
 		return err
 	}
@@ -152,20 +157,15 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 		})
 	}
 
-	d.log.TRACE.Printf("request: %v", string(req))
-
-	res, err := d.DoRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
+	res, err := d.DoSecureRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
 	if err != nil {
 		return nil, err
 	}
 
-	d.log.TRACE.Printf("response: %v", string(res))
+	d.log.TRACE.Printf("%v", string(res))
 
 	tapoResp := &DeviceResponse{}
 	json.NewDecoder(bytes.NewBuffer(res)).Decode(tapoResp)
-	if err = d.CheckErrorCode(tapoResp.ErrorCode); err != nil {
-		return tapoResp, err
-	}
 
 	if method == "get_device_info" {
 		tapoResp.Result.Nickname = base64Decode(tapoResp.Result.Nickname)
@@ -175,33 +175,29 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 	return tapoResp, nil
 }
 
-// DoRequest executes a Tapo device request by encding the request and decoding its response.
-func (d *Connection) DoRequest(uri string, request []byte) ([]byte, error) {
-	securedReq, _ := json.Marshal(map[string]interface{}{
+// DoSecureRequest executes a Tapo device request by encding the request and decoding its response.
+func (d *Connection) DoSecureRequest(uri string, taporequest []byte) ([]byte, error) {
+	securedReq := map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
-			"request": base64.StdEncoding.EncodeToString(d.Cipher.Encrypt(request)),
+			"request": base64.StdEncoding.EncodeToString(d.Cipher.Encrypt(taporequest)),
 		},
+	}
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(securedReq), map[string]string{
+		"Cookie": d.SessionID,
 	})
 
-	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(securedReq))
-	req.Header.Set("Cookie", d.SessionID)
-	req.Close = true
-
-	resp, err := d.Client.Do(req)
-	if err != nil {
-		return nil, err
+	var res DeviceResponse
+	if err == nil {
+		err = d.DoJSON(req, &res)
 	}
 
-	defer resp.Body.Close()
-
-	var jsonResp DeviceResponse
-	json.NewDecoder(resp.Body).Decode(&jsonResp)
-	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
-		return []byte(fmt.Sprintf("{\"error_code\":%v}", jsonResp.ErrorCode)), err
+	if err = d.CheckErrorCode(res.ErrorCode); err != nil {
+		return []byte(fmt.Sprintf("{\"error_code\":%v}", res.ErrorCode)), err
 	}
 
-	encryptedResponse, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Response)
+	encryptedResponse, _ := base64.StdEncoding.DecodeString(res.Result.Response)
 
 	return d.Cipher.Decrypt(encryptedResponse), nil
 }

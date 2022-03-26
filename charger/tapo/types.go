@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // Tapo homepage + api reverse engineering results
@@ -20,6 +21,7 @@ type Settings struct {
 
 // Tapo connection
 type Connection struct {
+	*request.Helper
 	log *util.Logger
 	*Settings
 	EncodedUser     string
