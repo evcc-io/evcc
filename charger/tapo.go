@@ -14,10 +14,11 @@ import (
 // TP-Link Tapo charger implementation
 // FritzDECT charger implementation
 type Tapo struct {
-	conn         *tapo.Connection
-	standbypower float64
-	updated      time.Time
-	energy       int64
+	conn            *tapo.Connection
+	standbypower    float64
+	updated         time.Time
+	lasttodayenergy int64
+	energy          int64
 }
 
 func init() {
@@ -121,9 +122,10 @@ func (c *Tapo) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	if resp.Result.Today_Energy-c.energy > 0 {
-		c.energy = c.energy + (resp.Result.Today_Energy - c.energy)
+	if resp.Result.Today_Energy > c.lasttodayenergy {
+		c.energy = c.energy + (resp.Result.Today_Energy - c.lasttodayenergy)
 	}
+	c.lasttodayenergy = resp.Result.Today_Energy
 
 	return float64(c.energy) / 1000, nil
 }
