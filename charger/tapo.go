@@ -73,6 +73,10 @@ func (c *Tapo) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *Tapo) Enable(enable bool) error {
 	_, err := c.execTapoCmd("set_device_info", enable)
+
+	// Sleep one second to assure correct device_on response in get_device_info (see Enabled())
+	// Will avoid "charger logic error: disabled but charging" warning
+	time.Sleep(1 * time.Second)
 	return err
 }
 
