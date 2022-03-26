@@ -17,4 +17,4 @@ var IDKParams = url.Values{
 	"redirect_uri": {"myaudi:///"},
 }
 
-const AZSConfig = "audi"
+const AZSConfig = "myaudi"
