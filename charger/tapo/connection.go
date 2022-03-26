@@ -82,13 +82,13 @@ func (d *Connection) Login() error {
 		return err
 	}
 
-	req, _ := json.Marshal(map[string]interface{}{
+	req := map[string]interface{}{
 		"method": "login_device",
 		"params": map[string]interface{}{
 			"username": d.EncodedUser,
 			"password": d.EncodedPassword,
 		},
-	})
+	}
 
 	res, err := d.DoSecureRequest(d.URI, req)
 	if err != nil {
@@ -147,22 +147,23 @@ func (d *Connection) Handshake() error {
 
 // ExecMethod executes a Tapo device command method and provides the corresponding response.
 func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, error) {
-	var req []byte
+	var req map[string]interface{}
+
 	switch method {
 	case "set_device_info":
-		req, _ = json.Marshal(map[string]interface{}{
+		req = map[string]interface{}{
 			"method": method,
 			"params": map[string]interface{}{
 				"device_on": deviceOn,
 			},
 			"requestTimeMils": int(time.Now().Unix() * 1000),
 			"terminalUUID":    d.TerminalUUID,
-		})
+		}
 	default:
-		req, _ = json.Marshal(map[string]interface{}{
+		req = map[string]interface{}{
 			"method":          method,
 			"requestTimeMils": int(time.Now().Unix() * 1000),
-		})
+		}
 	}
 
 	res, err := d.DoSecureRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
@@ -179,11 +180,17 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 }
 
 // DoSecureRequest executes a Tapo device request by encding the request and decoding its response.
-func (d *Connection) DoSecureRequest(uri string, taporequest []byte) (*DeviceResponse, error) {
+func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interface{}) (*DeviceResponse, error) {
+
+	treq, err := json.Marshal(taporequest)
+	if err != nil {
+		return nil, err
+	}
+
 	securedReq := map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
-			"request": base64.StdEncoding.EncodeToString(d.Cipher.Encrypt(taporequest)),
+			"request": base64.StdEncoding.EncodeToString(d.Cipher.Encrypt(treq)),
 		},
 	}
 
