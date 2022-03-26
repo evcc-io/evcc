@@ -187,6 +187,8 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 		return nil, err
 	}
 
+	d.log.TRACE.Printf("request: %s\n", string(treq))
+
 	securedReq := map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
@@ -210,14 +212,20 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 		return nil, err
 	}
 
-	encryptedResponse, _ := base64.StdEncoding.DecodeString(res.Result.Response)
+	b64decodedResp, err := base64.StdEncoding.DecodeString(res.Result.Response)
+	if err != nil {
+		return nil, err
+	}
+	decryptedResponse := d.Cipher.Decrypt(b64decodedResp)
 
-	var jsonResp *DeviceResponse
-	if err = json.Unmarshal(d.Cipher.Decrypt(encryptedResponse), &jsonResp); err != nil {
-		return jsonResp, err
+	d.log.TRACE.Printf("decrypted result: %v\n", string(decryptedResponse))
+
+	var deviceResp *DeviceResponse
+	if err = json.Unmarshal(decryptedResponse, &deviceResp); err != nil {
+		return deviceResp, err
 	}
 
-	return jsonResp, nil
+	return deviceResp, nil
 }
 
 // Tapo helper functions
