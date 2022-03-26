@@ -22,7 +22,7 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	ctx := context.WithValue(
 		context.Background(),
 		oauth2.HTTPClient,
-		request.NewHelper(log).Client,
+		request.NewClient(log),
 	)
 
 	v := &API{

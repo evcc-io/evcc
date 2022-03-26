@@ -118,7 +118,7 @@ func teslaToken() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
 	client, err := tesla.NewClient(
 		ctx,
 		tesla.WithMFAHandler(codePrompt),

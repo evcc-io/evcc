@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/seat"
 	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
+	"golang.org/x/oauth2"
 )
 
 // Cupra is an api.Vehicle implementation for Seat Cupra cars
@@ -56,12 +59,16 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	ui, err := vwidentity.UserInfo(log, token)
+	ts := trs.TokenSource(token)
+
+	// get OIDC user information
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
+	ui, err := vwidentity.Config.NewProvider(ctx).UserInfo(ctx, ts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed getting user information: %w", err)
 	}
 
-	api := cupra.NewAPI(log, trs.TokenSource(token))
+	api := cupra.NewAPI(log, ts)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
 		return api.Vehicles(ui.Subject)
