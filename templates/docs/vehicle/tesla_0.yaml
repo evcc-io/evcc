@@ -18,7 +18,6 @@ render:
     refreshToken: # Siehe https://docs.evcc.io/docs/devices/vehicles#tesla 
     vin: W...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
     capacity: 90  # Akku-Kapazität in kWh  # Optional 
-    cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,...  # Optional 
   advanced: |
     type: template
     template: tesla

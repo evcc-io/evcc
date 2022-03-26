@@ -1,6 +1,8 @@
 product:
   brand: Volkswagen
   description: We Connect ID
+description: |
+  ID.3, ID.4 (funktioniert auch für e-Golf, e-Up)
 
 render:
 - default: |
@@ -11,7 +13,6 @@ render:
     password: # Passwort des Benutzerkontos 
     vin: WVWZZZ...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
     capacity: 50  # Akku-Kapazität in kWh  # Optional 
-    cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,...  # Optional 
   advanced: |
     type: template
     template: id

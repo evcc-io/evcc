@@ -8,28 +8,24 @@ render:
     type: template
     template: sunspec
     usage: grid
-    # Modbus Start
     id: 1
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End
+    
 - usage: pv
   default: |
     type: template
     template: sunspec
     usage: pv
-    # Modbus Start
     id: 1
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End
+    
 - usage: battery
   default: |
     type: template
     template: sunspec
     usage: battery
-    # Modbus Start
     id: 1
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End

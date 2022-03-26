@@ -1,6 +1,8 @@
 product:
-  brand: Sungrow (LAN)
-  description: Inverter (Beta)
+  brand: Sungrow
+  description: Inverter (LAN)
+description: |
+  beta
 
 render:
 - usage: grid
@@ -8,49 +10,45 @@ render:
     type: template
     template: sungrow
     usage: grid
-    # Modbus Start
     id: 1
-    # RS485 via adapter:
+    # Modbus: RS485 via adapter:
     device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
     baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
     comset: "8N1" # Kommunikationsparameter für den Adapter
-    # RS485 via TCPIP:
+    # Modbus: RS485 via TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
     rtu: true
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End
+    
 - usage: pv
   default: |
     type: template
     template: sungrow
     usage: pv
-    # Modbus Start
     id: 1
-    # RS485 via adapter:
+    # Modbus: RS485 via adapter:
     device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
     baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
     comset: "8N1" # Kommunikationsparameter für den Adapter
-    # RS485 via TCPIP:
+    # Modbus: RS485 via TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
     rtu: true
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End
+    
 - usage: battery
   default: |
     type: template
     template: sungrow
     usage: battery
-    # Modbus Start
     id: 1
-    # RS485 via adapter:
+    # Modbus: RS485 via adapter:
     device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
     baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
     comset: "8N1" # Kommunikationsparameter für den Adapter
-    # RS485 via TCPIP:
+    # Modbus: RS485 via TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
     rtu: true
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End

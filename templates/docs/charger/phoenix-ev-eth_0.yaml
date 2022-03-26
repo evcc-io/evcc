@@ -1,5 +1,6 @@
 product:
-  description: Phoenix EV-ETH Controller (Modbus TCP)
+  brand: Phoenix
+  description: EV-ETH Controller (Modbus TCP)
   group: Generische Unterstützung
 description: |
   Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.

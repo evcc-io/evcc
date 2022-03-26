@@ -10,7 +10,6 @@ render:
     akey:
     token:
     capacity: 64  # Akku-Kapazität in kWh  # Optional 
-    cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,...  # Optional 
   advanced: |
     type: template
     template: evnotify

@@ -8,18 +8,15 @@ render:
     type: template
     template: kostal-plenticore
     usage: pv
-    # Modbus Start
     id: 71
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
-    # Modbus End
+    
 - usage: battery
   default: |
     type: template
     template: kostal-plenticore
     usage: battery
-    # Modbus Start
     id: 71
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
-    # Modbus End

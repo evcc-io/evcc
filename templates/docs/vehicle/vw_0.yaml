@@ -1,6 +1,8 @@
 product:
   brand: Volkswagen
-  description: We Connect
+  description: We Connect (legacy)
+description: |
+  ältere Modelle wie e-Up, e-Golf, etc.
 
 render:
 - default: |
@@ -11,7 +13,6 @@ render:
     password: # Passwort des Benutzerkontos 
     vin: WVWZZZ...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
     capacity: 10  # Akku-Kapazität in kWh  # Optional 
-    cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,...  # Optional 
   advanced: |
     type: template
     template: vw

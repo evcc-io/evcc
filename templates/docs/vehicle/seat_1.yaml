@@ -11,7 +11,6 @@ render:
     password: # Passwort des Benutzerkontos 
     vin: W...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
     capacity: 10  # Akku-Kapazität in kWh  # Optional 
-    cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,...  # Optional 
   advanced: |
     type: template
     template: seat

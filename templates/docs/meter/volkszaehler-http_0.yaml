@@ -1,5 +1,6 @@
 product:
-  description: Volkszähler (HTTP API)
+  brand: Volkszähler
+  description: HTTP API
   group: Generische Unterstützung
 
 render:

@@ -1,7 +1,8 @@
 template: phoenix-em-eth
 products:
-- description:
-    generic: Phoenix EM-CP-PP-ETH Controller (Modbus TCP)
+  - brand: Phoenix
+    description:
+      generic: EM-CP-PP-ETH Controller (Modbus TCP)
 group: generic
 requirements:
   description:
@@ -9,11 +10,11 @@ requirements:
     de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
   uri: https://docs.evcc.io/docs/devices/chargers#phoenix-contact
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: port
-  default: 502
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: port
+    default: 502
 render: |
   type: phoenix-em-eth
   uri: {{ .host }}:{{ .port }}

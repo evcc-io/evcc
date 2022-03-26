@@ -7,8 +7,6 @@ render:
 - default: |
     type: template
     template: amtron
-    # Modbus Start
     id: 255
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End

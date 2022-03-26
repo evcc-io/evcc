@@ -11,7 +11,6 @@ render:
     vin: ZFAE...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
     capacity: 42  # Akku-Kapazität in kWh  # Optional 
     pin: # Optional 
-    cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,...  # Optional 
   advanced: |
     type: template
     template: fiat

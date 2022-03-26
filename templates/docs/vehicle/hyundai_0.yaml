@@ -12,7 +12,6 @@ render:
     vin: W...  # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind  # Optional 
     capacity: 64  # Akku-Kapazität in kWh  # Optional 
     language: en  # 'de' für Deutsch und 'en' für Englisch  # Optional 
-    cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,...  # Optional 
   advanced: |
     type: template
     template: hyundai

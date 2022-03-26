@@ -1,6 +1,6 @@
 product:
-  brand: hardybarth-salia
-  description: HardyBarth (Salia PLCC controller)
+  brand: HardyBarth
+  description: Salia PLCC Controller
 
 render:
 - default: |

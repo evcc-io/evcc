@@ -1,5 +1,6 @@
 product:
-  description: Volkszähler (WebSocket API)
+  brand: Volkszähler
+  description: WebSocket API
   group: Generische Unterstützung
 
 render:

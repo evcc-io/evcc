@@ -1,6 +1,6 @@
 product:
-  brand: hardybarth-ecb1
-  description: HardyBarth cPH1 (eCB1 controller)
+  brand: HardyBarth
+  description: cPH1 (eCB1 Controller)
 
 render:
 - default: |

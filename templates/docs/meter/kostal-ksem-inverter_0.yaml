@@ -8,8 +8,6 @@ render:
     type: template
     template: kostal-ksem-inverter
     usage: grid
-    # Modbus Start
     id: 71
-    # TCPIP
+    # Modbus: TCPIP
     uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
-    # Modbus End
