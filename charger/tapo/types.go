@@ -1,12 +1,5 @@
 package tapo
 
-import (
-	"net/http"
-
-	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-)
-
 // Tapo homepage + api reverse engineering results
 // https://www.tapo.com/de/
 // Credits to & inspired by:
@@ -17,20 +10,6 @@ import (
 // Tapo settings
 type Settings struct {
 	URI, User, Password string
-}
-
-// Tapo connection
-type Connection struct {
-	*request.Helper
-	log *util.Logger
-	*Settings
-	EncodedUser     string
-	EncodedPassword string
-	Cipher          *ConnectionCipher
-	SessionID       string
-	Token           *string
-	Client          *http.Client
-	TerminalUUID    string
 }
 
 // Tapo connection cipher

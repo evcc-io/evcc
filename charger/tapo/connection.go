@@ -32,13 +32,25 @@ import (
 
 const Timeout = time.Second * 15
 
+// Connection is the Tapo connection
+type Connection struct {
+	*request.Helper
+	log *util.Logger
+	*Settings
+	EncodedUser     string
+	EncodedPassword string
+	Cipher          *ConnectionCipher
+	SessionID       string
+	Token           *string
+	Client          *http.Client
+	TerminalUUID    string
+}
+
 // NewConnection creates a new Tapo device connection.
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
 func NewConnection(uri, user, password string) *Connection {
-
 	log := util.NewLogger("tapo")
-	client := request.NewHelper(log)
 
 	settings := &Settings{
 		URI:      fmt.Sprintf("%s/app", util.DefaultScheme(uri, "http")),
@@ -46,14 +58,16 @@ func NewConnection(uri, user, password string) *Connection {
 		Password: password,
 	}
 
+	//lint:ignore
 	h := sha1.New()
-	h.Write([]byte(user))
+	_, _ = h.Write([]byte(user))
+	userhash := hex.EncodeToString(h.Sum(nil))
 
 	tapo := &Connection{
-		Helper:          client,
-		log:             util.NewLogger("tapo"),
+		log:             log,
+		Helper:          request.NewHelper(log),
 		Settings:        settings,
-		EncodedUser:     base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(h.Sum(nil)))),
+		EncodedUser:     base64.StdEncoding.EncodeToString([]byte(userhash)),
 		EncodedPassword: base64.StdEncoding.EncodeToString([]byte(password)),
 		Client:          &http.Client{Timeout: Timeout},
 	}
