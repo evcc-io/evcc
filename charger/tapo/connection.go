@@ -190,10 +190,13 @@ func (d *Connection) DoSecureRequest(uri string, taporequest []byte) (*DeviceRes
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(securedReq), map[string]string{
 		"Cookie": d.SessionID,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	var res *DeviceResponse
-	if err == nil {
-		err = d.DoJSON(req, &res)
+	if err = d.DoJSON(req, &res); err != nil {
+		return nil, err
 	}
 
 	if err = d.CheckErrorCode(res.ErrorCode); err != nil {
