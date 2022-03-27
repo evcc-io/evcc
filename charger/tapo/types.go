@@ -7,11 +7,6 @@ package tapo
 // https://github.com/fishbigger/TapoP100
 // https://github.com/artemvang/p100-go
 
-// Tapo settings
-type Settings struct {
-	URI, User, Password string
-}
-
 // Tapo connection cipher
 type ConnectionCipher struct {
 	Key []byte
