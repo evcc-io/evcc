@@ -109,9 +109,16 @@ func (d *Connection) Login() error {
 
 // Handshake provides the Tapo device session cookie and encryption cipher.
 func (d *Connection) Handshake() error {
-	privKey, pubKey := GenerateRSAKeys()
+	privKey, pubKey, err := GenerateRSAKeys()
+	if err != nil {
+		return err
+	}
 
-	pubPEM := DumpRSAPEM(pubKey)
+	pubPEM, err := DumpRSAPEM(pubKey)
+	if err != nil {
+		return err
+	}
+
 	req, _ := json.Marshal(map[string]interface{}{
 		"method": "handshake",
 		"params": map[string]interface{}{
@@ -176,8 +183,15 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 	}
 
 	if method == "get_device_info" {
-		res.Result.Nickname = base64Decode(res.Result.Nickname)
-		res.Result.SSID = base64Decode(res.Result.SSID)
+		res.Result.Nickname, err = base64Decode(res.Result.Nickname)
+		if err != nil {
+			return nil, err
+		}
+
+		res.Result.SSID, err = base64Decode(res.Result.SSID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return res, nil
@@ -274,29 +288,36 @@ func (c *ConnectionCipher) Decrypt(payload []byte) []byte {
 	return unpaddedPayload
 }
 
-func DumpRSAPEM(pubKey *rsa.PublicKey) (pubPEM []byte) {
-	pubKeyPKIX, _ := x509.MarshalPKIXPublicKey(pubKey)
+func DumpRSAPEM(pubKey *rsa.PublicKey) ([]byte, error) {
+	pubKeyPKIX, err := x509.MarshalPKIXPublicKey(pubKey)
+	if err != nil {
+		return nil, err
+	}
 
-	pubPEM = pem.EncodeToMemory(
+	pubPEM := pem.EncodeToMemory(
 		&pem.Block{
 			Type:  "PUBLIC KEY",
 			Bytes: pubKeyPKIX,
 		},
 	)
 
-	return
+	return pubPEM, nil
 }
 
-func GenerateRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey) {
+func GenerateRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	key, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
-	return key, key.Public().(*rsa.PublicKey)
+	return key, key.Public().(*rsa.PublicKey), nil
 }
 
-func base64Decode(base64String string) string {
-	decodedString, _ := base64.StdEncoding.DecodeString(base64String)
-	return string(decodedString)
+func base64Decode(base64String string) (string, error) {
+	decodedString, err := base64.StdEncoding.DecodeString(base64String)
+	if err != nil {
+		return "", err
+	}
+
+	return string(decodedString), nil
 }
