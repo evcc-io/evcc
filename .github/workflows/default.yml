@@ -39,11 +39,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Prettier
-        uses: creyD/prettier_action@v4.2
-        with:
-          prettier_options: --write **/*.{yaml,yml}
-
       - name: gofmt
         run: |
           gofmt -w -l $(find . -name '*.go')
@@ -53,6 +48,12 @@ jobs:
 
       - name: Assets
         run: make assets
+
+      - name: Install tools
+        run: make install-ui
+
+      - name: Lint
+        run: make lint-ui
 
       - name: Porcelain
         run: |

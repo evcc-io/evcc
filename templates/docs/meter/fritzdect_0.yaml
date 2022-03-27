@@ -9,7 +9,7 @@ render:
       type: template
       template: fritzdect
       usage: pv
-      uri: https://fritz.box  # Optional 
+      uri: https://fritz.box  # Optional
       user: # Benutzername um auf das Gerät zuzugreifen 
       password: # Passwort des Benutzerkontos 
       ain: 007788992233  # Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
@@ -18,7 +18,7 @@ render:
       type: template
       template: fritzdect
       usage: charge
-      uri: https://fritz.box  # Optional 
+      uri: https://fritz.box  # Optional
       user: # Benutzername um auf das Gerät zuzugreifen 
       password: # Passwort des Benutzerkontos 
       ain: 007788992233  # Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt.

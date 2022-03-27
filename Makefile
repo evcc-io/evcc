@@ -1,4 +1,4 @@
-.PHONY: default all clean install install-ui ui assets lint pretty test-ui lint-ui test build test-release release
+.PHONY: default all clean install install-ui ui assets lint test-ui lint-ui test build test-release release
 .PHONY: docker publish-testing publish-latest publish-nightly publish-release
 .PHONY: prepare-image image-rootfs image-update
 .PHONY: soc stamps
@@ -45,10 +45,6 @@ ui:
 
 assets:
 	go generate ./...
-
-pretty:
-	prettier -w ./**/*.{yml,yaml}
-	prettier -w ./**/.*.yml
 
 lint:
 	golangci-lint run

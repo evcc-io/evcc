@@ -119,5 +119,5 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 	}
 	err = tmpl.Execute(out, data)
 
-	return bytes.TrimSpace(out.Bytes()), err
+	return out.Bytes(), err
 }
