@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/avast/retry-go/v3"
+	"github.com/evcc-io/evcc/util"
 )
 
 var (
@@ -25,13 +26,14 @@ func powerToCurrent(power float64, phases int) float64 {
 
 // sitePower returns the available delta power that the charger might additionally consume
 // negative value: available power (grid export), positive value: grid import
-func sitePower(grid, battery, residual float64) float64 {
+func sitePower(log *util.Logger, maxGrid, grid, battery, residual float64) float64 {
 	// For hybrid inverters, battery can be charged from DC power in excess of
-	// inverter AC rating. This must be offset by the grid consumption when calculating
-	// available site power.
-	// (https://github.com/evcc-io/evcc/issues/2734)
-	if grid > 0 && battery < 0 && grid-battery > 50 {
+	// inverter AC rating. This battery charge must not be counted as available for AC consumption.
+	// https://github.com/evcc-io/evcc/issues/2734, https://github.com/evcc-io/evcc/issues/2986
+	if maxGrid > 0 && grid > maxGrid && battery < 0 {
+		log.TRACE.Printf("ignoring excess DC charging due to grid consumption: %.0fW > %.0fW", grid, maxGrid)
 		battery = 0
 	}
+
 	return grid + battery + residual
 }
