@@ -123,7 +123,15 @@ func (c *Tapo) CurrentPower() (float64, error) {
 
 	// set fix static power in static mode
 	if c.standbypower < 0 {
-		power = c.standbypower * -1
+		on, err := c.Enabled()
+		if err != nil {
+			return 0, err
+		}
+		if on {
+			power = c.standbypower * -1
+		} else {
+			power = 0
+		}
 	}
 
 	return power, nil
