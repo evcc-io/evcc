@@ -5,7 +5,7 @@ description: |
   Benötigt mindestens Firmware 040.0 oder neuer.
 
 render:
-- default: |
-    type: template
-    template: go-e
-    host: 192.0.2.2  # IP-Adresse oder Hostname
+  - default: |
+      type: template
+      template: go-e
+      host: 192.0.2.2  # IP-Adresse oder Hostname

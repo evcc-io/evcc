@@ -1,23 +1,23 @@
 template: kostal-plenticore
 products:
-- brand: Kostal
-  description:
-    generic: Plenticore Hybrid
+  - brand: Kostal
+    description:
+      generic: Plenticore Hybrid
 guidedsetup:
   enable: true
   linked:
-  - template: kostal-ksem-inverter
-    usage: grid
-  - template: kostal-ksem
-    usage: grid
-    excludetemplate: kostal-ksem-inverter
+    - template: kostal-ksem-inverter
+      usage: grid
+    - template: kostal-ksem
+      usage: grid
+      excludetemplate: kostal-ksem-inverter
 params:
-- name: usage
-  choice: [ "pv", "battery" ]
-- name: modbus
-  choice: [ "tcpip" ]
-  id: 71
-  port: 1502
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 71
+    port: 1502
 render: |
   {{- if eq .usage "pv" }}
   type: custom

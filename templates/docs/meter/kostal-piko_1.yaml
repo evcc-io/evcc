@@ -3,15 +3,15 @@ product:
   description: Piko BA
 
 render:
-- usage: grid
-  default: |
-    type: template
-    template: kostal-piko
-    usage: grid
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-- usage: pv
-  default: |
-    type: template
-    template: kostal-piko
-    usage: pv
-    host: 192.0.2.2  # IP-Adresse oder Hostname
+  - usage: grid
+    default: |
+      type: template
+      template: kostal-piko
+      usage: grid
+      host: 192.0.2.2  # IP-Adresse oder Hostname
+  - usage: pv
+    default: |
+      type: template
+      template: kostal-piko
+      usage: pv
+      host: 192.0.2.2  # IP-Adresse oder Hostname

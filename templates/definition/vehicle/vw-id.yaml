@@ -1,16 +1,16 @@
 template: id
 products:
-- brand: Volkswagen
-  description:
-    generic: We Connect ID
+  - brand: Volkswagen
+    description:
+      generic: We Connect ID
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: vin
-  example: WVWZZZ...
-- name: capacity
-  default: 50
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: vin
+    example: WVWZZZ...
+  - name: capacity
+    default: 50
+  - preset: vehiclecloud
 render: |
   type: id
   {{include "vehicle-base" .}}

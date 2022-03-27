@@ -3,25 +3,25 @@ product:
   description: Wechselrichter
 
 render:
-- usage: grid
-  default: |
-    type: template
-    template: solaredge-inverter
-    usage: grid
-    # Modbus Start
-    id: 1
-    # TCPIP
-    uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
-    # Modbus End
-    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional 
-- usage: pv
-  default: |
-    type: template
-    template: solaredge-inverter
-    usage: pv
-    # Modbus Start
-    id: 1
-    # TCPIP
-    uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
-    # Modbus End
-    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional
+  - usage: grid
+    default: |
+      type: template
+      template: solaredge-inverter
+      usage: grid
+      # Modbus Start
+      id: 1
+      # TCPIP
+      uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
+      # Modbus End
+      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional
+  - usage: pv
+    default: |
+      type: template
+      template: solaredge-inverter
+      usage: pv
+      # Modbus Start
+      id: 1
+      # TCPIP
+      uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
+      # Modbus End
+      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional

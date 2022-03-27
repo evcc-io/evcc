@@ -1,14 +1,14 @@
 template: skoda
 products:
-- brand: Skoda
-  description:
-    generic: Citigo
+  - brand: Skoda
+    description:
+      generic: Citigo
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: capacity
-  default: 10
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: capacity
+    default: 10
+  - preset: vehiclecloud
 render: |
   type: skoda
   {{include "vehicle-base" .}}

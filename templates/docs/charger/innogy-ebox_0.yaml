@@ -4,11 +4,11 @@ product:
 requirements: ["sponsorship"]
 
 render:
-- default: |
-    type: template
-    template: innogy-ebox
-    # Modbus Start
-    id: 1
-    # TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End
+  - default: |
+      type: template
+      template: innogy-ebox
+      # Modbus Start
+      id: 1
+      # TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+      # Modbus End

@@ -3,8 +3,8 @@ product:
   description: Bluetooth
 
 render:
-- default: |
-    type: template
-    template: nrgkick-bluetooth
-    mac:
-    pin:
+  - default: |
+      type: template
+      template: nrgkick-bluetooth
+      mac:
+      pin:

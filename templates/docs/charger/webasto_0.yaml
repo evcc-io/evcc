@@ -3,8 +3,8 @@ product:
   description: Live
 
 render:
-- default: |
-    type: template
-    template: webasto
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-    port: 502  # Port  # Optional
+  - default: |
+      type: template
+      template: webasto
+      host: 192.0.2.2  # IP-Adresse oder Hostname 
+      port: 502  # Port  # Optional

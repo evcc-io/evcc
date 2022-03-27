@@ -3,10 +3,10 @@ product:
   description: Poweropti (Cloud)
 
 render:
-- usage: grid
-  default: |
-    type: template
-    template: powerfox-poweropti
-    usage: grid
-    user: # Benutzername um auf das Gerät zuzugreifen 
-    password: # Passwort des Benutzerkontos
+  - usage: grid
+    default: |
+      type: template
+      template: powerfox-poweropti
+      usage: grid
+      user: # Benutzername um auf das Gerät zuzugreifen 
+      password: # Passwort des Benutzerkontos

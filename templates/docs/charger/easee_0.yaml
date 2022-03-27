@@ -5,9 +5,9 @@ capabilities: ["1p3p"]
 requirements: ["sponsorship"]
 
 render:
-- default: |
-    type: template
-    template: easee
-    user: # Benutzername um auf das Gerät zuzugreifen 
-    password: # Passwort des Benutzerkontos 
-    charger: EH______
+  - default: |
+      type: template
+      template: easee
+      user: # Benutzername um auf das Gerät zuzugreifen 
+      password: # Passwort des Benutzerkontos 
+      charger: EH______

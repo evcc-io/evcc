@@ -1,15 +1,15 @@
 template: sungrow-dongle
 products:
-- brand: Sungrow (Wifi dongle)
-  description:
-    generic: Inverter (Beta)
+  - brand: Sungrow (Wifi dongle)
+    description:
+      generic: Inverter (Beta)
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: modbus
-  choice: [ "rs485", "tcpip" ]
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
 render: |
   type: custom
   {{- if eq .usage "grid" }}

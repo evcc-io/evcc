@@ -1,8 +1,8 @@
 template: solax-x3
 products:
-- brand: Solax
-  description:
-    generic: Hybrid X3
+  - brand: Solax
+    description:
+      generic: Hybrid X3
 requirements:
   description:
     de: Der Solax Inverter muss via Ethernet an das lokale Netzwerk angeschlossen sein.
@@ -10,14 +10,14 @@ requirements:
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: port
-  required: true
-  default: 502
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: port
+    required: true
+    default: 502
 render: |
   type: custom
   power:
