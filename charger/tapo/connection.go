@@ -41,7 +41,7 @@ type Connection struct {
 	EncodedPassword string
 	Cipher          *ConnectionCipher
 	SessionID       string
-	Token           *string
+	Token           string
 	Client          *http.Client
 	TerminalUUID    string
 }
@@ -95,7 +95,7 @@ func (d *Connection) Login() error {
 		return err
 	}
 
-	d.Token = &res.Result.Token
+	d.Token = res.Result.Token
 
 	deviceResponse, err := d.ExecMethod("get_device_info", false)
 	if err != nil {
@@ -170,7 +170,7 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 		}
 	}
 
-	res, err := d.DoSecureRequest(fmt.Sprintf("%s?token=%s", d.URI, *d.Token), req)
+	res, err := d.DoSecureRequest(fmt.Sprintf("%s?token=%s", d.URI, d.Token), req)
 	if err != nil {
 		return nil, err
 	}
