@@ -119,13 +119,16 @@ func (d *Connection) Handshake() error {
 		return err
 	}
 
-	req, _ := json.Marshal(map[string]interface{}{
+	req, err := json.Marshal(map[string]interface{}{
 		"method": "handshake",
 		"params": map[string]interface{}{
 			"key":             string(pubPEM),
 			"requestTimeMils": 0,
 		},
 	})
+	if err != nil {
+		return err
+	}
 
 	res, err := http.Post(d.URI, "application/json", bytes.NewBuffer(req))
 	if err != nil {
@@ -144,16 +147,27 @@ func (d *Connection) Handshake() error {
 		return err
 	}
 
-	encryptedEncryptionKey, _ := base64.StdEncoding.DecodeString(jsonResp.Result.Key)
-	encryptionKey, _ := rsa.DecryptPKCS1v15(rand.Reader, privKey, encryptedEncryptionKey)
+	encryptedEncryptionKey, err := base64.StdEncoding.DecodeString(jsonResp.Result.Key)
+	if err != nil {
+		return err
+	}
+
+	encryptionKey, err := rsa.DecryptPKCS1v15(rand.Reader, privKey, encryptedEncryptionKey)
+	if err != nil {
+		return err
+	}
+
 	d.Cipher = &ConnectionCipher{
 		Key: encryptionKey[:16],
 		Iv:  encryptionKey[16:],
 	}
 
-	d.SessionID = strings.Split(res.Header.Get("Set-Cookie"), ";")[0]
+	if len(strings.Split(res.Header.Get("Set-Cookie"), ";")) > 0 {
+		d.SessionID = strings.Split(res.Header.Get("Set-Cookie"), ";")[0]
+		return nil
+	}
 
-	return nil
+	return errors.New("missing cookie")
 }
 
 // ExecMethod executes a Tapo device command method and provides the corresponding response.
@@ -207,10 +221,15 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 
 	d.log.TRACE.Printf("request: %s\n", string(treq))
 
+	encryptedRequest, err := d.Cipher.Encrypt(treq)
+	if err != nil {
+		return nil, err
+	}
+
 	securedReq := map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
-			"request": base64.StdEncoding.EncodeToString(d.Cipher.Encrypt(treq)),
+			"request": base64.StdEncoding.EncodeToString(encryptedRequest),
 		},
 	}
 
@@ -234,7 +253,11 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 	if err != nil {
 		return nil, err
 	}
-	decryptedResponse := d.Cipher.Decrypt(b64decodedResp)
+
+	decryptedResponse, err := d.Cipher.Decrypt(b64decodedResp)
+	if err != nil {
+		return nil, err
+	}
 
 	d.log.TRACE.Printf("decrypted result: %v\n", string(decryptedResponse))
 
@@ -265,27 +288,40 @@ func (d *Connection) CheckErrorCode(errorCode int) error {
 	return nil
 }
 
-func (c *ConnectionCipher) Encrypt(payload []byte) []byte {
-	block, _ := aes.NewCipher(c.Key)
-	encrypter := cipher.NewCBCEncrypter(block, c.Iv)
+func (c *ConnectionCipher) Encrypt(payload []byte) ([]byte, error) {
+	paddedPayload, err := pkcs7.Pad(payload, aes.BlockSize)
+	if err != nil {
+		return nil, err
+	}
 
-	paddedPayload, _ := pkcs7.Pad(payload, aes.BlockSize)
+	block, err := aes.NewCipher(c.Key)
+	if err != nil {
+		return nil, err
+	}
+	encrypter := cipher.NewCBCEncrypter(block, c.Iv)
 	encryptedPayload := make([]byte, len(paddedPayload))
 	encrypter.CryptBlocks(encryptedPayload, paddedPayload)
 
-	return encryptedPayload
+	return encryptedPayload, nil
 }
 
-func (c *ConnectionCipher) Decrypt(payload []byte) []byte {
-	block, _ := aes.NewCipher(c.Key)
-	encrypter := cipher.NewCBCDecrypter(block, c.Iv)
+func (c *ConnectionCipher) Decrypt(payload []byte) ([]byte, error) {
+	block, err := aes.NewCipher(c.Key)
+	if err != nil {
+		return nil, err
+	}
 
+	encrypter := cipher.NewCBCDecrypter(block, c.Iv)
 	decryptedPayload := make([]byte, len(payload))
+
 	encrypter.CryptBlocks(decryptedPayload, payload)
 
-	unpaddedPayload, _ := pkcs7.Unpad(decryptedPayload, aes.BlockSize)
+	unpaddedPayload, err := pkcs7.Unpad(decryptedPayload, aes.BlockSize)
+	if err != nil {
+		return nil, err
+	}
 
-	return unpaddedPayload
+	return unpaddedPayload, nil
 }
 
 func DumpRSAPEM(pubKey *rsa.PublicKey) ([]byte, error) {
