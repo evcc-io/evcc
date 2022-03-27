@@ -31,12 +31,13 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters        MetersConfig // Meter references
-	PrioritySoC   float64      `mapstructure:"prioritySoC"` // prefer battery up to this SoC
-	BufferSoC     float64      `mapstructure:"bufferSoC"`   // ignore battery above this SoC
+	Title                             string       `mapstructure:"title"`         // UI title
+	Voltage                           float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	Meters                            MetersConfig // Meter references
+	PrioritySoC                       float64      `mapstructure:"prioritySoC"`                       // prefer battery up to this SoC
+	BufferSoC                         float64      `mapstructure:"bufferSoC"`                         // ignore battery above this SoC
+	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -376,7 +377,8 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 		site.batteryBuffered = batteryPower > 0 && site.BufferSoC > 0 && socs > site.BufferSoC
 	}
 
-	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
+	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
+
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
 	return sitePower, nil
