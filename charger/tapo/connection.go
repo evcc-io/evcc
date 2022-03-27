@@ -35,14 +35,13 @@ const Timeout = time.Second * 15
 // Connection is the Tapo connection
 type Connection struct {
 	*request.Helper
-	log *util.Logger
-	*Settings
+	log             *util.Logger
+	URI             string
 	EncodedUser     string
 	EncodedPassword string
 	Cipher          *ConnectionCipher
 	SessionID       string
 	Token           string
-	Client          *http.Client
 	TerminalUUID    string
 }
 
@@ -52,27 +51,22 @@ type Connection struct {
 func NewConnection(uri, user, password string) *Connection {
 	log := util.NewLogger("tapo")
 
-	settings := &Settings{
-		URI:      fmt.Sprintf("%s/app", util.DefaultScheme(uri, "http")),
-		User:     user,
-		Password: password,
-	}
-
 	//lint:ignore
 	h := sha1.New()
 	_, _ = h.Write([]byte(user))
 	userhash := hex.EncodeToString(h.Sum(nil))
 
-	tapo := &Connection{
+	conn := &Connection{
 		log:             log,
 		Helper:          request.NewHelper(log),
-		Settings:        settings,
+		URI:             fmt.Sprintf("%s/app", util.DefaultScheme(uri, "http")),
 		EncodedUser:     base64.StdEncoding.EncodeToString([]byte(userhash)),
 		EncodedPassword: base64.StdEncoding.EncodeToString([]byte(password)),
-		Client:          &http.Client{Timeout: Timeout},
 	}
 
-	return tapo
+	conn.Client.Timeout = Timeout
+
+	return conn
 }
 
 // Login provides the Tapo device session token and MAC address (TerminalUUID).
@@ -130,24 +124,22 @@ func (d *Connection) Handshake() error {
 		return err
 	}
 
-	res, err := http.Post(d.URI, "application/json", bytes.NewBuffer(req))
+	resp, err := http.Post(d.URI, "application/json", bytes.NewBuffer(req))
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
-	defer res.Body.Close()
-
-	var jsonResp DeviceResponse
-
-	if err = json.NewDecoder(res.Body).Decode(&jsonResp); err != nil {
+	var res DeviceResponse
+	if err = json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return err
 	}
 
-	if err = d.CheckErrorCode(jsonResp.ErrorCode); err != nil {
+	if err = d.CheckErrorCode(res.ErrorCode); err != nil {
 		return err
 	}
 
-	encryptedEncryptionKey, err := base64.StdEncoding.DecodeString(jsonResp.Result.Key)
+	encryptedEncryptionKey, err := base64.StdEncoding.DecodeString(res.Result.Key)
 	if err != nil {
 		return err
 	}
@@ -162,12 +154,14 @@ func (d *Connection) Handshake() error {
 		Iv:  encryptionKey[16:],
 	}
 
-	if len(strings.Split(res.Header.Get("Set-Cookie"), ";")) > 0 {
-		d.SessionID = strings.Split(res.Header.Get("Set-Cookie"), ";")[0]
-		return nil
+	cookie := strings.Split(resp.Header.Get("Set-Cookie"), ";")
+	if len(cookie) == 0 {
+		return errors.New("missing session cookie")
 	}
 
-	return errors.New("missing cookie")
+	d.SessionID = cookie[0]
+
+	return nil
 }
 
 // ExecMethod executes a Tapo device command method and provides the corresponding response.
@@ -213,7 +207,6 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 
 // DoSecureRequest executes a Tapo device request by encding the request and decoding its response.
 func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interface{}) (*DeviceResponse, error) {
-
 	treq, err := json.Marshal(taporequest)
 	if err != nil {
 		return nil, err
