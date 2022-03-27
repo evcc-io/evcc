@@ -87,24 +87,22 @@ func (c *Tapo) MaxCurrent(current int64) error {
 // Status implements the api.Charger interface
 func (c *Tapo) Status() (api.ChargeStatus, error) {
 	res := api.StatusB
-
-	// static mode
-	if c.standbypower < 0 {
-		on, err := c.Enabled()
-		if on {
-			res = api.StatusC
-		}
-
+	on, err := c.Enabled()
+	if err != nil {
 		return res, err
 	}
 
-	// standby power mode
 	power, err := c.CurrentPower()
-	if power > c.standbypower {
+	if err != nil {
+		return res, err
+	}
+
+	// static mode || standby power mode condition
+	if on && (c.standbypower < 0 || power > c.standbypower) {
 		res = api.StatusC
 	}
 
-	return res, err
+	return res, nil
 }
 
 var _ api.Meter = (*Tapo)(nil)
@@ -115,7 +113,20 @@ func (c *Tapo) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return float64(resp.Result.Current_Power) / 1000, nil
+
+	power := float64(resp.Result.Current_Power) / 1000
+
+	// ignore power in standby mode
+	if c.standbypower >= 0 && power <= c.standbypower {
+		power = 0
+	}
+
+	// set fix static power in static mode
+	if c.standbypower < 0 {
+		power = c.standbypower * -1
+	}
+
+	return power, nil
 }
 
 var _ api.ChargeRater = (*Vestel)(nil)
