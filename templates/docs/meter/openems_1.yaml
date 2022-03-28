@@ -39,4 +39,3 @@ render:
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
       password: user # Passwort des Benutzerkontos # Optional
-
