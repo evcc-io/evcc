@@ -6,7 +6,7 @@ render:
       type: template
       template: openems
       usage: grid
-      host: 192.0.2.2  # IP-Adresse oder Hostname
+      host: 192.0.2.2 # IP-Adresse oder Hostname
     advanced: |
       type: template
       template: openems
@@ -19,7 +19,7 @@ render:
       type: template
       template: openems
       usage: pv
-      host: 192.0.2.2  # IP-Adresse oder Hostname
+      host: 192.0.2.2 # IP-Adresse oder Hostname
     advanced: |
       type: template
       template: openems
@@ -32,7 +32,7 @@ render:
       type: template
       template: openems
       usage: battery
-      host: 192.0.2.2  # IP-Adresse oder Hostname
+      host: 192.0.2.2 # IP-Adresse oder Hostname
     advanced: |
       type: template
       template: openems

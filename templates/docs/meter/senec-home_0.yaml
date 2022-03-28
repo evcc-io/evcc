@@ -7,16 +7,16 @@ render:
       type: template
       template: senec-home
       usage: grid
-      host: 192.0.2.2  # IP-Adresse oder Hostname
+      host: 192.0.2.2 # IP-Adresse oder Hostname
   - usage: pv
     default: |
       type: template
       template: senec-home
       usage: pv
-      host: 192.0.2.2  # IP-Adresse oder Hostname
+      host: 192.0.2.2 # IP-Adresse oder Hostname
   - usage: battery
     default: |
       type: template
       template: senec-home
       usage: battery
-      host: 192.0.2.2  # IP-Adresse oder Hostname
+      host: 192.0.2.2 # IP-Adresse oder Hostname

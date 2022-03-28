@@ -9,22 +9,22 @@ render:
       type: template
       template: solaredge-hybrid
       usage: grid
-      host: 192.0.2.2  # IP-Adresse oder Hostname
-      port: 502  # Port 502 (SetApp) oder 1502 (LCD) # Optional
-      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port 502 (SetApp) oder 1502 (LCD) # Optional
+      timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
   - usage: pv
     default: |
       type: template
       template: solaredge-hybrid
       usage: pv
-      host: 192.0.2.2  # IP-Adresse oder Hostname
-      port: 502  # Port 502 (SetApp) oder 1502 (LCD) # Optional
-      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port 502 (SetApp) oder 1502 (LCD) # Optional
+      timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
   - usage: battery
     default: |
       type: template
       template: solaredge-hybrid
       usage: battery
-      host: 192.0.2.2  # IP-Adresse oder Hostname
-      port: 502  # Port 502 (SetApp) oder 1502 (LCD) # Optional
-      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port 502 (SetApp) oder 1502 (LCD) # Optional
+      timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional

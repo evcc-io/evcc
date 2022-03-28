@@ -31,7 +31,7 @@ render:
       # Modbus End
       {{- else if ne .Advanced true }}
       {{ .Name }}:
-      {{- if len .Value }} {{ .Value }} {{ end }}
+      {{- if len .Value }} {{ .Value }} {{- end }}
       {{- if ne (len .Values) 0 }} 
       {{ range .Values }}
         - {{ . }}
