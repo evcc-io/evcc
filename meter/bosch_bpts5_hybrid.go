@@ -17,6 +17,23 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
+/*
+Example config:
+meters:
+- name: bosch_grid
+  type: bosch-bpts5-hybrid
+  uri: http://192.168.178.22
+  usage: grid
+- name: bosch_pv
+  type: bosch-bpts5-hybrid
+  uri: http://192.168.178.22
+  usage: pv
+- name: bosch_battery
+  type: bosch-bpts5-hybrid
+  uri: http://192.168.178.22
+  usage: battery
+*/
+
 // Bosch is the Bosch BPT-S 5 Hybrid meter
 type BoschBpts5HybridApiClient struct {
 	*request.Helper
@@ -70,7 +87,7 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
 func NewBoschBpts5Hybrid(uri, usage string) (api.Meter, error) {
-	log := util.NewLogger("bosch")
+	log := util.NewLogger("bosch-bpts5-hybrid")
 
 	if boschInstance == nil {
 		boschInstance = &BoschBpts5HybridApiClient{
