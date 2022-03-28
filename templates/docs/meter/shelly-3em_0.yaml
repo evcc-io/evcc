@@ -2,7 +2,6 @@ product:
   brand: Shelly
   description: 3EM
   group: Steckdosen
-
 render:
   - usage: grid
     default: |

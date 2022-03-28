@@ -1,6 +1,5 @@
 product:
   description: EVSE-Wifi
-
 render:
   - default: |
       type: template

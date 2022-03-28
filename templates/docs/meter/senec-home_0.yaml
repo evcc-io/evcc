@@ -1,7 +1,6 @@
 product:
   brand: SENEC
   description: .Home
-
 render:
   - usage: grid
     default: |

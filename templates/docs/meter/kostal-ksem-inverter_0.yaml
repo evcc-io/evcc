@@ -1,7 +1,6 @@
 product:
   brand: Kostal
   description: Smart Energy Meter (über den Wechselrichter)
-
 render:
   - usage: grid
     default: |

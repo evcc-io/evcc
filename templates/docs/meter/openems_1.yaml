@@ -1,6 +1,5 @@
 product:
   brand: FENECON
-
 render:
   - usage: grid
     default: |
@@ -12,8 +11,8 @@ render:
       type: template
       template: openems
       usage: grid
-      host: 192.0.2.2  # IP-Adresse oder Hostname 
-      password: user  # Passwort des Benutzerkontos  # Optional
+      host: 192.0.2.2  # IP-Adresse oder Hostname
+      password: user  # Passwort des Benutzerkontos # Optional
 
   - usage: pv
     default: |
@@ -25,8 +24,8 @@ render:
       type: template
       template: openems
       usage: pv
-      host: 192.0.2.2  # IP-Adresse oder Hostname 
-      password: user  # Passwort des Benutzerkontos  # Optional
+      host: 192.0.2.2  # IP-Adresse oder Hostname
+      password: user  # Passwort des Benutzerkontos # Optional
 
   - usage: battery
     default: |
@@ -38,5 +37,6 @@ render:
       type: template
       template: openems
       usage: battery
-      host: 192.0.2.2  # IP-Adresse oder Hostname 
-      password: user  # Passwort des Benutzerkontos  # Optional
+      host: 192.0.2.2  # IP-Adresse oder Hostname
+      password: user  # Passwort des Benutzerkontos # Optional
+

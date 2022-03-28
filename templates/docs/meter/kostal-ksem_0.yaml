@@ -1,7 +1,6 @@
 product:
   brand: Kostal
   description: Smart Energy Meter
-
 render:
   - usage: grid
     default: |

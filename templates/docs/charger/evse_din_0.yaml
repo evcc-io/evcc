@@ -1,6 +1,5 @@
 product:
   description: EVSE DIN
-
 render:
   - default: |
       type: template

@@ -2,7 +2,6 @@ product:
   brand: Innogy
   description: eBox
 requirements: ["sponsorship"]
-
 render:
   - default: |
       type: template

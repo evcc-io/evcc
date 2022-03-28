@@ -1,6 +1,5 @@
 product:
   description: Powerdog
-
 render:
   - usage: grid
     default: |

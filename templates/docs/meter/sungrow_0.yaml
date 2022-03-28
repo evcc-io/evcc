@@ -1,7 +1,6 @@
 product:
   brand: Sungrow (LAN)
   description: Inverter (Beta)
-
 render:
   - usage: grid
     default: |

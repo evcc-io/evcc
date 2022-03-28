@@ -1,7 +1,6 @@
 product:
   brand: Sungrow (Wifi dongle)
   description: Inverter (Beta)
-
 render:
   - usage: grid
     default: |

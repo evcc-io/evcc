@@ -1,7 +1,6 @@
 product:
   brand: Eastron
   description: SDM Modbus Strommessgeräte
-
 render:
   - usage: grid
     default: |

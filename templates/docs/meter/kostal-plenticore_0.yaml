@@ -1,7 +1,6 @@
 product:
   brand: Kostal
   description: Plenticore Hybrid
-
 render:
   - usage: pv
     default: |

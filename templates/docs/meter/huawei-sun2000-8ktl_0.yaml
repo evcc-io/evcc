@@ -1,7 +1,6 @@
 product:
   brand: Huawei
   description: SUN2000-8KTL
-
 render:
   - usage: pv
     default: |

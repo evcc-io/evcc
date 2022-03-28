@@ -1,7 +1,6 @@
 product:
   brand: NRGKick
   description: Bluetooth
-
 render:
   - default: |
       type: template

@@ -2,7 +2,6 @@ product:
   brand: SMA
   description: Sunny Home Manager 2.0
 capabilities: ["smahems"]
-
 render:
   - usage: grid
     default: |

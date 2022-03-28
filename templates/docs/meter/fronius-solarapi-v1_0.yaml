@@ -1,7 +1,6 @@
 product:
   brand: Fronius
   description: Solar API V1
-
 render:
   - usage: grid
     default: |

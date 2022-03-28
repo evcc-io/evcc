@@ -1,7 +1,6 @@
 product:
   brand: i-CHARGE
   description: CION
-
 render:
   - default: |
       type: template

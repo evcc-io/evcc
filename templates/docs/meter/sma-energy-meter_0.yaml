@@ -1,7 +1,6 @@
 product:
   brand: SMA
   description: Energy Meter
-
 render:
   - usage: grid
     default: |

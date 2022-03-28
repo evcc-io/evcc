@@ -1,7 +1,6 @@
 product:
   brand: Solaredge
   description: Wechselrichter
-
 render:
   - usage: grid
     default: |
@@ -13,7 +12,7 @@ render:
       # TCPIP
       uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
       # Modbus End
-      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional
+      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
   - usage: pv
     default: |
       type: template
@@ -24,4 +23,4 @@ render:
       # TCPIP
       uri: 192.0.2.2:1502 # IP-Adresse oder Hostname: Port
       # Modbus End
-      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional
+      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind # Optional

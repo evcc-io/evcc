@@ -2,7 +2,6 @@ product:
   brand: cFos
   description: PowerBrain
 requirements: ["sponsorship"]
-
 render:
   - default: |
       type: template

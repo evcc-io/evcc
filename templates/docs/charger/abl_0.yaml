@@ -2,7 +2,6 @@ product:
   brand: ABL
   description: eMH
 requirements: ["sponsorship"]
-
 render:
   - default: |
       type: template

@@ -1,7 +1,6 @@
 product:
   brand: Kostal
   description: Piko MP Plus
-
 render:
   - usage: pv
     default: |

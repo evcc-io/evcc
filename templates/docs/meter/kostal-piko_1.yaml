@@ -1,7 +1,6 @@
 product:
   brand: Kostal
   description: Piko BA
-
 render:
   - usage: grid
     default: |

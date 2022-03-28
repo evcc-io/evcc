@@ -2,7 +2,6 @@ product:
   brand: Heidelberg
   description: Energy Control (Modbus RTU)
 requirements: ["sponsorship"]
-
 render:
   - default: |
       type: template

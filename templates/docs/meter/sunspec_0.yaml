@@ -1,7 +1,6 @@
 product:
   description: Wechselrichter (SunSpec)
   group: Generische Unterstützung
-
 render:
   - usage: grid
     default: |

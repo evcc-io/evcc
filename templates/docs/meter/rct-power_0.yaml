@@ -1,7 +1,6 @@
 product:
   brand: RCT
   description: Power
-
 render:
   - usage: grid
     default: |

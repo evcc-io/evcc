@@ -2,7 +2,6 @@ product:
   brand: Vestel
   description: EVC04
 requirements: ["sponsorship"]
-
 render:
   - default: |
       type: template

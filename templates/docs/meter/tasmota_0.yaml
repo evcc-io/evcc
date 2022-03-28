@@ -1,7 +1,6 @@
 product:
   description: Tasmota
   group: Steckdosen
-
 render:
   - usage: grid
     default: |
