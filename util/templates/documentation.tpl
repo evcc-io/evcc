@@ -52,11 +52,11 @@ render:
       # Modbus End
       {{- else }}
       {{ .Name }}:
-      {{- if len .Value }} {{ .Value }} {{ end }}
+      {{- if len .Value }} {{ .Value }} {{- end }}
       {{- if ne (len .Values) 0 }} 
       {{ range .Values }}
         - {{ . }}
-      {{ end }}
+      {{- end }}
       {{- end }}
       {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}} 
       {{- end -}}
@@ -72,11 +72,11 @@ render:
       # Modbus End
       {{- else if ne .Advanced true }}
       {{ .Name }}:
-      {{- if len .Value }} {{ .Value }} {{ end }}
+      {{- if len .Value }} {{ .Value }} {{- end }}
       {{- if ne (len .Values) 0 }} 
       {{ range .Values }}
         - {{ . }}
-      {{ end }}
+      {{- end }}
       {{- end }}
       {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}} 
       {{- end -}}
@@ -92,11 +92,11 @@ render:
       # Modbus End
       {{- else }}
       {{ .Name }}:
-      {{- if len .Value }} {{ .Value }} {{ end }}
+      {{- if len .Value }} {{ .Value }} {{- end }}
       {{- if ne (len .Values) 0 }} 
       {{ range .Values }}
         - {{ . }}
-      {{ end }}
+      {{- end }}
       {{- end }}
       {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}}
       {{- end -}}

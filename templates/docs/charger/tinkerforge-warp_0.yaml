@@ -7,7 +7,7 @@ render:
   - default: |
       type: template
       template: tinkerforge-warp
-      host: 192.0.2.2  # Die IP Adresse oder der Hostname des MQTT Brokers
-      port: 1883  # Der Port des MQTT Brokers # Optional
-      topic: warp  # Optional
-      timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
+      host: 192.0.2.2 # Die IP Adresse oder der Hostname des MQTT Brokers
+      port: 1883 # Der Port des MQTT Brokers # Optional
+      topic: warp # Optional
+      timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional

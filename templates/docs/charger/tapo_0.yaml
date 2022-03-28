@@ -9,4 +9,4 @@ render:
       uri:
       user: # Benutzername um auf das Gerät zuzugreifen
       password: # Passwort des Benutzerkontos
-      standbypower: 15  # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional
+      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional

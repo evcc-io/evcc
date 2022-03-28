@@ -5,6 +5,6 @@ render:
   - default: |
       type: template
       template: nrgkick-connect
-      host: 192.0.2.2  # IP-Adresse oder Hostname
+      host: 192.0.2.2 # IP-Adresse oder Hostname
       mac:
       password: # Passwort des Benutzerkontos

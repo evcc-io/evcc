@@ -7,5 +7,5 @@ render:
   - default: |
       type: template
       template: phoenix-ev-eth
-      host: 192.0.2.2  # IP-Adresse oder Hostname
-      port: 502  # Port # Optional
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional
