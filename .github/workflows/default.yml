@@ -49,7 +49,15 @@ jobs:
       - name: Assets
         run: make assets
 
-      - name: Go Lint
+      - name: Porcelain
+        run: |
+          go mod tidy
+          test -z "$(git status --porcelain)" || (git status; git diff; false)
+
+      - name: Build
+        run: make build
+
+      - name: Lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
@@ -59,6 +67,11 @@ jobs:
       - name: Test
         run: make test
 
+  build-ui:
+    name: Build UI
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Cache NPM modules
         uses: actions/cache@v2
         with:
@@ -68,21 +81,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
-      - name: UI Install tools
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install tools
         run: make install-ui
 
-      - name: UI Build
+      - name: Build
         run: make ui
 
-      - name: UI Lint
+      - name: Lint
         run: make lint-ui
 
-      - name: UI Test
+      - name: Test
         run: make test-ui
 
       - name: Porcelain
         run: |
           test -z "$(git status --porcelain)" || (git status; git diff; false)
-
-      - name: Build
-        run: make build
