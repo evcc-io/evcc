@@ -3,9 +3,9 @@ product:
   description: Wechselrichter (Cloud)
 description: |
   Der Solax Inverter muss in der SolaxCloud angemeldet sein.
-  
+
   **Achtung**: Die Werte können nur alle 150s abgerufen werden und dann auch 5 Minuten alt sein. Die Laderegelung nach PV kann hiermit nicht optimal gesteuert werden!
-  
+
 render:
   - usage: pv
     default: |

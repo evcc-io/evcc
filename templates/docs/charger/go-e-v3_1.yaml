@@ -4,9 +4,9 @@ product:
 capabilities: ["1p3p"]
 description: |
   Benötigt mindestens Firmware 052.1 oder neuer. 
-  
+
   Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
-  
+
 render:
   - default: |
       type: template

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -119,5 +120,11 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 	}
 	err = tmpl.Execute(out, data)
 
-	return out.Bytes(), err
+	// trim empty lines with whitespace
+	regex, _ := regexp.Compile("\n *\n")
+	string := regex.ReplaceAllString(out.String(), "\n\n")
+	result := new(bytes.Buffer)
+	result.WriteString(string)
+
+	return result.Bytes(), err
 }
