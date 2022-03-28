@@ -53,7 +53,7 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/mapstructure v1.4.3
-	github.com/mlnoga/rct v0.1.2-0.20211011124352-7e995f76b592
+	github.com/mlnoga/rct v0.1.2-0.20220320164346-9f2daa4d6734
 	github.com/muka/go-bluetooth v0.0.0-20220219050759-674a63b8741a
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.1.2
