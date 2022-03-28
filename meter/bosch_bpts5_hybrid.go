@@ -142,14 +142,11 @@ func (m *BoschBpts5HybridApiClient) Login() error {
 	resp, err := m.Client.Get(m.uri)
 
 	if err != nil {
-		m.logger.ERROR.Println("Error during login: first GET", err)
-		return err
+		return fmt.Errorf("error during login: first get: %s", err)
 	}
 
 	if resp.StatusCode >= 300 {
-		errorText := "Error while getting WUI SID. Response code was >=300:"
-		m.logger.ERROR.Println(errorText)
-		return errors.New(errorText)
+		return errors.New("error while getting wui sid. response code was >=300")
 	}
 
 	defer resp.Body.Close()
@@ -157,15 +154,13 @@ func (m *BoschBpts5HybridApiClient) Login() error {
 	//We Read the response body on the line below.
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		m.logger.ERROR.Println("Error during login: read response body", err)
-		return err
+		return fmt.Errorf("error during login: read response body: %s", err)
 	}
 
 	err = extractWuiSidFromBody(m, string(body))
 
 	if err != nil {
-		m.logger.ERROR.Println("Error during login: error extract WUI SID", err)
-		return err
+		return fmt.Errorf("error during login: error extract wui sid: %s", err)
 	}
 
 	return nil
@@ -177,7 +172,11 @@ func readLoop(m *BoschBpts5HybridApiClient) {
 
 		if loopError != nil {
 			m.logger.ERROR.Println("error during read loop. Try to re-login/get new WUI SID")
-			m.Login()
+			err := m.Login()
+
+			if err != nil {
+				m.logger.ERROR.Println(err)
+			}
 		}
 
 		time.Sleep(5000 * time.Millisecond)
@@ -189,8 +188,7 @@ func executeRead(m *BoschBpts5HybridApiClient) error {
 	resp, err := m.Client.Post(m.uri+"/cgi-bin/ipcclient.fcgi?"+m.wuSid, "text/plain", bytes.NewBuffer(postMessge))
 
 	if err != nil {
-		m.logger.ERROR.Println("Error during data retrieval request: POST", err)
-		return err
+		return fmt.Errorf("error during data retrieval request: post: %s", err)
 	}
 
 	defer resp.Body.Close()
@@ -199,14 +197,11 @@ func executeRead(m *BoschBpts5HybridApiClient) error {
 	body, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		m.logger.ERROR.Println("Error during data retrieval request: read body", err)
-		return err
+		return fmt.Errorf("error during data retrieval request: read body: %s", err)
 	}
 
 	if resp.StatusCode >= 300 {
-		errorText := "error while reading values. response code was >=300:"
-		m.logger.ERROR.Println(errorText)
-		return errors.New(errorText)
+		return errors.New("error while reading values. response code was >=300")
 	}
 
 	sb := string(body)
@@ -237,37 +232,32 @@ func extractValues(m *BoschBpts5HybridApiClient, body string) error {
 	soc, err := strconv.Atoi(values[3])
 
 	if err != nil {
-		m.logger.ERROR.Println("extractValues: error during value parsing 1", err)
-		return err
+		return fmt.Errorf("extractValues: error during value parsing 1: %s", err)
 	}
 
 	m.currentBatterySocValue = float64(soc)
 	m.einspeisung, err = parseWattValue(values[11])
 
 	if err != nil {
-		m.logger.ERROR.Println("extractValues: error during value parsing 2", err)
-		return err
+		return fmt.Errorf("extractValues: error during value parsing 2: %s", err)
 	}
 
 	m.strombezugAusNetz, err = parseWattValue(values[14])
 
 	if err != nil {
-		m.logger.ERROR.Println("extractValues: error during value parsing 3", err)
-		return err
+		return fmt.Errorf("extractValues: error during value parsing 3: %s", err)
 	}
 
 	m.pvLeistungWatt, err = parseWattValue(values[2])
 
 	if err != nil {
-		m.logger.ERROR.Println("extractValues: error during value parsing 4", err)
-		return err
+		return fmt.Errorf("extractValues: error during value parsing 4: %s", err)
 	}
 
 	m.batterieLadeStrom, err = parseWattValue(values[10])
 
 	if err != nil {
-		m.logger.ERROR.Println("extractValues: error during value parsing 5", err)
-		return err
+		return fmt.Errorf("extractValues: error during value parsing 5: %s", err)
 	}
 
 	m.verbrauchVonBatterie, err = parseWattValue(values[13])
@@ -282,8 +272,7 @@ func extractWuiSidFromBody(m *BoschBpts5HybridApiClient, body string) error {
 
 	if index < 0 {
 		m.wuSid = ""
-		m.logger.ERROR.Println("Error while extracting WUI_SID. Body was= " + body)
-		return errors.New("Error while extracting WUI_SID. Body was= " + body)
+		return fmt.Errorf("error while extracting wui sid. body was= %s", body)
 	}
 
 	m.wuSid = body[index+9 : index+9+15]
