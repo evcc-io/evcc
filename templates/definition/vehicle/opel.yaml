@@ -1,14 +1,14 @@
 template: opel
 products:
-- brand: Opel
+  - brand: Opel
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: vin
-  example: WP0...
-- name: capacity
-  default: 50
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: vin
+    example: WP0...
+  - name: capacity
+    default: 50
+  - preset: vehiclecloud
 render: |
   type: opel
   {{include "vehicle-base" .}}

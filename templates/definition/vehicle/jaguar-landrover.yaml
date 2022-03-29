@@ -1,15 +1,15 @@
 template: jaguar-landrover
 products:
-- brand: Jaguar
-- brand: Land Rover
+  - brand: Jaguar
+  - brand: Land Rover
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: vin
-  example: W...
-- name: capacity
-- preset: vehiclecloud
-  default: 60
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: vin
+    example: W...
+  - name: capacity
+  - preset: vehiclecloud
+    default: 60
 render: |
   type: jaguar
   {{include "vehicle-base" .}}

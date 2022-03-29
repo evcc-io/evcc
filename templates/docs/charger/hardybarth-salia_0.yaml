@@ -1,9 +1,0 @@
-product:
-  brand: hardybarth-salia
-  description: HardyBarth (Salia PLCC controller)
-
-render:
-- default: |
-    type: template
-    template: hardybarth-salia
-    host: 192.0.2.2  # IP-Adresse oder Hostname

@@ -10,6 +10,7 @@ __debug_bin
 !util/templates/**/*.yaml
 !package*.json
 !evcc.dist.yaml
+templates/docs/*
 evcc
 evcc.exe
 evcc_*

@@ -1,15 +1,15 @@
 template: shelly-3em
 products:
-- brand: Shelly
-  description:
-    generic: 3EM
+  - brand: Shelly
+    description:
+      generic: 3EM
 group: sockets
 params:
-- name: usage
-  choice: [ "grid", "pv", "charge" ]
-- name: host
-  required: true
-  example: 192.0.2.2
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+    required: true
+    example: 192.0.2.2
 render: |
   type: custom
   power:

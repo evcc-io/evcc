@@ -1,16 +1,16 @@
 template: senec-home
 products:
-- brand: SENEC
-  description:
-    generic: .Home
+  - brand: SENEC
+    description:
+      generic: .Home
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: host
-  required: true
-  example: 192.0.2.2
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    required: true
+    example: 192.0.2.2
 render: |
   type: custom
   power:

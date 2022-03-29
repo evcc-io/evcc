@@ -1,15 +1,15 @@
 template: alphatec
 products:
-- brand: Alphatec
-  description:
-    generic: Wallbox Mini
-requirements: 
+  - brand: Alphatec
+    description:
+      generic: Wallbox Mini
+requirements:
   evcc: ["sponsorship"]
 params:
-- name: modbus
-  choice: ["rs485"]
-  baudrate: 9600
-  comset: 8N1
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    comset: 8N1
 render: |
   type: alphatec
   {{include "modbus" .}}

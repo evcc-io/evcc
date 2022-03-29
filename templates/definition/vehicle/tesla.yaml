@@ -1,6 +1,6 @@
 template: tesla
 products:
-- brand: Tesla
+  - brand: Tesla
 requirements:
   description:
     de: |
@@ -18,25 +18,25 @@ requirements:
       - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
       - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
 params:
-- name: title
-- name: accessToken
-  required: true
-  help:
-    en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
-    de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
-- name: refreshToken
-  required: true
-  help:
-    en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
-    de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
-- name: vin
-  example: W...
-- name: capacity
-  default: 90
-- name: phases
-  advanced: true
-- preset: vehicleidentify
-- preset: vehiclecloud
+  - name: title
+  - name: accessToken
+    required: true
+    help:
+      en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
+  - name: refreshToken
+    required: true
+    help:
+      en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
+  - name: vin
+    example: W...
+  - name: capacity
+    default: 90
+  - name: phases
+    advanced: true
+  - preset: vehicleidentify
+  - preset: vehiclecloud
 render: |
   type: tesla
   {{- if ne .title "" }}

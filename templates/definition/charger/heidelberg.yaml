@@ -1,21 +1,21 @@
 template: heidelberg
 products:
-- brand: Heidelberg
-  description:
-    generic: Energy Control (Modbus RTU)
-- brand: SENEC
-  description:
-    generic: Wallbox pro s
-- brand: Walther Werke
-  description:
-    generic: Basic Evo Pro
-requirements: 
+  - brand: Heidelberg
+    description:
+      generic: Energy Control
+  - brand: SENEC
+    description:
+      generic: Wallbox pro s
+  - brand: Walther Werke
+    description:
+      generic: Basic Evo Pro
+requirements:
   evcc: ["sponsorship"]
 params:
-- name: modbus
-  choice: ["rs485"]
-  baudrate: 19200
-  comset: 8E1
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 19200
+    comset: 8E1
 render: |
   type: heidelberg
   {{include "modbus" .}}

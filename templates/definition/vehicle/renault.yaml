@@ -1,14 +1,14 @@
 template: renault
 products:
-- brand: Renault
+  - brand: Renault
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: vin
-  example: WREN...
-- name: capacity
-  default: 60
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: vin
+    example: WREN...
+  - name: capacity
+    default: 60
+  - preset: vehiclecloud
 render: |
   type: renault
   {{include "vehicle-base" .}}

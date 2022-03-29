@@ -3,41 +3,41 @@ release:
   disable: true
 
 builds:
-- id: evcc
-  main: main.go
-  flags:
-  - -tags=release,viper_yaml3
-  ldflags:
-  - -X github.com/evcc-io/evcc/server.Version={{.Version}} -X github.com/evcc-io/evcc/server.Commit={{.ShortCommit}} -s -w
-  env:
-  - CGO_ENABLED=0
-  goos:
-  - linux
-  goarch:
-  - amd64
-  - arm
-  - arm64
-  goarm:
-  - "6"
+  - id: evcc
+    main: main.go
+    flags:
+      - -tags=release,viper_yaml3
+    ldflags:
+      - -X github.com/evcc-io/evcc/server.Version={{.Version}} -X github.com/evcc-io/evcc/server.Commit={{.ShortCommit}} -s -w
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - "6"
 
 archives:
-- builds:
-  - evcc
-  replacements:
-    darwin: macOS
-  format: tar.gz
-  format_overrides:
-  - goos: windows
-    format: zip
-  files:
-  - evcc.dist.yaml
-  name_template: "{{.ProjectName}}_{{ .Version }}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
+  - builds:
+      - evcc
+    replacements:
+      darwin: macOS
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - evcc.dist.yaml
+    name_template: "{{.ProjectName}}_{{ .Version }}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
 
 universal_binaries:
-- replace: true
+  - replace: true
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 
 snapshot:
   name_template: "{{ .Version }}.{{.Timestamp}}"
@@ -46,30 +46,30 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^chore'
-    - '^bump'
-    - '^docs:'
-    - '^test:'
+      - "^chore"
+      - "^bump"
+      - "^docs:"
+      - "^test:"
 
 nfpms:
-- id: default
-  package_name: evcc
-  file_name_template: "{{.ProjectName}}_{{ .Version }}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
+  - id: default
+    package_name: evcc
+    file_name_template: "{{.ProjectName}}_{{ .Version }}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
 
-  homepage:  https://evcc.io
-  description: EV Charge Controller
-  maintainer: andig <cpuidle@gmx.de>
-  license: MIT
-  vendor: evcc.io
+    homepage: https://evcc.io
+    description: EV Charge Controller
+    maintainer: andig <cpuidle@gmx.de>
+    license: MIT
+    vendor: evcc.io
 
-  formats:
-  - deb
+    formats:
+      - deb
 
-  contents:
-  - src: ./packaging/init/evcc.service
-    dst: /lib/systemd/system/evcc.service
+    contents:
+      - src: ./packaging/init/evcc.service
+        dst: /lib/systemd/system/evcc.service
 
-  scripts:
-    postinstall: ./packaging/scripts/postinstall.sh
-    preremove: ./packaging/scripts/preremove.sh
-    postremove: ./packaging/scripts/postremove.sh
+    scripts:
+      postinstall: ./packaging/scripts/postinstall.sh
+      preremove: ./packaging/scripts/preremove.sh
+      postremove: ./packaging/scripts/postremove.sh
