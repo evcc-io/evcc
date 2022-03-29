@@ -1,10 +1,10 @@
 template: evse_din
 products:
-- description:
-    generic: EVSE DIN
+  - description:
+      generic: EVSE DIN
 params:
-- name: modbus
-  choice: ["rs485"]
+  - name: modbus
+    choice: ["rs485"]
 render: |
   type: evsedin
   {{include "modbus" .}}

@@ -1,8 +1,8 @@
 template: solax-hybrid-cloud
 products:
-- brand: Solax
-  description:
-    generic: Hybrid (Cloud)
+  - brand: Solax
+    description:
+      generic: Hybrid (Cloud)
 requirements:
   description:
     de: |
@@ -16,23 +16,23 @@ requirements:
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: tokenid
-  required: true
-  description:
-    generic: SolaxCloud TokenID
-  help:
-    de: Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
-    en: Go to https://www.solaxcloud.com/#/api and take the value of "ObtaintokenID".
-- name: serial
-  required: true
-  description:
-    de: Seriennummer
-    en: Serial number
-  help:
-    de: Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
-    en: Go to https://www.solaxcloud.com/#/inverter and take the value of registration number
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: tokenid
+    required: true
+    description:
+      generic: SolaxCloud TokenID
+    help:
+      de: Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
+      en: Go to https://www.solaxcloud.com/#/api and take the value of "ObtaintokenID".
+  - name: serial
+    required: true
+    description:
+      de: Seriennummer
+      en: Serial number
+    help:
+      de: Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+      en: Go to https://www.solaxcloud.com/#/inverter and take the value of registration number
 render: |
   type: custom
   power:

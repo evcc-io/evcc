@@ -1,14 +1,14 @@
 template: powerdog
 products:
-- description:
-    generic: Powerdog
+  - description:
+      generic: Powerdog
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv" ]
-- name: modbus
-  choice: [ "tcpip" ]
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: modbus
+    choice: ["tcpip"]
 render: |
   type: custom
   power:

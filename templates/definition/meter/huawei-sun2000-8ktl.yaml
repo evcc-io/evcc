@@ -1,14 +1,14 @@
 template: huawei-sun2000-8ktl
 products:
-- brand: Huawei
-  description:
-    generic: SUN2000-8KTL
+  - brand: Huawei
+    description:
+      generic: SUN2000-8KTL
 params:
-- name: usage
-  choice: [ "pv" ]
-- name: modbus
-  choice: ["rs485"]
-  baudrate: 19200
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 19200
 render: |
   type: custom
   power:

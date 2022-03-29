@@ -3,12 +3,11 @@ product:
   description: Data Manager M Lite
 description: |
   In der Weboberfläche des SMA Data Manager muss im Bereich "Externe Kommunikation" der Schalter "Modbus Server aktivieren" eingeschaltet sein.
-
 render:
-- usage: pv
-  default: |
-    type: template
-    template: sma-data-manager-m-lite
-    usage: pv
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-    port: 502  # Port  # Optional
+  - usage: pv
+    default: |
+      type: template
+      template: sma-data-manager-m-lite
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional

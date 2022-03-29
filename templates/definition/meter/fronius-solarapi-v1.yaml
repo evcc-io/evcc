@@ -1,16 +1,16 @@
 template: fronius-solarapi-v1
 products:
-- brand: Fronius
-  description:
-    generic: Solar API V1
+  - brand: Fronius
+    description:
+      generic: Solar API V1
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: ["grid", "pv", "battery"]
-- name: host
-  example: 192.0.2.2
-  required: true
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    example: 192.0.2.2
+    required: true
 render: |
   type: custom
   power:

@@ -5,47 +5,47 @@ release:
     name: evcc
 
 builds:
-- id: evcc
-  main: main.go
-  flags:
-  - -tags=release,viper_yaml3
-  ldflags:
-  - -X github.com/evcc-io/evcc/server.Version={{.Version}} -s -w
-  env:
-  - CGO_ENABLED=0
-  goos:
-  - linux
-  - darwin
-  - windows
-  goarch:
-  - amd64
-  - arm
-  - arm64
-  goarm:
-  - "6"
-  ignore:
-  - goos: windows
-    goarch: arm
-  - goos: windows
-    goarch: arm64
+  - id: evcc
+    main: main.go
+    flags:
+      - -tags=release,viper_yaml3
+    ldflags:
+      - -X github.com/evcc-io/evcc/server.Version={{.Version}} -s -w
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - "6"
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
 
 archives:
-- builds:
-  - evcc
-  replacements:
-    darwin: macOS
-  format: tar.gz
-  format_overrides:
-  - goos: windows
-    format: zip
-  files:
-  - evcc.dist.yaml
+  - builds:
+      - evcc
+    replacements:
+      darwin: macOS
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - evcc.dist.yaml
 
 universal_binaries:
-- replace: true
+  - replace: true
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 
 snapshot:
   name_template: "{{ .Tag }}-next"
@@ -54,65 +54,65 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^chore'
-    - '^bump'
-    - '^docs:'
-    - '^test:'
+      - "^chore"
+      - "^bump"
+      - "^docs:"
+      - "^test:"
 
 nfpms:
-- id: default
-  package_name: evcc
-  file_name_template: '{{ .ConventionalFileName }}'
+  - id: default
+    package_name: evcc
+    file_name_template: "{{ .ConventionalFileName }}"
 
-  homepage:  https://evcc.io
-  description: EV Charge Controller
-  maintainer: andig <cpuidle@gmx.de>
-  license: MIT
-  vendor: evcc.io
+    homepage: https://evcc.io
+    description: EV Charge Controller
+    maintainer: andig <cpuidle@gmx.de>
+    license: MIT
+    vendor: evcc.io
 
-  formats:
-  - deb
+    formats:
+      - deb
 
-  contents:
-  - src: ./packaging/init/evcc.service
-    dst: /lib/systemd/system/evcc.service
+    contents:
+      - src: ./packaging/init/evcc.service
+        dst: /lib/systemd/system/evcc.service
 
-  scripts:
-    postinstall: ./packaging/scripts/postinstall.sh
-    preremove: ./packaging/scripts/preremove.sh
-    postremove: ./packaging/scripts/postremove.sh
+    scripts:
+      postinstall: ./packaging/scripts/postinstall.sh
+      preremove: ./packaging/scripts/preremove.sh
+      postremove: ./packaging/scripts/postremove.sh
 
 brews:
-- tap:
-    owner: evcc-io
-    name: homebrew-tap
-  commit_author:
-    name: andig
-    email: cpuidle@gmx.de
-  folder: Formula
-  homepage: "https://evcc.io"
-  description: "Sonne tanken ☀️🚘"
-  license: "MIT"
-  test: |
-    system "#{bin}/evcc --version"
-  plist: |
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>Program</key>
-        <string>#{bin}/evcc</string>
-        <key>WorkingDirectory</key>
-        <string>#{var}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <true/>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/evcc.log</string>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/evcc.log</string>
-      </dict>
-    </plist>
+  - tap:
+      owner: evcc-io
+      name: homebrew-tap
+    commit_author:
+      name: andig
+      email: cpuidle@gmx.de
+    folder: Formula
+    homepage: "https://evcc.io"
+    description: "Sonne tanken ☀️🚘"
+    license: "MIT"
+    test: |
+      system "#{bin}/evcc --version"
+    plist: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>Program</key>
+          <string>#{bin}/evcc</string>
+          <key>WorkingDirectory</key>
+          <string>#{var}</string>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <true/>
+          <key>StandardOutPath</key>
+          <string>#{var}/log/evcc.log</string>
+          <key>StandardErrorPath</key>
+          <string>#{var}/log/evcc.log</string>
+        </dict>
+      </plist>

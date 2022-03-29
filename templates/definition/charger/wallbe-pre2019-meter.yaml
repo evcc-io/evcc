@@ -1,24 +1,24 @@
 template: wallbe-pre2019-meter
 products:
-- brand: Wallbe
-  description:
-    de: Eco (vor ~2019, mit Strommessgerät)
-    en: Eco (pre ~2019, with meter)
-- brand: Wallbe
-  description:
-    de: Pro (vor ~2019, mit Strommessgerät)
-    en: Pro (pre ~2019, with meter)
+  - brand: Wallbe
+    description:
+      de: Eco (vor ~2019, mit Strommessgerät)
+      en: Eco (pre ~2019, with meter)
+  - brand: Wallbe
+    description:
+      de: Pro (vor ~2019, mit Strommessgerät)
+      en: Pro (pre ~2019, with meter)
 requirements:
   description:
     en: DIP switch 10 must be set to 'ON'.
     de: Im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
   uri: https://docs.evcc.io/docs/devices/chargers#wallbe-ecopro
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: port
-  default: 502
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: port
+    default: 502
 render: |
   type: wallbe
   uri: {{ .host }}:{{ .port }}

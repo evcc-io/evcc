@@ -1,15 +1,15 @@
 template: hyundai
 products:
-- brand: Hyundai
-  description:
-    generic: Bluelink  
+  - brand: Hyundai
+    description:
+      generic: Bluelink
 params:
-- preset: vehiclebase
-- preset: vehiclelanguage
-- preset: vehicleidentify
-- name: capacity
-  default: 64
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehiclelanguage
+  - preset: vehicleidentify
+  - name: capacity
+    default: 64
+  - preset: vehiclecloud
 render: |
   type: hyundai
   {{include "vehicle-base" .}}

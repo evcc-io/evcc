@@ -1,19 +1,19 @@
 template: tapo
 products:
-- brand: TP-Link
-  description:
-    generic: Tapo
+  - brand: TP-Link
+    description:
+      generic: Tapo
 group: switchsockets
 params:
-- name: uri
-  required: true
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
-- name: standbypower
-  default: 15
+  - name: uri
+    required: true
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: standbypower
+    default: 15
 render: |
   type: tapo
   uri: {{ .uri }}

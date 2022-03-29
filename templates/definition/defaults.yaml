@@ -1,224 +1,224 @@
 params:
-- name: title
-  description:
-    de: Titel
-    en: Title
-  help:
-    de: Wird in der Benutzeroberfläche angezeigt
-    en: Will be displayed in the user interface
-- name: modbusid
-  description:
-    generic: Modbus ID
-  default: 1
-  valuetype: number
-- name: modbusdevice
-  description:
-    de: Geräteadresse
-    en: Device address
-  help:
-    de: USB-RS485 Adapter Adresse
-    en: USB-RS485 Adapter address
-  example: /dev/ttyUSB0
-- name: modbusbaudrate
-  description:
-    de: Baudrate
-    en: Baudrate
-  help:
-    de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-    en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
-  default: 9600
-  valuetype: number
-- name: modbuscomset
-  description:
-    de: ComSet
-    en: ComSet
-  help:
-    de: Kommunikationsparameter für den Adapter
-    en: Communication parameter for the adapter
-  default: 8N1
-- name: host
-  description:
-    de: IP-Adresse oder Hostname
-    en: IP-Address or Hostname
-  help:
-    de: IP-Adresse oder Hostname
-    en: IP-Address or Hostname
-  example: "192.0.2.2"
-- name: port
-  description:
-    de: Port
-    en: Port
-  help:
-    de: Port
-    en: Port
-  valuetype: number
-- name: user
-  description:
-    de: Benutzername
-    en: Username
-  help:
-    de: Benutzername um auf das Gerät zuzugreifen
-    en: Username to access the device
-- name: password
-  description:
-    de: Passwort
-    en: Password
-  help:
-    de: Passwort des Benutzerkontos
-    en: Password of the account
-  mask: true
-- name: capacity
-  description:
-    de: Akku-Kapazität in kWh
-    en: Battery-Capacity in kWh
-  help:
-    de: Akku-Kapazität in kWh
-    en: Battery-Capacity in kWh
-  example: '41.5'
-  valuetype: float
-- name: vin
-  description:
-    de: Fahrzeugidentifikationsnummer
-    en: Vehicle Identification Number
-  help:
-    de: Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
-    en: Required if you own multiple vehicles of the same brand
-  example: W...
-- name: phases
-  description:
-    de: Maximale Phasenanzahl
-    en: Maximum number of phases
-  help:
-    de: Die maximale Anzahl der Phasen welche genutzt werden können
-    en: The maximum number of phases which can be used
-  example: 3
-  valuetype: number
-- name: cache
-  description:
-    de: Cache
-    en: Cache
-  help:
-    de: Das zeitliche Interval, in welchem Daten vom Fahrzeug neu geladen werden soll
-    en: Time interval with when data should be reloaded from the vehicle
-  example: 5m
-- name: cloud
-  description:
-    de: evcc Cloud
-    en: evcc Cloud
-  help:
-    de: |
-      Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,
-      wird dies über die evcc Cloud gemacht. Die Zugangsdaten und VIN werden sicher und verschlüsselt
-      übertragen und in der Cloud nicht gespeichert.
+  - name: title
+    description:
+      de: Titel
+      en: Title
+    help:
+      de: Wird in der Benutzeroberfläche angezeigt
+      en: Will be displayed in the user interface
+  - name: modbusid
+    description:
+      generic: Modbus ID
+    default: 1
+    valuetype: number
+  - name: modbusdevice
+    description:
+      de: Geräteadresse
+      en: Device address
+    help:
+      de: USB-RS485 Adapter Adresse
+      en: USB-RS485 Adapter address
+    example: /dev/ttyUSB0
+  - name: modbusbaudrate
+    description:
+      de: Baudrate
+      en: Baudrate
+    help:
+      de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+      en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
+    default: 9600
+    valuetype: number
+  - name: modbuscomset
+    description:
+      de: ComSet
+      en: ComSet
+    help:
+      de: Kommunikationsparameter für den Adapter
+      en: Communication parameter for the adapter
+    default: 8N1
+  - name: host
+    description:
+      de: IP-Adresse oder Hostname
+      en: IP-Address or Hostname
+    help:
+      de: IP-Adresse oder Hostname
+      en: IP-Address or Hostname
+    example: "192.0.2.2"
+  - name: port
+    description:
+      de: Port
+      en: Port
+    help:
+      de: Port
+      en: Port
+    valuetype: number
+  - name: user
+    description:
+      de: Benutzername
+      en: Username
+    help:
+      de: Benutzername um auf das Gerät zuzugreifen
+      en: Username to access the device
+  - name: password
+    description:
+      de: Passwort
+      en: Password
+    help:
+      de: Passwort des Benutzerkontos
+      en: Password of the account
+    mask: true
+  - name: capacity
+    description:
+      de: Akku-Kapazität in kWh
+      en: Battery-Capacity in kWh
+    help:
+      de: Akku-Kapazität in kWh
+      en: Battery-Capacity in kWh
+    example: "41.5"
+    valuetype: float
+  - name: vin
+    description:
+      de: Fahrzeugidentifikationsnummer
+      en: Vehicle Identification Number
+    help:
+      de: Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
+      en: Required if you own multiple vehicles of the same brand
+    example: W...
+  - name: phases
+    description:
+      de: Maximale Phasenanzahl
+      en: Maximum number of phases
+    help:
+      de: Die maximale Anzahl der Phasen welche genutzt werden können
+      en: The maximum number of phases which can be used
+    example: 3
+    valuetype: number
+  - name: cache
+    description:
+      de: Cache
+      en: Cache
+    help:
+      de: Das zeitliche Interval, in welchem Daten vom Fahrzeug neu geladen werden soll
+      en: Time interval with when data should be reloaded from the vehicle
+    example: 5m
+  - name: cloud
+    description:
+      de: evcc Cloud
+      en: evcc Cloud
+    help:
+      de: |
+        Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,
+        wird dies über die evcc Cloud gemacht. Die Zugangsdaten und VIN werden sicher und verschlüsselt
+        übertragen und in der Cloud nicht gespeichert.
 
-      Die Vorteile sind:
-      - Falls sich etwas an der Online API des Fahrzeugherstellers ändert, können Updates für alle Benutzer viel schneller zur Verfügung gestellt werden
-      - Man muss nicht auf eine neue Version von evcc warten und dann ein lokales Update von evcc durchführen
-    en: |
-      Instead of connecting to the vehicle manufacturers online API from your local installation,
-      this will use the evcc Cloud instead. Your credentials and VIN will be transfered encrypted and
-      securely and won't be stored in the cloud.
+        Die Vorteile sind:
+        - Falls sich etwas an der Online API des Fahrzeugherstellers ändert, können Updates für alle Benutzer viel schneller zur Verfügung gestellt werden
+        - Man muss nicht auf eine neue Version von evcc warten und dann ein lokales Update von evcc durchführen
+      en: |
+        Instead of connecting to the vehicle manufacturers online API from your local installation,
+        this will use the evcc Cloud instead. Your credentials and VIN will be transfered encrypted and
+        securely and won't be stored in the cloud.
 
-      The benefits are:
-      - If the vehicles online API changes, we can update this for all users more quickly
-      - No waiting for a new evcc version in this case and then requiring an update
-  requirements:
-    evcc: ["sponsorship"]
-  valuetype: bool
-- name: timeout
-  description:
-    de: Zeitüberschreitung
-    en: Timeout
-  help:
-    de: Akzeptiere keine Daten die älter als dieser Wert sind
-    en: Don't accept values older than this value
-  example: 30s
-  valuetype: duration
-- name: mode
-  description:
-    de: Standard-Lademodus, wenn ein Fahrzeug angeschlossen ist
-    en: Default charging mode when a vehicle is connected
-  help:
-    de: Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
-    en: Possible values are Off, Now, MinPV and PV, or empty if none should be set
-  valuetype: chargemodes
-- name: minsoc
-  description:
-    de: Minimaler Ladestand (SoC) in %
-    en: Minimum state of charge (SoC) in %
-  help:
-    de: Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht
-    en: Charge immediately with maximum power up to the defined state of charge, if the charge mode is not set to 'OFF'
-  example: 25
-  valuetype: number
-- name: targetsoc
-  description:
-    de: Ziel-Ladestand (SoC) in %
-    en: Target state of charge (SoC) in %
-  help:
-    de: Bis zu welchem Ladestand (SoC) soll das Fahrzeug geladen werden
-    en: Until which state of charge (SoC) should the vehicle be charged
-  example: 80
-  valuetype: number
-- name: mincurrent
-  description:
-    de: Minimale Stromstärke in Ampere (A)
-    en: Minimum amperage (A)
-  help:
-    de: Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
-    en: The minimum amperage per connected phase with which the car should be charged
-  example: 6
-  valuetype: number
-- name: maxcurrent
-  description:
-    de: Maximale Stromstärke in Ampere (A)
-    en: Maximum amperage (A)
-  help:
-    de: Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
-    en: The maximum amperage per connected phase with which the car shuold be charged
-  example: 16
-  valuetype: number
-- name: identifiers
-  description:
-    de: Identifikation
-    en: Identification
-  help:
-    de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
-    en: "Mostly this can be added later, see: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
-  valuetype: stringlist
-- name: standbypower
-  description:
-    de: Standby-Leistung in W"
-    en: Standby power in W
-  help:
-    de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
-    en: Power values above this value will be considered as charging pow
-  valuetype: number
-- name: language
-  description:
-    de: Sprache
-    en: Language
-  help:
-    de: "'de' für Deutsch und 'en' für Englisch"
-    en: "'en' for English and 'de' for German"
-  default: en
-  validvalues: ["de", "en"]
+        The benefits are:
+        - If the vehicles online API changes, we can update this for all users more quickly
+        - No waiting for a new evcc version in this case and then requiring an update
+    requirements:
+      evcc: ["sponsorship"]
+    valuetype: bool
+  - name: timeout
+    description:
+      de: Zeitüberschreitung
+      en: Timeout
+    help:
+      de: Akzeptiere keine Daten die älter als dieser Wert sind
+      en: Don't accept values older than this value
+    example: 30s
+    valuetype: duration
+  - name: mode
+    description:
+      de: Standard-Lademodus, wenn ein Fahrzeug angeschlossen ist
+      en: Default charging mode when a vehicle is connected
+    help:
+      de: Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
+      en: Possible values are Off, Now, MinPV and PV, or empty if none should be set
+    valuetype: chargemodes
+  - name: minsoc
+    description:
+      de: Minimaler Ladestand (SoC) in %
+      en: Minimum state of charge (SoC) in %
+    help:
+      de: Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht
+      en: Charge immediately with maximum power up to the defined state of charge, if the charge mode is not set to 'OFF'
+    example: 25
+    valuetype: number
+  - name: targetsoc
+    description:
+      de: Ziel-Ladestand (SoC) in %
+      en: Target state of charge (SoC) in %
+    help:
+      de: Bis zu welchem Ladestand (SoC) soll das Fahrzeug geladen werden
+      en: Until which state of charge (SoC) should the vehicle be charged
+    example: 80
+    valuetype: number
+  - name: mincurrent
+    description:
+      de: Minimale Stromstärke in Ampere (A)
+      en: Minimum amperage (A)
+    help:
+      de: Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
+      en: The minimum amperage per connected phase with which the car should be charged
+    example: 6
+    valuetype: number
+  - name: maxcurrent
+    description:
+      de: Maximale Stromstärke in Ampere (A)
+      en: Maximum amperage (A)
+    help:
+      de: Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
+      en: The maximum amperage per connected phase with which the car shuold be charged
+    example: 16
+    valuetype: number
+  - name: identifiers
+    description:
+      de: Identifikation
+      en: Identification
+    help:
+      de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
+      en: "Mostly this can be added later, see: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
+    valuetype: stringlist
+  - name: standbypower
+    description:
+      de: Standby-Leistung in W"
+      en: Standby power in W
+    help:
+      de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
+      en: Power values above this value will be considered as charging pow
+    valuetype: number
+  - name: language
+    description:
+      de: Sprache
+      en: Language
+    help:
+      de: "'de' für Deutsch und 'en' für Englisch"
+      en: "'en' for English and 'de' for German"
+    default: en
+    validvalues: ["de", "en"]
 
 presets:
   vehiclebase:
     params:
-    - name: title
-    - name: user
-      required: true
-    - name: password
-      required: true
-    - name: vin
-    - name: capacity
-    - name: phases
-      advanced: true
-    - name: cache
-      advanced: true
-      deprecated: true
+      - name: title
+      - name: user
+        required: true
+      - name: password
+        required: true
+      - name: vin
+      - name: capacity
+      - name: phases
+        advanced: true
+      - name: cache
+        advanced: true
+        deprecated: true
     render: |
       {{define "vehicle-base"}}
       {{- if ne .title "" }}
@@ -241,19 +241,19 @@ presets:
       {{end}}
   vehicleidentify:
     params:
-    - name: mode
-      advanced: true
-    - name: minSoC
-      advanced: true
-    - name: targetSoC
-      advanced: true
-    - name: minCurrent
-      advanced: true
-    - name: maxCurrent
-      advanced: true
-    - name: identifiers
-      advanced: true
-      valuetype: stringlist
+      - name: mode
+        advanced: true
+      - name: minSoC
+        advanced: true
+      - name: targetSoC
+        advanced: true
+      - name: minCurrent
+        advanced: true
+      - name: maxCurrent
+        advanced: true
+      - name: identifiers
+        advanced: true
+        valuetype: stringlist
     render: |
       {{define "vehicle-identify"}}
       {{- if or (ne .mode "") (ne .minSoC "") (ne .targetSoC "") (ne .minCurrent "") (ne .maxCurrent "") }}
@@ -283,7 +283,7 @@ presets:
       {{end}}
   vehiclelanguage:
     params:
-    - name: language
+      - name: language
     render: |
       {{define "vehicle-language"}}
       language: {{ .language }}
@@ -291,7 +291,7 @@ presets:
 
   vehiclecloud:
     params:
-    - name: cloud
+      - name: cloud
     render: |
       {{define "vehicle-cloud"}}
       cloud: {{ .cloud }}
@@ -306,45 +306,45 @@ modbus:
       description:
         generic: Serial (USB-RS485 Adapter)
       params:
-      - reference: true
-        referencename: modbusid
-        name: id
-      - reference: true
-        referencename: modbusdevice
-        name: device
-      - reference: true
-        referencename: modbusbaudrate
-        name: baudrate
-      - reference: true
-        referencename: modbuscomset
-        name: comset
+        - reference: true
+          referencename: modbusid
+          name: id
+        - reference: true
+          referencename: modbusdevice
+          name: device
+        - reference: true
+          referencename: modbusbaudrate
+          name: baudrate
+        - reference: true
+          referencename: modbuscomset
+          name: comset
     rs485tcpip:
       description:
         generic: Serial (Ethernet-RS485 Adapter)
       params:
-      - reference: true
-        referencename: modbusid
-        name: id
-      - reference: true
-        name: host
-      - reference: true
-        name: port
-        default: 502
-      - name: rtu
-        default: true
-        hidden: true
+        - reference: true
+          referencename: modbusid
+          name: id
+        - reference: true
+          name: host
+        - reference: true
+          name: port
+          default: 502
+        - name: rtu
+          default: true
+          hidden: true
     tcpip:
       description:
         generic: TCP/IP
       params:
-      - reference: true
-        referencename: modbusid
-        name: id
-      - reference: true
-        name: host
-      - reference: true
-        name: port
-        default: 502
+        - reference: true
+          referencename: modbusid
+          name: id
+        - reference: true
+          name: host
+        - reference: true
+          name: port
+          default: 502
 
 devicegroups:
   generic:

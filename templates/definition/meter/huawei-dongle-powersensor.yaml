@@ -1,15 +1,15 @@
 template: huawei-dongle-powersensor
 products:
-- brand: Huawei
-  description:
-    generic: SUN2000 with SDongle & Power Sensor
+  - brand: Huawei
+    description:
+      generic: SUN2000 with SDongle & Power Sensor
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: modbus
-  choice: ["tcpip"]
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
 render: |
   type: custom
   {{- if eq .usage "grid" }}
