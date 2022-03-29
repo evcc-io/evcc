@@ -13,9 +13,16 @@ guidedsetup:
     usage: pv
     multiple: true
     excludetemplate: sma-energy-meter
+  - template: sma-hybrid
+    usage: pv
+    multiple: true
+    excludetemplate: sma-energy-meter
   - template: sma-inverter
     usage: battery
     multiple: true
+  - template: sma-hybrid
+    usage: battery
+    multiple: true    
 params:
 - name: usage
   choice: ["grid"]
