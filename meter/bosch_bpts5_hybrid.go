@@ -1,61 +1,50 @@
 package meter
 
+// LICENSE
+
+// Bosch is the Bosch BPT-S 5 Hybrid meter
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http/cookiejar"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/bosch"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 )
 
-/*
-Example config:
-meters:
-- name: bosch_grid
-  type: bosch-bpts5-hybrid
-  uri: http://192.168.178.22
-  usage: grid
-- name: bosch_pv
-  type: bosch-bpts5-hybrid
-  uri: http://192.168.178.22
-  usage: pv
-- name: bosch_battery
-  type: bosch-bpts5-hybrid
-  uri: http://192.168.178.22
-  usage: battery
-*/
-
-// Bosch is the Bosch BPT-S 5 Hybrid meter
-type BoschBpts5HybridApiClient struct {
-	*request.Helper
-	uri, wuSid             string
-	currentBatterySocValue float64
-	einspeisung            float64
-	strombezugAusNetz      float64
-	pvLeistungWatt         float64
-	batterieLadeStrom      float64
-	verbrauchVonBatterie   float64
-	logger                 *util.Logger
-}
+// Example config:
+// meters:
+// - name: bosch_grid
+//   type: bosch-bpts5-hybrid
+//   uri: http://192.168.178.22
+//   usage: grid
+// - name: bosch_pv
+//   type: bosch-bpts5-hybrid
+//   uri: http://192.168.178.22
+//   usage: pv
+// - name: bosch_battery
+//   type: bosch-bpts5-hybrid
+//   uri: http://192.168.178.22
+//   usage: battery
 
 type BoschBpts5Hybrid struct {
-	usage                   string
-	currentErr              error
-	currentTotalEnergyValue float64
-	requestClient           *BoschBpts5HybridApiClient
-	logger                  *util.Logger
+	api                bosch.API
+	usage              string
+	currentTotalEnergy float64
+	logger             *util.Logger
 }
-
-var boschInstance *BoschBpts5HybridApiClient = nil
 
 func init() {
 	registry.Add("bosch-bpts5-hybrid", NewBoschBpts5HybridFromConfig)
@@ -66,7 +55,9 @@ func init() {
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
 func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Usage string
+		URI   string
+		Usage string
+		Cache time.Duration
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -82,44 +73,26 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 		return nil, fmt.Errorf("%s is invalid: %s", cc.URI, err)
 	}
 
-	return NewBoschBpts5Hybrid(cc.URI, cc.Usage)
+	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.Cache)
 }
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
-func NewBoschBpts5Hybrid(uri, usage string) (api.Meter, error) {
+func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, error) {
 	log := util.NewLogger("bosch-bpts5-hybrid")
 
-	if boschInstance == nil {
-		boschInstance = &BoschBpts5HybridApiClient{
-			Helper:                 request.NewHelper(log),
-			uri:                    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
-			currentBatterySocValue: 0.0,
-			einspeisung:            0.0,
-			strombezugAusNetz:      0.0,
-			pvLeistungWatt:         0.0,
-			batterieLadeStrom:      0.0,
-			verbrauchVonBatterie:   0.0,
-			logger:                 log,
-		}
+	newApi := bosch.NewLocal(log, uri, cache)
 
-		// ignore the self signed certificate
-		boschInstance.Client.Transport = request.NewTripper(log, transport.Insecure())
-		// create cookie jar to save login tokens
-		boschInstance.Client.Jar, _ = cookiejar.New(nil)
+	err := newApi.Login()
 
-		if err := boschInstance.Login(); err != nil {
-			return nil, err
-		}
-
-		go readLoop(boschInstance)
+	if err != nil {
+		return nil, err
 	}
 
 	m := &BoschBpts5Hybrid{
-		usage:                   strings.ToLower(usage),
-		currentErr:              nil,
-		currentTotalEnergyValue: 0.0,
-		requestClient:           boschInstance,
-		logger:                  log,
+		api:                newApi,
+		usage:              strings.ToLower(usage),
+		currentTotalEnergy: 0.0,
+		logger:             log,
 	}
 
 	// decorate api.MeterEnergy
@@ -137,168 +110,35 @@ func NewBoschBpts5Hybrid(uri, usage string) (api.Meter, error) {
 	return decorateBoschBpts5Hybrid(m, totalEnergy, batterySoC), nil
 }
 
-// Login calls login and saves the returned cookie
-func (m *BoschBpts5HybridApiClient) Login() error {
-	resp, err := m.Client.Get(m.uri)
-
-	if err != nil {
-		return fmt.Errorf("error during login: first get: %s", err)
-	}
-
-	if resp.StatusCode >= 300 {
-		return errors.New("error while getting wui sid. response code was >=300")
-	}
-
-	defer resp.Body.Close()
-
-	//We Read the response body on the line below.
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("error during login: read response body: %s", err)
-	}
-
-	err = extractWuiSidFromBody(m, string(body))
-
-	if err != nil {
-		return fmt.Errorf("error during login: error extract wui sid: %s", err)
-	}
-
-	return nil
-}
-
-func readLoop(m *BoschBpts5HybridApiClient) {
-	for {
-		loopError := executeRead(m)
-
-		if loopError != nil {
-			m.logger.ERROR.Println("error during read loop. Try to re-login/get new WUI SID")
-			err := m.Login()
-
-			if err != nil {
-				m.logger.ERROR.Println(err)
-			}
-		}
-
-		time.Sleep(5000 * time.Millisecond)
-	}
-}
-
-func executeRead(m *BoschBpts5HybridApiClient) error {
-	var postMessge = []byte(`action=get.hyb.overview&flow=1`)
-	resp, err := m.Client.Post(m.uri+"/cgi-bin/ipcclient.fcgi?"+m.wuSid, "text/plain", bytes.NewBuffer(postMessge))
-
-	if err != nil {
-		return fmt.Errorf("error during data retrieval request: post: %s", err)
-	}
-
-	defer resp.Body.Close()
-
-	//Read the response body
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return fmt.Errorf("error during data retrieval request: read body: %s", err)
-	}
-
-	if resp.StatusCode >= 300 {
-		return errors.New("error while reading values. response code was >=300")
-	}
-
-	sb := string(body)
-	return extractValues(m, sb)
-}
-
-func parseWattValue(inputString string) (float64, error) {
-	if len(strings.TrimSpace(inputString)) == 0 || strings.Contains(inputString, "nbsp;") {
-		return 0.0, nil
-	}
-
-	zahlenString := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(inputString, "kW", " "), "von", " "))
-
-	resultFloat, err := strconv.ParseFloat(zahlenString, 64)
-
-	return resultFloat * 1000.0, err
-}
-
-func extractValues(m *BoschBpts5HybridApiClient, body string) error {
-	if strings.Contains(body, "session invalid") {
-		m.logger.DEBUG.Println("extractValues: Session invalid. Performing Re-login")
-		m.Login()
-		return nil
-	}
-
-	values := strings.Split(body, "|")
-
-	soc, err := strconv.Atoi(values[3])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 1: %s", err)
-	}
-
-	m.currentBatterySocValue = float64(soc)
-	m.einspeisung, err = parseWattValue(values[11])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 2: %s", err)
-	}
-
-	m.strombezugAusNetz, err = parseWattValue(values[14])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 3: %s", err)
-	}
-
-	m.pvLeistungWatt, err = parseWattValue(values[2])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 4: %s", err)
-	}
-
-	m.batterieLadeStrom, err = parseWattValue(values[10])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 5: %s", err)
-	}
-
-	m.verbrauchVonBatterie, err = parseWattValue(values[13])
-
-	m.logger.DEBUG.Println("extractValues: batterieLadeStrom=", m.batterieLadeStrom, ";currentBatterySocValue=", m.currentBatterySocValue, ";einspeisung=", m.einspeisung, ";pvLeistungWatt=", m.pvLeistungWatt, ";strombezugAusNetz=", m.strombezugAusNetz, ";verbrauchVonBatterie=", m.verbrauchVonBatterie)
-
-	return err
-}
-
-func extractWuiSidFromBody(m *BoschBpts5HybridApiClient, body string) error {
-	index := strings.Index(body, "WUI_SID=")
-
-	if index < 0 {
-		m.wuSid = ""
-		return fmt.Errorf("error while extracting wui sid. body was= %s", body)
-	}
-
-	m.wuSid = body[index+9 : index+9+15]
-
-	m.logger.DEBUG.Println("extractWuiSidFromBody: result=", m.wuSid)
-
-	return nil
-}
-
 // CurrentPower implements the api.Meter interface
 func (m *BoschBpts5Hybrid) CurrentPower() (float64, error) {
 	if m.usage == "grid" {
-		if m.requestClient.einspeisung > 0.0 {
-			return -1.0 * m.requestClient.einspeisung, nil
+		sellToGrid, err := m.api.SellToGrid()
+
+		if err != nil {
+			return 0.0, err
+		}
+
+		if sellToGrid > 0.0 {
+			return -1.0 * sellToGrid, nil
 		} else {
-			return m.requestClient.strombezugAusNetz, nil
+			return m.api.BuyFromGrid()
 		}
 	}
 	if m.usage == "pv" {
-		return m.requestClient.pvLeistungWatt, nil
+		return m.api.PvPower()
 	}
 	if m.usage == "battery" {
-		if m.requestClient.batterieLadeStrom > 0.0 {
-			return -1.0 * m.requestClient.batterieLadeStrom, nil
+		batteryChargePower, err := m.api.BatteryChargePower()
+
+		if err != nil {
+			return 0.0, err
+		}
+
+		if batteryChargePower > 0.0 {
+			return -1.0 * batteryChargePower, nil
 		} else {
-			return m.requestClient.verbrauchVonBatterie, nil
+			return m.api.BatteryDischargePower()
 		}
 	}
 	return 0.0, nil
@@ -306,10 +146,10 @@ func (m *BoschBpts5Hybrid) CurrentPower() (float64, error) {
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *BoschBpts5Hybrid) totalEnergy() (float64, error) {
-	return m.currentTotalEnergyValue, nil
+	return m.currentTotalEnergy, nil
 }
 
 // batterySoC implements the api.Battery interface
 func (m *BoschBpts5Hybrid) batterySoC() (float64, error) {
-	return m.requestClient.currentBatterySocValue, nil
+	return m.api.BatterySoc()
 }
