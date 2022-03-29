@@ -313,14 +313,17 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	case "uint64":
 		op.Transform = rs485.RTUUint64ToFloat64
 		op.ReadLen = 4
+	case "uint64sma":
+		op.Transform = decodeNaN64(1<<63, rs485.RTUUint64ToFloat64)
+		op.ReadLen = 4
 	case "int16":
 		op.Transform = rs485.RTUInt16ToFloat64
 		op.ReadLen = 1
 	case "int16sma":
-		op.Transform = decodeNaN16(0x8000, rs485.RTUInt16ToFloat64)
+		op.Transform = decodeNaN16(1<<15, rs485.RTUInt16ToFloat64)
 		op.ReadLen = 1
 	case "int32":
-		op.Transform = decodeNaN32(0x80000000, rs485.RTUInt32ToFloat64)
+		op.Transform = decodeNaN32(1<<31, rs485.RTUInt32ToFloat64)
 	case "int32sma":
 		op.Transform = rs485.RTUInt32ToFloat64
 	case "int32s":

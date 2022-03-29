@@ -72,3 +72,12 @@ func decodeNaN32(nan uint32, f func(b []byte) float64) func(b []byte) float64 {
 		return f(b)
 	}
 }
+
+func decodeNaN64(nan uint64, f func(b []byte) float64) func(b []byte) float64 {
+	return func(b []byte) float64 {
+		if binary.BigEndian.Uint64(b) == nan {
+			return 0
+		}
+		return f(b)
+	}
+}
