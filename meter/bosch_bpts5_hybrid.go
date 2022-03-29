@@ -50,6 +50,8 @@ func init() {
 	registry.Add("bosch-bpts5-hybrid", NewBoschBpts5HybridFromConfig)
 }
 
+var boschApiInstance bosch.API = nil
+
 //go:generate go run ../cmd/tools/decorate.go -f decorateBoschBpts5Hybrid -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
@@ -80,16 +82,17 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, error) {
 	log := util.NewLogger("bosch-bpts5-hybrid")
 
-	newApi := bosch.NewLocal(log, uri, cache)
+	if boschApiInstance == nil {
+		boschApiInstance = bosch.NewLocal(log, uri, cache)
+		err := boschApiInstance.Login()
 
-	err := newApi.Login()
-
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	m := &BoschBpts5Hybrid{
-		api:                newApi,
+		api:                boschApiInstance,
 		usage:              strings.ToLower(usage),
 		currentTotalEnergy: 0.0,
 		logger:             log,
