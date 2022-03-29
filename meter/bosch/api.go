@@ -2,7 +2,6 @@ package bosch
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http/cookiejar"
@@ -62,12 +61,8 @@ func NewLocal(log *util.Logger, uri string, cache time.Duration) *LocalAPI {
 func (c *LocalAPI) Login() (err error) {
 	resp, err := c.Client.Get(c.uri)
 
-	if err != nil {
-		return fmt.Errorf("error during login: first get: %s", err)
-	}
-
-	if resp.StatusCode >= 300 {
-		return errors.New("error while getting wui sid. response code was >=300")
+	if err != nil || resp.StatusCode >= 300 {
+		return fmt.Errorf("error during login: first get: %s, response code %v", err, resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
@@ -78,13 +73,7 @@ func (c *LocalAPI) Login() (err error) {
 		return fmt.Errorf("error during login: read response body: %s", err)
 	}
 
-	err = extractWuiSidFromBody(c, string(body))
-
-	if err != nil {
-		return fmt.Errorf("error during login: error extract wui sid: %s", err)
-	}
-
-	return nil
+	return extractWuiSidFromBody(c, string(body))
 }
 
 //////////// value retrieval ////////////////
@@ -131,16 +120,11 @@ func (c *LocalAPI) updateValues() error {
 	//Read the response body
 	body, err := ioutil.ReadAll(resp.Body)
 
-	if err != nil {
-		return fmt.Errorf("error during data retrieval request: read body: %s", err)
+	if err != nil || resp.StatusCode >= 300 {
+		return fmt.Errorf("error during data retrieval request: read body: %s, response code %v", err, resp.StatusCode)
 	}
 
-	if resp.StatusCode >= 300 {
-		return errors.New("error while reading values. response code was >=300")
-	}
-
-	sb := string(body)
-	return extractValues(c, sb)
+	return extractValues(c, string(body))
 }
 
 func parseWattValue(inputString string) (float64, error) {
@@ -148,9 +132,9 @@ func parseWattValue(inputString string) (float64, error) {
 		return 0.0, nil
 	}
 
-	zahlenString := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(inputString, "kW", " "), "von", " "))
+	numberString := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(inputString, "kW", " "), "von", " "))
 
-	resultFloat, err := strconv.ParseFloat(zahlenString, 64)
+	resultFloat, err := strconv.ParseFloat(numberString, 64)
 
 	return resultFloat * 1000.0, err
 }
