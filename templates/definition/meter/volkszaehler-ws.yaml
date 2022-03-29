@@ -1,7 +1,8 @@
 template: volkszaehler-ws
 products:
-  - description:
-      generic: Volkszähler (WebSocket API)
+  - brand: Volkszähler
+    description:
+      generic: WebSocket API
 group: generic
 params:
   - name: usage

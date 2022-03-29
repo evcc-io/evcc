@@ -26,9 +26,7 @@ render:
       usage: {{ . }}
       {{- range $.Params }}
       {{- if eq .Name "modbus" }}
-      # Modbus Start
 {{ $.Modbus | indent 6 -}}
-      # Modbus End
       {{- else if ne .Advanced true }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}
@@ -47,9 +45,7 @@ render:
       usage: {{ . }}
       {{- range $.Params }}
       {{- if eq .Name "modbus" }}
-      # Modbus Start
 {{ $.Modbus | indent 6 -}}
-      # Modbus End
       {{- else }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}
@@ -67,9 +63,7 @@ render:
       template: {{ $.Template }}
       {{- range $.Params }}
       {{- if eq .Name "modbus" }}
-      # Modbus Start
 {{ $.Modbus | indent 6 -}}
-      # Modbus End
       {{- else if ne .Advanced true }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}
@@ -87,9 +81,7 @@ render:
       template: {{ $.Template }}
       {{- range $.Params }}
       {{- if eq .Name "modbus" }}
-      # Modbus Start
 {{ $.Modbus | indent 6 -}}
-      # Modbus End
       {{- else }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}

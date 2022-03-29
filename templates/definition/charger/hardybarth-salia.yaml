@@ -1,8 +1,8 @@
 template: hardybarth-salia
 products:
-  - brand: hardybarth-salia
+  - brand: HardyBarth
     description:
-      generic: HardyBarth (Salia PLCC controller)
+      generic: Salia PLCC Controller
 params:
   - name: host
     required: true

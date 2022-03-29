@@ -9,10 +9,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.18
+        id: go
+
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Install tools
+        run: make install
+
+      - name: Assets
+        run: make assets
 
       - name: Clean git
         run: |

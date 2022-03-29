@@ -1,7 +1,8 @@
 template: phoenix-ev-eth
 products:
-  - description:
-      generic: Phoenix EV-ETH Controller (Modbus TCP)
+  - brand: Phoenix
+    description:
+      generic: EV-ETH Controller (Modbus TCP)
 group: generic
 requirements:
   description:

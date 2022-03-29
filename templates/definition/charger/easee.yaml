@@ -2,7 +2,7 @@ template: easee
 products:
   - brand: Easee
     description:
-      generic: Home (Cloud API)
+      generic: Home
 capabilities: ["1p3p"]
 requirements:
   evcc: ["sponsorship"]

@@ -1,10 +1,13 @@
 template: sungrow
 products:
-  - brand: Sungrow (LAN)
+  - brand: Sungrow
     description:
-      generic: Inverter (Beta)
+      generic: Inverter (LAN)
 guidedsetup:
   enable: true
+requirements:
+  description:
+    generic: beta
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

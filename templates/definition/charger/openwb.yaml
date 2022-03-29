@@ -1,7 +1,8 @@
 template: openwb
 products:
-  - description:
-      generic: openWB (MQTT)
+  - brand: openWB
+    description:
+      generic: MQTT
 requirements:
   description:
     en: The wallbox has to be configured running as a loadpoint.

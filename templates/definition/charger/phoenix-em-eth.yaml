@@ -1,7 +1,8 @@
 template: phoenix-em-eth
 products:
-  - description:
-      generic: Phoenix EM-CP-PP-ETH Controller (Modbus TCP)
+  - brand: Phoenix
+    description:
+      generic: EM-CP-PP-ETH Controller (Modbus TCP)
 group: generic
 requirements:
   description:

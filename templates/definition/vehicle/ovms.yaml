@@ -3,6 +3,10 @@ products:
   - description:
       generic: Open Vehicle Monitoring System
 group: generic
+requirements:
+  description:
+    de: Unterstützung für alle Fahrzeuge via ODB2 Adapter im Fahrzeug. Mehr Infos bei [Open Vehicle Monitoring System](http://api.openvehicles.com/).
+    en: Support for all vehicles via ODB2 adapter in the vehicle. More info at [Open Vehicle Monitoring System](http://api.openvehicles.com/).
 params:
   - name: title
   - name: user

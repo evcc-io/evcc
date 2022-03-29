@@ -2,7 +2,7 @@ template: heidelberg
 products:
   - brand: Heidelberg
     description:
-      generic: Energy Control (Modbus RTU)
+      generic: Energy Control
   - brand: SENEC
     description:
       generic: Wallbox pro s

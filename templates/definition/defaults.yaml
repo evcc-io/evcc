@@ -292,6 +292,7 @@ presets:
   vehiclecloud:
     params:
       - name: cloud
+        advanced: true
     render: |
       {{define "vehicle-cloud"}}
       cloud: {{ .cloud }}
