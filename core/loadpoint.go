@@ -255,11 +255,11 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		Mode:          api.ModeOff,
 		Phases:        3,
 		status:        api.StatusNone,
-		MinCurrent:    6,                                                       // A
-		MaxCurrent:    16,                                                      // A
-		SoC:           SoCConfig{Min: 0, Target: 100},                          // %
-		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},       // t, W
-		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 200}, // t, W
+		MinCurrent:    6,                                                     // A
+		MaxCurrent:    16,                                                    // A
+		SoC:           SoCConfig{Min: 0, Target: 100},                        // %
+		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
+		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		GuardDuration: 5 * time.Minute,
 		progress:      NewProgress(0, 10), // soc progress indicator
 	}
