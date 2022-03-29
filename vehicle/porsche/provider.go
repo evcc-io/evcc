@@ -31,7 +31,7 @@ func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *Mo
 		}, cache).InterfaceGetter(),
 
 		mobileG: provider.NewCached(func() (interface{}, error) {
-			return mobile.Status(vin)
+			return mobile.Status(vin, []string{BATTERY_LEVEL, BATTERY_CHARGING_STATE, CLIMATIZER_STATE, E_RANGE, HEATING_STATE, MILEAGE})
 		}, cache).InterfaceGetter(),
 	}
 

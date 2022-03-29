@@ -1,27 +1,27 @@
 template: fronius-gen24
 products:
-- brand: Fronius
-  description:
-    generic: Symo GEN24 Plus
+  - brand: Fronius
+    description:
+      generic: Symo GEN24 Plus
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: ["grid", "pv", "battery"]
-- name: host
-  example: 192.0.2.2
-  required: true
-- name: port
-  default: 502
-- name: integer
-  description:
-    de: Integer Registerzugriff (nur für Netzzähler)
-    en: Integer register access (grid meter only)
-  help:
-    de: Einstellung Float/Integer im Wechselrichter überprüfen
-    en: Verify Float/Integer setting in inverter
-  advanced: true
-  valuetype: bool
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    example: 192.0.2.2
+    required: true
+  - name: port
+    default: 502
+  - name: integer
+    description:
+      de: Integer Registerzugriff (nur für Netzzähler)
+      en: Integer register access (grid meter only)
+    help:
+      de: Einstellung Float/Integer im Wechselrichter überprüfen
+      en: Verify Float/Integer setting in inverter
+    advanced: true
+    valuetype: bool
 render: |
   {{- if eq .usage "grid" }}
   type: modbus

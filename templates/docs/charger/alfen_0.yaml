@@ -3,11 +3,10 @@ product:
   description: Eve
 capabilities: ["1p3p"]
 requirements: ["sponsorship"]
-
 render:
-- default: |
-    type: template
-    template: alfen
-    id: 1
-    # Modbus: TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+  - default: |
+      type: template
+      template: alfen
+      id: 1
+      # Modbus: TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port

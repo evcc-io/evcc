@@ -1,13 +1,12 @@
 product:
   brand: Huawei
   description: SUN2000 with SDongle
-
 render:
-- usage: pv
-  default: |
-    type: template
-    template: huawei-dongle
-    usage: pv
-    id: 1
-    # Modbus: TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+  - usage: pv
+    default: |
+      type: template
+      template: huawei-dongle
+      usage: pv
+      id: 1
+      # Modbus: TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port

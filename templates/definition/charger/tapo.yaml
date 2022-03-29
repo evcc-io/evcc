@@ -1,0 +1,22 @@
+template: tapo
+products:
+  - brand: TP-Link
+    description:
+      generic: Tapo
+group: switchsockets
+params:
+  - name: uri
+    required: true
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: standbypower
+    default: 15
+render: |
+  type: tapo
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  standbypower: {{ .standbypower }}  # treat as charging above this power

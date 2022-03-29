@@ -1,12 +1,12 @@
 template: peugeot
 products:
-- brand: Peugeot
+  - brand: Peugeot
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: capacity
-  default: 50
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: capacity
+    default: 50
+  - preset: vehiclecloud
 render: |
   type: peugeot
   {{include "vehicle-base" .}}

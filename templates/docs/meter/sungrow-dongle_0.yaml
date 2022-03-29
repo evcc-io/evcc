@@ -3,52 +3,51 @@ product:
   description: Inverter (Wifi dongle)
 description: |
   beta
-
 render:
-- usage: grid
-  default: |
-    type: template
-    template: sungrow-dongle
-    usage: grid
-    id: 1
-    # Modbus: RS485 via adapter
-    device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
-    baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-    comset: "8N1" # Kommunikationsparameter für den Adapter
-    # Modbus: RS485 via TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    rtu: true
-    # Modbus: TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    
-- usage: pv
-  default: |
-    type: template
-    template: sungrow-dongle
-    usage: pv
-    id: 1
-    # Modbus: RS485 via adapter
-    device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
-    baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-    comset: "8N1" # Kommunikationsparameter für den Adapter
-    # Modbus: RS485 via TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    rtu: true
-    # Modbus: TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    
-- usage: battery
-  default: |
-    type: template
-    template: sungrow-dongle
-    usage: battery
-    id: 1
-    # Modbus: RS485 via adapter
-    device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
-    baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-    comset: "8N1" # Kommunikationsparameter für den Adapter
-    # Modbus: RS485 via TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    rtu: true
-    # Modbus: TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+  - usage: grid
+    default: |
+      type: template
+      template: sungrow-dongle
+      usage: grid
+      id: 1
+      # Modbus: RS485 via adapter
+      device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
+      baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+      comset: "8N1" # Kommunikationsparameter für den Adapter
+      # Modbus: RS485 via TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+      rtu: true
+      # Modbus: TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+
+  - usage: pv
+    default: |
+      type: template
+      template: sungrow-dongle
+      usage: pv
+      id: 1
+      # Modbus: RS485 via adapter
+      device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
+      baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+      comset: "8N1" # Kommunikationsparameter für den Adapter
+      # Modbus: RS485 via TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+      rtu: true
+      # Modbus: TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+
+  - usage: battery
+    default: |
+      type: template
+      template: sungrow-dongle
+      usage: battery
+      id: 1
+      # Modbus: RS485 via adapter
+      device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
+      baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+      comset: "8N1" # Kommunikationsparameter für den Adapter
+      # Modbus: RS485 via TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+      rtu: true
+      # Modbus: TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port

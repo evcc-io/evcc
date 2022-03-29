@@ -1,16 +1,16 @@
 template: fiat
 products:
-- brand: Fiat
+  - brand: Fiat
 params:
-- preset: vehiclebase
-- name: vin
-  example: ZFAE...
-- name: capacity
-  default: 42
-- name: pin
-  mask: true
-- preset: vehicleidentify
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - name: vin
+    example: ZFAE...
+  - name: capacity
+    default: 42
+  - name: pin
+    mask: true
+  - preset: vehicleidentify
+  - preset: vehiclecloud
 render: |
   type: fiat
   {{include "vehicle-base" .}}

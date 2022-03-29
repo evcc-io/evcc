@@ -1,21 +1,20 @@
 product:
   description: Powerdog
-
 render:
-- usage: grid
-  default: |
-    type: template
-    template: powerdog
-    usage: grid
-    id: 1
-    # Modbus: TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    
-- usage: pv
-  default: |
-    type: template
-    template: powerdog
-    usage: pv
-    id: 1
-    # Modbus: TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+  - usage: grid
+    default: |
+      type: template
+      template: powerdog
+      usage: grid
+      id: 1
+      # Modbus: TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+
+  - usage: pv
+    default: |
+      type: template
+      template: powerdog
+      usage: pv
+      id: 1
+      # Modbus: TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port

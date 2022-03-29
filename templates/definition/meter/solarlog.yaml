@@ -1,7 +1,7 @@
 template: solarlog
 products:
-- description:
-    generic: Solarlog
+  - description:
+      generic: Solarlog
 guidedsetup:
   enable: true
 requirements:
@@ -13,13 +13,13 @@ requirements:
       We recommend to use this device for grid power values only, if no other device is available providing this data.
       If you have a home battery installed, please do not use this device at all for grid power values.
 params:
-- name: usage
-  choice: [ "grid", "pv" ]
-- name: host
-  example: 192.0.2.2
-  required: true
-- name: port
-  default: 502
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+    example: 192.0.2.2
+    required: true
+  - name: port
+    default: 502
 render: |
   type: custom
   power:

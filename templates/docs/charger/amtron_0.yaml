@@ -2,11 +2,10 @@ product:
   brand: Mennekes
   description: AMTRON XTRA
 requirements: ["sponsorship"]
-
 render:
-- default: |
-    type: template
-    template: amtron
-    id: 255
-    # Modbus: TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+  - default: |
+      type: template
+      template: amtron
+      id: 255
+      # Modbus: TCPIP
+      uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
