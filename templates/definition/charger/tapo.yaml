@@ -2,7 +2,7 @@ template: tapo
 products:
   - brand: TP-Link
     description:
-      generic: Tapo
+      generic: Tapo P-Series Smart Plug
 group: switchsockets
 params:
   - name: uri
@@ -16,7 +16,7 @@ params:
     default: 15
 render: |
   type: tapo
-  uri: {{ .uri }}
-  user: {{ .user }}
+  uri: http://{{ .host }}  # tapo device ip address (local)
+  user: {{ .user }} 
   password: {{ .password }}
   standbypower: {{ .standbypower }}  # treat as charging above this power
