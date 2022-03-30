@@ -6,6 +6,7 @@ import (
 	"net/http/cookiejar"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -22,6 +23,8 @@ type API struct {
 	cache   time.Duration
 	logger  *util.Logger
 }
+
+var Instances = new(sync.Map)
 
 func NewLocal(log *util.Logger, uri string, cache time.Duration) *API {
 	var initialStatus StatusResponse
