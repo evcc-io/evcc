@@ -1,6 +1,8 @@
 package ocpp
 
 import (
+	"time"
+
 	core "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 )
@@ -38,17 +40,17 @@ func (cs *CS) OnHeartbeat(chargePointId string, request *core.HeartbeatRequest) 
 		return nil, err
 	}
 
-	go func() {
-		callback := func(request *remotetrigger.TriggerMessageConfirmation, err error) {
-			cs.log.TRACE.Printf("TriggerMessageRequest %T: %+v", request, request)
-		}
-
-		if err := cs.cs.TriggerMessage(cp.id, callback, core.MeterValuesFeatureName); err != nil {
-			cs.log.DEBUG.Printf("failed sending TriggerMessageRequest: %s", err)
-		}
-	}()
-
 	return cp.Heartbeat(request)
+}
+
+func (cs *CS) TriggerMeterValueRequest(cp *CP) {
+	callback := func(request *remotetrigger.TriggerMessageConfirmation, err error) {
+		cs.log.TRACE.Printf("TriggerMessageRequest %T: %+v", request, request)
+	}
+
+	if err := cs.cs.TriggerMessage(cp.id, callback, core.MeterValuesFeatureName); err != nil {
+		cs.log.DEBUG.Printf("failed sending TriggerMessageRequest: %s", err)
+	}
 }
 
 func (cs *CS) OnMeterValues(chargePointId string, request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
@@ -57,7 +59,20 @@ func (cs *CS) OnMeterValues(chargePointId string, request *core.MeterValuesReque
 		return nil, err
 	}
 
-	return cp.MeterValues(request)
+	conf, err := cp.MeterValues(request)
+	// if request != nil {
+	// 	cs.log.DEBUG.Printf("%s < %s", request.MeterValue[0].Timestamp, time.Now().Add(-9*time.Second))
+	// 	if request.MeterValue[0].Timestamp.Before(time.Now().Add(-9 * time.Second)) {
+
+	// 		go func() {
+	// 			cs.log.DEBUG.Printf("send extra meter value request to catch up")
+	// 			time.Sleep(3 * time.Second)
+	// 			cs.TriggerMeterValueRequest(cp)
+	// 		}()
+	// 	}
+	// }
+
+	return conf, err
 }
 
 func (cs *CS) OnStatusNotification(chargePointId string, request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
@@ -75,6 +90,23 @@ func (cs *CS) OnStartTransaction(chargePointId string, request *core.StartTransa
 		return nil, err
 	}
 
+	if cp.meterSupported {
+		go func() {
+			cp.log.DEBUG.Printf("starting meter value request")
+			cp.measureDoneCh = make(chan struct{})
+			ticker := time.NewTicker(10 * time.Second)
+			for {
+				select {
+				case <-ticker.C:
+					cs.TriggerMeterValueRequest(cp)
+				case <-cp.measureDoneCh:
+					cp.log.DEBUG.Printf("stopping meter value requests")
+					return
+				}
+			}
+		}()
+	}
+
 	return cp.StartTransaction(request)
 }
 
@@ -83,6 +115,9 @@ func (cs *CS) OnStopTransaction(chargePointId string, request *core.StopTransact
 	if err != nil {
 		return nil, err
 	}
+
+	cp.log.DEBUG.Printf("send stop signal for meter values")
+	cp.measureDoneCh <- struct{}{}
 
 	return cp.StopTransaction(request)
 }

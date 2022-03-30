@@ -14,7 +14,10 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-const KeyMeterValuesSampledData = "MeterValuesSampledData"
+const (
+	KeyMeterValuesSampledData   = "MeterValuesSampledData"
+	KeyMeterValueSampleInterval = "MeterValueSampleInterval"
+)
 
 // TODO: Maybe move this to the config?
 const ValuePreferedMeterValuesSampleData = "Current.Import.L1,Current.Import.L2,Current.Import.L3,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature"
@@ -71,9 +74,10 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 		err                          error
 		options                      []core.ConfigurationKey
 		meterValuesSampledDataString string
+		meterValuesSampleInterval    string
 	)
 
-	if err := ocpp.Instance().CS().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
+	err = ocpp.Instance().CS().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
 		options = resp.ConfigurationKey
 
 		for _, opt := range options {
@@ -81,12 +85,14 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 			if opt.Key == KeyMeterValuesSampledData {
 				meterValuesSampledDataString = *opt.Value
 			}
+
+			if opt.Key == KeyMeterValueSampleInterval {
+				meterValuesSampleInterval = *opt.Value
+			}
 		}
 
 		rc <- err
-	}, []string{}); err != nil {
-		return nil, err
-	}
+	}, []string{})
 
 	if err := c.wait(err, rc); err != nil {
 		return nil, err
@@ -102,34 +108,48 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 			return nil, fmt.Errorf("configured connector is not available, max available connectors %d", supported)
 		}
 	}
-	if meterValuesSampledDataString != ValuePreferedMeterValuesSampleData {
+
+	if meterValuesSampledDataString != "Current.Import,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature" {
+		c.log.TRACE.Printf("Current values \n\t%s != \n\t%+v", ValuePreferedMeterValuesSampleData, meterValuesSampledDataString)
 		rc = make(chan error, 1)
-		if err := ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
-			c.log.TRACE.Printf("ChangeConfigurationRequest %T: %+v", resp, resp)
+		err = ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
+			c.log.TRACE.Printf("ChangeMeterConfigurationRequest %T: %+v", resp, resp)
 
 			if resp.Status == core.ConfigurationStatusRejected {
 				rc <- fmt.Errorf("configuration change rejected")
 			}
-		}, KeyMeterValuesSampledData, ValuePreferedMeterValuesSampleData); err != nil {
-			return nil, err
-		}
-
-		if err := ocpp.Instance().CS().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
-			options = resp.ConfigurationKey
-
-			for _, opt := range options {
-				c.log.TRACE.Printf("%s (%t): %s", opt.Key, opt.Readonly, *opt.Value)
-			}
 
 			rc <- err
-		}, []string{}); err != nil {
-			return nil, err
-		}
+		}, KeyMeterValuesSampledData, ValuePreferedMeterValuesSampleData)
 
 		if err := c.wait(err, rc); err != nil {
 			return nil, err
 		}
 	}
+
+	{
+		interval := "60"
+		if meterValuesSampleInterval != interval {
+			rc = make(chan error, 1)
+
+			if err := ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
+				c.log.TRACE.Printf("ChangeSampleMeterValueInterval %T: %v", resp, resp)
+
+				if resp.Status == core.ConfigurationStatusRejected {
+					rc <- fmt.Errorf("configuration of meterinterval rejected: %w", err)
+				}
+				rc <- err
+			}, KeyMeterValueSampleInterval, interval); err != nil {
+				return nil, err
+			}
+
+			if err := c.wait(err, rc); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	ocpp.Instance().TriggerMeterValueRequest(cp)
 
 	return c, nil
 }
@@ -251,16 +271,18 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	return c.cp.Status()
 }
 
-var _ api.ChargePhases = (*Easee)(nil)
+// var _ api.ChargePhases = (*OCPP)(nil)
 
+// Currently not working with Elvi
+// Need further investigation
 // Phases1p3p implements the api.ChargePhases interface
-func (c *OCPP) Phases1p3p(phases int) error {
-	err := c.setPeriod(c.current, phases)
-	if err == nil {
-		c.phases = phases
-	}
-	return err
-}
+// func (c *OCPP) Phases1p3p(phases int) error {
+// 	err := c.setPeriod(c.current, phases)
+// 	if err == nil {
+// 		c.phases = phases
+// 	}
+// 	return err
+// }
 
 var _ api.Meter = (*OCPP)(nil)
 

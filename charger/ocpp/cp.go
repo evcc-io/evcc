@@ -55,7 +55,9 @@ type CP struct {
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
 
-	measureands map[string]types.SampledValue
+	meterSupported bool
+	measureDoneCh  chan struct{}
+	measureands    map[string]types.SampledValue
 
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
@@ -78,6 +80,7 @@ func (cp *CP) DetectCapabilities(opts []core.ConfigurationKey) error {
 
 	{ // meter detection
 		// TODO
+		cp.meterSupported = true
 	}
 
 	smartChargingCapabilities, err := detectSmartChargingCapabilities(options)
@@ -245,7 +248,12 @@ func (cp *CP) TotalEnergy() (float64, error) {
 	defer cp.mu.Unlock()
 
 	if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
-		return strconv.ParseFloat(energy.Value, 64)
+		v, err := strconv.ParseFloat(energy.Value, 64)
+		if err != nil {
+			return 0, err
+		}
+
+		return v / 1000, nil
 	}
 
 	return 0, nil
