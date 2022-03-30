@@ -17,12 +17,7 @@ import (
 
 type API interface {
 	Login() error
-	SellToGrid() (float64, error)
-	BuyFromGrid() (float64, error)
-	PvPower() (float64, error)
-	BatteryChargePower() (float64, error)
-	BatteryDischargePower() (float64, error)
-	BatterySoc() (float64, error)
+	Status() (StatusResponse, error)
 }
 
 type LocalAPI struct {
@@ -40,12 +35,12 @@ var _ API = (*LocalAPI)(nil)
 func NewLocal(log *util.Logger, uri string, cache time.Duration) *LocalAPI {
 
 	initialStatus := StatusResponse{
-		currentBatterySoc:     0.0,
-		sellToGrid:            0.0,
-		buyFromGrid:           0.0,
-		pvPower:               0.0,
-		batteryChargePower:    0.0,
-		batteryDischargePower: 0.0,
+		CurrentBatterySoc:     0.0,
+		SellToGrid:            0.0,
+		BuyFromGrid:           0.0,
+		PvPower:               0.0,
+		BatteryChargePower:    0.0,
+		BatteryDischargePower: 0.0,
 	}
 
 	api := &LocalAPI{
@@ -94,7 +89,7 @@ func (c *LocalAPI) Login() (err error) {
 
 //////////// value retrieval ////////////////
 
-func (c *LocalAPI) SellToGrid() (res float64, err error) {
+func (c *LocalAPI) Status() (res StatusResponse, err error) {
 	if time.Since(c.updated) > c.cache {
 
 		err = c.updateValues()
@@ -103,67 +98,7 @@ func (c *LocalAPI) SellToGrid() (res float64, err error) {
 			c.updated = time.Now()
 		}
 	}
-	return c.status.sellToGrid, err
-}
-
-func (c *LocalAPI) BuyFromGrid() (res float64, err error) {
-	if time.Since(c.updated) > c.cache {
-
-		err = c.updateValues()
-
-		if err == nil {
-			c.updated = time.Now()
-		}
-	}
-	return c.status.buyFromGrid, err
-}
-
-func (c *LocalAPI) PvPower() (res float64, err error) {
-	if time.Since(c.updated) > c.cache {
-
-		err = c.updateValues()
-
-		if err == nil {
-			c.updated = time.Now()
-		}
-	}
-	return c.status.pvPower, err
-}
-
-func (c *LocalAPI) BatteryChargePower() (res float64, err error) {
-	if time.Since(c.updated) > c.cache {
-
-		err = c.updateValues()
-
-		if err == nil {
-			c.updated = time.Now()
-		}
-	}
-	return c.status.batteryChargePower, err
-}
-
-func (c *LocalAPI) BatteryDischargePower() (res float64, err error) {
-	if time.Since(c.updated) > c.cache {
-
-		err = c.updateValues()
-
-		if err == nil {
-			c.updated = time.Now()
-		}
-	}
-	return c.status.batteryDischargePower, err
-}
-
-func (c *LocalAPI) BatterySoc() (res float64, err error) {
-	if time.Since(c.updated) > c.cache {
-
-		err = c.updateValues()
-
-		if err == nil {
-			c.updated = time.Now()
-		}
-	}
-	return c.status.currentBatterySoc, err
+	return c.status, err
 }
 
 //////////// helpers ////////////////
@@ -234,34 +169,34 @@ func extractValues(c *LocalAPI, body string) error {
 		return fmt.Errorf("extractValues: error during value parsing 1: %s", err)
 	}
 
-	c.status.currentBatterySoc = float64(soc)
-	c.status.sellToGrid, err = parseWattValue(values[11])
+	c.status.CurrentBatterySoc = float64(soc)
+	c.status.SellToGrid, err = parseWattValue(values[11])
 
 	if err != nil {
 		return fmt.Errorf("extractValues: error during value parsing 2: %s", err)
 	}
 
-	c.status.buyFromGrid, err = parseWattValue(values[14])
+	c.status.BuyFromGrid, err = parseWattValue(values[14])
 
 	if err != nil {
 		return fmt.Errorf("extractValues: error during value parsing 3: %s", err)
 	}
 
-	c.status.pvPower, err = parseWattValue(values[2])
+	c.status.PvPower, err = parseWattValue(values[2])
 
 	if err != nil {
 		return fmt.Errorf("extractValues: error during value parsing 4: %s", err)
 	}
 
-	c.status.batteryChargePower, err = parseWattValue(values[10])
+	c.status.BatteryChargePower, err = parseWattValue(values[10])
 
 	if err != nil {
 		return fmt.Errorf("extractValues: error during value parsing 5: %s", err)
 	}
 
-	c.status.batteryDischargePower, err = parseWattValue(values[13])
+	c.status.BatteryDischargePower, err = parseWattValue(values[13])
 
-	c.logger.DEBUG.Println("extractValues: batterieLadeStrom=", c.status.batteryChargePower, ";currentBatterySocValue=", c.status.currentBatterySoc, ";einspeisung=", c.status.sellToGrid, ";pvLeistungWatt=", c.status.pvPower, ";strombezugAusNetz=", c.status.buyFromGrid, ";verbrauchVonBatterie=", c.status.batteryDischargePower)
+	c.logger.DEBUG.Println("extractValues: batterieLadeStrom=", c.status.BatteryChargePower, ";currentBatterySocValue=", c.status.CurrentBatterySoc, ";einspeisung=", c.status.SellToGrid, ";pvLeistungWatt=", c.status.PvPower, ";strombezugAusNetz=", c.status.BuyFromGrid, ";verbrauchVonBatterie=", c.status.BatteryDischargePower)
 
 	return err
 }

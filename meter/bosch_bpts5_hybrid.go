@@ -120,33 +120,27 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, err
 
 // CurrentPower implements the api.Meter interface
 func (m *BoschBpts5Hybrid) CurrentPower() (float64, error) {
+	status, err := m.api.Status()
+
+	if err != nil {
+		return 0.0, err
+	}
+
 	if m.usage == "grid" {
-		sellToGrid, err := m.api.SellToGrid()
-
-		if err != nil {
-			return 0.0, err
-		}
-
-		if sellToGrid > 0.0 {
-			return -1.0 * sellToGrid, nil
+		if status.SellToGrid > 0.0 {
+			return -1.0 * status.SellToGrid, nil
 		} else {
-			return m.api.BuyFromGrid()
+			return status.BuyFromGrid, nil
 		}
 	}
 	if m.usage == "pv" {
-		return m.api.PvPower()
+		return status.PvPower, nil
 	}
 	if m.usage == "battery" {
-		batteryChargePower, err := m.api.BatteryChargePower()
-
-		if err != nil {
-			return 0.0, err
-		}
-
-		if batteryChargePower > 0.0 {
-			return -1.0 * batteryChargePower, nil
+		if status.BatteryChargePower > 0.0 {
+			return -1.0 * status.BatteryChargePower, nil
 		} else {
-			return m.api.BatteryDischargePower()
+			return status.BatteryDischargePower, nil
 		}
 	}
 	return 0.0, nil
@@ -159,5 +153,11 @@ func (m *BoschBpts5Hybrid) totalEnergy() (float64, error) {
 
 // batterySoC implements the api.Battery interface
 func (m *BoschBpts5Hybrid) batterySoC() (float64, error) {
-	return m.api.BatterySoc()
+	status, err := m.api.Status()
+
+	if err != nil {
+		return 0.0, err
+	}
+
+	return status.CurrentBatterySoc, nil
 }

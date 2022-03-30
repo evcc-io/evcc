@@ -5,10 +5,10 @@ type LoginResponse struct {
 }
 
 type StatusResponse struct {
-	currentBatterySoc     float64
-	sellToGrid            float64
-	buyFromGrid           float64
-	pvPower               float64
-	batteryChargePower    float64
-	batteryDischargePower float64
+	CurrentBatterySoc     float64
+	SellToGrid            float64
+	BuyFromGrid           float64
+	PvPower               float64
+	BatteryChargePower    float64
+	BatteryDischargePower float64
 }
