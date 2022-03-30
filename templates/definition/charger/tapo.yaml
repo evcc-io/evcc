@@ -17,6 +17,6 @@ params:
 render: |
   type: tapo
   uri: http://{{ .host }}  # tapo device ip address (local)
-  user: {{ .user }} 
-  password: {{ .password }}
+  user: {{ .user }}  # user of TP-Link account (usually an e-mail address)
+  password: {{ .password }}  # password of of TP-Link account
   standbypower: {{ .standbypower }}  # treat as charging above this power
