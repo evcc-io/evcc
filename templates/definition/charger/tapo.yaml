@@ -7,6 +7,7 @@ group: switchsockets
 params:
   - name: uri
     required: true
+    example: http://192.0.2.2
     help:
       en: tapo device ip address (local)
       de: Die IP-Adresse der Tapo Steckdose im lokalen LAN/WLAN
