@@ -2,8 +2,8 @@ template: sma-hybrid
 products:
 - brand: SMA
   description:
-    de: Hybrid-Wechselrichter (Smart Energy)
-    en: Hybrid Inverter (Smart Energy)
+    de: Smart Energy Hybrid-Wechselrichter
+    en: Smart Energy Hybrid Inverter
 params:
 - name: usage
   choice: [ "pv", "battery" ]
