@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -64,7 +65,11 @@ func NewEtronFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	// use the etron API for list of vehicles
 	api := etron.NewAPI(log, ats)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
+		defer cancel()
+		return api.Vehicles(ctx)
+	})
 
 	if err == nil {
 		api := id.NewAPI(log, its)
