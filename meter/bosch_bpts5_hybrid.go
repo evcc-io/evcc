@@ -38,16 +38,15 @@ import (
 //   usage: battery
 
 type BoschBpts5Hybrid struct {
-	api                *bosch.API
-	usage              string
-	currentTotalEnergy float64
+	api   *bosch.API
+	usage string
 }
 
 func init() {
 	registry.Add("bosch-bpts5-hybrid", NewBoschBpts5HybridFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateBoschBpts5Hybrid -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,SoC,func() (float64, error)"
 
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
 func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -80,15 +79,8 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, err
 	}
 
 	m := &BoschBpts5Hybrid{
-		api:                instance.(*bosch.API),
-		usage:              strings.ToLower(usage),
-		currentTotalEnergy: 0.0,
-	}
-
-	// decorate api.MeterEnergy
-	var totalEnergy func() (float64, error)
-	if m.usage == "grid" || m.usage == "pv" {
-		totalEnergy = m.totalEnergy
+		api:   instance.(*bosch.API),
+		usage: strings.ToLower(usage),
 	}
 
 	// decorate api.BatterySoC
@@ -97,7 +89,7 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, err
 		batterySoC = m.batterySoC
 	}
 
-	return decorateBoschBpts5Hybrid(m, totalEnergy, batterySoC), nil
+	return decorateBoschBpts5Hybrid(m, batterySoC), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -114,11 +106,6 @@ func (m *BoschBpts5Hybrid) CurrentPower() (float64, error) {
 	default:
 		return 0, err
 	}
-}
-
-// totalEnergy implements the api.MeterEnergy interface
-func (m *BoschBpts5Hybrid) totalEnergy() (float64, error) {
-	return m.currentTotalEnergy, nil
 }
 
 // batterySoC implements the api.Battery interface
