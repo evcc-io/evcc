@@ -128,6 +128,10 @@ func extractValues(c *API, body string) error {
 
 	values := strings.Split(body, "|")
 
+	if len(values) < 14 {
+		return fmt.Errorf("extractValues: response has not enough values")
+	}
+
 	soc, err := strconv.Atoi(values[3])
 
 	if err != nil {
