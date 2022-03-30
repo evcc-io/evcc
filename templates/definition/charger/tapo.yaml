@@ -15,7 +15,7 @@ params:
     required: true
     help:
       en: user of TP-Link account (usually an e-mail address)
-      de: TP-Link Benutzerkonto (Normalerweise die E-Mail Adresse, wie in der Tapo AP konfiguriert)
+      de: TP-Link Benutzerkonto (Normalerweise die E-Mail Adresse, wie in der Tapo App konfiguriert)
   - name: password
     required: true
     mask: true
