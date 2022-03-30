@@ -1,9 +1,8 @@
 package bosch
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
+	"net/http"
 	"net/http/cookiejar"
 	"strconv"
 	"strings"
@@ -14,12 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
-type API interface {
-	Login() error
-	Status() (StatusResponse, error)
-}
-
-type LocalAPI struct {
+type API struct {
 	*request.Helper
 	uri     string
 	status  StatusResponse
@@ -29,20 +23,10 @@ type LocalAPI struct {
 	logger  *util.Logger
 }
 
-var _ API = (*LocalAPI)(nil)
+func NewLocal(log *util.Logger, uri string, cache time.Duration) *API {
+	var initialStatus StatusResponse
 
-func NewLocal(log *util.Logger, uri string, cache time.Duration) *LocalAPI {
-
-	initialStatus := StatusResponse{
-		CurrentBatterySoc:     0.0,
-		SellToGrid:            0.0,
-		BuyFromGrid:           0.0,
-		PvPower:               0.0,
-		BatteryChargePower:    0.0,
-		BatteryDischargePower: 0.0,
-	}
-
-	api := &LocalAPI{
+	api := &API{
 		Helper: request.NewHelper(log),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 		cache:  cache,
@@ -58,19 +42,15 @@ func NewLocal(log *util.Logger, uri string, cache time.Duration) *LocalAPI {
 	return api
 }
 
-func (c *LocalAPI) Login() (err error) {
-	resp, err := c.Client.Get(c.uri)
-
-	if err != nil || resp.StatusCode >= 300 {
-		return fmt.Errorf("error during login: first get: %s, response code %v", err, resp.StatusCode)
+func (c *API) Login() (err error) {
+	req, err := request.New(http.MethodGet, c.uri, nil, nil)
+	if err != nil {
+		return err
 	}
 
-	defer resp.Body.Close()
-
-	//We Read the response body on the line below.
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := c.DoBody(req)
 	if err != nil {
-		return fmt.Errorf("error during login: read response body: %s", err)
+		return err
 	}
 
 	return extractWuiSidFromBody(c, string(body))
@@ -78,12 +58,10 @@ func (c *LocalAPI) Login() (err error) {
 
 //////////// value retrieval ////////////////
 
-func (c *LocalAPI) Status() (res StatusResponse, err error) {
+func (c *API) Status() (StatusResponse, error) {
+	var err error
 	if time.Since(c.updated) > c.cache {
-
-		err = c.updateValues()
-
-		if err == nil {
+		if err = c.updateValues(); err == nil {
 			c.updated = time.Now()
 		}
 	}
@@ -92,7 +70,7 @@ func (c *LocalAPI) Status() (res StatusResponse, err error) {
 
 //////////// helpers ////////////////
 
-func extractWuiSidFromBody(c *LocalAPI, body string) error {
+func extractWuiSidFromBody(c *API, body string) error {
 	index := strings.Index(body, "WUI_SID=")
 
 	if index < 0 {
@@ -107,21 +85,21 @@ func extractWuiSidFromBody(c *LocalAPI, body string) error {
 	return nil
 }
 
-func (c *LocalAPI) updateValues() error {
-	var postMessge = []byte(`action=get.hyb.overview&flow=1`)
-	resp, err := c.Client.Post(c.uri+"/cgi-bin/ipcclient.fcgi?"+c.login.wuSid, "text/plain", bytes.NewBuffer(postMessge))
+func (c *API) updateValues() error {
+	data := "action=get.hyb.overview&flow=1"
+
+	uri := c.uri + "/cgi-bin/ipcclient.fcgi?" + c.login.wuSid
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), map[string]string{
+		"Content-Type": "text/plain",
+	})
 
 	if err != nil {
-		return fmt.Errorf("error during data retrieval request: post: %s", err)
+		return err
 	}
 
-	defer resp.Body.Close()
-
-	//Read the response body
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil || resp.StatusCode >= 300 {
-		return fmt.Errorf("error during data retrieval request: read body: %s, response code %v", err, resp.StatusCode)
+	body, err := c.DoBody(req)
+	if err != nil {
+		return err
 	}
 
 	return extractValues(c, string(body))
@@ -134,12 +112,12 @@ func parseWattValue(inputString string) (float64, error) {
 
 	numberString := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(inputString, "kW", " "), "von", " "))
 
-	resultFloat, err := strconv.ParseFloat(numberString, 64)
+	res, err := strconv.ParseFloat(numberString, 64)
 
-	return resultFloat * 1000.0, err
+	return res * 1000.0, err
 }
 
-func extractValues(c *LocalAPI, body string) error {
+func extractValues(c *API, body string) error {
 	if strings.Contains(body, "session invalid") {
 		c.logger.DEBUG.Println("extractValues: Session invalid. Performing Re-login")
 		return c.Login()
