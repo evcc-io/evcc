@@ -1,14 +1,8 @@
 template: go-e
 products:
-  - brand: go-e
+  - brand: go-eCharger
     description:
-      generic: Charger HOME+
-  - brand: go-e
-    description:
-      generic: Charger HOMEfix
-  - brand: go-e
-    description:
-      generic: Charger Pro
+      generic: HOME+, HOMEfix, Pro
 requirements:
   description:
     en: Requires firmware 040.0 or later.

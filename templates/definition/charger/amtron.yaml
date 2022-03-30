@@ -1,11 +1,8 @@
 template: amtron
 products:
-  - brand: Mennekes
+  - brand: Mennekes AMTRON
     description:
-      generic: AMTRON XTRA
-  - brand: Mennekes
-    description:
-      generic: AMTRON PREMIUM
+      generic: XTRA, PREMIUM
 requirements:
   evcc: ["sponsorship"]
 params:

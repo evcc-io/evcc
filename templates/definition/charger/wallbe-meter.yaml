@@ -2,12 +2,8 @@ template: wallbe-meter
 products:
   - brand: Wallbe
     description:
-      de: Eco (mit Strommessgerät)
-      en: Eco (with meter)
-  - brand: Wallbe
-    description:
-      de: Pro (mit Strommessgerät)
-      en: Pro (with meter)
+      de: Eco, Pro (mit Strommessgerät)
+      en: Eco, Pro (with meter)
 requirements:
   description:
     en: DIP switch 10 must be set to 'ON'.

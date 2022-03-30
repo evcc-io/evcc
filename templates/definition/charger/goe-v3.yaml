@@ -1,11 +1,8 @@
 template: go-e-v3
 products:
-  - brand: go-e
+  - brand: go-eCharger
     description:
-      generic: Charger HOME+ (V3)
-  - brand: go-e
-    description:
-      generic: Charger HOMEfix (V3)
+      generic: HOME+, HOMEfix (V3)
 capabilities: ["1p3p"]
 requirements:
   description:
