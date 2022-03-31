@@ -15,5 +15,5 @@ params:
     default: 15
 render: |
   type: tplink
-  uri: {{ .host }}  # tplink device ip address (local)
+  uri: {{ .host }}
   standbypower: {{ .standbypower }}  # treat as charging above this power
