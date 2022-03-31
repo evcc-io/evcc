@@ -1,13 +1,16 @@
 template: tplink
 products:
-  - brand: TP-LINK
+  - brand: TP-Link
     description:
-      generic: Smart Plug
+      generic: H-Series Smart Plug
 group: switchsockets
 params:
   - name: host
     required: true
     example: 192.0.2.2
+    help:
+      en: tp-link device ip address (local)
+      de: Die IP-Adresse der TP-Link Steckdose im lokalen LAN/WLAN
   - name: standbypower
     default: 15
 render: |
