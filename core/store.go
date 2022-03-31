@@ -33,7 +33,7 @@ var (
 
 func NewStore() (*Store, error) {
 	log := util.NewLogger("store")
-	file := fmt.Sprintf("%s/evcc_savings.db", os.TempDir())
+	file := fmt.Sprintf("%s/evcc.db", os.TempDir())
 
 	s, err := OpenStore(file)
 	if err != nil {
