@@ -25,10 +25,10 @@ FROM golang:1.18-alpine as builder
 # Ca-certificates is required to call HTTPS endpoints.
 RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && update-ca-certificates
 
-WORKDIR /build
+# define RELEASE=1 to hide commit hash
+ARG RELEASE={{ env "RELEASE" }}
 
-# define --build-arg RELEASE=1 to hide commit hash
-ARG RELEASE
+WORKDIR /build
 
 # install go tools and cache modules
 COPY Makefile .
