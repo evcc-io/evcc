@@ -398,12 +398,18 @@ func (site *Site) update(lp Updater) {
 
 	// update all loadpoint's charge power
 	var totalChargePower float64
+	var totalPriority int
+	var minPower float64
 	for _, lp := range site.loadpoints {
 		lp.UpdateChargePower()
 		totalChargePower += lp.GetChargePower()
+		totalPriority += lp.GetPriority()
+		minPower += lp.GetMinPowerRequried()
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
+		// total available power = sitePower - totalChargePower + minPower
+
 		lp.Update(sitePower, cheap, site.batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption

@@ -49,6 +49,40 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 	}
 }
 
+// GetMinPowerRequried returns the Power that the Loadpoint needs at the minimum.
+func (lp *LoadPoint) GetMinPowerRequried() float64 {
+	//	lp.Lock()
+	//	defer lp.Unlock()
+	if lp.Mode == api.ModeOff || !lp.connected() || lp.targetSocReached() {
+		return 0
+	}
+	if lp.minSocNotReached() || lp.Mode == api.ModeNow {
+		return lp.chargePower
+	}
+	if lp.Mode == api.ModeMinPV {
+		return lp.GetMinPower()
+	}
+	return 0
+}
+
+// GetPriority returns Priority depending on the loadpoint and soc of the connected vehicle
+func (lp *LoadPoint) GetPriority() int {
+	// at the moment we don't have any other configurable priority value to add to the calcucation
+	//	lp.Lock()
+	//	defer lp.Unlock()
+	if lp.Mode == api.ModeOff || !lp.connected() || lp.targetSocReached() {
+		return 0
+	}
+	if !lp.minSocNotReached() || lp.Mode == api.ModeNow {
+		return 0
+	}
+	vSoC, _ := lp.vehicle.SoC()
+	if lp.GetTargetSoC() <= 100 && lp.GetTargetSoC() > 0 {
+		return lp.GetTargetSoC() - int(vSoC)
+	}
+	return 100 - int(vSoC)
+}
+
 // GetTargetSoC returns loadpoint charge target soc
 func (lp *LoadPoint) GetTargetSoC() int {
 	lp.Lock()
