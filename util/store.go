@@ -11,7 +11,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// SavingsStore is the parameter store container.
+// Store is the parameter store database container.
 type Store struct {
 	name       string
 	bucketName []byte
