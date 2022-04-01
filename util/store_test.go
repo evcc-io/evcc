@@ -1,4 +1,4 @@
-package core
+package util
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 
 func TestTore(t *testing.T) {
 
-	s, err := NewStore("evcc")
+	s, err := NewStore("evcc_test")
 	if err != nil {
 		t.Errorf("OpenStore %v", err)
 	}
