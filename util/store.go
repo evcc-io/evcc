@@ -13,39 +13,44 @@ import (
 
 // SavingsStore is the parameter store container.
 type Store struct {
-	name string
-	file string
-	db   *bolt.DB
+	name       string
+	bucketName []byte
+	db         *bolt.DB
 }
 
 var (
 	// ErrNotFound is returned when the key supplied to a Get or Delete
 	// method does not exist in the database.
-	ErrNotFound = errors.New("store: key not found")
+	ErrNotFound = errors.New("skv: key not found")
 
 	// ErrBadValue is returned when the value supplied to the Put method
 	// is nil.
-	ErrBadValue = errors.New("store: bad value")
-
-	bucketName = []byte("evcc")
+	ErrBadValue = errors.New("skv: bad value")
 )
 
 func NewStore(name string) (*Store, error) {
 	file := fmt.Sprintf("%s/%s.db", os.TempDir(), name)
 
-	s, err := OpenStore(file)
+	s, err := OpenStore(file, []byte(name))
 	if err != nil {
 		return nil, err
 	}
 
 	return &Store{
-		name: name,
-		file: file,
-		db:   s.db,
+		name:       name,
+		bucketName: []byte(name),
+		db:         s.db,
 	}, nil
 }
 
-func OpenStore(path string) (*Store, error) {
+// Open a key-value store. "path" is the full path to the database file, any
+// leading directories must have been created already. File is created with
+// mode 0640 if needed.
+//
+// Because of BoltDB restrictions, only one process may open the file at a
+// time. Attempts to open the file from another process will fail with a
+// timeout error.
+func OpenStore(path string, bucketName []byte) (*Store, error) {
 	opts := &bolt.Options{
 		Timeout: 50 * time.Millisecond,
 	}
@@ -73,13 +78,13 @@ func (s *Store) Put(key string, value interface{}) error {
 		return err
 	}
 	return s.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketName).Put([]byte(key), buf.Bytes())
+		return tx.Bucket(s.bucketName).Put([]byte(key), buf.Bytes())
 	})
 }
 
 func (s *Store) Get(key string, value interface{}) error {
 	return s.db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketName).Cursor()
+		c := tx.Bucket(s.bucketName).Cursor()
 		if k, v := c.Seek([]byte(key)); k == nil || string(k) != key {
 			return ErrNotFound
 		} else if value == nil {

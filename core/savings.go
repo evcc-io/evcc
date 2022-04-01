@@ -6,6 +6,8 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util"
+	"github.com/rapidloop/skv"
 )
 
 const DefaultGridPrice = 0.30
@@ -28,16 +30,33 @@ type Savings struct {
 	selfConsumptionCharged         float64   // Self-produced energy charged since startup (kWh)
 	selfConsumptionCost            float64   // Running total of charged self-produced energy cost (e.g. EUR)
 	lastGridPrice, lastFeedInPrice float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
+	store                          util.Store
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
 	clock := clock.New()
+
+	store, _ := util.NewStore("evcc_savings")
+
 	savings := &Savings{
 		clock:   clock,
 		tariffs: tariffs,
-		started: clock.Now(),
-		updated: clock.Now(),
+		store:   *store,
 	}
+
+	// Get stored savings parameters
+	if err := store.Get("savingsStarted", &savings.started); err == skv.ErrNotFound {
+		savings.started = clock.Now()
+	}
+	if err := store.Get("savingsUpdated", &savings.updated); err == skv.ErrNotFound {
+		savings.updated = clock.Now()
+	}
+	store.Get("savingsUpdated", &savings.updated)
+	store.Get("savingsGridCharged", &savings.gridCharged)
+	store.Get("savingsGridCost", &savings.gridCost)
+	store.Get("savingsgridSavedCost", &savings.gridSavedCost)
+	store.Get("savingsSelfConsumptionCharged", &savings.selfConsumptionCharged)
+	store.Get("savingsselfConsumptionCost", &savings.selfConsumptionCost)
 
 	return savings
 }
@@ -151,4 +170,12 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
+
+	// Persist savings parameters
+	s.store.Put("savingsUpdated", s.updated)
+	s.store.Put("savingsGridCharged", s.gridCharged)
+	s.store.Put("savingsGridCost", s.gridCost)
+	s.store.Put("savingsgridSavedCost", s.gridSavedCost)
+	s.store.Put("savingsSelfConsumptionCharged", s.selfConsumptionCharged)
+	s.store.Put("savingsselfConsumptionCost", s.selfConsumptionCost)
 }
