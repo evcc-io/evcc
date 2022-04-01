@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/auth"

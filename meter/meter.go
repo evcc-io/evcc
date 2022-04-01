@@ -33,15 +33,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		return nil, fmt.Errorf("power: %w", err)
 	}
 
-	// TODO deprecate
-	log := util.NewLogger("meter")
-	cc.Power.Deprecate(log)
-	cc.Energy.Deprecate(log)
-	cc.SoC.Deprecate(log)
-	for _, p := range cc.Currents {
-		p.Deprecate(log)
-	}
-
 	m, _ := NewConfigurable(power)
 
 	// decorate Meter with MeterEnergy

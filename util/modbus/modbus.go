@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -146,9 +147,15 @@ func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) 
 	return mb.handle(mb.conn.ModbusClient().ReadFIFOQueue(address))
 }
 
-var connections = make(map[string]meters.Connection)
+var (
+	connections = make(map[string]meters.Connection)
+	mu          sync.Mutex
+)
 
 func registeredConnection(key string, newConn meters.Connection) meters.Connection {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if conn, ok := connections[key]; ok {
 		return conn
 	}
@@ -284,30 +291,20 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	}
 
 	switch strings.ToLower(r.Decode) {
-	case "float32", "ieee754":
-		op.Transform = rs485.RTUIeee754ToFloat64
-	case "float32s", "ieee754s":
-		op.Transform = rs485.RTUIeee754ToFloat64Swapped
-	case "float64":
-		op.Transform = rs485.RTUUint64ToFloat64
-		op.ReadLen = 4
-	case "uint16":
-		op.Transform = rs485.RTUUint16ToFloat64
-		op.ReadLen = 1
-	case "uint32":
-		op.Transform = rs485.RTUUint32ToFloat64
-	case "uint32s":
-		op.Transform = rs485.RTUUint32ToFloat64Swapped
-	case "uint64":
-		op.Transform = rs485.RTUUint64ToFloat64
-		op.ReadLen = 4
+
+	// 16 bit
 	case "int16":
 		op.Transform = rs485.RTUInt16ToFloat64
 		op.ReadLen = 1
-	case "int32":
-		op.Transform = rs485.RTUInt32ToFloat64
-	case "int32s":
-		op.Transform = rs485.RTUInt32ToFloat64Swapped
+	case "int16sma":
+		op.Transform = decodeNaN16(1<<15, rs485.RTUInt16ToFloat64)
+		op.ReadLen = 1
+	case "uint16":
+		op.Transform = rs485.RTUUint16ToFloat64
+		op.ReadLen = 1
+	case "uint16sma":
+		op.Transform = decodeNaN16(0xFFFF, rs485.RTUUint16ToFloat64)
+		op.ReadLen = 1
 	case "bool16":
 		mask, err := decodeMask(r.BitMask)
 		if err != nil {
@@ -315,6 +312,36 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		}
 		op.Transform = decodeBool16(mask)
 		op.ReadLen = 1
+
+	// 32 bit
+	case "int32":
+		op.Transform = rs485.RTUInt32ToFloat64
+	case "int32sma":
+		op.Transform = decodeNaN32(1<<31, rs485.RTUInt32ToFloat64)
+	case "int32s":
+		op.Transform = rs485.RTUInt32ToFloat64Swapped
+	case "uint32":
+		op.Transform = rs485.RTUUint32ToFloat64
+	case "uint32s":
+		op.Transform = rs485.RTUUint32ToFloat64Swapped
+	case "uint32sma":
+		op.Transform = decodeNaN32(0xFFFFFFFF, rs485.RTUUint32ToFloat64)
+	case "float32", "ieee754":
+		op.Transform = rs485.RTUIeee754ToFloat64
+	case "float32s", "ieee754s":
+		op.Transform = rs485.RTUIeee754ToFloat64Swapped
+
+	// 64 bit
+	case "uint64":
+		op.Transform = rs485.RTUUint64ToFloat64
+		op.ReadLen = 4
+	case "uint64sma":
+		op.Transform = decodeNaN64(0xFFFFFFFFFFFFFFFF, rs485.RTUUint64ToFloat64)
+		op.ReadLen = 4
+	case "float64":
+		op.Transform = rs485.RTUFloat64ToFloat64
+		op.ReadLen = 4
+
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
 	}

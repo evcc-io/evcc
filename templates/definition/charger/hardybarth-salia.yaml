@@ -1,0 +1,12 @@
+template: hardybarth-salia
+products:
+  - brand: HardyBarth
+    description:
+      generic: Salia PLCC Controller
+params:
+  - name: host
+    required: true
+    example: 192.0.2.2
+render: |
+  type: hardybarth-salia
+  uri: http://{{ .host }}

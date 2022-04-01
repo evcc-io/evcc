@@ -117,8 +117,14 @@ func (wb *Alfen) Status() (api.ChargeStatus, error) {
 	}
 
 	switch r := rune(b[0]); r {
-	case 'A', 'B', 'C', 'D', 'E', 'F':
+	case 'A', 'B', 'D', 'E', 'F':
 		return api.ChargeStatus(r), nil
+	case 'C':
+		// C1 is "connected"
+		if rune(b[1]) == '1' {
+			return api.StatusB, nil
+		}
+		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[:1])
 	}

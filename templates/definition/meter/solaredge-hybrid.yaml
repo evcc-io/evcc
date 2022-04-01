@@ -1,8 +1,8 @@
 template: solaredge-hybrid
 products:
-- brand: Solaredge
-  description:
-    generic: Hybrid
+  - brand: Solaredge
+    description:
+      generic: Hybrid
 guidedsetup:
   enable: true
 requirements:
@@ -10,18 +10,17 @@ requirements:
     de: Nur ein System kann auf den Wechselrichter zugreifen!
     en: Only one system may access the inverter!
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: port
-  default: 502
-  help: 
-    en: Port 502 (SetApp) or 1502 (LCD)
-    de: Port 502 (SetApp) oder 1502 (LCD)
-- name: timeout
-  default: 3s
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: port
+    default: 502
+    help:
+      en: Port 502 (SetApp) or 1502 (LCD)
+      de: Port 502 (SetApp) oder 1502 (LCD)
+  - name: timeout
 render: |
   type: custom
   power:

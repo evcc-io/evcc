@@ -1,19 +1,16 @@
 template: kostal-piko
 products:
-- brand: Kostal
-  description:
-    generic: Piko
-- brand: Kostal
-  description:
-    generic: Piko BA
+  - brand: Kostal
+    description:
+      generic: Piko, Piko BA
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv" ]
-- name: host
-  example: 192.0.2.2
-  required: true
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+    example: 192.0.2.2
+    required: true
 render: |
   type: custom
   power:

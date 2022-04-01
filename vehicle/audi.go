@@ -1,13 +1,14 @@
 package vehicle
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/audi"
+	"github.com/evcc-io/evcc/vehicle/vag/idkproxy"
+	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
@@ -18,7 +19,6 @@ import (
 type Audi struct {
 	*embed
 	*vw.Provider // provides the api implementations
-	// audiProvider *audi.Provider
 }
 
 func init() {
@@ -46,14 +46,14 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("audi").Redact(cc.User, cc.Password, cc.VIN)
-	identity := vw.NewIdentity(log, audi.AuthClientID, audi.AuthParams, cc.User, cc.Password)
 
-	err := identity.Login()
+	idk := idkproxy.New(log, audi.IDKParams)
+	ts, err := service.MbbTokenSource(log, idk, audi.AuthClientID, audi.AuthParams, cc.User, cc.Password)
 	if err != nil {
-		return v, fmt.Errorf("login failed: %w", err)
+		return nil, err
 	}
 
-	api := vw.NewAPI(log, identity, "Audi", "DE")
+	api := vw.NewAPI(log, ts, audi.Brand, audi.Country)
 	api.Client.Timeout = cc.Timeout
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)

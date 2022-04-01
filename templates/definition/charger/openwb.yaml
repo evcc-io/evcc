@@ -1,18 +1,19 @@
 template: openwb
 products:
-- description:
-    generic: openWB (MQTT)
+  - brand: openWB
+    description:
+      generic: MQTT
 requirements:
   description:
     en: The wallbox has to be configured running as a loadpoint.
     de: Die Wallbox muss als Ladepunkt konfiguriert sein.
   uri: https://docs.evcc.io/docs/devices/chargers#openwb
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: loadpointid
-  default: 1
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: loadpointid
+    default: 1
 render: |
   type: openwb
   broker: {{ .host }}

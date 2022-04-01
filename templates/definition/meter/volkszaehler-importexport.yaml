@@ -1,20 +1,21 @@
 template: volkszaehler-importexport
 products:
-- description:
-    generic: Volkszähler (HTTP API, Import & Export)
+  - brand: Volkszähler
+    description:
+      generic: HTTP API, Import & Export
 group: generic
 params:
-- name: usage
-  choice: [ "grid" ]
-- name: host
-  example: 192.0.2.2
-  required: true
-- name: port
-  default: 80
-- name: importuuid
-  required: true
-- name: exportuuid
-  required: true
+  - name: usage
+    choice: ["grid"]
+  - name: host
+    example: 192.0.2.2
+    required: true
+  - name: port
+    default: 80
+  - name: importuuid
+    required: true
+  - name: exportuuid
+    required: true
 render: |
   type: custom
   power:

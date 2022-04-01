@@ -1,14 +1,14 @@
 template: alfen
-products: 
-- brand: Alfen
-  description:
-    generic: Eve
+products:
+  - brand: Alfen
+    description:
+      generic: Eve
 capabilities: ["1p3p"]
-requirements: 
+requirements:
   evcc: ["sponsorship"]
 params:
-- name: modbus
-  choice: ["tcpip"]
+  - name: modbus
+    choice: ["tcpip"]
 render: |
   type: alfen
   {{include "modbus" .}}

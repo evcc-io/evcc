@@ -1,20 +1,19 @@
 template: solaredge-inverter
 products:
-- brand: Solaredge
-  description:
-    de: Wechselrichter
-    en: Inverter
+  - brand: Solaredge
+    description:
+      de: Wechselrichter
+      en: Inverter
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv" ]
-- name: modbus
-  choice: [ "tcpip" ]
-  id: 1
-  port: 1502
-- name: timeout
-  default: 3s
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+    port: 1502
+  - name: timeout
 render: |
   type: custom
   power:

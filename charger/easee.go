@@ -65,29 +65,17 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Charger  string
-		Circuit  int           // deprecated
-		Cache    time.Duration // deprecated
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("easee")
-
-	if cc.Circuit > 0 {
-		log.WARN.Println("circuit is deprecated and will be removed in a future release")
-	}
-
-	if cc.Cache > 0 {
-		log.WARN.Println("cache is deprecated and will be removed in a future release")
-	}
-
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Cache)
+	return NewEasee(cc.User, cc.Password, cc.Charger)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
+func NewEasee(user, password, charger string) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {

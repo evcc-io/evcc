@@ -55,7 +55,7 @@ func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (Vehicle
 		// return the current value
 		if time.Since(ts) <= v.expiry {
 			v.refreshTime = time.Time{}
-			return res.ResMsg.VehicleStatusInfo.VehicleStatus, err
+			return res.ResMsg.VehicleStatusInfo.VehicleStatus, nil
 		}
 	}
 

@@ -108,17 +108,17 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 
 	data := url.Values{
-		"client_id":             []string{"31c357a0-7a1d-4590-aa99-33b97244d048"},
-		"response_type":         []string{"code"},
-		"redirect_uri":          []string{RedirectURI},
-		"state":                 []string{"cwU-gIE27j67poy2UcL3KQ"},
-		"scope":                 []string{"authenticate_user vehicle_data remote_services"},
-		"nonce":                 []string{"login_nonce"},
-		"code_challenge_method": []string{"S256"},
-		"code_challenge":        []string{cv.CodeChallengeS256()},
-		"username":              []string{v.user},
-		"password":              []string{v.password},
-		"grant_type":            []string{"authorization_code"},
+		"client_id":             {"31c357a0-7a1d-4590-aa99-33b97244d048"},
+		"response_type":         {"code"},
+		"redirect_uri":          {RedirectURI},
+		"state":                 {"cwU-gIE27j67poy2UcL3KQ"},
+		"scope":                 {"authenticate_user vehicle_data remote_services"},
+		"nonce":                 {"login_nonce"},
+		"code_challenge_method": {"S256"},
+		"code_challenge":        {cv.CodeChallengeS256()},
+		"username":              {v.user},
+		"password":              {v.password},
+		"grant_type":            {"authorization_code"},
 	}
 
 	uri := fmt.Sprintf("%s/authenticate", AuthURI)
@@ -172,10 +172,10 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 
 	data = url.Values{
-		"code":          []string{query.Get("code")},
-		"redirect_uri":  []string{RedirectURI},
-		"grant_type":    []string{"authorization_code"},
-		"code_verifier": []string{cv.CodeChallengePlain()},
+		"code":          {query.Get("code")},
+		"redirect_uri":  {RedirectURI},
+		"grant_type":    {"authorization_code"},
+		"code_verifier": {cv.CodeChallengePlain()},
 	}
 
 	return v.retrieveToken(data)

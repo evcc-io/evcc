@@ -52,7 +52,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	// authenticated http client with logging injected to the Tesla client
 	log := util.NewLogger("tesla").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
 
 	options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
 		AccessToken:  cc.Tokens.Access,
@@ -211,9 +211,9 @@ func (v *Tesla) Position() (float64, float64, error) {
 	return 0, 0, err
 }
 
-var _ api.VehicleStartCharge = (*Tesla)(nil)
+var _ api.VehicleChargeController = (*Tesla)(nil)
 
-// StartCharge implements the api.VehicleStartCharge interface
+// StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StartCharge() error {
 	err := v.vehicle.StartCharging()
 
@@ -240,9 +240,7 @@ func (v *Tesla) StartCharge() error {
 	return err
 }
 
-var _ api.VehicleStopCharge = (*Tesla)(nil)
-
-// StopCharge implements the api.VehicleStopCharge interface
+// StopCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StopCharge() error {
 	err := v.vehicle.StopCharging()
 

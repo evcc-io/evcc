@@ -47,14 +47,16 @@ type Com struct {
 	cachedData func() (interface{}, error)
 }
 
-var once sync.Once
-var instance *Com
+var (
+	once     sync.Once
+	instance *Com
+)
 
 // GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
 func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
-	const emptyUri = "https:"
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
+	var err error
 	once.Do(func() {
 		log := util.NewLogger("lgess")
 		instance = &Com{
@@ -71,32 +73,21 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 		instance.cachedData = provider.NewCached(func() (interface{}, error) {
 			return instance.refreshData()
 		}, cache).InterfaceGetter()
+
+		// do first login if no authKey exists and uri and password exist
+		if instance.authKey == "" && instance.uri != "" && instance.password != "" {
+			err = instance.Login()
+		}
 	})
 
-	// it is sufficient to provide the uri once ... if not provided yet set uri now
-	if instance.uri == emptyUri {
-		instance.uri = uri
-	}
-
 	// check if different uris are provided
-	if uri != emptyUri && instance.uri != uri {
+	if uri != "" && instance.uri != uri {
 		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
-	}
-
-	// it is sufficient to provide the password once ... if not provided yet set password now
-	if instance.password == "" {
-		instance.password = password
 	}
 
 	// check if different passwords are provided
 	if password != "" && instance.password != password {
 		return nil, errors.New("password mismatch")
-	}
-
-	// do first login if no authKey exists and uri and password exist
-	var err error
-	if instance.authKey == "" && instance.uri != emptyUri && instance.password != "" {
-		err = instance.Login()
 	}
 
 	return instance, err

@@ -5,7 +5,7 @@
   "scripts": {
     "build": "vite build --mode prod",
     "test": "",
-    "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
+    "lint": "prettier assets './**/*.{yml,yaml}' --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "build-storybook": "build-storybook",
     "dev": "vite",
     "storybook": "start-storybook -p 6006"
@@ -35,7 +35,7 @@
     "@vue/eslint-config-standard": "^6.1.0",
     "babel-loader": "^8.2.3",
     "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.0.0",

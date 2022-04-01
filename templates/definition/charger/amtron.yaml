@@ -1,16 +1,14 @@
 template: amtron
-products: 
-- brand: Mennekes
-  description:
-    generic: AMTRON XTRA
-- brand: Mennekes
-  description:
-    generic: AMTRON PREMIUM
-requirements: 
+products:
+  - brand: Mennekes AMTRON
+    description:
+      generic: XTRA, PREMIUM
+requirements:
   evcc: ["sponsorship"]
 params:
-- name: modbus
-  choice: ["tcpip"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
 render: |
   type: amtron
   {{include "modbus" .}}

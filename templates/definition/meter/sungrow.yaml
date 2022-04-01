@@ -1,15 +1,18 @@
 template: sungrow
 products:
-- brand: Sungrow (LAN)
-  description:
-    generic: Inverter (Beta)
+  - brand: Sungrow
+    description:
+      generic: Inverter (LAN)
 guidedsetup:
   enable: true
+requirements:
+  description:
+    generic: beta
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: modbus
-  choice: [ "rs485", "tcpip" ]
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
 render: |
   type: custom
   {{- if eq .usage "grid" }}

@@ -2,9 +2,6 @@ package provider
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/evcc-io/evcc/util"
 )
 
 // provider types
@@ -54,29 +51,12 @@ var registry providerRegistry = make(map[string]func(map[string]interface{}) (In
 // Config is the general provider config
 type Config struct {
 	Source string
-	Type   string                 // TODO remove deprecated
 	Other  map[string]interface{} `mapstructure:",remain"`
-}
-
-// TODO prepare for removing deprecated type attribute
-func (c *Config) Deprecate(log *util.Logger) {
-	if c != nil && c.Type != "" {
-		log.WARN.Printf("type:%s is deprecated, use source:%s instead", c.Type, c.Type)
-	}
-}
-
-// PluginType returns the plugin type in a legacy-aware way
-func (c Config) PluginType() string {
-	typ := c.Source
-	if typ == "" {
-		typ = c.Type
-	}
-	return strings.ToLower(typ)
 }
 
 // NewIntGetterFromConfig creates a IntGetter from config
 func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error) {
-	factory, err := registry.Get(config.PluginType())
+	factory, err := registry.Get(config.Source)
 	if err == nil {
 		var provider IntProvider
 		provider, err = factory(config.Other)
@@ -87,7 +67,7 @@ func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.PluginType())
+		err = fmt.Errorf("invalid plugin type: %s", config.Source)
 	}
 
 	return
@@ -95,7 +75,7 @@ func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
 func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err error) {
-	factory, err := registry.Get(config.PluginType())
+	factory, err := registry.Get(config.Source)
 	if err == nil {
 		var provider IntProvider
 		provider, err = factory(config.Other)
@@ -106,7 +86,7 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.PluginType())
+		err = fmt.Errorf("invalid plugin type: %s", config.Source)
 	}
 
 	return
@@ -114,7 +94,7 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 
 // NewStringGetterFromConfig creates a StringGetter from config
 func NewStringGetterFromConfig(config Config) (res func() (string, error), err error) {
-	switch typ := config.PluginType(); typ {
+	switch typ := config.Source; typ {
 	case "combined", "openwb":
 		res, err = NewOpenWBStatusProviderFromConfig(config.Other)
 
@@ -131,7 +111,7 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 		}
 
 		if err == nil && res == nil {
-			err = fmt.Errorf("invalid plugin type: %s", config.PluginType())
+			err = fmt.Errorf("invalid plugin type: %s", config.Source)
 		}
 	}
 
@@ -140,7 +120,7 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 
 // NewBoolGetterFromConfig creates a BoolGetter from config
 func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error) {
-	factory, err := registry.Get(config.PluginType())
+	factory, err := registry.Get(config.Source)
 	if err == nil {
 		var provider IntProvider
 		provider, err = factory(config.Other)
@@ -151,7 +131,7 @@ func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.PluginType())
+		err = fmt.Errorf("invalid plugin type: %s", config.Source)
 	}
 
 	return
@@ -159,7 +139,7 @@ func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error
 
 // NewIntSetterFromConfig creates a IntSetter from config
 func NewIntSetterFromConfig(param string, config Config) (res func(int64) error, err error) {
-	factory, err := registry.Get(config.PluginType())
+	factory, err := registry.Get(config.Source)
 	if err == nil {
 		var provider IntProvider
 		provider, err = factory(config.Other)
@@ -170,7 +150,7 @@ func NewIntSetterFromConfig(param string, config Config) (res func(int64) error,
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.PluginType())
+		err = fmt.Errorf("invalid plugin type: %s", config.Source)
 	}
 
 	return
@@ -178,7 +158,7 @@ func NewIntSetterFromConfig(param string, config Config) (res func(int64) error,
 
 // NewBoolSetterFromConfig creates a BoolSetter from config
 func NewBoolSetterFromConfig(param string, config Config) (res func(bool) error, err error) {
-	factory, err := registry.Get(config.PluginType())
+	factory, err := registry.Get(config.Source)
 	if err == nil {
 		var provider IntProvider
 		provider, err = factory(config.Other)
@@ -189,7 +169,7 @@ func NewBoolSetterFromConfig(param string, config Config) (res func(bool) error,
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.PluginType())
+		err = fmt.Errorf("invalid plugin type: %s", config.Source)
 	}
 
 	return

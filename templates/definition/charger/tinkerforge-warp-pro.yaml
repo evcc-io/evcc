@@ -1,32 +1,31 @@
 template: tinkerforge-warp-pro
 products:
-- brand: TinkerForge
-  description:
-    generic: WARP Charger Pro
+  - brand: TinkerForge
+    description:
+      generic: WARP Charger Pro
 requirements:
   description:
     en: A MQTT Broker software needs to be running on a computer. The MQTT connection also needs to be configured in the wallbox.
     de: Es muss ein sogennanter MQTT Broker auf einem Computer installiert sein. Die MQTT Verbindung muss in der Wallbox eingerichtet sein.
   uri: https://docs.evcc.io/docs/devices/chargers#tinkerforge-warp-charger
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
-  help:
-    de: Die IP Adresse oder der Hostname des MQTT Brokers
-    en: The IP address or hostname of the MQTT broker
-- name: port
-  default: 1883
-  help:
-    de: Der Port des MQTT Brokers
-    en: The port of the MQTT broker
-- name: topic
-  default: warp
-- name: timeout
-  default: 30s
+  - name: host
+    required: true
+    example: 192.0.2.2
+    help:
+      de: Die IP Adresse oder der Hostname des MQTT Brokers
+      en: The IP address or hostname of the MQTT broker
+  - name: port
+    default: 1883
+    help:
+      de: Der Port des MQTT Brokers
+      en: The port of the MQTT broker
+  - name: topic
+    default: warp
+  - name: timeout
+    default: 30s
 render: |
   type: warp
   broker: {{ .host }}:{{ .port }}
   topic: {{ .topic }}
-  useMeter: true
   timeout: {{ .timeout }}

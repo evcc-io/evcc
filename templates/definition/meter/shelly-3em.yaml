@@ -1,26 +1,29 @@
 template: shelly-3em
 products:
-- brand: Shelly
-  description:
-    generic: 3EM
+  - brand: Shelly
+    description:
+      generic: 3EM
 group: sockets
 params:
-- name: usage
-  choice: [ "grid" ]
-- name: host
-  required: true
-  example: 192.0.2.2
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+    required: true
+    example: 192.0.2.2
 render: |
   type: custom
   power:
     source: http
     uri: http://{{ .host }}/status
     jq: .emeters | map(.power) | add
+  {{if eq .usage "grid" -}}
   energy:
     source: http
     uri: http://{{ .host }}/status
     jq: .emeters | map(.total) | add
     scale: 0.001
+  {{ end -}}
+  {{if ne .usage "pv" -}}
   currents:
   - source: http
     uri: http://{{ .host }}/emeter/0
@@ -31,4 +34,4 @@ render: |
   - source: http
     uri: http://{{ .host }}/emeter/2
     jq: .current
-  
+  {{ end -}}

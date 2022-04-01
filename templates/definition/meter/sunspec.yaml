@@ -1,14 +1,14 @@
 template: sunspec
 products:
-- description:
-    de: Wechselrichter (SunSpec)
-    en: Inverter (SunSpec)
+  - description:
+      de: Wechselrichter (SunSpec)
+      en: Inverter (SunSpec)
 group: generic
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: modbus
-  choice: [ "tcpip" ]
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
 render: |
   type: modbus
   model: sunspec
