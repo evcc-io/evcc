@@ -6,7 +6,7 @@ import (
 
 func TestTore(t *testing.T) {
 
-	s, err := NewStore()
+	s, err := NewStore("evcc")
 	if err != nil {
 		t.Errorf("OpenStore %v", err)
 	}

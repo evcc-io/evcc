@@ -9,12 +9,11 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/evcc-io/evcc/util"
 )
 
 // SavingsStore is the parameter store container.
 type Store struct {
-	log  *util.Logger
+	name string
 	file string
 	db   *bolt.DB
 }
@@ -31,9 +30,8 @@ var (
 	bucketName = []byte("evcc")
 )
 
-func NewStore() (*Store, error) {
-	log := util.NewLogger("store")
-	file := fmt.Sprintf("%s/evcc.db", os.TempDir())
+func NewStore(name string) (*Store, error) {
+	file := fmt.Sprintf("%s/%s.db", os.TempDir(), name)
 
 	s, err := OpenStore(file)
 	if err != nil {
@@ -41,7 +39,7 @@ func NewStore() (*Store, error) {
 	}
 
 	return &Store{
-		log:  log,
+		name: name,
 		file: file,
 		db:   s.db,
 	}, nil
