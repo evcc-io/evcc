@@ -1,13 +1,13 @@
 package core
 
 import (
+	"fmt"
 	"math"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
-	"github.com/rapidloop/skv"
 )
 
 const DefaultGridPrice = 0.30
@@ -45,12 +45,18 @@ func NewSavings(tariffs tariff.Tariffs) *Savings {
 	}
 
 	// Get stored savings parameters
-	if err := store.Get("savingsStarted", &savings.started); err == skv.ErrNotFound {
+	err := store.Get("savingsStarted", &savings.started)
+	if fmt.Sprintf("%s", err) == "store: key not found" {
 		savings.started = clock.Now()
+		store.Put("savingsStarted", savings.started)
 	}
-	if err := store.Get("savingsUpdated", &savings.updated); err == skv.ErrNotFound {
+
+	err = store.Get("savingsUpdated", &savings.updated)
+	if fmt.Sprintf("%s", err) == "store: key not found" {
 		savings.updated = clock.Now()
+		store.Put("savingsUpdated", savings.updated)
 	}
+
 	store.Get("savingsUpdated", &savings.updated)
 	store.Get("savingsGridCharged", &savings.gridCharged)
 	store.Get("savingsGridCost", &savings.gridCost)

@@ -18,16 +18,7 @@ type Store struct {
 	db         *bolt.DB
 }
 
-var (
-	// ErrNotFound is returned when the key supplied to a Get or Delete
-	// method does not exist in the database.
-	ErrNotFound = errors.New("skv: key not found")
-
-	// ErrBadValue is returned when the value supplied to the Put method
-	// is nil.
-	ErrBadValue = errors.New("skv: bad value")
-)
-
+// Initialize a new persistent key value store in os temp directory
 func NewStore(name string) (*Store, error) {
 	file := fmt.Sprintf("%s/%s.db", os.TempDir(), name)
 
@@ -71,10 +62,10 @@ func OpenStore(path string, bucketName []byte) (*Store, error) {
 
 // Put an entry into the store. The passed value is gob-encoded and stored.
 // The key can be an empty string, but the value cannot be nil - if it is,
-// Put() returns ErrBadValue.
+// Put() returns bad value.
 func (s *Store) Put(key string, value interface{}) error {
 	if value == nil {
-		return ErrBadValue
+		return errors.New("store: bad value")
 	}
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(value); err != nil {
@@ -86,14 +77,14 @@ func (s *Store) Put(key string, value interface{}) error {
 }
 
 // Get an entry from the store. "value" must be a pointer-typed. If the key
-// is not present in the store, Get returns ErrNotFound.
+// is not present in the store, Get returns key not found.
 // The value passed to Get() can be nil, in which case any value read from
 // the store is silently discarded.
 func (s *Store) Get(key string, value interface{}) error {
 	return s.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(s.bucketName).Cursor()
 		if k, v := c.Seek([]byte(key)); k == nil || string(k) != key {
-			return ErrNotFound
+			return errors.New("store: key not found")
 		} else if value == nil {
 			return nil
 		} else {
@@ -104,12 +95,12 @@ func (s *Store) Get(key string, value interface{}) error {
 }
 
 // Delete the entry with the given key. If no such key is present in the store,
-// it returns ErrNotFound.
+// it returns key not found.
 func (s *Store) Delete(key string) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		c := tx.Bucket(s.bucketName).Cursor()
 		if k, _ := c.Seek([]byte(key)); k == nil || string(k) != key {
-			return ErrNotFound
+			return errors.New("store: key not found")
 		} else {
 			return c.Delete()
 		}
