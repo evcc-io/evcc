@@ -69,6 +69,9 @@ func OpenStore(path string, bucketName []byte) (*Store, error) {
 	}
 }
 
+// Put an entry into the store. The passed value is gob-encoded and stored.
+// The key can be an empty string, but the value cannot be nil - if it is,
+// Put() returns ErrBadValue.
 func (s *Store) Put(key string, value interface{}) error {
 	if value == nil {
 		return ErrBadValue
@@ -82,6 +85,10 @@ func (s *Store) Put(key string, value interface{}) error {
 	})
 }
 
+// Get an entry from the store. "value" must be a pointer-typed. If the key
+// is not present in the store, Get returns ErrNotFound.
+// The value passed to Get() can be nil, in which case any value read from
+// the store is silently discarded.
 func (s *Store) Get(key string, value interface{}) error {
 	return s.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(s.bucketName).Cursor()
@@ -92,6 +99,19 @@ func (s *Store) Get(key string, value interface{}) error {
 		} else {
 			d := gob.NewDecoder(bytes.NewReader(v))
 			return d.Decode(value)
+		}
+	})
+}
+
+// Delete the entry with the given key. If no such key is present in the store,
+// it returns ErrNotFound.
+func (s *Store) Delete(key string) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		c := tx.Bucket(s.bucketName).Cursor()
+		if k, _ := c.Seek([]byte(key)); k == nil || string(k) != key {
+			return ErrNotFound
+		} else {
+			return c.Delete()
 		}
 	})
 }
