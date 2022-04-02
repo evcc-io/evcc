@@ -25,15 +25,15 @@ import (
 // Example config:
 // meters:
 // - name: bosch_grid
-//   type: bosch-bpts5-hybrid
+//   type: bosch-bpt
 //   uri: http://192.168.178.22
 //   usage: grid
 // - name: bosch_pv
-//   type: bosch-bpts5-hybrid
+//   type: bosch-bpt
 //   uri: http://192.168.178.22
 //   usage: pv
 // - name: bosch_battery
-//   type: bosch-bpts5-hybrid
+//   type: bosch-bpt
 //   uri: http://192.168.178.22
 //   usage: battery
 
@@ -43,7 +43,7 @@ type BoschBpts5Hybrid struct {
 }
 
 func init() {
-	registry.Add("bosch-bpts5-hybrid", NewBoschBpts5HybridFromConfig)
+	registry.Add("bosch-bpt", NewBoschBpts5HybridFromConfig)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,SoC,func() (float64, error)"
@@ -69,7 +69,7 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
 func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, error) {
-	log := util.NewLogger("bosch-bpts5-hybrid")
+	log := util.NewLogger("bosch-bpt")
 
 	instance, exists := bosch.Instances.LoadOrStore(uri, bosch.NewLocal(log, uri, cache))
 	if !exists {
