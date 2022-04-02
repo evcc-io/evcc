@@ -5,7 +5,7 @@ products:
       generic: Energy Meter
 params:
   - name: usage
-    choice: ["grid", "pv", "battery"]
+    choice: ["grid", "pv"]
   - name: host
     example: 192.0.2.2
     required: true
