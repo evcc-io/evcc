@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/boltdb/bolt"
+	"go.etcd.io/bbolt"
 )
 
 // Store is the parameter store database container.
@@ -16,7 +16,7 @@ type Store struct {
 	dbName     string
 	bucketName string
 	isOpen     bool
-	db         *bolt.DB
+	db         *bbolt.DB
 }
 
 // Initialize a new persistent key value store in os user config directory
@@ -50,15 +50,15 @@ func (s *Store) Open() {
 		s.Log.WARN.Printf("cannot determine logdir %s: %v", cachedir, err)
 	}
 
-	opts := &bolt.Options{
+	opts := &bbolt.Options{
 		Timeout: 50 * time.Millisecond,
 	}
 
-	if db, err := bolt.Open(fmt.Sprintf("%s/%s.db", cachedir, s.dbName), 0640, opts); err != nil {
+	if db, err := bbolt.Open(fmt.Sprintf("%s/%s.db", cachedir, s.dbName), 0640, opts); err != nil {
 		s.Log.WARN.Printf("cannot open %s", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
 	} else {
 		s.Log.DEBUG.Printf("%s opened", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
-		err := db.Update(func(tx *bolt.Tx) error {
+		err := db.Update(func(tx *bbolt.Tx) error {
 			_, err := tx.CreateBucketIfNotExists([]byte(s.bucketName))
 			return err
 		})
@@ -83,7 +83,7 @@ func (s *Store) Put(key string, value interface{}) {
 			s.Log.ERROR.Printf("error encoding value %v: %v", value, err)
 		}
 
-		err := s.db.Update(func(tx *bolt.Tx) error {
+		err := s.db.Update(func(tx *bbolt.Tx) error {
 			return tx.Bucket([]byte(s.bucketName)).Put([]byte(key), buf.Bytes())
 		})
 		if err != nil {
@@ -101,7 +101,7 @@ func (s *Store) Get(key string, value interface{}) {
 	if key == "" || !s.isOpen {
 		s.Log.WARN.Printf("get invalid key or missing db: %s", key)
 	} else {
-		err := s.db.View(func(tx *bolt.Tx) error {
+		err := s.db.View(func(tx *bbolt.Tx) error {
 			c := tx.Bucket([]byte(s.bucketName)).Cursor()
 			if k, v := c.Seek([]byte(key)); k == nil || string(k) != key {
 				s.Log.WARN.Printf("get key %s not found", key)
@@ -125,7 +125,7 @@ func (s *Store) Delete(key string) {
 	if key == "" || !s.isOpen {
 		s.Log.WARN.Printf("delete invalid key or missing db: %s", key)
 	} else {
-		err := s.db.Update(func(tx *bolt.Tx) error {
+		err := s.db.Update(func(tx *bbolt.Tx) error {
 			c := tx.Bucket([]byte(s.bucketName)).Cursor()
 			if k, _ := c.Seek([]byte(key)); k == nil || string(k) != key {
 				s.Log.WARN.Printf("delete key %s not found", key)
