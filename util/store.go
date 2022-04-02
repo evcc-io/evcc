@@ -12,7 +12,7 @@ import (
 
 // Store is the parameter store database container.
 type Store struct {
-	log        *Logger
+	Log        *Logger
 	dbName     string
 	bucketName string
 	isOpen     bool
@@ -43,11 +43,11 @@ func NewStore(dbName, bucketName string) *Store {
 // timeout error.
 func (s *Store) Open() {
 
-	s.log = NewLogger(fmt.Sprintf("store-%s", s.dbName))
+	s.Log = NewLogger(fmt.Sprintf("store-%s", s.dbName))
 
 	cachedir, err := os.UserCacheDir()
 	if err != nil {
-		s.log.WARN.Printf("cannot determine logdir %s: %v", cachedir, err)
+		s.Log.WARN.Printf("cannot determine logdir %s: %v", cachedir, err)
 	}
 
 	opts := &bolt.Options{
@@ -55,15 +55,15 @@ func (s *Store) Open() {
 	}
 
 	if db, err := bolt.Open(fmt.Sprintf("%s/%s.db", cachedir, s.dbName), 0640, opts); err != nil {
-		s.log.WARN.Printf("cannot open %s", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
+		s.Log.WARN.Printf("cannot open %s", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
 	} else {
-		s.log.DEBUG.Printf("%s opened", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
+		s.Log.DEBUG.Printf("%s opened", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
 		err := db.Update(func(tx *bolt.Tx) error {
 			_, err := tx.CreateBucketIfNotExists([]byte(s.bucketName))
 			return err
 		})
 		if err != nil {
-			s.log.WARN.Printf("open error: %v", err)
+			s.Log.WARN.Printf("open error: %v", err)
 		} else {
 			s.isOpen = true
 			s.db = db
@@ -76,21 +76,21 @@ func (s *Store) Open() {
 // Put() is not storing the value
 func (s *Store) Put(key string, value interface{}) {
 	if key == "" || value == nil || !s.isOpen {
-		s.log.WARN.Printf("put invalid key,value or missing db: %s / %v", key, value)
+		s.Log.WARN.Printf("put invalid key,value or missing db: %s / %v", key, value)
 	} else {
 		var buf bytes.Buffer
 		if err := gob.NewEncoder(&buf).Encode(value); err != nil {
-			s.log.WARN.Printf("error encoding value %v: %v", value, err)
+			s.Log.WARN.Printf("error encoding value %v: %v", value, err)
 		}
 
 		err := s.db.Update(func(tx *bolt.Tx) error {
 			return tx.Bucket([]byte(s.bucketName)).Put([]byte(key), buf.Bytes())
 		})
 		if err != nil {
-			s.log.WARN.Printf("put error: %v", err)
+			s.Log.WARN.Printf("put error: %v", err)
 		}
 
-		s.log.DEBUG.Printf("put stored key <%s> with value <%v>:", key, value)
+		s.Log.DEBUG.Printf("put stored key <%s> with value <%v>:", key, value)
 
 	}
 }
@@ -99,12 +99,12 @@ func (s *Store) Put(key string, value interface{}) {
 // is not present in the store, Get is not updating the value
 func (s *Store) Get(key string, value interface{}) {
 	if key == "" || !s.isOpen {
-		s.log.WARN.Printf("get invalid key or missing db: %s", key)
+		s.Log.WARN.Printf("get invalid key or missing db: %s", key)
 	} else {
 		err := s.db.View(func(tx *bolt.Tx) error {
 			c := tx.Bucket([]byte(s.bucketName)).Cursor()
 			if k, v := c.Seek([]byte(key)); k == nil || string(k) != key {
-				s.log.WARN.Printf("get key %s not found", key)
+				s.Log.WARN.Printf("get key %s not found", key)
 			} else if value != nil {
 				d := gob.NewDecoder(bytes.NewReader(v))
 				return d.Decode(value)
@@ -114,7 +114,7 @@ func (s *Store) Get(key string, value interface{}) {
 		})
 
 		if err != nil {
-			s.log.WARN.Printf("get error: %v", err)
+			s.Log.WARN.Printf("get error: %v", err)
 		}
 	}
 }
@@ -123,12 +123,12 @@ func (s *Store) Get(key string, value interface{}) {
 // it returns key not found.
 func (s *Store) Delete(key string) {
 	if key == "" || !s.isOpen {
-		s.log.WARN.Printf("delete invalid key or missing db: %s", key)
+		s.Log.WARN.Printf("delete invalid key or missing db: %s", key)
 	} else {
 		err := s.db.Update(func(tx *bolt.Tx) error {
 			c := tx.Bucket([]byte(s.bucketName)).Cursor()
 			if k, _ := c.Seek([]byte(key)); k == nil || string(k) != key {
-				s.log.WARN.Printf("delete key %s not found", key)
+				s.Log.WARN.Printf("delete key %s not found", key)
 			} else {
 				return c.Delete()
 			}
@@ -136,7 +136,7 @@ func (s *Store) Delete(key string) {
 		})
 
 		if err != nil {
-			s.log.WARN.Printf("delete error: %v", err)
+			s.Log.WARN.Printf("delete error: %v", err)
 		}
 	}
 }
@@ -144,11 +144,11 @@ func (s *Store) Delete(key string) {
 // Closes the evcc key-value store file.
 func (s *Store) Close() {
 	if !s.isOpen {
-		s.log.WARN.Print("close missing db")
+		s.Log.WARN.Print("close missing db")
 	} else {
 		err := s.db.Close()
 		if err != nil {
-			s.log.WARN.Printf("delete error: %v", err)
+			s.Log.WARN.Printf("delete error: %v", err)
 		}
 	}
 }

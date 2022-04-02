@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/util"
 )
 
 func assertEnergy(t *testing.T, s *Savings, total, self, percentage float64) {
@@ -42,8 +43,14 @@ func (p StubPublisher) publish(key string, val interface{}) {}
 func TestSavingsWithChangingEnergySources(t *testing.T) {
 	p := StubPublisher{}
 
+	log := util.NewLogger("store-savingstest")
+	store := &util.Store{
+		Log: log,
+	}
+
 	clck := clock.NewMock()
 	s := &Savings{
+		store:   *store,
 		clock:   clck,
 		started: clck.Now(),
 		updated: clck.Now(),
@@ -91,8 +98,14 @@ func TestSavingsWithChangingEnergySources(t *testing.T) {
 func TestSavingsWithDifferentTimespans(t *testing.T) {
 	p := StubPublisher{}
 
+	log := util.NewLogger("store-savingstest")
+	store := &util.Store{
+		Log: log,
+	}
+
 	clck := clock.NewMock()
 	s := &Savings{
+		store:   *store,
 		clock:   clck,
 		started: clck.Now(),
 		updated: clck.Now(),
@@ -167,6 +180,11 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 func TestEffectiveEnergyPriceAndSavingsAmount(t *testing.T) {
 	p := StubPublisher{}
 
+	log := util.NewLogger("store-savingstest")
+	store := &util.Store{
+		Log: log,
+	}
+
 	clck := clock.NewMock()
 
 	type tcStep = struct {
@@ -210,6 +228,7 @@ func TestEffectiveEnergyPriceAndSavingsAmount(t *testing.T) {
 		t.Logf("%+v", tc)
 
 		s := &Savings{
+			store:   *store,
 			clock:   clck,
 			started: clck.Now(),
 			updated: clck.Now(),
