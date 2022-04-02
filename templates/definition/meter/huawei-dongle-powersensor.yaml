@@ -71,7 +71,7 @@ render: |
     timeout: 10s
     connectdelay: 1s
     register:
-      address: 32080 # Active generation power
+      address: 32064 # Input power
       type: holding
       decode: int32
   {{- end }}
