@@ -71,14 +71,12 @@ func (c *API) Status() (StatusResponse, error) {
 func (c *API) extractWuiSidFromBody(body string) error {
 	index := strings.Index(body, "WUI_SID=")
 
-	if index < 0 {
+	if index < 0 || len(body) < index+9+15 {
 		c.login.wuSid = ""
 		return fmt.Errorf("error while extracting wui sid. body was= %s", body)
 	}
 
 	c.login.wuSid = body[index+9 : index+9+15]
-
-	c.logger.DEBUG.Println("extractWuiSidFromBody: result=", c.login.wuSid)
 
 	return nil
 }
