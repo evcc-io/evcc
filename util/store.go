@@ -20,7 +20,12 @@ type Store struct {
 
 // Initialize a new persistent key value store in os temp directory
 func NewStore(name string) (*Store, error) {
-	file := fmt.Sprintf("%s/%s.db", os.TempDir(), name)
+	cachedir, err := os.UserCacheDir()
+	if err != nil {
+		return nil, err
+	}
+
+	file := fmt.Sprintf("%s/%s.db", cachedir, name)
 
 	s, err := OpenStore(file, []byte(name))
 	if err != nil {
