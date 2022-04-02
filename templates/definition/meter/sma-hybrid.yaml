@@ -1,55 +1,55 @@
 template: sma-hybrid
 products:
-- brand: SMA
-  description:
-    de: Smart Energy Hybrid-Wechselrichter
-    en: Smart Energy Hybrid Inverter
+  - brand: SMA
+    description:
+      de: Smart Energy Hybrid-Wechselrichter
+      en: Smart Energy Hybrid Inverter
 params:
-- name: usage
-  choice: [ "pv", "battery" ]
-- name: modbus
-  choice: [ "tcpip" ]
-  port: 502
-  id: 3
-  help:
-    en: The Modbus TCP-Server needs to be enabled on this Smart Energy inverter
-    de: Der Modbus TCP-Server muss an diesem Smart Energy Wechselrichter aktiviert sein
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 3
+    help:
+      en: The Modbus TCP-Server needs to be enabled on this Smart Energy inverter
+      de: Der Modbus TCP-Server muss an diesem Smart Energy Wechselrichter aktiviert sein
 render: |
   type: custom
   power:
   {{- if eq .usage "pv" }}
     source: calc
     add:
-    - source: modbus
-      {{include "modbus" . | indent 4}}
-      register: # manual non-sunspec register configuration
-        address: 30773 # SMA Modbus Profile: DC power input [1]
-        type: holding
-        decode: int32sma
-    - source: modbus
-      {{include "modbus" . | indent 4}}
-      register: # manual non-sunspec register configuration
-        address: 30961 # SMA Modbus Profile: DC power input [2]
-        type: holding
-        decode: int32sma
+      - source: modbus
+        {{include "modbus" . | indent 6}}
+        register: # manual non-sunspec register configuration
+          address: 30773 # SMA Modbus Profile: DC power input [1]
+          type: holding
+          decode: int32sma
+      - source: modbus
+        {{include "modbus" . | indent 6}}
+        register: # manual non-sunspec register configuration
+          address: 30961 # SMA Modbus Profile: DC power input [2]
+          type: holding
+          decode: int32sma
   {{- end }}
   {{- if eq .usage "battery" }}
     source: calc
     mul:
-    - source: modbus
-      {{include "modbus" . | indent 4}}
-      register: # manual non-sunspec register configuration
-        address: 30851 # SMA Modbus Profile: Battery voltage
-        type: holding
-        decode: uint32sma
-      scale: 0.01
-    - source: modbus
-      {{include "modbus" . | indent 4}}
-      register: # manual non-sunspec register configuration
-        address: 30843 # SMA Modbus Profile: Battery current
-        type: holding
-        decode: int32sma
-      scale: 0.001
+      - source: modbus
+        {{include "modbus" . | indent 6}}
+        register: # manual non-sunspec register configuration
+          address: 30851 # SMA Modbus Profile: Battery voltage
+          type: holding
+          decode: uint32sma
+        scale: 0.01
+      - source: modbus
+        {{include "modbus" . | indent 6}}
+        register: # manual non-sunspec register configuration
+          address: 30843 # SMA Modbus Profile: Battery current
+          type: holding
+          decode: int32sma
+        scale: 0.001
   soc:
     source: modbus
     {{include "modbus" . | indent 2}}
