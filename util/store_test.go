@@ -6,23 +6,12 @@ import (
 
 func TestTore(t *testing.T) {
 
-	s, err := NewStore("evcc_test")
-	if err != nil {
-		t.Errorf("OpenStore %v", err)
-	}
+	s := NewStore("evcc_test", "")
 
-	t.Logf("Db %v", s.db)
+	s.Open()
 
-	err = s.Put("key42", "this is a string")
-	if err != nil {
-		t.Errorf("PutStore %v", err)
-	}
+	s.Put("key42", "this is a string")
 
-	t.Logf("Store %v", s)
-
-	err = s.CloseStore()
-	if err != nil {
-		t.Errorf("Close %v", err)
-	}
+	s.Close()
 
 }

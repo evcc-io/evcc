@@ -3,7 +3,6 @@ package util
 import (
 	"bytes"
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -13,30 +12,26 @@ import (
 
 // Store is the parameter store database container.
 type Store struct {
-	name       string
-	bucketName []byte
+	log        *Logger
+	dbName     string
+	bucketName string
+	isOpen     bool
 	db         *bolt.DB
 }
 
 // Initialize a new persistent key value store in os temp directory
-func NewStore(name string) (*Store, error) {
-	cachedir, err := os.UserCacheDir()
-	if err != nil {
-		return nil, err
+func NewStore(dbName, bucketName string) *Store {
+	if bucketName == "" {
+		bucketName = dbName
 	}
 
-	file := fmt.Sprintf("%s/%s.db", cachedir, name)
-
-	s, err := OpenStore(file, []byte(name))
-	if err != nil {
-		return nil, err
+	s := &Store{
+		isOpen:     false,
+		dbName:     dbName,
+		bucketName: bucketName,
 	}
 
-	return &Store{
-		name:       name,
-		bucketName: []byte(name),
-		db:         s.db,
-	}, nil
+	return s
 }
 
 // Open a key-value store. "path" is the full path to the database file, any
@@ -46,73 +41,114 @@ func NewStore(name string) (*Store, error) {
 // Because of BoltDB restrictions, only one process may open the file at a
 // time. Attempts to open the file from another process will fail with a
 // timeout error.
-func OpenStore(path string, bucketName []byte) (*Store, error) {
+func (s *Store) Open() {
+
+	s.log = NewLogger(fmt.Sprintf("store-%s", s.dbName))
+
+	cachedir, err := os.UserCacheDir()
+	if err != nil {
+		s.log.WARN.Printf("cannot determine logdir %s: %v", cachedir, err)
+	}
+
 	opts := &bolt.Options{
 		Timeout: 50 * time.Millisecond,
 	}
-	if db, err := bolt.Open(path, 0640, opts); err != nil {
-		return nil, err
+
+	if db, err := bolt.Open(fmt.Sprintf("%s/%s.db", cachedir, s.dbName), 0640, opts); err != nil {
+		s.log.WARN.Printf("cannot open %s", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
 	} else {
+		s.log.DEBUG.Printf("%s opened", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
 		err := db.Update(func(tx *bolt.Tx) error {
-			_, err := tx.CreateBucketIfNotExists(bucketName)
+			_, err := tx.CreateBucketIfNotExists([]byte(s.bucketName))
 			return err
 		})
 		if err != nil {
-			return nil, err
+			s.log.WARN.Printf("open error: %v", err)
 		} else {
-			return &Store{db: db}, nil
+			s.isOpen = true
+			s.db = db
 		}
 	}
 }
 
 // Put an entry into the store. The passed value is gob-encoded and stored.
-// The key can be an empty string, but the value cannot be nil - if it is,
-// Put() returns bad value.
-func (s *Store) Put(key string, value interface{}) error {
-	if value == nil {
-		return errors.New("store: bad value")
+// The key cannot be an empty string, but the value cannot be nil - if it is,
+// Put() is not storing the value
+func (s *Store) Put(key string, value interface{}) {
+	if key == "" || value == nil || !s.isOpen {
+		s.log.WARN.Printf("put invalid key,value or missing db: %s / %v", key, value)
+	} else {
+		var buf bytes.Buffer
+		if err := gob.NewEncoder(&buf).Encode(value); err != nil {
+			s.log.WARN.Printf("error encoding value %v: %v", value, err)
+		}
+
+		err := s.db.Update(func(tx *bolt.Tx) error {
+			return tx.Bucket([]byte(s.bucketName)).Put([]byte(key), buf.Bytes())
+		})
+		if err != nil {
+			s.log.WARN.Printf("put error: %v", err)
+		}
+
+		s.log.DEBUG.Printf("put stored key <%s> with value <%v>:", key, value)
+
 	}
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(value); err != nil {
-		return err
-	}
-	return s.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(s.bucketName).Put([]byte(key), buf.Bytes())
-	})
 }
 
 // Get an entry from the store. "value" must be a pointer-typed. If the key
-// is not present in the store, Get returns key not found.
-// The value passed to Get() can be nil, in which case any value read from
-// the store is silently discarded.
-func (s *Store) Get(key string, value interface{}) error {
-	return s.db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket(s.bucketName).Cursor()
-		if k, v := c.Seek([]byte(key)); k == nil || string(k) != key {
-			return errors.New("store: key not found")
-		} else if value == nil {
+// is not present in the store, Get is not updating the value
+func (s *Store) Get(key string, value interface{}) {
+	if key == "" || !s.isOpen {
+		s.log.WARN.Printf("get invalid key or missing db: %s", key)
+	} else {
+		err := s.db.View(func(tx *bolt.Tx) error {
+			c := tx.Bucket([]byte(s.bucketName)).Cursor()
+			if k, v := c.Seek([]byte(key)); k == nil || string(k) != key {
+				s.log.WARN.Printf("get key %s not found", key)
+			} else if value != nil {
+				d := gob.NewDecoder(bytes.NewReader(v))
+				return d.Decode(value)
+			}
+
 			return nil
-		} else {
-			d := gob.NewDecoder(bytes.NewReader(v))
-			return d.Decode(value)
+		})
+
+		if err != nil {
+			s.log.WARN.Printf("get error: %v", err)
 		}
-	})
+	}
 }
 
 // Delete the entry with the given key. If no such key is present in the store,
 // it returns key not found.
-func (s *Store) Delete(key string) error {
-	return s.db.Update(func(tx *bolt.Tx) error {
-		c := tx.Bucket(s.bucketName).Cursor()
-		if k, _ := c.Seek([]byte(key)); k == nil || string(k) != key {
-			return errors.New("store: key not found")
-		} else {
-			return c.Delete()
+func (s *Store) Delete(key string) {
+	if key == "" || !s.isOpen {
+		s.log.WARN.Printf("delete invalid key or missing db: %s", key)
+	} else {
+		err := s.db.Update(func(tx *bolt.Tx) error {
+			c := tx.Bucket([]byte(s.bucketName)).Cursor()
+			if k, _ := c.Seek([]byte(key)); k == nil || string(k) != key {
+				s.log.WARN.Printf("delete key %s not found", key)
+			} else {
+				return c.Delete()
+			}
+			return nil
+		})
+
+		if err != nil {
+			s.log.WARN.Printf("delete error: %v", err)
 		}
-	})
+	}
 }
 
-// CloseStore closes the evcc key-value store file.
-func (s *Store) CloseStore() error {
-	return s.db.Close()
+// Closes the evcc key-value store file.
+func (s *Store) Close() {
+	if !s.isOpen {
+		s.log.WARN.Print("close missing db")
+	} else {
+		err := s.db.Close()
+		if err != nil {
+			s.log.WARN.Printf("delete error: %v", err)
+		}
+	}
 }

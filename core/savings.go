@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -36,7 +35,8 @@ type Savings struct {
 func NewSavings(tariffs tariff.Tariffs) *Savings {
 	clock := clock.New()
 
-	store, _ := util.NewStore("evcc_savings")
+	store := util.NewStore("evcc_savings", "")
+	store.Open()
 
 	savings := &Savings{
 		clock:   clock,
@@ -45,19 +45,18 @@ func NewSavings(tariffs tariff.Tariffs) *Savings {
 	}
 
 	// Get stored savings parameters
-	err := store.Get("savingsStarted", &savings.started)
-	if fmt.Sprintf("%s", err) == "store: key not found" {
+	store.Get("savingsStarted", &savings.started)
+	if savings.started == *new(time.Time) {
 		savings.started = clock.Now()
 		store.Put("savingsStarted", savings.started)
 	}
 
-	err = store.Get("savingsUpdated", &savings.updated)
-	if fmt.Sprintf("%s", err) == "store: key not found" {
+	store.Get("savingsUpdated", &savings.updated)
+	if savings.updated == *new(time.Time) {
 		savings.updated = clock.Now()
 		store.Put("savingsUpdated", savings.updated)
 	}
 
-	store.Get("savingsUpdated", &savings.updated)
 	store.Get("savingsGridCharged", &savings.gridCharged)
 	store.Get("savingsGridCost", &savings.gridCost)
 	store.Get("savingsgridSavedCost", &savings.gridSavedCost)
