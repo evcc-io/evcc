@@ -21,7 +21,6 @@ type API struct {
 	login   LoginResponse
 	updated time.Time
 	cache   time.Duration
-	logger  *util.Logger
 }
 
 var Instances = new(sync.Map)
@@ -31,7 +30,6 @@ func NewLocal(log *util.Logger, uri string, cache time.Duration) *API {
 		Helper: request.NewHelper(log),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 		cache:  cache,
-		logger: log,
 	}
 
 	// ignore the self signed certificate
@@ -66,8 +64,6 @@ func (c *API) Status() (StatusResponse, error) {
 	return c.status, err
 }
 
-//////////// helpers ////////////////
-
 func (c *API) extractWuiSidFromBody(body string) error {
 	index := strings.Index(body, "WUI_SID=")
 
@@ -98,24 +94,11 @@ func (c *API) updateValues() error {
 		return err
 	}
 
-	return extractValues(c, string(body))
+	return c.extractValues(string(body))
 }
 
-func parseWattValue(inputString string) (float64, error) {
-	if len(strings.TrimSpace(inputString)) == 0 || strings.Contains(inputString, "nbsp;") {
-		return 0.0, nil
-	}
-
-	numberString := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(inputString, "kW", " "), "von", " "))
-
-	res, err := strconv.ParseFloat(numberString, 64)
-
-	return res * 1000.0, err
-}
-
-func extractValues(c *API, body string) error {
+func (c *API) extractValues(body string) error {
 	if strings.Contains(body, "session invalid") {
-		c.logger.DEBUG.Println("extractValues: Session invalid. Performing Re-login")
 		return c.Login()
 	}
 
@@ -126,39 +109,37 @@ func extractValues(c *API, body string) error {
 	}
 
 	soc, err := strconv.Atoi(values[3])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 1: %s", err)
+	if err == nil {
+		c.status.CurrentBatterySoc = float64(soc)
+		c.status.SellToGrid, err = parseWattValue(values[11])
 	}
 
-	c.status.CurrentBatterySoc = float64(soc)
-	c.status.SellToGrid, err = parseWattValue(values[11])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 2: %s", err)
+	if err == nil {
+		c.status.BuyFromGrid, err = parseWattValue(values[14])
 	}
 
-	c.status.BuyFromGrid, err = parseWattValue(values[14])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 3: %s", err)
+	if err == nil {
+		c.status.PvPower, err = parseWattValue(values[2])
 	}
 
-	c.status.PvPower, err = parseWattValue(values[2])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 4: %s", err)
+	if err == nil {
+		c.status.BatteryChargePower, err = parseWattValue(values[10])
 	}
 
-	c.status.BatteryChargePower, err = parseWattValue(values[10])
-
-	if err != nil {
-		return fmt.Errorf("extractValues: error during value parsing 5: %s", err)
+	if err == nil {
+		c.status.BatteryDischargePower, err = parseWattValue(values[13])
 	}
-
-	c.status.BatteryDischargePower, err = parseWattValue(values[13])
-
-	c.logger.DEBUG.Println("extractValues: batterieLadeStrom=", c.status.BatteryChargePower, ";currentBatterySocValue=", c.status.CurrentBatterySoc, ";einspeisung=", c.status.SellToGrid, ";pvLeistungWatt=", c.status.PvPower, ";strombezugAusNetz=", c.status.BuyFromGrid, ";verbrauchVonBatterie=", c.status.BatteryDischargePower)
 
 	return err
+}
+
+func parseWattValue(inputString string) (float64, error) {
+	if len(strings.TrimSpace(inputString)) == 0 || strings.Contains(inputString, "nbsp;") {
+		return 0.0, nil
+	}
+
+	num := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(inputString, "kW", " "), "von", " "))
+	res, err := strconv.ParseFloat(num, 64)
+
+	return res * 1000.0, err
 }
