@@ -27,14 +27,11 @@ type API struct {
 var Instances = new(sync.Map)
 
 func NewLocal(log *util.Logger, uri string, cache time.Duration) *API {
-	var initialStatus StatusResponse
-
 	api := &API{
 		Helper: request.NewHelper(log),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 		cache:  cache,
 		logger: log,
-		status: initialStatus,
 	}
 
 	// ignore the self signed certificate
@@ -56,10 +53,8 @@ func (c *API) Login() (err error) {
 		return err
 	}
 
-	return extractWuiSidFromBody(c, string(body))
+	return c.extractWuiSidFromBody(string(body))
 }
-
-//////////// value retrieval ////////////////
 
 func (c *API) Status() (StatusResponse, error) {
 	var err error
@@ -73,7 +68,7 @@ func (c *API) Status() (StatusResponse, error) {
 
 //////////// helpers ////////////////
 
-func extractWuiSidFromBody(c *API, body string) error {
+func (c *API) extractWuiSidFromBody(body string) error {
 	index := strings.Index(body, "WUI_SID=")
 
 	if index < 0 {
