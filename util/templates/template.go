@@ -9,7 +9,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/util"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -27,7 +27,7 @@ type Template struct {
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
-		if p.ValueType == "" || (p.ValueType != "" && !funk.ContainsString(ValidParamValueTypes, p.ValueType)) {
+		if p.ValueType == "" || (p.ValueType != "" && !slices.Contains(ValidParamValueTypes, p.ValueType)) {
 			t.Params[i].ValueType = ParamValueTypeString
 		}
 
@@ -42,13 +42,13 @@ func (t *Template) UpdateParamsWithDefaults() error {
 // validate the template (only rudimentary for now)
 func (t *Template) Validate() error {
 	for _, c := range t.Capabilities {
-		if !funk.ContainsString(ValidCapabilities, c) {
+		if !slices.Contains(ValidCapabilities, c) {
 			return fmt.Errorf("invalid capability '%s' in template %s", c, t.Template)
 		}
 	}
 
 	for _, r := range t.Requirements.EVCC {
-		if !funk.ContainsString(ValidRequirements, r) {
+		if !slices.Contains(ValidRequirements, r) {
 			return fmt.Errorf("invalid requirement '%s' in template %s", r, t.Template)
 		}
 	}
@@ -57,24 +57,24 @@ func (t *Template) Validate() error {
 		switch p.Name {
 		case ParamUsage:
 			for _, c := range p.Choice {
-				if !funk.ContainsString(ValidUsageChoices, c) {
+				if !slices.Contains(ValidUsageChoices, c) {
 					return fmt.Errorf("invalid usage choice '%s' in template %s", c, t.Template)
 				}
 			}
 		case ParamModbus:
 			for _, c := range p.Choice {
-				if !funk.ContainsString(ValidModbusChoices, c) {
+				if !slices.Contains(ValidModbusChoices, c) {
 					return fmt.Errorf("invalid modbus choice '%s' in template %s", c, t.Template)
 				}
 			}
 		}
 
-		if p.ValueType != "" && !funk.ContainsString(ValidParamValueTypes, p.ValueType) {
+		if p.ValueType != "" && !slices.Contains(ValidParamValueTypes, p.ValueType) {
 			return fmt.Errorf("invalid value type '%s' in template %s", p.ValueType, t.Template)
 		}
 
 		for _, d := range p.Dependencies {
-			if !funk.ContainsString(ValidDependencies, d.Check) {
+			if !slices.Contains(ValidDependencies, d.Check) {
 				return fmt.Errorf("invalid dependency check '%s' in template %s", d.Check, t.Template)
 			}
 		}
@@ -303,7 +303,7 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 
 	for item, p := range values {
 		i, _ := t.ParamByName(item)
-		if i == -1 && !funk.ContainsString(predefinedTemplateProperties, item) {
+		if i == -1 && !slices.Contains(predefinedTemplateProperties, item) {
 			return nil, values, fmt.Errorf("invalid element 'name: %s'", item)
 		}
 

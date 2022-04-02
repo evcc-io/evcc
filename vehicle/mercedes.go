@@ -14,7 +14,6 @@ import (
 type Mercedes struct {
 	*embed
 	*mercedes.Provider
-	*mercedes.Identity
 }
 
 func init() {
@@ -65,7 +64,6 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Mercedes{
 		embed:    &cc.embed,
-		Identity: identity,
 		Provider: mercedes.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache),
 	}
 

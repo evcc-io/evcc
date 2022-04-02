@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/thoas/go-funk"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -40,9 +40,9 @@ func (v *API) Vehicles() ([]string, error) {
 
 	err := v.GetJSON(ApiUri, &resp)
 	if err == nil {
-		return funk.Map(resp, func(v Vehicle) string {
+		return lo.Map(resp, func(v Vehicle, _ int) string {
 			return v.FrameNo
-		}).([]string), nil
+		}), nil
 	}
 
 	return nil, err

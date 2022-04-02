@@ -12,7 +12,7 @@ const refreshTimeout = 2 * time.Minute
 
 // Provider is a kamereon provider
 type Provider struct {
-	statusG     func() (interface{}, error)
+	statusG     func() (StatusResponse, error)
 	action      func(value Action) error
 	expiry      time.Duration
 	refreshTime time.Time
@@ -28,12 +28,12 @@ func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
 		expiry: expiry,
 	}
 
-	impl.statusG = provider.NewCached(func() (interface{}, error) {
+	impl.statusG = provider.Cached(func() (StatusResponse, error) {
 		return impl.status(
 			func() (StatusResponse, error) { return api.BatteryStatus(vin) },
 			func() (ActionResponse, error) { return api.RefreshRequest(vin, "RefreshBatteryStatus") },
 		)
-	}, cache).InterfaceGetter()
+	}, cache)
 
 	return impl
 }
@@ -85,7 +85,7 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.Attributes.BatteryLevel), nil
 	}
 
@@ -99,7 +99,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		if res.Attributes.PlugStatus > 0 {
 			status = api.StatusB
 		}
@@ -117,7 +117,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return int64(res.Attributes.RangeHvacOff), nil
 	}
 
@@ -130,7 +130,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		if res.Attributes.RemainingTime == nil {
 			return time.Time{}, api.ErrNotAvailable
 		}

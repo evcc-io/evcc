@@ -2,8 +2,6 @@ package vehicle
 
 import (
 	"context"
-	"errors"
-	"strings"
 	"time"
 
 	"github.com/bogosj/tesla"
@@ -18,9 +16,9 @@ import (
 type Tesla struct {
 	*embed
 	vehicle       *tesla.Vehicle
-	chargeStateG  func() (interface{}, error)
-	vehicleStateG func() (interface{}, error)
-	driveStateG   func() (interface{}, error)
+	chargeStateG  func() (*tesla.ChargeState, error)
+	vehicleStateG func() (*tesla.VehicleState, error)
+	driveStateG   func() (*tesla.DriveState, error)
 }
 
 func init() {
@@ -65,56 +63,33 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	vehicles, err := client.Vehicles()
+	cc.VIN, v.vehicle, err = ensureVehicleWithFeature(
+		cc.VIN, client.Vehicles,
+		func(v *tesla.Vehicle) (string, *tesla.Vehicle) {
+			return v.Vin, v
+		},
+	)
+
 	if err != nil {
 		return nil, err
-	}
-
-	if cc.VIN == "" && len(vehicles) == 1 {
-		v.vehicle = vehicles[0]
-	} else {
-		for _, vehicle := range vehicles {
-			if vehicle.Vin == strings.ToUpper(cc.VIN) {
-				v.vehicle = vehicle
-			}
-		}
-	}
-
-	if v.vehicle == nil {
-		return nil, errors.New("vin not found")
 	}
 
 	if v.Title_ == "" {
 		v.Title_ = v.vehicle.DisplayName
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
-	v.vehicleStateG = provider.NewCached(v.vehicleState, cc.Cache).InterfaceGetter()
-	v.driveStateG = provider.NewCached(v.driveState, cc.Cache).InterfaceGetter()
+	v.chargeStateG = provider.Cached(v.vehicle.ChargeState, cc.Cache)
+	v.vehicleStateG = provider.Cached(v.vehicle.VehicleState, cc.Cache)
+	v.driveStateG = provider.Cached(v.vehicle.DriveState, cc.Cache)
 
 	return v, nil
-}
-
-// chargeState implements the charge state api
-func (v *Tesla) chargeState() (interface{}, error) {
-	return v.vehicle.ChargeState()
-}
-
-// vehicleState implements the climater api
-func (v *Tesla) vehicleState() (interface{}, error) {
-	return v.vehicle.VehicleState()
-}
-
-// driveState implements the climater api
-func (v *Tesla) driveState() (interface{}, error) {
-	return v.vehicle.DriveState()
 }
 
 // SoC implements the api.Vehicle interface
 func (v *Tesla) SoC() (float64, error) {
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		return float64(res.UsableBatteryLevel), nil
 	}
 
@@ -128,7 +103,7 @@ func (v *Tesla) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		if res.ChargingState == "Stopped" || res.ChargingState == "NoPower" || res.ChargingState == "Complete" {
 			status = api.StatusB
 		}
@@ -146,7 +121,7 @@ var _ api.ChargeRater = (*Tesla)(nil)
 func (v *Tesla) ChargedEnergy() (float64, error) {
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		return res.ChargeEnergyAdded, nil
 	}
 
@@ -161,7 +136,7 @@ var _ api.VehicleRange = (*Tesla)(nil)
 func (v *Tesla) Range() (int64, error) {
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		// miles to km
 		return int64(kmPerMile * res.BatteryRange), nil
 	}
@@ -175,7 +150,7 @@ var _ api.VehicleOdometer = (*Tesla)(nil)
 func (v *Tesla) Odometer() (float64, error) {
 	res, err := v.vehicleStateG()
 
-	if res, ok := res.(*tesla.VehicleState); err == nil && ok {
+	if err == nil {
 		// miles to km
 		return kmPerMile * res.Odometer, nil
 	}
@@ -189,7 +164,7 @@ var _ api.VehicleFinishTimer = (*Tesla)(nil)
 func (v *Tesla) FinishTime() (time.Time, error) {
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		t := time.Now()
 		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
 	}
@@ -204,7 +179,7 @@ var _ api.VehiclePosition = (*Tesla)(nil)
 // Position implements the api.VehiclePosition interface
 func (v *Tesla) Position() (float64, float64, error) {
 	res, err := v.driveStateG()
-	if res, ok := res.(*tesla.DriveState); err == nil && ok {
+	if err == nil {
 		return res.Latitude, res.Longitude, nil
 	}
 

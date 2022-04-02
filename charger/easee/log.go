@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/philippseith/signalr"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 )
 
 // Logger is a simple logger interface
@@ -34,7 +34,7 @@ func (l *logger) Log(keyVals ...interface{}) error {
 		}
 
 		if i%2 == 0 {
-			if funk.Contains(skipped, v) {
+			if slices.Contains(skipped, v.(string)) {
 				skip = true
 				continue
 			}
