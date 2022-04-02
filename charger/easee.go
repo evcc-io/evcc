@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/philippseith/signalr"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -108,7 +109,7 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 		}
 
 		if len(chargers) != 1 {
-			return c, fmt.Errorf("cannot determine charger id, found: %v", util.Map(chargers, func(c easee.Charger) string { return c.ID }))
+			return c, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
 		}
 
 		c.charger = chargers[0].ID

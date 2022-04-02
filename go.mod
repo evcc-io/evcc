@@ -52,6 +52,7 @@ require (
 	github.com/lorenzodonini/ocpp-go v0.15.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/manifoldco/promptui v0.9.0
+	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/mlnoga/rct v0.1.2-0.20220320164346-9f2daa4d6734
 	github.com/muka/go-bluetooth v0.0.0-20220219050759-674a63b8741a
@@ -62,6 +63,7 @@ require (
 	github.com/philippseith/signalr v0.5.3-0.20211205201131-d57b5a34379a
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robertkrimen/otto v0.0.0-20211024170158-b87d35c0b86f
+	github.com/samber/lo v1.11.0
 	github.com/shurcooL/graphql v0.0.0-20200928012149-18c5c3165e3a
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.4.0
@@ -122,7 +124,6 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/miekg/dns v1.1.45 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect

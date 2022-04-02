@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/porsche"
+	"github.com/samber/lo"
 )
 
 // Porsche is an api.Vehicle implementation for Porsche cars
@@ -52,13 +53,13 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
 		mobileVehicles, err := mobile.Vehicles()
 		if err == nil {
-			return util.Map(mobileVehicles, func(v porsche.StatusResponseMobile) string {
+			return lo.Map(mobileVehicles, func(v porsche.StatusResponseMobile, _ int) string {
 				return v.VIN
 			}), err
 		}
 
 		vehicles, err := api.Vehicles()
-		return util.Map(vehicles, func(v porsche.Vehicle) string {
+		return lo.Map(vehicles, func(v porsche.Vehicle, _ int) string {
 			return v.VIN
 		}), err
 	})

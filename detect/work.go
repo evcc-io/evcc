@@ -39,7 +39,7 @@ func Work(log *util.Logger, num int, hosts []string) []tasks.Result {
 	// log.INFO.Println(
 	// 	"\n" +
 	// 		strings.Join(
-	// 			util.Map(taskList.tasks, func(t tasks.Task) string {
+	// 			lo.Map(taskList.tasks, func(t tasks.Task) string {
 	// 				return fmt.Sprintf("task: %s\ttype: %s\tdepends: %s\n", t.ID, t.Type, t.Depends)
 	// 			}).([]string),
 	// 			"",

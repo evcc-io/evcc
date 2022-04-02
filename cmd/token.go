@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/slices"
@@ -47,7 +48,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	}
 
 	if vehicleConf.Name == "" {
-		vehicles := util.Map(conf.Vehicles, func(v qualifiedConfig) string {
+		vehicles := lo.Map(conf.Vehicles, func(v qualifiedConfig, _ int) string {
 			return v.Name
 		})
 		log.FATAL.Fatalf("vehicle not found, have %v", vehicles)

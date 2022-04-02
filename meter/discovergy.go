@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 )
 
 func init() {
@@ -62,7 +63,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	if meterID == "" {
-		return nil, fmt.Errorf("could not determine meter id: %v", util.Map(meters, func(m discovergy.Meter) string {
+		return nil, fmt.Errorf("could not determine meter id: %v", lo.Map(meters, func(m discovergy.Meter, _ int) string {
 			return m.FullSerialNumber
 		}))
 	}

@@ -12,7 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 // Provider implements the evcc vehicle api
@@ -204,14 +204,14 @@ func (v *Provider) Diagnose2() {
 	}
 
 	// list remaining service
-	services := util.Map(rr.OperationList.ServiceInfo, func(si ServiceInfo) string {
+	services := lo.Map(rr.OperationList.ServiceInfo, func(si ServiceInfo, _ int) string {
 		if si.InvocationUrl.Content == "" {
 			return si.ServiceId
 		}
 		return ""
 	})
 
-	services = util.Filter(services, func(s string) bool {
+	services = lo.Filter(services, func(s string, _ int) bool {
 		return s != ""
 	})
 
