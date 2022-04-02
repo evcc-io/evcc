@@ -35,7 +35,7 @@ type Savings struct {
 func NewSavings(tariffs tariff.Tariffs) *Savings {
 	clock := clock.New()
 
-	store := util.NewStore("evcc_savings", "")
+	store := util.NewStore("evcc_savings", "simple")
 	store.Open()
 
 	savings := &Savings{

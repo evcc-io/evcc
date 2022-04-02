@@ -19,7 +19,7 @@ type Store struct {
 	db         *bolt.DB
 }
 
-// Initialize a new persistent key value store in os temp directory
+// Initialize a new persistent key value store in os user config directory
 func NewStore(dbName, bucketName string) *Store {
 	if bucketName == "" {
 		bucketName = dbName
@@ -45,7 +45,7 @@ func (s *Store) Open() {
 
 	s.Log = NewLogger(fmt.Sprintf("store-%s", s.dbName))
 
-	cachedir, err := os.UserCacheDir()
+	cachedir, err := os.UserConfigDir()
 	if err != nil {
 		s.Log.WARN.Printf("cannot determine logdir %s: %v", cachedir, err)
 	}
@@ -80,17 +80,17 @@ func (s *Store) Put(key string, value interface{}) {
 	} else {
 		var buf bytes.Buffer
 		if err := gob.NewEncoder(&buf).Encode(value); err != nil {
-			s.Log.WARN.Printf("error encoding value %v: %v", value, err)
+			s.Log.ERROR.Printf("error encoding value %v: %v", value, err)
 		}
 
 		err := s.db.Update(func(tx *bolt.Tx) error {
 			return tx.Bucket([]byte(s.bucketName)).Put([]byte(key), buf.Bytes())
 		})
 		if err != nil {
-			s.Log.WARN.Printf("put error: %v", err)
+			s.Log.ERROR.Printf("put error: %v", err)
 		}
 
-		s.Log.DEBUG.Printf("put stored key <%s> with value <%v>:", key, value)
+		s.Log.DEBUG.Printf("put stored key <%s> in bucket <%s> with value <%v>:", key, s.bucketName, value)
 
 	}
 }
@@ -114,7 +114,7 @@ func (s *Store) Get(key string, value interface{}) {
 		})
 
 		if err != nil {
-			s.Log.WARN.Printf("get error: %v", err)
+			s.Log.ERROR.Printf("get error: %v", err)
 		}
 	}
 }
@@ -136,7 +136,7 @@ func (s *Store) Delete(key string) {
 		})
 
 		if err != nil {
-			s.Log.WARN.Printf("delete error: %v", err)
+			s.Log.ERROR.Printf("delete error: %v", err)
 		}
 	}
 }
@@ -148,7 +148,7 @@ func (s *Store) Close() {
 	} else {
 		err := s.db.Close()
 		if err != nil {
-			s.Log.WARN.Printf("delete error: %v", err)
+			s.Log.ERROR.Printf("delete error: %v", err)
 		}
 	}
 }
