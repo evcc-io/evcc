@@ -6,7 +6,6 @@ products:
 group: switchsockets
 params:
   - name: host
-    required: true
   - name: user
     required: true
   - name: password

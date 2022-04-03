@@ -224,6 +224,10 @@ func (p *Param) OverwriteProperties(withParam Param) {
 		p.ValueType = withParam.ValueType
 	}
 
+	if withParam.Required {
+		p.Required = withParam.Required
+	}
+
 	if withParam.Default != "" {
 		p.Default = withParam.Default
 	}
