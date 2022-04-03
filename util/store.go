@@ -54,7 +54,7 @@ func (s *Store) Open() {
 		Timeout: 50 * time.Millisecond,
 	}
 
-	if db, err := bbolt.Open(fmt.Sprintf("%s/%s.db", cachedir, s.dbName), 0640, opts); err != nil {
+	if db, err := bbolt.Open(fmt.Sprintf("%s/%s.db", cachedir, s.dbName), 0600, opts); err != nil {
 		s.Log.WARN.Printf("cannot open %s", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
 	} else {
 		s.Log.DEBUG.Printf("%s opened", fmt.Sprintf("%s/%s.db", cachedir, s.dbName))
