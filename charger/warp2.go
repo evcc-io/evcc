@@ -13,7 +13,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 )
 
 // Warp2 is the Warp charger v2 firmware implementation
@@ -120,14 +120,14 @@ func NewWarp2(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp2
 
 func (wb *Warp2) hasFeature(feature string) bool {
 	if wb.features != nil {
-		return funk.ContainsString(wb.features, feature)
+		return slices.Contains(wb.features, feature)
 	}
 
 	topic := fmt.Sprintf("%s/info/features", wb.root)
 
 	if data, err := provider.NewMqtt(wb.log, wb.client, topic, 0).StringGetter()(); err == nil {
 		if err := json.Unmarshal([]byte(data), &wb.features); err == nil {
-			return funk.ContainsString(wb.features, feature)
+			return slices.Contains(wb.features, feature)
 		}
 	}
 
