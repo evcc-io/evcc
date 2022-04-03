@@ -37,7 +37,7 @@ params:
       en: Communication parameter for the adapter
     default: 8N1
   - name: host
-    required: true  
+    required: true
     description:
       de: IP-Adresse oder Hostname
       en: IP-Address or Hostname
@@ -73,7 +73,7 @@ params:
       en: Password
     help:
       de: Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
-      en: Password of the user account (in case of leading zeros embed in single quotes)
+      en: Password of the user account (use single quotes in case of leading zeros)
     mask: true
   - name: capacity
     description:
