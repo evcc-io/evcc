@@ -132,7 +132,7 @@ func (t *Template) ResolvePresets() error {
 	t.Params = []Param{}
 	for _, p := range currentParams {
 		if p.Preset != "" {
-			base, ok := t.ConfigDefaults.Config.Presets[p.Preset]
+			base, ok := t.ConfigDefaults.Presets[p.Preset]
 			if !ok {
 				return fmt.Errorf("Error: Could not find preset definition: %s\n", p.Preset)
 			}
@@ -157,7 +157,7 @@ func (t *Template) ResolveGroup() error {
 		return nil
 	}
 
-	_, ok := t.ConfigDefaults.Config.DeviceGroups[t.Group]
+	_, ok := t.ConfigDefaults.DeviceGroups[t.Group]
 	if !ok {
 		return fmt.Errorf("Error: Could not find devicegroup definition: %s\n", t.Group)
 	}
@@ -167,7 +167,7 @@ func (t *Template) ResolveGroup() error {
 
 // return the language specific group title
 func (t *Template) GroupTitle() string {
-	tl := t.ConfigDefaults.Config.DeviceGroups[t.Group]
+	tl := t.ConfigDefaults.DeviceGroups[t.Group]
 	return tl.String(t.Lang)
 }
 
@@ -295,7 +295,7 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 	values = t.ModbusValues(renderMode, false, values)
 
 	// add the common templates
-	for _, v := range t.ConfigDefaults.Config.Presets {
+	for _, v := range t.ConfigDefaults.Presets {
 		if !strings.Contains(t.Render, v.Render) {
 			t.Render = fmt.Sprintf("%s\n%s", t.Render, v.Render)
 		}
