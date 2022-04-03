@@ -15,7 +15,7 @@ render: |
     source: http
     uri: http://{{ .host }}/cm?cmnd=Status%208
     jq: .StatusSNS.ENERGY.Power
-  energy: # energy reading (Wh)
+  energy: # energy reading (kWh)
     source: http
     uri: http://{{ .host }}/cm?cmnd=Status%208
     jq: .StatusSNS.ENERGY.Total
