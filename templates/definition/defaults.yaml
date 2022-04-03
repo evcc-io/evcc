@@ -73,7 +73,7 @@ params:
       en: Password
     help:
       de: Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
-      en: Password of user-account (in case of leading zeros embed in single quotes)
+      en: Password of the user account (in case of leading zeros embed in single quotes)
     mask: true
   - name: capacity
     description:
