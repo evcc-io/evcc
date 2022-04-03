@@ -21,7 +21,7 @@ func NewVehicleFromTemplateConfig(other map[string]interface{}) (api.Vehicle, er
 		return nil, err
 	}
 
-	tmpl, err := templates.ByTemplate(cc.Template, templates.Vehicle)
+	tmpl, err := templates.ByName(cc.Template, templates.Vehicle)
 	if err != nil {
 		return nil, err
 	}

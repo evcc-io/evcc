@@ -566,7 +566,7 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, dev
 		return
 	}
 
-	config := templateItem.ConfigDefaults.Config.Modbus
+	config := templateItem.ConfigDefaults.Modbus
 
 	for _, choice := range modbusParam.Choice {
 		if config.Interfaces[choice] == nil {

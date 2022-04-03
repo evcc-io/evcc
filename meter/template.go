@@ -21,7 +21,7 @@ func NewMeterFromTemplateConfig(other map[string]interface{}) (api.Meter, error)
 		return nil, err
 	}
 
-	tmpl, err := templates.ByTemplate(cc.Template, templates.Meter)
+	tmpl, err := templates.ByName(cc.Template, templates.Meter)
 	if err != nil {
 		return nil, err
 	}

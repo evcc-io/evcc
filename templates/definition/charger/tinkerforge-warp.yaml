@@ -1,4 +1,6 @@
 template: tinkerforge-warp
+covers:
+  - tinkerforge-warp-pro
 products:
   - brand: TinkerForge
     description:

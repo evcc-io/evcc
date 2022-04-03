@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/evcc-io/evcc/templates/definition"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -79,14 +80,14 @@ func ByClass(class string) []Template {
 	return templates[class]
 }
 
-func ByTemplate(t, class string) (Template, error) {
+func ByName(name, class string) (Template, error) {
 	loadTemplates(class)
 
 	for _, tmpl := range templates[class] {
-		if tmpl.Template == t {
+		if tmpl.Template == name || slices.Contains(tmpl.Covers, name) {
 			return tmpl, nil
 		}
 	}
 
-	return Template{}, fmt.Errorf("template not found: %s", t)
+	return Template{}, fmt.Errorf("template not found: %s", name)
 }
