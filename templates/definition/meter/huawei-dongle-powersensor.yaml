@@ -71,7 +71,7 @@ render: |
     timeout: 10s
     connectdelay: 1s
     register:
-      address: 32064 # Input power
+      address: 32064 # Input power DC (if no battery in your system - for more precise readings use 32080 # Active generation power AC)
       type: holding
       decode: int32
   {{- end }}
@@ -86,6 +86,7 @@ render: |
       address: 37001
       type: holding
       decode: int32
+    scale: -1  
   soc:
     source: modbus
     {{include "modbus" . | indent 2}}
