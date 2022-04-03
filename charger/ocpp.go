@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,8 +16,9 @@ import (
 )
 
 const (
-	KeyMeterValuesSampledData   = "MeterValuesSampledData"
-	KeyMeterValueSampleInterval = "MeterValueSampleInterval"
+	KeyConnectorSwitch3to1PhaseSupported = "ConnectorSwitch3to1PhaseSupported"
+	KeyMeterValuesSampledData            = "MeterValuesSampledData"
+	KeyMeterValueSampleInterval          = "MeterValueSampleInterval"
 )
 
 // TODO: Maybe move this to the config?
@@ -24,13 +26,14 @@ const ValuePreferedMeterValuesSampleData = "Current.Import.L1,Current.Import.L2,
 
 // OCPP charger implementation
 type OCPP struct {
-	log       *util.Logger
-	cp        *ocpp.CP
-	id        string
-	connector int
-	idtag     string
-	phases    int
-	current   float64
+	log                     *util.Logger
+	cp                      *ocpp.CP
+	id                      string
+	connector               int
+	idtag                   string
+	phases                  int
+	current                 float64
+	phaseSwitchingSupported bool
 }
 
 func init() {
@@ -40,23 +43,26 @@ func init() {
 // NewOCPPFromConfig creates a OCPP charger from generic config
 func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		StationId string
-		IdTag     string
-		Connector int
+		StationId      string
+		IdTag          string
+		Connector      int
+		MeterSupported bool
+		MeterInterval  string
 	}{
-		Connector: 1,
+		Connector:     1,
+		MeterInterval: "60", // minimal value for elvi
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewOCPP(cc.StationId, cc.Connector, cc.IdTag)
+	return NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterSupported, cc.MeterInterval)
 }
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
-	cp := ocpp.Instance().Register(id)
+func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterInterval string) (*OCPP, error) {
+	cp := ocpp.Instance().Register(id, meterSupported)
 	c := &OCPP{
 		log:       util.NewLogger(fmt.Sprintf("ocpp-%s:%d", id, connector)),
 		cp:        cp,
@@ -89,6 +95,17 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 			if opt.Key == KeyMeterValueSampleInterval {
 				meterValuesSampleInterval = *opt.Value
 			}
+
+			// Detection of 1 phase charging/switching support
+			if opt.Key == KeyConnectorSwitch3to1PhaseSupported {
+				b, err := strconv.ParseBool(*opt.Value)
+				if err != nil {
+					rc <- err
+					return
+				}
+
+				c.phaseSwitchingSupported = b
+			}
 		}
 
 		rc <- err
@@ -109,47 +126,51 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 		}
 	}
 
-	if meterValuesSampledDataString != "Current.Import,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature" {
-		c.log.TRACE.Printf("Current values \n\t%s != \n\t%+v", ValuePreferedMeterValuesSampleData, meterValuesSampledDataString)
-		rc = make(chan error, 1)
-		err = ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
-			c.log.TRACE.Printf("ChangeMeterConfigurationRequest %T: %+v", resp, resp)
-
-			if resp.Status == core.ConfigurationStatusRejected {
-				rc <- fmt.Errorf("configuration change rejected")
-			}
-
-			rc <- err
-		}, KeyMeterValuesSampledData, ValuePreferedMeterValuesSampleData)
-
-		if err := c.wait(err, rc); err != nil {
-			return nil, err
-		}
-	}
-
-	{
-		interval := "60"
-		if meterValuesSampleInterval != interval {
+	if meterSupported {
+		if meterValuesSampledDataString != "Current.Import,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature" {
+			c.log.TRACE.Printf("Current values \n\t%s != \n\t%+v", ValuePreferedMeterValuesSampleData, meterValuesSampledDataString)
 			rc = make(chan error, 1)
-
-			if err := ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
-				c.log.TRACE.Printf("ChangeSampleMeterValueInterval %T: %v", resp, resp)
+			err = ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
+				c.log.TRACE.Printf("ChangeMeterConfigurationRequest %T: %+v", resp, resp)
 
 				if resp.Status == core.ConfigurationStatusRejected {
-					rc <- fmt.Errorf("configuration of meterinterval rejected: %w", err)
+					rc <- fmt.Errorf("configuration change rejected")
 				}
+
 				rc <- err
-			}, KeyMeterValueSampleInterval, interval); err != nil {
-				return nil, err
-			}
+			}, KeyMeterValuesSampledData, ValuePreferedMeterValuesSampleData)
 
 			if err := c.wait(err, rc); err != nil {
 				return nil, err
 			}
 		}
+
+		{
+			if meterValuesSampleInterval != meterInterval {
+				rc = make(chan error, 1)
+
+				if err := ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
+					c.log.TRACE.Printf("ChangeSampleMeterValueInterval %T: %v", resp, resp)
+
+					if resp.Status == core.ConfigurationStatusRejected {
+						rc <- fmt.Errorf("configuration of meterinterval rejected: %w", err)
+					}
+					rc <- err
+				}, KeyMeterValueSampleInterval, meterInterval); err != nil {
+					return nil, err
+				}
+
+				if err := c.wait(err, rc); err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		// get inital meter values
+		ocpp.Instance().TriggerMeterValueRequest(cp)
 	}
 
-	ocpp.Instance().TriggerMeterValueRequest(cp)
+	// todo check running transaction
 
 	return c, nil
 }
@@ -206,6 +227,7 @@ func (c *OCPP) Enable(enable bool) error {
 func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfile) error {
 	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile, profile)
 	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile.ChargingSchedule, profile.ChargingSchedule)
+	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile.ChargingSchedule.ChargingSchedulePeriod[0].NumberPhases, *profile.ChargingSchedule.ChargingSchedulePeriod[0].NumberPhases)
 
 	rc := make(chan error, 1)
 	err := ocpp.Instance().CS().SetChargingProfile(c.id, func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
@@ -273,14 +295,17 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 
 // var _ api.ChargePhases = (*OCPP)(nil)
 
-// Currently not working with Elvi
-// Need further investigation
-// Phases1p3p implements the api.ChargePhases interface
+// // Phases1p3p implements the api.ChargePhases interface
 // func (c *OCPP) Phases1p3p(phases int) error {
+// 	if !c.phaseSwitchingSupported {
+// 		return fmt.Errorf("phase switching is not supported by the charger")
+// 	}
+
 // 	err := c.setPeriod(c.current, phases)
 // 	if err == nil {
 // 		c.phases = phases
 // 	}
+
 // 	return err
 // }
 

@@ -3,6 +3,7 @@ package ocpp
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
@@ -16,11 +17,13 @@ type CS struct {
 	cps map[string]*CP
 }
 
-func (cs *CS) Register(id string) *CP {
+func (cs *CS) Register(id string, meterSupported bool) *CP {
 	cp := &CP{
-		id:          id,
-		log:         util.NewLogger("ocpp-cp"),
-		measureands: make(map[string]types.SampledValue),
+		id:                        id,
+		log:                       util.NewLogger("ocpp-cp"),
+		latestMeterValueTimestamp: time.Now(),
+		measureands:               make(map[string]types.SampledValue),
+		meterSupported:            meterSupported,
 	}
 
 	cp.initialized = sync.NewCond(&cp.mu)

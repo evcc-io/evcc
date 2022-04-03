@@ -55,9 +55,10 @@ type CP struct {
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
 
-	meterSupported bool
-	measureDoneCh  chan struct{}
-	measureands    map[string]types.SampledValue
+	meterSupported            bool
+	measureDoneCh             chan struct{}
+	latestMeterValueTimestamp time.Time
+	measureands               map[string]types.SampledValue
 
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
@@ -76,11 +77,6 @@ func (cp *CP) DetectCapabilities(opts []core.ConfigurationKey) error {
 		}
 
 		cp.supportedNumberOfConnectors = supported
-	}
-
-	{ // meter detection
-		// TODO
-		cp.meterSupported = true
 	}
 
 	smartChargingCapabilities, err := detectSmartChargingCapabilities(options)
@@ -201,6 +197,8 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	defer cp.mu.Unlock()
 
 	res := api.StatusNone
+
+	cp.log.TRACE.Printf("last status update from CP: %s", cp.updated.Format(time.RFC3339))
 
 	if time.Since(cp.updated) > timeout {
 		return res, api.ErrTimeout

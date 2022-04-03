@@ -1,8 +1,6 @@
 package ocpp
 
 import (
-	"time"
-
 	core "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 )
@@ -90,23 +88,6 @@ func (cs *CS) OnStartTransaction(chargePointId string, request *core.StartTransa
 		return nil, err
 	}
 
-	if cp.meterSupported {
-		go func() {
-			cp.log.DEBUG.Printf("starting meter value request")
-			cp.measureDoneCh = make(chan struct{})
-			ticker := time.NewTicker(10 * time.Second)
-			for {
-				select {
-				case <-ticker.C:
-					cs.TriggerMeterValueRequest(cp)
-				case <-cp.measureDoneCh:
-					cp.log.DEBUG.Printf("stopping meter value requests")
-					return
-				}
-			}
-		}()
-	}
-
 	return cp.StartTransaction(request)
 }
 
@@ -115,9 +96,6 @@ func (cs *CS) OnStopTransaction(chargePointId string, request *core.StopTransact
 	if err != nil {
 		return nil, err
 	}
-
-	cp.log.DEBUG.Printf("send stop signal for meter values")
-	cp.measureDoneCh <- struct{}{}
 
 	return cp.StopTransaction(request)
 }
