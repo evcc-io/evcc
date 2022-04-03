@@ -2,7 +2,7 @@ template: huawei-sun2000-direct-RS485-modbus
 products:
   - brand: Huawei
     description:
-      generic: SUN2000 direct RS485 Modbus
+      generic: SUN2000 via RS485 Modbus
 params:
   - name: usage
     choice: ["pv"]
