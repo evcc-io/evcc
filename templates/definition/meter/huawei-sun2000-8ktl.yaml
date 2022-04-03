@@ -1,4 +1,4 @@
-template: huawei-sun2000-8ktl
+template: huawei-sun2000-direct-RS485-modbus
 products:
   - brand: Huawei
     description:
