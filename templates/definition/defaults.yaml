@@ -64,15 +64,15 @@ params:
       de: Benutzerkonto
       en: Username
     help:
-      de: Benutzerkonto (bspw. E-Mail Adresse, User-Id, etc.)
-      en: Device specific user-account (e.g. e-mail address, user-id, etc.)
+      de: Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      en: User-account (e.g. email address, user id, etc.)
   - name: password
     description:
       de: Passwort
       en: Password
     help:
       de: Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
-      en: Password of device specific user-account (in case of leading zeros embed in single quotes)
+      en: Password of user-account (in case of leading zeros embed in single quotes)
     mask: true
   - name: capacity
     description:
