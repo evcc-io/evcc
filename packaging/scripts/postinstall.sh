@@ -33,25 +33,23 @@ if [ "$1" = "configure" ]; then
 	# this choice file will include that information
 	# and the user will no longer be asked if he wants to keep it
 	if [ -f "$USER_CHOICE_CONFIG" ]; then
-		source "$USER_CHOICE_CONFIG"
+		. "$USER_CHOICE_CONFIG"
 	fi
 
 	# If the user previously decided that he doesn't want to keep
 	# the files or if it's the first time, aks whether he want's to
 	# keep the file
-	if [ -f "$ETC_SERVICE" -a "$KEEP_USR_LOCAL_BIN" -eq 0 ]; then
+	if [ -f "$ETC_SERVICE" ] && [ "$KEEP_ETC_SERVICE" -eq 0 ]; then
 		echo "An alternate service file was detected under '$ETC_SERVICE'."
 		echo "This is probably due to a previous manual installation."
 		echo "You probably want to delete this file now. Your evcc configuration stays untouched!"
-		askUserKeepFile "$ETC_SERVICE"
-		KEEP_ETC_SERVICE=$?
+		askUserKeepFile "$ETC_SERVICE" || KEEP_ETC_SERVICE=$?
 	fi	
-	if [ -f "$USR_LOCAL_BIN" -a "$KEEP_USR_LOCAL_BIN" -eq 0 ]; then
+	if [ -f "$USR_LOCAL_BIN" ] && [ "$KEEP_USR_LOCAL_BIN" -eq 0 ]; then
 		echo "An alternate evcc binary was detected under '$USR_LOCAL_BIN'."
 		echo "This is probably due to a previous manual installation."
 		echo "You probably want to delete this file now. Your evcc configuration stays untouched!"
-		askUserKeepFile "$USR_LOCAL_BIN"
-		KEEP_USR_LOCAL_BIN=$?
+		askUserKeepFile "$USR_LOCAL_BIN" || KEEP_USR_LOCAL_BIN=$?
 	fi
 	# Save the user decision
 	cat > "$USER_CHOICE_CONFIG" <<EOF 
@@ -61,12 +59,12 @@ KEEP_USR_LOCAL_BIN=$KEEP_USR_LOCAL_BIN
 EOF
 
 	# Execute the user decision
-	if [ -f "$ETC_SERVICE" -a "$KEEP_USR_LOCAL_BIN" -eq 0 ]; then
+	if [ -f "$ETC_SERVICE" ] && [ "$KEEP_ETC_SERVICE" -eq 0 ]; then
 		echo "Deleting old service file '$ETC_SERVICE'"
 		rm -v "$ETC_SERVICE"
 	fi
 
-	if [ -f "$USR_LOCAL_BIN" -a "$KEEP_USR_LOCAL_BIN" -eq 0 ]; then
+	if [ -f "$USR_LOCAL_BIN" ] && [ "$KEEP_USR_LOCAL_BIN" -eq 0 ]; then
 		echo "Deleting old evcc binary '$USR_LOCAL_BIN'"
 		rm -v "$USR_LOCAL_BIN"
 	fi
