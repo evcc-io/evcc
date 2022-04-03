@@ -18,4 +18,4 @@ render: |
   energy: # energy reading (Wh)
     source: http
     uri: http://{{ .host }}/cm?cmnd=Status%208
-    jq: .StatusSNS.ENERGY.Total * 1000
+    jq: .StatusSNS.ENERGY.Total
