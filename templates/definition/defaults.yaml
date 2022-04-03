@@ -37,13 +37,14 @@ params:
       en: Communication parameter for the adapter
     default: 8N1
   - name: host
+    required: true  
     description:
       de: IP-Adresse oder Hostname
       en: IP-Address or Hostname
     help:
       de: IP-Adresse oder Hostname
       en: IP-Address or Hostname
-    example: "192.0.2.2"
+    example: 192.0.2.2
   - name: port
     description:
       de: Port

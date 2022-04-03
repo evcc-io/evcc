@@ -5,8 +5,6 @@ products:
 group: switchsockets
 params:
   - name: host
-    required: true
-    example: 192.0.2.2
   - name: user
   - name: password
     mask: true
