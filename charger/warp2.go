@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -252,10 +251,5 @@ func (wb *Warp2) identify() (string, error) {
 		err = json.Unmarshal([]byte(s), &res)
 	}
 
-	var id string
-	if res.UserID > 0 {
-		id = strconv.Itoa(res.UserID)
-	}
-
-	return id, err
+	return res.AuthorizationInfo.TagId, err
 }

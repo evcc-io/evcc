@@ -58,8 +58,13 @@ type UsersConfig struct {
 }
 
 type ChargeTrackerCurrentCharge struct {
-	UserID     int     `json:"user_id"`
-	MeterStart float64 `json:"meter_start"`
+	UserID            int     `json:"user_id"`
+	MeterStart        float64 `json:"meter_start"`
+	AuthorizationType int     `json:"authorization_type"`
+	AuthorizationInfo struct {
+		TagType int    `json:"tag_type"`
+		TagId   string `json:"tag_id"`
+	} `json:"authorization_info"`
 }
 
 type User struct {
