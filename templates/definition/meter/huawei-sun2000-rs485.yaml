@@ -1,4 +1,6 @@
 template: huawei-sun2000-rs485
+covers:
+  - huawei-sun2000-8ktl
 products:
   - brand: Huawei
     description:
