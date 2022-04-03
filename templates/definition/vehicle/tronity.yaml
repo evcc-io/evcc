@@ -7,9 +7,9 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: title
-  - name: userid
+  - name: user
     required: true
-  - name: secret
+  - name: password
     required: true
   - name: vin
     example: W...
@@ -24,8 +24,8 @@ render: |
   title: {{ .title }}
   {{- end }}
   credentials:
-    id: {{ .userid }}
-    secret: {{ .secret }}
+    id: {{ .user }}
+    secret: {{ .password }}
   capacity: {{ .capacity }}
   {{- if ne .phases "" }}
   phases: {{ .phases }}
