@@ -19,6 +19,6 @@ render: |
     timeout: 10s
     connectdelay: 1s
     register:
-      address: 32080 # Active generation power
+      address: 32080 # Active generation power AC
       type: holding
       decode: int32
