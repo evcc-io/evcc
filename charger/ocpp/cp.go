@@ -205,7 +205,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	}
 
 	if cp.status.ErrorCode != core.NoError {
-		return res, fmt.Errorf("chargepoint error: %s", cp.status.ErrorCode)
+		cp.log.DEBUG.Printf("chargepoint error: %s: %s", cp.status.ErrorCode, cp.status.Info)
 	}
 
 	switch cp.status.Status {
