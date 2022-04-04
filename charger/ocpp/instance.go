@@ -25,6 +25,7 @@ func Instance() *CS {
 		cs.SetCoreHandler(instance)
 		cs.SetNewChargePointHandler(instance.NewChargePoint)
 		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
+		cs.SetFirmwareManagementHandler(instance)
 
 		go Instance().errorHandler(cs.Errors())
 		go cs.Start(8887, "/{ws}")

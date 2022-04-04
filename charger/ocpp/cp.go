@@ -44,6 +44,10 @@ type smartChargingProfile struct {
 	MaxChargingProfilesInstalled int
 }
 
+type ChargeTransaction struct {
+	MeterValueStart int
+}
+
 type CP struct {
 	mu  sync.Mutex
 	log *util.Logger
@@ -55,10 +59,13 @@ type CP struct {
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
 
+	transaction ChargeTransaction
+
 	meterSupported            bool
 	measureDoneCh             chan struct{}
 	latestMeterValueTimestamp time.Time
 	measureands               map[string]types.SampledValue
+	meterTrickerRunning       bool
 
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
@@ -222,7 +229,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 		res = api.StatusC
 	case core.ChargePointStatusReserved, // "Reserved"
 		core.ChargePointStatusFaulted: // "Faulted"
-		return api.StatusF, fmt.Errorf("chargepoint status: %s", cp.status.Status)
+		return api.StatusF, fmt.Errorf("chargepoint status: %s", cp.status.ErrorCode)
 	default:
 		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", cp.status.Status)
 	}
@@ -246,12 +253,14 @@ func (cp *CP) TotalEnergy() (float64, error) {
 	defer cp.mu.Unlock()
 
 	if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
-		v, err := strconv.ParseFloat(energy.Value, 64)
+		v, err := strconv.ParseInt(energy.Value, 10, 64)
 		if err != nil {
 			return 0, err
 		}
 
-		return v / 1000, nil
+		loaded := float64(int(v)-cp.transaction.MeterValueStart) / 1000
+
+		return loaded, nil
 	}
 
 	return 0, nil

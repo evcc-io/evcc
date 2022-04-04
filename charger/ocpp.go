@@ -50,7 +50,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		MeterInterval  string
 	}{
 		Connector:     1,
-		MeterInterval: "60", // minimal value for elvi
+		MeterInterval: "0", // disable meter smaple data as we are taking care on our own
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -149,16 +149,14 @@ func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterI
 			if meterValuesSampleInterval != meterInterval {
 				rc = make(chan error, 1)
 
-				if err := ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
+				err := ocpp.Instance().CS().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
 					c.log.TRACE.Printf("ChangeSampleMeterValueInterval %T: %v", resp, resp)
 
 					if resp.Status == core.ConfigurationStatusRejected {
 						rc <- fmt.Errorf("configuration of meterinterval rejected: %w", err)
 					}
 					rc <- err
-				}, KeyMeterValueSampleInterval, meterInterval); err != nil {
-					return nil, err
-				}
+				}, KeyMeterValueSampleInterval, meterInterval)
 
 				if err := c.wait(err, rc); err != nil {
 					return nil, err
@@ -167,7 +165,9 @@ func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterI
 		}
 
 		// get inital meter values
-		ocpp.Instance().TriggerMeterValueRequest(cp)
+		if meterSupported {
+			ocpp.Instance().TriggerMeterValueRequest(cp)
+		}
 	}
 
 	// todo check running transaction

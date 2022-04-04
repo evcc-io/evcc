@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	core "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 )
 
@@ -98,4 +99,23 @@ func (cs *CS) OnStopTransaction(chargePointId string, request *core.StopTransact
 	}
 
 	return cp.StopTransaction(request)
+}
+
+func (cs *CS) OnDiagnosticsStatusNotification(chargePointId string, request *firmware.DiagnosticsStatusNotificationRequest) (confirmation *firmware.DiagnosticsStatusNotificationConfirmation, err error) {
+	cp, err := cs.chargepointByID(chargePointId)
+	if err != nil {
+		return nil, err
+	}
+
+	return cp.DiagnosticStatusNotification(request)
+}
+
+func (cs *CS) OnFirmwareStatusNotification(chargePointId string, request *firmware.FirmwareStatusNotificationRequest) (confirmation *firmware.FirmwareStatusNotificationConfirmation, err error) {
+	cp, err := cs.chargepointByID(chargePointId)
+	if err != nil {
+		return nil, err
+	}
+
+	return cp.FirmwareStatusNotification(request)
+
 }
