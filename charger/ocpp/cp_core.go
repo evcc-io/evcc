@@ -51,10 +51,10 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 		if cp.status == nil {
 			cp.status = request
 			cp.initialized.Broadcast()
-		} else if cp.status.Timestamp.After(time.Now().Add(-30 * time.Second)) {
+		} else if request.Timestamp.After(cp.status.Timestamp.Time) && request.Timestamp.After(time.Now().Add(-30*time.Second)) {
 			cp.status = request
 		} else {
-			cp.log.TRACE.Printf("ignoring status: %s < %s", cp.status.Timestamp, time.Now().Add(-30*time.Second))
+			cp.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, cp.status.Timestamp)
 		}
 	}
 
@@ -90,6 +90,9 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 
 func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
+	if request.TransactionId != nil {
+		cp.log.TRACE.Printf("TransactionId: %+v", *request.TransactionId)
+	}
 
 	if request != nil {
 		cp.mu.Lock()
@@ -136,11 +139,28 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 			cp.mu.Unlock()
 
 			res.TransactionId = cp.txn
+
+			if request.Timestamp.After(time.Now().Add(-30*time.Second)) && cp.meterSupported {
+				// go func() {
+				// 	cp.log.DEBUG.Printf("starting meter value request")
+				// 	cp.measureDoneCh = make(chan struct{})
+				// 	ticker := time.NewTicker(10 * time.Second)
+				// 	defer cp.log.DEBUG.Printf("exiting meter value go func")
+				// 	for {
+				// 		select {
+				// 		case <-ticker.C:
+				// 			Instance().TriggerMeterValueRequest(cp)
+				// 		case <-cp.measureDoneCh:
+				// 			cp.log.DEBUG.Printf("returning from meter value requests")
+				// 			return
+				// 		}
+				// 	}
+				// }()
+			}
 		} else {
 			// TODO: Handle old transactions e.g. store them
 			res.TransactionId = 1 // change 1 to the last known global transaction. Needs persistence
 		}
-
 	}
 
 	return res, nil
@@ -163,6 +183,8 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 			Status: types.AuthorizationStatusAccepted, // accept
 		},
 	}
+
+	// cp.measureDoneCh <- struct{}{}
 
 	return res, nil
 }
