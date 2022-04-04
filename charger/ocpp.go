@@ -227,7 +227,6 @@ func (c *OCPP) Enable(enable bool) error {
 func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfile) error {
 	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile, profile)
 	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile.ChargingSchedule, profile.ChargingSchedule)
-	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile.ChargingSchedule.ChargingSchedulePeriod[0].NumberPhases, *profile.ChargingSchedule.ChargingSchedulePeriod[0].NumberPhases)
 
 	rc := make(chan error, 1)
 	err := ocpp.Instance().CS().SetChargingProfile(c.id, func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
