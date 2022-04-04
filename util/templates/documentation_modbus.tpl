@@ -7,10 +7,12 @@ comset: "{{ .comset }}" # Kommunikationsparameter für den Adapter
 {{- end }}
 {{- if .rs485tcpip }}
 # Modbus: RS485 via TCPIP
-uri: {{ .host }}:{{ .port }} # IP-Adresse oder Hostname: Port
+host: {{ .host }} # Hostname
+port: {{ .port }} # Port
 rtu: true
 {{- end }}
 {{- if .tcpip }}
 # Modbus: TCPIP
-uri: {{ .host }}:{{ .port }} # IP-Adresse oder Hostname: Port
+host: {{ .host }} # Hostname
+port: {{ .port }} # Port
 {{- end }}
