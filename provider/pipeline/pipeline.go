@@ -181,7 +181,9 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 
 	if p.re != nil {
 		m := p.re.FindSubmatch(b)
-		if len(m) > 1 {
+		if len(m) == 1 {
+			b = m[0] // full match
+		} else if len(m) > 1 {
 			b = m[1] // first submatch
 		}
 	}
