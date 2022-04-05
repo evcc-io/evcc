@@ -3,7 +3,6 @@ package charger
 // LICENSE
 
 // Copyright (c) 2019-2022 andig
-// Copyright (c) 2022 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -21,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -157,10 +157,10 @@ func (wb *Em2Go) CurrentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64(b), nil
 }
 
-var _ api.ChargeRater = (*Em2Go)(nil)
+var _ api.MeterEnergy = (*Em2Go)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *Em2Go) ChargedEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *Em2Go) TotalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(em2GoRegEnergy, 2)
 	if err != nil {
 		return 0, err
@@ -186,19 +186,42 @@ func (wb *Em2Go) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
-// var _ api.Diagnosis = (*Em2Go)(nil)
+var _ api.ChargeRater = (*Em2Go)(nil)
 
-// // Diagnose implements the api.Diagnosis interface
-// func (wb *Em2Go) Diagnose() {
-// 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegName, 11); err == nil {
-// 		fmt.Printf("Name: %s\n", modbus.RTUString(b))
-// 	}
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *Em2Go) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(em2GoRegChargedEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
 
-// 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
-// 		fmt.Printf("Phases: %d\n", binary.BigEndian.Uint16(b))
-// 	}
+	return rs485.RTUUint32ToFloat64(b) / 10, nil
+}
 
-// 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegSerial, 2); err == nil {
-// 		fmt.Printf("Serial: %d\n", binary.LittleEndian.Uint32(b))
-// 	}
-// }
+var _ api.ChargeTimer = (*Em2Go)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
+func (wb *Em2Go) ChargingTime() (time.Duration, error) {
+	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargeDuration, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
+}
+
+var _ api.Diagnosis = (*Em2Go)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *Em2Go) Diagnose() {
+	var serial []byte
+	for reg := 0; reg < 8; reg++ {
+		b, err := wb.conn.ReadHoldingRegisters(em2GoRegSerial+2*uint16(reg), 2)
+		if err != nil {
+			return
+		}
+		serial = append(serial, b...)
+	}
+
+	fmt.Printf("Serial: %s\n", string(serial))
+}
