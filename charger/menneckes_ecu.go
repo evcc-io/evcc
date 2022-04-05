@@ -3,7 +3,6 @@ package charger
 // LICENSE
 
 // Copyright (c) 2019-2022 andig
-// Copyright (c) 2022 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -22,6 +21,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -32,17 +32,18 @@ import (
 
 // https://www.chargeupyourday.de/fileadmin/07_wissen/01_anwendungsfaelle/05_kompatible_energie_management_systeme/ECU_modbus_tcp_server_spec_rev_1.05.pdf
 
-// Menneckes ECU-BRx and ECU-BBx (ChargeControl)charger implementation
+// Menneckes ECU-BRx and ECU-BBx (ChargeControl) charger implementation
 type ChargeControl struct {
 	conn *modbus.Connection
 	curr uint16
 }
 
 const (
-	chargeControlRegFirmware      = 100
-	chargeControlRegStatus        = 122
-	chargeControlRegChargedEnergy = 705
-	chargeControlRegHemsCurrent   = 1000
+	chargeControlRegFirmware       = 100
+	chargeControlRegStatus         = 122
+	chargeControlRegChargedEnergy  = 716 // FW 5.22
+	chargeControlRegChargeDuration = 718 // FW 5.22
+	chargeControlRegHemsCurrent    = 1000
 )
 
 var (
@@ -219,6 +220,20 @@ func (wb *ChargeControl) ChargedEnergy() (float64, error) {
 
 	return rs485.RTUIeee754ToFloat64(b) / 1e3, nil
 }
+
+var _ api.ChargeTimer = (*EVSEWifi)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
+func (wb *ChargeControl) ChargingTime() (time.Duration, error) {
+	b, err := wb.conn.ReadHoldingRegisters(chargeControlRegChargeDuration, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
+}
+
+// TODO RFID and EVCCID
 
 var _ api.Diagnosis = (*ChargeControl)(nil)
 
