@@ -39,11 +39,12 @@ type ChargeControl struct {
 }
 
 const (
-	chargeControlRegFirmware       = 100
-	chargeControlRegStatus         = 122
-	chargeControlRegChargedEnergy  = 716 // FW 5.22
-	chargeControlRegChargeDuration = 718 // FW 5.22
-	chargeControlRegHemsCurrent    = 1000
+	chargeControlRegFirmware        = 100
+	chargeControlRegStatus          = 122
+	chargeControlRegSignaledCurrent = 706
+	chargeControlRegChargedEnergy   = 716 // FW 5.22
+	chargeControlRegChargeDuration  = 718 // FW 5.22
+	chargeControlRegHemsCurrent     = 1000
 )
 
 var (
@@ -117,7 +118,7 @@ func (wb *ChargeControl) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ChargeControl) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(chargeControlRegHemsCurrent, 1)
+	b, err := wb.conn.ReadHoldingRegisters(chargeControlRegSignaledCurrent, 1)
 	if err != nil {
 		return false, err
 	}
