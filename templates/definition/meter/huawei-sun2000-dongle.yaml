@@ -14,7 +14,7 @@ render: |
   type: custom
   power:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     model: huawei
     timeout: 10s
     connectdelay: 1s

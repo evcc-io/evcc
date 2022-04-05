@@ -15,7 +15,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     model: huawei
     timeout: 10s
     connectdelay: 1s
@@ -26,7 +26,7 @@ render: |
     scale: -1
   energy:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     model: huawei
     timeout: 10s
     register:
@@ -36,7 +36,7 @@ render: |
     scale: 0.01
   currents:
   - source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     model: huawei
     timeout: 10s
     register:
@@ -45,7 +45,7 @@ render: |
       decode: int32
     scale: -0.01
   - source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     model: huawei
     timeout: 10s
     register:
@@ -54,7 +54,7 @@ render: |
       decode: int32
     scale: -0.01
   - source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     model: huawei
     timeout: 10s
     register:
@@ -66,7 +66,7 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     model: huawei
     timeout: 10s
     connectdelay: 1s
@@ -78,7 +78,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     model: huawei
     timeout: 10s
     connectdelay: 1s
@@ -86,10 +86,10 @@ render: |
       address: 37001
       type: holding
       decode: int32
-    scale: -1  
+    scale: -1
   soc:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     model: huawei
     timeout: 10s
     register:

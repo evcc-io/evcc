@@ -14,6 +14,6 @@ params:
   - preset: vehiclecloud
 render: |
   type: audi
-  {{include "vehicle-base" .}}
-  {{include "vehicle-identify" .}}
-  {{include "vehicle-cloud" .}}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

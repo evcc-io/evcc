@@ -19,8 +19,7 @@ description: |
 {{ .RequirementDescription | indent 2 }}
 {{- end }}
 render:
-{{ if .Usages -}}
-{{ range .Usages -}}
+{{- if .Usages -}}{{ range .Usages }}
   - usage: {{ . }}
     default: |
       type: template
@@ -37,7 +36,7 @@ render:
         - {{ . }}
       {{ end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{- if $.AdvancedParams }}
@@ -56,11 +55,13 @@ render:
         - {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{ end }}
-{{ end }}{{ else }}  - default: |
+{{ end }}
+{{- else }}
+  - default: |
       type: template
       template: {{ $.Template }}
       {{- range $.Params }}
@@ -74,7 +75,7 @@ render:
         - {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{- if $.AdvancedParams }}
@@ -92,7 +93,7 @@ render:
         - {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{- end }}

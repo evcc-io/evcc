@@ -10,28 +10,28 @@ render: |
   type: custom
   status:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     register: # manual register configuration
         address: 139 # CP-Status
         type: holding
         decode: uint16
   enabled:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     register: # manual register configuration
       address: 100 # Zustand
       type: holding
       decode: uint16
   enable:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     register: # manual register configuration
       address: 100 # ein / aus
       type: writesingle
       decode: uint16
   maxcurrent:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     register: # manual register configuration
       address: 127 # Strom max
       type: writesingle

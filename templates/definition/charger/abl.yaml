@@ -15,4 +15,4 @@ params:
     comset: 8E1
 render: |
   type: abl
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

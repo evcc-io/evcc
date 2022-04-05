@@ -12,4 +12,4 @@ params:
     comset: 8N1
 render: |
   type: alphatec
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

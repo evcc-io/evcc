@@ -7,4 +7,4 @@ params:
     choice: ["rs485"]
 render: |
   type: evsedin
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

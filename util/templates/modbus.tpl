@@ -1,4 +1,4 @@
-{{- define "modbus"}}
+{{- define "modbus" }}
 id: {{ .id }}
 {{- if or (eq .modbus "rs485serial") .rs485serial }}
 # RS485 via adapter (Modbus RTU)

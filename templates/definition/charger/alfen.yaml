@@ -11,4 +11,4 @@ params:
     choice: ["tcpip"]
 render: |
   type: alfen
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

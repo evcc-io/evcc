@@ -13,9 +13,9 @@ params:
   - preset: vehiclecloud
 render: |
   type: fiat
-  {{include "vehicle-base" .}}
+  {{ include "vehicle-base" . }}
   {{- if ne .pin "" }}
   pin: {{ .pin }} #mandatory to deep refresh SoC
   {{- end }}
-  {{include "vehicle-identify" .}}
-  {{include "vehicle-cloud" .}}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

@@ -11,4 +11,4 @@ params:
     id: 255
 render: |
   type: vestel
-  {{include "modbus" .}}
+  {{- include "modbus" . }}
