@@ -209,7 +209,7 @@ func (wb *WebastoLive) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) * 100, nil
+	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
 var _ api.MeterCurrent = (*WebastoLive)(nil)
