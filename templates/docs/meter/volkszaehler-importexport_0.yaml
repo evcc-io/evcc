@@ -1,0 +1,14 @@
+product:
+  brand: Volkszähler
+  description: HTTP API, Import & Export
+  group: Generische Unterstützung
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: volkszaehler-importexport
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 80 # Port # Optional
+      importuuid:
+      exportuuid:

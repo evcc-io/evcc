@@ -1,0 +1,28 @@
+product:
+  brand: SMA
+  description: Smart Energy Hybrid-Wechselrichter
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: sma-hybrid
+      usage: pv      
+
+      # Modbus: TCPIP
+      modbus: tcpip
+      id: 3
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+
+  - usage: battery
+    default: |
+      type: template
+      template: sma-hybrid
+      usage: battery      
+
+      # Modbus: TCPIP
+      modbus: tcpip
+      id: 3
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+

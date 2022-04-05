@@ -1,0 +1,16 @@
+product:
+  brand: Kostal
+  description: Smart Energy Meter
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: kostal-ksem
+      usage: grid      
+
+      # Modbus: TCPIP
+      modbus: tcpip
+      id: 71
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+

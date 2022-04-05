@@ -1,0 +1,16 @@
+product:
+  brand: Huawei
+  description: SUN2000 with SDongle
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: huawei-dongle
+      usage: pv      
+
+      # Modbus: TCPIP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+

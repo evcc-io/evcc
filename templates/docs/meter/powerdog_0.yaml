@@ -1,0 +1,27 @@
+product:
+  description: Powerdog
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: powerdog
+      usage: grid      
+
+      # Modbus: TCPIP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+
+  - usage: pv
+    default: |
+      type: template
+      template: powerdog
+      usage: pv      
+
+      # Modbus: TCPIP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+

@@ -1,0 +1,14 @@
+product:
+  brand: i-CHARGE
+  description: CION
+render:
+  - default: |
+      type: template
+      template: ichargecion      
+
+      # Modbus: TCPIP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+

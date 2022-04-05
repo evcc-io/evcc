@@ -1,0 +1,16 @@
+product:
+  brand: Alfen
+  description: Eve
+capabilities: ["1p3p"]
+requirements: ["sponsorship"]
+render:
+  - default: |
+      type: template
+      template: alfen      
+
+      # Modbus: TCPIP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+
