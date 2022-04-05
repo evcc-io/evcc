@@ -14,4 +14,3 @@ render:
       usage: pv
       tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
       serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
-

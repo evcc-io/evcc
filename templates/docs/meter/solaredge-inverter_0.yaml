@@ -14,7 +14,6 @@ render:
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
       timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
-
   - usage: pv
     default: |
       type: template
@@ -27,4 +26,3 @@ render:
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
       timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
-

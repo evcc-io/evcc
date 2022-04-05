@@ -13,7 +13,6 @@ render:
       id: 3
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-
   - usage: battery
     default: |
       type: template
@@ -25,4 +24,3 @@ render:
       id: 3
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-

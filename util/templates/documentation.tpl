@@ -59,7 +59,7 @@ render:
       {{- end -}}
       {{- end -}}
 {{ end }}
-{{ end }}
+{{- end }}
 {{- else }}
   - default: |
       type: template

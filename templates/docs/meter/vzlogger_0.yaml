@@ -10,4 +10,3 @@ render:
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 8081 # Port # Optional
       uuid:
-

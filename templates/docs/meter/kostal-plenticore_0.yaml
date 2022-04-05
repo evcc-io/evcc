@@ -13,7 +13,6 @@ render:
       id: 71
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
-
   - usage: battery
     default: |
       type: template
@@ -25,4 +24,3 @@ render:
       id: 71
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
-

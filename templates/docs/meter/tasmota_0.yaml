@@ -8,18 +8,15 @@ render:
       template: tasmota
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-
   - usage: pv
     default: |
       type: template
       template: tasmota
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-
   - usage: charge
     default: |
       type: template
       template: tasmota
       usage: charge
       host: 192.0.2.2 # IP-Adresse oder Hostname
-

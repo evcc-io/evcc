@@ -9,7 +9,6 @@ render:
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
       password: # Anlagenpasswort / Installateurspasswort # Optional
-
   - usage: battery
     default: |
       type: template
@@ -17,4 +16,3 @@ render:
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
       password: # Anlagenpasswort / Installateurspasswort # Optional
-
