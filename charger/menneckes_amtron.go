@@ -49,6 +49,7 @@ const (
 
 func init() {
 	registry.Add("amtron", NewAmtronFromConfig)
+	registry.Add("menneckes-amtron", NewAmtronFromConfig)
 }
 
 // NewAmtronFromConfig creates a Mennekes Amtron charger from generic config
@@ -162,7 +163,7 @@ func (wb *Amtron) CurrentPower() (float64, error) {
 
 var _ api.ChargeRater = (*Amtron)(nil)
 
-// ChargedEnergy implements the api.MeterEnergy interface
+// ChargedEnergy implements the api.ChargeRater interface
 func (wb *Amtron) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(amtronRegEnergy, 2)
 	if err != nil {
