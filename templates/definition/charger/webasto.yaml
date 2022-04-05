@@ -3,6 +3,8 @@ products:
   - brand: Webasto
     description:
       generic: Live
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: host
     required: true
