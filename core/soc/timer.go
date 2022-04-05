@@ -72,7 +72,13 @@ func (lp *Timer) Set(t time.Time) {
 	}
 
 	lp.Time = t
-	lp.Publish("targetTime", lp.Time)
+
+	if lp.Time.IsZero() {
+		lp.Publish("targetTime", nil)
+		lp.Publish("targetTimeProjectedStart", nil)
+	} else {
+		lp.Publish("targetTime", lp.Time)
+	}
 }
 
 // Reset resets the target charging request
@@ -114,8 +120,11 @@ func (lp *Timer) DemandActive() bool {
 	if lp.active {
 		lp.log.DEBUG.Printf("projected end: %v", lp.finishAt)
 		lp.log.DEBUG.Printf("desired finish time: %v", lp.Time)
+		lp.Publish("targetTimeProjectedStart", nil)
 	} else {
-		lp.log.DEBUG.Printf("projected start: %v", lp.Time.Add(-remainingDuration))
+		projectedStart := lp.Time.Add(-remainingDuration)
+		lp.log.DEBUG.Printf("projected start: %v", projectedStart)
+		lp.Publish("targetTimeProjectedStart", projectedStart)
 	}
 
 	// timer charging is already active- only deactivate once charging has stopped
