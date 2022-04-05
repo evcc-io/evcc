@@ -28,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // WebastoLive charger implementation
@@ -103,7 +104,11 @@ func NewWebastoLive(uri string, id uint8) (api.Charger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("webast")
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
+	log := util.NewLogger("webasto")
 	conn.Logger(log.TRACE)
 
 	wb := &WebastoLive{
@@ -209,7 +214,7 @@ func (wb *WebastoLive) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) * 100, nil
+	return float64(binary.BigEndian.Uint32(b)) / 10, nil
 }
 
 var _ api.MeterCurrent = (*WebastoLive)(nil)
