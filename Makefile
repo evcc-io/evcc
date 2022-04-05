@@ -1,7 +1,7 @@
-.PHONY: default all clean install install-ui ui assets lint test-ui lint-ui test build test-release release
+.PHONY: default all clean install install-ui ui assets docs lint test-ui lint-ui test build test-release release
 .PHONY: docker publish-testing publish-latest publish-nightly publish-release
 .PHONY: prepare-image image-rootfs image-update
-.PHONY: soc stamps
+.PHONY: soc
 
 # build vars
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
@@ -45,6 +45,9 @@ ui:
 
 assets:
 	go generate ./...
+
+docs:
+	go generate github.com/evcc-io/evcc/util/templates/...
 
 lint:
 	golangci-lint run
@@ -117,8 +120,3 @@ image-update:
 soc:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
-
-stamps:
-	docker pull hacksore/hks
-	docker run --platform linux/amd64 --rm hacksore/hks hyundai list 014d2225-8495-4735-812d-2616334fd15d | head -n 101 | tail -n 100 > vehicle/bluelink/014d2225-8495-4735-812d-2616334fd15d
-	docker run --platform linux/amd64 --rm hacksore/hks kia list 693a33fa-c117-43f2-ae3b-61a02d24f417 | head -n 101 | tail -n 100 > vehicle/bluelink/693a33fa-c117-43f2-ae3b-61a02d24f417
