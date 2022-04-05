@@ -8,7 +8,7 @@ render:
       template: kostal-plenticore
       usage: pv      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 71
       host: 192.0.2.2 # Hostname
@@ -20,7 +20,7 @@ render:
       template: kostal-plenticore
       usage: battery      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 71
       host: 192.0.2.2 # Hostname

@@ -7,7 +7,7 @@ render:
       template: powerdog
       usage: grid      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname
@@ -19,7 +19,7 @@ render:
       template: powerdog
       usage: pv      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname

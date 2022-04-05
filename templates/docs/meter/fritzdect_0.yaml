@@ -12,6 +12,7 @@ render:
       user: # Benutzername um auf das Gerät zuzugreifen
       password: # Passwort des Benutzerkontos
       ain: 007788992233 # Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
+
   - usage: charge
     default: |
       type: template
@@ -21,3 +22,4 @@ render:
       user: # Benutzername um auf das Gerät zuzugreifen
       password: # Passwort des Benutzerkontos
       ain: 007788992233 # Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
+

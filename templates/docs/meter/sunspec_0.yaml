@@ -8,7 +8,7 @@ render:
       template: sunspec
       usage: grid      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname
@@ -20,7 +20,7 @@ render:
       template: sunspec
       usage: pv      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname
@@ -32,7 +32,7 @@ render:
       template: sunspec
       usage: battery      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname

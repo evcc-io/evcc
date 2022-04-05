@@ -9,7 +9,7 @@ render:
       template: cfos
       usage: charge      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 2
       host: 192.0.2.2 # Hostname

@@ -8,23 +8,23 @@ render:
       template: solaredge-inverter
       usage: grid      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
-
       timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
+
   - usage: pv
     default: |
       type: template
       template: solaredge-inverter
       usage: pv      
 
-      # Modbus: TCPIP
+      # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
-
       timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
+
