@@ -30,7 +30,7 @@ params:
   - name: timeout
     default: 30s
 render: |
-  type: warp
+  type:{{ if .fw2 }} warp-fw2 {{ else }} warp {{ end }}
   broker: {{ .host }}:{{ .port }}
   topic: {{ .topic }}
   timeout: {{ .timeout }}
