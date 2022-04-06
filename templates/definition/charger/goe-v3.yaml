@@ -9,11 +9,11 @@ requirements:
     de: |
       Benötigt mindestens Firmware 052.1 oder neuer. 
 
-      Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein und es wird ein Sponsortoken benötigt. 💚
+      Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein und es wird ein Sponsortoken benötigt.
     en: |
       Requires firmware 052.1 or later.
 
-      For 1P/3P-Phase switching the HTTP API v2 in the charger setup needs to be activated and a sponsor token is required. 💚
+      For 1P/3P-Phase switching the HTTP API v2 in the charger setup needs to be activated and a sponsor token is required.
   uri: https://docs.evcc.io/docs/devices/chargers#go-echarger-homeprov3
 params:
   - name: host
