@@ -16,6 +16,7 @@ export default {
 		connected: Boolean,
 		charging: Boolean,
 		targetTime: String,
+		targetTimeProjectedStart: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
@@ -46,16 +47,17 @@ export default {
 
 			// target charage
 			if (this.targetTime) {
-				const targetDate = new Date(this.targetTime);
-				const data = { time: this.fmtAbsoluteDate(targetDate) };
-
 				if (this.charging) {
-					return t("targetChargeActive", data);
+					return t("targetChargeActive");
 				}
 				if (this.enabled) {
-					return t("targetChargeWaitForVehicle", data);
+					return t("targetChargeWaitForVehicle");
 				}
-				return t("targetChargePlanned", data);
+				if (this.targetTimeProjectedStart) {
+					return t("targetChargePlanned", {
+						time: this.fmtAbsoluteDate(new Date(this.targetTimeProjectedStart)),
+					});
+				}
 			}
 
 			// pv enable

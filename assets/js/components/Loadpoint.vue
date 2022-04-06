@@ -112,6 +112,7 @@ export default {
 		minSoC: Number,
 		targetTime: String,
 		targetTimeActive: Boolean,
+		targetTimeProjectedStart: String,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,

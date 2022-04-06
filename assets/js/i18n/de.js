@@ -104,7 +104,7 @@ export default {
       minCharge: "Mindestladung bis {soc}%.",
       waitForVehicle: "Ladebereit. Warte auf Fahrzeug.",
       charging: "Ladevorgang aktiv.",
-      targetChargePlanned: "Zielladen geplant. Ladung startet bald.",
+      targetChargePlanned: "Zielladen geplant. Ladung startet {time} Uhr.",
       targetChargeWaitForVehicle: "Zielladen bereit. Warte auf Fahrzeug.",
       targetChargeActive: "Zielladen aktiv.",
       connected: "Verbunden.",
@@ -121,7 +121,7 @@ export default {
     targetCharge: {
       title: "Zielzeit",
       inactiveLabel: "Zielzeit",
-      activeLabel: "{time} Uhr",
+      activeLabel: "{time}",
       modalTitle: "Zielzeit festlegen",
       setTargetTime: "keine",
       description: "Wann soll das Fahrzeug auf {targetSoC}% geladen sein?",

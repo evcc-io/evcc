@@ -93,12 +93,36 @@ export default {
       const mm = `${date.getMinutes()}`.padStart(2, "0");
       return `${HH}:${mm}`;
     },
-    fmtAbsoluteDate: function (date) {
+    isToday: function (date) {
+      const today = new Date();
+      return today.toDateString() === date.toDateString();
+    },
+    isTomorrow: function (date) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toDateString() === date.toDateString();
+    },
+    weekdayPrefix: function (date) {
+      const rtf = new Intl.RelativeTimeFormat(this.$i18n.locale, { numeric: "auto" });
+
+      if (this.isToday(date)) {
+        return rtf.formatToParts(0, "day")[0].value;
+      }
+      if (this.isTomorrow(date)) {
+        return rtf.formatToParts(1, "day")[0].value;
+      }
       return new Intl.DateTimeFormat(this.$i18n.locale, {
         weekday: "short",
+      }).format(date);
+    },
+    fmtAbsoluteDate: function (date) {
+      const weekday = this.weekdayPrefix(date);
+      const hour = new Intl.DateTimeFormat(this.$i18n.locale, {
         hour: "numeric",
         minute: "numeric",
       }).format(date);
+
+      return `${weekday} ${hour}`;
     },
     fmtMoney: function (amout = 0, currency = "EUR") {
       return new Intl.NumberFormat(this.$i18n.locale, {

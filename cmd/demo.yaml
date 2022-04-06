@@ -153,7 +153,6 @@ vehicles:
   - name: vehicle_1
     title: blauer e-Golf
     type: custom
-    capacity: 50
     soc:
       source: js
       vm: shared

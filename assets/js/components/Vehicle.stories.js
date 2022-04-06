@@ -59,7 +59,6 @@ Charging.args = {
   vehicleSoC: 66,
   targetSoC: 90,
   id: 0,
-  targetTimeHourSuggestion: null,
 };
 
 const hoursFromNow = function (hours) {

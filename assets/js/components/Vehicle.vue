@@ -35,6 +35,7 @@
 				<TargetCharge
 					class="flex-grow-1 text-sm-end target-charge flex-basis-0"
 					v-bind="targetCharge"
+					:disabled="targetChargeDisabled"
 					@target-time-updated="setTargetTime"
 					@target-time-removed="removeTargetTime"
 				/>
@@ -71,9 +72,10 @@ export default {
 		vehicleRange: Number,
 		vehicleTitle: String,
 		targetTimeActive: Boolean,
-		targetTimeHourSuggestion: Number,
 		targetTime: String,
+		targetTimeProjectedStart: String,
 		targetSoC: Number,
+		mode: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
@@ -102,6 +104,9 @@ export default {
 				);
 			}
 			return null;
+		},
+		targetChargeDisabled: function () {
+			return !this.connected || !["pv", "minpv"].includes(this.mode);
 		},
 	},
 	watch: {

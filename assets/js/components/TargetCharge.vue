@@ -3,7 +3,7 @@
 		<LabelAndValue class="flex-grow-1" :label="$t('main.targetCharge.title')">
 			<button
 				class="btn btn-link p-0 value"
-				:class="targetChargeEnabled ? 'text-white' : 'text-gray'"
+				:class="buttonIsEnabled ? 'text-white' : 'text-gray'"
 				data-bs-toggle="modal"
 				:data-bs-target="`#${modalId}`"
 			>
@@ -132,6 +132,7 @@ export default {
 		targetTime: String,
 		targetTimeActive: Boolean,
 		targetSoC: Number,
+		disabled: Boolean,
 	},
 	data: function () {
 		return { selectedDay: null, selectedTime: null };
@@ -139,6 +140,9 @@ export default {
 	computed: {
 		targetChargeEnabled: function () {
 			return this.targetTime;
+		},
+		buttonIsEnabled: function () {
+			return this.targetChargeEnabled && !this.disabled;
 		},
 		selectedTargetTimeValid: function () {
 			const now = new Date();
@@ -248,6 +252,7 @@ export default {
 	font-size: 18px;
 	line-height: 1.2;
 	border: none;
+	transition: color 500ms linear;
 }
 .value:hover {
 	color: var(--bs-color-white);
