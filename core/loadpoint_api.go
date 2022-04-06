@@ -132,7 +132,6 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 
 		// don't remove soc
 		if !finishAt.IsZero() {
-			lp.publish("targetTimeHourSuggestion", finishAt.Hour())
 			lp.setTargetSoC(soc)
 			lp.requestUpdate()
 		}

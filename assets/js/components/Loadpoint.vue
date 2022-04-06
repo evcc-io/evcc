@@ -60,7 +60,6 @@ export default {
 		minSoC: Number,
 		targetTime: String,
 		targetTimeActive: Boolean,
-		targetTimeHourSuggestion: Number,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,

@@ -1,4 +1,4 @@
-log: info
+log: trace
 
 interval: 3s
 
@@ -96,6 +96,7 @@ vehicles:
   - name: demo
     title: e-Golf
     type: custom
+    capacity: 50
     soc:
       source: js
       vm: shared
