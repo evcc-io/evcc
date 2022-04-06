@@ -72,6 +72,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+
       - name: Cache NPM modules
         uses: actions/cache@v2
         with:
