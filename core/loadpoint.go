@@ -150,6 +150,8 @@ type LoadPoint struct {
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
 	progress                *Progress     // Step-wise progress indicator
+
+	chargePriority int // charge Priority value
 }
 
 // NewLoadPointFromConfig creates a new loadpoint

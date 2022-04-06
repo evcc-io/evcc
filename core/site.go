@@ -408,9 +408,12 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
-		// total available power = sitePower - totalChargePower + minPower
-
-		lp.Update(sitePower, cheap, site.batteryBuffered)
+		if sitePower-totalChargePower+minPower < 0 {
+			// total available power = sitePower - totalChargePower + minPower
+			site.priorityPowerDistribution(totalPriority, sitePower-totalChargePower+minPower, cheap, site.batteryBuffered)
+		} else {
+			lp.Update(sitePower, cheap, site.batteryBuffered)
+		}
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
