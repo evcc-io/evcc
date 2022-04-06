@@ -22,7 +22,7 @@ render: |
     id: 255
     register:
       address: 1078 # grid power
-      type: input
+      type: holding
       decode: int16
     scale: -1
   {{- end }}
@@ -30,14 +30,14 @@ render: |
     id: 255
     register:
       address: 1102 # PV-sensor power
-      type: input
+      type: holding
       decode: uint16
   {{- end }}
   {{- if eq .usage "battery" }}
     id: 1
     register:
       address: 1066 # active power
-      type: input
+      type: holding
       decode: int16
     scale: -1
   soc:
@@ -46,6 +46,6 @@ render: |
     id: 1
     register:
       address: 1068 # SOC
-      type: input
+      type: holding
       decode: int16
   {{- end }}
