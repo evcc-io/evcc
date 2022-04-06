@@ -1,9 +1,7 @@
 package vehicle
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -98,24 +96,15 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 
 	api := psa.NewAPI(log, identity, realm, cc.Credentials.ID)
 
-	vehicles, err := api.Vehicles()
+	_, vid, err := ensureVehicleWithFeature(
+		cc.VIN, api.Vehicles,
+		func(v psa.Vehicle) (string, string) {
+			return v.VIN, v.ID
+		},
+	)
+
 	if err != nil {
 		return nil, err
-	}
-
-	var vid string
-	if cc.VIN == "" && len(vehicles) == 1 {
-		vid = vehicles[0].ID
-	} else {
-		for _, vehicle := range vehicles {
-			if vehicle.VIN == strings.ToUpper(cc.VIN) {
-				vid = vehicle.ID
-			}
-		}
-	}
-
-	if vid == "" {
-		return nil, errors.New("vin not found")
 	}
 
 	v.Provider = psa.NewProvider(api, vid, cc.Cache)

@@ -10,8 +10,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
-	"github.com/thoas/go-funk"
 	stripmd "github.com/writeas/go-strip-markdown"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -128,7 +128,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 }
 
 func (c *CmdConfigure) processDeviceCapabilities(capabilitites []string) {
-	if funk.ContainsString(capabilitites, templates.CapabilitySMAHems) {
+	if slices.Contains(capabilitites, templates.CapabilitySMAHems) {
 		c.capabilitySMAHems = true
 	}
 }
@@ -148,14 +148,14 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	}
 
 	// check if sponsorship is required
-	if funk.ContainsString(templateItem.Requirements.EVCC, templates.RequirementSponsorship) && c.configuration.config.SponsorToken == "" {
+	if slices.Contains(templateItem.Requirements.EVCC, templates.RequirementSponsorship) && c.configuration.config.SponsorToken == "" {
 		if err := c.askSponsortoken(true, false); err != nil {
 			return err
 		}
 	}
 
 	// check if we need to setup an MQTT broker
-	if funk.ContainsString(templateItem.Requirements.EVCC, templates.RequirementMQTT) {
+	if slices.Contains(templateItem.Requirements.EVCC, templates.RequirementMQTT) {
 		if c.configuration.config.MQTT == "" {
 			mqttConfig, err := c.configureMQTT(templateItem)
 			if err != nil {
@@ -172,7 +172,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	}
 
 	// check if we need to setup an EEBUS HEMS
-	if funk.ContainsString(templateItem.Requirements.EVCC, templates.RequirementEEBUS) {
+	if slices.Contains(templateItem.Requirements.EVCC, templates.RequirementEEBUS) {
 		if c.configuration.config.EEBUS == "" {
 			fmt.Println()
 			fmt.Println("-- EEBUS -----------------------------------")
@@ -219,7 +219,7 @@ func (c *CmdConfigure) processParamRequirements(param templates.Param) error {
 	}
 
 	// check if sponsorship is required
-	if funk.ContainsString(param.Requirements.EVCC, templates.RequirementSponsorship) && c.configuration.config.SponsorToken == "" {
+	if slices.Contains(param.Requirements.EVCC, templates.RequirementSponsorship) && c.configuration.config.SponsorToken == "" {
 		if err := c.askSponsortoken(true, true); err != nil {
 			return err
 		}
@@ -384,7 +384,7 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filter string) bool {
 	choices := c.paramChoiceValues(params, name)
 
-	return funk.ContainsString(choices, filter)
+	return slices.Contains(choices, filter)
 }
 
 // paramChoiceValues provides a list of possible values for a param choice
@@ -533,7 +533,7 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 	}
 
 	help := param.Help.String(c.lang)
-	if funk.ContainsString(param.Requirements.EVCC, templates.RequirementSponsorship) {
+	if slices.Contains(param.Requirements.EVCC, templates.RequirementSponsorship) {
 		help = fmt.Sprintf("%s\n\n%s", help, c.localizedString("Requirements_Sponsorship_Feature_Title", nil))
 	}
 
@@ -566,7 +566,7 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, dev
 		return
 	}
 
-	config := templateItem.ConfigDefaults.Config.Modbus
+	config := templateItem.ConfigDefaults.Modbus
 
 	for _, choice := range modbusParam.Choice {
 		if config.Interfaces[choice] == nil {

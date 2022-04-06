@@ -9,4 +9,4 @@ params:
     choice: ["rs485"]
 render: |
   type: phoenix-ev-ser
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

@@ -10,16 +10,16 @@ import (
 
 // Provider is an api.Vehicle implementation for VW ID cars
 type Provider struct {
-	statusG func() (interface{}, error)
+	statusG func() (Status, error)
 	action  func(action, value string) error
 }
 
 // NewProvider creates a new vehicle
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.NewCached(func() (interface{}, error) {
+		statusG: provider.Cached(func() (Status, error) {
 			return api.Status(vin)
-		}, cache).InterfaceGetter(),
+		}, cache),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
 		},
@@ -32,7 +32,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		return float64(res.Data.BatteryStatus.CurrentSOCPercent), nil
 	}
 
@@ -46,7 +46,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		if res.Data.PlugStatus.PlugConnectionState == "connected" {
 			status = api.StatusB
 		}
@@ -63,7 +63,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		cst := res.Data.ChargingStatus
 		return cst.CarCapturedTimestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), err
 	}
@@ -76,7 +76,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		return int64(res.Data.BatteryStatus.CruisingRangeElectricKm), nil
 	}
 
@@ -88,7 +88,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		if res.Data.MaintenanceStatus == nil {
 			return 0, api.ErrNotAvailable
 		}
@@ -103,7 +103,7 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
+	if err == nil {
 		state := strings.ToLower(res.Data.ClimatisationStatus.ClimatisationState)
 
 		if state == "" {

@@ -257,6 +257,7 @@ type Product struct {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
+	Covers       []string  // list of covered outdated tempate names
 	Products     []Product // list of products this template is compatible with
 	Capabilities []string
 	Requirements Requirements

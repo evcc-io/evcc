@@ -26,8 +26,8 @@ jobs:
       - name: Install tools
         run: make install
 
-      - name: Assets
-        run: make assets
+      - name: Build docs
+        run: make docs
 
       - name: Clean git
         run: |

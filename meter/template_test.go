@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 )
 
 var acceptable = []string{
@@ -42,7 +42,7 @@ func TestTemplates(t *testing.T) {
 		if values[templates.ParamModbus] != nil {
 			modbusChoices := tmpl.ModbusChoices()
 			// we only test one modbus setup
-			if funk.ContainsString(modbusChoices, templates.ModbusChoiceTCPIP) {
+			if slices.Contains(modbusChoices, templates.ModbusChoiceTCPIP) {
 				values[templates.ModbusKeyTCPIP] = true
 			} else {
 				values[templates.ModbusKeyRS485TCPIP] = true

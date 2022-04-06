@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.17
+go 1.18
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
@@ -52,6 +52,7 @@ require (
 	github.com/lorenzodonini/ocpp-go v0.15.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/manifoldco/promptui v0.9.0
+	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/mlnoga/rct v0.1.2-0.20220320164346-9f2daa4d6734
 	github.com/muka/go-bluetooth v0.0.0-20220219050759-674a63b8741a
@@ -62,6 +63,7 @@ require (
 	github.com/philippseith/signalr v0.5.3-0.20211205201131-d57b5a34379a
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robertkrimen/otto v0.0.0-20211024170158-b87d35c0b86f
+	github.com/samber/lo v1.11.0
 	github.com/shurcooL/graphql v0.0.0-20200928012149-18c5c3165e3a
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.4.0
@@ -69,12 +71,12 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.2-0.20220212101550-5986bd9c0c19
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
-	github.com/thoas/go-funk v0.9.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20220329124309-22084e041a33
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
-	golang.org/x/net v0.0.0-20220325170049-de3da57026de
+	golang.org/x/exp v0.0.0-20220318154914-8dddf5d87bd8
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	golang.org/x/text v0.3.7
 	google.golang.org/api v0.73.0
@@ -122,7 +124,6 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/miekg/dns v1.1.45 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -146,6 +147,7 @@ require (
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/teivah/onecontext v1.3.0 // indirect
+	github.com/thoas/go-funk v0.9.1 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.opencensus.io v0.23.0 // indirect

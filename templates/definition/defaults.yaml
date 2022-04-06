@@ -52,6 +52,13 @@ params:
       de: Port
       en: Port
     valuetype: number
+  - name: topic
+    description:
+      de: Topic
+      en: Topic
+    help:
+      de: Topic (ohne / am Anfang)
+      en: Topic (omit leading /)
   - name: user
     description:
       de: Benutzername
@@ -331,9 +338,6 @@ modbus:
         - reference: true
           name: port
           default: 502
-        - name: rtu
-          default: true
-          hidden: true
     tcpip:
       description:
         generic: TCP/IP

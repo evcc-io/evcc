@@ -5,8 +5,8 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 	"github.com/shurcooL/graphql"
-	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
 
@@ -45,9 +45,9 @@ func (v *API) Vehicles(ctx context.Context) ([]string, error) {
 	var vins []string
 	err := v.client.Query(ctx, &res, nil)
 	if err == nil {
-		vins = funk.Map(res.UserVehicles, func(v vehicle) string {
+		vins = lo.Map(res.UserVehicles, func(v vehicle, _ int) string {
 			return v.VIN
-		}).([]string)
+		})
 	}
 
 	return vins, err

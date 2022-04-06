@@ -14,13 +14,13 @@ import (
 const (
 	APIVersion         = "protocol=1.0,resource=2.1"
 	ClientID           = "a-ncb-prod-android"
-	ClientSecret       = "3LBs0yOx2XO-3m4mMRW27rKeJzskhfWF0A8KUtnim8i/qYQPl8ZItp3IaqJXaYj_"
+	ClientSecret       = "0sAcrtwvwEXXZp5nzQhPexSRhxUVKa0d76F4uqDvxvvKFHXpo4myoJwUuV4vuNqC"
 	Scope              = "openid profile vehicles"
-	AuthBaseURL        = "https://prod.eu.auth.kamereon.org/kauth"
+	AuthBaseURL        = "https://prod.eu2.auth.kamereon.org/kauth"
 	Realm              = "a-ncb-prod"
 	RedirectURI        = "org.kamereon.service.nci:/oauth2redirect"
-	CarAdapterBaseURL  = "https://alliance-platform-caradapter-prod.apps.eu.kamereon.io/car-adapter"
-	UserAdapterBaseURL = "https://alliance-platform-usersadapter-prod.apps.eu.kamereon.io/user-adapter"
+	CarAdapterBaseURL  = "https://alliance-platform-caradapter-prod.apps.eu2.kamereon.io/car-adapter"
+	UserAdapterBaseURL = "https://alliance-platform-usersadapter-prod.apps.eu2.kamereon.io/user-adapter"
 	UserBaseURL        = "https://nci-bff-web-prod.apps.eu.kamereon.io/bff-web"
 )
 

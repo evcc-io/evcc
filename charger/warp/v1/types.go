@@ -1,10 +1,14 @@
-package warp
+package v1
 
 import "time"
 
 const (
 	RootTopic = "warp"
 	Timeout   = 30 * time.Second
+
+	FeatureMeter       = "meter"
+	FeatureMeterPhases = "meter_phases"
+	FeatureNfc         = "nfc"
 )
 
 // https://www.warp-charger.com/api.html#evse_state

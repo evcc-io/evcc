@@ -10,4 +10,4 @@ params:
     choice: ["tcpip"]
 render: |
   type: innogy
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

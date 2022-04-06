@@ -64,7 +64,7 @@ func NewDaheimLaden(token string, stationID string) (*DaheimLaden, error) {
 func (c *DaheimLaden) Enabled() (bool, error) {
 	var res daheimladen.GetLatestStatus
 	err := c.GetJSON(fmt.Sprintf("%s/cs/%s/status", daheimladen.BASE_URL, c.stationID), &res)
-	return res.Status == string(daheimladen.CHARGING) || res.Status == string(daheimladen.PREPARING), err
+	return res.Status == string(daheimladen.CHARGING), err
 }
 
 // Enable implements the api.Charger interface

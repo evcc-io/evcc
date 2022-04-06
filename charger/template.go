@@ -21,7 +21,7 @@ func NewChargerFromTemplateConfig(other map[string]interface{}) (api.Charger, er
 		return nil, err
 	}
 
-	tmpl, err := templates.ByTemplate(cc.Template, templates.Charger)
+	tmpl, err := templates.ByName(cc.Template, templates.Charger)
 	if err != nil {
 		return nil, err
 	}

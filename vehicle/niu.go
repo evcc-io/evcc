@@ -23,7 +23,7 @@ type Niu struct {
 	user, password string
 	serial         string
 	token          niu.Token
-	apiG           func() (interface{}, error)
+	apiG           func() (niu.Response, error)
 }
 
 func init() {
@@ -58,7 +58,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		serial:   strings.ToUpper(cc.Serial),
 	}
 
-	v.apiG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.apiG = provider.Cached(v.batteryAPI, cc.Cache)
 
 	return v, nil
 }
@@ -116,7 +116,7 @@ func (v *Niu) request(uri string) (*http.Request, error) {
 }
 
 // batteryAPI provides battery api response
-func (v *Niu) batteryAPI() (interface{}, error) {
+func (v *Niu) batteryAPI() (niu.Response, error) {
 	var res niu.Response
 
 	req, err := v.request(niu.ApiURI + "/v3/motor_data/index_info?sn=" + v.serial)
@@ -130,12 +130,7 @@ func (v *Niu) batteryAPI() (interface{}, error) {
 // SoC implements the api.Vehicle interface
 func (v *Niu) SoC() (float64, error) {
 	res, err := v.apiG()
-
-	if res, ok := res.(niu.Response); err == nil && ok {
-		return float64(res.Data.Batteries.CompartmentA.BatteryCharging), nil
-	}
-
-	return 0, err
+	return float64(res.Data.Batteries.CompartmentA.BatteryCharging), err
 }
 
 var _ api.ChargeState = (*Niu)(nil)
@@ -145,7 +140,7 @@ func (v *Niu) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.apiG()
-	if res, ok := res.(niu.Response); err == nil && ok {
+	if err == nil {
 		if res.Data.IsConnected {
 			status = api.StatusB
 		}
@@ -162,10 +157,5 @@ var _ api.VehicleRange = (*Niu)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Niu) Range() (int64, error) {
 	res, err := v.apiG()
-
-	if res, ok := res.(niu.Response); err == nil && ok {
-		return res.Data.EstimatedMileage, nil
-	}
-
-	return 0, err
+	return res.Data.EstimatedMileage, err
 }

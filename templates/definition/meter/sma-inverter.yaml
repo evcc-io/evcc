@@ -13,8 +13,8 @@ params:
   - name: password
     mask: true
     help:
-      en: Only required if the default password was changed
-      de: Wird nur benötigt, wenn das Standardpasswort geändert wurde
+      en: System password / Installer password
+      de: Anlagenpasswort / Installateurspasswort
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname

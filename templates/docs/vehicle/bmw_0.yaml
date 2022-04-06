@@ -1,0 +1,27 @@
+product:
+  brand: BMW
+render:
+  - default: |
+      type: template
+      template: bmw
+      title: # Wird in der Benutzeroberfläche angezeigt # Optional
+      user: # Benutzername um auf das Gerät zuzugreifen
+      password: # Passwort des Benutzerkontos
+      vin: WBMW... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
+      capacity: 65 # Akku-Kapazität in kWh # Optional
+    advanced: |
+      type: template
+      template: bmw
+      title: # Wird in der Benutzeroberfläche angezeigt # Optional
+      user: # Benutzername um auf das Gerät zuzugreifen
+      password: # Passwort des Benutzerkontos
+      vin: WBMW... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
+      capacity: 65 # Akku-Kapazität in kWh # Optional
+      phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können # Optional
+      mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll # Optional
+      minSoC: 25 # Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht # Optional
+      targetSoC: 80 # Bis zu welchem Ladestand (SoC) soll das Fahrzeug geladen werden # Optional
+      minCurrent: 6 # Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll # Optional
+      maxCurrent: 16 # Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll # Optional
+      identifiers: # Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox # Optional
+      cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,... # Optional

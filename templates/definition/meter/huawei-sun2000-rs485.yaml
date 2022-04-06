@@ -1,21 +1,23 @@
-template: huawei-sun2000-8ktl
+template: huawei-sun2000-rs485
+covers:
+  - huawei-sun2000-8ktl
 products:
   - brand: Huawei
     description:
-      generic: SUN2000-8KTL
+      generic: SUN2000 via RS485 Modbus
 params:
   - name: usage
     choice: ["pv"]
   - name: modbus
     choice: ["rs485"]
-    baudrate: 19200
+    baudrate: 9600
 render: |
   type: custom
   power:
     source: modbus
-    {{include "modbus" . | indent 2}}
+    {{- include "modbus" . | indent 2 }}
     # register details
     register:
-      address: 40525
+      address: 32080 # Active generation power AC
       type: holding
       decode: int32

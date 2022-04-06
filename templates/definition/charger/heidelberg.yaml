@@ -18,4 +18,4 @@ params:
     comset: 8E1
 render: |
   type: heidelberg
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

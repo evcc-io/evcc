@@ -12,6 +12,6 @@ params:
     default: 60
 render: |
   type: jaguar
-  {{include "vehicle-base" .}}
-  {{include "vehicle-identify" .}}
-  {{include "vehicle-cloud" .}}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

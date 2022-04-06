@@ -52,5 +52,5 @@ render: |
   {{- if ne .vin "" }}
   vin: {{ .vin }}
   {{- end }}
-  {{include "vehicle-identify" .}}
-  {{include "vehicle-cloud" .}}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}
