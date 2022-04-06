@@ -6,15 +6,15 @@ render:
       type: template
       template: niu-e-scooter
       title: # Wird in der Benutzeroberfläche angezeigt # Optional
-      user: # Benutzername um auf das Gerät zuzugreifen
-      password: # Passwort des Benutzerkontos
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       serial:
     advanced: |
       type: template
       template: niu-e-scooter
       title: # Wird in der Benutzeroberfläche angezeigt # Optional
-      user: # Benutzername um auf das Gerät zuzugreifen
-      password: # Passwort des Benutzerkontos
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       serial:
       mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll # Optional
       minSoC: 25 # Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht # Optional

@@ -7,5 +7,5 @@ render:
       type: template
       template: powerfox-poweropti
       usage: grid
-      user: # Benutzername um auf das Gerät zuzugreifen
-      password: # Passwort des Benutzerkontos
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
