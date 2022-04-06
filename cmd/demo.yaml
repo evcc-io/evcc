@@ -1,4 +1,4 @@
-log: trace
+log: info
 
 interval: 3s
 
