@@ -14,4 +14,4 @@ params:
     id: 2
 render: |
   type: cfos
-  {{ include "modbus" . }}
+  {{- include "modbus" . }}

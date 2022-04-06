@@ -12,7 +12,7 @@ params:
 render: |
   type: modbus
   model: sunspec
-  {{ include "modbus" .}}
+  {{- include "modbus" . }}
   {{- if eq .usage "grid" }}
   subdevice: 1
   power: 203:W # sunspec 3-phase meter power reading

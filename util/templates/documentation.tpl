@@ -19,7 +19,8 @@ description: |
 {{ .RequirementDescription | indent 2 }}
 {{- end }}
 render:
-{{ if .Usages }}{{ range .Usages }}  - usage: {{ . }}
+{{- if .Usages -}}{{ range .Usages }}
+  - usage: {{ . }}
     default: |
       type: template
       template: {{ $.Template }}
@@ -30,12 +31,12 @@ render:
       {{- else if ne .Advanced true }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}
-      {{- if ne (len .Values) 0 }} 
+      {{- if ne (len .Values) 0 }}
       {{ range .Values }}
         - {{ . }}
       {{ end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{- if $.AdvancedParams }}
@@ -49,16 +50,18 @@ render:
       {{- else }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}
-      {{- if ne (len .Values) 0 }} 
+      {{- if ne (len .Values) 0 }}
       {{ range .Values }}
         - {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}} 
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{ end }}
-{{ end }}{{ else }}  - default: |
+{{- end }}
+{{- else }}
+  - default: |
       type: template
       template: {{ $.Template }}
       {{- range $.Params }}
@@ -67,12 +70,12 @@ render:
       {{- else if ne .Advanced true }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}
-      {{- if ne (len .Values) 0 }} 
+      {{- if ne (len .Values) 0 }}
       {{ range .Values }}
         - {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}} 
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{- if $.AdvancedParams }}
@@ -85,13 +88,13 @@ render:
       {{- else }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}
-      {{- if ne (len .Values) 0 }} 
+      {{- if ne (len .Values) 0 }}
       {{ range .Values }}
         - {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end -}}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{- end }}
-{{ end }}
+{{- end }}

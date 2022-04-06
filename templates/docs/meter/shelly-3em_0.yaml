@@ -1,0 +1,23 @@
+product:
+  brand: Shelly
+  description: 3EM
+  group: Steckdosen
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: shelly-3em
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+  - usage: pv
+    default: |
+      type: template
+      template: shelly-3em
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+  - usage: charge
+    default: |
+      type: template
+      template: shelly-3em
+      usage: charge
+      host: 192.0.2.2 # IP-Adresse oder Hostname

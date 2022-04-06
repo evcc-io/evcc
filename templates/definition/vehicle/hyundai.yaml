@@ -12,7 +12,7 @@ params:
   - preset: vehiclecloud
 render: |
   type: hyundai
-  {{include "vehicle-base" .}}
-  {{include "vehicle-language" .}}
-  {{include "vehicle-identify" .}}
-  {{include "vehicle-cloud" .}}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-language" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

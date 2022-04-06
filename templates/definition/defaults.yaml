@@ -331,9 +331,6 @@ modbus:
         - reference: true
           name: port
           default: 502
-        - name: rtu
-          default: true
-          hidden: true
     tcpip:
       description:
         generic: TCP/IP
