@@ -313,19 +313,16 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 
 // ProductUpdate implements the signalr receiver
 func (c *Easee) ProductUpdate(i json.RawMessage) {
-	c.log.TRACE.Printf("ProductUpdate %s", i)
 	c.observe("ProductUpdate", i)
 }
 
 // ChargerUpdate implements the signalr receiver
 func (c *Easee) ChargerUpdate(i json.RawMessage) {
-	c.log.TRACE.Printf("ChargerUpdate %s", i)
 	// c.observe("ChargerUpdate", i)
 }
 
 // CommandResponse implements the signalr receiver
 func (c *Easee) CommandResponse(i json.RawMessage) {
-	c.log.TRACE.Printf("CommandResponse %s", i)
 	// c.observe("CommandResponse", i)
 }
 
