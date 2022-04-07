@@ -5,8 +5,6 @@ products:
       generic: cPH1 eCB1 Controller
 params:
   - name: host
-    required: true
-    example: 192.0.2.2
 render: |
   type: hardybarth-ecb1
   uri: http://{{ .host }}

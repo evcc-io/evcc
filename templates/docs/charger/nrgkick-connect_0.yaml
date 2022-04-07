@@ -7,4 +7,4 @@ render:
       template: nrgkick-connect
       host: 192.0.2.2 # IP-Adresse oder Hostname
       mac:
-      password: # Passwort des Benutzerkontos
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)

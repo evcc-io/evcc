@@ -13,8 +13,6 @@ requirements:
     en: This requires the UDP function to be enabled with DIP 1.3 = ON, see the installation manual.
 params:
   - name: host
-    required: true
-    example: 192.0.2.2
   - name: rfid
     example: 765765348
     advanced: true

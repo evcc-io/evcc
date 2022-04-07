@@ -7,8 +7,6 @@ params:
   - name: usage
     choice: ["grid", "pv"]
   - name: host
-    example: 192.0.2.2
-    required: true
 render: |
   type: sma
   uri: {{ .host }}
