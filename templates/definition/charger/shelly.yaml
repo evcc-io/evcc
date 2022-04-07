@@ -1,12 +1,14 @@
 template: shelly
-description: 
-  generic: Shelly
+products:
+  - description:
+      generic: Shelly
+group: switchsockets
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: standbypower
-  default: 15
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: standbypower
+    default: 15
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)

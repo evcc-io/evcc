@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -11,8 +13,11 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	autoauth "github.com/evcc-io/evcc/server/auth"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
+	"github.com/gorilla/handlers"
 )
 
 type config struct {
@@ -60,7 +65,7 @@ type typedConfig struct {
 }
 
 type messagingConfig struct {
-	Events   map[string]push.EventTemplate
+	Events   map[string]push.EventTemplateConfig
 	Services []typedConfig
 }
 
@@ -76,6 +81,7 @@ type ConfigProvider struct {
 	chargers map[string]api.Charger
 	vehicles map[string]api.Vehicle
 	visited  map[string]bool
+	auth     *util.AuthCollection
 }
 
 func (cp *ConfigProvider) TrackVisitors() {
@@ -181,6 +187,20 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
 		}
 
+		// ensure vehicle config has title
+		ccWithTitle := struct {
+			Title string
+			Other map[string]interface{} `mapstructure:",remain"`
+		}{}
+
+		if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
+			return err
+		}
+
+		if ccWithTitle.Title == "" {
+			cc.Other["title"] = strings.Title(cc.Name)
+		}
+
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			// wrap any created errors to prevent fatals
@@ -195,4 +215,57 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	}
 
 	return nil
+}
+
+// webControl handles routing for devices. For now only api.ProviderLogin related routes
+func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Param) {
+	router := httpd.Router()
+
+	auth := router.PathPrefix("/oauth").Subrouter()
+	auth.Use(handlers.CompressHandler)
+	auth.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
+	// wire the handler
+	autoauth.Setup(auth)
+
+	// initialize
+	cp.auth = util.NewAuthCollection(paramC)
+
+	// TODO make evccURI configurable, add warnings for any network/ localhost
+	evccURI := fmt.Sprintf("http://%s", httpd.Addr)
+	baseAuthURI := fmt.Sprintf("%s/oauth", evccURI)
+
+	var id int
+	for _, v := range cp.vehicles {
+		if provider, ok := v.(api.ProviderLogin); ok {
+			id += 1
+
+			basePath := fmt.Sprintf("vehicles/%d", id)
+			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
+
+			// replace interface designator with address
+			// TODO fix when evccURI becomes configurable
+			callbackURI = strings.ReplaceAll(callbackURI, "0.0.0.0", "localhost")
+
+			// register vehicle
+			ap := cp.auth.Register(fmt.Sprintf("oauth/%s", basePath), v.Title())
+
+			provider.SetCallbackParams(evccURI, callbackURI, ap.Handler())
+
+			auth.
+				Methods(http.MethodPost).
+				Path(fmt.Sprintf("/%s/login", basePath)).
+				HandlerFunc(provider.LoginHandler())
+			auth.
+				Methods(http.MethodPost).
+				Path(fmt.Sprintf("/%s/logout", basePath)).
+				HandlerFunc(provider.LogoutHandler())
+
+			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
+		}
+	}
+
+	cp.auth.Publish()
 }

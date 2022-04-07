@@ -108,7 +108,8 @@
 <script>
 import formatter from "../mixins/formatter";
 
-const DEFAULT_TARGET_HOUR = 7;
+const DEFAULT_TARGET_TIME = "7:00";
+const LAST_TARGET_TIME_KEY = "last_target_time";
 
 export default {
 	name: "TargetCharge",
@@ -117,7 +118,6 @@ export default {
 		id: Number,
 		targetTime: String,
 		targetTimeActive: Boolean,
-		targetTimeHourSuggestion: Number,
 		targetSoC: Number,
 	},
 	data: function () {
@@ -158,14 +158,14 @@ export default {
 			return this.$t("main.targetCharge.inactiveLabel");
 		},
 		defaultDate: function () {
+			const [hours, minutes] = (
+				window.localStorage[LAST_TARGET_TIME_KEY] || DEFAULT_TARGET_TIME
+			).split(":");
+
 			const target = new Date();
 			target.setSeconds(0);
-			target.setMinutes(0);
-			if (Number.isInteger(this.targetTimeHourSuggestion)) {
-				target.setUTCHours(this.targetTimeHourSuggestion);
-			} else {
-				target.setHours(DEFAULT_TARGET_HOUR);
-			}
+			target.setMinutes(minutes);
+			target.setHours(hours);
 			// today or tomorrow?
 			const isInPast = target < new Date();
 			if (isInPast) {
@@ -208,6 +208,13 @@ export default {
 			return new Date().toISOString().split("T")[1].slice(0, -8);
 		},
 		setTargetTime: function () {
+			try {
+				const hours = this.selectedTargetTime.getHours();
+				const minutes = this.selectedTargetTime.getMinutes();
+				window.localStorage[LAST_TARGET_TIME_KEY] = `${hours}:${minutes}`;
+			} catch (e) {
+				console.warn(e);
+			}
 			this.$emit("target-time-updated", this.selectedTargetTime);
 		},
 		removeTargetTime: function () {

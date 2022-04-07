@@ -9,19 +9,19 @@ import (
 
 // Provider implements the evcc vehicle api
 type Provider struct {
-	chargerG func() (interface{}, error)
+	chargerG func() (ChargerResponse, error)
 	action   func(action, value string) error
 }
 
 // NewProvider provides the evcc vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		chargerG: provider.NewCached(func() (interface{}, error) {
+		chargerG: provider.Cached(func() (ChargerResponse, error) {
 			return api.Charger(vin)
-		}, cache).InterfaceGetter(),
-		// climateG: provider.NewCached(func() (interface{}, error) {
+		}, cache),
+		// climateG: provider.Cached(func() (interface{}, error) {
 		// 	return api.Climater(vin)
-		// }, cache).InterfaceGetter(),
+		// }, cache),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
 		},
@@ -34,7 +34,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.Battery.StateOfChargeInPercent), nil
 	}
 
@@ -48,7 +48,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		if res.Plug.ConnectionState == "Connected" {
 			status = api.StatusB
 		}
@@ -65,7 +65,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		crg := res.Charging
 
 		// estimate not available
@@ -85,7 +85,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		rng = res.Battery.CruisingRangeElectricInMeters / 1e3
 	}
 
@@ -97,7 +97,7 @@ func (v *Provider) Range() (rng int64, err error) {
 // // Climater implements the api.VehicleClimater interface
 // func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 // 	res, err := v.climateG()
-// 	if res, ok := res.(ClimaterResponse); err == nil && ok {
+// err == nil {
 // 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
 // 		active := state != "off" && state != "invalid" && state != "error"
 
@@ -113,16 +113,14 @@ func (v *Provider) Range() (rng int64, err error) {
 // 	return active, outsideTemp, targetTemp, err
 // }
 
-var _ api.VehicleStartCharge = (*Provider)(nil)
+var _ api.VehicleChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleStartCharge interface
+// StartCharge implements the api.VehicleChargeController interface
 func (v *Provider) StartCharge() error {
 	return v.action(ActionCharge, ActionChargeStart)
 }
 
-var _ api.VehicleStopCharge = (*Provider)(nil)
-
-// StopCharge implements the api.VehicleStopCharge interface
+// StopCharge implements the api.VehicleChargeController interface
 func (v *Provider) StopCharge() error {
 	return v.action(ActionCharge, ActionChargeStop)
 }

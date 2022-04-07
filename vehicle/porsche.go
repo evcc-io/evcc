@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/porsche"
-	"github.com/thoas/go-funk"
+	"github.com/samber/lo"
 )
 
 // Porsche is an api.Vehicle implementation for Porsche cars
@@ -48,12 +48,20 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	api := porsche.NewAPI(log, identity.DefaultSource)
+	mobile := porsche.NewMobileAPI(log, identity.MobileSource)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
+		mobileVehicles, err := mobile.Vehicles()
+		if err == nil {
+			return lo.Map(mobileVehicles, func(v porsche.StatusResponseMobile, _ int) string {
+				return v.VIN
+			}), err
+		}
+
 		vehicles, err := api.Vehicles()
-		return funk.Map(vehicles, func(v porsche.Vehicle) string {
+		return lo.Map(vehicles, func(v porsche.Vehicle, _ int) string {
 			return v.VIN
-		}).([]string), err
+		}), err
 	})
 
 	if err != nil {
@@ -65,29 +73,14 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vehicle is not paired with the My Porsche account")
 	}
 
-	// check if vehicle provides status:
-	// some PHEVs do not provide any data
-	if _, err := api.Status(cc.VIN); err != nil {
-		return nil, errors.New("vehicle is not capable of providing data")
-	}
-
 	// get eMobility capabilities
-
-	// Note: As of 27.10.21 the capabilities API needs to be called AFTER a
-	//   call to status() as it otherwise returns an HTTP 502 error.
-	//   The reason is unknown, even when tested with 100% identical Headers.
-	//   It seems to be a new backend related issue.
-	if _, err := api.Status(cc.VIN); err != nil {
-		return nil, err
-	}
-
 	emobility := porsche.NewEmobilityAPI(log, identity.EmobilitySource)
 	capabilities, err := emobility.Capabilities(cc.VIN)
 	if err != nil {
 		return nil, err
 	}
 
-	provider := porsche.NewProvider(log, api, emobility, cc.VIN, capabilities.CarModel, cc.Cache)
+	provider := porsche.NewProvider(log, api, emobility, mobile, cc.VIN, capabilities.CarModel, cc.Cache)
 
 	v := &Porsche{
 		embed:    &cc.embed,

@@ -22,6 +22,41 @@
 					</div>
 					<div id="navbarNavAltMarkup" class="collapse navbar-collapse flex-grow-0">
 						<ul class="navbar-nav">
+							<li v-if="providerLogins.length > 0" class="nav-item dropdown">
+								<a
+									class="nav-link dropdown-toggle"
+									data-bs-toggle="dropdown"
+									href="#"
+									role="button"
+									aria-expanded="false"
+									>{{ $t("header.login") }}
+									<span v-if="logoutCount > 0" class="badge bg-secondary">{{
+										logoutCount
+									}}</span>
+								</a>
+								<ul class="dropdown-menu">
+									<li
+										v-for="login in providerLogins"
+										:key="login.title"
+										class="dropdown-item"
+									>
+										<button
+											class="dropdown-item"
+											type="button"
+											@click="handleProviderAuthorization(login)"
+										>
+											{{ login.title }}
+											{{
+												$t(
+													login.loggedIn
+														? "main.provider.logout"
+														: "main.provider.login"
+												)
+											}}
+										</button>
+									</li>
+								</ul>
+							</li>
 							<li class="nav-item">
 								<a
 									class="nav-link"
@@ -69,6 +104,8 @@ import Notifications from "../components/Notifications";
 
 import store from "../store";
 
+import baseAPI from "../baseapi";
+
 export default {
 	name: "App",
 	components: { Logo, Footer, Notifications },
@@ -87,6 +124,7 @@ export default {
 		version: function () {
 			return {
 				installed: this.installedVersion,
+				commit: this.commit,
 				available: this.store.state.availableVersion,
 				releaseNotes: this.store.state.releaseNotes,
 				hasUpdater: this.store.state.hasUpdater,
@@ -113,6 +151,19 @@ export default {
 				feedInPrice: this.store.state.tariffFeedIn,
 				currency: this.store.state.currency,
 			};
+		},
+		logoutCount() {
+			return this.providerLogins.filter((login) => !login.loggedIn).length;
+		},
+		providerLogins() {
+			return this.store.state.auth
+				? Object.entries(this.store.state.auth.vehicles).map(([k, v]) => ({
+						title: k,
+						loggedIn: v.authenticated,
+						loginPath: v.uri + "/login",
+						logoutPath: v.uri + "/logout",
+				  }))
+				: [];
 		},
 	},
 	created: function () {
@@ -159,6 +210,15 @@ export default {
 		},
 		reload() {
 			window.location.reload();
+		},
+		handleProviderAuthorization: async function (provider) {
+			if (!provider.loggedIn) {
+				baseAPI.post(provider.loginPath).then(function (response) {
+					window.location.href = response.data.loginUri;
+				});
+			} else {
+				baseAPI.post(provider.logoutPath);
+			}
 		},
 	},
 	metaInfo() {

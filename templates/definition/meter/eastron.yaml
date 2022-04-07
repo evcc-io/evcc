@@ -1,16 +1,17 @@
 template: eastron
-description: 
-  de: Eastron SDM Modbus Strommessgeräte
-  en: Eastron SDM Modbus Meter
+products:
+  - brand: Eastron
+    description:
+      generic: SDM Modbus
 params:
-- name: usage
-  choice: ["grid", "pv", "battery", "charge"]
-- name: modbus
-  choice: ["rs485"]
+  - name: usage
+    choice: ["grid", "pv", "battery", "charge"]
+  - name: modbus
+    choice: ["rs485"]
 render: |
   type: modbus
   model: sdm # specific non-sunspec meter
   {{- if eq .usage "charge" }}
   energy: Sum # only required for charge meter usage
   {{- end }}
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

@@ -5,7 +5,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	_ "embed"
+	"errors"
 	"fmt"
+	"net"
 	"strings"
 
 	"google.golang.org/grpc"
@@ -28,7 +30,11 @@ func caPEM() []byte {
 }
 
 func loadTLSCredentials() (*tls.Config, error) {
-	certPool := x509.NewCertPool()
+	certPool, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, err
+	}
+
 	if !certPool.AppendCertsFromPEM(caPEM()) {
 		return nil, fmt.Errorf("failed to add CA certificate")
 	}
@@ -41,19 +47,39 @@ func loadTLSCredentials() (*tls.Config, error) {
 	return config, nil
 }
 
-func Connection(uri string) (*grpc.ClientConn, error) {
+func verifyConnection(host string) func(conn tls.ConnectionState) error {
+	return func(conn tls.ConnectionState) error {
+		if len(conn.PeerCertificates) > 0 {
+			peer := conn.PeerCertificates[0]
+			return peer.VerifyHostname(host)
+		}
+
+		return errors.New("missing host certificate")
+	}
+}
+
+func Connection(hostPort string) (*grpc.ClientConn, error) {
 	var err error
 	if conn == nil {
 		creds := insecure.NewCredentials()
-		if !strings.HasPrefix(uri, "localhost") {
+
+		if !strings.HasPrefix(hostPort, "localhost") {
+			host, _, err := net.SplitHostPort(hostPort)
+			if err != nil {
+				return nil, err
+			}
+
 			var tlsConfig *tls.Config
 			if tlsConfig, err = loadTLSCredentials(); err != nil {
 				return nil, err
 			}
 
+			// make sure it matches the hostname
+			tlsConfig.VerifyConnection = verifyConnection(host)
+
 			creds = credentials.NewTLS(tlsConfig)
 		}
-		conn, err = grpc.Dial(uri, grpc.WithTransportCredentials(creds))
+		conn, err = grpc.Dial(hostPort, grpc.WithTransportCredentials(creds))
 	}
 
 	return conn, err

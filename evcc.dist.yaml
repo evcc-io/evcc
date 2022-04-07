@@ -15,45 +15,45 @@ levels:
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints
 # for examples see https://github.com/evcc-io/config#meters
 meters:
-- name: grid
-  type: modbus
-  model: sdm # SDM630
-  uri: rs485.fritz.box:23
-  rtu: true # rs485 device connected using ethernet adapter
-  id: 2
-  power: Power # default value, optionally override
-  energy: Sum # default value, optionally override
-- name: pv
-  type: ...
-- name: battery
-  type: ...
-- name: charge
-  type: ...
+  - name: grid
+    type: modbus
+    model: sdm # SDM630
+    uri: rs485.fritz.box:23
+    rtu: true # rs485 device connected using ethernet adapter
+    id: 2
+    power: Power # default value, optionally override
+    energy: Sum # default value, optionally override
+  - name: pv
+    type: ...
+  - name: battery
+    type: ...
+  - name: charge
+    type: ...
 
 # charger definitions
 # name can be freely chosen and is used as reference when assigning charger to vehicle
 # for examples see https://github.com/evcc-io/config#chargers
 chargers:
-- name: wallbe
-  type: wallbe # Wallbe charger
-  uri: 192.168.0.8:502 # ModBus address
-- name: keba
-  type: ...
+  - name: wallbe
+    type: wallbe # Wallbe charger
+    uri: 192.168.0.8:502 # ModBus address
+  - name: keba
+    type: ...
 
 # vehicle definitions
 # name can be freely chosen and is used as reference when assigning vehicle to loadpoint
 # for examples see https://github.com/evcc-io/config#vehicles
 vehicles:
-- name: car1
-  type: renault
-  title: Zoe
-  capacity: 60 # kWh
-  user: myuser # user
-  password: mypassword # password
-  vin: WREN...
-  onIdentify: # set defaults when vehicle is identified
-    minSoC: 20 # charge to at least 20% independent of charge mode
-    targetSoC: 90 # limit charge to 90%
+  - name: car1
+    type: renault
+    title: Zoe
+    capacity: 60 # kWh
+    user: myuser # user
+    password: mypassword # password
+    vin: WREN...
+    onIdentify: # set defaults when vehicle is identified
+      minSoC: 20 # charge to at least 20% independent of charge mode
+      targetSoC: 90 # limit charge to 90%
 
 # site describes the EVU connection, PV and home battery
 site:
@@ -61,48 +61,47 @@ site:
   meters:
     grid: grid # grid meter
     pvs:
-    - pv # list of pv inverters/ meters
+      - pv # list of pv inverters/ meters
     battery: battery # battery meter
   prioritySoC: # give home battery priority up to this soc (empty to disable)
   bufferSoC: # ignore home battery discharge above soc (empty to disable)
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
-- title: Garage # display name for UI
-  charger: wallbe # charger
-  meters:
-    charge: charge # charge meter
-  vehicle: audi
-  # vehicles: # use if multiple vehicles allowed to charge on this loadpoint
-  # - ID.3
-  # - e-Up
-  mode: pv
-  resetOnDisconnect: true # set defaults when vehicle disconnects
-  soc:
-    # polling defines usage of the vehicle APIs
-    # Modifying the default settings it NOT recommended. It MAY deplete your vehicle's battery
-    # or lead to vehicle manufacturer banning you from API use. USE AT YOUR OWN RISK.
-    poll:
-      # poll mode defines under which condition the vehicle API is called:
-      #   charging: update vehicle ONLY when charging (this is the recommended default)
-      #   connected: update vehicle when connected (not only charging), interval defines how often
-      #   always: always update vehicle regardless of connection state, interval defines how often (only supported for single vehicle)
-      mode: charging
-      # poll interval defines how often the vehicle API may be polled if NOT charging
-      interval: 60m
-    min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
-    target: 100 # always charge to 100%
-    estimate: false # set true to interpolate between api updates
-  phases: 3 # ev phases (default 3)
-  enable: # pv mode enable behavior
-    delay: 1m # threshold must be exceeded for this long
-    threshold: 0 # grid power threshold (in Watts, negative=export). If zero, export must exceed minimum charge power to enable
-  disable: # pv mode disable behavior
-    delay: 10m # threshold must be exceeded for this long
-    threshold: 200 # maximum import power (W)
-  guardDuration: 5m # switch charger contactor not more often than this (default 10m)
-  minCurrent: 6 # minimum charge current (default 6A)
-  maxCurrent: 16 # maximum charge current (default 16A)
+  - title: Garage # display name for UI
+    charger: wallbe # charger
+    meter: charge # charge meter
+    vehicle: audi
+    # vehicles: # use if multiple vehicles allowed to charge on this loadpoint
+    # - ID.3
+    # - e-Up
+    mode: pv
+    resetOnDisconnect: true # set defaults when vehicle disconnects
+    soc:
+      # polling defines usage of the vehicle APIs
+      # Modifying the default settings it NOT recommended. It MAY deplete your vehicle's battery
+      # or lead to vehicle manufacturer banning you from API use. USE AT YOUR OWN RISK.
+      poll:
+        # poll mode defines under which condition the vehicle API is called:
+        #   charging: update vehicle ONLY when charging (this is the recommended default)
+        #   connected: update vehicle when connected (not only charging), interval defines how often
+        #   always: always update vehicle regardless of connection state, interval defines how often (only supported for single vehicle)
+        mode: charging
+        # poll interval defines how often the vehicle API may be polled if NOT charging
+        interval: 60m
+      min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
+      target: 100 # always charge to 100%
+      estimate: false # set true to interpolate between api updates
+    phases: 3 # ev phases (default 3)
+    enable: # pv mode enable behavior
+      delay: 1m # threshold must be exceeded for this long
+      threshold: 0 # grid power threshold (in Watts, negative=export). If zero, export must exceed minimum charge power to enable
+    disable: # pv mode disable behavior
+      delay: 3m # threshold must be exceeded for this long
+      threshold: 0 # maximum import power (W)
+    guardDuration: 5m # switch charger contactor not more often than this (default 5m)
+    minCurrent: 6 # minimum charge current (default 6A)
+    maxCurrent: 16 # maximum charge current (default 16A)
 
 # tariffs are the fixed or variable tariffs
 # cheap (tibber/awattar) can be used to define a tariff rate considered cheap enough for charging
@@ -166,6 +165,9 @@ messaging:
     disconnect: # vehicle connected event
       title: Car disconnected
       msg: Car disconnected after ${connectedDuration}
+    soc: # vehicle soc update event
+      title: SoC updated
+      msg: Battery charged to ${vehicleSoC:%.0f}%
   services:
   # - type: pushover
   #   app: # app id

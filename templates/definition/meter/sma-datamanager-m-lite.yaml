@@ -1,0 +1,35 @@
+template: sma-data-manager-m-lite
+products:
+  - brand: SMA
+    description:
+      generic: Data Manager M Lite
+guidedsetup:
+  enable: true
+  linked:
+    - template: sma-energy-meter
+      usage: grid
+    - template: sma-inverter
+      usage: battery
+      multiple: true
+requirements:
+  description:
+    de: In der Weboberfläche des SMA Data Manager muss im Bereich "Externe Kommunikation" der Schalter "Modbus Server aktivieren" eingeschaltet sein.
+    en: In the web interface of the SMA Data Manager you need to activate "Modbus Server activated" in the section "External communication".
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+    example: 192.0.2.2
+    required: true
+  - name: port
+    default: 502
+render: |
+  type: custom
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }} # Port 502
+    id: 2
+    register:
+      address: 30775 # Aktuelle PV-Einspeiseleistung
+      type: holding
+      decode: int32

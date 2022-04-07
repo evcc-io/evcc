@@ -1,17 +1,20 @@
 template: easee
-description:
-  generic: Easee Home (Cloud API)
+products:
+  - brand: Easee
+    description:
+      generic: Home
+capabilities: ["1p3p"]
 requirements:
-  sponsorship: true
+  evcc: ["sponsorship"]
 params:
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
-- name: charger
-  required: true
-  example: EH______
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: charger
+    required: true
+    example: EH______
 render: |
   type: easee
   user: {{ .user }}

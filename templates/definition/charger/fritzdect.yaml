@@ -1,23 +1,26 @@
 template: fritzdect
-description: 
-  generic: FritzDECT
+products:
+  - brand: AVM
+    description:
+      generic: FritzDECT
+group: switchsockets
 params:
-- name: uri
-  default: https://fritz.box
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
-- name: ain
-  required: true
-  mask: true
-  example: '007788992233'
-  help: 
-    en: The AIN is printed on the type label on the back of the device. 
-    de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
-- name: standbypower
-  default: 15
+  - name: uri
+    default: https://fritz.box
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: ain
+    required: true
+    mask: true
+    example: "007788992233"
+    help:
+      en: The AIN is printed on the type label on the back of the device.
+      de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
+  - name: standbypower
+    default: 15
 render: |
   type: fritzdect
   uri: {{ .uri }}

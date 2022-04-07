@@ -6,6 +6,8 @@ __debug_bin
 *.json
 *.yaml
 !templates/**/*.yaml
+!templates/**/*-schema.json
+!util/templates/**/*.yaml
 !package*.json
 !evcc.dist.yaml
 evcc

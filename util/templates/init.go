@@ -6,11 +6,13 @@ import (
 	"path"
 
 	"github.com/evcc-io/evcc/templates/definition"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	templates = make(map[string][]Template)
+	templates      = make(map[string][]Template)
+	configDefaults = ConfigDefaults{}
 )
 
 const (
@@ -20,6 +22,8 @@ const (
 )
 
 func loadTemplates(class string) {
+	configDefaults.LoadDefaults()
+
 	if templates[class] != nil {
 		return
 	}
@@ -37,11 +41,22 @@ func loadTemplates(class string) {
 			return err
 		}
 
-		var tmpl Template
-		if err = yaml.Unmarshal(b, &tmpl); err != nil {
+		var definition TemplateDefinition
+		if err = yaml.Unmarshal(b, &definition); err != nil {
 			return fmt.Errorf("reading template '%s' failed: %w", filepath, err)
 		}
-		if err = tmpl.ResolveParamBases(); err != nil {
+
+		tmpl := Template{
+			TemplateDefinition: definition,
+			ConfigDefaults:     configDefaults,
+		}
+		if err = tmpl.ResolvePresets(); err != nil {
+			return err
+		}
+		if err = tmpl.ResolveGroup(); err != nil {
+			return err
+		}
+		if err = tmpl.UpdateParamsWithDefaults(); err != nil {
 			return err
 		}
 		if err = tmpl.Validate(); err != nil {
@@ -65,14 +80,14 @@ func ByClass(class string) []Template {
 	return templates[class]
 }
 
-func ByTemplate(t, class string) (Template, error) {
+func ByName(name, class string) (Template, error) {
 	loadTemplates(class)
 
 	for _, tmpl := range templates[class] {
-		if tmpl.Template == t {
+		if tmpl.Template == name || slices.Contains(tmpl.Covers, name) {
 			return tmpl, nil
 		}
 	}
 
-	return Template{}, fmt.Errorf("template not found: %s", t)
+	return Template{}, fmt.Errorf("template not found: %s", name)
 }

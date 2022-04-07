@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Timeout is the default request timeout used by the Helper
@@ -16,16 +17,19 @@ type Helper struct {
 	*http.Client
 }
 
+// NewClient creates http client with default transport
+func NewClient(log *util.Logger) *http.Client {
+	return &http.Client{
+		Timeout:   Timeout,
+		Transport: NewTripper(log, transport.Default()),
+	}
+}
+
 // NewHelper creates http helper for simplified PUT GET logic
 func NewHelper(log *util.Logger) *Helper {
-	r := &Helper{
-		Client: &http.Client{
-			Timeout:   Timeout,
-			Transport: NewTripper(log, http.DefaultTransport),
-		},
+	return &Helper{
+		Client: NewClient(log),
 	}
-
-	return r
 }
 
 // DoBody executes HTTP request and returns the response body

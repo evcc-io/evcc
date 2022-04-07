@@ -1,16 +1,17 @@
 template: e3dc
-description: 
-  generic: E3DC
+products:
+  - description:
+      generic: E3DC
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: host
-  example: 192.0.2.2
-  required: true
-- name: port
-  default: 502
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    example: 192.0.2.2
+    required: true
+  - name: port
+    default: 502
 render: |
   type: custom
   power:

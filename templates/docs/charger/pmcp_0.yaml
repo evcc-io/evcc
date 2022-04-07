@@ -1,0 +1,9 @@
+product:
+  brand: Porsche
+  description: Mobile Charger Plus
+requirements: ["eebus"]
+render:
+  - default: |
+      type: template
+      template: pmcp
+      ski: # Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden

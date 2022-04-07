@@ -1,9 +1,24 @@
 package fiat
 
 import (
+	"fmt"
+	"html"
 	"strconv"
 	"time"
 )
+
+type ErrorInfo struct {
+	ErrorCode    int
+	ErrorMessage string
+	ErrorDetails string
+}
+
+func (e ErrorInfo) Error() error {
+	if e.ErrorCode == 0 {
+		return nil
+	}
+	return fmt.Errorf("%s: %s", e.ErrorMessage, html.UnescapeString(e.ErrorDetails))
+}
 
 type VehiclesResponse struct {
 	Vehicles []Vehicle
@@ -40,6 +55,15 @@ type StatusResponse struct {
 		Timestamp TimeMillis
 	} `json:",omitempty"`
 	Timestamp TimeMillis
+}
+
+type LocationResponse struct {
+	TimeStamp        TimeMillis
+	Longitude        float64
+	Latitude         float64
+	Altitude         float64
+	Bearing          float64
+	IsLocationApprox bool
 }
 
 type ActionResponse struct {

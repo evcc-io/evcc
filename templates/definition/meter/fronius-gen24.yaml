@@ -1,25 +1,52 @@
 template: fronius-gen24
-description: 
-  generic: Fronius Symo GEN24 Plus
+products:
+  - brand: Fronius
+    description:
+      generic: Symo GEN24 Plus
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: ["grid", "pv", "battery"]
-- name: host
-  example: 192.0.2.2
-  required: true
-- name: port
-  default: 502
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    example: 192.0.2.2
+    required: true
+  - name: port
+    default: 502
+  - name: integer
+    description:
+      de: Integer Registerzugriff (nur für Netzzähler)
+      en: Integer register access (grid meter only)
+    help:
+      de: Einstellung Float/Integer im Wechselrichter überprüfen
+      en: Verify Float/Integer setting in inverter
+    advanced: true
+    valuetype: bool
 render: |
   {{- if eq .usage "grid" }}
   type: modbus
   model: sunspec
   uri: {{ .host }}:{{ .port }}
   id: 200
-  power: 213:W # sunspec model 203 meter
+  power: {{ if .integer }}203{{ else }}213{{ end }}:W # sunspec model 203/213 meter
   {{- end }}
-  {{- if or (eq .usage "pv") (eq .usage "battery") }}
+  {{- if eq .usage "pv" }}
+  type: custom
+  power:
+    source: calc
+    add:
+    - source: modbus
+      model: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      value: 160:1:DCW # mppt 1
+    - source: modbus
+      model: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      value: 160:2:DCW # mppt 2
+  {{- end }}
+  {{- if eq .usage "battery" }}
   type: custom
   power:
     source: calc
@@ -35,8 +62,6 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       value: 160:4:DCW # mppt 4 discharge
-  {{- end }}
-  {{- if eq .usage "battery" }}
   soc:
     source: modbus
     model: sunspec

@@ -1,18 +1,20 @@
 template: sma-inverter
-description: 
-  de: SMA Wechselrichter
-  en: SMA Inverter
+products:
+  - brand: SMA
+    description:
+      de: Wechselrichter
+      en: Inverter
 params:
-- name: usage
-  choice: ["pv", "battery"]
-- name: host
-  example: 192.0.2.2
-  required: true
-- name: password
-  mask: true
-  help: 
-    en: Only required if the default password was changed
-    de: Wird nur benötigt, wenn das Standardpasswort geändert wurde
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: host
+    example: 192.0.2.2
+    required: true
+  - name: password
+    mask: true
+    help:
+      en: System password / Installer password
+      de: Anlagenpasswort / Installateurspasswort
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname

@@ -1,0 +1,21 @@
+template: tasmota
+products:
+  - description:
+      generic: Tasmota
+group: sockets
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+    required: true
+    example: 192.0.2.2
+render: |
+  type: custom
+  power: # power reading (W)
+    source: http
+    uri: http://{{ .host }}/cm?cmnd=Status%208
+    jq: .StatusSNS.ENERGY.Power
+  energy: # energy reading (kWh)
+    source: http
+    uri: http://{{ .host }}/cm?cmnd=Status%208
+    jq: .StatusSNS.ENERGY.Total

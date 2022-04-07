@@ -3,114 +3,108 @@ name: Release
 on:
   push:
     tags:
-    - '*'
+      - "*"
 
 jobs:
   call-build-workflow:
     if: "startsWith(github.ref, 'refs/tags')"
     uses: evcc-io/evcc/.github/workflows/default.yml@master
 
-  dockerrelease:
+  docker:
     name: Publish Docker :release
     needs:
-    - call-build-workflow
+      - call-build-workflow
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        ref: refs/heads/master # force master
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: refs/heads/master # force master
+          fetch-depth: 0
 
-    - name: Install
-      run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin v0.5.1
+      - name: Install
+        env:
+          SEIHON_VERSION: v0.9.0
+        run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin ${SEIHON_VERSION}
 
-    - name: Login
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKER_USER }}
-        password: ${{ secrets.DOCKER_PASS }}
+      - name: Login
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASS }}
 
-    - name: Publish
-      run: make publish-images
+      - name: Publish
+        run: make publish-release
 
-
-  release:
+  apt:
     name: Publish Github & APT release
     needs:
-    - call-build-workflow
+      - call-build-workflow
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Cache Go modules
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-        key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.go-version }}-go-
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg
+            ~/.cache/go-build
+          key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.go-version }}-go-
 
-    - name: Setup Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.16
-      id: go
-      
-    - name: Setup Node
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.18
+        id: go
 
-    - name: Install Cloudsmith CLI
-      run: pip install --upgrade cloudsmith-cli
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16"
 
-    # gokrazy image
-    # - name: Prepare Image
-    #   run: |
-    #     make prepare-image
-    #     sed -i -e 's#-ld.*$#& -X github.com/evcc-io/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/evcc-io/evcc/buildflags.txt
-    #     mkdir /home/runner/.config/gokrazy
-    #     echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
+      - name: Install Cloudsmith CLI
+        run: pip install --upgrade cloudsmith-cli
 
-    # - name: Build Image
-    #   run: make image
+      # gokrazy image
+      # - name: Prepare Image
+      #   run: |
+      #     make prepare-image
+      #     sed -i -e 's#-ld.*$#& -X github.com/evcc-io/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/evcc-io/evcc/buildflags.txt
+      #     mkdir /home/runner/.config/gokrazy
+      #     echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
 
-    # - name: Build Root Filesystem
-    #   run: make image-rootfs
+      # - name: Build Image
+      #   run: make image
 
-    - name: Clean git
-      run: |
-        git checkout go.*
-        rm -rf flags buildflags
+      # - name: Build Root Filesystem
+      #   run: make image-rootfs
 
-    - name: Create Github Release
-      uses: goreleaser/goreleaser-action@v2
-      with:
-        version: latest
-        args: release --rm-dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_GORELEASER }}
+      - name: Clean git
+        run: |
+          git checkout go.*
+          rm -rf flags buildflags
 
-    - name: Publish .deb to Cloudsmith
-      env:
-        CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-      run: |
-        for filename in release/*.deb; do
-          # goreleaser creates armel packages for armv6, which is wrong
-          # until this is fixed, ignore armv6 
-          if [[ "$filename" == *"armv6"* ]]; then
-            echo "Skipping $filename"
-            continue
-          fi
+      - name: Create Github Release
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_REPO }}
 
-          echo "Pushing $filename to 'stable'"
-          cloudsmith push deb evcc/stable/any-distro/any-version $filename
-        done
+      - name: Publish .deb to Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          for filename in release/*.deb; do
+            echo "Pushing $filename to 'stable'"
+            cloudsmith push deb evcc/stable/any-distro/any-version $filename
+          done

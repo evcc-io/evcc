@@ -1,12 +1,14 @@
 template: nrgkick-bluetooth
-description: 
-  generic: NRGKick Bluetooth
+products:
+  - brand: NRGKick
+    description:
+      generic: Bluetooth
 params:
-- name: mac
-  required: true
-- name: pin
-  required: true
-  mask: true
+  - name: mac
+    required: true
+  - name: pin
+    required: true
+    mask: true
 render: |
   type: nrgkick-bluetooth
   mac: {{ .mac }}

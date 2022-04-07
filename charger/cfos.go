@@ -28,10 +28,7 @@ func init() {
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
 func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		URI string
-		ID  uint8
-	}{
+	cc := modbus.TcpSettings{
 		ID: 1,
 	}
 
@@ -46,9 +43,13 @@ func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, err
 func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 	uri = util.DefaultPort(uri, 4701)
 
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("cfos")

@@ -12,7 +12,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 )
 
 // Credits to
@@ -105,9 +105,9 @@ type Renault struct {
 	gigya, kamereon     configServer
 	gigyaJwtToken       string
 	accountID           string
-	batteryG            func() (interface{}, error)
-	cockpitG            func() (interface{}, error)
-	hvacG               func() (interface{}, error)
+	batteryG            func() (kamereonResponse, error)
+	cockpitG            func() (kamereonResponse, error)
+	hvacG               func() (kamereonResponse, error)
 }
 
 func init() {
@@ -150,11 +150,9 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		})
 	}
 
-	if err == nil {
-		v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
-		v.cockpitG = provider.NewCached(v.cockpitAPI, cc.Cache).InterfaceGetter()
-		v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()
-	}
+	v.batteryG = provider.Cached(v.batteryAPI, cc.Cache)
+	v.cockpitG = provider.Cached(v.cockpitAPI, cc.Cache)
+	v.hvacG = provider.Cached(v.hvacAPI, cc.Cache)
 
 	return v, err
 }
@@ -274,7 +272,7 @@ func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
 	data := url.Values{"country": []string{"DE"}}
 	headers := map[string]string{
 		"x-gigya-id_token": v.gigyaJwtToken,
-		"apikey":           "Ae9FDWugRxZQAGm3Sxgk7uJn6Q4CGEA2", // v.kamereon.APIKey
+		"apikey":           "VAX7XYKGfa92yMvXculCkEFyfZbuM7Ss", // v.kamereon.APIKey
 	}
 
 	var res kamereonResponse
@@ -314,7 +312,7 @@ func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 }
 
 // batteryAPI provides battery-status api response
-func (v *Renault) batteryAPI() (interface{}, error) {
+func (v *Renault) batteryAPI() (kamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri)
 
@@ -329,7 +327,7 @@ func (v *Renault) batteryAPI() (interface{}, error) {
 }
 
 // hvacAPI provides hvac-status api response
-func (v *Renault) hvacAPI() (interface{}, error) {
+func (v *Renault) hvacAPI() (kamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/hvac-status", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri)
 
@@ -344,7 +342,7 @@ func (v *Renault) hvacAPI() (interface{}, error) {
 }
 
 // cockpitAPI provides cockpit api response
-func (v *Renault) cockpitAPI() (interface{}, error) {
+func (v *Renault) cockpitAPI() (kamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/cockpit", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri)
 
@@ -362,7 +360,7 @@ func (v *Renault) cockpitAPI() (interface{}, error) {
 func (v *Renault) SoC() (float64, error) {
 	res, err := v.batteryG()
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.Data.Attributes.BatteryLevel), nil
 	}
 
@@ -376,7 +374,7 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.batteryG()
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		if res.Data.Attributes.PlugStatus > 0 {
 			status = api.StatusB
 		}
@@ -394,7 +392,7 @@ var _ api.VehicleRange = (*Renault)(nil)
 func (v *Renault) Range() (int64, error) {
 	res, err := v.batteryG()
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		return int64(res.Data.Attributes.BatteryAutonomy), nil
 	}
 
@@ -407,7 +405,7 @@ var _ api.VehicleOdometer = (*Renault)(nil)
 func (v *Renault) Odometer() (float64, error) {
 	res, err := v.cockpitG()
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		return res.Data.Attributes.TotalMileage, nil
 	}
 
@@ -420,7 +418,7 @@ var _ api.VehicleFinishTimer = (*Renault)(nil)
 func (v *Renault) FinishTime() (time.Time, error) {
 	res, err := v.batteryG()
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
 
 		if res.Data.Attributes.RemainingTime == nil {
@@ -444,14 +442,14 @@ func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float
 		return false, 0, 0, api.ErrNotAvailable
 	}
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		state := strings.ToLower(res.Data.Attributes.HvacStatus)
 
 		if state == "" {
 			return false, 0, 0, api.ErrNotAvailable
 		}
 
-		active := !funk.ContainsString([]string{"off", "false", "invalid", "error"}, state)
+		active := !slices.Contains([]string{"off", "false", "invalid", "error"}, state)
 
 		return active, res.Data.Attributes.ExternalTemperature, 20, nil
 	}

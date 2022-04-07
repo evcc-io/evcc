@@ -54,12 +54,7 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 		cc.RTU = &b
 	}
 
-	format := modbus.TcpFormat
-	if cc.RTU != nil && *cc.RTU {
-		format = modbus.RtuFormat
-	}
-
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, format, cc.ID)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -182,12 +177,14 @@ func (m *Modbus) floatGetter() (float64, error) {
 			// client := m.conn.ModbusClient()
 			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
 		} else {
-			res, err = dev.QueryPoint(
+			if res, err = dev.QueryPoint(
 				m.conn,
 				m.op.SunSpec.Model,
 				m.op.SunSpec.Block,
 				m.op.SunSpec.Point,
-			)
+			); err != nil {
+				err = fmt.Errorf("model %d block %d point %s: %w", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, err)
+			}
 		}
 	}
 

@@ -1,5 +1,7 @@
 package server
 
+import "fmt"
+
 var (
 	// Repository name
 	Repository = "evcc"
@@ -11,5 +13,12 @@ var (
 	Version = "0.0.1-alpha"
 
 	// Commit of executable
-	Commit = "HEAD"
+	Commit = ""
 )
+
+func FormattedVersion() string {
+	if Commit != "" {
+		return fmt.Sprintf("%s (%s)", Version, Commit)
+	}
+	return Version
+}

@@ -1,15 +1,17 @@
 template: cfos
-description: 
-  generic: cFos PowerBrain Meter
+products:
+  - brand: cFos
+    description:
+      generic: PowerBrain Meter
 requirements:
-  sponsorship: true
+  evcc: ["sponsorship"]
 params:
-- name: usage
-  choice: [ "charge" ]
-- name: modbus
-  choice: [ "tcpip" ]
-  port: 4702
-  id: 2
+  - name: usage
+    choice: ["charge"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 4702
+    id: 2
 render: |
   type: cfos
-  {{ include "modbus" . }}
+  {{- include "modbus" . }}

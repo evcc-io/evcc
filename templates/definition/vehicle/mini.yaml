@@ -1,14 +1,16 @@
 template: mini
-description: 
-  generic: Mini
+products:
+  - brand: Mini
 params:
-- base: vehiclebase
-- base: vehicleidentify
-- name: vin
-  example: WBMW...
-- name: capacity
-  default: 32
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: vin
+    example: WBMW...
+  - name: capacity
+    default: 32
+  - preset: vehiclecloud
 render: |
   type: mini
-  {{include "vehicle-base" .}}
-  {{include "vehicle-identify" .}}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

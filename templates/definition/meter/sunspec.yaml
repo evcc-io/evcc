@@ -1,18 +1,20 @@
 template: sunspec
-description: 
-  de: Wechselrichter (SunSpec)
-  en: Inverter (SunSpec)
-generic: true
+products:
+  - description:
+      de: Wechselrichter (SunSpec)
+      en: Inverter (SunSpec)
+group: generic
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: modbus
-  choice: [ "tcpip" ]
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
 render: |
   type: modbus
   model: sunspec
-  {{ include "modbus" .}}
+  {{- include "modbus" . }}
   {{- if eq .usage "grid" }}
+  subdevice: 1
   power: 203:W # sunspec 3-phase meter power reading
   {{- end -}}
   {{- if eq .usage "battery" }}

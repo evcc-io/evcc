@@ -1,12 +1,18 @@
 template: kia
-description: 
-  generic: Kia
+products:
+  - brand: Kia
+    description:
+      generic: Bluelink
 params:
-- base: vehiclebase
-- base: vehicleidentify
-- name: capacity
-  default: 64
+  - preset: vehiclebase
+  - preset: vehiclelanguage
+  - preset: vehicleidentify
+  - name: capacity
+    default: 64
+  - preset: vehiclecloud
 render: |
   type: kia
-  {{include "vehicle-base" .}}
-  {{include "vehicle-identify" .}}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-language" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

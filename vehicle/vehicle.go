@@ -29,15 +29,10 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		Status   *provider.Config
 		Range    *provider.Config
 		Odometer *provider.Config
-		Cache    interface{}
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Cache != nil {
-		util.NewLogger("vehicle").WARN.Println("cache is deprecated and will be removed in a future release")
 	}
 
 	socG, err := provider.NewFloatGetterFromConfig(cc.Soc)
@@ -60,7 +55,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		status = v.status
 	}
 
-	// decorate vehicle with Range
+	// decorate vehicle with range
 	var rng func() (int64, error)
 	if cc.Range != nil {
 		rangeG, err := provider.NewIntGetterFromConfig(*cc.Range)
@@ -70,7 +65,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		rng = rangeG
 	}
 
-	// decorate vehicle with Range
+	// decorate vehicle with odometer
 	var odo func() (float64, error)
 	if cc.Odometer != nil {
 		odoG, err := provider.NewFloatGetterFromConfig(*cc.Odometer)

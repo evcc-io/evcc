@@ -1,7 +1,16 @@
 <template>
 	<div>
+		<a
+			v-if="commit"
+			:href="githubHashUrl"
+			target="_blank"
+			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
+		>
+			<fa-icon icon="moon" class="me-2 text-muted"></fa-icon>v{{ installed }}
+			<span class="text-muted">[{{ commit }}]</span>
+		</a>
 		<button
-			v-if="newVersionAvailable"
+			v-else-if="newVersionAvailable"
 			href="#"
 			data-bs-toggle="modal"
 			data-bs-target="#updateModal"

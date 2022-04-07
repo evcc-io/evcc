@@ -15,16 +15,21 @@ import (
 )
 
 type ovmsStatusResponse struct {
-	Odometer string `json:"odometer"`
+	Odometer float64 `json:"odometer,string"`
 }
 
 type ovmsChargeResponse struct {
-	ChargeEtrFull    string `json:"charge_etr_full"`
-	ChargeState      string `json:"chargestate"`
-	ChargePortOpen   int    `json:"cp_dooropen"`
-	EstimatedRange   string `json:"estimatedrange"`
-	MessageAgeServer int    `json:"m_msgage_s"`
-	Soc              string `json:"soc"`
+	ChargeEtrFull    int64   `json:"charge_etr_full,string"`
+	ChargeState      string  `json:"chargestate"`
+	ChargePortOpen   int     `json:"cp_dooropen"`
+	EstimatedRange   string  `json:"estimatedrange"`
+	MessageAgeServer int     `json:"m_msgage_s"`
+	Soc              float64 `json:"soc,string"`
+}
+
+type ovmsLocationResponse struct {
+	Latitude  float64 `json:"latitude,string"`
+	Longitude float64 `json:"longitude,string"`
 }
 
 type ovmsConnectResponse struct {
@@ -35,11 +40,13 @@ type ovmsConnectResponse struct {
 type Ovms struct {
 	*embed
 	*request.Helper
-	user, password, vehicleId, server string
-	cache                             time.Duration
-	isOnline                          bool
-	chargeG                           func() (interface{}, error)
-	statusG                           func() (interface{}, error)
+	user, password    string
+	vehicleId, server string
+	cache             time.Duration
+	isOnline          bool
+	chargeG           func() (ovmsChargeResponse, error)
+	statusG           func() (ovmsStatusResponse, error)
+	locationG         func() (ovmsLocationResponse, error)
 }
 
 func init() {
@@ -72,8 +79,9 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		cache:     cc.Cache,
 	}
 
-	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
-	v.statusG = provider.NewCached(v.statusAPI, cc.Cache).InterfaceGetter()
+	v.chargeG = provider.Cached(v.batteryAPI, cc.Cache)
+	v.statusG = provider.Cached(v.statusAPI, cc.Cache)
+	v.locationG = provider.Cached(v.locationAPI, cc.Cache)
 
 	var err error
 	v.Jar, err = cookiejar.New(&cookiejar.Options{
@@ -115,6 +123,13 @@ func (v *Ovms) statusRequest() (ovmsStatusResponse, error) {
 	return res, err
 }
 
+func (v *Ovms) locationRequest() (ovmsLocationResponse, error) {
+	uri := fmt.Sprintf("https://%s:6869/api/location/%s", v.server, v.vehicleId)
+	var res ovmsLocationResponse
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
 func (v *Ovms) authFlow() error {
 	var resp ovmsConnectResponse
 	err := v.loginToServer()
@@ -128,7 +143,7 @@ func (v *Ovms) authFlow() error {
 }
 
 // batteryAPI provides battery-status api response
-func (v *Ovms) batteryAPI() (interface{}, error) {
+func (v *Ovms) batteryAPI() (ovmsChargeResponse, error) {
 	var resp ovmsChargeResponse
 
 	resp, err := v.chargeRequest()
@@ -148,7 +163,7 @@ func (v *Ovms) batteryAPI() (interface{}, error) {
 }
 
 // statusAPI provides vehicle status api response
-func (v *Ovms) statusAPI() (interface{}, error) {
+func (v *Ovms) statusAPI() (ovmsStatusResponse, error) {
 	var resp ovmsStatusResponse
 
 	resp, err := v.statusRequest()
@@ -162,15 +177,25 @@ func (v *Ovms) statusAPI() (interface{}, error) {
 	return resp, err
 }
 
+// location API provides vehicle position api response
+func (v *Ovms) locationAPI() (ovmsLocationResponse, error) {
+	var resp ovmsLocationResponse
+
+	resp, err := v.locationRequest()
+	if err != nil {
+		err = v.authFlow()
+		if err == nil {
+			resp, err = v.locationRequest()
+		}
+	}
+
+	return resp, err
+}
+
 // SoC implements the api.Vehicle interface
 func (v *Ovms) SoC() (float64, error) {
 	res, err := v.chargeG()
-
-	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
-		return strconv.ParseFloat(res.Soc, 64)
-	}
-
-	return 0, err
+	return res.Soc, err
 }
 
 var _ api.ChargeState = (*Ovms)(nil)
@@ -180,7 +205,7 @@ func (v *Ovms) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.chargeG()
-	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
+	if err == nil {
 		if res.ChargePortOpen > 0 {
 			status = api.StatusB
 		}
@@ -198,7 +223,7 @@ var _ api.VehicleRange = (*Ovms)(nil)
 func (v *Ovms) Range() (int64, error) {
 	res, err := v.chargeG()
 
-	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
+	if err == nil {
 		return strconv.ParseInt(res.EstimatedRange, 0, 64)
 	}
 
@@ -210,15 +235,7 @@ var _ api.VehicleOdometer = (*Ovms)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Ovms) Odometer() (float64, error) {
 	res, err := v.statusG()
-
-	if res, ok := res.(ovmsStatusResponse); err == nil && ok {
-		odometer, err := strconv.ParseFloat(res.Odometer, 64)
-		if err == nil {
-			return odometer / 10, nil
-		}
-	}
-
-	return 0, err
+	return res.Odometer / 10, err
 }
 
 var _ api.VehicleFinishTimer = (*Ovms)(nil)
@@ -226,13 +243,11 @@ var _ api.VehicleFinishTimer = (*Ovms)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Ovms) FinishTime() (time.Time, error) {
 	res, err := v.chargeG()
+	return time.Now().Add(time.Duration(res.ChargeEtrFull) * time.Minute), err
+}
 
-	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
-		cef, err := strconv.ParseInt(res.ChargeEtrFull, 0, 64)
-		if err == nil {
-			return time.Now().Add(time.Duration(cef) * time.Minute), nil
-		}
-	}
-
-	return time.Time{}, err
+// VehiclePosition returns the vehicles position in latitude and longitude
+func (v *Ovms) Position() (float64, float64, error) {
+	res, err := v.locationG()
+	return res.Latitude, res.Longitude, err
 }

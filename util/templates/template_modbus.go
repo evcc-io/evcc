@@ -2,75 +2,43 @@ package templates
 
 import (
 	_ "embed"
-	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/thoas/go-funk"
 )
 
 //go:embed modbus.tpl
 var modbusTmpl string
 
 // add the modbus params to the template
-func (t *Template) ModbusParams(values map[string]interface{}) {
+func (t *Template) ModbusParams(modbusType string, values map[string]interface{}) {
 	if len(t.ModbusChoices()) == 0 {
 		return
 	}
 
-	if values[ParamModbus] == nil {
+	if modbusType != "" {
+		values[ParamModbus] = modbusType
+	}
+
+	if values[ParamModbus] == nil || values[ParamModbus] == "" {
 		return
 	}
 
-	for k := range values {
-		if k == ModbusParamNameId {
-			t.Params = append(t.Params, Param{Name: ModbusParamNameId, ValueType: ParamValueTypeNumber})
-			continue
-		}
-
-		type modbusData struct {
-			modbusKeys []string
-			valueType  string
-		}
-		paramMap := map[string]modbusData{
-			ModbusParamNameId:       {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP, ModbusKeyRS485Serial}, valueType: ParamValueTypeNumber},
-			ModbusParamNameHost:     {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP}, valueType: ParamValueTypeString},
-			ModbusParamNamePort:     {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP}, valueType: ParamValueTypeNumber},
-			ModbusParamNameDevice:   {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeString},
-			ModbusParamNameBaudrate: {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeNumber},
-			ModbusParamNameComset:   {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeString},
-		}
-
-		if funk.ContainsString(paramMap[k].modbusKeys, values[ParamModbus].(string)) {
-			t.Params = append(t.Params, Param{Name: k, ValueType: paramMap[k].valueType})
-		}
+	// check if the modbus params are already added
+	if index, _ := t.ParamByName("id"); index >= 0 {
+		return
 	}
+
+	modbusParams := t.ConfigDefaults.Modbus.Types[values[ParamModbus].(string)].Params
+
+	// add the modbus params at the beginning
+	t.Params = append(modbusParams, t.Params...)
 }
 
 // set the modbus values required from modbus.tpl and and the template to the render
-func (t *Template) ModbusValues(renderMode string, values map[string]interface{}) {
-	if len(t.ModbusChoices()) == 0 {
-		return
-	}
-
-	// either modbus param is defined or defaults for all modbus choices need to be set
-	hasModbusValues := false
-	if values[ModbusRS485Serial] == nil && values[ModbusRS485TCPIP] == nil && values[ModbusTCPIP] == nil {
-		for k, v := range values {
-			if k != ParamModbus {
-				continue
-			}
-
-			switch s := v.(string); s {
-			case ModbusKeyRS485Serial, ModbusKeyRS485TCPIP, ModbusKeyTCPIP:
-				hasModbusValues = true
-				values[s] = true
-			default:
-				// this happens during tests
-			}
-
-			break
-		}
+func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[string]interface{}) map[string]interface{} {
+	choices := t.ModbusChoices()
+	if len(choices) == 0 {
+		return values
 	}
 
 	// only add the template once, when testing multiple usages, it might already be present
@@ -78,42 +46,59 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 		t.Render = fmt.Sprintf("%s\n%s", t.Render, modbusTmpl)
 	}
 
-	if hasModbusValues {
-		return
+	if !setDefaults {
+		return values
 	}
 
-	// modbus defaults
-	for k, v := range map[string]interface{}{
-		ModbusParamNameId:       ModbusParamValueId,
-		ModbusParamNameHost:     ModbusParamValueHost,
-		ModbusParamNamePort:     ModbusParamValuePort,
-		ModbusParamNameDevice:   ModbusParamValueDevice,
-		ModbusParamNameBaudrate: ModbusParamValueBaudrate,
-		ModbusParamNameComset:   ModbusParamValueComset,
-	} {
-		values[k] = v
+	modbusConfig := t.ConfigDefaults.Modbus
+	_, modbusParam := t.ParamByName(ParamModbus)
+
+	modbusInterfaces := []string{}
+	for _, choice := range choices {
+		modbusInterfaces = append(modbusInterfaces, modbusConfig.Interfaces[choice]...)
 	}
 
-	for _, p := range t.Params {
-		if p.Name != ParamModbus {
-			continue
-		}
+	for _, iface := range modbusInterfaces {
+		typeParams := modbusConfig.Types[iface].Params
+		for _, p := range typeParams {
+			values[p.Name] = p.DefaultValue(renderMode)
 
-		for _, choice := range p.Choice {
-			if !funk.ContainsString([]string{ModbusChoiceRS485, ModbusChoiceTCPIP}, choice) {
-				panic(errors.New("Invalid modbus choice: " + choice))
+			var defaultValue string
+
+			switch p.Name {
+			case ModbusParamNameId:
+				if modbusParam.ID != 0 {
+					defaultValue = fmt.Sprintf("%d", modbusParam.ID)
+				}
+			case ModbusParamNamePort:
+				if modbusParam.Port != 0 {
+					defaultValue = fmt.Sprintf("%d", modbusParam.Port)
+				}
+			case ModbusParamNameBaudrate:
+				if modbusParam.Baudrate != 0 {
+					defaultValue = fmt.Sprintf("%d", modbusParam.Baudrate)
+				}
+			case ModbusParamNameComset:
+				if modbusParam.Comset != "" {
+					defaultValue = modbusParam.Comset
+				}
 			}
-		}
 
+			if defaultValue == "" {
+				continue
+			}
+
+			if renderMode == TemplateRenderModeInstance {
+				t.SetParamDefault(p.Name, defaultValue)
+			} else {
+				values[p.Name] = defaultValue
+			}
+
+		}
 		if renderMode == TemplateRenderModeDocs {
-			if funk.ContainsString(p.Choice, ModbusChoiceRS485) {
-				values[ModbusRS485Serial] = true
-				values[ModbusRS485TCPIP] = true
-			}
-
-			if funk.ContainsString(p.Choice, ModbusChoiceTCPIP) {
-				values[ModbusTCPIP] = true
-			}
+			values[iface] = true
 		}
 	}
+
+	return values
 }

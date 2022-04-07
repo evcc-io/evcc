@@ -1,12 +1,14 @@
 template: cfos
-description:
-  generic: cFos PowerBrain
+products:
+  - brand: cFos
+    description:
+      generic: PowerBrain
 requirements:
-  sponsorship: true
+  evcc: ["sponsorship"]
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
+  - name: host
+    required: true
+    example: 192.0.2.2
 render: |
   type: cfos
   uri: {{ .host }}

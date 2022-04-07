@@ -1,13 +1,14 @@
 template: powerdog
-description: 
-  generic: Powerdog
+products:
+  - description:
+      generic: Powerdog
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv" ]
-- name: modbus
-  choice: [ "tcpip" ]
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: modbus
+    choice: ["tcpip"]
 render: |
   type: custom
   power:
@@ -15,13 +16,13 @@ render: |
     source: calc #calculate current overall consumption + (current pv effort * (-1) )
     add:
     - source: modbus
-      {{ include "modbus" . | indent 4 }}
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 40026 #register for overall consumption
         type: holding
         decode: int32
     - source: modbus
-      {{ include "modbus" . | indent 4 }}
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 40002 #register for pv effort
         type: holding
@@ -29,8 +30,8 @@ render: |
       scale: -1 #scale with -1 to get a substraction
   {{- end }}
   {{- if eq .usage "pv" }}
-    type: modbus
-    {{ include "modbus" . | indent 2 }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 40002 #register for pv effort
       type: holding

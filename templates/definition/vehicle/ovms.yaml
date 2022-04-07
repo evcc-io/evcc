@@ -1,19 +1,26 @@
 template: ovms
-description: 
-  generic: Open Vehicle Monitoring System
-generic: true
+products:
+  - description:
+      generic: Open Vehicle Monitoring System
+group: generic
+requirements:
+  description:
+    de: Unterstützung für alle Fahrzeuge via ODB2 Adapter im Fahrzeug. Mehr Infos bei [Open Vehicle Monitoring System](http://api.openvehicles.com/).
+    en: Support for all vehicles via ODB2 adapter in the vehicle. More info at [Open Vehicle Monitoring System](http://api.openvehicles.com/).
 params:
-- name: title
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
-- name: vehicleid
-  required: true
-- name: capacity
-  default: 12
-- base: vehicleidentify
+  - name: title
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: vehicleid
+    required: true
+  - name: capacity
+    default: 12
+  - name: phases
+    advanced: true
+  - preset: vehicleidentify
 render: |
   type: ovms
   {{- if ne .title "" }}
@@ -23,5 +30,7 @@ render: |
   password: {{ .password }}
   vehicleid: {{ .vehicleid }} # vehicle id
   capacity: {{ .capacity }}
+  {{- if ne .phases "" }}
+  phases: {{ .phases }}
+  {{- end }}
   server: dexters-web.de # used ovms server [dexters-web.de or api.openvehicles.com]
-

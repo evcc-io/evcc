@@ -346,6 +346,20 @@ func (mr *MockVehicleMockRecorder) OnIdentified() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnIdentified", reflect.TypeOf((*MockVehicle)(nil).OnIdentified))
 }
 
+// Phases mocks base method.
+func (m *MockVehicle) Phases() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Phases")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Phases indicates an expected call of Phases.
+func (mr *MockVehicleMockRecorder) Phases() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Phases", reflect.TypeOf((*MockVehicle)(nil).Phases))
+}
+
 // SoC mocks base method.
 func (m *MockVehicle) SoC() (float64, error) {
 	m.ctrl.T.Helper()

@@ -1,15 +1,13 @@
 type: template
 template: {{ .Template }}
-{{- if .Description }}
-description: {{ .Description }}
-{{- end }}
-{{ range .Params -}}
+{{- range .Params }}
+{{- if or (ne (len .Value) 0) (ne (len .Values) 0) }} 
 {{ .Name }}:
 	{{- if len .Value }} {{ .Value }} {{ end }}
-	{{- if .Help.DE }} # {{ .Help.DE }} {{- end }}
 {{- if ne (len .Values) 0 }} 
 {{- range .Values }}
 - {{ . }}
 {{- end }}
 {{- end }}
+{{- end -}}
 {{ end -}}

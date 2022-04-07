@@ -29,14 +29,13 @@ var acceptable = []string{
 	"missing access and/or refresh token, use `evcc token` to create", // Tesla
 	"login failed: Unauthorized: Authentication Failed",               // Nissan
 	"login failed: no auth code",                                      // Porsche
+	"login failed: unexpected status: 400",                            // Smart
 	"invalid_client:Client authentication failed (e.g., login failure, unknown client, no client authentication included or unsupported authentication method)",   // BMW, Mini
 	"login failed: oauth2: cannot fetch token: 400 Bad Request Response: {\"error\":\"invalid_request\",\"error_description\":\"Missing parameter, 'username'\"}", // Opel, DS, Citroen, PSA
 	"401: Unauthorized: Invalid credentials", // Volvo
 }
 
-func TestVehicleTemplates(t *testing.T) {
-	test.SkipCI(t)
-
+func TestTemplates(t *testing.T) {
 	for _, tmpl := range templates.ByClass(templates.Vehicle) {
 		tmpl := tmpl
 
@@ -46,20 +45,8 @@ func TestVehicleTemplates(t *testing.T) {
 		// set the template value which is needed for rendering
 		values["template"] = tmpl.Template
 
-		t.Run(tmpl.Template, func(t *testing.T) {
-			t.Parallel()
-
-			b, values, err := tmpl.RenderResult(templates.TemplateRenderModeUnitTest, values)
-			if err != nil {
-				t.Logf("Template: %s", tmpl.Template)
-				t.Logf("%s", string(b))
-				t.Error(err)
-			}
-
-			_, err = NewFromConfig("template", values)
-			if err != nil && !test.Acceptable(err, acceptable) {
-				t.Logf("Template: %s", tmpl.Template)
-				t.Logf("%s", string(b))
+		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {
+			if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
 				t.Error(err)
 			}
 		})

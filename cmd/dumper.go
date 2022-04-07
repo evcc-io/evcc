@@ -145,7 +145,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if ft, err := v.FinishTime(); err != nil {
 			fmt.Fprintf(w, "Finish time:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Finish time:\t%v\n", ft.Truncate(time.Minute))
+			fmt.Fprintf(w, "Finish time:\t%v\n", ft.Truncate(time.Minute).In(time.Local))
 		}
 	}
 
@@ -186,7 +186,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Identifier); ok {
 		if id, err := v.Identify(); err != nil {
 			fmt.Fprintf(w, "Identifier:\t%v\n", err)
-		} else if id != "" {
+		} else {
+			if id == "" {
+				id = "<none>"
+			}
 			fmt.Fprintf(w, "Identifier:\t%s\n", id)
 		}
 	}

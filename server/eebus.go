@@ -37,6 +37,7 @@ type EEBus struct {
 	log               *util.Logger
 	srv               *server.Server
 	id                string
+	zc                *zeroconf.Server
 	clients           map[string]EEBusClientCBs
 	connectedClients  map[string]ship.Conn
 	discoveredClients map[string]*zeroconf.ServiceEntry
@@ -90,11 +91,13 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		Register:    true,
 	}
 
-	if _, err = srv.Announce(); err != nil {
+	zc, err := srv.Announce()
+	if err != nil {
 		return nil, err
 	}
 
 	c := &EEBus{
+		zc:                zc,
 		log:               log,
 		srv:               srv,
 		id:                id,
@@ -150,6 +153,10 @@ func (c *EEBus) Run() {
 	if err := c.srv.Listen(ln, c.certificateHandler); err != nil {
 		c.log.ERROR.Println("eebus listen:", err)
 	}
+}
+
+func (c *EEBus) Shutdown() {
+	c.zc.Shutdown()
 }
 
 func (c *EEBus) addDisoveredEntry(entry *zeroconf.ServiceEntry) {
@@ -282,24 +289,23 @@ func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
 // handles connection closed
 func (c *EEBus) shipCloseHandler(ski string) {
 	c.mux.Lock()
+	defer c.mux.Unlock()
 
-	currentConnection, found := c.connectedClients[ski]
-	if found {
-		var closeConnection bool
-		var clientCB EEBusClientCBs
+	if conn, ok := c.connectedClients[ski]; ok {
 		for clientSki, client := range c.clients {
-			if clientSki == ski && !currentConnection.IsConnectionClosed() {
-				clientCB = client
-				closeConnection = true
-				break
+			if clientSki != ski {
+				continue
 			}
-		}
-		if closeConnection {
-			c.log.TRACE.Printf("close client %s connection", ski)
-			clientCB.onDisconnect(ski)
+
+			if conn.IsConnectionClosed() {
+				c.log.TRACE.Printf("close client %s connection", ski)
+				client.onDisconnect(ski)
+			}
+
+			// always remove client on close
 			delete(c.connectedClients, ski)
+
+			break
 		}
 	}
-
-	c.mux.Unlock()
 }

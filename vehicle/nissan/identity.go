@@ -81,11 +81,11 @@ func (v *Identity) Login(user, password string) error {
 
 	if err == nil {
 		data := url.Values{
-			"client_id":     []string{ClientID},
-			"redirect_uri":  []string{RedirectURI},
-			"response_type": []string{"code"},
-			"scope":         []string{Scope},
-			"nonce":         []string{"sdfdsfez"},
+			"client_id":     {ClientID},
+			"redirect_uri":  {RedirectURI},
+			"response_type": {"code"},
+			"scope":         {Scope},
+			"nonce":         {"sdfdsfez"},
 		}
 
 		uri := fmt.Sprintf("%s/oauth2/%s/authorize?%s", AuthBaseURL, realm, data.Encode())
@@ -108,11 +108,11 @@ func (v *Identity) Login(user, password string) error {
 	var token oauth.Token
 	if err == nil {
 		data := url.Values{
-			"code":          []string{code},
-			"client_id":     []string{ClientID},
-			"client_secret": []string{ClientSecret},
-			"redirect_uri":  []string{RedirectURI},
-			"grant_type":    []string{"authorization_code"},
+			"code":          {code},
+			"client_id":     {ClientID},
+			"client_secret": {ClientSecret},
+			"redirect_uri":  {RedirectURI},
+			"grant_type":    {"authorization_code"},
 		}
 
 		uri = fmt.Sprintf("%s/oauth2/%s/access_token?%s", AuthBaseURL, realm, data.Encode())
@@ -131,8 +131,8 @@ func (v *Identity) Login(user, password string) error {
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
-		"client_id":     []string{ClientID},
-		"client_secret": []string{ClientSecret},
+		"client_id":     {ClientID},
+		"client_secret": {ClientSecret},
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},
 	}

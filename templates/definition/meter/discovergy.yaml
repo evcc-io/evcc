@@ -1,17 +1,18 @@
 template: discovergy
-description: 
-  generic: Discovergy (Cloud)
+products:
+  - description:
+      generic: Discovergy (Cloud)
 params:
-- name: usage
-  choice: ["grid", "pv"]
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
-- name: meter
-  required: true
-  example: 1ESY1161229886
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: meter
+    required: true
+    example: 1ESY1161229886
 render: |
   type: discovergy
   user: {{ .user }}

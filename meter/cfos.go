@@ -13,7 +13,7 @@ const (
 	cfosRegPower  = 8062 // power reading
 )
 
-var cfosRegCurrents = []uint16{8064, 8066, 8068} // current readings
+// var cfosRegCurrents = []uint16{8064, 8066, 8068} // current readings
 
 // CfosPowerBrain is a meter implementation for cFos PowerBrain wallboxes.
 // It uses Modbus TCP to communicate at modbus client id 1 and power meters at id 2 and 3.
@@ -28,10 +28,9 @@ func init() {
 
 // NewCfosPowerBrainFromConfig creates a cFos meter from generic config
 func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
-		URI string
-		ID  uint8
-	}{}
+	cc := modbus.TcpSettings{
+		ID: 1,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -42,7 +41,7 @@ func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Meter, error
 
 // NewCfosPowerBrain creates a cFos meter
 func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -79,19 +78,19 @@ func (wb *CfosPowerBrain) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint64(b)) / 1e3, err
 }
 
-var _ api.MeterCurrent = (*CfosPowerBrain)(nil)
+// var _ api.MeterCurrent = (*CfosPowerBrain)(nil)
 
-// Currents implements the api.MeterCurrent interface
-func (wb *CfosPowerBrain) Currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range cfosRegCurrents {
-		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
+// // Currents implements the api.MeterCurrent interface
+// func (wb *CfosPowerBrain) Currents() (float64, float64, float64, error) {
+// 	var currents []float64
+// 	for _, regCurrent := range cfosRegCurrents {
+// 		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 2)
+// 		if err != nil {
+// 			return 0, 0, 0, err
+// 		}
 
-		currents = append(currents, float64(binary.BigEndian.Uint32(b))/10)
-	}
+// 		currents = append(currents, float64(binary.BigEndian.Uint32(b))/10)
+// 	}
 
-	return currents[0], currents[1], currents[2], nil
-}
+// 	return currents[0], currents[1], currents[2], nil
+// }

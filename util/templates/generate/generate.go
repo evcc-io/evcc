@@ -37,20 +37,11 @@ func generateClass(class string) error {
 		if err := tmpl.Validate(); err != nil {
 			return err
 		}
-		usages := tmpl.Usages()
 
-		fmt.Println(tmpl.Template)
+		for index, product := range tmpl.Products {
+			fmt.Println(tmpl.Template + ": " + tmpl.ProductTitle(product))
 
-		if len(usages) == 0 {
-			err := writeTemplate(class, tmpl, "")
-			if err != nil {
-				return err
-			}
-		}
-
-		// render all usages
-		for _, usage := range usages {
-			err := writeTemplate(class, tmpl, usage)
+			err := writeTemplate(class, index, product, tmpl)
 			if err != nil {
 				return err
 			}
@@ -60,39 +51,18 @@ func generateClass(class string) error {
 	return nil
 }
 
-func writeTemplate(class string, tmpl templates.Template, usage string) error {
+func writeTemplate(class string, index int, product templates.Product, tmpl templates.Template) error {
 	values := tmpl.Defaults(templates.TemplateRenderModeDocs)
 
-	if usage != "" {
-		values["usage"] = usage
-	}
-
-	modbusChoices := tmpl.ModbusChoices()
-
-	for _, modbusChoice := range modbusChoices {
-		switch modbusChoice {
-		case templates.ModbusChoiceRS485:
-			values[templates.ModbusRS485Serial] = true
-			values[templates.ModbusRS485TCPIP] = true
-		case templates.ModbusChoiceTCPIP:
-			values[templates.ModbusTCPIP] = true
-		}
-	}
-	b, err := tmpl.RenderProxyWithValues(values, "de", true)
-
+	b, err := tmpl.RenderDocumentation(product, values, "de")
 	if err != nil {
-		println(string(b))
 		return err
 	}
 
-	filename := fmt.Sprintf("%s/%s/%s.yaml", basePath, class, tmpl.Template)
-	if usage != "" {
-		filename = fmt.Sprintf("%s/%s/%s-%s.yaml", basePath, class, tmpl.Template, usage)
-	}
+	filename := fmt.Sprintf("%s/%s/%s_%d.yaml", basePath, class, tmpl.Template, index)
 	if err := os.WriteFile(filename, b, 0644); err != nil {
 		return err
 	}
-
 	return nil
 }
 

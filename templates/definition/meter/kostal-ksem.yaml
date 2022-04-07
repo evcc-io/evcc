@@ -1,13 +1,15 @@
 template: kostal-ksem
-description: 
-  generic: Kostal Smart Energy Meter
+products:
+  - brand: Kostal
+    description:
+      generic: Smart Energy Meter
 params:
-- name: usage
-  choice: [ "grid" ]
-- name: modbus
-  choice: [ "tcpip" ]
-  id: 71
+  - name: usage
+    choice: ["grid"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 71
 render: |
   type: modbus
   model: sunspec
-  {{ include "modbus" . }}
+  {{- include "modbus" . }}

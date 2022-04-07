@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "title": "EVCC defaults configuration schema",
+  "$ref": "#/definitions/root",
+  "definitions": {
+    "root": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "common-schema.json#/definitions/ParamDefaults"
+          }
+        },
+        "presets": {
+          "$ref": "#/definitions/Presets"
+        },
+        "modbus": {
+          "$ref": "#/definitions/Modbus"
+        },
+        "devicegroups": {
+          "$ref": "#/definitions/Devicegroups"
+        }
+      },
+      "required": [
+        "devicegroups",
+        "modbus",
+        "params",
+        "presets"
+      ],
+      "title": "Defaults"
+    },
+    "Devicegroups": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "generic": {
+          "$ref": "#/definitions/Generic"
+        },
+        "switchsockets": {
+          "$ref": "#/definitions/Generic"
+        },
+        "sockets": {
+          "$ref": "#/definitions/Generic"
+        }
+      },
+      "required": [
+        "generic",
+        "sockets",
+        "switchsockets"
+      ],
+      "title": "Devicegroups"
+    },
+    "Generic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "de": {
+          "type": "string"
+        },
+        "en": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "de",
+        "en"
+      ],
+      "title": "Generic"
+    },
+    "Modbus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interfaces": {
+          "$ref": "#/definitions/Interfaces"
+        },
+        "types": {
+          "$ref": "#/definitions/Types"
+        }
+      },
+      "required": [
+        "interfaces",
+        "types"
+      ],
+      "title": "Modbus"
+    },
+    "Interfaces": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z]": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Interfaces"
+    },
+    "Types": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z]": {
+          "type": "object",
+          "$ref": "#/definitions/TypeElement"
+        }
+      },
+      "title": "Types"
+    },
+    "TypeElement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "$ref": "common-schema.json#/definitions/LanguageText"
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "common-schema.json#/definitions/ParamDefaults"
+          }
+        }
+      }
+    },
+    "Presets": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z]": {
+          "type": "object",
+          "properties": {
+            "params": {
+              "type": "array",
+              "items": {
+                "$ref": "common-schema.json#/definitions/ParamTemplate"
+              }
+            }
+          }
+        }
+      },
+      "title": "Presets"
+    }
+  }
+}

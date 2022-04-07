@@ -55,31 +55,27 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 		config: config,
 	}
 
-	// fetch updated stamps
-	updateStamps(log, config.CCSPApplicationID)
-
 	return v
 }
 
-// Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
-
-func (v *Identity) stamp() string {
-	return Stamps.New(v.config.CCSPApplicationID)
-}
-
 func (v *Identity) getDeviceID() (string, error) {
-	uniID, _ := uuid.NewUUID()
+	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	if err != nil {
+		return "", err
+	}
+
+	uuid := uuid.NewString()
 	data := map[string]interface{}{
 		"pushRegId": "1",
 		"pushType":  "GCM",
-		"uuid":      uniID.String(),
+		"uuid":      uuid,
 	}
 
 	headers := map[string]string{
 		"ccsp-service-id": v.config.CCSPServiceID,
 		"Content-type":    "application/json;charset=UTF-8",
 		"User-Agent":      "okhttp/3.10.0",
-		"Stamp":           v.stamp(),
+		"Stamp":           stamp,
 	}
 
 	var resp struct {
@@ -120,9 +116,9 @@ func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
 	return cookieClient, err
 }
 
-func (v *Identity) setLanguage(cookieClient *request.Helper) error {
+func (v *Identity) setLanguage(cookieClient *request.Helper, language string) error {
 	data := map[string]interface{}{
-		"lang": "en",
+		"lang": language,
 	}
 
 	req, err := request.New(http.MethodPost, v.config.URI+LanguageURL, request.MarshalJSON(data), request.JSONEncoding)
@@ -282,11 +278,11 @@ func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
 		"User-Agent":    "okhttp/3.10.0",
 	}
 
-	data := url.Values(map[string][]string{
+	data := url.Values{
 		"grant_type":   {"authorization_code"},
 		"redirect_uri": {v.config.URI + "/api/v1/user/oauth2/redirect"},
 		"code":         {accCode},
-	})
+	}
 
 	var token oauth.Token
 
@@ -306,11 +302,11 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"User-Agent":    "okhttp/3.10.0",
 	}
 
-	data := url.Values(map[string][]string{
+	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"redirect_uri":  {"https://www.getpostman.com/oauth2/callback"},
 		"refresh_token": {token.RefreshToken},
-	})
+	}
 
 	req, err := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
 
@@ -322,7 +318,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return (*oauth2.Token)(&res), err
 }
 
-func (v *Identity) Login(user, password string) (err error) {
+func (v *Identity) Login(user, password, language string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
@@ -335,7 +331,7 @@ func (v *Identity) Login(user, password string) (err error) {
 	}
 
 	if err == nil {
-		err = v.setLanguage(cookieClient)
+		err = v.setLanguage(cookieClient, language)
 	}
 
 	var code string
@@ -362,6 +358,11 @@ func (v *Identity) Login(user, password string) (err error) {
 
 // Request decorates requests with authorization headers
 func (v *Identity) Request(req *http.Request) error {
+	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	if err != nil {
+		return err
+	}
+
 	token, err := v.Token()
 	if err != nil {
 		return err
@@ -373,7 +374,7 @@ func (v *Identity) Request(req *http.Request) error {
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
-		"Stamp":               v.stamp(),
+		"Stamp":               stamp,
 	} {
 		req.Header.Set(k, v)
 	}

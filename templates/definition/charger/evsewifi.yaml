@@ -1,10 +1,11 @@
 template: evsewifi
-description:
-  generic: EVSE-Wifi
+products:
+  - description:
+      generic: EVSE-Wifi
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
+  - name: host
+    required: true
+    example: 192.0.2.2
 render: |
   type: evsewifi
   uri: http://{{ .host }}

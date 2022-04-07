@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2021 andig
+// Copyright (c) 2019-2022 andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -33,7 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/philippseith/signalr"
-	"github.com/thoas/go-funk"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -66,29 +66,17 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Charger  string
-		Circuit  int           // deprecated
-		Cache    time.Duration // deprecated
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("easee")
-
-	if cc.Circuit > 0 {
-		log.WARN.Println("circuit is deprecated and will be removed in a future release")
-	}
-
-	if cc.Cache > 0 {
-		log.WARN.Println("cache is deprecated and will be removed in a future release")
-	}
-
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Cache)
+	return NewEasee(cc.User, cc.Password, cc.Charger)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
+func NewEasee(user, password, charger string) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -122,7 +110,7 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 		}
 
 		if len(chargers) != 1 {
-			return c, fmt.Errorf("cannot determine charger id, found: %v", funk.Map(chargers, func(c easee.Charger) string { return c.ID }))
+			return c, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
 		}
 
 		c.charger = chargers[0].ID

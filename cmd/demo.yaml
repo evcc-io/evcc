@@ -3,107 +3,108 @@ log: info
 interval: 3s
 
 javascript:
-- vm: shared
-  script: |
-    state = {
-      residualpower: 300,
-      batterypower: 0,
-      pvpower: 6200,
-      gridpower: 0,
-      chargepower: 0,
-      maxcurrent: 0,
-      battery: 63, // car
-    };
-    function log() { console.log("state:", JSON.stringify(state)); }
-    function set() { console.log("set:", param+"="+val); }
+  - vm: shared
+    script: |
+      state = {
+        residualpower: 300,
+        batterypower: 0,
+        pvpower: 6200,
+        gridpower: 0,
+        chargepower: 0,
+        maxcurrent: 0,
+        battery: 63, // car
+      };
+      function log() { console.log("state:", JSON.stringify(state)); }
+      function set() { console.log("set:", param+"="+val); }
 
 meters:
-- name: grid
-  type: custom
-  power:
-    type: js
-    vm: shared
-    script: |
-      state.pvpower += 200*(Math.random()-0.5);
-      state.chargepower = 0;
-      if (state.enabled) {
-        state.chargepower = state.maxcurrent * 3 * 230;
-        state.batterypower = 0;
-      }
-      state.gridpower = -state.pvpower + state.chargepower + state.residualpower + state.batterypower;
-      // if (state.gridpower < 0) {
-      //   state.batterypower = -state.gridpower;
-      //   if (state.batterypower > 1000) {
-      //     state.batterypower = 1000;
-      //   }
-      //   state.gridpower += state.batterypower;
-      // } else {
-      //   state.batterypower = 0;
-      // }
-      state.gridpower;
+  - name: grid
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: |
+        state.pvpower += 200*(Math.random()-0.5);
+        state.chargepower = 0;
+        if (state.enabled) {
+          state.chargepower = state.maxcurrent * 3 * 230;
+          state.batterypower = 0;
+        }
+        state.gridpower = -state.pvpower + state.chargepower + state.residualpower + state.batterypower;
+        // if (state.gridpower < 0) {
+        //   state.batterypower = -state.gridpower;
+        //   if (state.batterypower > 1000) {
+        //     state.batterypower = 1000;
+        //   }
+        //   state.gridpower += state.batterypower;
+        // } else {
+        //   state.batterypower = 0;
+        // }
+        state.gridpower;
 
-- name: pv
-  type: custom
-  power:
-    type: js
-    vm: shared
-    script: state.pvpower
+  - name: pv
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: state.pvpower
 
-- name: battery
-  type: custom
-  power:
-    type: js
-    vm: shared
-    script: state.batterypower;
-  soc:
-    type: js
-    vm: shared
-    script: "30"
-- name: charge
-  type: custom
-  power:
-    type: js
-    vm: shared
-    script: state.chargepower;
-  soc:
-    type: js
-    vm: shared
-    script: "30"
+  - name: battery
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: state.batterypower;
+    soc:
+      source: js
+      vm: shared
+      script: "30"
+  - name: charge
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: state.chargepower;
+    soc:
+      source: js
+      vm: shared
+      script: "30"
 
 chargers:
-- name: demo
-  type: custom
-  enable:
-    type: js
-    vm: shared
-    script: state.enabled = val;
-  enabled:
-    type: js
-    vm: shared
-    script: |
-      state.enabled;
-  status:
-    type: js
-    vm: shared
-    script: |
-      if (state.enabled) "C"; else "B";
-  maxcurrent:
-    type: js
-    vm: shared
-    script: state.maxcurrent = val;
+  - name: demo
+    type: custom
+    enable:
+      source: js
+      vm: shared
+      script: state.enabled = val;
+    enabled:
+      source: js
+      vm: shared
+      script: |
+        state.enabled;
+    status:
+      source: js
+      vm: shared
+      script: |
+        if (state.enabled) "C"; else "B";
+    maxcurrent:
+      source: js
+      vm: shared
+      script: state.maxcurrent = val;
 
 vehicles:
-- name: demo
-  title: e-Golf
-  type: custom
-  soc:
-    type: js
-    vm: shared
-    script: |
-      if (state.chargepower > 0) state.battery++; else state.battery--;
-      if (state.battery < 15) state.battery = 15;
-      if (state.battery > 100) state.battery = 100;
-      state.battery;
+  - name: demo
+    title: e-Golf
+    type: custom
+    capacity: 50
+    soc:
+      source: js
+      vm: shared
+      script: |
+        if (state.chargepower > 0) state.battery++; else state.battery--;
+        if (state.battery < 15) state.battery = 15;
+        if (state.battery > 100) state.battery = 100;
+        state.battery;
 
 site:
   title: Demo
@@ -113,8 +114,7 @@ site:
     battery: battery
 
 loadpoints:
-- title: Carport
-  charger: demo
-  meters:
-    charge: charge
-  vehicle: demo
+  - title: Carport
+    charger: demo
+    meter: charge
+    vehicle: demo

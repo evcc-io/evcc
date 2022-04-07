@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -14,15 +15,21 @@ import (
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
-type WireFormat int
+type Protocol int
 
 const (
-	TcpFormat WireFormat = iota
-	RtuFormat
-	AsciiFormat
+	Tcp Protocol = iota
+	Rtu
+	Ascii
 
 	CoilOn uint16 = 0xFF00
 )
+
+// Settings contains the ModBus TCP settings
+type TcpSettings struct {
+	URI string
+	ID  uint8
+}
 
 // Settings contains the ModBus settings
 type Settings struct {
@@ -140,9 +147,15 @@ func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) 
 	return mb.handle(mb.conn.ModbusClient().ReadFIFOQueue(address))
 }
 
-var connections = make(map[string]meters.Connection)
+var (
+	connections = make(map[string]meters.Connection)
+	mu          sync.Mutex
+)
 
 func registeredConnection(key string, newConn meters.Connection) meters.Connection {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if conn, ok := connections[key]; ok {
 		return conn
 	}
@@ -152,8 +165,16 @@ func registeredConnection(key string, newConn meters.Connection) meters.Connecti
 	return newConn
 }
 
+// ProtocolFromRTU identifies the wire format from the RTU setting
+func ProtocolFromRTU(rtu *bool) Protocol {
+	if rtu != nil && *rtu {
+		return Rtu
+	}
+	return Tcp
+}
+
 // NewConnection creates physical modbus device from config
-func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, slaveID uint8) (*Connection, error) {
+func NewConnection(uri, device, comset string, baudrate int, proto Protocol, slaveID uint8) (*Connection, error) {
 	var conn meters.Connection
 
 	if device != "" && uri != "" {
@@ -173,20 +194,20 @@ func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, sl
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
 
-		if wire == RtuFormat {
-			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+		if proto == Ascii {
+			conn = registeredConnection(device, meters.NewASCII(device, baudrate, comset))
 		} else {
-			conn = registeredConnection(uri, meters.NewASCII(device, baudrate, comset))
+			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 		}
 	}
 
 	if uri != "" {
 		uri = util.DefaultPort(uri, 502)
 
-		switch wire {
-		case RtuFormat:
+		switch proto {
+		case Rtu:
 			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
-		case AsciiFormat:
+		case Ascii:
 			conn = registeredConnection(uri, meters.NewASCIIOverTCP(uri))
 		default:
 			conn = registeredConnection(uri, meters.NewTCP(uri))
@@ -270,30 +291,20 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	}
 
 	switch strings.ToLower(r.Decode) {
-	case "float32", "ieee754":
-		op.Transform = rs485.RTUIeee754ToFloat64
-	case "float32s", "ieee754s":
-		op.Transform = rs485.RTUIeee754ToFloat64Swapped
-	case "float64":
-		op.Transform = rs485.RTUUint64ToFloat64
-		op.ReadLen = 4
-	case "uint16":
-		op.Transform = rs485.RTUUint16ToFloat64
-		op.ReadLen = 1
-	case "uint32":
-		op.Transform = rs485.RTUUint32ToFloat64
-	case "uint32s":
-		op.Transform = rs485.RTUUint32ToFloat64Swapped
-	case "uint64":
-		op.Transform = rs485.RTUUint64ToFloat64
-		op.ReadLen = 4
+
+	// 16 bit
 	case "int16":
 		op.Transform = rs485.RTUInt16ToFloat64
 		op.ReadLen = 1
-	case "int32":
-		op.Transform = rs485.RTUInt32ToFloat64
-	case "int32s":
-		op.Transform = rs485.RTUInt32ToFloat64Swapped
+	case "int16sma":
+		op.Transform = decodeNaN16(1<<15, rs485.RTUInt16ToFloat64)
+		op.ReadLen = 1
+	case "uint16":
+		op.Transform = rs485.RTUUint16ToFloat64
+		op.ReadLen = 1
+	case "uint16sma":
+		op.Transform = decodeNaN16(0xFFFF, rs485.RTUUint16ToFloat64)
+		op.ReadLen = 1
 	case "bool16":
 		mask, err := decodeMask(r.BitMask)
 		if err != nil {
@@ -301,11 +312,50 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		}
 		op.Transform = decodeBool16(mask)
 		op.ReadLen = 1
+
+	// 32 bit
+	case "int32":
+		op.Transform = rs485.RTUInt32ToFloat64
+	case "int32sma":
+		op.Transform = decodeNaN32(1<<31, rs485.RTUInt32ToFloat64)
+	case "int32s":
+		op.Transform = rs485.RTUInt32ToFloat64Swapped
+	case "uint32":
+		op.Transform = rs485.RTUUint32ToFloat64
+	case "uint32s":
+		op.Transform = rs485.RTUUint32ToFloat64Swapped
+	case "uint32sma":
+		op.Transform = decodeNaN32(0xFFFFFFFF, rs485.RTUUint32ToFloat64)
+	case "float32", "ieee754":
+		op.Transform = rs485.RTUIeee754ToFloat64
+	case "float32s", "ieee754s":
+		op.Transform = rs485.RTUIeee754ToFloat64Swapped
+
+	// 64 bit
+	case "uint64":
+		op.Transform = rs485.RTUUint64ToFloat64
+		op.ReadLen = 4
+	case "uint64sma":
+		op.Transform = decodeNaN64(0xFFFFFFFFFFFFFFFF, rs485.RTUUint64ToFloat64)
+		op.ReadLen = 4
+	case "float64":
+		op.Transform = rs485.RTUFloat64ToFloat64
+		op.ReadLen = 4
+
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
 	}
 
 	return op, nil
+}
+
+func RTUStringSwapped(b []byte) string {
+	s := new(strings.Builder)
+	for i := 0; i < len(b); i += 2 {
+		s.WriteByte(b[i+1])
+		s.WriteByte(b[i])
+	}
+	return s.String()
 }
 
 // SunSpecOperation is a sunspec modbus operation

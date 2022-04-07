@@ -1,0 +1,61 @@
+name: Bug report
+description: Create a report to help us improve
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue form is for reporting bugs only!
+
+        If you want to start a discussion or ask a question, please use the [discussion forum][df].
+
+        [df]: https://github.com/evcc-io/evcc/discussions
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Describe the bug
+      description: >-
+        A clear and concise description of what the bug is.
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        Steps to reproduce the behavior.
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Configuration details
+      description: >
+        Show evcc configuration file <code>evcc.yaml</code>
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Log details
+      description: >
+        Show evcc log output by running with <code>evcc --log debug</code>
+
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: What type of operating system are you running?
+      description: >
+        Note that if you're using Docker we ask you to reproduce the problem without Docker first.
+      options:
+        - Linux
+        - Windows
+        - Docker container
+
+  - type: textarea
+    attributes:
+      label: Version
+      description: >
+        Show output of <code>evcc -v</code>

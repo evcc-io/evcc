@@ -24,6 +24,7 @@ type Savings struct {
 	updated                        time.Time // Time of last charged value update
 	gridCharged                    float64   // Grid energy charged since startup (kWh)
 	gridCost                       float64   // Running total of charged grid energy cost (e.g. EUR)
+	gridSavedCost                  float64   // Running total of saved cost from self consumption (e.g. EUR)
 	selfConsumptionCharged         float64   // Self-produced energy charged since startup (kWh)
 	selfConsumptionCost            float64   // Running total of charged self-produced energy cost (e.g. EUR)
 	lastGridPrice, lastFeedInPrice float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
@@ -68,7 +69,7 @@ func (s *Savings) EffectivePrice() float64 {
 }
 
 func (s *Savings) SavingsAmount() float64 {
-	return s.selfConsumptionCharged * (s.currentGridPrice() - s.currentFeedInPrice())
+	return s.gridSavedCost
 }
 
 func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower float64) float64 {
@@ -140,6 +141,7 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 
 	s.gridCharged += addedGrid
 	s.gridCost += addedGrid * gridPrice
+	s.gridSavedCost += addedSelfConsumption * (gridPrice - feedinPrice)
 	s.selfConsumptionCharged += addedSelfConsumption
 	s.selfConsumptionCost += addedSelfConsumption * feedinPrice
 

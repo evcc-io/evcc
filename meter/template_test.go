@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 )
 
 var acceptable = []string{
@@ -16,19 +16,19 @@ var acceptable = []string{
 	"missing password", // Powerwall
 	"connect: no route to host",
 	"connect: connection refused",
-	"i/o timeout",
 	"connect: network is unreachable",
-	"no ping response for 192.0.2.2", // SMA
-	"network is unreachable",
+	"i/o timeout",
+	"'sma': missing uri or serial", // SMA
+	"'fritzdect': missing ain",     // FritzDect
 	"[1ESY1161052714 1ESY1161229249 1EMH0008842285 1ESY1161978584 1EMH0004864048 1ESY1161979033 7ELS8135823805]", // Discovergy
-	"can only have either uri or device",                       // modbus
-	"(Client.Timeout exceeded while awaiting headers)",         // http
-	"cannot create meter 'discovergy': unexpected status: 401", //Discovergy Proxy
+	"can only have either uri or device",                                          // modbus
+	"(Client.Timeout exceeded while awaiting headers)",                            // http
+	"unexpected status: 401",                                                      // Discovergy
+	"unexpected status: 503",                                                      // Discovergy
+	"login failed: Put \"https://192.0.2.2/v1/login\": context deadline exceeded", // LG ESS
 }
 
-func TestMeterTemplates(t *testing.T) {
-	test.SkipCI(t)
-
+func TestTemplates(t *testing.T) {
 	for _, tmpl := range templates.ByClass(templates.Meter) {
 		tmpl := tmpl
 
@@ -42,46 +42,19 @@ func TestMeterTemplates(t *testing.T) {
 		if values[templates.ParamModbus] != nil {
 			modbusChoices := tmpl.ModbusChoices()
 			// we only test one modbus setup
-			if funk.ContainsString(modbusChoices, templates.ModbusChoiceTCPIP) {
-				values[templates.ModbusTCPIP] = true
+			if slices.Contains(modbusChoices, templates.ModbusChoiceTCPIP) {
+				values[templates.ModbusKeyTCPIP] = true
 			} else {
-				values[templates.ModbusRS485TCPIP] = true
+				values[templates.ModbusKeyRS485TCPIP] = true
 			}
+			values = tmpl.ModbusValues(templates.TemplateRenderModeInstance, true, values)
 		}
 
-		usages := tmpl.Usages()
-		if len(usages) == 0 {
-			runTest(t, tmpl, values)
-		} else {
-			// test all usages
-			for _, usage := range usages {
-
-				// set the usage param value
-				if usage != "" {
-					values[templates.ParamUsage] = usage
-				}
-
-				runTest(t, tmpl, values)
+		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {
+			if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
+				t.Log(values)
+				t.Error(err)
 			}
-		}
+		})
 	}
-}
-
-func runTest(t *testing.T, tmpl templates.Template, values map[string]interface{}) {
-	t.Run(tmpl.Template, func(t *testing.T) {
-		t.Parallel()
-
-		b, values, err := tmpl.RenderResult(templates.TemplateRenderModeUnitTest, values)
-		if err != nil {
-			t.Logf("Template: %s", tmpl.Template)
-			t.Logf("%s", string(b))
-			t.Error(err)
-		}
-
-		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
-			t.Logf("Template: %s", tmpl.Template)
-			t.Logf("%s", string(b))
-			t.Error(err)
-		}
-	})
 }

@@ -10,6 +10,7 @@ import { faBatteryThreeQuarters } from "@fortawesome/free-solid-svg-icons/faBatt
 import { faAngleUp } from "@fortawesome/free-solid-svg-icons/faAngleUp";
 import { faAngleDown } from "@fortawesome/free-solid-svg-icons/faAngleDown";
 import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
+import { faMoon } from "@fortawesome/free-solid-svg-icons/faMoon";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faSun } from "@fortawesome/free-solid-svg-icons/faSun";
 import { faSun as farSun } from "@fortawesome/free-regular-svg-icons/faSun";
@@ -43,6 +44,7 @@ library.add(
   faAngleDoubleLeft,
   faAngleDoubleRight,
   faClock,
+  faMoon,
   faExclamationCircle,
   faExclamationTriangle,
   faGift,

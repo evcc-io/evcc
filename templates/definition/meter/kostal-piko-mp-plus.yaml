@@ -1,20 +1,22 @@
 template: kostal-piko-mp-plus
-description: 
-  generic: Kostal Piko MP Plus
+products:
+  - brand: Kostal
+    description:
+      generic: Piko MP Plus
 guidedsetup:
   enable: true
-  linked: 
-  - template: kostal-ksem-inverter
-    usage: grid
-  - template: kostal-ksem
-    usage: grid
-    excludetemplate: kostal-ksem-inverter
+  linked:
+    - template: kostal-ksem-inverter
+      usage: grid
+    - template: kostal-ksem
+      usage: grid
+      excludetemplate: kostal-ksem-inverter
 params:
-- name: usage
-  choice: [ "pv" ]
-- name: host
-  example: 192.0.2.2
-  required: true
+  - name: usage
+    choice: ["pv"]
+  - name: host
+    example: 192.0.2.2
+    required: true
 render: |
   type: custom
   power:

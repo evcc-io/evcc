@@ -11,7 +11,7 @@ import (
 // https://github.com/TA2k/ioBroker.smart-eq
 
 type Provider struct {
-	statusG func() (interface{}, error)
+	statusG func() (StatusResponse, error)
 	expiry  time.Duration
 }
 
@@ -20,12 +20,12 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 		expiry: expiry,
 	}
 
-	v.statusG = provider.NewCached(func() (interface{}, error) {
+	v.statusG = provider.Cached(func() (StatusResponse, error) {
 		return v.status(
 			func() (StatusResponse, error) { return api.Status(vin) },
 			func() (StatusResponse, error) { return api.Refresh(vin) },
 		)
-	}, cache).InterfaceGetter()
+	}, cache)
 
 	return v
 }
@@ -43,12 +43,7 @@ func (v *Provider) status(statusG func() (StatusResponse, error), refreshG func(
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return res.Status.StatusData.Soc.Value, nil
-	}
-
-	return 0, err
+	return res.Status.StatusData.Soc.Value, err
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
@@ -56,12 +51,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return int64(res.Status.StatusData.RangeElectric.Value), nil
-	}
-
-	return 0, err
+	return int64(res.Status.StatusData.RangeElectric.Value), err
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -69,10 +59,5 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the Provider.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return res.Status.StatusData.Odo.Value, nil
-	}
-
-	return 0, err
+	return res.Status.StatusData.Odo.Value, err
 }

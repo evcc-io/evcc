@@ -101,8 +101,15 @@ func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 // testMeter tests a meter device
 func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v interface{}) (DeviceTestResult, error) {
 	if v, ok := v.(api.Meter); ok {
-		if _, err := v.CurrentPower(); err != nil {
+		power, err := v.CurrentPower()
+		if err != nil {
 			return DeviceTestResultInvalid, err
+		}
+		// check if the grid meter reports power 0, which should be impossible
+		// happens with Kostal Piko charger that do not have a grid meter attached
+		// but we can't determine this
+		if power == 0 && deviceCategory == DeviceCategoryGridMeter {
+			return DeviceTestResultInvalid, errors.New("grid meter reports power 0")
 		}
 
 		if deviceCategory == DeviceCategoryBatteryMeter {
