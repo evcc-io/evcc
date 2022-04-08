@@ -329,6 +329,12 @@ func (c *OCPP) Currents() (float64, float64, float64, error) {
 	return c.cp.Currents()
 }
 
+var _ api.MeterSupported = (*OCPP)(nil)
+
+func (c *OCPP) Supported() bool {
+	return c.cp.MeterSupported()
+}
+
 // var _ api.Identifier = (*OCPP)(nil)
 
 // // Identify implements the api.Identifier interface

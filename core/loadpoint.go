@@ -1268,6 +1268,16 @@ func (lp *LoadPoint) updateChargeCurrents() {
 		return // don't guess
 	}
 
+	supported := true
+	meterSupported, ok := lp.chargeMeter.(api.MeterSupported)
+	if ok {
+		supported = meterSupported.Supported()
+	}
+
+	if !supported {
+		return
+	}
+
 	i1, i2, i3, err := phaseMeter.Currents()
 	if err != nil {
 		lp.log.ERROR.Printf("charge meter: %v", err)

@@ -85,6 +85,10 @@ type MeterCurrent interface {
 	Currents() (float64, float64, float64, error)
 }
 
+type MeterSupported interface {
+	Supported() bool
+}
+
 // Battery is able to provide battery SoC in %
 type Battery interface {
 	SoC() (float64, error)
