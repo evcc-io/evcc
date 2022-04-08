@@ -18,9 +18,10 @@ package charger
 // SOFTWARE.
 
 // Supports all chargers based on Bender CC612/613 controller series
-// * The modbus server must be enabled
-// * The setting 'Modbus Slave Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'.
-//   Use the third selection labeled 'Ebee', 'Bender' etc.
+// * The 'Modbus TCP Server for energy management systems' must be enabled.
+// * The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'.
+//   Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc.
+// * Set 'Allow UID Disclose' to On
 
 import (
 	"encoding/binary"
@@ -47,6 +48,7 @@ const (
 	bendRegActivePower      = 220  // Active Power from primary meter (W)
 	bendRegChargedEnergy    = 716  // Sum of charged energy for the current session (Wh)
 	bendRegChargingDuration = 718  // Duration since beginning of charge (Seconds)
+	bendRegUserID           = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
 	bendRegEVCCID           = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
 	bendRegHemsCurrentLimit = 1000 // Current limit of the HEMS module (A)
 
@@ -231,7 +233,7 @@ var _ api.Identifier = (*BenderCC)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *BenderCC) Identify() (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
+	b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
 	if err != nil {
 		return "", err
 	}
@@ -257,5 +259,11 @@ func (wb *BenderCC) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1); err == nil {
 		fmt.Printf("\tSmart Vehicle:\t%t\n", binary.BigEndian.Uint16(b) != 0)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6); err == nil {
+		fmt.Printf("\tEVCCID:\t%s\n", b)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10); err == nil {
+		fmt.Printf("\tUserID:\t%s\n", b)
 	}
 }
