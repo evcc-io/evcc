@@ -20,7 +20,7 @@ func NewCache() *Cache {
 
 // Run adds input channel's values to cache
 func (c *Cache) Run(in <-chan Param) {
-	log := NewLogger("cache")
+	log := log.NewLogger("cache")
 
 	for p := range in {
 		key := p.Key

@@ -14,7 +14,8 @@ func Getenv(key string, def ...string) string {
 			return def[0]
 		}
 
-		log.Fatalln("missing", key)
+		log.Error("missing %s", key)
+		os.Exit(1)
 	}
 	return res
 }
