@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/tibber"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/shurcooL/graphql"
 	"golang.org/x/oauth2"
@@ -17,7 +18,7 @@ import (
 
 type Tibber struct {
 	mux    sync.Mutex
-	log    *util.Logger
+	log    log.Logger
 	Token  string
 	HomeID string
 	Cheap  float64

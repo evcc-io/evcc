@@ -30,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/philippseith/signalr"
@@ -44,7 +45,7 @@ type Easee struct {
 	site, circuit         int
 	updated               time.Time
 	chargeStatus          api.ChargeStatus
-	log                   *util.Logger
+	log                   log.Logger
 	mux                   *sync.Cond
 	dynamicChargerCurrent float64
 	current               float64
@@ -308,7 +309,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			value.(int) == easee.ModeReadyToCharge
 	}
 
-	c.log.TRACE.Printf("%s %s: %s %v", typ, res.Mid, res.ID, value)
+	c.log.Trace("%s %s: %s %v", typ, res.Mid, res.ID, value)
 }
 
 // ProductUpdate implements the signalr receiver

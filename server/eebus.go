@@ -34,7 +34,7 @@ type EEBusClientCBs struct {
 
 type EEBus struct {
 	mux               sync.Mutex
-	log               *util.Logger
+	log               log.Logger
 	srv               *server.Server
 	id                string
 	zc                *zeroconf.Server
@@ -115,7 +115,7 @@ func (c *EEBus) DeviceInfo() communication.ManufacturerDetails {
 
 func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) error, shipDisconnectHandler func(string)) {
 	ski = strings.ReplaceAll(ski, "-", "")
-	c.log.TRACE.Printf("registering ski: %s", ski)
+	c.log.Trace("registering ski: %s", ski)
 
 	c.mux.Lock()
 	c.clients[ski] = EEBusClientCBs{onConnect: shipConnectHandler, onDisconnect: shipDisconnectHandler}
@@ -171,7 +171,7 @@ func (c *EEBus) addDisoveredEntry(entry *zeroconf.ServiceEntry) {
 		// maybe the SKI is already registered
 		c.handleDiscoveredSKI(svc.SKI)
 	} else {
-		c.log.TRACE.Printf("%s: could not create ship service from DNS entry: %v", entry.HostName, err)
+		c.log.Trace("%s: could not create ship service from DNS entry: %v", entry.HostName, err)
 	}
 }
 
@@ -182,7 +182,7 @@ func (c *EEBus) handleDiscoveredSKI(ski string) {
 	_, registered := c.clients[ski]
 	entry, discovered := c.discoveredClients[ski]
 
-	c.log.TRACE.Printf("client %s connected %t, registered %t, discovered %t ", ski, connected, registered, discovered)
+	c.log.Trace("client %s connected %t, registered %t, discovered %t ", ski, connected, registered, discovered)
 
 	if !connected && discovered && registered {
 		c.mux.Unlock()
@@ -198,12 +198,12 @@ func (c *EEBus) connectDiscoveredEntry(entry *zeroconf.ServiceEntry) {
 
 	var conn ship.Conn
 	if err == nil {
-		c.log.TRACE.Printf("%s: client connect", entry.HostName)
+		c.log.Trace("%s: client connect", entry.HostName)
 		conn, err = svc.Connect(c.log.TRACE, c.id, c.srv.Certificate, c.shipCloseHandler)
 	}
 
 	if err != nil {
-		c.log.TRACE.Printf("%s: client done: %v", entry.HostName, err)
+		c.log.Trace("%s: client done: %v", entry.HostName, err)
 		return
 	}
 
@@ -216,7 +216,7 @@ func (c *EEBus) connectDiscoveredEntry(entry *zeroconf.ServiceEntry) {
 
 func (c *EEBus) discoverDNS(results <-chan *zeroconf.ServiceEntry, connector func(*zeroconf.ServiceEntry)) {
 	for entry := range results {
-		c.log.TRACE.Println("mDNS:", entry.HostName, entry.AddrIPv4, entry.Text)
+		c.log.Trace("mDNS:", entry.HostName, entry.AddrIPv4, entry.Text)
 
 		for _, typ := range entry.Text {
 			if strings.HasPrefix(typ, "type=") && typ == "type=EVSE" {
@@ -232,19 +232,19 @@ func (c *EEBus) certificateHandler(leaf *x509.Certificate) error {
 		return err
 	}
 
-	c.log.TRACE.Printf("verifying client ski: %s", ski)
+	c.log.Trace("verifying client ski: %s", ski)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
 	for client := range c.clients {
 		if client == ski {
-			c.log.TRACE.Printf("client ski found")
+			c.log.Trace("client ski found")
 			return nil
 		}
 	}
 
-	c.log.TRACE.Printf("client ski not found!")
+	c.log.Trace("client ski not found!")
 
 	return fmt.Errorf("client ski not allowed: %s", ski)
 }
@@ -256,17 +256,17 @@ func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
 		if client == ski {
 			currentConnection, found := c.connectedClients[ski]
 			connect := true
-			c.log.TRACE.Printf("client %s found? %t", ski, found)
+			c.log.Trace("client %s found? %t", ski, found)
 			if found {
 				if currentConnection.IsConnectionClosed() {
-					c.log.TRACE.Printf("client has closed connection")
+					c.log.Trace("client has closed connection")
 					delete(c.connectedClients, ski)
 				} else {
-					c.log.TRACE.Printf("client has no closed connection")
+					c.log.Trace("client has no closed connection")
 					connect = false
 				}
 			}
-			c.log.TRACE.Printf("client %s connect? %t", ski, connect)
+			c.log.Trace("client %s connect? %t", ski, connect)
 			if connect {
 				c.connectedClients[ski] = conn
 				c.mux.Unlock()
@@ -298,7 +298,7 @@ func (c *EEBus) shipCloseHandler(ski string) {
 			}
 
 			if conn.IsConnectionClosed() {
-				c.log.TRACE.Printf("close client %s connection", ski)
+				c.log.Trace("close client %s connection", ski)
 				client.onDisconnect(ski)
 			}
 

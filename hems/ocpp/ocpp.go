@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/ocpp/profile"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 
 	"github.com/denisbrodbeck/machineid"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
@@ -19,7 +20,7 @@ import (
 
 // OCPP is an OCPP client
 type OCPP struct {
-	log  *util.Logger
+	log  log.Logger
 	site site.API
 	cp   ocpp16.ChargePoint
 }
@@ -46,7 +47,7 @@ func New(conf map[string]interface{}, site site.API) (*OCPP, error) {
 		} else {
 			cc.StationID = fmt.Sprintf("evcc-%d", rand.Int31())
 		}
-		log.DEBUG.Println("station id:", cc.StationID)
+		log.Debug("station id:", cc.StationID)
 	}
 
 	ws := ws.NewClient()
@@ -88,7 +89,7 @@ func (s *OCPP) Run() {
 				status = ocppcore.ChargePointStatusCharging
 			}
 
-			s.log.DEBUG.Printf("send: lp-%d status: %+v", connector, status)
+			s.log.Debug("send: lp-%d status: %+v", connector, status)
 			if _, err := s.cp.StatusNotification(connector, ocppcore.NoError, status); err != nil {
 				s.log.ERROR.Printf("lp-%d: %v", connector, err)
 			}

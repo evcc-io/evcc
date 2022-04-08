@@ -24,6 +24,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -49,7 +50,7 @@ var vestelRegCurrents = []uint16{1008, 1010, 1012}
 // Vestel is an api.ChargeController implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Vestel struct {
-	log     *util.Logger
+	log     log.Logger
 	conn    *modbus.Connection
 	current uint16
 }

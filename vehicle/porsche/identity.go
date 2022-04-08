@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
@@ -57,7 +57,7 @@ type Identity struct {
 }
 
 // NewIdentity creates Porsche identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log log.Logger, user, password string) *Identity {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
 		user:     user,

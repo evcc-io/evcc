@@ -50,7 +50,7 @@ func bind(cmd *cobra.Command, flag string) {
 
 func configureCommand(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringP(
-		"log", "l",
+		"github.com/evcc-io/evcc/util/log", "l",
 		"error",
 		"Log level (fatal, error, warn, info, debug, trace)",
 	)
@@ -131,7 +131,7 @@ func Execute() {
 
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
+	log.Info("evcc %s", server.FormattedVersion())
 
 	// load config and re-configure logging after reading config file
 	conf, err := loadConfigFile(cfgFile)
@@ -143,7 +143,7 @@ func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	uri := viper.GetString("uri")
-	log.INFO.Println("listening at", uri)
+	log.Info("listening at", uri)
 
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {

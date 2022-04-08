@@ -20,7 +20,7 @@ const retryDelay = 5 * time.Second
 // Socket implements websocket request provider
 type Socket struct {
 	*request.Helper
-	log     *util.Logger
+	log     log.Logger
 	mux     *util.Waiter
 	url     string
 	headers map[string]string
@@ -62,7 +62,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 	p := &Socket{
 		log:     log,
 		Helper:  request.NewHelper(log),
-		mux:     util.NewWaiter(cc.Timeout, func() { log.DEBUG.Println("wait for initial value") }),
+		mux:     util.NewWaiter(cc.Timeout, func() { log.Debug("wait for initial value") }),
 		url:     url,
 		headers: cc.Headers,
 		scale:   cc.Scale,
@@ -117,12 +117,12 @@ func (p *Socket) listen() {
 		for {
 			_, b, err := client.ReadMessage()
 			if err != nil {
-				p.log.TRACE.Println("read:", err)
+				p.log.Trace("read:", err)
 				_ = client.Close()
 				break
 			}
 
-			p.log.TRACE.Printf("recv: %s", b)
+			p.log.Trace("recv: %s", b)
 
 			p.mux.Lock()
 			if p.jq != nil {

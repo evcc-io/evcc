@@ -20,7 +20,7 @@ import (
 
 // Script implements shell script-based providers and setters
 type Script struct {
-	log     *util.Logger
+	log     log.Logger
 	script  string
 	timeout time.Duration
 	cache   time.Duration
@@ -128,7 +128,7 @@ func (p *Script) exec(script string) (string, error) {
 		return "", err
 	}
 
-	p.log.DEBUG.Printf("%s: %s", strings.Join(args, " "), s)
+	p.log.Debug("%s: %s", strings.Join(args, " "), s)
 
 	return s, nil
 }

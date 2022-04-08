@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/evcc-io/evcc/detect/tasks"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 type TaskList struct {
@@ -81,7 +81,7 @@ func (l *TaskList) handler(task tasks.Task) tasks.TaskHandler {
 	return handler
 }
 
-func (l *TaskList) Test(log *util.Logger, id string, input tasks.ResultDetails) []tasks.Result {
+func (l *TaskList) Test(log log.Logger, id string, input tasks.ResultDetails) []tasks.Result {
 	l.once.Do(l.sort)
 
 	var all []tasks.Result
@@ -100,7 +100,7 @@ func (l *TaskList) Test(log *util.Logger, id string, input tasks.ResultDetails) 
 
 		inputs = task.Test(log, input)
 		success := len(inputs) > 0
-		log.DEBUG.Printf("task: %s %v -> %v", id, input, success)
+		log.Debug("task: %s %v -> %v", id, input, success)
 
 		for _, detail := range inputs {
 			all = append(all, tasks.Result{

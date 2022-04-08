@@ -27,7 +27,7 @@ func (c *Cache) Run(in <-chan Param) {
 		if p.LoadPoint != nil {
 			key = fmt.Sprintf("lp-%d/%s", *p.LoadPoint+1, key)
 		}
-		log.TRACE.Printf("%s: %v", key, p.Val)
+		log.Trace("%s: %v", key, p.Val)
 		c.Add(p.UniqueID(), p)
 	}
 }

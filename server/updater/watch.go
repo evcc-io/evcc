@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/google/go-github/v32/github"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-version"
@@ -15,7 +16,7 @@ type webServer interface {
 }
 
 type watch struct {
-	log     *util.Logger
+	log     log.Logger
 	outChan chan<- util.Param
 	repo    *Repo
 }
@@ -36,7 +37,7 @@ func (u *watch) watchReleases(installed string, out chan *github.RepositoryRelea
 		}
 
 		if rel != nil {
-			u.log.INFO.Printf("new version available: %s", *rel.TagName)
+			u.log.Info("new version available: %s", *rel.TagName)
 			out <- rel
 		}
 	}

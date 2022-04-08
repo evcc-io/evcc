@@ -61,7 +61,7 @@ func ParseHostIPNet(arg string) (res []string) {
 
 	// check subnet size
 	if bits, _ := ipnet.Mask.Size(); bits < 24 {
-		log.INFO.Println("skipping large subnet:", ipnet)
+		log.Info("skipping large subnet:", ipnet)
 		return
 	}
 
@@ -121,7 +121,7 @@ configuring EVCC but are probably not sufficient for fully automatic configurati
 		}
 
 		myIP := ips[0]
-		log.INFO.Println("my ip:", myIP.IP)
+		log.Info("my ip:", myIP.IP)
 
 		hosts = append(hosts, "127.0.0.1")
 		hosts = append(hosts, IPsFromSubnet(myIP.String())...)

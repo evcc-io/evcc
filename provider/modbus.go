@@ -18,7 +18,7 @@ import (
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
-	log    *util.Logger
+	log    log.Logger
 	conn   *modbus.Connection
 	device meters.Device
 	op     modbus.Operation
@@ -196,9 +196,9 @@ func (m *Modbus) floatGetter() (float64, error) {
 
 	if err == nil {
 		if m.op.MBMD.IEC61850 != 0 {
-			m.log.TRACE.Printf("%s: %v", m.op.MBMD.IEC61850, res.Value)
+			m.log.Trace("%s: %v", m.op.MBMD.IEC61850, res.Value)
 		} else {
-			m.log.TRACE.Printf("%d:%d:%s: %v", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, res.Value)
+			m.log.Trace("%d:%d:%s: %v", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, res.Value)
 		}
 	}
 

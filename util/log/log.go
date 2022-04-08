@@ -1,13 +1,13 @@
-package util
+package log
 
 import (
 	"io"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/util/log"
 	jww "github.com/spf13/jwalterweatherman"
 )
 

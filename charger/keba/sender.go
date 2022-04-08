@@ -6,17 +6,18 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 // Sender is a KEBA UDP sender
 type Sender struct {
-	log  *util.Logger
+	log  log.Logger
 	addr string
 	conn *net.UDPConn
 }
 
 // NewSender creates KEBA UDP sender
-func NewSender(log *util.Logger, addr string) (*Sender, error) {
+func NewSender(log log.Logger, addr string) (*Sender, error) {
 	addr = util.DefaultPort(addr, Port)
 	raddr, err := net.ResolveUDPAddr("udp", addr)
 
@@ -36,7 +37,7 @@ func NewSender(log *util.Logger, addr string) (*Sender, error) {
 
 // Send msg to receiver
 func (c *Sender) Send(msg string) error {
-	c.log.TRACE.Printf("send to %s %v", c.addr, msg)
+	c.log.Trace("send to %s %v", c.addr, msg)
 	_, err := io.Copy(c.conn, strings.NewReader(msg))
 	return err
 }

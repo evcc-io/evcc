@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/keba"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 // https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf
@@ -25,7 +26,7 @@ type RFID struct {
 
 // Keba is an api.Charger implementation with configurable getters and setters.
 type Keba struct {
-	log     *util.Logger
+	log     log.Logger
 	conn    string
 	rfid    RFID
 	timeout time.Duration

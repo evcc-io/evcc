@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -39,7 +39,7 @@ type tokenSource struct {
 }
 
 // TokenSource creates an Easee token source
-func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
+func TokenSource(log log.Logger, user, password string) (oauth2.TokenSource, error) {
 	c := &tokenSource{
 		Helper: request.NewHelper(log),
 	}

@@ -3,7 +3,7 @@ package porsche
 import (
 	"fmt"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
@@ -21,7 +21,7 @@ type API struct {
 }
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
+func NewAPI(log log.Logger, identity oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}

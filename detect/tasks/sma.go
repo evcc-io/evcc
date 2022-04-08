@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"gitlab.com/bboehmke/sunny"
 )
 
@@ -60,7 +61,7 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 	return true
 }
 
-func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
+func (h *SMAHandler) Test(log log.Logger, in ResultDetails) (res []ResultDetails) {
 	h.mux.Lock()
 
 	if h.handled {

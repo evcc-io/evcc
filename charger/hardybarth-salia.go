@@ -28,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/charger/echarge"
 	"github.com/evcc-io/evcc/charger/echarge/salia"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -37,7 +38,7 @@ import (
 // Salia charger implementation
 type Salia struct {
 	*request.Helper
-	log     *util.Logger
+	log     log.Logger
 	uri     string
 	current int64
 	res     salia.Api

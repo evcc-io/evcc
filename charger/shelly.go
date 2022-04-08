@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/shelly"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
@@ -18,7 +19,7 @@ import (
 // Shelly charger implementation
 type Shelly struct {
 	*request.Helper
-	log          *util.Logger
+	log          log.Logger
 	uri          string
 	gen          int // Shelly api generation
 	channel      int

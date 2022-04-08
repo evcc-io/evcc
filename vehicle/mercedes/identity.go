@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/auth"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"golang.org/x/oauth2"
 )
 
@@ -26,7 +26,7 @@ func WithToken(t *oauth2.Token) IdentityOptions {
 }
 
 type Identity struct {
-	log *util.Logger
+	log log.Logger
 	*ReuseTokenSource
 	oc      *oauth2.Config
 	baseURL string
@@ -34,7 +34,7 @@ type Identity struct {
 }
 
 // TODO SessionSecret from config/persistence
-func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions) (*Identity, error) {
+func NewIdentity(log log.Logger, id, secret string, options ...IdentityOptions) (*Identity, error) {
 	provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
@@ -112,7 +112,7 @@ func (v *Identity) LogoutHandler() http.HandlerFunc {
 }
 
 func (v *Identity) callbackHandler(w http.ResponseWriter, r *http.Request) {
-	v.log.TRACE.Println("callback request retrieved")
+	v.log.Trace("callback request retrieved")
 
 	data, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
@@ -133,7 +133,7 @@ func (v *Identity) callbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if token.Valid() {
-		v.log.TRACE.Println("sending login update...")
+		v.log.Trace("sending login update...")
 		v.ReuseTokenSource.Apply(token)
 		v.authC <- true
 

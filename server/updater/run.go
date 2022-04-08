@@ -5,11 +5,12 @@ package updater
 import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/google/go-github/v32/github"
 )
 
 // Run regularly checks version
-func Run(log *util.Logger, httpd webServer, tee util.TeeAttacher, outChan chan<- util.Param) {
+func Run(log log.Logger, httpd webServer, tee util.TeeAttacher, outChan chan<- util.Param) {
 	u := &watch{
 		log:     log,
 		outChan: outChan,

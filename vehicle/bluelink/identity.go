@@ -10,7 +10,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/google/uuid"
@@ -41,14 +41,14 @@ type Config struct {
 // Based on https://github.com/Hacksore/bluelinky.
 type Identity struct {
 	*request.Helper
-	log      *util.Logger
+	log      log.Logger
 	config   Config
 	deviceID string
 	oauth2.TokenSource
 }
 
 // NewIdentity creates BlueLink Identity
-func NewIdentity(log *util.Logger, config Config) *Identity {
+func NewIdentity(log log.Logger, config Config) *Identity {
 	v := &Identity{
 		log:    log,
 		Helper: request.NewHelper(log),

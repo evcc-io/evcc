@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/mergermarket/go-pkcs7"
 )
@@ -35,7 +36,7 @@ const Timeout = time.Second * 15
 // Connection is the Tapo connection
 type Connection struct {
 	*request.Helper
-	log             *util.Logger
+	log             log.Logger
 	URI             string
 	EncodedUser     string
 	EncodedPassword string
@@ -212,7 +213,7 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 		return nil, err
 	}
 
-	d.log.TRACE.Printf("request: %s\n", string(treq))
+	d.log.Trace("request: %s\n", string(treq))
 
 	encryptedRequest, err := d.Cipher.Encrypt(treq)
 	if err != nil {
@@ -252,7 +253,7 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 		return nil, err
 	}
 
-	d.log.TRACE.Printf("decrypted result: %v\n", string(decryptedResponse))
+	d.log.Trace("decrypted result: %v\n", string(decryptedResponse))
 
 	var deviceResp *DeviceResponse
 	if err = json.Unmarshal(decryptedResponse, &deviceResp); err != nil {

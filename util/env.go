@@ -1,9 +1,10 @@
 package util
 
 import (
-	"log"
 	"os"
 	"strings"
+
+	"github.com/evcc-io/evcc/util/log"
 )
 
 func Getenv(key string, def ...string) string {

@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 type vehicleCoordinator struct {
@@ -40,7 +40,7 @@ func (lp *vehicleCoordinator) availableVehicles(owner interface{}, vehicles []ap
 }
 
 // find active vehicle by charge state
-func (lp *vehicleCoordinator) identifyVehicleByStatus(log *util.Logger, owner interface{}, vehicles []api.Vehicle) api.Vehicle {
+func (lp *vehicleCoordinator) identifyVehicleByStatus(log log.Logger, owner interface{}, vehicles []api.Vehicle) api.Vehicle {
 	available := lp.availableVehicles(owner, vehicles)
 
 	var res api.Vehicle
@@ -53,7 +53,7 @@ func (lp *vehicleCoordinator) identifyVehicleByStatus(log *util.Logger, owner in
 				continue
 			}
 
-			log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
+			log.Debug("vehicle status: %s (%s)", status, vehicle.Title())
 
 			// vehicle is plugged or charging, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {

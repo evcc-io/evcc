@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -38,7 +39,7 @@ import (
 type Tronity struct {
 	*embed
 	*request.Helper
-	log   *util.Logger
+	log   log.Logger
 	oc    *oauth2.Config
 	vid   string
 	bulkG func() (tronity.Bulk, error)

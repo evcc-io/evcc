@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/charger/keba"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 const Keba TaskType = "keba"
@@ -34,7 +35,7 @@ type KEBAHandler struct {
 	Timeout  time.Duration
 }
 
-func (h *KEBAHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
+func (h *KEBAHandler) Test(log log.Logger, in ResultDetails) []ResultDetails {
 	h.mux.Lock()
 
 	if h.listener == nil {
@@ -67,7 +68,7 @@ func (h *KEBAHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 
 		select {
 		case t := <-resC:
-			log.INFO.Println(t)
+			log.Info(t)
 			if t.Report == nil {
 				continue
 			}

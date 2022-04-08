@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
@@ -40,7 +41,7 @@ var (
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log          *util.Logger
+	log          log.Logger
 	closeC       chan struct{}
 	doneC        chan struct{}
 	controllable bool
@@ -210,7 +211,7 @@ func (s *SEMP) handlers(router *mux.Router) {
 }
 
 func (s *SEMP) writeXML(w http.ResponseWriter, msg interface{}) {
-	s.log.TRACE.Printf("send: %+v", msg)
+	s.log.Trace("send: %+v", msg)
 
 	b, err := xml.MarshalIndent(msg, "", "  ")
 	if err != nil {
@@ -499,7 +500,7 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 	var msg EM2Device
 
 	err := xml.NewDecoder(r.Body).Decode(&msg)
-	s.log.TRACE.Printf("recv: %+v", msg)
+	s.log.Trace("recv: %+v", msg)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

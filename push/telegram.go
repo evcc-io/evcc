@@ -54,7 +54,7 @@ func (m *Telegram) trackChats() {
 	for update := range m.bot.GetUpdatesChan(conf) {
 		m.Lock()
 		if _, ok := m.chats[update.Message.Chat.ID]; !ok {
-			log.INFO.Printf("telegram: new chat id: %d", update.Message.Chat.ID)
+			log.Info("telegram: new chat id: %d", update.Message.Chat.ID)
 			// m.chats[update.Message.Chat.ID] = struct{}{}
 		}
 		m.Unlock()
@@ -65,7 +65,7 @@ func (m *Telegram) trackChats() {
 func (m *Telegram) Send(title, msg string) {
 	m.Lock()
 	for chat := range m.chats {
-		log.DEBUG.Printf("telegram: sending to %d", chat)
+		log.Debug("telegram: sending to %d", chat)
 
 		msg := tgbotapi.NewMessage(chat, msg)
 		if _, err := m.bot.Send(msg); err != nil {

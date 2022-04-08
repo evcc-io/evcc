@@ -3,7 +3,7 @@ package service
 import (
 	"net/url"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/evcc-io/evcc/vehicle/vag/aazsproxy"
 )
@@ -11,7 +11,7 @@ import (
 // AAZSTokenSource creates a refreshing token source for use with the AAZS api.
 // Once the AAZS token expires, it is recreated from the token exchanger (either TokenRefreshService or IDK).
 // Return values are the AAZS and token exchanger (TRS or IDK) token sources.
-func AAZSTokenSource(log *util.Logger, tox vag.TokenExchanger, azsConfig string, q url.Values) (vag.TokenSource, vag.TokenSource, error) {
+func AAZSTokenSource(log log.Logger, tox vag.TokenExchanger, azsConfig string, q url.Values) (vag.TokenSource, vag.TokenSource, error) {
 	token, err := tox.Exchange(q)
 	if err != nil {
 		return nil, nil, err

@@ -117,7 +117,7 @@ func (h *Hub) Run(events <-chan Event) {
 			if strings.TrimSpace(msg) != "" {
 				go sender.Send(title, msg)
 			} else {
-				log.DEBUG.Printf("did not send empty message template for %s: %v", ev.Event, err)
+				log.Debug("did not send empty message template for %s: %v", ev.Event, err)
 			}
 		}
 	}

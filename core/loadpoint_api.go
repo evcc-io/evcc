@@ -35,7 +35,7 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 		return
 	}
 
-	lp.log.DEBUG.Printf("set charge mode: %s", string(mode))
+	lp.log.Debug("set charge mode: %s", string(mode))
 
 	// apply immediately
 	if lp.Mode != mode {
@@ -67,7 +67,7 @@ func (lp *LoadPoint) SetTargetSoC(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set target soc:", soc)
+	lp.log.Debug("set target soc:", soc)
 
 	// apply immediately
 	if lp.SoC.Target != soc {
@@ -88,7 +88,7 @@ func (lp *LoadPoint) SetMinSoC(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set min soc:", soc)
+	lp.log.Debug("set min soc:", soc)
 
 	// apply immediately
 	if lp.SoC.Min != soc {
@@ -124,7 +124,7 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Printf("set target charge: %d @ %v", soc, finishAt)
+	lp.log.Debug("set target charge: %d @ %v", soc, finishAt)
 
 	// apply immediately
 	if lp.socTimer.Time != finishAt || lp.SoC.Target != soc {
@@ -151,7 +151,7 @@ func (lp *LoadPoint) RemoteControl(source string, demand loadpoint.RemoteDemand)
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("remote demand:", demand)
+	lp.log.Debug("remote demand:", demand)
 
 	// apply immediately
 	if lp.remoteDemand != demand {
@@ -189,7 +189,7 @@ func (lp *LoadPoint) SetMinCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set min current:", current)
+	lp.log.Debug("set min current:", current)
 
 	if current != lp.MinCurrent {
 		lp.MinCurrent = current
@@ -209,7 +209,7 @@ func (lp *LoadPoint) SetMaxCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set max current:", current)
+	lp.log.Debug("set max current:", current)
 
 	if current != lp.MaxCurrent {
 		lp.MaxCurrent = current

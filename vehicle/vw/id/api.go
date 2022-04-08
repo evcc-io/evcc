@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -34,7 +34,7 @@ const (
 )
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
+func NewAPI(log log.Logger, ts oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}

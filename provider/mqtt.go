@@ -10,7 +10,7 @@ import (
 
 // Mqtt provider
 type Mqtt struct {
-	log      *util.Logger
+	log      log.Logger
 	client   *mqtt.Client
 	topic    string
 	retained bool
@@ -62,7 +62,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 }
 
 // NewMqtt creates mqtt provider for given topic
-func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, timeout time.Duration) *Mqtt {
+func NewMqtt(log log.Logger, client *mqtt.Client, topic string, timeout time.Duration) *Mqtt {
 	m := &Mqtt{
 		log:     log,
 		client:  client,
@@ -107,7 +107,7 @@ func (m *Mqtt) newReceiver() *msgHandler {
 	h := &msgHandler{
 		topic:    m.topic,
 		scale:    m.scale,
-		mux:      util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
+		mux:      util.NewWaiter(m.timeout, func() { m.log.Debug("%s wait for initial value", m.topic) }),
 		pipeline: m.pipeline,
 	}
 

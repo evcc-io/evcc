@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 // Timer is the target charging handler
 type Timer struct {
 	Adapter
-	log       *util.Logger
+	log       log.Logger
 	current   float64
 	SoC       int
 	Time      time.Time
@@ -25,7 +25,7 @@ type Timer struct {
 }
 
 // NewTimer creates a Timer
-func NewTimer(log *util.Logger, api Adapter) *Timer {
+func NewTimer(log log.Logger, api Adapter) *Timer {
 	lp := &Timer{
 		log:     log,
 		Adapter: api,
@@ -61,7 +61,7 @@ func (lp *Timer) Stop() {
 	if lp.active {
 		lp.active = false
 		lp.Publish("targetTimeActive", lp.active)
-		lp.log.DEBUG.Println("target charging: disable")
+		lp.log.Debug("target charging: disable")
 	}
 }
 
@@ -116,14 +116,14 @@ func (lp *Timer) DemandActive() bool {
 	remainingDuration := time.Duration(float64(se.AssumedChargeDuration(lp.SoC, power)) / chargeEfficiency)
 	lp.finishAt = time.Now().Add(remainingDuration).Round(time.Minute)
 
-	lp.log.DEBUG.Printf("estimated charge duration: %v to %d%% at %.0fW", remainingDuration.Round(time.Minute), lp.SoC, power)
+	lp.log.Debug("estimated charge duration: %v to %d%% at %.0fW", remainingDuration.Round(time.Minute), lp.SoC, power)
 	if lp.active {
-		lp.log.DEBUG.Printf("projected end: %v", lp.finishAt)
-		lp.log.DEBUG.Printf("desired finish time: %v", lp.Time)
+		lp.log.Debug("projected end: %v", lp.finishAt)
+		lp.log.Debug("desired finish time: %v", lp.Time)
 		lp.Publish("targetTimeProjectedStart", nil)
 	} else {
 		projectedStart := lp.Time.Add(-remainingDuration)
-		lp.log.DEBUG.Printf("projected start: %v", projectedStart)
+		lp.log.Debug("projected start: %v", projectedStart)
 		lp.Publish("targetTimeProjectedStart", projectedStart)
 	}
 
@@ -142,7 +142,7 @@ func (lp *Timer) DemandActive() bool {
 		lp.Publish("targetTimeActive", lp.active)
 
 		lp.current = lp.GetMaxCurrent()
-		lp.log.INFO.Printf("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
+		lp.log.Info("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
 	}
 
 	return lp.active
@@ -163,7 +163,7 @@ func (lp *Timer) Handle() float64 {
 	}
 
 	lp.current = math.Max(math.Min(lp.current, lp.GetMaxCurrent()), lp.GetMinCurrent())
-	lp.log.DEBUG.Printf("target charging: %s (%.3gA)", action, lp.current)
+	lp.log.Debug("target charging: %s (%.3gA)", action, lp.current)
 
 	return lp.current
 }

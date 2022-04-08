@@ -3,7 +3,7 @@ package service
 import (
 	"net/url"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/evcc-io/evcc/vehicle/vag/mbb"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
@@ -11,7 +11,7 @@ import (
 
 // MbbTokenSource creates a refreshing token source for use with the MBB api.
 // Once the MBB token expires, it is recreated from the token exchanger (either TokenRefreshService or IDK)
-func MbbTokenSource(log *util.Logger, tox vag.TokenExchanger, clientID string, q url.Values, user, password string) (vag.TokenSource, error) {
+func MbbTokenSource(log log.Logger, tox vag.TokenExchanger, clientID string, q url.Values, user, password string) (vag.TokenSource, error) {
 	q, err := vwidentity.Login(log, q, user, password)
 	if err != nil {
 		return nil, err

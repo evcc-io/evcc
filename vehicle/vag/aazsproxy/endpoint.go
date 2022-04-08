@@ -3,7 +3,7 @@ package aazsproxy
 import (
 	"net/http"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"golang.org/x/oauth2"
@@ -19,7 +19,7 @@ type Service struct {
 	*request.Helper
 }
 
-func New(log *util.Logger) *Service {
+func New(log log.Logger) *Service {
 	return &Service{
 		Helper: request.NewHelper(log),
 	}

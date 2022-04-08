@@ -13,11 +13,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/tplink"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 // TPLink charger implementation
 type TPLink struct {
-	log          *util.Logger
+	log          log.Logger
 	uri          string
 	standbypower float64
 }
@@ -205,7 +206,7 @@ func (c *TPLink) execCmd(cmd string, res interface{}) error {
 		key = resp[i]
 		_ = buf.WriteByte(dec)
 	}
-	c.log.TRACE.Printf("recv: %s", buf.String())
+	c.log.Trace("recv: %s", buf.String())
 
 	return json.Unmarshal(buf.Bytes(), res)
 }

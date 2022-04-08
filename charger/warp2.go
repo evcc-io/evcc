@@ -12,12 +12,13 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"golang.org/x/exp/slices"
 )
 
 // Warp2 is the Warp charger v2 firmware implementation
 type Warp2 struct {
-	log           *util.Logger
+	log           log.Logger
 	root          string
 	client        *mqtt.Client
 	features      []string

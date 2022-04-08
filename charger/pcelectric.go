@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/pcelectric"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -15,7 +16,7 @@ import (
 // PCElectric charger implementation
 type PCElectric struct {
 	*request.Helper
-	log *util.Logger
+	log log.Logger
 
 	uri        string // http://garo2216247:8080/servlet
 	slaveIndex int    // 0 = Master, 1..n Slave
@@ -84,7 +85,7 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 	if err := wb.GetJSON(uri, &lbconfig); err == nil {
 		wb.lbmode = lbconfig.MasterLoadBalanced
 		wb.serialNumber = lbconfig.Slaves[wb.slaveIndex].SerialNumber
-		log.DEBUG.Printf("lbmode: %t  serial: %d ", wb.lbmode, wb.serialNumber)
+		log.Debug("lbmode: %t  serial: %d ", wb.lbmode, wb.serialNumber)
 	}
 
 	return wb, nil
@@ -117,7 +118,7 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 		chargeStatus = status[wb.slaveIndex].ChargeStatus
 		sessionStartTime = status[wb.slaveIndex].SessionStartTime
 	}
-	wb.log.DEBUG.Printf("chargeStatus: %d", chargeStatus)
+	wb.log.Debug("chargeStatus: %d", chargeStatus)
 
 	var res api.ChargeStatus
 	switch chargeStatus {

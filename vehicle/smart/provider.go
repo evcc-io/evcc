@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 // https://github.com/TA2k/ioBroker.smart-eq
@@ -15,7 +15,7 @@ type Provider struct {
 	expiry  time.Duration
 }
 
-func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Duration) *Provider {
+func NewProvider(log log.Logger, api *API, vin string, expiry, cache time.Duration) *Provider {
 	v := &Provider{
 		expiry: expiry,
 	}

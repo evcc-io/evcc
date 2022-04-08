@@ -26,7 +26,7 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		inner.ServeHTTP(w, r)
-		log.TRACE.Printf(
+		log.Trace(
 			"%s\t%s\t%s",
 			r.Method,
 			r.RequestURI,

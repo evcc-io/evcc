@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -16,7 +17,7 @@ const (
 
 type stampCollection struct {
 	mu           sync.Mutex
-	log          *util.Logger
+	log          log.Logger
 	AppID, Brand string
 	Stamps       []string
 	Generated    time.Time
@@ -46,7 +47,7 @@ func (c *stampCollection) Get() (string, error) {
 	// download
 	if position >= len(c.Stamps)*9/10 {
 		if time.Since(c.updated) > 15*time.Minute {
-			c.log.TRACE.Printf("retry stamps download, last attempt: %v", c.updated)
+			c.log.Trace("retry stamps download, last attempt: %v", c.updated)
 			if err := c.download(); err != nil {
 				return "", err
 			}

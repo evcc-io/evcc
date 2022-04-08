@@ -26,6 +26,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -35,7 +36,7 @@ import (
 
 // Alfen charger implementation
 type Alfen struct {
-	log     *util.Logger
+	log     log.Logger
 	conn    *modbus.Connection
 	mu      sync.Mutex
 	curr    float64

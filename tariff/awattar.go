@@ -10,12 +10,13 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/awattar"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 )
 
 type Awattar struct {
 	mux   sync.Mutex
-	log   *util.Logger
+	log   log.Logger
 	uri   string
 	cheap float64
 	data  []awattar.PriceInfo

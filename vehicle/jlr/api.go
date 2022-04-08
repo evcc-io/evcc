@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
@@ -23,7 +23,7 @@ type API struct {
 }
 
 // NewAPI creates a new api client
-func NewAPI(log *util.Logger, device string, ts oauth2.TokenSource) *API {
+func NewAPI(log log.Logger, device string, ts oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}

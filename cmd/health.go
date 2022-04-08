@@ -30,7 +30,7 @@ func init() {
 
 func runHealth(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
+	log.Info("evcc %s", server.FormattedVersion())
 
 	u := &httpunix.Transport{
 		DialTimeout:           100 * time.Millisecond,
@@ -51,7 +51,7 @@ func runHealth(cmd *cobra.Command, args []string) {
 		resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
-			log.INFO.Printf("health check ok")
+			log.Info("health check ok")
 			ok = true
 		}
 	}

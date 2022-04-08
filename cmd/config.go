@@ -263,7 +263,7 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 				Path(fmt.Sprintf("/%s/logout", basePath)).
 				HandlerFunc(provider.LogoutHandler())
 
-			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
+			log.Info("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
 		}
 	}
 

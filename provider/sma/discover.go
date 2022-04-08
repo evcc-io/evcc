@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"gitlab.com/bboehmke/sunny"
 )
 
@@ -54,7 +55,7 @@ func GetDiscoverer(iface string) (*Discoverer, error) {
 
 // Discoverer discovers SMA devicesBySerial in background while providing already found devicesBySerial
 type Discoverer struct {
-	log     *util.Logger
+	log     log.Logger
 	conn    *sunny.Connection
 	devices map[uint32]*Device
 	mux     sync.RWMutex
@@ -65,7 +66,7 @@ func (d *Discoverer) createDevice(device *sunny.Device) *Device {
 	return &Device{
 		Device: device,
 		log:    d.log,
-		mux:    util.NewWaiter(udpTimeout, func() { d.log.DEBUG.Println("wait for initial value") }),
+		mux:    util.NewWaiter(udpTimeout, func() { d.log.Debug("wait for initial value") }),
 		values: make(map[sunny.ValueID]interface{}),
 	}
 }

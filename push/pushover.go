@@ -38,7 +38,7 @@ func (m *PushOver) Send(title, msg string) {
 
 	for _, id := range m.recipients {
 		go func(id string) {
-			log.DEBUG.Printf("pushover: sending to %s", id)
+			log.Debug("pushover: sending to %s", id)
 
 			recipient := pushover.NewRecipient(id)
 			if _, err := m.app.SendMessage(message, recipient); err != nil {

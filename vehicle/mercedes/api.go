@@ -3,7 +3,7 @@ package mercedes
 import (
 	"fmt"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -21,7 +21,7 @@ type API struct {
 }
 
 // NewAPI creates a new api client
-func NewAPI(log *util.Logger, identity *Identity, sandbox bool) *API {
+func NewAPI(log log.Logger, identity *Identity, sandbox bool) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}

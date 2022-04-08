@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 const (
@@ -37,14 +37,14 @@ type UDPMsg struct {
 // Listener singleton listens for KEBA UDP messages
 type Listener struct {
 	mux     sync.Mutex
-	log     *util.Logger
+	log     log.Logger
 	conn    *net.UDPConn
 	clients map[string]chan<- UDPMsg
 	cache   map[string]string
 }
 
 // New creates a UDP listener that clients can subscribe to
-func New(log *util.Logger) (*Listener, error) {
+func New(log log.Logger) (*Listener, error) {
 	laddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", Port))
 	if err != nil {
 		return nil, err
@@ -81,12 +81,12 @@ func (l *Listener) listen() {
 	for {
 		read, addr, err := l.conn.ReadFrom(b)
 		if err != nil {
-			l.log.TRACE.Printf("listener: %v", err)
+			l.log.Trace("listener: %v", err)
 			continue
 		}
 
 		body := strings.TrimSpace(string(b[:read]))
-		l.log.TRACE.Printf("recv from %s %v", addr.String(), body)
+		l.log.Trace("recv from %s %v", addr.String(), body)
 
 		msg := UDPMsg{
 			Addr:    addr.String(),
@@ -143,7 +143,7 @@ func (l *Listener) send(msg UDPMsg) {
 			select {
 			case client <- msg:
 			default:
-				l.log.TRACE.Println("recv: listener blocked")
+				l.log.Trace("recv: listener blocked")
 			}
 			break
 		}

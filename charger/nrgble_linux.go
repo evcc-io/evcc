@@ -22,7 +22,7 @@ const nrgTimeout = 10 * time.Second
 
 // NRGKickBLE charger implementation
 type NRGKickBLE struct {
-	log           *util.Logger
+	log           log.Logger
 	timer         *time.Ticker
 	adapter       *adapter.Adapter1
 	agent         *agent.SimpleAgent
@@ -163,7 +163,7 @@ func (nrg *NRGKickBLE) read(service string, res interface{}) error {
 		nrg.close()
 		return err
 	}
-	nrg.log.TRACE.Printf("read %s %0x", service, b)
+	nrg.log.Trace("read %s %0x", service, b)
 
 	return struc.Unpack(bytes.NewReader(b), res)
 }
@@ -173,7 +173,7 @@ func (nrg *NRGKickBLE) write(service string, val interface{}) error {
 	if err := struc.Pack(&out, val); err != nil {
 		return err
 	}
-	nrg.log.TRACE.Printf("write %s %0x", service, out.Bytes())
+	nrg.log.Trace("write %s %0x", service, out.Bytes())
 
 	<-nrg.timer.C
 
@@ -219,7 +219,7 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 		return api.StatusF, err
 	}
 
-	nrg.log.TRACE.Printf("read power: %+v", res)
+	nrg.log.Trace("read power: %+v", res)
 
 	switch res.CPSignal {
 	case 3:
@@ -240,7 +240,7 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 		return false, err
 	}
 
-	nrg.log.TRACE.Printf("read info: %+v", res)
+	nrg.log.Trace("read info: %+v", res)
 
 	// workaround internal NRGkick state change after connecting
 	// https://github.com/evcc-io/evcc/pull/274
@@ -260,7 +260,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 		nrg.pauseCharging = false
 		settings := nrg.mergeSettings(res)
 
-		nrg.log.TRACE.Printf("write settings (workaround): %+v", settings)
+		nrg.log.Trace("write settings (workaround): %+v", settings)
 		if err := nrg.write(nrgble.SettingsService, &settings); err != nil {
 			return err
 		}
@@ -269,7 +269,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 	nrg.pauseCharging = !enable // use cached value to work around API roundtrip delay
 	settings := nrg.mergeSettings(res)
 
-	nrg.log.TRACE.Printf("write settings: %+v", settings)
+	nrg.log.Trace("write settings: %+v", settings)
 
 	return nrg.write(nrgble.SettingsService, &settings)
 }
@@ -284,7 +284,7 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 	nrg.current = int(current) // use cached value to work around API roundtrip delay
 	settings := nrg.mergeSettings(res)
 
-	nrg.log.TRACE.Printf("write settings: %+v", settings)
+	nrg.log.Trace("write settings: %+v", settings)
 
 	return nrg.write(nrgble.SettingsService, &settings)
 }
@@ -298,7 +298,7 @@ func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	nrg.log.TRACE.Printf("read power: %+v", res)
+	nrg.log.Trace("read power: %+v", res)
 
 	return float64(res.TotalPower) * 10, nil
 }
@@ -312,7 +312,7 @@ func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	nrg.log.TRACE.Printf("read energy: %+v", res)
+	nrg.log.Trace("read energy: %+v", res)
 
 	return float64(res.TotalEnergy) / 1000, nil
 }
@@ -326,7 +326,7 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	nrg.log.TRACE.Printf("read voltage/current: %+v", res)
+	nrg.log.Trace("read voltage/current: %+v", res)
 
 	return float64(res.CurrentL1) / 100,
 		float64(res.CurrentL2) / 100,
@@ -341,6 +341,6 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 // 	if err := nrg.read(nrgble.EnergyService, &res); err != nil {
 // 		return 0, err
 // 	}
-// 	nrg.log.TRACE.Printf("energy: %+v", res)
+// 	nrg.log.Trace("energy: %+v", res)
 // 	return float64(res.EnergyLastCharge) / 1000, nil
 // }

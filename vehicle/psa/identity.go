@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -16,7 +16,7 @@ type Identity struct {
 }
 
 // NewIdentity creates PSA identity
-func NewIdentity(log *util.Logger, brand, id, secret string) *Identity {
+func NewIdentity(log log.Logger, brand, id, secret string) *Identity {
 	return &Identity{
 		Helper: request.NewHelper(log),
 		oc: &oauth2.Config{

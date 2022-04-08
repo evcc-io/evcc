@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 const chargeEfficiency = 0.9 // assume charge 90% efficiency
@@ -14,7 +14,7 @@ const chargeEfficiency = 0.9 // assume charge 90% efficiency
 // Estimator provides vehicle soc and charge duration
 // Vehicle SoC can be estimated to provide more granularity
 type Estimator struct {
-	log      *util.Logger
+	log      log.Logger
 	charger  api.Charger
 	vehicle  api.Vehicle
 	estimate bool
@@ -30,7 +30,7 @@ type Estimator struct {
 }
 
 // NewEstimator creates new estimator
-func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool) *Estimator {
+func NewEstimator(log log.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool) *Estimator {
 	s := &Estimator{
 		log:      log,
 		charger:  charger,
@@ -168,7 +168,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 				if err != nil {
 					vcs = ccs // sanitize vehicle errors
 				} else {
-					s.log.DEBUG.Printf("vehicle status: %s", vcs)
+					s.log.Debug("vehicle status: %s", vcs)
 				}
 				invalid = vcs != ccs
 			}
@@ -186,7 +186,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 				if socDiff > 10 && energyDiff > 0 {
 					s.energyPerSocStep = energyDiff / socDiff
 					s.virtualCapacity = s.energyPerSocStep * 100
-					s.log.DEBUG.Printf("soc gradient updated: soc: %.1f%%, socDiff: %.1f%%, energyDiff: %.0fWh, energyPerSocStep: %.1fWh, virtualCapacity: %.0fWh", s.vehicleSoc, socDiff, energyDiff, s.energyPerSocStep, s.virtualCapacity)
+					s.log.Debug("soc gradient updated: soc: %.1f%%, socDiff: %.1f%%, energyDiff: %.0fWh, energyPerSocStep: %.1fWh, virtualCapacity: %.0fWh", s.vehicleSoc, socDiff, energyDiff, s.energyPerSocStep, s.virtualCapacity)
 				}
 			}
 
@@ -195,7 +195,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			s.prevSoc = s.vehicleSoc
 		} else {
 			s.vehicleSoc = math.Min(*fetchedSoC+energyDelta/s.energyPerSocStep, 100)
-			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoC)
+			s.log.Debug("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoC)
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/imdario/mergo"
 	"gitlab.com/bboehmke/sunny"
 )
@@ -14,7 +15,7 @@ import (
 type Device struct {
 	*sunny.Device
 
-	log    *util.Logger
+	log    log.Logger
 	mux    *util.Waiter
 	values map[sunny.ValueID]interface{}
 	once   sync.Once

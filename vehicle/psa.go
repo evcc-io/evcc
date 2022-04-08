@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/vehicle/psa"
 )
 
@@ -61,7 +62,7 @@ type PSA struct {
 }
 
 // newPSA creates a new vehicle
-func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]interface{}) (api.Vehicle, error) {
+func newPSA(log log.Logger, brand, realm, id, secret string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		Credentials         ClientCredentials

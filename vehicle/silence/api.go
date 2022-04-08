@@ -3,7 +3,7 @@ package silence
 import (
 	"errors"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
@@ -14,7 +14,7 @@ type API struct {
 	*request.Helper
 }
 
-func NewAPI(log *util.Logger, identity *Identity) *API {
+func NewAPI(log log.Logger, identity *Identity) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}

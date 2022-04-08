@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/transport"
 )
 
@@ -18,7 +18,7 @@ type Helper struct {
 }
 
 // NewClient creates http client with default transport
-func NewClient(log *util.Logger) *http.Client {
+func NewClient(log log.Logger) *http.Client {
 	return &http.Client{
 		Timeout:   Timeout,
 		Transport: NewTripper(log, transport.Default()),
@@ -26,7 +26,7 @@ func NewClient(log *util.Logger) *http.Client {
 }
 
 // NewHelper creates http helper for simplified PUT GET logic
-func NewHelper(log *util.Logger) *Helper {
+func NewHelper(log log.Logger) *Helper {
 	return &Helper{
 		Client: NewClient(log),
 	}

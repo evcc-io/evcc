@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
@@ -79,7 +79,7 @@ type MobileAPI struct {
 }
 
 // NewAPI creates a new vehicle
-func NewMobileAPI(log *util.Logger, identity oauth2.TokenSource) *MobileAPI {
+func NewMobileAPI(log log.Logger, identity oauth2.TokenSource) *MobileAPI {
 	v := &MobileAPI{
 		Helper: request.NewHelper(log),
 	}

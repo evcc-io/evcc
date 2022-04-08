@@ -11,7 +11,9 @@ import (
 	"strings"
 
 	"context"
-	"github.com/evcc-io/evcc/util"
+
+	"github.com/evcc-io/evcc/util/log"
+
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
@@ -29,7 +31,7 @@ type Identity struct {
 }
 
 // NewIdentity creates Mercedes Benz identity
-func NewIdentity(log *util.Logger, oc *oauth2.Config) *Identity {
+func NewIdentity(log log.Logger, oc *oauth2.Config) *Identity {
 	return &Identity{
 		Helper: request.NewHelper(log),
 		oc:     oc,

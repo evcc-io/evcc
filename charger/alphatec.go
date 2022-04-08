@@ -23,13 +23,14 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // Alphatec charger implementation
 type Alphatec struct {
-	log  *util.Logger
+	log  log.Logger
 	conn *modbus.Connection
 }
 

@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
@@ -22,7 +22,7 @@ type Service struct {
 	clientID string
 }
 
-func New(log *util.Logger, clientID string) *Service {
+func New(log log.Logger, clientID string) *Service {
 	return &Service{
 		Helper:   request.NewHelper(log),
 		clientID: clientID,

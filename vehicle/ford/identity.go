@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -32,7 +32,7 @@ type Identity struct {
 }
 
 // NewIdentity creates Fiat identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log log.Logger, user, password string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
 		user:     user,

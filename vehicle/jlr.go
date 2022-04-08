@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/jlr"
 	"github.com/google/uuid"
@@ -88,7 +89,7 @@ func NewJLRFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, err
 }
 
-func (v *JLR) RegisterDevice(log *util.Logger, user, device string, t jlr.Token) error {
+func (v *JLR) RegisterDevice(log log.Logger, user, device string, t jlr.Token) error {
 	c := request.NewHelper(log)
 
 	data := map[string]string{

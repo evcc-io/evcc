@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
@@ -25,7 +26,7 @@ type API struct {
 
 var Instances = new(sync.Map)
 
-func NewLocal(log *util.Logger, uri string, cache time.Duration) *API {
+func NewLocal(log log.Logger, uri string, cache time.Duration) *API {
 	api := &API{
 		Helper: request.NewHelper(log),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),

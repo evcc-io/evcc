@@ -13,7 +13,7 @@ import (
 	"github.com/cloudfoundry/jibber_jabber"
 	"github.com/evcc-io/evcc/hems/semp"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/exp/slices"
@@ -29,7 +29,7 @@ var lang_en string
 type CmdConfigure struct {
 	configuration Configure
 	localizer     *i18n.Localizer
-	log           *util.Logger
+	log           log.Logger
 
 	lang                                 string
 	advancedMode, expandedMode           bool
@@ -40,12 +40,12 @@ type CmdConfigure struct {
 }
 
 // Run starts the interactive configuration
-func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expandedMode bool) {
+func (c *CmdConfigure) Run(log log.Logger, flagLang string, advancedMode, expandedMode bool) {
 	c.log = log
 	c.advancedMode = advancedMode
 	c.expandedMode = expandedMode
 
-	c.log.INFO.Printf("evcc %s", server.FormattedVersion())
+	c.log.Info("evcc %s", server.FormattedVersion())
 
 	bundle := i18n.NewBundle(language.German)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)

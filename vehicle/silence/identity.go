@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -21,7 +21,7 @@ type Identity struct {
 }
 
 // NewIdentity creates an STS token source
-func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
+func NewIdentity(log log.Logger, user, password string) (*Identity, error) {
 	ctx := context.Background()
 	helper := request.NewHelper(log)
 

@@ -6,12 +6,12 @@ import (
 	"sync"
 
 	"github.com/evcc-io/evcc/detect/tasks"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/fatih/structs"
 	"github.com/jeremywohl/flatten"
 )
 
-func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []tasks.Result) *sync.WaitGroup {
+func workers(log log.Logger, num int, tasks <-chan string, hits chan<- []tasks.Result) *sync.WaitGroup {
 	var wg sync.WaitGroup
 	for i := 0; i < num; i++ {
 		wg.Add(1)
@@ -24,19 +24,19 @@ func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []tasks
 	return &wg
 }
 
-func workunit(log *util.Logger, ips <-chan string, hits chan<- []tasks.Result) {
+func workunit(log log.Logger, ips <-chan string, hits chan<- []tasks.Result) {
 	for ip := range ips {
 		res := taskList.Test(log, "", tasks.ResultDetails{IP: ip})
 		hits <- res
 	}
 }
 
-func Work(log *util.Logger, num int, hosts []string) []tasks.Result {
+func Work(log log.Logger, num int, hosts []string) []tasks.Result {
 	ip := make(chan string)
 	hits := make(chan []tasks.Result)
 	done := make(chan struct{})
 
-	// log.INFO.Println(
+	// log.Info(
 	// 	"\n" +
 	// 		strings.Join(
 	// 			lo.Map(taskList.tasks, func(t tasks.Task) string {

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
@@ -29,7 +29,7 @@ type Identity struct {
 }
 
 // NewIdentity creates BMW identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log log.Logger) *Identity {
 	v := &Identity{
 		Helper: request.NewHelper(log),
 	}

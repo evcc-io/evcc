@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/go-ping/ping"
 )
 
@@ -30,7 +31,7 @@ type PingHandler struct {
 	Timeout time.Duration
 }
 
-func (h *PingHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
+func (h *PingHandler) Test(log log.Logger, in ResultDetails) []ResultDetails {
 	pinger, err := ping.NewPinger(in.IP)
 	if err != nil {
 		panic(err)

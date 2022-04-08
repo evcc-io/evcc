@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type roundTripper struct {
-	log  *util.Logger
+	log  log.Logger
 	base http.RoundTripper
 }
 
@@ -52,7 +52,7 @@ func init() {
 }
 
 // NewTripper creates a logging roundtrip handler
-func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
+func NewTripper(log log.Logger, base http.RoundTripper) http.RoundTripper {
 	tripper := &roundTripper{
 		log:  log,
 		base: base,
@@ -98,7 +98,7 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 }
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
+	r.log.Trace("%s %s", req.Method, req.URL.String())
 
 	// dump without headers
 	var err error
@@ -145,7 +145,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	if bld.Len() > 0 {
-		r.log.TRACE.Println(bld.String())
+		r.log.Trace(bld.String())
 	}
 
 	return resp, err

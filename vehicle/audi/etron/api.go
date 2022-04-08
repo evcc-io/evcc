@@ -3,7 +3,7 @@ package etron
 import (
 	"context"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
 	"github.com/shurcooL/graphql"
@@ -18,7 +18,7 @@ type API struct {
 }
 
 // NewAPI creates a new api client
-func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
+func NewAPI(log log.Logger, ts oauth2.TokenSource) *API {
 	ctx := context.WithValue(
 		context.Background(),
 		oauth2.HTTPClient,

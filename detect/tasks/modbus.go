@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
@@ -74,7 +75,7 @@ type ModbusHandler struct {
 	Timeout  time.Duration
 }
 
-func (h *ModbusHandler) testRegister(log *util.Logger, conn gridx.Client) bool {
+func (h *ModbusHandler) testRegister(log log.Logger, conn gridx.Client) bool {
 	var bytes []byte
 	var err error
 
@@ -112,7 +113,7 @@ func (h *ModbusHandler) testRegister(log *util.Logger, conn gridx.Client) bool {
 	return false
 }
 
-func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, dev *sunspec.SunSpec, mr *ModbusResult) bool {
+func (h *ModbusHandler) testSunSpec(log log.Logger, conn meters.Connection, dev *sunspec.SunSpec, mr *ModbusResult) bool {
 	err := dev.Initialize(conn.ModbusClient())
 	if errors.Is(err, meters.ErrPartiallyOpened) {
 		err = nil
@@ -138,7 +139,7 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 			mr.Point = h.Point
 			mr.Value = res.Value()
 
-			log.DEBUG.Printf("model %d point %s: %v", model, mr.Point, mr.Value)
+			log.Debug("model %d point %s: %v", model, mr.Point, mr.Value)
 
 			if len(h.Invalid) == 0 {
 				return true
@@ -164,14 +165,14 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 				}
 			}
 		} else {
-			log.DEBUG.Printf("model %d: %v", model, err)
+			log.Debug("model %d: %v", model, err)
 		}
 	}
 
 	return false
 }
 
-func (h *ModbusHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
+func (h *ModbusHandler) Test(log log.Logger, in ResultDetails) (res []ResultDetails) {
 	port := in.Port
 	if port == 0 {
 		port = h.Port
@@ -201,10 +202,10 @@ func (h *ModbusHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDe
 
 		var ok bool
 		if h.op.OpCode > 0 {
-			// log.DEBUG.Printf("slave id: %d op: %v", slaveID, h.op)
+			// log.Debug("slave id: %d op: %v", slaveID, h.op)
 			ok = h.testRegister(log, conn.ModbusClient())
 		} else {
-			// log.DEBUG.Printf("slave id: %d models: %v", slaveID, h.Models)
+			// log.Debug("slave id: %d models: %v", slaveID, h.Models)
 			ok = h.testSunSpec(log, conn, dev, &mr)
 		}
 

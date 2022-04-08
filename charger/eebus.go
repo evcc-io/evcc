@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 const (
@@ -20,7 +21,7 @@ const (
 )
 
 type EEBus struct {
-	log           *util.Logger
+	log           log.Logger
 	cc            *communication.ConnectionController
 	lp            loadpoint.API
 	forcePVLimits bool
@@ -74,7 +75,7 @@ func NewEEBus(ski string, forcePVLimits bool) (*EEBus, error) {
 }
 
 func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
-	c.log.TRACE.Println("!! onConnect invoked on ski ", ski)
+	c.log.Trace("!! onConnect invoked on ski ", ski)
 
 	eebusDevice := app.HEMS(server.EEBusInstance.DeviceInfo())
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
@@ -89,7 +90,7 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 }
 
 func (c *EEBus) onDisconnect(ski string) {
-	c.log.TRACE.Println("!! onDisconnect invoked on ski ", ski)
+	c.log.Trace("!! onDisconnect invoked on ski ", ski)
 
 	c.setConnected(false)
 	c.setDefaultValues()
@@ -204,14 +205,14 @@ func isCharging(d communication.EVDataType) bool {
 func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! status: no eebus data available yet")
+		c.log.Trace("!! status: no eebus data available yet")
 		return api.StatusNone, err
 	}
 
 	currentState := data.EVData.ChargeState
 
 	if !c.connected {
-		c.log.TRACE.Printf("!! status: charger reported as disconnected")
+		c.log.Trace("!! status: charger reported as disconnected")
 		return api.StatusNone, fmt.Errorf("charger reported as disconnected")
 	}
 
@@ -254,12 +255,12 @@ func (c *EEBus) Enabled() (bool, error) {
 func (c *EEBus) Enable(enable bool) error {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! enable: no eebus data available yet")
+		c.log.Trace("!! enable: no eebus data available yet")
 		return err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! currents: ev reported as unplugged")
+		c.log.Trace("!! currents: ev reported as unplugged")
 		// if the ev is unplugged, we do not need to disable charging by setting a current of 0 as it already is
 		if !enable {
 			return nil
@@ -271,7 +272,7 @@ func (c *EEBus) Enable(enable bool) error {
 	// if we disable charging with a potential but not yet known communication standard ISO15118
 	// this would set allowed A value to be 0. And this would trigger ISO connections to switch to IEC!
 	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeUnknown {
-		c.log.TRACE.Printf("!! enable: cannot enable or disable as communication standard is not yet known")
+		c.log.Trace("!! enable: cannot enable or disable as communication standard is not yet known")
 		return api.ErrMustRetry
 	}
 
@@ -358,26 +359,26 @@ var _ api.ChargerEx = (*EEBus)(nil)
 func (c *EEBus) MaxCurrentMillis(current float64) error {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! currents: no eebus data available yet")
+		c.log.Trace("!! currents: no eebus data available yet")
 		return err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! currents: ev reported as unplugged")
+		c.log.Trace("!! currents: ev reported as unplugged")
 		return errors.New("can't set new current as ev is unplugged")
 	}
 
 	if data.EVData.LimitsL1.Min == 0 {
-		c.log.TRACE.Println("!! we did not yet receive min and max currents to validate the call of MaxCurrent, use it as is")
+		c.log.Trace("!! we did not yet receive min and max currents to validate the call of MaxCurrent, use it as is")
 	}
 
 	if current < data.EVData.LimitsL1.Min {
-		c.log.TRACE.Printf("!! current value %f is lower than the allowed minimum value %f", current, data.EVData.LimitsL1.Min)
+		c.log.Trace("!! current value %f is lower than the allowed minimum value %f", current, data.EVData.LimitsL1.Min)
 		current = data.EVData.LimitsL1.Min
 	}
 
 	if current > data.EVData.LimitsL1.Max {
-		c.log.TRACE.Printf("!! current value %f is higher than the allowed maximum value %f", current, data.EVData.LimitsL1.Max)
+		c.log.Trace("!! current value %f is higher than the allowed maximum value %f", current, data.EVData.LimitsL1.Max)
 		current = data.EVData.LimitsL1.Max
 	}
 
@@ -385,7 +386,7 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 
 	// TODO error handling
 
-	c.log.TRACE.Printf("!! currents: returning %f", current)
+	c.log.Trace("!! currents: returning %f", current)
 
 	currents := []float64{current, current, current}
 	return c.writeCurrentLimitData(currents)
@@ -397,17 +398,17 @@ var _ api.Meter = (*EEBus)(nil)
 func (c *EEBus) CurrentPower() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! current power: no eebus data available yet")
+		c.log.Trace("!! current power: no eebus data available yet")
 		return 0, err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! current power: ev reported as unplugged")
+		c.log.Trace("!! current power: ev reported as unplugged")
 		return 0, nil
 	}
 
 	power := data.EVData.Measurements.PowerL1 + data.EVData.Measurements.PowerL2 + data.EVData.Measurements.PowerL3
-	c.log.TRACE.Printf("!! current power: returning %f", power)
+	c.log.Trace("!! current power: returning %f", power)
 
 	return power, nil
 }
@@ -418,17 +419,17 @@ var _ api.ChargeRater = (*EEBus)(nil)
 func (c *EEBus) ChargedEnergy() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! charged energy: no eebus data available yet")
+		c.log.Trace("!! charged energy: no eebus data available yet")
 		return 0, err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! charged energy: ev reported as unplugged")
+		c.log.Trace("!! charged energy: ev reported as unplugged")
 		return 0, nil
 	}
 
 	energy := data.EVData.Measurements.ChargedEnergy / 1000
-	c.log.TRACE.Printf("!! charged energy: returning %f", energy)
+	c.log.Trace("!! charged energy: returning %f", energy)
 
 	return energy, nil
 }
@@ -452,16 +453,16 @@ var _ api.MeterCurrent = (*EEBus)(nil)
 func (c *EEBus) Currents() (float64, float64, float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! currents: no eebus data available yet")
+		c.log.Trace("!! currents: no eebus data available yet")
 		return 0, 0, 0, err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! currents: ev reported as unplugged")
+		c.log.Trace("!! currents: ev reported as unplugged")
 		return 0, 0, 0, nil
 	}
 
-	c.log.TRACE.Printf("!! currents: returning %f, %f, %f, ", data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3)
+	c.log.Trace("!! currents: returning %f, %f, %f, ", data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3)
 
 	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
 }
@@ -472,36 +473,36 @@ var _ api.Identifier = (*EEBus)(nil)
 func (c *EEBus) Identify() (string, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! identify: no eebus data available yet")
+		c.log.Trace("!! identify: no eebus data available yet")
 		return "", err
 	}
 
 	if !c.connected {
-		c.log.TRACE.Printf("!! identify: charger reported as disconnected")
+		c.log.Trace("!! identify: charger reported as disconnected")
 		return "", nil
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged || data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnknown {
-		c.log.TRACE.Printf("!! identify: ev reported as unplugged or unknown")
+		c.log.Trace("!! identify: ev reported as unplugged or unknown")
 		return "", nil
 	}
 
 	if len(data.EVData.Identification) > 0 {
-		c.log.TRACE.Printf("!! identify: returning %s", data.EVData.Identification)
+		c.log.Trace("!! identify: returning %s", data.EVData.Identification)
 		return data.EVData.Identification, nil
 	}
 
 	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeIEC61851 {
-		c.log.TRACE.Printf("!! identify: ev communication is IEC61851 which does not support any identification")
+		c.log.Trace("!! identify: ev communication is IEC61851 which does not support any identification")
 		return "", nil
 	}
 
 	if time.Since(c.evConnectedTime) < maxIdRequestTimespan {
-		c.log.TRACE.Printf("!! identify: returning nothing, retry")
+		c.log.Trace("!! identify: returning nothing, retry")
 		return "", api.ErrMustRetry
 	}
 
-	c.log.TRACE.Printf("!! identify: returning nothing, no more retries")
+	c.log.Trace("!! identify: returning nothing, no more retries")
 	return "", nil
 }
 
@@ -511,16 +512,16 @@ var _ api.Battery = (*EEBus)(nil)
 func (c *EEBus) SoC() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! soc: no eebus data available yet")
+		c.log.Trace("!! soc: no eebus data available yet")
 		return 0, api.ErrMustRetry
 	}
 
 	if !data.EVData.UCSoCAvailable || !data.EVData.SoCDataAvailable {
-		c.log.TRACE.Printf("!! soc: feature not available")
+		c.log.Trace("!! soc: feature not available")
 		return 0, api.ErrNotAvailable
 	}
 
-	c.log.TRACE.Printf("!! soc: returning %f", data.EVData.Measurements.SoC)
+	c.log.Trace("!! soc: returning %f", data.EVData.Measurements.SoC)
 	return data.EVData.Measurements.SoC, nil
 }
 

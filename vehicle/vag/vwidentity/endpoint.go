@@ -10,6 +10,7 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
@@ -29,10 +30,10 @@ var Config = &oidc.ProviderConfig{
 }
 
 // Login performs VW identity login with optional code challenge
-func Login(log *util.Logger, q url.Values, user, password string) (url.Values, error) {
+func Login(log log.Logger, q url.Values, user, password string) (url.Values, error) {
 	return LoginWithAuthURL(log, Config.AuthURL, q, user, password)
 }
-func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password string) (url.Values, error) {
+func LoginWithAuthURL(log log.Logger, uri string, q url.Values, user, password string) (url.Values, error) {
 	var verify func(url.Values)
 
 	// add code challenge
@@ -60,7 +61,7 @@ type Service struct {
 	*request.Helper
 }
 
-func New(log *util.Logger) *Service {
+func New(log log.Logger) *Service {
 	return &Service{
 		Helper: request.NewHelper(log),
 	}

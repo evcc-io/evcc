@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/itchyny/gojq"
 )
 
@@ -65,7 +66,7 @@ type HttpHandler struct {
 	Timeout              time.Duration
 }
 
-func (h *HttpHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
+func (h *HttpHandler) Test(log log.Logger, in ResultDetails) []ResultDetails {
 	port := in.Port
 	if port == 0 {
 		port = h.Port
