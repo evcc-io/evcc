@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	loggers = map[string]*Logger{}
+	loggers = map[string]*logger{}
 	levels  = map[string]jww.Threshold{}
 
 	loggersMux sync.Mutex
@@ -27,14 +27,23 @@ var (
 // LogAreaPadding of log areas
 var LogAreaPadding = 6
 
-// Logger wraps a jww notepad to avoid leaking implementation detail
-type Logger struct {
-	*jww.Notepad
+type Logger interface {
+	Trace(fmt string, args ...interface{})
+	Debug(fmt string, args ...interface{})
+	Info(fmt string, args ...interface{})
+	Error(fmt string, args ...interface{})
+}
+
+var _ Logger = (*logger)(nil)
+
+// logger wraps a jww notepad to avoid leaking implementation detail
+type logger struct {
+	np *jww.Notepad
 	*Redactor
 }
 
 // NewLogger creates a logger with the given log area and adds it to the registry
-func NewLogger(area string) *Logger {
+func NewLogger(area string) *logger {
 	loggersMux.Lock()
 	defer loggersMux.Unlock()
 
@@ -51,8 +60,8 @@ func NewLogger(area string) *Logger {
 	redactor := new(Redactor)
 	notepad := jww.NewNotepad(level, level, redactor, io.Discard, padded, log.Ldate|log.Ltime)
 
-	logger := &Logger{
-		Notepad:  notepad,
+	logger := &logger{
+		np:       notepad,
 		Redactor: redactor,
 	}
 
@@ -61,14 +70,27 @@ func NewLogger(area string) *Logger {
 	return logger
 }
 
+func (l *logger) Trace(fmt string, args ...interface{}) {
+	l.np.TRACE.Printf(fmt, args...)
+}
+func (l *logger) Debug(fmt string, args ...interface{}) {
+	l.np.DEBUG.Printf(fmt, args...)
+}
+func (l *logger) Info(fmt string, args ...interface{}) {
+	l.np.INFO.Printf(fmt, args...)
+}
+func (l *logger) Error(fmt string, args ...interface{}) {
+	l.np.ERROR.Printf(fmt, args...)
+}
+
 // Redact adds items for redaction
-func (l *Logger) Redact(items ...string) *Logger {
+func (l *logger) Redact(items ...string) *logger {
 	l.Redactor.Redact(items...)
 	return l
 }
 
 // Loggers invokes callback for each configured logger
-func Loggers(cb func(string, *Logger)) {
+func Loggers(cb func(string, *logger)) {
 	for name, logger := range loggers {
 		cb(name, logger)
 	}
@@ -95,8 +117,8 @@ func LogLevel(defaultLevel string, areaLevels map[string]string) {
 		levels[area] = LogLevelToThreshold(level)
 	}
 
-	Loggers(func(name string, logger *Logger) {
-		logger.SetStdoutThreshold(LogLevelForArea(name))
+	Loggers(func(name string, logger *logger) {
+		logger.np.SetStdoutThreshold(LogLevelForArea(name))
 	})
 }
 
@@ -144,9 +166,9 @@ func CaptureLogs(c chan<- Param) {
 	uiChan = c
 
 	for _, l := range loggers {
-		captureLogger("warn", l.Notepad.WARN)
-		captureLogger("error", l.Notepad.ERROR)
-		captureLogger("error", l.Notepad.FATAL)
+		captureLogger("warn", l.np.WARN)
+		captureLogger("error", l.np.ERROR)
+		captureLogger("error", l.np.FATAL)
 	}
 }
 
