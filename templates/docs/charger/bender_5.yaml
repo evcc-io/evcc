@@ -1,0 +1,11 @@
+product:
+  brand: Ebee
+  description: Wallbox
+description: |
+  Der Modbus Server muss aktiviert sein. 'Modbus Slave Register Address Set' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender' etc. ist richtig.
+render:
+  - default: |
+      type: template
+      template: bender
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional
