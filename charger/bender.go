@@ -233,12 +233,26 @@ var _ api.Identifier = (*BenderCC)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *BenderCC) Identify() (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
+	b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
 	if err != nil {
 		return "", err
 	}
 
-	return string(b), nil
+	if binary.BigEndian.Uint16(b) != 0 {
+		e, err := wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
+		if err != nil {
+			return "", err
+		}
+
+		return string(e), nil
+	}
+
+	u, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
+	if err != nil {
+		return "", err
+	}
+
+	return string(u), nil
 }
 
 var _ api.Diagnosis = (*BenderCC)(nil)
