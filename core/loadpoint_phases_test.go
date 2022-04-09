@@ -9,7 +9,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/mock"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/golang/mock/gomock"
 )
 
@@ -118,7 +118,7 @@ func TestPvScalePhases(t *testing.T) {
 		vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 		lp := &LoadPoint{
-			log:         util.NewLogger("foo"),
+			log:         log.NewLogger("foo"),
 			bus:         evbus.New(),
 			clock:       clock,
 			chargeMeter: &Null{},            // silence nil panics
@@ -284,7 +284,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		clock.Add(time.Hour) // avoid time.IsZero
 
 		lp := &LoadPoint{
-			log:            util.NewLogger("foo"),
+			log:            log.NewLogger("foo"),
 			clock:          clock,
 			charger:        charger,
 			MinCurrent:     minA,

@@ -51,7 +51,7 @@ func NewBlueprintFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewBlueprint creates Blueprint charger
 func NewBlueprint(uri string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("foo")
+	log := log.NewLogger("foo")
 
 	wb := &Blueprint{
 		Helper: request.NewHelper(log),

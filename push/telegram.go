@@ -21,7 +21,7 @@ type telegramConfig struct {
 
 func init() {
 	if err := tgbotapi.SetLogger(log.ERROR); err != nil {
-		log.ERROR.Printf("telegram: %v", err)
+		log.Error("telegram: %v", err)
 	}
 }
 
@@ -69,7 +69,7 @@ func (m *Telegram) Send(title, msg string) {
 
 		msg := tgbotapi.NewMessage(chat, msg)
 		if _, err := m.bot.Send(msg); err != nil {
-			log.ERROR.Print(err)
+			log.Error(err)
 		}
 	}
 	m.Unlock()

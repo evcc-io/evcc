@@ -57,7 +57,7 @@ func runHealth(cmd *cobra.Command, args []string) {
 	}
 
 	if !ok {
-		log.ERROR.Printf("health check failed")
+		log.Error("health check failed")
 		os.Exit(1)
 	}
 }

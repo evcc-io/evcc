@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/charger/echarge/ecb1"
 	"github.com/evcc-io/evcc/meter/obis"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -69,7 +70,7 @@ func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) 
 
 // NewHardyBarth creates HardyBarth charger
 func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
-	log := util.NewLogger("ecb1")
+	log := log.NewLogger("ecb1")
 
 	uri = strings.TrimSuffix(uri, "/") + "/api/v1"
 

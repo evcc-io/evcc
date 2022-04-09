@@ -39,7 +39,7 @@ func (m *Shoutrrr) Send(title, msg string) {
 
 	for _, err := range m.app.Send(msg, params) {
 		if err != nil {
-			log.ERROR.Printf("shoutrrr: %v", err)
+			log.Error("shoutrrr: %v", err)
 		}
 	}
 }

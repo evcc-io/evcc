@@ -83,8 +83,8 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("vestel")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("vestel")
+	conn.Trace(log)
 
 	wb := &Vestel{
 		log:     log,
@@ -106,7 +106,7 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 func (wb *Vestel) heartbeat() {
 	for range time.NewTicker(time.Minute).C {
 		if _, err := wb.conn.WriteSingleRegister(vestelRegAlive, 1); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
+			wb.log.Error("heartbeat:", err)
 		}
 	}
 }

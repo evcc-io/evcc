@@ -57,7 +57,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		uri = strings.TrimSuffix(uri, suffix)
 	}
 
-	log := util.NewLogger("shelly")
+	log := log.NewLogger("shelly")
 	client := request.NewHelper(log)
 
 	// Shelly Gen1 and Gen2 families expose the /shelly endpoint

@@ -8,12 +8,11 @@ import (
 	"github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 )
 
 var (
 	bus = EventBus.New()
-	log = util.NewLogger("cache")
+	log = log.NewLogger("cache")
 )
 
 const reset = "reset"

@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/vehicle/nissan"
 )
 
@@ -51,7 +52,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("nissan").Redact(cc.User, cc.Password, cc.VIN)
+	log := log.NewLogger("nissan").Redact(cc.User, cc.Password, cc.VIN)
 	identity := nissan.NewIdentity(log)
 
 	err := identity.Login(cc.User, cc.Password)

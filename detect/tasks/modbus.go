@@ -188,7 +188,7 @@ func (h *ModbusHandler) Test(log log.Logger, in ResultDetails) (res []ResultDeta
 
 	defer conn.Close()
 
-	conn.Logger(log.TRACE)
+	conn.Trace(log)
 	conn.Timeout(h.Timeout)
 
 	for _, slaveID := range h.IDs {

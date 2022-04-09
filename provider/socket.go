@@ -52,11 +52,11 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		return nil, err
 	}
 
-	log := util.NewLogger("ws")
+	log := log.NewLogger("ws")
 
 	url := util.DefaultScheme(cc.URI, "ws")
 	if url != cc.URI {
-		log.WARN.Printf("missing scheme for %s, assuming ws", cc.URI)
+		log.Warn("missing scheme for %s, assuming ws", cc.URI)
 	}
 
 	p := &Socket{
@@ -109,7 +109,7 @@ func (p *Socket) listen() {
 	for {
 		client, _, err := dialer.Dial(p.url, headers)
 		if err != nil {
-			p.log.ERROR.Println(err)
+			p.log.Error(err)
 			time.Sleep(retryDelay)
 			continue
 		}

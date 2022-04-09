@@ -1,6 +1,7 @@
 package tasks
 
 import (
+	"os"
 	"runtime"
 	"time"
 
@@ -46,16 +47,16 @@ func (h *PingHandler) Test(log log.Logger, in ResultDetails) []ResultDetails {
 	pinger.Timeout = h.Timeout
 
 	if err = pinger.Run(); err != nil {
-		log.FATAL.Println("ping:", err)
+		log.Error("ping:", err)
 
 		if runtime.GOOS != "windows" {
-			log.FATAL.Println("")
-			log.FATAL.Println("In order to run evcc in discovery mode, make sure to allow ping:")
-			log.FATAL.Println("")
-			log.FATAL.Println("	sudo sysctl -w net.ipv4.ping_group_range=\"0 2147483647\"")
+			log.Error("")
+			log.Error("In order to run evcc in discovery mode, make sure to allow ping:")
+			log.Error("")
+			log.Error("	sudo sysctl -w net.ipv4.ping_group_range=\"0 2147483647\"")
 		}
 
-		log.FATAL.Fatalln("")
+		os.Exit(1)
 	}
 
 	stat := pinger.Statistics()

@@ -93,7 +93,7 @@ func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP
 
 	s := &SEMP{
 		doneC:        make(chan struct{}),
-		log:          util.NewLogger("semp"),
+		log:          log.NewLogger("semp"),
 		site:         site,
 		uid:          uid.String(),
 		vid:          cc.VendorID,
@@ -118,7 +118,7 @@ func (s *SEMP) advertise(st, usn string) *ssdp.Advertiser {
 	descriptor := s.hostURI + basePath + "/description.xml"
 	ad, err := ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 	if err != nil {
-		s.log.ERROR.Println(err)
+		s.log.Error(err)
 	}
 	return ad
 }
@@ -145,7 +145,7 @@ ANNOUNCE:
 		case <-ticker.C:
 			for _, ad := range ads {
 				if err := ad.Alive(); err != nil {
-					s.log.ERROR.Println(err)
+					s.log.Error(err)
 				}
 			}
 		case <-s.closeC:
@@ -155,7 +155,7 @@ ANNOUNCE:
 
 	for _, ad := range ads {
 		if err := ad.Bye(); err != nil {
-			s.log.ERROR.Println(err)
+			s.log.Error(err)
 		}
 	}
 
@@ -185,11 +185,11 @@ func (s *SEMP) callbackURI() string {
 	if len(ips) > 0 {
 		ip = ips[0].IP.String()
 	} else {
-		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
+		s.log.Error("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
 	}
 
 	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseURLEnv, uri)
+	s.log.Warn("%s unspecified, using %s instead", sempBaseURLEnv, uri)
 
 	return uri
 }

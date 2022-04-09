@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -72,8 +73,14 @@ func (mb *Connection) ConnectDelay(delay time.Duration) {
 }
 
 // Logger sets logger implementation
+// TODO remove
 func (mb *Connection) Logger(logger meters.Logger) {
 	mb.conn.Logger(logger)
+}
+
+// Logger sets logger implementation
+func (mb *Connection) Trace(l log.Logger) {
+	mb.conn.Logger(log.PrintfAdapter(l))
 }
 
 // Timeout sets the connection timeout (not idle timeout)

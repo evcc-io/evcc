@@ -48,7 +48,7 @@ func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewTPLink creates TP-Link charger
 func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 	c := &TPLink{
-		log:          util.NewLogger("tplink"),
+		log:          log.NewLogger("tplink"),
 		uri:          net.JoinHostPort(uri, "9999"),
 		standbypower: standbypower,
 	}

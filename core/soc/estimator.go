@@ -82,7 +82,7 @@ func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) 
 			}
 
 			if !errors.Is(err, api.ErrNotAvailable) {
-				s.log.WARN.Printf("updating remaining time failed: %v", err)
+				s.log.Warn("updating remaining time failed: %v", err)
 			}
 		}
 
@@ -121,7 +121,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 
 				// recover from temporary api errors
 				f = s.prevSoc
-				s.log.WARN.Printf("vehicle soc (charger): %v (ignored by estimator)", err)
+				s.log.Warn("vehicle soc (charger): %v (ignored by estimator)", err)
 			}
 
 			fetchedSoC = &f
@@ -144,7 +144,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 
 			// recover from temporary api errors
 			f = s.prevSoc
-			s.log.WARN.Printf("vehicle soc: %v (ignored by estimator)", err)
+			s.log.Warn("vehicle soc: %v (ignored by estimator)", err)
 		}
 
 		fetchedSoC = &f

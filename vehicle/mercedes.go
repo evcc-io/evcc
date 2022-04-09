@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/vehicle/mercedes"
 )
 
@@ -52,7 +53,7 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	// 	}))
 	// }
 
-	log := util.NewLogger("mercedes")
+	log := log.NewLogger("mercedes")
 
 	// TODO session secret from config/persistence
 	identity, err := mercedes.NewIdentity(log, cc.ClientID, cc.ClientSecret, options...)

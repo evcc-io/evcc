@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/log"
+	elog "github.com/evcc-io/evcc/util/log"
 	"gitlab.com/bboehmke/sunny"
 )
 
@@ -24,9 +25,9 @@ var once sync.Once
 // GetDiscoverer fo the given interface
 func GetDiscoverer(iface string) (*Discoverer, error) {
 	// on time initialization of sunny logger
-	log := util.NewLogger("sma")
+	log := elog.NewLogger("sma")
 	once.Do(func() {
-		sunny.Log = log.TRACE
+		sunny.Log = elog.PrintfAdapter(log)
 	})
 
 	discoverersMutex.Lock()

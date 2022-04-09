@@ -33,7 +33,7 @@ type Influx struct {
 
 // NewInfluxClient creates new publisher for influx
 func NewInfluxClient(url, token, org, user, password, database string) *Influx {
-	log := util.NewLogger("influx")
+	log := log.NewLogger("influx")
 
 	// InfluxDB v1 compatibility
 	if token == "" && user != "" {
@@ -79,7 +79,7 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 	// log errors
 	go func() {
 		for err := range writer.Errors() {
-			m.log.ERROR.Println(err)
+			m.log.Error(err)
 		}
 	}()
 

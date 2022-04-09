@@ -81,8 +81,8 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alfen")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("alfen")
+	conn.Trace(log)
 
 	wb := &Alfen{
 		log:  log,
@@ -105,7 +105,7 @@ func (wb *Alfen) heartbeat() {
 		wb.mu.Unlock()
 
 		if err := wb.setCurrent(curr); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
+			wb.log.Error("heartbeat:", err)
 		}
 	}
 }

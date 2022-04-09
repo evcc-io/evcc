@@ -73,7 +73,7 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewWarp creates a new configurable charger
 func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, error) {
-	log := util.NewLogger("warp")
+	log := log.NewLogger("warp")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
 	if err != nil {

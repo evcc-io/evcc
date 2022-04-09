@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -26,11 +25,11 @@ type stampCollection struct {
 }
 
 var (
-	client = request.NewHelper(util.NewLogger("http"))
+	client = request.NewHelper(log.NewLogger("http"))
 
 	Stamps = map[string]*stampCollection{
-		KiaAppID:     {log: util.NewLogger("kia"), AppID: KiaAppID, Brand: "kia"},
-		HyundaiAppID: {log: util.NewLogger("hyundai"), AppID: HyundaiAppID, Brand: "hyundai"},
+		KiaAppID:     {log: log.NewLogger("kia"), AppID: KiaAppID, Brand: "kia"},
+		HyundaiAppID: {log: log.NewLogger("hyundai"), AppID: HyundaiAppID, Brand: "hyundai"},
 	}
 )
 

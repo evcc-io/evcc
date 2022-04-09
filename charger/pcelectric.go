@@ -62,7 +62,7 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 
 // NewPCElectric creates PCElectric charger
 func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error) {
-	log := util.NewLogger("pce")
+	log := log.NewLogger("pce")
 	uri = strings.TrimSuffix(strings.TrimRight(uri, "/"), "/servlet") + "/servlet/rest/chargebox"
 
 	if !sponsor.IsAuthorized() {

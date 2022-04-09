@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	log     = util.NewLogger("main")
+	log     = log.NewLogger("main")
 	cfgFile string
 
 	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
@@ -136,7 +136,7 @@ func run(cmd *cobra.Command, args []string) {
 	// load config and re-configure logging after reading config file
 	conf, err := loadConfigFile(cfgFile)
 	if err != nil {
-		log.ERROR.Println("missing evcc config - switching into demo mode")
+		log.Error("missing evcc config - switching into demo mode")
 		conf = demoConfig()
 	}
 
@@ -191,7 +191,7 @@ func run(cmd *cobra.Command, args []string) {
 			if zc, err := zeroconf.RegisterProxy("evcc Website", "_http._tcp", "local.", portInt, "evcc", nil, []string{}, nil); err == nil {
 				shutdown.Register(zc.Shutdown)
 			} else {
-				log.ERROR.Printf("mDNS announcement: %s", err)
+				log.Error("mDNS announcement: %s", err)
 			}
 		}
 	}

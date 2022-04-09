@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/skoda"
 	"github.com/evcc-io/evcc/vehicle/skoda/connect"
@@ -44,7 +45,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	var err error
-	log := util.NewLogger("enyaq").Redact(cc.User, cc.Password, cc.VIN)
+	log := log.NewLogger("enyaq").Redact(cc.User, cc.Password, cc.VIN)
 
 	// use Skoda credentials to resolve list of vehicles
 	ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)

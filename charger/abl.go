@@ -25,6 +25,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -104,8 +105,8 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("abl")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("abl")
+	conn.Trace(log)
 
 	wb := &ABLeMH{
 		conn: conn,

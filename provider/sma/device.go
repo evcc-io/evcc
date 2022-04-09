@@ -27,7 +27,7 @@ func (d *Device) StartUpdateLoop() {
 		go func() {
 			for range time.NewTicker(time.Second * 5).C {
 				if err := d.UpdateValues(); err != nil {
-					d.log.ERROR.Println(err)
+					d.log.Error(err)
 				}
 			}
 		}()
@@ -81,7 +81,7 @@ func AsFloat(value interface{}) float64 {
 	case nil:
 		return 0
 	default:
-		util.NewLogger("sma").WARN.Printf("unknown value type: %T", value)
+		log.NewLogger("sma").Warn("unknown value type: %T", value)
 		return 0
 	}
 }

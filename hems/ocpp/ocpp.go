@@ -38,7 +38,7 @@ func New(conf map[string]interface{}, site site.API) (*OCPP, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ocpp")
+	log := log.NewLogger("ocpp")
 
 	if cc.StationID == "" {
 		id, err := machineid.ProtectedID("evcc-ocpp")
@@ -74,7 +74,7 @@ func New(conf map[string]interface{}, site site.API) (*OCPP, error) {
 // errorHandler logs error channel
 func (s *OCPP) errorHandler(errC <-chan error) {
 	for err := range errC {
-		s.log.ERROR.Println(err)
+		s.log.Error(err)
 	}
 }
 
@@ -91,7 +91,7 @@ func (s *OCPP) Run() {
 
 			s.log.Debug("send: lp-%d status: %+v", connector, status)
 			if _, err := s.cp.StatusNotification(connector, ocppcore.NoError, status); err != nil {
-				s.log.ERROR.Printf("lp-%d: %v", connector, err)
+				s.log.Error("lp-%d: %v", connector, err)
 			}
 		}
 

@@ -27,6 +27,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
@@ -103,8 +104,8 @@ func NewWebastoLive(uri string, id uint8) (api.Charger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("webast")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("webast")
+	conn.Trace(log)
 
 	wb := &WebastoLive{
 		conn:    conn,

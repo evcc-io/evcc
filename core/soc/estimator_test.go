@@ -7,7 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/mock"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/golang/mock/gomock"
 )
 
@@ -18,7 +18,7 @@ func TestRemainingChargeDuration(t *testing.T) {
 	//9 kWh userBatCap => 10 kWh virtualBatCap
 	vehicle.EXPECT().Capacity().Return(int64(9))
 
-	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
+	ce := NewEstimator(log.NewLogger("foo"), charger, vehicle, false)
 	ce.vehicleSoc = 20.0
 
 	chargePower := 1000.0
@@ -43,7 +43,7 @@ func TestSoCEstimation(t *testing.T) {
 	var capacity int64 = 9
 	vehicle.EXPECT().Capacity().Return(capacity)
 
-	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
+	ce := NewEstimator(log.NewLogger("foo"), charger, vehicle, true)
 	ce.vehicleSoc = 0.0
 
 	tc := []struct {
@@ -127,7 +127,7 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 	var capacity int64 = 9
 	vehicle.EXPECT().Capacity().Return(capacity)
 
-	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
+	ce := NewEstimator(log.NewLogger("foo"), charger, vehicle, true)
 	ce.vehicleSoc = 20.0
 
 	tc := []struct {

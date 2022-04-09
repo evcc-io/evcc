@@ -24,6 +24,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -77,8 +78,8 @@ func NewAmtron(uri string, slaveID uint8) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("amtron")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("amtron")
+	conn.Trace(log)
 
 	wb := &Amtron{
 		conn: conn,

@@ -79,8 +79,8 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 		conn.ConnectDelay(cc.ConnectDelay)
 	}
 
-	log := util.NewLogger("modbus")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("modbus")
+	conn.Trace(log)
 
 	var device meters.Device
 	var op modbus.Operation
@@ -90,7 +90,7 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 	}
 
 	if cc.Value == "" && cc.Register.Decode == "" {
-		log.WARN.Println("missing modbus value or register - assuming Power")
+		log.Warn("missing modbus value or register - assuming Power")
 		cc.Value = "Power"
 	}
 

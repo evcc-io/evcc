@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/niu"
 )
@@ -48,7 +49,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing user, password or serial")
 	}
 
-	log := util.NewLogger("niu").Redact(cc.User, cc.Password)
+	log := log.NewLogger("niu").Redact(cc.User, cc.Password)
 
 	v := &Niu{
 		embed:    &cc.embed,

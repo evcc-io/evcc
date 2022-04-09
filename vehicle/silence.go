@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/vehicle/silence"
 )
 
@@ -40,7 +41,7 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing user or password")
 	}
 
-	log := util.NewLogger("s01").Redact(cc.User, cc.Password)
+	log := log.NewLogger("s01").Redact(cc.User, cc.Password)
 
 	v := &Silence{
 		embed: &cc.embed,

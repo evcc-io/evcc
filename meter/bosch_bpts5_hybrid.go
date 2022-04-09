@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/bosch"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 // Example config:
@@ -69,7 +70,7 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
 func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, error) {
-	log := util.NewLogger("bosch-bpt")
+	log := log.NewLogger("bosch-bpt")
 
 	instance, exists := bosch.Instances.LoadOrStore(uri, bosch.NewLocal(log, uri, cache))
 	if !exists {

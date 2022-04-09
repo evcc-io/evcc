@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/vehicle/mb"
 	"github.com/evcc-io/evcc/vehicle/smart"
 )
@@ -37,7 +38,7 @@ func NewSmartFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("smart").Redact(cc.User, cc.Password, cc.VIN)
+	log := log.NewLogger("smart").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Smart{
 		embed: &cc.embed,

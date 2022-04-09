@@ -68,8 +68,8 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alpha")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("alpha")
+	conn.Trace(log)
 
 	wb := &Alphatec{
 		log:  log,

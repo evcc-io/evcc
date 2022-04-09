@@ -24,6 +24,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -83,8 +84,8 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("heidel")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("heidel")
+	conn.Trace(log)
 
 	wb := &HeidelbergEC{
 		conn:    conn,

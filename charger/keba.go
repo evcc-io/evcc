@@ -74,7 +74,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewKeba creates a new charger
 func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (*Keba, error) {
-	log := util.NewLogger("keba")
+	log := log.NewLogger("keba")
 
 	if keba.Instance == nil {
 		var err error
@@ -184,7 +184,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 	}
 
 	if kr.AuthON == 1 && c.rfid.Tag == "" {
-		c.log.WARN.Println("missing credentials for RFID authorization")
+		c.log.Warn("missing credentials for RFID authorization")
 	}
 
 	if kr.Plug < 5 {

@@ -37,7 +37,7 @@ func indexHandler(site site.API) http.HandlerFunc {
 			"Commit":     Commit,
 			"Configured": len(site.LoadPoints()),
 		}); err != nil {
-			log.ERROR.Println("httpd: failed to render main page:", err.Error())
+			log.Error("httpd: failed to render main page:", err.Error())
 		}
 	})
 }
@@ -52,7 +52,7 @@ func jsonHandler(h http.Handler) http.Handler {
 
 func jsonWrite(w http.ResponseWriter, content interface{}) {
 	if err := json.NewEncoder(w).Encode(content); err != nil {
-		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
+		log.Error("httpd: failed to encode JSON: %v", err)
 	}
 }
 

@@ -76,7 +76,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// authenticated http client with logging injected to the tronity client
-	log := util.NewLogger("tronity").Redact(cc.Credentials.ID, cc.Credentials.Secret)
+	log := log.NewLogger("tronity").Redact(cc.Credentials.ID, cc.Credentials.Secret)
 
 	oc, err := tronity.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret)
 	if err != nil {

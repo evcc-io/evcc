@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
@@ -46,8 +47,8 @@ func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("cfos")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("cfos")
+	conn.Trace(log)
 
 	wb := &CfosPowerBrain{
 		conn: conn,

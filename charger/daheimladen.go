@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/daheimladen"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -43,7 +44,7 @@ func NewDaheimLadenFromConfig(other map[string]interface{}) (api.Charger, error)
 // NewDaheimLaden creates DaheimLaden charger
 func NewDaheimLaden(token string, stationID string) (*DaheimLaden, error) {
 	c := &DaheimLaden{
-		Helper:      request.NewHelper(util.NewLogger("daheim")),
+		Helper:      request.NewHelper(log.NewLogger("daheim")),
 		stationID:   stationID,
 		connectorID: 1,
 		idTag:       daheimladen.EVCC_IDTAG,

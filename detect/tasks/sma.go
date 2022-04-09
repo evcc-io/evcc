@@ -71,7 +71,7 @@ func (h *SMAHandler) Test(log log.Logger, in ResultDetails) (res []ResultDetails
 
 	connection, err := sunny.NewConnection("")
 	if err != nil {
-		log.ERROR.Println("sma:", err)
+		log.Error("sma:", err)
 		return nil
 	}
 

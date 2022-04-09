@@ -41,7 +41,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("mqtt")
+	log := log.NewLogger("mqtt")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/golang/mock/gomock"
 )
 
@@ -69,7 +70,7 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 }
 
 func TestNew(t *testing.T) {
-	lp := NewLoadPoint(util.NewLogger("foo"))
+	lp := NewLoadPoint(log.NewLogger("foo"))
 
 	if lp.Phases != 3 {
 		t.Errorf("Phases %v", lp.Phases)
@@ -144,7 +145,7 @@ func TestUpdatePowerZero(t *testing.T) {
 		charger := mock.NewMockCharger(ctrl)
 
 		lp := &LoadPoint{
-			log:         util.NewLogger("foo"),
+			log:         log.NewLogger("foo"),
 			bus:         evbus.New(),
 			clock:       clck,
 			charger:     charger,
@@ -297,7 +298,7 @@ func TestPVHysteresis(t *testing.T) {
 
 			Voltage = 100
 			lp := &LoadPoint{
-				log:            util.NewLogger("foo"),
+				log:            log.NewLogger("foo"),
 				clock:          clck,
 				charger:        charger,
 				MinCurrent:     minA,
@@ -346,7 +347,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 
 	Voltage = 100
 	lp := &LoadPoint{
-		log:            util.NewLogger("foo"),
+		log:            log.NewLogger("foo"),
 		clock:          clck,
 		MinCurrent:     minA,
 		MaxCurrent:     maxA,
@@ -377,10 +378,10 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	// wrap vehicle with estimator
 	vehicle.EXPECT().Capacity().Return(int64(10))
 	vehicle.EXPECT().Phases().Return(0).AnyTimes()
-	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
+	socEstimator := soc.NewEstimator(log.NewLogger("foo"), charger, vehicle, false)
 
 	lp := &LoadPoint{
-		log:          util.NewLogger("foo"),
+		log:          log.NewLogger("foo"),
 		bus:          evbus.New(),
 		clock:        clock,
 		charger:      charger,
@@ -453,7 +454,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	charger := mock.NewMockCharger(ctrl)
 
 	lp := &LoadPoint{
-		log:         util.NewLogger("foo"),
+		log:         log.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
 		charger:     charger,
@@ -525,7 +526,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater := mock.NewMockChargeRater(ctrl)
 
 	lp := &LoadPoint{
-		log:         util.NewLogger("foo"),
+		log:         log.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
 		charger:     charger,
@@ -641,7 +642,7 @@ func TestSoCPoll(t *testing.T) {
 
 	lp := &LoadPoint{
 		clock: clock,
-		log:   util.NewLogger("foo"),
+		log:   log.NewLogger("foo"),
 		SoC: SoCConfig{
 			Poll: PollConfig{
 				Interval: time.Hour,
@@ -808,7 +809,7 @@ func TestVehicleDetectByID(t *testing.T) {
 		t.Logf("%+v", tc)
 
 		lp := &LoadPoint{
-			log:      util.NewLogger("foo"),
+			log:      log.NewLogger("foo"),
 			vehicles: []api.Vehicle{v1, v2},
 		}
 

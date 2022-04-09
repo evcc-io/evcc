@@ -71,7 +71,7 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, err
 // Script execution is aborted after given timeout.
 func NewScriptProvider(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
 	s := &Script{
-		log:     util.NewLogger("script"),
+		log:     log.NewLogger("script"),
 		script:  script,
 		timeout: timeout,
 		scale:   scale,
@@ -124,7 +124,7 @@ func (p *Script) exec(script string) (string, error) {
 			s = strings.TrimSpace(string(ee.Stderr))
 		}
 
-		p.log.ERROR.Printf("%s: %s", strings.Join(args, " "), s)
+		p.log.Error("%s: %s", strings.Join(args, " "), s)
 		return "", err
 	}
 

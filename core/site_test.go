@@ -3,7 +3,7 @@ package core
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 func TestSitePower(t *testing.T) {
@@ -21,7 +21,7 @@ func TestSitePower(t *testing.T) {
 		{0.5, 1, -1, 1}, // grid import + DC battery charging
 	}
 
-	log := util.NewLogger("foo")
+	log := log.NewLogger("foo")
 
 	for _, tc := range tc {
 		res := sitePower(log, tc.maxGrid, tc.grid, tc.battery, 0)

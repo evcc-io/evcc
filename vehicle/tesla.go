@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -49,7 +50,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// authenticated http client with logging injected to the Tesla client
-	log := util.NewLogger("tesla").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
+	log := log.NewLogger("tesla").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
 
 	options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{

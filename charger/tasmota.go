@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/tasmota"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
@@ -50,7 +51,7 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewTasmota creates Tasmota charger
 func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, error) {
-	log := util.NewLogger("tasmota")
+	log := log.NewLogger("tasmota")
 	c := &Tasmota{
 		Helper:       request.NewHelper(log),
 		uri:          util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),

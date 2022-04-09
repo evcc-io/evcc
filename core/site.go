@@ -128,7 +128,7 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:     util.NewLogger("site"),
+		log:     log.NewLogger("site"),
 		Voltage: 230, // V
 	}
 
@@ -263,7 +263,7 @@ func (site *Site) updateMeters() error {
 			site.publish(name+"Power", *power)
 		} else {
 			err = fmt.Errorf("%s meter: %v", name, err)
-			site.log.ERROR.Println(err)
+			site.log.Error(err)
 		}
 
 		return err
@@ -280,11 +280,11 @@ func (site *Site) updateMeters() error {
 				// ignore negative values which represent self-consumption
 				site.pvPower += math.Max(0, power)
 				if power < -500 {
-					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", id, power)
+					site.log.Warn("pv %d power: %.0fW is negative - check configuration if sign is correct", id, power)
 				}
 			} else {
 				err = fmt.Errorf("pv meter %d: %v", id, err)
-				site.log.ERROR.Println(err)
+				site.log.Error(err)
 			}
 		}
 
@@ -302,7 +302,7 @@ func (site *Site) updateMeters() error {
 			if err == nil {
 				site.batteryPower += power
 			} else {
-				site.log.ERROR.Println(fmt.Errorf("battery meter %d: %v", id, err))
+				site.log.Error(fmt.Errorf("battery meter %d: %v", id, err))
 			}
 		}
 
@@ -319,7 +319,7 @@ func (site *Site) updateMeters() error {
 			site.log.Debug("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		} else {
-			site.log.ERROR.Println(fmt.Errorf("grid meter currents: %v", err))
+			site.log.Error(fmt.Errorf("grid meter currents: %v", err))
 		}
 	}
 
@@ -329,7 +329,7 @@ func (site *Site) updateMeters() error {
 		if err == nil {
 			site.publish("gridEnergy", val)
 		} else {
-			site.log.ERROR.Println(fmt.Errorf("grid meter energy: %v", err))
+			site.log.Error(fmt.Errorf("grid meter energy: %v", err))
 		}
 	}
 
@@ -357,7 +357,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 			soc, err := battery.(api.Battery).SoC()
 			if err != nil {
 				err = fmt.Errorf("battery soc %d: %v", id, err)
-				site.log.ERROR.Println(err)
+				site.log.Error(err)
 			} else {
 				site.log.Debug("battery soc %d: %.0f%%", id, soc)
 				socs += soc / float64(len(site.batteryMeters))

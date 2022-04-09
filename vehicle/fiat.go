@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/vehicle/fiat"
 )
 
@@ -45,7 +46,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("fiat").Redact(cc.User, cc.Password, cc.VIN)
+	log := log.NewLogger("fiat").Redact(cc.User, cc.Password, cc.VIN)
 	identity := fiat.NewIdentity(log, cc.User, cc.Password)
 
 	err := identity.Login()

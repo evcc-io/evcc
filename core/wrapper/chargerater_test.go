@@ -7,12 +7,12 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/mock"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/golang/mock/gomock"
 )
 
 func TestNoMeter(t *testing.T) {
-	cr := NewChargeRater(util.NewLogger("foo"), nil)
+	cr := NewChargeRater(log.NewLogger("foo"), nil)
 	clck := clock.NewMock()
 	cr.clck = clck
 
@@ -64,7 +64,7 @@ func TestWrappedMeter(t *testing.T) {
 
 	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
 
-	cr := NewChargeRater(util.NewLogger("foo"), cm)
+	cr := NewChargeRater(log.NewLogger("foo"), cm)
 	clck := clock.NewMock()
 	cr.clck = clck
 

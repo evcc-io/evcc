@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -131,7 +132,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewEVSEWifi creates EVSEWifi charger
 func NewEVSEWifi(uri string) (*EVSEWifi, error) {
-	log := util.NewLogger("evse")
+	log := log.NewLogger("evse")
 
 	wb := &EVSEWifi{
 		Helper:  request.NewHelper(log),

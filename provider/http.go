@@ -61,7 +61,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 	}
 
 	http := NewHTTP(
-		util.NewLogger("http"),
+		log.NewLogger("http"),
 		cc.Method,
 		cc.URI,
 		cc.Insecure,
@@ -91,7 +91,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 func NewHTTP(log log.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
-		log.WARN.Printf("missing scheme for %s, assuming http", uri)
+		log.Warn("missing scheme for %s, assuming http", uri)
 	}
 
 	p := &HTTP{

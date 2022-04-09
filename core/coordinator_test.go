@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/mock"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/golang/mock/gomock"
 )
 
@@ -34,7 +34,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		{"B/B->1", api.StatusB, api.StatusB, nil},
 	}
 
-	log := util.NewLogger("foo")
+	log := log.NewLogger("foo")
 	vehicles := []api.Vehicle{v1, v2}
 
 	lp := &LoadPoint{}

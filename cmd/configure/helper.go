@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/provider/mqtt"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	stripmd "github.com/writeas/go-strip-markdown"
@@ -313,7 +313,7 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 			"password": password,
 		}
 
-		log := util.NewLogger("mqtt")
+		log := log.NewLogger("mqtt")
 
 		if mqtt.Instance, err = mqtt.RegisteredClient(log, broker, user, password, "", 1); err == nil {
 			return mqttConfig, nil

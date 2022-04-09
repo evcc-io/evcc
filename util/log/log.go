@@ -1,13 +1,9 @@
 package log
 
 import (
-	"io"
-	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/evcc-io/evcc/util/log"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -26,68 +22,6 @@ var (
 
 // LogAreaPadding of log areas
 var LogAreaPadding = 6
-
-type Logger interface {
-	Trace(fmt string, args ...interface{})
-	Debug(fmt string, args ...interface{})
-	Info(fmt string, args ...interface{})
-	Error(fmt string, args ...interface{})
-}
-
-var _ Logger = (*logger)(nil)
-
-// logger wraps a jww notepad to avoid leaking implementation detail
-type logger struct {
-	np *jww.Notepad
-	*Redactor
-}
-
-// NewLogger creates a logger with the given log area and adds it to the registry
-func NewLogger(area string) *logger {
-	loggersMux.Lock()
-	defer loggersMux.Unlock()
-
-	if logger, ok := loggers[area]; ok {
-		return logger
-	}
-
-	padded := area
-	for len(padded) < LogAreaPadding {
-		padded = padded + " "
-	}
-
-	level := LogLevelForArea(area)
-	redactor := new(Redactor)
-	notepad := jww.NewNotepad(level, level, redactor, io.Discard, padded, log.Ldate|log.Ltime)
-
-	logger := &logger{
-		np:       notepad,
-		Redactor: redactor,
-	}
-
-	loggers[area] = logger
-
-	return logger
-}
-
-func (l *logger) Trace(fmt string, args ...interface{}) {
-	l.np.TRACE.Printf(fmt, args...)
-}
-func (l *logger) Debug(fmt string, args ...interface{}) {
-	l.np.DEBUG.Printf(fmt, args...)
-}
-func (l *logger) Info(fmt string, args ...interface{}) {
-	l.np.INFO.Printf(fmt, args...)
-}
-func (l *logger) Error(fmt string, args ...interface{}) {
-	l.np.ERROR.Printf(fmt, args...)
-}
-
-// Redact adds items for redaction
-func (l *logger) Redact(items ...string) *logger {
-	l.Redactor.Redact(items...)
-	return l
-}
 
 // Loggers invokes callback for each configured logger
 func Loggers(cb func(string, *logger)) {
@@ -142,47 +76,47 @@ func LogLevelToThreshold(level string) jww.Threshold {
 	}
 }
 
-var uiChan chan<- Param
+// var uiChan chan<- Param
 
-type uiWriter struct {
-	re    *regexp.Regexp
-	level string
-}
+// type uiWriter struct {
+// 	re    *regexp.Regexp
+// 	level string
+// }
 
-func (w *uiWriter) Write(p []byte) (n int, err error) {
-	// trim level and timestamp
-	s := string(w.re.ReplaceAll(p, []byte{}))
+// func (w *uiWriter) Write(p []byte) (n int, err error) {
+// 	// trim level and timestamp
+// 	s := string(w.re.ReplaceAll(p, []byte{}))
 
-	uiChan <- Param{
-		Key: w.level,
-		Val: strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
-	}
+// 	uiChan <- Param{
+// 		Key: w.level,
+// 		Val: strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
+// 	}
 
-	return 0, nil
-}
+// 	return 0, nil
+// }
 
-// CaptureLogs appends uiWriter to relevant log levels
-func CaptureLogs(c chan<- Param) {
-	uiChan = c
+// // CaptureLogs appends uiWriter to relevant log levels
+// func CaptureLogs(c chan<- Param) {
+// 	uiChan = c
 
-	for _, l := range loggers {
-		captureLogger("warn", l.np.WARN)
-		captureLogger("error", l.np.ERROR)
-		captureLogger("error", l.np.FATAL)
-	}
-}
+// 	for _, l := range loggers {
+// 		captureLogger("warn", l.Warn)
+// 		captureLogger("error", l.Error)
+// 		captureLogger("error", l.Fatal)
+// 	}
+// }
 
-func captureLogger(level string, l *log.Logger) {
-	re, err := regexp.Compile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
-	if err != nil {
-		panic(err)
-	}
+// func captureLogger(level string, func(fmt string, args ...interface{})) {
+// 	re, err := regexp.Compile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	ui := uiWriter{
-		re:    re,
-		level: level,
-	}
+// 	ui := uiWriter{
+// 		re:    re,
+// 		level: level,
+// 	}
 
-	mw := io.MultiWriter(l.Writer(), &ui)
-	l.SetOutput(mw)
-}
+// 	mw := io.MultiWriter(l.Writer(), &ui)
+// 	l.SetOutput(mw)
+// }

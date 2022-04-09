@@ -46,7 +46,7 @@ func NewOpenWBProFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewOpenWBPro creates OpenWBPro charger
 func NewOpenWBPro(uri string, cache time.Duration) (*OpenWBPro, error) {
-	log := util.NewLogger("owbpro")
+	log := log.NewLogger("owbpro")
 
 	wb := &OpenWBPro{
 		Helper:  request.NewHelper(log),
@@ -63,7 +63,7 @@ func NewOpenWBPro(uri string, cache time.Duration) (*OpenWBPro, error) {
 func (wb *OpenWBPro) hearbeat(log log.Logger) {
 	for range time.NewTicker(30 * time.Second).C {
 		if _, err := wb.get(); err != nil {
-			log.ERROR.Printf("heartbeat: %v", err)
+			log.Error("heartbeat: %v", err)
 		}
 	}
 }

@@ -50,7 +50,7 @@ type Connection struct {
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
 func NewConnection(uri, user, password string) *Connection {
-	log := util.NewLogger("tapo")
+	log := log.NewLogger("tapo")
 
 	//lint:ignore
 	h := sha1.New()

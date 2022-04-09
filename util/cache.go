@@ -3,6 +3,8 @@ package util
 import (
 	"fmt"
 	"sync"
+
+	"github.com/evcc-io/evcc/util/log"
 )
 
 // Cache is a data store

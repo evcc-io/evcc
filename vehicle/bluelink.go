@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/vehicle/bluelink"
 )
 
@@ -66,7 +67,7 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 		return nil, err
 	}
 
-	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
+	log := log.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := bluelink.NewIdentity(log, settings)
 
 	if err := identity.Login(cc.User, cc.Password, cc.Language); err != nil {

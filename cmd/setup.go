@@ -93,7 +93,7 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in 
 
 // setup mqtt
 func configureMQTT(conf mqttConfig) error {
-	log := util.NewLogger("mqtt")
+	log := log.NewLogger("mqtt")
 
 	var err error
 	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, func(options *paho.ClientOptions) {
@@ -222,7 +222,7 @@ func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.Lo
 			return nil, fmt.Errorf("failed decoding loadpoint configuration: %w", err)
 		}
 
-		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
+		log := log.NewLogger("lp-" + strconv.Itoa(id+1))
 		lp, err := core.NewLoadPointFromConfig(log, cp, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)

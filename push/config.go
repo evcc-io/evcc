@@ -12,7 +12,7 @@ type Sender interface {
 	Send(title, msg string)
 }
 
-var log = util.NewLogger("push")
+var log = log.NewLogger("push")
 
 // NewMessengerFromConfig creates a new messenger
 func NewMessengerFromConfig(typ string, other map[string]interface{}) (res Sender, err error) {

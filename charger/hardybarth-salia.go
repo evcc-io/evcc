@@ -73,7 +73,7 @@ func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewSalia creates Hardy Barth charger with Salia controller
 func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("salia")
+	log := log.NewLogger("salia")
 
 	uri = strings.TrimSuffix(uri, "/") + "/api"
 
@@ -106,7 +106,7 @@ func (wb *Salia) heartbeat() {
 	_ = wb.post(salia.HeartBeat, "alive")
 	for range time.NewTicker(30 * time.Second).C {
 		if err := wb.post(salia.HeartBeat, "alive"); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
+			wb.log.Error("heartbeat:", err)
 		}
 	}
 }

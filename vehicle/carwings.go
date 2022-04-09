@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 
 	"github.com/joeshaw/carwings"
@@ -55,7 +56,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("carwings").Redact(cc.User, cc.Password, cc.VIN)
+	log := log.NewLogger("carwings").Redact(cc.User, cc.Password, cc.VIN)
 
 	// http client with high dial/handshake timeout
 	transport := request.NewTripper(log, &http.Transport{

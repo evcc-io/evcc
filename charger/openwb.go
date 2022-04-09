@@ -48,7 +48,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("openwb")
+	log := log.NewLogger("openwb")
 
 	return NewOpenWB(log, cc.Config, cc.ID, cc.Topic, cc.Phases, cc.DC, cc.Timeout)
 }
@@ -126,7 +126,7 @@ func NewOpenWB(log log.Logger, mqttconf mqtt.Config, id int, topic string, p1p3,
 
 		for range time.NewTicker(openwb.HeartbeatInterval).C {
 			if err := heartbeatS(1); err != nil {
-				log.ERROR.Printf("heartbeat: %v", err)
+				log.Error("heartbeat: %v", err)
 			}
 		}
 	}()

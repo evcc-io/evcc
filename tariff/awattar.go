@@ -37,7 +37,7 @@ func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 	}
 
 	t := &Awattar{
-		log:   util.NewLogger("awattar"),
+		log:   log.NewLogger("awattar"),
 		cheap: cc.Cheap,
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
@@ -53,7 +53,7 @@ func (t *Awattar) Run() {
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res awattar.Prices
 		if err := client.GetJSON(t.uri, &res); err != nil {
-			t.log.ERROR.Println(err)
+			t.log.Error(err)
 			continue
 		}
 

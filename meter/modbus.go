@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -69,8 +70,8 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		conn.Timeout(cc.Timeout)
 	}
 
-	log := util.NewLogger("modbus")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("modbus")
+	conn.Trace(log)
 
 	// prepare device
 	device, err := modbus.NewDevice(cc.Model, cc.SubDevice)

@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -34,18 +33,18 @@ func init() {
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
+	log.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.Info("evcc %s", server.FormattedVersion())
 
 	// load config
 	conf, err := loadConfigFile(cfgFile)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatal(err)
 	}
 
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatal(err)
 	}
 
 	// full http request log
@@ -55,11 +54,11 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 	// select single charger
 	if err := selectByName(cmd, &conf.Chargers); err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatal(err)
 	}
 
 	if err := cp.configureChargers(conf); err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatal(err)
 	}
 
 	stopC := make(chan struct{})
@@ -86,7 +85,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			flagUsed = true
 
 			if err := v.MaxCurrent(current); err != nil {
-				log.ERROR.Println("set current:", err)
+				log.Error("set current:", err)
 			}
 		}
 
@@ -94,7 +93,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			flagUsed = true
 
 			if err := v.Enable(true); err != nil {
-				log.ERROR.Println("enable:", err)
+				log.Error("enable:", err)
 			}
 		}
 
@@ -102,7 +101,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			flagUsed = true
 
 			if err := v.Enable(false); err != nil {
-				log.ERROR.Println("disable:", err)
+				log.Error("disable:", err)
 			}
 		}
 
@@ -111,10 +110,10 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 			if vv, ok := v.(api.AlarmClock); ok {
 				if err := vv.WakeUp(); err != nil {
-					log.ERROR.Println("wakeup:", err)
+					log.Error("wakeup:", err)
 				}
 			} else {
-				log.ERROR.Println("wakeup: not implemented")
+				log.Error("wakeup: not implemented")
 			}
 		}
 	}

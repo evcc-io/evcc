@@ -71,10 +71,10 @@ func runVehicle(cmd *cobra.Command, args []string) {
 
 			if vv, ok := v.(api.AlarmClock); ok {
 				if err := vv.WakeUp(); err != nil {
-					log.ERROR.Println("wakeup:", err)
+					log.Error("wakeup:", err)
 				}
 			} else {
-				log.ERROR.Println("wakeup: not implemented")
+				log.Error("wakeup: not implemented")
 			}
 		}
 
@@ -83,10 +83,10 @@ func runVehicle(cmd *cobra.Command, args []string) {
 
 			if vv, ok := v.(api.VehicleChargeController); ok {
 				if err := vv.StartCharge(); err != nil {
-					log.ERROR.Println("start charge:", err)
+					log.Error("start charge:", err)
 				}
 			} else {
-				log.ERROR.Println("start charge: not implemented")
+				log.Error("start charge: not implemented")
 			}
 		}
 
@@ -95,10 +95,10 @@ func runVehicle(cmd *cobra.Command, args []string) {
 
 			if vv, ok := v.(api.VehicleChargeController); ok {
 				if err := vv.StopCharge(); err != nil {
-					log.ERROR.Println("stop charge:", err)
+					log.Error("stop charge:", err)
 				}
 			} else {
-				log.ERROR.Println("stop charge: not implemented")
+				log.Error("stop charge: not implemented")
 			}
 		}
 	}

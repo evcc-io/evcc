@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -87,7 +88,7 @@ func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, err
 // NewNRGKickConnect creates NRGKickConnect charger
 func NewNRGKickConnect(uri, mac, password string) (*NRGKickConnect, error) {
 	nrg := &NRGKickConnect{
-		Helper:   request.NewHelper(util.NewLogger("nrgconn")),
+		Helper:   request.NewHelper(log.NewLogger("nrgconn")),
 		uri:      util.DefaultScheme(uri, "http"),
 		mac:      mac,
 		password: password,

@@ -52,12 +52,12 @@ func NewJLRFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("jlr").Redact(cc.User, cc.Password, cc.VIN, cc.DeviceID)
+	log := log.NewLogger("jlr").Redact(cc.User, cc.Password, cc.VIN, cc.DeviceID)
 
 	if cc.DeviceID == "" {
 		uid := uuid.New()
 		cc.DeviceID = uid.String()
-		log.WARN.Println("new device id generated, add `deviceid` to config:", cc.DeviceID)
+		log.Warn("new device id generated, add `deviceid` to config:", cc.DeviceID)
 	}
 
 	identity := jlr.NewIdentity(log, cc.User, cc.Password, cc.DeviceID)

@@ -98,7 +98,7 @@ func (l *Listener) listen() {
 			if err := json.Unmarshal([]byte(body), &report); err != nil {
 				// ignore error during detection when sending report request to localhost
 				if body != "report 1" {
-					l.log.WARN.Printf("recv: invalid message: %v", err)
+					l.log.Warn("recv: invalid message: %v", err)
 				}
 				continue
 			}

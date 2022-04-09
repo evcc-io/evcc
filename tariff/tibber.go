@@ -30,7 +30,7 @@ var _ api.Tariff = (*Tibber)(nil)
 
 func NewTibber(other map[string]interface{}) (*Tibber, error) {
 	t := &Tibber{
-		log: util.NewLogger("tibber"),
+		log: log.NewLogger("tibber"),
 	}
 
 	if err := util.DecodeOther(other, &t); err != nil {
@@ -89,7 +89,7 @@ func (t *Tibber) Run() {
 		}
 
 		if err := t.client.Query(context.Background(), &res, v); err != nil {
-			t.log.ERROR.Println(err)
+			t.log.Error(err)
 			continue
 		}
 

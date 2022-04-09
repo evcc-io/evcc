@@ -49,7 +49,7 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 			cr.startEnergy = f
 			cr.log.Debug("charge start energy: %.3gkWh", f)
 		} else {
-			cr.log.ERROR.Printf("charge meter error %v", err)
+			cr.log.Error("charge meter error %v", err)
 		}
 	}
 
@@ -72,7 +72,7 @@ func (cr *ChargeRater) StopCharge() {
 			cr.chargedEnergy += f - cr.startEnergy
 			cr.log.Debug("final charge energy: %.3gkWh", cr.chargedEnergy)
 		} else {
-			cr.log.ERROR.Printf("charge meter error %v", err)
+			cr.log.Error("charge meter error %v", err)
 		}
 	}
 }

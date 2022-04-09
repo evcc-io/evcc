@@ -32,7 +32,7 @@ func (u *watch) watchReleases(installed string, out chan *github.RepositoryRelea
 	for range time.NewTicker(6 * time.Hour).C {
 		rel, err := u.findReleaseUpdate(installed)
 		if err != nil {
-			u.log.ERROR.Printf("version check failed: %v", err)
+			u.log.Error("version check failed: %v", err)
 			continue
 		}
 
@@ -81,6 +81,6 @@ func (u *watch) fetchReleaseNotes(installed string) {
 			Val: notes,
 		}
 	} else {
-		u.log.WARN.Printf("couldn't download release notes: %v", err)
+		u.log.Warn("couldn't download release notes: %v", err)
 	}
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/foogod/go-powerwall"
 )
@@ -57,7 +58,7 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 // NewPowerWall creates a Tesla PowerWall Meter
 func NewPowerWall(uri, usage, user, password string) (api.Meter, error) {
-	log := util.NewLogger("tesla")
+	log := log.NewLogger("tesla")
 
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),

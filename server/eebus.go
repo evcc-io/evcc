@@ -67,7 +67,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 
 	details := EEBusInstance.DeviceInfo()
 
-	log := util.NewLogger("eebus")
+	log := log.NewLogger("eebus")
 	id := server.UniqueID{Prefix: details.BrandName}.String()
 	if len(cc.ShipID) > 0 {
 		id = cc.ShipID
@@ -151,7 +151,7 @@ func (c *EEBus) Run() {
 	}
 
 	if err := c.srv.Listen(ln, c.certificateHandler); err != nil {
-		c.log.ERROR.Println("eebus listen:", err)
+		c.log.Error("eebus listen:", err)
 	}
 }
 

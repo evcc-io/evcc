@@ -58,7 +58,7 @@ func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) 
 
 // NewNRGKickBLE creates NRGKickBLE charger
 func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
-	logger := util.NewLogger("nrg-bt")
+	logger := log.NewLogger("nrg-bt")
 
 	ainfo, err := hw.GetAdapter(device)
 	if err != nil {

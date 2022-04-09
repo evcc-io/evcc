@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
@@ -44,8 +45,8 @@ func NewPhoenixEVSer(uri, device, comset string, baudrate int, proto modbus.Prot
 		return nil, err
 	}
 
-	log := util.NewLogger("ev-ser")
-	conn.Logger(log.TRACE)
+	log := log.NewLogger("ev-ser")
+	conn.Trace(log)
 
 	wb := &PhoenixEVSer{
 		conn: conn,

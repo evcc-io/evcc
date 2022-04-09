@@ -92,7 +92,7 @@ func NewClient(log log.Logger, broker, user, password, clientID string, qos byte
 
 // ConnectionLostHandler logs cause of connection loss as warning
 func (m *Client) ConnectionLostHandler(client paho.Client, reason error) {
-	m.log.ERROR.Printf("%s connection lost: %v", m.broker, reason.Error())
+	m.log.Error("%s connection lost: %v", m.broker, reason.Error())
 }
 
 // ConnectionHandler restores listeners
@@ -132,7 +132,7 @@ func (m *Client) ListenSetter(topic string, callback func(string)) {
 	m.Listen(topic, func(payload string) {
 		callback(payload)
 		if err := m.Publish(topic, true, ""); err != nil {
-			m.log.ERROR.Printf("clear: %v", err)
+			m.log.Error("clear: %v", err)
 		}
 	})
 }
@@ -159,7 +159,7 @@ func (m *Client) listen(topic string) {
 func (m *Client) WaitForToken(token paho.Token) {
 	if token.WaitTimeout(publishTimeout) {
 		if token.Error() != nil {
-			m.log.ERROR.Printf("error: %s", token.Error())
+			m.log.Error("error: %s", token.Error())
 		}
 	} else {
 		m.log.Debug("timeout")

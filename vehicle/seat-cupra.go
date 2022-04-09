@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/seat"
 	"github.com/evcc-io/evcc/vehicle/seat/cupra"
@@ -45,7 +46,7 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("cupra").Redact(cc.User, cc.Password, cc.VIN)
+	log := log.NewLogger("cupra").Redact(cc.User, cc.Password, cc.VIN)
 
 	// get initial VW identity id_token
 	q, err := vwidentity.Login(log, seat.AuthParams, cc.User, cc.Password)
