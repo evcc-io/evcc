@@ -32,8 +32,9 @@ products:
       generic: Heinz
 requirements:
   description:
-    de: Der Modbus Server muss aktiviert sein. 'Modbus Slave Register Address Set' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender' etc. ist richtig.
-    en: The Modbus server must be enabled. The setting 'Modbus Slave Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender' etc.
+    de: Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein.
+    en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
+  evcc: ["sponsorship"]
 params:
   - name: host
     required: true
