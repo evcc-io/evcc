@@ -243,7 +243,6 @@ func (wb *BenderCC) Identify() (string, error) {
 		if err != nil {
 			return "", err
 		}
-
 		if string(e) != "" {
 			return string(e), nil
 		}
