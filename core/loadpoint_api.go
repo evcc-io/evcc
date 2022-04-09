@@ -59,7 +59,7 @@ func (lp *LoadPoint) GetMinPowerRequried() float64 {
 	if lp.minSocNotReached() || lp.Mode == api.ModeNow {
 		return lp.chargePower
 	}
-	if lp.Mode == api.ModeMinPV {
+	if lp.Mode == api.ModeMinPV && !lp.targetSocReached() && lp.vehicleSoc < 100 {
 		return lp.GetMinPower() * float64(lp.activePhases())
 	}
 	return 0
@@ -80,6 +80,9 @@ func (lp *LoadPoint) GetPriority() int {
 	}
 	if prio == -1 {
 		prio = 100 - int(lp.vehicleSoc)
+	}
+	if prio > 0 && lp.chargePower > 0 {
+		prio = prio * 2
 	}
 	lp.Lock()
 	defer lp.Unlock()

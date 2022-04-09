@@ -410,7 +410,7 @@ func (site *Site) update(lp Updater) {
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
 		if sitePower-totalChargePower+minPower < 0 {
 			// total available power = sitePower - totalChargePower + minPower
-			site.priorityPowerDistribution(totalPriority, sitePower-totalChargePower+minPower, cheap, site.batteryBuffered)
+			site.priorityPowerDistribution(totalPriority, totalChargePower, sitePower-totalChargePower+minPower, cheap, site.batteryBuffered)
 		} else {
 			lp.Update(sitePower, cheap, site.batteryBuffered)
 		}
