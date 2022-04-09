@@ -244,7 +244,9 @@ func (wb *BenderCC) Identify() (string, error) {
 			return "", err
 		}
 
-		return string(e), nil
+		if string(e) != "" {
+			return string(e), nil
+		}
 	}
 
 	u, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
