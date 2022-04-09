@@ -25,13 +25,13 @@ render: |
         register: # manual non-sunspec register configuration
           address: 30773 # SMA Modbus Profile: DC power input [1]
           type: holding
-          decode: int32sma
+          decode: int32nan
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register: # manual non-sunspec register configuration
           address: 30961 # SMA Modbus Profile: DC power input [2]
           type: holding
-          decode: int32sma
+          decode: int32nan
   {{- end }}
   {{- if eq .usage "battery" }}
     source: calc
@@ -41,14 +41,14 @@ render: |
         register: # manual non-sunspec register configuration
           address: 30851 # SMA Modbus Profile: Battery voltage
           type: holding
-          decode: uint32sma
+          decode: uint32nan
         scale: 0.01
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register: # manual non-sunspec register configuration
           address: 30843 # SMA Modbus Profile: Battery current
           type: holding
-          decode: int32sma
+          decode: int32nan
         scale: 0.001
   soc:
     source: modbus
@@ -56,5 +56,5 @@ render: |
     register: # manual non-sunspec register configuration
       address: 30845 # SMA Modbus Profile: Battery state of charge
       type: holding
-      decode: uint32sma
+      decode: uint32nan
   {{- end }}
