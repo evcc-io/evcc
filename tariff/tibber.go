@@ -89,7 +89,7 @@ func (t *Tibber) Run() {
 		}
 
 		if err := t.client.Query(context.Background(), &res, v); err != nil {
-			t.log.Error(err)
+			t.log.Error("%v", err)
 			continue
 		}
 

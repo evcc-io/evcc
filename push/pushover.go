@@ -42,7 +42,7 @@ func (m *PushOver) Send(title, msg string) {
 
 			recipient := pushover.NewRecipient(id)
 			if _, err := m.app.SendMessage(message, recipient); err != nil {
-				log.Error(err)
+				log.Error("%v", err)
 			}
 		}(id)
 	}

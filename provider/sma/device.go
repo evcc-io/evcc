@@ -27,7 +27,7 @@ func (d *Device) StartUpdateLoop() {
 		go func() {
 			for range time.NewTicker(time.Second * 5).C {
 				if err := d.UpdateValues(); err != nil {
-					d.log.Error(err)
+					d.log.Error("%v", err)
 				}
 			}
 		}()

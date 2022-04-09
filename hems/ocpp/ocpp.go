@@ -74,7 +74,7 @@ func New(conf map[string]interface{}, site site.API) (*OCPP, error) {
 // errorHandler logs error channel
 func (s *OCPP) errorHandler(errC <-chan error) {
 	for err := range errC {
-		s.log.Error(err)
+		s.log.Error("%v", err)
 	}
 }
 

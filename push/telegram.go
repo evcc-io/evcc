@@ -69,7 +69,7 @@ func (m *Telegram) Send(title, msg string) {
 
 		msg := tgbotapi.NewMessage(chat, msg)
 		if _, err := m.bot.Send(msg); err != nil {
-			log.Error(err)
+			log.Error("%v", err)
 		}
 	}
 	m.Unlock()

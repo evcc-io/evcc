@@ -79,7 +79,7 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 	// log errors
 	go func() {
 		for err := range writer.Errors() {
-			m.log.Error(err)
+			m.log.Error("%v", err)
 		}
 	}()
 

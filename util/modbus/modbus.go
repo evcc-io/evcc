@@ -72,13 +72,7 @@ func (mb *Connection) ConnectDelay(delay time.Duration) {
 	mb.conn.ConnectDelay(delay)
 }
 
-// Logger sets logger implementation
-// TODO remove
-func (mb *Connection) Logger(logger meters.Logger) {
-	mb.conn.Logger(logger)
-}
-
-// Logger sets logger implementation
+// Trace sets logger implementation
 func (mb *Connection) Trace(l log.Logger) {
 	mb.conn.Logger(log.PrintfAdapter(l))
 }

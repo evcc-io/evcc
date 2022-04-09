@@ -109,7 +109,7 @@ func (p *Socket) listen() {
 	for {
 		client, _, err := dialer.Dial(p.url, headers)
 		if err != nil {
-			p.log.Error(err)
+			p.log.Error("%v", err)
 			time.Sleep(retryDelay)
 			continue
 		}

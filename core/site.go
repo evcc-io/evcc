@@ -263,7 +263,7 @@ func (site *Site) updateMeters() error {
 			site.publish(name+"Power", *power)
 		} else {
 			err = fmt.Errorf("%s meter: %v", name, err)
-			site.log.Error(err)
+			site.log.Error("%v", err)
 		}
 
 		return err
@@ -284,7 +284,7 @@ func (site *Site) updateMeters() error {
 				}
 			} else {
 				err = fmt.Errorf("pv meter %d: %v", id, err)
-				site.log.Error(err)
+				site.log.Error("%v", err)
 			}
 		}
 
@@ -357,7 +357,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 			soc, err := battery.(api.Battery).SoC()
 			if err != nil {
 				err = fmt.Errorf("battery soc %d: %v", id, err)
-				site.log.Error(err)
+				site.log.Error("%v", err)
 			} else {
 				site.log.Debug("battery soc %d: %.0f%%", id, soc)
 				socs += soc / float64(len(site.batteryMeters))

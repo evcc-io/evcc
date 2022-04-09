@@ -1544,6 +1544,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	// log any error
 	if err != nil {
-		lp.log.Error(err)
+		lp.log.Error("%v", err)
 	}
 }

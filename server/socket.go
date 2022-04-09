@@ -54,7 +54,7 @@ func (c *SocketClient) writePump() {
 func ServeWebsocket(hub *SocketHub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error(err)
+		log.Error("%v", err)
 		return
 	}
 	client := &SocketClient{hub: hub, conn: conn, send: make(chan []byte, 256)}

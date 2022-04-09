@@ -118,7 +118,7 @@ func (s *SEMP) advertise(st, usn string) *ssdp.Advertiser {
 	descriptor := s.hostURI + basePath + "/description.xml"
 	ad, err := ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 	if err != nil {
-		s.log.Error(err)
+		s.log.Error("%v", err)
 	}
 	return ad
 }
@@ -145,7 +145,7 @@ ANNOUNCE:
 		case <-ticker.C:
 			for _, ad := range ads {
 				if err := ad.Alive(); err != nil {
-					s.log.Error(err)
+					s.log.Error("%v", err)
 				}
 			}
 		case <-s.closeC:
@@ -155,7 +155,7 @@ ANNOUNCE:
 
 	for _, ad := range ads {
 		if err := ad.Bye(); err != nil {
-			s.log.Error(err)
+			s.log.Error("%v", err)
 		}
 	}
 
