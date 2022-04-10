@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 )
 
 // Event is a notification event
@@ -27,6 +28,7 @@ type EventTemplate struct {
 
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
+	log         log.Logger
 	definitions map[string]EventTemplate
 	sender      []Sender
 	cache       *util.Cache
@@ -53,7 +55,9 @@ func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) 
 		definitions[k] = def
 	}
 
+	// TODO inject logger
 	h := &Hub{
+		log:         log.NewLogger("push"),
 		definitions: definitions,
 		cache:       cache,
 	}
@@ -103,13 +107,13 @@ func (h *Hub) Run(events <-chan Event) {
 
 		title, err := h.apply(ev, definition.Title)
 		if err != nil {
-			log.Error("invalid title template for %s: %v", ev.Event, err)
+			h.log.Error("invalid title template for %s: %v", ev.Event, err)
 			continue
 		}
 
 		msg, err := h.apply(ev, definition.Msg)
 		if err != nil {
-			log.Error("invalid message template for %s: %v", ev.Event, err)
+			h.log.Error("invalid message template for %s: %v", ev.Event, err)
 			continue
 		}
 
@@ -117,7 +121,7 @@ func (h *Hub) Run(events <-chan Event) {
 			if strings.TrimSpace(msg) != "" {
 				go sender.Send(title, msg)
 			} else {
-				log.Debug("did not send empty message template for %s: %v", ev.Event, err)
+				h.log.Debug("did not send empty message template for %s: %v", ev.Event, err)
 			}
 		}
 	}

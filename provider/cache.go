@@ -10,10 +10,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-var (
-	bus = EventBus.New()
-	log = log.NewLogger("cache")
-)
+var bus = EventBus.New()
 
 const reset = "reset"
 

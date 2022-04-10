@@ -38,7 +38,7 @@ func ConfigureSponsorship(token string) error {
 	}
 
 	if err != nil {
-		if s, ok := status.FromError("%v", err); ok && s.Code() != codes.Unknown {
+		if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
 			Subject = "sponsorship unavailable"
 			err = nil
 		} else {

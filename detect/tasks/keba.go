@@ -68,7 +68,7 @@ func (h *KEBAHandler) Test(log log.Logger, in ResultDetails) []ResultDetails {
 
 		select {
 		case t := <-resC:
-			log.Info(t)
+			log.Info("%v", t)
 			if t.Report == nil {
 				continue
 			}

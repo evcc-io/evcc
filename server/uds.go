@@ -9,10 +9,11 @@ import (
 	"os"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/util/log"
 )
 
-// SocketPath is the unix domain socket path
-const SocketPath = "/tmp/evcc"
+// socketPath is the unix domain socket path
+const socketPath = "/tmp/evcc"
 
 // removeIfExists deletes file if it exists or fails
 func removeIfExists(file string) {
@@ -22,17 +23,19 @@ func removeIfExists(file string) {
 	}
 
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.FATAL.Fatal(err)
+		log.Error("cannot remove %s: %v", socketPath, err)
+		os.Exit(1)
 	}
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
 func HealthListener(site site.API, exitC <-chan struct{}) {
-	removeIfExists(SocketPath)
+	removeIfExists(socketPath)
 
-	l, err := net.Listen("unix", SocketPath)
+	l, err := net.Listen("unix", socketPath)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.Error("listen to unix://%s: %v", socketPath, err)
+		os.Exit(1)
 	}
 	defer l.Close()
 
@@ -43,5 +46,5 @@ func HealthListener(site site.API, exitC <-chan struct{}) {
 	go func() { _ = httpd.Serve(l) }()
 
 	<-exitC
-	removeIfExists(SocketPath) // cleanup
+	removeIfExists(socketPath) // cleanup
 }

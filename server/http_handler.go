@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/gorilla/mux"
 )
 
@@ -23,13 +24,15 @@ func indexHandler(site site.API) http.HandlerFunc {
 
 		indexTemplate, err := fs.ReadFile(Assets, "index.html")
 		if err != nil {
-			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
-			log.FATAL.Fatal("Make sure templates are included using the `release` build tag or use `make build`")
+			log.Error("httpd: failed to load embedded template: %s", err.Error())
+			log.Error("Make sure templates are included using the `release` build tag or use `make build`")
+			os.Exit(1)
 		}
 
 		t, err := template.New("evcc").Delims("[[", "]]").Parse(string(indexTemplate))
 		if err != nil {
-			log.FATAL.Fatal("httpd: failed to create main page template:", err.Error())
+			log.Error("httpd: failed to create main page template: %s", err.Error())
+			os.Exit(1)
 		}
 
 		if err := t.Execute(w, map[string]interface{}{
@@ -37,7 +40,8 @@ func indexHandler(site site.API) http.HandlerFunc {
 			"Commit":     Commit,
 			"Configured": len(site.LoadPoints()),
 		}); err != nil {
-			log.Error("httpd: failed to render main page:", err.Error())
+			log.Error("httpd: failed to render main page: %s", err.Error())
+			os.Exit(1)
 		}
 	})
 }

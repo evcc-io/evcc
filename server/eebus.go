@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/eebus/ship"
 	"github.com/evcc-io/eebus/spine/model"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/grandcat/zeroconf"
 )
 
@@ -67,7 +68,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 
 	details := EEBusInstance.DeviceInfo()
 
-	log := log.NewLogger("eebus")
+	llog := log.NewLogger("eebus")
 	id := server.UniqueID{Prefix: details.BrandName}.String()
 	if len(cc.ShipID) > 0 {
 		id = cc.ShipID
@@ -79,7 +80,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	}
 
 	srv := &server.Server{
-		Log:         log.TRACE,
+		Log:         log.PrintfAdapter(llog.Trace),
 		Addr:        cc.Uri,
 		Path:        "/ship/",
 		Certificate: cert,
@@ -98,7 +99,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 
 	c := &EEBus{
 		zc:                zc,
-		log:               log,
+		log:               llog,
 		srv:               srv,
 		id:                id,
 		clients:           make(map[string]EEBusClientCBs),
@@ -145,7 +146,7 @@ func (c *EEBus) Run() {
 	}
 
 	ln := &server.Listener{
-		Log:          c.log.TRACE,
+		Log:          log.PrintfAdapter(c.log.Trace),
 		AccessMethod: c.id,
 		Handler:      c.shipHandler,
 	}
@@ -199,7 +200,7 @@ func (c *EEBus) connectDiscoveredEntry(entry *zeroconf.ServiceEntry) {
 	var conn ship.Conn
 	if err == nil {
 		c.log.Trace("%s: client connect", entry.HostName)
-		conn, err = svc.Connect(c.log.TRACE, c.id, c.srv.Certificate, c.shipCloseHandler)
+		conn, err = svc.Connect(log.PrintfAdapter(c.log.Trace), c.id, c.srv.Certificate, c.shipCloseHandler)
 	}
 
 	if err != nil {
@@ -209,7 +210,7 @@ func (c *EEBus) connectDiscoveredEntry(entry *zeroconf.ServiceEntry) {
 
 	err = c.shipHandler(svc.SKI, conn)
 	if err != nil {
-		log.FATAL.Fatalf("%s: error calling shipHandler: %v", entry.HostName, err)
+		c.log.Error("%s: error calling shipHandler: %v", entry.HostName, err)
 		return
 	}
 }

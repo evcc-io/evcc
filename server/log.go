@@ -1,3 +1,3 @@
 package server
 
-var log = log.NewLogger("server")
+// var log = log.NewLogger("server")

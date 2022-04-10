@@ -1,19 +1,25 @@
 package log
 
+import "strings"
+
 // PrintfLogger adapter interface
 type PrintfLogger interface {
-	// Printf print line to log
+	Println(v ...interface{})
 	Printf(format string, v ...interface{})
 }
 
 type printfLogger struct {
-	l Logger
+	l func(fmt string, args ...interface{})
 }
 
-func (tl *printfLogger) Printf(fmt string, v ...interface{}) {
-	tl.l.Trace(fmt, v...)
+func (l *printfLogger) Println(v ...any) {
+	l.l(strings.Repeat("%v ", len(v)), v...)
 }
 
-func PrintfAdapter(l Logger) PrintfLogger {
+func (l *printfLogger) Printf(fmt string, v ...interface{}) {
+	l.l(fmt, v...)
+}
+
+func PrintfAdapter(l func(fmt string, args ...interface{})) PrintfLogger {
 	return &printfLogger{l}
 }

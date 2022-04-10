@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/evcc-io/evcc/util/log"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -19,14 +20,16 @@ type telegramConfig struct {
 	Chats []int64
 }
 
-func init() {
-	if err := tgbotapi.SetLogger(log.ERROR); err != nil {
-		log.Error("telegram: %v", err)
-	}
-}
+var once sync.Once
 
 // NewTelegramMessenger creates new pushover messenger
-func NewTelegramMessenger(token string, chats []int64) (*Telegram, error) {
+func NewTelegramMessenger(llog log.Logger, token string, chats []int64) (*Telegram, error) {
+	once.Do(func() {
+		if err := tgbotapi.SetLogger(log.PrintfAdapter(llog.Error)); err != nil {
+			log.Error("telegram: %v", err)
+		}
+	})
+
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return nil, errors.New("telegram: invalid bot token")

@@ -3,6 +3,7 @@ package push
 import (
 	"errors"
 
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/gregdel/pushover"
 )
 
@@ -19,7 +20,7 @@ type pushOverConfig struct {
 }
 
 // NewPushOverMessenger creates new pushover messenger
-func NewPushOverMessenger(app string, recipients []string) (*PushOver, error) {
+func NewPushOverMessenger(_ log.Logger, app string, recipients []string) (*PushOver, error) {
 	if app == "" {
 		return nil, errors.New("pushover: missing app name")
 	}

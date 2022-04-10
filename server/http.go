@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -96,6 +97,8 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 		}
 	}
 
+	// TODO inject logger
+
 	srv := &HTTPd{
 		Server: &http.Server{
 			Addr:         url,
@@ -103,7 +106,7 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 			IdleTimeout:  120 * time.Second,
-			ErrorLog:     log.ERROR,
+			ErrorLog:     log.StdlogAdapter(log.NewLogger("http").Error),
 		},
 	}
 	srv.SetKeepAlivesEnabled(true)

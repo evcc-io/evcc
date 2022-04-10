@@ -10,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/log"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
@@ -61,7 +62,6 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 	}
 
 	http := NewHTTP(
-		log.NewLogger("http"),
 		cc.Method,
 		cc.URI,
 		cc.Insecure,
@@ -88,11 +88,13 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log log.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
+func NewHTTP(method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.Warn("missing scheme for %s, assuming http", uri)
 	}
+
+	log := log.NewLogger("http")
 
 	p := &HTTP{
 		Helper: request.NewHelper(log),
@@ -133,9 +135,10 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	switch strings.ToLower(typ) {
 	case "basic":
 		basicAuth := transport.BasicAuthHeader(user, password)
-		log.Redact(basicAuth)
-
 		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
+
+		// TODO clarify redact api instead over re-creating logger
+		p.Helper = request.NewHelper(log.NewLogger("http").Redact(basicAuth))
 	case "digest":
 		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
 	default:

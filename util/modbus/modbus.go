@@ -74,7 +74,7 @@ func (mb *Connection) ConnectDelay(delay time.Duration) {
 
 // Trace sets logger implementation
 func (mb *Connection) Trace(l log.Logger) {
-	mb.conn.Logger(log.PrintfAdapter(l))
+	mb.conn.Logger(log.PrintfAdapter(l.Trace))
 }
 
 // Timeout sets the connection timeout (not idle timeout)
