@@ -1,5 +1,7 @@
 package zaptec
 
+import "strconv"
+
 type ChargersResponse struct {
 	Pages int
 	Data  []Charger
@@ -24,9 +26,37 @@ type Charger struct {
 	IsAuthorizationRequired bool
 }
 
-type State struct {
+type StateResponse []Observation
+
+func (s *StateResponse) ObservationByID(id ObservationID) *Observation {
+	if s == nil {
+		return nil
+	}
+
+	for _, o := range *s {
+		if o.StateId == id {
+			return &o
+		}
+	}
+
+	return nil
+}
+
+type Observation struct {
 	ChargerId     string
-	StateId       int
+	StateId       ObservationID
 	Timestamp     string
 	ValueAsString string
+}
+
+func (o *Observation) Bool() bool {
+	return o != nil && o.ValueAsString == "true"
+}
+
+func (o *Observation) Float64() (float64, error) {
+	if o == nil {
+		return 0, nil
+	}
+
+	return strconv.ParseFloat(o.ValueAsString, 64)
 }
