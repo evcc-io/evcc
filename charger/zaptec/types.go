@@ -53,10 +53,27 @@ func (o *Observation) Bool() bool {
 	return o != nil && o.ValueAsString == "true"
 }
 
+func (o *Observation) Int() (int, error) {
+	if o == nil {
+		return 0, nil
+	}
+
+	return strconv.Atoi(o.ValueAsString)
+}
+
 func (o *Observation) Float64() (float64, error) {
 	if o == nil {
 		return 0, nil
 	}
 
 	return strconv.ParseFloat(o.ValueAsString, 64)
+}
+
+type Update struct {
+	MaxChargeCurrent     *int `json:"maxChargeCurrent,omitempty"`
+	MaxChargePhases      *int `json:"maxChargePhases,omitempty"`
+	MinChargeCurrent     *int `json:"minChargeCurrent,omitempty"`
+	OfflineChargeCurrent *int `json:"offlineChargeCurrent,omitempty"`
+	OfflineChargePhase   *int `json:"offlineChargePhase,omitempty"`
+	MeterValueInterval   *int `json:"meterValueInterval,omitempty"`
 }

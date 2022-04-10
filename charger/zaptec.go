@@ -109,7 +109,9 @@ func NewZaptec(user, password string, cache time.Duration) (api.Charger, error) 
 		}
 	}
 
-	panic(0)
+	// TODO IsStandAlone
+
+	// panic(0)
 	return c, err
 }
 
@@ -120,6 +122,7 @@ func (c *Zaptec) state() (zaptec.StateResponse, error) {
 
 		uri := fmt.Sprintf("%s/api/chargers/%s/state", zaptec.ApiURL, c.id)
 		if err = c.GetJSON(uri, &res); err == nil {
+			c.updated = time.Now()
 			c.status = res
 		}
 	}
@@ -129,23 +132,21 @@ func (c *Zaptec) state() (zaptec.StateResponse, error) {
 
 // Status implements the api.Charger interface
 func (c *Zaptec) Status() (api.ChargeStatus, error) {
-	// resp, err := c.api.Status()
-	// if err != nil {
-	// 	return api.StatusNone, err
-	// }
+	res, err := c.state()
+	if err != nil {
+		return api.StatusA, err
+	}
 
-	// switch car := resp.Status(); car {
-	// case 1:
-	// 	return api.StatusA, nil
-	// case 2:
-	// 	return api.StatusC, nil
-	// case 3, 4:
-	// 	return api.StatusB, nil
-	// default:
-	// 	return api.StatusNone, fmt.Errorf("car unknown result: %d", car)
-	// }
-
-	return api.StatusA, nil
+	switch i, err := res.ObservationByID(zaptec.ChargerOperationMode).Int(); i {
+	case 1:
+		return api.StatusA, err
+	case 2, 5:
+		return api.StatusB, err
+	case 3:
+		return api.StatusC, err
+	default:
+		return api.StatusNone, fmt.Errorf("unknown status: %d", i)
+	}
 }
 
 // Enabled implements the api.Charger interface
@@ -156,13 +157,29 @@ func (c *Zaptec) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Zaptec) Enable(enable bool) error {
+	return api.ErrMustRetry
+}
 
-	return nil
+func (c *Zaptec) update(data zaptec.Update) error {
+	uri := fmt.Sprintf("%s/api/chargers/%s/update", zaptec.ApiURL, c.id)
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		err = c.DoJSON(req, &data)
+		c.updated = time.Time{}
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *Zaptec) MaxCurrent(current int64) error {
-	return nil
+	curr := int(current)
+	data := zaptec.Update{
+		MaxChargeCurrent: &curr,
+	}
+
+	return c.update(data)
 }
 
 var _ api.Meter = (*Zaptec)(nil)
@@ -177,63 +194,47 @@ func (c *Zaptec) CurrentPower() (float64, error) {
 	return res.ObservationByID(zaptec.TotalChargePower).Float64()
 }
 
-// var _ api.ChargeRater = (*Zaptec)(nil)
+var _ api.ChargeRater = (*Zaptec)(nil)
 
-// // ChargedEnergy implements the api.ChargeRater interface
-// func (c *Zaptec) ChargedEnergy() (float64, error) {
-// 	resp, err := c.api.Status()
-// 	if err != nil {
-// 		return 0, err
-// 	}
+// ChargedEnergy implements the api.ChargeRater interface
+func (c *Zaptec) ChargedEnergy() (float64, error) {
+	res, err := c.state()
+	if err != nil {
+		return 0, err
+	}
 
-// 	return resp.ChargedEnergy(), err
-// }
+	return res.ObservationByID(zaptec.TotalChargePowerSession).Float64()
+}
 
-// var _ api.MeterCurrent = (*Zaptec)(nil)
+var _ api.MeterCurrent = (*Zaptec)(nil)
 
-// // Currents implements the api.MeterCurrent interface
-// func (c *Zaptec) Currents() (float64, float64, float64, error) {
-// 	resp, err := c.api.Status()
-// 	if err != nil {
-// 		return 0, 0, 0, err
-// 	}
+// Currents implements the api.MeterCurrent interface
+func (c *Zaptec) Currents() (float64, float64, float64, error) {
+	res, err := c.state()
+	if err != nil {
+		return 0, 0, 0, err
+	}
 
-// 	i1, i2, i3 := resp.Currents()
+	i1, err := res.ObservationByID(zaptec.CurrentPhase1).Float64()
 
-// 	return i1, i2, i3, err
-// }
+	var i2, i3 float64
+	if err == nil {
+		i2, err = res.ObservationByID(zaptec.CurrentPhase2).Float64()
+	}
+	if err == nil {
+		i3, err = res.ObservationByID(zaptec.CurrentPhase3).Float64()
+	}
 
-// var _ api.Identifier = (*Zaptec)(nil)
+	return i1, i2, i3, err
+}
 
-// // Identify implements the api.Identifier interface
-// func (c *Zaptec) Identify() (string, error) {
-// 	resp, err := c.api.Status()
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return resp.Identify(), nil
-// }
+var _ api.ChargePhases = (*Zaptec)(nil)
 
-// // totalEnergy implements the api.MeterEnergy interface - v2 only
-// func (c *Zaptec) totalEnergy() (float64, error) {
-// 	resp, err := c.api.Status()
-// 	if err != nil {
-// 		return 0, err
-// 	}
+// Phases1p3p implements the api.ChargePhases interface
+func (c *Zaptec) Phases1p3p(phases int) error {
+	data := zaptec.Update{
+		MaxChargePhases: &phases,
+	}
 
-// 	var val float64
-// 	if res, ok := resp.(*Zaptec.StatusResponse2); ok {
-// 		val = res.TotalEnergy()
-// 	}
-
-// 	return val, err
-// }
-
-// // phases1p3p implements the api.ChargePhases interface - v2 only
-// func (c *Zaptec) phases1p3p(phases int) error {
-// 	if phases == 3 {
-// 		phases = 2
-// 	}
-
-// 	return c.api.Update(fmt.Sprintf("psm=%d", phases))
-// }
+	return c.update(data)
+}

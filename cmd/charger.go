@@ -78,6 +78,15 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	var phases int
+	if flag := cmd.PersistentFlags().Lookup(flagPhases); flag.Changed {
+		var err error
+		phases, err = strconv.Atoi(flag.Value.String())
+		if err != nil {
+			log.ERROR.Fatalln(err)
+		}
+	}
+
 	var flagUsed bool
 	for _, v := range chargers {
 		if current != noCurrent {
@@ -88,7 +97,23 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
+<<<<<<< HEAD
 		if cmd.Flags().Lookup(flagEnable).Changed {
+=======
+		if phases > 0 {
+			flagUsed = true
+
+			if vv, ok := v.(api.ChargePhases); ok {
+				if err := vv.Phases1p3p(phases); err != nil {
+					log.ERROR.Println("set phases:", err)
+				}
+			} else {
+				log.ERROR.Println("phases: not implemented")
+			}
+		}
+
+		if cmd.PersistentFlags().Lookup(flagEnable).Changed {
+>>>>>>> a868ada62 (wip)
 			flagUsed = true
 
 			if err := v.Enable(true); err != nil {
