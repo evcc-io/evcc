@@ -13,6 +13,16 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	APIVersion   = "protocol=1.0,resource=2.1"
+	ClientID     = "a-ncb-prod-android"
+	ClientSecret = "0sAcrtwvwEXXZp5nzQhPexSRhxUVKa0d76F4uqDvxvvKFHXpo4myoJwUuV4vuNqC"
+	Scope        = "openid profile vehicles"
+	Realm        = "a-ncb-prod"
+	AuthURL      = "https://prod.eu2.auth.kamereon.org/kauth"
+	RedirectURI  = "org.kamereon.service.nci:/oauth2redirect"
+)
+
 type Identity struct {
 	*request.Helper
 	oauth2.TokenSource
@@ -26,7 +36,7 @@ func NewIdentity(log *util.Logger) *Identity {
 }
 
 func (v *Identity) Login(user, password string) error {
-	uri := fmt.Sprintf("%s/json/realms/root/realms/%s/authenticate", AuthBaseURL, Realm)
+	uri := fmt.Sprintf("%s/json/realms/root/realms/%s/authenticate", AuthURL, Realm)
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept-Api-Version": APIVersion,
 		"X-Username":         "anonymous",
@@ -88,7 +98,7 @@ func (v *Identity) Login(user, password string) error {
 			"nonce":         {"sdfdsfez"},
 		}
 
-		uri := fmt.Sprintf("%s/oauth2/%s/authorize?%s", AuthBaseURL, realm, data.Encode())
+		uri := fmt.Sprintf("%s/oauth2/%s/authorize?%s", AuthURL, realm, data.Encode())
 		req, err = request.New(http.MethodGet, uri, nil, map[string]string{
 			"Cookie": "i18next=en-UK; amlbcookie=05; kauthSession=" + nToken.TokenID,
 		})
@@ -115,7 +125,7 @@ func (v *Identity) Login(user, password string) error {
 			"grant_type":    {"authorization_code"},
 		}
 
-		uri = fmt.Sprintf("%s/oauth2/%s/access_token?%s", AuthBaseURL, realm, data.Encode())
+		uri = fmt.Sprintf("%s/oauth2/%s/access_token?%s", AuthURL, realm, data.Encode())
 		req, err = request.New(http.MethodPost, uri, nil, request.URLEncoding)
 		if err == nil {
 			err = v.DoJSON(req, &token)
@@ -137,7 +147,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"refresh_token": {token.RefreshToken},
 	}
 
-	uri := fmt.Sprintf("%s/oauth2/%s/access_token?%s", AuthBaseURL, Realm, data.Encode())
+	uri := fmt.Sprintf("%s/oauth2/%s/access_token?%s", AuthURL, Realm, data.Encode())
 	req, err := request.New(http.MethodPost, uri, nil, request.URLEncoding)
 
 	var res oauth.Token
