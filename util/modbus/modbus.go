@@ -296,13 +296,13 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	case "int16":
 		op.Transform = rs485.RTUInt16ToFloat64
 		op.ReadLen = 1
-	case "int16sma":
+	case "int16nan":
 		op.Transform = decodeNaN16(1<<15, rs485.RTUInt16ToFloat64)
 		op.ReadLen = 1
 	case "uint16":
 		op.Transform = rs485.RTUUint16ToFloat64
 		op.ReadLen = 1
-	case "uint16sma":
+	case "uint16nan":
 		op.Transform = decodeNaN16(0xFFFF, rs485.RTUUint16ToFloat64)
 		op.ReadLen = 1
 	case "bool16":
@@ -316,7 +316,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	// 32 bit
 	case "int32":
 		op.Transform = rs485.RTUInt32ToFloat64
-	case "int32sma":
+	case "int32nan":
 		op.Transform = decodeNaN32(1<<31, rs485.RTUInt32ToFloat64)
 	case "int32s":
 		op.Transform = rs485.RTUInt32ToFloat64Swapped
@@ -324,7 +324,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.Transform = rs485.RTUUint32ToFloat64
 	case "uint32s":
 		op.Transform = rs485.RTUUint32ToFloat64Swapped
-	case "uint32sma":
+	case "uint32nan":
 		op.Transform = decodeNaN32(0xFFFFFFFF, rs485.RTUUint32ToFloat64)
 	case "float32", "ieee754":
 		op.Transform = rs485.RTUIeee754ToFloat64
@@ -335,7 +335,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	case "uint64":
 		op.Transform = rs485.RTUUint64ToFloat64
 		op.ReadLen = 4
-	case "uint64sma":
+	case "uint64nan":
 		op.Transform = decodeNaN64(0xFFFFFFFFFFFFFFFF, rs485.RTUUint64ToFloat64)
 		op.ReadLen = 4
 	case "float64":
