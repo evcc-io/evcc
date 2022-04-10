@@ -101,14 +101,6 @@ func NewZaptec(user, password string, cache time.Duration) (api.Charger, error) 
 		}
 	}
 
-	if err == nil {
-		res, _ := c.state()
-
-		for _, s := range res {
-			fmt.Println(zaptec.ObservationID(s.StateId).String(), s.ValueAsString)
-		}
-	}
-
 	// TODO IsStandAlone
 
 	// panic(0)
@@ -122,6 +114,12 @@ func (c *Zaptec) state() (zaptec.StateResponse, error) {
 
 		uri := fmt.Sprintf("%s/api/chargers/%s/state", zaptec.ApiURL, c.id)
 		if err = c.GetJSON(uri, &res); err == nil {
+			for _, s := range res {
+				if s.ValueAsString != "" {
+					fmt.Println(zaptec.ObservationID(s.StateId).String(), s.ValueAsString)
+				}
+			}
+
 			c.updated = time.Now()
 			c.status = res
 		}
@@ -145,7 +143,10 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 	case 3:
 		return api.StatusC, err
 	default:
-		return api.StatusNone, fmt.Errorf("unknown status: %d", i)
+		if err == nil {
+			err = fmt.Errorf("unknown status: %d", i)
+		}
+		return api.StatusNone, err
 	}
 }
 
