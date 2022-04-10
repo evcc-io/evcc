@@ -20,20 +20,24 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/zaptec"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
-// https://go-e.co/app/api.pdf
-// https://github.com/Zapteccharger/go-eCharger-API-v1/
-// https://github.com/Zapteccharger/go-eCharger-API-v2/
+// https://api.zaptec.com/help/index.html
 
 // Zaptec charger implementation
 type Zaptec struct {
-	*util.Helper
+	*request.Helper
+	token *oauth2.Token
 }
 
 func init() {
@@ -43,170 +47,172 @@ func init() {
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
 func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Token string
-		URI   string
-		Cache time.Duration
+		User, Password string
+		Cache          time.Duration
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.URI != "" && cc.Token != "" {
-		return nil, errors.New("should only have one of uri/token")
-	}
-	if cc.URI == "" && cc.Token == "" {
-		return nil, errors.New("must have one of uri/token")
+	if cc.User == "" || cc.Password == "" {
+		return nil, errors.New("need user and password")
 	}
 
-	return NewZaptec(cc.URI, cc.Token, cc.Cache)
+	return NewZaptec(cc.User, cc.Password, cc.Cache)
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(uri, token string, cache time.Duration) (api.Charger, error) {
-	c := &Zaptec{}
+func NewZaptec(user, password string, cache time.Duration) (api.Charger, error) {
+	log := util.NewLogger("zaptec").Redact(user, password)
 
-	log := util.NewLogger("zaptec").Redact(token)
-
-	if token != "" {
-		c.api = Zaptec.NewCloud(log, token, cache)
-	} else {
-		c.api = Zaptec.NewLocal(log, util.DefaultScheme(uri, "http"), cache)
+	c := &Zaptec{
+		Helper: request.NewHelper(log),
 	}
 
-	if c.api.IsV2() {
-		var phases func(int) error
-		if sponsor.IsAuthorized() {
-			phases = c.phases1p3p
-		} else {
-			log.WARN.Println("automatic 1p3p phase switching requires sponsor token")
+	data := url.Values{
+		"grant_type": {"password"},
+		"username":   {user},
+		"password":   {password},
+	}
+
+	uri := fmt.Sprintf("%s/oauth/token", zaptec.ApiURL)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	if err == nil {
+		var token oauth2.Token
+		if err = c.DoJSON(req, &token); err == nil {
+			c.Transport = &oauth2.Transport{
+				Source: oauth2.StaticTokenSource(&token),
+				Base:   c.Transport,
+			}
 		}
-
-		return decorateZaptec(c, c.totalEnergy, phases), nil
 	}
 
-	return c, nil
+	var res zaptec.ChargersResponse
+	if err == nil {
+		uri = fmt.Sprintf("%s/api/chargers", zaptec.ApiURL)
+		err = c.GetJSON(uri, &res)
+
+		fmt.Printf("%+v\n", res)
+	}
+
+	if err == nil {
+		var res2 []zaptec.State
+		uri = fmt.Sprintf("%s/api/chargers/%s/state", zaptec.ApiURL, res.Data[0].Id)
+		err = c.GetJSON(uri, &res2)
+
+		fmt.Printf("%+v\n", res)
+	}
+
+	return c, err
 }
 
 // Status implements the api.Charger interface
 func (c *Zaptec) Status() (api.ChargeStatus, error) {
-	resp, err := c.api.Status()
-	if err != nil {
-		return api.StatusNone, err
-	}
+	// resp, err := c.api.Status()
+	// if err != nil {
+	// 	return api.StatusNone, err
+	// }
 
-	switch car := resp.Status(); car {
-	case 1:
-		return api.StatusA, nil
-	case 2:
-		return api.StatusC, nil
-	case 3, 4:
-		return api.StatusB, nil
-	default:
-		return api.StatusNone, fmt.Errorf("car unknown result: %d", car)
-	}
+	// switch car := resp.Status(); car {
+	// case 1:
+	// 	return api.StatusA, nil
+	// case 2:
+	// 	return api.StatusC, nil
+	// case 3, 4:
+	// 	return api.StatusB, nil
+	// default:
+	// 	return api.StatusNone, fmt.Errorf("car unknown result: %d", car)
+	// }
+
+	return api.StatusA, nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *Zaptec) Enabled() (bool, error) {
-	resp, err := c.api.Status()
-	if err != nil {
-		return false, err
-	}
-
-	return resp.Enabled(), nil
+	return false, nil
 }
 
 // Enable implements the api.Charger interface
 func (c *Zaptec) Enable(enable bool) error {
-	var b int
-	if enable {
-		b = 1
-	}
 
-	param := map[bool]string{false: "alw", true: "frc"}[c.api.IsV2()]
-	if c.api.IsV2() {
-		b += 1
-	}
-
-	return c.api.Update(fmt.Sprintf("%s=%d", param, b))
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *Zaptec) MaxCurrent(current int64) error {
-	param := map[bool]string{false: "amx", true: "amp"}[c.api.IsV2()]
-	return c.api.Update(fmt.Sprintf("%s=%d", param, current))
+	return nil
 }
 
-var _ api.Meter = (*Zaptec)(nil)
+// var _ api.Meter = (*Zaptec)(nil)
 
-// CurrentPower implements the api.Meter interface
-func (c *Zaptec) CurrentPower() (float64, error) {
-	resp, err := c.api.Status()
-	if err != nil {
-		return 0, err
-	}
+// // CurrentPower implements the api.Meter interface
+// func (c *Zaptec) CurrentPower() (float64, error) {
+// 	resp, err := c.api.Status()
+// 	if err != nil {
+// 		return 0, err
+// 	}
 
-	return resp.CurrentPower(), err
-}
+// 	return resp.CurrentPower(), err
+// }
 
-var _ api.ChargeRater = (*Zaptec)(nil)
+// var _ api.ChargeRater = (*Zaptec)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *Zaptec) ChargedEnergy() (float64, error) {
-	resp, err := c.api.Status()
-	if err != nil {
-		return 0, err
-	}
+// // ChargedEnergy implements the api.ChargeRater interface
+// func (c *Zaptec) ChargedEnergy() (float64, error) {
+// 	resp, err := c.api.Status()
+// 	if err != nil {
+// 		return 0, err
+// 	}
 
-	return resp.ChargedEnergy(), err
-}
+// 	return resp.ChargedEnergy(), err
+// }
 
-var _ api.MeterCurrent = (*Zaptec)(nil)
+// var _ api.MeterCurrent = (*Zaptec)(nil)
 
-// Currents implements the api.MeterCurrent interface
-func (c *Zaptec) Currents() (float64, float64, float64, error) {
-	resp, err := c.api.Status()
-	if err != nil {
-		return 0, 0, 0, err
-	}
+// // Currents implements the api.MeterCurrent interface
+// func (c *Zaptec) Currents() (float64, float64, float64, error) {
+// 	resp, err := c.api.Status()
+// 	if err != nil {
+// 		return 0, 0, 0, err
+// 	}
 
-	i1, i2, i3 := resp.Currents()
+// 	i1, i2, i3 := resp.Currents()
 
-	return i1, i2, i3, err
-}
+// 	return i1, i2, i3, err
+// }
 
-var _ api.Identifier = (*Zaptec)(nil)
+// var _ api.Identifier = (*Zaptec)(nil)
 
-// Identify implements the api.Identifier interface
-func (c *Zaptec) Identify() (string, error) {
-	resp, err := c.api.Status()
-	if err != nil {
-		return "", err
-	}
-	return resp.Identify(), nil
-}
+// // Identify implements the api.Identifier interface
+// func (c *Zaptec) Identify() (string, error) {
+// 	resp, err := c.api.Status()
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return resp.Identify(), nil
+// }
 
-// totalEnergy implements the api.MeterEnergy interface - v2 only
-func (c *Zaptec) totalEnergy() (float64, error) {
-	resp, err := c.api.Status()
-	if err != nil {
-		return 0, err
-	}
+// // totalEnergy implements the api.MeterEnergy interface - v2 only
+// func (c *Zaptec) totalEnergy() (float64, error) {
+// 	resp, err := c.api.Status()
+// 	if err != nil {
+// 		return 0, err
+// 	}
 
-	var val float64
-	if res, ok := resp.(*Zaptec.StatusResponse2); ok {
-		val = res.TotalEnergy()
-	}
+// 	var val float64
+// 	if res, ok := resp.(*Zaptec.StatusResponse2); ok {
+// 		val = res.TotalEnergy()
+// 	}
 
-	return val, err
-}
+// 	return val, err
+// }
 
-// phases1p3p implements the api.ChargePhases interface - v2 only
-func (c *Zaptec) phases1p3p(phases int) error {
-	if phases == 3 {
-		phases = 2
-	}
+// // phases1p3p implements the api.ChargePhases interface - v2 only
+// func (c *Zaptec) phases1p3p(phases int) error {
+// 	if phases == 3 {
+// 		phases = 2
+// 	}
 
-	return c.api.Update(fmt.Sprintf("psm=%d", phases))
-}
+// 	return c.api.Update(fmt.Sprintf("psm=%d", phases))
+// }
