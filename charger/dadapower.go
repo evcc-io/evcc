@@ -33,7 +33,6 @@ type Dadapower struct {
 	log       *util.Logger
 	conn      *modbus.Connection
 	regOffset uint16
-	current   uint16
 }
 
 func init() {
@@ -62,9 +61,8 @@ func NewDadapower(uri string, id uint8) (*Dadapower, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Dadapower{
-		log:     log,
-		conn:    conn,
-		current: 6,
+		log:  log,
+		conn: conn,
 	}
 
 	// 5min failsafe timeout
@@ -137,19 +135,22 @@ func (wb *Dadapower) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the api.Charger interface
-func (wb *Dadapower) MaxCurrent(current int64) error {
+var _ api.ChargerEx = (*Dadapower)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *Dadapower) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+		return fmt.Errorf("invalid current %v", current)
 	}
 
-	u := uint16(current)
-	_, err := wb.conn.WriteSingleRegister(dadapowerRegChargeCurrentLimit+wb.regOffset, u)
-	if err == nil {
-		wb.current = u
-	}
+	_, err := wb.conn.WriteSingleRegister(dadapowerRegChargeCurrentLimit+wb.regOffset, uint16(current*100))
 
 	return err
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *Dadapower) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
 }
 
 var _ api.Meter = (*Dadapower)(nil)
