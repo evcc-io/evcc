@@ -1,6 +1,6 @@
 template: enyaq
 products:
-  - brand: Skoda
+  - brand: Škoda
     description:
       generic: Enyaq
 params:

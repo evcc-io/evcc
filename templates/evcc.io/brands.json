@@ -91,7 +91,7 @@
  "Vehicles": [
   "Audi",
   "BMW",
-  "Citroen",
+  "Citroën",
   "Dacia",
   "DS",
   "Fiat",
@@ -108,10 +108,10 @@
   "Porsche",
   "Renault",
   "Seat",
-  "Skoda",
   "Smart",
   "Tesla",
   "Volkswagen",
-  "Volvo"
+  "Volvo",
+  "Škoda"
  ]
 }

@@ -1,6 +1,6 @@
 product:
   brand: Seat
-  description: Cupra, Mii
+  description: Standard
 render:
   - default: |
       type: template

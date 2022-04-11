@@ -1,6 +1,6 @@
 template: citroen
 products:
-  - brand: Citroen
+  - brand: Citroën
 params:
   - preset: vehiclebase
   - preset: vehicleidentify

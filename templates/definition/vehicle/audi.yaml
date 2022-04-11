@@ -2,8 +2,8 @@ template: audi
 products:
   - brand: Audi
     description:
-      de: andere
-      en: others
+      de: Standard
+      en: Default
 params:
   - preset: vehiclebase
   - preset: vehicleidentify

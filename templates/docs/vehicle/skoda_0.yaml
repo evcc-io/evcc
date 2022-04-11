@@ -1,6 +1,6 @@
 product:
-  brand: Skoda
-  description: Citigo
+  brand: Škoda
+  description: Standard
 render:
   - default: |
       type: template

@@ -1,8 +1,9 @@
 template: skoda
 products:
-  - brand: Skoda
+  - brand: Škoda
     description:
-      generic: Citigo
+      de: Standard
+      en: Default
 params:
   - preset: vehiclebase
   - preset: vehicleidentify
