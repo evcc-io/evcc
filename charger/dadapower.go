@@ -73,7 +73,6 @@ func NewDadapower(uri string, id uint8) (*Dadapower, error) {
 	}
 
 	// The charging station may have multiple charging ports - use offset for register addresses for each port
-	wb.regOffset = 0
 	if id > 1 {
 		wb.regOffset = (uint16(id) - 1) * 1000
 	}
@@ -128,7 +127,7 @@ func (wb *Dadapower) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Dadapower) Enable(enable bool) error {
-	var u uint16 = 0
+	var u uint16
 	if enable {
 		u = 1
 	}
