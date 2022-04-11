@@ -2,7 +2,7 @@ template: dadapower
 products:
   - brand: Dadapower
     description:
-      generic: Dadapower Premium Wallbox
+      generic: Premium Wallbox
 capabilities: ["1p3p", "rfid"]
 params:
   - name: modbus
