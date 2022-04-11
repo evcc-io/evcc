@@ -1,0 +1,14 @@
+template: dadapower
+products:
+  - brand: Dadapower
+    description:
+      generic: Dadapower Premium Wallbox
+capabilities: ["1p3p", "rfid"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+    phases: true
+render: |
+  type: dadapower
+  {{- include "modbus" . }}
