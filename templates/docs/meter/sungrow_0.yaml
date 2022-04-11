@@ -1,8 +1,8 @@
 product:
   brand: Sungrow
-  description: Inverter (LAN)
+  description: Inverter
 description: |
-  beta
+  Die Verbindung zu Sungrow-Geräten ist nur über den LAN-Port (am Gerät) oder seriell via RS485-Port möglich. Nicht verfügbar über das WiNet-S-Dongle!
 render:
   - usage: grid
     default: |
