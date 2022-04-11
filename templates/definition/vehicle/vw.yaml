@@ -12,8 +12,6 @@ params:
   - preset: vehicleidentify
   - name: vin
     example: WVWZZZ...
-  - name: capacity
-    default: 10
   - preset: vehiclecloud
 render: |
   type: vw
