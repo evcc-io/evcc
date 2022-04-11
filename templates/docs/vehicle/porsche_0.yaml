@@ -5,16 +5,16 @@ render:
       type: template
       template: porsche
       title: # Wird in der Benutzeroberfläche angezeigt # Optional
-      user: # Benutzername um auf das Gerät zuzugreifen
-      password: # Passwort des Benutzerkontos
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
       capacity: 83.4 # Akku-Kapazität in kWh # Optional
     advanced: |
       type: template
       template: porsche
       title: # Wird in der Benutzeroberfläche angezeigt # Optional
-      user: # Benutzername um auf das Gerät zuzugreifen
-      password: # Passwort des Benutzerkontos
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
       capacity: 83.4 # Akku-Kapazität in kWh # Optional
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können # Optional

@@ -9,8 +9,6 @@ requirements:
     de: Benötigt mindestens Firmware 040.0 oder neuer.
 params:
   - name: host
-    required: true
-    example: 192.0.2.2
 render: |
   type: go-e
   uri: http://{{ .host }}

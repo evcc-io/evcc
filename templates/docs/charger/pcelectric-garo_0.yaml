@@ -8,5 +8,5 @@ render:
   - default: |
       type: template
       template: pcelectric-garo
-      host: 192.0.2.2 # IP-Adresse oder Hostname # Optional
+      host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 8080 # Port # Optional

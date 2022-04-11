@@ -6,7 +6,7 @@ render:
   - default: |
       type: template
       template: tapo
-      host: 192.0.2.2 # Die IP-Adresse der Tapo Steckdose im lokalen LAN/WLAN
-      user: # TP-Link Benutzerkonto (Normalerweise die E-Mail Adresse, wie in der Tapo App konfiguriert)
-      password: # Password des TP-Link Benutzerkontos
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional

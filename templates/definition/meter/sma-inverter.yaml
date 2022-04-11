@@ -8,8 +8,6 @@ params:
   - name: usage
     choice: ["pv", "battery"]
   - name: host
-    example: 192.0.2.2
-    required: true
   - name: password
     mask: true
     help:

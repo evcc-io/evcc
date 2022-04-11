@@ -6,22 +6,11 @@ products:
 group: switchsockets
 params:
   - name: host
-    required: true
-    example: 192.0.2.2
-    help:
-      en: tapo device ip address (local)
-      de: Die IP-Adresse der Tapo Steckdose im lokalen LAN/WLAN
   - name: user
     required: true
-    help:
-      en: user of TP-Link account (usually an e-mail address)
-      de: TP-Link Benutzerkonto (Normalerweise die E-Mail Adresse, wie in der Tapo App konfiguriert)
   - name: password
     required: true
     mask: true
-    help:
-      en: password of of TP-Link account
-      de: Password des TP-Link Benutzerkontos
   - name: standbypower
     default: 15
 render: |

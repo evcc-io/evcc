@@ -267,6 +267,7 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 func (d *Connection) CheckErrorCode(errorCode int) error {
 	errorDesc := map[int]string{
 		0:     "Success",
+		9999:  "Login failed, invalid user or password",
 		-1002: "Incorrect Request/Method",
 		-1003: "JSON formatting error ",
 		-1010: "Invalid Public Key Length",

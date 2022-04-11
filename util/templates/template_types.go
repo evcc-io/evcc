@@ -213,7 +213,7 @@ func (p *Param) DefaultValue(renderMode string) interface{} {
 
 // overwrite specific properties by using values from another param
 //
-// always overwrites if not provided empty: description, valuetype, default, mask
+// always overwrites if not provided empty: description, valuetype, default, mask, required
 //
 // only overwrite if not provided empty and empty in param: help, example, requirements
 func (p *Param) OverwriteProperties(withParam Param) {
@@ -222,6 +222,10 @@ func (p *Param) OverwriteProperties(withParam Param) {
 
 	if withParam.ValueType != "" {
 		p.ValueType = withParam.ValueType
+	}
+
+	if withParam.Required {
+		p.Required = withParam.Required
 	}
 
 	if withParam.Default != "" {

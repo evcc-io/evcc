@@ -37,13 +37,14 @@ params:
       en: Communication parameter for the adapter
     default: 8N1
   - name: host
+    required: true
     description:
       de: IP-Adresse oder Hostname
       en: IP-Address or Hostname
     help:
       de: IP-Adresse oder Hostname
       en: IP-Address or Hostname
-    example: "192.0.2.2"
+    example: 192.0.2.2
   - name: port
     description:
       de: Port
@@ -61,26 +62,26 @@ params:
       en: Topic (omit leading /)
   - name: user
     description:
-      de: Benutzername
+      de: Benutzerkonto
       en: Username
     help:
-      de: Benutzername um auf das Gerät zuzugreifen
-      en: Username to access the device
+      de: Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      en: User-account (e.g. email address, user id, etc.)
   - name: password
     description:
       de: Passwort
       en: Password
     help:
-      de: Passwort des Benutzerkontos
-      en: Password of the account
+      de: Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
+      en: Password of the user account (use single quotes in case of leading zeros)
     mask: true
   - name: capacity
     description:
       de: Akku-Kapazität in kWh
-      en: Battery-Capacity in kWh
+      en: Battery capacity in kWh
     help:
       de: Akku-Kapazität in kWh
-      en: Battery-Capacity in kWh
+      en: Battery capacity in kWh
     example: "41.5"
     valuetype: float
   - name: vin

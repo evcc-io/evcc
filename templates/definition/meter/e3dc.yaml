@@ -8,8 +8,6 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
-    example: 192.0.2.2
-    required: true
   - name: port
     default: 502
 render: |
