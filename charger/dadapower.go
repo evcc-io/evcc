@@ -80,7 +80,6 @@ func NewDadapower(uri string, id uint8) (*Dadapower, error) {
 	return wb, nil
 }
 
-// heartbeat implements the api.ChargerEx interface
 func (wb *Dadapower) heartbeat() {
 	for range time.NewTicker(time.Minute).C {
 		if _, err := wb.conn.ReadInputRegisters(dadapowerRegFailsafeTimeout, 1); err != nil {
