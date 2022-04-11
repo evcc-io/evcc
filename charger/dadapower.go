@@ -100,7 +100,7 @@ func (wb *Dadapower) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch b[1] {
+	switch binary.BigEndian.Uint16(b) {
 	case 0x0A: // ready
 		return api.StatusA, nil
 	case 0x0B: // EV is present
