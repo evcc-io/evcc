@@ -8,7 +8,6 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
-    phases: true
 render: |
   type: dadapower
   {{- include "modbus" . }}
