@@ -42,32 +42,6 @@
   "TP-Link"
  ],
  "Meters": [
-  "Audi",
-  "BMW",
-  "Citroen",
-  "Dacia",
-  "DS",
-  "Fiat",
-  "Ford",
-  "Hyundai",
-  "Jaguar",
-  "Kia",
-  "Land Rover",
-  "Mini",
-  "Nissan",
-  "NIU",
-  "Opel",
-  "Peugeot",
-  "Porsche",
-  "Renault",
-  "Seat",
-  "Skoda",
-  "Smart",
-  "Tesla",
-  "Volkswagen",
-  "Volvo"
- ],
- "PVBattery": [
   "AVM",
   "cFos",
   "Eastron",
@@ -92,7 +66,7 @@
   "Victron",
   "Volkszähler"
  ],
- "Vehicles": [
+ "PVBattery": [
   "AVM",
   "Eastron",
   "FENECON",
@@ -113,5 +87,31 @@
   "Tesla",
   "VARTA",
   "Victron"
+ ],
+ "Vehicles": [
+  "Audi",
+  "BMW",
+  "Citroen",
+  "Dacia",
+  "DS",
+  "Fiat",
+  "Ford",
+  "Hyundai",
+  "Jaguar",
+  "Kia",
+  "Land Rover",
+  "Mini",
+  "Nissan",
+  "NIU",
+  "Opel",
+  "Peugeot",
+  "Porsche",
+  "Renault",
+  "Seat",
+  "Skoda",
+  "Smart",
+  "Tesla",
+  "Volkswagen",
+  "Volvo"
  ]
 }

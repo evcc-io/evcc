@@ -147,9 +147,9 @@ func generateBrandJSON() error {
 	}{
 		Chargers:   sortedKeys(chargers),
 		SmartPlugs: sortedKeys(smartPlugs),
-		Meters:     sortedKeys(vehicles),
-		PVBattery:  sortedKeys(meters),
-		Vehicles:   sortedKeys(pvBattery),
+		Meters:     sortedKeys(meters),
+		PVBattery:  sortedKeys(pvBattery),
+		Vehicles:   sortedKeys(vehicles),
 	}
 
 	file, _ := json.MarshalIndent(brands, "", " ")
