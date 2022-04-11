@@ -4,10 +4,11 @@ product:
 render:
   - default: |
       type: template
-      template: dadapower
+      template: dadapower      
 
       # Modbus TCP
       modbus: tcpip
-      id: 1 # 1 for port 1 (left) and 2 for port 2 (right)
+      id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
+      chargeport: 1
