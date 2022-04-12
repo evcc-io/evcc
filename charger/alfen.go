@@ -93,7 +93,6 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 	return wb, err
 }
 
-// heartbeat implements the api.ChargerEx interface
 func (wb *Alfen) heartbeat() {
 	for range time.NewTicker(time.Minute).C {
 		wb.mu.Lock()

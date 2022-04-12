@@ -26,6 +26,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -76,6 +77,8 @@ func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewBenderCC(cc.URI, cc.ID)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+
 // NewBenderCC creates BenderCC charger
 func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
@@ -93,6 +96,12 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	wb := &BenderCC{
 		conn:    conn,
 		current: 6, // assume min current
+	}
+
+	// check presence of metering
+	b, err := wb.conn.ReadHoldingRegisters(bendRegActivePower, 2)
+	if err == nil && (binary.BigEndian.Uint32(b) != math.MaxUint32) {
+		return decorateBenderCC(wb, wb.currentPower, wb.currents, wb.chargedEnergy, wb.totalEnergy), nil
 	}
 
 	return wb, err
@@ -176,10 +185,8 @@ func (wb *BenderCC) ChargingTime() (time.Duration, error) {
 	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
-var _ api.Meter = (*BenderCC)(nil)
-
 // CurrentPower implements the api.Meter interface
-func (wb *BenderCC) CurrentPower() (float64, error) {
+func (wb *BenderCC) currentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(bendRegActivePower, 2)
 	if err != nil {
 		return 0, err
@@ -188,10 +195,8 @@ func (wb *BenderCC) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-var _ api.ChargeRater = (*BenderCC)(nil)
-
 // ChargedEnergy implements the api.ChargeRater interface
-func (wb *BenderCC) ChargedEnergy() (float64, error) {
+func (wb *BenderCC) chargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(bendRegChargedEnergy, 2)
 	if err != nil {
 		return 0, err
@@ -200,10 +205,8 @@ func (wb *BenderCC) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-var _ api.MeterEnergy = (*BenderCC)(nil)
-
 // TotalEnergy implements the api.MeterEnergy interface
-func (wb *BenderCC) TotalEnergy() (float64, error) {
+func (wb *BenderCC) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(bendRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err
@@ -212,10 +215,8 @@ func (wb *BenderCC) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-var _ api.MeterCurrent = (*BenderCC)(nil)
-
 // Currents implements the api.MeterCurrent interface
-func (wb *BenderCC) Currents() (float64, float64, float64, error) {
+func (wb *BenderCC) currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(bendRegCurrents, 6)
 	if err != nil {
 		return 0, 0, 0, err

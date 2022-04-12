@@ -1,5 +1,5 @@
 product:
-  brand: Solaredge
+  brand: SolarEdge
   description: Wechselrichter
 render:
   - usage: grid

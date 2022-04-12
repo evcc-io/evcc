@@ -6,8 +6,6 @@ products:
 params:
   - preset: vehiclebase
   - preset: vehicleidentify
-  - name: capacity
-    default: 50
   - preset: vehiclecloud
 render: |
   type: enyaq

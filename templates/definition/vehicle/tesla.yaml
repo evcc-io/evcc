@@ -32,7 +32,6 @@ params:
   - name: vin
     example: W...
   - name: capacity
-    default: 90
   - name: phases
     advanced: true
   - preset: vehicleidentify
