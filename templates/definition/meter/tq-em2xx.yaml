@@ -14,4 +14,4 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}:{{ .port }}/mum-webservice/data.php
-    jq: ."1-0:1.4.0*255"-."1-0:2.4.0*255" # Active power+ - Active power-
+    jq: .["1-0:1.4.0*255"]-.["1-0:2.4.0*255"] # Active power+ - Active power-

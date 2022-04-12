@@ -14,14 +14,14 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}:{{ .port }}/mum-webservice/data.php
-    jq: ."1-0:1.4.0*255"-."1-0:2.4.0*255" # Active power+ - Active power-
+    jq: .["1-0:1.4.0*255"]-.["1-0:2.4.0*255"] # Active power+ - Active power-
   currents:
     - source: http
       uri: http://{{ .host }}:{{ .port }}/mum-webservice/data.php
-      jq: ."1-0:31.4.0*255" # Current (L1)
+      jq: .["1-0:31.4.0*255"] # Current (L1)
     - source: http
       uri: http://{{ .host }}:{{ .port }}/mum-webservice/data.php
-      jq: ."1-0:51.4.0*255" # Current (L2)
+      jq: .["1-0:51.4.0*255"] # Current (L2)
     - source: http
       uri: http://{{ .host }}:{{ .port }}/mum-webservice/data.php
-      jq: ."1-0:71.4.0*255" # Current (L3)
+      jq: .["1-0:71.4.0*255"] # Current (L3)
