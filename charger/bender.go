@@ -26,6 +26,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -99,7 +100,7 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 
 	// check presence of metering
 	b, err := wb.conn.ReadHoldingRegisters(bendRegActivePower, 2)
-	if err == nil && (binary.BigEndian.Uint32(b) != 0xFFFFFFFF) {
+	if err == nil && (binary.BigEndian.Uint32(b) != math.MaxUint32) {
 		return decorateBenderCC(wb, wb.currentPower, wb.currents, wb.chargedEnergy, wb.totalEnergy), nil
 	}
 
