@@ -151,7 +151,7 @@ export default {
 </script>
 <style scoped>
 .top-area {
-	background: var(--bs-white);
+	background: linear-gradient(0deg, var(--bs-white) 60%, var(--bs-gray-dark) 60%);
 }
 .content-area {
 	background-color: var(--bs-gray-dark);
