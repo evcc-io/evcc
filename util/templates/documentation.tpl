@@ -9,10 +9,10 @@ product:
   group: {{ .ProductGroup }}
 {{- end }}
 {{- if .Capabilities }}
-capabilities: [{{ range .Capabilities -}}"{{ . }}"{{- end }}]
+capabilities: ["{{ join "\", \"" .Capabilities }}"]
 {{- end }}
 {{- if .Requirements }}
-requirements: [{{ range .Requirements -}}"{{ . }}"{{- end }}]
+requirements: ["{{ join "\", \"" .Requirements }}"]
 {{- end }}
 {{- if .RequirementDescription }}
 description: |

@@ -101,7 +101,6 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 	return wb, nil
 }
 
-// heartbeat implements the api.ChargerEx interface
 func (wb *Vestel) heartbeat() {
 	for range time.NewTicker(time.Minute).C {
 		if _, err := wb.conn.WriteSingleRegister(vestelRegAlive, 1); err != nil {

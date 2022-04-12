@@ -2,12 +2,13 @@ template: sungrow
 products:
   - brand: Sungrow
     description:
-      generic: Inverter (LAN)
+      generic: Inverter
 guidedsetup:
   enable: true
 requirements:
   description:
-    generic: beta
+    de: Die Verbindung zu Sungrow-Geräten ist nur über den LAN-Port (am Gerät) oder seriell via RS485-Port möglich. Nicht verfügbar über das WiNet-S-Dongle!
+    en: Communication to Sungrow-Devices may only be established by using the LAN port (on device) or serial RS485 port. Not available on WiNet-S-Dongle!
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
