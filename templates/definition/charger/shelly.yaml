@@ -1,7 +1,6 @@
 template: shelly
 products:
-  - description:
-      generic: Shelly
+  - brand: Shelly
 group: switchsockets
 params:
   - name: host

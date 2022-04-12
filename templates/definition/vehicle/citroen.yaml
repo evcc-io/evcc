@@ -1,11 +1,9 @@
 template: citroen
 products:
-  - brand: Citroen
+  - brand: Citroën
 params:
   - preset: vehiclebase
   - preset: vehicleidentify
-  - name: capacity
-    default: 50
   - preset: vehiclecloud
 render: |
   type: citroen

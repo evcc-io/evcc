@@ -10,7 +10,6 @@ params:
   - name: token
     required: true
   - name: capacity
-    default: 64
     valuetype: float
   - name: phases
     advanced: true

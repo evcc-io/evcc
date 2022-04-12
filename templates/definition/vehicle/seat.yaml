@@ -2,12 +2,11 @@ template: seat
 products:
   - brand: Seat
     description:
-      generic: Cupra, Mii
+      de: Andere
+      en: Others
 params:
   - preset: vehiclebase
   - preset: vehicleidentify
-  - name: capacity
-    default: 10
   - preset: vehiclecloud
 render: |
   type: seat

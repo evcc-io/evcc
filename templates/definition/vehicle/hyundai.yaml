@@ -7,8 +7,6 @@ params:
   - preset: vehiclebase
   - preset: vehiclelanguage
   - preset: vehicleidentify
-  - name: capacity
-    default: 64
   - preset: vehiclecloud
 render: |
   type: hyundai

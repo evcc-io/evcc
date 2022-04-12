@@ -1,6 +1,6 @@
 template: solaredge-inverter
 products:
-  - brand: Solaredge
+  - brand: SolarEdge
     description:
       de: Wechselrichter
       en: Inverter

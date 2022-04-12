@@ -1,0 +1,47 @@
+name: Deploy data to website
+
+on:
+  push:
+    branches: [master]
+    paths: "templates/evcc.io/**"
+  workflow_dispatch:
+
+jobs:
+  brandupdate:
+    name: Deploy data to website
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.18
+        id: go
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install tools
+        run: make install
+
+      - name: Build docs
+        run: make docs
+
+      - name: Clean git
+        run: |
+          git checkout go.*
+          rm -rf flags buildflags
+
+      - name: Deploy to evcc.io repo
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.GH_REPO }}
+          publish_dir: ./templates/evcc.io/
+          external_repository: evcc-io/evcc.io
+          publish_branch: main
+          destination_dir: data
+          allow_empty_commit: false
+          commit_message: Brand data update
+        if: ${{ success() }}
