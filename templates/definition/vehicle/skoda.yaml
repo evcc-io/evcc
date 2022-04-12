@@ -2,8 +2,8 @@ template: skoda
 products:
   - brand: Škoda
     description:
-      de: Standard
-      en: Default
+      de: Andere
+      en: Others
 params:
   - preset: vehiclebase
   - preset: vehicleidentify

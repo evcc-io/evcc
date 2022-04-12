@@ -1,6 +1,6 @@
 product:
   brand: Škoda
-  description: Standard
+  description: Andere
 render:
   - default: |
       type: template
