@@ -24,7 +24,7 @@ import (
 )
 
 type config struct {
-	URI          interface{} // deprecated
+	URI          interface{} // TODO deprecated
 	Network      networkConfig
 	Log          string
 	SponsorToken string
