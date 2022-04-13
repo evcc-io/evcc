@@ -10,7 +10,7 @@ import (
 //go:embed demo.yaml
 var demoYaml string
 
-func demoConfig() (conf config) {
+func demoConfig(conf *config) {
 	demo := map[string]interface{}{}
 
 	if err := yaml.Unmarshal([]byte(demoYaml), &demo); err != nil {
@@ -24,6 +24,4 @@ func demoConfig() (conf config) {
 	if err := viper.UnmarshalExact(&conf); err != nil {
 		log.FATAL.Fatalf("failed loading demo config: %v", err)
 	}
-
-	return conf
 }

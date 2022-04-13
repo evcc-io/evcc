@@ -29,8 +29,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
-	conf, err := loadConfigFile(cfgFile)
-	if err != nil {
+	if err := loadConfigFile(cfgFile, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -55,6 +54,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	}
 
 	var token *oauth2.Token
+	var err error
 
 	switch strings.ToLower(vehicleConf.Type) {
 	case "tesla":

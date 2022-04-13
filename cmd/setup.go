@@ -31,7 +31,7 @@ func init() {
 
 var cp = new(ConfigProvider)
 
-func loadConfigFile(cfgFile string) (conf config, err error) {
+func loadConfigFile(cfgFile string, conf *config) (err error) {
 	if cfgFile != "" {
 		log.INFO.Println("using config file", cfgFile)
 		if err := viper.UnmarshalExact(&conf); err != nil {
@@ -41,7 +41,7 @@ func loadConfigFile(cfgFile string) (conf config, err error) {
 		err = errors.New("missing evcc config")
 	}
 
-	return conf, err
+	return err
 }
 
 func configureEnvironment(conf config) (err error) {

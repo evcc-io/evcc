@@ -33,6 +33,14 @@ var (
 	ignoreMqtt   = []string{"auth", "releaseNotes"}   // excessive size may crash certain brokers
 )
 
+var conf = config{
+	Network: networkConfig{
+		Schema: "http",
+		Host:   "evcc.local",
+		Port:   7070,
+	},
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "evcc",
@@ -135,17 +143,15 @@ func run(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config and re-configure logging after reading config file
-	conf, err := loadConfigFile(cfgFile)
-	if err != nil {
+	if err := loadConfigFile(cfgFile, &conf); err != nil {
 		log.ERROR.Println("missing evcc config - switching into demo mode")
-		conf = demoConfig()
+		demoConfig(&conf)
 	}
 
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	// network config
 	if viper.GetString("uri") != "" {
-		panic(viper.GetString("uri"))
 		log.ERROR.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
 	}
 
@@ -234,7 +240,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	// allow web access for vehicles
-	cp.webControl(httpd, valueChan)
+	cp.webControl(conf.Network, httpd.Router(), valueChan)
 
 	// version check
 	go updater.Run(log, httpd, tee, valueChan)

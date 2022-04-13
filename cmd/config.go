@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 )
 
 type config struct {
@@ -235,9 +236,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 }
 
 // webControl handles routing for devices. For now only api.ProviderLogin related routes
-func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Param) {
-	router := httpd.Router()
-
+func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/oauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
@@ -250,9 +249,8 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 	// initialize
 	cp.auth = util.NewAuthCollection(paramC)
 
-	// TODO make evccURI configurable, add warnings for any network/ localhost
-	evccURI := fmt.Sprintf("http://%s", httpd.Addr)
-	baseAuthURI := fmt.Sprintf("%s/oauth", evccURI)
+	baseURI := conf.URI()
+	baseAuthURI := fmt.Sprintf("%s/oauth", baseURI)
 
 	var id int
 	for _, v := range cp.vehicles {
@@ -262,14 +260,10 @@ func (cp *ConfigProvider) webControl(httpd *server.HTTPd, paramC chan<- util.Par
 			basePath := fmt.Sprintf("vehicles/%d", id)
 			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
 
-			// replace interface designator with address
-			// TODO fix when evccURI becomes configurable
-			callbackURI = strings.ReplaceAll(callbackURI, "0.0.0.0", "localhost")
-
 			// register vehicle
 			ap := cp.auth.Register(fmt.Sprintf("oauth/%s", basePath), v.Title())
 
-			provider.SetCallbackParams(evccURI, callbackURI, ap.Handler())
+			provider.SetCallbackParams(baseURI, callbackURI, ap.Handler())
 
 			auth.
 				Methods(http.MethodPost).
