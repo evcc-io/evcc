@@ -35,7 +35,7 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
-		Interval:    10, // TODO
+		Interval:    60, // TODO
 		Status:      core.RegistrationStatusAccepted,
 	}
 
@@ -84,6 +84,10 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 	cp.update()
 	res := &core.HeartbeatConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
+	}
+
+	if !cp.meterTrickerRunning && cp.meterSupported {
+		Instance().TriggerMeterValueRequest(cp)
 	}
 
 	return res, nil
@@ -147,7 +151,7 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 					cp.log.TRACE.Printf("starting meter value ticker")
 					cp.meterTrickerRunning = true
 					cp.measureDoneCh = make(chan struct{})
-					ticker := time.NewTicker(10 * time.Second)
+					ticker := time.NewTicker(15 * time.Second)
 
 					defer cp.log.TRACE.Printf("exiting meter value ticker")
 					for {
@@ -156,6 +160,7 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 							Instance().TriggerMeterValueRequest(cp)
 						case <-cp.measureDoneCh:
 							cp.log.TRACE.Printf("returning from meter value requests")
+							cp.meterTrickerRunning = false
 							return
 						}
 					}

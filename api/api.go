@@ -85,6 +85,7 @@ type MeterCurrent interface {
 	Currents() (float64, float64, float64, error)
 }
 
+// MeterSupported is able to activly disable meter support via e.g. config even it is implemented for the charger
 type MeterSupported interface {
 	Supported() bool
 }

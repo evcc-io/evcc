@@ -295,11 +295,17 @@ func (lp *LoadPoint) requestUpdate() {
 func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	var integrated bool
 
+	supported := true
+	meterSupport, ok := charger.(api.MeterSupported)
+	if ok {
+		supported = meterSupport.Supported()
+	}
+
 	// ensure charge meter exists
 	if lp.chargeMeter == nil {
 		integrated = true
 
-		if mt, ok := charger.(api.Meter); ok {
+		if mt, ok := charger.(api.Meter); ok && supported {
 			lp.chargeMeter = mt
 		} else {
 			mt := new(wrapper.ChargeMeter)

@@ -294,7 +294,7 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 
 func (cp *CP) MeterSupported() bool {
 	cp.mu.Lock()
-	defer cp.mu.Lock()
+	defer cp.mu.Unlock()
 
 	return cp.meterSupported
 }
