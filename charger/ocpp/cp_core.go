@@ -202,6 +202,12 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		Instance().TriggerMeterValueRequest(cp)
 	}
 
+	// fix out of sync after the CP responded with a transaction stop but not sending a status update...
+	// think about triggering a status update
+	if cp.status.Status == core.ChargePointStatusCharging {
+		cp.status.Status = core.ChargePointStatusAvailable
+	}
+
 	return res, nil
 }
 
