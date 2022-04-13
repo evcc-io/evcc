@@ -41,7 +41,7 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTTPd {
+func NewHTTPd(addr string, site site.API, hub *SocketHub, cache *util.Cache) *HTTPd {
 	routes := map[string]route{
 		"health": {[]string{"GET"}, "/health", healthHandler(site)},
 		"state":  {[]string{"GET"}, "/state", stateHandler(cache)},
@@ -98,7 +98,7 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 
 	srv := &HTTPd{
 		Server: &http.Server{
-			Addr:         url,
+			Addr:         addr,
 			Handler:      router,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,

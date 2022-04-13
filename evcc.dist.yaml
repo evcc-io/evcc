@@ -1,4 +1,8 @@
-uri: 0.0.0.0:7070 # uri for ui
+network:
+  schema: http
+  host: evcc.local
+  port: 7070
+
 interval: 10s # control cycle interval
 
 # sponsor token enables optional features (request at https://cloud.evcc.io)

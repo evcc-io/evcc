@@ -1,3 +1,6 @@
+network:
+  port: 7070
+
 log: info
 
 interval: 3s

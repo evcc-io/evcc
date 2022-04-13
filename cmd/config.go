@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,7 +23,8 @@ import (
 )
 
 type config struct {
-	URI          string
+	URI          interface{} // deprecated
+	Network      networkConfig
 	Log          string
 	SponsorToken string
 	Metrics      bool
@@ -40,6 +43,20 @@ type config struct {
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	LoadPoints   []map[string]interface{}
+}
+
+type networkConfig struct {
+	Schema string
+	Host   string
+	Port   int
+}
+
+func (c networkConfig) HostPort() string {
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+}
+
+func (c networkConfig) URI() string {
+	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
 }
 
 type mqttConfig struct {
