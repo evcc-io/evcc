@@ -97,7 +97,7 @@ export default {
 			return this.collectProps(TargetCharge);
 		},
 		estimatedTargetRange: function () {
-			if (this.vehicleSoC && this.vehicleRange) {
+			if (this.vehicleSoC > 10 && this.vehicleRange && this.displayTargetSoC) {
 				return (
 					Math.round(this.displayTargetSoC * (this.vehicleRange / this.vehicleSoC)) +
 					" km"

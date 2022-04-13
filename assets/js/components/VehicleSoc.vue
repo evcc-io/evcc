@@ -138,7 +138,6 @@ export default {
 	--height: 32px;
 	--thumb-overlap: 6px;
 	--thumb-width: 12px;
-	--thumb-horizontal-padding: 15px;
 	--label-height: 26px;
 	position: relative;
 	height: var(--height);
@@ -169,9 +168,8 @@ export default {
 	-webkit-appearance: none;
 	position: absolute;
 	top: calc(var(--thumb-overlap) * -1);
-	left: calc(var(--thumb-horizontal-padding) * -1);
 	height: calc(100% + 2 * var(--thumb-overlap));
-	width: calc(100% + 2 * var(--thumb-horizontal-padding));
+	width: 100%;
 	background: transparent;
 }
 .target-slider:focus {
@@ -194,7 +192,7 @@ export default {
 .target-slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	position: relative;
-	margin-left: calc(var(--thumb-width) / 2 * -1);
+	margin-left: var(--thumb-width) / 2;
 	height: 100%;
 	width: var(--thumb-width);
 	background-color: var(--evcc-dark-green);
@@ -206,7 +204,6 @@ export default {
 }
 .target-slider::-moz-range-thumb {
 	position: relative;
-	margin-left: calc(var(--thumb-width) / 2 * -1);
 	height: 100%;
 	width: var(--thumb-width);
 	background-color: var(--evcc-dark-green);

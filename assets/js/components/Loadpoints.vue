@@ -1,9 +1,9 @@
 <template>
 	<div>
-		<div class="container px-4 mb-3 mb-sm-4">
-			<h2 class="mb-3 d-none d-md-block">{{ $t("main.loadpoints") }}</h2>
+		<div class="container px-4 mb-3 mb-sm-4 d-none d-md-block">
+			<h2 class="mb-3">{{ $t("main.loadpoints") }}</h2>
 		</div>
-		<div class="container container--loadpoint px-0">
+		<div class="container container--loadpoint mt-1 px-0">
 			<div ref="carousel" class="carousel d-lg-flex flex-wrap">
 				<div
 					v-for="(loadpoint, index) in loadpoints"
