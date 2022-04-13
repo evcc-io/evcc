@@ -24,4 +24,6 @@ func demoConfig(conf *config) {
 	if err := viper.UnmarshalExact(&conf); err != nil {
 		log.FATAL.Fatalf("failed loading demo config: %v", err)
 	}
+
+	conf.Network.Port = defaultPort
 }
