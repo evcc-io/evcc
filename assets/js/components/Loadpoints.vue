@@ -1,35 +1,30 @@
 <template>
-	<div>
-		<div class="container px-4 mb-3 mb-sm-4 d-none d-md-block">
-			<h2 class="mb-3">{{ $t("main.loadpoints") }}</h2>
-		</div>
-		<div class="container container--loadpoint mt-1 px-0">
-			<div ref="carousel" class="carousel d-lg-flex flex-wrap">
-				<div
-					v-for="(loadpoint, index) in loadpoints"
-					:key="index"
-					class="flex-grow-1 mb-3 m-lg-0 p-lg-0"
-				>
-					<Loadpoint
-						v-bind="loadpoint"
-						:id="index"
-						class="h-100"
-						:class="{ 'loadpoint-unselected': !selected(index) }"
-						@click="scrollTo(index)"
-					/>
-				</div>
-			</div>
-			<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center">
-				<button
-					v-for="(loadpoint, index) in loadpoints"
-					:key="index"
-					class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center text-white"
-					:class="{ 'indicator--selected': selected(index) }"
+	<div class="container container--loadpoint px-0 mb-3 mb-md-4">
+		<div ref="carousel" class="carousel d-lg-flex flex-wrap">
+			<div
+				v-for="(loadpoint, index) in loadpoints"
+				:key="index"
+				class="flex-grow-1 mb-3 m-lg-0 p-lg-0"
+			>
+				<Loadpoint
+					v-bind="loadpoint"
+					:id="index"
+					class="h-100"
+					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
-				>
-					<shopicon-filled-circle class="indicator-icon"></shopicon-filled-circle>
-				</button>
+				/>
 			</div>
+		</div>
+		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center">
+			<button
+				v-for="(loadpoint, index) in loadpoints"
+				:key="index"
+				class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center text-white"
+				:class="{ 'indicator--selected': selected(index) }"
+				@click="scrollTo(index)"
+			>
+				<shopicon-filled-circle class="indicator-icon"></shopicon-filled-circle>
+			</button>
 		</div>
 	</div>
 </template>

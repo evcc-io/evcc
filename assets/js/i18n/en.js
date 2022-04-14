@@ -78,7 +78,6 @@ export default {
       fast: "Fast",
       cheap: "Cheap",
     },
-    loadpoints: "Wallbox",
     loadpoint: {
       fallbackName: "Loadpoint",
       remoteDisabledSoft: "{source}: adaptive PV charging disabled",

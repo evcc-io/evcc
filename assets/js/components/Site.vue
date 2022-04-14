@@ -19,10 +19,13 @@
 				'padding-bottom': `${detailsVisible ? detailsHeight : 3}px`,
 			}"
 		>
-			<div class="toggle-handle py-3 d-flex justify-content-center" @click="toggleDetails">
+			<div
+				class="toggle-handle py-3 d-flex justify-content-center mb-3"
+				@click="toggleDetails"
+			>
 				<hr class="toggle-handle-icon bg-white m-0 p-0" />
 			</div>
-			<Loadpoints :loadpoints="loadpoints" class="mb-sm-3 mb-md-5" />
+			<Loadpoints :loadpoints="loadpoints" />
 			<Vehicles v-if="$hiddenFeatures" />
 			<Footer v-bind="footer"></Footer>
 		</div>
