@@ -75,4 +75,4 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 [3]: https://nodejs.org/
 [4]: https://vuejs.org
 [5]: https://getbootstrap.org
-[6]: https://hub.docker.com/repository/docker/andig/evcc
+[6]: https://hub.docker.com/r/andig/evcc
