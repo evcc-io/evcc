@@ -172,7 +172,7 @@ func (site *Site) DumpConfig() {
 
 	if len(site.pvMeters) > 0 {
 		for i, pv := range site.pvMeters {
-			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i), pv))
+			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i+1), pv))
 		}
 	}
 
@@ -180,7 +180,7 @@ func (site *Site) DumpConfig() {
 		for i, battery := range site.batteryMeters {
 			_, ok := battery.(api.Battery)
 			site.log.INFO.Println(
-				meterCapabilities(fmt.Sprintf("battery %d", i), battery),
+				meterCapabilities(fmt.Sprintf("battery %d", i+1), battery),
 				fmt.Sprintf("soc %s", presence[ok]),
 			)
 		}
@@ -217,7 +217,7 @@ func (site *Site) DumpConfig() {
 			_, status := v.(api.ChargeState)
 			_, climate := v.(api.VehicleClimater)
 			lp.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s",
-				i, presence[rng], presence[finish], presence[status], presence[climate],
+				i+1, presence[rng], presence[finish], presence[status], presence[climate],
 			)
 		}
 	}
