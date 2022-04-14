@@ -2,7 +2,7 @@
 	<div class="d-flex justify-content-between mb-3 align-items-center">
 		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
 			<shopicon-regular-car3
-				v-if="connected || parked"
+				v-if="vehiclePresent || parked"
 				class="me-2 flex-shrink-0 car-icon"
 			></shopicon-regular-car3>
 			<shopicon-regular-cablecharge
@@ -28,17 +28,14 @@ export default {
 	name: "VehicleTitle",
 	mixins: [collector],
 	props: {
-		connected: Boolean,
+		vehiclePresent: Boolean,
 		vehicleTitle: String,
 		parked: Boolean,
 	},
 	computed: {
 		name() {
-			if (this.connected || this.parked) {
-				if (this.vehicleTitle) {
-					return this.vehicleTitle;
-				}
-				return this.$t("main.vehicle.fallbackName");
+			if (this.vehiclePresent || this.parked) {
+				return this.vehicleTitle || this.$t("main.vehicle.fallbackName");
 			}
 			return this.$t("main.vehicle.noVehicle");
 		},
