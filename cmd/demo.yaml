@@ -12,7 +12,7 @@ javascript:
         batterySoC: 55,
         gridpower: -1000,
         loadpoints: [
-          { enabled: true, vehicleSoC: 62, maxcurrent: 6, phases: 1, chargepower: 230*6 },
+          { enabled: true, vehicleSoC: 62, maxcurrent: 6, phases: 1, chargepower: 0 },
           { enabled: false, vehicleSoC: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
         ]
       };
@@ -84,6 +84,7 @@ chargers:
         set();
         var lp = state.loadpoints[0];
         lp.enabled = val;
+        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
     enabled:
       source: js
       vm: shared
