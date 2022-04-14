@@ -40,6 +40,10 @@ export default {
 				return this.$t(`main.vehicleStatus.${key}`, data);
 			};
 
+			if (!this.connected) {
+				return t("disconnected");
+			}
+
 			// min charge active
 			if (this.minSoC > 0 && this.vehicleSoC < this.minSoC) {
 				return t("minCharge", { soc: this.minSoC });
@@ -60,43 +64,33 @@ export default {
 				}
 			}
 
-			// pv enable
 			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {
 				return t("pvEnable", {
 					remaining: this.fmtShortDuration(this.pvRemainingInterpolated, true),
 				});
 			}
 
-			// waiting for vehicle
 			if (this.enabled && !this.charging) {
 				return t("waitForVehicle");
 			}
 
-			// pv disable
 			if (this.pvTimerActive && this.charging && this.pvAction === "disable") {
 				return t("pvDisable", {
 					remaining: this.fmtShortDuration(this.pvRemainingInterpolated, true),
 				});
 			}
 
-			// phase timer
 			if (this.phaseTimerActive) {
 				return t(this.phaseAction, {
 					remaining: this.fmtShortDuration(this.phaseRemainingInterpolated, true),
 				});
 			}
 
-			// charging
 			if (this.charging) {
 				return t("charging");
 			}
 
-			// connected
-			if (this.connected) {
-				return t("connected");
-			}
-
-			return "";
+			return t("connected");
 		},
 	},
 };

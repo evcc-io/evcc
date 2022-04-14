@@ -2,6 +2,7 @@
 	<div class="vehicle-soc">
 		<div class="progress">
 			<div
+				v-if="connected || parked"
 				class="progress-bar"
 				role="progressbar"
 				:class="{
@@ -12,7 +13,7 @@
 				:style="{ width: `${vehicleSoCDisplayWidth}%` }"
 			></div>
 			<div
-				v-if="remainingSoCWidth > 0 && enabled"
+				v-if="remainingSoCWidth > 0 && enabled && connected"
 				class="progress-bar bg-muted"
 				role="progressbar"
 				:class="progressColor"
@@ -25,7 +26,7 @@
 				:style="{ left: `${visibleTargetSoC}%` }"
 			></div>
 			<input
-				v-if="vehiclePresent"
+				v-if="vehiclePresent && (connected || parked)"
 				type="range"
 				min="0"
 				max="100"
@@ -53,6 +54,7 @@ export default {
 		charging: Boolean,
 		minSoC: Number,
 		targetSoC: Number,
+		parked: Boolean,
 	},
 	data: function () {
 		return {

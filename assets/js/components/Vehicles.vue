@@ -21,6 +21,7 @@
 				:id="`vehicle_${index}`"
 				:key="index"
 				class="vehicle"
+				parked
 			/>
 		</div>
 	</div>

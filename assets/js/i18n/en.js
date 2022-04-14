@@ -89,9 +89,10 @@ export default {
     },
     vehicles: "Parking",
     vehicle: {
-      fallbackName: "Anonymous Vehicle",
+      fallbackName: "Vehicle",
       vehicleSoC: "SoC",
       targetSoC: "Limit",
+      noVehicle: "no Fahrzeug",
     },
     vehicleSoC: {
       disconnected: "disconnected",
@@ -111,6 +112,7 @@ export default {
       pvEnable: "Surplus available. Starging in {remaining}.",
       scale1p: "Reduce to single phase in {remaining}.",
       scale3p: "Increase to three phase in {remaining}.",
+      disconnected: "Disconnected.",
       unknown: "",
     },
     provider: {

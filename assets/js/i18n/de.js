@@ -89,9 +89,10 @@ export default {
     },
     vehicles: "Parkplatz",
     vehicle: {
-      fallbackName: "Unbekanntes Fahrzeug",
+      fallbackName: "Fahrzeug",
       vehicleSoC: "Ladestand",
       targetSoC: "Ladeziel",
+      noVehicle: "kein Fahrzeug",
     },
     vehicleSoC: {
       disconnected: "getrennt",
@@ -111,6 +112,7 @@ export default {
       pvEnable: "Überschuss verfügbar. Starte in {remaining}.",
       scale1p: "Reduziere auf einphasig in {remaining}.",
       scale3p: "Erhöhe auf dreiphasig in {remaining}.",
+      disconnected: "Nicht verbunden.",
       unknown: "",
     },
     provider: {

@@ -79,6 +79,10 @@ export default {
 };
 </script>
 <style scoped>
+.container--loadpoint {
+	min-height: 300px;
+}
+
 @media (max-width: 991.98px) {
 	.carousel {
 		scroll-snap-type: x mandatory;

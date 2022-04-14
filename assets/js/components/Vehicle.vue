@@ -1,17 +1,7 @@
 <template>
 	<div class="vehicle p-4 pb-3">
-		<div class="d-flex justify-content-between mb-3 align-items-center">
-			<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
-				<shopicon-regular-car3 class="me-2 flex-shrink-0 car-icon"></shopicon-regular-car3>
-				<span class="flex-grow-1 text-truncate">
-					{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
-				</span>
-			</h4>
-			<button v-if="$hiddenFeatures" class="btn btn-link text-white p-0 flex-shrink-0">
-				<shopicon-filled-options size="s"></shopicon-filled-options>
-			</button>
-		</div>
-		<VehicleStatus v-if="connected" v-bind="vehicleStatus" class="mb-2" />
+		<VehicleTitle v-bind="vehicleTitleProps" />
+		<VehicleStatus v-if="!parked" v-bind="vehicleStatus" class="mb-2" />
 		<VehicleSoc
 			v-bind="vehicleSocProps"
 			class="mt-2 mb-4"
@@ -48,18 +38,16 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/filled/options";
-import "@h2d2/shopicons/es/regular/car3";
-
 import collector from "../mixins/collector";
 import LabelAndValue from "./LabelAndValue.vue";
+import VehicleTitle from "./VehicleTitle.vue";
 import VehicleSoc from "./VehicleSoc.vue";
 import VehicleStatus from "./VehicleStatus.vue";
 import TargetCharge from "./TargetCharge.vue";
 
 export default {
 	name: "Vehicle",
-	components: { VehicleSoc, VehicleStatus, LabelAndValue, TargetCharge },
+	components: { VehicleTitle, VehicleSoc, VehicleStatus, LabelAndValue, TargetCharge },
 	mixins: [collector],
 	props: {
 		id: [String, Number],
@@ -80,6 +68,7 @@ export default {
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
+		parked: Boolean,
 	},
 	data() {
 		return {
@@ -92,6 +81,9 @@ export default {
 		},
 		vehicleStatus: function () {
 			return this.collectProps(VehicleStatus);
+		},
+		vehicleTitleProps: function () {
+			return this.collectProps(VehicleTitle);
 		},
 		targetCharge: function () {
 			return this.collectProps(TargetCharge);
