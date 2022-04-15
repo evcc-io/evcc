@@ -48,7 +48,12 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("audi").Redact(cc.User, cc.Password, cc.VIN)
 
 	idk := idkproxy.New(log, audi.IDKParams)
-	ts, err := service.MbbTokenSource(log, idk, audi.AuthClientID, audi.AuthParams, cc.User, cc.Password)
+	rts, err := service.RefreshTokenSource(log, idk, service.DefaultRefreshToken, audi.AuthParams, cc.User, cc.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	ts, err := service.MbbTokenSource(log, rts, audi.AuthClientID)
 	if err != nil {
 		return nil, err
 	}
