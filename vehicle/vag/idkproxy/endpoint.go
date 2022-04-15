@@ -27,6 +27,8 @@ var Config = &oidc.ProviderConfig{
 	TokenURL: "https://idkproxy-service.apps.emea.vwapps.io/v1/emea/token",
 }
 
+var _ vag.TokenExchanger = (*Service)(nil)
+
 type Service struct {
 	*request.Helper
 	data url.Values

@@ -17,6 +17,8 @@ const (
 	RefreshTokenURL = BaseURL + "/refreshTokens"
 )
 
+var _ vag.TokenExchanger = (*Service)(nil)
+
 type Service struct {
 	*request.Helper
 	data url.Values
