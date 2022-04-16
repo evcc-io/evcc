@@ -87,8 +87,6 @@ func matchesIdentifier(id string, m discovergy.Meter) bool {
 	return id == m.MeterID || id == m.SerialNumber || id == m.FullSerialNumber
 }
 
-var _ api.Meter = (*Discovergy)(nil)
-
 func (m *Discovergy) CurrentPower() (float64, error) {
 	res, err := m.dataG()
 	return m.scale * float64(res.Values.Power) / 1e3, err
