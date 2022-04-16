@@ -31,6 +31,12 @@
 		"Segoe UI Symbol", "Noto Color Emoji";
 }
 
+html {
+	/* prevents content jump when scrollbar is activate */
+	width: 100vw;
+    overflow-x: hidden;
+}
+
 body {
 	background-color: var(--bs-gray-dark);
 }
