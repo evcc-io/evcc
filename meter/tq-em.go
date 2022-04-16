@@ -72,7 +72,7 @@ func NewTqEmFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("tq-em") //.Redact(cc.User, cc.Password)
+	log := util.NewLogger("tq-em").Redact(cc.Password)
 
 	client := request.NewHelper(log)
 	client.Jar, _ = cookiejar.New(nil)
