@@ -9,7 +9,7 @@ type StatusResponse struct {
 	PreCond struct {
 		Data struct {
 			ChargingActive BoolValue
-			ChargingStatus FloatValue
+			ChargingStatus IntValue
 		} `json:"data"`
 	}
 	ChargeOpt struct{}
@@ -28,6 +28,12 @@ type StatusResponse struct {
 type BoolValue struct {
 	Status int
 	Value  bool
+	Ts     TimeSecs
+}
+
+type IntValue struct {
+	Status int
+	Value  int
 	Ts     TimeSecs
 }
 
