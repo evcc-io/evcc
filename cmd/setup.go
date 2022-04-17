@@ -21,6 +21,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/store"
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
 )
@@ -65,7 +66,25 @@ func configureEnvironment(conf config) (err error) {
 		err = configureEEBus(conf.EEBus)
 	}
 
+	if err == nil {
+		configureStore()
+	}
+
 	return
+}
+
+func configureStore() {
+	if err := store.Create(); err != nil {
+		log.ERROR.Println("open store failed:", err)
+	} else {
+		log.INFO.Println("store opened:", store.FileName)
+
+		shutdown.Register(func() {
+			if err := store.Close(); err != nil {
+				log.ERROR.Println("close store failed:", err)
+			}
+		})
+	}
 }
 
 // setup influx database

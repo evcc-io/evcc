@@ -8,17 +8,13 @@ import (
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 )
 
-type RefreshTokenProvider func() (*vag.Token, error)
-
 // RefreshTokenSource creates a refreshing VAG token source
-func RefreshTokenSource(log *util.Logger, tox vag.TokenExchanger, rtp RefreshTokenProvider, q url.Values, user, password string) (vag.TokenSource, error) {
+func RefreshTokenSource(log *util.Logger, tox vag.TokenExchanger, rts vag.RefreshTokenStore, q url.Values, user, password string) (vag.TokenSource, error) {
 	// create token source from stored refresh token
-	if rtp != nil {
-		if token, err := rtp(); err == nil {
-			trs := tox.TokenSource(token)
-			if itoken, err := trs.TokenEx(); err == nil {
-				return tox.TokenSource(itoken), nil
-			}
+	if token, err := rts.Get(); err == nil {
+		trs := tox.TokenSource(token)
+		if itoken, err := trs.TokenEx(); err == nil {
+			return tox.TokenSource(itoken), nil
 		}
 	}
 

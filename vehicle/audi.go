@@ -56,7 +56,8 @@ func NewAudiFromConfig(other map[string]interface{}, store persist.Store) (api.V
 	hash := persist.Hash(vag.IdkToken, cc.User, cc.Password)
 	stp := vag.StoreTokenProvider(store, hash, audiToken)
 
-	idk := idkproxy.New(log, audi.IDKParams)
+	// TODO bootstrap token source
+	idk := idkproxy.New(log, audi.IDKParams).WithStore(stp)
 	rts, err := service.RefreshTokenSource(log, idk, stp, audi.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err

@@ -31,7 +31,8 @@ var _ vag.TokenExchanger = (*Service)(nil)
 
 type Service struct {
 	*request.Helper
-	data url.Values
+	data  url.Values
+	store vag.RefreshTokenStore
 }
 
 func New(log *util.Logger, q url.Values) *Service {
@@ -39,6 +40,11 @@ func New(log *util.Logger, q url.Values) *Service {
 		Helper: request.NewHelper(log),
 		data:   q,
 	}
+}
+
+func (v *Service) WithStore(store vag.RefreshTokenStore) *Service {
+	v.store = store
+	return v
 }
 
 var secret = []byte{55, 24, 256 - 56, 256 - 96, 256 - 72, 256 - 110, 57, 256 - 87, 3, 256 - 86, 256 - 41, 256 - 103, 33, 256 - 30, 99, 103, 81, 125, 256 - 39, 256 - 39, 71, 18, 256 - 107, 256 - 112, 256 - 120, 256 - 12, 256 - 104, 89, 103, 113, 256 - 128, 256 - 91}
@@ -103,6 +109,11 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 	})
 	if err == nil {
 		err = v.DoJSON(req, &res)
+	}
+
+	// put refresh token into store
+	if err == nil && v.store != nil {
+		_ = v.store.Put(&res)
 	}
 
 	return &res, err
