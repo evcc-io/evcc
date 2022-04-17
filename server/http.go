@@ -21,6 +21,7 @@ type route struct {
 	HandlerFunc http.HandlerFunc
 }
 
+//lint:ignore U1000 if needed
 // routeLogger traces matched routes including their executing time
 func routeLogger(inner http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

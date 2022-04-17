@@ -51,7 +51,7 @@ type Connection struct {
 func NewConnection(uri, user, password string) *Connection {
 	log := util.NewLogger("tapo")
 
-	//lint:ignore
+	// nosemgrep:go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1
 	h := sha1.New()
 	_, _ = h.Write([]byte(user))
 	userhash := hex.EncodeToString(h.Sum(nil))
@@ -276,7 +276,7 @@ func (d *Connection) CheckErrorCode(errorCode int) error {
 	}
 
 	if errorCode != 0 {
-		return errors.New(fmt.Sprintf("Tapo error %d: %s", errorCode, errorDesc[errorCode]))
+		return fmt.Errorf("tapo error %d: %s", errorCode, errorDesc[errorCode])
 	}
 
 	return nil

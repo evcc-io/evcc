@@ -216,6 +216,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 		}
 
 		if ccWithTitle.Title == "" {
+			//lint:ignore SA1019 as Title is safe on ascii
 			cc.Other["title"] = strings.Title(cc.Name)
 		}
 
