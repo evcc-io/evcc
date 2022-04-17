@@ -34,8 +34,11 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 func (v *Provider) status(statusG func() (StatusResponse, error), refreshG func() (StatusResponse, error)) (StatusResponse, error) {
 	res, err := statusG()
 
-	// if err == nil && res.Status.StatusData.Soc.Ts.Time.Add(v.expiry).Before(time.Now()) {
+	// if ts := res.Status.Data.Soc.Ts.Time; err == nil && ts.Add(v.expiry).Before(time.Now()) {
+	// 	fmt.Println("--------------------------", ts)
 	// 	res, err = refreshG()
+	// 	ts := res.Status.Data.Soc.Ts.Time
+	// 	fmt.Println("--------------------------", ts)
 	// }
 
 	return res, err
