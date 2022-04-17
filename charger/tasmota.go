@@ -134,6 +134,19 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 		power = 0
 	}
 
+	// set fix static power in static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if err != nil {
+			return 0, err
+		}
+		if on {
+			power = c.standbypower * -1
+		} else {
+			power = 0
+		}
+	}
+
 	return power, err
 }
 
