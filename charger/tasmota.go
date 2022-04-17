@@ -145,7 +145,7 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		power := float64(resp.StatusSNS.Energy.Power)
+		power = float64(resp.StatusSNS.Energy.Power)
 		// ignore standby power
 		if power < c.standbypower {
 			power = 0
