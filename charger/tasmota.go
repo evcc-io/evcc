@@ -125,29 +125,34 @@ var _ api.Meter = (*Tasmota)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Tasmota) CurrentPower() (float64, error) {
-	var resp tasmota.StatusSNSResponse
-	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
-	power := float64(resp.StatusSNS.Energy.Power)
+	var power float64
 
-	// ignore standby power
-	if power < c.standbypower {
-		power = 0
-	}
-
-	// set fix static power in static mode
 	if c.standbypower < 0 {
+		// fix static power in static mode
 		on, err := c.Enabled()
 		if err != nil {
 			return 0, err
 		}
 		if on {
-			power = c.standbypower * -1
+			power = -c.standbypower
 		} else {
+			power = 0
+		}
+	} else {
+		// measured power in charger mode
+		var resp tasmota.StatusSNSResponse
+		err := c.GetJSON(c.cmdUri("Status 8"), &resp)
+		if err != nil {
+			return 0, err
+		}
+		power := float64(resp.StatusSNS.Energy.Power)
+		// ignore standby power
+		if power < c.standbypower {
 			power = 0
 		}
 	}
 
-	return power, err
+	return power, nil
 }
 
 var _ api.MeterEnergy = (*Tasmota)(nil)
