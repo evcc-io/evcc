@@ -1,6 +1,7 @@
 package smart
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -44,6 +45,27 @@ func (v *Provider) status(statusG func() (StatusResponse, error), refreshG func(
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	return res.Status.Data.Soc.Value, err
+}
+
+var _ api.ChargeState = (*Provider)(nil)
+
+// Range implements the api.VehicleRange interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	res, err := v.statusG()
+
+	switch v := res.PreCond.Data.ChargingStatus.Value; v {
+	case 0:
+		return api.StatusC, err
+	case 1, 2:
+		return api.StatusB, err
+	case 3:
+		return api.StatusA, err
+	default:
+		if err == nil {
+			err = fmt.Errorf("unknown status: %d", v)
+		}
+		return api.StatusNone, err
+	}
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
