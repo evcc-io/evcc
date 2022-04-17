@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	persist "github.com/evcc-io/evcc/util/store"
 )
 
 const (
@@ -14,16 +15,30 @@ const (
 	interval = 15 * time.Minute // refresh interval when charging
 )
 
-type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
+type (
+	factoryFunc   = func(map[string]interface{}) (api.Vehicle, error)
+	factoryFuncEx = func(map[string]interface{}, persist.Store) (api.Vehicle, error)
 
-func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error)) {
+	vehicleRegistry map[string]factoryFuncEx
+)
+
+func (r vehicleRegistry) Add(name string, factory factoryFunc) {
+	if _, exists := r[name]; exists {
+		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
+	}
+	r[name] = func(cc map[string]interface{}, _ persist.Store) (api.Vehicle, error) {
+		return factory(cc)
+	}
+}
+
+func (r vehicleRegistry) AddWithStore(name string, factory factoryFuncEx) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
 	}
 	r[name] = factory
 }
 
-func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Vehicle, error), error) {
+func (r vehicleRegistry) Get(name string) (factoryFuncEx, error) {
 	factory, exists := r[name]
 	if !exists {
 		return nil, fmt.Errorf("vehicle type not registered: %s", name)
@@ -31,7 +46,10 @@ func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Veh
 	return factory, nil
 }
 
-var registry vehicleRegistry = make(map[string]func(map[string]interface{}) (api.Vehicle, error))
+var (
+	store                    = persist.New("vehicles")
+	registry vehicleRegistry = make(map[string]factoryFuncEx)
+)
 
 // Types returns the list of vehicle types
 func Types() []string {
@@ -60,7 +78,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err
 
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
-		if v, err = factory(cc.Other); err != nil {
+		if v, err = factory(cc.Other, store); err != nil {
 			err = fmt.Errorf("cannot create vehicle '%s': %w", typ, err)
 		}
 	} else {

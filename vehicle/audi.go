@@ -1,12 +1,15 @@
 package vehicle
 
 import (
+	_ "embed"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	persist "github.com/evcc-io/evcc/util/store"
 	"github.com/evcc-io/evcc/vehicle/audi"
+	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/evcc-io/evcc/vehicle/vag/idkproxy"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vw"
@@ -22,11 +25,14 @@ type Audi struct {
 }
 
 func init() {
-	registry.Add("audi", NewAudiFromConfig)
+	registry.AddWithStore("audi", NewAudiFromConfig)
 }
 
+//go:embed all:.auditoken
+var audiToken string
+
 // NewAudiFromConfig creates a new vehicle
-func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewAudiFromConfig(other map[string]interface{}, store persist.Store) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -47,8 +53,11 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("audi").Redact(cc.User, cc.Password, cc.VIN)
 
+	hash := persist.Hash(vag.IdkToken, cc.User, cc.Password)
+	stp := vag.StoreTokenProvider(store, hash, audiToken)
+
 	idk := idkproxy.New(log, audi.IDKParams)
-	rts, err := service.RefreshTokenSource(log, idk, service.DefaultRefreshToken, audi.AuthParams, cc.User, cc.Password)
+	rts, err := service.RefreshTokenSource(log, idk, stp, audi.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

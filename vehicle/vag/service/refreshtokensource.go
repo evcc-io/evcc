@@ -6,18 +6,9 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
-	"golang.org/x/oauth2"
 )
 
 type RefreshTokenProvider func() (*vag.Token, error)
-
-func DefaultRefreshToken() (*vag.Token, error) {
-	return &vag.Token{
-		Token: oauth2.Token{
-			RefreshToken: refreshToken,
-		},
-	}, nil
-}
 
 // RefreshTokenSource creates a refreshing VAG token source
 func RefreshTokenSource(log *util.Logger, tox vag.TokenExchanger, rtp RefreshTokenProvider, q url.Values, user, password string) (vag.TokenSource, error) {
