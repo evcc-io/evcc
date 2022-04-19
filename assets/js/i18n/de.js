@@ -92,7 +92,7 @@ export default {
       fallbackName: "Fahrzeug",
       vehicleSoC: "Ladestand",
       targetSoC: "Ladeziel",
-      noVehicle: "kein Fahrzeug",
+      noVehicle: "Kein Fahrzeug",
     },
     vehicleSoC: {
       disconnected: "getrennt",
