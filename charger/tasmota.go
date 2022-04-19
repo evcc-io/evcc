@@ -66,27 +66,27 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
-	var resp tasmota.StatusResponse
-	err := c.GetJSON(c.cmdUri("Status 0"), &resp)
+	var res tasmota.StatusResponse
+	err := c.GetJSON(c.cmdUri("Status 0"), &res)
 
-	return resp.Status.Power == 1, err
+	return res.Status.Power == 1, err
 }
 
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
-	var resp tasmota.PowerResponse
+	var res tasmota.PowerResponse
 	cmd := "Power off"
 	if enable {
 		cmd = "Power on"
 	}
-	err := c.GetJSON(c.cmdUri(cmd), &resp)
+	err := c.GetJSON(c.cmdUri(cmd), &res)
 
 	switch {
 	case err != nil:
 		return err
-	case enable && resp.Power != "ON":
+	case enable && res.Power != "ON":
 		return errors.New("switchOn failed")
-	case !enable && resp.Power != "OFF":
+	case !enable && res.Power != "OFF":
 		return errors.New("switchOff failed")
 	default:
 		return nil
@@ -127,32 +127,26 @@ var _ api.Meter = (*Tasmota)(nil)
 func (c *Tasmota) CurrentPower() (float64, error) {
 	var power float64
 
+	// static mode
 	if c.standbypower < 0 {
-		// fix static power in static mode
 		on, err := c.Enabled()
-		if err != nil {
-			return 0, err
-		}
 		if on {
 			power = -c.standbypower
-		} else {
-			power = 0
 		}
-	} else {
-		// measured power in charger mode
-		var resp tasmota.StatusSNSResponse
-		err := c.GetJSON(c.cmdUri("Status 8"), &resp)
-		if err != nil {
-			return 0, err
-		}
-		power = float64(resp.StatusSNS.Energy.Power)
-		// ignore standby power
-		if power < c.standbypower {
-			power = 0
-		}
+		return power, err
 	}
 
-	return power, nil
+	// standby power mode
+	var res tasmota.StatusSNSResponse
+	err := c.GetJSON(c.cmdUri("Status 8"), &res)
+
+	// ignore standby power
+	power = float64(res.StatusSNS.Energy.Power)
+	if power < c.standbypower {
+		power = 0
+	}
+
+	return power, err
 }
 
 var _ api.MeterEnergy = (*Tasmota)(nil)
