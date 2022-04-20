@@ -1,6 +1,7 @@
 product:
   brand: HardyBarth
   description: Salia PLCC Controller
+requirements: ["sponsorship"]
 render:
   - default: |
       type: template

@@ -3,6 +3,8 @@ products:
   - brand: HardyBarth
     description:
       generic: Salia PLCC Controller
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: host
 render: |

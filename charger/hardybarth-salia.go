@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/charger/echarge/salia"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // http://apidoc.ecb1.de
@@ -84,9 +85,9 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 		cache:   cache,
 	}
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, api.ErrSponsorRequired
-	// }
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	err := wb.post(salia.ChargeMode, echarge.ModeManual)
 	if err == nil {
@@ -102,8 +103,7 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 }
 
 func (wb *Salia) heartbeat() {
-	_ = wb.post(salia.HeartBeat, "alive")
-	for range time.NewTicker(30 * time.Second).C {
+	for ; true; <-time.NewTicker(30 * time.Second).C {
 		if err := wb.post(salia.HeartBeat, "alive"); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
