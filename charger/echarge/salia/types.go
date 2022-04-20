@@ -3,6 +3,7 @@ package salia
 const (
 	HeartBeat        = "salia/heartbeat"
 	ChargeMode       = "salia/chargemode"
+	PauseCharging    = "salia/pausecharging"
 	GridCurrentLimit = "grid_current_limit"
 )
 
