@@ -1,4 +1,4 @@
-.PHONY: default all clean install install-ui ui assets docs lint test-ui lint-ui test build test-release release
+.PHONY: default all clean install install-ui ui assets docs lint test-ui lint-ui coverage.out test build test-release release
 .PHONY: docker publish-testing publish-latest publish-nightly publish-release
 .PHONY: prepare-image image-rootfs image-update
 .PHONY: soc
@@ -58,9 +58,14 @@ lint-ui:
 test-ui:
 	npm test
 
-test:
+coverage.out:
 	@echo "Running testsuite"
-	go test $(BUILD_TAGS) ./...
+	go test -covermode=atomic -coverprofile=$@ $(BUILD_TAGS) ./...
+
+coverage.html: coverage.out
+	go tool cover -html $< -o $@
+
+test: coverage.out ## runs tests
 
 build:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)

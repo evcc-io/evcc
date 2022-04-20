@@ -65,6 +65,10 @@ jobs:
       - name: Test
         run: make test
 
+      - uses: codecov/codecov-action@v3
+        with:
+          file: coverage.out
+
   build-ui:
     name: Build UI
     runs-on: ubuntu-latest
