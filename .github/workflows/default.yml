@@ -2,8 +2,6 @@ name: Default
 
 on:
   push:
-    branches:
-      - master
   pull_request:
   workflow_call:
 
