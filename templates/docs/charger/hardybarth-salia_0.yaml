@@ -1,6 +1,6 @@
 product:
   brand: HardyBarth
-  description: Salia PLCC Controller
+  description: cPH2 (Salia PLCC Controller)
 requirements: ["sponsorship"]
 render:
   - default: |

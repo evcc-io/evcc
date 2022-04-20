@@ -2,7 +2,7 @@ template: hardybarth-ecb1
 products:
   - brand: HardyBarth
     description:
-      generic: cPH1 eCB1 Controller
+      generic: cPH1 (eCB1 Controller)
 requirements:
   evcc: ["sponsorship"]
 params:
