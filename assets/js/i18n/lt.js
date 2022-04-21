@@ -14,8 +14,7 @@ export default {
       modalTitle: "Prieinama naujesnė versija",
       modalUpdateStarted: "Pasibaigus naujinimui EVCC startuos iš naujo..",
       modalInstalledVersion: "Dabartinė versija",
-      modalNoReleaseNotes:
-        "Naujinimo detalių nėra. Daugiau informacijos rasite čia:",
+      modalNoReleaseNotes: "Naujinimo detalių nėra. Daugiau informacijos rasite čia:",
       modalCancel: "Atšaukti",
       modalUpdate: "Naujinti",
       modalUpdateNow: "Naujinti dabar",
@@ -38,7 +37,8 @@ export default {
       modalServerStart: "nuo EVCC starto {since}.",
       modalNoData: "įkrovimo duomenų dar nėra",
       experimentalLabel: "eksperimentinis",
-      experimentalText: "Neteisingi duomenys? Turite klausimų apie šiuos skaičiavimus? Prisijunkite prie mūsų",
+      experimentalText:
+        "Neteisingi duomenys? Turite klausimų apie šiuos skaičiavimus? Prisijunkite prie mūsų",
     },
     sponsor: {
       thanks: "Ačiū, kad mus remiate {sponsor}! Tuo prisidedate prie projekto vystymo.",
