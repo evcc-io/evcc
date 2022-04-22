@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 )
 
 // https://github.com/cliviu74/wallbox
@@ -71,13 +72,52 @@ func NewWallbox(user, password string, id int) (*Wallbox, error) {
 		}
 	}
 
-	var res2 wallbox.Groups
-	if err == nil {
-		uri = fmt.Sprintf("%s/v3/chargers/groups", wallbox.ApiURI)
-		err = c.GetJSON(uri, &res2)
+	if id == 0 {
+		var groups wallbox.Groups
+		if err == nil {
+			uri = fmt.Sprintf("%s/v3/chargers/groups", wallbox.ApiURI)
+			err = c.GetJSON(uri, &groups)
+		}
+
+		chargers := lo.Flatten(lo.Map(groups.Result.Groups, func(g wallbox.Group, _ int) []int {
+			return lo.Map(g.Chargers, func(c wallbox.Charger, _ int) int {
+				return c.ID
+			})
+		}))
+
+		if len(chargers) == 1 {
+			c.id = chargers[0]
+		} else {
+			err = fmt.Errorf("found chargers: %v", chargers)
+		}
 	}
 
 	return c, err
+}
+
+// Status implements the api.Charger interface
+func (c *Wallbox) Status() (api.ChargeStatus, error) {
+	var res wallbox.ChargerStatus
+
+	uri := fmt.Sprintf("%s/chargers/status/%d", wallbox.ApiURI, c.id)
+	err := c.GetJSON(uri, &res)
+
+	if err != nil && res.Msg != "" {
+		err = fmt.Errorf("%s: %w", res.Msg, err)
+	}
+
+	status := api.StatusA
+
+	switch res.Status() {
+	case wallbox.WAITING, wallbox.PAUSED:
+		status = api.StatusB
+	case wallbox.CHARGING:
+		status = api.StatusC
+	case wallbox.ERROR:
+		status = api.StatusF
+	}
+
+	return status, err
 }
 
 // Enabled implements the api.Charger interface
@@ -86,6 +126,10 @@ func (c *Wallbox) Enabled() (bool, error) {
 
 	uri := fmt.Sprintf("%s/chargers/status/%d", wallbox.ApiURI, c.id)
 	err := c.GetJSON(uri, &res)
+
+	if err != nil && res.Msg != "" {
+		err = fmt.Errorf("%s: %w", res.Msg, err)
+	}
 
 	return res.ConfigData.MaxChargingCurrent > 0, err
 }
@@ -100,13 +144,15 @@ func (c *Wallbox) Enable(enable bool) error {
 }
 
 func (c *Wallbox) setCurrent(current int64) error {
-	data := fmt.Sprintf(`{{ "maxChargingCurrent":%d }}`, current)
+	data := fmt.Sprintf(`{ "maxChargingCurrent":%d }`, current)
 
 	uri := fmt.Sprintf("%s/v2/charger/%d", wallbox.ApiURI, c.id)
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPut, uri, strings.NewReader(data), request.JSONEncoding)
 	if err == nil {
-		var res interface{}
-		err = c.DoJSON(req, &res)
+		var res wallbox.Error
+		if err = c.DoJSON(req, &res); err != nil && res.Msg != "" {
+			err = fmt.Errorf("%s: %w", res.Msg, err)
+		}
 	}
 
 	return err
@@ -119,11 +165,4 @@ func (c *Wallbox) MaxCurrent(current int64) error {
 		c.current = current
 	}
 	return err
-}
-
-// Status implements the api.Charger interface
-func (c *Wallbox) Status() (api.ChargeStatus, error) {
-	res := api.StatusB
-
-	return res, nil
 }
