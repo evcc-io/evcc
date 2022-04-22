@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/charger/wallbox"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
 )
@@ -99,9 +98,9 @@ func NewWallbox(user, password string, id int, cache time.Duration) (*Wallbox, e
 		}
 	}
 
-	if err == nil && !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
+	// if err == nil && !sponsor.IsAuthorized() {
+	// 	return nil, api.ErrSponsorRequired
+	// }
 
 	return c, err
 }
