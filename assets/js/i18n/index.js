@@ -2,6 +2,7 @@ import { createI18n } from "vue-i18n/index";
 import de from "./de";
 import en from "./en";
 import it from "./it";
+import lt from "./lt";
 
 const PREFERRED_LOCALE_KEY = "preferred_locale";
 
@@ -17,5 +18,5 @@ function getBrowserLocale() {
 export default createI18n({
   locale: window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale(),
   fallbackLocale: "en",
-  messages: { de, en, it },
+  messages: { de, en, it, lt },
 });

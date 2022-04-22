@@ -31,7 +31,7 @@ func (c *ConfigDefaults) LoadDefaults() {
 	}
 
 	if err := yaml.Unmarshal([]byte(definition.DefaultsContent), &c); err != nil {
-		panic(fmt.Errorf("Error: failed to parse deviceGroupListDefinition: %v\n", err))
+		panic(fmt.Errorf("failed to parse deviceGroupListDefinition: %v", err))
 	}
 
 	// resolve modbus param references

@@ -2,12 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
-	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -33,6 +32,14 @@ var (
 	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
 	ignoreMqtt   = []string{"auth", "releaseNotes"}   // excessive size may crash certain brokers
 )
+
+var conf = config{
+	Network: networkConfig{
+		Schema: "http",
+		Host:   "evcc.local",
+		Port:   7070,
+	},
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -72,8 +79,10 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	configureCommand(rootCmd)
 
-	rootCmd.PersistentFlags().StringP("uri", "u", "0.0.0.0:7070", "Listen address")
-	bind(rootCmd, "uri")
+	rootCmd.PersistentFlags().IntP("port", "p", 7070, "Listen port")
+	if err := viper.BindPFlag("network.port", rootCmd.PersistentFlags().Lookup("port")); err != nil {
+		panic(err)
+	}
 
 	rootCmd.PersistentFlags().DurationP("interval", "i", 10*time.Second, "Update interval")
 	bind(rootCmd, "interval")
@@ -134,16 +143,23 @@ func run(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config and re-configure logging after reading config file
-	conf, err := loadConfigFile(cfgFile)
-	if err != nil {
+	if err := loadConfigFile(cfgFile, &conf); err != nil {
 		log.ERROR.Println("missing evcc config - switching into demo mode")
-		conf = demoConfig()
+		demoConfig(&conf)
 	}
 
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
-	uri := viper.GetString("uri")
-	log.INFO.Println("listening at", uri)
+	// network config
+	if viper.GetString("uri") != "" {
+		log.ERROR.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
+	}
+
+	if cmd.PersistentFlags().Lookup("port").Changed {
+		conf.Network.Port = viper.GetInt("network.port")
+	}
+
+	log.INFO.Printf("listening at :%d", conf.Network.Port)
 
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
@@ -183,16 +199,15 @@ func run(cmd *cobra.Command, args []string) {
 
 	// create webserver
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(uri, site, socketHub, cache)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), site, socketHub, cache)
 
 	// announce webserver on mDNS
-	if _, port, err := net.SplitHostPort(uri); err == nil {
-		if portInt, err := strconv.Atoi(port); err == nil {
-			if zc, err := zeroconf.RegisterProxy("evcc Website", "_http._tcp", "local.", portInt, "evcc", nil, []string{}, nil); err == nil {
-				shutdown.Register(zc.Shutdown)
-			} else {
-				log.ERROR.Printf("mDNS announcement: %s", err)
-			}
+	if strings.HasSuffix(conf.Network.Host, ".local") {
+		host := strings.TrimSuffix(conf.Network.Host, ".local")
+		if zc, err := zeroconf.RegisterProxy("EV Charge Controller", "_http._tcp", "local.", conf.Network.Port, host, nil, []string{}, nil); err == nil {
+			shutdown.Register(zc.Shutdown)
+		} else {
+			log.ERROR.Printf("mDNS announcement: %s", err)
 		}
 	}
 
@@ -225,7 +240,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	// allow web access for vehicles
-	cp.webControl(httpd, valueChan)
+	cp.webControl(conf.Network, httpd.Router(), valueChan)
 
 	// version check
 	go updater.Run(log, httpd, tee, valueChan)

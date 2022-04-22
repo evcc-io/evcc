@@ -54,7 +54,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		}
 
 		if res != nil {
-			c.aquire(lp, res)
+			c.acquire(lp, res)
 		} else {
 			c.release(res)
 		}

@@ -18,10 +18,9 @@ type roundTripper struct {
 	base http.RoundTripper
 }
 
-const max = 1024 * 64
-
 var (
 	LogHeaders bool
+	LogMaxLen  = 1024 * 8
 	reqMetric  *prometheus.SummaryVec
 	resMetric  *prometheus.CounterVec
 )
@@ -93,7 +92,7 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 	if w.Len() > 0 && len(body) > 0 {
 		w.WriteString("\n--\n")
 	}
-	_, err = w.Write(bytes.TrimSpace(body[:min(max, len(body))]))
+	_, err = w.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
 	return err
 }
 
@@ -108,7 +107,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if LogHeaders {
 		if body, err := httputil.DumpRequestOut(req, true); err == nil {
 			bld.WriteString("\n")
-			bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
+			bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
 		}
 	} else {
 		if save, req.Body, err = drainBody(req.Body); err == nil {
@@ -130,7 +129,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 		if LogHeaders {
 			if body, err := httputil.DumpResponse(resp, true); err == nil {
 				bld.WriteString("\n\n")
-				bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
+				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
 			}
 		} else {
 			if save, resp.Body, err = drainBody(resp.Body); err == nil {
