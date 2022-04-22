@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/wallbox"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
 )
@@ -19,7 +21,9 @@ import (
 type Wallbox struct {
 	*request.Helper
 	id      int
-	current int64
+	state   wallbox.ChargerStatus
+	cache   time.Duration
+	updated time.Time
 }
 
 func init() {
@@ -33,23 +37,26 @@ func NewWallboxFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		ID       int
-	}{}
+		Cache    time.Duration
+	}{
+		Cache: time.Second,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewWallbox(cc.User, cc.Password, cc.ID)
+	return NewWallbox(cc.User, cc.Password, cc.ID, cc.Cache)
 }
 
 // NewWallbox creates Wallbox charger
-func NewWallbox(user, password string, id int) (*Wallbox, error) {
+func NewWallbox(user, password string, id int, cache time.Duration) (*Wallbox, error) {
 	log := util.NewLogger("wallbox")
 
 	c := &Wallbox{
-		Helper:  request.NewHelper(log),
-		id:      id,
-		current: 6,
+		Helper: request.NewHelper(log),
+		id:     id,
+		cache:  cache,
 	}
 
 	uri := fmt.Sprintf("%s/auth/token/user", wallbox.ApiURI)
@@ -92,19 +99,16 @@ func NewWallbox(user, password string, id int) (*Wallbox, error) {
 		}
 	}
 
+	if err == nil && !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	return c, err
 }
 
 // Status implements the api.Charger interface
 func (c *Wallbox) Status() (api.ChargeStatus, error) {
-	var res wallbox.ChargerStatus
-
-	uri := fmt.Sprintf("%s/chargers/status/%d", wallbox.ApiURI, c.id)
-	err := c.GetJSON(uri, &res)
-
-	if err != nil && res.Msg != "" {
-		err = fmt.Errorf("%s: %w", res.Msg, err)
-	}
+	res, err := c.status()
 
 	status := api.StatusA
 
@@ -120,30 +124,56 @@ func (c *Wallbox) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-// Enabled implements the api.Charger interface
-func (c *Wallbox) Enabled() (bool, error) {
-	var res wallbox.ChargerStatus
+func (c *Wallbox) status() (wallbox.ChargerStatus, error) {
+	var err error
 
-	uri := fmt.Sprintf("%s/chargers/status/%d", wallbox.ApiURI, c.id)
-	err := c.GetJSON(uri, &res)
+	if c.cache > 0 && time.Since(c.updated) > c.cache {
+		uri := fmt.Sprintf("%s/chargers/status/%d", wallbox.ApiURI, c.id)
+		err = c.GetJSON(uri, &c.state)
 
-	if err != nil && res.Msg != "" {
-		err = fmt.Errorf("%s: %w", res.Msg, err)
+		if err != nil && c.state.Msg != "" {
+			err = fmt.Errorf("%s: %w", c.state.Msg, err)
+		}
+
+		if err == nil {
+			c.updated = time.Now()
+		}
 	}
 
+	return c.state, err
+}
+
+// Enabled implements the api.Charger interface
+func (c *Wallbox) Enabled() (bool, error) {
+	res, err := c.status()
 	return res.ConfigData.MaxChargingCurrent > 0, err
 }
 
 // Enable implements the api.Charger interface
 func (c *Wallbox) Enable(enable bool) error {
-	var curr int64
+	action := wallbox.ActionPause
 	if enable {
-		curr = c.current
+		action = wallbox.ActionResume
 	}
-	return c.setCurrent(curr)
+
+	data := fmt.Sprintf(`{ "action":%d }`, action)
+
+	uri := fmt.Sprintf("%s/v3/chargers/%d/remote-action", wallbox.ApiURI, c.id)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), request.JSONEncoding)
+	if err == nil {
+		var res wallbox.Error
+		if err = c.DoJSON(req, &res); err != nil && res.Msg != "" {
+			err = fmt.Errorf("%s: %w", res.Msg, err)
+		}
+	}
+
+	c.updated = time.Now()
+
+	return err
 }
 
-func (c *Wallbox) setCurrent(current int64) error {
+// MaxCurrent implements the api.Charger interface
+func (c *Wallbox) MaxCurrent(current int64) error {
 	data := fmt.Sprintf(`{ "maxChargingCurrent":%d }`, current)
 
 	uri := fmt.Sprintf("%s/v2/charger/%d", wallbox.ApiURI, c.id)
@@ -155,14 +185,15 @@ func (c *Wallbox) setCurrent(current int64) error {
 		}
 	}
 
+	c.updated = time.Now()
+
 	return err
 }
 
-// MaxCurrent implements the api.Charger interface
-func (c *Wallbox) MaxCurrent(current int64) error {
-	err := c.setCurrent(current)
-	if err == nil {
-		c.current = current
-	}
-	return err
+var _ api.ChargeRater = (*Wallbox)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (c *Wallbox) ChargedEnergy() (float64, error) {
+	res, err := c.status()
+	return res.AddedEnergy, err
 }

@@ -14,3 +14,8 @@ const (
 	LOCKED
 	UPDATING
 )
+
+const (
+	ActionResume = 1
+	ActionPause  = 2
+)

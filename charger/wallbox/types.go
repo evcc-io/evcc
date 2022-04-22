@@ -54,7 +54,7 @@ type ChargerStatus struct {
 	// DepotName             string  `json:"depot_name"`
 	// ChargingSpeed         int     `json:"charging_speed"`
 	// AddedRange            int     `json:"added_range"`
-	// AddedEnergy           float64 `json:"added_energy"`
+	AddedEnergy float64 `json:"added_energy"`
 	// AddedGreenEnergy      float64 `json:"added_green_energy"`
 	// AddedDischargedEnergy float64 `json:"added_discharged_energy"`
 	// ChargingTime          int     `json:"charging_time"`
