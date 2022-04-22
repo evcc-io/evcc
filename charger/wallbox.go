@@ -124,22 +124,25 @@ func (c *Wallbox) Status() (api.ChargeStatus, error) {
 }
 
 func (c *Wallbox) status() (wallbox.ChargerStatus, error) {
-	var err error
-
-	if c.cache > 0 && time.Since(c.updated) > c.cache {
-		uri := fmt.Sprintf("%s/chargers/status/%d", wallbox.ApiURI, c.id)
-		err = c.GetJSON(uri, &c.state)
-
-		if err != nil && c.state.Msg != "" {
-			err = fmt.Errorf("%s: %w", c.state.Msg, err)
-		}
-
-		if err == nil {
-			c.updated = time.Now()
-		}
+	if time.Since(c.updated) < c.cache {
+		return c.state, nil
 	}
 
-	return c.state, err
+	var res wallbox.ChargerStatus
+
+	uri := fmt.Sprintf("%s/chargers/status/%d", wallbox.ApiURI, c.id)
+	err := c.GetJSON(uri, &res)
+
+	if err != nil && res.Msg != "" {
+		err = fmt.Errorf("%s: %w", res.Msg, err)
+	}
+
+	if err == nil {
+		c.updated = time.Now()
+		c.state = res
+	}
+
+	return res, err
 }
 
 // Enabled implements the api.Charger interface
