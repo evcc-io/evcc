@@ -37,6 +37,9 @@ func ramp(c api.Charger, digits int) {
 
 	fmt.Printf("%6s\t%6s\n", "I (A)", "P (W)")
 
+	c.Enable(true)
+	defer c.Enable(false)
+
 	var i float64 = 6.0
 	for {
 		var err error
