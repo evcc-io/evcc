@@ -44,6 +44,8 @@ func init() {
 	registry.Add("pracht-alpha", NewPrachtAlphaFromConfig)
 }
 
+// https://www.prachtenergy.com/wp-content/uploads/2021/03/instruction-manual-charging-station-pracht-alphaXT-eng-1.pdf
+
 // NewPrachtAlphaFromConfig creates a PrachtAlpha charger from generic config
 func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
