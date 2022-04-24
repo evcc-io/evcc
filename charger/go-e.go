@@ -41,7 +41,7 @@ func init() {
 	registry.Add("go-e", NewGoEFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargePhases,Phases1p3p,func(int) (error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargePhases,Phases1p3p,func(int) (error)" -t "api.AlarmClock,WakeUp,func() (error)"
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -85,7 +85,7 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 			log.WARN.Println("automatic 1p3p phase switching requires sponsor token")
 		}
 
-		return decorateGoE(c, c.totalEnergy, phases), nil
+		return decorateGoE(c, c.totalEnergy, phases, c.wakeup), nil
 	}
 
 	return c, nil
@@ -212,4 +212,9 @@ func (c *GoE) phases1p3p(phases int) error {
 	}
 
 	return c.api.Update(fmt.Sprintf("psm=%d", phases))
+}
+
+// wakeup implements the api.AlarmClock interface - v2 only
+func (c *GoE) wakeup() error {
+	return c.api.Update("su=1")
 }
