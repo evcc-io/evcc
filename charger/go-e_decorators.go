@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateGoE(base *GoE, meterEnergy func() (float64, error), chargePhases func(phases int) error, alarmClock func() (error)) api.Charger {
+func decorateGoE(base *GoE, meterEnergy func() (float64, error), chargePhases func(phases int) error, alarmClock func() error) api.Charger {
 	switch {
 	case alarmClock == nil && chargePhases == nil && meterEnergy == nil:
 		return base
@@ -116,7 +116,7 @@ type decorateGoEAlarmClockImpl struct {
 	alarmClock func() (error)
 }
 
-func (impl *decorateGoEAlarmClockImpl) WakeUp() (error) {
+func (impl *decorateGoEAlarmClockImpl) WakeUp() error {
 	return impl.alarmClock()
 }
 
