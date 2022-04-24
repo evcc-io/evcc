@@ -31,7 +31,7 @@ func init() {
 
 var cp = new(ConfigProvider)
 
-func loadConfigFile(cfgFile string, conf any) (err error) {
+func loadConfigFile(cfgFile string, conf *config) (err error) {
 	if cfgFile != "" {
 		log.INFO.Println("using config file", cfgFile)
 		if err := viper.UnmarshalExact(&conf); err != nil {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -28,16 +29,8 @@ func init() {
 
 	chargerRampCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
 	chargerRampCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
-
 	chargerRampCmd.PersistentFlags().StringP(flagDigits, "", "0", "fractional digits (0..2)")
-	if err := viper.BindPFlag(flagDigits, chargerRampCmd.PersistentFlags().Lookup(flagDigits)); err != nil {
-		panic(err)
-	}
-
 	chargerRampCmd.PersistentFlags().StringP(flagDelay, "", "1s", "ramp delay")
-	if err := viper.BindPFlag(flagDelay, chargerRampCmd.PersistentFlags().Lookup(flagDelay)); err != nil {
-		panic(err)
-	}
 }
 
 func ramp(c api.Charger, digits int, delay time.Duration) {
@@ -83,20 +76,13 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
-	// wrap config to allow binding to viper
-	var conf struct {
-		Digits int
-		Delay  time.Duration
-		config `mapstructure:",squash"`
-	}
-
 	// load config
 	if err := loadConfigFile(cfgFile, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
 	// setup environment
-	if err := configureEnvironment(conf.config); err != nil {
+	if err := configureEnvironment(conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -110,7 +96,7 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	if err := cp.configureChargers(conf.config); err != nil {
+	if err := cp.configureChargers(conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -123,8 +109,15 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
 	}
 
-	digits := viper.GetInt(flagDigits)
-	delay := viper.GetDuration(flagDelay)
+	digits, err := strconv.Atoi(cmd.PersistentFlags().Lookup(flagDigits).Value.String())
+	if err != nil {
+		log.ERROR.Fatalln(err)
+	}
+
+	delay, err := time.ParseDuration(cmd.PersistentFlags().Lookup(flagDelay).Value.String())
+	if err != nil {
+		log.ERROR.Fatalln(err)
+	}
 
 	for _, c := range chargers {
 		if _, ok := c.(api.ChargerEx); digits > 0 && !ok {
