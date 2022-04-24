@@ -9,5 +9,5 @@ render:
       template: shelly-1pm
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      user: admin   # (optional)
-      password: xxx # (optional - bei führenden Nullen bitte in einfache Hochkommata setzen)
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
