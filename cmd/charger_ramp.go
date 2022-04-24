@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -20,22 +19,33 @@ import (
 // chargerRampCmd represents the charger command
 var chargerRampCmd = &cobra.Command{
 	Use:   "ramp [name]",
-	Short: "Ramp current from 6..16A in configurtable steps",
+	Short: "Ramp current from 6..16A in configurable steps",
 	Run:   runChargerRamp,
 }
 
 func init() {
 	chargerCmd.AddCommand(chargerRampCmd)
+
 	chargerRampCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
 	chargerRampCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
+
 	chargerRampCmd.PersistentFlags().StringP(flagDigits, "", "0", "fractional digits (0..2)")
+	if err := viper.BindPFlag(flagDigits, chargerRampCmd.PersistentFlags().Lookup(flagDigits)); err != nil {
+		panic(err)
+	}
+
+	chargerRampCmd.PersistentFlags().StringP(flagDelay, "", "1s", "ramp delay")
+	if err := viper.BindPFlag(flagDelay, chargerRampCmd.PersistentFlags().Lookup(flagDelay)); err != nil {
+		panic(err)
+	}
 }
 
-func ramp(c api.Charger, digits int) {
+func ramp(c api.Charger, digits int, delay time.Duration) {
 	steps := math.Pow10(digits)
 	delta := 1 / steps
 
-	fmt.Printf("%6s\t%6s\n", "I (A)", "P (W)")
+	fmt.Printf("delay:\t%s\n", delay)
+	fmt.Printf("\n%6s\t%6s\n", "I (A)", "P (W)")
 
 	c.Enable(true)
 	defer c.Enable(false)
@@ -50,7 +60,7 @@ func ramp(c api.Charger, digits int) {
 			err = c.MaxCurrent(int64(i))
 		}
 
-		time.Sleep(time.Second)
+		time.Sleep(delay)
 
 		var p float64
 		if cc, ok := c.(api.Meter); err == nil && ok {
@@ -71,13 +81,20 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
+	// wrap config to allow binding to viper
+	var conf struct {
+		Digits int
+		Delay  time.Duration
+		config `mapstructure:",squash"`
+	}
+
 	// load config
 	if err := loadConfigFile(cfgFile, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
 	// setup environment
-	if err := configureEnvironment(conf); err != nil {
+	if err := configureEnvironment(conf.config); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -91,7 +108,7 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	if err := cp.configureChargers(conf); err != nil {
+	if err := cp.configureChargers(conf.config); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -104,17 +121,14 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
 	}
 
-	flag := cmd.PersistentFlags().Lookup(flagDigits)
-	digits, err := strconv.Atoi(flag.Value.String())
-	if err != nil {
-		log.ERROR.Fatalln(err)
-	}
+	digits := viper.GetInt(flagDigits)
+	delay := viper.GetDuration(flagDelay)
 
 	for _, c := range chargers {
 		if _, ok := c.(api.ChargerEx); digits > 0 && !ok {
 			log.ERROR.Fatalln("charger does not support mA control")
 		}
-		ramp(c, digits)
+		ramp(c, digits, delay)
 	}
 
 	close(stopC)
