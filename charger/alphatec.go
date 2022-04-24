@@ -29,7 +29,6 @@ import (
 
 // Alphatec charger implementation
 type Alphatec struct {
-	log  *util.Logger
 	conn *modbus.Connection
 }
 
@@ -71,7 +70,6 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 	conn.Logger(log.TRACE)
 
 	wb := &Alphatec{
-		log:  log,
 		conn: conn,
 	}
 
