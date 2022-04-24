@@ -113,7 +113,7 @@ func decorateGoE(base *GoE, meterEnergy func() (float64, error), chargePhases fu
 }
 
 type decorateGoEAlarmClockImpl struct {
-	alarmClock func() (error)
+	alarmClock func() error
 }
 
 func (impl *decorateGoEAlarmClockImpl) WakeUp() error {
