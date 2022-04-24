@@ -47,8 +47,10 @@ func ramp(c api.Charger, digits int, delay time.Duration) {
 	fmt.Printf("delay:\t%s\n", delay)
 	fmt.Printf("\n%6s\t%6s\n", "I (A)", "P (W)")
 
-	c.Enable(true)
-	defer c.Enable(false)
+	if err := c.Enable(true); err != nil {
+		log.ERROR.Fatalln(err)
+	}
+	defer func() { _ = c.Enable(false) }()
 
 	var i float64 = 6.0
 	for {
