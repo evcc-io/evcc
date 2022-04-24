@@ -137,7 +137,6 @@ func (wb *PrachtAlpha) Enable(enable bool) error {
 	return wb.setCurrent(curr)
 }
 
-// setCurrent implements the api.Charger interface
 func (wb *PrachtAlpha) setCurrent(current uint16) error {
 	reg := wb.register(prachtMaxCurrent)
 
