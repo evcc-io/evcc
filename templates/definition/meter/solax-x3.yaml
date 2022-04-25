@@ -55,6 +55,7 @@ render: |
       address: 22 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
       type: input
       decode: int16
+    scale: -1
   soc:
     source: modbus
     uri: {{ .host }}:{{ .port }}
