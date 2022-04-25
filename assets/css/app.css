@@ -34,7 +34,7 @@
 html {
 	/* prevents content jump when scrollbar is activate */
 	width: 100vw;
-    overflow-x: hidden;
+	overflow-x: hidden;
 }
 
 body {
