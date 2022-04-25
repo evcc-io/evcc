@@ -58,7 +58,7 @@ func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
 	}
 
 	if user == "" || password == "" {
-		return tapo, fmt.Errorf("missing user/password")
+		return tapo, fmt.Errorf("missing user or password")
 	}
 
 	return tapo, nil
