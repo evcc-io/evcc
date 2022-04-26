@@ -45,7 +45,7 @@ export default {
       supportUs:
         "Norime, kad efektyvesnis elektromobilių įkrovimas saulės energija taptų pasiekiamas kuo daugiau žmonių. Remdami prisidedate prie nuolatinio projekto vystymo ir techninio palaikymo.",
       sticker: "... ar EVCC lipdukų?",
-      confettiPromise: "Gausite skaitmeninių lipdukų ir konfeti ;)",
+      confettiPromise: "Gausite lipdukų ir skaitmeninių konfeti ;)",
       becomeSponsor: "Pradėkite GitHub rėmimą!",
     },
   },
