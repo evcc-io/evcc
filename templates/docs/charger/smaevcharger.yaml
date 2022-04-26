@@ -1,0 +1,12 @@
+product:
+  brand: SMA
+  description: Wallbox EV Charger
+description: |
+  SMA Wallbox - verwendung mit EVCC nur mit Schalterstellung Fast-Charge möglich, die Leistung lässt sich trotzdem drosseln. Es muss ein sepereater Nutzer angelegt werden (Name != Admin)
+render:
+  - default: |
+      type: template
+      template: smaevcharger
+      host: # IP-Adresse oder Hostname
+      user: # Benutzerkonto
+      password: # Passwort des Benutzerkontos
