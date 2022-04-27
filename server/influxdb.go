@@ -40,7 +40,7 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 		token = fmt.Sprintf("%s:%s", user, password)
 	}
 
-	options := influxdb2.DefaultOptions().SetPrecision(time.Second)
+	options := influxdb2.DefaultOptions().SetPrecision(time.Second).SetLogLevel(influxlog.DebugLevel)
 	client := influxdb2.NewClientWithOptions(url, token, options)
 
 	// handle error logging in writer
