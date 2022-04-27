@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -89,7 +88,7 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 	if cc.Password == "" {
 		return nil, errors.New("missing password")
 	}
-
+	
 	return NewSmaevcharger(cc.Host, cc.User, cc.Password)
 }
 
@@ -150,20 +149,46 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 	} else {
 		wb.SendParameter("Parameter.Chrg.ActChaMod", smaevchStopCharge)
 	}
+	time.Sleep(time.Second) //Some Delay to prevent out of Sync - The Charger needs some time to react after setting have been changed
 	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Smaevcharger) MaxCurrent(current int64) error {
-
+	if current < 6 {
+		return fmt.Errorf("invalid current %v", current)
+	}
+	wb.SendParameter("Parameter.PCC.ARtg", strconv.FormatInt(int64(current), 10))
+	//This Parameter should be enough to change the Chargerates, but SMA Software seems to be very buggy and ignores this value
+	//aditionally it is still possible to set the current indirect via the max watts which will internally change the charger behavior
 	//Convert current to watts
 	ChargeRate := current * 3 * 230
-
 	//Check limits - ChargeRates above 11kW are illegal in Germany with funding (can be an option in the future)
 	if ChargeRate > 11000 {
 		ChargeRate = 11000
-	} else if ChargeRate < 4100 {
-		ChargeRate = 4100
+	}
+	// Set both Max in and Max out watts, Charger seems to be a bit buggy if only one is changed
+	wb.SendParameter("Parameter.Inverter.WMax", strconv.FormatInt(int64(ChargeRate), 10))
+	wb.SendParameter("Parameter.Inverter.WMaxIn", strconv.FormatInt(int64(ChargeRate), 10))
+	return nil
+}
+
+var _ api.ChargerEx = (*Smaevcharger)(nil)
+
+
+// maxCurrentMillis implements the api.ChargerEx interface
+func (wb *Smaevcharger) MaxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.5g", current)
+	}
+	wb.SendParameter("Parameter.PCC.ARtg", strconv.FormatFloat(current,'f', 2, 64))
+	//This Parameter should be enough to change the Chargerates, but SMA Software seems to be very buggy and ignores this value
+	//aditionally it is still possible to set the current indirect via the max watts which will internally change the charger behavior
+	//Convert current to watts
+	ChargeRate := current * 3 * 230
+	//Check limits - ChargeRates above 11kW are illegal in Germany with funding (can be an option in the future)
+	if ChargeRate > 11000 {
+		ChargeRate = 11000
 	}
 	// Set both Max in and Max out watts, Charger seems to be a bit buggy if only one is changed
 	wb.SendParameter("Parameter.Inverter.WMax", strconv.FormatInt(int64(ChargeRate), 10))
@@ -245,12 +270,15 @@ func (wb *Smaevcharger)GetMeasurementData() bool {
 		return false
 	}
 	respBody, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
 	if err != nil {
 		return false
 	}
-	resp.Body.Close()
-	err = json.Unmarshal([]byte(respBody), &wb.MeasurementsData)
-	return err == nil
+	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+		err = json.Unmarshal([]byte(respBody), &wb.MeasurementsData)
+		return err == nil
+	}
+	return false
 }
 
 func (wb *Smaevcharger)GetParameterData() bool {
@@ -277,7 +305,7 @@ func (wb *Smaevcharger)GetParameterData() bool {
 	respBody, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
-		log.Fatal(err)
+		return false
 	}
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 		err = json.Unmarshal([]byte(respBody), &wb.ParametersData)
@@ -344,6 +372,9 @@ func (wb *Smaevcharger)SendParameter(id string, value string) bool {
 		client := &http.Client{}
 		URL := wb.host + "/parameters/IGULD:SELF/"
 		jsonData, err := json.Marshal(parameter)
+		if err != nil {
+			return false
+		}	
 		req, err := http.NewRequest("PUT", URL, bytes.NewBuffer(jsonData))
 		if err != nil {
 			return false
@@ -352,7 +383,7 @@ func (wb *Smaevcharger)SendParameter(id string, value string) bool {
 		req.Header.Add("Authorization", "Bearer "+wb.Auth.Access_token)
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Fatal(err)
+			return false
 		}
 		resp.Body.Close()
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
