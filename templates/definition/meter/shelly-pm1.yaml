@@ -1,0 +1,26 @@
+template: shelly-1pm
+products:
+  - brand: Shelly
+    description:
+      generic: 1PM
+group: sockets
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+  - name: user
+    required: false
+  - name: password
+    required: false
+    mask: true
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ if ne .user "" }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}/status
+    jq: .meters | map(.power) | add
+  energy:
+    source: http
+    uri: http://{{ if ne .user "" }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}/status
+    jq: .meters | map(.total) | add
+    scale: 0.0000166666666666667
