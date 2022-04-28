@@ -42,9 +42,9 @@ render: |
   broker: {{ .host }}:{{ .port }}
   {{- if .user }}
   user: {{ .user }}
-  {{ end -}}
+  {{- end }}
   {{- if .password }}
   password: '{{ .password }}'
-  {{ end -}}
+  {{- end }}
   topic: {{ .topic }}
   timeout: {{ .timeout }}
