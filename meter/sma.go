@@ -26,7 +26,7 @@ func init() {
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,SoC,func() (float64, error)"
 
-// NewSMAFromConfig creates a SMA Meter from generic config
+// NewSMAFromConfig creates an SMA meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Password, Interface string
@@ -44,7 +44,7 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale)
 }
 
-// NewSMA creates a SMA Meter
+// NewSMA creates an SMA meter
 func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Meter, error) {
 	sm := &SMA{
 		uri:   uri,

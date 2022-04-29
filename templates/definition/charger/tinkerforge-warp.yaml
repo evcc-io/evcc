@@ -29,6 +29,10 @@ params:
     help:
       de: MQTT Broker Port
       en: MQTT broker port
+  - name: user
+    advanced: true
+  - name: password
+    advanced: true
   - name: topic
     default: warp
   - name: timeout
@@ -36,5 +40,11 @@ params:
 render: |
   type:{{ if .fw2 }} warp-fw2 {{ else }} warp {{ end }}
   broker: {{ .host }}:{{ .port }}
+  {{- if .user }}
+  user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
+  password: '{{ .password }}'
+  {{- end }}
   topic: {{ .topic }}
   timeout: {{ .timeout }}
