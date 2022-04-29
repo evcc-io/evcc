@@ -12,7 +12,7 @@ requirements:
   description:
     en: An MQTT broker is required. The charger must be have a configured MQTT connection.
     de: Es muss ein MQTT Broker installiert sein. Die MQTT Verbindung muss in der Wallbox eingerichtet sein.
-  uri: https://docs.evcc.io/docs/devices/chargers#tinkerforge-warp-charger
+  uri: https://docs.evcc.io/docs/devices/chargers#tinkerforge
 params:
   - name: fw2
     required: true
