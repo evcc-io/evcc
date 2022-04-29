@@ -1,7 +1,6 @@
 product:
   brand: Phoenix
-  description: EV-SER Controller (Modbus RTU)
-  group: Generische Unterstützung
+  description: EV-SER (Modbus RTU)
 render:
   - default: |
       type: template
