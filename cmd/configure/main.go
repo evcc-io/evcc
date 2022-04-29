@@ -207,7 +207,7 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	fmt.Println(c.localizedString("File_SaveSuccess", localizeMap{"FileName": filename}))
 }
 
-// configureDevices asks device specfic questions
+// configureDevices asks device specific questions
 func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askAdding, askMultiple bool) []device {
 	var devices []device
 
