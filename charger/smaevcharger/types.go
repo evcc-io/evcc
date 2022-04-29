@@ -2,14 +2,20 @@ package smaevcharger
 
 // SMA EV Charger 22 - json Responses
 
-// Auth Token Data json Response structure
-type AuthToken struct {
-	Access_token  string `json:"access_token"`
-	Expires_in    int    `json:"expires_in"`
-	Refresh_token string `json:"refresh_token"`
-	Token_type    string `json:"token_type"`
-	UiIdleTime    string `json:"uiIdleTime"`
-}
+//Constants
+const (
+	ConstNConNCarNChar = float32(200111) // No Car connectec and no charging
+	ConstYConYCarNChar = float32(200112) // Car connected and no charging
+	ConstYConYCarYChar = float32(200113) // Car connected and charging
+
+	ConstFastCharge = "4718" // Schnellladen - 4718
+	ConstOptiCharge = "4719" // Optimiertes Laden - 4719
+	ConstPlanCharge = "4720" // Laden mit Vorgabe - 4720
+	ConstStopCharge = "4721" // Ladestopp - 4721
+
+	ConstSwitchOeko = float32(4950) // Switch in PV Loading (Can be Optimized or Planned PV loading)
+	ConstSwitchFast = float32(4718) // Switch in Fast Charge Mode
+)
 
 // Measurements Data json Response structure
 type Measurements struct {

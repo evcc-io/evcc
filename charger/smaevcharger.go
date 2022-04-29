@@ -22,43 +22,26 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/smaevcharger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-)
-
-//Constants
-const (
-	smaevchNConNCarNChar = float32(200111) // No Car connectec and no charging
-	smaevchYConYCarNChar = float32(200112) // Car connected and no charging
-	smaevchYConYCarYChar = float32(200113) // Car connected and charging
-
-	smaevchFastCharge = "4718" // Schnellladen - 4718
-	smaevchOptiCharge = "4719" // Optimiertes Laden - 4719
-	smaevchPlanCharge = "4720" // Laden mit Vorgabe - 4720
-	smaevchStopCharge = "4721" // Ladestopp - 4721
-
-	smaevchSwitchOeko = float32(4950) // Switch in PV Loading (Can be Optimized or Planned PV loading)
-	smaevchSwitchFast = float32(4718) // Switch in Fast Charge Mode
+	"golang.org/x/oauth2"
 )
 
 // smaevchager charger implementation
 type Smaevcharger struct {
 	*request.Helper
-	host      	string	// 192.168.XXX.XXX
-	user     	string	// LOGIN user
-	password 	string	// password
-	Auth				smaevcharger.AuthToken
-	MeasurementsData	[]smaevcharger.Measurements
-	ParametersData		[]smaevcharger.Parameters	
+	log              *util.Logger
+	host             string // 192.168.XXX.XXX
+	user             string // LOGIN user
+	password         string // password
+	MeasurementsData []smaevcharger.Measurements
+	ParametersData   []smaevcharger.Parameters
 }
 
 func init() {
@@ -88,19 +71,32 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 	if cc.Password == "" {
 		return nil, errors.New("missing password")
 	}
-	
+
 	return NewSmaevcharger(cc.Host, cc.User, cc.Password)
 }
 
 // NewSmaevcharger creates Smaevcharger charger
 func NewSmaevcharger(host string, user string, password string) (api.Charger, error) {
+	log := util.NewLogger("smaevcharger").Redact(user, password)
+
 	wb := &Smaevcharger{
-		Helper:		request.NewHelper(util.NewLogger("smaevcharger")),
-		host:      	"http://" + host + "/api/v1",
-		user:     	user,
-		password: 	password,
+		Helper:   request.NewHelper(log),
+		log:      log,
+		host:     "http://" + host + "/api/v1",
+		user:     user,
+		password: password,
 	}
 
+	ts, err := smaevcharger.TokenSource(log, wb.host, wb.user, wb.password)
+	if err != nil {
+		return wb, err
+	}
+
+	// replace client transport with authenticated transport
+	wb.Client.Transport = &oauth2.Transport{
+		Source: ts,
+		Base:   wb.Client.Transport,
+	}
 	return wb, nil
 }
 
@@ -109,14 +105,14 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 	StateChargerCharging := wb.GetMeasurement("Measurement.Operation.EVeh.ChaStt")
 
 	switch StateChargerCharging {
-	case smaevchNConNCarNChar:// No Car connectec and no charging
+	case smaevcharger.ConstNConNCarNChar: // No Car connectec and no charging
 		return api.StatusA, nil
-	case smaevchYConYCarNChar:// Car connected and no charging
+	case smaevcharger.ConstYConYCarNChar: // Car connected and no charging
 		return api.StatusB, nil
-	case smaevchYConYCarYChar:// Car connected and charging
+	case smaevcharger.ConstYConYCarYChar: // Car connected and charging
 		return api.StatusC, nil
 	}
-		return api.StatusNone, fmt.Errorf("unkown charger state: %s", StateChargerCharging)
+	return api.StatusNone, fmt.Errorf("SMA EV Charger state: %s", StateChargerCharging)
 }
 
 // Enabled implements the api.Charger interface
@@ -124,16 +120,16 @@ func (wb *Smaevcharger) Enabled() (bool, error) {
 	StateChargerMode := wb.GetParameter("Parameter.Chrg.ActChaMod")
 
 	switch StateChargerMode {
-	case smaevchFastCharge:// Schnellladen - 4718
+	case smaevcharger.ConstFastCharge: // Schnellladen - 4718
 		return true, nil
-	case smaevchOptiCharge:// Optimiertes Laden - 4719
+	case smaevcharger.ConstOptiCharge: // Optimiertes Laden - 4719
 		return true, nil
-	case smaevchPlanCharge:// Laden mit Vorgabe - 4720
+	case smaevcharger.ConstPlanCharge: // Laden mit Vorgabe - 4720
 		return true, nil
-	case smaevchStopCharge:// Ladestopp - 4721
+	case smaevcharger.ConstStopCharge: // Ladestopp - 4721
 		return false, nil
 	}
-	return false, fmt.Errorf("unknown charger charge mode: %s", StateChargerMode)
+	return false, fmt.Errorf("SMA EV Charger  charge mode: %s", StateChargerMode)
 }
 
 // Enable implements the api.Charger interface
@@ -141,13 +137,13 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 	StateChargerSwitch := wb.GetMeasurement("Measurement.Chrg.ModSw")
 	if enable {
 		switch StateChargerSwitch {
-		case smaevchSwitchOeko:// Switch PV Loading
-			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevchOptiCharge)
-		case smaevchSwitchFast:// Fast charging
-			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevchFastCharge)
+		case smaevcharger.ConstSwitchOeko: // Switch PV Loading
+			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstOptiCharge)
+		case smaevcharger.ConstSwitchFast: // Fast charging
+			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstFastCharge)
 		}
 	} else {
-		wb.SendParameter("Parameter.Chrg.ActChaMod", smaevchStopCharge)
+		wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstStopCharge)
 	}
 	time.Sleep(time.Second) //Some Delay to prevent out of Sync - The Charger needs some time to react after setting have been changed
 	return nil
@@ -158,41 +154,70 @@ func (wb *Smaevcharger) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %v", current)
 	}
-	wb.SendParameter("Parameter.PCC.ARtg", strconv.FormatInt(int64(current), 10))
-	//This Parameter should be enough to change the Chargerates, but SMA Software seems to be very buggy and ignores this value
-	//aditionally it is still possible to set the current indirect via the max watts which will internally change the charger behavior
-	//Convert current to watts
+	
 	ChargeRate := current * 3 * 230
 	//Check limits - ChargeRates above 11kW are illegal in Germany with funding (can be an option in the future)
 	if ChargeRate > 11000 {
 		ChargeRate = 11000
 	}
+	var data []smaevcharger.SendData
+	var datapoint smaevcharger.SendData
+
+	//This Parameter should be enough to change the Chargerates, but SMA Software seems to be very buggy and ignores this value
+	//aditionally it is still possible to set the current indirect via the max watts which will internally change the charger behavior
+	//Convert current to watts
+	datapoint.ChannelId = "Parameter.PCC.ARtg"
+	datapoint.Value = strconv.FormatInt(int64(current), 10)
+	data = append(data, datapoint)
+
 	// Set both Max in and Max out watts, Charger seems to be a bit buggy if only one is changed
-	wb.SendParameter("Parameter.Inverter.WMax", strconv.FormatInt(int64(ChargeRate), 10))
-	wb.SendParameter("Parameter.Inverter.WMaxIn", strconv.FormatInt(int64(ChargeRate), 10))
+	datapoint.ChannelId = "Parameter.Inverter.WMax"
+	datapoint.Value = strconv.FormatInt(int64(ChargeRate), 10)
+	data = append(data, datapoint)
+
+	datapoint.ChannelId = "Parameter.Inverter.WMaxIn"
+	datapoint.Value = strconv.FormatInt(int64(ChargeRate), 10)
+	data = append(data, datapoint)
+
+	wb.SendMultiParameter(data)
+	time.Sleep(time.Second)
 	return nil
 }
 
 var _ api.ChargerEx = (*Smaevcharger)(nil)
-
 
 // maxCurrentMillis implements the api.ChargerEx interface
 func (wb *Smaevcharger) MaxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
-	wb.SendParameter("Parameter.PCC.ARtg", strconv.FormatFloat(current,'f', 2, 64))
-	//This Parameter should be enough to change the Chargerates, but SMA Software seems to be very buggy and ignores this value
-	//aditionally it is still possible to set the current indirect via the max watts which will internally change the charger behavior
-	//Convert current to watts
+
 	ChargeRate := current * 3 * 230
 	//Check limits - ChargeRates above 11kW are illegal in Germany with funding (can be an option in the future)
 	if ChargeRate > 11000 {
 		ChargeRate = 11000
 	}
+	var data []smaevcharger.SendData
+	var datapoint smaevcharger.SendData
+
+	//This Parameter should be enough to change the Chargerates, but SMA Software seems to be very buggy and ignores this value
+	//aditionally it is still possible to set the current indirect via the max watts which will internally change the charger behavior
+	//Convert current to watts
+	datapoint.ChannelId = "Parameter.PCC.ARtg"
+	datapoint.Value = strconv.FormatFloat(current, 'f', 2, 64)
+	data = append(data, datapoint)
+
 	// Set both Max in and Max out watts, Charger seems to be a bit buggy if only one is changed
-	wb.SendParameter("Parameter.Inverter.WMax", strconv.FormatInt(int64(ChargeRate), 10))
-	wb.SendParameter("Parameter.Inverter.WMaxIn", strconv.FormatInt(int64(ChargeRate), 10))
+	datapoint.ChannelId = "Parameter.Inverter.WMax"
+	datapoint.Value = strconv.FormatInt(int64(ChargeRate), 10)
+	data = append(data, datapoint)
+
+	datapoint.ChannelId = "Parameter.Inverter.WMaxIn"
+	datapoint.Value = strconv.FormatInt(int64(ChargeRate), 10)
+	data = append(data, datapoint)
+
+	wb.SendMultiParameter(data)
+
 	return nil
 }
 
@@ -222,99 +247,31 @@ func (wb *Smaevcharger) Currents() (float64, float64, float64, error) {
 	return PhsA, PhsB, PhsC, nil
 }
 
-func (wb *Smaevcharger) GetAuthToken() bool {
-	client := &http.Client{}
-	URL := wb.host + "/token"
-	v := url.Values{}
-	v.Set("grant_type", "password")
-	v.Set("password", wb.password)
-	v.Set("username", wb.user)
-	//pass the values to the request's body
-	req, err := http.NewRequest("POST", URL, strings.NewReader(v.Encode()))
-	if err != nil {
-		return false
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := client.Do(req)
-	if err != nil {
-		return false
-	}
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return false
-	}
-	reader := strings.NewReader(string(respBody))
-	err = json.NewDecoder(reader).Decode(&wb.Auth)
-	
-	return err == nil
-}
-
-func (wb *Smaevcharger)GetMeasurementData() bool {
-	
-	tokenok := wb.GetAuthToken()
-
-	if !tokenok{
-		return false
-	}
-	client := &http.Client{}
-	URL := wb.host + "/measurements/live"
+func (wb *Smaevcharger) GetMeasurementData() bool {
+	Host := wb.host + "/measurements/live"
 	jsonData := []byte(`[{"componentId": "IGULD:SELF"}]`)
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return false
-	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer "+ wb.Auth.Access_token )
-	resp, err := client.Do(req)
-	if err != nil {
-		return false
-	}
-	respBody, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return false
-	}
-	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-		err = json.Unmarshal([]byte(respBody), &wb.MeasurementsData)
+
+	req, err := request.New(http.MethodPost, Host, bytes.NewBuffer(jsonData), request.JSONEncoding)
+	if err == nil {
+		err = wb.DoJSON(req, &wb.MeasurementsData)
 		return err == nil
 	}
 	return false
 }
 
-func (wb *Smaevcharger)GetParameterData() bool {
-
-	tokenok := wb.GetAuthToken()
-
-	if !tokenok{
-		return false
-	}
-
-	client := &http.Client{}
-	URL := wb.host + "/parameters/search/"
+func (wb *Smaevcharger) GetParameterData() bool {
+	Host := wb.host + "/parameters/search/"
 	jsonData := []byte(`{"queryItems":[{"componentId":"IGULD:SELF"}]}`)
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return false
-	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer "+wb.Auth.Access_token)
-	resp, err := client.Do(req)
-	if err != nil {
-		return false
-	}
-	respBody, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return false
-	}
-	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-		err = json.Unmarshal([]byte(respBody), &wb.ParametersData)
+
+	req, err := request.New(http.MethodPost, Host, bytes.NewBuffer(jsonData), request.JSONEncoding)
+	if err == nil {
+		err = wb.DoJSON(req, &wb.ParametersData)
 		return err == nil
 	}
 	return false
 }
 
-func (wb *Smaevcharger)GetMeasurement(id string) interface{} {
+func (wb *Smaevcharger) GetMeasurement(id string) interface{} {
 	dataok := wb.GetMeasurementData()
 	if !dataok {
 		nil := fmt.Errorf("failed to aquire measurement data")
@@ -331,8 +288,7 @@ func (wb *Smaevcharger)GetMeasurement(id string) interface{} {
 	return returndata
 }
 
-func (wb *Smaevcharger)GetParameter(id string) interface{} {
-	
+func (wb *Smaevcharger) GetParameter(id string) interface{} {
 	dataok := wb.GetParameterData()
 	if !dataok {
 		nil := fmt.Errorf("failed to aquire parameter data")
@@ -349,8 +305,10 @@ func (wb *Smaevcharger)GetParameter(id string) interface{} {
 	return returndata
 }
 
-func (wb *Smaevcharger)SendParameter(id string, value string) bool {
-	wb.GetParameterData()
+func (wb *Smaevcharger) SendParameter(id string, value string) bool {
+	if wb.ParametersData == nil {
+		wb.GetParameterData()
+	}
 	var parameter smaevcharger.SendParameter
 	var data smaevcharger.SendData
 
@@ -369,33 +327,52 @@ func (wb *Smaevcharger)SendParameter(id string, value string) bool {
 
 	if parameterAvaliable {
 
-		client := &http.Client{}
-		URL := wb.host + "/parameters/IGULD:SELF/"
+		Host := wb.host + "/parameters/IGULD:SELF/"
 		jsonData, err := json.Marshal(parameter)
 		if err != nil {
 			return false
-		}	
-		req, err := http.NewRequest("PUT", URL, bytes.NewBuffer(jsonData))
-		if err != nil {
-			return false
 		}
-		req.Header.Add("Content-Type", "application/json")
-		req.Header.Add("Authorization", "Bearer "+wb.Auth.Access_token)
-		resp, err := client.Do(req)
-		if err != nil {
-			return false
-		}
-		resp.Body.Close()
-		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-			return true
-		} else {
-			return false
+		req, err := request.New(http.MethodPut, Host, bytes.NewBuffer(jsonData), request.JSONEncoding)
+		if err == nil {
+			resp, err := wb.Do(req)
+			if resp.StatusCode >= 200 && resp.StatusCode <= 299 && err == nil {
+				return true
+			}
 		}
 	}
 	return false
 }
 
-func (wb *Smaevcharger)ConvertInterfaceToFloat(data interface{})float64{
+func (wb *Smaevcharger) SendMultiParameter(data []smaevcharger.SendData) bool {
+	if wb.ParametersData == nil {
+		wb.GetParameterData()
+	}
+	var parameter smaevcharger.SendParameter
+	var payload smaevcharger.SendData
+
+	for i := range data {
+		payload.Timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+		payload.ChannelId = data[i].ChannelId
+		payload.Value = data[i].Value
+		parameter.Values = append(parameter.Values, payload)
+	}
+
+	Host := wb.host + "/parameters/IGULD:SELF/"
+	jsonData, err := json.Marshal(parameter)
+	if err != nil {
+		return false
+	}
+	req, err := request.New(http.MethodPut, Host, bytes.NewBuffer(jsonData), request.JSONEncoding)
+	if err == nil {
+		resp, err := wb.Do(req)
+		if resp.StatusCode >= 200 && resp.StatusCode <= 299 && err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func (wb *Smaevcharger) ConvertInterfaceToFloat(data interface{}) float64 {
 	var dataout float64
 	switch value := data.(type) {
 	case float32:
