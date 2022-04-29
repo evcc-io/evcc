@@ -468,6 +468,7 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 			if usageFilter != "" {
 				additionalConfig[param.Name] = usageFilter.String()
 			}
+
 		default:
 			if !c.advancedMode && param.Advanced {
 				continue
