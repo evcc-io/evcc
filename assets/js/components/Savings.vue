@@ -31,21 +31,17 @@
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title">
-								<span class="d-block d-sm-none">
+								<span class="text-nowrap">
 									{{
-										$t("footer.savings.modalTitleShort", {
-											percent,
+										$t("footer.savings.modalTitlePartOne", {
 											total: fmtKw(totalCharged * 1000, true, false),
 										})
 									}}
+									·
 								</span>
-								<span class="d-none d-sm-block">
-									{{
-										$t("footer.savings.modalTitleLong", {
-											percent,
-											total: fmtKw(totalCharged * 1000, true, false),
-										})
-									}}
+								{{ " " }}
+								<span class="text-nowrap">
+									{{ $t("footer.savings.modalTitlePartTwo", { percent }) }}
 								</span>
 							</h5>
 							<button
@@ -158,19 +154,7 @@
 
 							<hr class="mb-4" />
 
-							<Sponsor :sponsor="sponsor" class="mb-4" />
-
-							<p class="small text-muted mb-0">
-								<strong class="text-evcc">
-									{{ $t("footer.savings.experimentalLabel") }}:
-								</strong>
-								{{ $t("footer.savings.experimentalText") }}
-								<a
-									href="https://github.com/evcc-io/evcc/discussions/2104"
-									target="_blank"
-									>GitHub Discussions</a
-								>.
-							</p>
+							<Sponsor :sponsor="sponsor" />
 						</div>
 					</div>
 				</div>

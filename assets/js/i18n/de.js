@@ -25,8 +25,8 @@ export default {
     savings: {
       footerShort: "{percent}% Sonne",
       footerLong: "{percent}% Sonnenenergie",
-      modalTitleShort: "{total} kWh geladen · {percent}% Sonne",
-      modalTitleLong: "{total} kWh geladen · {percent}% Sonnenenergie",
+      modalTitlePartOne: "{total} kWh geladen",
+      modalTitlePartTwo: "{percent}% Sonne",
       modalChartGrid: "Netz {grid} kWh",
       modalChartSelf: "Sonne {self} kWh",
       modalSavingsPrice: "Effektiver Energiepreis",
@@ -36,8 +36,6 @@ export default {
       modalExplainationFeedIn: "Einspeisung {feedInPrice}",
       modalServerStart: "Seit Serverstart {since}.",
       modalNoData: "noch nicht geladen",
-      experimentalLabel: "Experimentell",
-      experimentalText: "Unplausible Werte? Fragen zur Ansicht? Meld dich gerne in den",
     },
     sponsor: {
       thanks: "Danke für deine Unterstützung, {sponsor}! Das hilft uns bei der Weiterentwicklung.",

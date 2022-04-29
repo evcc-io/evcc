@@ -25,8 +25,8 @@ export default {
     savings: {
       footerShort: "{percent}% solar",
       footerLong: "{percent}% solar energy",
-      modalTitleShort: "{total} kWh charged · {percent}% solar",
-      modalTitleLong: "{total} kWh charged · {percent}% solar energy",
+      modalTitlePartOne: "{total} kWh charged",
+      modalTitlePartTwo: "{percent}% solar",
       modalChartGrid: "Grid energy {grid} kWh",
       modalChartSelf: "Solar energy {self} kWh",
       modalSavingsPrice: "Effective energy price",
@@ -36,8 +36,6 @@ export default {
       modalExplainationFeedIn: "feed-in rate {feedInPrice}",
       modalServerStart: "since server start {since}.",
       modalNoData: "nothing charged yet",
-      experimentalLabel: "Experimental",
-      experimentalText: "Implausible values? Questions about this view? Feel free to join our ",
     },
     sponsor: {
       thanks: "Thanks for your support, {sponsor}! It helps us with the further development.",
