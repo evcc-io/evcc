@@ -127,15 +127,12 @@ export default {
       today: "heute",
       tomorrow: "morgen",
       targetIsInThePast: "Zeitpunkt liegt in der Vergangenheit.",
-      remove: "Keine Zielzeit",
-      activate: "Zielzeit aktivieren",
+      remove: "Entfernen",
+      activate: "Aktivieren",
       experimentalLabel: "Experimentell",
       experimentalText: `
-        Diese Funktion ist in einem frühen Stadium. Der Algorithmus ist noch
-        nicht perfekt. Die Zielzeit wird aktuell nicht persistiert - das
-        heißt sie geht beim Neustart verloren. Verlasse dich also noch nicht
-        zu sehr auf diese Funktion. Wir freuen uns aber über deine
-        Erfahrungen und Verbessungsvorschläge in den
+        Dieses Feature funktioniert, ist aber noch nicht perfekt.
+        Bitte melde unerwartetes Verhalten in unseren
       `,
     },
   },

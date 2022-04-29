@@ -130,11 +130,8 @@ export default {
       activate: "Aktyvuoti",
       experimentalLabel: "Eksperimentinis",
       experimentalText: `
-        Ši funkcija yra ankstyvoje integravimo stadijoje.
-        Algoritmas kol kas nėra tobulas.
-        Nustatytas laikas neišsaugojamas - neišlieka po serverio restarto.
-        Dėl šių priežasčių pernelyg nepasitikėkite šia eksperimentine funkcija.
-        Norėtume gauti atsiliepimų apie veikimą bei tobulinimo pasiūlymų mūsų
+        Ši funkcija veikia, bet dar nėra tobula. 
+        Apie netikėtą elgesį praneškite mūsų
       `,
     },
   },
