@@ -56,6 +56,7 @@ export default {
 		targetSoC: Number,
 		parked: Boolean,
 	},
+	emits: ["target-soc-drag", "target-soc-updated"],
 	data: function () {
 		return {
 			selectedTargetSoC: null,

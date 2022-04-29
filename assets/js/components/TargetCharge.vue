@@ -134,6 +134,7 @@ export default {
 		targetSoC: Number,
 		disabled: Boolean,
 	},
+	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
 		return { selectedDay: null, selectedTime: null };
 	},

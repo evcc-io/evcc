@@ -220,8 +220,8 @@ loadpoints:
     meters:
       charge: meter_charger_2
     vehicle: vehicle_2
-  - title: Garage rechts
-    charger: charger_3
-    mode: "off"
-    meters:
-      charge: meter_charger_3
+#  - title: Garage rechts
+#    charger: charger_3
+#    mode: "off"
+#    meters:
+#      charge: meter_charger_3

@@ -1,5 +1,7 @@
 <template>
-	<div class="container container--loadpoint px-0 mb-3 mb-md-4">
+	<div
+		class="container container--loadpoint px-0 mb-3 mb-md-4 d-flex flex-column justify-content-center"
+	>
 		<div ref="carousel" class="carousel d-lg-flex flex-wrap">
 			<div
 				v-for="(loadpoint, index) in loadpoints"

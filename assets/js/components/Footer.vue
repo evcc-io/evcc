@@ -3,13 +3,14 @@
 		<div class="container py-3">
 			<div class="d-flex justify-content-between">
 				<Version v-bind="version" />
+				<!--
 				<button
 					class="btn btn-link p-0 flex-shrink-0"
 					:class="{ 'text-evcc': $hiddenFeatures, 'text-muted': !$hiddenFeatures }"
 					@click="toggleHiddenFeatures"
 				>
 					<shopicon-filled-testtube size="s"></shopicon-filled-testtube>
-				</button>
+				</button>-->
 				<!-- Please don't mess with the sponsor status. You risk loosing your mojo. -->
 				<Savings v-bind="savings" :sponsor="sponsor" />
 			</div>

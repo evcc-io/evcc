@@ -1,9 +1,11 @@
 <template>
-	<div
-		class="phases d-flex flex-column justify-content-between"
-		:class="`active-phases-${activePhases}`"
-	>
-		<div v-for="num in [1, 2, 3]" :key="num" class="phase" :class="{ inactive: inactive(num) }">
+	<div class="phases d-flex justify-content-between">
+		<div
+			v-for="num in [1, 2, 3]"
+			:key="num"
+			class="phase me-1"
+			:class="{ inactive: inactive(num) }"
+		>
 			<div class="target" :style="{ width: `${targetWidth()}%` }"></div>
 			<div class="real" :style="{ width: `${realWidth(num)}%` }"></div>
 		</div>
@@ -63,13 +65,15 @@ export default {
 
 <style scoped>
 .phases {
-	height: 11px;
+	width: 68px;
 }
 .phase {
 	background-color: var(--bs-gray-200);
-	height: 3px;
-	width: 100%;
+	height: 4px;
+	width: 20px;
 	position: relative;
+	border-radius: 1px;
+	overflow: hidden;
 }
 .target,
 .real {

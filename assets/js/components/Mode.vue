@@ -32,6 +32,7 @@ export default {
 	props: {
 		mode: String,
 	},
+	emits: ["updated"],
 	data() {
 		return {
 			modes: ["off", "now", "minpv", "pv"],

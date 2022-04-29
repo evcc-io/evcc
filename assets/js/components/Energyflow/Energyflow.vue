@@ -1,8 +1,12 @@
 <template>
-	<div class="energyflow">
-		<div class="row cursor-pointer" @click="toggleDetails">
+	<div
+		class="energyflow cursor-pointer position-relative"
+		:class="{ 'energyflow--open': detailsOpen }"
+		@click="toggleDetails"
+	>
+		<div class="row">
 			<Visualization
-				class="col-12 mb-3"
+				class="col-12 mb-3 mb-md-4"
 				:gridImport="gridImport"
 				:selfConsumption="selfConsumption"
 				:loadpoints="loadpointsPower"
@@ -15,8 +19,11 @@
 				:valuesInKw="valuesInKw"
 			/>
 		</div>
-		<div class="details">
-			<div class="details-inner row" data-collapsible-details>
+		<div class="indicator position-absolute bottom-0 start-50">
+			<shopicon-regular-arrowdown></shopicon-regular-arrowdown>
+		</div>
+		<div class="details" :style="{ height: detailsHeight }">
+			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
 					<div class="d-flex flex-nowrap">
 						<span class="color-self me-2"
@@ -114,6 +121,7 @@
 
 <script>
 import "@h2d2/shopicons/es/filled/square";
+import "@h2d2/shopicons/es/regular/arrowdown";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
 import formatter from "../../mixins/formatter";
@@ -133,6 +141,9 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
+	},
+	data: () => {
+		return { detailsOpen: false, detailsCompleteHeight: null };
 	},
 	computed: {
 		gridImport: function () {
@@ -168,13 +179,26 @@ export default {
 		outPower: function () {
 			return this.homePower + this.loadpointsPower + this.pvExport + this.batteryCharge;
 		},
+		detailsHeight: function () {
+			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
+		},
+	},
+	mounted() {
+		window.addEventListener("resize", this.updateHeight);
+	},
+	unmounted() {
+		window.removeEventListener("resize", this.updateHeight);
 	},
 	methods: {
 		kw: function (watt) {
 			return this.fmtKw(watt, this.valuesInKw);
 		},
 		toggleDetails: function () {
-			this.$emit("toggle-details");
+			this.updateHeight();
+			this.detailsOpen = !this.detailsOpen;
+		},
+		updateHeight: function () {
+			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
 		},
 	},
 };
@@ -183,9 +207,26 @@ export default {
 .energyflow {
 	background: var(--bs-white);
 }
+.indicator {
+	opacity: 0;
+	transform: translateX(-50%) scaleY(1);
+	transition: opacity, transform;
+	transition-duration: 0.5s;
+}
+.energyflow--open .indicator {
+	transform: translateX(-50%) scaleY(-1);
+}
+@media (hover: hover) and (pointer: fine) {
+	.energyflow:hover .indicator {
+		opacity: 0.25;
+	}
+}
 .details {
 	height: 0;
 	overflow: visible;
+	transition: height;
+	transition-duration: 0.5s;
+	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);
 }
 .color-grid {
 	color: var(--evcc-grid);

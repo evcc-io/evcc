@@ -70,6 +70,7 @@ export default {
 		pvRemainingInterpolated: Number,
 		parked: Boolean,
 	},
+	emits: ["target-time-removed", "target-time-updated", "target-soc-updated"],
 	data() {
 		return {
 			displayTargetSoC: this.targetSoC,
