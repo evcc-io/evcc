@@ -91,6 +91,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
+	github.com/basvdlei/gotsmart v0.0.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
@@ -146,6 +147,7 @@ require (
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
+	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/teivah/onecontext v1.3.0 // indirect
 	github.com/thoas/go-funk v0.9.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
