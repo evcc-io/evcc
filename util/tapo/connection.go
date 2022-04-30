@@ -43,17 +43,20 @@ type Connection struct {
 	SessionID       string
 	Token           string
 	TerminalUUID    string
+	updated         time.Time
+	lasttodayenergy int64
+	energy          int64
 }
 
 // NewConnection creates a new Tapo device connection.
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
-func NewConnection(uri, user, password string) *Connection {
+func NewConnection(uri, user, password string) (*Connection, error) {
 	log := util.NewLogger("tapo")
 
 	// nosemgrep:go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1
 	h := sha1.New()
-	_, _ = h.Write([]byte(user))
+	_, err := h.Write([]byte(user))
 	userhash := hex.EncodeToString(h.Sum(nil))
 
 	conn := &Connection{
@@ -66,7 +69,7 @@ func NewConnection(uri, user, password string) *Connection {
 
 	conn.Client.Timeout = Timeout
 
-	return conn
+	return conn, err
 }
 
 // Login provides the Tapo device session token and MAC address (TerminalUUID).
@@ -203,6 +206,48 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 	}
 
 	return res, nil
+}
+
+// execTapoCmd executes a Tapo api command and provides the response
+func (d *Connection) ExecTapoCmd(method string, enable bool) (*DeviceResponse, error) {
+	// refresh Tapo session id
+	if time.Since(d.updated) >= 600*time.Minute {
+		err := d.Login()
+		if err != nil {
+			return nil, err
+		}
+		// update session timestamp
+		d.updated = time.Now()
+	}
+
+	return d.ExecMethod(method, enable)
+}
+
+// CurrentPower provides current power consuption
+func (d *Connection) CurrentPower() (float64, error) {
+	resp, err := d.ExecTapoCmd("get_energy_usage", false)
+	if err != nil {
+		return 0, err
+	}
+
+	power := float64(resp.Result.Current_Power) / 1000
+
+	return power, nil
+}
+
+// ChargedEnergy collects the daily charged energy
+func (d *Connection) ChargedEnergy() (float64, error) {
+	resp, err := d.ExecTapoCmd("get_energy_usage", false)
+	if err != nil {
+		return 0, err
+	}
+
+	if resp.Result.Today_Energy > d.lasttodayenergy {
+		d.energy = d.energy + (resp.Result.Today_Energy - d.lasttodayenergy)
+	}
+	d.lasttodayenergy = resp.Result.Today_Energy
+
+	return float64(d.energy) / 1000, nil
 }
 
 // DoSecureRequest executes a Tapo device request by encding the request and decoding its response.
