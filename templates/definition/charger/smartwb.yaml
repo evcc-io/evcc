@@ -1,9 +1,13 @@
-template: evsewifi
+template: smartwb
 products:
   - description:
-      generic: EVSE-WiFi
+      generic: smartWB
 params:
   - name: host
 render: |
   type: evsewifi
   uri: http://{{ .host }}
+  meter:
+    power: true
+    energy: true
+    currents: true
