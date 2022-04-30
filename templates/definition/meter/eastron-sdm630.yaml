@@ -3,6 +3,9 @@ products:
   - brand: Eastron
     description:
       generic: SDM 630
+  - brand: Eastron
+    description:
+      generic: SDM 72v2
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]
