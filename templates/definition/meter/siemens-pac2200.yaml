@@ -10,7 +10,7 @@ params:
     choice: ["rs485"]
 render: |
   type: modbus
-  model: sdm # specific non-sunspec meter
+  model: pac2200
   {{- if eq .usage "charge" }}
   energy: Sum # only required for charge meter usage
   {{- end }}
