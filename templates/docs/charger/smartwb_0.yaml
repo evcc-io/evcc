@@ -1,7 +1,7 @@
 product:
-  description: EVSE-WiFi
+  description: smartWB
 render:
   - default: |
       type: template
-      template: evsewifi
+      template: smartwb
       host: 192.0.2.2 # IP-Adresse oder Hostname

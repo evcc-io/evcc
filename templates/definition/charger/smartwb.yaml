@@ -1,7 +1,7 @@
-template: evsewifi
+template: smartwb
 products:
   - description:
-      generic: EVSE-WiFi
+      generic: smartWB
 params:
   - name: host
 render: |
