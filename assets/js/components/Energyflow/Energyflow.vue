@@ -25,19 +25,19 @@
 		<div class="details" :style="{ height: detailsHeight }">
 			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
-					<div class="d-flex flex-nowrap">
+					<div class="d-flex flex-nowrap align-items-center">
 						<span class="color-self me-2"
 							><shopicon-filled-square></shopicon-filled-square
 						></span>
 						<span>{{ $t("main.energyflow.selfConsumption") }}</span>
 					</div>
-					<div v-if="gridImport > 0" class="d-flex flex-nowrap">
+					<div v-if="gridImport > 0" class="d-flex flex-nowrap align-items-center">
 						<span>{{ $t("main.energyflow.gridImport") }}</span>
 						<span class="color-grid ms-2"
 							><shopicon-filled-square></shopicon-filled-square
 						></span>
 					</div>
-					<div v-else class="d-flex flex-nowrap">
+					<div v-else class="d-flex flex-nowrap align-items-center">
 						<span>{{ $t("main.energyflow.pvExport") }}</span>
 						<span class="color-export ms-2"
 							><shopicon-filled-square></shopicon-filled-square
@@ -211,7 +211,7 @@ export default {
 	opacity: 0;
 	transform: translateX(-50%) scaleY(1);
 	transition: opacity, transform;
-	transition-duration: 0.5s;
+	transition-duration: var(--evcc-transition-slow);
 }
 .energyflow--open .indicator {
 	transform: translateX(-50%) scaleY(-1);
@@ -225,7 +225,7 @@ export default {
 	height: 0;
 	overflow: visible;
 	transition: height;
-	transition-duration: 0.5s;
+	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);
 }
 .color-grid {

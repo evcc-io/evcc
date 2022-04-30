@@ -209,7 +209,7 @@ export default {
 		margin-bottom: 0;
 	}
 	.modal.fade .modal-dialog {
-		transition: transform 0.4s ease;
+		transition: transform var(--evcc-transition-medium) ease;
 		transform: translate(0, 150px);
 	}
 	.modal.show .modal-dialog {
@@ -240,7 +240,7 @@ export default {
 
 .chart-item {
 	transition-property: width;
-	transition-duration: 500ms;
+	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: linear;
 }
 </style>

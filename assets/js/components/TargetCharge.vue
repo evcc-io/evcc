@@ -253,7 +253,7 @@ export default {
 	font-size: 18px;
 	line-height: 1.2;
 	border: none;
-	transition: color 500ms linear;
+	transition: color var(--evcc-transition-medium) linear;
 }
 .value:hover {
 	color: var(--bs-color-white);

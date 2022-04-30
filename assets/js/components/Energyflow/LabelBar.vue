@@ -51,7 +51,7 @@ export default {
 	align-items: center;
 	white-space: nowrap;
 	border-radius: 0;
-	transition: border-radius 500ms linear;
+	transition: border-radius var(--evcc-transition-medium) linear;
 }
 .label-bar--top .label-bar-scale {
 	border-top-left-radius: 10px;

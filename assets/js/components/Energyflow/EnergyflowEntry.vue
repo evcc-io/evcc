@@ -50,6 +50,6 @@ export default {
 </script>
 <style scoped>
 .entry {
-	transition: color 500ms linear;
+	transition: color var(--evcc-transition-medium) linear;
 }
 </style>

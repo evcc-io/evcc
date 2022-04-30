@@ -22,6 +22,11 @@
 	--evcc-self: var(--evcc-dark-green);
 	--evcc-export: var(--evcc-yellow);
 
+	--evcc-transition-slow: 1000ms;
+	--evcc-transition-medium: 500ms;
+	--evcc-transition-fast: 250ms;
+	--evcc-transition-very-fast: 100ms;
+
 	--bs-primary: var(--evcc-dark-green);
 	--bs-primary-rgb: 58, 186, 44;
 

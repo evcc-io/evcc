@@ -229,6 +229,6 @@ export default {
 	text-align: right;
 }
 .opacity-transiton {
-	transition: opacity 0.75s ease-in;
+	transition: opacity var(--evcc-transition-slow) ease-in;
 }
 </style>

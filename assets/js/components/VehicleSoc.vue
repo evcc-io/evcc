@@ -164,8 +164,6 @@ export default {
 	text-align: center;
 	color: var(--bs-gray-dark);
 	font-size: 1rem;
-	opacity: 1;
-	transition: opacity 0.2s ease 1s;
 }
 .target-slider {
 	-webkit-appearance: none;

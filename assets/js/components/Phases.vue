@@ -82,7 +82,7 @@ export default {
 	top: 0;
 	bottom: 0;
 	transition-property: width, opacity;
-	transition-duration: 0.75s;
+	transition-duration: var(--evcc-transition-slow);
 	transition-timing-function: ease-in;
 	opacity: 1;
 }

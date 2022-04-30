@@ -105,7 +105,7 @@ export default {
 		width: 32px;
 		height: 32px;
 		opacity: 0.3;
-		transition: opacity 0.2s ease-in;
+		transition: opacity var(--evcc-transition-fast) ease-in;
 	}
 	.indicator--selected {
 		opacity: 1;
@@ -117,7 +117,7 @@ export default {
 		opacity: 1;
 		transform: scale(1);
 		transition-property: opacity, transform;
-		transition-duration: 0.2s;
+		transition-duration: var(--evcc-transition-fast);
 		transition-timing-function: ease-in;
 	}
 	.loadpoint-unselected {
