@@ -105,7 +105,7 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 		if b, err := conn.Peek(1); err == nil {
 			if string(b) != "/" {
 				log.DEBUG.Printf("ignoring garbage character: %c\n", b)
-				conn.ReadByte()
+				_, _ = conn.ReadByte()
 				continue
 			}
 		} else {
