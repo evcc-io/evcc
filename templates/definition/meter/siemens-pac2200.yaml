@@ -14,7 +14,7 @@ render: |
   {{- if eq .usage "charge" }}
   energy: Sum # only required for charge meter usage
   {{- end }}
-  {{- if or eq .usage "charge" eq .usage "grid" }}
+  {{- if or (eq .usage "charge") (eq .usage "grid") }}
   currents:
     - CurrentL1
     - CurrentL2
