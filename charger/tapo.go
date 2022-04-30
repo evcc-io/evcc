@@ -91,7 +91,7 @@ func (c *Tapo) Status() (api.ChargeStatus, error) {
 		return res, err
 	}
 
-	power, err := c.CurrentPower()
+	power, err := c.conn.CurrentPower()
 	if err != nil {
 		return res, err
 	}
@@ -108,7 +108,24 @@ var _ api.Meter = (*Tapo)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Tapo) CurrentPower() (float64, error) {
-	power, err := c.CurrentPower()
+	var power float64
+
+	// set fix static power in static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if err != nil {
+			return 0, err
+		}
+		if on {
+			power = -c.standbypower
+		} else {
+			power = 0
+		}
+		return power, nil
+	}
+
+	// standby power mode
+	power, err := c.conn.CurrentPower()
 	if err != nil {
 		return 0, err
 	}
@@ -118,19 +135,6 @@ func (c *Tapo) CurrentPower() (float64, error) {
 		power = 0
 	}
 
-	// set fix static power in static mode
-	if c.standbypower < 0 {
-		on, err := c.Enabled()
-		if err != nil {
-			return 0, err
-		}
-		if on {
-			power = c.standbypower * -1
-		} else {
-			power = 0
-		}
-	}
-
 	return power, nil
 }
 
@@ -138,5 +142,5 @@ var _ api.ChargeRater = (*Tapo)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *Tapo) ChargedEnergy() (float64, error) {
-	return c.ChargedEnergy()
+	return c.conn.ChargedEnergy()
 }
