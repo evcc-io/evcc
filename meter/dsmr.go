@@ -80,6 +80,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	return decorateDsmr(m, totalEnergy), nil
 }
 
+// based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
 func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 	log := util.NewLogger("dsmr")
 
@@ -130,7 +131,7 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 		mcrc := strings.ToUpper(strings.TrimSpace(string(bcrc)))
 		crc := fmt.Sprintf("%04X", crc16.Checksum(frame))
 		if mcrc != crc {
-			log.ERROR.Printf("CRC mismatch: %q != %q\n", mcrc, crc)
+			log.ERROR.Printf("crc mismatch: %q != %q\n", mcrc, crc)
 			continue
 		}
 
