@@ -3,9 +3,11 @@ product:
   description: Tapo P-Series Smart Plug
   group: Schaltbare Steckdosen
 render:
-  - default: |
+  - usage: pv
+    default: |
       type: template
       template: tapo
+      usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)

@@ -5,6 +5,8 @@ products:
       generic: Tapo P-Series Smart Plug
 group: switchsockets
 params:
+  - name: usage
+    choice: ["pv"]
   - name: host
   - name: user
     required: true
