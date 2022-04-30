@@ -2,10 +2,7 @@ template: tq-em
 products:
   - brand: TQ
     description:
-      generic: Energy Manager EM2xx
-  - brand: TQ
-    description:
-      generic: Energy Manager EM3xx
+      generic: Energy Manager EM2xx/EM3xx
 params:
   - name: usage
     choice: ["grid"]

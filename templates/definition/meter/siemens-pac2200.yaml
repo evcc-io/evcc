@@ -1,8 +1,8 @@
-template: eastron
+template: siemens-pac2200
 products:
-  - brand: Eastron
+  - brand: Siemens
     description:
-      generic: SDM Modbus
+      generic: PAC 2200
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]
@@ -13,5 +13,11 @@ render: |
   model: sdm # specific non-sunspec meter
   {{- if eq .usage "charge" }}
   energy: Sum # only required for charge meter usage
+  {{- end }}
+  {{- if or eq .usage "charge" eq .usage "grid" }}
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
   {{- end }}
   {{- include "modbus" . }}
