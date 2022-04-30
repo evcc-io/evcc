@@ -69,5 +69,6 @@ export default {
 <style scoped>
 .app {
 	min-height: 100vh;
+	background-color: white;
 }
 </style>

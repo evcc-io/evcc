@@ -38,7 +38,7 @@ html {
 }
 
 body {
-	background-color: white;
+	background-color: var(--evcc-gray-dark);
 }
 
 h1,
