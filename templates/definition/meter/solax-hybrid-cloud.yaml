@@ -2,7 +2,7 @@ template: solax-hybrid-cloud
 products:
   - brand: Solax
     description:
-      generic: Hybrid (Cloud)
+      generic: Hybrid
 requirements:
   description:
     de: |
