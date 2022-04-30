@@ -2,8 +2,7 @@ template: phoenix-ev-eth
 products:
   - brand: Phoenix
     description:
-      generic: EV-ETH Controller (Modbus TCP)
-group: generic
+      generic: EV-ETH (Modbus TCP)
 requirements:
   description:
     en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.
