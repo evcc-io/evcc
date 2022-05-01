@@ -4,23 +4,25 @@
 			v-if="commit"
 			:href="githubHashUrl"
 			target="_blank"
-			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
+			class="btn btn-link ps-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
 		>
-			<fa-icon icon="moon" class="me-2 text-muted"></fa-icon>v{{ installed }}
-			<span class="text-muted">[{{ commit }}]</span>
+			<shopicon-regular-moonstars class="me-2 text-gray-medium"></shopicon-regular-moonstars>
+			v{{ installed }}
+			<span class="ms-2 text-gray-medium">[{{ commit }}]</span>
 		</a>
 		<button
 			v-else-if="newVersionAvailable"
 			href="#"
 			data-bs-toggle="modal"
 			data-bs-target="#updateModal"
-			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
+			class="btn btn-link ps-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
 		>
-			<fa-icon icon="gift" class="icon me-2"></fa-icon>v{{ installed }}
-			<span class="d-none d-xs-inline d-sm-none text-muted text-decoration-underline">
+			<shopicon-regular-gift class="me-2 text-evcc"></shopicon-regular-gift>
+			v{{ installed }}
+			<span class="ms-2 d-none d-xs-block d-sm-none text-decoration-underline">
 				{{ $t("footer.version.availableShort") }}
 			</span>
-			<span class="d-none d-sm-inline text-muted text-decoration-underline">
+			<span class="ms-2 d-none d-sm-block text-gray-medium text-decoration-underline">
 				{{ $t("footer.version.availableLong") }}
 			</span>
 		</button>
@@ -28,17 +30,19 @@
 			v-else
 			:href="releaseNotesUrl(installed)"
 			target="_blank"
-			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
+			class="btn btn-link text-white ps-0 text-decoration-none text-nowrap d-flex align-items-end"
 		>
-			<span class="d-inline d-xs-none d-sm-none">{{
-				$t("footer.version.versionShort", { installed })
-			}}</span>
-			<span class="d-none d-xs-inline d-sm-inline">{{
-				$t("footer.version.versionLong", { installed })
-			}}</span>
+			<Logo class="logo me-2" />
+			v{{ installed }}
 		</a>
 
-		<div id="updateModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+		<div
+			id="updateModal"
+			class="modal fade text-dark"
+			tabindex="-1"
+			role="dialog"
+			aria-hidden="true"
+		>
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -119,10 +123,14 @@
 
 <script>
 import api from "../api";
-import "../icons";
+import Logo from "./Logo.vue";
+
+import "@h2d2/shopicons/es/regular/gift";
+import "@h2d2/shopicons/es/regular/moonstars";
 
 export default {
 	name: "Version",
+	components: { Logo },
 	props: {
 		installed: String,
 		available: String,
@@ -171,5 +179,9 @@ export default {
 <style scoped>
 .icon {
 	color: var(--evcc-dark-green);
+}
+.logo {
+	height: 1.1rem;
+	margin-bottom: 0.2rem;
 }
 </style>

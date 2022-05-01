@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<button
-			class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap"
+			class="btn btn-link pe-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
 			data-bs-toggle="modal"
 			data-bs-target="#savingsModal"
 		>
@@ -10,154 +10,164 @@
 			}}</span
 			><span class="d-none d-sm-inline">{{
 				$t("footer.savings.footerLong", { percent })
-			}}</span
-			><fa-icon icon="sun" class="icon ms-2 text-evcc"></fa-icon>
+			}}</span>
+			<shopicon-regular-sun class="ms-2 text-evcc"></shopicon-regular-sun>
 		</button>
-		<div
-			id="savingsModal"
-			ref="modal"
-			class="modal fade"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-		>
-			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">
-							<span class="d-block d-sm-none">
-								{{
-									$t("footer.savings.modalTitleShort", {
-										percent,
-										total: fmtKw(totalCharged * 1000, true, false),
-									})
-								}}
-							</span>
-							<span class="d-none d-sm-block">
-								{{
-									$t("footer.savings.modalTitleLong", {
-										percent,
-										total: fmtKw(totalCharged * 1000, true, false),
-									})
-								}}
-							</span>
-						</h5>
-						<button
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
-					</div>
-					<div class="modal-body py-4">
-						<div class="chart-container mb-3">
-							<div class="chart-legend d-flex flex-wrap justify-content-between mb-1">
-								<div class="text-nowrap">
-									<fa-icon icon="square" class="text-evcc"></fa-icon>
+
+		<Teleport to="body">
+			<div
+				id="savingsModal"
+				ref="modal"
+				class="modal fade text-dark"
+				data-bs-backdrop="true"
+				tabindex="-1"
+				role="dialog"
+				aria-hidden="true"
+			>
+				<div
+					class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+					role="document"
+				>
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">
+								<span class="text-nowrap">
 									{{
-										$t("footer.savings.modalChartSelf", {
-											self: fmtKw(selfConsumptionCharged * 1000, true, false),
+										$t("footer.savings.modalTitlePartOne", {
+											total: fmtKw(totalCharged * 1000, true, false),
 										})
 									}}
-								</div>
-								<div class="text-nowrap">
-									<fa-icon icon="square" class="text-grid"></fa-icon>
-									{{
-										$t("footer.savings.modalChartGrid", {
-											grid: fmtKw(gridCharged * 1000, true, false),
-										})
-									}}
-								</div>
-							</div>
-							<div
-								class="chart d-flex justify-content-stretch mb-1 rounded overflow-hidden"
-							>
-								<div
-									v-if="totalCharged > 0"
-									class="chart-item chart-item--self d-flex justify-content-center text-white flex-shrink-1"
-									:style="{ width: `${percent}%` }"
-								>
-									<span class="text-truncate"> {{ percent }}% </span>
-								</div>
-								<div
-									v-if="totalCharged > 0"
-									class="chart-item chart-item--grid d-flex justify-content-center text-white flex-shrink-1"
-									:style="{ width: `${100 - percent}%` }"
-								>
-									<span class="text-truncate"> {{ 100 - percent }}% </span>
-								</div>
-								<div
-									v-if="totalCharged === 0"
-									class="chart-item chart-item--no-data d-flex justify-content-center text-white w-100"
-								>
-									<span>{{ $t("footer.savings.modalNoData") }}</span>
-								</div>
-							</div>
+									·
+								</span>
+								{{ " " }}
+								<span class="text-nowrap">
+									{{ $t("footer.savings.modalTitlePartTwo", { percent }) }}
+								</span>
+							</h5>
+							<button
+								type="button"
+								class="btn-close"
+								data-bs-dismiss="modal"
+								aria-label="Close"
+							></button>
 						</div>
-						<p class="mb-3">
-							{{ $t("footer.savings.modalSavingsPrice") }}:
-							<strong>{{ fmtPricePerKWh(effectivePrice, currency) }}</strong>
-							<br />
-							{{ $t("footer.savings.modalSavingsTotal") }}:
-							<strong>{{ fmtMoney(amount, currency) }}</strong>
-						</p>
+						<div class="modal-body py-4">
+							<div class="chart-container mb-3">
+								<div
+									class="chart-legend d-flex flex-wrap justify-content-between mb-1"
+								>
+									<div
+										class="text-nowrap"
+										:class="{ 'text-gray-medium': noData }"
+									>
+										<shopicon-filled-square
+											class="text-evcc d-inline-block"
+											:class="{ 'text-gray-medium': noData }"
+										></shopicon-filled-square>
+										{{
+											$t("footer.savings.modalChartSelf", {
+												self: fmtKw(
+													selfConsumptionCharged * 1000,
+													true,
+													false
+												),
+											})
+										}}
+									</div>
+									<div
+										class="text-nowrap"
+										:class="{ 'text-gray-medium': noData }"
+									>
+										{{
+											$t("footer.savings.modalChartGrid", {
+												grid: fmtKw(gridCharged * 1000, true, false),
+											})
+										}}
+										<shopicon-filled-square
+											class="text-grid d-inline-block"
+											:class="{ 'text-gray-medium': noData }"
+										></shopicon-filled-square>
+									</div>
+								</div>
+								<div
+									class="chart d-flex justify-content-stretch mb-1 rounded overflow-hidden"
+								>
+									<div
+										v-if="!noData"
+										class="chart-item chart-item--self d-flex justify-content-center align-items-center text-white flex-shrink-1"
+										:style="{ width: `${percent}%` }"
+									>
+										<span class="text-truncate"> {{ percent }}% </span>
+									</div>
+									<div
+										v-if="!noData"
+										class="chart-item chart-item--grid d-flex justify-content-center align-items-center text-white flex-shrink-1"
+										:style="{ width: `${100 - percent}%` }"
+									>
+										<span class="text-truncate"> {{ 100 - percent }}% </span>
+									</div>
+									<div
+										v-if="noData"
+										class="chart-item chart-item--no-data d-flex justify-content-center align-items-center text-white w-100"
+									>
+										<span>{{ $t("footer.savings.modalNoData") }}</span>
+									</div>
+								</div>
+							</div>
+							<p class="mb-3">
+								{{ $t("footer.savings.modalSavingsPrice") }}:
+								<strong>{{ fmtPricePerKWh(effectivePrice, currency) }}</strong>
+								<br />
+								{{ $t("footer.savings.modalSavingsTotal") }}:
+								<strong>{{ fmtMoney(amount, currency) }}</strong>
+							</p>
 
-						<p class="small text-muted mb-3">
-							<a
-								href="https://docs.evcc.io/docs/guides/setup/#ersparnisberechnung"
-								target="_blank"
-								class="text-muted"
-							>
-								{{ $t("footer.savings.modalExplaination") }}</a
-							>:
-							<span class="text-nowrap">
+							<p class="small text-muted mb-3">
+								<a
+									href="https://docs.evcc.io/docs/guides/setup/#ersparnisberechnung"
+									target="_blank"
+									class="small"
+								>
+									{{ $t("footer.savings.modalExplaination") }}</a
+								>:
+								<span class="text-nowrap">
+									{{
+										$t("footer.savings.modalExplainationGrid", {
+											gridPrice: fmtPricePerKWh(gridPrice, currency),
+										})
+									}}</span
+								>,
+								<span class="text-nowrap">
+									{{
+										$t("footer.savings.modalExplainationFeedIn", {
+											feedInPrice: fmtPricePerKWh(feedInPrice, currency),
+										})
+									}}
+								</span>
+								<br />
 								{{
-									$t("footer.savings.modalExplainationGrid", {
-										gridPrice: fmtPricePerKWh(gridPrice, currency),
-									})
-								}}</span
-							>,
-							<span class="text-nowrap">
-								{{
-									$t("footer.savings.modalExplainationFeedIn", {
-										feedInPrice: fmtPricePerKWh(feedInPrice, currency),
+									$t("footer.savings.modalServerStart", {
+										since: fmtTimeAgo(secondsSinceStart()),
 									})
 								}}
-							</span>
-							<br />
-							{{
-								$t("footer.savings.modalServerStart", {
-									since: fmtTimeAgo(secondsSinceStart()),
-								})
-							}}
-						</p>
+							</p>
 
-						<hr class="mb-4" />
+							<hr class="mb-4" />
 
-						<Sponsor :sponsor="sponsor" class="mb-4" />
-
-						<p class="small text-muted mb-0">
-							<strong class="text-primary">
-								<fa-icon icon="flask"></fa-icon>
-								{{ $t("footer.savings.experimentalLabel") }}:
-							</strong>
-							{{ $t("footer.savings.experimentalText") }}
-							<a
-								href="https://github.com/evcc-io/evcc/discussions/2104"
-								target="_blank"
-								>GitHub Discussions</a
-							>.
-						</p>
+							<Sponsor :sponsor="sponsor" />
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</Teleport>
 	</div>
 </template>
 
 <script>
 import formatter from "../mixins/formatter";
 import Sponsor from "./Sponsor.vue";
+import "@h2d2/shopicons/es/filled/square";
+import "@h2d2/shopicons/es/regular/sun";
 
 export default {
 	name: "Savings",
@@ -180,6 +190,9 @@ export default {
 		percent() {
 			return Math.round(this.selfConsumptionPercent) || 0;
 		},
+		noData() {
+			return this.totalCharged === 0;
+		},
 	},
 	methods: {
 		secondsSinceStart() {
@@ -196,7 +209,7 @@ export default {
 		margin-bottom: 0;
 	}
 	.modal.fade .modal-dialog {
-		transition: transform 0.4s ease;
+		transition: transform var(--evcc-transition-medium) ease;
 		transform: translate(0, 150px);
 	}
 	.modal.show .modal-dialog {
@@ -206,12 +219,13 @@ export default {
 		height: calc(100% - 0.5rem);
 	}
 	.modal-content {
-		border-radius: 1rem 1rem 0 0;
+		border-end-end-radius: 0;
+		border-end-start-radius: 0;
 	}
 }
 
 .chart {
-	height: 1.6rem;
+	height: 2.5rem;
 }
 
 .chart-item--self {
@@ -221,12 +235,12 @@ export default {
 	background-color: var(--evcc-grid);
 }
 .chart-item--no-data {
-	background-color: var(--bs-gray);
+	background-color: var(--bs-gray-medium);
 }
 
 .chart-item {
 	transition-property: width;
-	transition-duration: 500ms;
+	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: linear;
 }
 </style>

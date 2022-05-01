@@ -1,27 +1,20 @@
 import Mode from "./Mode.vue";
-import i18n from "../i18n";
 
 export default {
   title: "Main/Mode",
   component: Mode,
   argTypes: {
-    mode: { control: { type: "inline-radio", options: ["off", "now", "minpv", "pv"] } },
+    mode: { control: { type: "inline-radio" }, options: ["off", "now", "minpv", "pv"] },
   },
 };
 
-const Template = (args, { argTypes }) => ({
-  i18n,
-  props: Object.keys(argTypes),
+const Template = (args) => ({
+  setup() {
+    return { args };
+  },
   components: { Mode },
-  template: '<Mode v-bind="$props"></Mode>',
+  template: '<Mode v-bind="args"></Mode>',
 });
 
 export const Base = Template.bind({});
-Base.args = {};
-
-export const CaptionAndPV = Template.bind({});
-CaptionAndPV.args = {
-  caption: true,
-  pvConfigured: true,
-  mode: "pv",
-};
+Base.args = { mode: "pv" };

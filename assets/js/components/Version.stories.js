@@ -1,5 +1,4 @@
 import Version from "./Version.vue";
-import i18n from "../i18n";
 
 export default {
   title: "Main/Footer/Version",
@@ -7,11 +6,12 @@ export default {
   argTypes: {},
 };
 
-const Template = (args, { argTypes }) => ({
-  i18n,
-  props: Object.keys(argTypes),
+const Template = (args) => ({
+  setup() {
+    return { args };
+  },
   components: { Version },
-  template: '<Version v-bind="$props"></Version>',
+  template: '<Version v-bind="args"></Version>',
 });
 
 const releaseNotes =

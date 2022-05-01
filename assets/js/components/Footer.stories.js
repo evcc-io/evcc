@@ -1,5 +1,4 @@
 import Footer from "./Footer.vue";
-import i18n from "../i18n";
 
 export default {
   title: "Main/Footer",
@@ -7,11 +6,12 @@ export default {
   argTypes: {},
 };
 
-const Template = (args, { argTypes }) => ({
-  i18n,
-  props: Object.keys(argTypes),
+const Template = (args) => ({
+  setup() {
+    return { args };
+  },
   components: { Footer },
-  template: '<Footer v-bind="$props"></Footer>',
+  template: '<Footer v-bind="args"></Footer>',
 });
 
 export const KeinUpdate = Template.bind({});
@@ -82,20 +82,5 @@ Upgrade.args = {
     totalCharged: 0,
     selfConsumptionCharged: 0,
     selfConsumptionPercent: 0,
-  },
-};
-
-export const Savings = Template.bind({});
-Savings.args = {
-  version: {
-    installed: "0.36",
-    available: "0.40",
-    hasUpdater: true,
-  },
-  savings: {
-    since: 82800,
-    totalCharged: 15231,
-    selfConsumptionCharged: 12231,
-    selfConsumptionPercent: 80.3,
   },
 };

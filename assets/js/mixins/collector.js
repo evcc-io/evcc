@@ -4,7 +4,9 @@ export default {
     collectProps: function (component) {
       let data = {};
       for (var p in component.props) {
-        data[p] = this[p];
+        if (p in this) {
+          data[p] = this[p];
+        }
       }
       return data;
     },

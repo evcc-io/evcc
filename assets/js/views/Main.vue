@@ -1,7 +1,7 @@
 <template>
-	<div class="container">
-		<Site v-if="configured" v-bind="state"></Site>
-		<div v-else>
+	<div>
+		<Site v-if="configured" :notifications="notifications" v-bind="state"></Site>
+		<div v-else class="container">
 			<div class="row py-5">
 				<div class="col12">
 					<p class="h1 pt-5 pb-2 border-bottom">Willkommen bei evcc</p>
@@ -80,13 +80,17 @@
 </template>
 
 <script>
-import Site from "../components/Site";
+import Site from "../components/Site.vue";
+import store from "../store";
 
 export default {
 	name: "Main",
 	components: { Site },
+	props: {
+		notifications: Array,
+	},
 	data: function () {
-		return this.$root.$data.store; // global state
+		return store;
 	},
 	computed: {
 		configured: function () {

@@ -1,5 +1,4 @@
 import Notifications from "./Notifications.vue";
-import i18n from "../i18n";
 
 export default {
   title: "Main/Notifications",
@@ -7,11 +6,12 @@ export default {
   argTypes: {},
 };
 
-const Template = (args, { argTypes }) => ({
-  i18n,
-  props: Object.keys(argTypes),
+const Template = (args) => ({
+  setup() {
+    return { args };
+  },
   components: { Notifications },
-  template: '<Notifications v-bind="$props"></Notifications>',
+  template: '<Notifications v-bind="args"></Notifications>',
 });
 
 function timeAgo(hours = 0, minutes = 0, seconds = 0) {

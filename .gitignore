@@ -24,3 +24,4 @@ ca-cert.srl
 server-key.pem
 ca-key.pem
 cmd/wip
+fly.toml

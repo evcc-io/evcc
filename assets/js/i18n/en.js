@@ -3,12 +3,11 @@ export default {
     docs: "Documentation",
     blog: "Blog",
     github: "GitHub",
-    login: "Logins",
+    login: "Vehicle Logins",
+    about: "About evcc",
   },
   footer: {
     version: {
-      versionShort: "v{installed}",
-      versionLong: "Version {installed}",
       availableShort: "update",
       availableLong: "update available",
       modalTitle: "Update available",
@@ -26,10 +25,10 @@ export default {
     savings: {
       footerShort: "{percent}% solar",
       footerLong: "{percent}% solar energy",
-      modalTitleShort: "{total} kWh charged · {percent}% solar",
-      modalTitleLong: "{total} kWh charged · {percent}% solar energy",
-      modalChartGrid: "Grid energy {grid} kWh",
-      modalChartSelf: "Solar energy {self} kWh",
+      modalTitlePartOne: "{total} kWh charged",
+      modalTitlePartTwo: "{percent}% solar",
+      modalChartGrid: "Grid {grid} kWh",
+      modalChartSelf: "Solar {self} kWh",
       modalSavingsPrice: "Effective energy price",
       modalSavingsTotal: "Savings compared to grid",
       modalExplaination: "Calculation",
@@ -37,8 +36,6 @@ export default {
       modalExplainationFeedIn: "feed-in rate {feedInPrice}",
       modalServerStart: "since server start {since}.",
       modalNoData: "nothing charged yet",
-      experimentalLabel: "experimental",
-      experimentalText: "Implausible values? Questions about this view? Feel free to join our ",
     },
     sponsor: {
       thanks: "Thanks for your support, {sponsor}! It helps us with the further development.",
@@ -58,8 +55,8 @@ export default {
     energyflow: {
       noEnergy: "No Energyflow",
       homePower: "Consumption",
-      loadpoints: "Loadpoint | Loadpoint | {count} Loadpoints",
       pvProduction: "Production",
+      loadpoints: "Loadpoint | Loadpoint | {count} Loadpoints",
       battery: "Battery",
       batteryCharge: "Battery charge",
       batteryDischarge: "Battery discharge",
@@ -68,21 +65,32 @@ export default {
       pvExport: "Grid export",
     },
     mode: {
-      title: "Mode",
-      stop: "Stop",
-      now: "Now",
+      offShort: "Stop",
+      offLong: "Stop",
+      nowShort: "Now",
+      nowLong: "Now",
       minpvShort: "Min",
       minpvLong: "Min + PV",
       pvShort: "PV",
-      pvLong: "PV only",
+      pvLong: "PV",
+      fast: "Fast",
+      cheap: "Cheap",
     },
     loadpoint: {
       fallbackName: "Loadpoint",
       remoteDisabledSoft: "{source}: adaptive PV charging disabled",
       remoteDisabledHard: "{source}: disabled",
+      power: "Power",
+      charged: "Charged",
+      duration: "Duration",
+      remaining: "Remaining",
     },
+    vehicles: "Parking",
     vehicle: {
       fallbackName: "Vehicle",
+      vehicleSoC: "SoC",
+      targetSoC: "Limit",
+      noVehicle: "No Vehicle",
     },
     vehicleSoC: {
       disconnected: "disconnected",
@@ -90,51 +98,42 @@ export default {
       ready: "ready",
       connected: "connected",
     },
-    vehicleSubline: {
-      mincharge: "minimum charging to {soc}%",
+    vehicleStatus: {
+      minCharge: "minimum charging to {soc}%.",
+      waitForVehicle: "Ready. Waiting for vehicle.",
+      charging: "Charging.",
+      targetChargePlanned: "Target charge planned. Starting {start}.",
+      targetChargeWaitForVehicle: "Target charge ready. Wait for vehicle.",
+      targetChargeActive: "Target charge active.",
+      connected: "Connected.",
+      pvDisable: "Not enough surplus. Pausing in {remaining}.",
+      pvEnable: "Surplus available. Starging in {remaining}.",
+      scale1p: "Reduce to single phase in {remaining}.",
+      scale3p: "Increase to three phase in {remaining}.",
+      disconnected: "Disconnected.",
+      unknown: "",
     },
     provider: {
       login: "login",
       logout: "logout",
     },
     targetCharge: {
+      title: "Target Time",
       inactiveLabel: "Target time",
-      activeLabel: "until {time}",
+      activeLabel: "{time}",
       modalTitle: "Set Target Time",
-      description: "When should the vehicle be charged to <strong>{targetSoC}%</strong>?",
+      setTargetTime: "none",
+      description: "When should the vehicle be charged to {targetSoC}%?",
       today: "today",
       tomorrow: "tomorrow",
       targetIsInThePast: "The chosen time is in the past.",
       remove: "Remove",
       activate: "Activate",
-      experimentalLabel: "experimental",
+      experimentalLabel: "Experimental",
       experimentalText: `
-        This function is at an early stage.
-        The algorithm is not perfect yet.
-        The target time is currently not persisted - this means, it will be lost when your server restarts.
-        So do not rely too much on this function.
-        However, we look forward to your experiences and suggestions for improvement in the
+        This feature works but isn't perfect yet. 
+        Please report unexpected behaviour in our
       `,
-    },
-    loadpointDetails: {
-      power: "Power",
-      vehicleRange: "Range",
-      charged: "Charged",
-      duration: "Duration",
-      remaining: "Remaining",
-      tooltip: {
-        phases: {
-          scale1p: "Switching to single-phase in {remaining}.",
-          scale3p: "Switching to three-phase in {remaining}.",
-          charge1p: "Single-phase charging.",
-          charge2p: "Two-phase charging.",
-          charge3p: "Three-phase charging.",
-        },
-        pv: {
-          enable: "Solar available. Resume charging in {remaining}.",
-          disable: "Not enough solar. Pause charging in {remaining}.",
-        },
-      },
     },
   },
 };

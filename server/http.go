@@ -58,7 +58,7 @@ func NewHTTPd(addr string, site site.API, hub *SocketHub, cache *util.Cache) *HT
 	static.Use(handlers.CompressHandler)
 
 	static.HandleFunc("/", indexHandler(site))
-	for _, dir := range []string{"css", "js", "ico"} {
+	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(Assets)))
 	}
 
