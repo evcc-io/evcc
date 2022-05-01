@@ -82,7 +82,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	}
 
 	// decorate currents
-	var current func() (float64, float64, float64, error)
+	var currents func() (float64, float64, float64, error)
 
 	for _, obis := range currentObisCodes {
 		_, err = m.get(obis)
@@ -92,10 +92,10 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	}
 
 	if err == nil {
-		current = m.currents
+		currents = m.currents
 	}
 
-	return decorateDsmr(m, totalEnergy, current), nil
+	return decorateDsmr(m, totalEnergy, currents), nil
 }
 
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
