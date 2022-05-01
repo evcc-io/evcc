@@ -67,7 +67,7 @@ func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error)
 
 // NewPrachtAlpha creates PrachtAlpha charger
 func NewPrachtAlpha(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, vehicle uint16) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Ascii, slaveID)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -139,9 +139,7 @@ func (wb *PrachtAlpha) Enable(enable bool) error {
 
 func (wb *PrachtAlpha) setCurrent(current uint16) error {
 	reg := wb.register(prachtMaxCurrent)
-
 	_, err := wb.conn.WriteSingleRegister(reg, current)
-
 	return err
 }
 
