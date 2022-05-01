@@ -1,8 +1,8 @@
-template: eastron
+template: eastron-sdm72_220_230
 products:
   - brand: Eastron
     description:
-      generic: SDM Modbus
+      generic: SDM 72/220/230
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]
@@ -10,7 +10,7 @@ params:
     choice: ["rs485"]
 render: |
   type: modbus
-  model: sdm # specific non-sunspec meter
+  model: sdm220
   {{- if eq .usage "charge" }}
   energy: Sum # only required for charge meter usage
   {{- end }}

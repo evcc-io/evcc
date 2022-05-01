@@ -1,11 +1,11 @@
 product:
   brand: Eastron
-  description: SDM 630
+  description: SDM 72/220/230
 render:
   - usage: grid
     default: |
       type: template
-      template: eastron
+      template: eastron-sdm72_220_230
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -23,7 +23,7 @@ render:
   - usage: pv
     default: |
       type: template
-      template: eastron
+      template: eastron-sdm72_220_230
       usage: pv      
 
       # RS485 via adapter (Modbus RTU)
@@ -41,7 +41,7 @@ render:
   - usage: battery
     default: |
       type: template
-      template: eastron
+      template: eastron-sdm72_220_230
       usage: battery      
 
       # RS485 via adapter (Modbus RTU)
@@ -59,7 +59,7 @@ render:
   - usage: charge
     default: |
       type: template
-      template: eastron
+      template: eastron-sdm72_220_230
       usage: charge      
 
       # RS485 via adapter (Modbus RTU)

@@ -43,6 +43,7 @@
  ],
  "Meters": [
   "AVM",
+  "Carlo Gavazzi",
   "cFos",
   "Eastron",
   "FENECON",
@@ -55,6 +56,7 @@
   "RCT",
   "SENEC",
   "Shelly",
+  "Siemens",
   "SMA",
   "SolarEdge",
   "Solarwatt",
@@ -69,6 +71,7 @@
  ],
  "PVBattery": [
   "AVM",
+  "Carlo Gavazzi",
   "Eastron",
   "FENECON",
   "Fronius",
@@ -79,6 +82,7 @@
   "RCT",
   "SENEC",
   "Shelly",
+  "Siemens",
   "SMA",
   "SolarEdge",
   "Solarwatt",

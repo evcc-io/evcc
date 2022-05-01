@@ -1,11 +1,11 @@
 product:
-  brand: Eastron
-  description: SDM 630
+  brand: Carlo Gavazzi
+  description: EM 24
 render:
   - usage: grid
     default: |
       type: template
-      template: eastron
+      template: cg-em24
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -23,7 +23,7 @@ render:
   - usage: pv
     default: |
       type: template
-      template: eastron
+      template: cg-em24
       usage: pv      
 
       # RS485 via adapter (Modbus RTU)
@@ -41,7 +41,7 @@ render:
   - usage: battery
     default: |
       type: template
-      template: eastron
+      template: cg-em24
       usage: battery      
 
       # RS485 via adapter (Modbus RTU)
@@ -59,7 +59,7 @@ render:
   - usage: charge
     default: |
       type: template
-      template: eastron
+      template: cg-em24
       usage: charge      
 
       # RS485 via adapter (Modbus RTU)

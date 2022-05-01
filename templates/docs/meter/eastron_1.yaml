@@ -1,6 +1,6 @@
 product:
   brand: Eastron
-  description: SDM 630
+  description: SDM 72v2
 render:
   - usage: grid
     default: |
