@@ -9,21 +9,21 @@
 			@target-soc-drag="targetSocDrag"
 		/>
 		<div v-if="vehiclePresent">
-			<div class="d-flex flex-wrap justify-content-between">
+			<div class="details d-flex flex-wrap justify-content-between">
 				<LabelAndValue
-					class="flex-grow-1 text-start flex-basis-0"
+					class="flex-grow-1 text-start"
 					:label="$t('main.vehicle.vehicleSoC')"
 					:value="`${vehicleSoC || '--'} %`"
 					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
 				/>
 				<LabelAndValue
-					class="flex-grow-1 text-end text-sm-center flex-basis-0"
+					class="flex-grow-1 text-center"
 					:label="$t('main.vehicle.targetSoC')"
 					:value="`${displayTargetSoC} %`"
 					:extraValue="estimatedTargetRange"
 				/>
 				<TargetCharge
-					class="flex-grow-1 text-sm-end target-charge flex-basis-0"
+					class="flex-grow-1 text-end target-charge"
 					v-bind="targetCharge"
 					:disabled="targetChargeDisabled"
 					@target-time-updated="setTargetTime"
@@ -134,15 +134,8 @@ export default {
 .car-icon {
 	width: 1.75rem;
 }
-.flex-basis-0 {
+.details > div {
+	flex-grow: 1;
 	flex-basis: 0;
-}
-.target-charge {
-	min-width: 100%;
-}
-@media (min-width: 576px) {
-	.target-charge {
-		min-width: auto;
-	}
 }
 </style>
