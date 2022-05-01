@@ -1,7 +1,7 @@
 template: evsewifi
 products:
   - description:
-      generic: EVSE-Wifi
+      generic: EVSE-WiFi
 params:
   - name: host
 render: |

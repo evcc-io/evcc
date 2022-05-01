@@ -41,13 +41,50 @@ Evcc is an extensible EV Charge Controller with PV integration implemented in [G
 
 You'll find everything you need in our [documentation](https://docs.evcc.io/) (German).
 
-## Build
+## Contribute
 
-To build EVCC from source, [Go][2] 1.18 and [Node][3] 16 are required:
+To build evcc from source, [Go][2] 1.18 and [Node][3] 16 are required.
+
+Build and run go backend. The UI becomes available at http://127.0.0.1:7070/
 
 ```sh
 make
+./evcc
 ```
+
+For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the livelreloading development server. It pulls its data from port 7070 (see above).
+
+```sh
+npm install
+npm run start
+```
+
+### Code formatting
+
+We use linters (golangci-lint, Prettier) to keep a coherent source code formatting. It's recommended to use the format-on-save feature of your editor. For VSCode use the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Veture](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extension. You can manually reformat your code by running:
+
+```sh
+make lint
+make lint-ui
+```
+
+### Changing UI code
+
+To ensure reproducability the build frontend artifacts are part of the source code repository. If you've made changes to frontend code, please make sure to rebuild the production assets before you commit.
+
+```sh
+make ui
+```
+
+### Changing templates
+
+Evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository. Make sure to update this meta-data every time you make changes to a templates.
+
+```sh
+make docs
+```
+
+If you miss one of the above steps Gitub Actions will likely trigger a **Porcelain** error.
 
 ## Sponsorship
 

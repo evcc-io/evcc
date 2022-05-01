@@ -1,11 +1,8 @@
-import Vue from "vue";
-import VueI18n from "vue-i18n";
+import { createI18n } from "vue-i18n/index";
 import de from "./de";
 import en from "./en";
 import it from "./it";
 import lt from "./lt";
-
-Vue.use(VueI18n);
 
 const PREFERRED_LOCALE_KEY = "preferred_locale";
 
@@ -15,11 +12,10 @@ function getBrowserLocale() {
   if (!navigatorLocale) {
     return undefined;
   }
-  const trimmedLocale = navigatorLocale.trim().split(/-|_/)[0];
-  return trimmedLocale;
+  return navigatorLocale.trim().split(/-|_/)[0];
 }
 
-export default new VueI18n({
+export default createI18n({
   locale: window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale(),
   fallbackLocale: "en",
   messages: { de, en, it, lt },

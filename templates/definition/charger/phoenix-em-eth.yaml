@@ -2,8 +2,7 @@ template: phoenix-em-eth
 products:
   - brand: Phoenix
     description:
-      generic: EM-CP-PP-ETH Controller (Modbus TCP)
-group: generic
+      generic: EM-CP-PP-ETH (Modbus TCP)
 requirements:
   description:
     en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.

@@ -2,7 +2,8 @@ template: varta-energiespeicher
 products:
   - brand: VARTA
     description:
-      generic: Energiespeicher
+      de: Energiespeicher (mit PV-Sensor)
+      en: Energiespeicher (with PV Sensor)
 guidedsetup:
   enable: true
 params:

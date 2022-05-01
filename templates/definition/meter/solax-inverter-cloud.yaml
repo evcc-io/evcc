@@ -2,8 +2,8 @@ template: solax-inverter-cloud
 products:
   - brand: Solax
     description:
-      de: Wechselrichter (Cloud)
-      en: Inverter (Cloud)
+      de: Wechselrichter
+      en: Inverter
 requirements:
   description:
     de: |

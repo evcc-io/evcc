@@ -1,6 +1,6 @@
 product:
   brand: TQ
-  description: Energy Manager EM2xx
+  description: Energy Manager EM2xx/EM3xx
 render:
   - usage: grid
     default: |

@@ -1,5 +1,5 @@
 product:
-  description: Discovergy (Cloud)
+  description: Discovergy
 render:
   - usage: grid
     default: |

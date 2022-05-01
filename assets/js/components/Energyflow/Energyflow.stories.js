@@ -1,5 +1,4 @@
 import Energyflow from "./";
-import i18n from "../../i18n";
 
 export default {
   title: "Main/Energyflow",
@@ -13,13 +12,19 @@ export default {
     batteryPower: { control: { type: "range", min: -4000, max: 4000, step: 100 } },
     batterySoC: { control: { type: "range", min: 0, max: 100, step: 1 } },
   },
+  parameters: {
+    backgrounds: {
+      default: "light",
+    },
+  },
 };
 
-const Template = (args, { argTypes }) => ({
-  i18n,
-  props: Object.keys(argTypes),
+const Template = (args) => ({
+  setup() {
+    return { args };
+  },
   components: { Energyflow },
-  template: '<Energyflow v-bind="$props"></Energyflow>',
+  template: '<Energyflow v-bind="args"></Energyflow>',
 });
 
 export const GridAndPV = Template.bind({});

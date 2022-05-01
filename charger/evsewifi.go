@@ -7,39 +7,10 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/evse"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
-
-const evseSuccess = "S0_"
-
-// EVSEParameterResponse is the getParameters response
-type EVSEParameterResponse struct {
-	Type string          `json:"type"`
-	List []EVSEListEntry `json:"list"`
-}
-
-// EVSEListEntry is EVSEParameterResponse.List
-type EVSEListEntry struct {
-	VehicleState    int64   `json:"vehicleState"`
-	EvseState       bool    `json:"evseState"`
-	MaxCurrent      int64   `json:"maxCurrent"`
-	ActualCurrent   int64   `json:"actualCurrent"`
-	ActualCurrentMA *int64  `json:"actualCurrentMA"` // 1/100 A
-	ActualPower     float64 `json:"actualPower"`
-	Duration        int64   `json:"duration"`
-	AlwaysActive    bool    `json:"alwaysActive"`
-	UseMeter        bool    `json:"useMeter"`
-	LastActionUser  string  `json:"lastActionUser"`
-	LastActionUID   string  `json:"lastActionUID"`
-	Energy          float64 `json:"energy"`
-	Mileage         float64 `json:"mileage"`
-	MeterReading    float64 `json:"meterReading"`
-	CurrentP1       float64 `json:"currentP1"`
-	CurrentP2       float64 `json:"currentP2"`
-	CurrentP3       float64 `json:"currentP3"`
-	RFIDUID         *string `json:"RFIDUID"`
-}
 
 // EVSEWifi charger implementation
 type EVSEWifi struct {
@@ -143,16 +114,16 @@ func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 }
 
 // query evse parameters
-func (wb *EVSEWifi) getParameters() (EVSEListEntry, error) {
-	var res EVSEParameterResponse
+func (wb *EVSEWifi) getParameters() (evse.ListEntry, error) {
+	var res evse.ParameterResponse
 	uri := fmt.Sprintf("%s/getParameters", wb.uri)
 	err := wb.GetJSON(uri, &res)
 	if err != nil {
-		return EVSEListEntry{}, err
+		return evse.ListEntry{}, err
 	}
 
 	if len(res.List) != 1 {
-		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", res.Type)
+		return evse.ListEntry{}, fmt.Errorf("unexpected response: %s", res.Type)
 	}
 
 	params := res.List[0]
@@ -193,7 +164,7 @@ func (wb *EVSEWifi) Enabled() (bool, error) {
 // get executes GET request and checks for EVSE error response
 func (wb *EVSEWifi) get(uri string) error {
 	b, err := wb.GetBody(uri)
-	if err == nil && !strings.HasPrefix(string(b), evseSuccess) {
+	if err == nil && !strings.HasPrefix(string(b), evse.Success) {
 		err = errors.New(string(b))
 	}
 	return err

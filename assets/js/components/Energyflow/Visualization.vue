@@ -1,17 +1,18 @@
 <template>
 	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
-		<div class="label-scale">
-			<div class="d-flex justify-content-start">
+		<div class="label-scale d-flex">
+			<div class="d-flex justify-content-start flex-grow-1">
 				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
-					<fa-icon icon="sun"></fa-icon>
+					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
-					<BatteryIcon :soc="batterySoC" discharge />
+					<BatteryIcon :soc="batterySoC" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
-					<GridIcon import />
+					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
 			</div>
+			<div class="label-scale-name">In</div>
 		</div>
 		<div ref="site_progress" class="site-progress">
 			<div
@@ -51,38 +52,39 @@
 				<span>{{ $t("main.energyflow.noEnergy") }}</span>
 			</div>
 		</div>
-		<div class="label-scale">
-			<div class="d-flex justify-content-start">
+		<div class="label-scale d-flex">
+			<div class="d-flex justify-content-start flex-grow-1">
 				<LabelBar v-bind="labelBarProps('bottom', 'homePower')">
-					<fa-icon icon="home"></fa-icon>
+					<shopicon-regular-home></shopicon-regular-home>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
-					<fa-icon icon="car"></fa-icon>
+					<shopicon-regular-car3></shopicon-regular-car3>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoC" charge />
+					<BatteryIcon :soc="batterySoC" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
-					<GridIcon export />
+					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
 			</div>
+			<div class="label-scale-name">Out</div>
 		</div>
 	</div>
 </template>
 
 <script>
-import "../../icons";
 import formatter from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
-import GridIcon from "./GridIcon.vue";
 import LabelBar from "./LabelBar.vue";
+import "@h2d2/shopicons/es/regular/car3";
+import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/home";
 
 export default {
 	name: "Visualization",
-	components: { BatteryIcon, LabelBar, GridIcon },
+	components: { BatteryIcon, LabelBar },
 	mixins: [formatter],
 	props: {
-		showDetails: Boolean,
 		gridImport: { type: Number, default: 0 },
 		selfConsumption: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
@@ -99,7 +101,7 @@ export default {
 	},
 	computed: {
 		gridExport: function () {
-			return this.pvExport;
+			return this.applyThreshold(this.pvExport);
 		},
 		totalRaw: function () {
 			return this.gridImport + this.selfConsumption + this.pvExport;
@@ -118,9 +120,6 @@ export default {
 		},
 	},
 	watch: {
-		showDetails: function () {
-			this.$nextTick(() => this.updateElementWidth());
-		},
 		totalAdjusted: function () {
 			if (!this.visualizationReady && this.totalAdjusted > 0)
 				setTimeout(() => {
@@ -134,7 +133,7 @@ export default {
 			this.updateElementWidth();
 		});
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		window.removeEventListener("resize", this.updateElementWidth);
 	},
 	methods: {
@@ -171,38 +170,13 @@ export default {
 		updateElementWidth() {
 			this.width = this.$refs.site_progress.getBoundingClientRect().width;
 		},
-		isLabelFirst(position, name) {
-			return this.isLabel(position, name, false);
-		},
-		isLabelLast(position, name) {
-			return this.isLabel(position, name, true);
-		},
-		isLabel(position, name, last) {
-			const labels = {
-				top: ["pvProduction", "batteryDischarge", "gridImport"],
-				bottom: ["homePower", "loadpoints", "batteryCharge", "gridExport"],
-			};
-			const entries = [...labels[position]];
-			if (last) {
-				entries.reverse();
-			}
-			for (let i = 0; i < entries.length; i++) {
-				const entry = entries[i];
-				if (this[entry] > 0) {
-					return entry === name;
-				}
-			}
-			return false;
-		},
 		labelBarProps(position, name) {
 			const value = this[name];
-			const minWidth = name.startsWith("battery") || name.startsWith("grid") ? 44 : 32;
+			const minWidth = 40;
 			return {
 				value,
 				hideIcon: this.hideLabelIcon(value, minWidth),
 				style: { width: this.widthTotal(value) },
-				first: this.isLabelFirst(position, name),
-				last: this.isLabelLast(position, name),
 				[position]: true,
 			};
 		},
@@ -211,12 +185,21 @@ export default {
 </script>
 <style scoped>
 .site-progress {
-	--height: 38px;
+	--height: 2.5rem;
 	height: var(--height);
-	margin: 0.25rem 0;
-	border-radius: 5px;
+	border-radius: 10px;
 	display: flex;
 	overflow: hidden;
+	margin-right: 1.2rem;
+}
+.label-scale-name {
+	color: var(--bs-gray-medium);
+	flex-basis: 1.2rem;
+	flex-grow: 0;
+	flex-shrink: 0;
+	writing-mode: tb-rl;
+	line-height: 1;
+	text-align: center;
 }
 .site-progress-bar {
 	display: flex;
@@ -228,7 +211,7 @@ export default {
 }
 .visualization--ready .site-progress-bar {
 	transition-property: width;
-	transition-duration: 500ms;
+	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: linear;
 }
 .grid-import {
@@ -249,12 +232,12 @@ export default {
 	white-space: nowrap;
 	overflow: hidden;
 }
-.visualization--ready >>> .label-bar {
+.visualization--ready ::v-deep(.label-bar) {
 	transition-property: width, opacity;
-	transition-duration: 500ms, 250ms;
+	transition-duration: var(--evcc-transition-medium), var(--evcc-transition-fast);
 	transition-timing-function: linear, ease;
 }
-.visualization--ready >>> .label-bar-icon {
-	transition: opacity 250ms ease-in;
+.visualization--ready ::v-deep(.label-bar-icon) {
+	transition-duration: var(--evcc-transition-very-fast), 500ms;
 }
 </style>

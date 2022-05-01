@@ -1,6 +1,6 @@
 product:
   brand: VARTA
-  description: Energiespeicher
+  description: Energiespeicher (mit PV-Sensor)
 render:
   - usage: grid
     default: |

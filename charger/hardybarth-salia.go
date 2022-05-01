@@ -93,6 +93,8 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 	if err == nil {
 		go wb.heartbeat()
 
+		wb.pause(false)
+
 		res, err := wb.get()
 		if err == nil && res.Secc.Port0.Metering.Meter.Available > 0 {
 			return decorateSalia(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
@@ -167,6 +169,12 @@ func (wb *Salia) Enabled() (bool, error) {
 	return res.Secc.Port0.GridCurrentLimit > 0 && res.Secc.Port0.Salia.PauseCharging == 0, err
 }
 
+func (wb *Salia) pause(enable bool) {
+	// ignore error for FW <1.52
+	var offOn = map[bool]string{false: "1", true: "0"}
+	_ = wb.post(salia.PauseCharging, offOn[enable])
+}
+
 // Enable implements the api.Charger interface
 func (wb *Salia) Enable(enable bool) error {
 	var current int64
@@ -176,11 +184,7 @@ func (wb *Salia) Enable(enable bool) error {
 
 	err := wb.setCurrent(current)
 	if err == nil {
-		// ignore error for FW <1.52
-		var offOn = map[bool]string{false: "1", true: "0"}
-		_ = wb.post(salia.PauseCharging, offOn[enable])
-	}
-	if err == nil {
+		wb.pause(enable)
 		wb.updated = time.Time{}
 	}
 
