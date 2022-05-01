@@ -182,51 +182,37 @@ func (m *Dsmr) connect() (*bufio.Reader, error) {
 	return bufio.NewReader(conn), nil
 }
 
-func (m *Dsmr) get(id string) (dsmr.DataObject, error) {
+func (m *Dsmr) get(id string) (float64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if time.Since(m.updated) > m.timeout {
-		return dsmr.DataObject{}, api.ErrTimeout
+		return 0, api.ErrTimeout
 	}
 
 	res, ok := m.frame.Objects[id]
 	if !ok {
-		return dsmr.DataObject{}, fmt.Errorf("%w: %s", api.ErrNotAvailable, id)
+		return 0, fmt.Errorf("%w: %s", api.ErrNotAvailable, id)
 	}
 
-	return res, nil
+	return strconv.ParseFloat(res.Value, 64)
 }
 
 // CurrentPower implements the api.Meter interface
 func (m *Dsmr) CurrentPower() (float64, error) {
 	bezug, err := m.get("1-0:1.7.0")
-	if err != nil {
-		return 0, err
-	}
 
-	lief, err := m.get("1-0:2.7.0")
-	if err != nil {
-		return 0, err
-	}
-
-	sum, err := strconv.ParseFloat(bezug.Value, 64)
+	var lief float64
 	if err == nil {
-		var f float64
-		f, err = strconv.ParseFloat(lief.Value, 64)
-		sum -= f
+		lief, err = m.get("1-0:2.7.0")
 	}
 
-	return sum * 1e3, err
+	return (bezug - lief) * 1e3, err
 }
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *Dsmr) totalEnergy() (float64, error) {
-	res, err := m.get(m.energy)
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseFloat(res.Value, 64)
+	return m.get(m.energy)
 }
 
 // currents implements the api.MeterCurrent interface
@@ -234,12 +220,8 @@ func (m *Dsmr) currents() (float64, float64, float64, error) {
 	var res [3]float64
 
 	for i := 0; i < 3; i++ {
-		val, err := m.get(currentObisCodes[i])
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		res[i], err = strconv.ParseFloat(val.Value, 64)
+		var err error
+		res[i], err = m.get(currentObisCodes[i])
 		if err != nil {
 			return 0, 0, 0, err
 		}
