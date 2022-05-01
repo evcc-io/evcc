@@ -19,14 +19,15 @@ import (
 
 // Dsmr meter implementation
 type Dsmr struct {
-	mu           sync.Mutex
-	addr         string
-	energyObis   string
-	currentsObis []string
-	timeout      time.Duration
-	frame        dsmr.Frame
-	updated      time.Time
+	mu      sync.Mutex
+	addr    string
+	energy  string
+	timeout time.Duration
+	frame   dsmr.Frame
+	updated time.Time
 }
+
+var currentObisCodes = []string{"1-0:31.7.0", "1-0:51.7.0", "1-0:71.7.0"}
 
 func init() {
 	registry.Add("dsmr", NewDsmrFromConfig)
@@ -37,10 +38,9 @@ func init() {
 // NewDsmrFromConfig creates a DSMR meter from generic config
 func NewDsmrFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI      string
-		Energy   string
-		Currents []string
-		Timeout  time.Duration
+		URI     string
+		Energy  string
+		Timeout time.Duration
 	}{
 		Timeout: 15 * time.Second,
 	}
@@ -49,22 +49,30 @@ func NewDsmrFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewDsmr(cc.URI, cc.Energy, cc.Currents, cc.Timeout)
+	return NewDsmr(cc.URI, cc.Energy, cc.Timeout)
 }
 
 // NewDsmr creates DSMR meter
-func NewDsmr(uri, energy string, currents []string, timeout time.Duration) (api.Meter, error) {
+func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	m := &Dsmr{
-		addr:         uri,
-		energyObis:   energy,
-		currentsObis: currents,
-		timeout:      timeout,
+		addr:    uri,
+		energy:  energy,
+		timeout: timeout,
 	}
 
 	done := make(chan struct{}, 1)
 	conn, err := m.connect()
-	if err == nil {
-		go m.run(conn, done)
+	if err != nil {
+		return nil, err
+	}
+
+	go m.run(conn, done)
+
+	// wait for initial value
+	select {
+	case <-done:
+	case <-time.NewTimer(timeout).C:
+		return nil, api.ErrTimeout
 	}
 
 	// decorate energy reading
@@ -75,19 +83,16 @@ func NewDsmr(uri, energy string, currents []string, timeout time.Duration) (api.
 
 	// decorate currents
 	var current func() (float64, float64, float64, error)
-	if len(currents) > 0 {
-		if len(currents) != 3 {
-			return nil, errors.New("need 3 currents")
-		}
 
-		current = m.currents
+	for _, obis := range currentObisCodes {
+		_, err = m.get(obis)
+		if err != nil {
+			break
+		}
 	}
 
-	// wait for initial value
-	select {
-	case <-done:
-	case <-time.NewTimer(timeout).C:
-		return nil, api.ErrTimeout
+	if err == nil {
+		current = m.currents
 	}
 
 	return decorateDsmr(m, totalEnergy, current), nil
@@ -217,7 +222,7 @@ func (m *Dsmr) CurrentPower() (float64, error) {
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *Dsmr) totalEnergy() (float64, error) {
-	res, err := m.get(m.energyObis)
+	res, err := m.get(m.energy)
 	if err != nil {
 		return 0, err
 	}
@@ -229,7 +234,7 @@ func (m *Dsmr) currents() (float64, float64, float64, error) {
 	var res [3]float64
 
 	for i := 0; i < 3; i++ {
-		val, err := m.get(m.currentsObis[i])
+		val, err := m.get(currentObisCodes[i])
 		if err != nil {
 			return 0, 0, 0, err
 		}
