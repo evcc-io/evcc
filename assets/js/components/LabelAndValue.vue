@@ -4,9 +4,8 @@
 		<slot>
 			<h3 class="value m-0">
 				{{ value }}
-				<span v-if="extraValue" class="extraValue">
-					<span class="d-none d-sm-inline"> / </span>
-					<span class="d-block d-sm-inline text-nowrap">{{ extraValue }}</span>
+				<span v-if="extraValue" class="extraValue d-block d-sm-inline text-nowrap">
+					{{ extraValue }}
 				</span>
 			</h3>
 		</slot>
