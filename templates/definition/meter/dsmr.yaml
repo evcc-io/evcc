@@ -6,6 +6,7 @@ params:
     choice: ["grid"]
   - name: host
   - name: port
+    default: 1502 # required to avoid rendering `uri: :` for test which leads to error
   - name: energy
     description:
       de: OBIS Kennzahl für Energieverbrauch
