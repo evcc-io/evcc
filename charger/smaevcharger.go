@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -97,6 +98,31 @@ func NewSmaevcharger(host string, user string, password string) (api.Charger, er
 		Source: ts,
 		Base:   wb.Client.Transport,
 	}
+
+	SoftwareVersion := fmt.Sprint(wb.GetParameter("Parameter.Nameplate.PkgRev"))
+	SoftwareVersionParts := strings.Split(SoftwareVersion, ".")
+	errortext := "Failed to read Charger Softwareversion"
+
+	if len(SoftwareVersionParts) < 3 {
+		return wb, errors.New(errortext)
+	}
+	tempvar1, err := strconv.Atoi(SoftwareVersionParts[0])
+	if err != nil {
+		return wb, errors.New(errortext)
+	}
+	tempvar2, err := strconv.Atoi(SoftwareVersionParts[1])
+	if err != nil {
+		return wb, errors.New(errortext)
+	}
+	tempvar3, err := strconv.Atoi(SoftwareVersionParts[2])
+	if err != nil {
+		return wb, errors.New(errortext)
+	}
+
+	if tempvar1 < 1 || tempvar2 < 2 || tempvar3 < 23 {
+		return wb, errors.New("Charger Softwareversion not supported - please update > 1.2.23R")
+	}
+
 	return wb, nil
 }
 
@@ -154,32 +180,8 @@ func (wb *Smaevcharger) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %v", current)
 	}
-	
-	ChargeRate := current * 3 * 230
-	//Check limits - ChargeRates above 11kW are illegal in Germany with funding (can be an option in the future)
-	if ChargeRate > 11000 {
-		ChargeRate = 11000
-	}
-	var data []smaevcharger.SendData
-	var datapoint smaevcharger.SendData
 
-	//This Parameter should be enough to change the Chargerates, but SMA Software seems to be very buggy and ignores this value
-	//aditionally it is still possible to set the current indirect via the max watts which will internally change the charger behavior
-	//Convert current to watts
-	datapoint.ChannelId = "Parameter.PCC.ARtg"
-	datapoint.Value = strconv.FormatInt(int64(current), 10)
-	data = append(data, datapoint)
-
-	// Set both Max in and Max out watts, Charger seems to be a bit buggy if only one is changed
-	datapoint.ChannelId = "Parameter.Inverter.WMax"
-	datapoint.Value = strconv.FormatInt(int64(ChargeRate), 10)
-	data = append(data, datapoint)
-
-	datapoint.ChannelId = "Parameter.Inverter.WMaxIn"
-	datapoint.Value = strconv.FormatInt(int64(ChargeRate), 10)
-	data = append(data, datapoint)
-
-	wb.SendMultiParameter(data)
+	wb.SendParameter("Parameter.Inverter.AcALim", strconv.FormatInt(int64(current), 10))
 	time.Sleep(time.Second)
 	return nil
 }
@@ -191,33 +193,8 @@ func (wb *Smaevcharger) MaxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
-
-	ChargeRate := current * 3 * 230
-	//Check limits - ChargeRates above 11kW are illegal in Germany with funding (can be an option in the future)
-	if ChargeRate > 11000 {
-		ChargeRate = 11000
-	}
-	var data []smaevcharger.SendData
-	var datapoint smaevcharger.SendData
-
-	//This Parameter should be enough to change the Chargerates, but SMA Software seems to be very buggy and ignores this value
-	//aditionally it is still possible to set the current indirect via the max watts which will internally change the charger behavior
-	//Convert current to watts
-	datapoint.ChannelId = "Parameter.PCC.ARtg"
-	datapoint.Value = strconv.FormatFloat(current, 'f', 2, 64)
-	data = append(data, datapoint)
-
-	// Set both Max in and Max out watts, Charger seems to be a bit buggy if only one is changed
-	datapoint.ChannelId = "Parameter.Inverter.WMax"
-	datapoint.Value = strconv.FormatInt(int64(ChargeRate), 10)
-	data = append(data, datapoint)
-
-	datapoint.ChannelId = "Parameter.Inverter.WMaxIn"
-	datapoint.Value = strconv.FormatInt(int64(ChargeRate), 10)
-	data = append(data, datapoint)
-
-	wb.SendMultiParameter(data)
-
+	wb.SendParameter("Parameter.Inverter.AcALim", strconv.FormatFloat(current, 'f', 2, 64))
+	time.Sleep(time.Second)
 	return nil
 }
 
