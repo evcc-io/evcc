@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateDsmr(base api.Meter, meterEnergy func() (float64, error)) api.Meter {
+func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Meter {
 	switch {
-	case meterEnergy == nil:
+	case meterCurrent == nil && meterEnergy == nil:
 		return base
 
-	case meterEnergy != nil:
+	case meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			api.Meter
 			api.MeterEnergy
@@ -21,9 +21,43 @@ func decorateDsmr(base api.Meter, meterEnergy func() (float64, error)) api.Meter
 				meterEnergy: meterEnergy,
 			},
 		}
+
+	case meterCurrent != nil && meterEnergy == nil:
+		return &struct {
+			api.Meter
+			api.MeterCurrent
+		}{
+			Meter: base,
+			MeterCurrent: &decorateDsmrMeterCurrentImpl{
+				meterCurrent: meterCurrent,
+			},
+		}
+
+	case meterCurrent != nil && meterEnergy != nil:
+		return &struct {
+			api.Meter
+			api.MeterCurrent
+			api.MeterEnergy
+		}{
+			Meter: base,
+			MeterCurrent: &decorateDsmrMeterCurrentImpl{
+				meterCurrent: meterCurrent,
+			},
+			MeterEnergy: &decorateDsmrMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decorateDsmrMeterCurrentImpl struct {
+	meterCurrent func() (float64, float64, float64, error)
+}
+
+func (impl *decorateDsmrMeterCurrentImpl) Currents() (float64, float64, float64, error) {
+	return impl.meterCurrent()
 }
 
 type decorateDsmrMeterEnergyImpl struct {
