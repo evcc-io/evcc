@@ -1,4 +1,4 @@
-template: tapo
+template: tplink
 products:
   - brand: TP-Link
     description:
