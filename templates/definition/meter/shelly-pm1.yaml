@@ -3,7 +3,7 @@ products:
   - brand: Shelly
     description:
       generic: 1PM
-group: sockets
+group: switchsockets
 params:
   - name: usage
     choice: ["pv"]

@@ -2,18 +2,19 @@ template: tasmota
 products:
   - description:
       generic: Tasmota
-group: sockets
+group: switchsockets
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["pv"]
   - name: host
+  - name: user
+    required: false
+    default: admin
+  - name: password
+    required: false
+    mask: true
 render: |
-  type: custom
-  power: # power reading (W)
-    source: http
-    uri: http://{{ .host }}/cm?cmnd=Status%208
-    jq: .StatusSNS.ENERGY.Power
-  energy: # energy reading (kWh)
-    source: http
-    uri: http://{{ .host }}/cm?cmnd=Status%208
-    jq: .StatusSNS.ENERGY.Total
+  type: tasmota
+  uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}

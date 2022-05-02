@@ -2,15 +2,10 @@ package charger
 
 import (
 	"errors"
-	"fmt"
-	"net/url"
-	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/tasmota"
+	"github.com/evcc-io/evcc/meter/tasmota"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Tasmota project homepage
@@ -20,9 +15,8 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
-	*request.Helper
-	uri, user, password string
-	standbypower        float64
+	conn         *tasmota.Connection
+	standbypower float64
 }
 
 func init() {
@@ -50,16 +44,15 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewTasmota creates Tasmota charger
 func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, error) {
-	log := util.NewLogger("tasmota")
-	c := &Tasmota{
-		Helper:       request.NewHelper(log),
-		uri:          util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
-		user:         user,
-		password:     password,
-		standbypower: standbypower,
+	conn, err := tasmota.NewConnection(uri, user, password)
+	if err != nil {
+		return nil, err
 	}
 
-	c.Client.Transport = request.NewTripper(log, transport.Insecure())
+	c := &Tasmota{
+		conn:         conn,
+		standbypower: standbypower,
+	}
 
 	return c, nil
 }
@@ -67,7 +60,7 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
 	var res tasmota.StatusResponse
-	err := c.GetJSON(c.cmdUri("Status 0"), &res)
+	err := c.conn.GetJSON(c.conn.CreateCmd("Status 0"), &res)
 
 	return res.Status.Power == 1, err
 }
@@ -79,7 +72,7 @@ func (c *Tasmota) Enable(enable bool) error {
 	if enable {
 		cmd = "Power on"
 	}
-	err := c.GetJSON(c.cmdUri(cmd), &res)
+	err := c.conn.GetJSON(c.conn.CreateCmd(cmd), &res)
 
 	switch {
 	case err != nil:
@@ -127,7 +120,7 @@ var _ api.Meter = (*Tasmota)(nil)
 func (c *Tasmota) CurrentPower() (float64, error) {
 	var power float64
 
-	// static mode
+	// set fix static power in static mode
 	if c.standbypower < 0 {
 		on, err := c.Enabled()
 		if on {
@@ -136,13 +129,9 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 		return power, err
 	}
 
-	// standby power mode
-	var res tasmota.StatusSNSResponse
-	err := c.GetJSON(c.cmdUri("Status 8"), &res)
-
-	// ignore standby power
-	power = float64(res.StatusSNS.Energy.Power)
-	if power < c.standbypower {
+	// ignore power in standby mode
+	power, err := c.conn.CurrentPower()
+	if c.standbypower >= 0 && power <= c.standbypower {
 		power = 0
 	}
 
@@ -153,20 +142,5 @@ var _ api.MeterEnergy = (*Tasmota)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
-	var resp tasmota.StatusSNSResponse
-	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
-
-	return resp.StatusSNS.Energy.Total, err
-}
-
-// cmdUri creates the Tasmota command web request
-// https://tasmota.github.io/docs/Commands/#with-web-requests
-func (c *Tasmota) cmdUri(cmd string) string {
-	parameters := url.Values{
-		"user":     []string{c.user},
-		"password": []string{c.password},
-		"cmnd":     []string{cmd},
-	}
-
-	return fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode())
+	return c.conn.TotalEnergy()
 }

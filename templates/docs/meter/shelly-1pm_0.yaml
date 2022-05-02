@@ -1,7 +1,7 @@
 product:
   brand: Shelly
   description: 1PM
-  group: Steckdosen
+  group: Schaltbare Steckdosen
 render:
   - usage: pv
     default: |
