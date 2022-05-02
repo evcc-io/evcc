@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/tapo"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/tapo"
 )
 
 // TP-Link Tapo charger implementation
@@ -118,8 +118,6 @@ func (c *Tapo) CurrentPower() (float64, error) {
 		}
 		if on {
 			power = -c.standbypower
-		} else {
-			power = 0
 		}
 		return power, nil
 	}

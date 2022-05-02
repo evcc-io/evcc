@@ -230,9 +230,7 @@ func (d *Connection) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	power := float64(resp.Result.Current_Power) / 1000
-
-	return power, nil
+	return float64(resp.Result.Current_Power) / 1e3, nil
 }
 
 // ChargedEnergy collects the daily charged energy

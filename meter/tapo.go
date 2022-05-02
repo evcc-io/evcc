@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/tapo"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/tapo"
 )
 
 // TP-Link Tapo meter implementation
