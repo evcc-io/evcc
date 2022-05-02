@@ -208,7 +208,7 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 	return res, nil
 }
 
-// execCmd executes a Tapo api command and provides the response
+// ExecCmd executes a Tapo api command and provides the response
 func (d *Connection) ExecCmd(method string, enable bool) (*DeviceResponse, error) {
 	// refresh session id
 	if time.Since(d.updated) >= 600*time.Minute {

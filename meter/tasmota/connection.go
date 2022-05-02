@@ -31,36 +31,40 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 	return c, nil
 }
 
-// CreateCmd creates the Tasmota command web request
-// https://tasmota.github.io/docs/Commands/#with-web-requests
-func (d *Connection) CreateCmd(cmd string) string {
+// ExecCmd executes a Tasmota api command and provides the response
+func (d *Connection) ExecCmd(cmd string, res interface{}) error {
 	parameters := url.Values{
 		"user":     []string{d.user},
 		"password": []string{d.password},
 		"cmnd":     []string{cmd},
 	}
 
-	return fmt.Sprintf("%s/cm?%s", d.uri, parameters.Encode())
+	err := d.GetJSON(fmt.Sprintf("%s/cm?%s", d.uri, parameters.Encode()), res)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // CurrentPower provides current power consumption
 func (d *Connection) CurrentPower() (float64, error) {
-	var resp StatusSNSResponse
-	err := d.GetJSON(d.CreateCmd("Status 8"), &resp)
+	var res *StatusSNSResponse
+	err := d.ExecCmd("Status 8", &res)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(resp.StatusSNS.Energy.Power), nil
+	return float64(res.StatusSNS.Energy.Power), nil
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (d *Connection) TotalEnergy() (float64, error) {
-	var resp StatusSNSResponse
-	err := d.GetJSON(d.CreateCmd("Status 8"), &resp)
+	var res *StatusSNSResponse
+	err := d.ExecCmd("Status 8", &res)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(resp.StatusSNS.Energy.Total), nil
+	return float64(res.StatusSNS.Energy.Total), nil
 }
