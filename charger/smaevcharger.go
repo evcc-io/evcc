@@ -31,6 +31,7 @@ import (
 	"github.com/evcc-io/evcc/charger/smaevcharger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/hashicorp/go-version"
 	"golang.org/x/oauth2"
 )
 
@@ -99,30 +100,14 @@ func NewSmaevcharger(host string, user string, password string) (api.Charger, er
 		Base:   wb.Client.Transport,
 	}
 
-	SoftwareVersion := fmt.Sprint(wb.GetParameter("Parameter.Nameplate.PkgRev"))
-	SoftwareVersionParts := strings.Split(SoftwareVersion, ".")
-	errortext := "Failed to read Charger Softwareversion"
+	VersionText := strings.Replace(fmt.Sprint(wb.GetParameter("Parameter.Nameplate.PkgRev")), ".R", "", 1)
+	SoftwareVersion, err := version.NewVersion(VersionText)
 
-	if len(SoftwareVersionParts) < 3 {
-		return wb, errors.New(errortext)
-	}
-	tempvar1, err := strconv.Atoi(SoftwareVersionParts[0])
-	if err != nil {
-		return wb, errors.New(errortext)
-	}
-	tempvar2, err := strconv.Atoi(SoftwareVersionParts[1])
-	if err != nil {
-		return wb, errors.New(errortext)
-	}
-	tempvar3, err := strconv.Atoi(SoftwareVersionParts[2])
-	if err != nil {
-		return wb, errors.New(errortext)
-	}
+	refVersion, err := version.NewVersion("1.2.23")
 
-	if tempvar1 < 1 || tempvar2 < 2 || tempvar3 < 23 {
-		return wb, errors.New("Charger Softwareversion not supported - please update > 1.2.23R")
+	if SoftwareVersion.Compare(refVersion) < 0 {
+		return wb, errors.New("Charger Softwareversion not supported - please update >= 1.2.23R")
 	}
-
 	return wb, nil
 }
 
