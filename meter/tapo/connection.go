@@ -43,17 +43,20 @@ type Connection struct {
 	SessionID       string
 	Token           string
 	TerminalUUID    string
+	updated         time.Time
+	lasttodayenergy int64
+	energy          int64
 }
 
 // NewConnection creates a new Tapo device connection.
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
-func NewConnection(uri, user, password string) *Connection {
+func NewConnection(uri, user, password string) (*Connection, error) {
 	log := util.NewLogger("tapo")
 
 	// nosemgrep:go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1
 	h := sha1.New()
-	_, _ = h.Write([]byte(user))
+	_, err := h.Write([]byte(user))
 	userhash := hex.EncodeToString(h.Sum(nil))
 
 	conn := &Connection{
@@ -66,7 +69,7 @@ func NewConnection(uri, user, password string) *Connection {
 
 	conn.Client.Timeout = Timeout
 
-	return conn
+	return conn, err
 }
 
 // Login provides the Tapo device session token and MAC address (TerminalUUID).
@@ -205,28 +208,67 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 	return res, nil
 }
 
+// execCmd executes a Tapo api command and provides the response
+func (d *Connection) ExecCmd(method string, enable bool) (*DeviceResponse, error) {
+	// refresh session id
+	if time.Since(d.updated) >= 600*time.Minute {
+		if err := d.Login(); err != nil {
+			return nil, err
+		}
+
+		d.updated = time.Now()
+	}
+
+	return d.ExecMethod(method, enable)
+}
+
+// CurrentPower provides current power consuption
+func (d *Connection) CurrentPower() (float64, error) {
+	resp, err := d.ExecCmd("get_energy_usage", false)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(resp.Result.Current_Power) / 1e3, nil
+}
+
+// ChargedEnergy collects the daily charged energy
+func (d *Connection) ChargedEnergy() (float64, error) {
+	resp, err := d.ExecCmd("get_energy_usage", false)
+	if err != nil {
+		return 0, err
+	}
+
+	if resp.Result.Today_Energy > d.lasttodayenergy {
+		d.energy = d.energy + (resp.Result.Today_Energy - d.lasttodayenergy)
+	}
+	d.lasttodayenergy = resp.Result.Today_Energy
+
+	return float64(d.energy) / 1000, nil
+}
+
 // DoSecureRequest executes a Tapo device request by encding the request and decoding its response.
 func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interface{}) (*DeviceResponse, error) {
-	treq, err := json.Marshal(taporequest)
+	payload, err := json.Marshal(taporequest)
 	if err != nil {
 		return nil, err
 	}
 
-	d.log.TRACE.Printf("request: %s\n", string(treq))
+	d.log.TRACE.Printf("request: %s", string(payload))
 
-	encryptedRequest, err := d.Cipher.Encrypt(treq)
+	encryptedRequest, err := d.Cipher.Encrypt(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	securedReq := map[string]interface{}{
+	data := map[string]interface{}{
 		"method": "securePassthrough",
 		"params": map[string]interface{}{
 			"request": base64.StdEncoding.EncodeToString(encryptedRequest),
 		},
 	}
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(securedReq), map[string]string{
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
 		"Cookie": d.SessionID,
 	})
 	if err != nil {
@@ -234,32 +276,30 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 	}
 
 	var res *DeviceResponse
-	if err = d.DoJSON(req, &res); err != nil {
+	if err := d.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
 
-	if err = d.CheckErrorCode(res.ErrorCode); err != nil {
+	if err := d.CheckErrorCode(res.ErrorCode); err != nil {
 		return nil, err
 	}
 
-	b64decodedResp, err := base64.StdEncoding.DecodeString(res.Result.Response)
+	decodedResponse, err := base64.StdEncoding.DecodeString(res.Result.Response)
 	if err != nil {
 		return nil, err
 	}
 
-	decryptedResponse, err := d.Cipher.Decrypt(b64decodedResp)
+	decryptedResponse, err := d.Cipher.Decrypt(decodedResponse)
 	if err != nil {
 		return nil, err
 	}
 
-	d.log.TRACE.Printf("decrypted result: %v\n", string(decryptedResponse))
+	d.log.TRACE.Printf("decrypted result: %v", string(decryptedResponse))
 
 	var deviceResp *DeviceResponse
-	if err = json.Unmarshal(decryptedResponse, &deviceResp); err != nil {
-		return deviceResp, err
-	}
+	err = json.Unmarshal(decryptedResponse, &deviceResp)
 
-	return deviceResp, nil
+	return deviceResp, err
 }
 
 // Tapo helper functions
@@ -292,6 +332,7 @@ func (c *ConnectionCipher) Encrypt(payload []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	encrypter := cipher.NewCBCEncrypter(block, c.Iv)
 	encryptedPayload := make([]byte, len(paddedPayload))
 	encrypter.CryptBlocks(encryptedPayload, paddedPayload)
@@ -310,12 +351,7 @@ func (c *ConnectionCipher) Decrypt(payload []byte) ([]byte, error) {
 
 	encrypter.CryptBlocks(decryptedPayload, payload)
 
-	unpaddedPayload, err := pkcs7.Unpad(decryptedPayload, aes.BlockSize)
-	if err != nil {
-		return nil, err
-	}
-
-	return unpaddedPayload, nil
+	return pkcs7.Unpad(decryptedPayload, aes.BlockSize)
 }
 
 func DumpRSAPEM(pubKey *rsa.PublicKey) ([]byte, error) {
