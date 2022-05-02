@@ -177,10 +177,6 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Smaevcharger) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %v", current)
-	}
-
 	return wb.MaxCurrentMillis(float64(current))
 }
 
@@ -247,10 +243,8 @@ func (wb *Smaevcharger) GetParameterData() bool {
 }
 
 func (wb *Smaevcharger) GetMeasurement(id string) interface{} {
-	dataok := wb.GetMeasurementData()
-	if !dataok {
-		nil := fmt.Errorf("failed to aquire measurement data")
-		return nil
+	if !wb.GetMeasurementData() {
+		return fmt.Errorf("failed to aquire measurement data")
 	}
 	var returndata interface{}
 
@@ -264,10 +258,8 @@ func (wb *Smaevcharger) GetMeasurement(id string) interface{} {
 }
 
 func (wb *Smaevcharger) GetParameter(id string) interface{} {
-	dataok := wb.GetParameterData()
-	if !dataok {
-		nil := fmt.Errorf("failed to aquire parameter data")
-		return nil
+	if !wb.GetParameterData() {
+		return fmt.Errorf("failed to aquire parameter data")
 	}
 	var returndata interface{}
 
@@ -316,7 +308,7 @@ func (wb *Smaevcharger) SendMultiParameter(data []smaevcharger.SendData) bool {
 	var payload smaevcharger.SendData
 
 	for i := range data {
-		payload.Timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+		payload.Timestamp = time.Now().UTC().Format(smaevcharger.ConstSendParameterFormat)
 		payload.ChannelId = data[i].ChannelId
 		payload.Value = data[i].Value
 		parameter.Values = append(parameter.Values, payload)
