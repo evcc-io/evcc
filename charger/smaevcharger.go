@@ -181,9 +181,7 @@ func (wb *Smaevcharger) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %v", current)
 	}
 
-	wb.SendParameter("Parameter.Inverter.AcALim", strconv.FormatInt(int64(current), 10))
-	time.Sleep(time.Second)
-	return nil
+	return wb.MaxCurrentMillis(float64(current))
 }
 
 var _ api.ChargerEx = (*Smaevcharger)(nil)
