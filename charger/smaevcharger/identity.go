@@ -68,33 +68,10 @@ func TokenSource(log *util.Logger, host, user, password string) (oauth2.TokenSou
 			c.TokenSource = oauth.RefreshTokenSource(token.AsOAuth2Token(), c)
 		}
 	}
-
 	return c, err
 }
 
 func (c *tokenSource) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	/*
-
-		Uri := c.Host + "/refresh_token" //URL Unknown?!
-		data := url.Values{
-			"AccessToken":		{token.AccessToken},
-			"RefreshToken":		{token.RefreshToken},
-		}
-
-		req, err := request.New(http.MethodPost, Uri, strings.NewReader(data.Encode()),request.JSONEncoding)
-
-		var res *oauth2.Token
-		if err == nil {
-			var refreshed Token
-			if err = c.DoJSON(req, &refreshed); err == nil {
-				res = refreshed.AsOAuth2Token()
-			}
-		}
-
-		return res, err
-
-	*/
-
 	//Token refresh not working, as a workaround we aquire a new token with the password and the username
 
 	Uri := c.Host + "/token"

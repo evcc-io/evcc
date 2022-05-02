@@ -289,34 +289,24 @@ func (wb *Smaevcharger) SendParameter(id string, value string) bool {
 	var parameter smaevcharger.SendParameter
 	var data smaevcharger.SendData
 
-	data.Timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+	data.Timestamp = time.Now().UTC().Format(smaevcharger.ConstSendParameterFormat)
 	data.ChannelId = id
 	data.Value = value
 	parameter.Values = append(parameter.Values, data)
 
-	parameterAvaliable := false
-	for i := range wb.ParametersData[0].Values {
-		if wb.ParametersData[0].Values[i].ChannelId == id {
-			parameterAvaliable = true
-			break
+	Host := wb.host + "/parameters/IGULD:SELF/"
+	jsonData, err := json.Marshal(parameter)
+	if err != nil {
+		return false
+	}
+	req, err := request.New(http.MethodPut, Host, bytes.NewBuffer(jsonData), request.JSONEncoding)
+	if err == nil {
+		resp, err := wb.Do(req)
+		if resp.StatusCode >= 200 && resp.StatusCode <= 299 && err == nil {
+			return true
 		}
 	}
 
-	if parameterAvaliable {
-
-		Host := wb.host + "/parameters/IGULD:SELF/"
-		jsonData, err := json.Marshal(parameter)
-		if err != nil {
-			return false
-		}
-		req, err := request.New(http.MethodPut, Host, bytes.NewBuffer(jsonData), request.JSONEncoding)
-		if err == nil {
-			resp, err := wb.Do(req)
-			if resp.StatusCode >= 200 && resp.StatusCode <= 299 && err == nil {
-				return true
-			}
-		}
-	}
 	return false
 }
 

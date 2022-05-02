@@ -15,6 +15,8 @@ const (
 
 	ConstSwitchOeko = float32(4950) // Switch in PV Loading (Can be Optimized or Planned PV loading)
 	ConstSwitchFast = float32(4718) // Switch in Fast Charge Mode
+
+	ConstSendParameterFormat = "2006-01-02T15:04:05.000Z"
 )
 
 // Measurements Data json Response structure
