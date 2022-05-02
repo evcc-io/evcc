@@ -45,8 +45,7 @@ func ramp(c api.Charger, digits int, delay time.Duration) {
 	}
 	defer func() { _ = c.Enable(false) }()
 
-	var i float64 = 6.0
-	for {
+	for i := 6.0; i <= 16; {
 		var err error
 
 		if cc, ok := c.(api.ChargerEx); ok {
