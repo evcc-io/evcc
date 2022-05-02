@@ -1,6 +1,7 @@
 package id
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -79,7 +80,9 @@ func (v *API) Status(vin string) (res Status, err error) {
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
 	if err == nil {
-		err = v.DoJSON(req, &res)
+		if err = v.DoJSON(req, &res); err == nil && len(res.Error) > 0 {
+			err = errors.New("unknown error")
+		}
 	}
 
 	return res, err
