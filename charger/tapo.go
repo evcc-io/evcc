@@ -65,7 +65,7 @@ func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Tapo) Enabled() (bool, error) {
-	resp, err := c.conn.ExecTapoCmd("get_device_info", false)
+	resp, err := c.conn.ExecCmd("get_device_info", false)
 	if err != nil {
 		return false, err
 	}
@@ -74,7 +74,7 @@ func (c *Tapo) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Tapo) Enable(enable bool) error {
-	_, err := c.conn.ExecTapoCmd("set_device_info", enable)
+	_, err := c.conn.ExecCmd("set_device_info", enable)
 	return err
 }
 
@@ -113,27 +113,19 @@ func (c *Tapo) CurrentPower() (float64, error) {
 	// set fix static power in static mode
 	if c.standbypower < 0 {
 		on, err := c.Enabled()
-		if err != nil {
-			return 0, err
-		}
 		if on {
 			power = -c.standbypower
 		}
-		return power, nil
-	}
-
-	// standby power mode
-	power, err := c.conn.CurrentPower()
-	if err != nil {
-		return 0, err
+		return power, err
 	}
 
 	// ignore power in standby mode
+	power, err := c.conn.CurrentPower()
 	if c.standbypower >= 0 && power <= c.standbypower {
 		power = 0
 	}
 
-	return power, nil
+	return power, err
 }
 
 var _ api.ChargeRater = (*Tapo)(nil)
