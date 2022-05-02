@@ -102,9 +102,13 @@ func NewSmaevcharger(host string, user string, password string) (api.Charger, er
 
 	VersionText := strings.Replace(fmt.Sprint(wb.GetParameter("Parameter.Nameplate.PkgRev")), ".R", "", 1)
 	SoftwareVersion, err := version.NewVersion(VersionText)
-
+	if err != nil {
+		return wb, errors.New("Failed to aquire Software version, get in contact with dev team")
+	}
 	refVersion, err := version.NewVersion("1.2.23")
-
+	if err != nil {
+		return wb, errors.New("Failed to generate Software version")
+	}
 	if SoftwareVersion.Compare(refVersion) < 0 {
 		return wb, errors.New("Charger Softwareversion not supported - please update >= 1.2.23R")
 	}
@@ -150,6 +154,8 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 		switch StateChargerSwitch {
 		case smaevcharger.ConstSwitchOeko: // Switch PV Loading
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstOptiCharge)
+			time.Sleep(time.Second) //Some Delay to prevent out of Sync - The Charger needs some time to react after setting have been changed
+			return fmt.Errorf("error while activating the charging process, switch position not on fast charging - SMA's own optimized charging was activated")
 		case smaevcharger.ConstSwitchFast: // Fast charging
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstFastCharge)
 		}
