@@ -36,6 +36,7 @@ import "@h2d2/shopicons/es/filled/circle";
 
 import Loadpoint from "./Loadpoint.vue";
 import collector from "../mixins/collector";
+import { readSelectedLoadpoint, saveSelectedLoadpoint } from "../persistance";
 
 export default {
 	name: "Site",
@@ -49,6 +50,7 @@ export default {
 	},
 	mounted() {
 		this.$refs.carousel.addEventListener("scroll", this.handleCarouselScroll, false);
+		this.restoreSelection();
 	},
 	unmounted() {
 		this.$refs.carousel.removeEventListener("scroll", this.handleCarouselScroll);
@@ -67,6 +69,7 @@ export default {
 				return;
 			}
 			this.selectedIndex = index;
+			saveSelectedLoadpoint(this.selectedIndex);
 			const $carousel = this.$refs.carousel;
 			const width = $carousel.children[0].offsetWidth;
 			$carousel.style.scrollSnapType = "none";
@@ -76,6 +79,25 @@ export default {
 			this.snapTimeout = setTimeout(() => {
 				this.$refs.carousel.style.scrollSnapType = "x mandatory";
 			}, 1000);
+		},
+		restoreSelection() {
+			const lastIndex = readSelectedLoadpoint();
+			if (lastIndex === 0) {
+				return;
+			}
+			// scroll to selected loadpoint once data is available
+			const unwatch = this.$watch(
+				"loadpoints",
+				() => {
+					if (this.loadpoints[lastIndex]) {
+						this.$nextTick(() => {
+							this.scrollTo(1);
+							unwatch();
+						});
+					}
+				},
+				{ deep: true }
+			);
 		},
 	},
 };

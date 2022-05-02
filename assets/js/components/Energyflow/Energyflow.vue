@@ -125,6 +125,7 @@ import "@h2d2/shopicons/es/regular/arrowdown";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
 import formatter from "../../mixins/formatter";
+import { readEnergyflowDetails, saveEnergyflowDetails } from "../../persistance";
 
 export default {
 	name: "Energyflow",
@@ -143,7 +144,7 @@ export default {
 		batterySoC: { type: Number, default: 0 },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null };
+		return { detailsOpen: readEnergyflowDetails(), detailsCompleteHeight: null };
 	},
 	computed: {
 		gridImport: function () {
@@ -183,6 +184,14 @@ export default {
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
 	},
+	watch: {
+		inPower(value) {
+			// calculate height once data is recieved
+			if (this.detailsCompleteHeight === null && value > 0) {
+				setTimeout(this.updateHeight, 100);
+			}
+		},
+	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
 	},
@@ -196,6 +205,7 @@ export default {
 		toggleDetails: function () {
 			this.updateHeight();
 			this.detailsOpen = !this.detailsOpen;
+			saveEnergyflowDetails(this.detailsOpen);
 		},
 		updateHeight: function () {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
