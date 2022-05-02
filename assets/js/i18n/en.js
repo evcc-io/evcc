@@ -90,7 +90,7 @@ export default {
       fallbackName: "Vehicle",
       vehicleSoC: "SoC",
       targetSoC: "Limit",
-      noVehicle: "No Vehicle",
+      noVehicle: "No vehicle",
     },
     vehicleSoC: {
       disconnected: "disconnected",
@@ -107,7 +107,7 @@ export default {
       targetChargeActive: "Target charge active.",
       connected: "Connected.",
       pvDisable: "Not enough surplus. Pausing in {remaining}.",
-      pvEnable: "Surplus available. Starging in {remaining}.",
+      pvEnable: "Surplus available. Starting in {remaining}.",
       scale1p: "Reduce to single phase in {remaining}.",
       scale3p: "Increase to three phase in {remaining}.",
       disconnected: "Disconnected.",
@@ -131,7 +131,7 @@ export default {
       activate: "Activate",
       experimentalLabel: "Experimental",
       experimentalText: `
-        This feature works but isn't perfect yet. 
+        This feature works but isn't perfect yet.
         Please report unexpected behaviour in our
       `,
     },
