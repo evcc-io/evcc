@@ -98,6 +98,7 @@ export default {
 			return {
 				version: {
 					installed: window.evcc.version,
+					commit: window.evcc.commit,
 					available: this.availableVersion,
 					releaseNotes: this.releaseNotes,
 					hasUpdater: this.hasUpdater,
