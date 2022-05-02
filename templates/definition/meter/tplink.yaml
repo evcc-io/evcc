@@ -1,0 +1,13 @@
+template: tapo
+products:
+  - brand: TP-Link
+    description:
+      generic: H-Series Smart Plug
+group: switchsockets
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+render: |
+  type: tplink
+  uri: {{ .host }}
