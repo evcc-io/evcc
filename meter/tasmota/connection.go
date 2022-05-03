@@ -1,6 +1,7 @@
 package tasmota
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -18,6 +19,10 @@ type Connection struct {
 
 // NewConnection creates Tasmota charger
 func NewConnection(uri, user, password string) (*Connection, error) {
+	if uri == "" {
+		return nil, errors.New("missing uri")
+	}
+
 	log := util.NewLogger("tasmota")
 	c := &Connection{
 		Helper:   request.NewHelper(log),

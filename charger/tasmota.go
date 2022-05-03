@@ -35,10 +35,6 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if cc.URI == "" {
-		return nil, errors.New("missing uri")
-	}
-
 	return NewTasmota(cc.URI, cc.User, cc.Password, cc.StandbyPower)
 }
 
