@@ -4,6 +4,8 @@ package smaevcharger
 
 //Constants
 const (
+	ConstMinAcceptedVersion = "1.2.23"
+
 	ConstNConNCarNChar = float32(200111) // No Car connectec and no charging
 	ConstYConYCarNChar = float32(200112) // Car connected and no charging
 	ConstYConYCarYChar = float32(200113) // Car connected and charging

@@ -105,12 +105,12 @@ func NewSmaevcharger(host string, user string, password string) (api.Charger, er
 	if err != nil {
 		return wb, errors.New("failed to aquire software version, get in contact with dev team")
 	}
-	refVersion, err := version.NewVersion("1.2.23")
+	refVersion, err := version.NewVersion(smaevcharger.ConstMinAcceptedVersion)
 	if err != nil {
 		return wb, errors.New("failed to generate software version")
 	}
 	if SoftwareVersion.Compare(refVersion) < 0 {
-		return wb, errors.New("charger software version not supported - please update >= 1.2.23")
+		return wb, errors.New("charger software version not supported - please update >= " + smaevcharger.ConstMinAcceptedVersion)
 	}
 	return wb, nil
 }
