@@ -44,8 +44,8 @@ type Smaevcharger struct {
 	password         string // password
 	MeasurementsData []smaevcharger.Measurements
 	ParametersData   []smaevcharger.Parameters
-	updated time.Time
-	cache   time.Duration
+	updated          time.Time
+	cache            time.Duration
 }
 
 func init() {
@@ -88,7 +88,7 @@ func NewSmaevcharger(host string, user string, password string, cache time.Durat
 		host:     "http://" + host + "/api/v1",
 		user:     user,
 		password: password,
-		cache:	  cache,
+		cache:    cache,
 	}
 
 	ts, err := smaevcharger.TokenSource(log, wb.host, wb.user, wb.password)
@@ -167,7 +167,7 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 		case smaevcharger.ConstSwitchOeko: // Switch PV Loading
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstOptiCharge)
 			time.Sleep(time.Second) //Some Delay to prevent out of Sync - The Charger needs some time to react after setting have been changed
-			wb.GetChargerData(true)//Force Update after write
+			wb.GetChargerData(true) //Force Update after write
 			return fmt.Errorf("error while activating the charging process, switch position not on fast charging - SMA's own optimized charging was activated")
 		case smaevcharger.ConstSwitchFast: // Fast charging
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstFastCharge)
@@ -243,7 +243,7 @@ func (wb *Smaevcharger) Currents() (float64, float64, float64, error) {
 	return PhsA, PhsB, PhsC, nil
 }
 
-func (wb *Smaevcharger) GetChargerData(forceupdate bool)bool{
+func (wb *Smaevcharger) GetChargerData(forceupdate bool) bool {
 	if time.Since(wb.updated) < wb.cache && !forceupdate {
 		return true
 	}
@@ -279,7 +279,7 @@ func (wb *Smaevcharger) GetParameterData() bool {
 	return false
 }
 
-func (wb *Smaevcharger) GetMeasurement(id string) (interface{},error) {
+func (wb *Smaevcharger) GetMeasurement(id string) (interface{}, error) {
 	if !wb.GetChargerData(false) {
 		return nil, fmt.Errorf("failed to aquire measurement data")
 	}
@@ -294,16 +294,16 @@ func (wb *Smaevcharger) GetMeasurement(id string) (interface{},error) {
 	return nil, fmt.Errorf("failed to find measurement data")
 }
 
-func (wb *Smaevcharger) GetParameter(id string) (interface{},error) {
+func (wb *Smaevcharger) GetParameter(id string) (interface{}, error) {
 	if !wb.GetChargerData(false) {
-		return nil,fmt.Errorf("failed to aquire parameter data")
+		return nil, fmt.Errorf("failed to aquire parameter data")
 	}
 	var returndata interface{}
 
 	for i := range wb.ParametersData[0].Values {
 		if wb.ParametersData[0].Values[i].ChannelId == id {
 			returndata = wb.ParametersData[0].Values[i].Value
-			return returndata,nil
+			return returndata, nil
 		}
 	}
 	return nil, fmt.Errorf("failed to find parameter data")
@@ -311,7 +311,7 @@ func (wb *Smaevcharger) GetParameter(id string) (interface{},error) {
 
 func (wb *Smaevcharger) SendParameter(id string, value string) bool {
 	if wb.ParametersData == nil {
-		wb.GetChargerData(false)
+		wb.GetChargerData(true)
 	}
 	var parameter smaevcharger.SendParameter
 	var data smaevcharger.SendData
