@@ -220,7 +220,7 @@ export default {
 }
 .self-consumption {
 	background-color: var(--evcc-self);
-	color: var(--bs-white);
+	color: var(--bs-dark);
 }
 .pv-export {
 	background-color: var(--evcc-export);
