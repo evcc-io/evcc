@@ -103,14 +103,14 @@ func NewSmaevcharger(host string, user string, password string) (api.Charger, er
 	VersionText := strings.Replace(fmt.Sprint(wb.GetParameter("Parameter.Nameplate.PkgRev")), ".R", "", 1)
 	SoftwareVersion, err := version.NewVersion(VersionText)
 	if err != nil {
-		return wb, errors.New("Failed to aquire Software version, get in contact with dev team")
+		return wb, errors.New("failed to aquire software version, get in contact with dev team")
 	}
 	refVersion, err := version.NewVersion("1.2.23")
 	if err != nil {
-		return wb, errors.New("Failed to generate Software version")
+		return wb, errors.New("failed to generate software version")
 	}
 	if SoftwareVersion.Compare(refVersion) < 0 {
-		return wb, errors.New("Charger Softwareversion not supported - please update >= 1.2.23R")
+		return wb, errors.New("charger software version not supported - please update >= 1.2.23")
 	}
 	return wb, nil
 }
