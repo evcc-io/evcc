@@ -1,10 +1,6 @@
 package charger
 
 import (
-	"errors"
-	"fmt"
-	"strings"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tapo"
 	"github.com/evcc-io/evcc/util"
@@ -33,19 +29,11 @@ func NewTapoFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if cc.URI == "" {
-		return nil, errors.New("missing uri")
-	}
-
 	return NewTapo(cc.URI, cc.User, cc.Password, cc.StandbyPower)
 }
 
 // NewTapo creates Tapo charger
 func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
-	for _, suffix := range []string{"/", "/app"} {
-		uri = strings.TrimSuffix(uri, suffix)
-	}
-
 	conn, err := tapo.NewConnection(uri, user, password)
 	if err != nil {
 		return nil, err
@@ -54,10 +42,6 @@ func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
 	tapo := &Tapo{
 		conn:         conn,
 		standbypower: standbypower,
-	}
-
-	if user == "" || password == "" {
-		return tapo, fmt.Errorf("missing user or password")
 	}
 
 	return tapo, nil
