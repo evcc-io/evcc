@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -19,6 +20,10 @@ type Connection struct {
 
 // NewConnection creates TP-Link charger
 func NewConnection(uri string) (*Connection, error) {
+	if uri == "" {
+		return nil, errors.New("missing uri")
+	}
+
 	c := &Connection{
 		log: util.NewLogger("tplink"),
 		uri: net.JoinHostPort(uri, "9999"),

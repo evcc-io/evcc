@@ -1,8 +1,6 @@
 package meter
 
 import (
-	"errors"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tasmota"
 	"github.com/evcc-io/evcc/util"
@@ -23,10 +21,6 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.URI == "" {
-		return nil, errors.New("missing uri")
 	}
 
 	return tasmota.NewConnection(cc.URI, cc.User, cc.Password)

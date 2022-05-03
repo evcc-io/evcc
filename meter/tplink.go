@@ -1,8 +1,6 @@
 package meter
 
 import (
-	"errors"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tplink"
 	"github.com/evcc-io/evcc/util"
@@ -21,10 +19,6 @@ func NewTPLinkFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.URI == "" {
-		return nil, errors.New("missing uri")
 	}
 
 	return tplink.NewConnection(cc.URI)
