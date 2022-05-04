@@ -38,6 +38,9 @@ export default {
 	padding: 10px 0;
 	opacity: 1;
 	overflow: hidden;
+	transition-property: width, opacity;
+	transition-duration: var(--evcc-transition-medium), var(--evcc-transition-fast);
+	transition-timing-function: linear, ease;
 }
 .label-bar-scale--hidden {
 	opacity: 0;
@@ -70,10 +73,9 @@ export default {
 	border-radius: 0;
 	border: 0.25rem solid white;
 	transition-property: background-color, transform, border-radius, border;
-	/* will be overwritten by parent component to avoid initial transition */
-	transition-duration: 0s;
 	transition-delay: 0s;
 	transition-timing-function: linear;
+	transition-duration: var(--evcc-transition-very-fast), 500ms;
 }
 .label-bar--top .label-bar-icon {
 	margin-top: -12px;

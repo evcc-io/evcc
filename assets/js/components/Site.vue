@@ -1,5 +1,5 @@
 <template>
-	<div class="d-flex flex-column site">
+	<div class="d-flex flex-column site" :class="{ 'site--transitions': transitionsEnabled }">
 		<div class="container px-4 top-area">
 			<div class="d-flex justify-content-between align-items-center my-3">
 				<h1 class="d-block my-0">
@@ -13,7 +13,11 @@
 			<Energyflow v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area pt-4">
-			<Loadpoints class="mt-1 mt-sm-2 flex-grow-1" :loadpoints="loadpoints" />
+			<Loadpoints
+				class="mt-1 mt-sm-2 flex-grow-1"
+				:loadpoints="loadpoints"
+				:ui-ready="uiReady"
+			/>
 			<Vehicles v-if="$hiddenFeatures" />
 			<Footer v-bind="footer"></Footer>
 		</div>
@@ -75,9 +79,16 @@ export default {
 			uploadMessage: null,
 			uploadProgress: null,
 			sponsor: null,
+			uiReady: false,
+			transitionsEnabled: false,
 		};
 	},
 	computed: {
+		hasData: function () {
+			const hasPower = this.pvPower || this.gridPower || this.homePower;
+			const hasLoadpoint = this.loadpoints?.length > 0;
+			return hasPower && hasLoadpoint;
+		},
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
@@ -121,11 +132,26 @@ export default {
 			};
 		},
 	},
+	watch: {
+		hasData(newValue) {
+			if (!this.uiReady && newValue) {
+				this.$nextTick(() => {
+					this.uiReady = true;
+					window.setTimeout(() => {
+						this.transitionsEnabled = true;
+					}, 100);
+				});
+			}
+		},
+	},
 };
 </script>
 <style scoped>
 .site {
 	min-height: 100vh;
+}
+.site:not(.site--transitions) ::v-deep(*) {
+	transition: none !important;
 }
 .content-area {
 	background-color: var(--bs-gray-dark);

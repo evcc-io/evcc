@@ -1,5 +1,5 @@
 <template>
-	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
+	<div class="visualization">
 		<div class="label-scale d-flex">
 			<div class="d-flex justify-content-start flex-grow-1">
 				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
@@ -119,14 +119,6 @@ export default {
 			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
 		},
 	},
-	watch: {
-		totalAdjusted: function () {
-			if (!this.visualizationReady && this.totalAdjusted > 0)
-				setTimeout(() => {
-					this.visualizationReady = true;
-				}, 500);
-		},
-	},
 	mounted: function () {
 		this.$nextTick(function () {
 			window.addEventListener("resize", this.updateElementWidth);
@@ -209,7 +201,7 @@ export default {
 	position: relative;
 	width: 0;
 }
-.visualization--ready .site-progress-bar {
+.site-progress-bar {
 	transition-property: width;
 	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: linear;
@@ -231,13 +223,5 @@ export default {
 	margin: 0 0.2rem;
 	white-space: nowrap;
 	overflow: hidden;
-}
-.visualization--ready ::v-deep(.label-bar) {
-	transition-property: width, opacity;
-	transition-duration: var(--evcc-transition-medium), var(--evcc-transition-fast);
-	transition-timing-function: linear, ease;
-}
-.visualization--ready ::v-deep(.label-bar-icon) {
-	transition-duration: var(--evcc-transition-very-fast), 500ms;
 }
 </style>

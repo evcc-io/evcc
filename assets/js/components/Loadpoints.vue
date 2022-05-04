@@ -44,17 +44,25 @@ export default {
 	mixins: [collector],
 	props: {
 		loadpoints: Array,
+		uiReady: Boolean,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };
 	},
+	watch: {
+		uiReady(value) {
+			if (value) {
+				this.restoreSelection();
+			}
+		},
+	},
 	mounted() {
 		this.$refs.carousel.addEventListener("scroll", this.handleCarouselScroll, false);
-		this.restoreSelection();
 	},
 	unmounted() {
 		this.$refs.carousel.removeEventListener("scroll", this.handleCarouselScroll);
 	},
+
 	methods: {
 		handleCarouselScroll() {
 			const { scrollLeft } = this.$refs.carousel;
@@ -64,7 +72,7 @@ export default {
 		selected(index) {
 			return this.selectedIndex === index;
 		},
-		scrollTo(index) {
+		scrollTo(index, behavior = "smooth") {
 			if (this.selectedIndex === index) {
 				return;
 			}
@@ -73,7 +81,7 @@ export default {
 			const $carousel = this.$refs.carousel;
 			const width = $carousel.children[0].offsetWidth;
 			$carousel.style.scrollSnapType = "none";
-			$carousel.scrollTo({ top: 0, left: 7.5 + width * index, behavior: "smooth" });
+			$carousel.scrollTo({ top: 0, left: 7.5 + width * index, behavior });
 
 			clearTimeout(this.snapTimeout);
 			this.snapTimeout = setTimeout(() => {
@@ -82,22 +90,9 @@ export default {
 		},
 		restoreSelection() {
 			const lastIndex = readSelectedLoadpoint();
-			if (lastIndex === 0) {
-				return;
+			if (lastIndex > 0 && this.loadpoints[lastIndex]) {
+				this.scrollTo(1, "auto");
 			}
-			// scroll to selected loadpoint once data is available
-			const unwatch = this.$watch(
-				"loadpoints",
-				() => {
-					if (this.loadpoints[lastIndex]) {
-						this.$nextTick(() => {
-							this.scrollTo(1);
-							unwatch();
-						});
-					}
-				},
-				{ deep: true }
-			);
 		},
 	},
 };

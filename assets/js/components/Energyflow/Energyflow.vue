@@ -1,9 +1,5 @@
 <template>
-	<div
-		class="energyflow cursor-pointer position-relative"
-		:class="{ 'energyflow--open': detailsOpen }"
-		@click="toggleDetails"
-	>
+	<div class="energyflow cursor-pointer position-relative" @click="toggleDetails">
 		<div class="row">
 			<Visualization
 				class="col-12 mb-3 mb-md-4"
@@ -142,6 +138,7 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
+		uiReady: Boolean,
 	},
 	data: () => {
 		return { detailsOpen: readEnergyflowDetails(), detailsCompleteHeight: null };
@@ -185,11 +182,8 @@ export default {
 		},
 	},
 	watch: {
-		inPower(value) {
-			// calculate height once data is recieved
-			if (this.detailsCompleteHeight === null && value > 0) {
-				setTimeout(this.updateHeight, 100);
-			}
+		uiReady() {
+			this.updateHeight();
 		},
 	},
 	mounted() {
