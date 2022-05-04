@@ -28,8 +28,9 @@ const (
 	flagStop            = "stop"
 	flagStopDescription = "Stop charging"
 
-	flagDigits = "digits"
-	flagDelay  = "delay"
+	flagDigits      = "digits"
+	flagDelay       = "delay"
+	flagStopcurrent = "stopcurrent"
 )
 
 func selectByName(cmd *cobra.Command, conf *[]qualifiedConfig) error {

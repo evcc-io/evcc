@@ -30,10 +30,11 @@ func init() {
 	chargerRampCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
 	chargerRampCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	chargerRampCmd.PersistentFlags().StringP(flagDigits, "", "0", "fractional digits (0..2)")
+	chargerRampCmd.PersistentFlags().StringP(flagStopcurrent, "", "16", "stop current at A (6..20)")
 	chargerRampCmd.PersistentFlags().StringP(flagDelay, "", "1s", "ramp delay")
 }
 
-func ramp(c api.Charger, digits int, delay time.Duration) {
+func ramp(c api.Charger, digits int, stopcurrent int, delay time.Duration) {
 	steps := math.Pow10(digits)
 	delta := 1 / steps
 
@@ -45,7 +46,11 @@ func ramp(c api.Charger, digits int, delay time.Duration) {
 	}
 	defer func() { _ = c.Enable(false) }()
 
-	for i := 6.0; i <= 16; {
+	if stopcurrent > 20 {
+		stopcurrent = 20
+	}
+
+	for i := 6.0; i <= float64(stopcurrent); {
 		var err error
 
 		if cc, ok := c.(api.ChargerEx); ok {
@@ -113,6 +118,11 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		log.ERROR.Fatalln(err)
 	}
 
+	stopcurrent, err := strconv.Atoi(cmd.PersistentFlags().Lookup(flagStopcurrent).Value.String())
+	if err != nil {
+		log.ERROR.Fatalln(err)
+	}
+
 	delay, err := time.ParseDuration(cmd.PersistentFlags().Lookup(flagDelay).Value.String())
 	if err != nil {
 		log.ERROR.Fatalln(err)
@@ -122,7 +132,7 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		if _, ok := c.(api.ChargerEx); digits > 0 && !ok {
 			log.ERROR.Fatalln("charger does not support mA control")
 		}
-		ramp(c, digits, delay)
+		ramp(c, digits, stopcurrent, delay)
 	}
 
 	close(stopC)
