@@ -6,9 +6,10 @@
 			target="_blank"
 			class="btn btn-link ps-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
 		>
-			<shopicon-regular-moonstars class="me-2 text-gray-medium"></shopicon-regular-moonstars>
+			<Logo class="logo me-2" />
 			v{{ installed }}
-			<span class="ms-2 text-gray-medium">[{{ commit }}]</span>
+			<shopicon-regular-moonstars class="ms-2 text-gray-light"></shopicon-regular-moonstars>
+			<span class="ms-2 text-gray-light d-none d-sm-inline">[{{ commit }}]</span>
 		</a>
 		<button
 			v-else-if="newVersionAvailable"

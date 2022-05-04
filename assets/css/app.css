@@ -17,6 +17,7 @@
 	--evcc-yellow: #faf000;
 	--bs-gray-dark: #28293e;
 	--bs-gray-medium: #93949e;
+	--bs-gray-light: #b5b6c3;
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
@@ -124,6 +125,9 @@ a {
 }
 .text-gray-medium {
 	color: var(--bs-gray-medium);
+}
+.text-gray-light {
+	color: var(--bs-gray-light);
 }
 .bg-dark {
 	background-color: var(--bs-gray-dark) !important;

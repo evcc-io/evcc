@@ -15,12 +15,14 @@
 					:label="$t('main.vehicle.vehicleSoC')"
 					:value="`${vehicleSoC || '--'} %`"
 					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
+					on-dark
 				/>
 				<LabelAndValue
 					class="flex-grow-1 text-center"
 					:label="$t('main.vehicle.targetSoC')"
 					:value="`${displayTargetSoC} %`"
 					:extraValue="estimatedTargetRange"
+					on-dark
 				/>
 				<TargetCharge
 					class="flex-grow-1 text-end target-charge"
