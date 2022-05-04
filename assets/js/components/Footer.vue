@@ -1,6 +1,6 @@
 <template>
 	<footer class="footer">
-		<div class="container py-3">
+		<div class="container py-2">
 			<div class="d-flex justify-content-between">
 				<Version v-bind="version" />
 				<!--

@@ -1,9 +1,9 @@
 <template>
 	<div>
-		<LabelAndValue class="flex-grow-1" :label="$t('main.targetCharge.title')">
+		<LabelAndValue class="flex-grow-1" :label="$t('main.targetCharge.title')" on-dark>
 			<button
 				class="btn btn-link p-0 value text-end"
-				:class="buttonIsEnabled ? 'text-white' : 'text-gray'"
+				:class="buttonIsEnabled ? 'text-white' : 'text-gray-light'"
 				data-bs-toggle="modal"
 				:data-bs-target="`#${modalId}`"
 			>

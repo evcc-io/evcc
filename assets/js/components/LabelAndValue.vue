@@ -1,5 +1,5 @@
 <template>
-	<div class="root">
+	<div class="root" :class="{ 'root--dark': onDark }">
 		<div class="mb-2 label">{{ label }}</div>
 		<slot>
 			<h3 class="value m-0">
@@ -19,6 +19,7 @@ export default {
 		label: String,
 		value: String,
 		extraValue: String,
+		onDark: Boolean,
 	},
 };
 </script>
@@ -37,5 +38,10 @@ export default {
 .extraValue {
 	color: var(--bs-gray-medium);
 	font-size: 14px;
+}
+
+.root--dark .extraValue,
+.root--dark .label {
+	color: var(--bs-gray-light);
 }
 </style>
