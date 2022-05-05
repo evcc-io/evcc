@@ -36,9 +36,9 @@ type PrachtAlpha struct {
 }
 
 const (
-	prachtMaxCurrent        = 40004
-	prachtStatus            = 30107
-	prachtConfiguredCurrent = 30012
+	prachtMaxCurrent        = 40004 - 40001
+	prachtStatus            = 30107 - 30001
+	prachtConfiguredCurrent = 30012 - 30001
 )
 
 func init() {
@@ -58,7 +58,6 @@ func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error)
 		Settings: modbus.Settings{
 			ID: 1,
 		},
-		Timeout: 2 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
