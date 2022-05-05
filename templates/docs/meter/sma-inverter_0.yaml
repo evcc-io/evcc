@@ -8,11 +8,11 @@ render:
       template: sma-inverter
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      password: # Anlagenpasswort / Installateurspasswort # Optional
+      password: # Passwort für Benutzergruppe Benutzer # Optional
   - usage: battery
     default: |
       type: template
       template: sma-inverter
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      password: # Anlagenpasswort / Installateurspasswort # Optional
+      password: # Passwort für Benutzergruppe Benutzer # Optional
