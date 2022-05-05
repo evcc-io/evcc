@@ -13,8 +13,8 @@ params:
     default: 15
 render: |
   type: shelly
-  uri: http://{{ .host }}  # shelly device ip address (local)
+  uri: http://{{ .host }}
   {{ if ne .user "" }}user: {{ .user }}{{ end }}
   {{ if ne .password "" }}password: {{ .password }}{{ end }}  
   channel: {{ .channel }}  # shelly device relay channel 
-  standbypower: {{ .standbypower }} # treat as charging above this power
+  standbypower: {{ .standbypower }}

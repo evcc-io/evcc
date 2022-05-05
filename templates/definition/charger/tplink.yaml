@@ -11,4 +11,4 @@ params:
 render: |
   type: tplink
   uri: {{ .host }}
-  standbypower: {{ .standbypower }}  # treat as charging above this power
+  standbypower: {{ .standbypower }}
