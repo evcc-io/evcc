@@ -1,24 +1,18 @@
 package charger
 
 import (
-	"bytes"
-	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/tplink"
+	"github.com/evcc-io/evcc/meter/tplink"
 	"github.com/evcc-io/evcc/util"
 )
 
 // TPLink charger implementation
 type TPLink struct {
-	log          *util.Logger
-	uri          string
+	conn         *tplink.Connection
 	standbypower float64
 }
 
@@ -46,9 +40,13 @@ func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewTPLink creates TP-Link charger
 func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
+	conn, err := tplink.NewConnection(uri)
+	if err != nil {
+		return nil, err
+	}
+
 	c := &TPLink{
-		log:          util.NewLogger("tplink"),
-		uri:          net.JoinHostPort(uri, "9999"),
+		conn:         conn,
 		standbypower: standbypower,
 	}
 	return c, nil
@@ -56,35 +54,35 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 
 // Enabled implements the api.Charger interface
 func (c *TPLink) Enabled() (bool, error) {
-	var resp tplink.SystemResponse
-	if err := c.execCmd(`{"system":{"get_sysinfo":null}}`, &resp); err != nil {
+	var res tplink.SystemResponse
+	if err := c.conn.ExecCmd(`{"system":{"get_sysinfo":null}}`, &res); err != nil {
 		return false, err
 	}
 
-	if err := resp.System.GetSysinfo.ErrCode; err != 0 {
+	if err := res.System.GetSysinfo.ErrCode; err != 0 {
 		return false, fmt.Errorf("get_sysinfo error %d", err)
 	}
 
-	if !strings.Contains(resp.System.GetSysinfo.Feature, "ENE") {
-		return false, errors.New(resp.System.GetSysinfo.Model + " not supported, energy meter feature missing")
+	if !strings.Contains(res.System.GetSysinfo.Feature, "ENE") {
+		return false, errors.New(res.System.GetSysinfo.Model + " not supported, energy meter feature missing")
 	}
 
-	return resp.System.GetSysinfo.RelayState == 1, nil
+	return res.System.GetSysinfo.RelayState == 1, nil
 }
 
 // Enable implements the api.Charger interface
 func (c *TPLink) Enable(enable bool) error {
+	var res tplink.SystemResponse
 	cmd := `{"system":{"set_relay_state":{"state":0}}}`
 	if enable {
 		cmd = `{"system":{"set_relay_state":{"state":1}}}`
 	}
 
-	var resp tplink.SystemResponse
-	if err := c.execCmd(cmd, &resp); err != nil {
+	if err := c.conn.ExecCmd(cmd, &res); err != nil {
 		return err
 	}
 
-	if err := resp.System.SetRelayState.ErrCode; err != 0 {
+	if err := res.System.SetRelayState.ErrCode; err != 0 {
 		return fmt.Errorf("set_relay_state error %d", err)
 	}
 
@@ -123,89 +121,29 @@ var _ api.Meter = (*TPLink)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *TPLink) CurrentPower() (float64, error) {
-	var resp tplink.EmeterResponse
-	if err := c.execCmd(`{"emeter":{"get_realtime":null}}`, &resp); err != nil {
-		return 0, err
+	var power float64
+
+	// set fix static power in static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if on {
+			power = -c.standbypower
+		}
+		return power, err
 	}
 
-	if err := resp.Emeter.GetRealtime.ErrCode; err != 0 {
-		return 0, fmt.Errorf("get_realtime error %d", err)
-	}
-
-	power := resp.Emeter.GetRealtime.PowerMw / 1000
-	if power == 0 {
-		power = resp.Emeter.GetRealtime.Power
-	}
-
-	// ignore standby power
-	if power < c.standbypower {
+	// ignore power in standby mode
+	power, err := c.conn.CurrentPower()
+	if c.standbypower >= 0 && power <= c.standbypower {
 		power = 0
 	}
 
-	return power, nil
+	return power, err
 }
 
 var _ api.MeterEnergy = (*TPLink)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *TPLink) TotalEnergy() (float64, error) {
-	var resp tplink.EmeterResponse
-	if err := c.execCmd(`{"emeter":{"get_realtime":null}}`, &resp); err != nil {
-		return 0, err
-	}
-
-	if err := resp.Emeter.GetRealtime.ErrCode; err != 0 {
-		return 0, fmt.Errorf("get_realtime error %d", err)
-	}
-
-	energy := resp.Emeter.GetRealtime.TotalWh / 1000
-	if energy == 0 {
-		energy = resp.Emeter.GetRealtime.Total
-	}
-
-	return energy, nil
-}
-
-// execCmd executes an TP-Link Smart Home Protocol command and provides the response
-func (c *TPLink) execCmd(cmd string, res interface{}) error {
-	// encode command message
-	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
-	var key byte = 171 // initialization vector
-	for i := 0; i < len(cmd); i++ {
-		key = key ^ cmd[i]
-		_ = buf.WriteByte(key)
-	}
-
-	// write 4 bytes command length to start of buffer
-	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()-4))
-
-	// open connection via TP-Link Smart Home Protocol
-	conn, err := net.DialTimeout("tcp", c.uri, 5*time.Second)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	// send command
-	if _, err = buf.WriteTo(conn); err != nil {
-		return err
-	}
-
-	// read response
-	resp := make([]byte, 8192)
-	len, err := conn.Read(resp)
-	if err != nil {
-		return err
-	}
-
-	// decode response message
-	key = 171 // reset initialization vector
-	for i := 4; i < len; i++ {
-		dec := key ^ resp[i]
-		key = resp[i]
-		_ = buf.WriteByte(dec)
-	}
-	c.log.TRACE.Printf("recv: %s", buf.String())
-
-	return json.Unmarshal(buf.Bytes(), res)
+	return c.conn.TotalEnergy()
 }

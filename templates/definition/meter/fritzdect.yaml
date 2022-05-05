@@ -3,7 +3,7 @@ products:
   - brand: AVM
     description:
       generic: FritzDECT
-group: sockets
+group: switchsockets
 params:
   - name: usage
     choice: ["pv", "charge"]

@@ -5,10 +5,9 @@ products:
       generic: H-Series Smart Plug
 group: switchsockets
 params:
+  - name: usage
+    choice: ["pv"]
   - name: host
-  - name: standbypower
-    default: 15
 render: |
   type: tplink
   uri: {{ .host }}
-  standbypower: {{ .standbypower }}

@@ -52,6 +52,18 @@ type Connection struct {
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
 func NewConnection(uri, user, password string) (*Connection, error) {
+	if uri == "" {
+		return nil, errors.New("missing uri")
+	}
+
+	if user == "" || password == "" {
+		return nil, fmt.Errorf("missing user or password")
+	}
+
+	for _, suffix := range []string{"/", "/app"} {
+		uri = strings.TrimSuffix(uri, suffix)
+	}
+
 	log := util.NewLogger("tapo")
 
 	// nosemgrep:go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1
@@ -208,7 +220,7 @@ func (d *Connection) ExecMethod(method string, deviceOn bool) (*DeviceResponse, 
 	return res, nil
 }
 
-// execCmd executes a Tapo api command and provides the response
+// ExecCmd executes a Tapo api command and provides the response
 func (d *Connection) ExecCmd(method string, enable bool) (*DeviceResponse, error) {
 	// refresh session id
 	if time.Since(d.updated) >= 600*time.Minute {

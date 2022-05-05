@@ -1,7 +1,7 @@
 product:
   brand: AVM
   description: FritzDECT
-  group: Steckdosen
+  group: Schaltbare Steckdosen
 render:
   - usage: pv
     default: |
