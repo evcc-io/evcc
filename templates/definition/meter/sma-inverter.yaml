@@ -11,7 +11,7 @@ params:
   - name: password
     mask: true
     help:
-      en: Password for User Group Standard
+      en: Password for user group Standard
       de: Passwort für Benutzergruppe Benutzer
 render: |
   type: sma
