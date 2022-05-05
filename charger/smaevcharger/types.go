@@ -9,6 +9,7 @@ const (
 	ConstNConNCarNChar = float32(200111) // No Car connectec and no charging
 	ConstYConYCarNChar = float32(200112) // Car connected and no charging
 	ConstYConYCarYChar = float32(200113) // Car connected and charging
+	ConstChargerLocked = float32(5169)   // Charger Locked
 
 	ConstFastCharge = "4718" // Schnellladen - 4718
 	ConstOptiCharge = "4719" // Optimiertes Laden - 4719
@@ -19,6 +20,12 @@ const (
 	ConstSwitchFast = float32(4718) // Switch in Fast Charge Mode
 
 	ConstSendParameterFormat = "2006-01-02T15:04:05.000Z"
+
+	ConstChargerAppLockEnabled  = "1129"
+	ConstChargerAppLockDisabled = "1130"
+
+	ConstChargerManualLockEnabled  = "5171"
+	ConstChargerManualLockDisabled = "5172"
 )
 
 // Measurements Data json Response structure

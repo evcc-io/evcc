@@ -19,7 +19,6 @@ type Token struct {
 	ExpiresIn    int    `json:"expires_in"`
 	TokenType    string `json:"token_type"`
 	RefreshToken string `json:"refresh_token"`
-	//UiIdleTime    string `json:"uiIdleTime"`
 }
 
 func (t *Token) AsOAuth2Token() *oauth2.Token {
@@ -44,7 +43,7 @@ type tokenSource struct {
 	Password string
 }
 
-// TokenSource creates an Easee token source
+// TokenSource creates an SMAevCharger token source
 func TokenSource(log *util.Logger, host, user, password string) (oauth2.TokenSource, error) {
 	c := &tokenSource{
 		Helper:   request.NewHelper(log),
@@ -72,13 +71,11 @@ func TokenSource(log *util.Logger, host, user, password string) (oauth2.TokenSou
 }
 
 func (c *tokenSource) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	//Token refresh not working, as a workaround we aquire a new token with the password and the username
 
 	Uri := c.Host + "/token"
 	data := url.Values{
-		"grant_type": {"password"},
-		"password":   {c.Password},
-		"username":   {c.User},
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token.RefreshToken},
 	}
 
 	req, err := request.New(http.MethodPost, Uri, strings.NewReader(data.Encode()), request.URLEncoding)

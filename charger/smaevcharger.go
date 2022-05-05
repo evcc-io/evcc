@@ -46,6 +46,7 @@ type Smaevcharger struct {
 	ParametersData   []smaevcharger.Parameters
 	updated          time.Time
 	cache            time.Duration
+	oldstate         float32
 }
 
 func init() {
@@ -117,6 +118,23 @@ func NewSmaevcharger(host string, user string, password string, cache time.Durat
 	if SoftwareVersion.Compare(refVersion) < 0 {
 		return wb, errors.New("charger software version not supported - please update >= " + smaevcharger.ConstMinAcceptedVersion)
 	}
+
+	//Lock Chargers Auto load functionality to prevent "charger out of sync"
+	var data []smaevcharger.SendData
+	var datapoint smaevcharger.SendData
+
+	datapoint.ChannelId = "Parameter.Chrg.ChrgLok"
+	datapoint.Value = smaevcharger.ConstChargerAppLockDisabled
+	data = append(data, datapoint)
+
+	datapoint.ChannelId = "Parameter.Chrg.ChrgApv"
+	datapoint.Value = smaevcharger.ConstChargerManualLockEnabled
+	data = append(data, datapoint)
+
+	wb.SendMultiParameter(data)
+	wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstStopCharge) //need to send this command as a second command to prevent auto state change
+	wb.GetChargerData(true)
+
 	return wb, nil
 }
 
@@ -125,6 +143,13 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 	StateChargerCharging, err := wb.GetMeasurement("Measurement.Operation.EVeh.ChaStt")
 	if err != nil {
 		return api.StatusNone, err
+	}
+	if StateChargerCharging != wb.oldstate {
+		wb.oldstate = StateChargerCharging.(float32)
+		if StateChargerCharging == smaevcharger.ConstYConYCarNChar {
+			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstStopCharge)
+			wb.GetChargerData(true) //Force Update after write
+		}
 	}
 	switch StateChargerCharging {
 	case smaevcharger.ConstNConNCarNChar: // No Car connectec and no charging
@@ -166,7 +191,6 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 		switch StateChargerSwitch {
 		case smaevcharger.ConstSwitchOeko: // Switch PV Loading
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstOptiCharge)
-			time.Sleep(time.Second) //Some Delay to prevent out of Sync - The Charger needs some time to react after setting have been changed
 			wb.GetChargerData(true) //Force Update after write
 			return fmt.Errorf("error while activating the charging process, switch position not on fast charging - SMA's own optimized charging was activated")
 		case smaevcharger.ConstSwitchFast: // Fast charging
@@ -175,7 +199,6 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 	} else {
 		wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.ConstStopCharge)
 	}
-	time.Sleep(time.Second) //Some Delay to prevent out of Sync - The Charger needs some time to react after setting have been changed
 	wb.GetChargerData(true) //Force Update after write
 	return nil
 }
