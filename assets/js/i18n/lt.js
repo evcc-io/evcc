@@ -90,6 +90,7 @@ export default {
       vehicleSoC: "Įkrova",
       targetSoC: "Limitas",
       none: "Nėra automobilio",
+      unknown: "Nežinomas automobilis",
     },
     vehicleSoC: {
       disconnected: "neprijungtas",
