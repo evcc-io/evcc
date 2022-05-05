@@ -89,7 +89,7 @@ export default {
       fallbackName: "Automobilis",
       vehicleSoC: "Įkrova",
       targetSoC: "Limitas",
-      noVehicle: "Nėra automobilio",
+      none: "Nėra automobilio",
     },
     vehicleSoC: {
       disconnected: "neprijungtas",
