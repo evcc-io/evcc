@@ -11,8 +11,8 @@ params:
   - name: password
     mask: true
     help:
-      en: Password for User Group 'Standard'
-      de: Passwort für Benutzergruppe 'Benutzer'
+      en: Password for User Group Standard
+      de: Passwort für Benutzergruppe Benutzer
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname
