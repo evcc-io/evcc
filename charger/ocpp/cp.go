@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -11,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"gopkg.in/yaml.v3"
 )
 
 const timeout = 2 * time.Minute
@@ -44,10 +46,6 @@ type smartChargingProfile struct {
 	MaxChargingProfilesInstalled int
 }
 
-type ChargeTransaction struct {
-	MeterValueStart int
-}
-
 type CP struct {
 	mu  sync.Mutex
 	log *util.Logger
@@ -59,8 +57,6 @@ type CP struct {
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
 
-	transaction ChargeTransaction
-
 	meterSupported            bool
 	measureDoneCh             chan struct{}
 	latestMeterValueTimestamp time.Time
@@ -69,6 +65,56 @@ type CP struct {
 
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
+
+	storeTransactions  bool
+	transactions       Transactions
+	currentTransaction Transaction
+}
+
+func (cp *CP) StoreTransactions(includingRunning bool) {
+	if cp.storeTransactions {
+
+	}
+
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	txns := cp.transactions
+	if includingRunning {
+		txns = append(txns, cp.currentTransaction)
+	}
+
+	data, err := yaml.Marshal(txns)
+	if err != nil {
+		cp.log.ERROR.Printf("failed to marshal transactions: %s", err)
+		return
+	}
+
+	file, err := os.OpenFile(cp.id+"_transactions.yaml", os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600)
+	if err != nil {
+		cp.log.ERROR.Printf("failed to open transactions file: %s", err)
+		return
+	}
+
+	if _, err := file.Write(data); err != nil {
+		cp.log.ERROR.Printf("failed to write transactions file: %s", err)
+		return
+	}
+}
+
+func (cp *CP) AddTransaction() {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	current := cp.currentTransaction
+	cp.currentTransaction.Reset()
+
+	if !cp.storeTransactions {
+		cp.transactions = []Transaction{current} // only keep latest transaction
+		return
+	}
+
+	cp.transactions = append(cp.transactions, current)
 }
 
 func (cp *CP) DetectCapabilities(opts []core.ConfigurationKey) error {
@@ -206,6 +252,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	res := api.StatusNone
 
 	cp.log.TRACE.Printf("last status update from CP: %s", cp.updated.Format(time.RFC3339))
+	cp.log.TRACE.Printf("current transaction ID: %s", cp.txn)
 
 	if time.Since(cp.updated) > timeout {
 		return res, api.ErrTimeout
@@ -252,18 +299,20 @@ func (cp *CP) TotalEnergy() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
-		v, err := strconv.ParseInt(energy.Value, 10, 64)
-		if err != nil {
-			return 0, err
-		}
+	// if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+	// 	v, err := strconv.ParseInt(energy.Value, 10, 64)
+	// 	if err != nil {
+	// 		return 0, err
+	// 	}
 
-		loaded := float64(int(v)-cp.transaction.MeterValueStart) / 1000
+	return float64(cp.currentTransaction.Charged) / 1000, nil
 
-		return loaded, nil
-	}
+	// loaded := float64(int(v)-cp.currentTransaction.MeterValueStart) / 1000
 
-	return 0, nil
+	// return loaded, nil
+	// }
+
+	// return 0, nil
 }
 
 func getKeyCurrentPhase(phase int) string {

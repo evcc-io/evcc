@@ -1,7 +1,7 @@
 package ocpp
 
 import (
-	"sync/atomic"
+	"strconv"
 	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -102,6 +102,12 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 	if request != nil {
 		cp.mu.Lock()
 		cp.setMeterValues(request)
+
+		if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+			v, _ := strconv.ParseInt(energy.Value, 10, 64)
+			cp.currentTransaction.Charged = v - cp.currentTransaction.MeterValueStart
+		}
+
 		cp.mu.Unlock()
 	}
 
@@ -140,11 +146,12 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 	if request != nil {
 		if request.Timestamp.After(time.Now().Add(-1 * time.Hour)) { // only respect transactions in the last hour
 			cp.mu.Lock()
-			cp.txn = int(atomic.AddInt64(&txnCount, 1))
-			cp.transaction = ChargeTransaction{MeterValueStart: request.MeterStart}
+			cp.txn = cp.transactions.GetLatestID() + 1
+			cp.currentTransaction = NewTransaction(cp.txn, request.IdTag, request.Timestamp.Time, request.MeterStart)
+
 			cp.mu.Unlock()
 
-			res.TransactionId = cp.txn
+			res.TransactionId = cp.currentTransaction.ID
 
 			if request.Timestamp.After(time.Now().Add(-30*time.Second)) && cp.meterSupported && !cp.meterTrickerRunning {
 				go func() {
@@ -168,9 +175,12 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 			}
 		} else {
 			// TODO: Handle old transactions e.g. store them
+			// FIXME: we know the last transaction
 			res.TransactionId = 1 // change 1 to the last known global transaction. Needs persistence
 		}
 	}
+
+	cp.StoreTransactions(true)
 
 	return res, nil
 }
@@ -181,8 +191,10 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 	// reset transaction
 	if request != nil {
 		cp.mu.Lock()
-		cp.txn = 0
-		cp.transaction.MeterValueStart = 0
+
+		cp.currentTransaction.Finish(request.IdTag, request.Timestamp.Time, request.MeterStop)
+		cp.AddTransaction()
+
 		cp.mu.Unlock()
 
 		// TODO: Handle old transaction. Store them, check for the starting transaction event
@@ -202,11 +214,7 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		Instance().TriggerMeterValueRequest(cp)
 	}
 
-	// fix out of sync after the CP responded with a transaction stop but not sending a status update...
-	// think about triggering a status update
-	if cp.status.Status == core.ChargePointStatusCharging {
-		cp.status.Status = core.ChargePointStatusAvailable
-	}
+	cp.StoreTransactions(false)
 
 	return res, nil
 }

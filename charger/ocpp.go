@@ -43,11 +43,12 @@ func init() {
 // NewOCPPFromConfig creates a OCPP charger from generic config
 func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		StationId      string
-		IdTag          string
-		Connector      int
-		MeterSupported bool
-		MeterInterval  string
+		StationId         string
+		IdTag             string
+		Connector         int
+		MeterSupported    bool
+		MeterInterval     string
+		StoreTransactions bool
 	}{
 		Connector:     1,
 		MeterInterval: "0", // disable meter smaple data as we are taking care on our own
@@ -57,12 +58,12 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterSupported, cc.MeterInterval)
+	return NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterSupported, cc.MeterInterval, cc.StoreTransactions)
 }
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterInterval string) (*OCPP, error) {
-	cp := ocpp.Instance().Register(id, meterSupported)
+func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterInterval string, storeTransactions bool) (*OCPP, error) {
+	cp := ocpp.Instance().Register(id, meterSupported, storeTransactions)
 	c := &OCPP{
 		log:       util.NewLogger(fmt.Sprintf("ocpp-%s:%d", id, connector)),
 		cp:        cp,
@@ -177,7 +178,12 @@ func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterI
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	return c.cp.TransactionID() > 0, nil
+	current, err := c.cp.Status()
+	if current == api.StatusC {
+		return true, err
+	}
+
+	return false, err
 }
 
 func (c *OCPP) wait(err error, rc chan error) error {
