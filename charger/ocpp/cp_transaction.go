@@ -27,22 +27,3 @@ func (t *Transaction) Finish(idTag string, end time.Time, meterValue int) {
 	t.MeterValueStop = int64(meterValue)
 	t.End = end
 }
-
-func (t *Transaction) Reset() {
-	*t = Transaction{}
-}
-
-type Transactions []Transaction
-
-// not efficient but okay for now
-func (t *Transactions) GetLatestID() int {
-	latestID := 0
-
-	for _, t := range *t {
-		if t.ID > latestID {
-			latestID = t.ID
-		}
-	}
-
-	return latestID
-}

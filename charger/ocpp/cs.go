@@ -24,7 +24,6 @@ func (cs *CS) Register(id string, meterSupported bool, storeTransactions bool) *
 		latestMeterValueTimestamp: time.Now(),
 		measureands:               make(map[string]types.SampledValue),
 		meterSupported:            meterSupported,
-		storeTransactions:         storeTransactions,
 	}
 
 	cp.initialized = sync.NewCond(&cp.mu)
@@ -33,24 +32,6 @@ func (cs *CS) Register(id string, meterSupported bool, storeTransactions bool) *
 	defer cs.mu.Unlock()
 
 	cs.cps[id] = cp
-
-	if storeTransactions {
-		txns, err := cs.loadTransactionFile(id)
-		if err != nil {
-			panic(err)
-		}
-
-		cp.transactions = txns
-		cp.txn = txns.GetLatestID()
-	} else {
-		txn, err := cs.loadLastTransaction(id)
-		if err != nil {
-			panic(err)
-		}
-
-		cp.transactions = []Transaction{txn}
-		cp.txn = txn.ID
-	}
 
 	return cp
 }

@@ -2,7 +2,6 @@ package ocpp
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -12,13 +11,9 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
-	"gopkg.in/yaml.v3"
 )
 
 const timeout = 2 * time.Minute
-
-// txnCount is the global transaction id counter
-var txnCount int64
 
 type smartchargingChargeProfileKey string
 
@@ -50,7 +45,6 @@ type CP struct {
 	mu  sync.Mutex
 	log *util.Logger
 	id  string
-	txn int // current transaction
 
 	updated     time.Time
 	initialized *sync.Cond
@@ -66,52 +60,7 @@ type CP struct {
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
 
-	storeTransactions  bool
-	transactions       Transactions
 	currentTransaction Transaction
-}
-
-func (cp *CP) StoreTransactions(includingRunning bool) {
-	if cp.storeTransactions {
-
-	}
-
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
-	txns := cp.transactions
-	if includingRunning {
-		txns = append(txns, cp.currentTransaction)
-	}
-
-	data, err := yaml.Marshal(txns)
-	if err != nil {
-		cp.log.ERROR.Printf("failed to marshal transactions: %s", err)
-		return
-	}
-
-	file, err := os.OpenFile(cp.id+"_transactions.yaml", os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600)
-	if err != nil {
-		cp.log.ERROR.Printf("failed to open transactions file: %s", err)
-		return
-	}
-
-	if _, err := file.Write(data); err != nil {
-		cp.log.ERROR.Printf("failed to write transactions file: %s", err)
-		return
-	}
-}
-
-func (cp *CP) AddTransaction() {
-	current := cp.currentTransaction
-	cp.currentTransaction.Reset()
-
-	if !cp.storeTransactions {
-		cp.transactions = []Transaction{current} // only keep latest transaction
-		return
-	}
-
-	cp.transactions = append(cp.transactions, current)
 }
 
 func (cp *CP) DetectCapabilities(opts []core.ConfigurationKey) error {
@@ -239,7 +188,7 @@ func (cp *CP) TransactionID() int {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	return cp.txn
+	return cp.currentTransaction.ID
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {
@@ -249,7 +198,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	res := api.StatusNone
 
 	cp.log.TRACE.Printf("last status update from CP: %s", cp.updated.Format(time.RFC3339))
-	cp.log.TRACE.Printf("current transaction ID: %d", cp.txn)
+	cp.log.TRACE.Printf("current transaction ID: %d", cp.currentTransaction.ID)
 
 	if time.Since(cp.updated) > timeout {
 		return res, api.ErrTimeout

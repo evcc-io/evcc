@@ -146,8 +146,7 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 	if request != nil {
 		if request.Timestamp.After(time.Now().Add(-1 * time.Hour)) { // only respect transactions in the last hour
 			cp.mu.Lock()
-			cp.txn = cp.transactions.GetLatestID() + 1
-			cp.currentTransaction = NewTransaction(cp.txn, request.IdTag, request.Timestamp.Time, request.MeterStart)
+			cp.currentTransaction = NewTransaction(cp.currentTransaction.ID+1, request.IdTag, request.Timestamp.Time, request.MeterStart)
 
 			cp.mu.Unlock()
 
@@ -180,8 +179,6 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 		}
 	}
 
-	cp.StoreTransactions(true)
-
 	return res, nil
 }
 
@@ -193,7 +190,6 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		cp.mu.Lock()
 
 		cp.currentTransaction.Finish(request.IdTag, request.Timestamp.Time, request.MeterStop)
-		cp.AddTransaction()
 
 		cp.mu.Unlock()
 
@@ -213,8 +209,6 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 
 		Instance().TriggerMeterValueRequest(cp)
 	}
-
-	cp.StoreTransactions(false)
 
 	return res, nil
 }
