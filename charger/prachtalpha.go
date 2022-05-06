@@ -36,9 +36,8 @@ type PrachtAlpha struct {
 }
 
 const (
-	prachtMaxCurrent        = 40004 - 40001
-	prachtStatus            = 30107 - 30001
-	prachtConfiguredCurrent = 30012 - 30001
+	prachtMaxCurrent = 40004 - 40001
+	prachtStatus     = 30107 - 30001
 )
 
 func init() {
@@ -88,6 +87,7 @@ func NewPrachtAlpha(uri, device, comset string, baudrate int, proto modbus.Proto
 	wb := &PrachtAlpha{
 		conn:    conn,
 		vehicle: vehicle,
+		curr:    6,
 	}
 
 	return wb, err
@@ -123,7 +123,7 @@ func (wb *PrachtAlpha) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *PrachtAlpha) Enabled() (bool, error) {
-	reg := wb.register(prachtConfiguredCurrent)
+	reg := wb.register(prachtMaxCurrent)
 
 	b, err := wb.conn.ReadInputRegisters(reg, 1)
 	if err != nil {
