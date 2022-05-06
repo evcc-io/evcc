@@ -17,7 +17,7 @@ type CS struct {
 	cps map[string]*CP
 }
 
-func (cs *CS) Register(id string, meterSupported bool, storeTransactions bool) *CP {
+func (cs *CS) Register(id string, meterSupported bool) *CP {
 	cp := &CP{
 		id:                        id,
 		log:                       util.NewLogger("ocpp-cp"),

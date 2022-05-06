@@ -119,3 +119,13 @@ func (cs *CS) OnFirmwareStatusNotification(chargePointId string, request *firmwa
 	return cp.FirmwareStatusNotification(request)
 
 }
+
+func (cs *CS) TriggerResetRequest(cp *CP, resetType core.ResetType) {
+	callback := func(request *core.ResetConfirmation, err error) {
+		cs.log.TRACE.Printf("TriggerResetRequest %T: %+v", request, request)
+	}
+
+	if err := cs.cs.Reset(cp.id, callback, resetType); err != nil {
+		cs.log.DEBUG.Printf("failed sending TriggerResetRequest: %s", err)
+	}
+}

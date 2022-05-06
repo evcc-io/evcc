@@ -43,12 +43,12 @@ func init() {
 // NewOCPPFromConfig creates a OCPP charger from generic config
 func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		StationId         string
-		IdTag             string
-		Connector         int
-		MeterSupported    bool
-		MeterInterval     string
-		StoreTransactions bool
+		StationId      string
+		IdTag          string
+		Connector      int
+		MeterSupported bool
+		MeterInterval  string
+		InitialReset   string
 	}{
 		Connector:     1,
 		MeterInterval: "0", // disable meter smaple data as we are taking care on our own
@@ -58,12 +58,21 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterSupported, cc.MeterInterval, cc.StoreTransactions)
+	switch cc.InitialReset {
+	case
+		"",
+		string(core.ResetTypeSoft),
+		string(core.ResetTypeHard):
+	default:
+		return nil, fmt.Errorf("failure: unknown configuration option detected for reset: %s", cc.InitialReset)
+	}
+
+	return NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterSupported, cc.MeterInterval, cc.InitialReset)
 }
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterInterval string, storeTransactions bool) (*OCPP, error) {
-	cp := ocpp.Instance().Register(id, meterSupported, storeTransactions)
+func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterInterval string, initialReset string) (*OCPP, error) {
+	cp := ocpp.Instance().Register(id, meterSupported)
 	c := &OCPP{
 		log:       util.NewLogger(fmt.Sprintf("ocpp-%s:%d", id, connector)),
 		cp:        cp,
@@ -171,7 +180,16 @@ func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterI
 		}
 	}
 
-	// todo check running transaction
+	if initialReset != "" {
+		t := core.ResetTypeSoft
+		if initialReset == string(core.ResetTypeHard) {
+			t = core.ResetTypeHard
+		}
+
+		ocpp.Instance().TriggerResetRequest(cp, t)
+	}
+
+	// TODO: check for running transaction
 
 	return c, nil
 }
