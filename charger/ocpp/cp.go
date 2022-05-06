@@ -249,7 +249,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	res := api.StatusNone
 
 	cp.log.TRACE.Printf("last status update from CP: %s", cp.updated.Format(time.RFC3339))
-	cp.log.TRACE.Printf("current transaction ID: %s", cp.txn)
+	cp.log.TRACE.Printf("current transaction ID: %d", cp.txn)
 
 	if time.Since(cp.updated) > timeout {
 		return res, api.ErrTimeout
