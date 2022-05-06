@@ -103,9 +103,6 @@ func (cp *CP) StoreTransactions(includingRunning bool) {
 }
 
 func (cp *CP) AddTransaction() {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
 	current := cp.currentTransaction
 	cp.currentTransaction.Reset()
 
