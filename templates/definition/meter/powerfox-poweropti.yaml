@@ -2,7 +2,7 @@ template: powerfox-poweropti
 products:
   - brand: Powerfox
     description:
-      generic: Poweropti (Cloud)
+      generic: Poweropti
 params:
   - name: usage
     choice: ["grid"]

@@ -28,7 +28,7 @@ func (r clientRegistry) Get(broker string) (*Client, error) {
 var registry clientRegistry = make(map[string]*Client)
 
 // RegisteredClient reuses an registered Mqtt publisher or creates a new one
-func RegisteredClient(log *util.Logger, broker, user, password, clientID string, qos byte, opts ...Option) (*Client, error) {
+func RegisteredClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, opts ...Option) (*Client, error) {
 	key := fmt.Sprintf("%s.%s:%s", broker, user, password)
 	client, err := registry.Get(key)
 
@@ -37,7 +37,7 @@ func RegisteredClient(log *util.Logger, broker, user, password, clientID string,
 			clientID = ClientID()
 		}
 
-		if client, err = NewClient(log, broker, user, password, clientID, qos, opts...); err == nil {
+		if client, err = NewClient(log, broker, user, password, clientID, qos, insecure, opts...); err == nil {
 			registry.Add(key, client)
 		}
 	}
@@ -52,7 +52,7 @@ func RegisteredClientOrDefault(log *util.Logger, cc Config) (*Client, error) {
 	client := Instance
 
 	if cc.Broker != "" {
-		client, err = RegisteredClient(log, cc.Broker, cc.User, cc.Password, cc.ClientID, 1)
+		client, err = RegisteredClient(log, cc.Broker, cc.User, cc.Password, cc.ClientID, 1, cc.Insecure)
 	}
 
 	if client == nil && err == nil {

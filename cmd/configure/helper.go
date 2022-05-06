@@ -315,7 +315,7 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 
 		log := util.NewLogger("mqtt")
 
-		if mqtt.Instance, err = mqtt.RegisteredClient(log, broker, user, password, "", 1); err == nil {
+		if mqtt.Instance, err = mqtt.RegisteredClient(log, broker, user, password, "", 1, false); err == nil {
 			return mqttConfig, nil
 		}
 
@@ -468,6 +468,7 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 			if usageFilter != "" {
 				additionalConfig[param.Name] = usageFilter.String()
 			}
+
 		default:
 			if !c.advancedMode && param.Advanced {
 				continue

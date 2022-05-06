@@ -300,11 +300,11 @@ func (c *EEBus) Enable(enable bool) error {
 		return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Max, data.EVData.LimitsL2.Max, data.EVData.LimitsL3.Max})
 	}
 
-	// in non now mode only enable with min settings, so we don't excessivly consume power in case it has to be turned of in the next cycle anyways
+	// in non now mode only enable with min settings, so we don't excessively consume power in case it has to be turned of in the next cycle anyways
 	return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min})
 }
 
-// returns true if the connected EV supports charging recommandation
+// returns true if the connected EV supports charging recommendation
 func (c *EEBus) optimizationSelfConsumptionAvailable() bool {
 	data, err := c.cc.GetData()
 	if err == nil {

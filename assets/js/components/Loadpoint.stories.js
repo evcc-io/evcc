@@ -1,5 +1,4 @@
 import Loadpoint from "./Loadpoint.vue";
-import i18n from "../i18n";
 
 export default {
   title: "Main/Loadpoint",
@@ -11,11 +10,12 @@ export default {
   },
 };
 
-const Template = (args, { argTypes }) => ({
-  i18n,
-  props: Object.keys(argTypes),
+const Template = (args) => ({
+  setup() {
+    return { args };
+  },
   components: { Loadpoint },
-  template: '<Loadpoint v-bind="$props"></Loadpoint>',
+  template: '<Loadpoint v-bind="args"></Loadpoint>',
 });
 
 export const Base = Template.bind({});
@@ -29,9 +29,29 @@ Base.args = {
   vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
+  mode: "pv",
   charging: true,
   vehicleSoC: 66,
   targetSoC: 90,
+  chargeCurrent: 7,
+  minCurrent: 6,
+  maxCurrent: 16,
+  activePhases: 2,
+};
+
+export const Idle = Template.bind({});
+Idle.args = {
+  id: 0,
+  chargePower: 0,
+  vehiclePresent: false,
+  enabled: false,
+  connected: false,
+  mode: "off",
+  charging: false,
+  chargeCurrent: 0,
+  minCurrent: 6,
+  maxCurrent: 16,
+  activePhases: 0,
 };
 
 export const Disabled = Template.bind({});
@@ -42,9 +62,16 @@ Disabled.args = {
   remoteDisabledSource: "Sunny Home Manager",
   vehiclePresent: true,
   vehicleTitle: "Mein Auto",
+  chargedEnergy: 31211,
   enabled: true,
+  mode: "now",
   connected: true,
   charging: false,
+  chargePower: 8112,
   vehicleSoC: 66,
   targetSoC: 100,
+  chargeCurrent: 7,
+  minCurrent: 6,
+  maxCurrent: 16,
+  activePhases: 3,
 };

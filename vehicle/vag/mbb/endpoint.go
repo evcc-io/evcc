@@ -17,6 +17,8 @@ const (
 	TokenURL = BaseURL + "/mbbcoauth/mobile/oauth2/v1/token"
 )
 
+var _ vag.TokenExchanger = (*Service)(nil)
+
 type Service struct {
 	*request.Helper
 	clientID string

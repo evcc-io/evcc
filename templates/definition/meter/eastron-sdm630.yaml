@@ -1,0 +1,26 @@
+template: eastron
+products:
+  - brand: Eastron
+    description:
+      generic: SDM 630
+  - brand: Eastron
+    description:
+      generic: SDM 72v2
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: modbus
+  model: sdm
+  {{- if eq .usage "charge" }}
+  energy: Sum # only required for charge meter usage
+  {{- end }}
+  {{- if or (eq .usage "charge") (eq .usage "grid") }}
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  {{- end }}
+  {{- include "modbus" . }}

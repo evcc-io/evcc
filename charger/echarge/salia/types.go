@@ -3,6 +3,7 @@ package salia
 const (
 	HeartBeat        = "salia/heartbeat"
 	ChargeMode       = "salia/chargemode"
+	PauseCharging    = "salia/pausecharging"
 	GridCurrentLimit = "grid_current_limit"
 )
 
@@ -32,7 +33,8 @@ type Port struct {
 		}
 	}
 	Salia struct {
-		ChargeMode string
+		ChargeMode    string
+		PauseCharging int `json:"pausecharging,string"`
 	}
 	Metering struct {
 		Meter struct {

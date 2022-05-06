@@ -1,7 +1,6 @@
 template: tasmota
 products:
-  - description:
-      generic: Tasmota
+  - brand: Tasmota
 group: switchsockets
 params:
   - name: host
@@ -19,4 +18,4 @@ render: |
   {{ if ne .password "" }}
   password: {{ .password }}
   {{ end }}
-  standbypower: {{ .standbypower }}  # treat as charging above this power
+  standbypower: {{ .standbypower }}

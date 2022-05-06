@@ -24,7 +24,9 @@ func indexHandler(site site.API) http.HandlerFunc {
 		indexTemplate, err := fs.ReadFile(Assets, "index.html")
 		if err != nil {
 			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
-			log.FATAL.Fatal("Make sure templates are included using the `release` build tag or use `make build`")
+			log.FATAL.Print("Make sure templates are included using the `release` build tag or use `make build`")
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 
 		t, err := template.New("evcc").Delims("[[", "]]").Parse(string(indexTemplate))

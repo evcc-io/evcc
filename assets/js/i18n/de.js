@@ -3,12 +3,11 @@ export default {
     docs: "Dokumentation",
     blog: "Blog",
     github: "GitHub",
-    login: "Anmeldungen",
+    login: "Fahrzeug Logins",
+    about: "Über evcc",
   },
   footer: {
     version: {
-      versionShort: "v{installed}",
-      versionLong: "Version {installed}",
       availableShort: "Update",
       availableLong: "Update verfügbar",
       modalTitle: "Update verfügbar",
@@ -26,8 +25,8 @@ export default {
     savings: {
       footerShort: "{percent}% Sonne",
       footerLong: "{percent}% Sonnenenergie",
-      modalTitleShort: "{total} kWh geladen · {percent}% Sonne",
-      modalTitleLong: "{total} kWh geladen · {percent}% Sonnenenergie",
+      modalTitlePartOne: "{total} kWh geladen",
+      modalTitlePartTwo: "{percent}% Sonne",
       modalChartGrid: "Netz {grid} kWh",
       modalChartSelf: "Sonne {self} kWh",
       modalSavingsPrice: "Effektiver Energiepreis",
@@ -37,8 +36,6 @@ export default {
       modalExplainationFeedIn: "Einspeisung {feedInPrice}",
       modalServerStart: "Seit Serverstart {since}.",
       modalNoData: "noch nicht geladen",
-      experimentalLabel: "experimentell",
-      experimentalText: "Unplausible Werte? Fragen zur Ansicht? Meld dich gerne in den",
     },
     sponsor: {
       thanks: "Danke für deine Unterstützung, {sponsor}! Das hilft uns bei der Weiterentwicklung.",
@@ -54,7 +51,6 @@ export default {
     modalTitle: "Meldungen",
     dismissAll: "Meldungen entfernen",
   },
-
   main: {
     energyflow: {
       noEnergy: "Kein Energiefluss",
@@ -69,21 +65,32 @@ export default {
       pvExport: "Einspeisung",
     },
     mode: {
-      title: "Modus",
-      stop: "Stop",
-      now: "Sofort",
+      offShort: "Aus",
+      offLong: "Aus",
+      nowShort: "Sofort",
+      nowLong: "Sofort",
       minpvShort: "Min",
       minpvLong: "Min + PV",
       pvShort: "PV",
-      pvLong: "Nur PV",
+      pvLong: "PV",
+      fast: "Schnell",
+      cheap: "Günstig",
     },
     loadpoint: {
       fallbackName: "Ladepunkt",
       remoteDisabledSoft: "{source}: Adaptives PV-Laden deaktiviert",
       remoteDisabledHard: "{source}: Deaktiviert",
+      power: "Leistung",
+      charged: "Geladen",
+      duration: "Dauer",
+      remaining: "Restzeit",
     },
+    vehicles: "Parkplatz",
     vehicle: {
       fallbackName: "Fahrzeug",
+      vehicleSoC: "Ladestand",
+      targetSoC: "Ladeziel",
+      noVehicle: "Kein Fahrzeug",
     },
     vehicleSoC: {
       disconnected: "getrennt",
@@ -91,51 +98,42 @@ export default {
       ready: "bereit",
       connected: "verbunden",
     },
-    vehicleSubline: {
-      mincharge: "Mindestladung bis {soc}%",
+    vehicleStatus: {
+      minCharge: "Mindestladung bis {soc}%.",
+      waitForVehicle: "Ladebereit. Warte auf Fahrzeug.",
+      charging: "Ladevorgang aktiv.",
+      targetChargePlanned: "Zielladen geplant. Ladung startet {time} Uhr.",
+      targetChargeWaitForVehicle: "Zielladen bereit. Warte auf Fahrzeug.",
+      targetChargeActive: "Zielladen aktiv.",
+      connected: "Verbunden.",
+      pvDisable: "Zu wenig Überschuss. Pausiere in {remaining}.",
+      pvEnable: "Überschuss verfügbar. Starte in {remaining}.",
+      scale1p: "Reduziere auf einphasig in {remaining}.",
+      scale3p: "Erhöhe auf dreiphasig in {remaining}.",
+      disconnected: "Nicht verbunden.",
+      unknown: "",
     },
     provider: {
       login: "anmelden",
       logout: "abmelden",
     },
     targetCharge: {
+      title: "Zielzeit",
       inactiveLabel: "Zielzeit",
-      activeLabel: "bis {time} Uhr",
+      activeLabel: "{time}",
       modalTitle: "Zielzeit festlegen",
-      description: "Wann soll das Fahrzeug auf <strong>{targetSoC}%</strong> geladen sein?",
+      setTargetTime: "keine",
+      description: "Wann soll das Fahrzeug auf {targetSoC}% geladen sein?",
       today: "heute",
       tomorrow: "morgen",
       targetIsInThePast: "Zeitpunkt liegt in der Vergangenheit.",
-      remove: "Keine Zielzeit",
-      activate: "Zielzeit aktivieren",
-      experimentalLabel: "experimentell",
+      remove: "Entfernen",
+      activate: "Aktivieren",
+      experimentalLabel: "Experimentell",
       experimentalText: `
-        Diese Funktion ist in einem frühen Stadium. Der Algorithmus ist noch
-        nicht perfekt. Die Zielzeit wird aktuell nicht persistiert - das
-        heißt sie geht beim Neustart verloren. Verlasse dich also noch nicht
-        zu sehr auf diese Funktion. Wir freuen uns aber über deine
-        Erfahrungen und Verbessungsvorschläge in den
+        Dieses Feature funktioniert, ist aber noch nicht perfekt.
+        Bitte melde unerwartetes Verhalten in unseren
       `,
-    },
-    loadpointDetails: {
-      power: "Leistung",
-      vehicleRange: "Reichweite",
-      charged: "Geladen",
-      duration: "Dauer",
-      remaining: "Restzeit",
-      tooltip: {
-        phases: {
-          scale1p: "Herunterschalten auf einphasig in {remaining}.",
-          scale3p: "Hochschalten auf dreiphasig in {remaining}.",
-          charge1p: "Lädt einphasig.",
-          charge2p: "Lädt zweiphasig.",
-          charge3p: "Lädt dreiphasig.",
-        },
-        pv: {
-          enable: "Überschuss verfügbar. Ladung startet in {remaining}.",
-          disable: "Zu wenig Überschuss. Ladung pausiert in {remaining}.",
-        },
-      },
     },
   },
 };

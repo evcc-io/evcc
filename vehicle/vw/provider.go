@@ -204,15 +204,8 @@ func (v *Provider) Diagnose2() {
 	}
 
 	// list remaining service
-	services := lo.Map(rr.OperationList.ServiceInfo, func(si ServiceInfo, _ int) string {
-		if si.InvocationUrl.Content == "" {
-			return si.ServiceId
-		}
-		return ""
-	})
-
-	services = lo.Filter(services, func(s string, _ int) bool {
-		return s != ""
+	services := lo.FilterMap(rr.OperationList.ServiceInfo, func(si ServiceInfo, _ int) (string, bool) {
+		return si.ServiceId, si.InvocationUrl.Content == ""
 	})
 
 	fmt.Fprintf(tw, "without uri:\t%s\n", strings.Join(services, ","))

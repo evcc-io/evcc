@@ -12,7 +12,7 @@ RUN make install-ui
 
 # build ui
 COPY assets assets
-COPY vue.config.js vue.config.js
+COPY vite.config.js vite.config.js
 COPY .eslintrc.js .eslintrc.js
 RUN make clean ui
 

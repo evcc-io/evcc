@@ -134,7 +134,7 @@ func (t *Template) ResolvePresets() error {
 		if p.Preset != "" {
 			base, ok := t.ConfigDefaults.Presets[p.Preset]
 			if !ok {
-				return fmt.Errorf("Error: Could not find preset definition: %s\n", p.Preset)
+				return fmt.Errorf("could not find preset definition: %s", p.Preset)
 			}
 
 			t.Params = append(t.Params, base.Params...)
@@ -159,7 +159,7 @@ func (t *Template) ResolveGroup() error {
 
 	_, ok := t.ConfigDefaults.DeviceGroups[t.Group]
 	if !ok {
-		return fmt.Errorf("Error: Could not find devicegroup definition: %s\n", t.Group)
+		return fmt.Errorf("could not find devicegroup definition: %s", t.Group)
 	}
 
 	return nil

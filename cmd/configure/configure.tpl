@@ -1,7 +1,18 @@
-uri: 0.0.0.0:7070 # uri for ui
-interval: 10s # control cycle interval
+# open evcc at http://evcc.local:7070
+network:
+  schema: http
+  host: evcc.local # .local suffix announces the hostname on MDNS
+  port: 7070
 
 log: info
+levels:
+  cache: error
+
+interval: 10s # control cycle interval
+{{- if ne (len .SponsorToken) 0 }}
+
+sponsortoken: {{ .SponsorToken }}
+{{- end}}
 {{- if ne (len .Meters) 0 }}
 
 meters:
@@ -74,7 +85,3 @@ hems:
 eebus:
 {{ .EEBUS | indent 2 }}
 {{- end }}
-{{- if ne (len .SponsorToken) 0 }}
-
-sponsortoken: {{ .SponsorToken }}
-{{- end}}

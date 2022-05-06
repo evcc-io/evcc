@@ -1,36 +1,44 @@
 <template>
-	<div class="flex-grow-1 d-flex flex-column">
-		<h3 class="d-none d-md-block my-4">
-			{{ siteTitle || "Home" }}
-		</h3>
-		<Energyflow v-bind="energyflow" />
-		<hr class="w-100 my-4" />
-		<div class="flex-grow-1 d-flex justify-content-around flex-column">
-			<template v-for="(loadpoint, id) in loadpoints">
-				<hr v-if="id > 0" :key="id + '_hr'" class="w-100 my-4" />
-				<Loadpoint
-					v-bind="loadpoint"
-					:id="id"
-					:key="id"
-					:single="loadpoints.length === 1"
-				/>
-			</template>
+	<div class="d-flex flex-column site">
+		<div class="container px-4 top-area">
+			<div class="d-flex justify-content-between align-items-center my-3">
+				<h1 class="d-block my-0">
+					{{ siteTitle || "evcc" }}
+				</h1>
+				<div class="d-flex">
+					<Notifications :notifications="notifications" class="me-2" />
+					<TopNavigation v-bind="topNavigation" />
+				</div>
+			</div>
+			<Energyflow v-bind="energyflow" />
+		</div>
+		<div class="d-flex flex-column justify-content-between content-area pt-4">
+			<Loadpoints class="mt-1 mt-sm-2 flex-grow-1" :loadpoints="loadpoints" />
+			<Vehicles v-if="$hiddenFeatures" />
+			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
 </template>
 
 <script>
-import Energyflow from "./Energyflow";
-import Loadpoint from "./Loadpoint";
+import "@h2d2/shopicons/es/regular/arrowup";
+import TopNavigation from "./TopNavigation.vue";
+import Notifications from "./Notifications.vue";
+import Energyflow from "./Energyflow/Energyflow.vue";
+import Loadpoints from "./Loadpoints.vue";
+import Vehicles from "./Vehicles.vue";
+import Footer from "./Footer.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
-	components: { Loadpoint, Energyflow },
+	components: { Loadpoints, Energyflow, Footer, Notifications, TopNavigation, Vehicles },
 	mixins: [formatter, collector],
 	props: {
 		loadpoints: Array,
+
+		notifications: Array,
 
 		// details
 		gridConfigured: Boolean,
@@ -44,6 +52,30 @@ export default {
 		gridCurrents: Array,
 		prioritySoC: Number,
 		siteTitle: String,
+
+		auth: Object,
+
+		// footer
+		currency: String,
+		savingsAmount: Number,
+		savingsEffectivePrice: Number,
+		savingsGridCharged: Number,
+		savingsSelfConsumptionCharged: Number,
+		savingsSelfConsumptionPercent: Number,
+		savingsSince: Number,
+		savingsTotalCharged: Number,
+		tariffFeedIn: Number,
+		tariffGrid: Number,
+	},
+	data: function () {
+		return {
+			availableVersion: null,
+			releaseNotes: null,
+			hasUpdater: null,
+			uploadMessage: null,
+			uploadProgress: null,
+			sponsor: null,
+		};
 	},
 	computed: {
 		energyflow: function () {
@@ -58,6 +90,47 @@ export default {
 				return sum;
 			}, 0);
 		},
+		topNavigation: function () {
+			const vehicleLogins = this.auth ? this.auth.vehicles : {};
+			return { vehicleLogins };
+		},
+		footer: function () {
+			return {
+				version: {
+					installed: window.evcc.version,
+					commit: window.evcc.commit,
+					available: this.availableVersion,
+					releaseNotes: this.releaseNotes,
+					hasUpdater: this.hasUpdater,
+					uploadMessage: this.uploadMessage,
+					uploadProgress: this.uploadProgress,
+				},
+				sponsor: this.sponsor,
+				savings: {
+					since: this.savingsSince,
+					totalCharged: this.savingsTotalCharged,
+					gridCharged: this.savingsGridCharged,
+					selfConsumptionCharged: this.savingsSelfConsumptionCharged,
+					amount: this.savingsAmount,
+					effectivePrice: this.savingsEffectivePrice,
+					selfConsumptionPercent: this.savingsSelfConsumptionPercent,
+					gridPrice: this.tariffGrid,
+					feedInPrice: this.tariffFeedIn,
+					currency: this.currency,
+				},
+			};
+		},
 	},
 };
 </script>
+<style scoped>
+.site {
+	min-height: 100vh;
+}
+.content-area {
+	background-color: var(--bs-gray-dark);
+	color: var(--bs-white);
+	flex-grow: 1;
+	z-index: 1;
+}
+</style>

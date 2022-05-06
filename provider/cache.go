@@ -40,15 +40,15 @@ func Cached[T any](g func() (T, error), cache time.Duration) func() (T, error) {
 	return c.Get
 }
 
-// Cachable is the interface for a resettable cache
-type Cachable[T any] interface {
+// Cacheable is the interface for a resettable cache
+type Cacheable[T any] interface {
 	Get() (T, error)
 	Reset()
 }
 
-var _ Cachable[int64] = (*cached[int64])(nil)
+var _ Cacheable[int64] = (*cached[int64])(nil)
 
-// ResettableCached wraps a getter with a cache. It returns a `Cachable`.
+// ResettableCached wraps a getter with a cache. It returns a `Cacheable`.
 // Instead of the cached getter, the `Get()` and `Reset()` methods are exposed.
 func ResettableCached[T any](g func() (T, error), cache time.Duration) *cached[T] {
 	return &cached[T]{

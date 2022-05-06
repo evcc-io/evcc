@@ -1,7 +1,7 @@
 template: discovergy
 products:
   - description:
-      generic: Discovergy (Cloud)
+      generic: Discovergy
 params:
   - name: usage
     choice: ["grid", "pv"]

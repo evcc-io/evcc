@@ -1,6 +1,5 @@
 product:
   brand: openWB
-  description: MQTT
 description: |
   Die Wallbox muss als Ladepunkt konfiguriert sein.
 render:

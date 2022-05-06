@@ -6,8 +6,6 @@ params:
   - preset: vehicleidentify
   - name: vin
     example: WBMW...
-  - name: capacity
-    default: 65
   - preset: vehiclecloud
 render: |
   type: bmw

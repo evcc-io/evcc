@@ -5,8 +5,6 @@ params:
   - preset: vehiclebase
   - name: vin
     example: ZFAE...
-  - name: capacity
-    default: 42
   - name: pin
     mask: true
   - preset: vehicleidentify

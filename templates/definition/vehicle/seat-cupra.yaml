@@ -6,8 +6,6 @@ products:
 params:
   - preset: vehiclebase
   - preset: vehicleidentify
-  - name: capacity
-    default: 10
   - preset: vehiclecloud
 render: |
   type: cupra

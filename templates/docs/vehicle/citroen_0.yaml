@@ -1,5 +1,5 @@
 product:
-  brand: Citroen
+  brand: Citroën
 render:
   - default: |
       type: template

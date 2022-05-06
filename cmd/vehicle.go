@@ -32,8 +32,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
-	conf, err := loadConfigFile(cfgFile)
-	if err != nil {
+	if err := loadConfigFile(cfgFile, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 

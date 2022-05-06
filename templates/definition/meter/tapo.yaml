@@ -1,0 +1,20 @@
+template: tapo
+products:
+  - brand: TP-Link
+    description:
+      generic: Tapo P-Series Smart Plug
+group: switchsockets
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+render: |
+  type: tapo
+  uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}

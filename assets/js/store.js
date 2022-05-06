@@ -1,9 +1,9 @@
-import Vue from "vue";
+import { reactive } from "vue";
 
 function setProperty(obj, props, value) {
   const prop = props.shift();
   if (!obj[prop]) {
-    Vue.set(obj, prop, {});
+    obj[prop] = {};
   }
 
   if (!props.length) {
@@ -18,16 +18,18 @@ function setProperty(obj, props, value) {
   setProperty(obj[prop], props, value);
 }
 
+const state = reactive({
+  loadpoints: [], // ensure array type
+});
+
 const store = {
-  state: {
-    loadpoints: [], // ensure array type
-  },
+  state,
   update: function (msg) {
     Object.keys(msg).forEach(function (k) {
       if (typeof window.app[k] === "function") {
         window.app[k]({ message: msg[k] });
       } else {
-        setProperty(store.state, k.split("."), msg[k]);
+        setProperty(state, k.split("."), msg[k]);
       }
     });
   },

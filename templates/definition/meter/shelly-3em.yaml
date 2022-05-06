@@ -3,7 +3,6 @@ products:
   - brand: Shelly
     description:
       generic: 3EM
-group: sockets
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

@@ -6,8 +6,6 @@ params:
   - preset: vehicleidentify
   - name: vin
     example: WF0FXX...
-  - name: capacity
-    default: 10
   - preset: vehiclecloud
 render: |
   type: ford

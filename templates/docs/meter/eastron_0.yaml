@@ -1,6 +1,6 @@
 product:
   brand: Eastron
-  description: SDM Modbus
+  description: SDM 630
 render:
   - usage: grid
     default: |

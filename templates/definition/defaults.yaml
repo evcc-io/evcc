@@ -82,7 +82,7 @@ params:
     help:
       de: Akku-Kapazität in kWh
       en: Battery capacity in kWh
-    example: "41.5"
+    example: "50"
     valuetype: float
   - name: vin
     description:

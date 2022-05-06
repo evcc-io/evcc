@@ -1,6 +1,6 @@
 product:
   brand: Powerfox
-  description: Poweropti (Cloud)
+  description: Poweropti
 render:
   - usage: grid
     default: |

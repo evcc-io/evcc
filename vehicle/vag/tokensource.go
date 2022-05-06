@@ -100,16 +100,25 @@ func (ts *metaTokenSource) TokenEx() (*Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
-	if ts.ts == nil {
-		token, err := ts.newT()
-		if err != nil {
-			return nil, err
+	// use token source
+	if ts.ts != nil {
+		token, err := ts.ts.TokenEx()
+		if err == nil {
+			return token, nil
 		}
-
-		ts.ts = ts.newTS(token)
 	}
 
-	token, err := ts.ts.TokenEx()
+	// create new start token
+	token, err := ts.newT()
+	if err != nil {
+		return nil, err
+	}
+
+	// create token source
+	ts.ts = ts.newTS(token)
+
+	// use token source
+	token, err = ts.ts.TokenEx()
 	if err != nil {
 		// token source doesn't work anymore, reset it
 		ts.ts = nil

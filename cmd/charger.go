@@ -27,7 +27,9 @@ func init() {
 	rootCmd.AddCommand(chargerCmd)
 	chargerCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
 	chargerCmd.PersistentFlags().IntP(flagCurrent, "I", noCurrent, flagCurrentDescription)
+	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.PersistentFlags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
+	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.PersistentFlags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
 	chargerCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
@@ -38,8 +40,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
-	conf, err := loadConfigFile(cfgFile)
-	if err != nil {
+	if err := loadConfigFile(cfgFile, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 

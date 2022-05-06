@@ -1,21 +1,26 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
+	"strings"
 
 	"github.com/evcc-io/evcc/util/templates"
+	"golang.org/x/exp/maps"
 )
 
-const basePath = "../../../templates/docs"
+const docsPath = "../../../templates/docs"
+const websitePath = "../../../templates/evcc.io"
 
 //go:generate go run generate.go
 
 func main() {
 	for _, class := range []string{templates.Meter, templates.Charger, templates.Vehicle} {
-		path := fmt.Sprintf("%s/%s", basePath, class)
+		path := fmt.Sprintf("%s/%s", docsPath, class)
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(path, 0755); err != nil {
@@ -29,6 +34,10 @@ func main() {
 		if err := generateClass(class); err != nil {
 			panic(err)
 		}
+	}
+
+	if err := generateBrandJSON(); err != nil {
+		panic(err)
 	}
 }
 
@@ -59,7 +68,7 @@ func writeTemplate(class string, index int, product templates.Product, tmpl temp
 		return err
 	}
 
-	filename := fmt.Sprintf("%s/%s/%s_%d.yaml", basePath, class, tmpl.Template, index)
+	filename := fmt.Sprintf("%s/%s/%s_%d.yaml", docsPath, class, tmpl.Template, index)
 	if err := os.WriteFile(filename, b, 0644); err != nil {
 		return err
 	}
@@ -79,4 +88,72 @@ func clearDir(dir string) error {
 	}
 
 	return nil
+}
+
+func sortedKeys(data map[string]bool) []string {
+	keys := maps.Keys(data)
+	sort.Slice(keys, func(i, j int) bool { return strings.ToLower(keys[i]) < strings.ToLower(keys[j]) })
+	return keys
+}
+
+func generateBrandJSON() error {
+	chargers := make(map[string]bool)
+	smartPlugs := make(map[string]bool)
+	for _, tmpl := range templates.ByClass(templates.Charger) {
+		for _, product := range tmpl.Products {
+			if product.Brand != "" {
+				if tmpl.Group == "switchsockets" {
+					smartPlugs[product.Brand] = true
+				} else {
+					chargers[product.Brand] = true
+				}
+			}
+		}
+	}
+
+	vehicles := make(map[string]bool)
+	for _, tmpl := range templates.ByClass(templates.Vehicle) {
+		for _, product := range tmpl.Products {
+			if product.Brand != "" {
+				vehicles[product.Brand] = true
+			}
+		}
+	}
+
+	meters := make(map[string]bool)
+	pvBattery := make(map[string]bool)
+	for _, tmpl := range templates.ByClass(templates.Meter) {
+		for i := range tmpl.Params {
+			if tmpl.Params[i].Name == "usage" {
+				for j := range tmpl.Params[i].Choice {
+					usage := tmpl.Params[i].Choice[j]
+					for _, product := range tmpl.Products {
+						if product.Brand != "" {
+							switch usage {
+							case "grid", "charge":
+								meters[product.Brand] = true
+							case "pv", "battery":
+								pvBattery[product.Brand] = true
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	brands := struct {
+		Chargers, SmartPlugs, Meters, PVBattery, Vehicles []string
+	}{
+		Chargers:   sortedKeys(chargers),
+		SmartPlugs: sortedKeys(smartPlugs),
+		Meters:     sortedKeys(meters),
+		PVBattery:  sortedKeys(pvBattery),
+		Vehicles:   sortedKeys(vehicles),
+	}
+
+	file, _ := json.MarshalIndent(brands, "", " ")
+	error := ioutil.WriteFile(websitePath+"/brands.json", file, 0644)
+
+	return error
 }
