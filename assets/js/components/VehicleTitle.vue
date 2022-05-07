@@ -2,7 +2,7 @@
 	<div class="d-flex justify-content-between mb-3 align-items-center">
 		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
 			<shopicon-regular-car3
-				v-if="vehiclePresent || parked"
+				v-if="carIcon"
 				class="me-2 flex-shrink-0 car-icon"
 			></shopicon-regular-car3>
 			<shopicon-regular-cablecharge
@@ -31,13 +31,20 @@ export default {
 		vehiclePresent: Boolean,
 		vehicleTitle: String,
 		parked: Boolean,
+		connected: Boolean,
 	},
 	computed: {
+		carIcon() {
+			return this.connected || this.parked;
+		},
 		name() {
 			if (this.vehiclePresent || this.parked) {
 				return this.vehicleTitle || this.$t("main.vehicle.fallbackName");
 			}
-			return this.$t("main.vehicle.noVehicle");
+			if (this.connected) {
+				return this.$t("main.vehicle.unknown");
+			}
+			return this.$t("main.vehicle.none");
 		},
 	},
 };

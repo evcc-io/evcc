@@ -90,7 +90,8 @@ export default {
       fallbackName: "Vehicle",
       vehicleSoC: "SoC",
       targetSoC: "Limit",
-      noVehicle: "No vehicle",
+      none: "No vehicle",
+      unknown: "Guest vehicle",
     },
     vehicleSoC: {
       disconnected: "disconnected",
