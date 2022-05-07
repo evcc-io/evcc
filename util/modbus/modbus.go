@@ -244,7 +244,7 @@ func NewDevice(model string, subdevice int) (device meters.Device, err error) {
 // IsRS485 determines if model is a known MBMD rs485 device model
 func IsRS485(model string) bool {
 	for k := range rs485.Producers {
-		if strings.ToUpper(model) == k {
+		if strings.EqualFold(model, k) {
 			return true
 		}
 	}
