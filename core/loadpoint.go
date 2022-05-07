@@ -808,6 +808,13 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
+		// publish odometer once
+		var odo float64
+		if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
+			odo, _ = vs.Odometer()
+		}
+		lp.publish("vehicleOdometer", odo)
+
 		lp.applyAction(vehicle.OnIdentified())
 
 		lp.progress.Reset()
@@ -817,6 +824,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehiclePresent", false)
 		lp.publish("vehicleTitle", "")
 		lp.publish("vehicleCapacity", int64(0))
+		lp.publish("vehicleOdometer", 0.0)
 	}
 
 	lp.unpublishVehicle()
@@ -847,7 +855,6 @@ func (lp *LoadPoint) unpublishVehicle() {
 
 	lp.publish("vehicleSoC", 0.0)
 	lp.publish("vehicleRange", int64(0))
-	lp.publish("vehicleOdometer", 0.0)
 
 	lp.setRemainingDuration(-1)
 }
@@ -1374,15 +1381,6 @@ func (lp *LoadPoint) publishSoCAndRange() {
 				if rng, err := vs.Range(); err == nil {
 					lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 					lp.publish("vehicleRange", rng)
-				}
-			}
-
-			// odometer
-			// TODO read only once after connect
-			if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
-				if odo, err := vs.Odometer(); err == nil {
-					lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
-					lp.publish("vehicleOdometer", odo)
 				}
 			}
 
