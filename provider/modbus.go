@@ -59,11 +59,6 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, err
 	}
 
-	// set non-default delay
-	if cc.Delay > 0 {
-		conn.Delay(cc.Delay)
-	}
-
 	// set non-default timeout
 	if cc.Timeout > 0 {
 		conn.Timeout(cc.Timeout)
