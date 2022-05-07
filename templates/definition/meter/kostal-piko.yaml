@@ -36,8 +36,8 @@ render: |
   {{- if eq .usage "battery" }}
     # Battery
     source: http
-    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556238 # Battery AC Aus-/Eingang
-    jq: .dxsEntries[0].value | if . == null then 0 else . end
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556226,33556238 # Battery Voltage * Energy
+    jq: (.dxsEntries[] | select(.dxsId==33556226) | .value) * (.dxsEntries[] | select(.dxsId==33556238) | .value) | if . == null then 0 else . end
   soc:
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556229 # Battery SOC
