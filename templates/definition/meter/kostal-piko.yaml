@@ -7,7 +7,7 @@ guidedsetup:
   enable: true
 params:
   - name: usage
-    choice: ["grid", "pv"]
+    choice: ["grid", "pv", "battery"]
   - name: host
 render: |
   type: custom
@@ -31,5 +31,15 @@ render: |
     # PV
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # PV AC Ausgang
+    jq: .dxsEntries[0].value | if . == null then 0 else . end
+  {{- end -}}
+  {{- if eq .usage "battery" }}
+    # Battery
+    source: http
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556238 # Battery AC Aus-/Eingang
+    jq: .dxsEntries[0].value | if . == null then 0 else . end
+  soc:
+    source: http
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556229 # Battery SOC
     jq: .dxsEntries[0].value | if . == null then 0 else . end
   {{- end -}}
