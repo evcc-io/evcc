@@ -1,5 +1,5 @@
 <template>
-	<div v-if="sponsor || true">
+	<div v-if="sponsor">
 		<p class="mb-3">
 			{{ $t("footer.sponsor.thanks", { sponsor }) }}
 		</p>

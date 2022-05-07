@@ -49,7 +49,7 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">In</h3>
-						<span class="fw-bold text-gray-medium">{{ kw(inPower) }}</span>
+						<span class="fw-bold">{{ kw(inPower) }}</span>
 					</div>
 					<div>
 						<EnergyflowEntry
@@ -79,7 +79,7 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">Out</h3>
-						<span class="fw-bold text-gray-medium">{{ kw(outPower) }}</span>
+						<span class="fw-bold">{{ kw(outPower) }}</span>
 					</div>
 					<div>
 						<EnergyflowEntry

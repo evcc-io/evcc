@@ -66,16 +66,13 @@ export default {
 		savingsTotalCharged: Number,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
-	},
-	data: function () {
-		return {
-			availableVersion: null,
-			releaseNotes: null,
-			hasUpdater: null,
-			uploadMessage: null,
-			uploadProgress: null,
-			sponsor: null,
-		};
+
+		availableVersion: String,
+		releaseNotes: String,
+		hasUpdater: Boolean,
+		uploadMessage: String,
+		uploadProgress: Number,
+		sponsor: String,
 	},
 	computed: {
 		energyflow: function () {
