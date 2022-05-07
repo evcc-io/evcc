@@ -36,7 +36,7 @@ render: |
   {{- if eq .usage "battery" }}
     # Battery
     source: http
-    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556226,33556238,33556230 # Battery Voltage * Energy * Charging Indicator
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556226&dxsEntries=33556238&dxsEntries=33556230 # Battery Voltage * Energy * Charging Indicator
     jq: (.dxsEntries[] | select(.dxsId==33556226) | .value) * (.dxsEntries[] | select(.dxsId==33556238) | .value) * (if (.dxsEntries[] | select(.dxsId==33556230) | .value) == 1 then -1 else 1 end) | if . == null then 0 else . end
   soc:
     source: http
