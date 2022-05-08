@@ -23,11 +23,13 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
 	"github.com/evcc-io/evcc/charger/echarge/ecb1"
 	"github.com/evcc-io/evcc/meter/obis"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -41,8 +43,7 @@ type HardyBarth struct {
 	*request.Helper
 	uri           string
 	chargecontrol int
-	meter         int
-	current       int64
+	meterG        func() (ecb1.Meter, error)
 }
 
 func init() {
@@ -55,20 +56,22 @@ func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) 
 		URI           string
 		ChargeControl int
 		Meter         int
+		Cache         time.Duration
 	}{
 		ChargeControl: 1,
 		Meter:         1,
+		Cache:         time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewHardyBarth(cc.URI, cc.ChargeControl, cc.Meter)
+	return NewHardyBarth(cc.URI, cc.ChargeControl, cc.Meter, cc.Cache)
 }
 
 // NewHardyBarth creates HardyBarth charger
-func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
+func NewHardyBarth(uri string, chargecontrol, meter int, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("ecb1")
 
 	uri = strings.TrimSuffix(uri, "/") + "/api/v1"
@@ -77,9 +80,21 @@ func NewHardyBarth(uri string, chargecontrol, meter int) (api.Charger, error) {
 		Helper:        request.NewHelper(log),
 		uri:           util.DefaultScheme(uri, "http"),
 		chargecontrol: chargecontrol,
-		meter:         meter,
-		current:       6,
 	}
+
+	// cache meter readings
+	wb.meterG = provider.Cached(func() (ecb1.Meter, error) {
+		var res struct {
+			Meter struct {
+				ecb1.Meter
+			}
+		}
+
+		uri := fmt.Sprintf("%s/meters/%d", wb.uri, meter)
+		err := wb.GetJSON(uri, &res)
+
+		return res.Meter.Meter, err
+	}, cache)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
@@ -131,17 +146,24 @@ func (wb *HardyBarth) Enabled() (bool, error) {
 	if err == nil && res.Mode != echarge.ModeManual {
 		err = fmt.Errorf("invalid mode: %s", res.Mode)
 	}
-	return res.ManualModeAmp > 0, err
+
+	return res.StateID != 17, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *HardyBarth) Enable(enable bool) error {
-	var current int64
+	action := "stop"
 	if enable {
-		current = wb.current
+		action = "start"
 	}
 
-	return wb.setCurrent(current)
+	uri := fmt.Sprintf("%s/chargecontrols/%d/%s", wb.uri, wb.chargecontrol, action)
+	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+	if err == nil {
+		_, err = wb.DoBody(req)
+	}
+
+	return err
 }
 
 func (wb *HardyBarth) post(uri string, data url.Values) error {
@@ -157,40 +179,18 @@ func (wb *HardyBarth) post(uri string, data url.Values) error {
 	return err
 }
 
-func (wb *HardyBarth) setCurrent(current int64) error {
+// MaxCurrent implements the api.Charger interface
+func (wb *HardyBarth) MaxCurrent(current int64) error {
 	uri := fmt.Sprintf("%s/chargecontrols/%d/mode/manual/ampere", wb.uri, wb.chargecontrol)
 	data := url.Values{"manualmodeamp": {fmt.Sprintf("%d", current)}}
 	return wb.post(uri, data)
-}
-
-// MaxCurrent implements the api.Charger interface
-func (wb *HardyBarth) MaxCurrent(current int64) error {
-	err := wb.setCurrent(current)
-	if err == nil {
-		wb.current = current
-	}
-	return err
-}
-
-func (wb *HardyBarth) getMeter() (ecb1.Meter, error) {
-	uri := fmt.Sprintf("%s/meters/%d", wb.uri, wb.meter)
-
-	var res struct {
-		Meter struct {
-			ecb1.Meter
-		}
-	}
-
-	err := wb.GetJSON(uri, &res)
-
-	return res.Meter.Meter, err
 }
 
 var _ api.Meter = (*HardyBarth)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *HardyBarth) CurrentPower() (float64, error) {
-	res, err := wb.getMeter()
+	res, err := wb.meterG()
 	if err != nil {
 		return 0, err
 	}
@@ -202,7 +202,7 @@ var _ api.MeterEnergy = (*HardyBarth)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *HardyBarth) TotalEnergy() (float64, error) {
-	res, err := wb.getMeter()
+	res, err := wb.meterG()
 	if err != nil {
 		return 0, err
 	}
@@ -214,7 +214,7 @@ var _ api.MeterCurrent = (*HardyBarth)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *HardyBarth) Currents() (float64, float64, float64, error) {
-	res, err := wb.getMeter()
+	res, err := wb.meterG()
 	if err != nil {
 		return 0, 0, 0, err
 	}
