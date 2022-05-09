@@ -1,6 +1,7 @@
 __debug_bin
 .vscode
 .cache
+.DS_store
 *.py
 *.log
 *.json
