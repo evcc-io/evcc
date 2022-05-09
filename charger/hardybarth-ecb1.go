@@ -37,6 +37,7 @@ import (
 
 // http://apidoc.ecb1.de
 // https://github.com/evcc-io/evcc/discussions/778
+// https://ee-toolkit.com/electric-car-automated-charging
 
 // HardyBarth charger implementation
 type HardyBarth struct {
