@@ -14,6 +14,7 @@ type ChargeControl struct {
 	ManualModeAmp float64
 	ModeID        int
 	StateID       int
+	Connected     bool
 }
 
 type Rfid struct {

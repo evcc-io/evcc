@@ -123,21 +123,28 @@ func (wb *HardyBarth) getChargeControl() (ecb1.ChargeControl, error) {
 
 // Status implements the api.Charger interface
 func (wb *HardyBarth) Status() (api.ChargeStatus, error) {
-	res, err := wb.getChargeControl()
+	resp, err := wb.getChargeControl()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	if res.State == "" {
+	if resp.State == "" {
 		return api.StatusNone, errors.New("invalid state- check controller type (eCB1 vs Salia)")
 	}
 
-	switch s := res.State[:1]; s {
-	case "A", "B", "C":
-		return api.ChargeStatus(s), nil
+	res := api.StatusA
+
+	switch {
+	case resp.Connected:
+		res = api.StatusB
+		fallthrough
+	case resp.StateID == 5:
+		res = api.StatusC
 	default:
-		return api.StatusNone, fmt.Errorf("invalid state: %s", s)
+		return api.StatusNone, fmt.Errorf("invalid state: %v", resp)
 	}
+
+	return res, nil
 }
 
 // Enabled implements the api.Charger interface
