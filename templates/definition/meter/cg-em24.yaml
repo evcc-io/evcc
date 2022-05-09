@@ -2,12 +2,12 @@ template: cg-em24
 products:
   - brand: Carlo Gavazzi
     description:
-      generic: EM 24
+      generic: EM24 E1
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]
   - name: modbus
-    choice: ["rs485"]
+    choice: ["tcpip"]
 render: |
   type: modbus
   model: cgem24
