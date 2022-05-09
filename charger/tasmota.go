@@ -127,7 +127,7 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 
 	// ignore power in standby mode
 	power, err := c.conn.CurrentPower()
-	if c.standbypower >= 0 && power <= c.standbypower {
+	if power <= c.standbypower {
 		power = 0
 	}
 
