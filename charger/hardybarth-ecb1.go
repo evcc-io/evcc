@@ -135,14 +135,12 @@ func (wb *HardyBarth) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusA
 
-	switch {
-	case resp.Connected:
+	if resp.Connected {
 		res = api.StatusB
-		fallthrough
-	case resp.StateID == 5:
-		res = api.StatusC
-	default:
-		return api.StatusNone, fmt.Errorf("invalid state: %v", resp)
+
+		if resp.StateID == 5 {
+			res = api.StatusC
+		}
 	}
 
 	return res, nil
