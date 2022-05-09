@@ -73,7 +73,7 @@ require (
 	github.com/spf13/viper v1.11.0
 	github.com/stretchr/testify v1.7.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20220508113926-4720393be8dc
+	github.com/volkszaehler/mbmd v0.0.0-20220509062004-21ece8c27e5e
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
