@@ -14,5 +14,6 @@ rtu: true
 {{- if or (eq .modbus "tcpip") .tcpip }}
 # Modbus TCP
 uri: {{ .host }}:{{ .port }}
+rtu: false
 {{- end }}
 {{- end}}
