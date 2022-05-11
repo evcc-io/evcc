@@ -7,12 +7,13 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rs485", "tcpip"]
 render: |
   type: modbus
   model: pac2200
+  {{- include "modbus" . }}
   {{- if eq .usage "charge" }}
-  energy: Sum # only required for charge meter usage
+  energy: Import # only required for charge meter usage
   {{- end }}
   {{- if or (eq .usage "charge") (eq .usage "grid") }}
   currents:
@@ -20,4 +21,3 @@ render: |
     - CurrentL2
     - CurrentL3
   {{- end }}
-  {{- include "modbus" . }}
