@@ -9,9 +9,12 @@ type Meter struct {
 type ChargeControl struct {
 	ID            int
 	Name          string
-	State         string
 	Mode          string
+	State         string
 	ManualModeAmp float64
+	ModeID        int
+	StateID       int
+	Connected     bool
 }
 
 type Rfid struct {
