@@ -28,9 +28,12 @@ const (
 )
 
 // Settings contains the ModBus TCP settings
+// RTU field is included for compatibility with modbus.tpl which renders rtu: false for TCP
+// TODO remove RTU field (https://github.com/evcc-io/evcc/issues/3360)
 type TcpSettings struct {
 	URI string
 	ID  uint8
+	RTU *bool `mapstructure:"rtu"`
 }
 
 // Settings contains the ModBus settings
