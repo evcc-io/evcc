@@ -17,32 +17,10 @@ export default {
 	name: "Phases",
 	props: {
 		chargeCurrent: { type: Number },
-		chargeCurrents: { type: Object },
+		chargeCurrents: { type: Array },
 		activePhases: { type: Number },
 		minCurrent: { type: Number },
 		maxCurrent: { type: Number },
-		phaseAction: { type: String },
-		phaseRemaining: { type: Number },
-	},
-	computed: {
-		phaseTimerVisible() {
-			if (this.phaseTimerActive && !this.pvTimerActive) {
-				return true;
-			}
-			if (this.phaseTimerActive && this.pvTimerActive) {
-				return this.phaseRemainingInterpolated < this.pvRemainingInterpolated; // only show next timer
-			}
-			return false;
-		},
-		pvTimerVisible() {
-			if (this.pvTimerActive && !this.phaseTimerActive) {
-				return true;
-			}
-			if (this.pvTimerActive && this.phaseTimerActive) {
-				return this.pvRemainingInterpolated < this.phaseRemainingInterpolated; // only show next timer
-			}
-			return false;
-		},
 	},
 	methods: {
 		inactive(num) {
@@ -65,15 +43,18 @@ export default {
 
 <style scoped>
 .phases {
-	width: 68px;
+	width: 73px;
 }
 .phase {
 	background-color: var(--bs-gray-200);
 	height: 4px;
-	width: 20px;
+	flex-grow: 1;
 	position: relative;
 	border-radius: 1px;
 	overflow: hidden;
+}
+.phase.inactive {
+	display: none;
 }
 .target,
 .real {
@@ -91,9 +72,5 @@ export default {
 }
 .real {
 	background-color: var(--evcc-dark-green);
-}
-.phase.inactive .target,
-.phase.inactive .real {
-	opacity: 0;
 }
 </style>
