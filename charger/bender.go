@@ -301,12 +301,12 @@ func (wb *BenderCC) Identify() (string, error) {
 		}
 	}
 
-	u, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
+	id, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
 	if err != nil {
 		return "", err
 	}
 
-	return string(u), nil
+	return strings.TrimSpace(string(id)), nil
 }
 
 var _ api.Diagnosis = (*BenderCC)(nil)
