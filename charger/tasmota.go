@@ -64,18 +64,25 @@ func (c *Tasmota) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
 	var res tasmota.PowerResponse
+	on := false
 	cmd := "Power off"
 	if enable {
 		cmd = "Power on"
 	}
+
 	err := c.conn.ExecCmd(cmd, &res)
+	if err != nil {
+		return err
+	}
+
+	if res.Power == "ON" || res.Power1 == "ON" || res.Power2 == "ON" {
+		on = true
+	}
 
 	switch {
-	case err != nil:
-		return err
-	case enable && res.Power != "ON":
+	case enable && !on:
 		return errors.New("switchOn failed")
-	case !enable && res.Power != "OFF":
+	case !enable && on:
 		return errors.New("switchOff failed")
 	default:
 		return nil
