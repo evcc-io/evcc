@@ -200,15 +200,14 @@ func (wb *BenderCC) ChargingTime() (time.Duration, error) {
 		}
 
 		return time.Duration(binary.BigEndian.Uint16(b)) * time.Second, nil
-	} else {
-		b, err := wb.conn.ReadHoldingRegisters(bendRegChargingDuration, 2)
-		if err != nil {
-			return 0, err
-		}
-
-		return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 	}
 
+	b, err := wb.conn.ReadHoldingRegisters(bendRegChargingDuration, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
 // CurrentPower implements the api.Meter interface
