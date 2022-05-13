@@ -43,19 +43,18 @@ export default {
 
 <style scoped>
 .phases {
-	width: 80px;
+	width: 73px;
 }
 .phase {
 	background-color: var(--bs-gray-200);
 	height: 4px;
-	flex-grow: 4;
+	flex-grow: 1;
 	position: relative;
 	border-radius: 1px;
 	overflow: hidden;
-	transition: flex-grow var(--evcc-transition-slow) ease-in;
 }
 .phase.inactive {
-	flex-grow: 1;
+	display: none;
 }
 .target,
 .real {
@@ -73,9 +72,5 @@ export default {
 }
 .real {
 	background-color: var(--evcc-dark-green);
-}
-.phase.inactive .target,
-.phase.inactive .real {
-	opacity: 0;
 }
 </style>
