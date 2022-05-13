@@ -13,12 +13,12 @@ params:
     default: 15
 render: |
   type: tasmota
-  uri: http://{{ .host }}  # shelly device ip address (local)
+  uri: http://{{ .host }}  # tasmota device ip address (local)
   {{ if ne .user "" }}
   user: {{ .user }}
   {{ end }}
   {{ if ne .password "" }}
   password: {{ .password }}
   {{ end }}
-  channel: {{ .channel }}  # tasmota device relay channel 
+  channel: {{ .channel }}  # tasmota device relay channel (allowed range: 1-8)
   standbypower: {{ .standbypower }}

@@ -29,8 +29,8 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 		channel = 1
 	}
 
-	if channel < 1 || channel > 4 {
-		return nil, errors.New("invalid relais channel (allowed range: 1-4)")
+	if channel < 1 || channel > 8 {
+		return nil, errors.New("invalid relay channel (allowed range: 1-8)")
 	}
 
 	log := util.NewLogger("tasmota")
