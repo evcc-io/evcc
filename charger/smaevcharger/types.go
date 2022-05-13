@@ -4,21 +4,20 @@ package smaevcharger
 
 const (
 	MinAcceptedVersion = "1.2.23"
+	TimestampFormat    = "2006-01-02T15:04:05.000Z"
 
 	StatusA       = float64(200111) // Not connected
 	StatusB       = float64(200112) // Connected and not charging
 	StatusC       = float64(200113) // Connected and charging
 	ChargerLocked = float64(5169)   // Charger locked
 
+	SwitchOeko = float64(4950) // Switch in PV Loading (Optimized or Planned PV loading)
+	SwitchFast = float64(4718) // Switch in Fast Charge Mode
+
 	FastCharge = "4718" // Schnellladen - 4718
 	OptiCharge = "4719" // Optimiertes Laden - 4719
 	PlanCharge = "4720" // Laden mit Vorgabe - 4720
 	StopCharge = "4721" // Ladestopp - 4721
-
-	SwitchOeko = float64(4950) // Switch in PV Loading (Can be Optimized or Planned PV loading)
-	SwitchFast = float64(4718) // Switch in Fast Charge Mode
-
-	SendParameterFormat = "2006-01-02T15:04:05.000Z"
 
 	ChargerAppLockEnabled  = "1129"
 	ChargerAppLockDisabled = "1130"

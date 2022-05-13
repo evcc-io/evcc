@@ -328,34 +328,26 @@ func (wb *Smaevcharger) getParameter(id string) (string, error) {
 	return "", fmt.Errorf("unknown parameter: %s", id)
 }
 
-// TODO return error instead of true/false
-func (wb *Smaevcharger) Send(payload ...smaevcharger.Value) error {
-	wb.reset()
-
-	var data smaevcharger.SendParameter
-	for _, el := range payload {
-		data.Values = append(data.Values, smaevcharger.Value{
-			Timestamp: time.Now().UTC().Format(smaevcharger.SendParameterFormat),
-			ChannelId: el.ChannelId,
-			Value:     el.Value,
-		})
-	}
-
+func (wb *Smaevcharger) Send(values ...smaevcharger.Value) error {
 	uri := fmt.Sprintf("%s/parameters/IGULD:SELF/", wb.uri)
+	data := smaevcharger.SendParameter{
+		Values: values,
+	}
 
 	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		var res any
 		err = wb.DoJSON(req, &res)
+		wb.reset()
 	}
 
 	return err
 }
 
-// value creates a Value item
+// value creates an smaevcharger.Value
 func value(id string, value string) smaevcharger.Value {
 	return smaevcharger.Value{
-		Timestamp: time.Now().UTC().Format(smaevcharger.SendParameterFormat),
+		Timestamp: time.Now().UTC().Format(smaevcharger.TimestampFormat),
 		ChannelId: id,
 		Value:     value,
 	}
