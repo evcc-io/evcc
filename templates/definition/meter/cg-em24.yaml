@@ -2,7 +2,7 @@ template: cg-em24
 products:
   - brand: Carlo Gavazzi
     description:
-      generic: EM24 E1
+      generic: EM24/ET340
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]

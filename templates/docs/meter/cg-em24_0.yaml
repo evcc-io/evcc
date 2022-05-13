@@ -1,6 +1,6 @@
 product:
   brand: Carlo Gavazzi
-  description: EM24 E1
+  description: EM24/ET340
 render:
   - usage: grid
     default: |
