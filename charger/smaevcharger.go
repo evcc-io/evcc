@@ -96,7 +96,7 @@ func NewSmaevcharger(host string, user string, password string, cache time.Durat
 		cache:    cache,
 	}
 
-	// cached values
+	// setup cached values
 	wb.reset()
 
 	ts, err := smaevcharger.TokenSource(log, baseUri, wb.user, wb.password)
@@ -154,7 +154,6 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 		// TODO why does status B require require refresh? please add comment.
 		if state == smaevcharger.StatusB {
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.StopCharge)
-			wb.reset()
 		}
 	}
 
@@ -172,36 +171,35 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Smaevcharger) Enabled() (bool, error) {
-	StateChargerMode, err := wb.getParameter("Parameter.Chrg.ActChaMod")
+	mode, err := wb.getParameter("Parameter.Chrg.ActChaMod")
 	if err != nil {
 		return false, err
 	}
-	switch StateChargerMode {
-	case smaevcharger.FastCharge: // Schnellladen - 4718
-		return true, nil
-	case smaevcharger.OptiCharge: // Optimiertes Laden - 4719
-		return true, nil
-	case smaevcharger.PlanCharge: // Laden mit Vorgabe - 4720
+
+	switch mode {
+	case smaevcharger.FastCharge, // Schnellladen - 4718
+		smaevcharger.OptiCharge, // Optimiertes Laden - 4719
+		smaevcharger.PlanCharge: // Laden mit Vorgabe - 4720
 		return true, nil
 	case smaevcharger.StopCharge: // Ladestopp - 4721
 		return false, nil
+	default:
+		return false, fmt.Errorf("invalid charge mode: %s", mode)
 	}
-	return false, fmt.Errorf("SMA EV Charger  charge mode: %s", StateChargerMode)
 }
 
 // Enable implements the api.Charger interface
 func (wb *Smaevcharger) Enable(enable bool) error {
-	StateChargerSwitch, err := wb.getMeasurement("Measurement.Chrg.ModSw")
+	res, err := wb.getMeasurement("Measurement.Chrg.ModSw")
 	if err != nil {
 		return err
 	}
 
 	if enable {
-		switch StateChargerSwitch {
+		switch res {
 		case smaevcharger.SwitchOeko: // Switch PV Loading
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.OptiCharge)
-			wb.reset()
-			return fmt.Errorf("error while activating the charging process, switch position not on fast charging - SMA's own optimized charging was activated")
+			return fmt.Errorf("switch position not on fast charging - SMA's own optimized charging was activated")
 		case smaevcharger.SwitchFast: // Fast charging
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.FastCharge)
 		}
@@ -209,7 +207,6 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 		wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.StopCharge)
 	}
 
-	wb.reset()
 	return nil
 }
 
@@ -225,6 +222,7 @@ func (wb *Smaevcharger) MaxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
+
 	wb.SendParameter("Parameter.Inverter.AcALim", strconv.FormatFloat(current, 'f', 2, 64))
 	time.Sleep(time.Second)
 	return nil
