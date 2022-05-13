@@ -52,11 +52,11 @@ type Parameters struct {
 
 // Parameter Data json Send structure
 type SendParameter struct {
-	Values []SendData `json:"values"`
+	Values []Value `json:"values"`
 }
 
 // part of Paramter Send structure
-type SendData struct {
+type Value struct {
 	Timestamp string `json:"timestamp"`
 	ChannelId string `json:"channelId"`
 	Value     string `json:"value"`
