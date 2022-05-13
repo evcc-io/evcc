@@ -1,6 +1,6 @@
 product:
   brand: SMA
-  description: Wallbox
+  description: EV Charger
 render:
   - default: |
       type: template
