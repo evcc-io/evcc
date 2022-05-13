@@ -274,7 +274,6 @@ func (wb *Smaevcharger) reset() {
 
 func (wb *Smaevcharger) _measurementData() ([]smaevcharger.Measurements, error) {
 	var res []smaevcharger.Measurements
-
 	uri := fmt.Sprintf("%s/measurements/live", wb.uri)
 	data := `[{"componentId": "IGULD:SELF"}]`
 
