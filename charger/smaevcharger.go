@@ -27,6 +27,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/smaevcharger"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/hashicorp/go-version"
@@ -36,15 +37,14 @@ import (
 // smaevchager charger implementation
 type Smaevcharger struct {
 	*request.Helper
-	log              *util.Logger
-	uri              string // 192.168.XXX.XXX
-	user             string // LOGIN user
-	password         string // password
-	MeasurementsData []smaevcharger.Measurements
-	ParametersData   []smaevcharger.Parameters
-	updated          time.Time
-	cache            time.Duration
-	oldstate         float64
+	log          *util.Logger
+	uri          string // 192.168.XXX.XXX
+	user         string // LOGIN user
+	password     string // password
+	cache        time.Duration
+	oldstate     float64
+	measurementG func() ([]smaevcharger.Measurements, error)
+	parameterG   func() ([]smaevcharger.Parameters, error)
 }
 
 func init() {
@@ -96,6 +96,9 @@ func NewSmaevcharger(host string, user string, password string, cache time.Durat
 		cache:    cache,
 	}
 
+	// cached values
+	wb.reset()
+
 	ts, err := smaevcharger.TokenSource(log, baseUri, wb.user, wb.password)
 	if err != nil {
 		return wb, err
@@ -134,7 +137,6 @@ func NewSmaevcharger(host string, user string, password string, cache time.Durat
 
 	// TODO handle error return
 	wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.StopCharge) //need to send this command as a second command to prevent auto state change
-	wb.updated = time.Time{}
 
 	return wb, nil
 }
@@ -152,7 +154,7 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 		// TODO why does status B require require refresh? please add comment.
 		if state == smaevcharger.StatusB {
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.StopCharge)
-			wb.updated = time.Time{} // force update
+			wb.reset()
 		}
 	}
 
@@ -198,7 +200,7 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 		switch StateChargerSwitch {
 		case smaevcharger.SwitchOeko: // Switch PV Loading
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.OptiCharge)
-			wb.updated = time.Time{}
+			wb.reset()
 			return fmt.Errorf("error while activating the charging process, switch position not on fast charging - SMA's own optimized charging was activated")
 		case smaevcharger.SwitchFast: // Fast charging
 			wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.FastCharge)
@@ -207,7 +209,7 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 		wb.SendParameter("Parameter.Chrg.ActChaMod", smaevcharger.StopCharge)
 	}
 
-	wb.updated = time.Time{}
+	wb.reset()
 	return nil
 }
 
@@ -261,56 +263,48 @@ func (wb *Smaevcharger) Currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
-// TODO return error instead of true/false
-func (wb *Smaevcharger) getChargerData() bool {
-	if time.Since(wb.updated) < wb.cache {
-		return true
-	}
-
-	if wb.getMeasurementData() && wb.getParameterData() {
-		wb.updated = time.Now()
-		return true
-	}
-
-	return false
+// reset cache
+func (wb *Smaevcharger) reset() {
+	wb.measurementG = provider.Cached(wb._measurementData, wb.cache)
+	wb.parameterG = provider.Cached(wb._parameterData, wb.cache)
 }
 
-// TODO return error instead of true/false
-func (wb *Smaevcharger) getMeasurementData() bool {
+func (wb *Smaevcharger) _measurementData() ([]smaevcharger.Measurements, error) {
+	var res []smaevcharger.Measurements
+
 	uri := fmt.Sprintf("%s/measurements/live", wb.uri)
 	data := `[{"componentId": "IGULD:SELF"}]`
 
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), request.JSONEncoding)
 	if err == nil {
-		err = wb.DoJSON(req, &wb.MeasurementsData)
-		return err == nil
+		err = wb.DoJSON(req, &res)
 	}
 
-	return false
+	return res, err
 }
 
-// TODO return error instead of true/false
-func (wb *Smaevcharger) getParameterData() bool {
+func (wb *Smaevcharger) _parameterData() ([]smaevcharger.Parameters, error) {
+	var res []smaevcharger.Parameters
 	uri := fmt.Sprintf("%s/parameters/search/", wb.uri)
 	data := `{"queryItems":[{"componentId":"IGULD:SELF"}]}`
 
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), request.JSONEncoding)
 	if err == nil {
-		err = wb.DoJSON(req, &wb.ParametersData)
-		return err == nil
+		err = wb.DoJSON(req, &res)
 	}
 
-	return false
+	return res, err
 }
 
 func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
-	if !wb.getChargerData() {
-		return 0, fmt.Errorf("failed to acquire measurement data")
+	res, err := wb.measurementG()
+	if err != nil {
+		return 0, err
 	}
 
-	for i := range wb.MeasurementsData {
-		if wb.MeasurementsData[i].ChannelId == id {
-			return wb.MeasurementsData[i].Values[0].Value, nil
+	for _, el := range res {
+		if el.ChannelId == id {
+			return el.Values[0].Value, nil
 		}
 	}
 
@@ -318,13 +312,14 @@ func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
 }
 
 func (wb *Smaevcharger) getParameter(id string) (string, error) {
-	if !wb.getChargerData() {
-		return "", fmt.Errorf("failed to acquire parameter data")
+	res, err := wb.parameterG()
+	if err != nil {
+		return "", err
 	}
 
-	for i := range wb.ParametersData[0].Values {
-		if wb.ParametersData[0].Values[i].ChannelId == id {
-			return wb.ParametersData[0].Values[i].Value, nil
+	for _, el := range res[0].Values {
+		if el.ChannelId == id {
+			return el.Value, nil
 		}
 	}
 
@@ -333,10 +328,7 @@ func (wb *Smaevcharger) getParameter(id string) (string, error) {
 
 // TODO return error instead of true/false
 func (wb *Smaevcharger) SendParameter(id string, value string) bool {
-	if wb.ParametersData == nil {
-		wb.updated = time.Time{}
-		wb.getChargerData()
-	}
+	wb.reset()
 
 	data := smaevcharger.SendParameter{
 		Values: []smaevcharger.SendData{{
@@ -360,9 +352,7 @@ func (wb *Smaevcharger) SendParameter(id string, value string) bool {
 
 // TODO return error instead of true/false
 func (wb *Smaevcharger) SendMultiParameter(send []smaevcharger.SendData) bool {
-	if wb.ParametersData == nil {
-		wb.getChargerData()
-	}
+	wb.reset()
 
 	var data smaevcharger.SendParameter
 
@@ -378,10 +368,9 @@ func (wb *Smaevcharger) SendMultiParameter(send []smaevcharger.SendData) bool {
 
 	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
-		resp, err := wb.Do(req)
-		if resp.StatusCode >= 200 && resp.StatusCode <= 299 && err == nil {
-			return true
-		}
+		var res any
+		err = wb.DoJSON(req, &res)
+		return err == nil
 	}
 
 	return false
