@@ -55,10 +55,10 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
-	var res tasmota.StatusResponse
+	var res tasmota.StatusSTSResponse
 	err := c.conn.ExecCmd("Status 0", &res)
 
-	return res.Status.Power == 1, err
+	return res.StatusSTS.Power == "ON" || res.StatusSTS.Power1 == "ON" || res.StatusSTS.Power2 == "ON", err
 }
 
 // Enable implements the api.Charger interface
