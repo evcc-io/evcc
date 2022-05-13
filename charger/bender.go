@@ -27,6 +27,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -288,19 +289,15 @@ var _ api.Identifier = (*BenderCC)(nil)
 // Identify implements the api.Identifier interface
 func (wb *BenderCC) Identify() (string, error) {
 	if !wb.legacy {
+		var id []byte
+
 		b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
-		if err != nil {
-			return "", err
+		if err == nil && binary.BigEndian.Uint16(b) != 0 {
+			id, err = wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
 		}
 
-		if binary.BigEndian.Uint16(b) != 0 {
-			e, err := wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
-			if err != nil {
-				return "", err
-			}
-			if string(e) != "" {
-				return string(e), nil
-			}
+		if id := strings.TrimSpace(string(id)); id != "" || err != nil {
+			return id, err
 		}
 	}
 
