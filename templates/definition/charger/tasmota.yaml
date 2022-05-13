@@ -7,6 +7,8 @@ params:
   - name: user
   - name: password
     mask: true
+  - name: channel
+    default: 1
   - name: standbypower
     default: 15
 render: |
@@ -18,4 +20,5 @@ render: |
   {{ if ne .password "" }}
   password: {{ .password }}
   {{ end }}
+  channel: {{ .channel }}  # tasmota device relay channel 
   standbypower: {{ .standbypower }}

@@ -15,12 +15,22 @@ import (
 type Connection struct {
 	*request.Helper
 	uri, user, password string
+	Channel             int
 }
 
 // NewConnection creates Tasmota charger
-func NewConnection(uri, user, password string) (*Connection, error) {
+func NewConnection(uri, user, password string, channel int) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
+	}
+
+	// Default Tasmota relay channel 1
+	if channel == 0 {
+		channel = 1
+	}
+
+	if channel < 1 || channel > 4 {
+		return nil, errors.New("invalid relais channel (allowed range: 1-4)")
 	}
 
 	log := util.NewLogger("tasmota")
@@ -29,6 +39,7 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 		uri:      util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		user:     user,
 		password: password,
+		Channel:  channel,
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())

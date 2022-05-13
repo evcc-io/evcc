@@ -17,11 +17,12 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		URI      string
 		User     string
 		Password string
+		Channel  int
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return tasmota.NewConnection(cc.URI, cc.User, cc.Password)
+	return tasmota.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel)
 }
