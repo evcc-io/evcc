@@ -38,53 +38,50 @@ func (t *Token) AsOAuth2Token() *oauth2.Token {
 type tokenSource struct {
 	*request.Helper
 	oauth2.TokenSource
-	Host     string
-	User     string
-	Password string
+	uri      string
+	user     string
+	password string
 }
 
 // TokenSource creates an SMAevCharger token source
-func TokenSource(log *util.Logger, host, user, password string) (oauth2.TokenSource, error) {
+func TokenSource(log *util.Logger, uri, user, password string) (oauth2.TokenSource, error) {
 	c := &tokenSource{
 		Helper:   request.NewHelper(log),
-		Host:     host,
-		User:     user,
-		Password: password,
+		uri:      uri + "/token",
+		user:     user,
+		password: password,
 	}
 
-	Uri := c.Host + "/token"
 	data := url.Values{
 		"grant_type": {"password"},
 		"password":   {password},
 		"username":   {user},
 	}
 
-	req, err := request.New(http.MethodPost, Uri, strings.NewReader(data.Encode()), request.URLEncoding)
-
+	req, err := request.New(http.MethodPost, c.uri, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err == nil {
 		var token Token
 		if err = c.DoJSON(req, &token); err == nil {
 			c.TokenSource = oauth.RefreshTokenSource(token.AsOAuth2Token(), c)
 		}
 	}
+
 	return c, err
 }
 
 func (c *tokenSource) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-
-	Uri := c.Host + "/token"
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},
 	}
 
-	req, err := request.New(http.MethodPost, Uri, strings.NewReader(data.Encode()), request.URLEncoding)
-
+	req, err := request.New(http.MethodPost, c.uri, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err == nil {
 		var token Token
 		if err = c.DoJSON(req, &token); err == nil {
 			return token.AsOAuth2Token(), nil
 		}
 	}
+
 	return nil, err
 }
