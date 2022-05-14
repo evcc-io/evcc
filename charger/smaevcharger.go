@@ -38,8 +38,6 @@ type Smaevcharger struct {
 	*request.Helper
 	log          *util.Logger
 	uri          string // 192.168.XXX.XXX
-	user         string // LOGIN user
-	password     string // password
 	cache        time.Duration
 	oldstate     float64
 	measurementG func() ([]smaevcharger.Measurements, error)
@@ -87,18 +85,16 @@ func NewSmaevcharger(host string, user string, password string, cache time.Durat
 	baseUri := "http://" + host
 
 	wb := &Smaevcharger{
-		Helper:   request.NewHelper(log),
-		log:      log,
-		uri:      baseUri + "/api/v1",
-		user:     user,
-		password: password,
-		cache:    cache,
+		Helper: request.NewHelper(log),
+		log:    log,
+		uri:    baseUri + "/api/v1",
+		cache:  cache,
 	}
 
 	// setup cached values
 	wb.reset()
 
-	ts, err := smaevcharger.TokenSource(log, baseUri, wb.user, wb.password)
+	ts, err := smaevcharger.TokenSource(log, baseUri, user, password)
 	if err != nil {
 		return wb, err
 	}
