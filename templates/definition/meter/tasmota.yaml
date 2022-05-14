@@ -22,7 +22,7 @@ params:
       de: Nummer des Schalt-Kanals
       en: Device relay channel number
     help:
-      de: Nummer des Schalt-Kanals (1-8), bei Geräten mit mehr als einem Schalter.
+      de: Nummer des Schalt-Kanals (1-8), bei Geräten mit mehr als einem Schalter
       en: Device relay channel number (allowed range 1-8)
 render: |
   type: tasmota
