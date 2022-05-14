@@ -81,7 +81,7 @@ func (d *Connection) TotalEnergy() (float64, error) {
 	return float64(res.StatusSNS.Energy.Total), nil
 }
 
-// ChannelExist checks the existence of the configured relay channel interface
+// ChannelExists checks the existence of the configured relay channel interface
 func (d *Connection) ChannelExists() error {
 	var res *StatusSTSResponse
 	err := d.ExecCmd("Status 0", &res)
