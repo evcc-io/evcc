@@ -196,7 +196,7 @@ params:
     valuetype: stringlist
   - name: standbypower
     description:
-      de: Standby-Leistung in W"
+      de: Standby-Leistung in W
       en: Standby power in W
     help:
       de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet

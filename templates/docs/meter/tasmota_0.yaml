@@ -8,5 +8,6 @@ render:
       template: tasmota
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      user: admin # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
+      user: # Standard-User ist admin # Optional
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
+      channel: 1 # Nummer des Schalt-Kanals (1-8), bei Geräten mit mehr als einem Schalter.
