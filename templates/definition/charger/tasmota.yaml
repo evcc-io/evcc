@@ -13,7 +13,7 @@ params:
     default: 15
 render: |
   type: tasmota
-  uri: http://{{ .host }}  # ip address (local)
+  uri: http://{{ .host }}
   {{ if ne .user "" }}
   user: {{ .user }}
   {{ end }}
