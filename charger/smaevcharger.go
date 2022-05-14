@@ -48,7 +48,7 @@ func init() {
 	registry.Add("smaevcharger", NewSmaevchargerFromConfig)
 }
 
-// NewSmaevchargerFromConfig creates a Smaevcharger charger from generic config
+// NewSmaevchargerFromConfig creates a SMA EV Charger from generic config
 func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Host     string
@@ -78,7 +78,7 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 	return NewSmaevcharger(cc.Host, cc.User, cc.Password, cc.Cache)
 }
 
-// NewSmaevcharger creates Smaevcharger charger
+// NewSmaevcharger creates an SMA EV Charger
 func NewSmaevcharger(host string, user string, password string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("smaevcharger").Redact(user, password)
 
