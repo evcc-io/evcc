@@ -19,6 +19,7 @@ type EVSEWifi struct {
 	alwaysActive bool
 	current      int64 // current will always be the physical value sent to the API
 	hires        bool
+	log          *util.Logger
 }
 
 func init() {
@@ -108,6 +109,7 @@ func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 		Helper:  request.NewHelper(log),
 		uri:     strings.TrimRight(uri, "/"),
 		current: 6, // 6A defined value
+		log:     log,
 	}
 
 	return wb, nil
