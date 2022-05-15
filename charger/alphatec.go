@@ -66,7 +66,7 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alpha")
+	log := util.NewLogger("alphatec")
 	conn.Logger(log.TRACE)
 
 	wb := &Alphatec{
@@ -84,7 +84,7 @@ func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 	}
 
 	var res api.ChargeStatus
-	switch b[0] {
+	switch u := binary.BigEndian.Uint16(b); u {
 	case 1:
 		res = api.StatusA
 	case 2:
@@ -92,7 +92,7 @@ func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 	case 3:
 		res = api.StatusC
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", b[0])
+		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
 
 	return res, nil
