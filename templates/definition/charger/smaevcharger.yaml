@@ -1,0 +1,19 @@
+template: smaevcharger
+products:
+  - brand: SMA
+    description:
+      generic: EV Charger
+params:
+  - name: title
+  - name: host
+    required: true
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+render: |
+  type: smaevcharger
+  host: {{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}
