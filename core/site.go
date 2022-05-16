@@ -270,6 +270,7 @@ func (site *Site) updateMeters() error {
 
 	if len(site.pvMeters) > 0 {
 		site.pvPower = 0
+		var pvEnergy float64 = -1.0
 
 		for id, meter := range site.pvMeters {
 			var power float64
@@ -285,10 +286,23 @@ func (site *Site) updateMeters() error {
 				err = fmt.Errorf("pv meter %d: %v", id, err)
 				site.log.ERROR.Println(err)
 			}
+
+			// pv energy
+			if energyMeter, ok := meter.(api.MeterEnergy); ok {
+				val, err := energyMeter.TotalEnergy()
+				if err == nil {
+					pvEnergy += val
+				} else {
+					site.log.ERROR.Println(fmt.Errorf("pv meter energy: %v", err))
+				}
+			}
 		}
 
 		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 		site.publish("pvPower", site.pvPower)
+		if pvEnergy >= 0.0 {
+			site.publish("pvEnergy", pvEnergy)
+		}
 	}
 
 	if len(site.batteryMeters) > 0 {
