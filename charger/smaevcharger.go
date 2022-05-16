@@ -149,7 +149,6 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 			if err := wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.StopCharge)); err != nil {
 				return api.StatusNone, err
 			}
-			wb.reset()
 		}
 		wb.oldstate = state
 	}
@@ -336,6 +335,7 @@ func (wb *Smaevcharger) Send(values ...smaevcharger.Value) error {
 		if res.StatusCode < 200 && res.StatusCode > 299 {
 			return err
 		}
+		wb.reset()
 	}
 
 	return err
