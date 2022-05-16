@@ -202,10 +202,10 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 			// If the wallbox is installed without SHM, charging in eco mode is not possible.
 			_ = wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.OptiCharge))
 			return fmt.Errorf("switch position not on fast charging - SMA's own optimized charging was activated")
-		} else {
-			// Switch in Fast charging position
-			return wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.FastCharge))
 		}
+		
+		// Switch in Fast charging position
+		return wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.FastCharge))
 	}
 
 	// else
