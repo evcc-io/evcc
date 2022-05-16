@@ -246,7 +246,7 @@ func targetChargeHandler(loadpoint loadpoint.API) http.HandlerFunc {
 		}
 
 		timeS, ok := vars["time"]
-		timeV, err := time.ParseInLocation("2006-01-02T15:04:05", timeS, timezone())
+		timeV, err := time.Parse(time.RFC3339, timeS)
 
 		if !ok || err != nil {
 			jsonError(w, http.StatusBadRequest, err)
