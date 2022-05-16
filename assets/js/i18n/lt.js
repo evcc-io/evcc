@@ -102,7 +102,7 @@ export default {
       minCharge: "minimalus įkrovimas iki {soc}%.",
       waitForVehicle: "Įkrovimas leidžiamas. Laukiama automobilio signalo.",
       charging: "Įkraunama.",
-      targetChargePlanned: "Suplanuotas įkrovimas, prasidės {start}.",
+      targetChargePlanned: "Suplanuotas įkrovimas, prasidės {time}.",
       targetChargeWaitForVehicle: "Suplanuotas įkrovimas leidžiamas. Laukiama automobilio signalo.",
       targetChargeActive: "Suplanuotas įkrovimas aktyvuotas.",
       connected: "Prijungtas.",

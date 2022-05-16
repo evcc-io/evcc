@@ -103,7 +103,7 @@ export default {
       minCharge: "minimum charging to {soc}%.",
       waitForVehicle: "Ready. Waiting for vehicle.",
       charging: "Charging.",
-      targetChargePlanned: "Target charge planned. Starting {start}.",
+      targetChargePlanned: "Target charge planned. Starting {time}.",
       targetChargeWaitForVehicle: "Target charge ready. Wait for vehicle.",
       targetChargeActive: "Target charge active.",
       connected: "Connected.",

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"os"
 	"strconv"
 	"text/template"
 	"time"
@@ -220,16 +219,6 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 
 		jsonResult(w, res)
 	}
-}
-
-func timezone() *time.Location {
-	tz := os.Getenv("TZ")
-	if tz == "" {
-		tz = "Local"
-	}
-
-	loc, _ := time.LoadLocation(tz)
-	return loc
 }
 
 // targetChargeHandler updates target soc
