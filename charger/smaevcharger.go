@@ -140,9 +140,9 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 
 	if state != wb.oldstate {
 		// if the wallbox detects a car, it automatically switches to the charging state of the selector switch.
-		// Since EVCC requires the fast charging option, the wallbox would immediately start charging with maximum charging power, 
-		// without taking into account the desired state of evcc. Since this is not desired, 
-		// the charging status must be changed / overwritten from fast charging to charging stop as soon as a vehicle is detected (StatusB) 
+		// Since EVCC requires the fast charging option, the wallbox would immediately start charging with maximum charging power,
+		// without taking into account the desired state of evcc. Since this is not desired,
+		// the charging status must be changed / overwritten from fast charging to charging stop as soon as a vehicle is detected (StatusB)
 		// After that, EVCC can decide which charging option should be selected.
 
 		if state == smaevcharger.StatusB && wb.oldstate == smaevcharger.StatusA {
@@ -193,18 +193,18 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 			return err
 		}
 
-		switch res {
-		case smaevcharger.SwitchOeko: // Switch PV Loading
+		if res == smaevcharger.SwitchOeko {
+			// Switch in PV Loading position
 			// If the selector switch of the wallbox is in the wrong position (eco-charging and not fast charging),
 			// the charging process is started with eco-charging when it is activated,
 			// which may be desired when integrated with SHM.
 			// Since evcc does not have full control over the charging station in this mode,
 			// a corresponding error is returned to indicate the incorrect switch position.
 			// If the wallbox is installed without SHM, charging in eco mode is not possible.
-
 			_ = wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.OptiCharge))
-			return fmt.Errorf("switch position not on fast charging - SMA's own optimized charging was activated")	
-		default: // Fast charging
+			return fmt.Errorf("switch position not on fast charging - SMA's own optimized charging was activated")
+		} else {
+			// Switch in Fast charging position
 			return wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.FastCharge))
 		}
 	}
@@ -226,9 +226,7 @@ func (wb *Smaevcharger) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
 
-	err := wb.Send(value("Parameter.Inverter.AcALim", fmt.Sprintf("%.2f", current)))
-
-	return err
+	return wb.Send(value("Parameter.Inverter.AcALim", fmt.Sprintf("%.2f", current)))
 }
 
 var _ api.Meter = (*Smaevcharger)(nil)
@@ -338,7 +336,6 @@ func (wb *Smaevcharger) Send(values ...smaevcharger.Value) error {
 		if res.StatusCode < 200 && res.StatusCode > 299 {
 			return err
 		}
-		wb.reset()
 	}
 
 	return err
