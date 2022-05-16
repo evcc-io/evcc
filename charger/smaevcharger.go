@@ -331,10 +331,7 @@ func (wb *Smaevcharger) Send(values ...smaevcharger.Value) error {
 
 	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
-		res, err := wb.Do(req)
-		if res.StatusCode < 200 && res.StatusCode > 299 {
-			return err
-		}
+		_, err = wb.DoBody(req)
 		wb.reset()
 	}
 
