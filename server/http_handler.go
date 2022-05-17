@@ -222,7 +222,7 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 }
 
 // targetChargeHandler updates target soc
-func targetChargeHandler(loadpoint loadpoint.TargetCharger) http.HandlerFunc {
+func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -279,4 +279,10 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ServeWebsocket(hub, w, r)
 	}
+}
+
+// TargetCharger defines target charge related loadpoint operations
+type targetCharger interface {
+	// SetTargetCharge sets the charge targetSoC
+	SetTargetCharge(time.Time, int)
 }
