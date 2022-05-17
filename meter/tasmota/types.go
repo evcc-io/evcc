@@ -1,6 +1,6 @@
 package tasmota
 
-// StatusResponse is a part of the Tasmota Status 0 command Status response
+// StatusResponse is the Status part of the Tasmota Status 0 command response
 // https://tasmota.github.io/docs/JSON-Status-Responses/
 type StatusResponse struct {
 	Status struct {
@@ -26,6 +26,36 @@ type StatusResponse struct {
 	}
 }
 
+// StatusSTSResponse is the StatusSTS part of the Tasmota Status 0 command response
+// https://tasmota.github.io/docs/JSON-Status-Responses/
+type StatusSTSResponse struct {
+	StatusSTS struct {
+		Power  string // ON, OFF, Error
+		Power1 string // ON, OFF, Error
+		Power2 string // ON, OFF, Error
+		Power3 string // ON, OFF, Error
+		Power4 string // ON, OFF, Error
+		Power5 string // ON, OFF, Error
+		Power6 string // ON, OFF, Error
+		Power7 string // ON, OFF, Error
+		Power8 string // ON, OFF, Error
+	}
+}
+
+// PowerResponse is the Tasmota Power command Status response
+// https://tasmota.github.io/docs/Commands/#with-web-requests
+type PowerResponse struct {
+	Power  string // ON, OFF, Error
+	Power1 string // ON, OFF, Error
+	Power2 string // ON, OFF, Error
+	Power3 string // ON, OFF, Error
+	Power4 string // ON, OFF, Error
+	Power5 string // ON, OFF, Error
+	Power6 string // ON, OFF, Error
+	Power7 string // ON, OFF, Error
+	Power8 string // ON, OFF, Error
+}
+
 // StatusSNSResponse is the Tasmota Status 8 command Status response
 // https://tasmota.github.io/docs/JSON-Status-Responses/
 type StatusSNSResponse struct {
@@ -44,10 +74,4 @@ type StatusSNSResponse struct {
 			Current        float64
 		}
 	}
-}
-
-// PowerResponse is the Tasmota Power command Status response
-// https://tasmota.github.io/docs/Commands/#with-web-requests
-type PowerResponse struct {
-	Power string // ON, OFF, Error
 }

@@ -2,6 +2,7 @@ package charger
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tasmota"
@@ -30,17 +31,18 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User         string
 		Password     string
 		StandbyPower float64
+		Channel      int
 	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewTasmota(cc.URI, cc.User, cc.Password, cc.StandbyPower)
+	return NewTasmota(cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
 }
 
 // NewTasmota creates Tasmota charger
-func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, error) {
-	conn, err := tasmota.NewConnection(uri, user, password)
+func NewTasmota(uri, user, password string, channel int, standbypower float64) (*Tasmota, error) {
+	conn, err := tasmota.NewConnection(uri, user, password, channel)
 	if err != nil {
 		return nil, err
 	}
@@ -55,27 +57,69 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
-	var res tasmota.StatusResponse
+	var res tasmota.StatusSTSResponse
 	err := c.conn.ExecCmd("Status 0", &res)
+	if err != nil {
+		return false, err
+	}
 
-	return res.Status.Power == 1, err
+	switch c.conn.Channel {
+	case 2:
+		return res.StatusSTS.Power2 == "ON", err
+	case 3:
+		return res.StatusSTS.Power3 == "ON", err
+	case 4:
+		return res.StatusSTS.Power4 == "ON", err
+	case 5:
+		return res.StatusSTS.Power5 == "ON", err
+	case 6:
+		return res.StatusSTS.Power6 == "ON", err
+	case 7:
+		return res.StatusSTS.Power7 == "ON", err
+	case 8:
+		return res.StatusSTS.Power8 == "ON", err
+	default:
+		return res.StatusSTS.Power == "ON" || res.StatusSTS.Power1 == "ON", err
+	}
 }
 
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
 	var res tasmota.PowerResponse
-	cmd := "Power off"
+	on := false
+	cmd := fmt.Sprintf("Power%d off", c.conn.Channel)
 	if enable {
-		cmd = "Power on"
+		cmd = fmt.Sprintf("Power%d on", c.conn.Channel)
 	}
+
 	err := c.conn.ExecCmd(cmd, &res)
+	if err != nil {
+		return err
+	}
+
+	switch c.conn.Channel {
+	case 2:
+		on = res.Power2 == "ON"
+	case 3:
+		on = res.Power3 == "ON"
+	case 4:
+		on = res.Power4 == "ON"
+	case 5:
+		on = res.Power5 == "ON"
+	case 6:
+		on = res.Power6 == "ON"
+	case 7:
+		on = res.Power7 == "ON"
+	case 8:
+		on = res.Power8 == "ON"
+	default:
+		on = res.Power == "ON" || res.Power1 == "ON"
+	}
 
 	switch {
-	case err != nil:
-		return err
-	case enable && res.Power != "ON":
+	case enable && !on:
 		return errors.New("switchOn failed")
-	case !enable && res.Power != "OFF":
+	case !enable && on:
 		return errors.New("switchOff failed")
 	default:
 		return nil
