@@ -222,7 +222,7 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 }
 
 // targetChargeHandler updates target soc
-func targetChargeHandler(loadpoint loadpoint.API) http.HandlerFunc {
+func targetChargeHandler(loadpoint loadpoint.TargetCharger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 

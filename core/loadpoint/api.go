@@ -81,3 +81,9 @@ type API interface {
 	// GetRemainingEnergy is the remaining charge energy in Wh
 	GetRemainingEnergy() float64
 }
+
+// TargetCharger defines target charge related loadpoint operations
+type TargetCharger interface {
+	// SetTargetCharge sets the charge targetSoC
+	SetTargetCharge(time.Time, int)
+}
