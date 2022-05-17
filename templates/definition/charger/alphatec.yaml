@@ -2,7 +2,7 @@ template: alphatec
 products:
   - brand: Alphatec
     description:
-      generic: Wallbox Mini
+      generic: Wallbox Mini/ AW1eM
 requirements:
   evcc: ["sponsorship"]
 params:

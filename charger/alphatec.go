@@ -27,6 +27,8 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
+// https://shop.alphatec-systeme.de/media/pdf/4d/0e/64/MontageanleitungwlFxbRgs4NKK3.pdf
+
 // Alphatec charger implementation
 type Alphatec struct {
 	conn *modbus.Connection

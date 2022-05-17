@@ -1,6 +1,6 @@
 product:
   brand: Alphatec
-  description: Wallbox Mini
+  description: Wallbox Mini/ AW1eM
 requirements: ["sponsorship"]
 render:
   - default: |
