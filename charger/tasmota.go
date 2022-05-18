@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tasmota"
@@ -65,21 +66,21 @@ func (c *Tasmota) Enabled() (bool, error) {
 
 	switch c.conn.Channel {
 	case 2:
-		return res.StatusSTS.Power2 == "ON", err
+		return strings.ToUpper(res.StatusSTS.Power2) == "ON", err
 	case 3:
-		return res.StatusSTS.Power3 == "ON", err
+		return strings.ToUpper(res.StatusSTS.Power3) == "ON", err
 	case 4:
-		return res.StatusSTS.Power4 == "ON", err
+		return strings.ToUpper(res.StatusSTS.Power4) == "ON", err
 	case 5:
-		return res.StatusSTS.Power5 == "ON", err
+		return strings.ToUpper(res.StatusSTS.Power5) == "ON", err
 	case 6:
-		return res.StatusSTS.Power6 == "ON", err
+		return strings.ToUpper(res.StatusSTS.Power6) == "ON", err
 	case 7:
-		return res.StatusSTS.Power7 == "ON", err
+		return strings.ToUpper(res.StatusSTS.Power7) == "ON", err
 	case 8:
-		return res.StatusSTS.Power8 == "ON", err
+		return strings.ToUpper(res.StatusSTS.Power8) == "ON", err
 	default:
-		return res.StatusSTS.Power == "ON" || res.StatusSTS.Power1 == "ON", err
+		return strings.ToUpper(res.StatusSTS.Power) == "ON" || strings.ToUpper(res.StatusSTS.Power1) == "ON", err
 	}
 }
 
@@ -99,21 +100,21 @@ func (c *Tasmota) Enable(enable bool) error {
 
 	switch c.conn.Channel {
 	case 2:
-		on = res.Power2 == "ON"
+		on = strings.ToUpper(res.Power2) == "ON"
 	case 3:
-		on = res.Power3 == "ON"
+		on = strings.ToUpper(res.Power3) == "ON"
 	case 4:
-		on = res.Power4 == "ON"
+		on = strings.ToUpper(res.Power4) == "ON"
 	case 5:
-		on = res.Power5 == "ON"
+		on = strings.ToUpper(res.Power5) == "ON"
 	case 6:
-		on = res.Power6 == "ON"
+		on = strings.ToUpper(res.Power6) == "ON"
 	case 7:
-		on = res.Power7 == "ON"
+		on = strings.ToUpper(res.Power7) == "ON"
 	case 8:
-		on = res.Power8 == "ON"
+		on = strings.ToUpper(res.Power8) == "ON"
 	default:
-		on = res.Power == "ON" || res.Power1 == "ON"
+		on = strings.ToUpper(res.Power) == "ON" || strings.ToUpper(res.Power1) == "ON"
 	}
 
 	switch {
