@@ -163,11 +163,16 @@ func (v *Renault) apiKeys(region string) error {
 
 	var cr configResponse
 	err := v.GetJSON(uri, &cr)
-
-	v.gigya = cr.Servers.GigyaProd
-	v.kamereon = cr.Servers.WiredProd
-
-	return err
+	if err != nil {
+		// Use of old fixed keys if keyStore is not accessible
+		v.gigya = configServer{"https://accounts.eu1.gigya.com", "3_7PLksOyBRkHv126x5WhHb-5pqC1qFR8pQjxSeLB6nhAnPERTUlwnYoznHSxwX668"}
+		v.kamereon = configServer{"https://api-wired-prod-1-euw1.wrd-aws.com", "VAX7XYKGfa92yMvXculCkEFyfZbuM7Ss"}
+		return nil
+	} else {
+		v.gigya = cr.Servers.GigyaProd
+		v.kamereon = cr.Servers.WiredProd
+		return err
+	}
 }
 
 func (v *Renault) authFlow() error {
@@ -278,7 +283,7 @@ func (v *Renault) kamereonRequest(uri string, body io.Reader) (kamereonResponse,
 	params := url.Values{"country": []string{"DE"}}
 	headers := map[string]string{
 		"x-gigya-id_token": v.gigyaJwtToken,
-		"apikey":           "VAX7XYKGfa92yMvXculCkEFyfZbuM7Ss", // v.kamereon.APIKey
+		"apikey":           v.kamereon.APIKey,
 	}
 
 	var res kamereonResponse
