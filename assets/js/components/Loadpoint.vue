@@ -202,8 +202,7 @@ export default {
 			api.post(this.apiPath("targetsoc") + "/" + soc);
 		},
 		setTargetTime: function (date) {
-			const formattedDate = `${this.fmtDayString(date)}T${this.fmtTimeString(date)}:00`;
-			api.post(this.apiPath("targetcharge") + "/" + this.targetSoC + "/" + formattedDate);
+			api.post(`${this.apiPath("targetcharge")}/${this.targetSoC}/${date.toISOString()}`);
 		},
 		removeTargetTime: function () {
 			api.delete(this.apiPath("targetcharge"));

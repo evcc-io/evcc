@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"os"
 	"strconv"
 	"text/template"
 	"time"
@@ -222,18 +221,8 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-func timezone() *time.Location {
-	tz := os.Getenv("TZ")
-	if tz == "" {
-		tz = "Local"
-	}
-
-	loc, _ := time.LoadLocation(tz)
-	return loc
-}
-
 // targetChargeHandler updates target soc
-func targetChargeHandler(loadpoint loadpoint.API) http.HandlerFunc {
+func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -246,7 +235,7 @@ func targetChargeHandler(loadpoint loadpoint.API) http.HandlerFunc {
 		}
 
 		timeS, ok := vars["time"]
-		timeV, err := time.ParseInLocation("2006-01-02T15:04:05", timeS, timezone())
+		timeV, err := time.Parse(time.RFC3339, timeS)
 
 		if !ok || err != nil {
 			jsonError(w, http.StatusBadRequest, err)
@@ -290,4 +279,10 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ServeWebsocket(hub, w, r)
 	}
+}
+
+// TargetCharger defines target charge related loadpoint operations
+type targetCharger interface {
+	// SetTargetCharge sets the charge targetSoC
+	SetTargetCharge(time.Time, int)
 }
