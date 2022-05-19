@@ -145,10 +145,13 @@ type StatusResponseMobile struct {
 func (s *StatusResponseMobile) MeasurementByKey(key string) (*MeasurementMobile, error) {
 	for _, m := range s.Measurements {
 		if m.Key == key {
+			var err error
 			if !m.Status.IsEnabled {
-				return nil, errors.New(m.Status.Cause)
+				if m.Status.Cause != "UNKNOWN" {
+					err = errors.New(m.Status.Cause)
+				}
 			}
-			return &m, nil
+			return &m, err
 		}
 	}
 	return nil, api.ErrNotAvailable
