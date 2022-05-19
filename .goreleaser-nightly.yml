@@ -8,7 +8,7 @@ builds:
     flags:
       - -tags=release,viper_yaml3
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{.Version}} -X github.com/evcc-io/evcc/server.Commit={{.ShortCommit}} -s -w
+      - -X github.com/evcc-io/evcc/server.Version={{.Tag}} -X github.com/evcc-io/evcc/server.Commit={{.ShortCommit}} -s -w
     env:
       - CGO_ENABLED=0
     goos:
