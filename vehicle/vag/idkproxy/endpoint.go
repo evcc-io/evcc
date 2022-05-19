@@ -41,6 +41,8 @@ func New(log *util.Logger, q url.Values) *Service {
 	}
 }
 
+// https://github.com/arjenvrh/audi_connect_ha/issues/133
+
 var secret = []byte{55, 24, 256 - 56, 256 - 96, 256 - 72, 256 - 110, 57, 256 - 87, 3, 256 - 86, 256 - 41, 256 - 103, 33, 256 - 30, 99, 103, 81, 125, 256 - 39, 256 - 39, 71, 18, 256 - 107, 256 - 112, 256 - 120, 256 - 12, 256 - 104, 89, 103, 113, 256 - 128, 256 - 91}
 
 func qmauth(ts int64) string {
