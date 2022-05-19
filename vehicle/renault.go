@@ -171,6 +171,8 @@ func (v *Renault) apiKeys(region string) error {
 	} else {
 		v.gigya = cr.Servers.GigyaProd
 		v.kamereon = cr.Servers.WiredProd
+		// Temporary fix of wrong kamereon APIKey in keyStore
+		v.kamereon.APIKey = "VAX7XYKGfa92yMvXculCkEFyfZbuM7Ss"
 		return err
 	}
 }
