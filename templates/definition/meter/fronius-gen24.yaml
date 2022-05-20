@@ -26,11 +26,21 @@ render: |
   model: sunspec
   uri: {{ .host }}:{{ .port }}
   id: 200
-  power: {{ if eq .integer "true" }}203{{ else }}213{{ end }}:W # sunspec model 203/213 meter
+  {{ if eq .integer "true" }}
+  # sunspec model 203 (int+sf) meter
+  power: 203:W
   currents:
-    - {{ if eq .integer "true" }}203{{ else }}213{{ end }}:AphA # sunspec 203/213 current
-    - {{ if eq .integer "true" }}203{{ else }}213{{ end }}:AphB # sunspec 203/213 current
-    - {{ if eq .integer "true" }}203{{ else }}213{{ end }}:AphC # sunspec 203/213 current
+    - 203:AphA
+    - 203:AphB
+    - 203:AphC
+  {{ else }}
+  # sunspec model 213 (float) meter
+  power: 213:W
+  currents:
+    - 213:AphA
+    - 213:AphB
+    - 213:AphC
+  {{- end }}
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
