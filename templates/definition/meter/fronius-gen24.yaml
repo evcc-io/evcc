@@ -21,6 +21,7 @@ params:
     advanced: true
     valuetype: bool
 render: |
+  # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}
   type: modbus
   model: sunspec
