@@ -34,17 +34,16 @@ type ABB struct {
 }
 
 const (
-	abbRegSerial       = 0x4000 // Serial Number 4 unsigned RO available
-	abbRegFirmware     = 0x4004 // Firmware version 2 unsigned RO available
-	abbRegErrorCode    = 0x4008 // Error Code 2 unsigned RO available
-	abbRegStatus       = 0x400C // Charging state 2 unsigned RO available
-	abbRegCurrents     = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
-	abbRegPower        = 0x401C // Active power 2 1 W unsigned RO available
-	abbRegEnergy       = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
-	abbRegCurrent      = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
-	abbRegPhases       = 0x4102 // Set charging phase 1 unsigned WO Not support
-	abbRegAvailability = 0x4104 // Set charger availability 1 unsigned WO Not support
-	abbRegStartStop    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
+	abbRegSerial    = 0x4000 // Serial Number 4 unsigned RO available
+	abbRegFirmware  = 0x4004 // Firmware version 2 unsigned RO available
+	abbRegErrorCode = 0x4008 // Error Code 2 unsigned RO available
+	abbRegStatus    = 0x400C // Charging state 2 unsigned RO available
+	abbRegCurrents  = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
+	abbRegPower     = 0x401C // Active power 2 1 W unsigned RO available
+	abbRegEnergy    = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
+	abbRegCurrent   = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
+	abbRegPhases    = 0x4102 // Set charging phase 1 unsigned WO Not support
+	abbRegStartStop = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 )
 
 func init() {
