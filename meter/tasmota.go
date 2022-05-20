@@ -18,7 +18,9 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		User     string
 		Password string
 		Channel  int
-	}{}
+	}{
+		Channel: 1,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
