@@ -1,6 +1,8 @@
 template: openwb
 products:
   - brand: openWB
+    description:
+      generic: series2
 requirements:
   description:
     en: The wallbox has to be configured as loadpoint.

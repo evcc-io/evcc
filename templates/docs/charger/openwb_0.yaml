@@ -1,5 +1,6 @@
 product:
   brand: openWB
+  description: series2
 description: |
   Die Wallbox muss als Ladepunkt konfiguriert sein.
 render:
