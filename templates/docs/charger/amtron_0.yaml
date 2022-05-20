@@ -1,6 +1,6 @@
 product:
-  brand: Mennekes AMTRON
-  description: XTRA, PREMIUM
+  brand: Mennekes
+  description: AMTRON XTRA, AMTRON PREMIUM
 requirements: ["sponsorship"]
 render:
   - default: |
