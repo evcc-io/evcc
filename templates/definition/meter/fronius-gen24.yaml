@@ -27,6 +27,10 @@ render: |
   uri: {{ .host }}:{{ .port }}
   id: 200
   power: {{ if eq .integer "true" }}203{{ else }}213{{ end }}:W # sunspec model 203/213 meter
+  currents:
+    - {{ if eq .integer "true" }}203{{ else }}213{{ end }}:AphA # sunspec 203/213 current
+    - {{ if eq .integer "true" }}203{{ else }}213{{ end }}:AphB # sunspec 203/213 current
+    - {{ if eq .integer "true" }}203{{ else }}213{{ end }}:AphC # sunspec 203/213 current
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
