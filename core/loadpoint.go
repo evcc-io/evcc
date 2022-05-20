@@ -944,7 +944,7 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 // effectiveCurrent returns the currently effective charging current
 func (lp *LoadPoint) effectiveCurrent() float64 {
-	if lp.GetStatus() != api.StatusC {
+	if lp.GetStatus() != api.StatusC && lp.GetStatus() != api.StatusD {
 		return 0
 	}
 
