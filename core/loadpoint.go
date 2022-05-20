@@ -470,9 +470,7 @@ func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
 	lp.publish("chargeCurrent", current)
 
 	// must be async or nested publish locks
-	go func() {
-		lp.bus.Publish(evChargeCurrentProxy, current)
-	}()
+	go lp.bus.Publish(evChargeCurrentProxy, current)
 }
 
 // evChargeCurrentProxyMeterHandler updates the dummy charge meter's charge power.
