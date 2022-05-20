@@ -7,7 +7,7 @@ render:
   - default: |
       type: template
       template: abb      
-      
+
       # Modbus TCP
       modbus: tcpip
       id: 1
