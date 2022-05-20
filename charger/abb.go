@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 premultiply
+// Copyright (c) 2022 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -38,15 +38,13 @@ type ABB struct {
 }
 
 const (
-	// read-only
-	abbRegSerial    = 0x4000 // Serial Number 4 unsigned RO available
-	abbRegFirmware  = 0x4004 // Firmware version 2 unsigned RO available
-	abbRegErrorCode = 0x4008 // Error Code 2 unsigned RO available
-	abbRegStatus    = 0x400C // Charging state 2 unsigned RO available
-	abbRegCurrents  = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
-	abbRegPower     = 0x401C // Active power 2 1 W unsigned RO available
-	abbRegEnergy    = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
-	// write-only
+	abbRegSerial       = 0x4000 // Serial Number 4 unsigned RO available
+	abbRegFirmware     = 0x4004 // Firmware version 2 unsigned RO available
+	abbRegErrorCode    = 0x4008 // Error Code 2 unsigned RO available
+	abbRegStatus       = 0x400C // Charging state 2 unsigned RO available
+	abbRegCurrents     = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
+	abbRegPower        = 0x401C // Active power 2 1 W unsigned RO available
+	abbRegEnergy       = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
 	abbRegCurrent      = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
 	abbRegPhases       = 0x4102 // Set charging phase 1 unsigned WO Not support
 	abbRegAvailability = 0x4104 // Set charger availability 1 unsigned WO Not support
@@ -127,12 +125,12 @@ func (wb *ABB) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	b := make([]byte, 2)
+	var b uint16
 	if !enable {
-		binary.BigEndian.PutUint16(b, 1)
+		b = 1
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(abbRegStartStop, 1, b)
+	_, err := wb.conn.WriteSingleRegister(abbRegStartStop, b)
 
 	return err
 }
@@ -197,13 +195,13 @@ func (wb *ABB) Currents() (float64, float64, float64, error) {
 var _ api.ChargePhases = (*ABB)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
-func (c *ABB) Phases1p3p(phases int) error {
-	var p uint16 = 1
+func (wb *ABB) Phases1p3p(phases int) error {
+	var b uint16 = 1
 	if phases != 1 {
-		p = 2 // 3p
+		b = 2 // 3p
 	}
 
-	_, err := c.conn.WriteSingleRegister(abbRegPhases, p)
+	_, err := wb.conn.WriteSingleRegister(abbRegPhases, b)
 	return err
 }
 
