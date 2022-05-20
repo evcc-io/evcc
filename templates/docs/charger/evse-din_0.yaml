@@ -1,9 +1,10 @@
 product:
-  description: EVSE DIN
+  brand: Stark in Strom
+  description: Easy
 render:
   - default: |
       type: template
-      template: evse_din      
+      template: evse-din      
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
