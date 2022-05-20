@@ -107,13 +107,13 @@ func (wb *Alphatec) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	return binary.BigEndian.Uint16(b) == 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Alphatec) Enable(enable bool) error {
 	b := make([]byte, 2)
-	if enable {
+	if !enable {
 		binary.BigEndian.PutUint16(b, 1)
 	}
 
