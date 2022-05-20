@@ -255,7 +255,7 @@ func (wb *Smaevcharger) Currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		curr = append(curr, val)
+		curr = append(curr, -val)
 	}
 
 	return curr[0], curr[1], curr[2], nil
