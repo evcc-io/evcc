@@ -1,0 +1,15 @@
+product:
+  brand: ABB
+  description: Terra AC
+capabilities: ["1p3p"]
+requirements: ["sponsorship"]
+render:
+  - default: |
+      type: template
+      template: abb      
+      
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
