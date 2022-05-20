@@ -20,7 +20,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"sync"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -30,11 +29,8 @@ import (
 
 // ABB charger implementation
 type ABB struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	mu      sync.Mutex
-	curr    float64
-	enabled bool
+	log  *util.Logger
+	conn *modbus.Connection
 }
 
 const (
