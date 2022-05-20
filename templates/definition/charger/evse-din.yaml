@@ -1,10 +1,17 @@
-template: evse_din
+template: evse-din
+covers:
+  - evse_din
 products:
+  - brand: Stark in Strom
+    description:
+      generic: Easy
   - description:
       generic: EVSE DIN
 params:
   - name: modbus
     choice: ["rs485"]
+    baudrate: 9600
+    comset: 8N1
 render: |
   type: evsedin
   {{- include "modbus" . }}
