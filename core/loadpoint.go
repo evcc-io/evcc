@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	evChargeStart       = "start"      // update chargeTimer
-	evChargeStop        = "stop"       // update chargeTimer
-	evChargeCurrent     = "current"    // update fakeChargeMeter
-	evChargePower       = "power"      // update chargeRater
-	evVehicleConnect    = "connect"    // vehicle connected
-	evVehicleDisconnect = "disconnect" // vehicle disconnected
-	evVehicleSoC        = "soc"        // vehicle soc progress
+	evChargeStart        = "start"        // update chargeTimer
+	evChargeStop         = "stop"         // update chargeTimer
+	evChargeCurrent      = "current"      // update maxCurrent
+	evChargeCurrentProxy = "proxyCurrent" // update fakeChargeMeter
+	evChargePower        = "power"        // update chargeRater
+	evVehicleConnect     = "connect"      // vehicle connected
+	evVehicleDisconnect  = "disconnect"   // vehicle disconnected
+	evVehicleSoC         = "soc"          // vehicle soc progress
 
 	pvTimer   = "pv"
 	pvEnable  = "enable"
@@ -305,7 +306,7 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 			lp.chargeMeter = mt
 		} else {
 			mt := new(wrapper.ChargeMeter)
-			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
+			_ = lp.bus.Subscribe(evChargeCurrentProxy, lp.evChargeCurrentProxyMeterHandler)
 			_ = lp.bus.Subscribe(evChargeStop, func() { mt.SetPower(0) })
 			lp.chargeMeter = mt
 		}
@@ -460,18 +461,22 @@ func (lp *LoadPoint) evVehicleSoCProgressHandler(soc float64) {
 
 // evChargeCurrentHandler publishes the charge current
 func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
+	lp.chargeCurrent = current
+
 	if !lp.enabled {
 		current = 0
 	}
+
 	lp.publish("chargeCurrent", current)
+	lp.bus.Publish(evChargeCurrentProxy, current)
 }
 
-// evChargeCurrentWrappedMeterHandler updates the dummy charge meter's charge power.
+// evChargeCurrentProxyMeterHandler updates the dummy charge meter's charge power.
 // This simplifies the main flow where the charge meter can always be treated as present.
 // It assumes that the charge meter cannot consume more than total household consumption.
 // If physical charge meter is present this handler is not used.
 // The actual value is published by the evChargeCurrentHandler
-func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
+func (lp *LoadPoint) evChargeCurrentProxyMeterHandler(current float64) {
 	power := current * float64(lp.activePhases()) * Voltage
 
 	if !lp.enabled || lp.GetStatus() != api.StatusC {
@@ -600,7 +605,6 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 		}
 
 		lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
-		lp.chargeCurrent = chargeCurrent
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 	}
 
@@ -1407,7 +1411,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	lp.updateChargeCurrents()
 
 	// update ChargeRater here to make sure initial meter update is caught
-	lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
+	lp.bus.Publish(evChargeCurrentProxy, lp.chargeCurrent)
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	// update progress and soc before status is updated
