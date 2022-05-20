@@ -628,8 +628,6 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 		lp.enabled = enabled
 		lp.guardUpdated = lp.clock.Now()
 
-		lp.bus.Publish(evChargeCurrent, chargeCurrent)
-
 		// start/stop vehicle wake-up timer
 		if enabled {
 			lp.log.DEBUG.Printf("wake-up timer: start")
@@ -1407,7 +1405,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	lp.updateChargeCurrents()
 
 	// update ChargeRater here to make sure initial meter update is caught
-	lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	// update progress and soc before status is updated
