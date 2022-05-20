@@ -27,7 +27,7 @@ const (
 	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
-	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
+	sempDeviceId     = "F-%s-%.12X-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
 	basePath         = "/semp"
