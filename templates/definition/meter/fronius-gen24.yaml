@@ -21,12 +21,27 @@ params:
     advanced: true
     valuetype: bool
 render: |
+  # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}
   type: modbus
   model: sunspec
   uri: {{ .host }}:{{ .port }}
   id: 200
-  power: {{ if eq .integer "true" }}203{{ else }}213{{ end }}:W # sunspec model 203/213 meter
+  {{ if eq .integer "true" }}
+  # sunspec model 203 (int+sf) meter
+  power: 203:W
+  currents:
+    - 203:AphA
+    - 203:AphB
+    - 203:AphC
+  {{ else }}
+  # sunspec model 213 (float) meter
+  power: 213:W
+  currents:
+    - 213:AphA
+    - 213:AphB
+    - 213:AphC
+  {{- end }}
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
