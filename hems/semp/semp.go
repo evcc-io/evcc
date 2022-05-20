@@ -409,12 +409,11 @@ func (s *SEMP) deviceStatus(id int, lp loadpoint.API) DeviceStatus {
 	isPV := mode == api.ModeMinPV || mode == api.ModePV
 
 	deviceStatus := StatusOff
-	if status == api.StatusC {
+	if status == api.StatusC || status == api.StatusD {
 		deviceStatus = StatusOn
 	}
 
-	connected := status == api.StatusB || status == api.StatusC
-
+	connected := status == api.StatusB || status == api.StatusC || status == api.StatusD
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
 		EMSignalsAccepted: s.controllable && isPV && connected,
@@ -438,7 +437,7 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 
 func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 	mode := lp.GetMode()
-	charging := lp.GetStatus() == api.StatusC
+	charging := lp.GetStatus() == api.StatusC || lp.GetStatus() == api.StatusD
 	connected := charging || lp.GetStatus() == api.StatusB
 
 	// remaining max demand duration in seconds

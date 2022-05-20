@@ -84,7 +84,7 @@ func (s *OCPP) Run() {
 			connector := id + 1
 
 			status := ocppcore.ChargePointStatusAvailable
-			if lp.GetStatus() == api.StatusC {
+			if lp.GetStatus() == api.StatusC || lp.GetStatus() == api.StatusD {
 				status = ocppcore.ChargePointStatusCharging
 			}
 

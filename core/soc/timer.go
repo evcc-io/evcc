@@ -129,7 +129,7 @@ func (lp *Timer) DemandActive() bool {
 
 	// timer charging is already active- only deactivate once charging has stopped
 	if lp.active {
-		if time.Now().After(lp.Time) && lp.GetStatus() != api.StatusC {
+		if time.Now().After(lp.Time) && lp.GetStatus() != api.StatusC && lp.GetStatus() != api.StatusD {
 			lp.Stop()
 		}
 

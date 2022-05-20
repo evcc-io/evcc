@@ -474,7 +474,7 @@ func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
 func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 	power := current * float64(lp.activePhases()) * Voltage
 
-	if !lp.enabled || lp.GetStatus() != api.StatusC {
+	if !lp.enabled || lp.GetStatus() != api.StatusC || lp.GetStatus() != api.StatusD {
 		// if disabled we cannot be charging
 		power = 0
 	}
@@ -573,7 +573,7 @@ func (lp *LoadPoint) syncCharger() {
 			err = lp.charger.Enable(lp.enabled)
 		}
 
-		if !enabled && lp.GetStatus() == api.StatusC {
+		if !enabled && (lp.GetStatus() == api.StatusC || lp.GetStatus() == api.StatusD) {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
 	}
@@ -655,12 +655,12 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 // connected returns the EVs connection state
 func (lp *LoadPoint) connected() bool {
 	status := lp.GetStatus()
-	return status == api.StatusB || status == api.StatusC
+	return status == api.StatusB || status == api.StatusC || status == api.StatusD
 }
 
 // charging returns the EVs charging state
 func (lp *LoadPoint) charging() bool {
-	return lp.GetStatus() == api.StatusC
+	return lp.GetStatus() == api.StatusC || lp.GetStatus() == api.StatusD
 }
 
 // charging returns the EVs charging state
@@ -926,7 +926,7 @@ func (lp *LoadPoint) updateChargerStatus() error {
 		// changed to C - start/stop charging cycle - handle before disconnect to update energy
 		if lp.charging() {
 			lp.bus.Publish(evChargeStart)
-		} else if prevStatus == api.StatusC {
+		} else if prevStatus == api.StatusC || prevStatus == api.StatusD {
 			lp.bus.Publish(evChargeStop)
 		}
 
