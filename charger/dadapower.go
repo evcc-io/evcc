@@ -104,7 +104,7 @@ func (wb *Dadapower) Status() (api.ChargeStatus, error) {
 	case 0x0C: // charging
 		return api.StatusC, nil
 	case 0x0D: // charging with ventilation
-		return api.StatusD, nil
+		return api.StatusNone, fmt.Errorf("unsupported status: charging with ventilation")
 	case 0x0E: // failure (e.g. diode check, RCD failure)
 		return api.StatusE, nil
 	default:

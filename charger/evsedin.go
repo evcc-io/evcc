@@ -77,7 +77,7 @@ func (evse *EvseDIN) Status() (api.ChargeStatus, error) {
 	case 3: // charging
 		return api.StatusC, nil
 	case 4: // charging with ventilation
-		return api.StatusD, nil
+		return api.StatusNone, errors.New("unsupported status: charging with ventilation")
 	case 5: // failure (e.g. diode check, RCD failure)
 		return api.StatusE, nil
 	default:

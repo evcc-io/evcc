@@ -127,7 +127,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	case 6, 7:
 		return api.StatusC, nil
 	case 8:
-		return api.StatusD, nil
+		return api.StatusNone, fmt.Errorf("unsupported status: charging with ventilation")
 	case 9:
 		return api.StatusE, nil
 	case 10:

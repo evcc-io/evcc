@@ -141,7 +141,7 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 	case 3:
 		return api.StatusC, nil
 	case 4:
-		return api.StatusD, nil
+		return api.StatusNone, fmt.Errorf("unsupported status: %d (charging with ventilation)", sb)
 	case 5:
 		return api.StatusE, nil
 	default:

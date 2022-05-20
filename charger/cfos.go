@@ -81,7 +81,7 @@ func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 	case 2: // laden
 		return api.StatusC, nil
 	case 3: // laden mit Kühlung
-		return api.StatusD, nil
+		return api.StatusNone, errors.New("unsupported status: (charging with ventilation)")
 	case 4: // kein Strom
 		return api.StatusE, nil
 	case 5: // Fehler

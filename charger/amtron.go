@@ -104,7 +104,7 @@ func (wb *Amtron) Status() (api.ChargeStatus, error) {
 	case 5, 6:
 		return api.StatusC, nil
 	case 7, 8:
-		return api.StatusD, nil
+		return api.StatusNone, fmt.Errorf("unsupported status: %0x (charging with ventilation)", b[1])
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[1])
 	}
