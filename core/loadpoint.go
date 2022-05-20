@@ -474,8 +474,8 @@ func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
 func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 	power := current * float64(lp.activePhases()) * Voltage
 
-	if !lp.enabled || lp.GetStatus() != api.StatusC {
-		// if disabled we cannot be charging
+	// if disabled we cannot be charging
+	if !lp.enabled || !lp.charging() {
 		power = 0
 	}
 
@@ -573,7 +573,7 @@ func (lp *LoadPoint) syncCharger() {
 			err = lp.charger.Enable(lp.enabled)
 		}
 
-		if !enabled && lp.GetStatus() == api.StatusC {
+		if !enabled && lp.charging() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
 	}
@@ -944,7 +944,7 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 // effectiveCurrent returns the currently effective charging current
 func (lp *LoadPoint) effectiveCurrent() float64 {
-	if lp.GetStatus() != api.StatusC {
+	if !lp.charging() {
 		return 0
 	}
 
