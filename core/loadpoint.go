@@ -1420,8 +1420,10 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	lp.publish("charging", lp.charging())
 	lp.publish("enabled", lp.enabled)
 
-	// identify connected vehicle
 	if lp.connected() {
+		lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
+
+		// identify connected vehicle
 		// read identity and run associated action
 		lp.identifyVehicle()
 
