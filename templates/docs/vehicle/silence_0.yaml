@@ -1,5 +1,6 @@
 product:
-  brand: Silence01
+  brand: Silence
+  description: S01/S02
 render:
   - default: |
       type: template

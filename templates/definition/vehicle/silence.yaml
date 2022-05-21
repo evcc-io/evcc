@@ -1,6 +1,8 @@
 template: silence
 products:
-  - brand: Silence01
+  - brand: Silence
+    description:
+      generic: S01/S02
   - brand: Seat
     description:
       generic: Mó
