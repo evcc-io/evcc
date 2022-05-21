@@ -96,15 +96,12 @@ type LoadPoint struct {
 	sync.Mutex                // guard status
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
-	Title       string   `mapstructure:"title"`    // UI title
-	Phases      int      `mapstructure:"phases"`   // Charger enabled phases
-	ChargerRef  string   `mapstructure:"charger"`  // Charger reference
-	VehicleRef  string   `mapstructure:"vehicle"`  // Vehicle reference
-	VehiclesRef []string `mapstructure:"vehicles"` // Vehicles reference
-	MeterRef    string   `mapstructure:"meter"`    // Charge meter reference
-	Meters      struct {
-		ChargeMeterRef string `mapstructure:"charge"` // deprecated
-	}
+	Title             string   `mapstructure:"title"`    // UI title
+	Phases            int      `mapstructure:"phases"`   // Charger enabled phases
+	ChargerRef        string   `mapstructure:"charger"`  // Charger reference
+	VehicleRef        string   `mapstructure:"vehicle"`  // Vehicle reference
+	VehiclesRef       []string `mapstructure:"vehicles"` // Vehicles reference
+	MeterRef          string   `mapstructure:"meter"`    // Charge meter reference
 	SoC               SoCConfig
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
@@ -193,16 +190,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	if lp.MeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.MeterRef)
-	}
-
-	// deprecated
-	if lp.Meters.ChargeMeterRef != "" {
-		lp.log.WARN.Println("meters: charge: is deprecated. Use meter: instead")
-		if lp.chargeMeter == nil {
-			lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
-		} else {
-			lp.log.ERROR.Println("must not have meter: and meters: charge: both")
-		}
 	}
 
 	// multiple vehicles
