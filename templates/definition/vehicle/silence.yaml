@@ -1,0 +1,17 @@
+template: silence
+products:
+  - brand: Silence
+    description:
+      generic: S01/S02
+  - brand: Seat
+    description:
+      generic: Mó
+params:
+  - preset: vehiclebase
+  - name: vin
+    example: W...
+  - preset: vehiclecloud
+render: |
+  type: silence
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-cloud" . }}
