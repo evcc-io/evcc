@@ -13,7 +13,7 @@ params:
     default: "youruser@tapo.app"
   - name: password
     required: true
-    default: "yourtapopwd"    
+    default: "yourtapopwd"
     mask: true
 render: |
   type: tapo
