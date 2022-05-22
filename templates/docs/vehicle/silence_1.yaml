@@ -1,6 +1,7 @@
 product:
   brand: Seat
-  description: Mó
+  description: MÓ
+  group: Scooter
 render:
   - default: |
       type: template

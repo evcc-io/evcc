@@ -1,6 +1,7 @@
 product:
   brand: Silence
   description: S01/S02
+  group: Scooter
 render:
   - default: |
       type: template

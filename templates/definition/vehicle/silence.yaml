@@ -5,7 +5,8 @@ products:
       generic: S01/S02
   - brand: Seat
     description:
-      generic: Mó
+      generic: MÓ
+group: scooter
 params:
   - preset: vehiclebase
   - name: vin
