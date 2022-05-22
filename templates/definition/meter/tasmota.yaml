@@ -5,7 +5,7 @@ products:
 group: switchsockets
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["grid", "pv", "battery"]
   - name: host
   - name: user
     required: false
@@ -15,18 +15,8 @@ params:
   - name: password
     required: false
     mask: true
-  - name: channel
-    default: 1
-    required: true
-    description:
-      de: Nummer des Schalt-Kanals
-      en: Device relay channel number
-    help:
-      de: Nummer des Schalt-Kanals (1-8), bei Geräten mit mehr als einem Schalter
-      en: Device relay channel number (allowed range 1-8)
 render: |
   type: tasmota
   uri: http://{{ .host }}
   user: {{ .user }}
   password: {{ .password }}
-  channel: {{ .channel }}  # # relay channel (allowed range: 1-8)
