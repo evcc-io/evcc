@@ -30,4 +30,4 @@ render: |
     register:
       address: 30775 # Aktuelle PV-Einspeiseleistung
       type: holding
-      decode: int32
+      decode: int32nan
