@@ -3,6 +3,7 @@ products:
   - brand: NIU
     description:
       generic: E-Scooter
+group: scooter
 params:
   - name: title
   - name: user

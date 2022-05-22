@@ -1,6 +1,7 @@
 product:
   brand: NIU
   description: E-Scooter
+  group: Scooter
 render:
   - default: |
       type: template
