@@ -796,11 +796,14 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
 		// publish odometer once
-		var odo float64
 		if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
-			odo, _ = vs.Odometer()
+			if odo, err := vs.Odometer(); err == nil {
+				lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
+				lp.publish("vehicleOdometer", odo)
+			} else {
+				lp.log.ERROR.Printf("vehicle odometer: %v", err)
+			}
 		}
-		lp.publish("vehicleOdometer", odo)
 
 		lp.applyAction(vehicle.OnIdentified())
 
