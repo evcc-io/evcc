@@ -10,8 +10,10 @@ params:
   - name: host
   - name: user
     required: true
+    default: "youruser@tapo.app"
   - name: password
     required: true
+    default: "yourtapopwd"    
     mask: true
 render: |
   type: tapo

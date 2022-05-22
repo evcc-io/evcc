@@ -9,5 +9,5 @@ render:
       template: tapo
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
-      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
+      user: youruser@tapo.app # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: yourtapopwd # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
