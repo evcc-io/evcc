@@ -17,12 +17,11 @@
 					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
 					on-dark
 				/>
-				<LabelAndValue
+				<TargetSoCSelect
 					class="flex-grow-1 text-center"
-					:label="$t('main.vehicle.targetSoC')"
-					:value="`${displayTargetSoC} %`"
-					:extraValue="estimatedTargetRange"
-					on-dark
+					:target-soc="displayTargetSoC"
+					:range-per-soc="rangePerSoC"
+					@target-soc-updated="targetSocUpdated"
 				/>
 				<TargetCharge
 					class="flex-grow-1 text-end target-charge"
@@ -46,10 +45,18 @@ import VehicleTitle from "./VehicleTitle.vue";
 import VehicleSoc from "./VehicleSoc.vue";
 import VehicleStatus from "./VehicleStatus.vue";
 import TargetCharge from "./TargetCharge.vue";
+import TargetSoCSelect from "./TargetSoCSelect.vue";
 
 export default {
 	name: "Vehicle",
-	components: { VehicleTitle, VehicleSoc, VehicleStatus, LabelAndValue, TargetCharge },
+	components: {
+		VehicleTitle,
+		VehicleSoc,
+		VehicleStatus,
+		LabelAndValue,
+		TargetCharge,
+		TargetSoCSelect,
+	},
 	mixins: [collector],
 	props: {
 		id: [String, Number],
@@ -91,12 +98,9 @@ export default {
 		targetCharge: function () {
 			return this.collectProps(TargetCharge);
 		},
-		estimatedTargetRange: function () {
-			if (this.vehicleSoC > 10 && this.vehicleRange && this.displayTargetSoC) {
-				return (
-					Math.round(this.displayTargetSoC * (this.vehicleRange / this.vehicleSoC)) +
-					" km"
-				);
+		rangePerSoC: function () {
+			if (this.vehicleSoC > 10 && this.vehicleRange) {
+				return this.vehicleRange / this.vehicleSoC;
 			}
 			return null;
 		},
