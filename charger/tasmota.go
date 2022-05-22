@@ -128,17 +128,17 @@ func (c *Tasmota) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
 	var res tasmota.PowerResponse
-	on := false
+
 	cmd := fmt.Sprintf("Power%d off", c.channel)
 	if enable {
 		cmd = fmt.Sprintf("Power%d on", c.channel)
 	}
 
-	err := c.conn.ExecCmd(cmd, &res)
-	if err != nil {
+	if err := c.conn.ExecCmd(cmd, &res); err != nil {
 		return err
 	}
 
+	var on bool
 	switch c.channel {
 	case 2:
 		on = strings.ToUpper(res.Power2) == "ON"
