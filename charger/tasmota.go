@@ -18,6 +18,7 @@ import (
 // Tasmota charger implementation
 type Tasmota struct {
 	conn         *tasmota.Connection
+	channel      int
 	standbypower float64
 }
 
@@ -36,6 +37,7 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		Channel: 1,
 	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -45,17 +47,54 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewTasmota creates Tasmota charger
 func NewTasmota(uri, user, password string, channel int, standbypower float64) (*Tasmota, error) {
-	conn, err := tasmota.NewConnection(uri, user, password, channel)
+	conn, err := tasmota.NewConnection(uri, user, password)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &Tasmota{
 		conn:         conn,
+		channel:      channel,
 		standbypower: standbypower,
 	}
 
-	return c, nil
+	err = c.channelExists(channel)
+
+	return c, err
+}
+
+// channelExists checks the existence of the configured relay channel interface
+func (c *Tasmota) channelExists(channel int) error {
+	var res *tasmota.StatusSTSResponse
+	if err := c.conn.ExecCmd("Status 0", &res); err != nil {
+		return err
+	}
+
+	var ok bool
+	switch channel {
+	case 1:
+		ok = res.StatusSTS.Power != "" || res.StatusSTS.Power1 != ""
+	case 2:
+		ok = res.StatusSTS.Power2 != ""
+	case 3:
+		ok = res.StatusSTS.Power3 != ""
+	case 4:
+		ok = res.StatusSTS.Power4 != ""
+	case 5:
+		ok = res.StatusSTS.Power5 != ""
+	case 6:
+		ok = res.StatusSTS.Power6 != ""
+	case 7:
+		ok = res.StatusSTS.Power7 != ""
+	case 8:
+		ok = res.StatusSTS.Power8 != ""
+	}
+
+	if !ok {
+		return fmt.Errorf("invalid relay channel: %d", channel)
+	}
+
+	return nil
 }
 
 // Enabled implements the api.Charger interface
@@ -66,7 +105,7 @@ func (c *Tasmota) Enabled() (bool, error) {
 		return false, err
 	}
 
-	switch c.conn.Channel {
+	switch c.channel {
 	case 2:
 		return strings.ToUpper(res.StatusSTS.Power2) == "ON", err
 	case 3:
@@ -90,9 +129,9 @@ func (c *Tasmota) Enabled() (bool, error) {
 func (c *Tasmota) Enable(enable bool) error {
 	var res tasmota.PowerResponse
 	on := false
-	cmd := fmt.Sprintf("Power%d off", c.conn.Channel)
+	cmd := fmt.Sprintf("Power%d off", c.channel)
 	if enable {
-		cmd = fmt.Sprintf("Power%d on", c.conn.Channel)
+		cmd = fmt.Sprintf("Power%d on", c.channel)
 	}
 
 	err := c.conn.ExecCmd(cmd, &res)
@@ -100,7 +139,7 @@ func (c *Tasmota) Enable(enable bool) error {
 		return err
 	}
 
-	switch c.conn.Channel {
+	switch c.channel {
 	case 2:
 		on = strings.ToUpper(res.Power2) == "ON"
 	case 3:
