@@ -83,6 +83,12 @@ func (d *Connection) TotalEnergy() (float64, error) {
 
 // ChannelExists checks the existence of the configured relay channel interface
 func (d *Connection) ChannelExists() error {
+
+	if d.Channel == -1 {
+		// Skip switch channel check in meter usage mode
+		return nil
+	}
+
 	var res *StatusSTSResponse
 	err := d.ExecCmd("Status 0", &res)
 	if err != nil {
