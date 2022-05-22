@@ -100,8 +100,8 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 	case 2: // State B2: EV Plug in, EVSE ready for charging(PWM)
 		return api.StatusB, nil
 	case 3: // State C1: EV Ready for charge, S2 closed(no PWM)
-		return api.StatusC, nil
-	case 5: // State C2: Charging Contact closed, energy delivering.
+		return api.StatusB, nil
+	case 5: // State C2: Charging Contact closed, energy delivering
 		return api.StatusC, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
