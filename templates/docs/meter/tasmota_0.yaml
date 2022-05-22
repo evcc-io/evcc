@@ -2,6 +2,14 @@ product:
   description: Tasmota
   group: Schaltbare Steckdosen
 render:
+  - usage: grid
+    default: |
+      type: template
+      template: tasmota
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      user: # Standard-User ist admin # Optional
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
   - usage: pv
     default: |
       type: template
@@ -10,4 +18,11 @@ render:
       host: 192.0.2.2 # IP-Adresse oder Hostname
       user: # Standard-User ist admin # Optional
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
-      channel: 1 # Nummer des Schalt-Kanals (1-8), bei Geräten mit mehr als einem Schalter
+  - usage: battery
+    default: |
+      type: template
+      template: tasmota
+      usage: battery
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      user: # Standard-User ist admin # Optional
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
