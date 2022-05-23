@@ -29,6 +29,8 @@
 				step="5"
 				:value="visibleTargetSoC"
 				class="target-slider"
+				@mousedown="changeTargetSoCStart"
+				@touchstart="changeTargetSoCStart"
 				@input="movedTargetSoC"
 				@mouseup="changeTargetSoCEnd"
 				@touchend="changeTargetSoCEnd"
@@ -95,6 +97,9 @@ export default {
 		},
 	},
 	methods: {
+		changeTargetSoCStart: function (e) {
+			e.stopPropagation();
+		},
 		changeTargetSoCEnd: function (e) {
 			// value changed
 			if (e.target.value !== this.targetSoC) {
@@ -102,6 +107,7 @@ export default {
 			}
 		},
 		movedTargetSoC: function (e) {
+			e.stopPropagation();
 			const minTargetSoC = 20;
 			if (e.target.value < minTargetSoC) {
 				e.target.value = minTargetSoC;
