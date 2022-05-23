@@ -113,13 +113,9 @@ func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP
 	return s, err
 }
 
-func (s *SEMP) advertise(st, usn string) *ssdp.Advertiser {
+func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
 	descriptor := s.hostURI + basePath + "/description.xml"
-	ad, err := ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
-	if err != nil {
-		s.log.ERROR.Println(err)
-	}
-	return ad
+	return ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 }
 
 // Run executes the SEMP runtime
@@ -130,10 +126,19 @@ func (s *SEMP) Run() {
 	s.closeC = make(chan struct{})
 
 	uid := "uuid:" + s.uid
-	ads := []*ssdp.Advertiser{
-		s.advertise(ssdp.RootDevice, uid+"::"+ssdp.RootDevice),
-		s.advertise(uid, uid),
-		s.advertise(sempGateway, uid+"::"+sempGateway),
+
+	var ads []*ssdp.Advertiser
+	for _, ad := range []struct{ st, usn string }{
+		{ssdp.RootDevice, uid + "::" + ssdp.RootDevice},
+		{sempGateway, uid + "::" + sempGateway},
+		{uid, uid},
+	} {
+		ad, err := s.advertise(ad.st, ad.usn)
+		if err != nil {
+			s.log.ERROR.Printf("advertise: %v", err)
+			continue
+		}
+		ads = append(ads, ad)
 	}
 
 	ticker := time.NewTicker(maxAge * time.Second / 2)
