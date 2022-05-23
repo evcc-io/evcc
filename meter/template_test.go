@@ -13,7 +13,8 @@ var acceptable = []string{
 	"missing mqtt broker configuration",
 	"mqtt not configured",
 	"not a SunSpec device",
-	"missing password", // Powerwall
+	"missing password",         // Powerwall
+	"missing user or password", // Tapo
 	"connect: no route to host",
 	"connect: connection refused",
 	"connect: network is unreachable",
