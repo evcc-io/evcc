@@ -21,10 +21,6 @@
 			></div>
 		</div>
 		<div class="target">
-			<div
-				class="target-label d-flex align-items-center justify-content-center"
-				:style="{ left: `${visibleTargetSoC}%` }"
-			></div>
 			<input
 				v-if="vehiclePresent && (connected || parked)"
 				type="range"
@@ -33,9 +29,9 @@
 				step="5"
 				:value="visibleTargetSoC"
 				class="target-slider"
-				@input="movedTargetSoC"
 				@mousedown="changeTargetSoCStart"
 				@touchstart="changeTargetSoCStart"
+				@input="movedTargetSoC"
 				@mouseup="changeTargetSoCEnd"
 				@touchend="changeTargetSoCEnd"
 			/>
@@ -102,25 +98,16 @@ export default {
 	},
 	methods: {
 		changeTargetSoCStart: function (e) {
-			const screenY = e.screenY || e.changedTouches[0].screenY;
-			this.interactionStartScreenY = screenY;
+			e.stopPropagation();
 		},
 		changeTargetSoCEnd: function (e) {
-			const screenY = e.screenY || e.changedTouches[0].screenY;
-			const yDiff = Math.abs(screenY - this.interactionStartScreenY);
-			// horizontal scroll detected - revert slider change
-			if (yDiff > 80) {
-				e.preventDefault();
-				e.target.value = this.targetSoC;
-				this.selectedTargetSoC = this.targetSoC;
-				return false;
-			}
 			// value changed
 			if (e.target.value !== this.targetSoC) {
 				this.$emit("target-soc-updated", e.target.value);
 			}
 		},
 		movedTargetSoC: function (e) {
+			e.stopPropagation();
 			const minTargetSoC = 20;
 			if (e.target.value < minTargetSoC) {
 				e.target.value = minTargetSoC;
@@ -155,16 +142,6 @@ export default {
 .bg-light {
 	color: var(--bs-gray-dark);
 }
-.target-label {
-	width: 3em;
-	margin-left: -1.5em;
-	height: var(--label-height);
-	position: absolute;
-	top: calc((var(--label-height) + var(--thumb-overlap)) * -1);
-	text-align: center;
-	color: var(--bs-gray-dark);
-	font-size: 1rem;
-}
 .target-slider {
 	-webkit-appearance: none;
 	position: absolute;
@@ -172,6 +149,7 @@ export default {
 	height: calc(100% + 2 * var(--thumb-overlap));
 	width: 100%;
 	background: transparent;
+	pointer-events: none;
 }
 .target-slider:focus {
 	outline: none;
@@ -182,13 +160,13 @@ export default {
 	background: transparent;
 	border: none;
 	height: 100%;
-	cursor: pointer;
+	cursor: auto;
 }
 .target-slider::-moz-range-track {
 	background: transparent;
 	border: none;
 	height: 100%;
-	cursor: pointer;
+	cursor: auto;
 }
 .target-slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
@@ -202,6 +180,7 @@ export default {
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
 	box-shadow: 0 0 6px var(--bs-gray-dark);
+	pointer-events: auto;
 }
 .target-slider::-moz-range-thumb {
 	position: relative;
@@ -213,5 +192,6 @@ export default {
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
 	box-shadow: 0 0 6px var(--bs-gray-dark);
+	pointer-events: auto;
 }
 </style>
