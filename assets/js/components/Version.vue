@@ -37,88 +37,97 @@
 			v{{ installed }}
 		</a>
 
-		<div
-			id="updateModal"
-			class="modal fade text-dark"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-		>
-			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">{{ $t("footer.version.modalTitle") }}</h5>
-						<button
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
-					</div>
-					<div class="modal-body">
-						<div v-if="updateStarted">
-							<p>{{ $t("footer.version.modalUpdateStarted") }}</p>
-							<div class="progress my-3">
-								<div
-									class="progress-bar progress-bar-striped progress-bar-animated"
-									role="progressbar"
-									:style="{ width: uploadProgress + '%' }"
-								></div>
-							</div>
-							<p>{{ updateStatus }}{{ uploadMessage }}</p>
-						</div>
-						<div v-else>
-							<p>
-								<small>
-									{{ $t("footer.version.modalInstalledVersion") }}:
-									{{ installed }}
-								</small>
-							</p>
-							<!-- eslint-disable vue/no-v-html -->
-							<div v-if="releaseNotes" v-html="releaseNotes"></div>
-							<!-- eslint-enable vue/no-v-html -->
-							<p v-else>
-								{{ $t("footer.version.modalNoReleaseNotes") }}
-								<a :href="releaseNotesUrl(available)">GitHub</a>.
-							</p>
-						</div>
-					</div>
-					<div class="modal-footer d-flex justify-content-between">
-						<button
-							type="button"
-							class="btn btn-outline-secondary"
-							:disabled="updateStarted"
-							data-bs-dismiss="modal"
-						>
-							{{ $t("footer.version.modalCancel") }}
-						</button>
-						<div>
+		<Teleport to="body">
+			<div
+				id="updateModal"
+				class="modal fade text-dark"
+				tabindex="-1"
+				role="dialog"
+				aria-hidden="true"
+			>
+				<div
+					class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+					role="document"
+				>
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">{{ $t("footer.version.modalTitle") }}</h5>
 							<button
-								v-if="hasUpdater"
 								type="button"
-								class="btn btn-primary"
+								class="btn-close"
+								data-bs-dismiss="modal"
+								aria-label="Close"
+							></button>
+						</div>
+						<div class="modal-body">
+							<div v-if="updateStarted">
+								<p>{{ $t("footer.version.modalUpdateStarted") }}</p>
+								<div class="progress my-3">
+									<div
+										class="progress-bar progress-bar-striped progress-bar-animated"
+										role="progressbar"
+										:style="{ width: uploadProgress + '%' }"
+									></div>
+								</div>
+								<p>{{ updateStatus }}{{ uploadMessage }}</p>
+							</div>
+							<div v-else>
+								<p>
+									<small>
+										{{ $t("footer.version.modalInstalledVersion") }}:
+										{{ installed }}
+									</small>
+								</p>
+								<!-- eslint-disable vue/no-v-html -->
+								<div v-if="releaseNotes" v-html="releaseNotes"></div>
+								<!-- eslint-enable vue/no-v-html -->
+								<p v-else>
+									{{ $t("footer.version.modalNoReleaseNotes") }}
+									<a :href="releaseNotesUrl(available)">GitHub</a>.
+								</p>
+							</div>
+						</div>
+						<div class="modal-footer d-flex justify-content-between">
+							<button
+								type="button"
+								class="btn btn-outline-secondary"
 								:disabled="updateStarted"
-								@click="update"
+								data-bs-dismiss="modal"
 							>
-								<span v-if="updateStarted">
-									<span
-										class="spinner-border spinner-border-sm"
-										role="status"
-										aria-hidden="true"
-									>
-									</span>
-									{{ $t("footer.version.modalUpdate") }}
-								</span>
-								<span v-else>{{ $t("footer.version.modalUpdateNow") }}</span>
+								{{ $t("footer.version.modalCancel") }}
 							</button>
-							<a v-else :href="releaseNotesUrl(available)" class="btn btn-primary">
-								{{ $t("footer.version.modalDownload") }}
-							</a>
+							<div>
+								<button
+									v-if="hasUpdater"
+									type="button"
+									class="btn btn-primary"
+									:disabled="updateStarted"
+									@click="update"
+								>
+									<span v-if="updateStarted">
+										<span
+											class="spinner-border spinner-border-sm"
+											role="status"
+											aria-hidden="true"
+										>
+										</span>
+										{{ $t("footer.version.modalUpdate") }}
+									</span>
+									<span v-else>{{ $t("footer.version.modalUpdateNow") }}</span>
+								</button>
+								<a
+									v-else
+									:href="releaseNotesUrl(available)"
+									class="btn btn-primary"
+								>
+									{{ $t("footer.version.modalDownload") }}
+								</a>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</Teleport>
 	</div>
 </template>
 
