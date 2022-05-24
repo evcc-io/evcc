@@ -52,7 +52,7 @@ func init() {
 
 // NewABBFromConfig creates a ABB charger from generic config
 func NewABBFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
+	cc := modbus.Settings{
 		ID: 1,
 	}
 
@@ -60,12 +60,12 @@ func NewABBFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewABB(cc.URI, cc.ID)
+	return NewABB(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
 // NewABB creates ABB charger
-func NewABB(uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Rtu, slaveID)
 	if err != nil {
 		return nil, err
 	}
