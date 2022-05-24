@@ -1,0 +1,40 @@
+template: sunspec-inverter
+products:
+  - description:
+      de: Wechselrichter
+      en: Inverter
+group: generic
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: modbus
+    choice: ["tcpip"]
+  - name: integer
+    description:
+      de: Integer Registerzugriff (nur für Netzzähler)
+      en: Integer register access (grid meter only)
+    help:
+      de: Einstellung Float/Integer im Wechselrichter überprüfen
+      en: Verify Float/Integer setting in inverter
+    advanced: true
+    valuetype: bool
+render: |
+  type: modbus
+  {{- include "modbus" . }}
+  {{- if eq .usage "grid" }}
+  {{- if eq .integer "true" }}
+  # sunspec model 203 (int+sf) meter
+  power: 203:W
+  currents:
+    - 203:AphA
+    - 203:AphB
+    - 203:AphC
+  {{ else }}
+  # sunspec model 213 (float) meter
+  power: 213:W
+  currents:
+    - 213:AphA
+    - 213:AphB
+    - 213:AphC
+  {{- end }}
+  {{- end }}
