@@ -18,6 +18,3 @@ render: |
   user: {{ .user }}
   password: {{ .password }} # password
   meter: {{ .meter }}
-  {{- if eq .usage "pv" }}
-  scale: -1
-  {{- end }}
