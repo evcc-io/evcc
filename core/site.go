@@ -40,9 +40,10 @@ type Site struct {
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
-	gridMeter     api.Meter   // Grid usage meter
-	pvMeters      []api.Meter // PV generation meters
-	batteryMeters []api.Meter // Battery charging meters
+	gridMeter     api.Meter            // Grid usage meter
+	pvMeters      []api.Meter          // PV generation meters
+	batteryMeters []api.Meter          // Battery charging meters
+	auxMeters     map[string]api.Meter // auxiliary meters
 
 	tariffs    tariff.Tariffs // Tariff
 	loadpoints []*LoadPoint   // Loadpoints
@@ -62,6 +63,7 @@ type MetersConfig struct {
 	PVMetersRef      []string `mapstructure:"pvs"`       // Multiple PV meters
 	BatteryMeterRef  string   `mapstructure:"battery"`   // Battery charging meter
 	BatteryMetersRef []string `mapstructure:"batteries"` // Multiple Battery charging meters
+	AuxMetersRef     []string `mapstructure:"aux"`       // Auxiliary meters
 }
 
 // NewSiteFromConfig creates a new site
@@ -116,6 +118,11 @@ func NewSiteFromConfig(
 		site.batteryMeters = append(site.batteryMeters, battery)
 	}
 
+	// auxiliary meters
+	for _, ref := range site.Meters.AuxMetersRef {
+		site.auxMeters[ref] = cp.Meter(ref)
+	}
+
 	// configure meter from references
 	if site.gridMeter == nil && len(site.pvMeters) == 0 {
 		return nil, errors.New("missing either grid or pv meter")
@@ -127,8 +134,9 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:     util.NewLogger("site"),
-		Voltage: 230, // V
+		log:       util.NewLogger("site"),
+		Voltage:   230, // V
+		auxMeters: make(map[string]api.Meter),
 	}
 
 	return lp
@@ -236,6 +244,20 @@ func (site *Site) publish(key string, val interface{}) {
 	}
 }
 
+// publish sends values to UI and databases
+func (site *Site) publishMeter(key string, val interface{}, name string) {
+	// test helper
+	if site.uiChan == nil {
+		return
+	}
+
+	site.uiChan <- util.Param{
+		Key:   key,
+		Val:   val,
+		Meter: name,
+	}
+}
+
 // updateMeter updates and publishes single meter
 func (site *Site) updateMeter(meter api.Meter, power *float64) func() error {
 	return func() error {
@@ -329,6 +351,21 @@ func (site *Site) updateMeters() error {
 			site.publish("gridEnergy", val)
 		} else {
 			site.log.ERROR.Println(fmt.Errorf("grid meter energy: %v", err))
+		}
+	}
+
+	// auxiliary meters
+	if len(site.auxMeters) > 0 {
+		for name, meter := range site.auxMeters {
+			var power float64
+			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
+
+			if err == nil {
+				site.log.DEBUG.Printf("aux power: %.0fW", power)
+				site.publishMeter("auxPower", power, name)
+			} else {
+				site.log.ERROR.Println(fmt.Errorf("aux meter %s: %v", name, err))
+			}
 		}
 	}
 
