@@ -137,6 +137,9 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		if p.LoadPoint != nil {
 			id := *p.LoadPoint + 1
 			topic = fmt.Sprintf("%s/loadpoints/%d", m.root, id)
+		} else if len(p.Meter) > 0 {
+			name := p.Meter
+			topic = fmt.Sprintf("%s/meters/%s", m.root, name)
 		}
 
 		// alive indicator

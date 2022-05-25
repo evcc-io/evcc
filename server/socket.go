@@ -124,6 +124,8 @@ func kv(p util.Param) string {
 	msg.WriteString("\"")
 	if p.LoadPoint != nil {
 		msg.WriteString(fmt.Sprintf("loadpoints.%d.", *p.LoadPoint))
+	} else if len(p.Meter) > 0 {
+		msg.WriteString(fmt.Sprintf("meters.%s.", p.Meter))
 	}
 	msg.WriteString(p.Key)
 	msg.WriteString("\":")

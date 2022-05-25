@@ -26,6 +26,8 @@ func (c *Cache) Run(in <-chan Param) {
 		key := p.Key
 		if p.LoadPoint != nil {
 			key = fmt.Sprintf("lp-%d/%s", *p.LoadPoint+1, key)
+		} else if len(p.Meter) > 0 {
+			key = fmt.Sprintf("m-%s/%s", p.Meter, key)
 		}
 		log.TRACE.Printf("%s: %v", key, p.Val)
 		c.Add(p.UniqueID(), p)
@@ -34,23 +36,32 @@ func (c *Cache) Run(in <-chan Param) {
 
 // State provides a structured copy of the cached values
 // Loadpoints are aggregated as loadpoints array
+// Meters are aggregated as meters array
 func (c *Cache) State() map[string]interface{} {
 	c.Lock()
 	defer c.Unlock()
 
 	res := map[string]interface{}{}
 	lps := make(map[int]map[string]interface{})
+	ms := make(map[string]map[string]interface{})
 
 	for _, param := range c.val {
-		if param.LoadPoint == nil {
-			res[param.Key] = param.Val
-		} else {
+		if param.LoadPoint != nil {
 			lp, ok := lps[*param.LoadPoint]
 			if !ok {
 				lp = make(map[string]interface{})
 				lps[*param.LoadPoint] = lp
 			}
 			lp[param.Key] = param.Val
+		} else if len(param.Meter) > 0 {
+			m, ok := ms[param.Meter]
+			if !ok {
+				m = make(map[string]interface{})
+				ms[param.Meter] = m
+			}
+			m[param.Key] = param.Val
+		} else {
+			res[param.Key] = param.Val
 		}
 	}
 
@@ -60,6 +71,15 @@ func (c *Cache) State() map[string]interface{} {
 		loadpoints[id] = lp
 	}
 	res["loadpoints"] = loadpoints
+
+	// convert map to array
+	meters := make([]map[string]interface{}, len(ms))
+	i := 0
+	for _, m := range ms {
+		meters[i] = m
+		i++
+	}
+	res["meters"] = meters
 
 	return res
 }
