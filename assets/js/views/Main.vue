@@ -1,6 +1,11 @@
 <template>
 	<div>
-		<Site v-if="configured" :notifications="notifications" v-bind="state"></Site>
+		<Site
+			v-if="configured"
+			:notifications="notifications"
+			:offline="offline"
+			v-bind="state"
+		></Site>
 		<div v-else class="container">
 			<div class="row py-5">
 				<div class="col12">
@@ -88,6 +93,7 @@ export default {
 	components: { Site },
 	props: {
 		notifications: Array,
+		offline: Boolean,
 	},
 	data: function () {
 		return store;

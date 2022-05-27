@@ -137,4 +137,8 @@ export default {
       `,
     },
   },
+  offline: {
+    message: "No connection to server.",
+    reload: "Reload?",
+  },
 };
