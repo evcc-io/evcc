@@ -3,7 +3,7 @@
 		<metainfo>
 			<template #title="{ content }">{{ content ? `${content} | evcc` : `evcc` }}</template>
 		</metainfo>
-		<router-view :notifications="notifications"></router-view>
+		<router-view :notifications="notifications" :offline="offline"></router-view>
 	</div>
 </template>
 
@@ -14,6 +14,10 @@ export default {
 	name: "App",
 	props: {
 		notifications: Array,
+		offline: Boolean,
+	},
+	data: () => {
+		return { reconnectTimeout: null };
 	},
 	created: function () {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -21,7 +25,12 @@ export default {
 		setTimeout(this.connect, 0);
 	},
 	methods: {
+		reconnect: function () {
+			window.clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = window.setTimeout(this.connect, 1000);
+		},
 		connect: function () {
+			console.log("connecting websocket");
 			const supportsWebSockets = "WebSocket" in window;
 			if (!supportsWebSockets) {
 				window.app.error({
@@ -39,12 +48,20 @@ export default {
 				(loc.port ? ":" + loc.port : "") +
 				loc.pathname +
 				"ws";
+
 			const ws = new WebSocket(uri);
 			ws.onerror = () => {
+				console.error({ message: "Websocket error. Trying to reconnect." });
 				ws.close();
 			};
+			ws.onopen = () => {
+				console.log("websocket connected");
+				window.app.setOnline();
+			};
 			ws.onclose = () => {
-				window.setTimeout(this.connect, 1000);
+				console.log("websocket disconnected");
+				window.app.setOffline();
+				this.reconnect();
 			};
 			ws.onmessage = (evt) => {
 				try {

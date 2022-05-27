@@ -14,7 +14,12 @@ smoothscroll.polyfill();
 
 const app = createApp({
   data() {
-    return { notifications: [] };
+    return { notifications: [], offline: false };
+  },
+  watch: {
+    offline: function (value) {
+      console.log(`we are ${value ? "offline" : "online"}`);
+    },
   },
   methods: {
     raise: function (msg) {
@@ -42,13 +47,19 @@ const app = createApp({
       msg.type = "error";
       this.raise(msg);
     },
+    setOnline: function () {
+      this.offline = false;
+    },
+    setOffline: function () {
+      this.offline = true;
+    },
     warn: function (msg) {
       msg.type = "warn";
       this.raise(msg);
     },
   },
   render: function () {
-    return h(App, { notifications: this.notifications });
+    return h(App, { notifications: this.notifications, offline: this.offline });
   },
 });
 
@@ -60,7 +71,5 @@ app.use(featureflags);
 window.app = app.mount("#app");
 
 window.setInterval(function () {
-  api.get("health").catch(function () {
-    window.app.error({ message: "Server unavailable" });
-  });
+  api.get("health").then(window.app.setOnline).catch(window.app.setOffline);
 }, 5000);
