@@ -5,7 +5,7 @@ products:
       generic: SDM 72/220/230
 params:
   - name: usage
-    choice: ["grid", "pv", "battery", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
