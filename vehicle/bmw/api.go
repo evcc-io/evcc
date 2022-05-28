@@ -29,7 +29,7 @@ type API struct {
 func NewAPI(log *util.Logger, brand string, identity oauth2.TokenSource) *API {
 	v := &API{
 		Helper:     request.NewHelper(log),
-		xUserAgent: fmt.Sprintf("android(v1.07_20200330);%s;1.7.0(11152)", brand),
+		xUserAgent: fmt.Sprintf("android(SP1A.210812.016.C1);%s;2.5.2(14945)", brand),
 	}
 
 	// replace client transport with authenticated transport
