@@ -1,16 +1,12 @@
-template: sma-data-manager-m
+template: sma-data-manager
+covers:
+  - sma-data-manager-m-lite
 products:
   - brand: SMA
     description:
-      generic: Data Manager M
-# guidedsetup:
-#   enable: true
-#   linked:
-#     - template: sma-energy-meter
-#       usage: grid
-#     - template: sma-inverter
-#       usage: battery
-#       multiple: true
+      generic: Data Manager
+guidedsetup:
+  enable: true
 requirements:
   description:
     de: In der Weboberfläche des SMA Data Manager muss im Bereich "Externe Kommunikation" der Schalter "Modbus Server aktivieren" eingeschaltet sein.
