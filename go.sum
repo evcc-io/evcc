@@ -910,8 +910,8 @@ github.com/vmihailenco/msgpack/v5 v5.3.5 h1:5gO0H1iULLWGhs2H5tbAHIZTV8/cYafcFOr9
 github.com/vmihailenco/msgpack/v5 v5.3.5/go.mod h1:7xyJ9e+0+9SaZT0Wt1RGleJXzli6Q/V5KbhBonMG9jc=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20220513145931-a8df46294407 h1:GyDTzbudD4tlden9A9UvTiKQvr0GuNdpFm6mtThm5Qg=
-github.com/volkszaehler/mbmd v0.0.0-20220513145931-a8df46294407/go.mod h1:JP4R5rxFO4QlDo/DoNp8YrPD2YV0+imTfRTL5xBCUjs=
+github.com/volkszaehler/mbmd v0.0.0-20220528181824-7251dd80a3fb h1:ESIHQLaabzC22atuOQ4B3CwyA0sxkTZOD+P/5MbneRY=
+github.com/volkszaehler/mbmd v0.0.0-20220528181824-7251dd80a3fb/go.mod h1:JP4R5rxFO4QlDo/DoNp8YrPD2YV0+imTfRTL5xBCUjs=
 github.com/writeas/go-strip-markdown v2.0.1+incompatible h1:IIqxTM5Jr7RzhigcL6FkrCNfXkvbR+Nbu1ls48pXYcw=
 github.com/writeas/go-strip-markdown v2.0.1+incompatible/go.mod h1:Rsyu10ZhbEK9pXdk8V6MVnZmTzRG0alMNLMwa0J01fE=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
