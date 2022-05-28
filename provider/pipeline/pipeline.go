@@ -113,7 +113,7 @@ func (p *Pipeline) transformXML(value []byte) []byte {
 	value = bytes.TrimSpace(value)
 
 	// only do a simple check, as some devices e.g. Kostal Piko MP plus don't seem to send proper XML
-	if !bytes.HasPrefix(value, []byte("<")) {
+	if !bytes.HasPrefix(value, []byte("<?xml")) {
 		return value
 	}
 
