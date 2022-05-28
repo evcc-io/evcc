@@ -46,8 +46,9 @@ func (v *API) eadrax() (VehiclesStatusResponse, error) {
 	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=60&appDateTime=%d", CocoApiURI, time.Now().Unix())
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Content-Type": request.JSONContent,
-		"X-User-Agent": v.xUserAgent,
+		"Content-Type":          request.JSONContent,
+		"X-User-Agent":          v.xUserAgent,
+		"bmw-units-preferences": "d=KM;v=L",
 	})
 	if err == nil {
 		err = v.DoJSON(req, &res)
