@@ -10,7 +10,7 @@ require (
 	github.com/alvaroloes/enumer v1.1.2
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go/v3 v3.1.1
-	github.com/aws/aws-sdk-go v1.44.18
+	github.com/aws/aws-sdk-go v1.44.20
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.0
@@ -26,7 +26,7 @@ require (
 	github.com/evcc-io/eebus v0.0.0-20220403153356-c4f2bab5546f
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
-	github.com/go-ping/ping v0.0.0-20211130115550-779d1e919534
+	github.com/go-ping/ping v1.1.0
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/gokrazy/updater v0.0.0-20211121155532-30ae8cd650ea
@@ -83,7 +83,7 @@ require (
 	google.golang.org/api v0.80.0
 	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
-	gopkg.in/yaml.v3 v3.0.0-20220512140231-539c8e751b99
+	gopkg.in/yaml.v3 v3.0.0
 )
 
 require (
@@ -99,7 +99,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chzyer/readline v1.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/deepmap/oapi-codegen v1.10.1 // indirect
+	github.com/deepmap/oapi-codegen v1.11.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
@@ -146,7 +146,7 @@ require (
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
-	github.com/subosito/gotenv v1.2.0 // indirect
+	github.com/subosito/gotenv v1.3.0 // indirect
 	github.com/teivah/onecontext v1.3.0 // indirect
 	github.com/thoas/go-funk v0.9.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
@@ -155,12 +155,12 @@ require (
 	golang.org/x/crypto v0.0.0-20220518034528-6f7dac969898 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
-	golang.org/x/sys v0.0.0-20220519141025-dcacdad47464 // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171 // indirect
 	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
+	google.golang.org/genproto v0.0.0-20220524023933-508584e28198 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
