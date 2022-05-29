@@ -36,6 +36,7 @@ type ABB struct {
 const (
 	abbRegSerial    = 0x4000 // Serial Number 4 unsigned RO available
 	abbRegFirmware  = 0x4004 // Firmware version 2 unsigned RO available
+	abbRegMaxRated  = 0x4006 // Max rated current 2 unsigned RO available
 	abbRegErrorCode = 0x4008 // Error Code 2 unsigned RO available
 	abbRegStatus    = 0x400C // Charging state 2 unsigned RO available
 	abbRegCurrents  = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
@@ -211,6 +212,9 @@ func (wb *ABB) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
 		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
+		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
 		fmt.Printf("\tError code:\t%x\n", b)
