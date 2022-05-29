@@ -31,20 +31,21 @@ import (
 type ABB struct {
 	log  *util.Logger
 	conn *modbus.Connection
+	curr uint32
 }
 
 const (
-	abbRegSerial    = 0x4000 // Serial Number 4 unsigned RO available
-	abbRegFirmware  = 0x4004 // Firmware version 2 unsigned RO available
-	abbRegStartStop = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
-	abbRegMaxRated  = 0x4006 // Max rated current 2 unsigned RO available
-	abbRegErrorCode = 0x4008 // Error Code 2 unsigned RO available
-	abbRegStatus    = 0x400C // Charging state 2 unsigned RO available
-	abbRegCurrents  = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
-	abbRegPower     = 0x401C // Active power 2 1 W unsigned RO available
-	abbRegEnergy    = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
-	abbRegCurrent   = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
-	abbRegPhases    = 0x4102 // Set charging phase 1 unsigned WO Not support
+	abbRegSerial     = 0x4000 // Serial Number 4 unsigned RO available
+	abbRegFirmware   = 0x4004 // Firmware version 2 unsigned RO available
+	abbRegMaxRated   = 0x4006 // Max rated current 2 unsigned RO available
+	abbRegErrorCode  = 0x4008 // Error Code 2 unsigned RO available
+	abbRegStatus     = 0x400C // Charging state 2 unsigned RO available
+	abbRegGetCurrent = 0x400E // Current charging current limit 2 0.001 A unsigned RO
+	abbRegCurrents   = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
+	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
+	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
+	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
+	abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not support
 )
 
 func init() {
@@ -83,6 +84,7 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	wb := &ABB{
 		log:  log,
 		conn: conn,
+		current: 6000 // assume min current
 	}
 
 	return wb, err
@@ -114,23 +116,32 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABB) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2)
+	b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
 	if err != nil {
 		return false, err
 	}
 
-	// A0 - Availability
-	return b[3] == 0, nil
+	cur := binary.BigEndian.Uint32(b)
+
+	enabled := cur != 0
+	if enabled {
+		wb.current = cur
+	}
+
+	return enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	var b uint16
-	if !enable {
-		b = 1
+	var cur uint32
+	if enable {
+		cur = wb.current
 	}
 
-	_, err := wb.conn.WriteSingleRegister(abbRegStartStop, b)
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, cur)
+
+	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
 
 	return err
 }
@@ -144,10 +155,16 @@ var _ api.ChargerEx = (*ABB)(nil)
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *ABB) MaxCurrentMillis(current float64) error {
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, uint32(current*1e3))
+	cur := uint32(current*1e3)
 
-	_, err := wb.conn.WriteMultipleRegisters(abbRegCurrent, 2, b)
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, cur)
+
+	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
+	if err == nil {
+		wb.current = cur
+	}
+
 	return err
 }
 
