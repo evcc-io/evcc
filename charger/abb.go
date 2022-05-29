@@ -217,6 +217,6 @@ func (wb *ABB) Diagnose() {
 		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
-		fmt.Printf("\tError code:\t%x\n", b)
+		fmt.Printf("\tError code:\t%x\n", binary.BigEndian.Uint32(b))
 	}
 }
