@@ -29,9 +29,9 @@ import (
 
 // ABB charger implementation
 type ABB struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	curr uint32
+	log     *util.Logger
+	conn    *modbus.Connection
+	current uint32
 }
 
 const (
@@ -82,8 +82,8 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	conn.Logger(log.TRACE)
 
 	wb := &ABB{
-		log:  log,
-		conn: conn,
+		log:     log,
+		conn:    conn,
 		current: 6000, // assume min current
 	}
 
@@ -155,7 +155,7 @@ var _ api.ChargerEx = (*ABB)(nil)
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *ABB) MaxCurrentMillis(current float64) error {
-	cur := uint32(current*1e3)
+	cur := uint32(current * 1e3)
 
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, cur)
