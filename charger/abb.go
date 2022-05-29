@@ -53,7 +53,9 @@ func init() {
 // NewABBFromConfig creates a ABB charger from generic config
 func NewABBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
-		ID: 1,
+		ID:       1,
+		Baudrate: 9600,
+		Comset:   "8N1",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -208,7 +210,7 @@ func (wb *ABB) Diagnose() {
 		fmt.Printf("\tSerial:\t%x\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
-		fmt.Printf("\tFirmware:\t%x\n", b)
+		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
 		fmt.Printf("\tError code:\t%x\n", b)
