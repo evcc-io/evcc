@@ -84,7 +84,7 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	wb := &ABB{
 		log:  log,
 		conn: conn,
-		current: 6000 // assume min current
+		current: 6000, // assume min current
 	}
 
 	return wb, err
