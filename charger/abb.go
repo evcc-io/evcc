@@ -95,6 +95,7 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
+	// A1 - Charging
 	switch s := b[2] & 0x7f; s {
 	case 0: // State A: Idle
 		return api.StatusA, nil
@@ -118,7 +119,8 @@ func (wb *ABB) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return b[0] == 0, nil
+	// A0 - Availability
+	return b[3] == 0, nil
 }
 
 // Enable implements the api.Charger interface
