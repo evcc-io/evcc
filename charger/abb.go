@@ -94,7 +94,7 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch s := b[1] & 0x7f; s {
+	switch s := b[2] & 0x7f; s {
 	case 0: // State A: Idle
 		return api.StatusA, nil
 	case 1: // State B1: EV Plug in, pending authorization
@@ -103,7 +103,7 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3: // State C1: EV Ready for charge, S2 closed(no PWM)
 		return api.StatusB, nil
-	case 5: // State C2: Charging Contact closed, energy delivering
+	case 4: // State C2: Charging Contact closed, energy delivering
 		return api.StatusC, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
@@ -160,10 +160,10 @@ func (wb *ABB) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
-var _ api.MeterEnergy = (*ABB)(nil)
+var _ api.ChargeRater = (*ABB)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *ABB) TotalEnergy() (float64, error) {
+// ChargedEnergy implements the api.MeterEnergy interface
+func (wb *ABB) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(abbRegEnergy, 2)
 	if err != nil {
 		return 0, err
