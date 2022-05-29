@@ -213,7 +213,7 @@ func (wb *ABB) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
 		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
 		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
