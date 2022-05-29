@@ -29,9 +29,9 @@ import (
 
 // ABB charger implementation
 type ABB struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	current uint32
+	log  *util.Logger
+	conn *modbus.Connection
+	curr uint32
 }
 
 const (
@@ -82,9 +82,9 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	conn.Logger(log.TRACE)
 
 	wb := &ABB{
-		log:     log,
-		conn:    conn,
-		current: 6000, // assume min current
+		log:  log,
+		conn: conn,
+		curr: 6000, // assume min current
 	}
 
 	return wb, err
@@ -121,29 +121,17 @@ func (wb *ABB) Enabled() (bool, error) {
 		return false, err
 	}
 
-	cur := binary.BigEndian.Uint32(b)
-
-	enabled := cur != 0
-	if enabled {
-		wb.current = cur
-	}
-
-	return enabled, nil
+	return binary.BigEndian.Uint32(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	var cur uint32
+	var curr uint32
 	if enable {
-		cur = wb.current
+		curr = wb.curr
 	}
 
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, cur)
-
-	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
-
-	return err
+	return wb.setCurrent(curr)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -153,16 +141,22 @@ func (wb *ABB) MaxCurrent(current int64) error {
 
 var _ api.ChargerEx = (*ABB)(nil)
 
-// MaxCurrent implements the api.ChargerEx interface
-func (wb *ABB) MaxCurrentMillis(current float64) error {
-	cur := uint32(current * 1e3)
-
+// setCurrent writes the current limit in mA
+func (wb *ABB) setCurrent(current uint32) error {
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, cur)
+	binary.BigEndian.PutUint32(b, current)
 
 	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
+	return err
+}
+
+// MaxCurrent implements the api.ChargerEx interface
+func (wb *ABB) MaxCurrentMillis(current float64) error {
+	curr := uint32(current * 1e3)
+
+	err := wb.setCurrent(curr)
 	if err == nil {
-		wb.current = cur
+		wb.curr = curr
 	}
 
 	return err
