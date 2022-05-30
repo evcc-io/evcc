@@ -45,7 +45,8 @@ const (
 	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
 	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
 	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
-	abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not support
+//	abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not support
+	abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 )
 
 func init() {
@@ -109,6 +110,10 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 4: // State C2: Charging Contact closed, energy delivering
 		return api.StatusC, nil
+	case 5: // Other: Session stopped
+		wb.conn.WriteSingleRegister(abbRegSession, 0)
+		wb.Enable(false)
+		return api.StatusE, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
 	}
@@ -203,6 +208,7 @@ func (wb *ABB) Currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
+/*
 var _ api.ChargePhases = (*ABB)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
@@ -215,6 +221,7 @@ func (wb *ABB) Phases1p3p(phases int) error {
 	_, err := wb.conn.WriteSingleRegister(abbRegPhases, b)
 	return err
 }
+*/
 
 var _ api.Diagnosis = (*ABB)(nil)
 
@@ -228,6 +235,9 @@ func (wb *ABB) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
 		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2); err == nil {
+		fmt.Printf("\tStatus:\t%x\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
 		fmt.Printf("\tError code:\t%x\n", binary.BigEndian.Uint32(b))
