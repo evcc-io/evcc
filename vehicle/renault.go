@@ -69,9 +69,14 @@ type kamereonAccount struct {
 }
 
 type kamereonVehicle struct {
-	Brand  string `json:"brand"`
-	VIN    string `json:"vin"`
-	Status string `json:"status"`
+	Brand           string          `json:"brand"`
+	VIN             string          `json:"vin"`
+	Status          string          `json:"status"`
+	ConnectedDriver connectedDriver `json:"ConnectedDriver"`
+}
+
+type connectedDriver struct {
+	Role string `json:"role"`
 }
 
 type kamereonData struct {
@@ -310,6 +315,7 @@ func (v *Renault) kamereonPerson(personID string) (string, error) {
 
 func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
+	log := util.NewLogger("renault")
 	res, err := v.kamereonRequest(uri, nil)
 
 	var vehicles []string
@@ -317,6 +323,11 @@ func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 		for _, v := range res.VehicleLinks {
 			if strings.ToUpper(v.Status) == "ACTIVE" {
 				vehicles = append(vehicles, v.VIN)
+			}
+			if v.ConnectedDriver.Role != "MAIN_DRIVER" {
+				log.ERROR.Println("The connected driver role is not set in renault accounts API response." +
+					" Renault will reject all car status requests with a http 403 error code. " +
+					" Please connect your my-renault account with the configured car.")
 			}
 		}
 	}
