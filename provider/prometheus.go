@@ -1,0 +1,105 @@
+package provider
+
+import (
+	"context"
+	"fmt"
+	"github.com/evcc-io/evcc/util/request"
+	"math"
+	"time"
+
+	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
+	"github.com/prometheus/common/model"
+
+	"github.com/evcc-io/evcc/util"
+	"github.com/prometheus/client_golang/api"
+)
+
+// Prometheus provider
+type Prometheus struct {
+	log         *util.Logger
+	clientV1Api v1.API
+	query       string
+	timeout     time.Duration
+}
+
+func init() {
+	registry.Add("prometheus", NewPrometheusFromConfig)
+}
+
+func NewPrometheusFromConfig(other map[string]interface{}) (IntProvider, error) {
+	cc := struct {
+		api.Config `mapstructure:",squash"`
+		Query      string
+		Timeout    time.Duration
+	}{
+		Timeout: request.Timeout,
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("prometheus")
+
+	client, err := api.NewClient(cc.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	p := NewPrometheus(log, client, cc.Query, cc.Timeout)
+
+	return p, err
+}
+
+func NewPrometheus(log *util.Logger, client api.Client, query string, timeout time.Duration) *Prometheus {
+	p := &Prometheus{
+		log:         log,
+		clientV1Api: v1.NewAPI(client),
+		query:       query,
+		timeout:     timeout,
+	}
+
+	return p
+}
+
+func (p *Prometheus) Query() (model.Value, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
+	defer cancel()
+	res, warn, err := p.clientV1Api.Query(ctx, p.query, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	p.log.TRACE.Printf("query %q: %+v", p.query, res)
+	if len(warn) > 0 {
+		p.log.WARN.Printf("query %q returned warnings: %v", p.query, warn)
+	}
+	return res, nil
+}
+
+var _ FloatProvider = (*Prometheus)(nil)
+
+// FloatGetter expects scalar value from query response as float
+func (p *Prometheus) FloatGetter() func() (float64, error) {
+	return func() (float64, error) {
+		res, err := p.Query()
+		if err != nil {
+			return 0, err
+		}
+		if res.Type() != model.ValScalar {
+			return 0, fmt.Errorf("query returned value of type %q, expected %q, consider wrapping query in scalar()", res.Type().String(), model.ValScalar.String())
+		}
+		scalarVal := res.(*model.Scalar)
+		return float64(scalarVal.Value), nil
+	}
+}
+
+var _ IntProvider = (*Prometheus)(nil)
+
+// IntGetter expects scalar value from query response as int
+func (p *Prometheus) IntGetter() func() (int64, error) {
+	floatGetter := p.FloatGetter()
+	return func() (int64, error) {
+		float, err := floatGetter()
+		return int64(math.Round(float)), err
+	}
+}
