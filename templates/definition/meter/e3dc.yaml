@@ -1,7 +1,6 @@
 template: e3dc
 products:
-  - description:
-      generic: E3DC
+  - brand: E3DC
 guidedsetup:
   enable: true
 params:
