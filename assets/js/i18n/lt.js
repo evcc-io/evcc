@@ -32,7 +32,7 @@ export default {
       modalSavingsTotal: "Sutaupyta, palyginus su tinklu",
       modalExplaination: "Skaičiavimas",
       modalExplainationGrid: "kaina iš tinklo {gridPrice}",
-      modalExplainationFeedIn: "Kompensavimas už patiektą į tinklą energiją {feedInPrice}",
+      modalExplainationFeedIn: "kompensavimas už patiektą į tinklą energiją {feedInPrice}",
       modalServerStart: "nuo EVCC starto {since}.",
       modalNoData: "įkrovimo duomenų dar nėra",
     },
@@ -135,5 +135,9 @@ export default {
         Apie netikėtą elgesį praneškite mūsų
       `,
     },
+  },
+  offline: {
+    message: "Nėra ryšio su serveriu.",
+    reload: "Perkrauti?",
   },
 };
