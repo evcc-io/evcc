@@ -17,5 +17,5 @@ render:
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 80 # Port # Optional
-      urlprefix: /api/ # Optional
+      urlprefix: /api/ # Wenn die volkszaehler Installation nicht in dem Standard  /api Pfad arbeitet, muss dies angepasst werden # Optional
       uuid:

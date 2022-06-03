@@ -12,6 +12,12 @@ params:
     default: 80
   - name: urlprefix
     default: /api/
+    description:
+      de: URL-Teil vor data
+      en: part of URL before data
+    help:
+      de: Wenn die volkszaehler Installation nicht in dem Standard  /api Pfad arbeitet, muss dies angepasst werden
+      en: If the volkszaehler installation not in the standard /api path works, this must be adjusted
     advanced: true
   - name: uuid
     required: true
