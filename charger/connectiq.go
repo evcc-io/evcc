@@ -155,7 +155,7 @@ func (wb *ConnectIq) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return res.Pow[0] + res.Pow[1] + res.Pow[2], nil
+	return (res.Pow[0] + res.Pow[1] + res.Pow[2]) * 1e3, nil
 }
 
 // var _ api.ChargeRater = (*ConnectIq)(nil)
