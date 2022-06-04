@@ -165,6 +165,13 @@ func (wb *ConnectIq) CurrentPower() (float64, error) {
 // 	return 0, api.ErrNotAvailable
 // }
 
+// var _ api.MeterEnergy = (*ConnectIq)(nil)
+
+// // TotalEnergy implements the api.MeterEnergy interface
+// func (wb *ConnectIq) TotalEnergy() (float64, error) {
+// 	return 0, api.ErrNotAvailable
+// }
+
 var _ api.MeterCurrent = (*ConnectIq)(nil)
 
 // Currents implements the api.MeterCurrent interface
@@ -181,13 +188,6 @@ func (wb *ConnectIq) Currents() (float64, float64, float64, error) {
 // // Identify implements the api.Identifier interface
 // func (wb *ConnectIq) Identify() (string, error) {
 // 	return "", api.ErrNotAvailable
-// }
-
-// var _ api.MeterEnergy = (*ConnectIq)(nil)
-
-// // TotalEnergy implements the api.MeterEnergy interface
-// func (wb *ConnectIq) TotalEnergy() (float64, error) {
-// 	return 0, api.ErrNotAvailable
 // }
 
 // var _ api.ChargePhases = (*ConnectIq)(nil)
