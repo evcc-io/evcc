@@ -4,12 +4,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -129,7 +129,7 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) error
 	if token.WaitTimeout(publishTimeout) {
 		return token.Error()
 	}
-	return api.ErrTimeout
+	return os.ErrDeadlineExceeded
 }
 
 // Listen validates uniqueness and registers and attaches listener

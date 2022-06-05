@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -104,7 +105,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	select {
 	case <-done:
 	case <-time.NewTimer(timeout).C:
-		return nil, api.ErrTimeout
+		return nil, os.ErrDeadlineExceeded
 	}
 
 	// decorate energy reading
@@ -219,7 +220,7 @@ func (m *Dsmr) get(id string) (float64, error) {
 	defer m.mu.Unlock()
 
 	if time.Since(m.updated) > m.timeout {
-		return 0, api.ErrTimeout
+		return 0, os.ErrDeadlineExceeded
 	}
 
 	res, ok := m.frame.Objects[id]

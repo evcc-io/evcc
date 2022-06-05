@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -160,7 +161,7 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 	select {
 	case <-done:
 	case <-time.After(request.Timeout):
-		err = api.ErrTimeout
+		err = os.ErrDeadlineExceeded
 	}
 
 	return c, err
