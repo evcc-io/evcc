@@ -152,7 +152,9 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err == nil {
 		v.vin, err = ensureVehicle(cc.VIN, func() ([]string, error) {
-			return v.kamereonVehicles(v.accountID)
+			var vehicles []string
+			vehicles, err = v.kamereonVehicles(v.accountID)
+			return vehicles, err
 		})
 	}
 
@@ -315,24 +317,31 @@ func (v *Renault) kamereonPerson(personID string) (string, error) {
 
 func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
-	log := util.NewLogger("renault")
 	res, err := v.kamereonRequest(uri, nil)
-
+	var erroneousVins []string
 	var vehicles []string
 	if err == nil {
 		for _, v := range res.VehicleLinks {
 			if strings.ToUpper(v.Status) == "ACTIVE" {
-				vehicles = append(vehicles, v.VIN)
-			}
-			if v.ConnectedDriver.Role != "MAIN_DRIVER" {
-				log.ERROR.Println("The connected driver role is not set in renault accounts API response." +
-					" Renault will reject all car status requests with a http 403 error code. " +
-					" Please connect your my-renault account with the configured car.")
+				if v.ConnectedDriver.Role == "MAIN_DRIVER" {
+					vehicles = append(vehicles, v.VIN)
+				} else {
+					erroneousVins = append(erroneousVins, fmt.Sprintf("For the configured vehicle with vin: %s "+
+						"the connected driver role is not set.", v.VIN))
+				}
+			} else {
+				erroneousVins = append(erroneousVins, fmt.Sprintf("For the configured vehicle with vin: %s "+
+					"the my-renault status is not set to active.", v.VIN))
 			}
 		}
 	}
-
-	return vehicles, err
+	if len(vehicles) <= 0 {
+		return vehicles, fmt.Errorf("No paired vehicle found. %s %s",
+			strings.Join(erroneousVins, ","), " Renault will reject all car status requests with a http 403 error code. "+
+				" Please pair your configured vehicle with the used my-renault account.")
+	} else {
+		return vehicles, err
+	}
 }
 
 // batteryAPI provides battery-status api response
