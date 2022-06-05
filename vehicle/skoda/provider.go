@@ -52,7 +52,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		if res.Plug.ConnectionState == "Connected" {
 			status = api.StatusB
 		}
-		if res.Plug.ConnectionState == "Charging" {
+		if res.Charging.State == "Charging" {
 			status = api.StatusC
 		}
 	}

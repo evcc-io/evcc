@@ -13,7 +13,7 @@ ifeq ($(RELEASE),1)
 endif
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
-BUILD_TAGS := -tags=release,viper_yaml3
+BUILD_TAGS := -tags=release
 LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -s -w
 BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 

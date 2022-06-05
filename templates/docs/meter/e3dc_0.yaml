@@ -1,5 +1,5 @@
 product:
-  description: E3DC
+  brand: E3DC
 render:
   - usage: grid
     default: |

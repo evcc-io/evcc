@@ -31,19 +31,21 @@ import (
 type ABB struct {
 	log  *util.Logger
 	conn *modbus.Connection
+	curr uint32
 }
 
 const (
-	abbRegSerial    = 0x4000 // Serial Number 4 unsigned RO available
-	abbRegFirmware  = 0x4004 // Firmware version 2 unsigned RO available
-	abbRegErrorCode = 0x4008 // Error Code 2 unsigned RO available
-	abbRegStatus    = 0x400C // Charging state 2 unsigned RO available
-	abbRegCurrents  = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
-	abbRegPower     = 0x401C // Active power 2 1 W unsigned RO available
-	abbRegEnergy    = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
-	abbRegCurrent   = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
-	abbRegPhases    = 0x4102 // Set charging phase 1 unsigned WO Not support
-	abbRegStartStop = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
+	abbRegSerial     = 0x4000 // Serial Number 4 unsigned RO available
+	abbRegFirmware   = 0x4004 // Firmware version 2 unsigned RO available
+	abbRegMaxRated   = 0x4006 // Max rated current 2 unsigned RO available
+	abbRegErrorCode  = 0x4008 // Error Code 2 unsigned RO available
+	abbRegStatus     = 0x400C // Charging state 2 unsigned RO available
+	abbRegGetCurrent = 0x400E // Current charging current limit 2 0.001 A unsigned RO
+	abbRegCurrents   = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
+	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
+	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
+	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
+	abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not support
 )
 
 func init() {
@@ -52,20 +54,22 @@ func init() {
 
 // NewABBFromConfig creates a ABB charger from generic config
 func NewABBFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 1,
+	cc := modbus.Settings{
+		ID:       1,
+		Baudrate: 9600,
+		Comset:   "8N1",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewABB(cc.URI, cc.ID)
+	return NewABB(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
 // NewABB creates ABB charger
-func NewABB(uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Rtu, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +84,7 @@ func NewABB(uri string, slaveID uint8) (api.Charger, error) {
 	wb := &ABB{
 		log:  log,
 		conn: conn,
+		curr: 6000, // assume min current
 	}
 
 	return wb, err
@@ -92,7 +97,8 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch s := b[1] & 0x7f; s {
+	// A1 - Charging
+	switch s := b[2] & 0x7f; s {
 	case 0: // State A: Idle
 		return api.StatusA, nil
 	case 1: // State B1: EV Plug in, pending authorization
@@ -101,7 +107,7 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3: // State C1: EV Ready for charge, S2 closed(no PWM)
 		return api.StatusB, nil
-	case 5: // State C2: Charging Contact closed, energy delivering
+	case 4: // State C2: Charging Contact closed, energy delivering
 		return api.StatusC, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
@@ -110,24 +116,22 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABB) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2)
+	b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
 	if err != nil {
 		return false, err
 	}
 
-	return b[0] == 0, nil
+	return binary.BigEndian.Uint32(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	var b uint16
-	if !enable {
-		b = 1
+	var curr uint32
+	if enable {
+		curr = wb.curr
 	}
 
-	_, err := wb.conn.WriteSingleRegister(abbRegStartStop, b)
-
-	return err
+	return wb.setCurrent(curr)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -137,12 +141,24 @@ func (wb *ABB) MaxCurrent(current int64) error {
 
 var _ api.ChargerEx = (*ABB)(nil)
 
+// setCurrent writes the current limit in mA
+func (wb *ABB) setCurrent(current uint32) error {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, current)
+
+	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
+	return err
+}
+
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *ABB) MaxCurrentMillis(current float64) error {
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, uint32(current*1e3))
+	curr := uint32(current * 1e3)
 
-	_, err := wb.conn.WriteMultipleRegisters(abbRegCurrent, 2, b)
+	err := wb.setCurrent(curr)
+	if err == nil {
+		wb.curr = curr
+	}
+
 	return err
 }
 
@@ -158,10 +174,10 @@ func (wb *ABB) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
-var _ api.MeterEnergy = (*ABB)(nil)
+var _ api.ChargeRater = (*ABB)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *ABB) TotalEnergy() (float64, error) {
+// ChargedEnergy implements the api.MeterEnergy interface
+func (wb *ABB) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(abbRegEnergy, 2)
 	if err != nil {
 		return 0, err
@@ -208,9 +224,12 @@ func (wb *ABB) Diagnose() {
 		fmt.Printf("\tSerial:\t%x\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
-		fmt.Printf("\tFirmware:\t%x\n", b)
+		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
+		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
-		fmt.Printf("\tError code:\t%x\n", b)
+		fmt.Printf("\tError code:\t%x\n", binary.BigEndian.Uint32(b))
 	}
 }
