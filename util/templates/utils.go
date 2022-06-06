@@ -16,12 +16,17 @@ func yamlQuote(value string) string {
 	input := fmt.Sprintf("key: %s", value)
 
 	var res struct {
-		Value any `yaml:"key"`
+		Value string `yaml:"key"`
 	}
 
 	if err := yaml.Unmarshal([]byte(input), &res); err != nil || value != res.Value {
 		quoted := strings.ReplaceAll(value, `'`, `''`)
 		return fmt.Sprintf("'%s'", quoted)
+	}
+
+	// fix 0815, but not 0
+	if strings.HasPrefix("0", value) && len(value) > 1 {
+		return fmt.Sprintf("'%s'", value)
 	}
 
 	return value
