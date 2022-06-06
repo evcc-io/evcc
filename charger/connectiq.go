@@ -81,11 +81,16 @@ func NewConnectIq(uri string, cache time.Duration) (api.Charger, error) {
 	return wb, nil
 }
 
+func (wb *ConnectIq) status() (connectiq.ChargeStatus, error) {
+	var res connectiq.ChargeStatus
+	uri := fmt.Sprintf("%s/charge/status", wb.uri)
+	err := wb.GetJSON(uri, &res)
+	return res, err
+}
+
 // Status implements the api.Charger interface
 func (wb *ConnectIq) Status() (api.ChargeStatus, error) {
-	var resp connectiq.ChargeStatus
-	uri := fmt.Sprintf("%s/charge/status", wb.uri)
-	err := wb.GetJSON(uri, &resp)
+	resp, err := wb.status()
 
 	res := api.StatusNone
 	switch resp.Status {
@@ -106,10 +111,8 @@ func (wb *ConnectIq) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ConnectIq) Enabled() (bool, error) {
-	var resp connectiq.ChargeStatus
-	uri := fmt.Sprintf("%s/charge/status", wb.uri)
-	err := wb.GetJSON(uri, &resp)
-	return resp.Amps > 0, err
+	res, err := wb.status()
+	return res.Amps > 0, err
 }
 
 // Enable implements the api.Charger interface
