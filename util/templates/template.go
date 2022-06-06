@@ -326,14 +326,23 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 	}
 
 	tmpl := template.New("yaml")
-	var funcMap template.FuncMap = map[string]interface{}{}
-	// copied from: https://github.com/helm/helm/blob/8648ccf5d35d682dcd5f7a9c2082f0aaf071e817/pkg/engine/engine.go#L147-L154
-	funcMap["include"] = func(name string, data interface{}) (string, error) {
-		buf := bytes.NewBuffer(nil)
-		if err := tmpl.ExecuteTemplate(buf, name, data); err != nil {
-			return "", err
-		}
-		return buf.String(), nil
+	funcMap := template.FuncMap{
+		// include function
+		// copied from: https://github.com/helm/helm/blob/8648ccf5d35d682dcd5f7a9c2082f0aaf071e817/pkg/engine/engine.go#L147-L154
+		"include": func(name string, data interface{}) (string, error) {
+			buf := bytes.NewBuffer(nil)
+			if err := tmpl.ExecuteTemplate(buf, name, data); err != nil {
+				return "", err
+			}
+			return buf.String(), nil
+		},
+		// quote usernames/passwords to preserve leading zero
+		"stringquote": func(val string) (string, error) {
+			if strings.HasPrefix(val, "0") {
+				val = yamlQuote(val)
+			}
+			return val, nil
+		},
 	}
 
 	tmpl, err := tmpl.Funcs(template.FuncMap(sprig.FuncMap())).Funcs(funcMap).Parse(t.Render)
