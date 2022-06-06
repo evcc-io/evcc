@@ -323,7 +323,7 @@ func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 	if err == nil {
 		for _, v := range res.VehicleLinks {
 			if strings.ToUpper(v.Status) == "ACTIVE" {
-				if v.ConnectedDriver.Role == "MAIN_DRIVER" {
+				if len(v.ConnectedDriver.Role) > 0 {
 					vehicles = append(vehicles, v.VIN)
 				} else {
 					erroneousVins = append(erroneousVins, fmt.Sprintf("For the configured vehicle with vin: %s "+
