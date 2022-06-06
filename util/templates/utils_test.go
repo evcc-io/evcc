@@ -8,13 +8,13 @@ import (
 )
 
 func TestYamlDecode(t *testing.T) {
-	for _, value := range []string{`value`, `!value`, `@value`, `"value"`, `"va"lue"`, `va'lue`, `@va'lue`} {
+	for _, value := range []string{`value`, `!value`, `@value`, `"value"`, `"va"lue"`, `va'lue`, `@va'lue` /*, `0815`*/} {
 		t.Run(value, func(t *testing.T) {
 			quoted := yamlQuote(value)
 			input := fmt.Sprintf("key: %s", quoted)
 
 			var res struct {
-				Value string `yaml:"key"`
+				Value any `yaml:"key"`
 			}
 
 			if err := yaml.Unmarshal([]byte(input), &res); err != nil {
