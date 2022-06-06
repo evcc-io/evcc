@@ -36,12 +36,12 @@ export default {
 	emits: ["updated"],
 	computed: {
 		modes() {
-		 let modes = ["off", "now", "minpv", "pv"]
-		 if (this.gridPriorityPower > 0) {
-			 (modes = modes.slice()).push("grid")
-		 }
-		 return modes
-		}
+			let modes = ["off", "now", "minpv", "pv"];
+			if (this.gridPriorityPower > 0) {
+				(modes = modes.slice()).push("grid");
+			}
+			return modes;
+		},
 	},
 	methods: {
 		isActive: function (mode) {

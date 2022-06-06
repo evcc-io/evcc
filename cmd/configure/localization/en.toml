@@ -131,6 +131,7 @@ ChargeModeOff = "Off"
 ChargeModeNow = "Now (charging with maximum power)"
 ChargeModeMinPV = "Min+PV (charging with minimum power, faster if enough PV power surplus is available)"
 ChargeModePV = "PV (Only with PV power surplus)"
+ChargeModeGrid = "Grid Prio (prioritizes feed into grid until given threshold)
 ChargeModeNone = "None (Use what is set at the loadpoint)"
 
 Site_Setup = "- Setup site"

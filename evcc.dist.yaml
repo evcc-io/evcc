@@ -76,6 +76,7 @@ site:
     battery: battery # battery meter
   prioritySoC: # give home battery priority up to this soc (empty to disable)
   bufferSoC: # ignore home battery discharge above soc (empty to disable)
+  gridPriorityPower: give grid feed priority below given power - enables grid prio mode (empty to disable)
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:

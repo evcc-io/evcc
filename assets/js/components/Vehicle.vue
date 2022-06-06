@@ -105,7 +105,7 @@ export default {
 			return null;
 		},
 		targetChargeDisabled: function () {
-			return !this.connected || !["pv", "minpv"].includes(this.mode);
+			return !this.connected || !["pv", "minpv", "grid"].includes(this.mode);
 		},
 	},
 	watch: {

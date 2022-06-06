@@ -131,6 +131,7 @@ ChargeModeOff = "Stop"
 ChargeModeNow = "Sofort (mit größtmöglicher Leistung)"
 ChargeModeMinPV = "Min+PV (mit der kleinstmöglichen Leistung, schneller wenn genügend PV Überschuss vorhanden ist)"
 ChargeModePV = "PV (Nur mit PV Überschuss)"
+ChargeModeGrid = "Netz Prio (Netz-Einspeisung bis angegebener Schwelle hat Priorität, z.B. Nutzung der restlichen 30% über Einspeiselimit)
 ChargeModeNone = "Keinen (Benutzt den im Ladepunkt gesetzten Lademodus)"
 
 Site_Setup = "- Standort einrichten"

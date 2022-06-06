@@ -5,7 +5,11 @@
 				{{ title || $t("main.loadpoint.fallbackName") }}
 			</h3>
 			<div class="mb-3 d-flex align-items-center">
-				<Mode :mode="mode" :gridPriorityPower="gridPriorityPower" @updated="setTargetMode" />
+				<Mode
+					:mode="mode"
+					:gridPriorityPower="gridPriorityPower"
+					@updated="setTargetMode"
+				/>
 				<button v-if="$hiddenFeatures" class="btn btn-link text-gray p-0 flex-shrink-0">
 					<shopicon-filled-options size="s"></shopicon-filled-options>
 				</button>

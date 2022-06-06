@@ -4,7 +4,7 @@ export default {
   title: "Main/Loadpoint",
   component: Loadpoint,
   argTypes: {
-    mode: { control: { type: "inline-radio", options: ["off", "now", "minpv", "pv"] } },
+    mode: { control: { type: "inline-radio", options: ["off", "now", "minpv", "pv", "grid"] } },
     remoteDisabled: { control: { type: "radio", options: ["", "soft", "hard"] } },
     climater: { control: { type: "inline-radio", options: ["on", "heating", "cooling"] } },
   },

@@ -147,8 +147,8 @@ params:
       de: Standard-Lademodus, wenn ein Fahrzeug angeschlossen ist
       en: Default charging mode when a vehicle is connected
     help:
-      de: Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
-      en: Possible values are Off, Now, MinPV and PV, or empty if none should be set
+      de: Möglich sind Off, Now, MinPV, PV and Grid, oder leer wenn keiner definiert werden soll
+      en: Possible values are Off, Now, MinPV, PV and Grid, or empty if none should be set
     valuetype: chargemodes
   - name: minsoc
     description:
