@@ -4,7 +4,7 @@ export default {
   title: "Main/Mode",
   component: Mode,
   argTypes: {
-    mode: { control: { type: "inline-radio" }, options: ["off", "now", "minpv", "pv"] },
+    mode: { control: { type: "inline-radio" }, options: ["off", "now", "minpv", "pv", "grid"] },
   },
 };
 

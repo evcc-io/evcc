@@ -15,7 +15,7 @@
 			<Energyflow v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area pt-4">
-			<Loadpoints class="mt-1 mt-sm-2 flex-grow-1" :loadpoints="loadpoints" />
+			<Loadpoints class="mt-1 mt-sm-2 flex-grow-1" :loadpoints="loadpoints" :gridPriorityPower="gridPriorityPower" />
 			<Vehicles v-if="$hiddenFeatures" />
 			<Footer v-bind="footer"></Footer>
 		</div>
@@ -64,6 +64,7 @@ export default {
 		gridCurrents: Array,
 		prioritySoC: Number,
 		siteTitle: String,
+		gridPriorityPower: Number,
 
 		auth: Object,
 

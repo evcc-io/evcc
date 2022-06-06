@@ -1130,14 +1130,18 @@ func (lp *LoadPoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered bool) float64 {
+func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered bool, gridPriorityPower float64) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.GetMinCurrent()
 	maxCurrent := lp.GetMaxCurrent()
+	eventualSitePower := sitePower
+	if mode == api.ModeGrid {
+		eventualSitePower += gridPriorityPower
+	}
 
 	// switch phases up/down
 	if _, ok := lp.charger.(api.ChargePhases); ok {
-		availablePower := -sitePower + lp.chargePower
+		availablePower := -eventualSitePower + lp.chargePower
 
 		// in case of scaling, keep charger disabled for this cycle
 		if lp.pvScalePhases(availablePower, minCurrent, maxCurrent) {
@@ -1148,20 +1152,20 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	// calculate target charge current from delta power and actual current
 	effectiveCurrent := lp.effectiveCurrent()
 	activePhases := lp.activePhases()
-	deltaCurrent := powerToCurrent(-sitePower, activePhases)
+	deltaCurrent := powerToCurrent(-eventualSitePower, activePhases)
 	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
 
-	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
+	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, eventualSitePower, activePhases)
 
 	// in MinPV mode or under special conditions return at least minCurrent
 	if (mode == api.ModeMinPV || batteryBuffered || lp.climateActive()) && targetCurrent < minCurrent {
 		return minCurrent
 	}
 
-	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
+	if (mode == api.ModePV || mode == api.ModeGrid) && lp.enabled && targetCurrent < minCurrent {
 		// kick off disable sequence
-		if sitePower >= lp.Disable.Threshold && lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Printf("site power %.0fW >= %.0fW disable threshold", sitePower, lp.Disable.Threshold)
+		if eventualSitePower >= lp.Disable.Threshold && lp.phaseTimer.IsZero() {
+			lp.log.DEBUG.Printf("site power %.0fW >= %.0fW disable threshold", eventualSitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.Disable.Delay)
@@ -1189,11 +1193,11 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 		return minCurrent
 	}
 
-	if mode == api.ModePV && !lp.enabled {
+	if (mode == api.ModePV || mode == api.ModeGrid) && !lp.enabled {
 		// kick off enable sequence
 		if (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) ||
-			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
+			(lp.Enable.Threshold != 0 && eventualSitePower <= lp.Enable.Threshold) {
+			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", eventualSitePower, lp.Enable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.Enable.Delay)
@@ -1389,7 +1393,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool) {
+func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool, gridPriorityPower float64) {
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 
@@ -1486,8 +1490,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 			err = lp.setLimit(targetCurrent, true)
 		}
 
-	case mode == api.ModeMinPV || mode == api.ModePV:
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
+	case mode == api.ModeMinPV || mode == api.ModePV || mode == api.ModeGrid:
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered, gridPriorityPower)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {

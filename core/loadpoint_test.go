@@ -326,7 +326,7 @@ func TestPVHysteresis(t *testing.T) {
 				// charger.EXPECT().Enabled().Return(tc.enabled, nil)
 
 				lp.enabled = tc.enabled
-				current := lp.pvMaxCurrent(api.ModePV, se.site, false)
+				current := lp.pvMaxCurrent(api.ModePV, se.site, false, 0)
 
 				if current != se.current {
 					t.Errorf("step %d: wanted %.1f, got %.1f", step, se.current, current)
@@ -359,7 +359,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 
 	// maxCurrent will read enabled state in PV mode
 	sitePower := -float64(phases)*minA*Voltage + 1 // 1W below min power
-	current := lp.pvMaxCurrent(api.ModePV, sitePower, false)
+	current := lp.pvMaxCurrent(api.ModePV, sitePower, false, 0)
 
 	if current != 0 {
 		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %.f", current)

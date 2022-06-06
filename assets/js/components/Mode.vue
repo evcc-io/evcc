@@ -31,12 +31,17 @@ export default {
 	name: "Mode",
 	props: {
 		mode: String,
+		gridPriorityPower: Number,
 	},
 	emits: ["updated"],
-	data() {
-		return {
-			modes: ["off", "now", "minpv", "pv"],
-		};
+	computed: {
+		modes() {
+		 let modes = ["off", "now", "minpv", "pv"]
+		 if (this.gridPriorityPower > 0) {
+			 (modes = modes.slice()).push("grid")
+		 }
+		 return modes
+		}
 	},
 	methods: {
 		isActive: function (mode) {

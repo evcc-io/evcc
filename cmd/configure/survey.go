@@ -136,12 +136,13 @@ func (c *CmdConfigure) askValue(q question) string {
 	}
 
 	if q.valueType == templates.ParamValueTypeChargeModes {
-		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
+		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV), string(api.ModeGrid)}
 		chargeModes := []string{
 			c.localizedString("ChargeModeOff", nil),
 			c.localizedString("ChargeModeNow", nil),
 			c.localizedString("ChargeModeMinPV", nil),
 			c.localizedString("ChargeModePV", nil),
+			c.localizedString("ChargeModeGrid", nil),
 		}
 		if !q.excludeNone {
 			chargingModes = append(chargingModes, "")

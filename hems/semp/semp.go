@@ -411,7 +411,7 @@ func (s *SEMP) deviceStatus(id int, lp loadpoint.API) DeviceStatus {
 
 	status := lp.GetStatus()
 	mode := lp.GetMode()
-	isPV := mode == api.ModeMinPV || mode == api.ModePV
+	isPV := mode == api.ModeMinPV || mode == api.ModePV || mode == api.ModeGrid
 
 	deviceStatus := StatusOff
 	if status == api.StatusC {
@@ -449,7 +449,7 @@ func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 	// remaining max demand duration in seconds
 	chargeRemainingDuration := lp.GetRemainingDuration()
 	latestEnd := int(chargeRemainingDuration / time.Second)
-	if mode == api.ModeMinPV || mode == api.ModePV || latestEnd <= 0 {
+	if mode == api.ModeMinPV || mode == api.ModePV || mode == api.ModeGrid || latestEnd <= 0 {
 		latestEnd = 24 * 3600
 	}
 
@@ -463,7 +463,7 @@ func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 	}
 
 	minEnergy := maxEnergy
-	if mode == api.ModePV {
+	if mode == api.ModePV || mode == api.ModeGrid {
 		minEnergy = 0
 	}
 
@@ -519,7 +519,7 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			if mode := lp.GetMode(); mode != api.ModeMinPV && mode != api.ModePV {
+			if mode := lp.GetMode(); mode != api.ModeMinPV && mode != api.ModePV && mode != api.ModeGrid {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}

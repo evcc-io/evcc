@@ -197,6 +197,7 @@ vehicles:
 
 site:
   title: Zuhause
+  gridPriorityPower: 2500
   meters:
     grid: grid
     pv: pv

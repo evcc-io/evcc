@@ -332,7 +332,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		if c.lp != nil && !obligationEnabled {
 			// recommendations only work in PV modes
 			chargeMode := c.lp.GetMode()
-			if chargeMode != api.ModePV && chargeMode != api.ModeMinPV {
+			if chargeMode != api.ModePV && chargeMode != api.ModeMinPV && chargeMode != api.ModeGrid {
 				obligationEnabled = true
 			}
 		}

@@ -17,7 +17,7 @@ import (
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
-	Update(availablePower float64, cheapRate bool, batteryBuffered bool)
+	Update(availablePower float64, cheapRate bool, batteryBuffered bool, gridPriorityPower float64)
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -38,6 +38,7 @@ type Site struct {
 	PrioritySoC                       float64      `mapstructure:"prioritySoC"`                       // prefer battery up to this SoC
 	BufferSoC                         float64      `mapstructure:"bufferSoC"`                         // ignore battery above this SoC
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	GridPriorityPower                 float64      `mapstructure:"gridPriorityPower"`                 // prefer grid supply below this
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -407,7 +408,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
-		lp.Update(sitePower, cheap, site.batteryBuffered)
+		lp.Update(sitePower, cheap, site.batteryBuffered, site.GridPriorityPower)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
@@ -433,6 +434,7 @@ func (site *Site) prepare() {
 
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since().Unix())
+	site.publish("gridPriorityPower", site.GridPriorityPower)
 }
 
 // Prepare attaches communication channels to site and loadpoints

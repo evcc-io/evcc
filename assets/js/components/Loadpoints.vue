@@ -11,6 +11,7 @@
 				<Loadpoint
 					v-bind="loadpoint"
 					:id="index"
+					:gridPriorityPower="gridPriorityPower"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -43,6 +44,7 @@ export default {
 	mixins: [collector],
 	props: {
 		loadpoints: Array,
+		gridPriorityPower: Number,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };

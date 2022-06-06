@@ -19,6 +19,8 @@ func ChargeModeString(mode string) (ChargeMode, error) {
 		return ModePV, nil
 	case string(ModeOff):
 		return ModeOff, nil
+	case string(ModeGrid):
+		return ModeGrid, nil
 	default:
 		return "", fmt.Errorf("invalid value: %s", mode)
 	}

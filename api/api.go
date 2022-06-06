@@ -23,6 +23,7 @@ const (
 	ModeNow   ChargeMode = "now"
 	ModeMinPV ChargeMode = "minpv"
 	ModePV    ChargeMode = "pv"
+	ModeGrid  ChargeMode = "grid"
 )
 
 // String implements Stringer

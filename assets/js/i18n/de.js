@@ -73,6 +73,8 @@ export default {
       minpvLong: "Min + PV",
       pvShort: "PV",
       pvLong: "PV",
+      gridShort: "Netz",
+      gridLong: "Netz Prio",
       fast: "Schnell",
       cheap: "Günstig",
     },

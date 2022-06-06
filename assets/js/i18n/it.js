@@ -53,6 +53,8 @@ export default {
       minpvLong: "Min + FV",
       pvShort: "FV",
       pvLong: "Solo FV",
+      gridShort: "Rete",
+      gridLong: "Rete Prio",
     },
     loadpoint: {
       fallbackName: "Punto di carica",
