@@ -232,8 +232,8 @@ presets:
       {{- if ne .title "" }}
       title: {{ .title }}
       {{- end }}
-      user: {{ stringquote .user }}
-      password: {{ stringquote .password }}
+      user: {{ .user }}
+      password: {{ .password }}
       {{- if ne .capacity "" }}
       capacity: {{ .capacity }}
       {{- end }}

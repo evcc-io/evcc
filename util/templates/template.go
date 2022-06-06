@@ -336,13 +336,6 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 			}
 			return buf.String(), nil
 		},
-		// quote usernames/passwords to preserve leading zero
-		"stringquote": func(val string) (string, error) {
-			if strings.HasPrefix(val, "0") {
-				val = yamlQuote(val)
-			}
-			return val, nil
-		},
 	}
 
 	tmpl, err := tmpl.Funcs(template.FuncMap(sprig.FuncMap())).Funcs(funcMap).Parse(t.Render)

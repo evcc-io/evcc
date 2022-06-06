@@ -8,7 +8,7 @@ import (
 )
 
 func TestYamlDecode(t *testing.T) {
-	for _, value := range []string{`value`, `!value`, `@value`, `"value"`, `"va"lue"`, `va'lue`, `@va'lue` /*, `0815`*/} {
+	for _, value := range []string{`value`, `!value`, `@value`, `"value"`, `"va"lue"`, `va'lue`, `@va'lue`, `0815`, ``} {
 		t.Run(value, func(t *testing.T) {
 			quoted := yamlQuote(value)
 			input := fmt.Sprintf("key: %s", quoted)
@@ -21,7 +21,7 @@ func TestYamlDecode(t *testing.T) {
 				t.Fatalf("expected %s (quoted: %s), got error %v", value, quoted, err)
 			}
 
-			if value != res.Value {
+			if value != res.Value && !(value == "" && res.Value == nil) {
 				t.Fatalf("expected %s (quoted: %s), got %s", value, quoted, res.Value)
 			}
 		})
