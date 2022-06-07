@@ -152,9 +152,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err == nil {
 		v.vin, err = ensureVehicle(cc.VIN, func() ([]string, error) {
-			var vehicles []string
-			vehicles, err = v.kamereonVehicles(v.accountID)
-			return vehicles, err
+			return v.kamereonVehicles(v.accountID)
 		})
 	}
 
