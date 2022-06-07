@@ -7,23 +7,18 @@ group: generic
 params:
   - name: usage
     choice: ["grid"]
-  - name: host
-  - name: port
-    default: 80
-  - name: urlprefix
-    default: /api/
+  - name: url
     description:
-      de: URL-Teil vor data
-      en: part of URL before data
+      de: URL des data Endpunkts der volkszahler Installation (ohne ein / am Ende)
+      en: URL of the data endpoint og the volkszaheler installation (without the / at the end)
     help:
-      de: Wenn die volkszaehler Installation nicht in dem Standard  /api Pfad arbeitet, muss dies angepasst werden
-      en: If the volkszaehler installation not in the standard /api path works, this must be adjusted
-    advanced: true
+      de: Die URL ist zum Beispiel http://zaehler.network.local:8080/api/data
+      en: The URL is for example http://zaehler.network.local:8080/api/data
   - name: uuid
     required: true
 render: |
   type: custom
   power: # power reading
     source: http # use http plugin
-    uri: http://{{ .host }}:{{ .port }}{{ .urlprefix }}data/{{ .uuid }}.json?from=now
+    uri: {{ .url }}/{{ .uuid }}.json?from=now
     jq: .data.tuples[0][1] # parse response json
