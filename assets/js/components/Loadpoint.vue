@@ -1,6 +1,6 @@
 <template>
 	<div class="loadpoint bg-white p-4">
-		<div class="d-flex justify-content-between align-items-center mb-3">
+		<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
 			<h3 class="mb-3 me-2 text-truncate">
 				{{ title || $t("main.loadpoint.fallbackName") }}
 			</h3>
