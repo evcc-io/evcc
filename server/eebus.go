@@ -115,6 +115,8 @@ func (c *EEBus) DeviceInfo() communication.ManufacturerDetails {
 
 func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) error, shipDisconnectHandler func(string)) {
 	ski = strings.ReplaceAll(ski, "-", "")
+	ski = strings.ReplaceAll(ski, " ", "")
+	ski = strings.ToLower(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	c.mux.Lock()
