@@ -36,7 +36,6 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/grandcat/zeroconf v1.0.0
 	github.com/gregdel/pushover v1.1.0
 	github.com/grid-x/modbus v0.0.0-20220419073012-0daecbb3900f
 	github.com/hashicorp/go-version v1.5.0
@@ -50,6 +49,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.3
 	github.com/korylprince/ipnetgen v1.0.1
+	github.com/libp2p/zeroconf/v2 v2.1.1
 	github.com/lorenzodonini/ocpp-go v0.15.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/manifoldco/promptui v0.9.0
@@ -112,6 +112,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
+	github.com/grandcat/zeroconf v1.0.0 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
@@ -172,3 +173,5 @@ require (
 )
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20220205120646-e5220ad9a9a0
+
+replace github.com/libp2p/zeroconf/v2 => github.com/DerAndereAndi/zeroconf/v2 v2.0.0-20220607195515-4c9557651bc9

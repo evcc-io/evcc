@@ -17,7 +17,7 @@ import (
 	"github.com/evcc-io/eebus/ship"
 	"github.com/evcc-io/eebus/spine/model"
 	"github.com/evcc-io/evcc/util"
-	"github.com/grandcat/zeroconf"
+	"github.com/libp2p/zeroconf/v2"
 )
 
 var EEBUSDetails = communication.ManufacturerDetails{
@@ -136,13 +136,7 @@ func (c *EEBus) Run() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	// discover all services on the network (e.g. _workstation._tcp)
-	resolver, err := zeroconf.NewResolver(nil)
-	if err != nil {
-		panic(fmt.Errorf("mDNS: failed initializing resolver: %w", err))
-	}
-
-	if err = resolver.Browse(ctx, ship.ZeroconfType, ship.ZeroconfDomain, entries); err != nil {
+	if err := zeroconf.Browse(ctx, ship.ZeroconfType, ship.ZeroconfDomain, entries); err != nil {
 		panic(fmt.Errorf("failed to browse: %w", err))
 	}
 
