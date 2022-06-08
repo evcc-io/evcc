@@ -14,4 +14,3 @@ params:
 render: |
   type: eebus
   ski: {{ .ski }}
-  forcePVLimits: true

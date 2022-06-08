@@ -20,10 +20,9 @@ const (
 )
 
 type EEBus struct {
-	log           *util.Logger
-	cc            *communication.ConnectionController
-	lp            loadpoint.API
-	forcePVLimits bool
+	log *util.Logger
+	cc  *communication.ConnectionController
+	lp  loadpoint.API
 
 	communicationStandard           communication.EVCommunicationStandardEnumType
 	socSupportAvailable             bool
@@ -43,19 +42,18 @@ func init() {
 // NewEEBusFromConfig creates an EEBus charger from generic config
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Ski           string
-		ForcePVLimits bool
+		Ski string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski, cc.ForcePVLimits)
+	return NewEEBus(cc.Ski)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string, forcePVLimits bool) (*EEBus, error) {
+func NewEEBus(ski string) (*EEBus, error) {
 	log := util.NewLogger("eebus")
 
 	if server.EEBusInstance == nil {
@@ -64,7 +62,6 @@ func NewEEBus(ski string, forcePVLimits bool) (*EEBus, error) {
 
 	c := &EEBus{
 		log:                   log,
-		forcePVLimits:         forcePVLimits,
 		communicationStandard: communication.EVCommunicationStandardEnumTypeUnknown,
 	}
 
@@ -350,7 +347,7 @@ func (c *EEBus) writeChargingPlan() error {
 		// The EV is in direct charging mode
 
 		// Does it support self consumption?
-		if c.optimizationSelfConsumptionAvailable() && !c.forcePVLimits {
+		if c.optimizationSelfConsumptionAvailable() {
 			// this should mean that any mode in evcc is ignored and the EV is in full control
 			// TODO: is this the right approach?
 
@@ -447,31 +444,9 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		return err
 	}
 
-	selfConsumptionCurrents := []float64{0.0, 0.0, 0.0}
-	overloadProtectionCurrents := currents
-
-	// are the limits obligations or recommendations
-	// in the scenarios IEC, ISO without asymetric charging, the limits are always obligations
-	obligationEnabled := true
-
-	if c.optimizationSelfConsumptionAvailable() {
-		obligationEnabled = c.forcePVLimits
-		if c.lp != nil && !obligationEnabled {
-			// recommendations only work in PV modes
-			chargeMode := c.lp.GetMode()
-			if chargeMode != api.ModePV && chargeMode != api.ModeMinPV {
-				obligationEnabled = true
-			}
-		}
-	}
-
-	// when recommending a current make sure the overload protection limit is set to max
-	if !obligationEnabled {
-		selfConsumptionCurrents = currents
-		overloadProtectionCurrents = []float64{data.EVData.LimitsL1.Max, data.EVData.LimitsL2.Max, data.EVData.LimitsL3.Max}
-	}
-
-	return c.cc.WriteCurrentLimitData(overloadProtectionCurrents, selfConsumptionCurrents, data.EVData)
+	// set overload protection limits and self consumption limits to identical values
+	// so if the EV supports self consumption it will be used automatically
+	return c.cc.WriteCurrentLimitData(currents, currents, data.EVData)
 }
 
 // MaxCurrent implements the api.Charger interface
