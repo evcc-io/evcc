@@ -54,6 +54,7 @@ type Site struct {
 	pvPower         float64 // PV power
 	batteryPower    float64 // Battery charge power
 	batteryBuffered bool    // Battery buffer active
+	batterySoC      float64 // Battery SoC
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -367,6 +368,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 			}
 		}
 		site.publish("batterySoC", math.Trunc(socs))
+		site.batterySoC = socs
 
 		site.Lock()
 		defer site.Unlock()
@@ -386,6 +388,20 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
 	return sitePower, nil
+}
+
+// Adjust GridPriorityPower when battery is charging above PrioritySoC because
+// sitePower adds charging power to available power then
+// This is some kind of hack because info about battery power and soc is lost.
+// To fix it, the values need to be propagated to loadpoint logic.
+func (site *Site) dynamicGridPriorityPower() float64 {
+	var dynamic = site.GridPriorityPower
+
+	if site.batterySoC >= site.PrioritySoC {
+		dynamic -= site.batteryPower
+	}
+
+	return dynamic
 }
 
 func (site *Site) update(lp Updater) {
@@ -408,7 +424,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
-		lp.Update(sitePower, cheap, site.batteryBuffered, site.GridPriorityPower)
+		lp.Update(sitePower, cheap, site.batteryBuffered, site.dynamicGridPriorityPower())
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
