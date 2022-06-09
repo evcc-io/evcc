@@ -66,7 +66,7 @@ TestingDevice_Title = "Testing the configuration of {{ .Device }} ..."
 TestingDevice_TitleUsage = "Testing the {{ .Usage }} configuration of {{ .Device }} ..."
 TestingDevice_RepeatStep = "Do you want to repeat choosing a device and configuring it?"
 TestingDevice_AddFailed = "Testing {{ .Device }} failed. Do you want to add it anyway?"
-TestingDevice_AddFailedUsage = "Testing of the {{ .Usage }} configuration of {{ .Device }} failed. Do you want to add it anyway?"
+TestingDevice_AddFailedUsage = "Testing of the {{ .Usage }} configuration of {{ .Device }} failed. Do you want to add {{ .Usage }} anyway?"
 
 TestingMQTTFailed = "Testing the MQTT configuration failed. Do you want to repeat its configuration?"
 
