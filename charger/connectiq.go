@@ -111,8 +111,10 @@ func (wb *ConnectIq) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ConnectIq) Enabled() (bool, error) {
-	res, err := wb.status()
-	return res.Amps > 0, err
+	var res connectiq.ChargeMaxAmps
+	uri := fmt.Sprintf("%s/charge/max_amps", wb.uri)
+	err := wb.GetJSON(uri, &res)
+	return res.Max > 0, err
 }
 
 // Enable implements the api.Charger interface
@@ -161,19 +163,15 @@ func (wb *ConnectIq) CurrentPower() (float64, error) {
 	return (res.Pow[0] + res.Pow[1] + res.Pow[2]) * 1e3, nil
 }
 
-// var _ api.ChargeRater = (*ConnectIq)(nil)
+var _ api.MeterEnergy = (*ConnectIq)(nil)
 
-// // ChargedEnergy implements the api.ChargeRater interface
-// func (wb *ConnectIq) ChargedEnergy() (float64, error) {
-// 	return 0, api.ErrNotAvailable
-// }
-
-// var _ api.MeterEnergy = (*ConnectIq)(nil)
-
-// // TotalEnergy implements the api.MeterEnergy interface
-// func (wb *ConnectIq) TotalEnergy() (float64, error) {
-// 	return 0, api.ErrNotAvailable
-// }
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *ConnectIq) TotalEnergy() (float64, error) {
+	var res connectiq.MeterRead
+	uri := fmt.Sprintf("%s/meter/read", wb.uri)
+	err := wb.GetJSON(uri, &res)
+	return 0, err
+}
 
 var _ api.MeterCurrent = (*ConnectIq)(nil)
 
@@ -185,17 +183,3 @@ func (wb *ConnectIq) Currents() (float64, float64, float64, error) {
 	}
 	return res.Curr[0], res.Curr[1], res.Curr[2], nil
 }
-
-// var _ api.Identifier = (*ConnectIq)(nil)
-
-// // Identify implements the api.Identifier interface
-// func (wb *ConnectIq) Identify() (string, error) {
-// 	return "", api.ErrNotAvailable
-// }
-
-// var _ api.ChargePhases = (*ConnectIq)(nil)
-
-// // Phases1p3p implements the api.ChargePhases interface
-// func (wb *ConnectIq) Phases1p3p(phases int) error {
-// 	return api.ErrNotAvailable
-// }

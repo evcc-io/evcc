@@ -7,10 +7,18 @@ type ChargeStatus struct {
 	Std    int64  `json:"std"`
 }
 
+type ChargeMaxAmps struct {
+	Max int64 `json:"max"`
+}
+
 type MeterStatus struct {
 	App  []float64 `json:"app"`
 	Curr []float64 `json:"curr"`
 	Fac  []float64 `json:"fac"`
 	Pow  []float64 `json:"pow"`
+	Volt []float64 `json:"volt"`
+}
+
+type MeterRead struct {
 	Volt []float64 `json:"volt"`
 }
