@@ -182,10 +182,6 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
-	if kr.AuthON == 1 && c.rfid.Tag == "" {
-		c.log.WARN.Println("missing credentials for RFID authorization")
-	}
-
 	if kr.Plug < 5 {
 		return api.StatusA, nil
 	}
@@ -217,8 +213,15 @@ func (c *Keba) enableRFID() error {
 	if err := c.roundtrip("report", 2, &kr); err != nil {
 		return err
 	}
+
+	// no auth required
 	if kr.AuthReq == 0 {
 		return nil
+	}
+
+	// auth required but missing tag
+	if c.rfid.Tag == "" {
+		return errors.New("missing credentials for RFID authorization")
 	}
 
 	// authorize
@@ -232,7 +235,7 @@ func (c *Keba) enableRFID() error {
 
 // Enable implements the api.Charger interface
 func (c *Keba) Enable(enable bool) error {
-	if enable && c.rfid.Tag != "" {
+	if enable {
 		if err := c.enableRFID(); err != nil {
 			return err
 		}
