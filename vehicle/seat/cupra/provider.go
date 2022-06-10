@@ -44,7 +44,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if err == nil {
 		switch strings.ToLower(res.Services.Charging.Status) {
-		case "connected":
+		case "connected", "readyforcharging":
 			status = api.StatusB
 		case "charging":
 			status = api.StatusC
