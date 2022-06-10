@@ -226,11 +226,7 @@ func (c *Keba) enableRFID() error {
 
 	// authorize
 	var resp string
-	if err := c.roundtrip(fmt.Sprintf("start %s", c.rfid.Tag), 0, &resp); err != nil {
-		return err
-	}
-
-	return nil
+	return c.roundtrip(fmt.Sprintf("start %s", c.rfid.Tag), 0, &resp)
 }
 
 // Enable implements the api.Charger interface
