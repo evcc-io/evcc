@@ -20,5 +20,5 @@ type MeterStatus struct {
 }
 
 type MeterRead struct {
-	Volt []float64 `json:"volt"`
+	Energy float64 `json:"energy"`
 }
