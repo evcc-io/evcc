@@ -128,8 +128,6 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 	case 4: // State C2: Charging Contact closed, energy delivering
 		return api.StatusC, nil
 	case 5: // Other: Session stopped
-		// wb.conn.WriteSingleRegister(abbRegSession, 0)
-		// wb.Enable(false)
 		return api.StatusB, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
@@ -157,6 +155,20 @@ func (wb *ABB) Enable(enable bool) error {
 	var curr uint32
 	if enable {
 		curr = wb.curr
+
+		s, err := wb.status()
+		wb.log.DEBUG.Printf("status: %d, %v", s, err)
+		if err != nil {
+			return err
+		}
+
+		if s == 5 {
+			s, err := wb.conn.WriteSingleRegister(abbRegSession, 0)
+			wb.log.DEBUG.Printf("unlock session: %d, %v", s, err)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return wb.setCurrent(curr)
