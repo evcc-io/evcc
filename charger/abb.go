@@ -24,7 +24,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // ABB charger implementation
@@ -45,8 +44,8 @@ const (
 	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
 	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
 	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
-//	abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not support
-	abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
+	//	abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not support
+	abbRegSession = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 )
 
 func init() {
@@ -75,9 +74,9 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 		return nil, err
 	}
 
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
+	// if !sponsor.IsAuthorized() {
+	// 	return nil, api.ErrSponsorRequired
+	// }
 
 	log := util.NewLogger("abb")
 	conn.Logger(log.TRACE)
