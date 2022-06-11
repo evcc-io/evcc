@@ -176,4 +176,4 @@ replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0
 
 replace github.com/libp2p/zeroconf/v2 => github.com/DerAndereAndi/zeroconf/v2 v2.0.0-20220607195515-4c9557651bc9
 
-replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220608123732-c33c7056ee2b
+replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220611083028-2f3e7b2b26bf
