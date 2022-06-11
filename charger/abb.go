@@ -248,23 +248,23 @@ func (wb *ABB) Currents() (float64, float64, float64, error) {
 // 	return err
 // }
 
-// var _ api.Diagnosis = (*ABB)(nil)
+var _ api.Diagnosis = (*ABB)(nil)
 
-// // Diagnose implements the api.Diagnosis interface
-// func (wb *ABB) Diagnose() {
-// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegSerial, 4); err == nil {
-// 		fmt.Printf("\tSerial:\t%x\n", b)
-// 	}
-// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
-// 		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
-// 	}
-// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
-// 		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
-// 	}
-// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2); err == nil {
-// 		fmt.Printf("\tStatus:\t%x\n", b)
-// 	}
-// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
-// 		fmt.Printf("\tError code:\t%x\n", binary.BigEndian.Uint32(b))
-// 	}
-// }
+// Diagnose implements the api.Diagnosis interface
+func (wb *ABB) Diagnose() {
+	// if b, err := wb.conn.ReadHoldingRegisters(abbRegSerial, 4); err == nil {
+	// 	fmt.Printf("\tSerial:\t%x\n", b)
+	// }
+	// if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
+	// 	fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
+	// }
+	// if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
+	// 	fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
+	// }
+	// if b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2); err == nil {
+	// 	fmt.Printf("\tStatus:\t%x\n", b)
+	// }
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
+		fmt.Printf("\tError code:\t%x\n", binary.BigEndian.Uint32(b))
+	}
+}
