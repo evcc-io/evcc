@@ -170,7 +170,7 @@ func (wb *ConnectIq) TotalEnergy() (float64, error) {
 	var res connectiq.MeterRead
 	uri := fmt.Sprintf("%s/meter/read", wb.uri)
 	err := wb.GetJSON(uri, &res)
-	return 0, err
+	return res.Energy, err
 }
 
 var _ api.MeterCurrent = (*ConnectIq)(nil)
