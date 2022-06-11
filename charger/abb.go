@@ -90,23 +90,33 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	return wb, err
 }
 
+// status implements the api.Charger interface
+func (wb *ABB) status() (byte, error) {
+	b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return b[2] & 0x7f, nil
+}
+
 // Status implements the api.Charger interface
 func (wb *ABB) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2)
+	s, err := wb.status()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
 	{
-		b, err := wb.conn.ReadHoldingRegisters(abbRegSession, 1)
-		if err != nil {
-			return api.StatusNone, err
-		}
-		wb.log.DEBUG.Printf("abbRegSession: %d", binary.BigEndian.Uint16(b))
+		// b, err := wb.conn.ReadHoldingRegisters(abbRegSession, 1)
+		// if err != nil {
+		// 	return api.StatusNone, err
+		// }
+		// wb.log.DEBUG.Printf("abbRegSession: %d", binary.BigEndian.Uint16(b))
 	}
 
 	// A1 - Charging
-	switch s := b[2] & 0x7f; s {
+	switch s {
 	case 0: // State A: Idle
 		return api.StatusA, nil
 	case 1: // State B1: EV Plug in, pending authorization
@@ -128,17 +138,18 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABB) Enabled() (bool, error) {
-	b1, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
+	s, err := wb.status()
+	wb.log.DEBUG.Printf("status: %d, %v", s, err)
+	if s == 5 || err != nil {
+		return false, err
+	}
+
+	b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
 	if err != nil {
 		return false, err
 	}
 
-	b2, err := wb.conn.ReadHoldingRegisters(abbRegSession, 1)
-	if err != nil {
-		return false, err
-	}
-
-	return binary.BigEndian.Uint32(b1) > 0 && binary.BigEndian.Uint16(b2) == 0, nil
+	return binary.BigEndian.Uint32(b) > 0, nil
 }
 
 // Enable implements the api.Charger interface
