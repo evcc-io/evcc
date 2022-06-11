@@ -44,8 +44,8 @@ const (
 	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
 	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
 	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
+	abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 	//	abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not support
-	abbRegSession = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 )
 
 func init() {
@@ -97,6 +97,11 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
+	{
+		b, _ := wb.conn.ReadHoldingRegisters(abbRegSession, 1)
+		wb.log.DEBUG.Printf("abbRegSession: %d", binary.BigEndian.Uint16(b))
+	}
+
 	// A1 - Charging
 	switch s := b[2] & 0x7f; s {
 	case 0: // State A: Idle
@@ -110,9 +115,9 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 	case 4: // State C2: Charging Contact closed, energy delivering
 		return api.StatusC, nil
 	case 5: // Other: Session stopped
-		wb.conn.WriteSingleRegister(abbRegSession, 0)
-		wb.Enable(false)
-		return api.StatusE, nil
+		// wb.conn.WriteSingleRegister(abbRegSession, 0)
+		// wb.Enable(false)
+		return api.StatusB, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
 	}
@@ -120,12 +125,17 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABB) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
+	b1, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint32(b) != 0, nil
+	b2, err := wb.conn.ReadHoldingRegisters(abbRegSession, 1)
+	if err != nil {
+		return false, err
+	}
+
+	return binary.BigEndian.Uint32(b1) > 0 && binary.BigEndian.Uint16(b2) == 0, nil
 }
 
 // Enable implements the api.Charger interface
