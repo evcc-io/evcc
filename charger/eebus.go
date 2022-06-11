@@ -451,9 +451,20 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	// So if are currentls smaller 6A with unknown communication standard change them to 6A
 	// keep in mind, that still will confuse evcc as it thinks charging is stopped, but it isn't yet
 	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeUnknown {
-		for i := range currents {
-			if currents[i] < 6.0 {
-				currents[i] = 6.0
+		for index, current := range currents {
+			switch index {
+			case 0:
+				if current < data.EVData.LimitsL1.Min {
+					currents[index] = data.EVData.LimitsL1.Min
+				}
+			case 1:
+				if current < data.EVData.LimitsL2.Min {
+					currents[index] = data.EVData.LimitsL2.Min
+				}
+			case 2:
+				if current < data.EVData.LimitsL3.Min {
+					currents[index] = data.EVData.LimitsL3.Min
+				}
 			}
 		}
 	}
