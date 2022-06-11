@@ -144,26 +144,28 @@ func (wb *ABB) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	var curr uint32
-	if enable {
-		curr = wb.curr
+	if !enable {
+		// stop session
+		_, err := wb.conn.WriteSingleRegister(abbRegSession, 1)
+		return err
+	}
 
-		s, err := wb.status()
-		wb.log.DEBUG.Printf("status: %d, %v", s, err)
+	// start session
+	s, err := wb.status()
+	wb.log.DEBUG.Printf("status: %d, %v", s, err)
+	if err != nil {
+		return err
+	}
+
+	if s == 5 {
+		s, err := wb.conn.WriteSingleRegister(abbRegSession, 0)
+		wb.log.DEBUG.Printf("unlock session: %d, %v", s, err)
 		if err != nil {
 			return err
 		}
-
-		if s == 5 {
-			s, err := wb.conn.WriteSingleRegister(abbRegSession, 0)
-			wb.log.DEBUG.Printf("unlock session: %d, %v", s, err)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
-	return wb.setCurrent(curr)
+	return wb.setCurrent(wb.curr)
 }
 
 // setCurrent writes the current limit in mA
