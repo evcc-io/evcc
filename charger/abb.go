@@ -98,7 +98,10 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 	}
 
 	{
-		b, _ := wb.conn.ReadHoldingRegisters(abbRegSession, 1)
+		b, err := wb.conn.ReadHoldingRegisters(abbRegSession, 1)
+		if err != nil {
+			return api.StatusNone, err
+		}
 		wb.log.DEBUG.Printf("abbRegSession: %d", binary.BigEndian.Uint16(b))
 	}
 
