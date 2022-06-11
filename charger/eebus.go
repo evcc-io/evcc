@@ -444,6 +444,20 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		return err
 	}
 
+	// Only send currents smaller 6A if the communication standard is known
+	// otherwise this could cause ISO15118 capable OBCs to stick with IEC61851 when plugging
+	// the charge cable in. Or even worse show an error and the cable needs the unplugged,
+	// wait for the car to go into sleep and plug it back in.
+	// So if are currentls smaller 6A with unknown communication standard change them to 6A
+	// keep in mind, that still will confuse evcc as it thinks charging is stopped, but it isn't yet
+	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeUnknown {
+		for i := range currents {
+			if currents[i] < 6.0 {
+				currents[i] = 6.0
+			}
+		}
+	}
+
 	// set overload protection limits and self consumption limits to identical values
 	// so if the EV supports self consumption it will be used automatically
 	return c.cc.WriteCurrentLimitData(currents, currents, data.EVData)
