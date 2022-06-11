@@ -63,8 +63,8 @@ github.com/BurntSushi/toml v1.1.0 h1:ksErzDEI1khOiGPgpwuI7x2ebx/uXQNw7xJpn9Eq1+I
 github.com/BurntSushi/toml v1.1.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
-github.com/DerAndereAndi/eebus v0.0.0-20220611083028-2f3e7b2b26bf h1:sIGdosZgsyORD3Aet/OIyrvoohzscH53P9tcc1ZMTN4=
-github.com/DerAndereAndi/eebus v0.0.0-20220611083028-2f3e7b2b26bf/go.mod h1:9asV2XJ4YJFQEz1NEeLprP5dL7Lrw2snNbFhc7xBQ6k=
+github.com/DerAndereAndi/eebus v0.0.0-20220611122735-593a8cbaa39e h1:/ADu/IfpHfsMEQ9CKKy77kyMUS7KEf/u23Amvweu7eU=
+github.com/DerAndereAndi/eebus v0.0.0-20220611122735-593a8cbaa39e/go.mod h1:9asV2XJ4YJFQEz1NEeLprP5dL7Lrw2snNbFhc7xBQ6k=
 github.com/DerAndereAndi/zeroconf/v2 v2.0.0-20220607195515-4c9557651bc9 h1:xM6uz9OcnqJ+Tu8h3LFgYdg3gy3Qu1eg2UbrL8LuPyY=
 github.com/DerAndereAndi/zeroconf/v2 v2.0.0-20220607195515-4c9557651bc9/go.mod h1:fuJqLnUwZTshS3U/bMRJ3+ow/v9oid1n0DmyYyNO1Xs=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=

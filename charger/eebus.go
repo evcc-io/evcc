@@ -111,8 +111,8 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 		return
 	}
 
-	newMin := data.EVData.LimitsL1.Min
-	newMax := data.EVData.LimitsL1.Max
+	newMin := data.EVData.Limits[1].Min
+	newMax := data.EVData.Limits[1].Max
 
 	if c.lp.GetMinCurrent() != newMin && newMin > 0 {
 		c.lp.SetMinCurrent(newMin)
@@ -198,9 +198,9 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 
 // we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
 func isCharging(d communication.EVDataType) bool {
-	return d.Measurements.PowerL1 > d.LimitsL1.Min*idleFactor ||
-		d.Measurements.PowerL2 > d.LimitsL2.Min*idleFactor ||
-		d.Measurements.PowerL3 > d.LimitsL3.Min*idleFactor
+	return d.Measurements.Power[1] > d.Limits[1].Min*idleFactor ||
+		d.Measurements.Power[2] > d.Limits[2].Min*idleFactor ||
+		d.Measurements.Power[3] > d.Limits[3].Min*idleFactor
 }
 
 func (c *EEBus) updateState() (api.ChargeStatus, error) {
@@ -299,11 +299,11 @@ func (c *EEBus) Enable(enable bool) error {
 
 	// we need to check if the mode is set to now as the currents won't be adjusted afterwards any more in all cases
 	if c.lp.GetMode() == api.ModeNow {
-		return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Max, data.EVData.LimitsL2.Max, data.EVData.LimitsL3.Max})
+		return c.writeCurrentLimitData([]float64{data.EVData.Limits[1].Max, data.EVData.Limits[2].Max, data.EVData.Limits[3].Max})
 	}
 
 	// in non now mode only enable with min settings, so we don't excessively consume power in case it has to be turned of in the next cycle anyways
-	return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min})
+	return c.writeCurrentLimitData([]float64{data.EVData.Limits[1].Min, data.EVData.Limits[2].Min, data.EVData.Limits[3].Min})
 }
 
 // returns true if the connected EV supports charging recommendation
@@ -452,18 +452,10 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	// keep in mind, that still will confuse evcc as it thinks charging is stopped, but it isn't yet
 	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeUnknown {
 		for index, current := range currents {
-			switch index {
-			case 0:
-				if current < data.EVData.LimitsL1.Min {
-					currents[index] = data.EVData.LimitsL1.Min
-				}
-			case 1:
-				if current < data.EVData.LimitsL2.Min {
-					currents[index] = data.EVData.LimitsL2.Min
-				}
-			case 2:
-				if current < data.EVData.LimitsL3.Min {
-					currents[index] = data.EVData.LimitsL3.Min
+			phase := uint(index) + 1
+			if limit, ok := data.EVData.Limits[phase]; ok {
+				if current < limit.Min {
+					currents[index] = limit.Min
 				}
 			}
 		}
@@ -494,18 +486,18 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 		return errors.New("can't set new current as ev is unplugged")
 	}
 
-	if data.EVData.LimitsL1.Min == 0 {
+	if data.EVData.Limits[1].Min == 0 {
 		c.log.TRACE.Println("!! we did not yet receive min and max currents to validate the call of MaxCurrent, use it as is")
 	}
 
-	if current < data.EVData.LimitsL1.Min {
-		c.log.TRACE.Printf("!! current value %f is lower than the allowed minimum value %f", current, data.EVData.LimitsL1.Min)
-		current = data.EVData.LimitsL1.Min
+	if current < data.EVData.Limits[1].Min {
+		c.log.TRACE.Printf("!! current value %f is lower than the allowed minimum value %f", current, data.EVData.Limits[1].Min)
+		current = data.EVData.Limits[1].Min
 	}
 
-	if current > data.EVData.LimitsL1.Max {
-		c.log.TRACE.Printf("!! current value %f is higher than the allowed maximum value %f", current, data.EVData.LimitsL1.Max)
-		current = data.EVData.LimitsL1.Max
+	if current > data.EVData.Limits[1].Max {
+		c.log.TRACE.Printf("!! current value %f is higher than the allowed maximum value %f", current, data.EVData.Limits[1].Max)
+		current = data.EVData.Limits[1].Max
 	}
 
 	c.maxCurrent = current
@@ -533,7 +525,13 @@ func (c *EEBus) CurrentPower() (float64, error) {
 		return 0, nil
 	}
 
-	power := data.EVData.Measurements.PowerL1 + data.EVData.Measurements.PowerL2 + data.EVData.Measurements.PowerL3
+	var power float64
+	var phase uint
+	for phase = 1; phase <= data.EVData.ConnectedPhases; phase++ {
+		if phasePower, ok := data.EVData.Measurements.Power[phase]; ok {
+			power += phasePower
+		}
+	}
 	c.log.TRACE.Printf("!! current power: returning %f", power)
 
 	return power, nil
@@ -588,9 +586,21 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	c.log.TRACE.Printf("!! currents: returning %f, %f, %f, ", data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3)
+	logString := "!! currents: returning "
+	var currents []float64
 
-	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
+	for phase := 1; phase <= 3; phase++ {
+		current := 0.0
+		if value, ok := data.EVData.Measurements.Current[uint(phase)]; ok {
+			current = value
+		}
+		currents = append(currents, current)
+
+		logString += fmt.Sprintf("%f ", current)
+	}
+	c.log.TRACE.Println(logString)
+
+	return currents[0], currents[1], currents[2], nil
 }
 
 var _ api.Identifier = (*EEBus)(nil)
