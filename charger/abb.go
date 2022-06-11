@@ -97,6 +97,7 @@ func (wb *ABB) status() (byte, error) {
 		return 0, err
 	}
 
+	// A1 - Charging
 	return b[2] & 0x7f, nil
 }
 
@@ -107,15 +108,6 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	{
-		// b, err := wb.conn.ReadHoldingRegisters(abbRegSession, 1)
-		// if err != nil {
-		// 	return api.StatusNone, err
-		// }
-		// wb.log.DEBUG.Printf("abbRegSession: %d", binary.BigEndian.Uint16(b))
-	}
-
-	// A1 - Charging
 	switch s {
 	case 0: // State A: Idle
 		return api.StatusA, nil
@@ -174,13 +166,6 @@ func (wb *ABB) Enable(enable bool) error {
 	return wb.setCurrent(curr)
 }
 
-// MaxCurrent implements the api.Charger interface
-func (wb *ABB) MaxCurrent(current int64) error {
-	return wb.MaxCurrentMillis(float64(current))
-}
-
-var _ api.ChargerEx = (*ABB)(nil)
-
 // setCurrent writes the current limit in mA
 func (wb *ABB) setCurrent(current uint32) error {
 	b := make([]byte, 4)
@@ -189,6 +174,13 @@ func (wb *ABB) setCurrent(current uint32) error {
 	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
 	return err
 }
+
+// MaxCurrent implements the api.Charger interface
+func (wb *ABB) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*ABB)(nil)
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *ABB) MaxCurrentMillis(current float64) error {
@@ -237,44 +229,42 @@ func (wb *ABB) Currents() (float64, float64, float64, error) {
 
 	var curr [3]float64
 	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint32(b[4*l:4*(l+1)])) / 1e3
+		curr[l] = float64(binary.BigEndian.Uint32(b[4*l:])) / 1e3
 	}
 
 	return curr[0], curr[1], curr[2], nil
 }
 
-/*
-var _ api.ChargePhases = (*ABB)(nil)
+// var _ api.ChargePhases = (*ABB)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
-func (wb *ABB) Phases1p3p(phases int) error {
-	var b uint16 = 1
-	if phases != 1 {
-		b = 2 // 3p
-	}
+// // Phases1p3p implements the api.ChargePhases interface
+// func (wb *ABB) Phases1p3p(phases int) error {
+// 	var b uint16 = 1
+// 	if phases != 1 {
+// 		b = 2 // 3p
+// 	}
 
-	_, err := wb.conn.WriteSingleRegister(abbRegPhases, b)
-	return err
-}
-*/
+// 	_, err := wb.conn.WriteSingleRegister(abbRegPhases, b)
+// 	return err
+// }
 
-var _ api.Diagnosis = (*ABB)(nil)
+// var _ api.Diagnosis = (*ABB)(nil)
 
-// Diagnose implements the api.Diagnosis interface
-func (wb *ABB) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(abbRegSerial, 4); err == nil {
-		fmt.Printf("\tSerial:\t%x\n", b)
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
-		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
-		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2); err == nil {
-		fmt.Printf("\tStatus:\t%x\n", b)
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
-		fmt.Printf("\tError code:\t%x\n", binary.BigEndian.Uint32(b))
-	}
-}
+// // Diagnose implements the api.Diagnosis interface
+// func (wb *ABB) Diagnose() {
+// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegSerial, 4); err == nil {
+// 		fmt.Printf("\tSerial:\t%x\n", b)
+// 	}
+// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
+// 		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
+// 	}
+// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
+// 		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
+// 	}
+// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2); err == nil {
+// 		fmt.Printf("\tStatus:\t%x\n", b)
+// 	}
+// 	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
+// 		fmt.Printf("\tError code:\t%x\n", binary.BigEndian.Uint32(b))
+// 	}
+// }
