@@ -8,7 +8,7 @@ import (
 )
 
 func TestYamlDecode(t *testing.T) {
-	for _, value := range []string{`value`, `!value`, `@value`, `"value"`, `"va"lue"`, `va'lue`, `@va'lue`, `0815`, `4711`, ``} {
+	for _, value := range []string{`value`, `!value`, `@value`, `"value"`, `"va"lue"`, `va'lue`, `@va'lue`, `0815`, `4711`, `#pwd`, ``} {
 		t.Run(value, func(t *testing.T) {
 			quoted := yamlQuote(value)
 			input := fmt.Sprintf("key: %s", quoted)
