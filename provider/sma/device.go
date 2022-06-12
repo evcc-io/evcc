@@ -18,15 +18,20 @@ type Device struct {
 	mux    sync.Mutex
 	wait   *util.Waiter
 	values map[sunny.ValueID]interface{}
+	once   sync.Once
 }
 
-// Run is the devices main update loop
-func (d *Device) Run() {
-	for range time.NewTicker(5 * time.Second).C {
-		if err := d.UpdateValues(); err != nil {
-			d.log.ERROR.Println(err)
-		}
-	}
+// StartUpdateLoop if not already started
+func (d *Device) StartUpdateLoop() {
+	d.once.Do(func() {
+		go func() {
+			for range time.NewTicker(time.Second * 5).C {
+				if err := d.UpdateValues(); err != nil {
+					d.log.ERROR.Println(err)
+				}
+			}
+		}()
+	})
 }
 
 func (d *Device) UpdateValues() error {
@@ -43,12 +48,15 @@ func (d *Device) UpdateValues() error {
 }
 
 func (d *Device) Values() (map[sunny.ValueID]interface{}, error) {
-	if late := d.wait.Overdue(); late > 0 {
-		return nil, fmt.Errorf("update timeout: %v", late.Truncate(time.Second))
-	}
+	// ensure update loop was started
+	d.StartUpdateLoop()
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
+
+	if late := d.wait.Overdue(); late > 0 {
+		return nil, fmt.Errorf("update timeout: %v", late.Truncate(time.Second))
+	}
 
 	// return a copy of the map to avoid race conditions
 	values := make(map[sunny.ValueID]interface{}, len(d.values))
