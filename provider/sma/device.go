@@ -15,22 +15,18 @@ type Device struct {
 	*sunny.Device
 
 	log    *util.Logger
-	mux    *util.Waiter
+	mux    sync.Mutex
+	wait   *util.Waiter
 	values map[sunny.ValueID]interface{}
-	once   sync.Once
 }
 
-// StartUpdateLoop if not already started
-func (d *Device) StartUpdateLoop() {
-	d.once.Do(func() {
-		go func() {
-			for range time.NewTicker(time.Second * 5).C {
-				if err := d.UpdateValues(); err != nil {
-					d.log.ERROR.Println(err)
-				}
-			}
-		}()
-	})
+// Run is the devices main update loop
+func (d *Device) Run() {
+	for range time.NewTicker(5 * time.Second).C {
+		if err := d.UpdateValues(); err != nil {
+			d.log.ERROR.Println(err)
+		}
+	}
 }
 
 func (d *Device) UpdateValues() error {
@@ -40,22 +36,19 @@ func (d *Device) UpdateValues() error {
 	values, err := d.Device.GetValues()
 	if err == nil {
 		err = mergo.Merge(&d.values, values, mergo.WithOverride)
-		d.mux.Update()
+		d.wait.Update()
 	}
 
 	return err
 }
 
 func (d *Device) Values() (map[sunny.ValueID]interface{}, error) {
-	// ensure update loop was started
-	d.StartUpdateLoop()
+	if late := d.wait.Overdue(); late > 0 {
+		return nil, fmt.Errorf("update timeout: %v", late.Truncate(time.Second))
+	}
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
-
-	if late := d.mux.Overdue(); late > 0 {
-		return nil, fmt.Errorf("update timeout: %v", late.Truncate(time.Second))
-	}
 
 	// return a copy of the map to avoid race conditions
 	values := make(map[sunny.ValueID]interface{}, len(d.values))
