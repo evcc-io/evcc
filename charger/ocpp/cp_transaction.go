@@ -18,7 +18,6 @@ func NewTransaction(id int, idTag string, start time.Time, meterValue int) Trans
 		IDTag:           idTag,
 		Start:           start,
 		MeterValueStart: int64(meterValue),
-		Charged:         0,
 	}
 }
 

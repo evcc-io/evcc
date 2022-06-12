@@ -15,15 +15,24 @@ import (
 
 const timeout = 2 * time.Minute
 
-type smartchargingChargeProfileKey string
+// Meter Profile Key
+const (
+	KeyMeterValuesSampledData   = "MeterValuesSampledData"
+	KeyMeterValueSampleInterval = "MeterValueSampleInterval"
+)
+
+// TODO: Maybe move this to the config?
+const ValuePreferedMeterValuesSampleData = "Current.Import.L1,Current.Import.L2,Current.Import.L3,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature"
+
+type SmartchargingChargeProfileKey string
 
 // Smart Charging Profile Key
 const (
-	chargeProfileMaxStackLevel              smartchargingChargeProfileKey = "ChargeProfileMaxStackLevel"
-	chargingScheduleAllowedChargingRateUnit smartchargingChargeProfileKey = "ChargingScheduleAllowedChargingRateUnit"
-	chargingScheduleMaxPeriods              smartchargingChargeProfileKey = "ChargingScheduleMaxPeriods"
-	connectorSwitch3to1PhaseSupported       smartchargingChargeProfileKey = "ConnectorSwitch3to1PhaseSupported"
-	maxChargingProfilesInstalled            smartchargingChargeProfileKey = "MaxChargingProfilesInstalled"
+	KeyChargeProfileMaxStackLevel              SmartchargingChargeProfileKey = "ChargeProfileMaxStackLevel"
+	KeyChargingScheduleAllowedChargingRateUnit SmartchargingChargeProfileKey = "ChargingScheduleAllowedChargingRateUnit"
+	KeyChargingScheduleMaxPeriods              SmartchargingChargeProfileKey = "ChargingScheduleMaxPeriods"
+	KeyConnectorSwitch3to1PhaseSupported       SmartchargingChargeProfileKey = "ConnectorSwitch3to1PhaseSupported"
+	KeyMaxChargingProfilesInstalled            SmartchargingChargeProfileKey = "MaxChargingProfilesInstalled"
 )
 
 type smartChargingProfile struct {
@@ -96,7 +105,7 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 	var profile smartChargingProfile
 
 	{ // required
-		val, err := parseIntOption(chargeProfileMaxStackLevel, options)
+		val, err := parseIntOption(KeyChargeProfileMaxStackLevel, options)
 		if err != nil {
 			return profile, err
 		}
@@ -105,7 +114,7 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 	}
 
 	{ // required
-		val, err := parseIntOption(chargingScheduleMaxPeriods, options)
+		val, err := parseIntOption(KeyChargingScheduleMaxPeriods, options)
 		if err != nil {
 			return profile, err
 		}
@@ -114,7 +123,7 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 	}
 
 	{ // required
-		val, err := parseIntOption(maxChargingProfilesInstalled, options)
+		val, err := parseIntOption(KeyMaxChargingProfilesInstalled, options)
 		if err != nil {
 			return profile, err
 		}
@@ -123,9 +132,9 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 	}
 
 	{ // required
-		opt, found := options[string(chargingScheduleAllowedChargingRateUnit)]
+		opt, found := options[string(KeyChargingScheduleAllowedChargingRateUnit)]
 		if !found || opt.Value == nil {
-			return profile, fmt.Errorf("smart charging key '%s' not found", chargingScheduleAllowedChargingRateUnit)
+			return profile, fmt.Errorf("smart charging key '%s' not found", KeyChargingScheduleAllowedChargingRateUnit)
 		}
 
 		vals := strings.Split(*opt.Value, ",")
@@ -134,9 +143,13 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 
 	{ // optional
 		var supported bool
-		opt, found := options[string(connectorSwitch3to1PhaseSupported)]
+		opt, found := options[string(KeyConnectorSwitch3to1PhaseSupported)]
 		if found {
-			supported, _ = strconv.ParseBool(*opt.Value)
+			var err error
+			supported, err = strconv.ParseBool(*opt.Value)
+			if err != nil {
+				return profile, fmt.Errorf("invalid value for key: %s", opt.Key)
+			}
 		}
 
 		profile.ConnectorSwitch3to1PhaseSupported = supported
@@ -146,7 +159,7 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 
 }
 
-func parseIntOption(key smartchargingChargeProfileKey, options map[string]core.ConfigurationKey) (int, error) {
+func parseIntOption(key SmartchargingChargeProfileKey, options map[string]core.ConfigurationKey) (int, error) {
 	opt, found := options[string(key)]
 	if !found || opt.Value == nil {
 		return 0, fmt.Errorf("smart charging key '%s' not found", key)
@@ -154,7 +167,7 @@ func parseIntOption(key smartchargingChargeProfileKey, options map[string]core.C
 
 	val, err := strconv.Atoi(*opt.Value)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse key: %s", key)
+		return 0, fmt.Errorf("invalid value for key: %s", key)
 	}
 
 	return val, nil
@@ -241,24 +254,31 @@ func (cp *CP) CurrentPower() (float64, error) {
 	return 0, nil
 }
 
-func (cp *CP) TotalEnergy() (float64, error) {
+// func (cp *CP) TotalEnergy() (float64, error) {
+// 	cp.mu.Lock()
+// 	defer cp.mu.Unlock()
+
+// 	// if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+// 	// 	v, err := strconv.ParseInt(energy.Value, 10, 64)
+// 	// 	if err != nil {
+// 	// 		return 0, err
+// 	// 	}
+
+// 	return float64(cp.currentTransaction.Charged) / 1000, nil
+
+// 	// loaded := float64(int(v)-cp.currentTransaction.MeterValueStart) / 1000
+
+// 	// return loaded, nil
+// 	// }
+
+// 	// return 0, nil
+// }
+
+func (cp *CP) ChargedEnergy() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	// if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
-	// 	v, err := strconv.ParseInt(energy.Value, 10, 64)
-	// 	if err != nil {
-	// 		return 0, err
-	// 	}
-
 	return float64(cp.currentTransaction.Charged) / 1000, nil
-
-	// loaded := float64(int(v)-cp.currentTransaction.MeterValueStart) / 1000
-
-	// return loaded, nil
-	// }
-
-	// return 0, nil
 }
 
 func getKeyCurrentPhase(phase int) string {
@@ -279,7 +299,7 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 		if current, ok := cp.measureands[getKeyCurrentPhase(phase)]; ok {
 			currents[phase], err = strconv.ParseFloat(current.Value, 64)
 			if err != nil {
-				return 0, 0, 0, fmt.Errorf("failed to convert current for phase %d: %w", phase, err)
+				return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
 			}
 		}
 	}

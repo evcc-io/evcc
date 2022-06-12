@@ -174,7 +174,6 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 			}
 		} else {
 			// TODO: Handle old transactions e.g. store them
-			// FIXME: we know the last transaction
 			res.TransactionId = 1 // change 1 to the last known global transaction. Needs persistence
 		}
 	}

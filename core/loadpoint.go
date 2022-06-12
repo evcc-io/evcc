@@ -284,17 +284,11 @@ func (lp *LoadPoint) requestUpdate() {
 func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	var integrated bool
 
-	supported := true
-	meterSupport, ok := charger.(api.MeterSupported)
-	if ok {
-		supported = meterSupport.Supported()
-	}
-
 	// ensure charge meter exists
 	if lp.chargeMeter == nil {
 		integrated = true
 
-		if mt, ok := charger.(api.Meter); ok && supported {
+		if mt, ok := charger.(api.Meter); ok {
 			lp.chargeMeter = mt
 		} else {
 			mt := new(wrapper.ChargeMeter)
@@ -1271,16 +1265,6 @@ func (lp *LoadPoint) updateChargeCurrents() {
 	phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent)
 	if !ok {
 		return // don't guess
-	}
-
-	supported := true
-	meterSupported, ok := lp.chargeMeter.(api.MeterSupported)
-	if ok {
-		supported = meterSupported.Supported()
-	}
-
-	if !supported {
-		return
 	}
 
 	i1, i2, i3, err := phaseMeter.Currents()
