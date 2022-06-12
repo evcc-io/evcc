@@ -1,0 +1,23 @@
+template: siemens-pac2200
+products:
+  - brand: Siemens
+    description:
+      generic: PAC 2200
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "charge"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+render: |
+  type: modbus
+  model: pac2200
+  {{- include "modbus" . }}
+  {{- if eq .usage "charge" }}
+  energy: Import # only required for charge meter usage
+  {{- end }}
+  {{- if or (eq .usage "charge") (eq .usage "grid") }}
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  {{- end }}

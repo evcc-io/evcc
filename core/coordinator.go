@@ -17,7 +17,7 @@ func init() {
 	}
 }
 
-func (lp *vehicleCoordinator) aquire(owner interface{}, vehicle api.Vehicle) {
+func (lp *vehicleCoordinator) acquire(owner interface{}, vehicle api.Vehicle) {
 	lp.tracked[vehicle] = owner
 }
 

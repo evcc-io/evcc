@@ -1,12 +1,12 @@
 template: hardybarth-ecb1
 products:
-- brand: hardybarth-ecb1
-  description:
-    generic: HardyBarth cPH1 (eCB1 controller)
+  - brand: HardyBarth
+    description:
+      generic: cPH1 (eCB1 Controller)
+requirements:
+  evcc: ["sponsorship"]
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
+  - name: host
 render: |
   type: hardybarth-ecb1
   uri: http://{{ .host }}

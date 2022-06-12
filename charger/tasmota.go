@@ -3,14 +3,11 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/tasmota"
+	"github.com/evcc-io/evcc/meter/tasmota"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Tasmota project homepage
@@ -20,9 +17,9 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
-	*request.Helper
-	uri, user, password string
-	standbypower        float64
+	conn         *tasmota.Connection
+	channel      int
+	standbypower float64
 }
 
 func init() {
@@ -36,57 +33,135 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User         string
 		Password     string
 		StandbyPower float64
-	}{}
+		Channel      int
+	}{
+		Channel: 1,
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.URI == "" {
-		return nil, errors.New("missing uri")
-	}
-
-	return NewTasmota(cc.URI, cc.User, cc.Password, cc.StandbyPower)
+	return NewTasmota(cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
 }
 
 // NewTasmota creates Tasmota charger
-func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, error) {
-	log := util.NewLogger("tasmota")
+func NewTasmota(uri, user, password string, channel int, standbypower float64) (*Tasmota, error) {
+	conn, err := tasmota.NewConnection(uri, user, password)
+	if err != nil {
+		return nil, err
+	}
+
 	c := &Tasmota{
-		Helper:       request.NewHelper(log),
-		uri:          util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
-		user:         user,
-		password:     password,
+		conn:         conn,
+		channel:      channel,
 		standbypower: standbypower,
 	}
 
-	c.Client.Transport = request.NewTripper(log, transport.Insecure())
+	err = c.channelExists(channel)
 
-	return c, nil
+	return c, err
+}
+
+// channelExists checks the existence of the configured relay channel interface
+func (c *Tasmota) channelExists(channel int) error {
+	var res *tasmota.StatusSTSResponse
+	if err := c.conn.ExecCmd("Status 0", &res); err != nil {
+		return err
+	}
+
+	var ok bool
+	switch channel {
+	case 1:
+		ok = res.StatusSTS.Power != "" || res.StatusSTS.Power1 != ""
+	case 2:
+		ok = res.StatusSTS.Power2 != ""
+	case 3:
+		ok = res.StatusSTS.Power3 != ""
+	case 4:
+		ok = res.StatusSTS.Power4 != ""
+	case 5:
+		ok = res.StatusSTS.Power5 != ""
+	case 6:
+		ok = res.StatusSTS.Power6 != ""
+	case 7:
+		ok = res.StatusSTS.Power7 != ""
+	case 8:
+		ok = res.StatusSTS.Power8 != ""
+	}
+
+	if !ok {
+		return fmt.Errorf("invalid relay channel: %d", channel)
+	}
+
+	return nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
-	var resp tasmota.StatusResponse
-	err := c.GetJSON(c.cmdUri("Status 0"), &resp)
+	var res tasmota.StatusSTSResponse
+	err := c.conn.ExecCmd("Status 0", &res)
+	if err != nil {
+		return false, err
+	}
 
-	return resp.Status.Power == 1, err
+	switch c.channel {
+	case 2:
+		return strings.ToUpper(res.StatusSTS.Power2) == "ON", err
+	case 3:
+		return strings.ToUpper(res.StatusSTS.Power3) == "ON", err
+	case 4:
+		return strings.ToUpper(res.StatusSTS.Power4) == "ON", err
+	case 5:
+		return strings.ToUpper(res.StatusSTS.Power5) == "ON", err
+	case 6:
+		return strings.ToUpper(res.StatusSTS.Power6) == "ON", err
+	case 7:
+		return strings.ToUpper(res.StatusSTS.Power7) == "ON", err
+	case 8:
+		return strings.ToUpper(res.StatusSTS.Power8) == "ON", err
+	default:
+		return strings.ToUpper(res.StatusSTS.Power) == "ON" || strings.ToUpper(res.StatusSTS.Power1) == "ON", err
+	}
 }
 
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
-	var resp tasmota.PowerResponse
-	cmd := "Power off"
+	var res tasmota.PowerResponse
+
+	cmd := fmt.Sprintf("Power%d off", c.channel)
 	if enable {
-		cmd = "Power on"
+		cmd = fmt.Sprintf("Power%d on", c.channel)
 	}
-	err := c.GetJSON(c.cmdUri(cmd), &resp)
+
+	if err := c.conn.ExecCmd(cmd, &res); err != nil {
+		return err
+	}
+
+	var on bool
+	switch c.channel {
+	case 2:
+		on = strings.ToUpper(res.Power2) == "ON"
+	case 3:
+		on = strings.ToUpper(res.Power3) == "ON"
+	case 4:
+		on = strings.ToUpper(res.Power4) == "ON"
+	case 5:
+		on = strings.ToUpper(res.Power5) == "ON"
+	case 6:
+		on = strings.ToUpper(res.Power6) == "ON"
+	case 7:
+		on = strings.ToUpper(res.Power7) == "ON"
+	case 8:
+		on = strings.ToUpper(res.Power8) == "ON"
+	default:
+		on = strings.ToUpper(res.Power) == "ON" || strings.ToUpper(res.Power1) == "ON"
+	}
 
 	switch {
-	case err != nil:
-		return err
-	case enable && resp.Power != "ON":
+	case enable && !on:
 		return errors.New("switchOn failed")
-	case !enable && resp.Power != "OFF":
+	case !enable && on:
 		return errors.New("switchOff failed")
 	default:
 		return nil
@@ -125,12 +200,20 @@ var _ api.Meter = (*Tasmota)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Tasmota) CurrentPower() (float64, error) {
-	var resp tasmota.StatusSNSResponse
-	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
-	power := float64(resp.StatusSNS.Energy.Power)
+	var power float64
 
-	// ignore standby power
-	if power < c.standbypower {
+	// set fix static power in static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if on {
+			power = -c.standbypower
+		}
+		return power, err
+	}
+
+	// ignore power in standby mode
+	power, err := c.conn.CurrentPower()
+	if power <= c.standbypower {
 		power = 0
 	}
 
@@ -141,20 +224,5 @@ var _ api.MeterEnergy = (*Tasmota)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
-	var resp tasmota.StatusSNSResponse
-	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
-
-	return resp.StatusSNS.Energy.Total, err
-}
-
-// cmdUri creates the Tasmota command web request
-// https://tasmota.github.io/docs/Commands/#with-web-requests
-func (c *Tasmota) cmdUri(cmd string) string {
-	parameters := url.Values{
-		"user":     []string{c.user},
-		"password": []string{c.password},
-		"cmnd":     []string{cmd},
-	}
-
-	return fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode())
+	return c.conn.TotalEnergy()
 }

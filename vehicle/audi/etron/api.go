@@ -5,8 +5,8 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 	"github.com/shurcooL/graphql"
-	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
 
@@ -22,7 +22,7 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	ctx := context.WithValue(
 		context.Background(),
 		oauth2.HTTPClient,
-		request.NewHelper(log).Client,
+		request.NewClient(log),
 	)
 
 	v := &API{
@@ -33,7 +33,7 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 }
 
 // Vehicles implements the /vehicles response
-func (v *API) Vehicles() ([]string, error) {
+func (v *API) Vehicles(ctx context.Context) ([]string, error) {
 	type vehicle struct {
 		VIN, Type, Nickname string
 	}
@@ -43,11 +43,11 @@ func (v *API) Vehicles() ([]string, error) {
 	}
 
 	var vins []string
-	err := v.client.Query(context.Background(), &res, nil)
+	err := v.client.Query(ctx, &res, nil)
 	if err == nil {
-		vins = funk.Map(res.UserVehicles, func(v vehicle) string {
+		vins = lo.Map(res.UserVehicles, func(v vehicle, _ int) string {
 			return v.VIN
-		}).([]string)
+		})
 	}
 
 	return vins, err

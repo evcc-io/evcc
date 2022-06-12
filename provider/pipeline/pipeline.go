@@ -113,7 +113,7 @@ func (p *Pipeline) transformXML(value []byte) []byte {
 	value = bytes.TrimSpace(value)
 
 	// only do a simple check, as some devices e.g. Kostal Piko MP plus don't seem to send proper XML
-	if !bytes.HasPrefix(value, []byte("<")) {
+	if !bytes.HasPrefix(value, []byte("<?xml")) {
 		return value
 	}
 
@@ -181,7 +181,9 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 
 	if p.re != nil {
 		m := p.re.FindSubmatch(b)
-		if len(m) > 1 {
+		if len(m) == 1 {
+			b = m[0] // full match
+		} else if len(m) > 1 {
 			b = m[1] // first submatch
 		}
 	}

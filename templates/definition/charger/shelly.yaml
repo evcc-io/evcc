@@ -1,16 +1,20 @@
 template: shelly
-products: 
-- description:
-    generic: Shelly
+products:
+  - brand: Shelly
 group: switchsockets
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: standbypower
-  default: 15
+  - name: host
+  - name: user
+  - name: password
+    mask: true
+  - name: channel
+    default: 0
+  - name: standbypower
+    default: 15
 render: |
   type: shelly
-  uri: http://{{ .host }}  # shelly device ip address (local)
-  channel: 0  # shelly device relay channel 
-  standbypower: {{ .standbypower }}  # treat as charging above this power
+  uri: http://{{ .host }}
+  {{ if ne .user "" }}user: {{ .user }}{{ end }}
+  {{ if ne .password "" }}password: {{ .password }}{{ end }}  
+  channel: {{ .channel }}  # shelly device relay channel 
+  standbypower: {{ .standbypower }}

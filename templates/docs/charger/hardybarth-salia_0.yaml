@@ -1,9 +1,9 @@
 product:
-  brand: hardybarth-salia
-  description: HardyBarth (Salia PLCC controller)
-
+  brand: HardyBarth
+  description: cPH2 (Salia PLCC Controller)
+requirements: ["sponsorship"]
 render:
-- default: |
-    type: template
-    template: hardybarth-salia
-    host: 192.0.2.2  # IP-Adresse oder Hostname
+  - default: |
+      type: template
+      template: hardybarth-salia
+      host: 192.0.2.2 # IP-Adresse oder Hostname

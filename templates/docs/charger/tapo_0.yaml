@@ -1,0 +1,12 @@
+product:
+  brand: TP-Link
+  description: Tapo P-Series Smart Plug
+  group: Schaltbare Steckdosen
+render:
+  - default: |
+      type: template
+      template: tapo
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
+      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional

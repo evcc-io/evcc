@@ -1,8 +1,9 @@
-name: 'Stale issue handler'
+name: "Stale issue handler"
+
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
 
 jobs:
   stale:
@@ -13,6 +14,6 @@ jobs:
         with:
           days-before-stale: 20
           days-before-close: 5
-          exempt-issue-labels: 'blocked,must,should,keep,pinned'
+          exempt-issue-labels: "blocked,must,should,keep,pinned"
       - name: Print outputs
         run: echo ${{ join(steps.stale.outputs.*, ',') }}

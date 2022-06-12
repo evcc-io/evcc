@@ -10,7 +10,7 @@ import (
 const refreshTimeout = time.Minute
 
 type Provider struct {
-	statusG     func() (interface{}, error)
+	statusG     func() (StatusResponse, error)
 	expiry      time.Duration
 	refreshTime time.Time
 	refreshId   string
@@ -22,13 +22,13 @@ func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
 		expiry: expiry,
 	}
 
-	impl.statusG = provider.NewCached(func() (interface{}, error) {
+	impl.statusG = provider.Cached(func() (StatusResponse, error) {
 		return impl.status(
 			func() (StatusResponse, error) { return api.Status(vin) },
 			func(id string) (StatusResponse, error) { return api.RefreshResult(vin, id) },
 			func() (string, error) { return api.RefreshRequest(vin) },
 		)
-	}, cache).InterfaceGetter()
+	}, cache)
 
 	impl.wakeup = func() error { return api.WakeUp(vin) }
 
@@ -78,7 +78,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Battery interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return res.VehicleStatus.BatteryFillLevel.Value, nil
 	}
 
@@ -90,7 +90,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return int64(res.VehicleStatus.ElVehDTE.Value), nil
 	}
 
@@ -104,7 +104,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		if res.VehicleStatus.PlugStatus.Value == 1 {
 			status = api.StatusB // connected, not charging
 		}
@@ -121,11 +121,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return res.VehicleStatus.Odometer.Value, nil
-	}
-
-	return 0, err
+	return res.VehicleStatus.Odometer.Value, err
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)
@@ -133,11 +129,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 // Position implements the api.VehiclePosition interface
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return res.VehicleStatus.Gps.Latitude, res.VehicleStatus.Gps.Longitude, nil
-	}
-
-	return 0, 0, err
+	return res.VehicleStatus.Gps.Latitude, res.VehicleStatus.Gps.Longitude, err
 }
 
 var _ api.AlarmClock = (*Provider)(nil)

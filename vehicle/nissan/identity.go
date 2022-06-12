@@ -1,6 +1,7 @@
 package nissan
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -8,9 +9,18 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
+)
+
+const (
+	APIVersion   = "protocol=1.0,resource=2.1"
+	ClientID     = "a-ncb-prod-android"
+	ClientSecret = "0sAcrtwvwEXXZp5nzQhPexSRhxUVKa0d76F4uqDvxvvKFHXpo4myoJwUuV4vuNqC"
+	Scope        = "openid profile vehicles"
+	Realm        = "a-ncb-prod"
+	AuthURL      = "https://prod.eu2.auth.kamereon.org/kauth"
+	RedirectURI  = "org.kamereon.service.nci:/oauth2redirect"
 )
 
 type Identity struct {
@@ -26,7 +36,7 @@ func NewIdentity(log *util.Logger) *Identity {
 }
 
 func (v *Identity) Login(user, password string) error {
-	uri := fmt.Sprintf("%s/json/realms/root/realms/%s/authenticate", AuthBaseURL, Realm)
+	uri := fmt.Sprintf("%s/json/realms/root/realms/%s/authenticate", AuthURL, Realm)
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept-Api-Version": APIVersion,
 		"X-Username":         "anonymous",
@@ -88,7 +98,7 @@ func (v *Identity) Login(user, password string) error {
 			"nonce":         {"sdfdsfez"},
 		}
 
-		uri := fmt.Sprintf("%s/oauth2/%s/authorize?%s", AuthBaseURL, realm, data.Encode())
+		uri := fmt.Sprintf("%s/oauth2/%s/authorize?%s", AuthURL, realm, data.Encode())
 		req, err = request.New(http.MethodGet, uri, nil, map[string]string{
 			"Cookie": "i18next=en-UK; amlbcookie=05; kauthSession=" + nToken.TokenID,
 		})
@@ -105,45 +115,26 @@ func (v *Identity) Login(user, password string) error {
 		}
 	}
 
-	var token oauth.Token
-	if err == nil {
-		data := url.Values{
-			"code":          {code},
-			"client_id":     {ClientID},
-			"client_secret": {ClientSecret},
-			"redirect_uri":  {RedirectURI},
-			"grant_type":    {"authorization_code"},
-		}
-
-		uri = fmt.Sprintf("%s/oauth2/%s/access_token?%s", AuthBaseURL, realm, data.Encode())
-		req, err = request.New(http.MethodPost, uri, nil, request.URLEncoding)
-		if err == nil {
-			err = v.DoJSON(req, &token)
-		}
+	uri = fmt.Sprintf("%s/oauth2/%s/access_token", AuthURL, realm)
+	config := oauth2.Config{
+		ClientID:     ClientID,
+		ClientSecret: ClientSecret,
+		RedirectURL:  RedirectURI,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   uri,
+			TokenURL:  uri,
+			AuthStyle: oauth2.AuthStyleInParams,
+		},
 	}
 
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
+
+	var token *oauth2.Token
 	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
+		token, err = config.Exchange(ctx, code)
 	}
+
+	v.TokenSource = config.TokenSource(ctx, token)
 
 	return err
-}
-
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := url.Values{
-		"client_id":     {ClientID},
-		"client_secret": {ClientSecret},
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {token.RefreshToken},
-	}
-
-	uri := fmt.Sprintf("%s/oauth2/%s/access_token?%s", AuthBaseURL, Realm, data.Encode())
-	req, err := request.New(http.MethodPost, uri, nil, request.URLEncoding)
-
-	var res oauth.Token
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	return (*oauth2.Token)(&res), err
 }

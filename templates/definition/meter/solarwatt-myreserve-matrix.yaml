@@ -1,18 +1,16 @@
 template: solarwatt-myreserve-matrix
 products:
-- brand: Solarwatt
-  description:
-    generic: MyReserve Matrix (LAN oder PowerGateway)
+  - brand: Solarwatt
+    description:
+      generic: MyReserve Matrix (LAN oder PowerGateway)
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv", "battery" ]
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: port
-  default: 8080
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: port
+    default: 8080
 render: |
   type: custom
   power:

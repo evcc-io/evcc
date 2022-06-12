@@ -1,17 +1,17 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/audi/etron"
-	"github.com/evcc-io/evcc/vehicle/id"
-	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/evcc-io/evcc/vehicle/vag/idkproxy"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
+	"github.com/evcc-io/evcc/vehicle/vw/id"
 )
 
 // https://github.com/TA2k/ioBroker.vw-connect
@@ -65,10 +65,14 @@ func NewEtronFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	// use the etron API for list of vehicles
 	api := etron.NewAPI(log, ats)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
+		defer cancel()
+		return api.Vehicles(ctx)
+	})
 
 	if err == nil {
-		api := id.NewAPI(log, vag.IDTokenSource(its))
+		api := id.NewAPI(log, its)
 		api.Client.Timeout = cc.Timeout
 
 		v.Provider = id.NewProvider(api, cc.VIN, cc.Cache)

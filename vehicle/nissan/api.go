@@ -12,15 +12,8 @@ import (
 
 // api constants
 const (
-	APIVersion         = "protocol=1.0,resource=2.1"
-	ClientID           = "a-ncb-prod-android"
-	ClientSecret       = "3LBs0yOx2XO-3m4mMRW27rKeJzskhfWF0A8KUtnim8i/qYQPl8ZItp3IaqJXaYj_"
-	Scope              = "openid profile vehicles"
-	AuthBaseURL        = "https://prod.eu.auth.kamereon.org/kauth"
-	Realm              = "a-ncb-prod"
-	RedirectURI        = "org.kamereon.service.nci:/oauth2redirect"
-	CarAdapterBaseURL  = "https://alliance-platform-caradapter-prod.apps.eu.kamereon.io/car-adapter"
-	UserAdapterBaseURL = "https://alliance-platform-usersadapter-prod.apps.eu.kamereon.io/user-adapter"
+	CarAdapterBaseURL  = "https://alliance-platform-caradapter-prod.apps.eu2.kamereon.io/car-adapter"
+	UserAdapterBaseURL = "https://alliance-platform-usersadapter-prod.apps.eu2.kamereon.io/user-adapter"
 	UserBaseURL        = "https://nci-bff-web-prod.apps.eu.kamereon.io/bff-web"
 )
 
@@ -97,6 +90,10 @@ func (v *API) RefreshRequest(vin string, typ string) (ActionResponse, error) {
 
 	return res, err
 }
+
+// more commands: https://github.com/TA2k/ioBroker.nissan/commit/0e32ab743af3cbecd756633e52e9baa869766c7d
+// refresh-location
+// wake-up-vehicle
 
 type Action string
 

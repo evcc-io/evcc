@@ -1,16 +1,16 @@
 import Vehicle from "./Vehicle.vue";
-import i18n from "../i18n";
 
 export default {
   title: "Main/Vehicle",
   component: Vehicle,
 };
 
-const Template = (args, { argTypes }) => ({
-  i18n,
-  props: Object.keys(argTypes),
+const Template = (args) => ({
+  setup() {
+    return { args };
+  },
   components: { Vehicle },
-  template: '<Vehicle v-bind="$props"></Vehicle>',
+  template: '<Vehicle v-bind="args"></Vehicle>',
 });
 
 export const Base = Template.bind({});
@@ -20,6 +20,7 @@ Base.args = {
   connected: true,
   vehiclePresent: true,
   vehicleSoC: 42,
+  vehicleRange: 231,
   targetSoC: 90,
   id: 0,
 };
@@ -58,7 +59,6 @@ Charging.args = {
   vehicleSoC: 66,
   targetSoC: 90,
   id: 0,
-  targetTimeHourSuggestion: null,
 };
 
 const hoursFromNow = function (hours) {
@@ -107,6 +107,38 @@ MinCharge.args = {
   minSoC: 20,
   charging: true,
   targetSoC: 90,
+  id: 0,
+};
+
+export const TimerPvEnable = Template.bind({});
+TimerPvEnable.args = {
+  vehicleTitle: "Mein Auto",
+  enabled: false,
+  connected: true,
+  vehiclePresent: true,
+  vehicleSoC: 17,
+  charging: false,
+  targetSoC: 90,
+  phaseAction: "inactive",
+  phaseRemainingInterpolated: 0,
+  pvAction: "enable",
+  pvRemainingInterpolated: 32,
+  id: 0,
+};
+
+export const TimerPvDisable = Template.bind({});
+TimerPvDisable.args = {
+  vehicleTitle: "Mein Auto",
+  enabled: true,
+  connected: true,
+  vehiclePresent: true,
+  vehicleSoC: 17,
+  charging: true,
+  targetSoC: 90,
+  phaseAction: "inactive",
+  phaseRemainingInterpolated: 0,
+  pvAction: "disable",
+  pvRemainingInterpolated: 155,
   id: 0,
 };
 

@@ -27,16 +27,15 @@ func TestCachedGetter(t *testing.T) {
 	}
 
 	duration := time.Second
-	c := NewCached(g, duration)
+	c := ResettableCached(g, duration)
 	clock := clock.NewMock()
 	c.clock = clock
-	getter := c.FloatGetter()
 
 	expect := func(s struct {
 		f float64
 		e error
 	}) {
-		f, e := getter()
+		f, e := c.Get()
 		if f != s.f || e != s.e {
 			t.Errorf("unexpected cache value: %f, %v\n", f, e)
 		}
@@ -59,12 +58,12 @@ func TestCacheReset(t *testing.T) {
 		return i, nil
 	}
 
-	c := NewCached(g, 10*time.Minute)
+	c := ResettableCached(g, 10*time.Minute)
 	clock := clock.NewMock()
 	c.clock = clock
 
 	test := func(exp int64) {
-		v, _ := c.IntGetter()()
+		v, _ := c.Get()
 		if exp != v {
 			t.Errorf("expected %d, got %d", exp, v)
 		}
@@ -72,7 +71,7 @@ func TestCacheReset(t *testing.T) {
 
 	test(1)
 	test(1)
-	ResetCached()
+	c.Reset()
 	test(2)
 	test(2)
 	clock.Add(10*time.Minute + 1)

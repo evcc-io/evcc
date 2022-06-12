@@ -52,7 +52,7 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 		Password: password,
 	}
 
-	uri := fmt.Sprintf("%s/%s", API, "accounts/token")
+	uri := fmt.Sprintf("%s/%s", API, "accounts/login")
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 	if err == nil {

@@ -1,16 +1,17 @@
 template: audi
 products:
-- brand: Audi
+  - brand: Audi
+    description:
+      de: Andere
+      en: Others
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: vin
-  example: WAUZZZ...
-- name: capacity
-  default: 60
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: vin
+    example: WAUZZZ...
+  - preset: vehiclecloud
 render: |
   type: audi
-  {{include "vehicle-base" .}}
-  {{include "vehicle-identify" .}}
-  {{include "vehicle-cloud" .}}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

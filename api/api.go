@@ -178,13 +178,9 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
-// VehicleStartCharge starts the charging session on the vehicle side
-type VehicleStartCharge interface {
+// VehicleChargeController allows to start/stop the charging session on the vehicle side
+type VehicleChargeController interface {
 	StartCharge() error
-}
-
-// VehicleStopCharge stops the charging session on the vehicle side
-type VehicleStopCharge interface {
 	StopCharge() error
 }
 

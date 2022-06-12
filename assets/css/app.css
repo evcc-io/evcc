@@ -1,14 +1,68 @@
+@font-face {
+	font-family: "Montserrat";
+	src: url("../font/Montserrat-Medium.woff2") format("woff2");
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+	font-family: "Montserrat";
+	src: url("../font/Montserrat-Bold.woff2") format("woff2");
+	font-weight: bold;
+	font-style: normal;
+}
+
 :root {
-	--evcc-green: #66d85a;
-	--evcc-dark-green: #3aba2c;
-	--evcc-yellow: #ffe000;
+	--evcc-green: #baffcb;
+	--evcc-dark-green: #0fde41;
+	--evcc-yellow: #faf000;
+	--bs-gray-dark: #28293e;
+	--bs-gray-medium: #93949e;
+	--bs-gray-light: #b5b6c3;
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
 	--evcc-export: var(--evcc-yellow);
 
+	--evcc-transition-slow: 1000ms;
+	--evcc-transition-medium: 500ms;
+	--evcc-transition-fast: 250ms;
+	--evcc-transition-very-fast: 100ms;
+
 	--bs-primary: var(--evcc-dark-green);
 	--bs-primary-rgb: 58, 186, 44;
+
+	--bs-body-font-size: 14px;
+	--bs-font-sans-serif: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+		Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+		"Segoe UI Symbol", "Noto Color Emoji";
+}
+
+html {
+	/* prevents content jump when scrollbar is activate */
+	width: 100vw;
+	overflow-x: hidden;
+}
+
+body {
+	background-color: var(--evcc-gray-dark);
+}
+
+h1,
+h2,
+h3,
+h4 {
+	font-weight: bold;
+}
+
+h1,
+h2 {
+	font-size: 1.25rem;
+	text-transform: uppercase;
+}
+
+h3,
+h4 {
+	font-size: 1.25rem;
 }
 
 .bg-primary {
@@ -27,22 +81,33 @@ a {
 	opacity: 0.25;
 }
 
+.rounded {
+	border-radius: 10px !important;
+}
+
 .btn-primary,
 .btn-primary:focus {
 	background-color: var(--bs-gray-dark);
 	border-color: var(--bs-gray-dark);
 }
+
 .btn-primary:hover,
 .btn-primary:active {
 	background-color: var(--evcc-dark-green);
 	border-color: var(--evcc-dark-green);
 }
-.btn-outline-primary {
+.btn-outline-primary,
+.btn-outline-primary:focus {
 	color: var(--bs-gray-dark);
+	background-color: transparent;
+	border-width: 2px;
 	border-color: var(--bs-gray-dark);
 }
-.btn-outline-primary:hover {
-	background-color: var(--evcc-dark-green);
+.btn-outline-primary:hover,
+.btn-outline-primary:active {
+	color: var(--evcc-dark-green);
+	background-color: transparent;
+	border-width: 2px;
 	border-color: var(--evcc-dark-green);
 }
 .text-evcc {
@@ -51,6 +116,21 @@ a {
 
 .text-grid {
 	color: var(--evcc-grid);
+}
+.text-dark {
+	color: var(--bs-gray-dark);
+}
+.text-gray {
+	color: var(--bs-gray-medium);
+}
+.text-gray-medium {
+	color: var(--bs-gray-medium);
+}
+.text-gray-light {
+	color: var(--bs-gray-light);
+}
+.bg-dark {
+	background-color: var(--bs-gray-dark) !important;
 }
 
 @media screen and (min-width: 400px) and (max-width: 574px) {
@@ -62,10 +142,47 @@ a {
 	}
 }
 
+.modal-backdrop.show {
+	opacity: 0.8;
+}
+
+.modal-header {
+	padding-bottom: 1.5rem;
+}
+
+.modal-title {
+	font-weight: bold;
+	font-size: 22px;
+}
+
+.modal-content {
+	border-radius: 1rem;
+	padding: 1rem;
+}
+
+.modal-body {
+	padding-top: 1.5rem;
+	padding-bottom: 1.5rem;
+}
+
+.modal-footer {
+	padding-top: 1.5rem;
+}
+
 .cursor-pointer {
 	cursor: pointer;
 }
 
 .v-popper__inner {
 	margin: 0 12px !important;
+}
+
+.small,
+small {
+	font-size: var(--bs-body-font-size);
+	color: var(--bs-gray-medium) !important;
+}
+
+.btn-close {
+	opacity: 1;
 }

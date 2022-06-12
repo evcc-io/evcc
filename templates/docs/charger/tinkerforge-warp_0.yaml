@@ -1,14 +1,24 @@
 product:
   brand: TinkerForge
-  description: WARP Charger
+  description: WARP Charger Smart
 description: |
-  Es muss ein sogennanter MQTT Broker auf einem Computer installiert sein. Die MQTT Verbindung muss in der Wallbox eingerichtet sein.
-
+  Es muss ein MQTT Broker installiert sein. Die MQTT Verbindung muss in der Wallbox eingerichtet sein.
 render:
-- default: |
-    type: template
-    template: tinkerforge-warp
-    host: 192.0.2.2  # Die IP Adresse oder der Hostname des MQTT Brokers 
-    port: 1883  # Der Port des MQTT Brokers  # Optional 
-    topic: warp  # Optional 
-    timeout: 30s  # Akzeptiere keine Daten die älter als dieser Wert sind  # Optional
+  - default: |
+      type: template
+      template: tinkerforge-warp
+      fw2: # Firmware v2 installiert
+      host: 192.0.2.2 # IP Adresse oder der Hostname des MQTT Brokers
+      port: 1883 # MQTT Broker Port # Optional
+      topic: warp # Topic (ohne / am Anfang) # Optional
+      timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional
+    advanced: |
+      type: template
+      template: tinkerforge-warp
+      fw2: # Firmware v2 installiert
+      host: 192.0.2.2 # IP Adresse oder der Hostname des MQTT Brokers
+      port: 1883 # MQTT Broker Port # Optional
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
+      topic: warp # Topic (ohne / am Anfang) # Optional
+      timeout: 30s # Akzeptiere keine Daten die älter als dieser Wert sind # Optional

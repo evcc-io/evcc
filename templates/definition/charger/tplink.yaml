@@ -1,16 +1,14 @@
 template: tplink
 products:
-- brand: TP-LINK
-  description:
-    generic: Smart Plug
+  - brand: TP-Link
+    description:
+      generic: H-Series Smart Plug
 group: switchsockets
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: standbypower
-  default: 15
+  - name: host
+  - name: standbypower
+    default: 15
 render: |
   type: tplink
   uri: {{ .host }}
-  standbypower: {{ .standbypower }}  # treat as charging above this power
+  standbypower: {{ .standbypower }}

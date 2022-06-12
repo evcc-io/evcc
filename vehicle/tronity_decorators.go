@@ -48,138 +48,26 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			},
 		}
 
-	case chargeState == nil && vehicleOdometer == nil && vehicleStartCharge != nil && vehicleStopCharge == nil:
+	case chargeState == nil && vehicleOdometer == nil && vehicleStartCharge != nil && vehicleStopCharge != nil:
 		return &struct {
 			*Tronity
-			api.VehicleStartCharge
+			api.VehicleChargeController
 		}{
 			Tronity: base,
-			VehicleStartCharge: &decorateTronityVehicleStartChargeImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
-			},
-		}
-
-	case chargeState != nil && vehicleOdometer == nil && vehicleStartCharge != nil && vehicleStopCharge == nil:
-		return &struct {
-			*Tronity
-			api.ChargeState
-			api.VehicleStartCharge
-		}{
-			Tronity: base,
-			ChargeState: &decorateTronityChargeStateImpl{
-				chargeState: chargeState,
-			},
-			VehicleStartCharge: &decorateTronityVehicleStartChargeImpl{
-				vehicleStartCharge: vehicleStartCharge,
-			},
-		}
-
-	case chargeState == nil && vehicleOdometer != nil && vehicleStartCharge != nil && vehicleStopCharge == nil:
-		return &struct {
-			*Tronity
-			api.VehicleOdometer
-			api.VehicleStartCharge
-		}{
-			Tronity: base,
-			VehicleOdometer: &decorateTronityVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleStartCharge: &decorateTronityVehicleStartChargeImpl{
-				vehicleStartCharge: vehicleStartCharge,
-			},
-		}
-
-	case chargeState != nil && vehicleOdometer != nil && vehicleStartCharge != nil && vehicleStopCharge == nil:
-		return &struct {
-			*Tronity
-			api.ChargeState
-			api.VehicleOdometer
-			api.VehicleStartCharge
-		}{
-			Tronity: base,
-			ChargeState: &decorateTronityChargeStateImpl{
-				chargeState: chargeState,
-			},
-			VehicleOdometer: &decorateTronityVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleStartCharge: &decorateTronityVehicleStartChargeImpl{
-				vehicleStartCharge: vehicleStartCharge,
-			},
-		}
-
-	case chargeState == nil && vehicleOdometer == nil && vehicleStartCharge == nil && vehicleStopCharge != nil:
-		return &struct {
-			*Tronity
-			api.VehicleStopCharge
-		}{
-			Tronity: base,
-			VehicleStopCharge: &decorateTronityVehicleStopChargeImpl{
-				vehicleStopCharge: vehicleStopCharge,
-			},
-		}
-
-	case chargeState != nil && vehicleOdometer == nil && vehicleStartCharge == nil && vehicleStopCharge != nil:
-		return &struct {
-			*Tronity
-			api.ChargeState
-			api.VehicleStopCharge
-		}{
-			Tronity: base,
-			ChargeState: &decorateTronityChargeStateImpl{
-				chargeState: chargeState,
-			},
-			VehicleStopCharge: &decorateTronityVehicleStopChargeImpl{
-				vehicleStopCharge: vehicleStopCharge,
-			},
-		}
-
-	case chargeState == nil && vehicleOdometer != nil && vehicleStartCharge == nil && vehicleStopCharge != nil:
-		return &struct {
-			*Tronity
-			api.VehicleOdometer
-			api.VehicleStopCharge
-		}{
-			Tronity: base,
-			VehicleOdometer: &decorateTronityVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleStopCharge: &decorateTronityVehicleStopChargeImpl{
-				vehicleStopCharge: vehicleStopCharge,
-			},
-		}
-
-	case chargeState != nil && vehicleOdometer != nil && vehicleStartCharge == nil && vehicleStopCharge != nil:
-		return &struct {
-			*Tronity
-			api.ChargeState
-			api.VehicleOdometer
-			api.VehicleStopCharge
-		}{
-			Tronity: base,
-			ChargeState: &decorateTronityChargeStateImpl{
-				chargeState: chargeState,
-			},
-			VehicleOdometer: &decorateTronityVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleStopCharge: &decorateTronityVehicleStopChargeImpl{
-				vehicleStopCharge: vehicleStopCharge,
 			},
 		}
 
 	case chargeState == nil && vehicleOdometer == nil && vehicleStartCharge != nil && vehicleStopCharge != nil:
 		return &struct {
 			*Tronity
-			api.VehicleStartCharge
-			api.VehicleStopCharge
+			api.VehicleChargeController
 		}{
 			Tronity: base,
-			VehicleStartCharge: &decorateTronityVehicleStartChargeImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
-			},
-			VehicleStopCharge: &decorateTronityVehicleStopChargeImpl{
-				vehicleStopCharge: vehicleStopCharge,
+				vehicleStopCharge:  vehicleStopCharge,
 			},
 		}
 
@@ -187,18 +75,15 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 		return &struct {
 			*Tronity
 			api.ChargeState
-			api.VehicleStartCharge
-			api.VehicleStopCharge
+			api.VehicleChargeController
 		}{
 			Tronity: base,
 			ChargeState: &decorateTronityChargeStateImpl{
 				chargeState: chargeState,
 			},
-			VehicleStartCharge: &decorateTronityVehicleStartChargeImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
-			},
-			VehicleStopCharge: &decorateTronityVehicleStopChargeImpl{
-				vehicleStopCharge: vehicleStopCharge,
+				vehicleStopCharge:  vehicleStopCharge,
 			},
 		}
 
@@ -206,18 +91,15 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 		return &struct {
 			*Tronity
 			api.VehicleOdometer
-			api.VehicleStartCharge
-			api.VehicleStopCharge
+			api.VehicleChargeController
 		}{
 			Tronity: base,
 			VehicleOdometer: &decorateTronityVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
 			},
-			VehicleStartCharge: &decorateTronityVehicleStartChargeImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
-			},
-			VehicleStopCharge: &decorateTronityVehicleStopChargeImpl{
-				vehicleStopCharge: vehicleStopCharge,
+				vehicleStopCharge:  vehicleStopCharge,
 			},
 		}
 
@@ -226,8 +108,7 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			*Tronity
 			api.ChargeState
 			api.VehicleOdometer
-			api.VehicleStartCharge
-			api.VehicleStopCharge
+			api.VehicleChargeController
 		}{
 			Tronity: base,
 			ChargeState: &decorateTronityChargeStateImpl{
@@ -236,11 +117,9 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			VehicleOdometer: &decorateTronityVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
 			},
-			VehicleStartCharge: &decorateTronityVehicleStartChargeImpl{
+			VehicleChargeController: &decorateTronityVehicleChargeControllerImpl{
 				vehicleStartCharge: vehicleStartCharge,
-			},
-			VehicleStopCharge: &decorateTronityVehicleStopChargeImpl{
-				vehicleStopCharge: vehicleStopCharge,
+				vehicleStopCharge:  vehicleStopCharge,
 			},
 		}
 	}
@@ -264,18 +143,15 @@ func (impl *decorateTronityVehicleOdometerImpl) Odometer() (float64, error) {
 	return impl.vehicleOdometer()
 }
 
-type decorateTronityVehicleStartChargeImpl struct {
+type decorateTronityVehicleChargeControllerImpl struct {
 	vehicleStartCharge func() error
+	vehicleStopCharge  func() error
 }
 
-func (impl *decorateTronityVehicleStartChargeImpl) StartCharge() error {
+func (impl *decorateTronityVehicleChargeControllerImpl) StartCharge() error {
 	return impl.vehicleStartCharge()
 }
 
-type decorateTronityVehicleStopChargeImpl struct {
-	vehicleStopCharge func() error
-}
-
-func (impl *decorateTronityVehicleStopChargeImpl) StopCharge() error {
+func (impl *decorateTronityVehicleChargeControllerImpl) StopCharge() error {
 	return impl.vehicleStopCharge()
 }

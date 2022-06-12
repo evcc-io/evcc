@@ -31,7 +31,7 @@ func init() {
 
 var cp = new(ConfigProvider)
 
-func loadConfigFile(cfgFile string) (conf config, err error) {
+func loadConfigFile(cfgFile string, conf *config) (err error) {
 	if cfgFile != "" {
 		log.INFO.Println("using config file", cfgFile)
 		if err := viper.UnmarshalExact(&conf); err != nil {
@@ -41,7 +41,7 @@ func loadConfigFile(cfgFile string) (conf config, err error) {
 		err = errors.New("missing evcc config")
 	}
 
-	return conf, err
+	return err
 }
 
 func configureEnvironment(conf config) (err error) {
@@ -96,7 +96,7 @@ func configureMQTT(conf mqttConfig) error {
 	log := util.NewLogger("mqtt")
 
 	var err error
-	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, func(options *paho.ClientOptions) {
+	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {
 		topic := fmt.Sprintf("%s/status", conf.RootTopic())
 		options.SetWill(topic, "offline", 1, true)
 	})

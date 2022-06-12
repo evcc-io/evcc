@@ -1,11 +1,12 @@
 # evcc 🚘☀️
 
-[![Open in Visual Studio Code](https://img.shields.io/static/v1?logo=visualstudiocode&label=&message=Open%20in%20Visual%20Studio%20Code&labelColor=2c2c32&color=007acc&logoColor=007acc)](https://open.vscode.dev/evcc-io/evcc)
 [![Build Status](https://github.com/evcc-io/evcc/workflows/Build/badge.svg)](https://github.com/evcc-io/evcc/actions?query=workflow%3ABuild)
 [![Code Quality](https://goreportcard.com/badge/github.com/evcc-io/evcc)](https://goreportcard.com/report/github.com/evcc-io/evcc)
+[![Open in Visual Studio Code](https://img.shields.io/static/v1?logo=visualstudiocode&label=&message=Open%20in%20VS%20Code&labelColor=2c2c32&color=007acc&logoColor=007acc)](https://open.vscode.dev/evcc-io/evcc)
+[![OSS hosting by cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith)](https://cloudsmith.io/~evcc/packages/)
 [![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)
-[![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
+<!-- [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc) -->
+<!-- [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2) -->
 
 Evcc is an extensible EV Charge Controller with PV integration implemented in [Go][2]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
@@ -15,7 +16,7 @@ Evcc is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - wide range of supported [chargers](https://docs.evcc.io/docs/devices/chargers):
-  - ABL eMH1, Alfen Eve, cFos PowerBrain, Daheimladen, [EVSEWifi/ smartWB](https://www.evse-wifi.de), go-eCharger, HardyBarth (eCB1, cPH1, cPH2) Heidelberg Energy Control, Innogy (eBox), KEBA/BMW, Menneckes  Amtron (Xtra/Premium), NRGkick, [openWB (includes Pro)](https://openwb.de/), PC Electric (includes Garo), Vestel, Wallbe, Webasto Live, Mobile Charger Connect
+  - ABL eMH1, Alfen (Eve), Bender (CC612/613), cFos (PowerBrain), Daheimladen, Ebee (Wallbox), Ensto (Chago Wallbox), [EVSEWifi/ smartWB](https://www.evse-wifi.de), Garo (GLB, GLB+, LS4), go-eCharger, HardyBarth (eCB1, cPH1, cPH2), Heidelberg (Energy Control), Innogy (eBox), Juice (Charger Me), KEBA/BMW, Menneckes (Amedio, Amtron Premium/Xtra, Amtron ChargeConrol), NRGkick, [openWB (includes Pro)](https://openwb.de/), Optec (Mobility One), PC Electric (includes Garo), TechniSat (Technivolt), Ubitricity (Heinz), Vestel, Wallbe, Webasto (Live), Mobile Charger Connect
   - experimental EEBus support (PMCC)
   - Build-your-own: Phoenix (includes ESL Walli), [EVSE DIN](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
@@ -40,13 +41,50 @@ Evcc is an extensible EV Charge Controller with PV integration implemented in [G
 
 You'll find everything you need in our [documentation](https://docs.evcc.io/) (German).
 
-## Build
+## Contribute
 
-To build EVCC from source, [Go][2] 1.17 and [Node][3] 16 are required:
+To build evcc from source, [Go][2] 1.18 and [Node][3] 16 are required.
+
+Build and run go backend. The UI becomes available at http://127.0.0.1:7070/
 
 ```sh
 make
+./evcc
 ```
+
+For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the livelreloading development server. It pulls its data from port 7070 (see above).
+
+```sh
+npm install
+npm run start
+```
+
+### Code formatting
+
+We use linters (golangci-lint, Prettier) to keep a coherent source code formatting. It's recommended to use the format-on-save feature of your editor. For VSCode use the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Veture](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extension. You can manually reformat your code by running:
+
+```sh
+make lint
+make lint-ui
+```
+
+### Changing UI code
+
+To ensure reproducability the build frontend artifacts are part of the source code repository. If you've made changes to frontend code, please make sure to rebuild the production assets before you commit.
+
+```sh
+make ui
+```
+
+### Changing templates
+
+Evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository. Make sure to update this meta-data every time you make changes to a templates.
+
+```sh
+make docs
+```
+
+If you miss one of the above steps Gitub Actions will likely trigger a **Porcelain** error.
 
 ## Sponsorship
 
@@ -75,4 +113,4 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 [3]: https://nodejs.org/
 [4]: https://vuejs.org
 [5]: https://getbootstrap.org
-[6]: https://hub.docker.com/repository/docker/andig/evcc
+[6]: https://hub.docker.com/r/andig/evcc

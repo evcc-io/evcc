@@ -1,0 +1,14 @@
+template: abb
+products:
+  - brand: ABB
+    description:
+      generic: Terra AC
+capabilities: ["1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: abb
+  {{- include "modbus" . }}

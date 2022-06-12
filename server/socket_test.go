@@ -1,6 +1,7 @@
 package server
 
 import (
+	"math"
 	"reflect"
 	"testing"
 	"time"
@@ -11,6 +12,7 @@ func TestEncode(t *testing.T) {
 		in, out interface{}
 	}{
 		{int64(1), "1"},
+		{math.NaN(), "null"},
 		{float64(1.23456), "1.2346"},
 		{"1.2345", "\"1.2345\""},
 		{time.Hour, "3600"},

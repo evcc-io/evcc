@@ -1,21 +1,21 @@
 template: kostal-ksem-inverter
 products:
-- brand: Kostal
-  description:
-    de: Smart Energy Meter (über den Wechselrichter)
-    en: Smart Energy Meter (via inverter)
+  - brand: Kostal
+    description:
+      de: Smart Energy Meter (über den Wechselrichter)
+      en: Smart Energy Meter (via inverter)
 params:
-- name: usage
-  choice: [ "grid" ]
-- name: modbus
-  choice: [ "tcpip" ]
-  port: 1502
-  id: 71
+  - name: usage
+    choice: ["grid"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 1502
+    id: 71
 render: |
   type: custom
   power:
     source: modbus # use ModBus plugin
-    {{ include "modbus" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 252 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
       type: holding

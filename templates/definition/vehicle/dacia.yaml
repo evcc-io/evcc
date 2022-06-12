@@ -1,14 +1,14 @@
 template: dacia
 products:
-- brand: Dacia
+  - brand: Dacia
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: capacity
-  default: 27.4
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: capacity
+    default: 27.4
+  - preset: vehiclecloud
 render: |
   type: renault
-  {{include "vehicle-base" .}}
-  {{include "vehicle-identify" .}}
-  {{include "vehicle-cloud" .}}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

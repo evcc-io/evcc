@@ -1,13 +1,12 @@
 product:
   brand: Easee
-  description: Home (Cloud API)
+  description: Home
 capabilities: ["1p3p"]
 requirements: ["sponsorship"]
-
 render:
-- default: |
-    type: template
-    template: easee
-    user: # Benutzername um auf das Gerät zuzugreifen 
-    password: # Passwort des Benutzerkontos 
-    charger: EH______
+  - default: |
+      type: template
+      template: easee
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
+      charger: EH______

@@ -1,40 +1,92 @@
 <template>
-	<div>
-		<p class="h3 mb-4 d-sm-block" :class="{ 'd-none': single }">
-			{{ title || $t("main.loadpoint.fallbackName") }}
-		</p>
-		<div v-if="remoteDisabled == 'soft'" class="alert alert-warning mt-4 mb-2" role="alert">
-			{{ $t("main.loadpoint.remoteDisabledSoft", { source: remoteDisabledSource }) }}
-		</div>
-		<div v-if="remoteDisabled == 'hard'" class="alert alert-danger mt-4 mb-2" role="alert">
-			{{ $t("main.loadpoint.remoteDisabledHard", { source: remoteDisabledSource }) }}
+	<div class="loadpoint bg-white p-4">
+		<div class="d-flex justify-content-between align-items-center mb-3">
+			<h3 class="mb-3 me-2 text-truncate">
+				{{ title || $t("main.loadpoint.fallbackName") }}
+			</h3>
+			<div class="mb-3 d-flex align-items-center">
+				<Mode :mode="mode" @updated="setTargetMode" />
+				<button v-if="$hiddenFeatures" class="btn btn-link text-gray p-0 flex-shrink-0">
+					<shopicon-filled-options size="s"></shopicon-filled-options>
+				</button>
+			</div>
 		</div>
 
-		<div class="row">
-			<Mode class="col-12 col-md-6 col-lg-4 mb-4" :mode="mode" @updated="setTargetMode" />
-			<Vehicle
-				class="col-12 col-md-6 col-lg-8 mb-4"
-				v-bind="vehicle"
-				@target-soc-updated="setTargetSoC"
-				@target-time-updated="setTargetTime"
-				@target-time-removed="removeTargetTime"
+		<div
+			v-if="remoteDisabled"
+			class="alert alert-warning my-4 py-2"
+			:class="`${remoteDisabled === 'hard' ? 'alert-danger' : 'alert-warning'}`"
+			role="alert"
+		>
+			{{
+				$t(
+					remoteDisabled === "hard"
+						? "main.loadpoint.remoteDisabledHard"
+						: "main.loadpoint.remoteDisabledSoft",
+					{ source: remoteDisabledSource }
+				)
+			}}
+		</div>
+
+		<div class="details d-flex align-items-start mb-3">
+			<div>
+				<div class="d-flex align-items-center">
+					<LabelAndValue
+						:label="$t('main.loadpoint.power')"
+						:value="fmtKw(chargePower)"
+						class="mb-2"
+					/>
+					<shopicon-regular-lightning
+						class="text-evcc opacity-transiton"
+						:class="`opacity-${charging ? '100' : '0'}`"
+						size="m"
+					></shopicon-regular-lightning>
+				</div>
+				<Phases
+					v-bind="phasesProps"
+					class="opacity-transiton"
+					:class="`opacity-${charging ? '100' : '0'}`"
+				/>
+			</div>
+			<LabelAndValue :label="$t('main.loadpoint.charged')" :value="fmtKWh(chargedEnergy)" />
+			<LabelAndValue
+				v-if="chargeRemainingDurationInterpolated"
+				:label="$t('main.loadpoint.remaining')"
+				:value="`
+					${fmtShortDuration(chargeRemainingDurationInterpolated)}
+					${fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)}`"
+			/>
+			<LabelAndValue
+				v-else
+				:label="$t('main.loadpoint.duration')"
+				:value="`
+					${fmtShortDuration(chargeDurationInterpolated)}
+					${fmtShortDurationUnit(chargeDurationInterpolated)}`"
 			/>
 		</div>
-		<LoadpointDetails v-bind="details" />
+		<Vehicle
+			v-bind="vehicle"
+			@target-soc-updated="setTargetSoC"
+			@target-time-updated="setTargetTime"
+			@target-time-removed="removeTargetTime"
+		/>
 	</div>
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/lightning";
+import "@h2d2/shopicons/es/filled/options";
 import api from "../api";
-import Mode from "./Mode";
-import Vehicle from "./Vehicle";
-import LoadpointDetails from "./LoadpointDetails";
+import Mode from "./Mode.vue";
+import Vehicle from "./Vehicle.vue";
+import Phases from "./Phases.vue";
+import LabelAndValue from "./LabelAndValue.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 
 export default {
 	name: "Loadpoint",
-	components: { LoadpointDetails, Mode, Vehicle },
+	components: { Mode, Vehicle, Phases, LabelAndValue },
 	mixins: [formatter, collector],
 	props: {
 		id: Number,
@@ -60,7 +112,7 @@ export default {
 		minSoC: Number,
 		targetTime: String,
 		targetTimeActive: Boolean,
-		targetTimeHourSuggestion: Number,
+		targetTimeProjectedStart: String,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,
@@ -88,15 +140,58 @@ export default {
 		pvRemaining: Number,
 		pvAction: String,
 	},
+	data() {
+		return {
+			tickerHandler: null,
+			phaseRemainingInterpolated: this.phaseRemaining,
+			pvRemainingInterpolated: this.pvRemaining,
+			chargeDurationInterpolated: this.chargeDuration,
+			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
+		};
+	},
 	computed: {
-		details: function () {
-			return this.collectProps(LoadpointDetails);
+		phasesProps: function () {
+			return this.collectProps(Phases);
 		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);
 		},
 	},
+	watch: {
+		phaseRemaining() {
+			this.phaseRemainingInterpolated = this.phaseRemaining;
+		},
+		pvRemaining() {
+			this.pvRemainingInterpolated = this.pvRemaining;
+		},
+		chargeDuration() {
+			this.chargeDurationInterpolated = this.chargeDuration;
+		},
+		chargeRemainingDuration() {
+			this.chargeRemainingDurationInterpolated = this.chargeRemainingDuration;
+		},
+	},
+	mounted() {
+		this.tickerHandler = setInterval(this.tick, 1000);
+	},
+	unmounted() {
+		clearInterval(this.tickerHandler);
+	},
 	methods: {
+		tick() {
+			if (this.phaseRemainingInterpolated > 0) {
+				this.phaseRemainingInterpolated--;
+			}
+			if (this.pvRemainingInterpolated > 0) {
+				this.pvRemainingInterpolated--;
+			}
+			if (this.chargeDurationInterpolated > 0 && this.charging) {
+				this.chargeDurationInterpolated++;
+			}
+			if (this.chargeRemainingDurationInterpolated > 0 && this.charging) {
+				this.chargeRemainingDurationInterpolated--;
+			}
+		},
 		apiPath: function (func) {
 			return "loadpoints/" + this.id + "/" + func;
 		},
@@ -107,8 +202,7 @@ export default {
 			api.post(this.apiPath("targetsoc") + "/" + soc);
 		},
 		setTargetTime: function (date) {
-			const formattedDate = `${this.fmtDayString(date)}T${this.fmtTimeString(date)}:00`;
-			api.post(this.apiPath("targetcharge") + "/" + this.targetSoC + "/" + formattedDate);
+			api.post(`${this.apiPath("targetcharge")}/${this.targetSoC}/${date.toISOString()}`);
 		},
 		removeTargetTime: function () {
 			api.delete(this.apiPath("targetcharge"));
@@ -116,3 +210,24 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.loadpoint {
+	border-radius: 2rem;
+	color: var(--bs-gray-dark);
+}
+
+.details > div {
+	flex-grow: 1;
+	flex-basis: 0;
+}
+.details > div:nth-child(2) {
+	text-align: center;
+}
+.details > div:nth-child(3) {
+	text-align: right;
+}
+.opacity-transiton {
+	transition: opacity var(--evcc-transition-slow) ease-in;
+}
+</style>

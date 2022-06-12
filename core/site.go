@@ -31,12 +31,13 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters        MetersConfig // Meter references
-	PrioritySoC   float64      `mapstructure:"prioritySoC"` // prefer battery up to this SoC
-	BufferSoC     float64      `mapstructure:"bufferSoC"`   // ignore battery above this SoC
+	Title                             string       `mapstructure:"title"`         // UI title
+	Voltage                           float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	Meters                            MetersConfig // Meter references
+	PrioritySoC                       float64      `mapstructure:"prioritySoC"`                       // prefer battery up to this SoC
+	BufferSoC                         float64      `mapstructure:"bufferSoC"`                         // ignore battery above this SoC
+	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -171,7 +172,7 @@ func (site *Site) DumpConfig() {
 
 	if len(site.pvMeters) > 0 {
 		for i, pv := range site.pvMeters {
-			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i), pv))
+			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i+1), pv))
 		}
 	}
 
@@ -179,7 +180,7 @@ func (site *Site) DumpConfig() {
 		for i, battery := range site.batteryMeters {
 			_, ok := battery.(api.Battery)
 			site.log.INFO.Println(
-				meterCapabilities(fmt.Sprintf("battery %d", i), battery),
+				meterCapabilities(fmt.Sprintf("battery %d", i+1), battery),
 				fmt.Sprintf("soc %s", presence[ok]),
 			)
 		}
@@ -193,12 +194,14 @@ func (site *Site) DumpConfig() {
 		_, energy := lp.charger.(api.MeterEnergy)
 		_, currents := lp.charger.(api.MeterCurrent)
 		_, phases := lp.charger.(api.ChargePhases)
+		_, wakeup := lp.charger.(api.AlarmClock)
 
-		lp.log.INFO.Printf("  charger:     power %s energy %s currents %s phases %s",
+		lp.log.INFO.Printf("  charger:     power %s energy %s currents %s phases %s wakeup %s",
 			presence[power],
 			presence[energy],
 			presence[currents],
 			presence[phases],
+			presence[wakeup],
 		)
 
 		lp.log.INFO.Printf("  meters:      charge %s", presence[lp.HasChargeMeter()])
@@ -215,8 +218,9 @@ func (site *Site) DumpConfig() {
 			_, finish := v.(api.VehicleFinishTimer)
 			_, status := v.(api.ChargeState)
 			_, climate := v.(api.VehicleClimater)
-			lp.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s",
-				i, presence[rng], presence[finish], presence[status], presence[climate],
+			_, wakeup := v.(api.AlarmClock)
+			lp.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s wakeup %s",
+				i+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
 			)
 		}
 	}
@@ -376,7 +380,8 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 		site.batteryBuffered = batteryPower > 0 && site.BufferSoC > 0 && socs > site.BufferSoC
 	}
 
-	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
+	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
+
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
 	return sitePower, nil

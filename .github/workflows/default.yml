@@ -8,95 +8,99 @@ on:
   workflow_call:
 
 jobs:
-
   build:
     name: Build
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.18
-      id: go
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.18
+        id: go
 
-    - name: Set up Node
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16"
 
-    - name: Cache Go modules
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/go/pkg
-          ~/.cache/go-build
-        key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.go-version }}-go-
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg
+            ~/.cache/go-build
+          key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.go-version }}-go-
 
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: gofmt
-      run: |
-        gofmt -w -l $(find . -name '*.go')
+      - name: gofmt
+        run: |
+          gofmt -w -l $(find . -name '*.go')
 
-    - name: Install tools
-      run: make install
+      - name: Install tools
+        run: make install
 
-    - name: Assets
-      run: make assets
+      - name: Assets
+        run: make assets
 
-    - name: Porcelain
-      run: |
-        go mod tidy
-        test -z "$(git status --porcelain)" || (git status; git diff; false)
+      - name: Porcelain
+        run: |
+          go mod tidy
+          test -z "$(git status --porcelain)" || (git status; git diff; false)
 
-    - name: Build
-      run: make build
+      - name: Build
+        run: make build
 
-    - name: Lint
-      uses: golangci/golangci-lint-action@v3
-      with:
-        version: latest
-        skip-pkg-cache: true
-        skip-build-cache: true
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          skip-pkg-cache: true
+          skip-build-cache: true
 
-    - name: Test
-      run: make test
+      - name: Test
+        run: make test
 
   build-ui:
     name: Build UI
     runs-on: ubuntu-latest
 
     steps:
-    - name: Cache NPM modules
-      uses: actions/cache@v2
-      with:
-        path: |
-          **/node_modules
-        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-npm-
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16"
 
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Cache NPM modules
+        uses: actions/cache@v2
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
 
-    - name: Install tools
-      run: make install-ui
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Build
-      run: make ui
+      - name: Install tools
+        run: make install-ui
 
-    - name: Lint
-      run: make lint-ui
+      - name: Build
+        run: make ui
 
-    - name: Test
-      run: make test-ui
+      - name: Lint
+        run: make lint-ui
 
-    - name: Porcelain
-      run: |
-        test -z "$(git status --porcelain)" || (git status; git diff; false)
+      - name: Test
+        run: make test-ui
+
+      - name: Porcelain
+        run: |
+          test -z "$(git status --porcelain)" || (git status; git diff; false)

@@ -12,15 +12,15 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
-	"github.com/thoas/go-funk"
+	"github.com/samber/lo"
 )
 
 // Provider implements the evcc vehicle api
 type Provider struct {
-	chargerG  func() (interface{}, error)
-	statusG   func() (interface{}, error)
-	climateG  func() (interface{}, error)
-	positionG func() (interface{}, error)
+	chargerG  func() (ChargerResponse, error)
+	statusG   func() (StatusResponse, error)
+	climateG  func() (ClimaterResponse, error)
+	positionG func() (PositionResponse, error)
 	action    func(action, value string) error
 	rr        func() (RolesRights, error)
 }
@@ -28,18 +28,18 @@ type Provider struct {
 // NewProvider provides the evcc vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		chargerG: provider.NewCached(func() (interface{}, error) {
+		chargerG: provider.Cached(func() (ChargerResponse, error) {
 			return api.Charger(vin)
-		}, cache).InterfaceGetter(),
-		statusG: provider.NewCached(func() (interface{}, error) {
+		}, cache),
+		statusG: provider.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
-		}, cache).InterfaceGetter(),
-		climateG: provider.NewCached(func() (interface{}, error) {
+		}, cache),
+		climateG: provider.Cached(func() (ClimaterResponse, error) {
 			return api.Climater(vin)
-		}, cache).InterfaceGetter(),
-		positionG: provider.NewCached(func() (interface{}, error) {
+		}, cache),
+		positionG: provider.Cached(func() (PositionResponse, error) {
 			return api.Position(vin)
-		}, cache).InterfaceGetter(),
+		}, cache),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
 		},
@@ -55,7 +55,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
 	}
 	return 0, err
@@ -68,7 +68,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		if res.Charger.Status.PlugStatusData.PlugState.Content == "connected" {
 			status = api.StatusB
 		}
@@ -85,7 +85,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		rct := res.Charger.Status.BatteryStatusData.RemainingChargingTime
 
 		// estimate not available
@@ -104,7 +104,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		crsd := res.Charger.Status.CruisingRangeStatusData
 
 		rng = int64(crsd.PrimaryEngineRange.Content)
@@ -121,7 +121,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		err = api.ErrNotAvailable
 
 		if sd := res.ServiceByID(ServiceOdometer); sd != nil {
@@ -141,7 +141,7 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.climateG()
-	if res, ok := res.(ClimaterResponse); err == nil && ok {
+	if err == nil {
 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
 		active := state != "off" && state != "invalid" && state != "error"
 
@@ -162,7 +162,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 // Position implements the api.VehiclePosition interface
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.positionG()
-	if res, ok := res.(PositionResponse); err == nil && ok {
+	if err == nil {
 		coord := res.FindCarResponse.Position.CarCoordinate
 		return float64(coord.Latitude) / 1e6, float64(coord.Longitude) / 1e6, nil
 	}
@@ -170,16 +170,14 @@ func (v *Provider) Position() (float64, float64, error) {
 	return 0, 0, err
 }
 
-var _ api.VehicleStartCharge = (*Provider)(nil)
+var _ api.VehicleChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleStartCharge interface
+// StartCharge implements the api.VehicleChargeController interface
 func (v *Provider) StartCharge() error {
 	return v.action(ActionCharge, ActionChargeStart)
 }
 
-var _ api.VehicleStopCharge = (*Provider)(nil)
-
-// StopCharge implements the api.VehicleStopCharge interface
+// StopCharge implements the api.VehicleChargeController interface
 func (v *Provider) StopCharge() error {
 	return v.action(ActionCharge, ActionChargeStop)
 }
@@ -206,15 +204,8 @@ func (v *Provider) Diagnose2() {
 	}
 
 	// list remaining service
-	services := funk.Map(rr.OperationList.ServiceInfo, func(si ServiceInfo) string {
-		if si.InvocationUrl.Content == "" {
-			return si.ServiceId
-		}
-		return ""
-	}).([]string)
-
-	services = funk.FilterString(services, func(s string) bool {
-		return s != ""
+	services := lo.FilterMap(rr.OperationList.ServiceInfo, func(si ServiceInfo, _ int) (string, bool) {
+		return si.ServiceId, si.InvocationUrl.Content == ""
 	})
 
 	fmt.Fprintf(tw, "without uri:\t%s\n", strings.Join(services, ","))

@@ -228,6 +228,6 @@ var _ api.Diagnosis = (*Wallbe)(nil)
 // Diagnose implements the Diagnosis interface
 func (wb *Wallbe) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(wbRegFirmware, 6); err == nil {
-		fmt.Printf("Firmware:\t%s\n", encoding.StringSwapped(b))
+		fmt.Printf("Firmware:\t%s\n", encoding.StringLsbFirst(b))
 	}
 }

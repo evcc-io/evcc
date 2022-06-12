@@ -1,15 +1,16 @@
 # executes binary build excluding UI
 
-# define RELEASE=1 to hide commit hash
-ARG RELEASE={{ env "RELEASE" }}
 FROM golang:1.18-alpine as builder
-
-WORKDIR /build
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
 # Ca-certificates is required to call HTTPS endpoints.
 RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && update-ca-certificates
+
+# define RELEASE=1 to hide commit hash
+ARG RELEASE={{ env "RELEASE" }}
+
+WORKDIR /build
 
 # install go tools and cache modules
 COPY Makefile .

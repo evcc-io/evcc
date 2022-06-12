@@ -26,8 +26,7 @@ func runDump(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
-	conf, err := loadConfigFile(cfgFile)
-	if err != nil {
+	if err := loadConfigFile(cfgFile, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -80,7 +79,7 @@ func runDump(cmd *cobra.Command, args []string) {
 		d.Header(fmt.Sprintf("loadpoint %d", id+1), "=")
 		fmt.Println("")
 
-		if name := lp.Meters.ChargeMeterRef; name != "" {
+		if name := lp.MeterRef; name != "" {
 			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), cp.Meter(name))
 		}
 

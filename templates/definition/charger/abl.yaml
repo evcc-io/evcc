@@ -1,18 +1,18 @@
 template: abl
 products:
-- brand: ABL
-  description:
-    generic: eMH
-- brand: SENEC
-  description:
-    generic: Wallbox pro
-requirements: 
+  - brand: ABL
+    description:
+      generic: eMH
+  - brand: SENEC
+    description:
+      generic: Wallbox pro
+requirements:
   evcc: ["sponsorship"]
 params:
-- name: modbus
-  choice: ["rs485"]
-  baudrate: 38400
-  comset: 8E1
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 38400
+    comset: 8E1
 render: |
   type: abl
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

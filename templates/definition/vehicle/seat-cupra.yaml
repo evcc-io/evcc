@@ -1,0 +1,14 @@
+template: cupra
+products:
+  - brand: Seat
+    description:
+      generic: Cupra Born, My Cupra
+params:
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - preset: vehiclecloud
+render: |
+  type: cupra
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

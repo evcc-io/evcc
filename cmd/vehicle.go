@@ -32,8 +32,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
-	conf, err := loadConfigFile(cfgFile)
-	if err != nil {
+	if err := loadConfigFile(cfgFile, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -81,7 +80,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		if cmd.PersistentFlags().Lookup(flagStart).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.VehicleStartCharge); ok {
+			if vv, ok := v.(api.VehicleChargeController); ok {
 				if err := vv.StartCharge(); err != nil {
 					log.ERROR.Println("start charge:", err)
 				}
@@ -93,7 +92,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		if cmd.PersistentFlags().Lookup(flagStop).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.VehicleStopCharge); ok {
+			if vv, ok := v.(api.VehicleChargeController); ok {
 				if err := vv.StopCharge(); err != nil {
 					log.ERROR.Println("stop charge:", err)
 				}

@@ -1,19 +1,14 @@
 template: kostal-piko
 products:
-- brand: Kostal
-  description:
-    generic: Piko
-- brand: Kostal
-  description:
-    generic: Piko BA
+  - brand: Kostal
+    description:
+      generic: Piko, Piko BA
 guidedsetup:
   enable: true
 params:
-- name: usage
-  choice: [ "grid", "pv" ]
-- name: host
-  example: 192.0.2.2
-  required: true
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
 render: |
   type: custom
   power:
@@ -24,7 +19,7 @@ render: |
     - source: http
       uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # PV AC Ausgang
       jq: .dxsEntries[0].value | if . == null then 0 else . end
-      scale: -1.0
+      scale: -1
     - source: http
       uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886848 # Netzbezug
       jq: .dxsEntries[0].value | if . == null then 0 else . end
@@ -36,5 +31,15 @@ render: |
     # PV
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # PV AC Ausgang
+    jq: .dxsEntries[0].value | if . == null then 0 else . end
+  {{- end -}}
+  {{- if eq .usage "battery" }}
+    # Battery
+    source: http
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556226&dxsEntries=33556238&dxsEntries=33556230 # Battery Voltage * Energy * Charging Indicator
+    jq: (.dxsEntries[] | select(.dxsId==33556226) | .value) * (.dxsEntries[] | select(.dxsId==33556238) | .value) * (if (.dxsEntries[] | select(.dxsId==33556230) | .value) == 0 then -1 else 1 end) | if . == null then 0 else . end
+  soc:
+    source: http
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556229 # Battery SOC
     jq: .dxsEntries[0].value | if . == null then 0 else . end
   {{- end -}}

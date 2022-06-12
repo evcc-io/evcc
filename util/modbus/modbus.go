@@ -10,9 +10,11 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/grid-x/modbus"
+	"github.com/volkszaehler/mbmd/encoding"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
+	"golang.org/x/exp/constraints"
 )
 
 type Protocol int
@@ -26,9 +28,12 @@ const (
 )
 
 // Settings contains the ModBus TCP settings
+// RTU field is included for compatibility with modbus.tpl which renders rtu: false for TCP
+// TODO remove RTU field (https://github.com/evcc-io/evcc/issues/3360)
 type TcpSettings struct {
 	URI string
 	ID  uint8
+	RTU *bool `mapstructure:"rtu"`
 }
 
 // Settings contains the ModBus settings
@@ -244,7 +249,7 @@ func NewDevice(model string, subdevice int) (device meters.Device, err error) {
 // IsRS485 determines if model is a known MBMD rs485 device model
 func IsRS485(model string) bool {
 	for k := range rs485.Producers {
-		if strings.ToUpper(model) == k {
+		if strings.EqualFold(model, k) {
 			return true
 		}
 	}
@@ -272,6 +277,13 @@ type Register struct {
 	BitMask string
 }
 
+// asFloat64 creates a function that returns numerics vales as float64
+func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
+	return func(v []byte) float64 {
+		return float64(f(v))
+	}
+}
+
 // RegisterOperation creates a read operation from a register definition
 func RegisterOperation(r Register) (rs485.Operation, error) {
 	op := rs485.Operation{
@@ -291,30 +303,20 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	}
 
 	switch strings.ToLower(r.Decode) {
-	case "float32", "ieee754":
-		op.Transform = rs485.RTUIeee754ToFloat64
-	case "float32s", "ieee754s":
-		op.Transform = rs485.RTUIeee754ToFloat64Swapped
-	case "float64":
-		op.Transform = rs485.RTUUint64ToFloat64
-		op.ReadLen = 4
-	case "uint16":
-		op.Transform = rs485.RTUUint16ToFloat64
-		op.ReadLen = 1
-	case "uint32":
-		op.Transform = rs485.RTUUint32ToFloat64
-	case "uint32s":
-		op.Transform = rs485.RTUUint32ToFloat64Swapped
-	case "uint64":
-		op.Transform = rs485.RTUUint64ToFloat64
-		op.ReadLen = 4
+
+	// 16 bit
 	case "int16":
-		op.Transform = rs485.RTUInt16ToFloat64
+		op.Transform = asFloat64(encoding.Int16)
 		op.ReadLen = 1
-	case "int32":
-		op.Transform = rs485.RTUInt32ToFloat64
-	case "int32s":
-		op.Transform = rs485.RTUInt32ToFloat64Swapped
+	case "int16nan":
+		op.Transform = decodeNaN16(1<<15, asFloat64(encoding.Int16))
+		op.ReadLen = 1
+	case "uint16":
+		op.Transform = asFloat64(encoding.Uint16)
+		op.ReadLen = 1
+	case "uint16nan":
+		op.Transform = decodeNaN16(0xFFFF, asFloat64(encoding.Uint16))
+		op.ReadLen = 1
 	case "bool16":
 		mask, err := decodeMask(r.BitMask)
 		if err != nil {
@@ -322,20 +324,41 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		}
 		op.Transform = decodeBool16(mask)
 		op.ReadLen = 1
+
+	// 32 bit
+	case "int32":
+		op.Transform = asFloat64(encoding.Int32)
+	case "int32nan":
+		op.Transform = decodeNaN32(1<<31, asFloat64(encoding.Int32))
+	case "int32s":
+		op.Transform = asFloat64(encoding.Int32LswFirst)
+	case "uint32":
+		op.Transform = asFloat64(encoding.Uint32)
+	case "uint32s":
+		op.Transform = asFloat64(encoding.Uint32LswFirst)
+	case "uint32nan":
+		op.Transform = decodeNaN32(0xFFFFFFFF, asFloat64(encoding.Uint32))
+	case "float32", "ieee754":
+		op.Transform = asFloat64(encoding.Float32)
+	case "float32s", "ieee754s":
+		op.Transform = asFloat64(encoding.Float32LswFirst)
+
+	// 64 bit
+	case "uint64":
+		op.Transform = asFloat64(encoding.Uint64)
+		op.ReadLen = 4
+	case "uint64nan":
+		op.Transform = decodeNaN64(0xFFFFFFFFFFFFFFFF, asFloat64(encoding.Uint64))
+		op.ReadLen = 4
+	case "float64":
+		op.Transform = encoding.Float64
+		op.ReadLen = 4
+
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
 	}
 
 	return op, nil
-}
-
-func RTUStringSwapped(b []byte) string {
-	s := new(strings.Builder)
-	for i := 0; i < len(b); i += 2 {
-		s.WriteByte(b[i+1])
-		s.WriteByte(b[i])
-	}
-	return s.String()
 }
 
 // SunSpecOperation is a sunspec modbus operation

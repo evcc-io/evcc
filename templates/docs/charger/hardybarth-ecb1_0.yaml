@@ -1,9 +1,9 @@
 product:
-  brand: hardybarth-ecb1
-  description: HardyBarth cPH1 (eCB1 controller)
-
+  brand: HardyBarth
+  description: cPH1 (eCB1 Controller)
+requirements: ["sponsorship"]
 render:
-- default: |
-    type: template
-    template: hardybarth-ecb1
-    host: 192.0.2.2  # IP-Adresse oder Hostname
+  - default: |
+      type: template
+      template: hardybarth-ecb1
+      host: 192.0.2.2 # IP-Adresse oder Hostname

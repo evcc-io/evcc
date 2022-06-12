@@ -3,6 +3,7 @@ package vehicle
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -12,15 +13,15 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 )
 
 // Credits to
+//  https://github.com/hacf-fr/renault-api
 //  https://github.com/edent/Renault-Zoe-API/issues/18
 //  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
-//  https://github.com/hacf-fr/renault-api
-// https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
+//  https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
 
 const (
 	keyStore = "https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_%s.json"
@@ -105,9 +106,9 @@ type Renault struct {
 	gigya, kamereon     configServer
 	gigyaJwtToken       string
 	accountID           string
-	batteryG            func() (interface{}, error)
-	cockpitG            func() (interface{}, error)
-	hvacG               func() (interface{}, error)
+	batteryG            func() (kamereonResponse, error)
+	cockpitG            func() (kamereonResponse, error)
+	hvacG               func() (kamereonResponse, error)
 }
 
 func init() {
@@ -150,11 +151,9 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		})
 	}
 
-	if err == nil {
-		v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
-		v.cockpitG = provider.NewCached(v.cockpitAPI, cc.Cache).InterfaceGetter()
-		v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()
-	}
+	v.batteryG = provider.Cached(v.batteryAPI, cc.Cache)
+	v.cockpitG = provider.Cached(v.cockpitAPI, cc.Cache)
+	v.hvacG = provider.Cached(v.hvacAPI, cc.Cache)
 
 	return v, err
 }
@@ -164,11 +163,18 @@ func (v *Renault) apiKeys(region string) error {
 
 	var cr configResponse
 	err := v.GetJSON(uri, &cr)
-
-	v.gigya = cr.Servers.GigyaProd
-	v.kamereon = cr.Servers.WiredProd
-
-	return err
+	if err != nil {
+		// Use of old fixed keys if keyStore is not accessible
+		v.gigya = configServer{"https://accounts.eu1.gigya.com", "3_7PLksOyBRkHv126x5WhHb-5pqC1qFR8pQjxSeLB6nhAnPERTUlwnYoznHSxwX668"}
+		v.kamereon = configServer{"https://api-wired-prod-1-euw1.wrd-aws.com", "VAX7XYKGfa92yMvXculCkEFyfZbuM7Ss"}
+		return nil
+	} else {
+		v.gigya = cr.Servers.GigyaProd
+		v.kamereon = cr.Servers.WiredProd
+		// Temporary fix of wrong kamereon APIKey in keyStore
+		v.kamereon.APIKey = "VAX7XYKGfa92yMvXculCkEFyfZbuM7Ss"
+		return err
+	}
 }
 
 func (v *Renault) authFlow() error {
@@ -201,10 +207,15 @@ func (v *Renault) authFlow() error {
 	return err
 }
 
-func (v *Renault) request(uri string, data url.Values, headers ...map[string]string) (*http.Request, error) {
-	req, err := request.New(http.MethodGet, uri, nil, headers...)
+func (v *Renault) request(uri string, params url.Values, body io.Reader, headers ...map[string]string) (*http.Request, error) {
+	method := http.MethodGet
+	if body != nil {
+		method = http.MethodPost
+	}
+
+	req, err := request.New(method, uri, body, headers...)
 	if err == nil {
-		req.URL.RawQuery = data.Encode()
+		req.URL.RawQuery = params.Encode()
 	}
 
 	return req, err
@@ -219,7 +230,7 @@ func (v *Renault) sessionCookie(user, password string) (string, error) {
 		"apiKey":   []string{v.gigya.APIKey},
 	}
 
-	req, err := v.request(uri, data)
+	req, err := v.request(uri, data, nil)
 
 	var res gigyaResponse
 	if err == nil {
@@ -240,7 +251,7 @@ func (v *Renault) personID(sessionCookie string) (string, error) {
 		"login_token": []string{sessionCookie},
 	}
 
-	req, err := v.request(uri, data)
+	req, err := v.request(uri, data, nil)
 
 	var res gigyaResponse
 	if err == nil {
@@ -260,7 +271,7 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 		"expiration":  []string{"900"},
 	}
 
-	req, err := v.request(uri, data)
+	req, err := v.request(uri, data, nil)
 
 	var res gigyaResponse
 	if err == nil {
@@ -270,15 +281,15 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 	return res.IDToken, err
 }
 
-func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
-	data := url.Values{"country": []string{"DE"}}
+func (v *Renault) kamereonRequest(uri string, body io.Reader) (kamereonResponse, error) {
+	params := url.Values{"country": []string{"DE"}}
 	headers := map[string]string{
 		"x-gigya-id_token": v.gigyaJwtToken,
-		"apikey":           "VAX7XYKGfa92yMvXculCkEFyfZbuM7Ss", // v.kamereon.APIKey
+		"apikey":           v.kamereon.APIKey,
 	}
 
 	var res kamereonResponse
-	req, err := v.request(uri, data, headers)
+	req, err := v.request(uri, params, body, headers)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -288,7 +299,7 @@ func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
 
 func (v *Renault) kamereonPerson(personID string) (string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/persons/%s", v.kamereon.Target, personID)
-	res, err := v.kamereonRequest(uri)
+	res, err := v.kamereonRequest(uri, nil)
 
 	if len(res.Accounts) == 0 {
 		return "", err
@@ -299,7 +310,7 @@ func (v *Renault) kamereonPerson(personID string) (string, error) {
 
 func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
-	res, err := v.kamereonRequest(uri)
+	res, err := v.kamereonRequest(uri, nil)
 
 	var vehicles []string
 	if err == nil {
@@ -314,14 +325,14 @@ func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 }
 
 // batteryAPI provides battery-status api response
-func (v *Renault) batteryAPI() (interface{}, error) {
+func (v *Renault) batteryAPI() (kamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
-	res, err := v.kamereonRequest(uri)
+	res, err := v.kamereonRequest(uri, nil)
 
 	// repeat auth if error
 	if err != nil {
 		if err = v.authFlow(); err == nil {
-			res, err = v.kamereonRequest(uri)
+			res, err = v.kamereonRequest(uri, nil)
 		}
 	}
 
@@ -329,14 +340,14 @@ func (v *Renault) batteryAPI() (interface{}, error) {
 }
 
 // hvacAPI provides hvac-status api response
-func (v *Renault) hvacAPI() (interface{}, error) {
+func (v *Renault) hvacAPI() (kamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/hvac-status", v.kamereon.Target, v.accountID, v.vin)
-	res, err := v.kamereonRequest(uri)
+	res, err := v.kamereonRequest(uri, nil)
 
 	// repeat auth if error
 	if err != nil {
 		if err = v.authFlow(); err == nil {
-			res, err = v.kamereonRequest(uri)
+			res, err = v.kamereonRequest(uri, nil)
 		}
 	}
 
@@ -344,14 +355,14 @@ func (v *Renault) hvacAPI() (interface{}, error) {
 }
 
 // cockpitAPI provides cockpit api response
-func (v *Renault) cockpitAPI() (interface{}, error) {
+func (v *Renault) cockpitAPI() (kamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/cockpit", v.kamereon.Target, v.accountID, v.vin)
-	res, err := v.kamereonRequest(uri)
+	res, err := v.kamereonRequest(uri, nil)
 
 	// repeat auth if error
 	if err != nil {
 		if err = v.authFlow(); err == nil {
-			res, err = v.kamereonRequest(uri)
+			res, err = v.kamereonRequest(uri, nil)
 		}
 	}
 
@@ -362,7 +373,7 @@ func (v *Renault) cockpitAPI() (interface{}, error) {
 func (v *Renault) SoC() (float64, error) {
 	res, err := v.batteryG()
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.Data.Attributes.BatteryLevel), nil
 	}
 
@@ -376,7 +387,7 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.batteryG()
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		if res.Data.Attributes.PlugStatus > 0 {
 			status = api.StatusB
 		}
@@ -394,7 +405,7 @@ var _ api.VehicleRange = (*Renault)(nil)
 func (v *Renault) Range() (int64, error) {
 	res, err := v.batteryG()
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		return int64(res.Data.Attributes.BatteryAutonomy), nil
 	}
 
@@ -407,7 +418,7 @@ var _ api.VehicleOdometer = (*Renault)(nil)
 func (v *Renault) Odometer() (float64, error) {
 	res, err := v.cockpitG()
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		return res.Data.Attributes.TotalMileage, nil
 	}
 
@@ -420,7 +431,7 @@ var _ api.VehicleFinishTimer = (*Renault)(nil)
 func (v *Renault) FinishTime() (time.Time, error) {
 	res, err := v.batteryG()
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
 
 		if res.Data.Attributes.RemainingTime == nil {
@@ -444,17 +455,44 @@ func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float
 		return false, 0, 0, api.ErrNotAvailable
 	}
 
-	if res, ok := res.(kamereonResponse); err == nil && ok {
+	if err == nil {
 		state := strings.ToLower(res.Data.Attributes.HvacStatus)
 
 		if state == "" {
 			return false, 0, 0, api.ErrNotAvailable
 		}
 
-		active := !funk.ContainsString([]string{"off", "false", "invalid", "error"}, state)
+		active := !slices.Contains([]string{"off", "false", "invalid", "error"}, state)
 
 		return active, res.Data.Attributes.ExternalTemperature, 20, nil
 	}
 
 	return false, 0, 0, err
+}
+
+var _ api.AlarmClock = (*Renault)(nil)
+
+// WakeUp implements the api.AlarmClock interface
+func (v *Renault) WakeUp() error {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/charge/pause-resume", v.kamereon.Target, v.accountID, v.vin)
+
+	data := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type": "ChargePauseResume",
+			"attributes": map[string]interface{}{
+				"action": "resume",
+			},
+		},
+	}
+
+	_, err := v.kamereonRequest(uri, request.MarshalJSON(data))
+
+	// repeat auth if error
+	if err != nil {
+		if err = v.authFlow(); err == nil {
+			_, err = v.kamereonRequest(uri, request.MarshalJSON(data))
+		}
+	}
+
+	return err
 }

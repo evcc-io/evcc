@@ -1,14 +1,14 @@
 template: vestel
 products:
-- brand: Vestel
-  description:
-    generic: EVC04
-requirements: 
+  - brand: Vestel
+    description:
+      generic: EVC04
+requirements:
   evcc: ["sponsorship"]
 params:
-- name: modbus
-  choice: ["tcpip"]
-  id: 255
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
 render: |
   type: vestel
-  {{include "modbus" .}}
+  {{- include "modbus" . }}

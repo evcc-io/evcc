@@ -35,8 +35,7 @@ export default {
 .label-bar {
 	width: 0;
 	margin: 0;
-	height: 1.7rem;
-	padding: 0.6rem 0;
+	padding: 10px 0;
 	opacity: 1;
 	overflow: hidden;
 }
@@ -44,51 +43,50 @@ export default {
 	opacity: 0;
 }
 .label-bar-scale {
-	border: 1px solid var(--bs-gray);
-	height: 0.5rem;
+	border: 1px solid var(--bs-gray-medium);
+	height: 14px;
 	background: none;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	white-space: nowrap;
 	border-radius: 0;
-	transition: border-radius 500ms linear;
+	transition: border-radius var(--evcc-transition-medium) linear;
 }
 .label-bar--top .label-bar-scale {
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
 	border-bottom: none;
 }
 .label-bar--bottom .label-bar-scale {
+	border-bottom-left-radius: 10px;
+	border-bottom-right-radius: 10px;
 	border-top: none;
-}
-.label-bar--top.label-bar--first .label-bar-scale {
-	border-top-left-radius: 4px;
-}
-.label-bar--top.label-bar--last .label-bar-scale {
-	border-top-right-radius: 4px;
-}
-.label-bar--bottom.label-bar--first .label-bar-scale {
-	border-bottom-left-radius: 4px;
-}
-.label-bar--bottom.label-bar--last .label-bar-scale {
-	border-bottom-right-radius: 4px;
-}
-.label-bar:not(.label-bar--first) .label-bar-scale {
-	border-left: none;
 }
 .label-bar-icon {
 	background-color: white;
-	color: var(--bs-gray);
-	padding: 0 0.3rem;
-	opacity: 1;
+	transform: scale(1);
+	color: var(--bs-gray-dark);
+	border-radius: 0;
+	border: 0.25rem solid white;
+	transition-property: background-color, transform, border-radius, border;
+	/* will be overwritten by parent component to avoid initial transition */
+	transition-duration: 0s;
+	transition-delay: 0s;
+	transition-timing-function: linear;
 }
 .label-bar--top .label-bar-icon {
-	margin-top: -6px;
+	margin-top: -12px;
 }
 .label-bar--bottom .label-bar-icon {
-	margin-top: 6px;
+	margin-top: 12px;
 }
 .label-bar--hide-icon .label-bar-icon {
-	opacity: 0;
+	background-color: var(--bs-gray-dark);
+	transform: scale(0.1666666);
+	border-radius: 100%;
+	border-width: 1.5rem;
+	transition-delay: 400ms, 0s;
 }
 .label-bar--hidden {
 	opacity: 0;

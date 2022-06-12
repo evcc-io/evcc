@@ -16,7 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 	"golang.org/x/text/language"
 )
 
@@ -207,7 +207,7 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	fmt.Println(c.localizedString("File_SaveSuccess", localizeMap{"FileName": filename}))
 }
 
-// configureDevices asks device specfic questions
+// configureDevices asks device specific questions
 func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askAdding, askMultiple bool) []device {
 	var devices []device
 
@@ -320,7 +320,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		var minValue int = 6
-		if funk.ContainsString(capabilities, templates.CapabilityISO151182) {
+		if slices.Contains(capabilities, templates.CapabilityISO151182) {
 			minValue = 2
 		}
 

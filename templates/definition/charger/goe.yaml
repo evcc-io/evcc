@@ -1,22 +1,14 @@
 template: go-e
 products:
-- brand: go-e
-  description:
-    generic: Charger HOME+
-- brand: go-e
-  description:
-    generic: Charger HOMEfix
-- brand: go-e
-  description:
-    generic: Charger Pro
+  - brand: go-eCharger
+    description:
+      generic: HOME+, HOMEfix, Pro
 requirements:
   description:
     en: Requires firmware 040.0 or later.
     de: Benötigt mindestens Firmware 040.0 oder neuer.
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
+  - name: host
 render: |
   type: go-e
   uri: http://{{ .host }}

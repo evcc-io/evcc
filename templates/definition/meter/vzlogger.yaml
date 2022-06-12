@@ -1,18 +1,16 @@
 template: vzlogger
 products:
-- description:
-    generic: vzlogger
+  - description:
+      generic: vzlogger
 group: generic
 params:
-- name: usage
-  choice: [ "grid" ]
-- name: host
-  example: 192.0.2.2
-  required: true
-- name: port
-  default: 8081
-- name: uuid
-  required: true
+  - name: usage
+    choice: ["grid"]
+  - name: host
+  - name: port
+    default: 8081
+  - name: uuid
+    required: true
 render: |
   type: custom
   power: # power reading

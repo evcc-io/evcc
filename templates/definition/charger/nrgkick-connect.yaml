@@ -1,17 +1,15 @@
 template: nrgkick-connect
 products:
-- brand: NRGKick
-  description:
-    generic: Connect
+  - brand: NRGKick
+    description:
+      generic: Connect
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: mac
-  required: true
-- name: password
-  required: true
-  mask: true
+  - name: host
+  - name: mac
+    required: true
+  - name: password
+    required: true
+    mask: true
 render: |
   type: nrgkick-connect
   uri: http://{{ .host }}

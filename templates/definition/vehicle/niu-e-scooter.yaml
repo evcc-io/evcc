@@ -1,18 +1,24 @@
 template: niu-e-scooter
 products:
-- brand: NIU
-  description:
-    generic: E-Scooter
+  - brand: NIU
+    description:
+      generic: E-Scooter
+group: scooter
 params:
-- name: title
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
-- name: serial
-  required: true
-- preset: vehicleidentify
+  - name: title
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: serial
+    description:
+      de: Scooter Seriennummer, wie in der NIU app angegeben
+      en: Scooter serial number like shown in NIU app
+    required: true
+  - name: capacity
+    default: 4
+  - preset: vehicleidentify
 render: |
   type: niu
   {{- if ne .title "" }}
@@ -21,5 +27,4 @@ render: |
   user: {{ .user }} # NIU app user
   password: {{ .password }} # NIU app password
   serial: {{ .serial }} # NIU E-Scooter serial number like shown in app
-  capacity: 4
-  
+  capacity: {{ .capacity }}

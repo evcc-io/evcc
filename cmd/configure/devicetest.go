@@ -84,7 +84,7 @@ func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 			return DeviceTestResultInvalid, err
 		}
 	} else {
-		return DeviceTestResultInvalid, errors.New("selected device is not a wallbox!")
+		return DeviceTestResultInvalid, errors.New("selected device is not a wallbox")
 	}
 
 	if v, ok := v.(api.Meter); ok {
@@ -125,11 +125,11 @@ func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v interface{}) (De
 					return DeviceTestResultInvalid, err
 				}
 			} else {
-				return DeviceTestResultInvalid, errors.New("selected device is not a battery meter!")
+				return DeviceTestResultInvalid, errors.New("selected device is not a battery meter")
 			}
 		}
 	} else {
-		return DeviceTestResultInvalid, errors.New("selected device is not a meter!")
+		return DeviceTestResultInvalid, errors.New("selected device is not a meter")
 	}
 
 	return DeviceTestResultValid, nil
@@ -144,7 +144,7 @@ func (d *DeviceTest) testVehicle(v interface{}) (DeviceTestResult, error) {
 			}
 		}
 	} else {
-		return DeviceTestResultInvalid, errors.New("selected device is not a vehicle!")
+		return DeviceTestResultInvalid, errors.New("selected device is not a vehicle")
 	}
 
 	return DeviceTestResultValid, nil

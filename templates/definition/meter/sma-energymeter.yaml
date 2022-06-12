@@ -1,14 +1,12 @@
 template: sma-energy-meter
 products:
-- brand: SMA
-  description:
-    generic: Energy Meter
+  - brand: SMA
+    description:
+      generic: Energy Meter
 params:
-- name: usage
-  choice: ["grid", "pv", "battery"]
-- name: host
-  example: 192.0.2.2
-  required: true
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
 render: |
   type: sma
   uri: {{ .host }}

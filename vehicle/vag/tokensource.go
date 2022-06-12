@@ -100,45 +100,29 @@ func (ts *metaTokenSource) TokenEx() (*Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
-	if ts.ts == nil {
-		token, err := ts.newT()
-		if err != nil {
-			return nil, err
+	// use token source
+	if ts.ts != nil {
+		token, err := ts.ts.TokenEx()
+		if err == nil {
+			return token, nil
 		}
-
-		ts.ts = ts.newTS(token)
 	}
 
-	token, err := ts.ts.TokenEx()
+	// create new start token
+	token, err := ts.newT()
+	if err != nil {
+		return nil, err
+	}
+
+	// create token source
+	ts.ts = ts.newTS(token)
+
+	// use token source
+	token, err = ts.ts.TokenEx()
 	if err != nil {
 		// token source doesn't work anymore, reset it
 		ts.ts = nil
 	}
 
 	return token, err
-}
-
-type idTokenSource struct {
-	ts TokenSource
-}
-
-// IDTokenSource provides an oauth2 token source with access_token populated from vag id_token
-func IDTokenSource(ts TokenSource) oauth2.TokenSource {
-	return &idTokenSource{ts}
-}
-
-// Token returns an oauth2 token or an error
-func (ts *idTokenSource) Token() (*oauth2.Token, error) {
-	token, err := ts.ts.TokenEx()
-	if err != nil {
-		return nil, err
-	}
-
-	idToken := &oauth2.Token{
-		TokenType:   token.TokenType,
-		AccessToken: token.IDToken,
-		Expiry:      token.Expiry,
-	}
-
-	return idToken, err
 }

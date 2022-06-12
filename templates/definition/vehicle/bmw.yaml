@@ -1,16 +1,14 @@
 template: bmw
 products:
-- brand: BMW
+  - brand: BMW
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: vin
-  example: WBMW...
-- name: capacity
-  default: 65
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - name: vin
+    example: WBMW...
+  - preset: vehiclecloud
 render: |
   type: bmw
-  {{include "vehicle-base" .}}
-  {{include "vehicle-identify" .}}
-  {{include "vehicle-cloud" .}}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}

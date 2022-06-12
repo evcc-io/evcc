@@ -1,9 +1,9 @@
 <template>
 	<div class="root position-relative" :class="`direction-${direction}`">
-		<shopicon-options-filled class="dots dots-back"></shopicon-options-filled
-		><shopicon-options-filled
+		<shopicon-filled-options class="dots dots-back"></shopicon-filled-options
+		><shopicon-filled-options
 			class="dots dots-front position-absolute start-0 top-0"
-		></shopicon-options-filled>
+		></shopicon-filled-options>
 	</div>
 </template>
 
@@ -50,7 +50,7 @@ export default {
 	}
 }
 
-.root >>> svg {
+.root ::v-deep(svg) {
 	display: block;
 }
 </style>

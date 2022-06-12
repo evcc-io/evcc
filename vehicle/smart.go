@@ -51,12 +51,7 @@ func NewSmartFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	api := smart.NewAPI(log, identity)
 
-	if cc.VIN == "" {
-		cc.VIN, err = findVehicle(api.Vehicles())
-		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-		}
-	}
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
 		v.Provider = smart.NewProvider(log, api, cc.VIN, cc.Expiry, cc.Cache)

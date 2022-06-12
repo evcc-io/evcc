@@ -1,14 +1,14 @@
 template: cfos
 products:
-- brand: cFos
-  description:
-    generic: PowerBrain
-requirements: 
+  - brand: cFos
+    description:
+      de: Bei cFos PowerBrain charger muss das [`charge meter`](meters) separat konfiguriert werden.
+      en: For cFos PowerBrain charger, the [`charge meter`](meters) must be configured separately.
+      generic: PowerBrain
+requirements:
   evcc: ["sponsorship"]
 params:
-- name: host
-  required: true
-  example: 192.0.2.2
+  - name: host
 render: |
   type: cfos
   uri: {{ .host }}

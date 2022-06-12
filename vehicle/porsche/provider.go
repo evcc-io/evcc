@@ -11,28 +11,28 @@ import (
 
 // Provider is an api.Vehicle implementation for Porsche PHEV cars
 type Provider struct {
-	statusG    func() (interface{}, error)
-	emobilityG func() (interface{}, error)
-	mobileG    func() (interface{}, error)
+	statusG    func() (StatusResponse, error)
+	emobilityG func() (EmobilityResponse, error)
+	mobileG    func() (StatusResponseMobile, error)
 }
 
 // NewProvider creates a new vehicle
 func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *MobileAPI, vin string, carModel string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.NewCached(func() (interface{}, error) {
+		statusG: provider.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
-		}, cache).InterfaceGetter(),
+		}, cache),
 
-		emobilityG: provider.NewCached(func() (interface{}, error) {
+		emobilityG: provider.Cached(func() (EmobilityResponse, error) {
 			if carModel != "" {
 				return emobility.Status(vin, carModel)
 			}
 			return EmobilityResponse{}, errors.New("no car model")
-		}, cache).InterfaceGetter(),
+		}, cache),
 
-		mobileG: provider.NewCached(func() (interface{}, error) {
-			return mobile.Status(vin)
-		}, cache).InterfaceGetter(),
+		mobileG: provider.Cached(func() (StatusResponseMobile, error) {
+			return mobile.Status(vin, []string{BATTERY_LEVEL, BATTERY_CHARGING_STATE, CLIMATIZER_STATE, E_RANGE, HEATING_STATE, MILEAGE})
+		}, cache),
 	}
 
 	return impl
@@ -43,7 +43,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.mobileG()
-	if res, ok := res.(StatusResponseMobile); err == nil && ok {
+	if err == nil {
 		m, err := res.MeasurementByKey("BATTERY_LEVEL")
 		if err != nil && err != api.ErrNotAvailable {
 			return 0, err
@@ -53,14 +53,14 @@ func (v *Provider) SoC() (float64, error) {
 		}
 	}
 
-	res, err = v.emobilityG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
-		return float64(res.BatteryChargeStatus.StateOfChargeInPercentage), nil
+	res3, err := v.emobilityG()
+	if err == nil {
+		return float64(res3.BatteryChargeStatus.StateOfChargeInPercentage), nil
 	}
 
-	res, err = v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return res.BatteryLevel.Value, nil
+	res2, err := v.statusG()
+	if err == nil {
+		return res2.BatteryLevel.Value, nil
 	}
 
 	return 0, err
@@ -71,7 +71,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.mobileG()
-	if res, ok := res.(StatusResponseMobile); err == nil && ok {
+	if err == nil {
 		m, err := res.MeasurementByKey("E_RANGE")
 		if err != nil && err != api.ErrNotAvailable {
 			return 0, err
@@ -81,14 +81,14 @@ func (v *Provider) Range() (int64, error) {
 		}
 	}
 
-	res, err = v.emobilityG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
-		return res.BatteryChargeStatus.RemainingERange.ValueInKilometers, nil
+	res3, err := v.emobilityG()
+	if err == nil {
+		return res3.BatteryChargeStatus.RemainingERange.ValueInKilometers, nil
 	}
 
-	res, err = v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return int64(res.RemainingRanges.ElectricalRange.Distance.Value), nil
+	res2, err := v.statusG()
+	if err == nil {
+		return int64(res2.RemainingRanges.ElectricalRange.Distance.Value), nil
 	}
 
 	return 0, err
@@ -99,11 +99,12 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.mobileG()
-	if res, ok := res.(StatusResponseMobile); err == nil && ok {
+	if err == nil {
 		m, err := res.MeasurementByKey("BATTERY_CHARGING_STATE")
 		if err != nil && err != api.ErrNotAvailable {
 			return time.Time{}, err
 		}
+
 		if err != api.ErrNotAvailable {
 			if m.Value.EndsAt == "" {
 				if m.Value.LastModified != "" {
@@ -115,9 +116,9 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		}
 	}
 
-	res, err = v.emobilityG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
-		return time.Now().Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
+	res2, err := v.emobilityG()
+	if err == nil {
+		return time.Now().Add(time.Duration(res2.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
 	}
 
 	return time.Time{}, err
@@ -128,11 +129,12 @@ var _ api.ChargeState = (*Provider)(nil)
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.mobileG()
-	if res, ok := res.(StatusResponseMobile); err == nil && ok {
+	if err == nil {
 		m, err := res.MeasurementByKey("BATTERY_CHARGING_STATE")
 		if err != nil && err != api.ErrNotAvailable {
 			return api.StatusNone, err
 		}
+
 		if err != api.ErrNotAvailable {
 			switch m.Value.Status {
 			case "FAST_CHARGING", "NOT_PLUGGED", "UNKNOWN":
@@ -150,17 +152,17 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		}
 	}
 
-	res, err = v.emobilityG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
-		switch res.BatteryChargeStatus.PlugState {
+	res2, err := v.emobilityG()
+	if err == nil {
+		switch res2.BatteryChargeStatus.PlugState {
 		case "DISCONNECTED":
 			return api.StatusA, nil
 		case "CONNECTED":
 			// ignore if the car is connected to a DC charging station
-			if res.BatteryChargeStatus.ChargingInDCMode {
+			if res2.BatteryChargeStatus.ChargingInDCMode {
 				return api.StatusA, nil
 			}
-			switch res.BatteryChargeStatus.ChargingState {
+			switch res2.BatteryChargeStatus.ChargingState {
 			case "ERROR":
 				return api.StatusF, nil
 			case "OFF", "COMPLETED":
@@ -168,7 +170,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 			case "ON", "CHARGING":
 				return api.StatusC, nil
 			default:
-				return api.StatusNone, errors.New("emobility - unknown charging state: " + res.BatteryChargeStatus.ChargingState)
+				return api.StatusNone, errors.New("emobility - unknown charging state: " + res2.BatteryChargeStatus.ChargingState)
 			}
 		}
 	}
@@ -181,7 +183,7 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.mobileG()
-	if res, ok := res.(StatusResponseMobile); err == nil && ok {
+	if err == nil {
 		m, err := res.MeasurementByKey("CLIMATIZER_STATE")
 		if err != nil && err != api.ErrNotAvailable {
 			return active, 20, 20, err
@@ -191,15 +193,15 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 		}
 	}
 
-	res, err = v.emobilityG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
-		switch res.DirectClimatisation.ClimatisationState {
+	res2, err := v.emobilityG()
+	if err == nil {
+		switch res2.DirectClimatisation.ClimatisationState {
 		case "OFF":
 			return false, 20, 20, nil
 		case "ON":
 			return true, 20, 20, nil
 		default:
-			return active, outsideTemp, targetTemp, errors.New("emobility - unknown climate state: " + res.DirectClimatisation.ClimatisationState)
+			return active, outsideTemp, targetTemp, errors.New("emobility - unknown climate state: " + res2.DirectClimatisation.ClimatisationState)
 		}
 	}
 
@@ -211,7 +213,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.mobileG()
-	if res, ok := res.(StatusResponseMobile); err == nil && ok {
+	if err == nil {
 		m, err := res.MeasurementByKey("MILEAGE")
 		if err != nil && err != api.ErrNotAvailable {
 			return 0, err
@@ -221,9 +223,9 @@ func (v *Provider) Odometer() (float64, error) {
 		}
 	}
 
-	res, err = v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return res.Mileage.Value, nil
+	res2, err := v.statusG()
+	if err == nil {
+		return res2.Mileage.Value, nil
 	}
 
 	return 0, err

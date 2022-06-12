@@ -1,0 +1,15 @@
+template: pracht-alpha
+products:
+  - brand: Pracht
+    description:
+      generic: Alpha XT
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    comset: 8N1
+render: |
+  type: pracht-alpha
+  {{- include "modbus" . }}

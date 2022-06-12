@@ -1,13 +1,15 @@
 package mqtt
 
 import (
+	"crypto/tls"
 	"fmt"
 	"math/rand"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -31,6 +33,7 @@ type Config struct {
 	User     string
 	Password string
 	ClientID string
+	Insecure bool
 }
 
 // Client encapsulates mqtt publish/subscribe functions
@@ -45,9 +48,17 @@ type Client struct {
 
 type Option func(*paho.ClientOptions)
 
+const secure = "tls://"
+
 // NewClient creates new Mqtt publisher
-func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, opts ...Option) (*Client, error) {
-	broker = util.DefaultPort(broker, 1883)
+func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, opts ...Option) (*Client, error) {
+	isSecure := strings.HasPrefix(broker, secure)
+
+	// strip schema as it breaks net.SplitHostPort
+	broker = util.DefaultPort(strings.TrimPrefix(broker, secure), 1883)
+	if isSecure {
+		broker = secure + broker
+	}
 
 	mc := &Client{
 		log:      log,
@@ -65,6 +76,10 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	options.SetOnConnectHandler(mc.ConnectionHandler)
 	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
 	options.SetConnectTimeout(connectTimeout)
+
+	if insecure {
+		options.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	}
 
 	// additional options
 	for _, o := range opts {
@@ -114,7 +129,7 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) error
 	if token.WaitTimeout(publishTimeout) {
 		return token.Error()
 	}
-	return api.ErrTimeout
+	return os.ErrDeadlineExceeded
 }
 
 // Listen validates uniqueness and registers and attaches listener

@@ -8,30 +8,30 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/google/uuid"
 	"golang.org/x/net/publicsuffix"
-	"golang.org/x/oauth2"
 )
 
 const (
 	BaseURL   = "https://identity.vwgroup.io"
-	WellKnown = BaseURL + "/.well-known/openid-configuration"
+	WellKnown = "https://identity.vwgroup.io/.well-known/openid-configuration"
 )
 
-var Endpoint = &oauth2.Endpoint{
-	AuthURL:  BaseURL + "/oidc/v1/authorize",
-	TokenURL: BaseURL + "/oidc/v1/token",
+var Config = &oidc.ProviderConfig{
+	AuthURL:     "https://identity.vwgroup.io/oidc/v1/authorize",
+	TokenURL:    "https://identity.vwgroup.io/oidc/v1/token",
+	UserInfoURL: "https://identity-userinfo.vwgroup.io/oidc/userinfo",
 }
 
 // Login performs VW identity login with optional code challenge
 func Login(log *util.Logger, q url.Values, user, password string) (url.Values, error) {
-	return LoginWithAuthURL(log, Endpoint.AuthURL, q, user, password)
+	return LoginWithAuthURL(log, Config.AuthURL, q, user, password)
 }
-
 func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password string) (url.Values, error) {
 	var verify func(url.Values)
 

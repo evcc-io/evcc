@@ -16,7 +16,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
-	"github.com/thoas/go-funk"
+	"golang.org/x/exp/slices"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v3"
@@ -96,15 +96,12 @@ type LoadPoint struct {
 	sync.Mutex                // guard status
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
-	Title       string   `mapstructure:"title"`    // UI title
-	Phases      int      `mapstructure:"phases"`   // Charger enabled phases
-	ChargerRef  string   `mapstructure:"charger"`  // Charger reference
-	VehicleRef  string   `mapstructure:"vehicle"`  // Vehicle reference
-	VehiclesRef []string `mapstructure:"vehicles"` // Vehicles reference
-	MeterRef    string   `mapstructure:"meter"`    // Charge meter reference
-	Meters      struct {
-		ChargeMeterRef string `mapstructure:"charge"` // deprecated
-	}
+	Title             string   `mapstructure:"title"`    // UI title
+	Phases            int      `mapstructure:"phases"`   // Charger enabled phases
+	ChargerRef        string   `mapstructure:"charger"`  // Charger reference
+	VehicleRef        string   `mapstructure:"vehicle"`  // Vehicle reference
+	VehiclesRef       []string `mapstructure:"vehicles"` // Vehicles reference
+	MeterRef          string   `mapstructure:"meter"`    // Charge meter reference
 	SoC               SoCConfig
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
@@ -195,16 +192,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.chargeMeter = cp.Meter(lp.MeterRef)
 	}
 
-	// deprecated
-	if lp.Meters.ChargeMeterRef != "" {
-		lp.log.WARN.Println("meters: charge: is deprecated. Use meter: instead")
-		if lp.chargeMeter == nil {
-			lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
-		} else {
-			lp.log.ERROR.Println("must not have meter: and meters: charge: both")
-		}
-	}
-
 	// multiple vehicles
 	for _, ref := range lp.VehiclesRef {
 		vehicle := cp.Vehicle(ref)
@@ -255,9 +242,11 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		Mode:          api.ModeOff,
 		Phases:        3,
 		status:        api.StatusNone,
-		MinCurrent:    6,                              // A
-		MaxCurrent:    16,                             // A
-		SoC:           SoCConfig{Min: 0, Target: 100}, // %
+		MinCurrent:    6,                                                     // A
+		MaxCurrent:    16,                                                    // A
+		SoC:           SoCConfig{Min: 0, Target: 100},                        // %
+		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
+		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		GuardDuration: 5 * time.Minute,
 		progress:      NewProgress(0, 10), // soc progress indicator
 	}
@@ -478,8 +467,8 @@ func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
 func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 	power := current * float64(lp.activePhases()) * Voltage
 
-	if !lp.enabled || lp.GetStatus() != api.StatusC {
-		// if disabled we cannot be charging
+	// if disabled we cannot be charging
+	if !lp.enabled || !lp.charging() {
 		power = 0
 	}
 
@@ -577,7 +566,7 @@ func (lp *LoadPoint) syncCharger() {
 			err = lp.charger.Enable(lp.enabled)
 		}
 
-		if !enabled && lp.GetStatus() == api.StatusC {
+		if !enabled && lp.charging() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
 	}
@@ -617,7 +606,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 
 		// remote stop
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
-		// if car, ok := lp.vehicle.(api.VehicleStopCharge); !enabled && ok {
+		// if car, ok := lp.vehicle.(api.VehicleChargeController); !enabled && ok {
 		// 	// log but don't propagate
 		// 	if err := car.StopCharge(); err != nil {
 		// 		lp.log.ERROR.Printf("vehicle remote charge stop: %v", err)
@@ -645,7 +634,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 
 		// remote start
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
-		// if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
+		// if car, ok := lp.vehicle.(api.VehicleChargeController); enabled && ok {
 		// 	// log but don't propagate
 		// 	if err := car.StartCharge(); err != nil {
 		// 		lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
@@ -764,7 +753,7 @@ func (lp *LoadPoint) identifyVehicle() {
 func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 	// find exact match
 	for _, vehicle := range lp.vehicles {
-		if funk.ContainsString(vehicle.Identifiers(), id) {
+		if slices.Contains(vehicle.Identifiers(), id) {
 			return vehicle
 		}
 	}
@@ -800,7 +789,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	}
 	to := "unknown"
 	if vehicle != nil {
-		coordinator.aquire(lp, vehicle)
+		coordinator.acquire(lp, vehicle)
 		to = vehicle.Title()
 	}
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
@@ -812,6 +801,16 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
+		// publish odometer once
+		if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
+			if odo, err := vs.Odometer(); err == nil {
+				lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
+				lp.publish("vehicleOdometer", odo)
+			} else {
+				lp.log.ERROR.Printf("vehicle odometer: %v", err)
+			}
+		}
+
 		lp.applyAction(vehicle.OnIdentified())
 
 		lp.progress.Reset()
@@ -821,6 +820,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehiclePresent", false)
 		lp.publish("vehicleTitle", "")
 		lp.publish("vehicleCapacity", int64(0))
+		lp.publish("vehicleOdometer", 0.0)
 	}
 
 	lp.unpublishVehicle()
@@ -851,7 +851,6 @@ func (lp *LoadPoint) unpublishVehicle() {
 
 	lp.publish("vehicleSoC", 0.0)
 	lp.publish("vehicleRange", int64(0))
-	lp.publish("vehicleOdometer", 0.0)
 
 	lp.setRemainingDuration(-1)
 }
@@ -941,7 +940,7 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 // effectiveCurrent returns the currently effective charging current
 func (lp *LoadPoint) effectiveCurrent() float64 {
-	if lp.GetStatus() != api.StatusC {
+	if !lp.charging() {
 		return 0
 	}
 
@@ -1388,15 +1387,6 @@ func (lp *LoadPoint) publishSoCAndRange() {
 				if rng, err := vs.Range(); err == nil {
 					lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 					lp.publish("vehicleRange", rng)
-				}
-			}
-
-			// odometer
-			// TODO read only once after connect
-			if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
-				if odo, err := vs.Odometer(); err == nil {
-					lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
-					lp.publish("vehicleOdometer", odo)
 				}
 			}
 

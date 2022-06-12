@@ -1,18 +1,17 @@
 template: pmcp
 products:
-- brand: Porsche
-  description:
-    generic: Mobile Charger Plus
-requirements: 
+  - brand: Porsche
+    description:
+      generic: Mobile Charger Plus
+requirements:
   evcc: ["eebus"]
 params:
-- name: ski
-  required: true
-  help:
-    en: The SKI of the wallbox, can usually be found on the web interface of the wallbox
-    de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
+  - name: ski
+    required: true
+    help:
+      en: The SKI of the wallbox, can usually be found on the web interface of the wallbox
+      de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
 render: |
   type: eebus
   ski: {{ .ski }}
   forcePVLimits: true
-  

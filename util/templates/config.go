@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type ConfigDefaultsDefinition struct {
+type ConfigDefaults struct {
 	Params  []Param // Default values for common parameters
 	Presets map[string]struct {
 		Params []Param
@@ -23,27 +23,20 @@ type ConfigDefaultsDefinition struct {
 	DeviceGroups map[string]TextLanguage // Default device groups
 }
 
-type ConfigDefaults struct {
-	read bool
-
-	Config ConfigDefaultsDefinition
-}
-
 // read the actual config into the struct, but only once
 func (c *ConfigDefaults) LoadDefaults() {
-	if c.read {
+	// if params are initialized, defaults have been loaded
+	if c.Params != nil {
 		return
 	}
 
-	if err := yaml.Unmarshal([]byte(definition.DefaultsContent), &c.Config); err != nil {
-		panic(fmt.Errorf("Error: failed to parse deviceGroupListDefinition: %v\n", err))
+	if err := yaml.Unmarshal([]byte(definition.DefaultsContent), &c); err != nil {
+		panic(fmt.Errorf("failed to parse deviceGroupListDefinition: %v", err))
 	}
 
-	c.read = true
-
 	// resolve modbus param references
-	for k := range c.Config.Modbus.Types {
-		for i, p := range c.Config.Modbus.Types[k].Params {
+	for k := range c.Modbus.Types {
+		for i, p := range c.Modbus.Types[k].Params {
 			// if this is a reference, get the referenced values and then overwrite it with the values defined here
 			if p.Reference {
 				finalName := p.Name
@@ -55,7 +48,7 @@ func (c *ConfigDefaults) LoadDefaults() {
 				referencedParam.OverwriteProperties(p)
 				referencedParam.Name = finalName
 				p = referencedParam
-				c.Config.Modbus.Types[k].Params[i] = p
+				c.Modbus.Types[k].Params[i] = p
 			}
 		}
 	}
@@ -63,7 +56,7 @@ func (c *ConfigDefaults) LoadDefaults() {
 
 // return the param with the given name
 func (c *ConfigDefaults) ParamByName(name string) (int, Param) {
-	for i, param := range c.Config.Params {
+	for i, param := range c.Params {
 		if param.Name == name {
 			return i, param
 		}

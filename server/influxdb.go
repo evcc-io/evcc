@@ -79,7 +79,8 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 	// log errors
 	go func() {
 		for err := range writer.Errors() {
-			m.log.ERROR.Println(err)
+			// log async as we're part of the logging loop
+			go m.log.ERROR.Println(err)
 		}
 	}()
 

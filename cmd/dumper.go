@@ -74,7 +74,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		for err = api.ErrMustRetry; err != nil && errors.Is(err, api.ErrMustRetry); {
 			if soc, err = v.SoC(); err != nil {
 				if time.Since(start) > time.Minute {
-					err = api.ErrTimeout
+					err = os.ErrDeadlineExceeded
 				} else {
 					fmt.Fprint(w, ".")
 					time.Sleep(3 * time.Second)
@@ -186,7 +186,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Identifier); ok {
 		if id, err := v.Identify(); err != nil {
 			fmt.Fprintf(w, "Identifier:\t%v\n", err)
-		} else if id != "" {
+		} else {
+			if id == "" {
+				id = "<none>"
+			}
 			fmt.Fprintf(w, "Identifier:\t%s\n", id)
 		}
 	}

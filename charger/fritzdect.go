@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/fritzdect"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/fritzdect"
 )
 
 // AVM FritzBox AHA interface specifications:
@@ -51,42 +51,6 @@ func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*Fritz
 	return fd, err
 }
 
-// Status implements the api.Charger interface
-func (c *FritzDECT) Status() (api.ChargeStatus, error) {
-	resp, err := c.conn.ExecCmd("getswitchpresent")
-
-	if err == nil {
-		var present bool
-		present, err = strconv.ParseBool(resp)
-		if err == nil && !present {
-			err = api.ErrNotAvailable
-		}
-	}
-	if err != nil {
-		return api.StatusNone, err
-	}
-
-	res := api.StatusB
-
-	// static mode
-	if c.standbypower < 0 {
-		on, err := c.Enabled()
-		if on {
-			res = api.StatusC
-		}
-
-		return res, err
-	}
-
-	// standby power mode
-	power, err := c.conn.CurrentPower()
-	if power > c.standbypower {
-		res = api.StatusC
-	}
-
-	return res, err
-}
-
 // Enabled implements the api.Charger interface
 func (c *FritzDECT) Enabled() (bool, error) {
 	resp, err := c.conn.ExecCmd("getswitchstate")
@@ -127,12 +91,58 @@ func (c *FritzDECT) MaxCurrent(current int64) error {
 	return nil
 }
 
+// Status implements the api.Charger interface
+func (c *FritzDECT) Status() (api.ChargeStatus, error) {
+	resp, err := c.conn.ExecCmd("getswitchpresent")
+
+	if err == nil {
+		var present bool
+		present, err = strconv.ParseBool(resp)
+		if err == nil && !present {
+			err = api.ErrNotAvailable
+		}
+	}
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	res := api.StatusB
+	on, err := c.Enabled()
+	if err != nil {
+		return res, err
+	}
+
+	power, err := c.conn.CurrentPower()
+	if err != nil {
+		return res, err
+	}
+
+	// static mode || standby power mode condition
+	if on && (c.standbypower < 0 || power > c.standbypower) {
+		res = api.StatusC
+	}
+
+	return res, nil
+}
+
 var _ api.Meter = (*FritzDECT)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *FritzDECT) CurrentPower() (float64, error) {
+	var power float64
+
+	// set fix static power in static mode
+	if c.standbypower < 0 {
+		on, err := c.Enabled()
+		if on {
+			power = -c.standbypower
+		}
+		return power, err
+	}
+
+	// ignore power in standby mode
 	power, err := c.conn.CurrentPower()
-	if power < c.standbypower {
+	if power <= c.standbypower {
 		power = 0
 	}
 

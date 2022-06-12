@@ -27,9 +27,10 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
+// https://shop.alphatec-systeme.de/media/pdf/4d/0e/64/MontageanleitungwlFxbRgs4NKK3.pdf
+
 // Alphatec charger implementation
 type Alphatec struct {
-	log  *util.Logger
 	conn *modbus.Connection
 }
 
@@ -67,11 +68,10 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alpha")
+	log := util.NewLogger("alphatec")
 	conn.Logger(log.TRACE)
 
 	wb := &Alphatec{
-		log:  log,
 		conn: conn,
 	}
 
@@ -86,7 +86,7 @@ func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 	}
 
 	var res api.ChargeStatus
-	switch b[0] {
+	switch u := binary.BigEndian.Uint16(b); u {
 	case 1:
 		res = api.StatusA
 	case 2:
@@ -94,7 +94,7 @@ func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 	case 3:
 		res = api.StatusC
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", b[0])
+		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
 
 	return res, nil
@@ -107,13 +107,13 @@ func (wb *Alphatec) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	return binary.BigEndian.Uint16(b) == 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Alphatec) Enable(enable bool) error {
 	b := make([]byte, 2)
-	if enable {
+	if !enable {
 		binary.BigEndian.PutUint16(b, 1)
 	}
 

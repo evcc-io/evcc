@@ -1,119 +1,225 @@
+network:
+  port: 7070
+
 log: info
 
 interval: 3s
 
 javascript:
-- vm: shared
-  script: |
-    state = {
-      residualpower: 300,
-      batterypower: 0,
-      pvpower: 6200,
-      gridpower: 0,
-      chargepower: 0,
-      maxcurrent: 0,
-      battery: 63, // car
-    };
-    function log() { console.log("state:", JSON.stringify(state)); }
-    function set() { console.log("set:", param+"="+val); }
+  - vm: shared
+    script: |
+      state = {
+        residualpower: 500,
+        pvpower: 5000,
+        batterypower: -750,
+        batterySoC: 55,
+        gridpower: -1000,
+        loadpoints: [
+          { enabled: true, vehicleSoC: 62, maxcurrent: 6, phases: 1, chargepower: 0 },
+          { enabled: false, vehicleSoC: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
+        ]
+      };
+      function get() {
+        console.log("state:", JSON.stringify(state));
+      }
+      function set() {
+        console.log(param+":", val);
+        console.log("state:", JSON.stringify(state));
+      }
 
 meters:
-- name: grid
-  type: custom
-  power:
-    source: js
-    vm: shared
-    script: |
-      state.pvpower += 200*(Math.random()-0.5);
-      state.chargepower = 0;
-      if (state.enabled) {
-        state.chargepower = state.maxcurrent * 3 * 230;
-        state.batterypower = 0;
-      }
-      state.gridpower = -state.pvpower + state.chargepower + state.residualpower + state.batterypower;
-      // if (state.gridpower < 0) {
-      //   state.batterypower = -state.gridpower;
-      //   if (state.batterypower > 1000) {
-      //     state.batterypower = 1000;
-      //   }
-      //   state.gridpower += state.batterypower;
-      // } else {
-      //   state.batterypower = 0;
-      // }
-      state.gridpower;
+  - name: grid
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: |
+        state.pvpower = 8000+500*Math.random();
+        state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
+        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - state.batterypower - state.pvpower;
+        state.gridpower;
 
-- name: pv
-  type: custom
-  power:
-    source: js
-    vm: shared
-    script: state.pvpower
+  - name: pv
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: state.pvpower;
 
-- name: battery
-  type: custom
-  power:
-    source: js
-    vm: shared
-    script: state.batterypower;
-  soc:
-    source: js
-    vm: shared
-    script: "30"
-- name: charge
-  type: custom
-  power:
-    source: js
-    vm: shared
-    script: state.chargepower;
-  soc:
-    source: js
-    vm: shared
-    script: "30"
-
+  - name: battery
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: state.batterypower;
+    soc:
+      source: js
+      vm: shared
+      script: |
+        if (state.batterypower < 0) state.batterySoC++; else state.batterySoC--;
+        if (state.batterySoC < 10) state.batterySoC = 90;
+        if (state.batterySoC > 90) state.batterySoC = 10;
+        state.batterySoC;
+  - name: meter_charger_1
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: state.loadpoints[0].chargepower;
+  - name: meter_charger_2
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: state.loadpoints[1].chargepower;
+  - name: meter_charger_3
+    type: custom
+    power:
+      source: js
+      script: 0
 chargers:
-- name: demo
-  type: custom
-  enable:
-    source: js
-    vm: shared
-    script: state.enabled = val;
-  enabled:
-    source: js
-    vm: shared
-    script: |
-      state.enabled;
-  status:
-    source: js
-    vm: shared
-    script: |
-      if (state.enabled) "C"; else "B";
-  maxcurrent:
-    source: js
-    vm: shared
-    script: state.maxcurrent = val;
+  - name: charger_1
+    type: custom
+    enable:
+      source: js
+      vm: shared
+      script: |
+        set();
+        var lp = state.loadpoints[0];
+        lp.enabled = val;
+        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+    enabled:
+      source: js
+      vm: shared
+      script: |
+        state.loadpoints[0].enabled;
+    status:
+      source: js
+      vm: shared
+      script: |
+        if (state.loadpoints[0].enabled) "C"; else "B";
+    maxcurrent:
+      source: js
+      vm: shared
+      script: |
+        set();
+        var lp = state.loadpoints[0];
+        lp.maxcurrent = val;
+        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+  - name: charger_2
+    type: custom
+    enable:
+      source: js
+      vm: shared
+      script: |
+        set();
+        var lp = state.loadpoints[1];
+        lp.enabled = val;
+        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+    enabled:
+      source: js
+      vm: shared
+      script: |
+        state.loadpoints[1].enabled;
+    status:
+      source: js
+      vm: shared
+      script: |
+        if (state.loadpoints[1].enabled) "C"; else "B";
+    maxcurrent:
+      source: js
+      vm: shared
+      script: |
+        set();
+        var lp = state.loadpoints[1];
+        lp.maxcurrent = val;
+        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+  - name: charger_3
+    type: custom
+    enable:
+      source: js
+      vm: shared
+      script:
+    enabled:
+      source: js
+      vm: shared
+      script: false
+    status:
+      source: js
+      vm: shared
+      script: "'A'"
+    maxcurrent:
+      source: js
+      vm: shared
+      script: 16
 
 vehicles:
-- name: demo
-  title: e-Golf
-  type: custom
-  soc:
-    source: js
-    vm: shared
-    script: |
-      if (state.chargepower > 0) state.battery++; else state.battery--;
-      if (state.battery < 15) state.battery = 15;
-      if (state.battery > 100) state.battery = 100;
-      state.battery;
+  - name: vehicle_1
+    title: blauer e-Golf
+    type: custom
+    soc:
+      source: js
+      vm: shared
+      script: |
+        var lp = state.loadpoints[0];
+        if (lp.chargepower > 0) lp.vehicleSoC++; else lp.vehicleSoC--;
+        if (lp.vehicleSoC < 15) lp.vehicleSoC = 80;
+        if (lp.vehicleSoC > 80) lp.vehicleSoC = 15;
+        lp.vehicleSoC;
+    range:
+      source: js
+      vm: shared
+      script: |
+        var lp = state.loadpoints[0]
+        var range = (44 * lp.vehicleSoC) / 15;
+        range
+    capacity: 44
+  - name: vehicle_2
+    title: weißes Model 3
+    type: custom
+    soc:
+      source: js
+      vm: shared
+      script: |
+        var lp = state.loadpoints[1];
+        if (lp.chargepower > 0) lp.vehicleSoC++; else lp.vehicleSoC--;
+        if (lp.vehicleSoC < 15) lp.vehicleSoC = 75;
+        if (lp.vehicleSoC > 75) lp.vehicleSoC = 15;
+        lp.vehicleSoC;
+    range:
+      source: js
+      vm: shared
+      script: |
+        var lp = state.loadpoints[1]
+        var range = (80 * lp.vehicleSoC) / 17;
+        range
+    capacity: 80
 
 site:
-  title: Demo
+  title: Zuhause
   meters:
     grid: grid
     pv: pv
     battery: battery
 
 loadpoints:
-- title: Carport
-  charger: demo
-  meter: charge
-  vehicle: demo
+  - title: Carport
+    charger: charger_1
+    mode: pv
+    phases: 1
+    soc:
+      target: 90
+    meter: meter_charger_1
+    vehicle: vehicle_1
+  - title: Garage
+    charger: charger_2
+    soc:
+      target: 75
+    mode: "off"
+    meter: meter_charger_2
+    vehicle: vehicle_2
+#  - title: Garage rechts
+#    charger: charger_3
+#    mode: "off"
+#    meters:
+#      charge: meter_charger_3

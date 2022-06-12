@@ -1,16 +1,16 @@
 template: powerfox-poweropti
 products:
-- brand: Powerfox
-  description:
-    generic: Poweropti (Cloud)
+  - brand: Powerfox
+    description:
+      generic: Poweropti
 params:
-- name: usage
-  choice: [ "grid" ]
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
+  - name: usage
+    choice: ["grid"]
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
 render: |
   type: custom
   power:

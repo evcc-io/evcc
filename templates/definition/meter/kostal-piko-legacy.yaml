@@ -1,0 +1,27 @@
+template: kostal-piko-legacy
+products:
+  - brand: Kostal
+    description:
+      generic: Piko (legacy)
+guidedsetup:
+  enable: true
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+  - name: user
+    required: true
+  - name: password
+    required: true
+render: |
+  type: custom
+  power:
+  {{- if eq .usage "pv" }}
+    source: http
+    uri: http://{{ .host }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    regex: '(?s)aktuell.*?(\d+)<'
+  {{- end -}}

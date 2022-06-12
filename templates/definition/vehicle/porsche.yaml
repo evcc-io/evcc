@@ -1,14 +1,12 @@
 template: porsche
 products:
-- brand: Porsche
+  - brand: Porsche
 params:
-- preset: vehiclebase
-- preset: vehicleidentify
-- name: capacity
-  default: 83.4
-- preset: vehiclecloud
+  - preset: vehiclebase
+  - preset: vehicleidentify
+  - preset: vehiclecloud
 render: |
   type: porsche
-  {{include "vehicle-base" .}}
-  {{include "vehicle-identify" .}}
-  {{include "vehicle-cloud" .}}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-cloud" . }}
