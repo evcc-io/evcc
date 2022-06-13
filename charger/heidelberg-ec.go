@@ -21,6 +21,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -92,7 +93,8 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 	}
 
 	// disable standby to prevent comm loss
-	err = wb.set(hecRegStandbyConfig, hecStandbyDisabled)
+	// fedo: disable to reduce writes on wallbox. Standby already set persistant in my case
+	//err = wb.set(hecRegStandbyConfig, hecStandbyDisabled)
 
 	return wb, err
 }
@@ -273,13 +275,16 @@ var _ api.AlarmClock = (*HeidelbergEC)(nil)
 // WakeUp implements the api.AlarmClock interface
 func (wb *HeidelbergEC) WakeUp() error {
 	// force status F by locking
-	err := wb.set(hecRegRemoteLock, 0)
-	if err == nil {
+	//err := wb.set(hecRegRemoteLock, 0)
+	//if err == nil {
 		// Always takes at least ~10 sec to return to normal operation
 		// after locking even if unlocking immediately.
+		// fede: add sleep to go in timeout and remove writes to wallbox
+		time.Sleep(10 * time.Second)
 		wb.wakeup = true
 		// return to normal operation by unlocking after ~10 sec
-		err = wb.set(hecRegRemoteLock, 1)
-	}
-	return err
+		//err = wb.set(hecRegRemoteLock, 1)
+	//}
+	//return err
+	return nil
 }

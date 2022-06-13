@@ -826,7 +826,8 @@ func (lp *LoadPoint) wakeUpVehicle() {
 		if err := c.WakeUp(); err != nil {
 			lp.log.ERROR.Printf("wake-up charger: %v", err)
 		}
-		return
+		// fedo workaround: Remove to trigger vehicle wakeUp also
+		//return
 	}
 
 	// vehicle
