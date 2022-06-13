@@ -23,5 +23,5 @@ render: |
       type: basic
       user: {{ .user }}
       password: {{ .password }}
-    regex: '(?s)aktuell.*?(\d+)<'
+    regex: '(?s)aktuell<\/td>\s*<td[^>]*>\s*(\d+)'
   {{- end -}}
