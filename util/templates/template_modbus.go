@@ -34,20 +34,16 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 	t.Params = append(modbusParams, t.Params...)
 }
 
-// set the modbus values required from modbus.tpl and and the template to the render
-func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[string]interface{}) map[string]interface{} {
+// ModbusValues adds the values required for modbus.tpl to the template
+func (t *Template) ModbusValues(renderMode string, values map[string]interface{}) {
 	choices := t.ModbusChoices()
 	if len(choices) == 0 {
-		return values
+		return
 	}
 
 	// only add the template once, when testing multiple usages, it might already be present
 	if !strings.Contains(t.Render, modbusTmpl) {
 		t.Render = fmt.Sprintf("%s\n%s", t.Render, modbusTmpl)
-	}
-
-	if !setDefaults {
-		return values
 	}
 
 	modbusConfig := t.ConfigDefaults.Modbus
@@ -58,8 +54,14 @@ func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[
 		modbusInterfaces = append(modbusInterfaces, modbusConfig.Interfaces[choice]...)
 	}
 
+	// set default interface type
+	if len(modbusInterfaces) == 1 {
+		values[ParamModbus] = modbusInterfaces[0]
+	}
+
 	for _, iface := range modbusInterfaces {
 		typeParams := modbusConfig.Types[iface].Params
+
 		for _, p := range typeParams {
 			values[p.Name] = p.DefaultValue(renderMode)
 
@@ -84,21 +86,13 @@ func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[
 				}
 			}
 
-			if defaultValue == "" {
-				continue
-			}
-
-			if renderMode == TemplateRenderModeInstance {
-				t.SetParamDefault(p.Name, defaultValue)
-			} else {
+			if defaultValue != "" {
 				values[p.Name] = defaultValue
 			}
-
 		}
+
 		if renderMode == TemplateRenderModeDocs {
 			values[iface] = true
 		}
 	}
-
-	return values
 }

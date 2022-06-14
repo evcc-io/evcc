@@ -595,6 +595,6 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, dev
 	templateItem.Params[modbusIndex].Value = choiceTypes[index]
 	// add the interface type specific modbus params
 	templateItem.ModbusParams(choiceTypes[index], values)
-	// Update the modbus default values
-	_ = templateItem.ModbusValues(templates.TemplateRenderModeInstance, true, values)
+	// update the modbus default values
+	templateItem.ModbusValues(templates.TemplateRenderModeInstance, values)
 }
