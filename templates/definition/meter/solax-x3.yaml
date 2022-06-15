@@ -2,7 +2,7 @@ template: solax-x3
 products:
   - brand: Solax
     description:
-      generic: Hybrid X3
+      generic: Hybrid X1/X3
 requirements:
   description:
     de: Der Solax Inverter muss via Ethernet an das lokale Netzwerk angeschlossen sein.
