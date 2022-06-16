@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 premultiply
+// Copyright (c) 2022 premultiply, andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -176,6 +176,8 @@ func (wb *ABB) Enable(enable bool) error {
 func (wb *ABB) setCurrent(current uint32) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, current)
+
+	fmt.Printf("abbRegSetCurrent: %d\n", current)
 
 	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
 	return err
