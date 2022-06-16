@@ -160,7 +160,7 @@ func (wb *ABB) Enable(enable bool) error {
 		return err
 	}
 
-	var current uint32
+	current := uint32(5000)
 	if enable {
 		if s == 5 {
 			return errors.New("session stopped")
