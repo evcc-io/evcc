@@ -137,8 +137,9 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABB) Enabled() (bool, error) {
+	s, err := wb.session()
 	b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
-	if err != nil {
+	if err != nil || !s {
 		return false, err
 	}
 
