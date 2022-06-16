@@ -138,12 +138,14 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *ABB) Enabled() (bool, error) {
 	s, err := wb.session()
-	b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
 	if err != nil || !s {
 		return false, err
 	}
 
-	fmt.Printf("abbRegGetCurrent: %d\n", binary.BigEndian.Uint32(b))
+	b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
+	if err != nil {
+		return false, err
+	}
 
 	return binary.BigEndian.Uint32(b) >= 6000, nil
 }
