@@ -16,7 +16,7 @@
 			v-for="m in modes"
 			:key="m"
 			type="button"
-			class="btn"
+			class="btn flex-grow-1"
 			:class="{ active: isActive(m) }"
 			@click="setTargetMode(m)"
 		>
@@ -57,8 +57,8 @@ export default {
 
 <style scoped>
 .mode-group {
-	border: 2px solid var(--bs-gray-medium);
-	background-color: var(--bs-white);
+	border: 2px solid var(--evcc-default-text);
+	background-color: var(--evcc-background);
 	border-radius: 20px;
 	padding: 4px;
 }
@@ -69,10 +69,14 @@ export default {
 	white-space: nowrap;
 	border-radius: 18px;
 	padding: 0.1em 0.8em;
+	color: var(--evcc-default-text);
+}
+.btn:hover {
+	background: var(--evcc-gray);
 }
 .btn.active {
-	background: var(--bs-gray-dark);
-	color: var(--bs-white);
+	color: var(--evcc-background);
+	background: var(--evcc-default-text);
 }
 .btn-group {
 	border-radius: 16px;

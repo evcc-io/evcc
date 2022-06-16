@@ -1,5 +1,5 @@
 <template>
-	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'text-gray-medium': !active }">
+	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'evcc-gray': !active }">
 		<span class="d-flex flex-nowrap">
 			<BatteryIcon v-if="isBattery" :soc="soc" />
 			<component :is="`shopicon-regular-${icon}`" v-else></component>

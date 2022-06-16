@@ -11,7 +11,7 @@
 			></shopicon-regular-cablecharge>
 			<span class="flex-grow-1 text-truncate"> {{ name }} </span>
 		</h4>
-		<button v-if="$hiddenFeatures" class="btn btn-link text-white p-0 flex-shrink-0">
+		<button v-if="$hiddenFeatures" class="btn btn-link evcc-default-text p-0 flex-shrink-0">
 			<shopicon-filled-options size="s"></shopicon-filled-options>
 		</button>
 	</div>

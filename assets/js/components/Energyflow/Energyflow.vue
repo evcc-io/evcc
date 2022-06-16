@@ -204,9 +204,6 @@ export default {
 };
 </script>
 <style scoped>
-.energyflow {
-	background: var(--bs-white);
-}
 .indicator {
 	opacity: 0;
 	transform: translateX(-50%) scaleY(1);
@@ -223,10 +220,16 @@ export default {
 }
 .details {
 	height: 0;
+	opacity: 0;
+	transform: scale(0.98);
 	overflow: visible;
-	transition: height;
+	transition: height, opacity, transform;
 	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);
+}
+.energyflow--open .details {
+	opacity: 1;
+	transform: scale(1);
 }
 .color-grid {
 	color: var(--evcc-grid);

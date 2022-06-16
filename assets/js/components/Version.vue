@@ -4,7 +4,7 @@
 			v-if="commit"
 			:href="githubHashUrl"
 			target="_blank"
-			class="btn btn-link ps-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
+			class="btn btn-link ps-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
 		>
 			<Logo class="logo me-2" />
 			v{{ installed }}
@@ -16,7 +16,7 @@
 			href="#"
 			data-bs-toggle="modal"
 			data-bs-target="#updateModal"
-			class="btn btn-link ps-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
+			class="btn btn-link ps-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
 		>
 			<shopicon-regular-gift class="me-2 text-evcc"></shopicon-regular-gift>
 			v{{ installed }}
@@ -31,7 +31,7 @@
 			v-else
 			:href="releaseNotesUrl(installed)"
 			target="_blank"
-			class="btn btn-link text-white ps-0 text-decoration-none text-nowrap d-flex align-items-end"
+			class="btn btn-link evcc-default-text ps-0 text-decoration-none text-nowrap d-flex align-items-end"
 		>
 			<Logo class="logo me-2" />
 			v{{ installed }}

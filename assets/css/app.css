@@ -11,6 +11,16 @@
 	font-style: normal;
 }
 
+/* Bootstrap Breakpoints as Custom Media Queries */
+@custom-media --sm-and-up (min-width: 576px);
+@custom-media --md-and-up (min-width: 768px);
+@custom-media --lg-and-up (min-width: 992px);
+@custom-media --xl-and-up (min-width: 1200px);
+@custom-media --xxl-and-up (min-width: 1400px);
+
+@custom-media --light-mode (prefers-color-scheme: light);
+@custom-media --dark-mode (prefers-color-scheme: dark);
+
 :root {
 	--evcc-green: #baffcb;
 	--evcc-dark-green: #0fde41;
@@ -22,6 +32,9 @@
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
 	--evcc-export: var(--evcc-yellow);
+	--evcc-background: var(--bs-white);
+	--evcc-default-text: var(--bs-gray-dark);
+	--evcc-gray: var(--bs-gray-medium);
 
 	--evcc-transition-slow: 1000ms;
 	--evcc-transition-medium: 500ms;
@@ -37,6 +50,16 @@
 		"Segoe UI Symbol", "Noto Color Emoji";
 }
 
+@media (--dark-mode) {
+	:root {
+		--evcc-grid: var(--bs-gray-medium);
+		--evcc-background: var(--bs-gray-dark);
+		--evcc-default-text: var(--bs-white);
+		--evcc-gray: var(--bs-gray-light);
+
+	}
+}
+
 html {
 	/* prevents content jump when scrollbar is activate */
 	width: 100vw;
@@ -44,7 +67,8 @@ html {
 }
 
 body {
-	background-color: var(--evcc-gray-dark);
+	background-color: var(--evcc-background);
+	color: var(--evcc-default-text);
 }
 
 h1,
@@ -112,6 +136,14 @@ a {
 }
 .text-evcc {
 	color: var(--evcc-dark-green);
+}
+
+.evcc-default-text {
+	color: var(--evcc-default-text);
+}
+
+.evcc-gray {
+	color: var(--evcc-gray);
 }
 
 .text-grid {

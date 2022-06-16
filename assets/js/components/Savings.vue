@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<button
-			class="btn btn-link pe-0 text-decoration-none text-white text-nowrap d-flex align-items-end"
+			class="btn btn-link pe-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
 			data-bs-toggle="modal"
 			data-bs-target="#savingsModal"
 		>
@@ -94,21 +94,21 @@
 								>
 									<div
 										v-if="!noData"
-										class="chart-item chart-item--self d-flex justify-content-center align-items-center text-white flex-shrink-1"
+										class="chart-item chart-item--self d-flex justify-content-center align-items-center evcc-default-text flex-shrink-1"
 										:style="{ width: `${percent}%` }"
 									>
 										<span class="text-truncate"> {{ percent }}% </span>
 									</div>
 									<div
 										v-if="!noData"
-										class="chart-item chart-item--grid d-flex justify-content-center align-items-center text-white flex-shrink-1"
+										class="chart-item chart-item--grid d-flex justify-content-center align-items-center evcc-default-text flex-shrink-1"
 										:style="{ width: `${100 - percent}%` }"
 									>
 										<span class="text-truncate"> {{ 100 - percent }}% </span>
 									</div>
 									<div
 										v-if="noData"
-										class="chart-item chart-item--no-data d-flex justify-content-center align-items-center text-white w-100"
+										class="chart-item chart-item--no-data d-flex justify-content-center align-items-center evcc-default-text w-100"
 									>
 										<span>{{ $t("footer.savings.modalNoData") }}</span>
 									</div>

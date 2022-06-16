@@ -1,11 +1,11 @@
 <template>
-	<div class="loadpoint bg-white p-4">
-		<div class="d-flex justify-content-between align-items-center mb-3">
+	<div class="loadpoint p-4">
+		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
 			<h3 class="mb-3 me-2 text-truncate">
 				{{ title || $t("main.loadpoint.fallbackName") }}
 			</h3>
 			<div class="mb-3 d-flex align-items-center">
-				<Mode :mode="mode" @updated="setTargetMode" />
+				<Mode class="w-100 w-sm-auto" :mode="mode" @updated="setTargetMode" />
 				<button v-if="$hiddenFeatures" class="btn btn-link text-gray p-0 flex-shrink-0">
 					<shopicon-filled-options size="s"></shopicon-filled-options>
 				</button>
@@ -64,6 +64,7 @@
 					${fmtShortDurationUnit(chargeDurationInterpolated)}`"
 			/>
 		</div>
+		<hr class="divider" />
 		<Vehicle
 			v-bind="vehicle"
 			@target-soc-updated="setTargetSoC"
@@ -214,7 +215,9 @@ export default {
 <style scoped>
 .loadpoint {
 	border-radius: 2rem;
-	color: var(--bs-gray-dark);
+	color: var(--evcc-default-text);
+	background: var(--evcc-background);
+	border: 2px solid var(--evcc-gray);
 }
 
 .details > div {
@@ -229,5 +232,14 @@ export default {
 }
 .opacity-transiton {
 	transition: opacity var(--evcc-transition-slow) ease-in;
+}
+.divider {
+	border: none;
+	border-bottom-width: 2px;
+	border-bottom-style: dotted;
+	border-bottom-color: var(--evcc-gray);
+	background: none;
+	margin: 0 -1.5rem;
+	opacity: 1;
 }
 </style>

@@ -3,7 +3,7 @@
 		<div class="container px-4 mb-3 mb-sm-4 d-flex justify-content-start align-items-center">
 			<h2 class="m-0">{{ $t("main.vehicles") }}</h2>
 			<button
-				class="btn btn-link d-flex text-white p-2 ms-1 refresh"
+				class="btn btn-link d-flex evcc-default-text p-2 ms-1 refresh"
 				:class="{
 					'refresh--in-progress': refreshing,
 				}"

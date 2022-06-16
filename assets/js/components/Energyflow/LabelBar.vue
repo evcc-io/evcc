@@ -43,7 +43,7 @@ export default {
 	opacity: 0;
 }
 .label-bar-scale {
-	border: 1px solid var(--bs-gray-medium);
+	border: 1px solid var(--evcc-gray);
 	height: 14px;
 	background: none;
 	display: flex;
@@ -64,11 +64,11 @@ export default {
 	border-top: none;
 }
 .label-bar-icon {
-	background-color: white;
+	background-color: var(--evcc-background);
 	transform: scale(1);
-	color: var(--bs-gray-dark);
+	color: var(--evcc-default-text);
 	border-radius: 0;
-	border: 0.25rem solid white;
+	border: 0.25rem solid var(--evcc-background);
 	transition-property: background-color, transform, border-radius, border;
 	/* will be overwritten by parent component to avoid initial transition */
 	transition-duration: 0s;
@@ -82,7 +82,7 @@ export default {
 	margin-top: 12px;
 }
 .label-bar--hide-icon .label-bar-icon {
-	background-color: var(--bs-gray-dark);
+	background-color: var(--evcc-default-text);
 	transform: scale(0.1666666);
 	border-radius: 100%;
 	border-width: 1.5rem;

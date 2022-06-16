@@ -29,19 +29,14 @@ export default {
 }
 .label {
 	text-transform: uppercase;
-	color: var(--bs-gray-medium);
+	color: var(--evcc-gray);
 	font-size: 14px;
 }
 .value {
 	font-size: 18px;
 }
 .extraValue {
-	color: var(--bs-gray-medium);
+	color: var(--evcc-gray);
 	font-size: 14px;
-}
-
-.root--dark .extraValue,
-.root--dark .label {
-	color: var(--bs-gray-light);
 }
 </style>

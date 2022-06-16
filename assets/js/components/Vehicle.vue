@@ -1,5 +1,5 @@
 <template>
-	<div class="vehicle p-4 pb-3">
+	<div class="vehicle pt-4">
 		<VehicleTitle v-bind="vehicleTitleProps" />
 		<VehicleStatus v-if="!parked" v-bind="vehicleStatus" class="mb-2" />
 		<VehicleSoc
@@ -132,11 +132,6 @@ export default {
 </script>
 
 <style scoped>
-.vehicle {
-	background-color: var(--bs-gray-dark);
-	border-radius: 1rem;
-	color: var(--bs-white);
-}
 .car-icon {
 	width: 1.75rem;
 }
