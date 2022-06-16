@@ -141,6 +141,8 @@ func (wb *ABB) Enabled() (bool, error) {
 		return false, err
 	}
 
+	fmt.Printf("abbRegGetCurrent: %d\n", binary.BigEndian.Uint32(b))
+
 	return binary.BigEndian.Uint32(b) > 0, nil
 }
 
