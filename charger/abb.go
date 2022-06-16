@@ -19,6 +19,7 @@ package charger
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -97,6 +98,8 @@ func (wb *ABB) status() (byte, error) {
 		return 0, err
 	}
 
+	wb.log.DEBUG.Printf("status: %d", b[2]&0x7f)
+
 	// A1 - Charging
 	return b[2] & 0x7f, nil
 }
@@ -129,7 +132,6 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *ABB) Enabled() (bool, error) {
 	s, err := wb.status()
-	wb.log.DEBUG.Printf("status: %d, %v", s, err)
 	if s == 5 || err != nil {
 		return false, err
 	}
@@ -144,28 +146,28 @@ func (wb *ABB) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	if !enable {
-		// stop session
-		_, err := wb.conn.WriteSingleRegister(abbRegSession, 1)
-		return err
-	}
+	// if !enable {
+	// 	// stop session
+	// 	_, err := wb.conn.WriteSingleRegister(abbRegSession, 1)
+	// 	return err
+	// }
 
 	// start session
 	s, err := wb.status()
-	wb.log.DEBUG.Printf("status: %d, %v", s, err)
 	if err != nil {
 		return err
 	}
 
-	if s == 5 {
-		s, err := wb.conn.WriteSingleRegister(abbRegSession, 0)
-		wb.log.DEBUG.Printf("unlock session: %d, %v", s, err)
-		if err != nil {
-			return err
+	var current uint32
+	if enable {
+		if s == 5 {
+			return errors.New("session stopped")
 		}
+
+		current = wb.curr
 	}
 
-	return wb.setCurrent(wb.curr)
+	return wb.setCurrent(current)
 }
 
 // setCurrent writes the current limit in mA
