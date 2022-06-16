@@ -19,7 +19,6 @@ package charger
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -123,7 +122,7 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 	case 4: // State C2: Charging Contact closed, energy delivering
 		return api.StatusC, nil
 	case 5: // Other: Session stopped
-		return api.StatusB, nil
+		return api.StatusA, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
 	}
@@ -143,39 +142,26 @@ func (wb *ABB) Enabled() (bool, error) {
 
 	fmt.Printf("abbRegGetCurrent: %d\n", binary.BigEndian.Uint32(b))
 
-	return binary.BigEndian.Uint32(b) > 0, nil
+	return binary.BigEndian.Uint32(b) >= 6000, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	// if !enable {
-	// 	// stop session
-	// 	_, err := wb.conn.WriteSingleRegister(abbRegSession, 1)
-	// 	return err
-	// }
-
 	s, err := wb.status()
 	if err != nil {
 		return err
 	}
 
-	current := uint32(5000)
-	if enable {
-		if s == 5 {
-			return errors.New("session stopped")
+	var current uint32
+	if s != 5 { // active session
+		if enable {
+			current = wb.curr
 		}
 
-		if s == 1 {
-			// start session
-			if _, err := wb.conn.WriteSingleRegister(abbRegSession, 0); err != nil {
-				return err
-			}
-		}
-
-		current = wb.curr
+		return wb.setCurrent(current)
 	}
 
-	return wb.setCurrent(current)
+	return nil
 }
 
 // setCurrent writes the current limit in mA
