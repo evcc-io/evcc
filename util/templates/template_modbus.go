@@ -34,7 +34,7 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 	t.Params = append(modbusParams, t.Params...)
 }
 
-// ModbusValues adds the values required for modbus.tpl to the template
+// ModbusValues adds the values required for modbus.tpl to the value map
 func (t *Template) ModbusValues(renderMode string, values map[string]interface{}) {
 	choices := t.ModbusChoices()
 	if len(choices) == 0 {

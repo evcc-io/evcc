@@ -470,11 +470,7 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 			}
 
 		default:
-			if !c.advancedMode && param.Advanced {
-				continue
-			}
-
-			if param.Deprecated {
+			if param.Advanced && !c.advancedMode || param.Deprecated {
 				continue
 			}
 
@@ -493,7 +489,9 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 					}
 				}
 				additionalConfig[param.Name] = nonEmptyValues
+
 			default:
+				// TODO make processInputConfig aware of default values added by template
 				if value := c.processInputConfig(param); value != "" {
 					additionalConfig[param.Name] = value
 				}
@@ -593,8 +591,10 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, dev
 
 	values := make(map[string]interface{})
 	templateItem.Params[modbusIndex].Value = choiceTypes[index]
+
 	// add the interface type specific modbus params
 	templateItem.ModbusParams(choiceTypes[index], values)
+
 	// update the modbus default values
 	templateItem.ModbusValues(templates.TemplateRenderModeInstance, values)
 }
