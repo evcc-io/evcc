@@ -44,8 +44,8 @@ const (
 	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
 	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
 	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
-	abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
-	//	abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not support
+	// abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
+	// abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not supported
 )
 
 func init() {
@@ -90,7 +90,6 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	return wb, err
 }
 
-// status implements the api.Charger interface
 func (wb *ABB) status() (byte, error) {
 	b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2)
 	if err != nil {
@@ -99,8 +98,16 @@ func (wb *ABB) status() (byte, error) {
 
 	wb.log.DEBUG.Printf("status: %d", b[2]&0x7f)
 
-	// A1 - Charging
 	return b[2] & 0x7f, nil
+}
+
+func (wb *ABB) session() (bool, error) {
+	s, err := wb.status()
+	if err != nil || s == 0 || s == 5 { // ToDo: check if 1 is active/inactive/unknown
+		return false, err
+	}
+
+	return true, err
 }
 
 // Status implements the api.Charger interface
@@ -130,11 +137,6 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABB) Enabled() (bool, error) {
-	s, err := wb.status()
-	if s == 5 || err != nil {
-		return false, err
-	}
-
 	b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
 	if err != nil {
 		return false, err
@@ -147,21 +149,17 @@ func (wb *ABB) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	s, err := wb.status()
-	if err != nil {
+	s, err := wb.session()
+	if err != nil || !s {
 		return err
 	}
 
 	var current uint32
-	if s != 5 { // active session
-		if enable {
-			current = wb.curr
-		}
-
-		return wb.setCurrent(current)
+	if enable {
+		current = wb.curr
 	}
 
-	return nil
+	return wb.setCurrent(current)
 }
 
 // setCurrent writes the current limit in mA
@@ -184,14 +182,14 @@ var _ api.ChargerEx = (*ABB)(nil)
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *ABB) MaxCurrentMillis(current float64) error {
-	curr := uint32(current * 1e3)
-
-	err := wb.setCurrent(curr)
-	if err == nil {
-		wb.curr = curr
+	s, err := wb.session()
+	if err != nil || !s {
+		return err
 	}
 
-	return err
+	wb.curr = uint32(current * 1e3)
+
+	return wb.setCurrent(wb.curr)
 }
 
 var _ api.Meter = (*ABB)(nil)
@@ -252,18 +250,21 @@ var _ api.Diagnosis = (*ABB)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *ABB) Diagnose() {
-	// if b, err := wb.conn.ReadHoldingRegisters(abbRegSerial, 4); err == nil {
-	// 	fmt.Printf("\tSerial:\t%x\n", b)
-	// }
-	// if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
-	// 	fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
-	// }
-	// if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
-	// 	fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
-	// }
-	// if b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2); err == nil {
-	// 	fmt.Printf("\tStatus:\t%x\n", b)
-	// }
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegSerial, 4); err == nil {
+		fmt.Printf("\tSerial:\t%x\n", b)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegFirmware, 2); err == nil {
+		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
+		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2); err == nil {
+		fmt.Printf("\tCharging current limit:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2); err == nil {
+		fmt.Printf("\tStatus:\t%x\n", b)
+	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegErrorCode, 2); err == nil {
 		fmt.Printf("\tError code:\t%x\n", binary.BigEndian.Uint32(b))
 	}
