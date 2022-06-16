@@ -154,7 +154,6 @@ func (wb *ABB) Enable(enable bool) error {
 	// 	return err
 	// }
 
-	// start session
 	s, err := wb.status()
 	if err != nil {
 		return err
@@ -164,6 +163,13 @@ func (wb *ABB) Enable(enable bool) error {
 	if enable {
 		if s == 5 {
 			return errors.New("session stopped")
+		}
+
+		if s == 1 {
+			// start session
+			if _, err := wb.conn.WriteSingleRegister(abbRegSession, 0); err != nil {
+				return err
+			}
 		}
 
 		current = wb.curr
