@@ -46,6 +46,8 @@ const (
 	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
 	// abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 	// abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not supported
+
+	abbMinCurrent = 0x1AE0 // 5920 mA
 )
 
 func init() {
@@ -84,7 +86,7 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	wb := &ABB{
 		log:  log,
 		conn: conn,
-		curr: 6000, // assume min current
+		curr: abbMinCurrent, // assume min current
 	}
 
 	return wb, err
@@ -147,7 +149,7 @@ func (wb *ABB) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint32(b) >= 6000, nil
+	return binary.BigEndian.Uint32(b) >= abbMinCurrent, nil
 }
 
 // Enable implements the api.Charger interface
