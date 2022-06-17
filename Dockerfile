@@ -14,6 +14,8 @@ RUN make install-ui
 COPY assets assets
 COPY vite.config.js vite.config.js
 COPY .eslintrc.js .eslintrc.js
+COPY postcss.config.js postcss.config.js
+
 RUN make clean ui
 
 
