@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // ABB charger implementation
@@ -76,9 +77,9 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 		return nil, err
 	}
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, api.ErrSponsorRequired
-	// }
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	log := util.NewLogger("abb")
 	conn.Logger(log.TRACE)
@@ -171,8 +172,6 @@ func (wb *ABB) Enable(enable bool) error {
 func (wb *ABB) setCurrent(current uint32) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, current)
-
-	fmt.Printf("abbRegSetCurrent: %d\n", current)
 
 	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
 	return err
