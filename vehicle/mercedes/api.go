@@ -68,7 +68,7 @@ func (v *API) Range(vin string) (EVResponse, error) {
 	return res, err
 }
 
-// allinOne is a 'fallback' to gether both metrics range and soc.
+// allinOne is a 'fallback' to gather both metrics range and soc.
 // It is used in case for any reason the single endpoints return an error - which happend in the past.
 func (v *API) allinOne(vin string) (EVResponse, error) {
 	var res []EVResponse
