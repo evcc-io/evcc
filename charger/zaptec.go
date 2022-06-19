@@ -54,7 +54,9 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User, Password string
 		Id             string
 		Cache          time.Duration
-	}{}
+	}{
+		Cache: time.Second,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -73,6 +75,7 @@ func NewZaptec(user, password, id string, cache time.Duration) (api.Charger, err
 
 	c := &Zaptec{
 		Helper: request.NewHelper(log),
+		id:     id,
 		cache:  cache,
 	}
 
@@ -94,26 +97,25 @@ func NewZaptec(user, password, id string, cache time.Duration) (api.Charger, err
 		}
 	}
 
-	var res zaptec.ChargersResponse
 	if err == nil {
-		uri = fmt.Sprintf("%s/api/chargers", zaptec.ApiURL)
-		if err = c.GetJSON(uri, &res); err == nil {
-			// TODO
-			c.id = res.Data[0].Id
-
-			chargers := lo.Map(res.Data, func(c zaptec.Charger, _ int) string {
-				return c.Id
-			})
-
-			fmt.Println(chargers)
-			panic(0)
-		}
+		c.id, err = ensureCharger(c.id, c.chargers)
 	}
 
-	// TODO IsStandAlone
-
-	// panic(0)
 	return c, err
+}
+
+func (c *Zaptec) chargers() ([]string, error) {
+	var res zaptec.ChargersResponse
+
+	uri := fmt.Sprintf("%s/api/chargers", zaptec.ApiURL)
+	err := c.GetJSON(uri, &res)
+	if err == nil {
+		return lo.Map(res.Data, func(c zaptec.Charger, _ int) string {
+			return c.Id
+		}), nil
+	}
+
+	return nil, err
 }
 
 func (c *Zaptec) state() (zaptec.StateResponse, error) {
