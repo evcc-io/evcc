@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/charger/zaptec"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -51,6 +52,7 @@ func init() {
 func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User, Password string
+		Id             string
 		Cache          time.Duration
 	}{}
 
@@ -62,11 +64,11 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("need user and password")
 	}
 
-	return NewZaptec(cc.User, cc.Password, cc.Cache)
+	return NewZaptec(cc.User, cc.Password, cc.Id, cc.Cache)
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(user, password string, cache time.Duration) (api.Charger, error) {
+func NewZaptec(user, password, id string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
 
 	c := &Zaptec{
@@ -98,6 +100,13 @@ func NewZaptec(user, password string, cache time.Duration) (api.Charger, error) 
 		if err = c.GetJSON(uri, &res); err == nil {
 			// TODO
 			c.id = res.Data[0].Id
+
+			chargers := lo.Map(res.Data, func(c zaptec.Charger, _ int) string {
+				return c.Id
+			})
+
+			fmt.Println(chargers)
+			panic(0)
 		}
 	}
 

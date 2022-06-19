@@ -54,7 +54,7 @@ func (o *Observation) Bool() bool {
 }
 
 func (o *Observation) Int() (int, error) {
-	if o == nil {
+	if o == nil || o.ValueAsString == "" {
 		return 0, nil
 	}
 
@@ -62,7 +62,7 @@ func (o *Observation) Int() (int, error) {
 }
 
 func (o *Observation) Float64() (float64, error) {
-	if o == nil {
+	if o == nil || o.ValueAsString == "" {
 		return 0, nil
 	}
 
