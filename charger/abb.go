@@ -186,6 +186,10 @@ var _ api.ChargerEx = (*ABB)(nil)
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *ABB) MaxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.1f", current)
+	}
+
 	s, err := wb.session()
 	if err != nil || !s {
 		return err
