@@ -313,29 +313,33 @@ func (v *Renault) kamereonPerson(personID string) (string, error) {
 	return res.Accounts[0].AccountID, err
 }
 
-func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
+func (v *Renault) kamereonVehicles(configVIN string) ([]string, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, v.accountID)
 	res, err := v.kamereonRequest(uri, nil)
-	var erroneousVins []string
+	var erroneousVin string
 	var vehicles []string
 	if err == nil {
-		for _, v := range res.VehicleLinks {
-			if strings.ToUpper(v.Status) == "ACTIVE" {
-				if len(v.ConnectedDriver.Role) > 0 {
-					vehicles = append(vehicles, v.VIN)
+		for _, vehicle := range res.VehicleLinks {
+			//the evcc.yml binds every vin to an account, so if no VIN is set we try to use the account vehicle regardless of its VIN
+			//if the VIN is set it must be match one of the vehicles bind to the account
+			if len(configVIN) == 0 || vehicle.VIN == configVIN {
+				if strings.ToUpper(vehicle.Status) == "ACTIVE" {
+					if len(vehicle.ConnectedDriver.Role) > 0 {
+						vehicles = append(vehicles, vehicle.VIN)
+					} else {
+						erroneousVin = fmt.Sprintf("For the configured vehicle with vin: %s "+
+							"the connected driver role is not set.", vehicle.VIN)
+					}
 				} else {
-					erroneousVins = append(erroneousVins, fmt.Sprintf("For the configured vehicle with vin: %s "+
-						"the connected driver role is not set.", v.VIN))
+					erroneousVin = fmt.Sprintf("For the configured vehicle with vin: %s "+
+						"the my-renault status is not set to active.", vehicle.VIN)
 				}
-			} else {
-				erroneousVins = append(erroneousVins, fmt.Sprintf("For the configured vehicle with vin: %s "+
-					"the my-renault status is not set to active.", v.VIN))
 			}
 		}
 	}
 	if len(vehicles) <= 0 {
 		return vehicles, fmt.Errorf("No paired vehicle found. %s %s",
-			strings.Join(erroneousVins, ","), " Renault will reject all car status requests with a http 403 error code. "+
+			erroneousVin, " Renault will reject all car status requests with a http 403 error code. "+
 				" Please pair your configured vehicle with the used my-renault account.")
 	} else {
 		return vehicles, err
