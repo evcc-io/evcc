@@ -5,7 +5,7 @@ render:
   - default: |
       type: template
       template: ocpp
-      stationid: # Die Stations ID der Wallbox
-      connector: 1 # Die Anzahl der unterstützen Ladepunkte # Optional
-      meterSupported: false # Wenn der in der Wallbox verbaute Energiezähler genutzt werden soll # Optional
-      idtag: # ID des Tokens, welcher für Ladevorgänge genutzt werden soll
+      stationid: # Die Station ID der Wallbox (z.B. EVB-P12345678)
+      connector: 1 # Optional: Die Anzahl der unterstützen Ladepunkte (z.B. 1
+      meterSupported: false # Optional: Hier muss true angegeben werden, falls der in der Box verbaute Stromzähler genutzt werden soll
+      idtag: # ID des Tags (Token/Karte), welcher zum Laden verwendet werden soll (z.B. 04E6B78921BBA0)

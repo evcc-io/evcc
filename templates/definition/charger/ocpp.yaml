@@ -9,26 +9,26 @@ params:
   - name: stationid
     required: true
     help:
-      en: The station ID of the wallbox
-      de: Die Stations ID der Wallbox
+      en: The station ID of the wallbox (e.g. EVB-P12345678)
+      de: Die Station ID der Wallbox (z.B. EVB-P12345678)
   - name: connector
     default: 1
     valuetype: int
     help:
-      en: The number of supported charge points
-      de: Die Anzahl der unterstützen Ladepunkte
+      en: The number of supported charge points (e.g. 1)
+      de: Die Anzahl der unterstützen Ladepunkte (z.B. 1)
   - name: meterSupported
     default: false
     valuetype: bool
     help:
-      en: Use the wallboxes build in energie meter
-      de: Wenn der in der Wallbox verbaute Energiezähler genutzt werden soll
+      en: Shall the wallboxes build energy meter be used (= true)
+      de: Verwenden des in der Wallbox verbauten Energiezählers (= true)
   - name: idtag
     required: true
     valuetype: string
     help:
-      en: ID of the token used for transactions
-      de: ID des Tokens, welcher für Ladevorgänge genutzt werden soll
+      en: ID of the token used for charging transactions (e.g. 04E6B78921BBA0)
+      de: ID des Tags (Token/Karte), welcher zum Laden verwendet werden soll (z.B. 04E6B78921BBA0)
 render: |
   type: ocpp
   stationid: {{ .stationid }}
