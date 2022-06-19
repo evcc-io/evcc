@@ -48,7 +48,7 @@ func TestTemplates(t *testing.T) {
 			} else {
 				values[templates.ModbusKeyRS485TCPIP] = true
 			}
-			values = tmpl.ModbusValues(templates.TemplateRenderModeInstance, true, values)
+			tmpl.ModbusValues(templates.TemplateRenderModeInstance, values)
 		}
 
 		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {

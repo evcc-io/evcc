@@ -9,62 +9,53 @@ var waitInitialTimeout = 10 * time.Second
 
 // Waiter provides monitoring of receive timeouts and reception of initial value
 type Waiter struct {
-	sync.Mutex
+	mu      sync.Mutex
 	log     func()
-	cond    *sync.Cond
 	updated time.Time
 	timeout time.Duration
+	initial chan bool
 }
 
 // NewWaiter creates new waiter
 func NewWaiter(timeout time.Duration, logInitialWait func()) *Waiter {
-	p := &Waiter{
+	return &Waiter{
 		log:     logInitialWait,
 		timeout: timeout,
+		initial: make(chan bool),
 	}
-	p.cond = sync.NewCond(p)
-	return p
 }
 
 // Update is called when client has received data. Update resets the timeout counter.
-// Waiter MUST be locked when calling Update.
 func (p *Waiter) Update() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	p.updated = time.Now()
-	p.cond.Broadcast()
+
+	select {
+	case <-p.initial:
+	default:
+		close(p.initial)
+	}
 }
 
 // Overdue waits for initial update and returns the duration since the last update
-// in excess of timeout. Waiter MUST be locked when calling Overdue.
+// in excess of timeout.
 func (p *Waiter) Overdue() time.Duration {
-	if p.updated.IsZero() {
+	select {
+	case <-p.initial:
+	default:
 		p.log()
 
-		c := make(chan struct{})
-
-		go func() {
-			defer close(c)
-			p.Lock() // establish lock once go routine has started
-			for p.updated.IsZero() {
-				p.cond.Wait()
-			}
-		}()
-
-		// release lock so external updates can occur
-		p.Unlock()
-
 		select {
-		case <-c:
-			// initial value received, lock established
+		case <-p.initial:
 		case <-time.After(waitInitialTimeout):
-			// establish lock per contract of `Update()``
-			p.Lock()
-			p.Update() // unblock the sync.Cond
-			p.Unlock()
-			<-c                     // wait for goroutine, re-establish lock
-			p.updated = time.Time{} // reset to "initial value missing"
 			return waitInitialTimeout
 		}
 	}
+
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
 	if elapsed := time.Since(p.updated); p.timeout != 0 && elapsed > p.timeout {
 		return elapsed

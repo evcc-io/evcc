@@ -225,7 +225,9 @@ func (wb *Dadapower) Identify() (string, error) {
 	return string(u), nil
 }
 
-// Diagnose implements the Diagnosis interface
+var _ api.Diagnosis = (*Dadapower)(nil)
+
+// Diagnose implements the api.Diagnosis interface
 func (wb *Dadapower) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(dadapowerRegModel, 1); err == nil {
 		fmt.Printf("Model:\t%d\n", b[1])

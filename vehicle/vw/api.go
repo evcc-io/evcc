@@ -166,8 +166,8 @@ func (v *API) Position(vin string) (PositionResponse, error) {
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":        request.JSONContent,
 		"Content-type":  "application/vnd.vwg.mbb.carfinderservice_v1_0_0+json",
-		"X-App-Version": "TODO",
-		"X-App-Name":    "TODO",
+		"X-App-Name":    "foo", // required
+		"X-App-Version": "foo", // required
 	})
 	if err == nil {
 		err = v.DoJSON(req, &res)

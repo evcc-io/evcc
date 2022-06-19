@@ -15,7 +15,8 @@ type Device struct {
 	*sunny.Device
 
 	log    *util.Logger
-	mux    *util.Waiter
+	mux    sync.Mutex
+	wait   *util.Waiter
 	values map[sunny.ValueID]interface{}
 	once   sync.Once
 }
@@ -40,7 +41,7 @@ func (d *Device) UpdateValues() error {
 	values, err := d.Device.GetValues()
 	if err == nil {
 		err = mergo.Merge(&d.values, values, mergo.WithOverride)
-		d.mux.Update()
+		d.wait.Update()
 	}
 
 	return err
@@ -53,7 +54,7 @@ func (d *Device) Values() (map[sunny.ValueID]interface{}, error) {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
-	if late := d.mux.Overdue(); late > 0 {
+	if late := d.wait.Overdue(); late > 0 {
 		return nil, fmt.Errorf("update timeout: %v", late.Truncate(time.Second))
 	}
 
