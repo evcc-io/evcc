@@ -12,6 +12,14 @@ const (
 	CmdResume = 507
 )
 
+const (
+	OpModeUnknown             = 0
+	OpModeDisconnected        = 1
+	OpModeConnectedRequesting = 2
+	OpModeConnectedCharging   = 3
+	OpModeConnectedFinished   = 5
+)
+
 // Observations
 const (
 	Unknown                                     ObservationID = 0

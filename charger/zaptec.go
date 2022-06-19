@@ -141,11 +141,11 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 	}
 
 	switch i, err := res.ObservationByID(zaptec.ChargerOperationMode).Int(); i {
-	case 1:
+	case zaptec.OpModeDisconnected:
 		return api.StatusA, err
-	case 2, 5:
+	case zaptec.OpModeConnectedRequesting, zaptec.OpModeConnectedFinished:
 		return api.StatusB, err
-	case 3:
+	case zaptec.OpModeConnectedCharging:
 		return api.StatusC, err
 	default:
 		if err == nil {
