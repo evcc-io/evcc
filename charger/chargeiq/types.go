@@ -1,4 +1,4 @@
-package connectiq
+package chargeiq
 
 type ChargeStatus struct {
 	Amps   int64  `json:"amps"`

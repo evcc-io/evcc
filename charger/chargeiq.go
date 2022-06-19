@@ -24,27 +24,27 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/connectiq"
+	"github.com/evcc-io/evcc/charger/chargeiq"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// ConnectIq charger implementation
-type ConnectIq struct {
+// ChargeIq charger implementation
+type ChargeIq struct {
 	*request.Helper
 	uri    string
 	curr   int64
-	meterG func() (connectiq.MeterStatus, error)
+	meterG func() (chargeiq.MeterStatus, error)
 	cache  time.Duration
 }
 
 func init() {
-	registry.Add("connectiq", NewConnectIqFromConfig)
+	registry.Add("chargeiq", NewChargeIqFromConfig)
 }
 
-// NewConnectIqFromConfig creates a ConnectIq charger from generic config
-func NewConnectIqFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewChargeIqFromConfig creates a ChargeIq charger from generic config
+func NewChargeIqFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
@@ -56,14 +56,14 @@ func NewConnectIqFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewConnectIq(cc.URI, cc.Cache)
+	return NewChargeIq(cc.URI, cc.Cache)
 }
 
-// NewConnectIq creates ConnectIq charger
-func NewConnectIq(uri string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("connectiq")
+// NewChargeIq creates ChargeIq charger
+func NewChargeIq(uri string, cache time.Duration) (api.Charger, error) {
+	log := util.NewLogger("chargeiq")
 
-	wb := &ConnectIq{
+	wb := &ChargeIq{
 		Helper: request.NewHelper(log),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 		curr:   6,
@@ -71,8 +71,8 @@ func NewConnectIq(uri string, cache time.Duration) (api.Charger, error) {
 	}
 
 	// cache meter readings
-	wb.meterG = provider.Cached(func() (connectiq.MeterStatus, error) {
-		var res connectiq.MeterStatus
+	wb.meterG = provider.Cached(func() (chargeiq.MeterStatus, error) {
+		var res chargeiq.MeterStatus
 		uri := fmt.Sprintf("%s/meter/status", wb.uri)
 		err := wb.GetJSON(uri, &res)
 		return res, err
@@ -81,15 +81,15 @@ func NewConnectIq(uri string, cache time.Duration) (api.Charger, error) {
 	return wb, nil
 }
 
-func (wb *ConnectIq) status() (connectiq.ChargeStatus, error) {
-	var res connectiq.ChargeStatus
+func (wb *ChargeIq) status() (chargeiq.ChargeStatus, error) {
+	var res chargeiq.ChargeStatus
 	uri := fmt.Sprintf("%s/charge/status", wb.uri)
 	err := wb.GetJSON(uri, &res)
 	return res, err
 }
 
 // Status implements the api.Charger interface
-func (wb *ConnectIq) Status() (api.ChargeStatus, error) {
+func (wb *ChargeIq) Status() (api.ChargeStatus, error) {
 	resp, err := wb.status()
 
 	res := api.StatusNone
@@ -110,15 +110,15 @@ func (wb *ConnectIq) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *ConnectIq) Enabled() (bool, error) {
-	var res connectiq.ChargeMaxAmps
+func (wb *ChargeIq) Enabled() (bool, error) {
+	var res chargeiq.ChargeMaxAmps
 	uri := fmt.Sprintf("%s/charge/max_amps", wb.uri)
 	err := wb.GetJSON(uri, &res)
 	return res.Max > 0, err
 }
 
 // Enable implements the api.Charger interface
-func (wb *ConnectIq) Enable(enable bool) error {
+func (wb *ChargeIq) Enable(enable bool) error {
 	var curr int64
 	if enable {
 		curr = wb.curr
@@ -126,7 +126,7 @@ func (wb *ConnectIq) Enable(enable bool) error {
 	return wb.setCurrent(curr)
 }
 
-func (wb *ConnectIq) setCurrent(current int64) error {
+func (wb *ChargeIq) setCurrent(current int64) error {
 	uri := fmt.Sprintf("%s/charge/max_amps", wb.uri)
 
 	data := struct {
@@ -144,7 +144,7 @@ func (wb *ConnectIq) setCurrent(current int64) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *ConnectIq) MaxCurrent(current int64) error {
+func (wb *ChargeIq) MaxCurrent(current int64) error {
 	err := wb.setCurrent(current)
 	if err == nil {
 		wb.curr = current
@@ -152,10 +152,10 @@ func (wb *ConnectIq) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.Meter = (*ConnectIq)(nil)
+var _ api.Meter = (*ChargeIq)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (wb *ConnectIq) CurrentPower() (float64, error) {
+func (wb *ChargeIq) CurrentPower() (float64, error) {
 	res, err := wb.meterG()
 	if err != nil {
 		return 0, err
@@ -163,20 +163,20 @@ func (wb *ConnectIq) CurrentPower() (float64, error) {
 	return (res.Pow[0] + res.Pow[1] + res.Pow[2]) * 1e3, nil
 }
 
-var _ api.MeterEnergy = (*ConnectIq)(nil)
+var _ api.MeterEnergy = (*ChargeIq)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (wb *ConnectIq) TotalEnergy() (float64, error) {
-	var res connectiq.MeterRead
+func (wb *ChargeIq) TotalEnergy() (float64, error) {
+	var res chargeiq.MeterRead
 	uri := fmt.Sprintf("%s/meter/read", wb.uri)
 	err := wb.GetJSON(uri, &res)
 	return res.Energy, err
 }
 
-var _ api.MeterCurrent = (*ConnectIq)(nil)
+var _ api.MeterCurrent = (*ChargeIq)(nil)
 
 // Currents implements the api.MeterCurrent interface
-func (wb *ConnectIq) Currents() (float64, float64, float64, error) {
+func (wb *ChargeIq) Currents() (float64, float64, float64, error) {
 	res, err := wb.meterG()
 	if err != nil {
 		return 0, 0, 0, err
