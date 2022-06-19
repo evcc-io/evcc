@@ -6,6 +6,12 @@ type ObservationID int
 
 //go:generate enumer -type ObservationID
 
+// Commands
+const (
+	CmdStop   = 506
+	CmdResume = 507
+)
+
 // Observations
 const (
 	Unknown                                     ObservationID = 0

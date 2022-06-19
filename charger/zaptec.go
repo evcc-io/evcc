@@ -125,12 +125,6 @@ func (c *Zaptec) state() (zaptec.StateResponse, error) {
 
 		uri := fmt.Sprintf("%s/api/chargers/%s/state", zaptec.ApiURL, c.id)
 		if err = c.GetJSON(uri, &res); err == nil {
-			for _, s := range res {
-				if s.ValueAsString != "" {
-					fmt.Println(zaptec.ObservationID(s.StateId).String(), s.ValueAsString)
-				}
-			}
-
 			c.updated = time.Now()
 			c.status = res
 		}
@@ -169,7 +163,20 @@ func (c *Zaptec) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Zaptec) Enable(enable bool) error {
-	return api.ErrMustRetry
+	cmd := zaptec.CmdStop
+	if enable {
+		cmd = zaptec.CmdResume
+	}
+
+	uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.id, cmd)
+
+	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+	if err == nil {
+		_, err = c.DoBody(req)
+		c.updated = time.Time{}
+	}
+
+	return err
 }
 
 func (c *Zaptec) update(data zaptec.Update) error {
