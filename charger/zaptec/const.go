@@ -4,7 +4,7 @@ const ApiURL = "https://api.zaptec.com"
 
 type ObservationID int
 
-//go:generate stringer -type ObservationID
+//go:generate enumer -type ObservationID
 
 // Observations
 const (
