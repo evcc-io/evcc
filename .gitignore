@@ -26,3 +26,4 @@ server-key.pem
 ca-key.pem
 cmd/wip
 fly.toml
+.idea
