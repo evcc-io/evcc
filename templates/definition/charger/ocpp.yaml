@@ -1,0 +1,37 @@
+template: ocpp
+products:
+  - description:
+      de: OCPP v1.6 kompatible Wallbox
+      en: OCPP v1.6 compatible Wallbox
+group: generic
+capabilities: []
+params:
+  - name: stationid
+    required: true
+    help:
+      en: The station ID of the wallbox
+      de: Die Stations ID der Wallbox
+  - name: connector
+    default: 1
+    valuetype: int
+    help:
+      en: The number of supported charge points
+      de: Die Anzahl der unterstützen Ladepunkte
+  - name: meterSupported
+    default: false
+    valuetype: bool
+    help:
+      en: Use the wallboxes build in energie meter
+      de: Wenn der in der Wallbox verbaute Energiezähler genutzt werden soll
+  - name: idtag
+    required: true
+    valuetype: string
+    help:
+      en: ID of the token used for transactions
+      de: ID des Tokens, welcher für Ladevorgänge genutzt werden soll
+render: |
+  type: ocpp
+  stationid: {{ .stationid }}
+  idtag: {{ .idtag }}
+  connector: {{ .connector }}
+  meterSupported: {{ .meterSupported }}
