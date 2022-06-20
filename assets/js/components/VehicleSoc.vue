@@ -135,9 +135,10 @@ export default {
 .progress {
 	height: 100%;
 	font-size: 1rem;
+	background: var(--evcc-background);
 }
 .progress-bar.bg-muted {
-	color: var(--white);
+	opacity: 0.5;
 }
 .bg-light {
 	color: var(--bs-gray-dark);
@@ -179,7 +180,7 @@ export default {
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
-	box-shadow: 0 0 6px var(--bs-gray-dark);
+	box-shadow: 0 0 6px var(--evcc-background);
 	pointer-events: auto;
 }
 .target-slider::-moz-range-thumb {
@@ -191,7 +192,7 @@ export default {
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
-	box-shadow: 0 0 6px var(--bs-gray-dark);
+	box-shadow: 0 0 6px var(--evcc-background);
 	pointer-events: auto;
 }
 </style>
