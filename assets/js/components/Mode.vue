@@ -1,27 +1,14 @@
 <template>
-	<div v-if="$hiddenFeatures" class="mode-group border d-inline-flex" role="group">
-		<button
-			v-for="m in ['fast', 'cheap']"
-			:key="m"
-			type="button"
-			class="btn"
-			:class="{ active: isActive(m) }"
-			@click="setTargetMode(m)"
-		>
-			{{ $t(`main.mode.${m}`) }}
-		</button>
-	</div>
-	<div v-else class="mode-group border d-inline-flex" role="group">
+	<div class="mode-group border d-inline-flex" role="group">
 		<button
 			v-for="m in modes"
 			:key="m"
 			type="button"
-			class="btn flex-grow-1"
+			class="btn flex-grow-1 flex-shrink-1"
 			:class="{ active: isActive(m) }"
 			@click="setTargetMode(m)"
 		>
-			<span class="d-inline d-sm-none"> {{ $t(`main.mode.${m}Short`) }} </span>
-			<span class="d-none d-sm-inline"> {{ $t(`main.mode.${m}Long`) }} </span>
+			{{ $t(`main.mode.${m}`) }}
 		</button>
 	</div>
 </template>
@@ -35,19 +22,15 @@ export default {
 	emits: ["updated"],
 	data() {
 		return {
-			modes: ["off", "now", "minpv", "pv"],
+			modes: ["off", "minpv", "pv", "now"],
 		};
 	},
 	methods: {
 		isActive: function (mode) {
-			return this.mode === this.mapToOldModes(mode);
+			return this.mode === mode;
 		},
 		setTargetMode: function (mode) {
-			this.$emit("updated", this.mapToOldModes(mode));
-		},
-		mapToOldModes: function (mode) {
-			const mapping = { fast: "now", cheap: "pv" };
-			return mapping[mode] || mode;
+			this.$emit("updated", mode);
 		},
 	},
 };

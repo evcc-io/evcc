@@ -101,21 +101,23 @@ export default {
 			e.stopPropagation();
 		},
 		changeTargetSoCEnd: function (e) {
+			const value = parseInt(e.target.value, 10);
 			// value changed
-			if (e.target.value !== this.targetSoC) {
-				this.$emit("target-soc-updated", e.target.value);
+			if (value !== this.targetSoC) {
+				this.$emit("target-soc-updated", value);
 			}
 		},
 		movedTargetSoC: function (e) {
+			let value = parseInt(e.target.value, 10);
 			e.stopPropagation();
 			const minTargetSoC = 20;
-			if (e.target.value < minTargetSoC) {
+			if (value < minTargetSoC) {
 				e.target.value = minTargetSoC;
-				this.selectedTargetSoC = e.target.value;
+				this.selectedTargetSoC = value;
 				e.preventDefault();
 				return false;
 			}
-			this.selectedTargetSoC = e.target.value;
+			this.selectedTargetSoC = value;
 
 			this.$emit("target-soc-drag", this.selectedTargetSoC);
 			return true;

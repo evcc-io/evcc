@@ -46,7 +46,7 @@ export default {
 	width: 73px;
 }
 .phase {
-	background-color: var(--evcc-default-text);
+	background-color: var(--evcc-green);
 	height: 4px;
 	flex-grow: 1;
 	position: relative;

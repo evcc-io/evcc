@@ -142,7 +142,7 @@ a {
 }
 
 .evcc-default-text {
-	color: var(--evcc-default-text);
+	color: var(--evcc-default-text) !important;
 }
 
 .evcc-gray {

@@ -48,7 +48,7 @@ export default {
 	},
 	methods: {
 		change: function (e) {
-			return this.$emit("target-soc-updated", e.target.value);
+			return this.$emit("target-soc-updated", parseInt(e.target.value, 10));
 		},
 		estimatedRange: function (soc) {
 			if (this.rangePerSoc) {
