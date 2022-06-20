@@ -53,12 +53,9 @@ export default {
 };
 </script>
 
-<style scoped></style>
-
 <style scoped>
 .mode-group {
 	border: 2px solid var(--evcc-default-text);
-	background-color: var(--evcc-background);
 	border-radius: 20px;
 	padding: 4px;
 }

@@ -25,14 +25,17 @@
 	--evcc-green: #baffcb;
 	--evcc-dark-green: #0fde41;
 	--evcc-yellow: #faf000;
+	--bs-gray-deep: #020318;
 	--bs-gray-dark: #28293e;
 	--bs-gray-medium: #93949e;
 	--bs-gray-light: #b5b6c3;
+	--bs-gray-bright: #f3f3f7;
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
 	--evcc-export: var(--evcc-yellow);
-	--evcc-background: var(--bs-white);
+	--evcc-background: var(--bs-gray-bright);
+	--evcc-box: var(--bs-white);
 	--evcc-default-text: var(--bs-gray-dark);
 	--evcc-gray: var(--bs-gray-medium);
 
@@ -53,10 +56,10 @@
 @media (--dark-mode) {
 	:root {
 		--evcc-grid: var(--bs-gray-medium);
-		--evcc-background: var(--bs-gray-dark);
+		--evcc-background: var(--bs-gray-deep);
+		--evcc-box: var(--bs-gray-dark);
 		--evcc-default-text: var(--bs-white);
 		--evcc-gray: var(--bs-gray-light);
-
 	}
 }
 

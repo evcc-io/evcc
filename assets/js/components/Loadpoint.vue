@@ -216,8 +216,7 @@ export default {
 .loadpoint {
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
-	background: var(--evcc-background);
-	border: 2px solid var(--evcc-gray);
+	background: var(--evcc-box);
 }
 
 .details > div {
@@ -235,11 +234,11 @@ export default {
 }
 .divider {
 	border: none;
-	border-bottom-width: 2px;
-	border-bottom-style: dotted;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
 	border-bottom-color: var(--evcc-gray);
 	background: none;
-	opacity: 1;
+	opacity: 0.5;
 	margin: 0 -1rem;
 }
 @media (--sm-and-up) {
