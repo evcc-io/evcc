@@ -6,6 +6,7 @@ products:
   - brand: Sonnen
     description:
       generic: sonnenCharger
+capabilities: ["mA"]
 requirements:
   description:
     de: Die Wallbox muss sich im "Power" Modus befinden.
