@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/hashicorp/go-version"
 	"golang.org/x/oauth2"
 )
@@ -89,6 +90,10 @@ func NewSmaevcharger(uri string, user string, password string, cache time.Durati
 		cache:  cache,
 	}
 
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	// setup cached values
 	wb.reset()
 
@@ -117,9 +122,10 @@ func NewSmaevcharger(uri string, user string, password string, cache time.Durati
 	}
 
 	if err == nil {
-		// Prepare Charger for EVCC Control:
-		// - disable App Lock functionality, this Option have been introduced with 1.2.23 and will lock the Charger until unlocked via SMA App
-		// unfortunately this Lock option will overwrite the status of the charger and prevent ev detection
+		// Prepare charger: disable App Lock functionality.
+		// This option have been introduced with 1.2.23 and will lock the charger
+		// until unlocked via SMA App. Unfortunately this Lock option will overwrite
+		// the status of the charger and prevent ev detection
 		err = wb.Send(
 			value("Parameter.Chrg.ChrgLok", smaevcharger.ChargerAppLockDisabled),
 			value("Parameter.Chrg.ChrgApv", smaevcharger.ChargerManualLockEnabled),
