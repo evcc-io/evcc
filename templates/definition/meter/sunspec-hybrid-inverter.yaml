@@ -44,9 +44,11 @@ render: |
     source: calc
     add:
     - source: modbus
+      model: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 160:1:DCW # mppt 1
     - source: modbus
+      model: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 160:2:DCW # mppt 2
   {{- end }}
@@ -56,10 +58,12 @@ render: |
     source: calc
     add:
     - source: modbus
+      model: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 160:3:DCW # mppt 3 charge
       scale: -1
     - source: modbus
+      model: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 160:4:DCW # mppt 4 discharge
   soc:

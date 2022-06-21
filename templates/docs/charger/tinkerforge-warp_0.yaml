@@ -1,6 +1,7 @@
 product:
   brand: TinkerForge
   description: WARP Charger Smart
+capabilities: ["mA"]
 description: |
   Es muss ein MQTT Broker installiert sein. Die MQTT Verbindung muss in der Wallbox eingerichtet sein.
 render:

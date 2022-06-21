@@ -48,6 +48,9 @@ func (v *API) SoC(vin string) (EVResponse, error) {
 
 	uri := fmt.Sprintf("%s/vehicles/%s/resources/soc", v.BaseURI(), vin)
 	err := v.GetJSON(uri, &res)
+	if err != nil {
+		res, err = v.allinOne(vin)
+	}
 
 	return res, err
 }
@@ -58,6 +61,33 @@ func (v *API) Range(vin string) (EVResponse, error) {
 
 	uri := fmt.Sprintf("%s/vehicles/%s/resources/rangeelectric", v.BaseURI(), vin)
 	err := v.GetJSON(uri, &res)
+	if err != nil {
+		res, err = v.allinOne(vin)
+	}
 
 	return res, err
+}
+
+// allinOne is a 'fallback' to gather both metrics range and soc.
+// It is used in case for any reason the single endpoints return an error - which happend in the past.
+func (v *API) allinOne(vin string) (EVResponse, error) {
+	var res []EVResponse
+
+	uri := fmt.Sprintf("%s/vehicles/%s/containers/electricvehicle", v.BaseURI(), vin)
+	err := v.GetJSON(uri, &res)
+
+	evres := EVResponse{}
+
+	for _, r := range res {
+		if r.SoC.Timestamp != 0 {
+			evres.SoC = r.SoC
+			continue
+		}
+
+		if r.RangeElectric.Timestamp != 0 {
+			evres.RangeElectric = r.RangeElectric
+		}
+	}
+
+	return evres, err
 }

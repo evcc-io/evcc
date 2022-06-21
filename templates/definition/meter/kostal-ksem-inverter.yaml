@@ -4,6 +4,10 @@ products:
     description:
       de: Smart Energy Meter (über den Wechselrichter)
       en: Smart Energy Meter (via inverter)
+requirements:
+  description:
+    de: Der Zähler muss in Sensorposition 2 (Netzanschluss) installiert sein. Sensorposition 1 (Haushaltsverbrauch) wird nicht unterstützt.
+    en: The energy meter must be installed in sensor position 2 (grid connection). Sensor position 1 (House consumption) is not supported.
 params:
   - name: usage
     choice: ["grid"]

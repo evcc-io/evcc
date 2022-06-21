@@ -1,7 +1,7 @@
 product:
   brand: Dadapower
   description: Premium Wallbox
-capabilities: ["1p3p", "rfid"]
+capabilities: ["1p3p", "mA", "rfid"]
 render:
   - default: |
       type: template

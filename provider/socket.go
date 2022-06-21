@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -21,7 +22,8 @@ const retryDelay = 5 * time.Second
 type Socket struct {
 	*request.Helper
 	log     *util.Logger
-	mux     *util.Waiter
+	mux     sync.Mutex
+	wait    *util.Waiter
 	url     string
 	headers map[string]string
 	scale   float64
@@ -62,7 +64,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 	p := &Socket{
 		log:     log,
 		Helper:  request.NewHelper(log),
-		mux:     util.NewWaiter(cc.Timeout, func() { log.DEBUG.Println("wait for initial value") }),
+		wait:    util.NewWaiter(cc.Timeout, func() { log.DEBUG.Println("wait for initial value") }),
 		url:     url,
 		headers: cc.Headers,
 		scale:   cc.Scale,
@@ -129,11 +131,11 @@ func (p *Socket) listen() {
 				v, err := jq.Query(p.jq, b)
 				if err == nil {
 					p.val = v
-					p.mux.Update()
+					p.wait.Update()
 				}
 			} else {
 				p.val = string(b)
-				p.mux.Update()
+				p.wait.Update()
 			}
 			p.mux.Unlock()
 		}
@@ -141,12 +143,12 @@ func (p *Socket) listen() {
 }
 
 func (p *Socket) hasValue() (interface{}, error) {
-	p.mux.Lock()
-	defer p.mux.Unlock()
-
-	if late := p.mux.Overdue(); late > 0 {
+	if late := p.wait.Overdue(); late > 0 {
 		return nil, fmt.Errorf("outdated: %v", late.Truncate(time.Second))
 	}
+
+	p.mux.Lock()
+	defer p.mux.Unlock()
 
 	return p.val, nil
 }

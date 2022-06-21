@@ -225,7 +225,7 @@ func (wb *Wallbe) currents() (float64, float64, float64, error) {
 
 var _ api.Diagnosis = (*Wallbe)(nil)
 
-// Diagnose implements the Diagnosis interface
+// Diagnose implements the api.Diagnosis interface
 func (wb *Wallbe) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(wbRegFirmware, 6); err == nil {
 		fmt.Printf("Firmware:\t%s\n", encoding.StringLsbFirst(b))

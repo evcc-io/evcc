@@ -57,28 +57,35 @@ type DeviceCategoryData struct {
 var DeviceCategories = map[DeviceCategory]DeviceCategoryData{
 	DeviceCategoryCharger: {
 		class:       DeviceClassCharger,
-		defaultName: defaultNameCharger},
+		defaultName: defaultNameCharger,
+	},
 	DeviceCategoryGuidedSetup: {
-		class: DeviceClassMeter},
+		class: DeviceClassMeter,
+	},
 	DeviceCategoryGridMeter: {
 		class:          DeviceClassMeter,
 		categoryFilter: DeviceCategoryGridMeter,
-		defaultName:    defaultNameGridMeter},
+		defaultName:    defaultNameGridMeter,
+	},
 	DeviceCategoryPVMeter: {
 		class:          DeviceClassMeter,
 		categoryFilter: DeviceCategoryPVMeter,
-		defaultName:    defaultNamePVMeter},
+		defaultName:    defaultNamePVMeter,
+	},
 	DeviceCategoryBatteryMeter: {
 		class:          DeviceClassMeter,
 		categoryFilter: DeviceCategoryBatteryMeter,
-		defaultName:    defaultNameBatteryMeter},
+		defaultName:    defaultNameBatteryMeter,
+	},
 	DeviceCategoryVehicle: {
 		class:       DeviceClassVehicle,
-		defaultName: defaultNameVehicle},
+		defaultName: defaultNameVehicle,
+	},
 	DeviceCategoryChargeMeter: {
 		class:          DeviceClassMeter,
 		categoryFilter: DeviceCategoryChargeMeter,
-		defaultName:    defaultNameChargeMeter},
+		defaultName:    defaultNameChargeMeter,
+	},
 }
 
 type localizeMap map[string]interface{}
