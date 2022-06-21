@@ -1,7 +1,7 @@
 product:
   brand: Easee
   description: Home
-capabilities: ["1p3p"]
+capabilities: ["1p3p", "rfid"]
 requirements: ["sponsorship"]
 render:
   - default: |

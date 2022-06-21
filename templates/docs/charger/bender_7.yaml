@@ -1,6 +1,7 @@
 product:
   brand: Garo
   description: GLB, GLB+, LS4, LS4 compact
+capabilities: ["rfid"]
 requirements: ["sponsorship"]
 description: |
   Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein.
