@@ -6,7 +6,7 @@ products:
 capabilities: ["mA"]
 requirements:
   description:
-    de: Die Wallbox muss sich im Modus "Fast" befinden.
+    de: Der EV Charger muss sich im Modus "Fast" befinden.
     en: The charger must be switched to "Fast" charging mode.
 params:
   - name: host
