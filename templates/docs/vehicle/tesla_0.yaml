@@ -12,7 +12,6 @@ render:
   - default: |
       type: template
       template: tesla
-      title: # Wird in der Benutzeroberfläche angezeigt # Optional
       accessToken: # Siehe https://docs.evcc.io/docs/devices/vehicles#tesla
       refreshToken: # Siehe https://docs.evcc.io/docs/devices/vehicles#tesla
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
@@ -20,7 +19,6 @@ render:
     advanced: |
       type: template
       template: tesla
-      title: # Wird in der Benutzeroberfläche angezeigt # Optional
       accessToken: # Siehe https://docs.evcc.io/docs/devices/vehicles#tesla
       refreshToken: # Siehe https://docs.evcc.io/docs/devices/vehicles#tesla
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional

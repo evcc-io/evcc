@@ -5,7 +5,6 @@ products:
       generic: E-Scooter
 group: scooter
 params:
-  - name: title
   - name: user
     required: true
   - name: password

@@ -5,14 +5,12 @@ render:
   - default: |
       type: template
       template: evnotify
-      title: # Wird in der Benutzeroberfläche angezeigt # Optional
       akey:
       token:
       capacity: 50 # Akku-Kapazität in kWh # Optional
     advanced: |
       type: template
       template: evnotify
-      title: # Wird in der Benutzeroberfläche angezeigt # Optional
       akey:
       token:
       capacity: 50 # Akku-Kapazität in kWh # Optional

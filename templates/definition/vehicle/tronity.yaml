@@ -6,7 +6,6 @@ group: generic
 requirements:
   evcc: ["sponsorship"]
 params:
-  - name: title
   - name: user
     required: true
   - name: password

@@ -6,7 +6,6 @@ render:
   - default: |
       type: template
       template: tronity
-      title: # Wird in der Benutzeroberfläche angezeigt # Optional
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
@@ -14,7 +13,6 @@ render:
     advanced: |
       type: template
       template: tronity
-      title: # Wird in der Benutzeroberfläche angezeigt # Optional
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional

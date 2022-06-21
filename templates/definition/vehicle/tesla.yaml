@@ -18,7 +18,6 @@ requirements:
       - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
       - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
 params:
-  - name: title
   - name: accessToken
     required: true
     help:

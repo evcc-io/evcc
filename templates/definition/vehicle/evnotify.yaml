@@ -4,7 +4,6 @@ products:
       generic: evNotify
 group: generic
 params:
-  - name: title
   - name: akey
     required: true
   - name: token

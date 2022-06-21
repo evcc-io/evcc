@@ -7,7 +7,6 @@ render:
   - default: |
       type: template
       template: ovms
-      title: # Wird in der Benutzeroberfläche angezeigt # Optional
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vehicleid:
@@ -15,7 +14,6 @@ render:
     advanced: |
       type: template
       template: ovms
-      title: # Wird in der Benutzeroberfläche angezeigt # Optional
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vehicleid:
