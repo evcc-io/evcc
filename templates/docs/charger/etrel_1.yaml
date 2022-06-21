@@ -1,6 +1,7 @@
 product:
   brand: Sonnen
   description: sonnenCharger
+capabilities: ["mA"]
 description: |
   Die Wallbox muss sich im "Power" Modus befinden.
 render:

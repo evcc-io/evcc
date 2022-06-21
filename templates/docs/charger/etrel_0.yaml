@@ -1,6 +1,7 @@
 product:
   brand: Etrel
   description: INCH
+capabilities: ["mA"]
 description: |
   Die Wallbox muss sich im "Power" Modus befinden.
 render:
