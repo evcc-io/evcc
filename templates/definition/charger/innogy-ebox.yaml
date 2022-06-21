@@ -3,6 +3,7 @@ products:
   - brand: Innogy
     description:
       generic: eBox
+capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]
 params:
