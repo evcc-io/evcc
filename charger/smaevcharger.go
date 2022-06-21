@@ -63,8 +63,8 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	if cc.Host == "" {
-		return nil, errors.New("missing host")
+	if cc.Uri == "" {
+		return nil, errors.New("missing uri")
 	}
 
 	if cc.User == "" || cc.Password == "" {
@@ -72,7 +72,7 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 	}
 
 	if cc.User == "admin" {
-		return nil, errors.New("user admin not allowed, create new user")
+		return nil, errors.New(`user "admin" not allowed, create new user`)
 	}
 
 	return NewSmaevcharger(cc.Uri, cc.User, cc.Password, cc.Cache)
