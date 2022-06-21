@@ -51,7 +51,7 @@ func init() {
 // NewSmaevchargerFromConfig creates a SMA EV Charger from generic config
 func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Host     string
+		Uri      string
 		User     string
 		Password string
 		Cache    time.Duration
@@ -75,19 +75,17 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, errors.New("user admin not allowed, create new user")
 	}
 
-	return NewSmaevcharger(cc.Host, cc.User, cc.Password, cc.Cache)
+	return NewSmaevcharger(cc.Uri, cc.User, cc.Password, cc.Cache)
 }
 
 // NewSmaevcharger creates an SMA EV Charger
-func NewSmaevcharger(host string, user string, password string, cache time.Duration) (api.Charger, error) {
+func NewSmaevcharger(uri string, user string, password string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("smaevcharger").Redact(user, password)
-
-	baseUri := "http://" + host
 
 	wb := &Smaevcharger{
 		Helper: request.NewHelper(log),
 		log:    log,
-		uri:    baseUri + "/api/v1",
+		uri:    util.DefaultScheme(uri, "http") + "/api/v1",
 		cache:  cache,
 	}
 
