@@ -3,6 +3,7 @@ import Vehicle from "./Vehicle.vue";
 export default {
   title: "Main/Vehicle",
   component: Vehicle,
+  parameters: { backgrounds: { default: "box" } },
 };
 
 const Template = (args) => ({

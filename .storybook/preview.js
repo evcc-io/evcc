@@ -11,15 +11,15 @@ app.use(i18n);
 export const parameters = {
   actions: { argTypesRegex: "^on[A-Z].*" },
   backgrounds: {
-    default: "dark",
+    default: "background",
     values: [
       {
-        name: "light",
-        value: "#ffffff",
+        name: "background",
+        value: "var(--evcc-background)",
       },
       {
-        name: "dark",
-        value: "#28293e",
+        name: "box",
+        value: "var(--evcc-box)",
       },
     ],
   },

@@ -6,6 +6,7 @@ export default {
   argTypes: {
     mode: { control: { type: "inline-radio" }, options: ["off", "now", "minpv", "pv"] },
   },
+  parameters: { backgrounds: { default: "box" } },
 };
 
 const Template = (args) => ({

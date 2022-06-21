@@ -4,11 +4,7 @@ export default {
   title: "Main/Phases",
   component: Phases,
   argTypes: {},
-  parameters: {
-    backgrounds: {
-      default: "light",
-    },
-  },
+  parameters: { backgrounds: { default: "box" } },
 };
 
 const Template = (args, { argTypes }) => ({

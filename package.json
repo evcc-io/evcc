@@ -26,10 +26,12 @@
   },
   "devDependencies": {
     "@babel/core": "^7.17.2",
-    "@storybook/addon-actions": "^6.5.0-alpha.38",
-    "@storybook/addon-essentials": "^6.5.0-alpha.38",
-    "@storybook/addon-links": "^6.5.0-alpha.38",
-    "@storybook/vue3": "^6.5.0-alpha.38",
+    "@mdx-js/react": "^1.6.22",
+    "@storybook/addon-actions": "^6.5.9",
+    "@storybook/addon-essentials": "^6.5.9",
+    "@storybook/addon-links": "^6.5.9",
+    "@storybook/builder-vite": "^0.1.36",
+    "@storybook/vue3": "^6.5.9",
     "@vue/compiler-sfc": "^3.2.30",
     "@vue/eslint-config-standard": "^6.1.0",
     "babel-loader": "^8.2.3",
@@ -44,7 +46,7 @@
     "eslint-plugin-vue": "^7.20.0",
     "postcss-custom-media": "^8.0.2",
     "prettier": "^2.5.1",
-    "storybook-builder-vite": "^0.1.15",
+    "storybook": "^6.5.9",
     "vite": "^2.7.13"
   },
   "engines": {

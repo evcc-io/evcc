@@ -1,4 +1,7 @@
-const { loadConfigFromFile } = require("vite");
+const {
+  loadConfigFromFile
+} = require("vite");
+
 const path = require("path");
 
 module.exports = {
@@ -6,18 +9,18 @@ module.exports = {
   addons: ["@storybook/addon-links", "@storybook/addon-essentials", "@storybook/addon-postcss"],
   framework: "@storybook/vue3",
   core: {
-    builder: "storybook-builder-vite",
+    builder: "@storybook/builder-vite"
   },
   staticDirs: ["../assets"],
+
   async viteFinal(config, b) {
-    const { config: userConfig } = await loadConfigFromFile(
-      path.resolve(__dirname, "../vite.config.ts")
-    );
-    const vuePlugin = userConfig.plugins.find((p) => p.name === "vite:vue");
-
-    const vuePluginIndex = config.plugins.findIndex((p) => p.name === "vite:vue");
+    const {
+      config: userConfig
+    } = await loadConfigFromFile(path.resolve(__dirname, "../vite.config.ts"));
+    const vuePlugin = userConfig.plugins.find(p => p.name === "vite:vue");
+    const vuePluginIndex = config.plugins.findIndex(p => p.name === "vite:vue");
     config.plugins[vuePluginIndex] = vuePlugin;
-
     return config;
-  },
+  }
+
 };
