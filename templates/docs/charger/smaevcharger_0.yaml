@@ -1,6 +1,8 @@
 product:
   brand: SMA
   description: EV Charger
+description: |
+  Die Wallbox muss sich im Modus "Fast" befinden.
 render:
   - default: |
       type: template
