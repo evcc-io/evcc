@@ -2,7 +2,7 @@ template: keba
 products:
   - brand: KEBA
     description:
-      generic: KeContact P20, P30
+      generic: KeContact P20, P30, C/X Series
   - brand: BMW
     description:
       generic: i Wallbox
