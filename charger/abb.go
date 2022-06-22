@@ -48,7 +48,7 @@ const (
 	// abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 	// abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not supported
 
-	abbMinCurrent = 0x1AE0 // 5920 mA
+	abbMinCurrent = 0x1720 // 5920 mA
 )
 
 func init() {
