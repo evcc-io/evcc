@@ -50,7 +50,7 @@ type Observation struct {
 }
 
 func (o *Observation) Bool() bool {
-	return o != nil && o.ValueAsString == "true"
+	return o != nil && (o.ValueAsString == "true" || o.ValueAsString == "1")
 }
 
 func (o *Observation) Int() (int, error) {

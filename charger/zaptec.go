@@ -38,6 +38,7 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
+	log     *util.Logger
 	cache   time.Duration
 	id      string
 	updated time.Time
@@ -75,6 +76,7 @@ func NewZaptec(user, password, id string, cache time.Duration) (api.Charger, err
 
 	c := &Zaptec{
 		Helper: request.NewHelper(log),
+		log:    log,
 		id:     id,
 		cache:  cache,
 	}
@@ -127,6 +129,10 @@ func (c *Zaptec) state() (zaptec.StateResponse, error) {
 		if err = c.GetJSON(uri, &res); err == nil {
 			c.updated = time.Now()
 			c.status = res
+
+			for _, o := range res {
+				c.log.DEBUG.Printf("%s: %s", o.StateId.String(), o.ValueAsString)
+			}
 		}
 	}
 
@@ -158,7 +164,8 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c *Zaptec) Enabled() (bool, error) {
 	res, err := c.state()
-	return res.ObservationByID(zaptec.IsEnabled).Bool(), err
+	return res.ObservationByID(zaptec.IsEnabled).Bool() &&
+		!res.ObservationByID(zaptec.FinalStopActive).Bool(), err
 }
 
 // Enable implements the api.Charger interface
