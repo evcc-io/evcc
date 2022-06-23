@@ -1,6 +1,7 @@
 product:
   brand: SENEC
   description: Wallbox pro s
+capabilities: ["mA"]
 requirements: ["sponsorship"]
 render:
   - default: |

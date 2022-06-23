@@ -9,6 +9,7 @@ products:
   - brand: Walther Werke
     description:
       generic: Basic Evo Pro
+capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]
 params:

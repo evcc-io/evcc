@@ -63,13 +63,13 @@ func (v *Identity) login() (oauth.Token, error) {
 	var token oauth.Token
 	if err == nil {
 		data := map[string]string{
-			"code": tok.AccessToken,
+			"ciToken": tok.AccessToken,
 		}
 
-		uri := fmt.Sprintf("%s/api/oauth2/v1/token", TokenURI)
+		uri := fmt.Sprintf("%s/api/token/v2/cat-with-ci-access-token", TokenURI)
 
 		var req *http.Request
-		req, err = request.New(http.MethodPut, uri, request.MarshalJSON(data), map[string]string{
+		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
 			"Content-type":   request.JSONContent,
 			"Application-Id": ApplicationID,
 		})
@@ -88,8 +88,8 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"refresh_token": token.RefreshToken,
 	}
 
-	uri := fmt.Sprintf("%s/api/oauth2/v1/refresh", TokenURI)
-	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), map[string]string{
+	uri := fmt.Sprintf("%s/api/token/v2/cat-with-refresh-token", TokenURI)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
 		"Content-type":   request.JSONContent,
 		"Application-Id": ApplicationID,
 	})
