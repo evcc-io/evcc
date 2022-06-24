@@ -4,34 +4,51 @@ products:
       de: OCPP v1.6 kompatible Wallbox
       en: OCPP v1.6 compatible Wallbox
 group: generic
-capabilities: []
+requirements:
+  description:
+    de: |
+      Zur Verbindung mit EVCC muss in der Wallbox `ws://{evcc.ip}:8887/` als Backend eingetragen werden. 
+
+      // TODO
+
+    en: |
+      To connnect the wallbox with EVCC `ws://{evcc.ip}:8887/` as to be provided as a backend address.
+
+      // TODO
+
 params:
   - name: stationid
     required: true
     help:
-      en: The station ID of the wallbox
-      de: Die Stations ID der Wallbox
+      en: The chargepoint ID to uniquly identifiy the station (should work with a random string)
+      de: Die Ladepunkt ID für die eindeutige identifizierung der Wallbox (ein belibiger string sollte funktioniern)
   - name: connector
     default: 1
     valuetype: int
     help:
-      en: The number of supported charge points
-      de: Die Anzahl der unterstützen Ladepunkte
+      en: Used chargepoint, usualy 1 for one connector.
+      de: Verwendeter Verbindungspunkt, normalerweise 1 bei einem Anschluss.
   - name: meterSupported
     default: false
     valuetype: bool
     help:
-      en: Use the wallboxes build in energie meter
-      de: Wenn der in der Wallbox verbaute Energiezähler genutzt werden soll
+      en: Use of the integrated meter (if present)
+      de: Verwendung des integrierten Zählers (falls vorhanden)
   - name: idtag
-    required: true
     valuetype: string
     help:
-      en: ID of the token used for transactions
-      de: ID des Tokens, welcher für Ladevorgänge genutzt werden soll
+      en: RFID token used for transactions (currently no authorization implemented)
+      de: ID des Tokens, welcher für Ladevorgänge genutzt werden soll (aktuell keine Authorizierung umgesetzt)
 render: |
   type: ocpp
   stationid: {{ .stationid }}
-  idtag: {{ .idtag }}
+  {{ if ne .idtag }}idtag: {{ .idtag }}{{ end }}
   connector: {{ .connector }}
   meterSupported: {{ .meterSupported }}
+  
+# TODO: switch to this config when implementation supports authorization
+# {{ if ne .rfid "" }}    
+# rfid:
+#   tag: {{ .rfid }}
+# {{ end }}
+
