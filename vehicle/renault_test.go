@@ -25,14 +25,20 @@ func TestKamereonVehicles(t *testing.T) {
 				kamereonResponse := createResponseStub("ACTIVE", "some role")
 				kamereonResponseJson, _ := json.Marshal(kamereonResponse)
 				w.WriteHeader(http.StatusOK)
-				w.Write(kamereonResponseJson)
+				_, err := w.Write(kamereonResponseJson)
+				if err != nil {
+					return
+				}
 			})), expectedResponse: []string{"V1234"}, expectedErr: nil},
 		{name: "kamereon-response-with-role-set-no-vin-in-config",
 			server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				kamereonResponse := createResponseStub("ACTIVE", "some role")
 				kamereonResponseJson, _ := json.Marshal(kamereonResponse)
 				w.WriteHeader(http.StatusOK)
-				w.Write(kamereonResponseJson)
+				_, err := w.Write(kamereonResponseJson)
+				if err != nil {
+					return
+				}
 			})), expectedResponse: []string{"V1234"}, expectedErr: nil},
 		{name: "kamereon-response-with-role-not-set",
 			configVIN: "V1234",
@@ -40,7 +46,10 @@ func TestKamereonVehicles(t *testing.T) {
 				kamereonResponse := createResponseStub("ACTIVE", "")
 				kamereonResponseJson, _ := json.Marshal(kamereonResponse)
 				w.WriteHeader(http.StatusOK)
-				w.Write(kamereonResponseJson)
+				_, err := w.Write(kamereonResponseJson)
+				if err != nil {
+					return
+				}
 			})), expectedResponse: nil, expectedErr: fmt.Errorf("No paired vehicle found. %s %s",
 				"For the configured vehicle with vin: V1234 the connected driver role is not set.",
 				" Renault will reject all car status requests with a http 403 error code. "+
@@ -52,7 +61,10 @@ func TestKamereonVehicles(t *testing.T) {
 				kamereonResponse := createResponseStub("INACTIVE", "some role")
 				kamereonResponseJson, _ := json.Marshal(kamereonResponse)
 				w.WriteHeader(http.StatusOK)
-				w.Write(kamereonResponseJson)
+				_, err := w.Write(kamereonResponseJson)
+				if err != nil {
+					return
+				}
 			})), expectedResponse: nil, expectedErr: fmt.Errorf("No paired vehicle found. %s %s",
 				"For the configured vehicle with vin: V1234 the my-renault status is not set to active.",
 				" Renault will reject all car status requests with a http 403 error code. "+
