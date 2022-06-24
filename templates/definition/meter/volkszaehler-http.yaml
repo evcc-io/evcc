@@ -10,7 +10,7 @@ params:
   - name: url
     description:
       de: URL des "data" Kontexts der Volkszähler Middleware (ohne / am Ende)
-      en: URL of the middleware#s "data" context (without trailing /)
+      en: URL of the middleware's "data" context (without trailing /)
     help:
       de: "Beispiel: http://zaehler.network.local:8080/api/data"
       en: "Example: http://zaehler.network.local:8080/api/data"
