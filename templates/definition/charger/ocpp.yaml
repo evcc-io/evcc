@@ -8,8 +8,8 @@ requirements:
   description:
     de: |
       Vorraussetzungen vor der Verbindung mit EVCC:
-      * löschen von zu vor konfigurierte Ladeprofile (z.B. durch ein anderes Backend)
-      
+      * löschen von zuvor konfigurierte Ladeprofile (z.B. durch ein anderes Backend)
+
       Zur Verbindung mit EVCC muss in der Wallbox `ws://{evcc.ip}:8887/` als Backend eingetragen werden. 
 
       // TODO
@@ -48,7 +48,7 @@ params:
 render: |
   type: ocpp
   stationid: {{ .stationid }}
-  {{ if ne .idtag }}idtag: {{ .idtag }}{{ end }}
+  {{ if ne .idtag "" }}idtag: {{ .idtag }}{{ end }}
   connector: {{ .connector }}
   meterSupported: {{ .meterSupported }}
 

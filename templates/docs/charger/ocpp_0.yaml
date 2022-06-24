@@ -3,7 +3,7 @@ product:
   group: Generische Unterstützung
 description: |
   Vorraussetzungen vor der Verbindung mit EVCC:
-  * löschen von zu vor konfigurierte Ladeprofile (z.B. durch ein anderes Backend)
+  * löschen von zuvor konfigurierte Ladeprofile (z.B. durch ein anderes Backend)
 
   Zur Verbindung mit EVCC muss in der Wallbox `ws://{evcc.ip}:8887/` als Backend eingetragen werden. 
 
