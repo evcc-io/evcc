@@ -191,7 +191,7 @@ func (wb *Innogy) Currents() (float64, float64, float64, error) {
 
 var _ api.Diagnosis = (*Innogy)(nil)
 
-// Diagnose implements the Diagnosis interface
+// Diagnose implements the api.Diagnosis interface
 func (wb *Innogy) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(igyRegManufacturer, 25); err == nil {
 		fmt.Printf("Manufacturer:\t%s\n", b)

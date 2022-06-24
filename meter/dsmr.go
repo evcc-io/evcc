@@ -60,7 +60,10 @@ type Dsmr struct {
 	updated time.Time
 }
 
-var currentObisCodes = []string{"1-0:31.7.0", "1-0:51.7.0", "1-0:71.7.0"}
+var (
+	currentObis     = []string{"1-0:31.7.0", "1-0:51.7.0", "1-0:71.7.0"}
+	powerExportObis = []string{"1-0:22.7.0", "1-0:42.7.0", "1-0:62.7.0"}
+)
 
 func init() {
 	registry.Add("dsmr", NewDsmrFromConfig)
@@ -117,7 +120,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	// decorate currents
 	var currents func() (float64, float64, float64, error)
 
-	for _, obis := range currentObisCodes {
+	for _, obis := range currentObis {
 		_, err = m.get(obis)
 		if err != nil {
 			break
@@ -254,9 +257,15 @@ func (m *Dsmr) currents() (float64, float64, float64, error) {
 
 	for i := 0; i < 3; i++ {
 		var err error
-		res[i], err = m.get(currentObisCodes[i])
-		if err != nil {
+		if res[i], err = m.get(currentObis[i]); err != nil {
 			return 0, 0, 0, err
+		}
+
+		// correct import/export sign
+		if f, err := m.get(powerExportObis[i]); err != nil {
+			return 0, 0, 0, err
+		} else if f > 0 {
+			res[i] = -res[i]
 		}
 	}
 

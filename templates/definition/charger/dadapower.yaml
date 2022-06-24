@@ -3,7 +3,7 @@ products:
   - brand: Dadapower
     description:
       generic: Premium Wallbox
-capabilities: ["1p3p", "rfid"]
+capabilities: ["1p3p", "mA", "rfid"]
 params:
   - name: modbus
     choice: ["tcpip"]

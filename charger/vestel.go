@@ -46,7 +46,7 @@ const (
 
 var vestelRegCurrents = []uint16{1008, 1010, 1012}
 
-// Vestel is an api.ChargeController implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
+// Vestel is an api.Charger implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Vestel struct {
 	log     *util.Logger
@@ -172,8 +172,7 @@ func (wb *Vestel) ChargingTime() (time.Duration, error) {
 		return 0, err
 	}
 
-	secs := binary.BigEndian.Uint32(b)
-	return time.Duration(time.Duration(secs) * time.Second), nil
+	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
 var _ api.Meter = (*Vestel)(nil)
@@ -229,7 +228,9 @@ func (wb *Vestel) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
-// Diagnose implements the Diagnosis interface
+var _ api.Diagnosis = (*Vestel)(nil)
+
+// Diagnose implements the api.Diagnosis interface
 func (wb *Vestel) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(vestelRegBrand, 10); err == nil {
 		fmt.Printf("Brand:\t%s\n", b)

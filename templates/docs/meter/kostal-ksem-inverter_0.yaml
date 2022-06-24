@@ -1,6 +1,8 @@
 product:
   brand: Kostal
   description: Smart Energy Meter (über den Wechselrichter)
+description: |
+  Der Zähler muss in Sensorposition 2 (Netzanschluss) installiert sein. Sensorposition 1 (Haushaltsverbrauch) wird nicht unterstützt.
 render:
   - usage: grid
     default: |

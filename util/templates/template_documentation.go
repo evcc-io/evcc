@@ -1,12 +1,10 @@
 package templates
 
 import (
-	"bufio"
 	"bytes"
 	_ "embed"
 	"fmt"
 	"regexp"
-	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -53,7 +51,7 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 			}
 
 			modbusData := map[string]interface{}{}
-			modbusData = t.ModbusValues(TemplateRenderModeDocs, true, modbusData)
+			t.ModbusValues(TemplateRenderModeDocs, modbusData)
 
 			modbusOut := new(bytes.Buffer)
 
@@ -70,31 +68,16 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 	var hasAdvancedParam bool
 	var newParams []Param
 	for _, param := range t.Params {
-		// reduce help texts to one line and add ...
-		help := param.Help.String(lang)
-		if help != "" {
-			scanner := bufio.NewScanner(strings.NewReader(help))
-			line := 0
-			for scanner.Scan() {
-				line++
-				if line == 1 {
-					help = scanner.Text()
-				} else {
-					help += "..."
-					break
-				}
-			}
-			if help != param.Help.String(lang) {
-				param.Help.SetString(lang, help)
-			}
-		}
+		param.Help.Shorten(lang)
 
 		if param.Deprecated || param.Name == ParamUsage {
 			continue
 		}
+
 		if param.Advanced {
 			hasAdvancedParam = true
 		}
+
 		newParams = append(newParams, param)
 	}
 	t.Params = newParams

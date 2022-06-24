@@ -37,7 +37,7 @@ func (v *Provider) SoC() (float64, error) {
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
-	res, err := v.chargerG()
+	res, err := v.rangeG()
 	if err == nil {
 		return int64(res.RangeElectric.Value), nil
 	}

@@ -7,14 +7,22 @@ group: generic
 params:
   - name: usage
     choice: ["grid"]
-  - name: host
-  - name: port
-    default: 80
+  - name: url
+    description:
+      de: URL des "data" Kontexts der Volkszähler Middleware (ohne / am Ende)
+      en: URL of the middleware's "data" context (without trailing /)
+    help:
+      de: "Beispiel: http://zaehler.network.local:8080/api/data"
+      en: "Example: http://zaehler.network.local:8080/api/data"
   - name: uuid
     required: true
 render: |
   type: custom
   power: # power reading
     source: http # use http plugin
+    {{- if .host }}
     uri: http://{{ .host }}:{{ .port }}/api/data/{{ .uuid }}.json?from=now
+    {{ else }}
+    uri: {{ .url }}/{{ .uuid }}.json?from=now
+    {{- end }}
     jq: .data.tuples[0][1] # parse response json
