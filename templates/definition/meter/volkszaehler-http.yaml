@@ -12,8 +12,8 @@ params:
       de: URL des "data" Kontext der volkszahler Middleware (ohne ein / am Ende)
       en: URL of the "data" context of the volkszaheler middleware (without the / at the end)
     help:
-      de: 'Die URL ist zum Beispiel: http://zaehler.network.local:8080/api/data'
-      en: 'The URL is for example: http://zaehler.network.local:8080/api/data'
+      de: "Die URL ist zum Beispiel: http://zaehler.network.local:8080/api/data"
+      en: "The URL is for example: http://zaehler.network.local:8080/api/data"
   - name: uuid
     required: true
 render: |
