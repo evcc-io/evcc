@@ -5,8 +5,8 @@ products:
       generic: PowerBrain
 requirements:
   description:
-    de: Bei cFos PowerBrain charger muss der cFos Zähler separat als Ladezähler konfiguriert werden [`charge meter`](meters).
-    en: For cFos PowerBrain charger, cFos meter must be configured separately as charge meter [`charge meter`](meters).
+    de: Der Zähler- falls vorhanden- muss separat als Ladezähler konfiguriert werden.
+    en: The meter- if present- must be configured separately as charge meter.
   evcc: ["sponsorship"]
 params:
   - name: host

@@ -2,6 +2,8 @@ product:
   brand: cFos
   description: PowerBrain
 requirements: ["sponsorship"]
+description: |
+  Der Zähler- falls vorhanden- muss separat als Ladezähler konfiguriert werden.
 render:
   - default: |
       type: template
