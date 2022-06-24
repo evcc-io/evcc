@@ -1,0 +1,12 @@
+template: openevse
+products:
+  - brand: OpenEVSE
+requirements:
+  description:
+    en: Requires firmware 7.0 or later.
+    de: Benötigt mindestens Firmware 7.0 oder neuer.
+params:
+  - name: host
+render: |
+  type: openevse
+  uri: http://{{ .host }}
