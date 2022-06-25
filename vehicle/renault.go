@@ -75,6 +75,18 @@ type kamereonVehicle struct {
 	ConnectedDriver connectedDriver `json:"ConnectedDriver"`
 }
 
+func (v *kamereonVehicle) Available() error {
+	if strings.ToUpper(v.Status) != "ACTIVE" {
+		return errors.New("vehicle is not active")
+	}
+
+	if len(v.ConnectedDriver.Role) == 0 {
+		return errors.New("vehicle is not connected to driver")
+	}
+
+	return nil
+}
+
 type connectedDriver struct {
 	Role string `json:"role"`
 }
@@ -150,10 +162,20 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		err = v.authFlow()
 	}
 
+	var car kamereonVehicle
 	if err == nil {
-		v.vin, err = ensureVehicle(cc.VIN, func() ([]string, error) {
-			return v.kamereonVehicles(v.accountID)
-		})
+		v.vin, car, err = ensureVehicleWithFeature(cc.VIN,
+			func() ([]kamereonVehicle, error) {
+				return v.kamereonVehicles(v.accountID)
+			},
+			func(v kamereonVehicle) (string, kamereonVehicle) {
+				return v.VIN, v
+			},
+		)
+	}
+
+	if err == nil {
+		err = car.Available()
 	}
 
 	v.batteryG = provider.Cached(v.batteryAPI, cc.Cache)
@@ -313,37 +335,10 @@ func (v *Renault) kamereonPerson(personID string) (string, error) {
 	return res.Accounts[0].AccountID, err
 }
 
-func (v *Renault) kamereonVehicles(configVIN string) ([]string, error) {
+func (v *Renault) kamereonVehicles(configVIN string) ([]kamereonVehicle, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, v.accountID)
 	res, err := v.kamereonRequest(uri, nil)
-	var erroneousVin string
-	var vehicles []string
-	if err == nil {
-		for _, vehicle := range res.VehicleLinks {
-			//the evcc.yml binds every vin to an account, so if no VIN is set we try to use the account vehicle regardless of its VIN
-			//if the VIN is set it must be match one of the vehicles bind to the account
-			if len(configVIN) == 0 || vehicle.VIN == configVIN {
-				if strings.ToUpper(vehicle.Status) == "ACTIVE" {
-					if len(vehicle.ConnectedDriver.Role) > 0 {
-						vehicles = append(vehicles, vehicle.VIN)
-					} else {
-						erroneousVin = fmt.Sprintf("For the configured vehicle with vin: %s "+
-							"the connected driver role is not set.", vehicle.VIN)
-					}
-				} else {
-					erroneousVin = fmt.Sprintf("For the configured vehicle with vin: %s "+
-						"the my-renault status is not set to active.", vehicle.VIN)
-				}
-			}
-		}
-	}
-	if len(vehicles) <= 0 {
-		return vehicles, fmt.Errorf("No paired vehicle found. %s %s",
-			erroneousVin, " Renault will reject all car status requests with a http 403 error code. "+
-				" Please pair your configured vehicle with the used my-renault account.")
-	} else {
-		return vehicles, err
-	}
+	return res.VehicleLinks, err
 }
 
 // batteryAPI provides battery-status api response
