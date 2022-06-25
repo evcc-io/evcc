@@ -25,7 +25,7 @@
 	--evcc-green: #baffcb;
 	--evcc-dark-green: #0fde41;
 	--evcc-yellow: #faf000;
-	--bs-gray-deep: #020318;
+	--bs-gray-deep: #010322;
 	--bs-gray-dark: #28293e;
 	--bs-gray-medium: #93949e;
 	--bs-gray-light: #b5b6c3;
@@ -182,26 +182,31 @@ a {
 }
 
 .modal-header {
-	padding-bottom: 1.5rem;
+	padding: 0 0 1rem 0;
 }
 
 .modal-title {
 	font-weight: bold;
-	font-size: 22px;
+	font-size: 1.25rem;
 }
 
 .modal-content {
 	border-radius: 1rem;
-	padding: 1rem;
+	padding: 1.25rem;
+}
+
+@media (--sm-and-up) {
+	.modal-content {
+		padding: 2rem;
+	}
 }
 
 .modal-body {
-	padding-top: 1.5rem;
-	padding-bottom: 1.5rem;
+	padding: 1rem 0 0;
 }
 
 .modal-footer {
-	padding-top: 1.5rem;
+	padding-top: 1rem;
 }
 
 .cursor-pointer {
@@ -220,4 +225,20 @@ small {
 
 .btn-close {
 	opacity: 1;
+}
+
+.dropdown-menu {
+	border: none;
+	border-radius: 10px;
+	box-shadow: 0 0 8px var(--bs-gray-light);
+	background-color: var(--evcc-box);
+}
+.dropdown-item {
+	color: var(--evcc-default-text); 
+}
+
+@media (--dark-mode) {
+	.dropdown-menu {
+		box-shadow: 0 0 8px var(--evcc-box);
+	}
 }

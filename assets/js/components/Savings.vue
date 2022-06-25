@@ -31,18 +31,7 @@
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title">
-								<span class="text-nowrap">
-									{{
-										$t("footer.savings.modalTitlePartOne", {
-											total: fmtKw(totalCharged * 1000, true, false),
-										})
-									}}
-									·
-								</span>
-								{{ " " }}
-								<span class="text-nowrap">
-									{{ $t("footer.savings.modalTitlePartTwo", { percent }) }}
-								</span>
+								{{ $t("footer.savings.modalTitle") }}
 							</h5>
 							<button
 								type="button"
@@ -51,106 +40,68 @@
 								aria-label="Close"
 							></button>
 						</div>
-						<div class="modal-body py-4">
-							<div class="chart-container mb-3">
-								<div
-									class="chart-legend d-flex flex-wrap justify-content-between mb-1"
-								>
-									<div
-										class="text-nowrap"
-										:class="{ 'text-gray-medium': noData }"
-									>
-										<shopicon-filled-square
-											class="text-evcc d-inline-block"
-											:class="{ 'text-gray-medium': noData }"
-										></shopicon-filled-square>
-										{{
-											$t("footer.savings.modalChartSelf", {
-												self: fmtKw(
-													selfConsumptionCharged * 1000,
-													true,
-													false
-												),
-											})
-										}}
-									</div>
-									<div
-										class="text-nowrap"
-										:class="{ 'text-gray-medium': noData }"
-									>
-										{{
-											$t("footer.savings.modalChartGrid", {
-												grid: fmtKw(gridCharged * 1000, true, false),
-											})
-										}}
-										<shopicon-filled-square
-											class="text-grid d-inline-block"
-											:class="{ 'text-gray-medium': noData }"
-										></shopicon-filled-square>
-									</div>
-								</div>
-								<div
-									class="chart d-flex justify-content-stretch mb-1 rounded overflow-hidden"
-								>
-									<div
-										v-if="!noData"
-										class="chart-item chart-item--self d-flex justify-content-center align-items-center evcc-default-text flex-shrink-1"
-										:style="{ width: `${percent}%` }"
-									>
-										<span class="text-truncate"> {{ percent }}% </span>
-									</div>
-									<div
-										v-if="!noData"
-										class="chart-item chart-item--grid d-flex justify-content-center align-items-center evcc-default-text flex-shrink-1"
-										:style="{ width: `${100 - percent}%` }"
-									>
-										<span class="text-truncate"> {{ 100 - percent }}% </span>
-									</div>
-									<div
-										v-if="noData"
-										class="chart-item chart-item--no-data d-flex justify-content-center align-items-center evcc-default-text w-100"
-									>
-										<span>{{ $t("footer.savings.modalNoData") }}</span>
-									</div>
-								</div>
-							</div>
-							<p class="mb-3">
-								{{ $t("footer.savings.modalSavingsPrice") }}:
-								<strong>{{ fmtPricePerKWh(effectivePrice, currency) }}</strong>
-								<br />
-								{{ $t("footer.savings.modalSavingsTotal") }}:
-								<strong>{{ fmtMoney(amount, currency) }}</strong>
-							</p>
-
-							<p class="small text-muted mb-3">
-								<a
-									href="https://docs.evcc.io/docs/guides/setup/#ersparnisberechnung"
-									target="_blank"
-									class="small"
-								>
-									{{ $t("footer.savings.modalExplaination") }}</a
-								>:
-								<span class="text-nowrap">
-									{{
-										$t("footer.savings.modalExplainationGrid", {
-											gridPrice: fmtPricePerKWh(gridPrice, currency),
-										})
-									}}</span
-								>,
-								<span class="text-nowrap">
-									{{
-										$t("footer.savings.modalExplainationFeedIn", {
-											feedInPrice: fmtPricePerKWh(feedInPrice, currency),
-										})
-									}}
-								</span>
-								<br />
+						<div class="modal-body">
+							<p>
+								<strong>Zeitraum:</strong>
 								{{
 									$t("footer.savings.modalServerStart", {
 										since: fmtTimeAgo(secondsSinceStart()),
 									})
 								}}
 							</p>
+
+							<div class="d-block d-sm-flex">
+								<div class="flex-grow-1">
+									<p class="my-0 fw">Sonnenenergie</p>
+									<h3 class="my-1 text-evcc fs-1">
+										{{ percent }}<span class="fs-6 text-evcc"> %</span>
+									</h3>
+									<small class="mt-0">
+										{{ fmtKw(selfConsumptionCharged * 1000, true, false) }} kWh
+										Sonne<br />
+										{{ fmtKw(gridCharged * 1000, true, false) }} kWh Netz
+									</small>
+								</div>
+
+								<div class="flex-grow-1">
+									<p class="my-0">Eff. Energiepreis</p>
+									<h3 class="my-2 text-evcc fs-1">
+										{{ fmtPricePerKWh(effectivePrice, currency).split(" ")[0]
+										}}<span class="fs-6 text-evcc">
+											{{
+												" " +
+												fmtPricePerKWh(effectivePrice, currency).split(
+													" "
+												)[1]
+											}}</span
+										>
+									</h3>
+									<small class="mt-0">
+										{{
+											$t("footer.savings.modalExplainationFeedIn", {
+												feedInPrice: fmtPricePerKWh(feedInPrice, currency),
+											})
+										}}
+										<br />
+										{{
+											$t("footer.savings.modalExplainationGrid", {
+												gridPrice: fmtPricePerKWh(gridPrice, currency),
+											})
+										}}
+									</small>
+								</div>
+
+								<div class="flex-grow-1">
+									<p class="my-0">Ersparnis</p>
+									<h3 class="my-2 text-evcc fs-1">
+										8,23<span class="fs-6 text-evcc"> €</span>
+									</h3>
+									<small class="mt-0"
+										>gegenüber Netzbezug<br />
+										{{ fmtKw(totalCharged * 1000, true, false) }} kWh geladen
+									</small>
+								</div>
+							</div>
 
 							<hr class="mb-4" />
 
@@ -202,28 +153,6 @@ export default {
 };
 </script>
 <style scoped>
-/* make modal a bottom drawer on small screens */
-@media (max-width: 575px) {
-	.modal-dialog.modal-dialog-centered {
-		align-items: flex-end;
-		margin-bottom: 0;
-	}
-	.modal.fade .modal-dialog {
-		transition: transform var(--evcc-transition-medium) ease;
-		transform: translate(0, 150px);
-	}
-	.modal.show .modal-dialog {
-		transform: none;
-	}
-	.modal-dialog-scrollable {
-		height: calc(100% - 0.5rem);
-	}
-	.modal-content {
-		border-end-end-radius: 0;
-		border-end-start-radius: 0;
-	}
-}
-
 .chart {
 	height: 2.5rem;
 }

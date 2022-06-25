@@ -15,20 +15,19 @@
 					:label="$t('main.vehicle.vehicleSoC')"
 					:value="`${vehicleSoC || '--'} %`"
 					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
-					on-dark
-				/>
-				<TargetSoCSelect
-					class="flex-grow-1 text-center"
-					:target-soc="displayTargetSoC"
-					:range-per-soc="rangePerSoC"
-					@target-soc-updated="targetSocUpdated"
 				/>
 				<TargetCharge
-					class="flex-grow-1 text-end target-charge"
+					class="flex-grow-1 text-center target-charge"
 					v-bind="targetCharge"
 					:disabled="targetChargeDisabled"
 					@target-time-updated="setTargetTime"
 					@target-time-removed="removeTargetTime"
+				/>
+				<TargetSoCSelect
+					class="flex-grow-1 text-end"
+					:target-soc="displayTargetSoC"
+					:range-per-soc="rangePerSoC"
+					@target-soc-updated="targetSocUpdated"
 				/>
 			</div>
 			<div v-if="$hiddenFeatures" class="d-flex justify-content-start">

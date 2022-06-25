@@ -218,6 +218,11 @@ export default {
 	background-color: var(--evcc-grid);
 	color: var(--bs-white);
 }
+@media (--dark-mode) {
+	.grid-import {
+		color: var(--bs-dark);
+	}
+}
 .self-consumption {
 	background-color: var(--evcc-self);
 	color: var(--bs-dark);

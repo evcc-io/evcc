@@ -1,5 +1,5 @@
 <template>
-	<div class="loadpoint pt-4 pb-2 px-3 px-sm-4 mx-1 mx-sm-0">
+	<div class="loadpoint pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
 		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
 			<h3 class="mb-3 me-2 text-truncate">
 				{{ title || $t("main.loadpoint.fallbackName") }}

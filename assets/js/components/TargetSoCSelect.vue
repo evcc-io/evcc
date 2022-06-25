@@ -1,5 +1,5 @@
 <template>
-	<LabelAndValue class="flex-grow-1" :label="$t('main.vehicle.targetSoC')" :on-dark="true">
+	<LabelAndValue class="flex-grow-1" :label="$t('main.vehicle.targetSoC')">
 		<h3 class="value m-0">
 			<label class="d-inline-block position-relative">
 				<select :value="targetSoc" class="custom-select" @change="change">
