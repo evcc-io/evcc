@@ -52,7 +52,7 @@ export default {
 	color: var(--evcc-default-text);
 }
 .btn:hover {
-	background: var(--evcc-gray);
+	color: var(--evcc-gray);
 }
 .btn.active {
 	color: var(--evcc-background);

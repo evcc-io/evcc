@@ -50,60 +50,49 @@
 								}}
 							</p>
 
-							<div class="d-block d-sm-flex">
-								<div class="flex-grow-1">
-									<p class="my-0 fw">Sonnenenergie</p>
-									<h3 class="my-1 text-evcc fs-1">
-										{{ percent }}<span class="fs-6 text-evcc"> %</span>
-									</h3>
-									<small class="mt-0">
-										{{ fmtKw(selfConsumptionCharged * 1000, true, false) }} kWh
-										Sonne<br />
-										{{ fmtKw(gridCharged * 1000, true, false) }} kWh Netz
-									</small>
-								</div>
+							<div class="d-block d-lg-flex mb-4">
+								<SavingsTile
+									class="text-accent1"
+									icon="sun"
+									title="Sonnenenergie"
+									:value="percent"
+									unit="%"
+									:sub1="`${fmtKw(
+										selfConsumptionCharged * 1000,
+										true,
+										false
+									)} kWh Sonne`"
+									:sub2="`${fmtKw(gridCharged * 1000, true, false)} kWh Netz`"
+								/>
 
-								<div class="flex-grow-1">
-									<p class="my-0">Eff. Energiepreis</p>
-									<h3 class="my-2 text-evcc fs-1">
-										{{ fmtPricePerKWh(effectivePrice, currency).split(" ")[0]
-										}}<span class="fs-6 text-evcc">
-											{{
-												" " +
-												fmtPricePerKWh(effectivePrice, currency).split(
-													" "
-												)[1]
-											}}</span
-										>
-									</h3>
-									<small class="mt-0">
-										{{
-											$t("footer.savings.modalExplainationFeedIn", {
-												feedInPrice: fmtPricePerKWh(feedInPrice, currency),
-											})
-										}}
-										<br />
-										{{
-											$t("footer.savings.modalExplainationGrid", {
-												gridPrice: fmtPricePerKWh(gridPrice, currency),
-											})
-										}}
-									</small>
-								</div>
+								<SavingsTile
+									class="text-accent2"
+									icon="receivepayment"
+									title="Ladeenergie"
+									:value="fmtPricePerKWh(effectivePrice, currency).split(' ')[0]"
+									:unit="fmtPricePerKWh(effectivePrice, currency).split(' ')[1]"
+									:sub1="
+										$t('footer.savings.modalExplainationFeedIn', {
+											feedInPrice: fmtPricePerKWh(feedInPrice, currency),
+										})
+									"
+									:sub2="
+										$t('footer.savings.modalExplainationGrid', {
+											gridPrice: fmtPricePerKWh(gridPrice, currency),
+										})
+									"
+								/>
 
-								<div class="flex-grow-1">
-									<p class="my-0">Ersparnis</p>
-									<h3 class="my-2 text-evcc fs-1">
-										8,23<span class="fs-6 text-evcc"> €</span>
-									</h3>
-									<small class="mt-0"
-										>gegenüber Netzbezug<br />
-										{{ fmtKw(totalCharged * 1000, true, false) }} kWh geladen
-									</small>
-								</div>
+								<SavingsTile
+									class="text-accent3"
+									icon="coinjar"
+									title="Ersparnis"
+									:value="fmtMoney(amount, currency).split('&nbsp;')[0]"
+									:unit="fmtMoney(amount, currency).split('&nbsp;')[1]"
+									sub1="gegenüber Netzbezug"
+									:sub2="`${fmtKw(totalCharged * 1000, true, false)} kWh geladen`"
+								/>
 							</div>
-
-							<hr class="mb-4" />
 
 							<Sponsor :sponsor="sponsor" />
 						</div>
@@ -117,12 +106,11 @@
 <script>
 import formatter from "../mixins/formatter";
 import Sponsor from "./Sponsor.vue";
-import "@h2d2/shopicons/es/filled/square";
-import "@h2d2/shopicons/es/regular/sun";
+import SavingsTile from "./SavingsTile.vue";
 
 export default {
 	name: "Savings",
-	components: { Sponsor },
+	components: { Sponsor, SavingsTile },
 	mixins: [formatter],
 	props: {
 		selfConsumptionPercent: Number,
@@ -171,5 +159,8 @@ export default {
 	transition-property: width;
 	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: linear;
+}
+.tile-icon {
+	width: 70px;
 }
 </style>

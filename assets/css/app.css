@@ -24,7 +24,10 @@
 :root {
 	--evcc-green: #baffcb;
 	--evcc-dark-green: #0fde41;
+	--evcc-darker-green: #0ba631;
+	--evcc-darkest-green: #076f20;
 	--evcc-yellow: #faf000;
+	--evcc-dark-yellow: #bbb400;
 	--bs-gray-deep: #010322;
 	--bs-gray-dark: #28293e;
 	--bs-gray-medium: #93949e;
@@ -39,12 +42,16 @@
 	--evcc-default-text: var(--bs-gray-dark);
 	--evcc-gray: var(--bs-gray-medium);
 
+	--evcc-accent1: var(--evcc-dark-yellow);
+	--evcc-accent2: var(--evcc-darker-green);
+	--evcc-accent3: var(--evcc-darkest-green);
+
 	--evcc-transition-slow: 1000ms;
 	--evcc-transition-medium: 500ms;
 	--evcc-transition-fast: 250ms;
 	--evcc-transition-very-fast: 100ms;
 
-	--bs-primary: var(--evcc-dark-green);
+	--bs-primary: var(--evcc-darker-green);
 	--bs-primary-rgb: 58, 186, 44;
 
 	--bs-body-font-size: 14px;
@@ -60,6 +67,10 @@
 		--evcc-box: var(--bs-gray-dark);
 		--evcc-default-text: var(--bs-white);
 		--evcc-gray: var(--bs-gray-light);
+		--evcc-accent1: var(--evcc-yellow);
+		--evcc-accent2: var(--evcc-dark-green);
+		--evcc-accent3: var(--evcc-darker-green);
+		--bs-primary: var(--evcc-dark-green);
 	}
 }
 
@@ -97,7 +108,11 @@ h4 {
 }
 
 a {
-	color: var(--evcc-dark-green);
+	color: var(--bs-primary);
+}
+
+a:hover {
+	color: var(--evcc-accent3);
 }
 
 /* reverse loading animation */
@@ -114,41 +129,50 @@ a {
 
 .btn-primary,
 .btn-primary:focus {
-	background-color: var(--bs-gray-dark);
-	border-color: var(--bs-gray-dark);
+	background-color: var(--bs-primary);
+	border-color: var(--bs-primary);
+	color: var(--evcc-background)
 }
 
 .btn-primary:hover,
 .btn-primary:active {
-	background-color: var(--evcc-dark-green);
-	border-color: var(--evcc-dark-green);
+	background-color: var(--evcc-accent3);
+	border-color: var(--evcc-accent3);
 }
 .btn-outline-primary,
 .btn-outline-primary:focus {
-	color: var(--bs-gray-dark);
+	color: var(--bs-primary);
 	background-color: transparent;
 	border-width: 2px;
-	border-color: var(--bs-gray-dark);
+	border-color: var(--bs-primary);
 }
 .btn-outline-primary:hover,
 .btn-outline-primary:active {
-	color: var(--evcc-dark-green);
+	color: var(--evcc-accent3);
 	background-color: transparent;
 	border-width: 2px;
-	border-color: var(--evcc-dark-green);
+	border-color: var(--evcc-accent3);
 }
+
 .text-evcc {
 	color: var(--evcc-dark-green);
+}
+.text-accent1 {
+	color: var(--evcc-accent1);
+}
+.text-accent2 {
+	color: var(--evcc-accent2);
+}
+.text-accent3 {
+	color: var(--evcc-accent3);
 }
 
 .evcc-default-text {
 	color: var(--evcc-default-text) !important;
 }
-
 .evcc-gray {
 	color: var(--evcc-gray);
 }
-
 .text-grid {
 	color: var(--evcc-grid);
 }
@@ -183,6 +207,7 @@ a {
 
 .modal-header {
 	padding: 0 0 1rem 0;
+	border: none;
 }
 
 .modal-title {
@@ -193,6 +218,8 @@ a {
 .modal-content {
 	border-radius: 1rem;
 	padding: 1.25rem;
+	background-color: var(--evcc-box);
+	color: var(--evcc-default-text);
 }
 
 @media (--sm-and-up) {
@@ -206,7 +233,12 @@ a {
 }
 
 .modal-footer {
-	padding-top: 1rem;
+	padding: 1rem 0 0;
+	border: none;
+}
+
+.modal-footer > * {
+	margin: 0;
 }
 
 .cursor-pointer {
@@ -225,6 +257,12 @@ small {
 
 .btn-close {
 	opacity: 1;
+}
+
+@media (--dark-mode) {
+	.btn-close {
+		filter: invert(1);
+	}
 }
 
 .dropdown-menu {

@@ -25,7 +25,7 @@ export default {
     savings: {
       footerShort: "{percent}% Sonne",
       footerLong: "{percent}% Sonnenenergie",
-      modalTitle: "Energieauswertung",
+      modalTitle: "Auswertung Ladeenergie",
       modalChartGrid: "Netz {grid} kWh",
       modalChartSelf: "Sonne {self} kWh",
       modalSavingsPrice: "Effektiver Energiepreis",
@@ -40,10 +40,10 @@ export default {
       thanks: "Danke für deine Unterstützung, {sponsor}! Das hilft uns bei der Weiterentwicklung.",
       confetti: "Lust auf etwas Sponsor-Konfetti?",
       supportUs:
-        "Wir möchten effizientes Zuhause-Laden zum Standard für möglichst viele Menschen machen. Helfe uns indem du die Weiterentwicklung und Pflege des Projekts unterstützt.",
+        "Unsere Mission: Sonne tanken zum Standard machen. Helfe uns und unterstütze evcc finanziell.",
       sticker: "...oder evcc Sticker?",
       confettiPromise: "Es gibt auch Sticker und digitales Konfetti ;)",
-      becomeSponsor: "Werde jetzt GitHub Sponsor",
+      becomeSponsor: "Sponsor werden",
     },
   },
   notifications: {

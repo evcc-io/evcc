@@ -21,16 +21,18 @@
 		<p class="mb-3">
 			{{ $t("footer.sponsor.supportUs") }}
 		</p>
-		<div class="d-flex justify-content-center align-items-center flex-column">
+		<div
+			class="d-flex justify-content-center align-items-center flex-column flex-lg-row align-items-lg-baseline justify-content-lg-start"
+		>
 			<a
 				target="_blank"
 				href="https://github.com/sponsors/andig"
-				class="btn btn-outline-primary mb-2 w-75"
+				class="btn btn-outline-primary mb-3 become-sponsor"
 			>
 				<shopicon-regular-heart class="me-1 d-inline-block"></shopicon-regular-heart>
 				{{ $t("footer.sponsor.becomeSponsor") }}
 			</a>
-			<div class="small text-muted text-center">
+			<div class="small text-muted text-center ms-lg-3">
 				{{ $t("footer.sponsor.confettiPromise") }}
 			</div>
 		</div>
@@ -89,5 +91,18 @@ export default {
 	/* prevent double-tap zoom */
 	touch-action: none;
 	user-select: none;
+}
+.become-sponsor {
+	width: 100%;
+}
+@media (--sm-and-up) {
+	.become-sponsor {
+		width: 75%;
+	}
+}
+@media (--lg-and-up) {
+	.become-sponsor {
+		width: 40%;
+	}
 }
 </style>

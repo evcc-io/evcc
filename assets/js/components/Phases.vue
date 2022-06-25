@@ -46,12 +46,17 @@ export default {
 	width: 73px;
 }
 .phase {
-	background-color: var(--evcc-green);
+	background-color: var(--bs-gray-bright);
 	height: 4px;
 	flex-grow: 1;
 	position: relative;
 	border-radius: 1px;
 	overflow: hidden;
+}
+@media (--dark-mode) {
+	.phase {
+		background-color: var(--bs-gray-bright);
+	}
 }
 .phase.inactive {
 	display: none;
