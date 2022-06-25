@@ -22,8 +22,8 @@ render: |
   {{- if eq .usage "pv" }}
     # PV
     source: http
-    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556736 # PV Power
-    #   | ----------------------------- PV W ------------- |               
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556736 # PV Power (all strings)
+    #   | ----------------------------- PV W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==33556736) | .value )
   {{- end -}}
   {{- if eq .usage "battery" }}
