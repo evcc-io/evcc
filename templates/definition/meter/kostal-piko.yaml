@@ -22,9 +22,9 @@ render: |
   {{- if eq .usage "pv" }}
     # PV
     source: http
-    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33555203&dxsEntries=33555459 # PV1 Power + PV2 Power
-    #   | ----------------------------- PV1 W ------------ | + | ----------------------------- PV2 W ------------ |
-    jq: (.dxsEntries[] | select(.dxsId==33555203) | .value ) + (.dxsEntries[] | select(.dxsId==33555459) | .value )
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556736 # PV Power (all strings)
+    #   | ----------------------------- PV W ------------- |
+    jq: (.dxsEntries[] | select(.dxsId==33556736) | .value )
   {{- end -}}
   {{- if eq .usage "battery" }}
     # Battery
