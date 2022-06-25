@@ -106,8 +106,6 @@ func (wb *Etrel) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	wb.log.TRACE.Printf("etrelRegChargeStatus: %v", binary.BigEndian.Uint16(b))
-
 	// 0 Unknown
 	// 1 SocketAvailable
 	// 2 WaitingForVehicleToBeConnected
@@ -139,8 +137,6 @@ func (wb *Etrel) Enabled() (bool, error) {
 		return false, err
 	}
 
-	wb.log.TRACE.Printf("etrelRegMaxCurrent: %v", encoding.Float32(b))
-
 	return encoding.Float32(b) > 0, nil
 }
 
@@ -169,7 +165,7 @@ func (wb *Etrel) MaxCurrent(current int64) error {
 
 var _ api.ChargerEx = (*Etrel)(nil)
 
-// MaxCurrentMilli implements the api.ChargerEx interface
+// MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Etrel) MaxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.1f", current)

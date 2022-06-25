@@ -8,6 +8,7 @@ products:
   - brand: TinkerForge
     description:
       generic: WARP Charger Pro
+capabilities: ["mA"]
 requirements:
   description:
     en: An MQTT broker is required. The charger must be have a configured MQTT connection.

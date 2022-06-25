@@ -43,18 +43,20 @@ func New(log *util.Logger, q url.Values) *Service {
 
 // https://github.com/arjenvrh/audi_connect_ha/issues/133
 
-var secret = []byte{55, 24, 256 - 56, 256 - 96, 256 - 72, 256 - 110, 57, 256 - 87, 3, 256 - 86, 256 - 41, 256 - 103, 33, 256 - 30, 99, 103, 81, 125, 256 - 39, 256 - 39, 71, 18, 256 - 107, 256 - 112, 256 - 120, 256 - 12, 256 - 104, 89, 103, 113, 256 - 128, 256 - 91}
+const (
+	qmSecret   = "e47866378ef0658ce75d71007a809f34616b9635e2ec228245784c1f63e88d06"
+	qmClientId = "c95f4fd2"
+)
 
 func qmauth(ts int64) string {
+	secret, _ := hex.DecodeString(qmSecret)
 	hash := hmac.New(sha256.New, secret)
 	hash.Write([]byte(strconv.FormatInt(ts, 10)))
-	b := hash.Sum(nil)
-
-	return hex.EncodeToString(b)
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
 func qmauthNow() string {
-	return "v1:55f755b0:" + qmauth(time.Now().Unix()/100)
+	return "v1:" + qmClientId + ":" + qmauth(time.Now().Unix()/100)
 }
 
 // Exchange exchanges an VAG identity token for an IDK token

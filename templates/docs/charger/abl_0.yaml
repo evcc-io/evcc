@@ -1,6 +1,7 @@
 product:
   brand: ABL
   description: eMH
+capabilities: ["mA"]
 requirements: ["sponsorship"]
 render:
   - default: |

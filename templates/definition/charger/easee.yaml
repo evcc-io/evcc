@@ -3,7 +3,7 @@ products:
   - brand: Easee
     description:
       generic: Home
-capabilities: ["1p3p"]
+capabilities: ["1p3p", "rfid"]
 requirements:
   evcc: ["sponsorship"]
 params:

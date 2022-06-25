@@ -3,6 +3,11 @@ products:
   - brand: SMA
     description:
       generic: EV Charger
+capabilities: ["mA"]
+requirements:
+  description:
+    de: Die Wallbox muss sich im Modus "Fast" befinden.
+    en: The charger must be switched to "Fast" charging mode.
 params:
   - name: title
   - name: host

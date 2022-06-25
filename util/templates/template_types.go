@@ -1,6 +1,10 @@
 package templates
 
-import "reflect"
+import (
+	"bufio"
+	"reflect"
+	"strings"
+)
 
 const (
 	ParamUsage  = "usage"
@@ -58,12 +62,13 @@ var ValidDependencies = []string{DependencyCheckEmpty, DependencyCheckNotEmpty, 
 
 const (
 	CapabilityISO151182 = "iso151182" // ISO 15118-2 support
+	CapabilityMilliAmps = "mA"        // Granular current control support
 	CapabilityRFID      = "rfid"      // RFID support
 	Capability1p3p      = "1p3p"      // 1P/3P phase switching support
 	CapabilitySMAHems   = "smahems"   // SMA HEMS Support
 )
 
-var ValidCapabilities = []string{CapabilityISO151182, CapabilityRFID, Capability1p3p, CapabilitySMAHems}
+var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilitySMAHems}
 
 const (
 	RequirementEEBUS       = "eebus"       // EEBUS Setup is required
@@ -79,7 +84,7 @@ var predefinedTemplateProperties = []string{"type", "template", "name",
 	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
-// language specific texts
+// TextLanguage contains language-specific texts
 type TextLanguage struct {
 	Generic string // language independent
 	DE      string // german text
@@ -99,7 +104,7 @@ func (t *TextLanguage) String(lang string) string {
 	return t.DE
 }
 
-func (t *TextLanguage) SetString(lang, value string) {
+func (t *TextLanguage) set(lang, value string) {
 	switch lang {
 	case "de":
 		t.DE = value
@@ -107,6 +112,33 @@ func (t *TextLanguage) SetString(lang, value string) {
 		t.EN = value
 	default:
 		t.DE = value
+	}
+}
+
+// Shorten reduces help texts to one line and adds ...
+func (t *TextLanguage) Shorten(lang string) {
+	help := t.String(lang)
+	if help == "" {
+		return
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(help))
+
+	var line int
+	var short string
+
+	for scanner.Scan() {
+		line++
+		if line == 1 {
+			short = scanner.Text()
+		} else {
+			short += "..."
+			break
+		}
+	}
+
+	if help != short {
+		t.set(lang, short)
 	}
 }
 
@@ -261,7 +293,7 @@ type Product struct {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
-	Covers       []string  // list of covered outdated tempate names
+	Covers       []string  // list of covered outdated template names
 	Products     []Product // list of products this template is compatible with
 	Capabilities []string
 	Requirements Requirements
