@@ -131,7 +131,7 @@ a:hover {
 .btn-primary:focus {
 	background-color: var(--bs-primary);
 	border-color: var(--bs-primary);
-	color: var(--evcc-background)
+	color: var(--evcc-background);
 }
 
 .btn-primary:hover,
@@ -272,7 +272,7 @@ small {
 	background-color: var(--evcc-box);
 }
 .dropdown-item {
-	color: var(--evcc-default-text); 
+	color: var(--evcc-default-text);
 }
 
 @media (--dark-mode) {
