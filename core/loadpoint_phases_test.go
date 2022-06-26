@@ -378,3 +378,52 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		}
 	}
 }
+
+func TestScalePhasesIfAvailable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	tc := []struct {
+		dflt, physical, maxExpected int
+	}{
+		{0, 0, 3},
+		{0, 1, 3},
+		{0, 3, 3},
+		{1, 0, 1},
+		{1, 1, 1},
+		{1, 3, 1},
+		{3, 0, 3},
+		{3, 1, 3},
+		{3, 3, 3},
+	}
+
+	for _, tc := range tc {
+		t.Log(tc)
+
+		plainCharger := mock.NewMockCharger(ctrl)
+		phaseCharger := mock.NewMockChargePhases(ctrl)
+
+		lp := &LoadPoint{
+			log:   util.NewLogger("foo"),
+			clock: clock.NewMock(),
+			charger: struct {
+				*mock.MockCharger
+				*mock.MockChargePhases
+			}{
+				plainCharger,
+				phaseCharger,
+			},
+			MinCurrent:    minA,
+			DefaultPhases: tc.dflt,     // fixed phases or default
+			phases:        tc.physical, // current phase status
+		}
+
+		// restrict scalable charger by config
+		if tc.dflt == 0 || tc.dflt != tc.physical {
+			phaseCharger.EXPECT().Phases1p3p(tc.maxExpected).Return(nil)
+		}
+
+		_ = lp.scalePhasesIfAvailable(3)
+
+		ctrl.Finish()
+	}
+}

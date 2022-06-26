@@ -977,9 +977,11 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 
 // scalePhasesIfAvailable scales if api.ChargePhases is available
 func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
-	mustNotChange := lp.DefaultPhases != 0 && lp.GetPhases() == lp.DefaultPhases
+	if lp.DefaultPhases != 0 {
+		phases = lp.DefaultPhases
+	}
 
-	if _, ok := lp.charger.(api.ChargePhases); ok && !mustNotChange {
+	if _, ok := lp.charger.(api.ChargePhases); ok {
 		return lp.scalePhases(phases)
 	}
 
