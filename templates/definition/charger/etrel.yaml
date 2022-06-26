@@ -1,0 +1,22 @@
+template: etrel
+products:
+  - brand: Etrel
+    description:
+      generic: INCH
+  - brand: Sonnen
+    description:
+      generic: sonnenCharger
+capabilities: ["mA"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: Die Wallbox muss sich im "Power" Modus befinden.
+    en: The charger must be switched to "Power" charging mode.
+params:
+  - name: host
+    required: true
+  - name: port
+    default: 502
+render: |
+  type: etrel
+  uri: {{ .host }}:{{ .port }}
