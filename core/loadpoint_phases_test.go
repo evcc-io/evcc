@@ -65,6 +65,66 @@ var (
 	}
 )
 
+func TestMaxActivePhases(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// 0 is auto, 1/3 are fixed
+	for _, dflt := range []int{0, 1, 3} {
+		for _, tc := range phaseTests {
+			// skip invalid configs (free scaling for simple charger)
+			if dflt == 0 && tc.capable != 0 {
+				continue
+			}
+
+			t.Log(dflt, tc)
+
+			plainCharger := mock.NewMockCharger(ctrl)
+
+			// 1p3p
+			var phaseCharger *mock.MockChargePhases
+			if tc.capable == 0 {
+				phaseCharger = mock.NewMockChargePhases(ctrl)
+			}
+
+			vehicle := mock.NewMockVehicle(ctrl)
+			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
+
+			lp := &LoadPoint{
+				DefaultPhases:  dflt, // fixed phases or default
+				vehicle:        vehicle,
+				phases:         tc.physical,
+				measuredPhases: tc.measuredPhases,
+			}
+
+			if phaseCharger != nil {
+				lp.charger = struct {
+					*mock.MockCharger
+					*mock.MockChargePhases
+				}{
+					plainCharger, phaseCharger,
+				}
+			} else {
+				lp.charger = struct {
+					*mock.MockCharger
+				}{
+					plainCharger,
+				}
+			}
+
+			expectedPhases := tc.maxExpected
+
+			// restrict scalable charger by config
+			if tc.capable == 0 && dflt > 0 && dflt < tc.maxExpected {
+				expectedPhases = dflt
+			}
+
+			if phs := lp.maxActivePhases(); phs != expectedPhases {
+				t.Errorf("expected max %d, got %d", expectedPhases, phs)
+			}
+		}
+	}
+}
+
 func testScale(t *testing.T, lp *LoadPoint, power float64, direction string, tc testCase) {
 	act := lp.activePhases()
 	max := lp.maxActivePhases()
@@ -118,19 +178,20 @@ func TestPvScalePhases(t *testing.T) {
 		vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 		lp := &LoadPoint{
-			log:         util.NewLogger("foo"),
-			bus:         evbus.New(),
-			clock:       clock,
-			chargeMeter: &Null{},            // silence nil panics
-			chargeRater: &Null{},            // silence nil panics
-			chargeTimer: &Null{},            // silence nil panics
-			progress:    NewProgress(0, 10), // silence nil panics
-			wakeUpTimer: NewTimer(),         // silence nil panics
-			Mode:        api.ModeNow,
-			MinCurrent:  minA,
-			MaxCurrent:  maxA,
-			vehicle:     vehicle,
-			phases:      tc.physical,
+			log:           util.NewLogger("foo"),
+			bus:           evbus.New(),
+			clock:         clock,
+			chargeMeter:   &Null{},            // silence nil panics
+			chargeRater:   &Null{},            // silence nil panics
+			chargeTimer:   &Null{},            // silence nil panics
+			progress:      NewProgress(0, 10), // silence nil panics
+			wakeUpTimer:   NewTimer(),         // silence nil panics
+			Mode:          api.ModeNow,
+			MinCurrent:    minA,
+			MaxCurrent:    maxA,
+			vehicle:       vehicle,
+			DefaultPhases: 0, // allow switching
+			phases:        tc.physical,
 		}
 
 		if phaseCharger != nil {
