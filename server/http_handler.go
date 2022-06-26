@@ -80,7 +80,7 @@ func healthHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-// pass converts a simple setting to a setting with nil error result
+// pass converts a simple api without return value to api with nil error return value
 func pass[T any](f func(T)) func(T) error {
 	return func(v T) error {
 		f(v)
@@ -88,7 +88,7 @@ func pass[T any](f func(T)) func(T) error {
 	}
 }
 
-// floatHandler updates target soc
+// floatHandler updates float-param api
 func floatHandler(set func(float64) error, get func() float64) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -107,7 +107,7 @@ func floatHandler(set func(float64) error, get func() float64) http.HandlerFunc 
 	}
 }
 
-// intHandler updates target soc
+// intHandler updates int-param api
 func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
