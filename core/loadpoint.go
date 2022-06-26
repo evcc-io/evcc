@@ -97,7 +97,7 @@ type LoadPoint struct {
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
 	Title             string   `mapstructure:"title"`    // UI title
-	Phases            int      `mapstructure:"phases"`   // Charger enabled phases
+	DefaultPhases     int      `mapstructure:"phases"`   // Charger enabled phases
 	ChargerRef        string   `mapstructure:"charger"`  // Charger reference
 	VehicleRef        string   `mapstructure:"vehicle"`  // Vehicle reference
 	VehiclesRef       []string `mapstructure:"vehicles"` // Vehicles reference
@@ -112,6 +112,7 @@ type LoadPoint struct {
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
 	enabled                bool      // Charger enabled state
+	phases                 int       // Charger active phases, guarded by mutex
 	measuredPhases         int       // Charger physically measured phases
 	chargeCurrent          float64   // Charger current limit
 	guardUpdated           time.Time // Charger enabled/disabled timestamp
@@ -213,9 +214,10 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.charger = cp.Charger(lp.ChargerRef)
 	lp.configureChargerType(lp.charger)
 
-	// TODO handle delayed scale-down
+	// setup fixed phases
 	if _, ok := lp.charger.(api.ChargePhases); ok && lp.GetPhases() != 0 {
-		lp.log.WARN.Printf("ignoring phases config (%dp) for switchable charger", lp.GetPhases())
+		lp.log.WARN.Printf("locking phase config to %dp for switchable charger", lp.GetPhases())
+		// set to unknown since we don't know the charger's setting yet and don't want to interrupt charging
 		lp.setPhases(0)
 	}
 
@@ -240,7 +242,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		clock:         clock, // mockable time
 		bus:           bus,   // event bus
 		Mode:          api.ModeOff,
-		Phases:        3,
+		phases:        3,
 		status:        api.StatusNone,
 		MinCurrent:    6,                                                     // A
 		MaxCurrent:    16,                                                    // A
@@ -512,7 +514,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("title", lp.Title)
 	lp.publish("minCurrent", lp.MinCurrent)
 	lp.publish("maxCurrent", lp.MaxCurrent)
-	lp.publish("phases", lp.Phases)
+	lp.publish("phases", lp.phases)
 	lp.publish("activePhases", lp.activePhases())
 	lp.publish("hasVehicle", len(lp.vehicles) > 0)
 
@@ -975,7 +977,9 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 
 // scalePhasesIfAvailable scales if api.ChargePhases is available
 func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
-	if _, ok := lp.charger.(api.ChargePhases); ok {
+	mustNotChange := lp.DefaultPhases != 0 && lp.GetPhases() == lp.DefaultPhases
+
+	if _, ok := lp.charger.(api.ChargePhases); ok && !mustNotChange {
 		return lp.scalePhases(phases)
 	}
 
@@ -986,11 +990,11 @@ func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 func (lp *LoadPoint) setPhases(phases int) {
 	if lp.GetPhases() != phases {
 		lp.Lock()
-		lp.Phases = phases
+		lp.phases = phases
 		lp.phaseTimer = time.Time{}
 		lp.Unlock()
 
-		lp.publish("phases", lp.Phases)
+		lp.publish("phases", lp.phases)
 		lp.publishTimer(phaseTimer, 0, timerInactive)
 
 		lp.resetMeasuredPhases()
@@ -1043,7 +1047,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	activePhases := lp.activePhases()
 
 	// scale down phases
-	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && activePhases > 1 {
+	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && activePhases > 1 && lp.DefaultPhases < 3 {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 
 		if lp.phaseTimer.IsZero() {
@@ -1072,7 +1076,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	scalable := maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
 
 	// scale up phases
-	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
+	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable && lp.DefaultPhases != 1 {
 		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, 3*Voltage*minCurrent, maxPhases)
 
 		if lp.phaseTimer.IsZero() {
