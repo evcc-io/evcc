@@ -12,6 +12,7 @@ const Template = (args) => ({
   },
   components: { Vehicle },
   template: '<Vehicle v-bind="args"></Vehicle>',
+  parameters: { backgrounds: { default: "box" } },
 });
 
 export const Base = Template.bind({});
