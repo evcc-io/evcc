@@ -80,25 +80,16 @@ func healthHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-// floatValueHandler updates target soc
-func floatValueHandler(set func(float64), get func() float64) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		val, err := strconv.ParseFloat(vars["value"], 64)
-		if err == nil {
-			set(val)
-		} else {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, get())
+// pass converts a simple setting to a setting with nil error result
+func pass[T any](f func(T)) func(T) error {
+	return func(v T) error {
+		f(v)
+		return nil
 	}
 }
 
-// floatValueErrorHandler updates target soc
-func floatValueErrorHandler(set func(float64) error, get func() float64) http.HandlerFunc {
+// floatHandler updates target soc
+func floatHandler(set func(float64) error, get func() float64) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -116,15 +107,17 @@ func floatValueErrorHandler(set func(float64) error, get func() float64) http.Ha
 	}
 }
 
-// intValueHandler updates target soc
-func intValueHandler(set func(int), get func() int) http.HandlerFunc {
+// intHandler updates target soc
+func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
 		val, err := strconv.ParseInt(vars["value"], 10, 32)
 		if err == nil {
-			set(int(val))
-		} else {
+			err = set(int(val))
+		}
+
+		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
