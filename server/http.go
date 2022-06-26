@@ -44,8 +44,11 @@ type HTTPd struct {
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(addr string, site site.API, hub *SocketHub, cache *util.Cache) *HTTPd {
 	routes := map[string]route{
-		"health": {[]string{"GET"}, "/health", healthHandler(site)},
-		"state":  {[]string{"GET"}, "/state", stateHandler(cache)},
+		"health":        {[]string{"GET"}, "/health", healthHandler(site)},
+		"state":         {[]string{"GET"}, "/state", stateHandler(cache)},
+		"buffersoc":     {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatValueErrorHandler(site.SetBufferSoC, site.GetBufferSoC)},
+		"prioritysoc":   {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatValueErrorHandler(site.SetPrioritySoC, site.GetPrioritySoC)},
+		"residualpower": {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[0-9.]+}", floatValueErrorHandler(site.SetResidualPower, site.GetResidualPower)},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -81,10 +84,10 @@ func NewHTTPd(addr string, site site.API, hub *SocketHub, cache *util.Cache) *HT
 
 		routes := map[string]route{
 			"mode":          {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
-			"targetsoc":     {[]string{"POST", "OPTIONS"}, "/targetsoc/{value:[0-9]+}", targetSoCHandler(lp)},
-			"minsoc":        {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", minSoCHandler(lp)},
-			"mincurrent":    {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9]+}", minCurrentHandler(lp)},
-			"maxcurrent":    {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9]+}", maxCurrentHandler(lp)},
+			"targetsoc":     {[]string{"POST", "OPTIONS"}, "/targetsoc/{value:[0-9]+}", intValueHandler(lp.SetTargetSoC, lp.GetTargetSoC)},
+			"minsoc":        {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intValueHandler(lp.SetMinSoC, lp.GetMinSoC)},
+			"mincurrent":    {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9]+}", floatValueHandler(lp.SetMinCurrent, lp.GetMinCurrent)},
+			"maxcurrent":    {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9]+}", floatValueHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
 			"phases":        {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
 			"targetcharge":  {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:.-]+}", targetChargeHandler(lp)},
 			"targetcharge2": {[]string{"DELETE", "OPTIONS"}, "/targetcharge", targetChargeRemoveHandler(lp)},
