@@ -109,6 +109,18 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 	})
 
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferSoC/set", m.root), func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
+			_ = site.SetBufferSoC(float64(soc))
+		}
+	})
+
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/residualPower/set", m.root), func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
+			_ = site.SetResidualPower(float64(soc))
+		}
+	})
+
 	// number of loadpoints
 	topic = fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))

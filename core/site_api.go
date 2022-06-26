@@ -29,3 +29,29 @@ func (site *Site) SetPrioritySoC(soc float64) error {
 
 	return nil
 }
+
+// SetBufferSoC sets the BufferSoC
+func (site *Site) SetBufferSoC(soc float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if len(site.batteryMeters) == 0 {
+		return errors.New("battery not configured")
+	}
+
+	site.BufferSoC = soc
+	site.publish("bufferSoC", site.BufferSoC)
+
+	return nil
+}
+
+// SetResidualPower sets the ResidualPower
+func (site *Site) SetResidualPower(power float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	site.ResidualPower = power
+	site.publish("residualPower", site.ResidualPower)
+
+	return nil
+}

@@ -6,5 +6,7 @@ import "github.com/evcc-io/evcc/core/loadpoint"
 type API interface {
 	Healthy() bool
 	LoadPoints() []loadpoint.API
+	SetBufferSoC(float64) error
 	SetPrioritySoC(float64) error
+	SetResidualPower(float64) error
 }
