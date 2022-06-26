@@ -3,16 +3,18 @@
 		<p class="mb-3">
 			{{ $t("footer.sponsor.thanks", { sponsor }) }}
 		</p>
-		<div class="d-flex justify-content-center align-items-center flex-column">
+		<div
+			class="d-flex justify-content-center align-items-center flex-column flex-lg-row align-items-lg-baseline justify-content-lg-start"
+		>
 			<button
 				ref="confetti"
-				class="btn btn btn-outline-primary mb-2 confetti-button bg-evcc w-75 rounded"
+				class="btn btn btn-outline-primary mb-2 confetti-button bg-evcc rounded"
 				@click="surprise"
 			>
-				<shopicon-regular-heart class="me-1 d-inline-block"></shopicon-regular-heart>
+				<shopicon-regular-stars class="me-1 d-inline-block"></shopicon-regular-stars>
 				{{ $t("footer.sponsor.confetti") }}
 			</button>
-			<a href="https://evcc.io/sticker" target="_blank" class="small text-muted">
+			<a href="https://evcc.io/sticker" target="_blank" class="small text-muted ms-lg-3">
 				{{ $t("footer.sponsor.sticker") }}
 			</a>
 		</div>
@@ -42,7 +44,7 @@
 <script>
 import confetti from "canvas-confetti";
 import "@h2d2/shopicons/es/regular/heart";
-import "@h2d2/shopicons/es/filled/heart";
+import "@h2d2/shopicons/es/regular/stars";
 
 export default {
 	name: "Sponsor",
@@ -92,15 +94,18 @@ export default {
 	touch-action: none;
 	user-select: none;
 }
+.confetti-button,
 .become-sponsor {
 	width: 100%;
 }
 @media (--sm-and-up) {
+	.confetti-button,
 	.become-sponsor {
 		width: 75%;
 	}
 }
 @media (--lg-and-up) {
+	.confetti-button,
 	.become-sponsor {
 		width: 40%;
 	}

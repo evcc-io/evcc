@@ -13,7 +13,7 @@
 				<LabelAndValue
 					class="flex-grow-1 text-start"
 					:label="$t('main.vehicle.vehicleSoC')"
-					:value="`${vehicleSoC || '--'} %`"
+					:value="vehicleSoC ? `${vehicleSoC}%` : '--'"
 					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
 				/>
 				<TargetCharge

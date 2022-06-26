@@ -42,9 +42,8 @@
 						</div>
 						<div class="modal-body">
 							<p>
-								<strong>Zeitraum:</strong>
 								{{
-									$t("footer.savings.modalServerStart", {
+									$t("footer.savings.sinceServerStart", {
 										since: fmtTimeAgo(secondsSinceStart()),
 									})
 								}}
@@ -54,30 +53,34 @@
 								<SavingsTile
 									class="text-accent1"
 									icon="sun"
-									title="Sonnenenergie"
+									:title="$t('footer.savings.percentTitle')"
 									:value="percent"
 									unit="%"
-									:sub1="`${fmtKw(
-										selfConsumptionCharged * 1000,
-										true,
-										false
-									)} kWh Sonne`"
-									:sub2="`${fmtKw(gridCharged * 1000, true, false)} kWh Netz`"
+									:sub1="
+										$t('footer.savings.percentSelf', {
+											self: fmtKw(selfConsumptionCharged * 1000, true, false),
+										})
+									"
+									:sub2="
+										$t('footer.savings.percentGrid', {
+											grid: fmtKw(gridCharged * 1000, true, false),
+										})
+									"
 								/>
 
 								<SavingsTile
 									class="text-accent2"
 									icon="receivepayment"
-									title="Ladeenergie"
-									:value="fmtPricePerKWh(effectivePrice, currency).split(' ')[0]"
-									:unit="fmtPricePerKWh(effectivePrice, currency).split(' ')[1]"
+									:title="$t('footer.savings.priceTitle')"
+									:value="effectivePriceFormatted.value"
+									:unit="effectivePriceFormatted.unit"
 									:sub1="
-										$t('footer.savings.modalExplainationFeedIn', {
+										$t('footer.savings.priceFeedIn', {
 											feedInPrice: fmtPricePerKWh(feedInPrice, currency),
 										})
 									"
 									:sub2="
-										$t('footer.savings.modalExplainationGrid', {
+										$t('footer.savings.priceGrid', {
 											gridPrice: fmtPricePerKWh(gridPrice, currency),
 										})
 									"
@@ -86,11 +89,15 @@
 								<SavingsTile
 									class="text-accent3"
 									icon="coinjar"
-									title="Ersparnis"
-									:value="fmtMoney(amount, currency).split('&nbsp;')[0]"
-									:unit="fmtMoney(amount, currency).split('&nbsp;')[1]"
-									sub1="gegenüber Netzbezug"
-									:sub2="`${fmtKw(totalCharged * 1000, true, false)} kWh geladen`"
+									:title="$t('footer.savings.savingsTitle')"
+									:value="fmtMoney(amount, currency)"
+									:unit="fmtCurrencySymbol(currency)"
+									:sub1="$t('footer.savings.savingsComparedToGrid')"
+									:sub2="
+										$t('footer.savings.savingsTotalEnergy', {
+											total: fmtKw(totalCharged * 1000, true, false),
+										})
+									"
 								/>
 							</div>
 
@@ -129,8 +136,11 @@ export default {
 		percent() {
 			return Math.round(this.selfConsumptionPercent) || 0;
 		},
-		noData() {
-			return this.totalCharged === 0;
+		effectivePriceFormatted() {
+			const [value, unit] = this.fmtPricePerKWh(this.effectivePrice, this.currency).split(
+				" "
+			);
+			return { value, unit };
 		},
 	},
 	methods: {
