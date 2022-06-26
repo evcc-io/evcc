@@ -80,6 +80,52 @@ func healthHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+// pass converts a simple api without return value to api with nil error return value
+func pass[T any](f func(T)) func(T) error {
+	return func(v T) error {
+		f(v)
+		return nil
+	}
+}
+
+// floatHandler updates float-param api
+func floatHandler(set func(float64) error, get func() float64) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		val, err := strconv.ParseFloat(vars["value"], 64)
+		if err == nil {
+			err = set(val)
+		}
+
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonResult(w, get())
+	}
+}
+
+// intHandler updates int-param api
+func intHandler(set func(int) error, get func() int) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		val, err := strconv.ParseInt(vars["value"], 10, 32)
+		if err == nil {
+			err = set(int(val))
+		}
+
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonResult(w, get())
+	}
+}
+
 // stateHandler returns current charge mode
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -105,74 +151,6 @@ func chargeModeHandler(lp loadpoint.API) http.HandlerFunc {
 		lp.SetMode(mode)
 
 		jsonResult(w, lp.GetMode())
-	}
-}
-
-// targetSoCHandler updates target soc
-func targetSoCHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		soc, err := strconv.ParseInt(vars["value"], 10, 32)
-		if err == nil {
-			lp.SetTargetSoC(int(soc))
-		} else {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, lp.GetTargetSoC())
-	}
-}
-
-// minSoCHandler updates minimum soc
-func minSoCHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		soc, err := strconv.ParseInt(vars["value"], 10, 32)
-		if err == nil {
-			lp.SetMinSoC(int(soc))
-		} else {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, lp.GetMinSoC())
-	}
-}
-
-// minCurrentHandler updates minimum current
-func minCurrentHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		current, err := strconv.ParseFloat(vars["value"], 64)
-		if err == nil {
-			lp.SetMinCurrent(current)
-		} else {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, lp.GetMinCurrent())
-	}
-}
-
-// maxCurrentHandler updates maximum current
-func maxCurrentHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		current, err := strconv.ParseFloat(vars["value"], 64)
-		if err == nil {
-			lp.SetMaxCurrent(current)
-		} else {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, lp.GetMaxCurrent())
 	}
 }
 
