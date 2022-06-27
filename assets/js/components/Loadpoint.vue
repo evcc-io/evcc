@@ -33,7 +33,7 @@
 				<div class="d-flex align-items-center">
 					<LabelAndValue
 						:label="$t('main.loadpoint.power')"
-						:value="fmtKw(chargePower)"
+						:value="fmtKw(chargePower, formatChargePowerInKw)"
 						class="mb-2"
 					/>
 					<shopicon-regular-lightning
@@ -156,6 +156,9 @@ export default {
 		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);
+		},
+		formatChargePowerInKw: function () {
+			return this.chargePower == 0 || this.chargePower >= 1000;
 		},
 	},
 	watch: {
