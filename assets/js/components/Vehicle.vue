@@ -1,5 +1,5 @@
 <template>
-	<div class="vehicle p-4 pb-3">
+	<div class="vehicle pt-4">
 		<VehicleTitle v-bind="vehicleTitleProps" />
 		<VehicleStatus v-if="!parked" v-bind="vehicleStatus" class="mb-2" />
 		<VehicleSoc
@@ -13,22 +13,21 @@
 				<LabelAndValue
 					class="flex-grow-1 text-start"
 					:label="$t('main.vehicle.vehicleSoC')"
-					:value="`${vehicleSoC || '--'} %`"
+					:value="vehicleSoC ? `${vehicleSoC}%` : '--'"
 					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
-					on-dark
-				/>
-				<TargetSoCSelect
-					class="flex-grow-1 text-center"
-					:target-soc="displayTargetSoC"
-					:range-per-soc="rangePerSoC"
-					@target-soc-updated="targetSocUpdated"
 				/>
 				<TargetCharge
-					class="flex-grow-1 text-end target-charge"
+					class="flex-grow-1 text-center target-charge"
 					v-bind="targetCharge"
 					:disabled="targetChargeDisabled"
 					@target-time-updated="setTargetTime"
 					@target-time-removed="removeTargetTime"
+				/>
+				<TargetSoCSelect
+					class="flex-grow-1 text-end"
+					:target-soc="displayTargetSoC"
+					:range-per-soc="rangePerSoC"
+					@target-soc-updated="targetSocUpdated"
 				/>
 			</div>
 			<div v-if="$hiddenFeatures" class="d-flex justify-content-start">
@@ -132,11 +131,6 @@ export default {
 </script>
 
 <style scoped>
-.vehicle {
-	background-color: var(--bs-gray-dark);
-	border-radius: 1rem;
-	color: var(--bs-white);
-}
 .car-icon {
 	width: 1.75rem;
 }

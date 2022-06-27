@@ -19,9 +19,6 @@
 				:valuesInKw="valuesInKw"
 			/>
 		</div>
-		<div class="indicator position-absolute bottom-0 start-50">
-			<shopicon-regular-arrowdown></shopicon-regular-arrowdown>
-		</div>
 		<div class="details" :style="{ height: detailsHeight }">
 			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
@@ -121,7 +118,6 @@
 
 <script>
 import "@h2d2/shopicons/es/filled/square";
-import "@h2d2/shopicons/es/regular/arrowdown";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
 import formatter from "../../mixins/formatter";
@@ -204,29 +200,18 @@ export default {
 };
 </script>
 <style scoped>
-.energyflow {
-	background: var(--bs-white);
-}
-.indicator {
-	opacity: 0;
-	transform: translateX(-50%) scaleY(1);
-	transition: opacity, transform;
-	transition-duration: var(--evcc-transition-slow);
-}
-.energyflow--open .indicator {
-	transform: translateX(-50%) scaleY(-1);
-}
-@media (hover: hover) and (pointer: fine) {
-	.energyflow:hover .indicator {
-		opacity: 0.25;
-	}
-}
 .details {
 	height: 0;
+	opacity: 0;
+	transform: scale(0.98);
 	overflow: visible;
-	transition: height;
+	transition: height, opacity, transform;
 	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);
+}
+.energyflow--open .details {
+	opacity: 1;
+	transform: scale(1);
 }
 .color-grid {
 	color: var(--evcc-grid);

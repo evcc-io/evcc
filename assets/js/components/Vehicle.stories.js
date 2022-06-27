@@ -3,6 +3,7 @@ import Vehicle from "./Vehicle.vue";
 export default {
   title: "Main/Vehicle",
   component: Vehicle,
+  parameters: { backgrounds: { default: "box" } },
 };
 
 const Template = (args) => ({
@@ -11,6 +12,7 @@ const Template = (args) => ({
   },
   components: { Vehicle },
   template: '<Vehicle v-bind="args"></Vehicle>',
+  parameters: { backgrounds: { default: "box" } },
 });
 
 export const Base = Template.bind({});

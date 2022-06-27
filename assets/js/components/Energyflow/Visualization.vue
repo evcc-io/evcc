@@ -193,7 +193,7 @@ export default {
 	margin-right: 1.2rem;
 }
 .label-scale-name {
-	color: var(--bs-gray-medium);
+	color: var(--evcc-gray);
 	flex-basis: 1.2rem;
 	flex-grow: 0;
 	flex-shrink: 0;
@@ -217,6 +217,11 @@ export default {
 .grid-import {
 	background-color: var(--evcc-grid);
 	color: var(--bs-white);
+}
+@media (--dark-mode) {
+	.grid-import {
+		color: var(--bs-dark);
+	}
 }
 .self-consumption {
 	background-color: var(--evcc-self);

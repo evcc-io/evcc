@@ -101,21 +101,23 @@ export default {
 			e.stopPropagation();
 		},
 		changeTargetSoCEnd: function (e) {
+			const value = parseInt(e.target.value, 10);
 			// value changed
-			if (e.target.value !== this.targetSoC) {
-				this.$emit("target-soc-updated", e.target.value);
+			if (value !== this.targetSoC) {
+				this.$emit("target-soc-updated", value);
 			}
 		},
 		movedTargetSoC: function (e) {
+			let value = parseInt(e.target.value, 10);
 			e.stopPropagation();
 			const minTargetSoC = 20;
-			if (e.target.value < minTargetSoC) {
+			if (value < minTargetSoC) {
 				e.target.value = minTargetSoC;
-				this.selectedTargetSoC = e.target.value;
+				this.selectedTargetSoC = value;
 				e.preventDefault();
 				return false;
 			}
-			this.selectedTargetSoC = e.target.value;
+			this.selectedTargetSoC = value;
 
 			this.$emit("target-soc-drag", this.selectedTargetSoC);
 			return true;
@@ -135,9 +137,10 @@ export default {
 .progress {
 	height: 100%;
 	font-size: 1rem;
+	background: var(--evcc-background);
 }
 .progress-bar.bg-muted {
-	color: var(--white);
+	opacity: 0.5;
 }
 .bg-light {
 	color: var(--bs-gray-dark);
@@ -179,7 +182,7 @@ export default {
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
-	box-shadow: 0 0 6px var(--bs-gray-dark);
+	box-shadow: 0 0 6px var(--evcc-background);
 	pointer-events: auto;
 }
 .target-slider::-moz-range-thumb {
@@ -191,7 +194,7 @@ export default {
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
-	box-shadow: 0 0 6px var(--bs-gray-dark);
+	box-shadow: 0 0 6px var(--evcc-background);
 	pointer-events: auto;
 }
 </style>

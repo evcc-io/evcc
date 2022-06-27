@@ -7,7 +7,7 @@
 			aria-controls="navbarNavAltMarkup"
 			aria-expanded="false"
 			aria-label="Toggle navigation"
-			class="btn btn-sm btn-outline-secondary position-relative"
+			class="btn btn-sm btn-outline-secondary position-relative border-0 menu-button"
 		>
 			<span
 				v-if="logoutCount > 0"
@@ -102,3 +102,8 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.menu-button {
+	margin-right: -0.7rem;
+}
+</style>

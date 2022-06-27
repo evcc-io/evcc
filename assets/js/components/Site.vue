@@ -14,7 +14,7 @@
 			</div>
 			<Energyflow v-bind="energyflow" />
 		</div>
-		<div class="d-flex flex-column justify-content-between content-area pt-4">
+		<div class="d-flex flex-column justify-content-between content-area">
 			<Loadpoints class="mt-1 mt-sm-2 flex-grow-1" :loadpoints="loadpoints" />
 			<Vehicles v-if="$hiddenFeatures" />
 			<Footer v-bind="footer"></Footer>
@@ -137,8 +137,6 @@ export default {
 	min-height: 100vh;
 }
 .content-area {
-	background-color: var(--bs-gray-dark);
-	color: var(--bs-white);
 	flex-grow: 1;
 	z-index: 1;
 }
