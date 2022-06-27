@@ -65,6 +65,66 @@ var (
 	}
 )
 
+func TestMaxActivePhases(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// 0 is auto, 1/3 are fixed
+	for _, dflt := range []int{0, 1, 3} {
+		for _, tc := range phaseTests {
+			// skip invalid configs (free scaling for simple charger)
+			if dflt == 0 && tc.capable != 0 {
+				continue
+			}
+
+			t.Log(dflt, tc)
+
+			plainCharger := mock.NewMockCharger(ctrl)
+
+			// 1p3p
+			var phaseCharger *mock.MockChargePhases
+			if tc.capable == 0 {
+				phaseCharger = mock.NewMockChargePhases(ctrl)
+			}
+
+			vehicle := mock.NewMockVehicle(ctrl)
+			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
+
+			lp := &LoadPoint{
+				DefaultPhases:  dflt, // fixed phases or default
+				vehicle:        vehicle,
+				phases:         tc.physical,
+				measuredPhases: tc.measuredPhases,
+			}
+
+			if phaseCharger != nil {
+				lp.charger = struct {
+					*mock.MockCharger
+					*mock.MockChargePhases
+				}{
+					plainCharger, phaseCharger,
+				}
+			} else {
+				lp.charger = struct {
+					*mock.MockCharger
+				}{
+					plainCharger,
+				}
+			}
+
+			expectedPhases := tc.maxExpected
+
+			// restrict scalable charger by config
+			if tc.capable == 0 && dflt > 0 && dflt < tc.maxExpected {
+				expectedPhases = dflt
+			}
+
+			if phs := lp.maxActivePhases(); phs != expectedPhases {
+				t.Errorf("expected max %d, got %d", expectedPhases, phs)
+			}
+		}
+	}
+}
+
 func testScale(t *testing.T, lp *LoadPoint, power float64, direction string, tc testCase) {
 	act := lp.activePhases()
 	max := lp.maxActivePhases()
@@ -118,19 +178,20 @@ func TestPvScalePhases(t *testing.T) {
 		vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 		lp := &LoadPoint{
-			log:         util.NewLogger("foo"),
-			bus:         evbus.New(),
-			clock:       clock,
-			chargeMeter: &Null{},            // silence nil panics
-			chargeRater: &Null{},            // silence nil panics
-			chargeTimer: &Null{},            // silence nil panics
-			progress:    NewProgress(0, 10), // silence nil panics
-			wakeUpTimer: NewTimer(),         // silence nil panics
-			Mode:        api.ModeNow,
-			MinCurrent:  minA,
-			MaxCurrent:  maxA,
-			vehicle:     vehicle,
-			Phases:      tc.physical,
+			log:           util.NewLogger("foo"),
+			bus:           evbus.New(),
+			clock:         clock,
+			chargeMeter:   &Null{},            // silence nil panics
+			chargeRater:   &Null{},            // silence nil panics
+			chargeTimer:   &Null{},            // silence nil panics
+			progress:      NewProgress(0, 10), // silence nil panics
+			wakeUpTimer:   NewTimer(),         // silence nil panics
+			Mode:          api.ModeNow,
+			MinCurrent:    minA,
+			MaxCurrent:    maxA,
+			vehicle:       vehicle,
+			DefaultPhases: 0, // allow switching
+			phases:        tc.physical,
 		}
 
 		if phaseCharger != nil {
@@ -155,8 +216,8 @@ func TestPvScalePhases(t *testing.T) {
 			t.Fatalf("%v invalid test case", tc)
 		}
 
-		if lp.Phases != tc.physical {
-			t.Error("wrong phases", lp.Phases, tc.physical)
+		if lp.phases != tc.physical {
+			t.Error("wrong phases", lp.phases, tc.physical)
 		}
 
 		if phs := lp.activePhases(); phs != tc.actExpected {
@@ -184,7 +245,7 @@ func TestPvScalePhases(t *testing.T) {
 			lp.phaseTimer = time.Time{}
 
 			// reset to initial state
-			lp.Phases = tc.physical
+			lp.phases = tc.physical
 			lp.measuredPhases = tc.measuredPhases
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
@@ -289,7 +350,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			charger:        charger,
 			MinCurrent:     minA,
 			MaxCurrent:     maxA,
-			Phases:         tc.phases,
+			phases:         tc.phases,
 			measuredPhases: tc.measuredPhases,
 			Enable: ThresholdConfig{
 				Delay: dt,
@@ -312,8 +373,57 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		switch {
 		case tc.res != res:
 			t.Errorf("expected %v, got %v", tc.res, res)
-		case lp.Phases != tc.toPhases:
-			t.Errorf("expected %dp, got %dp", tc.toPhases, lp.Phases)
+		case lp.phases != tc.toPhases:
+			t.Errorf("expected %dp, got %dp", tc.toPhases, lp.phases)
 		}
+	}
+}
+
+func TestScalePhasesIfAvailable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	tc := []struct {
+		dflt, physical, maxExpected int
+	}{
+		{0, 0, 3},
+		{0, 1, 3},
+		{0, 3, 3},
+		{1, 0, 1},
+		{1, 1, 1},
+		{1, 3, 1},
+		{3, 0, 3},
+		{3, 1, 3},
+		{3, 3, 3},
+	}
+
+	for _, tc := range tc {
+		t.Log(tc)
+
+		plainCharger := mock.NewMockCharger(ctrl)
+		phaseCharger := mock.NewMockChargePhases(ctrl)
+
+		lp := &LoadPoint{
+			log:   util.NewLogger("foo"),
+			clock: clock.NewMock(),
+			charger: struct {
+				*mock.MockCharger
+				*mock.MockChargePhases
+			}{
+				plainCharger,
+				phaseCharger,
+			},
+			MinCurrent:    minA,
+			DefaultPhases: tc.dflt,     // fixed phases or default
+			phases:        tc.physical, // current phase status
+		}
+
+		// restrict scalable charger by config
+		if tc.dflt == 0 || tc.dflt != tc.physical {
+			phaseCharger.EXPECT().Phases1p3p(tc.maxExpected).Return(nil)
+		}
+
+		_ = lp.scalePhasesIfAvailable(3)
+
+		ctrl.Finish()
 	}
 }

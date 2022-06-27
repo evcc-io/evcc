@@ -71,8 +71,8 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 func TestNew(t *testing.T) {
 	lp := NewLoadPoint(util.NewLogger("foo"))
 
-	if lp.Phases != 3 {
-		t.Errorf("Phases %v", lp.Phases)
+	if lp.phases != 3 {
+		t.Errorf("Phases %v", lp.phases)
 	}
 	if lp.MinCurrent != minA {
 		t.Errorf("MinCurrent %v", lp.MinCurrent)
@@ -154,7 +154,7 @@ func TestUpdatePowerZero(t *testing.T) {
 			wakeUpTimer: NewTimer(),
 			MinCurrent:  minA,
 			MaxCurrent:  maxA,
-			Phases:      1,
+			phases:      1,
 			status:      tc.status, // no status change
 		}
 
@@ -302,7 +302,7 @@ func TestPVHysteresis(t *testing.T) {
 				charger:        charger,
 				MinCurrent:     minA,
 				MaxCurrent:     maxA,
-				Phases:         phases,
+				phases:         phases,
 				measuredPhases: phases,
 				Enable: ThresholdConfig{
 					Threshold: tc.enable,
@@ -350,7 +350,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 		clock:          clck,
 		MinCurrent:     minA,
 		MaxCurrent:     maxA,
-		Phases:         phases,
+		phases:         phases,
 		measuredPhases: phases,
 	}
 

@@ -102,16 +102,21 @@ func (lp *LoadPoint) SetMinSoC(soc int) {
 func (lp *LoadPoint) GetPhases() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.Phases
+	return lp.phases
 }
 
 // SetPhases sets loadpoint enabled phases
 func (lp *LoadPoint) SetPhases(phases int) error {
-	if phases != 1 && phases != 3 {
+	// limit auto mode (phases=0) to scalable charger
+	if _, ok := lp.charger.(api.ChargePhases); !ok && phases == 0 {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
-	if _, ok := lp.charger.(api.ChargePhases); ok {
+	if phases != 0 && phases != 1 && phases != 3 {
+		return fmt.Errorf("invalid number of phases: %d", phases)
+	}
+
+	if _, ok := lp.charger.(api.ChargePhases); ok && phases > 0 {
 		return lp.scalePhases(phases)
 	}
 
