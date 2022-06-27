@@ -86,7 +86,7 @@ func NewSmaevcharger(uri string, user string, password string, cache time.Durati
 	wb := &Smaevcharger{
 		Helper: request.NewHelper(log),
 		log:    log,
-		uri:    util.DefaultScheme(uri, "http") + "/api/v1",
+		uri:    util.DefaultScheme(strings.TrimRight(uri, "/"), "http") + "/api/v1",
 		cache:  cache,
 	}
 
