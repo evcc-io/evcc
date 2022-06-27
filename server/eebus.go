@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/denisbrodbeck/machineid"
 	"github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/eebus/mdns"
@@ -68,9 +69,17 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	details := EEBusInstance.DeviceInfo()
 
 	log := util.NewLogger("eebus")
-	id := server.UniqueID{Prefix: details.BrandName}.String()
-	if len(cc.ShipID) > 0 {
-		id = cc.ShipID
+
+	if len(cc.ShipID) == 0 {
+		// var err error
+		// cc.ShipID, err = server.UniqueID(details.BrandName, "evcc-ship")
+
+		s, err := machineid.ProtectedID("evcc-ship")
+		if err != nil {
+			return nil, err
+		}
+
+		cc.ShipID = fmt.Sprintf("%s-%0x", details.BrandName, s[:8])
 	}
 
 	cert, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
@@ -83,7 +92,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		Addr:        cc.Uri,
 		Path:        "/ship/",
 		Certificate: cert,
-		ID:          id,
+		ID:          cc.ShipID,
 		Interfaces:  cc.Interfaces,
 		Brand:       details.BrandName,
 		Model:       details.DeviceCode,
@@ -100,7 +109,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		zc:                zc,
 		log:               log,
 		srv:               srv,
-		id:                id,
+		id:                cc.ShipID,
 		clients:           make(map[string]EEBusClientCBs),
 		connectedClients:  make(map[string]ship.Conn),
 		discoveredClients: make(map[string]*zeroconf.ServiceEntry),
