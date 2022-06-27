@@ -30,8 +30,8 @@ export default {
       percentSelf: "{self} kWh saulės",
       percentGrid: "{grid} kWh tinklas",
       priceTitle: "Energijos kaina",
-      priceFeedIn: "{feedInPrice} aina iš tinklo",
-      priceGrid: "{gridPrice} tinklas",
+      priceFeedIn: "{feedInPrice} eksporto",
+      priceGrid: "{gridPrice} tinklo",
       savingsTitle: "Sutaupyta",
       savingsComparedToGrid: "palyginus su tinklu",
       savingsTotalEnergy: "{total} kWh įkrauta",
@@ -40,7 +40,7 @@ export default {
       thanks: "Ačiū, kad mus remiate {sponsor}! Taip prisidedate prie projekto vystymo.",
       confetti: "Norite konfeti?",
       supportUs:
-        "Mūsų misija: Siekiame, kad saulės baterijų įkrovimas taptų standartu. Padėkite mums ir paremkite evcc finansiškai.",
+        "Mūsų misija: Siekiame, kad įkrovimas saulės energija taptų standartu. Padėkite mums ir paremkite evcc finansiškai.",
       sticker: "... ar evcc lipdukų?",
       confettiPromise: "Gausite lipdukų ir skaitmeninių konfeti ;)",
       becomeSponsor: "Tapkite rėmėju",
@@ -67,7 +67,7 @@ export default {
       off: "Stop",
       minpv: "Min+PV",
       pv: "PV",
-      now: "Greitai",
+      now: "Greitas",
     },
     loadpoint: {
       fallbackName: "Įkroviklis",

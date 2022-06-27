@@ -41,7 +41,7 @@ export default {
       thanks: "Danke für deine Unterstützung, {sponsor}! Das hilft uns bei der Weiterentwicklung.",
       confetti: "Lust auf Konfetti?",
       supportUs:
-        "Unsere Mission: Sonne tanken zum Standard machen. Helfe uns und unterstütze evcc finanziell.",
+        "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unterstütze evcc finanziell.",
       sticker: "...oder evcc Sticker?",
       confettiPromise: "Es gibt auch Sticker und digitales Konfetti ;)",
       becomeSponsor: "Sponsor werden",
