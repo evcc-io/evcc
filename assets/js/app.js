@@ -79,6 +79,5 @@ isDarkMode.addEventListener("change", updateThemeColor);
 function updateThemeColor() {
   const $el = document.querySelector("meta[name=theme-color]");
   $el.setAttribute("content", isDarkMode.matches ? "#020318" : "#f3f3f7");
-  console.log("update");
 }
 updateThemeColor();
