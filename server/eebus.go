@@ -71,7 +71,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 
 	if len(cc.ShipID) == 0 {
 		var err error
-		cc.ShipID, err = ship.UniqueID(details.BrandName, "evcc-ship")
+		cc.ShipID, err = ship.UniqueID(details.BrandName, "evcc-eebus")
 		if err != nil {
 			return nil, err
 		}
