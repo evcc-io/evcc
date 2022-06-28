@@ -342,7 +342,7 @@ func (s *SEMP) serialNumber(id int) string {
 	return fmt.Sprintf(sempSerialNumber, ser, id)
 }
 
-// uniqueDeviceID creates a 6-bytes base device id from machine id
+// UniqueDeviceID creates a 6-bytes base device id from machine id
 func UniqueDeviceID() ([]byte, error) {
 	bytes := 6
 
