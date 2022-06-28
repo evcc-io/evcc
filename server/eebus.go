@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/denisbrodbeck/machineid"
 	"github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/eebus/mdns"
@@ -71,15 +70,11 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	log := util.NewLogger("eebus")
 
 	if len(cc.ShipID) == 0 {
-		// var err error
-		// cc.ShipID, err = server.UniqueID(details.BrandName, "evcc-ship")
-
-		s, err := machineid.ProtectedID("evcc-ship")
+		var err error
+		cc.ShipID, err = ship.UniqueID(details.BrandName, "evcc-ship")
 		if err != nil {
 			return nil, err
 		}
-
-		cc.ShipID = fmt.Sprintf("%s-%0x", details.BrandName, s[:8])
 	}
 
 	cert, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)

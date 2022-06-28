@@ -23,7 +23,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
-	github.com/evcc-io/eebus v0.0.0-20220403153356-c4f2bab5546f
+	github.com/evcc-io/eebus v0.0.0-20220628095038-be707d322cfc
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
 	github.com/go-ping/ping v1.1.0
