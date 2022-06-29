@@ -2,7 +2,7 @@ template: sungrow
 products:
   - brand: Sungrow
     description:
-      generic: Inverter
+      generic: Hybrid
 guidedsetup:
   enable: true
 requirements:
