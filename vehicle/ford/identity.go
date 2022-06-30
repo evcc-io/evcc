@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/cookiejar"
+	"net/url"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/oauth2"
 )
 
@@ -21,8 +25,11 @@ const (
 var OAuth2Config = &oauth2.Config{
 	ClientID: ClientID,
 	Endpoint: oauth2.Endpoint{
+		AuthURL:  fmt.Sprintf("%s/v1.0/endpoint/default/authorize", AuthURI),
 		TokenURL: fmt.Sprintf("%s/oidc/endpoint/default/token", AuthURI),
 	},
+	RedirectURL: "fordapp://userauthorized",
+	Scopes:      []string{"openid"},
 }
 
 type Identity struct {
@@ -44,20 +51,71 @@ func NewIdentity(log *util.Logger, user, password string) *Identity {
 func (v *Identity) Login() error {
 	token, err := v.login()
 	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
+		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(token), v)
 	}
 	return err
 }
 
 // login authenticates with username/password to get new token
-func (v *Identity) login() (oauth.Token, error) {
+func (v *Identity) login() (*oauth.Token, error) {
 	ctx, cancel := context.WithTimeout(
 		context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
 		request.Timeout,
 	)
 	defer cancel()
 
-	tok, err := OAuth2Config.PasswordCredentialsToken(ctx, v.user, v.password)
+	cv, err := cv.CreateCodeVerifier()
+	if err != nil {
+		return nil, err
+	}
+
+	uri := OAuth2Config.AuthCodeURL("state",
+		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
+		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+	)
+	fmt.Println("----", uri)
+
+	// v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+	// 	if req.URL.Scheme != "https" {
+	// 		return http.ErrUseLastResponse
+	// 	}
+	// 	return nil
+	// }
+
+	v.Jar, _ = cookiejar.New(nil)
+
+	resp, err := v.Client.Get(uri)
+	if err != nil {
+		return nil, err
+	}
+	resp.Body.Close()
+
+	fmt.Println("----", resp.Request.URL.String())
+	fmt.Println("----", resp.Request.URL.Query().Get("identity_source_id"))
+
+	data := url.Values{
+		"operation":       {"verify"},
+		"login-form-type": {"pwd"},
+		"username":        {v.user},
+		"password":        {v.password},
+	}
+
+	uri = fmt.Sprintf("%s/authsvc/mtfim/sps/authsvc?identity_source_id=75d08ad1-510f-468a-b69b-5ebc34f773e3&StateId=3655f990-af21-485b-a619-b84ac833a750", AuthURI)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	if err == nil {
+		err = v.DoJSON(req, nil)
+	}
+
+	panic(1)
+
+	stateId := "3655f990-af21-485b-a619-b84ac833a750"
+	_ = stateId
+	code := "foo"
+
+	// tok, err := OAuth2Config.PasswordCredentialsToken(ctx, v.user, v.password)
+	tok, err := OAuth2Config.Exchange(ctx, code,
+		oauth2.SetAuthURLParam("grant_type", "code"), // app
+	)
 
 	// exchange code for api token
 	var token oauth.Token
@@ -79,7 +137,7 @@ func (v *Identity) login() (oauth.Token, error) {
 		}
 	}
 
-	return token, err
+	return &token, err
 }
 
 // RefreshToken implements oauth.TokenRefresher
@@ -94,7 +152,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"Application-Id": ApplicationID,
 	})
 
-	var res oauth.Token
+	var res *oauth.Token
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -103,5 +161,5 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		res, err = v.login()
 	}
 
-	return (*oauth2.Token)(&res), err
+	return (*oauth2.Token)(res), err
 }
