@@ -2,10 +2,12 @@ package ford
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -58,12 +60,6 @@ func (v *Identity) Login() error {
 
 // login authenticates with username/password to get new token
 func (v *Identity) login() (*oauth.Token, error) {
-	ctx, cancel := context.WithTimeout(
-		context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
-		request.Timeout,
-	)
-	defer cancel()
-
 	cv, err := cv.CreateCodeVerifier()
 	if err != nil {
 		return nil, err
@@ -74,24 +70,24 @@ func (v *Identity) login() (*oauth.Token, error) {
 		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 	)
-	fmt.Println("----", uri)
-
-	// v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-	// 	if req.URL.Scheme != "https" {
-	// 		return http.ErrUseLastResponse
-	// 	}
-	// 	return nil
-	// }
 
 	v.Jar, _ = cookiejar.New(nil)
+	defer func() { v.Jar = nil }()
 
-	resp, err := v.Client.Get(uri)
+	var body []byte
+	req, err := request.New(http.MethodGet, uri, nil, nil)
+	if err == nil {
+		body, err = v.DoBody(req)
+	}
+
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
 
-	fmt.Println("----", resp.Request.URL.String())
+	match := regexp.MustCompile(`data-ibm-login-url="(.+?)"`).FindSubmatch(body)
+	if len(match) < 2 {
+		return nil, errors.New("missing login url")
+	}
 
 	data := url.Values{
 		"operation":       {"verify"},
@@ -100,24 +96,40 @@ func (v *Identity) login() (*oauth.Token, error) {
 		"password":        {v.password},
 	}
 
-	identitySourceId := resp.Request.URL.Query().Get("identity_source_id")
-	stateId := "3655f990-af21-485b-a619-b84ac833a750"
-	fmt.Println("----", identitySourceId)
+	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if req.URL.Scheme != "https" {
+			return http.ErrUseLastResponse
+		}
+		return nil
+	}
+	defer func() { v.Client.CheckRedirect = nil }()
 
-	uri = fmt.Sprintf("%s/authsvc/mtfim/sps/authsvc?identity_source_id=%s&StateId=%s", AuthURI, identitySourceId, stateId)
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	uri = fmt.Sprintf("%s%s", AuthURI, string(match[1]))
+	req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+
+	var loc *url.URL
 	if err == nil {
-		err = v.DoJSON(req, nil)
+		var resp *http.Response
+		if resp, err = v.Do(req); err == nil {
+			loc, err = url.Parse(resp.Header.Get("location"))
+		}
 	}
 
-	panic(1)
+	if err != nil {
+		return nil, err
+	}
 
-	_ = stateId
-	code := "foo"
+	code := loc.Query().Get("code")
 
-	// tok, err := OAuth2Config.PasswordCredentialsToken(ctx, v.user, v.password)
+	ctx, cancel := context.WithTimeout(
+		context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
+		request.Timeout,
+	)
+	defer cancel()
+
 	tok, err := OAuth2Config.Exchange(ctx, code,
-		oauth2.SetAuthURLParam("grant_type", "code"), // app
+		oauth2.SetAuthURLParam("grant_type", "authorization_code"),
+		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
 
 	// exchange code for api token
