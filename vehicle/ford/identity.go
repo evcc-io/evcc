@@ -119,14 +119,13 @@ func (v *Identity) login() (*oauth.Token, error) {
 		return nil, err
 	}
 
-	code := loc.Query().Get("code")
-
 	ctx, cancel := context.WithTimeout(
 		context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
 		request.Timeout,
 	)
 	defer cancel()
 
+	code := loc.Query().Get("code")
 	tok, err := OAuth2Config.Exchange(ctx, code,
 		oauth2.SetAuthURLParam("grant_type", "authorization_code"),
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
