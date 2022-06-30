@@ -500,3 +500,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		}
 	}
 }
+
+func (site *Site) Name() string {
+	return site.Title
+}

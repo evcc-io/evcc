@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
@@ -16,13 +15,16 @@ import (
 type MQTT struct {
 	Handler *mqtt.Client
 	root    string
+
+	haKnownSensors map[string]struct{}
 }
 
 // NewMQTT creates MQTT server
 func NewMQTT(root string) *MQTT {
 	return &MQTT{
-		Handler: mqtt.Instance,
-		root:    root,
+		Handler:        mqtt.Instance,
+		root:           root,
+		haKnownSensors: make(map[string]struct{}),
 	}
 }
 
@@ -65,37 +67,6 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	m.publishSingleValue(topic, retained, payload)
 }
 
-func (m *MQTT) listenSetters(topic string, apiHandler loadpoint.API) {
-	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
-		apiHandler.SetMode(api.ChargeMode(payload))
-	})
-	m.Handler.ListenSetter(topic+"/minSoC/set", func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
-			apiHandler.SetMinSoC(soc)
-		}
-	})
-	m.Handler.ListenSetter(topic+"/targetSoC/set", func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
-			apiHandler.SetTargetSoC(soc)
-		}
-	})
-	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
-		if current, err := strconv.ParseFloat(payload, 64); err == nil {
-			apiHandler.SetMinCurrent(current)
-		}
-	})
-	m.Handler.ListenSetter(topic+"/maxCurrent/set", func(payload string) {
-		if current, err := strconv.ParseFloat(payload, 64); err == nil {
-			apiHandler.SetMaxCurrent(current)
-		}
-	})
-	m.Handler.ListenSetter(topic+"/phases/set", func(payload string) {
-		if phases, err := strconv.Atoi(payload); err == nil {
-			_ = apiHandler.SetPhases(phases)
-		}
-	})
-}
-
 // Run starts the MQTT publisher for the MQTT API
 func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	// alive
@@ -108,12 +79,14 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 			_ = site.SetPrioritySoC(float64(soc))
 		}
 	})
+	m.haPublishDiscoverNumber(site, nil, "prioritySoC", fmt.Sprintf("%s/site/prioritySoC", m.root), 0, 100)
 
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferSoC/set", m.root), func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
 			_ = site.SetBufferSoC(float64(soc))
 		}
 	})
+	m.haPublishDiscoverNumber(site, nil, "bufferSoC", fmt.Sprintf("%s/site/bufferSoC", m.root), 0, 100)
 
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/residualPower/set", m.root), func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
@@ -124,16 +97,57 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	// number of loadpoints
 	topic = fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))
+	m.haPublishDiscoverSensors(site, nil, "loadpoints", topic)
 
 	// loadpoint setters
 	for id, lp := range site.LoadPoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
-		m.listenSetters(topic, lp)
+		m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
+			lp.SetMode(api.ChargeMode(payload))
+		})
+		m.haPublishDiscoverSelect(site, &id, "mode", topic+"/mode", []string{
+			string(api.ModeOff),
+			string(api.ModeMinPV),
+			string(api.ModePV),
+			string(api.ModeNow),
+		})
+
+		m.Handler.ListenSetter(topic+"/minSoC/set", func(payload string) {
+			if soc, err := strconv.Atoi(payload); err == nil {
+				lp.SetMinSoC(soc)
+			}
+		})
+		m.haPublishDiscoverNumber(site, &id, "minSoC", topic+"/minSoC", 0, 100)
+
+		m.Handler.ListenSetter(topic+"/targetSoC/set", func(payload string) {
+			if soc, err := strconv.Atoi(payload); err == nil {
+				lp.SetTargetSoC(soc)
+			}
+		})
+		m.haPublishDiscoverNumber(site, &id, "targetSoC", topic+"/targetSoC", 0, 100)
+
+		m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
+			if current, err := strconv.ParseFloat(payload, 64); err == nil {
+				lp.SetMinCurrent(current)
+			}
+		})
+
+		m.Handler.ListenSetter(topic+"/maxCurrent/set", func(payload string) {
+			if current, err := strconv.ParseFloat(payload, 64); err == nil {
+				lp.SetMaxCurrent(current)
+			}
+		})
+		m.Handler.ListenSetter(topic+"/phases/set", func(payload string) {
+			if phases, err := strconv.Atoi(payload); err == nil {
+				_ = lp.SetPhases(phases)
+			}
+		})
 	}
 
 	// alive indicator
 	updated := time.Now().Unix()
 	m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
+	m.haPublishDiscoverSensors(site, nil, "updated", topic)
 
 	// remove deprecated topics
 	for id := range site.LoadPoints() {
@@ -160,5 +174,6 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		// value
 		topic += "/" + p.Key
 		m.publish(topic, true, p.Val)
+		m.haPublishDiscoverSensors(site, p.LoadPoint, p.Key, topic)
 	}
 }

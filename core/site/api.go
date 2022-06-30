@@ -4,6 +4,7 @@ import "github.com/evcc-io/evcc/core/loadpoint"
 
 // API is the external site API
 type API interface {
+	Name() string
 	Healthy() bool
 	LoadPoints() []loadpoint.API
 	GetBufferSoC() float64
