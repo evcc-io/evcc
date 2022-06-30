@@ -27,6 +27,8 @@ type HAEntityDef struct {
 
 	Min float64 `json:"min"`
 	Max float64 `json:"max"`
+
+	StateClass string `json:"state_class,omitempty"`
 }
 
 func (m *MQTT) haPublishBaseDeviceDef(site site.API, loadPoint *int, valueName string) HAEntityDef {
@@ -56,13 +58,18 @@ func (m *MQTT) haPublishBaseDeviceDef(site site.API, loadPoint *int, valueName s
 	}
 }
 
-func (m *MQTT) haPublishDiscoverSensors(site site.API, loadPoint *int, valueName, stateTopic string) {
+func (m *MQTT) haPublishDiscoverSensors(site site.API, loadPoint *int, valueName, stateTopic string, val interface{}) {
 	if _, ok := m.haKnownSensors[stateTopic]; ok {
 		return
 	}
 
 	entityDef := m.haPublishBaseDeviceDef(site, loadPoint, valueName)
 	entityDef.StateTopic = stateTopic
+
+	switch val.(type) {
+	case float64, float32, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, []float64:
+		entityDef.StateClass = "measurement"
+	}
 	topic := "homeassistant/sensor/" + entityDef.UniqueId + "/config"
 
 	jsonData, _ := json.MarshalIndent(entityDef, "", "  ")

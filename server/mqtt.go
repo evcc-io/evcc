@@ -97,7 +97,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	// number of loadpoints
 	topic = fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))
-	m.haPublishDiscoverSensors(site, nil, "loadpoints", topic)
+	m.haPublishDiscoverSensors(site, nil, "loadpoints", topic, nil)
 
 	// loadpoint setters
 	for id, lp := range site.LoadPoints() {
@@ -147,7 +147,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	// alive indicator
 	updated := time.Now().Unix()
 	m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
-	m.haPublishDiscoverSensors(site, nil, "updated", topic)
+	m.haPublishDiscoverSensors(site, nil, "updated", topic, nil)
 
 	// remove deprecated topics
 	for id := range site.LoadPoints() {
@@ -174,6 +174,6 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		// value
 		topic += "/" + p.Key
 		m.publish(topic, true, p.Val)
-		m.haPublishDiscoverSensors(site, p.LoadPoint, p.Key, topic)
+		m.haPublishDiscoverSensors(site, p.LoadPoint, p.Key, topic, p.Val)
 	}
 }
