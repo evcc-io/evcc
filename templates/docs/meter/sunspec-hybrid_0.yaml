@@ -5,7 +5,7 @@ render:
   - usage: grid
     default: |
       type: template
-      template: sunspec-hybrid-inverter
+      template: sunspec-hybrid
       usage: grid      
 
       # Modbus TCP
@@ -15,7 +15,7 @@ render:
       port: 502 # Port
     advanced: |
       type: template
-      template: sunspec-hybrid-inverter
+      template: sunspec-hybrid
       usage: grid      
 
       # Modbus TCP
@@ -27,7 +27,7 @@ render:
   - usage: pv
     default: |
       type: template
-      template: sunspec-hybrid-inverter
+      template: sunspec-hybrid
       usage: pv      
 
       # Modbus TCP
@@ -37,7 +37,7 @@ render:
       port: 502 # Port
     advanced: |
       type: template
-      template: sunspec-hybrid-inverter
+      template: sunspec-hybrid
       usage: pv      
 
       # Modbus TCP
@@ -49,7 +49,7 @@ render:
   - usage: battery
     default: |
       type: template
-      template: sunspec-hybrid-inverter
+      template: sunspec-hybrid
       usage: battery      
 
       # Modbus TCP
@@ -59,7 +59,7 @@ render:
       port: 502 # Port
     advanced: |
       type: template
-      template: sunspec-hybrid-inverter
+      template: sunspec-hybrid
       usage: battery      
 
       # Modbus TCP

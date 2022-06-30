@@ -2,12 +2,12 @@ product:
   brand: Sungrow
   description: Inverter
 description: |
-  Die Verbindung zu Sungrow-Geräten ist nur über den LAN-Port (am Gerät) oder seriell via RS485-Port möglich. Nicht verfügbar über das WiNet-S-Dongle!
+  Die Verbindung zu Sungrow-Geräten ist nur über seriell via RS485-Port oder über tcp mit dem WiNet-S-Dongle möglich.
 render:
   - usage: grid
     default: |
       type: template
-      template: sungrow-sgx0rt
+      template: sungrow-inverter
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -31,7 +31,7 @@ render:
   - usage: pv
     default: |
       type: template
-      template: sungrow-sgx0rt
+      template: sungrow-inverter
       usage: pv      
 
       # RS485 via adapter (Modbus RTU)

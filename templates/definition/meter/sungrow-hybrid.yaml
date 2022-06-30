@@ -1,8 +1,9 @@
-template: sungrow
+template: sungrow-inverter
+covers: ["sungrow"]
 products:
   - brand: Sungrow
     description:
-      generic: Hybrid
+      generic: Hybrid Inverter
 guidedsetup:
   enable: true
 requirements:
