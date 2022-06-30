@@ -69,7 +69,8 @@ func (v *Identity) login() (*oauth.Token, error) {
 		return nil, err
 	}
 
-	uri := OAuth2Config.AuthCodeURL("state",
+	uri := OAuth2Config.AuthCodeURL("",
+		oauth2.SetAuthURLParam("max_age", "3600"),
 		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 	)
@@ -91,7 +92,6 @@ func (v *Identity) login() (*oauth.Token, error) {
 	resp.Body.Close()
 
 	fmt.Println("----", resp.Request.URL.String())
-	fmt.Println("----", resp.Request.URL.Query().Get("identity_source_id"))
 
 	data := url.Values{
 		"operation":       {"verify"},
@@ -100,7 +100,11 @@ func (v *Identity) login() (*oauth.Token, error) {
 		"password":        {v.password},
 	}
 
-	uri = fmt.Sprintf("%s/authsvc/mtfim/sps/authsvc?identity_source_id=75d08ad1-510f-468a-b69b-5ebc34f773e3&StateId=3655f990-af21-485b-a619-b84ac833a750", AuthURI)
+	identitySourceId := resp.Request.URL.Query().Get("identity_source_id")
+	stateId := "3655f990-af21-485b-a619-b84ac833a750"
+	fmt.Println("----", identitySourceId)
+
+	uri = fmt.Sprintf("%s/authsvc/mtfim/sps/authsvc?identity_source_id=%s&StateId=%s", AuthURI, identitySourceId, stateId)
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err == nil {
 		err = v.DoJSON(req, nil)
@@ -108,7 +112,6 @@ func (v *Identity) login() (*oauth.Token, error) {
 
 	panic(1)
 
-	stateId := "3655f990-af21-485b-a619-b84ac833a750"
 	_ = stateId
 	code := "foo"
 
