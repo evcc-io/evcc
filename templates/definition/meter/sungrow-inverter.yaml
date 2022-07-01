@@ -7,8 +7,8 @@ guidedsetup:
   enable: true
 requirements:
   description:
-    de: Die Verbindung zu Sungrow-Geräten ist nur über seriell via RS485-Port oder über tcp mit dem WiNet-S-Dongle möglich.
-    en: Communication to Sungrow-Devices may only be established by using the serial RS485 port of the tcp connection of the WiNet-S-Dongle.
+    de: Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.
+    en: Communication is either serial (RS485) or via TCP (WiNet-S-Dongle).
 params:
   - name: usage
     choice: ["grid", "pv"]
