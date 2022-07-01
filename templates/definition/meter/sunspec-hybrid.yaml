@@ -1,4 +1,5 @@
-template: sunspec-hybrid-inverter
+template: sunspec-hybrid
+covers: ["sunspec-hybrid-inverter"]
 products:
   - description:
       de: Hybridwechselrichter

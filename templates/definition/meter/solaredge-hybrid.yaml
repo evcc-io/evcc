@@ -2,7 +2,7 @@ template: solaredge-hybrid
 products:
   - brand: SolarEdge
     description:
-      generic: Hybrid
+      generic: Hybrid Inverter
 guidedsetup:
   enable: true
 requirements:
