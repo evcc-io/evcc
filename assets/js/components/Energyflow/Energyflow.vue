@@ -146,7 +146,7 @@ export default {
 			return Math.max(0, this.gridPower);
 		},
 		pvProduction: function () {
-			return this.pvConfigured ? Math.abs(this.pvPower) : this.pvExport;
+			return Math.abs(this.pvPower);
 		},
 		batteryPowerAdjusted: function () {
 			const batteryPowerThreshold = 50;
