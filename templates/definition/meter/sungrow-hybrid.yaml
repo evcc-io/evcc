@@ -1,4 +1,4 @@
-template: sungrow-inverter
+template: sungrow-hybrid
 covers: ["sungrow"]
 products:
   - brand: Sungrow
