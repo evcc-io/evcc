@@ -58,6 +58,15 @@ func (m *MQTT) haPublishBaseDeviceDef(site site.API, loadPoint *int, valueName s
 	}
 }
 
+func (m *MQTT) haSendEntityDef(topic string, def HAEntityDef) {
+	jsonData, _ := json.MarshalIndent(def, "", "  ")
+	token := m.Handler.Client.Publish(topic, m.Handler.Qos, true, jsonData)
+	go m.Handler.WaitForToken(token)
+
+	// mark as know to sensors publish only once
+	m.haKnownSensors[def.StateTopic] = struct{}{}
+}
+
 func (m *MQTT) haPublishDiscoverSensors(site site.API, loadPoint *int, valueName, stateTopic string, val interface{}) {
 	if _, ok := m.haKnownSensors[stateTopic]; ok {
 		return
@@ -70,14 +79,8 @@ func (m *MQTT) haPublishDiscoverSensors(site site.API, loadPoint *int, valueName
 	case float64, float32, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, []float64:
 		entityDef.StateClass = "measurement"
 	}
-	topic := "homeassistant/sensor/" + entityDef.UniqueId + "/config"
 
-	jsonData, _ := json.MarshalIndent(entityDef, "", "  ")
-	token := m.Handler.Client.Publish(topic, m.Handler.Qos, true, jsonData)
-	go m.Handler.WaitForToken(token)
-
-	// mark as know to sensors publish only once
-	m.haKnownSensors[stateTopic] = struct{}{}
+	m.haSendEntityDef("homeassistant/sensor/"+entityDef.UniqueId+"/config", entityDef)
 }
 
 func (m *MQTT) haPublishDiscoverSelect(site site.API, loadPoint *int, valueName, stateTopic string, options []string) {
@@ -86,14 +89,8 @@ func (m *MQTT) haPublishDiscoverSelect(site site.API, loadPoint *int, valueName,
 	entityDef.StateTopic = stateTopic
 	entityDef.CommandTopic = stateTopic + "/set"
 	entityDef.Options = options
-	topic := "homeassistant/select/" + entityDef.UniqueId + "/config"
 
-	jsonData, _ := json.MarshalIndent(entityDef, "", "  ")
-	token := m.Handler.Client.Publish(topic, m.Handler.Qos, true, jsonData)
-	go m.Handler.WaitForToken(token)
-
-	// mark as know to sensors publish only once
-	m.haKnownSensors[stateTopic] = struct{}{}
+	m.haSendEntityDef("homeassistant/select/"+entityDef.UniqueId+"/config", entityDef)
 }
 
 func (m *MQTT) haPublishDiscoverNumber(site site.API, loadPoint *int, valueName, stateTopic string, min, max float64) {
@@ -103,12 +100,6 @@ func (m *MQTT) haPublishDiscoverNumber(site site.API, loadPoint *int, valueName,
 	entityDef.CommandTopic = stateTopic + "/set"
 	entityDef.Min = min
 	entityDef.Max = max
-	topic := "homeassistant/number/" + entityDef.UniqueId + "/config"
 
-	jsonData, _ := json.MarshalIndent(entityDef, "", "  ")
-	token := m.Handler.Client.Publish(topic, m.Handler.Qos, true, jsonData)
-	go m.Handler.WaitForToken(token)
-
-	// mark as know to sensors publish only once
-	m.haKnownSensors[stateTopic] = struct{}{}
+	m.haSendEntityDef("homeassistant/number/"+entityDef.UniqueId+"/config", entityDef)
 }
