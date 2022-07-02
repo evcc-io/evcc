@@ -57,27 +57,14 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 	var err error
 	hmr := MethodResponse{}
 
-	if method == "setValue" {
-		onoff := map[string]int64{"1": 1, "0": 0}
-		hmc := MethodCall{
-			XMLName:    xml.Name{},
-			MethodName: method,
-			Params:     []ParamValue{{CCUString: param1}, {CCUString: param2}, {CCUBool: onoff[param3]}},
-		}
-		body, err = xml.MarshalIndent(hmc, "", "  ")
-		if err != nil {
-			return hmr, err
-		}
-	} else {
-		hmc := MethodCall{
-			XMLName:    xml.Name{},
-			MethodName: method,
-			Params:     []ParamValue{{CCUString: param1}, {CCUString: param2}},
-		}
-		body, err = xml.MarshalIndent(hmc, "", "  ")
-		if err != nil {
-			return hmr, err
-		}
+	hmc := MethodCall{
+		XMLName:    xml.Name{},
+		MethodName: method,
+		Params:     []ParamValue{{CCUString: param1}, {CCUString: param2}, {CCUBool: param3}},
+	}
+	body, err = xml.MarshalIndent(hmc, "", "  ")
+	if err != nil {
+		return hmr, err
 	}
 
 	headers := map[string]string{
@@ -86,13 +73,8 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 
 	c.log.TRACE.Printf("request: %s\n", xml.Header+string(body))
 
-	//	fmt.Printf("request: %s\n", xml.Header+string(body))
-
 	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
 		if res, err := c.DoBody(req); err == nil {
-
-			//			fmt.Printf("response: %s\n", res)
-
 			c.log.TRACE.Printf("response: %s\n", res)
 			xml.Unmarshal([]byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1)), &hmr)
 		}
@@ -104,7 +86,7 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 //Enabled reads the homematic switch state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
 	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", "")
-	return sr.Value.CCUBool == 1, err
+	return sr.Value.CCUBool == "1", err
 }
 
 //Enable sets the homematic switch state true=on/false=off
@@ -124,4 +106,10 @@ func (c *Connection) CurrentPower() (float64, error) {
 func (c *Connection) TotalEnergy() (float64, error) {
 	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.MeterId), "ENERGY_COUNTER", "")
 	return sr.Value.CCUFloat / 1000, err
+}
+
+// Currents implements the api.MeterCurrent interface
+func (c *Connection) Currents() (float64, float64, float64, error) {
+	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.MeterId), "CURRENT", "")
+	return sr.Value.CCUFloat / 1000, 0, 0, err
 }

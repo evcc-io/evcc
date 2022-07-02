@@ -5,7 +5,7 @@ import (
 )
 
 type ParamValue struct {
-	CCUBool   int64   `xml:"value>boolean,omitempty"`
+	CCUBool   string  `xml:"value>boolean,omitempty"`
 	CCUFloat  float64 `xml:"value>double,omitempty"`
 	CCUInt    int64   `xml:"value>i4,omitempty"`
 	CCUString string  `xml:"value>string,omitempty"`
