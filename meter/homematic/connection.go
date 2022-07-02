@@ -53,7 +53,7 @@ type MethodResponse struct {
 // NewConnection creates a new Homematic device connection.
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
-func NewConnection(uri, user, password, deviceid, meterid, switchid string) *Connection {
+func NewConnection(uri, deviceid, meterid, switchid, user, password string) *Connection {
 	log := util.NewLogger("homematic")
 
 	settings := &Settings{
@@ -93,15 +93,13 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 
 	c.log.TRACE.Printf("request: %s\n", xml.Header+string(body))
 
-	fmt.Printf("request: %s\n", xml.Header+string(body))
-
 	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
 		if res, err := c.DoBody(req); err == nil {
-			fmt.Printf("response: %s\n", strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1))
-
+			c.log.TRACE.Printf("response: %s\n", res)
 			xml.Unmarshal([]byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1)), &hmr)
 		}
 	}
+
 	return hmr, err
 }
 
@@ -118,7 +116,7 @@ func (c *Connection) SetSwitchState(bool) (bool, error) {
 }
 
 //GetMeterPower reads the homematic meter power in W
-func (c *Connection) GetMeterPower() (float64, error) {
+func (c *Connection) CurrentPower() (float64, error) {
 	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.MeterId), "POWER", "")
 	return sr.Value.FloatValue, err
 }

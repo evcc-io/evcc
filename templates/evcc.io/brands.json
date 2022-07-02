@@ -43,6 +43,7 @@
  ],
  "SmartPlugs": [
   "AVM",
+  "ELV eQ-3 AG",
   "Shelly",
   "Tasmota",
   "TP-Link"

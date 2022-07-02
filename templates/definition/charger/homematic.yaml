@@ -1,0 +1,65 @@
+template: homematic
+products:
+  - brand: ELV eQ-3 AG
+    description:
+      generic: Homematic IP + BidCoS
+group: switchsockets
+params:
+  - name: host
+  - name: devicetype
+    description:
+      de: Homematic Gerätetyp (IP or BidCoS)
+      en: Homematic device type (IP or BidCoS)
+    required: true
+    mask: false
+    default: "IP"      
+  - name: device
+    description:
+      de: Geräteadresse/Seriennumer
+      en: Device address / Serial number
+    required: true
+    mask: false
+    example: "0001EE89AAD848"
+    help:
+      en: Homematic device id like shown in the CCU web user interface.
+      de: Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
+  - name: meterchannel
+    description:
+      de: Meterkanal
+      en: meter channel
+    required: true
+    mask: false
+    default: "6"
+    help:
+      en: Homematic device specific meter channel.
+      de: Kanal Id des Homematic Messwertkanals.
+  - name: switchchannel
+    description:
+      de: Schaltkanal
+      en: switch channel
+    required: true
+    mask: false
+    default: "3"
+    help:
+      en: Homematic device specific switch channel.
+      de: Kanal Id des Homematic Schaltkanals.
+  - name: standbypower
+    default: 15
+  - name: user
+    required: false
+  - name: password
+    required: false
+    mask: true
+render: |
+  type: homematic
+  uri: {{ .host }}:{{- if (eq .devicetype "IP")}}2010{{ else }}2001{{end}}
+  deviceid: {{ .device }}
+  meterid: {{ .meterchannel }}
+  switchid: {{ .switchchannel }}
+  standbypower: {{ .standbypower }}
+  {{ if ne .user "" }}
+  user: {{ .user }}
+  {{ end }}
+  {{ if ne .password "" }}
+  password: {{ .password }}
+  {{ end }}  

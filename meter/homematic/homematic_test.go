@@ -33,7 +33,7 @@ func TestGetMeterPower(t *testing.T) {
 
 	c := NewConnection("192.168.178.98:2010", "Admin", "85cMvmeHFVJNk6z", "0001DD89AAD848", "6", "3")
 
-	res, err := c.GetMeterPower()
+	res, err := c.CurrentPower()
 	if err != nil {
 		t.Errorf("\nError +++\n%v\n", err)
 	}
