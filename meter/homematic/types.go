@@ -14,6 +14,17 @@ type MethodGetCall struct {
 	Params     []MethodGetParam `xml:"params>param,omitempty"`
 }
 
+type ParamValue struct {
+	CCUString string `xml:"value>string,omitempty,"`
+	CCUBool   string `xml:"value>boolean,omitempty,"`
+}
+
+type MethodSetCall struct {
+	XMLName    xml.Name     `xml:"methodCall"`
+	MethodName string       `xml:"methodName"`
+	Params     []ParamValue `xml:"params>param,omitempty"`
+}
+
 type MethodResponseValue struct {
 	XMLName   xml.Name `xml:"value"`
 	CCUBool   int64    `xml:"boolean"`

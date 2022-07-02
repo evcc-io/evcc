@@ -40,6 +40,17 @@ func TestGetMeterPower(t *testing.T) {
 	t.Errorf("\nOK +++\n%v\n", res)
 }
 
+func TestEnable(t *testing.T) {
+
+	c := NewConnection("192.168.178.98:2010", "Admin", "85cMvmeHFVJNk6z", "0001DD89AAD848", "6", "3")
+
+	res, err := c.Enable(false)
+	if err != nil {
+		t.Errorf("\nError +++\n%v\n", err)
+	}
+	t.Errorf("\nOK +++\n%v\n", res)
+}
+
 func TestXMLUnmarshall(t *testing.T) {
 
 	contents := `<?xml version="1.0" encoding="ISO-8859-1"?><methodResponse><params><param><value><boolean>1</boolean></value></param></params></methodResponse>`

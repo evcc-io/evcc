@@ -45,18 +45,30 @@ func NewConnection(uri, deviceid, meterid, switchid, user, password string) *Con
 }
 
 func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodResponse, error) {
-
-	hmc := MethodGetCall{
-		XMLName:    xml.Name{},
-		MethodName: method,
-		Params:     []MethodGetParam{{param1}, {param2}, {param3}},
-	}
-
+	var body []byte
+	var err error
 	hmr := MethodResponse{}
 
-	body, err := xml.MarshalIndent(hmc, "", "  ")
-	if err != nil {
-		return hmr, err
+	if method == "setValue" {
+		hmc := MethodSetCall{
+			XMLName:    xml.Name{},
+			MethodName: method,
+			Params:     []ParamValue{{CCUString: param1}, {CCUString: param2}, {CCUBool: param3}},
+		}
+		body, err = xml.MarshalIndent(hmc, "", "  ")
+		if err != nil {
+			return hmr, err
+		}
+	} else {
+		hmc := MethodGetCall{
+			XMLName:    xml.Name{},
+			MethodName: method,
+			Params:     []MethodGetParam{{param1}, {param2}, {param3}},
+		}
+		body, err = xml.MarshalIndent(hmc, "", "  ")
+		if err != nil {
+			return hmr, err
+		}
 	}
 
 	headers := map[string]string{
@@ -64,6 +76,8 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 	}
 
 	c.log.TRACE.Printf("request: %s\n", xml.Header+string(body))
+
+	fmt.Printf("request: %s\n", xml.Header+string(body))
 
 	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
 		if res, err := c.DoBody(req); err == nil {
@@ -82,8 +96,9 @@ func (c *Connection) Enabled() (bool, error) {
 }
 
 //SetSwitchState sets the homematic switch state true=on/false=off
-func (c *Connection) SetSwitchState(bool) (bool, error) {
-	sr, err := c.XmlCmd("setValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", "true")
+func (c *Connection) Enable(enable bool) (bool, error) {
+	onoff := map[bool]string{true: "1", false: "0"}
+	sr, err := c.XmlCmd("setValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", onoff[enable])
 	return sr.Value.CCUBool == 1, err
 }
 
