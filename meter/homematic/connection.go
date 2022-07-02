@@ -50,20 +50,21 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 	hmr := MethodResponse{}
 
 	if method == "setValue" {
-		hmc := MethodSetCall{
+		onoff := map[string]int64{"1": 1, "0": 0}
+		hmc := MethodCall{
 			XMLName:    xml.Name{},
 			MethodName: method,
-			Params:     []ParamValue{{CCUString: param1}, {CCUString: param2}, {CCUBool: param3}},
+			Params:     []ParamValue{{CCUString: param1}, {CCUString: param2}, {CCUBool: onoff[param3]}},
 		}
 		body, err = xml.MarshalIndent(hmc, "", "  ")
 		if err != nil {
 			return hmr, err
 		}
 	} else {
-		hmc := MethodGetCall{
+		hmc := MethodCall{
 			XMLName:    xml.Name{},
 			MethodName: method,
-			Params:     []MethodGetParam{{param1}, {param2}, {param3}},
+			Params:     []ParamValue{{CCUString: param1}, {CCUString: param2}},
 		}
 		body, err = xml.MarshalIndent(hmc, "", "  ")
 		if err != nil {
