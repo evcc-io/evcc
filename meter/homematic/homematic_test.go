@@ -44,11 +44,11 @@ func TestEnable(t *testing.T) {
 
 	c := NewConnection("192.168.178.98:2010", "0001DD89AAD848", "6", "3", "Admin", "85cMvmeHFVJNk6z")
 
-	res, err := c.Enable(true)
+	err := c.Enable(true)
 	if err != nil {
 		t.Errorf("\nError +++\n%v\n", err)
 	}
-	t.Errorf("\nOK +++\n%v\n", res)
+	t.Errorf("\nOK +++\n%v\n", "")
 }
 
 func TestXMLUnmarshall(t *testing.T) {

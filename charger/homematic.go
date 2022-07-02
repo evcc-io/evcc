@@ -54,7 +54,7 @@ func (c *CCU) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *CCU) Enable(enable bool) error {
-	return nil
+	return c.conn.Enable(enable)
 }
 
 // MaxCurrent implements the api.Charger interface
