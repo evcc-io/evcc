@@ -107,15 +107,21 @@ func (c *Connection) Enabled() (bool, error) {
 	return sr.Value.CCUBool == 1, err
 }
 
-//SetSwitchState sets the homematic switch state true=on/false=off
+//Enable sets the homematic switch state true=on/false=off
 func (c *Connection) Enable(enable bool) (bool, error) {
 	onoff := map[bool]string{true: "1", false: "0"}
 	_, err := c.XmlCmd("setValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", onoff[enable])
 	return enable, err
 }
 
-//GetMeterPower reads the homematic meter power in W
+//CurrentPower reads the homematic meter power in W
 func (c *Connection) CurrentPower() (float64, error) {
 	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.MeterId), "POWER", "")
 	return sr.Value.CCUFloat, err
+}
+
+//TotalEnergy reads the homematic meter power in W
+func (c *Connection) TotalEnergy() (float64, error) {
+	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.MeterId), "ENERGY_COUNTER", "")
+	return sr.Value.CCUFloat / 1000, err
 }

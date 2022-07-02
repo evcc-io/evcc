@@ -106,3 +106,10 @@ func (c *CCU) CurrentPower() (float64, error) {
 
 	return power, err
 }
+
+var _ api.MeterEnergy = (*CCU)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *CCU) TotalEnergy() (float64, error) {
+	return c.conn.TotalEnergy()
+}
