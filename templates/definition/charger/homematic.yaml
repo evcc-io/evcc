@@ -15,8 +15,8 @@ params:
     default: "IP"      
   - name: device
     description:
-      de: Geräteadresse/Seriennumer
-      en: Device address / Serial number
+      de: Geräteadresse/Seriennummer
+      en: Device address/Serial number
     required: true
     mask: false
     example: "0001EE89AAD848"
