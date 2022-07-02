@@ -48,7 +48,7 @@ func TestXMLUnmarshall(t *testing.T) {
 
 	xml.Unmarshal([]byte(strings.Replace(contents, "ISO-8859-1", "UTF-8", 1)), &m)
 
-	fmt.Printf("%v\n", m.Value.BoolValue)
+	fmt.Printf("%v\n", m.Value.CCUBool)
 
 	t.Errorf("\nOK +++\n%#v\n", m)
 	//t.Errorf("\n+++\n%#v\n", members)

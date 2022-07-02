@@ -46,10 +46,10 @@ func NewConnection(uri, deviceid, meterid, switchid, user, password string) *Con
 
 func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodResponse, error) {
 
-	hmc := MethodCall{
+	hmc := MethodGetCall{
 		XMLName:    xml.Name{},
 		MethodName: method,
-		Params:     []MethodParam{{param1}, {param2}, {param3}},
+		Params:     []MethodGetParam{{param1}, {param2}, {param3}},
 	}
 
 	hmr := MethodResponse{}
@@ -78,17 +78,17 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 //Enabled reads the homematic switch state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
 	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", "")
-	return sr.Value.BoolValue == 1, err
+	return sr.Value.CCUBool == 1, err
 }
 
 //SetSwitchState sets the homematic switch state true=on/false=off
 func (c *Connection) SetSwitchState(bool) (bool, error) {
 	sr, err := c.XmlCmd("setValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", "true")
-	return sr.Value.BoolValue == 1, err
+	return sr.Value.CCUBool == 1, err
 }
 
 //GetMeterPower reads the homematic meter power in W
 func (c *Connection) CurrentPower() (float64, error) {
 	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.MeterId), "POWER", "")
-	return sr.Value.FloatValue, err
+	return sr.Value.CCUFloat, err
 }

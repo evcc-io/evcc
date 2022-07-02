@@ -4,22 +4,22 @@ import (
 	"encoding/xml"
 )
 
-type MethodParam struct {
-	ParamString string `xml:"value>string,omitempty"`
+type MethodGetParam struct {
+	CCUString string `xml:"value>string,omitempty"`
 }
 
-type MethodCall struct {
-	XMLName    xml.Name      `xml:"methodCall"`
-	MethodName string        `xml:"methodName"`
-	Params     []MethodParam `xml:"params>param,omitempty"`
+type MethodGetCall struct {
+	XMLName    xml.Name         `xml:"methodCall"`
+	MethodName string           `xml:"methodName"`
+	Params     []MethodGetParam `xml:"params>param,omitempty"`
 }
 
 type MethodResponseValue struct {
-	XMLName     xml.Name `xml:"value"`
-	BoolValue   int64    `xml:"boolean"`
-	FloatValue  float64  `xml:"double"`
-	IntValue    int64    `xml:"i4"`
-	StringValue string   `xml:"string"`
+	XMLName   xml.Name `xml:"value"`
+	CCUBool   int64    `xml:"boolean"`
+	CCUFloat  float64  `xml:"double"`
+	CCUInt    int64    `xml:"i4"`
+	CCUString string   `xml:"string"`
 }
 
 type MethodResponse struct {
