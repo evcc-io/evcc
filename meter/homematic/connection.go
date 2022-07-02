@@ -1,10 +1,5 @@
 package homematic
 
-// Credits to
-// https://github.com/dhcgn/hm2mqtt/blob/d05ef217ec5aa667e43401587e41c60aa4168d31/hmclient/hmclient.go
-// https://github.com/Bug405/Homematic-XML-RPC/blob/master/src/main/java/xmlrpc/HomematicClient.java
-// https://github.com/homematic-community/awesome-homematic
-
 import (
 	"encoding/xml"
 	"fmt"
@@ -25,29 +20,6 @@ type Connection struct {
 	log *util.Logger
 	*request.Helper
 	*Settings
-}
-
-type MethodParam struct {
-	ParamString string `xml:"value>string,omitempty"`
-}
-
-type MethodCall struct {
-	XMLName    xml.Name      `xml:"methodCall"`
-	MethodName string        `xml:"methodName"`
-	Params     []MethodParam `xml:"params>param,omitempty"`
-}
-
-type MethodResponseValue struct {
-	XMLName     xml.Name `xml:"value"`
-	BoolValue   int64    `xml:"boolean"`
-	FloatValue  float64  `xml:"double"`
-	IntValue    int64    `xml:"i4"`
-	StringValue string   `xml:"string"`
-}
-
-type MethodResponse struct {
-	XMLName xml.Name            `xml:"methodResponse"`
-	Value   MethodResponseValue `xml:"params>param>value,omitempty"`
 }
 
 // NewConnection creates a new Homematic device connection.
