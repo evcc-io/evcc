@@ -101,8 +101,8 @@ func (c *Connection) Enabled() (bool, error) {
 //SetSwitchState sets the homematic switch state true=on/false=off
 func (c *Connection) Enable(enable bool) (bool, error) {
 	onoff := map[bool]string{true: "1", false: "0"}
-	sr, err := c.XmlCmd("setValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", onoff[enable])
-	return sr.Value.CCUBool == 1, err
+	_, err := c.XmlCmd("setValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", onoff[enable])
+	return enable, err
 }
 
 //GetMeterPower reads the homematic meter power in W
