@@ -11,6 +11,10 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
+// Homematic plugable switch and meter charger based on CCU XML-RPC interface
+// https://homematic-ip.com/sites/default/files/downloads/HM_XmlRpc_API.pdf
+// https://homematic-ip.com/sites/default/files/downloads/HMIP_XmlRpc_API_Addendum.pdf
+
 // Homematic CCU settings
 type Settings struct {
 	URI, DeviceId, MeterId, SwitchId, User, Password string
