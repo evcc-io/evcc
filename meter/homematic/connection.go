@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Homematic CCU settings
@@ -39,6 +40,13 @@ func NewConnection(uri, deviceid, meterid, switchid, user, password string) *Con
 		log:      log,
 		Helper:   request.NewHelper(log),
 		Settings: settings,
+	}
+
+	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
+
+	if user != "" {
+		log.Redact(transport.BasicAuthHeader(user, password))
+		conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 	}
 
 	return conn
@@ -78,12 +86,12 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 
 	c.log.TRACE.Printf("request: %s\n", xml.Header+string(body))
 
-	fmt.Printf("request: %s\n", xml.Header+string(body))
+	//	fmt.Printf("request: %s\n", xml.Header+string(body))
 
 	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
 		if res, err := c.DoBody(req); err == nil {
 
-			fmt.Printf("response: %s\n", res)
+			//			fmt.Printf("response: %s\n", res)
 
 			c.log.TRACE.Printf("response: %s\n", res)
 			xml.Unmarshal([]byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1)), &hmr)
