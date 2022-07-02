@@ -75,8 +75,8 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 	return hmr, err
 }
 
-//GetSwitchState reads the homematic switch state true=on/false=off
-func (c *Connection) GetSwitchState() (bool, error) {
+//Enabled reads the homematic switch state true=on/false=off
+func (c *Connection) Enabled() (bool, error) {
 	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", "")
 	return sr.Value.BoolValue == 1, err
 }

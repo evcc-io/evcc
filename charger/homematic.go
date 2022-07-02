@@ -49,7 +49,7 @@ func NewCCU(uri, deviceid, meterid, switchid, user, password string, standbypowe
 
 // Enabled implements the api.Charger interface
 func (c *CCU) Enabled() (bool, error) {
-	return c.conn.GetSwitchState()
+	return c.conn.Enabled()
 }
 
 // Enable implements the api.Charger interface
