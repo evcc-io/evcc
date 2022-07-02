@@ -9,7 +9,7 @@ import (
 
 func TestHMCall(t *testing.T) {
 
-	c := NewConnection("192.168.178.98:2010", "Admin", "85cMvmeHFVJNk6z", "0001DD89AAD848", "6", "2")
+	c := NewConnection("192.168.178.98:2010", "0001DD89AAD848", "6", "3", "Admin", "85cMvmeHFVJNk6z")
 
 	res, err := c.XmlCmd("getParamset", "0001DD89AAD848:6", "VALUES", "")
 	if err != nil {
@@ -20,7 +20,7 @@ func TestHMCall(t *testing.T) {
 
 func TestGetSwitchState(t *testing.T) {
 
-	c := NewConnection("192.168.178.98:2010", "Admin", "85cMvmeHFVJNk6z", "0001DD89AAD848", "6", "3")
+	c := NewConnection("192.168.178.98:2010", "0001DD89AAD848", "6", "3", "Admin", "85cMvmeHFVJNk6z")
 
 	res, err := c.Enabled()
 	if err != nil {
@@ -31,7 +31,7 @@ func TestGetSwitchState(t *testing.T) {
 
 func TestGetMeterPower(t *testing.T) {
 
-	c := NewConnection("192.168.178.98:2010", "Admin", "85cMvmeHFVJNk6z", "0001DD89AAD848", "6", "3")
+	c := NewConnection("192.168.178.98:2010", "0001DD89AAD848", "6", "3", "Admin", "85cMvmeHFVJNk6z")
 
 	res, err := c.CurrentPower()
 	if err != nil {
@@ -42,9 +42,9 @@ func TestGetMeterPower(t *testing.T) {
 
 func TestEnable(t *testing.T) {
 
-	c := NewConnection("192.168.178.98:2010", "Admin", "85cMvmeHFVJNk6z", "0001DD89AAD848", "6", "3")
+	c := NewConnection("192.168.178.98:2010", "0001DD89AAD848", "6", "3", "Admin", "85cMvmeHFVJNk6z")
 
-	res, err := c.Enable(false)
+	res, err := c.Enable(true)
 	if err != nil {
 		t.Errorf("\nError +++\n%v\n", err)
 	}

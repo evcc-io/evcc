@@ -81,6 +81,9 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 
 	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
 		if res, err := c.DoBody(req); err == nil {
+
+			fmt.Printf("response: %s\n", res)
+
 			c.log.TRACE.Printf("response: %s\n", res)
 			xml.Unmarshal([]byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1)), &hmr)
 		}
