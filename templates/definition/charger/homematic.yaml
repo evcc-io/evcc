@@ -12,11 +12,11 @@ params:
       en: Homematic device type (IP or BidCoS)
     required: true
     mask: false
-    default: "IP"      
+    default: "IP"
   - name: device
     description:
-      de: Geräteadresse
-      en: Device address
+      de: Geräteadresse/Seriennummer
+      en: Device address/Serial number
     required: true
     mask: false
     example: "0001EE89AAD848"
