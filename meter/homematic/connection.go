@@ -51,7 +51,6 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 		conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 	}
 
-	//lint:ignore nothing to return as error, but needed to fullfill api.meter requirements
 	return conn, nil
 }
 
