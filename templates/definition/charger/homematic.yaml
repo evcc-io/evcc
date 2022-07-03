@@ -1,8 +1,6 @@
 template: homematic
 products:
   - brand: Homematic IP
-    description:
-      generic: Homematic IP + BidCoS
 group: switchsockets
 params:
   - name: host

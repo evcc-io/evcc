@@ -1,8 +1,6 @@
 template: homematic
 products:
-  - brand: Homematic eQ-3 AG (ELV)
-    description:
-      generic: Homematic IP + BidCoS
+  - brand: Homematic IP
 group: switchsockets
 params:
   - name: usage
