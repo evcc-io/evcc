@@ -1,0 +1,27 @@
+product:
+  brand: Homematic eQ-3 AG (ELV)
+  description: Homematic IP + BidCoS
+  group: Schaltbare Steckdosen
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: homematic
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      devicetype: IP
+      device: 0001EE89AAD848 # Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
+      meterchannel: 6 # Kanal Id des Homematic Messwertkanals.
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
+  - usage: charge
+    default: |
+      type: template
+      template: homematic
+      usage: charge
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      devicetype: IP
+      device: 0001EE89AAD848 # Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
+      meterchannel: 6 # Kanal Id des Homematic Messwertkanals.
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
