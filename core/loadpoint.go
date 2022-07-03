@@ -214,11 +214,15 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.charger = cp.Charger(lp.ChargerRef)
 	lp.configureChargerType(lp.charger)
 
-	// setup fixed phases
-	if _, ok := lp.charger.(api.ChargePhases); ok && lp.GetPhases() != 0 {
-		lp.log.WARN.Printf("locking phase config to %dp for switchable charger", lp.GetPhases())
-		// set to unknown since we don't know the charger's setting yet and don't want to interrupt charging
-		lp.setPhases(0)
+	// setup fixed phases:
+	// - simple charger starts with phases config if specified
+	// - switchable charger starts at 0p since we don't know the current setting
+	if _, ok := lp.charger.(api.ChargePhases); !ok {
+		if lp.DefaultPhases != 0 {
+			lp.phases = lp.DefaultPhases
+		}
+	} else if lp.DefaultPhases != 0 {
+		lp.log.WARN.Printf("locking phase config to %dp for switchable charger", lp.DefaultPhases)
 	}
 
 	// allow target charge handler to access loadpoint
