@@ -34,7 +34,6 @@
     "@storybook/testing-library": "^0.0.13",
     "@storybook/vue3": "^6.5.9",
     "@vue/compiler-sfc": "^3.2.30",
-    "@vue/eslint-config-standard": "^6.1.0",
     "babel-loader": "^8.2.3",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.5.0",
@@ -49,7 +48,7 @@
     "postcss-custom-media": "^8.0.2",
     "prettier": "^2.5.1",
     "vite": "^2.7.13",
-    "vue-loader": "^16.8.3"
+    "vue-loader": "^17.0.0"
   },
   "engines": {
     "npm": ">=8.0.0",

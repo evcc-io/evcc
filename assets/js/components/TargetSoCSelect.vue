@@ -11,7 +11,7 @@
 			</label>
 
 			<span v-if="estimatedTargetRange" class="extraValue d-block d-sm-inline text-nowrap">
-				&nbsp;{{ estimatedTargetRange }}km
+				&nbsp;{{ estimatedTargetRange }} km
 			</span>
 		</h3>
 	</LabelAndValue>
@@ -36,7 +36,7 @@ export default {
 				let text = `${soc}%`;
 				const range = this.estimatedRange(soc);
 				if (range) {
-					text += ` (${range}km)`;
+					text += ` (${range} km)`;
 				}
 				result.push({ soc, text });
 			}
