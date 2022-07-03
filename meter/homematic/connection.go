@@ -78,6 +78,11 @@ func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (M
 	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
 		if res, err := c.DoBody(req); err == nil {
 			c.log.TRACE.Printf("response: %s\n", res)
+
+			if strings.Contains(string(res), "faultCode") {
+				return hmr, fmt.Errorf("\nCCU error:%s", string(res))
+			}
+
 			err = xml.Unmarshal([]byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1)), &hmr)
 			if err != nil {
 				return hmr, err
