@@ -38,13 +38,16 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewCCU creates a new connection with standbypower for charger
 func NewCCU(uri, deviceid, meterid, switchid, user, password string, standbypower float64) (*CCU, error) {
 	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password)
+	if err != nil {
+		return nil, err
+	}
 
 	fd := &CCU{
 		conn:         conn,
 		standbypower: standbypower,
 	}
 
-	return fd, err
+	return fd, nil
 }
 
 // Enabled implements the api.Charger interface
