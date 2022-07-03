@@ -11,13 +11,13 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
-// Homematic plugable switch and meter charger based on CCU XML-RPC interface
+// Homematic plugable switchchannel and meterchannel charger based on CCU XML-RPC interface
 // https://homematic-ip.com/sites/default/files/downloads/HM_XmlRpc_API.pdf
 // https://homematic-ip.com/sites/default/files/downloads/HMIP_XmlRpc_API_Addendum.pdf
 
 // Homematic CCU settings
 type Settings struct {
-	URI, DeviceId, MeterId, SwitchId, User, Password string
+	URI, Device, MeterChannel, SwitchChannel, User, Password string
 }
 
 // Connection is the Homematic CCU connection
@@ -28,16 +28,14 @@ type Connection struct {
 }
 
 // NewConnection creates a new Homematic device connection.
-// User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
-// Password is directly B64 encoded.
-func NewConnection(uri, deviceid, meterid, switchid, user, password string) *Connection {
+func NewConnection(uri, device, meterchannel, switchchannel, user, password string) *Connection {
 	log := util.NewLogger("homematic")
 
 	settings := &Settings{
-		URI:      util.DefaultScheme(uri, "http"),
-		DeviceId: deviceid,
-		MeterId:  meterid,
-		SwitchId: switchid,
+		URI:           util.DefaultScheme(uri, "http"),
+		Device:        device,
+		MeterChannel:  meterchannel,
+		SwitchChannel: switchchannel,
 	}
 
 	conn := &Connection{
@@ -56,7 +54,7 @@ func NewConnection(uri, deviceid, meterid, switchid, user, password string) *Con
 	return conn
 }
 
-func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodResponse, error) {
+func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (MethodResponse, error) {
 	var body []byte
 	var err error
 	hmr := MethodResponse{}
@@ -64,7 +62,7 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 	hmc := MethodCall{
 		XMLName:    xml.Name{},
 		MethodName: method,
-		Params:     []ParamValue{{CCUString: param1}, {CCUString: param2}, {CCUBool: param3}},
+		Params:     []ParamValue{param1, param2, param3},
 	}
 	body, err = xml.MarshalIndent(hmc, "", "  ")
 	if err != nil {
@@ -90,33 +88,49 @@ func (c *Connection) XmlCmd(method, param1, param2, param3 string) (MethodRespon
 	return hmr, err
 }
 
-//Enabled reads the homematic switch state true=on/false=off
+//Enabled reads the homematic switchchannel state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
-	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", "")
+	//fmt.Sprintf("%s:%s", c.Device, c.SwitchChannel)
+	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.SwitchChannel)}
+	p2 := ParamValue{CCUString: "STATE"}
+	p3 := ParamValue{CCUString: ""}
+	sr, err := c.XmlCmd("getValue", p1, p2, p3)
 	return sr.Value.CCUBool == "1", err
 }
 
-//Enable sets the homematic switch state true=on/false=off
+//Enable sets the homematic switchchannel state true=on/false=off
 func (c *Connection) Enable(enable bool) error {
 	onoff := map[bool]string{true: "1", false: "0"}
-	_, err := c.XmlCmd("setValue", fmt.Sprintf("%s:%s", c.DeviceId, c.SwitchId), "STATE", onoff[enable])
+	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.SwitchChannel)}
+	p2 := ParamValue{CCUString: "STATE"}
+	p3 := ParamValue{CCUBool: onoff[enable]}
+	_, err := c.XmlCmd("setValue", p1, p2, p3)
 	return err
 }
 
-//CurrentPower reads the homematic meter power in W
+//CurrentPower reads the homematic meterchannel power in W
 func (c *Connection) CurrentPower() (float64, error) {
-	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.MeterId), "POWER", "")
+	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
+	p2 := ParamValue{CCUString: "POWER"}
+	p3 := ParamValue{CCUString: ""}
+	sr, err := c.XmlCmd("getValue", p1, p2, p3)
 	return sr.Value.CCUFloat, err
 }
 
-//TotalEnergy reads the homematic meter power in W
+//TotalEnergy reads the homematic meterchannel power in W
 func (c *Connection) TotalEnergy() (float64, error) {
-	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.MeterId), "ENERGY_COUNTER", "")
+	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
+	p2 := ParamValue{CCUString: "ENERGY_COUNTER"}
+	p3 := ParamValue{CCUString: ""}
+	sr, err := c.XmlCmd("getValue", p1, p2, p3)
 	return sr.Value.CCUFloat / 1000, err
 }
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.MeterChannelCurrent interface
 func (c *Connection) Currents() (float64, float64, float64, error) {
-	sr, err := c.XmlCmd("getValue", fmt.Sprintf("%s:%s", c.DeviceId, c.MeterId), "CURRENT", "")
+	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
+	p2 := ParamValue{CCUString: "CURRENT"}
+	p3 := ParamValue{CCUString: ""}
+	sr, err := c.XmlCmd("getValue", p1, p2, p3)
 	return sr.Value.CCUFloat / 1000, 0, 0, err
 }
