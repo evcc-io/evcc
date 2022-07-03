@@ -6,13 +6,6 @@ params:
   - name: usage
     choice: ["pv", "charge"]
   - name: host
-  - name: devicetype
-    description:
-      de: Homematic Gerätetyp (IP or BidCoS)
-      en: Homematic device type (IP or BidCoS)
-    required: true
-    mask: false
-    default: "IP"
   - name: device
     description:
       de: Geräteadresse/Seriennummer
@@ -40,7 +33,7 @@ params:
     mask: true
 render: |
   type: homematic
-  uri: {{ .host }}:{{- if (eq .devicetype "IP")}}2010{{ else }}2001{{end}}
+  uri: {{ .host }}:2010
   device: {{ .device }}
   meterchannel: {{ .meterchannel }}
   {{ if ne .user "" }}

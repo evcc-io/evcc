@@ -6,7 +6,6 @@ render:
       type: template
       template: homematic
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      devicetype: IP
       device: 0001EE89AAD848 # Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
       meterchannel: 6 # Kanal Id des Homematic Messwertkanals.
       switchchannel: 3 # Kanal Id des Homematic Schaltkanals.
