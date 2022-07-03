@@ -19,32 +19,32 @@ func init() {
 // NewCCUFromConfig creates a fritzdect charger from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI          string
-		DeviceId     string
-		MeterId      string
-		SwitchId     string
-		User         string
-		Password     string
-		StandbyPower float64
+		URI           string
+		Device        string
+		MeterChannel  string
+		SwitchChannel string
+		User          string
+		Password      string
+		StandbyPower  float64
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewCCU(cc.URI, cc.DeviceId, cc.MeterId, cc.SwitchId, cc.User, cc.Password, cc.StandbyPower)
+	return NewCCU(cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.StandbyPower)
 }
 
 // NewCCU creates a new connection with standbypower for charger
 func NewCCU(uri, deviceid, meterid, switchid, user, password string, standbypower float64) (*CCU, error) {
-	conn := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password)
+	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password)
 
 	fd := &CCU{
 		conn:         conn,
 		standbypower: standbypower,
 	}
 
-	return fd, nil
+	return fd, err
 }
 
 // Enabled implements the api.Charger interface

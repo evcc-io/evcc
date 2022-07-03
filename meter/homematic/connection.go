@@ -28,7 +28,7 @@ type Connection struct {
 }
 
 // NewConnection creates a new Homematic device connection.
-func NewConnection(uri, device, meterchannel, switchchannel, user, password string) *Connection {
+func NewConnection(uri, device, meterchannel, switchchannel, user, password string) (*Connection, error) {
 	log := util.NewLogger("homematic")
 
 	settings := &Settings{
@@ -51,7 +51,7 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 		conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 	}
 
-	return conn
+	return conn, nil
 }
 
 func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (MethodResponse, error) {

@@ -53,9 +53,9 @@ params:
 render: |
   type: homematic
   uri: {{ .host }}:{{- if (eq .devicetype "IP")}}2010{{ else }}2001{{end}}
-  deviceid: {{ .device }}
-  meterid: {{ .meterchannel }}
-  switchid: {{ .switchchannel }}
+  device: {{ .device }}
+  meterchannel: {{ .meterchannel }}
+  switchchannel: {{ .switchchannel }}
   standbypower: {{ .standbypower }}
   {{ if ne .user "" }}
   user: {{ .user }}
