@@ -353,6 +353,9 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	// allow using Grid and charge as estimate for pv power
 	if site.pvMeters == nil {
 		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
+		if site.pvPower < 0 {
+			site.pvPower = 0
+		}
 		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 		site.publish("pvPower", site.pvPower)
 	}
