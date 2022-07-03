@@ -31,7 +31,7 @@ export default {
       percentSelf: "{self} kWh Sonne",
       percentGrid: "{grid} kWh Netz",
       priceTitle: "Energiepreis",
-      priceFeedIn: "{feedInPrice} Einpeisung",
+      priceFeedIn: "{feedInPrice} Einspeisung",
       priceGrid: "{gridPrice} Netz",
       savingsTitle: "Ersparnis",
       savingsComparedToGrid: "gegenüber Netzbezug",
