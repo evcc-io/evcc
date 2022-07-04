@@ -126,6 +126,10 @@ func (v *Identity) login() (*oauth.Token, error) {
 	defer cancel()
 
 	code := loc.Query().Get("code")
+	if code == "" {
+		return nil, errors.New("could not obtain auth code- check user and password")
+	}
+
 	tok, err := OAuth2Config.Exchange(ctx, code,
 		oauth2.SetAuthURLParam("grant_type", "authorization_code"),
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
