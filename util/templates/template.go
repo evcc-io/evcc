@@ -181,6 +181,16 @@ func (t *Template) Defaults(renderMode string) map[string]interface{} {
 	return values
 }
 
+// SetParamDefault updates the default value of a param
+func (t *Template) SetParamDefault(name string, value string) {
+	for i, p := range t.Params {
+		if p.Name == name {
+			t.Params[i].Default = value
+			return
+		}
+	}
+}
+
 // return the param with the given name
 func (t *Template) ParamByName(name string) (int, Param) {
 	for i, p := range t.Params {

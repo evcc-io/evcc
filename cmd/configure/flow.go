@@ -21,7 +21,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 
 	deviceItem := device{}
 
-	for ok := true; ok; {
+	for {
 		fmt.Println()
 
 		templateItem, err = c.processDeviceSelection(DeviceCategoryGuidedSetup)
@@ -135,7 +135,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			continue
 		}
 
-		for ok := true; ok; {
+		for {
 			if added := c.configureLinkedTemplate(linkedTemplateItem, category); added {
 				deviceOfTemplateAdded[linkedTemplate.Template] = true
 			}
@@ -155,7 +155,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 // configureLinkedTemplate lets the user configure a device that is marked as being linked to a guided device
 // returns true if a device was added
 func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, category DeviceCategory) bool {
-	for ok := true; ok; {
+	for {
 		deviceItem := device{}
 
 		values := c.processConfig(&templateItem, category)
@@ -196,7 +196,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	var capabilities []string
 
 	// repeat until the device is added or the user chooses to continue without adding a device
-	for ok := true; ok; {
+	for {
 		fmt.Println()
 
 		templateItem, err := c.processDeviceSelection(deviceCategory)

@@ -9,7 +9,7 @@ import (
 //go:embed modbus.tpl
 var modbusTmpl string
 
-// add the modbus params to the template
+// ModbusParams adds the modbus parameters' default values
 func (t *Template) ModbusParams(modbusType string, values map[string]interface{}) {
 	if len(t.ModbusChoices()) == 0 {
 		return
@@ -92,7 +92,14 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 			}
 
 			if defaultValue != "" {
-				values[p.Name] = defaultValue
+				// for modbus params the default value is carried
+				// using the parameter default, not the value
+				// TODO figure out why that's necessary
+				if renderMode == TemplateRenderModeInstance {
+					t.SetParamDefault(p.Name, defaultValue)
+				} else {
+					values[p.Name] = defaultValue
+				}
 			}
 		}
 

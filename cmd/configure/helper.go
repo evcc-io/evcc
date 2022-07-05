@@ -265,7 +265,7 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 
 	var err error
 
-	for ok := true; ok; {
+	for {
 		fmt.Println()
 		_, paramHost := templateItem.ConfigDefaults.ParamByName("host")
 		_, paramPort := templateItem.ConfigDefaults.ParamByName("port")
@@ -405,6 +405,19 @@ func (c *CmdConfigure) processConfig(templateItem *templates.Template, deviceCat
 
 	c.processModbusConfig(templateItem, deviceCategory)
 
+	// TODO remove
+	// type mapped = struct {
+	// 	Name    string
+	// 	Default any
+	// }
+
+	// fmt.Printf("%+v\n", lo.Map(templateItem.Params, func(p templates.Param, _ int) mapped {
+	// 	return mapped{
+	// 		Name:    p.Name,
+	// 		Default: p.Default,
+	// 	}
+	// }))
+
 	return c.processParams(templateItem, deviceCategory)
 }
 
@@ -500,7 +513,7 @@ func (c *CmdConfigure) processListInputConfig(param templates.Param) []string {
 	var values []string
 
 	// ask for values until the user decides to stop
-	for ok := true; ok; {
+	for {
 		newValue := c.processInputConfig(param)
 		values = append(values, newValue)
 
@@ -549,7 +562,8 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 	return value
 }
 
-// handle user input for a device modbus configuration
+// processModbusConfig adds default values from the modbus Param to the template
+// and handles user input for interface type selection
 func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, deviceCategory DeviceCategory) {
 	var choices []string
 	var choiceTypes []string
