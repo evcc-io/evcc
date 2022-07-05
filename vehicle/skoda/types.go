@@ -38,7 +38,7 @@ type ChargerResponse struct {
 
 // SettingsResponse is the /v1/charging/<vin>/settings api
 type SettingsResponse struct {
-    AutoUnlockPlugWhenCharged    string `json:"autoUnlockPlugWhenCharged"`
-    MaxChargeCurrentAc           string `json:"maxChargeCurrentAc"`
-    TargetStateOfChargeInPercent int    `json:"targetStateOfChargeInPercent"`
+	AutoUnlockPlugWhenCharged    string `json:"autoUnlockPlugWhenCharged"`
+	MaxChargeCurrentAc           string `json:"maxChargeCurrentAc"`
+	TargetStateOfChargeInPercent int    `json:"targetStateOfChargeInPercent"`
 }
