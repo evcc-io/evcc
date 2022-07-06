@@ -501,6 +501,6 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	}
 }
 
-func (site *Site) Name() string {
+func (site *Site) GetTitle() string {
 	return site.Title
 }

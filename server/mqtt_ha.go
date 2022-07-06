@@ -32,7 +32,7 @@ type HAEntityDef struct {
 }
 
 func (m *MQTT) haPublishBaseDeviceDef(site site.API, loadPoint *int, valueName string) HAEntityDef {
-	siteId := strings.ReplaceAll(strings.ToLower(site.Name()), " ", "_") // TODO find better site ID
+	siteId := strings.ReplaceAll(strings.ToLower(site.GetTitle()), " ", "_") // TODO find better site ID
 	uid := "evcc_" + siteId + "_"
 	if loadPoint != nil {
 		uid += fmt.Sprintf("lp%d_", *loadPoint+1)
@@ -41,16 +41,16 @@ func (m *MQTT) haPublishBaseDeviceDef(site site.API, loadPoint *int, valueName s
 
 	var name string
 	if loadPoint == nil {
-		name = fmt.Sprintf("EVCC %s %s", site.Name(), valueName)
+		name = fmt.Sprintf("EVCC %s %s", site.GetTitle(), valueName)
 	} else {
-		name = fmt.Sprintf("EVCC %s Loadpoint %d %s", site.Name(), *loadPoint+1, valueName)
+		name = fmt.Sprintf("EVCC %s Loadpoint %d %s", site.GetTitle(), *loadPoint+1, valueName)
 	}
 
 	return HAEntityDef{
 		Device: HADeviceDef{
 			Identifiers:  fmt.Sprintf("evcc_%s", siteId),
 			Manufacturer: "EVCC",
-			Name:         site.Name(),
+			Name:         site.GetTitle(),
 		},
 		Name:              name,
 		UniqueId:          uid,
