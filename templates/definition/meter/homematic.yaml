@@ -4,7 +4,7 @@ products:
 group: switchsockets
 params:
   - name: usage
-    choice: ["pv", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: host
   - name: device
     description:
@@ -16,16 +16,6 @@ params:
     help:
       en: Homematic device id like shown in the CCU web user interface.
       de: Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
-  - name: meterchannel
-    description:
-      de: Meterkanal
-      en: meter channel
-    required: true
-    mask: false
-    default: "6"
-    help:
-      en: Homematic device specific meter channel.
-      de: Kanal Id des Homematic Messwertkanals.
   - name: user
     required: false
   - name: password
@@ -33,9 +23,10 @@ params:
     mask: true
 render: |
   type: homematic
-  uri: {{ .host }}:2010
+  usage: {{ .usage }}
+  uri: {{ .host }}:{{- if (eq .usage "grid")}}2001{{ else }}2010{{end}}
   device: {{ .device }}
-  meterchannel: {{ .meterchannel }}
+  meterchannel: {{ if (eq .usage "grid")}}1{{ else }}6{{end}}
   {{ if ne .user "" }}
   user: {{ .user }}
   {{ end }}

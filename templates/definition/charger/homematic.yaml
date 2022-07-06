@@ -14,26 +14,6 @@ params:
     help:
       en: Homematic device id like shown in the CCU web user interface.
       de: Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
-  - name: meterchannel
-    description:
-      de: Meterkanal
-      en: meter channel
-    required: true
-    mask: false
-    default: "6"
-    help:
-      en: Homematic device specific meter channel.
-      de: Kanal Id des Homematic Messwertkanals.
-  - name: switchchannel
-    description:
-      de: Schaltkanal
-      en: switch channel
-    required: true
-    mask: false
-    default: "3"
-    help:
-      en: Homematic device specific switch channel.
-      de: Kanal Id des Homematic Schaltkanals.
   - name: standbypower
     default: 15
   - name: user
@@ -45,8 +25,8 @@ render: |
   type: homematic
   uri: {{ .host }}:2010
   device: {{ .device }}
-  meterchannel: {{ .meterchannel }}
-  switchchannel: {{ .switchchannel }}
+  meterchannel: 6
+  switchchannel: 3
   standbypower: {{ .standbypower }}
   {{ if ne .user "" }}
   user: {{ .user }}

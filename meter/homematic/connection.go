@@ -64,10 +64,13 @@ func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (M
 		MethodName: method,
 		Params:     []ParamValue{param1, param2, param3},
 	}
-	body, err = xml.MarshalIndent(hmc, "", "  ")
+	body, err = xml.Marshal(hmc)
 	if err != nil {
 		return hmr, err
 	}
+
+	// Remove empty paramters in MethodCall
+	body = []byte(strings.ReplaceAll(string(body), "<param><value></value></param>", ""))
 
 	headers := map[string]string{
 		"Content-Type": "text/xml",
@@ -83,7 +86,13 @@ func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (M
 				return hmr, fmt.Errorf("\nCCU error:%s", string(res))
 			}
 
-			err = xml.Unmarshal([]byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1)), &hmr)
+			//Correct Homematic IP Legacy API (CCU port 2010) method response encoding value
+			res = []byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1))
+
+			//Correct XML-RPC-Schnittstelle (CCU port 2001) method response encoding value
+			res = []byte(strings.Replace(string(res), "iso-8859-1", "UTF-8", 1))
+
+			err = xml.Unmarshal(res, &hmr)
 			if err != nil {
 				return hmr, err
 			}
@@ -93,7 +102,7 @@ func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (M
 	return hmr, err
 }
 
-//Enabled reads the homematic switchchannel state true=on/false=off
+//Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
 	//fmt.Sprintf("%s:%s", c.Device, c.SwitchChannel)
 	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.SwitchChannel)}
@@ -103,7 +112,7 @@ func (c *Connection) Enabled() (bool, error) {
 	return sr.Value.CCUBool == "1", err
 }
 
-//Enable sets the homematic switchchannel state true=on/false=off
+//Enable sets the homematic HMIP-PSM switchchannel state to true=on/false=off
 func (c *Connection) Enable(enable bool) error {
 	onoff := map[bool]string{true: "1", false: "0"}
 	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.SwitchChannel)}
@@ -113,7 +122,7 @@ func (c *Connection) Enable(enable bool) error {
 	return err
 }
 
-//CurrentPower reads the homematic meterchannel power in W
+//CurrentPower reads the homematic HMIP-PSM meterchannel power in W
 func (c *Connection) CurrentPower() (float64, error) {
 	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
 	p2 := ParamValue{CCUString: "POWER"}
@@ -122,7 +131,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 	return sr.Value.CCUFloat, err
 }
 
-//TotalEnergy reads the homematic meterchannel power in W
+//TotalEnergyTotalEnergy reads the homematic HMIP-PSM meterchannel energy in Wh
 func (c *Connection) TotalEnergy() (float64, error) {
 	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
 	p2 := ParamValue{CCUString: "ENERGY_COUNTER"}
@@ -131,11 +140,29 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	return sr.Value.CCUFloat / 1000, err
 }
 
-// Currents implements the api.MeterChannelCurrent interface
+// Currents TotalEnergy reads the homematic HMIP-PSM meterchannel L1 current in A
 func (c *Connection) Currents() (float64, float64, float64, error) {
 	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
 	p2 := ParamValue{CCUString: "CURRENT"}
 	p3 := ParamValue{CCUString: ""}
 	sr, err := c.XmlCmd("getValue", p1, p2, p3)
 	return sr.Value.CCUFloat / 1000, 0, 0, err
+}
+
+//GridCurrentPower reads the homematic HM-ES-TX-WM grid meterchannel power in W
+func (c *Connection) GridCurrentPower() (float64, error) {
+	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
+	p2 := ParamValue{CCUString: "IEC_POWER"}
+	p3 := ParamValue{CCUString: ""}
+	sr, err := c.XmlCmd("getValue", p1, p2, p3)
+	return sr.Value.CCUFloat, err
+}
+
+//GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in Wh
+func (c *Connection) GridTotalEnergy() (float64, error) {
+	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
+	p2 := ParamValue{CCUString: "IEC_ENERGY_COUNTER"}
+	p3 := ParamValue{CCUString: ""}
+	sr, err := c.XmlCmd("getValue", p1, p2, p3)
+	return sr.Value.CCUFloat, err
 }
