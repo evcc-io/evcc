@@ -43,6 +43,7 @@
  ],
  "SmartPlugs": [
   "AVM",
+  "Homematic IP",
   "Shelly",
   "Tasmota",
   "TP-Link"
@@ -56,6 +57,7 @@
   "Eastron",
   "FENECON",
   "Fronius",
+  "Homematic IP",
   "Huawei",
   "Janitza",
   "Kostal",
@@ -85,6 +87,7 @@
   "Eastron",
   "FENECON",
   "Fronius",
+  "Homematic IP",
   "Huawei",
   "Janitza",
   "Kostal",
