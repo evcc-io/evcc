@@ -57,7 +57,7 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (MethodResponse, error) {
 	var body []byte
 	var err error
-	hmr := MethodResponse{}
+	var hmr MethodResponse
 
 	hmc := MethodCall{
 		XMLName:    xml.Name{},
@@ -80,10 +80,9 @@ func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (M
 
 	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
 		if res, err := c.DoBody(req); err == nil {
-			c.log.TRACE.Printf("response: %s\n", res)
 
 			if strings.Contains(string(res), "faultCode") {
-				return hmr, fmt.Errorf("\nCCU error:%s", string(res))
+				return hmr, fmt.Errorf("CCU error:%s", string(res))
 			}
 
 			//Correct Homematic IP Legacy API (CCU port 2010) method response encoding value
@@ -93,9 +92,6 @@ func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (M
 			res = []byte(strings.Replace(string(res), "iso-8859-1", "UTF-8", 1))
 
 			err = xml.Unmarshal(res, &hmr)
-			if err != nil {
-				return hmr, err
-			}
 		}
 	}
 
