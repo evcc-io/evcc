@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// Homematic CCU charger implementation
+// Homematic CCU meter implementation
 type CCU struct {
 	conn  *homematic.Connection
 	usage string
@@ -16,7 +16,7 @@ func init() {
 	registry.Add("homematic", NewCCUFromConfig)
 }
 
-// NewCCUFromConfig creates a homematic meter from generic config
+// NewCCUFromConfig creates a Homematic meter from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI           string
@@ -38,19 +38,14 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
 // NewCCU creates a new connection with usage for meter
 func NewCCU(uri, deviceid, meterid, switchid, user, password, usage string) (*CCU, error) {
 	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password)
-	if err != nil {
-		return nil, err
-	}
 
-	fd := &CCU{
+	m := &CCU{
 		conn:  conn,
 		usage: usage,
 	}
 
-	return fd, nil
+	return m, err
 }
-
-var _ api.Meter = (*CCU)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *CCU) CurrentPower() (float64, error) {

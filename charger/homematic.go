@@ -16,7 +16,7 @@ func init() {
 	registry.Add("homematic", NewCCUFromConfig)
 }
 
-// NewCCUFromConfig creates a fritzdect charger from generic config
+// NewCCUFromConfig creates a Homematic charger from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI           string
@@ -38,16 +38,13 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewCCU creates a new connection with standbypower for charger
 func NewCCU(uri, deviceid, meterid, switchid, user, password string, standbypower float64) (*CCU, error) {
 	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password)
-	if err != nil {
-		return nil, err
-	}
 
 	wb := &CCU{
 		conn:         conn,
 		standbypower: standbypower,
 	}
 
-	return wb, nil
+	return wb, err
 }
 
 // Enabled implements the api.Charger interface
