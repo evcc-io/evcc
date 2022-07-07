@@ -73,5 +73,10 @@ type StatusSNSResponse struct {
 			Voltage        int
 			Current        float64
 		}
+		SML struct {
+			Total_in   float64
+			Total_out  float64
+			Power_curr int
+		}
 	}
 }

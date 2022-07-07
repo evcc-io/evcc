@@ -73,3 +73,25 @@ func (d *Connection) TotalEnergy() (float64, error) {
 
 	return float64(res.StatusSNS.Energy.Total), nil
 }
+
+// GridCurrentPower provides current power consumption
+func (d *Connection) GridCurrentPower() (float64, error) {
+	var res *StatusSNSResponse
+	err := d.ExecCmd("Status 8", &res)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(res.StatusSNS.SML.Power_curr), nil
+}
+
+// GridTotalEnergy implements the api.MeterEnergy interface
+func (d *Connection) GridTotalEnergy() (float64, error) {
+	var res *StatusSNSResponse
+	err := d.ExecCmd("Status 8", &res)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(res.StatusSNS.SML.Total_in), nil
+}
