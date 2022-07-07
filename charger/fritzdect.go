@@ -43,12 +43,12 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
 	conn, err := fritzdect.NewConnection(uri, ain, user, password)
 
-	fd := &FritzDECT{
+	m := &FritzDECT{
 		conn:         conn,
 		standbypower: standbypower,
 	}
 
-	return fd, err
+	return m, err
 }
 
 // Enabled implements the api.Charger interface
@@ -56,10 +56,6 @@ func (c *FritzDECT) Enabled() (bool, error) {
 	resp, err := c.conn.ExecCmd("getswitchstate")
 	if err != nil {
 		return false, err
-	}
-
-	if resp == "inval" {
-		return false, api.ErrNotAvailable
 	}
 
 	return strconv.ParseBool(resp)
