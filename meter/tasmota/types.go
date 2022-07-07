@@ -60,7 +60,9 @@ type PowerResponse struct {
 // https://tasmota.github.io/docs/JSON-Status-Responses/
 type StatusSNSResponse struct {
 	StatusSNS struct {
-		Time   string
+		Time string
+
+		// Energy readings
 		Energy struct {
 			TotalStartTime string
 			Total          float64
@@ -73,10 +75,12 @@ type StatusSNSResponse struct {
 			Voltage        int
 			Current        float64
 		}
+
+		// SML sensor readings
 		SML struct {
-			Total_in   float64
-			Total_out  float64
-			Power_curr int
+			TotalIn   float64 `json:"total_in"`
+			TotalOut  float64 `json:"total_out"`
+			PowerCurr int     `json:"power_curr"`
 		}
 	}
 }
