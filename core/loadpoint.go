@@ -208,6 +208,16 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.vehicles = append(lp.vehicles, vehicle)
 	}
 
+	// verify vehicle detection
+	if len(lp.vehicles) > 1 {
+		for _, v := range lp.vehicles {
+			if _, ok := v.(api.ChargeState); !ok {
+				lp.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Title())
+				break
+			}
+		}
+	}
+
 	if lp.ChargerRef == "" {
 		return nil, errors.New("missing charger")
 	}
