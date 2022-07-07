@@ -75,7 +75,7 @@ func (d *Connection) ExecCmd(cmd string, res interface{}) error {
 	return json.Unmarshal(buf.Bytes(), res)
 }
 
-// CurrentPower provides current power consumption
+// CurrentPower implements the api.Meter interface
 func (d *Connection) CurrentPower() (float64, error) {
 	var res EmeterResponse
 	if err := d.ExecCmd(`{"emeter":{"get_realtime":null}}`, &res); err != nil {
@@ -83,7 +83,7 @@ func (d *Connection) CurrentPower() (float64, error) {
 	}
 
 	if err := res.Emeter.GetRealtime.ErrCode; err != 0 {
-		return 0, fmt.Errorf("get_realtime error %d", err)
+		return 0, fmt.Errorf("get_realtime: %d", err)
 	}
 
 	power := res.Emeter.GetRealtime.PowerMw / 1000
@@ -102,7 +102,7 @@ func (d *Connection) TotalEnergy() (float64, error) {
 	}
 
 	if err := res.Emeter.GetRealtime.ErrCode; err != 0 {
-		return 0, fmt.Errorf("get_realtime error %d", err)
+		return 0, fmt.Errorf("get_realtime: %d", err)
 	}
 
 	energy := res.Emeter.GetRealtime.TotalWh / 1000
