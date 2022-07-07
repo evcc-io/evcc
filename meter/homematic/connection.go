@@ -87,7 +87,7 @@ func (c *Connection) XmlCmd(method, channel, paramname, paramvalue string) (Meth
 		if res, err := c.DoBody(req); err == nil {
 
 			if strings.Contains(string(res), "faultCode") {
-				return hmr, fmt.Errorf("CCU:%s", string(res))
+				return hmr, fmt.Errorf("ccu:%s", string(res))
 			}
 
 			//Correct Homematic IP Legacy API (CCU port 2010) method response encoding value
