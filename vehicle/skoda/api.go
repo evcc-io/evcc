@@ -55,6 +55,14 @@ func (v *API) Charger(vin string) (ChargerResponse, error) {
 	return res, err
 }
 
+// Settings implements the /v1/charging/<vin>/settings response
+func (v *API) Settings(vin string) (SettingsResponse, error) {
+	var res SettingsResponse
+	uri := fmt.Sprintf("%s/v1/charging/%s/settings", BaseURI, vin)
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
 const (
 	ActionCharge      = "charging"
 	ActionChargeStart = "Start"
