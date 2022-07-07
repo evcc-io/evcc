@@ -96,8 +96,7 @@ func (c *Connection) XmlCmd(method, channel, paramname, paramvalue string) (Meth
 			//Correct XML-RPC-Schnittstelle (CCU port 2001) method response encoding value
 			res = []byte(strings.Replace(string(res), "iso-8859-1", "UTF-8", 1))
 
-			err = xml.Unmarshal(res, &hmr)
-			if err != nil {
+			if err := xml.Unmarshal(res, &hmr); err != nil {
 				return hmr, err
 			}
 		}
