@@ -42,12 +42,12 @@ func NewCCU(uri, deviceid, meterid, switchid, user, password string, standbypowe
 		return nil, err
 	}
 
-	fd := &CCU{
+	wb := &CCU{
 		conn:         conn,
 		standbypower: standbypower,
 	}
 
-	return fd, nil
+	return wb, nil
 }
 
 // Enabled implements the api.Charger interface
