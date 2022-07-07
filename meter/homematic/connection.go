@@ -54,35 +54,40 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 	return conn, nil
 }
 
-func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (MethodResponse, error) {
+func (c *Connection) XmlCmd(method, channel, paramname, paramvalue string) (MethodResponse, error) {
 	var body []byte
 	var err error
+	var hmc MethodCall
 	var hmr MethodResponse
 
-	hmc := MethodCall{
-		XMLName:    xml.Name{},
-		MethodName: method,
-		Params:     []ParamValue{param1, param2, param3},
+	if method == "setValue" {
+		hmc = MethodCall{
+			XMLName:    xml.Name{},
+			MethodName: method,
+			Params:     []ParamValue{{CCUString: fmt.Sprintf("%s:%s", c.Device, channel)}, {CCUString: paramname}, {CCUBool: paramvalue}},
+		}
+	} else {
+		hmc = MethodCall{
+			XMLName:    xml.Name{},
+			MethodName: method,
+			Params:     []ParamValue{{CCUString: fmt.Sprintf("%s:%s", c.Device, channel)}, {CCUString: paramname}},
+		}
 	}
+
 	body, err = xml.Marshal(hmc)
 	if err != nil {
 		return hmr, err
 	}
 
-	// Remove empty paramters in MethodCall
-	body = []byte(strings.ReplaceAll(string(body), "<param><value></value></param>", ""))
-
 	headers := map[string]string{
 		"Content-Type": "text/xml",
 	}
-
-	c.log.TRACE.Printf("request: %s\n", xml.Header+string(body))
 
 	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
 		if res, err := c.DoBody(req); err == nil {
 
 			if strings.Contains(string(res), "faultCode") {
-				return hmr, fmt.Errorf("CCU error:%s", string(res))
+				return hmr, fmt.Errorf("CCU:%s", string(res))
 			}
 
 			//Correct Homematic IP Legacy API (CCU port 2010) method response encoding value
@@ -103,65 +108,43 @@ func (c *Connection) XmlCmd(method string, param1, param2, param3 ParamValue) (M
 
 //Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
-	//fmt.Sprintf("%s:%s", c.Device, c.SwitchChannel)
-	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.SwitchChannel)}
-	p2 := ParamValue{CCUString: "STATE"}
-	p3 := ParamValue{CCUString: ""}
-	sr, err := c.XmlCmd("getValue", p1, p2, p3)
+	sr, err := c.XmlCmd("getValue", c.SwitchChannel, "STATE", "")
 	return sr.Value.CCUBool == "1", err
 }
 
 //Enable sets the homematic HMIP-PSM switchchannel state to true=on/false=off
 func (c *Connection) Enable(enable bool) error {
 	onoff := map[bool]string{true: "1", false: "0"}
-	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.SwitchChannel)}
-	p2 := ParamValue{CCUString: "STATE"}
-	p3 := ParamValue{CCUBool: onoff[enable]}
-	_, err := c.XmlCmd("setValue", p1, p2, p3)
+	_, err := c.XmlCmd("setValue", c.SwitchChannel, "STATE", onoff[enable])
 	return err
 }
 
 //CurrentPower reads the homematic HMIP-PSM meterchannel power in W
 func (c *Connection) CurrentPower() (float64, error) {
-	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
-	p2 := ParamValue{CCUString: "POWER"}
-	p3 := ParamValue{CCUString: ""}
-	sr, err := c.XmlCmd("getValue", p1, p2, p3)
+	sr, err := c.XmlCmd("getValue", c.MeterChannel, "POWER", "")
 	return sr.Value.CCUFloat, err
 }
 
 //TotalEnergyTotalEnergy reads the homematic HMIP-PSM meterchannel energy in Wh
 func (c *Connection) TotalEnergy() (float64, error) {
-	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
-	p2 := ParamValue{CCUString: "ENERGY_COUNTER"}
-	p3 := ParamValue{CCUString: ""}
-	sr, err := c.XmlCmd("getValue", p1, p2, p3)
+	sr, err := c.XmlCmd("getValue", c.MeterChannel, "ENERGY_COUNTER", "")
 	return sr.Value.CCUFloat / 1000, err
 }
 
 // Currents TotalEnergy reads the homematic HMIP-PSM meterchannel L1 current in A
 func (c *Connection) Currents() (float64, float64, float64, error) {
-	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
-	p2 := ParamValue{CCUString: "CURRENT"}
-	p3 := ParamValue{CCUString: ""}
-	sr, err := c.XmlCmd("getValue", p1, p2, p3)
+	sr, err := c.XmlCmd("getValue", c.MeterChannel, "CURRENT", "")
 	return sr.Value.CCUFloat / 1000, 0, 0, err
 }
 
 //GridCurrentPower reads the homematic HM-ES-TX-WM grid meterchannel power in W
 func (c *Connection) GridCurrentPower() (float64, error) {
-	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
-	p2 := ParamValue{CCUString: "IEC_POWER"}
-	p3 := ParamValue{CCUString: ""}
-	sr, err := c.XmlCmd("getValue", p1, p2, p3)
+	sr, err := c.XmlCmd("getValue", c.MeterChannel, "IEC_POWER", "")
 	return sr.Value.CCUFloat, err
 }
 
 //GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in Wh
 func (c *Connection) GridTotalEnergy() (float64, error) {
-	p1 := ParamValue{CCUString: fmt.Sprintf("%s:%s", c.Device, c.MeterChannel)}
-	p2 := ParamValue{CCUString: "IEC_ENERGY_COUNTER"}
-	p3 := ParamValue{CCUString: ""}
-	sr, err := c.XmlCmd("getValue", p1, p2, p3)
+	sr, err := c.XmlCmd("getValue", c.MeterChannel, "IEC_ENERGY_COUNTER", "")
 	return sr.Value.CCUFloat, err
 }
