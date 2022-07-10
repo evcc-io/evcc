@@ -5,6 +5,7 @@ products:
       generic: EV Charger
 capabilities: ["mA"]
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: Der EV Charger muss sich im Modus "Fast" befinden.
     en: The charger must be switched to "Fast" charging mode.
