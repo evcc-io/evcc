@@ -143,14 +143,6 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 	}
 }
 
-// SetVehicle sets the active vehicle
-func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.setActiveVehicle(vehicle)
-}
-
 // RemoteControl sets remote status demand
 func (lp *LoadPoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()
@@ -234,9 +226,6 @@ func (lp *LoadPoint) GetMaxPower() float64 {
 
 // setRemainingDuration sets the estimated remaining charging duration
 func (lp *LoadPoint) setRemainingDuration(chargeRemainingDuration time.Duration) {
-	lp.Lock()
-	defer lp.Unlock()
-
 	if lp.chargeRemainingDuration != chargeRemainingDuration {
 		lp.chargeRemainingDuration = chargeRemainingDuration
 		lp.publish("chargeRemainingDuration", chargeRemainingDuration)
@@ -266,4 +255,18 @@ func (lp *LoadPoint) GetRemainingEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.chargeRemainingEnergy
+}
+
+// GetVehicles is the list of vehicles
+func (lp *LoadPoint) GetVehicles() []api.Vehicle {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.vehicles
+}
+
+// SetVehicle sets the active vehicle
+func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.setActiveVehicle(vehicle)
 }

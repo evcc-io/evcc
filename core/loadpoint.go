@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -530,7 +531,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("maxCurrent", lp.MaxCurrent)
 	lp.publish("phases", lp.phases)
 	lp.publish("activePhases", lp.activePhases())
-	lp.publish("hasVehicle", len(lp.vehicles) > 0)
+	lp.publishVehicles()
 
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
@@ -1125,6 +1126,17 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	}
 
 	return false
+}
+
+// publishVehicles publishes a slice of vehicle titles
+func (lp *LoadPoint) publishVehicles() {
+	vehicles := make([]string, 0)
+	if len(lp.vehicles) > 0 {
+		vehicles = lo.Map(lp.GetVehicles(), func(v api.Vehicle, _ int) string {
+			return v.Title()
+		})
+	}
+	lp.publish("vehicles", vehicles)
 }
 
 // TODO move up to timer functions
