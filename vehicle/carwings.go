@@ -221,6 +221,12 @@ var _ api.VehicleClimater = (*CarWings)(nil)
 func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.climateG()
 
+	// silence ErrClimateStatusUnavailable errors
+	if errors.Is(err, carwings.ErrClimateStatusUnavailable) {
+		res.Temperature = 21
+		err = nil
+	}
+
 	if err == nil {
 		active = res.Running
 		targetTemp = float64(res.Temperature)
