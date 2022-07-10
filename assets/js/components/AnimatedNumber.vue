@@ -3,6 +3,8 @@
 </template>
 
 <script>
+const DURATION = 0.5;
+
 export default {
 	name: "AnimatedNumber",
 	props: {
@@ -14,7 +16,7 @@ export default {
 	},
 	watch: {
 		to: function () {
-			this.duration = 1;
+			this.duration = DURATION;
 		},
 	},
 };
