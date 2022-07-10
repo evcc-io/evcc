@@ -1,13 +1,13 @@
 template: ocpp
 products:
   - description:
-      de: OCPP v1.6 kompatible Wallbox
-      en: OCPP v1.6 compatible Wallbox
+      de: OCPP v1.6 kompatible Wallbox mit Smart Charging Profile
+      en: OCPP v1.6 compatible charger with smart charging profile
 group: generic
 requirements:
   description:
     de: |
-      Vorraussetzungen:
+      Voraussetzungen:
       * Löschen zuvor konfigurierter Ladeprofile (z.B. durch ein anderes Backend)
       * Konfiguration des Backends der Wallbox: `ws://evcc.local:8887/`
     en: |
