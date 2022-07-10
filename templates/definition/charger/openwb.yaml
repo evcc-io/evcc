@@ -11,8 +11,21 @@ requirements:
 params:
   - name: host
   - name: loadpointid
+    description:
+      en: OpenWB Loadpoint Id
+      de: OpenWB Ladepunkt Id
     default: 1
+  - name: phases1p3p
+    valuetype: bool
+    description:
+      en: Charger is equipped with phase switching feature
+      de: Phasenumschaltung ist verbaut
+    advanced: true
+    default: false
 render: |
   type: openwb
   broker: {{ .host }}
   id: {{ .loadpointid }} # loadpoint id
+  {{- if ne .phases1p3p "false" }}
+  phases: true
+  {{- end }}
