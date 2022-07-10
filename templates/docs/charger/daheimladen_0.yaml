@@ -1,6 +1,8 @@
 product:
   brand: DaheimLaden
   description: Wallbox
+description: |
+  Für die Nutzung mit evcc muss die Wallbox im RFID Modus betrieben werden.
 render:
   - default: |
       type: template
