@@ -86,6 +86,7 @@ export default {
       targetSoC: "Ladeziel",
       none: "Kein Fahrzeug",
       unknown: "Gastfahrzeug",
+      changeVehicle: "Fahrzeug ändern",
     },
     vehicleSoC: {
       disconnected: "getrennt",

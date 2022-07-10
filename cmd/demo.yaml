@@ -217,7 +217,9 @@ loadpoints:
       target: 75
     mode: "off"
     meter: meter_charger_2
-    vehicle: vehicle_2
+    vehicles:
+      - vehicle_2
+      - vehicle_1
 #  - title: Garage rechts
 #    charger: charger_3
 #    mode: "off"

@@ -278,9 +278,13 @@ small {
 .dropdown-item {
 	color: var(--evcc-default-text);
 }
+.dropdown-item:active {
+	background-color: var(--bs-primary);
+	color: var(--bs-white);
+}
 
 @media (--dark-mode) {
 	.dropdown-menu {
-		box-shadow: 0 0 8px var(--evcc-box);
+		box-shadow: 0 0 8px var(--evcc-background);
 	}
 }
