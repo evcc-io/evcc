@@ -34,15 +34,14 @@ func init() {
 // NewOCPPFromConfig creates a OCPP charger from generic config
 func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		StationId      string
-		IdTag          string
-		Connector      int
-		MeterSupported bool
-		MeterInterval  time.Duration
-		InitialReset   core.ResetType
+		StationId     string
+		IdTag         string
+		Connector     int
+		Meter         bool
+		MeterInterval time.Duration
+		InitialReset  core.ResetType
 	}{
-		Connector:     1,
-		MeterInterval: 0, // disable meter sample data as we are taking care on our own
+		Connector: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -58,7 +57,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, fmt.Errorf("unknown configuration option detected for reset: %s", cc.InitialReset)
 	}
 
-	ocpp, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterSupported, cc.MeterInterval, cc.InitialReset)
+	ocpp, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.Meter, cc.MeterInterval, cc.InitialReset)
 	if err != nil {
 		return ocpp, err
 	}
@@ -69,7 +68,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		chargeRater  func() (float64, error)
 	)
 
-	if cc.MeterSupported {
+	if cc.Meter {
 		meter = ocpp.currentPower
 		meterCurrent = ocpp.currents
 		chargeRater = ocpp.chargedEnergy
@@ -81,8 +80,8 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterInterval time.Duration, initialReset core.ResetType) (*OCPP, error) {
-	cp := ocpp.Instance().Register(id, meterSupported)
+func NewOCPP(id string, connector int, idtag string, hasMeter bool, meterInterval time.Duration, initialReset core.ResetType) (*OCPP, error) {
+	cp := ocpp.Instance().Register(id, hasMeter)
 	c := &OCPP{
 		log:       util.NewLogger(fmt.Sprintf("ocpp-%s:%d", id, connector)),
 		cp:        cp,
@@ -142,7 +141,7 @@ func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterI
 		}
 	}
 
-	if meterSupported {
+	if hasMeter {
 		if meterValuesSampledDataString != "Current.Import,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature" {
 			c.log.TRACE.Printf("Current values \n\t%s != \n\t%+v", ocpp.ValuePreferedMeterValuesSampleData, meterValuesSampledDataString)
 			rc = make(chan error, 1)
@@ -182,7 +181,7 @@ func NewOCPP(id string, connector int, idtag string, meterSupported bool, meterI
 		}
 
 		// get inital meter values
-		if meterSupported {
+		if hasMeter {
 			ocpp.Instance().TriggerMeterValueRequest(cp)
 		}
 	}
