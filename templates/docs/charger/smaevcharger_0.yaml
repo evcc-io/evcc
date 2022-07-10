@@ -2,6 +2,7 @@ product:
   brand: SMA
   description: EV Charger
 capabilities: ["mA"]
+requirements: ["sponsorship"]
 description: |
   Der EV Charger muss sich im Modus "Fast" befinden.
 render:
