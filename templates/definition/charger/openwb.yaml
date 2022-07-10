@@ -11,11 +11,6 @@ requirements:
 params:
   - name: host
   - name: connector
-    description:
-      en: OpenWB Loadpoint Id
-      de: OpenWB Ladepunkt Id
-    advanced: true
-    default: 1
   - name: phases1p3p
     valuetype: bool
     description:

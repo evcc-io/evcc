@@ -77,7 +77,7 @@ params:
     mask: true
   - name: capacity
     description:
-      de: Akku-Kapazität in kWh
+      de: Akkukapazität in kWh
       en: Battery capacity in kWh
     help:
       de: Akku-Kapazität in kWh
@@ -101,13 +101,20 @@ params:
       en: The maximum number of phases which can be used
     example: 3
     valuetype: number
+  - name: connector
+    description:
+      de: Ladepunkt (falls >1 Ladepunkt)
+      en: Loadpoint (if >1 loadpoint)
+    advanced: true
+    default: 1
   - name: cache
     description:
       de: Cache
       en: Cache
     help:
-      de: Das zeitliche Interval, in welchem Daten vom Fahrzeug neu geladen werden soll
+      de: Zeitintervall, in dem Daten vom Fahrzeug neu geladen werden sollen
       en: Time interval with when data should be reloaded from the vehicle
+    advanced: true
     example: 5m
   - name: cloud
     description:
