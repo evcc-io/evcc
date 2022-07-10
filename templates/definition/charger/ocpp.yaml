@@ -7,34 +7,28 @@ group: generic
 requirements:
   description:
     de: |
-      Vorraussetzungen vor der Verbindung mit EVCC:
-      * löschen von zuvor konfigurierte Ladeprofile (z.B. durch ein anderes Backend)
-
-      Zur Verbindung mit EVCC muss in der Wallbox `ws://{evcc.ip}:8887/` als Backend eingetragen werden. 
-
-      // TODO
-
+      Vorraussetzungen:
+      * Löschen zuvor konfigurierter Ladeprofile (z.B. durch ein anderes Backend)
+      * Konfiguration des Backends der Wallbox: `ws://evcc.local:8887/`
     en: |
-      Requirements befor connecting to EVCC:
-      * delete prior configured load profiles (e.g. from another backend)
-      
-      To connnect the wallbox with EVCC `ws://{evcc.ip}:8887/` as to be provided as a backend address.
-
-      // TODO
-
+      Requirements:
+      * Deletion prior configured load profiles (e.g. from another backend)
+      * Backend configuration of the charger: `ws://evcc.local:8887/`
 params:
   - name: stationid
     required: true
     help:
-      en: The chargepoint ID to uniquly identifiy the station (a random value) e.g. EVB-P12354
-      de: Die Ladepunkt ID für die eindeutige identifizierung der Wallbox (ein belibiger Wert) e.g. EVB-P12354
+      en: The charger's unique station id
+      de: Die Stations-ID der Wallbox
+    example: EVB-P12354
   - name: connector
     default: 1
     valuetype: int
+    advanced: true
     help:
-      en: Used chargepoint, usualy 1 for one connector.
-      de: Verwendeter Verbindungspunkt, normalerweise 1 bei einem Anschluss.
-  - name: meterSupported
+      en: Connector number, usually 1 for first connector.
+      de: Verwendeter Ladepunkt, normalerweise 1 für den ersten Anschluss.
+  - name: meter
     default: false
     valuetype: bool
     help:
@@ -42,19 +36,20 @@ params:
       de: Verwendung des integrierten Zählers (falls vorhanden)
   - name: idtag
     valuetype: string
+    advanced: true
     help:
-      en: RFID token used for transactions (currently no authorization implemented) e.g. 04E6B78921BBA0
-      de: ID des Tokens, welcher für Ladevorgänge genutzt werden soll (aktuell keine Authorizierung umgesetzt) e.g 04E6B78921BBA0
+      en: RFID token used for transactions (currently no authorization implemented)
+      de: ID des Tokens, welcher für Ladevorgänge genutzt werden soll, (aktuell nicht für Autorisierung verwendet) e.g
+    example: 04E6B78921BBA0
 render: |
   type: ocpp
   stationid: {{ .stationid }}
-  {{ if ne .idtag "" }}idtag: {{ .idtag }}{{ end }}
+  {{- if ne .connector "1 "}}
   connector: {{ .connector }}
-  meterSupported: {{ .meterSupported }}
-
-# TODO: switch to this config when implementation supports authorization
-# {{ if ne .rfid "" }}    
-# rfid:
-#   tag: {{ .rfid }}
-# {{ end }}
-
+  {{- end }}
+  {{- if ne .idtag "" }}
+  idtag: {{ .idtag }}
+  {{- end }}
+  {{- if ne .meter "false" }}
+  meter: {{ .meter }}
+  {{- end }}

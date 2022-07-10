@@ -2,18 +2,20 @@ product:
   description: OCPP v1.6 kompatible Wallbox
   group: Generische Unterstützung
 description: |
-  Vorraussetzungen vor der Verbindung mit EVCC:
-  * löschen von zuvor konfigurierte Ladeprofile (z.B. durch ein anderes Backend)
-
-  Zur Verbindung mit EVCC muss in der Wallbox `ws://{evcc.ip}:8887/` als Backend eingetragen werden. 
-
-  // TODO
+  Vorraussetzungen:
+  * Löschen zuvor konfigurierter Ladeprofile (z.B. durch ein anderes Backend)
+  * Konfiguration des Backends der Wallbox: `ws://evcc.local:8887/`
 
 render:
   - default: |
       type: template
       template: ocpp
-      stationid: # Die Ladepunkt ID für die eindeutige identifizierung der Wallbox (ein belibiger Wert) e.g. EVB-P12354
-      connector: 1 # Verwendeter Verbindungspunkt, normalerweise 1 bei einem Anschluss. # Optional
-      meterSupported: false # Verwendung des integrierten Zählers (falls vorhanden) # Optional
-      idtag: # ID des Tokens, welcher für Ladevorgänge genutzt werden soll (aktuell keine Authorizierung umgesetzt) e.g 04E6B78921BBA0 # Optional
+      stationid: EVB-P12354 # Die Stations-ID der Wallbox
+      meter: false # Verwendung des integrierten Zählers (falls vorhanden) # Optional
+    advanced: |
+      type: template
+      template: ocpp
+      stationid: EVB-P12354 # Die Stations-ID der Wallbox
+      connector: 1 # Verwendeter Ladepunkt, normalerweise 1 für den ersten Anschluss. # Optional
+      meter: false # Verwendung des integrierten Zählers (falls vorhanden) # Optional
+      idtag: 04E6B78921BBA0 # ID des Tokens, welcher für Ladevorgänge genutzt werden soll, (aktuell nicht für Autorisierung verwendet) e.g # Optional
