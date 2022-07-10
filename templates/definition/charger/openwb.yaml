@@ -15,7 +15,7 @@ params:
     valuetype: bool
     description:
       en: Charger is equipped with phase switching feature
-      de: Phasenumschaltung ist verbaut
+      de: Phasenumschaltung vorhanden
     advanced: true
     default: false
 render: |
