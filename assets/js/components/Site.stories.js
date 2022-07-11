@@ -92,7 +92,6 @@ Multi.args = {
       vehicleTitle: "Mein drittes Auto",
       enabled: true,
       connected: true,
-      hasVehicle: true,
       charging: true,
       vehicleSoC: 22,
       vehicleRange: 34,
