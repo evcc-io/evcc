@@ -45,7 +45,7 @@ require (
 	github.com/itchyny/gojq v0.12.8
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.3.5
-	github.com/joeshaw/carwings v0.0.0-20220225151533-185ade10e0de
+	github.com/joeshaw/carwings v0.0.0-20220711204617-d90801cf2848
 	github.com/jpfielding/go-http-digest v0.0.0-20211006141426-fbc93758452e
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.3
@@ -171,7 +171,4 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 )
 
-replace (
-	github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20220205120646-e5220ad9a9a0
-	github.com/joeshaw/carwings => github.com/andig/carwings v0.0.0-20220705135220-84815910cf7d
-)
+replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20220205120646-e5220ad9a9a0
