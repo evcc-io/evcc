@@ -30,6 +30,8 @@
 </template>
 
 <script>
+import "@h2d2/shopicons/es/filled/options";
+
 export default {
 	name: "VehicleOptions",
 	props: {

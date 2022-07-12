@@ -38,7 +38,7 @@ export default {
 		vehicleTitle: String,
 		parked: Boolean,
 		connected: Boolean,
-		vehicles: Array,
+		vehicles: { type: Array, default: () => [] },
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
