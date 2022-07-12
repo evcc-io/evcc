@@ -1272,7 +1272,6 @@ func (lp *LoadPoint) UpdateChargePower() {
 
 		return nil
 	}, retryOptions...)
-
 	if err != nil {
 		lp.log.ERROR.Printf("charge meter: %v", err)
 	}
@@ -1409,7 +1408,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool) {
+func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 

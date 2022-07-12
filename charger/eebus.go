@@ -156,7 +156,6 @@ func (c *EEBus) showCurrentChargingSetup() {
 		timestamp := time.Now()
 		c.log.WARN.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-self-consumption-support support changed from ", prevSelfConsumptionSupport, " to ", data.EVData.UCSelfConsumptionAvailable)
 	}
-
 }
 
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {

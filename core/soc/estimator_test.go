@@ -15,7 +15,7 @@ func TestRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
 	vehicle := mock.NewMockVehicle(ctrl)
-	//9 kWh userBatCap => 10 kWh virtualBatCap
+	// 9 kWh userBatCap => 10 kWh virtualBatCap
 	vehicle.EXPECT().Capacity().Return(int64(9))
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, false)

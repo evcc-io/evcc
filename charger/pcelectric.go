@@ -177,7 +177,7 @@ func (wb *PCElectric) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (wb *PCElectric) Enable(enable bool) error {
 	if wb.slaveIndex > 0 {
-		return nil //Slave wird immer mit dem Master geschaltet!
+		return nil // Slave wird immer mit dem Master geschaltet!
 	}
 
 	// Master Only !!
@@ -216,7 +216,7 @@ func (wb *PCElectric) MinCurrent(current int64) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *PCElectric) MaxCurrent(current int64) error {
 	if wb.slaveIndex > 0 {
-		return nil //Slave wird immer mit dem Master geschaltet!
+		return nil // Slave wird immer mit dem Master geschaltet!
 	}
 
 	// Ohne Loadbalancer Regelung über currentlimit:

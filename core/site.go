@@ -17,7 +17,7 @@ import (
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
-	Update(availablePower float64, cheapRate bool, batteryBuffered bool)
+	Update(availablePower float64, cheapRate, batteryBuffered bool)
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.

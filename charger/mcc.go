@@ -78,7 +78,7 @@ func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, erro
 }
 
 // NewMobileConnect creates MCC charger
-func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
+func NewMobileConnect(uri, password string) (*MobileConnect, error) {
 	log := util.NewLogger("mcc")
 
 	mcc := &MobileConnect{
@@ -153,7 +153,6 @@ func (mcc *MobileConnect) refresh() error {
 
 // creates a http request that contains the auth token
 func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
-
 	// do we need a token refresh?
 	if mcc.token != "" {
 		// is it time to refresh the token?

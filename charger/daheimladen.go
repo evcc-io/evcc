@@ -41,7 +41,7 @@ func NewDaheimLadenFromConfig(other map[string]interface{}) (api.Charger, error)
 }
 
 // NewDaheimLaden creates DaheimLaden charger
-func NewDaheimLaden(token string, stationID string) (*DaheimLaden, error) {
+func NewDaheimLaden(token, stationID string) (*DaheimLaden, error) {
 	c := &DaheimLaden{
 		Helper:      request.NewHelper(util.NewLogger("daheim")),
 		stationID:   stationID,

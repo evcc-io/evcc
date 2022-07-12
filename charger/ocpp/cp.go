@@ -156,7 +156,6 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 	}
 
 	return profile, nil
-
 }
 
 func parseIntOption(key SmartchargingChargeProfileKey, options map[string]core.ConfigurationKey) (int, error) {

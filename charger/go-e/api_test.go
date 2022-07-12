@@ -49,6 +49,7 @@ func TestLocalV1(t *testing.T) {
 		t.Error(err)
 	}
 }
+
 func TestLocalV2(t *testing.T) {
 	h := &handler{}
 	srv := httptest.NewServer(h)

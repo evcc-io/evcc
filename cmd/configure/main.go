@@ -179,7 +179,7 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	filename := DefaultConfigFilename
 
 	for ok := true; ok; {
-		file, err := os.OpenFile(filename, os.O_WRONLY, 0666)
+		file, err := os.OpenFile(filename, os.O_WRONLY, 0o666)
 		if errors.Is(err, os.ErrNotExist) {
 			break
 		}
@@ -196,10 +196,11 @@ func (c *CmdConfigure) flowNewConfigFile() {
 		filename = c.askValue(question{
 			label:        c.localizedString("File_NewFilename", nil),
 			exampleValue: "evcc_neu.yaml",
-			required:     true})
+			required:     true,
+		})
 	}
 
-	err = os.WriteFile(filename, yaml, 0755)
+	err = os.WriteFile(filename, yaml, 0o755)
 	if err != nil {
 		fmt.Printf("%s: ", c.localizedString("File_Error_SaveFailed", localizeMap{"FileName": filename}))
 		c.log.FATAL.Fatal(err)
@@ -283,7 +284,8 @@ func (c *CmdConfigure) configureLoadpoints() {
 		loadpointTitle := c.askValue(question{
 			label:        c.localizedString("Loadpoint_Title", nil),
 			defaultValue: c.localizedString("Loadpoint_DefaultTitle", nil),
-			required:     true})
+			required:     true,
+		})
 		loadpoint := loadpoint{
 			Title:      loadpointTitle,
 			Phases:     3,
@@ -330,14 +332,16 @@ func (c *CmdConfigure) configureLoadpoints() {
 				valueType:      templates.ParamValueTypeNumber,
 				minNumberValue: int64(minValue),
 				maxNumberValue: 32,
-				required:       true})
+				required:       true,
+			})
 			loadpoint.MinCurrent, _ = strconv.Atoi(minAmperage)
 			maxAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMaxAmperage", nil),
 				valueType:      templates.ParamValueTypeNumber,
 				minNumberValue: 6,
 				maxNumberValue: 32,
-				required:       true})
+				required:       true,
+			})
 			loadpoint.MaxCurrent, _ = strconv.Atoi(maxAmperage)
 
 			if !chargerHasMeter {
@@ -378,7 +382,8 @@ func (c *CmdConfigure) configureLoadpoints() {
 					valueType:      templates.ParamValueTypeNumber,
 					minNumberValue: int64(minValue),
 					maxNumberValue: 32,
-					required:       true})
+					required:       true,
+				})
 				loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
 
 				if !chargerHasMeter {
@@ -415,6 +420,7 @@ func (c *CmdConfigure) configureSite() {
 	siteTitle := c.askValue(question{
 		label:        c.localizedString("Site_Title", nil),
 		defaultValue: c.localizedString("Site_DefaultTitle", nil),
-		required:     true})
+		required:     true,
+	})
 	c.configuration.config.Site.Title = siteTitle
 }

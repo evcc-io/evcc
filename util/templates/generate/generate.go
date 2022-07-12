@@ -13,8 +13,10 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-const docsPath = "../../../templates/docs"
-const websitePath = "../../../templates/evcc.io"
+const (
+	docsPath    = "../../../templates/docs"
+	websitePath = "../../../templates/evcc.io"
+)
 
 //go:generate go run generate.go
 
@@ -23,7 +25,7 @@ func main() {
 		path := fmt.Sprintf("%s/%s", docsPath, class)
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {
-			if err := os.MkdirAll(path, 0755); err != nil {
+			if err := os.MkdirAll(path, 0o755); err != nil {
 				panic(err)
 			}
 		}
@@ -69,7 +71,7 @@ func writeTemplate(class string, index int, product templates.Product, tmpl temp
 	}
 
 	filename := fmt.Sprintf("%s/%s/%s_%d.yaml", docsPath, class, tmpl.Template, index)
-	if err := os.WriteFile(filename, b, 0644); err != nil {
+	if err := os.WriteFile(filename, b, 0o644); err != nil {
 		return err
 	}
 	return nil
@@ -153,7 +155,7 @@ func generateBrandJSON() error {
 	}
 
 	file, _ := json.MarshalIndent(brands, "", " ")
-	error := ioutil.WriteFile(websitePath+"/brands.json", file, 0644)
+	error := ioutil.WriteFile(websitePath+"/brands.json", file, 0o644)
 
 	return error
 }

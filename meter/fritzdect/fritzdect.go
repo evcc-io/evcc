@@ -171,7 +171,7 @@ func (c *Connection) getSessionID() error {
 }
 
 // createChallengeResponse creates the Fritzbox challenge response string
-func createChallengeResponse(challenge string, pass string) (string, error) {
+func createChallengeResponse(challenge, pass string) (string, error) {
 	encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
 	utf16le, err := encoder.String(challenge + "-" + pass)
 	if err != nil {

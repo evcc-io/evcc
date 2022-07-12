@@ -80,7 +80,7 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 }
 
 // NewSmaevcharger creates an SMA EV Charger
-func NewSmaevcharger(uri string, user string, password string, cache time.Duration) (api.Charger, error) {
+func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("smaevcharger").Redact(user, password)
 
 	wb := &Smaevcharger{
@@ -343,7 +343,7 @@ func (wb *Smaevcharger) Send(values ...smaevcharger.Value) error {
 }
 
 // value creates an smaevcharger.Value
-func value(id string, value string) smaevcharger.Value {
+func value(id, value string) smaevcharger.Value {
 	return smaevcharger.Value{
 		Timestamp: time.Now().UTC().Format(smaevcharger.TimestampFormat),
 		ChannelId: id,

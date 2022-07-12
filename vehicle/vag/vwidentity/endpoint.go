@@ -32,6 +32,7 @@ var Config = &oidc.ProviderConfig{
 func Login(log *util.Logger, q url.Values, user, password string) (url.Values, error) {
 	return LoginWithAuthURL(log, Config.AuthURL, q, user, password)
 }
+
 func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password string) (url.Values, error) {
 	var verify func(url.Values)
 

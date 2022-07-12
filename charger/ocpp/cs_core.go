@@ -117,7 +117,6 @@ func (cs *CS) OnFirmwareStatusNotification(chargePointId string, request *firmwa
 	}
 
 	return cp.FirmwareStatusNotification(request)
-
 }
 
 func (cs *CS) TriggerResetRequest(cp *CP, resetType core.ResetType) {

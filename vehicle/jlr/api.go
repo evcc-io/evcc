@@ -117,7 +117,8 @@ func (v *API) AuthenticateVinService(vin, user, service string) (PinResponse, er
 	pin := vin[len(vin)-4:]
 	data := map[string]string{
 		"serviceName": service,
-		"pin":         pin}
+		"pin":         pin,
+	}
 
 	uri := fmt.Sprintf("%s/vehicles/%s/users/%s/authenticate", IF9_BASE_URL, vin, user)
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{

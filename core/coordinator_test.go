@@ -59,5 +59,4 @@ func TestVehicleDetectByStatus(t *testing.T) {
 			c.release(res)
 		}
 	}
-
 }

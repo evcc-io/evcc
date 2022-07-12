@@ -595,6 +595,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 
 	ctrl.Finish()
 }
+
 func TestTargetSoC(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vhc := mock.NewMockVehicle(ctrl)
@@ -634,6 +635,7 @@ func TestTargetSoC(t *testing.T) {
 		}
 	}
 }
+
 func TestSoCPoll(t *testing.T) {
 	clock := clock.NewMock()
 	tRefresh := pollInterval

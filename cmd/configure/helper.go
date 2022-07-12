@@ -216,7 +216,7 @@ func (c *CmdConfigure) processParamRequirements(param templates.Param) error {
 	return nil
 }
 
-func (c *CmdConfigure) askSponsortoken(required bool, feature bool) error {
+func (c *CmdConfigure) askSponsortoken(required, feature bool) error {
 	fmt.Println("-- Sponsorship -----------------------------")
 	if required {
 		fmt.Println()
@@ -239,7 +239,8 @@ func (c *CmdConfigure) askSponsortoken(required bool, feature bool) error {
 	sponsortoken := c.askValue(question{
 		label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
 		mask:     true,
-		required: true})
+		required: true,
+	})
 
 	err := sponsor.ConfigureSponsorship(sponsortoken)
 	if err != nil {
@@ -273,22 +274,26 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 		host := c.askValue(question{
 			label:    paramHost.Description.String(c.lang),
 			mask:     false,
-			required: true})
+			required: true,
+		})
 
 		port := c.askValue(question{
 			label:    paramPort.Description.String(c.lang),
 			mask:     false,
-			required: true})
+			required: true,
+		})
 
 		user := c.askValue(question{
 			label:    paramUser.Description.String(c.lang),
 			mask:     false,
-			required: false})
+			required: false,
+		})
 
 		password := c.askValue(question{
 			label:    paramPassword.Description.String(c.lang),
 			mask:     true,
-			required: false})
+			required: false,
+		})
 
 		fmt.Println()
 		fmt.Println("--------------------------------------------")
@@ -532,7 +537,8 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		valueType:    param.ValueType,
 		validValues:  param.ValidValues,
 		mask:         param.Mask,
-		required:     param.Required})
+		required:     param.Required,
+	})
 
 	if param.ValueType == templates.ParamValueTypeBool && value == "true" {
 		if err := c.processParamRequirements(param); err != nil {

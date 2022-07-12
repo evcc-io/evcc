@@ -464,7 +464,7 @@ func (v *Renault) FinishTime() (time.Time, error) {
 var _ api.VehicleClimater = (*Renault)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+func (v *Renault) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2
