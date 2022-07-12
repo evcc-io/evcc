@@ -67,10 +67,8 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 		payload = len(slice)
 
 		// unpublish
-		if len(slice) == 0 {
-			for i := 0; i < 10; i++ {
-				slice = append(slice, "")
-			}
+		for i := len(slice); i < 10; i++ {
+			slice = append(slice, "")
 		}
 
 		// publish vehicles
