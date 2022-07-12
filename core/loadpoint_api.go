@@ -268,5 +268,10 @@ func (lp *LoadPoint) GetVehicles() []api.Vehicle {
 func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
 	lp.Lock()
 	defer lp.Unlock()
+
+	// set desired vehicle
 	lp.setActiveVehicle(vehicle)
+
+	// disable auto-detect
+	lp.stopVehicleDetection()
 }

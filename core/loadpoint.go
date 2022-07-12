@@ -789,17 +789,30 @@ func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
+	if vehicle == nil {
+		lp.log.FATAL.Println("setActiveVehicle <nil>")
+	} else {
+		lp.log.FATAL.Printf("setActiveVehicle %s", vehicle.Title())
+	}
+
 	if lp.vehicle == vehicle {
+		if lp.vehicle == nil {
+			lp.log.FATAL.Println("setActiveVehicle <unchanged>")
+		} else {
+			lp.log.FATAL.Printf("setActiveVehicle %s <unchanged>", vehicle.Title())
+		}
 		return
 	}
 
 	from := "unknown"
 	if lp.vehicle != nil {
+		lp.log.FATAL.Printf("release %s", lp.vehicle.Title())
 		coordinator.release(lp.vehicle)
 		from = lp.vehicle.Title()
 	}
 	to := "unknown"
 	if vehicle != nil {
+		lp.log.FATAL.Printf("acquire %s", vehicle.Title())
 		coordinator.acquire(lp, vehicle)
 		to = vehicle.Title()
 	}
@@ -872,6 +885,14 @@ func (lp *LoadPoint) startVehicleDetection() {
 	lp.vehicleConnectedTicker = lp.clock.Ticker(vehicleDetectInterval)
 }
 
+// stopVehicleDetection expires the connection timer and ticker
+func (lp *LoadPoint) stopVehicleDetection() {
+	lp.vehicleConnected = time.Time{}
+	if lp.vehicleConnectedTicker != nil {
+		lp.vehicleConnectedTicker.Stop()
+	}
+}
+
 // vehicleUnidentified checks if loadpoint has multiple vehicles associated and starts discovery period
 func (lp *LoadPoint) vehicleUnidentified() bool {
 	res := len(lp.vehicles) > 1 && lp.vehicle == nil &&
@@ -892,6 +913,8 @@ func (lp *LoadPoint) vehicleUnidentified() bool {
 
 // identifyVehicleByStatus validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) identifyVehicleByStatus() {
+	lp.log.FATAL.Println("identifyVehicleByStatus")
+
 	if len(lp.vehicles) <= 1 {
 		return
 	}
@@ -1451,6 +1474,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 
 		// find vehicle by status for a couple of minutes after connecting
 		if lp.vehicleUnidentified() {
+			lp.log.FATAL.Println("vehicleUnidentified")
 			lp.identifyVehicleByStatus()
 		}
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
+	"github.com/samber/lo"
 )
 
 func indexHandler(site site.API) http.HandlerFunc {
@@ -252,6 +253,9 @@ func vehicleHandler(loadpoint loadpoint.API) http.HandlerFunc {
 		val, err := strconv.Atoi(valS)
 
 		vehicles := loadpoint.GetVehicles()
+		log.FATAL.Println(lo.Map(vehicles, func(v api.Vehicle, _ int) string {
+			return v.Title()
+		}))
 
 		if !ok || val >= len(vehicles) || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
