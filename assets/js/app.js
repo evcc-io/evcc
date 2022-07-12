@@ -6,6 +6,7 @@ import { createApp, h } from "vue";
 import { createMetaManager, plugin as metaPlugin } from "vue-meta";
 import api from "./api";
 import App from "./views/App.vue";
+import VueNumber from "vue-number-animation";
 import router from "./router";
 import i18n from "./i18n";
 import featureflags from "./featureflags";
@@ -68,6 +69,7 @@ app.use(router);
 app.use(createMetaManager());
 app.use(metaPlugin);
 app.use(featureflags);
+app.use(VueNumber);
 window.app = app.mount("#app");
 
 window.setInterval(function () {

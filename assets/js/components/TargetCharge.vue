@@ -7,7 +7,7 @@
 		>
 			<button
 				class="btn btn-link p-0 value text-center"
-				:class="targetChargeEnabled ? 'evcc-default-text' : 'text-gray-light'"
+				:class="targetChargeEnabled ? 'evcc-default-text' : 'text-gray'"
 				data-bs-toggle="modal"
 				:data-bs-target="`#${modalId}`"
 				:disabled="disabled"

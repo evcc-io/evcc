@@ -15,10 +15,11 @@
 		<div v-if="vehiclePresent">
 			<div class="details d-flex flex-wrap justify-content-between">
 				<LabelAndValue
-					class="flex-grow-1 text-start"
+					class="flex-grow-1"
 					:label="$t('main.vehicle.vehicleSoC')"
 					:value="vehicleSoC ? `${vehicleSoC}%` : '--'"
 					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
+					align="start"
 				/>
 				<TargetCharge
 					class="flex-grow-1 text-center target-charge"
