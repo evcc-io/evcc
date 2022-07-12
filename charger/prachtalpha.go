@@ -36,8 +36,8 @@ type PrachtAlpha struct {
 }
 
 const (
-	prachtTotalCurrent = 40004
-	prachtMaxCurrent   = 40003 - 40001
+	prachtTotalCurrent = 40003 - 40001
+	prachtMaxCurrent   = 40004 - 40001
 	prachtStatus       = 30107 - 30001
 )
 
