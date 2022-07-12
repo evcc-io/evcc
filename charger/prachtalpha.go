@@ -36,9 +36,9 @@ type PrachtAlpha struct {
 }
 
 const (
-	prachtTotalCurrent = 40003 - 40001
-	prachtMaxCurrent   = 40004 - 40001
-	prachtStatus       = 30107 - 30001
+	prachtTotalCurrent = 40003 - 40001 // total limit of all connectors
+	prachtMaxCurrent   = 40004 - 40001 // +1 for second connector
+	prachtStatus       = 30107 - 30001 // +1 for second connector
 )
 
 func init() {
