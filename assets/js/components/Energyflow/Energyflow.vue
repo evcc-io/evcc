@@ -46,7 +46,9 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">In</h3>
-						<span class="fw-bold">{{ kw(inPower) }}</span>
+						<span class="fw-bold">
+							<AnimatedNumber :to="inPower" :format="kw" />
+						</span>
 					</div>
 					<div>
 						<EnergyflowEntry
@@ -76,7 +78,9 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">Out</h3>
-						<span class="fw-bold">{{ kw(outPower) }}</span>
+						<span class="fw-bold">
+							<AnimatedNumber :to="outPower" :format="kw" />
+						</span>
 					</div>
 					<div>
 						<EnergyflowEntry
@@ -121,10 +125,11 @@ import "@h2d2/shopicons/es/filled/square";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
 import formatter from "../../mixins/formatter";
+import AnimatedNumber from "../AnimatedNumber.vue";
 
 export default {
 	name: "Energyflow",
-	components: { Visualization, EnergyflowEntry },
+	components: { Visualization, EnergyflowEntry, AnimatedNumber },
 	mixins: [formatter],
 	props: {
 		gridConfigured: Boolean,

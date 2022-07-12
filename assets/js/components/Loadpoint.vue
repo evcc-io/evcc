@@ -33,8 +33,10 @@
 				<div class="d-flex align-items-center">
 					<LabelAndValue
 						:label="$t('main.loadpoint.power')"
-						:value="fmtKw(chargePower, formatChargePowerInKw)"
+						:value="chargePower"
+						:valueFmt="fmtkWUnit"
 						class="mb-2"
+						align="start"
 					/>
 					<shopicon-regular-lightning
 						class="text-evcc opacity-transiton"
@@ -48,13 +50,18 @@
 					:class="`opacity-${charging ? '100' : '0'}`"
 				/>
 			</div>
-			<LabelAndValue :label="$t('main.loadpoint.charged')" :value="fmtKWh(chargedEnergy)" />
+			<LabelAndValue
+				:label="$t('main.loadpoint.charged')"
+				:value="fmtKWh(chargedEnergy)"
+				align="center"
+			/>
 			<LabelAndValue
 				v-if="chargeRemainingDurationInterpolated"
 				:label="$t('main.loadpoint.remaining')"
 				:value="`
 					${fmtShortDuration(chargeRemainingDurationInterpolated)}
 					${fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)}`"
+				align="end"
 			/>
 			<LabelAndValue
 				v-else
@@ -62,6 +69,7 @@
 				:value="`
 					${fmtShortDuration(chargeDurationInterpolated)}
 					${fmtShortDurationUnit(chargeDurationInterpolated)}`"
+				align="end"
 			/>
 		</div>
 		<hr class="divider" />
@@ -157,9 +165,6 @@ export default {
 		vehicle: function () {
 			return this.collectProps(Vehicle);
 		},
-		formatChargePowerInKw: function () {
-			return this.chargePower == 0 || this.chargePower >= 1000;
-		},
 	},
 	watch: {
 		phaseRemaining() {
@@ -210,6 +215,10 @@ export default {
 		},
 		removeTargetTime: function () {
 			api.delete(this.apiPath("targetcharge"));
+		},
+		fmtkWUnit(value) {
+			const inKw = value == 0 || value >= 1000;
+			return this.fmtKw(value, inKw);
 		},
 	},
 };
