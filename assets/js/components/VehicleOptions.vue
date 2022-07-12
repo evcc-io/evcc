@@ -15,9 +15,9 @@
 			<li>
 				<h6 class="dropdown-header">{{ $t("main.vehicle.changeVehicle") }}</h6>
 			</li>
-			<li v-for="(vehicle, index) in vehicles" :key="vehicle">
-				<button type="button" class="dropdown-item" @click="changeVehicle(index)">
-					{{ vehicle }}
+			<li v-for="vehicle in vehicles" :key="vehicle">
+				<button type="button" class="dropdown-item" @click="changeVehicle(vehicle.id)">
+					{{ vehicle.title }}
 				</button>
 			</li>
 			<li v-if="!isUnknown">
