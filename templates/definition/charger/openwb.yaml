@@ -10,9 +10,23 @@ requirements:
   uri: https://docs.evcc.io/docs/devices/chargers#openwb
 params:
   - name: host
-  - name: loadpointid
-    default: 1
+  - name: connector
+  - name: phases1p3p
+    valuetype: bool
+    description:
+      en: Charger is equipped with phase switching feature
+      de: Phasenumschaltung vorhanden
+    advanced: true
+    default: false
 render: |
   type: openwb
   broker: {{ .host }}
+  {{- if ne .connector "1" }}
+  id: {{ .connector }} # loadpoint id
+  {{- end }}
+  {{- if ne .loadpointid "1" }}
   id: {{ .loadpointid }} # loadpoint id
+  {{- end }}
+  {{- if ne .phases1p3p "false" }}
+  phases: true
+  {{- end }}
