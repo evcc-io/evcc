@@ -86,6 +86,7 @@ export default {
       targetSoC: "Limit",
       none: "No vehicle",
       unknown: "Guest vehicle",
+      changeVehicle: "Change Vehicle",
     },
     vehicleSoC: {
       disconnected: "disconnected",

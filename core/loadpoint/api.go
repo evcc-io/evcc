@@ -48,8 +48,6 @@ type API interface {
 
 	// SetTargetCharge sets the charge targetSoC
 	SetTargetCharge(time.Time, int)
-	// SetVehicle sets the active vehicle
-	SetVehicle(vehicle api.Vehicle)
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
 
@@ -80,4 +78,13 @@ type API interface {
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in Wh
 	GetRemainingEnergy() float64
+
+	//
+	// vehicles
+	//
+
+	// GetVehicle is the list of vehicles
+	GetVehicles() []api.Vehicle
+	// SetVehicle sets the active vehicle
+	SetVehicle(vehicle api.Vehicle)
 }

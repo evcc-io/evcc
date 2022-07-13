@@ -78,6 +78,8 @@
 			@target-soc-updated="setTargetSoC"
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
+			@change-vehicle="changeVehicle"
+			@remove-vehicle="removeVehicle"
 		/>
 	</div>
 </template>
@@ -118,6 +120,7 @@ export default {
 		vehicleSoC: Number,
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
+		vehicles: Array,
 		minSoC: Number,
 		targetTime: String,
 		targetTimeActive: Boolean,
@@ -215,6 +218,12 @@ export default {
 		},
 		removeTargetTime: function () {
 			api.delete(this.apiPath("targetcharge"));
+		},
+		changeVehicle(index) {
+			api.post(this.apiPath("vehicle") + `/${index}`);
+		},
+		removeVehicle() {
+			api.delete(this.apiPath("vehicle"));
 		},
 		fmtkWUnit(value) {
 			const inKw = value == 0 || value >= 1000;

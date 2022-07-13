@@ -195,3 +195,16 @@ DisconnectedKnownSoc.args = {
   targetSoC: 60,
   id: 0,
 };
+
+export const SwitchBetweenVehicles = Template.bind({});
+SwitchBetweenVehicles.args = {
+  vehicleTitle: "Weißes Model 3",
+  vehicles: ["Blauer e-Golf", "Weißes Model 3"],
+  enabled: true,
+  connected: true,
+  vehiclePresent: true,
+  vehicleSoC: 42,
+  vehicleRange: 231,
+  targetSoC: 90,
+  id: 0,
+};

@@ -1,6 +1,10 @@
 <template>
 	<div class="vehicle pt-4">
-		<VehicleTitle v-bind="vehicleTitleProps" />
+		<VehicleTitle
+			v-bind="vehicleTitleProps"
+			@change-vehicle="changeVehicle"
+			@remove-vehicle="removeVehicle"
+		/>
 		<VehicleStatus v-if="!parked" v-bind="vehicleStatus" class="mb-2" />
 		<VehicleSoc
 			v-bind="vehicleSocProps"
@@ -78,8 +82,15 @@ export default {
 		pvAction: String,
 		pvRemainingInterpolated: Number,
 		parked: Boolean,
+		vehicles: Array,
 	},
-	emits: ["target-time-removed", "target-time-updated", "target-soc-updated"],
+	emits: [
+		"target-time-removed",
+		"target-time-updated",
+		"target-soc-updated",
+		"change-vehicle",
+		"remove-vehicle",
+	],
 	data() {
 		return {
 			displayTargetSoC: this.targetSoC,
@@ -126,6 +137,12 @@ export default {
 		},
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
+		},
+		changeVehicle(index) {
+			this.$emit("change-vehicle", index);
+		},
+		removeVehicle() {
+			this.$emit("remove-vehicle");
 		},
 	},
 };

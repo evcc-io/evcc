@@ -112,9 +112,9 @@ func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		val, err := strconv.ParseInt(vars["value"], 10, 32)
+		val, err := strconv.Atoi(vars["value"])
 		if err == nil {
-			err = set(int(val))
+			err = set(val)
 		}
 
 		if err != nil {
@@ -159,9 +159,9 @@ func phasesHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		phases, err := strconv.ParseInt(vars["value"], 10, 32)
+		phases, err := strconv.Atoi(vars["value"])
 		if err == nil {
-			err = lp.SetPhases(int(phases))
+			err = lp.SetPhases(phases)
 		}
 
 		if err != nil {
@@ -205,7 +205,7 @@ func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 		vars := mux.Vars(r)
 
 		socS, ok := vars["soc"]
-		socV, err := strconv.ParseInt(socS, 10, 32)
+		socV, err := strconv.Atoi(socS)
 
 		if !ok || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -220,10 +220,10 @@ func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 			return
 		}
 
-		loadpoint.SetTargetCharge(timeV, int(socV))
+		loadpoint.SetTargetCharge(timeV, socV)
 
 		res := struct {
-			SoC  int64     `json:"soc"`
+			SoC  int       `json:"soc"`
 			Time time.Time `json:"time"`
 		}{
 			SoC:  socV,
@@ -239,6 +239,32 @@ func targetChargeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		loadpoint.SetTargetCharge(time.Time{}, 0)
 		res := struct{}{}
+		jsonResult(w, res)
+	}
+}
+
+// vehicleHandler sets active vehicle
+func vehicleHandler(loadpoint loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		valS, ok := vars["vehicle"]
+		val, err := strconv.Atoi(valS)
+
+		vehicles := loadpoint.GetVehicles()
+		if !ok || val >= len(vehicles) || err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		loadpoint.SetVehicle(vehicles[val])
+
+		res := struct {
+			Vehicle string `json:"vehicle"`
+		}{
+			Vehicle: vehicles[val].Title(),
+		}
+
 		jsonResult(w, res)
 	}
 }
