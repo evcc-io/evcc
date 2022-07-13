@@ -45,6 +45,8 @@ func (c *switchSocket) Status() (api.ChargeStatus, error) {
 	return res, err
 }
 
+var _ api.Meter = (*switchSocket)(nil)
+
 // CurrentPower calculates a generic switches power
 func (c *switchSocket) CurrentPower() (float64, error) {
 	var power float64

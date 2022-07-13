@@ -69,5 +69,3 @@ func (c *MyStrom) Enable(enable bool) error {
 func (c *MyStrom) MaxCurrent(current int64) error {
 	return nil
 }
-
-var _ api.Meter = (*MyStrom)(nil)

@@ -79,5 +79,3 @@ func (c *Shelly) Enable(enable bool) error {
 func (c *Shelly) MaxCurrent(current int64) error {
 	return nil
 }
-
-var _ api.Meter = (*Shelly)(nil)

@@ -68,8 +68,6 @@ func (c *Tapo) MaxCurrent(current int64) error {
 	return nil
 }
 
-var _ api.Meter = (*Tapo)(nil)
-
 var _ api.ChargeRater = (*Tapo)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
