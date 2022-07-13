@@ -39,40 +39,40 @@ func NewMyStromFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb := &MyStrom{
+	c := &MyStrom{
 		Connection:   mystrom.NewConnection(cc.URI),
 		standbypower: cc.StandbyPower,
 		cache:        cc.Cache,
 	}
 
-	wb.reportG = provider.Cached(wb.Report, wb.cache)
+	c.reportG = provider.Cached(c.Report, c.cache)
 
-	return wb, nil
+	return c, nil
 }
 
 var _ api.Meter = (*MyStrom)(nil)
 
 // Status implements the api.Charger interface
-func (wb *MyStrom) Status() (api.ChargeStatus, error) {
-	return switchStatus(wb.Enabled, wb.CurrentPower, wb.standbypower)
+func (c *MyStrom) Status() (api.ChargeStatus, error) {
+	return switchStatus(c.Enabled, c.CurrentPower, c.standbypower)
 }
 
 // Enabled implements the api.Charger interface
-func (wb *MyStrom) Enabled() (bool, error) {
-	res, err := wb.reportG()
+func (c *MyStrom) Enabled() (bool, error) {
+	res, err := c.reportG()
 	return res.Relay, err
 }
 
 // Enable implements the api.Charger interface
-func (wb *MyStrom) Enable(enable bool) error {
+func (c *MyStrom) Enable(enable bool) error {
 	// reset cache
-	wb.reportG = provider.Cached(wb.Report, wb.cache)
+	c.reportG = provider.Cached(c.Report, c.cache)
 
 	onoff := map[bool]int{false: 0, true: 1}
-	return wb.Request(fmt.Sprintf("relay/state=%d", onoff[enable]))
+	return c.Request(fmt.Sprintf("relay/state=%d", onoff[enable]))
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *MyStrom) MaxCurrent(current int64) error {
+func (c *MyStrom) MaxCurrent(current int64) error {
 	return nil
 }
