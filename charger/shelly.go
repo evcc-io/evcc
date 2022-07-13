@@ -10,8 +10,8 @@ import (
 
 // Shelly charger implementation
 type Shelly struct {
-	conn         *shelly.Connection
-	standbypower float64
+	conn *shelly.Connection
+	*switchSocket
 }
 
 func init() {
@@ -42,12 +42,13 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		return nil, err
 	}
 
-	shelly := &Shelly{
-		conn:         conn,
-		standbypower: standbypower,
+	c := &Shelly{
+		conn: conn,
 	}
 
-	return shelly, nil
+	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
+
+	return c, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -79,31 +80,4 @@ func (c *Shelly) MaxCurrent(current int64) error {
 	return nil
 }
 
-// Status implements the api.Charger interface
-func (c *Shelly) Status() (api.ChargeStatus, error) {
-	return switchStatus(c.Enabled, c.CurrentPower, c.standbypower)
-}
-
 var _ api.Meter = (*Shelly)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (c *Shelly) CurrentPower() (float64, error) {
-	var power float64
-
-	// set fix static power in static mode
-	if c.standbypower < 0 {
-		on, err := c.Enabled()
-		if on {
-			power = -c.standbypower
-		}
-		return power, err
-	}
-
-	// ignore power in standby mode
-	power, err := c.conn.CurrentPower()
-	if power <= c.standbypower {
-		power = 0
-	}
-
-	return power, err
-}

@@ -14,8 +14,8 @@ import (
 
 // FritzDECT charger implementation
 type FritzDECT struct {
-	conn         *fritzdect.Connection
-	standbypower float64
+	conn *fritzdect.Connection
+	*switchSocket
 }
 
 func init() {
@@ -40,12 +40,13 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
 	conn, err := fritzdect.NewConnection(uri, ain, user, password)
 
-	m := &FritzDECT{
-		conn:         conn,
-		standbypower: standbypower,
+	c := &FritzDECT{
+		conn: conn,
 	}
 
-	return m, err
+	c.switchSocket = NewSwitchSocket(c.Enabled, c.CurrentPower, standbypower)
+
+	return c, err
 }
 
 // Status implements the api.Charger interface
@@ -63,7 +64,7 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return switchStatus(c.Enabled, c.CurrentPower, c.standbypower)
+	return c.switchSocket.Status()
 }
 
 // Enabled implements the api.Charger interface
@@ -103,28 +104,6 @@ func (c *FritzDECT) MaxCurrent(current int64) error {
 }
 
 var _ api.Meter = (*FritzDECT)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (c *FritzDECT) CurrentPower() (float64, error) {
-	var power float64
-
-	// set fix static power in static mode
-	if c.standbypower < 0 {
-		on, err := c.Enabled()
-		if on {
-			power = -c.standbypower
-		}
-		return power, err
-	}
-
-	// ignore power in standby mode
-	power, err := c.conn.CurrentPower()
-	if power <= c.standbypower {
-		power = 0
-	}
-
-	return power, err
-}
 
 var _ api.MeterEnergy = (*FritzDECT)(nil)
 
