@@ -54,8 +54,7 @@ var _ api.Meter = (*MyStrom)(nil)
 
 // Status implements the api.Charger interface
 func (wb *MyStrom) Status() (api.ChargeStatus, error) {
-	res, err := wb.reportG()
-	return switchStatus(res.Relay, res.Power, wb.standbypower), err
+	return switchStatus(wb.Enabled, wb.CurrentPower, wb.standbypower)
 }
 
 // Enabled implements the api.Charger interface
