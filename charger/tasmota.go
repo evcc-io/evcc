@@ -175,25 +175,7 @@ func (c *Tasmota) MaxCurrent(current int64) error {
 
 // Status implements the api.Charger interface
 func (c *Tasmota) Status() (api.ChargeStatus, error) {
-	res := api.StatusB
-
-	// static mode
-	if c.standbypower < 0 {
-		on, err := c.Enabled()
-		if on {
-			res = api.StatusC
-		}
-
-		return res, err
-	}
-
-	// standby power mode
-	power, err := c.CurrentPower()
-	if power > c.standbypower {
-		res = api.StatusC
-	}
-
-	return res, err
+	return switchStatus(c.Enabled, c.CurrentPower, c.standbypower)
 }
 
 var _ api.Meter = (*Tasmota)(nil)

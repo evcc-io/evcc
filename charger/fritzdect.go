@@ -48,6 +48,24 @@ func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*Fritz
 	return m, err
 }
 
+// Status implements the api.Charger interface
+func (c *FritzDECT) Status() (api.ChargeStatus, error) {
+	resp, err := c.conn.ExecCmd("getswitchpresent")
+
+	if err == nil {
+		var present bool
+		present, err = strconv.ParseBool(resp)
+		if err == nil && !present {
+			err = api.ErrNotAvailable
+		}
+	}
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	return switchStatus(c.Enabled, c.CurrentPower, c.standbypower)
+}
+
 // Enabled implements the api.Charger interface
 func (c *FritzDECT) Enabled() (bool, error) {
 	resp, err := c.conn.ExecCmd("getswitchstate")
@@ -82,40 +100,6 @@ func (c *FritzDECT) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *FritzDECT) MaxCurrent(current int64) error {
 	return nil
-}
-
-// Status implements the api.Charger interface
-func (c *FritzDECT) Status() (api.ChargeStatus, error) {
-	resp, err := c.conn.ExecCmd("getswitchpresent")
-
-	if err == nil {
-		var present bool
-		present, err = strconv.ParseBool(resp)
-		if err == nil && !present {
-			err = api.ErrNotAvailable
-		}
-	}
-	if err != nil {
-		return api.StatusNone, err
-	}
-
-	res := api.StatusB
-	on, err := c.Enabled()
-	if err != nil {
-		return res, err
-	}
-
-	power, err := c.conn.CurrentPower()
-	if err != nil {
-		return res, err
-	}
-
-	// static mode || standby power mode condition
-	if on && (c.standbypower < 0 || power > c.standbypower) {
-		res = api.StatusC
-	}
-
-	return res, nil
 }
 
 var _ api.Meter = (*FritzDECT)(nil)

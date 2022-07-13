@@ -69,23 +69,7 @@ func (c *Tapo) MaxCurrent(current int64) error {
 
 // Status implements the api.Charger interface
 func (c *Tapo) Status() (api.ChargeStatus, error) {
-	res := api.StatusB
-	on, err := c.Enabled()
-	if err != nil {
-		return res, err
-	}
-
-	power, err := c.conn.CurrentPower()
-	if err != nil {
-		return res, err
-	}
-
-	// static mode || standby power mode condition
-	if on && (c.standbypower < 0 || power > c.standbypower) {
-		res = api.StatusC
-	}
-
-	return res, nil
+	return switchStatus(c.Enabled, c.CurrentPower, c.standbypower)
 }
 
 var _ api.Meter = (*Tapo)(nil)
