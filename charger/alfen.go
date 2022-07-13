@@ -38,7 +38,7 @@ type Alfen struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	mu      sync.Mutex
-	curr    float64
+	curr    float32
 	enabled bool
 }
 
@@ -96,7 +96,7 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 func (wb *Alfen) heartbeat() {
 	for range time.NewTicker(time.Minute).C {
 		wb.mu.Lock()
-		var curr float64
+		var curr float32
 		if wb.enabled {
 			curr = wb.curr
 		}
@@ -141,7 +141,7 @@ func (wb *Alfen) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Alfen) Enable(enable bool) error {
-	var curr float64
+	var curr float32
 	if enable {
 		wb.mu.Lock()
 		curr = wb.curr
@@ -158,29 +158,22 @@ func (wb *Alfen) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the api.Charger interface
-func (wb *Alfen) MaxCurrent(current int64) error {
-	return wb.MaxCurrentMillis(float64(current))
-}
-
-var _ api.ChargerEx = (*Alfen)(nil)
-
 // setCurrent sets the current in milliamps without modifying the stored current value
-func (wb *Alfen) setCurrent(current float64) error {
+func (wb *Alfen) setCurrent(current float32) error {
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
+	binary.BigEndian.PutUint32(b, math.Float32bits(current))
 
 	_, err := wb.conn.WriteMultipleRegisters(alfenRegAmpsConfig, 2, b)
 
 	return err
 }
 
-// MaxCurrent implements the api.ChargerEx interface
-func (wb *Alfen) MaxCurrentMillis(current float64) error {
-	err := wb.setCurrent(current)
+// MaxCurrent implements the api.Charger interface
+func (wb *Alfen) MaxCurrent(current int64) error {
+	err := wb.setCurrent(float32(current))
 	if err == nil {
 		wb.mu.Lock()
-		wb.curr = current
+		wb.curr = float32(current)
 		wb.mu.Unlock()
 	}
 
