@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -125,11 +126,12 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter  api.Meter     // Charger usage meter
-	vehicle      api.Vehicle   // Currently active vehicle
-	vehicles     []api.Vehicle // Assigned vehicles
-	socEstimator *soc.Estimator
-	socTimer     *soc.Timer
+	chargeMeter    api.Meter     // Charger usage meter
+	vehicle        api.Vehicle   // Currently active vehicle
+	vehicles       []api.Vehicle // Assigned vehicles
+	defaultVehicle api.Vehicle   // Default vehicle (disables detection)
+	socEstimator   *soc.Estimator
+	socTimer       *soc.Timer
 
 	// cached state
 	status         api.ChargeStatus       // Charger status
@@ -199,13 +201,16 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.vehicles = append(lp.vehicles, vehicle)
 	}
 
-	// single vehicle
+	// default vehicle
 	if lp.VehicleRef != "" {
-		if len(lp.vehicles) > 0 {
-			return nil, errors.New("cannot have vehicle and vehicles both")
+		lp.defaultVehicle = cp.Vehicle(lp.VehicleRef)
+
+		// append default vehicle if not contained in list
+		if len(lo.Filter(lp.vehicles, func(v api.Vehicle, _ int) bool {
+			return v == lp.defaultVehicle
+		})) == 0 {
+			lp.vehicles = append(lp.vehicles, lp.defaultVehicle)
 		}
-		vehicle := cp.Vehicle(lp.VehicleRef)
-		lp.vehicles = append(lp.vehicles, vehicle)
 	}
 
 	// verify vehicle detection
@@ -405,8 +410,10 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.log.DEBUG.Println("vehicle api refresh")
 	provider.ResetCached()
 
-	// start detection if we have multiple vehicles
-	if len(lp.vehicles) > 1 {
+	// start detection if we have associated vehicles
+	if lp.vehicle == lp.defaultVehicle {
+		lp.setActiveVehicle(lp.defaultVehicle)
+	} else if len(lp.vehicles) > 0 {
 		lp.startVehicleDetection()
 	}
 
@@ -429,17 +436,10 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	lp.pushEvent(evVehicleDisconnect)
 
-	// remove active vehicle if we have multiple vehicles
-	if len(lp.vehicles) > 1 {
+	// remove active vehicle if not default
+	if lp.vehicle != lp.defaultVehicle {
 		lp.setActiveVehicle(nil)
-	}
-
-	// keep single vehicle to allow poll mode: always
-	if len(lp.vehicles) == 1 {
-		// but reset values if poll mode is not always (i.e. connected or charging)
-		if lp.SoC.Poll.Mode != pollAlways {
-			lp.unpublishVehicle()
-		}
+		lp.unpublishVehicle()
 	}
 
 	// set default mode on disconnect
@@ -538,13 +538,11 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("minSoC", lp.SoC.Min)
 	lp.Unlock()
 
-	// always treat single vehicle as attached to allow poll mode: always
-	if len(lp.vehicles) == 1 {
-		lp.setActiveVehicle(lp.vehicles[0])
-	}
-
-	// start detection if we have multiple vehicles
-	if len(lp.vehicles) > 1 {
+	// activate default vehicle (allows poll mode: always)
+	if lp.defaultVehicle != nil {
+		lp.setActiveVehicle(lp.defaultVehicle)
+	} else if len(lp.vehicles) > 0 {
+		// start detection if we have associated vehicles
 		lp.startVehicleDetection()
 	}
 
@@ -788,30 +786,17 @@ func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
-	if vehicle == nil {
-		lp.log.FATAL.Println("setActiveVehicle <nil>")
-	} else {
-		lp.log.FATAL.Printf("setActiveVehicle %s", vehicle.Title())
-	}
-
 	if lp.vehicle == vehicle {
-		if lp.vehicle == nil {
-			lp.log.FATAL.Println("setActiveVehicle <unchanged>")
-		} else {
-			lp.log.FATAL.Printf("setActiveVehicle %s <unchanged>", vehicle.Title())
-		}
 		return
 	}
 
 	from := "unknown"
 	if lp.vehicle != nil {
-		lp.log.FATAL.Printf("release %s", lp.vehicle.Title())
 		coordinator.release(lp.vehicle)
 		from = lp.vehicle.Title()
 	}
 	to := "unknown"
 	if vehicle != nil {
-		lp.log.FATAL.Printf("acquire %s", vehicle.Title())
 		coordinator.acquire(lp, vehicle)
 		to = vehicle.Title()
 	}
@@ -892,9 +877,9 @@ func (lp *LoadPoint) stopVehicleDetection() {
 	}
 }
 
-// vehicleUnidentified checks if loadpoint has multiple vehicles associated and starts discovery period
+// vehicleUnidentified checks if there are associated vehicles and starts discovery period
 func (lp *LoadPoint) vehicleUnidentified() bool {
-	res := len(lp.vehicles) > 1 && lp.vehicle == nil &&
+	res := len(lp.vehicles) > 0 && lp.vehicle == nil &&
 		lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
 
 	// request vehicle api refresh while waiting to identify
@@ -912,9 +897,7 @@ func (lp *LoadPoint) vehicleUnidentified() bool {
 
 // identifyVehicleByStatus validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) identifyVehicleByStatus() {
-	lp.log.FATAL.Println("identifyVehicleByStatus")
-
-	if len(lp.vehicles) <= 1 {
+	if len(lp.vehicles) == 0 {
 		return
 	}
 
@@ -1152,7 +1135,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 // publishVehicles publishes a slice of vehicle titles
 func (lp *LoadPoint) publishVehicles() {
-	lp.publish("vehicles", vehicleTitles(lp.GetVehicles()))
+	lp.publish("vehicles", vehicleTitles(lp.vehicles))
 }
 
 // TODO move up to timer functions
@@ -1467,7 +1450,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 
 		// find vehicle by status for a couple of minutes after connecting
 		if lp.vehicleUnidentified() {
-			lp.log.FATAL.Println("vehicleUnidentified")
 			lp.identifyVehicleByStatus()
 		}
 	}

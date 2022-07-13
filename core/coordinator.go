@@ -49,8 +49,6 @@ func (lp *vehicleCoordinator) availableDetectibleVehicles(owner loadpoint.API, v
 func (lp *vehicleCoordinator) identifyVehicleByStatus(log *util.Logger, owner loadpoint.API, vehicles []api.Vehicle) api.Vehicle {
 	available := lp.availableDetectibleVehicles(owner, vehicles)
 
-	log.FATAL.Println(vehicleTitles(available))
-
 	var res api.Vehicle
 	for _, vehicle := range available {
 		if vs, ok := vehicle.(api.ChargeState); ok {

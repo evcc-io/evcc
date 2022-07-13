@@ -193,6 +193,11 @@ vehicles:
         var lp = state.loadpoints[1]
         var range = (80 * lp.vehicleSoC) / 17;
         range
+    status:
+      source: js
+      vm: shared
+      script: |
+        "B"
     capacity: 80
 
 site:
@@ -211,6 +216,8 @@ loadpoints:
       target: 90
     meter: meter_charger_1
     vehicle: vehicle_1
+    vehicles:
+      - vehicle_2
   - title: Garage
     charger: charger_2
     soc:
@@ -218,8 +225,8 @@ loadpoints:
     mode: "off"
     meter: meter_charger_2
     vehicles:
-      - vehicle_2
       - vehicle_1
+      - vehicle_2
 #  - title: Garage rechts
 #    charger: charger_3
 #    mode: "off"
