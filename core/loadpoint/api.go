@@ -83,8 +83,6 @@ type API interface {
 	// vehicles
 	//
 
-	// GetVehicle is the list of vehicles
-	GetVehicles() []api.Vehicle
 	// SetVehicle sets the active vehicle
 	SetVehicle(vehicle api.Vehicle)
 }

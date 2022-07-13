@@ -85,7 +85,7 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	m.publishSingleValue(topic, retained, payload)
 }
 
-func (m *MQTT) listenSetters(topic string, lp loadpoint.API) {
+func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
 		lp.SetMode(api.ChargeMode(payload))
 	})
@@ -116,7 +116,7 @@ func (m *MQTT) listenSetters(topic string, lp loadpoint.API) {
 	})
 	m.Handler.ListenSetter(topic+"/vehicle/set", func(payload string) {
 		if vehicle, err := strconv.Atoi(payload); err == nil {
-			vehicles := lp.GetVehicles()
+			vehicles := site.GetVehicles()
 			if vehicle < len(vehicles) {
 				lp.SetVehicle(vehicles[vehicle])
 			}
@@ -156,7 +156,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	// loadpoint setters
 	for id, lp := range site.LoadPoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
-		m.listenSetters(topic, lp)
+		m.listenSetters(topic, site, lp)
 	}
 
 	// remove deprecated topics
