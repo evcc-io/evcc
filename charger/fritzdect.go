@@ -44,7 +44,7 @@ func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*Fritz
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(c.Enabled, c.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
 
 	return c, err
 }
