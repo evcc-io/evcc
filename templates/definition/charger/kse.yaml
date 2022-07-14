@@ -1,0 +1,17 @@
+template: kse
+products:
+  - brand: KSE
+    description:
+      generic: wBX16
+capabilities: ["1p3p", "rfid"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    comset: 8E1
+    id: 100
+render: |
+  type: kse
+  {{- include "modbus" . }}
