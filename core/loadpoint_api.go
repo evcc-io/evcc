@@ -35,18 +35,22 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 		return
 	}
 
-	lp.log.DEBUG.Printf("set charge mode: %s", string(mode))
-
 	// apply immediately
 	if lp.Mode != mode {
-		lp.Mode = mode
-		lp.publish("mode", mode)
-
-		// immediately allow pv mode activity
-		lp.elapsePVTimer()
-
+		lp.setMode(mode)
 		lp.requestUpdate()
 	}
+}
+
+// setMode sets loadpoint charge mode (lock-free)
+func (lp *LoadPoint) setMode(mode api.ChargeMode) {
+	lp.log.DEBUG.Printf("set charge mode: %s", string(mode))
+
+	lp.Mode = mode
+	lp.publish("mode", mode)
+
+	// immediately allow pv mode activity
+	lp.elapsePVTimer()
 }
 
 // GetTargetSoC returns loadpoint charge target soc
@@ -56,24 +60,25 @@ func (lp *LoadPoint) GetTargetSoC() int {
 	return lp.SoC.Target
 }
 
-func (lp *LoadPoint) setTargetSoC(soc int) {
-	lp.SoC.Target = soc
-	lp.socTimer.SoC = soc
-	lp.publish("targetSoC", soc)
-}
-
 // SetTargetSoC sets loadpoint charge target soc
 func (lp *LoadPoint) SetTargetSoC(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
-
-	lp.log.DEBUG.Println("set target soc:", soc)
 
 	// apply immediately
 	if lp.SoC.Target != soc {
 		lp.setTargetSoC(soc)
 		lp.requestUpdate()
 	}
+}
+
+// setTargetSoC sets loadpoint charge target soc (lock-free)
+func (lp *LoadPoint) setTargetSoC(soc int) {
+	lp.log.DEBUG.Println("set target soc:", soc)
+
+	lp.SoC.Target = soc
+	lp.socTimer.SoC = soc
+	lp.publish("targetSoC", soc)
 }
 
 // GetMinSoC returns loadpoint charge minimum soc
@@ -88,14 +93,19 @@ func (lp *LoadPoint) SetMinSoC(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set min soc:", soc)
-
 	// apply immediately
 	if lp.SoC.Min != soc {
-		lp.SoC.Min = soc
-		lp.publish("minSoC", soc)
+		lp.setMinSoC(soc)
 		lp.requestUpdate()
 	}
+}
+
+// setMinSoC sets loadpoint charge minimum soc (lock-free)
+func (lp *LoadPoint) setMinSoC(soc int) {
+	lp.log.DEBUG.Println("set min soc:", soc)
+
+	lp.SoC.Min = soc
+	lp.publish("minSoC", soc)
 }
 
 // GetPhases returns loadpoint enabled phases
@@ -181,17 +191,22 @@ func (lp *LoadPoint) GetMinCurrent() float64 {
 	return lp.MinCurrent
 }
 
-// SetMinCurrent returns the min loadpoint current
+// SetMinCurrent sets the min loadpoint current
 func (lp *LoadPoint) SetMinCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
+	if current != lp.MinCurrent {
+		lp.setMinCurrent(current)
+	}
+}
+
+// setMinCurrent sets the min loadpoint current (lock-free)
+func (lp *LoadPoint) setMinCurrent(current float64) {
 	lp.log.DEBUG.Println("set min current:", current)
 
-	if current != lp.MinCurrent {
-		lp.MinCurrent = current
-		lp.publish("minCurrent", lp.MinCurrent)
-	}
+	lp.MinCurrent = current
+	lp.publish("minCurrent", lp.MinCurrent)
 }
 
 // GetMaxCurrent returns the max loadpoint current
@@ -206,12 +221,17 @@ func (lp *LoadPoint) SetMaxCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
+	if current != lp.MaxCurrent {
+		lp.setMaxCurrent(current)
+	}
+}
+
+// setMaxCurrent sets the max loadpoint current (lock-free)
+func (lp *LoadPoint) setMaxCurrent(current float64) {
 	lp.log.DEBUG.Println("set max current:", current)
 
-	if current != lp.MaxCurrent {
-		lp.MaxCurrent = current
-		lp.publish("maxCurrent", lp.MaxCurrent)
-	}
+	lp.MinCurrent = current
+	lp.publish("minCurrent", lp.MinCurrent)
 }
 
 // GetMinPower returns the min loadpoint power for a single phase

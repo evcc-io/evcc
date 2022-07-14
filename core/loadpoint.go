@@ -489,19 +489,19 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 // applyAction executes the action
 func (lp *LoadPoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.Mode != nil {
-		lp.SetMode(*actionCfg.Mode)
+		lp.setMode(*actionCfg.Mode)
 	}
 	if actionCfg.MinCurrent != nil {
-		lp.SetMinCurrent(*actionCfg.MinCurrent)
+		lp.setMinCurrent(*actionCfg.MinCurrent)
 	}
 	if actionCfg.MaxCurrent != nil {
-		lp.SetMaxCurrent(*actionCfg.MaxCurrent)
+		lp.setMaxCurrent(*actionCfg.MaxCurrent)
 	}
 	if actionCfg.MinSoC != nil {
-		lp.SetMinSoC(*actionCfg.MinSoC)
+		lp.setMinSoC(*actionCfg.MinSoC)
 	}
 	if actionCfg.TargetSoC != nil {
-		lp.SetTargetSoC(*actionCfg.TargetSoC)
+		lp.setTargetSoC(*actionCfg.TargetSoC)
 	}
 }
 
