@@ -69,7 +69,7 @@ func (c *MyStrom) Enable(enable bool) error {
 	c.reportG = provider.Cached(c.Report, c.cache)
 
 	onoff := map[bool]int{false: 0, true: 1}
-	return c.Request(fmt.Sprintf("relay/state=%d", onoff[enable]))
+	return c.Request(fmt.Sprintf("relay?state=%d", onoff[enable]))
 }
 
 // MaxCurrent implements the api.Charger interface

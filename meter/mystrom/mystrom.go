@@ -2,6 +2,7 @@ package mystrom
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -20,7 +21,7 @@ type Connection struct {
 
 func NewConnection(uri string) *Connection {
 	return &Connection{
-		uri:    uri,
+		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 		Helper: request.NewHelper(util.NewLogger("mystrom")),
 	}
 }
