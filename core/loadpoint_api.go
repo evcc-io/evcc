@@ -201,7 +201,7 @@ func (lp *LoadPoint) GetMaxCurrent() float64 {
 	return lp.MaxCurrent
 }
 
-// SetMaxCurrent returns the max loadpoint current
+// SetMaxCurrent sets the max loadpoint current
 func (lp *LoadPoint) SetMaxCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
