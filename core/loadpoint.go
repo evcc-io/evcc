@@ -1444,8 +1444,10 @@ func (lp *LoadPoint) addTask(task func()) {
 
 // processTasks executes a single task from the queue
 func (lp *LoadPoint) processTasks() {
-	if task, ok := lp.tasks.Dequeue(); ok {
-		task.(func())()
+	if lp.tasks != nil {
+		if task, ok := lp.tasks.Dequeue(); ok {
+			task.(func())()
+		}
 	}
 }
 
