@@ -828,39 +828,41 @@ func TestApplyVehicleDefaults(t *testing.T) {
 
 	target := mock.NewMockVehicle(ctrl)
 
-	mode := api.ModePV
-	minCurrent := float64(7)
-	maxCurrent := float64(17)
-	minSoC := 1
-	targetSoC := 99
+	newConfig := func(mode api.ChargeMode, minCurrent, maxCurrent float64, minSoC, targetSoC int) api.ActionConfig {
+		return api.ActionConfig{
+			Mode:       &mode,
+			MinCurrent: &minCurrent,
+			MaxCurrent: &maxCurrent,
+			MinSoC:     &minSoC,
+			TargetSoC:  &targetSoC,
+		}
+	}
+
+	oi := newConfig(api.ModePV, 7, 17, 1, 99)
+	od := newConfig(api.ModeOff, 5, 15, 2, 98)
 
 	target.EXPECT().Title().AnyTimes()
 	target.EXPECT().Capacity().AnyTimes()
-	target.EXPECT().OnIdentified().Return(api.ActionConfig{
-		Mode:       &mode,
-		MinCurrent: &minCurrent,
-		MaxCurrent: &maxCurrent,
-		MinSoC:     &minSoC,
-		TargetSoC:  &targetSoC,
-	})
+	target.EXPECT().OnIdentified().Return(oi)
 
 	lp := NewLoadPoint(util.NewLogger("foo"))
+	lp.onDisconnect = od
 
 	lp.setActiveVehicle(target)
 
-	if lp.Mode != mode {
-		t.Errorf("expected mode %v, got %v", mode, lp.Mode)
+	if lp.Mode != *oi.Mode {
+		t.Errorf("expected mode %v, got %v", *oi.Mode, lp.Mode)
 	}
-	if lp.MinCurrent != minCurrent {
-		t.Errorf("expected min current %v, got %v", minCurrent, lp.MinCurrent)
+	if lp.MinCurrent != *oi.MinCurrent {
+		t.Errorf("expected minCurrent %v, got %v", *oi.MinCurrent, lp.MinCurrent)
 	}
-	if lp.MaxCurrent != maxCurrent {
-		t.Errorf("expected max current %v, got %v", maxCurrent, lp.MaxCurrent)
+	if lp.MaxCurrent != *oi.MaxCurrent {
+		t.Errorf("expected maxCurrent %v, got %v", *oi.MaxCurrent, lp.MaxCurrent)
 	}
-	if lp.SoC.Min != minSoC {
-		t.Errorf("expected minSoC %v, got %v", minSoC, lp.SoC.Min)
+	if lp.SoC.Min != *oi.MinSoC {
+		t.Errorf("expected minSoC %v, got %v", *oi.MinSoC, lp.SoC.Min)
 	}
-	if lp.SoC.Target != targetSoC {
-		t.Errorf("expected targetSoC %v, got %v", targetSoC, lp.SoC.Target)
+	if lp.SoC.Target != *oi.TargetSoC {
+		t.Errorf("expected targetSoC %v, got %v", *oi.TargetSoC, lp.SoC.Target)
 	}
 }
