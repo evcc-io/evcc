@@ -23,6 +23,8 @@ import (
 	"github.com/avast/retry-go/v3"
 	"github.com/benbjohnson/clock"
 	"github.com/cjrd/allocate"
+	"github.com/emirpasic/gods/queues"
+	aq "github.com/emirpasic/gods/queues/arrayqueue"
 )
 
 const (
@@ -150,6 +152,8 @@ type LoadPoint struct {
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
 	progress                *Progress     // Step-wise progress indicator
+
+	tasks queues.Queue // tasks to be executed
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -270,6 +274,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		GuardDuration: 5 * time.Minute,
 		progress:      NewProgress(0, 10), // soc progress indicator
+		tasks:         aq.New(),
 	}
 
 	return lp
@@ -817,16 +822,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		// release lock to unblock api
 		lp.Unlock()
 
-		// publish odometer once
-		if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
-			if odo, err := vs.Odometer(); err == nil {
-				lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
-				lp.publish("vehicleOdometer", odo)
-			} else {
-				lp.log.ERROR.Printf("vehicle odometer: %v", err)
-			}
-		}
-
+		lp.addTask(lp.vehicleOdometer)
 		lp.applyAction(vehicle.OnIdentified())
 
 		// re-apply lock to match defer above
@@ -920,6 +916,18 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 	// remove previous vehicle if status was not confirmed
 	if _, ok := lp.vehicle.(api.ChargeState); ok {
 		lp.setActiveVehicle(nil)
+	}
+}
+
+// vehicleOdometer updates odometer
+func (lp *LoadPoint) vehicleOdometer() {
+	if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
+		if odo, err := vs.Odometer(); err == nil {
+			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
+			lp.publish("vehicleOdometer", odo)
+		} else {
+			lp.log.ERROR.Printf("vehicle odometer: %v", err)
+		}
 	}
 }
 
@@ -1429,8 +1437,24 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	}
 }
 
+// addTask adds a single task to the queue
+func (lp *LoadPoint) addTask(task func()) {
+	lp.tasks.Enqueue(task)
+}
+
+// processTasks executes a single task from the queue
+func (lp *LoadPoint) processTasks() {
+	if lp.tasks != nil {
+		if task, ok := lp.tasks.Dequeue(); ok {
+			task.(func())()
+		}
+	}
+}
+
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
+	lp.processTasks()
+
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 
