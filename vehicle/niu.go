@@ -36,8 +36,10 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed                  `mapstructure:",squash"`
 		User, Password, Serial string
 		Cache                  time.Duration
+		Timeout                time.Duration
 	}{
-		Cache: interval,
+		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -52,7 +54,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Niu{
 		embed:    &cc.embed,
-		Helper:   request.NewHelper(log),
+		Helper:   request.NewHelper(log).WithTimeout(cc.Timeout),
 		user:     cc.User,
 		password: cc.Password,
 		serial:   strings.ToUpper(cc.Serial),

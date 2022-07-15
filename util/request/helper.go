@@ -32,6 +32,12 @@ func NewHelper(log *util.Logger) *Helper {
 	}
 }
 
+// WithTimeout sets the request timeout
+func (r *Helper) WithTimeout(timeout time.Duration) *Helper {
+	r.Client.Timeout = timeout
+	return r
+}
+
 // DoBody executes HTTP request and returns the response body
 func (r *Helper) DoBody(req *http.Request) ([]byte, error) {
 	resp, err := r.Do(req)

@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/silence"
 )
 
@@ -28,8 +29,10 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		User, Password string
 		VIN            string
 		Cache          time.Duration
+		Timeout        time.Duration
 	}{
-		Cache: interval,
+		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -52,6 +55,8 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	api := silence.NewAPI(log, identity)
+	api.Client.Timeout = cc.Timeout
+
 	vin, err := ensureVehicle(strings.ToLower(cc.VIN), api.Vehicles)
 
 	if err == nil {
