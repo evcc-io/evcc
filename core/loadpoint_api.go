@@ -27,8 +27,9 @@ func (lp *LoadPoint) GetMode() api.ChargeMode {
 
 // SetMode sets loadpoint charge mode
 func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
-	lp.Lock()
-	defer lp.Unlock()
+	if lp.TryLock() {
+		defer lp.Unlock()
+	}
 
 	if _, err := api.ChargeModeString(mode.String()); err != nil {
 		lp.log.WARN.Printf("invalid charge mode: %s", string(mode))
@@ -64,8 +65,9 @@ func (lp *LoadPoint) setTargetSoC(soc int) {
 
 // SetTargetSoC sets loadpoint charge target soc
 func (lp *LoadPoint) SetTargetSoC(soc int) {
-	lp.Lock()
-	defer lp.Unlock()
+	if lp.TryLock() {
+		defer lp.Unlock()
+	}
 
 	lp.log.DEBUG.Println("set target soc:", soc)
 
@@ -85,8 +87,9 @@ func (lp *LoadPoint) GetMinSoC() int {
 
 // SetMinSoC sets loadpoint charge minimum soc
 func (lp *LoadPoint) SetMinSoC(soc int) {
-	lp.Lock()
-	defer lp.Unlock()
+	if lp.TryLock() {
+		defer lp.Unlock()
+	}
 
 	lp.log.DEBUG.Println("set min soc:", soc)
 
@@ -183,8 +186,9 @@ func (lp *LoadPoint) GetMinCurrent() float64 {
 
 // SetMinCurrent returns the min loadpoint current
 func (lp *LoadPoint) SetMinCurrent(current float64) {
-	lp.Lock()
-	defer lp.Unlock()
+	if lp.TryLock() {
+		defer lp.Unlock()
+	}
 
 	lp.log.DEBUG.Println("set min current:", current)
 
@@ -203,8 +207,9 @@ func (lp *LoadPoint) GetMaxCurrent() float64 {
 
 // SetMaxCurrent sets the max loadpoint current
 func (lp *LoadPoint) SetMaxCurrent(current float64) {
-	lp.Lock()
-	defer lp.Unlock()
+	if lp.TryLock() {
+		defer lp.Unlock()
+	}
 
 	lp.log.DEBUG.Println("set max current:", current)
 
