@@ -23,6 +23,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
+	github.com/emirpasic/gods v1.18.1
 	github.com/evcc-io/eebus v0.0.0-20220628095038-be707d322cfc
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
@@ -101,7 +102,6 @@ require (
 	github.com/chzyer/readline v1.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deepmap/oapi-codegen v1.11.0 // indirect
-	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
