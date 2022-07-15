@@ -806,6 +806,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
 	if lp.vehicle = vehicle; vehicle != nil {
+		lp.socUpdated = time.Time{}
+
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, lp.SoC.Estimate)
 
 		lp.publish("vehiclePresent", true)
