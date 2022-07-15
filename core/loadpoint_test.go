@@ -287,7 +287,6 @@ func TestPVHysteresis(t *testing.T) {
 	}
 
 	for _, status := range []api.ChargeStatus{api.StatusB, api.StatusC} {
-
 		for _, tc := range tc {
 			t.Log(tc)
 
@@ -821,5 +820,47 @@ func TestVehicleDetectByID(t *testing.T) {
 		if res := lp.selectVehicleByID(tc.id); tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}
+	}
+}
+
+func TestApplyVehicleDefaults(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	target := mock.NewMockVehicle(ctrl)
+
+	mode := api.ModePV
+	minCurrent := float64(7)
+	maxCurrent := float64(17)
+	minSoC := 1
+	targetSoC := 99
+
+	target.EXPECT().Title().AnyTimes()
+	target.EXPECT().Capacity().AnyTimes()
+	target.EXPECT().OnIdentified().Return(api.ActionConfig{
+		Mode:       &mode,
+		MinCurrent: &minCurrent,
+		MaxCurrent: &maxCurrent,
+		MinSoC:     &minSoC,
+		TargetSoC:  &targetSoC,
+	})
+
+	lp := NewLoadPoint(util.NewLogger("foo"))
+
+	lp.setActiveVehicle(target)
+
+	if lp.Mode != mode {
+		t.Errorf("expected mode %v, got %v", mode, lp.Mode)
+	}
+	if lp.MinCurrent != minCurrent {
+		t.Errorf("expected min current %v, got %v", minCurrent, lp.MinCurrent)
+	}
+	if lp.MaxCurrent != maxCurrent {
+		t.Errorf("expected max current %v, got %v", maxCurrent, lp.MaxCurrent)
+	}
+	if lp.SoC.Min != minSoC {
+		t.Errorf("expected minSoC %v, got %v", minSoC, lp.SoC.Min)
+	}
+	if lp.SoC.Target != targetSoC {
+		t.Errorf("expected targetSoC %v, got %v", targetSoC, lp.SoC.Target)
 	}
 }
