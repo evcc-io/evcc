@@ -33,9 +33,7 @@ func (n *Null) ChargingTime() (time.Duration, error) {
 	return 0, nil
 }
 
-func attachListeners(t *testing.T, lp *LoadPoint) {
-	Voltage = 230 // V
-
+func createChannels(t *testing.T) (chan util.Param, chan push.Event, chan *LoadPoint) {
 	uiChan := make(chan util.Param)
 	pushChan := make(chan push.Event)
 	lpChan := make(chan *LoadPoint)
@@ -60,11 +58,24 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 		}
 	}()
 
+	return uiChan, pushChan, lpChan
+}
+
+func attachChannels(lp *LoadPoint, uiChan chan util.Param, pushChan chan push.Event, lpChan chan *LoadPoint) {
+	lp.uiChan = uiChan
+	lp.pushChan = pushChan
+	lp.lpChan = lpChan
+}
+
+func attachListeners(t *testing.T, lp *LoadPoint) {
+	Voltage = 230 // V
+
 	if charger, ok := lp.charger.(*mock.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
 		charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
 	}
 
+	uiChan, pushChan, lpChan := createChannels(t)
 	lp.Prepare(uiChan, pushChan, lpChan)
 }
 
@@ -826,8 +837,6 @@ func TestVehicleDetectByID(t *testing.T) {
 func TestApplyVehicleDefaults(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	target := mock.NewMockVehicle(ctrl)
-
 	newConfig := func(mode api.ChargeMode, minCurrent, maxCurrent float64, minSoC, targetSoC int) api.ActionConfig {
 		return api.ActionConfig{
 			Mode:       &mode,
@@ -838,31 +847,47 @@ func TestApplyVehicleDefaults(t *testing.T) {
 		}
 	}
 
+	assertConfig := func(lp *LoadPoint, conf api.ActionConfig) {
+		if lp.Mode != *conf.Mode {
+			t.Errorf("expected mode %v, got %v", *conf.Mode, lp.Mode)
+		}
+		if lp.MinCurrent != *conf.MinCurrent {
+			t.Errorf("expected minCurrent %v, got %v", *conf.MinCurrent, lp.MinCurrent)
+		}
+		if lp.MaxCurrent != *conf.MaxCurrent {
+			t.Errorf("expected maxCurrent %v, got %v", *conf.MaxCurrent, lp.MaxCurrent)
+		}
+		if lp.SoC.Min != *conf.MinSoC {
+			t.Errorf("expected minSoC %v, got %v", *conf.MinSoC, lp.SoC.Min)
+		}
+		if lp.SoC.Target != *conf.TargetSoC {
+			t.Errorf("expected targetSoC %v, got %v", *conf.TargetSoC, lp.SoC.Target)
+		}
+	}
+
 	oi := newConfig(api.ModePV, 7, 17, 1, 99)
 	od := newConfig(api.ModeOff, 5, 15, 2, 98)
 
-	target.EXPECT().Title().AnyTimes()
-	target.EXPECT().Capacity().AnyTimes()
-	target.EXPECT().OnIdentified().Return(oi)
+	vehicle := mock.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Title().AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(oi)
 
 	lp := NewLoadPoint(util.NewLogger("foo"))
+
+	// populate channels
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
 	lp.onDisconnect = od
+	lp.ResetOnDisconnect = true
 
-	lp.setActiveVehicle(target)
+	// vehicle identified
+	lp.setActiveVehicle(vehicle)
+	assertConfig(lp, oi)
 
-	if lp.Mode != *oi.Mode {
-		t.Errorf("expected mode %v, got %v", *oi.Mode, lp.Mode)
-	}
-	if lp.MinCurrent != *oi.MinCurrent {
-		t.Errorf("expected minCurrent %v, got %v", *oi.MinCurrent, lp.MinCurrent)
-	}
-	if lp.MaxCurrent != *oi.MaxCurrent {
-		t.Errorf("expected maxCurrent %v, got %v", *oi.MaxCurrent, lp.MaxCurrent)
-	}
-	if lp.SoC.Min != *oi.MinSoC {
-		t.Errorf("expected minSoC %v, got %v", *oi.MinSoC, lp.SoC.Min)
-	}
-	if lp.SoC.Target != *oi.TargetSoC {
-		t.Errorf("expected targetSoC %v, got %v", *oi.TargetSoC, lp.SoC.Target)
-	}
+	// vehicle disconnected
+	vehicle.EXPECT().Phases().AnyTimes()
+	lp.evVehicleDisconnectHandler()
+	assertConfig(lp, od)
 }
