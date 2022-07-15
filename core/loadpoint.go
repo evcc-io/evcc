@@ -1437,7 +1437,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	}
 }
 
-// addTask executes a single task from the queue
+// addTask adds a single task to the queue
 func (lp *LoadPoint) addTask(task func()) {
 	lp.tasks.Enqueue(task)
 }
