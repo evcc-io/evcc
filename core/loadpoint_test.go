@@ -834,6 +834,60 @@ func TestVehicleDetectByID(t *testing.T) {
 	}
 }
 
+func TestDefaultVehicle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	dflt := mock.NewMockVehicle(ctrl)
+	dflt.EXPECT().Title().Return("default").AnyTimes()
+	dflt.EXPECT().Capacity().AnyTimes()
+	dflt.EXPECT().Phases().AnyTimes()
+	dflt.EXPECT().OnIdentified().AnyTimes()
+
+	vehicle := mock.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Title().Return("target").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
+
+	lp := NewLoadPoint(util.NewLogger("foo"))
+	lp.defaultVehicle = dflt
+
+	// populate channels
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	title := func(v api.Vehicle) string {
+		if v == nil {
+			return "<nil>"
+		}
+		return v.Title()
+	}
+
+	// non-default vehicle identified
+	lp.setActiveVehicle(vehicle)
+	if lp.vehicle != vehicle {
+		t.Errorf("expected %v, got %v", title(vehicle), title(lp.vehicle))
+	}
+
+	// non-default vehicle disconnected
+	lp.evVehicleDisconnectHandler()
+	if lp.vehicle != dflt {
+		t.Errorf("expected %v, got %v", title(dflt), title(lp.vehicle))
+	}
+
+	// default vehicle disconnected
+	lp.evVehicleDisconnectHandler()
+	if lp.vehicle != dflt {
+		t.Errorf("expected %v, got %v", title(dflt), title(lp.vehicle))
+	}
+
+	// guest connected
+	lp.setActiveVehicle(nil)
+	if lp.vehicle != nil {
+		t.Errorf("expected %v, got %v", nil, title(lp.vehicle))
+	}
+}
+
 func TestApplyVehicleDefaults(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
