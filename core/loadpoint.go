@@ -786,6 +786,9 @@ func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
+	lp.Lock()
+	defer lp.Unlock()
+
 	if lp.vehicle == vehicle {
 		return
 	}
@@ -809,6 +812,9 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
+		// release lock to unblock api
+		lp.Unlock()
+
 		// publish odometer once
 		if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
 			if odo, err := vs.Odometer(); err == nil {
@@ -820,6 +826,9 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		}
 
 		lp.applyAction(vehicle.OnIdentified())
+
+		// re-apply lock to match defer above
+		lp.Lock()
 
 		lp.progress.Reset()
 	} else {
