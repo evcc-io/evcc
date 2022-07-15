@@ -445,12 +445,13 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	// remove active vehicle if not default
 	if lp.vehicle != lp.defaultVehicle {
-		lp.setActiveVehicle(nil)
+		lp.setActiveVehicle(lp.defaultVehicle)
 		lp.unpublishVehicle()
 	}
 
 	// set default mode on disconnect
 	if lp.ResetOnDisconnect {
+		// TODO respect defaultVehicle
 		lp.applyAction(lp.onDisconnect)
 	}
 
