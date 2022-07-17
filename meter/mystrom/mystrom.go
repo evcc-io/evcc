@@ -2,6 +2,7 @@ package mystrom
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -28,7 +29,11 @@ func NewConnection(uri string) *Connection {
 
 func (c *Connection) Request(path string) error {
 	uri := fmt.Sprintf("%s/%s", c.uri, path)
-	return c.GetJSON(uri, nil)
+	req, err := request.New(http.MethodGet, uri, nil, nil)
+	if err == nil {
+		_, err = c.DoBody(req)
+	}
+	return err
 }
 
 func (c *Connection) Report() (Report, error) {
