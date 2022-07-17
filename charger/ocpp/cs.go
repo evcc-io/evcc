@@ -57,6 +57,13 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 	if _, err := cs.chargepointByID(chargePoint.ID()); err != nil {
 		cs.log.ERROR.Println(err)
+
+		cs.log.INFO.Printf("new chargepoint with ID (%s) detected, atempting to remap", chargePoint.ID())
+		if unknownIDCP, ok := cs.cps[""]; ok && unknownIDCP != nil {
+			unknownIDCP.id = chargePoint.ID()
+			cs.cps[chargePoint.ID()] = unknownIDCP
+			delete(cs.cps, "") // remove unknownID key
+		}
 	}
 }
 
