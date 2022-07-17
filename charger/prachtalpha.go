@@ -36,8 +36,9 @@ type PrachtAlpha struct {
 }
 
 const (
-	prachtMaxCurrent = 40004 - 40001
-	prachtStatus     = 30107 - 30001
+	prachtTotalCurrent = 40003 - 40001 // total limit of all connectors
+	prachtMaxCurrent   = 40004 - 40001 // +1 for second connector
+	prachtStatus       = 30107 - 30001 // +1 for second connector
 )
 
 func init() {
@@ -49,11 +50,11 @@ func init() {
 // NewPrachtAlphaFromConfig creates a PrachtAlpha charger from generic config
 func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Vehicle         uint16
+		Connector       uint16
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration
 	}{
-		Vehicle: 1,
+		Connector: 1,
 		Settings: modbus.Settings{
 			ID: 1,
 		},
@@ -63,7 +64,7 @@ func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewPrachtAlpha(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout, cc.Vehicle)
+	return NewPrachtAlpha(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout, cc.Connector)
 }
 
 // NewPrachtAlpha creates PrachtAlpha charger
@@ -130,7 +131,13 @@ func (wb *PrachtAlpha) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	// get total current (https://github.com/evcc-io/evcc/issues/3738)
+	tot, err := wb.conn.ReadInputRegisters(prachtTotalCurrent, 1)
+	if err != nil {
+		return false, err
+	}
+
+	return binary.BigEndian.Uint16(b) > 0 && binary.BigEndian.Uint16(tot) > 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -146,6 +153,12 @@ func (wb *PrachtAlpha) Enable(enable bool) error {
 func (wb *PrachtAlpha) setCurrent(current uint16) error {
 	reg := wb.register(prachtMaxCurrent)
 	_, err := wb.conn.WriteSingleRegister(reg, current)
+
+	// set total current (https://github.com/evcc-io/evcc/issues/3738)
+	if err == nil {
+		_, err = wb.conn.WriteSingleRegister(prachtTotalCurrent, current)
+	}
+
 	return err
 }
 
