@@ -33,6 +33,7 @@ type KSE struct {
 	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
+	rfid bool
 }
 
 const (
@@ -67,6 +68,8 @@ func NewKSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewKSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateKSE -b *KSE -r api.Charger -t "api.Identifier,Identify,func() (string, error)"
+
 // NewKSE creates KSE charger
 func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Rtu, slaveID)
@@ -85,6 +88,13 @@ func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 		log:  log,
 		conn: conn,
 		curr: 6, // assume min current
+	}
+
+	// check presence of rfid
+	b, err := wb.conn.ReadDiscreteInputs(kseRegRFIDinstalled, 1)
+	if err == nil && b[0] != 0 {
+		wb.rfid = true
+		return decorateKSE(wb, wb.identify), err
 	}
 
 	return wb, err
@@ -155,7 +165,7 @@ var _ api.Meter = (*KSE)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *KSE) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kseRegActualPower, 1)
+	b, err := wb.conn.ReadInputRegisters(kseRegActualPower, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -167,7 +177,7 @@ var _ api.ChargeRater = (*KSE)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
 func (wb *KSE) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kseRegCurrentLoadedEnergy, 1)
+	b, err := wb.conn.ReadInputRegisters(kseRegCurrentLoadedEnergy, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -179,7 +189,7 @@ var _ api.MeterCurrent = (*KSE)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *KSE) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kseRegCurrents, 3)
+	b, err := wb.conn.ReadInputRegisters(kseRegCurrents, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -205,10 +215,8 @@ func (wb *KSE) Phases1p3p(phases int) error {
 	return err
 }
 
-var _ api.Identifier = (*BenderCC)(nil)
-
 // Identify implements the api.Identifier interface
-func (wb *KSE) Identify() (string, error) {
+func (wb *KSE) identify() (string, error) {
 	id, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4)
 	if err != nil {
 		return "", err
@@ -230,10 +238,9 @@ func (wb *KSE) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(kseRegVehicleState, 1); err == nil {
 		fmt.Printf("\tState:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadDiscreteInputs(kseRegRFIDinstalled, 1); err == nil {
-		fmt.Printf("\tRFID:\t%t\n", binary.BigEndian.Uint16(b) != 0)
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4); err == nil {
-		fmt.Printf("\tNFC ID:\t%s\n", b)
+	if wb.rfid {
+		if b, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4); err == nil {
+			fmt.Printf("\tNFC ID:\t%s\n", b)
+		}
 	}
 }
