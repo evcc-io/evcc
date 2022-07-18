@@ -82,8 +82,14 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string, hasMeter bool, meterInterval time.Duration, initialReset core.ResetType) (*OCPP, error) {
 	cp := ocpp.Instance().Register(id, hasMeter)
+
+	logstr := "-charger"
+	if id != "" {
+		logstr = fmt.Sprintf("-%s", id)
+	}
+
 	c := &OCPP{
-		log:       util.NewLogger(fmt.Sprintf("ocpp-%s:%d", id, connector)),
+		log:       util.NewLogger(fmt.Sprintf("ocpp%s:%d", logstr, connector)),
 		cp:        cp,
 		id:        id,
 		connector: connector,

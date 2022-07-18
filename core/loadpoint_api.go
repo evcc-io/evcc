@@ -201,7 +201,7 @@ func (lp *LoadPoint) GetMaxCurrent() float64 {
 	return lp.MaxCurrent
 }
 
-// SetMaxCurrent returns the max loadpoint current
+// SetMaxCurrent sets the max loadpoint current
 func (lp *LoadPoint) SetMaxCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
@@ -266,11 +266,14 @@ func (lp *LoadPoint) GetVehicles() []api.Vehicle {
 
 // SetVehicle sets the active vehicle
 func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
-	lp.Lock()
-	defer lp.Unlock()
+	// TODO develop universal locking approach
+	// setActiveVehicle is protected by lock, hence no locking here
 
 	// set desired vehicle
 	lp.setActiveVehicle(vehicle)
+
+	lp.Lock()
+	defer lp.Unlock()
 
 	// disable auto-detect
 	lp.stopVehicleDetection()

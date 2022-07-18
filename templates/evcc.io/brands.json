@@ -45,6 +45,7 @@
  "SmartPlugs": [
   "AVM",
   "Homematic IP",
+  "myStrom",
   "Shelly",
   "Tasmota",
   "TP-Link"
@@ -63,6 +64,7 @@
   "Janitza",
   "Kostal",
   "LG",
+  "myStrom",
   "OpenEMS",
   "Powerfox",
   "RCT",
@@ -93,6 +95,7 @@
   "Janitza",
   "Kostal",
   "LG",
+  "myStrom",
   "OpenEMS",
   "RCT",
   "SENEC",

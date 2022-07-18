@@ -8,8 +8,8 @@ import (
 
 // TP-Link Tapo charger implementation
 type Tapo struct {
-	conn         *tapo.Connection
-	standbypower float64
+	conn *tapo.Connection
+	*switchSocket
 }
 
 func init() {
@@ -39,12 +39,13 @@ func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
 		return nil, err
 	}
 
-	tapo := &Tapo{
-		conn:         conn,
-		standbypower: standbypower,
+	c := &Tapo{
+		conn: conn,
 	}
 
-	return tapo, nil
+	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
+
+	return c, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -65,51 +66,6 @@ func (c *Tapo) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *Tapo) MaxCurrent(current int64) error {
 	return nil
-}
-
-// Status implements the api.Charger interface
-func (c *Tapo) Status() (api.ChargeStatus, error) {
-	res := api.StatusB
-	on, err := c.Enabled()
-	if err != nil {
-		return res, err
-	}
-
-	power, err := c.conn.CurrentPower()
-	if err != nil {
-		return res, err
-	}
-
-	// static mode || standby power mode condition
-	if on && (c.standbypower < 0 || power > c.standbypower) {
-		res = api.StatusC
-	}
-
-	return res, nil
-}
-
-var _ api.Meter = (*Tapo)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (c *Tapo) CurrentPower() (float64, error) {
-	var power float64
-
-	// set fix static power in static mode
-	if c.standbypower < 0 {
-		on, err := c.Enabled()
-		if on {
-			power = -c.standbypower
-		}
-		return power, err
-	}
-
-	// ignore power in standby mode
-	power, err := c.conn.CurrentPower()
-	if power <= c.standbypower {
-		power = 0
-	}
-
-	return power, err
 }
 
 var _ api.ChargeRater = (*Tapo)(nil)
