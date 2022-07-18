@@ -37,7 +37,11 @@ params:
   - name: topic
     default: warp
   - name: timeout
+    advanced: true
     default: 30s
+    help:
+      de: Akzeptiere keine Daten die älter sind als dieser Wert
+      en: Don't accept values older than this value
 render: |
   type: {{ if eq .fw2 "true" -}} warp-fw2 {{ else -}} warp {{ end }}
   broker: {{ .host }}:{{ .port }}
@@ -48,4 +52,6 @@ render: |
   password: '{{ .password }}'
   {{- end }}
   topic: {{ .topic }}
+  {{- if ne .timeout "30s" }}
   timeout: {{ .timeout }}
+  {{- end }}
