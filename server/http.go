@@ -48,7 +48,7 @@ func NewHTTPd(addr string, site site.API, hub *SocketHub, cache *util.Cache) *HT
 		"state":         {[]string{"GET"}, "/state", stateHandler(cache)},
 		"buffersoc":     {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoC, site.GetBufferSoC)},
 		"prioritysoc":   {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoC, site.GetPrioritySoC)},
-		"residualpower": {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
+		"residualpower": {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
