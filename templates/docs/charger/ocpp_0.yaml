@@ -8,14 +8,14 @@ description: |
   Um mehrere Ladepunkte eindeutig zuordnen zu können müssen die jeweilige Stationskennung (`stationid: `) und Anschlussnummer (`connector: `) hinterlegt werden.
   Gegebenenfalls benötigt der Ladepunkt eine vorkonfigurierte (virtuelle) Token-ID/RFID-Kennung (`idtag: `) mit der die Ladevorgänge ohne Authentifizierung gestartet werden können.
   Wenn die Wallbox das Senden von Zählerdaten unterstützt sollte dafür, wenn möglich, ein kurzes Zeitintervall gewählt werden.
-  
+
   Voraussetzungen:
   * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallbox-Konfiguration entfernen
   * Backend-URL (Central System) in der Wallbox-Konfiguration: `ws://evcc.local:8887/` bzw. `ws://192.0.2.2:8887/`
   * Protokoll: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// o.ä.
   * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
   * LAN-Verbindung
-  
+
 render:
   - default: |
       type: template

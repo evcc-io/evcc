@@ -31,7 +31,7 @@ requirements:
       Requirements:
       * If necessary, remove previously configured OCPP profiles (e.g. used for a different backend connection) in the charger configuration
       * Backend URL (Central System) in the charger configuration: `ws://evcc.local:8887/` or `ws://192.0.2.2:8887/`
-      * Protocol: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// or similar.
+      * Protocol: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// or similar
       * No encryption, no authentication, no password
       * LAN connection
 params:
