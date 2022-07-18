@@ -234,12 +234,14 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.configureChargerType(lp.charger)
 
 	// setup fixed phases:
-	// - simple charger starts with phases config if specified
+	// - simple charger starts with phases config if specified or 3p
 	// - switchable charger starts at 0p since we don't know the current setting
 	if _, ok := lp.charger.(api.ChargePhases); !ok {
-		if lp.DefaultPhases != 0 {
-			lp.phases = lp.DefaultPhases
+		if lp.DefaultPhases == 0 {
+			lp.DefaultPhases = 3
+			lp.log.WARN.Println("phases not configured, assuming 3p")
 		}
+		lp.phases = lp.DefaultPhases
 	} else if lp.DefaultPhases != 0 {
 		lp.log.WARN.Printf("locking phase config to %dp for switchable charger", lp.DefaultPhases)
 	}
@@ -264,7 +266,6 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		clock:         clock, // mockable time
 		bus:           bus,   // event bus
 		Mode:          api.ModeOff,
-		phases:        3,
 		status:        api.StatusNone,
 		MinCurrent:    6,                                                     // A
 		MaxCurrent:    16,                                                    // A
