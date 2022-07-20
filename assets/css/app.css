@@ -60,24 +60,26 @@
 		"Segoe UI Symbol", "Noto Color Emoji";
 }
 
-@media (--dark-mode) {
-	:root {
-		--evcc-grid: var(--bs-gray-medium);
-		--evcc-background: var(--bs-gray-deep);
-		--evcc-box: var(--bs-gray-dark);
-		--evcc-default-text: var(--bs-white);
-		--evcc-gray: var(--bs-gray-light);
-		--evcc-accent1: var(--evcc-yellow);
-		--evcc-accent2: var(--evcc-dark-green);
-		--evcc-accent3: var(--evcc-darker-green);
-		--bs-primary: var(--evcc-dark-green);
-	}
+:root.dark {
+	--evcc-grid: var(--bs-gray-medium);
+	--evcc-background: var(--bs-gray-deep);
+	--evcc-box: var(--bs-gray-dark);
+	--evcc-default-text: var(--bs-white);
+	--evcc-gray: var(--bs-gray-light);
+	--evcc-accent1: var(--evcc-yellow);
+	--evcc-accent2: var(--evcc-dark-green);
+	--evcc-accent3: var(--evcc-darker-green);
+	--bs-primary: var(--evcc-dark-green);
 }
 
 html {
 	/* prevents content jump when scrollbar is activate */
 	width: 100vw;
 	overflow-x: hidden;
+}
+
+html.no-transitions * {
+	transition-duration: 0ms !important;
 }
 
 body {
