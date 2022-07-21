@@ -6,9 +6,9 @@ export default {
     login: "Fahrzeug Logins",
     about: "Über evcc",
     theme: {
-      auto: "Theme: auto",
-      light: "Theme: hell",
-      dark: "Theme: dunkel",
+      auto: "Design: System",
+      light: "Design: Hell",
+      dark: "Design: Dunkel",
     },
   },
   footer: {
