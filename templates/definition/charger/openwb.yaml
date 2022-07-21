@@ -24,9 +24,6 @@ render: |
   {{- if ne .connector "1" }}
   id: {{ .connector }} # loadpoint id
   {{- end }}
-  {{- if ne .loadpointid "1" }}
-  id: {{ .loadpointid }} # loadpoint id
-  {{- end }}
   {{- if ne .phases1p3p "false" }}
   phases: true
   {{- end }}
