@@ -16,8 +16,8 @@ import (
 type Volvo struct {
 	*embed
 	*request.Helper
-	vin     string
-	statusG func() (volvo.Status, error)
+	VIN     string
+	StatusG func() (volvo.Status, error)
 }
 
 func init() {
@@ -45,7 +45,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v := &Volvo{
 		embed:  &cc.embed,
 		Helper: request.NewHelper(log),
-		vin:    cc.VIN,
+		VIN:    cc.VIN,
 	}
 
 	v.Client.Transport = &transport.Decorator{
@@ -60,10 +60,10 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}),
 	}
 
-	v.statusG = provider.Cached(v.StatusRequest, cc.Cache)
+	v.StatusG = provider.Cached(v.StatusRequest, cc.Cache)
 
 	var err error
-	v.vin, err = ensureVehicle(cc.VIN, v.Vehicles)
+	v.VIN, err = ensureVehicle(cc.VIN, v.Vehicles)
 
 	return v, err
 }
@@ -95,7 +95,7 @@ func (v *Volvo) Vehicles() ([]string, error) {
 func (v *Volvo) StatusRequest() (volvo.Status, error) {
 	var res volvo.Status
 
-	uri := fmt.Sprintf("%s/vehicles/%s/status", volvo.ApiURI, v.vin)
+	uri := fmt.Sprintf("%s/vehicles/%s/status", volvo.ApiURI, v.VIN)
 	err := v.GetJSON(uri, &res)
 	if err != nil && res.ErrorLabel != "" {
 		err = fmt.Errorf("%w: %s: %s", err, res.ErrorLabel, res.ErrorDescription)
@@ -106,7 +106,7 @@ func (v *Volvo) StatusRequest() (volvo.Status, error) {
 
 // SoC implements the api.Vehicle interface
 func (v *Volvo) SoC() (float64, error) {
-	res, err := v.statusG()
+	res, err := v.StatusG()
 	return float64(res.HvBattery.HvBatteryLevel), err
 }
 
@@ -114,7 +114,7 @@ var _ api.ChargeState = (*Volvo)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Volvo) Status() (api.ChargeStatus, error) {
-	res, err := v.statusG()
+	res, err := v.StatusG()
 	if err == nil {
 		switch res.HvBattery.HvBatteryChargeStatusDerived {
 		case "CableNotPluggedInCar":
@@ -133,7 +133,7 @@ var _ api.VehicleRange = (*Volvo)(nil)
 
 // VehicleRange implements the api.VehicleRange interface
 func (v *Volvo) Range() (int64, error) {
-	res, err := v.statusG()
+	res, err := v.StatusG()
 	return int64(res.HvBattery.DistanceToHVBatteryEmpty), err
 }
 
@@ -141,7 +141,7 @@ var _ api.VehicleOdometer = (*Volvo)(nil)
 
 // VehicleOdometer implements the api.VehicleOdometer interface
 func (v *Volvo) Odometer() (float64, error) {
-	res, err := v.statusG()
+	res, err := v.StatusG()
 	return res.Odometer / 1e3, err
 }
 
@@ -149,7 +149,7 @@ var _ api.VehicleFinishTimer = (*Volvo)(nil)
 
 // FinishTime implements the VehicleFinishTimer interface
 func (v *Volvo) FinishTime() (time.Time, error) {
-	res, err := v.statusG()
+	res, err := v.StatusG()
 	if err == nil {
 		timestamp := res.HvBattery.TimeToHVBatteryFullyChargedTimestamp.Add(time.Duration(res.HvBattery.DistanceToHVBatteryEmpty) * time.Minute)
 		if timestamp.Before(time.Now()) {
