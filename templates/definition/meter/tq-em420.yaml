@@ -1,0 +1,22 @@
+template: tq-em420
+products:
+  - brand: TQ
+    description:
+      generic: Energy Manager EM420
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+  - name: port
+    default: 80
+  - name: device
+    default: "local"
+  - name: token
+    required: true
+    description:
+      generic: AccessToken
+render: |
+  type: tq-em420
+  uri: http://{{ .host }}:{{ .port }}
+  token: {{ .token }}
+  device: {{ .device }}
