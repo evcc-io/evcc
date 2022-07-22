@@ -65,8 +65,6 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DerAndereAndi/eebus v0.0.0-20220722130045-659fd2f260ef h1:V9AWK07WtLyfa6BgZKAKuqQRh0ywfE+g2i43Au9Erxg=
 github.com/DerAndereAndi/eebus v0.0.0-20220722130045-659fd2f260ef/go.mod h1:7TpZYb1fTnptzT5zpq46bU6K2LI3bH+YckOmDtcHXyY=
-github.com/DerAndereAndi/zeroconf/v2 v2.0.0-20220607195515-4c9557651bc9 h1:xM6uz9OcnqJ+Tu8h3LFgYdg3gy3Qu1eg2UbrL8LuPyY=
-github.com/DerAndereAndi/zeroconf/v2 v2.0.0-20220607195515-4c9557651bc9/go.mod h1:fuJqLnUwZTshS3U/bMRJ3+ow/v9oid1n0DmyYyNO1Xs=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
@@ -593,6 +591,8 @@ github.com/lestrrat-go/iter v1.0.1/go.mod h1:zIdgO1mRKhn8l9vrZJZz9TUMMFbQbLeTsbq
 github.com/lestrrat-go/iter v1.0.2/go.mod h1:Momfcq3AnRlRjI5b5O8/G5/BvpzrhoFTZcn06fEOPt4=
 github.com/lestrrat-go/jwx v1.2.24/go.mod h1:zoNuZymNl5lgdcu6P7K6ie2QRll5HVfF4xwxBBK1NxY=
 github.com/lestrrat-go/option v1.0.0/go.mod h1:5ZHFbivi4xwXxhxY9XHDe2FHo6/Z7WWmtT7T5nBBp3I=
+github.com/libp2p/zeroconf/v2 v2.0.0-20220623102032-af1f1d3ada85 h1:jIPip1x91RFdohBowS6pg0lDWoFL8ZqL6ix3NjoCuF4=
+github.com/libp2p/zeroconf/v2 v2.0.0-20220623102032-af1f1d3ada85/go.mod h1:fuJqLnUwZTshS3U/bMRJ3+ow/v9oid1n0DmyYyNO1Xs=
 github.com/lightstep/lightstep-tracer-common/golang/gogo v0.0.0-20190605223551-bc2310a04743/go.mod h1:qklhhLq1aX+mtWk9cPHPzaBjWImj5ULL6C7HFJtXQMM=
 github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0UBX0ZE6WURAspgAczcDHrL4=
 github.com/lorenzodonini/ocpp-go v0.15.0 h1:hDMmK4dueTaEF/hk213tr/bOeWsBVZCmBCH0aml0QNo=
