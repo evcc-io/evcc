@@ -45,8 +45,9 @@ const (
 	kseRegActualPower         = 0x18 // Aktuelle Ladeleistung (W)
 	kseRegFirmwareVersion     = 0x30 // Firmware Version
 	kseRegRFIDinstalled       = 0x31 // RFID-Leser vorhanden
-	kseRegRelayMode           = 0x35 // Umschalten 1 phasiges oder 3 phasiges Laden
 	kseRegNFCTransactionID    = 0x67 // Tag ID (8 Bytes)
+	// kseRegRelayMode           = 0x35 // Umschalten 1 phasiges oder 3 phasiges Laden
+
 )
 
 func init() {
@@ -202,18 +203,18 @@ func (wb *KSE) Currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
-var _ api.ChargePhases = (*KSE)(nil)
+// var _ api.ChargePhases = (*KSE)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
-func (wb *KSE) Phases1p3p(phases int) error {
-	var b uint16 = 0
-	if phases == 1 {
-		b = 1 // 1p
-	}
+// // Phases1p3p implements the api.ChargePhases interface
+// func (wb *KSE) Phases1p3p(phases int) error {
+// 	var b uint16 = 0
+// 	if phases == 1 {
+// 		b = 1 // 1p
+// 	}
 
-	_, err := wb.conn.WriteSingleRegister(kseRegRelayMode, b)
-	return err
-}
+// 	_, err := wb.conn.WriteSingleRegister(kseRegRelayMode, b)
+// 	return err
+// }
 
 // Identify implements the api.Identifier interface
 func (wb *KSE) identify() (string, error) {

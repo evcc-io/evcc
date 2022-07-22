@@ -1,7 +1,7 @@
 product:
   brand: KSE
   description: wBX16
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid"]
 requirements: ["sponsorship"]
 render:
   - default: |
