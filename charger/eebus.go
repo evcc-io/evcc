@@ -111,8 +111,12 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 		return
 	}
 
-	newMin := data.EVData.Limits[1].Min
-	newMax := data.EVData.Limits[1].Max
+	if len(data.EVData.Limits) == 0 {
+		return
+	}
+
+	newMin := data.EVData.Limits[0].Min
+	newMax := data.EVData.Limits[0].Max
 
 	if c.lp.GetMinCurrent() != newMin && newMin > 0 {
 		c.lp.SetMinCurrent(newMin)
