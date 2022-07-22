@@ -2,22 +2,26 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 )
 
 type vehicleCoordinator struct {
-	tracked map[api.Vehicle]interface{}
+	tracked map[api.Vehicle]loadpoint.API
 }
 
 var coordinator *vehicleCoordinator
 
 func init() {
 	coordinator = &vehicleCoordinator{
-		tracked: make(map[api.Vehicle]interface{}),
+		tracked: make(map[api.Vehicle]loadpoint.API),
 	}
 }
 
-func (lp *vehicleCoordinator) acquire(owner interface{}, vehicle api.Vehicle) {
+func (lp *vehicleCoordinator) acquire(owner loadpoint.API, vehicle api.Vehicle) {
+	if o, ok := lp.tracked[vehicle]; ok && o != owner {
+		o.SetVehicle(nil)
+	}
 	lp.tracked[vehicle] = owner
 }
 
@@ -25,7 +29,9 @@ func (lp *vehicleCoordinator) release(vehicle api.Vehicle) {
 	delete(lp.tracked, vehicle)
 }
 
-func (lp *vehicleCoordinator) availableVehicles(owner interface{}, vehicles []api.Vehicle) []api.Vehicle {
+// availableDetectibleVehicles is the list of vehicles that are currently not
+// associated to another loadpoint and have a status api that allows for detection
+func (lp *vehicleCoordinator) availableDetectibleVehicles(owner loadpoint.API, vehicles []api.Vehicle) []api.Vehicle {
 	var res []api.Vehicle
 
 	for _, vv := range vehicles {
@@ -40,8 +46,8 @@ func (lp *vehicleCoordinator) availableVehicles(owner interface{}, vehicles []ap
 }
 
 // find active vehicle by charge state
-func (lp *vehicleCoordinator) identifyVehicleByStatus(log *util.Logger, owner interface{}, vehicles []api.Vehicle) api.Vehicle {
-	available := lp.availableVehicles(owner, vehicles)
+func (lp *vehicleCoordinator) identifyVehicleByStatus(log *util.Logger, owner loadpoint.API, vehicles []api.Vehicle) api.Vehicle {
+	available := lp.availableDetectibleVehicles(owner, vehicles)
 
 	var res api.Vehicle
 	for _, vehicle := range available {

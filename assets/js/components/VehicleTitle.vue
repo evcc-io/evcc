@@ -11,28 +11,36 @@
 			></shopicon-regular-cablecharge>
 			<span class="flex-grow-1 text-truncate"> {{ name }} </span>
 		</h4>
-		<button v-if="$hiddenFeatures" class="btn btn-link text-white p-0 flex-shrink-0">
-			<shopicon-filled-options size="s"></shopicon-filled-options>
-		</button>
+		<VehicleOptions
+			v-if="showOptions"
+			class="options"
+			:vehicles="otherVehicles"
+			:is-unknown="isUnknown"
+			@change-vehicle="changeVehicle"
+			@remove-vehicle="removeVehicle"
+		/>
 	</div>
 </template>
 
 <script>
-import "@h2d2/shopicons/es/filled/options";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/cablecharge";
 
 import collector from "../mixins/collector";
+import VehicleOptions from "./VehicleOptions.vue";
 
 export default {
 	name: "VehicleTitle",
+	components: { VehicleOptions },
 	mixins: [collector],
 	props: {
 		vehiclePresent: Boolean,
 		vehicleTitle: String,
 		parked: Boolean,
 		connected: Boolean,
+		vehicles: { type: Array, default: () => [] },
 	},
+	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
 		carIcon() {
 			return this.connected || this.parked;
@@ -46,6 +54,34 @@ export default {
 			}
 			return this.$t("main.vehicle.none");
 		},
+		isUnknown() {
+			return this.connected && !this.vehiclePresent;
+		},
+		otherVehicles() {
+			return this.vehicles
+				.map((v, id) => ({
+					id: id,
+					title: v,
+				}))
+				.filter((v) => v.title !== this.vehicleTitle);
+		},
+		showOptions() {
+			return !this.isUnknown || this.vehicles.length;
+		},
+	},
+	methods: {
+		changeVehicle(index) {
+			this.$emit("change-vehicle", index);
+		},
+		removeVehicle() {
+			this.$emit("remove-vehicle");
+		},
 	},
 };
 </script>
+
+<style scoped>
+.options {
+	margin-right: -0.75rem;
+}
+</style>

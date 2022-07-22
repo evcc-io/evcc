@@ -130,9 +130,11 @@ func configureEEBus(conf map[string]interface{}) error {
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
 		go server.EEBusInstance.Run()
 		shutdown.Register(server.EEBusInstance.Shutdown)
+	} else {
+		err = fmt.Errorf("eebus: %w", err)
 	}
 
-	return nil
+	return err
 }
 
 // setup messaging

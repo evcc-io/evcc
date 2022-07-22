@@ -1,28 +1,31 @@
 <template>
-	<LabelAndValue class="flex-grow-1" :label="$t('main.vehicle.targetSoC')" :on-dark="true">
-		<h3 class="value m-0">
-			<label class="d-inline-block position-relative">
+	<LabelAndValue class="flex-grow-1" :label="$t('main.vehicle.targetSoC')" align="end">
+		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
+			<label class="position-relative">
 				<select :value="targetSoc" class="custom-select" @change="change">
 					<option v-for="{ soc, text } in options" :key="soc" :value="soc">
 						{{ text }}
 					</option>
 				</select>
-				<span class="text-decoration-underline">{{ targetSoc }}%</span>
+				<span class="text-decoration-underline">
+					<AnimatedNumber :to="targetSoc" :format="formatSoC" />
+				</span>
 			</label>
 
-			<span v-if="estimatedTargetRange" class="extraValue d-block d-sm-inline text-nowrap">
-				&nbsp;{{ estimatedTargetRange }}km
-			</span>
+			<div v-if="estimatedTargetRange" class="extraValue ms-0 ms-sm-1 text-nowrap">
+				<AnimatedNumber :to="estimatedTargetRange" :format="formatKm" />
+			</div>
 		</h3>
 	</LabelAndValue>
 </template>
 
 <script>
 import LabelAndValue from "./LabelAndValue.vue";
+import AnimatedNumber from "./AnimatedNumber.vue";
 
 export default {
 	name: "TargetSoCSelect",
-	components: { LabelAndValue },
+	components: { LabelAndValue, AnimatedNumber },
 	props: {
 		targetSoc: Number,
 		rangePerSoc: Number,
@@ -33,10 +36,10 @@ export default {
 		options: function () {
 			const result = [];
 			for (let soc = 20; soc <= 100; soc += 5) {
-				let text = `${soc}%`;
+				let text = this.formatSoC(soc);
 				const range = this.estimatedRange(soc);
 				if (range) {
-					text += ` (${range}km)`;
+					text += ` (${this.formatKm(range)})`;
 				}
 				result.push({ soc, text });
 			}
@@ -48,13 +51,19 @@ export default {
 	},
 	methods: {
 		change: function (e) {
-			return this.$emit("target-soc-updated", e.target.value);
+			return this.$emit("target-soc-updated", parseInt(e.target.value, 10));
 		},
 		estimatedRange: function (soc) {
 			if (this.rangePerSoc) {
 				return Math.round(soc * this.rangePerSoc);
 			}
 			return null;
+		},
+		formatSoC: function (value) {
+			return `${Math.round(value)}%`;
+		},
+		formatKm: function (value) {
+			return `${Math.round(value)} km`;
 		},
 	},
 };
@@ -65,7 +74,7 @@ export default {
 	font-size: 18px;
 }
 .extraValue {
-	color: var(--bs-gray-light);
+	color: var(--evcc-gray);
 	font-size: 14px;
 }
 .custom-select {

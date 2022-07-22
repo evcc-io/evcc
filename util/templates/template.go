@@ -181,9 +181,7 @@ func (t *Template) Defaults(renderMode string) map[string]interface{} {
 	return values
 }
 
-// Update the default value of a param
-//
-// Used for modbus params, which are dynamically added after selecting the interface
+// SetParamDefault updates the default value of a param
 func (t *Template) SetParamDefault(name string, value string) {
 	for i, p := range t.Params {
 		if p.Name == name {
@@ -292,7 +290,7 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 		return nil, values, err
 	}
 
-	values = t.ModbusValues(renderMode, false, values)
+	t.ModbusValues(renderMode, values)
 
 	// add the common templates
 	for _, v := range t.ConfigDefaults.Presets {

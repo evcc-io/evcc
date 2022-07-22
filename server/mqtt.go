@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -62,36 +63,58 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 		payload = total
 	}
 
+	if slice, ok := payload.([]string); ok && strings.HasSuffix(topic, "vehicles") {
+		payload = len(slice)
+
+		// unpublish
+		for i := len(slice); i < 10; i++ {
+			slice = append(slice, "")
+		}
+
+		// publish vehicles
+		for i, v := range slice {
+			m.publishSingleValue(fmt.Sprintf("%s/%d", topic, i), retained, v)
+		}
+	}
+
 	m.publishSingleValue(topic, retained, payload)
 }
 
-func (m *MQTT) listenSetters(topic string, apiHandler loadpoint.API) {
+func (m *MQTT) listenSetters(topic string, lp loadpoint.API) {
 	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
-		apiHandler.SetMode(api.ChargeMode(payload))
+		lp.SetMode(api.ChargeMode(payload))
 	})
 	m.Handler.ListenSetter(topic+"/minSoC/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
-			apiHandler.SetMinSoC(soc)
+			lp.SetMinSoC(soc)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/targetSoC/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
-			apiHandler.SetTargetSoC(soc)
+			lp.SetTargetSoC(soc)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
 		if current, err := strconv.ParseFloat(payload, 64); err == nil {
-			apiHandler.SetMinCurrent(current)
+			lp.SetMinCurrent(current)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/maxCurrent/set", func(payload string) {
 		if current, err := strconv.ParseFloat(payload, 64); err == nil {
-			apiHandler.SetMaxCurrent(current)
+			lp.SetMaxCurrent(current)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/phases/set", func(payload string) {
 		if phases, err := strconv.Atoi(payload); err == nil {
-			_ = apiHandler.SetPhases(phases)
+			_ = lp.SetPhases(phases)
+		}
+	})
+	m.Handler.ListenSetter(topic+"/vehicle/set", func(payload string) {
+		if vehicle, err := strconv.Atoi(payload); err == nil {
+			vehicles := lp.GetVehicles()
+			if vehicle < len(vehicles) {
+				lp.SetVehicle(vehicles[vehicle])
+			}
 		}
 	})
 }
@@ -106,6 +129,18 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
 			_ = site.SetPrioritySoC(float64(soc))
+		}
+	})
+
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferSoC/set", m.root), func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
+			_ = site.SetBufferSoC(float64(soc))
+		}
+	})
+
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/residualPower/set", m.root), func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
+			_ = site.SetResidualPower(float64(soc))
 		}
 	})
 

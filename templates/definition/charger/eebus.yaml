@@ -4,7 +4,7 @@ products:
       de: EEBUS kompatible Wallbox
       en: EEBUS compatible Wallbox
 group: generic
-capabilities: ["iso151182"]
+capabilities: ["iso151182", "mA"]
 requirements:
   evcc: ["eebus"]
 params:

@@ -69,9 +69,26 @@ type kamereonAccount struct {
 }
 
 type kamereonVehicle struct {
-	Brand  string `json:"brand"`
-	VIN    string `json:"vin"`
-	Status string `json:"status"`
+	Brand           string          `json:"brand"`
+	VIN             string          `json:"vin"`
+	Status          string          `json:"status"`
+	ConnectedDriver connectedDriver `json:"ConnectedDriver"`
+}
+
+func (v *kamereonVehicle) Available() error {
+	if strings.ToUpper(v.Status) != "ACTIVE" {
+		return errors.New("vehicle is not active")
+	}
+
+	if len(v.ConnectedDriver.Role) == 0 {
+		return errors.New("vehicle is not connected to driver")
+	}
+
+	return nil
+}
+
+type connectedDriver struct {
+	Role string `json:"role"`
 }
 
 type kamereonData struct {
@@ -145,10 +162,20 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		err = v.authFlow()
 	}
 
+	var car kamereonVehicle
 	if err == nil {
-		v.vin, err = ensureVehicle(cc.VIN, func() ([]string, error) {
-			return v.kamereonVehicles(v.accountID)
-		})
+		v.vin, car, err = ensureVehicleWithFeature(cc.VIN,
+			func() ([]kamereonVehicle, error) {
+				return v.kamereonVehicles(v.accountID)
+			},
+			func(v kamereonVehicle) (string, kamereonVehicle) {
+				return v.VIN, v
+			},
+		)
+	}
+
+	if err == nil {
+		err = car.Available()
 	}
 
 	v.batteryG = provider.Cached(v.batteryAPI, cc.Cache)
@@ -308,20 +335,10 @@ func (v *Renault) kamereonPerson(personID string) (string, error) {
 	return res.Accounts[0].AccountID, err
 }
 
-func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
+func (v *Renault) kamereonVehicles(configVIN string) ([]kamereonVehicle, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, v.accountID)
 	res, err := v.kamereonRequest(uri, nil)
-
-	var vehicles []string
-	if err == nil {
-		for _, v := range res.VehicleLinks {
-			if strings.ToUpper(v.Status) == "ACTIVE" {
-				vehicles = append(vehicles, v.VIN)
-			}
-		}
-	}
-
-	return vehicles, err
+	return res.VehicleLinks, err
 }
 
 // batteryAPI provides battery-status api response
@@ -447,7 +464,7 @@ func (v *Renault) FinishTime() (time.Time, error) {
 var _ api.VehicleClimater = (*Renault)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+func (v *Renault) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2

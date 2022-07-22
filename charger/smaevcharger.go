@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/hashicorp/go-version"
 	"golang.org/x/oauth2"
 )
@@ -51,7 +52,7 @@ func init() {
 // NewSmaevchargerFromConfig creates a SMA EV Charger from generic config
 func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Host     string
+		Uri      string
 		User     string
 		Password string
 		Cache    time.Duration
@@ -63,8 +64,8 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	if cc.Host == "" {
-		return nil, errors.New("missing host")
+	if cc.Uri == "" {
+		return nil, errors.New("missing uri")
 	}
 
 	if cc.User == "" || cc.Password == "" {
@@ -72,23 +73,25 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 	}
 
 	if cc.User == "admin" {
-		return nil, errors.New("user admin not allowed, create new user")
+		return nil, errors.New(`user "admin" not allowed, create new user`)
 	}
 
-	return NewSmaevcharger(cc.Host, cc.User, cc.Password, cc.Cache)
+	return NewSmaevcharger(cc.Uri, cc.User, cc.Password, cc.Cache)
 }
 
 // NewSmaevcharger creates an SMA EV Charger
-func NewSmaevcharger(host string, user string, password string, cache time.Duration) (api.Charger, error) {
+func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("smaevcharger").Redact(user, password)
-
-	baseUri := "http://" + host
 
 	wb := &Smaevcharger{
 		Helper: request.NewHelper(log),
 		log:    log,
-		uri:    baseUri + "/api/v1",
+		uri:    util.DefaultScheme(strings.TrimRight(uri, "/"), "http") + "/api/v1",
 		cache:  cache,
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	// setup cached values
@@ -119,9 +122,10 @@ func NewSmaevcharger(host string, user string, password string, cache time.Durat
 	}
 
 	if err == nil {
-		// Prepare Charger for EVCC Control:
-		// - disable App Lock functionality, this Option have been introduced with 1.2.23 and will lock the Charger until unlocked via SMA App
-		// unfortunately this Lock option will overwrite the status of the charger and prevent ev detection
+		// Prepare charger: disable App Lock functionality.
+		// This option have been introduced with 1.2.23 and will lock the charger
+		// until unlocked via SMA App. Unfortunately this Lock option will overwrite
+		// the status of the charger and prevent ev detection
 		err = wb.Send(
 			value("Parameter.Chrg.ChrgLok", smaevcharger.ChargerAppLockDisabled),
 			value("Parameter.Chrg.ChrgApv", smaevcharger.ChargerManualLockEnabled),
@@ -339,7 +343,7 @@ func (wb *Smaevcharger) Send(values ...smaevcharger.Value) error {
 }
 
 // value creates an smaevcharger.Value
-func value(id string, value string) smaevcharger.Value {
+func value(id, value string) smaevcharger.Value {
 	return smaevcharger.Value{
 		Timestamp: time.Now().UTC().Format(smaevcharger.TimestampFormat),
 		ChannelId: id,

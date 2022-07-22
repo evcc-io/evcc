@@ -1,14 +1,15 @@
-template: sungrow
+template: sungrow-hybrid
+covers: ["sungrow"]
 products:
   - brand: Sungrow
     description:
-      generic: Inverter
+      generic: Hybrid Inverter
 guidedsetup:
   enable: true
 requirements:
   description:
-    de: Die Verbindung zu Sungrow-Geräten ist nur über den LAN-Port (am Gerät) oder seriell via RS485-Port möglich. Nicht verfügbar über das WiNet-S-Dongle!
-    en: Communication to Sungrow-Devices may only be established by using the LAN port (on device) or serial RS485 port. Not available on WiNet-S-Dongle!
+    de: Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.
+    en: Communication is either serial (RS485) or via TCP (WiNet-S-Dongle).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -1,6 +1,7 @@
 product:
   brand: Walther Werke
   description: Basic Evo Pro
+capabilities: ["mA"]
 requirements: ["sponsorship"]
 render:
   - default: |

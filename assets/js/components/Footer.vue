@@ -46,8 +46,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.footer {
-	color: var(--bs-white);
-}
-</style>
+<style scoped></style>

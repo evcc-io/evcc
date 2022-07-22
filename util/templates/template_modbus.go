@@ -9,7 +9,7 @@ import (
 //go:embed modbus.tpl
 var modbusTmpl string
 
-// add the modbus params to the template
+// ModbusParams adds the modbus parameters' default values
 func (t *Template) ModbusParams(modbusType string, values map[string]interface{}) {
 	if len(t.ModbusChoices()) == 0 {
 		return
@@ -34,20 +34,16 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 	t.Params = append(modbusParams, t.Params...)
 }
 
-// set the modbus values required from modbus.tpl and and the template to the render
-func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[string]interface{}) map[string]interface{} {
+// ModbusValues adds the values required for modbus.tpl to the value map
+func (t *Template) ModbusValues(renderMode string, values map[string]interface{}) {
 	choices := t.ModbusChoices()
 	if len(choices) == 0 {
-		return values
+		return
 	}
 
 	// only add the template once, when testing multiple usages, it might already be present
 	if !strings.Contains(t.Render, modbusTmpl) {
 		t.Render = fmt.Sprintf("%s\n%s", t.Render, modbusTmpl)
-	}
-
-	if !setDefaults {
-		return values
 	}
 
 	modbusConfig := t.ConfigDefaults.Modbus
@@ -58,9 +54,20 @@ func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[
 		modbusInterfaces = append(modbusInterfaces, modbusConfig.Interfaces[choice]...)
 	}
 
+	// set default interface type
+	if len(modbusInterfaces) == 1 {
+		values[ParamModbus] = modbusInterfaces[0]
+	}
+
 	for _, iface := range modbusInterfaces {
 		typeParams := modbusConfig.Types[iface].Params
+
 		for _, p := range typeParams {
+			// don't overwrite custom values
+			if values[p.Name] != nil {
+				continue
+			}
+
 			values[p.Name] = p.DefaultValue(renderMode)
 
 			var defaultValue string
@@ -84,21 +91,20 @@ func (t *Template) ModbusValues(renderMode string, setDefaults bool, values map[
 				}
 			}
 
-			if defaultValue == "" {
-				continue
+			if defaultValue != "" {
+				// for modbus params the default value is carried
+				// using the parameter default, not the value
+				// TODO figure out why that's necessary
+				if renderMode == TemplateRenderModeInstance {
+					t.SetParamDefault(p.Name, defaultValue)
+				} else {
+					values[p.Name] = defaultValue
+				}
 			}
-
-			if renderMode == TemplateRenderModeInstance {
-				t.SetParamDefault(p.Name, defaultValue)
-			} else {
-				values[p.Name] = defaultValue
-			}
-
 		}
+
 		if renderMode == TemplateRenderModeDocs {
 			values[iface] = true
 		}
 	}
-
-	return values
 }

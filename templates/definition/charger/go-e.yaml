@@ -3,6 +3,7 @@ products:
   - brand: go-eCharger
     description:
       generic: HOME+, HOMEfix, Pro
+capabilities: ["rfid"]
 requirements:
   description:
     en: Requires firmware 040.0 or later.

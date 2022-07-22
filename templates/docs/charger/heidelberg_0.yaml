@@ -1,6 +1,7 @@
 product:
   brand: Heidelberg
   description: Energy Control
+capabilities: ["mA"]
 requirements: ["sponsorship"]
 render:
   - default: |

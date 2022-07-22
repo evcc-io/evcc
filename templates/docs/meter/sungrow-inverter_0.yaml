@@ -2,12 +2,12 @@ product:
   brand: Sungrow
   description: Inverter
 description: |
-  Die Verbindung zu Sungrow-Geräten ist nur über den LAN-Port (am Gerät) oder seriell via RS485-Port möglich. Nicht verfügbar über das WiNet-S-Dongle!
+  Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.
 render:
   - usage: grid
     default: |
       type: template
-      template: sungrow
+      template: sungrow-inverter
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -31,32 +31,8 @@ render:
   - usage: pv
     default: |
       type: template
-      template: sungrow
+      template: sungrow-inverter
       usage: pv      
-
-      # RS485 via adapter (Modbus RTU)
-      modbus: rs485serial
-      id: 1
-      device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
-      baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-      comset: "8N1" # Kommunikationsparameter für den Adapter
-
-      # RS485 via TCP/IP (Modbus RTU)
-      modbus: rs485tcpip
-      id: 1
-      host: 192.0.2.2 # Hostname
-      port: 502 # Port
-
-      # Modbus TCP
-      modbus: tcpip
-      id: 1
-      host: 192.0.2.2 # Hostname
-      port: 502 # Port
-  - usage: battery
-    default: |
-      type: template
-      template: sungrow
-      usage: battery      
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial

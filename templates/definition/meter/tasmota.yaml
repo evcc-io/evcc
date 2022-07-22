@@ -19,5 +19,6 @@ params:
 render: |
   type: tasmota
   uri: http://{{ .host }}
+  usage: {{ .usage }}
   user: {{ .user }}
   password: {{ .password }}

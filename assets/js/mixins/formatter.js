@@ -128,7 +128,15 @@ export default {
       return new Intl.NumberFormat(this.$i18n.locale, {
         style: "currency",
         currency,
-      }).format(amout);
+        currencyDisplay: "code",
+      })
+        .format(amout)
+        .replace(currency, "")
+        .trim();
+    },
+    fmtCurrencySymbol: function (currency = "EUR") {
+      const symbols = { EUR: "€", USD: "$" };
+      return symbols[currency] || currency;
     },
     fmtPricePerKWh: function (amout = 0, currency = "EUR") {
       let unit = currency;

@@ -19,34 +19,34 @@
 				class="site-progress-bar self-consumption"
 				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
 			>
-				<span v-if="powerLabelEnoughSpace(selfConsumption)" class="power">
-					{{ kw(selfConsumption) }}
-				</span>
-				<span v-else-if="powerLabelSomeSpace(selfConsumption)" class="power">
-					{{ kwNoUnit(selfConsumption) }}
-				</span>
+				<AnimatedNumber
+					v-if="selfConsumption"
+					class="power"
+					:to="selfConsumption"
+					:format="fmtBarValue"
+				/>
 			</div>
 			<div
 				class="site-progress-bar grid-import"
 				:style="{ width: widthTotal(gridImportAdjusted) }"
 			>
-				<span v-if="powerLabelEnoughSpace(gridImport)" class="power">
-					{{ kw(gridImport) }}
-				</span>
-				<span v-else-if="powerLabelSomeSpace(gridImport)" class="power">
-					{{ kwNoUnit(gridImport) }}
-				</span>
+				<AnimatedNumber
+					v-if="gridImport"
+					class="power"
+					:to="gridImport"
+					:format="fmtBarValue"
+				/>
 			</div>
 			<div
 				class="site-progress-bar pv-export"
 				:style="{ width: widthTotal(pvExportAdjusted) }"
 			>
-				<span v-if="powerLabelEnoughSpace(pvExport)" class="power">
-					{{ kw(pvExport) }}
-				</span>
-				<span v-else-if="powerLabelSomeSpace(pvExport)" class="power">
-					{{ kwNoUnit(pvExport) }}
-				</span>
+				<AnimatedNumber
+					v-if="pvExport"
+					class="power"
+					:to="pvExport"
+					:format="fmtBarValue"
+				/>
 			</div>
 			<div v-if="totalAdjusted <= 0" class="site-progress-bar bg-light border no-wrap w-100">
 				<span>{{ $t("main.energyflow.noEnergy") }}</span>
@@ -76,13 +76,14 @@
 import formatter from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import LabelBar from "./LabelBar.vue";
+import AnimatedNumber from "../AnimatedNumber.vue";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 
 export default {
 	name: "Visualization",
-	components: { BatteryIcon, LabelBar },
+	components: { BatteryIcon, LabelBar, AnimatedNumber },
 	mixins: [formatter],
 	props: {
 		gridImport: { type: Number, default: 0 },
@@ -141,11 +142,9 @@ export default {
 			if (this.totalAdjusted === 0) return "0%";
 			return (100 / this.totalAdjusted) * power + "%";
 		},
-		kw: function (watt) {
-			return this.fmtKw(watt, this.valuesInKw, true);
-		},
-		kwNoUnit: function (watt) {
-			return this.fmtKw(watt, this.valuesInKw, false);
+		fmtBarValue: function (watt) {
+			const valueInKw = this.powerLabelEnoughSpace(watt);
+			return this.fmtKw(watt, this.valuesInKw, valueInKw);
 		},
 		powerLabelAvailableSpace(power) {
 			if (this.totalAdjusted === 0) return 0;
@@ -193,7 +192,7 @@ export default {
 	margin-right: 1.2rem;
 }
 .label-scale-name {
-	color: var(--bs-gray-medium);
+	color: var(--evcc-gray);
 	flex-basis: 1.2rem;
 	flex-grow: 0;
 	flex-shrink: 0;
@@ -217,6 +216,11 @@ export default {
 .grid-import {
 	background-color: var(--evcc-grid);
 	color: var(--bs-white);
+}
+@media (--dark-mode) {
+	.grid-import {
+		color: var(--bs-dark);
+	}
 }
 .self-consumption {
 	background-color: var(--evcc-self);

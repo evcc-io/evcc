@@ -77,38 +77,40 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 }
 
 // ExecCmd execautes an FritzDECT AHA-HTTP-Interface command
-func (fd *Connection) ExecCmd(function string) (string, error) {
+func (c *Connection) ExecCmd(function string) (string, error) {
 	// refresh Fritzbox session id
-	if time.Since(fd.Updated) >= 10*time.Minute {
-		err := fd.getSessionID()
-		if err != nil {
+	if time.Since(c.Updated) >= 10*time.Minute {
+		if err := c.getSessionID(); err != nil {
 			return "", err
 		}
 		// update session timestamp
-		fd.Updated = time.Now()
+		c.Updated = time.Now()
 	}
 
 	parameters := url.Values{
-		"sid":       []string{fd.SID},
-		"ain":       []string{fd.AIN},
+		"sid":       []string{c.SID},
+		"ain":       []string{c.AIN},
 		"switchcmd": []string{function},
 	}
 
-	uri := fmt.Sprintf("%s/webservices/homeautoswitch.lua", fd.URI)
-	response, err := fd.GetBody(uri + "?" + parameters.Encode())
-	return strings.TrimSpace(string(response)), err
+	uri := fmt.Sprintf("%s/webservices/homeautoswitch.lua", c.URI)
+	body, err := c.GetBody(uri + "?" + parameters.Encode())
+
+	res := strings.TrimSpace(string(body))
+
+	if err == nil && res == "inval" {
+		err = api.ErrNotAvailable
+	}
+
+	return res, err
 }
 
 // CurrentPower implements the api.Meter interface
-func (fd *Connection) CurrentPower() (float64, error) {
+func (c *Connection) CurrentPower() (float64, error) {
 	// power value in 0,001 W (current switch power, refresh approximately every 2 minutes)
-	resp, err := fd.ExecCmd("getswitchpower")
+	resp, err := c.ExecCmd("getswitchpower")
 	if err != nil {
 		return 0, err
-	}
-
-	if resp == "inval" {
-		return 0, api.ErrNotAvailable
 	}
 
 	power, err := strconv.ParseFloat(resp, 64)
@@ -119,15 +121,11 @@ func (fd *Connection) CurrentPower() (float64, error) {
 var _ api.MeterEnergy = (*Connection)(nil)
 
 // CurrentPower implements the api.MeterEnergy interface
-func (fd *Connection) TotalEnergy() (float64, error) {
+func (c *Connection) TotalEnergy() (float64, error) {
 	// Energy value in Wh (total switch energy, refresh approximately every 2 minutes)
-	resp, err := fd.ExecCmd("getswitchenergy")
+	resp, err := c.ExecCmd("getswitchenergy")
 	if err != nil {
 		return 0, err
-	}
-
-	if resp == "inval" {
-		return 0, api.ErrNotAvailable
 	}
 
 	energy, err := strconv.ParseFloat(resp, 64)
@@ -138,9 +136,9 @@ func (fd *Connection) TotalEnergy() (float64, error) {
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)
 
 // getSessionID fetches a session-id based on the username and password in the connection struct
-func (fd *Connection) getSessionID() error {
-	uri := fmt.Sprintf("%s/login_sid.lua", fd.URI)
-	body, err := fd.GetBody(uri)
+func (c *Connection) getSessionID() error {
+	uri := fmt.Sprintf("%s/login_sid.lua", c.URI)
+	body, err := c.GetBody(uri)
 	if err != nil {
 		return err
 	}
@@ -153,18 +151,18 @@ func (fd *Connection) getSessionID() error {
 
 	if err = xml.Unmarshal(body, &v); err == nil && v.SID == "0000000000000000" {
 		var challresp string
-		if challresp, err = createChallengeResponse(v.Challenge, fd.Password); err == nil {
+		if challresp, err = createChallengeResponse(v.Challenge, c.Password); err == nil {
 			params := url.Values{
-				"username": []string{fd.User},
+				"username": []string{c.User},
 				"response": []string{challresp},
 			}
 
-			if body, err = fd.GetBody(uri + "?" + params.Encode()); err == nil {
+			if body, err = c.GetBody(uri + "?" + params.Encode()); err == nil {
 				err = xml.Unmarshal(body, &v)
 				if v.SID == "0000000000000000" {
-					return errors.New("invalid username (" + fd.User + ") or password")
+					return errors.New("invalid user or password")
 				}
-				fd.SID = v.SID
+				c.SID = v.SID
 			}
 		}
 	}
@@ -173,7 +171,7 @@ func (fd *Connection) getSessionID() error {
 }
 
 // createChallengeResponse creates the Fritzbox challenge response string
-func createChallengeResponse(challenge string, pass string) (string, error) {
+func createChallengeResponse(challenge, pass string) (string, error) {
 	encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
 	utf16le, err := encoder.String(challenge + "-" + pass)
 	if err != nil {

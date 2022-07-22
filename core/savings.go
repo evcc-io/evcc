@@ -8,8 +8,10 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 )
 
-const DefaultGridPrice = 0.30
-const DefaultFeedInPrice = 0.08
+const (
+	DefaultGridPrice   = 0.30
+	DefaultFeedInPrice = 0.08
+)
 
 // publisher gives access to the site's publish function
 type publisher interface {

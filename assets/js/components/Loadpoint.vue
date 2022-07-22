@@ -1,11 +1,11 @@
 <template>
-	<div class="loadpoint bg-white p-4">
-		<div class="d-flex justify-content-between align-items-center mb-3">
+	<div class="loadpoint pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
+		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
 			<h3 class="mb-3 me-2 text-truncate">
 				{{ title || $t("main.loadpoint.fallbackName") }}
 			</h3>
 			<div class="mb-3 d-flex align-items-center">
-				<Mode :mode="mode" @updated="setTargetMode" />
+				<Mode class="w-100 w-sm-auto" :mode="mode" @updated="setTargetMode" />
 				<button v-if="$hiddenFeatures" class="btn btn-link text-gray p-0 flex-shrink-0">
 					<shopicon-filled-options size="s"></shopicon-filled-options>
 				</button>
@@ -33,8 +33,10 @@
 				<div class="d-flex align-items-center">
 					<LabelAndValue
 						:label="$t('main.loadpoint.power')"
-						:value="fmtKw(chargePower)"
+						:value="chargePower"
+						:valueFmt="fmtkWUnit"
 						class="mb-2"
+						align="start"
 					/>
 					<shopicon-regular-lightning
 						class="text-evcc opacity-transiton"
@@ -48,13 +50,18 @@
 					:class="`opacity-${charging ? '100' : '0'}`"
 				/>
 			</div>
-			<LabelAndValue :label="$t('main.loadpoint.charged')" :value="fmtKWh(chargedEnergy)" />
+			<LabelAndValue
+				:label="$t('main.loadpoint.charged')"
+				:value="fmtKWh(chargedEnergy)"
+				align="center"
+			/>
 			<LabelAndValue
 				v-if="chargeRemainingDurationInterpolated"
 				:label="$t('main.loadpoint.remaining')"
 				:value="`
 					${fmtShortDuration(chargeRemainingDurationInterpolated)}
 					${fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)}`"
+				align="end"
 			/>
 			<LabelAndValue
 				v-else
@@ -62,13 +69,17 @@
 				:value="`
 					${fmtShortDuration(chargeDurationInterpolated)}
 					${fmtShortDurationUnit(chargeDurationInterpolated)}`"
+				align="end"
 			/>
 		</div>
+		<hr class="divider" />
 		<Vehicle
 			v-bind="vehicle"
 			@target-soc-updated="setTargetSoC"
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
+			@change-vehicle="changeVehicle"
+			@remove-vehicle="removeVehicle"
 		/>
 	</div>
 </template>
@@ -109,6 +120,7 @@ export default {
 		vehicleSoC: Number,
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
+		vehicles: Array,
 		minSoC: Number,
 		targetTime: String,
 		targetTimeActive: Boolean,
@@ -207,6 +219,16 @@ export default {
 		removeTargetTime: function () {
 			api.delete(this.apiPath("targetcharge"));
 		},
+		changeVehicle(index) {
+			api.post(this.apiPath("vehicle") + `/${index}`);
+		},
+		removeVehicle() {
+			api.delete(this.apiPath("vehicle"));
+		},
+		fmtkWUnit(value) {
+			const inKw = value == 0 || value >= 1000;
+			return this.fmtKw(value, inKw);
+		},
 	},
 };
 </script>
@@ -214,7 +236,8 @@ export default {
 <style scoped>
 .loadpoint {
 	border-radius: 2rem;
-	color: var(--bs-gray-dark);
+	color: var(--evcc-default-text);
+	background: var(--evcc-box);
 }
 
 .details > div {
@@ -229,5 +252,19 @@ export default {
 }
 .opacity-transiton {
 	transition: opacity var(--evcc-transition-slow) ease-in;
+}
+.divider {
+	border: none;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: var(--evcc-gray);
+	background: none;
+	opacity: 0.5;
+	margin: 0 -1rem;
+}
+@media (--sm-and-up) {
+	.divider {
+		margin: 0 -1.5rem;
+	}
 }
 </style>

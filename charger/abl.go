@@ -126,7 +126,7 @@ func (wb *ABLeMH) set(reg, val uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, val)
 
-	//write two times
+	// write two times
 	_, _ = wb.conn.WriteMultipleRegisters(reg, 1, b)
 	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
 
@@ -134,7 +134,7 @@ func (wb *ABLeMH) set(reg, val uint16) error {
 }
 
 func (wb *ABLeMH) get(reg, count uint16) ([]byte, error) {
-	//read two times
+	// read two times
 	_, _ = wb.conn.ReadHoldingRegisters(reg, count)
 	b, err := wb.conn.ReadHoldingRegisters(reg, count)
 

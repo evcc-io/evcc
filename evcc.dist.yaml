@@ -24,7 +24,7 @@ levels:
 
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints
-# for examples see https://github.com/evcc-io/config#meters
+# for documentation see https://docs.evcc.io/docs/devices/meters
 meters:
   - name: grid
     type: modbus
@@ -43,7 +43,7 @@ meters:
 
 # charger definitions
 # name can be freely chosen and is used as reference when assigning charger to vehicle
-# for examples see https://github.com/evcc-io/config#chargers
+# for documentation see https://docs.evcc.io/docs/devices/chargers
 chargers:
   - name: wallbe
     type: wallbe # Wallbe charger
@@ -53,7 +53,7 @@ chargers:
 
 # vehicle definitions
 # name can be freely chosen and is used as reference when assigning vehicle to loadpoint
-# for examples see https://github.com/evcc-io/config#vehicles
+# for documentation see https://docs.evcc.io/docs/devices/vehicles
 vehicles:
   - name: car1
     type: renault

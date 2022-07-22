@@ -13,11 +13,6 @@ func quote(value string) string {
 }
 
 func yamlQuote(value string) string {
-	// don't quote empty strings
-	if value == "" {
-		return value
-	}
-
 	input := fmt.Sprintf("key: %s", value)
 
 	var res struct {

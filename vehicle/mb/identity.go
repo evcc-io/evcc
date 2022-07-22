@@ -1,6 +1,7 @@
 package mb
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"net/url"
 	"strings"
 
-	"context"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"

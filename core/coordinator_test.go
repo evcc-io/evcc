@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
@@ -38,15 +39,15 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	vehicles := []api.Vehicle{v1, v2}
 
 	lp := &LoadPoint{}
-	c := &vehicleCoordinator{make(map[api.Vehicle]interface{})}
+	c := &vehicleCoordinator{make(map[api.Vehicle]loadpoint.API)}
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
 		v1.MockChargeState.EXPECT().Status().Return(tc.v1, nil)
 		v2.MockChargeState.EXPECT().Status().Return(tc.v2, nil)
-		v1.MockVehicle.EXPECT().Title().Return("v1")
-		v2.MockVehicle.EXPECT().Title().Return("v2")
+		v1.MockVehicle.EXPECT().Title().Return("v1").AnyTimes()
+		v2.MockVehicle.EXPECT().Title().Return("v2").AnyTimes()
 
 		res := c.identifyVehicleByStatus(log, lp, vehicles)
 		if tc.res != res {
@@ -59,5 +60,4 @@ func TestVehicleDetectByStatus(t *testing.T) {
 			c.release(res)
 		}
 	}
-
 }

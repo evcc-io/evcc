@@ -1,7 +1,7 @@
 product:
   description: EEBUS kompatible Wallbox
   group: Generische Unterstützung
-capabilities: ["iso151182"]
+capabilities: ["iso151182", "mA"]
 requirements: ["eebus"]
 render:
   - default: |

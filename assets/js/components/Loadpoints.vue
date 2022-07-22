@@ -21,7 +21,7 @@
 			<button
 				v-for="(loadpoint, index) in loadpoints"
 				:key="index"
-				class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center text-white"
+				class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center evcc-default-text"
 				:class="{ 'indicator--selected': selected(index) }"
 				@click="scrollTo(index)"
 			>

@@ -1,6 +1,10 @@
 <template>
-	<div class="vehicle p-4 pb-3">
-		<VehicleTitle v-bind="vehicleTitleProps" />
+	<div class="vehicle pt-4">
+		<VehicleTitle
+			v-bind="vehicleTitleProps"
+			@change-vehicle="changeVehicle"
+			@remove-vehicle="removeVehicle"
+		/>
 		<VehicleStatus v-if="!parked" v-bind="vehicleStatus" class="mb-2" />
 		<VehicleSoc
 			v-bind="vehicleSocProps"
@@ -11,24 +15,24 @@
 		<div v-if="vehiclePresent">
 			<div class="details d-flex flex-wrap justify-content-between">
 				<LabelAndValue
-					class="flex-grow-1 text-start"
+					class="flex-grow-1"
 					:label="$t('main.vehicle.vehicleSoC')"
-					:value="`${vehicleSoC || '--'} %`"
+					:value="vehicleSoC ? `${vehicleSoC}%` : '--'"
 					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
-					on-dark
-				/>
-				<TargetSoCSelect
-					class="flex-grow-1 text-center"
-					:target-soc="displayTargetSoC"
-					:range-per-soc="rangePerSoC"
-					@target-soc-updated="targetSocUpdated"
+					align="start"
 				/>
 				<TargetCharge
-					class="flex-grow-1 text-end target-charge"
+					class="flex-grow-1 text-center target-charge"
 					v-bind="targetCharge"
 					:disabled="targetChargeDisabled"
 					@target-time-updated="setTargetTime"
 					@target-time-removed="removeTargetTime"
+				/>
+				<TargetSoCSelect
+					class="flex-grow-1 text-end"
+					:target-soc="displayTargetSoC"
+					:range-per-soc="rangePerSoC"
+					@target-soc-updated="targetSocUpdated"
 				/>
 			</div>
 			<div v-if="$hiddenFeatures" class="d-flex justify-content-start">
@@ -78,8 +82,15 @@ export default {
 		pvAction: String,
 		pvRemainingInterpolated: Number,
 		parked: Boolean,
+		vehicles: Array,
 	},
-	emits: ["target-time-removed", "target-time-updated", "target-soc-updated"],
+	emits: [
+		"target-time-removed",
+		"target-time-updated",
+		"target-soc-updated",
+		"change-vehicle",
+		"remove-vehicle",
+	],
 	data() {
 		return {
 			displayTargetSoC: this.targetSoC,
@@ -127,16 +138,17 @@ export default {
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
 		},
+		changeVehicle(index) {
+			this.$emit("change-vehicle", index);
+		},
+		removeVehicle() {
+			this.$emit("remove-vehicle");
+		},
 	},
 };
 </script>
 
 <style scoped>
-.vehicle {
-	background-color: var(--bs-gray-dark);
-	border-radius: 1rem;
-	color: var(--bs-white);
-}
 .car-icon {
 	width: 1.75rem;
 }

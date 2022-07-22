@@ -17,7 +17,7 @@ import (
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
-	Update(availablePower float64, cheapRate bool, batteryBuffered bool)
+	Update(availablePower float64, cheapRate, batteryBuffered bool)
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -350,6 +350,16 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 		site.gridPower = totalChargePower - site.pvPower
 	}
 
+	// allow using Grid and charge as estimate for pv power
+	if site.pvMeters == nil {
+		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
+		if site.pvPower < 0 {
+			site.pvPower = 0
+		}
+		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
+		site.publish("pvPower", site.pvPower)
+	}
+
 	// honour battery priority
 	batteryPower := site.batteryPower
 
@@ -429,7 +439,9 @@ func (site *Site) prepare() {
 	site.publish("gridConfigured", site.gridMeter != nil)
 	site.publish("pvConfigured", len(site.pvMeters) > 0)
 	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
+	site.publish("bufferSoC", site.BufferSoC)
 	site.publish("prioritySoC", site.PrioritySoC)
+	site.publish("residualPower", site.ResidualPower)
 
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since().Unix())

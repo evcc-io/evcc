@@ -3,6 +3,7 @@ import Vehicle from "./Vehicle.vue";
 export default {
   title: "Main/Vehicle",
   component: Vehicle,
+  parameters: { backgrounds: { default: "box" } },
 };
 
 const Template = (args) => ({
@@ -11,6 +12,7 @@ const Template = (args) => ({
   },
   components: { Vehicle },
   template: '<Vehicle v-bind="args"></Vehicle>',
+  parameters: { backgrounds: { default: "box" } },
 });
 
 export const Base = Template.bind({});
@@ -191,5 +193,18 @@ DisconnectedKnownSoc.args = {
   vehiclePresent: true,
   vehicleSoC: 17,
   targetSoC: 60,
+  id: 0,
+};
+
+export const SwitchBetweenVehicles = Template.bind({});
+SwitchBetweenVehicles.args = {
+  vehicleTitle: "Weißes Model 3",
+  vehicles: ["Blauer e-Golf", "Weißes Model 3"],
+  enabled: true,
+  connected: true,
+  vehiclePresent: true,
+  vehicleSoC: 42,
+  vehicleRange: 231,
+  targetSoC: 90,
   id: 0,
 };

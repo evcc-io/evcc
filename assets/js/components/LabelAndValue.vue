@@ -1,25 +1,38 @@
 <template>
-	<div class="root" :class="{ 'root--dark': onDark }">
-		<div class="mb-2 label">{{ label }}</div>
+	<div class="root">
+		<div class="mb-2 label" :class="labelClass">{{ label }}</div>
 		<slot>
-			<h3 class="value m-0">
-				{{ value }}
-				<span v-if="extraValue" class="extraValue d-block d-sm-inline text-nowrap">
+			<h3 class="value m-0 d-block d-sm-flex align-items-baseline" :class="valueClass">
+				<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
+				<span v-else>{{ value }}</span>
+				<div v-if="extraValue" class="extraValue ms-0 ms-sm-1 text-nowrap">
 					{{ extraValue }}
-				</span>
+				</div>
 			</h3>
 		</slot>
 	</div>
 </template>
 
 <script>
+import AnimatedNumber from "./AnimatedNumber.vue";
+
 export default {
 	name: "LabelAndValue",
+	components: { AnimatedNumber },
 	props: {
 		label: String,
-		value: String,
+		value: [Number, String],
+		valueFmt: Function,
 		extraValue: String,
-		onDark: Boolean,
+		align: { type: String, default: "center" },
+	},
+	computed: {
+		labelClass() {
+			return `text-${this.align}`;
+		},
+		valueClass() {
+			return `justify-content-${this.align}`;
+		},
 	},
 };
 </script>
@@ -29,19 +42,14 @@ export default {
 }
 .label {
 	text-transform: uppercase;
-	color: var(--bs-gray-medium);
+	color: var(--evcc-gray);
 	font-size: 14px;
 }
 .value {
 	font-size: 18px;
 }
 .extraValue {
-	color: var(--bs-gray-medium);
+	color: var(--evcc-gray);
 	font-size: 14px;
-}
-
-.root--dark .extraValue,
-.root--dark .label {
-	color: var(--bs-gray-light);
 }
 </style>

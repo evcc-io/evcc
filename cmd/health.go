@@ -40,7 +40,7 @@ func runHealth(cmd *cobra.Command, args []string) {
 
 	u.RegisterLocation(serviceName, server.SocketPath)
 
-	var client = http.Client{
+	client := http.Client{
 		Transport: u,
 	}
 

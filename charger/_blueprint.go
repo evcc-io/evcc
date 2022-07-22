@@ -95,6 +95,13 @@ func (wb *Blueprint) ChargedEnergy() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+var _ api.MeterEnergy = (*Blueprint)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *Blueprint) TotalEnergy() (float64, error) {
+	return 0, api.ErrNotAvailable
+}
+
 var _ api.MeterCurrent = (*Blueprint)(nil)
 
 // Currents implements the api.MeterCurrent interface
@@ -107,13 +114,6 @@ var _ api.Identifier = (*Blueprint)(nil)
 // Identify implements the api.Identifier interface
 func (wb *Blueprint) Identify() (string, error) {
 	return "", api.ErrNotAvailable
-}
-
-var _ api.MeterEnergy = (*Blueprint)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Blueprint) TotalEnergy() (float64, error) {
-	return 0, api.ErrNotAvailable
 }
 
 var _ api.ChargePhases = (*Blueprint)(nil)
