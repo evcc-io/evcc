@@ -45,8 +45,9 @@ const (
 	kseRegActualPower         = 0x18 // Aktuelle Ladeleistung (W)
 	kseRegFirmwareVersion     = 0x30 // Firmware Version
 	kseRegRFIDinstalled       = 0x31 // RFID-Leser vorhanden
-	// kseRegRelayMode           = 0x35 // Umschalten 1 phasiges oder 3 phasiges Laden
 	kseRegNFCTransactionID    = 0x67 // Tag ID (8 Bytes)
+	// kseRegRelayMode           = 0x35 // Umschalten 1 phasiges oder 3 phasiges Laden
+
 )
 
 func init() {
