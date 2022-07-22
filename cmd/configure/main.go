@@ -40,7 +40,7 @@ type CmdConfigure struct {
 }
 
 // Run starts the interactive configuration
-func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expandedMode bool) {
+func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expandedMode bool, category string) {
 	c.log = log
 	c.advancedMode = advancedMode
 	c.expandedMode = expandedMode
@@ -72,7 +72,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	fmt.Println()
 	fmt.Println(c.localizedString("Intro", nil))
 
-	if !c.advancedMode {
+	if !c.advancedMode && category == "" {
 		// ask the user for his knowledge, so advanced mode can also be turned on this way
 		fmt.Println()
 		flowIndex, _ := c.askChoice(c.localizedString("Flow_Mode", nil), []string{
@@ -84,9 +84,20 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 		}
 	}
 
-	if !c.advancedMode {
+	if !c.advancedMode && category == "" {
 		c.flowNewConfigFile()
 		return
+	}
+
+	if category != "" {
+		for cat := range DeviceCategories {
+			if cat == DeviceCategory(category) {
+				c.flowSingleDevice(DeviceCategory(category))
+				return
+			}
+		}
+
+		panic("invalid category: " + category)
 	}
 
 	fmt.Println()
@@ -98,12 +109,12 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	case 0:
 		c.flowNewConfigFile()
 	case 1:
-		c.flowSingleDevice()
+		c.flowSingleDevice("")
 	}
 }
 
 // configureSingleDevice implements the flow for getting a single device configuration
-func (c *CmdConfigure) flowSingleDevice() {
+func (c *CmdConfigure) flowSingleDevice(category DeviceCategory) {
 	fmt.Println()
 	fmt.Println(c.localizedString("Flow_SingleDevice_Setup", nil))
 	fmt.Println()
@@ -119,18 +130,19 @@ func (c *CmdConfigure) flowSingleDevice() {
 		DeviceCategories[DeviceCategoryVehicle].title,
 	}
 
-	fmt.Println()
-	_, cagetoryTitle := c.askChoice(c.localizedString("Flow_SingleDevice_Select", nil), categoryChoices)
+	if category == "" {
+		fmt.Println()
+		_, categoryTitle := c.askChoice(c.localizedString("Flow_SingleDevice_Select", nil), categoryChoices)
 
-	var selectedCategory DeviceCategory
-	for item, data := range DeviceCategories {
-		if data.title == cagetoryTitle {
-			selectedCategory = item
-			break
+		for item, data := range DeviceCategories {
+			if data.title == categoryTitle {
+				category = item
+				break
+			}
 		}
 	}
 
-	devices := c.configureDevices(selectedCategory, false, false)
+	devices := c.configureDevices(category, false, false)
 	for _, item := range devices {
 		fmt.Println()
 		fmt.Println(c.localizedString("Flow_SingleDevice_Config", localizeMap{}))
@@ -178,8 +190,8 @@ func (c *CmdConfigure) flowNewConfigFile() {
 
 	filename := DefaultConfigFilename
 
-	for ok := true; ok; {
-		file, err := os.OpenFile(filename, os.O_WRONLY, 0o666)
+	for {
+		file, err := os.OpenFile(filename, os.O_WRONLY, 0666)
 		if errors.Is(err, os.ErrNotExist) {
 			break
 		}
@@ -233,7 +245,7 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askAdding
 		}
 	}
 
-	for ok := true; ok; {
+	for {
 		device, capabilities, err := c.configureDeviceCategory(deviceCategory)
 		if err != nil {
 			break
@@ -279,7 +291,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 	fmt.Println()
 	fmt.Println(c.localizedString("Loadpoint_Setup", nil))
 
-	for ok := true; ok; {
+	for {
 
 		loadpointTitle := c.askValue(question{
 			label:        c.localizedString("Loadpoint_Title", nil),

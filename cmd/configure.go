@@ -25,6 +25,7 @@ func init() {
 	configureCmd.Flags().String("lang", "", "Define the localization to be used (en, de)")
 	configureCmd.Flags().Bool("advanced", false, "Enables handling of advanced configuration options")
 	configureCmd.Flags().Bool("expand", false, "Enables rendering expanded configuration files")
+	configureCmd.Flags().String("category", "", "Pre-select device category for advanced configuration (implies advanced)")
 }
 
 func runConfigure(cmd *cobra.Command, args []string) {
@@ -41,6 +42,11 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	}
 
 	expand, err := cmd.Flags().GetBool("expand")
+	if err != nil {
+		panic(err)
+	}
+
+	category, err := cmd.Flags().GetString("category")
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +69,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}()
 
-	impl.Run(log, lang, advanced, expand)
+	impl.Run(log, lang, advanced, expand, category)
 
 	close(stopC)
 	<-shutdown.Done()

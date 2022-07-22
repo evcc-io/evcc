@@ -1,4 +1,4 @@
-Intro = "Die nächsten Schritte führen durch die Einrichtung einer Konfigurationsdatei für evcc.\nBeachte dass dieser Prozess nicht alle möglichen Szenarien berücksichtigen kann.\nDurch Drücken von CTRL-C kann der Prozess abgebrochen werden.\n\nACHTUNG: Diese Funktionalität hat experimentellen Status!\n  D.h. es kann möglich sein, dass die hiermit erstellte Konfigurationsdatei\n  in einem Update nicht mehr funktionieren könnte und neu erzeugt werden müsste.\n  Wir freuen uns auf euer Feedback auf https://github.com/evcc-io/evcc/discussions/\n\nAuf geht`s:"
+Intro = "Die nächsten Schritte führen durch die Einrichtung einer Konfigurationsdatei für evcc.\nBeachte dass dieser Prozess nicht alle möglichen Szenarien berücksichtigen kann.\nDurch Drücken von CTRL-C kann der Prozess abgebrochen werden.\n\nACHTUNG: Diese Funktionalität hat experimentellen Status!\n  D.h. es kann möglich sein, dass die hiermit erstellte Konfigurationsdatei\n  in einem Update nicht mehr funktionieren könnte und neu erzeugt werden müsste.\n  Wir freuen uns auf euer Feedback auf https://github.com/evcc-io/evcc/discussions/\n\nAuf geht's:"
 
 Flow_Mode = "In welchem Modus soll die Konfiguration durchgeführt werden?"
 Flow_Mode_Standard = "Standard Modus (So einfach und schnell wie möglich)"
@@ -12,7 +12,7 @@ Flow_NewConfiguration_Setup = "- Hausinstallation einrichten"
 Flow_NewConfiguration_Select = "Wähle eines der folgenden PV Komplettsysteme aus, oder '{{ .ItemNotPresent }}' falls keines dieser Geräte vorhanden ist"
 
 Flow_SingleDevice_Setup = "- Ein Gerät konfigurieren"
-Flow_SingleDevice_Select = "Wähle eines der folgenden Gerätekategorien aus"
+Flow_SingleDevice_Select = "Wähle eine der folgenden Gerätekategorien aus:"
 Flow_SingleDevice_Config = "Die Konfiguration lautet:"
 
 Flow_SMAHems_Setup = "- SMA HEMS konfigurieren"
