@@ -3,7 +3,7 @@ products:
   - brand: KSE
     description:
       generic: wBX16
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid"]
 requirements:
   evcc: ["sponsorship"]
 params:
