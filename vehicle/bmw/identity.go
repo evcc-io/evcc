@@ -108,11 +108,12 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 
 	data := url.Values{
-		"client_id":             {"31c357a0-7a1d-4590-aa99-33b97244d048"},
-		"response_type":         {"code"},
-		"redirect_uri":          {RedirectURI},
-		"state":                 {"cwU-gIE27j67poy2UcL3KQ"},
-		"scope":                 {"authenticate_user vehicle_data remote_services"},
+		"client_id":     {"31c357a0-7a1d-4590-aa99-33b97244d048"},
+		"response_type": {"code"},
+		"redirect_uri":  {RedirectURI},
+		"state":         {"cwU-gIE27j67poy2UcL3KQ"},
+		// "scope":                 {"authenticate_user vehicle_data remote_services"},
+		"scope":                 {"openid profile email offline_access smacc vehicle_data perseus dlm svds cesim vsapi remote_services fupo authenticate_user"},
 		"nonce":                 {"login_nonce"},
 		"code_challenge_method": {"S256"},
 		"code_challenge":        {cv.CodeChallengeS256()},
