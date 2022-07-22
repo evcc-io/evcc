@@ -174,6 +174,7 @@ require (
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20220205120646-e5220ad9a9a0
 
+// the patch is merged but not released as a new version yet
 replace github.com/libp2p/zeroconf/v2 => github.com/DerAndereAndi/zeroconf/v2 v2.0.0-20220607195515-4c9557651bc9
 
 replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220613154920-166ce977216e
