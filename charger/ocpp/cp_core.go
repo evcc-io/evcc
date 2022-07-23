@@ -42,6 +42,11 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 	return res, nil
 }
 
+func (cp *CP) timestampValid(t time.Time) bool {
+	const statusExpiry = 30 * time.Second
+	return !t.Before(cp.status.Timestamp.Time) && time.Since(t) <= statusExpiry
+}
+
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
@@ -52,7 +57,7 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 		if cp.status == nil {
 			cp.status = request
 			cp.initialized.Broadcast()
-		} else if (request.Timestamp.Equal(cp.status.Timestamp.Time) || request.Timestamp.After(cp.status.Timestamp.Time)) && request.Timestamp.After(time.Now().Add(-30*time.Second)) {
+		} else if request.Timestamp == nil || cp.timestampValid(request.Timestamp.Time) {
 			cp.status = request
 		} else {
 			cp.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, cp.status.Timestamp)
