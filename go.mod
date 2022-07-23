@@ -51,7 +51,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.3
 	github.com/korylprince/ipnetgen v1.0.1
-	github.com/lorenzodonini/ocpp-go v0.15.0
+	github.com/lorenzodonini/ocpp-go v0.16.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9

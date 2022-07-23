@@ -12,7 +12,7 @@ import (
 type CS struct {
 	mu  sync.Mutex
 	log *util.Logger
-	cs  ocpp16.CentralSystem
+	ocpp16.CentralSystem
 	cps map[string]*CP
 }
 
@@ -71,10 +71,6 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 	if _, err := cs.chargepointByID(chargePoint.ID()); err != nil {
 		cs.log.ERROR.Println(err)
 	}
-}
-
-func (cs *CS) CS() ocpp16.CentralSystem {
-	return cs.cs
 }
 
 func (cs *CS) Debug(args ...interface{}) {
