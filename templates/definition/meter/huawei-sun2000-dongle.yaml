@@ -16,7 +16,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     connectdelay: 1s
     register:
       address: 32080 # Active generation power AC
