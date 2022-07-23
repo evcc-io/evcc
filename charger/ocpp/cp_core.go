@@ -44,7 +44,19 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 
 func (cp *CP) timestampValid(t time.Time) bool {
 	const statusExpiry = 30 * time.Second
-	return !t.Before(cp.status.Timestamp.Time) && time.Since(t) <= statusExpiry
+
+	// reject if expired
+	if time.Since(t) > statusExpiry {
+		return false
+	}
+
+	// assume having a timestamp is better than not
+	if cp.status.Timestamp == nil {
+		return true
+	}
+
+	// reject older values than we already have
+	return !t.Before(cp.status.Timestamp.Time)
 }
 
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
