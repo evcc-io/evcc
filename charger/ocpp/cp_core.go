@@ -125,7 +125,7 @@ func getSampleKey(s types.SampledValue) string {
 func (cp *CP) setMeterValues(request *core.MeterValuesRequest) {
 	for _, meterValue := range request.MeterValue {
 		// ignore old meter value requests
-		if meterValue.Timestamp.Time.After(cp.latestMeterValueTimestamp) {
+		if meterValue.Timestamp.Time.After(cp.meterUpdated) {
 			for _, sample := range meterValue.SampledValue {
 				cp.measureands[getSampleKey(sample)] = sample
 			}
