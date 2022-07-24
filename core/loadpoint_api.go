@@ -116,11 +116,14 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
-	if _, ok := lp.charger.(api.ChargePhases); ok && phases > 0 {
-		return lp.scalePhases(phases)
+	// set new default
+	lp.setDefaultPhases(phases)
+
+	// apply immediately if not 1p3p
+	if _, ok := lp.charger.(api.ChargePhases); !ok {
+		lp.setPhases(phases)
 	}
 
-	lp.setPhases(phases)
 	return nil
 }
 
