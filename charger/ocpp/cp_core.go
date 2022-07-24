@@ -42,6 +42,7 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 	return res, nil
 }
 
+// timestampValid returns false if status timestamps are outdated
 func (cp *CP) timestampValid(t time.Time) bool {
 	const statusExpiry = 30 * time.Second
 
