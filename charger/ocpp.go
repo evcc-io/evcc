@@ -175,7 +175,7 @@ func NewOCPP(id string, connector int, idtag string, hasMeter bool, meterInterva
 					c.log.TRACE.Printf("ChangeSampleMeterValueInterval %T: %v", resp, resp)
 
 					if resp.Status == core.ConfigurationStatusRejected {
-						rc <- fmt.Errorf("configuration of meterinterval rejected: %w", err)
+						rc <- fmt.Errorf("configuration of meter interval rejected: %w", err)
 					}
 					rc <- err
 				}, ocpp.KeyMeterValueSampleInterval, intervalStr)
@@ -186,7 +186,7 @@ func NewOCPP(id string, connector int, idtag string, hasMeter bool, meterInterva
 			}
 		}
 
-		// get inital meter values
+		// get initial meter values
 		if hasMeter {
 			ocpp.Instance().TriggerMeterValueRequest(cp)
 		}
