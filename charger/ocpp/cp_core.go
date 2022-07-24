@@ -9,6 +9,11 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
+const (
+	messageExpiry     = 30 * time.Second
+	transactionExpiry = time.Hour
+)
+
 func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
@@ -44,10 +49,8 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 
 // timestampValid returns false if status timestamps are outdated
 func (cp *CP) timestampValid(t time.Time) bool {
-	const statusExpiry = 30 * time.Second
-
 	// reject if expired
-	if time.Since(t) > statusExpiry {
+	if time.Since(t) > messageExpiry {
 		return false
 	}
 
@@ -162,7 +165,7 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 
 	// create new transaction
 	if request != nil {
-		if request.Timestamp.After(time.Now().Add(-1 * time.Hour)) { // only respect transactions in the last hour
+		if time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
 			cp.mu.Lock()
 			cp.currentTransaction = NewTransaction(cp.currentTransaction.ID+1, request.IdTag, request.Timestamp.Time, request.MeterStart)
 
@@ -170,7 +173,7 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 
 			res.TransactionId = cp.currentTransaction.ID
 
-			if request.Timestamp.After(time.Now().Add(-30*time.Second)) && cp.meterSupported && !cp.meterTickerRunning {
+			if cp.meterSupported && !cp.meterTickerRunning && time.Since(request.Timestamp.Time) < messageExpiry {
 				go func() {
 					cp.log.TRACE.Printf("starting meter value ticker")
 					cp.meterTickerRunning = true
