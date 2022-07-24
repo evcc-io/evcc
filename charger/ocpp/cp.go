@@ -60,11 +60,11 @@ type CP struct {
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
 
-	meterSupported      bool
-	meterUpdated        time.Time
-	measureDoneCh       chan struct{}
-	measurements        map[string]types.SampledValue
-	meterTrickerRunning bool
+	meterSupported     bool
+	measureDoneCh      chan struct{}
+	meterUpdated       time.Time
+	measurements       map[string]types.SampledValue
+	meterTickerRunning bool
 
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
