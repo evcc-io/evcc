@@ -32,11 +32,11 @@ type OpenWB struct {
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		mqtt.Config `mapstructure:",squash"`
-		Topic       string
-		Timeout     time.Duration
-		ID          int
-		Phases, DC  bool
+		mqtt.Config    `mapstructure:",squash"`
+		Topic          string
+		Timeout        time.Duration
+		ID             int
+		Phases1p3p, DC bool
 	}{
 		Topic:   openwb.RootTopic,
 		Timeout: openwb.Timeout,
@@ -49,7 +49,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	log := util.NewLogger("openwb")
 
-	return NewOpenWB(log, cc.Config, cc.ID, cc.Topic, cc.Phases, cc.DC, cc.Timeout)
+	return NewOpenWB(log, cc.Config, cc.ID, cc.Topic, cc.Phases1p3p, cc.DC, cc.Timeout)
 }
 
 // NewOpenWB creates a new configurable charger
