@@ -305,10 +305,3 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 
 	return currents[1], currents[2], currents[3], nil
 }
-
-func (cp *CP) MeterSupported() bool {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
-	return cp.meterSupported
-}
