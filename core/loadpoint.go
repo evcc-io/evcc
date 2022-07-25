@@ -1031,6 +1031,14 @@ func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 	return nil
 }
 
+// setDefaultPhases sets the default phase configuration
+func (lp *LoadPoint) setDefaultPhases(phases int) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.DefaultPhases = phases
+	lp.phaseTimer = time.Time{}
+}
+
 // setPhases sets the number of enabled phases without modifying the charger
 func (lp *LoadPoint) setPhases(phases int) {
 	if lp.GetPhases() != phases {
