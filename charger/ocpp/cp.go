@@ -290,7 +290,7 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 
 	currents := make([]float64, 0, 3)
 
-	for _, phase := range []int{1, 2, 3} {
+	for phase := 1; phase <= 3; phase++ {
 		current, ok := cp.measurements[getKeyCurrentPhase(phase)]
 		if !ok {
 			return 0, 0, 0, api.ErrNotAvailable
