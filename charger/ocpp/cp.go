@@ -63,7 +63,7 @@ type CP struct {
 	meterSupported      bool
 	meterUpdated        time.Time
 	measureDoneCh       chan struct{}
-	measureands         map[string]types.SampledValue
+	measurements        map[string]types.SampledValue
 	meterTrickerRunning bool
 
 	supportedNumberOfConnectors int
@@ -246,7 +246,7 @@ func (cp *CP) CurrentPower() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if power, ok := cp.measureands[string(types.MeasurandPowerActiveImport)]; ok {
+	if power, ok := cp.measurements[string(types.MeasurandPowerActiveImport)]; ok {
 		return strconv.ParseFloat(power.Value, 64)
 	}
 
@@ -257,7 +257,7 @@ func (cp *CP) CurrentPower() (float64, error) {
 // 	cp.mu.Lock()
 // 	defer cp.mu.Unlock()
 
-// 	// if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+// 	// if energy, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
 // 	// 	v, err := strconv.ParseInt(energy.Value, 10, 64)
 // 	// 	if err != nil {
 // 	// 		return 0, err
@@ -288,20 +288,21 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	var (
-		currents = make(map[int]float64)
-
-		err error
-	)
+	currents := make([]float64, 0, 3)
 
 	for _, phase := range []int{1, 2, 3} {
-		if current, ok := cp.measureands[getKeyCurrentPhase(phase)]; ok {
-			currents[phase], err = strconv.ParseFloat(current.Value, 64)
-			if err != nil {
-				return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
-			}
+		current, ok := cp.measurements[getKeyCurrentPhase(phase)]
+		if !ok {
+			return 0, 0, 0, api.ErrNotAvailable
 		}
+
+		f, err := strconv.ParseFloat(current.Value, 64)
+		if err != nil {
+			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
+		}
+
+		currents = append(currents, f)
 	}
 
-	return currents[1], currents[2], currents[3], nil
+	return currents[0], currents[1], currents[2], nil
 }
