@@ -3,7 +3,6 @@ package ocpp
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
@@ -21,8 +20,7 @@ func (cs *CS) Register(id string, meterSupported bool) *CP {
 	cp := &CP{
 		id:             id,
 		log:            util.NewLogger("ocpp-cp"),
-		meterUpdated:   time.Now(),
-		measureands:    make(map[string]types.SampledValue),
+		measurements:   make(map[string]types.SampledValue),
 		meterSupported: meterSupported,
 	}
 
