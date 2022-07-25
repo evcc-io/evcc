@@ -250,7 +250,7 @@ func (cp *CP) CurrentPower() (float64, error) {
 		return strconv.ParseFloat(power.Value, 64)
 	}
 
-	return 0, nil
+	return 0, api.ErrNotAvailable
 }
 
 // func (cp *CP) TotalEnergy() (float64, error) {
