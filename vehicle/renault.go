@@ -166,7 +166,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if err == nil {
 		v.vin, car, err = ensureVehicleWithFeature(cc.VIN,
 			func() ([]kamereonVehicle, error) {
-				return v.kamereonVehicles(v.accountID)
+				return v.KamereonVehicles(v.accountID)
 			},
 			func(v kamereonVehicle) (string, kamereonVehicle) {
 				return v.VIN, v
@@ -178,9 +178,9 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		err = car.Available()
 	}
 
-	v.batteryG = provider.Cached(v.batteryAPI, cc.Cache)
-	v.cockpitG = provider.Cached(v.cockpitAPI, cc.Cache)
-	v.hvacG = provider.Cached(v.hvacAPI, cc.Cache)
+	v.batteryG = provider.Cached(v.BatteryAPI, cc.Cache)
+	v.cockpitG = provider.Cached(v.CockpitAPI, cc.Cache)
+	v.hvacG = provider.Cached(v.HvacAPI, cc.Cache)
 
 	return v, err
 }
@@ -335,14 +335,14 @@ func (v *Renault) kamereonPerson(personID string) (string, error) {
 	return res.Accounts[0].AccountID, err
 }
 
-func (v *Renault) kamereonVehicles(configVIN string) ([]kamereonVehicle, error) {
+func (v *Renault) KamereonVehicles(configVIN string) ([]kamereonVehicle, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, v.accountID)
 	res, err := v.kamereonRequest(uri, nil)
 	return res.VehicleLinks, err
 }
 
 // batteryAPI provides battery-status api response
-func (v *Renault) batteryAPI() (kamereonResponse, error) {
+func (v *Renault) BatteryAPI() (kamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri, nil)
 
@@ -357,7 +357,7 @@ func (v *Renault) batteryAPI() (kamereonResponse, error) {
 }
 
 // hvacAPI provides hvac-status api response
-func (v *Renault) hvacAPI() (kamereonResponse, error) {
+func (v *Renault) HvacAPI() (kamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/hvac-status", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri, nil)
 
@@ -372,7 +372,7 @@ func (v *Renault) hvacAPI() (kamereonResponse, error) {
 }
 
 // cockpitAPI provides cockpit api response
-func (v *Renault) cockpitAPI() (kamereonResponse, error) {
+func (v *Renault) CockpitAPI() (kamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/cockpit", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri, nil)
 
