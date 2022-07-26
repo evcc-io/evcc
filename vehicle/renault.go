@@ -57,7 +57,7 @@ type gigyaData struct {
 	PersonID string `json:"personId"`
 }
 
-type kamereonResponse struct {
+type KamereonResponse struct {
 	Accounts     []kamereonAccount `json:"accounts"`     // /commerce/v1/persons/%s
 	AccessToken  string            `json:"accessToken"`  // /commerce/v1/accounts/%s/kamereon/token
 	VehicleLinks []kamereonVehicle `json:"vehicleLinks"` // /commerce/v1/accounts/%s/vehicles
@@ -123,9 +123,9 @@ type Renault struct {
 	gigya, kamereon     configServer
 	gigyaJwtToken       string
 	accountID           string
-	batteryG            func() (kamereonResponse, error)
-	cockpitG            func() (kamereonResponse, error)
-	hvacG               func() (kamereonResponse, error)
+	batteryG            func() (KamereonResponse, error)
+	cockpitG            func() (KamereonResponse, error)
+	hvacG               func() (KamereonResponse, error)
 }
 
 func init() {
@@ -308,14 +308,14 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 	return res.IDToken, err
 }
 
-func (v *Renault) kamereonRequest(uri string, body io.Reader) (kamereonResponse, error) {
+func (v *Renault) kamereonRequest(uri string, body io.Reader) (KamereonResponse, error) {
 	params := url.Values{"country": []string{"DE"}}
 	headers := map[string]string{
 		"x-gigya-id_token": v.gigyaJwtToken,
 		"apikey":           v.kamereon.APIKey,
 	}
 
-	var res kamereonResponse
+	var res KamereonResponse
 	req, err := v.request(uri, params, body, headers)
 	if err == nil {
 		err = v.DoJSON(req, &res)
@@ -342,7 +342,7 @@ func (v *Renault) KamereonVehicles(configVIN string) ([]kamereonVehicle, error) 
 }
 
 // batteryAPI provides battery-status api response
-func (v *Renault) BatteryAPI() (kamereonResponse, error) {
+func (v *Renault) BatteryAPI() (KamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri, nil)
 
@@ -357,7 +357,7 @@ func (v *Renault) BatteryAPI() (kamereonResponse, error) {
 }
 
 // hvacAPI provides hvac-status api response
-func (v *Renault) HvacAPI() (kamereonResponse, error) {
+func (v *Renault) HvacAPI() (KamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/hvac-status", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri, nil)
 
@@ -372,7 +372,7 @@ func (v *Renault) HvacAPI() (kamereonResponse, error) {
 }
 
 // cockpitAPI provides cockpit api response
-func (v *Renault) CockpitAPI() (kamereonResponse, error) {
+func (v *Renault) CockpitAPI() (KamereonResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/cockpit", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri, nil)
 
