@@ -54,11 +54,9 @@ func (v *API) request(uri string, body io.Reader) (Response, error) {
 
 	// repeat auth if error
 	if err != nil {
-		err = v.login()
-	}
-
-	if err == nil {
-		res, err = v.request_(uri, nil)
+		if err = v.login(); err == nil {
+			res, err = v.request_(uri, nil)
+		}
 	}
 
 	return res, err
