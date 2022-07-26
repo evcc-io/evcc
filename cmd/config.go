@@ -53,12 +53,10 @@ type networkConfig struct {
 }
 
 func (c networkConfig) HostPort() string {
-        if ((c.Schema == "http" && c.Port == 80) ||
-                (c.Schema == "https" && c.Port == 443)) {
-                return c.Host;
-	} else {
-		return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
+		return c.Host
 	}
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }
 
 func (c networkConfig) URI() string {
