@@ -96,3 +96,18 @@ func (v *API) Cockpit(accountID string, vin string) (Response, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/cockpit", v.keys.Target, accountID, vin)
 	return v.request(uri, nil)
 }
+
+func (v *API) WakeUp(accountID string, vin string) (Response, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/charge/pause-resume", v.keys.Target, accountID, vin)
+
+	data := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type": "ChargePauseResume",
+			"attributes": map[string]interface{}{
+				"action": "resume",
+			},
+		},
+	}
+
+	return v.request(uri, request.MarshalJSON(data))
+}

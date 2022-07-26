@@ -17,6 +17,7 @@ type Provider struct {
 	batteryG func() (kamereon.Response, error)
 	cockpitG func() (kamereon.Response, error)
 	hvacG    func() (kamereon.Response, error)
+	wakeup   func() (kamereon.Response, error)
 }
 
 // NewProvider creates a new vehicle
@@ -31,6 +32,9 @@ func NewProvider(api *kamereon.API, accountID, vin string, cache time.Duration) 
 		hvacG: provider.Cached(func() (kamereon.Response, error) {
 			return api.Hvac(accountID, vin)
 		}, cache),
+		wakeup: func() (kamereon.Response, error) {
+			return api.WakeUp(accountID, vin)
+		},
 	}
 	return impl
 }
@@ -138,29 +142,10 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 	return false, 0, 0, err
 }
 
-// var _ api.AlarmClock = (*Provider)(nil)
+var _ api.AlarmClock = (*Provider)(nil)
 
-// // WakeUp implements the api.AlarmClock interface
-// func (v *Provider) WakeUp() error {
-// 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/charge/pause-resume", v.keys.Kamereon.Target, v.accountID, v.vin)
-
-// 	data := map[string]interface{}{
-// 		"data": map[string]interface{}{
-// 			"type": "ChargePauseResume",
-// 			"attributes": map[string]interface{}{
-// 				"action": "resume",
-// 			},
-// 		},
-// 	}
-
-// 	_, err := v.kamereonRequest(uri, request.MarshalJSON(data))
-
-// 	// // repeat auth if error
-// 	// if err != nil {
-// 	// 	if err = v.authFlow(); err == nil {
-// 	// 		_, err = v.kamereonRequest(uri, request.MarshalJSON(data))
-// 	// 	}
-// 	// }
-
-// 	return err
-// }
+// WakeUp implements the api.AlarmClock interface
+func (v *Provider) WakeUp() error {
+	_, err := v.wakeup()
+	return err
+}
