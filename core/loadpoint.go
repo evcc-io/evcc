@@ -812,7 +812,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
-		//  unblock api
+		// unblock api
 		lp.Unlock()
 		lp.applyAction(vehicle.OnIdentified())
 		lp.Lock()
