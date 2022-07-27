@@ -142,9 +142,9 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 	return false, 0, 0, err
 }
 
-var _ api.AlarmClock = (*Provider)(nil)
+var _ api.Resurrector = (*Provider)(nil)
 
-// WakeUp implements the api.AlarmClock interface
+// WakeUp implements the api.Resurrector interface
 func (v *Provider) WakeUp() error {
 	_, err := v.wakeup()
 	return err

@@ -194,7 +194,7 @@ func (site *Site) DumpConfig() {
 		_, energy := lp.charger.(api.MeterEnergy)
 		_, currents := lp.charger.(api.MeterCurrent)
 		_, phases := lp.charger.(api.ChargePhases)
-		_, wakeup := lp.charger.(api.AlarmClock)
+		_, wakeup := lp.charger.(api.Resurrector)
 
 		lp.log.INFO.Printf("  charger:     power %s energy %s currents %s phases %s wakeup %s",
 			presence[power],
@@ -218,7 +218,7 @@ func (site *Site) DumpConfig() {
 			_, finish := v.(api.VehicleFinishTimer)
 			_, status := v.(api.ChargeState)
 			_, climate := v.(api.VehicleClimater)
-			_, wakeup := v.(api.AlarmClock)
+			_, wakeup := v.(api.Resurrector)
 			lp.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s wakeup %s",
 				i+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
 			)

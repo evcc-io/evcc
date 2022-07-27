@@ -234,9 +234,9 @@ func (m *OpenWB) Authorize(key string) error {
 	return m.authS(key)
 }
 
-var _ api.AlarmClock = (*OpenWB)(nil)
+var _ api.Resurrector = (*OpenWB)(nil)
 
-// WakeUp implements the api.AlarmClock interface
+// WakeUp implements the api.Resurrector interface
 func (m *OpenWB) WakeUp() error {
 	return m.wakeupS(1)
 }
