@@ -886,6 +886,7 @@ func (lp *LoadPoint) vehicleDefaultOrDetect() {
 			lp.setActiveVehicle(lp.defaultVehicle)
 		} else {
 			// default vehicle is already active, update odometer anyway
+			// need to do this here since setActiveVehicle would short-circuit
 			lp.addTask(lp.vehicleOdometer)
 		}
 	} else if len(lp.vehicles) > 0 {
