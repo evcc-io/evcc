@@ -13,7 +13,8 @@ func NewProgress(min, step float64) *Progress {
 }
 
 func (p *Progress) NextStep(value float64) bool {
-	if value >= p.current {
+	// test guard
+	if p != nil && value >= p.current {
 		for p.current <= value {
 			p.current += p.step
 		}
@@ -25,5 +26,8 @@ func (p *Progress) NextStep(value float64) bool {
 }
 
 func (p *Progress) Reset() {
-	p.current = p.min
+	// test guard
+	if p != nil {
+		p.current = p.min
+	}
 }
