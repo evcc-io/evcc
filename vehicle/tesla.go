@@ -226,3 +226,10 @@ func (v *Tesla) StopCharge() error {
 
 	return err
 }
+
+var _ api.TargetSoCer = (*Tesla)(nil)
+
+// SetTargetSoC implements the api.VehicleChargeController interface
+func (v *Tesla) SetTargetSoC(soc int) error {
+	return v.vehicle.SetChargeLimit(soc)
+}

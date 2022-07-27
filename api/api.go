@@ -173,6 +173,11 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
+// TargetSoCer sends target soc to vehicle
+type TargetSoCer interface {
+	SetTargetSoC(soc int) error
+}
+
 // VehicleChargeController allows to start/stop the charging session on the vehicle side
 type VehicleChargeController interface {
 	StartCharge() error
