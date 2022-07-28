@@ -29,10 +29,10 @@ jobs:
       - name: Build docs
         run: make docs
 
-      - name: Clean git
-        run: |
-          git checkout go.*
-          rm -rf flags buildflags
+      # - name: Clean git
+      #   run: |
+      #     git checkout go.*
+      #     rm -rf flags buildflags
 
       - name: Deploy to docs repo
         uses: peaceiris/actions-gh-pages@v3
