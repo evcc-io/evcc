@@ -1,7 +1,7 @@
 template: ocpp
 products:
   - description:
-      de: OCPP v1.6 Websocket/JSON kompatible Wallbox mit Smart Charging Profile
+      de: OCPP 1.6J kompatible Wallbox mit Smart Charging Profile
       en: OCPP v1.6 Websocket/JSON compatible charger with smart charging profile
 group: generic
 requirements:
