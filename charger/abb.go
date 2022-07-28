@@ -20,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -89,6 +90,13 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 		conn: conn,
 		curr: abbMinCurrent, // assume min current
 	}
+
+	// keep-alive
+	go func() {
+		for range time.NewTicker(30 * time.Second).C {
+			_, _ = wb.status()
+		}
+	}()
 
 	return wb, err
 }
