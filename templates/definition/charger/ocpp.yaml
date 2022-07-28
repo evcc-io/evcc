@@ -1,8 +1,8 @@
 template: ocpp
 products:
   - description:
-      de: OCPP 1.6J kompatible Wallbox mit Smart Charging Profile
-      en: OCPP v1.6 Websocket/JSON compatible charger with smart charging profile
+      de: OCPP 1.6J kompatible Wallbox mit Smart Charging Profil
+      en: OCPP 1.6J compatible charger with smart charging profile
 group: generic
 requirements:
   description:
@@ -30,10 +30,10 @@ requirements:
 
       Requirements:
       * If necessary, remove previously configured OCPP profiles (e.g. used for a different backend connection) in the charger configuration
-      * Backend URL (Central System) in the charger configuration: `ws://evcc.local:8887/` or `ws://192.0.2.2:8887/`
+      * Backend URL (Central System) in the charger configuration: `ws://<evcc-IP-address>:8887/`
       * Protocol: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// or similar
       * No encryption, no authentication, no password
-      * LAN connection
+      * Local network connection
 params:
   - name: stationid
     valuetype: string

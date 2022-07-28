@@ -1,5 +1,5 @@
 product:
-  description: OCPP v1.6 Websocket/JSON kompatible Wallbox mit Smart Charging Profile
+  description: OCPP 1.6J kompatible Wallbox mit Smart Charging Profil
   group: Generische Unterstützung
 description: |
   Bei OCPP verbindet sich die Wallbox (Client) zu evcc (Server).
@@ -11,10 +11,10 @@ description: |
 
   Voraussetzungen:
   * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallbox-Konfiguration entfernen
-  * Backend-URL (Central System) in der Wallbox-Konfiguration: `ws://evcc.local:8887/` bzw. `ws://192.0.2.2:8887/`
+  * Backend-URL (Central System) in der Wallbox-Konfiguration: `ws://<evcc-IP-Adresse>:8887/`
   * Protokoll: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// o.ä.
   * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
-  * LAN-Verbindung
+  * Verbindung über das lokale Netzwerk
 
 render:
   - default: |
