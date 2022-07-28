@@ -65,10 +65,10 @@ jobs:
           go-version: ^1.18
         id: go
 
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: "16"
+      # - name: Setup Node
+      #   uses: actions/setup-node@v2
+      #   with:
+      #     node-version: "16"
 
       - name: Install Cloudsmith CLI
         run: pip install --upgrade cloudsmith-cli
@@ -87,10 +87,10 @@ jobs:
       # - name: Build Root Filesystem
       #   run: make image-rootfs
 
-      - name: Clean git
-        run: |
-          git checkout go.*
-          rm -rf flags buildflags
+      # - name: Clean git
+      #   run: |
+      #     git checkout go.*
+      #     rm -rf flags buildflags
 
       - name: Create Github Release
         uses: goreleaser/goreleaser-action@v2
@@ -98,13 +98,9 @@ jobs:
           version: latest
           args: release --rm-dist
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_REPO }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish .deb to Cloudsmith
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: |
-          for filename in release/*.deb; do
-            echo "Pushing $filename to 'stable'"
-            cloudsmith push deb evcc/stable/any-distro/any-version $filename
-          done
+        run: make apt-release

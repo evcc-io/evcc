@@ -85,18 +85,18 @@ jobs:
           go-version: ^1.18
         id: go
 
-      - name: Set up Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: "16"
+      # - name: Set up Node
+      #   uses: actions/setup-node@v2
+      #   with:
+      #     node-version: "16"
 
       - name: Install Cloudsmith CLI
         run: pip install --upgrade cloudsmith-cli
 
-      - name: Clean git
-        run: |
-          git checkout go.*
-          rm -rf flags buildflags
+      # - name: Clean git
+      #   run: |
+      #     git checkout go.*
+      #     rm -rf flags buildflags
 
       - name: Create nightly build
         uses: goreleaser/goreleaser-action@v2
@@ -109,8 +109,4 @@ jobs:
       - name: Publish .deb to Cloudsmith
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: |
-          for filename in release/*.deb; do
-            echo "Pushing $filename to 'unstable'"
-            cloudsmith push deb evcc/unstable/any-distro/any-version $filename
-          done
+        run: make apt-nightly

@@ -37,7 +37,7 @@ jobs:
       - name: Deploy to docs repo
         uses: peaceiris/actions-gh-pages@v3
         with:
-          personal_token: ${{ secrets.GH_REPO }}
+          personal_token: ${{ secrets.GH_TOKEN }}
           publish_dir: ./templates/docs
           external_repository: evcc-io/docs
           publish_branch: main
