@@ -19,7 +19,7 @@ requirements:
       * Backend-URL (Central System) in der Wallbox-Konfiguration: `ws://<evcc-IP-Adresse>:8887/`
       * Protokoll: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// o.ä.
       * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
-      * LAN-Verbindung
+      * Verbindung über das lokale Netzwerk
     en: |
       With OCPP the connection will be established from charger (client) to evcc (server).
       The charger needs to be able to reach evcc via the host name (functioning DNS resolution required!) or via the IP address on port 8887.
