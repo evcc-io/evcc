@@ -115,6 +115,10 @@ func (v *Identity) Login(user, password string) error {
 		}
 	}
 
+	if err == nil && res.Token == "" && res.Result != "" {
+		err = fmt.Errorf("missing token: %s", res.Result)
+	}
+
 	var code string
 	if err == nil {
 		params := url.Values{
