@@ -2,7 +2,9 @@ package silence
 
 import (
 	"errors"
+	"net/http"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -43,6 +45,11 @@ func (v *API) Vehicles() ([]string, error) {
 		return lo.Map(resp, func(v Vehicle, _ int) string {
 			return v.FrameNo
 		}), nil
+	}
+
+	// force retry on HTTP 500
+	if err2, ok := err.(request.StatusError); ok && err2.HasStatus(http.StatusInternalServerError) {
+		err = api.ErrMustRetry
 	}
 
 	return nil, err
