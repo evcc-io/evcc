@@ -11,9 +11,21 @@ params:
     default: 8081
   - name: uuid
     required: true
+  - name: scale
+    advanced: true
+    default: 1
+    description:
+      de: Skalierungsfaktor
+      en: Scale factor
+    help:
+      de: Multipliziere Rohwert mit diesem Faktor
+      en: Multiply by this value
 render: |
   type: custom
   power: # power reading
     source: http # use http plugin
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=="{{ .uuid }}") | .tuples[0][1] # parse response json
+    {{- if .scale }}
+    scale: {{ .scale }}
+    {{- end }}
