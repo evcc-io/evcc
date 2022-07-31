@@ -54,8 +54,6 @@ const (
 	tqRegComTimeout           = 2002 // Communication timeout
 	tqRegChargeCurrent        = 5004 // (A)
 	tqRegLifeBit              = 6000 // Communication monitoring 0/1 Toggle-Bit
-
-	tqTimeout = 60
 )
 
 func init() {
@@ -101,7 +99,7 @@ func NewWebastoNext(uri string, id uint8) (api.Charger, error) {
 		return nil, fmt.Errorf("could not get failsafe timeout: %v", err)
 	}
 
-	go wb.heartbeat(time.Duration(binary.BigEndian.Uint16(b)/2-1) * time.Second)
+	go wb.heartbeat(time.Duration(binary.BigEndian.Uint16(b)/2) * time.Second)
 
 	return wb, err
 }
