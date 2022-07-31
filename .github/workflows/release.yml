@@ -65,11 +65,6 @@ jobs:
           go-version: ^1.18
         id: go
 
-      # - name: Setup Node
-      #   uses: actions/setup-node@v2
-      #   with:
-      #     node-version: "16"
-
       - name: Install Cloudsmith CLI
         run: pip install --upgrade cloudsmith-cli
 
@@ -86,11 +81,6 @@ jobs:
 
       # - name: Build Root Filesystem
       #   run: make image-rootfs
-
-      # - name: Clean git
-      #   run: |
-      #     git checkout go.*
-      #     rm -rf flags buildflags
 
       - name: Create Github Release
         uses: goreleaser/goreleaser-action@v2

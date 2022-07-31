@@ -85,18 +85,8 @@ jobs:
           go-version: ^1.18
         id: go
 
-      # - name: Set up Node
-      #   uses: actions/setup-node@v2
-      #   with:
-      #     node-version: "16"
-
       - name: Install Cloudsmith CLI
         run: pip install --upgrade cloudsmith-cli
-
-      # - name: Clean git
-      #   run: |
-      #     git checkout go.*
-      #     rm -rf flags buildflags
 
       - name: Create nightly build
         uses: goreleaser/goreleaser-action@v2

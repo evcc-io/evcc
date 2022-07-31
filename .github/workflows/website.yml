@@ -23,16 +23,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install tools
-        run: make install
-
       - name: Build docs
         run: make docs
-
-      # - name: Clean git
-      #   run: |
-      #     git checkout go.*
-      #     rm -rf flags buildflags
 
       - name: Deploy to evcc.io repo
         uses: peaceiris/actions-gh-pages@v3
