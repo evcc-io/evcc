@@ -1,0 +1,20 @@
+template: webasto-next
+products:
+  - brand: Webasto
+    description:
+      generic: NEXT
+capabilities: ["rfid"]
+requirements:
+  description:
+    de: Mode 'HEMS activated' muss aktiviert sein.
+    en: Mode 'HEMS activated' must be enabled.
+  evcc: ["sponsorship"]
+params:
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: port
+    default: 502
+render: |
+  type: webasto-next
+  uri: {{ .host }}:{{ .port }}
