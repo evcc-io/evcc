@@ -116,14 +116,12 @@ func (wb *WebastoNext) Status() (api.ChargeStatus, error) {
 	sb := binary.BigEndian.Uint16(b)
 
 	switch sb {
-	case 0, 8:
+	case 0:
 		return api.StatusA, nil
 	case 1, 4:
 		return api.StatusB, nil
 	case 3:
 		return api.StatusC, nil
-	case 7:
-		return api.StatusE, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
 	}
