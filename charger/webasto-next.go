@@ -17,12 +17,6 @@ package charger
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Supports all chargers based on Bender CC612/613 controller series
-// * The 'Modbus TCP Server for energy management systems' must be enabled.
-// * The setting 'Register Address Set' must NOT be set to 'Phoenix', 'TQ-DM100' or 'ISE/IGT Kassel'.
-//   -> Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc.
-// * Set 'Allow UID Disclose' to On
-
 import (
 	"encoding/binary"
 	"fmt"
@@ -93,9 +87,9 @@ func NewWebastoNext(uri string, id uint8) (api.Charger, error) {
 		current: 6, // assume min current
 	}
 
-	// get failsafe timeout
-	b := make([]byte, 2)
-	if b, err = wb.conn.ReadHoldingRegisters(tqRegComTimeout, 1); err != nil {
+	// get failsafe timeout from charger
+	b, err := wb.conn.ReadHoldingRegisters(tqRegComTimeout, 1)
+	if err != nil {
 		return nil, fmt.Errorf("could not get failsafe timeout: %v", err)
 	}
 
