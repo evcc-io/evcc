@@ -12,7 +12,7 @@ jobs:
     outputs:
       should_run: ${{ steps.should_run.outputs.should_run }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: print latest_commit
         run: echo ${{ github.sha }}
 
@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -65,24 +65,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Cache Go modules
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/go/pkg
-            ~/.cache/go-build
-          key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.go-version }}-go-
-
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ^1.18
+          cache: true
         id: go
 
       - name: Install Cloudsmith CLI
