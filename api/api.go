@@ -173,8 +173,8 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
-// TargetSoCer sends target soc to vehicle
-type TargetSoCer interface {
+// SoCLimiter sends target soc to vehicle
+type SoCLimiter interface {
 	SetTargetSoC(soc int) error
 }
 

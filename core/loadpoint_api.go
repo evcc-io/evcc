@@ -75,7 +75,7 @@ func (lp *LoadPoint) SetTargetSoC(soc int) {
 		lp.requestUpdate()
 
 		// sync to vehicle
-		if v, ok := lp.vehicle.(api.TargetSoCer); ok {
+		if v, ok := lp.vehicle.(api.SoCLimiter); ok {
 			lp.tasks.Enqueue(func() {
 				if err := v.SetTargetSoC(soc); err != nil {
 					lp.log.ERROR.Printf("vehicle target soc: %v", err)
