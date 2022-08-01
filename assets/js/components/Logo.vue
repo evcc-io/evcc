@@ -31,9 +31,7 @@ export default {
 .letter {
 	fill: #18191a;
 }
-@media (--dark-mode) {
-	.letter {
-		fill: var(--bs-white);
-	}
+html.dark .letter {
+	fill: var(--bs-white);
 }
 </style>
