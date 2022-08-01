@@ -3,7 +3,7 @@ name: Deploy updated templates
 on:
   push:
     branches: [master]
-    paths: "templates/**"
+    paths: ["templates/**"]
   workflow_dispatch:
 
 jobs:
