@@ -98,6 +98,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set
 func initConfig() {
+	cfgFile = util.Getenv("CONFIG", cfgFile)
 	if cfgFile != "" {
 		// Use config file from the flag
 		viper.SetConfigFile(cfgFile)
@@ -110,7 +111,7 @@ func initConfig() {
 		// Search config in home directory with name "mbmd" (without extension).
 		viper.AddConfigPath(".")    // optionally look for config in the working directory
 		viper.AddConfigPath("/etc") // path to look for the config file in
-
+		viper.AddConfigPath("/etc/evcc") // path to look for the config file in
 		viper.SetConfigName("evcc")
 	}
 

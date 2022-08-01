@@ -15,6 +15,9 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
         echo "starting evcc: 'evcc --config ${CONFIG}'"
         exec evcc --config ${CONFIG}
     fi
+elif [ -f ${CONFIG} ]; then
+    echo "starting evcc: 'evcc --config ${CONFIG}'"
+    exec evcc --config ${CONFIG}
 else
     if [ "$1" == '"evcc"' ] || expr "$1" : '-*' > /dev/null; then
         exec evcc "$@"
