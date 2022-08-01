@@ -532,6 +532,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("activePhases", lp.activePhases())
 	lp.publishVehicles()
 
+	lp.setDefaultPhases(lp.DefaultPhases)
+
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
 	lp.publish("targetSoC", lp.SoC.Target)
@@ -1036,8 +1038,16 @@ func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 func (lp *LoadPoint) setDefaultPhases(phases int) {
 	lp.Lock()
 	defer lp.Unlock()
+
 	lp.DefaultPhases = phases
 	lp.phaseTimer = time.Time{}
+
+	// publish 1p3p capability and phase configuration
+	if _, ok := lp.charger.(api.ChargePhases); ok {
+		lp.publish("1p3p", lp.DefaultPhases)
+	} else {
+		lp.publish("1p3p", nil)
+	}
 }
 
 // setPhases sets the number of enabled phases without modifying the charger
