@@ -3,26 +3,21 @@ package ocpp
 import "time"
 
 type Transaction struct {
-	ID              int       `yaml:"id"`
-	IDTag           string    `yaml:"idTag"`
-	Start           time.Time `yaml:"startTimestamp"`
-	End             time.Time `yaml:"endTimestamp,omitempty"`
-	MeterValueStart int64     `yaml:"meterValueStart"`
-	MeterValueStop  int64     `yaml:"meterValueStop"`
-	Charged         int64     `yaml:"charged"`
+	ID    int       `yaml:"id"`
+	IDTag string    `yaml:"idTag"`
+	Start time.Time `yaml:"startTimestamp"`
+	End   time.Time `yaml:"endTimestamp,omitempty"`
 }
 
-func NewTransaction(id int, idTag string, start time.Time, meterValue int) Transaction {
+func NewTransaction(id int, idTag string, start time.Time) Transaction {
 	return Transaction{
-		ID:              id,
-		IDTag:           idTag,
-		Start:           start,
-		MeterValueStart: int64(meterValue),
+		ID:    id,
+		IDTag: idTag,
+		Start: start,
 	}
 }
 
-func (t *Transaction) Finish(idTag string, end time.Time, meterValue int) {
+func (t *Transaction) Finish(idTag string, end time.Time) {
 	t.IDTag = idTag
-	t.MeterValueStop = int64(meterValue)
 	t.End = end
 }

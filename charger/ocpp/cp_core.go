@@ -1,7 +1,6 @@
 package ocpp
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -108,7 +107,7 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 	}
 
 	if !cp.meterTickerRunning && cp.meterSupported {
-		Instance().TriggerMeterValueRequest(cp)
+		Instance().TriggerMeterValuesRequest(cp)
 	}
 
 	return res, nil
@@ -116,21 +115,10 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 
 func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
-	if request.TransactionId != nil {
-		cp.log.TRACE.Printf("TransactionId: %+v", *request.TransactionId)
-	}
 
-	if request != nil {
-		cp.mu.Lock()
-		cp.setMeterValues(request)
-
-		if energy, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
-			v, _ := strconv.ParseInt(energy.Value, 10, 64)
-			cp.currentTransaction.Charged = v - cp.currentTransaction.MeterValueStart
-		}
-
-		cp.mu.Unlock()
-	}
+	cp.mu.Lock()
+	cp.setMeterValues(request)
+	cp.mu.Unlock()
 
 	return new(core.MeterValuesConfirmation), nil
 }
@@ -167,8 +155,7 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 	if request != nil {
 		if time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
 			cp.mu.Lock()
-			cp.currentTransaction = NewTransaction(cp.currentTransaction.ID+1, request.IdTag, request.Timestamp.Time, request.MeterStart)
-
+			cp.currentTransaction = NewTransaction(cp.currentTransaction.ID+1, request.IdTag, request.Timestamp.Time)
 			cp.mu.Unlock()
 
 			res.TransactionId = cp.currentTransaction.ID
@@ -184,7 +171,7 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 					for {
 						select {
 						case <-ticker.C:
-							Instance().TriggerMeterValueRequest(cp)
+							Instance().TriggerMeterValuesRequest(cp)
 						case <-cp.measureDoneCh:
 							cp.log.TRACE.Printf("returning from meter value requests")
 							cp.meterTickerRunning = false
@@ -208,9 +195,7 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 	// reset transaction
 	if request != nil {
 		cp.mu.Lock()
-
-		cp.currentTransaction.Finish(request.IdTag, request.Timestamp.Time, request.MeterStop)
-
+		cp.currentTransaction.Finish(request.IdTag, request.Timestamp.Time)
 		cp.mu.Unlock()
 
 		// TODO: Handle old transaction. Store them, check for the starting transaction event
@@ -227,7 +212,7 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 			cp.measureDoneCh <- struct{}{}
 		}
 
-		Instance().TriggerMeterValueRequest(cp)
+		Instance().TriggerMeterValuesRequest(cp)
 	}
 
 	return res, nil
