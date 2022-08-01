@@ -77,15 +77,18 @@ type StatusResponse struct {
 }
 
 type Attributes struct {
-	ChargeStatus       float32   `json:"chargingStatus"`
-	RangeHvacOff       int       `json:"rangeHvacOff"`
-	BatteryLevel       int       `json:"batteryLevel"`
-	BatteryCapacity    int       `json:"batteryCapacity"`
-	BatteryTemperature int       `json:"batteryTemperature"`
-	PlugStatus         int       `json:"plugStatus"`
-	LastUpdateTime     Timestamp `json:"lastUpdateTime"`
-	ChargePower        int       `json:"chargePower"`
-	RemainingTime      *int      `json:"chargingRemainingTime"`
+	ChargeStatus          float32   `json:"chargeStatus"`
+	RangeHvacOff          int       `json:"rangeHvacOff"`
+	BatteryLevel          int       `json:"batteryLevel"`
+	BatteryCapacity       int       `json:"batteryCapacity"`
+	BatteryTemperature    int       `json:"batteryTemperature"`
+	PlugStatus            int       `json:"plugStatus"`
+	LastUpdateTime        Timestamp `json:"lastUpdateTime"`
+	ChargePower           int       `json:"chargePower"`
+	RemainingTime         *int      `json:"chargingRemainingTime"`
+	RemainingToFullFast   int       `json:"timeRequiredToFullFast"`
+	RemainingToFullNormal int       `json:"timeRequiredToFullNormal"`
+	RemainingToFullSlow   int       `json:"timeRequiredToFullSlow"`
 }
 
 type ActionResponse struct {
