@@ -28,21 +28,26 @@ func NewMQTT(root string) *MQTT {
 }
 
 func (m *MQTT) encode(v interface{}) string {
-	var s string
+	// nil should erase the value
+	if v == nil {
+		return ""
+	}
+
 	switch val := v.(type) {
+	case string:
+		return val
 	case time.Time:
-		s = strconv.FormatInt(val.Unix(), 10)
+		return strconv.FormatInt(val.Unix(), 10)
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
-		s = fmt.Sprintf("%d", int64(val.Seconds()))
-	case fmt.Stringer, string:
-		s = fmt.Sprintf("%s", val)
+		return fmt.Sprintf("%d", int64(val.Seconds()))
+	case fmt.Stringer:
+		return val.String()
 	case float64:
-		s = fmt.Sprintf("%.5g", val)
+		return fmt.Sprintf("%.5g", val)
 	default:
-		s = fmt.Sprintf("%v", val)
+		return fmt.Sprintf("%v", val)
 	}
-	return s
 }
 
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
