@@ -8,6 +8,38 @@ on:
   workflow_call:
 
 jobs:
+  clean:
+    name: Clean
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ^1.18
+          cache: true
+        id: go
+
+      - name: Install tools
+        run: make install
+
+      - name: Assets
+        run: make assets
+
+      - name: Format & Tidy
+        run: |
+          gofmt -w -l $(find . -name '*.go')
+          go mod tidy
+
+      - name: Porcelain
+        run: |
+          test -z "$(git status --porcelain)" || (git status; git diff; false)
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -24,21 +56,6 @@ jobs:
           go-version: ^1.18
           cache: true
         id: go
-
-      - name: gofmt
-        run: |
-          gofmt -w -l $(find . -name '*.go')
-
-      - name: Install tools
-        run: make install
-
-      - name: Assets
-        run: make assets
-
-      - name: Porcelain
-        run: |
-          go mod tidy
-          test -z "$(git status --porcelain)" || (git status; git diff; false)
 
       - name: Build
         run: make build
@@ -110,5 +127,3 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          skip-pkg-cache: true
-          skip-build-cache: true
