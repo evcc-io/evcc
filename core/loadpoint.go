@@ -1044,9 +1044,9 @@ func (lp *LoadPoint) setDefaultPhases(phases int) {
 
 	// publish 1p3p capability and phase configuration
 	if _, ok := lp.charger.(api.ChargePhases); ok {
-		lp.publish("1p3p", lp.DefaultPhases)
+		lp.publish("phases1p3p", lp.DefaultPhases)
 	} else {
-		lp.publish("1p3p", nil)
+		lp.publish("phases1p3p", nil)
 	}
 }
 
