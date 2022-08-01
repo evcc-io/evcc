@@ -1,4 +1,5 @@
 template: solax
+covers: ["solax-x1", "solax-x3"]
 products:
   - brand: Solax
     description:
