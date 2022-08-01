@@ -1,27 +1,27 @@
 product:
   brand: Solax
-  description: Hybrid X3
+  description: Hybrid X1/X3 G3/G4
 description: |
-  Der Solax Inverter muss via Ethernet an das lokale Netzwerk angeschlossen sein.
+  Der Solax Hybrid Inverter muss via Ethernet an das lokale Netzwerk angeschlossen sein.
 render:
   - usage: grid
     default: |
       type: template
-      template: solax-x3
+      template: solax
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 502 # Port
   - usage: pv
     default: |
       type: template
-      template: solax-x3
+      template: solax
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 502 # Port
   - usage: battery
     default: |
       type: template
-      template: solax-x3
+      template: solax
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 502 # Port
