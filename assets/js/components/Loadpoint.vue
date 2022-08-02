@@ -1,13 +1,24 @@
 <template>
 	<div class="loadpoint pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
 		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
-			<h3 class="mb-3 me-2 text-truncate">
-				{{ title || $t("main.loadpoint.fallbackName") }}
-			</h3>
+			<div class="d-flex justify-content-between align-items-center mb-3">
+				<h3 class="me-2 mb-0 text-truncate">
+					{{ title || $t("main.loadpoint.fallbackName") }}
+				</h3>
+				<button
+					type="button"
+					class="d-block d-sm-none btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray"
+				>
+					<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
+				</button>
+			</div>
 			<div class="mb-3 d-flex align-items-center">
-				<Mode class="w-100 w-sm-auto" :mode="mode" @updated="setTargetMode" />
-				<button v-if="$hiddenFeatures" class="btn btn-link text-gray p-0 flex-shrink-0">
-					<shopicon-filled-options size="s"></shopicon-filled-options>
+				<Mode class="flex-grow-1" :mode="mode" @updated="setTargetMode" />
+				<button
+					type="button"
+					class="d-none d-sm-block btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray ms-2"
+				>
+					<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 				</button>
 			</div>
 		</div>
@@ -86,7 +97,7 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/lightning";
-import "@h2d2/shopicons/es/filled/options";
+import "@h2d2/shopicons/es/regular/adjust";
 import api from "../api";
 import Mode from "./Mode.vue";
 import Vehicle from "./Vehicle.vue";

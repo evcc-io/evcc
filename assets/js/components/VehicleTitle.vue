@@ -1,16 +1,5 @@
 <template>
 	<div class="d-flex justify-content-between mb-3 align-items-center">
-		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
-			<shopicon-regular-car3
-				v-if="carIcon"
-				class="me-2 flex-shrink-0 car-icon"
-			></shopicon-regular-car3>
-			<shopicon-regular-cablecharge
-				v-else
-				class="me-2 flex-shrink-0 car-icon"
-			></shopicon-regular-cablecharge>
-			<span class="flex-grow-1 text-truncate"> {{ name }} </span>
-		</h4>
 		<VehicleOptions
 			v-if="showOptions"
 			class="options"
@@ -18,7 +7,19 @@
 			:is-unknown="isUnknown"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
-		/>
+		>
+			<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
+				<shopicon-regular-car3
+					v-if="carIcon"
+					class="me-2 flex-shrink-0 car-icon"
+				></shopicon-regular-car3>
+				<shopicon-regular-cablecharge
+					v-else
+					class="me-2 flex-shrink-0 car-icon"
+				></shopicon-regular-cablecharge>
+				<span class="flex-grow-1 text-truncate"> {{ name }} </span>
+			</h4>
+		</VehicleOptions>
 	</div>
 </template>
 
