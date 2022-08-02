@@ -30,6 +30,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -50,11 +51,13 @@ type Easee struct {
 	dynamicChargerCurrent float64
 	current               float64
 	chargerEnabled        bool
+	smartCharging         bool
 	enabledStatus         bool
 	phaseMode             int
 	currentPower, sessionEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid string
+	lp   loadpoint.API
 }
 
 func init() {
@@ -269,6 +272,8 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.rfid = res.Value
 	case easee.IS_ENABLED:
 		c.chargerEnabled = value.(bool)
+	case easee.SMART_CHARGING:
+		c.smartCharging = value.(bool)
 	case easee.TOTAL_POWER:
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
@@ -336,10 +341,12 @@ func (c *Easee) chargers() ([]easee.Charger, error) {
 
 // Status implements the api.Charger interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
+	err := c.updateSmartCharging()
+
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()
 
-	return c.chargeStatus, nil
+	return c.chargeStatus, err
 }
 
 // Enabled implements the api.Charger interface
@@ -499,4 +506,37 @@ func (c *Easee) Identify() (string, error) {
 	defer c.mux.L.Unlock()
 
 	return c.rfid, nil
+}
+
+// Set smart charging status to update the chargers led (smart=blue, fast=white)
+func (c *Easee) updateSmartCharging() error {
+	if c.lp == nil {
+		return nil
+	}
+
+	mode := c.lp.GetMode()
+	isSmartCharging := mode == api.ModePV || mode == api.ModeMinPV
+
+	if isSmartCharging != c.smartCharging {
+		c.log.DEBUG.Printf("update smart charging status: %v -> %v", c.smartCharging, isSmartCharging)
+
+		data := easee.ChargerSettings{
+			SmartCharging: &isSmartCharging,
+		}
+		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
+		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		if err != nil {
+			return err
+		}
+		resp.Body.Close()
+		c.mux.L.Lock()
+		c.smartCharging = isSmartCharging
+		c.mux.L.Unlock()
+	}
+	return nil
+}
+
+// LoadpointControl implements loadpoint.Controller
+func (c *Easee) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
 }
