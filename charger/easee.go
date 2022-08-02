@@ -522,15 +522,13 @@ func (c *Easee) updateSmartCharging() {
 	c.mux.L.Unlock()
 
 	if updateNeeded {
-		c.log.DEBUG.Printf("update smart charging status: %v", isSmartCharging)
-
 		data := easee.ChargerSettings{
 			SmartCharging: &isSmartCharging,
 		}
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 		if err != nil {
-			c.log.WARN.Printf("failed to update smart charging status")
+			c.log.WARN.Println("failed to update smart charging status", err)
 		}
 		resp.Body.Close()
 
