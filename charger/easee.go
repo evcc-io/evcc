@@ -341,12 +341,12 @@ func (c *Easee) chargers() ([]easee.Charger, error) {
 
 // Status implements the api.Charger interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
-	err := c.updateSmartCharging()
+	c.updateSmartCharging()
 
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()
 
-	return c.chargeStatus, err
+	return c.chargeStatus, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -509,16 +509,20 @@ func (c *Easee) Identify() (string, error) {
 }
 
 // Set smart charging status to update the chargers led (smart=blue, fast=white)
-func (c *Easee) updateSmartCharging() error {
+func (c *Easee) updateSmartCharging() {
 	if c.lp == nil {
-		return nil
+		return
 	}
 
 	mode := c.lp.GetMode()
 	isSmartCharging := mode == api.ModePV || mode == api.ModeMinPV
 
-	if isSmartCharging != c.smartCharging {
-		c.log.DEBUG.Printf("update smart charging status: %v -> %v", c.smartCharging, isSmartCharging)
+	c.mux.L.Lock()
+	updateNeeded := isSmartCharging != c.smartCharging
+	c.mux.L.Unlock()
+
+	if updateNeeded {
+		c.log.DEBUG.Printf("update smart charging status: %v", isSmartCharging)
 
 		data := easee.ChargerSettings{
 			SmartCharging: &isSmartCharging,
@@ -526,14 +530,14 @@ func (c *Easee) updateSmartCharging() error {
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 		if err != nil {
-			return err
+			c.log.WARN.Printf("failed to update smart charging status")
 		}
 		resp.Body.Close()
+
 		c.mux.L.Lock()
 		c.smartCharging = isSmartCharging
 		c.mux.L.Unlock()
 	}
-	return nil
 }
 
 // LoadpointControl implements loadpoint.Controller
