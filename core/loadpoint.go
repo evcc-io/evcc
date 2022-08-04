@@ -123,7 +123,7 @@ type LoadPoint struct {
 	socUpdated          time.Time // SoC updated timestamp (poll: connected)
 	vehicleDetect       time.Time // Vehicle connected timestamp
 	vehicleDetectTicker *clock.Ticker
-	vehicleID           string
+	vehicleIdentifier   string
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -435,6 +435,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	lp.pushEvent(evVehicleDisconnect)
 
+	// remove charger vehicle id
+	lp.setVehicleIdentifier("")
+
 	// remove active vehicle if not default
 	if lp.vehicle != lp.defaultVehicle {
 		lp.setActiveVehicle(lp.defaultVehicle)
@@ -726,6 +729,14 @@ func (lp *LoadPoint) remoteControlled(demand loadpoint.RemoteDemand) bool {
 	return lp.remoteDemand == demand
 }
 
+// setVehicleIdentifier updated the vehicle id as read from the charger
+func (lp *LoadPoint) setVehicleIdentifier(id string) {
+	if lp.vehicleIdentifier != id {
+		lp.vehicleIdentifier = id
+		lp.publish("vehicleIdentity", id)
+	}
+}
+
 // identifyVehicle reads vehicle identification from charger
 func (lp *LoadPoint) identifyVehicle() {
 	identifier, ok := lp.charger.(api.Identifier)
@@ -739,17 +750,16 @@ func (lp *LoadPoint) identifyVehicle() {
 		return
 	}
 
-	if lp.vehicleID == id {
+	if lp.vehicleIdentifier == id {
 		return
 	}
 
 	// vehicle found or removed
-	lp.vehicleID = id
-
-	lp.log.DEBUG.Println("charger vehicle id:", id)
-	lp.publish("vehicleIdentity", id)
+	lp.setVehicleIdentifier(id)
 
 	if id != "" {
+		lp.log.DEBUG.Println("charger vehicle id:", id)
+
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
 			lp.setActiveVehicle(vehicle)
 		}
