@@ -174,9 +174,9 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	od := newConfig(api.ModeOff, 5, 15, 2, 98)
 
 	vehicle := mock.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Title().AnyTimes()
+	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.EXPECT().OnIdentified().Return(oi)
+	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
 
 	lp := NewLoadPoint(util.NewLogger("foo"))
 
@@ -195,6 +195,25 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	vehicle.EXPECT().Phases().AnyTimes()
 	lp.evVehicleDisconnectHandler()
 	assertConfig(lp, od)
+
+	// identify vehicle by id
+	charger := struct {
+		*mock.MockCharger
+		*mock.MockIdentifier
+	}{
+		MockCharger:    mock.NewMockCharger(ctrl),
+		MockIdentifier: mock.NewMockIdentifier(ctrl),
+	}
+
+	lp.charger = charger
+	lp.vehicles = []api.Vehicle{vehicle}
+
+	const id = "don't call me stacey"
+	charger.MockIdentifier.EXPECT().Identify().Return(id, nil)
+	vehicle.EXPECT().Identifiers().Return([]string{id})
+
+	lp.identifyVehicle()
+	assertConfig(lp, oi)
 }
 
 func TestReconnectVehicle(t *testing.T) {
