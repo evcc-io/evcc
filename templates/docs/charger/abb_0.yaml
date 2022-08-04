@@ -1,7 +1,6 @@
 product:
   brand: ABB
   description: Terra AC
-capabilities: ["mA"]
 requirements: ["sponsorship"]
 render:
   - default: |
