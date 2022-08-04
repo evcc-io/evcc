@@ -3,7 +3,6 @@ products:
   - brand: ABB
     description:
       generic: Terra AC
-capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]
 params:

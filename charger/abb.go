@@ -187,15 +187,8 @@ func (wb *ABB) setCurrent(current uint32) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *ABB) MaxCurrent(current int64) error {
-	return wb.MaxCurrentMillis(float64(current))
-}
-
-var _ api.ChargerEx = (*ABB)(nil)
-
-// MaxCurrent implements the api.ChargerEx interface
-func (wb *ABB) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %.1f", current)
+		return fmt.Errorf("invalid current %d", current)
 	}
 
 	s, err := wb.session()
