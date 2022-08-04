@@ -112,7 +112,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"response_type":         {"code"},
 		"redirect_uri":          {RedirectURI},
 		"state":                 {"cwU-gIE27j67poy2UcL3KQ"},
-		"scope":                 {"authenticate_user vehicle_data remote_services"}, // {"openid profile email offline_access smacc vehicle_data perseus dlm svds cesim vsapi remote_services fupo authenticate_user"},
+		"scope":                 {"openid profile email offline_access smacc vehicle_data perseus dlm svds cesim vsapi remote_services fupo authenticate_user"},
 		"nonce":                 {"login_nonce"},
 		"code_challenge_method": {"S256"},
 		"code_challenge":        {cv.CodeChallengeS256()},
