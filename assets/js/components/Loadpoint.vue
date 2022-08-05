@@ -51,14 +51,14 @@
 					/>
 					<shopicon-regular-lightning
 						class="text-evcc opacity-transiton"
-						:class="`opacity-${charging ? '100' : '0'}`"
+						:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
 						size="m"
 					></shopicon-regular-lightning>
 				</div>
 				<Phases
 					v-bind="phasesProps"
 					class="opacity-transiton"
-					:class="`opacity-${charging ? '100' : '0'}`"
+					:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
 				/>
 			</div>
 			<LabelAndValue
@@ -178,6 +178,9 @@ export default {
 		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);
+		},
+		showChargingIndicator: function () {
+			return this.charging && this.chargePower > 0;
 		},
 	},
 	watch: {

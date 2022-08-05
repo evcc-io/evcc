@@ -49,7 +49,7 @@ jobs:
         run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin ${SEIHON_VERSION}
 
       - name: Login
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
@@ -80,7 +80,7 @@ jobs:
         run: pip install --upgrade cloudsmith-cli
 
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         with:
           version: latest
           args: --snapshot -f .goreleaser-nightly.yml --rm-dist

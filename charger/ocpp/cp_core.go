@@ -9,6 +9,11 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
+const (
+	messageExpiry     = 30 * time.Second
+	transactionExpiry = time.Hour
+)
+
 func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
@@ -42,6 +47,22 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 	return res, nil
 }
 
+// timestampValid returns false if status timestamps are outdated
+func (cp *CP) timestampValid(t time.Time) bool {
+	// reject if expired
+	if time.Since(t) > messageExpiry {
+		return false
+	}
+
+	// assume having a timestamp is better than not
+	if cp.status.Timestamp == nil {
+		return true
+	}
+
+	// reject older values than we already have
+	return !t.Before(cp.status.Timestamp.Time)
+}
+
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
@@ -52,7 +73,7 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 		if cp.status == nil {
 			cp.status = request
 			cp.initialized.Broadcast()
-		} else if (request.Timestamp.Equal(cp.status.Timestamp.Time) || request.Timestamp.After(cp.status.Timestamp.Time)) && request.Timestamp.After(time.Now().Add(-30*time.Second)) {
+		} else if request.Timestamp == nil || cp.timestampValid(request.Timestamp.Time) {
 			cp.status = request
 		} else {
 			cp.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, cp.status.Timestamp)
@@ -86,7 +107,7 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 		CurrentTime: types.NewDateTime(time.Now()),
 	}
 
-	if !cp.meterTrickerRunning && cp.meterSupported {
+	if !cp.meterTickerRunning && cp.meterSupported {
 		Instance().TriggerMeterValueRequest(cp)
 	}
 
@@ -144,7 +165,7 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 
 	// create new transaction
 	if request != nil {
-		if request.Timestamp.After(time.Now().Add(-1 * time.Hour)) { // only respect transactions in the last hour
+		if time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
 			cp.mu.Lock()
 			cp.currentTransaction = NewTransaction(cp.currentTransaction.ID+1, request.IdTag, request.Timestamp.Time, request.MeterStart)
 
@@ -152,10 +173,10 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 
 			res.TransactionId = cp.currentTransaction.ID
 
-			if request.Timestamp.After(time.Now().Add(-30*time.Second)) && cp.meterSupported && !cp.meterTrickerRunning {
+			if cp.meterSupported && !cp.meterTickerRunning && time.Since(request.Timestamp.Time) < messageExpiry {
 				go func() {
 					cp.log.TRACE.Printf("starting meter value ticker")
-					cp.meterTrickerRunning = true
+					cp.meterTickerRunning = true
 					cp.measureDoneCh = make(chan struct{})
 					ticker := time.NewTicker(15 * time.Second)
 
@@ -166,7 +187,7 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 							Instance().TriggerMeterValueRequest(cp)
 						case <-cp.measureDoneCh:
 							cp.log.TRACE.Printf("returning from meter value requests")
-							cp.meterTrickerRunning = false
+							cp.meterTickerRunning = false
 							return
 						}
 					}
@@ -202,7 +223,7 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 	}
 
 	if cp.meterSupported {
-		if cp.meterTrickerRunning {
+		if cp.meterTickerRunning {
 			cp.measureDoneCh <- struct{}{}
 		}
 

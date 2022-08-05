@@ -3,7 +3,7 @@ name: Deploy data to website
 on:
   push:
     branches: [master]
-    paths: "templates/evcc.io/**"
+    paths: ["templates/evcc.io/**"]
   workflow_dispatch:
 
 jobs:
@@ -21,8 +21,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Build docs
         run: make docs
