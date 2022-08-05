@@ -122,8 +122,8 @@ var _ api.VehicleClimater = (*Provider)(nil)
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.hvacG()
 
-	// Zoe Ph2
-	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden) {
+	// Zoe Ph2, Megane e-tech
+	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusBadGateway) {
 		return false, 0, 0, api.ErrNotAvailable
 	}
 
