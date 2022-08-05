@@ -491,6 +491,8 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 
 // applyAction executes the action
 func (lp *LoadPoint) applyAction(actionCfg api.ActionConfig) {
+	lp.log.DEBUG.Printf("#4040 applyAction: %+v", actionCfg) // TODO remove
+
 	if actionCfg.Mode != nil {
 		lp.SetMode(*actionCfg.Mode)
 	}
@@ -732,6 +734,7 @@ func (lp *LoadPoint) remoteControlled(demand loadpoint.RemoteDemand) bool {
 // setVehicleIdentifier updated the vehicle id as read from the charger
 func (lp *LoadPoint) setVehicleIdentifier(id string) {
 	if lp.vehicleIdentifier != id {
+		lp.log.DEBUG.Printf("#4040 setVehicleIdentifier: %s", id) // TODO remove
 		lp.vehicleIdentifier = id
 		lp.publish("vehicleIdentity", id)
 	}
@@ -768,9 +771,12 @@ func (lp *LoadPoint) identifyVehicle() {
 
 // selectVehicleByID selects the vehicle with the given ID
 func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
+	lp.log.DEBUG.Printf("#4040 selectVehicleByID: %s", id) // TODO remove
+
 	// find exact match
 	for _, vehicle := range lp.vehicles {
 		if slices.Contains(vehicle.Identifiers(), id) {
+			lp.log.DEBUG.Printf("#4040 selectVehicleByID found: %s", vehicle.Title()) // TODO remove
 			return vehicle
 		}
 	}
@@ -802,6 +808,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if lp.vehicle == vehicle {
 		return
 	}
+
+	lp.log.DEBUG.Printf("#4040 setActiveVehicle: %s", vehicle.Title()) // TODO remove
 
 	from := "unknown"
 	if lp.vehicle != nil {
@@ -927,12 +935,14 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 	}
 
 	if vehicle := coordinator.identifyVehicleByStatus(lp.log, lp, lp.vehicles); vehicle != nil {
+		lp.log.DEBUG.Printf("#4040 identifyVehicleByStatus - activate %s", vehicle.Title()) // TODO remove
 		lp.setActiveVehicle(vehicle)
 		return
 	}
 
 	// remove previous vehicle if status was not confirmed
 	if _, ok := lp.vehicle.(api.ChargeState); ok {
+		lp.log.DEBUG.Printf("#4040 identifyVehicleByStatus - remove previous") // TODO remove
 		lp.setActiveVehicle(nil)
 	}
 }
