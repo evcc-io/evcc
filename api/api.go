@@ -51,11 +51,13 @@ func (c ChargeStatus) String() string {
 
 // ActionConfig defines an action to take on event
 type ActionConfig struct {
-	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
-	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
-	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
-	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
-	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
+	Mode         *ChargeMode `mapstructure:"mode,omitempty"`         // Charge Mode
+	MinCurrent   *float64    `mapstructure:"minCurrent,omitempty"`   // Minimum Current
+	MaxCurrent   *float64    `mapstructure:"maxCurrent,omitempty"`   // Maximum Current
+	MinCurrent1p *float64    `mapstructure:"minCurrent1p,omitempty"` // Minimum Current 1p
+	MaxCurrent1p *float64    `mapstructure:"maxCurrent1p,omitempty"` // Maximum Current 1p
+	MinSoC       *int        `mapstructure:"minSoC,omitempty"`       // Minimum SoC
+	TargetSoC    *int        `mapstructure:"targetSoC,omitempty"`    // Target SoC
 }
 
 // String implements Stringer and returns the ActionConfig as comma-separated key:value string

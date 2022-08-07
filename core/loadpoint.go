@@ -113,6 +113,8 @@ type LoadPoint struct {
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
+	MinCurrent1p  float64       // Min current for 1p
+	MaxCurrent1p  float64       // Max current for 1p
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
 	enabled             bool      // Charger enabled state
@@ -295,6 +297,8 @@ func (lp *LoadPoint) collectDefaults() {
 		*actionCfg.Mode = lp.GetMode()
 		*actionCfg.MinCurrent = lp.GetMinCurrent()
 		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
+		*actionCfg.MinCurrent1p = lp.MinCurrent1p // TODO add api
+		*actionCfg.MaxCurrent1p = lp.MaxCurrent1p // TODO add api
 		*actionCfg.MinSoC = lp.GetMinSoC()
 		*actionCfg.TargetSoC = lp.GetTargetSoC()
 	} else {
@@ -497,8 +501,14 @@ func (lp *LoadPoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.MinCurrent != nil {
 		lp.SetMinCurrent(*actionCfg.MinCurrent)
 	}
+	if actionCfg.MinCurrent1p != nil {
+		lp.MinCurrent1p = *actionCfg.MinCurrent1p // TODO add api
+	}
 	if actionCfg.MaxCurrent != nil {
 		lp.SetMaxCurrent(*actionCfg.MaxCurrent)
+	}
+	if actionCfg.MaxCurrent1p != nil {
+		lp.MaxCurrent1p = *actionCfg.MaxCurrent1p // TODO add api
 	}
 	if actionCfg.MinSoC != nil {
 		lp.SetMinSoC(*actionCfg.MinSoC)
