@@ -4,7 +4,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 )
 
 type vehicleCoordinator struct {
@@ -49,10 +48,6 @@ func (lp *vehicleCoordinator) availableDetectibleVehicles(owner loadpoint.API, v
 // find active vehicle by charge state
 func (lp *vehicleCoordinator) identifyVehicleByStatus(log *util.Logger, owner loadpoint.API, vehicles []api.Vehicle) api.Vehicle {
 	available := lp.availableDetectibleVehicles(owner, vehicles)
-
-	log.DEBUG.Printf("#4040 coordinator.identifyVehicleByStatus - available %v", lo.Map(available, func(v api.Vehicle, _ int) string {
-		return v.Title()
-	})) // TODO remove
 
 	var res api.Vehicle
 	for _, vehicle := range available {
