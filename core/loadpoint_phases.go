@@ -65,7 +65,7 @@ func (lp *LoadPoint) maxActivePhases() int {
 
 	// if 1p3p supported then assume configured limit or 3p
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		physical = lp.DefaultPhases
+		physical = lp.ConfiguredPhases
 		if physical == 0 {
 			physical = 3
 		}
