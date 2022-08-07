@@ -295,10 +295,10 @@ func (lp *LoadPoint) collectDefaults() {
 	if err := allocate.Zero(actionCfg); err == nil {
 		// initialize with default values
 		*actionCfg.Mode = lp.GetMode()
-		*actionCfg.MinCurrent = lp.GetMinCurrent()
-		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
-		*actionCfg.MinCurrent1p = lp.MinCurrent1p // TODO add api
-		*actionCfg.MaxCurrent1p = lp.MaxCurrent1p // TODO add api
+		*actionCfg.MinCurrent = lp.MinCurrent     // TODO
+		*actionCfg.MaxCurrent = lp.MaxCurrent     // TODO
+		*actionCfg.MinCurrent1p = lp.MinCurrent1p // TODO
+		*actionCfg.MaxCurrent1p = lp.MaxCurrent1p // TODO
 		*actionCfg.MinSoC = lp.GetMinSoC()
 		*actionCfg.TargetSoC = lp.GetTargetSoC()
 	} else {
@@ -539,7 +539,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	// publish initial values
 	lp.publish("title", lp.Title)
-	lp.publish("minCurrent", lp.MinCurrent)
+	lp.publish("minCurrent", lp.MinCurrent) // TODO
 	lp.publish("maxCurrent", lp.MaxCurrent)
 	lp.publish("phases", lp.phases)
 	lp.publish("activePhases", lp.activePhases())
