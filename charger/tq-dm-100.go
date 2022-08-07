@@ -29,33 +29,33 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-// WebastoNext charger implementation
-type WebastoNext struct {
+// TqDm charger implementation
+type TqDm struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
 }
 
-// const (
-// all holding type registers
-// tqRegChargePointState     = 1000 // State of the charging device
-// tqRegCurrents             = 1008 // Charging current (mA)
-// tqRegActivePower          = 1020 // Sum of active charging power (W)
-// tqRegEnergyMeter          = 1036 // Meter reading of the charging station (Wh)
-// tqRegChargingTime         = 1508 // Duration since beginning of charge (Seconds)
-// tqRegUserID               = 1600 // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
-// tqRegSmartVehicleDetected = 1620 // Returns 1 if an EV currently connected is a smart vehicle, or 0 if no EV connected or it is not a smart vehicle
-// tqRegComTimeout           = 2002 // Communication timeout
-// tqRegChargeCurrent        = 5004 // (A)
-// tqRegLifeBit              = 6000 // Communication monitoring 0/1 Toggle-Bit
-// )
+const (
+	// all holding type registers
+	tqRegChargePointState     = 1000 // State of the charging device
+	tqRegCurrents             = 1008 // Charging current (mA)
+	tqRegActivePower          = 1020 // Sum of active charging power (W)
+	tqRegEnergyMeter          = 1036 // Meter reading of the charging station (Wh)
+	tqRegChargingTime         = 1508 // Duration since beginning of charge (Seconds)
+	tqRegUserID               = 1600 // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
+	tqRegSmartVehicleDetected = 1620 // Returns 1 if an EV currently connected is a smart vehicle, or 0 if no EV connected or it is not a smart vehicle
+	tqRegComTimeout           = 2002 // Communication timeout
+	tqRegChargeCurrent        = 5004 // (A)
+	tqRegLifeBit              = 6000 // Communication monitoring 0/1 Toggle-Bit
+)
 
 func init() {
-	registry.Add("webasto-next", NewWebastoNextFromConfig)
+	registry.Add("tq-dm", NewTqDmFromConfig)
 }
 
-// NewWebastoNextFromConfig creates a WebastoNext charger from generic config
-func NewWebastoNextFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewTqDmFromConfig creates a TqDm charger from generic config
+func NewTqDmFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -64,11 +64,11 @@ func NewWebastoNextFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewWebastoNext(cc.URI, cc.ID)
+	return NewTqDm(cc.URI, cc.ID)
 }
 
-// NewWebastoNext creates WebastoNext charger
-func NewWebastoNext(uri string, id uint8) (api.Charger, error) {
+// NewTqDm creates TqDm charger
+func NewTqDm(uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -78,10 +78,10 @@ func NewWebastoNext(uri string, id uint8) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("webasto-next")
+	log := util.NewLogger("tq-dm")
 	conn.Logger(log.TRACE)
 
-	wb := &WebastoNext{
+	wb := &TqDm{
 		log:     log,
 		conn:    conn,
 		current: 6, // assume min current
@@ -98,7 +98,7 @@ func NewWebastoNext(uri string, id uint8) (api.Charger, error) {
 	return wb, err
 }
 
-func (wb *WebastoNext) heartbeat(timeout time.Duration) {
+func (wb *TqDm) heartbeat(timeout time.Duration) {
 	for range time.NewTicker(timeout).C {
 		if _, err := wb.conn.WriteSingleRegister(tqRegLifeBit, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
@@ -107,7 +107,7 @@ func (wb *WebastoNext) heartbeat(timeout time.Duration) {
 }
 
 // Status implements the api.Charger interface
-func (wb *WebastoNext) Status() (api.ChargeStatus, error) {
+func (wb *TqDm) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegChargePointState, 1)
 	if err != nil {
 		return api.StatusNone, err
@@ -128,7 +128,7 @@ func (wb *WebastoNext) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *WebastoNext) Enabled() (bool, error) {
+func (wb *TqDm) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegChargeCurrent, 1)
 	if err != nil {
 		return false, err
@@ -140,7 +140,7 @@ func (wb *WebastoNext) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (wb *WebastoNext) Enable(enable bool) error {
+func (wb *TqDm) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
 		binary.BigEndian.PutUint16(b, wb.current)
@@ -152,7 +152,7 @@ func (wb *WebastoNext) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *WebastoNext) MaxCurrent(current int64) error {
+func (wb *TqDm) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
@@ -168,10 +168,10 @@ func (wb *WebastoNext) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.ChargeTimer = (*WebastoNext)(nil)
+var _ api.ChargeTimer = (*TqDm)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
-func (wb *WebastoNext) ChargingTime() (time.Duration, error) {
+func (wb *TqDm) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegChargingTime, 2)
 	if err != nil {
 		return 0, err
@@ -180,10 +180,10 @@ func (wb *WebastoNext) ChargingTime() (time.Duration, error) {
 	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
-var _ api.Meter = (*WebastoNext)(nil)
+var _ api.Meter = (*TqDm)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (wb *WebastoNext) CurrentPower() (float64, error) {
+func (wb *TqDm) CurrentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegActivePower, 2)
 	if err != nil {
 		return 0, err
@@ -192,10 +192,10 @@ func (wb *WebastoNext) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-var _ api.MeterEnergy = (*WebastoNext)(nil)
+var _ api.MeterEnergy = (*TqDm)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (wb *WebastoNext) TotalEnergy() (float64, error) {
+func (wb *TqDm) TotalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegEnergyMeter, 2)
 	if err != nil {
 		return 0, err
@@ -204,10 +204,10 @@ func (wb *WebastoNext) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-var _ api.MeterCurrent = (*WebastoNext)(nil)
+var _ api.MeterCurrent = (*TqDm)(nil)
 
 // Currents implements the api.MeterCurrent interface
-func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
+func (wb *TqDm) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegCurrents, 3)
 	if err != nil {
 		return 0, 0, 0, err
@@ -221,10 +221,10 @@ func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
-var _ api.Identifier = (*WebastoNext)(nil)
+var _ api.Identifier = (*TqDm)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *WebastoNext) Identify() (string, error) {
+func (wb *TqDm) Identify() (string, error) {
 	id, err := wb.conn.ReadHoldingRegisters(tqRegUserID, 10)
 	if err != nil {
 		return "", err
@@ -233,10 +233,10 @@ func (wb *WebastoNext) Identify() (string, error) {
 	return strings.TrimSpace(string(id)), nil
 }
 
-var _ api.Diagnosis = (*WebastoNext)(nil)
+var _ api.Diagnosis = (*TqDm)(nil)
 
 // Diagnose implements the api.Diagnosis interface
-func (wb *WebastoNext) Diagnose() {
+func (wb *TqDm) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(tqRegSmartVehicleDetected, 1); err == nil {
 		fmt.Printf("\tSmart Vehicle:\t%t\n", binary.BigEndian.Uint16(b) != 0)
 	}
