@@ -144,12 +144,12 @@ func NewTqEm420FromConfig(other map[string]interface{}) (api.Meter, error) {
 	return m, nil
 }
 
-var _ api.MeterEnergy = (*TqEM420)(nil)
-
 func (m *TqEM420) CurrentPower() (float64, error) {
 	res, err := m.dataG()
 	return (res.SmartMeter.Values.ActivePowerP / 1e3) - (res.SmartMeter.Values.ActivePowerM / 1e3), err
 }
+
+var _ api.MeterEnergy = (*TqEM420)(nil)
 
 func (m *TqEM420) TotalEnergy() (float64, error) {
 	res, err := m.dataG()
