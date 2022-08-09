@@ -150,12 +150,12 @@ var _ api.MeterEnergy = (*TqEM420)(nil)
 
 func (m *TqEM420) CurrentPower() (float64, error) {
 	res, err := m.dataG()
-	return res.SmartMeter.Values.ActivePowerP/1e3 - res.SmartMeter.Values.ActivePowerM/1e3, err
+	return (res.SmartMeter.Values.ActivePowerP / 1e3) - (res.SmartMeter.Values.ActivePowerM / 1e3), err
 }
 
 func (m *TqEM420) TotalEnergy() (float64, error) {
 	res, err := m.dataG()
-	return res.SmartMeter.Values.ActiveEnergyP / 1e6, err
+	return res.SmartMeter.Values.ActiveEnergyP / 1e3, err
 }
 
 func (m *TqEM420) Currents() (float64, float64, float64, error) {
