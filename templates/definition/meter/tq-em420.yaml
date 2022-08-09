@@ -11,8 +11,21 @@ params:
     default: 80
   - name: device
     default: "local"
+    description:
+      de: API Geräte Pfad
+      en: API Device Path
+    help:
+      de: Pfad der API (JSON-Schnittstelle -> Daten Endpunkt)
+      en: Path for API (JSON-API -> Data Endpoint)
   - name: token
     required: true
+    example: ey...
+    description:
+      de: Access token
+      en: Access token
+    help:
+      de: Token des EM420 (Erstellen unter Profil -> Zugangsschlüssel)
+      en: Access token for EM420 (Create in Profile -> Access tokens)
 render: |
   type: tq-em420
   uri: http://{{ .host }}:{{ .port }}

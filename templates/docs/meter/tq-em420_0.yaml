@@ -9,5 +9,5 @@ render:
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 80 # Port # Optional
-      token: ey... # Token des EQM420 (Erstellen unter Profil -> Zugangsschlüssel)
-      device: "local" # Optional Falls unter JSON-Schnittstelle -> Daten Endpunkt was anderes stehen sollte
+      device: local # Pfad der API (JSON-Schnittstelle -> Daten Endpunkt) # Optional
+      token: ey... # Token des EM420 (Erstellen unter Profil -> Zugangsschlüssel)
