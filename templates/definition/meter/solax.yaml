@@ -1,12 +1,13 @@
-template: solax-x3
+template: solax
+covers: ["solax-x1", "solax-x3"]
 products:
   - brand: Solax
     description:
-      generic: Hybrid X3
+      generic: Hybrid X1/X3 G3/G4
 requirements:
   description:
-    de: Der Solax Inverter muss via Ethernet an das lokale Netzwerk angeschlossen sein.
-    en: The Solax inverter has to be connected to the local network via ethernet.
+    de: Der Solax Hybrid Inverter muss via Ethernet an das lokale Netzwerk angeschlossen sein.
+    en: The Solax Hybrid inverter has to be connected to the local network via ethernet.
 guidedsetup:
   enable: true
 params:
@@ -24,10 +25,19 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: 1
     register: # manual non-sunspec register configuration
-      address: 192 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+      address: 70 # 0x0046 feedin_power(meter)
       type: input
       decode: int32s
     scale: -1
+  energy:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register: # manual non-sunspec register configuration
+      address: 74 # 0x004A consum_energy_total(meter)
+      type: input
+      decode: uint32s
+    scale: 10
   {{- end }}
   {{- if eq .usage "pv" }}
     source: calc
@@ -36,23 +46,32 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       register: # manual non-sunspec register configuration
-        address: 10 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+        address: 10 # 0x000A Powerdc1
         type: input
         decode: uint16
     - source: modbus
       uri: {{ .host }}:{{ .port }}
       id: 1
       register: # manual non-sunspec register configuration
-        address: 11 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+        address: 11 # 0x000B Powerdc2
         type: input
         decode: uint16
+  energy:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register: # manual non-sunspec register configuration
+      address: 148 # 0x0094 SolarEnergyTotal
+      type: input
+      decode: uint32s
+    scale: 10
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 1
     register: # manual non-sunspec register configuration
-      address: 22 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+      address: 22 # 0x0016 Batpower_Charge1
       type: input
       decode: int16
     scale: -1
@@ -61,7 +80,7 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: 1
     register:
-      address: 28 #(see Hybrid.X1.X3-G3.ModbusTCP.RTU.V3.21-.English.pdf)
+      address: 28 # 0x001C Battery Capacity
       type: input
-      decode: Uint16
+      decode: uint16
   {{- end }}

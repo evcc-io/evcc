@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"reflect"
 	"regexp"
 	"strings"
 	"sync"
@@ -114,15 +115,15 @@ type LoadPoint struct {
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
-	enabled                bool      // Charger enabled state
-	phases                 int       // Charger active phases, guarded by mutex
-	measuredPhases         int       // Charger physically measured phases
-	chargeCurrent          float64   // Charger current limit
-	guardUpdated           time.Time // Charger enabled/disabled timestamp
-	socUpdated             time.Time // SoC updated timestamp (poll: connected)
-	vehicleConnected       time.Time // Vehicle connected timestamp
-	vehicleConnectedTicker *clock.Ticker
-	vehicleID              string
+	enabled             bool      // Charger enabled state
+	phases              int       // Charger active phases, guarded by mutex
+	measuredPhases      int       // Charger physically measured phases
+	chargeCurrent       float64   // Charger current limit
+	guardUpdated        time.Time // Charger enabled/disabled timestamp
+	socUpdated          time.Time // SoC updated timestamp (poll: connected)
+	vehicleDetect       time.Time // Vehicle connected timestamp
+	vehicleDetectTicker *clock.Ticker
+	vehicleIdentifier   string
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -188,7 +189,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.log.WARN.Println("minCurrent must not be zero")
 	}
 
-	if lp.MaxCurrent <= lp.MinCurrent {
+	if lp.MaxCurrent < lp.MinCurrent {
 		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
 	}
 
@@ -414,21 +415,11 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
-	// flush all vehicles before updating state
-	lp.log.DEBUG.Println("vehicle api refresh")
-	provider.ResetCached()
-
-	// start detection if we have associated vehicles
-	if lp.vehicle == lp.defaultVehicle {
-		lp.setActiveVehicle(lp.defaultVehicle)
-	} else if len(lp.vehicles) > 0 {
-		lp.startVehicleDetection()
-	}
+	// set default or start detection
+	lp.vehicleDefaultOrDetect()
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
-
-	lp.pushEvent(evVehicleConnect)
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -443,6 +434,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
 	lp.pushEvent(evVehicleDisconnect)
+
+	// remove charger vehicle id
+	lp.setVehicleIdentifier("")
 
 	// remove active vehicle if not default
 	if lp.vehicle != lp.defaultVehicle {
@@ -541,6 +535,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("activePhases", lp.activePhases())
 	lp.publishVehicles()
 
+	lp.setDefaultPhases(lp.DefaultPhases)
+
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
 	lp.publish("targetSoC", lp.SoC.Target)
@@ -550,9 +546,6 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// activate default vehicle (allows poll mode: always)
 	if lp.defaultVehicle != nil {
 		lp.setActiveVehicle(lp.defaultVehicle)
-	} else if len(lp.vehicles) > 0 {
-		// start detection if we have associated vehicles
-		lp.startVehicleDetection()
 	}
 
 	// read initial charger state to prevent immediately disabling charger
@@ -736,6 +729,14 @@ func (lp *LoadPoint) remoteControlled(demand loadpoint.RemoteDemand) bool {
 	return lp.remoteDemand == demand
 }
 
+// setVehicleIdentifier updated the vehicle id as read from the charger
+func (lp *LoadPoint) setVehicleIdentifier(id string) {
+	if lp.vehicleIdentifier != id {
+		lp.vehicleIdentifier = id
+		lp.publish("vehicleIdentity", id)
+	}
+}
+
 // identifyVehicle reads vehicle identification from charger
 func (lp *LoadPoint) identifyVehicle() {
 	identifier, ok := lp.charger.(api.Identifier)
@@ -749,17 +750,16 @@ func (lp *LoadPoint) identifyVehicle() {
 		return
 	}
 
-	if lp.vehicleID == id {
+	if lp.vehicleIdentifier == id {
 		return
 	}
 
 	// vehicle found or removed
-	lp.vehicleID = id
-
-	lp.log.DEBUG.Println("charger vehicle id:", id)
-	lp.publish("vehicleIdentity", id)
+	lp.setVehicleIdentifier(id)
 
 	if id != "" {
+		lp.log.DEBUG.Println("charger vehicle id:", id)
+
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
 			lp.setActiveVehicle(vehicle)
 		}
@@ -793,7 +793,8 @@ func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 	return nil
 }
 
-// setActiveVehicle assigns currently active vehicle and configures soc estimator
+// setActiveVehicle assigns currently active vehicle, configures soc estimator
+// and adds an odometer task
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.Lock()
 	defer lp.Unlock()
@@ -823,14 +824,12 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
-		// release lock to unblock api
+		// unblock api
 		lp.Unlock()
+		lp.applyAction(vehicle.OnIdentified())
+		lp.Lock()
 
 		lp.addTask(lp.vehicleOdometer)
-		lp.applyAction(vehicle.OnIdentified())
-
-		// re-apply lock to match defer above
-		lp.Lock()
 
 		lp.progress.Reset()
 	} else {
@@ -847,7 +846,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 func (lp *LoadPoint) wakeUpVehicle() {
 	// charger
-	if c, ok := lp.charger.(api.AlarmClock); ok {
+	if c, ok := lp.charger.(api.Resurrector); ok {
 		if err := c.WakeUp(); err != nil {
 			lp.log.ERROR.Printf("wake-up charger: %v", err)
 		}
@@ -856,7 +855,7 @@ func (lp *LoadPoint) wakeUpVehicle() {
 
 	// vehicle
 	if lp.vehicle != nil {
-		if vs, ok := lp.vehicle.(api.AlarmClock); ok {
+		if vs, ok := lp.vehicle.(api.Resurrector); ok {
 			if err := vs.WakeUp(); err != nil {
 				lp.log.ERROR.Printf("wake-up vehicle: %v", err)
 			}
@@ -874,29 +873,15 @@ func (lp *LoadPoint) unpublishVehicle() {
 	lp.setRemainingDuration(-1)
 }
 
-// startVehicleDetection resets connection timer and starts api refresh timer
-func (lp *LoadPoint) startVehicleDetection() {
-	lp.vehicleConnected = lp.clock.Now()
-	lp.vehicleConnectedTicker = lp.clock.Ticker(vehicleDetectInterval)
-}
-
-// stopVehicleDetection expires the connection timer and ticker
-func (lp *LoadPoint) stopVehicleDetection() {
-	lp.vehicleConnected = time.Time{}
-	if lp.vehicleConnectedTicker != nil {
-		lp.vehicleConnectedTicker.Stop()
-	}
-}
-
 // vehicleUnidentified checks if there are associated vehicles and starts discovery period
 func (lp *LoadPoint) vehicleUnidentified() bool {
 	res := len(lp.vehicles) > 0 && lp.vehicle == nil &&
-		lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
+		lp.clock.Since(lp.vehicleDetect) < vehicleDetectDuration
 
 	// request vehicle api refresh while waiting to identify
 	if res {
 		select {
-		case <-lp.vehicleConnectedTicker.C:
+		case <-lp.vehicleDetectTicker.C:
 			lp.log.DEBUG.Println("vehicle api refresh")
 			provider.ResetCached()
 		default:
@@ -904,6 +889,35 @@ func (lp *LoadPoint) vehicleUnidentified() bool {
 	}
 
 	return res
+}
+
+// vehicleDefaultOrDetect will assign and update default vehicle or start detection
+func (lp *LoadPoint) vehicleDefaultOrDetect() {
+	if lp.defaultVehicle != nil {
+		if lp.vehicle != lp.defaultVehicle {
+			lp.setActiveVehicle(lp.defaultVehicle)
+		} else {
+			// default vehicle is already active, update odometer anyway
+			// need to do this here since setActiveVehicle would short-circuit
+			lp.addTask(lp.vehicleOdometer)
+		}
+	} else if len(lp.vehicles) > 0 {
+		// flush all vehicles before detection starts
+		lp.log.DEBUG.Println("vehicle api refresh")
+		provider.ResetCached()
+
+		// reset connection timer and starts api refresh timer
+		lp.vehicleDetect = lp.clock.Now()
+		lp.vehicleDetectTicker = lp.clock.Ticker(vehicleDetectInterval)
+	}
+}
+
+// stopVehicleDetection expires the connection timer and ticker
+func (lp *LoadPoint) stopVehicleDetection() {
+	lp.vehicleDetect = time.Time{}
+	if lp.vehicleDetectTicker != nil {
+		lp.vehicleDetectTicker.Stop()
+	}
 }
 
 // identifyVehicleByStatus validates if the active vehicle is still connected to the loadpoint
@@ -947,14 +961,18 @@ func (lp *LoadPoint) updateChargerStatus() error {
 	if prevStatus := lp.GetStatus(); status != prevStatus {
 		lp.setStatus(status)
 
-		// changed from empty (initial startup) - set connected without sending message
-		if prevStatus == api.StatusNone {
-			lp.connectedTime = lp.clock.Now()
-			lp.publish("connectedDuration", time.Duration(0))
+		// changed to A - disconnected - don't send on startup
+		if status == api.StatusA && prevStatus != api.StatusNone {
+			lp.bus.Publish(evVehicleDisconnect)
 		}
 
-		// changed from A - connected
-		if prevStatus == api.StatusA {
+		// changed to B - connected - don't send on startup
+		if status == api.StatusB && prevStatus != api.StatusC {
+			if prevStatus != api.StatusNone {
+				// send connected message if not startup
+				lp.pushEvent(evVehicleConnect)
+			}
+
 			lp.bus.Publish(evVehicleConnect)
 		}
 
@@ -963,11 +981,6 @@ func (lp *LoadPoint) updateChargerStatus() error {
 			lp.bus.Publish(evChargeStart)
 		} else if prevStatus == api.StatusC {
 			lp.bus.Publish(evChargeStop)
-		}
-
-		// changed to A - disconnected - don't send on startup
-		if status == api.StatusA && prevStatus != api.StatusNone {
-			lp.bus.Publish(evVehicleDisconnect)
 		}
 
 		// update whenever there is a state change
@@ -1029,6 +1042,22 @@ func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 	}
 
 	return nil
+}
+
+// setDefaultPhases sets the default phase configuration
+func (lp *LoadPoint) setDefaultPhases(phases int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.DefaultPhases = phases
+	lp.phaseTimer = time.Time{}
+
+	// publish 1p3p capability and phase configuration
+	if _, ok := lp.charger.(api.ChargePhases); ok {
+		lp.publish("phases1p3p", lp.DefaultPhases)
+	} else {
+		lp.publish("phases1p3p", nil)
+	}
 }
 
 // setPhases sets the number of enabled phases without modifying the charger
@@ -1443,11 +1472,20 @@ func (lp *LoadPoint) publishSoCAndRange() {
 
 // addTask adds a single task to the queue
 func (lp *LoadPoint) addTask(task func()) {
-	lp.tasks.Enqueue(task)
+	// test guard
+	if lp.tasks != nil {
+		// don't add twice
+		if t, ok := lp.tasks.Peek(); ok &&
+			reflect.ValueOf(t).Pointer() == reflect.ValueOf(task).Pointer() {
+			return
+		}
+		lp.tasks.Enqueue(task)
+	}
 }
 
 // processTasks executes a single task from the queue
 func (lp *LoadPoint) processTasks() {
+	// test guard
 	if lp.tasks != nil {
 		if task, ok := lp.tasks.Dequeue(); ok {
 			task.(func())()

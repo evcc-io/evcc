@@ -250,9 +250,9 @@ func (wb *ABLeMH) Diagnose() {
 	}
 }
 
-var _ api.AlarmClock = (*ABLeMH)(nil)
+var _ api.Resurrector = (*ABLeMH)(nil)
 
-// WakeUp implements the api.AlarmClock interface
+// WakeUp implements the api.Resurrector interface
 func (wb *ABLeMH) WakeUp() error {
 	// temporary jump to status E0 (Outlet disabled)
 	err := wb.set(ablRegModifyState, 0xE0E0)

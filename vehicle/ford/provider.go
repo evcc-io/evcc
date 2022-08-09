@@ -132,9 +132,9 @@ func (v *Provider) Position() (float64, float64, error) {
 	return res.VehicleStatus.Gps.Latitude, res.VehicleStatus.Gps.Longitude, err
 }
 
-var _ api.AlarmClock = (*Provider)(nil)
+var _ api.Resurrector = (*Provider)(nil)
 
-// WakeUp implements the api.AlarmClock interface
+// WakeUp implements the api.Resurrector interface
 func (v *Provider) WakeUp() error {
 	return v.wakeup()
 }

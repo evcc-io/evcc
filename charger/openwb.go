@@ -2,6 +2,7 @@ package charger
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -24,6 +25,7 @@ type OpenWB struct {
 	currentPowerG func() (float64, error)
 	totalEnergyG  func() (float64, error)
 	currentsG     []func() (float64, error)
+	wakeupS       func(int64) error
 	authS         func(string) error
 }
 
@@ -32,11 +34,11 @@ type OpenWB struct {
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		mqtt.Config `mapstructure:",squash"`
-		Topic       string
-		Timeout     time.Duration
-		ID          int
-		Phases, DC  bool
+		mqtt.Config    `mapstructure:",squash"`
+		Topic          string
+		Timeout        time.Duration
+		ID             int
+		Phases1p3p, DC bool
 	}{
 		Topic:   openwb.RootTopic,
 		Timeout: openwb.Timeout,
@@ -49,7 +51,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	log := util.NewLogger("openwb")
 
-	return NewOpenWB(log, cc.Config, cc.ID, cc.Topic, cc.Phases, cc.DC, cc.Timeout)
+	return NewOpenWB(log, cc.Config, cc.ID, cc.Topic, cc.Phases1p3p, cc.DC, cc.Timeout)
 }
 
 // NewOpenWB creates a new configurable charger
@@ -95,7 +97,15 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	currentS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, currentTopic),
 		timeout).WithRetained().IntSetter("current")
 
-	authS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/chargepoint/%d/get/%s", topic, id, openwb.RfidTopic),
+	cpTopic := openwb.SlaveCPInterruptTopic
+	if id == 2 {
+		// TODO remove after https://github.com/snaptec/openWB/issues/1757
+		cpTopic = strings.TrimSuffix(cpTopic, "1") + "2"
+	}
+	wakeupS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, cpTopic),
+		timeout).WithRetained().IntSetter("cp")
+
+	authS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/chargepoint/%d/set/%s", topic, id, openwb.RfidTopic),
 		timeout).WithRetained().StringSetter("rfid")
 
 	// meter getters
@@ -115,6 +125,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		currentPowerG: currentPowerG,
 		totalEnergyG:  totalEnergyG,
 		currentsG:     currentsG,
+		wakeupS:       wakeupS,
 		authS:         authS,
 	}
 
@@ -221,4 +232,11 @@ var _ api.Authorizer = (*OpenWB)(nil)
 // Authorize implements the api.Authorizer interface
 func (m *OpenWB) Authorize(key string) error {
 	return m.authS(key)
+}
+
+var _ api.Resurrector = (*OpenWB)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (m *OpenWB) WakeUp() error {
+	return m.wakeupS(1)
 }

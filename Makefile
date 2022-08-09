@@ -27,6 +27,9 @@ IMAGE_FILE := evcc_$(TAG_NAME).image
 IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
 IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/evcc-io/evcc
 
+# deb
+PACKAGES = ./release
+
 default: build
 
 all: clean install install-ui ui assets lint test-ui lint-ui test build
@@ -95,6 +98,16 @@ publish-release:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	RELEASE=1 seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
+
+apt-nightly:
+	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
+		cloudsmith push deb evcc/unstable/any-distro/any-version $(file); \
+	)
+
+apt-release:
+	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
+		cloudsmith push deb evcc/stable/any-distro/any-version $(file); \
+	)
 
 # gokrazy image
 prepare-image:

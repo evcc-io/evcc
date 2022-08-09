@@ -53,11 +53,10 @@ export default {
 	border-radius: 1px;
 	overflow: hidden;
 }
-@media (--dark-mode) {
-	.phase {
-		background-color: var(--bs-gray-bright);
-	}
+html.dark .phase {
+	background-color: var(--bs-gray-bright);
 }
+
 .phase.inactive {
 	display: none;
 }

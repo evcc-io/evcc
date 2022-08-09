@@ -12,7 +12,7 @@ jobs:
     outputs:
       should_run: ${{ steps.should_run.outputs.should_run }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: print latest_commit
         run: echo ${{ github.sha }}
 
@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -49,7 +49,7 @@ jobs:
         run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin ${SEIHON_VERSION}
 
       - name: Login
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
@@ -65,41 +65,22 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Cache Go modules
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/go/pkg
-            ~/.cache/go-build
-          key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.go-version }}-go-
-
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ^1.18
+          cache: true
         id: go
-
-      - name: Set up Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: "16"
 
       - name: Install Cloudsmith CLI
         run: pip install --upgrade cloudsmith-cli
 
-      - name: Clean git
-        run: |
-          git checkout go.*
-          rm -rf flags buildflags
-
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         with:
           version: latest
           args: --snapshot -f .goreleaser-nightly.yml --rm-dist
@@ -109,8 +90,4 @@ jobs:
       - name: Publish .deb to Cloudsmith
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: |
-          for filename in release/*.deb; do
-            echo "Pushing $filename to 'unstable'"
-            cloudsmith push deb evcc/unstable/any-distro/any-version $filename
-          done
+        run: make apt-nightly

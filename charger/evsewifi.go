@@ -243,9 +243,9 @@ func (wb *EVSEWifi) identify() (string, error) {
 // 	return params.Energy, err
 // }
 
-var _ api.AlarmClock = (*EVSEWifi)(nil)
+var _ api.Resurrector = (*EVSEWifi)(nil)
 
-// WakeUp implements the AlarmClock interface
+// WakeUp implements the Resurrector interface
 func (wb *EVSEWifi) WakeUp() error {
 	uri := fmt.Sprintf("%s/interruptCp", wb.uri)
 	_, err := wb.GetBody(uri)

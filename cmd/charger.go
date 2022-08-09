@@ -110,7 +110,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 		if cmd.PersistentFlags().Lookup(flagWakeup).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.AlarmClock); ok {
+			if vv, ok := v.(api.Resurrector); ok {
 				if err := vv.WakeUp(); err != nil {
 					log.ERROR.Println("wakeup:", err)
 				}

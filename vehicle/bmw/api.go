@@ -29,7 +29,7 @@ type API struct {
 func NewAPI(log *util.Logger, brand string, identity oauth2.TokenSource) *API {
 	v := &API{
 		Helper:     request.NewHelper(log),
-		xUserAgent: fmt.Sprintf("android(SP1A.210812.016.C1);%s;2.5.2(14945);row", brand),
+		xUserAgent: fmt.Sprintf("android(SP1A.210812.016.C1);%s;99.0.0(99999);row", brand),
 	}
 
 	// replace client transport with authenticated transport
@@ -43,12 +43,11 @@ func NewAPI(log *util.Logger, brand string, identity oauth2.TokenSource) *API {
 
 func (v *API) eadrax() (VehiclesStatusResponse, error) {
 	var res VehiclesStatusResponse
-	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=120&appDateTime=%d", CocoApiURI, time.Now().Unix())
+	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=120&appDateTime=%d", CocoApiURI, time.Now().UnixMilli())
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Content-Type":          request.JSONContent,
-		"X-User-Agent":          v.xUserAgent,
-		"bmw-units-preferences": "d=KM;v=L",
+		"Content-Type": request.JSONContent,
+		"X-User-Agent": v.xUserAgent,
 	})
 	if err == nil {
 		err = v.DoJSON(req, &res)

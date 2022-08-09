@@ -28,21 +28,26 @@ func NewMQTT(root string) *MQTT {
 }
 
 func (m *MQTT) encode(v interface{}) string {
-	var s string
+	// nil should erase the value
+	if v == nil {
+		return ""
+	}
+
 	switch val := v.(type) {
+	case string:
+		return val
+	case float64:
+		return fmt.Sprintf("%.5g", val)
 	case time.Time:
-		s = strconv.FormatInt(val.Unix(), 10)
+		return strconv.FormatInt(val.Unix(), 10)
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
-		s = fmt.Sprintf("%d", int64(val.Seconds()))
-	case fmt.Stringer, string:
-		s = fmt.Sprintf("%s", val)
-	case float64:
-		s = fmt.Sprintf("%.5g", val)
+		return fmt.Sprintf("%d", int64(val.Seconds()))
+	case fmt.Stringer:
+		return val.String()
 	default:
-		s = fmt.Sprintf("%v", val)
+		return fmt.Sprintf("%v", val)
 	}
-	return s
 }
 
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
@@ -154,10 +159,6 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		m.listenSetters(topic, lp)
 	}
 
-	// alive indicator
-	updated := time.Now().Unix()
-	m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
-
 	// remove deprecated topics
 	for id := range site.LoadPoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
@@ -165,6 +166,9 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, "")
 		}
 	}
+
+	// alive indicator
+	var updated time.Time
 
 	// publish
 	for p := range in {
@@ -175,9 +179,9 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 
 		// alive indicator
-		if now := time.Now().Unix(); now != updated {
-			updated = now
-			m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
+		if time.Since(updated) > time.Second {
+			updated = time.Now()
+			m.publish(fmt.Sprintf("%s/updated", m.root), true, updated.Unix())
 		}
 
 		// value
