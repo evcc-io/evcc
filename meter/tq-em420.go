@@ -93,8 +93,6 @@ type TqEM420 struct {
 	dataG func() (TqEm420Data, error)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateTqEm400 -b api.Meter -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
-
 // NewTqEm420FromConfig creates a new configurable meter
 func NewTqEm420FromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
