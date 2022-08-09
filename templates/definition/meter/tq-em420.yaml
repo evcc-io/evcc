@@ -13,8 +13,6 @@ params:
     default: "local"
   - name: token
     required: true
-    description:
-      generic: AccessToken
 render: |
   type: tq-em420
   uri: http://{{ .host }}:{{ .port }}
