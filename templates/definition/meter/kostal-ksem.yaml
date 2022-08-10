@@ -13,4 +13,4 @@ render: |
   type: modbus
   {{- include "modbus" . }}
   model: sunspec
-  value: Power
+  power: Power
