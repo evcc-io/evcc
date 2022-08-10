@@ -20,12 +20,12 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-    model: sunspec
-  {{- if ne .usage "grid" }}
-    value: Power
-  {{- end -}}
   {{- if eq .usage "grid" }}
     subdevice: 1
+    model: sunspec
     value: 203:W # sunspec 3-phase meter power reading
     scale: -1
-  {{- end -}}
+  {{- else }}
+    model: sunspec
+    value: Power
+  {{- end }}
