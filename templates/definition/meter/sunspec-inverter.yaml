@@ -21,6 +21,7 @@ params:
 render: |
   type: modbus
   {{- include "modbus" . }}
+  model: sunspec
   {{- if eq .usage "grid" }}
   {{- if eq .integer "true" }}
   # sunspec model 203 (int+sf) meter
