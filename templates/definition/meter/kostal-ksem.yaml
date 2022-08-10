@@ -11,5 +11,6 @@ params:
     id: 71
 render: |
   type: modbus
-  model: sunspec
   {{- include "modbus" . }}
+  model: sunspec
+  value: Power
