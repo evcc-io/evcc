@@ -9,5 +9,5 @@ render:
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 80 # Port # Optional
-      device: local # Pfad der API (JSON-Schnittstelle -> Daten Endpunkt) # Optional
+      device: local # JSON-Schnittstelle -> Datenendpunkt # Optional
       token: ey... # Token des EM420 (Erstellen unter Profil -> Zugangsschlüssel)

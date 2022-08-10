@@ -12,16 +12,16 @@ params:
   - name: device
     default: "local"
     description:
-      de: API Geräte Pfad
+      de: API Gerätepfad
       en: API Device Path
     help:
-      de: Pfad der API (JSON-Schnittstelle -> Daten Endpunkt)
-      en: Path for API (JSON-API -> Data Endpoint)
+      de: JSON-Schnittstelle -> Datenendpunkt
+      en: JSON-API -> Data Endpoint
   - name: token
     required: true
     example: ey...
     description:
-      de: Access token
+      de: Accesstoken
       en: Access token
     help:
       de: Token des EM420 (Erstellen unter Profil -> Zugangsschlüssel)
