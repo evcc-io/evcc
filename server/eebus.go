@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/eebus/communication"
@@ -160,11 +159,13 @@ func (c *EEBus) browseMDNS() {
 	c.mux.Unlock()
 
 	entries := make(chan *zeroconf.ServiceEntry)
+	defer close(entries)
+
 	go c.discoverDNS(entries, func(entry *zeroconf.ServiceEntry) {
 		c.addDisoveredEntry(entry)
 	})
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	if err := zeroconf.Browse(ctx, ship.ZeroconfType, ship.ZeroconfDomain, entries); err != nil {
