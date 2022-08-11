@@ -136,7 +136,7 @@ func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) 
 }
 
 func (c *EEBus) Run() {
-	c.browseMDNS()
+	go c.browseMDNS()
 
 	ln := &server.Listener{
 		Log:          c.log.TRACE,
