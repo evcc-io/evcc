@@ -24,11 +24,11 @@ render: |
   power:
   {{- if eq .usage "grid" }}
     source: modbus
-    model: sunspec
-    timeout: {{ .timeout }}
     uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
     id: 1
     subdevice: 1 # Metering device
+    timeout: {{ .timeout }}
+    model: sunspec
     value: 203:W
     scale: -1
   {{- end }}
@@ -36,15 +36,15 @@ render: |
     source: calc
     add:
     - source: modbus
-      model: sunspec
-      timeout: {{ .timeout }}
       uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
       id: 1
+      timeout: {{ .timeout }}
+      model: sunspec
       value: 103:DCW
     - source: modbus
-      timeout: {{ .timeout }}
       uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
       id: 1
+      timeout: {{ .timeout }}
       register:
         address: 62836 # Battery 1 Instantaneous Power
         type: holding

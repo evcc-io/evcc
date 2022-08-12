@@ -1,21 +1,30 @@
 product:
-  description: OCPP v1.6 kompatible Wallbox mit Smart Charging Profile
+  description: OCPP 1.6J kompatible Wallbox mit Smart Charging Profil
   group: Generische Unterstützung
 description: |
+  Bei OCPP verbindet sich die Wallbox (Client) zu evcc (Server).
+  Die Wallbox muss daher evcc via Hostname (funktionierende DNS-Auflösung erforderlich!) oder über die IP-Adresse auf Port 8887 erreichen können.
+  Standardmäßig wird die erste eingehende Verbindung mit einer beliebigen Ladepunkt-Kennung verwendet.
+  Um mehrere Ladepunkte eindeutig zuordnen zu können müssen die jeweilige Stationskennung (`stationid: `) und Anschlussnummer (`connector: `) hinterlegt werden.
+  Gegebenenfalls benötigt der Ladepunkt eine vorkonfigurierte (virtuelle) Token-ID/RFID-Kennung (`idtag: `) mit der die Ladevorgänge ohne Authentifizierung gestartet werden können.
+  Für Zählermesswerte sollte in der Wallbox ein kurzes Zeitintervall konfiguriert werden.
+
   Voraussetzungen:
-  * Löschen zuvor konfigurierter Ladeprofile (z.B. durch ein anderes Backend)
-  * Konfiguration des Backends der Wallbox: `ws://evcc.local:8887/`
+  * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallbox-Konfiguration entfernen
+  * Backend-URL (Central System) in der Wallbox-Konfiguration: `ws://<evcc-IP-Adresse>:8887/`
+  * Protokoll: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// o.ä.
+  * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
+  * Verbindung über das lokale Netzwerk
 
 render:
   - default: |
       type: template
       template: ocpp
-      stationid: EVB-P12354 # Die Stations-ID der Wallbox
-      meter: false # Verwendung des integrierten Zählers (falls vorhanden) # Optional
+      meter: false # Benutze den integrierten Zähler (falls vorhanden) # Optional
     advanced: |
       type: template
       template: ocpp
-      stationid: EVB-P12354 # Die Stations-ID der Wallbox
+      stationid: EVB-P12354 # Die Stations-ID der Wallbox (oder des Ladepunkts) # Optional
       connector: 1 # Verwendeter Ladepunkt, normalerweise 1 für den ersten Anschluss. # Optional
-      meter: false # Verwendung des integrierten Zählers (falls vorhanden) # Optional
-      idtag: 04E6B78921BBA0 # ID des Tokens, welcher für Ladevorgänge genutzt werden soll, (aktuell nicht für Autorisierung verwendet) e.g # Optional
+      meter: false # Benutze den integrierten Zähler (falls vorhanden) # Optional
+      idtag: 04E6B78921BBA0 # Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird # Optional

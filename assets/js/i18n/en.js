@@ -5,6 +5,11 @@ export default {
     github: "GitHub",
     login: "Vehicle Logins",
     about: "About evcc",
+    theme: {
+      auto: "Design: System",
+      light: "Design: Light",
+      dark: "Design: Dark",
+    },
   },
   footer: {
     version: {

@@ -50,6 +50,7 @@ export default {
 	border-radius: 18px;
 	padding: 0.1em 0.8em;
 	color: var(--evcc-default-text);
+	border: none;
 }
 .btn:hover {
 	color: var(--evcc-gray);

@@ -268,9 +268,9 @@ func (wb *HeidelbergEC) Diagnose() {
 	}
 }
 
-var _ api.AlarmClock = (*HeidelbergEC)(nil)
+var _ api.Resurrector = (*HeidelbergEC)(nil)
 
-// WakeUp implements the api.AlarmClock interface
+// WakeUp implements the api.Resurrector interface
 func (wb *HeidelbergEC) WakeUp() error {
 	// force status F by locking
 	err := wb.set(hecRegRemoteLock, 0)

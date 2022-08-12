@@ -45,12 +45,12 @@ render: |
     source: calc
     add:
     - source: modbus
-      model: sunspec
       {{- include "modbus" . | indent 4 }}
+      model: sunspec
       value: 160:1:DCW # mppt 1
     - source: modbus
-      model: sunspec
       {{- include "modbus" . | indent 4 }}
+      model: sunspec
       value: 160:2:DCW # mppt 2
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -59,16 +59,17 @@ render: |
     source: calc
     add:
     - source: modbus
-      model: sunspec
       {{- include "modbus" . | indent 4 }}
+      model: sunspec
       value: 160:3:DCW # mppt 3 charge
       scale: -1
     - source: modbus
-      model: sunspec
       {{- include "modbus" . | indent 4 }}
+      model: sunspec
       value: 160:4:DCW # mppt 4 discharge
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    model: sunspec
     value: ChargeState
   {{- end }}

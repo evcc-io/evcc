@@ -10,6 +10,7 @@ import VueNumber from "vue-number-animation";
 import router from "./router";
 import i18n from "./i18n";
 import featureflags from "./featureflags";
+import { watchThemeChanges } from "./theme";
 
 smoothscroll.polyfill();
 
@@ -76,10 +77,4 @@ window.setInterval(function () {
   api.get("health").then(window.app.setOnline).catch(window.app.setOffline);
 }, 5000);
 
-const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
-isDarkMode.addEventListener("change", updateThemeColor);
-function updateThemeColor() {
-  const $el = document.querySelector("meta[name=theme-color]");
-  $el.setAttribute("content", isDarkMode.matches ? "#020318" : "#f3f3f7");
-}
-updateThemeColor();
+watchThemeChanges();

@@ -1,0 +1,13 @@
+product:
+  brand: TQ
+  description: Energy Manager EM420
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: tq-em420
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 80 # Port # Optional
+      device: local # JSON-Schnittstelle -> Datenendpunkt # Optional
+      token: ey... # Token des EM420 (Erstellen unter Profil -> Zugangsschlüssel)

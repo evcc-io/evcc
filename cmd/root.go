@@ -152,7 +152,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// network config
 	if viper.GetString("uri") != "" {
-		log.ERROR.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
+		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
 	}
 
 	if cmd.PersistentFlags().Lookup("port").Changed {

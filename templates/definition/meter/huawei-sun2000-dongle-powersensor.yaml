@@ -17,7 +17,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     connectdelay: 1s
     register:
       address: 37113 # Grid import export power
@@ -28,7 +28,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     register:
       address: 37121 # Active energy import from the grid
       type: holding
@@ -38,7 +38,7 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     register:
       address: 37107 # Huawei phase A grid current
       type: holding
@@ -47,7 +47,7 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     register:
       address: 37109 # Huawei phase B grid current
       type: holding
@@ -56,7 +56,7 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     register:
       address: 37111 # Huawei phase C grid current
       type: holding
@@ -68,7 +68,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     connectdelay: 1s
     register:
       address: 32064 # Input power DC (if no battery in your system - for more precise readings use 32080 # Active generation power AC)
@@ -80,7 +80,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     connectdelay: 1s
     register:
       address: 37001
@@ -91,7 +91,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     register:
       address: 37004
       type: holding

@@ -394,8 +394,7 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 }
 
 // processConfig processes an EVCC configuration item
-// Returns:
-//   a map with param name and values
+// Returns a map with param name and values
 func (c *CmdConfigure) processConfig(templateItem *templates.Template, deviceCategory DeviceCategory) map[string]interface{} {
 	fmt.Println()
 	fmt.Println(c.localizedString("Config_Title", nil))

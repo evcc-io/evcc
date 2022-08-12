@@ -1,0 +1,13 @@
+product:
+  brand: Webasto
+  description: NEXT
+capabilities: ["rfid"]
+requirements: ["sponsorship"]
+description: |
+  Mode 'HEMS activated' muss aktiviert sein.
+render:
+  - default: |
+      type: template
+      template: webasto-next
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional

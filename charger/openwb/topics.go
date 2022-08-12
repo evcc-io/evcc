@@ -57,4 +57,5 @@ const (
 	SlaveChargeCurrentTopic = "Current"
 	SlavePhasesTopic        = "U1p3p"
 	SlaveClearRfidTopic     = "ClearRfid"
+	SlaveCPInterruptTopic   = "Cpulp1"
 )

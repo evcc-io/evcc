@@ -7,7 +7,6 @@ require (
 	github.com/BurntSushi/toml v1.1.0
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/alvaroloes/enumer v1.1.2
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.44.27
@@ -20,6 +19,7 @@ require (
 	github.com/containrrr/shoutrrr v0.6.0
 	github.com/coreos/go-oidc/v3 v3.2.0
 	github.com/denisbrodbeck/machineid v1.0.1
+	github.com/dmarkham/enumer v1.5.2
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
@@ -51,7 +51,7 @@ require (
 	github.com/koron/go-ssdp v0.0.3
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.0.0-20220623102032-af1f1d3ada85
-	github.com/lorenzodonini/ocpp-go v0.15.0
+	github.com/lorenzodonini/ocpp-go v0.16.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
@@ -79,7 +79,7 @@ require (
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/exp v0.0.0-20220602145555-4a0574d9293f
-	golang.org/x/net v0.0.0-20220531201128-c960675eff93
+	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
 	golang.org/x/oauth2 v0.0.0-20220524215830-622c5d57e401
 	golang.org/x/text v0.3.7
 	google.golang.org/api v0.82.0
@@ -157,12 +157,11 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
-	golang.org/x/tools v0.1.10 // indirect
-	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
+	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220602131408-e326c6e8e9c8 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
