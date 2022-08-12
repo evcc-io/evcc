@@ -25,12 +25,12 @@ render: |
     source: calc
     add: # The add plugin sums up both string values
     - source: modbus
+      {{- include "modbus" . | indent 4 }}
       model: sunspec
-  {{- include "modbus" . | indent 4 }}
       value: 160:1:DCW # string 1
     - source: modbus
+      {{- include "modbus" . | indent 4 }}
       model: sunspec
-  {{- include "modbus" . | indent 4 }}
       value: 160:2:DCW # string 2
   {{- end }}
   {{- if eq .usage "battery" }}

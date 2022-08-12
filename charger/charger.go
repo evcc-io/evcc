@@ -21,9 +21,14 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.Identifier,Identify,func() (string, error)"
+
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ Status, Enable, Enabled, MaxCurrent, Phases1p3p provider.Config }{}
+	cc := struct {
+		Status, Enable, Enabled, MaxCurrent, Phases1p3p provider.Config
+		Identify                                        *provider.Config
+	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -53,7 +58,15 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, fmt.Errorf("phases1p3p: %w", err)
 	}
 
-	return NewConfigurable(status, enabled, enable, maxcurrent, phases1p3p)
+	c, err := NewConfigurable(status, enabled, enable, maxcurrent, phases1p3p)
+
+	// decorate identifier
+	if err == nil && cc.Identify != nil {
+		identify, err := provider.NewStringGetterFromConfig(*cc.Identify)
+		return decorateCustom(c, identify), err
+	}
+
+	return c, err
 }
 
 // NewConfigurable creates a new charger
@@ -63,7 +76,7 @@ func NewConfigurable(
 	enableS func(bool) error,
 	maxCurrentS func(int64) error,
 	phases1p3pS func(int64) error,
-) (api.Charger, error) {
+) (*Charger, error) {
 	c := &Charger{
 		statusG:     statusG,
 		enabledG:    enabledG,

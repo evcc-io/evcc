@@ -79,7 +79,8 @@ jobs:
           version: latest
           args: release --rm-dist
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # use GH_TOKEN for access to evcc-io/homebrew-tap
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Publish .deb to Cloudsmith
         env:

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/fatih/structs"
-	"github.com/gorilla/mux"
 )
 
 //go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
@@ -184,13 +183,10 @@ type Resurrector interface {
 	WakeUp() error
 }
 
+// Tariff is the grid tariff
 type Tariff interface {
 	IsCheap() (bool, error)
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
-}
-
-type WebController interface {
-	WebControl(*mux.Router)
 }
 
 // ProviderLogin is the ability to provide OAuth authentication through the ui
