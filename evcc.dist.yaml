@@ -18,7 +18,7 @@ interval: 10s # control cycle interval
 # log settings
 log: info
 levels:
-  core: debug
+  site: debug
   lp-1: debug
   lp-2: debug
 
