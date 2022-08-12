@@ -22,7 +22,7 @@ export default {
 	emits: ["updated"],
 	data() {
 		return {
-			modes: ["off", "pv", "now"],
+			modes: ["off", "pv", "minpv", "now"],
 		};
 	},
 	methods: {

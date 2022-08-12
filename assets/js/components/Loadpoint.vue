@@ -5,23 +5,20 @@
 				<h3 class="me-2 mb-0 text-truncate">
 					{{ title || $t("main.loadpoint.fallbackName") }}
 				</h3>
-				<button
-					type="button"
-					class="d-block d-sm-none btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray"
-				>
-					<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
-				</button>
+				<LoadpointSettingsButton :id="id" class="d-block d-sm-none" />
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" :mode="mode" @updated="setTargetMode" />
-				<button
-					type="button"
-					class="d-none d-sm-block btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray ms-2"
-				>
-					<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
-				</button>
+				<LoadpointSettingsButton :id="id" class="d-none d-sm-block ms-2" />
 			</div>
 		</div>
+		<LoadpointSettingsModal
+			v-bind="settingsModal"
+			@maxcurrent-updated="setMaxCurrent"
+			@mincurrent-updated="setMinCurrent"
+			@phases1p3p-updated="setPhases1p3p"
+			@minsoc-updated="setMinSoC"
+		/>
 
 		<div
 			v-if="remoteDisabled"
@@ -105,10 +102,19 @@ import Phases from "./Phases.vue";
 import LabelAndValue from "./LabelAndValue.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
+import LoadpointSettingsButton from "./LoadpointSettingsButton.vue";
+import LoadpointSettingsModal from "./LoadpointSettingsModal.vue";
 
 export default {
 	name: "Loadpoint",
-	components: { Mode, Vehicle, Phases, LabelAndValue },
+	components: {
+		Mode,
+		Vehicle,
+		Phases,
+		LabelAndValue,
+		LoadpointSettingsButton,
+		LoadpointSettingsModal,
+	},
 	mixins: [formatter, collector],
 	props: {
 		id: Number,
@@ -149,6 +155,7 @@ export default {
 
 		// other information
 		phases: Number,
+		phases1p3p: Number,
 		minCurrent: Number,
 		maxCurrent: Number,
 		activePhases: Number,
@@ -175,6 +182,9 @@ export default {
 	computed: {
 		phasesProps: function () {
 			return this.collectProps(Phases);
+		},
+		settingsModal: function () {
+			return this.collectProps(LoadpointSettingsModal);
 		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);
@@ -226,6 +236,18 @@ export default {
 		},
 		setTargetSoC: function (soc) {
 			api.post(this.apiPath("targetsoc") + "/" + soc);
+		},
+		setMaxCurrent: function (maxCurrent) {
+			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
+		},
+		setMinCurrent: function (minCurrent) {
+			api.post(this.apiPath("mincurrent") + "/" + minCurrent);
+		},
+		setPhases1p3p: function (phases) {
+			api.post(this.apiPath("phases") + "/" + phases);
+		},
+		setMinSoC: function (soc) {
+			api.post(this.apiPath("minsoc") + "/" + soc);
 		},
 		setTargetTime: function (date) {
 			api.post(`${this.apiPath("targetcharge")}/${this.targetSoC}/${date.toISOString()}`);

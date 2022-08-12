@@ -106,6 +106,10 @@ chargers:
         var lp = state.loadpoints[0];
         lp.maxcurrent = val;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+    phases1p3p:
+      source: js
+      vm: shared
+      script: 1
   - name: charger_2
     type: custom
     enable:
@@ -134,6 +138,13 @@ chargers:
         var lp = state.loadpoints[1];
         lp.maxcurrent = val;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+    phases1p3p:
+      source: js
+      vm: shared
+      script: |
+        set();
+        if (val === 1) lp.phases = 1; else lp.phases = 3;
+        lp.phases;
   - name: charger_3
     type: custom
     enable:
@@ -152,7 +163,10 @@ chargers:
       source: js
       vm: shared
       script: 16
-
+    phases1p3p:
+      source: js
+      vm: shared
+      script: null
 vehicles:
   - name: vehicle_1
     title: blauer e-Golf

@@ -286,3 +286,8 @@ small {
 .dark .dropdown-menu {
 	box-shadow: 0 0 8px var(--evcc-background);
 }
+.dark .form-select {
+	background-color: var(--evcc-box);
+	color: var(--evcc-default-text);
+	background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/></svg>");
+}

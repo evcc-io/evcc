@@ -14,6 +14,7 @@ type Charger struct {
 	enabledG    func() (bool, error)
 	enableS     func(bool) error
 	maxCurrentS func(int64) error
+	phases1p3pS func(int64) error
 }
 
 func init() {
@@ -22,7 +23,7 @@ func init() {
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}
+	cc := struct{ Status, Enable, Enabled, MaxCurrent, Phases1p3p provider.Config }{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -47,7 +48,12 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, fmt.Errorf("maxcurrent: %w", err)
 	}
 
-	return NewConfigurable(status, enabled, enable, maxcurrent)
+	phases1p3p, err := provider.NewIntSetterFromConfig("phases1p3p", cc.Phases1p3p)
+	if err != nil {
+		return nil, fmt.Errorf("phases1p3p: %w", err)
+	}
+
+	return NewConfigurable(status, enabled, enable, maxcurrent, phases1p3p)
 }
 
 // NewConfigurable creates a new charger
@@ -56,12 +62,14 @@ func NewConfigurable(
 	enabledG func() (bool, error),
 	enableS func(bool) error,
 	maxCurrentS func(int64) error,
+	phases1p3pS func(int64) error,
 ) (api.Charger, error) {
 	c := &Charger{
 		statusG:     statusG,
 		enabledG:    enabledG,
 		enableS:     enableS,
 		maxCurrentS: maxCurrentS,
+		phases1p3pS: phases1p3pS,
 	}
 
 	return c, nil
@@ -90,4 +98,9 @@ func (m *Charger) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (m *Charger) MaxCurrent(current int64) error {
 	return m.maxCurrentS(current)
+}
+
+// MaxCurrent implements the api.Charger interface
+func (m *Charger) Phases1p3p(phases int) error {
+	return m.phases1p3pS(int64(phases))
 }

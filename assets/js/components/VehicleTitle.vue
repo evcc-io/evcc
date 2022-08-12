@@ -17,7 +17,9 @@
 					v-else
 					class="me-2 flex-shrink-0 car-icon"
 				></shopicon-regular-cablecharge>
-				<span class="flex-grow-1 text-truncate"> {{ name }} </span>
+				<span class="flex-grow-1 text-truncate vehicle-name">
+					{{ name }}
+				</span>
 			</h4>
 		</VehicleOptions>
 	</div>
@@ -84,5 +86,9 @@ export default {
 <style scoped>
 .options {
 	margin-right: -0.75rem;
+}
+.vehicle-name {
+	text-decoration: underline;
+	text-decoration-color: var(--evcc-gray);
 }
 </style>
