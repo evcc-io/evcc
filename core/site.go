@@ -193,7 +193,7 @@ func (site *Site) DumpConfig() {
 		_, power := lp.charger.(api.Meter)
 		_, energy := lp.charger.(api.MeterEnergy)
 		_, currents := lp.charger.(api.MeterCurrent)
-		_, phases := lp.charger.(api.ChargePhases)
+		_, phases := lp.charger.(api.PhaseSwitcher)
 		_, wakeup := lp.charger.(api.Resurrector)
 
 		lp.log.INFO.Printf("  charger:     power %s energy %s currents %s phases %s wakeup %s",

@@ -108,7 +108,7 @@ func (lp *LoadPoint) GetPhases() int {
 // SetPhases sets loadpoint enabled phases
 func (lp *LoadPoint) SetPhases(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
-	if _, ok := lp.charger.(api.ChargePhases); !ok && phases == 0 {
+	if _, ok := lp.charger.(api.PhaseSwitcher); !ok && phases == 0 {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
@@ -120,7 +120,7 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 	lp.setDefaultPhases(phases)
 
 	// apply immediately if not 1p3p
-	if _, ok := lp.charger.(api.ChargePhases); !ok {
+	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
 		lp.setPhases(phases)
 	}
 

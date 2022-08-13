@@ -81,9 +81,9 @@ func TestMaxActivePhases(t *testing.T) {
 			plainCharger := mock.NewMockCharger(ctrl)
 
 			// 1p3p
-			var phaseCharger *mock.MockChargePhases
+			var phaseCharger *mock.MockPhaseSwitcher
 			if tc.capable == 0 {
-				phaseCharger = mock.NewMockChargePhases(ctrl)
+				phaseCharger = mock.NewMockPhaseSwitcher(ctrl)
 			}
 
 			vehicle := mock.NewMockVehicle(ctrl)
@@ -99,7 +99,7 @@ func TestMaxActivePhases(t *testing.T) {
 			if phaseCharger != nil {
 				lp.charger = struct {
 					*mock.MockCharger
-					*mock.MockChargePhases
+					*mock.MockPhaseSwitcher
 				}{
 					plainCharger, phaseCharger,
 				}
@@ -169,9 +169,9 @@ func TestPvScalePhases(t *testing.T) {
 		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil) // MaxCurrentEx not implemented
 
 		// 1p3p
-		var phaseCharger *mock.MockChargePhases
+		var phaseCharger *mock.MockPhaseSwitcher
 		if tc.capable == 0 {
-			phaseCharger = mock.NewMockChargePhases(ctrl)
+			phaseCharger = mock.NewMockPhaseSwitcher(ctrl)
 		}
 
 		vehicle := mock.NewMockVehicle(ctrl)
@@ -197,7 +197,7 @@ func TestPvScalePhases(t *testing.T) {
 		if phaseCharger != nil {
 			lp.charger = struct {
 				*mock.MockCharger
-				*mock.MockChargePhases
+				*mock.MockPhaseSwitcher
 			}{
 				plainCharger, phaseCharger,
 			}
@@ -261,10 +261,10 @@ func TestPvScalePhasesTimer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := &struct {
 		*mock.MockCharger
-		*mock.MockChargePhases
+		*mock.MockPhaseSwitcher
 	}{
 		mock.NewMockCharger(ctrl),
-		mock.NewMockChargePhases(ctrl),
+		mock.NewMockPhaseSwitcher(ctrl),
 	}
 
 	dt := time.Minute
@@ -365,7 +365,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		}
 
 		if tc.res {
-			charger.MockChargePhases.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
+			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
 		}
 
 		res := lp.pvScalePhases(tc.availablePower, minA, maxA)
@@ -400,14 +400,14 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 		t.Log(tc)
 
 		plainCharger := mock.NewMockCharger(ctrl)
-		phaseCharger := mock.NewMockChargePhases(ctrl)
+		phaseCharger := mock.NewMockPhaseSwitcher(ctrl)
 
 		lp := &LoadPoint{
 			log:   util.NewLogger("foo"),
 			clock: clock.NewMock(),
 			charger: struct {
 				*mock.MockCharger
-				*mock.MockChargePhases
+				*mock.MockPhaseSwitcher
 			}{
 				plainCharger,
 				phaseCharger,

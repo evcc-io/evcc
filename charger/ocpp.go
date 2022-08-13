@@ -332,7 +332,7 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	return c.cp.Status()
 }
 
-// TODO: Phases1p3p implements the api.ChargePhases interface
+// TODO: Phases1p3p implements the api.PhaseSwitcher interface
 // func (c *OCPP) Phases1p3p(phases int) error {
 // 	if !c.phaseSwitchingSupported {
 // 		return fmt.Errorf("phase switching is not supported by the charger")

@@ -203,9 +203,9 @@ func (wb *KSE) Currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
-// var _ api.ChargePhases = (*KSE)(nil)
+// var _ api.PhaseSwitcher = (*KSE)(nil)
 
-// // Phases1p3p implements the api.ChargePhases interface
+// // Phases1p3p implements the api.PhaseSwitcher interface
 // func (wb *KSE) Phases1p3p(phases int) error {
 // 	var b uint16 = 0
 // 	if phases == 1 {

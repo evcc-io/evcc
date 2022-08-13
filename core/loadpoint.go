@@ -237,7 +237,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	// setup fixed phases:
 	// - simple charger starts with phases config if specified or 3p
 	// - switchable charger starts at 0p since we don't know the current setting
-	if _, ok := lp.charger.(api.ChargePhases); !ok {
+	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
 		if lp.DefaultPhases == 0 {
 			lp.DefaultPhases = 3
 			lp.log.WARN.Println("phases not configured, assuming 3p")
@@ -1031,13 +1031,13 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
-// scalePhasesIfAvailable scales if api.ChargePhases is available
+// scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 	if lp.DefaultPhases != 0 {
 		phases = lp.DefaultPhases
 	}
 
-	if _, ok := lp.charger.(api.ChargePhases); ok {
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
 		return lp.scalePhases(phases)
 	}
 
@@ -1053,7 +1053,7 @@ func (lp *LoadPoint) setDefaultPhases(phases int) {
 	lp.phaseTimer = time.Time{}
 
 	// publish 1p3p capability and phase configuration
-	if _, ok := lp.charger.(api.ChargePhases); ok {
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
 		lp.publish("phases1p3p", lp.DefaultPhases)
 	} else {
 		lp.publish("phases1p3p", nil)
@@ -1076,11 +1076,11 @@ func (lp *LoadPoint) setPhases(phases int) {
 }
 
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
-// Returns api.ErrNotAvailable if api.ChargePhases is not available.
+// Returns api.ErrNotAvailable if api.PhaseSwitcher is not available.
 func (lp *LoadPoint) scalePhases(phases int) error {
-	cp, ok := lp.charger.(api.ChargePhases)
+	cp, ok := lp.charger.(api.PhaseSwitcher)
 	if !ok {
-		panic("charger does not implement api.ChargePhases")
+		panic("charger does not implement api.PhaseSwitcher")
 	}
 
 	if lp.GetPhases() != phases {
@@ -1219,7 +1219,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	maxCurrent := lp.GetMaxCurrent()
 
 	// switch phases up/down
-	if _, ok := lp.charger.(api.ChargePhases); ok {
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
 		availablePower := -sitePower + lp.chargePower
 
 		// in case of scaling, keep charger disabled for this cycle
