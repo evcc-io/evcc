@@ -3,6 +3,8 @@ package core
 import (
 	"testing"
 
+	evbus "github.com/asaskevich/EventBus"
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/mock"
@@ -122,6 +124,16 @@ func TestDefaultVehicle(t *testing.T) {
 		t.Errorf("expected %v, got %v", title(dflt), title(lp.vehicle))
 	}
 
+	// set non-default vehicle during disconnect - should be default on connect
+	lp.tasks.Clear()
+	lp.evVehicleConnectHandler()
+	if lp.vehicle != dflt {
+		t.Errorf("expected %v, got %v", title(dflt), title(lp.vehicle))
+	}
+	if l := lp.tasks.Size(); l != 1 {
+		t.Error("expected task in queue, got none")
+	}
+
 	// guest connected
 	lp.setActiveVehicle(nil)
 	if lp.vehicle != nil {
@@ -164,9 +176,9 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	od := newConfig(api.ModeOff, 5, 15, 2, 98)
 
 	vehicle := mock.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Title().AnyTimes()
+	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.EXPECT().OnIdentified().Return(oi)
+	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
 
 	lp := NewLoadPoint(util.NewLogger("foo"))
 
@@ -185,4 +197,96 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	vehicle.EXPECT().Phases().AnyTimes()
 	lp.evVehicleDisconnectHandler()
 	assertConfig(lp, od)
+
+	// identify vehicle by id
+	charger := struct {
+		*mock.MockCharger
+		*mock.MockIdentifier
+	}{
+		MockCharger:    mock.NewMockCharger(ctrl),
+		MockIdentifier: mock.NewMockIdentifier(ctrl),
+	}
+
+	lp.charger = charger
+	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
+
+	const id = "don't call me stacey"
+	charger.MockIdentifier.EXPECT().Identify().Return(id, nil)
+	vehicle.EXPECT().Identifiers().Return([]string{id})
+
+	lp.identifyVehicle()
+	assertConfig(lp, oi)
+}
+
+func TestReconnectVehicle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+
+	type vehicleT struct {
+		*mock.MockVehicle
+		*mock.MockChargeState
+	}
+
+	vehicle := &vehicleT{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
+	vehicle.MockVehicle.EXPECT().Title().Return("vehicle").AnyTimes()
+	vehicle.MockVehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.MockVehicle.EXPECT().Phases().AnyTimes()
+	vehicle.MockVehicle.EXPECT().OnIdentified().AnyTimes()
+	vehicle.MockVehicle.EXPECT().SoC().Return(0.0, nil).AnyTimes()
+
+	charger := mock.NewMockCharger(ctrl)
+	charger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
+
+	lp := &LoadPoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clck,
+		charger:     charger,
+		chargeMeter: &Null{}, // silence nil panics
+		chargeRater: &Null{}, // silence nil panics
+		chargeTimer: &Null{}, // silence nil panics
+		wakeUpTimer: NewTimer(),
+		MinCurrent:  minA,
+		MaxCurrent:  maxA,
+		phases:      1,
+		Mode:        api.ModeNow,
+	}
+
+	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
+
+	attachListeners(t, lp)
+
+	// mode now
+	charger.EXPECT().MaxCurrent(int64(maxA))
+	// sync charger
+	charger.EXPECT().Enabled().Return(true, nil)
+
+	// vehicle not updated yet
+	vehicle.MockChargeState.EXPECT().Status().Return(api.StatusA, nil)
+
+	lp.Update(0, false, false)
+	ctrl.Finish()
+
+	// detection started
+	if lp.vehicleDetect != lp.clock.Now() {
+		t.Error("vehicle detection not started")
+	}
+
+	// vehicle not detected yet
+	if lp.vehicle != nil {
+		t.Error("vehicle should be <nil>")
+	}
+
+	// sync charger
+	charger.EXPECT().Enabled().Return(true, nil)
+	// vehicle not updated yet
+	vehicle.MockChargeState.EXPECT().Status().Return(api.StatusB, nil)
+
+	lp.Update(0, false, false)
+	ctrl.Finish()
+
+	// vehicle detected
+	if lp.vehicle != vehicle {
+		t.Error("vehicle should be detected")
+	}
 }
