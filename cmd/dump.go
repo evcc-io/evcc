@@ -73,6 +73,10 @@ func runDump(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	for _, v := range site.GetVehicles() {
+		d.DumpWithHeader(fmt.Sprintf("vehicle: %s", v.Title()), v)
+	}
+
 	for id, lpI := range site.LoadPoints() {
 		lp := lpI.(*core.LoadPoint)
 
@@ -85,10 +89,6 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		if name := lp.ChargerRef; name != "" {
 			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), cp.Charger(name))
-		}
-
-		for id, v := range lp.VehiclesRef {
-			d.DumpWithHeader(fmt.Sprintf("vehicle %d", id), cp.Vehicle(v))
 		}
 	}
 }
