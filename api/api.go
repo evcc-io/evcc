@@ -10,7 +10,7 @@ import (
 	"github.com/fatih/structs"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
@@ -107,8 +107,8 @@ type ChargerEx interface {
 	MaxCurrentMillis(current float64) error
 }
 
-// ChargePhases provides 1p3p switching
-type ChargePhases interface {
+// PhaseSwitcher provides 1p3p switching
+type PhaseSwitcher interface {
 	Phases1p3p(phases int) error
 }
 
