@@ -60,23 +60,21 @@ meters:
         if (state.batterySoC < 10) state.batterySoC = 90;
         if (state.batterySoC > 90) state.batterySoC = 10;
         state.batterySoC;
+
   - name: meter_charger_1
     type: custom
     power:
       source: js
       vm: shared
       script: state.loadpoints[0].chargepower;
+
   - name: meter_charger_2
     type: custom
     power:
       source: js
       vm: shared
       script: state.loadpoints[1].chargepower;
-  - name: meter_charger_3
-    type: custom
-    power:
-      source: js
-      script: 0
+
 chargers:
   - name: charger_1
     type: custom
@@ -106,6 +104,7 @@ chargers:
         var lp = state.loadpoints[0];
         lp.maxcurrent = val;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+
   - name: charger_2
     type: custom
     enable:
@@ -134,24 +133,6 @@ chargers:
         var lp = state.loadpoints[1];
         lp.maxcurrent = val;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-  - name: charger_3
-    type: custom
-    enable:
-      source: js
-      vm: shared
-      script:
-    enabled:
-      source: js
-      vm: shared
-      script: false
-    status:
-      source: js
-      vm: shared
-      script: "'A'"
-    maxcurrent:
-      source: js
-      vm: shared
-      script: 16
 
 vehicles:
   - name: vehicle_1
@@ -174,6 +155,7 @@ vehicles:
         var range = (44 * lp.vehicleSoC) / 15;
         range
     capacity: 44
+
   - name: vehicle_2
     title: weißes Model 3
     type: custom
@@ -215,20 +197,10 @@ loadpoints:
     soc:
       target: 90
     meter: meter_charger_1
-    vehicle: vehicle_1
-    vehicles:
-      - vehicle_2
+    vehicle: vehicle_1 # default
   - title: Garage
     charger: charger_2
     soc:
       target: 75
     mode: "off"
     meter: meter_charger_2
-    vehicles:
-      - vehicle_1
-      - vehicle_2
-#  - title: Garage rechts
-#    charger: charger_3
-#    mode: "off"
-#    meters:
-#      charge: meter_charger_3
