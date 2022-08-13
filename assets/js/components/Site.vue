@@ -64,6 +64,7 @@ export default {
 		gridCurrents: Array,
 		prioritySoC: Number,
 		siteTitle: String,
+		vehicles: Array,
 
 		auth: Object,
 

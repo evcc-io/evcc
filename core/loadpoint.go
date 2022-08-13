@@ -516,7 +516,6 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("maxCurrent", lp.MaxCurrent)
 	lp.publish("phases", lp.phases)
 	lp.publish("activePhases", lp.activePhases())
-	lp.publishVehicles()
 
 	lp.setDefaultPhases(lp.DefaultPhases)
 
@@ -1174,11 +1173,6 @@ func (lp *LoadPoint) coordinatedVehicles() []api.Vehicle {
 		return nil
 	}
 	return lp.coordinator.GetVehicles()
-}
-
-// publishVehicles publishes a slice of vehicle titles
-func (lp *LoadPoint) publishVehicles() {
-	lp.publish("vehicles", vehicleTitles(lp.coordinatedVehicles()))
 }
 
 // TODO move up to timer functions

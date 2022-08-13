@@ -466,6 +466,8 @@ func (site *Site) prepare() {
 
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since().Unix())
+
+	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
 }
 
 // Prepare attaches communication channels to site and loadpoints
