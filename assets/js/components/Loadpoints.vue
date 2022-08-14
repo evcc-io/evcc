@@ -11,6 +11,7 @@
 				<Loadpoint
 					v-bind="loadpoint"
 					:id="index"
+					:vehicles="vehicles"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -41,6 +42,7 @@ export default {
 	components: { Loadpoint },
 	props: {
 		loadpoints: Array,
+		vehicles: Array,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };
