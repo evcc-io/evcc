@@ -26,13 +26,11 @@
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/cablecharge";
 
-import collector from "../mixins/collector";
 import VehicleOptions from "./VehicleOptions.vue";
 
 export default {
 	name: "VehicleTitle",
 	components: { VehicleOptions },
-	mixins: [collector],
 	props: {
 		vehiclePresent: Boolean,
 		vehicleTitle: String,
