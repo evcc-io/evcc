@@ -54,23 +54,26 @@
 									<small>
 										{{
 											$t("main.loadpointSettings.minSoC.description", [
-												selectedMinSoC || "--",
+												selectedMinSoC || "x",
 											])
 										}}
 									</small>
 								</div>
 							</div>
 
-							<h4 class="d-flex align-items-center mb-3 mt-4 text-evcc">
+							<h4
+								v-if="showConfigurablePhases || showCurrentSettings"
+								class="d-flex align-items-center mb-3 mt-4 text-evcc"
+							>
 								{{ $t("main.loadpointSettings.currents") }}
 								<shopicon-bold-lightning class="ms-1"></shopicon-bold-lightning>
 							</h4>
-							<div v-if="[0, 1, 3].includes(selectedPhases)" class="mb-3 row">
+							<div v-if="showConfigurablePhases" class="mb-3 row">
 								<label
 									:for="formId('phases_0')"
 									class="col-sm-4 col-form-label pt-0"
 								>
-									{{ $t("main.loadpointSettings.phases1p3p.label") }}
+									{{ $t("main.loadpointSettings.phasesConfigured.label") }}
 								</label>
 								<div class="col-sm-8 pe-0">
 									<div class="form-check">
@@ -81,10 +84,14 @@
 											type="radio"
 											:name="formId('phases')"
 											:value="0"
-											@change="changePhases1p3p"
+											@change="changePhasesConfigured"
 										/>
 										<label class="form-check-label" :for="formId('phases_0')">
-											{{ $t("main.loadpointSettings.phases1p3p.phases_0") }}
+											{{
+												$t(
+													"main.loadpointSettings.phasesConfigured.phases_0"
+												)
+											}}
 										</label>
 									</div>
 									<div class="form-check">
@@ -95,14 +102,18 @@
 											type="radio"
 											:name="formId('phases')"
 											:value="1"
-											@change="changePhases1p3p"
+											@change="changePhasesConfigured"
 										/>
 										<label class="form-check-label" :for="formId('phases_1')">
-											{{ $t("main.loadpointSettings.phases1p3p.phases_1") }}
+											{{
+												$t(
+													"main.loadpointSettings.phasesConfigured.phases_1"
+												)
+											}}
 											<small>
 												{{
 													$t(
-														"main.loadpointSettings.phases1p3p.phases_1_hint",
+														"main.loadpointSettings.phasesConfigured.phases_1_hint",
 														{ min: minPower1p, max: maxPower1p }
 													)
 												}}
@@ -117,14 +128,18 @@
 											type="radio"
 											:name="formId('phases')"
 											:value="3"
-											@change="changePhases1p3p"
+											@change="changePhasesConfigured"
 										/>
 										<label class="form-check-label" :for="formId('phases_3')">
-											{{ $t("main.loadpointSettings.phases1p3p.phases_3") }}
+											{{
+												$t(
+													"main.loadpointSettings.phasesConfigured.phases_3"
+												)
+											}}
 											<small>
 												{{
 													$t(
-														"main.loadpointSettings.phases1p3p.phases_3_hint",
+														"main.loadpointSettings.phasesConfigured.phases_3_hint",
 														{ min: minPower3p, max: maxPower3p }
 													)
 												}}
@@ -134,7 +149,7 @@
 								</div>
 							</div>
 
-							<div class="mb-3 row">
+							<div v-if="$hiddenFeatures" class="mb-3 row">
 								<label
 									:for="formId('maxcurrent')"
 									class="col-sm-4 col-form-label pt-0 pt-sm-2"
@@ -160,7 +175,7 @@
 								</div>
 							</div>
 
-							<div class="mb-3 row">
+							<div v-if="$hiddenFeatures" class="mb-3 row">
 								<label
 									:for="formId('mincurrent')"
 									class="col-sm-4 col-form-label pt-0 pt-sm-2"
@@ -211,18 +226,23 @@ export default {
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
-		phases1p3p: Number,
+		phasesConfigured: Number,
 		minSoC: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
 		title: String,
 	},
-	emits: ["phases1p3p-updated", "maxcurrent-updated", "mincurrent-updated", "minsoc-updated"],
+	emits: [
+		"phasesconfigured-updated",
+		"maxcurrent-updated",
+		"mincurrent-updated",
+		"minsoc-updated",
+	],
 	data: function () {
 		return {
 			selectedMaxCurrent: this.maxCurrent,
 			selectedMinCurrent: this.minCurrent,
-			selectedPhases: this.phases1p3p,
+			selectedPhases: this.phasesConfigured,
 			selectedMinSoC: this.minSoC,
 		};
 	},
@@ -240,10 +260,16 @@ export default {
 			return this.fmtKw(this.minCurrent * V * 3);
 		},
 		maxPower: function () {
-			return this.phases1p3p === 1 ? this.maxPower1p : this.maxPower3p;
+			return this.phasesConfigured === 1 ? this.maxPower1p : this.maxPower3p;
 		},
 		minPower: function () {
-			return this.phases1p3p === 3 ? this.minPower3p : this.minPower1p;
+			return this.phasesConfigured === 3 ? this.minPower3p : this.minPower1p;
+		},
+		showConfigurablePhases: function () {
+			return [0, 1, 3].includes(this.phasesConfigured);
+		},
+		showCurrentSettings: function () {
+			return this.$hiddenFeatures;
 		},
 	},
 	watch: {
@@ -253,7 +279,7 @@ export default {
 		minCurrent: function (value) {
 			this.selectedMinCurrent = value;
 		},
-		phases1p3p: function (value) {
+		phasesConfigured: function (value) {
 			this.selectedPhases = value;
 		},
 		minSoC: function (value) {
@@ -270,8 +296,8 @@ export default {
 		changeMinCurrent: function () {
 			this.$emit("mincurrent-updated", this.selectedMinCurrent);
 		},
-		changePhases1p3p: function () {
-			this.$emit("phases1p3p-updated", this.selectedPhases);
+		changePhasesConfigured: function () {
+			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
 		changeMinSoC: function () {
 			this.$emit("minsoc-updated", this.selectedMinSoC);

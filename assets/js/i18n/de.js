@@ -93,7 +93,7 @@ export default {
         description:
           'Reichweite für Notfälle. Fahrzeug wird im PV-Modus "schnell" auf {0}% geladen. Danach weiter mit PV-Überschuss.',
       },
-      phases1p3p: {
+      phasesConfigured: {
         label: "Phasen",
         phases_0: "automatischer Wechsel",
         phases_1: "1-phasig",

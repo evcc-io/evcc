@@ -16,7 +16,7 @@
 			v-bind="settingsModal"
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
-			@phases1p3p-updated="setPhases1p3p"
+			@phasesconfigured-updated="setPhasesConfigured"
 			@minsoc-updated="setMinSoC"
 		/>
 
@@ -155,7 +155,7 @@ export default {
 
 		// other information
 		phases: Number,
-		phases1p3p: Number,
+		phasesConfigured: Number,
 		minCurrent: Number,
 		maxCurrent: Number,
 		phasesActive: Number,
@@ -243,7 +243,7 @@ export default {
 		setMinCurrent: function (minCurrent) {
 			api.post(this.apiPath("mincurrent") + "/" + minCurrent);
 		},
-		setPhases1p3p: function (phases) {
+		setPhasesConfigured: function (phases) {
 			api.post(this.apiPath("phases") + "/" + phases);
 		},
 		setMinSoC: function (soc) {

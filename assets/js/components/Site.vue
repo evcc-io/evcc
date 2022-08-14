@@ -20,7 +20,7 @@
 				:loadpoints="loadpoints"
 				:vehicles="vehicles"
 			/>
-			<Vehicles v-if="$hiddenFeatures" />
+			<Vehicles v-if="showParkingLot" />
 			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
@@ -107,6 +107,10 @@ export default {
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins };
+		},
+		showParkingLot: function () {
+			// work in progess
+			return false;
 		},
 		footer: function () {
 			return {
