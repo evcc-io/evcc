@@ -140,7 +140,7 @@ export default {
 		phases: Number,
 		minCurrent: Number,
 		maxCurrent: Number,
-		activePhases: Number,
+		phasesActive: Number,
 		chargeCurrent: Number,
 		vehicleCapacity: Number,
 		connectedDuration: Number,

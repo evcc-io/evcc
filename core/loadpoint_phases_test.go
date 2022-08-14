@@ -90,10 +90,10 @@ func TestMaxActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &LoadPoint{
-				DefaultPhases:  dflt, // fixed phases or default
-				vehicle:        vehicle,
-				phases:         tc.physical,
-				measuredPhases: tc.measuredPhases,
+				ConfiguredPhases: dflt, // fixed phases or default
+				vehicle:          vehicle,
+				phases:           tc.physical,
+				measuredPhases:   tc.measuredPhases,
 			}
 
 			if phaseCharger != nil {
@@ -178,20 +178,20 @@ func TestPvScalePhases(t *testing.T) {
 		vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 		lp := &LoadPoint{
-			log:           util.NewLogger("foo"),
-			bus:           evbus.New(),
-			clock:         clock,
-			chargeMeter:   &Null{},            // silence nil panics
-			chargeRater:   &Null{},            // silence nil panics
-			chargeTimer:   &Null{},            // silence nil panics
-			progress:      NewProgress(0, 10), // silence nil panics
-			wakeUpTimer:   NewTimer(),         // silence nil panics
-			Mode:          api.ModeNow,
-			MinCurrent:    minA,
-			MaxCurrent:    maxA,
-			vehicle:       vehicle,
-			DefaultPhases: 0, // allow switching
-			phases:        tc.physical,
+			log:              util.NewLogger("foo"),
+			bus:              evbus.New(),
+			clock:            clock,
+			chargeMeter:      &Null{},            // silence nil panics
+			chargeRater:      &Null{},            // silence nil panics
+			chargeTimer:      &Null{},            // silence nil panics
+			progress:         NewProgress(0, 10), // silence nil panics
+			wakeUpTimer:      NewTimer(),         // silence nil panics
+			Mode:             api.ModeNow,
+			MinCurrent:       minA,
+			MaxCurrent:       maxA,
+			vehicle:          vehicle,
+			ConfiguredPhases: 0, // allow switching
+			phases:           tc.physical,
 		}
 
 		if phaseCharger != nil {
@@ -412,9 +412,9 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 				plainCharger,
 				phaseCharger,
 			},
-			MinCurrent:    minA,
-			DefaultPhases: tc.dflt,     // fixed phases or default
-			phases:        tc.physical, // current phase status
+			MinCurrent:       minA,
+			ConfiguredPhases: tc.dflt,     // fixed phases or default
+			phases:           tc.physical, // current phase status
 		}
 
 		// restrict scalable charger by config

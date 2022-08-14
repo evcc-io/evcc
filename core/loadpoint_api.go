@@ -117,7 +117,7 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 	}
 
 	// set new default
-	lp.setDefaultPhases(phases)
+	lp.setConfiguredPhases(phases)
 
 	// apply immediately if not 1p3p
 	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
