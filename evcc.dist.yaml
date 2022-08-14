@@ -18,7 +18,7 @@ interval: 10s # control cycle interval
 # log settings
 log: info
 levels:
-  core: debug
+  site: debug
   lp-1: debug
   lp-2: debug
 
@@ -63,6 +63,7 @@ vehicles:
     password: mypassword # password
     vin: WREN...
     onIdentify: # set defaults when vehicle is identified
+      mode: pv # enable PV-charging when vehicle is identified
       minSoC: 20 # charge to at least 20% independent of charge mode
       targetSoC: 90 # limit charge to 90%
 
@@ -82,11 +83,8 @@ loadpoints:
   - title: Garage # display name for UI
     charger: wallbe # charger
     meter: charge # charge meter
-    vehicle: audi
-    # vehicles: # use if multiple vehicles allowed to charge on this loadpoint
-    # - ID.3
-    # - e-Up
-    mode: pv
+    mode: "off" # set default charge mode, use "off" to disable by default if charger is publicly available
+    # vehicle: car1 # set default vehicle (disables vehicle detection)
     resetOnDisconnect: true # set defaults when vehicle disconnects
     soc:
       # polling defines usage of the vehicle APIs

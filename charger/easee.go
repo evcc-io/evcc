@@ -406,9 +406,9 @@ func (c *Easee) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.ChargePhases = (*Easee)(nil)
+var _ api.PhaseSwitcher = (*Easee)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Easee) Phases1p3p(phases int) error {
 	var err error
 	if c.circuit != 0 {

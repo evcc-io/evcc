@@ -81,25 +81,25 @@ func TestMaxActivePhases(t *testing.T) {
 			plainCharger := mock.NewMockCharger(ctrl)
 
 			// 1p3p
-			var phaseCharger *mock.MockChargePhases
+			var phaseCharger *mock.MockPhaseSwitcher
 			if tc.capable == 0 {
-				phaseCharger = mock.NewMockChargePhases(ctrl)
+				phaseCharger = mock.NewMockPhaseSwitcher(ctrl)
 			}
 
 			vehicle := mock.NewMockVehicle(ctrl)
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &LoadPoint{
-				DefaultPhases:  dflt, // fixed phases or default
-				vehicle:        vehicle,
-				phases:         tc.physical,
-				measuredPhases: tc.measuredPhases,
+				ConfiguredPhases: dflt, // fixed phases or default
+				vehicle:          vehicle,
+				phases:           tc.physical,
+				measuredPhases:   tc.measuredPhases,
 			}
 
 			if phaseCharger != nil {
 				lp.charger = struct {
 					*mock.MockCharger
-					*mock.MockChargePhases
+					*mock.MockPhaseSwitcher
 				}{
 					plainCharger, phaseCharger,
 				}
@@ -169,35 +169,35 @@ func TestPvScalePhases(t *testing.T) {
 		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil) // MaxCurrentEx not implemented
 
 		// 1p3p
-		var phaseCharger *mock.MockChargePhases
+		var phaseCharger *mock.MockPhaseSwitcher
 		if tc.capable == 0 {
-			phaseCharger = mock.NewMockChargePhases(ctrl)
+			phaseCharger = mock.NewMockPhaseSwitcher(ctrl)
 		}
 
 		vehicle := mock.NewMockVehicle(ctrl)
 		vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 		lp := &LoadPoint{
-			log:           util.NewLogger("foo"),
-			bus:           evbus.New(),
-			clock:         clock,
-			chargeMeter:   &Null{},            // silence nil panics
-			chargeRater:   &Null{},            // silence nil panics
-			chargeTimer:   &Null{},            // silence nil panics
-			progress:      NewProgress(0, 10), // silence nil panics
-			wakeUpTimer:   NewTimer(),         // silence nil panics
-			Mode:          api.ModeNow,
-			MinCurrent:    minA,
-			MaxCurrent:    maxA,
-			vehicle:       vehicle,
-			DefaultPhases: 0, // allow switching
-			phases:        tc.physical,
+			log:              util.NewLogger("foo"),
+			bus:              evbus.New(),
+			clock:            clock,
+			chargeMeter:      &Null{},            // silence nil panics
+			chargeRater:      &Null{},            // silence nil panics
+			chargeTimer:      &Null{},            // silence nil panics
+			progress:         NewProgress(0, 10), // silence nil panics
+			wakeUpTimer:      NewTimer(),         // silence nil panics
+			Mode:             api.ModeNow,
+			MinCurrent:       minA,
+			MaxCurrent:       maxA,
+			vehicle:          vehicle,
+			ConfiguredPhases: 0, // allow switching
+			phases:           tc.physical,
 		}
 
 		if phaseCharger != nil {
 			lp.charger = struct {
 				*mock.MockCharger
-				*mock.MockChargePhases
+				*mock.MockPhaseSwitcher
 			}{
 				plainCharger, phaseCharger,
 			}
@@ -261,10 +261,10 @@ func TestPvScalePhasesTimer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := &struct {
 		*mock.MockCharger
-		*mock.MockChargePhases
+		*mock.MockPhaseSwitcher
 	}{
 		mock.NewMockCharger(ctrl),
-		mock.NewMockChargePhases(ctrl),
+		mock.NewMockPhaseSwitcher(ctrl),
 	}
 
 	dt := time.Minute
@@ -365,7 +365,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		}
 
 		if tc.res {
-			charger.MockChargePhases.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
+			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
 		}
 
 		res := lp.pvScalePhases(tc.availablePower, minA, maxA)
@@ -400,21 +400,21 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 		t.Log(tc)
 
 		plainCharger := mock.NewMockCharger(ctrl)
-		phaseCharger := mock.NewMockChargePhases(ctrl)
+		phaseCharger := mock.NewMockPhaseSwitcher(ctrl)
 
 		lp := &LoadPoint{
 			log:   util.NewLogger("foo"),
 			clock: clock.NewMock(),
 			charger: struct {
 				*mock.MockCharger
-				*mock.MockChargePhases
+				*mock.MockPhaseSwitcher
 			}{
 				plainCharger,
 				phaseCharger,
 			},
-			MinCurrent:    minA,
-			DefaultPhases: tc.dflt,     // fixed phases or default
-			phases:        tc.physical, // current phase status
+			MinCurrent:       minA,
+			ConfiguredPhases: tc.dflt,     // fixed phases or default
+			phases:           tc.physical, // current phase status
 		}
 
 		// restrict scalable charger by config

@@ -390,15 +390,16 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
 	lp := &LoadPoint{
-		log:          util.NewLogger("foo"),
-		bus:          evbus.New(),
-		clock:        clock,
-		charger:      charger,
-		chargeMeter:  &Null{},            // silence nil panics
-		chargeRater:  &Null{},            // silence nil panics
-		chargeTimer:  &Null{},            // silence nil panics
-		progress:     NewProgress(0, 10), // silence nil panics
-		wakeUpTimer:  NewTimer(),         // silence nil panics
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		charger:     charger,
+		chargeMeter: &Null{},            // silence nil panics
+		chargeRater: &Null{},            // silence nil panics
+		chargeTimer: &Null{},            // silence nil panics
+		progress:    NewProgress(0, 10), // silence nil panics
+		wakeUpTimer: NewTimer(),         // silence nil panics
+		// coordinator:  coordinator.NewDummy(), // silence nil panics
 		MinCurrent:   minA,
 		MaxCurrent:   maxA,
 		vehicle:      vehicle,      // needed for targetSoC check

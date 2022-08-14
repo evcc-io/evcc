@@ -6,6 +6,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
@@ -61,9 +62,10 @@ func TestVehicleDetectByID(t *testing.T) {
 		t.Logf("%+v", tc)
 
 		lp := &LoadPoint{
-			log:      util.NewLogger("foo"),
-			vehicles: []api.Vehicle{v1, v2},
+			log: util.NewLogger("foo"),
 		}
+
+		lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{v1, v2}))
 
 		if tc.prepare != nil {
 			tc.prepare(tc)
@@ -206,7 +208,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	}
 
 	lp.charger = charger
-	lp.vehicles = []api.Vehicle{vehicle}
+	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
 	const id = "don't call me stacey"
 	charger.MockIdentifier.EXPECT().Identify().Return(id, nil)
@@ -248,8 +250,9 @@ func TestReconnectVehicle(t *testing.T) {
 		MaxCurrent:  maxA,
 		phases:      1,
 		Mode:        api.ModeNow,
-		vehicles:    []api.Vehicle{vehicle},
 	}
+
+	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
 	attachListeners(t, lp)
 

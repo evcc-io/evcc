@@ -108,7 +108,7 @@ func (lp *LoadPoint) GetPhases() int {
 // SetPhases sets loadpoint enabled phases
 func (lp *LoadPoint) SetPhases(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
-	if _, ok := lp.charger.(api.ChargePhases); !ok && phases == 0 {
+	if _, ok := lp.charger.(api.PhaseSwitcher); !ok && phases == 0 {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
@@ -117,10 +117,10 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 	}
 
 	// set new default
-	lp.setDefaultPhases(phases)
+	lp.setConfiguredPhases(phases)
 
 	// apply immediately if not 1p3p
-	if _, ok := lp.charger.(api.ChargePhases); !ok {
+	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
 		lp.setPhases(phases)
 	}
 
@@ -258,13 +258,6 @@ func (lp *LoadPoint) GetRemainingEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.chargeRemainingEnergy
-}
-
-// GetVehicles is the list of vehicles
-func (lp *LoadPoint) GetVehicles() []api.Vehicle {
-	lp.Lock()
-	defer lp.Unlock()
-	return lp.vehicles
 }
 
 // SetVehicle sets the active vehicle

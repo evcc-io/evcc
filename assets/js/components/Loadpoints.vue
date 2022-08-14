@@ -11,6 +11,7 @@
 				<Loadpoint
 					v-bind="loadpoint"
 					:id="index"
+					:vehicles="vehicles"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -35,14 +36,13 @@
 import "@h2d2/shopicons/es/filled/circle";
 
 import Loadpoint from "./Loadpoint.vue";
-import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
 	components: { Loadpoint },
-	mixins: [collector],
 	props: {
 		loadpoints: Array,
+		vehicles: Array,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };
@@ -126,7 +126,7 @@ export default {
 	}
 }
 
-/* show truncated tiles on breakpoind sm,md */
+/* show truncated tiles on breakpoint sm,md */
 @media (min-width: 576px) and (max-width: 991.98px) {
 	.container--loadpoint {
 		max-width: none;
@@ -147,21 +147,21 @@ export default {
 	}
 }
 
-/* breakpoind sm */
+/* breakpoint sm */
 @media (min-width: 576px) and (max-width: 767.98px) {
 	.carousel {
 		--slide-width: 540px;
 	}
 }
 
-/* breakpoind md */
+/* breakpoint md */
 @media (min-width: 768px) and (max-width: 991.98px) {
 	.carousel {
 		--slide-width: 720px;
 	}
 }
 
-/* breakpoind lg */
+/* breakpoint lg */
 @media (min-width: 992px) {
 	.carousel {
 		display: grid !important;
