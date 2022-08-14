@@ -908,7 +908,9 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 		return
 	}
 
-	if vehicle := lp.coordinator.IdentifyVehicleByStatus(); vehicle != nil {
+	_, ok := lp.charger.(api.Identifier)
+
+	if vehicle := lp.coordinator.IdentifyVehicleByStatus(!ok); vehicle != nil {
 		lp.setActiveVehicle(vehicle)
 		return
 	}

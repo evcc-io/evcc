@@ -7,5 +7,5 @@ type API interface {
 	GetVehicles() []api.Vehicle
 	Acquire(api.Vehicle)
 	Release(api.Vehicle)
-	IdentifyVehicleByStatus() api.Vehicle
+	IdentifyVehicleByStatus(includeIdCapable bool) api.Vehicle
 }
