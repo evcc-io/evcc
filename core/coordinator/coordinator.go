@@ -48,7 +48,7 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API, includeId
 			// available or associated to current loadpoint
 			if o, ok := c.tracked[vv]; o == owner || !ok {
 				// no identifiers configured or identifiers ignored
-				if len(vv.Identifiers()) == 0 || includeIdCapable {
+				if includeIdCapable || len(vv.Identifiers()) == 0 {
 					res = append(res, vv)
 				}
 			}
