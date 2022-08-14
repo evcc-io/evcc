@@ -106,10 +106,6 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 		CurrentTime: types.NewDateTime(time.Now()),
 	}
 
-	if !cp.meterTickerRunning && cp.meterSupported {
-		Instance().TriggerMeterValuesRequest(cp)
-	}
-
 	return res, nil
 }
 
@@ -117,8 +113,23 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
 	cp.mu.Lock()
-	cp.setMeterValues(request)
-	cp.mu.Unlock()
+	defer cp.mu.Unlock()
+
+	var updated bool
+
+	for _, meterValue := range request.MeterValue {
+		// ignore old meter value requests
+		if meterValue.Timestamp.Time.After(cp.meterUpdated) {
+			for _, sample := range meterValue.SampledValue {
+				cp.measurements[getSampleKey(sample)] = sample
+				updated = true
+			}
+		}
+	}
+
+	if updated {
+		cp.meterUpdated = time.Now()
+	}
 
 	return new(core.MeterValuesConfirmation), nil
 }
@@ -131,60 +142,26 @@ func getSampleKey(s types.SampledValue) string {
 	return string(s.Measurand)
 }
 
-func (cp *CP) setMeterValues(request *core.MeterValuesRequest) {
-	for _, meterValue := range request.MeterValue {
-		// ignore old meter value requests
-		if meterValue.Timestamp.Time.After(cp.meterUpdated) {
-			for _, sample := range meterValue.SampledValue {
-				cp.measurements[getSampleKey(sample)] = sample
-			}
-		}
-	}
-}
-
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
+
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted, // accept
 		},
+		TransactionId: 1, // default
 	}
 
 	// create new transaction
-	if request != nil {
-		if time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
-			cp.mu.Lock()
-			cp.currentTransaction = NewTransaction(cp.currentTransaction.ID+1, request.IdTag, request.Timestamp.Time)
-			cp.mu.Unlock()
-
-			res.TransactionId = cp.currentTransaction.ID
-
-			if cp.meterSupported && !cp.meterTickerRunning && time.Since(request.Timestamp.Time) < messageExpiry {
-				go func() {
-					cp.log.TRACE.Printf("starting meter value ticker")
-					cp.meterTickerRunning = true
-					cp.measureDoneCh = make(chan struct{})
-					ticker := time.NewTicker(15 * time.Second)
-
-					defer cp.log.TRACE.Printf("exiting meter value ticker")
-					for {
-						select {
-						case <-ticker.C:
-							Instance().TriggerMeterValuesRequest(cp)
-						case <-cp.measureDoneCh:
-							cp.log.TRACE.Printf("returning from meter value requests")
-							cp.meterTickerRunning = false
-							return
-						}
-					}
-				}()
-			}
-		} else {
-			// TODO: Handle old transactions e.g. store them
-			res.TransactionId = 1 // change 1 to the last known global transaction. Needs persistence
-		}
+	if request != nil && time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
+		cp.txnCount++
+		res.TransactionId = cp.txnCount
 	}
+
+	cp.txnId = res.TransactionId
 
 	return res, nil
 }
@@ -195,7 +172,7 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 	// reset transaction
 	if request != nil {
 		cp.mu.Lock()
-		cp.currentTransaction.Finish(request.IdTag, request.Timestamp.Time)
+		cp.txnId = 0
 		cp.mu.Unlock()
 
 		// TODO: Handle old transaction. Store them, check for the starting transaction event
@@ -205,14 +182,6 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted, // accept
 		},
-	}
-
-	if cp.meterSupported {
-		if cp.meterTickerRunning {
-			cp.measureDoneCh <- struct{}{}
-		}
-
-		Instance().TriggerMeterValuesRequest(cp)
 	}
 
 	return res, nil

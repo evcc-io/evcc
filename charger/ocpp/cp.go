@@ -57,16 +57,31 @@ type CP struct {
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
 
-	meterSupported     bool
-	measureDoneCh      chan struct{}
-	meterUpdated       time.Time
-	measurements       map[string]types.SampledValue
-	meterTickerRunning bool
+	timeout      time.Duration
+	meterUpdated time.Time
+	measurements map[string]types.SampledValue
 
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
 
-	currentTransaction Transaction
+	txnCount int // change initial value to the last known global transaction. Needs persistence
+	txnId    int
+}
+
+func (cp *CP) WatchDog(timeout time.Duration) {
+	cp.timeout = timeout
+
+	go func() {
+		for ; true; <-time.NewTicker(timeout).C {
+			cp.mu.Lock()
+			update := cp.txnId != 0 && time.Since(cp.meterUpdated) > timeout
+			cp.mu.Unlock()
+
+			if update {
+				Instance().TriggerMeterValuesRequest(cp)
+			}
+		}
+	}()
 }
 
 func (cp *CP) DetectCapabilities(opts []core.ConfigurationKey) error {
@@ -189,8 +204,7 @@ func (cp *CP) Boot() error {
 func (cp *CP) TransactionID() int {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
-
-	return cp.currentTransaction.ID
+	return cp.txnId
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {
@@ -199,7 +213,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	cp.log.TRACE.Printf("current transaction ID (last update): %d (%s)", cp.currentTransaction.ID, cp.updated.Format(time.RFC3339))
+	cp.log.TRACE.Printf("current transaction ID (last update): %d (%s)", cp.txnId, cp.updated.Format(time.RFC3339))
 
 	if time.Since(cp.updated) > timeout {
 		return res, api.ErrTimeout
@@ -237,6 +251,10 @@ func (cp *CP) CurrentPower() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
+	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+		return 0, api.ErrNotAvailable
+	}
+
 	if power, ok := cp.measurements[string(types.MeasurandPowerActiveImport)]; ok {
 		return strconv.ParseFloat(power.Value, 64)
 	}
@@ -250,8 +268,13 @@ func (cp *CP) TotalEnergy() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
+	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+		return 0, api.ErrNotAvailable
+	}
+
 	if power, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
-		return strconv.ParseFloat(power.Value, 64)
+		f, err := strconv.ParseFloat(power.Value, 64)
+		return f / 1e3, err
 	}
 
 	return 0, api.ErrNotAvailable
@@ -266,6 +289,10 @@ var _ api.MeterCurrent = (*CP)(nil)
 func (cp *CP) Currents() (float64, float64, float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
+
+	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
 
 	currents := make([]float64, 0, 3)
 
