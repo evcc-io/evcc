@@ -35,12 +35,10 @@
 import "@h2d2/shopicons/es/filled/circle";
 
 import Loadpoint from "./Loadpoint.vue";
-import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
 	components: { Loadpoint },
-	mixins: [collector],
 	props: {
 		loadpoints: Array,
 	},

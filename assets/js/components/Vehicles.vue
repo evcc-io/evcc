@@ -29,13 +29,11 @@
 
 <script>
 import Vehicle from "./Vehicle.vue";
-import collector from "../mixins/collector";
 import "@h2d2/shopicons/es/regular/refresh";
 
 export default {
 	name: "Vehicles",
 	components: { Vehicle },
-	mixins: [collector],
 
 	data() {
 		return {
