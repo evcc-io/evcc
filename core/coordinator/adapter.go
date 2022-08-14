@@ -31,6 +31,7 @@ func (a *adapter) Release(v api.Vehicle) {
 	a.c.release(v)
 }
 
-func (a *adapter) IdentifyVehicleByStatus() api.Vehicle {
-	return a.c.identifyVehicleByStatus(a.lp)
+func (a *adapter) IdentifyVehicleByStatus(includeIdCapable bool) api.Vehicle {
+	available := a.c.availableDetectibleVehicles(a.lp, includeIdCapable)
+	return a.c.identifyVehicleByStatus(available)
 }
