@@ -76,7 +76,7 @@ func (v *Identity) invalidToken() {
 	}
 }
 
-var _ api.ProviderLogin = (*Identity)(nil)
+var _ api.AuthProvider = (*Identity)(nil)
 
 func (v *Identity) SetCallbackParams(baseURL, redirectURL string, authC chan<- bool) {
 	v.baseURL = baseURL

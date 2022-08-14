@@ -189,8 +189,8 @@ type Tariff interface {
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
 }
 
-// ProviderLogin is the ability to provide OAuth authentication through the ui
-type ProviderLogin interface {
+// AuthProvider is the ability to provide OAuth authentication through the ui
+type AuthProvider interface {
 	SetCallbackParams(baseURL, redirectURL string, authenticated chan<- bool)
 	LoginHandler() http.HandlerFunc
 	LogoutHandler() http.HandlerFunc
