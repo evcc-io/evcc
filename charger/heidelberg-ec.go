@@ -273,13 +273,11 @@ var _ api.Resurrector = (*HeidelbergEC)(nil)
 // WakeUp implements the api.Resurrector interface
 func (wb *HeidelbergEC) WakeUp() error {
 	// force status F by locking
-	err := wb.set(hecRegRemoteLock, 0)
+	err := wb.set(hecRegRemoteLock, 1)
 	if err == nil {
 		// Always takes at least ~10 sec to return to normal operation
 		// after locking even if unlocking immediately.
 		wb.wakeup = true
-		// return to normal operation by unlocking after ~10 sec
-		err = wb.set(hecRegRemoteLock, 1)
 	}
 	return err
 }
