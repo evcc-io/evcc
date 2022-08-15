@@ -92,7 +92,10 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 	}
 
 	// disable standby to prevent comm loss
-	_ = wb.set(hecRegStandbyConfig, hecStandbyDisabled)
+	err = wb.set(hecRegStandbyConfig, hecStandbyDisabled)
+	if err != nil {
+		return nil, err
+	}
 
 	// unlock
 	err = wb.set(hecRegRemoteLock, 1)
