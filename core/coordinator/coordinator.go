@@ -39,13 +39,18 @@ func (c *Coordinator) release(vehicle api.Vehicle) {
 
 // availableDetectibleVehicles is the list of vehicles that are currently not
 // associated to another loadpoint and have a status api that allows for detection
-func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Vehicle {
+func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API, includeIdCapable bool) []api.Vehicle {
 	var res []api.Vehicle
 
 	for _, vv := range c.vehicles {
+		// status api available
 		if _, ok := vv.(api.ChargeState); ok {
+			// available or associated to current loadpoint
 			if o, ok := c.tracked[vv]; o == owner || !ok {
-				res = append(res, vv)
+				// no identifiers configured or identifiers ignored
+				if includeIdCapable || len(vv.Identifiers()) == 0 {
+					res = append(res, vv)
+				}
 			}
 		}
 	}
@@ -54,9 +59,7 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Veh
 }
 
 // identifyVehicleByStatus finds active vehicle by charge state
-func (c *Coordinator) identifyVehicleByStatus(owner loadpoint.API) api.Vehicle {
-	available := c.availableDetectibleVehicles(owner)
-
+func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehicle {
 	var res api.Vehicle
 	for _, vehicle := range available {
 		if vs, ok := vehicle.(api.ChargeState); ok {

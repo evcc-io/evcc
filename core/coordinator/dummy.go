@@ -19,6 +19,6 @@ func (a *dummy) Acquire(v api.Vehicle) {}
 
 func (a *dummy) Release(v api.Vehicle) {}
 
-func (a *dummy) IdentifyVehicleByStatus() api.Vehicle {
+func (a *dummy) IdentifyVehicleByStatus(includeIdCapable bool) api.Vehicle {
 	return nil
 }
