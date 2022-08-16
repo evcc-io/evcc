@@ -93,12 +93,6 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 
 	// disable standby to prevent comm loss
 	err = wb.set(hecRegStandbyConfig, hecStandbyDisabled)
-	if err != nil {
-		return nil, err
-	}
-
-	// unlock
-	err = wb.set(hecRegRemoteLock, 1)
 
 	return wb, err
 }
@@ -137,6 +131,19 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	case 9:
 		return api.StatusE, nil
 	case 10:
+		// ensure RemoteLock is disabled after wake-up
+		l, err := wb.conn.ReadInputRegisters(hecRegRemoteLock, 1)
+		if err != nil {
+			return api.StatusNone, err
+		}
+		if binary.BigEndian.Uint16(l) != 1 {
+			// unlock
+			err = wb.set(hecRegRemoteLock, 1)
+			if err != nil {
+				return api.StatusNone, err
+			}
+		}
+
 		if wb.wakeup {
 			// keep status B2 during wakeup
 			return api.StatusB, nil
