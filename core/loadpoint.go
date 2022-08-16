@@ -477,11 +477,11 @@ func (lp *LoadPoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.Mode != nil {
 		lp.SetMode(*actionCfg.Mode)
 	}
-	if actionCfg.MinCurrent != nil {
-		lp.SetMinCurrent(*actionCfg.MinCurrent)
+	if min := actionCfg.MinCurrent; min != nil && *min >= *lp.onDisconnect.MinCurrent {
+		lp.SetMinCurrent(*min)
 	}
-	if actionCfg.MaxCurrent != nil {
-		lp.SetMaxCurrent(*actionCfg.MaxCurrent)
+	if max := actionCfg.MaxCurrent; max != nil && *max <= *lp.onDisconnect.MaxCurrent {
+		lp.SetMaxCurrent(*max)
 	}
 	if actionCfg.MinSoC != nil {
 		lp.SetMinSoC(*actionCfg.MinSoC)
