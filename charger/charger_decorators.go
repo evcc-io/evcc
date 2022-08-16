@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitcher func(int) (error)) api.Charger {
+func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitcher func(int) error) api.Charger {
 	switch {
 	case identifier == nil && phaseSwitcher == nil:
 		return base
@@ -61,9 +61,9 @@ func (impl *decorateCustomIdentifierImpl) Identify() (string, error) {
 }
 
 type decorateCustomPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) (error)
+	phaseSwitcher func(int) error
 }
 
-func (impl *decorateCustomPhaseSwitcherImpl) Phases1p3p(phases int) (error) {
+func (impl *decorateCustomPhaseSwitcherImpl) Phases1p3p(phases int) error {
 	return impl.phaseSwitcher(phases)
 }
