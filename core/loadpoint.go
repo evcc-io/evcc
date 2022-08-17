@@ -836,11 +836,9 @@ func (lp *LoadPoint) wakeUpVehicle() {
 	}
 
 	// vehicle
-	if lp.vehicle != nil {
-		if vs, ok := lp.vehicle.(api.Resurrector); ok {
-			if err := vs.WakeUp(); err != nil {
-				lp.log.ERROR.Printf("wake-up vehicle: %v", err)
-			}
+	if vs, ok := lp.vehicle.(api.Resurrector); ok {
+		if err := vs.WakeUp(); err != nil {
+			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
 		}
 	}
 }
