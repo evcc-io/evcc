@@ -419,10 +419,8 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	lp.pushEvent(evVehicleDisconnect)
 
-	// remove charger vehicle id
+	// remove charger vehicle id and stop potential detection
 	lp.setVehicleIdentifier("")
-
-	// stop potential detection
 	lp.stopVehicleDetection()
 
 	// remove active vehicle if not default
@@ -743,6 +741,8 @@ func (lp *LoadPoint) identifyVehicle() {
 	lp.setVehicleIdentifier(id)
 
 	if id != "" {
+		lp.stopVehicleDetection()
+
 		lp.log.DEBUG.Println("charger vehicle id:", id)
 
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
@@ -923,6 +923,7 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 	_, ok := lp.charger.(api.Identifier)
 
 	if vehicle := lp.coordinator.IdentifyVehicleByStatus(!ok); vehicle != nil {
+		lp.stopVehicleDetection()
 		lp.setActiveVehicle(vehicle)
 		return
 	}
