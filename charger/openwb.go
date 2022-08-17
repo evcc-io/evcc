@@ -19,6 +19,7 @@ func init() {
 // OpenWB configures generic charger and charge meter for an openWB loadpoint
 type OpenWB struct {
 	current int64
+	enabled bool
 	// enabledG      func() (int64, error)
 	statusG       func() (string, error)
 	currentS      func(int64) error
@@ -172,12 +173,14 @@ func (m *OpenWB) Enable(enable bool) error {
 		current = m.current
 	}
 
+	m.enabled = current > 0
+
 	return m.currentS(current)
 }
 
 func (m *OpenWB) Enabled() (bool, error) {
 	// current, err := m.enabledG()
-	return m.current > 0, nil
+	return m.enabled, nil
 }
 
 func (m *OpenWB) Status() (api.ChargeStatus, error) {
