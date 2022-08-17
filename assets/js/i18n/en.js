@@ -84,6 +84,33 @@ export default {
       duration: "Duration",
       remaining: "Remaining",
     },
+    loadpointSettings: {
+      title: 'Settings "{0}"',
+      vehicle: "Vehicle",
+      currents: "Charging",
+      minSoC: {
+        label: "Minimal SoC",
+        description:
+          'Range for emergencies. Vehicle gets "fast" charged to {0}% in PV mode. Then continues with PV surplus only.',
+      },
+      phasesConfigured: {
+        label: "Phases",
+        phases_0: "automatic switching",
+        phases_1: "1 phase",
+        phases_1_hint: "({min} to {max})",
+        phases_3: "3 phases",
+        phases_3_hint: "({min} to {max})",
+      },
+      maxCurrent: {
+        label: "Max. Current",
+      },
+      minCurrent: {
+        label: "Min. Current",
+      },
+      default: "default",
+      disclaimerHint: "Note:",
+      disclaimerText: "Changes are not persistent yet. They will be reset after server restart.",
+    },
     vehicles: "Parking",
     vehicle: {
       fallbackName: "Vehicle",

@@ -84,6 +84,34 @@ export default {
       duration: "Dauer",
       remaining: "Restzeit",
     },
+    loadpointSettings: {
+      title: 'Einstellungen "{0}"',
+      vehicle: "Fahrzeug",
+      currents: "Ladestrom",
+      minSoC: {
+        label: "Mindestladestand",
+        description:
+          'Reichweite für Notfälle. Fahrzeug wird im PV-Modus "schnell" auf {0}% geladen. Danach weiter mit PV-Überschuss.',
+      },
+      phasesConfigured: {
+        label: "Phasen",
+        phases_0: "automatischer Wechsel",
+        phases_1: "1-phasig",
+        phases_1_hint: "({min} bis {max})",
+        phases_3: "3-phasig",
+        phases_3_hint: "({min} bis {max})",
+      },
+      maxCurrent: {
+        label: "Max. Ladestrom",
+      },
+      minCurrent: {
+        label: "Min. Ladestrom",
+      },
+      default: "default",
+      disclaimerHint: "Hinweis:",
+      disclaimerText:
+        "Änderungen sind aktuell noch nicht persistent und werden nach einem Serverneustart wieder zurückgesetzt.",
+    },
     vehicles: "Parkplatz",
     vehicle: {
       fallbackName: "Fahrzeug",

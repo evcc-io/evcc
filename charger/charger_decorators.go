@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateCustom(base *Charger, identifier func() (string, error)) api.Charger {
+func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitcher func(int) error) api.Charger {
 	switch {
-	case identifier == nil:
+	case identifier == nil && phaseSwitcher == nil:
 		return base
 
-	case identifier != nil:
+	case identifier != nil && phaseSwitcher == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -19,6 +19,32 @@ func decorateCustom(base *Charger, identifier func() (string, error)) api.Charge
 			Charger: base,
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
+			},
+		}
+
+	case identifier == nil && phaseSwitcher != nil:
+		return &struct {
+			*Charger
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && phaseSwitcher != nil:
+		return &struct {
+			*Charger
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 		}
 	}
@@ -32,4 +58,12 @@ type decorateCustomIdentifierImpl struct {
 
 func (impl *decorateCustomIdentifierImpl) Identify() (string, error) {
 	return impl.identifier()
+}
+
+type decorateCustomPhaseSwitcherImpl struct {
+	phaseSwitcher func(int) error
+}
+
+func (impl *decorateCustomPhaseSwitcherImpl) Phases1p3p(phases int) error {
+	return impl.phaseSwitcher(phases)
 }

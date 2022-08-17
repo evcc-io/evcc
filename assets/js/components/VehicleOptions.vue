@@ -1,17 +1,17 @@
 <template>
 	<div>
-		<button
-			type="button"
+		<div
+			role="button"
+			tabindex="0"
 			data-bs-toggle="dropdown"
 			data-bs-target="#navbarNavAltMarkup"
 			aria-controls="navbarNavAltMarkup"
 			aria-expanded="false"
 			aria-label="Toggle navigation"
-			class="btn btn-sm btn-outline-secondary position-relative border-0 menu-button"
 		>
-			<shopicon-filled-options size="s"></shopicon-filled-options>
-		</button>
-		<ul class="dropdown-menu dropdown-menu-end">
+			<slot />
+		</div>
+		<ul class="dropdown-menu dropdown-menu-start">
 			<li>
 				<h6 class="dropdown-header">{{ $t("main.vehicle.changeVehicle") }}</h6>
 			</li>
