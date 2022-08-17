@@ -172,8 +172,11 @@ func TestApplyVehicleDefaults(t *testing.T) {
 		}
 	}
 
-	oi := newConfig(api.ModePV, 7, 17, 1, 99)
-	od := newConfig(api.ModeOff, 5, 15, 2, 98)
+	// onIdentified config
+	oi := newConfig(api.ModePV, 7, 15, 1, 99)
+
+	// onDefault config
+	od := newConfig(api.ModeOff, 6, 16, 2, 98)
 
 	vehicle := mock.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
@@ -188,6 +191,10 @@ func TestApplyVehicleDefaults(t *testing.T) {
 
 	lp.onDisconnect = od
 	lp.ResetOnDisconnect = true
+
+	// check loadpoint default currents can't be violated
+	lp.applyAction(newConfig(*od.Mode, 5, 17, *od.MinSoC, *od.TargetSoC))
+	assertConfig(lp, od)
 
 	// vehicle identified
 	lp.setActiveVehicle(vehicle)
