@@ -422,6 +422,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	// remove charger vehicle id
 	lp.setVehicleIdentifier("")
 
+	// stop potential detection
+	lp.stopVehicleDetection()
+
 	// remove active vehicle if not default
 	if lp.vehicle != lp.defaultVehicle {
 		lp.setActiveVehicle(lp.defaultVehicle)
