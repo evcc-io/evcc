@@ -34,11 +34,8 @@ func (l *logger) Log(keyVals ...interface{}) error {
 		}
 
 		if i%2 == 0 {
-			if _, ok := v.(string); !ok {
-				panic(fmt.Sprintf("expected string, got %T from %+v", v, v))
-			}
-
-			if slices.Contains(skipped, v.(string)) {
+			// don't log if key is not a string or if key should be skipped
+			if _, ok := v.(string); !ok || slices.Contains(skipped, v.(string)) {
 				skip = true
 				continue
 			}
