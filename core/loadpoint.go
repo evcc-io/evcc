@@ -195,6 +195,14 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
 	}
 
+	if lp.SoC.Min_ != 0 {
+		lp.log.WARN.Println("Configuring soc.min at loadpoint is deprecated and must be applied per vehicle")
+	}
+
+	if lp.SoC.Target_ != 0 {
+		lp.log.WARN.Println("Configuring soc.target at loadpoint is deprecated and must be applied per vehicle")
+	}
+
 	// store defaults
 	lp.collectDefaults()
 
