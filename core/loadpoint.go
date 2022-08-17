@@ -29,13 +29,14 @@ import (
 )
 
 const (
-	evChargeStart       = "start"      // update chargeTimer
-	evChargeStop        = "stop"       // update chargeTimer
-	evChargeCurrent     = "current"    // update fakeChargeMeter
-	evChargePower       = "power"      // update chargeRater
-	evVehicleConnect    = "connect"    // vehicle connected
-	evVehicleDisconnect = "disconnect" // vehicle disconnected
-	evVehicleSoC        = "soc"        // vehicle soc progress
+	evChargeStart         = "start"      // update chargeTimer
+	evChargeStop          = "stop"       // update chargeTimer
+	evChargeCurrent       = "current"    // update fakeChargeMeter
+	evChargePower         = "power"      // update chargeRater
+	evVehicleConnect      = "connect"    // vehicle connected
+	evVehicleDisconnect   = "disconnect" // vehicle disconnected
+	evVehicleSoC          = "soc"        // vehicle soc progress
+	evVehicleUnidentified = "guest"      // vehicle unidentified
 
 	pvTimer   = "pv"
 	pvEnable  = "enable"
@@ -526,6 +527,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.Unlock()
 
 	// set default or start detection
+	lp.publish(vehicleDetectionActive, false)
 	lp.vehicleDefaultOrDetect()
 
 	// read initial charger state to prevent immediately disabling charger
@@ -857,11 +859,16 @@ func (lp *LoadPoint) unpublishVehicle() {
 
 // vehicleUnidentified checks if there are associated vehicles and starts discovery period
 func (lp *LoadPoint) vehicleUnidentified() bool {
-	res := len(lp.coordinatedVehicles()) > 0 && lp.vehicle == nil &&
-		lp.clock.Since(lp.vehicleDetect) < vehicleDetectDuration
+	res := len(lp.coordinatedVehicles()) > 0 && lp.vehicle == nil
 
 	// request vehicle api refresh while waiting to identify
 	if res {
+		if lp.clock.Since(lp.vehicleDetect) > vehicleDetectDuration {
+			lp.stopVehicleDetection()
+			lp.pushEvent(evVehicleUnidentified)
+			return false
+		}
+
 		select {
 		case <-lp.vehicleDetectTicker.C:
 			lp.log.DEBUG.Println("vehicle api refresh")
@@ -891,6 +898,7 @@ func (lp *LoadPoint) vehicleDefaultOrDetect() {
 		// reset connection timer and starts api refresh timer
 		lp.vehicleDetect = lp.clock.Now()
 		lp.vehicleDetectTicker = lp.clock.Ticker(vehicleDetectInterval)
+		lp.publish(vehicleDetectionActive, true)
 	}
 }
 
@@ -900,6 +908,7 @@ func (lp *LoadPoint) stopVehicleDetection() {
 	if lp.vehicleDetectTicker != nil {
 		lp.vehicleDetectTicker.Stop()
 	}
+	lp.publish(vehicleDetectionActive, false)
 }
 
 // identifyVehicleByStatus validates if the active vehicle is still connected to the loadpoint
