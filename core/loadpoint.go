@@ -67,8 +67,10 @@ type PollConfig struct {
 type SoCConfig struct {
 	Poll     PollConfig `mapstructure:"poll"`
 	Estimate bool       `mapstructure:"estimate"`
-	Min      int        `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
-	Target   int        `mapstructure:"target"` // Default target SoC, guarded by mutex
+	Min_     int        `mapstructure:"min"`    // TODO deprecated
+	Target_  int        `mapstructure:"target"` // TODO deprecated
+	min      int        // Default minimum SoC, guarded by mutex
+	target   int        // Default target SoC, guarded by mutex
 }
 
 // Poll modes
@@ -252,7 +254,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		status:        api.StatusNone,
 		MinCurrent:    6,                                                     // A
 		MaxCurrent:    16,                                                    // A
-		SoC:           SoCConfig{Min: 0, Target: 100},                        // %
+		SoC:           SoCConfig{min: 0, target: 100},                        // %
 		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
 		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		GuardDuration: 5 * time.Minute,
@@ -521,8 +523,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
-	lp.publish("targetSoC", lp.SoC.Target)
-	lp.publish("minSoC", lp.SoC.Min)
+	lp.publish("targetSoC", lp.SoC.target)
+	lp.publish("minSoC", lp.SoC.min)
 	lp.Unlock()
 
 	// set default or start detection
@@ -657,17 +659,17 @@ func (lp *LoadPoint) setStatus(status api.ChargeStatus) {
 // If vehicle is not configured this will always return false
 func (lp *LoadPoint) targetSocReached() bool {
 	return lp.vehicle != nil &&
-		lp.SoC.Target > 0 &&
-		lp.SoC.Target < 100 &&
-		lp.vehicleSoc >= float64(lp.SoC.Target)
+		lp.SoC.target > 0 &&
+		lp.SoC.target < 100 &&
+		lp.vehicleSoc >= float64(lp.SoC.target)
 }
 
 // minSocNotReached checks if minimum is configured and not reached.
 // If vehicle is not configured this will always return true
 func (lp *LoadPoint) minSocNotReached() bool {
 	return lp.vehicle != nil &&
-		lp.SoC.Min > 0 &&
-		lp.vehicleSoc < float64(lp.SoC.Min)
+		lp.SoC.min > 0 &&
+		lp.vehicleSoc < float64(lp.SoC.min)
 }
 
 // climateActive checks if vehicle has active climate request
@@ -1428,12 +1430,12 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			lp.publish("vehicleSoC", lp.vehicleSoc)
 
 			if lp.charging() {
-				lp.setRemainingDuration(lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target))
+				lp.setRemainingDuration(lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.target))
 			} else {
 				lp.setRemainingDuration(-1)
 			}
 
-			lp.setRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target))
+			lp.setRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.target))
 
 			// range
 			if vs, ok := lp.vehicle.(api.VehicleRange); ok {
@@ -1542,7 +1544,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 		err = lp.setLimit(0, false)
 
 	case lp.targetSocReached():
-		lp.log.DEBUG.Printf("targetSoC reached: %.1f > %d", lp.vehicleSoc, lp.SoC.Target)
+		lp.log.DEBUG.Printf("targetSoC reached: %.1f > %d", lp.vehicleSoc, lp.SoC.target)
 		var targetCurrent float64 // zero disables
 		if lp.climateActive() {
 			lp.log.DEBUG.Println("climater active")
@@ -1609,7 +1611,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 
 	// Wake-up checks
 	if lp.enabled && lp.status == api.StatusB &&
-		int(lp.vehicleSoc) < lp.SoC.Target && lp.wakeUpTimer.Expired() {
+		int(lp.vehicleSoc) < lp.SoC.target && lp.wakeUpTimer.Expired() {
 		lp.wakeUpVehicle()
 	}
 

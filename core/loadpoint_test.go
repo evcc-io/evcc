@@ -406,7 +406,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
 		Mode:         api.ModeNow,
 		SoC: SoCConfig{
-			Target: 90,
+			target: 90,
 			Poll: PollConfig{
 				Mode:     pollConnected, // allow polling when connected
 				Interval: pollInterval,
@@ -477,7 +477,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		status:      api.StatusC,
 		Mode:        api.ModeOff,
 		SoC: SoCConfig{
-			Target: 70,
+			target: 70,
 		},
 		ResetOnDisconnect: true,
 	}
@@ -636,7 +636,7 @@ func TestTargetSoC(t *testing.T) {
 		lp := &LoadPoint{
 			vehicle: tc.vehicle,
 			SoC: SoCConfig{
-				Target: tc.target,
+				target: tc.target,
 			},
 			vehicleSoc: tc.soc,
 		}
@@ -760,7 +760,7 @@ func TestMinSoC(t *testing.T) {
 		lp := &LoadPoint{
 			vehicle: tc.vehicle,
 			SoC: SoCConfig{
-				Min: tc.min,
+				min: tc.min,
 			},
 			vehicleSoc: tc.soc,
 		}
