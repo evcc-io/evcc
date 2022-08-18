@@ -34,6 +34,7 @@ type WebastoNext struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
+	enabled bool
 }
 
 const (
@@ -127,18 +128,6 @@ func (wb *WebastoNext) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the api.Charger interface
-func (wb *WebastoNext) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(tqRegChargeCurrent, 1)
-	if err != nil {
-		return false, err
-	}
-
-	cur := binary.BigEndian.Uint16(b)
-
-	return cur != 0, nil
-}
-
 // Enable implements the api.Charger interface
 func (wb *WebastoNext) Enable(enable bool) error {
 	b := make([]byte, 2)
@@ -147,8 +136,16 @@ func (wb *WebastoNext) Enable(enable bool) error {
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(tqRegChargeCurrent, 1, b)
+	if err == nil {
+		wb.enabled = enable
+	}
 
 	return err
+}
+
+// Enabled implements the api.Charger interface
+func (wb *WebastoNext) Enabled() (bool, error) {
+	return wb.enabled, nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -208,14 +205,14 @@ var _ api.MeterCurrent = (*WebastoNext)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(tqRegCurrents, 3)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
 	var curr [3]float64
-	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint16(b[2*l:2*(l+1)])) / 1e3
+	for l := uint16(0); l < 3; l++ {
+		b, err := wb.conn.ReadInputRegisters(tqRegCurrents+2*l, 1)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		curr[l] = float64(binary.BigEndian.Uint16(b)) / 1e3
 	}
 
 	return curr[0], curr[1], curr[2], nil
