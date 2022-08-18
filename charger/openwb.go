@@ -173,9 +173,12 @@ func (m *OpenWB) Enable(enable bool) error {
 		current = m.current
 	}
 
-	m.enabled = current > 0
+	err := m.currentS(current)
+	if err == nil {
+		m.enabled = enable
+	}
 
-	return m.currentS(current)
+	return err
 }
 
 func (m *OpenWB) Enabled() (bool, error) {
