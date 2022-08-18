@@ -1,0 +1,13 @@
+template: go-e-gemini
+products:
+  - brand: go-eCharger
+    description:
+      generic: Gemini
+capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: host
+render: |
+  type: go-e
+  uri: http://{{ .host }}

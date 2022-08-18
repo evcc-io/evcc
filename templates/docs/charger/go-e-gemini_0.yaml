@@ -1,0 +1,10 @@
+product:
+  brand: go-eCharger
+  description: Gemini
+capabilities: ["rfid"]
+requirements: ["sponsorship"]
+render:
+  - default: |
+      type: template
+      template: go-e-gemini
+      host: 192.0.2.2 # IP-Adresse oder Hostname
