@@ -17,10 +17,10 @@ func init() {
 
 // NewCalcFromConfig creates calc provider
 func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
-	cc := struct {
+	var cc struct {
 		Add []Config
 		Mul []Config
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

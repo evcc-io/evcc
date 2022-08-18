@@ -24,10 +24,10 @@ func init() {
 
 // NewFritzDECTFromConfig creates a fritzdect charger from generic config
 func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		fritzdect.Settings `mapstructure:",squash"`
 		StandbyPower       float64
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

@@ -28,10 +28,10 @@ func init() {
 
 // NewDaheimLadenFromConfig creates a DaheimLaden charger from generic config
 func NewDaheimLadenFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		Token     string
 		StationID string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

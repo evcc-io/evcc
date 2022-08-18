@@ -209,10 +209,10 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 		}
 
 		// ensure vehicle config has title
-		ccWithTitle := struct {
+		var ccWithTitle struct {
 			Title string
 			Other map[string]interface{} `mapstructure:",remain"`
-		}{}
+		}
 
 		if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
 			return err

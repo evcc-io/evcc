@@ -45,11 +45,11 @@ func init() {
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		Token string
 		URI   string
 		Cache time.Duration
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

@@ -42,10 +42,10 @@ func init() {
 
 // NewEEBusFromConfig creates an EEBus charger from generic config
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		Ski           string
 		ForcePVLimits bool
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

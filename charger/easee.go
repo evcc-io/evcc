@@ -66,11 +66,11 @@ func init() {
 
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		User     string
 		Password string
 		Charger  string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

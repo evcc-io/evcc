@@ -18,12 +18,12 @@ func init() {
 
 // NewTapoFromConfig creates a Tapo charger from generic config
 func NewTapoFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		URI          string
 		User         string
 		Password     string
 		StandbyPower float64
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

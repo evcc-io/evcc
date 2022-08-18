@@ -20,10 +20,10 @@ func init() {
 
 // NewJavascriptProviderFromConfig creates a HTTP provider
 func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
-	cc := struct {
+	var cc struct {
 		VM     string
 		Script string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

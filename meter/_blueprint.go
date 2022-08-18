@@ -20,10 +20,10 @@ func init() {
 
 // NewBlueprintFromConfig creates a blueprint meter from generic config
 func NewBlueprintFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
+	var cc struct {
 		URI   string
 		Cache time.Duration
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
