@@ -396,7 +396,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 				socs += soc / float64(len(site.batteryMeters))
 			}
 		}
-		site.publish("batterySoC", math.Trunc(socs))
+		site.publish("batterySoC", math.Round(socs))
 
 		site.Lock()
 		defer site.Unlock()
