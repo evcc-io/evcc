@@ -37,6 +37,7 @@ type config struct {
 	Levels       map[string]string
 	Interval     time.Duration
 	Mqtt         mqttConfig
+	Database     dbConfig
 	Javascript   map[string]interface{}
 	Influx       server.InfluxConfig
 	EEBus        map[string]interface{}
@@ -54,6 +55,10 @@ type networkConfig struct {
 	Schema string
 	Host   string
 	Port   int
+}
+
+type dbConfig struct {
+	Path string
 }
 
 func (c networkConfig) HostPort() string {

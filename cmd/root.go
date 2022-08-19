@@ -226,9 +226,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site, err = configureSiteAndLoadpoints(conf)
 	}
 
+	// setup session log
+	if err == nil && conf.Database.Path != "" {
+		err = configureDatabase(conf.Database)
+	}
+
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureDatabase(conf.Influx, site.LoadPoints(), tee.Attach())
+		configureInflux(conf.Influx, site.LoadPoints(), tee.Attach())
 	}
 
 	// setup mqtt publisher
