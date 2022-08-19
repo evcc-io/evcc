@@ -120,6 +120,7 @@ export default {
       none: "Kein Fahrzeug",
       unknown: "Gastfahrzeug",
       changeVehicle: "Fahrzeug ändern",
+      detectionActive: "Fahrzeugerkennung läuft ...",
     },
     vehicleSoC: {
       disconnected: "getrennt",

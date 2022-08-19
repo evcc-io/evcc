@@ -119,6 +119,7 @@ export default {
       none: "No vehicle",
       unknown: "Guest vehicle",
       changeVehicle: "Change Vehicle",
+      detectionActive: "Detecting vehicle ...",
     },
     vehicleSoC: {
       disconnected: "disconnected",

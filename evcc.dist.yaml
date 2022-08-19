@@ -177,6 +177,9 @@ messaging:
     soc: # vehicle soc update event
       title: SoC updated
       msg: Battery charged to ${vehicleSoC:%.0f}%
+    guest: # vehicle could not be identified
+      title: Unknown vehicle
+      msg: Unknown vehicle, guest connected?
   services:
   # - type: pushover
   #   app: # app id
