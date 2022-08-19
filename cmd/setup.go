@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
@@ -51,6 +52,11 @@ func configureEnvironment(conf config) (err error) {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
+	// setup session log
+	if err == nil && conf.Database.Path != "" {
+		err = configureDatabase(conf.Database)
+	}
+
 	// setup mqtt client listener
 	if err == nil && conf.Mqtt.Broker != "" {
 		err = configureMQTT(conf.Mqtt)
@@ -69,8 +75,13 @@ func configureEnvironment(conf config) (err error) {
 	return
 }
 
-// setup influx database
-func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-chan util.Param) {
+// configureDatabase configures session database
+func configureDatabase(conf dbConfig) error {
+	return db.New(conf.Path)
+}
+
+// configureInflux configures influx database
+func configureInflux(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-chan util.Param) {
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -83,11 +94,6 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in 
 	// eliminate duplicate values
 	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleCapacity", "vehicleSoC", "vehicleRange", "vehicleOdometer", "chargedEnergy", "chargeRemainingEnergy")
 	in = dedupe.Pipe(in)
-
-	// reduce number of values written to influx
-	// TODO this breaks writing vehicleRange as its re-writting in short interval
-	// limiter := pipe.NewLimiter(5 * time.Second)
-	// in = limiter.Pipe(in)
 
 	go influx.Run(loadPoints, in)
 }
