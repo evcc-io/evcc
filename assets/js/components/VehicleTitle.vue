@@ -1,33 +1,42 @@
 <template>
 	<div class="d-flex justify-content-between mb-3 align-items-center">
-		<VehicleOptions
-			v-if="showOptions"
-			class="options"
-			:vehicles="otherVehicles"
-			:is-unknown="isUnknown"
-			@change-vehicle="changeVehicle"
-			@remove-vehicle="removeVehicle"
-		>
-			<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
-				<shopicon-regular-car3
-					v-if="carIcon"
-					class="me-2 flex-shrink-0 car-icon"
-				></shopicon-regular-car3>
-				<shopicon-regular-cablecharge
-					v-else
-					class="me-2 flex-shrink-0 car-icon"
-				></shopicon-regular-cablecharge>
+		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
+			<shopicon-regular-refresh
+				v-if="icon === 'refresh'"
+				ref="refresh"
+				data-bs-toggle="tooltip"
+				:title="$t('main.vehicle.detectionActive')"
+				class="me-2 flex-shrink-0 spin"
+			></shopicon-regular-refresh>
+			<shopicon-regular-car3
+				v-else-if="icon === 'car'"
+				class="me-2 flex-shrink-0"
+			></shopicon-regular-car3>
+			<shopicon-regular-cablecharge
+				v-else
+				class="me-2 flex-shrink-0"
+			></shopicon-regular-cablecharge>
+			<VehicleOptions
+				v-if="showOptions"
+				class="options"
+				:vehicles="otherVehicles"
+				:is-unknown="isUnknown"
+				@change-vehicle="changeVehicle"
+				@remove-vehicle="removeVehicle"
+			>
 				<span class="flex-grow-1 text-truncate vehicle-name">
 					{{ name }}
 				</span>
-			</h4>
-		</VehicleOptions>
+			</VehicleOptions>
+		</h4>
 	</div>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/regular/car3";
+import "@h2d2/shopicons/es/regular/refresh";
 import "@h2d2/shopicons/es/regular/cablecharge";
+import { Tooltip } from "bootstrap";
 
 import VehicleOptions from "./VehicleOptions.vue";
 
@@ -37,14 +46,21 @@ export default {
 	props: {
 		vehiclePresent: Boolean,
 		vehicleTitle: String,
+		vehicleDetectionActive: Boolean,
 		parked: Boolean,
 		connected: Boolean,
 		vehicles: { type: Array, default: () => [] },
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
-		carIcon() {
-			return this.connected || this.parked;
+		icon() {
+			if (this.vehicleDetectionActive) {
+				return "refresh";
+			}
+			if (this.connected || this.parked) {
+				return "car";
+			}
+			return null;
 		},
 		name() {
 			if (this.vehiclePresent || this.parked) {
@@ -70,12 +86,27 @@ export default {
 			return !this.isUnknown || this.vehicles.length;
 		},
 	},
+	watch: {
+		icon: function () {
+			this.tooltip();
+		},
+	},
+	mounted: function () {
+		this.tooltip();
+	},
 	methods: {
 		changeVehicle(index) {
 			this.$emit("change-vehicle", index);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");
+		},
+		tooltip() {
+			this.$nextTick(() => {
+				if (this.$refs.refresh) {
+					new Tooltip(this.$refs.refresh);
+				}
+			});
 		},
 	},
 };
@@ -88,5 +119,20 @@ export default {
 .vehicle-name {
 	text-decoration: underline;
 	text-decoration-color: var(--evcc-gray);
+}
+.spin {
+	animation: rotation 1s infinite cubic-bezier(0.37, 0, 0.63, 1);
+}
+.spin >>> svg {
+	/* workaround to fix the not perfectly centered shopicon. Remove once its fixed in @h2d2/shopicons */
+	transform: translateY(-0.7px);
+}
+@keyframes rotation {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 </style>
