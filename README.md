@@ -8,7 +8,7 @@
 <!-- [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc) -->
 <!-- [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2) -->
 
-Evcc is an extensible EV Charge Controller with PV integration implemented in [Go][2]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
+evcc is an extensible EV Charge Controller with PV integration implemented in [Go][2]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
 ![Screenshot](docs/screenshot.png)
 
@@ -79,7 +79,7 @@ make ui
 
 ### Changing templates
 
-Evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository. Make sure to update this meta-data every time you make changes to a templates.
+evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository. Make sure to update this meta-data every time you make changes to a templates.
 
 ```sh
 make docs
@@ -89,10 +89,10 @@ If you miss one of the above steps Gitub Actions will likely trigger a **Porcela
 
 ## Sponsorship
 
-Evcc believes in open source software. We're committed to provide best in class EV charging experience.
-Maintaining evcc consumes time and effort. With the vast amount of different devices to support, we depend on community and vendor support to keep EVCC alive.
+evcc believes in open source software. We're committed to provide best in class EV charging experience.
+Maintaining evcc consumes time and effort. With the vast amount of different devices to support, we depend on community and vendor support to keep evcc alive.
 
-While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwised closed hardware. Where this is not the case, EVCC requires "sponsor token" to finance ongoing development and support of evcc.
+While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwised closed hardware. Where this is not the case, evcc requires "sponsor token" to finance ongoing development and support of evcc.
 
 The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/andig) and can be requested at [cloud.evcc.io](https://cloud.evcc.io/). A sponsor token is valid for one year and can be renewed any time with active sponsorship.
 
@@ -100,7 +100,7 @@ The personal sponsor token requires a [Github Sponsorship](https://github.com/sp
 
 <img src="docs/logo.png" align="right" width="150" />
 
-Evcc is heavily inspired by [OpenWB][1]. However, in 2019, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to OpenWB's flexibility.
+evcc is heavily inspired by [OpenWB][1]. However, in 2019, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to OpenWB's flexibility.
 
 Hence, for a simplified and stricter implementation of an EV charge controller, the design goals for evcc were:
 
