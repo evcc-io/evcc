@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -26,12 +25,16 @@ type Renault struct {
 }
 
 func init() {
-	registry.Add("dacia", NewRenaultFromConfig)
-	registry.Add("renault", NewRenaultFromConfig)
+	registry.Add("dacia", func(other map[string]interface{}) (api.Vehicle, error) {
+		return NewRenaultDaciaFromConfig("dacia", other)
+	})
+	registry.Add("renault", func(other map[string]interface{}) (api.Vehicle, error) {
+		return NewRenaultDaciaFromConfig("renault", other)
+	})
 }
 
-// NewRenaultFromConfig creates a new vehicle
-func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewRenaultDaciaFromConfig creates a new Renault/Dacia vehicle
+func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
@@ -45,7 +48,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("renault").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Renault{
 		embed: &cc.embed,
@@ -63,10 +66,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return identity.Login(cc.User, cc.Password)
 	})
 
-	accountID, err := api.Person(identity.PersonID)
-	if err == nil && accountID == "" {
-		return nil, errors.New("missing accountID")
-	}
+	accountID, err := api.Person(identity.PersonID, brand)
 
 	var car kamereon.Vehicle
 	if err == nil {
