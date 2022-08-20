@@ -892,15 +892,19 @@ func (lp *LoadPoint) vehicleDefaultOrDetect() {
 			lp.addTask(lp.vehicleOdometer)
 		}
 	} else if len(lp.coordinatedVehicles()) > 0 {
-		// flush all vehicles before detection starts
-		lp.log.DEBUG.Println("vehicle api refresh")
-		provider.ResetCached()
-
-		// reset connection timer and starts api refresh timer
-		lp.vehicleDetect = lp.clock.Now()
-		lp.vehicleDetectTicker = lp.clock.Ticker(vehicleDetectInterval)
-		lp.publish(vehicleDetectionActive, true)
+		lp.startVehicleDetection()
 	}
+}
+
+// startVehicleDetection reset connection timer and starts api refresh timer
+func (lp *LoadPoint) startVehicleDetection() {
+	// flush all vehicles before detection starts
+	lp.log.DEBUG.Println("vehicle api refresh")
+	provider.ResetCached()
+
+	lp.vehicleDetect = lp.clock.Now()
+	lp.vehicleDetectTicker = lp.clock.Ticker(vehicleDetectInterval)
+	lp.publish(vehicleDetectionActive, true)
 }
 
 // stopVehicleDetection expires the connection timer and ticker

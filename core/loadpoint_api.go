@@ -274,3 +274,15 @@ func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
 	// disable auto-detect
 	lp.stopVehicleDetection()
 }
+
+// StartVehicleDetection allows triggering vehicle detection for debugging purposes
+func (lp *LoadPoint) StartVehicleDetection() {
+	// reset vehicle
+	lp.setActiveVehicle(nil)
+
+	lp.Lock()
+	defer lp.Unlock()
+
+	// start auto-detect
+	lp.startVehicleDetection()
+}
