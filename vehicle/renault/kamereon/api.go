@@ -1,10 +1,12 @@
 package kamereon
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -62,15 +64,20 @@ func (v *API) request(uri string, body io.Reader) (Response, error) {
 	return res, err
 }
 
-func (v *API) Person(personID string) (string, error) {
+func (v *API) Person(personID, brand string) (string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/persons/%s", v.keys.Target, personID)
 	res, err := v.request(uri, nil)
-
-	if len(res.Accounts) == 0 {
+	if err != nil {
 		return "", err
 	}
 
-	return res.Accounts[0].AccountID, err
+	for _, account := range res.Accounts {
+		if strings.Contains(strings.ToLower(account.AccountType), strings.ToLower(brand)) {
+			return account.AccountID, nil
+		}
+	}
+
+	return "", errors.New("account not found")
 }
 
 func (v *API) Vehicles(accountID string) ([]Vehicle, error) {

@@ -8,7 +8,7 @@ params:
     default: 27.4
   - preset: vehiclecloud
 render: |
-  type: renault
+  type: dacia
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
   {{ include "vehicle-cloud" . }}
