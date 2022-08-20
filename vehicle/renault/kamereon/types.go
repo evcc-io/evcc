@@ -31,12 +31,12 @@ type connectedDriver struct {
 	Role string
 }
 
-func (v *Vehicle) Available(brand string) error {
+func (v *Vehicle) Available() error {
 	if strings.ToUpper(v.Status) != "ACTIVE" {
 		return errors.New("vehicle is not active")
 	}
 
-	if v.ConnectedDriver.Role == "" && v.Brand != "DACIA" {
+	if v.ConnectedDriver.Role == "" {
 		return errors.New("vehicle is not connected to driver")
 	}
 

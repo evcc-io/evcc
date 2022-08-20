@@ -81,7 +81,7 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	}
 
 	if err == nil {
-		err = car.Available(brand)
+		err = car.Available()
 	}
 
 	v.Provider = renault.NewProvider(api, accountID, cc.VIN, cc.Cache)
