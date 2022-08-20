@@ -145,7 +145,16 @@ func (wb *WebastoNext) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (wb *WebastoNext) Enabled() (bool, error) {
-	return wb.enabled, nil
+	// return wb.enabled, nil
+
+	b, err := wb.conn.ReadHoldingRegisters(1104, 1)
+	if err != nil {
+		return false, err
+	}
+
+	fmt.Println(1104, binary.BigEndian.Uint16(b), err)
+
+	return binary.BigEndian.Uint16(b) > 0, nil
 }
 
 // MaxCurrent implements the api.Charger interface
