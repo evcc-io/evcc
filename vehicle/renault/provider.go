@@ -1,11 +1,15 @@
 package renault
 
 import (
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/renault/kamereon"
+	"golang.org/x/exp/slices"
 )
 
 // Provider is an api.Vehicle implementation for PSA cars
@@ -48,100 +52,100 @@ func (v *Provider) SoC() (float64, error) {
 	return 0, err
 }
 
-// var _ api.ChargeState = (*Provider)(nil)
+var _ api.ChargeState = (*Provider)(nil)
 
-// // Status implements the api.ChargeState interface
-// func (v *Provider) Status() (api.ChargeStatus, error) {
-// 	status := api.StatusA // disconnected
+// Status implements the api.ChargeState interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
 
-// 	res, err := v.batteryG()
-// 	if err == nil {
-// 		if res.Data.Attributes.PlugStatus > 0 {
-// 			status = api.StatusB
-// 		}
-// 		if res.Data.Attributes.ChargingStatus >= 1.0 {
-// 			status = api.StatusC
-// 		}
-// 	}
+	res, err := v.batteryG()
+	if err == nil {
+		if res.Data.Attributes.PlugStatus > 0 {
+			status = api.StatusB
+		}
+		if res.Data.Attributes.ChargingStatus >= 1.0 {
+			status = api.StatusC
+		}
+	}
 
-// 	return status, err
-// }
+	return status, err
+}
 
-// var _ api.VehicleRange = (*Provider)(nil)
+var _ api.VehicleRange = (*Provider)(nil)
 
-// // Range implements the api.VehicleRange interface
-// func (v *Provider) Range() (int64, error) {
-// 	res, err := v.batteryG()
+// Range implements the api.VehicleRange interface
+func (v *Provider) Range() (int64, error) {
+	res, err := v.batteryG()
 
-// 	if err == nil {
-// 		return int64(res.Data.Attributes.BatteryAutonomy), nil
-// 	}
+	if err == nil {
+		return int64(res.Data.Attributes.BatteryAutonomy), nil
+	}
 
-// 	return 0, err
-// }
+	return 0, err
+}
 
-// var _ api.VehicleOdometer = (*Provider)(nil)
+var _ api.VehicleOdometer = (*Provider)(nil)
 
-// // Odometer implements the api.VehicleOdometer interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.cockpitG()
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.cockpitG()
 
-// 	if err == nil {
-// 		return res.Data.Attributes.TotalMileage, nil
-// 	}
+	if err == nil {
+		return res.Data.Attributes.TotalMileage, nil
+	}
 
-// 	return 0, err
-// }
+	return 0, err
+}
 
-// var _ api.VehicleFinishTimer = (*Provider)(nil)
+var _ api.VehicleFinishTimer = (*Provider)(nil)
 
-// // FinishTime implements the api.VehicleFinishTimer interface
-// func (v *Provider) FinishTime() (time.Time, error) {
-// 	res, err := v.batteryG()
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	res, err := v.batteryG()
 
-// 	if err == nil {
-// 		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
+	if err == nil {
+		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
 
-// 		if res.Data.Attributes.RemainingTime == nil {
-// 			return time.Time{}, api.ErrNotAvailable
-// 		}
+		if res.Data.Attributes.RemainingTime == nil {
+			return time.Time{}, api.ErrNotAvailable
+		}
 
-// 		return timestamp.Add(time.Duration(*res.Data.Attributes.RemainingTime) * time.Minute), err
-// 	}
+		return timestamp.Add(time.Duration(*res.Data.Attributes.RemainingTime) * time.Minute), err
+	}
 
-// 	return time.Time{}, err
-// }
+	return time.Time{}, err
+}
 
-// var _ api.VehicleClimater = (*Provider)(nil)
+var _ api.VehicleClimater = (*Provider)(nil)
 
-// // Climater implements the api.VehicleClimater interface
-// func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-// 	res, err := v.hvacG()
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	res, err := v.hvacG()
 
-// 	// Zoe Ph2, Megane e-tech
-// 	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusBadGateway) {
-// 		return false, 0, 0, api.ErrNotAvailable
-// 	}
+	// Zoe Ph2, Megane e-tech
+	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusBadGateway) {
+		return false, 0, 0, api.ErrNotAvailable
+	}
 
-// 	if err == nil {
-// 		state := strings.ToLower(res.Data.Attributes.HvacStatus)
+	if err == nil {
+		state := strings.ToLower(res.Data.Attributes.HvacStatus)
 
-// 		if state == "" {
-// 			return false, 0, 0, api.ErrNotAvailable
-// 		}
+		if state == "" {
+			return false, 0, 0, api.ErrNotAvailable
+		}
 
-// 		active := !slices.Contains([]string{"off", "false", "invalid", "error"}, state)
+		active := !slices.Contains([]string{"off", "false", "invalid", "error"}, state)
 
-// 		return active, res.Data.Attributes.ExternalTemperature, 20, nil
-// 	}
+		return active, res.Data.Attributes.ExternalTemperature, 20, nil
+	}
 
-// 	return false, 0, 0, err
-// }
+	return false, 0, 0, err
+}
 
-// var _ api.Resurrector = (*Provider)(nil)
+var _ api.Resurrector = (*Provider)(nil)
 
-// // WakeUp implements the api.Resurrector interface
-// func (v *Provider) WakeUp() error {
-// 	_, err := v.wakeup()
-// 	return err
-// }
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	_, err := v.wakeup()
+	return err
+}
