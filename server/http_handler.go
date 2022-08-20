@@ -278,6 +278,15 @@ func vehicleRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
 	}
 }
 
+// vehicleDetectHandler starts vehicle detection
+func vehicleDetectHandler(loadpoint loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		loadpoint.StartVehicleDetection()
+		res := struct{}{}
+		jsonResult(w, res)
+	}
+}
+
 // socketHandler attaches websocket handler to uri
 func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

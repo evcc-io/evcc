@@ -94,6 +94,7 @@ func NewHTTPd(addr string, site site.API, hub *SocketHub, cache *util.Cache) *HT
 			"targetcharge2": {[]string{"DELETE", "OPTIONS"}, "/targetcharge", targetChargeRemoveHandler(lp)},
 			"vehicle":       {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[0-9]+}", vehicleHandler(site, lp)},
 			"vehicle2":      {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
+			"vehicleDetect": {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},
 			"remotedemand":  {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
 		}
 
