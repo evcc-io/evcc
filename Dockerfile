@@ -1,16 +1,16 @@
 # STEP 1 build ui
-FROM node:16-alpine as node
+FROM --platform=$BUILDPLATFORM node:16-alpine as node
 
 RUN apk update && apk add --no-cache make alpine-sdk python3
 
 WORKDIR /build
 
 # install node tools
-COPY Makefile .
 COPY package*.json ./
-RUN make install-ui
+RUN npm ci
 
 # build ui
+COPY Makefile .
 COPY assets assets
 COPY vite.config.js vite.config.js
 COPY .eslintrc.js .eslintrc.js
@@ -20,7 +20,7 @@ RUN make clean ui
 
 
 # STEP 2 build executable binary
-FROM golang:1.18-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.18-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -28,7 +28,7 @@ FROM golang:1.18-alpine as builder
 RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && update-ca-certificates
 
 # define RELEASE=1 to hide commit hash
-ARG RELEASE={{ env "RELEASE" }}
+ARG RELEASE=0
 
 WORKDIR /build
 
@@ -48,7 +48,18 @@ RUN make assets
 COPY --from=node /build/dist /build/dist
 
 # build
-RUN RELEASE=${RELEASE} make build
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+RUN case "${TARGETVARIANT}" in \
+	"armhf") export GOARM='6' ;; \
+	"armv7") export GOARM='6' ;; \
+	"v6") export GOARM='6' ;; \
+	"v7") export GOARM='7' ;; \
+	esac;
+
+RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 
 
 # STEP 3 build a small image including module support
