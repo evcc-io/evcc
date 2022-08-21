@@ -69,6 +69,8 @@ COPY docker/bin/* /app/
 EXPOSE 7070/tcp
 # KEBA charger
 EXPOSE 7090/udp
+# OCPP charger
+EXPOSE 8887/tcp
 # SMA Energy Manager
 EXPOSE 9522/udp
 
