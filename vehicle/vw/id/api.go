@@ -1,7 +1,6 @@
 package id
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -73,16 +72,15 @@ func (v *API) Vehicles() (res []string, err error) {
 	return res, err
 }
 
-// Status implements the /status response
+// Status implements the /status response.
+// It is callers responsibility to check for embedded (partial) errors.
 func (v *API) Status(vin string) (res Status, err error) {
 	uri := fmt.Sprintf("%s/vehicles/%s/status", BaseURL, vin)
 
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
 	if err == nil {
-		if err = v.DoJSON(req, &res); err == nil && len(res.Error) > 0 {
-			err = errors.New("unknown error")
-		}
+		err = v.DoJSON(req, &res)
 	}
 
 	return res, err

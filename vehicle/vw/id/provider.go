@@ -33,6 +33,10 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	if err == nil {
+		err = res.Error.Extract("batteryStatus")
+	}
+
+	if err == nil {
 		return float64(res.Data.BatteryStatus.CurrentSOCPercent), nil
 	}
 
@@ -46,6 +50,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
+	if err == nil {
+		err = res.Error.Extract("chargingStatus")
+	}
+
 	if err == nil {
 		if res.Data.PlugStatus.PlugConnectionState == "connected" {
 			status = api.StatusB
@@ -64,6 +72,10 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if err == nil {
+		err = res.Error.Extract("chargingStatus")
+	}
+
+	if err == nil {
 		cst := res.Data.ChargingStatus
 		return cst.CarCapturedTimestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), err
 	}
@@ -77,6 +89,10 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 	if err == nil {
+		err = res.Error.Extract("batteryStatus")
+	}
+
+	if err == nil {
 		return int64(res.Data.BatteryStatus.CruisingRangeElectricKm), nil
 	}
 
@@ -88,6 +104,10 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
+	if err == nil {
+		err = res.Error.Extract("maintenanceStatus")
+	}
+
 	if err == nil {
 		if res.Data.MaintenanceStatus == nil {
 			return 0, api.ErrNotAvailable
@@ -103,6 +123,10 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
 	res, err := v.statusG()
+	if err == nil {
+		err = res.Error.Extract("climatisationStatus")
+	}
+
 	if err == nil {
 		state := strings.ToLower(res.Data.ClimatisationStatus.ClimatisationState)
 
