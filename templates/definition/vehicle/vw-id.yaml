@@ -12,9 +12,7 @@ params:
   - preset: vehicleidentify
   - name: vin
     example: WVWZZZ...
-  - preset: vehiclecloud
 render: |
   type: id
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
-  {{ include "vehicle-cloud" . }}
