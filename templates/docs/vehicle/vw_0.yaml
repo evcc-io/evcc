@@ -27,4 +27,3 @@ render:
       minCurrent: 6 # Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll # Optional
       maxCurrent: 16 # Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll # Optional
       identifiers: # Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox # Optional
-      cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,... # Optional
