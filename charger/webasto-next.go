@@ -88,10 +88,15 @@ func NewWebastoNext(uri string, id uint8) (api.Charger, error) {
 		current: 6, // assume min current
 	}
 
+	// write heartbeat once for command line testing
+	if _, err := wb.conn.WriteSingleRegister(tqRegLifeBit, 1); err != nil {
+		return nil, fmt.Errorf("heartbeat: %w", err)
+	}
+
 	// get failsafe timeout from charger
 	b, err := wb.conn.ReadHoldingRegisters(tqRegComTimeout, 1)
 	if err != nil {
-		return nil, fmt.Errorf("could not get failsafe timeout: %v", err)
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 
 	go wb.heartbeat(time.Duration(binary.BigEndian.Uint16(b)/2) * time.Second)
@@ -146,6 +151,13 @@ func (wb *WebastoNext) Enable(enable bool) error {
 // Enabled implements the api.Charger interface
 func (wb *WebastoNext) Enabled() (bool, error) {
 	return wb.enabled, nil
+
+	// b, err := wb.conn.ReadHoldingRegisters(1104, 1)
+	// if err != nil {
+	// 	return false, err
+	// }
+
+	// return binary.BigEndian.Uint16(b) > 0, nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -235,10 +247,54 @@ var _ api.Diagnosis = (*WebastoNext)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *WebastoNext) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(tqRegSmartVehicleDetected, 1); err == nil {
-		fmt.Printf("\tSmart Vehicle:\t%t\n", binary.BigEndian.Uint16(b) != 0)
+		fmt.Printf("Smart vehicle:\t%t\n", binary.BigEndian.Uint16(b) != 0)
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(tqRegUserID, 10); err == nil {
-		fmt.Printf("\tUserID:\t%s\n", b)
+		fmt.Printf("UserID:\t%s\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(tqRegChargePointState, 1); err == nil {
+		fmt.Printf("Charge point state:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(1001, 1); err == nil {
+		fmt.Printf("Charge state:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(1002, 1); err == nil {
+		fmt.Printf("Evse state:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(1004, 1); err == nil {
+		fmt.Printf("Cable state:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(1102, 1); err == nil {
+		fmt.Printf("Min current:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(1100, 1); err == nil {
+		fmt.Printf("Max current:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(1104, 1); err == nil {
+		fmt.Printf("Max evse current:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(1106, 1); err == nil {
+		fmt.Printf("Max cable current:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(1108, 1); err == nil {
+		fmt.Printf("Max ev current:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(tqRegComTimeout, 1); err == nil {
+		fmt.Printf("Com timeout:\t%v\n", binary.BigEndian.Uint16(b))
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(1006, 1); err == nil {
+		fmt.Printf("Error code:\t%v\n", binary.BigEndian.Uint16(b))
 	}
 }
