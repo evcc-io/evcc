@@ -527,9 +527,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("minSoC", lp.SoC.Min)
 	lp.Unlock()
 
-	// set default or start detection
+	// reset detection state
 	lp.publish(vehicleDetectionActive, false)
-	lp.vehicleDefaultOrDetect()
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
@@ -542,7 +541,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		lp.log.ERROR.Printf("charger: %v", err)
 	}
 
-	// allow charger to  access loadpoint
+	// allow charger to access loadpoint
 	if ctrl, ok := lp.charger.(loadpoint.Controller); ok {
 		ctrl.LoadpointControl(lp)
 	}
@@ -891,7 +890,7 @@ func (lp *LoadPoint) vehicleDefaultOrDetect() {
 			// need to do this here since setActiveVehicle would short-circuit
 			lp.addTask(lp.vehicleOdometer)
 		}
-	} else if len(lp.coordinatedVehicles()) > 0 {
+	} else if len(lp.coordinatedVehicles()) > 0 && lp.connected() {
 		lp.startVehicleDetection()
 	}
 }
