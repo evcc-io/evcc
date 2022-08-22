@@ -77,7 +77,7 @@ func configureEnvironment(conf config) (err error) {
 
 // configureDatabase configures session database
 func configureDatabase(conf dbConfig) error {
-	return db.New(conf.Path)
+	return db.NewGlobal(conf.Type, conf.Path)
 }
 
 // configureInflux configures influx database

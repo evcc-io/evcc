@@ -3,8 +3,8 @@ package transaction
 import (
 	"fmt"
 
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -15,8 +15,8 @@ type DBStorage struct {
 }
 
 // NewDB creates a database storage driver
-func NewDB(path string) (*DBStorage, error) {
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+func NewDB(driver, path string) (*DBStorage, error) {
+	db, err := db.New(driver, path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}

@@ -54,6 +54,7 @@ type networkConfig struct {
 }
 
 type dbConfig struct {
+	Type string
 	Path string
 }
 
