@@ -1,9 +1,0 @@
-product:
-  brand: Elli
-  description: Charger Connect/Pro
-requirements: ["eebus"]
-render:
-  - default: |
-      type: template
-      template: elli
-      ski: # Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
