@@ -24,7 +24,7 @@ require (
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/emirpasic/gods v1.18.1
-	github.com/evcc-io/eebus v0.0.0-20220628095038-be707d322cfc
+	github.com/evcc-io/eebus v0.0.0-20220815121332-bbb3cd4260e0
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
 	github.com/go-ping/ping v1.1.0
@@ -173,5 +173,3 @@ require (
 )
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20220205120646-e5220ad9a9a0
-
-replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220812150617-4f7442d9e071
