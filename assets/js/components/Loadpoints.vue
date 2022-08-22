@@ -51,7 +51,9 @@ export default {
 		this.$refs.carousel.addEventListener("scroll", this.handleCarouselScroll, false);
 	},
 	unmounted() {
-		this.$refs.carousel.removeEventListener("scroll", this.handleCarouselScroll);
+		if (this.$refs.carousel) {
+			this.$refs.carousel.removeEventListener("scroll", this.handleCarouselScroll);
+		}
 	},
 	methods: {
 		handleCarouselScroll() {
