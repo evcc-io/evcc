@@ -11,13 +11,13 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -29,13 +29,14 @@ import (
 )
 
 const (
-	evChargeStart       = "start"      // update chargeTimer
-	evChargeStop        = "stop"       // update chargeTimer
-	evChargeCurrent     = "current"    // update fakeChargeMeter
-	evChargePower       = "power"      // update chargeRater
-	evVehicleConnect    = "connect"    // vehicle connected
-	evVehicleDisconnect = "disconnect" // vehicle disconnected
-	evVehicleSoC        = "soc"        // vehicle soc progress
+	evChargeStart         = "start"      // update chargeTimer
+	evChargeStop          = "stop"       // update chargeTimer
+	evChargeCurrent       = "current"    // update fakeChargeMeter
+	evChargePower         = "power"      // update chargeRater
+	evVehicleConnect      = "connect"    // vehicle connected
+	evVehicleDisconnect   = "disconnect" // vehicle disconnected
+	evVehicleSoC          = "soc"        // vehicle soc progress
+	evVehicleUnidentified = "guest"      // vehicle unidentified
 
 	pvTimer   = "pv"
 	pvEnable  = "enable"
@@ -101,10 +102,10 @@ type LoadPoint struct {
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
 	Title             string   `mapstructure:"title"`    // UI title
-	DefaultPhases     int      `mapstructure:"phases"`   // Charger enabled phases
+	ConfiguredPhases  int      `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
 	ChargerRef        string   `mapstructure:"charger"`  // Charger reference
 	VehicleRef        string   `mapstructure:"vehicle"`  // Vehicle reference
-	VehiclesRef       []string `mapstructure:"vehicles"` // Vehicles reference
+	VehiclesRef_      []string `mapstructure:"vehicles"` // TODO deprecated
 	MeterRef          string   `mapstructure:"meter"`    // Charge meter reference
 	SoC               SoCConfig
 	Enable, Disable   ThresholdConfig
@@ -116,7 +117,7 @@ type LoadPoint struct {
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
 	enabled             bool      // Charger enabled state
-	phases              int       // Charger active phases, guarded by mutex
+	phases              int       // Charger enabled phases, guarded by mutex
 	measuredPhases      int       // Charger physically measured phases
 	chargeCurrent       float64   // Charger current limit
 	guardUpdated        time.Time // Charger enabled/disabled timestamp
@@ -129,10 +130,10 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter    api.Meter     // Charger usage meter
-	vehicle        api.Vehicle   // Currently active vehicle
-	vehicles       []api.Vehicle // Assigned vehicles
-	defaultVehicle api.Vehicle   // Default vehicle (disables detection)
+	chargeMeter    api.Meter   // Charger usage meter
+	vehicle        api.Vehicle // Currently active vehicle
+	defaultVehicle api.Vehicle // Default vehicle (disables detection)
+	coordinator    coordinator.API
 	socEstimator   *soc.Estimator
 	socTimer       *soc.Timer
 
@@ -200,32 +201,14 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.chargeMeter = cp.Meter(lp.MeterRef)
 	}
 
-	// multiple vehicles
-	for _, ref := range lp.VehiclesRef {
-		vehicle := cp.Vehicle(ref)
-		lp.vehicles = append(lp.vehicles, vehicle)
-	}
-
 	// default vehicle
 	if lp.VehicleRef != "" {
 		lp.defaultVehicle = cp.Vehicle(lp.VehicleRef)
-
-		// append default vehicle if not contained in list
-		if len(lo.Filter(lp.vehicles, func(v api.Vehicle, _ int) bool {
-			return v == lp.defaultVehicle
-		})) == 0 {
-			lp.vehicles = append(lp.vehicles, lp.defaultVehicle)
-		}
 	}
 
-	// verify vehicle detection
-	if len(lp.vehicles) > 1 {
-		for _, v := range lp.vehicles {
-			if _, ok := v.(api.ChargeState); !ok {
-				lp.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Title())
-				break
-			}
-		}
+	// TODO deprecated
+	if len(lp.VehiclesRef_) > 0 {
+		lp.log.WARN.Println("vehicles option is deprecated")
 	}
 
 	if lp.ChargerRef == "" {
@@ -237,14 +220,14 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	// setup fixed phases:
 	// - simple charger starts with phases config if specified or 3p
 	// - switchable charger starts at 0p since we don't know the current setting
-	if _, ok := lp.charger.(api.ChargePhases); !ok {
-		if lp.DefaultPhases == 0 {
-			lp.DefaultPhases = 3
+	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
+		if lp.ConfiguredPhases == 0 {
+			lp.ConfiguredPhases = 3
 			lp.log.WARN.Println("phases not configured, assuming 3p")
 		}
-		lp.phases = lp.DefaultPhases
-	} else if lp.DefaultPhases != 0 {
-		lp.log.WARN.Printf("locking phase config to %dp for switchable charger", lp.DefaultPhases)
+		lp.phases = lp.ConfiguredPhases
+	} else if lp.ConfiguredPhases != 0 {
+		lp.log.WARN.Printf("locking phase config to %dp for switchable charger", lp.ConfiguredPhases)
 	}
 
 	// validate thresholds
@@ -274,8 +257,9 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
 		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		GuardDuration: 5 * time.Minute,
-		progress:      NewProgress(0, 10), // soc progress indicator
-		tasks:         aq.New(),
+		progress:      NewProgress(0, 10),     // soc progress indicator
+		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
+		tasks:         aq.New(),               // task queue
 	}
 
 	// allow target charge handler to access loadpoint
@@ -435,8 +419,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	lp.pushEvent(evVehicleDisconnect)
 
-	// remove charger vehicle id
+	// remove charger vehicle id and stop potential detection
 	lp.setVehicleIdentifier("")
+	lp.stopVehicleDetection()
 
 	// remove active vehicle if not default
 	if lp.vehicle != lp.defaultVehicle {
@@ -494,11 +479,11 @@ func (lp *LoadPoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.Mode != nil {
 		lp.SetMode(*actionCfg.Mode)
 	}
-	if actionCfg.MinCurrent != nil {
-		lp.SetMinCurrent(*actionCfg.MinCurrent)
+	if min := actionCfg.MinCurrent; min != nil && *min >= *lp.onDisconnect.MinCurrent {
+		lp.SetMinCurrent(*min)
 	}
-	if actionCfg.MaxCurrent != nil {
-		lp.SetMaxCurrent(*actionCfg.MaxCurrent)
+	if max := actionCfg.MaxCurrent; max != nil && *max <= *lp.onDisconnect.MaxCurrent {
+		lp.SetMaxCurrent(*max)
 	}
 	if actionCfg.MinSoC != nil {
 		lp.SetMinSoC(*actionCfg.MinSoC)
@@ -531,11 +516,10 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("title", lp.Title)
 	lp.publish("minCurrent", lp.MinCurrent)
 	lp.publish("maxCurrent", lp.MaxCurrent)
-	lp.publish("phases", lp.phases)
-	lp.publish("activePhases", lp.activePhases())
-	lp.publishVehicles()
+	lp.publish(phasesEnabled, lp.phases)
+	lp.publish(phasesActive, lp.activePhases())
 
-	lp.setDefaultPhases(lp.DefaultPhases)
+	lp.setConfiguredPhases(lp.ConfiguredPhases)
 
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
@@ -543,10 +527,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("minSoC", lp.SoC.Min)
 	lp.Unlock()
 
-	// activate default vehicle (allows poll mode: always)
-	if lp.defaultVehicle != nil {
-		lp.setActiveVehicle(lp.defaultVehicle)
-	}
+	// reset detection state
+	lp.publish(vehicleDetectionActive, false)
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
@@ -559,7 +541,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		lp.log.ERROR.Printf("charger: %v", err)
 	}
 
-	// allow charger to  access loadpoint
+	// allow charger to access loadpoint
 	if ctrl, ok := lp.charger.(loadpoint.Controller); ok {
 		ctrl.LoadpointControl(lp)
 	}
@@ -758,6 +740,8 @@ func (lp *LoadPoint) identifyVehicle() {
 	lp.setVehicleIdentifier(id)
 
 	if id != "" {
+		lp.stopVehicleDetection()
+
 		lp.log.DEBUG.Println("charger vehicle id:", id)
 
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
@@ -768,15 +752,17 @@ func (lp *LoadPoint) identifyVehicle() {
 
 // selectVehicleByID selects the vehicle with the given ID
 func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
+	vehicles := lp.coordinatedVehicles()
+
 	// find exact match
-	for _, vehicle := range lp.vehicles {
+	for _, vehicle := range vehicles {
 		if slices.Contains(vehicle.Identifiers(), id) {
 			return vehicle
 		}
 	}
 
 	// find placeholder match
-	for _, vehicle := range lp.vehicles {
+	for _, vehicle := range vehicles {
 		for _, vid := range vehicle.Identifiers() {
 			re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
 			if err != nil {
@@ -805,12 +791,12 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	from := "unknown"
 	if lp.vehicle != nil {
-		coordinator.release(lp.vehicle)
+		lp.coordinator.Release(lp.vehicle)
 		from = lp.vehicle.Title()
 	}
 	to := "unknown"
 	if vehicle != nil {
-		coordinator.acquire(lp, vehicle)
+		lp.coordinator.Acquire(vehicle)
 		to = vehicle.Title()
 	}
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
@@ -854,11 +840,9 @@ func (lp *LoadPoint) wakeUpVehicle() {
 	}
 
 	// vehicle
-	if lp.vehicle != nil {
-		if vs, ok := lp.vehicle.(api.Resurrector); ok {
-			if err := vs.WakeUp(); err != nil {
-				lp.log.ERROR.Printf("wake-up vehicle: %v", err)
-			}
+	if vs, ok := lp.vehicle.(api.Resurrector); ok {
+		if err := vs.WakeUp(); err != nil {
+			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
 		}
 	}
 }
@@ -875,11 +859,16 @@ func (lp *LoadPoint) unpublishVehicle() {
 
 // vehicleUnidentified checks if there are associated vehicles and starts discovery period
 func (lp *LoadPoint) vehicleUnidentified() bool {
-	res := len(lp.vehicles) > 0 && lp.vehicle == nil &&
-		lp.clock.Since(lp.vehicleDetect) < vehicleDetectDuration
+	res := len(lp.coordinatedVehicles()) > 0 && lp.vehicle == nil
 
 	// request vehicle api refresh while waiting to identify
 	if res {
+		if lp.clock.Since(lp.vehicleDetect) > vehicleDetectDuration {
+			lp.stopVehicleDetection()
+			lp.pushEvent(evVehicleUnidentified)
+			return false
+		}
+
 		select {
 		case <-lp.vehicleDetectTicker.C:
 			lp.log.DEBUG.Println("vehicle api refresh")
@@ -901,15 +890,20 @@ func (lp *LoadPoint) vehicleDefaultOrDetect() {
 			// need to do this here since setActiveVehicle would short-circuit
 			lp.addTask(lp.vehicleOdometer)
 		}
-	} else if len(lp.vehicles) > 0 {
-		// flush all vehicles before detection starts
-		lp.log.DEBUG.Println("vehicle api refresh")
-		provider.ResetCached()
-
-		// reset connection timer and starts api refresh timer
-		lp.vehicleDetect = lp.clock.Now()
-		lp.vehicleDetectTicker = lp.clock.Ticker(vehicleDetectInterval)
+	} else if len(lp.coordinatedVehicles()) > 0 && lp.connected() {
+		lp.startVehicleDetection()
 	}
+}
+
+// startVehicleDetection reset connection timer and starts api refresh timer
+func (lp *LoadPoint) startVehicleDetection() {
+	// flush all vehicles before detection starts
+	lp.log.DEBUG.Println("vehicle api refresh")
+	provider.ResetCached()
+
+	lp.vehicleDetect = lp.clock.Now()
+	lp.vehicleDetectTicker = lp.clock.Ticker(vehicleDetectInterval)
+	lp.publish(vehicleDetectionActive, true)
 }
 
 // stopVehicleDetection expires the connection timer and ticker
@@ -918,15 +912,19 @@ func (lp *LoadPoint) stopVehicleDetection() {
 	if lp.vehicleDetectTicker != nil {
 		lp.vehicleDetectTicker.Stop()
 	}
+	lp.publish(vehicleDetectionActive, false)
 }
 
 // identifyVehicleByStatus validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) identifyVehicleByStatus() {
-	if len(lp.vehicles) == 0 {
+	if len(lp.coordinatedVehicles()) == 0 {
 		return
 	}
 
-	if vehicle := coordinator.identifyVehicleByStatus(lp.log, lp, lp.vehicles); vehicle != nil {
+	_, ok := lp.charger.(api.Identifier)
+
+	if vehicle := lp.coordinator.IdentifyVehicleByStatus(!ok); vehicle != nil {
+		lp.stopVehicleDetection()
 		lp.setActiveVehicle(vehicle)
 		return
 	}
@@ -1031,32 +1029,32 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
-// scalePhasesIfAvailable scales if api.ChargePhases is available
+// scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
-	if lp.DefaultPhases != 0 {
-		phases = lp.DefaultPhases
+	if lp.ConfiguredPhases != 0 {
+		phases = lp.ConfiguredPhases
 	}
 
-	if _, ok := lp.charger.(api.ChargePhases); ok {
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
 		return lp.scalePhases(phases)
 	}
 
 	return nil
 }
 
-// setDefaultPhases sets the default phase configuration
-func (lp *LoadPoint) setDefaultPhases(phases int) {
+// setConfiguredPhases sets the default phase configuration
+func (lp *LoadPoint) setConfiguredPhases(phases int) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.DefaultPhases = phases
+	lp.ConfiguredPhases = phases
 	lp.phaseTimer = time.Time{}
 
 	// publish 1p3p capability and phase configuration
-	if _, ok := lp.charger.(api.ChargePhases); ok {
-		lp.publish("phases1p3p", lp.DefaultPhases)
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+		lp.publish(phasesConfigured, lp.ConfiguredPhases)
 	} else {
-		lp.publish("phases1p3p", nil)
+		lp.publish(phasesConfigured, nil)
 	}
 }
 
@@ -1068,7 +1066,7 @@ func (lp *LoadPoint) setPhases(phases int) {
 		lp.phaseTimer = time.Time{}
 		lp.Unlock()
 
-		lp.publish("phases", lp.phases)
+		lp.publish(phasesEnabled, lp.phases)
 		lp.publishTimer(phaseTimer, 0, timerInactive)
 
 		lp.resetMeasuredPhases()
@@ -1076,11 +1074,11 @@ func (lp *LoadPoint) setPhases(phases int) {
 }
 
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
-// Returns api.ErrNotAvailable if api.ChargePhases is not available.
+// Returns api.ErrNotAvailable if api.PhaseSwitcher is not available.
 func (lp *LoadPoint) scalePhases(phases int) error {
-	cp, ok := lp.charger.(api.ChargePhases)
+	cp, ok := lp.charger.(api.PhaseSwitcher)
 	if !ok {
-		panic("charger does not implement api.ChargePhases")
+		panic("charger does not implement api.PhaseSwitcher")
 	}
 
 	if lp.GetPhases() != phases {
@@ -1121,7 +1119,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	activePhases := lp.activePhases()
 
 	// scale down phases
-	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && activePhases > 1 && lp.DefaultPhases < 3 {
+	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && activePhases > 1 && lp.ConfiguredPhases < 3 {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 
 		if lp.phaseTimer.IsZero() {
@@ -1185,9 +1183,12 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	return false
 }
 
-// publishVehicles publishes a slice of vehicle titles
-func (lp *LoadPoint) publishVehicles() {
-	lp.publish("vehicles", vehicleTitles(lp.vehicles))
+// coordinatedVehicles is the slice of vehicles from the coordinator
+func (lp *LoadPoint) coordinatedVehicles() []api.Vehicle {
+	if lp.coordinator == nil {
+		return nil
+	}
+	return lp.coordinator.GetVehicles()
 }
 
 // TODO move up to timer functions
@@ -1219,7 +1220,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	maxCurrent := lp.GetMaxCurrent()
 
 	// switch phases up/down
-	if _, ok := lp.charger.(api.ChargePhases); ok {
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
 		availablePower := -sitePower + lp.chargePower
 
 		// in case of scaling, keep charger disabled for this cycle
@@ -1378,7 +1379,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 			lp.Unlock()
 
 			lp.log.DEBUG.Printf("detected phases: %dp", phases)
-			lp.publish("activePhases", phases)
+			lp.publish(phasesActive, phases)
 		}
 	}
 }

@@ -6,14 +6,18 @@ import (
 )
 
 type Response struct {
-	Accounts     []Account `json:"accounts"`     // /commerce/v1/persons/%s
-	AccessToken  string    `json:"accessToken"`  // /commerce/v1/accounts/%s/kamereon/token
-	VehicleLinks []Vehicle `json:"vehicleLinks"` // /commerce/v1/accounts/%s/vehicles
-	Data         Data      `json:"data"`         // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/vX/cars/%s/...
+	Accounts     []Account // /commerce/v1/persons/%s
+	AccessToken  string    // /commerce/v1/accounts/%s/kamereon/token
+	VehicleLinks []Vehicle // /commerce/v1/accounts/%s/vehicles
+	Data         Data      // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/vX/cars/%s/...
 }
 
 type Account struct {
-	AccountID string `json:"accountId"`
+	AccountID     string
+	AccountType   string
+	AccountStatus string
+	Country       string
+	RelationType  string
 }
 
 type Vehicle struct {
@@ -23,24 +27,24 @@ type Vehicle struct {
 	ConnectedDriver connectedDriver
 }
 
+type connectedDriver struct {
+	Role string
+}
+
 func (v *Vehicle) Available() error {
 	if strings.ToUpper(v.Status) != "ACTIVE" {
 		return errors.New("vehicle is not active")
 	}
 
-	if len(v.ConnectedDriver.Role) == 0 {
+	if v.ConnectedDriver.Role == "" {
 		return errors.New("vehicle is not connected to driver")
 	}
 
 	return nil
 }
 
-type connectedDriver struct {
-	Role string `json:"role"`
-}
-
 type Data struct {
-	Attributes attributes `json:"attributes"`
+	Attributes attributes
 }
 
 type attributes struct {

@@ -205,9 +205,9 @@ func (wb *Dadapower) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
-var _ api.ChargePhases = (*Dadapower)(nil)
+var _ api.PhaseSwitcher = (*Dadapower)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Dadapower) Phases1p3p(phases int) error {
 	_, err := wb.conn.WriteSingleRegister(dadapowerRegActivePhases+wb.regOffset, uint16(phases))
 	return err

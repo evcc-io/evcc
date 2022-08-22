@@ -22,7 +22,7 @@ export default {
 	emits: ["updated"],
 	data() {
 		return {
-			modes: ["off", "minpv", "pv", "now"],
+			modes: ["off", "pv", "minpv", "now"],
 		};
 	},
 	methods: {
@@ -41,6 +41,7 @@ export default {
 	border: 2px solid var(--evcc-default-text);
 	border-radius: 20px;
 	padding: 4px;
+	min-width: 255px;
 }
 
 .btn {

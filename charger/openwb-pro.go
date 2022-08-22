@@ -31,10 +31,10 @@ type OpenWBPro struct {
 
 // NewOpenWBProFromConfig creates a OpenWBPro charger from generic config
 func NewOpenWBProFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		URI   string
 		Cache time.Duration
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -180,9 +180,9 @@ func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
 	return res.Currents[0], res.Currents[1], res.Currents[2], err
 }
 
-var _ api.ChargePhases = (*OpenWBPro)(nil)
+var _ api.PhaseSwitcher = (*OpenWBPro)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *OpenWBPro) Phases1p3p(phases int) error {
 	return wb.set(fmt.Sprintf("phasetarget=%d", phases))
 }

@@ -66,7 +66,7 @@ require (
 	github.com/prometheus/client_golang v1.12.2
 	github.com/prometheus/common v0.34.0
 	github.com/robertkrimen/otto v0.0.0-20211024170158-b87d35c0b86f
-	github.com/samber/lo v1.21.0
+	github.com/samber/lo v1.27.0
 	github.com/shurcooL/graphql v0.0.0-20220520033453-bdb1221e171e
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.4.0

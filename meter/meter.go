@@ -17,12 +17,12 @@ func init() {
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
+	var cc struct {
 		Power    provider.Config
 		Energy   *provider.Config  // optional
 		SoC      *provider.Config  // optional
 		Currents []provider.Config // optional
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

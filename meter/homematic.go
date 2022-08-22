@@ -18,7 +18,7 @@ func init() {
 
 // NewCCUFromConfig creates a Homematic meter from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
+	var cc struct {
 		URI           string
 		Device        string
 		MeterChannel  string
@@ -26,7 +26,7 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
 		User          string
 		Password      string
 		Usage         string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

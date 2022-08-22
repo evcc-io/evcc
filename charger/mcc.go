@@ -69,7 +69,9 @@ func init() {
 
 // NewMobileConnectFromConfig creates a MCC charger from generic config
 func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ URI, Password string }{}
+	var cc struct {
+		URI, Password string
+	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

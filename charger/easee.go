@@ -66,11 +66,11 @@ func init() {
 
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		User     string
 		Password string
 		Charger  string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -406,9 +406,9 @@ func (c *Easee) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.ChargePhases = (*Easee)(nil)
+var _ api.PhaseSwitcher = (*Easee)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Easee) Phases1p3p(phases int) error {
 	var err error
 	if c.circuit != 0 {

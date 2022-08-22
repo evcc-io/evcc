@@ -143,11 +143,11 @@ func (c *Connection) getSessionID() error {
 		return err
 	}
 
-	v := struct {
+	var v struct {
 		SID       string
 		Challenge string
 		BlockTime string
-	}{}
+	}
 
 	if err = xml.Unmarshal(body, &v); err == nil && v.SID == "0000000000000000" {
 		var challresp string

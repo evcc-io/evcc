@@ -11,8 +11,6 @@ params:
   - preset: vehiclebase
   - name: vin
     example: W...
-  - preset: vehiclecloud
 render: |
   type: silence
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-cloud" . }}

@@ -70,6 +70,7 @@ export default {
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
+		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleTitle: String,
 		targetTimeActive: Boolean,
@@ -149,9 +150,6 @@ export default {
 </script>
 
 <style scoped>
-.car-icon {
-	width: 1.75rem;
-}
 .details > div {
 	flex-grow: 1;
 	flex-basis: 0;

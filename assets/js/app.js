@@ -74,7 +74,9 @@ app.use(VueNumber);
 window.app = app.mount("#app");
 
 window.setInterval(function () {
-  api.get("health").then(window.app.setOnline).catch(window.app.setOffline);
+  if (!document.hidden) {
+    api.get("health").then(window.app.setOnline).catch(window.app.setOffline);
+  }
 }, 5000);
 
 watchThemeChanges();

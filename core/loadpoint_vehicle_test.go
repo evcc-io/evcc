@@ -6,6 +6,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
@@ -61,9 +62,10 @@ func TestVehicleDetectByID(t *testing.T) {
 		t.Logf("%+v", tc)
 
 		lp := &LoadPoint{
-			log:      util.NewLogger("foo"),
-			vehicles: []api.Vehicle{v1, v2},
+			log: util.NewLogger("foo"),
 		}
+
+		lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{v1, v2}))
 
 		if tc.prepare != nil {
 			tc.prepare(tc)
@@ -170,8 +172,11 @@ func TestApplyVehicleDefaults(t *testing.T) {
 		}
 	}
 
-	oi := newConfig(api.ModePV, 7, 17, 1, 99)
-	od := newConfig(api.ModeOff, 5, 15, 2, 98)
+	// onIdentified config
+	oi := newConfig(api.ModePV, 7, 15, 1, 99)
+
+	// onDefault config
+	od := newConfig(api.ModeOff, 6, 16, 2, 98)
 
 	vehicle := mock.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
@@ -186,6 +191,10 @@ func TestApplyVehicleDefaults(t *testing.T) {
 
 	lp.onDisconnect = od
 	lp.ResetOnDisconnect = true
+
+	// check loadpoint default currents can't be violated
+	lp.applyAction(newConfig(*od.Mode, 5, 17, *od.MinSoC, *od.TargetSoC))
+	assertConfig(lp, od)
 
 	// vehicle identified
 	lp.setActiveVehicle(vehicle)
@@ -206,7 +215,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	}
 
 	lp.charger = charger
-	lp.vehicles = []api.Vehicle{vehicle}
+	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
 	const id = "don't call me stacey"
 	charger.MockIdentifier.EXPECT().Identify().Return(id, nil)
@@ -248,8 +257,9 @@ func TestReconnectVehicle(t *testing.T) {
 		MaxCurrent:  maxA,
 		phases:      1,
 		Mode:        api.ModeNow,
-		vehicles:    []api.Vehicle{vehicle},
 	}
+
+	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
 	attachListeners(t, lp)
 

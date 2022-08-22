@@ -244,14 +244,14 @@ func targetChargeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
 }
 
 // vehicleHandler sets active vehicle
-func vehicleHandler(loadpoint loadpoint.API) http.HandlerFunc {
+func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
 		valS, ok := vars["vehicle"]
 		val, err := strconv.Atoi(valS)
 
-		vehicles := loadpoint.GetVehicles()
+		vehicles := site.GetVehicles()
 		if !ok || val >= len(vehicles) || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -273,6 +273,15 @@ func vehicleHandler(loadpoint loadpoint.API) http.HandlerFunc {
 func vehicleRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		loadpoint.SetVehicle(nil)
+		res := struct{}{}
+		jsonResult(w, res)
+	}
+}
+
+// vehicleDetectHandler starts vehicle detection
+func vehicleDetectHandler(loadpoint loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		loadpoint.StartVehicleDetection()
 		res := struct{}{}
 		jsonResult(w, res)
 	}

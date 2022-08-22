@@ -37,7 +37,7 @@ export default {
 	props: {
 		title: String,
 		icon: String,
-		value: String,
+		value: [String, Number],
 		unit: String,
 		sub1: String,
 		sub2: String,
