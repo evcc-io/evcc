@@ -1039,6 +1039,12 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
+// scalePhasesRequired validates if fixed phase configuration matches enabled phases
+func (lp *LoadPoint) scalePhasesRequired() bool {
+	_, ok := lp.charger.(api.PhaseSwitcher)
+	return ok && lp.ConfiguredPhases != 0 && lp.ConfiguredPhases != lp.GetPhases()
+}
+
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 	if lp.ConfiguredPhases != 0 {
@@ -1058,7 +1064,6 @@ func (lp *LoadPoint) setConfiguredPhases(phases int) {
 	defer lp.Unlock()
 
 	lp.ConfiguredPhases = phases
-	lp.phaseTimer = time.Time{}
 
 	// publish 1p3p capability and phase configuration
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
@@ -1139,13 +1144,12 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 		lp.publishTimer(phaseTimer, lp.Disable.Delay, phaseScale1p)
 
-		elapsed := lp.clock.Since(lp.phaseTimer)
-		if elapsed >= lp.Disable.Delay {
+		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.Disable.Delay {
 			lp.log.DEBUG.Printf("phase %s timer elapsed", phaseScale1p)
 			if err := lp.scalePhases(1); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 1p @ %.0fW", availablePower)
 			} else {
-				lp.log.ERROR.Printf("switch phases: %v", err)
+				lp.log.ERROR.Println(err)
 			}
 			return true
 		}
@@ -1168,13 +1172,12 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 		lp.publishTimer(phaseTimer, lp.Enable.Delay, phaseScale3p)
 
-		elapsed := lp.clock.Since(lp.phaseTimer)
-		if elapsed >= lp.Enable.Delay {
+		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.Enable.Delay {
 			lp.log.DEBUG.Printf("phase %s timer elapsed", phaseScale3p)
 			if err := lp.scalePhases(3); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 3p @ %.0fW", availablePower)
 			} else {
-				lp.log.ERROR.Printf("switch phases: %v", err)
+				lp.log.ERROR.Println(err)
 			}
 			return true
 		}
@@ -1564,6 +1567,11 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 		// always disable charger if not connected
 		// https://github.com/evcc-io/evcc/issues/105
 		err = lp.setLimit(0, false)
+
+	case lp.scalePhasesRequired():
+		if err = lp.scalePhases(lp.ConfiguredPhases); err == nil {
+			lp.log.DEBUG.Printf("switched phases: %dp", lp.ConfiguredPhases)
+		}
 
 	case lp.targetSocReached():
 		lp.log.DEBUG.Printf("targetSoC reached: %.1f > %d", lp.vehicleSoc, lp.SoC.target)
