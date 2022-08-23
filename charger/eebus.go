@@ -24,9 +24,6 @@ type EEBus struct {
 	cc  *communication.ConnectionController
 	lp  loadpoint.API
 
-	hasMeter              bool
-	supportsChargedEnergy bool
-
 	communicationStandard           communication.EVCommunicationStandardEnumType
 	socSupportAvailable             bool
 	selfConsumptionSupportAvailable bool
@@ -47,10 +44,10 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Ski           string
 		Ip            string
-		HasMeter      bool
+		Meter         bool
 		ChargedEnergy bool
 	}{
-		HasMeter:      true,
+		Meter:         true,
 		ChargedEnergy: true,
 	}
 
@@ -58,11 +55,13 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski, cc.Ip, cc.HasMeter, cc.ChargedEnergy)
+	return NewEEBus(cc.Ski, cc.Ip, cc.Meter, cc.ChargedEnergy)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateEEBus -b *EEBus -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
+
 // NewEEBus creates EEBus charger
-func NewEEBus(ski, ip string, hasMeter, chargedEnergy bool) (*EEBus, error) {
+func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
 	log := util.NewLogger("eebus")
 
 	if server.EEBusInstance == nil {
@@ -71,12 +70,18 @@ func NewEEBus(ski, ip string, hasMeter, chargedEnergy bool) (*EEBus, error) {
 
 	c := &EEBus{
 		log:                   log,
-		hasMeter:              hasMeter,
-		supportsChargedEnergy: chargedEnergy,
 		communicationStandard: communication.EVCommunicationStandardEnumTypeUnknown,
 	}
 
 	server.EEBusInstance.Register(ski, ip, c.onConnect, c.onDisconnect)
+
+	if hasMeter {
+		if hasChargedEnergy {
+			return decorateEEBus(c, c.currentPower, c.currents, c.chargedEnergy), nil
+		} else {
+			return decorateEEBus(c, c.currentPower, c.currents, nil), nil
+		}
+	}
 
 	return c, nil
 }
@@ -511,14 +516,8 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	return c.writeCurrentLimitData(currents)
 }
 
-var _ api.Meter = (*EEBus)(nil)
-
 // CurrentPower implements the api.Meter interface
-func (c *EEBus) CurrentPower() (float64, error) {
-	if !c.hasMeter {
-		return 0, api.ErrNotAvailable
-	}
-
+func (c *EEBus) currentPower() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		return 0, err
@@ -539,18 +538,8 @@ func (c *EEBus) CurrentPower() (float64, error) {
 	return power, nil
 }
 
-var _ api.ChargeRater = (*EEBus)(nil)
-
 // ChargedEnergy implements the api.ChargeRater interface
-func (c *EEBus) ChargedEnergy() (float64, error) {
-	if !c.hasMeter {
-		return 0, api.ErrNotAvailable
-	}
-
-	if !c.supportsChargedEnergy {
-		return 0, api.ErrNotAvailable
-	}
-
+func (c *EEBus) chargedEnergy() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		return 0, err
@@ -578,14 +567,8 @@ func (c *EEBus) ChargedEnergy() (float64, error) {
 // 	return 0, nil
 // }
 
-var _ api.MeterCurrent = (*EEBus)(nil)
-
 // Currents implements the api.MeterCurrent interface
-func (c *EEBus) Currents() (float64, float64, float64, error) {
-	if !c.hasMeter {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-
+func (c *EEBus) currents() (float64, float64, float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		return 0, 0, 0, err
