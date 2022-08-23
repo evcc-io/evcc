@@ -1,7 +1,7 @@
 product:
   brand: go-eCharger
   description: Gemini
-capabilities: ["rfid"]
+capabilities: ["1p3p", "rfid"]
 requirements: ["sponsorship"]
 render:
   - default: |
