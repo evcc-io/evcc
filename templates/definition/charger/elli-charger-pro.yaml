@@ -7,6 +7,9 @@ products:
 capabilities: ["mA"]
 requirements:
   evcc: ["eebus"]
+  description:
+    de: Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP)
+    en: The device has to have a fix IP address (manuall or via DHCP)
 params:
   - preset: eebusmeter
   - name: ip

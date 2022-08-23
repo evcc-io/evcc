@@ -3,6 +3,8 @@ product:
   description: Charger Connect (mit Meter)/Pro
 capabilities: ["mA"]
 requirements: ["eebus"]
+description: |
+  Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP)
 render:
   - default: |
       type: template
