@@ -1,0 +1,15 @@
+template: elliconnect
+products:
+  - brand: Elli
+    description:
+      de: Charger Connect (ohne Meter)
+      en:  Charger Connect (without Meter)
+capabilities: ["mA"]
+requirements:
+  evcc: ["eebus"]
+params:
+  - preset: eebusnometer
+  - name: ip
+    required: true
+render: |
+  {{ include "eebus-no-meter" . }}
