@@ -131,6 +131,19 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	case 9:
 		return api.StatusE, nil
 	case 10:
+		// ensure RemoteLock is disabled after wake-up
+		l, err := wb.conn.ReadInputRegisters(hecRegRemoteLock, 1)
+		if err != nil {
+			return api.StatusNone, err
+		}
+		if binary.BigEndian.Uint16(l) != 1 {
+			// unlock
+			err = wb.set(hecRegRemoteLock, 1)
+			if err != nil {
+				return api.StatusNone, err
+			}
+		}
+
 		if wb.wakeup {
 			// keep status B2 during wakeup
 			return api.StatusB, nil
@@ -273,13 +286,14 @@ var _ api.Resurrector = (*HeidelbergEC)(nil)
 // WakeUp implements the api.Resurrector interface
 func (wb *HeidelbergEC) WakeUp() error {
 	// force status F by locking
-	err := wb.set(hecRegRemoteLock, 0)
-	if err == nil {
-		// Always takes at least ~10 sec to return to normal operation
+	if wb.set(hecRegRemoteLock, 0) == nil {
+		// Takes at least ~10 sec to return to normal operation
 		// after locking even if unlocking immediately.
 		wb.wakeup = true
-		// return to normal operation by unlocking after ~10 sec
-		err = wb.set(hecRegRemoteLock, 1)
 	}
+
+	// return to normal operation by unlocking after ~10 sec
+	err := wb.set(hecRegRemoteLock, 1)
+
 	return err
 }
