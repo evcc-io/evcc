@@ -324,7 +324,7 @@ presets:
       type: eebus
       ski: {{ .ski }}
       {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
-      Meter: true
+      meter: true
       {{end}}
   eebusnometer:
     params:
@@ -336,7 +336,7 @@ presets:
       type: eebus
       ski: {{ .ski }}
       {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
-      Meter: false
+      meter: false
       {{end}}
 
 modbus:
