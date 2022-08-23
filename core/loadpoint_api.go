@@ -53,11 +53,11 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 func (lp *LoadPoint) GetTargetSoC() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.SoC.Target
+	return lp.SoC.target
 }
 
 func (lp *LoadPoint) setTargetSoC(soc int) {
-	lp.SoC.Target = soc
+	lp.SoC.target = soc
 	lp.socTimer.SoC = soc
 	lp.publish("targetSoC", soc)
 }
@@ -70,7 +70,7 @@ func (lp *LoadPoint) SetTargetSoC(soc int) {
 	lp.log.DEBUG.Println("set target soc:", soc)
 
 	// apply immediately
-	if lp.SoC.Target != soc {
+	if lp.SoC.target != soc {
 		lp.setTargetSoC(soc)
 		lp.requestUpdate()
 	}
@@ -80,7 +80,7 @@ func (lp *LoadPoint) SetTargetSoC(soc int) {
 func (lp *LoadPoint) GetMinSoC() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.SoC.Min
+	return lp.SoC.min
 }
 
 // SetMinSoC sets loadpoint charge minimum soc
@@ -91,8 +91,8 @@ func (lp *LoadPoint) SetMinSoC(soc int) {
 	lp.log.DEBUG.Println("set min soc:", soc)
 
 	// apply immediately
-	if lp.SoC.Min != soc {
-		lp.SoC.Min = soc
+	if lp.SoC.min != soc {
+		lp.SoC.min = soc
 		lp.publish("minSoC", soc)
 		lp.requestUpdate()
 	}
@@ -135,7 +135,7 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 	lp.log.DEBUG.Printf("set target charge: %d @ %v", soc, finishAt)
 
 	// apply immediately
-	if lp.socTimer.Time != finishAt || lp.SoC.Target != soc {
+	if lp.socTimer.Time != finishAt || lp.SoC.target != soc {
 		lp.socTimer.Set(finishAt)
 
 		// don't remove soc

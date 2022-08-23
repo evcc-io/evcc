@@ -164,11 +164,11 @@ func TestApplyVehicleDefaults(t *testing.T) {
 		if lp.MaxCurrent != *conf.MaxCurrent {
 			t.Errorf("expected maxCurrent %v, got %v", *conf.MaxCurrent, lp.MaxCurrent)
 		}
-		if lp.SoC.Min != *conf.MinSoC {
-			t.Errorf("expected minSoC %v, got %v", *conf.MinSoC, lp.SoC.Min)
+		if lp.SoC.min != *conf.MinSoC {
+			t.Errorf("expected minSoC %v, got %v", *conf.MinSoC, lp.SoC.min)
 		}
-		if lp.SoC.Target != *conf.TargetSoC {
-			t.Errorf("expected targetSoC %v, got %v", *conf.TargetSoC, lp.SoC.Target)
+		if lp.SoC.target != *conf.TargetSoC {
+			t.Errorf("expected targetSoC %v, got %v", *conf.TargetSoC, lp.SoC.target)
 		}
 	}
 
