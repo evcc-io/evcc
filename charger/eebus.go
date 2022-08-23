@@ -87,6 +87,7 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 	eebusDevice := app.HEMS(server.EEBusInstance.DeviceInfo())
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
 	c.cc.SetDataUpdateHandler(c.dataUpdateHandler)
+	c.cc.Voltage = 230.0 // TODO value should be provided from site
 
 	c.setDefaultValues()
 	c.setConnected(true)
