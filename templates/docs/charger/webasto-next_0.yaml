@@ -4,7 +4,7 @@ product:
 capabilities: ["rfid"]
 requirements: ["sponsorship"]
 description: |
-  Modus "HEMS activated" muss aktiviert sein. RFID-Tags können nur durch evcc gelesen.
+  Modus "HEMS activated" muss aktiviert sein. RFID-Tags können durch evcc nur gelesen werden.
 render:
   - default: |
       type: template
