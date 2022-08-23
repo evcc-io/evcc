@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/eebus/communication"
@@ -17,7 +16,7 @@ import (
 	"github.com/evcc-io/eebus/ship"
 	"github.com/evcc-io/eebus/spine/model"
 	"github.com/evcc-io/evcc/util"
-	"github.com/grandcat/zeroconf"
+	"github.com/libp2p/zeroconf/v2"
 )
 
 var EEBUSDetails = communication.ManufacturerDetails{
@@ -33,14 +32,17 @@ type EEBusClientCBs struct {
 }
 
 type EEBus struct {
-	mux               sync.Mutex
-	log               *util.Logger
-	srv               *server.Server
-	id                string
-	zc                *zeroconf.Server
-	clients           map[string]EEBusClientCBs
-	connectedClients  map[string]ship.Conn
-	discoveredClients map[string]*zeroconf.ServiceEntry
+	mux                sync.Mutex
+	log                *util.Logger
+	srv                *server.Server
+	id                 string
+	zc                 *zeroconf.Server
+	clients            map[string]EEBusClientCBs
+	connectedClients   map[string]ship.Conn
+	discoveredClients  map[string]*zeroconf.ServiceEntry
+	clientInConnection map[string]bool
+
+	browseMDNSRunning bool
 }
 
 var EEBusInstance *EEBus
@@ -101,13 +103,14 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	}
 
 	c := &EEBus{
-		zc:                zc,
-		log:               log,
-		srv:               srv,
-		id:                cc.ShipID,
-		clients:           make(map[string]EEBusClientCBs),
-		connectedClients:  make(map[string]ship.Conn),
-		discoveredClients: make(map[string]*zeroconf.ServiceEntry),
+		zc:                 zc,
+		log:                log,
+		srv:                srv,
+		id:                 cc.ShipID,
+		clients:            make(map[string]EEBusClientCBs),
+		connectedClients:   make(map[string]ship.Conn),
+		discoveredClients:  make(map[string]*zeroconf.ServiceEntry),
+		clientInConnection: make(map[string]bool),
 	}
 
 	return c, nil
@@ -119,6 +122,8 @@ func (c *EEBus) DeviceInfo() communication.ManufacturerDetails {
 
 func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) error, shipDisconnectHandler func(string)) {
 	ski = strings.ReplaceAll(ski, "-", "")
+	ski = strings.ReplaceAll(ski, " ", "")
+	ski = strings.ToLower(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	c.mux.Lock()
@@ -126,27 +131,11 @@ func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) 
 	c.mux.Unlock()
 
 	// maybe the SKI is already discovered
-	c.handleDiscoveredSKI(ski)
+	_ = c.handleDiscoveredSKI(ski)
 }
 
 func (c *EEBus) Run() {
-	entries := make(chan *zeroconf.ServiceEntry)
-	go c.discoverDNS(entries, func(entry *zeroconf.ServiceEntry) {
-		c.addDisoveredEntry(entry)
-	})
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	// discover all services on the network (e.g. _workstation._tcp)
-	resolver, err := zeroconf.NewResolver(nil)
-	if err != nil {
-		panic(fmt.Errorf("mDNS: failed initializing resolver: %w", err))
-	}
-
-	if err = resolver.Browse(ctx, ship.ZeroconfType, ship.ZeroconfDomain, entries); err != nil {
-		panic(fmt.Errorf("failed to browse: %w", err))
-	}
+	go c.browseMDNS()
 
 	ln := &server.Listener{
 		Log:          c.log.TRACE,
@@ -159,6 +148,44 @@ func (c *EEBus) Run() {
 	}
 }
 
+func (c *EEBus) browseMDNS() {
+	c.browseMDNSRunning = true
+
+	// Let's start from scratch
+	c.mux.Lock()
+	for k := range c.discoveredClients {
+		delete(c.discoveredClients, k)
+	}
+	c.mux.Unlock()
+
+	entries := make(chan *zeroconf.ServiceEntry)
+	defer close(entries)
+
+	go c.discoverDNS(entries, func(entry *zeroconf.ServiceEntry) {
+		c.addDisoveredEntry(entry)
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := zeroconf.Browse(ctx, ship.ZeroconfType, ship.ZeroconfDomain, entries); err != nil {
+		panic(fmt.Errorf("failed to browse: %w", err))
+	}
+}
+
+func (c *EEBus) discoverDNS(results <-chan *zeroconf.ServiceEntry, connector func(*zeroconf.ServiceEntry)) {
+	for entry := range results {
+		c.log.TRACE.Println("mDNS:", entry.HostName, entry.AddrIPv4, entry.Text)
+
+		connector(entry)
+	}
+
+	// The mDNS Browse has timed out
+	c.browseMDNSRunning = false
+
+	c.browseMissingClients()
+}
+
 func (c *EEBus) Shutdown() {
 	c.zc.Shutdown()
 }
@@ -168,36 +195,57 @@ func (c *EEBus) addDisoveredEntry(entry *zeroconf.ServiceEntry) {
 	svc, err := mdns.NewFromDNSEntry(entry)
 
 	if err == nil {
+		if entry.Text == nil {
+			c.log.TRACE.Printf("Ignoring discovered mDNS entry as it has no TXT record: %s", entry.HostName)
+			return
+		}
+
+		if entry.AddrIPv4 == nil && entry.AddrIPv6 == nil {
+			c.log.TRACE.Printf("Ignoring discovered mDNS entry as it has no IPv4 and IPv6 address: %s", entry.HostName)
+			return
+		}
+
 		c.mux.Lock()
 		c.discoveredClients[svc.SKI] = entry
 		c.mux.Unlock()
 
 		// maybe the SKI is already registered
-		c.handleDiscoveredSKI(svc.SKI)
+		_ = c.handleDiscoveredSKI(svc.SKI)
 	} else {
 		c.log.TRACE.Printf("%s: could not create ship service from DNS entry: %v", entry.HostName, err)
 	}
 }
 
-func (c *EEBus) handleDiscoveredSKI(ski string) {
+func (c *EEBus) handleDiscoveredSKI(ski string) error {
 	c.mux.Lock()
-
 	_, connected := c.connectedClients[ski]
 	_, registered := c.clients[ski]
 	entry, discovered := c.discoveredClients[ski]
+	_, connecting := c.clientInConnection[ski]
+	c.mux.Unlock()
 
-	c.log.TRACE.Printf("client %s connected %t, registered %t, discovered %t ", ski, connected, registered, discovered)
+	c.log.TRACE.Printf("client %s connected %t, registered %t, discovered %t, connecting %t", ski, connected, registered, discovered, connecting)
 
-	if !connected && discovered && registered {
+	if !connected && discovered && registered && !connecting {
+		c.mux.Lock()
+		c.clientInConnection[ski] = true
 		c.mux.Unlock()
-		c.connectDiscoveredEntry(entry)
-		return
+		if err := c.connectDiscoveredEntry(ski, entry); err != nil {
+			c.mux.Lock()
+			delete(c.connectedClients, ski)
+			delete(c.clientInConnection, ski)
+			c.mux.Unlock()
+			return err
+		}
+		c.mux.Lock()
+		delete(c.clientInConnection, ski)
+		c.mux.Unlock()
 	}
 
-	c.mux.Unlock()
+	return nil
 }
 
-func (c *EEBus) connectDiscoveredEntry(entry *zeroconf.ServiceEntry) {
+func (c *EEBus) connectDiscoveredEntry(ski string, entry *zeroconf.ServiceEntry) error {
 	svc, err := mdns.NewFromDNSEntry(entry)
 
 	var conn ship.Conn
@@ -208,26 +256,16 @@ func (c *EEBus) connectDiscoveredEntry(entry *zeroconf.ServiceEntry) {
 
 	if err != nil {
 		c.log.TRACE.Printf("%s: client done: %v", entry.HostName, err)
-		return
+		return err
 	}
 
 	err = c.shipHandler(svc.SKI, conn)
 	if err != nil {
 		log.FATAL.Fatalf("%s: error calling shipHandler: %v", entry.HostName, err)
-		return
+		return err
 	}
-}
 
-func (c *EEBus) discoverDNS(results <-chan *zeroconf.ServiceEntry, connector func(*zeroconf.ServiceEntry)) {
-	for entry := range results {
-		c.log.TRACE.Println("mDNS:", entry.HostName, entry.AddrIPv4, entry.Text)
-
-		for _, typ := range entry.Text {
-			if strings.HasPrefix(typ, "type=") && typ == "type=EVSE" {
-				connector(entry)
-			}
-		}
-	}
+	return nil
 }
 
 func (c *EEBus) certificateHandler(leaf *x509.Certificate) error {
@@ -254,17 +292,16 @@ func (c *EEBus) certificateHandler(leaf *x509.Certificate) error {
 }
 
 func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
-	c.mux.Lock()
-
 	for client, cb := range c.clients {
 		if client == ski {
+			c.mux.Lock()
 			currentConnection, found := c.connectedClients[ski]
+			c.mux.Unlock()
 			connect := true
 			c.log.TRACE.Printf("client %s found? %t", ski, found)
 			if found {
 				if currentConnection.IsConnectionClosed() {
 					c.log.TRACE.Printf("client has closed connection")
-					delete(c.connectedClients, ski)
 				} else {
 					c.log.TRACE.Printf("client has no closed connection")
 					connect = false
@@ -272,20 +309,13 @@ func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
 			}
 			c.log.TRACE.Printf("client %s connect? %t", ski, connect)
 			if connect {
+				c.mux.Lock()
 				c.connectedClients[ski] = conn
 				c.mux.Unlock()
-				err := cb.onConnect(ski, conn)
-				if err != nil {
-					c.mux.Lock()
-					delete(c.connectedClients, ski)
-					c.mux.Unlock()
-				}
-				return err
+				return cb.onConnect(ski, conn)
 			}
 		}
 	}
-
-	c.mux.Unlock()
 
 	return errors.New("client not registered")
 }
@@ -293,8 +323,6 @@ func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
 // handles connection closed
 func (c *EEBus) shipCloseHandler(ski string) {
 	c.mux.Lock()
-	defer c.mux.Unlock()
-
 	if conn, ok := c.connectedClients[ski]; ok {
 		for clientSki, client := range c.clients {
 			if clientSki != ski {
@@ -311,5 +339,52 @@ func (c *EEBus) shipCloseHandler(ski string) {
 
 			break
 		}
+	}
+
+	c.mux.Unlock()
+	c.browseMissingClients()
+}
+
+// search for registered but not connected clients right away
+// this fixes registered clients closing the connection whysoever
+func (c *EEBus) browseMissingClients() {
+	if c.browseMDNSRunning {
+		return
+	}
+
+	if len(c.clients) == len(c.connectedClients) {
+		return
+	}
+
+	c.browseMDNSRunning = true
+
+	// first try the discovered client, if that not works, browse again
+	foundMissingClients := len(c.clients) - len(c.connectedClients)
+	var failedClientSKIs []string
+	for ski, entry := range c.discoveredClients {
+		if _, ok := c.clients[ski]; !ok {
+			continue
+		}
+
+		if _, ok := c.connectedClients[ski]; !ok {
+			c.log.TRACE.Printf("%s: client not connected, trying to connect\n", entry.HostName)
+			if err := c.handleDiscoveredSKI(ski); err != nil {
+				failedClientSKIs = append(failedClientSKIs, ski)
+				continue
+			}
+			foundMissingClients--
+		}
+	}
+
+	c.mux.Lock()
+	for _, ski := range failedClientSKIs {
+		delete(c.discoveredClients, ski)
+	}
+	c.mux.Unlock()
+
+	c.browseMDNSRunning = false
+
+	if foundMissingClients > 0 {
+		c.browseMDNS()
 	}
 }

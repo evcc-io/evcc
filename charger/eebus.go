@@ -20,10 +20,9 @@ const (
 )
 
 type EEBus struct {
-	log           *util.Logger
-	cc            *communication.ConnectionController
-	lp            loadpoint.API
-	forcePVLimits bool
+	log *util.Logger
+	cc  *communication.ConnectionController
+	lp  loadpoint.API
 
 	communicationStandard           communication.EVCommunicationStandardEnumType
 	socSupportAvailable             bool
@@ -42,20 +41,19 @@ func init() {
 
 // NewEEBusFromConfig creates an EEBus charger from generic config
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
-		Ski           string
-		ForcePVLimits bool
-	}
+	cc := struct {
+		Ski string
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski, cc.ForcePVLimits)
+	return NewEEBus(cc.Ski)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string, forcePVLimits bool) (*EEBus, error) {
+func NewEEBus(ski string) (*EEBus, error) {
 	log := util.NewLogger("eebus")
 
 	if server.EEBusInstance == nil {
@@ -64,7 +62,6 @@ func NewEEBus(ski string, forcePVLimits bool) (*EEBus, error) {
 
 	c := &EEBus{
 		log:                   log,
-		forcePVLimits:         forcePVLimits,
 		communicationStandard: communication.EVCommunicationStandardEnumTypeUnknown,
 	}
 
@@ -114,8 +111,12 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 		return
 	}
 
-	newMin := data.EVData.LimitsL1.Min
-	newMax := data.EVData.LimitsL1.Max
+	if len(data.EVData.Limits) == 0 {
+		return
+	}
+
+	newMin := data.EVData.Limits[1].Min
+	newMax := data.EVData.Limits[1].Max
 
 	if c.lp.GetMinCurrent() != newMin && newMin > 0 {
 		c.lp.SetMinCurrent(newMin)
@@ -184,6 +185,11 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 		c.setLoadpointMinMaxLimits(data)
 	// case communication.EVDataElementUpdateEVSEOperationState:
 	// case communication.EVDataElementUpdateEVChargeState:
+	// case communication.EVDataElementUpdateChargingStrategy:
+	case communication.EVDataElementUpdateChargingPlanRequired:
+		if err := c.writeChargingPlan(); err != nil {
+			c.log.ERROR.Println("failed to send charging plan: ", err)
+		}
 	case communication.EVDataElementUpdateConnectedPhases:
 		c.setLoadpointMinMaxLimits(data)
 	case communication.EVDataElementUpdatePowerLimits:
@@ -195,22 +201,20 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 
 // we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
 func isCharging(d communication.EVDataType) bool {
-	return d.Measurements.PowerL1 > d.LimitsL1.Min*idleFactor ||
-		d.Measurements.PowerL2 > d.LimitsL2.Min*idleFactor ||
-		d.Measurements.PowerL3 > d.LimitsL3.Min*idleFactor
+	return d.Measurements.Power[1] > d.Limits[1].Min*idleFactor ||
+		d.Measurements.Power[2] > d.Limits[2].Min*idleFactor ||
+		d.Measurements.Power[3] > d.Limits[3].Min*idleFactor
 }
 
 func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! status: no eebus data available yet")
 		return api.StatusNone, err
 	}
 
 	currentState := data.EVData.ChargeState
 
 	if !c.connected {
-		c.log.TRACE.Printf("!! status: charger reported as disconnected")
 		return api.StatusNone, fmt.Errorf("charger reported as disconnected")
 	}
 
@@ -250,12 +254,10 @@ func (c *EEBus) Enabled() (bool, error) {
 func (c *EEBus) Enable(enable bool) error {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! enable: no eebus data available yet")
 		return err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! currents: ev reported as unplugged")
 		// if the ev is unplugged, we do not need to disable charging by setting a current of 0 as it already is
 		if !enable {
 			return nil
@@ -267,7 +269,6 @@ func (c *EEBus) Enable(enable bool) error {
 	// if we disable charging with a potential but not yet known communication standard ISO15118
 	// this would set allowed A value to be 0. And this would trigger ISO connections to switch to IEC!
 	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeUnknown {
-		c.log.TRACE.Printf("!! enable: cannot enable or disable as communication standard is not yet known")
 		return api.ErrMustRetry
 	}
 
@@ -293,11 +294,11 @@ func (c *EEBus) Enable(enable bool) error {
 
 	// we need to check if the mode is set to now as the currents won't be adjusted afterwards any more in all cases
 	if c.lp.GetMode() == api.ModeNow {
-		return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Max, data.EVData.LimitsL2.Max, data.EVData.LimitsL3.Max})
+		return c.writeCurrentLimitData([]float64{data.EVData.Limits[1].Max, data.EVData.Limits[2].Max, data.EVData.Limits[3].Max})
 	}
 
 	// in non now mode only enable with min settings, so we don't excessively consume power in case it has to be turned of in the next cycle anyways
-	return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min})
+	return c.writeCurrentLimitData([]float64{data.EVData.Limits[1].Min, data.EVData.Limits[2].Min, data.EVData.Limits[3].Min})
 }
 
 // returns true if the connected EV supports charging recommendation
@@ -310,37 +311,154 @@ func (c *EEBus) optimizationSelfConsumptionAvailable() bool {
 	return false
 }
 
+// respond to a charging plan request from the EV
+func (c *EEBus) writeChargingPlan() error {
+	data, err := c.cc.GetData()
+	if err != nil {
+		return err
+	}
+
+	var chargingPlan communication.EVChargingPlan
+
+	tariffGrid := 0.30
+	tariffFeedIn := 0.10
+	maxPower := c.lp.GetMaxPower()
+
+	switch data.EVData.ChargingStrategy {
+	case communication.EVChargingStrategyEnumTypeNoDemand, communication.EVChargingStrategyEnumTypeUnknown:
+		// The EV has no power demand or we don't know it yet, so we shouldn't get here
+		// TODO: why did we get here?
+
+		// lets do 24 1 hour slots with maximum power, power will be adjusted via Overload Protection limits
+		for i := 0; i < 24; i++ {
+			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+				Duration: time.Hour,
+				MaxValue: maxPower,
+				Pricing:  tariffGrid,
+			})
+		}
+		chargingPlan.Duration = 24 * time.Hour
+	case communication.EVChargingStrategyEnumTypeDirectCharging:
+		// The EV is in direct charging mode
+
+		// Does it support self consumption?
+		if c.optimizationSelfConsumptionAvailable() {
+			// this should mean that any mode in evcc is ignored and the EV is in full control
+			// TODO: is this the right approach?
+
+			// lets do one 24 hour slot with maximum power, power will be adjusted via Overload Protection limits
+			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+				Duration: time.Duration(24) * time.Hour,
+				MaxValue: maxPower,
+				Pricing:  tariffGrid,
+			})
+			chargingPlan.Duration = 24 * time.Hour
+		} else {
+			// in this mode we need to enforce the evcc modes
+
+			// we need to create a 24h charging plan
+			chargingPlan.Duration = 24 * time.Hour
+
+			currentMode := c.lp.GetMode()
+			switch currentMode {
+			case api.ModeNow, api.ModeMinPV:
+				// lets do one 24 hour slot with maximum power, power will be adjusted via Overload Protection limits
+				chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+					Duration: time.Duration(24) * time.Hour,
+					MaxValue: maxPower,
+					Pricing:  tariffGrid,
+				})
+				chargingPlan.Duration = 24 * time.Hour
+			case api.ModePV:
+				// lets do 24 1 hour slots with maximum power, power will be adjusted via Overload Protection limits
+				// but set the nightly hours to 0 W, we assume those to be from 20:00 to 07:00
+				now := time.Now()
+				for i := 0; i < 24; i++ {
+					power := maxPower
+					pricing := tariffFeedIn
+					if now.Hour()+i >= 20 || now.Hour()+i < 7 {
+						power = 0.0
+						pricing = tariffGrid
+					}
+					chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+						Duration: time.Hour,
+						MaxValue: power,
+						Pricing:  pricing,
+					})
+				}
+				chargingPlan.Duration = 24 * time.Hour
+			case api.ModeOff:
+				// lets do 24 1 hour slots with 0 W, so it wakes at once an hour to check back
+				for i := 0; i < 24; i++ {
+					chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+						Duration: time.Hour,
+						MaxValue: 0,
+						Pricing:  tariffGrid,
+					})
+				}
+				chargingPlan.Duration = 24 * time.Hour
+			}
+		}
+	case communication.EVChargingStrategyEnumTypeTimedCharging:
+		// The EV is in timed charging mode
+
+		targetDuration := data.EVData.ChargingTargetDuration
+
+		// split the duration into full hours, with the remaining time at the start
+		hours := int(targetDuration.Hours())
+		remainingDuration := targetDuration - (time.Duration(hours) * time.Hour)
+
+		if remainingDuration > 0 {
+			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+				Duration: remainingDuration,
+				MaxValue: maxPower,
+				Pricing:  tariffGrid,
+			})
+		}
+
+		for i := 0; i < hours; i++ {
+			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+				Duration: time.Hour,
+				MaxValue: maxPower,
+				Pricing:  tariffGrid,
+			})
+		}
+		chargingPlan.Duration = targetDuration
+
+	default:
+		return fmt.Errorf("charging strategy not implemented: %s", data.EVData.ChargingStrategy)
+	}
+
+	return c.cc.WriteChargingPlan(chargingPlan)
+}
+
+// send current charging power limits to the EV
 func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	data, err := c.cc.GetData()
 	if err != nil {
 		return err
 	}
 
-	selfConsumptionCurrents := []float64{0.0, 0.0, 0.0}
-	overloadProtectionCurrents := currents
-
-	// are the limits obligations or recommendations
-	// in the scenarios IEC, ISO without asymetric charging, the limits are always obligations
-	obligationEnabled := true
-
-	if c.optimizationSelfConsumptionAvailable() {
-		obligationEnabled = c.forcePVLimits
-		if c.lp != nil && !obligationEnabled {
-			// recommendations only work in PV modes
-			chargeMode := c.lp.GetMode()
-			if chargeMode != api.ModePV && chargeMode != api.ModeMinPV {
-				obligationEnabled = true
+	// Only send currents smaller 6A if the communication standard is known
+	// otherwise this could cause ISO15118 capable OBCs to stick with IEC61851 when plugging
+	// the charge cable in. Or even worse show an error and the cable needs the unplugged,
+	// wait for the car to go into sleep and plug it back in.
+	// So if are currentls smaller 6A with unknown communication standard change them to 6A
+	// keep in mind, that still will confuse evcc as it thinks charging is stopped, but it isn't yet
+	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeUnknown {
+		for index, current := range currents {
+			phase := uint(index) + 1
+			if limit, ok := data.EVData.Limits[phase]; ok {
+				if current < limit.Min {
+					currents[index] = limit.Min
+				}
 			}
 		}
 	}
 
-	// when recommending a current make sure the overload protection limit is set to max
-	if !obligationEnabled {
-		selfConsumptionCurrents = currents
-		overloadProtectionCurrents = []float64{data.EVData.LimitsL1.Max, data.EVData.LimitsL2.Max, data.EVData.LimitsL3.Max}
-	}
-
-	return c.cc.WriteCurrentLimitData(overloadProtectionCurrents, selfConsumptionCurrents, data.EVData)
+	// set overload protection limits and self consumption limits to identical values
+	// so if the EV supports self consumption it will be used automatically
+	return c.cc.WriteCurrentLimitData(currents, currents, data.EVData)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -354,34 +472,28 @@ var _ api.ChargerEx = (*EEBus)(nil)
 func (c *EEBus) MaxCurrentMillis(current float64) error {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! currents: no eebus data available yet")
 		return err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! currents: ev reported as unplugged")
 		return errors.New("can't set new current as ev is unplugged")
 	}
 
-	if data.EVData.LimitsL1.Min == 0 {
-		c.log.TRACE.Println("!! we did not yet receive min and max currents to validate the call of MaxCurrent, use it as is")
+	// if data.EVData.Limits[1].Min == 0 {
+	// 	c.log.TRACE.Println("!! we did not yet receive min and max currents to validate the call of MaxCurrent, use it as is")
+	// }
+
+	if current < data.EVData.Limits[1].Min {
+		current = data.EVData.Limits[1].Min
 	}
 
-	if current < data.EVData.LimitsL1.Min {
-		c.log.TRACE.Printf("!! current value %f is lower than the allowed minimum value %f", current, data.EVData.LimitsL1.Min)
-		current = data.EVData.LimitsL1.Min
-	}
-
-	if current > data.EVData.LimitsL1.Max {
-		c.log.TRACE.Printf("!! current value %f is higher than the allowed maximum value %f", current, data.EVData.LimitsL1.Max)
-		current = data.EVData.LimitsL1.Max
+	if current > data.EVData.Limits[1].Max {
+		current = data.EVData.Limits[1].Max
 	}
 
 	c.maxCurrent = current
 
 	// TODO error handling
-
-	c.log.TRACE.Printf("!! currents: returning %f", current)
 
 	currents := []float64{current, current, current}
 	return c.writeCurrentLimitData(currents)
@@ -393,17 +505,20 @@ var _ api.Meter = (*EEBus)(nil)
 func (c *EEBus) CurrentPower() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! current power: no eebus data available yet")
 		return 0, err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! current power: ev reported as unplugged")
 		return 0, nil
 	}
 
-	power := data.EVData.Measurements.PowerL1 + data.EVData.Measurements.PowerL2 + data.EVData.Measurements.PowerL3
-	c.log.TRACE.Printf("!! current power: returning %f", power)
+	var power float64
+	var phase uint
+	for phase = 1; phase <= data.EVData.ConnectedPhases; phase++ {
+		if phasePower, ok := data.EVData.Measurements.Power[phase]; ok {
+			power += phasePower
+		}
+	}
 
 	return power, nil
 }
@@ -414,17 +529,14 @@ var _ api.ChargeRater = (*EEBus)(nil)
 func (c *EEBus) ChargedEnergy() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! charged energy: no eebus data available yet")
 		return 0, err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! charged energy: ev reported as unplugged")
 		return 0, nil
 	}
 
 	energy := data.EVData.Measurements.ChargedEnergy / 1000
-	c.log.TRACE.Printf("!! charged energy: returning %f", energy)
 
 	return energy, nil
 }
@@ -448,18 +560,24 @@ var _ api.MeterCurrent = (*EEBus)(nil)
 func (c *EEBus) Currents() (float64, float64, float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! currents: no eebus data available yet")
 		return 0, 0, 0, err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("!! currents: ev reported as unplugged")
 		return 0, 0, 0, nil
 	}
 
-	c.log.TRACE.Printf("!! currents: returning %f, %f, %f, ", data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3)
+	var currents []float64
 
-	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
+	for phase := 1; phase <= 3; phase++ {
+		current := 0.0
+		if value, ok := data.EVData.Measurements.Current[uint(phase)]; ok {
+			current = value
+		}
+		currents = append(currents, current)
+	}
+
+	return currents[0], currents[1], currents[2], nil
 }
 
 var _ api.Identifier = (*EEBus)(nil)
@@ -468,36 +586,29 @@ var _ api.Identifier = (*EEBus)(nil)
 func (c *EEBus) Identify() (string, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! identify: no eebus data available yet")
 		return "", err
 	}
 
 	if !c.connected {
-		c.log.TRACE.Printf("!! identify: charger reported as disconnected")
 		return "", nil
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged || data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnknown {
-		c.log.TRACE.Printf("!! identify: ev reported as unplugged or unknown")
 		return "", nil
 	}
 
 	if len(data.EVData.Identification) > 0 {
-		c.log.TRACE.Printf("!! identify: returning %s", data.EVData.Identification)
 		return data.EVData.Identification, nil
 	}
 
 	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeIEC61851 {
-		c.log.TRACE.Printf("!! identify: ev communication is IEC61851 which does not support any identification")
 		return "", nil
 	}
 
 	if time.Since(c.evConnectedTime) < maxIdRequestTimespan {
-		c.log.TRACE.Printf("!! identify: returning nothing, retry")
 		return "", api.ErrMustRetry
 	}
 
-	c.log.TRACE.Printf("!! identify: returning nothing, no more retries")
 	return "", nil
 }
 
@@ -507,16 +618,13 @@ var _ api.Battery = (*EEBus)(nil)
 func (c *EEBus) SoC() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
-		c.log.TRACE.Printf("!! soc: no eebus data available yet")
 		return 0, api.ErrMustRetry
 	}
 
 	if !data.EVData.UCSoCAvailable || !data.EVData.SoCDataAvailable {
-		c.log.TRACE.Printf("!! soc: feature not available")
 		return 0, api.ErrNotAvailable
 	}
 
-	c.log.TRACE.Printf("!! soc: returning %f", data.EVData.Measurements.SoC)
 	return data.EVData.Measurements.SoC, nil
 }
 
