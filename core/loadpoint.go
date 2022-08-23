@@ -526,10 +526,12 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("title", lp.Title)
 	lp.publish("minCurrent", lp.MinCurrent)
 	lp.publish("maxCurrent", lp.MaxCurrent)
-	lp.publish(phasesEnabled, lp.phases)
-	lp.publish(phasesActive, lp.activePhases())
 
 	lp.setConfiguredPhases(lp.ConfiguredPhases)
+	lp.publish(phasesEnabled, lp.phases)
+	lp.publish(phasesActive, lp.activePhases())
+	lp.publishTimer(phaseTimer, 0, timerInactive)
+	lp.publishTimer(pvTimer, 0, timerInactive)
 
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
@@ -1039,6 +1041,12 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
+// resetPhaseTimer resets the phase switch timer to disabled state
+func (lp *LoadPoint) resetPhaseTimer() {
+	lp.phaseTimer = time.Time{}
+	lp.publishTimer(phaseTimer, 0, timerInactive)
+}
+
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (lp *LoadPoint) scalePhasesRequired() bool {
 	_, ok := lp.charger.(api.PhaseSwitcher)
@@ -1078,12 +1086,12 @@ func (lp *LoadPoint) setPhases(phases int) {
 	if lp.GetPhases() != phases {
 		lp.Lock()
 		lp.phases = phases
-		lp.phaseTimer = time.Time{}
 		lp.Unlock()
 
-		lp.publish(phasesEnabled, lp.phases)
-		lp.publishTimer(phaseTimer, 0, timerInactive)
+		// reset timer to disabled state
+		lp.resetPhaseTimer()
 
+		// measure phases after switching
 		lp.resetMeasuredPhases()
 	}
 }
@@ -1107,7 +1115,7 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 			return fmt.Errorf("switch phases: %w", err)
 		}
 
-		// update setting
+		// update setting and reset timer
 		lp.setPhases(phases)
 
 		// allow pv mode to re-enable charger right away
@@ -1187,10 +1195,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 	// reset timer to disabled state
 	if !waiting && !lp.phaseTimer.IsZero() {
-		lp.log.DEBUG.Printf("phase timer reset")
-		lp.phaseTimer = time.Time{}
-
-		lp.publishTimer(phaseTimer, 0, timerInactive)
+		lp.resetPhaseTimer()
 	}
 
 	return false
