@@ -3,7 +3,7 @@ products:
   - brand: Elli
     description:
       de: Charger Connect (ohne Meter)
-      en:  Charger Connect (without Meter)
+      en: Charger Connect (without Meter)
 capabilities: ["mA"]
 requirements:
   evcc: ["eebus"]
