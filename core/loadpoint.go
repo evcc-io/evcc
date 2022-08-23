@@ -1029,6 +1029,12 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
+// scalePhasesRequired validates if fixed phase configuration matches enabled phases
+func (lp *LoadPoint) scalePhasesRequired() bool {
+	_, ok := lp.charger.(api.PhaseSwitcher)
+	return ok && lp.ConfiguredPhases != 0 && lp.ConfiguredPhases != lp.GetPhases()
+}
+
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 	if lp.ConfiguredPhases != 0 {
@@ -1551,6 +1557,11 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 		// always disable charger if not connected
 		// https://github.com/evcc-io/evcc/issues/105
 		err = lp.setLimit(0, false)
+
+	case lp.scalePhasesRequired():
+		if err = lp.scalePhases(lp.ConfiguredPhases); err == nil {
+			lp.log.DEBUG.Printf("switched phases: %dp", lp.ConfiguredPhases)
+		}
 
 	case lp.targetSocReached():
 		lp.log.DEBUG.Printf("targetSoC reached: %.1f > %d", lp.vehicleSoc, lp.SoC.Target)

@@ -124,6 +124,8 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 		lp.setPhases(phases)
 	}
 
+	lp.requestUpdate()
+
 	return nil
 }
 
