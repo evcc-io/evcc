@@ -541,8 +541,7 @@ func (c *EEBus) currentPower() (float64, error) {
 	}
 
 	var power float64
-	var phase uint
-	for phase = 1; phase <= data.EVData.ConnectedPhases; phase++ {
+	for phase := uint(1); phase <= data.EVData.ConnectedPhases; phase++ {
 		if phasePower, ok := data.EVData.Measurements.Power.Load(phase); ok {
 			if _, ok := phasePower.(float64); ok {
 				power += phasePower.(float64)
