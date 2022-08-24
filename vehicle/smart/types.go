@@ -8,7 +8,7 @@ import (
 type StatusResponse struct {
 	PreCond struct {
 		Data struct {
-			ChargingPower IntValue
+			ChargingPower  IntValue
 			ChargingActive ChargeValue
 			ChargingStatus ChargeValue
 		} `json:"data"`
