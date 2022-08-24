@@ -216,6 +216,15 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	}
 }
 
+// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
+func (c *EEBus) isCharging(d *communication.EVSEClientDataType) bool {
+	if power, err := c.currentPower(); err == nil {
+		return power > d.EVData.LimitsPower.Min*idleFactor
+	}
+
+	return false
+}
+
 func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
@@ -235,16 +244,7 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
 		return api.StatusB, nil
 	case communication.EVChargeStateEnumTypeActive: // Active
-		p1, ok1 := data.EVData.Measurements.Power.Load(1)
-		p2, ok2 := data.EVData.Measurements.Power.Load(2)
-		p3, ok3 := data.EVData.Measurements.Power.Load(3)
-
-		// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
-		isCharging := (ok1 && p1.(float64) > data.EVData.Limits[1].Min*idleFactor) ||
-			(ok2 && p2.(float64) > data.EVData.Limits[2].Min*idleFactor) ||
-			(ok3 && p3.(float64) > data.EVData.Limits[3].Min*idleFactor)
-
-		if isCharging {
+		if c.isCharging(data) {
 			// we might already be enabled and charging due to connection issues
 			c.expectedEnableState = true
 			return api.StatusC, nil
