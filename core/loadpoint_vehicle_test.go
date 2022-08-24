@@ -181,6 +181,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	vehicle := mock.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
 
 	lp := NewLoadPoint(util.NewLogger("foo"))
