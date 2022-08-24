@@ -1,0 +1,50 @@
+template: offline
+products:
+  - description:
+      generic: Offline
+group: generic
+params:
+  - name: title
+  - name: capacity
+    valuetype: float
+  - name: phases
+    advanced: true
+  - name: mode
+    advanced: true
+  - name: minCurrent
+    advanced: true
+  - name: maxCurrent
+    advanced: true
+  - name: identifiers
+    advanced: true
+    valuetype: stringlist
+render: |
+  type: custom
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  capacity: {{ .capacity }} # kWh
+  {{- if ne .phases "" }}
+  phases: {{ .phases }}
+  {{- end }}
+  soc: # fixed - no SoC available
+    type: js
+    script: 0;
+  onIdentify:
+  {{- if (ne .mode "") }}
+    mode: {{ .mode }}
+  {{- end }}
+    minSoC: 0 # fixed - no SoC available
+    targetSoC: 100 # fixed - no SoC available
+  {{- if (ne .minCurrent "") }}
+    minCurrent: {{ .minCurrent }}
+  {{- end }}
+  {{- if (ne .maxCurrent "") }}
+    maxCurrent: {{ .maxCurrent }}
+  {{- end }}
+  {{- if ne (len .identifiers) 0 }}
+  identifiers:
+  {{-   range .identifiers }}
+  - {{ . }}
+  {{-   end }}
+  {{- end }}
