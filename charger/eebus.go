@@ -216,13 +216,6 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	}
 }
 
-// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
-func isCharging(d communication.EVDataType) bool {
-	return d.Measurements.Power[1] > d.Limits[1].Min*idleFactor ||
-		d.Measurements.Power[2] > d.Limits[2].Min*idleFactor ||
-		d.Measurements.Power[3] > d.Limits[3].Min*idleFactor
-}
-
 func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
@@ -242,7 +235,16 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
 		return api.StatusB, nil
 	case communication.EVChargeStateEnumTypeActive: // Active
-		if isCharging(data.EVData) {
+		p1, ok1 := data.EVData.Measurements.Power.Load(1)
+		p2, ok2 := data.EVData.Measurements.Power.Load(2)
+		p3, ok3 := data.EVData.Measurements.Power.Load(3)
+
+		// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
+		isCharging := (ok1 && p1.(float64) > data.EVData.Limits[1].Min*idleFactor) ||
+			(ok2 && p2.(float64) > data.EVData.Limits[2].Min*idleFactor) ||
+			(ok3 && p3.(float64) > data.EVData.Limits[3].Min*idleFactor)
+
+		if isCharging {
 			// we might already be enabled and charging due to connection issues
 			c.expectedEnableState = true
 			return api.StatusC, nil
@@ -475,7 +477,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	// set overload protection limits and self consumption limits to identical values
 	// so if the EV supports self consumption it will be used automatically
-	return c.cc.WriteCurrentLimitData(currents, currents, data.EVData)
+	return c.cc.WriteCurrentLimitData(currents, currents, &data.EVData)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -530,8 +532,8 @@ func (c *EEBus) currentPower() (float64, error) {
 	var power float64
 	var phase uint
 	for phase = 1; phase <= data.EVData.ConnectedPhases; phase++ {
-		if phasePower, ok := data.EVData.Measurements.Power[phase]; ok {
-			power += phasePower
+		if phasePower, ok := data.EVData.Measurements.Power.Load(phase); ok {
+			power += phasePower.(float64)
 		}
 	}
 
@@ -582,8 +584,8 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 	for phase := 1; phase <= 3; phase++ {
 		current := 0.0
-		if value, ok := data.EVData.Measurements.Current[uint(phase)]; ok {
-			current = value
+		if value, ok := data.EVData.Measurements.Current.Load(uint(phase)); ok {
+			current = value.(float64)
 		}
 		currents = append(currents, current)
 	}
