@@ -8,8 +8,9 @@ import (
 type StatusResponse struct {
 	PreCond struct {
 		Data struct {
-			ChargingActive BoolValue
-			ChargingStatus IntValue
+			ChargingPower IntValue
+			ChargingActive ChargeValue
+			ChargingStatus ChargeValue
 		} `json:"data"`
 	}
 	ChargeOpt struct{}
@@ -25,9 +26,8 @@ type StatusResponse struct {
 	ErrorDescription string `json:"error_description"`
 }
 
-type BoolValue struct {
+type ChargeValue struct {
 	Status int
-	Value  bool
 	Ts     TimeSecs
 }
 
