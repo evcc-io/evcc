@@ -220,10 +220,15 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	}
 }
 
-// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
+// we assume that if any phase current value is > idleFactor * min Current, then charging is active and enabled is true
 func (c *EEBus) isCharging(d *communication.EVSEClientDataType) bool {
-	if power, err := c.currentPower(); err == nil {
-		return power > d.EVData.LimitsPower.Min*idleFactor
+	var phase uint
+	for phase = 1; phase <= d.EVData.ConnectedPhases; phase++ {
+		if phaseCurrent, ok := d.EVData.Measurements.Current.Load(phase); ok {
+			if phaseCurrent.(float64) > d.EVData.Limits[phase].Min*idleFactor {
+				return true
+			}
+		}
 	}
 
 	return false
