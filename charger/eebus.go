@@ -568,19 +568,6 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 	return energy, nil
 }
 
-// var _ api.ChargeTimer = (*EEBus)(nil)
-
-// // ChargingTime implements the api.ChargeTimer interface
-// func (c *EEBus) ChargingTime() (time.Duration, error) {
-// 	// var currentSession MCCCurrentSession
-// 	// if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
-// 	// 	return 0, err
-// 	// }
-
-// 	// return time.Duration(currentSession.Duration * time.Second), nil
-// 	return 0, nil
-// }
-
 // Currents implements the api.MeterCurrent interface
 func (c *EEBus) currents() (float64, float64, float64, error) {
 	data, err := c.cc.GetData()
