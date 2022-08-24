@@ -132,6 +132,14 @@ func (v *Provider) Position() (float64, float64, error) {
 	return res.VehicleStatus.Gps.Latitude, res.VehicleStatus.Gps.Longitude, err
 }
 
+var _ api.VehicleFinishTimer = (*Provider)(nil)
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	res, err := v.statusG()
+	return res.VehicleStatus.ChargeEndTime.Value.Time, err
+}
+
 var _ api.Resurrector = (*Provider)(nil)
 
 // WakeUp implements the api.Resurrector interface
