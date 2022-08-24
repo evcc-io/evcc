@@ -581,9 +581,9 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 	var currents []float64
 
-	for phase := 1; phase <= 3; phase++ {
+	for phase := uint(1); phase <= 3; phase++ {
 		current := 0.0
-		if value, ok := data.EVData.Measurements.Current.Load(uint(phase)); ok {
+		if value, ok := data.EVData.Measurements.Current.Load(phase); ok {
 			if _, ok := value.(float64); ok {
 				current = value.(float64)
 			}
