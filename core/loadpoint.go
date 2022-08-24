@@ -67,7 +67,7 @@ type PollConfig struct {
 // SoCConfig defines soc settings, estimation and update behaviour
 type SoCConfig struct {
 	Poll     PollConfig `mapstructure:"poll"`
-	Estimate bool       `mapstructure:"estimate"`
+	Estimate *bool      `mapstructure:"estimate"`
 	Min_     int        `mapstructure:"min"`    // TODO deprecated
 	Target_  int        `mapstructure:"target"` // TODO deprecated
 	min      int        // Default minimum SoC, guarded by mutex
@@ -820,7 +820,12 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if lp.vehicle = vehicle; vehicle != nil {
 		lp.socUpdated = time.Time{}
 
-		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, lp.SoC.Estimate)
+		// resolve optional config
+		var estimate bool
+		if lp.SoC.Estimate == nil || *lp.SoC.Estimate {
+			estimate = true
+		}
+		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, estimate)
 
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())
