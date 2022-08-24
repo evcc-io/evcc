@@ -12,7 +12,7 @@ func (lp *LoadPoint) resetMeasuredPhases() {
 	lp.measuredPhases = 0
 	lp.Unlock()
 
-	lp.publish("activePhases", lp.activePhases())
+	lp.publish(phasesActive, lp.activePhases())
 }
 
 // getMeasuredPhases provides synchronized access to measuredPhases

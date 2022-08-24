@@ -43,12 +43,6 @@ loadpoints:
 {{-     if .ChargeMeter }}
   meter: {{ .ChargeMeter }}
 {{-     end }}
-{{-     if ne (len .Vehicles) 0 }}
-  vehicles:
-{{-       range .Vehicles }}
-  - {{ . }}
-{{-       end }}
-{{-     end }}
   mode: {{ .Mode }}
   phases: {{ .Phases }}
   mincurrent: {{ .MinCurrent }}

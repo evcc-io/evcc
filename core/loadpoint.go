@@ -839,6 +839,11 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleOdometer", 0.0)
 	}
 
+	// re-publish vehicle settings
+	lp.Unlock()
+	lp.publish(phasesActive, lp.activePhases())
+	lp.Lock()
+
 	lp.unpublishVehicle()
 }
 
