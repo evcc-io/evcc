@@ -225,8 +225,10 @@ func (c *EEBus) isCharging(d *communication.EVSEClientDataType) bool {
 	var phase uint
 	for phase = 1; phase <= d.EVData.ConnectedPhases; phase++ {
 		if phaseCurrent, ok := d.EVData.Measurements.Current.Load(phase); ok {
-			if phaseCurrent.(float64) > d.EVData.Limits[phase].Min*idleFactor {
-				return true
+			if _, ok := phaseCurrent.(float64); ok {
+				if phaseCurrent.(float64) > d.EVData.Limits[phase].Min*idleFactor {
+					return true
+				}
 			}
 		}
 	}
@@ -542,7 +544,9 @@ func (c *EEBus) currentPower() (float64, error) {
 	var phase uint
 	for phase = 1; phase <= data.EVData.ConnectedPhases; phase++ {
 		if phasePower, ok := data.EVData.Measurements.Power.Load(phase); ok {
-			power += phasePower.(float64)
+			if _, ok := phasePower.(float64); ok {
+				power += phasePower.(float64)
+			}
 		}
 	}
 
@@ -594,7 +598,9 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	for phase := 1; phase <= 3; phase++ {
 		current := 0.0
 		if value, ok := data.EVData.Measurements.Current.Load(uint(phase)); ok {
-			current = value.(float64)
+			if _, ok := value.(float64); ok {
+				current = value.(float64)
+			}
 		}
 		currents = append(currents, current)
 	}
