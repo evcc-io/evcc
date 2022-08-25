@@ -24,7 +24,7 @@ render: |
   phases: {{ .phases }}
   {{- end }}
   soc:
-    type: http
+    source: http
     uri: https://app.evnotify.de/soc?akey={{ .akey }}&token={{ .token }} # evNotify Server + AKEY
     method: GET
     jq: .soc_display
