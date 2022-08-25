@@ -8,8 +8,8 @@ capabilities: ["mA"]
 requirements:
   evcc: ["eebus"]
   description:
-    de: Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP)
-    en: The device has to have a fix IP address (manuall or via DHCP)
+    de: Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP). Ein Stromzähler wird benötigt.
+    en: The device has to have a fix IP address (manuall or via DHCP). Also a meter is required.
 params:
   - preset: eebusnometer
   - name: ip
