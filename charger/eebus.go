@@ -47,7 +47,6 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Meter         bool
 		ChargedEnergy bool
 	}{
-		Meter:         true,
 		ChargedEnergy: true,
 	}
 
