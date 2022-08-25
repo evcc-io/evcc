@@ -63,8 +63,8 @@ github.com/BurntSushi/toml v1.1.0 h1:ksErzDEI1khOiGPgpwuI7x2ebx/uXQNw7xJpn9Eq1+I
 github.com/BurntSushi/toml v1.1.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
-github.com/DerAndereAndi/eebus v0.0.0-20220824090335-5250c6795e37 h1:ANOO6+xCzz+4qWsUKhz0xz7+81yqGnZVaK3xGKMF504=
-github.com/DerAndereAndi/eebus v0.0.0-20220824090335-5250c6795e37/go.mod h1:1MLJwXaBxVzxtuv/tvrULhBz29g61k1JpXy3zmUPris=
+github.com/DerAndereAndi/eebus v0.0.0-20220825143752-882420a31191 h1:eHYNtqzoVv97EDNqpYZog+sm09FoKhXd/KLPMFRrO2c=
+github.com/DerAndereAndi/eebus v0.0.0-20220825143752-882420a31191/go.mod h1:3XOPHDqI7b58TaUU/zacWprEkazWtOleOVN3oNA3mGw=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
@@ -591,8 +591,8 @@ github.com/lestrrat-go/iter v1.0.1/go.mod h1:zIdgO1mRKhn8l9vrZJZz9TUMMFbQbLeTsbq
 github.com/lestrrat-go/iter v1.0.2/go.mod h1:Momfcq3AnRlRjI5b5O8/G5/BvpzrhoFTZcn06fEOPt4=
 github.com/lestrrat-go/jwx v1.2.24/go.mod h1:zoNuZymNl5lgdcu6P7K6ie2QRll5HVfF4xwxBBK1NxY=
 github.com/lestrrat-go/option v1.0.0/go.mod h1:5ZHFbivi4xwXxhxY9XHDe2FHo6/Z7WWmtT7T5nBBp3I=
-github.com/libp2p/zeroconf/v2 v2.0.0-20220807195455-586e7c571d10 h1:mR77t0DBvg8R9PIE9b6by0YaLY/RrX9xDOeua72YAA4=
-github.com/libp2p/zeroconf/v2 v2.0.0-20220807195455-586e7c571d10/go.mod h1:fuJqLnUwZTshS3U/bMRJ3+ow/v9oid1n0DmyYyNO1Xs=
+github.com/libp2p/zeroconf/v2 v2.2.0 h1:Cup06Jv6u81HLhIj1KasuNM/RHHrJ8T7wOTS4+Tv53Q=
+github.com/libp2p/zeroconf/v2 v2.2.0/go.mod h1:fuJqLnUwZTshS3U/bMRJ3+ow/v9oid1n0DmyYyNO1Xs=
 github.com/lightstep/lightstep-tracer-common/golang/gogo v0.0.0-20190605223551-bc2310a04743/go.mod h1:qklhhLq1aX+mtWk9cPHPzaBjWImj5ULL6C7HFJtXQMM=
 github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0UBX0ZE6WURAspgAczcDHrL4=
 github.com/lorenzodonini/ocpp-go v0.16.0 h1:+MsMvmZfUi0ac5jXS/Bevn7afM8UNUUiGjMbtwv4SgI=

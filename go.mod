@@ -50,7 +50,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.3
 	github.com/korylprince/ipnetgen v1.0.1
-	github.com/libp2p/zeroconf/v2 v2.0.0-20220807195455-586e7c571d10
+	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.16.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/manifoldco/promptui v0.9.0
@@ -174,6 +174,4 @@ require (
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20220205120646-e5220ad9a9a0
 
-replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220824090335-5250c6795e37
-
-// replace github.com/evcc-io/eebus => ../eebus
+replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220825143752-882420a31191
