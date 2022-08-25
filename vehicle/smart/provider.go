@@ -58,9 +58,11 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	switch v := res.PreCond.Data.ChargingStatus.Status; v {
 	case 0:
-		return api.StatusC, err
-	case 1, 2:
-		return api.StatusB, err
+		if res.PreCond.Data.ChargingStatus.Value == 0 {
+			return api.StatusC, err
+		} else {
+			return api.StatusB, err
+		}
 	case 3:
 		return api.StatusA, err
 	default:
