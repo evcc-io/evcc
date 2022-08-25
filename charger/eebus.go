@@ -141,14 +141,6 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 	if c.lp.GetMaxCurrent() != newMax && newMax > 0 {
 		c.lp.SetMaxCurrent(newMax)
 	}
-
-	if c.lp.GetPhases() == int(data.EVData.ConnectedPhases) {
-		return
-	}
-
-	if err := c.lp.SetPhases(int(data.EVData.ConnectedPhases)); err != nil {
-		c.log.ERROR.Printf("!! cannot set %dp", data.EVData.ConnectedPhases)
-	}
 }
 
 func (c *EEBus) showCurrentChargingSetup() {
