@@ -845,8 +845,8 @@ func ObservationIDString(s string) (ObservationID, error) {
 	if val, ok := _ObservationIDNameToValueMap[s]; ok {
 		return val, nil
 	}
-	s = strings.ToLower(s)
-	if val, ok := _ObservationIDNameToValueMap[s]; ok {
+
+	if val, ok := _ObservationIDNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to ObservationID values", s)
