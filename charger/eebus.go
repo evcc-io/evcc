@@ -215,7 +215,21 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 func (c *EEBus) isCharging(d *communication.EVSEClientDataType) bool {
 	// check if an external physical meter is assigned
 	if c.lp.HasChargeMeter() {
-		return c.lp.GetChargePower() > d.EVData.LimitsPower.Min*idleFactor
+		if c.lp.GetChargePower() > d.EVData.LimitsPower.Min*idleFactor {
+			return true
+		}
+	}
+
+	// The above doesn't (yet) work for build in chargers, so check the EEBUS measurements also
+	var phase uint
+	for phase = 1; phase <= d.EVData.ConnectedPhases; phase++ {
+		if phaseCurrent, ok := d.EVData.Measurements.Current.Load(phase); ok {
+			if _, ok := phaseCurrent.(float64); ok {
+				if phaseCurrent.(float64) > d.EVData.Limits[phase].Min*idleFactor {
+					return true
+				}
+			}
+		}
 	}
 
 	return false
