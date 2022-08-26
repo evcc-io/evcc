@@ -214,7 +214,7 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 // we assume that if any phase current value is > idleFactor * min Current, then charging is active and enabled is true
 func (c *EEBus) isCharging(d *communication.EVSEClientDataType) bool {
 	// check if an external physical meter is assigned
-	if c.lp.HasChargeMeter() {
+	if c.lp != nil && c.lp.HasChargeMeter() {
 		if c.lp.GetChargePower() > d.EVData.LimitsPower.Min*idleFactor {
 			return true
 		}
