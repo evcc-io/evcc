@@ -837,7 +837,6 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.Lock()
 
 		lp.addTask(lp.vehicleOdometer)
-		lp.addTask(lp.vehicleTargetSoC)
 
 		lp.progress.Reset()
 	} else {
@@ -847,7 +846,6 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleTitle", "")
 		lp.publish("vehicleCapacity", int64(0))
 		lp.publish("vehicleOdometer", 0.0)
-		lp.publish("vehicleTargetSoC", 0.0)
 	}
 
 	// re-publish vehicle settings
@@ -881,6 +879,7 @@ func (lp *LoadPoint) unpublishVehicle() {
 
 	lp.publish("vehicleSoC", 0.0)
 	lp.publish("vehicleRange", int64(0))
+	lp.publish("vehicleTargetSoC", 0.0)
 
 	lp.setRemainingDuration(-1)
 }

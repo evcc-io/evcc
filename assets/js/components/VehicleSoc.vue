@@ -58,6 +58,7 @@ export default {
 		connected: Boolean,
 		vehiclePresent: Boolean,
 		vehicleSoC: Number,
+		vehicleTargetSoC: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
@@ -69,7 +70,7 @@ export default {
 		return {
 			selectedTargetSoC: null,
 			interactionStartScreenY: null,
-			vehicleTargetSoC: 60,
+			tooltip: null,
 		};
 	},
 	computed: {
@@ -115,11 +116,12 @@ export default {
 		targetSoC: function () {
 			this.selectedTargetSoC = this.targetSoC;
 		},
+		vehicleTargetSoC: function () {
+			this.updateTooltip();
+		},
 	},
 	mounted: function () {
-		this.$nextTick(() => {
-			new Tooltip(this.$refs.vehicleTargetSoC);
-		});
+		this.updateTooltip();
 	},
 	methods: {
 		changeTargetSoCStart: function (e) {
@@ -146,6 +148,14 @@ export default {
 
 			this.$emit("target-soc-drag", this.selectedTargetSoC);
 			return true;
+		},
+		updateTooltip: function () {
+			this.$nextTick(() => {
+				if (this.tooltip) {
+					this.tooltip.dispose();
+				}
+				this.tooltip = new Tooltip(this.$refs.vehicleTargetSoC);
+			});
 		},
 	},
 };

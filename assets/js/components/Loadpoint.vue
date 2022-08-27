@@ -138,6 +138,7 @@ export default {
 		vehicleRange: Number,
 		vehicleSoC: Number,
 		vehicleTitle: String,
+		vehicleTargetSoC: Number,
 		vehicles: Array,
 		minSoC: Number,
 		targetTime: String,
