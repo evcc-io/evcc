@@ -837,6 +837,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.Lock()
 
 		lp.addTask(lp.vehicleOdometer)
+		lp.addTask(lp.vehicleTargetSoC)
 
 		lp.progress.Reset()
 	} else {
@@ -846,6 +847,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleTitle", "")
 		lp.publish("vehicleCapacity", int64(0))
 		lp.publish("vehicleOdometer", 0.0)
+		lp.publish("vehicleTargetSoC", 0.0)
 	}
 
 	// re-publish vehicle settings
@@ -969,6 +971,18 @@ func (lp *LoadPoint) vehicleOdometer() {
 			lp.publish("vehicleOdometer", odo)
 		} else {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
+		}
+	}
+}
+
+// vehicleOdometer updates odometer
+func (lp *LoadPoint) vehicleTargetSoC() {
+	if vs, ok := lp.vehicle.(api.VehicleTargetSoC); ok {
+		if targetSoC, err := vs.TargetSoC(); err == nil {
+			lp.log.DEBUG.Printf("vehicle target SoC: \t%.0f%%", targetSoC)
+			lp.publish("vehicleTargetSoC", targetSoC)
+		} else {
+			lp.log.ERROR.Printf("vehicle target SoC: %v", err)
 		}
 	}
 }
