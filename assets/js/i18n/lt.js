@@ -5,6 +5,11 @@ export default {
     github: "GitHub",
     login: " Automobilių prisijungimai",
     about: "Apie EVCC",
+    theme: {
+      auto: "Design: System",
+      light: "Design: Light",
+      dark: "Design: Dark",
+    },
   },
   footer: {
     version: {
@@ -25,7 +30,7 @@ export default {
       footerShort: "{percent}% saulės",
       footerLong: "{percent}% saulės energija",
       modalTitle: "Įkrovimo energijos apžvalga",
-      sinceServerStart: "nuo evcc starto {since}.",
+      sinceServerStart: "Nuo evcc starto {since}.",
       percentTitle: "Saulės energija",
       percentSelf: "{self} kWh saulės",
       percentGrid: "{grid} kWh tinklas",
@@ -52,7 +57,7 @@ export default {
   },
   main: {
     energyflow: {
-      noEnergy: "Energija neteka",
+      noEnergy: "Nėra skaitiklių duomenų",
       homePower: "Namo suvartojimas",
       pvProduction: "Gamyba",
       loadpoints: "Įkroviklis | Įkroviklis | {count} Įkrovikliai",
@@ -78,6 +83,33 @@ export default {
       duration: "Trukmė",
       remaining: "Liko",
     },
+    loadpointSettings: {
+      title: 'Nustatymai "{0}"',
+      vehicle: "Automobilis",
+      currents: "Įkraunama",
+      minSoC: {
+        label: "Minimali įkrova",
+        description:
+          'Minimali įkrova. Automobilis įkraunamas "greitai" iki {0}% PV nustatyme. Toliau įkraunamas tik saulės energijos pertekliumi.',
+      },
+      phasesConfigured: {
+        label: "Fazės",
+        phases_0: "automatinis perjungimas",
+        phases_1: "1 fazė",
+        phases_1_hint: "({min} to {max})",
+        phases_3: "3 fazės",
+        phases_3_hint: "({min} to {max})",
+      },
+      maxCurrent: {
+        label: "Max. Srovė",
+      },
+      minCurrent: {
+        label: "Min. Srovė",
+      },
+      default: "standartiškai",
+      disclaimerHint: "Pastaba:",
+      disclaimerText: "Šie pakeitimai neišlieka ir po EVCC serverio restarto pradings.",
+    },
     vehicles: "Autoparkas",
     vehicle: {
       fallbackName: "Automobilis",
@@ -85,6 +117,8 @@ export default {
       targetSoC: "Limitas",
       none: "Nėra automobilio",
       unknown: "Nežinomas automobilis",
+      changeVehicle: "Pakeisti automobilį",
+      detectionActive: "Bandome atpažinti automobilį ...",
     },
     vehicleSoC: {
       disconnected: "neprijungtas",
