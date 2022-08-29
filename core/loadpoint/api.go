@@ -15,8 +15,6 @@ type Controller interface {
 type API interface {
 	// Name returns the defined loadpoint name
 	Name() string
-	// HasChargeMeter determines if a physical charge meter is attached
-	HasChargeMeter() bool
 
 	//
 	// status
@@ -55,6 +53,8 @@ type API interface {
 	// power and energy
 	//
 
+	// HasChargeMeter determines if a physical charge meter is attached
+	HasChargeMeter() bool
 	// GetChargePower returns the current charging power
 	GetChargePower() float64
 	// GetMinCurrent returns the min charging current
