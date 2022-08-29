@@ -115,20 +115,14 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	var updated bool
-
 	for _, meterValue := range request.MeterValue {
 		// ignore old meter value requests
 		if meterValue.Timestamp.Time.After(cp.meterUpdated) {
 			for _, sample := range meterValue.SampledValue {
 				cp.measurements[getSampleKey(sample)] = sample
-				updated = true
+				cp.meterUpdated = time.Now()
 			}
 		}
-	}
-
-	if updated {
-		cp.meterUpdated = time.Now()
 	}
 
 	return new(core.MeterValuesConfirmation), nil
