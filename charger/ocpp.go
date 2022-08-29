@@ -256,8 +256,7 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	status, err := c.cp.Status()
-	return status == api.StatusC, err
+	return c.cp.TransactionID() > 0, nil
 }
 
 // Enable implements the api.Charger interface

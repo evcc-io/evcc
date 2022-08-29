@@ -163,13 +163,17 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
-	// reset transaction
-	if request != nil {
-		cp.mu.Lock()
-		cp.txnId = 0
-		cp.mu.Unlock()
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 
-		// TODO: Handle old transaction. Store them, check for the starting transaction event
+	// reset transaction
+	if request != nil && time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
+		// log mismatching id but close transaction anyway
+		if request.TransactionId != cp.txnId {
+			cp.log.ERROR.Printf("stop transaction: invalid id %d", request.TransactionId)
+		}
+
+		cp.txnId = 0
 	}
 
 	res := &core.StopTransactionConfirmation{
