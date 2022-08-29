@@ -14,7 +14,13 @@ func (cs *CS) TriggerResetRequest(cp *CP, resetType core.ResetType) {
 		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
 			log = cs.log.ERROR
 		}
-		log.Printf("TriggerReset for %s: %+v", cp.id, request.Status)
+
+		var status core.ResetStatus
+		if request != nil {
+			status = request.Status
+		}
+
+		log.Printf("TriggerReset for %s: %+v", cp.id, status)
 	}, resetType); err != nil {
 		cs.log.ERROR.Printf("send TriggerReset for %s failed: %v", cp.id, err)
 	}
@@ -26,7 +32,13 @@ func (cs *CS) TriggerMeterValuesRequest(cp *CP) {
 		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
 			log = cs.log.ERROR
 		}
-		log.Printf("TriggerMessage %s for %s: %+v", core.MeterValuesFeatureName, cp.id, request.Status)
+
+		var status remotetrigger.TriggerMessageStatus
+		if request != nil {
+			status = request.Status
+		}
+
+		log.Printf("TriggerMessage %s for %s: %+v", core.MeterValuesFeatureName, cp.id, status)
 	}, core.MeterValuesFeatureName); err != nil {
 		cs.log.ERROR.Printf("send TriggerMessage for %s failed: %v", cp.id, err)
 	}
