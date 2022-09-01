@@ -9,7 +9,9 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
 render: |
   type: custom
   power:
@@ -17,16 +19,14 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 1021 # PactouserTotal AC power to user Total
         type: input
         decode: uint32
       scale: 10
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 1029 # Pactogrid total AC power to grid total
         type: input
@@ -34,18 +34,16 @@ render: |
       scale: -10
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 1046 # Etouser_tota Energy to user total
+      address: 1046 # Etouser_total Energy to user total
       type: input
       decode: uint32
     scale: 10
   {{- end }}
   {{- if eq .usage "pv" }}
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 4 }}
     register: # manual non-sunspec register configuration
       address: 1 # Ppv Input power
       type: input
@@ -53,8 +51,7 @@ render: |
     scale: 10
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 91 # PV Energy total
       type: input
@@ -65,16 +62,14 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 1009 # Pdischarge1 Discharge power
         type: input
         decode: uint32
       scale: 10
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 1011 # Pcharge1 Charge power
         type: input
@@ -82,8 +77,7 @@ render: |
       scale: -10
   soc:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 1014 # SOC
       type: input
