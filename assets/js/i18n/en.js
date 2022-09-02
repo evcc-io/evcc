@@ -126,10 +126,12 @@ export default {
       charging: "charging",
       ready: "ready",
       connected: "connected",
+      vehicleTarget: "Vehicle limit: {soc}%",
     },
     vehicleStatus: {
       minCharge: "minimum charging to {soc}%.",
       waitForVehicle: "Ready. Waiting for vehicle.",
+      vehicleTargetReached: "Vehicle limit {soc}% reached.",
       charging: "Charging.",
       targetChargePlanned: "Target charge planned. Starting {time}.",
       targetChargeWaitForVehicle: "Target charge ready. Wait for vehicle.",

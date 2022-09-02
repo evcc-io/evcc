@@ -24,7 +24,7 @@
 				ref="vehicleTargetSoC"
 				class="vehicle-target-soc"
 				data-bs-toggle="tooltip"
-				:title="`Fahrzeug-Limit: ${vehicleTargetSoC}%`"
+				:title="$t('main.vehicleSoC.vehicleTarget', { soc: vehicleTargetSoC })"
 				:class="{ 'vehicle-target-soc--active': vehicleTargetSoCActive }"
 				:style="{ left: `${vehicleTargetSoC}%` }"
 			/>
