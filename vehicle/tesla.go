@@ -186,9 +186,9 @@ func (v *Tesla) Position() (float64, float64, error) {
 	return 0, 0, err
 }
 
-var _ api.VehicleTargetSoC = (*Tesla)(nil)
+var _ api.SocLimiter = (*Tesla)(nil)
 
-// TargetSoC implements the api.VehicleTargetSoC interface
+// TargetSoC implements the api.SocLimiter interface
 func (v *Tesla) TargetSoC() (float64, error) {
 	res, err := v.chargeStateG()
 	if err == nil {

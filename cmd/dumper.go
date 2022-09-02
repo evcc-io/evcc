@@ -171,7 +171,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.VehicleTargetSoC); ok {
+	if v, ok := v.(api.SocLimiter); ok {
 		if targetSoC, err := v.TargetSoC(); err != nil {
 			fmt.Fprintf(w, "Target SoC:\t%v\n", err)
 		} else {

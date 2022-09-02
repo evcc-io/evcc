@@ -172,8 +172,8 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
-// VehicleTargetSoC returns the vehicles charge limit
-type VehicleTargetSoC interface {
+// SocLimiter returns the vehicles charge limit
+type SocLimiter interface {
 	TargetSoC() (float64, error)
 }
 
