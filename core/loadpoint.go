@@ -974,18 +974,6 @@ func (lp *LoadPoint) vehicleOdometer() {
 	}
 }
 
-// vehicleTargetSoC updates the soc limit from vehicle
-func (lp *LoadPoint) vehicleTargetSoC() {
-	if vs, ok := lp.vehicle.(api.SocLimiter); ok {
-		if targetSoC, err := vs.TargetSoC(); err == nil {
-			lp.log.DEBUG.Printf("vehicle target soc: \t%.0f%%", targetSoC)
-			lp.publish(vehicleTargetSoC, targetSoC)
-		} else {
-			lp.log.ERROR.Printf("vehicle target soc: %v", err)
-		}
-	}
-}
-
 // updateChargerStatus updates charger status and detects car connected/disconnected events
 func (lp *LoadPoint) updateChargerStatus() error {
 	status, err := lp.charger.Status()
