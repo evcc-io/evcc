@@ -171,6 +171,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.SocLimiter); ok {
+		if targetSoC, err := v.TargetSoC(); err != nil {
+			fmt.Fprintf(w, "Target SoC:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Target SoC:\t%.0f%%\n", targetSoC)
+		}
+	}
+
 	if v, ok := v.(api.Vehicle); ok {
 		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
 		if len(v.Identifiers()) > 0 {

@@ -19,6 +19,15 @@
 				:class="progressColor"
 				:style="{ width: `${remainingSoCWidth}%`, transition: 'none' }"
 			></div>
+			<div
+				v-show="vehicleTargetSoC"
+				ref="vehicleTargetSoC"
+				class="vehicle-target-soc"
+				data-bs-toggle="tooltip"
+				:title="$t('main.vehicleSoC.vehicleTarget', { soc: vehicleTargetSoC })"
+				:class="{ 'vehicle-target-soc--active': vehicleTargetSoCActive }"
+				:style="{ left: `${vehicleTargetSoC}%` }"
+			/>
 		</div>
 		<div class="target">
 			<input
@@ -29,6 +38,7 @@
 				step="5"
 				:value="visibleTargetSoC"
 				class="target-slider"
+				:class="{ 'target-slider--active': targetSliderActive }"
 				@mousedown="changeTargetSoCStart"
 				@touchstart="changeTargetSoCStart"
 				@input="movedTargetSoC"
@@ -40,12 +50,15 @@
 </template>
 
 <script>
+import { Tooltip } from "bootstrap";
+
 export default {
 	name: "VehicleSoc",
 	props: {
 		connected: Boolean,
 		vehiclePresent: Boolean,
 		vehicleSoC: Number,
+		vehicleTargetSoC: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
@@ -57,6 +70,7 @@ export default {
 		return {
 			selectedTargetSoC: null,
 			interactionStartScreenY: null,
+			tooltip: null,
 		};
 	},
 	computed: {
@@ -65,6 +79,12 @@ export default {
 				return this.vehicleSoC;
 			}
 			return 100;
+		},
+		vehicleTargetSoCActive: function () {
+			return this.vehicleTargetSoC > 0 && this.vehicleTargetSoC > this.vehicleSoC;
+		},
+		targetSliderActive: function () {
+			return !this.visibleTargetSoC || this.visibleTargetSoC <= this.vehicleTargetSoC;
 		},
 		progressColor: function () {
 			if (this.minSoCActive) {
@@ -82,8 +102,9 @@ export default {
 			if (this.minSoCActive) {
 				return this.minSoC - this.vehicleSoC;
 			}
-			if (this.visibleTargetSoC > this.vehicleSoC) {
-				return this.visibleTargetSoC - this.vehicleSoC;
+			let targetSoC = this.targetSliderActive ? this.visibleTargetSoC : this.vehicleTargetSoC;
+			if (targetSoC > this.vehicleSoC) {
+				return targetSoC - this.vehicleSoC;
 			}
 			return null;
 		},
@@ -95,6 +116,12 @@ export default {
 		targetSoC: function () {
 			this.selectedTargetSoC = this.targetSoC;
 		},
+		vehicleTargetSoC: function () {
+			this.updateTooltip();
+		},
+	},
+	mounted: function () {
+		this.updateTooltip();
 	},
 	methods: {
 		changeTargetSoCStart: function (e) {
@@ -121,6 +148,14 @@ export default {
 
 			this.$emit("target-soc-drag", this.selectedTargetSoC);
 			return true;
+		},
+		updateTooltip: function () {
+			this.$nextTick(() => {
+				if (this.tooltip) {
+					this.tooltip.dispose();
+				}
+				this.tooltip = new Tooltip(this.$refs.vehicleTargetSoC);
+			});
 		},
 	},
 };
@@ -177,24 +212,48 @@ export default {
 	margin-left: var(--thumb-width) / 2;
 	height: 100%;
 	width: var(--thumb-width);
-	background-color: var(--evcc-dark-green);
+	background-color: var(--evcc-gray);
 	cursor: grab;
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
 	box-shadow: 0 0 6px var(--evcc-background);
 	pointer-events: auto;
+	transition: background-color var(--evcc-transition-fast) linear;
 }
 .target-slider::-moz-range-thumb {
 	position: relative;
 	height: 100%;
 	width: var(--thumb-width);
-	background-color: var(--evcc-dark-green);
+	background-color: var(--evcc-gray);
 	cursor: grab;
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
 	box-shadow: 0 0 6px var(--evcc-background);
 	pointer-events: auto;
+	transition: background-color var(--evcc-transition-fast) linear;
+}
+.target-slider--active::-webkit-slider-thumb {
+	background-color: var(--evcc-dark-green);
+}
+.target-slider--active::-moz-range-thumb {
+	background-color: var(--evcc-dark-green);
+}
+.vehicle-target-soc {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 20px;
+	transform: translateX(-8px);
+	background-color: transparent;
+	background-clip: padding-box;
+	border-width: 0 8px;
+	border-style: solid;
+	border-color: transparent;
+	transition: background-color var(--evcc-transition-fast) linear;
+}
+.vehicle-target-soc--active {
+	background-color: var(--evcc-box);
 }
 </style>

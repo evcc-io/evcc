@@ -172,6 +172,11 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
+// SocLimiter returns the vehicles charge limit
+type SocLimiter interface {
+	TargetSoC() (float64, error)
+}
+
 // VehicleChargeController allows to start/stop the charging session on the vehicle side
 type VehicleChargeController interface {
 	StartCharge() error

@@ -845,7 +845,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehiclePresent", false)
 		lp.publish("vehicleTitle", "")
 		lp.publish("vehicleCapacity", int64(0))
-		lp.publish("vehicleOdometer", 0.0)
+		lp.publish(vehicleOdometer, 0.0)
 	}
 
 	// re-publish vehicle settings
@@ -878,7 +878,8 @@ func (lp *LoadPoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
 
 	lp.publish("vehicleSoC", 0.0)
-	lp.publish("vehicleRange", int64(0))
+	lp.publish(vehicleRange, int64(0))
+	lp.publish(vehicleTargetSoC, 0.0)
 
 	lp.setRemainingDuration(-1)
 }
@@ -966,7 +967,7 @@ func (lp *LoadPoint) vehicleOdometer() {
 	if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
-			lp.publish("vehicleOdometer", odo)
+			lp.publish(vehicleOdometer, odo)
 		} else {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
@@ -1506,7 +1507,15 @@ func (lp *LoadPoint) publishSoCAndRange() {
 		if vs, ok := lp.vehicle.(api.VehicleRange); ok {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
-				lp.publish("vehicleRange", rng)
+				lp.publish(vehicleRange, rng)
+			}
+		}
+
+		// vehicle target soc
+		if vs, ok := lp.vehicle.(api.SocLimiter); ok {
+			if targetSoC, err := vs.TargetSoC(); err == nil {
+				lp.log.DEBUG.Printf("vehicle target soc: %.0f%%", targetSoC)
+				lp.publish(vehicleTargetSoC, targetSoC)
 			}
 		}
 
