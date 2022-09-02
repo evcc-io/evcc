@@ -31,9 +31,11 @@ type OpenWBPro struct {
 
 // NewOpenWBProFromConfig creates a OpenWBPro charger from generic config
 func NewOpenWBProFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+	cc := struct {
 		URI   string
 		Cache time.Duration
+	}{
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -54,12 +56,12 @@ func NewOpenWBPro(uri string, cache time.Duration) (*OpenWBPro, error) {
 		cache:   cache,
 	}
 
-	go wb.hearbeat(log)
+	go wb.heartbeat(log)
 
 	return wb, nil
 }
 
-func (wb *OpenWBPro) hearbeat(log *util.Logger) {
+func (wb *OpenWBPro) heartbeat(log *util.Logger) {
 	for range time.NewTicker(30 * time.Second).C {
 		if _, err := wb.get(); err != nil {
 			log.ERROR.Printf("heartbeat: %v", err)
@@ -92,9 +94,11 @@ func (wb *OpenWBPro) set(payload string) error {
 	if err == nil {
 		resp.Body.Close()
 	}
+
 	wb.mu.Lock()
 	wb.updated = time.Time{}
 	wb.mu.Unlock()
+
 	return err
 }
 
