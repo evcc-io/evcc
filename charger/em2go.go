@@ -48,8 +48,8 @@ const (
 var em2GoRegCurrents = []uint16{6, 8, 10}
 
 func init() {
-	registry.Add("Em2Go", NewEm2GoFromConfig)
-	registry.Add("menneckes-Em2Go", NewEm2GoFromConfig)
+	registry.Add("em2go", NewEm2GoFromConfig)
+	registry.Add("menneckes-em2go", NewEm2GoFromConfig)
 }
 
 // NewEm2GoFromConfig creates a Mennekes Em2Go charger from generic config
