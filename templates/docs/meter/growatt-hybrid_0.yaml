@@ -5,7 +5,7 @@ render:
   - usage: grid
     default: |
       type: template
-      template: growatt
+      template: growatt-hybrid
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -29,7 +29,7 @@ render:
   - usage: pv
     default: |
       type: template
-      template: growatt
+      template: growatt-hybrid
       usage: pv      
 
       # RS485 via adapter (Modbus RTU)
@@ -53,7 +53,7 @@ render:
   - usage: battery
     default: |
       type: template
-      template: growatt
+      template: growatt-hybrid
       usage: battery      
 
       # RS485 via adapter (Modbus RTU)

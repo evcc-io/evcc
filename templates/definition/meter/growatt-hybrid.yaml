@@ -1,4 +1,4 @@
-template: growatt
+template: growatt-hybrid
 products:
   - brand: Growatt
     description:
@@ -43,7 +43,7 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 1 # Ppv Input power
       type: input
