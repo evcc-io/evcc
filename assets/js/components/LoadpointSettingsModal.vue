@@ -23,11 +23,14 @@
 					</div>
 					<div class="modal-body">
 						<div class="container">
-							<h4 class="d-flex align-items-center mb-3 mt-0 text-evcc">
+							<h4
+								v-if="showMinSoCSettings"
+								class="d-flex align-items-center mb-3 mt-0 text-evcc"
+							>
 								{{ $t("main.loadpointSettings.vehicle") }}
 								<shopicon-bold-car3 class="ms-2"></shopicon-bold-car3>
 							</h4>
-							<div class="mb-3 row">
+							<div v-if="showMinSoCSettings" class="mb-3 row">
 								<label
 									:for="formId('minsoc')"
 									class="col-sm-4 col-form-label pt-0 pt-sm-1"
@@ -271,6 +274,9 @@ export default {
 		showCurrentSettings: function () {
 			return this.$hiddenFeatures;
 		},
+		showMinSoCSettings: function () {
+			return this.$hiddenFeatures;
+		},
 	},
 	watch: {
 		maxCurrent: function (value) {
@@ -322,5 +328,9 @@ export default {
 .container {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
+}
+
+.container h4:first-child {
+	margin-top: 0 !important;
 }
 </style>
