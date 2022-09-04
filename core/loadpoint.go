@@ -49,7 +49,7 @@ const (
 	timerInactive = "inactive"
 
 	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
-	vehicleDetectInterval = 3 * time.Minute
+	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 
 	guardGracePeriod = 10 * time.Second // allow out of sync during this timespan
@@ -884,27 +884,30 @@ func (lp *LoadPoint) unpublishVehicle() {
 	lp.setRemainingDuration(-1)
 }
 
-// vehicleUnidentified checks if there are associated vehicles and starts discovery period
+// vehicleUnidentified returns true if there are associated vehicles and detection is running.
+// It will also reset the api cache at regular intervals.
+// Detection is stopped after maximum duration and the "guest vehicle" message dispatched.
 func (lp *LoadPoint) vehicleUnidentified() bool {
-	res := len(lp.coordinatedVehicles()) > 0 && lp.vehicle == nil
-
-	// request vehicle api refresh while waiting to identify
-	if res {
-		if lp.clock.Since(lp.vehicleDetect) > vehicleDetectDuration {
-			lp.stopVehicleDetection()
-			lp.pushEvent(evVehicleUnidentified)
-			return false
-		}
-
-		select {
-		case <-lp.vehicleDetectTicker.C:
-			lp.log.DEBUG.Println("vehicle api refresh")
-			provider.ResetCached()
-		default:
-		}
+	if lp.vehicle != nil || lp.vehicleDetect.IsZero() || len(lp.coordinatedVehicles()) == 0 {
+		return false
 	}
 
-	return res
+	// stop detection
+	if lp.clock.Since(lp.vehicleDetect) > vehicleDetectDuration {
+		lp.stopVehicleDetection()
+		lp.pushEvent(evVehicleUnidentified)
+		return false
+	}
+
+	// request vehicle api refresh while waiting to identify
+	select {
+	case <-lp.vehicleDetectTicker.C:
+		lp.log.DEBUG.Println("vehicle api refresh")
+		provider.ResetCached()
+	default:
+	}
+
+	return true
 }
 
 // vehicleDefaultOrDetect will assign and update default vehicle or start detection
