@@ -4,6 +4,10 @@ products:
     description:
       generic: 1PM
 group: switchsockets
+requirements:
+  description:
+    de: Template ist auch nutzbar für "Shelly EM" (channel: 0 = meter 1 ; channel: 1 = meter 2)
+    en: Template is also usable for "Shelly EM" (channel: 0 = meter 1 ; channel: 1 = meter 2)
 params:
   - name: usage
     choice: ["pv"]
