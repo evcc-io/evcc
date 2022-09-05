@@ -45,4 +45,3 @@ render: |
       type: input
       decode: int16
   {{- end }}
-
