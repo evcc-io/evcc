@@ -125,10 +125,12 @@ export default {
       charging: "vyksta įkrovimas",
       ready: "leidžiama įkrauti",
       connected: "automobilis prijungtas",
+      vehicleTarget: "Automobilio limitas: {soc}%",
     },
     vehicleStatus: {
       minCharge: "minimalus įkrovimas iki {soc}%.",
       waitForVehicle: "Įkrovimas leidžiamas. Laukiama automobilio signalo.",
+      vehicleTargetReached: "Automobilio limitas {soc}% pasiektas.",
       charging: "Įkraunama.",
       targetChargePlanned: "Suplanuotas įkrovimas, prasidės {time}.",
       targetChargeWaitForVehicle: "Suplanuotas įkrovimas leidžiamas. Laukiama automobilio signalo.",
