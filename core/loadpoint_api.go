@@ -59,7 +59,10 @@ func (lp *LoadPoint) GetTargetSoC() int {
 // setTargetSoC sets loadpoint charge target soc (no mutex)
 func (lp *LoadPoint) setTargetSoC(soc int) {
 	lp.SoC.target = soc
-	lp.socTimer.SoC = soc
+	// test guard
+	if lp.socTimer != nil {
+		lp.socTimer.SoC = soc
+	}
 	lp.publish("targetSoC", soc)
 }
 
