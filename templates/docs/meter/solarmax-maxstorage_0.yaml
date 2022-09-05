@@ -7,7 +7,7 @@ render:
       type: template
       template: solarmax-maxstorage
       usage: grid      
-      
+
       # Modbus TCP
       modbus: tcpip
       id: 1
@@ -18,7 +18,7 @@ render:
       type: template
       template: solarmax-maxstorage
       usage: pv      
-      
+
       # Modbus TCP
       modbus: tcpip
       id: 1
@@ -29,7 +29,7 @@ render:
       type: template
       template: solarmax-maxstorage
       usage: battery      
-      
+
       # Modbus TCP
       modbus: tcpip
       id: 1

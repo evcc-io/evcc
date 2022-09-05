@@ -1,11 +1,11 @@
 product:
-  brand: SolarMax
-  description: SP Inverter
+  brand: Senergy
+  description: SE 4/5/6KTL-S1/G2 Inverter
 render:
   - usage: pv
     default: |
       type: template
-      template: solarmax
+      template: senergy
       usage: pv      
 
       # Modbus TCP

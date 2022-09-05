@@ -18,7 +18,7 @@ render: |
     register: # manual non-sunspec register configuration
       address: 118 # Einspeise-/Bezugsleistung
       type: input
-      decode: int32
+      decode: int32s
     scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -27,7 +27,7 @@ render: |
     register: # manual non-sunspec register configuration
       address: 110 # PV-Leistung MAX.STORAGE
       type: input
-      decode: int32
+      decode: int32s
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
@@ -35,7 +35,7 @@ render: |
     register: # manual non-sunspec register configuration
       address: 114 # Batterie-Leistung
       type: input
-      decode: int32
+      decode: int32s
     scale: -1
   soc:
     source: modbus

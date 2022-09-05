@@ -1,11 +1,11 @@
-template: solarmax
+template: senergy
 products:
+  - brand: Senergy
+    description:
+      generic: SE 4/5/6KTL-S1/G2 Inverter
   - brand: SolarMax
     description:
-      generic: SP Inverter
-  - brand: Senergytec
-    description:
-      generic: Inverter
+      generic: SP Series Inverter
 params:
   - name: usage
     choice: ["pv"]
@@ -19,14 +19,14 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 4151 # PAC?
+      address: 4151 # PAC
       type: holding
-      decode: uint32s
+      decode: uint32
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 4129 # Total
       type: holding
-      decode: uint32s
+      decode: uint32
   {{- end }}
