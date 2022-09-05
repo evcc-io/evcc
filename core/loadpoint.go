@@ -817,9 +817,10 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	}
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
-	// reset minSoC before change
+	// reset minSoC and targetSoC before change
 	lp.Unlock()
 	lp.SetMinSoC(0)
+	lp.setTargetSoC(100)
 	lp.Lock()
 
 	if lp.vehicle = vehicle; vehicle != nil {
