@@ -2,7 +2,7 @@ template: shelly-1pm
 products:
   - brand: Shelly
     description:
-      generic: 1PM
+      generic: 1PM, EM
 group: switchsockets
 params:
   - name: usage
@@ -18,5 +18,5 @@ render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)
   {{ if ne .user "" }}user: {{ .user }}{{ end }}
-  {{ if ne .password "" }}password: {{ .password }}{{ end }}  
+  {{ if ne .password "" }}password: {{ .password }}{{ end }}
   channel: {{ .channel }}  # shelly device relay channel
