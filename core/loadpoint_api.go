@@ -117,6 +117,7 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 	}
 
 	// set new default
+	lp.log.DEBUG.Println("set phases:", phases)
 	lp.setConfiguredPhases(phases)
 
 	// apply immediately if not 1p3p
