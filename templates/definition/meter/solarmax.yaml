@@ -1,7 +1,9 @@
 template: solarmax
-covers: ["solarmax"]
 products:
-  - brand: Solarmax
+  - brand: SolarMax
+    description:
+      generic: SP Inverter
+  - brand: Senergytec
     description:
       generic: Inverter
 params:
@@ -9,6 +11,7 @@ params:
     choice: ["pv"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
 render: |
   type: custom
   {{- if eq .usage "pv" }}
@@ -16,7 +19,14 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 4151 # Total DC power
+      address: 4151 # PAC?
+      type: holding
+      decode: uint32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4129 # Total
       type: holding
       decode: uint32s
   {{- end }}

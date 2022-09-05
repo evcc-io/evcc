@@ -1,6 +1,6 @@
 product:
-  brand: SolarMax
-  description: SP Inverter
+  brand: Senergytec
+  description: Inverter
 render:
   - usage: pv
     default: |
