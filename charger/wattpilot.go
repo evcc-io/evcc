@@ -20,7 +20,6 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -48,12 +47,11 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-
 	if cc.URI == "" || cc.Password == "" {
 		return nil, errors.New("must have one  uri and password")
 	}
 
-	return NewWattpilot(cc.URI, cc.Password,cc.Cache)
+	return NewWattpilot(cc.URI, cc.Password, cc.Cache)
 }
 
 // NewWattpilot creates Wattpilot charger
@@ -109,19 +107,14 @@ func (c *Wattpilot) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *Wattpilot) MaxCurrent(current int64) error {
-	return c.api.SetProperty("amp", current)
+	return c.api.SetCurrent(float64(current))
 }
 
 var _ api.Meter = (*Wattpilot)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Wattpilot) CurrentPower() (float64, error) {
-	resp, err := c.api.GetProperty("power")
-	if err != nil {
-		return 0, err
-	}
-	power,err := strconv.ParseFloat(resp.(string), 64)
-	return power, err
+	return c.api.GetPower()
 }
 
 var _ api.ChargeRater = (*Wattpilot)(nil)
@@ -140,37 +133,12 @@ var _ api.MeterCurrent = (*Wattpilot)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (c *Wattpilot) Currents() (float64, float64, float64, error) {
-	i1, err := c.api.GetProperty("amps1")
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	i2, _ := c.api.GetProperty("amps2")
-	i3, _ := c.api.GetProperty("amps3")
-
-	fi1, _ := strconv.ParseFloat(i1.(string), 64)
-	fi2, _ := strconv.ParseFloat(i2.(string), 64)
-	fi3, _ := strconv.ParseFloat(i3.(string), 64)
-
-	return fi1, fi2, fi3, err
+	return c.api.GetCurrents()
 }
 
 var _ api.Identifier = (*Wattpilot)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *Wattpilot) Identify() (string, error) {
-	resp, err := c.api.GetProperty("cak")
-	if err != nil {
-		return "", err
-	}
-	return resp.(string), nil
-}
-
-// totalEnergy implements the api.MeterEnergy interface - v2 only
-func (c *Wattpilot) totalEnergy() (float64, error) {
-	resp, err := c.api.GetProperty("eto")
-	if err != nil {
-		return 0, err
-	}
-
-	return resp.(float64), err
+	return c.api.GetRFID()
 }
