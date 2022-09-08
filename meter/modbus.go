@@ -162,7 +162,7 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 		if op.MBMD.IEC61850 != 0 {
 			res, err = dev.QueryOp(m.conn, op.MBMD.IEC61850)
 		} else {
-			res, err = dev.QueryPoint(
+			res.Value, err = dev.QueryPoint(
 				m.conn,
 				op.SunSpec.Model,
 				op.SunSpec.Block,
