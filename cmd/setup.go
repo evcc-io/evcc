@@ -19,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/community"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/samber/lo"
@@ -49,6 +50,10 @@ func configureEnvironment(conf config) (err error) {
 	// setup sponsorship
 	if conf.SponsorToken != "" {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
+	}
+
+	if err == nil && conf.Community {
+		err = community.Create(sponsor.Token)
 	}
 
 	// setup mqtt client listener
