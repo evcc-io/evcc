@@ -29,30 +29,28 @@ func ChargeProgress(log *util.Logger, power, energy float64) {
 		return
 	}
 
-	go func() {
-		data := struct {
-			Power, Energy float64
-		}{
-			Power:  power,
-			Energy: energy,
-		}
+	data := struct {
+		Power, Energy float64
+	}{
+		Power:  power,
+		Energy: energy,
+	}
 
-		uri := fmt.Sprintf("%s/%s/%s", api, "charged", sponsor.Token)
-		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data))
+	uri := fmt.Sprintf("%s/%s/%s", api, "charged", sponsor.Token)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data))
 
-		var res struct {
-			Error string
-		}
+	var res struct {
+		Error string
+	}
 
-		if err == nil {
-			client := request.NewHelper(log)
-			if err = client.DoJSON(req, &res); err == nil && res.Error != "" {
-				err = errors.New(res.Error)
-			}
+	if err == nil {
+		client := request.NewHelper(log)
+		if err = client.DoJSON(req, &res); err == nil && res.Error != "" {
+			err = errors.New(res.Error)
 		}
+	}
 
-		if err != nil {
-			log.ERROR.Printf("community api: %v", err)
-		}
-	}()
+	if err != nil {
+		log.ERROR.Printf("community api: %v", err)
+	}
 }
