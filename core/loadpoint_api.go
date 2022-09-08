@@ -56,9 +56,13 @@ func (lp *LoadPoint) GetTargetSoC() int {
 	return lp.SoC.target
 }
 
+// setTargetSoC sets loadpoint charge target soc (no mutex)
 func (lp *LoadPoint) setTargetSoC(soc int) {
 	lp.SoC.target = soc
-	lp.socTimer.SoC = soc
+	// test guard
+	if lp.socTimer != nil {
+		lp.socTimer.SoC = soc
+	}
 	lp.publish("targetSoC", soc)
 }
 
@@ -83,6 +87,12 @@ func (lp *LoadPoint) GetMinSoC() int {
 	return lp.SoC.min
 }
 
+// setMinSoC sets loadpoint charge min soc (no mutex)
+func (lp *LoadPoint) setMinSoC(soc int) {
+	lp.SoC.min = soc
+	lp.publish("minSoC", soc)
+}
+
 // SetMinSoC sets loadpoint charge minimum soc
 func (lp *LoadPoint) SetMinSoC(soc int) {
 	lp.Lock()
@@ -92,8 +102,7 @@ func (lp *LoadPoint) SetMinSoC(soc int) {
 
 	// apply immediately
 	if lp.SoC.min != soc {
-		lp.SoC.min = soc
-		lp.publish("minSoC", soc)
+		lp.setMinSoC(soc)
 		lp.requestUpdate()
 	}
 }
