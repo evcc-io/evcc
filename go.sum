@@ -624,6 +624,8 @@ github.com/mabunixda/wattpilot v1.0.0 h1:HJi/GqsSanaALOhJ6EuC5rJf6lgUxCqw5eVa/mI
 github.com/mabunixda/wattpilot v1.0.0/go.mod h1:wU1/aTR4aBzeZ+TN9wpwku2uipYRsQW5Wox0xe1hHUM=
 github.com/mabunixda/wattpilot v1.0.1 h1:amtEdFVhfwq23BO/ZCoudCJxuvXKeI3eABHhsPh20Z8=
 github.com/mabunixda/wattpilot v1.0.1/go.mod h1:wU1/aTR4aBzeZ+TN9wpwku2uipYRsQW5Wox0xe1hHUM=
+github.com/mabunixda/wattpilot v1.0.2 h1:IyGg3dN5Y5V/I+J1omJsF4ytp1njxlqKFU77BW2SGNw=
+github.com/mabunixda/wattpilot v1.0.2/go.mod h1:wU1/aTR4aBzeZ+TN9wpwku2uipYRsQW5Wox0xe1hHUM=
 github.com/magiconair/properties v1.8.1/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/magiconair/properties v1.8.6 h1:5ibWZ6iY0NctNGWo87LalDlEZ6R41TqbbDamhfG/Qzo=
 github.com/magiconair/properties v1.8.6/go.mod h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=

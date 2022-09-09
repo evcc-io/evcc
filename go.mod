@@ -123,7 +123,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.15.5 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/mabunixda/wattpilot v1.0.1
+	github.com/mabunixda/wattpilot v1.0.2
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
