@@ -41,7 +41,7 @@ func ChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
 		GreenEnergy:  deltaGreen,
 	}
 
-	uri := fmt.Sprintf("%s/%s/%s", api, "charged", sponsor.Token)
+	uri := fmt.Sprintf("%s/charged/%s", api, sponsor.Token)
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data))
 
 	var res struct {
