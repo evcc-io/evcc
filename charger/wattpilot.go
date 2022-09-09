@@ -125,8 +125,7 @@ func (c *Wattpilot) ChargedEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	return resp.(float64) * 0.0010, err
+	return resp.(float64) / 1e3, err
 }
 
 var _ api.MeterCurrent = (*Wattpilot)(nil)
