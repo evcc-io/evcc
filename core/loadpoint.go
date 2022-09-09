@@ -819,7 +819,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	// reset minSoC and targetSoC before change
 	lp.setMinSoC(0)
-	lp.setTargetSoC(0)
+	lp.setTargetSoC(100)
 
 	if lp.vehicle = vehicle; vehicle != nil {
 		lp.socUpdated = time.Time{}
