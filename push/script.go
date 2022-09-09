@@ -38,10 +38,8 @@ type scriptConfig struct {
 	Cache   time.Duration
 }
 
-// NewSciptMessenger creates Script messenger
-// Script execution is aborted after given timeout.
+// NewScriptMessenger creates a Script messenger. Script execution is aborted after given timeout.
 func NewScriptMessenger(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
-
 	s := &Script{
 		log:     util.NewLogger("script"),
 		script:  script,
