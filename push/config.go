@@ -32,6 +32,11 @@ func NewMessengerFromConfig(typ string, other map[string]interface{}) (res Sende
 		if err = util.DecodeOther(other, &cc); err == nil {
 			res, err = NewShoutrrrMessenger(cc.URI)
 		}
+	case "script":
+		var cc scriptConfig
+		if err = util.DecodeOther(other, &cc); err == nil {
+			res, err = NewScriptMessenger(cc.CmdLine, cc.Timeout, cc.Scale, cc.Cache)
+		}
 	default:
 		err = fmt.Errorf("unknown messenger type: %s", typ)
 	}
