@@ -52,7 +52,6 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	updated            time.Time
 	gridPower          float64   // Grid power
 	pvPower            float64   // PV power
 	batteryPower       float64   // Battery charge power
@@ -435,26 +434,6 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	return sitePower, nil
 }
 
-func (site *Site) deltaGridEnergy(prevGridTotalEnergy float64) float64 {
-	var gridDeltaEnergy float64
-
-	// derive from power
-	if !site.updated.IsZero() {
-		if site.gridPower > 0 {
-			gridDeltaEnergy = site.gridPower / 1e3 * float64(time.Since(site.updated)) / float64(time.Hour)
-		}
-	}
-	site.updated = time.Now()
-
-	// use actual measurements
-	if _, ok := site.gridMeter.(api.MeterEnergy); ok {
-		// gridTotalEnergy is updated when the meter values are updated
-		gridDeltaEnergy = site.gridTotalEnergy - prevGridTotalEnergy
-	}
-
-	return gridDeltaEnergy
-}
-
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
@@ -496,7 +475,7 @@ func (site *Site) update(lp Updater) {
 
 	// update savings and community api
 	if deltaCharged := totalChargedEnergy - prevChargedTotalEnergy; deltaCharged > 0 {
-		deltaGrid := site.deltaGridEnergy(prevGridTotalEnergy)
+		deltaGrid := site.gridTotalEnergy - prevGridTotalEnergy
 		site.savings.Update(site, deltaCharged, deltaGrid)
 
 		deltaGreen := math.Max(0, deltaCharged-deltaGrid)

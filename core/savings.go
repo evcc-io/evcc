@@ -106,13 +106,13 @@ func (s *Savings) updatePrices(p publisher) (float64, float64) {
 }
 
 // Update savings calculation and return grid/green energy added since last update
-func (s *Savings) Update(p publisher, addedTotal, addedGrid float64) {
+func (s *Savings) Update(p publisher, deltaCharged, deltaGrid float64) {
 	gridPrice, feedinPrice := s.updatePrices(p)
 
-	addedSelfConsumption := addedTotal - addedGrid
+	addedSelfConsumption := deltaCharged - deltaGrid
 
-	s.gridCharged += addedGrid
-	s.gridCost += addedGrid * gridPrice
+	s.gridCharged += deltaGrid
+	s.gridCost += deltaGrid * gridPrice
 
 	s.selfConsumptionCharged += addedSelfConsumption
 	s.selfConsumptionCost += addedSelfConsumption * feedinPrice
