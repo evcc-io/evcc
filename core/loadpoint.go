@@ -1356,9 +1356,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	return targetCurrent
 }
 
-// UpdateChargeMeter updates charge meter
+// UpdateChargeMeter updates charge meter power and energy
 func (lp *LoadPoint) UpdateChargeMeter() {
-	// update power
 	if err := retry.Do(func() error {
 		value, err := lp.chargeMeter.CurrentPower()
 		if err != nil {
@@ -1382,7 +1381,6 @@ func (lp *LoadPoint) UpdateChargeMeter() {
 		lp.log.ERROR.Printf("charge power: %v", err)
 	}
 
-	// update total energy
 	if m, ok := lp.chargeMeter.(api.MeterEnergy); ok {
 		value, err := m.TotalEnergy()
 		if err != nil {
