@@ -52,13 +52,13 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower         float64   // Grid power
-	pvPower           float64   // PV power
-	batteryPower      float64   // Battery charge power
-	batteryBuffered   bool      // Battery buffer active
-	chargeTotalEnergy float64   // Charge energy
-	gridTotalEnergy   float64   // Grid import energy
-	energyUpdated     time.Time // Grid energy last updated
+	gridPower       float64   // Grid power
+	pvPower         float64   // PV power
+	batteryPower    float64   // Battery charge power
+	batteryBuffered bool      // Battery buffer active
+	chargeImport    float64   // Charge import energy
+	gridImport      float64   // Grid import energy
+	gridUpdated     time.Time // Grid energy last updated
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -354,7 +354,7 @@ func (site *Site) updateMeters() error {
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
 		val, err := energyMeter.TotalEnergy()
 		if err == nil {
-			site.gridTotalEnergy = val
+			site.gridImport = val
 			site.publish("gridEnergy", val)
 
 			if val < 0 {
@@ -364,12 +364,12 @@ func (site *Site) updateMeters() error {
 			site.log.ERROR.Printf("grid meter energy: %v", err)
 		}
 	} else {
-		if !site.energyUpdated.IsZero() {
+		if !site.gridUpdated.IsZero() {
 			if site.gridPower > 0 {
-				site.gridTotalEnergy += site.gridPower / 1e3 * float64(time.Since(site.energyUpdated)) / float64(time.Hour)
+				site.gridImport += site.gridPower / 1e3 * float64(time.Since(site.gridUpdated)) / float64(time.Hour)
 			}
 		}
-		site.energyUpdated = time.Now()
+		site.gridUpdated = time.Now()
 	}
 
 	return err
@@ -447,18 +447,18 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// save before grid meter is updated
-	prevGridTotalEnergy := site.gridTotalEnergy
+	prevGridImport := site.gridImport
 
 	var (
-		totalChargePower   float64
-		totalChargedEnergy float64
+		totalChargePower  float64
+		totalChargeImport float64
 	)
 
 	// update all loadpoint's charge meter
 	for _, lp := range site.loadpoints {
 		lp.UpdateChargeMeter()
 		totalChargePower += lp.GetChargePower()
-		totalChargedEnergy += lp.GetChargeTotalEnergy()
+		totalChargeImport += lp.GetChargeTotalEnergy()
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
@@ -473,10 +473,10 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// update savings and community api
-	if deltaCharged := totalChargedEnergy - site.chargeTotalEnergy; deltaCharged > 0 {
-		site.chargeTotalEnergy = totalChargedEnergy
+	if deltaCharged := totalChargeImport - site.chargeImport; deltaCharged > 0 {
+		site.chargeImport = totalChargeImport
 
-		deltaGrid := site.gridTotalEnergy - prevGridTotalEnergy
+		deltaGrid := site.gridImport - prevGridImport
 		site.savings.Update(site, deltaCharged, deltaGrid)
 
 		deltaGreen := math.Max(0, deltaCharged-deltaGrid)
