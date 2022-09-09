@@ -189,6 +189,13 @@ func (lp *LoadPoint) GetChargePower() float64 {
 	return lp.chargePower
 }
 
+// GetChargeTotalEnergy returns the total charged energy
+func (lp *LoadPoint) GetChargeTotalEnergy() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.chargeTotalEnergy
+}
+
 // GetMinCurrent returns the min loadpoint current
 func (lp *LoadPoint) GetMinCurrent() float64 {
 	lp.Lock()

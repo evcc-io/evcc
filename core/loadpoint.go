@@ -140,14 +140,16 @@ type LoadPoint struct {
 	socTimer       *soc.Timer
 
 	// cached state
-	status         api.ChargeStatus       // Charger status
-	remoteDemand   loadpoint.RemoteDemand // External status demand
-	chargePower    float64                // Charging power
-	chargeCurrents []float64              // Phase currents
-	connectedTime  time.Time              // Time when vehicle was connected
-	pvTimer        time.Time              // PV enabled/disable timer
-	phaseTimer     time.Time              // 1p3p switch timer
-	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
+	status            api.ChargeStatus       // Charger status
+	remoteDemand      loadpoint.RemoteDemand // External status demand
+	chargePower       float64                // Charging power
+	chargeTotalEnergy float64                // Charge meter total energy
+	chargeCurrents    []float64              // Phase currents
+	energyUpdated     time.Time              // Time when charge meter energy was updated
+	connectedTime     time.Time              // Time when vehicle was connected
+	pvTimer           time.Time              // PV enabled/disable timer
+	phaseTimer        time.Time              // 1p3p switch timer
+	wakeUpTimer       *Timer                 // Vehicle wake-up timeout
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle SoC
@@ -1354,30 +1356,49 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	return targetCurrent
 }
 
-// UpdateChargePower updates charge meter power
-func (lp *LoadPoint) UpdateChargePower() {
-	err := retry.Do(func() error {
+// UpdateChargeMeter updates charge meter
+func (lp *LoadPoint) UpdateChargeMeter() {
+	// update power
+	if err := retry.Do(func() error {
 		value, err := lp.chargeMeter.CurrentPower()
 		if err != nil {
 			return err
 		}
 
+		// use -1 for https://github.com/evcc-io/evcc/issues/2153
+		if value < -1 {
+			lp.log.WARN.Printf("charge power must not be negative: %.0f", value)
+		}
+
 		lp.Lock()
-		lp.chargePower = value // update value if no error
+		lp.chargePower = math.Abs(value) // update value if no error
 		lp.Unlock()
 
 		lp.log.DEBUG.Printf("charge power: %.0fW", value)
 		lp.publish("chargePower", value)
 
-		// use -1 for https://github.com/evcc-io/evcc/issues/2153
-		if lp.chargePower < -1 {
-			lp.log.WARN.Printf("charge power must not be negative: %.0f", lp.chargePower)
-		}
-
 		return nil
-	}, retryOptions...)
-	if err != nil {
-		lp.log.ERROR.Printf("charge meter: %v", err)
+	}, retryOptions...); err != nil {
+		lp.log.ERROR.Printf("charge power: %v", err)
+	}
+
+	// update total energy
+	if m, ok := lp.chargeMeter.(api.MeterEnergy); ok {
+		value, err := m.TotalEnergy()
+		if err != nil {
+			lp.log.ERROR.Printf("charge total energy: %v", err)
+		} else {
+			lp.Lock()
+			lp.chargeTotalEnergy = value // update value if no error
+			lp.Unlock()
+		}
+	} else {
+		if !lp.energyUpdated.IsZero() {
+			lp.Lock()
+			lp.chargeTotalEnergy += lp.chargePower / 1e3 * float64(time.Since(lp.energyUpdated)) / float64(time.Hour)
+			lp.Unlock()
+		}
+		lp.energyUpdated = time.Now()
 	}
 }
 
@@ -1568,7 +1589,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 	lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
-	// update progress and soc before status is updated
+	// update energy and duration before status is updated
 	lp.publishChargeProgress()
 
 	// read and publish status

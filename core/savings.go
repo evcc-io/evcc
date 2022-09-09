@@ -1,7 +1,6 @@
 package core
 
 import (
-	"math"
 	"time"
 
 	"github.com/benbjohnson/clock"
@@ -23,12 +22,11 @@ type Savings struct {
 	clock                          clock.Clock
 	tariffs                        tariff.Tariffs
 	started                        time.Time // Boot time
-	updated                        time.Time // Time of last charged value update
 	gridCharged                    float64   // Grid energy charged since startup (kWh)
 	gridCost                       float64   // Running total of charged grid energy cost (e.g. EUR)
-	gridSavedCost                  float64   // Running total of saved cost from self consumption (e.g. EUR)
 	selfConsumptionCharged         float64   // Self-produced energy charged since startup (kWh)
 	selfConsumptionCost            float64   // Running total of charged self-produced energy cost (e.g. EUR)
+	savedCost                      float64   // Running total of saved cost from self consumption (e.g. EUR)
 	lastGridPrice, lastFeedInPrice float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
 }
 
@@ -38,7 +36,6 @@ func NewSavings(tariffs tariff.Tariffs) *Savings {
 		clock:   clock,
 		tariffs: tariffs,
 		started: clock.Now(),
-		updated: clock.Now(),
 	}
 
 	return savings
@@ -71,24 +68,7 @@ func (s *Savings) EffectivePrice() float64 {
 }
 
 func (s *Savings) SavingsAmount() float64 {
-	return s.gridSavedCost
-}
-
-func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower float64) float64 {
-	batteryDischarge := math.Max(0, batteryPower)
-	batteryCharge := math.Min(0, batteryPower) * -1
-	pvConsumption := math.Min(pvPower, pvPower+gridPower-batteryCharge)
-
-	gridImport := math.Max(0, gridPower)
-	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
-
-	share := selfConsumption / (gridImport + selfConsumption)
-
-	if math.IsNaN(share) {
-		return 0
-	}
-
-	return share
+	return s.savedCost
 }
 
 func (s *Savings) currentGridPrice() float64 {
@@ -126,27 +106,18 @@ func (s *Savings) updatePrices(p publisher) (float64, float64) {
 }
 
 // Update savings calculation and return grid/green energy added since last update
-func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) (float64, float64) {
+func (s *Savings) Update(p publisher, addedTotal, addedGrid float64) {
 	gridPrice, feedinPrice := s.updatePrices(p)
-	defer func() { s.updated = s.clock.Now() }()
 
-	// no charging, no need to update
-	if chargePower == 0 {
-		return 0, 0
-	}
-
-	// assume charge power as constant over the duration -> rough kWh estimate
-	energyAdded := s.clock.Since(s.updated).Hours() * chargePower / 1e3
-	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
-
-	addedSelfConsumption := energyAdded * share
-	addedGrid := energyAdded - addedSelfConsumption
+	addedSelfConsumption := addedTotal - addedGrid
 
 	s.gridCharged += addedGrid
 	s.gridCost += addedGrid * gridPrice
-	s.gridSavedCost += addedSelfConsumption * (gridPrice - feedinPrice)
+
 	s.selfConsumptionCharged += addedSelfConsumption
 	s.selfConsumptionCost += addedSelfConsumption * feedinPrice
+
+	s.savedCost += addedSelfConsumption * (gridPrice - feedinPrice)
 
 	p.publish("savingsTotalCharged", s.TotalCharged())
 	p.publish("savingsGridCharged", s.gridCharged)
@@ -154,6 +125,4 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
-
-	return energyAdded, addedSelfConsumption
 }

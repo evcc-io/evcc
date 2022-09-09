@@ -52,10 +52,14 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower       float64 // Grid power
-	pvPower         float64 // PV power
-	batteryPower    float64 // Battery charge power
-	batteryBuffered bool    // Battery buffer active
+	updated            time.Time
+	gridPower          float64   // Grid power
+	pvPower            float64   // PV power
+	batteryPower       float64   // Battery charge power
+	batteryBuffered    bool      // Battery buffer active
+	chargedTotalEnergy float64   // Charge energy
+	gridTotalEnergy    float64   // Grid import energy
+	energyUpdated      time.Time // Grid energy last updated
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -326,7 +330,7 @@ func (site *Site) updateMeters() error {
 			if err == nil {
 				site.batteryPower += power
 			} else {
-				site.log.ERROR.Println(fmt.Errorf("battery meter %d: %v", id, err))
+				site.log.ERROR.Printf("battery meter %d: %v", id, err)
 			}
 		}
 
@@ -343,7 +347,7 @@ func (site *Site) updateMeters() error {
 			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		} else {
-			site.log.ERROR.Println(fmt.Errorf("grid meter currents: %v", err))
+			site.log.ERROR.Printf("grid meter currents: %v", err)
 		}
 	}
 
@@ -351,10 +355,22 @@ func (site *Site) updateMeters() error {
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
 		val, err := energyMeter.TotalEnergy()
 		if err == nil {
+			site.gridTotalEnergy = val
 			site.publish("gridEnergy", val)
+
+			if val < 0 {
+				site.log.ERROR.Printf("grid meter energy must not be negative: %.0f", val)
+			}
 		} else {
-			site.log.ERROR.Println(fmt.Errorf("grid meter energy: %v", err))
+			site.log.ERROR.Printf("grid meter energy: %v", err)
 		}
+	} else {
+		if !site.energyUpdated.IsZero() {
+			if site.gridPower > 0 {
+				site.gridTotalEnergy += site.gridPower / 1e3 * float64(time.Since(site.energyUpdated)) / float64(time.Hour)
+			}
+		}
+		site.energyUpdated = time.Now()
 	}
 
 	return err
@@ -372,7 +388,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 		site.gridPower = totalChargePower - site.pvPower
 	}
 
-	// allow using Grid and charge as estimate for pv power
+	// allow using grid and charge as estimate for pv power
 	if site.pvMeters == nil {
 		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
 		if site.pvPower < 0 {
@@ -419,6 +435,26 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	return sitePower, nil
 }
 
+func (site *Site) deltaGridEnergy(prevGridTotalEnergy float64) float64 {
+	var gridDeltaEnergy float64
+
+	// derive from power
+	if !site.updated.IsZero() {
+		if site.gridPower > 0 {
+			gridDeltaEnergy = site.gridPower / 1e3 * float64(time.Since(site.updated)) / float64(time.Hour)
+		}
+	}
+	site.updated = time.Now()
+
+	// use actual measurements
+	if _, ok := site.gridMeter.(api.MeterEnergy); ok {
+		// gridTotalEnergy is updated when the meter values are updated
+		gridDeltaEnergy = site.gridTotalEnergy - prevGridTotalEnergy
+	}
+
+	return gridDeltaEnergy
+}
+
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
@@ -431,11 +467,20 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
-	// update all loadpoint's charge power
-	var totalChargePower float64
+	// save before meters are updated
+	prevChargedTotalEnergy := site.chargedTotalEnergy
+	prevGridTotalEnergy := site.gridTotalEnergy
+
+	var (
+		totalChargePower   float64
+		totalChargedEnergy float64
+	)
+
+	// update all loadpoint's charge meter
 	for _, lp := range site.loadpoints {
-		lp.UpdateChargePower()
+		lp.UpdateChargeMeter()
 		totalChargePower += lp.GetChargePower()
+		totalChargedEnergy += lp.GetChargeTotalEnergy()
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
@@ -449,10 +494,13 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	// update savings
-	// TODO: use energy instead of current power for better results
-	if deltaGrid, deltaGreen := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower); deltaGrid > 0 {
-		go community.ChargeProgress(site.log, totalChargePower, deltaGrid, deltaGreen)
+	// update savings and community api
+	if deltaCharged := totalChargedEnergy - prevChargedTotalEnergy; deltaCharged > 0 {
+		deltaGrid := site.deltaGridEnergy(prevGridTotalEnergy)
+		site.savings.Update(site, deltaCharged, deltaGrid)
+
+		deltaGreen := math.Max(0, deltaCharged-deltaGrid)
+		go community.ChargeProgress(site.log, totalChargePower, deltaCharged, deltaGreen)
 	}
 }
 

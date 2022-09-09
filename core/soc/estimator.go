@@ -105,7 +105,7 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 }
 
 // SoC replaces the api.Vehicle.SoC interface to take charged energy into account
-func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
+func (s *Estimator) SoC(chargedEnergyWh float64) (float64, error) {
 	var fetchedSoC *float64
 
 	if charger, ok := s.charger.(api.Battery); ok {
@@ -153,7 +153,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 
 	if s.estimate && s.virtualCapacity > 0 {
 		socDelta := s.vehicleSoc - s.prevSoc
-		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
+		energyDelta := math.Max(chargedEnergyWh, 0) - s.prevChargedEnergy
 
 		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
 			// compare ChargeState of vehicle and charger
@@ -176,11 +176,11 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			if !invalid {
 				if s.initialSoc == 0 {
 					s.initialSoc = s.vehicleSoc
-					s.initialEnergy = chargedEnergy
+					s.initialEnergy = chargedEnergyWh
 				}
 
 				socDiff := s.vehicleSoc - s.initialSoc
-				energyDiff := chargedEnergy - s.initialEnergy
+				energyDiff := chargedEnergyWh - s.initialEnergy
 
 				// recalculate gradient, wh per soc %
 				if socDiff > 10 && energyDiff > 0 {
@@ -191,7 +191,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			}
 
 			// sample charged energy at soc change, reset energy delta
-			s.prevChargedEnergy = math.Max(chargedEnergy, 0)
+			s.prevChargedEnergy = math.Max(chargedEnergyWh, 0)
 			s.prevSoc = s.vehicleSoc
 		} else {
 			s.vehicleSoc = math.Min(*fetchedSoC+energyDelta/s.energyPerSocStep, 100)
