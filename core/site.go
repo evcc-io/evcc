@@ -52,13 +52,15 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower       float64   // Grid power
-	pvPower         float64   // PV power
-	batteryPower    float64   // Battery charge power
-	batteryBuffered bool      // Battery buffer active
-	chargeImport    float64   // Charge import energy
-	gridImport      float64   // Grid import energy
-	gridUpdated     time.Time // Grid energy last updated
+	gridPower       float64 // Grid power
+	pvPower         float64 // PV power
+	batteryPower    float64 // Battery charge power
+	batteryBuffered bool    // Battery buffer active
+
+	// savings and community energy
+	chargeImport float64   // Charge import energy
+	gridImport   float64   // Grid import energy
+	gridUpdated  time.Time // Grid energy last updated
 }
 
 // MetersConfig contains the loadpoint's meter configuration
