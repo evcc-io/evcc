@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/community"
 )
 
 // Updater abstracts the LoadPoint implementation for testing
@@ -450,7 +451,9 @@ func (site *Site) update(lp Updater) {
 
 	// update savings
 	// TODO: use energy instead of current power for better results
-	site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	if deltaGrid, deltaGreen := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower); deltaGrid > 0 {
+		go community.ChargeProgress(site.log, totalChargePower, deltaGrid, deltaGreen)
+	}
 }
 
 // prepare publishes initial values

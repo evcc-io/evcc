@@ -18,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/community"
 	"golang.org/x/exp/slices"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -1570,11 +1569,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	// update progress and soc before status is updated
-	prevEnergy := lp.chargedEnergy
 	lp.publishChargeProgress()
-	if deltaEnergy := lp.chargedEnergy - prevEnergy; deltaEnergy > 0 {
-		go community.ChargeProgress(lp.log, lp.chargePower, deltaEnergy)
-	}
 
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {

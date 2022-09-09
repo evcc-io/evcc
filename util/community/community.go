@@ -24,16 +24,17 @@ func Create(token string) error {
 	return nil
 }
 
-func ChargeProgress(log *util.Logger, power, energy float64) {
+func ChargeProgress(log *util.Logger, power, gridEnergy, greenEnergy float64) {
 	if !enabled {
 		return
 	}
 
 	data := struct {
-		Power, Energy float64
+		Power, GridEnergy, GreenEnergy float64
 	}{
-		Power:  power,
-		Energy: energy,
+		Power:       power,
+		GridEnergy:  gridEnergy,
+		GreenEnergy: greenEnergy,
 	}
 
 	uri := fmt.Sprintf("%s/%s/%s", api, "charged", sponsor.Token)

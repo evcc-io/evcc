@@ -125,13 +125,14 @@ func (s *Savings) updatePrices(p publisher) (float64, float64) {
 	return gridPrice, feedinPrice
 }
 
-func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
+// Update savings calculation and return grid/green energy added since last update
+func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) (float64, float64) {
 	gridPrice, feedinPrice := s.updatePrices(p)
 	defer func() { s.updated = s.clock.Now() }()
 
 	// no charging, no need to update
 	if chargePower == 0 {
-		return
+		return 0, 0
 	}
 
 	// assume charge power as constant over the duration -> rough kWh estimate
@@ -153,4 +154,6 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
+
+	return energyAdded, addedSelfConsumption
 }
