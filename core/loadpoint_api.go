@@ -189,7 +189,7 @@ func (lp *LoadPoint) GetChargePower() float64 {
 	return lp.chargePower
 }
 
-// GetChargeTotalEnergy returns the total charged energy
+// GetChargeTotalEnergy returns the charge meter total energy reading (Zählerstand)
 func (lp *LoadPoint) GetChargeTotalEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()

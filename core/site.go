@@ -52,13 +52,13 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower          float64   // Grid power
-	pvPower            float64   // PV power
-	batteryPower       float64   // Battery charge power
-	batteryBuffered    bool      // Battery buffer active
-	chargedTotalEnergy float64   // Charge energy
-	gridTotalEnergy    float64   // Grid import energy
-	energyUpdated      time.Time // Grid energy last updated
+	gridPower         float64   // Grid power
+	pvPower           float64   // PV power
+	batteryPower      float64   // Battery charge power
+	batteryBuffered   bool      // Battery buffer active
+	chargeTotalEnergy float64   // Charge energy
+	gridTotalEnergy   float64   // Grid import energy
+	energyUpdated     time.Time // Grid energy last updated
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -446,8 +446,7 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
-	// save before meters are updated
-	prevChargedTotalEnergy := site.chargedTotalEnergy
+	// save before grid meter is updated
 	prevGridTotalEnergy := site.gridTotalEnergy
 
 	var (
@@ -474,7 +473,9 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// update savings and community api
-	if deltaCharged := totalChargedEnergy - prevChargedTotalEnergy; deltaCharged > 0 {
+	if deltaCharged := totalChargedEnergy - site.chargeTotalEnergy; deltaCharged > 0 {
+		site.chargeTotalEnergy = totalChargedEnergy
+
 		deltaGrid := site.gridTotalEnergy - prevGridTotalEnergy
 		site.savings.Update(site, deltaCharged, deltaGrid)
 
