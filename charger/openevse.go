@@ -29,8 +29,10 @@ func init() {
 	registry.Add("openevse", NewOpenEVSEFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateOpenEVSE -b "*OpenEVSE" -r api.Charger -t "api.ChargePhases,Phases1p3p,func(int) (error)"
-// go:generate go run oapi-codegen -package openevse -old-config-style -generate "types,client" openevse/api.yaml > openevse/api.go
+// Xgo:generate go run ../cmd/tools/decorate.go -f decorateOpenEVSE -b "*OpenEVSE" -r api.Charger -t "api.ChargePhases,Phases1p3p,func(int) (error)"
+// Xgo:generate go run oapi-codegen -package openevse -old-config-style -generate "types,client" openevse/api.yaml > openevse/api.go
+
+// go:generate go run ../cmd/tools/decorate.go -f decorateOpenEVSE -b ""*OpenEVSE" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
 
 // NewOpenEVSEFromConfig creates a go-e charger from generic config
 func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -69,6 +71,10 @@ func NewOpenEVSE(uri, user, password string) (api.Charger, error) {
 		c.api, err = openevse.NewClientWithResponses(uri, openevse.WithRequestEditorFn(basicAuthProvider.Intercept))
 	} else {
 		c.api, err = openevse.NewClientWithResponses(uri)
+	}
+
+	if err != nil {
+		return c, err
 	}
 
 	var phaseSwitchFn func(int) error
@@ -179,7 +185,7 @@ func (c *OpenEVSE) PerformRAPICommand(uri, command string) (response string, suc
 			return "", false, err
 		}
 
-		regex := regexp.MustCompile("\\$(OK|NK)\\s([^^]*)\\^\\d+")
+		regex := regexp.MustCompile(`\$(OK|NK)\s([^^]*)\^\d+`)
 
 		if regex == nil {
 			return "", false, fmt.Errorf("invalid response from RAPI command %s: %s", command, string(bodyBytes))
@@ -225,22 +231,26 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 		255: "disabled"
 	*/
 
-	switch car := *resp.JSON200.State; car {
+	state := *resp.JSON200.State
+	vehicleConnected := *resp.JSON200.Vehicle != 0
 
+	switch state {
 	case 1:
 		return api.StatusA, nil
 	case 2, 254, 255:
-		return api.StatusB, nil
+		if vehicleConnected {
+			return api.StatusB, nil
+		} else {
+			return api.StatusA, nil
+		}
 	case 3:
 		return api.StatusC, nil
 	case 4:
 		return api.StatusD, nil
-	//case 255:
-	//	return api.StatusE, nil
 	case 5, 6, 7, 8, 9, 10, 11:
 		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("car unknown result: %d", car)
+		return api.StatusNone, fmt.Errorf("unknown EVSE state: %d", state)
 	}
 }
 
@@ -296,7 +306,7 @@ func (c *OpenEVSE) Enable(enable bool) error {
 
 		if clearOverrideResp.StatusCode() != 200 {
 			if overrideResp.JSON200 != nil && overrideResp.JSON200.State != nil {
-				return fmt.Errorf("cannot clear %s override", overrideResp.JSON200.State)
+				return fmt.Errorf("cannot clear %s override", *overrideResp.JSON200.State)
 			} else {
 				return fmt.Errorf("cannot clear override")
 			}
@@ -304,13 +314,13 @@ func (c *OpenEVSE) Enable(enable bool) error {
 	}
 
 	if enable && c.autoPhasesSwitchSupported {
-		_, success, err := c.PerformRAPICommand(c.uri, fmt.Sprintf("$S8 0"))
+		_, success, err := c.PerformRAPICommand(c.uri, "$S8 0")
 
 		if err != nil {
 			return err
 		}
 
-		if success != true {
+		if !success {
 			return fmt.Errorf("failed to turn off three phase auto-switching")
 		}
 	}
@@ -426,7 +436,7 @@ func (c *OpenEVSE) phases1p3p(phases int) error {
 		return err
 	}
 
-	if success != true {
+	if !success {
 		return fmt.Errorf("failed to switch to %d phase(s)", phases)
 	}
 

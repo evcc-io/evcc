@@ -1,0 +1,9 @@
+product:
+  brand: OpenEVSE
+description: |
+  Benötigt mindestens Firmware 7.0 oder neuer.
+render:
+  - default: |
+      type: template
+      template: openevse
+      host: 192.0.2.2 # IP-Adresse oder Hostname
