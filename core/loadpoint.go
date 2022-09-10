@@ -140,15 +140,14 @@ type LoadPoint struct {
 	socTimer       *soc.Timer
 
 	// cached state
-	status           api.ChargeStatus       // Charger status
-	remoteDemand     loadpoint.RemoteDemand // External status demand
-	chargePower      float64                // Charging power
-	chargeCurrents   []float64              // Phase currents
-	connectedTime    time.Time              // Time when vehicle was connected
-	pvTimer          time.Time              // PV enabled/disable timer
-	phaseTimer       time.Time              // 1p3p switch timer
-	wakeUpTimer      *Timer                 // Vehicle wake-up timeout
-	wakeUpUseVehicle bool                   // Wake-up by vehicle API
+	status         api.ChargeStatus       // Charger status
+	remoteDemand   loadpoint.RemoteDemand // External status demand
+	chargePower    float64                // Charging power
+	chargeCurrents []float64              // Phase currents
+	connectedTime  time.Time              // Time when vehicle was connected
+	pvTimer        time.Time              // PV enabled/disable timer
+	phaseTimer     time.Time              // 1p3p switch timer
+	wakeUp         *WakeUp                // Vehicle wake-up facility
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle SoC
@@ -347,9 +346,6 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 		_ = lp.bus.Subscribe(evChargeStop, ct.StopCharge)
 		lp.chargeTimer = ct
 	}
-
-	// add wakeup timer
-	lp.wakeUpTimer = NewTimer()
 }
 
 // pushEvent sends push messages to clients
@@ -369,11 +365,7 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.pushEvent(evChargeStart)
 
-	if lp.wakeUpUseVehicle && !lp.wakeUpTimer.Expired() {
-		// reset to use successful charger wake-up next time
-		lp.wakeUpUseVehicle = false
-	}
-	lp.wakeUpTimer.Stop()
+	lp.wakeUp.Stop()
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -566,6 +558,9 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	if ctrl, ok := lp.charger.(loadpoint.Controller); ok {
 		ctrl.LoadpointControl(lp)
 	}
+
+	// add wakeup facility
+	lp.wakeUp = NewWakeUp(lp, lp.charger)
 }
 
 // syncCharger updates charger status and synchronizes it with expectations
@@ -617,15 +612,6 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 			return nil
 		}
 
-		// remote stop
-		// TODO https://github.com/evcc-io/evcc/discussions/1929
-		// if car, ok := lp.vehicle.(api.VehicleChargeController); !enabled && ok {
-		// 	// log but don't propagate
-		// 	if err := car.StopCharge(); err != nil {
-		// 		lp.log.ERROR.Printf("vehicle remote charge stop: %v", err)
-		// 	}
-		// }
-
 		if err := lp.charger.Enable(enabled); err != nil {
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
@@ -638,21 +624,10 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 
 		// start/stop vehicle wake-up timer
 		if enabled {
-			lp.log.DEBUG.Printf("wake-up timer: start")
-			lp.wakeUpTimer.Start()
+			lp.wakeUp.Start(lp.vehicle)
 		} else {
-			lp.log.DEBUG.Printf("wake-up timer: stop")
-			lp.wakeUpTimer.Stop()
+			lp.wakeUp.Stop()
 		}
-
-		// remote start
-		// TODO https://github.com/evcc-io/evcc/discussions/1929
-		// if car, ok := lp.vehicle.(api.VehicleChargeController); enabled && ok {
-		// 	// log but don't propagate
-		// 	if err := car.StartCharge(); err != nil {
-		// 		lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
-		// 	}
-		// }
 	}
 
 	return nil
@@ -863,34 +838,6 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.Lock()
 
 	lp.unpublishVehicle()
-}
-
-// wakeUpVehicle calls the next available wake-up method
-func (lp *LoadPoint) wakeUpVehicle() {
-	if !lp.wakeUpUseVehicle {
-		// try the chargers explicit car wake-up method first
-		if c, ok := lp.charger.(api.Resurrector); ok {
-			if err := c.WakeUp(); err != nil {
-				lp.log.ERROR.Printf("wake-up charger: %v", err)
-			}
-		}
-		// if not available, the charger may have an automatic
-		// internal car wake-up method that is already running
-		// in the background and has to be simply waited for.
-
-		// wait for vehicle wake-up again before trying the next wake-up method.
-		lp.wakeUpUseVehicle = true
-		lp.wakeUpTimer.Start()
-	} else {
-		// try vehicle remote wake-up
-		if lp.vehicle != nil {
-			if vs, ok := lp.vehicle.(api.Resurrector); ok {
-				if err := vs.WakeUp(); err != nil {
-					lp.log.ERROR.Printf("wake-up vehicle: %v", err)
-				}
-			}
-		}
-	}
 }
 
 // unpublishVehicle resets published vehicle data
@@ -1703,9 +1650,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 	}
 
 	// Wake-up checks
-	if lp.enabled && lp.status == api.StatusB &&
-		int(lp.vehicleSoc) < lp.SoC.target && lp.wakeUpTimer.Expired() {
-		lp.wakeUpVehicle()
+	if err == nil && lp.enabled && lp.status == api.StatusB && int(lp.vehicleSoc) < lp.SoC.target {
+		err = lp.wakeUp.WakeUp()
 	}
 
 	// stop an active target charging session if not currently evaluated

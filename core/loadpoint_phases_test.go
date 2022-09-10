@@ -185,7 +185,6 @@ func TestPvScalePhases(t *testing.T) {
 			chargeRater:      &Null{},            // silence nil panics
 			chargeTimer:      &Null{},            // silence nil panics
 			progress:         NewProgress(0, 10), // silence nil panics
-			wakeUpTimer:      NewTimer(),         // silence nil panics
 			Mode:             api.ModeNow,
 			MinCurrent:       minA,
 			MaxCurrent:       maxA,

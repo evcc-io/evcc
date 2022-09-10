@@ -253,7 +253,6 @@ func TestReconnectVehicle(t *testing.T) {
 		chargeMeter: &Null{}, // silence nil panics
 		chargeRater: &Null{}, // silence nil panics
 		chargeTimer: &Null{}, // silence nil panics
-		wakeUpTimer: NewTimer(),
 		MinCurrent:  minA,
 		MaxCurrent:  maxA,
 		phases:      1,

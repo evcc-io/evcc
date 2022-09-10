@@ -162,7 +162,6 @@ func TestUpdatePowerZero(t *testing.T) {
 			chargeMeter: &Null{}, // silence nil panics
 			chargeRater: &Null{}, // silence nil panics
 			chargeTimer: &Null{}, // silence nil panics
-			wakeUpTimer: NewTimer(),
 			MinCurrent:  minA,
 			MaxCurrent:  maxA,
 			phases:      1,
@@ -398,7 +397,6 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		chargeRater: &Null{},            // silence nil panics
 		chargeTimer: &Null{},            // silence nil panics
 		progress:    NewProgress(0, 10), // silence nil panics
-		wakeUpTimer: NewTimer(),         // silence nil panics
 		// coordinator:  coordinator.NewDummy(), // silence nil panics
 		MinCurrent:   minA,
 		MaxCurrent:   maxA,
@@ -471,7 +469,6 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		chargeMeter: &Null{}, // silence nil panics
 		chargeRater: &Null{}, // silence nil panics
 		chargeTimer: &Null{}, // silence nil panics
-		wakeUpTimer: NewTimer(),
 		MinCurrent:  minA,
 		MaxCurrent:  maxA,
 		status:      api.StatusC,
@@ -543,7 +540,6 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		chargeMeter: &Null{}, // silence nil panics
 		chargeRater: rater,
 		chargeTimer: &Null{}, // silence nil panics
-		wakeUpTimer: NewTimer(),
 		MinCurrent:  minA,
 		MaxCurrent:  maxA,
 		status:      api.StatusC,
