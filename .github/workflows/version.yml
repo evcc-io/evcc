@@ -1,0 +1,26 @@
+name: Upgrade Version in config.json for evcc-io/hassio-addon
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  upgrade-version-config-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: pocket-apps/action-update-version@v1
+        with:
+          files: 'hassio.addon.config.json'
+          version-regexp: '\d+.\d+.\d+'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Copy
+        uses: andstor/copycat-action@v3
+        with:
+          personal_token: ${{ secrets.GH_TOKEN }}
+          src_path: hassio.addon.config.json
+          dst_path: /evcc/config.json
+          dst_owner: evcc-io
+          src_branch: master
+          dst_branch: master
+          dst_repo_name: hassio-addon
