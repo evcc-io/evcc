@@ -11,14 +11,14 @@ jobs:
       - uses: actions/checkout@v2
       - uses: pocket-apps/action-update-version@v1
         with:
-          files: 'hassio.addon.config.json'
+          files: 'packaging/hassio/config.json'
           version-regexp: '\d+.\d+.\d+'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Copy
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.GH_TOKEN }}
-          src_path: hassio.addon.config.json
+          src_path: packaging/hassio/config.json
           dst_path: /evcc/config.json
           dst_owner: evcc-io
           src_branch: master
