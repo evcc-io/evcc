@@ -95,7 +95,8 @@ func (v *JLR) RegisterDevice(log *util.Logger, user, device string, t jlr.Token)
 		"access_token":        t.AccessToken,
 		"authorization_token": t.AuthToken,
 		"expires_in":          "86400",
-		"deviceID":            device}
+		"deviceID":            device,
+	}
 
 	uri := fmt.Sprintf("%s/users/%s/clients", jlr.IFOP_BASE_URL, url.PathEscape(user))
 

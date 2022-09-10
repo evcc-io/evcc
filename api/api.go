@@ -8,10 +8,9 @@ import (
 	"time"
 
 	"github.com/fatih/structs"
-	"github.com/gorilla/mux"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
@@ -108,8 +107,8 @@ type ChargerEx interface {
 	MaxCurrentMillis(current float64) error
 }
 
-// ChargePhases provides 1p3p switching
-type ChargePhases interface {
+// PhaseSwitcher provides 1p3p switching
+type PhaseSwitcher interface {
 	Phases1p3p(phases int) error
 }
 
@@ -160,7 +159,7 @@ type VehicleRange interface {
 
 // VehicleClimater provides climatisation data
 type VehicleClimater interface {
-	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
+	Climater() (active bool, outsideTemp, targetTemp float64, err error)
 }
 
 // VehicleOdometer returns the vehicles milage
@@ -173,28 +172,30 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
+// SocLimiter returns the vehicles charge limit
+type SocLimiter interface {
+	TargetSoC() (float64, error)
+}
+
 // VehicleChargeController allows to start/stop the charging session on the vehicle side
 type VehicleChargeController interface {
 	StartCharge() error
 	StopCharge() error
 }
 
-// AlarmClock provides wakeup calls to the vehicle with an API call or a CP interrupt from the charger
-type AlarmClock interface {
+// Resurrector provides wakeup calls to the vehicle with an API call or a CP interrupt from the charger
+type Resurrector interface {
 	WakeUp() error
 }
 
+// Tariff is the grid tariff
 type Tariff interface {
 	IsCheap() (bool, error)
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
 }
 
-type WebController interface {
-	WebControl(*mux.Router)
-}
-
-// ProviderLogin is the ability to provide OAuth authentication through the ui
-type ProviderLogin interface {
+// AuthProvider is the ability to provide OAuth authentication through the ui
+type AuthProvider interface {
 	SetCallbackParams(baseURL, redirectURL string, authenticated chan<- bool)
 	LoginHandler() http.HandlerFunc
 	LogoutHandler() http.HandlerFunc

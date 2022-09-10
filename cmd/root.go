@@ -18,7 +18,7 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/grandcat/zeroconf"
+	"github.com/libp2p/zeroconf/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -152,7 +152,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// network config
 	if viper.GetString("uri") != "" {
-		log.ERROR.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
+		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
 	}
 
 	if cmd.PersistentFlags().Lookup("port").Changed {

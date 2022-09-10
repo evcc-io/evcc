@@ -41,7 +41,7 @@ func NewSMAFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, fmt.Errorf("failed to get discoverer failed: %w", err)
 	}
 
-	var provider = &SMA{
+	provider := &SMA{
 		scale: cc.Scale,
 	}
 	switch {

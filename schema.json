@@ -126,10 +126,14 @@
             }
           }
         },
-        "prioritySoC": {
+        "vehicles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
-        "bufferSoC": {
-        }
+        "prioritySoC": {},
+        "bufferSoC": {}
       }
     },
     "loadpoints": {
@@ -153,19 +157,8 @@
           "charger": {
             "type": "string"
           },
-          "meters": {
-            "type": "object",
-            "properties": {
-              "charge": {
-                "type": "string"
-              }
-            }
-          },
-          "vehicles": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "meter": {
+            "type": "string"
           },
           "soc": {
             "type": "object",

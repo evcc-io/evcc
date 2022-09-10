@@ -8,4 +8,3 @@ render:
       type: template
       template: eebus
       ski: # Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
-      enforcePVLimits: true # Verwende PV Laden über eine Ladebegrenzung (wie herkömmliche Wallboxen) bei Fahrzeugen mit Unterstützung von ISO15118 # Optional

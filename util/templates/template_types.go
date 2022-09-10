@@ -49,8 +49,10 @@ const (
 
 var ValidParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes, ParamValueTypeDuration}
 
-var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
-var ValidUsageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
+var (
+	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+	ValidUsageChoices  = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
+)
 
 const (
 	DependencyCheckEmpty    = "empty"
@@ -78,7 +80,8 @@ const (
 
 var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship}
 
-var predefinedTemplateProperties = []string{"type", "template", "name",
+var predefinedTemplateProperties = []string{
+	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
 	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
 	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,

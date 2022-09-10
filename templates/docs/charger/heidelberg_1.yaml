@@ -3,6 +3,8 @@ product:
   description: Wallbox pro s
 capabilities: ["mA"]
 requirements: ["sponsorship"]
+description: |
+  Bitte das Handbuch zur Verkabelung und Konfiguration genau lesen. Alle Boxen müssen für die externe Steuerung auf Follower-Modus konfiguriert sein (DIP S5/4 OFF). Jede Box braucht eine individuelle Modbus-ID (DIP S4). Auf korrekte RS485-Verkabelung inkl. Busterminierung (DIP S6/2) achten.
 render:
   - default: |
       type: template

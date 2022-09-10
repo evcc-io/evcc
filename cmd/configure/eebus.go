@@ -17,7 +17,7 @@ func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 		shutdown.Register(server.EEBusInstance.Shutdown)
 	}
 
-	return nil
+	return err
 }
 
 // eebusCertificate creates EEBUS certificate and returns private/public key

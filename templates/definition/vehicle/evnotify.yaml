@@ -14,7 +14,6 @@ params:
   - name: phases
     advanced: true
   - preset: vehicleidentify
-  - preset: vehiclecloud
 render: |
   type: custom
   {{- if ne .title "" }}
@@ -25,8 +24,7 @@ render: |
   phases: {{ .phases }}
   {{- end }}
   soc:
-    type: http
+    source: http
     uri: https://app.evnotify.de/soc?akey={{ .akey }}&token={{ .token }} # evNotify Server + AKEY
     method: GET
     jq: .soc_display
-  {{ include "vehicle-cloud" . }}

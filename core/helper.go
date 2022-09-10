@@ -2,7 +2,9 @@ package core
 
 import (
 	"github.com/avast/retry-go/v3"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 var (
@@ -36,4 +38,11 @@ func sitePower(log *util.Logger, maxGrid, grid, battery, residual float64) float
 	}
 
 	return grid + battery + residual
+}
+
+// vehicleTitles returns a list of vehicle titles
+func vehicleTitles(vehicles []api.Vehicle) []string {
+	return lo.Map(vehicles, func(v api.Vehicle, _ int) string {
+		return v.Title()
+	})
 }

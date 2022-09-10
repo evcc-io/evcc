@@ -17,9 +17,9 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
-	conn         *tasmota.Connection
-	channel      int
-	standbypower float64
+	conn    *tasmota.Connection
+	channel int
+	*switchSocket
 }
 
 func init() {
@@ -53,14 +53,13 @@ func NewTasmota(uri, user, password string, channel int, standbypower float64) (
 	}
 
 	c := &Tasmota{
-		conn:         conn,
-		channel:      channel,
-		standbypower: standbypower,
+		conn:    conn,
+		channel: channel,
 	}
 
-	err = c.channelExists(channel)
+	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
 
-	return c, err
+	return c, c.channelExists(channel)
 }
 
 // channelExists checks the existence of the configured relay channel interface
@@ -171,53 +170,6 @@ func (c *Tasmota) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *Tasmota) MaxCurrent(current int64) error {
 	return nil
-}
-
-// Status implements the api.Charger interface
-func (c *Tasmota) Status() (api.ChargeStatus, error) {
-	res := api.StatusB
-
-	// static mode
-	if c.standbypower < 0 {
-		on, err := c.Enabled()
-		if on {
-			res = api.StatusC
-		}
-
-		return res, err
-	}
-
-	// standby power mode
-	power, err := c.CurrentPower()
-	if power > c.standbypower {
-		res = api.StatusC
-	}
-
-	return res, err
-}
-
-var _ api.Meter = (*Tasmota)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (c *Tasmota) CurrentPower() (float64, error) {
-	var power float64
-
-	// set fix static power in static mode
-	if c.standbypower < 0 {
-		on, err := c.Enabled()
-		if on {
-			power = -c.standbypower
-		}
-		return power, err
-	}
-
-	// ignore power in standby mode
-	power, err := c.conn.CurrentPower()
-	if power <= c.standbypower {
-		power = 0
-	}
-
-	return power, err
 }
 
 var _ api.MeterEnergy = (*Tasmota)(nil)

@@ -21,7 +21,6 @@ func (lp *mockLoadpoint) SetTargetCharge(time time.Time, soc int) {
 }
 
 func TestTargetChargeHandler(t *testing.T) {
-
 	tc := []struct {
 		inSoC      string
 		inTime     string
@@ -29,8 +28,10 @@ func TestTargetChargeHandler(t *testing.T) {
 		outSoC     int
 		outTime    time.Time
 	}{
-		{"70", "2022-05-17T06:20:59.509Z", http.StatusOK,
-			70, time.Date(2022, 05, 17, 06, 20, 59, 509000000, time.UTC)},
+		{
+			"70", "2022-05-17T06:20:59.509Z", http.StatusOK,
+			70, time.Date(2022, 0o5, 17, 0o6, 20, 59, 509000000, time.UTC),
+		},
 		{"foo", "2022-05-17T06:20:59.509Z", http.StatusBadRequest, 0, time.Time{}},
 		{"70", "2022-05-17 06:20:59", http.StatusBadRequest, 0, time.Time{}},
 	}
@@ -69,5 +70,4 @@ func TestTargetChargeHandler(t *testing.T) {
 			t.Errorf("wrong target time year: got %v want %v", mockLp.TargetTime.UTC().Format(isoFormat), tc.outTime.Format(isoFormat))
 		}
 	}
-
 }

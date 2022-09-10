@@ -53,6 +53,9 @@ type networkConfig struct {
 }
 
 func (c networkConfig) HostPort() string {
+	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
+		return c.Host
+	}
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }
 
@@ -206,10 +209,10 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 		}
 
 		// ensure vehicle config has title
-		ccWithTitle := struct {
+		var ccWithTitle struct {
 			Title string
 			Other map[string]interface{} `mapstructure:",remain"`
-		}{}
+		}
 
 		if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
 			return err
@@ -236,7 +239,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	return nil
 }
 
-// webControl handles routing for devices. For now only api.ProviderLogin related routes
+// webControl handles routing for devices. For now only api.AuthProvider related routes
 func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/oauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
@@ -255,7 +258,7 @@ func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, par
 
 	var id int
 	for _, v := range cp.vehicles {
-		if provider, ok := v.(api.ProviderLogin); ok {
+		if provider, ok := v.(api.AuthProvider); ok {
 			id += 1
 
 			basePath := fmt.Sprintf("vehicles/%d", id)

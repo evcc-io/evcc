@@ -92,7 +92,7 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 		return nil, err
 	}
 
-	//Connect DBus System bus
+	// Connect DBus System bus
 	conn, err := dbus.SystemBus()
 	if err != nil {
 		return nil, err

@@ -8,7 +8,7 @@ builds:
     flags:
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{.Tag}} -X github.com/evcc-io/evcc/server.Commit={{.ShortCommit}} -s -w
+      - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w
     env:
       - CGO_ENABLED=0
     goos:
@@ -31,7 +31,7 @@ archives:
         format: zip
     files:
       - evcc.dist.yaml
-    name_template: "{{.ProjectName}}_{{ .Version }}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}"
 
 universal_binaries:
   - replace: true
@@ -40,7 +40,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: "{{ .Version }}.{{.Timestamp}}"
+  name_template: "{{ .Version }}.{{ .Timestamp }}"
 
 changelog:
   sort: asc
@@ -54,7 +54,7 @@ changelog:
 nfpms:
   - id: default
     package_name: evcc
-    file_name_template: "{{.ProjectName}}_{{ .Version }}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}"
 
     homepage: https://evcc.io
     description: EV Charge Controller

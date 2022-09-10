@@ -6,9 +6,11 @@ import { createApp, h } from "vue";
 import { createMetaManager, plugin as metaPlugin } from "vue-meta";
 import api from "./api";
 import App from "./views/App.vue";
+import VueNumber from "vue-number-animation";
 import router from "./router";
 import i18n from "./i18n";
 import featureflags from "./featureflags";
+import { watchThemeChanges } from "./theme";
 
 smoothscroll.polyfill();
 
@@ -68,8 +70,13 @@ app.use(router);
 app.use(createMetaManager());
 app.use(metaPlugin);
 app.use(featureflags);
+app.use(VueNumber);
 window.app = app.mount("#app");
 
 window.setInterval(function () {
-  api.get("health").then(window.app.setOnline).catch(window.app.setOffline);
+  if (!document.hidden) {
+    api.get("health").then(window.app.setOnline).catch(window.app.setOffline);
+  }
 }, 5000);
+
+watchThemeChanges();

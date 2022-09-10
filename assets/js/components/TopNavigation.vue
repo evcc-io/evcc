@@ -7,7 +7,7 @@
 			aria-controls="navbarNavAltMarkup"
 			aria-expanded="false"
 			aria-label="Toggle navigation"
-			class="btn btn-sm btn-outline-secondary position-relative"
+			class="btn btn-sm btn-outline-secondary position-relative border-0 menu-button"
 		>
 			<span
 				v-if="logoutCount > 0"
@@ -38,6 +38,11 @@
 					{{ $t("header.about") }}
 				</a>
 			</li>
+			<li>
+				<button type="button" class="dropdown-item" @click.stop="toggleTheme">
+					{{ $t(`header.theme.${theme}`) }}
+				</button>
+			</li>
 			<template v-if="providerLogins.length > 0">
 				<li><hr class="dropdown-divider" /></li>
 				<li>
@@ -64,7 +69,9 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/menu";
+
 import baseAPI from "../baseapi";
+import { getThemePreference, setThemePreference, THEMES } from "../theme";
 
 export default {
 	name: "TopNavigation",
@@ -75,6 +82,9 @@ export default {
 				return {};
 			},
 		},
+	},
+	data: function () {
+		return { theme: getThemePreference() };
 	},
 	computed: {
 		logoutCount() {
@@ -90,6 +100,12 @@ export default {
 		},
 	},
 	methods: {
+		toggleTheme: function () {
+			const currentIndex = THEMES.indexOf(this.theme);
+			const nextIndex = currentIndex < THEMES.length - 1 ? currentIndex + 1 : 0;
+			this.theme = THEMES[nextIndex];
+			setThemePreference(this.theme);
+		},
 		handleProviderAuthorization: async function (provider) {
 			if (!provider.loggedIn) {
 				baseAPI.post(provider.loginPath).then(function (response) {
@@ -102,3 +118,8 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.menu-button {
+	margin-right: -0.7rem;
+}
+</style>

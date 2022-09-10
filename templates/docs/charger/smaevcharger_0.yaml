@@ -2,13 +2,13 @@ product:
   brand: SMA
   description: EV Charger
 capabilities: ["mA"]
+requirements: ["sponsorship"]
 description: |
-  Die Wallbox muss sich im Modus "Fast" befinden.
+  Der EV Charger muss sich im Modus "Fast" befinden.
 render:
   - default: |
       type: template
       template: smaevcharger
-      title: # Wird in der Benutzeroberfläche angezeigt # Optional
       host: 192.0.2.2 # IP-Adresse oder Hostname
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)

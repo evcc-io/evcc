@@ -44,32 +44,33 @@ func (d *Connection) ExecCmd(cmd string, res interface{}) error {
 		"cmnd":     []string{cmd},
 	}
 
-	err := d.GetJSON(fmt.Sprintf("%s/cm?%s", d.uri, parameters.Encode()), res)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return d.GetJSON(fmt.Sprintf("%s/cm?%s", d.uri, parameters.Encode()), res)
 }
 
-// CurrentPower provides current power consumption
+// CurrentPower implements the api.Meter interface
 func (d *Connection) CurrentPower() (float64, error) {
-	var res *StatusSNSResponse
+	var res StatusSNSResponse
 	err := d.ExecCmd("Status 8", &res)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(res.StatusSNS.Energy.Power), nil
+	return float64(res.StatusSNS.Energy.Power), err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (d *Connection) TotalEnergy() (float64, error) {
-	var res *StatusSNSResponse
+	var res StatusSNSResponse
 	err := d.ExecCmd("Status 8", &res)
-	if err != nil {
-		return 0, err
-	}
+	return res.StatusSNS.Energy.Total, err
+}
 
-	return float64(res.StatusSNS.Energy.Total), nil
+// SmlPower provides the sml sensor power
+func (d *Connection) SmlPower() (float64, error) {
+	var res StatusSNSResponse
+	err := d.ExecCmd("Status 8", &res)
+	return float64(res.StatusSNS.SML.PowerCurr), err
+}
+
+// SmlTotalEnergy provides the sml sensor total import energy
+func (d *Connection) SmlTotalEnergy() (float64, error) {
+	var res StatusSNSResponse
+	err := d.ExecCmd("Status 8", &res)
+	return res.StatusSNS.SML.TotalIn, err
 }

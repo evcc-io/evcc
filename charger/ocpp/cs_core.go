@@ -47,7 +47,7 @@ func (cs *CS) TriggerMeterValueRequest(cp *CP) {
 		cs.log.TRACE.Printf("TriggerMessageRequest %T: %+v", request, request)
 	}
 
-	if err := cs.cs.TriggerMessage(cp.id, callback, core.MeterValuesFeatureName); err != nil {
+	if err := cs.TriggerMessage(cp.id, callback, core.MeterValuesFeatureName); err != nil {
 		cs.log.DEBUG.Printf("failed sending TriggerMessageRequest: %s", err)
 	}
 }
@@ -117,7 +117,6 @@ func (cs *CS) OnFirmwareStatusNotification(chargePointId string, request *firmwa
 	}
 
 	return cp.FirmwareStatusNotification(request)
-
 }
 
 func (cs *CS) TriggerResetRequest(cp *CP, resetType core.ResetType) {
@@ -125,7 +124,7 @@ func (cs *CS) TriggerResetRequest(cp *CP, resetType core.ResetType) {
 		cs.log.TRACE.Printf("TriggerResetRequest %T: %+v", request, request)
 	}
 
-	if err := cs.cs.Reset(cp.id, callback, resetType); err != nil {
+	if err := cs.Reset(cp.id, callback, resetType); err != nil {
 		cs.log.DEBUG.Printf("failed sending TriggerResetRequest: %s", err)
 	}
 }

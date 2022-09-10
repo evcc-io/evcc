@@ -129,7 +129,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
 	res, err := v.statusG()
 	if err == nil {
 		active := strings.ToLower(res.Preconditionning.AirConditioning.Status) != "disabled"
@@ -145,7 +145,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.statusG()
 	if err == nil {
-		if coord := res.LastPosition.Geometry.Coordinates; len(coord) == 2 {
+		if coord := res.LastPosition.Geometry.Coordinates; len(coord) >= 2 {
 			return coord[0], coord[1], nil
 		}
 		return 0, 0, api.ErrNotAvailable

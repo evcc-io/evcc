@@ -22,6 +22,7 @@ render: |
   type: modbus
   {{- include "modbus" . }}
   {{- if eq .usage "grid" }}
+  model: sunspec
   {{- if eq .integer "true" }}
   # sunspec model 203 (int+sf) meter
   power: 203:W
@@ -37,4 +38,7 @@ render: |
     - 213:AphB
     - 213:AphC
   {{- end }}
+  {{- else }}
+  model: sunspec
+  power: Power
   {{- end }}

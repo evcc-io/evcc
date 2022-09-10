@@ -152,9 +152,14 @@ func (m *Modbus) bytesGetter() ([]byte, error) {
 	return nil, errors.New("expected rtu reading")
 }
 
-func (m *Modbus) floatGetter() (float64, error) {
+func (m *Modbus) floatGetter() (f float64, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v", r)
+		}
+	}()
+
 	var res meters.MeasurementResult
-	var err error
 
 	// if funccode is configured, execute the read directly
 	if op := m.op.MBMD; op.FuncCode != 0 {
@@ -172,7 +177,7 @@ func (m *Modbus) floatGetter() (float64, error) {
 			// client := m.conn.ModbusClient()
 			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
 		} else {
-			if res, err = dev.QueryPoint(
+			if res.Value, err = dev.QueryPoint(
 				m.conn,
 				m.op.SunSpec.Model,
 				m.op.SunSpec.Block,
@@ -201,7 +206,7 @@ func (m *Modbus) floatGetter() (float64, error) {
 }
 
 // FloatGetter executes configured modbus read operation and implements func() (float64, error)
-func (m *Modbus) FloatGetter() func() (float64, error) {
+func (m *Modbus) FloatGetter() func() (f float64, err error) {
 	return m.floatGetter
 }
 

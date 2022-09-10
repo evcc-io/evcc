@@ -2,12 +2,18 @@ package ford
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"net/http/cookiejar"
+	"net/url"
+	"regexp"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/oauth2"
 )
 
@@ -21,8 +27,11 @@ const (
 var OAuth2Config = &oauth2.Config{
 	ClientID: ClientID,
 	Endpoint: oauth2.Endpoint{
+		AuthURL:  fmt.Sprintf("%s/v1.0/endpoint/default/authorize", AuthURI),
 		TokenURL: fmt.Sprintf("%s/oidc/endpoint/default/token", AuthURI),
 	},
+	RedirectURL: "fordapp://userauthorized",
+	Scopes:      []string{"openid"},
 }
 
 type Identity struct {
@@ -44,20 +53,87 @@ func NewIdentity(log *util.Logger, user, password string) *Identity {
 func (v *Identity) Login() error {
 	token, err := v.login()
 	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
+		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(token), v)
 	}
 	return err
 }
 
 // login authenticates with username/password to get new token
-func (v *Identity) login() (oauth.Token, error) {
+func (v *Identity) login() (*oauth.Token, error) {
+	cv, err := cv.CreateCodeVerifier()
+	if err != nil {
+		return nil, err
+	}
+
+	uri := OAuth2Config.AuthCodeURL("",
+		oauth2.SetAuthURLParam("max_age", "3600"),
+		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
+		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+	)
+
+	v.Jar, _ = cookiejar.New(nil)
+	defer func() { v.Jar = nil }()
+
+	var body []byte
+	req, err := request.New(http.MethodGet, uri, nil, nil)
+	if err == nil {
+		body, err = v.DoBody(req)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	match := regexp.MustCompile(`data-ibm-login-url="(.+?)"`).FindSubmatch(body)
+	if len(match) < 2 {
+		return nil, errors.New("missing login url")
+	}
+
+	data := url.Values{
+		"operation":       {"verify"},
+		"login-form-type": {"pwd"},
+		"username":        {v.user},
+		"password":        {v.password},
+	}
+
+	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if req.URL.Scheme != "https" {
+			return http.ErrUseLastResponse
+		}
+		return nil
+	}
+	defer func() { v.Client.CheckRedirect = nil }()
+
+	uri = fmt.Sprintf("%s%s", AuthURI, string(match[1]))
+	req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+
+	var loc *url.URL
+	if err == nil {
+		var resp *http.Response
+		if resp, err = v.Do(req); err == nil {
+			loc, err = url.Parse(resp.Header.Get("location"))
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithTimeout(
 		context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
 		request.Timeout,
 	)
 	defer cancel()
 
-	tok, err := OAuth2Config.PasswordCredentialsToken(ctx, v.user, v.password)
+	code := loc.Query().Get("code")
+	if code == "" {
+		return nil, errors.New("could not obtain auth code- check user and password")
+	}
+
+	tok, err := OAuth2Config.Exchange(ctx, code,
+		oauth2.SetAuthURLParam("grant_type", "authorization_code"),
+		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
+	)
 
 	// exchange code for api token
 	var token oauth.Token
@@ -79,7 +155,7 @@ func (v *Identity) login() (oauth.Token, error) {
 		}
 	}
 
-	return token, err
+	return &token, err
 }
 
 // RefreshToken implements oauth.TokenRefresher
@@ -94,7 +170,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"Application-Id": ApplicationID,
 	})
 
-	var res oauth.Token
+	var res *oauth.Token
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -103,5 +179,5 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		res, err = v.login()
 	}
 
-	return (*oauth2.Token)(&res), err
+	return (*oauth2.Token)(res), err
 }

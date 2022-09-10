@@ -12,8 +12,13 @@ import (
 const (
 	ApiURI = "https://api.porsche.com"
 
-	PairingComplete = "PAIRINGCOMPLETE"
+	PairingComplete  = "PAIRINGCOMPLETE"
+	PairingInProcess = "INPROCESS"
 )
+
+func IsPaired(status string) bool {
+	return status == PairingComplete || status == PairingInProcess
+}
 
 // API is an api.Vehicle implementation for Porsche PHEV cars
 type API struct {

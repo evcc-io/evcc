@@ -5,6 +5,11 @@ export default {
     github: "GitHub",
     login: "Fahrzeug Logins",
     about: "Über evcc",
+    theme: {
+      auto: "Design: System",
+      light: "Design: Hell",
+      dark: "Design: Dunkel",
+    },
   },
   footer: {
     version: {
@@ -25,26 +30,26 @@ export default {
     savings: {
       footerShort: "{percent}% Sonne",
       footerLong: "{percent}% Sonnenenergie",
-      modalTitlePartOne: "{total} kWh geladen",
-      modalTitlePartTwo: "{percent}% Sonne",
-      modalChartGrid: "Netz {grid} kWh",
-      modalChartSelf: "Sonne {self} kWh",
-      modalSavingsPrice: "Effektiver Energiepreis",
-      modalSavingsTotal: "Ersparnis gegenüber Netzbezug",
-      modalExplaination: "Berechnung",
-      modalExplainationGrid: "Netz {gridPrice}",
-      modalExplainationFeedIn: "Einspeisung {feedInPrice}",
-      modalServerStart: "Seit Serverstart {since}.",
-      modalNoData: "noch nicht geladen",
+      modalTitle: "Auswertung Ladeenergie",
+      sinceServerStart: "Seit Serverstart {since}.",
+      percentTitle: "Sonnenenergie",
+      percentSelf: "{self} kWh Sonne",
+      percentGrid: "{grid} kWh Netz",
+      priceTitle: "Energiepreis",
+      priceFeedIn: "{feedInPrice} Einspeisung",
+      priceGrid: "{gridPrice} Netz",
+      savingsTitle: "Ersparnis",
+      savingsComparedToGrid: "gegenüber Netzbezug",
+      savingsTotalEnergy: "{total} kWh geladen",
     },
     sponsor: {
       thanks: "Danke für deine Unterstützung, {sponsor}! Das hilft uns bei der Weiterentwicklung.",
-      confetti: "Lust auf etwas Sponsor-Konfetti?",
+      confetti: "Lust auf Konfetti?",
       supportUs:
-        "Wir möchten effizientes Zuhause-Laden zum Standard für möglichst viele Menschen machen. Helfe uns indem du die Weiterentwicklung und Pflege des Projekts unterstützt.",
+        "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unterstütze evcc finanziell.",
       sticker: "...oder evcc Sticker?",
       confettiPromise: "Es gibt auch Sticker und digitales Konfetti ;)",
-      becomeSponsor: "Werde jetzt GitHub Sponsor",
+      becomeSponsor: "Sponsor werden",
     },
   },
   notifications: {
@@ -53,7 +58,7 @@ export default {
   },
   main: {
     energyflow: {
-      noEnergy: "Kein Energiefluss",
+      noEnergy: "Kein Messwerte",
       homePower: "Verbrauch",
       pvProduction: "Erzeugung",
       loadpoints: "Ladepunkt | Ladepunkt | {count} Ladepunkte",
@@ -65,16 +70,10 @@ export default {
       pvExport: "Einspeisung",
     },
     mode: {
-      offShort: "Aus",
-      offLong: "Aus",
-      nowShort: "Sofort",
-      nowLong: "Sofort",
-      minpvShort: "Min",
-      minpvLong: "Min + PV",
-      pvShort: "PV",
-      pvLong: "PV",
-      fast: "Schnell",
-      cheap: "Günstig",
+      off: "Aus",
+      minpv: "Min+PV",
+      pv: "PV",
+      now: "Schnell",
     },
     loadpoint: {
       fallbackName: "Ladepunkt",
@@ -85,6 +84,34 @@ export default {
       duration: "Dauer",
       remaining: "Restzeit",
     },
+    loadpointSettings: {
+      title: 'Einstellungen "{0}"',
+      vehicle: "Fahrzeug",
+      currents: "Ladestrom",
+      minSoC: {
+        label: "Mindestladestand",
+        description:
+          'Reichweite für Notfälle. Fahrzeug wird im PV-Modus "schnell" auf {0}% geladen. Danach weiter mit PV-Überschuss.',
+      },
+      phasesConfigured: {
+        label: "Phasen",
+        phases_0: "automatischer Wechsel",
+        phases_1: "1-phasig",
+        phases_1_hint: "({min} bis {max})",
+        phases_3: "3-phasig",
+        phases_3_hint: "({min} bis {max})",
+      },
+      maxCurrent: {
+        label: "Max. Ladestrom",
+      },
+      minCurrent: {
+        label: "Min. Ladestrom",
+      },
+      default: "default",
+      disclaimerHint: "Hinweis:",
+      disclaimerText:
+        "Änderungen sind aktuell noch nicht persistent und werden nach einem Serverneustart wieder zurückgesetzt.",
+    },
     vehicles: "Parkplatz",
     vehicle: {
       fallbackName: "Fahrzeug",
@@ -92,16 +119,20 @@ export default {
       targetSoC: "Ladeziel",
       none: "Kein Fahrzeug",
       unknown: "Gastfahrzeug",
+      changeVehicle: "Fahrzeug ändern",
+      detectionActive: "Fahrzeugerkennung läuft ...",
     },
     vehicleSoC: {
       disconnected: "getrennt",
       charging: "lädt",
       ready: "bereit",
       connected: "verbunden",
+      vehicleTarget: "Fahrzeuglimit: {soc}%",
     },
     vehicleStatus: {
       minCharge: "Mindestladung bis {soc}%.",
       waitForVehicle: "Ladebereit. Warte auf Fahrzeug.",
+      vehicleTargetReached: "Fahrzeuglimit {soc}% erreicht.",
       charging: "Ladevorgang aktiv.",
       targetChargePlanned: "Zielladen geplant. Ladung startet {time} Uhr.",
       targetChargeWaitForVehicle: "Zielladen bereit. Warte auf Fahrzeug.",

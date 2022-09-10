@@ -216,7 +216,7 @@ func (c *CmdConfigure) processParamRequirements(param templates.Param) error {
 	return nil
 }
 
-func (c *CmdConfigure) askSponsortoken(required bool, feature bool) error {
+func (c *CmdConfigure) askSponsortoken(required, feature bool) error {
 	fmt.Println("-- Sponsorship -----------------------------")
 	if required {
 		fmt.Println()
@@ -239,7 +239,8 @@ func (c *CmdConfigure) askSponsortoken(required bool, feature bool) error {
 	sponsortoken := c.askValue(question{
 		label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
 		mask:     true,
-		required: true})
+		required: true,
+	})
 
 	err := sponsor.ConfigureSponsorship(sponsortoken)
 	if err != nil {
@@ -264,7 +265,7 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 
 	var err error
 
-	for ok := true; ok; {
+	for {
 		fmt.Println()
 		_, paramHost := templateItem.ConfigDefaults.ParamByName("host")
 		_, paramPort := templateItem.ConfigDefaults.ParamByName("port")
@@ -273,22 +274,26 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 		host := c.askValue(question{
 			label:    paramHost.Description.String(c.lang),
 			mask:     false,
-			required: true})
+			required: true,
+		})
 
 		port := c.askValue(question{
 			label:    paramPort.Description.String(c.lang),
 			mask:     false,
-			required: true})
+			required: true,
+		})
 
 		user := c.askValue(question{
 			label:    paramUser.Description.String(c.lang),
 			mask:     false,
-			required: false})
+			required: false,
+		})
 
 		password := c.askValue(question{
 			label:    paramPassword.Description.String(c.lang),
 			mask:     true,
-			required: false})
+			required: false,
+		})
 
 		fmt.Println()
 		fmt.Println("--------------------------------------------")
@@ -313,8 +318,6 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 			return nil, fmt.Errorf("failed configuring mqtt: %w", err)
 		}
 	}
-
-	return nil, fmt.Errorf("failed configuring mqtt: %w", err)
 }
 
 // fetchElements returns template items of a given class
@@ -391,14 +394,26 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 }
 
 // processConfig processes an EVCC configuration item
-// Returns:
-//   a map with param name and values
+// Returns a map with param name and values
 func (c *CmdConfigure) processConfig(templateItem *templates.Template, deviceCategory DeviceCategory) map[string]interface{} {
 	fmt.Println()
 	fmt.Println(c.localizedString("Config_Title", nil))
 	fmt.Println()
 
 	c.processModbusConfig(templateItem, deviceCategory)
+
+	// TODO remove
+	// type mapped = struct {
+	// 	Name    string
+	// 	Default any
+	// }
+
+	// fmt.Printf("%+v\n", lo.Map(templateItem.Params, func(p templates.Param, _ int) mapped {
+	// 	return mapped{
+	// 		Name:    p.Name,
+	// 		Default: p.Default,
+	// 	}
+	// }))
 
 	return c.processParams(templateItem, deviceCategory)
 }
@@ -495,7 +510,7 @@ func (c *CmdConfigure) processListInputConfig(param templates.Param) []string {
 	var values []string
 
 	// ask for values until the user decides to stop
-	for ok := true; ok; {
+	for {
 		newValue := c.processInputConfig(param)
 		values = append(values, newValue)
 
@@ -532,7 +547,8 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		valueType:    param.ValueType,
 		validValues:  param.ValidValues,
 		mask:         param.Mask,
-		required:     param.Required})
+		required:     param.Required,
+	})
 
 	if param.ValueType == templates.ParamValueTypeBool && value == "true" {
 		if err := c.processParamRequirements(param); err != nil {
@@ -543,7 +559,8 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 	return value
 }
 
-// handle user input for a device modbus configuration
+// processModbusConfig adds default values from the modbus Param to the template
+// and handles user input for interface type selection
 func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, deviceCategory DeviceCategory) {
 	var choices []string
 	var choiceTypes []string

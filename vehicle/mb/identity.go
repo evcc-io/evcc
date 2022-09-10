@@ -1,6 +1,7 @@
 package mb
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"net/url"
 	"strings"
 
-	"context"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
@@ -113,6 +113,10 @@ func (v *Identity) Login(user, password string) error {
 				err = fmt.Errorf("%s: %w", string(res.Errors[0].Key), err)
 			}
 		}
+	}
+
+	if err == nil && res.Token == "" && res.Result != "" {
+		err = fmt.Errorf("missing token: %s", res.Result)
 	}
 
 	var code string

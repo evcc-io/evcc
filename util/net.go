@@ -18,7 +18,7 @@ func DefaultPort(conn string, port int) string {
 }
 
 // DefaultScheme prepends given scheme to uri if not specified
-func DefaultScheme(uri string, scheme string) string {
+func DefaultScheme(uri, scheme string) string {
 	u, err := url.Parse(uri)
 	if err != nil {
 		if strings.HasSuffix(err.Error(), "first path segment in URL cannot contain colon") {

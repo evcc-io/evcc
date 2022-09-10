@@ -1,5 +1,5 @@
 .PHONY: default all clean install install-ui ui assets docs lint test-ui lint-ui test build test-release release
-.PHONY: docker publish-testing publish-latest publish-nightly publish-release
+.PHONY: docker publish-testing publish-nightly publish-release
 .PHONY: prepare-image image-rootfs image-update
 .PHONY: soc
 
@@ -19,13 +19,15 @@ BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := andig/evcc
-ALPINE_VERSION := 3.15
-TARGETS := arm.v6,arm.v8,amd64
+PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
 IMAGE_FILE := evcc_$(TAG_NAME).image
 IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
 IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/evcc-io/evcc
+
+# deb
+PACKAGES = ./release
 
 default: build
 
@@ -78,23 +80,25 @@ docker:
 
 publish-testing:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
-	   --image-name $(DOCKER_IMAGE) -v "testing" --targets=$(TARGETS)
-
-publish-latest:
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
-	   --image-name $(DOCKER_IMAGE) -v "latest" --targets=$(TARGETS)
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing --push .
 
 publish-nightly:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
-	   --image-name $(DOCKER_IMAGE) -v "nightly" --targets=$(TARGETS)
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly .
 
 publish-release:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	RELEASE=1 seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
-	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
+	docker buildx build --build-arg RELEASE=1 --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest .
+
+apt-nightly:
+	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
+		cloudsmith push deb evcc/unstable/any-distro/any-version $(file); \
+	)
+
+apt-release:
+	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
+		cloudsmith push deb evcc/stable/any-distro/any-version $(file); \
+	)
 
 # gokrazy image
 prepare-image:

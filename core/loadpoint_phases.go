@@ -12,7 +12,7 @@ func (lp *LoadPoint) resetMeasuredPhases() {
 	lp.measuredPhases = 0
 	lp.Unlock()
 
-	lp.publish("activePhases", lp.activePhases())
+	lp.publish(phasesActive, lp.activePhases())
 }
 
 // getMeasuredPhases provides synchronized access to measuredPhases
@@ -63,9 +63,12 @@ func (lp *LoadPoint) maxActivePhases() int {
 		measured = 0
 	}
 
-	// if 1p3p supported then assume 3p
-	if _, ok := lp.charger.(api.ChargePhases); ok {
-		physical = 3
+	// if 1p3p supported then assume configured limit or 3p
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+		physical = lp.ConfiguredPhases
+		if physical == 0 {
+			physical = 3
+		}
 	}
 
 	return min(expect(vehicle), expect(physical), expect(measured))

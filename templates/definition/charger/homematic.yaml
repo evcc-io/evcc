@@ -1,0 +1,36 @@
+template: homematic
+products:
+  - brand: Homematic IP
+group: switchsockets
+params:
+  - name: host
+  - name: device
+    description:
+      de: Geräteadresse/Seriennummer
+      en: Device address/Serial number
+    required: true
+    mask: false
+    example: "0001EE89AAD848"
+    help:
+      en: Homematic device id like shown in the CCU web user interface.
+      de: Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
+  - name: standbypower
+    default: 15
+  - name: user
+    required: false
+  - name: password
+    required: false
+    mask: true
+render: |
+  type: homematic
+  uri: {{ .host }}:2010
+  device: {{ .device }}
+  meterchannel: 6
+  switchchannel: 3
+  standbypower: {{ .standbypower }}
+  {{ if ne .user "" }}
+  user: {{ .user }}
+  {{ end }}
+  {{ if ne .password "" }}
+  password: {{ .password }}
+  {{ end }}

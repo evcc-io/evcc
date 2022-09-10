@@ -6,7 +6,7 @@
   - charger: all charger templates
   - meter: all meter templates
   - vehicle: all vehicle templates
-- docs: content is generated via `go generate ./..` using the above templates for the evcc documentation page to be used
+- docs: content is generated via `go generate ./...` using the above templates for the evcc documentation page to be used
 
 ## Template Documentation
 

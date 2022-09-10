@@ -9,7 +9,7 @@ import (
 )
 
 var acceptable = []string{
-	"invalid plugin type: ...",
+	"invalid plugin source: ...",
 	"missing mqtt broker configuration",
 	"mqtt not configured",
 	"not a SunSpec device",

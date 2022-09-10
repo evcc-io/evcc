@@ -12,9 +12,9 @@ type OpenWBStatus struct {
 
 // NewOpenWBStatusProviderFromConfig creates OpenWBStatus from given configuration
 func NewOpenWBStatusProviderFromConfig(other map[string]interface{}) (func() (string, error), error) {
-	cc := struct {
+	var cc struct {
 		Plugged, Charging Config
-	}{}
+	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

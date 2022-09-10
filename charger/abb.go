@@ -20,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -90,6 +91,13 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 		curr: abbMinCurrent, // assume min current
 	}
 
+	// keep-alive
+	go func() {
+		for range time.NewTicker(30 * time.Second).C {
+			_, _ = wb.status()
+		}
+	}()
+
 	return wb, err
 }
 
@@ -98,8 +106,6 @@ func (wb *ABB) status() (byte, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	wb.log.DEBUG.Printf("status: %d", b[2]&0x7f)
 
 	return b[2] & 0x7f, nil
 }
@@ -241,9 +247,9 @@ func (wb *ABB) Currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
-// var _ api.ChargePhases = (*ABB)(nil)
+// var _ api.PhaseSwitcher = (*ABB)(nil)
 
-// // Phases1p3p implements the api.ChargePhases interface
+// // Phases1p3p implements the api.PhaseSwitcher interface
 // func (wb *ABB) Phases1p3p(phases int) error {
 // 	var b uint16 = 1
 // 	if phases != 1 {

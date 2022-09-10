@@ -21,9 +21,36 @@ const (
 	Vehicle = "vehicle"
 )
 
-func loadTemplates(class string) {
+func init() {
 	configDefaults.LoadDefaults()
+}
 
+func FromBytes(b []byte) (Template, error) {
+	var definition TemplateDefinition
+	if err := yaml.Unmarshal(b, &definition); err != nil {
+		return Template{}, err
+	}
+
+	tmpl := Template{
+		TemplateDefinition: definition,
+		ConfigDefaults:     configDefaults,
+	}
+
+	err := tmpl.ResolvePresets()
+	if err == nil {
+		err = tmpl.ResolveGroup()
+	}
+	if err == nil {
+		err = tmpl.UpdateParamsWithDefaults()
+	}
+	if err == nil {
+		err = tmpl.Validate()
+	}
+
+	return tmpl, err
+}
+
+func loadTemplates(class string) {
 	if templates[class] != nil {
 		return
 	}
@@ -41,26 +68,9 @@ func loadTemplates(class string) {
 			return err
 		}
 
-		var definition TemplateDefinition
-		if err = yaml.Unmarshal(b, &definition); err != nil {
-			return fmt.Errorf("reading template '%s' failed: %w", filepath, err)
-		}
-
-		tmpl := Template{
-			TemplateDefinition: definition,
-			ConfigDefaults:     configDefaults,
-		}
-		if err = tmpl.ResolvePresets(); err != nil {
-			return err
-		}
-		if err = tmpl.ResolveGroup(); err != nil {
-			return err
-		}
-		if err = tmpl.UpdateParamsWithDefaults(); err != nil {
-			return err
-		}
-		if err = tmpl.Validate(); err != nil {
-			return err
+		tmpl, err := FromBytes(b)
+		if err != nil {
+			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
 		path := path.Dir(filepath)

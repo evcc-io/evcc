@@ -41,15 +41,15 @@ func init() {
 	registry.Add("go-e", NewGoEFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargePhases,Phases1p3p,func(int) (error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		Token string
 		URI   string
 		Cache time.Duration
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -205,7 +205,7 @@ func (c *GoE) totalEnergy() (float64, error) {
 	return val, err
 }
 
-// phases1p3p implements the api.ChargePhases interface - v2 only
+// phases1p3p implements the api.PhaseSwitcher interface - v2 only
 func (c *GoE) phases1p3p(phases int) error {
 	if phases == 3 {
 		phases = 2

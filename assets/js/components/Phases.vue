@@ -18,13 +18,13 @@ export default {
 	props: {
 		chargeCurrent: { type: Number },
 		chargeCurrents: { type: Array },
-		activePhases: { type: Number },
+		phasesActive: { type: Number },
 		minCurrent: { type: Number },
 		maxCurrent: { type: Number },
 	},
 	methods: {
 		inactive(num) {
-			return num > this.activePhases;
+			return num > this.phasesActive;
 		},
 		targetWidth() {
 			let current = Math.min(Math.max(this.minCurrent, this.chargeCurrent), this.maxCurrent);
@@ -46,13 +46,17 @@ export default {
 	width: 73px;
 }
 .phase {
-	background-color: var(--bs-gray-200);
+	background-color: var(--bs-gray-bright);
 	height: 4px;
 	flex-grow: 1;
 	position: relative;
 	border-radius: 1px;
 	overflow: hidden;
 }
+html.dark .phase {
+	background-color: var(--bs-gray-bright);
+}
+
 .phase.inactive {
 	display: none;
 }

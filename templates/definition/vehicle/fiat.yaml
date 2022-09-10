@@ -8,7 +8,6 @@ params:
   - name: pin
     mask: true
   - preset: vehicleidentify
-  - preset: vehiclecloud
 render: |
   type: fiat
   {{ include "vehicle-base" . }}
@@ -16,4 +15,3 @@ render: |
   pin: {{ .pin }} # mandatory to deep refresh SoC
   {{- end }}
   {{ include "vehicle-identify" . }}
-  {{ include "vehicle-cloud" . }}

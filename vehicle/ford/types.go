@@ -28,6 +28,10 @@ type StatusResponse struct {
 			Value     string
 			Timestamp Timestamp
 		}
+		ChargeEndTime struct {
+			Value     Timestamp
+			Timestamp Timestamp
+		}
 		PlugStatus struct {
 			Value     int
 			Timestamp Timestamp

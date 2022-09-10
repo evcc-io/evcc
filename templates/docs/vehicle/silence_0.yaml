@@ -20,4 +20,3 @@ render:
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
       capacity: 50 # Akku-Kapazität in kWh # Optional
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können # Optional
-      cloud: # Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,... # Optional

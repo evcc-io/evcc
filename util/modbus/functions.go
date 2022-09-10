@@ -11,10 +11,8 @@ import (
 
 // ReadingName formats MBMD reading names
 func ReadingName(val string) string {
-	if len(val) > 0 {
-		val = strings.ToUpper(val[:1]) + val[1:]
-	}
-	return val
+	//lint:ignore SA1019 as Title is safe on ascii
+	return strings.Title(val)
 }
 
 func RTUFloat64ToFloat64(b []byte) float64 {

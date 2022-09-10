@@ -15,7 +15,7 @@ func init() {
 
 // NewFritzDECTFromConfig creates a fritzdect meter from generic config
 func NewFritzDECTFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := &fritzdect.Settings{}
+	var cc fritzdect.Settings
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

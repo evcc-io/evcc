@@ -8,4 +8,10 @@ render:
       type: template
       template: openwb
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      loadpointid: 1 # Optional
+      connector: 1 # Optional
+    advanced: |
+      type: template
+      template: openwb
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      connector: 1 # Optional
+      phases1p3p: false # Optional

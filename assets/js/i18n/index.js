@@ -1,4 +1,4 @@
-import { createI18n } from "vue-i18n/index";
+import { createI18n } from "vue-i18n";
 import de from "./de";
 import en from "./en";
 import it from "./it";

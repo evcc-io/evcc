@@ -171,7 +171,7 @@ func (wb *Salia) Enabled() (bool, error) {
 
 func (wb *Salia) pause(enable bool) {
 	// ignore error for FW <1.52
-	var offOn = map[bool]string{false: "1", true: "0"}
+	offOn := map[bool]string{false: "1", true: "0"}
 	_ = wb.post(salia.PauseCharging, offOn[enable])
 }
 

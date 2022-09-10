@@ -3,16 +3,18 @@
 		<p class="mb-3">
 			{{ $t("footer.sponsor.thanks", { sponsor }) }}
 		</p>
-		<div class="d-flex justify-content-center align-items-center flex-column">
+		<div
+			class="d-flex justify-content-center align-items-center flex-column flex-lg-row align-items-lg-baseline justify-content-lg-start"
+		>
 			<button
 				ref="confetti"
-				class="btn btn btn-outline-primary mb-2 confetti-button bg-evcc w-75 rounded"
+				class="btn btn btn-outline-primary mb-2 confetti-button bg-evcc rounded"
 				@click="surprise"
 			>
-				<shopicon-regular-heart class="me-1 d-inline-block"></shopicon-regular-heart>
+				<shopicon-regular-stars class="me-1 d-inline-block"></shopicon-regular-stars>
 				{{ $t("footer.sponsor.confetti") }}
 			</button>
-			<a href="https://evcc.io/sticker" target="_blank" class="small text-muted">
+			<a href="https://evcc.io/sticker" target="_blank" class="small text-muted ms-lg-3">
 				{{ $t("footer.sponsor.sticker") }}
 			</a>
 		</div>
@@ -21,16 +23,18 @@
 		<p class="mb-3">
 			{{ $t("footer.sponsor.supportUs") }}
 		</p>
-		<div class="d-flex justify-content-center align-items-center flex-column">
+		<div
+			class="d-flex justify-content-center align-items-center flex-column flex-lg-row align-items-lg-baseline justify-content-lg-start"
+		>
 			<a
 				target="_blank"
 				href="https://github.com/sponsors/andig"
-				class="btn btn-outline-primary mb-2 w-75"
+				class="btn btn-outline-primary mb-3 become-sponsor"
 			>
 				<shopicon-regular-heart class="me-1 d-inline-block"></shopicon-regular-heart>
 				{{ $t("footer.sponsor.becomeSponsor") }}
 			</a>
-			<div class="small text-muted text-center">
+			<div class="small text-muted text-center ms-lg-3">
 				{{ $t("footer.sponsor.confettiPromise") }}
 			</div>
 		</div>
@@ -40,7 +44,7 @@
 <script>
 import confetti from "canvas-confetti";
 import "@h2d2/shopicons/es/regular/heart";
-import "@h2d2/shopicons/es/filled/heart";
+import "@h2d2/shopicons/es/regular/stars";
 
 export default {
 	name: "Sponsor",
@@ -89,5 +93,21 @@ export default {
 	/* prevent double-tap zoom */
 	touch-action: none;
 	user-select: none;
+}
+.confetti-button,
+.become-sponsor {
+	width: 100%;
+}
+@media (--sm-and-up) {
+	.confetti-button,
+	.become-sponsor {
+		width: 75%;
+	}
+}
+@media (--lg-and-up) {
+	.confetti-button,
+	.become-sponsor {
+		width: 40%;
+	}
 }
 </style>

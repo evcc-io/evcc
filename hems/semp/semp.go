@@ -34,9 +34,7 @@ const (
 	maxAge           = 1800
 )
 
-var (
-	serverName = "EVCC SEMP Server " + server.Version
-)
+var serverName = "EVCC SEMP Server " + server.Version
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
@@ -342,7 +340,7 @@ func (s *SEMP) serialNumber(id int) string {
 	return fmt.Sprintf(sempSerialNumber, ser, id)
 }
 
-// uniqueDeviceID creates a 6-bytes base device id from machine id
+// UniqueDeviceID creates a 6-bytes base device id from machine id
 func UniqueDeviceID() ([]byte, error) {
 	bytes := 6
 

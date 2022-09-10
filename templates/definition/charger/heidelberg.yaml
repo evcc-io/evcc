@@ -11,6 +11,9 @@ products:
       generic: Basic Evo Pro
 capabilities: ["mA"]
 requirements:
+  description:
+    de: Bitte das Handbuch zur Verkabelung und Konfiguration genau lesen. Alle Boxen müssen für die externe Steuerung auf Follower-Modus konfiguriert sein (DIP S5/4 OFF). Jede Box braucht eine individuelle Modbus-ID (DIP S4). Auf korrekte RS485-Verkabelung inkl. Busterminierung (DIP S6/2) achten.
+    en: Please read the wiring and configuration manual carefully. All boxes must be configured for external control in follower mode (DIP S5/4 OFF). Each box needs an individual Modbus ID (DIP S4). Ensure correct RS485 cabling including bus termination (DIP S6/2).
   evcc: ["sponsorship"]
 params:
   - name: modbus

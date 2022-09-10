@@ -70,7 +70,7 @@ func (v *API) BatteryStatus(vin string) (StatusResponse, error) {
 }
 
 // RefreshRequest requests  battery status refresh
-func (v *API) RefreshRequest(vin string, typ string) (ActionResponse, error) {
+func (v *API) RefreshRequest(vin, typ string) (ActionResponse, error) {
 	var res ActionResponse
 	uri := fmt.Sprintf("%s/v1/cars/%s/actions/refresh-battery-status", CarAdapterBaseURL, vin)
 

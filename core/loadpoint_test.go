@@ -33,9 +33,7 @@ func (n *Null) ChargingTime() (time.Duration, error) {
 	return 0, nil
 }
 
-func attachListeners(t *testing.T, lp *LoadPoint) {
-	Voltage = 230 // V
-
+func createChannels(t *testing.T) (chan util.Param, chan push.Event, chan *LoadPoint) {
 	uiChan := make(chan util.Param)
 	pushChan := make(chan push.Event)
 	lpChan := make(chan *LoadPoint)
@@ -60,19 +58,32 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 		}
 	}()
 
+	return uiChan, pushChan, lpChan
+}
+
+func attachChannels(lp *LoadPoint, uiChan chan util.Param, pushChan chan push.Event, lpChan chan *LoadPoint) {
+	lp.uiChan = uiChan
+	lp.pushChan = pushChan
+	lp.lpChan = lpChan
+}
+
+func attachListeners(t *testing.T, lp *LoadPoint) {
+	Voltage = 230 // V
+
 	if charger, ok := lp.charger.(*mock.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
 		charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
 	}
 
+	uiChan, pushChan, lpChan := createChannels(t)
 	lp.Prepare(uiChan, pushChan, lpChan)
 }
 
 func TestNew(t *testing.T) {
 	lp := NewLoadPoint(util.NewLogger("foo"))
 
-	if lp.Phases != 3 {
-		t.Errorf("Phases %v", lp.Phases)
+	if lp.phases != 0 {
+		t.Errorf("Phases %v", lp.phases)
 	}
 	if lp.MinCurrent != minA {
 		t.Errorf("MinCurrent %v", lp.MinCurrent)
@@ -154,7 +165,7 @@ func TestUpdatePowerZero(t *testing.T) {
 			wakeUpTimer: NewTimer(),
 			MinCurrent:  minA,
 			MaxCurrent:  maxA,
-			Phases:      1,
+			phases:      1,
 			status:      tc.status, // no status change
 		}
 
@@ -287,7 +298,6 @@ func TestPVHysteresis(t *testing.T) {
 	}
 
 	for _, status := range []api.ChargeStatus{api.StatusB, api.StatusC} {
-
 		for _, tc := range tc {
 			t.Log(tc)
 
@@ -302,7 +312,7 @@ func TestPVHysteresis(t *testing.T) {
 				charger:        charger,
 				MinCurrent:     minA,
 				MaxCurrent:     maxA,
-				Phases:         phases,
+				phases:         phases,
 				measuredPhases: phases,
 				Enable: ThresholdConfig{
 					Threshold: tc.enable,
@@ -350,7 +360,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 		clock:          clck,
 		MinCurrent:     minA,
 		MaxCurrent:     maxA,
-		Phases:         phases,
+		phases:         phases,
 		measuredPhases: phases,
 	}
 
@@ -380,22 +390,23 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
 	lp := &LoadPoint{
-		log:          util.NewLogger("foo"),
-		bus:          evbus.New(),
-		clock:        clock,
-		charger:      charger,
-		chargeMeter:  &Null{},            // silence nil panics
-		chargeRater:  &Null{},            // silence nil panics
-		chargeTimer:  &Null{},            // silence nil panics
-		progress:     NewProgress(0, 10), // silence nil panics
-		wakeUpTimer:  NewTimer(),         // silence nil panics
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		charger:     charger,
+		chargeMeter: &Null{},            // silence nil panics
+		chargeRater: &Null{},            // silence nil panics
+		chargeTimer: &Null{},            // silence nil panics
+		progress:    NewProgress(0, 10), // silence nil panics
+		wakeUpTimer: NewTimer(),         // silence nil panics
+		// coordinator:  coordinator.NewDummy(), // silence nil panics
 		MinCurrent:   minA,
 		MaxCurrent:   maxA,
 		vehicle:      vehicle,      // needed for targetSoC check
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
 		Mode:         api.ModeNow,
 		SoC: SoCConfig{
-			Target: 90,
+			target: 90,
 			Poll: PollConfig{
 				Mode:     pollConnected, // allow polling when connected
 				Interval: pollInterval,
@@ -466,7 +477,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		status:      api.StatusC,
 		Mode:        api.ModeOff,
 		SoC: SoCConfig{
-			Target: 70,
+			target: 70,
 		},
 		ResetOnDisconnect: true,
 	}
@@ -595,6 +606,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 
 	ctrl.Finish()
 }
+
 func TestTargetSoC(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vhc := mock.NewMockVehicle(ctrl)
@@ -624,7 +636,7 @@ func TestTargetSoC(t *testing.T) {
 		lp := &LoadPoint{
 			vehicle: tc.vehicle,
 			SoC: SoCConfig{
-				Target: tc.target,
+				target: tc.target,
 			},
 			vehicleSoc: tc.soc,
 		}
@@ -634,6 +646,7 @@ func TestTargetSoC(t *testing.T) {
 		}
 	}
 }
+
 func TestSoCPoll(t *testing.T) {
 	clock := clock.NewMock()
 	tRefresh := pollInterval
@@ -747,76 +760,12 @@ func TestMinSoC(t *testing.T) {
 		lp := &LoadPoint{
 			vehicle: tc.vehicle,
 			SoC: SoCConfig{
-				Min: tc.min,
+				min: tc.min,
 			},
 			vehicleSoc: tc.soc,
 		}
 
 		if res := lp.minSocNotReached(); tc.res != res {
-			t.Errorf("expected %v, got %v", tc.res, res)
-		}
-	}
-}
-
-func TestVehicleDetectByID(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	v1 := mock.NewMockVehicle(ctrl)
-	v2 := mock.NewMockVehicle(ctrl)
-
-	type testcase struct {
-		string
-		id, i1, i2 string
-		res        api.Vehicle
-		prepare    func(testcase)
-	}
-	tc := []testcase{
-		{"1/_/_->0", "1", "", "", nil, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return(nil)
-			v2.EXPECT().Identifiers().Return(nil)
-			v1.EXPECT().Identifiers().Return(nil)
-			v2.EXPECT().Identifiers().Return(nil)
-		}},
-		{"1/1/2->1", "1", "1", "2", v1, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return([]string{tc.i1})
-		}},
-		{"2/1/2->2", "2", "1", "2", v2, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return([]string{tc.i1})
-			v2.EXPECT().Identifiers().Return([]string{tc.i2})
-		}},
-		{"11/1*/2->1", "11", "1*", "2", v1, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return([]string{tc.i1})
-			v2.EXPECT().Identifiers().Return([]string{tc.i2})
-			v1.EXPECT().Identifiers().Return([]string{tc.i1})
-			// v2.EXPECT().Identifiers().Return([]string{tc.i2})
-		}},
-		{"22/1*/2*->2", "22", "1*", "2*", v2, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return([]string{tc.i1})
-			v2.EXPECT().Identifiers().Return([]string{tc.i2})
-			v1.EXPECT().Identifiers().Return([]string{tc.i1})
-			v2.EXPECT().Identifiers().Return([]string{tc.i2})
-		}},
-		{"2/_/*->2", "2", "", "*", v2, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return(nil)
-			v2.EXPECT().Identifiers().Return([]string{tc.i2})
-			v1.EXPECT().Identifiers().Return(nil)
-			v2.EXPECT().Identifiers().Return([]string{tc.i2})
-		}},
-	}
-
-	for _, tc := range tc {
-		t.Logf("%+v", tc)
-
-		lp := &LoadPoint{
-			log:      util.NewLogger("foo"),
-			vehicles: []api.Vehicle{v1, v2},
-		}
-
-		if tc.prepare != nil {
-			tc.prepare(tc)
-		}
-
-		if res := lp.selectVehicleByID(tc.id); tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}
 	}

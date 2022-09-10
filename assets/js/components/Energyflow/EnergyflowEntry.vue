@@ -1,13 +1,14 @@
 <template>
-	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'text-gray-medium': !active }">
+	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'evcc-gray': !active }">
 		<span class="d-flex flex-nowrap">
 			<BatteryIcon v-if="isBattery" :soc="soc" />
 			<component :is="`shopicon-regular-${icon}`" v-else></component>
 		</span>
 		<span class="text-nowrap flex-grow-1 ms-3">{{ name }}</span>
 		<span class="text-end text-nowrap ps-1 fw-bold"
-			><span v-if="hasSoC">{{ soc }}% / </span>{{ kw(power) }}</span
-		>
+			><span v-if="hasSoC">{{ soc }}% / </span>
+			<AnimatedNumber :to="power" :format="kw" />
+		</span>
 	</div>
 </template>
 
@@ -18,10 +19,11 @@ import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/car3";
 import BatteryIcon from "./BatteryIcon.vue";
 import formatter from "../../mixins/formatter";
+import AnimatedNumber from "../AnimatedNumber.vue";
 
 export default {
 	name: "EnergyflowEntry",
-	components: { BatteryIcon },
+	components: { BatteryIcon, AnimatedNumber },
 	mixins: [formatter],
 	props: {
 		name: { type: String },

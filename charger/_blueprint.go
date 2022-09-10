@@ -37,10 +37,10 @@ func init() {
 
 // NewBlueprintFromConfig creates a blueprint charger from generic config
 func NewBlueprintFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		URI   string
 		Cache time.Duration
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -116,9 +116,9 @@ func (wb *Blueprint) Identify() (string, error) {
 	return "", api.ErrNotAvailable
 }
 
-var _ api.ChargePhases = (*Blueprint)(nil)
+var _ api.PhaseSwitcher = (*Blueprint)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Blueprint) Phases1p3p(phases int) error {
 	return api.ErrNotAvailable
 }

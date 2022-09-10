@@ -60,11 +60,11 @@ type CP struct {
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
 
-	meterSupported            bool
-	measureDoneCh             chan struct{}
-	latestMeterValueTimestamp time.Time
-	measureands               map[string]types.SampledValue
-	meterTrickerRunning       bool
+	meterSupported     bool
+	measureDoneCh      chan struct{}
+	meterUpdated       time.Time
+	measurements       map[string]types.SampledValue
+	meterTickerRunning bool
 
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
@@ -156,7 +156,6 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 	}
 
 	return profile, nil
-
 }
 
 func parseIntOption(key SmartchargingChargeProfileKey, options map[string]core.ConfigurationKey) (int, error) {
@@ -247,18 +246,18 @@ func (cp *CP) CurrentPower() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if power, ok := cp.measureands[string(types.MeasurandPowerActiveImport)]; ok {
+	if power, ok := cp.measurements[string(types.MeasurandPowerActiveImport)]; ok {
 		return strconv.ParseFloat(power.Value, 64)
 	}
 
-	return 0, nil
+	return 0, api.ErrNotAvailable
 }
 
 // func (cp *CP) TotalEnergy() (float64, error) {
 // 	cp.mu.Lock()
 // 	defer cp.mu.Unlock()
 
-// 	// if energy, ok := cp.measureands[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+// 	// if energy, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
 // 	// 	v, err := strconv.ParseInt(energy.Value, 10, 64)
 // 	// 	if err != nil {
 // 	// 		return 0, err
@@ -289,27 +288,21 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	var (
-		currents = make(map[int]float64)
+	currents := make([]float64, 0, 3)
 
-		err error
-	)
-
-	for _, phase := range []int{1, 2, 3} {
-		if current, ok := cp.measureands[getKeyCurrentPhase(phase)]; ok {
-			currents[phase], err = strconv.ParseFloat(current.Value, 64)
-			if err != nil {
-				return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
-			}
+	for phase := 1; phase <= 3; phase++ {
+		current, ok := cp.measurements[getKeyCurrentPhase(phase)]
+		if !ok {
+			return 0, 0, 0, api.ErrNotAvailable
 		}
+
+		f, err := strconv.ParseFloat(current.Value, 64)
+		if err != nil {
+			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
+		}
+
+		currents = append(currents, f)
 	}
 
-	return currents[1], currents[2], currents[3], nil
-}
-
-func (cp *CP) MeterSupported() bool {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
-	return cp.meterSupported
+	return currents[0], currents[1], currents[2], nil
 }

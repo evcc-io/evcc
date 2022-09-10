@@ -17,7 +17,7 @@ type Provider struct {
 }
 
 // NewProvider creates a new vehicle
-func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *MobileAPI, vin string, carModel string, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *MobileAPI, vin, carModel string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
@@ -181,7 +181,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
 	res, err := v.mobileG()
 	if err == nil {
 		m, err := res.MeasurementByKey("CLIMATIZER_STATE")

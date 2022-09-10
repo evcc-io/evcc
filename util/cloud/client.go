@@ -17,9 +17,7 @@ import (
 
 var Host = "cloud.evcc.io:8080"
 
-var (
-	conn *grpc.ClientConn
-)
+var conn *grpc.ClientConn
 
 //go:embed ca-cert.pem
 var caCert []byte

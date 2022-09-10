@@ -15,9 +15,9 @@ func Instance() *CS {
 		cs := ocpp16.NewCentralSystem(nil, nil)
 
 		instance = &CS{
-			log: util.NewLogger("ocpp"),
-			cps: make(map[string]*CP),
-			cs:  cs,
+			log:           util.NewLogger("ocpp"),
+			cps:           make(map[string]*CP),
+			CentralSystem: cs,
 		}
 
 		ocppj.SetLogger(instance)

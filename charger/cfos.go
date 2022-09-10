@@ -66,7 +66,7 @@ func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 	return wb, nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegStatus, 1)
 	if err != nil {
@@ -91,7 +91,7 @@ func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (wb *CfosPowerBrain) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegEnable, 1)
 	if err != nil {
@@ -101,7 +101,7 @@ func (wb *CfosPowerBrain) Enabled() (bool, error) {
 	return b[1] == 1, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (wb *CfosPowerBrain) Enable(enable bool) error {
 	var u uint16
 	if enable {
@@ -113,7 +113,7 @@ func (wb *CfosPowerBrain) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (wb *CfosPowerBrain) MaxCurrent(current int64) error {
 	return wb.MaxCurrentMillis(float64(current))
 }

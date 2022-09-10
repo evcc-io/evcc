@@ -368,7 +368,7 @@ type SunSpecOperation struct {
 }
 
 // ParsePoint parses sunspec point from string
-func ParsePoint(selector string) (model int, block int, point string, err error) {
+func ParsePoint(selector string) (model, block int, point string, err error) {
 	err = fmt.Errorf("invalid point: %s", selector)
 
 	el := strings.Split(selector, ":")
