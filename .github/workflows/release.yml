@@ -117,6 +117,4 @@ jobs:
           src_path: packaging/hassio/config.json
           dst_path: /evcc/config.json
           dst_owner: evcc-io
-          src_branch: master
-          dst_branch: master
           dst_repo_name: hassio-addon
