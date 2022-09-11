@@ -62,6 +62,7 @@ func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		ChargeControl: 1,
 		Meter:         1,
+		Cache:         time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
