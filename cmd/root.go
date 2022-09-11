@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
@@ -12,6 +13,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/hems"
+	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
@@ -138,6 +142,17 @@ func Execute() {
 	}
 }
 
+var valueChan chan util.Param
+
+func publish(key string, val any) {
+	valueChan <- util.Param{Key: key, Val: val}
+}
+
+func fatal(err error) {
+	log.FATAL.Println(err)
+	publish("fatal", err)
+}
+
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
@@ -150,6 +165,11 @@ func run(cmd *cobra.Command, args []string) {
 
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
+	// full http request log
+	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
+	}
+
 	// network config
 	if viper.GetString("uri") != "" {
 		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
@@ -161,55 +181,16 @@ func run(cmd *cobra.Command, args []string) {
 
 	log.INFO.Printf("listening at :%d", conf.Network.Port)
 
-	// setup environment
-	if err := configureEnvironment(conf); err != nil {
-		log.FATAL.Fatal(err)
-	}
-
-	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
-		request.LogHeaders = true
-	}
-
-	// setup loadpoints
-	cp.TrackVisitors() // track duplicate usage
-
-	site, err := configureSiteAndLoadpoints(conf)
-	if err != nil {
-		log.FATAL.Fatal(err)
-	}
-
 	// start broadcasting values
-	tee := &util.Tee{}
+	tee := new(util.Tee)
 
 	// value cache
 	cache := util.NewCache()
 	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
 
-	// setup database
-	if conf.Influx.URL != "" {
-		configureDatabase(conf.Influx, site.LoadPoints(), tee.Attach())
-	}
-
-	// setup mqtt publisher
-	if conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
-		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
-	}
-
 	// create webserver
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), site, socketHub, cache)
-
-	// announce webserver on mDNS
-	if strings.HasSuffix(conf.Network.Host, ".local") {
-		host := strings.TrimSuffix(conf.Network.Host, ".local")
-		if zc, err := zeroconf.RegisterProxy("EV Charge Controller", "_http._tcp", "local.", conf.Network.Port, host, nil, []string{}, nil); err == nil {
-			shutdown.Register(zc.Shutdown)
-		} else {
-			log.ERROR.Printf("mDNS announcement: %s", err)
-		}
-	}
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -221,46 +202,100 @@ func run(cmd *cobra.Command, args []string) {
 		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
 
-	// start HEMS server
-	if conf.HEMS.Type != "" {
-		hems := configureHEMS(conf.HEMS, site, httpd)
-		go hems.Run()
-	}
-
 	// publish to UI
 	go socketHub.Run(tee.Attach(), cache)
 
 	// setup values channel
-	valueChan := make(chan util.Param)
+	valueChan = make(chan util.Param)
 	go tee.Run(valueChan)
 
-	// expose sponsor to UI
-	if sponsor.Subject != "" {
-		valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}
+	// setup environment
+	// if err := configureEnvironment(conf); err != nil {
+	err := configureEnvironment(conf)
+	if err == nil {
+		err = fmt.Errorf("bad things: %w", errors.New("foo"))
+	}
+	if err != nil {
+		fatal(err)
 	}
 
-	// allow web access for vehicles
-	cp.webControl(conf.Network, httpd.Router(), valueChan)
+	// setup loadpoints
+	cp.TrackVisitors() // track duplicate usage
 
-	// version check
-	go updater.Run(log, httpd, tee, valueChan)
+	var site *core.Site
+	if err == nil {
+		if site, err = configureSiteAndLoadpoints(conf); err != nil {
+			fatal(err)
+		}
+	}
 
-	// capture log messages for UI
-	util.CaptureLogs(valueChan)
+	// setup database
+	if err == nil && conf.Influx.URL != "" {
+		configureDatabase(conf.Influx, site.LoadPoints(), tee.Attach())
+	}
+
+	// setup mqtt publisher
+	if conf.Mqtt.Broker != "" {
+		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
+		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
+	}
+
+	// announce web server on mDNS
+	if strings.HasSuffix(conf.Network.Host, ".local") {
+		host := strings.TrimSuffix(conf.Network.Host, ".local")
+		if zc, err := zeroconf.RegisterProxy("EV Charge Controller", "_http._tcp", "local.", conf.Network.Port, host, nil, []string{}, nil); err == nil {
+			shutdown.Register(zc.Shutdown)
+		} else {
+			log.ERROR.Printf("mDNS announcement: %s", err)
+		}
+	}
+
+	// start HEMS server
+	if err == nil && conf.HEMS.Type != "" {
+		var hems hems.HEMS
+		if hems, err = configureHEMS(conf.HEMS, site, httpd); err == nil {
+			go hems.Run()
+		}
+	}
 
 	// setup messaging
-	pushChan := configureMessengers(conf.Messaging, cache)
+	var pushChan chan push.Event
+	if err == nil {
+		pushChan, err = configureMessengers(conf.Messaging, cache)
+	}
 
-	// set channels
-	site.DumpConfig()
-	site.Prepare(valueChan, pushChan)
+	// show main ui
+	if err == nil {
+		httpd.Site(site, cache)
+
+		// set channels
+		site.DumpConfig()
+		site.Prepare(valueChan, pushChan)
+
+		// version check
+		go updater.Run(log, httpd, tee, valueChan)
+
+		// capture log messages for UI
+		util.CaptureLogs(valueChan)
+
+		// expose sponsor to UI
+		if sponsor.Subject != "" {
+			publish("sponsor", sponsor.Subject)
+		}
+
+		// allow web access for vehicles
+		cp.webControl(conf.Network, httpd.Router(), valueChan)
+	}
 
 	stopC := make(chan struct{})
 	go shutdown.Run(stopC)
 
 	siteC := make(chan struct{})
 	go func() {
-		site.Run(stopC, conf.Interval)
+		// site may be nil if setup never completed
+		if site != nil {
+			site.Run(stopC, conf.Interval)
+		}
 		close(siteC)
 	}()
 
