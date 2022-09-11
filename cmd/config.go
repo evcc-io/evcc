@@ -123,7 +123,7 @@ func (cp *ConfigProvider) Meter(name string) (api.Meter, error) {
 
 		return meter, nil
 	}
-	return nil, fmt.Errorf("invalid meter: %s", name)
+	return nil, fmt.Errorf("meter does not exist: %s", name)
 }
 
 // Charger provides chargers by name
@@ -131,7 +131,7 @@ func (cp *ConfigProvider) Charger(name string) (api.Charger, error) {
 	if charger, ok := cp.chargers[name]; ok {
 		return charger, nil
 	}
-	return nil, fmt.Errorf("invalid charger: %s", name)
+	return nil, fmt.Errorf("charger does not exist: %s", name)
 }
 
 // Vehicle provides vehicles by name
@@ -139,7 +139,7 @@ func (cp *ConfigProvider) Vehicle(name string) (api.Vehicle, error) {
 	if vehicle, ok := cp.vehicles[name]; ok {
 		return vehicle, nil
 	}
-	return nil, fmt.Errorf("invalid vehicle: %s", name)
+	return nil, fmt.Errorf("vehicle does not exist: %s", name)
 }
 
 func (cp *ConfigProvider) configure(conf config) error {
