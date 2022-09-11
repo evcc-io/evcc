@@ -104,7 +104,7 @@ jobs:
       - name: Create Hassio addon release
         uses: pocket-apps/action-update-version@v1
         with:
-          files: 'packaging/hassio/config.json'
+          files: "packaging/hassio/config.json"
           version-regexp: '\d+.\d+.\d+'
           branch-name: master
           author-name: evcc-io
