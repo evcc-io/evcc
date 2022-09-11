@@ -38,7 +38,7 @@
     "8887/tcp": 8887
   },
   "ports_description": {
-    "7070/TCP": "Webserver",
-    "9522/UDP": "Multicast (SMA Speedwire)",
-    "8887/TCP": "OCPP web socket"
+    "7070/tcp": "Webserver",
+    "9522/udp": "Multicast (SMA Speedwire)",
+    "8887/tcp": "OCPP web socket"
   }
