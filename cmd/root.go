@@ -148,11 +148,6 @@ func publish(key string, val any) {
 	valueChan <- util.Param{Key: key, Val: val}
 }
 
-func fatal(err error) {
-	log.FATAL.Println(err)
-	publish("fatal", err)
-}
-
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
@@ -215,18 +210,13 @@ func run(cmd *cobra.Command, args []string) {
 	if err == nil {
 		err = fmt.Errorf("bad things: %w", errors.New("foo"))
 	}
-	if err != nil {
-		fatal(err)
-	}
 
 	// setup loadpoints
 	cp.TrackVisitors() // track duplicate usage
 
 	var site *core.Site
 	if err == nil {
-		if site, err = configureSiteAndLoadpoints(conf); err != nil {
-			fatal(err)
-		}
+		site, err = configureSiteAndLoadpoints(conf)
 	}
 
 	// setup database
@@ -298,6 +288,19 @@ func run(cmd *cobra.Command, args []string) {
 		}
 		close(siteC)
 	}()
+
+	if err != nil {
+		const reboot = time.Minute
+
+		log.FATAL.Println(err)
+		log.FATAL.Printf("will attempt restart in: %v", reboot)
+
+		publish("fatal", err)
+
+		time.AfterFunc(reboot, func() {
+			os.Exit(1)
+		})
+	}
 
 	// uds health check listener
 	go server.HealthListener(site, siteC)
