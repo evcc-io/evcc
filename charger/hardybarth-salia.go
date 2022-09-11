@@ -32,7 +32,6 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-// http://apidoc.ecb1.de
 // https://github.com/evcc-io/evcc/discussions/778
 
 // Salia charger implementation
@@ -55,14 +54,12 @@ func init() {
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
 func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI           string
-		ChargeControl int
-		Meter         int
-		Cache         time.Duration
+		URI   string
+		Meter int
+		Cache time.Duration
 	}{
-		ChargeControl: 1,
-		Meter:         1,
-		Cache:         time.Second,
+		Meter: 1,
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
