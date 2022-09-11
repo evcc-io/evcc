@@ -106,23 +106,23 @@ jobs:
       - name: Update version
         # uses: pocket-apps/action-update-version@v1
         # with:
-        #   files: "packaging/hassio/config.json"
+        #   files: "packaging/hassio/config-nightly.json"
         #   version-regexp: '\d+.\d+.\d+'
         #   branch-name: master
         #   author-name: evcc-io
         #run: |
-        #  sed -i -e s#0.0.0#$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)# packaging/hassio/config.json
+        #  sed -i -e s#0.0.0#$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)# packaging/hassio/config-nightly.json
         
         run: |
           export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e s#refs/tags/v##)
           echo "$RELEASE_VERSION"
-          sed -e s#0.0.0#$RELEASE_VERSION# packaging/hassio/config.json
+          sed -e s#0.0.0#$RELEASE_VERSION# packaging/hassio/config-nightly.json
           
       - name: Copy config to hassio-addon
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.GH_TOKEN }}
-          src_path: packaging/hassio/config.json
+          src_path: packaging/hassio/config-nightly.json
           dst_path: /evcc-nightly/config.json
           dst_owner: evcc-io
           dst_repo_name: hassio-addon
