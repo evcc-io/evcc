@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
@@ -145,6 +146,21 @@ func publish(key string, val any) {
 	valueChan <- util.Param{Key: key, Val: val}
 }
 
+func unwrap(err error) (res []string) {
+	for err != nil {
+		inner := errors.Unwrap(err)
+		if inner == nil {
+			res = append(res, err.Error())
+		} else {
+			cur := strings.TrimSuffix(err.Error(), ": "+inner.Error())
+			cur = strings.TrimSuffix(cur, inner.Error())
+			res = append(res, strings.TrimSpace(cur))
+		}
+		err = inner
+	}
+	return
+}
+
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
@@ -270,7 +286,7 @@ func run(cmd *cobra.Command, args []string) {
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", reboot)
 
-		publish("fatal", err)
+		publish("fatal", unwrap(err))
 
 		<-time.After(reboot)
 		os.Exit(1)
