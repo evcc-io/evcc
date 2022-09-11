@@ -55,10 +55,8 @@ func init() {
 func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI   string
-		Meter int
 		Cache time.Duration
 	}{
-		Meter: 1,
 		Cache: time.Second,
 	}
 
