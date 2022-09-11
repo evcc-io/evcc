@@ -1,0 +1,36 @@
+{
+    "name": "evcc (nightly)",
+    "version": "0.0.0",
+    "slug": "evcc-nightly",
+    "description": "Nightly version of EV Charge Controller!",
+    "url": "https://github.com/evcc-io/evcc",
+    "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+    "startup": "application",
+    "panel_icon": "mdi:ev-station",
+    "boot": "auto",
+    "legacy": true,
+    "stage": "experimental",
+    "ingress": true,
+    "ingress_port": 7070,
+    "init": false,
+    "image": "andig/evcc",
+    "options": {
+        "config_file": "/config/evcc.yaml"
+    },
+    "schema":  {
+        "config_file": "str"
+    },
+    "host_network": true,
+    "map": ["config:rw"],
+    "webui": "http://[HOST]:[PORT:7070]/",
+    "ports": {
+      "7090/udp": 7090,
+      "9522/udp": 9522,
+      "8887/tcp": 8887
+  },
+  "ports_description": {
+    "7070/tcp": "Webserver",
+    "9522/udp": "Multicast (SMA Speedwire)",
+    "8887/tcp": "OCPP web socket"
+  }
+}
