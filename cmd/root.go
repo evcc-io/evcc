@@ -31,8 +31,8 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
-	ignoreMqtt   = []string{"auth", "releaseNotes"}   // excessive size may crash certain brokers
+	ignoreErrors = []string{"warn", "error"}        // don't add to cache
+	ignoreMqtt   = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
 var conf = config{
@@ -258,6 +258,14 @@ func run(cmd *cobra.Command, args []string) {
 		pushChan, err = configureMessengers(conf.Messaging, cache)
 	}
 
+	// TODO remove
+	err = fmt.Errorf("foo: %w", fmt.Errorf("bar %w", errors.New("baz")))
+
+	stopC := make(chan struct{})
+	go shutdown.Run(stopC)
+
+	siteC := make(chan struct{})
+
 	// show main ui
 	if err == nil {
 		httpd.Site(site, cache)
@@ -279,6 +287,11 @@ func run(cmd *cobra.Command, args []string) {
 
 		// allow web access for vehicles
 		cp.webControl(conf.Network, httpd.Router(), valueChan)
+
+		go func() {
+			site.Run(stopC, conf.Interval)
+			close(siteC)
+		}()
 	} else {
 		// delayed reboot on error
 		const reboot = time.Minute
@@ -288,21 +301,10 @@ func run(cmd *cobra.Command, args []string) {
 
 		publish("fatal", unwrap(err))
 
-		<-time.After(reboot)
-		os.Exit(1)
+		time.AfterFunc(reboot, func() {
+			os.Exit(1)
+		})
 	}
-
-	stopC := make(chan struct{})
-	go shutdown.Run(stopC)
-
-	siteC := make(chan struct{})
-	go func() {
-		// site may be nil if setup errored
-		if site != nil {
-			site.Run(stopC, conf.Interval)
-		}
-		close(siteC)
-	}()
 
 	// uds health check listener
 	go server.HealthListener(site, siteC)
