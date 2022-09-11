@@ -263,6 +263,19 @@ func run(cmd *cobra.Command, args []string) {
 
 		// allow web access for vehicles
 		cp.webControl(conf.Network, httpd.Router(), valueChan)
+	} else {
+		// delayed reboot on error
+		const reboot = time.Minute
+
+		log.FATAL.Println(err)
+		log.FATAL.Printf("will attempt restart in: %v", reboot)
+
+		publish("fatal", err)
+
+		time.AfterFunc(reboot, func() {
+			os.Exit(1)
+		})
+
 	}
 
 	stopC := make(chan struct{})
@@ -276,20 +289,6 @@ func run(cmd *cobra.Command, args []string) {
 		}
 		close(siteC)
 	}()
-
-	// delayed reboot on error
-	if err != nil {
-		const reboot = time.Minute
-
-		log.FATAL.Println(err)
-		log.FATAL.Printf("will attempt restart in: %v", reboot)
-
-		publish("fatal", err)
-
-		time.AfterFunc(reboot, func() {
-			os.Exit(1)
-		})
-	}
 
 	// uds health check listener
 	go server.HealthListener(site, siteC)
