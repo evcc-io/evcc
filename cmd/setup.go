@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -22,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/libp2p/zeroconf/v2"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
@@ -123,25 +125,42 @@ func configureJavascript(conf map[string]interface{}) error {
 }
 
 // setup HEMS
-func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) (hems.HEMS, error) {
+func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) error {
 	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, httpd)
 	if err != nil {
-		err = fmt.Errorf("failed configuring hems: %w", err)
+		return fmt.Errorf("failed configuring hems: %w", err)
 	}
-	return hems, err
+
+	go hems.Run()
+
+	return nil
+}
+
+// setup MDNS
+func configureMDNS(conf networkConfig) error {
+	host := strings.TrimSuffix(conf.Host, ".local")
+
+	zc, err := zeroconf.RegisterProxy("EV Charge Controller", "_http._tcp", "local.", conf.Port, host, nil, []string{}, nil)
+	if err != nil {
+		return fmt.Errorf("mDNS announcement: %w", err)
+	}
+
+	shutdown.Register(zc.Shutdown)
+
+	return nil
 }
 
 // setup EEBus
 func configureEEBus(conf map[string]interface{}) error {
 	var err error
-	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
-		go server.EEBusInstance.Run()
-		shutdown.Register(server.EEBusInstance.Shutdown)
-	} else {
-		err = fmt.Errorf("eebus: %w", err)
+	if server.EEBusInstance, err = server.NewEEBus(conf); err != nil {
+		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
-	return err
+	go server.EEBusInstance.Run()
+	shutdown.Register(server.EEBusInstance.Shutdown)
+
+	return nil
 }
 
 // setup messaging

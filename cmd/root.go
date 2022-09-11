@@ -14,7 +14,6 @@ import (
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
-	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
@@ -22,7 +21,6 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/libp2p/zeroconf/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -208,7 +206,7 @@ func run(cmd *cobra.Command, args []string) {
 	// if err := configureEnvironment(conf); err != nil {
 	err := configureEnvironment(conf)
 	if err == nil {
-		err = fmt.Errorf("bad things: %w", errors.New("foo"))
+		err = fmt.Errorf("bad things: %w", fmt.Errorf("really weird stuff happened: %w", errors.New("foo")))
 	}
 
 	// setup loadpoints
@@ -225,27 +223,19 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	// setup mqtt publisher
-	if conf.Mqtt.Broker != "" {
+	if err == nil && conf.Mqtt.Broker != "" {
 		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
 		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
 	}
 
-	// announce web server on mDNS
-	if strings.HasSuffix(conf.Network.Host, ".local") {
-		host := strings.TrimSuffix(conf.Network.Host, ".local")
-		if zc, err := zeroconf.RegisterProxy("EV Charge Controller", "_http._tcp", "local.", conf.Network.Port, host, nil, []string{}, nil); err == nil {
-			shutdown.Register(zc.Shutdown)
-		} else {
-			log.ERROR.Printf("mDNS announcement: %s", err)
-		}
+	// announce on mDNS
+	if err == nil && strings.HasSuffix(conf.Network.Host, ".local") {
+		err = configureMDNS(conf.Network)
 	}
 
 	// start HEMS server
 	if err == nil && conf.HEMS.Type != "" {
-		var hems hems.HEMS
-		if hems, err = configureHEMS(conf.HEMS, site, httpd); err == nil {
-			go hems.Run()
-		}
+		err = configureHEMS(conf.HEMS, site, httpd)
 	}
 
 	// setup messaging
