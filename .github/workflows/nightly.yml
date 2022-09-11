@@ -101,10 +101,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Project A
-        uses: actions/checkout@v2
-        with:
-          path: ./projectA
+      #- name: Checkout Project A
+      #  uses: actions/checkout@v2
+      #  with:
+      #    path: ./projectA
 
       - name: Checkout Project B
         uses: actions/checkout@master
@@ -114,11 +114,15 @@ jobs:
           path: ./projectB
 
       - name: Copy Update Version config.json file
+        #run: |
+        #  export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e s#refs/tags/v##)
+        #  echo "$RELEASE_VERSION"
+        #  sed -e s#0.0.0#$RELEASE_VERSION# ./projectA/packaging/hassio/config.json > ./projectB/evcc/config.json
         run: |
           export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e s#refs/tags/v##)
           echo "$RELEASE_VERSION"
-          sed -e s#0.0.0#$RELEASE_VERSION# ./projectA/packaging/hassio/config.json > ./projectB/evcc/config.json
-
+          sed -i -e s#.*version.*#'  "version": "'$RELEASE_VERSION'"'# ./projectB/evcc/config.json
+          
       - name: Push Project B
         run: |
           cd ./projectB
