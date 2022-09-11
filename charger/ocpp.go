@@ -3,7 +3,9 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -13,6 +15,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/samber/lo"
 )
 
 // OCPP charger implementation
@@ -24,6 +27,7 @@ type OCPP struct {
 	idtag                   string
 	phases                  int
 	current                 float64
+	meterValuesSample       string
 	phaseSwitchingSupported bool
 }
 
@@ -37,8 +41,9 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		StationId     string
 		IdTag         string
 		Connector     int
-		Meter         bool
+		Meter         interface{} // TODO deprecated
 		MeterInterval time.Duration
+		MeterValues   string
 		InitialReset  core.ResetType
 	}{
 		Connector: 1,
@@ -57,69 +62,92 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, fmt.Errorf("unknown configuration option detected for reset: %s", cc.InitialReset)
 	}
 
-	ocpp, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.Meter, cc.MeterInterval, cc.InitialReset)
+	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.InitialReset)
 	if err != nil {
-		return ocpp, err
+		return c, err
 	}
 
-	var (
-		meter        func() (float64, error)
-		meterCurrent func() (float64, float64, float64, error)
-		chargeRater  func() (float64, error)
-	)
-
-	if cc.Meter {
-		meter = ocpp.currentPower
-		meterCurrent = ocpp.currents
-		chargeRater = ocpp.chargedEnergy
+	var powerG func() (float64, error)
+	if c.hasMeasurement(types.MeasurandPowerActiveImport) {
+		powerG = c.currentPower
 	}
 
-	return decorateOCPP(ocpp, meter, meterCurrent, chargeRater), nil
+	var totalEnergyG func() (float64, error)
+	if c.hasMeasurement(types.MeasurandEnergyActiveImportRegister) {
+		totalEnergyG = c.totalEnergy
+	}
+
+	var currentsG func() (float64, float64, float64, error)
+	if c.hasMeasurement(types.MeasurandCurrentImport + ".L3") {
+		currentsG = c.currents
+	}
+
+	return decorateOCPP(c, powerG, totalEnergyG, currentsG), nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string, hasMeter bool, meterInterval time.Duration, initialReset core.ResetType) (*OCPP, error) {
-	cp, err := ocpp.Instance().Register(id, hasMeter)
+func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, initialReset core.ResetType) (*OCPP, error) {
+	cp, err := ocpp.Instance().Register(id)
 	if err != nil {
 		return nil, err
 	}
 
-	logstr := "-charger"
+	unit := "ocpp-cp"
 	if id != "" {
-		logstr = fmt.Sprintf("-%s", id)
+		unit = id
 	}
 
 	c := &OCPP{
-		log:       util.NewLogger(fmt.Sprintf("ocpp%s:%d", logstr, connector)),
+		log:       util.NewLogger(unit),
 		cp:        cp,
 		id:        id,
 		connector: connector,
 		idtag:     idtag,
 	}
 
+	c.log.DEBUG.Println("waiting for chargepoint to register")
 	if err := cp.Boot(); err != nil {
 		return nil, err
 	}
 
 	var (
-		rc                           = make(chan error, 1)
-		options                      []core.ConfigurationKey
-		meterValuesSampledDataString string
-		meterValuesSampleInterval    string
+		rc                  = make(chan error, 1)
+		options             []core.ConfigurationKey
+		meterSampleInterval time.Duration
 	)
 
 	err = ocpp.Instance().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
+		if err != nil {
+			rc <- err
+			return
+		}
+
 		options = resp.ConfigurationKey
 
+		// sort config options for printing
+		sort.Slice(options, func(i, j int) bool {
+			return options[i].Key < options[j].Key
+		})
+
+		rw := map[bool]string{false: "r/w", true: "r/o"}
+
 		for _, opt := range options {
-			c.log.TRACE.Printf("%s (%t): %s", opt.Key, opt.Readonly, *opt.Value)
+			c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
+
 			switch opt.Key {
 			case ocpp.KeyMeterValuesSampledData:
-				meterValuesSampledDataString = *opt.Value
+				c.meterValuesSample = *opt.Value
+
 			case ocpp.KeyMeterValueSampleInterval:
-				meterValuesSampleInterval = *opt.Value
+				meterValuesSampleInterval, err := strconv.Atoi(*opt.Value)
+				if err != nil {
+					rc <- err
+					return
+				}
+				meterSampleInterval = time.Duration(meterValuesSampleInterval) * time.Second
+
 			case string(ocpp.KeyConnectorSwitch3to1PhaseSupported):
 				// Detection of 1 phase charging/switching support
 				b, err := strconv.ParseBool(*opt.Value)
@@ -132,7 +160,7 @@ func NewOCPP(id string, connector int, idtag string, hasMeter bool, meterInterva
 			}
 		}
 
-		rc <- err
+		rc <- nil
 	}, []string{})
 
 	if err := c.wait(err, rc); err != nil {
@@ -143,56 +171,32 @@ func NewOCPP(id string, connector int, idtag string, hasMeter bool, meterInterva
 		return nil, err
 	}
 
-	{ // Check supported connectors of charge point
-		supported := cp.GetNumberOfSupportedConnectors()
-		if c.connector > supported {
-			return nil, fmt.Errorf("configured connector is not available, max available connectors %d", supported)
-		}
+	// check supported connectors of charge point
+	if supported := cp.GetNumberOfSupportedConnectors(); c.connector > supported {
+		return nil, fmt.Errorf("configured connector is not available, max available connectors %d", supported)
 	}
 
-	if hasMeter {
-		if meterValuesSampledDataString != "Current.Import,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature" {
-			c.log.TRACE.Printf("Current values \n\t%s != \n\t%+v", ocpp.ValuePreferedMeterValuesSampleData, meterValuesSampledDataString)
+	if meterValues != "" {
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
+			return nil, err
+		}
 
-			rc = make(chan error, 1)
-			err = ocpp.Instance().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
-				c.log.TRACE.Printf("ChangeMeterConfigurationRequest %T: %+v", resp, resp)
+		// configuration activated
+		c.meterValuesSample = meterValues
+	}
 
-				if resp.Status == core.ConfigurationStatusRejected {
-					rc <- fmt.Errorf("configuration change rejected")
-				}
+	// get initial meter values and configure sample rate
+	if c.hasMeasurement("Power.Active.Import") || c.hasMeasurement("Energy.Active.Import.Register") {
+		ocpp.Instance().TriggerMeterValuesRequest(cp)
 
-				rc <- err
-			}, ocpp.KeyMeterValuesSampledData, ocpp.ValuePreferedMeterValuesSampleData)
-
-			if err := c.wait(err, rc); err != nil {
+		if meterSampleInterval > meterInterval && meterInterval > 0 {
+			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 				return nil, err
 			}
-		}
 
-		{
-			intervalStr := fmt.Sprintf("%d", int(meterInterval.Seconds()))
-			if meterValuesSampleInterval != intervalStr {
-				rc = make(chan error, 1)
-
-				err := ocpp.Instance().ChangeConfiguration(id, func(resp *core.ChangeConfigurationConfirmation, err error) {
-					c.log.TRACE.Printf("ChangeSampleMeterValueInterval %T: %v", resp, resp)
-
-					if resp.Status == core.ConfigurationStatusRejected {
-						rc <- fmt.Errorf("configuration of meter interval rejected: %w", err)
-					}
-					rc <- err
-				}, ocpp.KeyMeterValueSampleInterval, intervalStr)
-
-				if err := c.wait(err, rc); err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		// get initial meter values
-		if hasMeter {
-			ocpp.Instance().TriggerMeterValueRequest(cp)
+			// HACK: setup watchdog for meter values if not happy with config
+			c.log.DEBUG.Println("enabling meter watchdog")
+			cp.WatchDog(meterInterval)
 		}
 	}
 
@@ -210,16 +214,29 @@ func NewOCPP(id string, connector int, idtag string, hasMeter bool, meterInterva
 	return c, nil
 }
 
-// Enabled implements the api.Charger interface
-func (c *OCPP) Enabled() (bool, error) {
-	current, err := c.cp.Status()
-	if current == api.StatusC {
-		return true, err
-	}
-
-	return false, err
+// hasMeasurement checks if meterValuesSample contains given measurement
+func (c *OCPP) hasMeasurement(val types.Measurand) bool {
+	return lo.Contains(strings.Split(c.meterValuesSample, ","), string(val))
 }
 
+// configure updates CP configuration
+func (c *OCPP) configure(key, val string) error {
+	rc := make(chan error, 1)
+
+	err := ocpp.Instance().ChangeConfiguration(c.id, func(resp *core.ChangeConfigurationConfirmation, err error) {
+		c.log.TRACE.Printf("ChangeConfiguration: %v", resp)
+
+		if err == nil && resp != nil && resp.Status != core.ConfigurationStatusAccepted {
+			rc <- fmt.Errorf("ChangeConfiguration failed: %s", resp.Status)
+		}
+
+		rc <- err
+	}, key, val)
+
+	return c.wait(err, rc)
+}
+
+// wait waits for a CP roundtrip with timeout
 func (c *OCPP) wait(err error, rc chan error) error {
 	if err == nil {
 		select {
@@ -232,6 +249,16 @@ func (c *OCPP) wait(err error, rc chan error) error {
 	return err
 }
 
+// Status implements the api.Charger interface
+func (c *OCPP) Status() (api.ChargeStatus, error) {
+	return c.cp.Status()
+}
+
+// Enabled implements the api.Charger interface
+func (c *OCPP) Enabled() (bool, error) {
+	return c.cp.TransactionID() > 0, nil
+}
+
 // Enable implements the api.Charger interface
 func (c *OCPP) Enable(enable bool) error {
 	var err error
@@ -239,7 +266,7 @@ func (c *OCPP) Enable(enable bool) error {
 
 	if enable {
 		err = ocpp.Instance().RemoteStartTransaction(c.id, func(resp *core.RemoteStartTransactionConfirmation, err error) {
-			c.log.TRACE.Printf("RemoteStartTransaction %T: %+v", resp, resp)
+			c.log.TRACE.Printf("RemoteStartTransaction: %+v", resp)
 
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
@@ -251,7 +278,7 @@ func (c *OCPP) Enable(enable bool) error {
 		})
 	} else {
 		err = ocpp.Instance().RemoteStopTransaction(c.id, func(resp *core.RemoteStopTransactionConfirmation, err error) {
-			c.log.TRACE.Printf("RemoteStopTransaction %T: %+v", resp, resp)
+			c.log.TRACE.Printf("RemoteStopTransaction: %+v", resp)
 
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
@@ -265,12 +292,11 @@ func (c *OCPP) Enable(enable bool) error {
 }
 
 func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfile) error {
-	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile, profile)
-	c.log.TRACE.Printf("SetChargingProfileRequest %T: %+v", profile.ChargingSchedule, profile.ChargingSchedule)
+	c.log.TRACE.Printf("SetChargingProfileRequest: %+v (%+v)", profile, *profile.ChargingSchedule)
 
 	rc := make(chan error, 1)
 	err := ocpp.Instance().SetChargingProfile(c.id, func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
-		c.log.TRACE.Printf("SetChargingProfileResponse %T: %+v", resp, resp)
+		c.log.TRACE.Printf("SetChargingProfile: %+v", resp)
 		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}
@@ -291,15 +317,15 @@ func (c *OCPP) setPeriod(current float64, phases int) error {
 	}
 
 	// connectorID: 0 - profile will be applied to all connectors
-	err := c.setChargingProfile(0, getMaxCharginProfile(period))
+	err := c.setChargingProfile(0, getMaxChargingProfile(period))
 	if err != nil {
-		c.log.TRACE.Printf("failed to set charging profile: %s", err)
+		err = fmt.Errorf("failed to set charging profile: %w", err)
 	}
 
 	return err
 }
 
-func getMaxCharginProfile(period types.ChargingSchedulePeriod) *types.ChargingProfile {
+func getMaxChargingProfile(period types.ChargingSchedulePeriod) *types.ChargingProfile {
 	return &types.ChargingProfile{
 		ChargingProfileId:      1,
 		StackLevel:             1,
@@ -318,6 +344,8 @@ func (c *OCPP) MaxCurrent(current int64) error {
 	return c.MaxCurrentMillis(float64(current))
 }
 
+var _ api.ChargerEx = (*OCPP)(nil)
+
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *OCPP) MaxCurrentMillis(current float64) error {
 	err := c.setPeriod(current, c.phases)
@@ -327,12 +355,22 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-// Status implements the api.Charger interface
-func (c *OCPP) Status() (api.ChargeStatus, error) {
-	return c.cp.Status()
+// CurrentPower implements the api.Meter interface
+func (c *OCPP) currentPower() (float64, error) {
+	return c.cp.CurrentPower()
 }
 
-// TODO: Phases1p3p implements the api.PhaseSwitcher interface
+// TotalEnergy implements the api.MeterTotal interface
+func (c *OCPP) totalEnergy() (float64, error) {
+	return c.cp.TotalEnergy()
+}
+
+// Currents implements the api.MeterCurrent interface
+func (c *OCPP) currents() (float64, float64, float64, error) {
+	return c.cp.Currents()
+}
+
+// // TODO: Phases1p3p implements the api.PhaseSwitcher interface
 // func (c *OCPP) Phases1p3p(phases int) error {
 // 	if !c.phaseSwitchingSupported {
 // 		return fmt.Errorf("phase switching is not supported by the charger")
@@ -345,21 +383,6 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 
 // 	return err
 // }
-
-// CurrentPower implements the api.Meter interface
-func (c *OCPP) currentPower() (float64, error) {
-	return c.cp.CurrentPower()
-}
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *OCPP) chargedEnergy() (float64, error) {
-	return c.cp.ChargedEnergy()
-}
-
-// Currents implements the api.MeterCurrent interface
-func (c *OCPP) currents() (float64, float64, float64, error) {
-	return c.cp.Currents()
-}
 
 // // Identify implements the api.Identifier interface
 // func (c *OCPP) Identify() (string, error) {
