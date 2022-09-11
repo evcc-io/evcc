@@ -16,7 +16,7 @@ const (
 	stageVehicle
 )
 
-// WakeUp measures active time between start and stop events
+// WakeUp is a staged charger/vehicle timer-based wakeup mechanism
 type WakeUp struct {
 	sync.Mutex
 	pub     publisher
@@ -27,7 +27,7 @@ type WakeUp struct {
 	vehicle api.Resurrector
 }
 
-// NewWakeUp creates timer that can expire
+// NewWakeUp creates a staged charger/vehicle timer-based wakeup mechanism
 func NewWakeUp(pub publisher, charger api.Charger) *WakeUp {
 	m := &WakeUp{
 		clck: clock.New(),
@@ -41,7 +41,7 @@ func NewWakeUp(pub publisher, charger api.Charger) *WakeUp {
 	return m
 }
 
-// Start starts the timer if not started already
+// Start starts the timer for given vehicles if not already started
 func (m *WakeUp) Start(vehicle api.Vehicle) {
 	// test guard
 	if m == nil {
@@ -68,7 +68,7 @@ func (m *WakeUp) Start(vehicle api.Vehicle) {
 	}
 }
 
-// Reset resets the timer
+// Stop stops the timer if not already stopped
 func (m *WakeUp) Stop() {
 	// test guard
 	if m == nil {
@@ -78,8 +78,10 @@ func (m *WakeUp) Stop() {
 	m.Lock()
 	defer m.Unlock()
 
-	m.started = time.Time{}
-	m.pub.publish("wakeupTimer", 0)
+	if !m.started.IsZero() {
+		m.started = time.Time{}
+		m.pub.publish("wakeupTimer", 0)
+	}
 }
 
 // wakeUpVehicle calls the next available wake-up method
@@ -101,7 +103,13 @@ func (m *WakeUp) WakeUp() error {
 		return nil
 	}
 
-	var err error
+	var (
+		err         error
+		wakeupTimer time.Duration
+	)
+
+	// expire timer
+	m.started = time.Time{}
 
 	switch m.stage {
 	case stageCharger:
@@ -109,23 +117,20 @@ func (m *WakeUp) WakeUp() error {
 			err = fmt.Errorf("wake up charger: %w", err)
 		}
 
+		// start vehicle stage
 		if m.vehicle != nil {
 			m.stage = stageVehicle
 			m.started = m.clck.Now()
-			m.pub.publish("wakeupTimer", wakeupTimeout)
-		} else {
-			m.started = time.Time{}
-			m.pub.publish("wakeupTimer", 0)
+			wakeupTimer = wakeupTimeout
 		}
 
 	case stageVehicle:
 		if err = m.vehicle.WakeUp(); err != nil {
 			err = fmt.Errorf("wake up vehicle: %w", err)
 		}
-
-		m.started = time.Time{}
-		m.pub.publish("wakeupTimer", 0)
 	}
+
+	m.pub.publish("wakeupTimer", wakeupTimer)
 
 	return err
 }
