@@ -272,10 +272,8 @@ func run(cmd *cobra.Command, args []string) {
 
 		publish("fatal", err)
 
-		time.AfterFunc(reboot, func() {
-			os.Exit(1)
-		})
-
+		<-time.After(reboot)
+		os.Exit(1)
 	}
 
 	stopC := make(chan struct{})
