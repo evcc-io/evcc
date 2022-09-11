@@ -100,13 +100,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Create Hassio addon release
-        uses: pocket-apps/action-update-version@v1
-        with:
-          files: "packaging/hassio/config.json"
-          version-regexp: '\d+.\d+.\d+'
-          branch-name: master
-          author-name: evcc-io
+      - name: Update version
+        # uses: pocket-apps/action-update-version@v1
+        # with:
+        #   files: "packaging/hassio/config.json"
+        #   version-regexp: '\d+.\d+.\d+'
+        #   branch-name: master
+        #   author-name: evcc-io
+        run: |
+          export RELEASE_VERSION=$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)
+          sed -e s#0.0.0#$RELEASE_VERSION# packaging/hassio/config.json
 
       - name: Copy config to hassio-addon
         uses: andstor/copycat-action@v3
