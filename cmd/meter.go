@@ -54,8 +54,12 @@ func runMeter(cmd *cobra.Command, args []string) {
 
 	meters := cp.meters
 	if len(args) == 1 {
-		arg := args[0]
-		meters = map[string]api.Meter{arg: cp.Meter(arg)}
+		name := args[0]
+		meter, err := cp.Meter(name)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		meters = map[string]api.Meter{name: meter}
 	}
 
 	d := dumper{len: len(meters)}

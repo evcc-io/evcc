@@ -104,8 +104,12 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 
 	chargers := cp.chargers
 	if len(args) == 1 {
-		arg := args[0]
-		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
+		name := args[0]
+		charger, err := cp.Charger(name)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		chargers = map[string]api.Charger{name: charger}
 	}
 
 	digits, err := strconv.Atoi(cmd.PersistentFlags().Lookup(flagDigits).Value.String())

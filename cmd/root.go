@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
@@ -150,8 +149,10 @@ func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
-	// load config and re-configure logging after reading config file
-	if err := loadConfigFile(cfgFile, &conf); err != nil {
+	var err error
+	if cfgFile != "" {
+		err = loadConfigFile(cfgFile, &conf)
+	} else {
 		log.ERROR.Println("missing evcc config - switching into demo mode")
 		demoConfig(&conf)
 	}
@@ -181,7 +182,7 @@ func run(cmd *cobra.Command, args []string) {
 	cache := util.NewCache()
 	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
 
-	// create webserver
+	// create web server
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
 
@@ -203,17 +204,14 @@ func run(cmd *cobra.Command, args []string) {
 	go tee.Run(valueChan)
 
 	// setup environment
-	// if err := configureEnvironment(conf); err != nil {
-	err := configureEnvironment(conf)
 	if err == nil {
-		err = fmt.Errorf("bad things: %w", fmt.Errorf("really weird stuff happened: %w", errors.New("foo")))
+		err = configureEnvironment(conf)
 	}
 
-	// setup loadpoints
-	cp.TrackVisitors() // track duplicate usage
-
+	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
+		cp.TrackVisitors() // track duplicate usage
 		site, err = configureSiteAndLoadpoints(conf)
 	}
 
@@ -272,13 +270,14 @@ func run(cmd *cobra.Command, args []string) {
 
 	siteC := make(chan struct{})
 	go func() {
-		// site may be nil if setup never completed
+		// site may be nil if setup errored
 		if site != nil {
 			site.Run(stopC, conf.Interval)
 		}
 		close(siteC)
 	}()
 
+	// delayed reboot on error
 	if err != nil {
 		const reboot = time.Minute
 
