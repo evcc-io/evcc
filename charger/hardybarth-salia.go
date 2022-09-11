@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -85,7 +86,18 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	err := wb.post(salia.ChargeMode, echarge.ModeManual)
+	// set chargemode manual
+	res, err := wb.get()
+	if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
+		if err = wb.post(salia.ChargeMode, echarge.ModeManual); err == nil {
+			res, err = wb.get()
+		}
+
+		if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
+			err = errors.New("could not change chargemode to manual")
+		}
+	}
+
 	if err == nil {
 		go wb.heartbeat()
 
