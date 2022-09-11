@@ -17,8 +17,8 @@ params:
     mask: true
     example: "307788992233"
     help:
-      en: The AIN is printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
-      de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      en: The AIN is printed on the type label on the back of the device. Embed it in single quotes in case of leading zeroes.
+      de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in einfache Hochkommata setzen.
   - name: standbypower
     default: 15
 render: |
