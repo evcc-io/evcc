@@ -108,8 +108,7 @@ jobs:
         #   branch-name: master
         #   author-name: evcc-io
         run: |
-          export RELEASE_VERSION=$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)
-          sed -e s#0.0.0#$RELEASE_VERSION# packaging/hassio/config.json
+          sed -i -e s#0.0.0#$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)# packaging/hassio/config.json
 
       - name: Copy config to hassio-addon
         uses: andstor/copycat-action@v3
