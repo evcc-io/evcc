@@ -220,7 +220,7 @@ func (c *EEBus) isCharging(d *communication.EVSEClientDataType) bool {
 		}
 	}
 
-	// The above doesn't (yet) work for build in chargers, so check the EEBUS measurements also
+	// The above doesn't (yet) work for built in meters, so check the EEBUS measurements also
 	var phase uint
 	for phase = 1; phase <= d.EVData.ConnectedPhases; phase++ {
 		if phaseCurrent, ok := d.EVData.Measurements.Current.Load(phase); ok {
