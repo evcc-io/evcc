@@ -8,8 +8,7 @@
 		>
 			<Logo class="logo me-2" />
 			v{{ installed }}
-			<shopicon-regular-moonstars class="ms-2 text-gray-light"></shopicon-regular-moonstars>
-			<span class="ms-2 text-gray-light d-none d-sm-inline">[{{ commit }}]</span>
+			<shopicon-regular-moonstars class="ms-2"></shopicon-regular-moonstars>
 		</a>
 		<button
 			v-else-if="newVersionAvailable"
