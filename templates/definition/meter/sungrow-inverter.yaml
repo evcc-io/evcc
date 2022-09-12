@@ -2,7 +2,7 @@ template: sungrow-inverter
 products:
   - brand: Sungrow
     description:
-      generic: Inverter
+      generic: SG Series Inverter
 guidedsetup:
   enable: true
 requirements:
@@ -14,6 +14,7 @@ params:
     choice: ["grid", "pv"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    baudrate: 9600
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -22,15 +23,31 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       type: input
-      address: 5082 # Export power
+      address: 5082 # Meter power
       decode: int32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5098 # Total import energy
+      type: input
+      decode: uint32s
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 5016 # Total DC power
+      address: 5030 # Total Active Power
       type: input
       decode: uint32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5003 # Total power yields
+      type: input
+      decode: uint32s
+    scale: 0.1
   {{- end }}
