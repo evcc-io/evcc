@@ -17,7 +17,7 @@
 			data-bs-target="#updateModal"
 			class="btn btn-link ps-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
 		>
-			<shopicon-regular-gift class="me-2 text-evcc"></shopicon-regular-gift>
+			<shopicon-regular-gift class="me-2"></shopicon-regular-gift>
 			v{{ installed }}
 			<span class="ms-2 d-none d-xs-block d-sm-none text-decoration-underline">
 				{{ $t("footer.version.availableShort") }}
