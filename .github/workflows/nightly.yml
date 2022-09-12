@@ -121,7 +121,7 @@ jobs:
         run: |
           export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e s#refs/tags/v##)
           echo "$RELEASE_VERSION"
-          sed -i -e s#.*version.*#'  "version": "'$RELEASE_VERSION'"'# ./projectB/evcc/config.json
+          sed -i -e s#.*version.*#'  "version": "'$RELEASE_VERSION'",'# ./projectB/evcc/config.json
           
       - name: Push Project B
         run: |
