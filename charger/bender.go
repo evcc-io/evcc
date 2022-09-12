@@ -109,16 +109,13 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	}
 
 	// check presence of metering
+	reg := uint16(bendRegActivePower)
 	if wb.legacy {
-		b, err := wb.conn.ReadHoldingRegisters(bendRegPhaseEnergy, 2)
-		if err == nil && (binary.BigEndian.Uint32(b) != math.MaxUint32) {
-			return decorateBenderCC(wb, wb.currentPower, wb.currents, wb.chargedEnergy, wb.totalEnergy), nil
-		}
-	} else {
-		b, err := wb.conn.ReadHoldingRegisters(bendRegActivePower, 2)
-		if err == nil && (binary.BigEndian.Uint32(b) != math.MaxUint32) {
-			return decorateBenderCC(wb, wb.currentPower, wb.currents, wb.chargedEnergy, wb.totalEnergy), nil
-		}
+		reg = bendRegPhaseEnergy
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
+		return decorateBenderCC(wb, wb.currentPower, wb.currents, wb.chargedEnergy, wb.totalEnergy), nil
 	}
 
 	return wb, err
@@ -131,9 +128,7 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	sb := binary.BigEndian.Uint16(b)
-
-	switch sb {
+	switch sb := binary.BigEndian.Uint16(b); sb {
 	case 1:
 		return api.StatusA, nil
 	case 2:
@@ -156,9 +151,7 @@ func (wb *BenderCC) Enabled() (bool, error) {
 		return false, err
 	}
 
-	cur := binary.BigEndian.Uint16(b)
-
-	return cur != 0, nil
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
