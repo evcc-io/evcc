@@ -10,3 +10,6 @@ params:
 render: |
   type: sma
   uri: {{ .host }}
+  {{- if eq .usage "pv" }}
+  scale: -1
+  {{- end }}
