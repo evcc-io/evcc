@@ -7,6 +7,7 @@ import (
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"sync"
 	"syscall"
@@ -161,6 +162,12 @@ func unwrap(err error) (res []string) {
 	return
 }
 
+func redact(src string) string {
+	return regexp.
+		MustCompile("(user|password|access|refresh|id|secret|token|url|host|broker|serial|deviceid).*").
+		ReplaceAllString(src, "$1: *****")
+}
+
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
@@ -298,6 +305,13 @@ func run(cmd *cobra.Command, args []string) {
 
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", reboot)
+
+		// add anonymous config
+		if src, err := os.ReadFile(cfgFile); err != nil {
+			log.ERROR.Println("could not open config file:", err)
+		} else {
+			publish("config", redact(string(src)))
+		}
 
 		publish("fatal", unwrap(err))
 

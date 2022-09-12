@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -13,5 +14,24 @@ func TestUnwrap(t *testing.T) {
 	res := unwrap(err)
 	if exp := []string{"foo", "bar", "baz"}; !reflect.DeepEqual(res, exp) {
 		t.Errorf("expected %v, got %v", exp, res)
+	}
+}
+
+func TestRedact(t *testing.T) {
+	secret := `
+	user: geheim
+	password: geheim
+	secret: geheim
+	token:
+		access: geheim
+		refresh: geheim
+	host: geheim
+	url: geheim
+	secret: geheim # comment
+	secret : geheim
+	`
+
+	if res := redact(secret); strings.Contains(res, "geheim") {
+		t.Errorf("secret exposed: %v", res)
 	}
 }

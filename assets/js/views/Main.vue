@@ -10,8 +10,16 @@
 			<div class="row py-5">
 				<div v-for="(error, index) in errors" :key="`err-${index}`" class="col12">
 					<span v-if="index == 0">Fehler:</span>
-					<span v-else>verursacht durch:</span>
+					<span v-else>Ursache:</span>
 					<code>{{ error }}</code>
+				</div>
+			</div>
+			<div class="row py-5">
+				<div class="col12">Config:</div>
+				<div class="col12">
+					<code v-if="config">
+						<pre>{{ config }}</pre>
+					</code>
 				</div>
 			</div>
 		</div>
@@ -38,6 +46,9 @@ export default {
 		},
 		errors: function () {
 			return this.state.fatal === null ? [] : this.state.fatal;
+		},
+		config: function () {
+			return this.state.config;
 		},
 	},
 };
