@@ -5,11 +5,19 @@
 				<h3 class="me-2 mb-0 text-truncate">
 					{{ title || $t("main.loadpoint.fallbackName") }}
 				</h3>
-				<LoadpointSettingsButton :id="id" class="d-block d-sm-none" />
+				<LoadpointSettingsButton
+					v-if="settingsButtonVisible"
+					:id="id"
+					class="d-block d-sm-none"
+				/>
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" :mode="mode" @updated="setTargetMode" />
-				<LoadpointSettingsButton :id="id" class="d-none d-sm-block ms-2" />
+				<LoadpointSettingsButton
+					v-if="settingsButtonVisible"
+					:id="id"
+					class="d-none d-sm-block ms-2"
+				/>
 			</div>
 		</div>
 		<LoadpointSettingsModal
@@ -138,6 +146,7 @@ export default {
 		vehicleRange: Number,
 		vehicleSoC: Number,
 		vehicleTitle: String,
+		vehicleTargetSoC: Number,
 		vehicles: Array,
 		minSoC: Number,
 		targetTime: String,
@@ -186,6 +195,9 @@ export default {
 		},
 		settingsModal: function () {
 			return this.collectProps(LoadpointSettingsModal);
+		},
+		settingsButtonVisible: function () {
+			return this.$hiddenFeatures || [0, 1, 3].includes(this.phasesConfigured);
 		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);

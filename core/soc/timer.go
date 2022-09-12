@@ -142,7 +142,7 @@ func (lp *Timer) DemandActive() bool {
 		lp.Publish("targetTimeActive", lp.active)
 
 		lp.current = lp.GetMaxCurrent()
-		lp.log.INFO.Printf("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
+		lp.log.INFO.Printf("target charging active for %v: projected %v (%v remaining)", lp.Time.Local(), lp.finishAt.Local(), remainingDuration.Round(time.Minute))
 	}
 
 	return lp.active

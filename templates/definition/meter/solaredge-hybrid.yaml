@@ -40,7 +40,7 @@ render: |
       id: 1
       timeout: {{ .timeout }}
       model: sunspec
-      value: 103:DCW
+      value: DCPower
     - source: modbus
       uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
       id: 1

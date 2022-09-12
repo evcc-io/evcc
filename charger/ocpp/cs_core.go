@@ -1,10 +1,50 @@
 package ocpp
 
 import (
-	core "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 )
+
+// cs actions
+
+func (cs *CS) TriggerResetRequest(cp *CP, resetType core.ResetType) {
+	if err := cs.Reset(cp.id, func(request *core.ResetConfirmation, err error) {
+		log := cs.log.TRACE
+		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
+			log = cs.log.ERROR
+		}
+
+		var status core.ResetStatus
+		if request != nil {
+			status = request.Status
+		}
+
+		log.Printf("TriggerReset for %s: %+v", cp.id, status)
+	}, resetType); err != nil {
+		cs.log.ERROR.Printf("send TriggerReset for %s failed: %v", cp.id, err)
+	}
+}
+
+func (cs *CS) TriggerMeterValuesRequest(cp *CP) {
+	if err := cs.TriggerMessage(cp.id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
+		log := cs.log.TRACE
+		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
+			log = cs.log.ERROR
+		}
+
+		var status remotetrigger.TriggerMessageStatus
+		if request != nil {
+			status = request.Status
+		}
+
+		log.Printf("TriggerMessage %s for %s: %+v", core.MeterValuesFeatureName, cp.id, status)
+	}, core.MeterValuesFeatureName); err != nil {
+		cs.log.ERROR.Printf("send TriggerMessage for %s failed: %v", cp.id, err)
+	}
+}
+
+// cp actions
 
 func (cs *CS) OnAuthorize(chargePointId string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
 	cp, err := cs.chargepointByID(chargePointId)
@@ -42,36 +82,13 @@ func (cs *CS) OnHeartbeat(chargePointId string, request *core.HeartbeatRequest) 
 	return cp.Heartbeat(request)
 }
 
-func (cs *CS) TriggerMeterValueRequest(cp *CP) {
-	callback := func(request *remotetrigger.TriggerMessageConfirmation, err error) {
-		cs.log.TRACE.Printf("TriggerMessageRequest %T: %+v", request, request)
-	}
-
-	if err := cs.TriggerMessage(cp.id, callback, core.MeterValuesFeatureName); err != nil {
-		cs.log.DEBUG.Printf("failed sending TriggerMessageRequest: %s", err)
-	}
-}
-
 func (cs *CS) OnMeterValues(chargePointId string, request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
 	cp, err := cs.chargepointByID(chargePointId)
 	if err != nil {
 		return nil, err
 	}
 
-	conf, err := cp.MeterValues(request)
-	// if request != nil {
-	// 	cs.log.DEBUG.Printf("%s < %s", request.MeterValue[0].Timestamp, time.Now().Add(-9*time.Second))
-	// 	if request.MeterValue[0].Timestamp.Before(time.Now().Add(-9 * time.Second)) {
-
-	// 		go func() {
-	// 			cs.log.DEBUG.Printf("send extra meter value request to catch up")
-	// 			time.Sleep(3 * time.Second)
-	// 			cs.TriggerMeterValueRequest(cp)
-	// 		}()
-	// 	}
-	// }
-
-	return conf, err
+	return cp.MeterValues(request)
 }
 
 func (cs *CS) OnStatusNotification(chargePointId string, request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
@@ -117,14 +134,4 @@ func (cs *CS) OnFirmwareStatusNotification(chargePointId string, request *firmwa
 	}
 
 	return cp.FirmwareStatusNotification(request)
-}
-
-func (cs *CS) TriggerResetRequest(cp *CP, resetType core.ResetType) {
-	callback := func(request *core.ResetConfirmation, err error) {
-		cs.log.TRACE.Printf("TriggerResetRequest %T: %+v", request, request)
-	}
-
-	if err := cs.Reset(cp.id, callback, resetType); err != nil {
-		cs.log.DEBUG.Printf("failed sending TriggerResetRequest: %s", err)
-	}
 }

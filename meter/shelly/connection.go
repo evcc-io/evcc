@@ -87,11 +87,14 @@ func (d *Connection) CurrentPower() (float64, error) {
 			return 0, err
 		}
 
-		if d.channel >= len(res.Meters) {
+		switch {
+		case d.channel < len(res.Meters):
+			power = res.Meters[d.channel].Power
+		case d.channel < len(res.EMeters):
+			power = res.EMeters[d.channel].Power
+		default:
 			return 0, errors.New("invalid channel, missing power meter")
 		}
-
-		power = res.Meters[d.channel].Power
 
 	default:
 		var res Gen2StatusResponse

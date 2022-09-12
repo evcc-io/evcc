@@ -1,0 +1,47 @@
+template: solarmax-maxstorage
+products:
+  - brand: SolarMax
+    description:
+      generic: MAX.STORAGE / MAX.STORAGE Ultimate
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: custom
+  power:
+  {{- if eq .usage "grid" }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 118 # Einspeise-/Bezugsleistung
+      type: input
+      decode: int32s
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 110 # PV-Leistung MAX.STORAGE
+      type: input
+      decode: int32s
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 114 # Batterie-Leistung
+      type: input
+      decode: int32s
+    scale: -1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 122 # Batterie SoC
+      type: input
+      decode: int16
+  {{- end }}

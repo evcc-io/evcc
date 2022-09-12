@@ -13,11 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: ^1.18
           cache: true
@@ -43,11 +41,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: ^1.18
           cache: true
@@ -56,19 +52,48 @@ jobs:
       - name: Build
         run: make build
 
-      - name: Test
-        run: make test
-
-  build-ui:
-    name: Build UI
+  test:
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Node
-        uses: actions/setup-node@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ^1.18
+          cache: true
+        id: go
+
+      - name: Test
+        run: make test
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ^1.18
+          cache: true
+        id: go
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+
+  build-ui:
+    name: UI
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
         with:
           node-version: "16"
 
@@ -101,23 +126,3 @@ jobs:
       - name: Porcelain
         run: |
           test -z "$(git status --porcelain)" || (git status; git diff; false)
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ^1.18
-          cache: true
-        id: go
-
-      - name: Lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest

@@ -1,0 +1,15 @@
+product:
+  brand: Senergy
+  description: SE 4/5/6KTL-S1/G2 Inverter
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: senergy
+      usage: pv      
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port

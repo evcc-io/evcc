@@ -17,12 +17,16 @@ type CS struct {
 	cps map[string]*CP
 }
 
-func (cs *CS) Register(id string, meterSupported bool) (*CP, error) {
+func (cs *CS) Register(id string) (*CP, error) {
+	unit := "ocpp-cp"
+	if id != "" {
+		unit = id
+	}
+
 	cp := &CP{
-		id:             id,
-		log:            util.NewLogger("ocpp-cp"),
-		measurements:   make(map[string]types.SampledValue),
-		meterSupported: meterSupported,
+		id:           id,
+		log:          util.NewLogger(unit),
+		measurements: make(map[string]types.SampledValue),
 	}
 
 	cp.initialized = sync.NewCond(&cp.mu)

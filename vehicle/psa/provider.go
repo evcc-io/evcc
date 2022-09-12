@@ -145,7 +145,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.statusG()
 	if err == nil {
-		if coord := res.LastPosition.Geometry.Coordinates; len(coord) == 2 {
+		if coord := res.LastPosition.Geometry.Coordinates; len(coord) >= 2 {
 			return coord[0], coord[1], nil
 		}
 		return 0, 0, api.ErrNotAvailable

@@ -49,7 +49,7 @@ const (
 	timerInactive = "inactive"
 
 	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
-	vehicleDetectInterval = 3 * time.Minute
+	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 
 	guardGracePeriod = 10 * time.Second // allow out of sync during this timespan
@@ -817,6 +817,10 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	}
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
+	// reset minSoC and targetSoC before change
+	lp.setMinSoC(0)
+	lp.setTargetSoC(100)
+
 	if lp.vehicle = vehicle; vehicle != nil {
 		lp.socUpdated = time.Time{}
 
@@ -845,7 +849,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehiclePresent", false)
 		lp.publish("vehicleTitle", "")
 		lp.publish("vehicleCapacity", int64(0))
-		lp.publish("vehicleOdometer", 0.0)
+		lp.publish(vehicleOdometer, 0.0)
 	}
 
 	// re-publish vehicle settings
@@ -878,32 +882,36 @@ func (lp *LoadPoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
 
 	lp.publish("vehicleSoC", 0.0)
-	lp.publish("vehicleRange", int64(0))
+	lp.publish(vehicleRange, int64(0))
+	lp.publish(vehicleTargetSoC, 0.0)
 
 	lp.setRemainingDuration(-1)
 }
 
-// vehicleUnidentified checks if there are associated vehicles and starts discovery period
+// vehicleUnidentified returns true if there are associated vehicles and detection is running.
+// It will also reset the api cache at regular intervals.
+// Detection is stopped after maximum duration and the "guest vehicle" message dispatched.
 func (lp *LoadPoint) vehicleUnidentified() bool {
-	res := len(lp.coordinatedVehicles()) > 0 && lp.vehicle == nil
-
-	// request vehicle api refresh while waiting to identify
-	if res {
-		if lp.clock.Since(lp.vehicleDetect) > vehicleDetectDuration {
-			lp.stopVehicleDetection()
-			lp.pushEvent(evVehicleUnidentified)
-			return false
-		}
-
-		select {
-		case <-lp.vehicleDetectTicker.C:
-			lp.log.DEBUG.Println("vehicle api refresh")
-			provider.ResetCached()
-		default:
-		}
+	if lp.vehicle != nil || lp.vehicleDetect.IsZero() || len(lp.coordinatedVehicles()) == 0 {
+		return false
 	}
 
-	return res
+	// stop detection
+	if lp.clock.Since(lp.vehicleDetect) > vehicleDetectDuration {
+		lp.stopVehicleDetection()
+		lp.pushEvent(evVehicleUnidentified)
+		return false
+	}
+
+	// request vehicle api refresh while waiting to identify
+	select {
+	case <-lp.vehicleDetectTicker.C:
+		lp.log.DEBUG.Println("vehicle api refresh")
+		provider.ResetCached()
+	default:
+	}
+
+	return true
 }
 
 // vehicleDefaultOrDetect will assign and update default vehicle or start detection
@@ -966,7 +974,7 @@ func (lp *LoadPoint) vehicleOdometer() {
 	if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
-			lp.publish("vehicleOdometer", odo)
+			lp.publish(vehicleOdometer, odo)
 		} else {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
@@ -1465,41 +1473,61 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	}
 
 	if lp.socPollAllowed() || lp.socProvidedByCharger() {
-		lp.socUpdated = lp.clock.Now()
+		var f float64
+		var err error
 
-		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
-		if err == nil {
-			lp.vehicleSoc = math.Trunc(f)
-			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
-			lp.publish("vehicleSoC", lp.vehicleSoc)
-
-			if lp.charging() {
-				lp.setRemainingDuration(lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.target))
-			} else {
-				lp.setRemainingDuration(-1)
-			}
-
-			lp.setRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.target))
-
-			// range
-			if vs, ok := lp.vehicle.(api.VehicleRange); ok {
-				if rng, err := vs.Range(); err == nil {
-					lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
-					lp.publish("vehicleRange", rng)
-				}
-			}
-
-			// trigger message after variables are updated
-			lp.bus.Publish(evVehicleSoC, f)
+		// guard for socEstimator removed by api
+		if se := lp.socEstimator; se != nil {
+			lp.socUpdated = lp.clock.Now()
+			f, err = se.SoC(lp.chargedEnergy)
 		} else {
+			return
+		}
+
+		if err != nil {
 			if errors.Is(err, api.ErrMustRetry) {
 				lp.socUpdated = time.Time{}
 			} else {
 				lp.log.ERROR.Printf("vehicle soc: %v", err)
 			}
+
+			return
 		}
 
-		return
+		lp.vehicleSoc = math.Trunc(f)
+		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
+		lp.publish("vehicleSoC", lp.vehicleSoc)
+
+		if se := lp.socEstimator; se != nil {
+			if lp.charging() {
+				lp.setRemainingDuration(se.RemainingChargeDuration(lp.chargePower, lp.SoC.target))
+			} else {
+				lp.setRemainingDuration(-1)
+			}
+		}
+
+		if se := lp.socEstimator; se != nil {
+			lp.setRemainingEnergy(1e3 * se.RemainingChargeEnergy(lp.SoC.target))
+		}
+
+		// range
+		if vs, ok := lp.vehicle.(api.VehicleRange); ok {
+			if rng, err := vs.Range(); err == nil {
+				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
+				lp.publish(vehicleRange, rng)
+			}
+		}
+
+		// vehicle target soc
+		if vs, ok := lp.vehicle.(api.SocLimiter); ok {
+			if targetSoC, err := vs.TargetSoC(); err == nil {
+				lp.log.DEBUG.Printf("vehicle target soc: %.0f%%", targetSoC)
+				lp.publish(vehicleTargetSoC, targetSoC)
+			}
+		}
+
+		// trigger message after variables are updated
+		lp.bus.Publish(evVehicleSoC, f)
 	}
 }
 

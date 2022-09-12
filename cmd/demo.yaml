@@ -104,13 +104,6 @@ chargers:
         var lp = state.loadpoints[0];
         lp.maxcurrent = val;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-    phases1p3p:
-      source: js
-      vm: shared
-      script: |
-        set();
-        if (val === 1) lp.phases = 1; else lp.phases = 3;
-        lp.phases;
 
   - name: charger_2
     type: custom
@@ -169,6 +162,8 @@ vehicles:
         var range = (44 * lp.vehicleSoC) / 15;
         range
     capacity: 44
+    onidentify:
+      targetsoc: 90
 
   - name: vehicle_2
     title: weißes Model 3
@@ -195,6 +190,8 @@ vehicles:
       script: |
         "B"
     capacity: 80
+    onidentify:
+      targetsoc: 75
 
 site:
   title: Zuhause
@@ -208,13 +205,9 @@ loadpoints:
     charger: charger_1
     mode: pv
     phases: 1
-    soc:
-      target: 90
     meter: meter_charger_1
     vehicle: vehicle_1 # default
   - title: Garage
     charger: charger_2
-    soc:
-      target: 75
     mode: "off"
     meter: meter_charger_2

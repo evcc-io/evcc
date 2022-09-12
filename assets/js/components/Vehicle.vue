@@ -67,6 +67,7 @@ export default {
 		connected: Boolean,
 		vehiclePresent: Boolean,
 		vehicleSoC: Number,
+		vehicleTargetSoC: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,

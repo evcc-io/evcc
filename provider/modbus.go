@@ -177,7 +177,7 @@ func (m *Modbus) floatGetter() (f float64, err error) {
 			// client := m.conn.ModbusClient()
 			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
 		} else {
-			if res, err = dev.QueryPoint(
+			if res.Value, err = dev.QueryPoint(
 				m.conn,
 				m.op.SunSpec.Model,
 				m.op.SunSpec.Block,

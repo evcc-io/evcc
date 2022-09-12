@@ -107,8 +107,6 @@ func (wb *ABB) status() (byte, error) {
 		return 0, err
 	}
 
-	wb.log.DEBUG.Printf("status: %d", b[2]&0x7f)
-
 	return b[2] & 0x7f, nil
 }
 
