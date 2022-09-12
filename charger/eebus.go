@@ -155,19 +155,19 @@ func (c *EEBus) showCurrentChargingSetup() {
 	if prevComStandard != data.EVData.CommunicationStandard {
 		c.communicationStandard = data.EVData.CommunicationStandard
 		timestamp := time.Now()
-		c.log.WARN.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-communication changed from ", prevComStandard, " to ", data.EVData.CommunicationStandard)
+		c.log.TRACE.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-communication changed from ", prevComStandard, " to ", data.EVData.CommunicationStandard)
 	}
 
 	if prevSoCSupport != data.EVData.UCSoCAvailable {
 		c.socSupportAvailable = data.EVData.UCSoCAvailable
 		timestamp := time.Now()
-		c.log.WARN.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-soc support changed from ", prevSoCSupport, " to ", data.EVData.UCSoCAvailable)
+		c.log.TRACE.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-soc support changed from ", prevSoCSupport, " to ", data.EVData.UCSoCAvailable)
 	}
 
 	if prevSelfConsumptionSupport != data.EVData.UCSelfConsumptionAvailable {
 		c.selfConsumptionSupportAvailable = data.EVData.UCSelfConsumptionAvailable
 		timestamp := time.Now()
-		c.log.WARN.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-self-consumption-support support changed from ", prevSelfConsumptionSupport, " to ", data.EVData.UCSelfConsumptionAvailable)
+		c.log.TRACE.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-self-consumption-support support changed from ", prevSelfConsumptionSupport, " to ", data.EVData.UCSelfConsumptionAvailable)
 	}
 }
 
