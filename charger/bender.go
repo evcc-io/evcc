@@ -82,7 +82,7 @@ func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewBenderCC(cc.URI, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewBenderCC creates BenderCC charger
 func NewBenderCC(uri string, id uint8) (api.Charger, error) {
@@ -108,6 +108,14 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 		wb.legacy = true
 	}
 
+	var (
+		currentPower  func() (float64, error)
+		currents      func() (float64, float64, float64, error)
+		chargedEnergy func() (float64, error)
+		totalEnergy   func() (float64, error)
+		identify      func() (string, error)
+	)
+
 	// check presence of metering
 	reg := uint16(bendRegActivePower)
 	if wb.legacy {
@@ -115,10 +123,18 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
-		return decorateBenderCC(wb, wb.currentPower, wb.currents, wb.chargedEnergy, wb.totalEnergy), nil
+		currentPower = wb.currentPower
+		currents = wb.currents
+		chargedEnergy = wb.chargedEnergy
+		totalEnergy = wb.totalEnergy
 	}
 
-	return wb, err
+	// check rfid
+	if _, err := wb.identify(); err == nil {
+		identify = wb.identify
+	}
+
+	return decorateBenderCC(wb, currentPower, currents, chargedEnergy, totalEnergy, identify), nil
 }
 
 // Status implements the api.Charger interface
@@ -277,10 +293,8 @@ func (wb *BenderCC) currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
-var _ api.Identifier = (*BenderCC)(nil)
-
-// Identify implements the api.Identifier interface
-func (wb *BenderCC) Identify() (string, error) {
+// identify implements the api.Identifier interface
+func (wb *BenderCC) identify() (string, error) {
 	if !wb.legacy {
 		var id []byte
 
