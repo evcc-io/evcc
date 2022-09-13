@@ -18,7 +18,7 @@ type CS struct {
 }
 
 func (cs *CS) Register(id string) (*CP, error) {
-	unit := "ocpp-cp"
+	unit := "ocpp"
 	if id != "" {
 		unit = id
 	}
@@ -26,10 +26,10 @@ func (cs *CS) Register(id string) (*CP, error) {
 	cp := &CP{
 		id:           id,
 		log:          util.NewLogger(unit),
+		bootC:        make(chan struct{}),
+		statusC:      make(chan struct{}),
 		measurements: make(map[string]types.SampledValue),
 	}
-
-	cp.initialized = sync.NewCond(&cp.mu)
 
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
@@ -63,18 +63,18 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	defer cs.mu.Unlock()
 
 	if _, err := cs.chargepointByID(chargePoint.ID()); err != nil {
-		if auto, ok := cs.cps[""]; ok {
-			cs.log.INFO.Printf("unknown chargepoint connected, registering: %s", chargePoint.ID())
+		if cp, ok := cs.cps[""]; ok {
+			cs.log.INFO.Printf("chargepoint connected, registering: %s", chargePoint.ID())
 
 			// update id
-			auto.id = chargePoint.ID()
-			cs.cps[chargePoint.ID()] = auto
+			cp.RegisterID(chargePoint.ID())
+			cs.cps[chargePoint.ID()] = cp
 			delete(cs.cps, "")
 
 			return
 		}
 
-		cs.log.WARN.Printf("unknown chargepoint connected, ignored: %s", chargePoint.ID())
+		cs.log.WARN.Printf("chargepoint connected, ignoring: %s", chargePoint.ID())
 	} else {
 		cs.log.DEBUG.Printf("chargepoint connected: %s", chargePoint.ID())
 	}

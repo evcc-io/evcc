@@ -18,6 +18,8 @@ import (
 	"github.com/samber/lo"
 )
 
+const statusTimeout = 30 * time.Second
+
 // OCPP charger implementation
 type OCPP struct {
 	log                     *util.Logger
@@ -94,7 +96,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		return nil, err
 	}
 
-	unit := "ocpp-cp"
+	unit := "ocpp"
 	if id != "" {
 		unit = id
 	}
@@ -107,7 +109,6 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		idtag:     idtag,
 	}
 
-	c.log.DEBUG.Println("waiting for chargepoint to register")
 	if err := cp.Boot(); err != nil {
 		return nil, err
 	}
@@ -118,7 +119,8 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		meterSampleInterval time.Duration
 	)
 
-	err = ocpp.Instance().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
+	// configured id may be empty, use registered id below
+	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err != nil {
 			rc <- err
 			return
@@ -187,7 +189,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 	// get initial meter values and configure sample rate
 	if c.hasMeasurement("Power.Active.Import") || c.hasMeasurement("Energy.Active.Import.Register") {
-		ocpp.Instance().TriggerMeterValuesRequest(cp)
+		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
 
 		if meterSampleInterval > meterInterval && meterInterval > 0 {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
@@ -206,8 +208,11 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 			t = core.ResetTypeHard
 		}
 
-		ocpp.Instance().TriggerResetRequest(cp, t)
+		ocpp.Instance().TriggerResetRequest(cp.ID(), t)
 	}
+
+	// request initial status
+	_ = cp.Initialized(statusTimeout)
 
 	// TODO: check for running transaction
 

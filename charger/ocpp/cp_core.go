@@ -30,11 +30,13 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
 	if request != nil {
-		cp.mu.Lock()
-		defer cp.mu.Unlock()
+		cp.log.DEBUG.Printf("chargepoint: %+v", request)
+	}
 
-		cp.boot = request
-		cp.initialized.Broadcast()
+	// signal boot
+	select {
+	case cp.bootC <- struct{}{}:
+	default:
 	}
 
 	res := &core.BootNotificationConfirmation{
@@ -71,7 +73,7 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 
 		if cp.status == nil {
 			cp.status = request
-			cp.initialized.Broadcast()
+			close(cp.statusC) // signal initial status received
 		} else if request.Timestamp == nil || cp.timestampValid(request.Timestamp.Time) {
 			cp.status = request
 		} else {
