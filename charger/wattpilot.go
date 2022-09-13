@@ -24,7 +24,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	wattpilot "github.com/mabunixda/wattpilot"
+	wattpilot "github.com/mabunixda/evcc/charger/wattpilot"
 )
 
 // Wattpilot charger implementation
