@@ -27,4 +27,4 @@ render:
       stationid: EVB-P12354 # Die Stations-ID der Wallbox (oder des Ladepunkts) # Optional
       connector: 1 # Verwendeter Ladepunkt, normalerweise 1 für den ersten Anschluss. # Optional
       meter: false # Benutze den integrierten Zähler (falls vorhanden) # Optional
-      idtag: 04E6B78921BBA0 # Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird # Optional
+      idtag: '04E6B78921BBA0' # Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird # Optional

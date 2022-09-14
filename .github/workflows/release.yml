@@ -90,3 +90,31 @@ jobs:
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
         run: make apt-release
+
+  hassio:
+    name: Create Hassio Addon Release
+    needs:
+      - docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Update version
+        # uses: pocket-apps/action-update-version@v1
+        # with:
+        #   files: "packaging/hassio/config.json"
+        #   version-regexp: '\d+.\d+.\d+'
+        #   branch-name: master
+        #   author-name: evcc-io
+        run: |
+          sed -i -e s#0.0.0#$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)# packaging/hassio/config.json
+
+      - name: Copy config to hassio-addon
+        uses: andstor/copycat-action@v3
+        with:
+          personal_token: ${{ secrets.GH_TOKEN }}
+          src_path: packaging/hassio/config.json
+          dst_path: /evcc/config.json
+          dst_owner: evcc-io
+          dst_repo_name: hassio-addon
