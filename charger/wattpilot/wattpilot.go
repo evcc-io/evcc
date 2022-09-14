@@ -23,7 +23,7 @@ const (
 	MAX_RECONNECT_RETRIES = 5
 )
 
-//go:generate go run generate.go
+//go:generate go run gen/generate.go
 
 var randomSource = rand.New(rand.NewSource(time.Now().UnixNano()))
 
