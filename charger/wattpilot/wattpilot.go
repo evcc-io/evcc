@@ -23,7 +23,7 @@ const (
 	MAX_RECONNECT_RETRIES = 5
 )
 
-//go:generate ./mapping_gen.sh
+//go:generate go run generate.go
 
 var randomSource = rand.New(rand.NewSource(time.Now().UnixNano()))
 
