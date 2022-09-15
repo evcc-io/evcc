@@ -39,6 +39,7 @@ type VehicleStatus struct {
 			}
 		}
 		DrvDistance []DrivingDistance
+		ReservChargeInfos ReservCharge
 	}
 	Vehicles []Vehicle
 }
@@ -58,6 +59,8 @@ type Odometer struct {
 const (
 	timeFormat = "20060102150405 -0700" // Note: must add timeOffset
 	timeOffset = " +0100"
+
+	plugTypeAC = 1
 )
 
 func (d *VehicleStatus) Updated() (time.Time, error) {
@@ -70,4 +73,13 @@ type DrivingDistance struct {
 			Value int
 		}
 	}
+}
+
+type ReservCharge struct {
+	TargetSOClist []TargetSOC
+}
+
+type TargetSOC struct {
+	TargetSOClevel int
+	PlugType int
 }
