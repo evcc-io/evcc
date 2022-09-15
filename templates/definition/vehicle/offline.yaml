@@ -28,7 +28,7 @@ render: |
   phases: {{ .phases }}
   {{- end }}
   soc: # fixed - no SoC available
-    type: js
+    source: js
     script: 0;
   onIdentify:
   {{- if (ne .mode "") }}
