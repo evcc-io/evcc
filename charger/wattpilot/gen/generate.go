@@ -55,20 +55,20 @@ func main() {
 		}
 		if key != "" && alias != "" {
 
-			propertyMap[key] = alias
+			propertyMap[alias] = key
 		}
 	}
 	f, _ := os.Create(output)
 	defer f.Close()
-	// Create a writer
+
 	w := bufio.NewWriter(f)
 	w.WriteString("package wattpilot\nvar propertyMap = map[string]string {\n")
 	for i, s := range propertyMap {
 		w.WriteString(fmt.Sprintf("\"%s\": \"%s\",\n", i, s))
 	}
+
 	w.WriteString("}\n")
 
-	// Very important to invoke after writing a large number of lines
 	w.Flush()
 
 }
