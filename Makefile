@@ -30,6 +30,7 @@ IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybo
 PACKAGES = ./release
 
 # patch asn1.go
+CURRENT_DIR := $(shell pwd)
 GO_ROOT := $(shell go env GOROOT)
 ASN1_PATH := $(GO_ROOT)/src/vendor/golang.org/x/crypto/cryptobyte
 ASN1_FILE := $(ASN1_PATH)/asn1.go
