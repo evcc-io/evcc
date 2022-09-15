@@ -36,6 +36,9 @@ jobs:
         run: |
           test -z "$(git status --porcelain)" || (git status; git diff; false)
 
+      - name: Patch ASN1
+        run: make patch-asn1
+
   build:
     name: Build
     runs-on: ubuntu-latest

@@ -1,0 +1,11 @@
+--- asn1.go	2022-09-15 13:21:17.000000000 +0200
++++ asn1_new.go	2022-09-15 13:22:12.000000000 +0200
+@@ -255,7 +255,7 @@
+ 	switch bytes[0] {
+ 	case 0:
+ 		*out = false
+-	case 0xff:
++	case 1, 0xff:
+ 		*out = true
+ 	default:
+ 		return false
