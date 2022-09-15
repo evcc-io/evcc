@@ -28,8 +28,14 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Set up Docker Buildx
+      - name: Setup Buildx
         uses: docker/setup-buildx-action@v2
+
+      - name: Meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: andig/evcc
 
       - name: Publish
         uses: docker/build-push-action@v3
@@ -37,13 +43,11 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
-          build-args: |
-            RELEASE=1
-          tags: |
-            andig/evcc:latest
+          build-args: RELEASE=1
+          tags: ${{ steps.meta.outputs.tags }}
 
   apt:
-    name: Publish Github & APT release
+    name: Github & APT
     needs:
       - call-build-workflow
     runs-on: ubuntu-latest
@@ -92,7 +96,7 @@ jobs:
         run: make apt-release
 
   hassio:
-    name: Create Hassio Addon Release
+    name: Hassio Addon
     needs:
       - docker
     runs-on: ubuntu-latest
@@ -101,12 +105,6 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Update version
-        # uses: pocket-apps/action-update-version@v1
-        # with:
-        #   files: "packaging/hassio/config.json"
-        #   version-regexp: '\d+.\d+.\d+'
-        #   branch-name: master
-        #   author-name: evcc-io
         run: |
           sed -i -e s#0.0.0#$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)# packaging/hassio/config.json
 
