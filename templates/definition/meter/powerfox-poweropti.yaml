@@ -5,7 +5,7 @@ products:
       generic: Poweropti
 params:
   - name: usage
-    choice: ["grid"]
+    choice: ["grid", "pv"]
   - name: user
     required: true
   - name: password
@@ -21,3 +21,6 @@ render: |
       user: {{ .user }}
       password: {{ .password }}
     jq: .Watt
+  {{- if eq .usage "pv" }}
+    scale: -1
+  {{- end }}
