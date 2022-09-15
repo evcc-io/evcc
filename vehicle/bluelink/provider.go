@@ -176,9 +176,9 @@ func (v *Provider) TargetSoC() (float64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
-		for _, targetSOC := range res.EvStatus.ReservChargeInfos.TargetSOClist {
+		for _, targetSOC := range res.EvStatus.ReservChargeInfos.TargetSocList {
 			if targetSOC.PlugType == plugTypeAC {
-				return float64(targetSOC.TargetSOClevel), nil
+				return float64(targetSOC.TargetSocLevel), nil
 			}
 		}
 	}

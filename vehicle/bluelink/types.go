@@ -38,8 +38,8 @@ type VehicleStatus struct {
 				Value, Unit int
 			}
 		}
-		DrvDistance []DrivingDistance
-		ReservChargeInfos ReservCharge
+		DrvDistance       []DrivingDistance
+		ReservChargeInfos ReservChargeInfo
 	}
 	Vehicles []Vehicle
 }
@@ -75,11 +75,11 @@ type DrivingDistance struct {
 	}
 }
 
-type ReservCharge struct {
-	TargetSOClist []TargetSOC
+type ReservChargeInfo struct {
+	TargetSocList []TargetSoc
 }
 
-type TargetSOC struct {
-	TargetSOClevel int
-	PlugType int
+type TargetSoc struct {
+	TargetSocLevel int
+	PlugType       int
 }
