@@ -1,7 +1,7 @@
 # STEP 1 build ui
 FROM --platform=$BUILDPLATFORM node:16-alpine as node
 
-RUN apk update && apk add --no-cache make alpine-sdk python3
+RUN apk update && apk add --no-cache make alpine-sdk
 
 WORKDIR /build
 
