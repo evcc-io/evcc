@@ -4,7 +4,7 @@ product:
 capabilities: ["mA"]
 requirements: ["eebus"]
 description: |
-  Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP). Ein Stromzähler wird benötigt.
+  Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).
 render:
   - default: |
       type: template
