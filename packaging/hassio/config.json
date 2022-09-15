@@ -33,12 +33,13 @@
   ],
   "webui": "http://[HOST]:[PORT:7070]/",
   "ports": {
-    "7070/tcp": 7070,
-    "9522/udp": 9522,
-    "8887/tcp": 8887
+    "7090/udp": 7090,
+    "8887/tcp": 8887,
+    "9522/udp": 9522
   },
   "ports_description": {
-    "7070/tcp": "Webserver",
-    "9522/udp": "Multicast (SMA Speedwire)",
-    "8887/tcp": "OCPP web socket"
+    "7090/udp": "Keba",
+    "8887/tcp": "OCPP web socket",
+    "9522/udp": "Multicast (SMA Speedwire)"
   }
+}

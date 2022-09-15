@@ -1,4 +1,4 @@
-name: Release
+name: Publish Release
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
     uses: evcc-io/evcc/.github/workflows/default.yml@master
 
   docker:
-    name: Publish Docker :release
+    name: Docker
     needs:
       - call-build-workflow
     runs-on: ubuntu-latest
