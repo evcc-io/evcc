@@ -554,7 +554,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 			_ = lp.setLimit(lp.GetMinCurrent(), false)
 		}
 	} else {
-		lp.log.ERROR.Printf("charger: %v", err)
+		lp.log.ERROR.Printf("charger %s: %v", lp.Title, err)
 	}
 
 	// allow charger to access loadpoint
@@ -569,7 +569,7 @@ func (lp *LoadPoint) syncCharger() {
 	if err == nil {
 		if enabled != lp.enabled {
 			if time.Since(lp.guardUpdated) > guardGracePeriod {
-				lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
+				lp.log.WARN.Printf("charger %s out of sync: expected %vd, got %vd", lp.Title, status[lp.enabled], status[enabled])
 			}
 			err = lp.charger.Enable(lp.enabled)
 		}
@@ -580,7 +580,7 @@ func (lp *LoadPoint) syncCharger() {
 	}
 
 	if err != nil {
-		lp.log.ERROR.Printf("charger: %v", err)
+		lp.log.ERROR.Printf("charger %s: %v", lp.Title, err)
 	}
 }
 
@@ -864,7 +864,7 @@ func (lp *LoadPoint) wakeUpVehicle() {
 	// charger
 	if c, ok := lp.charger.(api.Resurrector); ok {
 		if err := c.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wake-up charger: %v", err)
+			lp.log.ERROR.Printf("wake-up charger %s: %v", lp.Title, err)
 		}
 		return
 	}
@@ -1573,7 +1573,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
-		lp.log.ERROR.Printf("charger: %v", err)
+		lp.log.ERROR.Printf("charger %s: %v", lp.Title, err)
 		return
 	}
 
