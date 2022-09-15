@@ -52,10 +52,9 @@ type CP struct {
 	log *util.Logger
 	id  string
 
-	updated     time.Time
-	initialized *sync.Cond
-	boot        *core.BootNotificationRequest
-	status      *core.StatusNotificationRequest
+	bootC, statusC chan struct{}
+	updated        time.Time
+	status         *core.StatusNotificationRequest
 
 	timeout      time.Duration
 	meterUpdated time.Time
@@ -68,6 +67,47 @@ type CP struct {
 	txnId    int
 }
 
+func (cp *CP) ID() string {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	return cp.id
+}
+
+func (cp *CP) RegisterID(id string) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	if cp.id != "" {
+		panic("ocpp: cannot re-register id")
+	}
+
+	cp.id = id
+}
+
+func (cp *CP) Initialized(timeout time.Duration) bool {
+	cp.log.DEBUG.Printf("waiting for chargepoint status: %v", timeout)
+
+	// trigger status
+	time.AfterFunc(5*time.Second, func() {
+		select {
+		case <-cp.statusC:
+			return
+		default:
+			Instance().TriggerMessageRequest(cp.ID(), core.StatusNotificationFeatureName)
+		}
+	})
+
+	// wait for status
+	select {
+	case <-cp.statusC:
+		cp.update()
+		return true
+	case <-time.After(timeout):
+		return false
+	}
+}
+
 func (cp *CP) WatchDog(timeout time.Duration) {
 	cp.timeout = timeout
 
@@ -78,7 +118,7 @@ func (cp *CP) WatchDog(timeout time.Duration) {
 			cp.mu.Unlock()
 
 			if update {
-				Instance().TriggerMeterValuesRequest(cp)
+				Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
 			}
 		}
 	}()
@@ -148,8 +188,8 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 
 	{ // optional
 		var supported bool
-		opt, found := options[string(KeyConnectorSwitch3to1PhaseSupported)]
-		if found {
+
+		if opt, ok := options[string(KeyConnectorSwitch3to1PhaseSupported)]; ok {
 			var err error
 			supported, err = strconv.ParseBool(*opt.Value)
 			if err != nil {
@@ -179,21 +219,10 @@ func parseIntOption(key SmartchargingChargeProfileKey, options map[string]core.C
 
 // Boot waits for the CP to register itself
 func (cp *CP) Boot() error {
-	bootC := make(chan struct{})
-	go func() {
-		cp.mu.Lock()
-		defer cp.mu.Unlock()
-
-		for cp.boot == nil || cp.status == nil {
-			cp.initialized.Wait()
-		}
-
-		close(bootC)
-	}()
+	cp.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
 
 	select {
-	case <-bootC:
-		cp.update()
+	case <-cp.bootC:
 		return nil
 	case <-time.After(timeout):
 		return api.ErrTimeout
@@ -213,14 +242,12 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	cp.log.TRACE.Printf("current transaction ID (last update): %d (%s)", cp.txnId, cp.updated.Format(time.RFC3339))
-
 	if time.Since(cp.updated) > timeout {
 		return res, api.ErrTimeout
 	}
 
 	if cp.status.ErrorCode != core.NoError {
-		cp.log.DEBUG.Printf("chargepoint error: %s: %s", cp.status.ErrorCode, cp.status.Info)
+		return res, fmt.Errorf("%s: %s", cp.status.ErrorCode, cp.status.Info)
 	}
 
 	switch cp.status.Status {
