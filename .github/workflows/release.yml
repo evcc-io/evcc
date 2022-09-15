@@ -102,17 +102,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+        - name: Checkout Project B (Hassio-Addon)
+          uses: actions/checkout@master
+          with: 
+            repository: thecem/hassio-addon
+            token: ${{ secrets.GH_TOKEN }}
+            path: ./projectB
 
-      - name: Update version
-        run: |
-          sed -i -e s#0.0.0#$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)# packaging/hassio/config.json
-
-      - name: Copy config to hassio-addon
-        uses: andstor/copycat-action@v3
-        with:
-          personal_token: ${{ secrets.GH_TOKEN }}
-          src_path: packaging/hassio/config.json
-          dst_path: /evcc/config.json
-          dst_owner: evcc-io
-          dst_repo_name: hassio-addon
+        - name: Update version
+          run: |
+            export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e s#refs/tags/v##)
+            echo "$RELEASE_VERSION"
+            sed -i -e s#.*version.*#'  "version": "'$RELEASE_VERSION'",'# ./projectB/evcc/config.json
+            
+        - name: Push Project B (Hassio-Addon and save changes to config.json)
+          run: |
+            cd ./projectB
+            git add .
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git commit -am "config.json updated from Project evcc"
+            git push
