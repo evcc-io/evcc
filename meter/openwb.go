@@ -55,13 +55,6 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return to.FloatGetter(g)
 	}
 
-	invertedG := func(g func() (float64, error)) func() (float64, error) {
-		return func() (float64, error) {
-			f, err := g()
-			return -f, err
-		}
-	}
-
 	var power func() (float64, error)
 	var soc func() (float64, error)
 	var currents func() (float64, float64, float64, error)
@@ -89,7 +82,11 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil, errors.New("pv not available")
 		}
 
-		power = invertedG(floatG(fmt.Sprintf("%s/pv/%s", cc.Topic, openwb.PowerTopic)))
+		g := floatG(fmt.Sprintf("%s/pv/%s", cc.Topic, openwb.PowerTopic))
+		power = func() (float64, error) {
+			f, err := g()
+			return -f, err
+		}
 
 	case "battery":
 		configuredG := boolG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.BatteryConfigured))
