@@ -105,7 +105,7 @@ jobs:
         - name: Checkout Project B (Hassio-Addon)
           uses: actions/checkout@master
           with: 
-            repository: thecem/hassio-addon
+            repository: evcc-io/hassio-addon
             token: ${{ secrets.GH_TOKEN }}
             path: ./projectB
 
