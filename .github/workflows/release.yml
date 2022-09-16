@@ -102,17 +102,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          repository: evcc-io/hassio-addon
+          token: ${{ secrets.GH_TOKEN }}
+          path: ./hassio
 
       - name: Update version
         run: |
-          sed -i -e s#0.0.0#$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)# packaging/hassio/config.json
+          export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e s#refs/tags/v##)
+          sed -i -e s#.*version.*#'  "version": "'$RELEASE_VERSION'",'# ./hassio/evcc/config.json
 
-      - name: Copy config to hassio-addon
-        uses: andstor/copycat-action@v3
-        with:
-          personal_token: ${{ secrets.GH_TOKEN }}
-          src_path: packaging/hassio/config.json
-          dst_path: /evcc/config.json
-          dst_owner: evcc-io
-          dst_repo_name: hassio-addon
+      - name: Push
+        run: |
+          cd ./hassio
+          git add .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -am "Mirror evcc release"
+          git push

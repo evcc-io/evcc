@@ -93,3 +93,30 @@ jobs:
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
         run: make apt-nightly
+
+  hassio:
+    name: Hassio Addon
+    needs:
+      - docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          repository: evcc-io/hassio-addon
+          token: ${{ secrets.GH_TOKEN }}
+          path: ./hassio
+
+      - name: Update version
+        run: |
+          sed -i -e s#.*version.*#'  "version": "nightly-'$(date +'%Y%m%d%H%M%S')'",'# ./hassio/evcc-nightly/config.json
+
+      - name: Push
+        run: |
+          cd ./hassio
+          git add .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -am "config.json updated from Project evcc release"
+          git push
