@@ -114,8 +114,7 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 	// model + value configured
 	if cc.Value != "" {
-		cc.Value = modbus.ReadingName(cc.Value)
-		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
+		if err := modbus.ParseOperation(device, strings.ToLower(cc.Value), &op); err != nil {
 			return nil, fmt.Errorf("invalid value %s", cc.Value)
 		}
 	}
@@ -174,7 +173,6 @@ func (m *Modbus) floatGetter() (f float64, err error) {
 	// if funccode is not configured, try find the reading on sunspec
 	if dev, ok := m.device.(*sunspec.SunSpec); ok {
 		if m.op.MBMD.IEC61850 != 0 {
-			// client := m.conn.ModbusClient()
 			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
 		} else {
 			if res.Value, err = dev.QueryPoint(
