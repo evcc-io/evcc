@@ -102,24 +102,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-        - name: Checkout Project B (Hassio-Addon)
+        - name: Checkout hassio
           uses: actions/checkout@master
           with: 
             repository: evcc-io/hassio-addon
             token: ${{ secrets.GH_TOKEN }}
-            path: ./projectB
+            path: ./hassio
 
         - name: Update version
           run: |
             export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e s#refs/tags/v##)
-            echo "$RELEASE_VERSION"
-            sed -i -e s#.*version.*#'  "version": "'$RELEASE_VERSION'",'# ./projectB/evcc/config.json
+            sed -i -e s#.*version.*#'  "version": "'$RELEASE_VERSION'",'# ./hassio/evcc/config.json
             
-        - name: Push Project B (Hassio-Addon and save changes to config.json)
+        - name: Push hassio (Hassio-Addon and save changes to config.json)
           run: |
-            cd ./projectB
+            cd ./hassio
             git add .
             git config user.name github-actions
             git config user.email github-actions@github.com
-            git commit -am "config.json updated from Project evcc"
+            git commit -am "config.json updated from Project evcc release"
             git push
