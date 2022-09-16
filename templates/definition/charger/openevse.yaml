@@ -7,6 +7,14 @@ requirements:
     de: Benötigt mindestens Firmware 7.0 oder neuer.
 params:
   - name: host
+    required: true
+  - name: user
+    required: false
+  - name: password
+    required: false
+    mask: true
 render: |
   type: openevse
   uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}
