@@ -27,14 +27,8 @@ jobs:
       - name: Assets
         run: make assets
 
-      - name: Format & Tidy
-        run: |
-          gofmt -w -l $(find . -name '*.go')
-          go mod tidy
-
       - name: Porcelain
-        run: |
-          test -z "$(git status --porcelain)" || (git status; git diff; false)
+        run: make porcelain
 
   build:
     name: Build
