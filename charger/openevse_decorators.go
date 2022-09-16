@@ -27,9 +27,9 @@ func decorateOpenEVSE(base *OpenEVSE, phaseSwitcher func(phases int) error) api.
 }
 
 type decorateOpenEVSEPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) (error)
+	phaseSwitcher func(int) error
 }
 
-func (impl *decorateOpenEVSEPhaseSwitcherImpl) Phases1p3p(phases int) (error) {
+func (impl *decorateOpenEVSEPhaseSwitcherImpl) Phases1p3p(phases int) error {
 	return impl.phaseSwitcher(phases)
 }

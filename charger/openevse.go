@@ -20,10 +20,10 @@ import (
 
 // OpenEVSE charger implementation
 type OpenEVSE struct {
-	uri              string
-	phases           int
-	api              *openevse.ClientWithResponses
-	log              *util.Logger
+	uri    string
+	phases int
+	api    *openevse.ClientWithResponses
+	log    *util.Logger
 	api.MeterEnergy
 }
 
@@ -57,7 +57,7 @@ func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewOpenEVSE(uri, user, password string) (api.Charger, error) {
 	c := &OpenEVSE{
 		uri: uri,
-		log : util.NewLogger("openevse").Redact(user, password),
+		log: util.NewLogger("openevse").Redact(user, password),
 	}
 
 	var err error
@@ -142,7 +142,7 @@ func (c *OpenEVSE) IsChargingOnThreePhases() (threePhase bool, err error) {
 
 func (c *OpenEVSE) Phases() (phases int, err error) {
 	phases = c.phases
-	if (phases != 0) {
+	if phases != 0 {
 		return phases, nil
 	}
 
@@ -151,7 +151,7 @@ func (c *OpenEVSE) Phases() (phases int, err error) {
 		return 0, err
 	}
 
-	if (isChargingOnThreePhase) {
+	if isChargingOnThreePhase {
 		phases = 3
 	} else {
 		phases = 1
@@ -205,7 +205,7 @@ func (c *OpenEVSE) PerformRAPICommand(uri, command string) (response string, suc
 	return "", false, fmt.Errorf("invalid response from RAPI command %s: %s, code %d", command, rsp.Header.Get("Content-Type"), rsp.StatusCode)
 }
 
-func (c *OpenEVSE) SetManualOverride(enable bool) (error) {
+func (c *OpenEVSE) SetManualOverride(enable bool) error {
 	var state openevse.SetManualOverrideJSONBodyState
 	if enable {
 		state = "active"
@@ -294,26 +294,26 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 	if statusResp.JSON200 != nil && statusResp.JSON200.State != nil {
 		stateCode = *statusResp.JSON200.State
 	} else {
-		stateCode = -1;
+		stateCode = -1
 	}
 
 	var state bool
 	switch stateCode {
-		case 3, 4:
-			state = true
-		default:
-			configResp, err := c.api.GetConfigWithResponse(context.Background())
+	case 3, 4:
+		state = true
+	default:
+		configResp, err := c.api.GetConfigWithResponse(context.Background())
 
-			if err != nil {
-				return false, err
-			}
+		if err != nil {
+			return false, err
+		}
 
-			switch *configResp.JSON200.ChargeMode {
-				case "fast":
-					state = true
-				default:
-					state = false
-			}
+		switch *configResp.JSON200.ChargeMode {
+			case "fast":
+				state = true
+			default:
+				state = false
+		}
 	}
 
 	err = c.SetManualOverride(state)
@@ -399,7 +399,7 @@ func (c *OpenEVSE) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	if (phases == 3) {
+	if phases == 3 {
 		return cur, cur, cur, nil
 	} else {
 		return cur, 0, 0, nil
