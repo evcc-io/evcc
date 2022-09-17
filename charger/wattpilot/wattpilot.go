@@ -23,8 +23,6 @@ const (
 	MAX_RECONNECT_RETRIES = 5
 )
 
-//go:generate go run gen/generate.go
-
 var randomSource = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 type EventFunc func(*websocket.Conn, map[string]interface{})
@@ -354,9 +352,6 @@ func (w *Wattpilot) GetProperty(name string) (interface{}, error) {
 		return nil, errors.New("connection is not valid")
 	}
 	origName := name
-	if v, isKnown := propertyMap[name]; isKnown {
-		name = v
-	}
 	m, post := postProcess[origName]
 	if post {
 		name = m.key
@@ -428,33 +423,6 @@ func (w *Wattpilot) Status() (map[string]interface{}, error) {
 	}
 
 	return w._status, nil
-}
-
-func (w *Wattpilot) StatusInfo() {
-
-	fmt.Println("Wattpilot: " + w._name)
-	fmt.Println("Serial: " + w._serial)
-
-	fmt.Printf("Car Connected: %v\n", w._status["car"].(float64))
-	fmt.Printf("Charge Status %v\n", w._status["alw"].(bool))
-	fmt.Printf("Mode: %v\n", w._status["lmo"].(float64))
-	fmt.Printf("Power: %v\n\nCharge: ", w._status["amp"].(float64))
-
-	for _, i := range []string{"voltage1", "voltage2", "voltage2"} {
-		v, _ := w.GetProperty(i)
-		fmt.Printf("%v V, ", v)
-	}
-	fmt.Printf("\n\t")
-	for _, i := range []string{"amps1", "amps2", "amps3"} {
-		v, _ := w.GetProperty(i)
-		fmt.Printf("%v A, ", v)
-	}
-	fmt.Printf("\n\t")
-	for _, i := range []string{"power1", "power2", "power3"} {
-		v, _ := w.GetProperty(i)
-		fmt.Printf("%v W, ", v)
-	}
-	fmt.Println("")
 }
 
 func (w *Wattpilot) GetPower() (float64, error) {
