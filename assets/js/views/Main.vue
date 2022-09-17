@@ -42,10 +42,10 @@ export default {
 	},
 	computed: {
 		configured: function () {
-			return this.state.fatal === null || this.state.fatal.length === 0;
+			return this.errors.length === 0;
 		},
 		errors: function () {
-			return this.state.fatal === null ? [] : this.state.fatal;
+			return this.state.fatal || [];
 		},
 		config: function () {
 			return this.state.config;

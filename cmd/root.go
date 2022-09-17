@@ -266,7 +266,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	// TODO remove
-	err = fmt.Errorf("foo: %w", fmt.Errorf("bar %w", errors.New("baz")))
+	//err = fmt.Errorf("foo: %w", fmt.Errorf("bar %w", errors.New("baz")))
 
 	stopC := make(chan struct{})
 	go shutdown.Run(stopC)
