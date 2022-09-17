@@ -9,6 +9,7 @@ import (
 
 type calcProvider struct {
 	add, mul []func() (float64, error)
+	sign     func() (float64, error)
 }
 
 func init() {
@@ -18,8 +19,9 @@ func init() {
 // NewCalcFromConfig creates calc provider
 func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	var cc struct {
-		Add []Config
-		Mul []Config
+		Add  []Config
+		Mul  []Config
+		Sign *Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -30,6 +32,10 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 	if len(cc.Add) > 0 && len(cc.Mul) > 0 {
 		return nil, errors.New("can only have either add or mul")
+	}
+
+	if len(cc.Add) > 0 || len(cc.Mul) > 0 && cc.Sign != nil {
+		return nil, errors.New("can only have either add/mul or sign")
 	}
 
 	for idx, cc := range cc.Add {
@@ -46,6 +52,14 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 			return nil, fmt.Errorf("mul[%d]: %w", idx, err)
 		}
 		o.mul = append(o.mul, f)
+	}
+
+	if cc.Sign != nil {
+		f, err := NewFloatGetterFromConfig(*cc.Sign)
+		if err != nil {
+			return nil, fmt.Errorf("sign: %w", err)
+		}
+		o.sign = f
 	}
 
 	return o, nil
@@ -72,7 +86,8 @@ func (o *calcProvider) FloatGetter() func() (float64, error) {
 func (o *calcProvider) floatGetter() (float64, error) {
 	var res float64
 
-	if len(o.mul) > 0 {
+	switch {
+	case len(o.mul) > 0:
 		res = 1
 		for idx, p := range o.mul {
 			v, err := p()
@@ -81,7 +96,8 @@ func (o *calcProvider) floatGetter() (float64, error) {
 			}
 			res *= v
 		}
-	} else {
+
+	case len(o.add) > 0:
 		for idx, p := range o.add {
 			v, err := p()
 			if err != nil {
@@ -89,6 +105,13 @@ func (o *calcProvider) floatGetter() (float64, error) {
 			}
 			res += v
 		}
+
+	default:
+		v, err := o.sign()
+		if err != nil {
+			return 0, fmt.Errorf("sign: %w", err)
+		}
+		res = map[bool]float64{false: -1, true: 1}[v >= 0]
 	}
 
 	return res, nil
