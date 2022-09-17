@@ -118,11 +118,7 @@ func (c *OpenEVSE) PerformRAPICommand(uri, command string) (success bool, err er
 	}
 
 	err = c.helper.GetJSON(uriBuilder.String(), &resp)
-	if err == nil && strings.HasPrefix(resp.Ret, "$OK") {
-		return true, nil
-	}
-
-	return false, err
+	return strings.HasPrefix(resp.Ret, "$OK"), err
 }
 
 func (c *OpenEVSE) SetManualOverride(enable bool) error {
