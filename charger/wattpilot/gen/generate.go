@@ -62,13 +62,17 @@ func main() {
 	defer f.Close()
 
 	w := bufio.NewWriter(f)
-	w.WriteString("package wattpilot\nvar propertyMap = map[string]string {\n")
-	for i, s := range propertyMap {
-		w.WriteString(fmt.Sprintf("\"%s\": \"%s\",\n", i, s))
+	if _, err := w.WriteString("package wattpilot\nvar propertyMap = map[string]string {\n"); err != nil {
+		return
 	}
-
-	w.WriteString("}\n")
-
+	for i, s := range propertyMap {
+		if _, err := w.WriteString(fmt.Sprintf("\"%s\": \"%s\",\n", i, s)); err != nil {
+			return
+		}
+	}
+	if _, err := w.WriteString("}\n"); err != nil {
+		return
+	}
 	w.Flush()
 
 }

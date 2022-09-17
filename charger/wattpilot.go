@@ -61,7 +61,9 @@ func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error
 
 	log.INFO.Println("Connecting wattpilot local", uri)
 	c.api = wattpilot.NewWattpilot(uri, password)
-	c.api.Connect()
+	if connected, err := c.api.Connect(); !connected || err != nil {
+		return nil, err
+	}
 
 	return c, nil
 }
