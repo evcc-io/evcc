@@ -309,12 +309,19 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 	// The code below tries to select the best, i.e. non-empty, value for the
 	// parameter and assigns it to the result key.
 	// The actual key name is taken from the parameter to make it unique.
+	// Since predefined properties are not matched by actual parameters using
+	// ParamByName(), the lower case key name is used instead.
 	// All keys *must* be assigned or rendering will create "<no value>" artifacts.
 
 	for key, val := range values {
-		i, p := t.ParamByName(key)
-		if i == -1 && !slices.Contains(predefinedTemplateProperties, strings.ToLower(key)) {
-			return nil, values, fmt.Errorf("invalid key: %s", key)
+		out := strings.ToLower(key)
+
+		if i, p := t.ParamByName(key); i == -1 {
+			if !slices.Contains(predefinedTemplateProperties, strings.ToLower(key)) {
+				return nil, values, fmt.Errorf("invalid key: %s", key)
+			}
+		} else {
+			out = p.Name
 		}
 
 		switch typed := val.(type) {
@@ -323,8 +330,8 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 			for _, v := range typed {
 				list = append(list, yamlQuote(fmt.Sprintf("%v", v)))
 			}
-			if res[p.Name] == nil || len(res[p.Name].([]interface{})) == 0 {
-				res[p.Name] = list
+			if res[out] == nil || len(res[out].([]interface{})) == 0 {
+				res[out] = list
 			}
 
 		case []string:
@@ -332,13 +339,13 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 			for _, v := range typed {
 				list = append(list, yamlQuote(v))
 			}
-			if res[p.Name] == nil || len(res[p.Name].([]string)) == 0 {
-				res[p.Name] = list
+			if res[out] == nil || len(res[out].([]string)) == 0 {
+				res[out] = list
 			}
 
 		default:
-			if res[p.Name] == nil || res[p.Name].(string) == "" {
-				res[p.Name] = yamlQuote(fmt.Sprintf("%v", val))
+			if res[out] == nil || res[out].(string) == "" {
+				res[out] = yamlQuote(fmt.Sprintf("%v", val))
 			}
 		}
 	}
