@@ -1,8 +1,5 @@
 title: EvseState
 type: string
-enum:
-  - active
-  - disabled
 x-tags:
   - Claims
   - Status

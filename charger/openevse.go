@@ -2,10 +2,8 @@ package charger
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -83,47 +81,26 @@ func NewOpenEVSE(uri, user, password string, timeout time.Duration) (api.Charger
 
 	var phases1p3p func(int) error
 
-	ok, err := c.IsChargingOnThreePhases()
+	ok, err := c.isChargingOnThreePhases()
 	if ok {
 		phases1p3p = c.phases1p3p
+
+		// disable 1/3-phase auto-switching
+		_, _, err := c.PerformRAPICommand(c.uri, "$S8 0")
+		if err != nil {
+			return c, err
+		}
 	}
 
 	return decorateOpenEVSE(c, phases1p3p), err
 }
-
-// func (c *OpenEVSE) DetectCapabilities() (phases int, err error) {
-// 	_, err = c.IsChargingOnThreePhases()
-// 	if err == nil {
-// 		// phase switch supported
-// 		return 0, nil
-// 	}
-
-// 	ctx, cancel := c.requestContextWithTimeout()
-// 	defer cancel()
-
-// 	configResp, err := c.api.GetConfigWithResponse(ctx)
-// 	if err != nil {
-// 		return 1, err
-// 	}
-
-// 	firmware := *configResp.JSON200.Firmware
-// 	regex := regexp.MustCompile(`\.3P`)
-// 	matches := regex.FindStringSubmatch(firmware)
-
-// 	if len(matches) != 0 {
-// 		// 3-phase supported, assume actual 3-phase connection
-// 		return 3, nil
-// 	} else {
-// 		return 1, nil
-// 	}
-// }
 
 func (c *OpenEVSE) requestContextWithTimeout() (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	return ctx, cancel
 }
 
-func (c *OpenEVSE) IsChargingOnThreePhases() (threePhase bool, err error) {
+func (c *OpenEVSE) isChargingOnThreePhases() (threePhase bool, err error) {
 	threePhaseResponse, _, err := c.PerformRAPICommand(c.uri, "$G7")
 	if err != nil {
 		return false, err
@@ -134,72 +111,39 @@ func (c *OpenEVSE) IsChargingOnThreePhases() (threePhase bool, err error) {
 	return threePhaseInt != 0, err
 }
 
-// func (c *OpenEVSE) Phases() (phases int, err error) {
-// 	if c.phases != 0 {
-// 		return c.phases, nil
-// 	}
-
-// 	isChargingOnThreePhase, err := c.IsChargingOnThreePhases()
-// 	if isChargingOnThreePhase {
-// 		phases = 3
-// 	} else {
-// 		phases = 1
-// 	}
-
-// 	return phases, err
-// }
-
 func (c *OpenEVSE) PerformRAPICommand(uri, command string) (response string, success bool, err error) {
 	var uriBuilder strings.Builder
 	uriBuilder.WriteString(uri)
 	uriBuilder.WriteString("/r?json=1&rapi=")
 	uriBuilder.WriteString(url.QueryEscape(command))
 
-	resp, err := c.helper.Get(uri)
+	var resp openevse.RAPIResponse
+	err = c.helper.GetJSON(uriBuilder.String(), &resp)
 	if err != nil {
+		fmt.Printf("PerformRAPICommand %s: %+v", command, resp)
 		return "", false, err
 	}
 
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", false, err
-	}
-	defer resp.Body.Close()
-
-	switch {
-	case strings.Contains(resp.Header.Get("Content-Type"), "json") && resp.StatusCode == 200:
-		var responseJson struct {
-			Cmd *string
-			Ret *string
-		}
-		if err := json.Unmarshal(bodyBytes, &responseJson); err != nil {
-			return "", false, err
-		}
-
-		regex := regexp.MustCompile(`\$(OK|NK)([^^]*)\^\d+`)
-
-		if regex == nil {
-			return "", false, fmt.Errorf("invalid response from RAPI command %s: %s", command, string(bodyBytes))
-		}
-
-		matches := regex.FindStringSubmatch(*responseJson.Ret)
-
-		if len(matches) == 0 {
-			return "", false, fmt.Errorf("invalid response from RAPI command %s: %s", command, string(bodyBytes))
-		}
-
-		if matches[1] == "OK" {
-			return strings.TrimSpace(matches[2]), true, nil
-		} else {
-			return "", false, nil
-		}
+	regex := regexp.MustCompile(`\$(OK|NK)([^^]*)\^\d+`)
+	if regex == nil {
+		return "", false, fmt.Errorf("internal error")
 	}
 
-	return "", false, fmt.Errorf("invalid response from RAPI command %s: %s, code %d", command, resp.Header.Get("Content-Type"), resp.StatusCode)
+	matches := regex.FindStringSubmatch(resp.Ret)
+
+	if len(matches) == 0 {
+		return "", false, fmt.Errorf("invalid response from RAPI command %s: %s", command, resp.Ret)
+	}
+
+	if matches[1] != "OK" {
+		return "", false, nil
+	}
+
+	return strings.TrimSpace(matches[2]), true, nil
 }
 
 func (c *OpenEVSE) SetManualOverride(enable bool) error {
-	state := openevse.SetManualOverrideJSONBodyState("disabled")
+	state := "disabled"
 	if enable {
 		state = "active"
 	}
@@ -264,6 +208,9 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
+// Since OpenEVSE has many possible states, we manually override the state do it cannot change automatically
+// For example, there can be an energy limit set, or a timer to only charge between certain hours
+// Logic is: if it has manual override, keep it; otherwise enforce the current state as a manual override
 func (c *OpenEVSE) Enabled() (bool, error) {
 	ctx, cancel := c.requestContextWithTimeout()
 	defer cancel()
@@ -315,18 +262,6 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *OpenEVSE) Enable(enable bool) error {
-	if enable && c.phases == 0 {
-		_, success, err := c.PerformRAPICommand(c.uri, "$S8 0")
-
-		if err != nil {
-			return err
-		}
-
-		if !success {
-			return fmt.Errorf("failed to turn off three phase auto-switching")
-		}
-	}
-
 	return c.SetManualOverride(enable)
 }
 
@@ -345,23 +280,6 @@ func (c *OpenEVSE) MaxCurrent(current int64) error {
 	return err
 }
 
-// var _ api.Meter = (*OpenEVSE)(nil)
-
-// // CurrentPower implements the api.Meter interface
-// func (c *OpenEVSE) CurrentPower() (power float64, err error) {
-// 	ctx, cancel := c.requestContextWithTimeout()
-// 	defer cancel()
-// 	resp, err := c.api.GetStatusWithResponse(ctx)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
-// 	phases, err := c.Phases()
-// 	current := float64(phases) * float64(*resp.JSON200.Voltage) * float64(*resp.JSON200.Amp) / 1000
-
-// 	return current, err
-// }
-
 var _ api.ChargeRater = (*OpenEVSE)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
@@ -376,21 +294,6 @@ func (c *OpenEVSE) ChargedEnergy() (float64, error) {
 
 	return float64(*resp.JSON200.Wattsec) / 3600 / 1e3, nil
 }
-
-// var _ api.MeterCurrent = (*OpenEVSE)(nil)
-
-// // Currents implements the api.MeterCurrent interface
-// func (c *OpenEVSE) Currents() (float64, float64, float64, error) {
-// 	ctx, cancel := c.requestContextWithTimeout()
-// 	defer cancel()
-// 	resp, err := c.api.GetStatusWithResponse(ctx)
-// 	if err != nil {
-// 		return 0, 0, 0, err
-// 	}
-
-// 	cur := float64(*resp.JSON200.Amp) / 1e3
-// 	return cur, 0, 0, nil
-// }
 
 var _ api.MeterEnergy = (*OpenEVSE)(nil)
 

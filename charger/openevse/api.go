@@ -18,12 +18,6 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 )
 
-// Defines values for LogEventManagerState.
-const (
-	LogEventManagerStateActive   LogEventManagerState = "active"
-	LogEventManagerStateDisabled LogEventManagerState = "disabled"
-)
-
 // Defines values for LogEventType.
 const (
 	Information  LogEventType = "information"
@@ -42,12 +36,6 @@ const (
 	Wednesday ScheduleEventDays = "wednesday"
 )
 
-// Defines values for ScheduleEventState.
-const (
-	ScheduleEventStateActive   ScheduleEventState = "active"
-	ScheduleEventStateDisabled ScheduleEventState = "disabled"
-)
-
 // LogEvent defines model for LogEvent.
 type LogEvent struct {
 	DivertMode *int32   `json:"divertMode,omitempty"`
@@ -57,16 +45,13 @@ type LogEvent struct {
 	EvseState  *int     `json:"evseState,omitempty"`
 
 	// Either enable charging (`active`) or block charging (`disabled`)
-	ManagerState   *LogEventManagerState `json:"managerState,omitempty"`
-	Pilot          *int32                `json:"pilot,omitempty"`
-	Temperature    *float64              `json:"temperature,omitempty"`
-	TempuratureMax *float64              `json:"tempuratureMax,omitempty"`
-	Time           *time.Time            `json:"time,omitempty"`
-	Type           *LogEventType         `json:"type,omitempty"`
+	ManagerState   *string       `json:"managerState,omitempty"`
+	Pilot          *int32        `json:"pilot,omitempty"`
+	Temperature    *float64      `json:"temperature,omitempty"`
+	TempuratureMax *float64      `json:"tempuratureMax,omitempty"`
+	Time           *time.Time    `json:"time,omitempty"`
+	Type           *LogEventType `json:"type,omitempty"`
 }
-
-// Either enable charging (`active`) or block charging (`disabled`)
-type LogEventManagerState string
 
 // LogEventType defines model for LogEvent.Type.
 type LogEventType string
@@ -83,15 +68,12 @@ type ScheduleEvent struct {
 	Id   *int                `json:"id,omitempty"`
 
 	// Either enable charging (`active`) or block charging (`disabled`)
-	State ScheduleEventState `json:"state"`
-	Time  string             `json:"time"`
+	State string `json:"state"`
+	Time  string `json:"time"`
 }
 
 // ScheduleEventDays defines model for ScheduleEvent.Days.
 type ScheduleEventDays string
-
-// Either enable charging (`active`) or block charging (`disabled`)
-type ScheduleEventState string
 
 // BadRequest defines model for BadRequest.
 type BadRequest = Message
@@ -121,7 +103,7 @@ type SetClaimJSONBody struct {
 	MaxCurrent *int `json:"max_current,omitempty"`
 
 	// Either enable charging (`active`) or block charging (`disabled`)
-	State *SetClaimJSONBodyState `json:"state,omitempty"`
+	State *string `json:"state,omitempty"`
 
 	// Stop the charge after the duration of the charging session has exceeded `time_limit` seconds
 	//
@@ -129,91 +111,82 @@ type SetClaimJSONBody struct {
 	TimeLimit *int32 `json:"time_limit,omitempty"`
 }
 
-// SetClaimJSONBodyState defines parameters for SetClaim.
-type SetClaimJSONBodyState string
-
 // UpdateConfigJSONBody defines parameters for UpdateConfig.
 type UpdateConfigJSONBody struct {
-	Buildenv                    *string                                       `json:"buildenv,omitempty"`
-	ChargeMode                  *string                                       `json:"charge_mode,omitempty"`
-	DiodeCheck                  *bool                                         `json:"diode_check,omitempty"`
-	DivertPVRatio               *float32                                      `json:"divert_PV_ratio,omitempty"`
-	DivertAttackSmoothingFactor *float32                                      `json:"divert_attack_smoothing_factor,omitempty"`
-	DivertDecaySmoothingFactor  *float32                                      `json:"divert_decay_smoothing_factor,omitempty"`
-	DivertEnabled               *bool                                         `json:"divert_enabled,omitempty"`
-	DivertMinChargeTime         *float32                                      `json:"divert_min_charge_time,omitempty"`
-	EmoncmsApikey               *string                                       `json:"emoncms_apikey,omitempty"`
-	EmoncmsEnabled              *bool                                         `json:"emoncms_enabled,omitempty"`
-	EmoncmsFingerprint          *string                                       `json:"emoncms_fingerprint,omitempty"`
-	EmoncmsNode                 *string                                       `json:"emoncms_node,omitempty"`
-	EmoncmsServer               *string                                       `json:"emoncms_server,omitempty"`
-	Espflash                    *float32                                      `json:"espflash,omitempty"`
-	Espinfo                     *string                                       `json:"espinfo,omitempty"`
-	Firmware                    *string                                       `json:"firmware,omitempty"`
-	Flags                       *float32                                      `json:"flags,omitempty"`
-	GfciCheck                   *bool                                         `json:"gfci_check,omitempty"`
-	GroundCheck                 *bool                                         `json:"ground_check,omitempty"`
-	Hostname                    *string                                       `json:"hostname,omitempty"`
-	HttpSupportedProtocols      *[]UpdateConfigJSONBodyHttpSupportedProtocols `json:"http_supported_protocols,omitempty"`
-	LedBrightness               *float32                                      `json:"led_brightness,omitempty"`
-	MaxCurrentHard              *int                                          `json:"max_current_hard,omitempty"`
-	MaxCurrentSoft              *int                                          `json:"max_current_soft,omitempty"`
-	MinCurrentHard              *int                                          `json:"min_current_hard,omitempty"`
-	MqttAnnounceTopic           *string                                       `json:"mqtt_announce_topic,omitempty"`
-	MqttEnabled                 *bool                                         `json:"mqtt_enabled,omitempty"`
-	MqttGridIe                  *string                                       `json:"mqtt_grid_ie,omitempty"`
-	MqttPass                    *string                                       `json:"mqtt_pass,omitempty"`
-	MqttPort                    *int                                          `json:"mqtt_port,omitempty"`
-	MqttProtocol                *string                                       `json:"mqtt_protocol,omitempty"`
-	MqttRejectUnauthorized      *bool                                         `json:"mqtt_reject_unauthorized,omitempty"`
-	MqttServer                  *string                                       `json:"mqtt_server,omitempty"`
-	MqttSolar                   *string                                       `json:"mqtt_solar,omitempty"`
-	MqttSupportedProtocols      *[]UpdateConfigJSONBodyMqttSupportedProtocols `json:"mqtt_supported_protocols,omitempty"`
-	MqttTopic                   *string                                       `json:"mqtt_topic,omitempty"`
-	MqttUser                    *string                                       `json:"mqtt_user,omitempty"`
-	MqttVehicleEta              *string                                       `json:"mqtt_vehicle_eta,omitempty"`
-	MqttVehicleRange            *string                                       `json:"mqtt_vehicle_range,omitempty"`
-	MqttVehicleRangeMiles       *bool                                         `json:"mqtt_vehicle_range_miles,omitempty"`
-	MqttVehicleSoc              *string                                       `json:"mqtt_vehicle_soc,omitempty"`
-	MqttVrms                    *string                                       `json:"mqtt_vrms,omitempty"`
-	OcppChargeBoxId             *string                                       `json:"ocpp_chargeBoxId,omitempty"`
-	OcppEnabled                 *bool                                         `json:"ocpp_enabled,omitempty"`
-	OcppEnergizePlug            *bool                                         `json:"ocpp_energize_plug,omitempty"`
-	OcppIdTag                   *string                                       `json:"ocpp_idTag,omitempty"`
-	OcppServer                  *string                                       `json:"ocpp_server,omitempty"`
-	OcppSuspendEvse             *bool                                         `json:"ocpp_suspend_evse,omitempty"`
-	Offset                      *int                                          `json:"offset,omitempty"`
-	Ohm                         *string                                       `json:"ohm,omitempty"`
-	OhmEnabled                  *bool                                         `json:"ohm_enabled,omitempty"`
-	Pass                        *string                                       `json:"pass,omitempty"`
-	PauseUsesDisabled           *bool                                         `json:"pause_uses_disabled,omitempty"`
-	Protocol                    *string                                       `json:"protocol,omitempty"`
-	RelayCheck                  *bool                                         `json:"relay_check,omitempty"`
-	Scale                       *int                                          `json:"scale,omitempty"`
-	Service                     *int                                          `json:"service,omitempty"`
-	SntpEnabled                 *bool                                         `json:"sntp_enabled,omitempty"`
-	SntpHostname                *string                                       `json:"sntp_hostname,omitempty"`
-	Ssid                        *string                                       `json:"ssid,omitempty"`
-	TempCheck                   *bool                                         `json:"temp_check,omitempty"`
-	TeslaAccessToken            *string                                       `json:"tesla_access_token,omitempty"`
-	TeslaCreatedAt              *float32                                      `json:"tesla_created_at,omitempty"`
-	TeslaEnabled                *bool                                         `json:"tesla_enabled,omitempty"`
-	TeslaExpiresIn              *float32                                      `json:"tesla_expires_in,omitempty"`
-	TeslaRefreshToken           *string                                       `json:"tesla_refresh_token,omitempty"`
-	TeslaVehicleId              *string                                       `json:"tesla_vehicle_id,omitempty"`
-	TimeZone                    *string                                       `json:"time_zone,omitempty"`
-	TxStartPoint                *string                                       `json:"tx_start_point,omitempty"`
-	VentCheck                   *bool                                         `json:"vent_check,omitempty"`
-	Version                     *string                                       `json:"version,omitempty"`
-	WwwPassword                 *string                                       `json:"www_password,omitempty"`
-	WwwUsername                 *string                                       `json:"www_username,omitempty"`
+	Buildenv                    *string   `json:"buildenv,omitempty"`
+	ChargeMode                  *string   `json:"charge_mode,omitempty"`
+	DiodeCheck                  *bool     `json:"diode_check,omitempty"`
+	DivertPVRatio               *float32  `json:"divert_PV_ratio,omitempty"`
+	DivertAttackSmoothingFactor *float32  `json:"divert_attack_smoothing_factor,omitempty"`
+	DivertDecaySmoothingFactor  *float32  `json:"divert_decay_smoothing_factor,omitempty"`
+	DivertEnabled               *bool     `json:"divert_enabled,omitempty"`
+	DivertMinChargeTime         *float32  `json:"divert_min_charge_time,omitempty"`
+	EmoncmsApikey               *string   `json:"emoncms_apikey,omitempty"`
+	EmoncmsEnabled              *bool     `json:"emoncms_enabled,omitempty"`
+	EmoncmsFingerprint          *string   `json:"emoncms_fingerprint,omitempty"`
+	EmoncmsNode                 *string   `json:"emoncms_node,omitempty"`
+	EmoncmsServer               *string   `json:"emoncms_server,omitempty"`
+	Espflash                    *float32  `json:"espflash,omitempty"`
+	Espinfo                     *string   `json:"espinfo,omitempty"`
+	Firmware                    *string   `json:"firmware,omitempty"`
+	Flags                       *float32  `json:"flags,omitempty"`
+	GfciCheck                   *bool     `json:"gfci_check,omitempty"`
+	GroundCheck                 *bool     `json:"ground_check,omitempty"`
+	Hostname                    *string   `json:"hostname,omitempty"`
+	HttpSupportedProtocols      *[]string `json:"http_supported_protocols,omitempty"`
+	LedBrightness               *float32  `json:"led_brightness,omitempty"`
+	MaxCurrentHard              *int      `json:"max_current_hard,omitempty"`
+	MaxCurrentSoft              *int      `json:"max_current_soft,omitempty"`
+	MinCurrentHard              *int      `json:"min_current_hard,omitempty"`
+	MqttAnnounceTopic           *string   `json:"mqtt_announce_topic,omitempty"`
+	MqttEnabled                 *bool     `json:"mqtt_enabled,omitempty"`
+	MqttGridIe                  *string   `json:"mqtt_grid_ie,omitempty"`
+	MqttPass                    *string   `json:"mqtt_pass,omitempty"`
+	MqttPort                    *int      `json:"mqtt_port,omitempty"`
+	MqttProtocol                *string   `json:"mqtt_protocol,omitempty"`
+	MqttRejectUnauthorized      *bool     `json:"mqtt_reject_unauthorized,omitempty"`
+	MqttServer                  *string   `json:"mqtt_server,omitempty"`
+	MqttSolar                   *string   `json:"mqtt_solar,omitempty"`
+	MqttSupportedProtocols      *[]string `json:"mqtt_supported_protocols,omitempty"`
+	MqttTopic                   *string   `json:"mqtt_topic,omitempty"`
+	MqttUser                    *string   `json:"mqtt_user,omitempty"`
+	MqttVehicleEta              *string   `json:"mqtt_vehicle_eta,omitempty"`
+	MqttVehicleRange            *string   `json:"mqtt_vehicle_range,omitempty"`
+	MqttVehicleRangeMiles       *bool     `json:"mqtt_vehicle_range_miles,omitempty"`
+	MqttVehicleSoc              *string   `json:"mqtt_vehicle_soc,omitempty"`
+	MqttVrms                    *string   `json:"mqtt_vrms,omitempty"`
+	OcppChargeBoxId             *string   `json:"ocpp_chargeBoxId,omitempty"`
+	OcppEnabled                 *bool     `json:"ocpp_enabled,omitempty"`
+	OcppEnergizePlug            *bool     `json:"ocpp_energize_plug,omitempty"`
+	OcppIdTag                   *string   `json:"ocpp_idTag,omitempty"`
+	OcppServer                  *string   `json:"ocpp_server,omitempty"`
+	OcppSuspendEvse             *bool     `json:"ocpp_suspend_evse,omitempty"`
+	Offset                      *int      `json:"offset,omitempty"`
+	Ohm                         *string   `json:"ohm,omitempty"`
+	OhmEnabled                  *bool     `json:"ohm_enabled,omitempty"`
+	Pass                        *string   `json:"pass,omitempty"`
+	PauseUsesDisabled           *bool     `json:"pause_uses_disabled,omitempty"`
+	Protocol                    *string   `json:"protocol,omitempty"`
+	RelayCheck                  *bool     `json:"relay_check,omitempty"`
+	Scale                       *int      `json:"scale,omitempty"`
+	Service                     *int      `json:"service,omitempty"`
+	SntpEnabled                 *bool     `json:"sntp_enabled,omitempty"`
+	SntpHostname                *string   `json:"sntp_hostname,omitempty"`
+	Ssid                        *string   `json:"ssid,omitempty"`
+	TempCheck                   *bool     `json:"temp_check,omitempty"`
+	TeslaAccessToken            *string   `json:"tesla_access_token,omitempty"`
+	TeslaCreatedAt              *float32  `json:"tesla_created_at,omitempty"`
+	TeslaEnabled                *bool     `json:"tesla_enabled,omitempty"`
+	TeslaExpiresIn              *float32  `json:"tesla_expires_in,omitempty"`
+	TeslaRefreshToken           *string   `json:"tesla_refresh_token,omitempty"`
+	TeslaVehicleId              *string   `json:"tesla_vehicle_id,omitempty"`
+	TimeZone                    *string   `json:"time_zone,omitempty"`
+	TxStartPoint                *string   `json:"tx_start_point,omitempty"`
+	VentCheck                   *bool     `json:"vent_check,omitempty"`
+	Version                     *string   `json:"version,omitempty"`
+	WwwPassword                 *string   `json:"www_password,omitempty"`
+	WwwUsername                 *string   `json:"www_username,omitempty"`
 }
-
-// UpdateConfigJSONBodyHttpSupportedProtocols defines parameters for UpdateConfig.
-type UpdateConfigJSONBodyHttpSupportedProtocols string
-
-// UpdateConfigJSONBodyMqttSupportedProtocols defines parameters for UpdateConfig.
-type UpdateConfigJSONBodyMqttSupportedProtocols string
 
 // SetManualOverrideJSONBody defines parameters for SetManualOverride.
 type SetManualOverrideJSONBody struct {
@@ -234,7 +207,7 @@ type SetManualOverrideJSONBody struct {
 	MaxCurrent *int `json:"max_current,omitempty"`
 
 	// Either enable charging (`active`) or block charging (`disabled`)
-	State *SetManualOverrideJSONBodyState `json:"state,omitempty"`
+	State *string `json:"state,omitempty"`
 
 	// Stop the charge after the duration of the charging session has exceeded `time_limit` seconds
 	//
@@ -242,14 +215,11 @@ type SetManualOverrideJSONBody struct {
 	TimeLimit *int32 `json:"time_limit,omitempty"`
 }
 
-// SetManualOverrideJSONBodyState defines parameters for SetManualOverride.
-type SetManualOverrideJSONBodyState string
-
 // UpdateScheduleJSONBody defines parameters for UpdateSchedule.
 type UpdateScheduleJSONBody = []ScheduleEvent
 
 // SetScheduleEventJSONBody defines parameters for SetScheduleEvent.
-type SetScheduleEventJSONBody string
+type SetScheduleEventJSONBody = string
 
 // SetClaimJSONRequestBody defines body for SetClaim for application/json ContentType.
 type SetClaimJSONRequestBody SetClaimJSONBody
@@ -264,7 +234,7 @@ type SetManualOverrideJSONRequestBody SetManualOverrideJSONBody
 type UpdateScheduleJSONRequestBody = UpdateScheduleJSONBody
 
 // SetScheduleEventJSONRequestBody defines body for SetScheduleEvent for application/json ContentType.
-type SetScheduleEventJSONRequestBody SetScheduleEventJSONBody
+type SetScheduleEventJSONRequestBody = SetScheduleEventJSONBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -2136,10 +2106,10 @@ type GetStatusResponse struct {
 		Voltage *float32 `json:"voltage,omitempty"`
 
 		// The total amount of energy transfered, in W/hour
-		Watthour *int64 `json:"watthour,omitempty"`
+		Watthour *int `json:"watthour,omitempty"`
 
 		// The amount of energy transfered in this charge session, in W/sec
-		Wattsec *float64 `json:"wattsec,omitempty"`
+		Wattsec *float32 `json:"wattsec,omitempty"`
 
 		// `1`, WiFi is connected, `0` no WiFi connection
 		WifiClientConnected *int `json:"wifi_client_connected,omitempty"`
@@ -2315,10 +2285,10 @@ type StatusUpdatesResponse struct {
 		Voltage *float32 `json:"voltage,omitempty"`
 
 		// The total amount of energy transfered, in W/hour
-		Watthour *int64 `json:"watthour,omitempty"`
+		Watthour *int `json:"watthour,omitempty"`
 
 		// The amount of energy transfered in this charge session, in W/sec
-		Wattsec *float64 `json:"wattsec,omitempty"`
+		Wattsec *float32 `json:"wattsec,omitempty"`
 
 		// `1`, WiFi is connected, `0` no WiFi connection
 		WifiClientConnected *int `json:"wifi_client_connected,omitempty"`
@@ -3314,10 +3284,10 @@ func ParseGetStatusResponse(rsp *http.Response) (*GetStatusResponse, error) {
 			Voltage *float32 `json:"voltage,omitempty"`
 
 			// The total amount of energy transfered, in W/hour
-			Watthour *int64 `json:"watthour,omitempty"`
+			Watthour *int `json:"watthour,omitempty"`
 
 			// The amount of energy transfered in this charge session, in W/sec
-			Wattsec *float64 `json:"wattsec,omitempty"`
+			Wattsec *float32 `json:"wattsec,omitempty"`
 
 			// `1`, WiFi is connected, `0` no WiFi connection
 			WifiClientConnected *int `json:"wifi_client_connected,omitempty"`
@@ -3501,10 +3471,10 @@ func ParseStatusUpdatesResponse(rsp *http.Response) (*StatusUpdatesResponse, err
 			Voltage *float32 `json:"voltage,omitempty"`
 
 			// The total amount of energy transfered, in W/hour
-			Watthour *int64 `json:"watthour,omitempty"`
+			Watthour *int `json:"watthour,omitempty"`
 
 			// The amount of energy transfered in this charge session, in W/sec
-			Wattsec *float64 `json:"wattsec,omitempty"`
+			Wattsec *float32 `json:"wattsec,omitempty"`
 
 			// `1`, WiFi is connected, `0` no WiFi connection
 			WifiClientConnected *int `json:"wifi_client_connected,omitempty"`

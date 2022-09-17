@@ -216,18 +216,12 @@ properties:
     uniqueItems: true
     items:
       type: string
-      enum:
-        - mqtt
-        - mqtts
     readOnly: true
   http_supported_protocols:
     type: array
     uniqueItems: true
     items:
       type: string
-      enum:
-        - http
-        - https
     readOnly: true
   ssid:
     type: string

@@ -39,11 +39,6 @@ properties:
   ohm_hour:
     type: string
     description: Last status message from the OhmHour connection
-    enum:
-      - NotConnected
-      - "True"
-      - "False"
-      - None
   free_heap:
     type: integer
     description: Number of bytes free in the ESP memory heap
@@ -71,18 +66,6 @@ properties:
   temp:
     type: number
     description: "the derived temperature, in 1/10th °C"
-  temp1:
-    type: number
-    description: "the DS3232 temperature, in 1/10th °C, if fitted or `false` if not"
-  temp2:
-    type: number
-    description: "the MCP9808 (on the LCD) temperature, in 1/10th °C, if fitted or `false` if not"
-  temp3:
-    type: number
-    description: "the TMP007 temperature, in 1/10th °C, if fitted or `false` if not"
-  temp4:
-    type: number
-    description: "the MCP9808 (on the WiFi module) temperature, in 1/10th °C, if fitted or `false` if not"
   state:
     type: integer
     description: The EVSE status
@@ -99,7 +82,7 @@ properties:
     type: number
     description: "The duration of the current charge session, in seconds"
   wattsec:
-    type: integer
+    type: number
     description: "The amount of energy transfered in this charge session, in W/sec"
   watthour:
     type: integer
