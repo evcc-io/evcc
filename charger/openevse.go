@@ -10,20 +10,22 @@ import (
 	"github.com/evcc-io/evcc/charger/openevse"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"io/ioutil"
-	"net/http"
+	"io"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // OpenEVSE charger implementation
 type OpenEVSE struct {
-	uri    string
-	phases int
-	api    *openevse.ClientWithResponses
-	log    *util.Logger
+	uri     string
+	phases  int
+	api     *openevse.ClientWithResponses
+	helper  *request.Helper
+	log     *util.Logger
+	timeout time.Duration
 	api.MeterEnergy
 }
 
@@ -31,15 +33,14 @@ func init() {
 	registry.Add("openevse", NewOpenEVSEFromConfig)
 }
 
-// go:generate go run oapi-codegen -package openevse -old-config-style -generate "types,client" openevse/api.yaml > openevse/api.go
 // go:generate go run ../cmd/tools/decorate.go -f decorateOpenEVSE -b ""*OpenEVSE" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
 
 // NewOpenEVSEFromConfig creates a go-e charger from generic config
 func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI       string
-		User      string
-		Password  string
+		URI      string
+		User     string
+		Password string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -55,16 +56,17 @@ func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewOpenEVSE creates OpenEVSE charger
 func NewOpenEVSE(uri, user, password string) (api.Charger, error) {
+	log := util.NewLogger("openevse").Redact(user, password)
 	c := &OpenEVSE{
-		uri: uri,
-		log: util.NewLogger("openevse").Redact(user, password),
+		uri:     uri,
+		helper:  request.NewHelper(log),
+		log:     log,
+		timeout: request.Timeout,
 	}
 
 	var err error
 
-	//conn.Logger(log.TRACE)
-
-    loggingClientOption := openevse.WithHTTPClient(request.NewClient(c.log))
+	loggingClientOption := openevse.WithHTTPClient(request.NewClient(c.log))
 
 	if user != "" && password != "" {
 		basicAuthProvider, err := securityprovider.NewSecurityProviderBasicAuth(user, password)
@@ -109,12 +111,14 @@ func (c *OpenEVSE) DetectCapabilities() (phases int, err error) {
 		return 0, nil
 	}
 
-	configResp, err := c.api.GetConfigWithResponse(context.Background())
+	ctx, cancel := c.RequestContextWithTimeout()
+	defer cancel()
+	configResp, err := c.api.GetConfigWithResponse(ctx)
 	if err != nil {
 		return 1, err
 	}
 
-	firmware := string(*configResp.JSON200.Firmware)
+	firmware := *configResp.JSON200.Firmware
 	regex := regexp.MustCompile(`\.3P`)
 	matches := regex.FindStringSubmatch(firmware)
 
@@ -124,6 +128,11 @@ func (c *OpenEVSE) DetectCapabilities() (phases int, err error) {
 	} else {
 		return 1, nil
 	}
+}
+
+func (c *OpenEVSE) RequestContextWithTimeout() (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	return ctx, cancel
 }
 
 func (c *OpenEVSE) IsChargingOnThreePhases() (threePhase bool, err error) {
@@ -165,16 +174,20 @@ func (c *OpenEVSE) PerformRAPICommand(uri, command string) (response string, suc
 	uriBuilder.WriteString(uri)
 	uriBuilder.WriteString("/r?json=1&rapi=")
 	uriBuilder.WriteString(url.QueryEscape(command))
-	rsp, err := http.DefaultClient.Get(uriBuilder.String())
+	resp, err := c.helper.Get(uri)
+	if err != nil {
+		return "", false, err
+	}
 
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+	_ = resp.Body.Close()
+	bodyBytes, err := io.ReadAll(resp.Body)
+	defer func() { _ = resp.Body.Close() }()
 	if err != nil {
 		return "", false, err
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+	case strings.Contains(resp.Header.Get("Content-Type"), "json") && resp.StatusCode == 200:
 		var responseJson struct {
 			Cmd *string
 			Ret *string
@@ -202,7 +215,7 @@ func (c *OpenEVSE) PerformRAPICommand(uri, command string) (response string, suc
 		}
 	}
 
-	return "", false, fmt.Errorf("invalid response from RAPI command %s: %s, code %d", command, rsp.Header.Get("Content-Type"), rsp.StatusCode)
+	return "", false, fmt.Errorf("invalid response from RAPI command %s: %s, code %d", command, resp.Header.Get("Content-Type"), resp.StatusCode)
 }
 
 func (c *OpenEVSE) SetManualOverride(enable bool) error {
@@ -217,13 +230,17 @@ func (c *OpenEVSE) SetManualOverride(enable bool) error {
 		State: &state,
 	}
 
-	_, err := c.api.SetManualOverrideWithResponse(context.Background(), body)
+	ctx, cancel := c.RequestContextWithTimeout()
+	defer cancel()
+	_, err := c.api.SetManualOverrideWithResponse(ctx, body)
 
 	return err
 }
 
 func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
-	resp, err := c.api.GetStatusWithResponse(context.Background())
+	ctx, cancel := c.RequestContextWithTimeout()
+	defer cancel()
+	resp, err := c.api.GetStatusWithResponse(ctx)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -270,7 +287,9 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OpenEVSE) Enabled() (bool, error) {
-	overrideResp, err := c.api.GetManualOverrideWithResponse(context.Background())
+	ctx, cancel := c.RequestContextWithTimeout()
+	defer cancel()
+	overrideResp, err := c.api.GetManualOverrideWithResponse(ctx)
 
 	if err != nil {
 		return false, err
@@ -285,7 +304,7 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 		}
 	}
 
-	statusResp, err := c.api.GetStatusWithResponse(context.Background())
+	statusResp, err := c.api.GetStatusWithResponse(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -302,17 +321,14 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 	case 3, 4:
 		state = true
 	default:
-		configResp, err := c.api.GetConfigWithResponse(context.Background())
-
+		configResp, err := c.api.GetConfigWithResponse(ctx)
 		if err != nil {
 			return false, err
 		}
 
 		switch *configResp.JSON200.ChargeMode {
-			case "fast":
-				state = true
-			default:
-				state = false
+		case "fast":
+			state = true
 		}
 	}
 
@@ -347,7 +363,9 @@ func (c *OpenEVSE) MaxCurrent(current int64) error {
 		ChargeCurrent: &cur,
 	}
 
-	_, err := c.api.SetManualOverrideWithResponse(context.Background(), body)
+	ctx, cancel := c.RequestContextWithTimeout()
+	defer cancel()
+	_, err := c.api.SetManualOverrideWithResponse(ctx, body)
 
 	return err
 }
@@ -356,26 +374,26 @@ var _ api.Meter = (*OpenEVSE)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *OpenEVSE) CurrentPower() (power float64, err error) {
-	resp, err := c.api.GetStatusWithResponse(context.Background())
+	ctx, cancel := c.RequestContextWithTimeout()
+	defer cancel()
+	resp, err := c.api.GetStatusWithResponse(ctx)
 	if err != nil {
 		return 0, err
 	}
 
 	phases, err := c.Phases()
-	if err != nil {
-		return 0, err
-	}
-
 	current := float64(phases) * float64(*resp.JSON200.Voltage) * float64(*resp.JSON200.Amp) / 1000
 
-	return current, nil
+	return current, err
 }
 
 var _ api.ChargeRater = (*OpenEVSE)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *OpenEVSE) ChargedEnergy() (float64, error) {
-	resp, err := c.api.GetStatusWithResponse(context.Background())
+	ctx, cancel := c.RequestContextWithTimeout()
+	defer cancel()
+	resp, err := c.api.GetStatusWithResponse(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -387,26 +405,16 @@ var _ api.MeterCurrent = (*OpenEVSE)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (c *OpenEVSE) Currents() (float64, float64, float64, error) {
-	resp, err := c.api.GetStatusWithResponse(context.Background())
+	ctx, cancel := c.RequestContextWithTimeout()
+	defer cancel()
+	resp, err := c.api.GetStatusWithResponse(ctx)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	cur := float64(*resp.JSON200.Amp) / 1000
-
-	phases, err := c.Phases()
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	if phases == 3 {
-		return cur, cur, cur, nil
-	} else {
-		return cur, 0, 0, nil
-	}
+	return cur, 0, 0, nil
 }
-
-var _ api.Identifier = (*OpenEVSE)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *OpenEVSE) Identify() (string, error) {
@@ -415,7 +423,9 @@ func (c *OpenEVSE) Identify() (string, error) {
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *OpenEVSE) TotalEnergy() (float64, error) {
-	resp, err := c.api.GetStatusWithResponse(context.Background())
+	ctx, cancel := c.RequestContextWithTimeout()
+	defer cancel()
+	resp, err := c.api.GetStatusWithResponse(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -428,8 +438,6 @@ func (c *OpenEVSE) phases1p3p(phases int) error {
 	var enableThreePhases int
 	if phases == 3 {
 		enableThreePhases = 1
-	} else {
-		enableThreePhases = 0
 	}
 
 	_, success, err := c.PerformRAPICommand(c.uri, fmt.Sprintf("$S7 %d", enableThreePhases))
