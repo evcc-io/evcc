@@ -111,6 +111,7 @@ jobs:
       - name: Update version
         run: |
           sed -i -e s#\"version.*#\"version\"\:\ \"nightly-$(date +'%Y%m%d%H%M%S')\",# ./hassio/evcc-nightly/config.json
+
       - name: Push
         run: |
           cd ./hassio
