@@ -125,10 +125,6 @@ func (c *OpenEVSE) PerformRAPICommand(uri, command string) (response string, suc
 	}
 
 	regex := regexp.MustCompile(`\$(OK|NK)([^^]*)\^\d+`)
-	if regex == nil {
-		return "", false, fmt.Errorf("internal error")
-	}
-
 	matches := regex.FindStringSubmatch(resp.Ret)
 
 	if len(matches) == 0 {
