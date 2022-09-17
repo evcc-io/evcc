@@ -268,8 +268,8 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 func (c *OpenEVSE) Enabled() (bool, error) {
 	ctx, cancel := c.requestContextWithTimeout()
 	defer cancel()
-	overrideResp, err := c.api.GetManualOverrideWithResponse(ctx)
 
+	overrideResp, err := c.api.GetManualOverrideWithResponse(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -291,8 +291,6 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 	var stateCode int
 	if statusResp.JSON200 != nil && statusResp.JSON200.State != nil {
 		stateCode = *statusResp.JSON200.State
-	} else {
-		stateCode = -1
 	}
 
 	var state bool
