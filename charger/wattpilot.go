@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	wattpilot "github.com/evcc-io/evcc/charger/wattpilot"
 	"github.com/evcc-io/evcc/util"
+	wattpilot "github.com/mabunixda/wattpilot"
 )
 
 // Wattpilot charger implementation
