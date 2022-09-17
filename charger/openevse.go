@@ -330,9 +330,7 @@ func (c *OpenEVSE) Enable(enable bool) error {
 		}
 	}
 
-	err := c.SetManualOverride(enable)
-
-	return err
+	return c.SetManualOverride(enable)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -414,12 +412,12 @@ func (c *OpenEVSE) TotalEnergy() (float64, error) {
 
 // phases1p3p implements the api.ChargePhases interface
 func (c *OpenEVSE) phases1p3p(phases int) error {
-	var enableThreePhases int
+	var set3p int
 	if phases == 3 {
-		enableThreePhases = 1
+		set3p = 1
 	}
 
-	_, ok, err := c.PerformRAPICommand(c.uri, fmt.Sprintf("$S7 %d", enableThreePhases))
+	_, ok, err := c.PerformRAPICommand(c.uri, fmt.Sprintf("$S7 %d", set3p))
 	if err != nil {
 		return err
 	}
