@@ -3,7 +3,6 @@ package meter
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -94,14 +93,14 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		device: device,
 	}
 
-	if err := modbus.ParseOperation(device, strings.ToLower(cc.Power), &m.opPower); err != nil {
+	if err := modbus.ParseOperation(device, cc.Power, &m.opPower); err != nil {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
 
 	// decorate energy reading
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
-		if err := modbus.ParseOperation(device, strings.ToLower(cc.Energy), &m.opEnergy); err != nil {
+		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
 
@@ -119,7 +118,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		for _, cc := range cc.Currents {
 			var opCurrent modbus.Operation
 
-			if err := modbus.ParseOperation(device, strings.ToLower(cc), &opCurrent); err != nil {
+			if err := modbus.ParseOperation(device, cc, &opCurrent); err != nil {
 				return nil, fmt.Errorf("invalid measurement for current: %s", cc)
 			}
 
@@ -136,7 +135,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	// decorate soc reading
 	var soc func() (float64, error)
 	if cc.SoC != "" {
-		if err := modbus.ParseOperation(device, strings.ToLower(cc.SoC), &m.opSoC); err != nil {
+		if err := modbus.ParseOperation(device, cc.SoC, &m.opSoC); err != nil {
 			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.SoC)
 		}
 
