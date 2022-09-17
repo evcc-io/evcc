@@ -111,8 +111,7 @@ jobs:
 
       - name: Update version
         run: |
-          export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e s#refs/tags/##)
-          sed -i -e s#.*version.*#'  "version": "'$RELEASE_VERSION'",'# ./hassio/evcc/config.json
+          sed -i -e s#.*\"version.*#'  "version": "'$(echo ${{ github.ref }} | sed -e s#refs/tags/##)'",'# ./hassio/evcc/config.json
 
       - name: Push
         run: |
