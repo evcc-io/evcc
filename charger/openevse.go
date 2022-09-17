@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -81,12 +79,12 @@ func NewOpenEVSE(uri, user, password string, timeout time.Duration) (api.Charger
 
 	var phases1p3p func(int) error
 
-	ok, err := c.isChargingOnThreePhases()
+	ok, err := c.hasPhaseSwitchCapabilities()
 	if ok {
 		phases1p3p = c.phases1p3p
 
-		// disable 1/3-phase auto-switching
-		_, _, err := c.PerformRAPICommand(c.uri, "$S8 0")
+		// disable EVSE's own 1/3-phase auto-switching
+		_, err := c.PerformRAPICommand(c.uri, "$S8 0")
 		if err != nil {
 			return c, err
 		}
@@ -100,42 +98,31 @@ func (c *OpenEVSE) requestContextWithTimeout() (context.Context, context.CancelF
 	return ctx, cancel
 }
 
-func (c *OpenEVSE) isChargingOnThreePhases() (threePhase bool, err error) {
-	threePhaseResponse, _, err := c.PerformRAPICommand(c.uri, "$G7")
+func (c *OpenEVSE) hasPhaseSwitchCapabilities() (threePhaseCapabilities bool, err error) {
+	_, err = c.PerformRAPICommand(c.uri, "$G7")
 	if err != nil {
 		return false, err
 	}
 
-	threePhaseInt, err := strconv.Atoi(threePhaseResponse)
-
-	return threePhaseInt != 0, err
+	return true, nil
 }
 
-func (c *OpenEVSE) PerformRAPICommand(uri, command string) (response string, success bool, err error) {
+func (c *OpenEVSE) PerformRAPICommand(uri, command string) (success bool, err error) {
 	var uriBuilder strings.Builder
 	uriBuilder.WriteString(uri)
 	uriBuilder.WriteString("/r?json=1&rapi=")
 	uriBuilder.WriteString(url.QueryEscape(command))
 
-	var resp openevse.RAPIResponse
+	var resp struct {
+		Cmd, Ret string
+	}
+
 	err = c.helper.GetJSON(uriBuilder.String(), &resp)
-	if err != nil {
-		fmt.Printf("PerformRAPICommand %s: %+v", command, resp)
-		return "", false, err
+	if err == nil && strings.HasPrefix(resp.Ret, "$OK") {
+		return true, nil
 	}
 
-	regex := regexp.MustCompile(`\$(OK|NK)([^^]*)\^\d+`)
-	matches := regex.FindStringSubmatch(resp.Ret)
-
-	if len(matches) == 0 {
-		return "", false, fmt.Errorf("invalid response from RAPI command %s: %s", command, resp.Ret)
-	}
-
-	if matches[1] != "OK" {
-		return "", false, nil
-	}
-
-	return strings.TrimSpace(matches[2]), true, nil
+	return false, err
 }
 
 func (c *OpenEVSE) SetManualOverride(enable bool) error {
@@ -313,7 +300,7 @@ func (c *OpenEVSE) phases1p3p(phases int) error {
 		set3p = 1
 	}
 
-	_, ok, err := c.PerformRAPICommand(c.uri, fmt.Sprintf("$S7 %d", set3p))
+	ok, err := c.PerformRAPICommand(c.uri, fmt.Sprintf("$S7 %d", set3p))
 	if err != nil {
 		return err
 	}
