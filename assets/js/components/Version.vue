@@ -8,7 +8,7 @@
 		>
 			<Logo class="logo me-2" />
 			v{{ installed }}
-			<shopicon-regular-moonstars class="ms-2"></shopicon-regular-moonstars>
+			<shopicon-regular-moonstars class="ms-2 text-gray-light"></shopicon-regular-moonstars>
 		</a>
 		<button
 			v-else-if="newVersionAvailable"
