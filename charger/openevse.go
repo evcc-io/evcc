@@ -155,17 +155,17 @@ func (c *OpenEVSE) PerformRAPICommand(uri, command string) (response string, suc
 	uriBuilder.WriteString(uri)
 	uriBuilder.WriteString("/r?json=1&rapi=")
 	uriBuilder.WriteString(url.QueryEscape(command))
+
 	resp, err := c.helper.Get(uri)
 	if err != nil {
 		return "", false, err
 	}
 
-	_ = resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
-	defer func() { _ = resp.Body.Close() }()
 	if err != nil {
 		return "", false, err
 	}
+	defer resp.Body.Close()
 
 	switch {
 	case strings.Contains(resp.Header.Get("Content-Type"), "json") && resp.StatusCode == 200:
@@ -334,14 +334,14 @@ func (c *OpenEVSE) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *OpenEVSE) MaxCurrent(current int64) error {
 	cur := int(current)
-	body := openevse.SetManualOverrideJSONRequestBody{
+	data := openevse.SetManualOverrideJSONRequestBody{
 		ChargeCurrent: &cur,
 	}
 
 	ctx, cancel := c.requestContextWithTimeout()
 	defer cancel()
 
-	_, err := c.api.SetManualOverrideWithResponse(ctx, body)
+	_, err := c.api.SetManualOverrideWithResponse(ctx, data)
 
 	return err
 }
