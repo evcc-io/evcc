@@ -61,7 +61,7 @@ func bind(cmd *cobra.Command, flag string) {
 func configureCommand(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringP(
 		"log", "l",
-		"error",
+		"info",
 		"Log level (fatal, error, warn, info, debug, trace)",
 	)
 	bind(cmd, "log")
@@ -118,19 +118,6 @@ func initConfig() {
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in
-	if err := viper.ReadInConfig(); err == nil {
-		// using config file
-		cfgFile = viper.ConfigFileUsed()
-	} else if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-		// parsing failed - exit
-		fmt.Println(err)
-		os.Exit(1)
-	} else {
-		// not using config file
-		cfgFile = ""
-	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -176,7 +163,7 @@ func run(cmd *cobra.Command, args []string) {
 	if cfgFile != "" {
 		err = loadConfigFile(cfgFile, &conf)
 	} else {
-		log.ERROR.Println("missing evcc config - switching into demo mode")
+		log.INFO.Println("missing config file - switching into demo mode")
 		demoConfig(&conf)
 	}
 
@@ -265,9 +252,6 @@ func run(cmd *cobra.Command, args []string) {
 		pushChan, err = configureMessengers(conf.Messaging, cache)
 	}
 
-	// TODO remove
-	//err = fmt.Errorf("foo: %w", fmt.Errorf("bar %w", errors.New("baz")))
-
 	stopC := make(chan struct{})
 	go shutdown.Run(stopC)
 
@@ -307,10 +291,12 @@ func run(cmd *cobra.Command, args []string) {
 		log.FATAL.Printf("will attempt restart in: %v", reboot)
 
 		// add anonymous config
-		if src, err := os.ReadFile(cfgFile); err != nil {
-			log.ERROR.Println("could not open config file:", err)
-		} else {
-			publish("config", redact(string(src)))
+		if cfgFile != "" {
+			if src, err := os.ReadFile(cfgFile); err != nil {
+				log.ERROR.Println("could not open config file:", err)
+			} else {
+				publish("config", redact(string(src)))
+			}
 		}
 
 		publish("fatal", unwrap(err))
