@@ -9,14 +9,6 @@ import (
 	"strings"
 )
 
-// ReadingName formats MBMD reading names
-func ReadingName(val string) string {
-	if len(val) > 0 {
-		val = strings.ToUpper(val[:1]) + val[1:]
-	}
-	return val
-}
-
 func RTUFloat64ToFloat64(b []byte) float64 {
 	bits := binary.BigEndian.Uint64(b)
 	return math.Float64frombits(bits)

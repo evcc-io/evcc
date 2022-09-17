@@ -18,7 +18,7 @@ func init() {
 
 // NewCCUFromConfig creates a Homematic charger from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		URI           string
 		Device        string
 		MeterChannel  string
@@ -26,7 +26,7 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User          string
 		Password      string
 		StandbyPower  float64
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

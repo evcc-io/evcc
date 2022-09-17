@@ -12,10 +12,10 @@ func init() {
 }
 
 func NewVehicleFromTemplateConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
+	var cc struct {
 		Template string
 		Other    map[string]interface{} `mapstructure:",remain"`
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

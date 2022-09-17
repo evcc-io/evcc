@@ -24,9 +24,9 @@ render: |
   # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}
   type: modbus
-  model: sunspec
   uri: {{ .host }}:{{ .port }}
   id: 200
+  model: sunspec
   {{- if eq .integer "true" }}
   # sunspec model 203 (int+sf) meter
   power: 203:W
@@ -49,14 +49,14 @@ render: |
     source: calc
     add:
     - source: modbus
-      model: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
+      model: sunspec
       value: 160:1:DCW # mppt 1
     - source: modbus
-      model: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
+      model: sunspec
       value: 160:2:DCW # mppt 2
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -65,20 +65,20 @@ render: |
     source: calc
     add:
     - source: modbus
-      model: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
+      model: sunspec
       value: 160:3:DCW # mppt 3 charge
       scale: -1
     - source: modbus
-      model: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
+      model: sunspec
       value: 160:4:DCW # mppt 4 discharge
   soc:
     source: modbus
-    model: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 1
+    model: sunspec
     value: ChargeState
   {{- end }}

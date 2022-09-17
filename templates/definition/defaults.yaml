@@ -302,15 +302,6 @@ presets:
       language: {{ .language }}
       {{end}}
 
-  vehiclecloud:
-    params:
-      - name: cloud
-        advanced: true
-    render: |
-      {{define "vehicle-cloud"}}
-      cloud: {{ .cloud }}
-      {{end}}
-
 modbus:
   interfaces:
     rs485: ["rs485serial", "rs485tcpip"]

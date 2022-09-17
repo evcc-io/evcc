@@ -186,6 +186,18 @@ func (v *Tesla) Position() (float64, float64, error) {
 	return 0, 0, err
 }
 
+var _ api.SocLimiter = (*Tesla)(nil)
+
+// TargetSoC implements the api.SocLimiter interface
+func (v *Tesla) TargetSoC() (float64, error) {
+	res, err := v.chargeStateG()
+	if err == nil {
+		return float64(res.ChargeLimitSoc), nil
+	}
+
+	return 0, err
+}
+
 var _ api.VehicleChargeController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface

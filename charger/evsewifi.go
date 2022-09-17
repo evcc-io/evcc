@@ -30,12 +30,12 @@ func init() {
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		URI   string
 		Meter struct {
 			Power, Energy, Currents bool
 		}
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

@@ -93,7 +93,6 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		device: device,
 	}
 
-	cc.Power = modbus.ReadingName(cc.Power)
 	if err := modbus.ParseOperation(device, cc.Power, &m.opPower); err != nil {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
@@ -101,7 +100,6 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	// decorate energy reading
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
-		cc.Energy = modbus.ReadingName(cc.Energy)
 		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
@@ -120,7 +118,6 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		for _, cc := range cc.Currents {
 			var opCurrent modbus.Operation
 
-			cc = modbus.ReadingName(cc)
 			if err := modbus.ParseOperation(device, cc, &opCurrent); err != nil {
 				return nil, fmt.Errorf("invalid measurement for current: %s", cc)
 			}
@@ -138,7 +135,6 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	// decorate soc reading
 	var soc func() (float64, error)
 	if cc.SoC != "" {
-		cc.SoC = modbus.ReadingName(cc.SoC)
 		if err := modbus.ParseOperation(device, cc.SoC, &m.opSoC); err != nil {
 			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.SoC)
 		}
@@ -162,7 +158,7 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 		if op.MBMD.IEC61850 != 0 {
 			res, err = dev.QueryOp(m.conn, op.MBMD.IEC61850)
 		} else {
-			res, err = dev.QueryPoint(
+			res.Value, err = dev.QueryPoint(
 				m.conn,
 				op.SunSpec.Model,
 				op.SunSpec.Block,

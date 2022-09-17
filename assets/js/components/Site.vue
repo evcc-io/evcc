@@ -15,8 +15,12 @@
 			<Energyflow v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
-			<Loadpoints class="mt-1 mt-sm-2 flex-grow-1" :loadpoints="loadpoints" />
-			<Vehicles v-if="$hiddenFeatures" />
+			<Loadpoints
+				class="mt-1 mt-sm-2 flex-grow-1"
+				:loadpoints="loadpoints"
+				:vehicles="vehicles"
+			/>
+			<Vehicles v-if="showParkingLot" />
 			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
@@ -64,6 +68,7 @@ export default {
 		gridCurrents: Array,
 		prioritySoC: Number,
 		siteTitle: String,
+		vehicles: Array,
 
 		auth: Object,
 
@@ -102,6 +107,10 @@ export default {
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins };
+		},
+		showParkingLot: function () {
+			// work in progess
+			return false;
 		},
 		footer: function () {
 			return {

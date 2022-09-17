@@ -41,7 +41,7 @@ func (r providerRegistry) Add(name string, factory func(map[string]interface{}) 
 func (r providerRegistry) Get(name string) (func(map[string]interface{}) (IntProvider, error), error) {
 	factory, exists := r[name]
 	if !exists {
-		return nil, fmt.Errorf("invalid plugin type: %s", name)
+		return nil, fmt.Errorf("invalid plugin source: %s", name)
 	}
 	return factory, nil
 }
@@ -67,7 +67,7 @@ func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.Source)
+		err = fmt.Errorf("invalid plugin source: %s", config.Source)
 	}
 
 	return
@@ -86,7 +86,7 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.Source)
+		err = fmt.Errorf("invalid plugin source: %s", config.Source)
 	}
 
 	return
@@ -111,7 +111,7 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 		}
 
 		if err == nil && res == nil {
-			err = fmt.Errorf("invalid plugin type: %s", config.Source)
+			err = fmt.Errorf("invalid plugin source: %s", config.Source)
 		}
 	}
 
@@ -131,7 +131,7 @@ func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.Source)
+		err = fmt.Errorf("invalid plugin source: %s", config.Source)
 	}
 
 	return
@@ -150,7 +150,7 @@ func NewIntSetterFromConfig(param string, config Config) (res func(int64) error,
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.Source)
+		err = fmt.Errorf("invalid plugin source: %s", config.Source)
 	}
 
 	return
@@ -169,7 +169,7 @@ func NewBoolSetterFromConfig(param string, config Config) (res func(bool) error,
 	}
 
 	if err == nil && res == nil {
-		err = fmt.Errorf("invalid plugin type: %s", config.Source)
+		err = fmt.Errorf("invalid plugin source: %s", config.Source)
 	}
 
 	return

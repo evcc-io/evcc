@@ -9,9 +9,7 @@ params:
   - preset: vehicleidentify
   - name: vin
     example: WAUZZZ...
-  - preset: vehiclecloud
 render: |
   type: audi
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
-  {{ include "vehicle-cloud" . }}

@@ -13,13 +13,6 @@ params:
     help:
       en: The SKI of the wallbox, can usually be found on the web interface of the wallbox
       de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
-  - name: enforcePVLimits
-    default: true
-    valuetype: bool
-    help:
-      en: Use PV charging via overload protection (just as usual wallboxes do it) with vehicles supporting ISO15519
-      de: Verwende PV Laden über eine Ladebegrenzung (wie herkömmliche Wallboxen) bei Fahrzeugen mit Unterstützung von ISO15118
 render: |
   type: eebus
   ski: {{ .ski }}
-  forcePVLimits: {{ .enforcePVLimits }}

@@ -1,6 +1,7 @@
 package id
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -17,7 +18,19 @@ type Status struct {
 		ClimatisationStatus   `json:"climatisationStatus"` // may be temporarily not available
 		*MaintenanceStatus    `json:"maintenanceStatus"`   // optional
 	}
-	Error map[string]Error
+	Error ErrorMap
+}
+
+type ErrorMap map[string]Error
+
+func (e ErrorMap) Extract(key string) error {
+	for k, v := range e {
+		if k == key {
+			return fmt.Errorf("%s: %s", v.Info, v.Message)
+		}
+	}
+
+	return nil
 }
 
 // Error is the error status

@@ -50,11 +50,11 @@ func init() {
 
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
 func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
+	var cc struct {
 		URI   string
 		Usage string
 		Cache time.Duration
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

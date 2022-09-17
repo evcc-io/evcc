@@ -48,7 +48,10 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div v-if="totalAdjusted <= 0" class="site-progress-bar bg-light border no-wrap w-100">
+			<div
+				v-if="totalAdjusted <= 0"
+				class="site-progress-bar bg-light border no-wrap w-100 text-dark"
+			>
 				<span>{{ $t("main.energyflow.noEnergy") }}</span>
 			</div>
 		</div>
@@ -217,11 +220,10 @@ export default {
 	background-color: var(--evcc-grid);
 	color: var(--bs-white);
 }
-@media (--dark-mode) {
-	.grid-import {
-		color: var(--bs-dark);
-	}
+html.dark .grid-import {
+	color: var(--bs-dark);
 }
+
 .self-consumption {
 	background-color: var(--evcc-self);
 	color: var(--bs-dark);

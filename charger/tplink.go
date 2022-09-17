@@ -22,10 +22,10 @@ func init() {
 
 // NewTPLinkFromConfig creates a TP-Link charger from generic config
 func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		URI          string
 		StandbyPower float64
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

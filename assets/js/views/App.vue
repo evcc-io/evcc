@@ -17,25 +17,56 @@ export default {
 		offline: Boolean,
 	},
 	data: () => {
-		return { reconnectTimeout: null };
+		return { reconnectTimeout: null, ws: null };
 	},
-	created: function () {
-		const urlParams = new URLSearchParams(window.location.search);
-		this.compact = urlParams.get("compact");
-		setTimeout(this.connect, 0);
+	mounted: function () {
+		this.connect();
+		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
+	},
+	unmounted: function () {
+		this.disconnect();
+		window.clearTimeout(this.reconnectTimeout);
+		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
 	},
 	methods: {
+		pageVisibilityChanged: function () {
+			if (document.hidden) {
+				window.clearTimeout(this.reconnectTimeout);
+				this.disconnect();
+			} else {
+				this.connect();
+			}
+		},
 		reconnect: function () {
 			window.clearTimeout(this.reconnectTimeout);
-			this.reconnectTimeout = window.setTimeout(this.connect, 1000);
+			this.reconnectTimeout = window.setTimeout(() => {
+				this.disconnect();
+				this.connect();
+			}, 2500);
+		},
+		disconnect: function () {
+			console.log("websocket disconnecting");
+			if (this.ws) {
+				this.ws.onerror = null;
+				this.ws.onopen = null;
+				this.ws.onclose = null;
+				this.ws.onmessage = null;
+				this.ws.close();
+				this.ws = null;
+			}
 		},
 		connect: function () {
-			console.log("connecting websocket");
+			console.log("websocket connect");
 			const supportsWebSockets = "WebSocket" in window;
 			if (!supportsWebSockets) {
 				window.app.error({
 					message: "Web sockets not supported. Please upgrade your browser.",
 				});
+				return;
+			}
+
+			if (this.ws) {
+				console.log("websocket already connected");
 				return;
 			}
 
@@ -49,21 +80,21 @@ export default {
 				loc.pathname +
 				"ws";
 
-			const ws = new WebSocket(uri);
-			ws.onerror = () => {
+			this.ws = new WebSocket(uri);
+			this.ws.onerror = () => {
 				console.error({ message: "Websocket error. Trying to reconnect." });
-				ws.close();
+				this.ws.close();
 			};
-			ws.onopen = () => {
+			this.ws.onopen = () => {
 				console.log("websocket connected");
 				window.app.setOnline();
 			};
-			ws.onclose = () => {
+			this.ws.onclose = () => {
 				console.log("websocket disconnected");
 				window.app.setOffline();
 				this.reconnect();
 			};
-			ws.onmessage = (evt) => {
+			this.ws.onmessage = (evt) => {
 				try {
 					var msg = JSON.parse(evt.data);
 					store.update(msg);

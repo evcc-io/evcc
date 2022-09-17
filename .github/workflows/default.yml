@@ -8,40 +8,18 @@ on:
   workflow_call:
 
 jobs:
-  build:
-    name: Build
+  clean:
+    name: Clean
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
         with:
           go-version: ^1.18
+          cache: true
         id: go
-
-      - name: Set up Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: "16"
-
-      - name: Cache Go modules
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/go/pkg
-            ~/.cache/go-build
-          key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.go-version }}-go-
-
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: gofmt
-        run: |
-          gofmt -w -l $(find . -name '*.go')
 
       - name: Install tools
         run: make install
@@ -50,44 +28,82 @@ jobs:
         run: make assets
 
       - name: Porcelain
-        run: |
-          go mod tidy
-          test -z "$(git status --porcelain)" || (git status; git diff; false)
+        run: make porcelain
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ^1.18
+          cache: true
+        id: go
 
       - name: Build
         run: make build
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ^1.18
+          cache: true
+        id: go
+
+      - name: Test
+        run: make test
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ^1.18
+          cache: true
+        id: go
 
       - name: Lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          skip-pkg-cache: true
-          skip-build-cache: true
-
-      - name: Test
-        run: make test
 
   build-ui:
-    name: Build UI
+    name: UI
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up Node
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
         with:
           node-version: "16"
 
-      - name: Cache NPM modules
-        uses: actions/cache@v2
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+      - name: Get NPM cache dir
+        id: npm-cache-dir
+        run: |
+          echo "::set-output name=dir::$(npm config get cache)"
 
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Cache NPM modules
+        uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install tools
         run: make install-ui

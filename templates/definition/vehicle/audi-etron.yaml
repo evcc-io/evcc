@@ -8,9 +8,7 @@ params:
   - preset: vehicleidentify
   - name: vin
     example: WAUZZZ...
-  - preset: vehiclecloud
 render: |
   type: etron
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
-  {{ include "vehicle-cloud" . }}

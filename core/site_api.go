@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 )
 
@@ -68,4 +69,11 @@ func (site *Site) SetResidualPower(power float64) error {
 	site.publish("residualPower", site.ResidualPower)
 
 	return nil
+}
+
+// GetVehicles is the list of vehicles
+func (site *Site) GetVehicles() []api.Vehicle {
+	site.Lock()
+	defer site.Unlock()
+	return site.coordinator.GetVehicles()
 }

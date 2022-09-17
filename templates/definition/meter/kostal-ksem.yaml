@@ -11,5 +11,11 @@ params:
     id: 71
 render: |
   type: modbus
-  model: sunspec
   {{- include "modbus" . }}
+  model: sunspec
+  power: Power
+  energy: Import
+  currents:
+  - CurrentL1
+  - CurrentL2
+  - CurrentL3

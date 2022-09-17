@@ -21,9 +21,6 @@ const (
 	KeyMeterValueSampleInterval = "MeterValueSampleInterval"
 )
 
-// TODO: Maybe move this to the config?
-const ValuePreferedMeterValuesSampleData = "Current.Import.L1,Current.Import.L2,Current.Import.L3,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature"
-
 type SmartchargingChargeProfileKey string
 
 // Smart Charging Profile Key
@@ -55,21 +52,76 @@ type CP struct {
 	log *util.Logger
 	id  string
 
-	updated     time.Time
-	initialized *sync.Cond
-	boot        *core.BootNotificationRequest
-	status      *core.StatusNotificationRequest
+	bootC, statusC chan struct{}
+	updated        time.Time
+	status         *core.StatusNotificationRequest
 
-	meterSupported      bool
-	meterUpdated        time.Time
-	measureDoneCh       chan struct{}
-	measurements        map[string]types.SampledValue
-	meterTrickerRunning bool
+	timeout      time.Duration
+	meterUpdated time.Time
+	measurements map[string]types.SampledValue
 
 	supportedNumberOfConnectors int
 	smartChargingCapabilities   smartChargingProfile
 
-	currentTransaction Transaction
+	txnCount int // change initial value to the last known global transaction. Needs persistence
+	txnId    int
+}
+
+func (cp *CP) ID() string {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	return cp.id
+}
+
+func (cp *CP) RegisterID(id string) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	if cp.id != "" {
+		panic("ocpp: cannot re-register id")
+	}
+
+	cp.id = id
+}
+
+func (cp *CP) Initialized(timeout time.Duration) bool {
+	cp.log.DEBUG.Printf("waiting for chargepoint status: %v", timeout)
+
+	// trigger status
+	time.AfterFunc(5*time.Second, func() {
+		select {
+		case <-cp.statusC:
+			return
+		default:
+			Instance().TriggerMessageRequest(cp.ID(), core.StatusNotificationFeatureName)
+		}
+	})
+
+	// wait for status
+	select {
+	case <-cp.statusC:
+		cp.update()
+		return true
+	case <-time.After(timeout):
+		return false
+	}
+}
+
+func (cp *CP) WatchDog(timeout time.Duration) {
+	cp.timeout = timeout
+
+	go func() {
+		for ; true; <-time.NewTicker(timeout).C {
+			cp.mu.Lock()
+			update := cp.txnId != 0 && time.Since(cp.meterUpdated) > timeout
+			cp.mu.Unlock()
+
+			if update {
+				Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
+			}
+		}
+	}()
 }
 
 func (cp *CP) DetectCapabilities(opts []core.ConfigurationKey) error {
@@ -78,21 +130,14 @@ func (cp *CP) DetectCapabilities(opts []core.ConfigurationKey) error {
 		options[opt.Key] = opt
 	}
 
-	{
-		supported, err := parseIntOption("NumberOfConnectors", options)
-		if err != nil {
-			return err
-		}
-
-		cp.supportedNumberOfConnectors = supported
-	}
-
-	smartChargingCapabilities, err := detectSmartChargingCapabilities(options)
-	if err != nil {
+	var err error
+	if cp.supportedNumberOfConnectors, err = parseIntOption("NumberOfConnectors", options); err != nil {
 		return err
 	}
 
-	cp.smartChargingCapabilities = smartChargingCapabilities
+	if cp.smartChargingCapabilities, err = detectSmartChargingCapabilities(options); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -143,8 +188,8 @@ func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (
 
 	{ // optional
 		var supported bool
-		opt, found := options[string(KeyConnectorSwitch3to1PhaseSupported)]
-		if found {
+
+		if opt, ok := options[string(KeyConnectorSwitch3to1PhaseSupported)]; ok {
 			var err error
 			supported, err = strconv.ParseBool(*opt.Value)
 			if err != nil {
@@ -174,21 +219,10 @@ func parseIntOption(key SmartchargingChargeProfileKey, options map[string]core.C
 
 // Boot waits for the CP to register itself
 func (cp *CP) Boot() error {
-	bootC := make(chan struct{})
-	go func() {
-		cp.mu.Lock()
-		defer cp.mu.Unlock()
-
-		for cp.boot == nil || cp.status == nil {
-			cp.initialized.Wait()
-		}
-
-		close(bootC)
-	}()
+	cp.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
 
 	select {
-	case <-bootC:
-		cp.update()
+	case <-cp.bootC:
 		return nil
 	case <-time.After(timeout):
 		return api.ErrTimeout
@@ -199,8 +233,7 @@ func (cp *CP) Boot() error {
 func (cp *CP) TransactionID() int {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
-
-	return cp.currentTransaction.ID
+	return cp.txnId
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {
@@ -209,15 +242,12 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	cp.log.TRACE.Printf("last status update from CP: %s", cp.updated.Format(time.RFC3339))
-	cp.log.TRACE.Printf("current transaction ID: %d", cp.currentTransaction.ID)
-
 	if time.Since(cp.updated) > timeout {
 		return res, api.ErrTimeout
 	}
 
 	if cp.status.ErrorCode != core.NoError {
-		cp.log.DEBUG.Printf("chargepoint error: %s: %s", cp.status.ErrorCode, cp.status.Info)
+		return res, fmt.Errorf("%s: %s", cp.status.ErrorCode, cp.status.Info)
 	}
 
 	switch cp.status.Status {
@@ -242,9 +272,15 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	return res, nil
 }
 
+var _ api.Meter = (*CP)(nil)
+
 func (cp *CP) CurrentPower() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
+
+	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+		return 0, api.ErrNotAvailable
+	}
 
 	if power, ok := cp.measurements[string(types.MeasurandPowerActiveImport)]; ok {
 		return strconv.ParseFloat(power.Value, 64)
@@ -253,40 +289,37 @@ func (cp *CP) CurrentPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-// func (cp *CP) TotalEnergy() (float64, error) {
-// 	cp.mu.Lock()
-// 	defer cp.mu.Unlock()
+var _ api.MeterEnergy = (*CP)(nil)
 
-// 	// if energy, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
-// 	// 	v, err := strconv.ParseInt(energy.Value, 10, 64)
-// 	// 	if err != nil {
-// 	// 		return 0, err
-// 	// 	}
-
-// 	return float64(cp.currentTransaction.Charged) / 1000, nil
-
-// 	// loaded := float64(int(v)-cp.currentTransaction.MeterValueStart) / 1000
-
-// 	// return loaded, nil
-// 	// }
-
-// 	// return 0, nil
-// }
-
-func (cp *CP) ChargedEnergy() (float64, error) {
+func (cp *CP) TotalEnergy() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	return float64(cp.currentTransaction.Charged) / 1000, nil
+	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+		return 0, api.ErrNotAvailable
+	}
+
+	if power, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+		f, err := strconv.ParseFloat(power.Value, 64)
+		return f / 1e3, err
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 func getKeyCurrentPhase(phase int) string {
 	return string(types.MeasurandCurrentImport) + "@L" + strconv.Itoa(phase)
 }
 
+var _ api.MeterCurrent = (*CP)(nil)
+
 func (cp *CP) Currents() (float64, float64, float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
+
+	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
 
 	currents := make([]float64, 0, 3)
 

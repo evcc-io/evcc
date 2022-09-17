@@ -1,4 +1,4 @@
-package core
+package coordinator
 
 import (
 	"testing"
@@ -38,18 +38,22 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	log := util.NewLogger("foo")
 	vehicles := []api.Vehicle{v1, v2}
 
-	lp := &LoadPoint{}
-	c := &vehicleCoordinator{make(map[api.Vehicle]loadpoint.API)}
+	v1.MockVehicle.EXPECT().Title().Return("v1").AnyTimes()
+	v2.MockVehicle.EXPECT().Title().Return("v2").AnyTimes()
+	v1.MockVehicle.EXPECT().Identifiers().Return(nil).AnyTimes()
+	v2.MockVehicle.EXPECT().Identifiers().Return([]string{"it's me"}).AnyTimes()
+
+	var lp loadpoint.API
+	c := New(log, vehicles)
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
 		v1.MockChargeState.EXPECT().Status().Return(tc.v1, nil)
 		v2.MockChargeState.EXPECT().Status().Return(tc.v2, nil)
-		v1.MockVehicle.EXPECT().Title().Return("v1").AnyTimes()
-		v2.MockVehicle.EXPECT().Title().Return("v2").AnyTimes()
 
-		res := c.identifyVehicleByStatus(log, lp, vehicles)
+		available := c.availableDetectibleVehicles(lp, true) // include id-able vehicles
+		res := c.identifyVehicleByStatus(available)
 		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}

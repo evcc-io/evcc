@@ -228,9 +228,9 @@ func (wb *Alfen) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
-var _ api.ChargePhases = (*Alfen)(nil)
+var _ api.PhaseSwitcher = (*Alfen)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Alfen) Phases1p3p(phases int) error {
 	_, err := c.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
 	return err

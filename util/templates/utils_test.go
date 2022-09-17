@@ -27,3 +27,11 @@ func TestYamlDecode(t *testing.T) {
 		})
 	}
 }
+
+func TestYamlDecodeLeadingZero(t *testing.T) {
+	exp := "'0815'"
+
+	if res := yamlQuote("0815"); res != exp {
+		t.Fatalf("expected %s, got %s", exp, res)
+	}
+}

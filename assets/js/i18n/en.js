@@ -5,6 +5,11 @@ export default {
     github: "GitHub",
     login: "Vehicle Logins",
     about: "About evcc",
+    theme: {
+      auto: "Design: System",
+      light: "Design: Light",
+      dark: "Design: Dark",
+    },
   },
   footer: {
     version: {
@@ -53,7 +58,7 @@ export default {
   },
   main: {
     energyflow: {
-      noEnergy: "No Energyflow",
+      noEnergy: "No meter data",
       homePower: "Consumption",
       pvProduction: "Production",
       loadpoints: "Loadpoint | Loadpoint | {count} Loadpoints",
@@ -79,6 +84,33 @@ export default {
       duration: "Duration",
       remaining: "Remaining",
     },
+    loadpointSettings: {
+      title: 'Settings "{0}"',
+      vehicle: "Vehicle",
+      currents: "Charging",
+      minSoC: {
+        label: "Minimal SoC",
+        description:
+          'Range for emergencies. Vehicle gets "fast" charged to {0}% in PV mode. Then continues with PV surplus only.',
+      },
+      phasesConfigured: {
+        label: "Phases",
+        phases_0: "automatic switching",
+        phases_1: "1 phase",
+        phases_1_hint: "({min} to {max})",
+        phases_3: "3 phases",
+        phases_3_hint: "({min} to {max})",
+      },
+      maxCurrent: {
+        label: "Max. Current",
+      },
+      minCurrent: {
+        label: "Min. Current",
+      },
+      default: "default",
+      disclaimerHint: "Note:",
+      disclaimerText: "Changes are not persistent yet. They will be reset after server restart.",
+    },
     vehicles: "Parking",
     vehicle: {
       fallbackName: "Vehicle",
@@ -87,16 +119,19 @@ export default {
       none: "No vehicle",
       unknown: "Guest vehicle",
       changeVehicle: "Change Vehicle",
+      detectionActive: "Detecting vehicle ...",
     },
     vehicleSoC: {
       disconnected: "disconnected",
       charging: "charging",
       ready: "ready",
       connected: "connected",
+      vehicleTarget: "Vehicle limit: {soc}%",
     },
     vehicleStatus: {
       minCharge: "minimum charging to {soc}%.",
       waitForVehicle: "Ready. Waiting for vehicle.",
+      vehicleTargetReached: "Vehicle limit {soc}% reached.",
       charging: "Charging.",
       targetChargePlanned: "Target charge planned. Starting {time}.",
       targetChargeWaitForVehicle: "Target charge ready. Wait for vehicle.",

@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOCPP(base *OCPP, meter func() (float64, error), meterCurrent func() (float64, float64, float64, error), chargeRater func() (float64, error)) api.Charger {
+func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case chargeRater == nil && meter == nil && meterCurrent == nil:
+	case meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return base
 
-	case chargeRater == nil && meter != nil && meterCurrent == nil:
+	case meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
 			*OCPP
 			api.Meter
@@ -22,7 +22,33 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterCurrent func()
 			},
 		}
 
-	case chargeRater == nil && meter == nil && meterCurrent != nil:
+	case meter == nil && meterCurrent == nil && meterEnergy != nil:
+		return &struct {
+			*OCPP
+			api.MeterEnergy
+		}{
+			OCPP: base,
+			MeterEnergy: &decorateOCPPMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case meter != nil && meterCurrent == nil && meterEnergy != nil:
+		return &struct {
+			*OCPP
+			api.Meter
+			api.MeterEnergy
+		}{
+			OCPP: base,
+			Meter: &decorateOCPPMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateOCPPMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			*OCPP
 			api.MeterCurrent
@@ -33,7 +59,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterCurrent func()
 			},
 		}
 
-	case chargeRater == nil && meter != nil && meterCurrent != nil:
+	case meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			*OCPP
 			api.Meter
@@ -48,76 +74,42 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterCurrent func()
 			},
 		}
 
-	case chargeRater != nil && meter == nil && meterCurrent == nil:
+	case meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			*OCPP
-			api.ChargeRater
-		}{
-			OCPP: base,
-			ChargeRater: &decorateOCPPChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-		}
-
-	case chargeRater != nil && meter != nil && meterCurrent == nil:
-		return &struct {
-			*OCPP
-			api.ChargeRater
-			api.Meter
-		}{
-			OCPP: base,
-			ChargeRater: &decorateOCPPChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateOCPPMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case chargeRater != nil && meter == nil && meterCurrent != nil:
-		return &struct {
-			*OCPP
-			api.ChargeRater
 			api.MeterCurrent
+			api.MeterEnergy
 		}{
 			OCPP: base,
-			ChargeRater: &decorateOCPPChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
 			MeterCurrent: &decorateOCPPMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
+			MeterEnergy: &decorateOCPPMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
 		}
 
-	case chargeRater != nil && meter != nil && meterCurrent != nil:
+	case meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			*OCPP
-			api.ChargeRater
 			api.Meter
 			api.MeterCurrent
+			api.MeterEnergy
 		}{
 			OCPP: base,
-			ChargeRater: &decorateOCPPChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
 			Meter: &decorateOCPPMeterImpl{
 				meter: meter,
 			},
 			MeterCurrent: &decorateOCPPMeterCurrentImpl{
 				meterCurrent: meterCurrent,
+			},
+			MeterEnergy: &decorateOCPPMeterEnergyImpl{
+				meterEnergy: meterEnergy,
 			},
 		}
 	}
 
 	return nil
-}
-
-type decorateOCPPChargeRaterImpl struct {
-	chargeRater func() (float64, error)
-}
-
-func (impl *decorateOCPPChargeRaterImpl) ChargedEnergy() (float64, error) {
-	return impl.chargeRater()
 }
 
 type decorateOCPPMeterImpl struct {
@@ -134,4 +126,12 @@ type decorateOCPPMeterCurrentImpl struct {
 
 func (impl *decorateOCPPMeterCurrentImpl) Currents() (float64, float64, float64, error) {
 	return impl.meterCurrent()
+}
+
+type decorateOCPPMeterEnergyImpl struct {
+	meterEnergy func() (float64, error)
+}
+
+func (impl *decorateOCPPMeterEnergyImpl) TotalEnergy() (float64, error) {
+	return impl.meterEnergy()
 }

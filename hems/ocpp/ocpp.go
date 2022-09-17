@@ -28,10 +28,10 @@ const retryTimeout = 5 * time.Second
 
 // New generates OCPP chargepoint client
 func New(conf map[string]interface{}, site site.API) (*OCPP, error) {
-	cc := struct {
+	var cc struct {
 		URI       string
 		StationID string
-	}{}
+	}
 
 	if err := util.DecodeOther(conf, &cc); err != nil {
 		return nil, err

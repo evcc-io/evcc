@@ -19,6 +19,7 @@ func init() {
 // OpenWB configures generic charger and charge meter for an openWB loadpoint
 type OpenWB struct {
 	current int64
+	enabled bool
 	// enabledG      func() (int64, error)
 	statusG       func() (string, error)
 	currentS      func(int64) error
@@ -29,7 +30,7 @@ type OpenWB struct {
 	authS         func(string) error
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b *OpenWB -r api.Charger -t "api.ChargePhases,Phases1p3p,func(int) (error)" -t "api.Battery,SoC,func() (float64, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b *OpenWB -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -172,12 +173,17 @@ func (m *OpenWB) Enable(enable bool) error {
 		current = m.current
 	}
 
-	return m.currentS(current)
+	err := m.currentS(current)
+	if err == nil {
+		m.enabled = enable
+	}
+
+	return err
 }
 
 func (m *OpenWB) Enabled() (bool, error) {
 	// current, err := m.enabledG()
-	return m.current > 0, nil
+	return m.enabled, nil
 }
 
 func (m *OpenWB) Status() (api.ChargeStatus, error) {
