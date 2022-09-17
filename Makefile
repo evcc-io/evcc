@@ -81,7 +81,7 @@ release:
 
 docker:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker build --tag $(DOCKER_IMAGE):testing .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing .
 
 publish-testing:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
