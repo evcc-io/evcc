@@ -195,7 +195,7 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 		}
 	}
 
-	return false, fmt.Errorf("unknown EVSE state: %s", *overrideResp.JSON200.State)
+	return false, fmt.Errorf("unknown EVSE state")
 }
 
 // Enable implements the api.Charger interface
