@@ -28,8 +28,14 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Set up Docker Buildx
+      - name: Setup Buildx
         uses: docker/setup-buildx-action@v2
+
+      - name: Meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: andig/evcc
 
       - name: Publish
         uses: docker/build-push-action@v3
@@ -37,13 +43,11 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
-          build-args: |
-            RELEASE=1
-          tags: |
-            andig/evcc:latest
+          build-args: RELEASE=1
+          tags: ${{ steps.meta.outputs.tags }}
 
   apt:
-    name: Publish Github & APT release
+    name: Github & APT
     needs:
       - call-build-workflow
     runs-on: ubuntu-latest
@@ -92,29 +96,28 @@ jobs:
         run: make apt-release
 
   hassio:
-    name: Create Hassio Addon Release
+    name: Hassio Addon
     needs:
       - docker
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          repository: evcc-io/hassio-addon
+          token: ${{ secrets.GH_TOKEN }}
+          path: ./hassio
 
       - name: Update version
-        # uses: pocket-apps/action-update-version@v1
-        # with:
-        #   files: "packaging/hassio/config.json"
-        #   version-regexp: '\d+.\d+.\d+'
-        #   branch-name: master
-        #   author-name: evcc-io
         run: |
-          sed -i -e s#0.0.0#$(echo ${{ env.GITHUB_REF }} | sed -e s#refs/tags/##)# packaging/hassio/config.json
+          sed -i -e s#\"version.*#\"version\":\ \"$(echo ${{ github.ref }} | sed -e s#refs/tags/##)\",# ./hassio/evcc/config.json
 
-      - name: Copy config to hassio-addon
-        uses: andstor/copycat-action@v3
-        with:
-          personal_token: ${{ secrets.GH_TOKEN }}
-          src_path: packaging/hassio/config.json
-          dst_path: /evcc/config.json
-          dst_owner: evcc-io
-          dst_repo_name: hassio-addon
+      - name: Push
+        run: |
+          cd ./hassio
+          git add .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -am "Mirror evcc release"
+          git push

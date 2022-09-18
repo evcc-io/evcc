@@ -17,6 +17,6 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Automatic Rebase
-        uses: cirrus-actions/rebase@1.5
+        uses: cirrus-actions/rebase@1.7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

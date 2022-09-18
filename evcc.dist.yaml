@@ -64,7 +64,7 @@ vehicles:
     vin: WREN...
     onIdentify: # set defaults when vehicle is identified
       mode: pv # enable PV-charging when vehicle is identified
-      minSoC: 20 # charge to at least 20% independent of charge mode
+      minSoC: 20 # immediately charge to 0% regardless of mode unless "off" (disabled)
       targetSoC: 90 # limit charge to 90%
 
 # site describes the EVU connection, PV and home battery
@@ -98,8 +98,6 @@ loadpoints:
         mode: charging
         # poll interval defines how often the vehicle API may be polled if NOT charging
         interval: 60m
-      min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
-      target: 100 # always charge to 100%
       estimate: true # set false to disable interpolating between api updates (not recommended)
     phases: 3 # electrical connection (normal charger: default 3 for 3 phase, 1p3p charger: 0 for "auto" or 1/3 for fixed phases)
     enable: # pv mode enable behavior
