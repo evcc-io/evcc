@@ -24,20 +24,24 @@ func Create(token string) error {
 	return nil
 }
 
-func ChargeProgress(log *util.Logger, power, gridEnergy, greenEnergy float64) {
+func ChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
+	log.DEBUG.Printf("community: Δ%.0f/%.0fkWh @ %.0fW", deltaGreen, deltaCharged, power)
+
 	if !enabled {
 		return
 	}
 
 	data := struct {
-		Power, GridEnergy, GreenEnergy float64
+		ChargePower  float64 `json:"chargePower"`
+		ChargeEnergy float64 `json:"chargeEnergy"`
+		GreenEnergy  float64 `json:"greenEnergy"`
 	}{
-		Power:       power,
-		GridEnergy:  gridEnergy,
-		GreenEnergy: greenEnergy,
+		ChargePower:  power,
+		ChargeEnergy: deltaCharged,
+		GreenEnergy:  deltaGreen,
 	}
 
-	uri := fmt.Sprintf("%s/%s/%s", api, "charged", sponsor.Token)
+	uri := fmt.Sprintf("%s/charged/%s", api, sponsor.Token)
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data))
 
 	var res struct {
