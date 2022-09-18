@@ -3,7 +3,7 @@ covers: ["sungrow"]
 products:
   - brand: Sungrow
     description:
-      generic: Hybrid Inverter
+      generic: SH Series Hybrid Inverter
 guidedsetup:
   enable: true
 requirements:
@@ -15,6 +15,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    baudrate: 9600
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -26,6 +27,14 @@ render: |
       address: 13009 # Export power
       decode: int32s
     scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13036 # Total Import Energy
+      type: input
+      decode: uint32s
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -35,6 +44,14 @@ render: |
       address: 5016 # Total DC power
       type: input
       decode: uint32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13002 # Total PV Generation
+      type: input
+      decode: uint32s
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -63,6 +80,14 @@ render: |
           address: 13000 # Battery running state
           decode: bool16
           bitmask: 4 # Discharging
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13026 # Total battery discharge energy
+      type: input
+      decode: uint32s
+    scale: 0.1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}

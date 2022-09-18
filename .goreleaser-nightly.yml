@@ -19,6 +19,11 @@ builds:
       - arm64
     goarm:
       - "6"
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
 
 archives:
   - builds:
@@ -40,7 +45,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: "{{ .Version }}.{{ .Timestamp }}"
+  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}-{{ .Timestamp }}'
 
 changelog:
   sort: asc

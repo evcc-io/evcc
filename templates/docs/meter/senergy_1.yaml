@@ -1,11 +1,11 @@
 product:
-  brand: Solarmax
-  description: Inverter
+  brand: SolarMax
+  description: SP Series Inverter
 render:
   - usage: pv
     default: |
       type: template
-      template: solarmax
+      template: senergy
       usage: pv      
 
       # Modbus TCP

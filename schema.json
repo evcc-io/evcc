@@ -126,12 +126,6 @@
             }
           }
         },
-        "vehicles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "prioritySoC": {},
         "bufferSoC": {}
       }
@@ -160,6 +154,9 @@
           "meter": {
             "type": "string"
           },
+          "vehicle": {
+            "type": "string"
+          },
           "soc": {
             "type": "object",
             "properties": {
@@ -173,12 +170,6 @@
                     "$ref": "#/definitions/duration"
                   }
                 }
-              },
-              "min": {
-                "type": "integer"
-              },
-              "target": {
-                "type": "integer"
               },
               "estimate": {
                 "type": "boolean"

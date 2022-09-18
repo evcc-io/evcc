@@ -9,3 +9,10 @@ render:
       usage: grid
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
+  - usage: pv
+    default: |
+      type: template
+      template: powerfox-poweropti
+      usage: pv
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)

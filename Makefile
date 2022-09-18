@@ -64,6 +64,11 @@ test:
 	@echo "Running testsuite"
 	go test $(BUILD_TAGS) ./...
 
+porcelain:
+	gofmt -w -l $$(find . -name '*.go')
+	go mod tidy
+	test -z "$$(git status --porcelain)" || (git status; git diff; false)
+
 build:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
@@ -76,7 +81,7 @@ release:
 
 docker:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker build --tag $(DOCKER_IMAGE):testing .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing .
 
 publish-testing:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
@@ -84,11 +89,11 @@ publish-testing:
 
 publish-nightly:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly --push .
 
 publish-release:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --build-arg RELEASE=1 --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest .
+	docker buildx build --build-arg RELEASE=1 --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --push .
 
 apt-nightly:
 	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
