@@ -53,7 +53,6 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	static := router.PathPrefix("/").Subrouter()
 	static.Use(handlers.CompressHandler)
 
-	// static.HandleFunc("/", indexHandler(site))
 	static.HandleFunc("/", indexHandler())
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(Assets)))
