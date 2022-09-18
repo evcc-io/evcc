@@ -155,7 +155,7 @@ func redact(src string) string {
 		"url", "host", "broker", // infrastructure
 		"user", "password", // users
 		"token", "accesstoken", "refreshtoken", "sponsortoken", // tokens
-		"id", "secret", "serial", "deviceid", "machineid", // devices
+		"ain", "id", "secret", "serial", "deviceid", "machineid", // devices
 		"vin"} // vehicles
 	return regexp.
 		MustCompile(fmt.Sprintf(`\b(%s)\b.*`, strings.Join(secrets, "|"))).
