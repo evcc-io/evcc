@@ -186,18 +186,16 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 		return false, err
 	}
 
-	if overrideResp.JSON200 == nil || overrideResp.JSON200.State == nil {
-		return false, errors.New("charger not in manual override mode")
+	if overrideResp.JSON200 != nil && overrideResp.JSON200.State != nil {
+		switch *overrideResp.JSON200.State {
+		case "disabled":
+			return false, nil
+		case "enabled", "active":
+			return true, nil
+		}
 	}
 
-	switch *overrideResp.JSON200.State {
-	case "disabled":
-		return false, nil
-	case "enabled", "active":
-		return true, nil
-	default:
-		return false, fmt.Errorf("unknown EVSE state: %s", *overrideResp.JSON200.State)
-	}
+	return false, fmt.Errorf("unknown EVSE state: %s", *overrideResp.JSON200.State)
 }
 
 // Enable implements the api.Charger interface
