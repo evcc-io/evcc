@@ -37,7 +37,6 @@ func indexHandler() http.HandlerFunc {
 		if err := t.Execute(w, map[string]interface{}{
 			"Version": Version,
 			"Commit":  Commit,
-			// "Configured": len(site.LoadPoints()),
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
