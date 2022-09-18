@@ -187,7 +187,7 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 	}
 
 	if overrideResp.JSON200 == nil || overrideResp.JSON200.State == nil {
-		return false, fmt.Errorf("charger not in manual override mode")
+		return false, errors.New("charger not in manual override mode")
 	}
 
 	switch *overrideResp.JSON200.State {
