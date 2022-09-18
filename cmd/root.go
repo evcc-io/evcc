@@ -7,6 +7,7 @@ import (
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -292,10 +293,21 @@ func run(cmd *cobra.Command, args []string) {
 
 		// add anonymous config
 		if cfgFile != "" {
-			if src, err := os.ReadFile(cfgFile); err != nil {
-				log.ERROR.Println("could not open config file:", err)
+			file, pathErr := filepath.Abs(cfgFile)
+			if pathErr != nil {
+				file = cfgFile
+			}
+			publish("file", file)
+
+			if src, fileErr := os.ReadFile(cfgFile); fileErr != nil {
+				log.ERROR.Println("could not open config file:", fileErr)
 			} else {
 				publish("config", redact(string(src)))
+
+				// find line number
+				if match := regexp.MustCompile(`yaml: line (\d+):`).FindStringSubmatch(err.Error()); len(match) == 2 {
+					publish("line", match[1])
+				}
 			}
 		}
 

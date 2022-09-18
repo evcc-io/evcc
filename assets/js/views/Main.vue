@@ -15,6 +15,10 @@
 				</div>
 			</div>
 			<div class="row py-5">
+				<div class="col12">File:{{ file }}</div>
+				<div class="col12">Line:{{ line }}</div>
+			</div>
+			<div class="row py-5">
 				<div class="col12">Config:</div>
 				<div class="col12">
 					<code v-if="config">
@@ -49,6 +53,12 @@ export default {
 		},
 		config: function () {
 			return this.state.config;
+		},
+		file: function () {
+			return this.state.file;
+		},
+		line: function () {
+			return this.state.line;
 		},
 	},
 };
