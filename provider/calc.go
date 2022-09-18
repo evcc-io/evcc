@@ -30,12 +30,8 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 	o := &calcProvider{}
 
-	if len(cc.Add) > 0 && len(cc.Mul) > 0 {
-		return nil, errors.New("can only have either add or mul")
-	}
-
-	if len(cc.Add) > 0 || len(cc.Mul) > 0 && cc.Sign != nil {
-		return nil, errors.New("can only have either add/mul or sign")
+	if len(cc.Add) > 0 && len(cc.Mul) > 0 || len(cc.Add) > 0 && cc.Sign != nil || len(cc.Mul) > 0 && cc.Sign != nil {
+		return nil, errors.New("can only have either add, mul or sign")
 	}
 
 	for idx, cc := range cc.Add {
