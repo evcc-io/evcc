@@ -152,7 +152,7 @@ func unwrap(err error) (res []string) {
 
 func redact(src string) string {
 	secrets := []string{
-		"url", "host", "broker", // infrastructure
+		"url", "uri", "host", "broker", // infrastructure
 		"user", "password", // users
 		"token", "accesstoken", "refreshtoken", "sponsortoken", // tokens
 		"ain", "id", "secret", "serial", "deviceid", "machineid", // devices
