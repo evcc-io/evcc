@@ -78,14 +78,11 @@ func NewOpenEVSE(uri, user, password string, timeout time.Duration) (api.Charger
 	}
 
 	var phases1p3p func(int) error
-
-	ok, err := c.hasPhaseSwitchCapabilities()
-	if ok {
+	if err := c.hasPhaseSwitchCapabilities(); err == nil {
 		phases1p3p = c.phases1p3p
 
 		// disable EVSE's own 1/3-phase auto-switching
-		_, err := c.PerformRAPICommand(c.uri, "$S8 0")
-		if err != nil {
+		if err := c.rapiCommand("$S8 0"); err != nil {
 			return c, err
 		}
 	}
@@ -98,27 +95,23 @@ func (c *OpenEVSE) requestContextWithTimeout() (context.Context, context.CancelF
 	return ctx, cancel
 }
 
-func (c *OpenEVSE) hasPhaseSwitchCapabilities() (threePhaseCapabilities bool, err error) {
-	_, err = c.PerformRAPICommand(c.uri, "$G7")
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
+func (c *OpenEVSE) hasPhaseSwitchCapabilities() error {
+	return c.rapiCommand("$G7")
 }
 
-func (c *OpenEVSE) PerformRAPICommand(uri, command string) (success bool, err error) {
-	var uriBuilder strings.Builder
-	uriBuilder.WriteString(uri)
-	uriBuilder.WriteString("/r?json=1&rapi=")
-	uriBuilder.WriteString(url.QueryEscape(command))
-
-	var resp struct {
+func (c *OpenEVSE) rapiCommand(command string) error {
+	var res struct {
 		Cmd, Ret string
 	}
 
-	err = c.helper.GetJSON(uriBuilder.String(), &resp)
-	return strings.HasPrefix(resp.Ret, "$OK"), err
+	uri := fmt.Sprintf("%s/r?json=1&rapi=%s", c.uri, url.QueryEscape(command))
+
+	err := c.helper.GetJSON(uri, &res)
+	if err == nil && !strings.HasPrefix(res.Ret, "$OK") {
+		err = fmt.Errorf("rapi command failed: %s", res.Ret)
+	}
+
+	return err
 }
 
 func (c *OpenEVSE) SetManualOverride(enable bool) error {
@@ -141,7 +134,8 @@ func (c *OpenEVSE) SetManualOverride(enable bool) error {
 func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 	ctx, cancel := c.requestContextWithTimeout()
 	defer cancel()
-	resp, err := c.api.GetStatusWithResponse(ctx)
+
+	res, err := c.api.GetStatusWithResponse(ctx)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -163,18 +157,14 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 		255: "disabled"
 	*/
 
-	state := *resp.JSON200.State
-	vehicleConnected := *resp.JSON200.Vehicle != 0
-
-	switch state {
+	switch state := *res.JSON200.State; state {
 	case 1:
 		return api.StatusA, nil
 	case 2, 254, 255:
-		if vehicleConnected {
+		if connected := *res.JSON200.Vehicle != 0; connected {
 			return api.StatusB, nil
-		} else {
-			return api.StatusA, nil
 		}
+		return api.StatusA, nil
 	case 3:
 		return api.StatusC, nil
 	case 4:
@@ -267,14 +257,5 @@ func (c *OpenEVSE) phases1p3p(phases int) error {
 		set3p = 1
 	}
 
-	ok, err := c.PerformRAPICommand(c.uri, fmt.Sprintf("$S7 %d", set3p))
-	if err != nil {
-		return err
-	}
-
-	if !ok {
-		return fmt.Errorf("failed to switch to %d phase(s)", phases)
-	}
-
-	return nil
+	return c.rapiCommand(fmt.Sprintf("$S7 %d", set3p))
 }
