@@ -187,56 +187,27 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-// Since OpenEVSE has many possible states, we manually override the state do it cannot change automatically
-// For example, there can be an energy limit set, or a timer to only charge between certain hours
-// Logic is: if it has manual override, keep it; otherwise enforce the current state as a manual override
 func (c *OpenEVSE) Enabled() (bool, error) {
 	ctx, cancel := c.requestContextWithTimeout()
 	defer cancel()
-
 	overrideResp, err := c.api.GetManualOverrideWithResponse(ctx)
+
 	if err != nil {
 		return false, err
 	}
 
-	if overrideResp.JSON200 != nil && overrideResp.JSON200.State != nil {
-		switch *overrideResp.JSON200.State {
-		case "disabled":
-			return false, nil
-		case "enabled", "active":
-			return true, nil
-		}
+	if overrideResp.JSON200 == nil || overrideResp.JSON200.State == nil {
+		return false, fmt.Errorf("charger not in manual override mode")
 	}
 
-	statusResp, err := c.api.GetStatusWithResponse(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	var stateCode int
-	if statusResp.JSON200 != nil && statusResp.JSON200.State != nil {
-		stateCode = *statusResp.JSON200.State
-	}
-
-	var state bool
-	switch stateCode {
-	case 3, 4:
-		state = true
+	switch *overrideResp.JSON200.State {
+	case "disabled":
+		return false, nil
+	case "enabled", "active":
+		return true, nil
 	default:
-		configResp, err := c.api.GetConfigWithResponse(ctx)
-		if err != nil {
-			return false, err
-		}
-
-		switch *configResp.JSON200.ChargeMode {
-		case "fast":
-			state = true
-		}
+		return false, fmt.Errorf("unknown EVSE state: %s", *overrideResp.JSON200.State)
 	}
-
-	err = c.SetManualOverride(state)
-
-	return state, err
 }
 
 // Enable implements the api.Charger interface
