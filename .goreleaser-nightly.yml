@@ -1,4 +1,4 @@
-dist: nightly
+dist: release
 release:
   disable: true
 
