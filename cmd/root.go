@@ -151,8 +151,14 @@ func unwrap(err error) (res []string) {
 }
 
 func redact(src string) string {
+	secrets := []string{
+		"url", "host", "broker", // infrastructure
+		"user", "password", // users
+		"token", "accesstoken", "refreshtoken", "sponsortoken", // tokens
+		"id", "secret", "serial", "deviceid", "machineid", // devices
+		"vin"} // vehicles
 	return regexp.
-		MustCompile("(user|password|access|refresh|id|secret|token|url|host|broker|serial|deviceid).*").
+		MustCompile(fmt.Sprintf(`\b(%s)\b.*`, strings.Join(secrets, "|"))).
 		ReplaceAllString(src, "$1: *****")
 }
 
