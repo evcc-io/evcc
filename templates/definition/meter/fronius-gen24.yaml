@@ -3,6 +3,9 @@ products:
   - brand: Fronius
     description:
       generic: Symo GEN24 Plus
+  - brand: Fronius
+    description:
+      generic: Primo GEN24 Plus
 guidedsetup:
   enable: true
 params:
@@ -11,15 +14,6 @@ params:
   - name: host
   - name: port
     default: 502
-  - name: integer
-    description:
-      de: Integer Registerzugriff (nur für Netzzähler)
-      en: Integer register access (grid meter only)
-    help:
-      de: Einstellung Float/Integer im Wechselrichter überprüfen
-      en: Verify Float/Integer setting in inverter
-    advanced: true
-    valuetype: bool
 render: |
   # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}
@@ -27,21 +21,12 @@ render: |
   uri: {{ .host }}:{{ .port }}
   id: 200
   model: sunspec
-  {{- if eq .integer "true" }}
-  # sunspec model 203 (int+sf) meter
-  power: 203:W
+  power: Power
+  energy: Export
   currents:
-    - 203:AphA
-    - 203:AphB
-    - 203:AphC
-  {{ else }}
-  # sunspec model 213 (float) meter
-  power: 213:W
-  currents:
-    - 213:AphA
-    - 213:AphB
-    - 213:AphC
-  {{- end }}
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
@@ -58,6 +43,12 @@ render: |
       id: 1
       model: sunspec
       value: 160:2:DCW # mppt 2
+  energy:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    model: sunspec
+    value: Export
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
