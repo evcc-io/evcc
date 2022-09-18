@@ -156,6 +156,29 @@ func redact(src string) string {
 		ReplaceAllString(src, "$1: *****")
 }
 
+func publishErrorInfo(cfgFile string, err error) {
+	if cfgFile != "" {
+		file, pathErr := filepath.Abs(cfgFile)
+		if pathErr != nil {
+			file = cfgFile
+		}
+		publish("file", file)
+
+		if src, fileErr := os.ReadFile(cfgFile); fileErr != nil {
+			log.ERROR.Println("could not open config file:", fileErr)
+		} else {
+			publish("config", redact(string(src)))
+
+			// find line number
+			if match := regexp.MustCompile(`yaml: line (\d+):`).FindStringSubmatch(err.Error()); len(match) == 2 {
+				publish("line", match[1])
+			}
+		}
+	}
+
+	publish("fatal", unwrap(err))
+}
+
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
@@ -286,34 +309,14 @@ func run(cmd *cobra.Command, args []string) {
 		}()
 	} else {
 		// delayed reboot on error
-		const reboot = time.Minute
+		const rebootDelay = time.Minute
 
 		log.FATAL.Println(err)
-		log.FATAL.Printf("will attempt restart in: %v", reboot)
+		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
-		// add anonymous config
-		if cfgFile != "" {
-			file, pathErr := filepath.Abs(cfgFile)
-			if pathErr != nil {
-				file = cfgFile
-			}
-			publish("file", file)
+		publishErrorInfo(cfgFile, err)
 
-			if src, fileErr := os.ReadFile(cfgFile); fileErr != nil {
-				log.ERROR.Println("could not open config file:", fileErr)
-			} else {
-				publish("config", redact(string(src)))
-
-				// find line number
-				if match := regexp.MustCompile(`yaml: line (\d+):`).FindStringSubmatch(err.Error()); len(match) == 2 {
-					publish("line", match[1])
-				}
-			}
-		}
-
-		publish("fatal", unwrap(err))
-
-		time.AfterFunc(reboot, func() {
+		time.AfterFunc(rebootDelay, func() {
 			os.Exit(1)
 		})
 	}
