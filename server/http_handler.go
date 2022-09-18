@@ -16,7 +16,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// func indexHandler(site site.API) http.HandlerFunc {
 func indexHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
