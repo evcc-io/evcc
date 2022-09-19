@@ -132,7 +132,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 		return api.StatusE, nil
 	case 10:
 		// ensure RemoteLock is disabled after wake-up
-		b, err := wb.conn.ReadInputRegisters(hecRegRemoteLock, 1)
+		b, err := wb.conn.ReadHoldingRegisters(hecRegRemoteLock, 1)
 		if err != nil {
 			return api.StatusNone, err
 		}

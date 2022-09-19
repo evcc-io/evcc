@@ -33,22 +33,12 @@ render: |
     scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
-    source: calc
-    add:
-    - source: modbus
-      uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
-      id: 1
-      timeout: {{ .timeout }}
-      model: sunspec
-      value: DCPower
-    - source: modbus
-      uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
-      id: 1
-      timeout: {{ .timeout }}
-      register:
-        address: 62836 # Battery 1 Instantaneous Power
-        type: holding
-        decode: float32s
+    source: modbus
+    uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
+    id: 1
+    timeout: {{ .timeout }}
+    model: sunspec
+    value: DCPower
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
