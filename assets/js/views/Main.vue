@@ -1,42 +1,21 @@
 <template>
 	<div>
-		<Site
-			v-if="configured"
-			:notifications="notifications"
-			:offline="offline"
-			v-bind="state"
-		></Site>
-		<div v-else class="container">
-			<div class="row py-5">
-				<div v-for="(error, index) in errors" :key="`err-${index}`" class="col12">
-					<span v-if="index == 0">Fehler:</span>
-					<span v-else>Ursache:</span>
-					<code>{{ error }}</code>
-				</div>
-			</div>
-			<div class="row py-5">
-				<div class="col12">File:{{ file }}</div>
-				<div class="col12">Line:{{ line }}</div>
-			</div>
-			<div class="row py-5">
-				<div class="col12">Config:</div>
-				<div class="col12">
-					<code v-if="config">
-						<pre>{{ config }}</pre>
-					</code>
-				</div>
-			</div>
-		</div>
+		<OfflineIndicator v-if="offline" />
+
+		<StartupError v-if="startupErrors" v-bind="state" :line="5" />
+		<Site v-else :notifications="notifications" v-bind="state"></Site>
 	</div>
 </template>
 
 <script>
 import Site from "../components/Site.vue";
+import StartupError from "../components/StartupError.vue";
+import OfflineIndicator from "../components/OfflineIndicator.vue";
 import store from "../store";
 
 export default {
 	name: "Main",
-	components: { Site },
+	components: { Site, StartupError, OfflineIndicator },
 	props: {
 		notifications: Array,
 		offline: Boolean,
@@ -45,20 +24,8 @@ export default {
 		return store;
 	},
 	computed: {
-		configured: function () {
-			return this.errors.length === 0;
-		},
-		errors: function () {
-			return this.state.fatal || [];
-		},
-		config: function () {
-			return this.state.config;
-		},
-		file: function () {
-			return this.state.file;
-		},
-		line: function () {
-			return this.state.line;
+		startupErrors: function () {
+			return this.state.fatal?.length > 0;
 		},
 	},
 };
