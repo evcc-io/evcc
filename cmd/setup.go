@@ -35,22 +35,22 @@ func init() {
 
 var cp = new(ConfigProvider)
 
-func loadConfigFile(cfgFile string, conf *config) error {
-	if cfgFile == "" {
-		return errors.New("missing config file")
+func loadConfigFile(conf *config) error {
+	err := viper.ReadInConfig()
+
+	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
+		return err
 	}
 
-	log.INFO.Println("using config file", cfgFile)
+	log.INFO.Println("using config file:", cfgFile)
 
-	if err := viper.ReadInConfig(); err != nil {
-		return fmt.Errorf("failed reading config file %s: %w", cfgFile, err)
+	if err == nil {
+		if err = viper.UnmarshalExact(&conf); err != nil {
+			err = fmt.Errorf("failed parsing config file: %w", err)
+		}
 	}
 
-	if err := viper.UnmarshalExact(&conf); err != nil {
-		return fmt.Errorf("failed parsing config file %s: %w", cfgFile, err)
-	}
-
-	return nil
+	return err
 }
 
 func configureEnvironment(conf config) (err error) {

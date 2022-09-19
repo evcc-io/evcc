@@ -189,12 +189,13 @@ func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
+	// load config and re-configure logging after reading config file
 	var err error
-	if cfgFile != "" {
-		err = loadConfigFile(cfgFile, &conf)
-	} else {
+	if cfgErr := loadConfigFile(&conf); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
 		demoConfig(&conf)
+	} else {
+		err = cfgErr
 	}
 
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
