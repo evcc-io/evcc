@@ -21,6 +21,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
@@ -49,6 +50,10 @@ func configureEnvironment(conf config) (err error) {
 	// setup sponsorship
 	if conf.SponsorToken != "" {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
+	}
+
+	if err == nil && conf.Telemetry {
+		err = telemetry.Create(sponsor.Token)
 	}
 
 	// setup mqtt client listener

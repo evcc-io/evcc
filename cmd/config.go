@@ -28,6 +28,7 @@ type config struct {
 	Network      networkConfig
 	Log          string
 	SponsorToken string
+	Telemetry    bool
 	Metrics      bool
 	Profile      bool
 	Levels       map[string]string

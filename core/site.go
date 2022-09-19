@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/telemetry"
 )
 
 // Updater abstracts the LoadPoint implementation for testing
@@ -325,7 +326,7 @@ func (site *Site) updateMeters() error {
 			if err == nil {
 				site.batteryPower += power
 			} else {
-				site.log.ERROR.Println(fmt.Errorf("battery meter %d: %v", id, err))
+				site.log.ERROR.Printf("battery meter %d: %v", id, err)
 			}
 		}
 
@@ -342,7 +343,7 @@ func (site *Site) updateMeters() error {
 			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		} else {
-			site.log.ERROR.Println(fmt.Errorf("grid meter currents: %v", err))
+			site.log.ERROR.Printf("grid meter currents: %v", err)
 		}
 	}
 
@@ -371,7 +372,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 		site.gridPower = totalChargePower - site.pvPower
 	}
 
-	// allow using Grid and charge as estimate for pv power
+	// allow using grid and charge as estimate for pv power
 	if site.pvMeters == nil {
 		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
 		if site.pvPower < 0 {
@@ -448,9 +449,12 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	// update savings
+	// update savings and aggregate telemetry
 	// TODO: use energy instead of current power for better results
-	site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	if totalChargePower > 0 {
+		go telemetry.ChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
+	}
 }
 
 // prepare publishes initial values
