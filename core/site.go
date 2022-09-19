@@ -449,7 +449,7 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	// update savings and community
+	// update savings and aggregate telemetry
 	// TODO: use energy instead of current power for better results
 	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
 	if totalChargePower > 0 {
