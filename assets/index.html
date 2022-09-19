@@ -1,39 +1,37 @@
 <!DOCTYPE html>
 <html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="evcc - Sonne tanken ☀️🚘" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="evcc" />
+    <meta name="application-name" content="evcc" />
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="evcc - Sonne tanken ☀️🚘" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="evcc" />
-  <meta name="application-name" content="evcc" />
+    <link rel="apple-touch-icon" sizes="180x180" href="meta/apple-touch-icon.png?[[.Version]]" />
+    <link rel="icon" type="image/png" sizes="32x32" href="meta/favicon-32x32.png?[[.Version]]" />
+    <link rel="icon" type="image/png" sizes="16x16" href="meta/favicon-16x16.png?[[.Version]]" />
+    <link rel="manifest" href="meta/site.webmanifest?[[.Version]]" crossorigin="use-credentials" />
+    <link rel="mask-icon" href="meta/safari-pinned-tab.svg?[[.Version]]" color="#28293e" />
+    <link rel="shortcut icon" href="meta/favicon.ico?[[.Version]]" />
+    <meta name="msapplication-TileColor" content="#28293e" />
+    <meta name="msapplication-config" content="meta/browserconfig.xml?[[.Version]]" />
+    <meta name="theme-color" content="#020318" />
 
-  <link rel="apple-touch-icon" sizes="180x180" href="meta/apple-touch-icon.png?[[.Version]]" />
-  <link rel="icon" type="image/png" sizes="32x32" href="meta/favicon-32x32.png?[[.Version]]" />
-  <link rel="icon" type="image/png" sizes="16x16" href="meta/favicon-16x16.png?[[.Version]]" />
-  <link rel="manifest" href="meta/site.webmanifest?[[.Version]]" crossorigin="use-credentials" />
-  <link rel="mask-icon" href="meta/safari-pinned-tab.svg?[[.Version]]" color="#28293e" />
-  <link rel="shortcut icon" href="meta/favicon.ico?[[.Version]]" />
-  <meta name="msapplication-TileColor" content="#28293e" />
-  <meta name="msapplication-config" content="meta/browserconfig.xml?[[.Version]]" />
-  <meta name="theme-color" content="#020318" />
+    <title>evcc</title>
+  </head>
 
-  <title>evcc</title>
-</head>
+  <body>
+    <script>
+      window.evcc = {
+        version: "[[.Version]]",
+        configured: "[[.Configured]]",
+        commit: "[[.Commit]]",
+      };
+    </script>
 
-<body>
-  <script>
-    window.evcc = {
-      version: "[[.Version]]",
-      configured: "[[.Configured]]",
-      commit: "[[.Commit]]",
-    };
-  </script>
-
-  <div id="app"></div>
-  <script type="module" src="./js/app.js"></script>
-</body>
-
+    <div id="app"></div>
+    <script type="module" src="./js/app.js"></script>
+  </body>
 </html>
