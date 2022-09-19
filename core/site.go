@@ -14,7 +14,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/community"
+	"github.com/evcc-io/evcc/util/telemetry"
 )
 
 // Updater abstracts the LoadPoint implementation for testing
@@ -453,7 +453,7 @@ func (site *Site) update(lp Updater) {
 	// TODO: use energy instead of current power for better results
 	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
 	if totalChargePower > 0 {
-		go community.ChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
+		go telemetry.ChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
 	}
 }
 
