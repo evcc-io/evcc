@@ -17,7 +17,7 @@ var (
 
 func Create(token string) error {
 	if token == "" {
-		return errors.New("community requires sponsorship")
+		return errors.New("telemetry requires sponsorship")
 	}
 
 	enabled = true
@@ -56,6 +56,6 @@ func ChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
 	}
 
 	if err != nil {
-		log.ERROR.Printf("community api: %v", err)
+		log.ERROR.Printf("telemetry: charge: %v", err)
 	}
 }

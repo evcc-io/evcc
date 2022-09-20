@@ -52,6 +52,7 @@ func configureEnvironment(conf config) (err error) {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
+	// setup telemetry
 	if err == nil && conf.Telemetry {
 		err = telemetry.Create(sponsor.Token)
 	}
