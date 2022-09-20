@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -177,7 +178,9 @@ func publishErrorInfo(cfgFile string, err error) {
 
 			// find line number
 			if match := regexp.MustCompile(`yaml: line (\d+):`).FindStringSubmatch(err.Error()); len(match) == 2 {
-				publish("line", match[1])
+				if line, err := strconv.Atoi(match[1]); err == nil {
+					publish("line", line)
+				}
 			}
 		}
 	}

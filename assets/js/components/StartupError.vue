@@ -1,25 +1,53 @@
 <template>
 	<div class="container px-4">
 		<div class="d-flex justify-content-between align-items-center my-3">
-			<h1 class="d-block mt-0">evcc konnte nicht starten</h1>
+			<h1 class="d-block mt-0 d-flex">
+				Fehler beim Starten
+				<shopicon-regular-car1 size="m" class="ms-2 icon"></shopicon-regular-car1>
+			</h1>
 		</div>
 		<div class="row mb-4">
-			<h5 class="mb-3">Fehlermeldung</h5>
 			<code class="fs-6 mb-3">
 				<div v-for="(error, index) in errors" :key="index">{{ error }}</div>
 			</code>
 			<p>
-				Lorem ipsum dolor, sit amet consectetur adipisicing elit. Culpa, eius nesciunt enim
-				ullam, atque voluptas dolor blanditiis fugiat possimus at nam modi ducimus
-				reiciendis dicta molestias, libero minus ex accusantium?
+				Bitte überprüfe deine Konfigurationsdatei. Sollte dir die Fehlermeldung nicht
+				weiterhelfen, suche in unseren
+				<a href="https://github.com/evcc-io/evcc/discussions">GitHub Discussions</a> nach
+				einer Lösung.
+			</p>
+			<p>
+				<em>
+					Hinweis: Ein weiterer Grund, warum du diese Meldung siehst, könnte ein
+					fehlerhaftes Gerät (Wechselrichter, Zähler, ...) sein. Überprüfe deine
+					Netzwerkverbindungen.
+				</em>
 			</p>
 		</div>
 		<div class="row mb-4">
-			<h5 class="mb-3">Aktuelle Konfiguration</h5>
+			<h5 class="mb-3">Konfiguration</h5>
+			<div class="d-md-flex justify-content-between">
+				<p class="me-md-4">
+					Folgende Konfigurationsdatei wurde verwendet:
+					<code>
+						{{ file }}<span v-if="line">:{{ line }}</span>
+					</code>
+					<br />
+					Klicke hier um evcc neu zu starten nachdem du die Datei angepasst hast.
+				</p>
+				<p>
+					<button
+						class="btn btn-outline-primary text-nowrap"
+						type="button"
+						@click="shutdown"
+					>
+						Server neu starten
+					</button>
+				</p>
+			</div>
+
 			<code v-if="config">
-				<div class="my-2">
-					{{ file }}<span v-if="line">:{{ line }}</span>
-				</div>
+				<div class="my-2"></div>
 				<div class="py-2 text-muted config">
 					<div
 						v-for="(configLine, lineNumber) in config.split('\n')"
@@ -38,7 +66,8 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/arrowup";
+import "@h2d2/shopicons/es/regular/car1";
+import api from "../api";
 import collector from "../mixins/collector";
 
 export default {
@@ -48,11 +77,16 @@ export default {
 		fatal: Array,
 		config: String,
 		file: String,
-		line: { type: Number, default: 6 },
+		line: Number,
 	},
 	computed: {
 		errors() {
 			return this.fatal || [];
+		},
+	},
+	methods: {
+		shutdown() {
+			api.post("shutdown");
 		},
 	},
 };
@@ -78,5 +112,21 @@ export default {
 }
 .config {
 	border: 1px solid var(--bs-gray-400);
+}
+.icon {
+	transform-origin: 60% 40%;
+	animation: swinging 3.5s ease-in-out infinite;
+}
+
+@keyframes swinging {
+	0% {
+		transform: translateY(8%) rotate(170deg);
+	}
+	50% {
+		transform: translateY(8%) rotate(185deg);
+	}
+	100% {
+		transform: translateY(8%) rotate(170deg);
+	}
 }
 </style>

@@ -2,7 +2,7 @@
 	<div>
 		<OfflineIndicator v-if="offline" />
 
-		<StartupError v-if="startupErrors" v-bind="state" :line="5" />
+		<StartupError v-if="startupErrors" v-bind="state" />
 		<Site v-else :notifications="notifications" v-bind="state"></Site>
 	</div>
 </template>
