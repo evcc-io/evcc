@@ -1,6 +1,6 @@
 product:
   brand: Solarwatt
-  description: MyReserve
+  description: MyReserve, EnergyManager, EnergyManager Pro
 render:
   - usage: grid
     default: |

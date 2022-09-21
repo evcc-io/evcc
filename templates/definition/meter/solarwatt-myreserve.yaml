@@ -2,7 +2,7 @@ template: solarwatt-myreserve
 products:
   - brand: Solarwatt
     description:
-      generic: MyReserve
+      generic: MyReserve, EnergyManager, EnergyManager Pro
 guidedsetup:
   enable: true
 params:
