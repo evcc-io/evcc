@@ -19,6 +19,8 @@ func TestUnwrap(t *testing.T) {
 
 func TestRedact(t *testing.T) {
 	secret := `
+	# sponsor token is a public token
+	sponsortoken: geheim
 	user: geheim
 	password: geheim
 	secret: geheim
@@ -31,7 +33,7 @@ func TestRedact(t *testing.T) {
 	secret : geheim
 	`
 
-	if res := redact(secret); strings.Contains(res, "geheim") {
+	if res := redact(secret); strings.Contains(res, "geheim") || !strings.Contains(res, "public") {
 		t.Errorf("secret exposed: %v", res)
 	}
 }

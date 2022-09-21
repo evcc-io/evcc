@@ -159,7 +159,7 @@ func redact(src string) string {
 		"ain", "id", "secret", "serial", "deviceid", "machineid", // devices
 		"vin"} // vehicles
 	return regexp.
-		MustCompile(fmt.Sprintf(`\b(%s)\b.*`, strings.Join(secrets, "|"))).
+		MustCompile(fmt.Sprintf(`\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).
 		ReplaceAllString(src, "$1: *****")
 }
 
