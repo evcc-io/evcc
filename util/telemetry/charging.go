@@ -12,7 +12,7 @@ import (
 
 var (
 	api     = "https://api.evcc.io"
-	enabled bool
+	Enabled bool
 )
 
 func Create(token string) error {
@@ -20,16 +20,12 @@ func Create(token string) error {
 		return errors.New("telemetry requires sponsorship")
 	}
 
-	enabled = true
+	Enabled = true
 	return nil
 }
 
 func ChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
-	log.DEBUG.Printf("community: Δ%.0f/%.0fkWh @ %.0fW", deltaGreen, deltaCharged, power)
-
-	if !enabled {
-		return
-	}
+	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", deltaGreen*1e3, deltaCharged*1e3, power)
 
 	data := struct {
 		ChargePower  float64 `json:"chargePower"`

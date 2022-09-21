@@ -454,7 +454,7 @@ func (site *Site) update(lp Updater) {
 	// update savings and aggregate telemetry
 	// TODO: use energy instead of current power for better results
 	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
-	if totalChargePower > standbyPower {
+	if telemetry.Enabled && totalChargePower > standbyPower {
 		go telemetry.ChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
 	}
 }
