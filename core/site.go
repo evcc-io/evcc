@@ -17,6 +17,8 @@ import (
 	"github.com/evcc-io/evcc/util/telemetry"
 )
 
+const standbyPower = 10 // consider less than 10W as charger in standby
+
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
 	Update(availablePower float64, cheapRate, batteryBuffered bool)
@@ -452,7 +454,7 @@ func (site *Site) update(lp Updater) {
 	// update savings and aggregate telemetry
 	// TODO: use energy instead of current power for better results
 	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
-	if totalChargePower > 0 {
+	if totalChargePower > standbyPower {
 		go telemetry.ChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
 	}
 }
