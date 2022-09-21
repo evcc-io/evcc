@@ -155,7 +155,7 @@ func redact(src string) string {
 	secrets := []string{
 		"url", "uri", "host", "broker", // infrastructure
 		"user", "password", // users
-		"token", "accesstoken", "refreshtoken", "sponsortoken", // tokens
+		"token", "access", "refresh", "sponsortoken", // tokens
 		"ain", "id", "secret", "serial", "deviceid", "machineid", // devices
 		"vin"} // vehicles
 	return regexp.
