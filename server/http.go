@@ -78,8 +78,8 @@ func (s *HTTPd) Router() *mux.Router {
 	return s.Handler.(*mux.Router)
 }
 
-// Main configures the site
-func (s *HTTPd) Site(site site.API, cache *util.Cache) {
+// RegisterSiteHandlers connects the http handlers to the site
+func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -127,4 +127,29 @@ func (s *HTTPd) Site(site site.API, cache *util.Cache) {
 		}
 	}
 
+}
+
+// RegisterShutdownHandler connects the http handlers to the site
+func (s *HTTPd) RegisterShutdownHandler(callback func()) {
+	router := s.Server.Handler.(*mux.Router)
+
+	// api
+	api := router.PathPrefix("/api").Subrouter()
+	api.Use(jsonHandler)
+	api.Use(handlers.CompressHandler)
+	api.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
+	// site api
+	routes := map[string]route{
+		"shutdown": {[]string{"POST", "OPTIONS"}, "/shutdown", func(w http.ResponseWriter, r *http.Request) {
+			callback()
+			w.WriteHeader(http.StatusNoContent)
+		}},
+	}
+
+	for _, r := range routes {
+		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+	}
 }

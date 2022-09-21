@@ -293,7 +293,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// show main ui
 	if err == nil {
-		httpd.Site(site, cache)
+		httpd.RegisterSiteHandlers(site, cache)
 
 		// set channels
 		site.DumpConfig()
@@ -318,6 +318,13 @@ func run(cmd *cobra.Command, args []string) {
 			close(siteC)
 		}()
 	} else {
+		var once sync.Once
+		httpd.RegisterShutdownHandler(func() {
+			once.Do(func() {
+				close(siteC)
+			})
+		})
+
 		// delayed reboot on error
 		const rebootDelay = time.Minute
 
@@ -326,9 +333,14 @@ func run(cmd *cobra.Command, args []string) {
 
 		publishErrorInfo(cfgFile, err)
 
-		time.AfterFunc(rebootDelay, func() {
+		go func() {
+			select {
+			case <-time.After(rebootDelay):
+			case <-siteC:
+			}
+
 			os.Exit(1)
-		})
+		}()
 	}
 
 	// uds health check listener
