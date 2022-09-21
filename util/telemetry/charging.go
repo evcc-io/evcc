@@ -24,15 +24,12 @@ func Create(token string) error {
 	return nil
 }
 
-func ChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
+func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
 	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", deltaGreen*1e3, deltaCharged*1e3, power)
 
-	data := struct {
-		ChargePower  float64 `json:"chargePower"`
-		ChargeEnergy float64 `json:"chargeEnergy"`
-		GreenEnergy  float64 `json:"greenEnergy"`
-	}{
+	data := ChargeProgress{
 		ChargePower:  power,
+		GreenPower:   power * deltaGreen / deltaCharged,
 		ChargeEnergy: deltaCharged,
 		GreenEnergy:  deltaGreen,
 	}
