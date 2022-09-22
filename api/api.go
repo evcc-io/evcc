@@ -57,6 +57,27 @@ type ActionConfig struct {
 	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
 }
 
+// Merge merges all non-nil properties of the additional config into the base config.
+// The receiver's config remains immutable.
+func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
+	if m.Mode != nil {
+		a.Mode = m.Mode
+	}
+	if m.MinCurrent != nil {
+		a.MinCurrent = m.MinCurrent
+	}
+	if m.MaxCurrent != nil {
+		a.MaxCurrent = m.MaxCurrent
+	}
+	if m.MinSoC != nil {
+		a.MinSoC = m.MinSoC
+	}
+	if m.TargetSoC != nil {
+		a.TargetSoC = m.TargetSoC
+	}
+	return a
+}
+
 // String implements Stringer and returns the ActionConfig as comma-separated key:value string
 func (a ActionConfig) String() string {
 	var s []string
