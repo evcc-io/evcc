@@ -449,8 +449,11 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	// set default mode on disconnect
 	if lp.ResetOnDisconnect {
-		// TODO respect defaultVehicle
-		lp.applyAction(lp.onDisconnect)
+		actionCfg := lp.onDisconnect
+		if v := lp.defaultVehicle; v != nil {
+			actionCfg = actionCfg.Merge(v.OnIdentified())
+		}
+		lp.applyAction(actionCfg)
 	}
 
 	// soc update reset
