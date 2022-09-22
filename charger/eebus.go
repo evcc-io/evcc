@@ -230,6 +230,7 @@ func (c *EEBus) isCharging(d *communication.EVSEClientDataType) bool {
 		timeDiff := time.Since(c.lastIsChargingCheck)
 		if timeDiff.Seconds() >= 10.0 {
 			c.lastIsChargingCheck = time.Now()
+			c.lastIsChargingResult = false
 			if c.lp.GetChargePower() > c.lp.GetMinPower()*idleFactor {
 				c.lastIsChargingResult = true
 				return true
