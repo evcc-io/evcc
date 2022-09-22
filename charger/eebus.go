@@ -32,6 +32,9 @@ type EEBus struct {
 	connected           bool
 	expectedEnableState bool
 
+	lastIsChargingCheck  time.Time
+	lastIsChargingResult bool
+
 	evConnectedTime time.Time
 }
 
@@ -113,6 +116,8 @@ func (c *EEBus) setDefaultValues() {
 	c.communicationStandard = communication.EVCommunicationStandardEnumTypeUnknown
 	c.socSupportAvailable = false
 	c.selfConsumptionSupportAvailable = false
+	c.lastIsChargingCheck = time.Now().Add(-time.Hour * 1)
+	c.lastIsChargingResult = false
 }
 
 func (c *EEBus) setConnected(connected bool) {
@@ -218,8 +223,18 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 // we assume that if any phase current value is > idleFactor * min Current, then charging is active and enabled is true
 func (c *EEBus) isCharging(d *communication.EVSEClientDataType) bool {
 	// check if an external physical meter is assigned
+	// we only want this for configured meters and not for internal meters!
+	// right now it works as expected
 	if c.lp != nil && c.lp.HasChargeMeter() {
-		if c.lp.GetChargePower() > c.lp.GetMinPower()*idleFactor {
+		// we only check ever 10 seconds, maybe we can use the config interval duration
+		timeDiff := time.Since(c.lastIsChargingCheck)
+		if timeDiff.Seconds() >= 10.0 {
+			c.lastIsChargingCheck = time.Now()
+			if c.lp.GetChargePower() > c.lp.GetMinPower()*idleFactor {
+				c.lastIsChargingResult = true
+				return true
+			}
+		} else if c.lastIsChargingResult {
 			return true
 		}
 	}
