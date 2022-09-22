@@ -111,7 +111,7 @@ func (cp *ConfigProvider) TrackVisitors() {
 }
 
 // Meter provides meters by name
-func (cp *ConfigProvider) Meter(name string) api.Meter {
+func (cp *ConfigProvider) Meter(name string) (api.Meter, error) {
 	if meter, ok := cp.meters[name]; ok {
 		// track duplicate usage https://github.com/evcc-io/evcc/issues/1744
 		if cp.visited != nil {
@@ -121,28 +121,25 @@ func (cp *ConfigProvider) Meter(name string) api.Meter {
 			cp.visited[name] = true
 		}
 
-		return meter
+		return meter, nil
 	}
-	log.FATAL.Fatalf("invalid meter: %s", name)
-	return nil
+	return nil, fmt.Errorf("meter does not exist: %s", name)
 }
 
 // Charger provides chargers by name
-func (cp *ConfigProvider) Charger(name string) api.Charger {
+func (cp *ConfigProvider) Charger(name string) (api.Charger, error) {
 	if charger, ok := cp.chargers[name]; ok {
-		return charger
+		return charger, nil
 	}
-	log.FATAL.Fatalf("invalid charger: %s", name)
-	return nil
+	return nil, fmt.Errorf("charger does not exist: %s", name)
 }
 
 // Vehicle provides vehicles by name
-func (cp *ConfigProvider) Vehicle(name string) api.Vehicle {
+func (cp *ConfigProvider) Vehicle(name string) (api.Vehicle, error) {
 	if vehicle, ok := cp.vehicles[name]; ok {
-		return vehicle
+		return vehicle, nil
 	}
-	log.FATAL.Fatalf("invalid vehicle: %s", name)
-	return nil
+	return nil, fmt.Errorf("vehicle does not exist: %s", name)
 }
 
 func (cp *ConfigProvider) configure(conf config) error {

@@ -32,7 +32,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
-	if err := loadConfigFile(cfgFile, &conf); err != nil {
+	if err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -57,8 +57,12 @@ func runVehicle(cmd *cobra.Command, args []string) {
 
 	vehicles := cp.vehicles
 	if len(args) == 1 {
-		arg := args[0]
-		vehicles = map[string]api.Vehicle{arg: cp.Vehicle(arg)}
+		name := args[0]
+		vehicle, err := cp.Vehicle(name)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		vehicles = map[string]api.Vehicle{name: vehicle}
 	}
 
 	d := dumper{len: len(vehicles)}

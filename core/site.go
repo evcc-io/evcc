@@ -95,12 +95,18 @@ func NewSiteFromConfig(
 	}
 
 	if site.Meters.GridMeterRef != "" {
-		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
+		var err error
+		if site.gridMeter, err = cp.Meter(site.Meters.GridMeterRef); err != nil {
+			return nil, err
+		}
 	}
 
 	// multiple pv
 	for _, ref := range site.Meters.PVMetersRef {
-		pv := cp.Meter(ref)
+		pv, err := cp.Meter(ref)
+		if err != nil {
+			return nil, err
+		}
 		site.pvMeters = append(site.pvMeters, pv)
 	}
 
@@ -109,13 +115,19 @@ func NewSiteFromConfig(
 		if len(site.pvMeters) > 0 {
 			return nil, errors.New("cannot have pv and pvs both")
 		}
-		pv := cp.Meter(site.Meters.PVMeterRef)
+		pv, err := cp.Meter(site.Meters.PVMeterRef)
+		if err != nil {
+			return nil, err
+		}
 		site.pvMeters = append(site.pvMeters, pv)
 	}
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
-		battery := cp.Meter(ref)
+		battery, err := cp.Meter(ref)
+		if err != nil {
+			return nil, err
+		}
 		site.batteryMeters = append(site.batteryMeters, battery)
 	}
 
@@ -124,7 +136,10 @@ func NewSiteFromConfig(
 		if len(site.batteryMeters) > 0 {
 			return nil, errors.New("cannot have battery and batteries both")
 		}
-		battery := cp.Meter(site.Meters.BatteryMeterRef)
+		battery, err := cp.Meter(site.Meters.BatteryMeterRef)
+		if err != nil {
+			return nil, err
+		}
 		site.batteryMeters = append(site.batteryMeters, battery)
 	}
 

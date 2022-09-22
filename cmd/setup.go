@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -22,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/libp2p/zeroconf/v2"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
@@ -33,14 +35,19 @@ func init() {
 
 var cp = new(ConfigProvider)
 
-func loadConfigFile(cfgFile string, conf *config) (err error) {
-	if cfgFile != "" {
-		log.INFO.Println("using config file", cfgFile)
-		if err := viper.UnmarshalExact(&conf); err != nil {
-			log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
+func loadConfigFile(conf *config) error {
+	err := viper.ReadInConfig()
+
+	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
+		return err
+	}
+
+	log.INFO.Println("using config file:", cfgFile)
+
+	if err == nil {
+		if err = viper.UnmarshalExact(&conf); err != nil {
+			err = fmt.Errorf("failed parsing config file: %w", err)
 		}
-	} else {
-		err = errors.New("missing evcc config")
 	}
 
 	return err
@@ -123,47 +130,64 @@ func configureJavascript(conf map[string]interface{}) error {
 }
 
 // setup HEMS
-func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) hems.HEMS {
+func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) error {
 	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, httpd)
 	if err != nil {
-		log.FATAL.Fatalf("failed configuring hems: %v", err)
+		return fmt.Errorf("failed configuring hems: %w", err)
 	}
-	return hems
+
+	go hems.Run()
+
+	return nil
+}
+
+// setup MDNS
+func configureMDNS(conf networkConfig) error {
+	host := strings.TrimSuffix(conf.Host, ".local")
+
+	zc, err := zeroconf.RegisterProxy("EV Charge Controller", "_http._tcp", "local.", conf.Port, host, nil, []string{}, nil)
+	if err != nil {
+		return fmt.Errorf("mDNS announcement: %w", err)
+	}
+
+	shutdown.Register(zc.Shutdown)
+
+	return nil
 }
 
 // setup EEBus
 func configureEEBus(conf map[string]interface{}) error {
 	var err error
-	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
-		go server.EEBusInstance.Run()
-		shutdown.Register(server.EEBusInstance.Shutdown)
-	} else {
-		err = fmt.Errorf("eebus: %w", err)
+	if server.EEBusInstance, err = server.NewEEBus(conf); err != nil {
+		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
-	return err
+	go server.EEBusInstance.Run()
+	shutdown.Register(server.EEBusInstance.Shutdown)
+
+	return nil
 }
 
 // setup messaging
-func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Event {
-	notificationChan := make(chan push.Event, 1)
-	notificationHub, err := push.NewHub(conf.Events, cache)
+func configureMessengers(conf messagingConfig, cache *util.Cache) (chan push.Event, error) {
+	messageChan := make(chan push.Event, 1)
+
+	messageHub, err := push.NewHub(conf.Events, cache)
 	if err != nil {
-		log.FATAL.Fatalf("failed configuring push services: %v", err)
+		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}
 
 	for _, service := range conf.Services {
 		impl, err := push.NewMessengerFromConfig(service.Type, service.Other)
 		if err != nil {
-			log.FATAL.Fatal(err)
-			log.FATAL.Fatalf("failed configuring messenger %s: %v", service.Type, err)
+			return messageChan, fmt.Errorf("failed configuring push service %s: %w", service.Type, err)
 		}
-		notificationHub.Add(impl)
+		messageHub.Add(impl)
 	}
 
-	go notificationHub.Run(notificationChan)
+	go messageHub.Run(messageChan)
 
-	return notificationChan
+	return messageChan, nil
 }
 
 func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {

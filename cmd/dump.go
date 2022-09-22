@@ -21,12 +21,19 @@ func init() {
 	rootCmd.AddCommand(dumpCmd)
 }
 
+func handle(device any, err error) any {
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
+	return device
+}
+
 func runDump(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
-	if err := loadConfigFile(cfgFile, &conf); err != nil {
+	if err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -46,29 +53,29 @@ func runDump(cmd *cobra.Command, args []string) {
 	fmt.Println("")
 
 	if name := site.Meters.GridMeterRef; name != "" {
-		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), cp.Meter(name))
+		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(cp.Meter(name)))
 	}
 
 	if len(site.Meters.PVMetersRef) == 0 {
 		if name := site.Meters.PVMeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("pv: %s", name), cp.Meter(name))
+			d.DumpWithHeader(fmt.Sprintf("pv: %s", name), handle(cp.Meter(name)))
 		}
 	} else {
 		for id, name := range site.Meters.PVMetersRef {
 			if name != "" {
-				d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id, name), cp.Meter(name))
+				d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id, name), handle(cp.Meter(name)))
 			}
 		}
 	}
 
 	if len(site.Meters.BatteryMetersRef) == 0 {
 		if name := site.Meters.BatteryMeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("battery: %s", name), cp.Meter(name))
+			d.DumpWithHeader(fmt.Sprintf("battery: %s", name), handle(cp.Meter(name)))
 		}
 	} else {
 		for id, name := range site.Meters.BatteryMetersRef {
 			if name != "" {
-				d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id, name), cp.Meter(name))
+				d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id, name), handle(cp.Meter(name)))
 			}
 		}
 	}
@@ -84,11 +91,11 @@ func runDump(cmd *cobra.Command, args []string) {
 		fmt.Println("")
 
 		if name := lp.MeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), cp.Meter(name))
+			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), handle(cp.Meter(name)))
 		}
 
 		if name := lp.ChargerRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), cp.Charger(name))
+			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(cp.Charger(name)))
 		}
 	}
 }

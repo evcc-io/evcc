@@ -43,15 +43,7 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, site site.API, hub *SocketHub, cache *util.Cache) *HTTPd {
-	routes := map[string]route{
-		"health":        {[]string{"GET"}, "/health", healthHandler(site)},
-		"state":         {[]string{"GET"}, "/state", stateHandler(cache)},
-		"buffersoc":     {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoC, site.GetBufferSoC)},
-		"prioritysoc":   {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoC, site.GetPrioritySoC)},
-		"residualpower": {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-	}
-
+func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// websocket
@@ -61,46 +53,9 @@ func NewHTTPd(addr string, site site.API, hub *SocketHub, cache *util.Cache) *HT
 	static := router.PathPrefix("/").Subrouter()
 	static.Use(handlers.CompressHandler)
 
-	static.HandleFunc("/", indexHandler(site))
+	static.HandleFunc("/", indexHandler())
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(Assets)))
-	}
-
-	// api
-	api := router.PathPrefix("/api").Subrouter()
-	api.Use(jsonHandler)
-	api.Use(handlers.CompressHandler)
-	api.Use(handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-Type"}),
-	))
-
-	// site api
-	for _, r := range routes {
-		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
-	}
-
-	// loadpoint api
-	for id, lp := range site.LoadPoints() {
-		lpAPI := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
-
-		routes := map[string]route{
-			"mode":          {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
-			"targetsoc":     {[]string{"POST", "OPTIONS"}, "/targetsoc/{value:[0-9]+}", intHandler(pass(lp.SetTargetSoC), lp.GetTargetSoC)},
-			"minsoc":        {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intHandler(pass(lp.SetMinSoC), lp.GetMinSoC)},
-			"mincurrent":    {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent)},
-			"maxcurrent":    {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
-			"phases":        {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
-			"targetcharge":  {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:.-]+}", targetChargeHandler(lp)},
-			"targetcharge2": {[]string{"DELETE", "OPTIONS"}, "/targetcharge", targetChargeRemoveHandler(lp)},
-			"vehicle":       {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[0-9]+}", vehicleHandler(site, lp)},
-			"vehicle2":      {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
-			"vehicleDetect": {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},
-			"remotedemand":  {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
-		}
-
-		for _, r := range routes {
-			lpAPI.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
-		}
 	}
 
 	srv := &HTTPd{
@@ -121,4 +76,80 @@ func NewHTTPd(addr string, site site.API, hub *SocketHub, cache *util.Cache) *HT
 // Router returns the main router
 func (s *HTTPd) Router() *mux.Router {
 	return s.Handler.(*mux.Router)
+}
+
+// RegisterSiteHandlers connects the http handlers to the site
+func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
+	router := s.Server.Handler.(*mux.Router)
+
+	// api
+	api := router.PathPrefix("/api").Subrouter()
+	api.Use(jsonHandler)
+	api.Use(handlers.CompressHandler)
+	api.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
+	// site api
+	routes := map[string]route{
+		"health":        {[]string{"GET"}, "/health", healthHandler(site)},
+		"state":         {[]string{"GET"}, "/state", stateHandler(cache)},
+		"buffersoc":     {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoC, site.GetBufferSoC)},
+		"prioritysoc":   {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoC, site.GetPrioritySoC)},
+		"residualpower": {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
+	}
+
+	for _, r := range routes {
+		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+	}
+
+	// loadpoint api
+	for id, lp := range site.LoadPoints() {
+		loadpoint := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
+
+		routes := map[string]route{
+			"mode":          {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
+			"targetsoc":     {[]string{"POST", "OPTIONS"}, "/targetsoc/{value:[0-9]+}", intHandler(pass(lp.SetTargetSoC), lp.GetTargetSoC)},
+			"minsoc":        {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intHandler(pass(lp.SetMinSoC), lp.GetMinSoC)},
+			"mincurrent":    {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent)},
+			"maxcurrent":    {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
+			"phases":        {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
+			"targetcharge":  {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:.-]+}", targetChargeHandler(lp)},
+			"targetcharge2": {[]string{"DELETE", "OPTIONS"}, "/targetcharge", targetChargeRemoveHandler(lp)},
+			"vehicle":       {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[0-9]+}", vehicleHandler(site, lp)},
+			"vehicle2":      {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
+			"vehicleDetect": {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},
+			"remotedemand":  {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
+		}
+
+		for _, r := range routes {
+			loadpoint.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+	}
+
+}
+
+// RegisterShutdownHandler connects the http handlers to the site
+func (s *HTTPd) RegisterShutdownHandler(callback func()) {
+	router := s.Server.Handler.(*mux.Router)
+
+	// api
+	api := router.PathPrefix("/api").Subrouter()
+	api.Use(jsonHandler)
+	api.Use(handlers.CompressHandler)
+	api.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
+	// site api
+	routes := map[string]route{
+		"shutdown": {[]string{"POST", "OPTIONS"}, "/shutdown", func(w http.ResponseWriter, r *http.Request) {
+			callback()
+			w.WriteHeader(http.StatusNoContent)
+		}},
+	}
+
+	for _, r := range routes {
+		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+	}
 }
