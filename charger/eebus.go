@@ -175,14 +175,18 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	// we receive data, so it is connected
 	c.setConnected(true)
 
+	prevSelfConsumptionSupport := c.selfConsumptionSupportAvailable
 	c.showCurrentChargingSetup()
 
 	switch dataType {
 	case communication.EVDataElementUpdateUseCaseSelfConsumption:
 		// if availability of self consumption use case changes, resend the current charging limit
-		err := c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
-		if err != nil {
-			c.log.WARN.Println("failed to send current limit data: ", err)
+		// but only if the support value actually changed
+		if prevSelfConsumptionSupport != c.selfConsumptionSupportAvailable {
+			err := c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
+			if err != nil {
+				c.log.WARN.Println("failed to send current limit data: ", err)
+			}
 		}
 	// case communication.EVDataElementUpdateUseCaseSoC:
 	case communication.EVDataElementUpdateEVConnectionState:
