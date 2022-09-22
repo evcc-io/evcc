@@ -326,12 +326,19 @@ func run(cmd *cobra.Command, args []string) {
 			})
 		})
 
+		// delayed reboot on error
+		const rebootDelay = time.Minute * 5
+
 		log.FATAL.Println(err)
+		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
 		publishErrorInfo(cfgFile, err)
 
 		go func() {
-			<-siteC
+			select {
+			case <-time.After(rebootDelay):
+			case <-siteC:
+			}
 			os.Exit(1)
 		}()
 	}
