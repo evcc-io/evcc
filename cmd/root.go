@@ -327,7 +327,7 @@ func run(cmd *cobra.Command, args []string) {
 		})
 
 		// delayed reboot on error
-		const rebootDelay = time.Minute * 5
+		const rebootDelay = 5 * time.Minute
 
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
