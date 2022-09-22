@@ -57,7 +57,8 @@ type ActionConfig struct {
 	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
 }
 
-// Merge merges all non-nil properties of the additional config
+// Merge merges all non-nil properties of the additional config into the base config.
+// The receiver's config remains immutable.
 func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
 	if m.Mode != nil {
 		a.Mode = m.Mode
