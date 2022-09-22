@@ -13,11 +13,9 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.config.url !== "health") {
-      const url = error.config.baseURL + error.config.url;
-      const message = `${error.message}: API request failed ${url}`;
-      window.app.error({ message });
-    }
+    const url = error.config.baseURL + error.config.url;
+    const message = `${error.message}: API request failed ${url}`;
+    window.app.error({ message });
     return Promise.reject(error);
   }
 );

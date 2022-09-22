@@ -4,7 +4,6 @@ import smoothscroll from "smoothscroll-polyfill";
 import "../css/app.css";
 import { createApp, h } from "vue";
 import { createMetaManager, plugin as metaPlugin } from "vue-meta";
-import api from "./api";
 import App from "./views/App.vue";
 import VueNumber from "vue-number-animation";
 import router from "./router";
@@ -72,11 +71,5 @@ app.use(metaPlugin);
 app.use(featureflags);
 app.use(VueNumber);
 window.app = app.mount("#app");
-
-window.setInterval(function () {
-  if (!document.hidden) {
-    api.get("health").then(window.app.setOnline).catch(window.app.setOffline);
-  }
-}, 5000);
 
 watchThemeChanges();

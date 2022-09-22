@@ -70,6 +70,11 @@ test:
 	@echo "Running testsuite"
 	go test $(BUILD_TAGS) ./...
 
+porcelain:
+	gofmt -w -l $$(find . -name '*.go')
+	go mod tidy
+	test -z "$$(git status --porcelain)" || (git status; git diff; false)
+
 build:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
@@ -82,7 +87,7 @@ release:
 
 docker:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker build --tag $(DOCKER_IMAGE):testing .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing .
 
 publish-testing:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)

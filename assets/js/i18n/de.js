@@ -168,6 +168,19 @@ export default {
       `,
     },
   },
+  startupError: {
+    title: "Fehler beim Starten",
+    description:
+      "Bitte überprüfe deine Konfigurationsdatei. Sollte dir die Fehlermeldung nicht weiterhelfen, suche in unseren {0} nach einer Lösung.",
+    discussions: "GitHub Discussions",
+    hint: "Hinweis: Ein weiterer Grund, warum du diese Meldung siehst, könnte ein fehlerhaftes Gerät (Wechselrichter, Zähler, ...) sein. Überprüfe deine Netzwerkverbindungen.",
+    configuration: "Konfiguration",
+    configFile: "Verwendete Konfigurationsdatei:",
+    lineError: "In {0} wurde ein Fehler gefunden.",
+    lineErrorLink: "Zeile {0}",
+    fixAndRestart: "Behebe das Problem und starte den Server neu.",
+    restartButton: "Neu starten",
+  },
   offline: {
     message: "Keine Verbindung zum Server.",
     reload: "Reload?",

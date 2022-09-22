@@ -125,27 +125,28 @@ func (s *Savings) updatePrices(p publisher) (float64, float64) {
 	return gridPrice, feedinPrice
 }
 
-func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
+// Update savings calculation and return grid/green energy added since last update
+func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) (float64, float64) {
 	gridPrice, feedinPrice := s.updatePrices(p)
 	defer func() { s.updated = s.clock.Now() }()
 
 	// no charging, no need to update
 	if chargePower == 0 {
-		return
+		return 0, 0
 	}
 
 	// assume charge power as constant over the duration -> rough kWh estimate
-	energyAdded := s.clock.Since(s.updated).Hours() * chargePower / 1e3
+	deltaCharged := s.clock.Since(s.updated).Hours() * chargePower / 1e3
 	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
-	addedSelfConsumption := energyAdded * share
-	addedGrid := energyAdded - addedSelfConsumption
+	deltaSelf := deltaCharged * share
+	deltaGrid := deltaCharged - deltaSelf
 
-	s.gridCharged += addedGrid
-	s.gridCost += addedGrid * gridPrice
-	s.gridSavedCost += addedSelfConsumption * (gridPrice - feedinPrice)
-	s.selfConsumptionCharged += addedSelfConsumption
-	s.selfConsumptionCost += addedSelfConsumption * feedinPrice
+	s.gridCharged += deltaGrid
+	s.gridCost += deltaGrid * gridPrice
+	s.gridSavedCost += deltaSelf * (gridPrice - feedinPrice)
+	s.selfConsumptionCharged += deltaSelf
+	s.selfConsumptionCost += deltaSelf * feedinPrice
 
 	p.publish("savingsTotalCharged", s.TotalCharged())
 	p.publish("savingsGridCharged", s.gridCharged)
@@ -153,4 +154,6 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
+
+	return deltaCharged, deltaSelf
 }

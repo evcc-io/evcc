@@ -27,14 +27,8 @@ jobs:
       - name: Assets
         run: make assets
 
-      - name: Format & Tidy
-        run: |
-          gofmt -w -l $(find . -name '*.go')
-          go mod tidy
-
       - name: Porcelain
-        run: |
-          test -z "$(git status --porcelain)" || (git status; git diff; false)
+        run: make porcelain
 
       - name: Patch ASN1
         run: make patch-asn1
@@ -88,6 +82,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
+          args: --timeout 3m
 
   build-ui:
     name: UI

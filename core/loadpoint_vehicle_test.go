@@ -80,11 +80,19 @@ func TestVehicleDetectByID(t *testing.T) {
 func TestDefaultVehicle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
+	mode := api.ModePV
+	minsoc := 20
+	targetsoc := 80
+
 	dflt := mock.NewMockVehicle(ctrl)
 	dflt.EXPECT().Title().Return("default").AnyTimes()
 	dflt.EXPECT().Capacity().AnyTimes()
 	dflt.EXPECT().Phases().AnyTimes()
-	dflt.EXPECT().OnIdentified().AnyTimes()
+	dflt.EXPECT().OnIdentified().Return(api.ActionConfig{
+		Mode:      &mode,
+		MinSoC:    &minsoc,
+		TargetSoC: &targetsoc,
+	}).AnyTimes()
 
 	vehicle := mock.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("target").AnyTimes()
@@ -94,6 +102,7 @@ func TestDefaultVehicle(t *testing.T) {
 
 	lp := NewLoadPoint(util.NewLogger("foo"))
 	lp.defaultVehicle = dflt
+	lp.collectDefaults()
 
 	// populate channels
 	x, y, z := createChannels(t)
@@ -119,9 +128,19 @@ func TestDefaultVehicle(t *testing.T) {
 	}
 
 	// default vehicle disconnected
+	lp.ResetOnDisconnect = true
 	lp.evVehicleDisconnectHandler()
-	if lp.vehicle != dflt {
-		t.Errorf("expected %v, got %v", title(dflt), title(lp.vehicle))
+	if m := lp.GetMode(); m != mode {
+		t.Errorf("expected mode %v, got %v", mode, m)
+	}
+	if s := lp.GetMinSoC(); s != minsoc {
+		t.Errorf("expected minsoc %v, got %v", minsoc, s)
+	}
+	if s := lp.GetTargetSoC(); s != targetsoc {
+		t.Errorf("expected targetsoc %v, got %v", targetsoc, s)
+	}
+	if m := lp.onDisconnect.Mode; *m != api.ModeOff {
+		t.Errorf("expected ondisconnect mode %v, got %v", api.ModeOff, m)
 	}
 
 	// set non-default vehicle during disconnect - should be default on connect

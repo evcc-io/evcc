@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -111,6 +112,16 @@ func (v *Identity) login() (*oauth.Token, error) {
 	if err == nil {
 		var resp *http.Response
 		if resp, err = v.Do(req); err == nil {
+			defer resp.Body.Close()
+
+			if body, err = io.ReadAll(resp.Body); err == nil {
+				if match := regexp.MustCompile(`data-ibm-login-error-text="(.+?)"`).FindSubmatch(body); len(match) >= 2 {
+					err = errors.New(string(match[1]))
+				}
+			}
+		}
+
+		if err == nil {
 			loc, err = url.Parse(resp.Header.Get("location"))
 		}
 	}

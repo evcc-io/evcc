@@ -40,7 +40,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config
-	if err := loadConfigFile(cfgFile, &conf); err != nil {
+	if err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -68,8 +68,12 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 	chargers := cp.chargers
 	if len(args) == 1 {
-		arg := args[0]
-		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
+		name := args[0]
+		charger, err := cp.Charger(name)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		chargers = map[string]api.Charger{name: charger}
 	}
 
 	current := int64(noCurrent)

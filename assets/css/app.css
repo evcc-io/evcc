@@ -145,6 +145,13 @@ a:hover {
 	background-color: var(--evcc-accent3);
 	border-color: var(--evcc-accent3);
 }
+
+.btn:disabled {
+	color: inherit !important;
+	background-color: inherit !important;
+	border-color: inherit !important;
+}
+
 .btn-outline-primary,
 .btn-outline-primary:focus {
 	color: var(--bs-primary);

@@ -194,7 +194,7 @@ func (t *Template) SetParamDefault(name string, value string) {
 // return the param with the given name
 func (t *Template) ParamByName(name string) (int, Param) {
 	for i, p := range t.Params {
-		if p.Name == name {
+		if strings.EqualFold(p.Name, name) {
 			return i, p
 		}
 	}
@@ -295,31 +295,58 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 	// add the common templates
 	for _, v := range t.ConfigDefaults.Presets {
 		if !strings.Contains(t.Render, v.Render) {
-			t.Render = fmt.Sprintf("%s\n%s", t.Render, v.Render)
+			t.Render += "\n" + v.Render
 		}
 	}
 
-	for item, p := range values {
-		i, _ := t.ParamByName(item)
-		if i == -1 && !slices.Contains(predefinedTemplateProperties, item) {
-			return nil, values, fmt.Errorf("invalid element 'name: %s'", item)
+	res := make(map[string]interface{})
+
+	// TODO this is an utterly horrible hack
+	//
+	// When decoding the actual values ("other" parameter) into the
+	// defaults-populated map, mismatching key case will create multiple
+	// map entries for the same parameter.
+	// The code below tries to select the best, i.e. non-empty, value for the
+	// parameter and assigns it to the result key.
+	// The actual key name is taken from the parameter to make it unique.
+	// Since predefined properties are not matched by actual parameters using
+	// ParamByName(), the lower case key name is used instead.
+	// All keys *must* be assigned or rendering will create "<no value>" artifacts.
+
+	for key, val := range values {
+		out := strings.ToLower(key)
+
+		if i, p := t.ParamByName(key); i == -1 {
+			if !slices.Contains(predefinedTemplateProperties, strings.ToLower(key)) {
+				return nil, values, fmt.Errorf("invalid key: %s", key)
+			}
+		} else {
+			out = p.Name
 		}
 
-		switch p := p.(type) {
+		switch typed := val.(type) {
 		case []interface{}:
 			var list []string
-			for _, v := range p {
+			for _, v := range typed {
 				list = append(list, yamlQuote(fmt.Sprintf("%v", v)))
 			}
-			values[item] = list
+			if res[out] == nil || len(res[out].([]interface{})) == 0 {
+				res[out] = list
+			}
+
 		case []string:
 			var list []string
-			for _, v := range p {
+			for _, v := range typed {
 				list = append(list, yamlQuote(v))
 			}
-			values[item] = list
+			if res[out] == nil || len(res[out].([]string)) == 0 {
+				res[out] = list
+			}
+
 		default:
-			values[item] = yamlQuote(fmt.Sprintf("%v", p))
+			if res[out] == nil || res[out].(string) == "" {
+				res[out] = yamlQuote(fmt.Sprintf("%v", val))
+			}
 		}
 	}
 
@@ -338,11 +365,11 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 
 	tmpl, err := tmpl.Funcs(template.FuncMap(sprig.FuncMap())).Funcs(funcMap).Parse(t.Render)
 	if err != nil {
-		return nil, values, err
+		return nil, res, err
 	}
 
 	out := new(bytes.Buffer)
-	err = tmpl.Execute(out, values)
+	err = tmpl.Execute(out, res)
 
-	return bytes.TrimSpace(out.Bytes()), values, err
+	return bytes.TrimSpace(out.Bytes()), res, err
 }

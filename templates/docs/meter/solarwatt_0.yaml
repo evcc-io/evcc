@@ -5,18 +5,18 @@ render:
   - usage: grid
     default: |
       type: template
-      template: solarwatt-myreserve
+      template: solarwatt
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
   - usage: pv
     default: |
       type: template
-      template: solarwatt-myreserve
+      template: solarwatt
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
   - usage: battery
     default: |
       type: template
-      template: solarwatt-myreserve
+      template: solarwatt
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
