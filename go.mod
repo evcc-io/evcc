@@ -174,4 +174,4 @@ require (
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20220205120646-e5220ad9a9a0
 
-replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220903124413-34ed446d0f0c
+replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220922202013-9a412165ffaf
