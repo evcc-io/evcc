@@ -179,7 +179,7 @@ export default {
     lineError: "In {0} wurde ein Fehler gefunden.",
     lineErrorLink: "Zeile {0}",
     fixAndRestart: "Behebe das Problem und starte den Server neu.",
-    restartButton: "Server neu starten",
+    restartButton: "Neu starten",
   },
   offline: {
     message: "Keine Verbindung zum Server.",
