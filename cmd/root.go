@@ -321,24 +321,17 @@ func run(cmd *cobra.Command, args []string) {
 		var once sync.Once
 		httpd.RegisterShutdownHandler(func() {
 			once.Do(func() {
+				log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
 				close(siteC)
 			})
 		})
 
-		// delayed reboot on error
-		const rebootDelay = time.Minute
-
 		log.FATAL.Println(err)
-		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
 		publishErrorInfo(cfgFile, err)
 
 		go func() {
-			select {
-			case <-time.After(rebootDelay):
-			case <-siteC:
-			}
-
+			<-siteC
 			os.Exit(1)
 		}()
 	}

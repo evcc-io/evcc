@@ -2,7 +2,7 @@
 	<div class="container px-4">
 		<div class="d-flex justify-content-between align-items-center my-3">
 			<h1 class="d-block mt-0 d-flex">
-				Fehler beim Starten
+				{{ $t("startupError.title") }}
 				<shopicon-regular-car1 size="m" class="ms-2 icon"></shopicon-regular-car1>
 			</h1>
 		</div>
@@ -10,38 +10,38 @@
 			<code class="fs-6 mb-3">
 				<div v-for="(error, index) in errors" :key="index">{{ error }}</div>
 			</code>
+			<i18n-t tag="p" keypath="startupError.description">
+				<a href="https://github.com/evcc-io/evcc/discussions">
+					{{ $t("startupError.discussions") }}
+				</a>
+			</i18n-t>
 			<p>
-				Bitte überprüfe deine Konfigurationsdatei. Sollte dir die Fehlermeldung nicht
-				weiterhelfen, suche in unseren
-				<a href="https://github.com/evcc-io/evcc/discussions">GitHub Discussions</a> nach
-				einer Lösung.
-			</p>
-			<p>
-				<em>
-					Hinweis: Ein weiterer Grund, warum du diese Meldung siehst, könnte ein
-					fehlerhaftes Gerät (Wechselrichter, Zähler, ...) sein. Überprüfe deine
-					Netzwerkverbindungen.
-				</em>
+				<em>{{ $t("startupError.hint") }}</em>
 			</p>
 		</div>
 		<div class="row mb-4">
-			<h5 class="mb-3">Konfiguration</h5>
+			<h5 class="mb-3">{{ $t("startupError.configuration") }}</h5>
 			<div class="d-md-flex justify-content-between">
 				<p class="me-md-4">
-					Folgende Konfigurationsdatei wurde verwendet:
-					<code>
-						{{ file }}<span v-if="line">:{{ line }}</span>
-					</code>
-					<br />
-					Klicke hier um evcc neu zu starten nachdem du die Datei angepasst hast.
+					<span class="d-block">
+						{{ $t("startupError.configFile") }}
+						<code>{{ file }}</code>
+					</span>
+					<i18n-t v-if="line" tag="span" keypath="startupError.lineError">
+						<a :href="`#line${line}`" @click.prevent="scrollTo">{{
+							$t("startupError.lineErrorLink", [line])
+						}}</a>
+					</i18n-t>
+					{{ $t("startupError.fixAndRestart") }}
 				</p>
 				<p>
 					<button
-						class="btn btn-outline-primary text-nowrap"
+						class="btn btn-primary text-nowrap"
 						type="button"
+						:disabled="offline"
 						@click="shutdown"
 					>
-						Server neu starten
+						{{ $t("startupError.restartButton") }}
 					</button>
 				</p>
 			</div>
@@ -51,6 +51,7 @@
 				<div class="py-2 text-muted config">
 					<div
 						v-for="(configLine, lineNumber) in config.split('\n')"
+						:id="`line${lineNumber + 1}`"
 						:key="lineNumber"
 						class="m-0 px-2"
 						:class="{
@@ -78,6 +79,7 @@ export default {
 		config: String,
 		file: String,
 		line: Number,
+		offline: Boolean,
 	},
 	computed: {
 		errors() {
@@ -87,6 +89,14 @@ export default {
 	methods: {
 		shutdown() {
 			api.post("shutdown");
+		},
+		scrollTo(e) {
+			const id = e.currentTarget.getAttribute("href").substring(1);
+			const el = document.getElementById(id);
+			console.log({ id, el });
+			if (el) {
+				el.scrollIntoView({ behavior: "smooth", block: "center" });
+			}
 		},
 	},
 };
