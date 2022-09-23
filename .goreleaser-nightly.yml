@@ -45,7 +45,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}-{{ .Timestamp }}'
+  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
 
 changelog:
   sort: asc
