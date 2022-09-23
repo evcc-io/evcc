@@ -1,0 +1,100 @@
+query GetConsumerInformation {
+	myStar {
+		__typename
+		getConsumer {
+			__typename
+			...MyStarConsumerDetails
+		}
+		getOrders {
+			__typename
+			...MyStarOrderDetails
+		}
+		getConsumerCars {
+			__typename
+			...MyStarCarDetails
+		}
+	}
+}
+fragment MyStarConsumerDetails on MyStarConsumer {
+	__typename
+	birthdate
+	city
+	country
+	countryCode
+	email
+	firstName
+	lastName
+	mobilePhone
+	salesforceId
+	streetAddress
+	zipCode
+	additionalCustomerIds {
+		__typename
+		code
+		id
+	}
+}
+fragment MyStarOrderDetails on MyStarOrder {
+	__typename
+	type
+	address
+	city
+	configurationId
+	consumerId
+	country
+	countryCode
+	deposit
+	district
+	downPayment
+	externalOrderId
+	orderId
+	orderState
+	packageId
+	placedAt
+	province
+	redirectUrl
+	totalPrice
+	zipCode
+	car {
+		__typename
+		...MyStarCarDetails
+	}
+	items {
+		__typename
+		...MyStarOrderItemDetails
+	}
+}
+fragment MyStarCarDetails on MyStarCar {
+	__typename
+	id
+	consumerId
+	engine
+	exterior
+	exteriorCode
+	exteriorImageUrl
+	gearbox
+	interior
+	interiorCode
+	interiorImageUrl
+	model
+	modelYear
+	package
+	packageCode
+	pdfUrl
+	status
+	steering
+	vin
+	wheels
+	wheelsCode
+}
+fragment MyStarOrderItemDetails on MyStarOrderItem {
+	__typename
+	id
+	currency
+	deposit
+	downPayment
+	price
+	quantity
+	title
+	type
+}

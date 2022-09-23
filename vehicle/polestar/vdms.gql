@@ -1,0 +1,235 @@
+GetVDMSCarDetails($vin: String!, $locale: String!) {
+	vdms {
+	__typename
+	vehicleInformation(vin: $vin, locale: $locale) {
+		__typename
+		...VdmsExtendedCarDetails
+	}
+}
+}
+fragment VdmsExtendedCarDetails on VehicleInformation {
+	__typename
+	belongsToFleet
+	content {
+	__typename
+	dimensions {
+		__typename
+		...VdmsDimensionsDetails
+	}
+exterior {
+		__typename
+		...VdmsFeatureDetails
+	}
+images {
+		__typename
+		...VdmsCarImageDetails
+	}
+interior {
+		__typename
+		...VdmsFeatureDetails
+	}
+model {
+		__typename
+		...VdmsModelDetails
+	}
+motor {
+		__typename
+		...VdmsFeatureDetails
+	}
+performancePackage {
+		__typename
+		...VdmsFeatureDetails
+	}
+pilotPackage {
+		__typename
+		...VdmsFeatureDetails
+	}
+plusPackage {
+		__typename
+		...VdmsFeatureDetails
+	}
+specification {
+		__typename
+		...VdmsSpecificationDetails
+	}
+towbar {
+		__typename
+		...VdmsFeatureDetails
+	}
+wheels {
+		__typename
+		...VdmsFeatureDetails
+	}
+}
+curbWeight {
+	__typename
+	...VdmsWeightDetails
+	}
+cylinderVolume
+cylinderVolumeUnit
+drivetrain
+factoryCompleteDate
+fuelType
+hasPerformancePackage
+market
+maxTrailerWeight {
+	__typename
+	...VdmsWeightDetails
+	}
+metaOrderNumber
+modelYear
+motor {
+	__typename
+	...VdmsMotorDetails
+	}
+numberOfCylinders
+numberOfDoors
+numberOfGears
+numberOfSeats
+pno34
+primaryDriver
+registrationNo
+serviceHistory {
+	__typename
+	...VdmsWorkOrderDetails
+	}
+transmission
+vin
+wltpNedcData {
+	__typename
+	...VdmsWltpDetails
+	}
+}
+fragment VdmsDimensionsDetails on VdmsDimensions {
+	__typename
+	bodyDimensions {
+	__typename
+	...VdmsLabelValueDetails
+	}
+groundClearanceWithPerformance {
+	__typename
+	...VdmsLabelValueDetails
+	}
+groundClearanceWithoutPerformance {
+	__typename
+	...VdmsLabelValueDetails
+	}
+wheelbase {
+	__typename
+	...VdmsLabelValueDetails
+	}
+}
+fragment VdmsLabelValueDetails on VdmsLabelValue {
+	__typename
+	label
+	value
+}
+fragment VdmsFeatureDetails on VdmsFeature {
+	__typename
+	code
+	description
+	excluded
+	galleryImage {
+	__typename
+	alt
+	url
+	}
+name
+thumbnail {
+	__typename
+	alt
+	url
+	}
+}
+fragment VdmsCarImageDetails on VdmsCarImages {
+	__typename
+	interior {
+	__typename
+	...VdmsImageDetails
+	}
+location {
+	__typename
+	...VdmsImageDetails
+	}
+studio {
+	__typename
+	...VdmsImageDetails
+	}
+}
+fragment VdmsImageDetails on VdmsImage {
+	__typename
+	angles
+	resolutions
+	url
+}
+fragment VdmsModelDetails on VdmsModel {
+	__typename
+	code
+	name
+}
+fragment VdmsSpecificationDetails on VdmsSpecification {
+	__typename
+	battery
+	electricMotors
+	performance
+	torque
+	totalHp
+	totalKw
+	trunkCapacity {
+	__typename
+	...VdmsLabelValueDetails
+	}
+}
+fragment VdmsWeightDetails on VdmsWeight {
+	__typename
+	unit
+	value
+}
+fragment VdmsMotorDetails on VdmsMotor {
+	__typename
+	code
+	description
+}
+fragment VdmsWorkOrderDetails on VdmsWorkOrder {
+	__typename
+	market
+	operations {
+	__typename
+	...VdmsOperationDetails
+	}
+orderEndDate
+orderNumber
+orderStartDate
+parts {
+	__typename
+	...VdmsPartDetails
+	}
+status
+statusDMS
+workshopId
+}
+fragment VdmsOperationDetails on VdmsOperation {
+	__typename
+	code
+	description
+	id
+	performedDate
+	quantity
+}
+fragment VdmsPartDetails on VdmsPart {
+	__typename
+	code
+	description
+	id
+	performedDate
+	quantity
+}
+fragment VdmsWltpDetails on VdmsWltpNedcData {
+	__typename
+	wltpCO2Unit
+	wltpElecEnergyConsumption
+	wltpElecEnergyUnit
+	wltpElecRange
+	wltpElecRangeUnit
+	wltpWeightedCombinedCO2
+}",

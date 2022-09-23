@@ -2,20 +2,23 @@ package polestar
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 	"github.com/shurcooL/graphql"
 	"golang.org/x/oauth2"
 )
 
 // https://github.com/TA2k/ioBroker.polestar
 
-const ApiURI = "https://pc-api.polestar.com/eu-north-1/mesh/"
+const ApiURI = "https://pc-api.polestar.com/eu-north-1/mesh"
 
 type API struct {
+	*request.Helper
 	client *graphql.Client
 }
 
@@ -35,52 +38,81 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	}
 
 	v := &API{
+		Helper: request.NewHelper(log),
 		client: graphql.NewClient(ApiURI, httpClient),
 	}
+
+	v.Client.Transport = httpClient.Transport
 
 	return v
 }
 
 func (v *API) Vehicles(ctx context.Context) ([]string, error) {
-	type vehicle struct {
-		VIN, Type, Nickname string
-	}
-
 	var res struct {
-		GetConsumerInformation struct {
-			MyStar struct {
-				Type        string `graphql:"__typename"`
-				GetConsumer struct {
-					Type                  string `graphql:"__typename"`
-					MyStarConsumerDetails string `graphql:"... MyStarConsumerDetails"`
-				} `graphql:"getConsumer"`
-			} `graphql:"myStar"`
-		} `graphql:"GetConsumerInformation"`
+		MyStar struct {
+			// Type            string `graphql:"__typename"`
+			GetConsumer     Consumer
+			GetConsumerCars []ConsumerCar
+		}
 	}
 
 	var vins []string
 	err := v.client.Query(ctx, &res, nil)
-	// if err == nil {
-	// 	vins = lo.Map(res.UserVehicles, func(v vehicle, _ int) string {
-	// 		return v.VIN
-	// 	})
-	// }
+	if err == nil {
+		vins = lo.Map(res.MyStar.GetConsumerCars, func(v ConsumerCar, _ int) string {
+			return v.Vin
+		})
+	}
+
+	v.Status(ctx, vins[0])
 
 	return vins, err
 }
 
-// func (v *API) Status(vin string) (StatusResponse, error) {
-// 	var res StatusResponse
+type VehicleInformation struct {
+	VdmsExtendedCarDetails `graphql:"... on VehicleInformation"`
+}
 
-// 	uri := fmt.Sprintf("%s/vehicles/%s/init-data?requestedData=BOTH&countryCode=DE&locale=de-DE", ApiURI, vin)
-// 	err := v.GetJSON(uri, &res)
+type VdmsExtendedCarDetails struct {
+	Type string `graphql:"__typename"`
+}
 
-// 	if err != nil && res.Error != "" {
-// 		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
+// {
+// 	"query": "query($locale:String!$vin:String!){
+// 		vdms{
+// 			vehicleInformation(vin: $vin, locale: $locale){
+// 				... on VehicleInformation{
+// 					__typename
+// 				}
+// 			}
+// 		}
+// 	}",
+// 	"variables": {
+// 		"locale": "de_DE",
+// 		"vin": "LPSVSEDEEML002398"
 // 	}
-
-// 	return res, err
 // }
+
+func (v *API) Status(ctx context.Context, vin string) error {
+	// var res struct {
+	// 	// GetVDMSCarDetails struct {
+	// 	Vdms struct {
+	// 		VehicleInformation `graphql:"vehicleInformation(vin: $vin, locale: $locale)"`
+	// 	} //`graphql:"GetVDMSCarDetails($vin: String!, $locale: String!)"`
+	// 	// }
+	// }
+
+	// err := v.client.Query(ctx, &res, map[string]interface{}{
+	// 	"vin":    graphql.String(vin),
+	// 	"locale": graphql.String("de_DE"),
+	// })
+	// if err == nil {
+
+	// }
+
+	err := v.GetJSON(fmt.Sprintf("%s/status/%s", ApiURI, vin), nil)
+	return err
+}
 
 // func (v *API) Refresh(vin string) (StatusResponse, error) {
 // 	var res StatusResponse

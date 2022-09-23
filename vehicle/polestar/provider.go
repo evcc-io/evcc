@@ -9,8 +9,8 @@ import (
 // https://github.com/TA2k/ioBroker.polestar
 
 type Provider struct {
-	statusG func() (StatusResponse, error)
-	expiry  time.Duration
+	// statusG func() (StatusResponse, error)
+	expiry time.Duration
 }
 
 func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Duration) *Provider {
@@ -36,8 +36,8 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
-	res, err := v.statusG()
-	return res.Status.Data.Soc.Value, err
+	// res, err := v.statusG()
+	return 0, nil
 }
 
 // var _ api.ChargeState = (*Provider)(nil)
