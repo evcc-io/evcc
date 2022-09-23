@@ -166,6 +166,19 @@ export default {
       `,
     },
   },
+  startupError: {
+    title: "Klaida startuojant",
+    description:
+      "Patikrinkite konfigūracijos failą. Jei klaidos žinutė jums nepadėjo, atsakymų ieškokite mūsų {0}.",
+    discussions: "GitHub Diskusijose",
+    hint: "Pastaba: Gali būti, kad pranešimą apie klaidą matote dėl neteisingai veikiančio įrenginio (inverterio, skaitiklio, ...). Patikrinkite tiklo jungtis.",
+    configuration: "Konfigūracija",
+    configFile: "Naudojamas konfiguracijos failas:",
+    lineError: "Radome klaidą čia {0}.",
+    lineErrorLink: "eilutė {0}",
+    fixAndRestart: "Ištaisykite klaidą ir restartuokite serverį.",
+    restartButton: "Restartuoti",
+  },
   offline: {
     message: "Nėra ryšio su serveriu.",
     reload: "Perkrauti?",
