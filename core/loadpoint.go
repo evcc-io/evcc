@@ -208,12 +208,18 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.collectDefaults()
 
 	if lp.MeterRef != "" {
-		lp.chargeMeter = cp.Meter(lp.MeterRef)
+		var err error
+		if lp.chargeMeter, err = cp.Meter(lp.MeterRef); err != nil {
+			return nil, err
+		}
 	}
 
 	// default vehicle
 	if lp.VehicleRef != "" {
-		lp.defaultVehicle = cp.Vehicle(lp.VehicleRef)
+		var err error
+		if lp.defaultVehicle, err = cp.Vehicle(lp.VehicleRef); err != nil {
+			return nil, err
+		}
 	}
 
 	// TODO deprecated
@@ -224,7 +230,10 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	if lp.ChargerRef == "" {
 		return nil, errors.New("missing charger")
 	}
-	lp.charger = cp.Charger(lp.ChargerRef)
+	var err error
+	if lp.charger, err = cp.Charger(lp.ChargerRef); err != nil {
+		return nil, err
+	}
 	lp.configureChargerType(lp.charger)
 
 	// setup fixed phases:
@@ -440,8 +449,11 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	// set default mode on disconnect
 	if lp.ResetOnDisconnect {
-		// TODO respect defaultVehicle
-		lp.applyAction(lp.onDisconnect)
+		actionCfg := lp.onDisconnect
+		if v := lp.defaultVehicle; v != nil {
+			actionCfg = actionCfg.Merge(v.OnIdentified())
+		}
+		lp.applyAction(actionCfg)
 	}
 
 	// soc update reset

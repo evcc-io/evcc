@@ -1,7 +1,5 @@
 <template>
 	<div class="d-flex flex-column site">
-		<OfflineIndicator v-if="offline" />
-
 		<div class="container px-4 top-area">
 			<div class="d-flex justify-content-between align-items-center my-3">
 				<h1 class="d-block my-0">
@@ -29,7 +27,6 @@
 <script>
 import "@h2d2/shopicons/es/regular/arrowup";
 import TopNavigation from "./TopNavigation.vue";
-import OfflineIndicator from "./OfflineIndicator.vue";
 import Notifications from "./Notifications.vue";
 import Energyflow from "./Energyflow/Energyflow.vue";
 import Loadpoints from "./Loadpoints.vue";
@@ -44,7 +41,6 @@ export default {
 		Loadpoints,
 		Energyflow,
 		Footer,
-		OfflineIndicator,
 		Notifications,
 		TopNavigation,
 		Vehicles,

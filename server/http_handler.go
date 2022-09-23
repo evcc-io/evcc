@@ -16,7 +16,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func indexHandler(site site.API) http.HandlerFunc {
+func indexHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
@@ -34,9 +34,8 @@ func indexHandler(site site.API) http.HandlerFunc {
 		}
 
 		if err := t.Execute(w, map[string]interface{}{
-			"Version":    Version,
-			"Commit":     Commit,
-			"Configured": len(site.LoadPoints()),
+			"Version": Version,
+			"Commit":  Commit,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
@@ -70,7 +69,7 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 // healthHandler returns current charge mode
 func healthHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !site.Healthy() {
+		if site == nil || !site.Healthy() {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

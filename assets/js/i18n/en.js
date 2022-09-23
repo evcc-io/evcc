@@ -167,6 +167,19 @@ export default {
       `,
     },
   },
+  startupError: {
+    title: "Startup Error",
+    description:
+      "Please check your configuration file. If the error message does not help you, have a look at our {0}.",
+    discussions: "GitHub Discussions",
+    hint: "Note: Another reason why you see this message could be a faulty device (inverter, meter, ...). Check your network connections.",
+    configuration: "Config",
+    configFile: "Configuration file used:",
+    lineError: "We found an error in {0}.",
+    lineErrorLink: "line {0}",
+    fixAndRestart: "Fix the problem and restart the server.",
+    restartButton: "Restart",
+  },
   offline: {
     message: "No connection to server.",
     reload: "Reload?",

@@ -1,24 +1,29 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
+	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/libp2p/zeroconf/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -29,8 +34,8 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
-	ignoreMqtt   = []string{"auth", "releaseNotes"}   // excessive size may crash certain brokers
+	ignoreErrors = []string{"warn", "error"}        // don't add to cache
+	ignoreMqtt   = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
 var conf = config{
@@ -58,7 +63,7 @@ func bind(cmd *cobra.Command, flag string) {
 func configureCommand(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringP(
 		"log", "l",
-		"error",
+		"info",
 		"Log level (fatal, error, warn, info, debug, trace)",
 	)
 	bind(cmd, "log")
@@ -115,19 +120,6 @@ func initConfig() {
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in
-	if err := viper.ReadInConfig(); err == nil {
-		// using config file
-		cfgFile = viper.ConfigFileUsed()
-	} else if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-		// parsing failed - exit
-		fmt.Println(err)
-		os.Exit(1)
-	} else {
-		// not using config file
-		cfgFile = ""
-	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -138,17 +130,83 @@ func Execute() {
 	}
 }
 
+var valueChan chan util.Param
+
+func publish(key string, val any) {
+	valueChan <- util.Param{Key: key, Val: val}
+}
+
+func unwrap(err error) (res []string) {
+	for err != nil {
+		inner := errors.Unwrap(err)
+		if inner == nil {
+			res = append(res, err.Error())
+		} else {
+			cur := strings.TrimSuffix(err.Error(), ": "+inner.Error())
+			cur = strings.TrimSuffix(cur, inner.Error())
+			res = append(res, strings.TrimSpace(cur))
+		}
+		err = inner
+	}
+	return
+}
+
+func redact(src string) string {
+	secrets := []string{
+		"url", "uri", "host", "broker", // infrastructure
+		"user", "password", // users
+		"token", "access", "refresh", "sponsortoken", // tokens
+		"ain", "id", "secret", "serial", "deviceid", "machineid", // devices
+		"vin"} // vehicles
+	return regexp.
+		MustCompile(fmt.Sprintf(`\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).
+		ReplaceAllString(src, "$1: *****")
+}
+
+func publishErrorInfo(cfgFile string, err error) {
+	if cfgFile != "" {
+		file, pathErr := filepath.Abs(cfgFile)
+		if pathErr != nil {
+			file = cfgFile
+		}
+		publish("file", file)
+
+		if src, fileErr := os.ReadFile(cfgFile); fileErr != nil {
+			log.ERROR.Println("could not open config file:", fileErr)
+		} else {
+			publish("config", redact(string(src)))
+
+			// find line number
+			if match := regexp.MustCompile(`yaml: line (\d+):`).FindStringSubmatch(err.Error()); len(match) == 2 {
+				if line, err := strconv.Atoi(match[1]); err == nil {
+					publish("line", line)
+				}
+			}
+		}
+	}
+
+	publish("fatal", unwrap(err))
+}
+
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
 	// load config and re-configure logging after reading config file
-	if err := loadConfigFile(cfgFile, &conf); err != nil {
-		log.ERROR.Println("missing evcc config - switching into demo mode")
+	var err error
+	if cfgErr := loadConfigFile(&conf); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
+		log.INFO.Println("missing config file - switching into demo mode")
 		demoConfig(&conf)
+	} else {
+		err = cfgErr
 	}
 
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
+
+	// full http request log
+	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
+	}
 
 	// network config
 	if viper.GetString("uri") != "" {
@@ -161,55 +219,16 @@ func run(cmd *cobra.Command, args []string) {
 
 	log.INFO.Printf("listening at :%d", conf.Network.Port)
 
-	// setup environment
-	if err := configureEnvironment(conf); err != nil {
-		log.FATAL.Fatal(err)
-	}
-
-	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
-		request.LogHeaders = true
-	}
-
-	// setup loadpoints
-	cp.TrackVisitors() // track duplicate usage
-
-	site, err := configureSiteAndLoadpoints(conf)
-	if err != nil {
-		log.FATAL.Fatal(err)
-	}
-
 	// start broadcasting values
-	tee := &util.Tee{}
+	tee := new(util.Tee)
 
 	// value cache
 	cache := util.NewCache()
 	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
 
-	// setup database
-	if conf.Influx.URL != "" {
-		configureDatabase(conf.Influx, site.LoadPoints(), tee.Attach())
-	}
-
-	// setup mqtt publisher
-	if conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
-		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
-	}
-
-	// create webserver
+	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), site, socketHub, cache)
-
-	// announce webserver on mDNS
-	if strings.HasSuffix(conf.Network.Host, ".local") {
-		host := strings.TrimSuffix(conf.Network.Host, ".local")
-		if zc, err := zeroconf.RegisterProxy("EV Charge Controller", "_http._tcp", "local.", conf.Network.Port, host, nil, []string{}, nil); err == nil {
-			shutdown.Register(zc.Shutdown)
-		} else {
-			log.ERROR.Printf("mDNS announcement: %s", err)
-		}
-	}
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -221,48 +240,108 @@ func run(cmd *cobra.Command, args []string) {
 		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
 
-	// start HEMS server
-	if conf.HEMS.Type != "" {
-		hems := configureHEMS(conf.HEMS, site, httpd)
-		go hems.Run()
-	}
-
 	// publish to UI
 	go socketHub.Run(tee.Attach(), cache)
 
 	// setup values channel
-	valueChan := make(chan util.Param)
+	valueChan = make(chan util.Param)
 	go tee.Run(valueChan)
 
-	// expose sponsor to UI
-	if sponsor.Subject != "" {
-		valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}
+	// setup environment
+	if err == nil {
+		err = configureEnvironment(conf)
 	}
 
-	// allow web access for vehicles
-	cp.webControl(conf.Network, httpd.Router(), valueChan)
+	// setup site and loadpoints
+	var site *core.Site
+	if err == nil {
+		cp.TrackVisitors() // track duplicate usage
+		site, err = configureSiteAndLoadpoints(conf)
+	}
 
-	// version check
-	go updater.Run(log, httpd, tee, valueChan)
+	// setup database
+	if err == nil && conf.Influx.URL != "" {
+		configureDatabase(conf.Influx, site.LoadPoints(), tee.Attach())
+	}
 
-	// capture log messages for UI
-	util.CaptureLogs(valueChan)
+	// setup mqtt publisher
+	if err == nil && conf.Mqtt.Broker != "" {
+		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
+		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
+	}
+
+	// announce on mDNS
+	if err == nil && strings.HasSuffix(conf.Network.Host, ".local") {
+		err = configureMDNS(conf.Network)
+	}
+
+	// start HEMS server
+	if err == nil && conf.HEMS.Type != "" {
+		err = configureHEMS(conf.HEMS, site, httpd)
+	}
 
 	// setup messaging
-	pushChan := configureMessengers(conf.Messaging, cache)
-
-	// set channels
-	site.DumpConfig()
-	site.Prepare(valueChan, pushChan)
+	var pushChan chan push.Event
+	if err == nil {
+		pushChan, err = configureMessengers(conf.Messaging, cache)
+	}
 
 	stopC := make(chan struct{})
 	go shutdown.Run(stopC)
 
 	siteC := make(chan struct{})
-	go func() {
-		site.Run(stopC, conf.Interval)
-		close(siteC)
-	}()
+
+	// show main ui
+	if err == nil {
+		httpd.RegisterSiteHandlers(site, cache)
+
+		// set channels
+		site.DumpConfig()
+		site.Prepare(valueChan, pushChan)
+
+		// version check
+		go updater.Run(log, httpd, tee, valueChan)
+
+		// capture log messages for UI
+		util.CaptureLogs(valueChan)
+
+		// expose sponsor to UI
+		if sponsor.Subject != "" {
+			publish("sponsor", sponsor.Subject)
+		}
+
+		// allow web access for vehicles
+		cp.webControl(conf.Network, httpd.Router(), valueChan)
+
+		go func() {
+			site.Run(stopC, conf.Interval)
+			close(siteC)
+		}()
+	} else {
+		var once sync.Once
+		httpd.RegisterShutdownHandler(func() {
+			once.Do(func() {
+				log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
+				close(siteC)
+			})
+		})
+
+		// delayed reboot on error
+		const rebootDelay = 5 * time.Minute
+
+		log.FATAL.Println(err)
+		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
+
+		publishErrorInfo(cfgFile, err)
+
+		go func() {
+			select {
+			case <-time.After(rebootDelay):
+			case <-siteC:
+			}
+			os.Exit(1)
+		}()
+	}
 
 	// uds health check listener
 	go server.HealthListener(site, siteC)

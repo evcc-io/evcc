@@ -14,7 +14,10 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/telemetry"
 )
+
+const standbyPower = 10 // consider less than 10W as charger in standby
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
@@ -92,12 +95,18 @@ func NewSiteFromConfig(
 	}
 
 	if site.Meters.GridMeterRef != "" {
-		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
+		var err error
+		if site.gridMeter, err = cp.Meter(site.Meters.GridMeterRef); err != nil {
+			return nil, err
+		}
 	}
 
 	// multiple pv
 	for _, ref := range site.Meters.PVMetersRef {
-		pv := cp.Meter(ref)
+		pv, err := cp.Meter(ref)
+		if err != nil {
+			return nil, err
+		}
 		site.pvMeters = append(site.pvMeters, pv)
 	}
 
@@ -106,13 +115,19 @@ func NewSiteFromConfig(
 		if len(site.pvMeters) > 0 {
 			return nil, errors.New("cannot have pv and pvs both")
 		}
-		pv := cp.Meter(site.Meters.PVMeterRef)
+		pv, err := cp.Meter(site.Meters.PVMeterRef)
+		if err != nil {
+			return nil, err
+		}
 		site.pvMeters = append(site.pvMeters, pv)
 	}
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
-		battery := cp.Meter(ref)
+		battery, err := cp.Meter(ref)
+		if err != nil {
+			return nil, err
+		}
 		site.batteryMeters = append(site.batteryMeters, battery)
 	}
 
@@ -121,7 +136,10 @@ func NewSiteFromConfig(
 		if len(site.batteryMeters) > 0 {
 			return nil, errors.New("cannot have battery and batteries both")
 		}
-		battery := cp.Meter(site.Meters.BatteryMeterRef)
+		battery, err := cp.Meter(site.Meters.BatteryMeterRef)
+		if err != nil {
+			return nil, err
+		}
 		site.batteryMeters = append(site.batteryMeters, battery)
 	}
 
@@ -325,7 +343,7 @@ func (site *Site) updateMeters() error {
 			if err == nil {
 				site.batteryPower += power
 			} else {
-				site.log.ERROR.Println(fmt.Errorf("battery meter %d: %v", id, err))
+				site.log.ERROR.Printf("battery meter %d: %v", id, err)
 			}
 		}
 
@@ -342,7 +360,7 @@ func (site *Site) updateMeters() error {
 			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		} else {
-			site.log.ERROR.Println(fmt.Errorf("grid meter currents: %v", err))
+			site.log.ERROR.Printf("grid meter currents: %v", err)
 		}
 	}
 
@@ -371,7 +389,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 		site.gridPower = totalChargePower - site.pvPower
 	}
 
-	// allow using Grid and charge as estimate for pv power
+	// allow using grid and charge as estimate for pv power
 	if site.pvMeters == nil {
 		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
 		if site.pvPower < 0 {
@@ -448,9 +466,12 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	// update savings
+	// update savings and aggregate telemetry
 	// TODO: use energy instead of current power for better results
-	site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	if telemetry.Enabled && totalChargePower > standbyPower {
+		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
+	}
 }
 
 // prepare publishes initial values

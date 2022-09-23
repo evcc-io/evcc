@@ -15,6 +15,19 @@ interval: 10s # control cycle interval
 # sponsor token enables optional features (request at https://cloud.evcc.io)
 # sponsortoken:
 
+# telemetry enables aggregated statistics
+#
+# Telemetry allows collecting usage data (grid and green energy, charge power).
+# Data is aggregated, no individual charging sessions are tracked. The collected,
+# anonymous data can be retrieved using https://api.evcc.io.
+#
+# See https://github.com/evcc-io/evcc/pull/4343 or details.
+#
+# For time being, this is only available to sponsors, hence data is associated with
+# the sponsor token's identity.
+#
+# telemetry: true
+
 # log settings
 log: info
 levels:
