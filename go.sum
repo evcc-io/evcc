@@ -66,8 +66,8 @@ github.com/BurntSushi/toml v1.0.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbi
 github.com/BurntSushi/toml v1.2.0 h1:Rt8g24XnyGTyglgET/PRUNlrUeu9F5L+7FilkXfZgs0=
 github.com/BurntSushi/toml v1.2.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/DerAndereAndi/eebus v0.0.0-20220922202013-9a412165ffaf h1:nPEMC/xPo+OC2FPckfLqG4HEFRNpS0iK6BTDk4nChlQ=
-github.com/DerAndereAndi/eebus v0.0.0-20220922202013-9a412165ffaf/go.mod h1:3XOPHDqI7b58TaUU/zacWprEkazWtOleOVN3oNA3mGw=
+github.com/DerAndereAndi/eebus v0.0.0-20220924095845-1a31009786c4 h1:9JzcAUI75PTZ75vZTyRq8jf7EKjCfJGk8rPQnWl7VAM=
+github.com/DerAndereAndi/eebus v0.0.0-20220924095845-1a31009786c4/go.mod h1:3XOPHDqI7b58TaUU/zacWprEkazWtOleOVN3oNA3mGw=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
