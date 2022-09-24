@@ -46,8 +46,10 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		MeterInterval time.Duration
 		MeterValues   string
 		InitialReset  core.ResetType
+		Timeout       time.Duration
 	}{
 		Connector: 1,
+		Timeout:   time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -63,7 +65,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, fmt.Errorf("unknown configuration option detected for reset: %s", cc.InitialReset)
 	}
 
-	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.InitialReset)
+	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.InitialReset, cc.Timeout)
 	if err != nil {
 		return c, err
 	}
@@ -89,27 +91,35 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, initialReset core.ResetType) (*OCPP, error) {
-	cp, err := ocpp.Instance().Register(id)
-	if err != nil {
-		return nil, err
-	}
-
+func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, initialReset core.ResetType, timeout time.Duration) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
 		unit = id
 	}
+	log := util.NewLogger(unit)
+
+	cp := ocpp.NewChargePoint(log, id, timeout)
+	if err := ocpp.Instance().Register(id, cp); err != nil {
+		return nil, err
+	}
 
 	c := &OCPP{
-		log:       util.NewLogger(unit),
+		log:       log,
 		cp:        cp,
 		connector: connector,
 		idtag:     idtag,
 	}
 
-	if err := cp.Boot(); err != nil {
-		return nil, err
+	c.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
+
+	select {
+	case <-time.After(timeout):
+		return nil, api.ErrTimeout
+	case <-cp.HasConnected():
 	}
+
+	// see who's there
+	ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
 
 	var (
 		rc                  = make(chan error, 1)
@@ -118,7 +128,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	)
 
 	// configured id may be empty, use registered id below
-	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+	err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err != nil {
 			rc <- err
 			return

@@ -33,6 +33,13 @@ func main() {
 		for msg := range handler.triggerC {
 			fmt.Println("msg:", msg)
 			switch msg {
+			case core.BootNotificationFeatureName:
+				if res, err := chargePoint.BootNotification("demo", "evcc"); err != nil {
+					log.Println("BootNotification:", err)
+				} else {
+					log.Println("BootNotification:", res)
+				}
+
 			case core.StatusNotificationFeatureName:
 				if res, err := chargePoint.StatusNotification(1, core.NoError, core.ChargePointStatusAvailable); err != nil {
 					log.Println("StatusNotification:", err)
@@ -41,12 +48,14 @@ func main() {
 				}
 
 			case core.MeterValuesFeatureName:
-				if _, err := chargePoint.MeterValues(1, []types.MeterValue{
+				if res, err := chargePoint.MeterValues(1, []types.MeterValue{
 					{SampledValue: []types.SampledValue{
 						{Measurand: types.MeasurandPowerActiveImport, Value: "1000"},
 					}},
 				}); err != nil {
 					log.Println("MeterValues:", err)
+				} else {
+					log.Println("MeterValues:", res)
 				}
 			}
 		}
@@ -58,11 +67,6 @@ func main() {
 	}
 
 	log.Printf("connected to central system at %v", url)
-	if res, err := chargePoint.BootNotification("model1", "vendor1"); err != nil {
-		log.Fatal("BootNotification", err)
-	} else {
-		log.Printf("status: %v, interval: %v", res.Status, res.Interval)
-	}
 
 	select {}
 }

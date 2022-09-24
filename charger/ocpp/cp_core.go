@@ -29,16 +29,6 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
-	if request != nil {
-		cp.log.DEBUG.Printf("chargepoint: %+v", request)
-	}
-
-	// signal boot
-	select {
-	case cp.bootC <- struct{}{}:
-	default:
-	}
-
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
 		Interval:    60, // TODO
