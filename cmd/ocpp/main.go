@@ -64,7 +64,6 @@ func main() {
 
 	go func() {
 		for msg := range handler.triggerC {
-			fmt.Println("msg:", msg)
 			switch msg {
 			case core.BootNotificationFeatureName:
 				if res, err := chargePoint.BootNotification("demo", "evcc"); err != nil {
@@ -90,6 +89,9 @@ func main() {
 				} else {
 					log.Println("MeterValues:", res)
 				}
+
+			default:
+				fmt.Println(msg)
 			}
 		}
 	}()
