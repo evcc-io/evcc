@@ -29,6 +29,7 @@ type config struct {
 	Log          string
 	SponsorToken string
 	Telemetry    bool
+	Plant        string // telemetry plant id
 	Metrics      bool
 	Profile      bool
 	Levels       map[string]string
