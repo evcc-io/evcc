@@ -43,14 +43,13 @@ type Alfen struct {
 }
 
 const (
+	alfenRegCurrents   = 320 // 3 registers
 	alfenRegPower      = 344
 	alfenRegEnergy     = 374  // 390
 	alfenRegStatus     = 1201 // 5 registers
 	alfenRegAmpsConfig = 1210
 	alfenRegPhases     = 1215
 )
-
-var alfenRegCurrents = []uint16{320, 322, 324}
 
 func init() {
 	registry.Add("alfen", NewAlfenFromConfig)
@@ -215,7 +214,7 @@ var _ api.MeterCurrent = (*Alfen)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Alfen) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(abbRegCurrents, 6)
+	b, err := wb.conn.ReadHoldingRegisters(alfenRegCurrents, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
