@@ -322,7 +322,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		vehicles := c.configuration.DevicesOfClass(DeviceClassVehicle)
+		vehicles := c.configuration.DevicesOfClass(templates.Vehicle)
 		if len(vehicles) == 1 {
 			loadpoint.Vehicles = append(loadpoint.Vehicles, vehicles[0].Name)
 		} else if len(vehicles) > 1 {

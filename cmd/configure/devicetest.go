@@ -36,15 +36,18 @@ func (d *DeviceTest) Test() (DeviceTestResult, error) {
 	}
 
 	switch DeviceCategories[d.DeviceCategory].class {
-	case DeviceClassCharger:
+	case templates.Charger:
 		return d.testCharger(v)
-	case DeviceClassMeter:
-		return d.testMeter(d.DeviceCategory, v)
-	case DeviceClassVehicle:
-		return d.testVehicle(v)
-	}
 
-	return DeviceTestResultInvalid, errors.New("testDevice not implemented for this device class")
+	case templates.Meter:
+		return d.testMeter(d.DeviceCategory, v)
+
+	case templates.Vehicle:
+		return d.testVehicle(v)
+
+	default:
+		panic("invalid class for category: " + d.DeviceCategory)
+	}
 }
 
 // configure creates a configured device from a template so we can test it
@@ -66,11 +69,11 @@ func (d *DeviceTest) configure() (interface{}, error) {
 	var v interface{}
 
 	switch DeviceCategories[d.DeviceCategory].class {
-	case DeviceClassMeter:
+	case templates.Meter:
 		v, err = meter.NewFromConfig(instance.Type, instance.Other)
-	case DeviceClassCharger:
+	case templates.Charger:
 		v, err = charger.NewFromConfig(instance.Type, instance.Other)
-	case DeviceClassVehicle:
+	case templates.Vehicle:
 		v, err = vehicle.NewFromConfig(instance.Type, instance.Other)
 	}
 
