@@ -215,17 +215,22 @@ var _ api.MeterCurrent = (*Alfen)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Alfen) Currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, reg := range alfenRegCurrents {
-		b, err := wb.conn.ReadHoldingRegisters(reg, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		currents = append(currents, rs485.RTUIeee754ToFloat64(b))
+	b, err := wb.conn.ReadHoldingRegisters(abbRegCurrents, 6)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		f := rs485.RTUIeee754ToFloat64(b[4*i:])
+		if math.IsNaN(f) {
+			f = 0
+		}
+
+		res[i] = f
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseSwitcher = (*Alfen)(nil)
