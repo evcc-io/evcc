@@ -1,8 +1,9 @@
-template: sonnenbatterie-eco10
+template: sonnenbatterie
+covers: ["sonnenbatterie-eco10"]
 products:
-  - brand: Sonnenbatterie
+  - brand: Sonnen
     description:
-      generic: Eco/10
+      generic: sonnenBatterie
 guidedsetup:
   enable: true
 params:
