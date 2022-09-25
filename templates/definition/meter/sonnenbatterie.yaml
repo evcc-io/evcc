@@ -1,7 +1,7 @@
 template: sonnenbatterie
 covers: ["sonnenbatterie-eco10"]
 products:
-  - brand: Sonnen 
+  - brand: Sonnen
     description:
       generic: sonnenBatterie
 guidedsetup:
