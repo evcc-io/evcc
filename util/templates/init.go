@@ -11,14 +11,16 @@ import (
 )
 
 var (
-	templates      = make(map[string][]Template)
+	templates      = make(map[Class][]Template)
 	configDefaults = ConfigDefaults{}
 )
 
+type Class string
+
 const (
-	Charger = "charger"
-	Meter   = "meter"
-	Vehicle = "vehicle"
+	Charger Class = "charger"
+	Meter   Class = "meter"
+	Vehicle Class = "vehicle"
 )
 
 func init() {
@@ -50,7 +52,7 @@ func FromBytes(b []byte) (Template, error) {
 	return tmpl, err
 }
 
-func loadTemplates(class string) {
+func loadTemplates(class Class) {
 	if templates[class] != nil {
 		return
 	}
@@ -73,7 +75,7 @@ func loadTemplates(class string) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		path := path.Dir(filepath)
+		path := Class(path.Dir(filepath))
 		templates[path] = append(templates[path], tmpl)
 
 		return nil
@@ -84,13 +86,13 @@ func loadTemplates(class string) {
 	}
 }
 
-func ByClass(class string) []Template {
+func ByClass(class Class) []Template {
 	loadTemplates(class)
 
 	return templates[class]
 }
 
-func ByName(name, class string) (Template, error) {
+func ByName(class Class, name string) (Template, error) {
 	loadTemplates(class)
 
 	for _, tmpl := range templates[class] {

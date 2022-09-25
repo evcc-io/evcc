@@ -323,7 +323,7 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 // fetchElements returns template items of a given class
 func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.Template {
 	var items []templates.Template
-	for _, tmpl := range templates.ByClass(DeviceCategories[deviceCategory].class.String()) {
+	for _, tmpl := range templates.ByClass(DeviceCategories[deviceCategory].class) {
 		if len(tmpl.Params) == 0 {
 			continue
 		}

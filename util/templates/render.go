@@ -4,9 +4,43 @@ import (
 	"os"
 	"testing"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
 )
+
+// Instance is an actual instantiated template
+type Instance struct {
+	Type  string
+	Other map[string]interface{} `yaml:",inline"`
+}
+
+// RenderInstance renders an actual configuration instance
+func RenderInstance(class Class, other map[string]interface{}) (Instance, error) {
+	var cc struct {
+		Template string
+		Other    map[string]interface{} `mapstructure:",remain"`
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return *new(Instance), err
+	}
+
+	tmpl, err := ByName(class, cc.Template)
+	if err != nil {
+		return *new(Instance), err
+	}
+
+	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, other)
+	if err != nil {
+		return *new(Instance), err
+	}
+
+	var instance Instance
+	err = yaml.Unmarshal(b, &instance)
+
+	return instance, err
+}
 
 // RenderTest renders and instantiates plus yaml-parses the template per usage
 func RenderTest(t *testing.T, tmpl Template, values map[string]interface{}, cb func(values map[string]interface{})) {

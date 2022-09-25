@@ -111,7 +111,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			}
 		}
 
-		linkedTemplateItem, err := templates.ByName(linkedTemplate.Template, string(DeviceClassMeter))
+		linkedTemplateItem, err := templates.ByName(templates.Meter, linkedTemplate.Template)
 		if err != nil {
 			fmt.Println("Error: " + err.Error())
 			return

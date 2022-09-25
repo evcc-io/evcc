@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"sort"
@@ -21,7 +20,7 @@ const (
 //go:generate go run generate.go
 
 func main() {
-	for _, class := range []string{templates.Meter, templates.Charger, templates.Vehicle} {
+	for _, class := range []templates.Class{templates.Meter, templates.Charger, templates.Vehicle} {
 		path := fmt.Sprintf("%s/%s", docsPath, class)
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {
@@ -43,7 +42,7 @@ func main() {
 	}
 }
 
-func generateClass(class string) error {
+func generateClass(class templates.Class) error {
 	for _, tmpl := range templates.ByClass(class) {
 		if err := tmpl.Validate(); err != nil {
 			return err
@@ -62,7 +61,7 @@ func generateClass(class string) error {
 	return nil
 }
 
-func writeTemplate(class string, index int, product templates.Product, tmpl templates.Template) error {
+func writeTemplate(class templates.Class, index int, product templates.Product, tmpl templates.Template) error {
 	values := tmpl.Defaults(templates.TemplateRenderModeDocs)
 
 	b, err := tmpl.RenderDocumentation(product, values, "de")
@@ -78,7 +77,7 @@ func writeTemplate(class string, index int, product templates.Product, tmpl temp
 }
 
 func clearDir(dir string) error {
-	names, err := ioutil.ReadDir(dir)
+	names, err := os.ReadDir(dir)
 	if err != nil {
 		return err
 	}
@@ -154,8 +153,10 @@ func generateBrandJSON() error {
 		Vehicles:   sortedKeys(vehicles),
 	}
 
-	file, _ := json.MarshalIndent(brands, "", " ")
-	error := ioutil.WriteFile(websitePath+"/brands.json", file, 0o644)
+	file, err := json.MarshalIndent(brands, "", " ")
+	if err == nil {
+		err = os.WriteFile(websitePath+"/brands.json", file, 0o644)
+	}
 
-	return error
+	return err
 }
