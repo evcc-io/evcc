@@ -10,7 +10,8 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485", "tcpip"]    
+    choice: ["rs485", "tcpip"]
+    baudrate: 19200
 render: |
   type: custom
   power:
