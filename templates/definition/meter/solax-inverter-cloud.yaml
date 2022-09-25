@@ -2,12 +2,12 @@ template: solax-inverter-cloud
 products:
   - brand: Solax
     description:
-      de: Wechselrichter (Cloud)
+      de: PV-Wechselrichter (Cloud)
       en: Inverter (Cloud)
 requirements:
   description:
     de: |
-      Der Solax Wechselrichter muss in der SolaxCloud angemeldet sein.
+      Der Solax PV-Wechselrichter muss in der SolaxCloud angemeldet sein.
 
       **Achtung**: Die Werte können nur alle 150s abgerufen werden und dann auch 5 Minuten alt sein. Die Laderegelung nach PV kann hiermit nicht optimal gesteuert werden! Nur als Notfalloption nutzen wenn kein lokaler Zugriff möglich ist.
     en: |
