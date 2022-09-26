@@ -66,8 +66,8 @@ github.com/BurntSushi/toml v1.0.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbi
 github.com/BurntSushi/toml v1.2.0 h1:Rt8g24XnyGTyglgET/PRUNlrUeu9F5L+7FilkXfZgs0=
 github.com/BurntSushi/toml v1.2.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/DerAndereAndi/eebus v0.0.0-20220924095845-1a31009786c4 h1:9JzcAUI75PTZ75vZTyRq8jf7EKjCfJGk8rPQnWl7VAM=
-github.com/DerAndereAndi/eebus v0.0.0-20220924095845-1a31009786c4/go.mod h1:3XOPHDqI7b58TaUU/zacWprEkazWtOleOVN3oNA3mGw=
+github.com/DerAndereAndi/eebus v0.0.0-20220926190227-d3fa9f08ed05 h1:t2KKnOyUd3Ctc/qrPg9K/C5NjGxcRTkK2aMUs0Oc5og=
+github.com/DerAndereAndi/eebus v0.0.0-20220926190227-d3fa9f08ed05/go.mod h1:iW/elb1cQ/eqLiOI8rmPQjrR4bLhg42PFEZs/zn2v0M=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
@@ -693,6 +693,8 @@ github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJ
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
+github.com/panta/machineid v1.0.1 h1:IUIF47trYWR813A3cO/MnTEpesPFOhvejyauCGh1KI0=
+github.com/panta/machineid v1.0.1/go.mod h1:JXdlT3pyUqvDz7Pf1VeU2hRa1DIfOu0zBrj+xSvVbDg=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/name v1.0.0/go.mod h1:Z//MfYJnH4jVpQ9wkclwu2I2MkHmXTlT9wR5UZScttM=
 github.com/pascaldekloe/name v1.0.1 h1:9lnXOHeqeHHnWLbKfH6X98+4+ETVqFqxN09UXSjcMb0=
