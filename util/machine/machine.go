@@ -40,7 +40,7 @@ func ID() (string, error) {
 			mac := hmac.New(sha256.New, []byte(rnd))
 			rid := hex.EncodeToString(mac.Sum(nil))
 
-			return "", fmt.Errorf("could not get machine id: %w; for manual configuration use plant: %s", err, rid)
+			return "", fmt.Errorf("could not get %w; for manual configuration use plant: %s", err, rid)
 		}
 	}
 
