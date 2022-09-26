@@ -17,10 +17,10 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
-	"github.com/panta/machineid"
 )
 
 const (
@@ -344,7 +344,7 @@ func (s *SEMP) serialNumber(id int) string {
 func UniqueDeviceID() ([]byte, error) {
 	bytes := 6
 
-	mid, err := machineid.ProtectedID("evcc-semp")
+	mid, err := machine.ProtectedID("evcc-semp")
 	if err != nil {
 		return nil, err
 	}
