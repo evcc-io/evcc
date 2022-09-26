@@ -61,7 +61,7 @@ func configureEnvironment(conf config) (err error) {
 
 	// setup telemetry
 	if err == nil && conf.Telemetry {
-		err = telemetry.Create(sponsor.Token)
+		err = telemetry.Create(sponsor.Token, conf.Plant)
 	}
 
 	// setup mqtt client listener

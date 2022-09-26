@@ -214,7 +214,6 @@ type Param struct {
 	Default       string       // default value if no user value is provided in the configuration
 	Example       string       // cli example value
 	Help          TextLanguage // cli configuration help
-	Test          string       // testing default value
 	Value         string       // user provided value via cli configuration
 	Values        []string     // user provided list of values e.g. for ValueType "stringlist"
 	ValueType     string       // string representation of the value type, "string" is default
@@ -230,20 +229,16 @@ type Param struct {
 
 // return a default value or example value depending on the renderMode
 func (p *Param) DefaultValue(renderMode string) interface{} {
-	switch p.ValueType {
-	case ParamValueTypeStringList:
+	// return empty list to allow iterating over in template
+	if p.ValueType == ParamValueTypeStringList {
 		return []string{}
-	case ParamValueTypeChargeModes:
-		return ""
-	default:
-		if p.Test != "" {
-			return p.Test
-		} else if p.Example != "" && p.Default == "" && renderMode == TemplateRenderModeDocs {
-			return p.Example
-		} else {
-			return p.Default // may be empty
-		}
 	}
+
+	if renderMode == TemplateRenderModeDocs && p.Default == "" {
+		return p.Example
+	}
+
+	return p.Default
 }
 
 // overwrite specific properties by using values from another param

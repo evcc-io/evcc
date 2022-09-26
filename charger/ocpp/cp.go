@@ -13,8 +13,6 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-const timeout = 2 * time.Minute
-
 // Meter Profile Key
 const (
 	KeyMeterValuesSampledData   = "MeterValuesSampledData"
@@ -48,13 +46,15 @@ type smartChargingProfile struct {
 }
 
 type CP struct {
-	mu  sync.Mutex
-	log *util.Logger
-	id  string
+	mu   sync.Mutex
+	log  *util.Logger
+	once sync.Once
 
-	bootC, statusC chan struct{}
-	updated        time.Time
-	status         *core.StatusNotificationRequest
+	id string
+
+	connectC, statusC chan struct{}
+	updated           time.Time
+	status            *core.StatusNotificationRequest
 
 	timeout      time.Duration
 	meterUpdated time.Time
@@ -65,6 +65,17 @@ type CP struct {
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
+}
+
+func NewChargePoint(log *util.Logger, id string, timeout time.Duration) *CP {
+	return &CP{
+		log:          log,
+		id:           id,
+		connectC:     make(chan struct{}),
+		statusC:      make(chan struct{}),
+		measurements: make(map[string]types.SampledValue),
+		timeout:      timeout,
+	}
 }
 
 func (cp *CP) ID() string {
@@ -83,6 +94,19 @@ func (cp *CP) RegisterID(id string) {
 	}
 
 	cp.id = id
+}
+
+func (cp *CP) Connect() {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	cp.once.Do(func() {
+		close(cp.connectC)
+	})
+}
+
+func (cp *CP) HasConnected() <-chan struct{} {
+	return cp.connectC
 }
 
 func (cp *CP) Initialized(timeout time.Duration) bool {
@@ -217,18 +241,6 @@ func parseIntOption(key SmartchargingChargeProfileKey, options map[string]core.C
 	return val, nil
 }
 
-// Boot waits for the CP to register itself
-func (cp *CP) Boot() error {
-	cp.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
-
-	select {
-	case <-cp.bootC:
-		return nil
-	case <-time.After(timeout):
-		return api.ErrTimeout
-	}
-}
-
 // TransactionID returns the current transaction id
 func (cp *CP) TransactionID() int {
 	cp.mu.Lock()
@@ -242,7 +254,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	if time.Since(cp.updated) > timeout {
+	if time.Since(cp.updated) > cp.timeout {
 		return res, api.ErrTimeout
 	}
 

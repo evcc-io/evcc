@@ -3,6 +3,9 @@ products:
   - brand: Vestel
     description:
       generic: EVC04
+  - brand: Webasto
+    description:
+      generic: Unite
 requirements:
   evcc: ["sponsorship"]
 params:

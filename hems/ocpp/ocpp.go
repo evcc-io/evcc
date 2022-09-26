@@ -11,10 +11,10 @@ import (
 	"github.com/evcc-io/evcc/hems/ocpp/profile"
 	"github.com/evcc-io/evcc/util"
 
-	"github.com/denisbrodbeck/machineid"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	ocppcore "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ws"
+	"github.com/panta/machineid"
 )
 
 // OCPP is an OCPP client

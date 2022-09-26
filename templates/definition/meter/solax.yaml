@@ -4,19 +4,17 @@ products:
   - brand: Solax
     description:
       generic: Hybrid X1/X3 G3/G4
-requirements:
-  description:
-    de: Der Solax Hybrid Inverter muss via Ethernet an das lokale Netzwerk angeschlossen sein.
-    en: The Solax Hybrid inverter has to be connected to the local network via ethernet.
+  - brand: Qcells
+    description:
+      generic: Q.HOME ESS HYB-G3
 guidedsetup:
   enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-  - name: host
-  - name: port
-    required: true
-    default: 502
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 19200
 render: |
   type: custom
   power:

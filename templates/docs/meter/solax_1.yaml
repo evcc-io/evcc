@@ -1,6 +1,6 @@
 product:
-  brand: Solax
-  description: Hybrid X1/X3 G3/G4
+  brand: Qcells
+  description: Q.HOME ESS HYB-G3
 render:
   - usage: grid
     default: |
