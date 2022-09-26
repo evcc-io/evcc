@@ -6,29 +6,32 @@ import (
 	"net/http"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/panta/machineid"
 )
 
 const api = "https://api.evcc.io"
 
-var (
-	Enabled    bool
-	instanceID string
-)
+var instanceID string
 
-func Create(token, instance string) error {
+func Enabled() bool {
+	return instanceID != ""
+}
+
+func Create(token, machineID string) error {
 	if token == "" {
 		return errors.New("telemetry requires sponsorship")
 	}
 
-	Enabled = true
-	instanceID = instance
-
-	if mid, err := machineid.ProtectedID("evcc-api"); err == nil && instanceID == "" {
-		instanceID = mid
+	if machineID == "" {
+		var err error
+		if machineID, err = machine.ProtectedID("evcc-api"); err != nil {
+			return err
+		}
 	}
+
+	instanceID = machineID
 
 	return nil
 }

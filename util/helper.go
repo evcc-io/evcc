@@ -4,7 +4,7 @@ import (
 	"math/rand"
 )
 
-// RandomString creates random string of N integers
+// RandomString creates random string of N characters
 func RandomString(n int) string {
 	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	s := make([]rune, n)

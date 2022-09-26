@@ -10,11 +10,11 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/ocpp/profile"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
 
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	ocppcore "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ws"
-	"github.com/panta/machineid"
 )
 
 // OCPP is an OCPP client
@@ -40,7 +40,7 @@ func New(conf map[string]interface{}, site site.API) (*OCPP, error) {
 	log := util.NewLogger("ocpp")
 
 	if cc.StationID == "" {
-		id, err := machineid.ProtectedID("evcc-ocpp")
+		id, err := machine.ProtectedID("evcc-ocpp")
 		if err == nil {
 			cc.StationID = fmt.Sprintf("evcc-%s", strings.ToLower(id))
 		} else {
