@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -37,7 +38,9 @@ func RenderInstance(class Class, other map[string]interface{}) (Instance, error)
 	}
 
 	var instance Instance
-	err = yaml.Unmarshal(b, &instance)
+	if err = yaml.Unmarshal(b, &instance); err == nil && instance.Type == "" {
+		err = errors.New("empty instance type- check for missing usage")
+	}
 
 	return instance, err
 }
