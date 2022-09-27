@@ -20,8 +20,7 @@ render: |
   power:
   {{- if eq .usage "grid" }}
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 70 # 0x0046 feedin_power(meter)
       type: input
@@ -29,8 +28,7 @@ render: |
     scale: -1
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 74 # 0x004A consum_energy_total(meter)
       type: input
@@ -41,23 +39,20 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 10 # 0x000A Powerdc1
         type: input
         decode: uint16
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 11 # 0x000B Powerdc2
         type: input
         decode: uint16
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 148 # 0x0094 SolarEnergyTotal
       type: input
@@ -66,8 +61,7 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 22 # 0x0016 Batpower_Charge1
       type: input
@@ -75,8 +69,7 @@ render: |
     scale: -1
   soc:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 28 # 0x001C Battery Capacity
       type: input
