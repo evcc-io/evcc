@@ -112,7 +112,7 @@ params:
       de: Cache
       en: Cache
     help:
-      de: Zeitintervall, in dem Daten vom Fahrzeug neu geladen werden sollen
+      de: Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden
       en: Time interval with when data should be reloaded from the vehicle
     advanced: true
     example: 5m
@@ -230,8 +230,8 @@ presets:
       - name: phases
         advanced: true
       - name: cache
+        default: 15m
         advanced: true
-        deprecated: true
     render: |
       {{define "vehicle-base"}}
       {{- if ne .title "" }}
