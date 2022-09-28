@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/eebus/ship"
 	"github.com/evcc-io/eebus/spine/model"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/libp2p/zeroconf/v2"
 )
 
@@ -75,7 +76,12 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 
 	if len(cc.ShipID) == 0 {
 		var err error
-		cc.ShipID, err = ship.UniqueID(details.BrandName, "evcc-eebus")
+		protectedID, err := machine.ProtectedID("evcc-eebus")
+		if err == nil {
+			cc.ShipID, err = ship.UniqueIDWithProtectedID(details.BrandName, protectedID)
+		} else {
+			cc.ShipID, err = ship.UniqueID(details.BrandName, "evcc-eebus")
+		}
 		if err != nil {
 			return nil, err
 		}
