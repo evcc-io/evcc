@@ -317,9 +317,11 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 		out := strings.ToLower(key)
 
 		if i, p := t.ParamByName(key); i == -1 {
-			if !slices.Contains(predefinedTemplateProperties, strings.ToLower(key)) {
+			if !slices.Contains(predefinedTemplateProperties, out) {
 				return nil, values, fmt.Errorf("invalid key: %s", key)
 			}
+		} else if p.Deprecated {
+			continue
 		} else {
 			out = p.Name
 		}

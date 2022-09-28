@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -54,6 +55,11 @@ func loadConfigFile(conf *config) error {
 }
 
 func configureEnvironment(conf config) (err error) {
+	// setup machine id
+	if conf.Plant != "" {
+		err = machine.CustomID(conf.Plant)
+	}
+
 	// setup sponsorship
 	if conf.SponsorToken != "" {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)

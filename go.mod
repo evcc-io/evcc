@@ -19,6 +19,7 @@ require (
 	github.com/containrrr/shoutrrr v0.6.1
 	github.com/coreos/go-oidc/v3 v3.3.0
 	github.com/deepmap/oapi-codegen v1.11.0
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dmarkham/enumer v1.5.6
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
@@ -51,7 +52,7 @@ require (
 	github.com/koron/go-ssdp v0.0.3
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
-	github.com/lorenzodonini/ocpp-go v0.16.0
+	github.com/lorenzodonini/ocpp-go v0.16.1-0.20220927200117-d4afed542168
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
@@ -62,7 +63,6 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.2.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20220510032225-4f9f17eaec4c
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/panta/machineid v1.0.1
 	github.com/philippseith/signalr v0.6.1-0.20220829124759-bd5ffb679356
 	github.com/prometheus/client_golang v1.13.0
 	github.com/prometheus/common v0.37.0

@@ -73,7 +73,7 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 		return nil, err
 	}
 
-	api := bluelink.NewAPI(log, settings.URI, identity, cc.Cache)
+	api := bluelink.NewAPI(log, settings.URI, identity)
 
 	_, vehicle, err := ensureVehicleWithFeature(
 		cc.VIN, api.Vehicles,

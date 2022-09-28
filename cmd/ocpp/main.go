@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gorilla/websocket"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
@@ -27,19 +26,7 @@ func main() {
 
 	// create websocket client
 	client := ws.NewClient()
-	client.AddOption(func(dialer *websocket.Dialer) {
-		// Look for v1.6 subprotocol and add it, if not found
-		alreadyExists := false
-		for _, proto := range dialer.Subprotocols {
-			if proto == types.V16Subprotocol {
-				alreadyExists = true
-				break
-			}
-		}
-		if !alreadyExists {
-			dialer.Subprotocols = append(dialer.Subprotocols, types.V16Subprotocol)
-		}
-	})
+	client.SetRequestedSubProtocol(types.V16Subprotocol)
 
 	// create chargepoint with connection tracking
 	endpoint := ocppj.NewClient(chargePointId, client, nil, nil, core.Profile, localauth.Profile, firmware.Profile, reservation.Profile, remotetrigger.Profile, smartcharging.Profile)

@@ -37,7 +37,7 @@ type Requester interface {
 }
 
 // New creates a new BlueLink API
-func NewAPI(log *util.Logger, baseURI string, identity Requester, cache time.Duration) *API {
+func NewAPI(log *util.Logger, baseURI string, identity Requester) *API {
 	v := &API{
 		Helper:  request.NewHelper(log),
 		baseURI: strings.TrimSuffix(baseURI, "/api/v1/spa") + "/api/v1/spa",

@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"bytes"
 	"fmt"
 	"io/fs"
 	"path"
@@ -28,8 +29,12 @@ func init() {
 }
 
 func FromBytes(b []byte) (Template, error) {
+	// panic if template definition contains unknown fields
+	dec := yaml.NewDecoder(bytes.NewReader(b))
+	dec.KnownFields(true)
+
 	var definition TemplateDefinition
-	if err := yaml.Unmarshal(b, &definition); err != nil {
+	if err := dec.Decode(&definition); err != nil {
 		return Template{}, err
 	}
 
