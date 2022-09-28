@@ -50,7 +50,7 @@ func ID() (string, error) {
 // ProtectedID returns a hashed version of the machine id
 // using a fixed, application-specific key.
 func ProtectedID(key string) (string, error) {
-	id, err := machineid.ID()
+	id, err := ID()
 	if err != nil {
 		return id, err
 	}
