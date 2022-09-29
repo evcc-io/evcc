@@ -79,8 +79,6 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		protectedID, err := machine.ProtectedID("evcc-eebus")
 		if err == nil {
 			cc.ShipID, err = ship.UniqueIDWithProtectedID(details.BrandName, protectedID)
-		} else {
-			cc.ShipID, err = ship.UniqueID(details.BrandName, "evcc-eebus")
 		}
 		if err != nil {
 			return nil, err
