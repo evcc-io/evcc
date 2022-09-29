@@ -20,6 +20,7 @@ params:
     valuetype: stringlist
 render: |
   type: custom
+  features: ["offline"]
   {{- if ne .title "" }}
   title: {{ .title }}
   {{- end }}
