@@ -135,7 +135,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
-	github.com/panta/machineid v1.0.1 // indirect
 	github.com/pascaldekloe/name v1.0.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
@@ -175,4 +174,4 @@ require (
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20220205120646-e5220ad9a9a0
 
-replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220928183324-ef68aab01342
+replace github.com/evcc-io/eebus => github.com/DerAndereAndi/eebus v0.0.0-20220929140044-f635b19611c8
