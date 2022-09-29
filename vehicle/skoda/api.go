@@ -3,6 +3,7 @@ package skoda
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -34,7 +35,7 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 func (v *API) Vehicles() ([]string, error) {
 	var res VehiclesResponse
 
-	uri := fmt.Sprintf("%s/v2/garage/vehicles", BaseURI)
+	uri := fmt.Sprintf("%s/v3/garage", BaseURI)
 	err := v.GetJSON(uri, &res)
 
 	var vehicles []string
@@ -44,6 +45,7 @@ func (v *API) Vehicles() ([]string, error) {
 		}
 	}
 
+	os.Exit(0)
 	return vehicles, err
 }
 

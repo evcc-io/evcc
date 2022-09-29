@@ -1,19 +1,37 @@
 package skoda
 
-// VehiclesResponse is the /v2/garage/vehicles api
+// VehiclesResponse is the /v2/garage/vehicles and /v3/garage api
 type VehiclesResponse []Vehicle
 
 type Vehicle struct {
 	ID, VIN       string
+	Name          string // user-given name
 	LastUpdatedAt string
-	Specification struct {
-		Title, Brand, Model string
-		Battery             struct {
-			CapacityInKWh int
-		}
-	}
+	Specification Specification
 	// Connectivities
 	// Capabilities
+}
+
+type Specification struct {
+	Title         string
+	Model         string
+	ModelYear     string
+	Body          string
+	SystemCode    string
+	SystemModelId string
+	Engine        struct {
+		Typ       string `json:"type"`
+		PowerInKW int
+	}
+	Battery struct {
+		CapacityInKWh int
+	}
+	Gearbox struct {
+		Typ string `json:"type"`
+	}
+	TrimLevel            string
+	ManufacturingDate    string
+	MaxChargingPowerInKW int
 }
 
 // ChargerResponse is the /v1/charging/<vin>/status api
