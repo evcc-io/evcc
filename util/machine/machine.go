@@ -21,8 +21,8 @@ func CustomID(cid string) error {
 	}
 
 	cid = strings.TrimSpace(cid)
-	if l := len(cid); l != 32 {
-		return fmt.Errorf("expected 32 characters machine id, got %d", l)
+	if l := len(cid); l != 32 && l != 64 {
+		return fmt.Errorf("expected 32 or 64 characters machine id, got %d", l)
 	}
 
 	id = cid
