@@ -34,7 +34,6 @@ render: |
       address: 13036 # Total Import Energy
       type: input
       decode: uint32s
-    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -51,7 +50,6 @@ render: |
       address: 13002 # Total PV Generation
       type: input
       decode: uint32s
-    scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -87,7 +85,6 @@ render: |
       address: 13026 # Total battery discharge energy
       type: input
       decode: uint32s
-    scale: 0.1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
