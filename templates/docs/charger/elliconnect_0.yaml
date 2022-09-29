@@ -1,10 +1,13 @@
 product:
   brand: Elli
-  description: Charger Connect (ohne Meter)
+  description: Charger Connect (ohne Meter) (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
 description: |
   Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).
+
+  Die Unterstützung ist im Beta Stadium und es kann noch zu Problemen kommen!
+
 render:
   - default: |
       type: template
