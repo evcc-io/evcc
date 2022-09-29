@@ -159,8 +159,7 @@ func (c *EEBus) showCurrentChargingSetup() {
 
 	if prevComStandard != data.EVData.CommunicationStandard {
 		c.communicationStandard = data.EVData.CommunicationStandard
-		timestamp := time.Now()
-		c.log.TRACE.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-communication changed from ", prevComStandard, " to ", data.EVData.CommunicationStandard)
+		c.log.TRACE.Println("ev-charger-communication changed from ", prevComStandard, " to ", data.EVData.CommunicationStandard)
 	}
 
 	if prevSoCSupport != data.EVData.UCSoCAvailable {
@@ -188,8 +187,7 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 		// if availability of self consumption use case changes, resend the current charging limit
 		// but only if the support value actually changed
 		if prevSelfConsumptionSupport != c.selfConsumptionSupportAvailable {
-			err := c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
-			if err != nil {
+			if err := c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent}); err != nil {
 				c.log.WARN.Println("failed to send current limit data: ", err)
 			}
 		}
