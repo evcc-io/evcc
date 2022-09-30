@@ -57,7 +57,8 @@ func runHelp(cmd *cobra.Command, args []string) {
 
 	out := new(bytes.Buffer)
 	tmpl := template.Must(template.New("help").Funcs(sprig.FuncMap()).Parse(helpTmpl))
-	tmpl.Execute(out, map[string]any{
+
+	_ = tmpl.Execute(out, map[string]any{
 		"CfgFile":    file,
 		"CfgError":   errorString(cfgErr),
 		"CfgContent": redacted,
@@ -67,5 +68,7 @@ func runHelp(cmd *cobra.Command, args []string) {
 	body := out.String()
 	uri := "https://github.com/evcc-io/evcc/discussions/new?category=erste-hilfe&body=" + url.QueryEscape(body)
 
-	browser.OpenURL(uri)
+	if err := browser.OpenURL(uri); err != nil {
+		log.FATAL.Fatal(err)
+	}
 }
