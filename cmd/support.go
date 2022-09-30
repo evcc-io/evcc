@@ -18,18 +18,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-// helpCmd represents the meter command
-var helpCmd = &cobra.Command{
-	Use:   "help",
-	Short: "Request help at Github Discussions",
-	Run:   runHelp,
+// supportCmd represents the meter command
+var supportCmd = &cobra.Command{
+	Use:   "support",
+	Short: "Request support at Github Discussions",
+	Run:   runsupport,
 }
 
-//go:embed help.tpl
-var helpTmpl string
+//go:embed support.tpl
+var supportTmpl string
 
 func init() {
-	rootCmd.AddCommand(helpCmd)
+	rootCmd.AddCommand(supportCmd)
 }
 
 func errorString(err error) string {
@@ -39,7 +39,7 @@ func errorString(err error) string {
 	return ""
 }
 
-func runHelp(cmd *cobra.Command, args []string) {
+func runsupport(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
@@ -56,7 +56,7 @@ func runHelp(cmd *cobra.Command, args []string) {
 	}
 
 	out := new(bytes.Buffer)
-	tmpl := template.Must(template.New("help").Funcs(sprig.FuncMap()).Parse(helpTmpl))
+	tmpl := template.Must(template.New("support").Funcs(sprig.FuncMap()).Parse(supportTmpl))
 
 	_ = tmpl.Execute(out, map[string]any{
 		"CfgFile":    file,
