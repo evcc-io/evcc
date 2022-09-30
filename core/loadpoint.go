@@ -602,7 +602,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
 		var err error
-		if charger, ok := lp.charger.(api.ChargerEx); ok {
+		if charger, ok := lp.charger.(api.ChargerEx); ok && !lp.vehicleHasFeature(api.CoarseCurrent) {
 			err = charger.MaxCurrentMillis(chargeCurrent)
 		} else {
 			chargeCurrent = math.Trunc(chargeCurrent)
@@ -686,12 +686,7 @@ func (lp *LoadPoint) setStatus(status api.ChargeStatus) {
 
 // targetEnergyReached checks if target is configured and reached
 func (lp *LoadPoint) targetEnergyReached() bool {
-	v, ok := lp.vehicle.(api.FeatureDescriber)
-	if ok {
-		ok = v.Has(api.Offline)
-	}
-
-	return (v == nil || ok) &&
+	return (lp.vehicle == nil || lp.vehicleHasFeature(api.Offline)) &&
 		lp.targetEnergy > 0 &&
 		lp.chargedEnergy/1e3 >= float64(lp.targetEnergy)
 }
@@ -929,13 +924,18 @@ func (lp *LoadPoint) unpublishVehicle() {
 	lp.vehiclePublishFeature(api.Offline)
 }
 
-// vehiclePublishFeature availability of vehicle features
-func (lp *LoadPoint) vehiclePublishFeature(f api.Feature) {
+// vehicleHasFeature checks availability of vehicle feature
+func (lp *LoadPoint) vehicleHasFeature(f api.Feature) bool {
 	v, ok := lp.vehicle.(api.FeatureDescriber)
 	if ok {
 		ok = v.Has(f)
 	}
-	lp.publish("vehicleFeature"+f.String(), ok)
+	return ok
+}
+
+// vehiclePublishFeature availability of vehicle features
+func (lp *LoadPoint) vehiclePublishFeature(f api.Feature) {
+	lp.publish("vehicleFeature"+f.String(), lp.vehicleHasFeature(f))
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.

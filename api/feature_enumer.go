@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "Offline"
+const _FeatureName = "OfflineCoarseCurrent"
 
-var _FeatureIndex = [...]uint8{0, 7}
+var _FeatureIndex = [...]uint8{0, 7, 20}
 
-const _FeatureLowerName = "offline"
+const _FeatureLowerName = "offlinecoarsecurrent"
 
 func (i Feature) String() string {
 	i -= 1
@@ -26,17 +26,21 @@ func (i Feature) String() string {
 func _FeatureNoOp() {
 	var x [1]struct{}
 	_ = x[Offline-(1)]
+	_ = x[CoarseCurrent-(2)]
 }
 
-var _FeatureValues = []Feature{Offline}
+var _FeatureValues = []Feature{Offline, CoarseCurrent}
 
 var _FeatureNameToValueMap = map[string]Feature{
-	_FeatureName[0:7]:      Offline,
-	_FeatureLowerName[0:7]: Offline,
+	_FeatureName[0:7]:       Offline,
+	_FeatureLowerName[0:7]:  Offline,
+	_FeatureName[7:20]:      CoarseCurrent,
+	_FeatureLowerName[7:20]: CoarseCurrent,
 }
 
 var _FeatureNames = []string{
 	_FeatureName[0:7],
+	_FeatureName[7:20],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.
