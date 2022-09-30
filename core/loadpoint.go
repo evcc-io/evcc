@@ -922,6 +922,17 @@ func (lp *LoadPoint) unpublishVehicle() {
 	lp.publish(vehicleTargetSoC, 0.0)
 
 	lp.setRemainingDuration(-1)
+
+	lp.vehiclePublishFeature(api.Offline)
+}
+
+// vehiclePublishFeature availability of vehicle features
+func (lp *LoadPoint) vehiclePublishFeature(f api.Feature) {
+	v, ok := lp.vehicle.(api.FeatureDescriber)
+	if ok {
+		ok = v.Has(f)
+	}
+	lp.publish("vehicleFeature"+f.String(), ok)
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.
