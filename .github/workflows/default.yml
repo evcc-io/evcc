@@ -31,7 +31,11 @@ jobs:
         run: make porcelain
 
       - name: Patch ASN1
-        run: sudo make patch-asn1
+        run: |
+          sudo make patch-asn1
+          cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go
+          make patch-asn1
+          cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go
 
   build:
     name: Build
