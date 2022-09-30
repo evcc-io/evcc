@@ -686,9 +686,12 @@ func (lp *LoadPoint) setStatus(status api.ChargeStatus) {
 
 // targetEnergyReached checks if target is configured and reached
 func (lp *LoadPoint) targetEnergyReached() bool {
-	v := lp.vehicle.(api.FeatureDescriber)
+	v, ok := lp.vehicle.(api.FeatureDescriber)
+	if ok {
+		ok = v.Has(api.Offline)
+	}
 
-	return (v == nil || v.Has(api.Offline)) &&
+	return (v == nil || ok) &&
 		lp.targetEnergy > 0 &&
 		lp.chargedEnergy/1e3 >= float64(lp.targetEnergy)
 }
