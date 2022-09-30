@@ -138,6 +138,4 @@ soc:
 
 # patch asn1.go to allow Elli buggy certificates to be accepted with EEBUS
 patch-asn1:
-ifeq ($(shell test -e $(ASN1_FILE) && echo 1),1)
-	patch -N -t -d $(ASN1_PATH) -i $(CURRENT_DIR)/patch/asn1.diff
-endif
+	test -e $(ASN1_FILE) && patch -N -t -d $(ASN1_PATH) -i $(CURRENT_DIR)/patch/asn1.diff || true
