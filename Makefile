@@ -29,6 +29,12 @@ IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybo
 # deb
 PACKAGES = ./release
 
+# patch asn1.go
+CURRENT_DIR := $(shell pwd)
+GO_ROOT := $(shell go env GOROOT)
+ASN1_PATH := $(GO_ROOT)/src/vendor/golang.org/x/crypto/cryptobyte
+ASN1_FILE := $(ASN1_PATH)/asn1.go
+
 default: build
 
 all: clean install install-ui ui assets lint test-ui lint-ui test build
@@ -129,3 +135,7 @@ image-update:
 soc:
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
+
+# patch asn1.go to allow Elli buggy certificates to be accepted with EEBUS
+patch-asn1:
+	test -e $(ASN1_FILE) && patch -N -t -d $(ASN1_PATH) -i $(CURRENT_DIR)/patch/asn1.diff || true

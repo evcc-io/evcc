@@ -78,7 +78,7 @@
     },
     "Groups": {
       "type": "string",
-      "enum": ["generic", "switchsockets", "sockets"]
+      "enum": ["generic", "switchsockets", "scooter", "sockets"]
     },
     "GuidedSetup": {
       "type": "object",
@@ -120,7 +120,7 @@
     },
     "Capability": {
       "type": "string",
-      "enum": ["1p3p", "iso151182", "rfid", "smahems"]
+      "enum": ["1p3p", "iso151182", "rfid", "smahems", "mA"]
     }
   }
 }

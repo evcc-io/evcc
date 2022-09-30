@@ -42,6 +42,7 @@ RUN go mod download
 
 # prepare
 COPY . .
+RUN make patch-asn1
 RUN make assets
 
 # copy ui

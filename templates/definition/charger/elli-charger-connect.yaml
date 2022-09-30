@@ -1,0 +1,24 @@
+template: elliconnect
+products:
+  - brand: Elli
+    description:
+      de: Charger Connect (ohne Meter) (Beta)
+      en: Charger Connect (without Meter) (Beta)
+capabilities: ["mA"]
+requirements:
+  evcc: ["eebus"]
+  description:
+    de: |
+      Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).
+
+      Die Unterstützung ist im Beta Stadium und es kann noch zu Problemen kommen!
+    en: |
+      The device has to have a fix IP address (manuall or via DHCP).
+
+      The support is in beta state and problems can occur!
+params:
+  - preset: eebusnometer
+  - name: ip
+    required: true
+render: |
+  {{ include "eebus-no-meter" . }}

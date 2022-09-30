@@ -4,15 +4,10 @@ products:
       de: EEBUS kompatible Wallbox
       en: EEBUS compatible Wallbox
 group: generic
-capabilities: ["iso151182", "mA"]
+capabilities: ["mA"]
 requirements:
   evcc: ["eebus"]
 params:
-  - name: ski
-    required: true
-    help:
-      en: The SKI of the wallbox, can usually be found on the web interface of the wallbox
-      de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
+  - preset: eebusmeter
 render: |
-  type: eebus
-  ski: {{ .ski }}
+  {{ include "eebus-meter" . }}

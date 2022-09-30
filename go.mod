@@ -25,7 +25,7 @@ require (
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.1
 	github.com/emirpasic/gods v1.18.1
-	github.com/evcc-io/eebus v0.0.0-20220815121332-bbb3cd4260e0
+	github.com/evcc-io/eebus v0.0.0-20220929204231-3e14a14e2b1c
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
 	github.com/go-ping/ping v1.1.0
