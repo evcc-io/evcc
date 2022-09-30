@@ -176,7 +176,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		if lp.SoC.Poll.Mode != "" {
 			lp.log.WARN.Printf("invalid poll mode: %s", lp.SoC.Poll.Mode)
 		}
-		lp.SoC.Poll.Mode = pollConnected
+		lp.SoC.Poll.Mode = pollCharging
 	}
 
 	// set vehicle polling interval
@@ -1459,7 +1459,8 @@ func (lp *LoadPoint) socPollAllowed() bool {
 	remaining := lp.SoC.Poll.Interval - lp.clock.Since(lp.socUpdated)
 
 	honourUpdateInterval := lp.SoC.Poll.Mode == pollAlways ||
-		lp.SoC.Poll.Mode == pollConnected && lp.connected()
+		lp.SoC.Poll.Mode == pollConnected && lp.connected() ||
+		lp.SoC.Poll.Mode == pollCharging && lp.connected() && (lp.vehicleSoc < float64(lp.SoC.target))
 
 	if honourUpdateInterval && remaining > 0 {
 		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
