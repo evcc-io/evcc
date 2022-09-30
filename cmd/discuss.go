@@ -18,18 +18,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-// supportCmd represents the meter command
-var supportCmd = &cobra.Command{
-	Use:   "support",
-	Short: "Request support at Github Discussions",
-	Run:   runsupport,
+// discussCmd represents the meter command
+var discussCmd = &cobra.Command{
+	Use:   "discuss",
+	Short: "Request support at Github Discussions (https://github.com/evcc-io/evcc/discussions/categories/erste-hilfe)",
+	Run:   runDiscuss,
 }
 
-//go:embed support.tpl
-var supportTmpl string
+//go:embed discuss.tpl
+var discussTmpl string
 
 func init() {
-	rootCmd.AddCommand(supportCmd)
+	rootCmd.AddCommand(discussCmd)
 }
 
 func errorString(err error) string {
@@ -39,7 +39,7 @@ func errorString(err error) string {
 	return ""
 }
 
-func runsupport(cmd *cobra.Command, args []string) {
+func runDiscuss(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
@@ -56,7 +56,7 @@ func runsupport(cmd *cobra.Command, args []string) {
 	}
 
 	out := new(bytes.Buffer)
-	tmpl := template.Must(template.New("support").Funcs(sprig.FuncMap()).Parse(supportTmpl))
+	tmpl := template.Must(template.New("discuss").Funcs(sprig.FuncMap()).Parse(discussTmpl))
 
 	_ = tmpl.Execute(out, map[string]any{
 		"CfgFile":    file,
