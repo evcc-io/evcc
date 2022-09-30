@@ -39,6 +39,26 @@ Base.args = {
   activePhases: 2,
 };
 
+export const WithoutSoc = Template.bind({});
+WithoutSoc.args = {
+  id: 0,
+  pvConfigured: true,
+  chargePower: 2800,
+  chargedEnergy: 7123,
+  chargeDuration: 95 * 60,
+  vehiclePresent: false,
+  enabled: true,
+  connected: true,
+  mode: "pv",
+  charging: true,
+  vehicleSoC: 66,
+  targetSoC: 90,
+  chargeCurrent: 7,
+  minCurrent: 6,
+  maxCurrent: 16,
+  activePhases: 2,
+};
+
 export const Idle = Template.bind({});
 Idle.args = {
   id: 0,

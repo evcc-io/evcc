@@ -12,44 +12,65 @@
 			@target-soc-updated="targetSocUpdated"
 			@target-soc-drag="targetSocDrag"
 		/>
-		<div v-if="vehiclePresent">
-			<div class="details d-flex flex-wrap justify-content-between">
-				<LabelAndValue
-					class="flex-grow-1"
-					:label="$t('main.vehicle.vehicleSoC')"
-					:value="vehicleSoC ? `${vehicleSoC}%` : '--'"
-					:extraValue="vehicleRange ? `${vehicleRange} km` : null"
-					align="start"
-				/>
-				<TargetCharge
-					class="flex-grow-1 text-center target-charge"
-					v-bind="targetCharge"
-					:disabled="targetChargeDisabled"
-					@target-time-updated="setTargetTime"
-					@target-time-removed="removeTargetTime"
-				/>
-				<TargetSoCSelect
-					class="flex-grow-1 text-end"
-					:target-soc="displayTargetSoC"
-					:range-per-soc="rangePerSoC"
-					@target-soc-updated="targetSocUpdated"
-				/>
-			</div>
-			<div v-if="$hiddenFeatures" class="d-flex justify-content-start">
-				<small>vor 5 Stunden</small>
-			</div>
+
+		<div class="details d-flex flex-wrap justify-content-between">
+			<LabelAndValue
+				v-if="socBasedCharging"
+				class="flex-grow-1"
+				:label="$t('main.vehicle.vehicleSoC')"
+				:value="vehicleSoC ? `${vehicleSoC}%` : '--'"
+				:extraValue="vehicleRange ? `${vehicleRange} km` : null"
+				align="start"
+			/>
+			<LabelAndValue
+				v-else
+				class="flex-grow-1"
+				:label="$t('main.loadpoint.charged')"
+				:value="fmtKWh(chargedEnergy)"
+				:extraValue="chargedSoC"
+				align="start"
+			/>
+			<TargetCharge
+				v-if="socBasedCharging"
+				class="flex-grow-1 text-center target-charge"
+				v-bind="targetCharge"
+				:disabled="targetChargeDisabled"
+				@target-time-updated="setTargetTime"
+				@target-time-removed="removeTargetTime"
+			/>
+			<TargetSoCSelect
+				v-if="socBasedCharging"
+				class="flex-grow-1 text-end"
+				:target-soc="displayTargetSoC"
+				:range-per-soc="rangePerSoC"
+				@target-soc-updated="targetSocUpdated"
+			/>
+			<TargetEnergySelect
+				v-else
+				class="flex-grow-1 text-end"
+				:target-energy="targetEnergy"
+				:soc-per-kwh="socPerKwh"
+				:charged-energy="chargedEnergy"
+				:vehicle-capacity="vehicleCapacity"
+				@target-energy-updated="targetEnergyUpdated"
+			/>
+		</div>
+		<div v-if="$hiddenFeatures" class="d-flex justify-content-start">
+			<small>vor 5 Stunden</small>
 		</div>
 	</div>
 </template>
 
 <script>
 import collector from "../mixins/collector";
+import formatter from "../mixins/formatter";
 import LabelAndValue from "./LabelAndValue.vue";
 import VehicleTitle from "./VehicleTitle.vue";
 import VehicleSoc from "./VehicleSoc.vue";
 import VehicleStatus from "./VehicleStatus.vue";
 import TargetCharge from "./TargetCharge.vue";
 import TargetSoCSelect from "./TargetSoCSelect.vue";
+import TargetEnergySelect from "./TargetEnergySelect.vue";
 
 export default {
 	name: "Vehicle",
@@ -60,8 +81,9 @@ export default {
 		LabelAndValue,
 		TargetCharge,
 		TargetSoCSelect,
+		TargetEnergySelect,
 	},
-	mixins: [collector],
+	mixins: [collector, formatter],
 	props: {
 		id: [String, Number],
 		connected: Boolean,
@@ -74,10 +96,14 @@ export default {
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleTitle: String,
+		vehicleCapacity: Number,
+		socBasedCharging: Boolean,
 		targetTimeActive: Boolean,
 		targetTime: String,
 		targetTimeProjectedStart: String,
 		targetSoC: Number,
+		targetEnergy: Number,
+		chargedEnergy: Number,
 		mode: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
@@ -90,6 +116,7 @@ export default {
 		"target-time-removed",
 		"target-time-updated",
 		"target-soc-updated",
+		"target-energy-updated",
 		"change-vehicle",
 		"remove-vehicle",
 	],
@@ -117,6 +144,16 @@ export default {
 			}
 			return null;
 		},
+		socPerKwh: function () {
+			if (this.vehicleCapacity > 0) {
+				return 100 / this.vehicleCapacity;
+			}
+			return null;
+		},
+		chargedSoC: function () {
+			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
+			return value > 1 ? `+${Math.round(value)}%` : null;
+		},
 		targetChargeDisabled: function () {
 			return !this.connected || !["pv", "minpv"].includes(this.mode);
 		},
@@ -133,6 +170,9 @@ export default {
 		targetSocUpdated: function (targetSoC) {
 			this.displayTargetSoC = targetSoC;
 			this.$emit("target-soc-updated", targetSoC);
+		},
+		targetEnergyUpdated: function (targetEnergy) {
+			this.$emit("target-energy-updated", targetEnergy);
 		},
 		setTargetTime: function (targetTime) {
 			this.$emit("target-time-updated", targetTime);

@@ -67,6 +67,7 @@
 				/>
 			</div>
 			<LabelAndValue
+				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
 				:value="fmtKWh(chargedEnergy)"
 				align="center"
@@ -92,6 +93,7 @@
 		<Vehicle
 			v-bind="vehicle"
 			@target-soc-updated="setTargetSoC"
+			@target-energy-updated="setTargetEnergy"
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
 			@change-vehicle="changeVehicle"
@@ -132,6 +134,7 @@ export default {
 		title: String,
 		mode: String,
 		targetSoC: Number,
+		targetEnergy: Number,
 		remoteDisabled: Boolean,
 		remoteDisabledSource: String,
 		chargeDuration: Number,
@@ -147,6 +150,8 @@ export default {
 		vehicleSoC: Number,
 		vehicleTitle: String,
 		vehicleTargetSoC: Number,
+		vehicleCapacity: Number,
+		vehicleFeatureOffline: Boolean,
 		vehicles: Array,
 		minSoC: Number,
 		targetTime: String,
@@ -170,7 +175,6 @@ export default {
 		maxCurrent: Number,
 		phasesActive: Number,
 		chargeCurrent: Number,
-		vehicleCapacity: Number,
 		connectedDuration: Number,
 		chargeCurrents: Array,
 		chargeConfigured: Boolean,
@@ -204,6 +208,9 @@ export default {
 		},
 		showChargingIndicator: function () {
 			return this.charging && this.chargePower > 0;
+		},
+		socBasedCharging: function () {
+			return !this.vehicleFeatureOffline && this.vehiclePresent;
 		},
 	},
 	watch: {
@@ -249,6 +256,9 @@ export default {
 		},
 		setTargetSoC: function (soc) {
 			api.post(this.apiPath("targetsoc") + "/" + soc);
+		},
+		setTargetEnergy: function (kWh) {
+			api.post(this.apiPath("targetenergy") + "/" + kWh);
 		},
 		setMaxCurrent: function (maxCurrent) {
 			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
