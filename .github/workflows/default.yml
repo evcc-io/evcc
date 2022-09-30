@@ -35,11 +35,11 @@ jobs:
           # make patch-asn1
           echo 1
           cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go
-          patch -N -t -d $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i patch/asn1.diff
+          patch -N -t -d $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $(pwd)/patch/asn1.diff
           echo 2
           cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go
           # sudo make patch-asn1
-          sudo patch -N -t -d $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i patch/asn1.diff
+          sudo patch -N -t -d $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $(pwd)/patch/asn1.diff
           echo 3
           cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go
 
