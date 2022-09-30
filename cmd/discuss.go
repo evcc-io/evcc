@@ -69,6 +69,8 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 	uri := "https://github.com/evcc-io/evcc/discussions/new?category=erste-hilfe&body=" + url.QueryEscape(body)
 
 	if err := browser.OpenURL(uri); err != nil {
-		log.FATAL.Fatal(err)
+		log.FATAL.Println("Could not open browser.")
+		log.FATAL.Println("Goto https://github.com/evcc-io/evcc/discussions/new?category=erste-hilfe and post the following:")
+		log.FATAL.Println(body)
 	}
 }

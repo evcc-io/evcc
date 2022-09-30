@@ -5,21 +5,19 @@
 {{ if .CfgError -}}
 Fehlermeldung:
 
-    {{ .CfgError }}
+```
+{{ .CfgError }}
+```
 
 {{ end -}}
 
-<details><summary>Konfiguration:</summary>
+<details><summary>Konfiguration{{ if .CfgFile }} ({{ .CfgFile }}){{ end }}</summary>
 
 ```yaml
 {{ .CfgContent }}
 ```
 
 </details>
-
-{{ if .CfgFile -}}
-Pfad: `{{ .CfgFile }}`
-{{ end -}}
 
 {{ if .Version -}}
 Version: `{{ .Version }}`
