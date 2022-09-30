@@ -34,14 +34,14 @@ jobs:
         run: |
           # make patch-asn1
           echo 1
-          cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C "out = true"
+          cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 2 "out = true"
           patch -N -t -d $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $(pwd)/patch/asn1.diff
           echo 2
-          cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C "out = true"
+          cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 2 "out = true"
           # sudo make patch-asn1
           sudo patch -N -t -d $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $(pwd)/patch/asn1.diff
           echo 3
-          cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C "out = true"
+          cat $(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 2 "out = true"
 
   build:
     name: Build
