@@ -11,7 +11,7 @@ Fehlermeldung:
 
 <details><summary>Konfiguration:</summary>
 
-```
+```yaml
 {{ .CfgContent }}
 ```
 
