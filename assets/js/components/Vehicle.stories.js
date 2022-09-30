@@ -116,6 +116,7 @@ MinCharge.args = {
   charging: true,
   targetSoC: 90,
   socBasedCharging: true,
+<<<<<<< HEAD
   id: 0,
 };
 
@@ -130,6 +131,8 @@ VehicleTargetSoc.args = {
   charging: true,
   targetSoC: 90,
   socBasedCharging: true,
+=======
+>>>>>>> 1ef123ee6 (kwh based charging UI)
   id: 0,
 };
 
