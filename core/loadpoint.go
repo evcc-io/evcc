@@ -1491,8 +1491,8 @@ func (lp *LoadPoint) publishSoCAndRange() {
 
 		// guard for socEstimator removed by api
 		if se := lp.socEstimator; se != nil {
-			lp.socUpdated = lp.clock.Now()
 			f, err = se.SoC(lp.chargedEnergy)
+			lp.socUpdated = lp.clock.Now()
 		} else {
 			return
 		}
