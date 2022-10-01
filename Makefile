@@ -132,12 +132,14 @@ soc:
 
 # patch asn1.go to allow Elli buggy certificates to be accepted with EEBUS
 patch-asn1:
-	# echo $$(go env GOROOT)
 	go mod download
 	cat $$(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
 	patch -N -t -d $$(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $$(pwd)/patch/asn1.diff
 	cat $$(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
 	# also patch the downloaded mod
-CRYPTOMOD := $(sort $(dir $(wildcard $$(go env GOMODCACHE)/golang.org/x/crypto@*/)))
-	ls $(CRYPTOMOD)
+	$(eval DIRS := $(shell ls -d $$(go env GOMODCACHE)/golang.org/x/crypto*))
+	# use the last directory as that should be the latest, there should be at least one
+	$(eval CRYPTOMOD := $(word $(words $(DIRS)), $(DIRS)))
+	cat $(CRYPTOMOD)/cryptobyte/asn1.go | grep -C 1 "out = true"
+	patch -N -t -d $(CRYPTOMOD)/cryptobyte -i $$(pwd)/patch/asn1.diff
 	cat $(CRYPTOMOD)/cryptobyte/asn1.go | grep -C 1 "out = true"
