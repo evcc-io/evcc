@@ -141,6 +141,6 @@ patch-asn1:
 	echo $$DIRS ;\
 	CRYPTOMOD=$$DIRS ;\
 	cat $$CRYPTOMOD/cryptobyte/asn1.go | grep -C 1 "out = true" ;\
-	patch -N -t -d $$CRYPTOMOD/cryptobyte -i $$(pwd)/patch/asn1.diff ;\
+	sudo patch -N -t -d $$CRYPTOMOD/cryptobyte -i $$(pwd)/patch/asn1.diff ;\
 	cat $$CRYPTOMOD/cryptobyte/asn1.go | grep -C 1 "out = true" ;\
 	}
