@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/pkg/browser"
@@ -56,7 +55,7 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 	}
 
 	out := new(bytes.Buffer)
-	tmpl := template.Must(template.New("discuss").Funcs(sprig.FuncMap()).Parse(discussTmpl))
+	tmpl := template.Must(template.New("discuss").Parse(discussTmpl))
 
 	_ = tmpl.Execute(out, map[string]any{
 		"CfgFile":    file,
