@@ -54,9 +54,9 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 		redacted = redact(string(src))
 	}
 
-	out := new(bytes.Buffer)
 	tmpl := template.Must(template.New("discuss").Parse(discussTmpl))
 
+	out := new(bytes.Buffer)
 	_ = tmpl.Execute(out, map[string]any{
 		"CfgFile":    file,
 		"CfgError":   errorString(cfgErr),
