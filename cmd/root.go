@@ -51,54 +51,28 @@ var rootCmd = &cobra.Command{
 	Use:     "evcc",
 	Short:   "EV Charge Controller",
 	Version: server.FormattedVersion(),
-	Run:     run,
-}
-
-func bind(cmd *cobra.Command, flag string) {
-	if err := viper.BindPFlag(flag, cmd.PersistentFlags().Lookup(flag)); err != nil {
-		panic(err)
-	}
-}
-
-func configureCommand(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringP(
-		"log", "l",
-		"info",
-		"Log level (fatal, error, warn, info, debug, trace)",
-	)
-	bind(cmd, "log")
-
-	cmd.PersistentFlags().StringVarP(&cfgFile,
-		"config", "c",
-		"",
-		"Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")",
-	)
-	cmd.PersistentFlags().BoolP(
-		"help", "h",
-		false,
-		"Help for "+cmd.Name(),
-	)
+	Run:     runRoot,
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	configureCommand(rootCmd)
 
-	rootCmd.PersistentFlags().IntP("port", "p", 7070, "Listen port")
-	if err := viper.BindPFlag("network.port", rootCmd.PersistentFlags().Lookup("port")); err != nil {
-		panic(err)
-	}
+	// global options
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
 
-	rootCmd.PersistentFlags().DurationP("interval", "i", 10*time.Second, "Update interval")
-	bind(rootCmd, "interval")
-
-	rootCmd.PersistentFlags().Bool("metrics", false, "Expose metrics")
-	bind(rootCmd, "metrics")
-
-	rootCmd.PersistentFlags().Bool("profile", false, "Expose pprof profiles")
-	bind(rootCmd, "profile")
+	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
+
+	// config file options
+	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
+	bindP(rootCmd, "log", "log")
+
+	rootCmd.Flags().Bool("metrics", false, "Expose metrics")
+	bind(rootCmd, "metrics", "metrics")
+
+	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
+	bind(rootCmd, "profile", "profile")
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -189,7 +163,7 @@ func publishErrorInfo(cfgFile string, err error) {
 	publish("fatal", unwrap(err))
 }
 
-func run(cmd *cobra.Command, args []string) {
+func runRoot(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
 
