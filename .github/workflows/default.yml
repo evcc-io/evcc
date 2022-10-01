@@ -63,7 +63,7 @@ jobs:
         id: go
 
       - name: Patch ASN1
-        run: make patch-asn1
+        run: sudo make patch-asn1
 
       - name: Test
         run: make test
