@@ -62,6 +62,9 @@ jobs:
           cache: true
         id: go
 
+      - name: Patch ASN1
+        run: make patch-asn1
+
       - name: Test
         run: make test
 
