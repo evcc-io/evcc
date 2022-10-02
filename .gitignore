@@ -27,3 +27,4 @@ ca-key.pem
 cmd/wip
 fly.toml
 .idea
+vendor/*
