@@ -9,6 +9,7 @@ import (
 
 // Provider implements the evcc vehicle api
 type Provider struct {
+	statusG  func() (StatusResponse, error)
 	chargerG func() (ChargerResponse, error)
 	action   func(action, value string) error
 }
@@ -16,6 +17,9 @@ type Provider struct {
 // NewProvider provides the evcc vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
+		statusG: provider.Cached(func() (StatusResponse, error) {
+			return api.Status(vin)
+		}, cache),
 		chargerG: provider.Cached(func() (ChargerResponse, error) {
 			return api.Charger(vin)
 		}, cache),
@@ -85,11 +89,15 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
-	if err == nil {
-		rng = res.Battery.CruisingRangeElectricInMeters / 1e3
-	}
+	return res.Battery.CruisingRangeElectricInMeters / 1e3, err
+}
 
-	return rng, err
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (odo float64, err error) {
+	res, err := v.statusG()
+	return res.Remote.MileageInKm, err
 }
 
 // var _ api.VehicleClimater = (*Provider)(nil)
