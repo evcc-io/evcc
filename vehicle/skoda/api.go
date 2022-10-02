@@ -3,7 +3,6 @@ package skoda
 import (
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -31,22 +30,22 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	return v
 }
 
-// Vehicles implements the /vehicles response
-func (v *API) Vehicles() ([]string, error) {
+// Vehicles implements the /v3/garage response
+func (v *API) Vehicles() ([]Vehicle, error) {
 	var res VehiclesResponse
 
 	uri := fmt.Sprintf("%s/v3/garage", BaseURI)
 	err := v.GetJSON(uri, &res)
 
-	var vehicles []string
-	if err == nil {
-		for _, v := range res {
-			vehicles = append(vehicles, v.VIN)
-		}
-	}
+	return res.Vehicles, err
+}
 
-	os.Exit(0)
-	return vehicles, err
+// Status implements the /v2/vehicle-status/<vin> response
+func (v *API) Status(vin string) (StatusResponse, error) {
+	var res StatusResponse
+	uri := fmt.Sprintf("%s/v2/vehicle-status/%s", BaseURI, vin)
+	err := v.GetJSON(uri, &res)
+	return res, err
 }
 
 // Charger implements the /v1/charging/<vin>/status response
