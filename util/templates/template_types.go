@@ -173,12 +173,6 @@ type LinkedTemplate struct {
 	ExcludeTemplate string // only consider this if no device of the named linked template was added
 }
 
-type Dependency struct {
-	Name  string // the Param name value this depends on
-	Check string // the check to perform, valid values see const DependencyCheck...
-	Value string // the string value to check against
-}
-
 // Param is a proxy template parameter
 // Params can be defined:
 // 1. in the template: uses entries in 4. for default properties and values, can be overwritten here
@@ -196,7 +190,6 @@ type Param struct {
 	Preset        string       // Reference a predefined se of params
 	Name          string       // Param name which is used for assigning defaults properties and referencing in render
 	Description   TextLanguage // language specific titles (presented in UI instead of Name)
-	Dependencies  []Dependency // List of dependencies, when this param should be presented
 	Required      bool         // cli if the user has to provide a non empty value
 	Mask          bool         // cli if the value should be masked, e.g. for passwords
 	Advanced      bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
