@@ -342,7 +342,7 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 			titleTmpl.SetTitle(title)
 
 			if deviceCategory == DeviceCategoryGuidedSetup {
-				if tmpl.GuidedSetup.Enable {
+				if tmpl.GuidedSetupEnabled() {
 					items = append(items, titleTmpl)
 				}
 			} else {

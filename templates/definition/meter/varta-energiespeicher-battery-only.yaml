@@ -4,8 +4,6 @@ products:
     description:
       de: Energiespeicher (kein PV-Sensor)
       en: Energiespeicher (without PV Sensor)
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "battery"]

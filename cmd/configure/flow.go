@@ -95,7 +95,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 // configureLinkedTypes lets the user configure devices that are marked as being linked to a guided device
 // e.g. SMA Inverters, Energy Meter with SMA Home Manager
 func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
-	linkedTemplates := templateItem.GuidedSetup.Linked
+	linkedTemplates := templateItem.Linked
 
 	deviceOfTemplateAdded := make(map[string]bool)
 

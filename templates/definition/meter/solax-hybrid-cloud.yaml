@@ -14,8 +14,6 @@ requirements:
       The Solax hybrid inverter has to be registered in the SolaxCloud.
 
       **Attention**: Values can only be fetched every 150s and then also can be 5 minutes old. Charging by PV will not be optimal because of this! Only use as fallback if no local access is available.
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
