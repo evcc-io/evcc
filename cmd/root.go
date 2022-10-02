@@ -188,10 +188,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
 	}
 
-	if cmd.PersistentFlags().Lookup("port").Changed {
-		conf.Network.Port = viper.GetInt("network.port")
-	}
-
 	log.INFO.Printf("listening at :%d", conf.Network.Port)
 
 	// start broadcasting values
