@@ -29,19 +29,15 @@ Either `brand`, or `description` need to be set.
 
 ## `group`
 
-`group` contains the reference to a `groups.yaml` entry. This is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
+`group` is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
 
-## `guidedsetup`
+## `guidedsetup` (Obsolete)
 
-`guidedsetup` if the device can be used for a guided setup, which are devices that provide multiple meter usages, or meter devices that are typically installed with specific other devices. Mostly used for meter devices that provided multiple usage data with the same user input. These devices are then sorted at the bottom of the product list.
+`guidedsetup` is enabled when the device has linked templates or >1 usage. It is used with devices that provide multiple meter usages, or meter devices that are typically installed with specific other devices. Mostly used for meter devices that provided multiple usage data with the same user input. These devices are then sorted at the bottom of the product list.
 
-### `enable`
+## `linked`
 
-`enable: true` to define that this device can be used for `guidedsetup`
-
-### `linked`
-
-Allows to define a list of meter devices that are typically installed with this device
+Allows to define a list of meter devices that are typically installed with this device. Enables `guidedsetup` mode.
 
 #### `template`
 
