@@ -54,10 +54,10 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	api := skoda.NewAPI(log, ts)
 
-	_, vehicle, err := ensureVehicleWithFeature(
+	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v skoda.Vehicle) (string, skoda.Vehicle) {
-			return v.VIN, v
+		func(v skoda.Vehicle) string {
+			return v.VIN
 		},
 	)
 
