@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util/templates"
-	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -64,15 +64,12 @@ func writeTemplate(class templates.Class, index int, product templates.Product, 
 	values := tmpl.Defaults(templates.TemplateRenderModeDocs)
 
 	b, err := tmpl.RenderDocumentation(product, values, "de")
-	if err != nil {
-		return err
+	if err == nil {
+		filename := fmt.Sprintf("%s/%s/%s_%d.yaml", docsPath, class, tmpl.Template, index)
+		err = os.WriteFile(filename, b, 0o644)
 	}
 
-	filename := fmt.Sprintf("%s/%s/%s_%d.yaml", docsPath, class, tmpl.Template, index)
-	if err := os.WriteFile(filename, b, 0o644); err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func clearDir(dir string) error {
@@ -90,38 +87,39 @@ func clearDir(dir string) error {
 	return nil
 }
 
-func sortedKeys(data map[string]bool) []string {
-	keys := maps.Keys(data)
-	sort.Slice(keys, func(i, j int) bool { return strings.ToLower(keys[i]) < strings.ToLower(keys[j]) })
-	return keys
+func sorted(keys []string) []string {
+	sort.Slice(keys, func(i, j int) bool {
+		return strings.ToLower(keys[i]) < strings.ToLower(keys[j])
+	})
+	return slices.Compact(keys)
 }
 
 func generateBrandJSON() error {
-	chargers := make(map[string]bool)
-	smartPlugs := make(map[string]bool)
+	chargers := make([]string, 0)
+	smartPlugs := make([]string, 0)
 	for _, tmpl := range templates.ByClass(templates.Charger) {
 		for _, product := range tmpl.Products {
 			if product.Brand != "" {
 				if tmpl.Group == "switchsockets" {
-					smartPlugs[product.Brand] = true
+					smartPlugs = append(smartPlugs, product.Brand)
 				} else {
-					chargers[product.Brand] = true
+					chargers = append(chargers, product.Brand)
 				}
 			}
 		}
 	}
 
-	vehicles := make(map[string]bool)
+	vehicles := make([]string, 0)
 	for _, tmpl := range templates.ByClass(templates.Vehicle) {
 		for _, product := range tmpl.Products {
 			if product.Brand != "" {
-				vehicles[product.Brand] = true
+				vehicles = append(vehicles, product.Brand)
 			}
 		}
 	}
 
-	meters := make(map[string]bool)
-	pvBattery := make(map[string]bool)
+	meters := make([]string, 0)
+	pvBattery := make([]string, 0)
 	for _, tmpl := range templates.ByClass(templates.Meter) {
 		for i := range tmpl.Params {
 			if tmpl.Params[i].Name == "usage" {
@@ -131,9 +129,9 @@ func generateBrandJSON() error {
 						if product.Brand != "" {
 							switch usage {
 							case "grid", "charge":
-								meters[product.Brand] = true
+								meters = append(meters, product.Brand)
 							case "pv", "battery":
-								pvBattery[product.Brand] = true
+								pvBattery = append(pvBattery, product.Brand)
 							}
 						}
 					}
@@ -145,11 +143,11 @@ func generateBrandJSON() error {
 	brands := struct {
 		Chargers, SmartPlugs, Meters, PVBattery, Vehicles []string
 	}{
-		Chargers:   sortedKeys(chargers),
-		SmartPlugs: sortedKeys(smartPlugs),
-		Meters:     sortedKeys(meters),
-		PVBattery:  sortedKeys(pvBattery),
-		Vehicles:   sortedKeys(vehicles),
+		Chargers:   sorted(chargers),
+		SmartPlugs: sorted(smartPlugs),
+		Meters:     sorted(meters),
+		PVBattery:  sorted(pvBattery),
+		Vehicles:   sorted(vehicles),
 	}
 
 	file, err := json.MarshalIndent(brands, "", " ")
