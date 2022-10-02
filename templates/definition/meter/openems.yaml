@@ -2,8 +2,6 @@ template: openems
 products:
   - brand: OpenEMS
   - brand: FENECON
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

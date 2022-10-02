@@ -4,25 +4,23 @@ products:
     description:
       generic: Sunny Home Manager 2.0
 capabilities: ["smahems"]
-guidedsetup:
-  enable: true
-  linked:
-    - template: sma-energy-meter
-      usage: pv
-    - template: sma-hybrid
-      usage: pv
-      multiple: true
-      excludetemplate: sma-energy-meter
-    - template: sma-inverter
-      usage: pv
-      multiple: true
-      excludetemplate: sma-energy-meter
-    - template: sma-hybrid
-      usage: battery
-      multiple: true
-    - template: sma-inverter
-      usage: battery
-      multiple: true
+linked:
+  - template: sma-energy-meter
+    usage: pv
+  - template: sma-hybrid
+    usage: pv
+    multiple: true
+    excludetemplate: sma-energy-meter
+  - template: sma-inverter
+    usage: pv
+    multiple: true
+    excludetemplate: sma-energy-meter
+  - template: sma-hybrid
+    usage: battery
+    multiple: true
+  - template: sma-inverter
+    usage: battery
+    multiple: true
 params:
   - name: usage
     choice: ["grid"]

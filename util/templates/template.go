@@ -24,6 +24,12 @@ type Template struct {
 	titles []string
 }
 
+// GuidedSetupEnabled returns true if there are linked templates or >1 usage
+func (t *Template) GuidedSetupEnabled() bool {
+	_, p := t.ParamByName(ParamUsage)
+	return len(t.Linked) > 0 || len(p.Choice) > 1
+}
+
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {

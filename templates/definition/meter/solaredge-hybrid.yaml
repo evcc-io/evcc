@@ -3,8 +3,6 @@ products:
   - brand: SolarEdge
     description:
       generic: Hybrid Inverter
-guidedsetup:
-  enable: true
 requirements:
   description:
     de: Nur ein System kann auf den Wechselrichter zugreifen!

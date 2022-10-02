@@ -169,11 +169,6 @@ type Requirements struct {
 	URI         string       // URI to a webpage with more details about the preparation requirements
 }
 
-type GuidedSetup struct {
-	Enable bool             // if true, guided setup is possible
-	Linked []LinkedTemplate // a list of templates that should be processed as part of the guided setup
-}
-
 // Linked Template
 type LinkedTemplate struct {
 	Template        string
@@ -291,12 +286,12 @@ type Product struct {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
+	Group        string    // the group this template belongs to, references groupList entries
 	Covers       []string  // list of covered outdated template names
 	Products     []Product // list of products this template is compatible with
 	Capabilities []string
 	Requirements Requirements
-	GuidedSetup  GuidedSetup
-	Group        string // the group this template belongs to, references groupList entries
+	Linked       []LinkedTemplate // a list of templates that should be processed as part of the guided setup
 	Params       []Param
 	Render       string // rendering template
 }

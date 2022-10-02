@@ -3,8 +3,6 @@ products:
   - brand: Solarwatt
     description:
       generic: MyReserve Matrix (LAN oder PowerGateway)
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -24,7 +22,7 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
     jq: .FData.IBat * .FData.VBat
-  soc: 
+  soc:
     source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .SData.SoC
