@@ -24,6 +24,10 @@ IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybo
 # deb
 PACKAGES = ./release
 
+# asn1-patch
+GOROOT := $(shell go env GOROOT)
+CURRDIR := $(shell pwd)
+
 default:: build
 
 all:: clean install install-ui ui assets lint test-ui lint-ui test build
@@ -127,7 +131,7 @@ soc::
 
 # patch asn1.go to allow Elli buggy certificates to be accepted with EEBUS
 patch-asn1::
-	# echo $$(go env GOROOT)
-	cat $$(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
-	sudo patch -N -t -d $$(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $$(pwd)/patch/asn1.diff
-	cat $$(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
+	# echo $(GOROOT)
+	cat $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
+	sudo patch -N -t -d $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $(CURRDIR)/patch/asn1.diff
+	cat $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
