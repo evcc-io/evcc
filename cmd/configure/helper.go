@@ -84,10 +84,6 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
 	if !c.expandedMode {
-		for _, param := range templateItem.Params {
-			param.Help.Shorten(c.lang)
-		}
-
 		b, err := templateItem.RenderProxyWithValues(values, c.lang)
 		if err != nil {
 			c.addedDeviceIndex--
@@ -496,7 +492,7 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		label = langLabel
 	}
 
-	help := param.Help.String(c.lang)
+	help := param.Help.ShortString(c.lang)
 	if slices.Contains(param.Requirements.EVCC, templates.RequirementSponsorship) {
 		help = fmt.Sprintf("%s\n\n%s", help, c.localizedString("Requirements_Sponsorship_Feature_Title", nil))
 	}

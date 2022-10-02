@@ -109,24 +109,12 @@ func (t *TextLanguage) String(lang string) string {
 	}
 }
 
-func (t *TextLanguage) set(lang, value string) {
-	switch lang {
-	case "de":
-		t.DE = value
-	case "en":
-		t.EN = value
-	default:
-		t.DE = value
-	}
-}
-
-// Shorten reduces help texts to one line and adds ...
-func (t *TextLanguage) Shorten(lang string) {
-	var short string
-
+// ShortString reduces help texts to one line and adds ...
+func (t *TextLanguage) ShortString(lang string) string {
 	help := t.String(lang)
 	scanner := bufio.NewScanner(strings.NewReader(help))
 
+	var short string
 	for scanner.Scan() {
 		if short == "" {
 			short = scanner.Text()
@@ -136,9 +124,7 @@ func (t *TextLanguage) Shorten(lang string) {
 		}
 	}
 
-	if help != short {
-		t.set(lang, short)
-	}
+	return short
 }
 
 // Update the language specific texts
