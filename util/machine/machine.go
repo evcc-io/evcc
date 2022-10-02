@@ -30,16 +30,20 @@ func CustomID(cid string) error {
 	return nil
 }
 
+// RandomID creates a random id
+func RandomID() string {
+	rnd := util.RandomString(512)
+	mac := hmac.New(sha256.New, []byte(rnd))
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
 // ID returns the platform specific machine id of the current host OS.
 // If ID cannot be generated, a random value is suggested.
 func ID() (string, error) {
 	if id == "" {
 		var err error
 		if id, err = machineid.ID(); err != nil {
-			rnd := util.RandomString(512)
-			mac := hmac.New(sha256.New, []byte(rnd))
-			rid := hex.EncodeToString(mac.Sum(nil))
-
+			rid := RandomID()
 			return "", fmt.Errorf("could not get %w; for manual configuration use plant: %s", err, rid)
 		}
 	}
