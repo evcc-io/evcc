@@ -1457,16 +1457,17 @@ func (lp *LoadPoint) publishChargeProgress() {
 // socPollAllowed validates charging state against polling mode
 func (lp *LoadPoint) socPollAllowed() bool {
 	// Check if poll is allowed
-	poll_allowed := lp.SoC.Poll.Mode == pollAlways ||
+	poll_allowed := lp.socUpdated.IsZero() && lp.connected() || // Forced update from outside via time reset, security only via connected vehicle
+		lp.charging() || // During chargeing socPoll is allowed always, nevermind which Poll Mode is activated
+		lp.SoC.Poll.Mode == pollAlways ||
 		lp.SoC.Poll.Mode == pollConnected && lp.connected() ||
-		lp.SoC.Poll.Mode == pollCharging && lp.connected() && (lp.vehicleSoc < float64(lp.SoC.target))
+		lp.SoC.Poll.Mode == pollCharging && lp.connected() && (lp.vehicleSoc < float64(lp.SoC.target)) // Special case to get last API SoC
 
 	if poll_allowed {
 		// Check intervall duration
-		var interval time.Duration = 900000000000 // TODO get minimum value (cache) from car, because more often does not make sence
-		if lp.SoC.Poll.Mode != pollCharging && interval < lp.SoC.Poll.Interval {
-			// TODO ideal would be math.Max(vehicle.cache, lp.SoC.Poll.Inteval) für nicht Chargeing
-			interval = lp.SoC.Poll.Interval // Use slow intervall and not cached value
+		var interval time.Duration = lp.SoC.Poll.Interval
+		if lp.charging() { // Use cache intervall 15 min
+			interval = 900000000000 // TODO get minimum value (cache) from car, because more often does not make sence
 		}
 		// Calculate if we need to skip this one, because we are faster then the intervall
 		if (interval - lp.clock.Since(lp.socUpdated)) > 0 {
