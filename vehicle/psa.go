@@ -96,10 +96,10 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 
 	api := psa.NewAPI(log, identity, realm, cc.Credentials.ID)
 
-	_, vid, err := ensureVehicleWithFeature(
+	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v psa.Vehicle) (string, string) {
-			return v.VIN, v.ID
+		func(v psa.Vehicle) string {
+			return v.VIN
 		},
 	)
 
@@ -107,7 +107,7 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 		return nil, err
 	}
 
-	v.Provider = psa.NewProvider(api, vid, cc.Cache)
+	v.Provider = psa.NewProvider(api, vehicle.ID, cc.Cache)
 
 	return v, err
 }
