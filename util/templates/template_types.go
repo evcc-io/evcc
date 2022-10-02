@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bufio"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -95,16 +96,17 @@ type TextLanguage struct {
 }
 
 func (t *TextLanguage) String(lang string) string {
-	if t.Generic != "" {
-		return t.Generic
-	}
-	switch lang {
-	case "de":
+	switch {
+	case lang == "de" && t.DE != "":
 		return t.DE
-	case "en":
+	case lang == "en" && t.EN != "":
 		return t.EN
+	default:
+		if t.Generic != "" {
+			return t.Generic
+		}
+		return t.DE
 	}
-	return t.DE
 }
 
 func (t *TextLanguage) set(lang, value string) {
@@ -120,19 +122,13 @@ func (t *TextLanguage) set(lang, value string) {
 
 // Shorten reduces help texts to one line and adds ...
 func (t *TextLanguage) Shorten(lang string) {
-	help := t.String(lang)
-	if help == "" {
-		return
-	}
-
-	scanner := bufio.NewScanner(strings.NewReader(help))
-
-	var line int
 	var short string
 
+	help := t.String(lang)
+	scanner := bufio.NewScanner(strings.NewReader(help))
+
 	for scanner.Scan() {
-		line++
-		if line == 1 {
+		if short == "" {
 			short = scanner.Text()
 		} else {
 			short += "..."
@@ -169,23 +165,12 @@ type Requirements struct {
 	URI         string       // URI to a webpage with more details about the preparation requirements
 }
 
-type GuidedSetup struct {
-	Enable bool             // if true, guided setup is possible
-	Linked []LinkedTemplate // a list of templates that should be processed as part of the guided setup
-}
-
 // Linked Template
 type LinkedTemplate struct {
 	Template        string
 	Usage           string // usage: "grid", "pv", "battery"
 	Multiple        bool   // if true, multiple instances of this template can be added
 	ExcludeTemplate string // only consider this if no device of the named linked template was added
-}
-
-type Dependency struct {
-	Name  string // the Param name value this depends on
-	Check string // the check to perform, valid values see const DependencyCheck...
-	Value string // the string value to check against
 }
 
 // Param is a proxy template parameter
@@ -205,7 +190,6 @@ type Param struct {
 	Preset        string       // Reference a predefined se of params
 	Name          string       // Param name which is used for assigning defaults properties and referencing in render
 	Description   TextLanguage // language specific titles (presented in UI instead of Name)
-	Dependencies  []Dependency // List of dependencies, when this param should be presented
 	Required      bool         // cli if the user has to provide a non empty value
 	Mask          bool         // cli if the value should be masked, e.g. for passwords
 	Advanced      bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
@@ -288,15 +272,19 @@ type Product struct {
 	Description TextLanguage // product name
 }
 
+func (p Product) Title(lang string) string {
+	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(lang)))
+}
+
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
+	Group        string    // the group this template belongs to, references groupList entries
 	Covers       []string  // list of covered outdated template names
 	Products     []Product // list of products this template is compatible with
 	Capabilities []string
 	Requirements Requirements
-	GuidedSetup  GuidedSetup
-	Group        string // the group this template belongs to, references groupList entries
+	Linked       []LinkedTemplate // a list of templates that should be processed as part of the guided setup
 	Params       []Param
 	Render       string // rendering template
 }

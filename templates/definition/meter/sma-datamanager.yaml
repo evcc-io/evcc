@@ -5,8 +5,6 @@ products:
   - brand: SMA
     description:
       generic: Data Manager
-guidedsetup:
-  enable: true
 requirements:
   description:
     de: In der Weboberfläche des SMA Data Manager muss im Bereich "Externe Kommunikation" der Schalter "Modbus Server aktivieren" eingeschaltet sein.

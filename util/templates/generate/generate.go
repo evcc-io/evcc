@@ -49,10 +49,9 @@ func generateClass(class templates.Class) error {
 		}
 
 		for index, product := range tmpl.Products {
-			fmt.Println(tmpl.Template + ": " + tmpl.ProductTitle(product))
+			fmt.Println(tmpl.Template + ": " + product.Title(tmpl.Lang))
 
-			err := writeTemplate(class, index, product, tmpl)
-			if err != nil {
+			if err := writeTemplate(class, index, product, tmpl); err != nil {
 				return err
 			}
 		}

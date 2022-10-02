@@ -6,8 +6,6 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

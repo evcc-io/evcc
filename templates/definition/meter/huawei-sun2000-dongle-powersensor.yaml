@@ -3,8 +3,6 @@ products:
   - brand: Huawei
     description:
       generic: SUN2000 with SDongle & Power Sensor
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

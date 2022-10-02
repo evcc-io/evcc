@@ -3,8 +3,6 @@ products:
   - brand: Sungrow
     description:
       generic: SG Series Inverter
-guidedsetup:
-  enable: true
 requirements:
   description:
     de: Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.

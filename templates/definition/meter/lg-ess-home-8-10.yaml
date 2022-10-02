@@ -3,8 +3,6 @@ products:
   - brand: LG
     description:
       generic: ESS Home 8/10
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

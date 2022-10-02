@@ -7,8 +7,6 @@ products:
   - brand: Qcells
     description:
       generic: Q.HOME ESS HYB-G3
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

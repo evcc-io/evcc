@@ -3,8 +3,6 @@ products:
   - brand: SENEC
     description:
       generic: .Home
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
