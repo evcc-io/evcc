@@ -19,7 +19,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/libp2p/zeroconf/v2"
-	"golang.org/x/crypto/cryptobyte"
 )
 
 var EEBUSDetails = communication.ManufacturerDetails{
@@ -91,13 +90,6 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	cert, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
 	if err != nil {
 		return nil, err
-	}
-
-	// Test if go is patched for accepting the buggy Elli certificate
-	var res bool
-	b := cryptobyte.String([]byte{0x01, 0x01, 0x01})
-	if ok := b.ReadASN1Boolean(&res); !ok {
-		panic("EEBUS needs a patched go crypto library. Run `make patch-asn1` before compiling.")
 	}
 
 	srv := &server.Server{
