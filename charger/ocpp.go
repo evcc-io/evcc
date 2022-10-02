@@ -22,14 +22,13 @@ const statusTimeout = 30 * time.Second
 
 // OCPP charger implementation
 type OCPP struct {
-	log                     *util.Logger
-	cp                      *ocpp.CP
-	connector               int
-	idtag                   string
-	phases                  int
-	current                 float64
-	meterValuesSample       string
-	phaseSwitchingSupported bool
+	log               *util.Logger
+	cp                *ocpp.CP
+	connector         int
+	idtag             string
+	phases            int
+	current           float64
+	meterValuesSample string
 }
 
 func init() {
@@ -123,67 +122,66 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 	var (
 		rc                  = make(chan error, 1)
-		options             []core.ConfigurationKey
 		meterSampleInterval time.Duration
 	)
 
+	keys := []string{
+		ocpp.KeyNumberOfConnectors,
+		ocpp.KeyMeterValuesSampledData,
+		ocpp.KeyMeterValueSampleInterval,
+		ocpp.KeyChargeProfileMaxStackLevel,
+		ocpp.KeyChargingScheduleAllowedChargingRateUnit,
+		ocpp.KeyChargingScheduleMaxPeriods,
+		ocpp.KeyConnectorSwitch3to1PhaseSupported,
+		ocpp.KeyMaxChargingProfilesInstalled,
+	}
+
 	// configured id may be empty, use registered id below
 	err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
-		if err != nil {
-			rc <- err
-			return
-		}
+		if err == nil {
+			// sort config options for printing
+			sort.Slice(resp.ConfigurationKey, func(i, j int) bool {
+				return resp.ConfigurationKey[i].Key < resp.ConfigurationKey[j].Key
+			})
 
-		options = resp.ConfigurationKey
+			rw := map[bool]string{false: "r/w", true: "r/o"}
 
-		// sort config options for printing
-		sort.Slice(options, func(i, j int) bool {
-			return options[i].Key < options[j].Key
-		})
-
-		rw := map[bool]string{false: "r/w", true: "r/o"}
-
-		for _, opt := range options {
-			c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
-
-			switch opt.Key {
-			case ocpp.KeyMeterValuesSampledData:
-				c.meterValuesSample = *opt.Value
-
-			case ocpp.KeyMeterValueSampleInterval:
-				meterValuesSampleInterval, err := strconv.Atoi(*opt.Value)
-				if err != nil {
-					rc <- err
-					return
-				}
-				meterSampleInterval = time.Duration(meterValuesSampleInterval) * time.Second
-
-			case string(ocpp.KeyConnectorSwitch3to1PhaseSupported):
-				// Detection of 1 phase charging/switching support
-				b, err := strconv.ParseBool(*opt.Value)
-				if err != nil {
-					rc <- err
-					return
+			for _, opt := range resp.ConfigurationKey {
+				if opt.Value == nil {
+					c.log.ERROR.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], "nil")
+					continue
 				}
 
-				c.phaseSwitchingSupported = b
+				c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
+
+				switch opt.Key {
+				case ocpp.KeyNumberOfConnectors:
+					var val int
+					if val, err = strconv.Atoi(*opt.Value); err == nil && c.connector > val {
+						err = fmt.Errorf("connector %d exceeds max available connectors: %d", c.connector, val)
+					}
+
+				case ocpp.KeyMeterValuesSampledData:
+					c.meterValuesSample = *opt.Value
+
+				case ocpp.KeyMeterValueSampleInterval:
+					var val int
+					if val, err = strconv.Atoi(*opt.Value); err == nil {
+						meterSampleInterval = time.Duration(val) * time.Second
+					}
+				}
+
+				if err != nil {
+					break
+				}
 			}
 		}
 
-		rc <- nil
-	}, []string{})
+		rc <- err
+	}, keys)
 
 	if err := c.wait(err, rc); err != nil {
 		return nil, err
-	}
-
-	if err := cp.DetectCapabilities(options); err != nil {
-		return nil, err
-	}
-
-	// check supported connectors of charge point
-	if supported := cp.GetNumberOfSupportedConnectors(); c.connector > supported {
-		return nil, fmt.Errorf("configured connector is not available, max available connectors %d", supported)
 	}
 
 	if meterValues != "" {
