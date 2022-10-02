@@ -649,8 +649,10 @@ func TestTargetSoC(t *testing.T) {
 
 func TestSoCPoll(t *testing.T) {
 	clock := clock.NewMock()
-	tRefresh := pollInterval
+	tRefresh := pollInterval // 1 Hour
 	tNoRefresh := pollInterval / 2
+	tRefresh_StatusC := pollInterval / 4 // Only 15min like cache time for chargeing
+	tNoRefresh_StatusC := pollInterval / 8
 
 	lp := &LoadPoint{
 		clock: clock,
@@ -674,11 +676,11 @@ func TestSoCPoll(t *testing.T) {
 		{pollCharging, api.StatusA, tRefresh, false},
 		{pollCharging, api.StatusB, -1, true}, // poll once when car connected
 		{pollCharging, api.StatusB, 0, false},
-		{pollCharging, api.StatusB, tRefresh, false},
+		{pollCharging, api.StatusB, tRefresh, true}, // New feature, because SoCs are still different and vehicle is connected poll is allowed
 		{pollCharging, api.StatusC, -1, true},
-		{pollCharging, api.StatusC, 0, true},
-		{pollCharging, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollCharging, api.StatusC, tRefresh, true},
+		{pollCharging, api.StatusC, 0, false},                  // Breaking change, wait during active charging min. cache time.
+		{pollCharging, api.StatusC, tNoRefresh_StatusC, false}, // Breaking change, wait during active charging min. cache time.
+		{pollCharging, api.StatusC, tRefresh_StatusC, true},
 
 		// pollConnected
 		{pollConnected, api.StatusA, -1, false},
@@ -689,9 +691,9 @@ func TestSoCPoll(t *testing.T) {
 		{pollConnected, api.StatusB, tNoRefresh, false},
 		{pollConnected, api.StatusB, tRefresh, true},
 		{pollConnected, api.StatusC, -1, true},
-		{pollConnected, api.StatusC, 0, true},
-		{pollConnected, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollConnected, api.StatusC, tRefresh, true},
+		{pollConnected, api.StatusC, 0, false},                  // Breaking change, wait during active charging min. cache time.
+		{pollConnected, api.StatusC, tNoRefresh_StatusC, false}, // Breaking change, wait during active charging min. cache time.
+		{pollConnected, api.StatusC, tRefresh_StatusC, true},
 
 		// pollAlways
 		{pollAlways, api.StatusA, -1, true},
@@ -703,9 +705,9 @@ func TestSoCPoll(t *testing.T) {
 		{pollAlways, api.StatusB, tNoRefresh, false},
 		{pollAlways, api.StatusB, tRefresh, true},
 		{pollAlways, api.StatusC, -1, true},
-		{pollAlways, api.StatusC, 0, true},
-		{pollAlways, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollAlways, api.StatusC, tRefresh, true},
+		{pollAlways, api.StatusC, 0, false},                  // Breaking change, wait during active charging min. cache time.
+		{pollAlways, api.StatusC, tNoRefresh_StatusC, false}, // Breaking change, wait during active charging min. cache time.
+		{pollAlways, api.StatusC, tRefresh_StatusC, true},
 	}
 
 	for _, tc := range tc {
@@ -719,6 +721,7 @@ func TestSoCPoll(t *testing.T) {
 
 		lp.SoC.Poll.Mode = tc.mode
 		lp.status = tc.status
+		lp.SoC.target = 100.0
 
 		res := lp.socPollAllowed()
 		if res {
