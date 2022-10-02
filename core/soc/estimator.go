@@ -105,23 +105,52 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 }
 
 // SoC replaces the api.Vehicle.SoC interface to take charged energy into account
-func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
-	var fetchedSoC *float64
+func (s *Estimator) SoC(allowPollNewSoc bool, chargedEnergy float64) (bool, float64, error) {
+	var fetchedSoC *float64 = nil
+	var fetchedNewSoc bool = false
 
-	if charger, ok := s.charger.(api.Battery); ok {
-		f, err := charger.SoC()
+	if allowPollNewSoc {
+		if charger, ok := s.charger.(api.Battery); ok {
+			f, err := charger.SoC()
 
-		// if the charger does or could provide SoC, we always use it instead of using the vehicle API
-		if err == nil || !errors.Is(err, api.ErrNotAvailable) {
-			if err != nil {
+			// if the charger does or could provide SoC, we always use it instead of using the vehicle API
+			if err == nil || !errors.Is(err, api.ErrNotAvailable) {
+				if err == nil {
+					fetchedNewSoc = true
+				} else {
+					// never received a soc value
+					if s.prevSoc == 0 {
+						return fetchedNewSoc, 0, err
+					}
+
+					// recover from temporary api errors
+					f = s.prevSoc
+					s.log.WARN.Printf("vehicle soc (charger): %v (ignored by estimator)", err)
+				}
+
+				fetchedSoC = &f
+				s.vehicleSoc = f
+			}
+		}
+
+		if fetchedSoC == nil {
+			f, err := s.vehicle.SoC()
+			if err == nil {
+				fetchedNewSoc = true
+			} else {
+				// required for online APIs with refreshkey
+				if errors.Is(err, api.ErrMustRetry) {
+					return fetchedNewSoc, 0, err
+				}
+
 				// never received a soc value
 				if s.prevSoc == 0 {
-					return 0, err
+					return fetchedNewSoc, 0, err
 				}
 
 				// recover from temporary api errors
 				f = s.prevSoc
-				s.log.WARN.Printf("vehicle soc (charger): %v (ignored by estimator)", err)
+				s.log.WARN.Printf("vehicle soc: %v (ignored by estimator)", err)
 			}
 
 			fetchedSoC = &f
@@ -129,29 +158,13 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 		}
 	}
 
-	if fetchedSoC == nil {
-		f, err := s.vehicle.SoC()
-		if err != nil {
-			// required for online APIs with refreshkey
-			if errors.Is(err, api.ErrMustRetry) {
-				return 0, err
-			}
-
-			// never received a soc value
-			if s.prevSoc == 0 {
-				return 0, err
-			}
-
-			// recover from temporary api errors
-			f = s.prevSoc
-			s.log.WARN.Printf("vehicle soc: %v (ignored by estimator)", err)
+	if s.estimate && s.virtualCapacity > 0 {
+		// Use cached values if nothing is available
+		if fetchedSoC == nil {
+			fetchedSoC = &s.prevSoc
+			s.vehicleSoc = s.prevSoc
 		}
 
-		fetchedSoC = &f
-		s.vehicleSoc = f
-	}
-
-	if s.estimate && s.virtualCapacity > 0 {
 		socDelta := s.vehicleSoc - s.prevSoc
 		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
 
@@ -162,7 +175,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			if vs, ok := s.vehicle.(api.ChargeState); ok {
 				ccs, err := s.charger.Status()
 				if err != nil {
-					return 0, err
+					return fetchedNewSoc, 0, err
 				}
 				vcs, err := vs.Status()
 				if err != nil {
@@ -199,5 +212,5 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 		}
 	}
 
-	return s.vehicleSoc, nil
+	return fetchedNewSoc, s.vehicleSoc, nil
 }
