@@ -1478,16 +1478,6 @@ func (lp *LoadPoint) socPollAllowed() bool {
 	return poll_allowed
 }
 
-// checks if the connected charger can provide SoC to the connected vehicle
-func (lp *LoadPoint) socProvidedByCharger() bool {
-	if charger, ok := lp.charger.(api.Battery); ok {
-		if _, err := charger.SoC(); err == nil {
-			return true
-		}
-	}
-	return false
-}
-
 // publish state of charge, remaining charge duration and range
 func (lp *LoadPoint) publishSoCAndRange() {
 	if lp.socEstimator == nil {
