@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bufio"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -95,16 +96,17 @@ type TextLanguage struct {
 }
 
 func (t *TextLanguage) String(lang string) string {
-	if t.Generic != "" {
-		return t.Generic
-	}
-	switch lang {
-	case "de":
+	switch {
+	case lang == "de" && t.DE != "":
 		return t.DE
-	case "en":
+	case lang == "en" && t.EN != "":
 		return t.EN
+	default:
+		if t.Generic != "" {
+			return t.Generic
+		}
+		return t.DE
 	}
-	return t.DE
 }
 
 func (t *TextLanguage) set(lang, value string) {
@@ -120,19 +122,13 @@ func (t *TextLanguage) set(lang, value string) {
 
 // Shorten reduces help texts to one line and adds ...
 func (t *TextLanguage) Shorten(lang string) {
-	help := t.String(lang)
-	if help == "" {
-		return
-	}
-
-	scanner := bufio.NewScanner(strings.NewReader(help))
-
-	var line int
 	var short string
 
+	help := t.String(lang)
+	scanner := bufio.NewScanner(strings.NewReader(help))
+
 	for scanner.Scan() {
-		line++
-		if line == 1 {
+		if short == "" {
 			short = scanner.Text()
 		} else {
 			short += "..."
@@ -281,6 +277,10 @@ func (p *Param) OverwriteProperties(withParam Param) {
 type Product struct {
 	Brand       string       // product brand
 	Description TextLanguage // product name
+}
+
+func (p Product) Title(lang string) string {
+	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(lang)))
 }
 
 // TemplateDefinition contains properties of a device template

@@ -108,11 +108,6 @@ func (t *Template) Title() string {
 	return t.title
 }
 
-// return a language specific product title
-func (t *Template) ProductTitle(p Product) string {
-	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(t.Lang)))
-}
-
 // return the language specific product titles
 func (t *Template) Titles(lang string) []string {
 	t.Lang = lang
@@ -127,7 +122,7 @@ func (t *Template) Titles(lang string) []string {
 // set the language specific product titles
 func (t *Template) resolveTitles() {
 	for _, p := range t.Products {
-		t.titles = append(t.titles, t.ProductTitle(p))
+		t.titles = append(t.titles, p.Title(t.Lang))
 	}
 }
 
