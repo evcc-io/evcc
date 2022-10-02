@@ -78,12 +78,6 @@ func (t *Template) Validate() error {
 		if p.ValueType != "" && !slices.Contains(ValidParamValueTypes, p.ValueType) {
 			return fmt.Errorf("invalid value type '%s' in template %s", p.ValueType, t.Template)
 		}
-
-		for _, d := range p.Dependencies {
-			if !slices.Contains(ValidDependencies, d.Check) {
-				return fmt.Errorf("invalid dependency check '%s' in template %s", d.Check, t.Template)
-			}
-		}
 	}
 
 	return nil
