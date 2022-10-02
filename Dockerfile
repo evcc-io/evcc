@@ -42,7 +42,7 @@ RUN go mod download
 
 # prepare
 COPY . .
-RUN make patch-asn1
+RUN make patch-asn1-docker
 RUN make assets
 
 # copy ui
