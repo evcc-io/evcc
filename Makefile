@@ -1,8 +1,3 @@
-.PHONY: default all clean install install-ui ui assets docs lint test-ui lint-ui test build test-release release
-.PHONY: docker publish-testing publish-nightly publish-release
-.PHONY: prepare-image image-rootfs image-update
-.PHONY: soc
-
 # build vars
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
@@ -29,84 +24,84 @@ IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybo
 # deb
 PACKAGES = ./release
 
-default: build
+default:: build
 
-all: clean install install-ui ui assets lint test-ui lint-ui test build
+all:: clean install install-ui ui assets lint test-ui lint-ui test build
 
-clean:
+clean::
 	rm -rf dist/
 
-install:
+install::
 	go install $$(go list -f '{{join .Imports " "}}' tools.go)
 
-install-ui:
+install-ui::
 	npm ci
 
-ui:
+ui::
 	npm run build
 
-assets:
+assets::
 	go generate ./...
 
-docs:
+docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
 
-lint:
+lint::
 	golangci-lint run
 
-lint-ui:
+lint-ui::
 	npm run lint
 
-test-ui:
+test-ui::
 	npm test
 
-test:
+test::
 	@echo "Running testsuite"
 	go test $(BUILD_TAGS) ./...
 
-porcelain:
+porcelain::
 	gofmt -w -l $$(find . -name '*.go')
 	go mod tidy
 	test -z "$$(git status --porcelain)" || (git status; git diff; false)
 
-build:
+build::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
-release-test:
+snapshot:
 	goreleaser --snapshot --skip-publish --rm-dist
 
-release:
+release::
 	goreleaser --rm-dist
 
-docker:
+docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing .
 
-publish-testing:
+publish-testing::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing --push .
 
-publish-nightly:
+publish-nightly::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly --push .
 
-publish-release:
+publish-release::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	docker buildx build --build-arg RELEASE=1 --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --push .
 
-apt-nightly:
+apt-nightly::
 	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
 		cloudsmith push deb evcc/unstable/any-distro/any-version $(file); \
 	)
 
-apt-release:
+apt-release::
 	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
 		cloudsmith push deb evcc/stable/any-distro/any-version $(file); \
 	)
 
 # gokrazy image
-prepare-image:
+prepare-image::
 	go install github.com/gokrazy/tools/cmd/gokr-packer@latest
 	mkdir -p flags/github.com/gokrazy/breakglass
 	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
@@ -114,24 +109,24 @@ prepare-image:
 	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
 	echo "$(BUILD_ARGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
 
-image:
+image::
 	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
 	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); sudo mkfs.ext4 $${loop}p4
 	gzip -f $(IMAGE_FILE)
 
-image-rootfs:
+image-rootfs::
 	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
 	gzip -f $(IMAGE_ROOTFS)
 
-image-update:
+image-update::
 	gokr-packer -update yes $(IMAGE_OPTIONS)
 
-soc:
+soc::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
 
 # patch asn1.go to allow Elli buggy certificates to be accepted with EEBUS
-patch-asn1:
+patch-asn1::
 	# echo $$(go env GOROOT)
 	# cat $$(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
 	# patch -N -t -d $$(go env GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $$(pwd)/patch/asn1.diff
