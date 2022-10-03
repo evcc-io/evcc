@@ -890,8 +890,6 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.addTask(lp.vehicleOdometer)
 
 		lp.progress.Reset()
-
-		lp.updateTxnVehicle(vehicle.Title())
 	} else {
 		lp.socEstimator = nil
 
@@ -899,8 +897,6 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleTitle", "")
 		lp.publish("vehicleCapacity", int64(0))
 		lp.publish(vehicleOdometer, 0.0)
-
-		lp.updateTxnVehicle("")
 	}
 
 	// reset target energy
@@ -912,6 +908,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.Lock()
 
 	lp.unpublishVehicle()
+	lp.updateTxn()
 }
 
 func (lp *LoadPoint) wakeUpVehicle() {

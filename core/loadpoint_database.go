@@ -32,6 +32,12 @@ func (lp *LoadPoint) startTxn() {
 			lp.txn.Vehicle = lp.vehicle.Title()
 		}
 
+		if c, ok := lp.charger.(api.Identifier); ok {
+			if id, err := c.Identify(); err == nil {
+				lp.txn.Identifier = id
+			}
+		}
+
 		lp.db.Persist(lp.txn)
 	}
 }
@@ -47,24 +53,21 @@ func (lp *LoadPoint) stopTxn() {
 	lp.db.Persist(lp.txn)
 }
 
-func (lp *LoadPoint) updateTxnVehicle(v string) {
+func (lp *LoadPoint) updateTxn() {
 	// test guard
 	if lp.db == nil || lp.txn == nil {
 		return
 	}
 
-	lp.txn.Vehicle = v
-	lp.db.Persist(lp.txn)
-}
-
-func (lp *LoadPoint) updateTxnRfid(v string) {
-	// test guard
-	if lp.db == nil {
-		return
+	var title string
+	if lp.vehicle != nil {
+		title = lp.vehicle.Title()
 	}
 
-	lp.txn.Rfid = v
-	lp.db.Persist(lp.txn)
+	if lp.txn.Vehicle != title {
+		lp.txn.Vehicle = title
+		lp.db.Persist(lp.txn)
+	}
 }
 
 func (lp *LoadPoint) finalizeTxn() {

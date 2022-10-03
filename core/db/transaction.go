@@ -8,8 +8,8 @@ import (
 type Transaction struct {
 	ID            uint `gorm:"primarykey"`
 	Loadpoint     string
+	Identifier    string
 	Vehicle       string
-	Rfid          string
 	StartTime     time.Time
 	EndTime       time.Time
 	MeterStart    float64 `gorm:"column:meter_start_kwh"`
