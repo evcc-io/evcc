@@ -44,7 +44,7 @@ func (lp *LoadPoint) startTxn() {
 
 func (lp *LoadPoint) stopTxn() {
 	// test guard
-	if lp.db == nil {
+	if lp.db == nil || lp.txn == nil {
 		return
 	}
 

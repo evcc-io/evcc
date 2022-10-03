@@ -9,6 +9,7 @@ import (
 
 	"github.com/avast/retry-go/v3"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -107,6 +108,8 @@ func NewSiteFromConfig(
 			if lp.db, err = db.New(lp.Title); err != nil {
 				return nil, err
 			}
+
+			shutdown.Register(lp.stopTxn)
 		}
 	}
 

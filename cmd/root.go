@@ -321,7 +321,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		wg.Add(2)
 
 		// wait for main loop and shutdown functions to finish
-		go func() { <-shutdown.Done(conf.Interval); wg.Done() }()
+		go func() { <-shutdown.Done(); wg.Done() }()
 		go func() { <-siteC; wg.Done() }()
 		go func() { wg.Wait(); close(exitC) }()
 

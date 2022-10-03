@@ -35,7 +35,7 @@ func New(name string) (*DB, error) {
 func (s *DB) Txn(meter float64) *Transaction {
 	t := Transaction{
 		Loadpoint:  s.name,
-		StartTime:  time.Now(),
+		Created:    time.Now(),
 		MeterStart: meter,
 	}
 
