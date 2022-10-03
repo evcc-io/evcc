@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -10,8 +11,10 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	dbserver "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
 )
@@ -134,6 +137,24 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 		}
 		jsonResult(w, res)
 	}
+}
+
+// sessionHandler returns the list of charging sessions
+func sessionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbserver.Instance == nil {
+		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
+		return
+	}
+
+	var res []db.Transaction
+
+	txn := dbserver.Instance.Order("created desc").Find(&res)
+	if txn.Error != nil {
+		jsonError(w, http.StatusInternalServerError, txn.Error)
+		return
+	}
+
+	jsonResult(w, res)
 }
 
 // chargeModeHandler updates charge mode
