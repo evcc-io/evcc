@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	dbserver "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
+	"github.com/fatih/structs"
 	"github.com/gorilla/mux"
 )
 
@@ -60,13 +62,53 @@ func jsonWrite(w http.ResponseWriter, content interface{}) {
 }
 
 func jsonResult(w http.ResponseWriter, res interface{}) {
-	w.WriteHeader(http.StatusOK)
 	jsonWrite(w, map[string]interface{}{"result": res})
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
 	jsonWrite(w, map[string]interface{}{"error": err.Error()})
+}
+
+func csvResult(w http.ResponseWriter, res []db.Transaction) {
+	w.Header()["Content-Disposition"] = []string{`attachment; filename="sessions.csv")`}
+	ww := csv.NewWriter(w)
+
+	var row []string
+	for _, f := range structs.Fields(db.Transaction{}) {
+		if f.Tag("json") == "-" {
+			continue
+		}
+		row = append(row, f.Name())
+	}
+	ww.Write(row)
+
+	for _, r := range res {
+		var row []string
+		for _, f := range structs.Fields(r) {
+			if f.Tag("json") == "-" {
+				continue
+			}
+
+			val := fmt.Sprintf("%v", f.Value())
+
+			switch v := f.Value().(type) {
+			case float64:
+				val = strconv.FormatFloat(v, 'f', 3, 64)
+			case time.Time:
+				if v.IsZero() {
+					val = ""
+				} else {
+					val = v.Local().Format("2006-01-02 15:04:05")
+				}
+			}
+
+			row = append(row, val)
+		}
+		ww.Write(row)
+	}
+
+	ww.Flush()
 }
 
 // healthHandler returns current charge mode
@@ -147,10 +189,13 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var res []db.Transaction
-
-	txn := dbserver.Instance.Order("created desc").Find(&res)
-	if txn.Error != nil {
+	if txn := dbserver.Instance.Where("charged_kwh>0").Order("created desc").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
+		return
+	}
+
+	if r.URL.Query().Get("format") == "csv" {
+		csvResult(w, res)
 		return
 	}
 
