@@ -85,14 +85,14 @@ func TestSoCEstimation(t *testing.T) {
 				vehicle.EXPECT().SoC().Return(tc.vehicleSoC, nil)
 			}
 
-			tmp, soc, err := ce.SoC(true, tc.chargedEnergy)
+			soc, err := ce.SoC(tc.chargedEnergy)
 			if err != nil {
 				t.Error(err)
 			}
 
 			// validate soc estimate
 			if tc.estimatedSoC != soc {
-				t.Errorf("expected estimated new: %t c bvsoc: %g, got: %g", tmp, tc.estimatedSoC, soc)
+				t.Errorf("expected estimated soc: %g, got: %g", tc.estimatedSoC, soc)
 			}
 
 			// validate capacity estimate
@@ -177,7 +177,7 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 			vehicle.EXPECT().SoC().Return(tc.vehicleSoC, tc.vehicleError)
 		}
 
-		tmp, soc, err := ce.SoC(true, tc.chargedEnergy)
+		soc, err := ce.SoC(tc.chargedEnergy)
 		if err != nil {
 			if (!tc.expectVehicle && err != tc.chargerError) || (tc.expectVehicle && err != tc.vehicleError) {
 				t.Error(err)
@@ -188,7 +188,7 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 
 		// validate soc estimate
 		if tc.estimatedSoC != soc {
-			t.Errorf("expected estimated tmp: %t, soc: %g, got: %g", tmp, tc.estimatedSoC, soc)
+			t.Errorf("expected estimated soc: %g, got: %g", tc.estimatedSoC, soc)
 		}
 
 		// validate capacity estimate
