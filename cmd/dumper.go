@@ -13,8 +13,6 @@ import (
 	"github.com/fatih/structs"
 )
 
-var truefalse = map[bool]string{false: "false", true: "true"}
-
 type dumper struct {
 	len int
 }
@@ -103,7 +101,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if enabled, err := v.Enabled(); err != nil {
 			fmt.Fprintf(w, "Enabled:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Enabled:\t%s\n", truefalse[enabled])
+			fmt.Fprintf(w, "Enabled:\t%t\n", enabled)
 		}
 	}
 
