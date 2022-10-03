@@ -209,16 +209,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = configureEnvironment(cmd, conf)
 	}
 
+	// setup session log
+	if err == nil && conf.Database.Dsn != "" {
+		err = configureDatabase(conf.Database)
+	}
+
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
 		cp.TrackVisitors() // track duplicate usage
 		site, err = configureSiteAndLoadpoints(conf)
-	}
-
-	// setup session log
-	if err == nil && conf.Database.Dsn != "" {
-		err = configureDatabase(conf.Database)
 	}
 
 	// setup database

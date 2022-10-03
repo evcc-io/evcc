@@ -30,6 +30,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 	default:
 		return nil, fmt.Errorf("invalid database type: %s not in [sqlite, postgres, mysql]", driver)
 	}
+
 	return gorm.Open(dialect, &gorm.Config{})
 }
 
