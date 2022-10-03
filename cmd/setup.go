@@ -78,11 +78,6 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 		err = telemetry.Create(sponsor.Token, conf.Plant)
 	}
 
-	// setup session log
-	if err == nil && conf.Database.Path != "" {
-		err = configureDatabase(conf.Database)
-	}
-
 	// setup mqtt client listener
 	if err == nil && conf.Mqtt.Broker != "" {
 		err = configureMQTT(conf.Mqtt)
@@ -103,7 +98,7 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 
 // configureDatabase configures session database
 func configureDatabase(conf dbConfig) error {
-	return db.NewGlobal(conf.Type, conf.Path)
+	return db.NewInstance(conf.Type, conf.Dsn)
 }
 
 // configureInflux configures influx database
@@ -130,7 +125,7 @@ func configureMQTT(conf mqttConfig) error {
 
 	var err error
 	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {
-		topic := fmt.Sprintf("%s/status", conf.RootTopic())
+		topic := fmt.Sprintf("%s/status", strings.Trim(conf.Topic, "/"))
 		options.SetWill(topic, "offline", 1, true)
 	})
 	if err != nil {

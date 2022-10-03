@@ -37,16 +37,6 @@ var (
 	ignoreMqtt   = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
-var conf = config{
-	Interval: 10 * time.Second,
-	Log:      "info",
-	Network: networkConfig{
-		Schema: "http",
-		Host:   "evcc.local",
-		Port:   7070,
-	},
-}
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "evcc",
@@ -227,7 +217,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// setup session log
-	if err == nil && conf.Database.Path != "" {
+	if err == nil && conf.Database.Dsn != "" {
 		err = configureDatabase(conf.Database)
 	}
 
@@ -238,7 +228,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
+		publisher := server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"))
 		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
 	}
 

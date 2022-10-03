@@ -2,7 +2,9 @@ package db
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -11,23 +13,27 @@ import (
 
 var Instance *gorm.DB
 
-func New(driver, path string) (*gorm.DB, error) {
+func New(driver, dsn string) (*gorm.DB, error) {
 	var dialect gorm.Dialector
 
 	switch driver {
 	case "sqlite":
-		dialect = sqlite.Open(path)
+		file, err := homedir.Expand(dsn)
+		if err != nil {
+			return nil, err
+		}
+		dialect = sqlite.Open(file)
 	case "postgres":
-		dialect = postgres.Open(path)
+		dialect = postgres.Open(dsn)
 	case "mysql":
-		dialect = mysql.Open(path)
+		dialect = mysql.Open(dsn)
 	default:
-		return nil, fmt.Errorf("database type %s not valid. Must be one of (sqlite, postgres, mysql)", driver)
+		return nil, fmt.Errorf("invalid database type: %s not in [sqlite, postgres, mysql]", driver)
 	}
 	return gorm.Open(dialect, &gorm.Config{})
 }
 
-func NewGlobal(driver, path string) (err error) {
-	Instance, err = New(driver, path)
+func NewInstance(driver, dsn string) (err error) {
+	Instance, err = New(strings.ToLower(driver), dsn)
 	return
 }
