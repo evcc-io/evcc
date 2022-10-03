@@ -1455,28 +1455,55 @@ func (lp *LoadPoint) publishChargeProgress() {
 }
 
 // socPollAllowed validates charging state against polling mode
+// This is needed to protect the vehicle 12V battery and the vendor REST API
+// So we need to call the vendor REST API as less as possible
+// If we can ask the charger directly we do not need to wait
 func (lp *LoadPoint) socPollAllowed() bool {
-	// Check if poll is allowed
-	poll_allowed := lp.socUpdated.IsZero() && lp.connected() || // Forced update from outside via time reset, security only via connected vehicle
-		lp.charging() || // During chargeing socPoll is allowed always, nevermind which Poll Mode is activated
-		lp.SoC.Poll.Mode == pollAlways ||
-		lp.SoC.Poll.Mode == pollConnected && lp.connected() ||
-		lp.SoC.Poll.Mode == pollCharging && lp.connected() && (lp.vehicleSoc < float64(lp.SoC.target)) // Special case to get last API SoC
+	poll_allowed := false
+	charging := lp.charging() // Cache because that function use lock and unlock internaly
+
+	// Check if socPoll is  allowed
+	if lp.connected() {
+		poll_allowed = lp.SoC.Poll.Mode == pollCharging && (lp.vehicleSoc < float64(lp.SoC.target)) || // Special case to get last API SoC
+			lp.SoC.Poll.Mode == pollConnected ||
+			lp.SoC.Poll.Mode == pollAlways ||
+			charging || // During chargeing socPoll is allowed always, nevermind which Poll Mode is activated
+			lp.socUpdated.IsZero() // Forced update from outside via time reset, security only via connected vehicle
+	} else {
+		poll_allowed = lp.SoC.Poll.Mode == pollAlways
+	}
 
 	if poll_allowed {
-		// Check intervall duration
-		var interval time.Duration = lp.SoC.Poll.Interval
-		if lp.charging() { // Use cache intervall 15 min
+		// set corresponding intervall
+		var interval time.Duration = lp.SoC.Poll.Interval // Slow Poll intervall from evcc config file
+		if charging {
+			// If vehicle is charging we have no 12V problem, so we can ask a little bit faster.
+			// Normal car API updates are around 15 min. So change intervall from 60 min to 15 min.
 			interval = 900000000000 // TODO get minimum value (cache) from car, because more often does not make sence
 		}
+		if lp.socProvidedByCharger() {
+			// Charger can provide SOC immediately and via direct access so we do not need a safety interval
+			interval = 0
+		}
+
 		// Calculate if we need to skip this one, because we are faster then the intervall
 		if (interval - lp.clock.Since(lp.socUpdated)) > 0 {
+			poll_allowed = false
 			lp.log.DEBUG.Printf("next soc poll remaining time: %v", (interval - lp.clock.Since(lp.socUpdated)).Truncate(time.Second))
-			return false
 		}
 	}
 
 	return poll_allowed
+}
+
+// checks if the connected charger can provide SoC to the connected vehicle
+func (lp *LoadPoint) socProvidedByCharger() bool {
+	if charger, ok := lp.charger.(api.Battery); ok {
+		if _, err := charger.SoC(); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 // publish state of charge, remaining charge duration and range
