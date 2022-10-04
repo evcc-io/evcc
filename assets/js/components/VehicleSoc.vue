@@ -93,7 +93,7 @@ export default {
 			return this.vehicleTargetSoC > 0 && this.vehicleTargetSoC > this.vehicleSoC;
 		},
 		targetSliderActive: function () {
-			return !this.visibleTargetSoC || this.visibleTargetSoC <= this.vehicleTargetSoC;
+			return !this.vehicleTargetSoC || this.visibleTargetSoC <= this.vehicleTargetSoC;
 		},
 		progressColor: function () {
 			if (this.minSoCActive) {

@@ -119,6 +119,20 @@ MinCharge.args = {
   id: 0,
 };
 
+export const VehicleTargetSoc = Template.bind({});
+VehicleTargetSoc.args = {
+  vehicleTitle: "Mein Auto",
+  enabled: true,
+  connected: true,
+  vehiclePresent: true,
+  vehicleTargetSoC: 80,
+  vehicleSoC: 66,
+  charging: true,
+  targetSoC: 90,
+  socBasedCharging: true,
+  id: 0,
+};
+
 export const TimerPvEnable = Template.bind({});
 TimerPvEnable.args = {
   vehicleTitle: "Mein Auto",
