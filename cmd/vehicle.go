@@ -19,7 +19,7 @@ var vehicleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
-	vehicleCmd.Flags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "vehicle"))
+	vehicleCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "vehicle"))
 	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
 	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
 	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)

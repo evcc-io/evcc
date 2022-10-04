@@ -19,7 +19,7 @@ var meterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(meterCmd)
-	meterCmd.Flags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "meter"))
+	meterCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "meter"))
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
