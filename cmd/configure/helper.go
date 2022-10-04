@@ -84,10 +84,6 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
 	if !c.expandedMode {
-		for _, param := range templateItem.Params {
-			param.Help.Shorten(c.lang)
-		}
-
 		b, err := templateItem.RenderProxyWithValues(values, c.lang)
 		if err != nil {
 			c.addedDeviceIndex--
@@ -342,7 +338,7 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 			titleTmpl.SetTitle(title)
 
 			if deviceCategory == DeviceCategoryGuidedSetup {
-				if tmpl.GuidedSetup.Enable {
+				if tmpl.GuidedSetupEnabled() {
 					items = append(items, titleTmpl)
 				}
 			} else {
@@ -425,44 +421,6 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 	additionalConfig := make(map[string]interface{})
 
 	for _, param := range templateItem.Params {
-		if param.Dependencies != nil {
-			valid := true
-			for _, dep := range param.Dependencies {
-				i, valueParam := templateItem.ParamByName(dep.Name)
-				if i == -1 {
-					break
-				}
-
-				value := valueParam.Value
-				switch dep.Check {
-				case templates.DependencyCheckEmpty:
-					if additionalConfig[dep.Name] != nil {
-						valid = additionalConfig[dep.Name] == ""
-					} else {
-						valid = value == ""
-					}
-				case templates.DependencyCheckNotEmpty:
-					if additionalConfig[dep.Name] != nil {
-						valid = additionalConfig[dep.Name] != ""
-					} else {
-						valid = value != ""
-					}
-				case templates.DependencyCheckEqual:
-					if additionalConfig[dep.Name] != nil {
-						valid = additionalConfig[dep.Name] == dep.Value
-					} else {
-						valid = value == dep.Value
-					}
-				}
-				if !valid {
-					break
-				}
-			}
-			if !valid {
-				continue
-			}
-		}
-
 		switch param.Name {
 		case templates.ParamModbus:
 			additionalConfig[param.Name] = param.Value
@@ -534,7 +492,7 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		label = langLabel
 	}
 
-	help := param.Help.String(c.lang)
+	help := param.Help.ShortString(c.lang)
 	if slices.Contains(param.Requirements.EVCC, templates.RequirementSponsorship) {
 		help = fmt.Sprintf("%s\n\n%s", help, c.localizedString("Requirements_Sponsorship_Feature_Title", nil))
 	}

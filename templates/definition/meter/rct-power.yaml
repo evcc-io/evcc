@@ -3,8 +3,6 @@ products:
   - brand: RCT
     description:
       generic: Power
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

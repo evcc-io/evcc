@@ -53,7 +53,20 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	api := skoda.NewAPI(log, ts)
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+
+	vehicle, err := ensureVehicleEx(
+		cc.VIN, api.Vehicles,
+		func(v skoda.Vehicle) string {
+			return v.VIN
+		},
+	)
+
+	if v.Title_ == "" {
+		v.Title_ = vehicle.Name
+	}
+	if v.Capacity_ == 0 {
+		v.Capacity_ = int64(vehicle.Specification.Battery.CapacityInKWh)
+	}
 
 	// use Connect credentials to build provider
 	if err == nil {
@@ -65,7 +78,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		api := skoda.NewAPI(log, ts)
 		api.Client.Timeout = cc.Timeout
 
-		v.Provider = skoda.NewProvider(api, cc.VIN, cc.Cache)
+		v.Provider = skoda.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
 	return v, err

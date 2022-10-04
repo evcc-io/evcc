@@ -3,7 +3,6 @@ package ocpp
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -13,37 +12,21 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-// Meter Profile Key
 const (
+	// Core profile keys
+	KeyNumberOfConnectors = "NumberOfConnectors"
+
+	// Meter profile keys
 	KeyMeterValuesSampledData   = "MeterValuesSampledData"
 	KeyMeterValueSampleInterval = "MeterValueSampleInterval"
+
+	// Smart Charging profile keys
+	KeyChargeProfileMaxStackLevel              = "ChargeProfileMaxStackLevel"
+	KeyChargingScheduleAllowedChargingRateUnit = "ChargingScheduleAllowedChargingRateUnit"
+	KeyChargingScheduleMaxPeriods              = "ChargingScheduleMaxPeriods"
+	KeyConnectorSwitch3to1PhaseSupported       = "ConnectorSwitch3to1PhaseSupported"
+	KeyMaxChargingProfilesInstalled            = "MaxChargingProfilesInstalled"
 )
-
-type SmartchargingChargeProfileKey string
-
-// Smart Charging Profile Key
-const (
-	KeyChargeProfileMaxStackLevel              SmartchargingChargeProfileKey = "ChargeProfileMaxStackLevel"
-	KeyChargingScheduleAllowedChargingRateUnit SmartchargingChargeProfileKey = "ChargingScheduleAllowedChargingRateUnit"
-	KeyChargingScheduleMaxPeriods              SmartchargingChargeProfileKey = "ChargingScheduleMaxPeriods"
-	KeyConnectorSwitch3to1PhaseSupported       SmartchargingChargeProfileKey = "ConnectorSwitch3to1PhaseSupported"
-	KeyMaxChargingProfilesInstalled            SmartchargingChargeProfileKey = "MaxChargingProfilesInstalled"
-)
-
-type smartChargingProfile struct {
-	// Max StackLevel of a ChargingProfile. The number defined also indicates the max allowed
-	// number of installed charging scheduls per Charging Profile Purpose
-	ChargeProfileMaxStackLevel int
-	// A list of supported quantities for use in a ChargingSchedule.
-	// Allowed values: 'Current' and 'Power'
-	ChargingScheduleAllowedChargingRateUnit []string
-	// Maximum number of periods that may be defined per ChargingSchedule
-	ChargingScheduleMaxPeriods int
-	// Defines if this Charge Point support switching from 3 to 1 phase during a charging session.
-	ConnectorSwitch3to1PhaseSupported bool
-	// Maximum number of Charging profiles instsalled at a time.
-	MaxChargingProfilesInstalled int
-}
 
 type CP struct {
 	mu   sync.Mutex
@@ -59,9 +42,6 @@ type CP struct {
 	timeout      time.Duration
 	meterUpdated time.Time
 	measurements map[string]types.SampledValue
-
-	supportedNumberOfConnectors int
-	smartChargingCapabilities   smartChargingProfile
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
@@ -146,99 +126,6 @@ func (cp *CP) WatchDog(timeout time.Duration) {
 			}
 		}
 	}()
-}
-
-func (cp *CP) DetectCapabilities(opts []core.ConfigurationKey) error {
-	options := make(map[string]core.ConfigurationKey)
-	for _, opt := range opts {
-		options[opt.Key] = opt
-	}
-
-	var err error
-	if cp.supportedNumberOfConnectors, err = parseIntOption("NumberOfConnectors", options); err != nil {
-		return err
-	}
-
-	if cp.smartChargingCapabilities, err = detectSmartChargingCapabilities(options); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (cp *CP) GetNumberOfSupportedConnectors() int {
-	return cp.supportedNumberOfConnectors
-}
-
-func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (smartChargingProfile, error) {
-	var profile smartChargingProfile
-
-	{ // required
-		val, err := parseIntOption(KeyChargeProfileMaxStackLevel, options)
-		if err != nil {
-			return profile, err
-		}
-
-		profile.ChargeProfileMaxStackLevel = val
-	}
-
-	{ // required
-		val, err := parseIntOption(KeyChargingScheduleMaxPeriods, options)
-		if err != nil {
-			return profile, err
-		}
-
-		profile.ChargingScheduleMaxPeriods = val
-	}
-
-	{ // required
-		val, err := parseIntOption(KeyMaxChargingProfilesInstalled, options)
-		if err != nil {
-			return profile, err
-		}
-
-		profile.MaxChargingProfilesInstalled = val
-	}
-
-	{ // required
-		opt, found := options[string(KeyChargingScheduleAllowedChargingRateUnit)]
-		if !found || opt.Value == nil {
-			return profile, fmt.Errorf("smart charging key '%s' not found", KeyChargingScheduleAllowedChargingRateUnit)
-		}
-
-		vals := strings.Split(*opt.Value, ",")
-		profile.ChargingScheduleAllowedChargingRateUnit = append(profile.ChargingScheduleAllowedChargingRateUnit, vals...)
-	}
-
-	{ // optional
-		var supported bool
-
-		if opt, ok := options[string(KeyConnectorSwitch3to1PhaseSupported)]; ok {
-			var err error
-			supported, err = strconv.ParseBool(*opt.Value)
-			if err != nil {
-				return profile, fmt.Errorf("invalid value for key: %s", opt.Key)
-			}
-		}
-
-		profile.ConnectorSwitch3to1PhaseSupported = supported
-	}
-
-	return profile, nil
-}
-
-func parseIntOption(key SmartchargingChargeProfileKey, options map[string]core.ConfigurationKey) (int, error) {
-	opt, found := options[string(key)]
-	if !found || opt.Value == nil {
-		return 0, fmt.Errorf("smart charging key '%s' not found", key)
-	}
-
-	val, err := strconv.Atoi(*opt.Value)
-	if err != nil {
-		return 0, fmt.Errorf("invalid value for key: %s", key)
-	}
-
-	return val, nil
 }
 
 // TransactionID returns the current transaction id

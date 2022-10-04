@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,10 +26,8 @@ var chargerRampCmd = &cobra.Command{
 func init() {
 	chargerCmd.AddCommand(chargerRampCmd)
 
-	chargerRampCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
-	chargerRampCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
-	chargerRampCmd.PersistentFlags().StringP(flagDigits, "", "0", "fractional digits (0..2)")
-	chargerRampCmd.PersistentFlags().StringP(flagDelay, "", "1s", "ramp delay")
+	chargerRampCmd.Flags().StringP(flagDigits, "", "0", "fractional digits (0..2)")
+	chargerRampCmd.Flags().StringP(flagDelay, "", "1s", "ramp delay")
 }
 
 func ramp(c api.Charger, digits int, delay time.Duration) {
@@ -81,13 +78,8 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 	}
 
 	// setup environment
-	if err := configureEnvironment(conf); err != nil {
+	if err := configureEnvironment(cmd, conf); err != nil {
 		log.FATAL.Fatal(err)
-	}
-
-	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
-		request.LogHeaders = true
 	}
 
 	// select single charger
@@ -112,12 +104,12 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		chargers = map[string]api.Charger{name: charger}
 	}
 
-	digits, err := strconv.Atoi(cmd.PersistentFlags().Lookup(flagDigits).Value.String())
+	digits, err := strconv.Atoi(cmd.Flags().Lookup(flagDigits).Value.String())
 	if err != nil {
 		log.ERROR.Fatalln(err)
 	}
 
-	delay, err := time.ParseDuration(cmd.PersistentFlags().Lookup(flagDelay).Value.String())
+	delay, err := time.ParseDuration(cmd.Flags().Lookup(flagDelay).Value.String())
 	if err != nil {
 		log.ERROR.Fatalln(err)
 	}

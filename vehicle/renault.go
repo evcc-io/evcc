@@ -72,23 +72,24 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 
 	accountID, err := api.Person(identity.PersonID, brand)
 
-	var car kamereon.Vehicle
-	if err == nil {
-		cc.VIN, car, err = ensureVehicleWithFeature(cc.VIN,
-			func() ([]kamereon.Vehicle, error) {
-				return api.Vehicles(accountID)
-			},
-			func(v kamereon.Vehicle) (string, kamereon.Vehicle) {
-				return v.VIN, v
-			},
-		)
+	if err != nil {
+		return nil, err
 	}
 
+	vehicle, err := ensureVehicleEx(cc.VIN,
+		func() ([]kamereon.Vehicle, error) {
+			return api.Vehicles(accountID)
+		},
+		func(v kamereon.Vehicle) string {
+			return v.VIN
+		},
+	)
+
 	if err == nil {
-		err = car.Available()
+		err = vehicle.Available()
 	}
 
-	v.Provider = renault.NewProvider(api, accountID, cc.VIN, cc.Cache)
+	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.Cache)
 
 	return v, err
 }

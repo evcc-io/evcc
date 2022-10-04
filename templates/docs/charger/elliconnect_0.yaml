@@ -1,0 +1,16 @@
+product:
+  brand: Elli
+  description: Charger Connect (ohne Meter) (Beta)
+capabilities: ["mA"]
+requirements: ["eebus"]
+description: |
+  Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).
+
+  Die Unterstützung ist im Beta Stadium und es kann noch zu Problemen kommen!
+
+render:
+  - default: |
+      type: template
+      template: elliconnect
+      ski: # Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
+      ip: 192.0.2.2 # IP-Adresse

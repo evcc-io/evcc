@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -31,6 +32,18 @@ const (
 	flagDigits = "digits"
 	flagDelay  = "delay"
 )
+
+func bind(cmd *cobra.Command, flag, vpr string) {
+	if err := viper.BindPFlag(vpr, cmd.Flags().Lookup(flag)); err != nil {
+		panic(err)
+	}
+}
+
+func bindP(cmd *cobra.Command, flag, vpr string) {
+	if err := viper.BindPFlag(vpr, cmd.PersistentFlags().Lookup(flag)); err != nil {
+		panic(err)
+	}
+}
 
 func selectByName(cmd *cobra.Command, conf *[]qualifiedConfig) error {
 	flag := cmd.PersistentFlags().Lookup(flagName)

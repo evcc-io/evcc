@@ -6,7 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -21,10 +20,9 @@ var vehicleCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
 	vehicleCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "vehicle"))
-	vehicleCmd.PersistentFlags().BoolP(flagStart, "a", false, flagStartDescription)
-	vehicleCmd.PersistentFlags().BoolP(flagStop, "o", false, flagStopDescription)
-	vehicleCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
-	vehicleCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
+	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
+	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
+	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
@@ -37,13 +35,8 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	// setup environment
-	if err := configureEnvironment(conf); err != nil {
+	if err := configureEnvironment(cmd, conf); err != nil {
 		log.FATAL.Fatal(err)
-	}
-
-	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
-		request.LogHeaders = true
 	}
 
 	// select single vehicle
@@ -69,7 +62,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 
 	var flagUsed bool
 	for _, v := range vehicles {
-		if cmd.PersistentFlags().Lookup(flagWakeup).Changed {
+		if cmd.Flags().Lookup(flagWakeup).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.Resurrector); ok {
@@ -81,7 +74,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagStart).Changed {
+		if cmd.Flags().Lookup(flagStart).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.VehicleChargeController); ok {
@@ -93,7 +86,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagStop).Changed {
+		if cmd.Flags().Lookup(flagStop).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.VehicleChargeController); ok {

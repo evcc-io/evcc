@@ -111,10 +111,10 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Base:   v.Client.Transport,
 	}
 
-	_, vehicle, err := ensureVehicleWithFeature(
+	vehicle, err := ensureVehicleEx(
 		cc.VIN, v.vehicles,
-		func(v tronity.Vehicle) (string, tronity.Vehicle) {
-			return v.VIN, v
+		func(v tronity.Vehicle) string {
+			return v.VIN
 		},
 	)
 

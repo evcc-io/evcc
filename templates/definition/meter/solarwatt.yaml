@@ -7,8 +7,6 @@ products:
   - brand: Solarwatt
     description:
       generic: EnergyManager, EnergyManager Pro
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

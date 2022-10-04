@@ -32,6 +32,9 @@ type EEBus struct {
 	connected           bool
 	expectedEnableState bool
 
+	lastIsChargingCheck  time.Time
+	lastIsChargingResult bool
+
 	evConnectedTime time.Time
 }
 
@@ -42,18 +45,25 @@ func init() {
 // NewEEBusFromConfig creates an EEBus charger from generic config
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Ski string
-	}{}
+		Ski           string
+		Ip            string
+		Meter         bool
+		ChargedEnergy bool
+	}{
+		ChargedEnergy: true,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski)
+	return NewEEBus(cc.Ski, cc.Ip, cc.Meter, cc.ChargedEnergy)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateEEBus -b *EEBus -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
+
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string) (*EEBus, error) {
+func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
 	log := util.NewLogger("eebus")
 
 	if server.EEBusInstance == nil {
@@ -65,7 +75,15 @@ func NewEEBus(ski string) (*EEBus, error) {
 		communicationStandard: communication.EVCommunicationStandardEnumTypeUnknown,
 	}
 
-	server.EEBusInstance.Register(ski, c.onConnect, c.onDisconnect)
+	server.EEBusInstance.Register(ski, ip, c.onConnect, c.onDisconnect)
+
+	if hasMeter {
+		if hasChargedEnergy {
+			return decorateEEBus(c, c.currentPower, c.currents, c.chargedEnergy), nil
+		} else {
+			return decorateEEBus(c, c.currentPower, c.currents, nil), nil
+		}
+	}
 
 	return c, nil
 }
@@ -76,6 +94,7 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 	eebusDevice := app.HEMS(server.EEBusInstance.DeviceInfo())
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
 	c.cc.SetDataUpdateHandler(c.dataUpdateHandler)
+	c.cc.Voltage = 230.0 // TODO value should be provided from site
 
 	c.setDefaultValues()
 	c.setConnected(true)
@@ -97,6 +116,8 @@ func (c *EEBus) setDefaultValues() {
 	c.communicationStandard = communication.EVCommunicationStandardEnumTypeUnknown
 	c.socSupportAvailable = false
 	c.selfConsumptionSupportAvailable = false
+	c.lastIsChargingCheck = time.Now().Add(-time.Hour * 1)
+	c.lastIsChargingResult = false
 }
 
 func (c *EEBus) setConnected(connected bool) {
@@ -124,10 +145,6 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 	if c.lp.GetMaxCurrent() != newMax && newMax > 0 {
 		c.lp.SetMaxCurrent(newMax)
 	}
-
-	if err := c.lp.SetPhases(int(data.EVData.ConnectedPhases)); err != nil {
-		c.log.ERROR.Printf("!! cannot set %dp", data.EVData.ConnectedPhases)
-	}
 }
 
 func (c *EEBus) showCurrentChargingSetup() {
@@ -142,20 +159,17 @@ func (c *EEBus) showCurrentChargingSetup() {
 
 	if prevComStandard != data.EVData.CommunicationStandard {
 		c.communicationStandard = data.EVData.CommunicationStandard
-		timestamp := time.Now()
-		c.log.WARN.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-communication changed from ", prevComStandard, " to ", data.EVData.CommunicationStandard)
+		c.log.TRACE.Println("ev-charger-communication changed from ", prevComStandard, " to ", data.EVData.CommunicationStandard)
 	}
 
 	if prevSoCSupport != data.EVData.UCSoCAvailable {
 		c.socSupportAvailable = data.EVData.UCSoCAvailable
-		timestamp := time.Now()
-		c.log.WARN.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-soc support changed from ", prevSoCSupport, " to ", data.EVData.UCSoCAvailable)
+		c.log.TRACE.Println("ev-charger-soc support changed from ", prevSoCSupport, " to ", data.EVData.UCSoCAvailable)
 	}
 
 	if prevSelfConsumptionSupport != data.EVData.UCSelfConsumptionAvailable {
 		c.selfConsumptionSupportAvailable = data.EVData.UCSelfConsumptionAvailable
-		timestamp := time.Now()
-		c.log.WARN.Println("!! ", timestamp.Format("2006-01-02 15:04:05"), " ev-charger-self-consumption-support support changed from ", prevSelfConsumptionSupport, " to ", data.EVData.UCSelfConsumptionAvailable)
+		c.log.TRACE.Println("ev-charger-self-consumption-support support changed from ", prevSelfConsumptionSupport, " to ", data.EVData.UCSelfConsumptionAvailable)
 	}
 }
 
@@ -163,14 +177,17 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	// we receive data, so it is connected
 	c.setConnected(true)
 
+	prevSelfConsumptionSupport := c.selfConsumptionSupportAvailable
 	c.showCurrentChargingSetup()
 
 	switch dataType {
 	case communication.EVDataElementUpdateUseCaseSelfConsumption:
 		// if availability of self consumption use case changes, resend the current charging limit
-		err := c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
-		if err != nil {
-			c.log.ERROR.Println("failed to send current limit data: ", err)
+		// but only if the support value actually changed
+		if prevSelfConsumptionSupport != c.selfConsumptionSupportAvailable {
+			if err := c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent}); err != nil {
+				c.log.WARN.Println("failed to send current limit data: ", err)
+			}
 		}
 	// case communication.EVDataElementUpdateUseCaseSoC:
 	case communication.EVDataElementUpdateEVConnectionState:
@@ -188,7 +205,7 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	// case communication.EVDataElementUpdateChargingStrategy:
 	case communication.EVDataElementUpdateChargingPlanRequired:
 		if err := c.writeChargingPlan(); err != nil {
-			c.log.ERROR.Println("failed to send charging plan: ", err)
+			c.log.INFO.Println("failed to send charging plan: ", err)
 		}
 	case communication.EVDataElementUpdateConnectedPhases:
 		c.setLoadpointMinMaxLimits(data)
@@ -199,11 +216,39 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	}
 }
 
-// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
-func isCharging(d communication.EVDataType) bool {
-	return d.Measurements.Power[1] > d.Limits[1].Min*idleFactor ||
-		d.Measurements.Power[2] > d.Limits[2].Min*idleFactor ||
-		d.Measurements.Power[3] > d.Limits[3].Min*idleFactor
+// we assume that if any phase current value is > idleFactor * min Current, then charging is active and enabled is true
+func (c *EEBus) isCharging(d *communication.EVSEClientDataType) bool {
+	// check if an external physical meter is assigned
+	// we only want this for configured meters and not for internal meters!
+	// right now it works as expected
+	if c.lp != nil && c.lp.HasChargeMeter() {
+		// we only check ever 10 seconds, maybe we can use the config interval duration
+		timeDiff := time.Since(c.lastIsChargingCheck)
+		if timeDiff.Seconds() >= 10.0 {
+			c.lastIsChargingCheck = time.Now()
+			c.lastIsChargingResult = false
+			if c.lp.GetChargePower() > c.lp.GetMinPower()*idleFactor {
+				c.lastIsChargingResult = true
+				return true
+			}
+		} else if c.lastIsChargingResult {
+			return true
+		}
+	}
+
+	// The above doesn't (yet) work for built in meters, so check the EEBUS measurements also
+	var phase uint
+	for phase = 1; phase <= d.EVData.ConnectedPhases; phase++ {
+		if phaseCurrent, ok := d.EVData.Measurements.Current.Load(phase); ok {
+			if _, ok := phaseCurrent.(float64); ok {
+				if phaseCurrent.(float64) > d.EVData.Limits[phase].Min*idleFactor {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
 }
 
 func (c *EEBus) updateState() (api.ChargeStatus, error) {
@@ -225,7 +270,7 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
 		return api.StatusB, nil
 	case communication.EVChargeStateEnumTypeActive: // Active
-		if isCharging(data.EVData) {
+		if c.isCharging(data) {
 			// we might already be enabled and charging due to connection issues
 			c.expectedEnableState = true
 			return api.StatusC, nil
@@ -458,7 +503,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	// set overload protection limits and self consumption limits to identical values
 	// so if the EV supports self consumption it will be used automatically
-	return c.cc.WriteCurrentLimitData(currents, currents, data.EVData)
+	return c.cc.WriteCurrentLimitData(currents, currents, &data.EVData)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -499,10 +544,8 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	return c.writeCurrentLimitData(currents)
 }
 
-var _ api.Meter = (*EEBus)(nil)
-
 // CurrentPower implements the api.Meter interface
-func (c *EEBus) CurrentPower() (float64, error) {
+func (c *EEBus) currentPower() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		return 0, err
@@ -513,20 +556,19 @@ func (c *EEBus) CurrentPower() (float64, error) {
 	}
 
 	var power float64
-	var phase uint
-	for phase = 1; phase <= data.EVData.ConnectedPhases; phase++ {
-		if phasePower, ok := data.EVData.Measurements.Power[phase]; ok {
-			power += phasePower
+	for phase := uint(1); phase <= data.EVData.ConnectedPhases; phase++ {
+		if phasePower, ok := data.EVData.Measurements.Power.Load(phase); ok {
+			if _, ok := phasePower.(float64); ok {
+				power += phasePower.(float64)
+			}
 		}
 	}
 
 	return power, nil
 }
 
-var _ api.ChargeRater = (*EEBus)(nil)
-
 // ChargedEnergy implements the api.ChargeRater interface
-func (c *EEBus) ChargedEnergy() (float64, error) {
+func (c *EEBus) chargedEnergy() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		return 0, err
@@ -541,23 +583,8 @@ func (c *EEBus) ChargedEnergy() (float64, error) {
 	return energy, nil
 }
 
-// var _ api.ChargeTimer = (*EEBus)(nil)
-
-// // ChargingTime implements the api.ChargeTimer interface
-// func (c *EEBus) ChargingTime() (time.Duration, error) {
-// 	// var currentSession MCCCurrentSession
-// 	// if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
-// 	// 	return 0, err
-// 	// }
-
-// 	// return time.Duration(currentSession.Duration * time.Second), nil
-// 	return 0, nil
-// }
-
-var _ api.MeterCurrent = (*EEBus)(nil)
-
 // Currents implements the api.MeterCurrent interface
-func (c *EEBus) Currents() (float64, float64, float64, error) {
+func (c *EEBus) currents() (float64, float64, float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		return 0, 0, 0, err
@@ -569,10 +596,12 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 
 	var currents []float64
 
-	for phase := 1; phase <= 3; phase++ {
+	for phase := uint(1); phase <= 3; phase++ {
 		current := 0.0
-		if value, ok := data.EVData.Measurements.Current[uint(phase)]; ok {
-			current = value
+		if value, ok := data.EVData.Measurements.Current.Load(phase); ok {
+			if _, ok := value.(float64); ok {
+				current = value.(float64)
+			}
 		}
 		currents = append(currents, current)
 	}

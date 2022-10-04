@@ -2,8 +2,6 @@ template: powerdog
 products:
   - description:
       generic: Powerdog
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv"]

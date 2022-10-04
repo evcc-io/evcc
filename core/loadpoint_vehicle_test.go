@@ -1,16 +1,82 @@
 package core
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestPublishSoCAndRange(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+
+	charger := mock.NewMockCharger(ctrl)
+	charger.EXPECT().MaxCurrent(int64(maxA)).AnyTimes()
+	charger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+
+	vehicle := mock.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Title().Return("target").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
+
+	log := util.NewLogger("foo")
+	lp := &LoadPoint{
+		log:            log,
+		bus:            evbus.New(),
+		clock:          clck,
+		charger:        charger,
+		defaultVehicle: vehicle,
+		chargeMeter:    &Null{}, // silence nil panics
+		chargeRater:    &Null{}, // silence nil panics
+		chargeTimer:    &Null{}, // silence nil panics
+		socEstimator:   soc.NewEstimator(log, charger, vehicle, false),
+		MinCurrent:     minA,
+		MaxCurrent:     maxA,
+		phases:         1,
+		Mode:           api.ModeNow,
+	}
+
+	// populate channels
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	assert.Empty(t, lp.socUpdated)
+
+	tc := []struct {
+		status  api.ChargeStatus
+		allowed bool
+	}{
+		{api.StatusB, false},
+		{api.StatusC, true},
+	}
+
+	for _, tc := range tc {
+		clck.Add(time.Hour)
+		lp.status = tc.status
+
+		assert.True(t, lp.socPollAllowed())
+		vehicle.EXPECT().SoC().Return(0.0, errors.New("foo"))
+		lp.publishSoCAndRange()
+
+		clck.Add(time.Second)
+		assert.Equal(t, tc.allowed, lp.socPollAllowed())
+		if tc.allowed {
+			vehicle.EXPECT().SoC().Return(0.0, errors.New("foo"))
+		}
+		lp.publishSoCAndRange()
+	}
+}
 
 func TestVehicleDetectByID(t *testing.T) {
 	ctrl := gomock.NewController(t)

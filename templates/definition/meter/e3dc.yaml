@@ -1,8 +1,6 @@
 template: e3dc
 products:
   - brand: E3DC
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

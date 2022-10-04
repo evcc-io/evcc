@@ -112,7 +112,7 @@ func (v *Identity) LogoutHandler() http.HandlerFunc {
 }
 
 func (v *Identity) callbackHandler(w http.ResponseWriter, r *http.Request) {
-	v.log.TRACE.Println("callback request retrieved")
+	v.log.DEBUG.Println("callback request received")
 
 	data, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
