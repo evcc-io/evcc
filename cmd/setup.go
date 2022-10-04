@@ -22,10 +22,12 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/libp2p/zeroconf/v2"
 	"github.com/samber/lo"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
 )
@@ -54,7 +56,12 @@ func loadConfigFile(conf *config) error {
 	return err
 }
 
-func configureEnvironment(conf config) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
+	// full http request log
+	if cmd.Flags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
+	}
+
 	// setup machine id
 	if conf.Plant != "" {
 		err = machine.CustomID(conf.Plant)
