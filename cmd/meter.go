@@ -6,6 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,6 +21,7 @@ var meterCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(meterCmd)
 	meterCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "meter"))
+	meterCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
@@ -32,8 +34,13 @@ func runMeter(cmd *cobra.Command, args []string) {
 	}
 
 	// setup environment
-	if err := configureEnvironment(cmd, conf); err != nil {
+	if err := configureEnvironment(conf); err != nil {
 		log.FATAL.Fatal(err)
+	}
+
+	// full http request log
+	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
 	}
 
 	// select single meter
