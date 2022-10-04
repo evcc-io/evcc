@@ -58,7 +58,7 @@ func loadConfigFile(conf *config) error {
 
 func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+	if cmd.Flags().Lookup(flagHeaders).Changed {
 		request.LogHeaders = true
 	}
 
