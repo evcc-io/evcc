@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"golang.org/x/exp/maps"
 )
 
 type config struct {
@@ -255,8 +257,14 @@ func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, par
 	baseURI := conf.URI()
 	baseAuthURI := fmt.Sprintf("%s/oauth", baseURI)
 
+	// stable map iteration
+	keys := maps.Keys(cp.vehicles)
+	sort.Strings(keys)
+
 	var id int
-	for _, v := range cp.vehicles {
+	for _, k := range keys {
+		v := cp.vehicles[k]
+
 		if provider, ok := v.(api.AuthProvider); ok {
 			id += 1
 
