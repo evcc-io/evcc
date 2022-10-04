@@ -11,7 +11,7 @@ import (
 	"github.com/fatih/structs"
 )
 
-// Transaction is a single charging transaction with status and reservation and payment data
+// Transaction is a single charging transaction
 type Transaction struct {
 	ID            uint      `json:"-" gorm:"primarykey"`
 	Created       time.Time `json:"created"`

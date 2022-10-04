@@ -31,7 +31,7 @@ func New(name string) (*DB, error) {
 	return db, nil
 }
 
-// Txn creates a charging transaction given email and payment reservation
+// Txn creates a charging transaction
 func (s *DB) Txn(meter float64) *Transaction {
 	t := Transaction{
 		Loadpoint:  s.name,
