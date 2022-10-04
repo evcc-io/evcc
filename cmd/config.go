@@ -38,7 +38,7 @@ var conf = config{
 	},
 	Database: dbConfig{
 		Type: "sqlite",
-		Dsn:  "~/evcc.db",
+		Dsn:  "~/.evcc/evcc.db",
 	},
 }
 

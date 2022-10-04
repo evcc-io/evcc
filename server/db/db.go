@@ -2,6 +2,8 @@ package db
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
@@ -19,6 +21,10 @@ func New(driver, dsn string) (*gorm.DB, error) {
 	switch driver {
 	case "sqlite":
 		file, err := homedir.Expand(dsn)
+		if err != nil {
+			return nil, err
+		}
+		err = os.MkdirAll(filepath.Dir(file), os.ModePerm)
 		if err != nil {
 			return nil, err
 		}
