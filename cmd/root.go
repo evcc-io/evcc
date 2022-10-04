@@ -22,7 +22,6 @@ import (
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
@@ -178,11 +177,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
-	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
-		request.LogHeaders = true
-	}
-
 	// network config
 	if viper.GetString("uri") != "" {
 		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
@@ -220,7 +214,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup environment
 	if err == nil {
-		err = configureEnvironment(conf)
+		err = configureEnvironment(cmd, conf)
 	}
 
 	// setup site and loadpoints

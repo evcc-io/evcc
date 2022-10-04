@@ -9,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -26,13 +25,12 @@ const noCurrent = -1
 func init() {
 	rootCmd.AddCommand(chargerCmd)
 	chargerCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
-	chargerCmd.PersistentFlags().IntP(flagCurrent, "I", noCurrent, flagCurrentDescription)
+	chargerCmd.Flags().IntP(flagCurrent, "I", noCurrent, flagCurrentDescription)
 	//lint:ignore SA1019 as Title is safe on ascii
-	chargerCmd.PersistentFlags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
+	chargerCmd.Flags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
 	//lint:ignore SA1019 as Title is safe on ascii
-	chargerCmd.PersistentFlags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
-	chargerCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
-	chargerCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
+	chargerCmd.Flags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
+	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -45,13 +43,8 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	// setup environment
-	if err := configureEnvironment(conf); err != nil {
+	if err := configureEnvironment(cmd, conf); err != nil {
 		log.FATAL.Fatal(err)
-	}
-
-	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
-		request.LogHeaders = true
 	}
 
 	// select single charger
@@ -77,7 +70,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	current := int64(noCurrent)
-	if flag := cmd.PersistentFlags().Lookup(flagCurrent); flag.Changed {
+	if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {
 		var err error
 		current, err = strconv.ParseInt(flag.Value.String(), 10, 64)
 		if err != nil {
@@ -95,7 +88,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagEnable).Changed {
+		if cmd.Flags().Lookup(flagEnable).Changed {
 			flagUsed = true
 
 			if err := v.Enable(true); err != nil {
@@ -103,7 +96,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagDisable).Changed {
+		if cmd.Flags().Lookup(flagDisable).Changed {
 			flagUsed = true
 
 			if err := v.Enable(false); err != nil {
@@ -111,7 +104,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagWakeup).Changed {
+		if cmd.Flags().Lookup(flagWakeup).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.Resurrector); ok {
