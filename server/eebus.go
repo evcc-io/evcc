@@ -46,6 +46,8 @@ type EEBus struct {
 	clientInConnection map[string]bool
 
 	browseMDNSRunning bool
+
+	SKI string
 }
 
 var EEBusInstance *EEBus
@@ -87,7 +89,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		}
 	}
 
-	cert, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
+	certificate, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +98,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		Log:         log.TRACE,
 		Addr:        cc.Uri,
 		Path:        "/ship/",
-		Certificate: cert,
+		Certificate: certificate,
 		ID:          cc.ShipID,
 		Interfaces:  cc.Interfaces,
 		Brand:       details.BrandName,
@@ -106,6 +108,11 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	}
 
 	zc, err := srv.Announce()
+	if err != nil {
+		return nil, err
+	}
+
+	ski, err := cert.SkiFromCert(certificate)
 	if err != nil {
 		return nil, err
 	}
@@ -120,6 +127,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		connectedClients:   make(map[string]ship.Conn),
 		discoveredClients:  make(map[string]*zeroconf.ServiceEntry),
 		clientInConnection: make(map[string]bool),
+		SKI:                ski,
 	}
 
 	return c, nil
@@ -134,6 +142,10 @@ func (c *EEBus) Register(ski, ip string, shipConnectHandler func(string, ship.Co
 	ski = strings.ReplaceAll(ski, " ", "")
 	ski = strings.ToLower(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
+
+	if ski == c.SKI {
+		log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
+	}
 
 	c.mux.Lock()
 	c.clients[ski] = EEBusClientCBs{onConnect: shipConnectHandler, onDisconnect: shipDisconnectHandler}
@@ -209,6 +221,11 @@ func (c *EEBus) addDisoveredEntry(entry *zeroconf.ServiceEntry) {
 	if err == nil {
 		if entry.Text == nil {
 			c.log.TRACE.Printf("Ignoring discovered mDNS entry as it has no TXT record: %s", entry.HostName)
+			return
+		}
+
+		if svc.SKI == c.SKI {
+			c.log.TRACE.Println("Ignoring discovered mDNS entry as it is this service itself")
 			return
 		}
 
