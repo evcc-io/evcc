@@ -39,6 +39,8 @@ var (
 )
 
 var conf = config{
+	Interval: 10 * time.Second,
+	Log:      "info",
 	Network: networkConfig{
 		Schema: "http",
 		Host:   "evcc.local",
