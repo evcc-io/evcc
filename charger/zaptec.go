@@ -254,7 +254,7 @@ func (c *Zaptec) Currents() (float64, float64, float64, error) {
 	return i1, i2, i3, err
 }
 
-var _ api.ChargePhases = (*Zaptec)(nil)
+var _ api.PhaseSwitcher = (*Zaptec)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Zaptec) Phases1p3p(phases int) error {

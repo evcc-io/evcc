@@ -103,7 +103,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 		if phases > 0 {
 			flagUsed = true
 
-			if vv, ok := v.(api.ChargePhases); ok {
+			if vv, ok := v.(api.PhaseSwitcher); ok {
 				if err := vv.Phases1p3p(phases); err != nil {
 					log.ERROR.Println("set phases:", err)
 				}
