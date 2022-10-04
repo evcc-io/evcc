@@ -167,6 +167,10 @@ export default {
         Bitte melde unerwartetes Verhalten in unseren
       `,
     },
+    targetEnergy: {
+      label: "Ladeziel",
+      noLimit: "keins",
+    },
   },
   startupError: {
     title: "Fehler beim Starten",

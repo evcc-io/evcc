@@ -192,6 +192,11 @@ vehicles:
     capacity: 80
     onidentify:
       targetsoc: 75
+  - name: vehicle_3
+    type: template
+    template: offline
+    title: grüner Honda e
+    capacity: 26
 
 site:
   title: Zuhause

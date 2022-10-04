@@ -221,3 +221,9 @@ type AuthProvider interface {
 	LoginHandler() http.HandlerFunc
 	LogoutHandler() http.HandlerFunc
 }
+
+// FeatureDescriber optionally provides a list of supported non-api features
+type FeatureDescriber interface {
+	Features() []Feature
+	Has(Feature) bool
+}

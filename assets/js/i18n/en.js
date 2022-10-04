@@ -166,6 +166,10 @@ export default {
         Please report unexpected behaviour in our
       `,
     },
+    targetEnergy: {
+      label: "Limit",
+      noLimit: "none",
+    },
   },
   startupError: {
     title: "Startup Error",

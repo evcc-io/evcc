@@ -113,6 +113,7 @@ type LoadPoint struct {
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
 	onDisconnect      api.ActionConfig
+	targetEnergy      int // Target charge energy for dumb vehicles
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
@@ -683,6 +684,18 @@ func (lp *LoadPoint) setStatus(status api.ChargeStatus) {
 	lp.status = status
 }
 
+// targetEnergyReached checks if target is configured and reached
+func (lp *LoadPoint) targetEnergyReached() bool {
+	v, ok := lp.vehicle.(api.FeatureDescriber)
+	if ok {
+		ok = v.Has(api.Offline)
+	}
+
+	return (v == nil || ok) &&
+		lp.targetEnergy > 0 &&
+		lp.chargedEnergy/1e3 >= float64(lp.targetEnergy)
+}
+
 // targetSocReached checks if target is configured and reached.
 // If vehicle is not configured this will always return false
 func (lp *LoadPoint) targetSocReached() bool {
@@ -729,6 +742,17 @@ func (lp *LoadPoint) climateActive() bool {
 	}
 
 	return false
+}
+
+// disableUnlessClimater disables the charger unless climate is active
+func (lp *LoadPoint) disableUnlessClimater() error {
+	var current float64 // zero disables
+	if lp.climateActive() {
+		lp.log.DEBUG.Println("climater active")
+		current = lp.GetMinCurrent()
+	}
+	lp.socTimer.Reset() // once SoC is reached, the target charge request is removed
+	return lp.setLimit(current, true)
 }
 
 // remoteControlled returns true if remote control status is active
@@ -864,6 +888,9 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(vehicleOdometer, 0.0)
 	}
 
+	// reset target energy
+	lp.setTargetEnergy(0)
+
 	// re-publish vehicle settings
 	lp.Unlock()
 	lp.publish(phasesActive, lp.activePhases())
@@ -898,6 +925,17 @@ func (lp *LoadPoint) unpublishVehicle() {
 	lp.publish(vehicleTargetSoC, 0.0)
 
 	lp.setRemainingDuration(-1)
+
+	lp.vehiclePublishFeature(api.Offline)
+}
+
+// vehiclePublishFeature availability of vehicle features
+func (lp *LoadPoint) vehiclePublishFeature(f api.Feature) {
+	v, ok := lp.vehicle.(api.FeatureDescriber)
+	if ok {
+		ok = v.Has(f)
+	}
+	lp.publish("vehicleFeature"+f.String(), ok)
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.
@@ -1633,15 +1671,13 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 			lp.log.DEBUG.Printf("switched phases: %dp", lp.ConfiguredPhases)
 		}
 
+	case lp.targetEnergyReached():
+		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %dkWh", lp.chargedEnergy/1e3, lp.targetEnergy)
+		err = lp.disableUnlessClimater()
+
 	case lp.targetSocReached():
-		lp.log.DEBUG.Printf("targetSoC reached: %.1f > %d", lp.vehicleSoc, lp.SoC.target)
-		var targetCurrent float64 // zero disables
-		if lp.climateActive() {
-			lp.log.DEBUG.Println("climater active")
-			targetCurrent = lp.GetMinCurrent()
-		}
-		err = lp.setLimit(targetCurrent, true)
-		lp.socTimer.Reset() // once SoC is reached, the target charge request is removed
+		lp.log.DEBUG.Printf("targetSoC reached: %.1f%% > %d%%", lp.vehicleSoc, lp.SoC.target)
+		err = lp.disableUnlessClimater()
 
 	// OCPP has priority over target charging
 	case lp.remoteControlled(loadpoint.RemoteHardDisable):

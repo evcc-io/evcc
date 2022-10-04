@@ -28,6 +28,9 @@
 					{{ name }}
 				</span>
 			</VehicleOptions>
+			<span v-else class="flex-grow-1 text-truncate vehicle-name">
+				{{ name }}
+			</span>
 		</h4>
 	</div>
 </template>
@@ -117,8 +120,10 @@ export default {
 	margin-right: -0.75rem;
 }
 .vehicle-name {
-	text-decoration: underline;
 	text-decoration-color: var(--evcc-gray);
+}
+.options .vehicle-name {
+	text-decoration: underline;
 }
 .spin {
 	animation: rotation 1s infinite cubic-bezier(0.37, 0, 0.63, 1);
