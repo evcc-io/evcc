@@ -26,7 +26,6 @@ var chargerRampCmd = &cobra.Command{
 func init() {
 	chargerCmd.AddCommand(chargerRampCmd)
 
-	chargerRampCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
 	chargerRampCmd.Flags().StringP(flagDigits, "", "0", "fractional digits (0..2)")
 	chargerRampCmd.Flags().StringP(flagDelay, "", "1s", "ramp delay")
 }
