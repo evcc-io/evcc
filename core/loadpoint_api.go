@@ -59,11 +59,10 @@ func (lp *LoadPoint) GetTargetEnergy() int {
 // setTargetEnergy sets loadpoint charge target energy (no mutex)
 func (lp *LoadPoint) setTargetEnergy(energy int) {
 	lp.targetEnergy = energy
-	// test guard
-	if lp.socTimer != nil {
-		// TODO soctimer
-		// lp.socTimer.Energy = energy
-	}
+	// TODO soctimer
+	// if lp.socTimer != nil {
+	// lp.socTimer.Energy = energy
+	// }
 	lp.publish("targetEnergy", energy)
 }
 

@@ -14,4 +14,5 @@ func (f *Feature) UnmarshalText(text []byte) error {
 const (
 	_ Feature = iota
 	Offline
+	CoarseCurrent
 )
