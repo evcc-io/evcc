@@ -31,13 +31,12 @@ func (t *Transaction) Stop(chargedWh, total float64) {
 	t.Finished = time.Now()
 }
 
+// Transactions is a list of transactions
 type Transactions []Transaction
 
 var _ api.CsvWriter = (*Transactions)(nil)
 
-func (t *Transactions) WriteCsv(w io.Writer) {
-	ww := csv.NewWriter(w)
-
+func (t *Transactions) writeHeader(ww *csv.Writer) {
 	var row []string
 	for _, f := range structs.Fields(Transaction{}) {
 		if f.Tag("json") == "-" {
@@ -46,30 +45,40 @@ func (t *Transactions) WriteCsv(w io.Writer) {
 		row = append(row, f.Name())
 	}
 	_ = ww.Write(row)
+}
+
+func (t *Transactions) writeRow(ww *csv.Writer, r Transaction) {
+	var row []string
+	for _, f := range structs.Fields(r) {
+		if f.Tag("json") == "-" {
+			continue
+		}
+
+		val := fmt.Sprintf("%v", f.Value())
+
+		switch v := f.Value().(type) {
+		case float64:
+			val = strconv.FormatFloat(v, 'f', 3, 64)
+		case time.Time:
+			if v.IsZero() {
+				val = ""
+			} else {
+				val = v.Local().Format("2006-01-02 15:04:05")
+			}
+		}
+
+		row = append(row, val)
+	}
+	_ = ww.Write(row)
+}
+
+// WriteCsv implements the api.CsvWriter interface
+func (t *Transactions) WriteCsv(w io.Writer) {
+	ww := csv.NewWriter(w)
+	t.writeHeader(ww)
 
 	for _, r := range *t {
-		var row []string
-		for _, f := range structs.Fields(r) {
-			if f.Tag("json") == "-" {
-				continue
-			}
-
-			val := fmt.Sprintf("%v", f.Value())
-
-			switch v := f.Value().(type) {
-			case float64:
-				val = strconv.FormatFloat(v, 'f', 3, 64)
-			case time.Time:
-				if v.IsZero() {
-					val = ""
-				} else {
-					val = v.Local().Format("2006-01-02 15:04:05")
-				}
-			}
-
-			row = append(row, val)
-		}
-		_ = ww.Write(row)
+		t.writeRow(ww, r)
 	}
 
 	ww.Flush()
