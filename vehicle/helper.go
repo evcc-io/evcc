@@ -38,7 +38,7 @@ func ensureVehicleEx[Vehicle any](
 			return vehicles[0], nil
 		}
 
-		err = fmt.Errorf("cannot find vehicle: %v", vehicles)
+		err = fmt.Errorf("cannot find vehicle, got: %v", vehicles)
 	}
 
 	return *new(Vehicle), err

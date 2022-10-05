@@ -80,9 +80,8 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 	if hasMeter {
 		if hasChargedEnergy {
 			return decorateEEBus(c, c.currentPower, c.currents, c.chargedEnergy), nil
-		} else {
-			return decorateEEBus(c, c.currentPower, c.currents, nil), nil
 		}
+		return decorateEEBus(c, c.currentPower, c.currents, nil), nil
 	}
 
 	return c, nil
