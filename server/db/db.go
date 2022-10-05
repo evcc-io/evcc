@@ -6,10 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/glebarez/sqlite"
 	"github.com/mitchellh/go-homedir"
-	"gorm.io/driver/mysql"
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -28,12 +26,12 @@ func New(driver, dsn string) (*gorm.DB, error) {
 			return nil, err
 		}
 		dialect = sqlite.Open(file)
-	case "postgres":
-		dialect = postgres.Open(dsn)
-	case "mysql":
-		dialect = mysql.Open(dsn)
+	// case "postgres":
+	// 	dialect = postgres.Open(dsn)
+	// case "mysql":
+	// 	dialect = mysql.Open(dsn)
 	default:
-		return nil, fmt.Errorf("invalid database type: %s not in [sqlite, postgres, mysql]", driver)
+		return nil, fmt.Errorf("invalid database type: %s not in [sqlite]", driver)
 	}
 
 	return gorm.Open(dialect, &gorm.Config{})
