@@ -24,8 +24,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = os.MkdirAll(filepath.Dir(file), os.ModePerm)
-		if err != nil {
+		if err := os.MkdirAll(filepath.Dir(file), os.ModePerm); err != nil {
 			return nil, err
 		}
 		dialect = sqlite.Open(file)
