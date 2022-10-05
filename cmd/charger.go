@@ -31,6 +31,7 @@ func init() {
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
+	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -78,6 +79,15 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	var phases int
+	if flag := cmd.Flags().Lookup(flagPhases); flag.Changed {
+		var err error
+		phases, err = strconv.Atoi(flag.Value.String())
+		if err != nil {
+			log.ERROR.Fatalln(err)
+		}
+	}
+
 	var flagUsed bool
 	for _, v := range chargers {
 		if current != noCurrent {
@@ -113,6 +123,18 @@ func runCharger(cmd *cobra.Command, args []string) {
 				}
 			} else {
 				log.ERROR.Println("wakeup: not implemented")
+			}
+		}
+
+		if phases > 0 {
+			flagUsed = true
+
+			if vv, ok := v.(api.PhaseSwitcher); ok {
+				if err := vv.Phases1p3p(phases); err != nil {
+					log.ERROR.Println("set phases:", err)
+				}
+			} else {
+				log.ERROR.Println("phases: not implemented")
 			}
 		}
 	}
