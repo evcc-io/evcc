@@ -124,6 +124,21 @@ export default {
 
       return `${weekday} ${hour}`;
     },
+    fmtFullDateTime: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n.locale, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+      }).format(date);
+    },
+    fmtMonthYear: function (date, short) {
+      return new Intl.DateTimeFormat(this.$i18n.locale, {
+        month: short ? "short" : "long",
+        year: "numeric",
+      }).format(date);
+    },
     fmtMoney: function (amout = 0, currency = "EUR") {
       return new Intl.NumberFormat(this.$i18n.locale, {
         style: "currency",

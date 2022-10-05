@@ -1,5 +1,6 @@
 export default {
   header: {
+    sessions: "Charging Log",
     docs: "Documentation",
     blog: "Blog",
     github: "GitHub",
@@ -183,6 +184,14 @@ export default {
     lineErrorLink: "line {0}",
     fixAndRestart: "Fix the problem and restart the server.",
     restartButton: "Restart",
+  },
+  sessions: {
+    title: "Charging Log",
+    downloadCsv: "Download as CSV",
+    loadpoint: "Loadpoint",
+    vehicle: "Vehicle",
+    energy: "Charged",
+    date: "Finished",
   },
   offline: {
     message: "No connection to server.",

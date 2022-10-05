@@ -1,6 +1,7 @@
 export default {
   header: {
-    docs: "Dokumentation",
+    sessions: "Ladevorgänge",
+    docs: "Doku",
     blog: "Blog",
     github: "GitHub",
     login: "Fahrzeug Logins",
@@ -184,6 +185,14 @@ export default {
     lineErrorLink: "Zeile {0}",
     fixAndRestart: "Behebe das Problem und starte den Server neu.",
     restartButton: "Neu starten",
+  },
+  sessions: {
+    title: "Ladevorgänge",
+    downloadCsv: "Als CSV herunterladen",
+    loadpoint: "Ladepunkt",
+    vehicle: "Fahrzeug",
+    energy: "Geladen",
+    date: "Beendet",
   },
   offline: {
     message: "Keine Verbindung zum Server.",

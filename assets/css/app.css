@@ -105,6 +105,11 @@ h4 {
 	font-size: 1.25rem;
 }
 
+.large {
+	font-size: 1.25rem;
+	line-height: 1.2;
+}
+
 .bg-primary {
 	background-color: var(--evcc-dark-green) !important;
 }
