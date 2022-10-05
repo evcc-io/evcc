@@ -9,9 +9,12 @@ import (
 
 	"github.com/avast/retry-go/v3"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/coordinator"
+	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/push"
+	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -89,9 +92,25 @@ func NewSiteFromConfig(
 	site.coordinator = coordinator.New(log, vehicles)
 	site.savings = NewSavings(tariffs)
 
-	// give loadpoints access to vehicles
+	// migrate session log
+	if serverdb.Instance != nil {
+		if err := serverdb.Instance.AutoMigrate(new(db.Transaction)); err != nil {
+			return nil, err
+		}
+	}
+
+	// give loadpoints access to vehicles and database
 	for _, lp := range loadpoints {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
+
+		if serverdb.Instance != nil {
+			var err error
+			if lp.db, err = db.New(lp.Title); err != nil {
+				return nil, err
+			}
+
+			shutdown.Register(lp.stopTxn)
+		}
 	}
 
 	if site.Meters.GridMeterRef != "" {

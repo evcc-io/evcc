@@ -25,6 +25,23 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+var conf = config{
+	Interval: 10 * time.Second,
+	Log:      "info",
+	Network: networkConfig{
+		Schema: "http",
+		Host:   "evcc.local",
+		Port:   7070,
+	},
+	Mqtt: mqttConfig{
+		Topic: "evcc",
+	},
+	Database: dbConfig{
+		Type: "sqlite",
+		Dsn:  "~/.evcc/evcc.db",
+	},
+}
+
 type config struct {
 	URI          interface{} // TODO deprecated
 	Network      networkConfig
@@ -37,6 +54,7 @@ type config struct {
 	Levels       map[string]string
 	Interval     time.Duration
 	Mqtt         mqttConfig
+	Database     dbConfig
 	Javascript   map[string]interface{}
 	Influx       server.InfluxConfig
 	EEBus        map[string]interface{}
@@ -50,33 +68,14 @@ type config struct {
 	LoadPoints   []map[string]interface{}
 }
 
-type networkConfig struct {
-	Schema string
-	Host   string
-	Port   int
-}
-
-func (c networkConfig) HostPort() string {
-	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
-		return c.Host
-	}
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
-}
-
-func (c networkConfig) URI() string {
-	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
-}
-
 type mqttConfig struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string
 }
 
-func (conf *mqttConfig) RootTopic() string {
-	if conf.Topic != "" {
-		return conf.Topic
-	}
-	return "evcc"
+type dbConfig struct {
+	Type string
+	Dsn  string
 }
 
 type qualifiedConfig struct {
@@ -98,6 +97,23 @@ type tariffConfig struct {
 	Currency string
 	Grid     typedConfig
 	FeedIn   typedConfig
+}
+
+type networkConfig struct {
+	Schema string
+	Host   string
+	Port   int
+}
+
+func (c networkConfig) HostPort() string {
+	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
+		return c.Host
+	}
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+}
+
+func (c networkConfig) URI() string {
+	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
 }
 
 // ConfigProvider provides configuration items

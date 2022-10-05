@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
@@ -226,4 +227,9 @@ type AuthProvider interface {
 type FeatureDescriber interface {
 	Features() []Feature
 	Has(Feature) bool
+}
+
+// CsvWriter converts to csv
+type CsvWriter interface {
+	WriteCsv(io.Writer)
 }

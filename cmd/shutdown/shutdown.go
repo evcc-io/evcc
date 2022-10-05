@@ -2,7 +2,6 @@ package shutdown
 
 import (
 	"sync"
-	"time"
 )
 
 var (
@@ -11,12 +10,14 @@ var (
 	exitC    = make(chan struct{})
 )
 
+// Register registers a function for executing on application shutdown
 func Register(cb func()) {
 	mu.Lock()
 	handlers = append(handlers, cb)
 	mu.Unlock()
 }
 
+// Run executes the registered shutdown functions when the stop channel closes
 func Run(stopC <-chan struct{}) {
 	<-stopC
 	wg := new(sync.WaitGroup)
@@ -36,18 +37,7 @@ func Run(stopC <-chan struct{}) {
 	close(exitC)
 }
 
-func Done(timeout ...time.Duration) <-chan struct{} {
-	to := time.Second
-	if len(timeout) == 1 {
-		to = timeout[0]
-	}
-
-	select {
-	case <-exitC:
-		return exitC
-	case <-time.After(to):
-		exitC := make(chan struct{})
-		close(exitC)
-		return exitC
-	}
+// Done returns a readable channel that closes when all registered functions have completed
+func Done() <-chan struct{} {
+	return exitC
 }

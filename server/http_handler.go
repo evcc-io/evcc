@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -10,8 +11,10 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	dbserver "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
 )
@@ -57,13 +60,22 @@ func jsonWrite(w http.ResponseWriter, content interface{}) {
 }
 
 func jsonResult(w http.ResponseWriter, res interface{}) {
-	w.WriteHeader(http.StatusOK)
 	jsonWrite(w, map[string]interface{}{"result": res})
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
 	jsonWrite(w, map[string]interface{}{"error": err.Error()})
+}
+
+func csvResult(w http.ResponseWriter, res any) {
+	w.Header()["Content-Disposition"] = []string{`attachment; filename="sessions.csv")`}
+
+	if ww, ok := res.(api.CsvWriter); ok {
+		ww.WriteCsv(w)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 // healthHandler returns current charge mode
@@ -134,6 +146,27 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 		}
 		jsonResult(w, res)
 	}
+}
+
+// sessionHandler returns the list of charging sessions
+func sessionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbserver.Instance == nil {
+		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
+		return
+	}
+
+	var res db.Transactions
+	if txn := dbserver.Instance.Where("charged_kwh>0").Order("created desc").Find(&res); txn.Error != nil {
+		jsonError(w, http.StatusInternalServerError, txn.Error)
+		return
+	}
+
+	if r.URL.Query().Get("format") == "csv" {
+		csvResult(w, &res)
+		return
+	}
+
+	jsonResult(w, res)
 }
 
 // chargeModeHandler updates charge mode

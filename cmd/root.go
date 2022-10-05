@@ -37,16 +37,6 @@ var (
 	ignoreMqtt   = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
-var conf = config{
-	Interval: 10 * time.Second,
-	Log:      "info",
-	Network: networkConfig{
-		Schema: "http",
-		Host:   "evcc.local",
-		Port:   7070,
-	},
-}
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "evcc",
@@ -219,6 +209,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = configureEnvironment(cmd, conf)
 	}
 
+	// setup session log
+	if err == nil && conf.Database.Dsn != "" {
+		err = configureDatabase(conf.Database)
+	}
+
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
@@ -228,12 +223,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureDatabase(conf.Influx, site.LoadPoints(), tee.Attach())
+		configureInflux(conf.Influx, site.LoadPoints(), tee.Attach())
 	}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
+		publisher := server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"))
 		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
 	}
 
@@ -326,7 +321,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		wg.Add(2)
 
 		// wait for main loop and shutdown functions to finish
-		go func() { <-shutdown.Done(conf.Interval); wg.Done() }()
+		go func() { <-shutdown.Done(); wg.Done() }()
 		go func() { <-siteC; wg.Done() }()
 		go func() { wg.Wait(); close(exitC) }()
 
