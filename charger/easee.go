@@ -54,7 +54,7 @@ type Easee struct {
 	smartCharging         bool
 	enabledStatus         bool
 	phaseMode             int
-	currentPower, sessionEnergy,
+	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid string
 	lp   loadpoint.API
@@ -278,6 +278,8 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
 		c.sessionEnergy = value.(float64)
+	case easee.LIFETIME_ENERGY:
+		c.totalEnergy = value.(float64)
 	case easee.IN_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.IN_CURRENT_T4:
@@ -496,6 +498,16 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	defer c.mux.L.Unlock()
 
 	return c.currentL1, c.currentL2, c.currentL3, nil
+}
+
+var _ api.MeterEnergy = (*Easee)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *Easee) TotalEnergy() (float64, error) {
+	c.mux.L.Lock()
+	defer c.mux.L.Unlock()
+
+	return c.totalEnergy, nil
 }
 
 var _ api.Identifier = (*Easee)(nil)
