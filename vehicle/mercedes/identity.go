@@ -15,6 +15,13 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const OAuthURI = "https://ssoalpha.dvb.corpinter.net"
+
+var OAuth2Endpoint = oauth2.Endpoint{
+	AuthURL:  OAuthURI + "/v1/auth",
+	TokenURL: OAuthURI + "/v1/token",
+}
+
 type IdentityOptions func(c *Identity) error
 
 // WithToken provides an oauth2.Token to the client for auth.
@@ -35,16 +42,15 @@ type Identity struct {
 
 // TODO SessionSecret from config/persistence
 func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions) (*Identity, error) {
-	provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
-	}
-
 	oc := &oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,
-		Endpoint:     provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOfflineAccess, "mb:vehicle:mbdata:evstatus"},
+		Endpoint:     OAuth2Endpoint,
+		Scopes: []string{
+			oidc.ScopeOpenID,
+			oidc.ScopeOfflineAccess,
+			"mb:vehicle:mbdata:evstatus",
+		},
 	}
 
 	v := &Identity{
@@ -61,12 +67,12 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 	v.ReuseTokenSource = ts
 
 	for _, o := range options {
-		if err == nil {
-			err = o(v)
+		if err := o(v); err != nil {
+			return v, err
 		}
 	}
 
-	return v, err
+	return v, nil
 }
 
 // invalidToken is the callback for the token source when token expires
