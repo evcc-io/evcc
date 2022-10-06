@@ -23,26 +23,33 @@
 				</div>
 
 				<div v-for="group in sessionsByMonth" :key="group.month" class="mb-5">
-					<div class="mx-2 d-flex align-items-baseline">
-						<h2 class="me-4">
-							<span class="d-block d-md-none">
-								{{ formatGroupHeadline(group.month, true) }}
-							</span>
-							<span class="d-none d-md-block">
-								{{ formatGroupHeadline(group.month, false) }}
-							</span>
-						</h2>
-						<div class="large mb-2">{{ fmtKWh(totalKWh(group.sessions)) }}</div>
-						<ul class="groups">
-							<li v-for="(loadpoint, id) in loadpointsKWh(group.sessions)" :key="id">
+					<div class="mx-2">
+						<div class="d-flex align-items-baseline mb-3">
+							<h2 class="me-4 mb-0">
+								{{ formatGroupHeadline(group.month) }}
+							</h2>
+							<div class="large">{{ fmtKWh(totalKWh(group.sessions)) }}</div>
+						</div>
+						<ul class="breakdown text-gray d-sm-flex flex-sm-wrap ps-0 mb-2">
+							<li
+								v-for="(loadpoint, id) in loadpointsKWh(group.sessions)"
+								:key="id"
+								class="breakdown-item"
+							>
 								{{ loadpoint.name }}: {{ fmtKWh(loadpoint.energy) }}
 							</li>
-							<li v-for="(vehicle, id) in vehiclesKWh(group.sessions)" :key="id">
+						</ul>
+						<ul class="breakdown text-gray d-sm-flex flex-sm-wrap ps-0 mb-2">
+							<li
+								v-for="(vehicle, id) in vehiclesKWh(group.sessions)"
+								:key="id"
+								class="breakdown-item"
+							>
 								{{ vehicle.name }}: {{ fmtKWh(vehicle.energy) }}
 							</li>
 						</ul>
 					</div>
-					<div class="table-responsive">
+					<div class="table-responsive mt-3">
 						<table class="table">
 							<thead>
 								<tr>
@@ -124,9 +131,10 @@ export default {
 				groups[vehicle] += session.chargedEnergy * 1e3;
 				return groups;
 			}, {});
-			return Object.entries(grouped).map(([name, energy]) => {
+			const list = Object.entries(grouped).map(([name, energy]) => {
 				return { name, energy };
 			});
+			return list.length >= 2 ? list : [];
 		},
 		loadpointsKWh(sessions) {
 			const grouped = sessions.reduce((groups, session) => {
@@ -135,16 +143,17 @@ export default {
 				groups[loadpoint] += session.chargedEnergy * 1e3;
 				return groups;
 			}, {});
-			return Object.entries(grouped).map(([name, energy]) => {
+			const list = Object.entries(grouped).map(([name, energy]) => {
 				return { name, energy };
 			});
+			return list.length >= 2 ? list : [];
 		},
-		formatGroupHeadline(group, short) {
+		formatGroupHeadline(group) {
 			const date = new Date();
 			const [year, month] = group.split(".");
 			date.setMonth(month);
 			date.setFullYear(year);
-			return this.fmtMonthYear(date, short);
+			return this.fmtMonthYear(date);
 		},
 	},
 };
@@ -156,22 +165,26 @@ export default {
 	position: relative;
 	top: -2px;
 }
-.groups {
-	display: flex;
-	flex-wrap: wrap;
+.breakdown {
 	list-style: none;
 }
 
-.groups li {
+.breakdown-item {
 	white-space: nowrap;
 }
 
-.groups li:after {
-	content: ", ";
-	white-space: wrap;
-	margin-right: 0.25rem;
+@media (--sm-and-up) {
+	.breakdown-item:after {
+		content: ", ";
+		white-space: wrap;
+		margin-right: 0.25rem;
+	}
+	.breakdown-item:last-child:after {
+		content: "";
+	}
 }
-.groups li:last-child:after {
-	content: "";
+
+.breakdown:empty {
+	display: none;
 }
 </style>

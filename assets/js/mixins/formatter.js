@@ -133,9 +133,9 @@ export default {
         minute: "numeric",
       }).format(date);
     },
-    fmtMonthYear: function (date, short) {
+    fmtMonthYear: function (date) {
       return new Intl.DateTimeFormat(this.$i18n.locale, {
-        month: short ? "short" : "long",
+        month: "long",
         year: "numeric",
       }).format(date);
     },
