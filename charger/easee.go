@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/philippseith/signalr"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
