@@ -1,15 +1,15 @@
 export default {
   header: {
-    sessions: "Charging Log",
+    sessions: "Charging sessions",
     docs: "Documentation",
     blog: "Blog",
     github: "GitHub",
-    login: "Vehicle Logins",
+    login: "Vehicle logins",
     about: "About evcc",
     theme: {
-      auto: "Design: System",
-      light: "Design: Light",
-      dark: "Design: Dark",
+      auto: "Design: system",
+      light: "Design: light",
+      dark: "Design: dark",
     },
   },
   footer: {
@@ -186,7 +186,7 @@ export default {
     restartButton: "Restart",
   },
   sessions: {
-    title: "Charging Log",
+    title: "Charging sessions",
     downloadCsv: "Download as CSV",
     loadpoint: "Loadpoint",
     vehicle: "Vehicle",
