@@ -1,5 +1,6 @@
 export default {
   header: {
+    sessions: "Įkrovimo sesijos ",
     docs: "Dokumentacija (Vokiečių k.)",
     blog: "Tinklaraštis",
     github: "GitHub",
@@ -18,7 +19,8 @@ export default {
       modalTitle: "Yra naujesnė versija",
       modalUpdateStarted: "Pasibaigus naujinimui EVCC startuos iš naujo..",
       modalInstalledVersion: "Dabartinė versija",
-      modalNoReleaseNotes: "Naujinimo detalių nėra. Daugiau informacijos rasite čia:",
+      modalNoReleaseNotes:
+        "Naujinimo pastabų nėra. Daugiau informacijos apie naują versiją galite rasti rasite čia:",
       modalCancel: "Atšaukti",
       modalUpdate: "Naujinti",
       modalUpdateNow: "Naujinti dabar",
@@ -165,6 +167,10 @@ export default {
         Apie netikėtą elgesį praneškite mūsų
       `,
     },
+    targetEnergy: {
+      label: "Limitas",
+      noLimit: "nėra",
+    },
   },
   startupError: {
     title: "Klaida startuojant",
@@ -178,6 +184,14 @@ export default {
     lineErrorLink: "eilutė {0}",
     fixAndRestart: "Ištaisykite klaidą ir restartuokite serverį.",
     restartButton: "Restartuoti",
+  },
+  sessions: {
+    title: "Įkrovimo sesijos",
+    downloadCsv: "Parsisiųsti CSV failą",
+    loadpoint: "Įkroviklis",
+    vehicle: "Automobilis",
+    energy: "Įkrauta",
+    date: "Baigta",
   },
   offline: {
     message: "Nėra ryšio su serveriu.",
