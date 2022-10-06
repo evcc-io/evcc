@@ -124,10 +124,10 @@ export default {
 
       return `${weekday} ${hour}`;
     },
-    fmtFullDateTime: function (date) {
+    fmtFullDateTime: function (date, short) {
       return new Intl.DateTimeFormat(this.$i18n.locale, {
-        weekday: "short",
-        month: "short",
+        weekday: short ? undefined : "short",
+        month: short ? "numeric" : "short",
         day: "numeric",
         hour: "numeric",
         minute: "numeric",
