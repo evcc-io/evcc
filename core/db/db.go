@@ -16,8 +16,8 @@ type DB struct {
 }
 
 type Database interface {
-	Txn(startEnergy float64) *Transaction
-	Persist(txn interface{})
+	Session(startEnergy float64) *Session
+	Persist(session interface{})
 }
 
 // New creates a database storage driver
@@ -31,9 +31,9 @@ func New(name string) (*DB, error) {
 	return db, nil
 }
 
-// Txn creates a charging transaction
-func (s *DB) Txn(meter float64) *Transaction {
-	t := Transaction{
+// Session creates a charging session
+func (s *DB) Session(meter float64) *Session {
+	t := Session{
 		Loadpoint:  s.name,
 		Created:    time.Now(),
 		MeterStart: meter,
@@ -43,10 +43,10 @@ func (s *DB) Txn(meter float64) *Transaction {
 }
 
 // Persist creates or updates a transaction in the database
-func (s *DB) Persist(txn interface{}) {
-	s.log.TRACE.Printf("store: %+v", txn)
+func (s *DB) Persist(session interface{}) {
+	s.log.TRACE.Printf("store: %+v", session)
 
-	if err := s.db.Save(txn).Error; err != nil {
+	if err := s.db.Save(session).Error; err != nil {
 		s.log.ERROR.Printf("store: %v", err)
 	}
 }

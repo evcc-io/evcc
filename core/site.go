@@ -94,7 +94,15 @@ func NewSiteFromConfig(
 
 	// migrate session log
 	if serverdb.Instance != nil {
-		if err := serverdb.Instance.AutoMigrate(new(db.Transaction)); err != nil {
+		var err error
+		// TODO deprecate
+		if table := "transactions"; serverdb.Instance.Migrator().HasTable(table) {
+			err = serverdb.Instance.Migrator().RenameTable(table, new(db.Session))
+		}
+		if err == nil {
+			err = serverdb.Instance.AutoMigrate(new(db.Session))
+		}
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -109,7 +117,7 @@ func NewSiteFromConfig(
 				return nil, err
 			}
 
-			shutdown.Register(lp.stopTxn)
+			shutdown.Register(lp.stopSession)
 		}
 	}
 

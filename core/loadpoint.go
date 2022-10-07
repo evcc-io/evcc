@@ -160,8 +160,8 @@ type LoadPoint struct {
 	progress                *Progress     // Step-wise progress indicator
 
 	// session log
-	db  db.Database
-	txn *db.Transaction
+	db      db.Database
+	session *db.Session
 
 	tasks queues.Queue // tasks to be executed
 }
@@ -388,7 +388,7 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	lp.startTxn()
+	lp.startSession()
 }
 
 // evChargeStopHandler sends external stop event
@@ -405,7 +405,7 @@ func (lp *LoadPoint) evChargeStopHandler() {
 		lp.resetPVTimerIfRunning()
 	}
 
-	lp.stopTxn()
+	lp.stopSession()
 }
 
 // evVehicleConnectHandler sends external start event
@@ -472,7 +472,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	// reset timer when vehicle is removed
 	lp.socTimer.Reset()
 
-	lp.finalizeTxn()
+	lp.finalizeSession()
 }
 
 // evVehicleSoCProgressHandler sends external start event
@@ -903,7 +903,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.Lock()
 
 	lp.unpublishVehicle()
-	lp.updateTxn()
+	lp.updateSession()
 }
 
 func (lp *LoadPoint) wakeUpVehicle() {
