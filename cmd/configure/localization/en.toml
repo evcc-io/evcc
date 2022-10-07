@@ -80,7 +80,7 @@ Requirements_Sponsorship_Token = "Are you already a sponsor?"
 Requirements_Sponsorship_Token_Input = "Please enter the sponsortoken"
 
 Requirements_EEBUS_Cert_Error = "Error: The EEBUS certificate couldn't be created"
-Requirements_EEBUS_Pairing = "You selected a wallbox, which will be access via the EEBUS protocoll.\nFor that the wallbox needs to be connected to evcc. This can usually be done in the web interface of the wallbox.\nPlease press the enter key once this is done."
+Requirements_EEBUS_Pairing = "You selected a wallbox, which will be accessed via the EEBUS protocol.\nFor that the wallbox needs to be connected to evcc. This can usually be done in the web interface of the wallbox.\nPlease press the enter key once this is done."
 
 Config_Title = "Please provide the following settings:"
 Config_ModbusInterface = "Choose the ModBus interface"
