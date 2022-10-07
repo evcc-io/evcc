@@ -235,7 +235,7 @@ func (c *OCPP) configure(key, val string) error {
 	rc := make(chan error, 1)
 
 	err := ocpp.Instance().ChangeConfiguration(c.cp.ID(), func(resp *core.ChangeConfigurationConfirmation, err error) {
-		c.log.TRACE.Printf("ChangeConfiguration: %v", resp)
+		c.log.TRACE.Printf("%T: %v", resp, resp)
 
 		if err == nil && resp != nil && resp.Status != core.ConfigurationStatusAccepted {
 			rc <- fmt.Errorf("ChangeConfiguration failed: %s", resp.Status)
@@ -277,7 +277,7 @@ func (c *OCPP) Enable(enable bool) error {
 
 	if enable {
 		err = ocpp.Instance().RemoteStartTransaction(c.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
-			c.log.TRACE.Printf("RemoteStartTransaction: %+v", resp)
+			c.log.TRACE.Printf("%T: %+v", resp, resp)
 
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
@@ -289,7 +289,7 @@ func (c *OCPP) Enable(enable bool) error {
 		})
 	} else {
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
-			c.log.TRACE.Printf("RemoteStopTransaction: %+v", resp)
+			c.log.TRACE.Printf("%T: %+v", resp, resp)
 
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
@@ -307,7 +307,8 @@ func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfil
 
 	rc := make(chan error, 1)
 	err := ocpp.Instance().SetChargingProfile(c.cp.ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
-		c.log.TRACE.Printf("SetChargingProfile: %+v", resp)
+		c.log.TRACE.Printf("%T: %+v", resp, resp)
+
 		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}
