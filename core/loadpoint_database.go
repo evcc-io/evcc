@@ -19,43 +19,43 @@ func (lp *LoadPoint) chargeMeterTotal() float64 {
 	return f
 }
 
-func (lp *LoadPoint) startTxn() {
+func (lp *LoadPoint) startSession() {
 	// test guard
 	if lp.db == nil {
 		return
 	}
 
-	if lp.txn == nil {
-		lp.txn = lp.db.Txn(lp.chargeMeterTotal())
+	if lp.session == nil {
+		lp.session = lp.db.Session(lp.chargeMeterTotal())
 
 		if lp.vehicle != nil {
-			lp.txn.Vehicle = lp.vehicle.Title()
+			lp.session.Vehicle = lp.vehicle.Title()
 		}
 
 		if c, ok := lp.charger.(api.Identifier); ok {
 			if id, err := c.Identify(); err == nil {
-				lp.txn.Identifier = id
+				lp.session.Identifier = id
 			}
 		}
 
-		lp.db.Persist(lp.txn)
+		lp.db.Persist(lp.session)
 	}
 }
 
-func (lp *LoadPoint) stopTxn() {
+func (lp *LoadPoint) stopSession() {
 	// test guard
-	if lp.db == nil || lp.txn == nil {
+	if lp.db == nil || lp.session == nil {
 		return
 	}
 
-	lp.txn.Stop(lp.chargedEnergy, lp.chargeMeterTotal())
+	lp.session.Stop(lp.chargedEnergy, lp.chargeMeterTotal())
 
-	lp.db.Persist(lp.txn)
+	lp.db.Persist(lp.session)
 }
 
-func (lp *LoadPoint) updateTxn() {
+func (lp *LoadPoint) updateSession() {
 	// test guard
-	if lp.db == nil || lp.txn == nil {
+	if lp.db == nil || lp.session == nil {
 		return
 	}
 
@@ -64,17 +64,17 @@ func (lp *LoadPoint) updateTxn() {
 		title = lp.vehicle.Title()
 	}
 
-	if lp.txn.Vehicle != title {
-		lp.txn.Vehicle = title
-		lp.db.Persist(lp.txn)
+	if lp.session.Vehicle != title {
+		lp.session.Vehicle = title
+		lp.db.Persist(lp.session)
 	}
 }
 
-func (lp *LoadPoint) finalizeTxn() {
+func (lp *LoadPoint) finalizeSession() {
 	// test guard
 	if lp.db == nil {
 		return
 	}
 
-	lp.txn = nil
+	lp.session = nil
 }

@@ -94,7 +94,7 @@ func NewSiteFromConfig(
 
 	// migrate session log
 	if serverdb.Instance != nil {
-		if err := serverdb.Instance.AutoMigrate(new(db.Transaction)); err != nil {
+		if err := serverdb.Instance.AutoMigrate(new(db.Session)); err != nil {
 			return nil, err
 		}
 	}
@@ -109,7 +109,7 @@ func NewSiteFromConfig(
 				return nil, err
 			}
 
-			shutdown.Register(lp.stopTxn)
+			shutdown.Register(lp.stopSession)
 		}
 	}
 

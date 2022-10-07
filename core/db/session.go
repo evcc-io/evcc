@@ -11,8 +11,8 @@ import (
 	"github.com/fatih/structs"
 )
 
-// Transaction is a single charging transaction
-type Transaction struct {
+// Session is a single charging session
+type Session struct {
 	ID            uint      `json:"-" csv:"-" gorm:"primarykey"`
 	Created       time.Time `json:"created"`
 	Finished      time.Time `json:"finished"`
@@ -25,20 +25,20 @@ type Transaction struct {
 }
 
 // Stop stops charging session with end meter reading and due total amount
-func (t *Transaction) Stop(chargedWh, total float64) {
+func (t *Session) Stop(chargedWh, total float64) {
 	t.ChargedEnergy = chargedWh / 1e3
 	t.MeterStop = total
 	t.Finished = time.Now()
 }
 
-// Transactions is a list of transactions
-type Transactions []Transaction
+// Sessions is a list of sessions
+type Sessions []Session
 
-var _ api.CsvWriter = (*Transactions)(nil)
+var _ api.CsvWriter = (*Sessions)(nil)
 
-func (t *Transactions) writeHeader(ww *csv.Writer) {
+func (t *Sessions) writeHeader(ww *csv.Writer) {
 	var row []string
-	for _, f := range structs.Fields(Transaction{}) {
+	for _, f := range structs.Fields(Session{}) {
 		caption := f.Tag("csv")
 		switch {
 		case caption == "-":
@@ -52,7 +52,7 @@ func (t *Transactions) writeHeader(ww *csv.Writer) {
 	_ = ww.Write(row)
 }
 
-func (t *Transactions) writeRow(ww *csv.Writer, r Transaction) {
+func (t *Sessions) writeRow(ww *csv.Writer, r Session) {
 	var row []string
 	for _, f := range structs.Fields(r) {
 		if f.Tag("csv") == "-" {
@@ -79,7 +79,7 @@ func (t *Transactions) writeRow(ww *csv.Writer, r Transaction) {
 }
 
 // WriteCsv implements the api.CsvWriter interface
-func (t *Transactions) WriteCsv(w io.Writer) {
+func (t *Sessions) WriteCsv(w io.Writer) {
 	ww := csv.NewWriter(w)
 	t.writeHeader(ww)
 
