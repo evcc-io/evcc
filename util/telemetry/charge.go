@@ -36,14 +36,15 @@ func Create(token, machineID string) error {
 	return nil
 }
 
-func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
+func UpdateChargeProgress(log *util.Logger, power, deltaCharged, greenShare float64) {
+	deltaGreen := deltaCharged * greenShare
 	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", deltaGreen*1e3, deltaCharged*1e3, power)
 
 	data := InstanceChargeProgress{
 		InstanceID: instanceID,
 		ChargeProgress: ChargeProgress{
 			ChargePower:  power,
-			GreenPower:   power * deltaGreen / deltaCharged,
+			GreenPower:   power * greenShare,
 			ChargeEnergy: deltaCharged,
 			GreenEnergy:  deltaGreen,
 		},

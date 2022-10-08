@@ -1,7 +1,6 @@
 package core
 
 import (
-	"math"
 	"time"
 
 	"github.com/benbjohnson/clock"
@@ -74,23 +73,6 @@ func (s *Savings) SavingsAmount() float64 {
 	return s.gridSavedCost
 }
 
-func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower float64) float64 {
-	batteryDischarge := math.Max(0, batteryPower)
-	batteryCharge := math.Min(0, batteryPower) * -1
-	pvConsumption := math.Min(pvPower, pvPower+gridPower-batteryCharge)
-
-	gridImport := math.Max(0, gridPower)
-	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
-
-	share := selfConsumption / (gridImport + selfConsumption)
-
-	if math.IsNaN(share) {
-		return 0
-	}
-
-	return share
-}
-
 func (s *Savings) currentGridPrice() float64 {
 	if s.tariffs.Grid != nil {
 		if gridPrice, err := s.tariffs.Grid.CurrentPrice(); err == nil {
@@ -125,21 +107,20 @@ func (s *Savings) updatePrices(p publisher) (float64, float64) {
 	return gridPrice, feedinPrice
 }
 
-// Update savings calculation and return grid/green energy added since last update
-func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) (float64, float64) {
+// Update savings calculation and return the charged energy since last update
+func (s *Savings) Update(p publisher, chargePower, greenShare float64) float64 {
 	gridPrice, feedinPrice := s.updatePrices(p)
 	defer func() { s.updated = s.clock.Now() }()
 
 	// no charging, no need to update
 	if chargePower == 0 {
-		return 0, 0
+		return 0
 	}
 
 	// assume charge power as constant over the duration -> rough kWh estimate
 	deltaCharged := s.clock.Since(s.updated).Hours() * chargePower / 1e3
-	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
-	deltaSelf := deltaCharged * share
+	deltaSelf := deltaCharged * greenShare
 	deltaGrid := deltaCharged - deltaSelf
 
 	s.gridCharged += deltaGrid
@@ -155,5 +136,5 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
 
-	return deltaCharged, deltaSelf
+	return deltaCharged
 }

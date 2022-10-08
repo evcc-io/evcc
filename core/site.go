@@ -463,6 +463,26 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	return sitePower, nil
 }
 
+// greenShare returns the percentage of self produced energy currently used at the site. 0 = full-grid; 1 = full pv/battery.
+func (site *Site) greenShare() float64 {
+	batteryDischarge := math.Max(0, site.batteryPower)
+	batteryCharge := math.Min(0, site.batteryPower) * -1
+	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
+
+	gridImport := math.Max(0, site.gridPower)
+	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
+
+	share := selfConsumption / (gridImport + selfConsumption)
+
+	if math.IsNaN(share) {
+		share = 0
+	}
+
+	site.publish("greenShare", share)
+
+	return share
+}
+
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
@@ -493,11 +513,13 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
+	greenShare := site.greenShare()
+
 	// update savings and aggregate telemetry
 	// TODO: use energy instead of current power for better results
-	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	deltaCharged := site.savings.Update(site, totalChargePower, greenShare)
 	if telemetry.Enabled() && totalChargePower > standbyPower {
-		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
+		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
 	}
 }
 
