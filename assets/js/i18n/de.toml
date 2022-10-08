@@ -1,0 +1,188 @@
+[header]
+sessions = "Ladevorgänge"
+docs = "Doku"
+blog = "Blog"
+github = "GitHub"
+login = "Fahrzeug Logins"
+about = "Über evcc"
+
+[header.theme]
+auto = "Design: System"
+light = "Design: Hell"
+dark = "Design: Dunkel"
+
+[footer.version]
+availableShort = "Update"
+availableLong = "Update verfügbar"
+modalTitle = "Update verfügbar"
+modalUpdateStarted = "Nach der Aktualisierung wird evcc neu gestartet."
+modalInstalledVersion = "Aktuell installierte Version"
+modalNoReleaseNotes = "Keine Releasenotes verfügbar. Mehr Informationen zur neuen Version findest du hier:"
+modalCancel = "Abbrechen"
+modalUpdate = "Aktualisieren"
+modalUpdateNow = "Jetzt aktualisieren"
+modalDownload = "Download"
+modalUpdateStatusStart = "Aktualisierung gestartet: "
+modalUpdateStatusFailed = "Aktualisierung nicht möglich: "
+
+[footer.savings]
+footerShort = "{percent}% Sonne"
+footerLong = "{percent}% Sonnenenergie"
+modalTitle = "Auswertung Ladeenergie"
+sinceServerStart = "Seit Serverstart {since}."
+percentTitle = "Sonnenenergie"
+percentSelf = "{self} kWh Sonne"
+percentGrid = "{grid} kWh Netz"
+priceTitle = "Energiepreis"
+priceFeedIn = "{feedInPrice} Einspeisung"
+priceGrid = "{gridPrice} Netz"
+savingsTitle = "Ersparnis"
+savingsComparedToGrid = "gegenüber Netzbezug"
+savingsTotalEnergy = "{total} kWh geladen"
+
+[footer.sponsor]
+thanks = "Danke für deine Unterstützung, {sponsor}! Das hilft uns bei der Weiterentwicklung."
+confetti = "Lust auf Konfetti?"
+supportUs = "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unterstütze evcc finanziell."
+sticker = "...oder evcc Sticker?"
+confettiPromise = "Es gibt auch Sticker und digitales Konfetti ;)"
+becomeSponsor = "Sponsor werden"
+
+[notifications]
+modalTitle = "Meldungen"
+dismissAll = "Meldungen entfernen"
+
+[main]
+vehicles = "Parkplatz"
+
+[main.energyflow]
+noEnergy = "Kein Messwerte"
+homePower = "Verbrauch"
+pvProduction = "Erzeugung"
+loadpoints = "Ladepunkt | Ladepunkt | {count} Ladepunkte"
+battery = "Batterie"
+batteryCharge = "Batterie laden"
+batteryDischarge = "Batterie entladen"
+gridImport = "Netzbezug"
+selfConsumption = "Eigenverbrauch"
+pvExport = "Einspeisung"
+
+[main.mode]
+off = "Aus"
+minpv = "Min+PV"
+pv = "PV"
+now = "Schnell"
+
+[main.loadpoint]
+fallbackName = "Ladepunkt"
+remoteDisabledSoft = "{source}: Adaptives PV-Laden deaktiviert"
+remoteDisabledHard = "{source}: Deaktiviert"
+power = "Leistung"
+charged = "Geladen"
+duration = "Dauer"
+remaining = "Restzeit"
+
+[main.loadpointSettings]
+title = 'Einstellungen "{0}"'
+vehicle = "Fahrzeug"
+currents = "Ladestrom"
+default = "default"
+disclaimerHint = "Hinweis:"
+disclaimerText = "Änderungen sind aktuell noch nicht persistent und werden nach einem Serverneustart wieder zurückgesetzt."
+
+[main.loadpointSettings.minSoC]
+label = "Mindestladestand"
+description = 'Reichweite für Notfälle. Fahrzeug wird im PV-Modus "schnell" auf {0}% geladen. Danach weiter mit PV-Überschuss.'
+
+[main.loadpointSettings.phasesConfigured]
+label = "Phasen"
+phases_0 = "automatischer Wechsel"
+phases_1 = "1-phasig"
+phases_1_hint = "({min} bis {max})"
+phases_3 = "3-phasig"
+phases_3_hint = "({min} bis {max})"
+
+[main.loadpointSettings.maxCurrent]
+label = "Max. Ladestrom"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. Ladestrom"
+
+[main.vehicle]
+fallbackName = "Fahrzeug"
+vehicleSoC = "Ladestand"
+targetSoC = "Ladeziel"
+none = "Kein Fahrzeug"
+unknown = "Gastfahrzeug"
+changeVehicle = "Fahrzeug ändern"
+detectionActive = "Fahrzeugerkennung läuft ..."
+
+[main.vehicleSoC]
+disconnected = "getrennt"
+charging = "lädt"
+ready = "bereit"
+connected = "verbunden"
+vehicleTarget = "Fahrzeuglimit: {soc}%"
+
+[main.vehicleStatus]
+minCharge = "Mindestladung bis {soc}%."
+waitForVehicle = "Ladebereit. Warte auf Fahrzeug."
+vehicleTargetReached = "Fahrzeuglimit {soc}% erreicht."
+charging = "Ladevorgang aktiv."
+targetChargePlanned = "Zielladen geplant. Ladung startet {time} Uhr."
+targetChargeWaitForVehicle = "Zielladen bereit. Warte auf Fahrzeug."
+targetChargeActive = "Zielladen aktiv."
+connected = "Verbunden."
+pvDisable = "Zu wenig Überschuss. Pausiere in {remaining}."
+pvEnable = "Überschuss verfügbar. Starte in {remaining}."
+scale1p = "Reduziere auf einphasig in {remaining}."
+scale3p = "Erhöhe auf dreiphasig in {remaining}."
+disconnected = "Nicht verbunden."
+unknown = ""
+
+[main.provider]
+login = "anmelden"
+logout = "abmelden"
+
+[main.targetCharge]
+title = "Zielzeit"
+inactiveLabel = "Zielzeit"
+activeLabel = "{time}"
+modalTitle = "Zielzeit festlegen"
+setTargetTime = "keine"
+description = "Wann soll das Fahrzeug auf {targetSoC}% geladen sein?"
+today = "heute"
+tomorrow = "morgen"
+targetIsInThePast = "Zeitpunkt liegt in der Vergangenheit."
+remove = "Entfernen"
+activate = "Aktivieren"
+experimentalLabel = "Experimentell"
+experimentalText = "Dieses Feature funktioniert, ist aber noch nicht perfekt. Bitte melde unerwartetes Verhalten in unseren"
+
+[main.targetEnergy]
+label = "Ladeziel"
+noLimit = "keins"
+
+[startupError]
+title = "Fehler beim Starten"
+description = "Bitte überprüfe deine Konfigurationsdatei. Sollte dir die Fehlermeldung nicht weiterhelfen, suche in unseren {0} nach einer Lösung."
+discussions = "GitHub Discussions"
+hint = "Hinweis: Ein weiterer Grund, warum du diese Meldung siehst, könnte ein fehlerhaftes Gerät (Wechselrichter, Zähler, ...) sein. Überprüfe deine Netzwerkverbindungen."
+configuration = "Konfiguration"
+configFile = "Verwendete Konfigurationsdatei:"
+lineError = "In {0} wurde ein Fehler gefunden."
+lineErrorLink = "Zeile {0}"
+fixAndRestart = "Behebe das Problem und starte den Server neu."
+restartButton = "Neu starten"
+
+[sessions]
+title = "Ladevorgänge"
+downloadCsv = "Als CSV herunterladen"
+loadpoint = "Ladepunkt"
+vehicle = "Fahrzeug"
+energy = "Geladen"
+date = "Beendet"
+
+[offline]
+message = "Keine Verbindung zum Server."
+reload = "Reload?"

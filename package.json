@@ -5,7 +5,7 @@
   "scripts": {
     "build": "vite build",
     "test": "",
-    "lint": "prettier assets './**/*.{yml,yaml}' --write && eslint assets/**/*.js assets/**/*.vue --fix",
+    "lint": "prettier assets './**/*.{yml,yaml,toml}' --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "dev": "vite",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
@@ -49,7 +49,9 @@
     "html-webpack-plugin": "^5.5.0",
     "postcss-custom-media": "^8.0.2",
     "prettier": "^2.5.1",
+    "prettier-plugin-toml": "^0.3.1",
     "vite": "^3.0.4",
+    "vite-plugin-toml": "^0.4.0",
     "vue-loader": "^17.0.0"
   },
   "engines": {

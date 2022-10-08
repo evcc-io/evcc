@@ -1,8 +1,8 @@
 import { createI18n } from "vue-i18n";
-import de from "./de";
-import en from "./en";
-import it from "./it";
-import lt from "./lt";
+import de from "./de.toml";
+import en from "./en.toml";
+import it from "./it.toml";
+import lt from "./lt.toml";
 
 const PREFERRED_LOCALE_KEY = "preferred_locale";
 
