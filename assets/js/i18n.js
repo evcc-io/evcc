@@ -1,8 +1,15 @@
 import { createI18n } from "vue-i18n";
+<<<<<<< HEAD:assets/js/i18n.js
 import de from "../i18n/de.toml";
 import en from "../i18n/en.toml";
 import it from "../i18n/it.toml";
 import lt from "../i18n/lt.toml";
+=======
+import de from "./de.toml";
+import en from "./en.toml";
+import it from "./it.toml";
+import lt from "./lt.toml";
+>>>>>>> bfd983beb (change translation format to form js to toml):assets/js/i18n/index.js
 
 const PREFERRED_LOCALE_KEY = "preferred_locale";
 
