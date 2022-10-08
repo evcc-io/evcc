@@ -6,6 +6,8 @@ requirements: ["eebus"]
 description: |
   Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).
 
+  Eine Identifikation des Fahrzeugs über die RFID Karte ist nicht möglich.
+
   Die Unterstützung ist im Beta Stadium und es kann noch zu Problemen kommen!
 
 render:

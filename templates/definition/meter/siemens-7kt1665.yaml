@@ -1,0 +1,59 @@
+template: siemens
+products:
+  - brand: Siemens
+    description:
+      generic: 7KT1665
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "charge"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 57
+      type: input
+      decode: uint32
+    scale: 0.01
+    timeout: 5s
+  {{- if or (eq .usage "charge") (eq .usage "grid") }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6687
+      type: input
+      decode: uint32
+    scale: 0.001
+    timeout: 5s
+  {{ end -}}
+  {{- if or (eq .usage "charge") (eq .usage "grid") }}
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 7
+      type: input
+      decode: uint32
+    scale: 0.0001
+    timeout: 5s
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 9
+      type: input
+      decode: uint32
+    scale: 0.0001
+    timeout: 5s
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 11
+      type: input
+      decode: uint32
+    scale: 0.0001
+    timeout: 5s
+  {{ end -}}
