@@ -11,9 +11,13 @@ requirements:
     de: |
       Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).
 
+      Eine Identifikation des Fahrzeugs über die RFID Karte ist nicht möglich.
+
       Die Unterstützung ist im Beta Stadium und es kann noch zu Problemen kommen!
     en: |
       The device has to have a fix IP address (manuall or via DHCP).
+
+      The identification of a vehicle using the RFID card is not possible.
 
       The support is in beta state and problems can occur!
 params:
