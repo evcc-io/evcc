@@ -10,6 +10,12 @@
         "template": {
           "$": "#/definitions/Template"
         },
+        "covers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "products": {
           "type": "array",
           "items": {
@@ -19,8 +25,11 @@
         "group": {
           "$ref": "#/definitions/Groups"
         },
-        "guidedsetup": {
-          "$ref": "#/definitions/GuidedSetup"
+        "linked": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Linked"
+          }
         },
         "capabilities": {
           "type": "array",
@@ -58,7 +67,7 @@
       },
       "required": ["name"],
       "title": "Template"
-  },
+    },
     "Product": {
       "type": "object",
       "additionalProperties": false,
@@ -79,22 +88,6 @@
     "Groups": {
       "type": "string",
       "enum": ["generic", "switchsockets", "scooter", "sockets"]
-    },
-    "GuidedSetup": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "enable": {
-          "type": "boolean"
-        },
-        "linked": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Linked"
-          }
-        }
-      },
-      "required": ["enable"]
     },
     "Linked": {
       "type": "object",
