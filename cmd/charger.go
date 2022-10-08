@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
@@ -56,9 +55,6 @@ func runCharger(cmd *cobra.Command, args []string) {
 	if err := cp.configureChargers(conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
-
-	stopC := make(chan struct{})
-	go shutdown.Run(stopC)
 
 	chargers := cp.chargers
 	if len(args) == 1 {
@@ -146,6 +142,6 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	close(stopC)
-	<-shutdown.Done()
+	// wait for shutdown
+	<-shutdownDoneC()
 }

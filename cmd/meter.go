@@ -59,4 +59,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 	for name, v := range meters {
 		d.DumpWithHeader(name, v)
 	}
+
+	// wait for shutdown
+	<-shutdownDoneC()
 }
