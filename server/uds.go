@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/site"
 )
 
@@ -28,7 +27,7 @@ func removeIfExists(file string) {
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
-func HealthListener(site site.API) {
+func HealthListener(site site.API, exitC <-chan struct{}) {
 	removeIfExists(SocketPath)
 
 	l, err := net.Listen("unix", SocketPath)
@@ -43,7 +42,6 @@ func HealthListener(site site.API) {
 
 	go func() { _ = httpd.Serve(l) }()
 
-	shutdown.Register(func() {
-		removeIfExists(SocketPath) // cleanup
-	})
+	<-exitC
+	removeIfExists(SocketPath) // cleanup
 }

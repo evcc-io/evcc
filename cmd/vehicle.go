@@ -31,21 +31,21 @@ func runVehicle(cmd *cobra.Command, args []string) {
 
 	// load config
 	if err := loadConfigFile(&conf); err != nil {
-		fatal(err)
+		log.FATAL.Fatal(err)
 	}
 
 	// setup environment
 	if err := configureEnvironment(cmd, conf); err != nil {
-		fatal(err)
+		log.FATAL.Fatal(err)
 	}
 
 	// select single vehicle
 	if err := selectByName(cmd, &conf.Vehicles); err != nil {
-		fatal(err)
+		log.FATAL.Fatal(err)
 	}
 
 	if err := cp.configureVehicles(conf); err != nil {
-		fatal(err)
+		log.FATAL.Fatal(err)
 	}
 
 	vehicles := cp.vehicles
@@ -104,7 +104,4 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			d.DumpWithHeader(name, v)
 		}
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

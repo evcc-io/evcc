@@ -7,11 +7,15 @@ import (
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
+	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
@@ -97,6 +101,59 @@ func publish(key string, val any) {
 	valueChan <- util.Param{Key: key, Val: val}
 }
 
+func unwrap(err error) (res []string) {
+	for err != nil {
+		inner := errors.Unwrap(err)
+		if inner == nil {
+			res = append(res, err.Error())
+		} else {
+			cur := strings.TrimSuffix(err.Error(), ": "+inner.Error())
+			cur = strings.TrimSuffix(cur, inner.Error())
+			res = append(res, strings.TrimSpace(cur))
+		}
+		err = inner
+	}
+	return
+}
+
+func redact(src string) string {
+	secrets := []string{
+		"url", "uri", "host", "broker", "mac", // infrastructure
+		"sponsortoken", "plant", // global settings
+		"user", "password", "pin", // users
+		"token", "access", "refresh", // tokens
+		"ain", "id", "secret", "serial", "deviceid", "machineid", // devices
+		"vin"} // vehicles
+	return regexp.
+		MustCompile(fmt.Sprintf(`\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).
+		ReplaceAllString(src, "$1: *****")
+}
+
+func publishErrorInfo(cfgFile string, err error) {
+	if cfgFile != "" {
+		file, pathErr := filepath.Abs(cfgFile)
+		if pathErr != nil {
+			file = cfgFile
+		}
+		publish("file", file)
+
+		if src, fileErr := os.ReadFile(cfgFile); fileErr != nil {
+			log.ERROR.Println("could not open config file:", fileErr)
+		} else {
+			publish("config", redact(string(src)))
+
+			// find line number
+			if match := regexp.MustCompile(`yaml: line (\d+):`).FindStringSubmatch(err.Error()); len(match) == 2 {
+				if line, err := strconv.Atoi(match[1]); err == nil {
+					publish("line", line)
+				}
+			}
+		}
+	}
+
+	publish("fatal", unwrap(err))
+}
+
 func runRoot(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
@@ -152,6 +209,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = configureEnvironment(cmd, conf)
 	}
 
+	// setup session log
+	if err == nil && conf.Database.Dsn != "" {
+		err = configureDatabase(conf.Database)
+	}
+
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
@@ -186,18 +248,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 		pushChan, err = configureMessengers(conf.Messaging, cache)
 	}
 
-	// run shutdown functions on stop
-	var once sync.Once
 	stopC := make(chan struct{})
+	go shutdown.Run(stopC)
 
-	// catch signals
-	go func() {
-		signalC := make(chan os.Signal, 1)
-		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
-
-		<-signalC                        // wait for signal
-		once.Do(func() { close(stopC) }) // signal loop to end
-	}()
+	siteC := make(chan struct{})
 
 	// show main ui
 	if err == nil {
@@ -223,12 +277,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		go func() {
 			site.Run(stopC, conf.Interval)
+			close(siteC)
 		}()
 	} else {
+		var once sync.Once
 		httpd.RegisterShutdownHandler(func() {
 			once.Do(func() {
 				log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
-				close(stopC) // signal loop to end
+				close(siteC)
 			})
 		})
 
@@ -240,15 +296,42 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		publishErrorInfo(cfgFile, err)
 
-		// wait for shutdown
-		go exitWhenDone(rebootDelay)
+		go func() {
+			select {
+			case <-time.After(rebootDelay):
+			case <-siteC:
+			}
+			os.Exit(1)
+		}()
 	}
 
 	// uds health check listener
-	go server.HealthListener(site)
+	go server.HealthListener(site, siteC)
 
-	// wait for shutdown
-	go exitWhenDone(conf.Interval)
+	// catch signals
+	go func() {
+		signalC := make(chan os.Signal, 1)
+		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
+
+		<-signalC    // wait for signal
+		close(stopC) // signal loop to end
+
+		exitC := make(chan struct{})
+		wg := new(sync.WaitGroup)
+		wg.Add(2)
+
+		// wait for main loop and shutdown functions to finish
+		go func() { <-shutdown.Done(); wg.Done() }()
+		go func() { <-siteC; wg.Done() }()
+		go func() { wg.Wait(); close(exitC) }()
+
+		select {
+		case <-exitC: // wait for loop to end
+		case <-time.NewTimer(conf.Interval).C: // wait max 1 period
+		}
+
+		os.Exit(1)
+	}()
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }

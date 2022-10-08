@@ -73,11 +73,6 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
-	// setup persistence
-	if err == nil && conf.Database.Dsn != "" {
-		err = configureDatabase(conf.Database)
-	}
-
 	// setup telemetry
 	if err == nil && conf.Telemetry {
 		err = telemetry.Create(sponsor.Token, conf.Plant)

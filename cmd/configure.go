@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/evcc-io/evcc/cmd/configure"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -52,15 +53,24 @@ func runConfigure(cmd *cobra.Command, args []string) {
 
 	util.LogLevel(viper.GetString("log"), nil)
 
+	stopC := make(chan struct{})
+	go shutdown.Run(stopC)
+
 	// catch signals
 	go func() {
 		signalC := make(chan os.Signal, 1)
 		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
 
-		<-signalC // wait for signal
+		<-signalC    // wait for signal
+		close(stopC) // signal loop to end
+
+		<-shutdown.Done()
 
 		os.Exit(1)
 	}()
 
 	impl.Run(log, lang, advanced, expand, category)
+
+	close(stopC)
+	<-shutdown.Done()
 }
