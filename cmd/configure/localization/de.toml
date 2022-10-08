@@ -1,45 +1,33 @@
 Intro = "Die nächsten Schritte führen durch die Einrichtung einer Konfigurationsdatei für evcc.\nBeachte dass dieser Prozess nicht alle möglichen Szenarien berücksichtigen kann.\nDurch Drücken von CTRL-C kann der Prozess abgebrochen werden.\n\nACHTUNG: Diese Funktionalität hat experimentellen Status!\n  D.h. es kann möglich sein, dass die hiermit erstellte Konfigurationsdatei\n  in einem Update nicht mehr funktionieren könnte und neu erzeugt werden müsste.\n  Wir freuen uns auf euer Feedback auf https://github.com/evcc-io/evcc/discussions/\n\nAuf geht's:"
-
 Flow_Mode = "In welchem Modus soll die Konfiguration durchgeführt werden?"
 Flow_Mode_Standard = "Standard Modus (So einfach und schnell wie möglich)"
 Flow_Mode_Advanced = "Fortgeschrittener Modus (Detailliertere Fragen, erfordert jedoch technisches Know-How)"
-
 Flow_Type = "Was möchtest du machen?"
 Flow_Type_NewConfiguration = "Eine neue evcc Konfigurationsdatei erstellen"
 Flow_Type_SingleDevice = "Ein einzelnes Gerät konfigurieren (muss manuell in eine Konfigurationsdatei eingetragen werden!)"
-
 Flow_NewConfiguration_Setup = "- Hausinstallation einrichten"
 Flow_NewConfiguration_Select = "Wähle eines der folgenden PV Komplettsysteme aus, oder '{{ .ItemNotPresent }}' falls keines dieser Geräte vorhanden ist"
-
 Flow_SingleDevice_Setup = "- Ein Gerät konfigurieren"
 Flow_SingleDevice_Select = "Wähle eine der folgenden Gerätekategorien aus:"
 Flow_SingleDevice_Config = "Die Konfiguration lautet:"
-
 Flow_SMAHems_Setup = "- SMA HEMS konfigurieren"
 Flow_SMAHems_Add = "Möchtest du die Wallboxen an den SMA Home Manager anbinden, damit diese z.B. für die Steuerung der Hausbatterie berücksichtigt werden können?"
-
 ItemNotPresent = "Mein Gerät ist nicht in der Liste"
-
 AddDeviceInCategory = "Möchtest du {{ .Article }} {{ .Category }} hinzufügen?"
 AddAnotherDeviceInCategory = "Möchtest du noch {{ .Additional }} {{ .Category }} hinzufügen?"
 AddLinkedDeviceInCategory = "Möchtest du ein '{{ .Linked }}' Gerät als {{ .Article }} {{ .Category }} hinzufügen?"
 AddAnotherLinkedDeviceInCategory = "Möchtest du noch ein '{{ .Linked }}' Gerät als {{ .Article }} {{ .Category }} hinzufügen?"
-
 Error = "Fehler: {{ .Error }}"
 Error_ItemNotPresent = "Gerät nicht vorhanden"
 Error_DeviceNotValid = "Das Gerät funktioniert nicht"
-
 Error_EEBUS_Certificate_Create = "Konnte das EEBUS Zertifikat nicht erstellen"
 Error_EEBUS_Certificate_Use = "Konnte das EEBUS Zertifikat nicht verwenden"
-
 File_Exists = "Die Datei {{ .FileName }} existiert bereits. Soll die Datei überschrieben werden?"
 File_Permissions = "Die Datei {{ .FileName }} existiert bereits und kann nicht überschrieben werden."
 File_NewFilename = "Bitte gib einen neuen Dateinamen an"
 File_Error_SaveFailed = "Die Konfiguration konnte nicht in der Datei {{ .FileName }} gespeichert werden"
 File_SaveSuccess = "Die Konfiguration wurde erfolgreich in der Datei {{ .FileName }} gespeichert"
-
 Choose = "Wähle"
-
 Category_ChargerTitle = "Wallbox"
 Category_ChargerArticle = "eine"
 Category_ChargerAdditional = "eine weitere"
@@ -61,36 +49,28 @@ Category_ChargeMeterAdditional = "einen weiteren"
 Category_VehicleTitle = "Fahrzeug"
 Category_VehicleArticle = "ein"
 Category_VehicleAdditional = "ein weiteres"
-
 TestingDevice_Title = "Teste die Konfiguration von {{ .Device }} ..."
 TestingDevice_TitleUsage = "Teste die {{ .Usage}} Konfiguration von {{ .Device }} ..."
 TestingDevice_RepeatStep = "Möchtest du erneut ein Gerät aus der Liste auswählen und einrichten?"
 TestingDevice_AddFailed = "Der Test von {{ .Device }} ist fehlgeschlagen. Soll es trotzdem in die Konfiguration aufgenommen werden?"
 TestingDevice_AddFailedUsage = "Der Test der {{ .Usage }} Konfiguration von {{ .Device }} ist fehlgeschlagen. Soll {{ .Usage }} trotzdem in die Konfiguration aufgenommen werden?"
-
 TestingMQTTFailed = "Der Test der MQTT Konfiguration ist fehlgeschlagen. Möchten Sie die Konfiguration wiederholen?"
-
 Requirements_Title = "Das Gerät hat die folgenden Voraussetzungen:"
 Requirements_More = "Weitere Informationen:"
-
 Requirements_Sponsorship_Title = "Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship"
 Requirements_Sponsorship_Optional_Title = "Die Entwicklung von evcc kann über Sponsoring unterstützt werden. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship"
 Requirements_Sponsorship_Feature_Title = "Dies Verwendung dieser Funktionalität benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship"
 Requirements_Sponsorship_Token = "Bist du ein Sponsor?"
 Requirements_Sponsorship_Token_Input = "Bitte gib das Sponsortoken ein"
-
 Requirements_EEBUS_Cert_Error = "Fehler: Das EEBUS Zertifikat konnte nicht erstellt werden"
 Requirements_EEBUS_Pairing = "Du hast eine Wallbox ausgewählt, welche über das EEBUS Protokoll angesprochen wird.\nDazu muss die Wallbox nun mit evcc verbunden werden. Dies geschieht üblicherweise auf der Webseite der Wallbox.\nDrücke die Enter-Taste, wenn dies abgeschlossen ist."
-
 Config_Title = "Führe folgende Einstellungen durch:"
 Config_ModbusInterface = "Wähle die ModBus Schnittstelle aus"
 Config_AddAnotherValue = "Möchtest du einen weiteren Wert hinzufügen?"
 Config_Yes = "Ja"
 Config_No = "Nein"
-
 Cancel = "Die Konfiguration wurde abgebrochen.\n\nFalls diese geführte Konfiguration für dich noch nicht funktioniert, versuche es doch mal mit der manuellen Konfiguration. Details findest du auf der folgenden Webseite: https://docs.evcc.io/docs/\n"
 InputError = "Bei der Eingabe ist ein Fehler aufgetreten:"
-
 Value_Help = "Hilfe:"
 Value_Required = "erforderlich"
 Value_Optional = "optional"
@@ -103,17 +83,13 @@ ValueError_Number = "Der Wert muss eine ganzzahlige Zahl sein."
 ValueError_NumberLowerThanMin = "Der Wert muss größer oder gleich {{ .Min }} sein."
 ValueError_NumberBiggerThanMax = "Der Wert muss kleiner oder gleich {{ .Max }} sein."
 ValueError_Duration = "Der Wert muss eine Zeitdauer angeben. Zum Beispiel: 1s, 1m, 1h"
-
 Device_Configure = "Konfiguration"
 Device_Added = "wurde erfolgreich hinzugefügt."
-
 Loadpoint_Setup = "- Ladepunkt(e) einrichten"
 Loadpoint_Title = "Titel des Ladepunktes"
 Loadpoint_AddAnother = "Möchtest du einen weiteren Ladepunkt hinzufügen?"
 Loadpoint_DefaultTitle = "Garage"
-
 Loadpoint_ResetOnDisconnect = "Soll beim Abstecken des Ladekables von einem Fahrzeug, die Lade-Standardeinstellungen wieder hergestellt werden?"
-
 Loadpoint_WallboxWOMeter = "Das System konnte nicht erkennen ob ein Ladestromzähler in der Wallbox eingebaut ist. Möchtest du einen externen Ladestromzähler hinzufügen?"
 Loadpoint_WallboxMaxPower = "Was ist die maximale Leistung, welche die Wallbox zur Verfügung stellen kann?"
 Loadpoint_WallboxMinAmperage = "Was ist die MINIMALE Stromstärke, welche die Wallbox auf einer Phase zur Verfügung stellen kann?"
@@ -123,16 +99,13 @@ Loadpoint_WallboxPower36kW = "3,6 kW"
 Loadpoint_WallboxPower11kW = "11 kW"
 Loadpoint_WallboxPower22kW = "22 kW"
 Loadpoint_WallboxPowerOther = "Andere Leistung"
-
 Loadpoint_VehicleChargeHere = "Wird das Fahrzeug {{ .Vehicle }} hier laden?"
-
 ChargeMode_Question = "Was sollte der Standard-Lademodus sein, wenn ein Fahrzeug angeschlossen wird?"
 ChargeModeOff = "Stop"
 ChargeModeNow = "Sofort (mit größtmöglicher Leistung)"
 ChargeModeMinPV = "Min+PV (mit der kleinstmöglichen Leistung, schneller wenn genügend PV Überschuss vorhanden ist)"
 ChargeModePV = "PV (Nur mit PV Überschuss)"
 ChargeModeNone = "Keinen (Benutzt den im Ladepunkt gesetzten Lademodus)"
-
 Site_Setup = "- Standort einrichten"
 Site_Title = "Titel des Standortes"
 Site_DefaultTitle = "Mein Zuhause"
