@@ -53,13 +53,13 @@ func init() {
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
-	bindP(rootCmd, "log", "log")
+	bindP(rootCmd, "log")
 
 	rootCmd.Flags().Bool("metrics", false, "Expose metrics")
-	bind(rootCmd, "metrics", "metrics")
+	bind(rootCmd, "metrics")
 
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
-	bind(rootCmd, "profile", "profile")
+	bind(rootCmd, "profile")
 }
 
 // initConfig reads in config file and ENV variables if set

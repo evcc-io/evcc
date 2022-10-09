@@ -36,20 +36,20 @@ const (
 	flagDelay  = "delay"
 )
 
-func bind(cmd *cobra.Command, flag, vpr string) {
-	if err := viper.BindPFlag(vpr, cmd.Flags().Lookup(flag)); err != nil {
+func bind(cmd *cobra.Command, flag string) {
+	if err := viper.BindPFlag(flag, cmd.Flags().Lookup(flag)); err != nil {
 		panic(err)
 	}
 }
 
-func bindP(cmd *cobra.Command, flag, vpr string) {
-	if err := viper.BindPFlag(vpr, cmd.PersistentFlags().Lookup(flag)); err != nil {
+func bindP(cmd *cobra.Command, flag string) {
+	if err := viper.BindPFlag(flag, cmd.PersistentFlags().Lookup(flag)); err != nil {
 		panic(err)
 	}
 }
 
 func selectByName(cmd *cobra.Command, conf *[]qualifiedConfig) error {
-	flag := cmd.PersistentFlags().Lookup(flagName)
+	flag := cmd.Flags().Lookup(flagName)
 	if !flag.Changed {
 		return nil
 	}
