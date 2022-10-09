@@ -11,7 +11,19 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/util"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
+
+// setLogLevel sets log level from config overwritten by command line
+// https://github.com/spf13/viper/issues/1444
+func setLogLevel(cmd *cobra.Command) {
+	if flag := cmd.Flags().Lookup("log"); viper.GetString("log") == "" || flag.Changed {
+		viper.Set("log", flag.Value.String())
+	}
+	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
+}
 
 // unwrap converts a wrapped error into slice of strings
 func unwrap(err error) (res []string) {

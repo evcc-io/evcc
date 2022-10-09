@@ -33,6 +33,8 @@ func runToken(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
+	setLogLevel(cmd)
+
 	var vehicleConf qualifiedConfig
 	if len(conf.Vehicles) == 1 {
 		vehicleConf = conf.Vehicles[0]
