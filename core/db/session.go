@@ -48,7 +48,8 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) {
 
 	var row []string
 	for _, f := range structs.Fields(Session{}) {
-		if f.Tag("csv") == "-" {
+		csv := f.Tag("csv")
+		if csv == "-" {
 			continue
 		}
 
@@ -56,7 +57,11 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) {
 			MessageID: "sessions." + strings.ToLower(f.Name()),
 		})
 		if err != nil {
-			caption = f.Name()
+			if csv != "" {
+				caption = csv
+			} else {
+				caption = f.Name()
+			}
 		}
 
 		row = append(row, caption)
