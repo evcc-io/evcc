@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/glebarez/sqlite"
 	"github.com/mitchellh/go-homedir"
 	"gorm.io/gorm"
@@ -34,7 +35,9 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("invalid database type: %s not in [sqlite]", driver)
 	}
 
-	return gorm.Open(dialect, &gorm.Config{})
+	return gorm.Open(dialect, &gorm.Config{
+		Logger: &Logger{util.NewLogger("db")},
+	})
 }
 
 func NewInstance(driver, dsn string) (err error) {
