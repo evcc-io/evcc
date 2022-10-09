@@ -110,7 +110,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = cfgErr
 	}
 
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
+	setLogLevel(cmd)
 
 	// network config
 	if viper.GetString("uri") != "" {

@@ -34,6 +34,8 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
+	setLogLevel(cmd)
+
 	// setup environment
 	if err := configureEnvironment(cmd, conf); err != nil {
 		fatal(err)

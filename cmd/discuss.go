@@ -42,6 +42,8 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 
 	cfgErr := loadConfigFile(&conf)
 
+	setLogLevel(cmd)
+
 	file, pathErr := filepath.Abs(cfgFile)
 	if pathErr != nil {
 		file = cfgFile

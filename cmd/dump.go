@@ -50,6 +50,8 @@ func runDump(cmd *cobra.Command, args []string) {
 	// load config
 	err := loadConfigFile(&conf)
 
+	setLogLevel(cmd)
+
 	// setup environment
 	if err == nil {
 		err = configureEnvironment(cmd, conf)
