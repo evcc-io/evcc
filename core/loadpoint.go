@@ -439,8 +439,9 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.log.INFO.Println("car disconnected")
 
-	// ensure session is persisted before vehicle is changed
+	// ensure session is persisted and closed before vehicle is changed
 	lp.stopSession()
+	lp.finalizeSession()
 
 	// phases are unknown when vehicle disconnects
 	lp.resetMeasuredPhases()
@@ -474,8 +475,6 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	// reset timer when vehicle is removed
 	lp.socTimer.Reset()
-
-	lp.finalizeSession()
 }
 
 // evVehicleSoCProgressHandler sends external start event
