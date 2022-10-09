@@ -182,6 +182,12 @@ loadpoint = "Ladepunkt"
 vehicle = "Fahrzeug"
 energy = "Geladen"
 date = "Beendet"
+identifier = "Kennung" # csv
+chargedenergy = "Energie (kWh)" # csv
+meterstart = "Anfangszählerstand (kWh)" # csv
+meterstop = "Endzählerstand (kWh)" # csv
+created = "Startzeit" # csv
+finished = "Endzeit" # csv
 
 [offline]
 message = "Keine Verbindung zum Server."

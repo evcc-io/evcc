@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	dbserver "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/locale"
 	"github.com/gorilla/mux"
 )
 
@@ -68,12 +70,12 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 	jsonWrite(w, map[string]interface{}{"error": err.Error()})
 }
 
-func csvResult(w http.ResponseWriter, res any) {
+func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
 	w.Header().Set("Content-Type", "text/csv")
 	w.Header().Set("Content-Disposition", `attachment; filename="sessions.csv"`)
 
 	if ww, ok := res.(api.CsvWriter); ok {
-		ww.WriteCsv(w)
+		ww.WriteCsv(ctx, w)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -163,7 +165,9 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Query().Get("format") == "csv" {
-		csvResult(w, &res)
+		accept := r.Header.Get("Accept-Language")
+		ctx := context.WithValue(context.Background(), locale.Locale, accept)
+		csvResult(ctx, w, &res)
 		return
 	}
 

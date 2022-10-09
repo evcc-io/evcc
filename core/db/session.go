@@ -1,14 +1,18 @@
 package db
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/locale"
 	"github.com/fatih/structs"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 // Session is a single charging session
@@ -36,14 +40,22 @@ type Sessions []Session
 
 var _ api.CsvWriter = (*Sessions)(nil)
 
-func (t *Sessions) writeHeader(ww *csv.Writer) {
+func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) {
+	localizer := locale.Localizer
+	if val := ctx.Value(locale.Locale).(string); val != "" {
+		localizer = i18n.NewLocalizer(locale.Bundle, val, locale.Language)
+	}
+
 	var row []string
 	for _, f := range structs.Fields(Session{}) {
-		caption := f.Tag("csv")
-		switch {
-		case caption == "-":
+		if f.Tag("csv") == "-" {
 			continue
-		case caption == "":
+		}
+
+		caption, err := localizer.Localize(&locale.Config{
+			MessageID: "sessions." + strings.ToLower(f.Name()),
+		})
+		if err != nil {
 			caption = f.Name()
 		}
 
@@ -79,9 +91,9 @@ func (t *Sessions) writeRow(ww *csv.Writer, r Session) {
 }
 
 // WriteCsv implements the api.CsvWriter interface
-func (t *Sessions) WriteCsv(w io.Writer) {
+func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) {
 	ww := csv.NewWriter(w)
-	t.writeHeader(ww)
+	t.writeHeader(ctx, ww)
 
 	for _, r := range *t {
 		t.writeRow(ww, r)
