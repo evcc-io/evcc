@@ -5,7 +5,7 @@ render:
   - usage: grid
     default: |
       type: template
-      template: siemens
+      template: siemens-7kt1665
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -29,7 +29,7 @@ render:
   - usage: pv
     default: |
       type: template
-      template: siemens
+      template: siemens-7kt1665
       usage: pv      
 
       # RS485 via adapter (Modbus RTU)
@@ -53,7 +53,7 @@ render:
   - usage: battery
     default: |
       type: template
-      template: siemens
+      template: siemens-7kt1665
       usage: battery      
 
       # RS485 via adapter (Modbus RTU)
@@ -77,7 +77,7 @@ render:
   - usage: charge
     default: |
       type: template
-      template: siemens
+      template: siemens-7kt1665
       usage: charge      
 
       # RS485 via adapter (Modbus RTU)
