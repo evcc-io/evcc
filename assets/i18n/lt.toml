@@ -7,13 +7,13 @@ login = " Automobilių prisijungimai"
 about = "Apie EVCC"
 
 [header.theme]
-auto = "Design: System"
-light = "Design: Light"
-dark = "Design: Dark"
+auto = "Dizainas: Sistemos"
+light = "Dizainas: Šviesus"
+dark = "Dizainas: Tamsus"
 
 [footer.version]
-availableShort = "Naujinimas"
-availableLong = "Yra naujesnė versija"
+availableShort = "naujinimas"
+availableLong = "yra naujesnė versija"
 modalTitle = "Yra naujesnė versija"
 modalUpdateStarted = "Pasibaigus naujinimui EVCC startuos iš naujo.."
 modalInstalledVersion = "Dabartinė versija"
@@ -45,7 +45,7 @@ thanks = "Ačiū, kad mus remiate {sponsor}! Taip prisidedate prie projekto vyst
 confetti = "Norite konfeti?"
 supportUs = "Mūsų misija: Siekiame, kad įkrovimas saulės energija taptų standartu. Padėkite mums ir paremkite evcc finansiškai."
 sticker = "... ar evcc lipdukų?"
-confettiPromise = "Gausite lipdukų ir skaitmeninių konfeti ;)"
+confettiPromise = "Bus lipdukų ir skaitmeninių konfeti ;)"
 becomeSponsor = "Tapkite rėmėju"
 
 [notifications]
@@ -69,13 +69,13 @@ pvExport = "Tinklo eksportas"
 
 [main.mode]
 off = "Stop"
-minpv = "Min+PV"
-pv = "PV"
+minpv = "Min+S"
+pv = "Saulės"
 now = "Greitas"
 
 [main.loadpoint]
 fallbackName = "Įkroviklis"
-remoteDisabledSoft = "{source}: adaptyvus PV įkrovimas išjungtas"
+remoteDisabledSoft = "{source}: adaptyvus Saulės įkrovimas išjungtas"
 remoteDisabledHard = "{source}: išjungtas"
 power = "Galia"
 charged = "Įkrauta"
@@ -92,7 +92,7 @@ disclaimerText = "Šie pakeitimai neišlieka ir po EVCC serverio restarto pradin
 
 [main.loadpointSettings.minSoC]
 label = "Minimali įkrova"
-description = 'Minimali įkrova. Automobilis įkraunamas "greitai" iki {0}% PV nustatyme. Toliau įkraunamas tik saulės energijos pertekliumi.'
+description = 'Minimali įkrova. Automobilis įkraunamas "Greitai" iki {0}% nustatyme "Saulė" . Toliau įkraunamas tik saulės energijos pertekliumi.'
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fazės"
