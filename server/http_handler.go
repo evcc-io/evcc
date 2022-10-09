@@ -69,7 +69,8 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 }
 
 func csvResult(w http.ResponseWriter, res any) {
-	w.Header()["Content-Disposition"] = []string{`attachment; filename="sessions.csv"`}
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", `attachment; filename="sessions.csv"`)
 
 	if ww, ok := res.(api.CsvWriter); ok {
 		ww.WriteCsv(w)
