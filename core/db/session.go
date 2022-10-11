@@ -54,8 +54,9 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) {
 		}
 
 		caption, err := localizer.Localize(&locale.Config{
-			MessageID: "sessions." + strings.ToLower(f.Name()),
+			MessageID: "sessions.csv." + strings.ToLower(f.Name()),
 		})
+
 		if err != nil {
 			if csv != "" {
 				caption = csv
@@ -76,17 +77,17 @@ func (t *Sessions) writeRow(ww *csv.Writer, r Session) {
 			continue
 		}
 
-		val := fmt.Sprintf("%v", f.Value())
+		var val string
 
 		switch v := f.Value().(type) {
 		case float64:
 			val = strconv.FormatFloat(v, 'f', 3, 64)
 		case time.Time:
-			if v.IsZero() {
-				val = ""
-			} else {
+			if !v.IsZero() {
 				val = v.Local().Format("2006-01-02 15:04:05")
 			}
+		default:
+			val = fmt.Sprintf("%v", f.Value())
 		}
 
 		row = append(row, val)

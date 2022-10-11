@@ -182,12 +182,16 @@ loadpoint = "Ladepunkt"
 vehicle = "Fahrzeug"
 energy = "Geladen"
 date = "Beendet"
-identifier = "Kennung" # csv
-chargedenergy = "Energie (kWh)" # csv
-meterstart = "Anfangszählerstand (kWh)" # csv
-meterstop = "Endzählerstand (kWh)" # csv
-created = "Startzeit" # csv
-finished = "Endzeit" # csv
+
+[sessions.csv]
+loadpoint = "Ladepunkt"
+vehicle = "Fahrzeug"
+identifier = "Kennung"
+chargedenergy = "Energie (kWh)"
+meterstart = "Anfangszählerstand (kWh)"
+meterstop = "Endzählerstand (kWh)"
+created = "Startzeit"
+finished = "Endzeit"
 
 [offline]
 message = "Keine Verbindung zum Server."

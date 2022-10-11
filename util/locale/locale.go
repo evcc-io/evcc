@@ -22,7 +22,7 @@ var (
 )
 
 func Init() error {
-	Bundle := i18n.NewBundle(language.English)
+	Bundle = i18n.NewBundle(language.English)
 	Bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 
 	dir, err := assets.LocaleFS.ReadDir(".")

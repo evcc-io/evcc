@@ -182,12 +182,16 @@ loadpoint = "Loadpoint"
 vehicle = "Vehicle"
 energy = "Charged"
 date = "Finished"
-identifier = "Identifier" # csv
-chargedenergy = "Energy (kWh)" # csv
-meterstart = "Meter Start (kWh)" # csv
-meterstop = "Meter Stop (kWh)" # csv
-created = "Created" # csv
-finished = "Finished" # csv
+
+[sessions.csv]
+loadpoint = "Loadpoint"
+vehicle = "Vehicle"
+identifier = "Identifier"
+chargedenergy = "Energy (kWh)"
+meterstart = "Meter Start (kWh)"
+meterstop = "Meter Stop (kWh)"
+created = "Created"
+finished = "Finished"
 
 [offline]
 message = "No connection to server."
