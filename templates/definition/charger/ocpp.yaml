@@ -62,6 +62,7 @@ params:
       en: Token-ID returned to the charger for authorisation of charging sessions
       de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
     example: 04E6B78921BBA0
+  - name: timeout
 render: |
   type: ocpp
   {{- if ne .stationid "" }}
