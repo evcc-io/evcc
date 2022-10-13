@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
@@ -29,6 +28,7 @@ type OCPP struct {
 	phases            int
 	current           float64
 	meterValuesSample string
+	timeout           time.Duration
 }
 
 func init() {
@@ -107,6 +107,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		cp:        cp,
 		connector: connector,
 		idtag:     idtag,
+		timeout:   timeout,
 	}
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
@@ -118,23 +119,12 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	}
 
 	// see who's there
-	ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
+	// ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
 
 	var (
 		rc                  = make(chan error, 1)
 		meterSampleInterval time.Duration
 	)
-
-	keys := []string{
-		ocpp.KeyNumberOfConnectors,
-		ocpp.KeyMeterValuesSampledData,
-		ocpp.KeyMeterValueSampleInterval,
-		ocpp.KeyChargeProfileMaxStackLevel,
-		ocpp.KeyChargingScheduleAllowedChargingRateUnit,
-		ocpp.KeyChargingScheduleMaxPeriods,
-		ocpp.KeyConnectorSwitch3to1PhaseSupported,
-		ocpp.KeyMaxChargingProfilesInstalled,
-	}
 
 	// configured id may be empty, use registered id below
 	err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
@@ -178,7 +168,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		}
 
 		rc <- err
-	}, keys)
+	}, nil)
 
 	if err := c.wait(err, rc); err != nil {
 		return nil, err
@@ -253,7 +243,7 @@ func (c *OCPP) wait(err error, rc chan error) error {
 		select {
 		case err = <-rc:
 			close(rc)
-		case <-time.After(request.Timeout):
+		case <-time.After(c.timeout):
 			err = api.ErrTimeout
 		}
 	}
