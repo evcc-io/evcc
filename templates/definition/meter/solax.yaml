@@ -10,6 +10,7 @@ products:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 19200

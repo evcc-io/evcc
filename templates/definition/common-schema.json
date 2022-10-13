@@ -68,6 +68,9 @@
             "type": "string",
             "enum": ["charge", "grid", "pv", "battery"]
           }
+        },
+        "allinone": {
+          "type": "boolean"
         }
       },
       "required": [

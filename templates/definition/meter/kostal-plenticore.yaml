@@ -12,6 +12,7 @@ linked:
 params:
   - name: usage
     choice: ["pv", "battery"]
+    allinone: true
   - name: modbus
     choice: ["tcpip"]
     id: 71
