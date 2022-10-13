@@ -7,6 +7,7 @@ products:
 params:
   - name: usage
     choice: ["grid", "battery"]
+    allinone: true
   - name: host
   - name: port
     default: 502

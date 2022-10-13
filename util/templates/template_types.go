@@ -189,6 +189,7 @@ type Param struct {
 	ValueType     string       // string representation of the value type, "string" is default
 	ValidValues   []string     // list of valid values the user can provide
 	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	AllInOne      bool         // defines if the defined usages can all be present in a single device
 	Requirements  Requirements // requirements for this param to be usable, only supported via ValueType "bool"
 
 	Baudrate int    // device specific default for modbus RS485 baudrate

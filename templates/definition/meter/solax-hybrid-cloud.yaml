@@ -17,6 +17,7 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: tokenid
     required: true
     description:
