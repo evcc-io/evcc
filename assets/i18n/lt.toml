@@ -183,6 +183,16 @@ vehicle = "Automobilis"
 energy = "Įkrauta"
 date = "Baigta"
 
+[sessions.csv]
+loadpoint = "Įkroviklis"
+vehicle = "Automobilis"
+identifier = "Identifikatorius"
+chargedenergy = "Energija (kWh)"
+meterstart = "Skaitiklis pradžioje (kWh)"
+meterstop = "Skaitiklis pabaigoje (kWh)"
+created = "Pradėta"
+finished = "Pabaigta"
+
 [offline]
 message = "Nėra ryšio su serveriu."
 reload = "Perkrauti?"

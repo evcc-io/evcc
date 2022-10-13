@@ -183,6 +183,16 @@ vehicle = "Vehicle"
 energy = "Charged"
 date = "Finished"
 
+[sessions.csv]
+loadpoint = "Loadpoint"
+vehicle = "Vehicle"
+identifier = "Identifier"
+chargedenergy = "Energy (kWh)"
+meterstart = "Meter Start (kWh)"
+meterstop = "Meter Stop (kWh)"
+created = "Created"
+finished = "Finished"
+
 [offline]
 message = "No connection to server."
 reload = "Reload?"

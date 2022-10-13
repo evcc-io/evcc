@@ -1,14 +1,18 @@
 package db
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/locale"
 	"github.com/fatih/structs"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 // Session is a single charging session
@@ -36,15 +40,29 @@ type Sessions []Session
 
 var _ api.CsvWriter = (*Sessions)(nil)
 
-func (t *Sessions) writeHeader(ww *csv.Writer) {
+func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) {
+	localizer := locale.Localizer
+	if val := ctx.Value(locale.Locale).(string); val != "" {
+		localizer = i18n.NewLocalizer(locale.Bundle, val, locale.Language)
+	}
+
 	var row []string
 	for _, f := range structs.Fields(Session{}) {
-		caption := f.Tag("csv")
-		switch {
-		case caption == "-":
+		csv := f.Tag("csv")
+		if csv == "-" {
 			continue
-		case caption == "":
-			caption = f.Name()
+		}
+
+		caption, err := localizer.Localize(&locale.Config{
+			MessageID: "sessions.csv." + strings.ToLower(f.Name()),
+		})
+
+		if err != nil {
+			if csv != "" {
+				caption = csv
+			} else {
+				caption = f.Name()
+			}
 		}
 
 		row = append(row, caption)
@@ -59,17 +77,17 @@ func (t *Sessions) writeRow(ww *csv.Writer, r Session) {
 			continue
 		}
 
-		val := fmt.Sprintf("%v", f.Value())
+		var val string
 
 		switch v := f.Value().(type) {
 		case float64:
 			val = strconv.FormatFloat(v, 'f', 3, 64)
 		case time.Time:
-			if v.IsZero() {
-				val = ""
-			} else {
+			if !v.IsZero() {
 				val = v.Local().Format("2006-01-02 15:04:05")
 			}
+		default:
+			val = fmt.Sprintf("%v", f.Value())
 		}
 
 		row = append(row, val)
@@ -79,9 +97,9 @@ func (t *Sessions) writeRow(ww *csv.Writer, r Session) {
 }
 
 // WriteCsv implements the api.CsvWriter interface
-func (t *Sessions) WriteCsv(w io.Writer) {
+func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) {
 	ww := csv.NewWriter(w)
-	t.writeHeader(ww)
+	t.writeHeader(ctx, ww)
 
 	for _, r := range *t {
 		t.writeRow(ww, r)

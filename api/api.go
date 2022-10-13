@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -231,5 +232,5 @@ type FeatureDescriber interface {
 
 // CsvWriter converts to csv
 type CsvWriter interface {
-	WriteCsv(io.Writer)
+	WriteCsv(context.Context, io.Writer)
 }

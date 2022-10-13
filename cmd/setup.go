@@ -21,6 +21,7 @@ import (
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/locale"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
@@ -71,6 +72,11 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 	// setup sponsorship
 	if conf.SponsorToken != "" {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
+	}
+
+	// setup translations
+	if err == nil {
+		err = locale.Init()
 	}
 
 	// setup persistence

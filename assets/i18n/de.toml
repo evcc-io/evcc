@@ -183,6 +183,16 @@ vehicle = "Fahrzeug"
 energy = "Geladen"
 date = "Beendet"
 
+[sessions.csv]
+loadpoint = "Ladepunkt"
+vehicle = "Fahrzeug"
+identifier = "Kennung"
+chargedenergy = "Energie (kWh)"
+meterstart = "Anfangszählerstand (kWh)"
+meterstop = "Endzählerstand (kWh)"
+created = "Startzeit"
+finished = "Endzeit"
+
 [offline]
 message = "Keine Verbindung zum Server."
 reload = "Reload?"
