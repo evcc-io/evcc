@@ -11,7 +11,26 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/util"
+	"github.com/spf13/viper"
 )
+
+// logLevel parses --log area:level[,...] switch into levels per log area
+func logLevel() {
+	levels := viper.GetStringMapString("levels")
+
+	var level string
+	for _, kv := range strings.Split(viper.GetString("log"), ",") {
+		areaLevel := strings.SplitN(kv, ":", 2)
+		if len(areaLevel) == 1 {
+			level = areaLevel[0]
+		} else {
+			levels[areaLevel[0]] = areaLevel[1]
+		}
+	}
+
+	util.LogLevel(level, levels)
+}
 
 // unwrap converts a wrapped error into slice of strings
 func unwrap(err error) (res []string) {

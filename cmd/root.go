@@ -81,6 +81,10 @@ func initConfig() {
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
+
+	// print version
+	util.LogLevel("info", nil)
+	log.INFO.Printf("evcc %s", server.FormattedVersion())
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -98,9 +102,6 @@ func publish(key string, val any) {
 }
 
 func runRoot(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
-
 	// load config and re-configure logging after reading config file
 	var err error
 	if cfgErr := loadConfigFile(&conf); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
@@ -109,8 +110,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	} else {
 		err = cfgErr
 	}
-
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	// network config
 	if viper.GetString("uri") != "" {

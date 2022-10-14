@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"golang.org/x/exp/slices"
 	"golang.org/x/oauth2"
 )
@@ -25,15 +22,10 @@ func init() {
 }
 
 func runToken(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
-
 	// load config
 	if err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
-
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	var vehicleConf qualifiedConfig
 	if len(conf.Vehicles) == 1 {
