@@ -4,10 +4,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // meterCmd represents the meter command
@@ -23,15 +20,10 @@ func init() {
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
-
 	// load config
 	if err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
-
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	// setup environment
 	if err := configureEnvironment(cmd, conf); err != nil {

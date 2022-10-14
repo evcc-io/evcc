@@ -11,9 +11,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // dumpCmd represents the meter command
@@ -44,13 +42,8 @@ func handle(device any, err error) any {
 }
 
 func runDump(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
-
 	// load config
 	err := loadConfigFile(&conf)
-
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	// setup environment
 	if err == nil {

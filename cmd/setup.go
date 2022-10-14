@@ -55,6 +55,10 @@ func loadConfigFile(conf *config) error {
 		}
 	}
 
+	if err == nil {
+		logLevel()
+	}
+
 	return err
 }
 

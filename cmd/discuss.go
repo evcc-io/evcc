@@ -9,10 +9,8 @@ import (
 	"text/template"
 
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // discussCmd represents the discuss command
@@ -37,12 +35,7 @@ func errorString(err error) string {
 }
 
 func runDiscuss(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
-
 	cfgErr := loadConfigFile(&conf)
-
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	file, pathErr := filepath.Abs(cfgFile)
 	if pathErr != nil {
