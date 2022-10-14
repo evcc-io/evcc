@@ -22,7 +22,6 @@ func init() {
 }
 
 func runToken(cmd *cobra.Command, args []string) {
-
 	// load config
 	if err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
