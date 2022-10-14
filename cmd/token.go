@@ -33,7 +33,7 @@ func runToken(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	setLogLevel(cmd)
+	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	var vehicleConf qualifiedConfig
 	if len(conf.Vehicles) == 1 {

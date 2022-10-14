@@ -76,7 +76,7 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	setLogLevel(cmd)
+	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	// setup environment
 	if err := configureEnvironment(cmd, conf); err != nil {

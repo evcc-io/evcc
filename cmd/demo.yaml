@@ -1,7 +1,9 @@
 network:
   port: 7070
 
-log: info
+log: debug
+levels:
+  mercedes: trace
 
 interval: 3s
 
@@ -198,6 +200,15 @@ vehicles:
     title: grüner Honda e
     capacity: 26
 
+  - name: mercedes1
+    type: mercedes
+    title: Mercedes
+    phases: 2
+    vin: W1K2052131G009532
+    clientId: 53c28422-25e4-47c2-9cf4-94a48065c5b3
+    clientSecret: ePhxFTNyMbvslPqgoAfERHscIvpHZIaOfKPLjmEvQZDhSaocKAOiceLEVubDPyxP
+    identifiers: Jochen
+
 site:
   title: Zuhause
   meters:
@@ -211,7 +222,7 @@ loadpoints:
     mode: pv
     phases: 1
     meter: meter_charger_1
-    vehicle: vehicle_1 # default
+    # vehicle: vehicle_1 # default
   - title: Garage
     charger: charger_2
     mode: "off"

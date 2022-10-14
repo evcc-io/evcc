@@ -42,7 +42,7 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 
 	cfgErr := loadConfigFile(&conf)
 
-	setLogLevel(cmd)
+	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	file, pathErr := filepath.Abs(cfgFile)
 	if pathErr != nil {

@@ -34,7 +34,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
-	setLogLevel(cmd)
+	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	// setup environment
 	if err := configureEnvironment(cmd, conf); err != nil {

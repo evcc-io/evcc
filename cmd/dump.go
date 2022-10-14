@@ -50,7 +50,7 @@ func runDump(cmd *cobra.Command, args []string) {
 	// load config
 	err := loadConfigFile(&conf)
 
-	setLogLevel(cmd)
+	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	// setup environment
 	if err == nil {
