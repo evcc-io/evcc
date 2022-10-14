@@ -21,7 +21,6 @@ render:
       type: template
       template: ocpp
       meter: false # Benutze den integrierten Zähler (falls vorhanden) # Optional
-      timeout: 10s # Optional
     advanced: |
       type: template
       template: ocpp
@@ -29,4 +28,3 @@ render:
       connector: 1 # Verwendeter Ladepunkt, normalerweise 1 für den ersten Anschluss. # Optional
       meter: false # Benutze den integrierten Zähler (falls vorhanden) # Optional
       idtag: '04E6B78921BBA0' # Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird # Optional
-      timeout: 10s # Optional
