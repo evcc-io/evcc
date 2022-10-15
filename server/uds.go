@@ -3,7 +3,6 @@
 package server
 
 import (
-	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -17,13 +16,10 @@ const SocketPath = "/tmp/evcc"
 
 // removeIfExists deletes file if it exists or fails
 func removeIfExists(file string) {
-	_, err := os.Stat(file)
-	if err == nil {
-		err = os.Remove(file)
-	}
-
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.FATAL.Fatal(err)
+	if _, err := os.Stat(file); err == nil {
+		if err := os.RemoveAll(file); err != nil {
+			log.FATAL.Fatal(err)
+		}
 	}
 }
 
@@ -35,7 +31,6 @@ func HealthListener(site site.API) {
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
-	defer l.Close()
 
 	mux := http.NewServeMux()
 	httpd := http.Server{Handler: mux}
@@ -44,6 +39,7 @@ func HealthListener(site site.API) {
 	go func() { _ = httpd.Serve(l) }()
 
 	shutdown.Register(func() {
+		_ = l.Close()
 		removeIfExists(SocketPath) // cleanup
 	})
 }
