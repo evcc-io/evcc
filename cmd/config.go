@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -23,6 +25,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"golang.org/x/exp/maps"
+	"golang.org/x/sync/errgroup"
 )
 
 var conf = config{
@@ -196,26 +199,36 @@ func (cp *ConfigProvider) configureMeters(conf config) error {
 }
 
 func (cp *ConfigProvider) configureChargers(conf config) error {
+	var mu sync.Mutex
+	g, _ := errgroup.WithContext(context.Background())
+
 	cp.chargers = make(map[string]api.Charger)
 	for id, cc := range conf.Chargers {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create %s charger: missing name", humanize.Ordinal(id+1))
 		}
 
-		c, err := charger.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			err = fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
-			return err
-		}
+		cc := cc
 
-		if _, exists := cp.chargers[cc.Name]; exists {
-			return fmt.Errorf("duplicate charger name: %s already defined and must be unique", cc.Name)
-		}
+		g.Go(func() error {
+			c, err := charger.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
+			}
 
-		cp.chargers[cc.Name] = c
+			mu.Lock()
+			defer mu.Unlock()
+
+			if _, exists := cp.chargers[cc.Name]; exists {
+				return fmt.Errorf("duplicate charger name: %s already defined and must be unique", cc.Name)
+			}
+
+			cp.chargers[cc.Name] = c
+			return nil
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
 func (cp *ConfigProvider) configureVehicles(conf config) error {
