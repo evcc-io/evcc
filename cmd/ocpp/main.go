@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -14,15 +15,33 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
+	"github.com/spf13/cobra"
 )
 
-const (
-	chargePointId = "cp0001"
-	url           = "ws://localhost:8887"
-)
+var chargePointId = "cp0001"
+
+// ocppCmd represents the base command when called without any subcommands
+var ocppCmd = &cobra.Command{
+	Use:  "ocpp",
+	Run:  runOcpp,
+	Args: cobra.MaximumNArgs(1),
+}
 
 func main() {
-	// chargePoint := ocpp16.NewChargePoint(chargePointId, nil, nil)
+	ocppCmd.Flags().String("uri", "ws://localhost:8887", "Central system uri")
+
+	if err := ocppCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func runOcpp(cmd *cobra.Command, args []string) {
+	url := cmd.Flags().Lookup("uri").Value.String()
+
+	if len(args) > 0 {
+		chargePointId = args[0]
+	}
 
 	// create websocket client
 	client := ws.NewClient()
