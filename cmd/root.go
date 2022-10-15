@@ -25,6 +25,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const rebootDelay = 5 * time.Minute // delayed reboot on error
+
 var (
 	log     = util.NewLogger("main")
 	cfgFile string
@@ -95,12 +97,6 @@ func Execute() {
 	}
 }
 
-var valueChan chan util.Param
-
-func publish(key string, val any) {
-	valueChan <- util.Param{Key: key, Val: val}
-}
-
 func runRoot(cmd *cobra.Command, args []string) {
 	// load config and re-configure logging after reading config file
 	var err error
@@ -143,7 +139,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go socketHub.Run(tee.Attach(), cache)
 
 	// setup values channel
-	valueChan = make(chan util.Param)
+	valueChan := make(chan util.Param)
 	go tee.Run(valueChan)
 
 	// setup environment
@@ -214,7 +210,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		// expose sponsor to UI
 		if sponsor.Subject != "" {
-			publish("sponsor", sponsor.Subject)
+			valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}
 		}
 
 		// allow web access for vehicles
@@ -231,23 +227,35 @@ func runRoot(cmd *cobra.Command, args []string) {
 			})
 		})
 
-		// delayed reboot on error
-		const rebootDelay = 5 * time.Minute
-
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
-		publishErrorInfo(cfgFile, err)
-
-		// wait for shutdown
-		go exitWhenStopped(stopC, rebootDelay)
+		publishErrorInfo(valueChan, cfgFile, err)
 	}
 
 	// uds health check listener
 	go server.HealthListener(site)
 
 	// wait for shutdown
-	go exitWhenStopped(stopC, conf.Interval)
+	go func() {
+		<-stopC
+
+		timeout := conf.Interval
+		if err != nil {
+			timeout = rebootDelay
+		}
+
+		select {
+		case <-shutdownDoneC(): // wait for shutdown
+		case <-time.After(timeout):
+		}
+
+		if err != nil {
+			os.Exit(1)
+		}
+
+		os.Exit(0)
+	}()
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }

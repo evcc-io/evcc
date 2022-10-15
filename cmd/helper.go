@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
@@ -62,29 +61,29 @@ func redact(src string) string {
 		ReplaceAllString(src, "$1: *****")
 }
 
-func publishErrorInfo(cfgFile string, err error) {
+func publishErrorInfo(valueChan chan<- util.Param, cfgFile string, err error) {
 	if cfgFile != "" {
 		file, pathErr := filepath.Abs(cfgFile)
 		if pathErr != nil {
 			file = cfgFile
 		}
-		publish("file", file)
+		valueChan <- util.Param{Key: "file", Val: file}
 
 		if src, fileErr := os.ReadFile(cfgFile); fileErr != nil {
 			log.ERROR.Println("could not open config file:", fileErr)
 		} else {
-			publish("config", redact(string(src)))
+			valueChan <- util.Param{Key: "config", Val: redact(string(src))}
 
 			// find line number
 			if match := regexp.MustCompile(`yaml: line (\d+):`).FindStringSubmatch(err.Error()); len(match) == 2 {
 				if line, err := strconv.Atoi(match[1]); err == nil {
-					publish("line", line)
+					valueChan <- util.Param{Key: "line", Val: line}
 				}
 			}
 		}
 	}
 
-	publish("fatal", unwrap(err))
+	valueChan <- util.Param{Key: "fatal", Val: unwrap(err)}
 }
 
 // fatal logs a fatal error and runs shutdown functions before terminating
@@ -99,20 +98,4 @@ func shutdownDoneC() <-chan struct{} {
 	doneC := make(chan struct{})
 	go shutdown.Cleanup(doneC)
 	return doneC
-}
-
-// exitWhenDone waits for shutdown to complete with timeout
-func exitWhenDone(timeout time.Duration) {
-	select {
-	case <-shutdownDoneC(): // wait for shutdown
-	case <-time.After(timeout):
-	}
-
-	os.Exit(1)
-}
-
-// exitWhenStopped waits for stop and performs shutdown
-func exitWhenStopped(stopC <-chan struct{}, timeout time.Duration) {
-	<-stopC
-	exitWhenDone(timeout)
 }
