@@ -126,10 +126,23 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		meterSampleInterval time.Duration
 	)
 
+	keys := []string{
+		ocpp.KeyNumberOfConnectors,
+		ocpp.KeyMeterValuesSampledData,
+		ocpp.KeyMeterValueSampleInterval,
+		ocpp.KeyConnectorSwitch3to1PhaseSupported,
+	}
+	_ = keys
+
 	// configured id may be empty, use registered id below
 	err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
-			// sort config options for printing
+			// log unsupported configuration keys
+			if len(resp.UnknownKey) > 0 {
+				c.log.ERROR.Printf("unsupported keys: %v", sort.StringSlice(resp.UnknownKey))
+			}
+
+			// sort configuration keys for printing
 			sort.Slice(resp.ConfigurationKey, func(i, j int) bool {
 				return resp.ConfigurationKey[i].Key < resp.ConfigurationKey[j].Key
 			})
