@@ -75,7 +75,7 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 	}
 
 	// setup sponsorship
-	if conf.SponsorToken != "" {
+	if err == nil && conf.SponsorToken != "" {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 

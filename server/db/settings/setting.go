@@ -1,8 +1,10 @@
 package settings
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
+	"sync/atomic"
 
 	"github.com/evcc-io/evcc/server/db"
 	"golang.org/x/exp/slices"
@@ -16,7 +18,10 @@ type setting struct {
 	Value string `json:"value"`
 }
 
-var settings []setting
+var (
+	settings []setting
+	dirty    int32
+)
 
 func Init() error {
 	err := db.Instance.AutoMigrate(new(setting))
@@ -27,7 +32,8 @@ func Init() error {
 }
 
 func Persist() error {
-	if len(settings) == 0 {
+	dirty := atomic.CompareAndSwapInt32(&dirty, 1, 0)
+	if !dirty || len(settings) == 0 {
 		// avoid "empty slice found"
 		return nil
 	}
@@ -41,8 +47,10 @@ func SetString(key string, val string) {
 
 	if idx < 0 {
 		settings = append(settings, setting{key, val})
-	} else {
+		atomic.StoreInt32(&dirty, 1)
+	} else if settings[idx].Value != val {
 		settings[idx].Value = val
+		atomic.StoreInt32(&dirty, 1)
 	}
 }
 
@@ -52,6 +60,14 @@ func SetInt(key string, val int64) {
 
 func SetFloat(key string, val float64) {
 	SetString(key, strconv.FormatFloat(val, 'f', -1, 64))
+}
+
+func SetJson(key string, val any) error {
+	b, err := json.Marshal(val)
+	if err == nil {
+		SetString(key, string(b))
+	}
+	return err
 }
 
 func String(key string) (string, error) {
@@ -78,4 +94,12 @@ func Float(key string) (float64, error) {
 		return 0, err
 	}
 	return strconv.ParseFloat(s, 64)
+}
+
+func Json(key string, res any) error {
+	s, err := String(key)
+	if err == nil {
+		err = json.Unmarshal([]byte(s), &res)
+	}
+	return err
 }
