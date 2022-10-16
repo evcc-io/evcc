@@ -4,10 +4,11 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/store"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vag/loginapps"
-	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
+	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vw/id"
 )
 
@@ -20,11 +21,11 @@ type ID struct {
 }
 
 func init() {
-	registry.Add("id", NewIDFromConfig)
+	registry.AddWithStore("id", NewIDFromConfig)
 }
 
 // NewIDFromConfig creates a new vehicle
-func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewIDFromConfig(factory store.Provider, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -45,18 +46,15 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("id").Redact(cc.User, cc.Password, cc.VIN)
 
-	q, err := vwidentity.LoginWithAuthURL(log, id.LoginURL, id.AuthParams, cc.User, cc.Password)
+	appsStore := factory("vw.id.tokens.loginapps." + cc.User)
+	apps := loginapps.New(log).WithStore(appsStore)
+
+	ts, err := service.LoginAppsServiceTokenSource(log, apps, id.LoginURL, id.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	apps := loginapps.New(log)
-	token, err := apps.Exchange(q)
-	if err != nil {
-		return nil, err
-	}
-
-	api := id.NewAPI(log, apps.TokenSource(token))
+	api := id.NewAPI(log, ts)
 	api.Client.Timeout = cc.Timeout
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)

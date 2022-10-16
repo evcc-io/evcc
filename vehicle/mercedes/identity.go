@@ -6,21 +6,25 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/store"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/auth"
 	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
 
-type IdentityOptions func(c *Identity) error
+type IdentityOption func(c *Identity) error
 
-// WithToken provides an oauth2.Token to the client for auth.
-func WithToken(t *oauth2.Token) IdentityOptions {
+// WithStore provides an oauth2.Token to the client for auth.
+func WithStore(store store.Store) IdentityOption {
 	return func(v *Identity) error {
-		v.ReuseTokenSource.Apply(t)
+		if store != nil && !reflect.ValueOf(store).IsNil() {
+			v.ReuseTokenSource.WithStore(store)
+		}
 		return nil
 	}
 }
@@ -33,8 +37,7 @@ type Identity struct {
 	authC   chan<- bool
 }
 
-// TODO SessionSecret from config/persistence
-func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions) (*Identity, error) {
+func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOption) (*Identity, error) {
 	provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
@@ -52,13 +55,10 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 		oc:  oc,
 	}
 
-	ts := &ReuseTokenSource{
+	v.ReuseTokenSource = &ReuseTokenSource{
 		oc: oc,
-		cb: v.invalidToken,
+		cb: v.loggedIn,
 	}
-	ts.Apply(nil)
-
-	v.ReuseTokenSource = ts
 
 	for _, o := range options {
 		if err == nil {
@@ -66,13 +66,18 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 		}
 	}
 
+	var token *oauth2.Token
+	_ = v.store.Load(&token)
+
+	v.Update(token)
+
 	return v, err
 }
 
-// invalidToken is the callback for the token source when token expires
-func (v *Identity) invalidToken() {
+// loggedIn is the callback for the token source when token expires
+func (v *Identity) loggedIn(val bool) {
 	if v.authC != nil {
-		v.authC <- false
+		v.authC <- val
 	}
 }
 
@@ -103,8 +108,8 @@ func (v *Identity) LoginHandler() http.HandlerFunc {
 
 func (v *Identity) LogoutHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		v.ReuseTokenSource.Apply(nil)
-		v.authC <- false
+		v.log.TRACE.Println("sending logout update...")
+		v.ReuseTokenSource.Update(nil)
 
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(nil)
@@ -134,8 +139,7 @@ func (v *Identity) callbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	if token.Valid() {
 		v.log.TRACE.Println("sending login update...")
-		v.ReuseTokenSource.Apply(token)
-		v.authC <- true
+		v.ReuseTokenSource.Update(token)
 
 		provider.ResetCached()
 	}

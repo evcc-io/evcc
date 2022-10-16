@@ -4,8 +4,10 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/store"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/vag/mbb"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
 	"github.com/evcc-io/evcc/vehicle/vw"
@@ -21,11 +23,11 @@ type VW struct {
 }
 
 func init() {
-	registry.Add("vw", NewVWFromConfig)
+	registry.AddWithStore("vw", NewVWFromConfig)
 }
 
 // NewVWFromConfig creates a new vehicle
-func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewVWFromConfig(factory store.Provider, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -46,8 +48,13 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("vw").Redact(cc.User, cc.Password, cc.VIN)
 
-	trs := tokenrefreshservice.New(log, vw.TRSParams)
-	ts, err := service.MbbTokenSource(log, trs, vw.AuthClientID, vw.AuthParams, cc.User, cc.Password)
+	trsStore := factory("vw.tokens.trs." + cc.User)
+	trs := tokenrefreshservice.New(log, vw.TRSParams).WithStore(trsStore)
+
+	mbbStore := factory("vw.tokens.mbb." + cc.User)
+	mbb := mbb.New(log, vw.AuthClientID).WithStore(mbbStore)
+
+	ts, err := service.MbbTokenSource(log, trs, mbb, vw.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

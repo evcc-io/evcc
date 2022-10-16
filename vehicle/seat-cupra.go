@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/store"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/seat"
 	"github.com/evcc-io/evcc/vehicle/seat/cupra"
+	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 	"golang.org/x/oauth2"
@@ -22,11 +24,11 @@ type Cupra struct {
 }
 
 func init() {
-	registry.Add("cupra", NewCupraFromConfig)
+	registry.AddWithStore("cupra", NewCupraFromConfig)
 }
 
 // NewCupraFromConfig creates a new vehicle
-func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewCupraFromConfig(factory store.Provider, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -47,19 +49,13 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("cupra").Redact(cc.User, cc.Password, cc.VIN)
 
-	// get initial VW identity id_token
-	q, err := vwidentity.Login(log, seat.AuthParams, cc.User, cc.Password)
+	trsStore := factory("seat.tokens.trs." + cc.User)
+	trs := tokenrefreshservice.New(log, seat.TRSParams).WithStore(trsStore)
+
+	ts, err := service.TokenRefreshServiceTokenSource(log, trs, seat.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
-
-	trs := tokenrefreshservice.New(log, seat.TRSParams)
-	token, err := trs.Exchange(q)
-	if err != nil {
-		return nil, err
-	}
-
-	ts := trs.TokenSource(token)
 
 	// get OIDC user information
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))

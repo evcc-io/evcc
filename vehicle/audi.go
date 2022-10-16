@@ -4,10 +4,12 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/store"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/audi"
 	"github.com/evcc-io/evcc/vehicle/vag/idkproxy"
+	"github.com/evcc-io/evcc/vehicle/vag/mbb"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
@@ -22,11 +24,11 @@ type Audi struct {
 }
 
 func init() {
-	registry.Add("audi", NewAudiFromConfig)
+	registry.AddWithStore("audi", NewAudiFromConfig)
 }
 
 // NewAudiFromConfig creates a new vehicle
-func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewAudiFromConfig(factory store.Provider, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -47,8 +49,13 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("audi").Redact(cc.User, cc.Password, cc.VIN)
 
-	idk := idkproxy.New(log, audi.IDKParams)
-	ts, err := service.MbbTokenSource(log, idk, audi.AuthClientID, audi.AuthParams, cc.User, cc.Password)
+	idkStore := factory("audi.tokens.idk." + cc.User)
+	idk := idkproxy.New(log, audi.IDKParams).WithStore(idkStore)
+
+	mbbStore := factory("audi.tokens.mbb." + cc.User)
+	mbb := mbb.New(log, audi.AuthClientID).WithStore(mbbStore)
+
+	ts, err := service.MbbTokenSource(log, idk, mbb, audi.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,10 @@
 package vehicle
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/store"
 	"golang.org/x/exp/slices"
 )
 
@@ -12,6 +15,7 @@ type embed struct {
 	Identifiers_ []string         `mapstructure:"identifiers"`
 	Features_    []api.Feature    `mapstructure:"features"`
 	OnIdentify   api.ActionConfig `mapstructure:"onIdentify"`
+	Context      context.Context  `mapstructure:"context"` // TODO this is a horrible hack
 }
 
 // Title implements the api.Vehicle interface
@@ -46,7 +50,11 @@ func (v *embed) Features() []api.Feature {
 	return v.Features_
 }
 
-// Features implements the api.Describer interface
+// Has returns if features contains given feature
 func (v *embed) Has(f api.Feature) bool {
 	return slices.Contains(v.Features_, f)
+}
+
+func (v *embed) Store() store.Store {
+	return v.Context.Value("store").(store.Store)
 }

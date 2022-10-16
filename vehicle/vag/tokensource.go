@@ -1,10 +1,12 @@
 package vag
 
 import (
+	"errors"
 	"net/url"
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/api/store"
 	"github.com/imdario/mergo"
 	"golang.org/x/oauth2"
 )
@@ -23,19 +25,26 @@ type TokenExchanger interface {
 	TokenSource(token *Token) TokenSource
 }
 
-// TokenRefresher refreshes a token
-type TokenRefresher func(*Token) (*Token, error)
+// TokenRefreshFunc refreshes a token
+type TokenRefreshFunc func(*Token) (*Token, error)
 
 var _ TokenSource = (*tokenSource)(nil)
 
 type tokenSource struct {
 	mu    sync.Mutex
 	token *Token
-	new   TokenRefresher
+	new   TokenRefreshFunc
+	store store.Store // TODO use or remove
 }
 
-func RefreshTokenSource(token *Token, refresher TokenRefresher) *tokenSource {
+func RefreshTokenSource(token *Token, refresher TokenRefreshFunc) *tokenSource {
 	return &tokenSource{token: token, new: refresher}
+}
+
+// WithStore sets the storage option
+func (v *tokenSource) WithStore(store store.Store) *tokenSource {
+	v.store = store
+	return v
 }
 
 // Token returns an oauth2 token or an error
@@ -52,11 +61,24 @@ func (ts *tokenSource) TokenEx() (*Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
+	if ts.token == nil {
+		return nil, errors.New("token not initialized")
+	}
+
 	var err error
 	if time.Until(ts.token.Expiry) < time.Minute {
+		if ts.new == nil {
+			// this token source does not refresh
+			// TODO used with AAZS, find out why
+			return nil, errors.New("token source is not refreshable")
+		}
+
 		var token *Token
 		if token, err = ts.new(ts.token); err == nil {
 			err = ts.mergeToken(token)
+		}
+		if err == nil && ts.store != nil {
+			err = ts.store.Save(token)
 		}
 	}
 

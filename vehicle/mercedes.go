@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/store"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/mercedes"
 )
@@ -18,11 +19,11 @@ type Mercedes struct {
 }
 
 func init() {
-	registry.Add("mercedes", NewMercedesFromConfig)
+	registry.AddWithStore("mercedes", NewMercedesFromConfig)
 }
 
 // NewMercedesFromConfig creates a new Mercedes vehicle
-func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewMercedesFromConfig(factory store.Provider, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                  `mapstructure:",squash"`
 		ClientID, ClientSecret string
@@ -41,21 +42,13 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	var options []mercedes.IdentityOptions
-
-	// TODO Load tokens from a persistence storage and use those during startup
-	// e.g. persistence.Load("key")
-	// if tokens != nil {
-	// 	options = append(options, mercedes.WithToken(&oauth2.Token{
-	// 		AccessToken:  tokens.Access,
-	// 		RefreshToken: tokens.Refresh,
-	// 		Expiry:       tokens.Expiry,
-	// 	}))
-	// }
+	store := factory("mercedes.tokens." + cc.ClientID)
+	options := []mercedes.IdentityOption{
+		mercedes.WithStore(store),
+	}
 
 	log := util.NewLogger("mercedes")
 
-	// TODO session secret from config/persistence
 	identity, err := mercedes.NewIdentity(log, cc.ClientID, cc.ClientSecret, options...)
 	if err != nil {
 		return nil, err

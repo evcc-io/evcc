@@ -4,13 +4,16 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/evcc-io/evcc/api/store"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
@@ -31,7 +34,8 @@ var _ vag.TokenExchanger = (*Service)(nil)
 
 type Service struct {
 	*request.Helper
-	data url.Values
+	data  url.Values
+	store store.Store
 }
 
 func New(log *util.Logger, q url.Values) *Service {
@@ -57,6 +61,14 @@ func qmauth(ts int64) string {
 
 func qmauthNow() string {
 	return "v1:" + qmClientId + ":" + qmauth(time.Now().Unix()/100)
+}
+
+// WithStore attaches a persistent store
+func (v *Service) WithStore(store store.Store) *Service {
+	if store != nil && !reflect.ValueOf(store).IsNil() {
+		v.store = store
+	}
+	return v
 }
 
 // Exchange exchanges an VAG identity token for an IDK token
@@ -88,8 +100,8 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	return &res, err
 }
 
-// Refresh refreshes an IDK token
-func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
+// refresh refreshes an IDK token
+func (v *Service) refresh(token *vag.Token) (*vag.Token, error) {
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"response_type": {"token id_token"},
@@ -109,10 +121,34 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 		err = v.DoJSON(req, &res)
 	}
 
+	// store refreshed token
+	if err == nil && v.store != nil {
+		fmt.Println("idk refresh remaining:", time.Until(res.Expiry))
+		err = v.store.Save(res)
+	}
+
 	return &res, err
 }
 
 // TokenSource creates token source. Token is refreshed automatically.
 func (v *Service) TokenSource(token *vag.Token) vag.TokenSource {
-	return vag.RefreshTokenSource(token, v.Refresh)
+	if v.store != nil {
+		if token == nil {
+			if err := v.store.Load(&token); err != nil || token == nil {
+				return nil
+			}
+			fmt.Println("idk load remaining:", time.Until(token.Expiry))
+		} else {
+			fmt.Println("idk store remaining:", time.Until(token.Expiry))
+			// store initial token, typically from code exchange
+			_ = v.store.Save(token)
+		}
+	}
+
+	// don't create tokensource for nil token
+	if token == nil {
+		return nil
+	}
+
+	return vag.RefreshTokenSource(token, v.refresh)
 }
