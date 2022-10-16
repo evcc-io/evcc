@@ -92,7 +92,7 @@ If you miss one of the above steps Gitub Actions will likely trigger a **Porcela
 evcc believes in open source software. We're committed to provide best in class EV charging experience.
 Maintaining evcc consumes time and effort. With the vast amount of different devices to support, we depend on community and vendor support to keep evcc alive.
 
-While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwised closed hardware. Where this is not the case, evcc requires "sponsor token" to finance ongoing development and support of evcc.
+While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwise closed hardware. Where this is not the case, evcc requires "sponsor token" to finance ongoing development and support of evcc.
 
 The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/andig) and can be requested at [cloud.evcc.io](https://cloud.evcc.io/). A sponsor token is valid for one year and can be renewed any time with active sponsorship.
 
