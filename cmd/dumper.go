@@ -200,6 +200,12 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	w.Flush()
+}
+
+func (d *dumper) DumpDiagnosis(v interface{}) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+
 	if v, ok := v.(api.Diagnosis); ok {
 		fmt.Fprintln(w, "Diagnostic dump:")
 		v.Diagnose()
