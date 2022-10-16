@@ -64,7 +64,7 @@ params:
     example: 04E6B78921BBA0
   - name: timeout
     advanced: true
-    default: 1m
+    default: 10m
 render: |
   type: ocpp
   {{- if ne .stationid "" }}
