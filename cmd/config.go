@@ -232,41 +232,52 @@ func (cp *ConfigProvider) configureChargers(conf config) error {
 }
 
 func (cp *ConfigProvider) configureVehicles(conf config) error {
+	var mu sync.Mutex
+	g, _ := errgroup.WithContext(context.Background())
+
 	cp.vehicles = make(map[string]api.Vehicle)
 	for id, cc := range conf.Vehicles {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
 		}
 
-		// ensure vehicle config has title
-		var ccWithTitle struct {
-			Title string
-			Other map[string]interface{} `mapstructure:",remain"`
-		}
+		cc := cc
 
-		if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
-			return err
-		}
+		g.Go(func() error {
+			// ensure vehicle config has title
+			var ccWithTitle struct {
+				Title string
+				Other map[string]interface{} `mapstructure:",remain"`
+			}
 
-		if ccWithTitle.Title == "" {
-			//lint:ignore SA1019 as Title is safe on ascii
-			cc.Other["title"] = strings.Title(cc.Name)
-		}
+			if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
+				return err
+			}
 
-		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			// wrap any created errors to prevent fatals
-			v, _ = wrapper.New(v, err)
-		}
+			if ccWithTitle.Title == "" {
+				//lint:ignore SA1019 as Title is safe on ascii
+				cc.Other["title"] = strings.Title(cc.Name)
+			}
 
-		if _, exists := cp.vehicles[cc.Name]; exists {
-			return fmt.Errorf("duplicate vehicle name: %s already defined and must be unique", cc.Name)
-		}
+			v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				// wrap any created errors to prevent fatals
+				v, _ = wrapper.New(v, err)
+			}
 
-		cp.vehicles[cc.Name] = v
+			mu.Lock()
+			defer mu.Unlock()
+
+			if _, exists := cp.vehicles[cc.Name]; exists {
+				return fmt.Errorf("duplicate vehicle name: %s already defined and must be unique", cc.Name)
+			}
+
+			cp.vehicles[cc.Name] = v
+			return nil
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
 // webControl handles routing for devices. For now only api.AuthProvider related routes
