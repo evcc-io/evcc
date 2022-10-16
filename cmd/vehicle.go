@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/spf13/cobra"
@@ -20,6 +21,8 @@ func init() {
 	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
 	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
 	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
+	//lint:ignore SA1019 as Title is safe on ascii
+	vehicleCmd.Flags().Bool(flagDiagnose, false, strings.Title(flagDiagnose))
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
@@ -51,8 +54,6 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		}
 		vehicles = map[string]api.Vehicle{name: vehicle}
 	}
-
-	d := dumper{len: len(vehicles)}
 
 	var flagUsed bool
 	for _, v := range vehicles {
@@ -94,8 +95,14 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	if !flagUsed {
+		d := dumper{len: len(vehicles)}
+		flag := cmd.Flags().Lookup(flagDiagnose).Changed
+
 		for name, v := range vehicles {
 			d.DumpWithHeader(name, v)
+			if flag {
+				d.DumpDiagnosis(v)
+			}
 		}
 	}
 

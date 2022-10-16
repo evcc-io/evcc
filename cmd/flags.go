@@ -23,8 +23,9 @@ const (
 	flagPhases            = "phases"
 	flagPhasesDescription = "Set usable phases (1 or 3)"
 
-	flagEnable  = "enable"
-	flagDisable = "disable"
+	flagEnable   = "enable"
+	flagDisable  = "disable"
+	flagDiagnose = "diagnose"
 
 	flagWakeup            = "wakeup"
 	flagWakeupDescription = "Wake up"
