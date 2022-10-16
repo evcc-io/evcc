@@ -38,7 +38,7 @@ var conf = config{
 	},
 	Database: dbConfig{
 		Type: "sqlite",
-		Dsn:  "~/.evcc/evcc.db",
+		Dsn:  "~/.evcc/evcc.db?_pragma=busy_timeout(5000)",
 	},
 }
 
