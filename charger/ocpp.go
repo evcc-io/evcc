@@ -42,9 +42,10 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		IdTag         string
 		Connector     int
 		Meter         interface{} // TODO deprecated
+		Quirks        bool
 		MeterInterval time.Duration
 		MeterValues   string
-		InitialReset  core.ResetType
+		InitialReset  interface{} // TODO deprecated
 		Timeout       time.Duration
 	}{
 		Connector: 1,
@@ -55,16 +56,16 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	switch cc.InitialReset {
-	case
-		"",
-		core.ResetTypeSoft,
-		core.ResetTypeHard:
-	default:
-		return nil, fmt.Errorf("unknown configuration option detected for reset: %s", cc.InitialReset)
-	}
+	// switch cc.InitialReset {
+	// case
+	// 	"",
+	// 	core.ResetTypeSoft,
+	// 	core.ResetTypeHard:
+	// default:
+	// 	return nil, fmt.Errorf("unknown configuration option detected for reset: %s", cc.InitialReset)
+	// }
 
-	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.InitialReset, cc.Timeout)
+	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.Quirks, cc.Timeout)
 	if err != nil {
 		return c, err
 	}
@@ -90,7 +91,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, initialReset core.ResetType, timeout time.Duration) (*OCPP, error) {
+func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, quirks bool, timeout time.Duration) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
 		unit = id
@@ -134,60 +135,67 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	}
 	_ = keys
 
-	// configured id may be empty, use registered id below
-	err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
-		if err == nil {
-			// log unsupported configuration keys
-			if len(resp.UnknownKey) > 0 {
-				c.log.ERROR.Printf("unsupported keys: %v", sort.StringSlice(resp.UnknownKey))
-			}
-
-			// sort configuration keys for printing
-			sort.Slice(resp.ConfigurationKey, func(i, j int) bool {
-				return resp.ConfigurationKey[i].Key < resp.ConfigurationKey[j].Key
-			})
-
-			rw := map[bool]string{false: "r/w", true: "r/o"}
-
-			for _, opt := range resp.ConfigurationKey {
-				if opt.Value == nil {
-					c.log.ERROR.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], "nil")
-					continue
-				}
-
-				c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
-
-				switch opt.Key {
-				case ocpp.KeyNumberOfConnectors:
-					var val int
-					if val, err = strconv.Atoi(*opt.Value); err == nil && c.connector > val {
-						err = fmt.Errorf("connector %d exceeds max available connectors: %d", c.connector, val)
-					}
-
-				case ocpp.KeyMeterValuesSampledData:
-					c.meterValuesSample = *opt.Value
-
-				case ocpp.KeyMeterValueSampleInterval:
-					var val int
-					if val, err = strconv.Atoi(*opt.Value); err == nil {
-						meterSampleInterval = time.Duration(val) * time.Second
-					}
-				}
-
-				if err != nil {
-					break
-				}
-			}
+	// quirks mode disables GetConfiguration
+	if quirks {
+		c.meterValuesSample = meterValues
+		if meterInterval == 0 {
+			meterInterval = 10 * time.Second
 		}
+	} else {
+		err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+			if err == nil {
+				// log unsupported configuration keys
+				if len(resp.UnknownKey) > 0 {
+					c.log.ERROR.Printf("unsupported keys: %v", sort.StringSlice(resp.UnknownKey))
+				}
 
-		rc <- err
-	}, nil)
+				// sort configuration keys for printing
+				sort.Slice(resp.ConfigurationKey, func(i, j int) bool {
+					return resp.ConfigurationKey[i].Key < resp.ConfigurationKey[j].Key
+				})
 
-	if err := c.wait(err, rc); err != nil {
-		return nil, err
+				rw := map[bool]string{false: "r/w", true: "r/o"}
+
+				for _, opt := range resp.ConfigurationKey {
+					if opt.Value == nil {
+						c.log.ERROR.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], "nil")
+						continue
+					}
+
+					c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
+
+					switch opt.Key {
+					case ocpp.KeyNumberOfConnectors:
+						var val int
+						if val, err = strconv.Atoi(*opt.Value); err == nil && c.connector > val {
+							err = fmt.Errorf("connector %d exceeds max available connectors: %d", c.connector, val)
+						}
+
+					case ocpp.KeyMeterValuesSampledData:
+						c.meterValuesSample = *opt.Value
+
+					case ocpp.KeyMeterValueSampleInterval:
+						var val int
+						if val, err = strconv.Atoi(*opt.Value); err == nil {
+							meterSampleInterval = time.Duration(val) * time.Second
+						}
+					}
+
+					if err != nil {
+						break
+					}
+				}
+			}
+
+			rc <- err
+		}, nil)
+
+		if err := c.wait(err, rc); err != nil {
+			return nil, err
+		}
 	}
 
-	if meterValues != "" {
+	if meterValues != "" && meterValues != c.meterValuesSample {
 		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
 			return nil, err
 		}
@@ -200,25 +208,27 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	if c.hasMeasurement("Power.Active.Import") || c.hasMeasurement("Energy.Active.Import.Register") {
 		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
 
-		if meterSampleInterval > meterInterval && meterInterval > 0 {
+		if !quirks && meterSampleInterval > meterInterval && meterInterval > 0 {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 				return nil, err
 			}
 
 			// HACK: setup watchdog for meter values if not happy with config
 			c.log.DEBUG.Println("enabling meter watchdog")
-			cp.WatchDog(meterInterval)
-		}
-	}
-
-	if initialReset != "" {
-		t := core.ResetTypeSoft
-		if initialReset == core.ResetTypeHard {
-			t = core.ResetTypeHard
 		}
 
-		ocpp.Instance().TriggerResetRequest(cp.ID(), t)
+		cp.WatchDog(meterInterval)
 	}
+
+	// TODO deprecate
+	// if initialReset != "" {
+	// 	t := core.ResetTypeSoft
+	// 	if initialReset == core.ResetTypeHard {
+	// 		t = core.ResetTypeHard
+	// 	}
+
+	// 	ocpp.Instance().TriggerResetRequest(cp.ID(), t)
+	// }
 
 	// request initial status
 	_ = cp.Initialized(statusTimeout)
