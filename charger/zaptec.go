@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -44,7 +45,6 @@ type Zaptec struct {
 	statusG  func() (zaptec.StateResponse, error)
 	id       string
 	priority bool
-	current  int64
 	cache    time.Duration
 }
 
@@ -87,7 +87,6 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		log:      log,
 		id:       id,
 		priority: priority,
-		current:  6, // assume min current
 		cache:    cache,
 	}
 
@@ -169,48 +168,22 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c *Zaptec) Enabled() (bool, error) {
 	res, err := c.statusG()
-	if !res.ObservationByID(zaptec.IsEnabled).Bool() ||
-		res.ObservationByID(zaptec.FinalStopActive).Bool() {
-		return false, err
-	}
-
-	return c.current > 0, err
+	return res.ObservationByID(zaptec.IsEnabled).Bool() && !res.ObservationByID(zaptec.FinalStopActive).Bool(), err
 }
 
 // Enable implements the api.Charger interface
 func (c *Zaptec) Enable(enable bool) error {
-	var (
-		current int64
-		res     zaptec.StateResponse
-		err     error
-	)
-
+	cmd := zaptec.CmdStopChargingFinal
 	if enable {
-		current = c.current
-
-		res, err = c.statusG()
-		if err != nil {
-			return err
-		}
-
-		if res.ObservationByID(zaptec.FinalStopActive).Bool() {
-			return errors.New("cannot enable: final stop active")
-		}
-
-		if !res.ObservationByID(zaptec.IsEnabled).Bool() {
-			uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.id, zaptec.CmdResume)
-
-			var req *http.Request
-			req, err = request.New(http.MethodPost, uri, nil, request.JSONEncoding)
-			if err == nil {
-				_, err = c.DoBody(req)
-				c.reset()
-			}
-		}
+		cmd = zaptec.CmdResumeCharging
 	}
 
+	uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.id, cmd)
+
+	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
-		err = c.setCurrent(current)
+		_, err = c.DoBody(req)
+		c.reset()
 	}
 
 	return err
@@ -240,24 +213,14 @@ func (c *Zaptec) sessionPriority(session string, data zaptec.SessionPriority) er
 	return err
 }
 
-// setCurrent sets the charger current
-func (c *Zaptec) setCurrent(current int64) error {
+// MaxCurrent implements the api.Charger interface
+func (c *Zaptec) MaxCurrent(current int64) error {
 	curr := int(current)
 	data := zaptec.Update{
 		MaxChargeCurrent: &curr,
 	}
 
 	return c.chargerUpdate(data)
-}
-
-// MaxCurrent implements the api.Charger interface
-func (c *Zaptec) MaxCurrent(current int64) error {
-	err := c.setCurrent(current)
-	if err == nil {
-		c.current = current
-	}
-
-	return err
 }
 
 var _ api.Meter = (*Zaptec)(nil)
@@ -330,4 +293,20 @@ func (c *Zaptec) Phases1p3p(phases int) error {
 	}
 
 	return err
+}
+
+var _ api.Diagnosis = (*Zaptec)(nil)
+
+// Diagnosis implements the api.ChargePhases interface
+func (c *Zaptec) Diagnose() {
+	res, _ := c.statusG()
+
+	// sort for printing
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].StateId < res[j].StateId
+	})
+
+	for _, k := range res {
+		fmt.Printf("%d. %s %s\n", k.StateId, k.StateId, k)
+	}
 }

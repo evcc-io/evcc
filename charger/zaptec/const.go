@@ -8,8 +8,13 @@ type ObservationID int
 
 // Commands
 const (
-	CmdStop   = 506
-	CmdResume = 507
+	CmdStartCharging       = 501
+	CmdStopCharging        = 502
+	CmdReportChargingState = 503
+	CmdSetSessionId        = 504
+	CmdSetUserUuid         = 505
+	CmdStopChargingFinal   = 506
+	CmdResumeCharging      = 507
 )
 
 const (
