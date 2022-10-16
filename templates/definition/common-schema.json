@@ -152,7 +152,7 @@
         },
         "valuetype": {
           "type": "string",
-          "enum": ["string", "bool", "number", "float", "stringlist", "chargemodes", "duration"]
+          "enum": ["string", "bool", "number", "float", "int", "stringlist", "chargemodes", "duration"]
         },
         "validvalues": {
           "type": "array",
