@@ -26,7 +26,8 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		if err := os.MkdirAll(filepath.Dir(file), os.ModePerm); err != nil {
 			return nil, err
 		}
-		dialect = sqlite.Open(file)
+		// avoid busy errors
+		dialect = sqlite.Open(file + "?_pragma=busy_timeout(5000)")
 	// case "postgres":
 	// 	dialect = postgres.Open(dsn)
 	// case "mysql":

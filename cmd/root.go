@@ -53,6 +53,8 @@ func init() {
 
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 
+	rootCmd.PersistentFlags().String(flagSqlite, "", flagSqliteDescription)
+
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
 	bindP(rootCmd, "log")
