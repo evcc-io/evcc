@@ -77,3 +77,7 @@ type Update struct {
 	OfflineChargePhase   *int `json:"offlineChargePhase,omitempty"`
 	MeterValueInterval   *int `json:"meterValueInterval,omitempty"`
 }
+
+type SessionPriority struct {
+	PrioritizedPhases *int `json:"prioritizedPhases,omitempty"`
+}

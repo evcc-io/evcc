@@ -30,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
@@ -39,11 +40,12 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
-	log     *util.Logger
-	statusG func() (zaptec.StateResponse, error)
-	id      string
-	current int64
-	cache   time.Duration
+	log      *util.Logger
+	statusG  func() (zaptec.StateResponse, error)
+	id       string
+	priority bool
+	current  int64
+	cache    time.Duration
 }
 
 func init() {
@@ -55,6 +57,7 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User, Password string
 		Id             string
+		Priority       bool
 		Cache          time.Duration
 	}{
 		Cache: time.Second,
@@ -68,19 +71,24 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("need user and password")
 	}
 
-	return NewZaptec(cc.User, cc.Password, cc.Id, cc.Cache)
+	return NewZaptec(cc.User, cc.Password, cc.Id, cc.Priority, cc.Cache)
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(user, password, id string, cache time.Duration) (api.Charger, error) {
+func NewZaptec(user, password, id string, priority bool, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
 
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	c := &Zaptec{
-		Helper:  request.NewHelper(log),
-		log:     log,
-		id:      id,
-		current: 6, // assume min current
-		cache:   cache,
+		Helper:   request.NewHelper(log),
+		log:      log,
+		id:       id,
+		priority: priority,
+		current:  6, // assume min current
+		cache:    cache,
 	}
 
 	// setup cached values
@@ -208,8 +216,20 @@ func (c *Zaptec) Enable(enable bool) error {
 	return err
 }
 
-func (c *Zaptec) update(data zaptec.Update) error {
+func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
 	uri := fmt.Sprintf("%s/api/chargers/%s/update", zaptec.ApiURL, c.id)
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		_, err = c.DoBody(req)
+		c.reset()
+	}
+
+	return err
+}
+
+func (c *Zaptec) sessionPriority(session string, data zaptec.SessionPriority) error {
+	uri := fmt.Sprintf("%s/api/session/%s/priority", zaptec.ApiURL, session)
 
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
@@ -227,7 +247,7 @@ func (c *Zaptec) setCurrent(current int64) error {
 		MaxChargeCurrent: &curr,
 	}
 
-	return c.update(data)
+	return c.chargerUpdate(data)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -287,9 +307,27 @@ var _ api.PhaseSwitcher = (*Zaptec)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Zaptec) Phases1p3p(phases int) error {
-	data := zaptec.Update{
-		MaxChargePhases: &phases,
+	res, err := c.statusG()
+
+	if err == nil {
+		data := zaptec.Update{
+			MaxChargePhases: &phases,
+		}
+
+		err = c.chargerUpdate(data)
 	}
 
-	return c.update(data)
+	if err == nil && c.priority {
+		data := zaptec.SessionPriority{
+			PrioritizedPhases: &phases,
+		}
+
+		if session := res.ObservationByID(zaptec.SessionIdentifier); session != nil {
+			err = c.sessionPriority(session.ValueAsString, data)
+		} else {
+			err = errors.New("unknown session")
+		}
+	}
+
+	return err
 }
