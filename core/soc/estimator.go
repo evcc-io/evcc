@@ -104,6 +104,19 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 	return whRemaining / 1e3
 }
 
+// Range replaces the api.Vehicle.Range interface to take the estimated soc into account
+func (s *Estimator) Range() (float64, error) {
+	var vehicleRange int64
+	var err error
+	if vehicle, ok := s.vehicle.(api.VehicleRange); ok {
+		vehicleRange, err = vehicle.Range()
+		if err != nil || s.prevSoc == 0 {
+			return 0, err
+		}
+	}
+	return (float64(vehicleRange) / s.prevSoc) * s.vehicleSoc, nil
+}
+
 // SoC replaces the api.Vehicle.SoC interface to take charged energy into account
 func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 	var fetchedSoC *float64
