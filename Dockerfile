@@ -68,6 +68,11 @@ RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 # STEP 3 build a small image including module support
 FROM alpine:3.15
 
+# Create a group and user
+RUN addgroup -S evcc && adduser -S evcc -G evcc
+
+USER evcc
+
 WORKDIR /app
 
 ENV TZ=Europe/Berlin
@@ -91,4 +96,4 @@ EXPOSE 9522/udp
 HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]
-CMD [ "evcc" ]
+CMD [ "evcc", "--sqlite", "/home/evcc/evcc.db" ]
