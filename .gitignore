@@ -2,6 +2,7 @@ __debug_bin
 .vscode
 .cache
 .DS_store
+*.gz
 *.py
 *.log
 *.json

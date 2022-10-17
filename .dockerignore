@@ -3,6 +3,7 @@
 .vscode
 *.conf
 *.Dockerfile
+*.gz
 *.image
 *.json
 *.sh
