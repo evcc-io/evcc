@@ -1503,6 +1503,7 @@ func (lp *LoadPoint) publishChargeProgress() {
 	}
 
 	lp.publish("chargedEnergy", lp.chargedEnergy)
+	lp.publish("totalChargedEnergy", lp.chargeMeterTotal())
 	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
