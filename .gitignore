@@ -14,9 +14,9 @@ __debug_bin
 evcc
 evcc.exe
 evcc_*
-flags/*
-buildflags/*
 linux-*.Dockerfile
+builddir
+flags
 node_modules
 release
 *.inc
