@@ -113,20 +113,18 @@ func (cp *CP) Initialized(timeout time.Duration) bool {
 	}
 }
 
+// WatchDog triggers meter values messages if older than timeout.
+// Must be wrapped in a goroutine.
 func (cp *CP) WatchDog(timeout time.Duration) {
-	cp.timeout = timeout
+	for ; true; <-time.NewTicker(timeout).C {
+		cp.mu.Lock()
+		update := cp.txnId != 0 && time.Since(cp.meterUpdated) > timeout
+		cp.mu.Unlock()
 
-	go func() {
-		for ; true; <-time.NewTicker(timeout).C {
-			cp.mu.Lock()
-			update := cp.txnId != 0 && time.Since(cp.meterUpdated) > timeout
-			cp.mu.Unlock()
-
-			if update {
-				Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
-			}
+		if update {
+			Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
 		}
-	}()
+	}
 }
 
 // TransactionID returns the current transaction id

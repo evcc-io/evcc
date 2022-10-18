@@ -217,7 +217,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 			c.log.DEBUG.Println("enabling meter watchdog")
 		}
 
-		cp.WatchDog(meterInterval)
+		go cp.WatchDog(meterInterval)
 	}
 
 	// TODO deprecate
