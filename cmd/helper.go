@@ -50,7 +50,7 @@ func unwrap(err error) (res []string) {
 // redact redacts a configuration string
 func redact(src string) string {
 	secrets := []string{
-		"mac", // infrastructure
+		"mac",                   // infrastructure
 		"sponsortoken", "plant", // global settings
 		"user", "password", "pin", // users
 		"token", "access", "refresh", // tokens
