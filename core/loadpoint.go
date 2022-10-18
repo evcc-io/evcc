@@ -1503,8 +1503,10 @@ func (lp *LoadPoint) publishChargeProgress() {
 	}
 
 	lp.publish("chargedEnergy", lp.chargedEnergy)
-	lp.publish("totalChargedEnergy", lp.chargeMeterTotal())
 	lp.publish("chargeDuration", lp.chargeDuration)
+	if _, ok := lp.chargeMeter.(api.MeterEnergy); ok {
+		lp.publish("chargeTotalImport", lp.chargeMeterTotal())
+	}
 }
 
 // socPollAllowed validates charging state against polling mode
