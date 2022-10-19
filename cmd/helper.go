@@ -50,11 +50,11 @@ func unwrap(err error) (res []string) {
 // redact redacts a configuration string
 func redact(src string) string {
 	secrets := []string{
-		"url", "uri", "host", "broker", "mac", // infrastructure
+		"mac",                   // infrastructure
 		"sponsortoken", "plant", // global settings
 		"user", "password", "pin", // users
 		"token", "access", "refresh", // tokens
-		"ain", "id", "secret", "serial", "deviceid", "machineid", // devices
+		"ain", "secret", "serial", "deviceid", "machineid", // devices
 		"vin"} // vehicles
 	return regexp.
 		MustCompile(fmt.Sprintf(`\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).
