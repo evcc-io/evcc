@@ -16,7 +16,7 @@ func TestRemainingChargeDuration(t *testing.T) {
 	charger := mock.NewMockCharger(ctrl)
 	vehicle := mock.NewMockVehicle(ctrl)
 	// 9 kWh userBatCap => 10 kWh virtualBatCap
-	vehicle.EXPECT().Capacity().Return(int64(9))
+	vehicle.EXPECT().Capacity().Return(float64(9))
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 	ce.vehicleSoc = 20.0
@@ -40,7 +40,7 @@ func TestSoCEstimation(t *testing.T) {
 	charger := &chargerStruct{mock.NewMockCharger(ctrl), mock.NewMockBattery(ctrl)}
 
 	// 9 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity
-	var capacity int64 = 9
+	var capacity float64 = 9
 	vehicle.EXPECT().Capacity().Return(capacity)
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
@@ -124,7 +124,7 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 	charger := &chargerStruct{mock.NewMockCharger(ctrl), mock.NewMockBattery(ctrl)}
 
 	// 9 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity
-	var capacity int64 = 9
+	var capacity float64 = 9
 	vehicle.EXPECT().Capacity().Return(capacity)
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
