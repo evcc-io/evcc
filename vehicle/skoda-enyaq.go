@@ -65,7 +65,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		v.Title_ = vehicle.Name
 	}
 	if v.Capacity_ == 0 {
-		v.Capacity_ = int64(vehicle.Specification.Battery.CapacityInKWh)
+		v.Capacity_ = float64(vehicle.Specification.Battery.CapacityInKWh)
 	}
 
 	// use Connect credentials to build provider
