@@ -49,6 +49,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Timeout       time.Duration
 	}{
 		Connector: 1,
+		IdTag:     "evcc",
 		Timeout:   time.Minute,
 	}
 
