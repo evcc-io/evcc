@@ -69,9 +69,12 @@ RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 FROM alpine:3.15
 
 # Create a group and user
-RUN addgroup -S evcc && adduser -S evcc -G evcc
+ARG UID=1000
+ARG GID=1000
 
-USER evcc
+RUN addgroup -g "${GID}" -S evcc && adduser -u "${UID}" -g "${GID}" -S evcc
+
+USER "${UID}:${GID}"
 
 WORKDIR /app
 
