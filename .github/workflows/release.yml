@@ -68,7 +68,7 @@ jobs:
         run: pip install --upgrade cloudsmith-cli
 
       - name: Patch ASN1
-        run: make patch-asn1-sudo
+        run: sudo make patch-asn1
 
       # gokrazy image
       # - name: Prepare Image

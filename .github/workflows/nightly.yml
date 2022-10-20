@@ -82,7 +82,7 @@ jobs:
         run: pip install --upgrade cloudsmith-cli
 
       - name: Patch ASN1
-        run: make patch-asn1-sudo
+        run: sudo make patch-asn1
 
       - name: Create nightly build
         uses: goreleaser/goreleaser-action@v3
