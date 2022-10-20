@@ -9,8 +9,10 @@ import (
 	sunspec "github.com/andig/gosunspec"
 	bus "github.com/andig/gosunspec/modbus"
 	"github.com/andig/gosunspec/smdx"
-	"github.com/grid-x/modbus"
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/volkszaehler/mbmd/meters"
 	quirks "github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
@@ -22,8 +24,12 @@ var sunspecCmd = &cobra.Command{
 	Run:   runSunspec,
 }
 
+var slaveID *int
+
 func init() {
 	rootCmd.AddCommand(sunspecCmd)
+
+	slaveID = sunspecCmd.Flags().IntP("id", "i", 1, "Slave id")
 }
 
 func pf(format string, v ...interface{}) {
@@ -40,9 +46,13 @@ func modelName(m sunspec.Model) string {
 }
 
 func runSunspec(cmd *cobra.Command, args []string) {
-	client := modbus.TCPClient(args[0])
+	util.LogLevel(viper.GetString("log"), nil)
 
-	in, err := bus.Open(client)
+	conn := meters.NewTCP(args[0])
+	conn.Slave(uint8(*slaveID))
+	conn.Logger(log.TRACE)
+
+	in, err := bus.Open(conn.ModbusClient())
 	if err != nil && in == nil {
 		log.FATAL.Fatal(err)
 	} else if err != nil {
