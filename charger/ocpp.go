@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
@@ -22,14 +21,14 @@ const statusTimeout = 30 * time.Second
 
 // OCPP charger implementation
 type OCPP struct {
-	log                     *util.Logger
-	cp                      *ocpp.CP
-	connector               int
-	idtag                   string
-	phases                  int
-	current                 float64
-	meterValuesSample       string
-	phaseSwitchingSupported bool
+	log               *util.Logger
+	cp                *ocpp.CP
+	connector         int
+	idtag             string
+	phases            int
+	current           float64
+	meterValuesSample string
+	timeout           time.Duration
 }
 
 func init() {
@@ -43,27 +42,31 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		IdTag         string
 		Connector     int
 		Meter         interface{} // TODO deprecated
+		Quirks        bool
 		MeterInterval time.Duration
 		MeterValues   string
-		InitialReset  core.ResetType
+		InitialReset  interface{} // TODO deprecated
+		Timeout       time.Duration
 	}{
 		Connector: 1,
+		IdTag:     "evcc",
+		Timeout:   time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	switch cc.InitialReset {
-	case
-		"",
-		core.ResetTypeSoft,
-		core.ResetTypeHard:
-	default:
-		return nil, fmt.Errorf("unknown configuration option detected for reset: %s", cc.InitialReset)
-	}
+	// switch cc.InitialReset {
+	// case
+	// 	"",
+	// 	core.ResetTypeSoft,
+	// 	core.ResetTypeHard:
+	// default:
+	// 	return nil, fmt.Errorf("unknown configuration option detected for reset: %s", cc.InitialReset)
+	// }
 
-	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.InitialReset)
+	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.Quirks, cc.Timeout)
 	if err != nil {
 		return c, err
 	}
@@ -89,94 +92,111 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, initialReset core.ResetType) (*OCPP, error) {
-	cp, err := ocpp.Instance().Register(id)
-	if err != nil {
-		return nil, err
-	}
-
+func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, quirks bool, timeout time.Duration) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
 		unit = id
 	}
+	log := util.NewLogger(unit)
+
+	cp := ocpp.NewChargePoint(log, id, timeout)
+	if err := ocpp.Instance().Register(id, cp); err != nil {
+		return nil, err
+	}
 
 	c := &OCPP{
-		log:       util.NewLogger(unit),
+		log:       log,
 		cp:        cp,
 		connector: connector,
 		idtag:     idtag,
+		timeout:   timeout,
 	}
 
-	if err := cp.Boot(); err != nil {
-		return nil, err
+	c.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
+
+	select {
+	case <-time.After(timeout):
+		return nil, api.ErrTimeout
+	case <-cp.HasConnected():
 	}
+
+	// see who's there
+	// ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
 
 	var (
 		rc                  = make(chan error, 1)
-		options             []core.ConfigurationKey
 		meterSampleInterval time.Duration
 	)
 
-	// configured id may be empty, use registered id below
-	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
-		if err != nil {
-			rc <- err
-			return
+	keys := []string{
+		ocpp.KeyNumberOfConnectors,
+		ocpp.KeyMeterValuesSampledData,
+		ocpp.KeyMeterValueSampleInterval,
+		ocpp.KeyConnectorSwitch3to1PhaseSupported,
+	}
+	_ = keys
+
+	// quirks mode disables GetConfiguration
+	if quirks {
+		c.meterValuesSample = meterValues
+		if meterInterval == 0 {
+			meterInterval = 10 * time.Second
 		}
-
-		options = resp.ConfigurationKey
-
-		// sort config options for printing
-		sort.Slice(options, func(i, j int) bool {
-			return options[i].Key < options[j].Key
-		})
-
-		rw := map[bool]string{false: "r/w", true: "r/o"}
-
-		for _, opt := range options {
-			c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
-
-			switch opt.Key {
-			case ocpp.KeyMeterValuesSampledData:
-				c.meterValuesSample = *opt.Value
-
-			case ocpp.KeyMeterValueSampleInterval:
-				meterValuesSampleInterval, err := strconv.Atoi(*opt.Value)
-				if err != nil {
-					rc <- err
-					return
-				}
-				meterSampleInterval = time.Duration(meterValuesSampleInterval) * time.Second
-
-			case string(ocpp.KeyConnectorSwitch3to1PhaseSupported):
-				// Detection of 1 phase charging/switching support
-				b, err := strconv.ParseBool(*opt.Value)
-				if err != nil {
-					rc <- err
-					return
+	} else {
+		err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+			if err == nil {
+				// log unsupported configuration keys
+				if len(resp.UnknownKey) > 0 {
+					c.log.ERROR.Printf("unsupported keys: %v", sort.StringSlice(resp.UnknownKey))
 				}
 
-				c.phaseSwitchingSupported = b
+				// sort configuration keys for printing
+				sort.Slice(resp.ConfigurationKey, func(i, j int) bool {
+					return resp.ConfigurationKey[i].Key < resp.ConfigurationKey[j].Key
+				})
+
+				rw := map[bool]string{false: "r/w", true: "r/o"}
+
+				for _, opt := range resp.ConfigurationKey {
+					if opt.Value == nil {
+						c.log.ERROR.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], "nil")
+						continue
+					}
+
+					c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
+
+					switch opt.Key {
+					case ocpp.KeyNumberOfConnectors:
+						var val int
+						if val, err = strconv.Atoi(*opt.Value); err == nil && c.connector > val {
+							err = fmt.Errorf("connector %d exceeds max available connectors: %d", c.connector, val)
+						}
+
+					case ocpp.KeyMeterValuesSampledData:
+						c.meterValuesSample = *opt.Value
+
+					case ocpp.KeyMeterValueSampleInterval:
+						var val int
+						if val, err = strconv.Atoi(*opt.Value); err == nil {
+							meterSampleInterval = time.Duration(val) * time.Second
+						}
+					}
+
+					if err != nil {
+						break
+					}
+				}
 			}
+
+			rc <- err
+		}, nil)
+
+		if err := c.wait(err, rc); err != nil {
+			return nil, err
 		}
-
-		rc <- nil
-	}, []string{})
-
-	if err := c.wait(err, rc); err != nil {
-		return nil, err
 	}
 
-	if err := cp.DetectCapabilities(options); err != nil {
-		return nil, err
-	}
-
-	// check supported connectors of charge point
-	if supported := cp.GetNumberOfSupportedConnectors(); c.connector > supported {
-		return nil, fmt.Errorf("configured connector is not available, max available connectors %d", supported)
-	}
-
-	if meterValues != "" {
+	if meterValues != "" && meterValues != c.meterValuesSample {
 		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
 			return nil, err
 		}
@@ -189,25 +209,27 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	if c.hasMeasurement("Power.Active.Import") || c.hasMeasurement("Energy.Active.Import.Register") {
 		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
 
-		if meterSampleInterval > meterInterval && meterInterval > 0 {
+		if !quirks && meterSampleInterval > meterInterval && meterInterval > 0 {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 				return nil, err
 			}
 
 			// HACK: setup watchdog for meter values if not happy with config
 			c.log.DEBUG.Println("enabling meter watchdog")
-			cp.WatchDog(meterInterval)
-		}
-	}
-
-	if initialReset != "" {
-		t := core.ResetTypeSoft
-		if initialReset == core.ResetTypeHard {
-			t = core.ResetTypeHard
 		}
 
-		ocpp.Instance().TriggerResetRequest(cp.ID(), t)
+		go cp.WatchDog(meterInterval)
 	}
+
+	// TODO deprecate
+	// if initialReset != "" {
+	// 	t := core.ResetTypeSoft
+	// 	if initialReset == core.ResetTypeHard {
+	// 		t = core.ResetTypeHard
+	// 	}
+
+	// 	ocpp.Instance().TriggerResetRequest(cp.ID(), t)
+	// }
 
 	// request initial status
 	_ = cp.Initialized(statusTimeout)
@@ -227,7 +249,7 @@ func (c *OCPP) configure(key, val string) error {
 	rc := make(chan error, 1)
 
 	err := ocpp.Instance().ChangeConfiguration(c.cp.ID(), func(resp *core.ChangeConfigurationConfirmation, err error) {
-		c.log.TRACE.Printf("ChangeConfiguration: %v", resp)
+		c.log.TRACE.Printf("%T: %v", resp, resp)
 
 		if err == nil && resp != nil && resp.Status != core.ConfigurationStatusAccepted {
 			rc <- fmt.Errorf("ChangeConfiguration failed: %s", resp.Status)
@@ -245,7 +267,7 @@ func (c *OCPP) wait(err error, rc chan error) error {
 		select {
 		case err = <-rc:
 			close(rc)
-		case <-time.After(request.Timeout):
+		case <-time.After(c.timeout):
 			err = api.ErrTimeout
 		}
 	}
@@ -269,7 +291,7 @@ func (c *OCPP) Enable(enable bool) error {
 
 	if enable {
 		err = ocpp.Instance().RemoteStartTransaction(c.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
-			c.log.TRACE.Printf("RemoteStartTransaction: %+v", resp)
+			c.log.TRACE.Printf("%T: %+v", resp, resp)
 
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
@@ -281,7 +303,7 @@ func (c *OCPP) Enable(enable bool) error {
 		})
 	} else {
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
-			c.log.TRACE.Printf("RemoteStopTransaction: %+v", resp)
+			c.log.TRACE.Printf("%T: %+v", resp, resp)
 
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
@@ -299,7 +321,8 @@ func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfil
 
 	rc := make(chan error, 1)
 	err := ocpp.Instance().SetChargingProfile(c.cp.ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
-		c.log.TRACE.Printf("SetChargingProfile: %+v", resp)
+		c.log.TRACE.Printf("%T: %+v", resp, resp)
+
 		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}

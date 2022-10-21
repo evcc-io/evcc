@@ -6,14 +6,15 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: host
   - name: port
     default: 502
+  - name: integer
+    deprecated: true
 render: |
   # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}

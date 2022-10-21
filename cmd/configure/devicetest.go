@@ -36,15 +36,18 @@ func (d *DeviceTest) Test() (DeviceTestResult, error) {
 	}
 
 	switch DeviceCategories[d.DeviceCategory].class {
-	case DeviceClassCharger:
+	case templates.Charger:
 		return d.testCharger(v)
-	case DeviceClassMeter:
-		return d.testMeter(d.DeviceCategory, v)
-	case DeviceClassVehicle:
-		return d.testVehicle(v)
-	}
 
-	return DeviceTestResultInvalid, errors.New("testDevice not implemented for this device class")
+	case templates.Meter:
+		return d.testMeter(d.DeviceCategory, v)
+
+	case templates.Vehicle:
+		return d.testVehicle(v)
+
+	default:
+		panic("invalid class for category: " + d.DeviceCategory)
+	}
 }
 
 // configure creates a configured device from a template so we can test it
@@ -66,11 +69,11 @@ func (d *DeviceTest) configure() (interface{}, error) {
 	var v interface{}
 
 	switch DeviceCategories[d.DeviceCategory].class {
-	case DeviceClassMeter:
+	case templates.Meter:
 		v, err = meter.NewFromConfig(instance.Type, instance.Other)
-	case DeviceClassCharger:
+	case templates.Charger:
 		v, err = charger.NewFromConfig(instance.Type, instance.Other)
-	case DeviceClassVehicle:
+	case templates.Vehicle:
 		v, err = vehicle.NewFromConfig(instance.Type, instance.Other)
 	}
 
@@ -79,20 +82,20 @@ func (d *DeviceTest) configure() (interface{}, error) {
 
 // testCharger tests a charger device
 func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
-	if v, ok := v.(api.Charger); ok {
-		if _, err := v.Status(); err != nil {
-			return DeviceTestResultInvalid, err
-		}
-	} else {
+	c, ok := v.(api.Charger)
+	if !ok {
 		return DeviceTestResultInvalid, errors.New("selected device is not a wallbox")
 	}
+	if _, err := c.Status(); err != nil {
+		return DeviceTestResultInvalid, err
+	}
 
-	if v, ok := v.(api.Meter); ok {
-		if _, err := v.CurrentPower(); err != nil {
-			return DeviceTestResultValidMissingMeter, nil
-		}
-	} else {
+	m, ok := v.(api.Meter)
+	if !ok {
 		return DeviceTestResultValidMissingMeter, nil
+	}
+	if _, err := m.CurrentPower(); err != nil {
+		return DeviceTestResultInvalid, err
 	}
 
 	return DeviceTestResultValid, nil
@@ -100,36 +103,39 @@ func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 
 // testMeter tests a meter device
 func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v interface{}) (DeviceTestResult, error) {
-	if v, ok := v.(api.Meter); ok {
-		power, err := v.CurrentPower()
+	m, ok := v.(api.Meter)
+	if !ok {
+		return DeviceTestResultInvalid, errors.New("selected device is not a meter")
+	}
+
+	power, err := m.CurrentPower()
+	if err != nil {
+		return DeviceTestResultInvalid, err
+	}
+
+	// check if the grid meter reports power 0, which should be impossible
+	// happens with Kostal Piko charger that do not have a grid meter attached
+	// but we can't determine this
+	if power == 0 && deviceCategory == DeviceCategoryGridMeter {
+		return DeviceTestResultInvalid, errors.New("grid meter reports power 0")
+	}
+
+	if deviceCategory == DeviceCategoryBatteryMeter {
+		b, ok := v.(api.Battery)
+		if !ok {
+			return DeviceTestResultInvalid, errors.New("selected device is not a battery meter")
+		}
+
+		_, err := b.SoC()
+
+		for err != nil && errors.Is(err, api.ErrMustRetry) {
+			time.Sleep(3 * time.Second)
+			_, err = b.SoC()
+		}
+
 		if err != nil {
 			return DeviceTestResultInvalid, err
 		}
-		// check if the grid meter reports power 0, which should be impossible
-		// happens with Kostal Piko charger that do not have a grid meter attached
-		// but we can't determine this
-		if power == 0 && deviceCategory == DeviceCategoryGridMeter {
-			return DeviceTestResultInvalid, errors.New("grid meter reports power 0")
-		}
-
-		if deviceCategory == DeviceCategoryBatteryMeter {
-			if v, ok := v.(api.Battery); ok {
-				_, err := v.SoC()
-
-				for err != nil && errors.Is(err, api.ErrMustRetry) {
-					time.Sleep(3 * time.Second)
-					_, err = v.SoC()
-				}
-
-				if err != nil {
-					return DeviceTestResultInvalid, err
-				}
-			} else {
-				return DeviceTestResultInvalid, errors.New("selected device is not a battery meter")
-			}
-		}
-	} else {
-		return DeviceTestResultInvalid, errors.New("selected device is not a meter")
 	}
 
 	return DeviceTestResultValid, nil
@@ -137,14 +143,13 @@ func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v interface{}) (De
 
 // testVehicle tests a vehicle device
 func (d *DeviceTest) testVehicle(v interface{}) (DeviceTestResult, error) {
-	if _, ok := v.(api.Vehicle); ok {
-		if v, ok := v.(api.Battery); ok {
-			if _, err := v.SoC(); err != nil {
-				return DeviceTestResultInvalid, err
-			}
-		}
-	} else {
+	vv, ok := v.(api.Vehicle)
+	if !ok {
 		return DeviceTestResultInvalid, errors.New("selected device is not a vehicle")
+	}
+
+	if _, err := vv.SoC(); err != nil {
+		return DeviceTestResultInvalid, err
 	}
 
 	return DeviceTestResultValid, nil

@@ -8,6 +8,7 @@ group: generic
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: modbus
     choice: ["tcpip"]
   - name: integer

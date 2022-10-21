@@ -3,11 +3,10 @@ products:
   - brand: Fronius
     description:
       generic: Solar API V1
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: host
 render: |
   type: custom

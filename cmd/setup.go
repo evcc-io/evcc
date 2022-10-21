@@ -18,13 +18,18 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/locale"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/libp2p/zeroconf/v2"
 	"github.com/samber/lo"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
 )
@@ -50,18 +55,46 @@ func loadConfigFile(conf *config) error {
 		}
 	}
 
+	if err == nil {
+		logLevel()
+	}
+
 	return err
 }
 
-func configureEnvironment(conf config) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
+	// full http request log
+	if cmd.Flags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
+	}
+
+	// setup machine id
+	if conf.Plant != "" {
+		err = machine.CustomID(conf.Plant)
+	}
+
 	// setup sponsorship
 	if conf.SponsorToken != "" {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
+	// setup translations
+	if err == nil {
+		err = locale.Init()
+	}
+
+	// setup persistence
+	if err == nil && conf.Database.Dsn != "" {
+		if flag := cmd.Flags().Lookup(flagSqlite); flag.Changed {
+			conf.Database.Type = "sqlite"
+			conf.Database.Dsn = flag.Value.String()
+		}
+		err = configureDatabase(conf.Database)
+	}
+
 	// setup telemetry
 	if err == nil && conf.Telemetry {
-		err = telemetry.Create(sponsor.Token)
+		err = telemetry.Create(sponsor.Token, conf.Plant)
 	}
 
 	// setup mqtt client listener
@@ -82,8 +115,13 @@ func configureEnvironment(conf config) (err error) {
 	return
 }
 
-// setup influx database
-func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-chan util.Param) {
+// configureDatabase configures session database
+func configureDatabase(conf dbConfig) error {
+	return db.NewInstance(conf.Type, conf.Dsn)
+}
+
+// configureInflux configures influx database
+func configureInflux(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-chan util.Param) {
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -97,11 +135,6 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in 
 	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleCapacity", "vehicleSoC", "vehicleRange", "vehicleOdometer", "chargedEnergy", "chargeRemainingEnergy")
 	in = dedupe.Pipe(in)
 
-	// reduce number of values written to influx
-	// TODO this breaks writing vehicleRange as its re-writting in short interval
-	// limiter := pipe.NewLimiter(5 * time.Second)
-	// in = limiter.Pipe(in)
-
 	go influx.Run(loadPoints, in)
 }
 
@@ -111,7 +144,7 @@ func configureMQTT(conf mqttConfig) error {
 
 	var err error
 	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {
-		topic := fmt.Sprintf("%s/status", conf.RootTopic())
+		topic := fmt.Sprintf("%s/status", strings.Trim(conf.Topic, "/"))
 		options.SetWill(topic, "offline", 1, true)
 	})
 	if err != nil {

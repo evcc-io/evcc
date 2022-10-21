@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
@@ -162,7 +164,7 @@ type Authorizer interface {
 type Vehicle interface {
 	Battery
 	Title() string
-	Capacity() int64
+	Capacity() float64
 	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
@@ -220,4 +222,15 @@ type AuthProvider interface {
 	SetCallbackParams(baseURL, redirectURL string, authenticated chan<- bool)
 	LoginHandler() http.HandlerFunc
 	LogoutHandler() http.HandlerFunc
+}
+
+// FeatureDescriber optionally provides a list of supported non-api features
+type FeatureDescriber interface {
+	Features() []Feature
+	Has(Feature) bool
+}
+
+// CsvWriter converts to csv
+type CsvWriter interface {
+	WriteCsv(context.Context, io.Writer)
 }

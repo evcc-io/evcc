@@ -63,10 +63,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	cc.VIN, v.vehicle, err = ensureVehicleWithFeature(
+	v.vehicle, err = ensureVehicleEx(
 		cc.VIN, client.Vehicles,
-		func(v *tesla.Vehicle) (string, *tesla.Vehicle) {
-			return v.Vin, v
+		func(v *tesla.Vehicle) string {
+			return v.Vin
 		},
 	)
 

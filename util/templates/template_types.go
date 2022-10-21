@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bufio"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -95,44 +96,27 @@ type TextLanguage struct {
 }
 
 func (t *TextLanguage) String(lang string) string {
-	if t.Generic != "" {
-		return t.Generic
-	}
-	switch lang {
-	case "de":
+	switch {
+	case lang == "de" && t.DE != "":
 		return t.DE
-	case "en":
+	case lang == "en" && t.EN != "":
 		return t.EN
-	}
-	return t.DE
-}
-
-func (t *TextLanguage) set(lang, value string) {
-	switch lang {
-	case "de":
-		t.DE = value
-	case "en":
-		t.EN = value
 	default:
-		t.DE = value
+		if t.Generic != "" {
+			return t.Generic
+		}
+		return t.DE
 	}
 }
 
-// Shorten reduces help texts to one line and adds ...
-func (t *TextLanguage) Shorten(lang string) {
+// ShortString reduces help texts to one line and adds ...
+func (t *TextLanguage) ShortString(lang string) string {
 	help := t.String(lang)
-	if help == "" {
-		return
-	}
-
 	scanner := bufio.NewScanner(strings.NewReader(help))
 
-	var line int
 	var short string
-
 	for scanner.Scan() {
-		line++
-		if line == 1 {
+		if short == "" {
 			short = scanner.Text()
 		} else {
 			short += "..."
@@ -140,9 +124,7 @@ func (t *TextLanguage) Shorten(lang string) {
 		}
 	}
 
-	if help != short {
-		t.set(lang, short)
-	}
+	return short
 }
 
 // Update the language specific texts
@@ -169,23 +151,12 @@ type Requirements struct {
 	URI         string       // URI to a webpage with more details about the preparation requirements
 }
 
-type GuidedSetup struct {
-	Enable bool             // if true, guided setup is possible
-	Linked []LinkedTemplate // a list of templates that should be processed as part of the guided setup
-}
-
 // Linked Template
 type LinkedTemplate struct {
 	Template        string
 	Usage           string // usage: "grid", "pv", "battery"
 	Multiple        bool   // if true, multiple instances of this template can be added
 	ExcludeTemplate string // only consider this if no device of the named linked template was added
-}
-
-type Dependency struct {
-	Name  string // the Param name value this depends on
-	Check string // the check to perform, valid values see const DependencyCheck...
-	Value string // the string value to check against
 }
 
 // Param is a proxy template parameter
@@ -205,7 +176,6 @@ type Param struct {
 	Preset        string       // Reference a predefined se of params
 	Name          string       // Param name which is used for assigning defaults properties and referencing in render
 	Description   TextLanguage // language specific titles (presented in UI instead of Name)
-	Dependencies  []Dependency // List of dependencies, when this param should be presented
 	Required      bool         // cli if the user has to provide a non empty value
 	Mask          bool         // cli if the value should be masked, e.g. for passwords
 	Advanced      bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
@@ -214,12 +184,12 @@ type Param struct {
 	Default       string       // default value if no user value is provided in the configuration
 	Example       string       // cli example value
 	Help          TextLanguage // cli configuration help
-	Test          string       // testing default value
 	Value         string       // user provided value via cli configuration
 	Values        []string     // user provided list of values e.g. for ValueType "stringlist"
 	ValueType     string       // string representation of the value type, "string" is default
 	ValidValues   []string     // list of valid values the user can provide
 	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	AllInOne      bool         // defines if the defined usages can all be present in a single device
 	Requirements  Requirements // requirements for this param to be usable, only supported via ValueType "bool"
 
 	Baudrate int    // device specific default for modbus RS485 baudrate
@@ -230,20 +200,16 @@ type Param struct {
 
 // return a default value or example value depending on the renderMode
 func (p *Param) DefaultValue(renderMode string) interface{} {
-	switch p.ValueType {
-	case ParamValueTypeStringList:
+	// return empty list to allow iterating over in template
+	if p.ValueType == ParamValueTypeStringList {
 		return []string{}
-	case ParamValueTypeChargeModes:
-		return ""
-	default:
-		if p.Test != "" {
-			return p.Test
-		} else if p.Example != "" && p.Default == "" && renderMode == TemplateRenderModeDocs {
-			return p.Example
-		} else {
-			return p.Default // may be empty
-		}
 	}
+
+	if renderMode == TemplateRenderModeDocs && p.Default == "" {
+		return p.Example
+	}
+
+	return p.Default
 }
 
 // overwrite specific properties by using values from another param
@@ -293,15 +259,19 @@ type Product struct {
 	Description TextLanguage // product name
 }
 
+func (p Product) Title(lang string) string {
+	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(lang)))
+}
+
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
+	Group        string    // the group this template belongs to, references groupList entries
 	Covers       []string  // list of covered outdated template names
 	Products     []Product // list of products this template is compatible with
 	Capabilities []string
 	Requirements Requirements
-	GuidedSetup  GuidedSetup
-	Group        string // the group this template belongs to, references groupList entries
+	Linked       []LinkedTemplate // a list of templates that should be processed as part of the guided setup
 	Params       []Param
 	Render       string // rendering template
 }

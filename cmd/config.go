@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -21,7 +22,25 @@ import (
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"golang.org/x/exp/maps"
 )
+
+var conf = config{
+	Interval: 10 * time.Second,
+	Log:      "info",
+	Network: networkConfig{
+		Schema: "http",
+		Host:   "evcc.local",
+		Port:   7070,
+	},
+	Mqtt: mqttConfig{
+		Topic: "evcc",
+	},
+	Database: dbConfig{
+		Type: "sqlite",
+		Dsn:  "~/.evcc/evcc.db",
+	},
+}
 
 type config struct {
 	URI          interface{} // TODO deprecated
@@ -29,11 +48,13 @@ type config struct {
 	Log          string
 	SponsorToken string
 	Telemetry    bool
+	Plant        string // telemetry plant id
 	Metrics      bool
 	Profile      bool
 	Levels       map[string]string
 	Interval     time.Duration
 	Mqtt         mqttConfig
+	Database     dbConfig
 	Javascript   map[string]interface{}
 	Influx       server.InfluxConfig
 	EEBus        map[string]interface{}
@@ -47,33 +68,14 @@ type config struct {
 	LoadPoints   []map[string]interface{}
 }
 
-type networkConfig struct {
-	Schema string
-	Host   string
-	Port   int
-}
-
-func (c networkConfig) HostPort() string {
-	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
-		return c.Host
-	}
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
-}
-
-func (c networkConfig) URI() string {
-	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
-}
-
 type mqttConfig struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string
 }
 
-func (conf *mqttConfig) RootTopic() string {
-	if conf.Topic != "" {
-		return conf.Topic
-	}
-	return "evcc"
+type dbConfig struct {
+	Type string
+	Dsn  string
 }
 
 type qualifiedConfig struct {
@@ -95,6 +97,23 @@ type tariffConfig struct {
 	Currency string
 	Grid     typedConfig
 	FeedIn   typedConfig
+}
+
+type networkConfig struct {
+	Schema string
+	Host   string
+	Port   int
+}
+
+func (c networkConfig) HostPort() string {
+	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
+		return c.Host
+	}
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+}
+
+func (c networkConfig) URI() string {
+	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
 }
 
 // ConfigProvider provides configuration items
@@ -254,8 +273,14 @@ func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, par
 	baseURI := conf.URI()
 	baseAuthURI := fmt.Sprintf("%s/oauth", baseURI)
 
+	// stable map iteration
+	keys := maps.Keys(cp.vehicles)
+	sort.Strings(keys)
+
 	var id int
-	for _, v := range cp.vehicles {
+	for _, k := range keys {
+		v := cp.vehicles[k]
+
 		if provider, ok := v.(api.AuthProvider); ok {
 			id += 1
 

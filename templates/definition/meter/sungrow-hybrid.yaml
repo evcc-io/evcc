@@ -4,8 +4,6 @@ products:
   - brand: Sungrow
     description:
       generic: SH Series Hybrid Inverter
-guidedsetup:
-  enable: true
 requirements:
   description:
     de: Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.
@@ -13,6 +11,7 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
@@ -31,7 +30,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 13036 # Total Import Energy
+      address: 13036 # Total Import Energy, 0.1kWh
       type: input
       decode: uint32s
     scale: 0.1
@@ -48,7 +47,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 13002 # Total PV Generation
+      address: 13002 # Total PV Generation, 0.1kWh
       type: input
       decode: uint32s
     scale: 0.1
@@ -84,7 +83,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 13026 # Total battery discharge energy
+      address: 13026 # Total battery discharge energy, 0.1kWh
       type: input
       decode: uint32s
     scale: 0.1

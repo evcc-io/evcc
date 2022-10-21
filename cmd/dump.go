@@ -1,13 +1,17 @@
 package cmd
 
 import (
+	"bytes"
+	_ "embed"
 	"fmt"
+	"os"
+	"path/filepath"
+	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // dumpCmd represents the meter command
@@ -17,8 +21,17 @@ var dumpCmd = &cobra.Command{
 	Run:   runDump,
 }
 
+var (
+	//go:embed dump.tpl
+	dumpTmpl string
+
+	dumpConfig *bool
+)
+
 func init() {
 	rootCmd.AddCommand(dumpCmd)
+
+	dumpConfig = dumpCmd.Flags().Bool("cfg", false, "Dump config file")
 }
 
 func handle(device any, err error) any {
@@ -29,20 +42,48 @@ func handle(device any, err error) any {
 }
 
 func runDump(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
-
 	// load config
-	if err := loadConfigFile(&conf); err != nil {
-		log.FATAL.Fatal(err)
-	}
+	err := loadConfigFile(&conf)
 
 	// setup environment
-	if err := configureEnvironment(conf); err != nil {
-		log.FATAL.Fatal(err)
+	if err == nil {
+		err = configureEnvironment(cmd, conf)
 	}
 
-	site, err := configureSiteAndLoadpoints(conf)
+	var site *core.Site
+	if err == nil {
+		site, err = configureSiteAndLoadpoints(conf)
+	}
+
+	if *dumpConfig {
+		file, pathErr := filepath.Abs(cfgFile)
+		if pathErr != nil {
+			file = cfgFile
+		}
+
+		var redacted string
+		if src, err := os.ReadFile(cfgFile); err == nil {
+			redacted = redact(string(src))
+		}
+
+		tmpl := template.Must(
+			template.New("dump").
+				Funcs(template.FuncMap(sprig.FuncMap())).
+				Parse(dumpTmpl))
+
+		out := new(bytes.Buffer)
+		_ = tmpl.Execute(out, map[string]any{
+			"CfgFile":    file,
+			"CfgError":   errorString(err),
+			"CfgContent": redacted,
+			"Version":    server.FormattedVersion(),
+		})
+
+		fmt.Println(out.String())
+
+		os.Exit(0)
+	}
+
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}

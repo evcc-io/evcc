@@ -4,11 +4,10 @@ products:
     description:
       de: Wechselrichter
       en: Inverter
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv"]
+    allinone: true
   - name: modbus
     choice: ["tcpip"]
     id: 1

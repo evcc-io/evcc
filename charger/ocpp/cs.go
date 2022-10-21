@@ -7,7 +7,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 type CS struct {
@@ -17,30 +16,17 @@ type CS struct {
 	cps map[string]*CP
 }
 
-func (cs *CS) Register(id string) (*CP, error) {
-	unit := "ocpp"
-	if id != "" {
-		unit = id
-	}
-
-	cp := &CP{
-		id:           id,
-		log:          util.NewLogger(unit),
-		bootC:        make(chan struct{}),
-		statusC:      make(chan struct{}),
-		measurements: make(map[string]types.SampledValue),
-	}
-
+func (cs *CS) Register(id string, cp *CP) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
 	if _, ok := cs.cps[id]; ok && id == "" {
-		return nil, errors.New("cannot have >1 chargepoint with empty station id")
+		return errors.New("cannot have >1 chargepoint with empty station id")
 	}
 
 	cs.cps[id] = cp
 
-	return cp, nil
+	return nil
 }
 
 // errorHandler logs error channel
@@ -62,7 +48,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	if _, err := cs.chargepointByID(chargePoint.ID()); err != nil {
+	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
 		if cp, ok := cs.cps[""]; ok {
 			cs.log.INFO.Printf("chargepoint connected, registering: %s", chargePoint.ID())
 
@@ -71,12 +57,15 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 			cs.cps[chargePoint.ID()] = cp
 			delete(cs.cps, "")
 
+			cp.Connect()
+
 			return
 		}
 
 		cs.log.WARN.Printf("chargepoint connected, ignoring: %s", chargePoint.ID())
 	} else {
 		cs.log.DEBUG.Printf("chargepoint connected: %s", chargePoint.ID())
+		cp.Connect()
 	}
 }
 

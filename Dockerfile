@@ -1,22 +1,22 @@
-# STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:16-alpine as node
+# # STEP 1 build ui
+# FROM --platform=$BUILDPLATFORM node:16-alpine as node
 
-RUN apk update && apk add --no-cache make alpine-sdk
+# RUN apk update && apk add --no-cache make alpine-sdk
 
-WORKDIR /build
+# WORKDIR /build
 
-# install node tools
-COPY package*.json ./
-RUN npm ci
+# # install node tools
+# COPY package*.json ./
+# RUN npm ci
 
-# build ui
-COPY Makefile .
-COPY assets assets
-COPY vite.config.js vite.config.js
-COPY .eslintrc.js .eslintrc.js
-COPY postcss.config.js postcss.config.js
+# # build ui
+# COPY Makefile .
+# COPY assets assets
+# COPY vite.config.js vite.config.js
+# COPY .eslintrc.js .eslintrc.js
+# COPY postcss.config.js postcss.config.js
 
-RUN make clean ui
+# RUN make clean ui
 
 
 # STEP 2 build executable binary
@@ -32,20 +32,23 @@ ARG RELEASE=0
 
 WORKDIR /build
 
-# install go tools and cache modules
-COPY Makefile .
+# download modules
 COPY go.mod .
 COPY go.sum .
+RUN go mod download
+
+# install tools
+COPY Makefile .
 COPY tools.go .
 RUN make install
-RUN go mod download
 
 # prepare
 COPY . .
+RUN make patch-asn1
 RUN make assets
 
 # copy ui
-COPY --from=node /build/dist /build/dist
+# COPY --from=node /build/dist /build/dist
 
 # build
 ARG TARGETOS

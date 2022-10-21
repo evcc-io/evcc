@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"sync"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/evcc-io/eebus/ship"
 	"github.com/evcc-io/eebus/spine/model"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/libp2p/zeroconf/v2"
 )
 
@@ -38,11 +40,14 @@ type EEBus struct {
 	id                 string
 	zc                 *zeroconf.Server
 	clients            map[string]EEBusClientCBs
+	ipaddress          map[string]string
 	connectedClients   map[string]ship.Conn
 	discoveredClients  map[string]*zeroconf.ServiceEntry
 	clientInConnection map[string]bool
 
 	browseMDNSRunning bool
+
+	SKI string
 }
 
 var EEBusInstance *EEBus
@@ -73,13 +78,18 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 
 	if len(cc.ShipID) == 0 {
 		var err error
-		cc.ShipID, err = ship.UniqueID(details.BrandName, "evcc-eebus")
+		protectedID, err := machine.ProtectedID("evcc-eebus")
+		if err != nil {
+			return nil, err
+		}
+
+		cc.ShipID, err = ship.UniqueIDWithProtectedID(details.BrandName, protectedID)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	cert, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
+	certificate, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +98,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		Log:         log.TRACE,
 		Addr:        cc.Uri,
 		Path:        "/ship/",
-		Certificate: cert,
+		Certificate: certificate,
 		ID:          cc.ShipID,
 		Interfaces:  cc.Interfaces,
 		Brand:       details.BrandName,
@@ -102,15 +112,22 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		return nil, err
 	}
 
+	ski, err := cert.SkiFromCert(certificate)
+	if err != nil {
+		return nil, err
+	}
+
 	c := &EEBus{
 		zc:                 zc,
 		log:                log,
 		srv:                srv,
 		id:                 cc.ShipID,
 		clients:            make(map[string]EEBusClientCBs),
+		ipaddress:          make(map[string]string),
 		connectedClients:   make(map[string]ship.Conn),
 		discoveredClients:  make(map[string]*zeroconf.ServiceEntry),
 		clientInConnection: make(map[string]bool),
+		SKI:                ski,
 	}
 
 	return c, nil
@@ -120,14 +137,21 @@ func (c *EEBus) DeviceInfo() communication.ManufacturerDetails {
 	return EEBUSDetails
 }
 
-func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) error, shipDisconnectHandler func(string)) {
+func (c *EEBus) Register(ski, ip string, shipConnectHandler func(string, ship.Conn) error, shipDisconnectHandler func(string)) {
 	ski = strings.ReplaceAll(ski, "-", "")
 	ski = strings.ReplaceAll(ski, " ", "")
 	ski = strings.ToLower(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
+	if ski == c.SKI {
+		log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
+	}
+
 	c.mux.Lock()
 	c.clients[ski] = EEBusClientCBs{onConnect: shipConnectHandler, onDisconnect: shipDisconnectHandler}
+	if ip != "" {
+		c.ipaddress[ski] = ip
+	}
 	c.mux.Unlock()
 
 	// maybe the SKI is already discovered
@@ -200,6 +224,13 @@ func (c *EEBus) addDisoveredEntry(entry *zeroconf.ServiceEntry) {
 			return
 		}
 
+		if svc.SKI == c.SKI {
+			c.log.TRACE.Println("Ignoring discovered mDNS entry as it is this service itself")
+			return
+		}
+
+		c.patchMdnsEntryWithProvidedIP(svc.SKI, entry)
+
 		if entry.AddrIPv4 == nil && entry.AddrIPv6 == nil {
 			c.log.TRACE.Printf("Ignoring discovered mDNS entry as it has no IPv4 and IPv6 address: %s", entry.HostName)
 			return
@@ -245,7 +276,19 @@ func (c *EEBus) handleDiscoveredSKI(ski string) error {
 	return nil
 }
 
+// add the IP address from the charger configuration to the mDNS entry if it is missing
+func (c *EEBus) patchMdnsEntryWithProvidedIP(ski string, entry *zeroconf.ServiceEntry) {
+	address, exists := c.ipaddress[ski]
+	if entry.AddrIPv4 == nil && exists && address != "" {
+		if ip := net.ParseIP(address); ip != nil {
+			entry.AddrIPv4 = []net.IP{ip}
+		}
+	}
+}
+
 func (c *EEBus) connectDiscoveredEntry(ski string, entry *zeroconf.ServiceEntry) error {
+	c.patchMdnsEntryWithProvidedIP(ski, entry)
+
 	svc, err := mdns.NewFromDNSEntry(entry)
 
 	var conn ship.Conn

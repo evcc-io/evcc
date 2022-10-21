@@ -34,6 +34,8 @@ levels:
   site: debug
   lp-1: debug
   lp-2: debug
+  cache: error
+  db: error
 
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints

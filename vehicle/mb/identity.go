@@ -138,7 +138,9 @@ func (v *Identity) Login(user, password string) error {
 
 	var token *oauth2.Token
 	if err == nil {
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		ctx, cancel := context.WithTimeout(
+			context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
+			request.Timeout)
 		defer cancel()
 
 		token, err = v.oc.Exchange(ctx, code,

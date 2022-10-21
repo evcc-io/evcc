@@ -4,11 +4,10 @@ products:
     description:
       de: Energiespeicher (mit PV-Sensor)
       en: Energiespeicher (with PV Sensor)
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: host
   - name: port
     default: 502

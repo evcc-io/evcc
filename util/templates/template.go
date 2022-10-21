@@ -24,6 +24,12 @@ type Template struct {
 	titles []string
 }
 
+// GuidedSetupEnabled returns true if there are linked templates or >1 usage
+func (t *Template) GuidedSetupEnabled() bool {
+	_, p := t.ParamByName(ParamUsage)
+	return len(t.Linked) > 0 || (len(p.Choice) > 1 && p.AllInOne)
+}
+
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
@@ -72,12 +78,6 @@ func (t *Template) Validate() error {
 		if p.ValueType != "" && !slices.Contains(ValidParamValueTypes, p.ValueType) {
 			return fmt.Errorf("invalid value type '%s' in template %s", p.ValueType, t.Template)
 		}
-
-		for _, d := range p.Dependencies {
-			if !slices.Contains(ValidDependencies, d.Check) {
-				return fmt.Errorf("invalid dependency check '%s' in template %s", d.Check, t.Template)
-			}
-		}
 	}
 
 	return nil
@@ -102,11 +102,6 @@ func (t *Template) Title() string {
 	return t.title
 }
 
-// return a language specific product title
-func (t *Template) ProductTitle(p Product) string {
-	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(t.Lang)))
-}
-
 // return the language specific product titles
 func (t *Template) Titles(lang string) []string {
 	t.Lang = lang
@@ -121,7 +116,7 @@ func (t *Template) Titles(lang string) []string {
 // set the language specific product titles
 func (t *Template) resolveTitles() {
 	for _, p := range t.Products {
-		t.titles = append(t.titles, t.ProductTitle(p))
+		t.titles = append(t.titles, p.Title(t.Lang))
 	}
 }
 
@@ -317,9 +312,11 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 		out := strings.ToLower(key)
 
 		if i, p := t.ParamByName(key); i == -1 {
-			if !slices.Contains(predefinedTemplateProperties, strings.ToLower(key)) {
+			if !slices.Contains(predefinedTemplateProperties, out) {
 				return nil, values, fmt.Errorf("invalid key: %s", key)
 			}
+		} else if p.Deprecated {
+			continue
 		} else {
 			out = p.Name
 		}

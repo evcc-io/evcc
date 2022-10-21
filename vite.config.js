@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import vuePlugin from "@vitejs/plugin-vue";
+import { ViteToml } from "vite-plugin-toml";
 
 export default defineConfig({
   root: "./assets",
@@ -30,5 +31,6 @@ export default defineConfig({
         },
       },
     }),
+    ViteToml(),
   ],
 });

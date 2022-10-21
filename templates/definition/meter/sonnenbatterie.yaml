@@ -1,13 +1,13 @@
-template: sonnenbatterie-eco10
+template: sonnenbatterie
+covers: ["sonnenbatterie-eco10"]
 products:
-  - brand: Sonnenbatterie
+  - brand: Sonnen
     description:
-      generic: Eco/10
-guidedsetup:
-  enable: true
+      generic: sonnenBatterie
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: host
   - name: port
     default: 8080

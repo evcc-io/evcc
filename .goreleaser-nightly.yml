@@ -9,8 +9,6 @@ builds:
       - -tags=release
     ldflags:
       - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w
-    env:
-      - CGO_ENABLED=0
     goos:
       - linux
     goarch:
@@ -45,7 +43,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}-{{ .Timestamp }}'
+  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
 
 changelog:
   sort: asc
