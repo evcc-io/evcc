@@ -14,12 +14,12 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
         echo "Config not found. Please create a config under ${CONFIG}."
         echo "For details see evcc documentation at https://github.com/evcc-io/evcc#readme."
     else
-        if [ -z "${SQLITE_FILE}" ]; then
-            echo "starting evcc: 'evcc --config ${CONFIG}'"
-            exec evcc --config "${CONFIG}"
-        else
+        if [ "${SQLITE_FILE}" ]; then
             echo "starting evcc: 'evcc --config ${CONFIG} --sqlite ${SQLITE_FILE}'"
             exec evcc --config "${CONFIG}" --sqlite "${SQLITE_FILE}"
+        else
+            echo "starting evcc: 'evcc --config ${CONFIG}'"
+            exec evcc --config "${CONFIG}"
         fi
     fi
 else
