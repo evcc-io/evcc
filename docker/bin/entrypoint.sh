@@ -5,7 +5,7 @@ set -e
 HASSIO_OPTIONSFILE=/data/options.json
 
 if [ -f ${HASSIO_OPTIONSFILE} ]; then
-    CONFIG=$(grep config_file ${HASSIO_OPTIONSFILE}| cut -d ':' -f 2 | sed s/[\"}]//g )
+    CONFIG=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
     echo "Using config file: ${CONFIG}"
 
     SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
