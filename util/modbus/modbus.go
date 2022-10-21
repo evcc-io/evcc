@@ -309,13 +309,13 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.Transform = asFloat64(encoding.Int16)
 		op.ReadLen = 1
 	case "int16nan":
-		op.Transform = decodeNaN16(1<<15, asFloat64(encoding.Int16))
+		op.Transform = decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
 		op.ReadLen = 1
 	case "uint16":
 		op.Transform = asFloat64(encoding.Uint16)
 		op.ReadLen = 1
 	case "uint16nan":
-		op.Transform = decodeNaN16(0xFFFF, asFloat64(encoding.Uint16))
+		op.Transform = decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
 		op.ReadLen = 1
 	case "bool16":
 		mask, err := decodeMask(r.BitMask)
@@ -329,7 +329,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	case "int32":
 		op.Transform = asFloat64(encoding.Int32)
 	case "int32nan":
-		op.Transform = decodeNaN32(1<<31, asFloat64(encoding.Int32))
+		op.Transform = decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
 	case "int32s":
 		op.Transform = asFloat64(encoding.Int32LswFirst)
 	case "uint32":
@@ -337,7 +337,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	case "uint32s":
 		op.Transform = asFloat64(encoding.Uint32LswFirst)
 	case "uint32nan":
-		op.Transform = decodeNaN32(0xFFFFFFFF, asFloat64(encoding.Uint32))
+		op.Transform = decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
 	case "float32", "ieee754":
 		op.Transform = asFloat64(encoding.Float32)
 	case "float32s", "ieee754s":
@@ -348,7 +348,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.Transform = asFloat64(encoding.Uint64)
 		op.ReadLen = 4
 	case "uint64nan":
-		op.Transform = decodeNaN64(0xFFFFFFFFFFFFFFFF, asFloat64(encoding.Uint64))
+		op.Transform = decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
 		op.ReadLen = 4
 	case "float64":
 		op.Transform = encoding.Float64
