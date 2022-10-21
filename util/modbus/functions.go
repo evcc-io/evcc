@@ -56,8 +56,8 @@ func decodeBool16(mask uint64) func(b []byte) float64 {
 func decodeNaN16(f func(b []byte) float64, nan ...uint16) func(b []byte) float64 {
 	return func(b []byte) float64 {
 		u := binary.BigEndian.Uint16(b)
-		for _, n := range nan {
-			if u == n {
+		for _, nan := range nan {
+			if u == nan {
 				return 0
 			}
 		}
@@ -68,8 +68,8 @@ func decodeNaN16(f func(b []byte) float64, nan ...uint16) func(b []byte) float64
 func decodeNaN32(f func(b []byte) float64, nan ...uint32) func(b []byte) float64 {
 	return func(b []byte) float64 {
 		u := binary.BigEndian.Uint32(b)
-		for _, n := range nan {
-			if u == n {
+		for _, nan := range nan {
+			if u == nan {
 				return 0
 			}
 		}
@@ -80,8 +80,8 @@ func decodeNaN32(f func(b []byte) float64, nan ...uint32) func(b []byte) float64
 func decodeNaN64(f func(b []byte) float64, nan ...uint64) func(b []byte) float64 {
 	return func(b []byte) float64 {
 		u := binary.BigEndian.Uint64(b)
-		for _, n := range nan {
-			if u == n {
+		for _, nan := range nan {
+			if u == nan {
 				return 0
 			}
 		}
