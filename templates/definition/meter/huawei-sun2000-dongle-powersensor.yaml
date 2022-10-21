@@ -84,7 +84,7 @@ render: |
     register:
       address: 37001
       type: holding
-      decode: int32
+      decode: int32nan
     scale: -1
   soc:
     source: modbus
