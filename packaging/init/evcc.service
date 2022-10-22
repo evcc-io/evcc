@@ -14,5 +14,8 @@ ExecStart=/usr/bin/evcc
 Restart=always
 RestartSec=10
 
+User=evcc
+Group=evcc
+
 [Install]
 WantedBy=multi-user.target
