@@ -9,7 +9,7 @@ set -e
 
 EVCC_USER=evcc
 EVCC_GROUP=evcc
-EVCC_HOME=/var/lib/$EVCC_USER
+EVCC_HOME="/var/lib/$EVCC_USER"
 RESTART_FLAG_FILE=/var/lib/evcc/.restartOnUpgrade
 
 copyDbToUserDir() {
@@ -20,7 +20,8 @@ copyDbToUserDir() {
       deb-systemd-invoke stop evcc.service >/dev/null || true
       touch ${RESTART_FLAG_FILE}
     fi
-    /bin/cp -Rp /root/.evcc/evcc.db /var/lib/evcc/
+    /bin/cp -Rp /root/.evcc/evcc.db "$EVCC_HOME"
+    chown "$EVCC_USER:$EVCC_GROUP" "$EVCC_HOME/evcc.db"
   fi
   return 0
 }
