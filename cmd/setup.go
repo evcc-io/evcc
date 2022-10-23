@@ -19,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/locale"
@@ -74,7 +75,7 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 	}
 
 	// setup sponsorship
-	if conf.SponsorToken != "" {
+	if err == nil && conf.SponsorToken != "" {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
@@ -117,7 +118,17 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 
 // configureDatabase configures session database
 func configureDatabase(conf dbConfig) error {
-	return db.NewInstance(conf.Type, conf.Dsn)
+	err := db.NewInstance(conf.Type, conf.Dsn)
+	if err == nil {
+		if err = settings.Init(); err == nil {
+			shutdown.Register(func() {
+				if err := settings.Persist(); err != nil {
+					log.ERROR.Println("cannot save settings:", err)
+				}
+			})
+		}
+	}
+	return err
 }
 
 // configureInflux configures influx database
