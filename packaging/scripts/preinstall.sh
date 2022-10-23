@@ -11,17 +11,17 @@ EVCC_USER=evcc
 EVCC_GROUP=evcc
 EVCC_HOME="/var/lib/$EVCC_USER"
 RESTART_FLAG_FILE=/var/lib/evcc/.restartOnUpgrade
+COPIED_FLAG=/root/.evcc/.copiedToEvccUser
 
 copyDbToUserDir() {
-  if [ -d /root/.evcc ] && [ ! -f /root/.evcc/.copiedToEvccUser ]; then
-    touch /var/lib/openhab2/.copiedToEvccUser
-
+  if [ -d /root/.evcc ] && [ ! -f $COPIED_FLAG ]; then
     if [ -d /run/systemd/system ] && /bin/systemctl status evcc.service > /dev/null 2>&1; then
       deb-systemd-invoke stop evcc.service >/dev/null || true
       touch ${RESTART_FLAG_FILE}
     fi
     /bin/cp -Rp /root/.evcc/evcc.db "$EVCC_HOME"
     chown "$EVCC_USER:$EVCC_GROUP" "$EVCC_HOME/evcc.db"
+    touch "$COPIED_FLAG"
   fi
   return 0
 }
