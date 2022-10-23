@@ -7,6 +7,7 @@ require (
 	github.com/BurntSushi/toml v1.2.0
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.8.0
+	github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.44.119
@@ -97,7 +98,6 @@ require (
 	cloud.google.com/go/compute v1.10.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
-	github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
