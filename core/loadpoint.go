@@ -1047,7 +1047,7 @@ func (lp *LoadPoint) vehicleOdometer() {
 
 // statusEvents converts the observed charger status change into a logical sequence of events
 func statusEvents(prevStatus, status api.ChargeStatus) []string {
-	res := make([]string, 0)
+	res := make([]string, 0, 2)
 
 	// changed from A - connected
 	if prevStatus == api.StatusA || (status != api.StatusA && prevStatus == api.StatusNone) {
