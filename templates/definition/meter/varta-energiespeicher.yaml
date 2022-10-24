@@ -1,5 +1,5 @@
-template: varta-energiespeicher
-covers: ["varta-energiespeicher-battery-only"]
+template: varta
+covers: ["varta-energiespeicher", "varta-energiespeicher-battery-only"]
 products:
   - brand: VARTA
     description:
