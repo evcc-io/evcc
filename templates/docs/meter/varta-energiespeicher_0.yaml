@@ -1,6 +1,6 @@
 product:
   brand: VARTA
-  description: Energiespeicher (mit PV-Sensor)
+  description: pulse/ pulse neo/ element (PV nur verfügbar mit PV-Sensor)
 render:
   - usage: grid
     default: |

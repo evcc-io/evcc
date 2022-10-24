@@ -1,9 +1,10 @@
 template: varta-energiespeicher
+covers: ["varta-energiespeicher-battery-only"]
 products:
   - brand: VARTA
     description:
-      de: Energiespeicher (mit PV-Sensor)
-      en: Energiespeicher (with PV Sensor)
+      de: pulse/ pulse neo/ element (PV nur verfügbar mit PV-Sensor)
+      en: pulse/ pulse neo/ element (PV only available with PV sensor)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
