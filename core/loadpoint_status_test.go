@@ -23,7 +23,6 @@ func TestStatusEvents(t *testing.T) {
 		{api.StatusB, api.StatusC, []string{evChargeStart}},
 
 		{api.StatusC, api.StatusA, []string{evChargeStop, evVehicleDisconnect}},
-		// {api.StatusC, api.StatusA, []string{evVehicleDisconnect, evChargeStop}},
 		{api.StatusC, api.StatusB, []string{evChargeStop}},
 	}
 
