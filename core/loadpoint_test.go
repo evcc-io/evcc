@@ -418,6 +418,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	lp.enabled = true
 	lp.chargeCurrent = float64(minA)
+	lp.status = api.StatusC
 
 	t.Log("charging below soc target")
 	vehicle.EXPECT().SoC().Return(85.0, nil)
