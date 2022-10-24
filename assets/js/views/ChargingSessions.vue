@@ -71,7 +71,7 @@
 												<span class="d-block d-sm-none">
 													{{
 														fmtFullDateTime(
-															new Date(session.finished),
+															new Date(session.created),
 															true
 														)
 													}}
@@ -223,6 +223,7 @@ export default {
 		content: "";
 	}
 }
+
 .breakdown:empty {
 	display: none;
 }
