@@ -213,12 +213,13 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 				return nil, err
 			}
-
-			// HACK: setup watchdog for meter values if not happy with config
-			c.log.DEBUG.Println("enabling meter watchdog")
 		}
 
-		go cp.WatchDog(meterInterval)
+		// HACK: setup watchdog for meter values if not happy with config
+		if meterInterval > 0 {
+			c.log.DEBUG.Println("enabling meter watchdog")
+			go cp.WatchDog(meterInterval)
+		}
 	}
 
 	// TODO deprecate
