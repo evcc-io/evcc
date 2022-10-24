@@ -8,7 +8,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["rs485", "tcpip"]
 render: |
   type: abb
   {{- include "modbus" . }}
