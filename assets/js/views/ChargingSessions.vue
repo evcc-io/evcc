@@ -50,7 +50,7 @@
 									{{ vehicle.name }}: {{ fmtKWh(vehicle.energy) }}
 								</li>
 							</ul>
-							<div class="table-responsive mt-3">
+							<div class="table-responsive my-3">
 								<table class="table">
 									<thead>
 										<tr>
@@ -223,15 +223,7 @@ export default {
 		content: "";
 	}
 }
-
 .breakdown:empty {
 	display: none;
-}
-.table td {
-	border-top-width: 1px;
-	border-bottom-width: 0;
-}
-.table td:empty {
-	border-top-width: 0;
 }
 </style>
