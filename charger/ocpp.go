@@ -87,10 +87,15 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currentsG = c.currents
 	}
 
-	return decorateOCPP(c, powerG, totalEnergyG, currentsG), nil
+	var phasesS func(int) error
+	if c.phaseSwitching {
+		phasesS = c.phases1p3p
+	}
+
+	return decorateOCPP(c, powerG, totalEnergyG, currentsG, phasesS), nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
 
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, quirks bool, timeout time.Duration) (*OCPP, error) {
@@ -184,7 +189,6 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 					case ocpp.KeyConnectorSwitch3to1PhaseSupported:
 						var val bool
-						c.phaseSwitching = false
 						if val, err = strconv.ParseBool(*opt.Value); err == nil {
 							c.phaseSwitching = val
 						}
@@ -310,9 +314,9 @@ func (c *OCPP) Enable(enable bool) error {
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
 			request.ConnectorId = &c.connector
 
+			// TODO remove log
 			c.log.TRACE.Printf("Setting current %d and phases %d at the start of remote transaction", c.current, c.phases)
 			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
-
 		})
 	} else {
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
@@ -351,31 +355,28 @@ func (c *OCPP) setPeriod(current float64, phases int) error {
 	c.log.TRACE.Printf("current phases: %d, current current: %f", phases, current)
 
 	enabled, err := c.Enabled()
-	if err == nil && enabled {
-		err = c.setChargingProfile(c.connector, getTxChargingProfile(current, phases))
-	} else {
-		c.log.TRACE.Printf("no running transaction, so silently ommiting request to change charging parameters")
-	}
-
-	if err != nil {
-		err = fmt.Errorf("failed to set charging profile: %w", err)
+	if err == nil {
+		if enabled {
+			if err = c.setChargingProfile(c.connector, getTxChargingProfile(current, phases)); err != nil {
+				err = fmt.Errorf("failed to set charging profile: %w", err)
+			}
+		} else {
+			c.log.TRACE.Printf("no running transaction, ommitting request to change charging parameters")
+		}
 	}
 
 	return err
 }
 
-
 func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
-	if phases == 0 {
-		phases = 3
+	period := types.NewChargingSchedulePeriod(0, current)
+	if phases != 0 {
+		period.NumberPhases = &phases
 	}
 
-	period := types.NewChargingSchedulePeriod(0, current)
-	period.NumberPhases = &phases
-
 	return &types.ChargingProfile{
-		ChargingProfileId: 1,
-		StackLevel: 0,
+		ChargingProfileId:      1,
+		StackLevel:             0,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
 		ChargingProfileKind:    types.ChargingProfileKindRelative,
 		ChargingSchedule: &types.ChargingSchedule{
@@ -417,23 +418,15 @@ func (c *OCPP) currents() (float64, float64, float64, error) {
 }
 
 // Phases1p3p implements the api.PhaseSwitcher interface
-func (c *OCPP) Phases1p3p(phases int) error {
-	if !c.phaseSwitching {
-		c.log.DEBUG.Printf("phase switching during transaction is not supported by the charger")
-	}
-
-	c.log.TRACE.Printf("switching phase to %dp", phases)
-	c.phases = phases
-
+func (c *OCPP) phases1p3p(phases int) error {
 	enabled, err := c.Enabled()
 	if err == nil && enabled {
+		c.phases = phases
+
+		// TODO remove log
 		c.log.TRACE.Printf("sending request to set current %f @ %dp", c.current, c.phases)
-		if c.phaseSwitching {
-			err = c.setPeriod(c.current, c.phases)
-		} else {
-			c.Enable(false)
-			c.Enable(true)
-		}
+
+		err = c.setPeriod(c.current, c.phases)
 	}
 
 	return err
