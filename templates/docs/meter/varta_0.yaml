@@ -1,25 +1,25 @@
 product:
   brand: VARTA
-  description: Energiespeicher (mit PV-Sensor)
+  description: pulse/ pulse neo/ element (PV nur verfügbar mit PV-Sensor)
 render:
   - usage: grid
     default: |
       type: template
-      template: varta-energiespeicher
+      template: varta
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 502 # Port # Optional
   - usage: pv
     default: |
       type: template
-      template: varta-energiespeicher
+      template: varta
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 502 # Port # Optional
   - usage: battery
     default: |
       type: template
-      template: varta-energiespeicher
+      template: varta
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 502 # Port # Optional
