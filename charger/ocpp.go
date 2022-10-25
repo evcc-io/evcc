@@ -117,14 +117,11 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
 
-
-
 	select {
 	case <-time.After(timeout):
 		return nil, api.ErrTimeout
 	case <-cp.HasConnected():
 	}
-
 
 	// see who's there
 	// ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
