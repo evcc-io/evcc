@@ -200,15 +200,6 @@ vehicles:
     title: grüner Honda e
     capacity: 26
 
-  - name: mercedes1
-    type: mercedes
-    title: Mercedes
-    phases: 2
-    vin: W1K2052131G009532
-    clientId: 53c28422-25e4-47c2-9cf4-94a48065c5b3
-    clientSecret: ePhxFTNyMbvslPqgoAfERHscIvpHZIaOfKPLjmEvQZDhSaocKAOiceLEVubDPyxP
-    identifiers: Jochen
-
 site:
   title: Zuhause
   meters:
