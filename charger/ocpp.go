@@ -440,7 +440,7 @@ func (c *OCPP) currents() (float64, float64, float64, error) {
 	return c.cp.Currents()
 }
 
-// // TODO: Phases1p3p implements the api.PhaseSwitcher interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (c *OCPP) Phases1p3p(phases int) error {
 	if !c.phaseSwitching {
 		return fmt.Errorf("phase switching is not supported by the charger")
@@ -453,6 +453,7 @@ func (c *OCPP) Phases1p3p(phases int) error {
 }
 
 // // Identify implements the api.Identifier interface
+// Unless charger uses vehicle ID as idTag in authorize.req it is not possible to implement this in ocpp1.6
 // func (c *OCPP) Identify() (string, error) {
 // 	return "", errors.New("not implemented")
 // }
