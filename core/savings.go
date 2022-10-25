@@ -85,6 +85,9 @@ func (s *Savings) save() {
 	save("selfConsumptionCharged", s.selfConsumptionCharged)
 	save("selfConsumptionCost", s.selfConsumptionCost)
 
+	if s.persistTicker == nil {
+		return
+	}
 	quit := make(chan struct{})
 	for {
 		select {
