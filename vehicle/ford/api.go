@@ -13,7 +13,7 @@ import (
 
 const ApiURI = "https://usapi.cv.ford.com"
 
-// API is the VW api client
+// API is the Ford api client
 type API struct {
 	*request.Helper
 }
@@ -49,7 +49,7 @@ func (v *API) Vehicles() ([]string, error) {
 	var resp VehiclesResponse
 	var vehicles []string
 
-	uri := fmt.Sprintf("%s/api/users/vehicles", TokenURI)
+	uri := fmt.Sprintf("%s/api/expdashboard/v1/details", TokenURI)
 
 	err := v.GetJSON(uri, &resp)
 	if err == nil {
@@ -63,7 +63,7 @@ func (v *API) Vehicles() ([]string, error) {
 
 // Status performs a /status request
 func (v *API) Status(vin string) (StatusResponse, error) {
-	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", ApiURI, vin)
+	uri := fmt.Sprintf("%s/api/vehicles/v5/%s/status", ApiURI, vin)
 
 	var res StatusResponse
 	err := v.GetJSON(uri, &res)
@@ -75,7 +75,7 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 func (v *API) RefreshResult(vin, refreshId string) (StatusResponse, error) {
 	var res StatusResponse
 
-	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", ApiURI, vin, refreshId)
+	uri := fmt.Sprintf("%s/api/vehicles/v5/%s/statusrefresh/%s", ApiURI, vin, refreshId)
 	err := v.GetJSON(uri, &res)
 
 	return res, err
