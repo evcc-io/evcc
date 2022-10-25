@@ -54,7 +54,6 @@ func (v *API) Vehicles() ([]string, error) {
 
 	data := map[string]string{
 		"dashboardRefreshRequest": "All",
-		"smsWakeUpVIN":            "",
 	}
 
 	uri := fmt.Sprintf("%s/api/expdashboard/v1/details", TokenURI)
