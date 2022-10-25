@@ -10,7 +10,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
@@ -31,7 +30,6 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
-	lp                loadpoint.API
 }
 
 func init() {
@@ -312,15 +310,8 @@ func (c *OCPP) Enable(enable bool) error {
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
 			request.ConnectorId = &c.connector
 
-			c.log.TRACE.Printf("Setting current and phases at the start of remote transaction")
-			// in approach where we apply TXChargingProfile to set the phases and MaxChargingProfile is used to limit total current
-			// to be safe we set current here to maximum available for the connector
-			current := c.current // when we can't get max current from loadpoint settings we fallback to currently set current for charger
-			if c.lp != nil {
-				current = c.lp.GetMaxCurrent()
-			}
-
-			request.ChargingProfile = getTxChargingProfile(current, c.phases)
+			c.log.TRACE.Printf("Setting current %d and phases %d at the start of remote transaction", c.current, c.phases)
+			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
 
 		})
 	} else {
@@ -357,13 +348,15 @@ func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfil
 
 // setPeriod sets a single charging schedule period with given current and phases
 func (c *OCPP) setPeriod(current float64, phases int) error {
-	period := types.NewChargingSchedulePeriod(0, current)
-
 	c.log.TRACE.Printf("current phases: %d, current current: %f", phases, current)
-	// MaxChargingProfile should not try to change phases since standard doesn't define how to handle composition of phases
-	// connectorID: 0 - profile will be applied to all connectors
-	// MaxChargingProfile MUST be applied to connector 0 and not other one
-	err := c.setChargingProfile(0, getMaxChargingProfile(period))
+
+	enabled, err := c.Enabled()
+	if err == nil && enabled {
+		err = c.setChargingProfile(c.connector, getTxChargingProfile(current, phases))
+	} else {
+		c.log.TRACE.Printf("no running transaction, so silently ommiting request to change charging parameters")
+	}
+
 	if err != nil {
 		err = fmt.Errorf("failed to set charging profile: %w", err)
 	}
@@ -371,21 +364,7 @@ func (c *OCPP) setPeriod(current float64, phases int) error {
 	return err
 }
 
-func getMaxChargingProfile(period types.ChargingSchedulePeriod) *types.ChargingProfile {
-	return &types.ChargingProfile{
-		ChargingProfileId:      2,
-		StackLevel:             1,
-		ChargingProfilePurpose: types.ChargingProfilePurposeChargePointMaxProfile,
-		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
-		ChargingSchedule: &types.ChargingSchedule{
-			StartSchedule:          types.NewDateTime(time.Now().Add(-12 * time.Hour)), // using -12h to avoid summer time issues
-			ChargingRateUnit:       types.ChargingRateUnitAmperes,
-			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
-		},
-	}
-}
 
-// this is initial profile for transaction
 func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
 	if phases == 0 {
 		phases = 3
@@ -440,13 +419,24 @@ func (c *OCPP) currents() (float64, float64, float64, error) {
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (c *OCPP) Phases1p3p(phases int) error {
 	if !c.phaseSwitching {
-		return fmt.Errorf("phase switching is not supported by the charger")
+		c.log.DEBUG.Printf("phase switching during transaction is not supported by the charger")
 	}
 
 	c.log.TRACE.Printf("switching phase to %dp", phases)
 	c.phases = phases
 
-	return nil
+	enabled, err := c.Enabled()
+	if err == nil && enabled {
+		c.log.TRACE.Printf("sending request to set current %f @ %dp", c.current, c.phases)
+		if c.phaseSwitching {
+			err = c.setPeriod(c.current, c.phases)
+		} else {
+			c.Enable(false)
+			c.Enable(true)
+		}
+	}
+
+	return err
 }
 
 // // Identify implements the api.Identifier interface
@@ -454,7 +444,3 @@ func (c *OCPP) Phases1p3p(phases int) error {
 // func (c *OCPP) Identify() (string, error) {
 // 	return "", errors.New("not implemented")
 // }
-
-func (c *OCPP) LoadpointControl(lp loadpoint.API) {
-	c.lp = lp
-}
