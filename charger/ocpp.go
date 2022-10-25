@@ -313,9 +313,6 @@ func (c *OCPP) Enable(enable bool) error {
 			rc <- err
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
 			request.ConnectorId = &c.connector
-
-			// TODO remove log
-			c.log.TRACE.Printf("Setting current %d and phases %d at the start of remote transaction", c.current, c.phases)
 			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
 		})
 	} else {
@@ -419,13 +416,12 @@ func (c *OCPP) currents() (float64, float64, float64, error) {
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (c *OCPP) phases1p3p(phases int) error {
+	c.phases = phases
+
 	enabled, err := c.Enabled()
 	if err == nil && enabled {
-		c.phases = phases
-
-		// TODO remove log
-		c.log.TRACE.Printf("sending request to set current %f @ %dp", c.current, c.phases)
-
+		// NOTE: this will currently _never_ happen since
+		// loadpoint disabled the charger before switching
 		err = c.setPeriod(c.current, c.phases)
 	}
 
