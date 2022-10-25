@@ -55,8 +55,12 @@
 									<thead>
 										<tr>
 											<th scope="col">{{ $t("sessions.vehicle") }}</th>
-											<th scope="col">{{ $t("sessions.energy") }}</th>
-											<th scope="col">{{ $t("sessions.date") }}</th>
+											<th scope="col" class="text-end ps-sm-4 pe-md-5">
+												{{ $t("sessions.energy") }}
+											</th>
+											<th scope="col" class="ps-3 ps-md-4 ps-md-5">
+												{{ $t("sessions.date") }}
+											</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -64,10 +68,10 @@
 											<td>
 												{{ session.vehicle }}
 											</td>
-											<td class="text-nowrap">
+											<td class="text-nowrap text-end ps-sm-4 pe-md-5">
 												{{ fmtKWh(session.chargedEnergy * 1e3) }}
 											</td>
-											<td class="text-nowrap">
+											<td class="text-nowrap ps-3 ps-md-4 ps-md-5">
 												<span class="d-block d-sm-none">
 													{{
 														fmtFullDateTime(
