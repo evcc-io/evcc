@@ -49,7 +49,6 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 
 // Vehicles returns the list of user vehicles
 func (v *API) Vehicles() ([]string, error) {
-	var resp VehiclesResponse
 	var res []string
 
 	data := map[string]string{
@@ -60,6 +59,7 @@ func (v *API) Vehicles() ([]string, error) {
 
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
+		var resp VehiclesResponse
 		if err = v.DoJSON(req, &resp); err == nil {
 			for _, v := range resp.UserVehicles.VehicleDetails {
 				res = append(res, v.VIN)
