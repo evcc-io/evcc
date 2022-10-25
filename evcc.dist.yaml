@@ -37,6 +37,14 @@ levels:
   cache: error
   db: error
 
+# modbus proxy for allowing external programs to reuse the evcc modbus connection
+# each entry will start a proxy instance at the given port speaking Modbus TCP and
+# relaying to the given modbus downstream device (either TCP or RTU, RS485 or TCP)
+modbusproxy:
+  #  - port: 5200
+  #    uri: localhost:502
+  #    readonly: true
+
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints
 # for documentation see https://docs.evcc.io/docs/devices/meters

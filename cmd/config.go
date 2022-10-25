@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	autoauth "github.com/evcc-io/evcc/server/auth"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 	"github.com/gorilla/handlers"
@@ -47,13 +48,14 @@ type config struct {
 	Network      networkConfig
 	Log          string
 	SponsorToken string
-	Telemetry    bool
 	Plant        string // telemetry plant id
+	Telemetry    bool
 	Metrics      bool
 	Profile      bool
 	Levels       map[string]string
 	Interval     time.Duration
 	Mqtt         mqttConfig
+	ModbusProxy  []proxyConfig
 	Database     dbConfig
 	Javascript   map[string]interface{}
 	Influx       server.InfluxConfig
@@ -71,6 +73,12 @@ type config struct {
 type mqttConfig struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string
+}
+
+type proxyConfig struct {
+	Port            int
+	ReadOnly        bool
+	modbus.Settings `mapstructure:",squash"`
 }
 
 type dbConfig struct {

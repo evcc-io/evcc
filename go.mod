@@ -8,6 +8,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71
+	github.com/andig/mbserver v0.0.0-20221101145037-fcaa2dfef9fb
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.44.127

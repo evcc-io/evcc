@@ -46,15 +46,23 @@ type Settings struct {
 	RTU                 *bool // indicates RTU over TCP if true
 }
 
+func (s *Settings) String() string {
+	if s.URI != "" {
+		return s.URI
+	}
+	return s.Device
+}
+
 // Connection decorates a meters.Connection with transparent slave id and error handling
 type Connection struct {
 	slaveID uint8
+	mu      sync.Mutex
 	conn    meters.Connection
 	delay   time.Duration
 }
 
-func (mb *Connection) prepare() {
-	mb.conn.Slave(mb.slaveID)
+func (mb *Connection) prepare(slaveID uint8) {
+	mb.conn.Slave(slaveID)
 	if mb.delay > 0 {
 		time.Sleep(mb.delay)
 	}
@@ -88,69 +96,135 @@ func (mb *Connection) Timeout(timeout time.Duration) {
 }
 
 // ReadCoils wraps the underlying implementation
-func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) ReadCoilsWithSlave(slaveID uint8, address, quantity uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadCoils(address, quantity))
 }
 
 // WriteSingleCoil wraps the underlying implementation
-func (mb *Connection) WriteSingleCoil(address, quantity uint16) ([]byte, error) {
-	mb.prepare()
-	return mb.handle(mb.conn.ModbusClient().WriteSingleCoil(address, quantity))
+func (mb *Connection) WriteSingleCoilWithSlave(slaveID uint8, address, value uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
+	return mb.handle(mb.conn.ModbusClient().WriteSingleCoil(address, value))
 }
 
 // ReadInputRegisters wraps the underlying implementation
-func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) ReadInputRegistersWithSlave(slaveID uint8, address, quantity uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadInputRegisters(address, quantity))
 }
 
 // ReadHoldingRegisters wraps the underlying implementation
-func (mb *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) ReadHoldingRegistersWithSlave(slaveID uint8, address, quantity uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadHoldingRegisters(address, quantity))
 }
 
 // WriteSingleRegister wraps the underlying implementation
-func (mb *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) WriteSingleRegisterWithSlave(slaveID uint8, address, value uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteSingleRegister(address, value))
 }
 
 // WriteMultipleRegisters wraps the underlying implementation
-func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) WriteMultipleRegistersWithSlave(slaveID uint8, address, quantity uint16, value []byte) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteMultipleRegisters(address, quantity, value))
 }
 
 // ReadDiscreteInputs wraps the underlying implementation
-func (mb *Connection) ReadDiscreteInputs(address, quantity uint16) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) ReadDiscreteInputsWithSlave(slaveID uint8, address, quantity uint16) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadDiscreteInputs(address, quantity))
 }
 
 // WriteMultipleCoils wraps the underlying implementation
-func (mb *Connection) WriteMultipleCoils(address, quantity uint16, value []byte) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) WriteMultipleCoilsWithSlave(slaveID uint8, address, quantity uint16, value []byte) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteMultipleCoils(address, quantity, value))
 }
 
 // ReadWriteMultipleRegisters wraps the underlying implementation
-func (mb *Connection) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) ReadWriteMultipleRegistersWithSlave(slaveID uint8, readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity, value))
 }
 
 // MaskWriteRegister wraps the underlying implementation
-func (mb *Connection) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) MaskWriteRegisterWithSlave(slaveID uint8, address, andMask, orMask uint16) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().MaskWriteRegister(address, andMask, orMask))
 }
 
 // ReadFIFOQueue wraps the underlying implementation
-func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) ReadFIFOQueueWithSlave(slaveID uint8, address uint16) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadFIFOQueue(address))
+}
+
+func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
+	return mb.ReadCoilsWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) WriteSingleCoil(address, quantity uint16) ([]byte, error) {
+	return mb.WriteSingleCoilWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
+	return mb.ReadInputRegistersWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
+	return mb.ReadHoldingRegistersWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
+	return mb.WriteSingleRegisterWithSlave(mb.slaveID, address, value)
+}
+
+func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
+	return mb.WriteMultipleRegistersWithSlave(mb.slaveID, address, quantity, value)
+}
+
+func (mb *Connection) ReadDiscreteInputs(address, quantity uint16) (results []byte, err error) {
+	return mb.ReadDiscreteInputsWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) WriteMultipleCoils(address, quantity uint16, value []byte) (results []byte, err error) {
+	return mb.WriteMultipleCoilsWithSlave(mb.slaveID, address, quantity, value)
+}
+
+func (mb *Connection) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
+	return mb.ReadWriteMultipleRegistersWithSlave(mb.slaveID, readAddress, readQuantity, writeAddress, writeQuantity, value)
+}
+
+func (mb *Connection) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
+	return mb.MaskWriteRegisterWithSlave(mb.slaveID, address, andMask, orMask)
+}
+
+func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) {
+	return mb.ReadFIFOQueueWithSlave(mb.slaveID, address)
 }
 
 var (
