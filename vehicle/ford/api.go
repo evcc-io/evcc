@@ -30,8 +30,11 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 			if err == nil {
 				for k, v := range map[string]string{
 					"Content-type":   request.JSONContent,
+					"User-Agent":     "FordPass/5 CFNetwork/1333.0.4 Darwin/21.5.0",
+					"locale":         "en-US",
 					"Application-Id": ApplicationID,
 					"Auth-Token":     token.AccessToken,
+					"CountryCode":    "USA",
 				} {
 					req.Header.Set(k, v)
 				}
@@ -47,18 +50,25 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 // Vehicles returns the list of user vehicles
 func (v *API) Vehicles() ([]string, error) {
 	var resp VehiclesResponse
-	var vehicles []string
+	var res []string
+
+	data := map[string]string{
+		"dashboardRefreshRequest": "All",
+		"smsWakeUpVIN":            "",
+	}
 
 	uri := fmt.Sprintf("%s/api/expdashboard/v1/details", TokenURI)
 
-	err := v.GetJSON(uri, &resp)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
-		for _, v := range resp.Vehicles.Values {
-			vehicles = append(vehicles, v.VIN)
+		if err = v.DoJSON(req, &resp); err == nil {
+			for _, v := range resp.UserVehicles.VehicleDetails {
+				res = append(res, v.VIN)
+			}
 		}
 	}
 
-	return vehicles, err
+	return res, err
 }
 
 // Status performs a /status request
