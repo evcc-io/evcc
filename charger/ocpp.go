@@ -330,7 +330,7 @@ func (c *OCPP) Enable(enable bool) error {
 	return c.wait(err, rc)
 }
 
-func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfile) error {
+func (c *OCPP) setChargingProfile(connectorId int, profile *types.ChargingProfile) error {
 	c.log.TRACE.Printf("SetChargingProfileRequest: %+v (%+v)", profile, *profile.ChargingSchedule)
 
 	rc := make(chan error, 1)
@@ -342,24 +342,23 @@ func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfil
 		}
 
 		rc <- err
-	}, connectorid, profile)
+	}, connectorId, profile)
 
 	return c.wait(err, rc)
 }
 
-// setPeriod sets a single charging schedule period with given current and phases
-func (c *OCPP) setPeriod(current float64, phases int) error {
-	c.log.TRACE.Printf("current phases: %d, current current: %f", phases, current)
+// updatePeriod sets a single charging schedule period with given current and phases
+func (c *OCPP) updatePeriod(current float64, phases int) error {
+	// current period can only be updated if transaction is active
+	if enabled, err := c.Enabled(); err != nil || !enabled {
+		return err
+	}
 
-	enabled, err := c.Enabled()
-	if err == nil {
-		if enabled {
-			if err = c.setChargingProfile(c.connector, getTxChargingProfile(current, phases)); err != nil {
-				err = fmt.Errorf("failed to set charging profile: %w", err)
-			}
-		} else {
-			c.log.TRACE.Printf("no running transaction, ommitting request to change charging parameters")
-		}
+	c.log.TRACE.Printf("update period with phases: %d, current: %f", phases, current)
+
+	err := c.setChargingProfile(c.connector, getTxChargingProfile(current, phases))
+	if err != nil {
+		err = fmt.Errorf("set charging profile: %w", err)
 	}
 
 	return err
@@ -392,7 +391,7 @@ var _ api.ChargerEx = (*OCPP)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *OCPP) MaxCurrentMillis(current float64) error {
-	err := c.setPeriod(current, c.phases)
+	err := c.updatePeriod(current, c.phases)
 	if err == nil {
 		c.current = current
 	}
@@ -418,14 +417,10 @@ func (c *OCPP) currents() (float64, float64, float64, error) {
 func (c *OCPP) phases1p3p(phases int) error {
 	c.phases = phases
 
-	enabled, err := c.Enabled()
-	if err == nil && enabled {
-		// NOTE: this will currently _never_ happen since
-		// loadpoint disabled the charger before switching
-		err = c.setPeriod(c.current, c.phases)
-	}
-
-	return err
+	// NOTE: this will currently _never_ do anything since
+	// loadpoint disabled the charger before switching so
+	// updatePeriod will short-circuit
+	return c.updatePeriod(c.current, c.phases)
 }
 
 // // Identify implements the api.Identifier interface
