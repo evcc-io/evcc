@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"sync/atomic"
+	"time"
 
 	"github.com/evcc-io/evcc/server/db"
 	"golang.org/x/exp/slices"
@@ -62,6 +63,10 @@ func SetFloat(key string, val float64) {
 	SetString(key, strconv.FormatFloat(val, 'f', -1, 64))
 }
 
+func SetTime(key string, val time.Time) {
+	SetString(key, val.Format(time.RFC3339))
+}
+
 func SetJson(key string, val any) error {
 	b, err := json.Marshal(val)
 	if err == nil {
@@ -94,6 +99,14 @@ func Float(key string) (float64, error) {
 		return 0, err
 	}
 	return strconv.ParseFloat(s, 64)
+}
+
+func Time(key string) (time.Time, error) {
+	s, err := String(key)
+	if err != nil {
+		return time.Now(), err
+	}
+	return time.Parse(time.RFC3339, s)
 }
 
 func Json(key string, res any) error {

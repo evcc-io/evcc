@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 )
 
@@ -41,7 +42,27 @@ func NewSavings(tariffs tariff.Tariffs) *Savings {
 		updated: clock.Now(),
 	}
 
+	savings.load()
+
 	return savings
+}
+
+func (s *Savings) load() {
+	s.started, _ = settings.Time("savings.started")
+	s.gridCharged, _ = settings.Float("savings.gridCharged")
+	s.gridCost, _ = settings.Float("savings.gridCost")
+	s.gridSavedCost, _ = settings.Float("savings.gridSavedCost")
+	s.selfConsumptionCharged, _ = settings.Float("savings.selfConsumptionCharged")
+	s.selfConsumptionCost, _ = settings.Float("savings.selfConsumptionCost")
+}
+
+func (s *Savings) save() {
+	settings.SetTime("savings.started", s.started)
+	settings.SetFloat("savings.gridCharged", s.gridCharged)
+	settings.SetFloat("savings.gridCost", s.gridCost)
+	settings.SetFloat("savings.gridSavedCost", s.gridSavedCost)
+	settings.SetFloat("savings.selfConsumptionCharged", s.selfConsumptionCharged)
+	settings.SetFloat("savings.selfConsumptionCost", s.selfConsumptionCost)
 }
 
 func (s *Savings) Since() time.Time {
@@ -154,6 +175,8 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
+
+	s.save()
 
 	return deltaCharged, deltaSelf
 }
