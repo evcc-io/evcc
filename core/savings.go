@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -20,88 +19,50 @@ type publisher interface {
 	publish(key string, val interface{})
 }
 
-func load(name string, res any) {
-	key := "savings." + name
-	store := settings.NewStore(key)
-	if err := store.Load(&res); err != nil {
-		fmt.Printf("no value for %s in database. first start.\n", key)
-	}
-}
-
-func save(name string, value any) {
-	key := "savings." + name
-	store := settings.NewStore(key)
-	if err := store.Save(value); err != nil {
-		fmt.Printf("unable to save %s settings.\n", key)
-	}
-}
-
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Savings struct {
 	clock                          clock.Clock
 	tariffs                        tariff.Tariffs
-	started                        time.Time    // Boot time
-	updated                        time.Time    // Time of last charged value update
-	gridCharged                    float64      // Grid energy charged since startup (kWh)
-	gridCost                       float64      // Running total of charged grid energy cost (e.g. EUR)
-	gridSavedCost                  float64      // Running total of saved cost from self consumption (e.g. EUR)
-	selfConsumptionCharged         float64      // Self-produced energy charged since startup (kWh)
-	selfConsumptionCost            float64      // Running total of charged self-produced energy cost (e.g. EUR)
-	lastGridPrice, lastFeedInPrice float64      // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
-	persistTicker                  *time.Ticker // Ticker that defines the interval when savings are written to disk
+	started                        time.Time // Boot time
+	updated                        time.Time // Time of last charged value update
+	gridCharged                    float64   // Grid energy charged since startup (kWh)
+	gridCost                       float64   // Running total of charged grid energy cost (e.g. EUR)
+	gridSavedCost                  float64   // Running total of saved cost from self consumption (e.g. EUR)
+	selfConsumptionCharged         float64   // Self-produced energy charged since startup (kWh)
+	selfConsumptionCost            float64   // Running total of charged self-produced energy cost (e.g. EUR)
+	lastGridPrice, lastFeedInPrice float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
 	clock := clock.New()
 	savings := &Savings{
-		clock:         clock,
-		tariffs:       tariffs,
-		started:       clock.Now(),
-		updated:       clock.Now(),
-		persistTicker: time.NewTicker(time.Minute),
+		clock:   clock,
+		tariffs: tariffs,
+		started: clock.Now(),
+		updated: clock.Now(),
 	}
 
-	savings.restore()
+	savings.load()
 
 	return savings
 }
 
-func (s *Savings) restore() {
-	load("started", &s.started)
-	load("gridCharged", &s.gridCharged)
-	load("gridCost", &s.gridCost)
-	load("gridSavedCost", &s.gridSavedCost)
-	load("selfConsumptionCharged", &s.selfConsumptionCharged)
-	load("selfConsumptionCost", &s.selfConsumptionCost)
-
-	// fmt.Println("restored savings.*")
+func (s *Savings) load() {
+	s.started, _ = settings.Time("savings.started")
+	s.gridCharged, _ = settings.Float("savings.gridCharged")
+	s.gridCost, _ = settings.Float("savings.gridCost")
+	s.gridSavedCost, _ = settings.Float("savings.gridSavedCost")
+	s.selfConsumptionCharged, _ = settings.Float("savings.selfConsumptionCharged")
+	s.selfConsumptionCost, _ = settings.Float("savings.selfConsumptionCost")
 }
 
 func (s *Savings) save() {
-	save("started", s.started)
-	save("gridCharged", s.gridCharged)
-	save("gridCost", s.gridCost)
-	save("gridSavedCost", s.gridSavedCost)
-	save("selfConsumptionCharged", s.selfConsumptionCharged)
-	save("selfConsumptionCost", s.selfConsumptionCost)
-
-	if s.persistTicker == nil {
-		return
-	}
-	quit := make(chan struct{})
-	for {
-		select {
-		case <-s.persistTicker.C:
-			if err := settings.Persist(); err != nil {
-				fmt.Printf("unable to persist settings.\n")
-				return
-			}
-			// fmt.Println("saved savings.*")
-		case <-quit:
-			s.persistTicker.Stop()
-			return
-		}
-	}
+	settings.SetTime("savings.started", s.started)
+	settings.SetFloat("savings.gridCharged", s.gridCharged)
+	settings.SetFloat("savings.gridCost", s.gridCost)
+	settings.SetFloat("savings.gridSavedCost", s.gridSavedCost)
+	settings.SetFloat("savings.selfConsumptionCharged", s.selfConsumptionCharged)
+	settings.SetFloat("savings.selfConsumptionCost", s.selfConsumptionCost)
 }
 
 func (s *Savings) Since() time.Time {
