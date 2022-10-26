@@ -43,7 +43,7 @@
 						<div class="modal-body">
 							<p>
 								{{
-									$t("footer.savings.sinceServerStart", {
+									$t("footer.savings.since", {
 										since: fmtTimeAgo(secondsSinceStart()),
 									})
 								}}
