@@ -15,6 +15,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// https://ssoalpha.dvb.corpinter.net/v1/.well-known/openid-configuration
 const OAuthURI = "https://ssoalpha.dvb.corpinter.net"
 
 var OAuth2Endpoint = oauth2.Endpoint{
@@ -42,10 +43,16 @@ type Identity struct {
 
 // TODO SessionSecret from config/persistence
 func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions) (*Identity, error) {
+	provider, err := oidc.NewProvider(context.Background(), "https://ssoalpha.dvb.corpinter.net/v1")
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
+	}
+
 	oc := &oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,
-		Endpoint:     OAuth2Endpoint,
+		// Endpoint:     OAuth2Endpoint,
+		Endpoint: provider.Endpoint(),
 		Scopes: []string{
 			oidc.ScopeOpenID,
 			oidc.ScopeOfflineAccess,
