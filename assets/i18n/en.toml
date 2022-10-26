@@ -181,7 +181,7 @@ downloadCsv = "Download as CSV"
 loadpoint = "Loadpoint"
 vehicle = "Vehicle"
 energy = "Charged"
-date = "Finished"
+date = "Period"
 
 [sessions.csv]
 loadpoint = "Loadpoint"

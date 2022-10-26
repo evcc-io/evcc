@@ -181,7 +181,7 @@ downloadCsv = "Parsisiųsti CSV failą"
 loadpoint = "Įkroviklis"
 vehicle = "Automobilis"
 energy = "Įkrauta"
-date = "Baigta"
+date = "Laikotarpis"
 
 [sessions.csv]
 loadpoint = "Įkroviklis"
