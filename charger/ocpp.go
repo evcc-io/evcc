@@ -217,6 +217,8 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		c.meterValuesSample = meterValues
 	}
 
+	c.log.DEBUG.Printf("currently sampled meter values: %s \r\n", c.meterValuesSample)
+
 	// get initial meter values and configure sample rate
 	if c.hasMeasurement("Power.Active.Import") || c.hasMeasurement("Energy.Active.Import.Register") {
 		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
