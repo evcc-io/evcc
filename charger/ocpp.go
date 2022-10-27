@@ -89,7 +89,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return decorateOCPP(c, powerG, totalEnergyG, currentsG), nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, quirks bool, timeout time.Duration) (*OCPP, error) {
