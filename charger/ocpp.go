@@ -126,6 +126,8 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	case <-time.After(timeout):
 		return nil, api.ErrTimeout
 	case <-cp.HasConnected():
+		c.log.TRACE.Printf("triggering soft reset to get back to known state")
+		c.softReset()
 	}
 
 	// see who's there
@@ -225,6 +227,8 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		c.meterValuesSample = meterValues
 	}
 
+	c.log.DEBUG.Printf("currently sampled meter values: %s \r\n", c.meterValuesSample)
+
 	// get initial meter values and configure sample rate
 	if c.hasMeasurement("Power.Active.Import") || c.hasMeasurement("Energy.Active.Import.Register") {
 		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
@@ -252,10 +256,15 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	// 	ocpp.Instance().TriggerResetRequest(cp.ID(), t)
 	// }
 
+	// clear old profiles
+	c.clearChargingProfiles()
+
 	// request initial status
 	_ = cp.Initialized(statusTimeout)
 
 	// TODO: check for running transaction
+
+
 
 	return c, nil
 }
@@ -337,6 +346,49 @@ func (c *OCPP) Enable(enable bool) error {
 
 	return c.wait(err, rc)
 }
+
+
+func (c *OCPP) softReset() error {
+	c.log.TRACE.Printf("ResetRequest")
+
+	rc := make(chan error, 1)
+	err := ocpp.Instance().Reset(c.cp.ID(), func(request *core.ResetConfirmation, err error) {
+		c.log.TRACE.Printf("%T: %+v", request, request)
+
+		var status core.ResetStatus
+		if request != nil {
+			status = request.Status
+		}
+
+		c.log.TRACE.Printf("softReset for %s: %+v", c.cp.ID(), status)
+		rc <- err
+	}, core.ResetTypeSoft)
+
+	return c.wait(err, rc)
+}
+
+func (c *OCPP) clearChargingProfiles() error {
+	c.log.TRACE.Printf("ClearChargingProfileRequest")
+
+	rc := make(chan error, 1)
+	err := ocpp.Instance().ClearChargingProfile(c.cp.ID(), func(resp *smartcharging.ClearChargingProfileConfirmation, err error) {
+		c.log.TRACE.Printf("%T: %+v", resp, resp)
+
+		if err == nil && resp != nil && resp.Status != smartcharging.ClearChargingProfileStatusAccepted {
+			err = errors.New(string(resp.Status))
+		}
+		rc <- err
+	}, func (req *smartcharging.ClearChargingProfileRequest) {
+		c.log.TRACE.Printf("%T: %+v", req, req)
+		// profileId := 1
+		// req.Id = &profileId
+		// req.ConnectorId = &connectorId
+		// req.ChargingProfilePurpose = types.ChargingProfilePurposeTxProfile
+	})
+
+	return c.wait(err, rc)
+}
+
 
 func (c *OCPP) setChargingProfile(connectorId int, profile *types.ChargingProfile) error {
 	c.log.TRACE.Printf("SetChargingProfileRequest: %+v (%+v)", profile, *profile.ChargingSchedule)
