@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const rebootDelay = 5 * time.Minute // delayed reboot on error
+const rebootDelay = 5 * time.Second // delayed reboot on error
 
 var (
 	log     = util.NewLogger("main")
@@ -229,10 +229,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 			})
 		})
 
+		publishErrorInfo(valueChan, cfgFile, err)
+
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
-		publishErrorInfo(valueChan, cfgFile, err)
+		once.Do(func() {
+			<-time.After(rebootDelay)
+			close(stopC) // signal loop to end
+		})
 	}
 
 	// uds health check listener
@@ -242,14 +247,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go func() {
 		<-stopC
 
-		timeout := conf.Interval
-		if err != nil {
-			timeout = rebootDelay
-		}
-
 		select {
 		case <-shutdownDoneC(): // wait for shutdown
-		case <-time.After(timeout):
+		case <-time.After(conf.Interval):
 		}
 
 		if err != nil {
