@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/daheimladen"
 	"github.com/evcc-io/evcc/provider"
@@ -17,6 +16,7 @@ import (
 // DaheimLaden charger implementation
 type DaheimLaden struct {
 	*request.Helper
+	apiUrl		  string
 	stationID     string
 	connectorID   int32
 	idTag         string
@@ -34,22 +34,24 @@ func init() {
 // NewDaheimLadenFromConfig creates a DaheimLaden charger from generic config
 func NewDaheimLadenFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
+		ApiUrl	  string
 		Token     string
 		StationID string
 		Cache     time.Duration
 	}{
 		Cache: time.Second,
+		ApiUrl: daheimladen.BASE_URL,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDaheimLaden(cc.Token, cc.StationID, cc.Cache)
+	return NewDaheimLaden(cc.ApiUrl, cc.Token, cc.StationID, cc.Cache)
 }
 
 // NewDaheimLaden creates DaheimLaden charger
-func NewDaheimLaden(token, stationID string, cache time.Duration) (*DaheimLaden, error) {
+func NewDaheimLaden(apiUrl daheimladen.BASE_URL, token, stationID string, cache time.Duration) (*DaheimLaden, error) {
 	c := &DaheimLaden{
 		Helper:      request.NewHelper(util.NewLogger("daheim")),
 		stationID:   stationID,
@@ -57,6 +59,7 @@ func NewDaheimLaden(token, stationID string, cache time.Duration) (*DaheimLaden,
 		idTag:       daheimladen.EVCC_IDTAG,
 		token:       token,
 		cache:       cache,
+		apiUrl:      apiUrl,
 	}
 
 	c.Client.Transport = &oauth2.Transport{
@@ -76,13 +79,13 @@ func NewDaheimLaden(token, stationID string, cache time.Duration) (*DaheimLaden,
 func (c *DaheimLaden) reset() {
 	c.statusG = provider.Cached(func() (daheimladen.GetLatestStatus, error) {
 		var res daheimladen.GetLatestStatus
-		err := c.GetJSON(fmt.Sprintf("%s/cs/%s/status", daheimladen.BASE_URL, c.stationID), &res)
+		err := c.GetJSON(fmt.Sprintf("%s/cs/%s/status", c.apiUrl, c.stationID), &res)
 		return res, err
 	}, c.cache)
 
 	c.meterG = provider.Cached(func() (daheimladen.GetLatestMeterValueResponse, error) {
 		var res daheimladen.GetLatestMeterValueResponse
-		err := c.GetJSON(fmt.Sprintf("%s/cs/%s/metervalue", daheimladen.BASE_URL, c.stationID), &res)
+		err := c.GetJSON(fmt.Sprintf("%s/cs/%s/metervalue", c.apiUrl, c.stationID), &res)
 		return res, err
 	}, c.cache)
 }
@@ -125,7 +128,7 @@ func (c *DaheimLaden) Enable(enable bool) error {
 			IdTag:       c.idTag,
 		}
 
-		uri := fmt.Sprintf("%s/cs/%s/remotestart", daheimladen.BASE_URL, c.stationID)
+		uri := fmt.Sprintf("%s/cs/%s/remotestart", c.apiUrl, c.stationID)
 		req, err := http.NewRequest(http.MethodPost, uri, request.MarshalJSON(data))
 		if err != nil {
 			return err
@@ -140,7 +143,7 @@ func (c *DaheimLaden) Enable(enable bool) error {
 	}
 
 	var res daheimladen.GetLatestInProgressTransactionResponse
-	uri := fmt.Sprintf("%s/cs/%s/get_latest_inprogress_transaction", daheimladen.BASE_URL, c.stationID)
+	uri := fmt.Sprintf("%s/cs/%s/get_latest_inprogress_transaction", c.apiUrl, c.stationID)
 	if err := c.GetJSON(uri, &res); err != nil {
 		return err
 	}
@@ -151,7 +154,7 @@ func (c *DaheimLaden) Enable(enable bool) error {
 		TransactionID: c.transactionID,
 	}
 
-	uri = fmt.Sprintf("%s/cs/%s/remotestop", daheimladen.BASE_URL, c.stationID)
+	uri = fmt.Sprintf("%s/cs/%s/remotestop", c.apiUrl, c.stationID)
 	req, err := http.NewRequest(http.MethodPost, uri, request.MarshalJSON(data))
 	if err != nil {
 		return err
@@ -174,7 +177,7 @@ func (c *DaheimLaden) MaxCurrent(current int64) error {
 		Value: strconv.FormatInt(current, 10),
 	}
 
-	uri := fmt.Sprintf("%s/cs/%s/change_config", daheimladen.BASE_URL, c.stationID)
+	uri := fmt.Sprintf("%s/cs/%s/change_config", c.apiUrl, c.stationID)
 	req, err := http.NewRequest(http.MethodPost, uri, request.MarshalJSON(data))
 	if err != nil {
 		return err
