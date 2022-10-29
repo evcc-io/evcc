@@ -31,10 +31,10 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 				for k, v := range map[string]string{
 					"Content-type":   request.JSONContent,
 					"User-Agent":     "FordPass/5 CFNetwork/1333.0.4 Darwin/21.5.0",
-					"locale":         "en-US",
+					"locale":         "de-DE",
 					"Application-Id": ApplicationID,
 					"Auth-Token":     token.AccessToken,
-					"CountryCode":    "USA",
+					"CountryCode":    "DEU",
 				} {
 					req.Header.Set(k, v)
 				}
