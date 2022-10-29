@@ -13,7 +13,7 @@ import (
 
 const ApiURI = "https://usapi.cv.ford.com"
 
-// API is the VW api client
+// API is the Ford api client
 type API struct {
 	*request.Helper
 }
@@ -30,8 +30,11 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 			if err == nil {
 				for k, v := range map[string]string{
 					"Content-type":   request.JSONContent,
+					"User-Agent":     "FordPass/5 CFNetwork/1333.0.4 Darwin/21.5.0",
+					"locale":         "de-DE",
 					"Application-Id": ApplicationID,
 					"Auth-Token":     token.AccessToken,
+					"CountryCode":    "DEU",
 				} {
 					req.Header.Set(k, v)
 				}
@@ -46,24 +49,30 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 
 // Vehicles returns the list of user vehicles
 func (v *API) Vehicles() ([]string, error) {
-	var resp VehiclesResponse
-	var vehicles []string
+	var res []string
 
-	uri := fmt.Sprintf("%s/api/users/vehicles", TokenURI)
+	data := map[string]string{
+		"dashboardRefreshRequest": "All",
+	}
 
-	err := v.GetJSON(uri, &resp)
+	uri := fmt.Sprintf("%s/api/expdashboard/v1/details", TokenURI)
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
-		for _, v := range resp.Vehicles.Values {
-			vehicles = append(vehicles, v.VIN)
+		var resp VehiclesResponse
+		if err = v.DoJSON(req, &resp); err == nil {
+			for _, v := range resp.UserVehicles.VehicleDetails {
+				res = append(res, v.VIN)
+			}
 		}
 	}
 
-	return vehicles, err
+	return res, err
 }
 
 // Status performs a /status request
 func (v *API) Status(vin string) (StatusResponse, error) {
-	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", ApiURI, vin)
+	uri := fmt.Sprintf("%s/api/vehicles/v5/%s/status", ApiURI, vin)
 
 	var res StatusResponse
 	err := v.GetJSON(uri, &res)
@@ -75,7 +84,7 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 func (v *API) RefreshResult(vin, refreshId string) (StatusResponse, error) {
 	var res StatusResponse
 
-	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", ApiURI, vin, refreshId)
+	uri := fmt.Sprintf("%s/api/vehicles/v5/%s/statusrefresh/%s", ApiURI, vin, refreshId)
 	err := v.GetJSON(uri, &res)
 
 	return res, err
