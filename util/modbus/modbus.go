@@ -3,6 +3,7 @@ package modbus
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -280,7 +281,11 @@ type Register struct {
 // asFloat64 creates a function that returns numerics vales as float64
 func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
 	return func(v []byte) float64 {
-		return float64(f(v))
+		res := float64(f(v))
+		if math.IsNaN(res) || math.IsInf(res, 0) {
+			res = 0
+		}
+		return res
 	}
 }
 
