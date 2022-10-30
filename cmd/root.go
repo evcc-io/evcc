@@ -192,10 +192,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		signalC := make(chan os.Signal, 1)
 		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
 
-		<-signalC // wait for signal
-		once.Do(func() {
-			close(stopC)
-		}) // signal loop to end
+		<-signalC                        // wait for signal
+		once.Do(func() { close(stopC) }) // signal loop to end
 	}()
 
 	// wait for shutdown
@@ -241,10 +239,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}()
 	} else {
 		httpd.RegisterShutdownHandler(func() {
-			once.Do(func() {
-				log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
-				close(stopC) // signal loop to end
-			})
+			log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
+			once.Do(func() { close(stopC) }) // signal loop to end
 		})
 
 		publishErrorInfo(valueChan, cfgFile, err)
@@ -253,10 +249,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
 		<-time.After(rebootDelay)
-
-		once.Do(func() {
-			close(stopC) // signal loop to end
-		})
+		once.Do(func() { close(stopC) }) // signal loop to end
 	}
 
 	// uds health check listener
