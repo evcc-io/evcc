@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const rebootDelay = 5 * time.Second // delayed reboot on error
+const rebootDelay = 5 * time.Minute // delayed reboot on error
 
 var (
 	log     = util.NewLogger("main")
@@ -192,8 +192,26 @@ func runRoot(cmd *cobra.Command, args []string) {
 		signalC := make(chan os.Signal, 1)
 		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
 
-		<-signalC                        // wait for signal
-		once.Do(func() { close(stopC) }) // signal loop to end
+		<-signalC // wait for signal
+		once.Do(func() {
+			close(stopC)
+		}) // signal loop to end
+	}()
+
+	// wait for shutdown
+	go func() {
+		<-stopC
+
+		select {
+		case <-shutdownDoneC(): // wait for shutdown
+		case <-time.After(conf.Interval):
+		}
+
+		if err != nil {
+			os.Exit(1)
+		}
+
+		os.Exit(0)
 	}()
 
 	// show main ui
@@ -234,30 +252,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
+		<-time.After(rebootDelay)
+
 		once.Do(func() {
-			<-time.After(rebootDelay)
 			close(stopC) // signal loop to end
 		})
 	}
 
 	// uds health check listener
 	go server.HealthListener(site)
-
-	// wait for shutdown
-	go func() {
-		<-stopC
-
-		select {
-		case <-shutdownDoneC(): // wait for shutdown
-		case <-time.After(conf.Interval):
-		}
-
-		if err != nil {
-			os.Exit(1)
-		}
-
-		os.Exit(0)
-	}()
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }
