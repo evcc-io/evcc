@@ -6,10 +6,10 @@ import (
 )
 
 type VehiclesResponse struct {
-	Vehicles struct {
-		Values []struct {
+	UserVehicles struct {
+		VehicleDetails []struct {
 			VIN string
-		} `json:"$values"`
+		}
 	}
 }
 
