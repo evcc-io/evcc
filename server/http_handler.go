@@ -18,7 +18,6 @@ import (
 	dbserver "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/locale"
-	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/gorilla/mux"
 )
 
@@ -141,6 +140,34 @@ func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	}
 }
 
+// boolHandler updates bool-param api
+func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		val, err := strconv.ParseBool(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		err = set(val)
+		if err != nil {
+			jsonError(w, http.StatusNotAcceptable, err)
+			return
+		}
+
+		jsonResult(w, get())
+	}
+}
+
+// boolGetHandler retrievs bool api values
+func boolGetHandler(get func() bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		jsonResult(w, get())
+	}
+}
+
 // stateHandler returns current charge mode
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -173,35 +200,6 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResult(w, res)
-}
-
-// telemetryHandler returns if telemetry is enabled
-func telemetryHandler(w http.ResponseWriter, r *http.Request) {
-	jsonResult(w, telemetry.Enabled())
-}
-
-// telemetryChangeHandler enableds/disables telemetry
-func telemetryChangeHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	val, err := strconv.ParseBool(vars["value"])
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	if val {
-		err = telemetry.Enable()
-
-	} else {
-		err = telemetry.Disable()
-	}
-	if err != nil {
-		jsonError(w, http.StatusNotAcceptable, err)
-		return
-	}
-
-	jsonResult(w, telemetry.Enabled())
 }
 
 // chargeModeHandler updates charge mode

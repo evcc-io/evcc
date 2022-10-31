@@ -21,17 +21,11 @@ func Enabled() bool {
 	return enabled && sponsor.IsAuthorized()
 }
 
-func Enable() error {
-	if !sponsor.IsAuthorized() {
+func Enable(enable bool) error {
+	if enable && !sponsor.IsAuthorized() {
 		return errors.New("telemetry requires sponsorship")
 	}
-	settings.SetBool("telemetry.enabled", true)
-	err := settings.Persist()
-	return err
-}
-
-func Disable() error {
-	settings.SetBool("telemetry.enabled", false)
+	settings.SetBool("telemetry.enabled", enable)
 	err := settings.Persist()
 	return err
 }
