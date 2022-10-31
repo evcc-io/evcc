@@ -31,7 +31,7 @@ if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
       addgroup --system "$EVCC_GROUP" --quiet
     fi
     if ! getent passwd "$EVCC_USER" > /dev/null 2>&1 ; then
-      adduser --quiet --system --ingroup "$EVCC_GROUP" --no-create-home \
+      adduser --quiet --system --ingroup "$EVCC_GROUP" \
       --disabled-password --shell /bin/false \
       --gecos "evcc runtime user" --home "$EVCC_HOME" "$EVCC_USER"
     else
