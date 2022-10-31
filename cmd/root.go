@@ -248,8 +248,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
-		<-time.After(rebootDelay)
-		once.Do(func() { close(stopC) }) // signal loop to end
+		go func() {
+			<-time.After(rebootDelay)
+			once.Do(func() { close(stopC) }) // signal loop to end
+		}()
 	}
 
 	// uds health check listener
