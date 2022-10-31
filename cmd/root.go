@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const rebootDelay = 5 * time.Second // delayed reboot on error
+const rebootDelay = 5 * time.Minute // delayed reboot on error
 
 var (
 	log     = util.NewLogger("main")
@@ -196,6 +196,22 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) }) // signal loop to end
 	}()
 
+	// wait for shutdown
+	go func() {
+		<-stopC
+
+		select {
+		case <-shutdownDoneC(): // wait for shutdown
+		case <-time.After(conf.Interval):
+		}
+
+		if err != nil {
+			os.Exit(1)
+		}
+
+		os.Exit(0)
+	}()
+
 	// show main ui
 	if err == nil {
 		httpd.RegisterSiteHandlers(site, cache)
@@ -223,10 +239,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}()
 	} else {
 		httpd.RegisterShutdownHandler(func() {
-			once.Do(func() {
-				log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
-				close(stopC) // signal loop to end
-			})
+			log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
+			once.Do(func() { close(stopC) }) // signal loop to end
 		})
 
 		publishErrorInfo(valueChan, cfgFile, err)
@@ -234,30 +248,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
-		once.Do(func() {
+		go func() {
 			<-time.After(rebootDelay)
-			close(stopC) // signal loop to end
-		})
+			once.Do(func() { close(stopC) }) // signal loop to end
+		}()
 	}
 
 	// uds health check listener
 	go server.HealthListener(site)
-
-	// wait for shutdown
-	go func() {
-		<-stopC
-
-		select {
-		case <-shutdownDoneC(): // wait for shutdown
-		case <-time.After(conf.Interval):
-		}
-
-		if err != nil {
-			os.Exit(1)
-		}
-
-		os.Exit(0)
-	}()
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }
