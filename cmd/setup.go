@@ -94,8 +94,14 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 	}
 
 	// setup telemetry
+	if err == nil {
+		err = telemetry.Create(conf.Plant)
+	}
+
+	// deprecated: enable telemetry if its in the config
 	if err == nil && conf.Telemetry {
-		err = telemetry.Create(sponsor.Token, conf.Plant)
+		log.WARN.Println("Enabling telementry in config is deprecated. You can configure this via the UI now.")
+		err = telemetry.Enable()
 	}
 
 	// setup mqtt client listener

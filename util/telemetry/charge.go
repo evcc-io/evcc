@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/request"
@@ -16,14 +17,26 @@ const api = "https://api.evcc.io"
 var instanceID string
 
 func Enabled() bool {
-	return instanceID != ""
+	enabled, _ := settings.Bool("telemetry.enabled")
+	return enabled && sponsor.IsAuthorized()
 }
 
-func Create(token, machineID string) error {
-	if token == "" {
+func Enable() error {
+	if !sponsor.IsAuthorized() {
 		return errors.New("telemetry requires sponsorship")
 	}
+	settings.SetBool("telemetry.enabled", true)
+	err := settings.Persist()
+	return err
+}
 
+func Disable() error {
+	settings.SetBool("telemetry.enabled", false)
+	err := settings.Persist()
+	return err
+}
+
+func Create(machineID string) error {
 	if machineID == "" {
 		var err error
 		if machineID, err = machine.ProtectedID("evcc-api"); err != nil {

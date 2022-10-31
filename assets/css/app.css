@@ -308,3 +308,21 @@ small {
 	--bs-table-color: var(--evcc-default-text);
 	--bs-table-border-color: var(--evcc-gray);
 }
+.nav-tabs .nav-link {
+	color: var(--evcc-gray) !important;
+}
+
+.nav-tabs .nav-link.active {
+	color: var(--evcc-default-text) !important;
+	background-color: var(--evcc-box) !important;
+	border-bottom-color: var(--evcc-box);
+}
+
+.form-check-input:checked {
+	border-color: var(--bs-primary);
+	background-color: var(--bs-primary);
+}
+
+.dark .form-switch .form-check-input:checked {
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2328293e'/%3e%3c/svg%3e");
+}

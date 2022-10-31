@@ -11,18 +11,19 @@ export default {
 		to: { type: Number },
 		format: { type: Function },
 		noAnimation: { type: Boolean },
+		duration: { type: Number, default: DURATION },
 	},
 	data() {
-		return { duration: 0 };
+		return { activeDuration: 0 };
 	},
 	computed: {
 		animationDuration() {
-			return this.noAnimation ? 0 : this.duration;
+			return this.noAnimation ? 0 : this.activeDuration;
 		},
 	},
 	watch: {
 		to: function () {
-			this.duration = DURATION;
+			this.activeDuration = this.duration;
 		},
 	},
 };
