@@ -4,12 +4,16 @@ products:
     description:
       de: Wechselrichter
       en: Inverter
+requirements:
+  description:
+    de: Nur ein System kann und darf auf den Wechselrichter zugreifen!
+    en: Only one system may access the inverter!
 params:
   - name: usage
     choice: ["grid", "pv"]
     allinone: true
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcpip", "rs485"]
     id: 1
     port: 1502
   - name: timeout
@@ -20,8 +24,8 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
   {{- if eq .usage "grid" }}
-    subdevice: 1
     model: sunspec
+    subdevice: 1
     value: 203:W # sunspec 3-phase meter power reading
     scale: -1
   {{- else }}

@@ -5,29 +5,26 @@ products:
       generic: Hybrid Inverter
 requirements:
   description:
-    de: Nur ein System kann auf den Wechselrichter zugreifen!
+    de: Nur ein System kann und darf auf den Wechselrichter zugreifen!
     en: Only one system may access the inverter!
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
-  - name: host
-  - name: port
-    default: 502
-    help:
-      en: Port 502 (SetApp) or 1502 (LCD)
-      de: Port 502 (SetApp) oder 1502 (LCD)
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+    id: 1
+    port: 1502
   - name: timeout
 render: |
   type: custom
   power:
   {{- if eq .usage "grid" }}
     source: modbus
-    uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
-    id: 1
-    subdevice: 1 # Metering device
+    {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     model: sunspec
+    subdevice: 1 # Metering device
     value: 203:W
     scale: -1
   {{- end }}
@@ -35,14 +32,12 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       timeout: {{ .timeout }}
       model: sunspec
       value: DCPower
     - source: modbus
-      uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       timeout: {{ .timeout }}
       register:
         address: 62836 # Battery 1 Instantaneous Power
@@ -51,9 +46,8 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
+    {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-    uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
-    id: 1
     register:
       address: 62836 # Battery 1 Instantaneous Power
       type: holding
@@ -61,9 +55,8 @@ render: |
     scale: -1
   soc:
     source: modbus
+    {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-    uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
-    id: 1
     register:
       address: 62852 # Battery 1 State of Energy (SOE)
       type: holding
