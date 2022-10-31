@@ -27,9 +27,7 @@
 					<span class="ms-1 unit">{{ unit }}</span>
 				</strong>
 			</div>
-			<small
-				class="d-block mt-0 ms-3 ms-lg-0 text-end text-lg-start flex-grow-1 flex-shrink-1 text-truncate"
-			>
+			<small class="d-block mt-0 ms-3 ms-lg-0 text-end text-lg-start">
 				{{ sub1 }} <br />
 				{{ sub2 }}
 			</small>
