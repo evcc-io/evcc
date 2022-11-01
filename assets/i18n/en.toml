@@ -26,6 +26,7 @@ modalUpdateStatusStart = "Update started: "
 modalUpdateStatusFailed = "Update failed: "
 
 [footer.savings]
+tabTitle = "My data"
 footerShort = "{percent}% solar"
 footerLong = "{percent}% solar energy"
 modalTitle = "Charge Energy Overview"
@@ -41,6 +42,7 @@ savingsComparedToGrid = "compared to grid"
 savingsTotalEnergy = "{total} kWh charged"
 
 [footer.community]
+tabTitle = "Live community"
 power = "Charging power"
 powerSub1 = "{activeClients} of {totalClients} participants"
 powerSub2 = "are charging right now"

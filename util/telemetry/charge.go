@@ -26,6 +26,7 @@ func Enable(enable bool) error {
 		return errors.New("telemetry requires sponsorship")
 	}
 	settings.SetBool("telemetry.enabled", enable)
+	// TODO: remove once settings has central persistance mechanism
 	err := settings.Persist()
 	return err
 }

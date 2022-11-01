@@ -49,7 +49,7 @@
 										href="#"
 										@click.prevent="showMyData"
 									>
-										Meine Daten
+										{{ $t("footer.savings.tabTitle") }}
 									</a>
 								</li>
 								<li class="nav-item">
@@ -59,7 +59,7 @@
 										href="#"
 										@click.prevent="showCommunity"
 									>
-										Live-Community
+										{{ $t("footer.community.tabTitle") }}
 									</a>
 								</li>
 							</ul>

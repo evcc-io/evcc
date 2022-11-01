@@ -26,6 +26,7 @@ modalUpdateStatusStart = "Aktualisierung gestartet: "
 modalUpdateStatusFailed = "Aktualisierung nicht möglich: "
 
 [footer.savings]
+tabTitle = "Meine Daten"
 footerShort = "{percent}% Sonne"
 footerLong = "{percent}% Sonnenenergie"
 modalTitle = "Auswertung Ladeenergie"
@@ -41,6 +42,7 @@ savingsComparedToGrid = "gegenüber Netzbezug"
 savingsTotalEnergy = "{total} kWh geladen"
 
 [footer.community]
+tabTitle = "Live-Community"
 power = "Ladeleistung"
 powerSub1 = "{activeClients} von {totalClients} Nutzern"
 powerSub2 = "laden mit evcc"
