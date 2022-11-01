@@ -1,8 +1,12 @@
 <template>
 	<div v-if="sponsor">
-		<p class="mb-3">
-			{{ $t("footer.sponsor.thanks", { sponsor }) }}
+		<p class="fw-bold mb-1 d-flex">
+			<shopicon-regular-heart
+				class="title-icon text-primary d-inline-block me-1"
+			></shopicon-regular-heart>
+			{{ $t("footer.sponsor.titleSponsor") }}
 		</p>
+		<p class="mb-3">{{ $t("footer.sponsor.thanks", { sponsor }) }}</p>
 		<div
 			class="d-flex justify-content-center align-items-center flex-column flex-lg-row align-items-lg-baseline justify-content-lg-start"
 		>
@@ -20,9 +24,10 @@
 		</div>
 	</div>
 	<div v-else>
-		<p class="mb-3">
-			{{ $t("footer.sponsor.supportUs") }}
+		<p class="fw-bold mb-1">
+			{{ $t("footer.sponsor.titleNoSponsor") }}
 		</p>
+		<p class="mb-3">{{ $t("footer.sponsor.supportUs") }}</p>
 		<div
 			class="d-flex justify-content-center align-items-center flex-column flex-lg-row align-items-lg-baseline justify-content-lg-start"
 		>
@@ -89,6 +94,9 @@ export default {
 </script>
 
 <style scoped>
+.title-icon {
+	transform: translateY(-2px);
+}
 .confetti-button {
 	/* prevent double-tap zoom */
 	touch-action: none;

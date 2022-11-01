@@ -16,7 +16,7 @@
     "@popperjs/core": "^2.11.5",
     "@vitejs/plugin-vue": "^3.0.1",
     "axios": "^0.27.2",
-    "bootstrap": "^5.1.3",
+    "bootstrap": "^5.2.2",
     "canvas-confetti": "^1.4.0",
     "smoothscroll-polyfill": "^0.4.4",
     "vue": "^3.2.29",

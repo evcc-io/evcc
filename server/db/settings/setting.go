@@ -75,6 +75,10 @@ func SetJson(key string, val any) error {
 	return err
 }
 
+func SetBool(key string, val bool) {
+	SetString(key, strconv.FormatBool(val))
+}
+
 func String(key string) (string, error) {
 	idx := slices.IndexFunc(settings, func(s setting) bool {
 		return s.Key == key
@@ -107,6 +111,14 @@ func Time(key string) (time.Time, error) {
 		return time.Now(), err
 	}
 	return time.Parse(time.RFC3339, s)
+}
+
+func Bool(key string) (bool, error) {
+	s, err := String(key)
+	if err != nil {
+		return false, err
+	}
+	return strconv.ParseBool(s)
 }
 
 func Json(key string, res any) error {

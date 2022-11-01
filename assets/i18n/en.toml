@@ -26,10 +26,11 @@ modalUpdateStatusStart = "Update started: "
 modalUpdateStatusFailed = "Update failed: "
 
 [footer.savings]
+tabTitle = "My data"
 footerShort = "{percent}% solar"
 footerLong = "{percent}% solar energy"
 modalTitle = "Charge Energy Overview"
-since = "Since {since}."
+since = "since {since}"
 percentTitle = "Solar Energy"
 percentSelf = "{self} kWh solar"
 percentGrid = "{grid} kWh grid"
@@ -40,7 +41,27 @@ savingsTitle = "Savings"
 savingsComparedToGrid = "compared to grid"
 savingsTotalEnergy = "{total} kWh charged"
 
+[footer.community]
+tabTitle = "Live community"
+power = "Charging power"
+powerSub1 = "{activeClients} of {totalClients} participants"
+powerSub2 = "are charging right now"
+greenShare = "Solar share"
+greenShareSub1 = "power is covered by"
+greenShareSub2 = "PV & battery storage"
+greenEnergy = "Solar energy"
+greenEnergySub1 = "charged with evcc"
+greenEnergySub2 = "since October 2022"
+
+[footer.telemetry]
+optIn = "I want to contribute my data as well."
+optInMoreDetails = "More details are available {0}."
+optInMoreDetailsLink = "here"
+optInSponsorship = "Sponsoring required."
+
 [footer.sponsor]
+titleSponsor = "You are a supporter"
+titleNoSponsor = "Support us"
 thanks = "Thanks for your support, {sponsor}! It helps us with the further development."
 confetti = "Ready for confetti?"
 supportUs = "Our mission: Make solar charging the standard. Help us and support evcc financially."

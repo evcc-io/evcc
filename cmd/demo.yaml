@@ -2,8 +2,7 @@ network:
   port: 7070
 
 log: debug
-levels:
-  mercedes: trace
+plant: 683fd96cb7de8cf3080e1d79a12ffedd03d66d7c39be742350559817833ae6f7
 
 interval: 3s
 
