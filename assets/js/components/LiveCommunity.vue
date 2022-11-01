@@ -91,8 +91,12 @@ export default {
 	},
 	methods: {
 		async update() {
-			const response = await communityApi.get("total");
-			this.result = response.data || {};
+			try {
+				const response = await communityApi.get("total");
+				this.result = response.data || {};
+			} catch (err) {
+				console.error(err);
+			}
 		},
 		numberAnimationFmt(number) {
 			return this.fmtNumber(number, 1);

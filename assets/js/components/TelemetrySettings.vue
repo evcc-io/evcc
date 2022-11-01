@@ -12,10 +12,9 @@
 		<label class="form-check-label" for="telemetryEnabled">
 			{{ $t("footer.telemetry.optIn") }}
 			<i18n-t v-if="sponsor" tag="span" keypath="footer.telemetry.optInMoreDetails">
-				<a href="https://docs.evcc.io/docs/reference/configuration/telemetry/">
+				<a href="https://docs.evcc.io/docs/guides/setup/#telemetry--community-daten">
 					{{ $t("footer.telemetry.optInMoreDetailsLink") }}
 				</a>
-				<!-- TODO: create a more user friendy explaination site -->
 			</i18n-t>
 			<span v-else>{{ $t("footer.telemetry.optInSponsorship") }}</span>
 		</label>
@@ -38,12 +37,22 @@ export default {
 	},
 	methods: {
 		async change(e) {
-			const response = await api.post(`settings/telemetry/${e.target.checked}`);
-			this.enabled = response.data.result;
+			try {
+				const response = await api.post(`settings/telemetry/${e.target.checked}`);
+				this.enabled = response.data.result;
+			} catch (err) {
+				window.app.error({
+					message: `Unable to update telemetry setting: ${err.message}`,
+				});
+			}
 		},
 		async update() {
-			const response = await api.get("settings/telemetry");
-			this.enabled = response.data.result;
+			try {
+				const response = await api.get("settings/telemetry");
+				this.enabled = response.data.result;
+			} catch (err) {
+				console.error(err);
+			}
 		},
 	},
 };
