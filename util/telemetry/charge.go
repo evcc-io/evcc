@@ -31,17 +31,25 @@ func Enable(enable bool) error {
 	return err
 }
 
-func Create(machineID string) error {
-	if machineID == "" {
-		var err error
-		if machineID, err = machine.ProtectedID("evcc-api"); err != nil {
-			return err
-		}
+func Create(machineID string) {
+	if machineID != "" {
+		instanceID = machineID
 	}
 
-	instanceID = machineID
+	// from settings
+	var err error
+	if instanceID, err = settings.String("telemetry.instanceId"); err == nil {
+		return
+	}
 
-	return nil
+	// from settings
+	if instanceID, err = machine.ProtectedID("evcc-api"); err == nil {
+		return
+	}
+
+	// generate and write to setting
+	instanceID = machine.RandomID()
+	settings.SetString("telemetry.instanceId", instanceID)
 }
 
 func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {

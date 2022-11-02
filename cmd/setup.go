@@ -93,9 +93,9 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 		err = configureDatabase(conf.Database)
 	}
 
-	// setup telemetry
 	if err == nil {
-		err = telemetry.Create(conf.Plant)
+		// setup telemetry
+		telemetry.Create(conf.Plant)
 	}
 
 	// deprecated: enable telemetry if its in the config
