@@ -32,6 +32,8 @@ type OCPP struct {
 	phaseSwitching    bool
 }
 
+const defaultIdTag = "evcc"
+
 func init() {
 	registry.Add("ocpp", NewOCPPFromConfig)
 }
@@ -50,7 +52,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Timeout       time.Duration
 	}{
 		Connector: 1,
-		IdTag:     "evcc",
+		IdTag:     defaultIdTag,
 		Timeout:   time.Minute,
 	}
 
@@ -194,8 +196,8 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 						}
 
 					case ocpp.KeyAlfenPlugAndChargeIdentifier:
-						if c.idtag == "evcc" {
-							c.log.TRACE.Printf("alfen-specific conveniance - detected default idtag evcc so setting plug&charge identifier to the one read from config")
+						if c.idtag == defaultIdTag {
+							c.log.TRACE.Printf("alfen-specific conveniance - detected default idtag %s, setting plug&charge identifier to the one read from config", defaultIdTag)
 							c.idtag = *opt.Value
 						}
 					}
