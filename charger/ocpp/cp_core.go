@@ -29,11 +29,16 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
 		Interval:    60, // TODO
 		Status:      core.RegistrationStatusAccepted,
 	}
+
+	close(cp.bootC)
 
 	return res, nil
 }

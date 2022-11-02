@@ -122,16 +122,36 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
 
+	// wait for connection
 	select {
 	case <-time.After(timeout):
 		return nil, api.ErrTimeout
 	case <-cp.HasConnected():
-		c.log.TRACE.Printf("triggering soft reset to get back to known state")
-		c.softReset()
 	}
 
-	// see who's there
-	// ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
+
+	// wait for bootnotification
+	bootTimeout := time.Minute
+	select {
+	case <-time.After(bootTimeout):
+		// if no bootnotification in timeout trigger soft (hard if soft is not available) reset
+		cp.Reset()
+		select {
+		case <-time.After(bootTimeout):
+			// if no bootnotification in timeout trigger it
+			cp.TriggerBootNotification()
+			select {
+			case <-time.After(bootTimeout):
+				// no boot notification so return errtimeout
+				return nil, api.ErrTimeout
+			case <-cp.HasBooted():
+			}
+		case <-cp.HasBooted():
+		}
+	case <-cp.HasBooted():
+	}
+
+	// get configuration
 
 	var (
 		rc                  = make(chan error, 1)
@@ -257,7 +277,12 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	// }
 
 	// clear old profiles
-	c.clearChargingProfiles()
+	// c.clearChargingProfiles()
+
+	// use configuration :
+	// features setup
+	// metering setup
+	// charging profile initialization
 
 	// request initial status
 	_ = cp.Initialized(statusTimeout)

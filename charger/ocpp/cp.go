@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 )
 
 const (
@@ -39,7 +40,7 @@ type CP struct {
 
 	id string
 
-	connectC, statusC chan struct{}
+	connectC, bootC, statusC chan struct{}
 	updated           time.Time
 	status            *core.StatusNotificationRequest
 
@@ -56,6 +57,7 @@ func NewChargePoint(log *util.Logger, id string, timeout time.Duration) *CP {
 		log:          log,
 		id:           id,
 		connectC:     make(chan struct{}),
+		bootC:        make(chan struct{}),
 		statusC:      make(chan struct{}),
 		measurements: make(map[string]types.SampledValue),
 		timeout:      timeout,
@@ -91,6 +93,40 @@ func (cp *CP) Connect() {
 
 func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
+}
+
+func (cp *CP) HasBooted() <-chan struct{} {
+	return cp.bootC
+}
+
+func (cp *CP) Reset() <-chan error {
+	rc := make(chan error, 1)
+	Instance().Reset(cp.ID(), func(request *core.ResetConfirmation, err error) {
+		cp.log.TRACE.Printf("%T: %+v", request, request)
+
+		if request != nil && request.Status != core.ResetStatusAccepted{
+			cp.log.ERROR.Printf("chargepoint rejected reset request")
+		}
+
+		rc <- err
+	}, core.ResetTypeSoft)
+
+	return rc
+}
+
+func (cp *CP) TriggerBootNotification() <-chan error {
+	rc := make(chan error, 1)
+	Instance().TriggerMessage(cp.ID(), func(request *remotetrigger.TriggerMessageConfirmation, err error) {
+		cp.log.TRACE.Printf("%T: %+v", request, request)
+
+		if request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted{
+			cp.log.ERROR.Printf("chargepoint rejected BootNotification trigger")
+		}
+
+		rc <- err
+	}, core.BootNotificationFeatureName)
+
+	return rc
 }
 
 func (cp *CP) Initialized(timeout time.Duration) bool {
