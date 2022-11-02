@@ -32,6 +32,7 @@ func Enable(enable bool) error {
 }
 
 func Create(machineID string) {
+	// from config
 	if machineID != "" {
 		instanceID = machineID
 		return
