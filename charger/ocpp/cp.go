@@ -27,6 +27,9 @@ const (
 	KeyChargingScheduleMaxPeriods              = "ChargingScheduleMaxPeriods"
 	KeyConnectorSwitch3to1PhaseSupported       = "ConnectorSwitch3to1PhaseSupported"
 	KeyMaxChargingProfilesInstalled            = "MaxChargingProfilesInstalled"
+
+	// Alfen specific keys
+	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
 )
 
 type CP struct {
