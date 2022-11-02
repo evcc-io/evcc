@@ -197,8 +197,8 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 					case ocpp.KeyAlfenPlugAndChargeIdentifier:
 						if c.idtag == defaultIdTag {
-							c.log.TRACE.Printf("alfen-specific conveniance - detected default idtag %s, setting plug&charge identifier to the one read from config", defaultIdTag)
 							c.idtag = *opt.Value
+							c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
 						}
 					}
 
