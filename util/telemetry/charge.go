@@ -44,7 +44,7 @@ func Create(machineID string) {
 		return
 	}
 
-	// from settings
+	// from hardware
 	if instanceID, err = machine.ProtectedID("evcc-api"); err == nil {
 		return
 	}
