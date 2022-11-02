@@ -218,7 +218,6 @@ func (site *Site) DumpConfig() {
 		for _, v := range vehicles {
 			if _, ok := v.(api.ChargeState); !ok {
 				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Title())
-				break
 			}
 		}
 	}
