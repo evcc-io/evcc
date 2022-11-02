@@ -18,12 +18,15 @@ var instanceID string
 
 func Enabled() bool {
 	enabled, _ := settings.Bool("telemetry.enabled")
-	return enabled && sponsor.IsAuthorized()
+	return enabled && sponsor.IsAuthorized() && instanceID != ""
 }
 
 func Enable(enable bool) error {
 	if enable && !sponsor.IsAuthorized() {
-		return errors.New("telemetry requires sponsorship")
+		return errors.New("Telemetry requires sponsorship")
+	}
+	if enable && instanceID == "" {
+		return fmt.Errorf("Using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
 	}
 	settings.SetBool("telemetry.enabled", enable)
 	// TODO: remove once settings has central persistance mechanism
@@ -31,17 +34,12 @@ func Enable(enable bool) error {
 	return err
 }
 
-func Create(machineID string) error {
+func Create(machineID string) {
 	if machineID == "" {
-		var err error
-		if machineID, err = machine.ProtectedID("evcc-api"); err != nil {
-			return err
-		}
+		machineID, _ = machine.ProtectedID("evcc-api")
 	}
 
 	instanceID = machineID
-
-	return nil
 }
 
 func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
