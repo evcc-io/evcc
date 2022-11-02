@@ -219,6 +219,13 @@ a:hover {
 	}
 }
 
+@media (--lg-and-up) {
+	.modal-lg,
+	.modal-xl {
+		--bs-modal-width: 850px;
+	}
+}
+
 .modal-backdrop.show {
 	opacity: 0.8;
 }
@@ -248,6 +255,7 @@ a:hover {
 
 .modal-body {
 	padding: 1rem 0 0;
+	overflow-x: hidden;
 }
 
 .modal-footer {
