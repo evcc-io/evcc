@@ -192,6 +192,12 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 						if val, err = strconv.ParseBool(*opt.Value); err == nil {
 							c.phaseSwitching = val
 						}
+
+					case ocpp.KeyAlfenPlugAndChargeIdentifier:
+						if c.idtag == "evcc" {
+							c.log.TRACE.Printf("alfen-specific conveniance - detected default idtag evcc so setting plug&charge identifier to the one read from config")
+							c.idtag = *opt.Value
+						}
 					}
 
 					if err != nil {
