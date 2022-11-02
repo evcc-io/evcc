@@ -16,12 +16,7 @@ import (
 )
 
 // https://ssoalpha.dvb.corpinter.net/v1/.well-known/openid-configuration
-const OAuthURI = "https://ssoalpha.dvb.corpinter.net"
-
-var OAuth2Endpoint = oauth2.Endpoint{
-	AuthURL:  OAuthURI + "/v1/auth",
-	TokenURL: OAuthURI + "/v1/token",
-}
+const OAuthURI = "https://ssoalpha.dvb.corpinter.net/v1"
 
 type IdentityOptions func(c *Identity) error
 
@@ -43,7 +38,7 @@ type Identity struct {
 
 // TODO SessionSecret from config/persistence
 func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions) (*Identity, error) {
-	provider, err := oidc.NewProvider(context.Background(), "https://ssoalpha.dvb.corpinter.net/v1")
+	provider, err := oidc.NewProvider(context.Background(), OAuthURI)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
 	}
@@ -51,8 +46,7 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions
 	oc := &oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,
-		// Endpoint:     OAuth2Endpoint,
-		Endpoint: provider.Endpoint(),
+		Endpoint:     provider.Endpoint(),
 		Scopes: []string{
 			oidc.ScopeOpenID,
 			oidc.ScopeOfflineAccess,
