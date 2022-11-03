@@ -14,7 +14,7 @@ import (
 
 const (
 	api            = "https://api.evcc.io"
-	enabledSetting = "telemetry.enabled"
+	enabledSetting = "telemetry"
 )
 
 var instanceID string
