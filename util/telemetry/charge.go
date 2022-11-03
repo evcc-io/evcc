@@ -29,8 +29,8 @@ func Enable(enable bool) error {
 		if !sponsor.IsAuthorized() {
 			return errors.New("telemetry requires sponsorship")
 		}
-			return fmt.Errorf("using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
 		if instanceID == "" {
+			return fmt.Errorf("using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
 		}
 	}
 
