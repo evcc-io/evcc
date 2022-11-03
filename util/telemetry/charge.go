@@ -19,13 +19,9 @@ const (
 
 var instanceID string
 
-func prerequisites() bool {
-	return sponsor.IsAuthorized() && instanceID != ""
-}
-
 func Enabled() bool {
 	enabled, _ := settings.Bool(enabledSetting)
-	return enabled && prerequisites()
+	return enabled && sponsor.IsAuthorized() && instanceID != ""
 }
 
 func Enable(enable bool) error {
@@ -33,8 +29,8 @@ func Enable(enable bool) error {
 		if !sponsor.IsAuthorized() {
 			return errors.New("telemetry requires sponsorship")
 		}
-		if !prerequisites() {
 			return fmt.Errorf("using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
+		if instanceID == "" {
 		}
 	}
 
