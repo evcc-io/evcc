@@ -12,26 +12,35 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-const api = "https://api.evcc.io"
+const (
+	api            = "https://api.evcc.io"
+	enabledSetting = "telemetry.enabled"
+)
 
 var instanceID string
 
+func prerequisites() bool {
+	return sponsor.IsAuthorized() && instanceID != ""
+}
+
 func Enabled() bool {
-	enabled, _ := settings.Bool("telemetry.enabled")
-	return enabled && sponsor.IsAuthorized() && instanceID != ""
+	enabled, _ := settings.Bool(enabledSetting)
+	return enabled && prerequisites()
 }
 
 func Enable(enable bool) error {
-	if enable && !sponsor.IsAuthorized() {
-		return errors.New("Telemetry requires sponsorship")
+	if enable {
+		if !sponsor.IsAuthorized() {
+			return errors.New("telemetry requires sponsorship")
+		}
+		if !prerequisites() {
+			return fmt.Errorf("using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
+		}
 	}
-	if enable && instanceID == "" {
-		return fmt.Errorf("Using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
-	}
-	settings.SetBool("telemetry.enabled", enable)
-	// TODO: remove once settings has central persistance mechanism
-	err := settings.Persist()
-	return err
+
+	settings.SetBool(enabledSetting, enable)
+
+	return nil
 }
 
 func Create(machineID string) {
