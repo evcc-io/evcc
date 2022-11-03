@@ -114,7 +114,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
 	}
 
-	log.INFO.Printf("listening at :%d", conf.Network.Port)
+	log.INFO.Printf("starting ui and api at :%d", conf.Network.Port)
 
 	// start broadcasting values
 	tee := new(util.Tee)
