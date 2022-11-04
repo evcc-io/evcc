@@ -27,7 +27,6 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/libp2p/zeroconf/v2"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
@@ -91,14 +90,6 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 			conf.Database.Dsn = flag.Value.String()
 		}
 		err = configureDatabase(conf.Database)
-	}
-
-	// setup telemetry
-	if err == nil {
-		telemetry.Create(conf.Plant)
-		if conf.Telemetry {
-			err = telemetry.Enable(true)
-		}
 	}
 
 	// setup mqtt client listener
