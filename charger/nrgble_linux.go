@@ -69,7 +69,7 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	btmgmt := hw.NewBtMgmt(ainfo.AdapterID)
 
 	if len(os.Getenv("DOCKER")) > 0 {
-		btmgmt.BinPath = "./docker-btmgmt"
+		btmgmt.BinPath = "/bin/docker-btmgmt"
 	}
 
 	err = btmgmt.SetPowered(false)
