@@ -31,6 +31,7 @@ type Savings struct {
 	selfConsumptionCharged         float64   // Self-produced energy charged since startup (kWh)
 	selfConsumptionCost            float64   // Running total of charged self-produced energy cost (e.g. EUR)
 	lastGridPrice, lastFeedInPrice float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
+	hasPublished                   bool      // Has initial publish happened?
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
@@ -152,7 +153,7 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	defer func() { s.updated = s.clock.Now() }()
 
 	// no charging, no need to update
-	if chargePower == 0 {
+	if chargePower == 0 && s.hasPublished {
 		return 0, 0
 	}
 
@@ -175,6 +176,7 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
+	s.hasPublished = true
 
 	s.save()
 
