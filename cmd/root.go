@@ -15,10 +15,12 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -147,6 +149,23 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup environment
 	if err == nil {
 		err = configureEnvironment(cmd, conf)
+	}
+
+	// setup telemetry
+	if err == nil {
+		telemetry.Create(conf.Plant)
+		if conf.Telemetry {
+			err = telemetry.Enable(true)
+		}
+	}
+
+	// setup modbus proxy
+	if err == nil {
+		for _, cfg := range conf.ModbusProxy {
+			if err = modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
+				break
+			}
+		}
 	}
 
 	// setup site and loadpoints
