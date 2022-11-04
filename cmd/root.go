@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
@@ -163,15 +162,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		telemetry.Create(conf.Plant)
 		if conf.Telemetry {
 			err = telemetry.Enable(true)
-		}
-	}
-
-	// setup modbus proxy
-	if err == nil {
-		for _, cfg := range conf.ModbusProxy {
-			if err = modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
-				break
-			}
 		}
 	}
 
