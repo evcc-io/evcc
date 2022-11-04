@@ -31,7 +31,7 @@ type Savings struct {
 	selfConsumptionCharged         float64   // Self-produced energy charged since startup (kWh)
 	selfConsumptionCost            float64   // Running total of charged self-produced energy cost (e.g. EUR)
 	lastGridPrice, lastFeedInPrice float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
-	hasPublished                   bool      // Has initial publish (startup) happened
+	hasPublished                   bool      // Has initial publish happened?
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
