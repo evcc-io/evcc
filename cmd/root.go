@@ -239,7 +239,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		// version check
+		// show and check version
+		valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
 		go updater.Run(log, httpd, tee, valueChan)
 
 		// capture log messages for UI
