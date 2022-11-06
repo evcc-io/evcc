@@ -14,7 +14,7 @@ import (
 
 //go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
-// ChargeMode are charge modes modeled after OpenWB
+// ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
 
 // Charge modes
