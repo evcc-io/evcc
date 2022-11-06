@@ -23,6 +23,7 @@ type Session struct {
 	Loadpoint     string    `json:"loadpoint"`
 	Identifier    string    `json:"identifier"`
 	Vehicle       string    `json:"vehicle"`
+	Odometer      float64   `json:"odometer"`
 	MeterStart    float64   `json:"meterStart" csv:"Meter Start (kWh)" gorm:"column:meter_start_kwh"`
 	MeterStop     float64   `json:"meterStop" csv:"Meter Stop (kWh)" gorm:"column:meter_end_kwh"`
 	ChargedEnergy float64   `json:"chargedEnergy" csv:"Charged Energy (kWh)" gorm:"column:charged_kwh"`

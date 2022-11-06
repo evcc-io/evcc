@@ -32,6 +32,13 @@ func (lp *LoadPoint) startSession() {
 			lp.session.Vehicle = lp.vehicle.Title()
 		}
 
+		// TODO this is relying on the vehicle caching api results
+		if v, ok := lp.vehicle.(api.VehicleOdometer); ok {
+			if odo, err := v.Odometer(); err == nil {
+				lp.session.Odometer = odo
+			}
+		}
+
 		if c, ok := lp.charger.(api.Identifier); ok {
 			if id, err := c.Identify(); err == nil {
 				lp.session.Identifier = id
