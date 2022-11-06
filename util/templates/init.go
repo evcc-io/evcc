@@ -26,6 +26,10 @@ const (
 
 func init() {
 	configDefaults.LoadDefaults()
+
+	loadTemplates(Charger)
+	loadTemplates(Meter)
+	loadTemplates(Vehicle)
 }
 
 func FromBytes(b []byte) (Template, error) {
@@ -92,14 +96,10 @@ func loadTemplates(class Class) {
 }
 
 func ByClass(class Class) []Template {
-	loadTemplates(class)
-
 	return templates[class]
 }
 
 func ByName(class Class, name string) (Template, error) {
-	loadTemplates(class)
-
 	for _, tmpl := range templates[class] {
 		if tmpl.Template == name || slices.Contains(tmpl.Covers, name) {
 			return tmpl, nil
