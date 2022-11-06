@@ -134,10 +134,12 @@ export default {
 		},
 		vehicleTargetSoC: function () {
 			this.updateTooltip();
+			this.decreaseSelectedTargetSoC();
 		},
 	},
 	mounted: function () {
 		this.updateTooltip();
+		this.decreaseSelectedTargetSoC();
 	},
 	methods: {
 		changeTargetSoCStart: function (e) {
@@ -171,6 +173,14 @@ export default {
 					this.tooltip.dispose();
 				}
 				this.tooltip = new Tooltip(this.$refs.vehicleTargetSoC);
+			});
+		},
+		decreaseSelectedTargetSoC: function () {
+			this.$nextTick(() => {
+				if (this.targetSoC > this.vehicleTargetSoC) {
+					this.selectedTargetSoC = this.vehicleTargetSoC;
+					this.$emit("target-soc-updated", this.selectedTargetSoC);
+				}
 			});
 		},
 	},
