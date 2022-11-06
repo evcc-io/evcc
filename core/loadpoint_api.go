@@ -49,7 +49,21 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 	}
 }
 
-// GetTargetSoC returns loadpoint charge target energy
+// getChargedEnergy returns loadpoint charge target energy
+func (lp *LoadPoint) getChargedEnergy() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.chargedEnergy
+}
+
+// setChargedEnergy returns loadpoint charge target energy
+func (lp *LoadPoint) setChargedEnergy(energy float64) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.chargedEnergy = energy
+}
+
+// GetTargetEnergy returns loadpoint charge target energy
 func (lp *LoadPoint) GetTargetEnergy() int {
 	lp.Lock()
 	defer lp.Unlock()

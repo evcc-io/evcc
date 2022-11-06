@@ -48,7 +48,7 @@ func (lp *LoadPoint) stopSession() {
 		return
 	}
 
-	lp.session.Stop(lp.chargedEnergy, lp.chargeMeterTotal())
+	lp.session.Stop(lp.getChargedEnergy(), lp.chargeMeterTotal())
 
 	lp.db.Persist(lp.session)
 }

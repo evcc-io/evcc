@@ -412,8 +412,8 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.log.INFO.Printf("car connected")
 
 	// energy
-	lp.chargedEnergy = 0
-	lp.publish("chargedEnergy", lp.chargedEnergy)
+	lp.setChargedEnergy(0)
+	lp.publish("chargedEnergy", lp.getChargedEnergy())
 
 	// duration
 	lp.connectedTime = lp.clock.Now()
@@ -446,7 +446,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.resetMeasuredPhases()
 
 	// energy and duration
-	lp.publish("chargedEnergy", lp.chargedEnergy)
+	lp.publish("chargedEnergy", lp.getChargedEnergy())
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
 	// remove charger vehicle id and stop potential detection
@@ -698,7 +698,7 @@ func (lp *LoadPoint) setStatus(status api.ChargeStatus) {
 func (lp *LoadPoint) targetEnergyReached() bool {
 	return (lp.vehicle == nil || lp.vehicleHasFeature(api.Offline)) &&
 		lp.targetEnergy > 0 &&
-		lp.chargedEnergy/1e3 >= float64(lp.targetEnergy)
+		lp.getChargedEnergy()/1e3 >= float64(lp.targetEnergy)
 }
 
 // targetSocReached checks if target is configured and reached.
@@ -1510,7 +1510,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 // publish charged energy and duration
 func (lp *LoadPoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
-		lp.chargedEnergy = 1e3 * f // convert to Wh
+		lp.setChargedEnergy(1e3 * f) // convert to Wh
 	} else {
 		lp.log.ERROR.Printf("charge rater: %v", err)
 	}
@@ -1521,7 +1521,7 @@ func (lp *LoadPoint) publishChargeProgress() {
 		lp.log.ERROR.Printf("charge timer: %v", err)
 	}
 
-	lp.publish("chargedEnergy", lp.chargedEnergy)
+	lp.publish("chargedEnergy", lp.getChargedEnergy())
 	lp.publish("chargeDuration", lp.chargeDuration)
 	if _, ok := lp.chargeMeter.(api.MeterEnergy); ok {
 		lp.publish("chargeTotalImport", lp.chargeMeterTotal())
@@ -1566,7 +1566,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 		// guard for socEstimator removed by api
 		if se := lp.socEstimator; se != nil {
 			lp.socUpdated = lp.clock.Now()
-			f, err = se.SoC(lp.chargedEnergy)
+			f, err = se.SoC(lp.getChargedEnergy())
 		} else {
 			return
 		}
@@ -1708,7 +1708,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 		}
 
 	case lp.targetEnergyReached():
-		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %dkWh", lp.chargedEnergy/1e3, lp.targetEnergy)
+		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %dkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)
 		err = lp.disableUnlessClimater()
 
 	case lp.targetSocReached():
