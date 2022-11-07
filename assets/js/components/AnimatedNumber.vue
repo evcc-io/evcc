@@ -1,5 +1,5 @@
 <template>
-	<number :to="to" :format="format" :duration="duration" />
+	<number :to="to" :format="format" :duration="animationDuration" />
 </template>
 
 <script>
@@ -10,13 +10,20 @@ export default {
 	props: {
 		to: { type: Number },
 		format: { type: Function },
+		noAnimation: { type: Boolean },
+		duration: { type: Number, default: DURATION },
 	},
 	data() {
-		return { duration: 0 };
+		return { activeDuration: 0 };
+	},
+	computed: {
+		animationDuration() {
+			return this.noAnimation ? 0 : this.activeDuration;
+		},
 	},
 	watch: {
 		to: function () {
-			this.duration = DURATION;
+			this.activeDuration = this.duration;
 		},
 	},
 };

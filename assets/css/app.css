@@ -105,6 +105,11 @@ h4 {
 	font-size: 1.25rem;
 }
 
+.large {
+	font-size: 1.25rem;
+	line-height: 1.2;
+}
+
 .bg-primary {
 	background-color: var(--evcc-dark-green) !important;
 }
@@ -214,6 +219,13 @@ a:hover {
 	}
 }
 
+@media (--lg-and-up) {
+	.modal-lg,
+	.modal-xl {
+		--bs-modal-width: 850px;
+	}
+}
+
 .modal-backdrop.show {
 	opacity: 0.8;
 }
@@ -243,6 +255,7 @@ a:hover {
 
 .modal-body {
 	padding: 1rem 0 0;
+	overflow-x: hidden;
 }
 
 .modal-footer {
@@ -297,4 +310,27 @@ small {
 	background-color: var(--evcc-box);
 	color: var(--evcc-default-text);
 	background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/></svg>");
+}
+
+.dark .table {
+	--bs-table-color: var(--evcc-default-text);
+	--bs-table-border-color: var(--evcc-gray);
+}
+.nav-tabs .nav-link {
+	color: var(--evcc-gray) !important;
+}
+
+.nav-tabs .nav-link.active {
+	color: var(--evcc-default-text) !important;
+	background-color: var(--evcc-box) !important;
+	border-bottom-color: var(--evcc-box);
+}
+
+.form-check-input:checked {
+	border-color: var(--bs-primary);
+	background-color: var(--bs-primary);
+}
+
+.dark .form-switch .form-check-input:checked {
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2328293e'/%3e%3c/svg%3e");
 }

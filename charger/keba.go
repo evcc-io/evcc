@@ -37,7 +37,7 @@ func init() {
 	registry.Add("keba", NewKebaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewKebaFromConfig creates a new configurable charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -65,7 +65,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	if energy > 0 {
-		return decorateKeba(k, k.currentPower, k.totalEnergy, k.chargedEnergy, k.currents), nil
+		return decorateKeba(k, k.currentPower, k.totalEnergy, k.currents), nil
 	}
 
 	return k, err
@@ -296,15 +296,6 @@ func (c *Keba) totalEnergy() (float64, error) {
 
 	// mW to W
 	return float64(kr.ETotal) / 1e4, err
-}
-
-// chargedEnergy implements the ChargeRater interface
-func (c *Keba) chargedEnergy() (float64, error) {
-	var kr keba.Report3
-	err := c.roundtrip("report", 3, &kr)
-
-	// 0,1Wh to kWh
-	return float64(kr.EPres) / 1e4, err
 }
 
 // currents implements the api.MeterCurrent interface

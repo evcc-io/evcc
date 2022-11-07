@@ -20,6 +20,7 @@ import (
 
 // https://github.com/TA2k/ioBroker.smart-eq
 
+// https://id.mercedes-benz.com/.well-known/openid-configuration
 const OAuthURI = "https://id.mercedes-benz.com"
 
 type Identity struct {

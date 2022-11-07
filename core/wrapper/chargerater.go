@@ -49,7 +49,7 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 			cr.startEnergy = f
 			cr.log.DEBUG.Printf("charge start energy: %.3gkWh", f)
 		} else {
-			cr.log.ERROR.Printf("charge meter error %v", err)
+			cr.log.ERROR.Printf("charge meter: %v", err)
 		}
 	}
 

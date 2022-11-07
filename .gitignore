@@ -2,6 +2,7 @@ __debug_bin
 .vscode
 .cache
 .DS_store
+*.gz
 *.py
 *.log
 *.json
@@ -14,9 +15,9 @@ __debug_bin
 evcc
 evcc.exe
 evcc_*
-flags/*
-buildflags/*
 linux-*.Dockerfile
+builddir
+flags
 node_modules
 release
 *.inc
@@ -27,3 +28,4 @@ ca-key.pem
 cmd/wip
 fly.toml
 .idea
+vendor/*

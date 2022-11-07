@@ -6,12 +6,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/cmd/shutdown"
-	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // chargerCmd represents the charger command
@@ -26,32 +21,26 @@ const noCurrent = -1
 func init() {
 	rootCmd.AddCommand(chargerCmd)
 	chargerCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
-	chargerCmd.PersistentFlags().IntP(flagCurrent, "I", noCurrent, flagCurrentDescription)
+	chargerCmd.Flags().IntP(flagCurrent, "i", noCurrent, flagCurrentDescription)
 	//lint:ignore SA1019 as Title is safe on ascii
-	chargerCmd.PersistentFlags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
+	chargerCmd.Flags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
 	//lint:ignore SA1019 as Title is safe on ascii
-	chargerCmd.PersistentFlags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
-	chargerCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
-	chargerCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
+	chargerCmd.Flags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
+	//lint:ignore SA1019 as Title is safe on ascii
+	chargerCmd.Flags().Bool(flagDiagnose, false, strings.Title(flagDiagnose))
+	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
+	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
-
 	// load config
 	if err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
 	// setup environment
-	if err := configureEnvironment(conf); err != nil {
+	if err := configureEnvironment(cmd, conf); err != nil {
 		log.FATAL.Fatal(err)
-	}
-
-	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
-		request.LogHeaders = true
 	}
 
 	// select single charger
@@ -62,9 +51,6 @@ func runCharger(cmd *cobra.Command, args []string) {
 	if err := cp.configureChargers(conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
-
-	stopC := make(chan struct{})
-	go shutdown.Run(stopC)
 
 	chargers := cp.chargers
 	if len(args) == 1 {
@@ -77,9 +63,18 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	current := int64(noCurrent)
-	if flag := cmd.PersistentFlags().Lookup(flagCurrent); flag.Changed {
+	if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {
 		var err error
 		current, err = strconv.ParseInt(flag.Value.String(), 10, 64)
+		if err != nil {
+			log.ERROR.Fatalln(err)
+		}
+	}
+
+	var phases int
+	if flag := cmd.Flags().Lookup(flagPhases); flag.Changed {
+		var err error
+		phases, err = strconv.Atoi(flag.Value.String())
 		if err != nil {
 			log.ERROR.Fatalln(err)
 		}
@@ -95,7 +90,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagEnable).Changed {
+		if cmd.Flags().Lookup(flagEnable).Changed {
 			flagUsed = true
 
 			if err := v.Enable(true); err != nil {
@@ -103,7 +98,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagDisable).Changed {
+		if cmd.Flags().Lookup(flagDisable).Changed {
 			flagUsed = true
 
 			if err := v.Enable(false); err != nil {
@@ -111,7 +106,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagWakeup).Changed {
+		if cmd.Flags().Lookup(flagWakeup).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.Resurrector); ok {
@@ -122,15 +117,32 @@ func runCharger(cmd *cobra.Command, args []string) {
 				log.ERROR.Println("wakeup: not implemented")
 			}
 		}
+
+		if phases > 0 {
+			flagUsed = true
+
+			if vv, ok := v.(api.PhaseSwitcher); ok {
+				if err := vv.Phases1p3p(phases); err != nil {
+					log.ERROR.Println("set phases:", err)
+				}
+			} else {
+				log.ERROR.Println("phases: not implemented")
+			}
+		}
 	}
 
 	if !flagUsed {
 		d := dumper{len: len(chargers)}
+		flag := cmd.Flags().Lookup(flagDiagnose).Changed
+
 		for name, v := range chargers {
 			d.DumpWithHeader(name, v)
+			if flag {
+				d.DumpDiagnosis(v)
+			}
 		}
 	}
 
-	close(stopC)
-	<-shutdown.Done()
+	// wait for shutdown
+	<-shutdownDoneC()
 }

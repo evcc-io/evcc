@@ -13,8 +13,6 @@ import (
 	"github.com/fatih/structs"
 )
 
-var truefalse = map[bool]string{false: "false", true: "true"}
-
 type dumper struct {
 	len int
 }
@@ -103,7 +101,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if enabled, err := v.Enabled(); err != nil {
 			fmt.Fprintf(w, "Enabled:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Enabled:\t%s\n", truefalse[enabled])
+			fmt.Fprintf(w, "Enabled:\t%t\n", enabled)
 		}
 	}
 
@@ -180,7 +178,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.Vehicle); ok {
-		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
+		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
 		if len(v.Identifiers()) > 0 {
 			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
 		}
@@ -201,6 +199,12 @@ func (d *dumper) Dump(name string, v interface{}) {
 			fmt.Fprintf(w, "Identifier:\t%s\n", id)
 		}
 	}
+
+	w.Flush()
+}
+
+func (d *dumper) DumpDiagnosis(v interface{}) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
 	if v, ok := v.(api.Diagnosis); ok {
 		fmt.Fprintln(w, "Diagnostic dump:")

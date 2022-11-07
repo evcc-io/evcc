@@ -21,13 +21,20 @@ func CustomID(cid string) error {
 	}
 
 	cid = strings.TrimSpace(cid)
-	if l := len(cid); l != 32 {
-		return fmt.Errorf("expected 32 characters machine id, got %d", l)
+	if l := len(cid); l != 32 && l != 64 {
+		return fmt.Errorf("expected 32 or 64 characters machine id, got %d", l)
 	}
 
 	id = cid
 
 	return nil
+}
+
+// RandomID creates a random id
+func RandomID() string {
+	rnd := util.RandomString(512)
+	mac := hmac.New(sha256.New, []byte(rnd))
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 // ID returns the platform specific machine id of the current host OS.
@@ -36,10 +43,7 @@ func ID() (string, error) {
 	if id == "" {
 		var err error
 		if id, err = machineid.ID(); err != nil {
-			rnd := util.RandomString(512)
-			mac := hmac.New(sha256.New, []byte(rnd))
-			rid := hex.EncodeToString(mac.Sum(nil))
-
+			rid := RandomID()
 			return "", fmt.Errorf("could not get %w; for manual configuration use plant: %s", err, rid)
 		}
 	}

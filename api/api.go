@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
@@ -12,7 +14,7 @@ import (
 
 //go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
-// ChargeMode are charge modes modeled after OpenWB
+// ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
 
 // Charge modes
@@ -162,7 +164,7 @@ type Authorizer interface {
 type Vehicle interface {
 	Battery
 	Title() string
-	Capacity() int64
+	Capacity() float64
 	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
@@ -220,4 +222,15 @@ type AuthProvider interface {
 	SetCallbackParams(baseURL, redirectURL string, authenticated chan<- bool)
 	LoginHandler() http.HandlerFunc
 	LogoutHandler() http.HandlerFunc
+}
+
+// FeatureDescriber optionally provides a list of supported non-api features
+type FeatureDescriber interface {
+	Features() []Feature
+	Has(Feature) bool
+}
+
+// CsvWriter converts to csv
+type CsvWriter interface {
+	WriteCsv(context.Context, io.Writer)
 }

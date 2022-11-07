@@ -116,9 +116,12 @@ func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 	})
 	m.Handler.ListenSetter(topic+"/vehicle/set", func(payload string) {
 		if vehicle, err := strconv.Atoi(payload); err == nil {
-			vehicles := site.GetVehicles()
-			if vehicle < len(vehicles) {
-				lp.SetVehicle(vehicles[vehicle])
+			if vehicle >= 0 {
+				if vehicles := site.GetVehicles(); vehicle < len(vehicles) {
+					lp.SetVehicle(vehicles[vehicle])
+				}
+			} else {
+				lp.SetVehicle(nil)
 			}
 		}
 	})

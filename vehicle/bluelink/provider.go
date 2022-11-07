@@ -185,3 +185,12 @@ func (v *Provider) TargetSoC() (float64, error) {
 
 	return 0, err
 }
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.statusLG()
+	coord := res.ResMsg.VehicleStatusInfo.VehicleLocation.Coord
+	return coord.Lat, coord.Lon, err
+}

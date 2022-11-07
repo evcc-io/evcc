@@ -385,7 +385,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	vehicle := mock.NewMockVehicle(ctrl)
 
 	// wrap vehicle with estimator
-	vehicle.EXPECT().Capacity().Return(int64(10))
+	vehicle.EXPECT().Capacity().Return(float64(10))
 	vehicle.EXPECT().Phases().Return(0).AnyTimes()
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
@@ -418,6 +418,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	lp.enabled = true
 	lp.chargeCurrent = float64(minA)
+	lp.status = api.StatusC
 
 	t.Log("charging below soc target")
 	vehicle.EXPECT().SoC().Return(85.0, nil)

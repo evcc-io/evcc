@@ -5,35 +5,46 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-const api = "https://api.evcc.io"
+const (
+	api            = "https://api.evcc.io"
+	enabledSetting = "telemetry"
+)
 
 var instanceID string
 
 func Enabled() bool {
-	return instanceID != ""
+	enabled, _ := settings.Bool(enabledSetting)
+	return enabled && sponsor.IsAuthorized() && instanceID != ""
 }
 
-func Create(token, machineID string) error {
-	if token == "" {
-		return errors.New("telemetry requires sponsorship")
-	}
-
-	if machineID == "" {
-		var err error
-		if machineID, err = machine.ProtectedID("evcc-api"); err != nil {
-			return err
+func Enable(enable bool) error {
+	if enable {
+		if !sponsor.IsAuthorized() {
+			return errors.New("telemetry requires sponsorship")
+		}
+		if instanceID == "" {
+			return fmt.Errorf("using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
 		}
 	}
 
-	instanceID = machineID
+	settings.SetBool(enabledSetting, enable)
 
 	return nil
+}
+
+func Create(machineID string) {
+	if machineID == "" {
+		machineID, _ = machine.ProtectedID("evcc-api")
+	}
+
+	instanceID = machineID
 }
 
 func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {

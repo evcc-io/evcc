@@ -2,7 +2,7 @@
 	<div class="vehicle-soc">
 		<div class="progress">
 			<div
-				v-if="connected || parked"
+				v-if="connected"
 				class="progress-bar"
 				role="progressbar"
 				:class="{
@@ -31,7 +31,7 @@
 		</div>
 		<div class="target">
 			<input
-				v-if="vehiclePresent && (connected || parked)"
+				v-if="socBasedCharging && connected"
 				type="range"
 				min="0"
 				max="100"
@@ -63,7 +63,9 @@ export default {
 		charging: Boolean,
 		minSoC: Number,
 		targetSoC: Number,
-		parked: Boolean,
+		targetEnergy: Number,
+		chargedEnergy: Number,
+		socBasedCharging: Boolean,
 	},
 	emits: ["target-soc-drag", "target-soc-updated"],
 	data: function () {
@@ -75,16 +77,23 @@ export default {
 	},
 	computed: {
 		vehicleSoCDisplayWidth: function () {
-			if (this.vehiclePresent && this.vehicleSoC >= 0) {
-				return this.vehicleSoC;
+			if (this.socBasedCharging) {
+				if (this.vehicleSoC >= 0) {
+					return this.vehicleSoC;
+				}
+				return 100;
+			} else {
+				if (this.targetEnergy) {
+					return (100 / this.targetEnergy) * (this.chargedEnergy / 1e3);
+				}
+				return 100;
 			}
-			return 100;
 		},
 		vehicleTargetSoCActive: function () {
 			return this.vehicleTargetSoC > 0 && this.vehicleTargetSoC > this.vehicleSoC;
 		},
 		targetSliderActive: function () {
-			return !this.visibleTargetSoC || this.visibleTargetSoC <= this.vehicleTargetSoC;
+			return !this.vehicleTargetSoC || this.visibleTargetSoC <= this.vehicleTargetSoC;
 		},
 		progressColor: function () {
 			if (this.minSoCActive) {
@@ -96,16 +105,23 @@ export default {
 			return this.minSoC > 0 && this.vehicleSoC < this.minSoC;
 		},
 		remainingSoCWidth: function () {
-			if (this.vehicleSoCDisplayWidth === 100) {
-				return null;
+			if (this.socBasedCharging) {
+				if (this.vehicleSoCDisplayWidth === 100) {
+					return null;
+				}
+				if (this.minSoCActive) {
+					return this.minSoC - this.vehicleSoC;
+				}
+				let targetSoC = this.targetSliderActive
+					? this.visibleTargetSoC
+					: this.vehicleTargetSoC;
+				if (targetSoC > this.vehicleSoC) {
+					return targetSoC - this.vehicleSoC;
+				}
+			} else {
+				return 100 - this.vehicleSoCDisplayWidth;
 			}
-			if (this.minSoCActive) {
-				return this.minSoC - this.vehicleSoC;
-			}
-			let targetSoC = this.targetSliderActive ? this.visibleTargetSoC : this.vehicleTargetSoC;
-			if (targetSoC > this.vehicleSoC) {
-				return targetSoC - this.vehicleSoC;
-			}
+
 			return null;
 		},
 		visibleTargetSoC: function () {

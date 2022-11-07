@@ -31,7 +31,7 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 	defer lp.Unlock()
 
 	if _, err := api.ChargeModeString(mode.String()); err != nil {
-		lp.log.WARN.Printf("invalid charge mode: %s", string(mode))
+		lp.log.ERROR.Printf("invalid charge mode: %s", string(mode))
 		return
 	}
 
@@ -45,6 +45,51 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 		// immediately allow pv mode activity
 		lp.elapsePVTimer()
 
+		lp.requestUpdate()
+	}
+}
+
+// getChargedEnergy returns loadpoint charge target energy
+func (lp *LoadPoint) getChargedEnergy() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.chargedEnergy
+}
+
+// setChargedEnergy returns loadpoint charge target energy
+func (lp *LoadPoint) setChargedEnergy(energy float64) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.chargedEnergy = energy
+}
+
+// GetTargetEnergy returns loadpoint charge target energy
+func (lp *LoadPoint) GetTargetEnergy() int {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.SoC.target
+}
+
+// setTargetEnergy sets loadpoint charge target energy (no mutex)
+func (lp *LoadPoint) setTargetEnergy(energy int) {
+	lp.targetEnergy = energy
+	// TODO soctimer
+	// if lp.socTimer != nil {
+	// lp.socTimer.Energy = energy
+	// }
+	lp.publish("targetEnergy", energy)
+}
+
+// SetTargetEnergy sets loadpoint charge target energy
+func (lp *LoadPoint) SetTargetEnergy(energy int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set target energy:", energy)
+
+	// apply immediately
+	if lp.targetEnergy != energy {
+		lp.setTargetEnergy(energy)
 		lp.requestUpdate()
 	}
 }

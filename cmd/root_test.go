@@ -27,8 +27,8 @@ func TestRedact(t *testing.T) {
 	token:
 		access: geheim
 		refresh: geheim
-	host: geheim
-	url: geheim
+	pin: geheim
+	mac: geheim
 	secret: geheim # comment
 	secret : geheim
 	`

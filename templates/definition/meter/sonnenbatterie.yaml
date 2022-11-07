@@ -4,11 +4,10 @@ products:
   - brand: Sonnen
     description:
       generic: sonnenBatterie
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: host
   - name: port
     default: 8080

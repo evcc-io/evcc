@@ -28,7 +28,7 @@ func (v *Wrapper) Title() string {
 }
 
 // Capacity implements the api.Vehicle interface
-func (v *Wrapper) Capacity() int64 {
+func (v *Wrapper) Capacity() float64 {
 	return 0
 }
 

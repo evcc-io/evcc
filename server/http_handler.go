@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -10,9 +12,12 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	dbserver "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/locale"
 	"github.com/gorilla/mux"
 )
 
@@ -57,13 +62,23 @@ func jsonWrite(w http.ResponseWriter, content interface{}) {
 }
 
 func jsonResult(w http.ResponseWriter, res interface{}) {
-	w.WriteHeader(http.StatusOK)
 	jsonWrite(w, map[string]interface{}{"result": res})
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
 	jsonWrite(w, map[string]interface{}{"error": err.Error()})
+}
+
+func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", `attachment; filename="sessions.csv"`)
+
+	if ww, ok := res.(api.CsvWriter); ok {
+		ww.WriteCsv(ctx, w)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 // healthHandler returns current charge mode
@@ -125,6 +140,34 @@ func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	}
 }
 
+// boolHandler updates bool-param api
+func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		val, err := strconv.ParseBool(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		err = set(val)
+		if err != nil {
+			jsonError(w, http.StatusNotAcceptable, err)
+			return
+		}
+
+		jsonResult(w, get())
+	}
+}
+
+// boolGetHandler retrievs bool api values
+func boolGetHandler(get func() bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		jsonResult(w, get())
+	}
+}
+
 // stateHandler returns current charge mode
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -134,6 +177,29 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 		}
 		jsonResult(w, res)
 	}
+}
+
+// sessionHandler returns the list of charging sessions
+func sessionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbserver.Instance == nil {
+		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
+		return
+	}
+
+	var res db.Sessions
+	if txn := dbserver.Instance.Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
+		jsonError(w, http.StatusInternalServerError, txn.Error)
+		return
+	}
+
+	if r.URL.Query().Get("format") == "csv" {
+		accept := r.Header.Get("Accept-Language")
+		ctx := context.WithValue(context.Background(), locale.Locale, accept)
+		csvResult(ctx, w, &res)
+		return
+	}
+
+	jsonResult(w, res)
 }
 
 // chargeModeHandler updates charge mode

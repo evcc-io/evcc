@@ -9,9 +9,12 @@ import (
 
 	"github.com/avast/retry-go/v3"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/coordinator"
+	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/push"
+	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -89,9 +92,34 @@ func NewSiteFromConfig(
 	site.coordinator = coordinator.New(log, vehicles)
 	site.savings = NewSavings(tariffs)
 
-	// give loadpoints access to vehicles
+	// migrate session log
+	if serverdb.Instance != nil {
+		var err error
+		// TODO deprecate
+		if table := "transactions"; serverdb.Instance.Migrator().HasTable(table) {
+			err = serverdb.Instance.Migrator().RenameTable(table, new(db.Session))
+		}
+		if err == nil {
+			err = serverdb.Instance.AutoMigrate(new(db.Session))
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// give loadpoints access to vehicles and database
 	for _, lp := range loadpoints {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
+
+		if serverdb.Instance != nil {
+			var err error
+			if lp.db, err = db.New(lp.Title); err != nil {
+				return nil, err
+			}
+
+			// NOTE: this requires stopSession to respect async access
+			shutdown.Register(lp.stopSession)
+		}
 	}
 
 	if site.Meters.GridMeterRef != "" {
@@ -191,7 +219,6 @@ func (site *Site) DumpConfig() {
 		for _, v := range vehicles {
 			if _, ok := v.(api.ChargeState); !ok {
 				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Title())
-				break
 			}
 		}
 	}

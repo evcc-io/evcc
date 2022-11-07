@@ -1,7 +1,7 @@
 network:
   port: 7070
 
-log: info
+log: debug
 
 interval: 3s
 
@@ -192,6 +192,11 @@ vehicles:
     capacity: 80
     onidentify:
       targetsoc: 75
+  - name: vehicle_3
+    type: template
+    template: offline
+    title: grüner Honda e
+    capacity: 26
 
 site:
   title: Zuhause
@@ -206,7 +211,7 @@ loadpoints:
     mode: pv
     phases: 1
     meter: meter_charger_1
-    vehicle: vehicle_1 # default
+    # vehicle: vehicle_1 # default
   - title: Garage
     charger: charger_2
     mode: "off"

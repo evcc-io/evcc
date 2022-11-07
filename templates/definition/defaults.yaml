@@ -45,6 +45,14 @@ params:
       de: IP-Adresse oder Hostname
       en: IP-Address or Hostname
     example: 192.0.2.2
+  - name: ip
+    description:
+      de: IP-Adresse
+      en: IP-Address
+    help:
+      de: IP-Adresse
+      en: IP-Address
+    example: 192.0.2.2
   - name: port
     description:
       de: Port
@@ -216,6 +224,11 @@ params:
       en: "'en' for English and 'de' for German"
     default: en
     validvalues: ["de", "en"]
+  - name: ski
+    required: true
+    help:
+      en: The SKI of the wallbox, can usually be found on the web interface of the wallbox
+      de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
 
 presets:
   vehiclebase:
@@ -300,6 +313,29 @@ presets:
     render: |
       {{define "vehicle-language"}}
       language: {{ .language }}
+      {{end}}
+  eebusmeter:
+    params:
+      - name: ski
+      - name: ip
+        required: false
+    render: |
+      {{define "eebus-meter"}}
+      type: eebus
+      ski: {{ .ski }}
+      {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
+      meter: true
+      {{end}}
+  eebusnometer:
+    params:
+      - name: ski
+      - name: ip
+        required: false
+    render: |
+      {{define "eebus-no-meter"}}
+      type: eebus
+      ski: {{ .ski }}
+      {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
       {{end}}
 
 modbus:
