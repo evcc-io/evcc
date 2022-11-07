@@ -201,6 +201,7 @@ title = "Ladevorgänge"
 downloadCsv = "Als CSV herunterladen"
 loadpoint = "Ladepunkt"
 vehicle = "Fahrzeug"
+odometer = "Kilometerstand"
 energy = "Geladen"
 date = "Zeitraum"
 

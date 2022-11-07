@@ -207,6 +207,7 @@ date = "Period"
 [sessions.csv]
 loadpoint = "Loadpoint"
 vehicle = "Vehicle"
+odometer = "Mileage (km)"
 identifier = "Identifier"
 chargedenergy = "Energy (kWh)"
 meterstart = "Meter Start (kWh)"
