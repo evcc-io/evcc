@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/db"
 )
 
 func (lp *LoadPoint) chargeMeterTotal() float64 {
@@ -32,13 +33,6 @@ func (lp *LoadPoint) startSession() {
 			lp.session.Vehicle = lp.vehicle.Title()
 		}
 
-		// TODO this is relying on the vehicle caching api results
-		if v, ok := lp.vehicle.(api.VehicleOdometer); ok {
-			if odo, err := v.Odometer(); err == nil {
-				lp.session.Odometer = odo
-			}
-		}
-
 		if c, ok := lp.charger.(api.Identifier); ok {
 			if id, err := c.Identify(); err == nil {
 				lp.session.Identifier = id
@@ -60,21 +54,19 @@ func (lp *LoadPoint) stopSession() {
 	lp.db.Persist(lp.session)
 }
 
-func (lp *LoadPoint) updateSession() {
+type sessionOption func(*db.Session)
+
+func (lp *LoadPoint) updateSession(opts ...sessionOption) {
 	// test guard
 	if lp.db == nil || lp.session == nil {
 		return
 	}
 
-	var title string
-	if lp.vehicle != nil {
-		title = lp.vehicle.Title()
+	for _, opt := range opts {
+		opt(lp.session)
 	}
 
-	if lp.session.Vehicle != title {
-		lp.session.Vehicle = title
-		lp.db.Persist(lp.session)
-	}
+	lp.db.Persist(lp.session)
 }
 
 func (lp *LoadPoint) finalizeSession() {

@@ -905,7 +905,15 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.Lock()
 
 	lp.unpublishVehicle()
-	lp.updateSession()
+
+	lp.updateSession(func(session *db.Session) {
+		var title string
+		if lp.vehicle != nil {
+			title = lp.vehicle.Title()
+		}
+
+		lp.session.Vehicle = title
+	})
 }
 
 func (lp *LoadPoint) wakeUpVehicle() {
@@ -1039,6 +1047,11 @@ func (lp *LoadPoint) vehicleOdometer() {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
 			lp.publish(vehicleOdometer, odo)
+
+			// update session once odometer is read
+			lp.updateSession(func(session *db.Session) {
+				session.Odometer = odo
+			})
 		} else {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
