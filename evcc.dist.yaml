@@ -42,8 +42,9 @@ levels:
 # relaying to the given modbus downstream device (either TCP or RTU, RS485 or TCP)
 modbusproxy:
   #  - port: 5200
-  #    uri: localhost:502
-  #    readonly: true
+  #    uri: solar-edge:502
+  #    # rtu: true
+  #    # readonly: true
 
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints
