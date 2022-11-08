@@ -44,6 +44,8 @@ import SavingsTile from "./SavingsTile.vue";
 import formatter from "../mixins/formatter";
 import communityApi from "../communityApi";
 
+const UPDATE_INTERVAL_SECONDS = 10;
+
 export default {
 	name: "LiveCommunity",
 	components: { SavingsTile },
@@ -80,10 +82,10 @@ export default {
 		},
 	},
 	async mounted() {
-		this.refresh = setInterval(this.update, 5000);
+		this.refresh = setInterval(this.update, UPDATE_INTERVAL_SECONDS * 1e3);
 		await this.update();
 		this.$nextTick(() => {
-			this.animationDuration = 5;
+			this.animationDuration = UPDATE_INTERVAL_SECONDS;
 		});
 	},
 	unmounted() {
