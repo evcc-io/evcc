@@ -50,7 +50,7 @@ const (
 	// abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 	// abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not supported
 
-	// abbEnabled = 0x1400 // "5120 mA"
+	abbEnabled = 5880 // mA
 )
 
 func init() {
@@ -60,21 +60,19 @@ func init() {
 // NewABBFromConfig creates a ABB charger from generic config
 func NewABBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
-		ID:       1,
-		Baudrate: 9600,
-		Comset:   "8N1",
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewABB(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewABB(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 }
 
 // NewABB creates ABB charger
-func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Rtu, slaveID)
+func NewABB(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +85,6 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	conn.Logger(log.TRACE)
 
 	wb := &ABB{
-		log:  log,
 		conn: conn,
 		curr: 6000, // assume min current
 	}
@@ -150,7 +147,7 @@ func (wb *ABB) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint32(b) > 0, nil
+	return binary.BigEndian.Uint32(b) >= abbEnabled, nil
 }
 
 // Enable implements the api.Charger interface
