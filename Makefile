@@ -109,6 +109,8 @@ image::
 	go install github.com/gokrazy/tools/cmd/gokr-packer@main
 	mkdir -p flags/github.com/gokrazy/breakglass
 	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
+	mkdir -p flags/github.com/evcc-io/evcc
+	echo "--sqlite /perm/evcc.db" > flags/github.com/evcc-io/evcc/flags.txt
 	mkdir -p buildflags/github.com/evcc-io/evcc
 	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
 	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
