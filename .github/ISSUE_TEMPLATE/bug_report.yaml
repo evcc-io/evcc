@@ -31,6 +31,7 @@ body:
       required: true
     attributes:
       label: Configuration details
+      render: yaml
       description: >
         Show evcc configuration file <code>evcc.yaml</code>
 
@@ -39,6 +40,7 @@ body:
       required: true
     attributes:
       label: Log details
+      render: text
       description: >
         Show evcc log output by running with <code>evcc --log debug</code>
 
