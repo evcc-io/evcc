@@ -25,11 +25,11 @@ body:
       label: Steps to reproduce
       description: >-
         Steps to reproduce the behavior.
-        value: |
-          1.
-          2.
-          3.
-          ...
+      value: |
+        1.
+        2.
+        3.
+        ...
 
   - type: textarea
     validations:
