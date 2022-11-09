@@ -22,14 +22,14 @@ body:
     validations:
       required: true
     attributes:
-      label: Steps to reproduce
-      description: >-
-        Steps to reproduce the behavior.
       value: |
         1.
         2.
         3.
         ...
+      label: Steps to reproduce
+      description: >-
+        Steps to reproduce the behavior.
 
   - type: textarea
     validations:
