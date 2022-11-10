@@ -1523,7 +1523,11 @@ func (lp *LoadPoint) updateChargeCurrents() {
 // publish charged energy and duration
 func (lp *LoadPoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
-		lp.setChargedEnergy(1e3 * f) // convert to Wh
+		// workaround for Go-E resetting during disconnect, see
+		// https://github.com/evcc-io/evcc/issues/5092
+		if f > 0 {
+			lp.setChargedEnergy(1e3 * f) // convert to Wh
+		}
 	} else {
 		lp.log.ERROR.Printf("charge rater: %v", err)
 	}
