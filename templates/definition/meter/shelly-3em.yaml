@@ -21,6 +21,18 @@ render: |
     scale: 0.001
   {{ end -}}
   {{if ne .usage "pv" -}}
+  {{if eq .usage "grid" -}}
+  currents:
+  - source: http
+    uri: http://{{ .host }}/emeter/0
+    jq: if .power < 0 then - .current else .current end
+  - source: http
+    uri: http://{{ .host }}/emeter/1
+    jq: if .power < 0 then - .current else .current end
+  - source: http
+    uri: http://{{ .host }}/emeter/2
+    jq: if .power < 0 then - .current else .current end
+  {{ else }}
   currents:
   - source: http
     uri: http://{{ .host }}/emeter/0
@@ -31,4 +43,5 @@ render: |
   - source: http
     uri: http://{{ .host }}/emeter/2
     jq: .current
+  {{ end -}}
   {{ end -}}
