@@ -30,10 +30,11 @@ func (m *ChargeTimer) StartCharge(continued bool) {
 	m.Lock()
 	defer m.Unlock()
 
-	m.charging = true
 	m.start = m.clck.Now()
 
-	if !continued {
+	if continued {
+		m.charging = true
+	} else {
 		m.duration = 0
 	}
 }
