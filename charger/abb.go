@@ -30,7 +30,6 @@ import (
 
 // ABB charger implementation
 type ABB struct {
-	log  *util.Logger
 	conn *modbus.Connection
 	curr uint32
 }
