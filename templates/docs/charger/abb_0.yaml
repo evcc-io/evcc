@@ -3,6 +3,8 @@ product:
   description: Terra AC
 capabilities: ["mA"]
 requirements: ["sponsorship"]
+description: |
+  Erfordert Firmware >= 1.6.5
 render:
   - default: |
       type: template

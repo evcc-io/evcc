@@ -77,15 +77,12 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 		c.api = goe.NewLocal(log, util.DefaultScheme(uri, "http"), cache)
 	}
 
-	if c.api.IsV2() {
-		var phases func(int) error
-		if sponsor.IsAuthorized() {
-			phases = c.phases1p3p
-		} else {
-			log.WARN.Println("automatic 1p3p phase switching requires sponsor token")
-		}
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
-		return decorateGoE(c, c.totalEnergy, phases), nil
+	if c.api.IsV2() {
+		return decorateGoE(c, c.totalEnergy, c.phases1p3p), nil
 	}
 
 	return c, nil
