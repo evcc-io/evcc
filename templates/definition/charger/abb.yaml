@@ -7,7 +7,7 @@ capabilities: ["mA"]
 requirements:
   description:
     de: Erfordert Firmware >= 1.6.5
-    en: Requires firmware >= 1.6.5 
+    en: Requires firmware >= 1.6.5
   evcc: ["sponsorship"]
 params:
   - name: modbus
