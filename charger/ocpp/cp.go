@@ -33,12 +33,48 @@ const (
 	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
 )
 
+type TransactionState int
+
+const (
+	Undefined TransactionState = iota
+	RequestedStart
+	Running
+	Suspended
+	RequestedStop
+	Finished
+)
+
+type Transaction struct {
+	Id int
+	Status TransactionState
+	StatusChanged chan struct{}
+	StatusMutex sync.Mutex
+}
+
+func (trans *Transaction) HasStatusChanged() <-chan struct{} {
+	return trans.StatusChanged
+}
+
+// type CPDetails struct {
+// 	Manufacturer string
+// 	Model string
+// 	SerialNumber string
+//
+// 	FirmwareVersion string
+// 	Imsi string
+// 	Iccid string
+//
+// 	MeterModel string
+// 	MeterSerialNumber string
+// }
+
 type CP struct {
 	mu   sync.Mutex
 	log  *util.Logger
 	once sync.Once
 
 	id string
+	// Details CPDetails
 
 	connectC, bootC, statusC chan struct{}
 	updated           time.Time
@@ -48,8 +84,8 @@ type CP struct {
 	meterUpdated time.Time
 	measurements map[string]types.SampledValue
 
-	txnCount int // change initial value to the last known global transaction. Needs persistence
-	txnId    int
+	currentTransaction *Transaction
+	lastTransactionId int
 }
 
 func NewChargePoint(log *util.Logger, id string, timeout time.Duration) *CP {
@@ -61,6 +97,7 @@ func NewChargePoint(log *util.Logger, id string, timeout time.Duration) *CP {
 		statusC:      make(chan struct{}),
 		measurements: make(map[string]types.SampledValue),
 		timeout:      timeout,
+		lastTransactionId: 0,
 	}
 }
 
@@ -157,7 +194,7 @@ func (cp *CP) Initialized(timeout time.Duration) bool {
 func (cp *CP) WatchDog(timeout time.Duration) {
 	for ; true; <-time.NewTicker(timeout).C {
 		cp.mu.Lock()
-		update := cp.txnId != 0 && time.Since(cp.meterUpdated) > timeout
+		update := cp.currentTransaction != nil && time.Since(cp.meterUpdated) > timeout
 		cp.mu.Unlock()
 
 		if update {
@@ -166,11 +203,61 @@ func (cp *CP) WatchDog(timeout time.Duration) {
 	}
 }
 
-// TransactionID returns the current transaction id
-func (cp *CP) TransactionID() int {
+// transaction related methods
+
+func (cp *CP) InitializeNewTransaction() {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
-	return cp.txnId
+
+	cp.currentTransaction = new(Transaction)
+	cp.currentTransaction.Id = cp.lastTransactionId+1
+	cp.currentTransaction.StatusChanged = make(chan struct{})
+
+	// save transaction Id for later
+	cp.lastTransactionId = cp.currentTransaction.Id
+}
+
+
+func (cp *CP) DeinitializeTransaction() {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	cp.currentTransaction.Status = Finished
+	close(cp.currentTransaction.StatusChanged)
+	cp.currentTransaction = nil
+}
+
+// TransactionID returns the current transaction id
+func (cp *CP) TransactionID() int {
+	cp.currentTransaction.StatusMutex.Lock()
+	defer cp.currentTransaction.StatusMutex.Unlock()
+	return cp.currentTransaction.Id
+}
+
+func (cp *CP) CurrentTransaction() *Transaction {
+	cp.currentTransaction.StatusMutex.Lock()
+	defer cp.currentTransaction.StatusMutex.Unlock()
+	return cp.currentTransaction
+}
+
+func (cp *CP) HasTransaction() bool {
+	return cp.currentTransaction != nil
+}
+
+func (cp *CP) SetTransactionStatus(status TransactionState) {
+	cp.currentTransaction.StatusMutex.Lock()
+	close(cp.currentTransaction.StatusChanged)
+
+	cp.currentTransaction.Status = status
+
+	cp.currentTransaction.StatusChanged = make(chan struct{})
+	cp.currentTransaction.StatusMutex.Unlock()
+}
+
+func (cp *CP) GetTransactionStatus() TransactionState{
+	cp.currentTransaction.StatusMutex.Lock()
+	defer cp.currentTransaction.StatusMutex.Unlock()
+	return cp.currentTransaction.Status
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {
@@ -208,6 +295,8 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	return res, nil
 }
+
+// metering APIs implementations
 
 var _ api.Meter = (*CP)(nil)
 

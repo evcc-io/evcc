@@ -32,6 +32,32 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
+	// // required fields by spec
+	// cp.Details.Manufacturer = request.ChargePointVendor
+	// cp.Details.Model = request.ChargePointModel
+	//
+	// // optional fields by spec
+	// if request.ChargePointSerialNumber != "" {
+	// 	cp.Details.SerialNumber = request.ChargePointSerialNumber
+	// }
+	//
+	// if request.FirmwareVersion != "" {
+	// 	cp.Details.FirmwareVersion = request.FirmwareVersion
+	// }
+	// if request.Imsi != "" {
+	// 	cp.Details.Imsi = request.Imsi
+	// }
+	// if request.Iccid != "" {
+	// 	cp.Details.Iccid = request.Iccid
+	// }
+	//
+	// if request.MeterType != "" {
+	// 	cp.Details.MeterModel = request.MeterType
+	// }
+	// if request.MeterSerialNumber != "" {
+	// 	cp.Details.MeterSerialNumber = request.MeterSerialNumber
+	// }
+
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
 		Interval:    60, // TODO
@@ -139,6 +165,10 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
+	if request == nil { // what!?
+		return nil, nil
+	}
+
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted, // accept
@@ -146,13 +176,13 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 		TransactionId: 1, // default
 	}
 
-	// create new transaction
-	if request != nil && time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
-		cp.txnCount++
-		res.TransactionId = cp.txnCount
+	if (time.Since(request.Timestamp.Time) < transactionExpiry) || // only respect transactions in the last hour, invalidate it
+	(cp.currentTransaction != nil && cp.GetTransactionStatus() != RequestedStart) { // we didnt start this transaction, invalidate it
+		cp.log.DEBUG.Printf("responded with authorization status blocked for unknown transaction")
+		res.IdTagInfo.Status = types.AuthorizationStatusConcurrentTx
+	} else { // create new transaction
+		res.TransactionId = cp.TransactionID()
 	}
-
-	cp.txnId = res.TransactionId
 
 	return res, nil
 }
@@ -163,14 +193,18 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	// reset transaction
-	if request != nil && time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
-		// log mismatching id but close transaction anyway
-		if request.TransactionId != cp.txnId {
-			cp.log.ERROR.Printf("stop transaction: invalid id %d", request.TransactionId)
+	// signal that transaction has ended
+	if cp.currentTransaction != nil {
+		if cp.currentTransaction.Status != Running || cp.currentTransaction.Status != Suspended {
+			cp.log.ERROR.Printf("stop transaction: stopping not started transaction")
 		}
 
-		cp.txnId = 0
+		// log mismatching id because we close transaction anyway
+		if request.TransactionId != cp.currentTransaction.Id {
+			cp.log.ERROR.Printf("stop transaction: mismatched id %d expected %d", request.TransactionId, cp.currentTransaction.Id)
+		}
+
+		cp.SetTransactionStatus(Finished)
 	}
 
 	res := &core.StopTransactionConfirmation{

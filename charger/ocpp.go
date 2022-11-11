@@ -17,7 +17,12 @@ import (
 	"github.com/samber/lo"
 )
 
-const statusTimeout = 30 * time.Second
+const (
+	statusTimeout = 30*time.Second
+	bootTimeout = time.Minute
+	startStopTimeout = 30*time.Second
+	defaultIdTag = "evcc"
+)
 
 // OCPP charger implementation
 type OCPP struct {
@@ -32,7 +37,6 @@ type OCPP struct {
 	phaseSwitching    bool
 }
 
-const defaultIdTag = "evcc"
 
 func init() {
 	registry.Add("ocpp", NewOCPPFromConfig)
@@ -131,7 +135,6 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 
 	// wait for bootnotification
-	bootTimeout := time.Minute
 	select {
 	case <-time.After(bootTimeout):
 		// if no bootnotification in timeout trigger soft (hard if soft is not available) reset
@@ -331,12 +334,14 @@ func (c *OCPP) wait(err error, rc chan error) error {
 
 // Status implements the api.Charger interface
 func (c *OCPP) Status() (api.ChargeStatus, error) {
+	c.log.TRACE.Printf("Status() called")
 	return c.cp.Status()
 }
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	return c.cp.TransactionID() > 0, nil
+	c.log.TRACE.Printf("Enabled() called")
+	return (c.cp.HasTransaction() && c.cp.TransactionID() > 0), nil
 }
 
 // Enable implements the api.Charger interface
@@ -344,7 +349,11 @@ func (c *OCPP) Enable(enable bool) error {
 	var err error
 	rc := make(chan error, 1)
 
-	if enable {
+	c.log.TRACE.Printf("Enable(%v) called", enable)
+
+	if enable && !c.cp.HasTransaction() {
+		c.cp.InitializeNewTransaction()
+
 		err = ocpp.Instance().RemoteStartTransaction(c.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
 			c.log.TRACE.Printf("%T: %+v", resp, resp)
 
@@ -352,42 +361,39 @@ func (c *OCPP) Enable(enable bool) error {
 				err = errors.New(string(resp.Status))
 			}
 
+			if err == nil {
+				c.cp.SetTransactionStatus(ocpp.RequestedStart)
+
+				select {
+				case <- c.cp.CurrentTransaction().HasStatusChanged():
+					status := c.cp.GetTransactionStatus()
+					if status == ocpp.Running || status == ocpp.Suspended {
+						break
+					}
+					err = fmt.Errorf("unable to start transaction")
+				case <- time.After(30*time.Second):
+				}
+			} else {
+				c.cp.DeinitializeTransaction()
+			}
+
 			rc <- err
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
 			request.ConnectorId = &c.connector
 			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
 		})
-	} else {
+	}
+	if !enable {
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
 			c.log.TRACE.Printf("%T: %+v", resp, resp)
 
-			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-				err = errors.New(string(resp.Status))
+			if enabled,_ := c.Enabled(); err == nil && resp != nil && !enabled {
+				c.log.TRACE.Printf("trying to cancel running transaction")
 			}
 
 			rc <- err
 		}, c.cp.TransactionID())
 	}
-
-	return c.wait(err, rc)
-}
-
-
-func (c *OCPP) softReset() error {
-	c.log.TRACE.Printf("ResetRequest")
-
-	rc := make(chan error, 1)
-	err := ocpp.Instance().Reset(c.cp.ID(), func(request *core.ResetConfirmation, err error) {
-		c.log.TRACE.Printf("%T: %+v", request, request)
-
-		var status core.ResetStatus
-		if request != nil {
-			status = request.Status
-		}
-
-		c.log.TRACE.Printf("softReset for %s: %+v", c.cp.ID(), status)
-		rc <- err
-	}, core.ResetTypeSoft)
 
 	return c.wait(err, rc)
 }
@@ -408,7 +414,7 @@ func (c *OCPP) clearChargingProfiles() error {
 		// profileId := 1
 		// req.Id = &profileId
 		// req.ConnectorId = &connectorId
-		// req.ChargingProfilePurpose = types.ChargingProfilePurposeTxProfile
+		// req.ChargingProfilePurpose = types.ChargingProfilePurposeTxDefaultProfile
 	})
 
 	return c.wait(err, rc)

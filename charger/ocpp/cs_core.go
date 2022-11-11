@@ -44,7 +44,7 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 	}
 }
 
-// cp actions
+// core handlers are redirected to chargepoint object implementation
 
 func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
 	cp, err := cs.chargepointByID(id)

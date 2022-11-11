@@ -29,13 +29,6 @@ func (cs *CS) Register(id string, cp *CP) error {
 	return nil
 }
 
-// errorHandler logs error channel
-func (cs *CS) errorHandler(errC <-chan error) {
-	for err := range errC {
-		cs.log.ERROR.Println(err)
-	}
-}
-
 func (cs *CS) chargepointByID(id string) (*CP, error) {
 	cp, ok := cs.cps[id]
 	if !ok {
@@ -77,6 +70,13 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 		cs.log.ERROR.Printf("chargepoint disconnected: %v", err)
 	} else {
 		cs.log.DEBUG.Printf("chargepoint disconnected: %s", chargePoint.ID())
+	}
+}
+
+// errorHandler logs error channel
+func (cs *CS) errorHandler(errC <-chan error) {
+	for err := range errC {
+		cs.log.ERROR.Println(err)
 	}
 }
 
