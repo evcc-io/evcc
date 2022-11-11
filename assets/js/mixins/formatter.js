@@ -33,6 +33,13 @@ export default {
     fmtKWh: function (val) {
       return this.fmtKw(val) + "h";
     },
+    fmtNumber: function (number, decimals) {
+      return new Intl.NumberFormat(this.$i18n.locale, {
+        style: "decimal",
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }).format(number);
+    },
     fmtUnit: function (val) {
       return Math.abs(val) >= this.fmtLimit ? "k" : "";
     },
@@ -135,6 +142,13 @@ export default {
     },
     fmtMonthYear: function (date) {
       return new Intl.DateTimeFormat(this.$i18n.locale, {
+        month: "long",
+        year: "numeric",
+      }).format(date);
+    },
+    fmtDayMonthYear: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n.locale, {
+        day: "numeric",
         month: "long",
         year: "numeric",
       }).format(date);

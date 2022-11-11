@@ -1,12 +1,13 @@
-template: varta-energiespeicher-battery-only
+template: varta
+covers: ["varta-energiespeicher", "varta-energiespeicher-battery-only"]
 products:
   - brand: VARTA
     description:
-      de: Energiespeicher (kein PV-Sensor)
-      en: Energiespeicher (without PV Sensor)
+      de: pulse/ pulse neo/ element (PV nur verfügbar mit PV-Sensor)
+      en: pulse/ pulse neo/ element (PV only available with PV sensor)
 params:
   - name: usage
-    choice: ["grid", "battery"]
+    choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
   - name: port
@@ -20,15 +21,22 @@ render: |
     id: 255
     register:
       address: 1078 # grid power
-      type: input
+      type: holding
       decode: int16
     scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    id: 255
+    register:
+      address: 1102 # PV-sensor power
+      type: holding
+      decode: uint16
   {{- end }}
   {{- if eq .usage "battery" }}
     id: 255
     register:
       address: 1066 # active power
-      type: input
+      type: holding
       decode: int16
     scale: -1
   soc:
@@ -37,6 +45,6 @@ render: |
     id: 255
     register:
       address: 1068 # SOC
-      type: input
+      type: holding
       decode: int16
   {{- end }}

@@ -449,8 +449,6 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.publish("chargedEnergy", lp.chargedEnergy)
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
-	lp.pushEvent(evVehicleDisconnect)
-
 	// remove charger vehicle id and stop potential detection
 	lp.setVehicleIdentifier("")
 	lp.stopVehicleDetection()
@@ -1047,6 +1045,33 @@ func (lp *LoadPoint) vehicleOdometer() {
 	}
 }
 
+// statusEvents converts the observed charger status change into a logical sequence of events
+func statusEvents(prevStatus, status api.ChargeStatus) []string {
+	res := make([]string, 0, 2)
+
+	// changed from A - connected
+	if prevStatus == api.StatusA || (status != api.StatusA && prevStatus == api.StatusNone) {
+		res = append(res, evVehicleConnect)
+	}
+
+	// changed to C - start charging
+	if status == api.StatusC {
+		res = append(res, evChargeStart)
+	}
+
+	// changed from C - stop charging
+	if prevStatus == api.StatusC {
+		res = append(res, evChargeStop)
+	}
+
+	// changed to A - disconnected
+	if status == api.StatusA {
+		res = append(res, evVehicleDisconnect)
+	}
+
+	return res
+}
+
 // updateChargerStatus updates charger status and detects car connected/disconnected events
 func (lp *LoadPoint) updateChargerStatus() error {
 	status, err := lp.charger.Status()
@@ -1059,26 +1084,18 @@ func (lp *LoadPoint) updateChargerStatus() error {
 	if prevStatus := lp.GetStatus(); status != prevStatus {
 		lp.setStatus(status)
 
-		// changed to A - disconnected - don't send on startup
-		if status == api.StatusA && prevStatus != api.StatusNone {
-			lp.bus.Publish(evVehicleDisconnect)
-		}
+		for _, ev := range statusEvents(prevStatus, status) {
+			lp.bus.Publish(ev)
 
-		// changed to B - connected - don't send on startup
-		if status == api.StatusB && prevStatus != api.StatusC {
+			// send connect/disconnect events except during startup
 			if prevStatus != api.StatusNone {
-				// send connected message if not startup
-				lp.pushEvent(evVehicleConnect)
+				switch ev {
+				case evVehicleConnect:
+					lp.pushEvent(evVehicleConnect)
+				case evVehicleDisconnect:
+					lp.pushEvent(evVehicleDisconnect)
+				}
 			}
-
-			lp.bus.Publish(evVehicleConnect)
-		}
-
-		// changed to C - start/stop charging cycle - handle before disconnect to update energy
-		if lp.charging() {
-			lp.bus.Publish(evChargeStart)
-		} else if prevStatus == api.StatusC {
-			lp.bus.Publish(evChargeStop)
 		}
 
 		// update whenever there is a state change

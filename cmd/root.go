@@ -114,7 +114,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
 	}
 
-	log.INFO.Printf("listening at :%d", conf.Network.Port)
+	log.INFO.Printf("starting ui and api at :%d", conf.Network.Port)
 
 	// start broadcasting values
 	tee := new(util.Tee)
@@ -196,6 +196,22 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) }) // signal loop to end
 	}()
 
+	// wait for shutdown
+	go func() {
+		<-stopC
+
+		select {
+		case <-shutdownDoneC(): // wait for shutdown
+		case <-time.After(conf.Interval):
+		}
+
+		if err != nil {
+			os.Exit(1)
+		}
+
+		os.Exit(0)
+	}()
+
 	// show main ui
 	if err == nil {
 		httpd.RegisterSiteHandlers(site, cache)
@@ -223,41 +239,23 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}()
 	} else {
 		httpd.RegisterShutdownHandler(func() {
-			once.Do(func() {
-				log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
-				close(stopC) // signal loop to end
-			})
+			log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
+			once.Do(func() { close(stopC) }) // signal loop to end
 		})
+
+		publishErrorInfo(valueChan, cfgFile, err)
 
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 
-		publishErrorInfo(valueChan, cfgFile, err)
+		go func() {
+			<-time.After(rebootDelay)
+			once.Do(func() { close(stopC) }) // signal loop to end
+		}()
 	}
 
 	// uds health check listener
 	go server.HealthListener(site)
-
-	// wait for shutdown
-	go func() {
-		<-stopC
-
-		timeout := conf.Interval
-		if err != nil {
-			timeout = rebootDelay
-		}
-
-		select {
-		case <-shutdownDoneC(): // wait for shutdown
-		case <-time.After(timeout):
-		}
-
-		if err != nil {
-			os.Exit(1)
-		}
-
-		os.Exit(0)
-	}()
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }

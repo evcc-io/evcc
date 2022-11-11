@@ -15,7 +15,7 @@ import (
 // configureCmd represents the configure command
 var configureCmd = &cobra.Command{
 	Use:   "configure",
-	Short: "Create an EVCC configuration",
+	Short: "Create configuration (evcc.yaml)",
 	Run:   runConfigure,
 }
 

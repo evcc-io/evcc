@@ -41,7 +41,11 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	var options []mercedes.IdentityOptions
+	if cc.VIN == "" {
+		return nil, errors.New("missing vin")
+	}
+
+	var options []mercedes.IdentityOption
 
 	// TODO Load tokens from a persistence storage and use those during startup
 	// e.g. persistence.Load("key")
