@@ -53,7 +53,7 @@ type ChargingStatus struct {
 	ChargeMode                         string  // invalid
 	RemainingChargingTimeToCompleteMin int     `json:"remainingChargingTimeToComplete_min"`
 	ChargePowerKW                      float64 `json:"chargePower_kW"`
-	ChargeRateKmph                     int     `json:"chargeRate_kmph"`
+	ChargeRateKmph                     float64 `json:"chargeRate_kmph"`
 }
 
 // ChargingSettings is the /status.chargingSettings api

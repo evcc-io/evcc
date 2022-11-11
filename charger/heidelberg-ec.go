@@ -36,7 +36,6 @@ type HeidelbergEC struct {
 }
 
 const (
-	hecRegFirmware       = 1   // Input
 	hecRegVehicleStatus  = 5   // Input
 	hecRegTemperature    = 9   // Input
 	hecRegPower          = 14  // Input
@@ -262,9 +261,6 @@ var _ api.Diagnosis = (*HeidelbergEC)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *HeidelbergEC) Diagnose() {
-	if b, err := wb.conn.ReadInputRegisters(hecRegFirmware, 2); err == nil {
-		fmt.Printf("Firmware:\t%d.%d.%d\n", b[1], b[2], b[3])
-	}
 	if b, err := wb.conn.ReadInputRegisters(hecRegTemperature, 1); err == nil {
 		fmt.Printf("Temperature:\t%.1fC\n", float64(int16(binary.BigEndian.Uint16(b)))/10)
 	}

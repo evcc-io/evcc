@@ -19,7 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: refs/heads/master # force master
           fetch-depth: 0
 
       - name: Login

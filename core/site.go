@@ -117,6 +117,7 @@ func NewSiteFromConfig(
 				return nil, err
 			}
 
+			// NOTE: this requires stopSession to respect async access
 			shutdown.Register(lp.stopSession)
 		}
 	}

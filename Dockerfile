@@ -79,6 +79,8 @@ COPY --from=builder /build/evcc /usr/local/bin/evcc
 
 COPY docker/bin/* /app/
 
+# mDNS
+EXPOSE 5353/udp
 # UI and /api
 EXPOSE 7070/tcp
 # KEBA charger
