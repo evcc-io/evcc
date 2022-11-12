@@ -41,8 +41,6 @@ func Init() error {
 		Language = language.German.String()
 	}
 
-	fmt.Println("Language", Language)
-
 	Localizer = i18n.NewLocalizer(Bundle, Language)
 
 	return nil
