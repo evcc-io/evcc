@@ -13,6 +13,9 @@ import (
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/fatih/structs"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
+	"golang.org/x/text/number"
 )
 
 // Session is a single charging session
@@ -43,7 +46,7 @@ type Sessions []Session
 
 var _ api.CsvWriter = (*Sessions)(nil)
 
-func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) {
+func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) error {
 	localizer := locale.Localizer
 	if val := ctx.Value(locale.Locale).(string); val != "" {
 		localizer = i18n.NewLocalizer(locale.Bundle, val, locale.Language)
@@ -70,10 +73,11 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) {
 
 		row = append(row, caption)
 	}
-	_ = ww.Write(row)
+
+	return ww.Write(row)
 }
 
-func (t *Sessions) writeRow(ww *csv.Writer, r Session) {
+func (t *Sessions) writeRow(ww *csv.Writer, r Session) error {
 	var row []string
 	for _, f := range structs.Fields(r) {
 		if f.Tag("csv") == "-" {
@@ -96,17 +100,43 @@ func (t *Sessions) writeRow(ww *csv.Writer, r Session) {
 		row = append(row, val)
 	}
 
-	_ = ww.Write(row)
+	return ww.Write(row)
 }
 
 // WriteCsv implements the api.CsvWriter interface
-func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) {
+func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
+	if _, err := w.Write([]byte{0xFE, 0xFF}); err != nil {
+		return err
+	}
+
+	lang := ctx.Value(locale.Locale).(string)
+	println(lang)
+	if lang == "" {
+		lang = locale.Language
+		println(lang)
+	}
+
+	tag, err := language.Parse(lang)
+	if err != nil {
+		return err
+	}
+
+	p := message.NewPrinter(tag)
+	p.Println(number.Decimal(1.234, number.MaxFractionDigits(2)))
+	panic(1)
+
 	ww := csv.NewWriter(w)
-	t.writeHeader(ctx, ww)
+	if err := t.writeHeader(ctx, ww); err != nil {
+		return err
+	}
 
 	for _, r := range *t {
-		t.writeRow(ww, r)
+		if err := t.writeRow(ww, r); err != nil {
+			return err
+		}
 	}
 
 	ww.Flush()
+
+	return ww.Error()
 }
