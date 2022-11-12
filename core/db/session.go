@@ -110,13 +110,15 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 
 // WriteCsv implements the api.CsvWriter interface
 func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
-	if _, err := w.Write([]byte{0xFE, 0xFF}); err != nil {
+	if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
 		return err
 	}
 
 	lang := locale.Language
 	if loc, ok := ctx.Value(locale.Locale).(string); ok && loc != "" {
-		lang = loc
+		if tags, _, err := language.ParseAcceptLanguage(loc); err == nil && len(tags) > 0 {
+			lang = tags[0].String()
+		}
 	}
 
 	tag, err := language.Parse(lang)
