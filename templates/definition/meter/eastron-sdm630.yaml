@@ -12,15 +12,78 @@ params:
   - name: modbus
     choice: ["rs485"]
 render: |
-  type: modbus
-  model: sdm
+  # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/rs485/sdm.go
   {{- if eq .usage "charge" }}
+  type: modbus
+  {{- include "modbus" . }}
+  model: sdm
   energy: Sum # only required for charge meter usage
-  {{- end }}
-  {{- if or (eq .usage "charge") (eq .usage "grid") }}
+  power: Power
   currents:
     - CurrentL1
     - CurrentL2
     - CurrentL3
   {{- end }}
+  # custom for grid usage to adjust currents according power flow
+  {{- if eq .usage "grid" }}
+  type: custom
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2}}
+    model: sdm
+    value: Sum
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2}}
+    model: sdm
+    value: Power
+  currents:
+    - source: calc
+      mul:
+        - source: modbus
+          uri: {{ .host }}:{{ .port }}
+          id: {{ .id }}
+          model: sdm
+          value: CurrentL1
+        - source: calc
+          sign:
+            source: modbus
+            uri: {{ .host }}:{{ .port }}
+            id: {{ .id }}
+            model: sdm
+            value: PowerL1
+    - source: calc
+      mul:
+        - source: modbus
+          uri: {{ .host }}:{{ .port }}
+          id: {{ .id }}
+          model: sdm
+          value: CurrentL2
+        - source: calc
+          sign:
+            source: modbus
+            uri: {{ .host }}:{{ .port }}
+            id: {{ .id }}
+            model: sdm
+            value: PowerL2
+    - source: calc
+      mul:
+        - source: modbus
+          uri: {{ .host }}:{{ .port }}
+          id: {{ .id }}
+          model: sdm
+          value: CurrentL3
+        - source: calc
+          sign:
+            source: modbus
+            uri: {{ .host }}:{{ .port }}
+            id: {{ .id }}
+            model: sdm
+            value: PowerL3
+  {{- end }}
+  # battery / pv fallback
+  {{- if or (eq .usage "battery") (eq .usage "pv") }}
+  type: modbus
   {{- include "modbus" . }}
+  model: sdm
+  {{- end }}
