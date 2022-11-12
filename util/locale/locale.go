@@ -36,10 +36,12 @@ func Init() error {
 		}
 	}
 
-	Language, err := jibber_jabber.DetectLanguage()
+	Language, err = jibber_jabber.DetectLanguage()
 	if err != nil {
-		Language = "de"
+		Language = language.German.String()
 	}
+
+	fmt.Println("Language", Language)
 
 	Localizer = i18n.NewLocalizer(Bundle, Language)
 

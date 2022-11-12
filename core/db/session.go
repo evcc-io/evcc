@@ -5,7 +5,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 	"time"
 
@@ -26,7 +25,7 @@ type Session struct {
 	Loadpoint     string    `json:"loadpoint"`
 	Identifier    string    `json:"identifier"`
 	Vehicle       string    `json:"vehicle"`
-	Odometer      float64   `json:"odometer"`
+	Odometer      float64   `json:"odometer" format:"int"`
 	MeterStart    float64   `json:"meterStart" csv:"Meter Start (kWh)" gorm:"column:meter_start_kwh"`
 	MeterStop     float64   `json:"meterStop" csv:"Meter Stop (kWh)" gorm:"column:meter_end_kwh"`
 	ChargedEnergy float64   `json:"chargedEnergy" csv:"Charged Energy (kWh)" gorm:"column:charged_kwh"`
@@ -77,7 +76,7 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) error {
 	return ww.Write(row)
 }
 
-func (t *Sessions) writeRow(ww *csv.Writer, r Session) error {
+func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) error {
 	var row []string
 	for _, f := range structs.Fields(r) {
 		if f.Tag("csv") == "-" {
@@ -85,10 +84,16 @@ func (t *Sessions) writeRow(ww *csv.Writer, r Session) error {
 		}
 
 		var val string
+		format := f.Tag("format")
 
 		switch v := f.Value().(type) {
 		case float64:
-			val = strconv.FormatFloat(v, 'f', 3, 64)
+			switch format {
+			case "int":
+				val = mp.Sprintf(number.Decimal(v, number.MaxFractionDigits(0)))
+			default:
+				val = mp.Sprintf(number.Decimal(v, number.MaxFractionDigits(3)))
+			}
 		case time.Time:
 			if !v.IsZero() {
 				val = v.Local().Format("2006-01-02 15:04:05")
@@ -103,17 +108,25 @@ func (t *Sessions) writeRow(ww *csv.Writer, r Session) error {
 	return ww.Write(row)
 }
 
+// func init() {
+// 	if err := locale.Init(); err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	if err := (*Sessions)(nil).WriteCsv(context.Background(), new(strings.Builder)); err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	os.Exit(1)
+// }
+
 // WriteCsv implements the api.CsvWriter interface
 func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
 	if _, err := w.Write([]byte{0xFE, 0xFF}); err != nil {
 		return err
 	}
 
-	lang := ctx.Value(locale.Locale).(string)
-	println(lang)
-	if lang == "" {
-		lang = locale.Language
-		println(lang)
+	lang := locale.Language
+	if loc, ok := ctx.Value(locale.Locale).(string); ok {
+		lang = loc
 	}
 
 	tag, err := language.Parse(lang)
@@ -121,9 +134,8 @@ func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
 		return err
 	}
 
-	p := message.NewPrinter(tag)
-	p.Println(number.Decimal(1.234, number.MaxFractionDigits(2)))
-	panic(1)
+	mp := message.NewPrinter(tag)
+	// mp.Println(number.Decimal(1.234, number.MaxFractionDigits(2)))
 
 	ww := csv.NewWriter(w)
 	if err := t.writeHeader(ctx, ww); err != nil {
@@ -131,7 +143,7 @@ func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
 	}
 
 	for _, r := range *t {
-		if err := t.writeRow(ww, r); err != nil {
+		if err := t.writeRow(ww, mp, r); err != nil {
 			return err
 		}
 	}
