@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -17,22 +20,46 @@ import (
 	"github.com/evcc-io/evcc/server"
 	autoauth "github.com/evcc-io/evcc/server/auth"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"golang.org/x/exp/maps"
+	"golang.org/x/sync/errgroup"
 )
+
+var conf = config{
+	Interval: 10 * time.Second,
+	Log:      "info",
+	Network: networkConfig{
+		Schema: "http",
+		Host:   "evcc.local",
+		Port:   7070,
+	},
+	Mqtt: mqttConfig{
+		Topic: "evcc",
+	},
+	Database: dbConfig{
+		Type: "sqlite",
+		Dsn:  "~/.evcc/evcc.db",
+	},
+}
 
 type config struct {
 	URI          interface{} // TODO deprecated
 	Network      networkConfig
 	Log          string
 	SponsorToken string
+	Plant        string // telemetry plant id
+	Telemetry    bool
 	Metrics      bool
 	Profile      bool
 	Levels       map[string]string
 	Interval     time.Duration
 	Mqtt         mqttConfig
+	ModbusProxy  []proxyConfig
+	Database     dbConfig
 	Javascript   map[string]interface{}
 	Influx       server.InfluxConfig
 	EEBus        map[string]interface{}
@@ -46,30 +73,20 @@ type config struct {
 	LoadPoints   []map[string]interface{}
 }
 
-type networkConfig struct {
-	Schema string
-	Host   string
-	Port   int
-}
-
-func (c networkConfig) HostPort() string {
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
-}
-
-func (c networkConfig) URI() string {
-	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
-}
-
 type mqttConfig struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string
 }
 
-func (conf *mqttConfig) RootTopic() string {
-	if conf.Topic != "" {
-		return conf.Topic
-	}
-	return "evcc"
+type proxyConfig struct {
+	Port            int
+	ReadOnly        bool
+	modbus.Settings `mapstructure:",squash"`
+}
+
+type dbConfig struct {
+	Type string
+	Dsn  string
 }
 
 type qualifiedConfig struct {
@@ -93,6 +110,23 @@ type tariffConfig struct {
 	FeedIn   typedConfig
 }
 
+type networkConfig struct {
+	Schema string
+	Host   string
+	Port   int
+}
+
+func (c networkConfig) HostPort() string {
+	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
+		return c.Host
+	}
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+}
+
+func (c networkConfig) URI() string {
+	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
+}
+
 // ConfigProvider provides configuration items
 type ConfigProvider struct {
 	meters   map[string]api.Meter
@@ -107,7 +141,7 @@ func (cp *ConfigProvider) TrackVisitors() {
 }
 
 // Meter provides meters by name
-func (cp *ConfigProvider) Meter(name string) api.Meter {
+func (cp *ConfigProvider) Meter(name string) (api.Meter, error) {
 	if meter, ok := cp.meters[name]; ok {
 		// track duplicate usage https://github.com/evcc-io/evcc/issues/1744
 		if cp.visited != nil {
@@ -117,28 +151,25 @@ func (cp *ConfigProvider) Meter(name string) api.Meter {
 			cp.visited[name] = true
 		}
 
-		return meter
+		return meter, nil
 	}
-	log.FATAL.Fatalf("invalid meter: %s", name)
-	return nil
+	return nil, fmt.Errorf("meter does not exist: %s", name)
 }
 
 // Charger provides chargers by name
-func (cp *ConfigProvider) Charger(name string) api.Charger {
+func (cp *ConfigProvider) Charger(name string) (api.Charger, error) {
 	if charger, ok := cp.chargers[name]; ok {
-		return charger
+		return charger, nil
 	}
-	log.FATAL.Fatalf("invalid charger: %s", name)
-	return nil
+	return nil, fmt.Errorf("charger does not exist: %s", name)
 }
 
 // Vehicle provides vehicles by name
-func (cp *ConfigProvider) Vehicle(name string) api.Vehicle {
+func (cp *ConfigProvider) Vehicle(name string) (api.Vehicle, error) {
 	if vehicle, ok := cp.vehicles[name]; ok {
-		return vehicle
+		return vehicle, nil
 	}
-	log.FATAL.Fatalf("invalid vehicle: %s", name)
-	return nil
+	return nil, fmt.Errorf("vehicle does not exist: %s", name)
 }
 
 func (cp *ConfigProvider) configure(conf config) error {
@@ -176,67 +207,88 @@ func (cp *ConfigProvider) configureMeters(conf config) error {
 }
 
 func (cp *ConfigProvider) configureChargers(conf config) error {
+	var mu sync.Mutex
+	g, _ := errgroup.WithContext(context.Background())
+
 	cp.chargers = make(map[string]api.Charger)
 	for id, cc := range conf.Chargers {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create %s charger: missing name", humanize.Ordinal(id+1))
 		}
 
-		c, err := charger.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			err = fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
-			return err
-		}
+		cc := cc
 
-		if _, exists := cp.chargers[cc.Name]; exists {
-			return fmt.Errorf("duplicate charger name: %s already defined and must be unique", cc.Name)
-		}
+		g.Go(func() error {
+			c, err := charger.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
+			}
 
-		cp.chargers[cc.Name] = c
+			mu.Lock()
+			defer mu.Unlock()
+
+			if _, exists := cp.chargers[cc.Name]; exists {
+				return fmt.Errorf("duplicate charger name: %s already defined and must be unique", cc.Name)
+			}
+
+			cp.chargers[cc.Name] = c
+			return nil
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
 func (cp *ConfigProvider) configureVehicles(conf config) error {
+	var mu sync.Mutex
+	g, _ := errgroup.WithContext(context.Background())
+
 	cp.vehicles = make(map[string]api.Vehicle)
 	for id, cc := range conf.Vehicles {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
 		}
 
-		// ensure vehicle config has title
-		ccWithTitle := struct {
-			Title string
-			Other map[string]interface{} `mapstructure:",remain"`
-		}{}
+		cc := cc
 
-		if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
-			return err
-		}
+		g.Go(func() error {
+			// ensure vehicle config has title
+			var ccWithTitle struct {
+				Title string
+				Other map[string]interface{} `mapstructure:",remain"`
+			}
 
-		if ccWithTitle.Title == "" {
-			//lint:ignore SA1019 as Title is safe on ascii
-			cc.Other["title"] = strings.Title(cc.Name)
-		}
+			if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
+				return err
+			}
 
-		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			// wrap any created errors to prevent fatals
-			v, _ = wrapper.New(v, err)
-		}
+			if ccWithTitle.Title == "" {
+				//lint:ignore SA1019 as Title is safe on ascii
+				cc.Other["title"] = strings.Title(cc.Name)
+			}
 
-		if _, exists := cp.vehicles[cc.Name]; exists {
-			return fmt.Errorf("duplicate vehicle name: %s already defined and must be unique", cc.Name)
-		}
+			v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				// wrap any created errors to prevent fatals
+				v, _ = wrapper.New(v, err)
+			}
 
-		cp.vehicles[cc.Name] = v
+			mu.Lock()
+			defer mu.Unlock()
+
+			if _, exists := cp.vehicles[cc.Name]; exists {
+				return fmt.Errorf("duplicate vehicle name: %s already defined and must be unique", cc.Name)
+			}
+
+			cp.vehicles[cc.Name] = v
+			return nil
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
-// webControl handles routing for devices. For now only api.ProviderLogin related routes
+// webControl handles routing for devices. For now only api.AuthProvider related routes
 func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/oauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
@@ -253,9 +305,15 @@ func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, par
 	baseURI := conf.URI()
 	baseAuthURI := fmt.Sprintf("%s/oauth", baseURI)
 
+	// stable map iteration
+	keys := maps.Keys(cp.vehicles)
+	sort.Strings(keys)
+
 	var id int
-	for _, v := range cp.vehicles {
-		if provider, ok := v.(api.ProviderLogin); ok {
+	for _, k := range keys {
+		v := cp.vehicles[k]
+
+		if provider, ok := v.(api.AuthProvider); ok {
 			id += 1
 
 			basePath := fmt.Sprintf("vehicles/%d", id)

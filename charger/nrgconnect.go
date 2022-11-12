@@ -76,7 +76,9 @@ func init() {
 
 // NewNRGKickConnectFromConfig creates a NRGKickConnect charger from generic config
 func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ URI, Mac, Password string }{}
+	var cc struct {
+		URI, Mac, Password string
+	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

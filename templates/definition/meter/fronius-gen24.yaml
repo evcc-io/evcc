@@ -3,30 +3,31 @@ products:
   - brand: Fronius
     description:
       generic: Symo GEN24 Plus
-guidedsetup:
-  enable: true
+  - brand: Fronius
+    description:
+      generic: Primo GEN24 Plus
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: host
   - name: port
     default: 502
   - name: integer
-    description:
-      de: Integer Registerzugriff (nur für Netzzähler)
-      en: Integer register access (grid meter only)
-    help:
-      de: Einstellung Float/Integer im Wechselrichter überprüfen
-      en: Verify Float/Integer setting in inverter
-    advanced: true
-    valuetype: bool
+    deprecated: true
 render: |
+  # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}
   type: modbus
-  model: sunspec
   uri: {{ .host }}:{{ .port }}
   id: 200
-  power: {{ if eq .integer "true" }}203{{ else }}213{{ end }}:W # sunspec model 203/213 meter
+  model: sunspec
+  power: Power
+  energy: Export
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
@@ -34,15 +35,21 @@ render: |
     source: calc
     add:
     - source: modbus
-      model: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
+      model: sunspec
       value: 160:1:DCW # mppt 1
     - source: modbus
-      model: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
+      model: sunspec
       value: 160:2:DCW # mppt 2
+  energy:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    model: sunspec
+    value: Export
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
@@ -50,20 +57,20 @@ render: |
     source: calc
     add:
     - source: modbus
-      model: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
+      model: sunspec
       value: 160:3:DCW # mppt 3 charge
       scale: -1
     - source: modbus
-      model: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
+      model: sunspec
       value: 160:4:DCW # mppt 4 discharge
   soc:
     source: modbus
-    model: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 1
+    model: sunspec
     value: ChargeState
   {{- end }}

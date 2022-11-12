@@ -1,0 +1,16 @@
+template: silence
+products:
+  - brand: Silence
+    description:
+      generic: S01/S02
+  - brand: Seat
+    description:
+      generic: MÓ
+group: scooter
+params:
+  - preset: vehiclebase
+  - name: vin
+    example: W...
+render: |
+  type: silence
+  {{ include "vehicle-base" . }}

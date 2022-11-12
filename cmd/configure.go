@@ -7,7 +7,6 @@ import (
 	"syscall"
 
 	"github.com/evcc-io/evcc/cmd/configure"
-	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,7 +15,7 @@ import (
 // configureCmd represents the configure command
 var configureCmd = &cobra.Command{
 	Use:   "configure",
-	Short: "Create an EVCC configuration",
+	Short: "Create configuration (evcc.yaml)",
 	Run:   runConfigure,
 }
 
@@ -25,6 +24,7 @@ func init() {
 	configureCmd.Flags().String("lang", "", "Define the localization to be used (en, de)")
 	configureCmd.Flags().Bool("advanced", false, "Enables handling of advanced configuration options")
 	configureCmd.Flags().Bool("expand", false, "Enables rendering expanded configuration files")
+	configureCmd.Flags().String("category", "", "Pre-select device category for advanced configuration (implies advanced)")
 }
 
 func runConfigure(cmd *cobra.Command, args []string) {
@@ -45,26 +45,22 @@ func runConfigure(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	util.LogLevel(viper.GetString("log"), nil)
+	category, err := cmd.Flags().GetString("category")
+	if err != nil {
+		panic(err)
+	}
 
-	stopC := make(chan struct{})
-	go shutdown.Run(stopC)
+	util.LogLevel(viper.GetString("log"), nil)
 
 	// catch signals
 	go func() {
 		signalC := make(chan os.Signal, 1)
 		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
 
-		<-signalC    // wait for signal
-		close(stopC) // signal loop to end
-
-		<-shutdown.Done()
+		<-signalC // wait for signal
 
 		os.Exit(1)
 	}()
 
-	impl.Run(log, lang, advanced, expand)
-
-	close(stopC)
-	<-shutdown.Done()
+	impl.Run(log, lang, advanced, expand, category)
 }

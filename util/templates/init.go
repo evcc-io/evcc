@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"bytes"
 	"fmt"
 	"io/fs"
 	"path"
@@ -11,19 +12,56 @@ import (
 )
 
 var (
-	templates      = make(map[string][]Template)
+	templates      = make(map[Class][]Template)
 	configDefaults = ConfigDefaults{}
 )
 
+type Class string
+
 const (
-	Charger = "charger"
-	Meter   = "meter"
-	Vehicle = "vehicle"
+	Charger Class = "charger"
+	Meter   Class = "meter"
+	Vehicle Class = "vehicle"
 )
 
-func loadTemplates(class string) {
+func init() {
 	configDefaults.LoadDefaults()
 
+	loadTemplates(Charger)
+	loadTemplates(Meter)
+	loadTemplates(Vehicle)
+}
+
+func FromBytes(b []byte) (Template, error) {
+	// panic if template definition contains unknown fields
+	dec := yaml.NewDecoder(bytes.NewReader(b))
+	dec.KnownFields(true)
+
+	var definition TemplateDefinition
+	if err := dec.Decode(&definition); err != nil {
+		return Template{}, err
+	}
+
+	tmpl := Template{
+		TemplateDefinition: definition,
+		ConfigDefaults:     configDefaults,
+	}
+
+	err := tmpl.ResolvePresets()
+	if err == nil {
+		err = tmpl.ResolveGroup()
+	}
+	if err == nil {
+		err = tmpl.UpdateParamsWithDefaults()
+	}
+	if err == nil {
+		err = tmpl.Validate()
+	}
+
+	return tmpl, err
+}
+
+func loadTemplates(class Class) {
 	if templates[class] != nil {
 		return
 	}
@@ -41,29 +79,12 @@ func loadTemplates(class string) {
 			return err
 		}
 
-		var definition TemplateDefinition
-		if err = yaml.Unmarshal(b, &definition); err != nil {
-			return fmt.Errorf("reading template '%s' failed: %w", filepath, err)
+		tmpl, err := FromBytes(b)
+		if err != nil {
+			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		tmpl := Template{
-			TemplateDefinition: definition,
-			ConfigDefaults:     configDefaults,
-		}
-		if err = tmpl.ResolvePresets(); err != nil {
-			return err
-		}
-		if err = tmpl.ResolveGroup(); err != nil {
-			return err
-		}
-		if err = tmpl.UpdateParamsWithDefaults(); err != nil {
-			return err
-		}
-		if err = tmpl.Validate(); err != nil {
-			return err
-		}
-
-		path := path.Dir(filepath)
+		path := Class(path.Dir(filepath))
 		templates[path] = append(templates[path], tmpl)
 
 		return nil
@@ -74,15 +95,11 @@ func loadTemplates(class string) {
 	}
 }
 
-func ByClass(class string) []Template {
-	loadTemplates(class)
-
+func ByClass(class Class) []Template {
 	return templates[class]
 }
 
-func ByName(name, class string) (Template, error) {
-	loadTemplates(class)
-
+func ByName(class Class, name string) (Template, error) {
 	for _, tmpl := range templates[class] {
 		if tmpl.Template == name || slices.Contains(tmpl.Covers, name) {
 			return tmpl, nil

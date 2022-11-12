@@ -44,7 +44,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if err == nil {
 		switch strings.ToLower(res.Services.Charging.Status) {
-		case "connected":
+		case "connected", "readyforcharging":
 			status = api.StatusB
 		case "charging":
 			status = api.StatusC
@@ -87,7 +87,7 @@ func (v *Provider) Range() (int64, error) {
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
 	res, err := v.statusG()
 	return res.Services.Climatisation.Active, 21, 21, err
 }

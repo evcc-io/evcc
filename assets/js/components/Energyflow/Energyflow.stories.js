@@ -12,11 +12,6 @@ export default {
     batteryPower: { control: { type: "range", min: -4000, max: 4000, step: 100 } },
     batterySoC: { control: { type: "range", min: 0, max: 100, step: 1 } },
   },
-  parameters: {
-    backgrounds: {
-      default: "light",
-    },
-  },
 };
 
 const Template = (args) => ({

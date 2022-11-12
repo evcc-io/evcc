@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/denisbrodbeck/machineid"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
@@ -34,9 +34,7 @@ const (
 	maxAge           = 1800
 )
 
-var (
-	serverName = "EVCC SEMP Server " + server.Version
-)
+var serverName = "EVCC SEMP Server " + server.Version
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
@@ -113,13 +111,9 @@ func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP
 	return s, err
 }
 
-func (s *SEMP) advertise(st, usn string) *ssdp.Advertiser {
+func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
 	descriptor := s.hostURI + basePath + "/description.xml"
-	ad, err := ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
-	if err != nil {
-		s.log.ERROR.Println(err)
-	}
-	return ad
+	return ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 }
 
 // Run executes the SEMP runtime
@@ -130,10 +124,19 @@ func (s *SEMP) Run() {
 	s.closeC = make(chan struct{})
 
 	uid := "uuid:" + s.uid
-	ads := []*ssdp.Advertiser{
-		s.advertise(ssdp.RootDevice, uid+"::"+ssdp.RootDevice),
-		s.advertise(uid, uid),
-		s.advertise(sempGateway, uid+"::"+sempGateway),
+
+	var ads []*ssdp.Advertiser
+	for _, ad := range []struct{ st, usn string }{
+		{ssdp.RootDevice, uid + "::" + ssdp.RootDevice},
+		{sempGateway, uid + "::" + sempGateway},
+		{uid, uid},
+	} {
+		ad, err := s.advertise(ad.st, ad.usn)
+		if err != nil {
+			s.log.ERROR.Printf("advertise: %v", err)
+			continue
+		}
+		ads = append(ads, ad)
 	}
 
 	ticker := time.NewTicker(maxAge * time.Second / 2)
@@ -337,11 +340,11 @@ func (s *SEMP) serialNumber(id int) string {
 	return fmt.Sprintf(sempSerialNumber, ser, id)
 }
 
-// uniqueDeviceID creates a 6-bytes base device id from machine id
+// UniqueDeviceID creates a 6-bytes base device id from machine id
 func UniqueDeviceID() ([]byte, error) {
 	bytes := 6
 
-	mid, err := machineid.ProtectedID("evcc-semp")
+	mid, err := machine.ProtectedID("evcc-semp")
 	if err != nil {
 		return nil, err
 	}

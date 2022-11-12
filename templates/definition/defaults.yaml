@@ -45,6 +45,14 @@ params:
       de: IP-Adresse oder Hostname
       en: IP-Address or Hostname
     example: 192.0.2.2
+  - name: ip
+    description:
+      de: IP-Adresse
+      en: IP-Address
+    help:
+      de: IP-Adresse
+      en: IP-Address
+    example: 192.0.2.2
   - name: port
     description:
       de: Port
@@ -77,7 +85,7 @@ params:
     mask: true
   - name: capacity
     description:
-      de: Akku-Kapazität in kWh
+      de: Akkukapazität in kWh
       en: Battery capacity in kWh
     help:
       de: Akku-Kapazität in kWh
@@ -101,13 +109,20 @@ params:
       en: The maximum number of phases which can be used
     example: 3
     valuetype: number
+  - name: connector
+    description:
+      de: Ladepunkt (falls >1 Ladepunkt)
+      en: Loadpoint (if >1 loadpoint)
+    advanced: true
+    default: 1
   - name: cache
     description:
       de: Cache
       en: Cache
     help:
-      de: Das zeitliche Interval, in welchem Daten vom Fahrzeug neu geladen werden soll
+      de: Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden
       en: Time interval with when data should be reloaded from the vehicle
+    advanced: true
     example: 5m
   - name: cloud
     description:
@@ -137,10 +152,8 @@ params:
     description:
       de: Zeitüberschreitung
       en: Timeout
-    help:
-      de: Akzeptiere keine Daten die älter als dieser Wert sind
-      en: Don't accept values older than this value
-    example: 30s
+    advanced: true
+    example: 10s
     valuetype: duration
   - name: mode
     description:
@@ -196,7 +209,7 @@ params:
     valuetype: stringlist
   - name: standbypower
     description:
-      de: Standby-Leistung in W"
+      de: Standby-Leistung in W
       en: Standby power in W
     help:
       de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
@@ -211,6 +224,11 @@ params:
       en: "'en' for English and 'de' for German"
     default: en
     validvalues: ["de", "en"]
+  - name: ski
+    required: true
+    help:
+      en: The SKI of the wallbox, can usually be found on the web interface of the wallbox
+      de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
 
 presets:
   vehiclebase:
@@ -225,8 +243,8 @@ presets:
       - name: phases
         advanced: true
       - name: cache
+        default: 15m
         advanced: true
-        deprecated: true
     render: |
       {{define "vehicle-base"}}
       {{- if ne .title "" }}
@@ -296,14 +314,28 @@ presets:
       {{define "vehicle-language"}}
       language: {{ .language }}
       {{end}}
-
-  vehiclecloud:
+  eebusmeter:
     params:
-      - name: cloud
-        advanced: true
+      - name: ski
+      - name: ip
+        required: false
     render: |
-      {{define "vehicle-cloud"}}
-      cloud: {{ .cloud }}
+      {{define "eebus-meter"}}
+      type: eebus
+      ski: {{ .ski }}
+      {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
+      meter: true
+      {{end}}
+  eebusnometer:
+    params:
+      - name: ski
+      - name: ip
+        required: false
+    render: |
+      {{define "eebus-no-meter"}}
+      type: eebus
+      ski: {{ .ski }}
+      {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
       {{end}}
 
 modbus:
@@ -355,10 +387,14 @@ modbus:
 devicegroups:
   generic:
     de: Generische Unterstützung
-    en: generic support
+    en: Generic support
   switchsockets:
     de: Schaltbare Steckdosen
-    en: switchable sockets
+    en: Switchable sockets
+  scooter:
+    de: Scooter
+    en: Scooter
+  # TODO check if this is really used?
   sockets:
     de: Steckdosen
-    en: power sockets
+    en: Power sockets

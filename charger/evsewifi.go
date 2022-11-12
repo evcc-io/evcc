@@ -30,12 +30,12 @@ func init() {
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		URI   string
 		Meter struct {
 			Power, Energy, Currents bool
 		}
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -243,9 +243,9 @@ func (wb *EVSEWifi) identify() (string, error) {
 // 	return params.Energy, err
 // }
 
-var _ api.AlarmClock = (*EVSEWifi)(nil)
+var _ api.Resurrector = (*EVSEWifi)(nil)
 
-// WakeUp implements the AlarmClock interface
+// WakeUp implements the Resurrector interface
 func (wb *EVSEWifi) WakeUp() error {
 	uri := fmt.Sprintf("%s/interruptCp", wb.uri)
 	_, err := wb.GetBody(uri)

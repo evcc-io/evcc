@@ -31,7 +31,7 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 	return v
 }
 
-func (v *Provider) status(statusG func() (StatusResponse, error), refreshG func() (StatusResponse, error)) (StatusResponse, error) {
+func (v *Provider) status(statusG, refreshG func() (StatusResponse, error)) (StatusResponse, error) {
 	res, err := statusG()
 
 	// if ts := res.Status.Data.Soc.Ts.Time; err == nil && ts.Add(v.expiry).Before(time.Now()) {
@@ -56,10 +56,11 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 
-	switch v := res.PreCond.Data.ChargingStatus.Value; v {
+	switch v := res.PreCond.Data.ChargingStatus.Status; v {
 	case 0:
-		return api.StatusC, err
-	case 1, 2:
+		if res.PreCond.Data.ChargingActive.Value {
+			return api.StatusC, err
+		}
 		return api.StatusB, err
 	case 3:
 		return api.StatusA, err

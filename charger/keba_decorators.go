@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() (float64, error), chargeRater func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case chargeRater == nil && meter == nil && meterCurrent == nil && meterEnergy == nil:
+	case meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return base
 
-	case chargeRater == nil && meter != nil && meterCurrent == nil && meterEnergy == nil:
+	case meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
 			*Keba
 			api.Meter
@@ -22,7 +22,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case chargeRater == nil && meter == nil && meterCurrent == nil && meterEnergy != nil:
+	case meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			*Keba
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case chargeRater == nil && meter != nil && meterCurrent == nil && meterEnergy != nil:
+	case meter != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			*Keba
 			api.Meter
@@ -48,67 +48,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case chargeRater != nil && meter == nil && meterCurrent == nil && meterEnergy == nil:
-		return &struct {
-			*Keba
-			api.ChargeRater
-		}{
-			Keba: base,
-			ChargeRater: &decorateKebaChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-		}
-
-	case chargeRater != nil && meter != nil && meterCurrent == nil && meterEnergy == nil:
-		return &struct {
-			*Keba
-			api.ChargeRater
-			api.Meter
-		}{
-			Keba: base,
-			ChargeRater: &decorateKebaChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case chargeRater != nil && meter == nil && meterCurrent == nil && meterEnergy != nil:
-		return &struct {
-			*Keba
-			api.ChargeRater
-			api.MeterEnergy
-		}{
-			Keba: base,
-			ChargeRater: &decorateKebaChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargeRater != nil && meter != nil && meterCurrent == nil && meterEnergy != nil:
-		return &struct {
-			*Keba
-			api.ChargeRater
-			api.Meter
-			api.MeterEnergy
-		}{
-			Keba: base,
-			ChargeRater: &decorateKebaChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargeRater == nil && meter == nil && meterCurrent != nil && meterEnergy == nil:
+	case meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			*Keba
 			api.MeterCurrent
@@ -119,7 +59,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case chargeRater == nil && meter != nil && meterCurrent != nil && meterEnergy == nil:
+	case meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			*Keba
 			api.Meter
@@ -134,7 +74,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case chargeRater == nil && meter == nil && meterCurrent != nil && meterEnergy != nil:
+	case meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			*Keba
 			api.MeterCurrent
@@ -149,7 +89,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case chargeRater == nil && meter != nil && meterCurrent != nil && meterEnergy != nil:
+	case meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			*Keba
 			api.Meter
@@ -157,82 +97,6 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			api.MeterEnergy
 		}{
 			Keba: base,
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			MeterCurrent: &decorateKebaMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargeRater != nil && meter == nil && meterCurrent != nil && meterEnergy == nil:
-		return &struct {
-			*Keba
-			api.ChargeRater
-			api.MeterCurrent
-		}{
-			Keba: base,
-			ChargeRater: &decorateKebaChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			MeterCurrent: &decorateKebaMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-		}
-
-	case chargeRater != nil && meter != nil && meterCurrent != nil && meterEnergy == nil:
-		return &struct {
-			*Keba
-			api.ChargeRater
-			api.Meter
-			api.MeterCurrent
-		}{
-			Keba: base,
-			ChargeRater: &decorateKebaChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			MeterCurrent: &decorateKebaMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-		}
-
-	case chargeRater != nil && meter == nil && meterCurrent != nil && meterEnergy != nil:
-		return &struct {
-			*Keba
-			api.ChargeRater
-			api.MeterCurrent
-			api.MeterEnergy
-		}{
-			Keba: base,
-			ChargeRater: &decorateKebaChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			MeterCurrent: &decorateKebaMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargeRater != nil && meter != nil && meterCurrent != nil && meterEnergy != nil:
-		return &struct {
-			*Keba
-			api.ChargeRater
-			api.Meter
-			api.MeterCurrent
-			api.MeterEnergy
-		}{
-			Keba: base,
-			ChargeRater: &decorateKebaChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
 			Meter: &decorateKebaMeterImpl{
 				meter: meter,
 			},
@@ -246,14 +110,6 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 	}
 
 	return nil
-}
-
-type decorateKebaChargeRaterImpl struct {
-	chargeRater func() (float64, error)
-}
-
-func (impl *decorateKebaChargeRaterImpl) ChargedEnergy() (float64, error) {
-	return impl.chargeRater()
 }
 
 type decorateKebaMeterImpl struct {

@@ -139,7 +139,7 @@ func (v *Provider) Odometer() (float64, error) {
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
 	res, err := v.climateG()
 	if err == nil {
 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
@@ -182,10 +182,10 @@ func (v *Provider) StopCharge() error {
 	return v.action(ActionCharge, ActionChargeStop)
 }
 
-// var _ api.Diagnosis = (*Provider)(nil)
+var _ api.Diagnosis = (*Provider)(nil)
 
 // Diagnose implements the api.Diagnosis interface
-func (v *Provider) Diagnose2() {
+func (v *Provider) Diagnose() {
 	rr, err := v.rr()
 	if err != nil {
 		return

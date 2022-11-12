@@ -7,7 +7,7 @@
 			aria-controls="navbarNavAltMarkup"
 			aria-expanded="false"
 			aria-label="Toggle navigation"
-			class="btn btn-sm btn-outline-secondary position-relative"
+			class="btn btn-sm btn-outline-secondary position-relative border-0 menu-button"
 		>
 			<span
 				v-if="logoutCount > 0"
@@ -19,24 +19,15 @@
 		</button>
 		<ul class="dropdown-menu dropdown-menu-end">
 			<li>
-				<a class="dropdown-item" href="https://docs.evcc.io/blog/" target="_blank">
-					{{ $t("header.blog") }}
-				</a>
+				<router-link class="dropdown-item" to="/sessions">
+					{{ $t("header.sessions") }}
+				</router-link>
 			</li>
+
 			<li>
-				<a class="dropdown-item" href="https://docs.evcc.io/docs/Home/" target="_blank">
-					{{ $t("header.docs") }}
-				</a>
-			</li>
-			<li>
-				<a class="dropdown-item" href="https://github.com/evcc-io/evcc" target="_blank">
-					{{ $t("header.github") }}
-				</a>
-			</li>
-			<li>
-				<a class="dropdown-item" href="https://evcc.io/" target="_blank">
-					{{ $t("header.about") }}
-				</a>
+				<button type="button" class="dropdown-item" @click.stop="toggleTheme">
+					{{ $t(`header.theme.${theme}`) }}
+				</button>
 			</li>
 			<template v-if="providerLogins.length > 0">
 				<li><hr class="dropdown-divider" /></li>
@@ -58,13 +49,60 @@
 					</button>
 				</li>
 			</template>
+			<li>
+				<a class="dropdown-item d-flex" href="https://docs.evcc.io/blog/" target="_blank">
+					<span>{{ $t("header.blog") }}</span>
+					<shopicon-regular-newtab
+						size="s"
+						class="ms-2 external"
+					></shopicon-regular-newtab>
+				</a>
+			</li>
+			<li>
+				<a
+					class="dropdown-item d-flex"
+					href="https://docs.evcc.io/docs/Home/"
+					target="_blank"
+				>
+					<span>{{ $t("header.docs") }}</span>
+					<shopicon-regular-newtab
+						size="s"
+						class="ms-2 external"
+					></shopicon-regular-newtab>
+				</a>
+			</li>
+			<li>
+				<a
+					class="dropdown-item d-flex"
+					href="https://github.com/evcc-io/evcc"
+					target="_blank"
+				>
+					<span>{{ $t("header.github") }}</span>
+					<shopicon-regular-newtab
+						size="s"
+						class="ms-2 external"
+					></shopicon-regular-newtab>
+				</a>
+			</li>
+			<li>
+				<a class="dropdown-item d-flex" href="https://evcc.io/" target="_blank">
+					<span>{{ $t("header.about") }}</span>
+					<shopicon-regular-newtab
+						size="s"
+						class="ms-2 external"
+					></shopicon-regular-newtab>
+				</a>
+			</li>
 		</ul>
 	</div>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/regular/menu";
+import "@h2d2/shopicons/es/regular/newtab";
+
 import baseAPI from "../baseapi";
+import { getThemePreference, setThemePreference, THEMES } from "../theme";
 
 export default {
 	name: "TopNavigation",
@@ -75,6 +113,9 @@ export default {
 				return {};
 			},
 		},
+	},
+	data: function () {
+		return { theme: getThemePreference() };
 	},
 	computed: {
 		logoutCount() {
@@ -90,6 +131,12 @@ export default {
 		},
 	},
 	methods: {
+		toggleTheme: function () {
+			const currentIndex = THEMES.indexOf(this.theme);
+			const nextIndex = currentIndex < THEMES.length - 1 ? currentIndex + 1 : 0;
+			this.theme = THEMES[nextIndex];
+			setThemePreference(this.theme);
+		},
 		handleProviderAuthorization: async function (provider) {
 			if (!provider.loggedIn) {
 				baseAPI.post(provider.loginPath).then(function (response) {
@@ -102,3 +149,12 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.menu-button {
+	margin-right: -0.7rem;
+}
+.external {
+	width: 18px;
+	height: 20px;
+}
+</style>

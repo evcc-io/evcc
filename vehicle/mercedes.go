@@ -13,7 +13,7 @@ import (
 // Mercedes is an api.Vehicle implementation for Mercedes cars
 type Mercedes struct {
 	*embed
-	api.ProviderLogin
+	api.AuthProvider
 	*mercedes.Provider
 }
 
@@ -41,7 +41,11 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	var options []mercedes.IdentityOptions
+	if cc.VIN == "" {
+		return nil, errors.New("missing vin")
+	}
+
+	var options []mercedes.IdentityOption
 
 	// TODO Load tokens from a persistence storage and use those during startup
 	// e.g. persistence.Load("key")
@@ -64,9 +68,9 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	api := mercedes.NewAPI(log, identity, cc.Sandbox)
 
 	v := &Mercedes{
-		embed:         &cc.embed,
-		Provider:      mercedes.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache),
-		ProviderLogin: identity, // expose the OAuth2 login
+		embed:        &cc.embed,
+		Provider:     mercedes.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache),
+		AuthProvider: identity, // expose the OAuth2 login
 	}
 
 	return v, nil

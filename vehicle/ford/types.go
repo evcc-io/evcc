@@ -6,10 +6,10 @@ import (
 )
 
 type VehiclesResponse struct {
-	Vehicles struct {
-		Values []struct {
+	UserVehicles struct {
+		VehicleDetails []struct {
 			VIN string
-		} `json:"$values"`
+		}
 	}
 }
 
@@ -26,6 +26,10 @@ type StatusResponse struct {
 		}
 		ChargingStatus struct {
 			Value     string
+			Timestamp Timestamp
+		}
+		ChargeEndTime struct {
+			Value     Timestamp
 			Timestamp Timestamp
 		}
 		PlugStatus struct {

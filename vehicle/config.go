@@ -44,10 +44,10 @@ func Types() []string {
 
 // NewFromConfig creates vehicle from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
-	cc := struct {
+	var cc struct {
 		Cloud bool
 		Other map[string]interface{} `mapstructure:",remain"`
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

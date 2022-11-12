@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -17,10 +18,18 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/locale"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/libp2p/zeroconf/v2"
+	"github.com/samber/lo"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
 )
@@ -31,23 +40,56 @@ func init() {
 
 var cp = new(ConfigProvider)
 
-func loadConfigFile(cfgFile string, conf *config) (err error) {
-	if cfgFile != "" {
-		log.INFO.Println("using config file", cfgFile)
-		if err := viper.UnmarshalExact(&conf); err != nil {
-			log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
+func loadConfigFile(conf *config) error {
+	err := viper.ReadInConfig()
+
+	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
+		return err
+	}
+
+	log.INFO.Println("using config file:", cfgFile)
+
+	if err == nil {
+		if err = viper.UnmarshalExact(&conf); err != nil {
+			err = fmt.Errorf("failed parsing config file: %w", err)
 		}
-	} else {
-		err = errors.New("missing evcc config")
+	}
+
+	if err == nil {
+		logLevel()
 	}
 
 	return err
 }
 
-func configureEnvironment(conf config) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
+	// full http request log
+	if cmd.Flags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
+	}
+
+	// setup machine id
+	if conf.Plant != "" {
+		err = machine.CustomID(conf.Plant)
+	}
+
 	// setup sponsorship
-	if conf.SponsorToken != "" {
+	if err == nil && conf.SponsorToken != "" {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
+	}
+
+	// setup translations
+	if err == nil {
+		err = locale.Init()
+	}
+
+	// setup persistence
+	if err == nil && conf.Database.Dsn != "" {
+		if flag := cmd.Flags().Lookup(flagSqlite); flag.Changed {
+			conf.Database.Type = "sqlite"
+			conf.Database.Dsn = flag.Value.String()
+		}
+		err = configureDatabase(conf.Database)
 	}
 
 	// setup mqtt client listener
@@ -68,8 +110,23 @@ func configureEnvironment(conf config) (err error) {
 	return
 }
 
-// setup influx database
-func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-chan util.Param) {
+// configureDatabase configures session database
+func configureDatabase(conf dbConfig) error {
+	err := db.NewInstance(conf.Type, conf.Dsn)
+	if err == nil {
+		if err = settings.Init(); err == nil {
+			shutdown.Register(func() {
+				if err := settings.Persist(); err != nil {
+					log.ERROR.Println("cannot save settings:", err)
+				}
+			})
+		}
+	}
+	return err
+}
+
+// configureInflux configures influx database
+func configureInflux(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-chan util.Param) {
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -83,11 +140,6 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in 
 	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleCapacity", "vehicleSoC", "vehicleRange", "vehicleOdometer", "chargedEnergy", "chargeRemainingEnergy")
 	in = dedupe.Pipe(in)
 
-	// reduce number of values written to influx
-	// TODO this breaks writing vehicleRange as its re-writting in short interval
-	// limiter := pipe.NewLimiter(5 * time.Second)
-	// in = limiter.Pipe(in)
-
 	go influx.Run(loadPoints, in)
 }
 
@@ -97,7 +149,7 @@ func configureMQTT(conf mqttConfig) error {
 
 	var err error
 	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {
-		topic := fmt.Sprintf("%s/status", conf.RootTopic())
+		topic := fmt.Sprintf("%s/status", strings.Trim(conf.Topic, "/"))
 		options.SetWill(topic, "offline", 1, true)
 	})
 	if err != nil {
@@ -116,45 +168,64 @@ func configureJavascript(conf map[string]interface{}) error {
 }
 
 // setup HEMS
-func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) hems.HEMS {
+func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) error {
 	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, httpd)
 	if err != nil {
-		log.FATAL.Fatalf("failed configuring hems: %v", err)
+		return fmt.Errorf("failed configuring hems: %w", err)
 	}
-	return hems
+
+	go hems.Run()
+
+	return nil
+}
+
+// setup MDNS
+func configureMDNS(conf networkConfig) error {
+	host := strings.TrimSuffix(conf.Host, ".local")
+
+	zc, err := zeroconf.RegisterProxy("EV Charge Controller", "_http._tcp", "local.", conf.Port, host, nil, []string{}, nil)
+	if err != nil {
+		return fmt.Errorf("mDNS announcement: %w", err)
+	}
+
+	shutdown.Register(zc.Shutdown)
+
+	return nil
 }
 
 // setup EEBus
 func configureEEBus(conf map[string]interface{}) error {
 	var err error
-	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
-		go server.EEBusInstance.Run()
-		shutdown.Register(server.EEBusInstance.Shutdown)
+	if server.EEBusInstance, err = server.NewEEBus(conf); err != nil {
+		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
+
+	go server.EEBusInstance.Run()
+	shutdown.Register(server.EEBusInstance.Shutdown)
 
 	return nil
 }
 
 // setup messaging
-func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Event {
-	notificationChan := make(chan push.Event, 1)
-	notificationHub, err := push.NewHub(conf.Events, cache)
+func configureMessengers(conf messagingConfig, cache *util.Cache) (chan push.Event, error) {
+	messageChan := make(chan push.Event, 1)
+
+	messageHub, err := push.NewHub(conf.Events, cache)
 	if err != nil {
-		log.FATAL.Fatalf("failed configuring push services: %v", err)
+		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}
 
 	for _, service := range conf.Services {
 		impl, err := push.NewMessengerFromConfig(service.Type, service.Other)
 		if err != nil {
-			log.FATAL.Fatal(err)
-			log.FATAL.Fatalf("failed configuring messenger %s: %v", service.Type, err)
+			return messageChan, fmt.Errorf("failed configuring push service %s: %w", service.Type, err)
 		}
-		notificationHub.Add(impl)
+		messageHub.Add(impl)
 	}
 
-	go notificationHub.Run(notificationChan)
+	go messageHub.Run(messageChan)
 
-	return notificationChan
+	return messageChan, nil
 }
 
 func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
@@ -194,15 +265,20 @@ func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
 		}
 
 		if err == nil {
-			site, err = configureSite(conf.Site, cp, loadPoints, tariffs)
+			// list of vehicles
+			vehicles := lo.MapToSlice(cp.vehicles, func(_ string, v api.Vehicle) api.Vehicle {
+				return v
+			})
+
+			site, err = configureSite(conf.Site, cp, loadPoints, vehicles, tariffs)
 		}
 	}
 
 	return site, err
 }
 
-func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint, tariffs tariff.Tariffs) (*core.Site, error) {
-	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints, tariffs)
+func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {
+	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints, vehicles, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}

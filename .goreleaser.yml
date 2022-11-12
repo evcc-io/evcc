@@ -8,11 +8,9 @@ builds:
   - id: evcc
     main: main.go
     flags:
-      - -tags=release,viper_yaml3
+      - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{.Version}} -s -w
-    env:
-      - CGO_ENABLED=0
+      - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w
     goos:
       - linux
       - darwin

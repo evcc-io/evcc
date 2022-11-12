@@ -1,6 +1,7 @@
 package mb
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"net/url"
 	"strings"
 
-	"context"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
@@ -20,6 +20,7 @@ import (
 
 // https://github.com/TA2k/ioBroker.smart-eq
 
+// https://id.mercedes-benz.com/.well-known/openid-configuration
 const OAuthURI = "https://id.mercedes-benz.com"
 
 type Identity struct {
@@ -115,6 +116,10 @@ func (v *Identity) Login(user, password string) error {
 		}
 	}
 
+	if err == nil && res.Token == "" && res.Result != "" {
+		err = fmt.Errorf("missing token: %s", res.Result)
+	}
+
 	var code string
 	if err == nil {
 		params := url.Values{
@@ -134,7 +139,9 @@ func (v *Identity) Login(user, password string) error {
 
 	var token *oauth2.Token
 	if err == nil {
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		ctx, cancel := context.WithTimeout(
+			context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
+			request.Timeout)
 		defer cancel()
 
 		token, err = v.oc.Exchange(ctx, code,

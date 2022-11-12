@@ -3,6 +3,7 @@ package modbus
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,9 +29,12 @@ const (
 )
 
 // Settings contains the ModBus TCP settings
+// RTU field is included for compatibility with modbus.tpl which renders rtu: false for TCP
+// TODO remove RTU field (https://github.com/evcc-io/evcc/issues/3360)
 type TcpSettings struct {
 	URI string
 	ID  uint8
+	RTU *bool `mapstructure:"rtu"`
 }
 
 // Settings contains the ModBus settings
@@ -42,15 +46,23 @@ type Settings struct {
 	RTU                 *bool // indicates RTU over TCP if true
 }
 
+func (s *Settings) String() string {
+	if s.URI != "" {
+		return s.URI
+	}
+	return s.Device
+}
+
 // Connection decorates a meters.Connection with transparent slave id and error handling
 type Connection struct {
 	slaveID uint8
+	mu      sync.Mutex
 	conn    meters.Connection
 	delay   time.Duration
 }
 
-func (mb *Connection) prepare() {
-	mb.conn.Slave(mb.slaveID)
+func (mb *Connection) prepare(slaveID uint8) {
+	mb.conn.Slave(slaveID)
 	if mb.delay > 0 {
 		time.Sleep(mb.delay)
 	}
@@ -84,69 +96,135 @@ func (mb *Connection) Timeout(timeout time.Duration) {
 }
 
 // ReadCoils wraps the underlying implementation
-func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) ReadCoilsWithSlave(slaveID uint8, address, quantity uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadCoils(address, quantity))
 }
 
 // WriteSingleCoil wraps the underlying implementation
-func (mb *Connection) WriteSingleCoil(address, quantity uint16) ([]byte, error) {
-	mb.prepare()
-	return mb.handle(mb.conn.ModbusClient().WriteSingleCoil(address, quantity))
+func (mb *Connection) WriteSingleCoilWithSlave(slaveID uint8, address, value uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
+	return mb.handle(mb.conn.ModbusClient().WriteSingleCoil(address, value))
 }
 
 // ReadInputRegisters wraps the underlying implementation
-func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) ReadInputRegistersWithSlave(slaveID uint8, address, quantity uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadInputRegisters(address, quantity))
 }
 
 // ReadHoldingRegisters wraps the underlying implementation
-func (mb *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) ReadHoldingRegistersWithSlave(slaveID uint8, address, quantity uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadHoldingRegisters(address, quantity))
 }
 
 // WriteSingleRegister wraps the underlying implementation
-func (mb *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) WriteSingleRegisterWithSlave(slaveID uint8, address, value uint16) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteSingleRegister(address, value))
 }
 
 // WriteMultipleRegisters wraps the underlying implementation
-func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
-	mb.prepare()
+func (mb *Connection) WriteMultipleRegistersWithSlave(slaveID uint8, address, quantity uint16, value []byte) ([]byte, error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteMultipleRegisters(address, quantity, value))
 }
 
 // ReadDiscreteInputs wraps the underlying implementation
-func (mb *Connection) ReadDiscreteInputs(address, quantity uint16) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) ReadDiscreteInputsWithSlave(slaveID uint8, address, quantity uint16) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadDiscreteInputs(address, quantity))
 }
 
 // WriteMultipleCoils wraps the underlying implementation
-func (mb *Connection) WriteMultipleCoils(address, quantity uint16, value []byte) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) WriteMultipleCoilsWithSlave(slaveID uint8, address, quantity uint16, value []byte) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteMultipleCoils(address, quantity, value))
 }
 
 // ReadWriteMultipleRegisters wraps the underlying implementation
-func (mb *Connection) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) ReadWriteMultipleRegistersWithSlave(slaveID uint8, readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity, value))
 }
 
 // MaskWriteRegister wraps the underlying implementation
-func (mb *Connection) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) MaskWriteRegisterWithSlave(slaveID uint8, address, andMask, orMask uint16) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().MaskWriteRegister(address, andMask, orMask))
 }
 
 // ReadFIFOQueue wraps the underlying implementation
-func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) {
-	mb.prepare()
+func (mb *Connection) ReadFIFOQueueWithSlave(slaveID uint8, address uint16) (results []byte, err error) {
+	mb.mu.Lock()
+	defer mb.mu.Unlock()
+	mb.prepare(slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadFIFOQueue(address))
+}
+
+func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
+	return mb.ReadCoilsWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) WriteSingleCoil(address, quantity uint16) ([]byte, error) {
+	return mb.WriteSingleCoilWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
+	return mb.ReadInputRegistersWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
+	return mb.ReadHoldingRegistersWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
+	return mb.WriteSingleRegisterWithSlave(mb.slaveID, address, value)
+}
+
+func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
+	return mb.WriteMultipleRegistersWithSlave(mb.slaveID, address, quantity, value)
+}
+
+func (mb *Connection) ReadDiscreteInputs(address, quantity uint16) (results []byte, err error) {
+	return mb.ReadDiscreteInputsWithSlave(mb.slaveID, address, quantity)
+}
+
+func (mb *Connection) WriteMultipleCoils(address, quantity uint16, value []byte) (results []byte, err error) {
+	return mb.WriteMultipleCoilsWithSlave(mb.slaveID, address, quantity, value)
+}
+
+func (mb *Connection) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
+	return mb.ReadWriteMultipleRegistersWithSlave(mb.slaveID, readAddress, readQuantity, writeAddress, writeQuantity, value)
+}
+
+func (mb *Connection) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
+	return mb.MaskWriteRegisterWithSlave(mb.slaveID, address, andMask, orMask)
+}
+
+func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) {
+	return mb.ReadFIFOQueueWithSlave(mb.slaveID, address)
 }
 
 var (
@@ -277,7 +355,11 @@ type Register struct {
 // asFloat64 creates a function that returns numerics vales as float64
 func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
 	return func(v []byte) float64 {
-		return float64(f(v))
+		res := float64(f(v))
+		if math.IsNaN(res) || math.IsInf(res, 0) {
+			res = 0
+		}
+		return res
 	}
 }
 
@@ -306,13 +388,13 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.Transform = asFloat64(encoding.Int16)
 		op.ReadLen = 1
 	case "int16nan":
-		op.Transform = decodeNaN16(1<<15, asFloat64(encoding.Int16))
+		op.Transform = decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
 		op.ReadLen = 1
 	case "uint16":
 		op.Transform = asFloat64(encoding.Uint16)
 		op.ReadLen = 1
 	case "uint16nan":
-		op.Transform = decodeNaN16(0xFFFF, asFloat64(encoding.Uint16))
+		op.Transform = decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
 		op.ReadLen = 1
 	case "bool16":
 		mask, err := decodeMask(r.BitMask)
@@ -326,7 +408,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	case "int32":
 		op.Transform = asFloat64(encoding.Int32)
 	case "int32nan":
-		op.Transform = decodeNaN32(1<<31, asFloat64(encoding.Int32))
+		op.Transform = decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
 	case "int32s":
 		op.Transform = asFloat64(encoding.Int32LswFirst)
 	case "uint32":
@@ -334,7 +416,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	case "uint32s":
 		op.Transform = asFloat64(encoding.Uint32LswFirst)
 	case "uint32nan":
-		op.Transform = decodeNaN32(0xFFFFFFFF, asFloat64(encoding.Uint32))
+		op.Transform = decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
 	case "float32", "ieee754":
 		op.Transform = asFloat64(encoding.Float32)
 	case "float32s", "ieee754s":
@@ -345,7 +427,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.Transform = asFloat64(encoding.Uint64)
 		op.ReadLen = 4
 	case "uint64nan":
-		op.Transform = decodeNaN64(0xFFFFFFFFFFFFFFFF, asFloat64(encoding.Uint64))
+		op.Transform = decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
 		op.ReadLen = 4
 	case "float64":
 		op.Transform = encoding.Float64
@@ -365,7 +447,7 @@ type SunSpecOperation struct {
 }
 
 // ParsePoint parses sunspec point from string
-func ParsePoint(selector string) (model int, block int, point string, err error) {
+func ParsePoint(selector string) (model, block int, point string, err error) {
 	err = fmt.Errorf("invalid point: %s", selector)
 
 	el := strings.Split(selector, ":")
@@ -398,7 +480,7 @@ type Operation struct {
 // ParseOperation parses an MBMD measurement or SunsSpec point definition into a modbus operation
 func ParseOperation(dev meters.Device, measurement string, op *Operation) (err error) {
 	// if measurement cannot be parsed it could be SunSpec model/block/point
-	if op.MBMD.IEC61850, err = meters.MeasurementString(measurement); err != nil {
+	if op.MBMD.IEC61850, err = meters.MeasurementString(strings.ToLower(measurement)); err != nil {
 		op.SunSpec.Model, op.SunSpec.Block, op.SunSpec.Point, err = ParsePoint(measurement)
 		return err
 	}

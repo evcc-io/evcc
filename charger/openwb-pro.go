@@ -34,7 +34,9 @@ func NewOpenWBProFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
-	}{}
+	}{
+		Cache: time.Second,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -54,12 +56,12 @@ func NewOpenWBPro(uri string, cache time.Duration) (*OpenWBPro, error) {
 		cache:   cache,
 	}
 
-	go wb.hearbeat(log)
+	go wb.heartbeat(log)
 
 	return wb, nil
 }
 
-func (wb *OpenWBPro) hearbeat(log *util.Logger) {
+func (wb *OpenWBPro) heartbeat(log *util.Logger) {
 	for range time.NewTicker(30 * time.Second).C {
 		if _, err := wb.get(); err != nil {
 			log.ERROR.Printf("heartbeat: %v", err)
@@ -92,9 +94,11 @@ func (wb *OpenWBPro) set(payload string) error {
 	if err == nil {
 		resp.Body.Close()
 	}
+
 	wb.mu.Lock()
 	wb.updated = time.Time{}
 	wb.mu.Unlock()
+
 	return err
 }
 
@@ -180,9 +184,9 @@ func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
 	return res.Currents[0], res.Currents[1], res.Currents[2], err
 }
 
-var _ api.ChargePhases = (*OpenWBPro)(nil)
+var _ api.PhaseSwitcher = (*OpenWBPro)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *OpenWBPro) Phases1p3p(phases int) error {
 	return wb.set(fmt.Sprintf("phasetarget=%d", phases))
 }

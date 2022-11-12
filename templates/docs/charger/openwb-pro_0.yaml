@@ -1,0 +1,9 @@
+product:
+  brand: openWB
+  description: Pro
+capabilities: ["mA", "iso151182"]
+render:
+  - default: |
+      type: template
+      template: openwb-pro
+      host: 192.0.2.2 # IP-Adresse oder Hostname

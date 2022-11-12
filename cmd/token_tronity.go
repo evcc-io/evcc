@@ -112,11 +112,11 @@ func tronityAuthorize(addr string, oc *oauth2.Config) (*oauth2.Token, error) {
 }
 
 func tronityToken(conf config, vehicleConf qualifiedConfig) (*oauth2.Token, error) {
-	cc := struct {
+	var cc struct {
 		Credentials vehicle.ClientCredentials
 		RedirectURI string
 		Other       map[string]interface{} `mapstructure:",remain"`
-	}{}
+	}
 
 	if err := util.DecodeOther(vehicleConf.Other, &cc); err != nil {
 		return nil, err

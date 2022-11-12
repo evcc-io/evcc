@@ -24,6 +24,12 @@ type Template struct {
 	titles []string
 }
 
+// GuidedSetupEnabled returns true if there are linked templates or >1 usage
+func (t *Template) GuidedSetupEnabled() bool {
+	_, p := t.ParamByName(ParamUsage)
+	return len(t.Linked) > 0 || (len(p.Choice) > 1 && p.AllInOne)
+}
+
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
@@ -72,12 +78,6 @@ func (t *Template) Validate() error {
 		if p.ValueType != "" && !slices.Contains(ValidParamValueTypes, p.ValueType) {
 			return fmt.Errorf("invalid value type '%s' in template %s", p.ValueType, t.Template)
 		}
-
-		for _, d := range p.Dependencies {
-			if !slices.Contains(ValidDependencies, d.Check) {
-				return fmt.Errorf("invalid dependency check '%s' in template %s", d.Check, t.Template)
-			}
-		}
 	}
 
 	return nil
@@ -102,11 +102,6 @@ func (t *Template) Title() string {
 	return t.title
 }
 
-// return a language specific product title
-func (t *Template) ProductTitle(p Product) string {
-	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(t.Lang)))
-}
-
 // return the language specific product titles
 func (t *Template) Titles(lang string) []string {
 	t.Lang = lang
@@ -121,7 +116,7 @@ func (t *Template) Titles(lang string) []string {
 // set the language specific product titles
 func (t *Template) resolveTitles() {
 	for _, p := range t.Products {
-		t.titles = append(t.titles, t.ProductTitle(p))
+		t.titles = append(t.titles, p.Title(t.Lang))
 	}
 }
 
@@ -181,9 +176,7 @@ func (t *Template) Defaults(renderMode string) map[string]interface{} {
 	return values
 }
 
-// Update the default value of a param
-//
-// Used for modbus params, which are dynamically added after selecting the interface
+// SetParamDefault updates the default value of a param
 func (t *Template) SetParamDefault(name string, value string) {
 	for i, p := range t.Params {
 		if p.Name == name {
@@ -196,7 +189,7 @@ func (t *Template) SetParamDefault(name string, value string) {
 // return the param with the given name
 func (t *Template) ParamByName(name string) (int, Param) {
 	for i, p := range t.Params {
-		if p.Name == name {
+		if strings.EqualFold(p.Name, name) {
 			return i, p
 		}
 	}
@@ -292,57 +285,88 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 		return nil, values, err
 	}
 
-	values = t.ModbusValues(renderMode, false, values)
+	t.ModbusValues(renderMode, values)
 
 	// add the common templates
 	for _, v := range t.ConfigDefaults.Presets {
 		if !strings.Contains(t.Render, v.Render) {
-			t.Render = fmt.Sprintf("%s\n%s", t.Render, v.Render)
+			t.Render += "\n" + v.Render
 		}
 	}
 
-	for item, p := range values {
-		i, _ := t.ParamByName(item)
-		if i == -1 && !slices.Contains(predefinedTemplateProperties, item) {
-			return nil, values, fmt.Errorf("invalid element 'name: %s'", item)
+	res := make(map[string]interface{})
+
+	// TODO this is an utterly horrible hack
+	//
+	// When decoding the actual values ("other" parameter) into the
+	// defaults-populated map, mismatching key case will create multiple
+	// map entries for the same parameter.
+	// The code below tries to select the best, i.e. non-empty, value for the
+	// parameter and assigns it to the result key.
+	// The actual key name is taken from the parameter to make it unique.
+	// Since predefined properties are not matched by actual parameters using
+	// ParamByName(), the lower case key name is used instead.
+	// All keys *must* be assigned or rendering will create "<no value>" artifacts.
+
+	for key, val := range values {
+		out := strings.ToLower(key)
+
+		if i, p := t.ParamByName(key); i == -1 {
+			if !slices.Contains(predefinedTemplateProperties, out) {
+				return nil, values, fmt.Errorf("invalid key: %s", key)
+			}
+		} else if p.Deprecated {
+			continue
+		} else {
+			out = p.Name
 		}
 
-		switch p := p.(type) {
+		switch typed := val.(type) {
 		case []interface{}:
 			var list []string
-			for _, v := range p {
+			for _, v := range typed {
 				list = append(list, yamlQuote(fmt.Sprintf("%v", v)))
 			}
-			values[item] = list
+			if res[out] == nil || len(res[out].([]interface{})) == 0 {
+				res[out] = list
+			}
+
 		case []string:
 			var list []string
-			for _, v := range p {
+			for _, v := range typed {
 				list = append(list, yamlQuote(v))
 			}
-			values[item] = list
+			if res[out] == nil || len(res[out].([]string)) == 0 {
+				res[out] = list
+			}
+
 		default:
-			values[item] = yamlQuote(fmt.Sprintf("%v", p))
+			if res[out] == nil || res[out].(string) == "" {
+				res[out] = yamlQuote(fmt.Sprintf("%v", val))
+			}
 		}
 	}
 
 	tmpl := template.New("yaml")
-	var funcMap template.FuncMap = map[string]interface{}{}
-	// copied from: https://github.com/helm/helm/blob/8648ccf5d35d682dcd5f7a9c2082f0aaf071e817/pkg/engine/engine.go#L147-L154
-	funcMap["include"] = func(name string, data interface{}) (string, error) {
-		buf := bytes.NewBuffer(nil)
-		if err := tmpl.ExecuteTemplate(buf, name, data); err != nil {
-			return "", err
-		}
-		return buf.String(), nil
+	funcMap := template.FuncMap{
+		// include function
+		// copied from: https://github.com/helm/helm/blob/8648ccf5d35d682dcd5f7a9c2082f0aaf071e817/pkg/engine/engine.go#L147-L154
+		"include": func(name string, data interface{}) (string, error) {
+			buf := bytes.NewBuffer(nil)
+			if err := tmpl.ExecuteTemplate(buf, name, data); err != nil {
+				return "", err
+			}
+			return buf.String(), nil
+		},
 	}
 
 	tmpl, err := tmpl.Funcs(template.FuncMap(sprig.FuncMap())).Funcs(funcMap).Parse(t.Render)
 	if err != nil {
-		return nil, values, err
+		return nil, res, err
 	}
 
 	out := new(bytes.Buffer)
-	err = tmpl.Execute(out, values)
+	err = tmpl.Execute(out, res)
 
-	return bytes.TrimSpace(out.Bytes()), values, err
+	return bytes.TrimSpace(out.Bytes()), res, err
 }

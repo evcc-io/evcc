@@ -48,7 +48,7 @@
 										'text-danger': msg.type === 'error',
 										'text-warning': msg.type === 'warn',
 									}"
-									class="flex-grow-0 d-block"
+									class="flex-grow-0 flex-shrink-0 d-block"
 								></shopicon-regular-exclamationtriangle>
 								<span class="flex-grow-1 px-2 py-1 text-break">
 									{{ msg.message }}

@@ -7,6 +7,8 @@ import (
 	"github.com/evcc-io/evcc/provider"
 )
 
+const kmPerMile = 1.609344
+
 // Provider implements the evcc vehicle api
 type Provider struct {
 	statusG func() (VehicleStatus, error)
@@ -99,7 +101,7 @@ func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
 	if err == nil {
 		if cm := res.Status.CurrentMileage; cm != nil {
-			return float64(cm.Mileage), nil
+			return float64(cm.Mileage) * kmPerMile, nil
 		}
 
 		err = api.ErrNotAvailable

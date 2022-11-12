@@ -16,7 +16,7 @@ api.interceptors.response.use(
     const url = error.config.baseURL + error.config.url;
     const message = `${error.message}: API request failed ${url}`;
     window.app.error({ message });
+    return Promise.reject(error);
   }
 );
-
 export default api;

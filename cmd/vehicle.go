@@ -2,13 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // vehicleCmd represents the vehicle command
@@ -21,54 +18,49 @@ var vehicleCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
 	vehicleCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "vehicle"))
-	vehicleCmd.PersistentFlags().BoolP(flagStart, "a", false, flagStartDescription)
-	vehicleCmd.PersistentFlags().BoolP(flagStop, "o", false, flagStopDescription)
-	vehicleCmd.PersistentFlags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
-	vehicleCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
+	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
+	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
+	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
+	//lint:ignore SA1019 as Title is safe on ascii
+	vehicleCmd.Flags().Bool(flagDiagnose, false, strings.Title(flagDiagnose))
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
-
 	// load config
-	if err := loadConfigFile(cfgFile, &conf); err != nil {
-		log.FATAL.Fatal(err)
+	if err := loadConfigFile(&conf); err != nil {
+		fatal(err)
 	}
 
 	// setup environment
-	if err := configureEnvironment(conf); err != nil {
-		log.FATAL.Fatal(err)
-	}
-
-	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
-		request.LogHeaders = true
+	if err := configureEnvironment(cmd, conf); err != nil {
+		fatal(err)
 	}
 
 	// select single vehicle
 	if err := selectByName(cmd, &conf.Vehicles); err != nil {
-		log.FATAL.Fatal(err)
+		fatal(err)
 	}
 
 	if err := cp.configureVehicles(conf); err != nil {
-		log.FATAL.Fatal(err)
+		fatal(err)
 	}
 
 	vehicles := cp.vehicles
 	if len(args) == 1 {
-		arg := args[0]
-		vehicles = map[string]api.Vehicle{arg: cp.Vehicle(arg)}
+		name := args[0]
+		vehicle, err := cp.Vehicle(name)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		vehicles = map[string]api.Vehicle{name: vehicle}
 	}
-
-	d := dumper{len: len(vehicles)}
 
 	var flagUsed bool
 	for _, v := range vehicles {
-		if cmd.PersistentFlags().Lookup(flagWakeup).Changed {
+		if cmd.Flags().Lookup(flagWakeup).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.AlarmClock); ok {
+			if vv, ok := v.(api.Resurrector); ok {
 				if err := vv.WakeUp(); err != nil {
 					log.ERROR.Println("wakeup:", err)
 				}
@@ -77,7 +69,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagStart).Changed {
+		if cmd.Flags().Lookup(flagStart).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.VehicleChargeController); ok {
@@ -89,7 +81,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.PersistentFlags().Lookup(flagStop).Changed {
+		if cmd.Flags().Lookup(flagStop).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.VehicleChargeController); ok {
@@ -103,8 +95,17 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	if !flagUsed {
+		d := dumper{len: len(vehicles)}
+		flag := cmd.Flags().Lookup(flagDiagnose).Changed
+
 		for name, v := range vehicles {
 			d.DumpWithHeader(name, v)
+			if flag {
+				d.DumpDiagnosis(v)
+			}
 		}
 	}
+
+	// wait for shutdown
+	<-shutdownDoneC()
 }

@@ -6,6 +6,7 @@ products:
   - brand: SENEC
     description:
       generic: Wallbox pro
+capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]
 params:

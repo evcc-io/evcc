@@ -40,7 +40,6 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 	defer cr.Unlock()
 
 	// time is needed if MeterEnergy is not supported
-	cr.charging = true
 	cr.start = cr.clck.Now()
 
 	// get end energy amount
@@ -49,11 +48,13 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 			cr.startEnergy = f
 			cr.log.DEBUG.Printf("charge start energy: %.3gkWh", f)
 		} else {
-			cr.log.ERROR.Printf("charge meter error %v", err)
+			cr.log.ERROR.Printf("charge meter: %v", err)
 		}
 	}
 
-	if !continued {
+	if continued {
+		cr.charging = true
+	} else {
 		cr.chargedEnergy = 0
 	}
 }

@@ -126,10 +126,8 @@
             }
           }
         },
-        "prioritySoC": {
-        },
-        "bufferSoC": {
-        }
+        "prioritySoC": {},
+        "bufferSoC": {}
       }
     },
     "loadpoints": {
@@ -153,19 +151,11 @@
           "charger": {
             "type": "string"
           },
-          "meters": {
-            "type": "object",
-            "properties": {
-              "charge": {
-                "type": "string"
-              }
-            }
+          "meter": {
+            "type": "string"
           },
-          "vehicles": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "vehicle": {
+            "type": "string"
           },
           "soc": {
             "type": "object",
@@ -180,12 +170,6 @@
                     "$ref": "#/definitions/duration"
                   }
                 }
-              },
-              "min": {
-                "type": "integer"
-              },
-              "target": {
-                "type": "integer"
               },
               "estimate": {
                 "type": "boolean"

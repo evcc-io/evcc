@@ -5,16 +5,20 @@ products:
 group: switchsockets
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["grid", "pv", "battery"]
   - name: host
+    default: 192.0.2.2
   - name: user
     required: false
-    default: admin
+    help:
+      de: Standard-User ist admin
+      en: admin is default
   - name: password
     required: false
     mask: true
 render: |
   type: tasmota
   uri: http://{{ .host }}
+  usage: {{ .usage }}
   user: {{ .user }}
   password: {{ .password }}

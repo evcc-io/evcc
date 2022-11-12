@@ -23,12 +23,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -49,11 +51,13 @@ type Easee struct {
 	dynamicChargerCurrent float64
 	current               float64
 	chargerEnabled        bool
+	smartCharging         bool
 	enabledStatus         bool
 	phaseMode             int
-	currentPower, sessionEnergy,
+	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid string
+	lp   loadpoint.API
 }
 
 func init() {
@@ -62,11 +66,11 @@ func init() {
 
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		User     string
 		Password string
 		Charger  string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -160,7 +164,7 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 	select {
 	case <-done:
 	case <-time.After(request.Timeout):
-		err = api.ErrTimeout
+		err = os.ErrDeadlineExceeded
 	}
 
 	return c, err
@@ -268,10 +272,14 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.rfid = res.Value
 	case easee.IS_ENABLED:
 		c.chargerEnabled = value.(bool)
+	case easee.SMART_CHARGING:
+		c.smartCharging = value.(bool)
 	case easee.TOTAL_POWER:
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
 		c.sessionEnergy = value.(float64)
+	case easee.LIFETIME_ENERGY:
+		c.totalEnergy = value.(float64)
 	case easee.IN_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.IN_CURRENT_T4:
@@ -335,6 +343,8 @@ func (c *Easee) chargers() ([]easee.Charger, error) {
 
 // Status implements the api.Charger interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
+	c.updateSmartCharging()
+
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()
 
@@ -398,9 +408,9 @@ func (c *Easee) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.ChargePhases = (*Easee)(nil)
+var _ api.PhaseSwitcher = (*Easee)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Easee) Phases1p3p(phases int) error {
 	var err error
 	if c.circuit != 0 {
@@ -490,6 +500,16 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 
+var _ api.MeterEnergy = (*Easee)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *Easee) TotalEnergy() (float64, error) {
+	c.mux.L.Lock()
+	defer c.mux.L.Unlock()
+
+	return c.totalEnergy, nil
+}
+
 var _ api.Identifier = (*Easee)(nil)
 
 // Currents implements the api.MeterCurrent interface
@@ -498,4 +518,42 @@ func (c *Easee) Identify() (string, error) {
 	defer c.mux.L.Unlock()
 
 	return c.rfid, nil
+}
+
+// Set smart charging status to update the chargers led (smart=blue, fast=white)
+func (c *Easee) updateSmartCharging() {
+	if c.lp == nil {
+		return
+	}
+
+	mode := c.lp.GetMode()
+	isSmartCharging := mode == api.ModePV || mode == api.ModeMinPV
+
+	c.mux.L.Lock()
+	updateNeeded := isSmartCharging != c.smartCharging
+	c.mux.L.Unlock()
+
+	if updateNeeded {
+		data := easee.ChargerSettings{
+			SmartCharging: &isSmartCharging,
+		}
+
+		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
+		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+		if err == nil {
+			_, err = c.DoBody(req)
+		}
+		if err != nil {
+			c.log.WARN.Printf("smart charging: %v", err)
+		}
+
+		c.mux.L.Lock()
+		c.smartCharging = isSmartCharging
+		c.mux.L.Unlock()
+	}
+}
+
+// LoadpointControl implements loadpoint.Controller
+func (c *Easee) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
 }

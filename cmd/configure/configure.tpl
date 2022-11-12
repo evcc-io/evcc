@@ -8,10 +8,17 @@ log: info
 levels:
   cache: error
 
+# unique installation id
+plant: {{ .Plant }}
+
 interval: 10s # control cycle interval
 {{- if ne (len .SponsorToken) 0 }}
 
 sponsortoken: {{ .SponsorToken }}
+
+# sponsors can set telemetry: true to enable anonymous data aggregation
+# see https://github.com/evcc-io/evcc/discussions/4554
+telemetry: {{ .Telemetry }}
 {{- end}}
 {{- if ne (len .Meters) 0 }}
 
@@ -43,11 +50,8 @@ loadpoints:
 {{-     if .ChargeMeter }}
   meter: {{ .ChargeMeter }}
 {{-     end }}
-{{-     if ne (len .Vehicles) 0 }}
-  vehicles:
-{{-       range .Vehicles }}
-  - {{ . }}
-{{-       end }}
+{{-     if .Vehicle }}
+  vehicle: {{ .Vehicle }}
 {{-     end }}
   mode: {{ .Mode }}
   phases: {{ .Phases }}

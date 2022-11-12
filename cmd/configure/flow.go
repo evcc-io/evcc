@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/util/templates"
+	"golang.org/x/exp/slices"
 )
 
 // configureDeviceGuidedSetup lets the user choose a device that is set to support guided setup
@@ -21,7 +22,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 
 	deviceItem := device{}
 
-	for ok := true; ok; {
+	for {
 		fmt.Println()
 
 		templateItem, err = c.processDeviceSelection(DeviceCategoryGuidedSetup)
@@ -95,34 +96,27 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 // configureLinkedTypes lets the user configure devices that are marked as being linked to a guided device
 // e.g. SMA Inverters, Energy Meter with SMA Home Manager
 func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
-	linkedTemplates := templateItem.GuidedSetup.Linked
+	added := make([]string, 0)
 
-	deviceOfTemplateAdded := make(map[string]bool)
-
-	if linkedTemplates == nil {
-		return
-	}
-
-	for _, linkedTemplate := range linkedTemplates {
-		if linkedTemplate.ExcludeTemplate != "" {
-			// don't process this linked template if a referenced exclude template was added
-			if deviceOfTemplateAdded[linkedTemplate.ExcludeTemplate] {
-				continue
-			}
+	for _, linkedTemplate := range templateItem.Linked {
+		// don't process this linked template if a referenced exclude template was added
+		if slices.Contains(added, linkedTemplate.ExcludeTemplate) {
+			continue
 		}
 
-		linkedTemplateItem, err := templates.ByName(linkedTemplate.Template, string(DeviceClassMeter))
+		linkedTemplateItem, err := templates.ByName(templates.Meter, linkedTemplate.Template)
 		if err != nil {
 			fmt.Println("Error: " + err.Error())
 			return
 		}
+
 		if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
 			break
 		}
+
 		linkedTemplateItem.SetCombinedTitle()
 
 		category := DeviceCategory(linkedTemplate.Usage)
-
 		localizeMap := localizeMap{
 			"Linked":     linkedTemplateItem.Title(),
 			"Article":    DeviceCategories[category].article,
@@ -135,9 +129,9 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			continue
 		}
 
-		for ok := true; ok; {
-			if added := c.configureLinkedTemplate(linkedTemplateItem, category); added {
-				deviceOfTemplateAdded[linkedTemplate.Template] = true
+		for {
+			if c.configureLinkedTemplate(linkedTemplateItem, category) {
+				added = append(added, linkedTemplate.Template)
 			}
 
 			if !linkedTemplate.Multiple {
@@ -155,7 +149,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 // configureLinkedTemplate lets the user configure a device that is marked as being linked to a guided device
 // returns true if a device was added
 func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, category DeviceCategory) bool {
-	for ok := true; ok; {
+	for {
 		deviceItem := device{}
 
 		values := c.processConfig(&templateItem, category)
@@ -196,7 +190,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	var capabilities []string
 
 	// repeat until the device is added or the user chooses to continue without adding a device
-	for ok := true; ok; {
+	for {
 		fmt.Println()
 
 		templateItem, err := c.processDeviceSelection(deviceCategory)

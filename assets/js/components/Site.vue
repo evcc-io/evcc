@@ -12,9 +12,13 @@
 			</div>
 			<Energyflow v-bind="energyflow" />
 		</div>
-		<div class="d-flex flex-column justify-content-between content-area pt-4">
-			<Loadpoints class="mt-1 mt-sm-2 flex-grow-1" :loadpoints="loadpoints" />
-			<Vehicles v-if="$hiddenFeatures" />
+		<div class="d-flex flex-column justify-content-between content-area">
+			<Loadpoints
+				class="mt-1 mt-sm-2 flex-grow-1"
+				:loadpoints="loadpoints"
+				:vehicles="vehicles"
+			/>
+			<Vehicles v-if="showParkingLot" />
 			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
@@ -33,12 +37,20 @@ import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
-	components: { Loadpoints, Energyflow, Footer, Notifications, TopNavigation, Vehicles },
+	components: {
+		Loadpoints,
+		Energyflow,
+		Footer,
+		Notifications,
+		TopNavigation,
+		Vehicles,
+	},
 	mixins: [formatter, collector],
 	props: {
 		loadpoints: Array,
 
 		notifications: Array,
+		offline: Boolean,
 
 		// details
 		gridConfigured: Boolean,
@@ -52,6 +64,7 @@ export default {
 		gridCurrents: Array,
 		prioritySoC: Number,
 		siteTitle: String,
+		vehicles: Array,
 
 		auth: Object,
 
@@ -91,6 +104,10 @@ export default {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins };
 		},
+		showParkingLot: function () {
+			// work in progess
+			return false;
+		},
 		footer: function () {
 			return {
 				version: {
@@ -125,8 +142,6 @@ export default {
 	min-height: 100vh;
 }
 .content-area {
-	background-color: var(--bs-gray-dark);
-	color: var(--bs-white);
 	flex-grow: 1;
 	z-index: 1;
 }

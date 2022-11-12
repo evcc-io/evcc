@@ -1,24 +1,26 @@
-# STEP 1 build ui
-FROM node:16-alpine as node
+# # STEP 1 build ui
+# FROM --platform=$BUILDPLATFORM node:16-alpine as node
 
-RUN apk update && apk add --no-cache make alpine-sdk python3
+# RUN apk update && apk add --no-cache make alpine-sdk
 
-WORKDIR /build
+# WORKDIR /build
 
-# install node tools
-COPY Makefile .
-COPY package*.json ./
-RUN make install-ui
+# # install node tools
+# COPY package*.json ./
+# RUN npm ci
 
-# build ui
-COPY assets assets
-COPY vite.config.js vite.config.js
-COPY .eslintrc.js .eslintrc.js
-RUN make clean ui
+# # build ui
+# COPY Makefile .
+# COPY assets assets
+# COPY vite.config.js vite.config.js
+# COPY .eslintrc.js .eslintrc.js
+# COPY postcss.config.js postcss.config.js
+
+# RUN make clean ui
 
 
 # STEP 2 build executable binary
-FROM golang:1.18-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.18-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -26,27 +28,41 @@ FROM golang:1.18-alpine as builder
 RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && update-ca-certificates
 
 # define RELEASE=1 to hide commit hash
-ARG RELEASE={{ env "RELEASE" }}
+ARG RELEASE=0
 
 WORKDIR /build
 
-# install go tools and cache modules
-COPY Makefile .
+# download modules
 COPY go.mod .
 COPY go.sum .
+RUN go mod download
+
+# install tools
+COPY Makefile .
 COPY tools.go .
 RUN make install
-RUN go mod download
 
 # prepare
 COPY . .
+RUN make patch-asn1
 RUN make assets
 
 # copy ui
-COPY --from=node /build/dist /build/dist
+# COPY --from=node /build/dist /build/dist
 
 # build
-RUN RELEASE=${RELEASE} make build
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+RUN case "${TARGETVARIANT}" in \
+	"armhf") export GOARM='6' ;; \
+	"armv7") export GOARM='6' ;; \
+	"v6") export GOARM='6' ;; \
+	"v7") export GOARM='7' ;; \
+	esac;
+
+RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 
 
 # STEP 3 build a small image including module support
@@ -63,10 +79,14 @@ COPY --from=builder /build/evcc /usr/local/bin/evcc
 
 COPY docker/bin/* /app/
 
+# mDNS
+EXPOSE 5353/udp
 # UI and /api
 EXPOSE 7070/tcp
 # KEBA charger
 EXPOSE 7090/udp
+# OCPP charger
+EXPOSE 8887/tcp
 # SMA Energy Manager
 EXPOSE 9522/udp
 

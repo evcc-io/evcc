@@ -9,11 +9,12 @@ import (
 )
 
 var acceptable = []string{
-	"invalid plugin type: ...",
+	"invalid plugin source: ...",
 	"missing mqtt broker configuration",
 	"mqtt not configured",
 	"not a SunSpec device",
-	"missing password", // Powerwall
+	"missing password",         // Powerwall
+	"missing user or password", // Tapo
 	"connect: no route to host",
 	"connect: connection refused",
 	"connect: network is unreachable",
@@ -47,7 +48,7 @@ func TestTemplates(t *testing.T) {
 			} else {
 				values[templates.ModbusKeyRS485TCPIP] = true
 			}
-			values = tmpl.ModbusValues(templates.TemplateRenderModeInstance, true, values)
+			tmpl.ModbusValues(templates.TemplateRenderModeInstance, values)
 		}
 
 		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {

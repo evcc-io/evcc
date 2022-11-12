@@ -1,16 +1,32 @@
 <template>
-	<div class="loadpoint bg-white p-4">
-		<div class="d-flex justify-content-between align-items-center mb-3">
-			<h3 class="mb-3 me-2 text-truncate">
-				{{ title || $t("main.loadpoint.fallbackName") }}
-			</h3>
+	<div class="loadpoint pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
+		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
+			<div class="d-flex justify-content-between align-items-center mb-3">
+				<h3 class="me-2 mb-0 text-truncate">
+					{{ title || $t("main.loadpoint.fallbackName") }}
+				</h3>
+				<LoadpointSettingsButton
+					v-if="settingsButtonVisible"
+					:id="id"
+					class="d-block d-sm-none"
+				/>
+			</div>
 			<div class="mb-3 d-flex align-items-center">
-				<Mode :mode="mode" @updated="setTargetMode" />
-				<button v-if="$hiddenFeatures" class="btn btn-link text-gray p-0 flex-shrink-0">
-					<shopicon-filled-options size="s"></shopicon-filled-options>
-				</button>
+				<Mode class="flex-grow-1" :mode="mode" @updated="setTargetMode" />
+				<LoadpointSettingsButton
+					v-if="settingsButtonVisible"
+					:id="id"
+					class="d-none d-sm-block ms-2"
+				/>
 			</div>
 		</div>
+		<LoadpointSettingsModal
+			v-bind="settingsModal"
+			@maxcurrent-updated="setMaxCurrent"
+			@mincurrent-updated="setMinCurrent"
+			@phasesconfigured-updated="setPhasesConfigured"
+			@minsoc-updated="setMinSoC"
+		/>
 
 		<div
 			v-if="remoteDisabled"
@@ -29,32 +45,40 @@
 		</div>
 
 		<div class="details d-flex align-items-start mb-3">
-			<div class="d-flex align-items-center">
-				<div>
+			<div>
+				<div class="d-flex align-items-center">
 					<LabelAndValue
 						:label="$t('main.loadpoint.power')"
-						:value="fmtKw(chargePower)"
+						:value="chargePower"
+						:valueFmt="fmtkWUnit"
 						class="mb-2"
+						align="start"
 					/>
-					<Phases
-						v-bind="phasesProps"
-						class="opacity-transiton"
-						:class="`opacity-${charging ? '100' : '0'}`"
-					/>
+					<shopicon-regular-lightning
+						class="text-evcc opacity-transiton"
+						:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
+						size="m"
+					></shopicon-regular-lightning>
 				</div>
-				<shopicon-regular-lightning
-					class="text-evcc opacity-transiton"
-					:class="`opacity-${charging ? '100' : '0'}`"
-					size="m"
-				></shopicon-regular-lightning>
+				<Phases
+					v-bind="phasesProps"
+					class="opacity-transiton"
+					:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
+				/>
 			</div>
-			<LabelAndValue :label="$t('main.loadpoint.charged')" :value="fmtKWh(chargedEnergy)" />
+			<LabelAndValue
+				v-show="socBasedCharging"
+				:label="$t('main.loadpoint.charged')"
+				:value="fmtKWh(chargedEnergy)"
+				align="center"
+			/>
 			<LabelAndValue
 				v-if="chargeRemainingDurationInterpolated"
 				:label="$t('main.loadpoint.remaining')"
 				:value="`
 					${fmtShortDuration(chargeRemainingDurationInterpolated)}
 					${fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)}`"
+				align="end"
 			/>
 			<LabelAndValue
 				v-else
@@ -62,20 +86,25 @@
 				:value="`
 					${fmtShortDuration(chargeDurationInterpolated)}
 					${fmtShortDurationUnit(chargeDurationInterpolated)}`"
+				align="end"
 			/>
 		</div>
+		<hr class="divider" />
 		<Vehicle
 			v-bind="vehicle"
 			@target-soc-updated="setTargetSoC"
+			@target-energy-updated="setTargetEnergy"
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
+			@change-vehicle="changeVehicle"
+			@remove-vehicle="removeVehicle"
 		/>
 	</div>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/regular/lightning";
-import "@h2d2/shopicons/es/filled/options";
+import "@h2d2/shopicons/es/regular/adjust";
 import api from "../api";
 import Mode from "./Mode.vue";
 import Vehicle from "./Vehicle.vue";
@@ -83,10 +112,19 @@ import Phases from "./Phases.vue";
 import LabelAndValue from "./LabelAndValue.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
+import LoadpointSettingsButton from "./LoadpointSettingsButton.vue";
+import LoadpointSettingsModal from "./LoadpointSettingsModal.vue";
 
 export default {
 	name: "Loadpoint",
-	components: { Mode, Vehicle, Phases, LabelAndValue },
+	components: {
+		Mode,
+		Vehicle,
+		Phases,
+		LabelAndValue,
+		LoadpointSettingsButton,
+		LoadpointSettingsModal,
+	},
 	mixins: [formatter, collector],
 	props: {
 		id: Number,
@@ -96,6 +134,7 @@ export default {
 		title: String,
 		mode: String,
 		targetSoC: Number,
+		targetEnergy: Number,
 		remoteDisabled: Boolean,
 		remoteDisabledSource: String,
 		chargeDuration: Number,
@@ -105,10 +144,15 @@ export default {
 		connected: Boolean,
 		// charging: Boolean,
 		enabled: Boolean,
-		vehicleTitle: String,
-		vehicleSoC: Number,
+		vehicleDetectionActive: Boolean,
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
+		vehicleSoC: Number,
+		vehicleTitle: String,
+		vehicleTargetSoC: Number,
+		vehicleCapacity: Number,
+		vehicleFeatureOffline: Boolean,
+		vehicles: Array,
 		minSoC: Number,
 		targetTime: String,
 		targetTimeActive: Boolean,
@@ -126,11 +170,11 @@ export default {
 
 		// other information
 		phases: Number,
+		phasesConfigured: Number,
 		minCurrent: Number,
 		maxCurrent: Number,
-		activePhases: Number,
+		phasesActive: Number,
 		chargeCurrent: Number,
-		vehicleCapacity: Number,
 		connectedDuration: Number,
 		chargeCurrents: Array,
 		chargeConfigured: Boolean,
@@ -153,8 +197,20 @@ export default {
 		phasesProps: function () {
 			return this.collectProps(Phases);
 		},
+		settingsModal: function () {
+			return this.collectProps(LoadpointSettingsModal);
+		},
+		settingsButtonVisible: function () {
+			return this.$hiddenFeatures || [0, 1, 3].includes(this.phasesConfigured);
+		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);
+		},
+		showChargingIndicator: function () {
+			return this.charging && this.chargePower > 0;
+		},
+		socBasedCharging: function () {
+			return !this.vehicleFeatureOffline && this.vehiclePresent;
 		},
 	},
 	watch: {
@@ -201,12 +257,36 @@ export default {
 		setTargetSoC: function (soc) {
 			api.post(this.apiPath("targetsoc") + "/" + soc);
 		},
+		setTargetEnergy: function (kWh) {
+			api.post(this.apiPath("targetenergy") + "/" + kWh);
+		},
+		setMaxCurrent: function (maxCurrent) {
+			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
+		},
+		setMinCurrent: function (minCurrent) {
+			api.post(this.apiPath("mincurrent") + "/" + minCurrent);
+		},
+		setPhasesConfigured: function (phases) {
+			api.post(this.apiPath("phases") + "/" + phases);
+		},
+		setMinSoC: function (soc) {
+			api.post(this.apiPath("minsoc") + "/" + soc);
+		},
 		setTargetTime: function (date) {
-			const formattedDate = `${this.fmtDayString(date)}T${this.fmtTimeString(date)}:00`;
-			api.post(this.apiPath("targetcharge") + "/" + this.targetSoC + "/" + formattedDate);
+			api.post(`${this.apiPath("targetcharge")}/${this.targetSoC}/${date.toISOString()}`);
 		},
 		removeTargetTime: function () {
 			api.delete(this.apiPath("targetcharge"));
+		},
+		changeVehicle(index) {
+			api.post(this.apiPath("vehicle") + `/${index}`);
+		},
+		removeVehicle() {
+			api.delete(this.apiPath("vehicle"));
+		},
+		fmtkWUnit(value) {
+			const inKw = value == 0 || value >= 1000;
+			return this.fmtKw(value, inKw);
 		},
 	},
 };
@@ -215,7 +295,8 @@ export default {
 <style scoped>
 .loadpoint {
 	border-radius: 2rem;
-	color: var(--bs-gray-dark);
+	color: var(--evcc-default-text);
+	background: var(--evcc-box);
 }
 
 .details > div {
@@ -230,5 +311,19 @@ export default {
 }
 .opacity-transiton {
 	transition: opacity var(--evcc-transition-slow) ease-in;
+}
+.divider {
+	border: none;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: var(--evcc-gray);
+	background: none;
+	opacity: 0.5;
+	margin: 0 -1rem;
+}
+@media (--sm-and-up) {
+	.divider {
+		margin: 0 -1.5rem;
+	}
 }
 </style>

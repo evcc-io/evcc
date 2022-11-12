@@ -3,6 +3,7 @@ import Vehicle from "./Vehicle.vue";
 export default {
   title: "Main/Vehicle",
   component: Vehicle,
+  parameters: { backgrounds: { default: "box" } },
 };
 
 const Template = (args) => ({
@@ -11,6 +12,7 @@ const Template = (args) => ({
   },
   components: { Vehicle },
   template: '<Vehicle v-bind="args"></Vehicle>',
+  parameters: { backgrounds: { default: "box" } },
 });
 
 export const Base = Template.bind({});
@@ -22,6 +24,7 @@ Base.args = {
   vehicleSoC: 42,
   vehicleRange: 231,
   targetSoC: 90,
+  socBasedCharging: true,
   id: 0,
 };
 
@@ -34,6 +37,7 @@ Connected.args = {
   charging: false,
   vehicleSoC: 66,
   targetSoC: 90,
+  socBasedCharging: true,
   id: 0,
 };
 
@@ -46,6 +50,7 @@ ReadyToCharge.args = {
   charging: false,
   vehicleSoC: 66,
   targetSoC: 90,
+  socBasedCharging: true,
   id: 0,
 };
 
@@ -58,6 +63,7 @@ Charging.args = {
   charging: true,
   vehicleSoC: 66,
   targetSoC: 90,
+  socBasedCharging: true,
   id: 0,
 };
 
@@ -79,6 +85,7 @@ TargetChargePlanned.args = {
   targetTimeActive: false,
   targetSoC: 45,
   targetTime: hoursFromNow(14),
+  socBasedCharging: true,
   id: 0,
 };
 
@@ -94,6 +101,7 @@ TargetChargeActive.args = {
   targetTimeActive: true,
   targetSoC: 80,
   targetTime: hoursFromNow(2),
+  socBasedCharging: true,
   id: 0,
 };
 
@@ -107,6 +115,21 @@ MinCharge.args = {
   minSoC: 20,
   charging: true,
   targetSoC: 90,
+  socBasedCharging: true,
+  id: 0,
+};
+
+export const VehicleTargetSoc = Template.bind({});
+VehicleTargetSoc.args = {
+  vehicleTitle: "Mein Auto",
+  enabled: true,
+  connected: true,
+  vehiclePresent: true,
+  vehicleTargetSoC: 80,
+  vehicleSoC: 66,
+  charging: true,
+  targetSoC: 90,
+  socBasedCharging: true,
   id: 0,
 };
 
@@ -123,6 +146,7 @@ TimerPvEnable.args = {
   phaseRemainingInterpolated: 0,
   pvAction: "enable",
   pvRemainingInterpolated: 32,
+  socBasedCharging: true,
   id: 0,
 };
 
@@ -139,16 +163,17 @@ TimerPvDisable.args = {
   phaseRemainingInterpolated: 0,
   pvAction: "disable",
   pvRemainingInterpolated: 155,
+  socBasedCharging: true,
   id: 0,
 };
 
 export const UnknownVehicleConnected = Template.bind({});
 UnknownVehicleConnected.args = {
-  vehicleTitle: "Mein Auto",
   enabled: false,
   connected: true,
   vehiclePresent: false,
   targetSoC: 90,
+  socBasedCharging: false,
   id: 0,
 };
 
@@ -160,6 +185,7 @@ UnknownVehicleReadyToCharge.args = {
   vehiclePresent: false,
   charging: false,
   targetSoC: 100,
+  socBasedCharging: false,
   id: 0,
 };
 
@@ -171,6 +197,37 @@ UnknownVehicleCharging.args = {
   vehiclePresent: false,
   charging: true,
   targetSoC: 90,
+  socBasedCharging: false,
+  id: 0,
+};
+
+export const OfflineVehicleCharging = Template.bind({});
+OfflineVehicleCharging.args = {
+  vehicleTitle: "Polestar 2",
+  enabled: true,
+  connected: true,
+  vehiclePresent: true,
+  vehicleFeatureOffline: true,
+  vehicleCapacity: 72,
+  chargedEnergy: 14123,
+  charging: true,
+  targetSoC: 90,
+  socBasedCharging: false,
+  id: 0,
+};
+
+export const OfflineVehicleTargetEnergy = Template.bind({});
+OfflineVehicleTargetEnergy.args = {
+  vehicleTitle: "Polestar 2",
+  enabled: true,
+  connected: true,
+  vehiclePresent: true,
+  vehicleFeatureOffline: true,
+  vehicleCapacity: 72,
+  chargedEnergy: 14123,
+  targetEnergy: 30,
+  charging: true,
+  socBasedCharging: false,
   id: 0,
 };
 
@@ -191,5 +248,18 @@ DisconnectedKnownSoc.args = {
   vehiclePresent: true,
   vehicleSoC: 17,
   targetSoC: 60,
+  id: 0,
+};
+
+export const SwitchBetweenVehicles = Template.bind({});
+SwitchBetweenVehicles.args = {
+  vehicleTitle: "Weißes Model 3",
+  vehicles: ["Blauer e-Golf", "Weißes Model 3"],
+  enabled: true,
+  connected: true,
+  vehiclePresent: true,
+  vehicleSoC: 42,
+  vehicleRange: 231,
+  targetSoC: 90,
   id: 0,
 };

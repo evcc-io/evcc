@@ -43,14 +43,13 @@ type Alfen struct {
 }
 
 const (
+	alfenRegCurrents   = 320 // 3 registers
 	alfenRegPower      = 344
 	alfenRegEnergy     = 374  // 390
 	alfenRegStatus     = 1201 // 5 registers
 	alfenRegAmpsConfig = 1210
 	alfenRegPhases     = 1215
 )
-
-var alfenRegCurrents = []uint16{320, 322, 324}
 
 func init() {
 	registry.Add("alfen", NewAlfenFromConfig)
@@ -94,7 +93,7 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 }
 
 func (wb *Alfen) heartbeat() {
-	for range time.NewTicker(time.Minute).C {
+	for range time.NewTicker(25 * time.Second).C {
 		wb.mu.Lock()
 		var curr float64
 		if wb.enabled {
@@ -215,22 +214,27 @@ var _ api.MeterCurrent = (*Alfen)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Alfen) Currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, reg := range alfenRegCurrents {
-		b, err := wb.conn.ReadHoldingRegisters(reg, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		currents = append(currents, rs485.RTUIeee754ToFloat64(b))
+	b, err := wb.conn.ReadHoldingRegisters(alfenRegCurrents, 6)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		f := rs485.RTUIeee754ToFloat64(b[4*i:])
+		if math.IsNaN(f) {
+			f = 0
+		}
+
+		res[i] = f
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
-var _ api.ChargePhases = (*Alfen)(nil)
+var _ api.PhaseSwitcher = (*Alfen)(nil)
 
-// Phases1p3p implements the api.ChargePhases interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Alfen) Phases1p3p(phases int) error {
 	_, err := c.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
 	return err

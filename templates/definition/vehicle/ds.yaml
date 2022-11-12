@@ -4,9 +4,7 @@ products:
 params:
   - preset: vehiclebase
   - preset: vehicleidentify
-  - preset: vehiclecloud
 render: |
   type: ds
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
-  {{ include "vehicle-cloud" . }}

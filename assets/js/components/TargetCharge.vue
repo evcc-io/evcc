@@ -1,11 +1,16 @@
 <template>
 	<div>
-		<LabelAndValue class="flex-grow-1" :label="$t('main.targetCharge.title')" on-dark>
+		<LabelAndValue
+			class="root flex-grow-1"
+			:label="$t('main.targetCharge.title')"
+			:class="disabled ? 'opacity-0' : 'opacity-1'"
+		>
 			<button
-				class="btn btn-link p-0 value text-end"
-				:class="buttonIsEnabled ? 'text-white' : 'text-gray-light'"
+				class="btn btn-link p-0 value text-center"
+				:class="targetChargeEnabled ? 'evcc-default-text' : 'text-gray'"
 				data-bs-toggle="modal"
 				:data-bs-target="`#${modalId}`"
+				:disabled="disabled"
 			>
 				<strong v-if="targetChargeEnabled">{{ targetTimeLabel() }}</strong>
 				<span v-else>{{ $t("main.targetCharge.setTargetTime") }}</span>
@@ -142,9 +147,6 @@ export default {
 		targetChargeEnabled: function () {
 			return this.targetTime;
 		},
-		buttonIsEnabled: function () {
-			return this.targetChargeEnabled && !this.disabled;
-		},
 		selectedTargetTimeValid: function () {
 			const now = new Date();
 			return now < this.selectedTargetTime;
@@ -253,7 +255,9 @@ export default {
 	font-size: 18px;
 	line-height: 1.2;
 	border: none;
-	transition: color var(--evcc-transition-medium) linear;
+}
+.root {
+	transition: opacity var(--evcc-transition-medium) linear;
 }
 .value:hover {
 	color: var(--bs-color-white);

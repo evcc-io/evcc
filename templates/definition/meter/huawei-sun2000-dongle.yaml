@@ -3,8 +3,6 @@ products:
   - brand: Huawei
     description:
       generic: SUN2000 with SDongle
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["pv"]
@@ -16,7 +14,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 10s
+    timeout: 15s
     connectdelay: 1s
     register:
       address: 32080 # Active generation power AC

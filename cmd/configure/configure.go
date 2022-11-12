@@ -6,6 +6,8 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/util/machine"
+	"github.com/evcc-io/evcc/util/templates"
 )
 
 type device struct {
@@ -19,7 +21,7 @@ type loadpoint struct {
 	Title             string // TODO Perspektivisch können wir was aus core wiederverwenden, für später
 	Charger           string
 	ChargeMeter       string
-	Vehicles          []string
+	Vehicle           string
 	Mode              string
 	MinCurrent        int
 	MaxCurrent        int
@@ -42,6 +44,8 @@ type config struct {
 	EEBUS        string
 	MQTT         string
 	SponsorToken string
+	Plant        string
+	Telemetry    bool
 }
 
 type Configure struct {
@@ -52,9 +56,10 @@ type Configure struct {
 // e.g. a PV meter to site.PVs
 func (c *Configure) AddDevice(d device, category DeviceCategory) {
 	switch DeviceCategories[category].class {
-	case DeviceClassCharger:
+	case templates.Charger:
 		c.config.Chargers = append(c.config.Chargers, d)
-	case DeviceClassMeter:
+
+	case templates.Meter:
 		c.config.Meters = append(c.config.Meters, d)
 		switch DeviceCategories[category].categoryFilter {
 		case DeviceCategoryGridMeter:
@@ -64,22 +69,27 @@ func (c *Configure) AddDevice(d device, category DeviceCategory) {
 		case DeviceCategoryBatteryMeter:
 			c.config.Site.Batteries = append(c.config.Site.Batteries, d.Name)
 		}
-	case DeviceClassVehicle:
+
+	case templates.Vehicle:
 		c.config.Vehicles = append(c.config.Vehicles, d)
+
+	default:
+		panic("invalid class for category: " + category)
 	}
 }
 
 // DevicesOfClass returns all configured devices of a given DeviceClass
-func (c *Configure) DevicesOfClass(class DeviceClass) []device {
+func (c *Configure) DevicesOfClass(class templates.Class) []device {
 	switch class {
-	case DeviceClassCharger:
+	case templates.Charger:
 		return c.config.Chargers
-	case DeviceClassMeter:
+	case templates.Meter:
 		return c.config.Meters
-	case DeviceClassVehicle:
+	case templates.Vehicle:
 		return c.config.Vehicles
+	default:
+		panic("invalid class: " + class)
 	}
-	return nil
 }
 
 // AddLoadpoint adds a loadpoint to the configuration
@@ -112,6 +122,10 @@ func (c *Configure) RenderConfiguration() ([]byte, error) {
 	if err != nil {
 		panic(err)
 	}
+
+	// Assign random plant id. Don't use actual machine-id as file might
+	// be copied around to a different machine.
+	c.config.Plant = machine.RandomID()
 
 	out := new(bytes.Buffer)
 	err = tmpl.Execute(out, c.config)

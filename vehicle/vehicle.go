@@ -23,13 +23,13 @@ func init() {
 
 // NewConfigurableFromConfig creates a new Vehicle
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
+	var cc struct {
 		embed    `mapstructure:",squash"`
 		Soc      provider.Config
 		Status   *provider.Config
 		Range    *provider.Config
 		Odometer *provider.Config
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

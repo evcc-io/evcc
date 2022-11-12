@@ -1,10 +1,12 @@
 package daheimladen
 
-type ChargePointStatus string
-type RemoteStartStatus string
-type RemoteStopStatus string
-type ConfigKey string
-type ChangeConfigStatus string
+type (
+	ChargePointStatus  string
+	RemoteStartStatus  string
+	RemoteStopStatus   string
+	ConfigKey          string
+	ChangeConfigStatus string
+)
 
 const BASE_URL string = "https://api.daheimladen.com/v1"
 

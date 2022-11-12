@@ -27,7 +27,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 	var err error
-	if time.Until(ts.token.Expiry) < time.Minute {
+	if ts.token == nil || time.Until(ts.token.Expiry) < time.Minute {
 		var token *oauth2.Token
 		if token, err = ts.refresher.RefreshToken(ts.token); err == nil {
 			if token.AccessToken == "" {

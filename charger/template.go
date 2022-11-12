@@ -2,9 +2,7 @@ package charger
 
 import (
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
-	"gopkg.in/yaml.v3"
 )
 
 func init() {
@@ -12,33 +10,12 @@ func init() {
 }
 
 func NewChargerFromTemplateConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		Template string
-		Other    map[string]interface{} `mapstructure:",remain"`
-	}{}
+	instance, err := templates.RenderInstance(templates.Charger, other)
 
-	if err := util.DecodeOther(other, &cc); err != nil {
-		return nil, err
+	var res api.Charger
+	if err == nil {
+		res, err = NewFromConfig(instance.Type, instance.Other)
 	}
 
-	tmpl, err := templates.ByName(cc.Template, templates.Charger)
-	if err != nil {
-		return nil, err
-	}
-
-	b, _, err := tmpl.RenderResult(templates.TemplateRenderModeInstance, other)
-	if err != nil {
-		return nil, err
-	}
-
-	var instance struct {
-		Type  string
-		Other map[string]interface{} `yaml:",inline"`
-	}
-
-	if err := yaml.Unmarshal(b, &instance); err != nil {
-		return nil, err
-	}
-
-	return NewFromConfig(instance.Type, instance.Other)
+	return res, err
 }

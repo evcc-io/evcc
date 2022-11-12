@@ -1,0 +1,13 @@
+title: EVSE claim
+allOf:
+  - type: object
+    properties:
+      client:
+        type: integer
+        description: "The client ID, defined by [OpenEVSE](src/evse_man.h#L25)"
+      priority:
+        type: integer
+        description: "The priority of the claim, the higher the number the higher the priority"
+  - $ref: ./Properties.yaml
+x-tags:
+  - Claims

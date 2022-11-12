@@ -3,16 +3,19 @@ products:
   - brand: DaheimLaden
     description:
       generic: Wallbox
+requirements:
+  description:
+    de: Für die Nutzung mit evcc muss die Wallbox im RFID Modus betrieben werden.
+    en: For use with evcc, the wallbox must be operated in RFID mode.
 params:
   - name: token
     help:
       de: "Sie bekommen dieses Access Token vom Daheimladen Support: info@daheimladen.de."
       en: "Request your access token from Daheimladen support: info@daheimladen.de."
   - name: stationid
-    example: "xxxxxxxxxxxx990"
     help:
-      de: "Die Software Seriennummer, welche auf dem Bildschirm der Wallbox angezeigt wird."
-      en: "Software Serial Number displayed on the display of the wallbox."
+      de: "Die Seriennummer, welche auf dem Bildschirm der Wallbox angezeigt wird."
+      en: "Serial number as displayed on the wallbox display."
 render: |
   type: daheimladen
   stationID: {{ .stationid }}

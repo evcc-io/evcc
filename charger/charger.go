@@ -20,9 +20,14 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
+// go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
+
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}
+	var cc struct {
+		Status, Enable, Enabled, MaxCurrent provider.Config
+		Identify, Phases1p3p                *provider.Config
+	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -47,7 +52,26 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, fmt.Errorf("maxcurrent: %w", err)
 	}
 
-	return NewConfigurable(status, enabled, enable, maxcurrent)
+	c, err := NewConfigurable(status, enabled, enable, maxcurrent)
+
+	// decorator phases
+	var phases1p3p func(int) error
+	if err == nil && cc.Phases1p3p != nil {
+		var phases1p3pi64 func(int64) error
+		phases1p3pi64, err = provider.NewIntSetterFromConfig("phases", *cc.Phases1p3p)
+
+		phases1p3p = func(phases int) error {
+			return phases1p3pi64(int64(phases))
+		}
+	}
+
+	// decorator identifier
+	var identify func() (string, error)
+	if err == nil && cc.Identify != nil {
+		identify, err = provider.NewStringGetterFromConfig(*cc.Identify)
+	}
+
+	return decorateCustom(c, identify, phases1p3p), err
 }
 
 // NewConfigurable creates a new charger
@@ -56,7 +80,7 @@ func NewConfigurable(
 	enabledG func() (bool, error),
 	enableS func(bool) error,
 	maxCurrentS func(int64) error,
-) (api.Charger, error) {
+) (*Charger, error) {
 	c := &Charger{
 		statusG:     statusG,
 		enabledG:    enabledG,

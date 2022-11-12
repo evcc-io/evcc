@@ -3,7 +3,7 @@ name: Deploy updated templates
 on:
   push:
     branches: [master]
-    paths: "templates/**"
+    paths: ["templates/**"]
   workflow_dispatch:
 
 jobs:
@@ -12,32 +12,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
         with:
           go-version: ^1.18
+          cache: true
         id: go
-
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Install tools
-        run: make install
 
       - name: Build docs
         run: make docs
 
-      - name: Clean git
-        run: |
-          git checkout go.*
-          rm -rf flags buildflags
-
       - name: Deploy to docs repo
         uses: peaceiris/actions-gh-pages@v3
         with:
-          personal_token: ${{ secrets.GH_REPO }}
+          personal_token: ${{ secrets.GH_TOKEN }}
           publish_dir: ./templates/docs
           external_repository: evcc-io/docs
           publish_branch: main

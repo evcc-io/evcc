@@ -147,5 +147,9 @@ func (t *TimedTemperature) UnmarshalJSON(data []byte) error {
 
 // temp2Float converts api temp to float value
 func temp2Float(i int) float64 {
-	return float64(i)/10 - 273
+	f := float64(i)
+	if f == 0 {
+		return math.NaN()
+	}
+	return f/10 - 273
 }

@@ -2,22 +2,22 @@ template: solax-hybrid-cloud
 products:
   - brand: Solax
     description:
-      generic: Hybrid
+      de: Hybrid-Wechselrichter (Cloud)
+      en: Hybrid-Inverter (Cloud)
 requirements:
   description:
     de: |
-      Der Solax Inverter muss in der SolaxCloud angemeldet sein.
+      Der Solax Hybrid-Wechselrichter muss in der SolaxCloud angemeldet sein.
 
-      **Achtung**: Die Werte können nur alle 150s abgerufen werden und dann auch 5 Minuten alt sein. Die Laderegelung nach PV kann hiermit nicht optimal gesteuert werden!
+      **Achtung**: Die Werte können nur alle 150s abgerufen werden und dann auch 5 Minuten alt sein. Die Laderegelung nach PV kann hiermit nicht optimal gesteuert werden! Nur als Notfalloption nutzen wenn kein lokaler Zugriff möglich ist.
     en: |
-      The Solax inverter has to be registered in the SolaxCloud.
+      The Solax hybrid inverter has to be registered in the SolaxCloud.
 
-      **Attention**: Values can only be fetched every 150s and then also can be 5 minutes old. Charging by PV will not be optimal because of this!
-guidedsetup:
-  enable: true
+      **Attention**: Values can only be fetched every 150s and then also can be 5 minutes old. Charging by PV will not be optimal because of this! Only use as fallback if no local access is available.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
   - name: tokenid
     required: true
     description:
@@ -38,7 +38,7 @@ render: |
   power:
   {{- if eq .usage "grid" }}
     source: http
-    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId=={{ .tokenid }}&sn={{ .serial}}
+    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
     jq: .result.feedinpower
     cache: 2m30s
     scale: -1

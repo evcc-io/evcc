@@ -6,11 +6,9 @@ builds:
   - id: evcc
     main: main.go
     flags:
-      - -tags=release,viper_yaml3
+      - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{.Version}} -X github.com/evcc-io/evcc/server.Commit={{.ShortCommit}} -s -w
-    env:
-      - CGO_ENABLED=0
+      - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w
     goos:
       - linux
     goarch:
@@ -19,6 +17,11 @@ builds:
       - arm64
     goarm:
       - "6"
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
 
 archives:
   - builds:
@@ -31,7 +34,7 @@ archives:
         format: zip
     files:
       - evcc.dist.yaml
-    name_template: "{{.ProjectName}}_{{ .Version }}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}"
 
 universal_binaries:
   - replace: true
@@ -40,7 +43,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: "{{ .Version }}.{{.Timestamp}}"
+  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
 
 changelog:
   sort: asc
@@ -54,7 +57,7 @@ changelog:
 nfpms:
   - id: default
     package_name: evcc
-    file_name_template: "{{.ProjectName}}_{{ .Version }}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}"
 
     homepage: https://evcc.io
     description: EV Charge Controller

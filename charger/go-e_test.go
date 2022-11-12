@@ -36,6 +36,8 @@ func TestGoEV1(t *testing.T) {
 	h := &handler{}
 	srv := httptest.NewServer(h)
 
+	sponsor.Subject = "foo"
+
 	wb, err := NewGoE(srv.URL, "", 0)
 	if err != nil {
 		t.Error(err)
@@ -82,7 +84,7 @@ func TestGoEV2(t *testing.T) {
 		t.Error("missing MeterEnergy api")
 	}
 
-	if _, ok := wb.(api.ChargePhases); !ok {
-		t.Error("missing ChargePhases api")
+	if _, ok := wb.(api.PhaseSwitcher); !ok {
+		t.Error("missing PhaseSwitcher api")
 	}
 }

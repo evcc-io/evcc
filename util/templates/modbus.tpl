@@ -5,14 +5,16 @@ id: {{ .id }}
 device: {{ .device }}
 baudrate: {{ .baudrate }}
 comset: "{{ .comset }}"
-{{- end }}
-{{- if or (eq .modbus "rs485tcpip") .rs485tcpip }}
+{{- else if or (eq .modbus "rs485tcpip") .rs485tcpip }}
 # RS485 via TCP/IP (Modbus RTU)
 uri: {{ .host }}:{{ .port }}
 rtu: true
-{{- end }}
-{{- if or (eq .modbus "tcpip") .tcpip }}
+{{- else if or (eq .modbus "tcpip") .tcpip }}
 # Modbus TCP
 uri: {{ .host }}:{{ .port }}
+rtu: false
+{{- else }}
+# configuration error - should not happen
+modbusConnectionTypeNotDefined: {{ .modbus }}
 {{- end }}
-{{- end}}
+{{- end }}

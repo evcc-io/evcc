@@ -11,9 +11,7 @@ import (
 	"github.com/google/go-github/v32/github"
 )
 
-var (
-	latest *github.RepositoryRelease
-)
+var latest *github.RepositoryRelease
 
 // Run regularly checks version
 func Run(log *util.Logger, httpd webServer, tee util.TeeAttacher, outChan chan<- util.Param) {

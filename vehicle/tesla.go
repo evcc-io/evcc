@@ -63,10 +63,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	cc.VIN, v.vehicle, err = ensureVehicleWithFeature(
+	v.vehicle, err = ensureVehicleEx(
 		cc.VIN, client.Vehicles,
-		func(v *tesla.Vehicle) (string, *tesla.Vehicle) {
-			return v.Vin, v
+		func(v *tesla.Vehicle) string {
+			return v.Vin
 		},
 	)
 
@@ -184,6 +184,18 @@ func (v *Tesla) Position() (float64, float64, error) {
 	}
 
 	return 0, 0, err
+}
+
+var _ api.SocLimiter = (*Tesla)(nil)
+
+// TargetSoC implements the api.SocLimiter interface
+func (v *Tesla) TargetSoC() (float64, error) {
+	res, err := v.chargeStateG()
+	if err == nil {
+		return float64(res.ChargeLimitSoc), nil
+	}
+
+	return 0, err
 }
 
 var _ api.VehicleChargeController = (*Tesla)(nil)

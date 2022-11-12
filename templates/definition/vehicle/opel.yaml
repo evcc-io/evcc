@@ -6,9 +6,7 @@ params:
   - preset: vehicleidentify
   - name: vin
     example: WP0...
-  - preset: vehiclecloud
 render: |
   type: opel
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
-  {{ include "vehicle-cloud" . }}

@@ -2,7 +2,7 @@
 	<div class="vehicle-soc">
 		<div class="progress">
 			<div
-				v-if="connected || parked"
+				v-if="connected"
 				class="progress-bar"
 				role="progressbar"
 				:class="{
@@ -19,23 +19,29 @@
 				:class="progressColor"
 				:style="{ width: `${remainingSoCWidth}%`, transition: 'none' }"
 			></div>
+			<div
+				v-show="vehicleTargetSoC"
+				ref="vehicleTargetSoC"
+				class="vehicle-target-soc"
+				data-bs-toggle="tooltip"
+				:title="$t('main.vehicleSoC.vehicleTarget', { soc: vehicleTargetSoC })"
+				:class="{ 'vehicle-target-soc--active': vehicleTargetSoCActive }"
+				:style="{ left: `${vehicleTargetSoC}%` }"
+			/>
 		</div>
 		<div class="target">
-			<div
-				class="target-label d-flex align-items-center justify-content-center"
-				:style="{ left: `${visibleTargetSoC}%` }"
-			></div>
 			<input
-				v-if="vehiclePresent && (connected || parked)"
+				v-if="socBasedCharging && connected"
 				type="range"
 				min="0"
 				max="100"
 				step="5"
 				:value="visibleTargetSoC"
 				class="target-slider"
-				@input="movedTargetSoC"
+				:class="{ 'target-slider--active': targetSliderActive }"
 				@mousedown="changeTargetSoCStart"
 				@touchstart="changeTargetSoCStart"
+				@input="movedTargetSoC"
 				@mouseup="changeTargetSoCEnd"
 				@touchend="changeTargetSoCEnd"
 			/>
@@ -44,31 +50,50 @@
 </template>
 
 <script>
+import { Tooltip } from "bootstrap";
+
 export default {
 	name: "VehicleSoc",
 	props: {
 		connected: Boolean,
 		vehiclePresent: Boolean,
 		vehicleSoC: Number,
+		vehicleTargetSoC: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
 		targetSoC: Number,
-		parked: Boolean,
+		targetEnergy: Number,
+		chargedEnergy: Number,
+		socBasedCharging: Boolean,
 	},
 	emits: ["target-soc-drag", "target-soc-updated"],
 	data: function () {
 		return {
 			selectedTargetSoC: null,
 			interactionStartScreenY: null,
+			tooltip: null,
 		};
 	},
 	computed: {
 		vehicleSoCDisplayWidth: function () {
-			if (this.vehiclePresent && this.vehicleSoC >= 0) {
-				return this.vehicleSoC;
+			if (this.socBasedCharging) {
+				if (this.vehicleSoC >= 0) {
+					return this.vehicleSoC;
+				}
+				return 100;
+			} else {
+				if (this.targetEnergy) {
+					return (100 / this.targetEnergy) * (this.chargedEnergy / 1e3);
+				}
+				return 100;
 			}
-			return 100;
+		},
+		vehicleTargetSoCActive: function () {
+			return this.vehicleTargetSoC > 0 && this.vehicleTargetSoC > this.vehicleSoC;
+		},
+		targetSliderActive: function () {
+			return !this.vehicleTargetSoC || this.visibleTargetSoC <= this.vehicleTargetSoC;
 		},
 		progressColor: function () {
 			if (this.minSoCActive) {
@@ -80,15 +105,23 @@ export default {
 			return this.minSoC > 0 && this.vehicleSoC < this.minSoC;
 		},
 		remainingSoCWidth: function () {
-			if (this.vehicleSoCDisplayWidth === 100) {
-				return null;
+			if (this.socBasedCharging) {
+				if (this.vehicleSoCDisplayWidth === 100) {
+					return null;
+				}
+				if (this.minSoCActive) {
+					return this.minSoC - this.vehicleSoC;
+				}
+				let targetSoC = this.targetSliderActive
+					? this.visibleTargetSoC
+					: this.vehicleTargetSoC;
+				if (targetSoC > this.vehicleSoC) {
+					return targetSoC - this.vehicleSoC;
+				}
+			} else {
+				return 100 - this.vehicleSoCDisplayWidth;
 			}
-			if (this.minSoCActive) {
-				return this.minSoC - this.vehicleSoC;
-			}
-			if (this.visibleTargetSoC > this.vehicleSoC) {
-				return this.visibleTargetSoC - this.vehicleSoC;
-			}
+
 			return null;
 		},
 		visibleTargetSoC: function () {
@@ -99,39 +132,46 @@ export default {
 		targetSoC: function () {
 			this.selectedTargetSoC = this.targetSoC;
 		},
+		vehicleTargetSoC: function () {
+			this.updateTooltip();
+		},
+	},
+	mounted: function () {
+		this.updateTooltip();
 	},
 	methods: {
 		changeTargetSoCStart: function (e) {
-			const screenY = e.screenY || e.changedTouches[0].screenY;
-			this.interactionStartScreenY = screenY;
+			e.stopPropagation();
 		},
 		changeTargetSoCEnd: function (e) {
-			const screenY = e.screenY || e.changedTouches[0].screenY;
-			const yDiff = Math.abs(screenY - this.interactionStartScreenY);
-			// horizontal scroll detected - revert slider change
-			if (yDiff > 80) {
-				e.preventDefault();
-				e.target.value = this.targetSoC;
-				this.selectedTargetSoC = this.targetSoC;
-				return false;
-			}
+			const value = parseInt(e.target.value, 10);
 			// value changed
-			if (e.target.value !== this.targetSoC) {
-				this.$emit("target-soc-updated", e.target.value);
+			if (value !== this.targetSoC) {
+				this.$emit("target-soc-updated", value);
 			}
 		},
 		movedTargetSoC: function (e) {
+			let value = parseInt(e.target.value, 10);
+			e.stopPropagation();
 			const minTargetSoC = 20;
-			if (e.target.value < minTargetSoC) {
+			if (value < minTargetSoC) {
 				e.target.value = minTargetSoC;
-				this.selectedTargetSoC = e.target.value;
+				this.selectedTargetSoC = value;
 				e.preventDefault();
 				return false;
 			}
-			this.selectedTargetSoC = e.target.value;
+			this.selectedTargetSoC = value;
 
 			this.$emit("target-soc-drag", this.selectedTargetSoC);
 			return true;
+		},
+		updateTooltip: function () {
+			this.$nextTick(() => {
+				if (this.tooltip) {
+					this.tooltip.dispose();
+				}
+				this.tooltip = new Tooltip(this.$refs.vehicleTargetSoC);
+			});
 		},
 	},
 };
@@ -148,22 +188,13 @@ export default {
 .progress {
 	height: 100%;
 	font-size: 1rem;
+	background: var(--evcc-background);
 }
 .progress-bar.bg-muted {
-	color: var(--white);
+	opacity: 0.5;
 }
 .bg-light {
 	color: var(--bs-gray-dark);
-}
-.target-label {
-	width: 3em;
-	margin-left: -1.5em;
-	height: var(--label-height);
-	position: absolute;
-	top: calc((var(--label-height) + var(--thumb-overlap)) * -1);
-	text-align: center;
-	color: var(--bs-gray-dark);
-	font-size: 1rem;
 }
 .target-slider {
 	-webkit-appearance: none;
@@ -172,6 +203,7 @@ export default {
 	height: calc(100% + 2 * var(--thumb-overlap));
 	width: 100%;
 	background: transparent;
+	pointer-events: none;
 }
 .target-slider:focus {
 	outline: none;
@@ -182,13 +214,13 @@ export default {
 	background: transparent;
 	border: none;
 	height: 100%;
-	cursor: pointer;
+	cursor: auto;
 }
 .target-slider::-moz-range-track {
 	background: transparent;
 	border: none;
 	height: 100%;
-	cursor: pointer;
+	cursor: auto;
 }
 .target-slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
@@ -196,22 +228,48 @@ export default {
 	margin-left: var(--thumb-width) / 2;
 	height: 100%;
 	width: var(--thumb-width);
-	background-color: var(--evcc-dark-green);
+	background-color: var(--evcc-gray);
 	cursor: grab;
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
-	box-shadow: 0 0 6px var(--bs-gray-dark);
+	box-shadow: 0 0 6px var(--evcc-background);
+	pointer-events: auto;
+	transition: background-color var(--evcc-transition-fast) linear;
 }
 .target-slider::-moz-range-thumb {
 	position: relative;
 	height: 100%;
 	width: var(--thumb-width);
-	background-color: var(--evcc-dark-green);
+	background-color: var(--evcc-gray);
 	cursor: grab;
 	border: none;
 	opacity: 1;
 	border-radius: var(--thumb-overlap);
-	box-shadow: 0 0 6px var(--bs-gray-dark);
+	box-shadow: 0 0 6px var(--evcc-background);
+	pointer-events: auto;
+	transition: background-color var(--evcc-transition-fast) linear;
+}
+.target-slider--active::-webkit-slider-thumb {
+	background-color: var(--evcc-dark-green);
+}
+.target-slider--active::-moz-range-thumb {
+	background-color: var(--evcc-dark-green);
+}
+.vehicle-target-soc {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 20px;
+	transform: translateX(-8px);
+	background-color: transparent;
+	background-clip: padding-box;
+	border-width: 0 8px;
+	border-style: solid;
+	border-color: transparent;
+	transition: background-color var(--evcc-transition-fast) linear;
+}
+.vehicle-target-soc--active {
+	background-color: var(--evcc-box);
 }
 </style>

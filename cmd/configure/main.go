@@ -40,7 +40,7 @@ type CmdConfigure struct {
 }
 
 // Run starts the interactive configuration
-func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expandedMode bool) {
+func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expandedMode bool, category string) {
 	c.log = log
 	c.advancedMode = advancedMode
 	c.expandedMode = expandedMode
@@ -72,7 +72,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	fmt.Println()
 	fmt.Println(c.localizedString("Intro", nil))
 
-	if !c.advancedMode {
+	if !c.advancedMode && category == "" {
 		// ask the user for his knowledge, so advanced mode can also be turned on this way
 		fmt.Println()
 		flowIndex, _ := c.askChoice(c.localizedString("Flow_Mode", nil), []string{
@@ -84,9 +84,20 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 		}
 	}
 
-	if !c.advancedMode {
+	if !c.advancedMode && category == "" {
 		c.flowNewConfigFile()
 		return
+	}
+
+	if category != "" {
+		for cat := range DeviceCategories {
+			if cat == DeviceCategory(category) {
+				c.flowSingleDevice(DeviceCategory(category))
+				return
+			}
+		}
+
+		panic("invalid category: " + category)
 	}
 
 	fmt.Println()
@@ -98,12 +109,12 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	case 0:
 		c.flowNewConfigFile()
 	case 1:
-		c.flowSingleDevice()
+		c.flowSingleDevice("")
 	}
 }
 
 // configureSingleDevice implements the flow for getting a single device configuration
-func (c *CmdConfigure) flowSingleDevice() {
+func (c *CmdConfigure) flowSingleDevice(category DeviceCategory) {
 	fmt.Println()
 	fmt.Println(c.localizedString("Flow_SingleDevice_Setup", nil))
 	fmt.Println()
@@ -119,18 +130,19 @@ func (c *CmdConfigure) flowSingleDevice() {
 		DeviceCategories[DeviceCategoryVehicle].title,
 	}
 
-	fmt.Println()
-	_, cagetoryTitle := c.askChoice(c.localizedString("Flow_SingleDevice_Select", nil), categoryChoices)
+	if category == "" {
+		fmt.Println()
+		_, categoryTitle := c.askChoice(c.localizedString("Flow_SingleDevice_Select", nil), categoryChoices)
 
-	var selectedCategory DeviceCategory
-	for item, data := range DeviceCategories {
-		if data.title == cagetoryTitle {
-			selectedCategory = item
-			break
+		for item, data := range DeviceCategories {
+			if data.title == categoryTitle {
+				category = item
+				break
+			}
 		}
 	}
 
-	devices := c.configureDevices(selectedCategory, false, false)
+	devices := c.configureDevices(category, false, false)
 	for _, item := range devices {
 		fmt.Println()
 		fmt.Println(c.localizedString("Flow_SingleDevice_Config", localizeMap{}))
@@ -178,7 +190,7 @@ func (c *CmdConfigure) flowNewConfigFile() {
 
 	filename := DefaultConfigFilename
 
-	for ok := true; ok; {
+	for {
 		file, err := os.OpenFile(filename, os.O_WRONLY, 0666)
 		if errors.Is(err, os.ErrNotExist) {
 			break
@@ -196,10 +208,11 @@ func (c *CmdConfigure) flowNewConfigFile() {
 		filename = c.askValue(question{
 			label:        c.localizedString("File_NewFilename", nil),
 			exampleValue: "evcc_neu.yaml",
-			required:     true})
+			required:     true,
+		})
 	}
 
-	err = os.WriteFile(filename, yaml, 0755)
+	err = os.WriteFile(filename, yaml, 0o755)
 	if err != nil {
 		fmt.Printf("%s: ", c.localizedString("File_Error_SaveFailed", localizeMap{"FileName": filename}))
 		c.log.FATAL.Fatal(err)
@@ -232,7 +245,7 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askAdding
 		}
 	}
 
-	for ok := true; ok; {
+	for {
 		device, capabilities, err := c.configureDeviceCategory(deviceCategory)
 		if err != nil {
 			break
@@ -278,12 +291,13 @@ func (c *CmdConfigure) configureLoadpoints() {
 	fmt.Println()
 	fmt.Println(c.localizedString("Loadpoint_Setup", nil))
 
-	for ok := true; ok; {
+	for {
 
 		loadpointTitle := c.askValue(question{
 			label:        c.localizedString("Loadpoint_Title", nil),
 			defaultValue: c.localizedString("Loadpoint_DefaultTitle", nil),
-			required:     true})
+			required:     true,
+		})
 		loadpoint := loadpoint{
 			Title:      loadpointTitle,
 			Phases:     3,
@@ -308,13 +322,22 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		vehicles := c.configuration.DevicesOfClass(DeviceClassVehicle)
-		if len(vehicles) == 1 {
-			loadpoint.Vehicles = append(loadpoint.Vehicles, vehicles[0].Name)
-		} else if len(vehicles) > 1 {
-			for _, vehicle := range vehicles {
-				if c.askYesNo(c.localizedString("Loadpoint_VehicleChargeHere", localizeMap{"Vehicle": vehicle.Title})) {
-					loadpoint.Vehicles = append(loadpoint.Vehicles, vehicle.Name)
+		vehicles := c.configuration.DevicesOfClass(templates.Vehicle)
+		if len(vehicles) > 0 {
+			fmt.Println()
+			if c.askYesNo(c.localizedString("Loadpoint_VehicleDisableAutoDetection", nil)) {
+				if len(vehicles) == 1 {
+					loadpoint.Vehicle = vehicles[0].Name
+				} else {
+					fmt.Println()
+
+					var vehicleTitles []string
+					for _, vehicle := range vehicles {
+						vehicleTitles = append(vehicleTitles, vehicle.Title)
+					}
+
+					vehicleIndex, _ := c.askChoice(c.localizedString("Loadpoint_VehicleSelection", nil), vehicleTitles)
+					loadpoint.Vehicle = vehicles[vehicleIndex].Name
 				}
 			}
 		}
@@ -325,19 +348,22 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		if c.advancedMode {
+			fmt.Println()
 			minAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMinAmperage", nil),
 				valueType:      templates.ParamValueTypeNumber,
 				minNumberValue: int64(minValue),
 				maxNumberValue: 32,
-				required:       true})
+				required:       true,
+			})
 			loadpoint.MinCurrent, _ = strconv.Atoi(minAmperage)
 			maxAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMaxAmperage", nil),
 				valueType:      templates.ParamValueTypeNumber,
 				minNumberValue: 6,
 				maxNumberValue: 32,
-				required:       true})
+				required:       true,
+			})
 			loadpoint.MaxCurrent, _ = strconv.Atoi(maxAmperage)
 
 			if !chargerHasMeter {
@@ -378,7 +404,8 @@ func (c *CmdConfigure) configureLoadpoints() {
 					valueType:      templates.ParamValueTypeNumber,
 					minNumberValue: int64(minValue),
 					maxNumberValue: 32,
-					required:       true})
+					required:       true,
+				})
 				loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
 
 				if !chargerHasMeter {
@@ -415,6 +442,7 @@ func (c *CmdConfigure) configureSite() {
 	siteTitle := c.askValue(question{
 		label:        c.localizedString("Site_Title", nil),
 		defaultValue: c.localizedString("Site_DefaultTitle", nil),
-		required:     true})
+		required:     true,
+	})
 	c.configuration.config.Site.Title = siteTitle
 }

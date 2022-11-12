@@ -1,16 +1,16 @@
 <template>
-	<div class="d-block text-gray-light">{{ message }}&nbsp;</div>
+	<div class="d-block evcc-gray">{{ message }}&nbsp;</div>
 </template>
 
 <script>
-import collector from "../mixins/collector";
 import formatter from "../mixins/formatter";
 
 export default {
 	name: "VehicleStatus",
-	mixins: [collector, formatter],
+	mixins: [formatter],
 	props: {
 		vehicleSoC: Number,
+		vehicleTargetSoC: Number,
 		minSoC: Number,
 		enabled: Boolean,
 		connected: Boolean,
@@ -71,6 +71,9 @@ export default {
 			}
 
 			if (this.enabled && !this.charging) {
+				if (this.vehicleTargetSoC > 0 && this.vehicleSoC >= this.vehicleTargetSoC - 1) {
+					return t("vehicleTargetReached", { soc: this.vehicleTargetSoC });
+				}
 				return t("waitForVehicle");
 			}
 

@@ -1,0 +1,51 @@
+template: sungrow-inverter
+products:
+  - brand: Sungrow
+    description:
+      generic: SG Series Inverter
+requirements:
+  description:
+    de: Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.
+    en: Communication is either serial (RS485) or via TCP (WiNet-S-Dongle).
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+    allinone: true
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      type: input
+      address: 5082 # Meter power
+      decode: int32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5098 # Total import energy, 0.1 kWh
+      type: input
+      decode: uint32s
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5030 # Total Active Power
+      type: input
+      decode: uint32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5003 # Total power yields, 1 kWh
+      type: input
+      decode: uint32s
+  {{- end }}

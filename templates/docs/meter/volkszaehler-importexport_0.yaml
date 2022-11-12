@@ -8,7 +8,6 @@ render:
       type: template
       template: volkszaehler-importexport
       usage: grid
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 80 # Port # Optional
+      url: # Die URL ist zum Beispiel: http://zaehler.network.local:8080/api/data # Optional
       importuuid:
       exportuuid:

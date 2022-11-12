@@ -9,19 +9,27 @@ import (
 
 // Provider implements the evcc vehicle api
 type Provider struct {
-	chargerG func() (ChargerResponse, error)
-	action   func(action, value string) error
+	statusG   func() (StatusResponse, error)
+	chargerG  func() (ChargerResponse, error)
+	settingsG func() (SettingsResponse, error)
+	action    func(action, value string) error
 }
 
 // NewProvider provides the evcc vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
+		statusG: provider.Cached(func() (StatusResponse, error) {
+			return api.Status(vin)
+		}, cache),
 		chargerG: provider.Cached(func() (ChargerResponse, error) {
 			return api.Charger(vin)
 		}, cache),
 		// climateG: provider.Cached(func() (interface{}, error) {
 		// 	return api.Climater(vin)
 		// }, cache),
+		settingsG: provider.Cached(func() (SettingsResponse, error) {
+			return api.Settings(vin)
+		}, cache),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
 		},
@@ -52,7 +60,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		if res.Plug.ConnectionState == "Connected" {
 			status = api.StatusB
 		}
-		if res.Plug.ConnectionState == "Charging" {
+		if res.Charging.State == "Charging" {
 			status = api.StatusC
 		}
 	}
@@ -85,11 +93,15 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
-	if err == nil {
-		rng = res.Battery.CruisingRangeElectricInMeters / 1e3
-	}
+	return res.Battery.CruisingRangeElectricInMeters / 1e3, err
+}
 
-	return rng, err
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (odo float64, err error) {
+	res, err := v.statusG()
+	return res.Remote.MileageInKm, err
 }
 
 // var _ api.VehicleClimater = (*Provider)(nil)
@@ -112,6 +124,18 @@ func (v *Provider) Range() (rng int64, err error) {
 
 // 	return active, outsideTemp, targetTemp, err
 // }
+
+var _ api.SocLimiter = (*Provider)(nil)
+
+// TargetSoC implements the api.SocLimiter interface
+func (v *Provider) TargetSoC() (float64, error) {
+	res, err := v.settingsG()
+	if err == nil {
+		return float64(res.TargetStateOfChargeInPercent), nil
+	}
+
+	return 0, err
+}
 
 var _ api.VehicleChargeController = (*Provider)(nil)
 

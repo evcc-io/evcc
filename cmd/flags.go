@@ -4,9 +4,13 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
+	flagSqlite            = "sqlite"
+	flagSqliteDescription = "SQlite database file"
+
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
 
@@ -16,8 +20,12 @@ const (
 	flagCurrent            = "current"
 	flagCurrentDescription = "Set maximum current"
 
-	flagEnable  = "enable"
-	flagDisable = "disable"
+	flagPhases            = "phases"
+	flagPhasesDescription = "Set usable phases (1 or 3)"
+
+	flagEnable   = "enable"
+	flagDisable  = "disable"
+	flagDiagnose = "diagnose"
 
 	flagWakeup            = "wakeup"
 	flagWakeupDescription = "Wake up"
@@ -32,8 +40,20 @@ const (
 	flagDelay  = "delay"
 )
 
+func bind(cmd *cobra.Command, flag string) {
+	if err := viper.BindPFlag(flag, cmd.Flags().Lookup(flag)); err != nil {
+		panic(err)
+	}
+}
+
+func bindP(cmd *cobra.Command, flag string) {
+	if err := viper.BindPFlag(flag, cmd.PersistentFlags().Lookup(flag)); err != nil {
+		panic(err)
+	}
+}
+
 func selectByName(cmd *cobra.Command, conf *[]qualifiedConfig) error {
-	flag := cmd.PersistentFlags().Lookup(flagName)
+	flag := cmd.Flags().Lookup(flagName)
 	if !flag.Changed {
 		return nil
 	}

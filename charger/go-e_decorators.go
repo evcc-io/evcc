@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateGoE(base *GoE, meterEnergy func() (float64, error), chargePhases func(phases int) error) api.Charger {
+func decorateGoE(base *GoE, meterEnergy func() (float64, error), phaseSwitcher func(phases int) error) api.Charger {
 	switch {
-	case chargePhases == nil && meterEnergy == nil:
+	case phaseSwitcher == nil && meterEnergy == nil:
 		return base
 
-	case chargePhases == nil && meterEnergy != nil:
+	case phaseSwitcher == nil && meterEnergy != nil:
 		return &struct {
 			*GoE
 			api.MeterEnergy
@@ -22,26 +22,26 @@ func decorateGoE(base *GoE, meterEnergy func() (float64, error), chargePhases fu
 			},
 		}
 
-	case chargePhases != nil && meterEnergy == nil:
+	case phaseSwitcher != nil && meterEnergy == nil:
 		return &struct {
 			*GoE
-			api.ChargePhases
+			api.PhaseSwitcher
 		}{
 			GoE: base,
-			ChargePhases: &decorateGoEChargePhasesImpl{
-				chargePhases: chargePhases,
+			PhaseSwitcher: &decorateGoEPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case chargePhases != nil && meterEnergy != nil:
+	case phaseSwitcher != nil && meterEnergy != nil:
 		return &struct {
 			*GoE
-			api.ChargePhases
+			api.PhaseSwitcher
 			api.MeterEnergy
 		}{
 			GoE: base,
-			ChargePhases: &decorateGoEChargePhasesImpl{
-				chargePhases: chargePhases,
+			PhaseSwitcher: &decorateGoEPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 			MeterEnergy: &decorateGoEMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -52,12 +52,12 @@ func decorateGoE(base *GoE, meterEnergy func() (float64, error), chargePhases fu
 	return nil
 }
 
-type decorateGoEChargePhasesImpl struct {
-	chargePhases func(int) error
+type decorateGoEPhaseSwitcherImpl struct {
+	phaseSwitcher func(int) error
 }
 
-func (impl *decorateGoEChargePhasesImpl) Phases1p3p(phases int) error {
-	return impl.chargePhases(phases)
+func (impl *decorateGoEPhaseSwitcherImpl) Phases1p3p(phases int) error {
+	return impl.phaseSwitcher(phases)
 }
 
 type decorateGoEMeterEnergyImpl struct {

@@ -3,6 +3,7 @@ package util
 import (
 	"math"
 	"testing"
+	"time"
 )
 
 func TestTruish(t *testing.T) {
@@ -68,5 +69,33 @@ func TestReplaceNoMatch(t *testing.T) {
 
 	if err == nil {
 		t.Error(s, err)
+	}
+}
+
+func TestReplaceTemplate(t *testing.T) {
+	tc := []struct {
+		in, out, key string
+		val          any
+	}{
+		{`"{{ .mode }}"`, `"pv"`, "mode", "pv"},
+		{`{{ printf "%.1f" .chargedEnergy }}kW`, `1.2kW`, "chargedEnergy", 1.234},
+		{`{{ round .chargedEnergy 1 }}kW`, `1.2kW`, "chargedEnergy", 1.234},
+		{`{{ timeRound .connectedDuration "s" }}`, `1s`, "connectedDuration", 1234 * time.Millisecond},
+		{`{{ timeRound .connectedDuration "m" }}`, `21m0s`, "connectedDuration", 1234 * time.Second},
+	}
+
+	for _, tc := range tc {
+		s, err := ReplaceFormatted(tc.in, map[string]interface{}{
+			tc.key: tc.val,
+		})
+
+		t.Log(s)
+		if err != nil {
+			t.Error(s, err)
+		}
+
+		if s != tc.out {
+			t.Errorf("expected: %s, got: %s", tc.out, s)
+		}
 	}
 }

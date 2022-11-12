@@ -9,15 +9,22 @@ import (
 
 	"github.com/avast/retry-go/v3"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/core/coordinator"
+	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/push"
+	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/telemetry"
 )
+
+const standbyPower = 10 // consider less than 10W as charger in standby
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
-	Update(availablePower float64, cheapRate bool, batteryBuffered bool)
+	Update(availablePower float64, cheapRate, batteryBuffered bool)
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -44,9 +51,10 @@ type Site struct {
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
 
-	tariffs    tariff.Tariffs // Tariff
-	loadpoints []*LoadPoint   // Loadpoints
-	savings    *Savings       // Savings
+	tariffs     tariff.Tariffs           // Tariff
+	loadpoints  []*LoadPoint             // Loadpoints
+	coordinator *coordinator.Coordinator // Savings
+	savings     *Savings                 // Savings
 
 	// cached state
 	gridPower       float64 // Grid power
@@ -70,6 +78,7 @@ func NewSiteFromConfig(
 	cp configProvider,
 	other map[string]interface{},
 	loadpoints []*LoadPoint,
+	vehicles []api.Vehicle,
 	tariffs tariff.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
@@ -80,15 +89,52 @@ func NewSiteFromConfig(
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
+	site.coordinator = coordinator.New(log, vehicles)
 	site.savings = NewSavings(tariffs)
 
+	// migrate session log
+	if serverdb.Instance != nil {
+		var err error
+		// TODO deprecate
+		if table := "transactions"; serverdb.Instance.Migrator().HasTable(table) {
+			err = serverdb.Instance.Migrator().RenameTable(table, new(db.Session))
+		}
+		if err == nil {
+			err = serverdb.Instance.AutoMigrate(new(db.Session))
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// give loadpoints access to vehicles and database
+	for _, lp := range loadpoints {
+		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
+
+		if serverdb.Instance != nil {
+			var err error
+			if lp.db, err = db.New(lp.Title); err != nil {
+				return nil, err
+			}
+
+			// NOTE: this requires stopSession to respect async access
+			shutdown.Register(lp.stopSession)
+		}
+	}
+
 	if site.Meters.GridMeterRef != "" {
-		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
+		var err error
+		if site.gridMeter, err = cp.Meter(site.Meters.GridMeterRef); err != nil {
+			return nil, err
+		}
 	}
 
 	// multiple pv
 	for _, ref := range site.Meters.PVMetersRef {
-		pv := cp.Meter(ref)
+		pv, err := cp.Meter(ref)
+		if err != nil {
+			return nil, err
+		}
 		site.pvMeters = append(site.pvMeters, pv)
 	}
 
@@ -97,13 +143,19 @@ func NewSiteFromConfig(
 		if len(site.pvMeters) > 0 {
 			return nil, errors.New("cannot have pv and pvs both")
 		}
-		pv := cp.Meter(site.Meters.PVMeterRef)
+		pv, err := cp.Meter(site.Meters.PVMeterRef)
+		if err != nil {
+			return nil, err
+		}
 		site.pvMeters = append(site.pvMeters, pv)
 	}
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
-		battery := cp.Meter(ref)
+		battery, err := cp.Meter(ref)
+		if err != nil {
+			return nil, err
+		}
 		site.batteryMeters = append(site.batteryMeters, battery)
 	}
 
@@ -112,7 +164,10 @@ func NewSiteFromConfig(
 		if len(site.batteryMeters) > 0 {
 			return nil, errors.New("cannot have battery and batteries both")
 		}
-		battery := cp.Meter(site.Meters.BatteryMeterRef)
+		battery, err := cp.Meter(site.Meters.BatteryMeterRef)
+		if err != nil {
+			return nil, err
+		}
 		site.batteryMeters = append(site.batteryMeters, battery)
 	}
 
@@ -159,6 +214,15 @@ func meterCapabilities(name string, meter interface{}) string {
 
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
+	// verify vehicle detection
+	if vehicles := site.GetVehicles(); len(vehicles) > 1 {
+		for _, v := range vehicles {
+			if _, ok := v.(api.ChargeState); !ok {
+				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Title())
+			}
+		}
+	}
+
 	site.log.INFO.Println("site config:")
 	site.log.INFO.Printf("  meters:      grid %s pv %s battery %s",
 		presence[site.gridMeter != nil],
@@ -186,6 +250,21 @@ func (site *Site) DumpConfig() {
 		}
 	}
 
+	if vehicles := site.GetVehicles(); len(vehicles) > 0 {
+		site.log.INFO.Println("  vehicles:")
+
+		for i, v := range vehicles {
+			_, rng := v.(api.VehicleRange)
+			_, finish := v.(api.VehicleFinishTimer)
+			_, status := v.(api.ChargeState)
+			_, climate := v.(api.VehicleClimater)
+			_, wakeup := v.(api.Resurrector)
+			site.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s wakeup %s",
+				i+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
+			)
+		}
+	}
+
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
@@ -193,13 +272,15 @@ func (site *Site) DumpConfig() {
 		_, power := lp.charger.(api.Meter)
 		_, energy := lp.charger.(api.MeterEnergy)
 		_, currents := lp.charger.(api.MeterCurrent)
-		_, phases := lp.charger.(api.ChargePhases)
+		_, phases := lp.charger.(api.PhaseSwitcher)
+		_, wakeup := lp.charger.(api.Resurrector)
 
-		lp.log.INFO.Printf("  charger:     power %s energy %s currents %s phases %s",
+		lp.log.INFO.Printf("  charger:     power %s energy %s currents %s phases %s wakeup %s",
 			presence[power],
 			presence[energy],
 			presence[currents],
 			presence[phases],
+			presence[wakeup],
 		)
 
 		lp.log.INFO.Printf("  meters:      charge %s", presence[lp.HasChargeMeter()])
@@ -207,18 +288,6 @@ func (site *Site) DumpConfig() {
 		lp.publish("chargeConfigured", lp.HasChargeMeter())
 		if lp.HasChargeMeter() {
 			lp.log.INFO.Printf(meterCapabilities("charge", lp.chargeMeter))
-		}
-
-		lp.log.INFO.Printf("  vehicles:    %s", presence[len(lp.vehicles) > 0])
-
-		for i, v := range lp.vehicles {
-			_, rng := v.(api.VehicleRange)
-			_, finish := v.(api.VehicleFinishTimer)
-			_, status := v.(api.ChargeState)
-			_, climate := v.(api.VehicleClimater)
-			lp.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s",
-				i+1, presence[rng], presence[finish], presence[status], presence[climate],
-			)
 		}
 	}
 }
@@ -315,7 +384,7 @@ func (site *Site) updateMeters() error {
 			if err == nil {
 				site.batteryPower += power
 			} else {
-				site.log.ERROR.Println(fmt.Errorf("battery meter %d: %v", id, err))
+				site.log.ERROR.Printf("battery meter %d: %v", id, err)
 			}
 		}
 
@@ -332,7 +401,7 @@ func (site *Site) updateMeters() error {
 			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		} else {
-			site.log.ERROR.Println(fmt.Errorf("grid meter currents: %v", err))
+			site.log.ERROR.Printf("grid meter currents: %v", err)
 		}
 	}
 
@@ -361,6 +430,16 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 		site.gridPower = totalChargePower - site.pvPower
 	}
 
+	// allow using grid and charge as estimate for pv power
+	if site.pvMeters == nil {
+		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
+		if site.pvPower < 0 {
+			site.pvPower = 0
+		}
+		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
+		site.publish("pvPower", site.pvPower)
+	}
+
 	// honour battery priority
 	batteryPower := site.batteryPower
 
@@ -376,7 +455,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 				socs += soc / float64(len(site.batteryMeters))
 			}
 		}
-		site.publish("batterySoC", math.Trunc(socs))
+		site.publish("batterySoC", math.Round(socs))
 
 		site.Lock()
 		defer site.Unlock()
@@ -428,9 +507,12 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	// update savings
+	// update savings and aggregate telemetry
 	// TODO: use energy instead of current power for better results
-	site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	if telemetry.Enabled() && totalChargePower > standbyPower {
+		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
+	}
 }
 
 // prepare publishes initial values
@@ -440,10 +522,14 @@ func (site *Site) prepare() {
 	site.publish("gridConfigured", site.gridMeter != nil)
 	site.publish("pvConfigured", len(site.pvMeters) > 0)
 	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
+	site.publish("bufferSoC", site.BufferSoC)
 	site.publish("prioritySoC", site.PrioritySoC)
+	site.publish("residualPower", site.ResidualPower)
 
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since().Unix())
+
+	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
 }
 
 // Prepare attaches communication channels to site and loadpoints
@@ -472,9 +558,6 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 		}(id)
 
 		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
-
-		// add loadpoint number
-		lp.publish("loadpoint", id+1)
 	}
 }
 

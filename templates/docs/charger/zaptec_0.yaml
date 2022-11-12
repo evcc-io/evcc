@@ -1,0 +1,10 @@
+product:
+  brand: Zaptec
+  description: Go/Pro
+render:
+  - default: |
+      type: template
+      template: zaptec
+      id: # Wallbox ID # Optional
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional

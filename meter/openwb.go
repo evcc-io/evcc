@@ -82,7 +82,11 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil, errors.New("pv not available")
 		}
 
-		power = floatG(fmt.Sprintf("%s/pv/%s", cc.Topic, openwb.PowerTopic))
+		g := floatG(fmt.Sprintf("%s/pv/%s", cc.Topic, openwb.PowerTopic))
+		power = func() (float64, error) {
+			f, err := g()
+			return -f, err
+		}
 
 	case "battery":
 		configuredG := boolG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.BatteryConfigured))

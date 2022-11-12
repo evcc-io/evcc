@@ -10,6 +10,8 @@ import (
 )
 
 // https://github.com/d4v3y0rk/ffpass-module
+// https://github.com/ianjwhite99/connected-car-node-sdk
+// https://github.com/TA2k/ioBroker.ford
 
 // Ford is an api.Vehicle implementation for Ford cars
 type Ford struct {

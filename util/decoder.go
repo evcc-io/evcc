@@ -5,7 +5,7 @@ import (
 )
 
 // DecodeOther uses mapstructure to decode into target structure. Unused keys cause errors.
-func DecodeOther(other interface{}, cc interface{}) error {
+func DecodeOther(other, cc interface{}) error {
 	decoderConfig := &mapstructure.DecoderConfig{
 		Result:           cc,
 		ErrorUnused:      true,

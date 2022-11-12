@@ -35,7 +35,6 @@ params:
   - name: phases
     advanced: true
   - preset: vehicleidentify
-  - preset: vehiclecloud
 render: |
   type: tesla
   {{- if ne .title "" }}
@@ -52,4 +51,3 @@ render: |
   vin: {{ .vin }}
   {{- end }}
   {{ include "vehicle-identify" . }}
-  {{ include "vehicle-cloud" . }}

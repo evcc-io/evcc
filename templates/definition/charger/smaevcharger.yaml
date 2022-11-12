@@ -1,0 +1,24 @@
+template: smaevcharger
+products:
+  - brand: SMA
+    description:
+      generic: EV Charger
+capabilities: ["mA"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: Der EV Charger muss sich im Modus "Fast" befinden.
+    en: The charger must be switched to "Fast" charging mode.
+params:
+  - name: host
+    required: true
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+render: |
+  type: smaevcharger
+  uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}

@@ -6,23 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOpenWB(base *OpenWB, chargePhases func(int) error, battery func() (float64, error)) api.Charger {
+func decorateOpenWB(base *OpenWB, phaseSwitcher func(int) error, battery func() (float64, error)) api.Charger {
 	switch {
-	case battery == nil && chargePhases == nil:
+	case battery == nil && phaseSwitcher == nil:
 		return base
 
-	case battery == nil && chargePhases != nil:
+	case battery == nil && phaseSwitcher != nil:
 		return &struct {
 			*OpenWB
-			api.ChargePhases
+			api.PhaseSwitcher
 		}{
 			OpenWB: base,
-			ChargePhases: &decorateOpenWBChargePhasesImpl{
-				chargePhases: chargePhases,
+			PhaseSwitcher: &decorateOpenWBPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case battery != nil && chargePhases == nil:
+	case battery != nil && phaseSwitcher == nil:
 		return &struct {
 			*OpenWB
 			api.Battery
@@ -33,18 +33,18 @@ func decorateOpenWB(base *OpenWB, chargePhases func(int) error, battery func() (
 			},
 		}
 
-	case battery != nil && chargePhases != nil:
+	case battery != nil && phaseSwitcher != nil:
 		return &struct {
 			*OpenWB
 			api.Battery
-			api.ChargePhases
+			api.PhaseSwitcher
 		}{
 			OpenWB: base,
 			Battery: &decorateOpenWBBatteryImpl{
 				battery: battery,
 			},
-			ChargePhases: &decorateOpenWBChargePhasesImpl{
-				chargePhases: chargePhases,
+			PhaseSwitcher: &decorateOpenWBPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 		}
 	}
@@ -60,10 +60,10 @@ func (impl *decorateOpenWBBatteryImpl) SoC() (float64, error) {
 	return impl.battery()
 }
 
-type decorateOpenWBChargePhasesImpl struct {
-	chargePhases func(int) error
+type decorateOpenWBPhaseSwitcherImpl struct {
+	phaseSwitcher func(int) error
 }
 
-func (impl *decorateOpenWBChargePhasesImpl) Phases1p3p(phases int) error {
-	return impl.chargePhases(phases)
+func (impl *decorateOpenWBPhaseSwitcherImpl) Phases1p3p(phases int) error {
+	return impl.phaseSwitcher(phases)
 }

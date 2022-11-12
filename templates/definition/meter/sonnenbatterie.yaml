@@ -1,0 +1,32 @@
+template: sonnenbatterie
+covers: ["sonnenbatterie-eco10"]
+products:
+  - brand: Sonnen
+    description:
+      generic: sonnenBatterie
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: port
+    default: 8080
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/api/v1/status
+  {{- if eq .usage "grid" }}
+    jq: .GridFeedIn_W
+    scale: -1 # reverse direction
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    jq: .Production_W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    jq: .Pac_total_W
+  soc:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/api/v1/status
+    jq: .USOC
+  {{- end }}

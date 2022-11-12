@@ -3,7 +3,11 @@ products:
   - brand: cFos
     description:
       generic: PowerBrain
+capabilities: ["mA"]
 requirements:
+  description:
+    de: Der Zähler- falls vorhanden- muss separat als Ladezähler konfiguriert werden.
+    en: The meter- if present- must be configured separately as charge meter.
   evcc: ["sponsorship"]
 params:
   - name: host

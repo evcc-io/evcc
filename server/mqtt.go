@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -27,21 +28,26 @@ func NewMQTT(root string) *MQTT {
 }
 
 func (m *MQTT) encode(v interface{}) string {
-	var s string
+	// nil should erase the value
+	if v == nil {
+		return ""
+	}
+
 	switch val := v.(type) {
+	case string:
+		return val
+	case float64:
+		return fmt.Sprintf("%.5g", val)
 	case time.Time:
-		s = strconv.FormatInt(val.Unix(), 10)
+		return strconv.FormatInt(val.Unix(), 10)
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
-		s = fmt.Sprintf("%d", int64(val.Seconds()))
-	case fmt.Stringer, string:
-		s = fmt.Sprintf("%s", val)
-	case float64:
-		s = fmt.Sprintf("%.5g", val)
+		return fmt.Sprintf("%d", int64(val.Seconds()))
+	case fmt.Stringer:
+		return val.String()
 	default:
-		s = fmt.Sprintf("%v", val)
+		return fmt.Sprintf("%v", val)
 	}
-	return s
 }
 
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
@@ -62,36 +68,61 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 		payload = total
 	}
 
+	if slice, ok := payload.([]string); ok && strings.HasSuffix(topic, "vehicles") {
+		payload = len(slice)
+
+		// unpublish
+		for i := len(slice); i < 10; i++ {
+			slice = append(slice, "")
+		}
+
+		// publish vehicles
+		for i, v := range slice {
+			m.publishSingleValue(fmt.Sprintf("%s/%d", topic, i), retained, v)
+		}
+	}
+
 	m.publishSingleValue(topic, retained, payload)
 }
 
-func (m *MQTT) listenSetters(topic string, apiHandler loadpoint.API) {
+func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
-		apiHandler.SetMode(api.ChargeMode(payload))
+		lp.SetMode(api.ChargeMode(payload))
 	})
 	m.Handler.ListenSetter(topic+"/minSoC/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
-			apiHandler.SetMinSoC(soc)
+			lp.SetMinSoC(soc)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/targetSoC/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
-			apiHandler.SetTargetSoC(soc)
+			lp.SetTargetSoC(soc)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
 		if current, err := strconv.ParseFloat(payload, 64); err == nil {
-			apiHandler.SetMinCurrent(current)
+			lp.SetMinCurrent(current)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/maxCurrent/set", func(payload string) {
 		if current, err := strconv.ParseFloat(payload, 64); err == nil {
-			apiHandler.SetMaxCurrent(current)
+			lp.SetMaxCurrent(current)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/phases/set", func(payload string) {
 		if phases, err := strconv.Atoi(payload); err == nil {
-			_ = apiHandler.SetPhases(phases)
+			_ = lp.SetPhases(phases)
+		}
+	})
+	m.Handler.ListenSetter(topic+"/vehicle/set", func(payload string) {
+		if vehicle, err := strconv.Atoi(payload); err == nil {
+			if vehicle >= 0 {
+				if vehicles := site.GetVehicles(); vehicle < len(vehicles) {
+					lp.SetVehicle(vehicles[vehicle])
+				}
+			} else {
+				lp.SetVehicle(nil)
+			}
 		}
 	})
 }
@@ -109,6 +140,18 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 	})
 
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferSoC/set", m.root), func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
+			_ = site.SetBufferSoC(float64(soc))
+		}
+	})
+
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/residualPower/set", m.root), func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
+			_ = site.SetResidualPower(float64(soc))
+		}
+	})
+
 	// number of loadpoints
 	topic = fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))
@@ -116,20 +159,19 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	// loadpoint setters
 	for id, lp := range site.LoadPoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
-		m.listenSetters(topic, lp)
+		m.listenSetters(topic, site, lp)
 	}
 
-	// alive indicator
-	updated := time.Now().Unix()
-	m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
-
-	// remove deprecated topics
+	// TODO remove deprecated topics
 	for id := range site.LoadPoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
-		for _, dep := range []string{"range", "socCharge", "vehicleSoc"} {
+		for _, dep := range []string{"activePhases", "range", "socCharge", "vehicleSoc"} {
 			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, "")
 		}
 	}
+
+	// alive indicator
+	var updated time.Time
 
 	// publish
 	for p := range in {
@@ -140,9 +182,9 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 
 		// alive indicator
-		if now := time.Now().Unix(); now != updated {
-			updated = now
-			m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
+		if time.Since(updated) > time.Second {
+			updated = time.Now()
+			m.publish(fmt.Sprintf("%s/updated", m.root), true, updated.Unix())
 		}
 
 		// value

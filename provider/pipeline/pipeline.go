@@ -18,6 +18,7 @@ import (
 type Pipeline struct {
 	re     *regexp.Regexp
 	jq     *gojq.Query
+	dflt   string
 	unpack string
 	decode string
 	vm     *otto.Otto
@@ -25,12 +26,13 @@ type Pipeline struct {
 }
 
 type Settings struct {
-	Regex  string
-	Jq     string
-	Unpack string
-	Decode string
-	VM     string
-	Script string
+	Regex   string
+	Default string
+	Jq      string
+	Unpack  string
+	Decode  string
+	VM      string
+	Script  string
 }
 
 func New(cc Settings) (*Pipeline, error) {
@@ -38,7 +40,7 @@ func New(cc Settings) (*Pipeline, error) {
 
 	var err error
 	if err == nil && cc.Regex != "" {
-		_, err = p.WithRegex(cc.Regex)
+		_, err = p.WithRegex(cc.Regex, cc.Default)
 	}
 
 	if err == nil && cc.Jq != "" {
@@ -61,13 +63,14 @@ func New(cc Settings) (*Pipeline, error) {
 }
 
 // WithRegex adds a regex query applied to the mqtt listener payload
-func (p *Pipeline) WithRegex(regex string) (*Pipeline, error) {
+func (p *Pipeline) WithRegex(regex, dflt string) (*Pipeline, error) {
 	re, err := regexp.Compile(regex)
 	if err != nil {
 		return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
 	}
 
 	p.re = re
+	p.dflt = dflt
 
 	return p, nil
 }
@@ -113,7 +116,7 @@ func (p *Pipeline) transformXML(value []byte) []byte {
 	value = bytes.TrimSpace(value)
 
 	// only do a simple check, as some devices e.g. Kostal Piko MP plus don't seem to send proper XML
-	if !bytes.HasPrefix(value, []byte("<")) {
+	if !bytes.HasPrefix(value, []byte("<?xml")) {
 		return value
 	}
 
@@ -185,6 +188,8 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 			b = m[0] // full match
 		} else if len(m) > 1 {
 			b = m[1] // first submatch
+		} else if len(p.dflt) > 0 {
+			return []byte(p.dflt), nil
 		}
 	}
 

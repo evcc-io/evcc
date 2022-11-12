@@ -1,0 +1,17 @@
+template: zaptec
+products:
+  - brand: Zaptec
+    description:
+      generic: Go/Pro
+params:
+  - name: id
+    help:
+      de: Wallbox ID
+      en: Charger ID
+  - name: user
+  - name: password
+render: |
+  type: zaptec
+  id: {{ .id }}
+  user: {{ .user }}
+  password: '{{ .password }}'

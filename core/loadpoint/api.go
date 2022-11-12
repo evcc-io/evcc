@@ -15,8 +15,6 @@ type Controller interface {
 type API interface {
 	// Name returns the defined loadpoint name
 	Name() string
-	// HasChargeMeter determines if a physical charge meter is attached
-	HasChargeMeter() bool
 
 	//
 	// status
@@ -33,6 +31,10 @@ type API interface {
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
+	// GetTargetEnergy returns the charge target energy
+	GetTargetEnergy() int
+	// SetTargetEnergy sets the charge target energy
+	SetTargetEnergy(int)
 	// GetTargetSoC returns the charge target soc
 	GetTargetSoC() int
 	// SetTargetSoC sets the charge target soc
@@ -48,8 +50,6 @@ type API interface {
 
 	// SetTargetCharge sets the charge targetSoC
 	SetTargetCharge(time.Time, int)
-	// SetVehicle sets the active vehicle
-	SetVehicle(vehicle api.Vehicle)
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
 
@@ -57,6 +57,8 @@ type API interface {
 	// power and energy
 	//
 
+	// HasChargeMeter determines if a physical charge meter is attached
+	HasChargeMeter() bool
 	// GetChargePower returns the current charging power
 	GetChargePower() float64
 	// GetMinCurrent returns the min charging current
@@ -80,4 +82,13 @@ type API interface {
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in Wh
 	GetRemainingEnergy() float64
+
+	//
+	// vehicles
+	//
+
+	// SetVehicle sets the active vehicle
+	SetVehicle(vehicle api.Vehicle)
+	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
+	StartVehicleDetection()
 }

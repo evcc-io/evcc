@@ -7,9 +7,13 @@ group: generic
 params:
   - name: usage
     choice: ["grid"]
-  - name: host
-  - name: port
-    default: 80
+  - name: url
+    description:
+      de: URL des "data" Kontexts der Volkszähler Middleware (ohne / am Ende)
+      en: URL of the middleware's "data" context (without trailing /)
+    help:
+      de: "Die URL ist zum Beispiel: http://zaehler.network.local:8080/api/data"
+      en: "The URL is for example: http://zaehler.network.local:8080/api/data"
   - name: importuuid
     required: true
   - name: exportuuid
@@ -20,9 +24,17 @@ render: |
     source: calc # use calc plugin
     add:
     - source: http # import channel
+      {{- if .host }}
       uri: http://{{ .host }}:{{ .port }}/api/data/{{ .importuuid }}.json?from=now
+      {{ else }}
+      uri: {{ .url }}/{{ .importuuid }}.json?from=now
+      {{- end }}
       jq: .data.tuples[0][1] # parse response json
     - source: http # export channel
+      {{- if .host }}
       uri: http://{{ .host }}:{{ .port }}/api/data/{{ .exportuuid }}.json?from=now
+      {{ else }}
+      uri: {{ .url }}/{{ .exportuuid }}.json?from=now
+      {{- end }}
       jq: .data.tuples[0][1] # parse response json
       scale: -1 # export must result in negative values

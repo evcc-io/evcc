@@ -9,7 +9,7 @@ import (
 )
 
 var acceptable = []string{
-	"invalid plugin type: ...",
+	"invalid plugin source: ...",
 	"missing mqtt broker configuration",
 	"mqtt not configured",
 	"invalid charger type: nrgkick-bluetooth",
@@ -49,7 +49,7 @@ func TestTemplates(t *testing.T) {
 			} else {
 				values[templates.ModbusKeyRS485TCPIP] = true
 			}
-			values = tmpl.ModbusValues(templates.TemplateRenderModeInstance, true, values)
+			tmpl.ModbusValues(templates.TemplateRenderModeInstance, values)
 		}
 
 		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {
