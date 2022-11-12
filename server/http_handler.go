@@ -75,10 +75,7 @@ func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
 	w.Header().Set("Content-Disposition", `attachment; filename="sessions.csv"`)
 
 	if ww, ok := res.(api.CsvWriter); ok {
-		println(1)
-		if err := ww.WriteCsv(ctx, w); err != nil {
-			fmt.Println(err)
-		}
+		_ = ww.WriteCsv(ctx, w)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 	}

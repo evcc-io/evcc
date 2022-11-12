@@ -90,9 +90,9 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 		case float64:
 			switch format {
 			case "int":
-				val = mp.Sprintf(number.Decimal(v, number.MaxFractionDigits(0)))
+				val = mp.Sprint(number.Decimal(v, number.MaxFractionDigits(0)))
 			default:
-				val = mp.Sprintf(number.Decimal(v, number.MaxFractionDigits(3)))
+				val = mp.Sprint(number.Decimal(v, number.MaxFractionDigits(3)))
 			}
 		case time.Time:
 			if !v.IsZero() {
@@ -108,16 +108,6 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 	return ww.Write(row)
 }
 
-// func init() {
-// 	if err := locale.Init(); err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	if err := (*Sessions)(nil).WriteCsv(context.Background(), new(strings.Builder)); err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	os.Exit(1)
-// }
-
 // WriteCsv implements the api.CsvWriter interface
 func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
 	if _, err := w.Write([]byte{0xFE, 0xFF}); err != nil {
@@ -125,7 +115,7 @@ func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
 	}
 
 	lang := locale.Language
-	if loc, ok := ctx.Value(locale.Locale).(string); ok {
+	if loc, ok := ctx.Value(locale.Locale).(string); ok && loc != "" {
 		lang = loc
 	}
 
@@ -134,14 +124,16 @@ func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
 		return err
 	}
 
-	mp := message.NewPrinter(tag)
-	// mp.Println(number.Decimal(1.234, number.MaxFractionDigits(2)))
-
 	ww := csv.NewWriter(w)
+	if b, _ := tag.Base(); b.String() == language.German.String() {
+		ww.Comma = ';'
+	}
+
 	if err := t.writeHeader(ctx, ww); err != nil {
 		return err
 	}
 
+	mp := message.NewPrinter(tag)
 	for _, r := range *t {
 		if err := t.writeRow(ww, mp, r); err != nil {
 			return err
