@@ -1,5 +1,4 @@
 <script setup>
-import { reactive } from "vue";
 import BatteryIcon from "./BatteryIcon.vue";
 </script>
 

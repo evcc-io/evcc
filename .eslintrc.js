@@ -9,8 +9,8 @@ module.exports = {
     "plugin:vue/vue3-recommended",
     "plugin:prettier/recommended",
     "prettier",
-    "plugin:storybook/recommended",
   ],
+  parser: "vue-eslint-parser",
   rules: {
     "vue/require-default-prop": "off",
     "vue/attribute-hyphenation": "off",

@@ -30,7 +30,7 @@
     "@histoire/plugin-vue": "^0.11.6",
     "@vue/compiler-sfc": "^3.2.30",
     "babel-loader": "^8.2.3",
-    "eslint": "^8.21.0",
+    "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
@@ -44,6 +44,7 @@
     "prettier-plugin-toml": "^0.3.1",
     "vite": "^3.0.4",
     "vite-plugin-toml": "^0.4.0",
+    "vue-eslint-parser": "^9.1.0",
     "vue-loader": "^17.0.0"
   },
   "engines": {

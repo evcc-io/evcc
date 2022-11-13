@@ -2,14 +2,6 @@
 import { reactive } from "vue";
 import Footer from "./Footer.vue";
 
-const timeAgo = (hours = 0, minutes = 0, seconds = 0) => {
-	const date = new Date();
-	date.setHours(date.getHours() - hours);
-	date.setMinutes(date.getMinutes() - minutes);
-	date.setSeconds(date.getSeconds() - seconds);
-	return date;
-};
-
 const state = reactive({
 	version: {
 		installed: "0.401",

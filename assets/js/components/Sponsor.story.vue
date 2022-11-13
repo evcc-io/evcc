@@ -1,5 +1,4 @@
 <script setup>
-import { reactive } from "vue";
 import Sponsor from "./Sponsor.vue";
 </script>
 
