@@ -114,12 +114,13 @@ func upload(log *util.Logger, chargePower, greenPower float64) error {
 	req = req.WithContext(ctx)
 	defer cancel()
 
-	var res struct {
-		Error string
-	}
-
 	if err == nil {
 		client := request.NewHelper(log)
+
+		var res struct {
+			Error string
+		}
+
 		if err = client.DoJSON(req, &res); err == nil && res.Error != "" {
 			err = errors.New(res.Error)
 		}
