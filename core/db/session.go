@@ -114,11 +114,10 @@ func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
 		return err
 	}
 
+	// get context language
 	lang := locale.Language
-	if loc, ok := ctx.Value(locale.Locale).(string); ok && loc != "" {
-		if tags, _, err := language.ParseAcceptLanguage(loc); err == nil && len(tags) > 0 {
-			lang = tags[0].String()
-		}
+	if language, ok := ctx.Value(locale.Locale).(string); ok && language != "" {
+		lang = language
 	}
 
 	tag, err := language.Parse(lang)
@@ -127,6 +126,8 @@ func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
 	}
 
 	ww := csv.NewWriter(w)
+
+	// set separator according to locale
 	if b, _ := tag.Base(); b.String() == language.German.String() {
 		ww.Comma = ';'
 	}
