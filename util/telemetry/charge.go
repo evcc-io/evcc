@@ -1,9 +1,12 @@
 package telemetry
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
@@ -17,7 +20,13 @@ const (
 	enabledSetting = "telemetry"
 )
 
-var instanceID string
+var (
+	instanceID string
+
+	mu                              sync.Mutex
+	updated                         time.Time
+	accChargeEnergy, accGreenEnergy float64
+)
 
 func Enabled() bool {
 	enabled, _ := settings.Bool(enabledSetting)
@@ -47,16 +56,51 @@ func Create(machineID string) {
 	instanceID = machineID
 }
 
+// UpdateChargeProgress accumulates the charge delta and uploads at given interval.
+// This interval must be smaller that the apis expiry interval for treating power values as current.
 func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
-	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", deltaGreen*1e3, deltaCharged*1e3, power)
+	mu.Lock()
+	defer mu.Unlock()
+
+	// cache
+	accChargeEnergy += deltaCharged
+	accGreenEnergy += deltaGreen
+
+	if time.Since(updated) < 30*time.Second {
+		return
+	}
+
+	if err := upload(log, power, power*deltaGreen/deltaCharged); err != nil {
+		log.ERROR.Printf("telemetry: upload failed: %v", err)
+	}
+}
+
+// Persist uploads the accumulated data if necessary
+func Persist(log *util.Logger) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if accChargeEnergy+accGreenEnergy == 0 {
+		return
+	}
+
+	if err := upload(log, 0, 0); err != nil {
+		log.ERROR.Printf("telemetry: upload failed: %v", err)
+	}
+}
+
+// upload executes the actual upload.
+// Lock must be held when calling upload.
+func upload(log *util.Logger, chargePower, greenPower float64) error {
+	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", accGreenEnergy*1e3, accChargeEnergy*1e3, chargePower)
 
 	data := InstanceChargeProgress{
 		InstanceID: instanceID,
 		ChargeProgress: ChargeProgress{
-			ChargePower:  power,
-			GreenPower:   power * deltaGreen / deltaCharged,
-			ChargeEnergy: deltaCharged,
-			GreenEnergy:  deltaGreen,
+			ChargePower:  chargePower,
+			GreenPower:   greenPower,
+			ChargeEnergy: accChargeEnergy,
+			GreenEnergy:  accGreenEnergy,
 		},
 	}
 
@@ -65,18 +109,29 @@ func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen floa
 		"Authorization": "Bearer " + sponsor.Token,
 	})
 
-	var res struct {
-		Error string
-	}
+	// request timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	req = req.WithContext(ctx)
+	defer cancel()
 
 	if err == nil {
 		client := request.NewHelper(log)
+
+		var res struct {
+			Error string
+		}
+
 		if err = client.DoJSON(req, &res); err == nil && res.Error != "" {
 			err = errors.New(res.Error)
 		}
 	}
 
-	if err != nil {
-		log.ERROR.Printf("telemetry: charge: %v", err)
+	if err == nil {
+		updated = time.Now()
+
+		accChargeEnergy = 0
+		accGreenEnergy = 0
 	}
+
+	return err
 }
