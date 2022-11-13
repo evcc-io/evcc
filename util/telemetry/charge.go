@@ -127,6 +127,8 @@ func upload(log *util.Logger, chargePower, greenPower float64) error {
 	}
 
 	if err == nil {
+		updated = time.Now()
+
 		accChargeEnergy = 0
 		accGreenEnergy = 0
 	}
