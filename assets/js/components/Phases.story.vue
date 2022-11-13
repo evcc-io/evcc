@@ -12,7 +12,7 @@ const state = reactive({
 </script>
 
 <template>
-	<Story title="Phases" :layout="{ type: 'grid', width: 300 }">
+	<Story :layout="{ type: 'grid', width: 300 }">
 		<Variant title="one phase">
 			<Phases v-bind="state" />
 		</Variant>

@@ -24,7 +24,7 @@ const state = reactive({
 </script>
 
 <template>
-	<Story title="Loadpoint">
+	<Story>
 		<Variant title="standard">
 			<Loadpoint v-bind="state" />
 		</Variant>

@@ -8,7 +8,7 @@ const state = reactive({
 </script>
 
 <template>
-	<Story title="Mode" auto-props-disabled>
+	<Story auto-props-disabled>
 		<Variant title="standard">
 			<Mode :mode="state.mode" />
 			<template #controls>

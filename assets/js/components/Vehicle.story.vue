@@ -24,7 +24,7 @@ const hoursFromNow = function (hours) {
 </script>
 
 <template>
-	<Story title="Vehicle">
+	<Story>
 		<Variant title="disconnected">
 			<Vehicle v-bind="state" :connected="false" />
 		</Variant>

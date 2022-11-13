@@ -12,7 +12,7 @@ const releaseNotes =
 </script>
 
 <template>
-	<Story title="Version">
+	<Story :layout="{ type: 'grid', width: 600 }">
 		<Variant title="latest">
 			<Version v-bind="state" />
 		</Variant>
