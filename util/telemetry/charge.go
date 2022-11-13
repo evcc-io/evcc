@@ -1,9 +1,12 @@
 package telemetry
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
@@ -17,7 +20,13 @@ const (
 	enabledSetting = "telemetry"
 )
 
-var instanceID string
+var (
+	instanceID string
+
+	mu                              sync.Mutex
+	updated                         time.Time
+	accChargeEnergy, accGreenEnergy float64
+)
 
 func Enabled() bool {
 	enabled, _ := settings.Bool(enabledSetting)
@@ -47,16 +56,36 @@ func Create(machineID string) {
 	instanceID = machineID
 }
 
+// UpdateChargeProgress caches the charge delta an uploads at given interval
 func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
 	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", deltaGreen*1e3, deltaCharged*1e3, power)
 
+	mu.Lock()
+	defer mu.Unlock()
+
+	// cache
+	accChargeEnergy += deltaCharged
+	accGreenEnergy += deltaGreen
+
+	if time.Since(updated) < 30*time.Second {
+		return
+	}
+
+	if err := upload(log, power, power*deltaGreen/deltaCharged); err != nil {
+		log.ERROR.Printf("telemetry: charge: %v", err)
+	}
+}
+
+// upload executes the actual upload.
+// Lock must be held when calling upload.
+func upload(log *util.Logger, chargePower, greenPower float64) error {
 	data := InstanceChargeProgress{
 		InstanceID: instanceID,
 		ChargeProgress: ChargeProgress{
-			ChargePower:  power,
-			GreenPower:   power * deltaGreen / deltaCharged,
-			ChargeEnergy: deltaCharged,
-			GreenEnergy:  deltaGreen,
+			ChargePower:  chargePower,
+			GreenPower:   greenPower,
+			ChargeEnergy: accChargeEnergy,
+			GreenEnergy:  accGreenEnergy,
 		},
 	}
 
@@ -64,6 +93,11 @@ func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen floa
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
 		"Authorization": "Bearer " + sponsor.Token,
 	})
+
+	// request timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	req = req.WithContext(ctx)
+	defer cancel()
 
 	var res struct {
 		Error string
@@ -76,7 +110,10 @@ func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen floa
 		}
 	}
 
-	if err != nil {
-		log.ERROR.Printf("telemetry: charge: %v", err)
+	if err == nil {
+		accChargeEnergy = 0
+		accGreenEnergy = 0
 	}
+
+	return err
 }
