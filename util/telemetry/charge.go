@@ -56,7 +56,8 @@ func Create(machineID string) {
 	instanceID = machineID
 }
 
-// UpdateChargeProgress accumulates the charge delta and uploads at given interval
+// UpdateChargeProgress accumulates the charge delta and uploads at given interval.
+// This interval must be smaller that the apis expiry interval for treating power values as current.
 func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
 	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", deltaGreen*1e3, deltaCharged*1e3, power)
 
