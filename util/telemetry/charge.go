@@ -56,7 +56,7 @@ func Create(machineID string) {
 	instanceID = machineID
 }
 
-// UpdateChargeProgress caches the charge delta an uploads at given interval
+// UpdateChargeProgress accumulates the charge delta and uploads at given interval
 func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
 	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", deltaGreen*1e3, deltaCharged*1e3, power)
 
@@ -72,7 +72,21 @@ func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen floa
 	}
 
 	if err := upload(log, power, power*deltaGreen/deltaCharged); err != nil {
-		log.ERROR.Printf("telemetry: charge: %v", err)
+		log.ERROR.Printf("telemetry: upload failed: %v", err)
+	}
+}
+
+// Persist uploads the accumulated data if necessary
+func Persist(log *util.Logger) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if accChargeEnergy+accGreenEnergy == 0 {
+		return
+	}
+
+	if err := upload(log, 0, 0); err != nil {
+		log.ERROR.Printf("telemetry: upload failed: %v", err)
 	}
 }
 
