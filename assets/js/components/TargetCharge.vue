@@ -149,6 +149,7 @@ export default {
 		},
 		selectedTargetTimeValid: function () {
 			const now = new Date();
+			console.log(now, this.selectedTargetTime);
 			return now < this.selectedTargetTime;
 		},
 		selectedTargetTime: function () {
@@ -223,15 +224,12 @@ export default {
 				const dayName =
 					labels[i] || date.toLocaleDateString("default", { weekday: "long" });
 				options.push({
-					value: date.toISOString().split("T")[0],
+					value: this.fmtDayString(date),
 					name: `${dayNumber} (${dayName})`,
 				});
 				date.setDate(date.getDate() + 1);
 			}
 			return options;
-		},
-		minTime: function () {
-			return new Date().toISOString().split("T")[1].slice(0, -8);
 		},
 		setTargetTime: function () {
 			try {
