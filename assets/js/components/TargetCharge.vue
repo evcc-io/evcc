@@ -149,7 +149,6 @@ export default {
 		},
 		selectedTargetTimeValid: function () {
 			const now = new Date();
-			console.log(now, this.selectedTargetTime);
 			return now < this.selectedTargetTime;
 		},
 		selectedTargetTime: function () {
