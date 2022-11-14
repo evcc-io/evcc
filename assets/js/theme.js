@@ -40,10 +40,13 @@ function updateTheme() {
 
   // update iOS title bar color
   const themeColors = { light: "#f3f3f7", dark: "#020318" };
-  document.querySelector("meta[name=theme-color]").setAttribute("content", themeColors[theme]);
+  const $metaThemeColor = document.querySelector("meta[name=theme-color]");
+  if ($metaThemeColor) {
+    $metaThemeColor.setAttribute("content", themeColors[theme]);
+  }
 
   // toggle the class on html root
-  const $html = document.querySelector(":root");
+  const $html = document.querySelector("html");
   $html.classList.add("no-transitions");
   $html.classList.toggle("dark", theme === THEME_DARK);
   window.requestAnimationFrame(function () {
