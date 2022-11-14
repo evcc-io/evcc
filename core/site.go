@@ -107,6 +107,13 @@ func NewSiteFromConfig(
 		}
 	}
 
+	// upload telemetry on shutdown
+	if telemetry.Enabled() {
+		shutdown.Register(func() {
+			telemetry.Persist(log)
+		})
+	}
+
 	// give loadpoints access to vehicles and database
 	for _, lp := range loadpoints {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
