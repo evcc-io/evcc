@@ -113,7 +113,7 @@ type LoadPoint struct {
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
 	onDisconnect      api.ActionConfig
-	targetEnergy      int // Target charge energy for dumb vehicles
+	targetEnergy      float64 // Target charge energy for dumb vehicles
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
@@ -1725,7 +1725,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 		}
 
 	case lp.targetEnergyReached():
-		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %dkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)
+		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)
 		err = lp.disableUnlessClimater()
 
 	case lp.targetSocReached():

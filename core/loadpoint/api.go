@@ -32,9 +32,9 @@ type API interface {
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
 	// GetTargetEnergy returns the charge target energy
-	GetTargetEnergy() int
+	GetTargetEnergy() float64
 	// SetTargetEnergy sets the charge target energy
-	SetTargetEnergy(int)
+	SetTargetEnergy(float64)
 	// GetTargetSoC returns the charge target soc
 	GetTargetSoC() int
 	// SetTargetSoC sets the charge target soc
