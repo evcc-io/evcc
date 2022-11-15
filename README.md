@@ -37,7 +37,7 @@ evcc is an extensible EV Charge Controller with PV integration implemented in [G
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
 - granular charge power control down to mA steps with supported chargers (labeled by e.g. smartWB als [OLC](https://board.evse-wifi.de/viewtopic.php?f=16&t=187))
 - REST and MQTT [APIs](https://docs.evcc.io/docs/reference/api) for integration with home automation systems
-- HomeAssistant [add-on](https://github.com/evcc-io/evcc-hassio-addon)
+- Add-ons for [HomeAssistant](https://github.com/evcc-io/evcc-hassio-addon) and [OpenHAB](https://www.openhab.org/addons/bindings/evcc) (not maintained by the evcc core team)
 
 ## Getting Started
 
