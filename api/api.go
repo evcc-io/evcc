@@ -232,5 +232,5 @@ type FeatureDescriber interface {
 
 // CsvWriter converts to csv
 type CsvWriter interface {
-	WriteCsv(context.Context, io.Writer)
+	WriteCsv(context.Context, io.Writer) error
 }
