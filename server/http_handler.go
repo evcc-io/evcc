@@ -19,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/gorilla/mux"
+	"golang.org/x/text/language"
 )
 
 func indexHandler() http.HandlerFunc {
@@ -75,7 +76,7 @@ func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
 	w.Header().Set("Content-Disposition", `attachment; filename="sessions.csv"`)
 
 	if ww, ok := res.(api.CsvWriter); ok {
-		ww.WriteCsv(ctx, w)
+		_ = ww.WriteCsv(ctx, w)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -193,8 +194,13 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Query().Get("format") == "csv" {
-		accept := r.Header.Get("Accept-Language")
-		ctx := context.WithValue(context.Background(), locale.Locale, accept)
+		// get request language
+		lang := r.Header.Get("Accept-Language")
+		if tags, _, err := language.ParseAcceptLanguage(lang); err == nil && len(tags) > 0 {
+			lang = tags[0].String()
+		}
+
+		ctx := context.WithValue(context.Background(), locale.Locale, lang)
 		csvResult(ctx, w, &res)
 		return
 	}
