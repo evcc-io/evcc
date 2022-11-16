@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -33,10 +32,6 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 var cp = new(ConfigProvider)
 
