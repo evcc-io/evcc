@@ -140,6 +140,8 @@ func (t *Tibber) CurrentPower() (float64, error) {
 	return t.live.Power, nil
 }
 
+var _ api.MeterCurrent = (*Tibber)(nil)
+
 // Currents implements the api.MeterCurrent interface
 func (t *Tibber) Currents() (float64, float64, float64, error) {
 	t.mu.Lock()
