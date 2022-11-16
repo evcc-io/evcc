@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) 2019-2022 andig, premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -32,21 +32,21 @@ import (
 // https://github.com/RustyDust/sonnen-charger/blob/main/Etrel%20INCH%20SmartHome%20Modbus%20TCPRegisters.xlsx
 
 const (
-	// read
-	etrelRegChargeStatus = 0
-	etrelRegCurrents     = 14 // 16, 18
-	etrelRegPower        = 26
-	etrelRegSerial       = 990
-	etrelRegModel        = 1000
-	etrelRegHWVersion    = 1010
-	etrelRegSWVersion    = 1015
+	// input, read-only
+	etrelRegChargeStatus  = 0
+	etrelRegTargetCurrent = 4
+	etrelRegCurrents      = 14 // 16, 18
+	etrelRegPower         = 26
+	etrelRegSerial        = 990
+	etrelRegModel         = 1000
+	etrelRegHWVersion     = 1010
+	etrelRegSWVersion     = 1015
 	// etrelRegMaxPhaseCurrent  = 2
-	// etrelRegTargetCurrent    = 4 // power mgmt or modbus
 	// etrelRegSessionEnergy = 30
 	// etrelRegChargeTime       = 32
 	// etrelRegCustomMaxCurrent = 1028
 
-	// write
+	// holding, write-only!
 	etrelRegMaxCurrent = 8
 	// etrelRegStop       = 1
 	// etrelRegPause      = 2
@@ -133,7 +133,7 @@ func (wb *Etrel) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Etrel) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(etrelRegMaxCurrent, 2)
+	b, err := wb.conn.ReadInputRegisters(etrelRegTargetCurrent, 2)
 	if err != nil {
 		return false, err
 	}
