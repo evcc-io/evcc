@@ -34,7 +34,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	t := &Tibber{
-		log: util.NewLogger("pulse"),
+		log: util.NewLogger("pulse").Redact(cc.HomeID, cc.Token),
 	}
 
 	// TODO

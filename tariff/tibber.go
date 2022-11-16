@@ -28,13 +28,13 @@ type Tibber struct {
 var _ api.Tariff = (*Tibber)(nil)
 
 func NewTibber(other map[string]interface{}) (*Tibber, error) {
-	t := &Tibber{
-		log: util.NewLogger("tibber"),
-	}
+	t := &Tibber{}
 
 	if err := util.DecodeOther(other, &t); err != nil {
 		return nil, err
 	}
+
+	t.log = util.NewLogger("tibber").Redact(t.HomeID, t.Token)
 
 	ctx := context.WithValue(
 		context.Background(),
