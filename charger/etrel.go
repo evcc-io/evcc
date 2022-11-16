@@ -138,7 +138,7 @@ func (wb *Etrel) Enabled() (bool, error) {
 		return false, err
 	}
 	maxCurrent := encoding.Float32(b)
-	
+
 	currentPower, err := wb.CurrentPower()
 	if err != nil {
 		return false, err
