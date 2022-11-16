@@ -42,7 +42,7 @@ const (
 	etrelRegHWVersion     = 1010
 	etrelRegSWVersion     = 1015
 	// etrelRegMaxPhaseCurrent  = 2
-	// etrelRegSessionEnergy = 30
+	// etrelRegSessionEnergy    = 30
 	// etrelRegChargeTime       = 32
 	// etrelRegCustomMaxCurrent = 1028
 
