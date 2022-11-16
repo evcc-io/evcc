@@ -44,6 +44,7 @@ require (
 	github.com/gregdel/pushover v1.1.0
 	github.com/grid-x/modbus v0.0.0-20221109090852-6bf5f3bc63ea
 	github.com/hashicorp/go-version v1.6.0
+	github.com/hasura/go-graphql-client v0.8.1
 	github.com/imdario/mergo v0.3.13
 	github.com/influxdata/influxdb-client-go/v2 v2.12.0
 	github.com/itchyny/gojq v0.12.9
@@ -124,7 +125,6 @@ require (
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hasura/go-graphql-client v0.8.1 // indirect
 	github.com/huandu/xstrings v1.3.3 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
