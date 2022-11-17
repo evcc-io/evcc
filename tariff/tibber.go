@@ -28,13 +28,13 @@ type Tibber struct {
 var _ api.Tariff = (*Tibber)(nil)
 
 func NewTibber(other map[string]interface{}) (*Tibber, error) {
-	t := &Tibber{
-		log: util.NewLogger("tibber"),
-	}
+	t := &Tibber{}
 
 	if err := util.DecodeOther(other, &t); err != nil {
 		return nil, err
 	}
+
+	t.log = util.NewLogger("tibber").Redact(t.HomeID, t.Token)
 
 	ctx := context.WithValue(
 		context.Background(),
@@ -49,26 +49,33 @@ func NewTibber(other map[string]interface{}) (*Tibber, error) {
 	t.client = graphql.NewClient(tibber.URI, client)
 
 	if t.HomeID == "" {
-		var res struct {
-			Viewer struct {
-				Homes []tibber.Home
-			}
-		}
-
-		if err := t.client.Query(context.Background(), &res, nil); err != nil {
+		var err error
+		if t.HomeID, err = t.DefaultHomeID(); err != nil {
 			return nil, err
 		}
-
-		if len(res.Viewer.Homes) != 1 {
-			return nil, fmt.Errorf("could not determine home id: %v", res.Viewer.Homes)
-		}
-
-		t.HomeID = res.Viewer.Homes[0].ID
 	}
 
 	go t.Run()
 
 	return t, nil
+}
+
+func (t *Tibber) DefaultHomeID() (string, error) {
+	var res struct {
+		Viewer struct {
+			Homes []tibber.Home
+		}
+	}
+
+	if err := t.client.Query(context.Background(), &res, nil); err != nil {
+		return "", err
+	}
+
+	if len(res.Viewer.Homes) != 1 {
+		return "", fmt.Errorf("could not determine home id: %v", res.Viewer.Homes)
+	}
+
+	return res.Viewer.Homes[0].ID, nil
 }
 
 func (t *Tibber) Run() {
