@@ -90,9 +90,9 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 		case float64:
 			switch format {
 			case "int":
-				val = mp.Sprint(number.Decimal(v, number.MaxFractionDigits(0)))
+				val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(0)))
 			default:
-				val = mp.Sprint(number.Decimal(v, number.MaxFractionDigits(3)))
+				val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(3)))
 			}
 		case time.Time:
 			if !v.IsZero() {
