@@ -1,0 +1,11 @@
+product:
+  brand: Tibber
+  description: Pulse
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: tibber-pulse
+      usage: grid
+      token: 96a14971-525a-4420-aae9-e5aedaa129ff
+      homeid: 5K4MVS-OjfWhK_4yrjOlFe1F6kJXPVf7eQYggo8ebAE

@@ -1,0 +1,19 @@
+template: tibber-pulse
+products:
+  - brand: Tibber
+    description:
+      generic: Pulse
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: token
+    mask: true
+    required: true
+    example: 96a14971-525a-4420-aae9-e5aedaa129ff
+  - name: homeid
+    required: true
+    example: 5K4MVS-OjfWhK_4yrjOlFe1F6kJXPVf7eQYggo8ebAE
+render: |
+  type: tibber-pulse
+  token: {{ .token }}
+  homeid: {{ .homeid }}
