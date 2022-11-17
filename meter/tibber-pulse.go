@@ -86,12 +86,16 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	var once sync.Once
 	recv := make(chan struct{})
+	errC := make(chan error)
 
 	_, err := client.Subscribe(&query, map[string]any{
 		"homeId": graphql.ID(cc.HomeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
-			t.log.ERROR.Println(err)
+			select {
+			case errC <- err:
+			default:
+			}
 			return nil
 		}
 
@@ -122,6 +126,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		case <-recv:
 		case <-time.After(request.Timeout):
 			err = api.ErrTimeout
+		case err = <-errC:
 		}
 	}
 
