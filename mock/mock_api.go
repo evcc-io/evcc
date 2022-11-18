@@ -383,6 +383,14 @@ func (m *MockVehicle) Title() string {
 	return ret0
 }
 
+// Icon mocks base method.
+func (m *MockVehicle) Icon() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Icon")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
 // Title indicates an expected call of Title.
 func (mr *MockVehicleMockRecorder) Title() *gomock.Call {
 	mr.mock.ctrl.T.Helper()

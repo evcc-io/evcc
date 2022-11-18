@@ -96,6 +96,7 @@ export default {
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleTitle: String,
+		vehicleIcon: String,
 		vehicleCapacity: Number,
 		socBasedCharging: Boolean,
 		targetTimeActive: Boolean,

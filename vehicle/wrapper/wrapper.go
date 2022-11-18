@@ -27,6 +27,11 @@ func (v *Wrapper) Title() string {
 	return "unavailable"
 }
 
+// Icon implements the api.Vehicle interface
+func (v *Wrapper) Icon() string {
+	return ""
+}
+
 // Capacity implements the api.Vehicle interface
 func (v *Wrapper) Capacity() float64 {
 	return 0

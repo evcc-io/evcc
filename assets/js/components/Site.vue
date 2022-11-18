@@ -94,6 +94,9 @@ export default {
 		activeLoadpointsCount: function () {
 			return this.loadpoints.filter((lp) => lp.chargePower > 0).length;
 		},
+		vehicleIcon: function () {
+			return this.loadpoints.find((lp) => lp.chargePower > 0)?.vehicleIcon;
+		},
 		loadpointsPower: function () {
 			return this.loadpoints.reduce((sum, lp) => {
 				sum += lp.chargePower || 0;

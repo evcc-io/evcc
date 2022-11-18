@@ -164,6 +164,7 @@ type Authorizer interface {
 type Vehicle interface {
 	Battery
 	Title() string
+	Icon() string
 	Capacity() float64
 	Phases() int
 	Identifiers() []string
