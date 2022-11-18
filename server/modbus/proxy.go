@@ -24,7 +24,7 @@ func StartProxy(port int, config modbus.Settings, readOnly bool) error {
 	h := &handler{
 		log:            util.NewLogger(fmt.Sprintf("proxy-%d", port)),
 		readOnly:       readOnly,
-		RequestHandler: new(mbserver.DummyHandler),
+		RequestHandler: new(mbserver.DummyHandler), // supplies HandleDiscreteInputs
 		conn:           conn,
 	}
 
