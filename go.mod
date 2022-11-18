@@ -44,6 +44,7 @@ require (
 	github.com/gregdel/pushover v1.1.0
 	github.com/grid-x/modbus v0.0.0-20221109090852-6bf5f3bc63ea
 	github.com/hashicorp/go-version v1.6.0
+	github.com/hasura/go-graphql-client v0.8.1
 	github.com/imdario/mergo v0.3.13
 	github.com/influxdata/influxdb-client-go/v2 v2.12.0
 	github.com/itchyny/gojq v0.12.9
