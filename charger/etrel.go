@@ -187,7 +187,7 @@ func (wb *Etrel) ChargingTime() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(binary.BigEndian.Int64(b)) * time.Second, nil
+	return time.Duration(int64(binary.BigEndian.Uint64(b))) * time.Second, nil
 }
 
 var _ api.Meter = (*Etrel)(nil)
