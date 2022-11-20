@@ -36,7 +36,7 @@ params:
     default: 3
     valuetype: int
     required: true
-    advanced: true    
+    advanced: true
     description:
       en: Switch/Actor channel number (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2)
       de: Kanalnummer der schaltbaren Steckdose (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2)
