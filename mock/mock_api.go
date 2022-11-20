@@ -318,6 +318,20 @@ func (mr *MockVehicleMockRecorder) Capacity() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Capacity", reflect.TypeOf((*MockVehicle)(nil).Capacity))
 }
 
+// Icon mocks base method.
+func (m *MockVehicle) Icon() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Icon")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Icon indicates an expected call of Icon.
+func (mr *MockVehicleMockRecorder) Icon() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Icon", reflect.TypeOf((*MockVehicle)(nil).Icon))
+}
+
 // Identifiers mocks base method.
 func (m *MockVehicle) Identifiers() []string {
 	m.ctrl.T.Helper()
@@ -379,14 +393,6 @@ func (mr *MockVehicleMockRecorder) SoC() *gomock.Call {
 func (m *MockVehicle) Title() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Title")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// Icon mocks base method.
-func (m *MockVehicle) Icon() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Icon")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
