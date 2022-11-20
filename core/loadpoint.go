@@ -797,11 +797,10 @@ func (lp *LoadPoint) identifyVehicle() {
 	lp.setVehicleIdentifier(id)
 
 	if id != "" {
-		lp.stopVehicleDetection()
-
 		lp.log.DEBUG.Println("charger vehicle id:", id)
 
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
+			lp.stopVehicleDetection()
 			lp.setActiveVehicle(vehicle)
 		}
 	}

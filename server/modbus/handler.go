@@ -3,6 +3,7 @@ package modbus
 import (
 	"encoding/binary"
 	"errors"
+	"math/bits"
 
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/util"
@@ -33,33 +34,11 @@ func asBytes(u []uint16) []byte {
 	return b
 }
 
-func bytesAsBool(b []byte) []bool {
-	var res []bool
-	for _, c := range bytesAsUint16(b) {
-		if c != 0 {
-			res = append(res, true)
-			continue
-		}
-		res = append(res, false)
-	}
-	return res
-}
-
-func boolAsBytes(b []bool) []byte {
-	res := make([]byte, 2*len(b))
-	for i, bb := range b {
-		if bb {
-			binary.BigEndian.PutUint16(res[2*i:], 0xFF00)
-		}
-	}
-	return res
-}
-
 func (h *handler) logResult(op string, b []byte, err error) {
 	if err == nil {
-		h.log.TRACE.Printf(op+" response: %0x", b)
+		h.log.TRACE.Printf(op+": %0x", b)
 	} else {
-		h.log.TRACE.Printf(op+" response: %v", err)
+		h.log.TRACE.Printf(op+": %v", err)
 	}
 }
 
@@ -74,7 +53,27 @@ func (h *handler) exceptionToUint16AndError(op string, b []byte, err error) ([]u
 	return bytesAsUint16(b), err
 }
 
-func (h *handler) exceptionToBoolAndError(op string, b []byte, err error) ([]bool, error) {
+func coilsToBytes(b []bool) []byte {
+	l := len(b) / 8
+	if len(b)%8 != 0 {
+		l++
+	}
+
+	res := make([]byte, l)
+
+	for i, bb := range b {
+		if bb {
+			byteNum := i / 8
+			bit := i % 8
+
+			res[byteNum] |= bits.RotateLeft8(1, bit)
+		}
+	}
+
+	return res
+}
+
+func (h *handler) coilsToResult(op string, qty uint16, b []byte, err error) ([]bool, error) {
 	h.logResult(op, b, err)
 
 	var modbusError *gridx.Error
@@ -82,7 +81,20 @@ func (h *handler) exceptionToBoolAndError(op string, b []byte, err error) ([]boo
 		err = mbserver.MapExceptionCodeToError(modbusError.ExceptionCode)
 	}
 
-	return bytesAsBool(b), err
+	var res []bool
+
+LOOP:
+	for _, bb := range b {
+		for bit := 0; bit < 8; bit++ {
+			if len(res) >= int(qty) {
+				break LOOP
+			}
+
+			res = append(res, bits.RotateLeft8(bb, -bit)&1 != 0)
+		}
+	}
+
+	return res, err
 }
 
 func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
@@ -92,28 +104,29 @@ func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 		}
 
 		if req.Quantity == 1 {
-			h.log.TRACE.Printf("write coil: id: %d addr: %d val: %t", req.UnitId, req.Addr, req.Args[0])
+			h.log.TRACE.Printf("write coil: id %d addr %d val %t", req.UnitId, req.Addr, req.Args[0])
 			var u uint16
 			if req.Args[0] {
 				u = 0xFF00
 			}
 
 			b, err := h.conn.WriteSingleCoilWithSlave(req.UnitId, req.Addr, u)
-			return h.exceptionToBoolAndError("write coil", b, err)
+			return h.coilsToResult("write coil", req.Quantity, b, err)
 		}
 
-		h.log.TRACE.Printf("write multiple coils: id: %d addr: %d qty: %d val: %v", req.UnitId, req.Addr, req.Quantity, req.Args)
-		b, err := h.conn.WriteMultipleCoilsWithSlave(req.UnitId, req.Addr, req.Quantity, boolAsBytes(req.Args))
-		return h.exceptionToBoolAndError("write multiple coils", b, err)
+		h.log.TRACE.Printf("write multiple coils: id %d addr %d qty %d val %v", req.UnitId, req.Addr, req.Quantity, req.Args)
+		args := coilsToBytes(req.Args)
+		b, err := h.conn.WriteMultipleCoilsWithSlave(req.UnitId, req.Addr, req.Quantity, args)
+		return h.coilsToResult("write multiple coils", req.Quantity, b, err)
 	}
 
-	h.log.TRACE.Printf("read coil: id: %d addr: %d qty: %d", req.UnitId, req.Addr, req.Quantity)
+	h.log.TRACE.Printf("read coil: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
 	b, err := h.conn.ReadCoilsWithSlave(req.UnitId, req.Addr, req.Quantity)
-	return h.exceptionToBoolAndError("read coil", b, err)
+	return h.coilsToResult("read coil", req.Quantity, b, err)
 }
 
 func (h *handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) (res []uint16, err error) {
-	h.log.TRACE.Printf("read input: id: %d addr: %d qty: %d", req.UnitId, req.Addr, req.Quantity)
+	h.log.TRACE.Printf("read input: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
 	b, err := h.conn.ReadInputRegistersWithSlave(req.UnitId, req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read input", b, err)
 }
@@ -125,17 +138,17 @@ func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) 
 		}
 
 		if req.Quantity == 1 {
-			h.log.TRACE.Printf("write holding: id: %d addr: %d val: %0x", req.UnitId, req.Addr, req.Args[0])
+			h.log.TRACE.Printf("write holding: id %d addr %d val %0x", req.UnitId, req.Addr, req.Args[0])
 			b, err := h.conn.WriteSingleRegisterWithSlave(req.UnitId, req.Addr, req.Args[0])
 			return h.exceptionToUint16AndError("write holding", b, err)
 		}
 
-		h.log.TRACE.Printf("write multiple holding: id: %d addr: %d qty: %d val: %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
+		h.log.TRACE.Printf("write multiple holding: id %d addr %d qty %d val %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
 		b, err := h.conn.WriteMultipleRegistersWithSlave(req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
 		return h.exceptionToUint16AndError("write multiple holding", b, err)
 	}
 
-	h.log.TRACE.Printf("read holding: id: %d addr: %d qty: %d", req.UnitId, req.Addr, req.Quantity)
+	h.log.TRACE.Printf("read holding: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
 	b, err := h.conn.ReadHoldingRegistersWithSlave(req.UnitId, req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read holding", b, err)
 }

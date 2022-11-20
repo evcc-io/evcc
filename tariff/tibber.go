@@ -3,54 +3,50 @@ package tariff
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/tariff/tibber"
+	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/shurcooL/graphql"
-	"golang.org/x/oauth2"
 )
 
 type Tibber struct {
 	mux    sync.Mutex
 	log    *util.Logger
-	Token  string
-	HomeID string
-	Cheap  float64
-	client *graphql.Client
+	homeID string
+	cheap  float64
+	client *tibber.Client
 	data   []tibber.PriceInfo
 }
 
 var _ api.Tariff = (*Tibber)(nil)
 
 func NewTibber(other map[string]interface{}) (*Tibber, error) {
-	t := &Tibber{}
+	var cc struct {
+		Token  string
+		HomeID string
+		Cheap  float64
+	}
 
-	if err := util.DecodeOther(other, &t); err != nil {
+	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	t.log = util.NewLogger("tibber").Redact(t.HomeID, t.Token)
+	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)
 
-	ctx := context.WithValue(
-		context.Background(),
-		oauth2.HTTPClient,
-		request.NewHelper(t.log).Client,
-	)
+	t := &Tibber{
+		log:    log,
+		homeID: cc.HomeID,
+		cheap:  cc.Cheap,
+		client: tibber.NewClient(log, cc.Token),
+	}
 
-	client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{
-		AccessToken: t.Token,
-	}))
-
-	t.client = graphql.NewClient(tibber.URI, client)
-
-	if t.HomeID == "" {
+	if t.homeID == "" {
 		var err error
-		if t.HomeID, err = t.DefaultHomeID(); err != nil {
+		if t.homeID, err = t.client.DefaultHomeID(); err != nil {
 			return nil, err
 		}
 	}
@@ -58,24 +54,6 @@ func NewTibber(other map[string]interface{}) (*Tibber, error) {
 	go t.Run()
 
 	return t, nil
-}
-
-func (t *Tibber) DefaultHomeID() (string, error) {
-	var res struct {
-		Viewer struct {
-			Homes []tibber.Home
-		}
-	}
-
-	if err := t.client.Query(context.Background(), &res, nil); err != nil {
-		return "", err
-	}
-
-	if len(res.Viewer.Homes) != 1 {
-		return "", fmt.Errorf("could not determine home id: %v", res.Viewer.Homes)
-	}
-
-	return res.Viewer.Homes[0].ID, nil
 }
 
 func (t *Tibber) Run() {
@@ -91,10 +69,14 @@ func (t *Tibber) Run() {
 		}
 
 		v := map[string]interface{}{
-			"id": graphql.ID(t.HomeID),
+			"id": graphql.ID(t.homeID),
 		}
 
-		if err := t.client.Query(context.Background(), &res, v); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		err := t.client.Query(ctx, &res, v)
+		cancel()
+
+		if err != nil {
 			t.log.ERROR.Println(err)
 			continue
 		}
@@ -121,5 +103,5 @@ func (t *Tibber) CurrentPrice() (float64, error) {
 
 func (t *Tibber) IsCheap() (bool, error) {
 	price, err := t.CurrentPrice()
-	return price <= t.Cheap, err
+	return price <= t.cheap, err
 }
