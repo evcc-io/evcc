@@ -31,7 +31,7 @@ params:
       de: Kanalnummer des Power-Meters (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
     help:
       en: Homematic meter channel number like shown in the CCU web user interface.
-      de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.   
+      de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
   - name: switchchannel
     default: 3
     valuetype: int
