@@ -34,52 +34,54 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	t := &Tibber{
-		log: util.NewLogger("pulse").Redact(cc.HomeID, cc.Token),
+		log: util.NewLogger("pulse").Redact(cc.Token, cc.HomeID),
 	}
 
-	// TODO
-	// https://developer.tibber.com/docs/overview#breaking-websocket-change
-	// https://github.com/hasura/go-graphql-client/issues/38
+	if cc.HomeID == "" {
+		// query client
+		qclient := tibber.NewClient(t.log, cc.Token)
 
-	// ctx := context.WithValue(
-	// 	context.Background(),
-	// 	oauth2.HTTPClient,
-	// 	request.NewHelper(t.log).Client,
-	// )
+		var err error
+		if cc.HomeID, err = qclient.DefaultHomeID(); err != nil {
+			return nil, err
+		}
+	}
 
-	// client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{
-	// 	AccessToken: t.Token,
-	// }))
-
-	// urlClient := graphql.NewClient(tibber.URI, client)
-
+	// // get websocket uri
 	// var res struct {
 	// 	Viewer struct {
 	// 		WebsocketSubscriptionUrl string
 	// 	}
 	// }
 
-	// if err := urlClient.Query(context.Background(), &res, nil); err != nil {
-	// 	panic(err)
+	// ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	// defer cancel()
+
+	// if err := qclient.Query(ctx, &res, nil); err != nil {
+	// 	return nil, err
 	// }
 
-	// println(res.Viewer.WebsocketSubscriptionUrl)
-
+	// subscription client
 	client := graphql.NewSubscriptionClient(tibber.SubscriptionURI).
 		WithConnectionParams(map[string]any{
 			"token": cc.Token,
 		}).
 		WithLog(t.log.TRACE.Println)
 
-	// Run the client
+	// run the client
 	go func() {
 		if err := client.Run(); err != nil {
-			panic(err)
+			t.log.ERROR.Println(err)
 		}
-		println("running")
 	}()
 
-	// subscribe
+	err := t.subscribe(client, cc.HomeID)
+
+	return t, err
+}
+
+// subscribe to the websocket query
+func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) error {
 	var query struct {
 		tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
 	}
@@ -89,7 +91,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 	errC := make(chan error)
 
 	_, err := client.Subscribe(&query, map[string]any{
-		"homeId": graphql.ID(cc.HomeID),
+		"homeId": graphql.ID(homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
 			select {
@@ -130,7 +132,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		}
 	}
 
-	return t, err
+	return err
 }
 
 // CurrentPower implements the api.Meter interface
