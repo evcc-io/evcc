@@ -21,12 +21,23 @@ params:
   - name: password
     required: false
     mask: true
+  - name: meterchannel
+    default: 6
+    valuetype: int
+    required: true
+    advanced: true
+    description:
+      en: Meter channel number (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
+      de: Kanalnummer des Power-Meters (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
+    help:
+      en: Homematic meter channel number like shown in the CCU web user interface.
+      de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
 render: |
   type: homematic
   usage: {{ .usage }}
   uri: {{ .host }}:{{- if (eq .usage "grid")}}2001{{ else }}2010{{end}}
   device: {{ .device }}
-  meterchannel: {{ if (eq .usage "grid")}}1{{ else }}6{{end}}
+  meterchannel: {{ if (eq .usage "grid")}}1{{ else }}{{ .meterchannel }}{{end}}
   {{ if ne .user "" }}
   user: {{ .user }}
   {{ end }}
