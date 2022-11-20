@@ -25,10 +25,11 @@ func (u *watch) Send(key string, val interface{}) {
 		Key: key,
 		Val: val,
 	}
+	println("done send")
 }
 
 func (u *watch) watchReleases(installed string, out chan *github.RepositoryRelease) {
-	for range time.NewTicker(6 * time.Hour).C {
+	for ; ; <-time.NewTicker(6 * time.Hour).C {
 		rel, err := u.findReleaseUpdate(installed)
 		if err != nil {
 			u.log.ERROR.Printf("version check failed: %v", err)

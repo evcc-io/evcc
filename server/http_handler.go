@@ -173,7 +173,7 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State()
-		for _, k := range []string{"availableVersion", "releaseNotes"} {
+		for _, k := range []string{"releaseNotes"} {
 			delete(res, k)
 		}
 		jsonResult(w, res)
