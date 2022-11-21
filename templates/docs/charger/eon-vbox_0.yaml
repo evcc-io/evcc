@@ -1,6 +1,6 @@
 product:
   brand: E.ON Drive
-  description: vbox Smart/ vbox Pro
+  description: vBox Smart/Pro
 requirements: ["sponsorship"]
 description: |
   Firmware 2.77 für Modbus benötigt

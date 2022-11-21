@@ -2,7 +2,7 @@ template: eon-vbox
 products:
   - brand: E.ON Drive
     description:
-      generic: vbox Smart/ vbox Pro
+      generic: vBox Smart/Pro
 requirements:
   evcc: ["sponsorship"]
   description:
