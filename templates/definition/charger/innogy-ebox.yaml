@@ -3,6 +3,9 @@ products:
   - brand: Innogy
     description:
       generic: eBox
+  - brand: E.ON Drive
+    description:
+      generic: eBox
 capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]
