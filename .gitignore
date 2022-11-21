@@ -29,3 +29,4 @@ cmd/wip
 fly.toml
 .idea
 vendor/*
+QEMU_EFI.fd
