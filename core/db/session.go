@@ -19,10 +19,9 @@ import (
 
 // Session is a single charging session
 type Session struct {
-	ID            uint      `json:"-" csv:"-" gorm:"primarykey"`
-	Created       time.Time `json:"created"`
+	Created       time.Time `json:"created" gorm:"primarykey"`
+	Loadpoint     string    `json:"loadpoint" gorm:"primarykey"`
 	Finished      time.Time `json:"finished"`
-	Loadpoint     string    `json:"loadpoint"`
 	Identifier    string    `json:"identifier"`
 	Vehicle       string    `json:"vehicle"`
 	Odometer      float64   `json:"odometer" format:"int"`
