@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/modbus"
+	"github.com/evcc-io/evcc/server/tailscale"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
@@ -174,6 +175,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 				break
 			}
 		}
+	}
+
+	// setup tailscale
+	if cfg := conf.Tailscale; err == nil && cfg.Active() {
+		err = tailscale.Up(cfg.Host,cfg.AuthKey)
 	}
 
 	// setup site and loadpoints

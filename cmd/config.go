@@ -49,6 +49,7 @@ var conf = config{
 type config struct {
 	URI          interface{} // TODO deprecated
 	Network      networkConfig
+	Tailscale    tailscaleConfig
 	Log          string
 	SponsorToken string
 	Plant        string // telemetry plant id
@@ -130,6 +131,15 @@ func (c networkConfig) HostPort() string {
 
 func (c networkConfig) URI() string {
 	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
+}
+
+type tailscaleConfig struct {
+	Host    string
+	AuthKey string
+}
+
+func (c tailscaleConfig) Active() bool {
+	return c.Host != "" || c.AuthKey != ""
 }
 
 // ConfigProvider provides configuration items
