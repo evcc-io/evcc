@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 
 const NoState = "NoState"
 
-func Run(host, authKey string) (string, error) {
+func Run(host, authKey string, downstreamPort int) (string, error) {
 	logr := util.NewLogger("tailscale")
 	if host == "" {
 		host = "evcc"
@@ -69,12 +70,12 @@ func Run(host, authKey string) (string, error) {
 	// 	GetCertificate: lc.GetCertificate,
 	// })
 
-	go handle(ln)
+	go handle(ln, strconv.Itoa(downstreamPort))
 
 	return status.AuthURL, nil
 }
 
-func handle(ln net.Listener) {
+func handle(ln net.Listener, port string) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -85,7 +86,7 @@ func handle(ln net.Listener) {
 		go func(downstream net.Conn) {
 			defer downstream.Close()
 
-			upstream, err := net.Dial("tcp", ":7070")
+			upstream, err := net.Dial("tcp", ":"+port)
 			if err != nil {
 				return
 			}

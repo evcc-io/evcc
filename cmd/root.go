@@ -180,7 +180,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup tailscale
 	if cfg := conf.Tailscale; err == nil && cfg.Active() {
 		var authUrl string
-		authUrl, err = tailscale.Run(cfg.Host, cfg.AuthKey)
+		authUrl, err = tailscale.Run(cfg.Host, cfg.AuthKey, conf.Network.Port)
 		valueChan <- util.Param{Key: "tailscaleAuthUri", Val: authUrl}
 
 		if authUrl != "" {
