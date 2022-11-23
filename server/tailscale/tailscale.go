@@ -11,20 +11,16 @@ import (
 	"tailscale.com/tsnet"
 )
 
- func defStr(s string, dflt string) string {
-				if s == "" {
-					return dflt
-				}
-				return s
-			}
-
 func Up(host, authKey string) error {
+	if host == "" {
+		host = "evcc"
+	}
+
 	s := &tsnet.Server{
-		Hostname: defStr(host,"evcc"),
+		Hostname: host,
 		AuthKey:  authKey,
 		Logf:     util.NewLogger("tailscale").ERROR.Printf,
 	}
-	// defer s.Close()
 
 	ln, err := s.Listen("tcp", ":80")
 	if err != nil {
@@ -42,6 +38,27 @@ func Up(host, authKey string) error {
 	// 		GetCertificate: tailscale.GetCertificate,
 	// 	})
 	// }
+
+	// go func() {
+	// 	for {
+	// 		conn, err := ln.Accept()
+	// 		if err != nil {
+	// 			break
+	// 		}
+
+	// 		go func(client net.Conn) {
+	// 			defer client.Close()
+
+	// 			server, err := net.Dial("tcp", ":7070")
+	// 			if err != nil {
+	// 				return
+	// 			}
+
+	// 			_, _ = io.Copy(server, client)
+	// 			_, _ = io.Copy(client, server)
+	// 		}(conn)
+	// 	}
+	// }()
 
 	go func() {
 		log.Fatal(http.Serve(ln, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
