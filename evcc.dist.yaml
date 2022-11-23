@@ -37,6 +37,10 @@ levels:
   cache: error
   db: error
 
+tailscale:
+  # host: evcc # TailScale host name
+  # authKey: # TailScale authorization key
+
 # modbus proxy for allowing external programs to reuse the evcc modbus connection
 # each entry will start a proxy instance at the given port speaking Modbus TCP and
 # relaying to the given modbus downstream device (either TCP or RTU, RS485 or TCP)

@@ -182,6 +182,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 		var authUrl string
 		authUrl, err = tailscale.Run(cfg.Host, cfg.AuthKey)
 		valueChan <- util.Param{Key: "tailscaleAuthUri", Val: authUrl}
+
+		if authUrl != "" {
+			log.INFO.Println("authorize at:", authUrl)
+		}
 	}
 
 	// setup site and loadpoints
