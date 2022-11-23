@@ -7,15 +7,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"tailscale.com/ipn/ipnstate"
 	"tailscale.com/tsnet"
 )
 
 const NoState = "NoState"
 
-func Up(host, authKey string) error {
+func Run(host, authKey string) (string, error) {
 	logr := util.NewLogger("tailscale")
 	if host == "" {
 		host = "evcc"
@@ -28,26 +28,25 @@ func Up(host, authKey string) error {
 	}
 
 	if err := s.Start(); err != nil {
-		return err
+		return "", err
 	}
 
 	lc, err := s.LocalClient()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	connect := time.Now()
+	var status *ipnstate.Status
+	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	defer cancel()
+
 	for {
-		status, err := lc.Status(context.Background())
+		status, err = lc.Status(ctx)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		if status.BackendState == NoState {
-			if time.Since(connect) > request.Timeout {
-				return api.ErrTimeout
-			}
-
 			time.Sleep(10 * time.Millisecond)
 			continue
 		}
@@ -63,7 +62,7 @@ func Up(host, authKey string) error {
 
 	ln, err := s.Listen("tcp", ":80")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// ln = tls.NewListener(ln, &tls.Config{
@@ -72,7 +71,7 @@ func Up(host, authKey string) error {
 
 	go handle(ln)
 
-	return nil
+	return status.AuthURL, nil
 }
 
 func handle(ln net.Listener) {

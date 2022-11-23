@@ -179,7 +179,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup tailscale
 	if cfg := conf.Tailscale; err == nil && cfg.Active() {
-		err = tailscale.Up(cfg.Host,cfg.AuthKey)
+		var authUrl string
+		authUrl, err = tailscale.Run(cfg.Host, cfg.AuthKey)
+		valueChan <- util.Param{Key: "tailscaleAuthUri", Val: authUrl}
 	}
 
 	// setup site and loadpoints
