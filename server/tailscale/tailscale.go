@@ -93,19 +93,18 @@ func handle(ln net.Listener, port string) {
 			}
 			defer upstream.Close()
 
-			var wg sync.WaitGroup
+			wg := new(sync.WaitGroup)
 			wg.Add(2)
 
-			go func() {
-				_, _ = io.Copy(upstream, downstream)
-				wg.Done()
-			}()
-			go func() {
-				_, _ = io.Copy(downstream, upstream)
-				wg.Done()
-			}()
+			go copy(wg, upstream, downstream)
+			go copy(wg, downstream, upstream)
 
 			wg.Wait()
 		}(conn)
 	}
+}
+
+func copy(wg *sync.WaitGroup, from io.Reader, to io.Writer) {
+	_, _ = io.Copy(to, from)
+	wg.Done()
 }
