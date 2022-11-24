@@ -2,6 +2,7 @@ package tailscale
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"net"
 	"strconv"
@@ -57,18 +58,18 @@ func Run(host, authKey string, downstreamPort int) (string, error) {
 			net = "." + tn.MagicDNSSuffix
 		}
 
-		logr.INFO.Printf("url: http://%s ip: %v", s.Hostname+net, status.TailscaleIPs)
+		logr.INFO.Printf("url: https://%s ip: %v", s.Hostname+net, status.TailscaleIPs)
 		break
 	}
 
-	ln, err := s.Listen("tcp", ":80")
+	ln, err := s.Listen("tcp", ":443")
 	if err != nil {
 		return "", err
 	}
 
-	// ln = tls.NewListener(ln, &tls.Config{
-	// 	GetCertificate: lc.GetCertificate,
-	// })
+	ln = tls.NewListener(ln, &tls.Config{
+		GetCertificate: lc.GetCertificate,
+	})
 
 	go handle(ln, strconv.Itoa(downstreamPort))
 
