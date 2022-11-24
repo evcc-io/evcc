@@ -264,8 +264,8 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 		// HACK: setup watchdog for meter values if not happy with config
 		if meterInterval > 0 {
-			c.log.DEBUG.Println("enabling meter watchdog")
-			go cp.WatchDog(meterInterval)
+			c.log.DEBUG.Println("enabling metering controller")
+			go cp.MeteringWatchdog(meterInterval)
 		}
 	}
 
@@ -351,8 +351,12 @@ func (c *OCPP) Enable(enable bool) error {
 
 	c.log.TRACE.Printf("Enable(%v) called", enable)
 
-	if enable && !c.cp.HasTransaction() {
-		c.cp.InitializeNewTransaction()
+	if enable {
+		if !c.cp.HasTransaction() {
+			c.cp.InitTransaction()
+		} else {
+			return fmt.Errorf("concurrent transaction start attempt")
+		}
 
 		err = ocpp.Instance().RemoteStartTransaction(c.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
 			c.log.TRACE.Printf("%T: %+v", resp, resp)
@@ -362,19 +366,20 @@ func (c *OCPP) Enable(enable bool) error {
 			}
 
 			if err == nil {
-				c.cp.SetTransactionStatus(ocpp.RequestedStart)
+				c.cp.SetTransactionStatus(ocpp.TransactionStarting)
 
 				select {
 				case <- c.cp.CurrentTransaction().HasStatusChanged():
-					status := c.cp.GetTransactionStatus()
-					if status == ocpp.Running || status == ocpp.Suspended {
+					if status := c.cp.GetTransactionStatus(); status == ocpp.TransactionRunning || status == ocpp.TransactionSuspended {
 						break
 					}
 					err = fmt.Errorf("unable to start transaction")
 				case <- time.After(30*time.Second):
 				}
-			} else {
-				c.cp.DeinitializeTransaction()
+			}
+
+			if err != nil {
+				c.cp.FinishTransaction()
 			}
 
 			rc <- err
@@ -382,8 +387,7 @@ func (c *OCPP) Enable(enable bool) error {
 			request.ConnectorId = &c.connector
 			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
 		})
-	}
-	if !enable {
+	} else {
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
 			c.log.TRACE.Printf("%T: %+v", resp, resp)
 

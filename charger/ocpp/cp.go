@@ -2,8 +2,8 @@ package ocpp
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	// "strconv"
+	// "strings"
 	"sync"
 	"time"
 
@@ -33,57 +33,27 @@ const (
 	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
 )
 
-type TransactionState int
-
-const (
-	Undefined TransactionState = iota
-	RequestedStart
-	Running
-	Suspended
-	RequestedStop
-	Finished
-)
-
-type Transaction struct {
-	Id int
-	Status TransactionState
-	StatusChanged chan struct{}
-	StatusMutex sync.Mutex
-}
-
-func (trans *Transaction) HasStatusChanged() <-chan struct{} {
-	return trans.StatusChanged
-}
-
-// type CPDetails struct {
-// 	Manufacturer string
-// 	Model string
-// 	SerialNumber string
-//
-// 	FirmwareVersion string
-// 	Imsi string
-// 	Iccid string
-//
-// 	MeterModel string
-// 	MeterSerialNumber string
-// }
 
 type CP struct {
-	mu   sync.Mutex
-	log  *util.Logger
-	once sync.Once
+	mu      sync.Mutex
+	log     *util.Logger
+	once    sync.Once
 
 	id string
-	// Details CPDetails
+	details *core.BootNotificationRequest
 
-	connectC, bootC, statusC chan struct{}
-	updated           time.Time
+	updated time.Time
+	timeout time.Duration
+
+	connectC, bootC, statusC chan struct{} // signals
+
+	statusUpdated     time.Time
 	status            *core.StatusNotificationRequest
 
-	timeout      time.Duration
 	meterUpdated time.Time
 	measurements map[string]types.SampledValue
 
+	transactions map[int]*Transaction
 	currentTransaction *Transaction
 	lastTransactionId int
 }
@@ -142,7 +112,7 @@ func (cp *CP) Reset() <-chan error {
 		cp.log.TRACE.Printf("%T: %+v", request, request)
 
 		if request != nil && request.Status != core.ResetStatusAccepted{
-			cp.log.ERROR.Printf("chargepoint rejected reset request")
+			cp.log.ERROR.Printf("chargepoint rejected Reset request")
 		}
 
 		rc <- err
@@ -189,75 +159,56 @@ func (cp *CP) Initialized(timeout time.Duration) bool {
 	}
 }
 
-// WatchDog triggers meter values messages if older than timeout.
-// Must be wrapped in a goroutine.
-func (cp *CP) WatchDog(timeout time.Duration) {
-	for ; true; <-time.NewTicker(timeout).C {
-		cp.mu.Lock()
-		update := cp.currentTransaction != nil && time.Since(cp.meterUpdated) > timeout
-		cp.mu.Unlock()
-
-		if update {
-			Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
-		}
-	}
-}
-
 // transaction related methods
 
-func (cp *CP) InitializeNewTransaction() {
+func (cp *CP) InitTransaction() {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	cp.currentTransaction = new(Transaction)
-	cp.currentTransaction.Id = cp.lastTransactionId+1
-	cp.currentTransaction.StatusChanged = make(chan struct{})
-
+	cp.currentTransaction = NewTransaction(cp.lastTransactionId+1)
 	// save transaction Id for later
 	cp.lastTransactionId = cp.currentTransaction.Id
 }
 
 
-func (cp *CP) DeinitializeTransaction() {
+func (cp *CP) FinishTransaction() {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	cp.currentTransaction.Status = Finished
-	close(cp.currentTransaction.StatusChanged)
+	cp.currentTransaction.SetStatus(TransactionFinished)
 	cp.currentTransaction = nil
 }
 
 // TransactionID returns the current transaction id
 func (cp *CP) TransactionID() int {
-	cp.currentTransaction.StatusMutex.Lock()
-	defer cp.currentTransaction.StatusMutex.Unlock()
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 	return cp.currentTransaction.Id
 }
 
 func (cp *CP) CurrentTransaction() *Transaction {
-	cp.currentTransaction.StatusMutex.Lock()
-	defer cp.currentTransaction.StatusMutex.Unlock()
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 	return cp.currentTransaction
 }
 
 func (cp *CP) HasTransaction() bool {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 	return cp.currentTransaction != nil
 }
 
 func (cp *CP) SetTransactionStatus(status TransactionState) {
-	cp.currentTransaction.StatusMutex.Lock()
-	close(cp.currentTransaction.StatusChanged)
-
-	cp.currentTransaction.Status = status
-
-	cp.currentTransaction.StatusChanged = make(chan struct{})
-	cp.currentTransaction.StatusMutex.Unlock()
+	if cp.currentTransaction != nil {
+		cp.currentTransaction.SetStatus(status)
+	}
 }
 
 func (cp *CP) GetTransactionStatus() TransactionState{
-	cp.currentTransaction.StatusMutex.Lock()
-	defer cp.currentTransaction.StatusMutex.Unlock()
-	return cp.currentTransaction.Status
+	if cp.currentTransaction == nil {
+		return TransactionUndefined
+	}
+	return cp.currentTransaction.Status()
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {
@@ -266,7 +217,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	if time.Since(cp.updated) > cp.timeout {
+	if time.Since(cp.statusUpdated) > cp.timeout {
 		return res, api.ErrTimeout
 	}
 
@@ -293,87 +244,11 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", cp.status.Status)
 	}
 
+	// state correction based on ongoing transaction
+	if cp.currentTransaction == nil && cp.status.Status == core.ChargePointStatusPreparing {
+		res = api.StatusA
+	}
+
 	return res, nil
 }
 
-// metering APIs implementations
-
-var _ api.Meter = (*CP)(nil)
-
-func (cp *CP) CurrentPower() (float64, error) {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
-	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
-		return 0, api.ErrNotAvailable
-	}
-
-	if m, ok := cp.measurements[string(types.MeasurandPowerActiveImport)]; ok {
-		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit), err
-	}
-
-	return 0, api.ErrNotAvailable
-}
-
-var _ api.MeterEnergy = (*CP)(nil)
-
-func (cp *CP) TotalEnergy() (float64, error) {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
-	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
-		return 0, api.ErrNotAvailable
-	}
-
-	if m, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
-		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit) / 1e3, err
-	}
-
-	return 0, api.ErrNotAvailable
-}
-
-func scale(f float64, scale types.UnitOfMeasure) float64 {
-	switch {
-	case strings.HasPrefix(string(scale), "k"):
-		return f * 1e3
-	case strings.HasPrefix(string(scale), "m"):
-		return f / 1e3
-	default:
-		return f
-	}
-}
-
-func getKeyCurrentPhase(phase int) string {
-	return string(types.MeasurandCurrentImport) + "@L" + strconv.Itoa(phase)
-}
-
-var _ api.MeterCurrent = (*CP)(nil)
-
-func (cp *CP) Currents() (float64, float64, float64, error) {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
-	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-
-	currents := make([]float64, 0, 3)
-
-	for phase := 1; phase <= 3; phase++ {
-		m, ok := cp.measurements[getKeyCurrentPhase(phase)]
-		if !ok {
-			return 0, 0, 0, api.ErrNotAvailable
-		}
-
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
-		}
-
-		currents = append(currents, scale(f, m.Unit))
-	}
-
-	return currents[0], currents[1], currents[2], nil
-}
