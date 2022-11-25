@@ -6,6 +6,7 @@ group: generic
 params:
   - name: title
   - name: icon
+    default: car
     advanced: true
   - name: capacity
     valuetype: float

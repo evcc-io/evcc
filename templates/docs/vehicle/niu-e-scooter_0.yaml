@@ -11,6 +11,7 @@ render:
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       serial:
       capacity: 4 # Akku-Kapazität in kWh # Optional
+      icon: scooter # Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater # Optional
     advanced: |
       type: template
       template: niu-e-scooter
@@ -19,6 +20,7 @@ render:
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       serial:
       capacity: 4 # Akku-Kapazität in kWh # Optional
+      icon: scooter # Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater # Optional
       mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll # Optional
       minSoC: 25 # Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht # Optional
       targetSoC: 80 # Bis zu welchem Ladestand (SoC) soll das Fahrzeug geladen werden # Optional

@@ -18,11 +18,16 @@ params:
     required: true
   - name: capacity
     default: 4
+  - name: icon
+    default: scooter
   - preset: vehicleidentify
 render: |
   type: niu
   {{- if ne .title "" }}
   title: {{ .title }}
+  {{- end }}
+  {{- if ne .icon "" }}
+  icon: {{ .icon }}
   {{- end }}
   user: {{ .user }} # NIU app user
   password: {{ .password }} # NIU app password

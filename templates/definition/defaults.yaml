@@ -228,6 +228,9 @@ params:
     description:
       de: Icon
       en: Icon
+    help:
+      de: "Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater"
+      en: "Visible in UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater"
     validvalues:
       [
         "bike",
@@ -263,6 +266,7 @@ presets:
       - name: phases
         advanced: true
       - name: icon
+        default: car
         advanced: true
       - name: cache
         default: 15m
