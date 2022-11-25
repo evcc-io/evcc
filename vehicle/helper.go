@@ -3,6 +3,8 @@ package vehicle
 import (
 	"fmt"
 	"strings"
+
+	"github.com/samber/lo"
 )
 
 // ensureVehicle extracts VIN from list of VINs returned from `list` function
@@ -38,7 +40,9 @@ func ensureVehicleEx[Vehicle any](
 			return vehicles[0], nil
 		}
 
-		err = fmt.Errorf("cannot find vehicle, got: %v", vehicles)
+		err = fmt.Errorf("cannot find vehicle, got: %v", lo.Map(vehicles, func(v Vehicle, _ int) string {
+			return extract(v)
+		}))
 	}
 
 	return *new(Vehicle), err
