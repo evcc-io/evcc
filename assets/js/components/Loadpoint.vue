@@ -50,7 +50,7 @@
 					<LabelAndValue
 						:label="$t('main.loadpoint.power')"
 						:value="chargePower"
-						:valueFmt="fmtkWUnit"
+						:valueFmt="fmtPower"
 						class="mb-2"
 						align="start"
 					/>
@@ -69,7 +69,7 @@
 			<LabelAndValue
 				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
-				:value="fmtKWh(chargedEnergy)"
+				:value="fmtEnergy(chargedEnergy)"
 				align="center"
 			/>
 			<LabelAndValue
@@ -284,9 +284,13 @@ export default {
 		removeVehicle() {
 			api.delete(this.apiPath("vehicle"));
 		},
-		fmtkWUnit(value) {
+		fmtPower(value) {
 			const inKw = value == 0 || value >= 1000;
 			return this.fmtKw(value, inKw);
+		},
+		fmtEnergy(value) {
+			const inKw = value == 0 || value >= 1000;
+			return this.fmtKWh(value, inKw);
 		},
 	},
 };

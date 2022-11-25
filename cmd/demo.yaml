@@ -196,7 +196,7 @@ vehicles:
     type: template
     template: offline
     title: grüner Honda e
-    capacity: 26
+    capacity: 9
 
 site:
   title: Zuhause

@@ -64,14 +64,14 @@ func (lp *LoadPoint) setChargedEnergy(energy float64) {
 }
 
 // GetTargetEnergy returns loadpoint charge target energy
-func (lp *LoadPoint) GetTargetEnergy() int {
+func (lp *LoadPoint) GetTargetEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.SoC.target
+	return lp.targetEnergy
 }
 
 // setTargetEnergy sets loadpoint charge target energy (no mutex)
-func (lp *LoadPoint) setTargetEnergy(energy int) {
+func (lp *LoadPoint) setTargetEnergy(energy float64) {
 	lp.targetEnergy = energy
 	// TODO soctimer
 	// if lp.socTimer != nil {
@@ -81,7 +81,7 @@ func (lp *LoadPoint) setTargetEnergy(energy int) {
 }
 
 // SetTargetEnergy sets loadpoint charge target energy
-func (lp *LoadPoint) SetTargetEnergy(energy int) {
+func (lp *LoadPoint) SetTargetEnergy(energy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
