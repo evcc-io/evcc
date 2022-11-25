@@ -146,6 +146,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan := make(chan util.Param)
 	go tee.Run(valueChan)
 
+	// capture log messages for UI
+	util.CaptureLogs(valueChan)
+
 	// setup environment
 	if err == nil {
 		err = configureEnvironment(cmd, conf)
@@ -241,10 +244,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		// show and check version
 		valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
-		go updater.Run(log, httpd, tee, valueChan)
-
-		// capture log messages for UI
-		util.CaptureLogs(valueChan)
+		go updater.Run(log, httpd, valueChan)
 
 		// expose sponsor to UI
 		if sponsor.Subject != "" {

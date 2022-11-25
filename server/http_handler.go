@@ -22,6 +22,8 @@ import (
 	"golang.org/x/text/language"
 )
 
+var ignoreState = []string{"releaseNotes"} // excessive size
+
 func indexHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
@@ -173,7 +175,7 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State()
-		for _, k := range []string{"availableVersion", "releaseNotes"} {
+		for _, k := range ignoreState {
 			delete(res, k)
 		}
 		jsonResult(w, res)
