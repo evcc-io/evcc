@@ -230,7 +230,7 @@ params:
       en: Icon
     help:
       de: "Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater"
-      en: "Visible in UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater"
+      en: "Visible in UI. Possible values: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater"
     validvalues:
       [
         "bike",
