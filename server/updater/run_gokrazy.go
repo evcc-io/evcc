@@ -18,7 +18,7 @@ func Run(log *util.Logger, httpd webServer, outChan chan<- util.Param) {
 	u := &watch{
 		log:     log,
 		outChan: outChan,
-		repo:    NewRepo(server.Owner, server.Repository),
+		repo:    NewRepo(owner, repository),
 	}
 
 	httpd.Router().PathPrefix("/api/update").HandlerFunc(u.updateHandler)
