@@ -195,7 +195,7 @@ vehicles:
     type: template
     template: offline
     title: grüner Honda e
-    capacity: 26
+    capacity: 8
   - name: vehicle_4
     type: template
     template: offline
