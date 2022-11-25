@@ -5,6 +5,8 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"math/rand"
+	"time"
 
 	"github.com/evcc-io/evcc/cmd"
 	"github.com/evcc-io/evcc/server"
@@ -16,6 +18,8 @@ var assets embed.FS
 
 // init loads embedded assets unless live assets are already loaded
 func init() {
+	rand.Seed(time.Now().UnixNano())
+
 	if server.Assets == nil {
 		fsys, err := fs.Sub(assets, "dist")
 		if err != nil {

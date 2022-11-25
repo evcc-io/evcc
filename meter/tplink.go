@@ -6,7 +6,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// TP-Link meter implementation
 func init() {
 	registry.Add("tplink", NewTPLinkFromConfig)
 }

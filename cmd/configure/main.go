@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"golang.org/x/text/language"
 )
@@ -72,7 +73,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	fmt.Println()
 	fmt.Println(c.localizedString("Intro", nil))
 
-	if !c.advancedMode && category == "" {
+	if !c.advancedMode {
 		// ask the user for his knowledge, so advanced mode can also be turned on this way
 		fmt.Println()
 		flowIndex, _ := c.askChoice(c.localizedString("Flow_Mode", nil), []string{
@@ -97,7 +98,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 			}
 		}
 
-		panic("invalid category: " + category)
+		log.FATAL.Fatalln("invalid category:", category, "have:", maps.Keys(DeviceCategories))
 	}
 
 	fmt.Println()

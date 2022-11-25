@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) 2019-2022 andig, premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -21,6 +21,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -32,31 +33,27 @@ import (
 // https://github.com/RustyDust/sonnen-charger/blob/main/Etrel%20INCH%20SmartHome%20Modbus%20TCPRegisters.xlsx
 
 const (
-	// read
-	etrelRegChargeStatus = 0
-	etrelRegCurrents     = 14 // 16, 18
-	etrelRegPower        = 26
-	etrelRegSerial       = 990
-	etrelRegModel        = 1000
-	etrelRegHWVersion    = 1010
-	etrelRegSWVersion    = 1015
-	// etrelRegMaxPhaseCurrent  = 2
-	// etrelRegTargetCurrent    = 4 // power mgmt or modbus
-	// etrelRegSessionEnergy = 30
-	// etrelRegChargeTime       = 32
-	// etrelRegCustomMaxCurrent = 1028
+	// input, read-only
+	etrelRegChargeStatus  = 0
+	etrelRegTargetCurrent = 4
+	etrelRegCurrents      = 14 // 16, 18
+	etrelRegPower         = 26
+	etrelRegSessionEnergy = 30
+	etrelRegChargeTime    = 32
+	etrelRegSerial        = 990
+	etrelRegModel         = 1000
+	etrelRegHWVersion     = 1010
+	etrelRegSWVersion     = 1015
 
-	// write
+	// holding, write-only!
 	etrelRegMaxCurrent = 8
-	// etrelRegStop       = 1
-	// etrelRegPause      = 2
-	// etrelRegMaxPower   = 11
 )
 
 // Etrel is an api.Charger implementation for Etrel/Sonnen wallboxes
 type Etrel struct {
 	log     *util.Logger
 	conn    *modbus.Connection
+	base    uint16
 	current float32
 }
 
@@ -66,19 +63,25 @@ func init() {
 
 // NewEtrelFromConfig creates a Etrel charger from generic config
 func NewEtrelFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 1,
+	cc := struct {
+		Connector int
+		modbus.TcpSettings
+	}{
+		Connector: 1,
+		TcpSettings: modbus.TcpSettings{
+			ID: 1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEtrel(cc.URI, cc.ID)
+	return NewEtrel(cc.Connector, cc.URI, cc.ID)
 }
 
 // NewEtrel creates a Etrel charger
-func NewEtrel(uri string, id uint8) (*Etrel, error) {
+func NewEtrel(connector int, uri string, id uint8) (*Etrel, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -97,12 +100,16 @@ func NewEtrel(uri string, id uint8) (*Etrel, error) {
 		current: 6,
 	}
 
+	if connector == 2 {
+		wb.base = 100
+	}
+
 	return wb, nil
 }
 
 // Status implements the api.Charger interface
 func (wb *Etrel) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(etrelRegChargeStatus, 1)
+	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegChargeStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -133,7 +140,7 @@ func (wb *Etrel) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Etrel) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(etrelRegMaxCurrent, 2)
+	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegTargetCurrent, 2)
 	if err != nil {
 		return false, err
 	}
@@ -155,7 +162,7 @@ func (wb *Etrel) setCurrent(current float32) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, math.Float32bits(current))
 
-	_, err := wb.conn.WriteMultipleRegisters(etrelRegMaxCurrent, 2, b)
+	_, err := wb.conn.WriteMultipleRegisters(wb.base+etrelRegMaxCurrent, 2, b)
 	return err
 }
 
@@ -182,11 +189,23 @@ func (wb *Etrel) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+var _ api.ChargeTimer = (*Etrel)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
+func (wb *Etrel) ChargingTime() (time.Duration, error) {
+	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegChargeTime, 4)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(int64(binary.BigEndian.Uint64(b))) * time.Second, nil
+}
+
 var _ api.Meter = (*Etrel)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Etrel) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(etrelRegPower, 2)
+	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -194,19 +213,17 @@ func (wb *Etrel) CurrentPower() (float64, error) {
 	return float64(encoding.Float32(b) * 1e3), err
 }
 
-// var _ api.ChargeRater = (*Etrel)(nil)
+var _ api.ChargeRater = (*Etrel)(nil)
 
-// // ChargedEnergy implements the api.ChargeRater interface
-// func (wb *Etrel) ChargedEnergy() (float64, error) {
-// 	b, err := wb.conn.ReadInputRegisters(etrelRegSessionEnergy, 2)
-// 	if err != nil {
-// 		return 0, err
-// 	}
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *Etrel) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegSessionEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
 
-// 	fmt.Printf("%.5f", encoding.Float32(b))
-
-// 	return float64(encoding.Float32(b)), err
-// }
+	return float64(encoding.Float32(b)), err
+}
 
 var _ api.MeterCurrent = (*Etrel)(nil)
 

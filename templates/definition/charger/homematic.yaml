@@ -21,12 +21,34 @@ params:
   - name: password
     required: false
     mask: true
+  - name: meterchannel
+    default: 6
+    valuetype: int
+    required: true
+    advanced: true
+    description:
+      en: Meter channel number (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
+      de: Kanalnummer des Power-Meters (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
+    help:
+      en: Homematic meter channel number like shown in the CCU web user interface.
+      de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
+  - name: switchchannel
+    default: 3
+    valuetype: int
+    required: true
+    advanced: true
+    description:
+      en: Switch/Actor channel number (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2)
+      de: Kanalnummer der schaltbaren Steckdose (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2)
+    help:
+      en: Homematic switch actor channel number like shown in the CCU web user interface.
+      de: Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
 render: |
   type: homematic
   uri: {{ .host }}:2010
   device: {{ .device }}
-  meterchannel: 6
-  switchchannel: 3
+  meterchannel: {{ .meterchannel }}
+  switchchannel: {{ .switchchannel }}
   standbypower: {{ .standbypower }}
   {{ if ne .user "" }}
   user: {{ .user }}
