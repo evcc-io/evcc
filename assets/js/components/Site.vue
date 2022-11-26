@@ -98,7 +98,7 @@ export default {
 			return this.activeLoadpoints.length;
 		},
 		vehicleIcons: function () {
-			return this.activeLoadpoints.map((lp) => lp.vehicleIcon);
+			return this.activeLoadpoints.map((lp) => lp.vehicleIcon || "car");
 		},
 		loadpointsPower: function () {
 			return this.loadpoints.reduce((sum, lp) => {
