@@ -47,10 +47,10 @@ export default {
 			return [...new Set(this.names || [this.name])];
 		},
 		count: function () {
-			return this.uniqueNames.length;
+			return this.names.length;
 		},
 		single: function () {
-			return this.count == 1;
+			return this.uniqueNames.length == 1;
 		},
 		singleIcon: function () {
 			return icons[this.uniqueNames[0]] || `shopicon-regular-car3`;

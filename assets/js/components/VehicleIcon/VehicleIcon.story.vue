@@ -25,8 +25,8 @@ const icons = [
 		<Variant title="2 cars">
 			<VehicleIcon :names="['car', 'car']" size="xl" />
 		</Variant>
-		<Variant title="bike, cars">
-			<VehicleIcon :names="['bike', 'car']" size="xl" />
+		<Variant title="car & 3 bikes">
+			<VehicleIcon :names="['car', 'bike', 'bike', 'bike']" size="xl" />
 		</Variant>
 	</Story>
 </template>
