@@ -9,11 +9,11 @@ import (
 )
 
 // Run regularly checks version
-func Run(log *util.Logger, httpd webServer, tee util.TeeAttacher, outChan chan<- util.Param) {
+func Run(log *util.Logger, httpd webServer, outChan chan<- util.Param) {
 	u := &watch{
 		log:     log,
 		outChan: outChan,
-		repo:    NewRepo(server.Owner, server.Repository),
+		repo:    NewRepo(owner, repository),
 	}
 
 	c := make(chan *github.RepositoryRelease, 1)

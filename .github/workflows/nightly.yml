@@ -60,6 +60,7 @@ jobs:
           push: true
           tags: |
             andig/evcc:nightly
+            evcc/evcc:nightly
 
   apt:
     name: Publish APT nightly
