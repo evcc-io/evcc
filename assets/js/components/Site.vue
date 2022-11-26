@@ -91,11 +91,14 @@ export default {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
-		activeLoadpointsCount: function () {
-			return this.loadpoints.filter((lp) => lp.chargePower > 0).length;
+		activeLoadpoints: function () {
+			return this.loadpoints.filter((lp) => lp.chargePower > 0);
 		},
-		vehicleIcon: function () {
-			return this.loadpoints.find((lp) => lp.chargePower > 0)?.vehicleIcon;
+		activeLoadpointsCount: function () {
+			return this.activeLoadpoints.length;
+		},
+		vehicleIcons: function () {
+			return this.activeLoadpoints.map((lp) => lp.vehicleIcon);
 		},
 		loadpointsPower: function () {
 			return this.loadpoints.reduce((sum, lp) => {

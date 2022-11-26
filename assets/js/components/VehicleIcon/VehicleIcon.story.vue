@@ -22,5 +22,11 @@ const icons = [
 		<Variant v-for="icon in icons" :key="icon" :title="icon">
 			<VehicleIcon :name="icon" size="xl" />
 		</Variant>
+		<Variant title="2 cars">
+			<VehicleIcon :names="['car', 'car']" size="xl" />
+		</Variant>
+		<Variant title="bike, cars">
+			<VehicleIcon :names="['bike', 'car']" size="xl" />
+		</Variant>
 	</Story>
 </template>

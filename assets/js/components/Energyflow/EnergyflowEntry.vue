@@ -2,7 +2,7 @@
 	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'evcc-gray': !active }">
 		<span class="d-flex flex-nowrap">
 			<BatteryIcon v-if="isBattery" :soc="soc" />
-			<VehicleIcon v-else-if="isVehicle" :name="vehicleIcon" />
+			<VehicleIcon v-else-if="isVehicle" :names="vehicleIcons" />
 			<component :is="`shopicon-regular-${icon}`" v-else></component>
 		</span>
 		<span class="text-nowrap flex-grow-1 ms-3">{{ name }}</span>
@@ -32,7 +32,7 @@ export default {
 		power: { type: Number },
 		soc: { type: Number },
 		valuesInKw: { type: Boolean },
-		vehicleIcon: { type: String },
+		vehicleIcons: { type: Array },
 	},
 	computed: {
 		active: function () {

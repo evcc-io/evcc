@@ -61,7 +61,7 @@
 					<shopicon-regular-home></shopicon-regular-home>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
-					<VehicleIcon :name="vehicleIcon" />
+					<VehicleIcon :names="vehicleIcons" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
 					<BatteryIcon :soc="batterySoC" />
@@ -99,7 +99,7 @@ export default {
 		homePower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
 		valuesInKw: { type: Boolean, default: false },
-		vehicleIcon: { type: String },
+		vehicleIcons: { type: Array },
 	},
 	data: function () {
 		return { width: 0, visualizationReady: false };

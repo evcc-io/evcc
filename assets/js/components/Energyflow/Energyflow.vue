@@ -17,7 +17,7 @@
 				:homePower="homePower"
 				:batterySoC="batterySoC"
 				:valuesInKw="valuesInKw"
-				:vehicleIcon="vehicleIcon"
+				:vehicleIcons="vehicleIcons"
 			/>
 		</div>
 		<div class="details" :style="{ height: detailsHeight }">
@@ -97,7 +97,7 @@
 								})
 							"
 							icon="vehicle"
-							:vehicleIcon="vehicleIcon"
+							:vehicleIcons="vehicleIcons"
 							:power="loadpointsPower"
 							:valuesInKw="valuesInKw"
 						/>
@@ -144,7 +144,7 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
-		vehicleIcon: { type: String },
+		vehicleIcons: { type: Array },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null };

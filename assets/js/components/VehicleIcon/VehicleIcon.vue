@@ -1,9 +1,11 @@
 <template>
-	<component :is="icon" :class="`icon icon--${size}`"></component>
+	<component :is="singleIcon" v-if="single" :class="`icon icon--${size}`"></component>
+	<MultiIcon v-else :count="count" :size="size"></MultiIcon>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/regular/car3";
+import MultiIcon from "../MultiIcon";
 
 import bike from "./Bike.vue";
 import bus from "./Bus.vue";
@@ -34,13 +36,24 @@ const icons = {
 
 export default {
 	name: "VehicleIcon",
+	components: { MultiIcon },
 	props: {
 		name: { type: String, default: "car" },
+		names: { type: Array },
 		size: { type: String, default: "s" },
 	},
 	computed: {
-		icon: function () {
-			return icons[this.name] || `shopicon-regular-car3`;
+		uniqueNames: function () {
+			return [...new Set(this.names || [this.name])];
+		},
+		count: function () {
+			return this.uniqueNames.length;
+		},
+		single: function () {
+			return this.count == 1;
+		},
+		singleIcon: function () {
+			return icons[this.uniqueNames[0]] || `shopicon-regular-car3`;
 		},
 	},
 };
