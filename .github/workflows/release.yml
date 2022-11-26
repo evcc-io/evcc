@@ -30,6 +30,14 @@ jobs:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            andig/evcc
+            evcc/evcc
+
       - name: Publish
         uses: docker/build-push-action@v3
         with:
@@ -37,9 +45,7 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
           build-args: RELEASE=1
-          tags: |
-            andig/evcc:latest
-            evcc/evcc:latest
+          tags: ${{ steps.meta.outputs.tags }}
 
   apt:
     name: Github & APT
