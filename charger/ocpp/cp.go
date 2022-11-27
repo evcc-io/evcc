@@ -152,7 +152,6 @@ func (cp *CP) Initialized(timeout time.Duration) bool {
 	// wait for status
 	select {
 	case <-cp.statusC:
-		cp.update()
 		return true
 	case <-time.After(timeout):
 		return false
@@ -209,6 +208,19 @@ func (cp *CP) GetTransactionStatus() TransactionState{
 		return TransactionUndefined
 	}
 	return cp.currentTransaction.Status()
+}
+
+func (cp *CP) Enabled() (bool, error) {
+	if !cp.HasTransaction() {
+		return false, nil
+	}
+
+	switch cp.GetTransactionStatus() {
+	case TransactionStarting, TransactionRunning, TransactionSuspended:
+		return true, nil
+	default:
+		return false, nil
+	}
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {

@@ -124,7 +124,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		timeout:   timeout,
 	}
 
-	c.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
+	c.log.DEBUG.Printf("waiting for chargepoint connection: %v", timeout)
 
 	// wait for connection
 	select {
@@ -341,7 +341,7 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
 	c.log.TRACE.Printf("Enabled() called")
-	return (c.cp.HasTransaction() && c.cp.TransactionID() > 0), nil
+	return c.cp.Enabled()
 }
 
 // Enable implements the api.Charger interface

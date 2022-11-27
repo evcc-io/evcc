@@ -42,12 +42,6 @@ func (cp *CP) isStatusTimestampValid(t time.Time) bool {
 	return !t.Before(cp.status.Timestamp.Time)
 }
 
-func (cp *CP) update() {
-	cp.mu.Lock()
-	cp.updated = time.Now()
-	cp.mu.Unlock()
-}
-
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
@@ -96,7 +90,6 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
-
 	cp.updated = time.Now()
 
 	res := &core.HeartbeatConfirmation{
@@ -126,8 +119,11 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 
 	// properly filling in transaction Id
 	if (cp.currentTransaction == nil) {
-		res.TransactionId = cp.lastTransactionId+1
-		cp.lastTransactionId = res.TransactionId
+		// res.TransactionId = cp.lastTransactionId+1
+		// cp.lastTransactionId = res.TransactionId
+		cp.currentTransaction = NewTransaction(cp.lastTransactionId+1)
+		cp.lastTransactionId = cp.currentTransaction.Id
+		cp.SetTransactionStatus(TransactionStarting)
 	} else	{
 		res.TransactionId = cp.currentTransaction.Id
 		// no need to save lastTransactionId because NewTransaction always does that
@@ -137,9 +133,9 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 	if (time.Since(request.Timestamp.Time) < transactionExpiry) || // too old transaction request
 	(cp.currentTransaction != nil && cp.currentTransaction.Status() != TransactionStarting) { // we didnt start this transaction, invalidate it
 		cp.log.DEBUG.Printf("start transaction: defering transaction stop request and hope for the best")
-		defer Instance().RemoteStopTransaction(cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
-				cp.log.TRACE.Printf("%T: %+v", resp, resp)
-			}, res.TransactionId)
+		// defer Instance().RemoteStopTransaction(cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
+		// 		cp.log.TRACE.Printf("%T: %+v", resp, resp)
+		// 	}, res.TransactionId)
 	}
 
 	return res, nil
@@ -153,10 +149,11 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 
 	// signal that transaction has ended
 	if cp.currentTransaction != nil {
-		if status := cp.currentTransaction.Status(); status != TransactionRunning || status != TransactionSuspended {
-			cp.log.ERROR.Printf("stop transaction: stopping not started transaction")
+		if status := cp.currentTransaction.Status(); status == TransactionRunning || status == TransactionSuspended {
+			cp.log.ERROR.Printf("stop transaction: stopping running transaction not due to request")
 		}
 
+		// TODO: find and close correct transaction
 		// log mismatching id because we close transaction anyway
 		if request.TransactionId != cp.currentTransaction.Id {
 			cp.log.ERROR.Printf("stop transaction: mismatched id %d expected %d", request.TransactionId, cp.currentTransaction.Id)
