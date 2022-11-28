@@ -3,11 +3,10 @@ package javascript
 import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
-	_ "github.com/robertkrimen/otto/underscore"
 )
 
-// Configure initializes JS VMs
-func Configure(other map[string]interface{}) error {
+// configure initializes JS VMs
+func configure(other map[string]interface{}) error {
 	cc := []struct {
 		VM     string
 		Script string
@@ -36,22 +35,4 @@ func Configure(other map[string]interface{}) error {
 	}
 
 	return nil
-}
-
-var registry = make(map[string]*otto.Otto)
-
-// RegisteredVM returns a JS VM. If name is not empty, it will return a shared instance.
-func RegisteredVM(name string) *otto.Otto {
-	vm, ok := registry[name]
-
-	// create new VM
-	if !ok {
-		vm = otto.New()
-
-		if name != "" {
-			registry[name] = vm
-		}
-	}
-
-	return vm
 }
