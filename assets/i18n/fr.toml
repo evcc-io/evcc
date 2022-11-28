@@ -186,7 +186,7 @@ noLimit = "Non"
 
 [startupError]
 title = "Erreur au démarrage"
-description = ""Veuillez vérifier votre fichier de configuration. Si le message d'erreur ne vous aide pas, consultez notre {0}."
+description = "Veuillez vérifier votre fichier de configuration. Si le message d'erreur ne vous aide pas, consultez notre {0}."
 discussions = "GitHub Discussions"
 hint = "Remarque : Une autre raison pour laquelle vous voyez ce message pourrait être un appareil défectueux (onduleur, compteur, ...). Vérifiez vos connexions réseau."
 configuration = "Configuration"
