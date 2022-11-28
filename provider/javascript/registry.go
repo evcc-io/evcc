@@ -13,7 +13,7 @@ var (
 )
 
 // RegisteredVM returns a JS VM. If name is not empty, it will return a shared instance.
-func RegisteredVM(name string) *otto.Otto {
+func RegisteredVM(name, init string) (*otto.Otto, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -23,10 +23,16 @@ func RegisteredVM(name string) *otto.Otto {
 	if !ok {
 		vm = otto.New()
 
+		if init != "" {
+			if _, err := vm.Run(init); err != nil {
+				return nil, err
+			}
+		}
+
 		if name != "" {
 			registry[name] = vm
 		}
 	}
 
-	return vm
+	return vm, nil
 }

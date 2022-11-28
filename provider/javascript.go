@@ -29,7 +29,10 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider,
 		return nil, err
 	}
 
-	vm := javascript.RegisteredVM(strings.ToLower(cc.VM))
+	vm, err := javascript.RegisteredVM(strings.ToLower(cc.VM), "")
+	if err != nil {
+		return nil, err
+	}
 
 	p := &Javascript{
 		vm:     vm,
