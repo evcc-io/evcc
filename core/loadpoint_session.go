@@ -39,6 +39,8 @@ func (lp *LoadPoint) startSession() {
 			}
 		}
 
+		lp.session.Odometer = lp.vehicleOdometer
+
 		// TODO remove
 		lp.log.DEBUG.Println("session started")
 
