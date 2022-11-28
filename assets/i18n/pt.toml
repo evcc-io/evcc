@@ -218,7 +218,6 @@ finished = "hora final"
 [offline]
 message = "Sem conexão com o servidor."
 reload = "Iniciar de novo?"
-
 # weitere Übersetzungen zu den Wochentagen, da diese in der Auflistung der Ladevorgänge aufgeführt werden (in Klammern die gängige Abkürzung):
 # Montag => segunda-feira (2a)
 # Dienstag => terça-feira (3a)
