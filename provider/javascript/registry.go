@@ -1,6 +1,7 @@
 package javascript
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/robertkrimen/otto"
@@ -17,6 +18,7 @@ func RegisteredVM(name, init string) (*otto.Otto, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	name = strings.ToLower(name)
 	vm, ok := registry[name]
 
 	// create new VM
