@@ -1,5 +1,5 @@
 [header]
-sessions = "opérations de chargement"
+sessions = "Opérations de chargement"
 docs = "Documentation"
 blog = "Blog"
 github = "GitHub"
@@ -19,62 +19,62 @@ modalUpdateStarted = "Evcc redémarrera après la mise à jour."
 modalInstalledVersion = "Version actuellement installée"
 modalNoReleaseNotes = "Aucune note de version disponible. Plus d'informations sur la nouvelle version peuvent être trouvées ici:"
 modalCancel = "Annuler"
-modalUpdate = "réactualiser"
+modalUpdate = "Réactualiser"
 modalUpdateNow = "Mettez à jour maintenant"
 modalDownload = "Télécharger"
 modalUpdateStatusStart = "La mise à jour a commencé: "
 modalUpdateStatusFailed = "Mise à jour a échoué: "
 
 [footer.savings]
-tabTitle = "mes données"
+tabTitle = "Mes données"
 footerShort = "{percent}% Solaire"
 footerLong = "{percent}% Énergie Solaire"
 modalTitle = "Aperçu de l'énergie de charge"
-since = "puisque {since}"
+since = "Puisque {since}"
 percentTitle = "Énergie Solaire"
 percentSelf = "{self} kWh Solaire"
 percentGrid = "{grid} kWh Réseau électrique"
-priceTitle = "prix de l'énergie"
+priceTitle = "Prix de l'énergie"
 priceFeedIn = "{feedInPrice} Alimentation"
 priceGrid = "{gridPrice} Réseau électrique"
 savingsTitle = "Des économies"
-savingsComparedToGrid = "par rapport au réseau"
+savingsComparedToGrid = "Par rapport au réseau"
 savingsTotalEnergy = "{total} kWh chargé"
 
 [footer.community]
 tabTitle = "Communauté en ligne"
-power = "puissance de charge"
+power = "Puissance de charge"
 powerSub1 = "{activeClients} de {totalClients} Participants"
-powerSub2 = "sont en train de charger"
-greenShare = "part solaire"
-greenShareSub1 = "la puissance est couverte par"
-greenShareSub2 = "du PV et de la batterie domestique"
+powerSub2 = "Sont en train de charger"
+greenShare = "Part solaire"
+greenShareSub1 = "La puissance est couverte par"
+greenShareSub2 = "Du PV et de la batterie domestique"
 greenEnergy = "Énergie Solaire"
-greenEnergySub1 = "chargé d'evcc"
-greenEnergySub2 = "depuis octobre 2022"
+greenEnergySub1 = "Chargé d'evcc"
+greenEnergySub2 = "Depuis Octobre 2022"
 
 [footer.telemetry]
 optIn = "Je souhaite également apporter mes données."
 optInMoreDetails = "Plus de détails sont disponibles {0}."
-optInMoreDetailsLink = "ici"
+optInMoreDetailsLink = "Ici"
 optInSponsorship = "Parrainage requis."
 
 [footer.sponsor]
 titleSponsor = "Vous êtes un supporter"
-titleNoSponsor = "soutenez-nouss"
+titleNoSponsor = "Soutenez-nouss"
 thanks = "Merci pour votre aide, {sponsor}! Cela nous aide à poursuivre le développement."
 confetti = "Prêt pour les confettis?"
 supportUs = "Notre mission : Faire de la recharge solaire la norme. Aidez-nous et soutenez evcc financièrement."
-sticker = "… ou autocollants evcc?"
+sticker = "… Ou autocollants evcc?"
 confettiPromise = "Il y a des autocollants et des confettis numériques ;)"
 becomeSponsor = "Devenir parrain"
 
 [notifications]
 modalTitle = "Notifications"
-dismissAll = "rejeter la totalité"
+dismissAll = "Rejeter la totalité"
 
 [main]
-vehicles = "place de parking"
+vehicles = "Place de parking"
 
 [main.energyflow]
 noEnergy = "Aucune donnée de compteur"
@@ -96,7 +96,7 @@ now = "Rapidement"
 
 [main.loadpoint]
 fallbackName = "Point de chargement"
-remoteDisabledSoft = "{source}: charge PV adaptative désactivée"
+remoteDisabledSoft = "{source}: Charge PV adaptative désactivée"
 remoteDisabledHard = "{source}: Désactivé"
 power = "Énergie"
 charged = "Chargé"
@@ -106,8 +106,8 @@ remaining = "Temps restant"
 [main.loadpointSettings]
 title = 'Réglages "{0}"'
 vehicle = "Véhicule"
-currents = "courant de charge"
-default = "défaut"
+currents = "Courant de charge"
+default = "Défaut"
 disclaimerHint = "A Noter:"
 disclaimerText = "Les changements ne sont pas encore persistants. Ils seront réinitialisés après le redémarrage du serveur."
 
@@ -117,17 +117,17 @@ description = 'Portée pour les urgences. Le véhicule est chargé "rapidement" 
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"
-phases_0 = "commutation automatique"
+phases_0 = "Commutation automatique"
 phases_1 = "1-phase"
 phases_1_hint = "({min} á {max})"
 phases_3 = "3-phases"
 phases_3_hint = "({min} á {max})"
 
 [main.loadpointSettings.maxCurrent]
-label = "Max. courant de charge"
+label = "Max. Courant de charge"
 
 [main.loadpointSettings.minCurrent]
-label = "Min. courant de charge"
+label = "Min. Courant de charge"
 
 [main.vehicle]
 fallbackName = "Véhicule"
@@ -139,10 +139,10 @@ changeVehicle = "Changer de véhicule"
 detectionActive = "Détecter le véhicule ..."
 
 [main.vehicleSoC]
-disconnected = "détaché"
-charging = "mise en charge"
-ready = "brêt"
-connected = "connecté"
+disconnected = "Détaché"
+charging = "Mise en charge"
+ready = "Brêt"
+connected = "Connecté"
 vehicleTarget = "Limite de véhicule: {soc}%"
 
 [main.vehicleStatus]
@@ -151,29 +151,29 @@ waitForVehicle = "Prêt à charger. Attendre le véhicule."
 vehicleTargetReached = "Limite de véhicule {soc}% atteint."
 charging = "Charge active."
 targetChargePlanned = "Magasin cible prévu. La charge commence à {time} heures."
-targetChargeWaitForVehicle = "magasin cible prêt. Attendre le véhicule."
+targetChargeWaitForVehicle = "Magasin cible prêt. Attendre le véhicule."
 targetChargeActive = "Chargement cible actif."
 connected = "Connecté."
-pvDisable = "Trop peu de surplus. faire une pause {remaining}."
-pvEnable = "Surplus disponible. commencer dans {remaining}."
+pvDisable = "Trop peu de surplus. Faire une pause {remaining}."
+pvEnable = "Surplus disponible. Commencer dans {remaining}."
 scale1p = "Réduire en monophasé en {remaining}."
 scale3p = "Passage à trois phases {remaining}."
 disconnected = "Pas connecté."
 unknown = ""
 
 [main.provider]
-login = "connexion"
+login = "Connexion"
 logout = "Se déconnecter"
 
 [main.targetCharge]
 title = "Temps visé"
 inactiveLabel = "Temps visé"
 activeLabel = "{time}"
-modalTitle = "définir l'heure cible"
-setTargetTime = "non"
+modalTitle = "Définir l'heure cible"
+setTargetTime = "Non"
 description = "Quand le véhicule doit-il être rechargé à {targetSoC}%?"
-today = "aujourd'hui"
-tomorrow = "matin"
+today = "Aujourd'hui"
+tomorrow = "Matin"
 targetIsInThePast = "Le temps est passé."
 remove = "Ôter"
 activate = "Activer"
@@ -182,7 +182,7 @@ experimentalText = "Cette fonctionnalité fonctionne mais n'est pas encore parfa
 
 [main.targetEnergy]
 label = "Cible de chargement"
-noLimit = "non"
+noLimit = "Non"
 
 [startupError]
 title = "Erreur au démarrage"
@@ -197,7 +197,7 @@ fixAndRestart = "Corrigez le problème et redémarrez le serveur."
 restartButton = "Redémarrer"
 
 [sessions]
-title = "sessions de chargement"
+title = "Sessions de chargement"
 downloadCsv = "Télécharger au format CSV"
 loadpoint = "Point de chargement"
 vehicle = "Véhicule"
