@@ -5,6 +5,7 @@ import it from "../i18n/it.toml";
 import lt from "../i18n/lt.toml";
 import nl from "../i18n/nl.toml";
 import pl from "../i18n/pl.toml";
+import pt from "../i18n/pt.toml";
 
 const PREFERRED_LOCALE_KEY = "preferred_locale";
 
@@ -20,5 +21,5 @@ function getBrowserLocale() {
 export default createI18n({
   locale: window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale(),
   fallbackLocale: "en",
-  messages: { de, en, it, lt, nl, pl },
+  messages: { de, en, it, lt, nl, pl, pt },
 });
