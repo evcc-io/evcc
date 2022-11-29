@@ -1,11 +1,15 @@
 package javascript
 
 import (
+	"fmt"
+	"log"
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
 	_ "github.com/robertkrimen/otto/underscore"
+	"github.com/samber/lo"
 )
 
 var (
@@ -24,6 +28,9 @@ func RegisteredVM(name, init string) (*otto.Otto, error) {
 	// create new VM
 	if !ok {
 		vm = otto.New()
+		if err := setConsole(vm, name); err != nil {
+			return nil, err
+		}
 
 		if init != "" {
 			if _, err := vm.Run(init); err != nil {
@@ -37,4 +44,39 @@ func RegisteredVM(name, init string) (*otto.Otto, error) {
 	}
 
 	return vm, nil
+}
+
+func setConsole(vm *otto.Otto, name string) error {
+	if name == "" {
+		name = "javascript"
+	}
+
+	log := util.NewLogger(name)
+
+	console := map[string]any{
+		"trace": printer(log.TRACE),
+		"log":   printer(log.DEBUG),
+		"info":  printer(log.INFO),
+		"error": printer(log.ERROR),
+	}
+
+	if err := vm.Set("console", console); err != nil {
+		return err
+	}
+
+	vm.Run(`console.log("Hello, World.");`)
+	return nil
+}
+
+func printer(log *log.Logger) func(call otto.FunctionCall) otto.Value {
+	return func(call otto.FunctionCall) otto.Value {
+		output := lo.Map(call.ArgumentList, func(a otto.Value, _ int) string {
+			return fmt.Sprintf("%v", a)
+		})
+
+		fmt.Println(strings.Join(output, " "))
+		log.Println(strings.Join(output, " "))
+
+		return otto.UndefinedValue()
+	}
 }
