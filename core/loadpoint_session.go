@@ -20,30 +20,42 @@ func (lp *LoadPoint) chargeMeterTotal() float64 {
 	return f
 }
 
+func (lp *LoadPoint) initializeSession() {
+	// test guard
+	if lp.db == nil {
+		return
+	}
+
+	// assure empty session
+	lp.session = nil
+
+	// initialize session
+	lp.session = lp.db.Session(lp.chargeMeterTotal())
+
+	if lp.vehicle != nil {
+		lp.session.Vehicle = lp.vehicle.Title()
+	}
+
+	if c, ok := lp.charger.(api.Identifier); ok {
+		if id, err := c.Identify(); err == nil {
+			lp.session.Identifier = id
+		}
+	}
+
+	// TODO remove
+	lp.log.DEBUG.Println("session initialized")
+}
+
 func (lp *LoadPoint) startSession() {
 	// test guard
 	if lp.db == nil {
 		return
 	}
 
-	if lp.session == nil {
-		lp.session = lp.db.Session(lp.chargeMeterTotal())
+	// TODO remove
+	lp.log.DEBUG.Println("session started")
 
-		if lp.vehicle != nil {
-			lp.session.Vehicle = lp.vehicle.Title()
-		}
-
-		if c, ok := lp.charger.(api.Identifier); ok {
-			if id, err := c.Identify(); err == nil {
-				lp.session.Identifier = id
-			}
-		}
-
-		// TODO remove
-		lp.log.DEBUG.Println("session started")
-
-		lp.db.Persist(lp.session)
-	}
+	lp.db.Persist(lp.session)
 }
 
 func (lp *LoadPoint) stopSession() {

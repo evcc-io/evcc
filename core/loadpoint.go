@@ -432,6 +432,9 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
+
+	// initialize session and persist session start parameters
+	lp.initializeSession()
 }
 
 // evVehicleDisconnectHandler sends external start event
