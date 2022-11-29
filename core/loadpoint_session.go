@@ -39,6 +39,9 @@ func (lp *LoadPoint) startSession() {
 			}
 		}
 
+		// TODO remove
+		lp.log.DEBUG.Println("session started")
+
 		lp.db.Persist(lp.session)
 	}
 }
@@ -50,6 +53,9 @@ func (lp *LoadPoint) stopSession() {
 	}
 
 	lp.session.Stop(lp.getChargedEnergy(), lp.chargeMeterTotal())
+
+	// TODO remove
+	lp.log.DEBUG.Println("session stopped")
 
 	lp.db.Persist(lp.session)
 }
@@ -65,6 +71,9 @@ func (lp *LoadPoint) updateSession(opts ...sessionOption) {
 	for _, opt := range opts {
 		opt(lp.session)
 	}
+
+	// TODO remove
+	lp.log.DEBUG.Println("session updated")
 
 	lp.db.Persist(lp.session)
 }

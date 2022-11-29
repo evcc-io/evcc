@@ -44,6 +44,9 @@ func (s *DB) Session(meter float64) *Session {
 
 // Persist creates or updates a transaction in the database
 func (s *DB) Persist(session interface{}) {
+	// TODO remove
+	s.log.DEBUG.Printf("persist: %+v", session)
+
 	if err := s.db.Save(session).Error; err != nil {
 		s.log.ERROR.Printf("persist: %v", err)
 	}
