@@ -433,9 +433,6 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
-
-	// initialize session and persist session start parameters
-	lp.initializeSession()
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -444,7 +441,6 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	// ensure session is persisted and closed before vehicle is changed
 	lp.stopSession()
-	lp.finalizeSession()
 
 	// phases are unknown when vehicle disconnects
 	lp.resetMeasuredPhases()
@@ -1056,6 +1052,8 @@ func (lp *LoadPoint) vehicleOdometer() {
 		} else {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
+	} else {
+		lp.odoMeter = 0
 	}
 }
 
