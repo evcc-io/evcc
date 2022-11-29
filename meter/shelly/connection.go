@@ -184,9 +184,9 @@ func (d *Connection) TotalEnergy() (float64, error) {
 
 		switch {
 		case d.channel < len(res.Meters):
-			energy = float64(res.Meters[d.channel].Total) / 60 / 1000
+			energy = float64(res.Meters[d.channel].Total) / 60
 		case d.channel < len(res.EMeters):
-			energy = float64(res.EMeters[d.channel].Total) / 60 / 1000
+			energy = float64(res.EMeters[d.channel].Total) / 60
 		default:
 			return 0, errors.New("invalid channel, missing power meter")
 		}
@@ -207,5 +207,5 @@ func (d *Connection) TotalEnergy() (float64, error) {
 		}
 	}
 
-	return energy, nil
+	return energy / 1000, nil
 }
