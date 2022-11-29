@@ -8,8 +8,8 @@ import (
 )
 
 type calcProvider struct {
-	add, mul []func() (float64, error)
-	sign     func() (float64, error)
+	add, mul, div []func() (float64, error)
+	sign          func() (float64, error)
 }
 
 func init() {
@@ -21,6 +21,7 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	var cc struct {
 		Add  []Config
 		Mul  []Config
+		Div  []Config
 		Sign *Config
 	}
 
@@ -30,7 +31,7 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 	o := &calcProvider{}
 
-	if len(cc.Add) > 0 && len(cc.Mul) > 0 || len(cc.Add) > 0 && cc.Sign != nil || len(cc.Mul) > 0 && cc.Sign != nil {
+	if len(cc.Add) > 0 && len(cc.Mul) > 0 && len(cc.Div) > 0 || len(cc.Add) > 0 && cc.Sign != nil || len(cc.Mul) > 0 && cc.Sign != nil {
 		return nil, errors.New("can only have either add, mul or sign")
 	}
 
@@ -48,6 +49,14 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 			return nil, fmt.Errorf("mul[%d]: %w", idx, err)
 		}
 		o.mul = append(o.mul, f)
+	}
+
+	for idx, cc := range cc.Div {
+		f, err := NewFloatGetterFromConfig(cc)
+		if err != nil {
+			return nil, fmt.Errorf("div[%d]: %w", idx, err)
+		}
+		o.div = append(o.div, f)
 	}
 
 	if cc.Sign != nil {
@@ -100,6 +109,21 @@ func (o *calcProvider) floatGetter() (float64, error) {
 				return 0, fmt.Errorf("add[%d]: %w", idx, err)
 			}
 			res += v
+		}
+
+	case len(o.div) > 0:
+		for idx, p := range o.div {
+			v, err := p()
+			if err != nil {
+				return 0, fmt.Errorf("div[%d]: %w", idx, err)
+			}
+			if res == 0 {
+				res = v
+			} else if v != 0 {
+				res /= v
+			} else {
+				res = 0
+			}
 		}
 
 	default:
