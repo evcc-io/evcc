@@ -3,6 +3,7 @@ package mqtt
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/evcc-io/evcc/util"
 )
@@ -24,12 +25,17 @@ func (r clientRegistry) Get(broker string) (*Client, error) {
 	return client, nil
 }
 
-// registry is the Mqtt client registry
-var registry clientRegistry = make(map[string]*Client)
+var (
+	mu       sync.Mutex
+	registry clientRegistry = make(map[string]*Client)
+)
 
 // RegisteredClient reuses an registered Mqtt publisher or creates a new one
 func RegisteredClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, opts ...Option) (*Client, error) {
 	key := fmt.Sprintf("%s.%s:%s", broker, user, password)
+
+	mu.Lock()
+	defer mu.Unlock()
 	client, err := registry.Get(key)
 
 	if err != nil {
