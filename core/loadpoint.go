@@ -128,7 +128,6 @@ type LoadPoint struct {
 	vehicleDetect       time.Time // Vehicle connected timestamp
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
-	vehicleOdometer     float64
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -884,7 +883,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.applyAction(vehicle.OnIdentified())
 		lp.Lock()
 
-		lp.addTask(lp.getVehicleOdometer)
+		lp.addTask(lp.vehicleOdometer)
 
 		lp.progress.Reset()
 	} else {
@@ -913,7 +912,6 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		}
 
 		lp.session.Vehicle = title
-		lp.session.Odometer = lp.vehicleOdometer
 	})
 }
 
@@ -995,7 +993,7 @@ func (lp *LoadPoint) vehicleDefaultOrDetect() {
 		} else {
 			// default vehicle is already active, update odometer anyway
 			// need to do this here since setActiveVehicle would short-circuit
-			lp.addTask(lp.getVehicleOdometer)
+			lp.addTask(lp.vehicleOdometer)
 		}
 	} else if len(lp.coordinatedVehicles()) > 0 && lp.connected() {
 		lp.startVehicleDetection()
@@ -1042,21 +1040,20 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 	}
 }
 
-// getVehicleOdometer updates odometer
-func (lp *LoadPoint) getVehicleOdometer() {
+// vehicleOdometer updates odometer
+func (lp *LoadPoint) vehicleOdometer() {
 	if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
 			lp.publish(vehicleOdometer, odo)
 
-			// set session odometer
-			lp.vehicleOdometer = odo
-
+			// update session once odometer is read
+			lp.updateSession(func(session *db.Session) {
+				session.Odometer = odo
+			})
 		} else {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
-	} else {
-		lp.vehicleOdometer = 0
 	}
 }
 
