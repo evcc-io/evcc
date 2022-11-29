@@ -159,8 +159,9 @@ type LoadPoint struct {
 	progress                *Progress     // Step-wise progress indicator
 
 	// session log
-	db      db.Database
-	session *db.Session
+	db       db.Database
+	session  *db.Session
+	odoMeter float64
 
 	tasks queues.Queue // tasks to be executed
 }
@@ -1050,10 +1051,8 @@ func (lp *LoadPoint) vehicleOdometer() {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
 			lp.publish(vehicleOdometer, odo)
 
-			// update session once odometer is read
-			lp.updateSession(func(session *db.Session) {
-				session.Odometer = odo
-			})
+			// update session odometer once it is read
+			lp.odoMeter = odo
 		} else {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
