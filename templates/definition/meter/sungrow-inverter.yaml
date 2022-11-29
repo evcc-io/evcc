@@ -48,4 +48,27 @@ render: |
       address: 5003 # Total power yields, 1 kWh
       type: input
       decode: uint32s
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5021
+      type: input
+      decode: int16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5022
+      type: input
+      decode: int16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5023
+      type: input
+      decode: int16
+    scale: 0.1
   {{- end }}
+
