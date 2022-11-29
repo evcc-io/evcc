@@ -913,6 +913,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		}
 
 		lp.session.Vehicle = title
+		lp.session.Odometer = lp.vehicleOdometer
 	})
 }
 
