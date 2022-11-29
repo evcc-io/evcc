@@ -103,7 +103,6 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
 	cp.mu.Lock()
-	defer cp.mu.Unlock()
 
 	if request == nil { // what!?
 		return nil, nil
@@ -123,21 +122,33 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 		// cp.lastTransactionId = res.TransactionId
 		cp.currentTransaction = NewTransaction(cp.lastTransactionId+1)
 		cp.lastTransactionId = cp.currentTransaction.Id
-		cp.SetTransactionStatus(TransactionStarting)
+		cp.SetTransactionStatus(TransactionStopping)
 	} else	{
 		res.TransactionId = cp.currentTransaction.Id
 		// no need to save lastTransactionId because NewTransaction always does that
 	}
 
 
-	if (time.Since(request.Timestamp.Time) < transactionExpiry) || // too old transaction request
+	if //(time.Since(request.Timestamp.Time) < transactionExpiry) || // too old transaction request
 	(cp.currentTransaction != nil && cp.currentTransaction.Status() != TransactionStarting) { // we didnt start this transaction, invalidate it
 		cp.log.DEBUG.Printf("start transaction: defering transaction stop request and hope for the best")
-		// defer Instance().RemoteStopTransaction(cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
-		// 		cp.log.TRACE.Printf("%T: %+v", resp, resp)
-		// 	}, res.TransactionId)
+		time.AfterFunc(time.Second, func () {
+			Instance().RemoteStopTransaction(cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
+				cp.log.TRACE.Printf("%T: %+v", resp, resp)
+
+				if cp.currentTransaction != nil && cp.currentTransaction.Id == res.TransactionId {
+					cp.log.TRACE.Printf("start transaction: cleaning up after unwanted transaction succeded")
+				}
+			}, res.TransactionId)
+		})
 	}
 
+	if cp.currentTransaction != nil && cp.currentTransaction.Status() == TransactionStarting {
+		cp.log.TRACE.Printf("start transaction: setting transaction state to running")
+		cp.currentTransaction.SetStatus(TransactionRunning)
+	}
+
+	cp.mu.Unlock()
 	return res, nil
 }
 
@@ -160,6 +171,7 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		}
 
 		cp.currentTransaction.SetStatus(TransactionFinished)
+		cp.currentTransaction = nil
 	} else {
 		cp.log.WARN.Printf("stop transaction: stopping non existent transaction")
 	}

@@ -174,6 +174,10 @@ func (cp *CP) FinishTransaction() {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
+	if cp.currentTransaction == nil {
+		return 
+	}
+
 	cp.currentTransaction.SetStatus(TransactionFinished)
 	cp.currentTransaction = nil
 }

@@ -352,6 +352,10 @@ func (c *OCPP) Enable(enable bool) error {
 	c.log.TRACE.Printf("Enable(%v) called", enable)
 
 	if enable {
+		if status, err := c.cp.Status(); err != nil || status == api.StatusA {
+			return fmt.Errorf("unable to start transaction when car is not connected or status is unknown")
+		}
+
 		if !c.cp.HasTransaction() {
 			c.cp.InitTransaction()
 		} else {
@@ -366,11 +370,12 @@ func (c *OCPP) Enable(enable bool) error {
 			}
 
 			if err == nil {
+				c.log.TRACE.Printf("enable: setting transaction state to starting and waiting for status change")
 				c.cp.SetTransactionStatus(ocpp.TransactionStarting)
-
 				select {
 				case <- c.cp.CurrentTransaction().HasStatusChanged():
 					if status := c.cp.GetTransactionStatus(); status == ocpp.TransactionRunning || status == ocpp.TransactionSuspended {
+						c.log.TRACE.Printf("enable: transaction state is running or suspended")
 						break
 					}
 					err = fmt.Errorf("unable to start transaction")
@@ -379,6 +384,7 @@ func (c *OCPP) Enable(enable bool) error {
 			}
 
 			if err != nil {
+				c.log.TRACE.Printf("enable: cleaning up after failed transaction start")
 				c.cp.FinishTransaction()
 			}
 
@@ -391,8 +397,13 @@ func (c *OCPP) Enable(enable bool) error {
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
 			c.log.TRACE.Printf("%T: %+v", resp, resp)
 
-			if enabled,_ := c.Enabled(); err == nil && resp != nil && !enabled {
+			if enabled,_ := c.Enabled(); err == nil && resp != nil && enabled {
 				c.log.TRACE.Printf("trying to cancel running transaction")
+			}
+
+			if err == nil && resp != nil && resp.Status == types.RemoteStartStopStatusAccepted {
+				c.log.TRACE.Printf("enable: setting transaction state to stopping")
+				c.cp.SetTransactionStatus(ocpp.TransactionStopping)
 			}
 
 			rc <- err
