@@ -48,7 +48,7 @@ func (lp *LoadPoint) initializeSession() {
 
 func (lp *LoadPoint) startSession() {
 	// test guard
-	if lp.db == nil {
+	if lp.db == nil || lp.session == nil {
 		return
 	}
 
