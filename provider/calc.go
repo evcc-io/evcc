@@ -123,9 +123,8 @@ func (o *calcProvider) floatGetter() (float64, error) {
 			if idx == 0 {
 				if v == 0 {
 					break
-				} else {
-					res = v
 				}
+				res = v
 			} else if v != 0 {
 				res /= v
 			}
