@@ -120,12 +120,14 @@ func (o *calcProvider) floatGetter() (float64, error) {
 			if err != nil {
 				return 0, fmt.Errorf("div[%d]: %w", idx, err)
 			}
-			if res == 0 {
-				res = v
+			if idx == 0 {
+				if v == 0 {
+					break
+				} else {
+					res = v
+				}
 			} else if v != 0 {
 				res /= v
-			} else {
-				res = 0
 			}
 		}
 
