@@ -127,6 +127,9 @@ func (o *calcProvider) floatGetter() (float64, error) {
 				res = v
 			} else if v != 0 {
 				res /= v
+			} else if v == 0 {
+				res = 0
+				break
 			}
 		}
 
