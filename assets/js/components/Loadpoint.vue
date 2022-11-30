@@ -149,6 +149,7 @@ export default {
 		vehicleRange: Number,
 		vehicleSoC: Number,
 		vehicleTitle: String,
+		vehicleIcon: String,
 		vehicleTargetSoC: Number,
 		vehicleCapacity: Number,
 		vehicleFeatureOffline: Boolean,

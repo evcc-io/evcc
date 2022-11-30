@@ -8,10 +8,11 @@
 				:title="$t('main.vehicle.detectionActive')"
 				class="me-2 flex-shrink-0 spin"
 			></shopicon-regular-refresh>
-			<shopicon-regular-car3
-				v-else-if="icon === 'car'"
+			<VehicleIcon
+				v-else-if="icon === 'vehicle'"
+				:name="vehicleIcon"
 				class="me-2 flex-shrink-0"
-			></shopicon-regular-car3>
+			/>
 			<shopicon-regular-cablecharge
 				v-else
 				class="me-2 flex-shrink-0"
@@ -36,19 +37,20 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/refresh";
 import "@h2d2/shopicons/es/regular/cablecharge";
+import VehicleIcon from "./VehicleIcon";
 import { Tooltip } from "bootstrap";
 
 import VehicleOptions from "./VehicleOptions.vue";
 
 export default {
 	name: "VehicleTitle",
-	components: { VehicleOptions },
+	components: { VehicleOptions, VehicleIcon },
 	props: {
 		vehiclePresent: Boolean,
 		vehicleTitle: String,
+		vehicleIcon: String,
 		vehicleDetectionActive: Boolean,
 		parked: Boolean,
 		connected: Boolean,
@@ -61,7 +63,7 @@ export default {
 				return "refresh";
 			}
 			if (this.connected || this.parked) {
-				return "car";
+				return "vehicle";
 			}
 			return null;
 		},

@@ -152,6 +152,7 @@ func TestDefaultVehicle(t *testing.T) {
 
 	dflt := mock.NewMockVehicle(ctrl)
 	dflt.EXPECT().Title().Return("default").AnyTimes()
+	dflt.EXPECT().Icon().Return("").AnyTimes()
 	dflt.EXPECT().Capacity().AnyTimes()
 	dflt.EXPECT().Phases().AnyTimes()
 	dflt.EXPECT().OnIdentified().Return(api.ActionConfig{
@@ -162,6 +163,7 @@ func TestDefaultVehicle(t *testing.T) {
 
 	vehicle := mock.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("target").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().AnyTimes()
@@ -265,6 +267,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 
 	vehicle := mock.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
@@ -322,6 +325,7 @@ func TestReconnectVehicle(t *testing.T) {
 
 	vehicle := &vehicleT{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
 	vehicle.MockVehicle.EXPECT().Title().Return("vehicle").AnyTimes()
+	vehicle.MockVehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.MockVehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.MockVehicle.EXPECT().Phases().AnyTimes()
 	vehicle.MockVehicle.EXPECT().OnIdentified().AnyTimes()
