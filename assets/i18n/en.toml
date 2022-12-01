@@ -136,7 +136,7 @@ targetSoC = "Limit"
 none = "No vehicle"
 unknown = "Guest vehicle"
 changeVehicle = "Change Vehicle"
-detectionActive = "Identifying vehicle ..."
+detectionActive = "Vehicle identification running …"
 
 [main.vehicleSoC]
 disconnected = "disconnected"
