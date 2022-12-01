@@ -241,7 +241,7 @@ func (lp *LoadPoint) GetMinCurrent() float64 {
 	return lp.MinCurrent
 }
 
-// SetMinCurrent returns the min loadpoint current
+// SetMinCurrent sets the min loadpoint current
 func (lp *LoadPoint) SetMinCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
