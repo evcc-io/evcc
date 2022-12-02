@@ -4,7 +4,7 @@
 			v-for="m in modes"
 			:key="m"
 			type="button"
-			class="btn flex-grow-1 flex-shrink-1 text-truncate"
+			class="btn flex-grow-1 flex-shrink-1"
 			:class="{ active: isActive(m) }"
 			@click="setTargetMode(m)"
 		>
