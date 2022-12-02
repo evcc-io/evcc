@@ -22,9 +22,17 @@ export default {
 		minCurrent: { type: Number },
 		maxCurrent: { type: Number },
 	},
+	computed: {
+		highestActivePhase() {
+			if (this.chargeCurrents) {
+				return this.chargeCurrents.findLastIndex((current) => current > 0) + 1;
+			}
+			return this.phasesActive;
+		},
+	},
 	methods: {
 		inactive(num) {
-			return num > this.phasesActive;
+			return num > this.highestActivePhase;
 		},
 		targetWidth() {
 			let current = Math.min(Math.max(this.minCurrent, this.chargeCurrent), this.maxCurrent);
