@@ -1,12 +1,12 @@
 //go:build !release
 
-package server
+package assets
 
 import (
 	"os"
 )
 
 func init() {
-	Assets = os.DirFS("dist")
+	Web = os.DirFS("dist")
 	I18n = os.DirFS("i18n")
 }
