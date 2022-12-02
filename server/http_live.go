@@ -8,4 +8,5 @@ import (
 
 func init() {
 	Assets = os.DirFS("dist")
+	I18n = os.DirFS("i18n")
 }

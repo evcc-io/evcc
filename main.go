@@ -16,6 +16,9 @@ import (
 //go:embed dist
 var assets embed.FS
 
+//go:embed i18n
+var i18n embed.FS
+
 // init loads embedded assets unless live assets are already loaded
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -26,6 +29,13 @@ func init() {
 			panic(err)
 		}
 		server.Assets = fsys
+	}
+	if server.I18n == nil {
+		fsys, err := fs.Sub(i18n, "i18n")
+		if err != nil {
+			panic(err)
+		}
+		server.I18n = fsys
 	}
 }
 

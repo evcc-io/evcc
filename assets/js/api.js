@@ -25,7 +25,7 @@ api.interceptors.response.use(
 export default api;
 
 export const i18n = axios.create({
-  baseURL: base + "assets/i18n/",
+  baseURL: base + "i18n/",
   headers: {
     Accept: "application/toml",
   },

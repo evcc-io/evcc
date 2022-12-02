@@ -1,7 +1,7 @@
 import toml from "toml";
 import { nextTick } from "vue";
 import { createI18n } from "vue-i18n";
-import en from "../i18n/en.toml";
+import en from "../../i18n/en.toml";
 import { i18n as i18nApi } from "./api";
 
 const PREFERRED_LOCALE_KEY = "preferred_locale";

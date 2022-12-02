@@ -16,6 +16,9 @@ import (
 // Assets is the embedded assets file system
 var Assets fs.FS
 
+// I18n is the embedded assets file system
+var I18n fs.FS
+
 type route struct {
 	Methods     []string
 	Pattern     string
@@ -58,6 +61,7 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(Assets)))
 	}
+	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(I18n))))
 
 	srv := &HTTPd{
 		Server: &http.Server{

@@ -5,7 +5,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
-	assets "github.com/evcc-io/evcc/assets/i18n"
+	assets "github.com/evcc-io/evcc/i18n"
 	"github.com/evcc-io/evcc/util/locale/internal"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
