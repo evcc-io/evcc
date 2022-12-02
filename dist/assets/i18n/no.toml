@@ -1,0 +1,216 @@
+[header]
+sessions = "Ladeøkter"
+docs = "Dokumentasjon"
+about = "Om evcc"
+blog = "Blogg"
+github = "GitHub"
+login = "Kjøretøysinnlogginger"
+
+[header.theme]
+auto = "Design: system"
+light = "Design: lyst"
+dark = "Design: mørkt"
+
+[footer.version]
+availableShort = "Oppdater"
+availableLong = "oppdatering tilgjengelig"
+modalTitle = "Oppdatering tilgjengelig"
+modalInstalledVersion = "Installert versjon"
+modalUpdate = "Oppdater"
+modalCancel = "Avbryt"
+modalDownload = "Last ned"
+modalUpdateStatusFailed = "Oppdatering mislyktes: "
+modalUpdateStatusStart = "Oppdatering startet: "
+modalUpdateNow = "Oppdater nå"
+modalUpdateStarted = "Evcc vil starte på ny etter oppdateringen …"
+modalNoReleaseNotes = "Ingen utgivelsesnotater tilgjengelig. Mer info om den nye versjonen er å finne her:"
+
+[footer.savings]
+tabTitle = "Min data"
+footerShort = "{percent}% solenergi"
+footerLong = "{percent}% solcelleenergi"
+modalTitle = "Oversikt over ladeenergi"
+percentSelf = "{self} kWt sol"
+percentGrid = "{self} kWh lysnett"
+priceTitle = "Kraftpris"
+priceGrid = "{gridPrice} lysnett"
+priceFeedIn = "{feedInPrice} subsidiering"
+savingsTotalEnergy = "{total} kWh ladet"
+percentTitle = "Solenergi"
+savingsTitle = "Besparelser"
+since = "siden {since}"
+savingsComparedToGrid = "sammenlignet med lysnett"
+
+[footer.community]
+tabTitle = "Sanntidsgemenskap"
+greenShareSub1 = "ladestrømmen kommer fra"
+greenEnergy = "Solenergi"
+greenShareSub2 = "Fotovoltaisk og batterilading"
+powerSub2 = "lades nå"
+greenShare = "Solcelleandel"
+greenEnergySub1 = "ladet med evcc"
+greenEnergySub2 = "siden Oktober 2022"
+power = "Ladeeffekt"
+powerSub1 = "{activeClients} av {totalClients} deltagere"
+
+[footer.telemetry]
+optIn = "Jeg vil også bidra min data."
+optInMoreDetails = "Flere detaljer tilgjengelig på {0}."
+optInMoreDetailsLink = "her"
+optInSponsorship = "Sponsing kreves."
+
+[main]
+vehicles = "Parkering"
+
+[main.energyflow]
+pvProduction = "Produksjon"
+batteryDischarge = "Batteriutlading"
+loadpoints = "Ladepunkt | Ladepunkt | {count} ladepunkter"
+pvExport = "Lysnetteksport"
+homePower = "Forbruk"
+battery = "Batteri"
+batteryCharge = "Batterilading"
+gridImport = "Lysnettsimport"
+selfConsumption = "Egenforbruk"
+noEnergy = "Ingen telleverksdata"
+
+[main.mode]
+now = "Raskt"
+off = "Stopp"
+minpv = "Min+fotovoltaisk"
+pv = "Fotovoltaisk"
+
+[main.loadpointSettings]
+currents = "Ladestrøm"
+default = "forvalg"
+disclaimerHint = "Merknad:"
+disclaimerText = "Endringene er ikke lagret enda. De vil bli tilbakestilt når tjeneren startes på ny."
+vehicle = "Kjøretøy"
+title = 'Innstillinger "{0}"'
+
+[main.loadpointSettings.phasesConfigured]
+label = "Faser"
+phases_0 = "automatisk bytting"
+phases_3 = "3-fas"
+phases_1 = "1-fas"
+phases_1_hint = "({min} til {max})"
+phases_3_hint = "({min} til {max})"
+
+[main.loadpointSettings.minSoC]
+description = 'Kurve for nødsfall. Kjøretøyet blir "hurtig"-ladet til {0}% i fotovoltaisk modus. Deretter fortsetter det på kun solcelleoverskudd."'
+label = "Minimumsladestand"
+
+[main.loadpointSettings.maxCurrent]
+label = "Maks. ladestrøm"
+
+[main.vehicle]
+targetSoC = "Grense"
+none = "Ingen kjøretøy"
+changeVehicle = "Lad kjøretøy"
+detectionActive = "Oppdager kjøretøy …"
+vehicleSoC = "Ladestand"
+fallbackName = "Kjøretøy"
+unknown = "Gjestekjøretøy"
+
+[main.vehicleSoC]
+disconnected = "frakoblet"
+charging = "lader"
+vehicleTarget = "Kjøretøygrense: {soc}%"
+ready = "klar"
+connected = "tilkoblet"
+
+[main.vehicleStatus]
+waitForVehicle = "Klar. Venter på kjøretøy."
+minCharge = "minimumslading til {soc}%."
+charging = "Lader …"
+targetChargePlanned = "Målladenivå planlagt. Starter {time}."
+pvEnable = "Overskudd tilgjengelig. Starter om {remaining}."
+scale1p = "Reduser til 1-fas om {remaining}."
+targetChargeActive = "Målladenivå aktivt."
+disconnected = "Frakoblet."
+unknown = ""
+connected = "Tilkoblet."
+vehicleTargetReached = "Kjøretøygrense på {soc}% nådd."
+pvDisable = "Ikke nok overskudd. Tar pause om {remaining}."
+scale3p = "Øk til 3-fas om {remaining}."
+targetChargeWaitForVehicle = "Målladenivå klart. Venter på kjøretøy …"
+
+[main.targetCharge]
+inactiveLabel = "Mål-tid"
+activeLabel = "{time}"
+description = "Når skal kjøretøyet lades til {targetSoC}%?"
+tomorrow = "i morgen"
+experimentalLabel = "Eksperimentelt"
+activate = "Aktiver"
+experimentalText = "Funksjonen fungerer, men er ikke perfekt. Rapporter uventet oppførsel på"
+title = "Mål-tid"
+modalTitle = "Sett mål-tid"
+setTargetTime = "ingen"
+today = "i dag"
+targetIsInThePast = "Valgt tidspunkt er i fortiden."
+
+[main.targetEnergy]
+label = "Grense"
+noLimit = "ingen"
+
+[startupError]
+discussions = "GitHub-diskusjoner"
+configFile = "Brukt oppsettsfil:"
+lineErrorLink = "linje {0}"
+restartButton = "Omstart"
+lineError = "Feil i {0}"
+fixAndRestart = "Fiks problemet og start tjeneren om igjen."
+title = "Oppstartsfeil"
+configuration = "Oppsett"
+description = "Sjekk oppsettsfilen din. Hvis feilmeldingen ikke hjelper kan du ta en titt på {0}."
+hint = "Merk: En annen grunn til at du ser denne meldingen kan være en skadet enhet (omformer, telleverk, …) Sjekk nettverkstilkoblingene dine."
+
+[sessions]
+title = "Ladeøkter"
+energy = "Oppladet"
+downloadCsv = "Last ned som CSV"
+vehicle = "Kjøretøy"
+date = "Tidsrom"
+loadpoint = "Ladepunkt"
+
+[sessions.csv]
+odometer = "Kilometerstand"
+identifier = "Identifikator"
+chargedenergy = "Energi (kWh)"
+created = "Opprettet"
+finished = "Fullført"
+meterstart = "Telleverksoppstart (kWt)"
+meterstop = "Telleverksstopp (kWt)"
+vehicle = "Kjøretøy"
+loadpoint = "Ladepunkt"
+
+[offline]
+message = "Ingen tilkobling til tjeneren."
+reload = "Last inn igjen?"
+
+[notifications]
+modalTitle = "Merknader"
+dismissAll = "Forkast alle"
+
+[main.loadpoint]
+duration = "Varighet"
+charged = "Oppladet"
+power = "Effekt"
+fallbackName = "Ladepunkt"
+
+[footer.sponsor]
+titleSponsor = "Du er en støttespiller"
+titleNoSponsor = "Støtt oss"
+becomeSponsor = "Bli sponsor"
+confetti = "Klar for konfetti?"
+sticker = "… eller evcc-klistremerker?"
+thanks = "Takk for din støtte {sponsor}. Det hjelper videre utvikling."
+confettiPromise = "Du vil få klistremerker og digital konfetti"
+supportUs = "Vår mål: Å gjøre solcellelading til normalen. Hjelp til å kronerulle evcc."
+
+[main.loadpointSettings.minCurrent]
+label = "Min. ladestrøm"
+
+[main.provider]
+logout = "logg ut"
+login = "logg inn"

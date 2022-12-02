@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import vuePlugin from "@vitejs/plugin-vue";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 import { ViteToml } from "vite-plugin-toml";
+//import analyze from "rollup-plugin-analyzer";
 
 export default defineConfig({
   root: "./assets",
@@ -32,5 +34,9 @@ export default defineConfig({
       },
     }),
     ViteToml(),
+    viteStaticCopy({
+      targets: [{ src: "i18n/*.toml", dest: "./assets/i18n" }],
+    }),
+    //analyze(),
   ],
 });
