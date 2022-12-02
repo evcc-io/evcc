@@ -84,7 +84,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	c := &Tesla{
 		Helper: request.NewHelper(log),
-		uri:    util.DefaultScheme(cc.URI, "http"),
+		uri:    util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http"),
 	}
 
 	c.vitalsG = provider.Cached(func() (Vitals, error) {
@@ -198,70 +198,6 @@ func (v *Tesla) Currents() (float64, float64, float64, error) {
 	return res.CurrentAA, res.CurrentBA, res.CurrentCA, err
 }
 
-// var _ api.MeterEnergy = (*Tesla)(nil)
-
-// // TotalEnergy implements the api.MeterEnergy interface
-// func (c *Tesla) TotalEnergy() (float64, error) {
-// 	return 1, nil
-// }
-
-// // SoC implements the api.Vehicle interface
-// func (v *Tesla) SoC() (float64, error) {
-// 	res, err := v.chargeStateG()
-
-// 	if err == nil {
-// 		return float64(res.UsableBatteryLevel), nil
-// 	}
-
-// 	return 0, err
-// }
-
-// const kmPerMile = 1.609344
-
-// var _ api.VehicleRange = (*Tesla)(nil)
-
-// // Range implements the api.VehicleRange interface
-// func (v *Tesla) Range() (int64, error) {
-// 	res, err := v.chargeStateG()
-
-// 	if err == nil {
-// 		// miles to km
-// 		return int64(kmPerMile * res.BatteryRange), nil
-// 	}
-
-// 	return 0, err
-// }
-
-// var _ api.VehicleOdometer = (*Tesla)(nil)
-
-// // Odometer implements the api.VehicleOdometer interface
-// func (v *Tesla) Odometer() (float64, error) {
-// 	res, err := v.vehicleStateG()
-
-// 	if err == nil {
-// 		// miles to km
-// 		return kmPerMile * res.Odometer, nil
-// 	}
-
-// 	return 0, err
-// }
-
-// var _ api.VehicleFinishTimer = (*Tesla)(nil)
-
-// // FinishTime implements the api.VehicleFinishTimer interface
-// func (v *Tesla) FinishTime() (time.Time, error) {
-// 	res, err := v.chargeStateG()
-
-// 	if err == nil {
-// 		t := time.Now()
-// 		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
-// 	}
-
-// 	return time.Time{}, err
-// }
-
-// // TODO api.Climater implementation has been removed as it drains battery. Re-check at a later time.
-
 // var _ api.VehiclePosition = (*Tesla)(nil)
 
 // // Position implements the api.VehiclePosition interface
@@ -272,57 +208,4 @@ func (v *Tesla) Currents() (float64, float64, float64, error) {
 // 	}
 
 // 	return 0, 0, err
-// }
-
-// var _ api.SocLimiter = (*Tesla)(nil)
-
-// // TargetSoC implements the api.SocLimiter interface
-// func (v *Tesla) TargetSoC() (float64, error) {
-// 	res, err := v.chargeStateG()
-// 	if err == nil {
-// 		return float64(res.ChargeLimitSoc), nil
-// 	}
-
-// 	return 0, err
-// }
-
-// var _ api.VehicleChargeController = (*Tesla)(nil)
-
-// // StartCharge implements the api.VehicleChargeController interface
-// func (v *Tesla) StartCharge() error {
-// 	err := v.vehicle.StartCharging()
-
-// 	if err != nil && err.Error() == "408 Request Timeout" {
-// 		if _, err := v.vehicle.Wakeup(); err != nil {
-// 			return err
-// 		}
-
-// 		timer := time.NewTimer(90 * time.Second)
-
-// 		for {
-// 			select {
-// 			case <-timer.C:
-// 				return api.ErrTimeout
-// 			default:
-// 				time.Sleep(2 * time.Second)
-// 				if err := v.vehicle.StartCharging(); err == nil || err.Error() != "408 Request Timeout" {
-// 					return err
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return err
-// }
-
-// // StopCharge implements the api.VehicleChargeController interface
-// func (v *Tesla) StopCharge() error {
-// 	err := v.vehicle.StopCharging()
-
-// 	// ignore sleeping vehicle
-// 	if err != nil && err.Error() == "408 Request Timeout" {
-// 		err = nil
-// 	}
-
-// 	return err
 // }
