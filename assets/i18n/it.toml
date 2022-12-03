@@ -3,6 +3,8 @@ docs = "Documentazione"
 blog = "Blog"
 github = "GitHub"
 login = "Iscrizioni"
+about = "Informazioni su evcc"
+sessions = "Sessioni di ricarica"
 
 [footer.version]
 availableShort = "aggiornamento"
@@ -15,8 +17,8 @@ modalCancel = "Cancella"
 modalUpdate = "Aggiorna"
 modalUpdateNow = "Aggiorna ora"
 modalDownload = "Download"
-modalUpdateStatusStart = "Aggiornamento iniziato: "
-modalUpdateStatusFailed = "Aggiornamento fallito: "
+modalUpdateStatusStart = "Aggiornamento iniziato:"
+modalUpdateStatusFailed = "Aggiornamento fallito:"
 
 [notifications]
 modalTitle = "Notifiche"
@@ -32,6 +34,7 @@ batteryDischarge = "Battery discharge"
 gridImport = "Grid import"
 selfConsumption = "Self consumption"
 pvExport = "Grid export"
+loadpoints = "Punto di carico | Punto di carico | {count} Punti di carico"
 
 [main.mode]
 off = "Stop"
@@ -41,6 +44,9 @@ now = "Ora"
 
 [main.loadpoint]
 fallbackName = "Punto di carica"
+power = "Potenza"
+charged = "Caricato"
+duration = "Durata"
 remoteDisabledSoft = "{source}: Ricarica FV adattiva disabilitata"
 remoteDisabledHard = "{source}: Disabilitato"
 
@@ -52,3 +58,77 @@ disconnected = "disconesso"
 charging = "carica"
 ready = "pronto"
 connected = "collegato"
+
+[header.theme]
+auto = "Design: sistema"
+light = "Design: luce"
+dark = "Design: scuro"
+
+[footer.savings]
+footerShort = "{percent}% solare"
+footerLong = "{percent}% di energia solare"
+modalTitle = "Panoramica sull'energia di carica"
+since = "da quando {since}"
+percentTitle = "Energia solare"
+percentSelf = "{self} kWh solare"
+percentGrid = "{grid} kWh grid"
+priceTitle = "Prezzo dell'energia"
+priceGrid = "{gridPrice} griglia"
+savingsComparedToGrid = "rispetto alla griglia"
+savingsTotalEnergy = "{total} kWh totali caricati"
+tabTitle = "I miei dati"
+priceFeedIn = "{feedInPrice} feed-in"
+savingsTitle = "Risparmio"
+
+[footer.community]
+tabTitle = "Comunità viva"
+power = "Potenza di carica"
+powerSub1 = "{activeClients} di {totalClients} partecipanti"
+powerSub2 = "stanno caricando in questo momento"
+greenShare = "Quota solare"
+greenShareSub1 = "il potere è coperto da"
+greenShareSub2 = "FV e accumulo a batteria"
+greenEnergy = "Energia solare"
+greenEnergySub2 = "da ottobre 2022"
+greenEnergySub1 = "accusato di evcc"
+
+[footer.telemetry]
+optIn = "Voglio contribuire anch'io con i miei dati"
+optInMoreDetails = "Sono disponibili ulteriori dettagli {0}"
+optInMoreDetailsLink = "qui"
+optInSponsorship = "È necessaria una sponsorizzazione"
+
+[footer.sponsor]
+titleSponsor = "Sei un sostenitore"
+titleNoSponsor = "Sosteneteci"
+thanks = "Grazie per il tuo sostegno, {sponsor}! Ci aiuta nell'ulteriore sviluppo"
+confetti = "Pronti per i coriandoli?"
+confettiPromise = "Ci saranno adesivi e coriandoli digitali"
+becomeSponsor = "Diventa uno sponsor"
+sticker = "… o adesivi evcc?"
+supportUs = "La nostra missione: Rendere la ricarica solare lo standard. Aiutateci e sostenete finanziariamente evcc"
+
+[main]
+vehicles = "Parcheggio"
+
+[main.loadpointSettings]
+vehicle = "Veicolo"
+default = "default"
+currents = "Carica"
+disclaimerHint = "Nota:"
+title = 'Impostazioni "{0}"'
+disclaimerText = "Le modifiche non sono ancora persistenti. Verranno ripristinate dopo il riavvio del server"
+
+[main.loadpointSettings.minSoC]
+label = "SoC minimo"
+description = "Autonomia per le emergenze. Il veicolo viene caricato \"velocemente\" fino a {0}% in modalità FV. Poi continua solo con l'eccedenza FV"
+
+[main.loadpointSettings.phasesConfigured]
+label = "Fasi"
+phases_0 = "commutazione automatica"
+phases_1 = "1 fase"
+phases_1_hint = "({min} a {max})"
+phases_3 = "3 fasi"
+
+[main.loadpointSettings.maxCurrent]
+label = "Corrente massima"
