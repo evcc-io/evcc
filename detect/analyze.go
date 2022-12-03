@@ -75,6 +75,7 @@ func Consolidate(res []tasks.Result) Summary {
 		{tid: taskEVSEWifi},
 		{tid: taskGoE},
 		{tid: taskKEBA},
+		{tid: taskVersicharge},
 	})
 
 	charge := filter(res, []Criteria{

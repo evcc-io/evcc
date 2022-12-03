@@ -4,7 +4,7 @@ package charger
 
 // Copyright (c) 2019-2022 andig => Vertel.go Charger used as basis
 //                                  Additional input from other EVCC Charger GO templates
-// Copyright (c) 2022 achgut/flogut => Change and adpation to Versicharge Gen 3 Charger
+// Copyright (c) 2022 achgut/Flo56958 => Change and adpation to Versicharge Gen 3 Charger
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
