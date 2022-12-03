@@ -1,6 +1,8 @@
 package core
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/db"
 )
@@ -20,39 +22,50 @@ func (lp *LoadPoint) chargeMeterTotal() float64 {
 	return f
 }
 
-func (lp *LoadPoint) startSession() {
+// createSession creates a charging session. The created timestamp is empty until set by evChargeStartHandler.
+// The session is not persisted yet. That will only happen when stopSession is called.
+func (lp *LoadPoint) createSession() {
 	// test guard
-	if lp.db == nil {
+	if lp.db == nil || lp.session != nil {
 		return
 	}
 
-	if lp.session == nil {
-		lp.session = lp.db.Session(lp.chargeMeterTotal())
+	lp.session = lp.db.Session(lp.chargeMeterTotal())
 
-		if lp.vehicle != nil {
-			lp.session.Vehicle = lp.vehicle.Title()
-		}
-
-		if c, ok := lp.charger.(api.Identifier); ok {
-			if id, err := c.Identify(); err == nil {
-				lp.session.Identifier = id
-			}
-		}
-
-		// TODO remove
-		lp.log.DEBUG.Println("session started")
-
-		lp.db.Persist(lp.session)
+	if lp.vehicle != nil {
+		lp.session.Vehicle = lp.vehicle.Title()
 	}
+
+	if c, ok := lp.charger.(api.Identifier); ok {
+		if id, err := c.Identify(); err == nil {
+			lp.session.Identifier = id
+		}
+	}
+
+	// TODO remove
+	lp.log.DEBUG.Println("session started")
 }
 
+// stopSession ends a charging session segment and persists the session.
 func (lp *LoadPoint) stopSession() {
 	// test guard
 	if lp.db == nil || lp.session == nil {
 		return
 	}
 
-	lp.session.Stop(lp.getChargedEnergy(), lp.chargeMeterTotal())
+	// abort the session if charging has never started
+	if lp.session.Created.IsZero() {
+		// TODO remove
+		lp.log.DEBUG.Println("session aborted")
+		return
+	}
+
+	lp.session.Finished = time.Now()
+	lp.session.MeterStop = lp.chargeMeterTotal()
+
+	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > lp.session.ChargedEnergy {
+		lp.session.ChargedEnergy = chargedEnergy
+	}
 
 	// TODO remove
 	lp.log.DEBUG.Println("session stopped")
@@ -62,6 +75,7 @@ func (lp *LoadPoint) stopSession() {
 
 type sessionOption func(*db.Session)
 
+// updateSession updates any parameter of a charging session and persists the session.
 func (lp *LoadPoint) updateSession(opts ...sessionOption) {
 	// test guard
 	if lp.db == nil || lp.session == nil {
@@ -78,7 +92,8 @@ func (lp *LoadPoint) updateSession(opts ...sessionOption) {
 	lp.db.Persist(lp.session)
 }
 
-func (lp *LoadPoint) finalizeSession() {
+// clearSession clears the charging session without persisting it.
+func (lp *LoadPoint) clearSession() {
 	// test guard
 	if lp.db == nil {
 		return

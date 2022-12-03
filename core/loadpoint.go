@@ -387,7 +387,12 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	lp.startSession()
+	// set created when first charging session segment starts
+	lp.updateSession(func(session *db.Session) {
+		if session.Created.IsZero() {
+			session.Created = lp.clock.Now()
+		}
+	})
 }
 
 // evChargeStopHandler sends external stop event
@@ -432,15 +437,17 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
+
+	// create charging session
+	lp.createSession()
 }
 
 // evVehicleDisconnectHandler sends external start event
 func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.log.INFO.Println("car disconnected")
 
-	// ensure session is persisted and closed before vehicle is changed
-	lp.stopSession()
-	lp.finalizeSession()
+	// session is persisted during evChargeStopHandler which runs before
+	lp.clearSession()
 
 	// phases are unknown when vehicle disconnects
 	lp.resetMeasuredPhases()

@@ -31,15 +31,6 @@ type Session struct {
 	ChargedEnergy float64   `json:"chargedEnergy" csv:"Charged Energy (kWh)" gorm:"column:charged_kwh"`
 }
 
-// Stop stops charging session with end meter reading and due total amount
-func (t *Session) Stop(chargedWh, total float64) {
-	if chargedEnergy := chargedWh / 1e3; chargedEnergy > t.ChargedEnergy {
-		t.ChargedEnergy = chargedEnergy
-	}
-	t.MeterStop = total
-	t.Finished = time.Now()
-}
-
 // Sessions is a list of sessions
 type Sessions []Session
 
