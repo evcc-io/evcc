@@ -1,13 +1,8 @@
+import toml from "toml";
+import { nextTick } from "vue";
 import { createI18n } from "vue-i18n";
-import de from "../i18n/de.toml";
-import en from "../i18n/en.toml";
-import fr from "../i18n/fr.toml";
-import it from "../i18n/it.toml";
-import lt from "../i18n/lt.toml";
-import nl from "../i18n/nl.toml";
-import nb_no from "../i18n/nb_NO.toml";
-import pl from "../i18n/pl.toml";
-import pt from "../i18n/pt.toml";
+import en from "../../i18n/en.toml";
+import { i18n as i18nApi } from "./api";
 
 const PREFERRED_LOCALE_KEY = "preferred_locale";
 
@@ -20,8 +15,43 @@ function getBrowserLocale() {
   return navigatorLocale.trim().split(/-|_/)[0];
 }
 
-export default createI18n({
-  locale: window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale(),
-  fallbackLocale: "en",
-  messages: { de, en, fr, it, lt, nb_no, nl, pl, pt },
-});
+function getLocale() {
+  return window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale();
+}
+
+export default function setupI18n() {
+  const i18n = createI18n({
+    legacy: true,
+    silentFallbackWarn: true,
+    silentTranslationWarn: true,
+    locale: "en",
+    fallbackLocale: "en",
+    messages: { en },
+  });
+  setI18nLanguage(i18n, getLocale());
+  return i18n;
+}
+
+export function setI18nLanguage(i18n, locale) {
+  i18n.global.locale = locale;
+  document.querySelector("html").setAttribute("lang", locale);
+}
+
+async function loadLocaleMessages(i18n, locale) {
+  try {
+    const response = await i18nApi.get(`${locale}.toml`, { params: { v: window.evcc?.version } });
+    const messages = toml.parse(response.data);
+    i18n.global.setLocaleMessage(locale, messages);
+  } catch (e) {
+    console.error(`unable to load translation for [${locale}]`, e);
+  }
+
+  return nextTick();
+}
+
+export async function ensureCurrentLocaleMessages(i18n) {
+  const { locale } = i18n.global;
+  if (!i18n.global.availableLocales.includes(locale)) {
+    await loadLocaleMessages(i18n, locale);
+  }
+}
