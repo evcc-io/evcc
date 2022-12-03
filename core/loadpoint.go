@@ -876,6 +876,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())
+		lp.publish("vehicleIcon", lp.vehicle.Icon())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
 		// unblock api
@@ -891,6 +892,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 		lp.publish("vehiclePresent", false)
 		lp.publish("vehicleTitle", "")
+		lp.publish("vehicleIcon", "")
 		lp.publish("vehicleCapacity", int64(0))
 		lp.publish(vehicleOdometer, 0.0)
 	}

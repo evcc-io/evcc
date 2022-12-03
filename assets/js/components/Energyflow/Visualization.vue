@@ -61,7 +61,7 @@
 					<shopicon-regular-home></shopicon-regular-home>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
-					<shopicon-regular-car3></shopicon-regular-car3>
+					<VehicleIcon :names="vehicleIcons" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
 					<BatteryIcon :soc="batterySoC" />
@@ -80,13 +80,13 @@ import formatter from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import LabelBar from "./LabelBar.vue";
 import AnimatedNumber from "../AnimatedNumber.vue";
-import "@h2d2/shopicons/es/regular/car3";
+import VehicleIcon from "../VehicleIcon";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 
 export default {
 	name: "Visualization",
-	components: { BatteryIcon, LabelBar, AnimatedNumber },
+	components: { BatteryIcon, LabelBar, AnimatedNumber, VehicleIcon },
 	mixins: [formatter],
 	props: {
 		gridImport: { type: Number, default: 0 },
@@ -99,6 +99,7 @@ export default {
 		homePower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
 		valuesInKw: { type: Boolean, default: false },
+		vehicleIcons: { type: Array },
 	},
 	data: function () {
 		return { width: 0, visualizationReady: false };

@@ -7,6 +7,7 @@ import (
 
 type embed struct {
 	Title_       string           `mapstructure:"title"`
+	Icon_        string           `mapstructure:"icon"`
 	Capacity_    float64          `mapstructure:"capacity"`
 	Phases_      int              `mapstructure:"phases"`
 	Identifiers_ []string         `mapstructure:"identifiers"`
@@ -17,6 +18,11 @@ type embed struct {
 // Title implements the api.Vehicle interface
 func (v *embed) Title() string {
 	return v.Title_
+}
+
+// Icon implements the api.Vehicle interface
+func (v *embed) Icon() string {
+	return v.Icon_
 }
 
 // Capacity implements the api.Vehicle interface
