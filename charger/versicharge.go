@@ -35,7 +35,7 @@ package charger
     // daher Verwendung Apparent Power.
 //************************************************************************************
 
-// Steuerung Enable/Enabled durch Pause. Anderer Variante über Current, siehe ABB?
+// Steuerung Enable/Enabled durch Pause. Andere Variante über Current, siehe ABB?
 
 // Weitere zukünfitge Themen zu implementieren / testen:
 
@@ -92,7 +92,8 @@ const (
     VersichargePause              = 1629 // 1 RW UNIT16  -> On: 1, Off: 2 - AN
     VersichargePhases             = 1642 // 1 RW UNIT16  -> 1Phase: 0 ; 3Phase: 1
 	VersichargeRegMaxCurrent      = 1633 // 1 RW UNIT16  -> Max. Charging Current
- // VersichargeRegTotalEnergy     = 1692 // 2 RO Unit32(BigEndian) -> in WattHours (Mulitplikation mit 0,1)
+ // VersichargeRegTotalEnergy     = 1692 // 2 RO Unit32(BigEndian) 
+                                         // -> Gesamtleistung Wallbox in WattHours (Mulitplikation mit 0,1)
 )
 
 var (
@@ -191,18 +192,30 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	return api.StatusNone, err
 }
 
-// Enabled implements the api.Charger interface
+// Enabled implements the api.Charger interface -> Über Pause
+//func (wb *Versicharge) Enabled() (bool, error) {
+//	b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1)
+//	fmt.Printf("%d Enabled \n", b) // nur für Test -> raus
+//	if err != nil {
+//		return false, err
+//	}
+//
+//	return binary.BigEndian.Uint16(b) == 2, nil
+//}
+
+// Enabled implements the api.Charger interface -> Über Strom
 func (wb *Versicharge) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1)
+	b, err := wb.conn.ReadHoldingRegisters(VersichargeRegCurrents[3], 1) // Summenstrom lesen
 	fmt.Printf("%d Enabled \n", b) // nur für Test -> raus
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) == 2, nil
+	return binary.BigEndian.Uint16(b) <> 0, nil
 }
 
-// Enable implements the api.Charger interfaceb
+// Enable implements the api.Charger interface
+// Enable mit Einstellung auf MinCurrent sinnvoll?
 func (wb *Versicharge) Enable(enable bool) error {
     var u uint16
 	u = 1
