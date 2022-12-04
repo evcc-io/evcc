@@ -9,23 +9,35 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/cmd"
-	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/assets"
 	_ "github.com/evcc-io/evcc/util/goversion" // require minimum go version
 )
 
-//go:embed dist
-var assets embed.FS
+var (
+	//go:embed dist
+	web embed.FS
+
+	//go:embed i18n/*.toml
+	i18n embed.FS
+)
 
 // init loads embedded assets unless live assets are already loaded
 func init() {
+	// TODO remove this once Go 1.20 is out with it.
 	rand.Seed(time.Now().UnixNano())
 
-	if server.Assets == nil {
-		fsys, err := fs.Sub(assets, "dist")
+	if !assets.Live() {
+		var err error
+
+		assets.Web, err = fs.Sub(web, "dist")
 		if err != nil {
 			panic(err)
 		}
-		server.Assets = fsys
+
+		assets.I18n, err = fs.Sub(i18n, "i18n")
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
