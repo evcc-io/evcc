@@ -3,7 +3,7 @@ package charger
 // LICENSE
 
 // Copyright (c) 2019-2022 andig => Vertel.go Charger used as basis
-//                                  Additional input from other EVCC Charger GO templates
+//                                  Additional input from other EVCC Charger GO templates (e.g. ABB)
 // Copyright (c) 2022 achgut/Flo56958 => Change and adpation to Versicharge Gen 3 Charger
 
 // This module is NOT covered by the MIT license. All rights reserved.
@@ -35,6 +35,8 @@ package charger
     // daher Verwendung Apparent Power.
 //************************************************************************************
 
+// Steuerung Enable/Enabled durch Pause. Anderer Variante über Current, siehe ABB?
+
 // Weitere zukünfitge Themen zu implementieren / testen:
 
   // Laden 1/3 Phasen
@@ -49,16 +51,16 @@ package charger
     //	VersichargeRegRFID_UID2         = 97 // 5  RO
     //  weitere RFID Karten möglich (bis Register 337)
 
+//  Failsafe Current und Timeout
+    //  VersichargeRegFailsafeTimeout    = 1661 // RW 
+    //  VersichargeRegFailsafeCurrentSum = 1660 // RW 
+
   // Time and Energy of charging session	 
     //  VersichargeRegSessionEnergy   = // derzeit nicht vorhanden im Modbus Table
     //	VersichargeRegChargeTime      = // derzeit nicht vorhanden im Modbus Table
 	//  nur Total Energy (Gesamtladeleistung Wallbox) vorhanden
 
-//  Failsafe Current und Timeout
-    //  VersichargeRegFailsafeTimeout    = 1661 // RW 
-    //  VersichargeRegFailsafeCurrentSum = 1660 // RW 
-
-// Alive Check / Heartbeat Function
+// Alive Check / Heartbeat Function (notwendig? aus ABB)
     //  VersichargeRegAlive           = // derzeit nicht vorhanden im Modbus Table
 
 //************************************************************************************
@@ -73,30 +75,31 @@ import (
 
 const (
 // Info Wallbox, nur Lesen
-    VersichargeRegBrand             = 0   // 5   RO -> Diagnose
-	VersichargeRegProductionDate    = 5   // 2   RO -> Diagnose
-	VersichargeRegSerial            = 7   // 5   RO -> Diagnose 
-	VersichargeRegModel             = 12   // 10 RO -> Diagnose
-	VersichargeRegFirmware          = 31   // 10 RO -> Diagnose
-	VersichargeRegModbusTable       = 41   // 1  RO -> Diagnose
-	VersichargeRegRatedCurrent      = 28   // 1  RO -> Diagnose
-	VersichargeRegCurrentDipSwitch  = 29   // 1  RO -> Diagnose
-	VersichargeRegMeterType         = 30   // 1  RO -> Diagnose
-	VersichargeRegTemp				= 1602 // 1  RO -> Diagnose
+    VersichargeRegBrand             = 0    // 5   RO ASCII    -> Diagnose
+	VersichargeRegProductionDate    = 5    // 2   RO UNIT16[] -> Diagnose
+	VersichargeRegSerial            = 7    // 5   RO ASCII    -> Diagnose 
+	VersichargeRegModel             = 12   // 10 RO ASCII     -> Diagnose
+	VersichargeRegFirmware          = 31   // 10 RO ASCII     -> Diagnose
+	VersichargeRegModbusTable       = 41   // 1  RO UINT16    -> Diagnose
+	VersichargeRegRatedCurrent      = 28   // 1  RO UINT16    -> Diagnose
+	VersichargeRegCurrentDipSwitch  = 29   // 1  RO UNIT16    -> Diagnose
+	VersichargeRegMeterType         = 30   // 1  RO UINT16    -> Diagnose
+	VersichargeRegTemp				= 1602 // 1  RO INT16     -> Diagnose
 
 // Charger States / Settings / Steuerung
- 	VersichargeRegRFIDEnable      =   79 // 1 RW disabled: 0 , enabled: 1	
-    VersichargeRegChargeStatus    = 1601 // 1 RO Status 1-5 nicht dokumentiert
-    VersichargePause              = 1629 // RW On: 1, Off: 2 - Neu
-    VersichargePhases             = 1642 // 1 RW 1Phase: 0 ; 3Phase: 1
-	VersichargeRegMaxCurrent      = 1633 // RW Max. Charging Current
- // VersichargeRegTotalEnergy     = 1692 // RO Unit32 in WattHours
+ 	VersichargeRegRFIDEnable      =   79 // 1 RW UNIT16  -> disabled: 0 , enabled: 1	
+    VersichargeRegChargeStatus    = 1601 // 1 RO INT16?? -> Status 1-5 nicht dokumentiert
+    VersichargePause              = 1629 // 1 RW UNIT16  -> On: 1, Off: 2 - AN
+    VersichargePhases             = 1642 // 1 RW UNIT16  -> 1Phase: 0 ; 3Phase: 1
+	VersichargeRegMaxCurrent      = 1633 // 1 RW UNIT16  -> Max. Charging Current
+ // VersichargeRegTotalEnergy     = 1692 // 2 RO Unit32(BigEndian) -> in WattHours (Mulitplikation mit 0,1)
 )
 
 var (
 	VersichargeRegCurrents = []uint16{1647, 1648, 1649, 1650}  // L1, L2, L3, SUM in AMP
 	VersichargeRegVoltages = []uint16{1651, 1652, 1653}        // L1-N, L2-N, L3-N in V
-//	VersichargeRegPower    = []uint16{1662, 1663, 1664, 1665}  // L1, L2, L3, SUM in Watt (Actual Power) 
+//	VersichargeRegPower    = []uint16{1662, 1663, 1664, 1665}  // L1, L2, L3, SUM in Watt (Actual Power)
+                                                               // SUM (Multiplikation mit 0,1)  
                                                                // WB bringt teilweise falschen Summenwert (bei >10A)
 	VersichargeRegPower    = []uint16{1670, 1671, 1672, 1673}  // L1, L2, L3, SUM in Watt (Aparent Power)
 )
@@ -112,13 +115,13 @@ type Versicharge struct {
 }
 
 func init() {
-	fmt.Printf("init()\n")
+	fmt.Printf("init()\n")  // nur für Test -> raus
 	registry.Add("versicharge", NewVersichargeFromConfig)
 }
 
 // NewVersichargeFromConfig creates a Versicharge charger from generic config
 func NewVersichargeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	fmt.Printf("NewVersichargeFromConfig()\n")
+	fmt.Printf("NewVersichargeFromConfig()\n") // nur für Test -> raus
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -132,7 +135,7 @@ func NewVersichargeFromConfig(other map[string]interface{}) (api.Charger, error)
 
 // NewVersicharge creates a Versicharge charger
 func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
-	fmt.Printf("NewVersicharge()\n")
+	fmt.Printf("NewVersicharge()\n") // nur für Test -> raus
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -158,7 +161,7 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 // Status implements the api.Charger interface (Charging State A-F)
 func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	s, err := wb.conn.ReadHoldingRegisters(VersichargeRegChargeStatus, 1)
-	fmt.Printf("%d Status \n", s)
+	fmt.Printf("%d Status \n", s) // nur für Test -> raus
 		if err != nil {
 		return api.StatusNone, err
 	}
@@ -179,7 +182,7 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 			return api.StatusNone, err
 		}
 		if binary.BigEndian.Uint16(b) == 0x1 {  //Pause ON
-			fmt.Printf("%d Status B \n", s)
+			fmt.Printf("%d Status B \n", s) // nur für Test -> raus
 			return api.StatusB, nil
 		}
 	default: // Other
@@ -191,7 +194,7 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *Versicharge) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1)
-	fmt.Printf("%d Enabled \n", b)
+	fmt.Printf("%d Enabled \n", b) // nur für Test -> raus
 	if err != nil {
 		return false, err
 	}
@@ -203,7 +206,7 @@ func (wb *Versicharge) Enabled() (bool, error) {
 func (wb *Versicharge) Enable(enable bool) error {
     var u uint16
 	u = 1
-	fmt.Printf("Enable \n")
+	fmt.Printf("Enable \n") // nur für Test -> raus
 	if enable == true {
 		u = 2
 		}
@@ -214,7 +217,7 @@ func (wb *Versicharge) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Versicharge) MaxCurrent(current int64) error {
-	fmt.Printf("MaxCurrent %d \n", current)
+	fmt.Printf("MaxCurrent %d \n", current) // nur für Test -> raus
 	if current < 7 {
 		return fmt.Errorf("invalid current %d", current)
 	}
@@ -255,7 +258,7 @@ var _ api.Meter = (*Versicharge)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *Versicharge) CurrentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(VersichargeRegPower[3], 1)
-	fmt.Printf("%d Current Power \n", b)	
+	fmt.Printf("%d Current Power \n", b)	 // nur für Test -> raus
 	if err != nil {
 	  return 0, err
 	}
@@ -267,7 +270,7 @@ var _ api.MeterCurrent = (*Versicharge)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Versicharge) Currents() (float64, float64, float64, error) {
-	fmt.Printf("Currents()\n")
+	fmt.Printf("Currents()\n") // nur für Test -> raus
 	var currents []float64
 	for _, regCurrent := range VersichargeRegCurrents {
 		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 1)
