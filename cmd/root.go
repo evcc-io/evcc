@@ -108,7 +108,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	var err error
 	if cfgErr := loadConfigFile(&conf); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
-		demoConfig(&conf)
+		if err := demoConfig(&conf); err != nil {
+			log.FATAL.Fatal(err)
+		}
 	} else {
 		err = cfgErr
 	}

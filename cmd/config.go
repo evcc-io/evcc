@@ -57,10 +57,10 @@ type config struct {
 	Profile      bool
 	Levels       map[string]string
 	Interval     time.Duration
+	Database     dbConfig
 	Mqtt         mqttConfig
 	ModbusProxy  []proxyConfig
-	Database     dbConfig
-	Javascript   map[string]interface{}
+	Javascript   []javascriptConfig
 	Influx       server.InfluxConfig
 	EEBus        map[string]interface{}
 	HEMS         typedConfig
@@ -76,6 +76,11 @@ type config struct {
 type mqttConfig struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string
+}
+
+type javascriptConfig struct {
+	VM     string
+	Script string
 }
 
 type proxyConfig struct {
