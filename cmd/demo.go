@@ -14,7 +14,7 @@ var demoYaml string
 func demoConfig(conf *config) error {
 	viper.SetConfigType("yaml")
 	if err := viper.ReadConfig(strings.NewReader(demoYaml)); err != nil {
-		return fmt.Errorf("failed decoding demo config: %+w", err)
+		return fmt.Errorf("failed decoding demo config: %w", err)
 	}
 
 	if err := viper.UnmarshalExact(&conf); err != nil {
