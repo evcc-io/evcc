@@ -213,3 +213,7 @@ messaging:
   #   - # list of chat ids
   # - type: email
   #   uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
+  # - type: ntfy
+  #   uri: https://<host>/<topics>
+  #   priority: <priority>
+  #   tags: <tags>
