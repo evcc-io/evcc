@@ -46,9 +46,10 @@ func RegisteredVM(name, init string) (*otto.Otto, error) {
 	return vm, nil
 }
 
-func setConsole(vm *otto.Otto, name string) error {
-	if name == "" {
-		name = "javascript"
+func setConsole(vm *otto.Otto, suffix string) error {
+	name := "js"
+	if suffix != "" {
+		name = name + "-" + suffix
 	}
 
 	log := util.NewLogger(name)

@@ -110,6 +110,8 @@ gokrazy::
 	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
 	mkdir -p flags/github.com/evcc-io/evcc
 	echo "--sqlite=/perm/evcc.db" > flags/github.com/evcc-io/evcc/flags.txt
+	mkdir -p env/github.com/evcc-io/evcc
+	echo "EVCC_NETWORK_PORT=80" > env/github.com/evcc-io/evcc/env.txt
 	mkdir -p buildflags/github.com/evcc-io/evcc
 	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
 	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
