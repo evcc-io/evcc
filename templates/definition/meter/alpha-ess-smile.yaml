@@ -25,7 +25,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 18 # 0x12h Total energy consume from grid (Grid)
+      address: 18 # 0x12h Total energy consumed from grid (Grid)
       type: holding
       decode: uint32
     scale: 0.01
