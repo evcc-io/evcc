@@ -116,13 +116,11 @@ type Versicharge struct {
 }
 
 func init() {
-	fmt.Printf("init()\n")  // nur für Test -> raus
 	registry.Add("versicharge", NewVersichargeFromConfig)
 }
 
 // NewVersichargeFromConfig creates a Versicharge charger from generic config
 func NewVersichargeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	fmt.Printf("NewVersichargeFromConfig()\n") // nur für Test -> raus
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -136,7 +134,6 @@ func NewVersichargeFromConfig(other map[string]interface{}) (api.Charger, error)
 
 // NewVersicharge creates a Versicharge charger
 func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
-	fmt.Printf("NewVersicharge()\n") // nur für Test -> raus
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -162,7 +159,6 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 // Status implements the api.Charger interface (Charging State A-F)
 func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	s, err := wb.conn.ReadHoldingRegisters(VersichargeRegChargeStatus, 1)
-	fmt.Printf("%d Status \n", s) // nur für Test -> raus
 		if err != nil {
 		return api.StatusNone, err
 	}
@@ -183,7 +179,6 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 			return api.StatusNone, err
 		}
 		if binary.BigEndian.Uint16(b) == 0x1 {  //Pause ON
-			fmt.Printf("%d Status B \n", s) // nur für Test -> raus
 			return api.StatusB, nil
 		}
 	default: // Other
@@ -195,7 +190,6 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface -> Über Pause
 func (wb *Versicharge) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1)
-	fmt.Printf("%d Enabled \n", b) // nur für Test -> raus
 	if err != nil {
 		return false, err
 	}
@@ -208,7 +202,6 @@ func (wb *Versicharge) Enabled() (bool, error) {
 func (wb *Versicharge) Enable(enable bool) error {
     var u uint16
 	u = 1
-	fmt.Printf("Enable \n") // nur für Test -> raus
 	if enable == true {
 		u = 2
 		}
@@ -219,7 +212,6 @@ func (wb *Versicharge) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Versicharge) MaxCurrent(current int64) error {
-	fmt.Printf("MaxCurrent %d \n", current) // nur für Test -> raus
 	if current < 7 {
 		return fmt.Errorf("invalid current %d", current)
 	}
@@ -260,7 +252,6 @@ var _ api.Meter = (*Versicharge)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *Versicharge) CurrentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(VersichargeRegPower[3], 1)
-	fmt.Printf("%d Current Power \n", b)	 // nur für Test -> raus
 	if err != nil {
 	  return 0, err
 	}
@@ -272,7 +263,6 @@ var _ api.MeterCurrent = (*Versicharge)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Versicharge) Currents() (float64, float64, float64, error) {
-	fmt.Printf("Currents()\n") // nur für Test -> raus
 	var currents []float64
 	for _, regCurrent := range VersichargeRegCurrents {
 		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 1)
