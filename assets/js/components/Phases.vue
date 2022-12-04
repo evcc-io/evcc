@@ -65,9 +65,6 @@ html.dark .phase {
 .phases--1p .phase--3 {
 	display: none;
 }
-.phase.inactive {
-	display: none;
-}
 .target,
 .real {
 	position: absolute;
