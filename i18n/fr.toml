@@ -22,8 +22,8 @@ modalCancel = "Annuler"
 modalUpdate = "Réactualiser"
 modalUpdateNow = "Mettez à jour maintenant"
 modalDownload = "Télécharger"
-modalUpdateStatusStart = "La mise à jour a commencé: "
-modalUpdateStatusFailed = "Mise à jour a échoué: "
+modalUpdateStatusStart = "La mise à jour a commencé:"
+modalUpdateStatusFailed = "Mise à jour a échoué:"
 
 [footer.savings]
 tabTitle = "Mes données"
