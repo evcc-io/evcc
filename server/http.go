@@ -2,19 +2,17 @@ package server
 
 import (
 	"fmt"
-	"io/fs"
 	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/go-http-utils/etag"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
-
-// Assets is the embedded assets file system
-var Assets fs.FS
 
 type route struct {
 	Methods     []string
@@ -53,11 +51,15 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	// static - individual handlers per root and folders
 	static := router.PathPrefix("/").Subrouter()
 	static.Use(handlers.CompressHandler)
+	static.Use(handlers.CompressHandler, func(h http.Handler) http.Handler {
+		return etag.Handler(h, false)
+	})
 
 	static.HandleFunc("/", indexHandler())
 	for _, dir := range []string{"assets", "meta"} {
-		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(Assets)))
+		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}
+	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
 
 	srv := &HTTPd{
 		Server: &http.Server{

@@ -1,8 +1,6 @@
 package db
 
 import (
-	"time"
-
 	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"gorm.io/gorm"
@@ -35,7 +33,6 @@ func New(name string) (*DB, error) {
 func (s *DB) Session(meter float64) *Session {
 	t := Session{
 		Loadpoint:  s.name,
-		Created:    time.Now(),
 		MeterStart: meter,
 	}
 
