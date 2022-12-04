@@ -193,25 +193,14 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface -> Über Pause
-//func (wb *Versicharge) Enabled() (bool, error) {
-//	b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1)
-//	fmt.Printf("%d Enabled \n", b) // nur für Test -> raus
-//	if err != nil {
-//		return false, err
-//	}
-//
-//	return binary.BigEndian.Uint16(b) == 2, nil
-//}
-
-// Enabled implements the api.Charger interface -> Über Strom
 func (wb *Versicharge) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(VersichargeRegCurrents[3], 1) // Summenstrom lesen
+	b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1)
 	fmt.Printf("%d Enabled \n", b) // nur für Test -> raus
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != 0, nil
+	return binary.BigEndian.Uint16(b) == 2, nil
 }
 
 // Enable implements the api.Charger interface
