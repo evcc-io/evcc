@@ -50,8 +50,9 @@ func loadConfigFile(conf *config) error {
 		}
 	}
 
+	// parse log levels after reading config
 	if err == nil {
-		logLevel()
+		parseLogLevels()
 	}
 
 	return err
@@ -155,9 +156,11 @@ func configureMQTT(conf mqttConfig) error {
 }
 
 // setup javascript
-func configureJavascript(conf map[string]interface{}) error {
-	if err := javascript.Configure(conf); err != nil {
-		return fmt.Errorf("failed configuring javascript: %w", err)
+func configureJavascript(conf []javascriptConfig) error {
+	for _, cc := range conf {
+		if _, err := javascript.RegisteredVM(cc.VM, cc.Script); err != nil {
+			return fmt.Errorf("failed configuring javascript: %w", err)
+		}
 	}
 	return nil
 }
