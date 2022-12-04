@@ -273,7 +273,6 @@ func (wb *Versicharge) Currents() (float64, float64, float64, error) {
 		currents = append(currents, float64(binary.BigEndian.Uint16(b))) // in Ampere
 	}
 
-	fmt.Printf("%f %f %f %f Currents \n", currents[0],currents[1],currents[2],currents[3])	
 	return currents[0], currents[1], currents[2], nil
 }
 
