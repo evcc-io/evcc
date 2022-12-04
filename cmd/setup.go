@@ -50,8 +50,9 @@ func loadConfigFile(conf *config) error {
 		}
 	}
 
+	// parse log levels after reading config
 	if err == nil {
-		logLevel()
+		parseLogLevels()
 	}
 
 	return err

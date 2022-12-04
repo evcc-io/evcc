@@ -14,8 +14,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// logLevel parses --log area:level[,...] switch into levels per log area
-func logLevel() {
+// parseLogLevels parses --log area:level[,...] switch into levels per log area
+func parseLogLevels() {
 	levels := viper.GetStringMapString("levels")
 
 	var level string

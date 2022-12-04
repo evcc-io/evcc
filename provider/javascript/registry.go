@@ -60,12 +60,7 @@ func setConsole(vm *otto.Otto, name string) error {
 		"error": printer(log.ERROR),
 	}
 
-	if err := vm.Set("console", console); err != nil {
-		return err
-	}
-
-	vm.Run(`console.log("Hello, World.");`)
-	return nil
+	return vm.Set("console", console)
 }
 
 func printer(log *log.Logger) func(call otto.FunctionCall) otto.Value {
@@ -74,7 +69,6 @@ func printer(log *log.Logger) func(call otto.FunctionCall) otto.Value {
 			return fmt.Sprintf("%v", a)
 		})
 
-		fmt.Println(strings.Join(output, " "))
 		log.Println(strings.Join(output, " "))
 
 		return otto.UndefinedValue()
