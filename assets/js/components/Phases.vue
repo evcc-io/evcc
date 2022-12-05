@@ -56,14 +56,20 @@ export default {
 	position: relative;
 	border-radius: 1px;
 	overflow: hidden;
+	flex-basis: 100%;
+	opacity: 1;
+	transition-property: flex-basis, margin, opacity;
+	transition-duration: var(--evcc-transition-slow);
+	transition-timing-function: ease-in;
 }
 html.dark .phase {
 	background-color: var(--bs-gray-bright);
 }
 
-.phases--1p .phase--2,
-.phases--1p .phase--3 {
-	display: none;
+.phase.inactive {
+	flex-basis: 0;
+	margin-right: 0 !important;
+	opacity: 0;
 }
 .target,
 .real {
