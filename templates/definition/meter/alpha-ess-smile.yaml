@@ -1,99 +1,96 @@
-template: huawei-dongle-powersensor
+template: alpha-ess-smile
 products:
-  - brand: Huawei
+  - brand: Alpha ESS
     description:
-      generic: SUN2000 with SDongle & Power Sensor
+      generic: Storion SMILE
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 85
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
-    timeout: 15s
-    connectdelay: 1s
     register:
-      address: 37113 # Grid import export power
+      address: 33 # 0x21h Total Active power (Grid Meter)
       type: holding
       decode: int32
-    scale: -1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
-    timeout: 15s
     register:
-      address: 37121 # Active energy import from the grid
+      address: 18 # 0x12h Total energy consumed from grid (Grid)
       type: holding
-      decode: int32
+      decode: uint32
     scale: 0.01
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
-    timeout: 15s
     register:
-      address: 37107 # Huawei phase A grid current
+      address: 23 # 0x17h Current of A phase
       type: holding
-      decode: int32
-    scale: -0.01
+      decode: int16
+    scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
-    timeout: 15s
     register:
-      address: 37109 # Huawei phase B grid current
+      address: 24 # 0x18h Current of B phase
       type: holding
-      decode: int32
-    scale: -0.01
+      decode: int16
+    scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
-    timeout: 15s
     register:
-      address: 37111 # Huawei phase C grid current
+      address: 25 # 0x19h Current of C phase
       type: holding
-      decode: int32
-    scale: -0.01
+      decode: int16
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
-    timeout: 15s
-    connectdelay: 1s
     register:
-      address: 32064 # Input power DC (if no battery in your system - for more precise readings use 32080 # Active generation power AC)
+      address: 161 # 0xA1h Total Active power (PV Meter)
       type: holding
       decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 144 # 0x90h Total energy feed to Grid (PV)
+      type: holding
+      decode: uint32
+    scale: 0.01
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
-    timeout: 15s
-    connectdelay: 1s
     register:
-      address: 37001
+      address: 294 # 0x126h Battery Power
       type: holding
-      decode: int32nan
-    scale: -1
+      decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 290 # 0x122h Battery discharge energy
+      type: holding
+      decode: uint32
+    scale: 0.1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
-    timeout: 15s
     register:
-      address: 37004
+      address: 258 # 0x102h Battery SOC
       type: holding
-      decode: uint16nan
+      decode: uint16
     scale: 0.1
   {{- end }}

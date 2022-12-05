@@ -51,6 +51,7 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.3.5
 	github.com/joeshaw/carwings v0.0.0-20220711204617-d90801cf2848
+	github.com/joho/godotenv v1.4.0
 	github.com/jpfielding/go-http-digest v0.0.0-20211006141426-fbc93758452e
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.3

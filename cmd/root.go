@@ -21,8 +21,9 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -86,6 +87,7 @@ func initConfig() {
 		viper.SetConfigName("evcc")
 	}
 
+	viper.SetEnvPrefix("evcc")
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// print version
@@ -106,7 +108,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	var err error
 	if cfgErr := loadConfigFile(&conf); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
-		demoConfig(&conf)
+		if err := demoConfig(&conf); err != nil {
+			log.FATAL.Fatal(err)
+		}
 	} else {
 		err = cfgErr
 	}
