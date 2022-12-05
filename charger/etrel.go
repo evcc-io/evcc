@@ -202,8 +202,6 @@ func (wb *Etrel) CurrentPower() (float64, error) {
 	return float64(encoding.Float32(b) * 1e3), err
 }
 
-var _ api.ChargeRater = (*Etrel)(nil)
-
 var _ api.MeterCurrent = (*Etrel)(nil)
 
 // Currents implements the api.MeterCurrent interface
@@ -222,24 +220,26 @@ func (wb *Etrel) Currents() (float64, float64, float64, error) {
 }
 
 // var _ api.ChargeTimer = (*Etrel)(nil)
-
+//
 // // ChargingTime implements the api.ChargeTimer interface
 // func (wb *Etrel) ChargingTime() (time.Duration, error) {
 // 	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegChargeTime, 4)
 // 	if err != nil {
 // 		return 0, err
 // 	}
-
+//
 // 	return time.Duration(int64(binary.BigEndian.Uint64(b))) * time.Second, nil
 // }
 
+// var _ api.ChargeRater = (*Etrel)(nil)
+//
 // // ChargedEnergy implements the api.ChargeRater interface
 // func (wb *Etrel) ChargedEnergy() (float64, error) {
 // 	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegSessionEnergy, 2)
 // 	if err != nil {
 // 		return 0, err
 // 	}
-
+//
 // 	return float64(encoding.Float32(b)), err
 // }
 
