@@ -16,6 +16,9 @@ const state = reactive({
 		<Variant title="one phase">
 			<Phases v-bind="state" />
 		</Variant>
+		<Variant title="two phase">
+			<Phases v-bind="state" :phasesActive="2" />
+		</Variant>
 		<Variant title="three phase">
 			<Phases v-bind="state" :phasesActive="3" />
 		</Variant>

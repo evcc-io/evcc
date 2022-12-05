@@ -1,6 +1,11 @@
 <template>
-	<div class="phases d-flex justify-content-between" :class="rootClass">
-		<div v-for="num in [1, 2, 3]" :key="num" :class="`phase phase--${num} me-1`">
+	<div class="phases d-flex justify-content-between">
+		<div
+			v-for="num in [1, 2, 3]"
+			:key="num"
+			class="phase me-1"
+			:class="{ inactive: inactive(num) }"
+		>
 			<div class="target" :style="{ width: `${targetWidth()}%` }"></div>
 			<div class="real" :style="{ width: `${realWidth(num)}%` }"></div>
 		</div>
@@ -18,18 +23,17 @@ export default {
 		maxCurrent: { type: Number },
 	},
 	computed: {
-		rootClass() {
-			return this.onlyFirstPhase ? "phases--1p" : "phases-3p";
-		},
-		onlyFirstPhase() {
+		highestActivePhase() {
 			if (this.chargeCurrents) {
-				const [l1, l2, l3] = this.chargeCurrents;
-				return l1 && !l2 && !l3;
+				return this.chargeCurrents.findLastIndex((current) => current > 0) + 1;
 			}
-			return this.phasesActive === 1;
+			return this.phasesActive;
 		},
 	},
 	methods: {
+		inactive(num) {
+			return num > this.highestActivePhase;
+		},
 		targetWidth() {
 			let current = Math.min(Math.max(this.minCurrent, this.chargeCurrent), this.maxCurrent);
 			return (100 / this.maxCurrent) * current;
@@ -65,7 +69,6 @@ export default {
 html.dark .phase {
 	background-color: var(--bs-gray-bright);
 }
-
 .phase.inactive {
 	flex-basis: 0;
 	margin-right: 0 !important;
