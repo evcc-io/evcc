@@ -15,7 +15,12 @@ import (
 	"tailscale.com/tsnet"
 )
 
-const NoState = "NoState"
+const (
+	NoState          = "NoState"
+	NeedsLogin       = "NeedsLogin"
+	NeedsMachineAuth = "NeedsMachineAuth"
+	Running          = "Running"
+)
 
 func Run(host, authKey string, downstreamPort int) (string, error) {
 	logr := util.NewLogger("tailscale")
@@ -42,24 +47,40 @@ func Run(host, authKey string, downstreamPort int) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 	defer cancel()
 
+LOOP:
 	for {
 		status, err = lc.Status(ctx)
 		if err != nil {
 			return "", err
 		}
 
-		if status.BackendState == NoState {
+		switch status.BackendState {
+		case NeedsMachineAuth:
+			logr.INFO.Printf("needs machine auth: %+v", status)
+			break LOOP
+
+		case NeedsLogin:
+			if status.AuthURL == "" {
+				time.Sleep(10 * time.Millisecond)
+				continue
+			}
+
+			logr.INFO.Printf("needs login: %s", status.AuthURL)
+			break LOOP
+
+		case Running:
+			var net string
+			if tn := status.CurrentTailnet; tn != nil {
+				net = "." + tn.MagicDNSSuffix
+			}
+
+			logr.INFO.Printf("url: https://%s ip: %v", s.Hostname+net, status.TailscaleIPs)
+			break LOOP
+
+		default:
+			logr.ERROR.Println("status:", status.BackendState, status.AuthURL)
 			time.Sleep(10 * time.Millisecond)
-			continue
 		}
-
-		var net string
-		if tn := status.CurrentTailnet; tn != nil {
-			net = "." + tn.MagicDNSSuffix
-		}
-
-		logr.INFO.Printf("url: https://%s ip: %v", s.Hostname+net, status.TailscaleIPs)
-		break
 	}
 
 	ln, err := s.Listen("tcp", ":443")
@@ -80,7 +101,6 @@ func handle(ln net.Listener, port string) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			// logr.ERROR.Println(err)
 			continue
 		}
 
