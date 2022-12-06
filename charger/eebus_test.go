@@ -73,7 +73,7 @@ func (e *EmobilityMock) EVSoCSupported() (bool, error) {
 }
 
 func (e *EmobilityMock) EVSoC() (float64, error) {
-	return 0.0, nil
+	return 0, nil
 }
 
 func (e *EmobilityMock) EVCoordinatedChargingSupported() (bool, error) {
@@ -91,25 +91,25 @@ func TestEEBusIsCharging(t *testing.T) {
 		{
 			"3 phase IEC",
 			[]limitStruct{
-				{1, 6.0, 16.0, 0.0},
-				{2, 6.0, 16.0, 0.0},
-				{3, 6.0, 16.0, 0.0},
+				{1, 6, 16, 0},
+				{2, 6, 16, 0},
+				{3, 6, 16, 0},
 			},
 			[]testMeasurementStruct{
 				{
 					false,
 					[]measurementStruct{
-						{1, 0.0},
-						{2, 3.0},
-						{3, 0.0},
+						{1, 0},
+						{2, 3},
+						{3, 0},
 					},
 				},
 				{
 					true,
 					[]measurementStruct{
-						{1, 6.0},
-						{2, 0.0},
-						{3, 1.0},
+						{1, 6},
+						{2, 0},
+						{3, 1},
 					},
 				},
 			},
@@ -117,19 +117,19 @@ func TestEEBusIsCharging(t *testing.T) {
 		{
 			"1 phase IEC",
 			[]limitStruct{
-				{1, 6.0, 16.0, 0.0},
+				{1, 6, 16, 0},
 			},
 			[]testMeasurementStruct{
 				{
 					false,
 					[]measurementStruct{
-						{1, 2.0},
+						{1, 2},
 					},
 				},
 				{
 					true,
 					[]measurementStruct{
-						{1, 6.0},
+						{1, 6},
 					},
 				},
 			},
@@ -137,25 +137,25 @@ func TestEEBusIsCharging(t *testing.T) {
 		{
 			"3 phase ISO",
 			[]limitStruct{
-				{1, 2.2, 16.0, 0.1},
-				{2, 2.2, 16.0, 0.1},
-				{3, 2.2, 16.0, 0.1},
+				{1, 2.2, 16, 0.1},
+				{2, 2.2, 16, 0.1},
+				{3, 2.2, 16, 0.1},
 			},
 			[]testMeasurementStruct{
 				{
 					false,
 					[]measurementStruct{
-						{1, 1.0},
-						{2, 0.0},
-						{3, 0.0},
+						{1, 1},
+						{2, 0},
+						{3, 0},
 					},
 				},
 				{
 					true,
 					[]measurementStruct{
 						{1, 1.8},
-						{2, 1.0},
-						{3, 3.0},
+						{2, 1},
+						{3, 3},
 					},
 				},
 			},
