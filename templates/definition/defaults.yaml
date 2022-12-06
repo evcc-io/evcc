@@ -123,6 +123,7 @@ params:
       de: Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden
       en: Time interval with when data should be reloaded from the vehicle
     advanced: true
+    valuetype: duration
     example: 5m
   - name: cloud
     description:
@@ -271,6 +272,7 @@ presets:
       - name: cache
         default: 15m
         advanced: true
+        valuetype: duration
     render: |
       {{define "vehicle-base"}}
       {{- if ne .title "" }}
