@@ -89,7 +89,9 @@ func (lp *LoadPoint) updateSession(opts ...sessionOption) {
 	// TODO remove
 	lp.log.DEBUG.Println("session updated")
 
-	lp.db.Persist(lp.session)
+	if !lp.session.Created.IsZero() {
+		lp.db.Persist(lp.session)
+	}
 }
 
 // clearSession clears the charging session without persisting it.
