@@ -52,9 +52,6 @@ func (v *API) Vehicles() (res []string, err error) {
 	uri := fmt.Sprintf("%s/vehicles", BaseURL)
 
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
-	if err != nil {
-		return nil, err
-	}
 
 	var vehicles struct {
 		Data []struct {
@@ -64,13 +61,12 @@ func (v *API) Vehicles() (res []string, err error) {
 		}
 	}
 
-	err = v.DoJSON(req, &vehicles)
-	if err != nil {
-		return nil, err
-	}
+	if err == nil {
+		err = v.DoJSON(req, &vehicles)
 
-	for _, v := range vehicles.Data {
-		res = append(res, v.VIN)
+		for _, v := range vehicles.Data {
+			res = append(res, v.VIN)
+		}
 	}
 
 	return res, err
@@ -83,11 +79,10 @@ func (v *API) Status(vin string) (res SelectiveSatus, err error) {
 
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
-	if err != nil {
-		return res, err
+	if err == nil {
+		err = v.DoJSON(req, &res)
 	}
 
-	err = v.DoJSON(req, &res)
 	return res, err
 }
 
@@ -96,12 +91,13 @@ func (v *API) Action(vin, action, value string) error {
 	uri := fmt.Sprintf("%s/vehicles/%s/%s/%s", BaseURL, vin, action, value)
 
 	req, err := request.New(http.MethodPost, uri, nil, request.AcceptJSON)
-	if err != nil {
-		return err
+
+	if err == nil {
+		var res interface{}
+		err = v.DoJSON(req, &res)
 	}
 
-	var res interface{}
-	return v.DoJSON(req, &res)
+	return err
 }
 
 // Any implements any api response
@@ -111,11 +107,11 @@ func (v *API) Any(uri, vin string) (interface{}, error) {
 	}
 
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
-	if err != nil {
-		return nil, err
-	}
 
 	var res interface{}
-	err = v.DoJSON(req, &res)
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
 	return res, err
 }
