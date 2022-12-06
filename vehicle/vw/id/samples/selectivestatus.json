@@ -1,0 +1,289 @@
+{
+    "automation": {
+        "climatisationTimer": {
+            "value": {
+                "timers": [
+                    {
+                        "id": 1,
+                        "enabled": true,
+                        "recurringTimer": {
+                            "startTime": "04:55",
+                            "recurringOn": {
+                                "mondays": false,
+                                "tuesdays": true,
+                                "wednesdays": true,
+                                "thursdays": true,
+                                "fridays": true,
+                                "saturdays": false,
+                                "sundays": false
+                            }
+                        }
+                    },
+                    {
+                        "id": 2,
+                        "enabled": false,
+                        "singleTimer": {
+                            "startDateTime": "2022-11-26T06:45:00Z"
+                        }
+                    }
+                ],
+                "carCapturedTimestamp": "2022-12-05T21:25:30.835Z",
+                "timeInCar": "2022-12-05T22:25:31+01:00"
+            }
+        },
+        "chargingProfiles": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T21:25:32.234Z",
+                "timeInCar": "2022-12-05T22:25:31+01:00",
+                "profiles": []
+            }
+        }
+    },
+    "userCapabilities": {
+        "capabilitiesStatus": {
+            "value": [
+                {
+                    "id": "webApp",
+                    "userDisablingAllowed": false
+                },
+                {
+                    "id": "automation",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "charging",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "chargingProfiles",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": false
+                },
+                {
+                    "id": "chargingStations",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "climatisation",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "climatisationTimers",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": false
+                },
+                {
+                    "id": "destinations",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "fuelStatus",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": false
+                },
+                {
+                    "id": "ignition",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": false
+                },
+                {
+                    "id": "mapUpdate",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "onlineSpeech",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "parkingInformation",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "readiness",
+                    "userDisablingAllowed": false
+                },
+                {
+                    "id": "routing",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "trafficInformation",
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                },
+                {
+                    "id": "webRadio",
+                    "status": [
+                        1004
+                    ],
+                    "expirationDate": "2025-02-12T23:59:59Z",
+                    "userDisablingAllowed": true
+                }
+            ]
+        }
+    },
+    "charging": {
+        "batteryStatus": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T22:28:06Z",
+                "currentSOC_pct": 76,
+                "cruisingRangeElectric_km": 206
+            }
+        },
+        "chargingStatus": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T22:28:06Z",
+                "remainingChargingTimeToComplete_min": 5,
+                "chargingState": "charging",
+                "chargeMode": "manual",
+                "chargePower_kW": 10,
+                "chargeRate_kmph": 52,
+                "chargeType": "ac",
+                "chargingSettings": "default"
+            }
+        },
+        "chargingSettings": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T21:25:36Z",
+                "maxChargeCurrentAC": "maximum",
+                "autoUnlockPlugWhenCharged": "permanent",
+                "autoUnlockPlugWhenChargedAC": "permanent",
+                "targetSOC_pct": 80
+            }
+        },
+        "plugStatus": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T21:41:13Z",
+                "plugConnectionState": "connected",
+                "plugLockState": "locked",
+                "externalPower": "active",
+                "ledColor": "green"
+            }
+        },
+        "chargeMode": {
+            "value": {
+                "preferredChargeMode": "manual",
+                "availableChargeModes": [
+                    "invalid"
+                ]
+            }
+        }
+    },
+    "climatisation": {
+        "climatisationStatus": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T21:25:34Z",
+                "remainingClimatisationTime_min": 0,
+                "climatisationState": "off"
+            }
+        },
+        "climatisationSettings": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T21:25:34Z",
+                "targetTemperature_C": 22,
+                "targetTemperature_F": 72,
+                "unitInCar": "celsius",
+                "climatizationAtUnlock": true,
+                "windowHeatingEnabled": true,
+                "zoneFrontLeftEnabled": true,
+                "zoneFrontRightEnabled": false
+            }
+        },
+        "windowHeatingStatus": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T21:25:34Z",
+                "windowHeatingStatus": [
+                    {
+                        "windowLocation": "front",
+                        "windowHeatingState": "off"
+                    },
+                    {
+                        "windowLocation": "rear",
+                        "windowHeatingState": "off"
+                    }
+                ]
+            }
+        }
+    },
+    "climatisationTimers": {
+        "climatisationTimersStatus": {
+            "value": {
+                "timers": [
+                    {
+                        "id": 1,
+                        "enabled": true,
+                        "recurringTimer": {
+                            "startTime": "04:55",
+                            "recurringOn": {
+                                "mondays": false,
+                                "tuesdays": true,
+                                "wednesdays": true,
+                                "thursdays": true,
+                                "fridays": true,
+                                "saturdays": false,
+                                "sundays": false
+                            }
+                        }
+                    },
+                    {
+                        "id": 2,
+                        "enabled": false,
+                        "singleTimer": {
+                            "startDateTime": "2022-11-26T06:45:00Z"
+                        }
+                    }
+                ],
+                "carCapturedTimestamp": "2022-12-05T21:25:30.835Z",
+                "timeInCar": "2022-12-05T22:25:31+01:00"
+            }
+        }
+    },
+    "fuelStatus": {
+        "rangeStatus": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T22:28:06Z",
+                "carType": "electric",
+                "primaryEngine": {
+                    "type": "electric",
+                    "currentSOC_pct": 76,
+                    "remainingRange_km": 206
+                },
+                "totalRange_km": 206
+            }
+        }
+    },
+    "readiness": {
+        "readinessStatus": {
+            "value": {
+                "connectionState": {
+                    "isOnline": true,
+                    "isActive": false,
+                    "batteryPowerLevel": "comfort",
+                    "dailyPowerBudgetAvailable": true
+                },
+                "connectionWarning": {
+                    "insufficientBatteryLevelWarning": false,
+                    "dailyPowerBudgetWarning": false
+                }
+            }
+        }
+    },
+    "chargingProfiles": {
+        "chargingProfilesStatus": {
+            "value": {
+                "carCapturedTimestamp": "2022-12-05T21:25:32.234Z",
+                "timeInCar": "2022-12-05T22:25:31+01:00",
+                "profiles": []
+            }
+        }
+    }
+}
