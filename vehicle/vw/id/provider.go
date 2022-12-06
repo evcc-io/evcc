@@ -36,6 +36,11 @@ func (v *Provider) SoC() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	if res.Charging == nil {
+		return 0, fmt.Errorf("SoC not avaliable")
+	}
+
 	return float64(res.Charging.BatteryStatus.Value.CurrentSOCPct), nil
 }
 
@@ -48,6 +53,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if err != nil {
 		return "", err
+	}
+
+	if res.Charging == nil {
+		return "", fmt.Errorf("PlugStatus not avaliable")
 	}
 
 	if res.Charging.PlugStatus.Value.PlugConnectionState == "connected" {
@@ -69,6 +78,10 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		return time.Time{}, err
 	}
 
+	if res.Charging == nil {
+		return time.Time{}, fmt.Errorf("Finishtime not avaliable")
+	}
+
 	return res.Charging.ChargingStatus.Value.CarCapturedTimestamp.Add(time.Duration(res.Charging.ChargingStatus.Value.RemainingChargingTimeToCompleteMin) * time.Minute), err
 
 }
@@ -80,6 +93,10 @@ func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 	if err != nil {
 		return 0, err
+	}
+
+	if res.Charging == nil {
+		return 0, fmt.Errorf("Range not avaliable")
 	}
 
 	return int64(res.Charging.BatteryStatus.Value.CruisingRangeElectricKm), nil
@@ -100,6 +117,10 @@ func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err
 	res, err := v.statusG()
 	if err != nil {
 		return active, outsideTemp, targetTemp, err
+	}
+
+	if res.Climatisation == nil {
+		return false, 0, 0, fmt.Errorf("Climater not avaliable")
 	}
 
 	state := strings.ToLower(res.Climatisation.ClimatisationStatus.Value.ClimatisationState)
@@ -125,6 +146,11 @@ func (v *Provider) TargetSoC() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	if res.Charging == nil {
+		return 0, fmt.Errorf("Target SoC not avaliable")
+	}
+
 	return float64(res.Charging.ChargingSettings.Value.TargetSOCPct), nil
 }
 

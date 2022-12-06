@@ -7,7 +7,7 @@ import (
 )
 
 type SelectiveSatus struct {
-	Automation struct {
+	Automation *struct {
 		ClimatisationTimer struct {
 			Value struct {
 				Timers []struct {
@@ -33,7 +33,7 @@ type SelectiveSatus struct {
 				TimeInCar            Timestamp `json:"timeInCar"`
 			} `json:"value"`
 		} `json:"climatisationTimer"`
-		ChargingProfiles struct {
+		ChargingProfiles *struct {
 			Value struct {
 				CarCapturedTimestamp Timestamp     `json:"carCapturedTimestamp"`
 				TimeInCar            Timestamp     `json:"timeInCar"`
@@ -41,7 +41,7 @@ type SelectiveSatus struct {
 			} `json:"value"`
 		} `json:"chargingProfiles"`
 	} `json:"automation"`
-	UserCapabilities struct {
+	UserCapabilities *struct {
 		CapabilitiesStatus struct {
 			Value []struct {
 				ID                   string    `json:"id"`
@@ -51,7 +51,7 @@ type SelectiveSatus struct {
 			} `json:"value"`
 		} `json:"capabilitiesStatus"`
 	} `json:"userCapabilities"`
-	Charging struct {
+	Charging *struct {
 		BatteryStatus struct {
 			Value struct {
 				CarCapturedTimestamp    Timestamp `json:"carCapturedTimestamp"`
@@ -96,7 +96,7 @@ type SelectiveSatus struct {
 			} `json:"value"`
 		} `json:"chargeMode"`
 	} `json:"charging"`
-	Climatisation struct {
+	Climatisation *struct {
 		ClimatisationStatus struct {
 			Value struct {
 				CarCapturedTimestamp          Timestamp `json:"carCapturedTimestamp"`
@@ -126,7 +126,7 @@ type SelectiveSatus struct {
 			} `json:"value"`
 		} `json:"windowHeatingStatus"`
 	} `json:"climatisation"`
-	ClimatisationTimers struct {
+	ClimatisationTimers *struct {
 		ClimatisationTimersStatus struct {
 			Value struct {
 				Timers []struct {
@@ -153,7 +153,7 @@ type SelectiveSatus struct {
 			} `json:"value"`
 		} `json:"climatisationTimersStatus"`
 	} `json:"climatisationTimers"`
-	FuelStatus struct {
+	FuelStatus *struct {
 		RangeStatus struct {
 			Value struct {
 				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
@@ -167,7 +167,7 @@ type SelectiveSatus struct {
 			} `json:"value"`
 		} `json:"rangeStatus"`
 	} `json:"fuelStatus"`
-	Readiness struct {
+	Readiness *struct {
 		ReadinessStatus struct {
 			Value struct {
 				ConnectionState struct {
@@ -183,7 +183,7 @@ type SelectiveSatus struct {
 			} `json:"value"`
 		} `json:"readinessStatus"`
 	} `json:"readiness"`
-	ChargingProfiles struct {
+	ChargingProfiles *struct {
 		ChargingProfilesStatus struct {
 			Value struct {
 				CarCapturedTimestamp Timestamp     `json:"carCapturedTimestamp"`
