@@ -38,7 +38,7 @@ func (v *Provider) SoC() (float64, error) {
 		return float64(res.Charging.BatteryStatus.Value.CurrentSOCPct), nil
 	}
 
-	return 0, fmt.Errorf("SoC not avaliable")
+	return 0, fmt.Errorf("SoC not avaliable: %s", err)
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -58,7 +58,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return status, nil
 	}
 
-	return "", fmt.Errorf("PlugStatus not avaliable")
+	return "", fmt.Errorf("PlugStatus not avaliable: %s", err)
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -70,7 +70,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		return res.Charging.ChargingStatus.Value.CarCapturedTimestamp.Add(time.Duration(res.Charging.ChargingStatus.Value.RemainingChargingTimeToCompleteMin) * time.Minute), err
 	}
 
-	return time.Time{}, fmt.Errorf("FinishTime not avaliable")
+	return time.Time{}, fmt.Errorf("FinishTime not avaliable: %s", err)
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
@@ -82,7 +82,7 @@ func (v *Provider) Range() (int64, error) {
 		return int64(res.Charging.BatteryStatus.Value.CruisingRangeElectricKm), nil
 	}
 
-	return 0, fmt.Errorf("Range not avaliable")
+	return 0, fmt.Errorf("Range not avaliable: %s", err)
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -112,7 +112,7 @@ func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err
 		return active, outsideTemp, targetTemp, nil
 	}
 
-	return false, 0, 0, fmt.Errorf("Climater not avaliable")
+	return false, 0, 0, fmt.Errorf("Climater not avaliable: %s", err)
 }
 
 var _ api.SocLimiter = (*Provider)(nil)
@@ -124,7 +124,7 @@ func (v *Provider) TargetSoC() (float64, error) {
 		return float64(res.Charging.ChargingSettings.Value.TargetSOCPct), nil
 	}
 
-	return 0, fmt.Errorf("Target SoC not avaliable")
+	return 0, fmt.Errorf("Target SoC not avaliable: %s", err)
 }
 
 var _ api.VehicleChargeController = (*Provider)(nil)
