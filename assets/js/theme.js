@@ -49,9 +49,9 @@ function updateTheme() {
   const $html = document.querySelector("html");
   $html.classList.add("no-transitions");
   $html.classList.toggle("dark", theme === THEME_DARK);
-  window.requestAnimationFrame(function () {
+  window.setTimeout(function () {
     $html.classList.remove("no-transitions");
-  });
+  }, 100);
 }
 
 export function watchThemeChanges() {
