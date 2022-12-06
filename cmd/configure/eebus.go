@@ -1,10 +1,8 @@
 package configure
 
 import (
-	"crypto/x509/pkix"
 	"fmt"
 
-	certhelper "github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server"
 )
@@ -22,22 +20,14 @@ func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 
 // eebusCertificate creates EEBUS certificate and returns private/public key
 func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
-	details := server.EEBUSDetails
-
-	subject := pkix.Name{
-		CommonName:   details.DeviceCode,
-		Country:      []string{"DE"},
-		Organization: []string{details.BrandName},
-	}
-
 	var eebusConfig map[string]interface{}
 
-	cert, err := certhelper.CreateCertificate(true, subject)
+	cert, err := server.CreateEEBUSCertificate()
 	if err != nil {
 		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Create", nil))
 	}
 
-	pubKey, privKey, err := certhelper.GetX509KeyPair(cert)
+	pubKey, privKey, err := server.GetX509KeyPair(cert)
 	if err != nil {
 		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Use", nil))
 	}

@@ -3,7 +3,7 @@ package charger
 import (
 	"testing"
 
-	"github.com/evcc-io/eebus/communication"
+	"github.com/enbility/cemd/emobility"
 )
 
 type limitStruct struct {
@@ -20,6 +20,67 @@ type testMeasurementStruct struct {
 	expected bool
 	data     []measurementStruct
 }
+
+// Emobility mock
+
+type EmobilityMock struct {
+	connectedPhases                               uint
+	currents, limitsMin, limitsMax, limitsDefault []float64
+}
+
+func (e *EmobilityMock) EVCurrentChargeState() (emobility.EVChargeStateType, error) {
+	return emobility.EVChargeStateTypeUnknown, nil
+}
+
+func (e *EmobilityMock) EVConnectedPhases() (uint, error) {
+	return e.connectedPhases, nil
+}
+
+func (e *EmobilityMock) EVChargedEnergy() (float64, error) {
+	return 0, nil
+}
+
+func (e *EmobilityMock) EVPowerPerPhase() ([]float64, error) {
+	return []float64{}, nil
+}
+
+func (e *EmobilityMock) EVCurrentsPerPhase() ([]float64, error) {
+	return e.currents, nil
+}
+
+func (e *EmobilityMock) EVCurrentLimits() ([]float64, []float64, []float64, error) {
+	return e.limitsMin, e.limitsMax, e.limitsDefault, nil
+}
+
+func (e *EmobilityMock) EVWriteLoadControlLimits(obligations, recommendations []float64) error {
+	return nil
+}
+
+func (e *EmobilityMock) EVCommunicationStandard() (emobility.EVCommunicationStandardType, error) {
+	return emobility.EVCommunicationStandardTypeUnknown, nil
+}
+
+func (e *EmobilityMock) EVIdentification() (string, error) {
+	return "", nil
+}
+
+func (e *EmobilityMock) EVOptimizationOfSelfConsumptionSupported() (bool, error) {
+	return false, nil
+}
+
+func (e *EmobilityMock) EVSoCSupported() (bool, error) {
+	return false, nil
+}
+
+func (e *EmobilityMock) EVSoC() (float64, error) {
+	return 0.0, nil
+}
+
+func (e *EmobilityMock) EVCoordinatedChargingSupported() (bool, error) {
+	return false, nil
+}
+
+var _ emobility.EmobilityI = (*EmobilityMock)(nil)
 
 func TestEEBusIsCharging(t *testing.T) {
 	tests := []struct {
@@ -101,32 +162,32 @@ func TestEEBusIsCharging(t *testing.T) {
 		},
 	}
 
-	eebus := &EEBus{}
+	emobilityMock := &EmobilityMock{}
+	eebus := &EEBus{
+		emobility: emobilityMock,
+	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			data := &communication.EVSEClientDataType{
-				EVData: communication.EVDataType{
-					ConnectedPhases: 3,
-					Limits:          make(map[uint]communication.EVCurrentLimitType),
-					Measurements:    communication.EVMeasurementsType{},
-				},
-			}
+			emobilityMock.connectedPhases = 3
+			emobilityMock.limitsMin = make([]float64, 0)
+			emobilityMock.limitsMax = make([]float64, 0)
+			emobilityMock.limitsDefault = make([]float64, 0)
 
 			for _, limit := range tc.limits {
-				data.EVData.Limits[limit.phase] = communication.EVCurrentLimitType{
-					Min:     limit.min,
-					Max:     limit.max,
-					Default: limit.pause,
-				}
+				emobilityMock.limitsMin = append(emobilityMock.limitsMin, limit.min)
+				emobilityMock.limitsMax = append(emobilityMock.limitsMax, limit.max)
+				emobilityMock.limitsDefault = append(emobilityMock.limitsDefault, limit.pause)
 			}
 
 			for index, m := range tc.measurements {
+				emobilityMock.currents = make([]float64, 0)
+
 				for _, d := range m.data {
-					data.EVData.Measurements.Current.Store(d.phase, d.current)
+					emobilityMock.currents = append(emobilityMock.currents, d.current)
 				}
 
-				result := eebus.isCharging(data)
+				result := eebus.isCharging()
 				if result != m.expected {
 					t.Errorf("Failure: test %s, series %d, expected %v, got %v", tc.name, index, m.expected, result)
 				}
