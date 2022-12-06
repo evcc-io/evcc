@@ -1,0 +1,14 @@
+product:
+  brand: Etrel
+  description: INCH Duo
+capabilities: ["mA"]
+requirements: ["sponsorship"]
+description: |
+  Die Wallbox muss sich im "Power" Modus befinden.
+render:
+  - default: |
+      type: template
+      template: etrel-duo
+      connector: 1 # Optional
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional

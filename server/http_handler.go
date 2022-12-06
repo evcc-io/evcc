@@ -15,17 +15,21 @@ import (
 	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/server/assets"
 	dbserver "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/gorilla/mux"
+	"golang.org/x/text/language"
 )
+
+var ignoreState = []string{"releaseNotes"} // excessive size
 
 func indexHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
-		indexTemplate, err := fs.ReadFile(Assets, "index.html")
+		indexTemplate, err := fs.ReadFile(assets.Web, "index.html")
 		if err != nil {
 			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
 			log.FATAL.Print("Make sure templates are included using the `release` build tag or use `make build`")
@@ -75,7 +79,7 @@ func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
 	w.Header().Set("Content-Disposition", `attachment; filename="sessions.csv"`)
 
 	if ww, ok := res.(api.CsvWriter); ok {
-		ww.WriteCsv(ctx, w)
+		_ = ww.WriteCsv(ctx, w)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -172,7 +176,7 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State()
-		for _, k := range []string{"availableVersion", "releaseNotes"} {
+		for _, k := range ignoreState {
 			delete(res, k)
 		}
 		jsonResult(w, res)
@@ -193,8 +197,13 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Query().Get("format") == "csv" {
-		accept := r.Header.Get("Accept-Language")
-		ctx := context.WithValue(context.Background(), locale.Locale, accept)
+		// get request language
+		lang := r.Header.Get("Accept-Language")
+		if tags, _, err := language.ParseAcceptLanguage(lang); err == nil && len(tags) > 0 {
+			lang = tags[0].String()
+		}
+
+		ctx := context.WithValue(context.Background(), locale.Locale, lang)
 		csvResult(ctx, w, &res)
 		return
 	}

@@ -103,7 +103,10 @@ func (p *Pipeline) WithDecode(decode string) (*Pipeline, error) {
 
 // WithScript adds a javascript script to process the response
 func (p *Pipeline) WithScript(vm, script string) (*Pipeline, error) {
-	regvm := javascript.RegisteredVM(strings.ToLower(vm))
+	regvm, err := javascript.RegisteredVM(vm, "")
+	if err != nil {
+		return nil, err
+	}
 
 	p.vm = regvm
 	p.script = script

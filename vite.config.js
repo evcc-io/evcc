@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import vuePlugin from "@vitejs/plugin-vue";
 import { ViteToml } from "vite-plugin-toml";
+//import analyze from "rollup-plugin-analyzer";
 
 export default defineConfig({
   root: "./assets",
@@ -20,6 +21,7 @@ export default defineConfig({
     port: 7071,
     proxy: {
       "/api": "http://localhost:7070",
+      "/i18n": "http://localhost:7070",
       "/ws": { target: "ws://localhost:7070", ws: true },
     },
   },
@@ -32,5 +34,6 @@ export default defineConfig({
       },
     }),
     ViteToml(),
+    //analyze(),
   ],
 });

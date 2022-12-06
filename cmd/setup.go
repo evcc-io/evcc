@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -34,10 +33,6 @@ import (
 	"golang.org/x/text/currency"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 var cp = new(ConfigProvider)
 
 func loadConfigFile(conf *config) error {
@@ -55,8 +50,9 @@ func loadConfigFile(conf *config) error {
 		}
 	}
 
+	// parse log levels after reading config
 	if err == nil {
-		logLevel()
+		parseLogLevels()
 	}
 
 	return err
@@ -73,9 +69,9 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 		err = machine.CustomID(conf.Plant)
 	}
 
-	// setup sponsorship
-	if err == nil && conf.SponsorToken != "" {
-		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
+	// setup sponsorship (allow env override)
+	if token := viper.GetString("sponsortoken"); err == nil && token != "" {
+		err = sponsor.ConfigureSponsorship(token)
 	}
 
 	// setup translations
@@ -160,9 +156,11 @@ func configureMQTT(conf mqttConfig) error {
 }
 
 // setup javascript
-func configureJavascript(conf map[string]interface{}) error {
-	if err := javascript.Configure(conf); err != nil {
-		return fmt.Errorf("failed configuring javascript: %w", err)
+func configureJavascript(conf []javascriptConfig) error {
+	for _, cc := range conf {
+		if _, err := javascript.RegisteredVM(cc.VM, cc.Script); err != nil {
+			return fmt.Errorf("failed configuring javascript: %w", err)
+		}
 	}
 	return nil
 }

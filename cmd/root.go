@@ -21,8 +21,9 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -86,6 +87,7 @@ func initConfig() {
 		viper.SetConfigName("evcc")
 	}
 
+	viper.SetEnvPrefix("evcc")
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// print version
@@ -106,7 +108,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	var err error
 	if cfgErr := loadConfigFile(&conf); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
-		demoConfig(&conf)
+		if err := demoConfig(&conf); err != nil {
+			log.FATAL.Fatal(err)
+		}
 	} else {
 		err = cfgErr
 	}
@@ -145,6 +149,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup values channel
 	valueChan := make(chan util.Param)
 	go tee.Run(valueChan)
+
+	// capture log messages for UI
+	util.CaptureLogs(valueChan)
 
 	// setup environment
 	if err == nil {
@@ -241,10 +248,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		// show and check version
 		valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
-		go updater.Run(log, httpd, tee, valueChan)
-
-		// capture log messages for UI
-		util.CaptureLogs(valueChan)
+		go updater.Run(log, httpd, valueChan)
 
 		// expose sponsor to UI
 		if sponsor.Subject != "" {

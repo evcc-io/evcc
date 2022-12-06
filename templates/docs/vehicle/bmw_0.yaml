@@ -18,6 +18,7 @@ render:
       vin: WBMW... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
       capacity: 50 # Akku-Kapazität in kWh # Optional
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können # Optional
+      icon: car # Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater # Optional
       cache: 15m # Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden # Optional
       mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll # Optional
       minSoC: 25 # Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht # Optional

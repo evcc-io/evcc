@@ -96,12 +96,12 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "18"
 
       - name: Get NPM cache dir
         id: npm-cache-dir
         run: |
-          echo "::set-output name=dir::$(npm config get cache)"
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
 
       - name: Cache NPM modules
         uses: actions/cache@v3

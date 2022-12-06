@@ -9,6 +9,7 @@
   "cFos",
   "Dadapower",
   "DaheimLaden",
+  "E.ON Drive",
   "Easee",
   "Ebee",
   "echarge",
@@ -56,6 +57,7 @@
   "TP-Link"
  ],
  "Meters": [
+  "Alpha ESS",
   "AVM",
   "Carlo Gavazzi",
   "cFos",
@@ -86,12 +88,14 @@
   "Sonnen",
   "Sungrow",
   "Tesla",
+  "Tibber",
   "TQ",
   "VARTA",
   "Victron",
   "Volkszähler"
  ],
  "PVBattery": [
+  "Alpha ESS",
   "AVM",
   "Carlo Gavazzi",
   "E3DC",

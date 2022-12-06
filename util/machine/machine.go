@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 
 	"github.com/denisbrodbeck/machineid"
 )
@@ -32,7 +32,7 @@ func CustomID(cid string) error {
 
 // RandomID creates a random id
 func RandomID() string {
-	rnd := util.RandomString(512)
+	rnd := lo.RandomString(512, lo.LettersCharset)
 	mac := hmac.New(sha256.New, []byte(rnd))
 	return hex.EncodeToString(mac.Sum(nil))
 }

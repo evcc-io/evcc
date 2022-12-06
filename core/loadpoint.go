@@ -113,7 +113,7 @@ type LoadPoint struct {
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
 	onDisconnect      api.ActionConfig
-	targetEnergy      int // Target charge energy for dumb vehicles
+	targetEnergy      float64 // Target charge energy for dumb vehicles
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
@@ -387,7 +387,12 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	lp.startSession()
+	// set created when first charging session segment starts
+	lp.updateSession(func(session *db.Session) {
+		if session.Created.IsZero() {
+			session.Created = lp.clock.Now()
+		}
+	})
 }
 
 // evChargeStopHandler sends external stop event
@@ -432,15 +437,17 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
+
+	// create charging session
+	lp.createSession()
 }
 
 // evVehicleDisconnectHandler sends external start event
 func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.log.INFO.Println("car disconnected")
 
-	// ensure session is persisted and closed before vehicle is changed
-	lp.stopSession()
-	lp.finalizeSession()
+	// session is persisted during evChargeStopHandler which runs before
+	lp.clearSession()
 
 	// phases are unknown when vehicle disconnects
 	lp.resetMeasuredPhases()
@@ -797,11 +804,10 @@ func (lp *LoadPoint) identifyVehicle() {
 	lp.setVehicleIdentifier(id)
 
 	if id != "" {
-		lp.stopVehicleDetection()
-
 		lp.log.DEBUG.Println("charger vehicle id:", id)
 
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
+			lp.stopVehicleDetection()
 			lp.setActiveVehicle(vehicle)
 		}
 	}
@@ -877,6 +883,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())
+		lp.publish("vehicleIcon", lp.vehicle.Icon())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
 		// unblock api
@@ -892,6 +899,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 		lp.publish("vehiclePresent", false)
 		lp.publish("vehicleTitle", "")
+		lp.publish("vehicleIcon", "")
 		lp.publish("vehicleCapacity", int64(0))
 		lp.publish(vehicleOdometer, 0.0)
 	}
@@ -1725,7 +1733,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 		}
 
 	case lp.targetEnergyReached():
-		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %dkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)
+		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)
 		err = lp.disableUnlessClimater()
 
 	case lp.targetSocReached():

@@ -7,8 +7,7 @@
     "test": "",
     "lint": "prettier assets './**/*.{yml,yaml,toml}' --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "dev": "vite",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "histoire": "histoire dev"
   },
   "main": "index.js",
   "dependencies": {
@@ -19,44 +18,36 @@
     "bootstrap": "^5.2.2",
     "canvas-confetti": "^1.4.0",
     "smoothscroll-polyfill": "^0.4.4",
+    "toml": "^3.0.0",
+    "vite-plugin-toml": "^0.5.0",
     "vue": "^3.2.29",
     "vue-hot-reload-api": "^2.3.4",
-    "vue-i18n": "^9.1.9",
+    "vue-i18n": "^9.2.2",
     "vue-meta": "^3.0.0-alpha.2",
     "vue-number-animation": "^1.1.2",
     "vue-router": "^4.0.12"
   },
   "devDependencies": {
     "@babel/core": "^7.17.2",
-    "@storybook/addon-actions": "^6.5.9",
-    "@storybook/addon-essentials": "^6.5.9",
-    "@storybook/addon-interactions": "^6.5.9",
-    "@storybook/addon-links": "^6.5.9",
-    "@storybook/builder-vite": "^0.2.2",
-    "@storybook/testing-library": "^0.0.13",
-    "@storybook/vue3": "^6.5.9",
+    "@histoire/plugin-vue": "^0.11.6",
     "@vue/compiler-sfc": "^3.2.30",
-    "babel-loader": "^8.2.3",
-    "eslint": "^8.21.0",
+    "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-standard": "^5.0.0",
-    "eslint-plugin-storybook": "^0.6.1",
     "eslint-plugin-vue": "^9.3.0",
-    "html-webpack-plugin": "^5.5.0",
-    "postcss-custom-media": "^8.0.2",
+    "histoire": "^0.11.6",
     "prettier": "^2.5.1",
     "prettier-plugin-toml": "^0.3.1",
+    "rollup-plugin-analyzer": "^4.0.0",
     "vite": "^3.0.4",
-    "vite-plugin-toml": "^0.4.0",
-    "vue-loader": "^17.0.0"
+    "vue-eslint-parser": "^9.1.0"
   },
   "engines": {
     "npm": ">=8.0.0",
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "license": "MIT",
   "repository": "github:evcc-io/evcc"

@@ -34,7 +34,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: andig/evcc
+          images: |
+            andig/evcc
+            evcc/evcc
 
       - name: Publish
         uses: docker/build-push-action@v3

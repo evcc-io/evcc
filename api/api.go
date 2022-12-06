@@ -164,6 +164,7 @@ type Authorizer interface {
 type Vehicle interface {
 	Battery
 	Title() string
+	Icon() string
 	Capacity() float64
 	Phases() int
 	Identifiers() []string
@@ -232,5 +233,5 @@ type FeatureDescriber interface {
 
 // CsvWriter converts to csv
 type CsvWriter interface {
-	WriteCsv(context.Context, io.Writer)
+	WriteCsv(context.Context, io.Writer) error
 }

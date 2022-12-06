@@ -26,7 +26,7 @@
 				v-else
 				class="flex-grow-1"
 				:label="$t('main.loadpoint.charged')"
-				:value="fmtKWh(chargedEnergy)"
+				:value="fmtEnergy(chargedEnergy)"
 				:extraValue="chargedSoC"
 				align="start"
 			/>
@@ -96,6 +96,7 @@ export default {
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleTitle: String,
+		vehicleIcon: String,
 		vehicleCapacity: Number,
 		socBasedCharging: Boolean,
 		targetTimeActive: Boolean,
@@ -185,6 +186,10 @@ export default {
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");
+		},
+		fmtEnergy(value) {
+			const inKw = value == 0 || value >= 1000;
+			return this.fmtKWh(value, inKw);
 		},
 	},
 };
