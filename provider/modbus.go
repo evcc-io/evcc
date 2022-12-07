@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -221,12 +222,12 @@ func (m *Modbus) IntGetter() func() (int64, error) {
 // StringGetter executes configured modbus read operation and implements IntProvider
 func (m *Modbus) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		bytes, err := m.bytesGetter()
+		b, err := m.bytesGetter()
 		if err != nil {
 			return "", err
 		}
 
-		return strings.TrimSpace(string(bytes)), nil
+		return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00"))), nil
 	}
 }
 

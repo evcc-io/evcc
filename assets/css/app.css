@@ -79,7 +79,7 @@ html {
 }
 
 html.no-transitions * {
-	transition-duration: 0ms !important;
+	transition: none !important;
 }
 
 body {

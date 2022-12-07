@@ -1610,16 +1610,32 @@ func (lp *LoadPoint) publishSoCAndRange() {
 		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
 		lp.publish("vehicleSoC", lp.vehicleSoc)
 
+		// vehicle target soc
+		targetSoC := 100.0
+		if vs, ok := lp.vehicle.(api.SocLimiter); ok {
+			var err error
+			if targetSoC, err = vs.TargetSoC(); err == nil {
+				lp.log.DEBUG.Printf("vehicle target soc: %.0f%%", targetSoC)
+				lp.publish(vehicleTargetSoC, targetSoC)
+			}
+		}
+
+		// use minimum of vehicle and loadpoint
+		socLimit := int(math.Round(targetSoC))
+		if lp.SoC.target < socLimit {
+			socLimit = lp.SoC.target
+		}
+
 		if se := lp.socEstimator; se != nil {
 			if lp.charging() {
-				lp.setRemainingDuration(se.RemainingChargeDuration(lp.chargePower, lp.SoC.target))
+				lp.setRemainingDuration(se.RemainingChargeDuration(lp.chargePower, socLimit))
 			} else {
 				lp.setRemainingDuration(-1)
 			}
 		}
 
 		if se := lp.socEstimator; se != nil {
-			lp.setRemainingEnergy(1e3 * se.RemainingChargeEnergy(lp.SoC.target))
+			lp.setRemainingEnergy(1e3 * se.RemainingChargeEnergy(socLimit))
 		}
 
 		// range
@@ -1627,14 +1643,6 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.publish(vehicleRange, rng)
-			}
-		}
-
-		// vehicle target soc
-		if vs, ok := lp.vehicle.(api.SocLimiter); ok {
-			if targetSoC, err := vs.TargetSoC(); err == nil {
-				lp.log.DEBUG.Printf("vehicle target soc: %.0f%%", targetSoC)
-				lp.publish(vehicleTargetSoC, targetSoC)
 			}
 		}
 

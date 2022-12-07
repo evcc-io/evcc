@@ -3,7 +3,7 @@ import Energyflow from "./Energyflow.vue";
 </script>
 
 <template>
-	<Story :layout="{ type: 'grid', width: 800 }">
+	<Story>
 		<Variant title="grid and pv">
 			<Energyflow
 				gridConfigured

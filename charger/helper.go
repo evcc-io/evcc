@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 )
@@ -45,4 +46,9 @@ func ensureChargerWithFeature[Charger, Feature any](
 	}
 
 	return "", *new(Feature), err
+}
+
+// bytesAsString normalises a string by stripping leading 0x00 and trimming white space
+func bytesAsString(b []byte) string {
+	return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00")))
 }

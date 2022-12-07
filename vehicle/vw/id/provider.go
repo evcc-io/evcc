@@ -1,6 +1,7 @@
 package id
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -32,12 +33,12 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if err == nil {
-		err = res.Error.Extract("batteryStatus")
+	if err == nil && res.FuelStatus == nil {
+		err = errors.New("missing fuel status")
 	}
 
 	if err == nil {
-		return float64(res.Data.BatteryStatus.CurrentSOCPercent), nil
+		return float64(res.FuelStatus.RangeStatus.Value.PrimaryEngine.CurrentSOCPct), nil
 	}
 
 	return 0, err
@@ -47,18 +48,17 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
 	res, err := v.statusG()
-	if err == nil {
-		err = res.Error.Extract("chargingStatus")
+	if err == nil && res.Charging == nil {
+		err = errors.New("missing charging status")
 	}
 
+	status := api.StatusA // disconnected
 	if err == nil {
-		if res.Data.PlugStatus.PlugConnectionState == "connected" {
+		if res.Charging.PlugStatus.Value.PlugConnectionState == "connected" {
 			status = api.StatusB
 		}
-		if res.Data.ChargingStatus.ChargingState == "charging" {
+		if res.Charging.ChargingStatus.Value.ChargingState == "charging" {
 			status = api.StatusC
 		}
 	}
@@ -71,12 +71,12 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-	if err == nil {
-		err = res.Error.Extract("chargingStatus")
+	if err == nil && res.Charging == nil {
+		err = errors.New("missing charging status")
 	}
 
 	if err == nil {
-		cst := res.Data.ChargingStatus
+		cst := res.Charging.ChargingStatus.Value
 		return cst.CarCapturedTimestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), err
 	}
 
@@ -88,47 +88,47 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if err == nil {
-		err = res.Error.Extract("batteryStatus")
+	if err == nil && res.FuelStatus == nil {
+		err = errors.New("missing fuel status")
 	}
 
 	if err == nil {
-		return int64(res.Data.BatteryStatus.CruisingRangeElectricKm), nil
-	}
-
-	return 0, err
-}
-
-var _ api.VehicleOdometer = (*Provider)(nil)
-
-// Odometer implements the api.VehicleOdometer interface
-func (v *Provider) Odometer() (float64, error) {
-	res, err := v.statusG()
-	if err == nil {
-		err = res.Error.Extract("maintenanceStatus")
-	}
-
-	if err == nil {
-		if res.Data.MaintenanceStatus == nil {
-			return 0, api.ErrNotAvailable
-		}
-		return float64(res.Data.MaintenanceStatus.MileageKm), nil
+		return int64(res.FuelStatus.RangeStatus.Value.TotalRangeKm), nil
 	}
 
 	return 0, err
 }
+
+// var _ api.VehicleOdometer = (*Provider)(nil)
+
+// // Odometer implements the api.VehicleOdometer interface
+// func (v *Provider) Odometer() (float64, error) {
+// 	res, err := v.statusG()
+// 	if err == nil {
+// 		err = res.Error.Extract("maintenanceStatus")
+// 	}
+
+// 	if err == nil {
+// 		if res.Data.MaintenanceStatus == nil {
+// 			return 0, api.ErrNotAvailable
+// 		}
+// 		return float64(res.Data.MaintenanceStatus.MileageKm), nil
+// 	}
+
+// 	return 0, err
+// }
 
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
 	res, err := v.statusG()
-	if err == nil {
-		err = res.Error.Extract("climatisationStatus")
+	if err == nil && res.Climatisation == nil {
+		err = errors.New("missing climatisation status")
 	}
 
 	if err == nil {
-		state := strings.ToLower(res.Data.ClimatisationStatus.ClimatisationState)
+		state := strings.ToLower(res.Climatisation.ClimatisationStatus.Value.ClimatisationState)
 
 		if state == "" {
 			return false, 0, 0, api.ErrNotAvailable
@@ -136,7 +136,7 @@ func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err
 
 		active := state != "off" && state != "invalid" && state != "error"
 
-		targetTemp = res.Data.ClimatisationSettings.TargetTemperatureC
+		targetTemp = res.Climatisation.ClimatisationSettings.Value.TargetTemperatureC
 
 		// TODO not available; use target temp to avoid wrong heating/cooling display
 		outsideTemp = targetTemp
@@ -152,8 +152,12 @@ var _ api.SocLimiter = (*Provider)(nil)
 // TargetSoC implements the api.SocLimiter interface
 func (v *Provider) TargetSoC() (float64, error) {
 	res, err := v.statusG()
+	if err == nil && res.Charging == nil {
+		err = errors.New("missing charging status")
+	}
+
 	if err == nil {
-		return float64(res.Data.TargetSOCPercent), nil
+		return float64(res.Charging.ChargingSettings.Value.TargetSOCPct), nil
 	}
 
 	return 0, err

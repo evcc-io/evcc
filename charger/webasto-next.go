@@ -20,7 +20,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -234,12 +233,12 @@ var _ api.Identifier = (*WebastoNext)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *WebastoNext) Identify() (string, error) {
-	id, err := wb.conn.ReadHoldingRegisters(tqRegUserID, 10)
+	b, err := wb.conn.ReadHoldingRegisters(tqRegUserID, 10)
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimSpace(string(id)), nil
+	return bytesAsString(b), nil
 }
 
 var _ api.Diagnosis = (*WebastoNext)(nil)

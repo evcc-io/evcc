@@ -22,9 +22,17 @@ export default {
 		minCurrent: { type: Number },
 		maxCurrent: { type: Number },
 	},
+	computed: {
+		highestActivePhase() {
+			if (this.chargeCurrents) {
+				return this.chargeCurrents.findLastIndex((current) => current > 0) + 1;
+			}
+			return this.phasesActive;
+		},
+	},
 	methods: {
 		inactive(num) {
-			return num > this.phasesActive;
+			return num > this.highestActivePhase;
 		},
 		targetWidth() {
 			let current = Math.min(Math.max(this.minCurrent, this.chargeCurrent), this.maxCurrent);
@@ -52,13 +60,19 @@ export default {
 	position: relative;
 	border-radius: 1px;
 	overflow: hidden;
+	flex-basis: 100%;
+	opacity: 1;
+	transition-property: flex-basis, margin, opacity;
+	transition-duration: var(--evcc-transition-slow);
+	transition-timing-function: ease-in;
 }
 html.dark .phase {
 	background-color: var(--bs-gray-bright);
 }
-
 .phase.inactive {
-	display: none;
+	flex-basis: 0;
+	margin-right: 0 !important;
+	opacity: 0;
 }
 .target,
 .real {

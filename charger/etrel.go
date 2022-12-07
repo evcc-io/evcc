@@ -21,7 +21,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -38,12 +37,14 @@ const (
 	etrelRegTargetCurrent = 4
 	etrelRegCurrents      = 14 // 16, 18
 	etrelRegPower         = 26
-	etrelRegSessionEnergy = 30
-	etrelRegChargeTime    = 32
 	etrelRegSerial        = 990
 	etrelRegModel         = 1000
 	etrelRegHWVersion     = 1010
 	etrelRegSWVersion     = 1015
+
+	// Always zero, see https://github.com/evcc-io/evcc/issues/5346
+	//etrelRegSessionEnergy = 30
+	//etrelRegChargeTime    = 32
 
 	// holding, write-only!
 	etrelRegMaxCurrent = 8
@@ -189,18 +190,6 @@ func (wb *Etrel) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-var _ api.ChargeTimer = (*Etrel)(nil)
-
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *Etrel) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegChargeTime, 4)
-	if err != nil {
-		return 0, err
-	}
-
-	return time.Duration(int64(binary.BigEndian.Uint64(b))) * time.Second, nil
-}
-
 var _ api.Meter = (*Etrel)(nil)
 
 // CurrentPower implements the api.Meter interface
@@ -211,18 +200,6 @@ func (wb *Etrel) CurrentPower() (float64, error) {
 	}
 
 	return float64(encoding.Float32(b) * 1e3), err
-}
-
-var _ api.ChargeRater = (*Etrel)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *Etrel) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegSessionEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(encoding.Float32(b)), err
 }
 
 var _ api.MeterCurrent = (*Etrel)(nil)
@@ -241,6 +218,30 @@ func (wb *Etrel) Currents() (float64, float64, float64, error) {
 
 	return currents[0], currents[1], currents[2], nil
 }
+
+// var _ api.ChargeTimer = (*Etrel)(nil)
+//
+// // ChargingTime implements the api.ChargeTimer interface
+// func (wb *Etrel) ChargingTime() (time.Duration, error) {
+// 	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegChargeTime, 4)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+//
+// 	return time.Duration(int64(binary.BigEndian.Uint64(b))) * time.Second, nil
+// }
+
+// var _ api.ChargeRater = (*Etrel)(nil)
+//
+// // ChargedEnergy implements the api.ChargeRater interface
+// func (wb *Etrel) ChargedEnergy() (float64, error) {
+// 	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegSessionEnergy, 2)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+//
+// 	return float64(encoding.Float32(b)), err
+// }
 
 var _ api.Diagnosis = (*Etrel)(nil)
 
