@@ -62,7 +62,7 @@ optInSponsorship = "Sponsoring required."
 [footer.sponsor]
 titleSponsor = "You are a supporter"
 titleNoSponsor = "Support us"
-thanks = "Thank you, {sponsor}! You have helped the development."
+thanks = "Thank you, {sponsor}. You have helped evcc."
 confetti = "Ready for confetti?"
 supportUs = "Our mission is to make solar the norm. Help evcc by paying what it is worth to you."
 sticker = "… or evcc stickers?"
@@ -80,7 +80,7 @@ vehicles = "Parking"
 noEnergy = "No meter data"
 homePower = "Consumption"
 pvProduction = "Production"
-loadpoints = "Charging point | Charging point | {count} charging points"
+loadpoints = "Charger| Charger | {count} chargers"
 battery = "Battery"
 batteryCharge = "Battery charging"
 batteryDischarge = "Battery discharging"
@@ -90,13 +90,13 @@ pvExport = "Sent to grid"
 
 [main.mode]
 off = "Off"
-minpv = "Min + solar"
+minpv = "Min+S"
 pv = "Solar"
 now = "Fast"
 
 [main.loadpoint]
 fallbackName = "Charging point"
-remoteDisabledSoft = "{source}: turned off adaptive solar charging"
+remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
 remoteDisabledHard = "{source}: turned off"
 power = "Power"
 charged = "Charged"
@@ -112,8 +112,8 @@ disclaimerHint = "Note:"
 disclaimerText = "Changes will be lost after the server is restarted."
 
 [main.loadpointSettings.minSoC]
-label = "Minimal state of charge"
-description = 'For emergencies. The vehicle gets "fast" charged to {0}% from solar, and then continues with only solar surplus.'
+label = "Min. charge %"
+description = 'For emergencies. The vehicle gets "fast" charged to {0}% from all available solar, and then continues with only the solar surplus.'
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"
