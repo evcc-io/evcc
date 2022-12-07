@@ -6,6 +6,19 @@ import { i18n as i18nApi } from "./api";
 
 const PREFERRED_LOCALE_KEY = "preferred_locale";
 
+export const LOCALES = {
+  nl: "Dutch",
+  en: "English",
+  fr: "French",
+  de: "German",
+  it: "Italian",
+  lt: "Lithuanian",
+  no: "Norwegian",
+  pl: "Polish",
+  pt: "Portuguese",
+  es: "Spanish",
+};
+
 function getBrowserLocale() {
   const navigatorLocale =
     navigator.languages !== undefined ? navigator.languages[0] : navigator.language;
@@ -15,8 +28,12 @@ function getBrowserLocale() {
   return navigatorLocale.trim().split(/-|_/)[0];
 }
 
+export function getLocalePreference() {
+  return window.localStorage[PREFERRED_LOCALE_KEY];
+}
+
 function getLocale() {
-  return window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale();
+  return getLocalePreference() || getBrowserLocale();
 }
 
 export default function setupI18n() {

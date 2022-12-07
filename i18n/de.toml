@@ -6,10 +6,15 @@ github = "GitHub"
 login = "Fahrzeug Logins"
 about = "Über evcc"
 
-[header.theme]
-auto = "Design: System"
-light = "Design: Hell"
-dark = "Design: Dunkel"
+[settings.theme]
+label = "Design"
+auto = "Automatisch"
+light = "Hell"
+dark = "Dunkel"
+
+[settings.language]
+label = "Sprache"
+auto = "Automatisch"
 
 [footer.version]
 availableShort = "Update"
