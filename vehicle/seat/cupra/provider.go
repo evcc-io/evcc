@@ -92,6 +92,18 @@ func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err
 	return res.Services.Climatisation.Active, 21, 21, err
 }
 
+var _ api.SocLimiter = (*Provider)(nil)
+
+// TargetSoC implements the api.SocLimiter interface
+func (v *Provider) TargetSoC() (float64, error) {
+	res, err := v.statusG()
+	if err == nil {
+		return float64(res.Services.Charging.TargetPct), nil
+	}
+
+	return 0, err
+}
+
 var _ api.VehicleChargeController = (*Provider)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
