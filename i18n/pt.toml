@@ -214,6 +214,7 @@ meterstart = "Leitura inicial do contador (kWh)"
 meterstop = "Leitura final do contador (kWh)"
 created = "hora de início"
 finished = "hora final"
+odometer = "Quilometragem (km)"
 
 [offline]
 message = "Sem conexão com o servidor."
