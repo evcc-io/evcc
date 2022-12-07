@@ -65,10 +65,11 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	log := util.NewLogger("eebus")
 
 	var err error
-	serial, err := machine.ProtectedID("evcc-eebus")
+	protectedID, err := machine.ProtectedID("evcc-eebus")
 	if err != nil {
 		return nil, err
 	}
+	serial := fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
 
 	if len(cc.ShipID) != 0 {
 		serial = cc.ShipID
