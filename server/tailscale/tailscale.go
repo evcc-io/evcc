@@ -3,15 +3,15 @@ package tailscale
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-	"tailscale.com/ipn/ipnstate"
+	"tailscale.com/client/tailscale"
+	"tailscale.com/ipn"
 	"tailscale.com/tsnet"
 )
 
@@ -43,45 +43,29 @@ func Run(host, authKey string, downstreamPort int) (string, error) {
 		return "", err
 	}
 
-	var status *ipnstate.Status
-	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-	defer cancel()
-
-LOOP:
-	for {
-		status, err = lc.Status(ctx)
-		if err != nil {
-			return "", err
-		}
-
-		switch status.BackendState {
-		case NeedsMachineAuth:
-			logr.INFO.Printf("needs machine auth: %+v", status)
-			break LOOP
-
-		case NeedsLogin:
-			if status.AuthURL == "" {
-				time.Sleep(10 * time.Millisecond)
-				continue
-			}
-
-			logr.INFO.Printf("needs login: %s", status.AuthURL)
-			break LOOP
-
-		case Running:
-			var net string
-			if tn := status.CurrentTailnet; tn != nil {
-				net = "." + tn.MagicDNSSuffix
-			}
-
-			logr.INFO.Printf("url: https://%s ip: %v", s.Hostname+net, status.TailscaleIPs)
-			break LOOP
-
-		default:
-			logr.ERROR.Println("status:", status.BackendState, status.AuthURL)
-			time.Sleep(10 * time.Millisecond)
-		}
+	w, err := lc.WatchIPNBus(context.Background(), ipn.NotifyWatchEngineUpdates|ipn.NotifyInitialState)
+	if err != nil {
+		return "", err
 	}
+
+	done := make(chan struct{})
+	go watch(w, done)
+
+	go func() {
+		<-done
+
+		status, err := lc.Status(context.Background())
+		if err != nil {
+			return
+		}
+
+		var net string
+		if tn := status.CurrentTailnet; tn != nil {
+			net = "." + tn.MagicDNSSuffix
+		}
+
+		logr.INFO.Printf("url: https://%s ip: %v", s.Hostname+net, status.TailscaleIPs)
+	}()
 
 	ln, err := s.Listen("tcp", ":443")
 	if err != nil {
@@ -94,7 +78,42 @@ LOOP:
 
 	go handle(ln, strconv.Itoa(downstreamPort))
 
-	return status.AuthURL, nil
+	return "", nil
+}
+
+func watch(w *tailscale.IPNBusWatcher, done chan struct{}) {
+	var needsLogin bool
+
+	for {
+		n, err := w.Next()
+		if err != nil {
+			return
+		}
+
+		if n.State != nil {
+			fmt.Println(n.State.String())
+
+			switch *n.State {
+			case ipn.NeedsLogin:
+				needsLogin = true
+
+			case ipn.Running:
+				close(done)
+				return
+			}
+		}
+
+		if needsLogin {
+			switch {
+			case n.LoginFinished != nil:
+				fmt.Println("LoginFinished")
+				needsLogin = false
+
+			case n.BrowseToURL != nil && *n.BrowseToURL != "":
+				fmt.Println("BrowseToURL:", *n.BrowseToURL)
+			}
+		}
+	}
 }
 
 func handle(ln net.Listener, port string) {
