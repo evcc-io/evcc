@@ -24,7 +24,7 @@
 				ref="vehicleTargetSoC"
 				class="vehicle-target-soc"
 				data-bs-toggle="tooltip"
-				:title="$t('main.vehicleSoC.vehicleTarget', { soc: vehicleTargetSoC })"
+				title=" "
 				:class="{ 'vehicle-target-soc--active': vehicleTargetSoCActive }"
 				:style="{ left: `${vehicleTargetSoC}%` }"
 			/>
@@ -166,12 +166,12 @@ export default {
 			return true;
 		},
 		updateTooltip: function () {
-			this.$nextTick(() => {
-				if (this.tooltip) {
-					this.tooltip.dispose();
-				}
+			if (!this.tooltip) {
 				this.tooltip = new Tooltip(this.$refs.vehicleTargetSoC);
-			});
+			}
+			const soc = this.vehicleTargetSoC;
+			const content = this.$t("main.vehicleSoC.vehicleTarget", { soc });
+			this.tooltip.setContent({ ".tooltip-inner": content });
 		},
 	},
 };
