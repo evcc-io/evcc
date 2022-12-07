@@ -222,7 +222,7 @@ func (wb *Dadapower) Identify() (string, error) {
 		return "", err
 	}
 
-	return string(u), nil
+	return bytesAsString(u), nil
 }
 
 var _ api.Diagnosis = (*Dadapower)(nil)
