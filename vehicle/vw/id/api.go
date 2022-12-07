@@ -75,7 +75,8 @@ func (v *API) Vehicles() (res []string, err error) {
 // Status implements the /status response.
 // It is callers responsibility to check for embedded (partial) errors.
 func (v *API) Status(vin string) (res Status, err error) {
-	uri := fmt.Sprintf("%s/vehicles/%s/status", BaseURL, vin)
+	// NOTE use `all` to retrieve entire status
+	uri := fmt.Sprintf("%s/vehicles/%s/selectivestatus?jobs=charging,fuelStatus,climatisation", BaseURL, vin)
 
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
