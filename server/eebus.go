@@ -134,10 +134,8 @@ func (c *EEBus) Register(ski, ip string, connectHandler func(string), disconnect
 		c.log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
 	}
 
-	serviceDetails := service.ServiceDetails{
-		SKI:  ski,
-		IPv4: ip,
-	}
+	serviceDetails := service.NewServiceDetails(ski)
+	serviceDetails.SetIPv4(ip)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()

@@ -27,8 +27,8 @@ require (
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/emirpasic/gods v1.18.1
-	github.com/enbility/cemd v0.1.1
-	github.com/enbility/eebus-go v0.1.1
+	github.com/enbility/cemd v0.1.2
+	github.com/enbility/eebus-go v0.1.2
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
 	github.com/glebarez/sqlite v1.5.0
@@ -88,7 +88,7 @@ require (
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
-	golang.org/x/net v0.3.0
+	golang.org/x/net v0.4.0
 	golang.org/x/oauth2 v0.3.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/text v0.5.0
@@ -181,7 +181,7 @@ require (
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
-	golang.org/x/tools v0.3.0 // indirect
+	golang.org/x/tools v0.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221205194025-8222ab48f5fc // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
