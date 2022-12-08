@@ -13,6 +13,10 @@ import (
 
 var instance *Auth
 
+// Auth manages a dynamic map of routes for OAuth authentication.
+// When a route is registered a token OAuth state is returned.
+// On GET request the generic handler identifies route and target handler
+// by request state obtained from the request.
 type Auth struct {
 	mu     sync.Mutex
 	secret []byte
