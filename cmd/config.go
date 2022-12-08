@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -352,6 +353,23 @@ func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, par
 			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
 		}
 	}
+
+	path := "oauth/tailscale"
+	ap := cp.auth.Register(path, "Tailscale")
+	_ = ap
+	auth.
+		Methods(http.MethodPost).
+		Path("/tailscale/login").
+		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			b, _ := json.Marshal(struct {
+				LoginUri string `json:"loginUri"`
+			}{
+				LoginUri: "http://spiegel.de",
+			})
+
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(b)
+		})
 
 	cp.auth.Publish()
 }
