@@ -33,12 +33,14 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if err == nil && res.FuelStatus == nil {
-		err = errors.New("missing fuel status")
+
+	var eng EngineRangeStatus
+	if err == nil {
+		eng, err = res.FuelStatus.EngineRangeStatus("electric")
 	}
 
 	if err == nil {
-		return float64(res.FuelStatus.RangeStatus.Value.PrimaryEngine.CurrentSOCPct), nil
+		return float64(eng.CurrentSOCPct), nil
 	}
 
 	return 0, err
@@ -88,12 +90,14 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if err == nil && res.FuelStatus == nil {
-		err = errors.New("missing fuel status")
+
+	var eng EngineRangeStatus
+	if err == nil {
+		eng, err = res.FuelStatus.EngineRangeStatus("electric")
 	}
 
 	if err == nil {
-		return int64(res.FuelStatus.RangeStatus.Value.TotalRangeKm), nil
+		return int64(eng.RemainingRangeKm), nil
 	}
 
 	return 0, err

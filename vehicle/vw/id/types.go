@@ -1,6 +1,8 @@
 package id
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -153,21 +155,8 @@ type Status struct {
 			} `json:"value"`
 		} `json:"climatisationTimersStatus"`
 	} `json:"climatisationTimers"`
-	FuelStatus *struct {
-		RangeStatus struct {
-			Value struct {
-				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
-				CarType              string    `json:"carType"`
-				PrimaryEngine        struct {
-					Type             string `json:"type"`
-					CurrentSOCPct    int    `json:"currentSOC_pct"`
-					RemainingRangeKm int    `json:"remainingRange_km"`
-				} `json:"primaryEngine"`
-				TotalRangeKm int `json:"totalRange_km"`
-			} `json:"value"`
-		} `json:"rangeStatus"`
-	} `json:"fuelStatus"`
-	Readiness *struct {
+	FuelStatus *FuelStatus `json:"fuelStatus"`
+	Readiness  *struct {
 		ReadinessStatus struct {
 			Value struct {
 				ConnectionState struct {
@@ -192,6 +181,41 @@ type Status struct {
 			} `json:"value"`
 		} `json:"chargingProfilesStatus"`
 	} `json:"chargingProfiles"`
+}
+
+// FuelStatus is the engine range status
+type FuelStatus struct {
+	RangeStatus struct {
+		Value struct {
+			CarCapturedTimestamp Timestamp         `json:"carCapturedTimestamp"`
+			CarType              string            `json:"carType"`
+			PrimaryEngine        EngineRangeStatus `json:"primaryEngine"`
+			SecondaryEngine      EngineRangeStatus `json:"secondaryEngine"`
+			TotalRangeKm         int               `json:"totalRange_km"`
+		} `json:"value"`
+	} `json:"rangeStatus"`
+}
+
+func (f *FuelStatus) EngineRangeStatus(typ string) (EngineRangeStatus, error) {
+	if f == nil {
+		return EngineRangeStatus{}, errors.New("missing fuel status")
+	}
+
+	if f.RangeStatus.Value.PrimaryEngine.Type == typ {
+		return f.RangeStatus.Value.PrimaryEngine, nil
+	}
+	if f.RangeStatus.Value.SecondaryEngine.Type == typ {
+		return f.RangeStatus.Value.SecondaryEngine, nil
+	}
+
+	return EngineRangeStatus{}, fmt.Errorf("unknown engine type: %s", typ)
+}
+
+// EngineRangeStatus is the engine range status
+type EngineRangeStatus struct {
+	Type             string `json:"type"`
+	CurrentSOCPct    int    `json:"currentSOC_pct"`
+	RemainingRangeKm int    `json:"remainingRange_km"`
 }
 
 // Timestamp implements JSON unmarshal

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/google/go-github/v32/github"
 	"github.com/hashicorp/go-version"
 )
@@ -27,11 +29,11 @@ type Repo struct {
 }
 
 // NewRepo creates repository adapter
-func NewRepo(owner, repository string) *Repo {
+func NewRepo(log *util.Logger, owner, repository string) *Repo {
 	r := &Repo{
 		owner:      owner,
 		repository: repository,
-		Client:     github.NewClient(nil),
+		Client:     github.NewClient(request.NewClient(log)),
 	}
 	return r
 }

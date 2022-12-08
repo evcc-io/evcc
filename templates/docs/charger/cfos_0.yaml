@@ -1,7 +1,7 @@
 product:
   brand: cFos
   description: PowerBrain
-capabilities: ["mA"]
+capabilities: ["mA", "rfid"]
 requirements: ["sponsorship"]
 description: |
   Der Zähler- falls vorhanden- muss separat als Ladezähler konfiguriert werden.

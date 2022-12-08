@@ -27,7 +27,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -296,24 +295,22 @@ func (wb *BenderCC) currents() (float64, float64, float64, error) {
 // identify implements the api.Identifier interface
 func (wb *BenderCC) identify() (string, error) {
 	if !wb.legacy {
-		var id []byte
-
 		b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
 		if err == nil && binary.BigEndian.Uint16(b) != 0 {
-			id, err = wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
+			b, err = wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
 		}
 
-		if id := strings.TrimSpace(string(id)); id != "" || err != nil {
+		if id := bytesAsString(b); id != "" || err != nil {
 			return id, err
 		}
 	}
 
-	id, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
+	b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimSpace(string(id)), nil
+	return bytesAsString(b), nil
 }
 
 var _ api.Diagnosis = (*BenderCC)(nil)
