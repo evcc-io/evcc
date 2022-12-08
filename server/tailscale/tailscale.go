@@ -3,27 +3,18 @@ package tailscale
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"io"
 	"net"
 	"strconv"
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
-	"tailscale.com/client/tailscale"
 	"tailscale.com/ipn"
 	"tailscale.com/tsnet"
 )
 
-const (
-	NoState          = "NoState"
-	NeedsLogin       = "NeedsLogin"
-	NeedsMachineAuth = "NeedsMachineAuth"
-	Running          = "Running"
-)
-
-func Run(host, authKey string, downstreamPort int) (string, error) {
-	logr := util.NewLogger("tailscale")
+func Run(host, authKey string, port int) (string, error) {
+	log := util.NewLogger("tailscale")
 	if host == "" {
 		host = "evcc"
 	}
@@ -31,7 +22,7 @@ func Run(host, authKey string, downstreamPort int) (string, error) {
 	s := &tsnet.Server{
 		Hostname: host,
 		AuthKey:  authKey,
-		Logf:     logr.TRACE.Printf,
+		Logf:     log.TRACE.Printf,
 	}
 
 	if err := s.Start(); err != nil {
@@ -48,24 +39,16 @@ func Run(host, authKey string, downstreamPort int) (string, error) {
 		return "", err
 	}
 
-	done := make(chan struct{})
-	go watch(w, done)
+	h := &handler{
+		log: log,
+		lc:  lc,
+	}
 
-	go func() {
-		<-done
+	started := make(chan struct{})
+	go h.watchState(w, started)
 
-		status, err := lc.Status(context.Background())
-		if err != nil {
-			return
-		}
-
-		var net string
-		if tn := status.CurrentTailnet; tn != nil {
-			net = "." + tn.MagicDNSSuffix
-		}
-
-		logr.INFO.Printf("url: https://%s ip: %v", s.Hostname+net, status.TailscaleIPs)
-	}()
+	<-started
+	go h.completeStartup(host)
 
 	ln, err := s.Listen("tcp", ":443")
 	if err != nil {
@@ -76,47 +59,12 @@ func Run(host, authKey string, downstreamPort int) (string, error) {
 		GetCertificate: lc.GetCertificate,
 	})
 
-	go handle(ln, strconv.Itoa(downstreamPort))
+	go handleListener(ln, strconv.Itoa(port))
 
 	return "", nil
 }
 
-func watch(w *tailscale.IPNBusWatcher, done chan struct{}) {
-	var needsLogin bool
-
-	for {
-		n, err := w.Next()
-		if err != nil {
-			return
-		}
-
-		if n.State != nil {
-			fmt.Println(n.State.String())
-
-			switch *n.State {
-			case ipn.NeedsLogin:
-				needsLogin = true
-
-			case ipn.Running:
-				close(done)
-				return
-			}
-		}
-
-		if needsLogin {
-			switch {
-			case n.LoginFinished != nil:
-				fmt.Println("LoginFinished")
-				needsLogin = false
-
-			case n.BrowseToURL != nil && *n.BrowseToURL != "":
-				fmt.Println("BrowseToURL:", *n.BrowseToURL)
-			}
-		}
-	}
-}
-
-func handle(ln net.Listener, port string) {
+func handleListener(ln net.Listener, port string) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
