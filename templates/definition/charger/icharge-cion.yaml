@@ -1,8 +1,8 @@
 template: ichargecion
 products:
-  - brand: i-CHARGE
+  - brand: Schrack
     description:
-      generic: CION
+      generic: i-CHARGE CION
 params:
   - name: modbus
     choice: ["tcpip"]
@@ -33,6 +33,6 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual register configuration
-      address: 127 # Strom max
+      address: 121 # Strom max
       type: writesingle
       decode: uint16
