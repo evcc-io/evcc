@@ -46,7 +46,7 @@ func SetupRouter(router *mux.Router) {
 	router.Methods(http.MethodGet).HandlerFunc(instance.handle)
 }
 
-// SetupRouter registers a device handler with the redirect handler
+// Register registers a specific handler with the redirect handler
 func Register(handler http.HandlerFunc) string {
 	return instance.register(handler)
 }
