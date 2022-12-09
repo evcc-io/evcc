@@ -35,6 +35,7 @@ func NewRepo(log *util.Logger, owner, repository string) *Repo {
 	client := request.NewClient(log)
 
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		log.Redact(token)
 		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
 		client = oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{
 			AccessToken: token,
