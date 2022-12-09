@@ -13,7 +13,7 @@ func Run(log *util.Logger, httpd webServer, outChan chan<- util.Param) {
 	u := &watch{
 		log:     log,
 		outChan: outChan,
-		repo:    NewRepo(owner, repository),
+		repo:    NewRepo(log, owner, repository),
 	}
 
 	c := make(chan *github.RepositoryRelease, 1)
