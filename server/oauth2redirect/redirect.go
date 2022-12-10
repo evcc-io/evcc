@@ -1,4 +1,4 @@
-package auth
+package oauth2redirect
 
 import (
 	"crypto/rand"
@@ -11,13 +11,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var instance *Auth
+var instance *Handler
 
-// Auth manages a dynamic map of routes for OAuth authentication.
-// When a route is registered a token OAuth state is returned.
+// Handler manages a dynamic map of routes for handling the redirect during
+// OAuth authentication. When a route is registered a token OAuth state is returned.
 // On GET request the generic handler identifies route and target handler
-// by request state obtained from the request.
-type Auth struct {
+// by request state obtained from the request and delegates to the registered handler.
+type Handler struct {
 	mu     sync.Mutex
 	secret []byte
 	routes map[string]http.HandlerFunc
@@ -35,21 +35,23 @@ func init() {
 		panic(err)
 	}
 
-	instance = &Auth{
+	instance = &Handler{
 		secret: secret,
 		routes: make(map[string]http.HandlerFunc),
 	}
 }
 
-func Setup(router *mux.Router) {
+// SetupRouter connects the redirect handler to the router
+func SetupRouter(router *mux.Router) {
 	router.Methods(http.MethodGet).HandlerFunc(instance.handle)
 }
 
+// Register registers a specific handler with the redirect handler
 func Register(handler http.HandlerFunc) string {
 	return instance.register(handler)
 }
 
-func (a *Auth) register(handler http.HandlerFunc) string {
+func (a *Handler) register(handler http.HandlerFunc) string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -61,7 +63,7 @@ func (a *Auth) register(handler http.HandlerFunc) string {
 	return key
 }
 
-func (a *Auth) handle(w http.ResponseWriter, r *http.Request) {
+func (a *Handler) handle(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
 	if q.Has("error") {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/google/go-github/v32/github"
 	"github.com/hashicorp/go-version"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -30,11 +32,22 @@ type Repo struct {
 
 // NewRepo creates repository adapter
 func NewRepo(log *util.Logger, owner, repository string) *Repo {
+	client := request.NewClient(log)
+
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		log.Redact(token)
+		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
+		client = oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{
+			AccessToken: token,
+		}))
+	}
+
 	r := &Repo{
 		owner:      owner,
 		repository: repository,
-		Client:     github.NewClient(request.NewClient(log)),
+		Client:     github.NewClient(client),
 	}
+
 	return r
 }
 
