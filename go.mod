@@ -27,7 +27,8 @@ require (
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/emirpasic/gods v1.18.1
-	github.com/evcc-io/eebus v0.0.0-20221023111026-e3c9e4d1f3c8
+	github.com/enbility/cemd v0.1.3
+	github.com/enbility/eebus-go v0.1.3
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
 	github.com/glebarez/sqlite v1.5.0
@@ -87,7 +88,7 @@ require (
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
-	golang.org/x/net v0.3.0
+	golang.org/x/net v0.4.0
 	golang.org/x/oauth2 v0.3.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/text v0.5.0
@@ -97,6 +98,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.24.2
 )
+
+require github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
 
 require (
 	cloud.google.com/go/compute v1.14.0 // indirect
@@ -129,6 +132,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/holoplot/go-avahi v1.0.1 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
@@ -171,12 +175,13 @@ require (
 	github.com/thoas/go-funk v0.9.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
-	golang.org/x/tools v0.3.0 // indirect
+	golang.org/x/tools v0.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221205194025-8222ab48f5fc // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
