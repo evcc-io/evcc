@@ -11,6 +11,7 @@ import (
 var acceptable = []string{
 	"invalid plugin source: ...",
 	"missing mqtt broker configuration",
+	"missing token",
 	"mqtt not configured",
 	"not a SunSpec device",
 	"missing password",         // Powerwall

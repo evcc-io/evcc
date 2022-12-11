@@ -2,6 +2,7 @@ package meter
 
 import (
 	"encoding/json"
+	"errors"
 	"sync"
 	"time"
 
@@ -33,6 +34,10 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
+	if cc.Token == "" {
+		return nil, errors.New("missing token")
+	}
+
 	t := &Tibber{
 		log: util.NewLogger("pulse").Redact(cc.Token, cc.HomeID),
 	}
@@ -46,20 +51,6 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil, err
 		}
 	}
-
-	// // get websocket uri
-	// var res struct {
-	// 	Viewer struct {
-	// 		WebsocketSubscriptionUrl string
-	// 	}
-	// }
-
-	// ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-	// defer cancel()
-
-	// if err := qclient.Query(ctx, &res, nil); err != nil {
-	// 	return nil, err
-	// }
 
 	// subscription client
 	client := graphql.NewSubscriptionClient(tibber.SubscriptionURI).
