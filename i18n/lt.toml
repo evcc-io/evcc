@@ -7,15 +7,15 @@ login = " Automobilių prisijungimai"
 about = "Apie EVCC"
 
 [header.theme]
-auto = "Dizainas: Sistemos"
-light = "Dizainas: Šviesus"
-dark = "Dizainas: Tamsus"
+auto = "Dizainas: sistemos"
+light = "Dizainas: šviesus"
+dark = "Dizainas: tamsus"
 
 [footer.version]
 availableShort = "naujinimas"
 availableLong = "yra naujesnė versija"
 modalTitle = "Yra naujesnė versija"
-modalUpdateStarted = "Pasibaigus naujinimui EVCC startuos iš naujo.."
+modalUpdateStarted = "Pasibaigus naujinimui EVCC startuos iš naujo."
 modalInstalledVersion = "Dabartinė versija"
 modalNoReleaseNotes = "Naujinimo pastabų nėra. Daugiau informacijos apie naują versiją galite rasti rasite čia:"
 modalCancel = "Atšaukti"
@@ -90,7 +90,7 @@ pvExport = "Tinklo eksportas"
 
 [main.mode]
 off = "Stop"
-minpv = "Min+S"
+minpv = "Min+S."
 pv = "Saulės"
 now = "Greitas"
 
@@ -131,7 +131,7 @@ label = "Min. Srovė"
 
 [main.vehicle]
 fallbackName = "Automobilis"
-vehicleSoC = "Įkrova"
+vehicleSoC = "Akumuliatorius"
 targetSoC = "Limitas"
 none = "Nėra automobilio"
 unknown = "Nežinomas automobilis"
@@ -143,7 +143,7 @@ disconnected = "neprijungtas"
 charging = "vyksta įkrovimas"
 ready = "leidžiama įkrauti"
 connected = "automobilis prijungtas"
-vehicleTarget = "Automobilio limitas: {soc}%"
+vehicleTarget = "Automobilyje nustatytas limitas: {soc}%"
 
 [main.vehicleStatus]
 minCharge = "minimalus įkrovimas iki {soc}%."
