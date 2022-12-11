@@ -31,6 +31,10 @@ func NewTibber(other map[string]interface{}) (*Tibber, error) {
 		Cheap  float64
 	}
 
+	if cc.Token == "" {
+		return nil, errors.New("missing token")
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
