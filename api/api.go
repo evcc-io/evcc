@@ -12,7 +12,7 @@ import (
 	"github.com/fatih/structs"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -218,10 +218,18 @@ type Resurrector interface {
 	WakeUp() error
 }
 
-// Tariff is the grid tariff
+// Rate is a grid tariff rate
+type Rate struct {
+	Start, End time.Time
+	Price      float64
+}
+
+// Rates is a slice of (future) tariff rates
+type Rates []Rate
+
+// Tariff is a tariff capable of retrieving tariff rates
 type Tariff interface {
-	IsCheap() (bool, error)
-	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
+	Rates() (Rates, error)
 }
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
