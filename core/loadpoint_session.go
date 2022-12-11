@@ -41,9 +41,6 @@ func (lp *LoadPoint) createSession() {
 			lp.session.Identifier = id
 		}
 	}
-
-	// TODO remove
-	lp.log.DEBUG.Println("session started")
 }
 
 // stopSession ends a charging session segment and persists the session.
@@ -55,8 +52,6 @@ func (lp *LoadPoint) stopSession() {
 
 	// abort the session if charging has never started
 	if lp.session.Created.IsZero() {
-		// TODO remove
-		lp.log.DEBUG.Println("session aborted")
 		return
 	}
 
@@ -66,9 +61,6 @@ func (lp *LoadPoint) stopSession() {
 	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > lp.session.ChargedEnergy {
 		lp.session.ChargedEnergy = chargedEnergy
 	}
-
-	// TODO remove
-	lp.log.DEBUG.Println("session stopped")
 
 	lp.db.Persist(lp.session)
 }
@@ -85,9 +77,6 @@ func (lp *LoadPoint) updateSession(opts ...sessionOption) {
 	for _, opt := range opts {
 		opt(lp.session)
 	}
-
-	// TODO remove
-	lp.log.DEBUG.Println("session updated")
 
 	if !lp.session.Created.IsZero() {
 		lp.db.Persist(lp.session)
