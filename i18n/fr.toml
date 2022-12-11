@@ -4,7 +4,7 @@ docs = "Documentation"
 blog = "Blog"
 github = "GitHub"
 login = "Connexion véhicule"
-about = "Au sujet de evcc"
+about = "Au sujet d'evcc"
 
 [header.theme]
 auto = "Désign: Système"
