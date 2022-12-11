@@ -137,6 +137,5 @@ phases_3_hint = "({min} al {max})"
 [main.loadpointSettings.maxCurrent]
 label = "Corrente massima"
 
-
 [main.loadpointSettings.minCurrent]
 label = "Min. corrente"
