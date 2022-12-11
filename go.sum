@@ -224,10 +224,10 @@ github.com/eclipse/paho.mqtt.golang v1.4.2/go.mod h1:JGt0RsEwEX+Xa/agj90YJ9d9DH2
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
-github.com/enbility/cemd v0.1.3 h1:FkmbuS7ngKBsQNtapEjtorhkjJM9ay8uc9VZta7MlDA=
-github.com/enbility/cemd v0.1.3/go.mod h1:dDJWVmkT2bysTPBQ+YYpeu8gLMic0zEzlVTYNL7u+S8=
-github.com/enbility/eebus-go v0.1.3 h1:YYDkd5h9jgT126B1OG/lvawYcxweqKMXP0DvfC5cj7w=
-github.com/enbility/eebus-go v0.1.3/go.mod h1:BaXy+yk3pAURDqjaaPkxqJ6nlPDcEOT7ARs85U9T6YI=
+github.com/enbility/cemd v0.1.4 h1:nrqPIvPszadb3xFYhkqgufiyHLPAcHRysNMK2M93hu8=
+github.com/enbility/cemd v0.1.4/go.mod h1:G02MGOf65FSyfQD/YMVVcL3LYE89pkFbq/DLNupF/MI=
+github.com/enbility/eebus-go v0.1.4 h1:vjbIhIdGS3K/VUMp6ES2ocWvekJTHZBlc0wP08qJhNQ=
+github.com/enbility/eebus-go v0.1.4/go.mod h1:BaXy+yk3pAURDqjaaPkxqJ6nlPDcEOT7ARs85U9T6YI=
 github.com/envoyproxy/go-control-plane v0.6.9/go.mod h1:SBwIajubJHhxtWwsL9s8ss4safvEdbitLhGGK48rN6g=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
