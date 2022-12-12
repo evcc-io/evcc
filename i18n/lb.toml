@@ -1,6 +1,3 @@
-
-
-
 [header]
 sessions = "Opluedsessiounen"
 docs = "Dokumentatioun"
@@ -61,8 +58,8 @@ optInMoreDetailsLink = "hei"
 titleSponsor = "Dir sidd e Supporter"
 confetti = "Prett fir Konfetti?"
 supportUs = "Eis Missioun: Solarladung de Standard maachen. Hëlleft eis an ënnerstëtzen evcc finanziell."
-sticker = "...oder evcc Stickeren?"
-confettiPromise = "Et ginn Stickeren an digital Konfetti
+sticker = "… oder evcc Stickeren?"
+confettiPromise = "Et ginn Stickeren an digital Konfetti"
 titleNoSponsor = "Ënnerstëtzt eis"
 thanks = "Merci fir Är Ënnerstëtzung, {sponsor}! Et hëlleft eis bei der Weiderentwécklung."
 becomeSponsor = "Gitt e Sponsor"
@@ -75,7 +72,7 @@ dismissAll = "Alles entloossen"
 vehicles = "Parking"
 
 [main.energyflow]
-noEnergy = Keng Moossdaten
+noEnergy = "Keng Moossdaten"
 homePower = "Verbrauch"
 battery = "Batterie"
 batteryDischarge = "Batterie Entladung"
