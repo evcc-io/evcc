@@ -1,0 +1,215 @@
+[header]
+sessions = "Opluedsessiounen"
+docs = "Dokumentatioun"
+login = "Gefier Login"
+about = "Iwwer evcc"
+blog = "Blog"
+github = "GitHub"
+
+[footer.version]
+availableShort = "aktualiséieren"
+modalTitle = "Aktualiséierung verfügbar"
+modalInstalledVersion = "Aktuell installéiert Versioun"
+modalCancel = "Ofbriechen"
+modalUpdate = "Update"
+modalUpdateNow = "Update elo"
+modalDownload = "Download"
+modalUpdateStarted = "Evcc wäert nom Update nei starten."
+modalNoReleaseNotes = "Keng Verëffentlechungsnotizen verfügbar. Méi Informatioun iwwer déi nei Versioun fannt Dir hei:"
+availableLong = "Aktualiséierung verfügbar"
+modalUpdateStatusStart = "Aktualiséierung ugefaang:"
+modalUpdateStatusFailed = "Aktualiséierung gescheitert:"
+
+[footer.savings]
+tabTitle = "Meng Daten"
+footerShort = "{percent}% Solar"
+modalTitle = "Charge Energy Iwwersiicht"
+since = "zënter {since}"
+percentTitle = "Solarenergie"
+percentGrid = "{grid} kWh Stroumnetz"
+savingsComparedToGrid = "verglach mam Stroumnetz"
+savingsTotalEnergy = "{total} kWh gelueden"
+savingsTitle = "Spueren"
+footerLong = "{percent}% Solarenergie"
+percentSelf = "{self} kWh Solar"
+priceTitle = "Energiepräis"
+priceGrid = "{gridPrice} Stroumnetz"
+priceFeedIn = "{feedInPrice} fidderen"
+
+[footer.community]
+powerSub1 = "{activeClients} vun {totalClients} Participanten"
+powerSub2 = "gëtt elo gelueden"
+greenShare = "Solar deelen"
+greenEnergySub2 = "zënter Oktober 2022"
+power = "Ladekraaft"
+greenEnergy = "Solarenergie"
+greenEnergySub1 = "opgelueden mat evcc"
+tabTitle = "Live Gemeinschaft"
+greenShareSub1 = "Kraaft ass iwwerdeckt"
+greenShareSub2 = "PV & Batterielagerung"
+
+[footer.telemetry]
+optIn = "Ech wëll meng Donnéeën och bäidroen."
+optInMoreDetails = "Méi Detailer sinn verfügbar {0}."
+optInSponsorship = "Sponsoring erfuerderlech."
+optInMoreDetailsLink = "hei"
+
+[footer.sponsor]
+titleSponsor = "Dir sidd e Supporter"
+confetti = "Prett fir Konfetti?"
+supportUs = "Eis Missioun: Solarladung de Standard maachen. Hëlleft eis an ënnerstëtzen evcc finanziell."
+sticker = "… oder evcc Stickeren?"
+confettiPromise = "Et ginn Stickeren an digital Konfetti"
+titleNoSponsor = "Ënnerstëtzt eis"
+thanks = "Merci fir Är Ënnerstëtzung, {sponsor}! Et hëlleft eis bei der Weiderentwécklung."
+becomeSponsor = "Gitt e Sponsor"
+
+[notifications]
+modalTitle = "Notifikatiounen"
+dismissAll = "Alles entloossen"
+
+[main]
+vehicles = "Parking"
+
+[main.energyflow]
+noEnergy = "Keng Moossdaten"
+homePower = "Verbrauch"
+battery = "Batterie"
+batteryDischarge = "Batterie Entladung"
+gridImport = "Stroumnetz Import"
+selfConsumption = "Selbstverbrauch"
+pvExport = "Stroumnetz Export"
+batteryCharge = "Batterie charge"
+pvProduction = "Produktioun"
+loadpoints = "Opluedpunkt | Opluedpunkt | {count} Opluedstatiounen"
+
+[main.loadpointSettings.minSoC]
+label = "Minimal SoC"
+description = 'Gamme fir Noutfäll. Gefier gëtt "séier" op {0}% am PV Modus gelueden. Da geet et nëmme mat PV-Iwwerschoss weider.'
+
+[main.loadpointSettings.phasesConfigured]
+label = "Phasen"
+phases_0 = "automatesch Schalter"
+phases_1_hint = "({min} bis {max})"
+phases_3_hint = "({min} bis {max})"
+phases_1 = "1 Phase"
+phases_3 = "3 Phasen"
+
+[main.vehicle]
+vehicleSoC = "SoC"
+targetSoC = "Limite"
+none = "Keng Gefier"
+unknown = "Gäscht Gefier"
+changeVehicle = "Gefier änneren"
+detectionActive = "Identifikatioun Gefier ..."
+fallbackName = "Gefier"
+
+[main.vehicleSoC]
+connected = "verbonne"
+disconnected = "deconnectéiert"
+charging = "oplueden"
+ready = "bereet"
+vehicleTarget = "Gefier Limite: {soc}%"
+
+[main.targetCharge]
+targetIsInThePast = "Déi gewielt Zäit ass an der Vergaangenheet."
+activate = "Aktivéieren"
+title = "Zilzäit"
+setTargetTime = "keen"
+experimentalLabel = "Experimentell"
+description = "Wéini soll d'Gefier op {targetSoC}% gelueden ginn?"
+modalTitle = "Zielzäit setzen"
+today = "haut"
+tomorrow = "muer"
+inactiveLabel = "Zilzäit"
+experimentalText = "Dës Fonktioun funktionnéiert awer ass nach net perfekt. Meld w.e.g. onerwaart Verhalen an eisem"
+activeLabel = "{time}"
+
+[main.targetEnergy]
+noLimit = "keen"
+label = "Limite"
+
+[startupError]
+hint = "Notiz: en anere Grond fir dëse Message kéint e defekten Apparat sinn (Inverter, Meter, ...). Kontrolléiert Är Netzwierkverbindungen."
+configuration = "Configuratioun"
+configFile = "Konfiguratiounsdatei benotzt:"
+title = "Startup Feeler"
+lineErrorLink = "Linn {0}"
+discussions = "GitHub Diskussiounen"
+lineError = "Mir hunn e Feeler am {0} fonnt."
+description = "Kuckt w.e.g. Är Konfiguratiounsdatei. Wann d'Fehlermeldung Iech net hëlleft, kuckt op eis {0}."
+fixAndRestart = "Fir de Problem fixéieren an de Server nei starten."
+restartButton = "Neistart"
+
+[header.theme]
+auto = "Design: System"
+light = "Design: Liicht"
+dark = "Design: donkel"
+
+[main.mode]
+pv = "PV"
+now = "Schnell"
+off = "ausgeschalt"
+minpv = "Min+PV"
+
+[main.loadpoint]
+power = "Leeschtung"
+fallbackName = "Opluedpunkt"
+duration = "Dauer"
+charged = "Gelueden"
+
+[main.loadpointSettings]
+currents = "Laden"
+disclaimerText = "Ännerunge sinn nach net persistent. Si ginn no der Restart vum Server zréckgesat."
+vehicle = "Gefier"
+default = "Standard"
+disclaimerHint = "Notiz:"
+title = 'Astellungen "{0}"'
+
+[main.loadpointSettings.minCurrent]
+label = "Min. Stroum"
+
+[main.vehicleStatus]
+pvEnable = "Iwwerschoss verfügbar. Vun {remaining} un."
+vehicleTargetReached = "Gefier Limit {soc}% erreecht."
+targetChargePlanned = "Zilladung geplangt. Start {time}."
+charging = "Laden."
+pvDisable = "Net genuch Iwwerschoss. Pausen an {remaining}."
+scale3p = "Erhéijung op dräi Phase am {remaining}."
+waitForVehicle = "Prett. Op Gefier waarden."
+targetChargeWaitForVehicle = "Zil charge prett. Wait fir Gefier."
+targetChargeActive = "Zilladung aktiv."
+connected = "Verbonne."
+scale1p = "Reduktioun op eenzeg Phase am {remaining}."
+disconnected = "Deconnectéiert."
+minCharge = "Charge op d'mannst op {soc}%."
+
+[main.loadpointSettings.maxCurrent]
+label = "Max. Stroum"
+
+[main.provider]
+logout = "ausloggen"
+login = "umellen"
+
+[sessions]
+loadpoint = "Opluedpunkt"
+title = "Opluedsessiounen"
+vehicle = "Gefier"
+downloadCsv = "Als CSV eroflueden"
+energy = "Belaascht"
+date = "Period"
+
+[sessions.csv]
+loadpoint = "Opluedpunkt"
+vehicle = "Gefier"
+odometer = "Kilometerstand (km)"
+identifier = "Identifier"
+chargedenergy = "Energie (kWh)"
+meterstart = "Meter Start (kWh)"
+meterstop = "Meter Stop (kWh)"
+created = "Erstallt"
+finished = "Fäerdeg"
+
+[offline]
+message = "Keng Verbindung mam Server."
+reload = "Reload?"
