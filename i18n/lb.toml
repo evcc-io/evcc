@@ -84,7 +84,7 @@ pvProduction = "Produktioun"
 loadpoints = "Opluedpunkt | Opluedpunkt | {count} Opluedstatiounen"
 
 [main.loadpointSettings.minSoC]
-label = "Minimal SoC"
+label = "Minimum Staat vun charge"
 description = 'Gamme fir Noutfäll. Gefier gëtt "séier" op {0}% am PV Modus gelueden. Da geet et nëmme mat PV-Iwwerschoss weider.'
 
 [main.loadpointSettings.phasesConfigured]
@@ -96,7 +96,7 @@ phases_1 = "1 Phase"
 phases_3 = "3 Phasen"
 
 [main.vehicle]
-vehicleSoC = "SoC"
+vehicleSoC = "Staat vun charge"
 targetSoC = "Limite"
 none = "Keng Gefier"
 unknown = "Gäscht Gefier"
