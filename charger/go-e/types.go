@@ -15,7 +15,7 @@ type StatusResponse struct {
 	Alw int       `json:"alw,string"` // allow charging
 	Amp int       `json:"amp,string"` // current [A]
 	Err int       `json:"err,string"` // error
-	Eto int       `json:"eto,string"` // energy total Wh
+	Eto int       `json:"eto,string"` // energy total [0.1kWh]
 	Stp int       `json:"stp,string"` // stop state
 	Tmp int       `json:"tmp,string"` // temperature [°C]
 	Dws int       `json:"dws,string"` // energy [Ws]
