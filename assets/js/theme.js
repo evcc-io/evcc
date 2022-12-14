@@ -19,7 +19,6 @@ export function getThemePreference() {
 }
 
 export function setThemePreference(theme) {
-  console.log({ theme });
   if (!THEMES.includes(theme)) {
     return;
   }

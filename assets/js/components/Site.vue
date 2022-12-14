@@ -111,7 +111,7 @@ export default {
 		},
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
-			return { vehicleLogins };
+			return { vehicleLogins, ...this.collectProps(TopNavigation) };
 		},
 		showParkingLot: function () {
 			// work in progess

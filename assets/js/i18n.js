@@ -6,17 +6,18 @@ import { i18n as i18nApi } from "./api";
 
 const PREFERRED_LOCALE_KEY = "preferred_locale";
 
+// https://github.com/joker-x/languages.js/blob/master/languages.json
 export const LOCALES = {
-  nl: "Dutch",
-  en: "English",
-  fr: "French",
-  de: "German",
-  it: "Italian",
-  lt: "Lithuanian",
-  no: "Norwegian",
-  pl: "Polish",
-  pt: "Portuguese",
-  es: "Spanish",
+  nl: ["Dutch", "Nederlands"],
+  en: ["English", "English"],
+  fr: ["French", "Français"],
+  de: ["German", "Deutsch"],
+  it: ["Italian", "Italiano"],
+  lt: ["Lithuanian", "Lietuvių"],
+  no: ["Norwegian", "Norsk"],
+  pl: ["Polish", "Polski"],
+  pt: ["Portuguese", "Português"],
+  es: ["Spanish", "Español"],
 };
 
 function getBrowserLocale() {
@@ -32,6 +33,29 @@ export function getLocalePreference() {
   return window.localStorage[PREFERRED_LOCALE_KEY];
 }
 
+export function removeLocalePreference(i18n) {
+  try {
+    delete window.localStorage[PREFERRED_LOCALE_KEY];
+    setI18nLanguage(i18n, i18n.fallbackLocale);
+  } catch (e) {
+    console.error("unable to delete locale in localStorage", e);
+  }
+}
+
+export function setLocalePreference(i18n, locale) {
+  if (!LOCALES[locale]) {
+    console.error("unknown locale", locale);
+    return;
+  }
+  try {
+    window.localStorage[PREFERRED_LOCALE_KEY] = locale;
+    setI18nLanguage(i18n, locale);
+    ensureCurrentLocaleMessages(i18n);
+  } catch (e) {
+    console.error("unable to write locale to localStorage", e);
+  }
+}
+
 function getLocale() {
   return getLocalePreference() || getBrowserLocale();
 }
@@ -45,12 +69,12 @@ export default function setupI18n() {
     fallbackLocale: "en",
     messages: { en },
   });
-  setI18nLanguage(i18n, getLocale());
+  setI18nLanguage(i18n.global, getLocale());
   return i18n;
 }
 
 export function setI18nLanguage(i18n, locale) {
-  i18n.global.locale = locale;
+  i18n.locale = locale;
   document.querySelector("html").setAttribute("lang", locale);
 }
 
@@ -58,7 +82,7 @@ async function loadLocaleMessages(i18n, locale) {
   try {
     const response = await i18nApi.get(`${locale}.toml`, { params: { v: window.evcc?.version } });
     const messages = toml.parse(response.data);
-    i18n.global.setLocaleMessage(locale, messages);
+    i18n.setLocaleMessage(locale, messages);
   } catch (e) {
     console.error(`unable to load translation for [${locale}]`, e);
   }
@@ -67,8 +91,8 @@ async function loadLocaleMessages(i18n, locale) {
 }
 
 export async function ensureCurrentLocaleMessages(i18n) {
-  const { locale } = i18n.global;
-  if (!i18n.global.availableLocales.includes(locale)) {
+  const { locale } = i18n;
+  if (!i18n.availableLocales.includes(locale)) {
     await loadLocaleMessages(i18n, locale);
   }
 }

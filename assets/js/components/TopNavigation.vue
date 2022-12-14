@@ -31,7 +31,7 @@
 					data-bs-toggle="modal"
 					data-bs-target="#globalSettingsModal"
 				>
-					Einstellungen
+					{{ $t("header.settings") }}
 				</button>
 			</li>
 			<template v-if="providerLogins.length > 0">
@@ -99,7 +99,7 @@
 				</a>
 			</li>
 		</ul>
-		<GlobalSettingsModal />
+		<GlobalSettingsModal :sponsor="sponsor" />
 	</div>
 </template>
 
@@ -120,6 +120,7 @@ export default {
 				return {};
 			},
 		},
+		sponsor: String,
 	},
 	computed: {
 		logoutCount() {
