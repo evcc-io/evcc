@@ -3,8 +3,7 @@ import { nextTick } from "vue";
 import { createI18n } from "vue-i18n";
 import en from "../../i18n/en.toml";
 import { i18n as i18nApi } from "./api";
-
-const PREFERRED_LOCALE_KEY = "preferred_locale";
+import settings from "./settings";
 
 // https://github.com/joker-x/languages.js/blob/master/languages.json
 export const LOCALES = {
@@ -30,16 +29,12 @@ function getBrowserLocale() {
 }
 
 export function getLocalePreference() {
-  return window.localStorage[PREFERRED_LOCALE_KEY];
+  return settings.locale;
 }
 
 export function removeLocalePreference(i18n) {
-  try {
-    delete window.localStorage[PREFERRED_LOCALE_KEY];
-    setI18nLanguage(i18n, i18n.fallbackLocale);
-  } catch (e) {
-    console.error("unable to delete locale in localStorage", e);
-  }
+  settings.locale = null;
+  setI18nLanguage(i18n, i18n.fallbackLocale);
 }
 
 export function setLocalePreference(i18n, locale) {
@@ -47,13 +42,9 @@ export function setLocalePreference(i18n, locale) {
     console.error("unknown locale", locale);
     return;
   }
-  try {
-    window.localStorage[PREFERRED_LOCALE_KEY] = locale;
-    setI18nLanguage(i18n, locale);
-    ensureCurrentLocaleMessages(i18n);
-  } catch (e) {
-    console.error("unable to write locale to localStorage", e);
-  }
+  settings.locale = locale;
+  setI18nLanguage(i18n, locale);
+  ensureCurrentLocaleMessages(i18n);
 }
 
 function getLocale() {
