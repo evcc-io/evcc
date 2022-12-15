@@ -1036,16 +1036,16 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 		return
 	}
 
-	var includeIdCapable bool
+	var ignoreIdCapable bool
 	if identifier, ok := lp.charger.(api.Identifier); ok {
 		id, err := identifier.Identify()
 		if err != nil {
 			lp.log.ERROR.Println("charger vehicle id:", err)
 		}
-		includeIdCapable = id == ""
+		ignoreIdCapable = id != ""
 	}
 
-	if vehicle := lp.coordinator.IdentifyVehicleByStatus(includeIdCapable); vehicle != nil {
+	if vehicle := lp.coordinator.IdentifyVehicleByStatus(!ignoreIdCapable); vehicle != nil {
 		lp.stopVehicleDetection()
 		lp.setActiveVehicle(vehicle)
 		return
