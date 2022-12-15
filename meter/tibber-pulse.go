@@ -9,13 +9,14 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/hasura/go-graphql-client"
 )
 
 func init() {
 	registry.Add("tibber-pulse", NewTibberFromConfig)
 }
+
+var timeout = time.Minute
 
 type Tibber struct {
 	mu      sync.Mutex
@@ -57,6 +58,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		WithConnectionParams(map[string]any{
 			"token": cc.Token,
 		}).
+		WithRetryTimeout(timeout).
 		WithLog(t.log.TRACE.Println)
 
 	// run the client
@@ -117,7 +119,7 @@ func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) er
 	if err == nil {
 		select {
 		case <-recv:
-		case <-time.After(request.Timeout):
+		case <-time.After(timeout):
 			err = api.ErrTimeout
 		case err = <-errC:
 		}
@@ -131,11 +133,11 @@ func (t *Tibber) CurrentPower() (float64, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	if time.Since(t.updated) > request.Timeout {
+	if time.Since(t.updated) > timeout {
 		return 0, api.ErrTimeout
 	}
 
-	return t.live.Power, nil
+	return t.live.Power - t.live.PowerProduction, nil
 }
 
 var _ api.MeterCurrent = (*Tibber)(nil)
@@ -145,7 +147,7 @@ func (t *Tibber) Currents() (float64, float64, float64, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	if time.Since(t.updated) > request.Timeout {
+	if time.Since(t.updated) > timeout {
 		return 0, 0, 0, api.ErrTimeout
 	}
 

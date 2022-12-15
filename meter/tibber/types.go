@@ -40,6 +40,7 @@ type PriceInfo struct {
 type LiveMeasurement struct {
 	// Timestamp                       time.Time
 	Power                           float64
+	PowerProduction                 float64
 	LastMeterConsumption            float64
 	LastMeterProduction             float64
 	CurrentL1, CurrentL2, CurrentL3 float64
