@@ -80,7 +80,7 @@ import FormRow from "./FormRow.vue";
 import SelectGroup from "./SelectGroup.vue";
 import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreference } from "../i18n";
 import { getThemePreference, setThemePreference, THEMES } from "../theme";
-const UNITS = ["km", "mile"];
+import { getUnits, setUnits, UNITS } from "../units";
 
 export default {
 	name: "GlobalSettingsModal",
@@ -92,7 +92,7 @@ export default {
 		return {
 			theme: getThemePreference(),
 			language: getLocalePreference() || "",
-			unit: "km",
+			unit: getUnits(),
 			THEMES,
 			UNITS,
 		};
@@ -108,6 +108,9 @@ export default {
 		},
 	},
 	watch: {
+		unit(value) {
+			setUnits(value);
+		},
 		theme(value) {
 			setThemePreference(value);
 		},

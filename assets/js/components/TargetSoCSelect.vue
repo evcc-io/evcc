@@ -22,6 +22,7 @@
 <script>
 import LabelAndValue from "./LabelAndValue.vue";
 import AnimatedNumber from "./AnimatedNumber.vue";
+import { distanceUnit } from "../units";
 
 export default {
 	name: "TargetSoCSelect",
@@ -63,7 +64,7 @@ export default {
 			return `${Math.round(value)}%`;
 		},
 		formatKm: function (value) {
-			return `${Math.round(value)} km`;
+			return `${Math.round(value)} ${distanceUnit()}`;
 		},
 	},
 };

@@ -1,8 +1,8 @@
 import { reactive, watch } from "vue";
 
-const SETTING_LOCALE = "setting_locale";
-const SETTING_THEME = "setting_theme";
-const SETTING_UNIT = "setting_unit";
+const SETTINGS_LOCALE = "settings_locale";
+const SETTINGS_THEME = "settings_theme";
+const SETTINGS_UNIT = "settings_unit";
 
 function read(key) {
   return window.localStorage[key];
@@ -24,13 +24,13 @@ function save(key) {
 
 const settings = reactive({
   telemetry: null,
-  locale: read(SETTING_LOCALE),
-  theme: read(SETTING_THEME),
-  unit: read(SETTING_UNIT),
+  locale: read(SETTINGS_LOCALE),
+  theme: read(SETTINGS_THEME),
+  unit: read(SETTINGS_UNIT),
 });
 
-watch(() => settings.locale, save(SETTING_LOCALE));
-watch(() => settings.theme, save(SETTING_THEME));
-watch(() => settings.unit, save(SETTING_UNIT));
+watch(() => settings.locale, save(SETTINGS_LOCALE));
+watch(() => settings.theme, save(SETTINGS_THEME));
+watch(() => settings.unit, save(SETTINGS_UNIT));
 
 export default settings;
