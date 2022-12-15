@@ -137,12 +137,7 @@ func (t *Tibber) CurrentPower() (float64, error) {
 		return 0, api.ErrTimeout
 	}
 
-	power := t.live.Power
-	if t.live.PowerProduction > 0 {
-		power = -t.live.PowerProduction
-	}
-
-	return power, nil
+	return t.live.Power - t.live.PowerProduction, nil
 }
 
 var _ api.MeterCurrent = (*Tibber)(nil)
