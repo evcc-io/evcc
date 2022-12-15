@@ -1036,6 +1036,7 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 		return
 	}
 
+	// decide if id-able vehicles should be included https://github.com/evcc-io/evcc/pull/5469
 	var ignoreIdCapable bool
 	if identifier, ok := lp.charger.(api.Identifier); ok {
 		id, err := identifier.Identify()
