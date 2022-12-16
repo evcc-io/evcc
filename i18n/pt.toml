@@ -23,7 +23,6 @@ modalUpdate = "Atualizar"
 modalUpdateNow = "Atualizar agora"
 modalDownload = "Download"
 modalUpdateStatusStart = "Atualização iniciada:"
-modalUpdateStatusFailed = "Não foi possível atualizar:"
 
 [footer.savings]
 tabTitle = "Meus dados"

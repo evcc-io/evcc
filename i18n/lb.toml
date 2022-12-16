@@ -18,7 +18,6 @@ modalUpdateStarted = "Evcc wäert nom Update nei starten."
 modalNoReleaseNotes = "Keng Verëffentlechungsnotizen verfügbar. Méi Informatioun iwwer déi nei Versioun fannt Dir hei:"
 availableLong = "Aktualiséierung verfügbar"
 modalUpdateStatusStart = "Aktualiséierung ugefaang:"
-modalUpdateStatusFailed = "Aktualiséierung gescheitert:"
 
 [footer.savings]
 tabTitle = "Meng Daten"

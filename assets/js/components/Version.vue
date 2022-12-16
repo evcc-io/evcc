@@ -68,7 +68,7 @@
 										:style="{ width: uploadProgress + '%' }"
 									></div>
 								</div>
-								<p>{{ updateStatus }}{{ uploadMessage }}</p>
+								<p>{{ updateStatus }} {{ uploadMessage }}</p>
 							</div>
 							<div v-else>
 								<p>
@@ -175,7 +175,7 @@ export default {
 				this.updateStatus = this.$t("footer.version.modalUpdateStatusStart");
 				this.updateStarted = true;
 			} catch (e) {
-				this.updateStatus = this.$t("footer.version.modalUpdateStatusStart") + e;
+				this.updateStatus = `${this.$t("footer.version.modalUpdateStatusStart")} ${e}`;
 			}
 		},
 		releaseNotesUrl: function (version) {
