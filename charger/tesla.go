@@ -88,8 +88,8 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	c.vitalsG = provider.Cached(func() (Vitals, error) {
-		uri := fmt.Sprintf("%s/api/1/vitals ", c.uri)
 		var res Vitals
+		uri := fmt.Sprintf("%s/api/1/vitals", c.uri)
 		err := c.GetJSON(uri, &res)
 		return res, err
 	}, time.Second)
