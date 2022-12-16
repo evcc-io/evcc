@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -185,9 +186,13 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 }
 
 // SetTargetCharge sets loadpoint charge targetSoC
-func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
+func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) error {
 	lp.Lock()
 	defer lp.Unlock()
+
+	if !finishAt.IsZero() && finishAt.Before(time.Now()) {
+		return errors.New("timestamp is in the past")
+	}
 
 	lp.log.DEBUG.Printf("set target charge: %d @ %v", soc, finishAt)
 
@@ -201,6 +206,8 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 			lp.requestUpdate()
 		}
 	}
+
+	return nil
 }
 
 // RemoteControl sets remote status demand

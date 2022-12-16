@@ -294,7 +294,10 @@ func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 			return
 		}
 
-		loadpoint.SetTargetCharge(timeV, socV)
+		if err := loadpoint.SetTargetCharge(timeV, socV); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
 
 		res := struct {
 			SoC  int       `json:"soc"`
@@ -371,5 +374,5 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 // TargetCharger defines target charge related loadpoint operations
 type targetCharger interface {
 	// SetTargetCharge sets the charge targetSoC
-	SetTargetCharge(time.Time, int)
+	SetTargetCharge(time.Time, int) error
 }

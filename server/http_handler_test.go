@@ -15,9 +15,10 @@ type mockLoadpoint struct {
 	TargetTime time.Time
 }
 
-func (lp *mockLoadpoint) SetTargetCharge(time time.Time, soc int) {
+func (lp *mockLoadpoint) SetTargetCharge(time time.Time, soc int) error {
 	lp.SoC = soc
 	lp.TargetTime = time
+	return nil
 }
 
 func TestTargetChargeHandler(t *testing.T) {
