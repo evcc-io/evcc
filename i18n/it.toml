@@ -52,6 +52,9 @@ remoteDisabledHard = "{source}: Disabilitato"
 
 [main.vehicle]
 fallbackName = "Veicolo"
+vehicleSoC = "SoC"
+targetSoC = "Limite"
+none = "Nessun veicolo"
 
 [main.vehicleSoC]
 disconnected = "disconesso"
@@ -129,6 +132,10 @@ phases_0 = "commutazione automatica"
 phases_1 = "1 fase"
 phases_1_hint = "({min} a {max})"
 phases_3 = "3 fasi"
+phases_3_hint = "({min} al {max})"
 
 [main.loadpointSettings.maxCurrent]
 label = "Corrente massima"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. corrente"

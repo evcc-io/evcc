@@ -315,75 +315,88 @@ func TestApplyVehicleDefaults(t *testing.T) {
 }
 
 func TestReconnectVehicle(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	clck := clock.NewMock()
-
-	type vehicleT struct {
-		*mock.MockVehicle
-		*mock.MockChargeState
+	tc := []struct {
+		name      string
+		vehicleId []string
+	}{
+		{"without vehicle id", nil},
+		{"with vehicle id", []string{"foo"}},
 	}
 
-	vehicle := &vehicleT{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
-	vehicle.MockVehicle.EXPECT().Title().Return("vehicle").AnyTimes()
-	vehicle.MockVehicle.EXPECT().Icon().Return("").AnyTimes()
-	vehicle.MockVehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.MockVehicle.EXPECT().Phases().AnyTimes()
-	vehicle.MockVehicle.EXPECT().OnIdentified().AnyTimes()
-	vehicle.MockVehicle.EXPECT().SoC().Return(0.0, nil).AnyTimes()
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			clck := clock.NewMock()
 
-	charger := mock.NewMockCharger(ctrl)
-	charger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
+			type vehicleT struct {
+				*mock.MockVehicle
+				*mock.MockChargeState
+			}
 
-	lp := &LoadPoint{
-		log:         util.NewLogger("foo"),
-		bus:         evbus.New(),
-		clock:       clck,
-		charger:     charger,
-		chargeMeter: &Null{}, // silence nil panics
-		chargeRater: &Null{}, // silence nil panics
-		chargeTimer: &Null{}, // silence nil panics
-		wakeUpTimer: NewTimer(),
-		MinCurrent:  minA,
-		MaxCurrent:  maxA,
-		phases:      1,
-		Mode:        api.ModeNow,
-	}
+			vehicle := &vehicleT{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
+			vehicle.MockVehicle.EXPECT().Title().Return("vehicle").AnyTimes()
+			vehicle.MockVehicle.EXPECT().Icon().Return("").AnyTimes()
+			vehicle.MockVehicle.EXPECT().Capacity().AnyTimes()
+			vehicle.MockVehicle.EXPECT().Phases().AnyTimes()
+			vehicle.MockVehicle.EXPECT().OnIdentified().AnyTimes()
+			vehicle.MockVehicle.EXPECT().Identifiers().AnyTimes().Return(tc.vehicleId)
+			vehicle.MockVehicle.EXPECT().SoC().Return(0.0, nil).AnyTimes()
 
-	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
+			charger := mock.NewMockCharger(ctrl)
+			charger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
 
-	attachListeners(t, lp)
+			lp := &LoadPoint{
+				log:         util.NewLogger("foo"),
+				bus:         evbus.New(),
+				clock:       clck,
+				charger:     charger,
+				chargeMeter: &Null{}, // silence nil panics
+				chargeRater: &Null{}, // silence nil panics
+				chargeTimer: &Null{}, // silence nil panics
+				wakeUpTimer: NewTimer(),
+				MinCurrent:  minA,
+				MaxCurrent:  maxA,
+				phases:      1,
+				Mode:        api.ModeNow,
+			}
 
-	// mode now
-	charger.EXPECT().MaxCurrent(int64(maxA))
-	// sync charger
-	charger.EXPECT().Enabled().Return(true, nil)
+			lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
-	// vehicle not updated yet
-	vehicle.MockChargeState.EXPECT().Status().Return(api.StatusA, nil)
+			attachListeners(t, lp)
 
-	lp.Update(0, false, false)
-	ctrl.Finish()
+			// mode now
+			charger.EXPECT().MaxCurrent(int64(maxA))
+			// sync charger
+			charger.EXPECT().Enabled().Return(true, nil)
 
-	// detection started
-	if lp.vehicleDetect != lp.clock.Now() {
-		t.Error("vehicle detection not started")
-	}
+			// vehicle not updated yet
+			vehicle.MockChargeState.EXPECT().Status().Return(api.StatusA, nil)
 
-	// vehicle not detected yet
-	if lp.vehicle != nil {
-		t.Error("vehicle should be <nil>")
-	}
+			lp.Update(0, false, false)
+			ctrl.Finish()
 
-	// sync charger
-	charger.EXPECT().Enabled().Return(true, nil)
-	// vehicle not updated yet
-	vehicle.MockChargeState.EXPECT().Status().Return(api.StatusB, nil)
+			// detection started
+			if lp.vehicleDetect != lp.clock.Now() {
+				t.Error("vehicle detection not started")
+			}
 
-	lp.Update(0, false, false)
-	ctrl.Finish()
+			// vehicle not detected yet
+			if lp.vehicle != nil {
+				t.Error("vehicle should be <nil>")
+			}
 
-	// vehicle detected
-	if lp.vehicle != vehicle {
-		t.Error("vehicle should be detected")
+			// sync charger
+			charger.EXPECT().Enabled().Return(true, nil)
+			// vehicle not updated yet
+			vehicle.MockChargeState.EXPECT().Status().Return(api.StatusB, nil)
+
+			lp.Update(0, false, false)
+			ctrl.Finish()
+
+			// vehicle detected
+			if lp.vehicle != vehicle {
+				t.Error("vehicle should be detected")
+			}
+		})
 	}
 }

@@ -81,7 +81,7 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 
 	// setup persistence
 	if err == nil && conf.Database.Dsn != "" {
-		if flag := cmd.Flags().Lookup(flagSqlite); flag.Changed {
+		if flag := cmd.Flags().Lookup(flagSqlite); flag != nil && flag.Changed {
 			conf.Database.Type = "sqlite"
 			conf.Database.Dsn = flag.Value.String()
 		}

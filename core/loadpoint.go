@@ -24,8 +24,6 @@ import (
 	"github.com/avast/retry-go/v3"
 	"github.com/benbjohnson/clock"
 	"github.com/cjrd/allocate"
-	"github.com/emirpasic/gods/queues"
-	aq "github.com/emirpasic/gods/queues/arrayqueue"
 )
 
 const (
@@ -88,6 +86,9 @@ type ThresholdConfig struct {
 	Delay     time.Duration
 	Threshold float64
 }
+
+// Task is the task type
+type Task = func()
 
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
@@ -162,7 +163,7 @@ type LoadPoint struct {
 	db      db.Database
 	session *db.Session
 
-	tasks queues.Queue // tasks to be executed
+	tasks *util.Queue[Task] // tasks to be executed
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -283,7 +284,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		GuardDuration: 5 * time.Minute,
 		progress:      NewProgress(0, 10),     // soc progress indicator
 		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
-		tasks:         aq.New(),               // task queue
+		tasks:         util.NewQueue[Task](),  // task queue
 	}
 
 	// allow target charge handler to access loadpoint
@@ -1035,9 +1036,17 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 		return
 	}
 
-	_, ok := lp.charger.(api.Identifier)
+	// decide if id-able vehicles should be included https://github.com/evcc-io/evcc/pull/5469
+	var ignoreIdCapable bool
+	if identifier, ok := lp.charger.(api.Identifier); ok {
+		id, err := identifier.Identify()
+		if err != nil {
+			lp.log.ERROR.Println("charger vehicle id:", err)
+		}
+		ignoreIdCapable = id != ""
+	}
 
-	if vehicle := lp.coordinator.IdentifyVehicleByStatus(!ok); vehicle != nil {
+	if vehicle := lp.coordinator.IdentifyVehicleByStatus(!ignoreIdCapable); vehicle != nil {
 		lp.stopVehicleDetection()
 		lp.setActiveVehicle(vehicle)
 		return
@@ -1656,7 +1665,7 @@ func (lp *LoadPoint) addTask(task func()) {
 	// test guard
 	if lp.tasks != nil {
 		// don't add twice
-		if t, ok := lp.tasks.Peek(); ok &&
+		if t, ok := lp.tasks.First(); ok &&
 			reflect.ValueOf(t).Pointer() == reflect.ValueOf(task).Pointer() {
 			return
 		}
@@ -1669,7 +1678,7 @@ func (lp *LoadPoint) processTasks() {
 	// test guard
 	if lp.tasks != nil {
 		if task, ok := lp.tasks.Dequeue(); ok {
-			task.(func())()
+			task()
 		}
 	}
 }

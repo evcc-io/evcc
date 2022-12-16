@@ -131,7 +131,7 @@ label = "Min. Prąd"
 
 [main.vehicle]
 fallbackName = "Pojazd"
-vehicleSoC = "SoC"
+vehicleSoC = "Bateria"
 targetSoC = "Ograniczenie"
 none = "Brak pojazdu"
 unknown = "Pojazd gościa"

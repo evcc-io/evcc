@@ -222,8 +222,6 @@ github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFP
 github.com/eclipse/paho.mqtt.golang v1.4.2 h1:66wOzfUHSSI1zamx7jR6yMEI5EuHnT1G6rNA5PM12m4=
 github.com/eclipse/paho.mqtt.golang v1.4.2/go.mod h1:JGt0RsEwEX+Xa/agj90YJ9d9DH2b7upDZMK9HRbFvCA=
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
-github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
-github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
 github.com/enbility/cemd v0.1.5 h1:9DHDH90YoldCpbg2gt06y0ZgOOk6pJB0BspBMrwnUq0=
 github.com/enbility/cemd v0.1.5/go.mod h1:PZfCRYAe9PDI8fKLADtvotiVTym9ZJ2LZaLfi4EeIaE=
 github.com/enbility/eebus-go v0.1.5 h1:IkRxwN+jCqQ4TCbbtjJf70iaeSUUicZZSUsMTLFtVpg=

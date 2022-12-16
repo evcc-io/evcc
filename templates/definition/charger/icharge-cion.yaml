@@ -33,6 +33,6 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual register configuration
-      address: 121 # Strom max
+      address: 101 # Strom max
       type: writesingle
       decode: uint16
