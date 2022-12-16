@@ -7,16 +7,17 @@ import settings from "./settings";
 
 // https://github.com/joker-x/languages.js/blob/master/languages.json
 export const LOCALES = {
-  nl: ["Dutch", "Nederlands"],
-  en: ["English", "English"],
-  fr: ["French", "Français"],
   de: ["German", "Deutsch"],
+  en: ["English", "English"],
+  es: ["Spanish", "Español"],
+  fr: ["French", "Français"],
   it: ["Italian", "Italiano"],
+  lb: ["Luxembourgish", "Lëtzebuergesch"],
   lt: ["Lithuanian", "Lietuvių"],
+  nl: ["Dutch", "Nederlands"],
   no: ["Norwegian", "Norsk"],
   pl: ["Polish", "Polski"],
   pt: ["Portuguese", "Português"],
-  es: ["Spanish", "Español"],
 };
 
 function getBrowserLocale() {
@@ -34,7 +35,7 @@ export function getLocalePreference() {
 
 export function removeLocalePreference(i18n) {
   settings.locale = null;
-  setI18nLanguage(i18n, i18n.fallbackLocale);
+  setI18nLanguage(i18n, getBrowserLocale());
 }
 
 export function setLocalePreference(i18n, locale) {
