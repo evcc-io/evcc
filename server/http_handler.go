@@ -314,7 +314,11 @@ func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 // targetChargeRemoveHandler removes target soc
 func targetChargeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		loadpoint.SetTargetCharge(time.Time{}, 0)
+		if err := loadpoint.SetTargetCharge(time.Time{}, 0); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
 		res := struct{}{}
 		jsonResult(w, res)
 	}
