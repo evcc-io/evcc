@@ -159,24 +159,14 @@ func (c *Tesla) MaxCurrent(current int64) error {
 
 // Status implements the api.Charger interface
 func (v *Tesla) Status() (api.ChargeStatus, error) {
-	{
-		// check TWC status first
-		res, err := v.vitalsG()
-		if !res.VehicleConnected || err != nil {
-			return api.StatusA, err
-		}
-	}
-
 	status := api.StatusA // disconnected
-	res, err := v.chargeStateG()
 
-	if err == nil {
-		if res.ChargingState == "Stopped" || res.ChargingState == "NoPower" || res.ChargingState == "Complete" {
-			status = api.StatusB
-		}
-		if res.ChargingState == "Charging" {
-			status = api.StatusC
-		}
+	res, err := v.vitalsG()
+	switch {
+	case res.ContactorClosed:
+		status = api.StatusC
+	case res.VehicleConnected:
+		status = api.StatusB
 	}
 
 	return status, err
