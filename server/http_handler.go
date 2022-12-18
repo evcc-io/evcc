@@ -197,10 +197,13 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Query().Get("format") == "csv" {
-		// get request language
-		lang := r.Header.Get("Accept-Language")
-		if tags, _, err := language.ParseAcceptLanguage(lang); err == nil && len(tags) > 0 {
-			lang = tags[0].String()
+		lang := r.URL.Query().Get("lang")
+		if lang == "" {
+			// get request language
+			lang = r.Header.Get("Accept-Language")
+			if tags, _, err := language.ParseAcceptLanguage(lang); err == nil && len(tags) > 0 {
+				lang = tags[0].String()
+			}
 		}
 
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)

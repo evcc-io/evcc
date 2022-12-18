@@ -1,34 +1,26 @@
+import settings from "./settings";
+
 const darkModeMatcher = window.matchMedia("(prefers-color-scheme: dark)");
 
 const THEME_AUTO = "auto";
 const THEME_LIGHT = "light";
 const THEME_DARK = "dark";
 export const THEMES = [THEME_AUTO, THEME_LIGHT, THEME_DARK];
-const LOCAL_STORAGE_KEY = "theme";
 
 export function getThemePreference() {
-  try {
-    const theme = window.localStorage[LOCAL_STORAGE_KEY];
-    if (THEMES.includes(theme)) {
-      return theme;
-    }
-  } catch (e) {
-    console.error("unable to read theme from localStorage", e);
+  const theme = settings.theme;
+  if (THEMES.includes(theme)) {
+    return theme;
   }
   return THEME_AUTO;
 }
 
 export function setThemePreference(theme) {
-  console.log({ theme });
   if (!THEMES.includes(theme)) {
     return;
   }
-  try {
-    window.localStorage[LOCAL_STORAGE_KEY] = theme;
-    updateTheme();
-  } catch (e) {
-    console.error("unable to write theme to localStorage", e);
-  }
+  settings.theme = theme;
+  updateTheme();
 }
 
 function updateTheme() {

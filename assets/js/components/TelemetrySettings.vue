@@ -30,6 +30,7 @@
 
 <script>
 import api from "../api";
+import settings from "../settings";
 
 function parseMarkdown(markdownText) {
 	const htmlText = markdownText
@@ -44,9 +45,13 @@ export default {
 	props: { sponsor: String },
 	data() {
 		return {
-			enabled: false,
 			error: null,
 		};
+	},
+	computed: {
+		enabled() {
+			return settings.telemetry;
+		},
 	},
 	async mounted() {
 		await this.update();
@@ -56,15 +61,18 @@ export default {
 			try {
 				this.error = null;
 				const response = await api.post(`settings/telemetry/${e.target.checked}`);
-				this.enabled = response.data.result;
+				settings.telemetry = response.data.result;
 			} catch (err) {
 				if (err.response) {
 					this.error = parseMarkdown("**Error:** " + err.response.data.error);
-					this.enabled = false;
+					settings.telemetry = false;
 				}
 			}
 		},
 		async update() {
+			if (settings.telemetry !== null) {
+				return;
+			}
 			try {
 				const response = await api.get("settings/telemetry");
 				this.enabled = response.data.result;

@@ -1,15 +1,32 @@
 [header]
 sessions = "Charging sessions"
+settings = "Settings"
 docs = "Documentation"
 blog = "Blog"
 github = "GitHub"
 login = "Vehicle logins"
 about = "About"
 
-[header.theme]
-auto = "Design: system"
-light = "Design: light"
-dark = "Design: dark"
+[settings]
+title = "Settings"
+
+[settings.theme]
+label = "Design"
+auto = "system"
+light = "light"
+dark = "dark"
+
+[settings.language]
+label = "Language"
+auto = "Automatic"
+
+[settings.unit]
+label = "Units"
+km = "km"
+mi = "miles"
+
+[settings.telemetry]
+label = "Telemetry"
 
 [footer.version]
 availableShort = "install"

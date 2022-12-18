@@ -25,8 +25,13 @@
 			</li>
 
 			<li>
-				<button type="button" class="dropdown-item" @click.stop="toggleTheme">
-					{{ $t(`header.theme.${theme}`) }}
+				<button
+					type="button"
+					class="dropdown-item"
+					data-bs-toggle="modal"
+					data-bs-target="#globalSettingsModal"
+				>
+					{{ $t("header.settings") }}
 				</button>
 			</li>
 			<template v-if="providerLogins.length > 0">
@@ -94,18 +99,20 @@
 				</a>
 			</li>
 		</ul>
+		<GlobalSettingsModal :sponsor="sponsor" />
 	</div>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
+import GlobalSettingsModal from "./GlobalSettingsModal.vue";
 
 import baseAPI from "../baseapi";
-import { getThemePreference, setThemePreference, THEMES } from "../theme";
 
 export default {
 	name: "TopNavigation",
+	components: { GlobalSettingsModal },
 	props: {
 		vehicleLogins: {
 			type: Object,
@@ -113,9 +120,7 @@ export default {
 				return {};
 			},
 		},
-	},
-	data: function () {
-		return { theme: getThemePreference() };
+		sponsor: String,
 	},
 	computed: {
 		logoutCount() {
@@ -131,12 +136,6 @@ export default {
 		},
 	},
 	methods: {
-		toggleTheme: function () {
-			const currentIndex = THEMES.indexOf(this.theme);
-			const nextIndex = currentIndex < THEMES.length - 1 ? currentIndex + 1 : 0;
-			this.theme = THEMES[nextIndex];
-			setThemePreference(this.theme);
-		},
 		handleProviderAuthorization: async function (provider) {
 			if (!provider.loggedIn) {
 				baseAPI.post(provider.loginPath).then(function (response) {

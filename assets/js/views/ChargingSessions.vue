@@ -15,7 +15,7 @@
 				<div class="mb-4">
 					<a
 						class="btn btn-outline-secondary text-nowrap my-2"
-						href="./api/sessions?format=csv"
+						:href="`./api/sessions?format=csv&amp;lang=${$i18n.locale}`"
 						download="sessions.csv"
 					>
 						{{ $t("sessions.downloadCsv") }}
@@ -217,7 +217,8 @@ export default {
 	white-space: nowrap;
 }
 
-@media (--sm-and-up) {
+/* breakpoint sm */
+@media (min-width: 576px) {
 	.breakdown-item:after {
 		content: ", ";
 		white-space: wrap;
