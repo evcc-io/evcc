@@ -19,7 +19,7 @@
 				class="flex-grow-1"
 				:label="$t('main.vehicle.vehicleSoC')"
 				:value="vehicleSoC ? `${vehicleSoC}%` : '--'"
-				:extraValue="vehicleRange ? `${vehicleRange} km` : null"
+				:extraValue="range ? `${Math.round(range)} ${rangeUnit}` : null"
 				align="start"
 			/>
 			<LabelAndValue
@@ -71,6 +71,7 @@ import VehicleStatus from "./VehicleStatus.vue";
 import TargetCharge from "./TargetCharge.vue";
 import TargetSoCSelect from "./TargetSoCSelect.vue";
 import TargetEnergySelect from "./TargetEnergySelect.vue";
+import { distanceUnit, distanceValue } from "../units";
 
 export default {
 	name: "Vehicle",
@@ -139,9 +140,15 @@ export default {
 		targetCharge: function () {
 			return this.collectProps(TargetCharge);
 		},
+		range: function () {
+			return distanceValue(this.vehicleRange);
+		},
+		rangeUnit: function () {
+			return distanceUnit();
+		},
 		rangePerSoC: function () {
-			if (this.vehicleSoC > 10 && this.vehicleRange) {
-				return this.vehicleRange / this.vehicleSoC;
+			if (this.vehicleSoC > 10 && this.range) {
+				return this.range / this.vehicleSoC;
 			}
 			return null;
 		},

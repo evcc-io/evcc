@@ -63,7 +63,9 @@ export default {
 	width: 40px;
 	flex: 0 0 auto;
 }
-@media (--lg-and-up) {
+
+/* breakpoint lg */
+@media (min-width: 992px) {
 	.tile-icon {
 		width: 70px;
 	}

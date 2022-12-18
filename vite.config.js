@@ -11,6 +11,7 @@ export default defineConfig({
     outDir: "../dist/",
     emptyOutDir: true,
     assetsInlineLimit: 1024,
+    chunkSizeWarningLimit: 550,
     rollupOptions: {
       output: {
         manualChunks: undefined,

@@ -1,15 +1,32 @@
 [header]
 sessions = "Ladevorgänge"
-docs = "Doku"
+settings = "Einstellungen"
+docs = "Dokumentation"
 blog = "Blog"
 github = "GitHub"
 login = "Fahrzeug Logins"
 about = "Über evcc"
 
-[header.theme]
-auto = "Design: System"
-light = "Design: Hell"
-dark = "Design: Dunkel"
+[settings]
+title = "Einstellungen"
+
+[settings.theme]
+label = "Design"
+auto = "System"
+light = "Hell"
+dark = "Dunkel"
+
+[settings.language]
+label = "Sprache"
+auto = "Automatisch"
+
+[settings.unit]
+label = "Einheit"
+km = "Km"
+mi = "Meilen"
+
+[settings.telemetry]
+label = "Telemetrie"
 
 [footer.version]
 availableShort = "Update"
@@ -23,7 +40,6 @@ modalUpdate = "Aktualisieren"
 modalUpdateNow = "Jetzt aktualisieren"
 modalDownload = "Download"
 modalUpdateStatusStart = "Aktualisierung gestartet:"
-modalUpdateStatusFailed = "Aktualisierung nicht möglich:"
 
 [footer.savings]
 tabTitle = "Meine Daten"
@@ -54,7 +70,7 @@ greenEnergySub1 = "über evcc geladen"
 greenEnergySub2 = "seit Oktober 2022"
 
 [footer.telemetry]
-optIn = "Ich möchte meine Daten auch beisteuern."
+optIn = "Ich möchte meine Ladedaten mit der Community teilen."
 optInMoreDetails = "Mehr Details gibts {0}."
 optInMoreDetailsLink = "hier"
 optInSponsorship = "Sponsoring erforderlich."
