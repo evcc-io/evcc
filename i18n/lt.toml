@@ -23,7 +23,6 @@ modalUpdate = "Naujinti"
 modalUpdateNow = "Naujinti dabar"
 modalDownload = "Atsisiųsti"
 modalUpdateStatusStart = "Naujinimas prasidėjo:"
-modalUpdateStatusFailed = "Naujinimas nepavyko:"
 
 [footer.savings]
 tabTitle = "Mano duomenys"
