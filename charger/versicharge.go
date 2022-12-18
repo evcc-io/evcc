@@ -171,9 +171,17 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	case 3: // Charging
 		return api.StatusC, nil
 	case 4: // Charging? kommt nur kurzzeitg beim Starten, dann Rückfall auf 3
+		b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1) // Abfrage Pausiert?
+		if err != nil {
+			return api.StatusNone, err
+		}
+		if binary.BigEndian.Uint16(b) == 0x1 {  
+			//Pause ON -> Fehlerfall/Issue: 
+			//https://github.com/achgut/Modbus_Versicharge/issues/12#issue-1501793186
+			return api.StatusNone, fmt.Errorf("invalid status during pause: %0x", s)
+		}
 		return api.StatusC, nil
 	case 5: // Other: Session stopped (Pause) 
-	        //weitere Option, noch zu implementieren: Test auf ChargingStrom -> C, bei 0 -> B
 		b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1) // Abfrage Pausiert?
 		if err != nil {
 			return api.StatusNone, err
