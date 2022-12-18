@@ -8,9 +8,8 @@
 			<button
 				class="btn btn-link p-0 value text-center"
 				:class="targetChargeEnabled ? 'evcc-default-text' : 'text-gray'"
-				data-bs-toggle="modal"
-				:data-bs-target="`#${modalId}`"
 				:disabled="disabled"
+				@click="openModal"
 			>
 				<strong v-if="targetChargeEnabled">{{ targetTimeLabel() }}</strong>
 				<span v-else>{{ $t("main.targetCharge.setTargetTime") }}</span>
@@ -119,6 +118,7 @@
 </template>
 
 <script>
+import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
 import LabelAndValue from "./LabelAndValue.vue";
@@ -242,6 +242,10 @@ export default {
 		},
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
+		},
+		openModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById(this.modalId));
+			modal.show();
 		},
 	},
 };

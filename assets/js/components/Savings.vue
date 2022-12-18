@@ -2,8 +2,7 @@
 	<div>
 		<button
 			class="btn btn-link pe-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
-			data-bs-toggle="modal"
-			data-bs-target="#savingsModal"
+			@click="openModal"
 		>
 			<span class="d-inline d-sm-none">{{
 				$t("footer.savings.footerShort", { percent })
@@ -145,6 +144,7 @@
 </template>
 
 <script>
+import Modal from "bootstrap/js/dist/modal";
 import formatter from "../mixins/formatter";
 import Sponsor from "./Sponsor.vue";
 import SavingsTile from "./SavingsTile.vue";
@@ -191,6 +191,10 @@ export default {
 		},
 		showMyData() {
 			this.communityView = false;
+		},
+		openModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("savingsModal"));
+			modal.show();
 		},
 	},
 };
