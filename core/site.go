@@ -242,16 +242,16 @@ func (site *Site) DumpConfig() {
 	}
 
 	if len(site.pvMeters) > 0 {
-		for i, pv := range site.pvMeters {
-			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i+1), pv))
+		for id, pv := range site.pvMeters {
+			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", id+1), pv))
 		}
 	}
 
 	if len(site.batteryMeters) > 0 {
-		for i, battery := range site.batteryMeters {
+		for id, battery := range site.batteryMeters {
 			_, ok := battery.(api.Battery)
 			site.log.INFO.Println(
-				meterCapabilities(fmt.Sprintf("battery %d", i+1), battery),
+				meterCapabilities(fmt.Sprintf("battery %d", id+1), battery),
 				fmt.Sprintf("soc %s", presence[ok]),
 			)
 		}
@@ -260,20 +260,20 @@ func (site *Site) DumpConfig() {
 	if vehicles := site.GetVehicles(); len(vehicles) > 0 {
 		site.log.INFO.Println("  vehicles:")
 
-		for i, v := range vehicles {
+		for id, v := range vehicles {
 			_, rng := v.(api.VehicleRange)
 			_, finish := v.(api.VehicleFinishTimer)
 			_, status := v.(api.ChargeState)
 			_, climate := v.(api.VehicleClimater)
 			_, wakeup := v.(api.Resurrector)
 			site.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s wakeup %s",
-				i+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
+				id+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
 			)
 		}
 	}
 
-	for i, lp := range site.loadpoints {
-		lp.log.INFO.Printf("loadpoint %d:", i+1)
+	for id, lp := range site.loadpoints {
+		lp.log.INFO.Printf("loadpoint %d:", id+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
 		_, power := lp.charger.(api.Meter)
@@ -307,6 +307,25 @@ func (site *Site) publish(key string, val interface{}) {
 	}
 
 	site.uiChan <- util.Param{
+		Key: key,
+		Val: val,
+	}
+}
+
+// publishSub sends values to UI and databases
+func (site *Site) publishSub(folder string, idx int, key string, val interface{}) {
+	// test helper
+	if site.uiChan == nil {
+		return
+	}
+
+	sub := util.ParamSub{
+		SubKey: folder,
+		Index:  idx,
+	}
+
+	site.uiChan <- util.Param{
+		Sub: &sub,
 		Key: key,
 		Val: val,
 	}
@@ -351,14 +370,16 @@ func (site *Site) updateMeters() error {
 			var power float64
 			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
 
+			site.publishSub("pv", id+1, "power", power)
+
 			if err == nil {
 				// ignore negative values which represent self-consumption
 				site.pvPower += math.Max(0, power)
 				if power < -500 {
-					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", id, power)
+					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", id+1, power)
 				}
 			} else {
-				err = fmt.Errorf("pv meter %d: %v", id, err)
+				err = fmt.Errorf("pv meter %d: %v", id+1, err)
 				site.log.ERROR.Println(err)
 			}
 		}
@@ -374,10 +395,12 @@ func (site *Site) updateMeters() error {
 			var power float64
 			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
 
+			site.publishSub("battery", id+1, "power", power)
+
 			if err == nil {
 				site.batteryPower += power
 			} else {
-				site.log.ERROR.Printf("battery meter %d: %v", id, err)
+				site.log.ERROR.Printf("battery meter %d: %v", id+1, err)
 			}
 		}
 
@@ -438,16 +461,22 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 
 	if len(site.batteryMeters) > 0 {
 		var socs float64
+
 		for id, battery := range site.batteryMeters {
 			soc, err := battery.(api.Battery).SoC()
+
+			site.publishSub("battery", id+1, "SoC", soc)
+
 			if err != nil {
-				err = fmt.Errorf("battery soc %d: %v", id, err)
+				err = fmt.Errorf("battery soc %d: %v", id+1, err)
 				site.log.ERROR.Println(err)
 			} else {
-				site.log.DEBUG.Printf("battery soc %d: %.0f%%", id, soc)
+				site.log.DEBUG.Printf("battery soc %d: %.0f%%", id+1, soc)
 				socs += soc / float64(len(site.batteryMeters))
 			}
 		}
+
+		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(socs))
 		site.publish("batterySoC", math.Round(socs))
 
 		site.Lock()
