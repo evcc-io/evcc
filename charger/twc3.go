@@ -1,34 +1,29 @@
 package charger
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle"
-	"golang.org/x/oauth2"
 )
 
-// Tesla is an api.Vehicle implementation for Tesla cars
-type Tesla struct {
+// Twc3 is an api.Vehicle implementation for Twc3 cars
+type Twc3 struct {
 	*request.Helper
-	uri           string
-	vitalsG       func() (Vitals, error)
-	vehicle       *tesla.Vehicle
-	chargeStateG  func() (*tesla.ChargeState, error)
-	vehicleStateG func() (*tesla.VehicleState, error)
-	driveStateG   func() (*tesla.DriveState, error)
-	enabled       bool
+	lp      loadpoint.API
+	uri     string
+	vitalsG func() (Vitals, error)
+	enabled bool
 }
 
 func init() {
-	registry.Add("tesla", NewTeslaFromConfig)
+	registry.Add("twc3", NewTwc3FromConfig)
 }
 
 // Vitals is the /api/1/vitals response
@@ -61,28 +56,22 @@ type Vitals struct {
 	CurrentAlerts     []any   `json:"current_alerts"`      //[]
 }
 
-// NewTeslaFromConfig creates a new vehicle
-func NewTeslaFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewTwc3FromConfig creates a new vehicle
+func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI    string
-		Tokens vehicle.Tokens
-		VIN    string
-		Cache  time.Duration
+		URI   string
+		Cache time.Duration
 	}{
-		Cache: request.Timeout,
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if err := cc.Tokens.Error(); err != nil {
-		return nil, err
-	}
+	log := util.NewLogger("twc3")
 
-	log := util.NewLogger("tesla").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
-
-	c := &Tesla{
+	c := &Twc3{
 		Helper: request.NewHelper(log),
 		uri:    util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http"),
 	}
@@ -94,55 +83,30 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return res, err
 	}, time.Second)
 
-	// authenticated http client with logging injected to the Tesla client
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, c.Helper.Client)
-
-	options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
-		AccessToken:  cc.Tokens.Access,
-		RefreshToken: cc.Tokens.Refresh,
-		Expiry:       time.Now(),
-	})}
-
-	client, err := tesla.NewClient(ctx, options...)
-	if err != nil {
-		return nil, err
-	}
-
-	vv, err := client.Vehicles()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range vv {
-		if strings.EqualFold(v.Vin, cc.VIN) {
-			c.vehicle = v
-			break
-		}
-	}
-
-	if c.vehicle == nil {
-		return nil, fmt.Errorf("Tesla %s not found", cc.VIN)
-	}
-
-	c.chargeStateG = provider.Cached(c.vehicle.ChargeState, cc.Cache)
-	c.vehicleStateG = provider.Cached(c.vehicle.VehicleState, cc.Cache)
-	c.driveStateG = provider.Cached(c.vehicle.DriveState, cc.Cache)
-
 	return c, nil
 }
 
 // Enabled implements the api.Charger interface
-func (c *Tesla) Enabled() (bool, error) {
+func (c *Twc3) Enabled() (bool, error) {
 	return c.enabled, nil
 }
 
 // Enable implements the api.Charger interface
-func (c *Tesla) Enable(enable bool) error {
+func (c *Twc3) Enable(enable bool) error {
+	if c.lp == nil {
+		return errors.New("loadpoint not initialized")
+	}
+
+	v, ok := c.lp.GetVehicle().(api.VehicleChargeController)
+	if !ok {
+		return errors.New("vehicle not capable of start/stop")
+	}
+
 	var err error
 	if enable {
-		err = c.vehicle.StartCharging()
+		err = v.StartCharge()
 	} else {
-		err = c.vehicle.StopCharging()
+		err = v.StopCharge()
 	}
 
 	if err == nil {
@@ -153,12 +117,17 @@ func (c *Tesla) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (c *Tesla) MaxCurrent(current int64) error {
-	return c.vehicle.SetChargingAmps(int(current))
+func (c *Twc3) MaxCurrent(current int64) error {
+	v, ok := c.lp.GetVehicle().(api.CurrentLimiter)
+	if !ok {
+		return errors.New("vehicle capable of current control")
+	}
+
+	return v.MaxCurrent(current)
 }
 
 // Status implements the api.Charger interface
-func (v *Tesla) Status() (api.ChargeStatus, error) {
+func (v *Twc3) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.vitalsG()
@@ -172,26 +141,33 @@ func (v *Tesla) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-var _ api.ChargeRater = (*Tesla)(nil)
+var _ api.ChargeRater = (*Twc3)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
-func (v *Tesla) ChargedEnergy() (float64, error) {
+func (v *Twc3) ChargedEnergy() (float64, error) {
 	res, err := v.vitalsG()
 	return res.SessionEnergyWh / 1e3, err
 }
 
-var _ api.ChargeTimer = (*Tesla)(nil)
+var _ api.ChargeTimer = (*Twc3)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
-func (v *Tesla) ChargingTime() (time.Duration, error) {
+func (v *Twc3) ChargingTime() (time.Duration, error) {
 	res, err := v.vitalsG()
 	return time.Duration(res.SessionS) * time.Second, err
 }
 
-var _ api.MeterCurrent = (*Tesla)(nil)
+var _ api.MeterCurrent = (*Twc3)(nil)
 
 // Currents implements the api.MeterCurrent interface
-func (v *Tesla) Currents() (float64, float64, float64, error) {
+func (v *Twc3) Currents() (float64, float64, float64, error) {
 	res, err := v.vitalsG()
 	return res.CurrentAA, res.CurrentBA, res.CurrentCA, err
+}
+
+var _ loadpoint.Controller = (*Twc3)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (v *Twc3) LoadpointControl(lp loadpoint.API) {
+	v.lp = lp
 }

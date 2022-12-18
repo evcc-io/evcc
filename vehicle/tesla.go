@@ -198,6 +198,13 @@ func (v *Tesla) TargetSoC() (float64, error) {
 	return 0, err
 }
 
+var _ api.CurrentLimiter = (*Tesla)(nil)
+
+// StartCharge implements the api.VehicleChargeController interface
+func (v *Tesla) MaxCurrent(current int64) error {
+	return v.vehicle.SetChargingAmps(int(current))
+}
+
 var _ api.VehicleChargeController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface

@@ -324,6 +324,13 @@ func (lp *LoadPoint) GetRemainingEnergy() float64 {
 	return lp.chargeRemainingEnergy
 }
 
+// GetVehicle gets the active vehicle
+func (lp *LoadPoint) GetVehicle() api.Vehicle {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.vehicle
+}
+
 // SetVehicle sets the active vehicle
 func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
 	// TODO develop universal locking approach

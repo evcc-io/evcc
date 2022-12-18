@@ -87,6 +87,8 @@ type API interface {
 	// vehicles
 	//
 
+	// GetVehicle gets the active vehicle
+	GetVehicle() api.Vehicle
 	// SetVehicle sets the active vehicle
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
