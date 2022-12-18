@@ -1,17 +1,15 @@
 <template>
 	<div>
 		<div
+			:id="dropdownId"
 			role="button"
 			tabindex="0"
 			data-bs-toggle="dropdown"
-			data-bs-target="#navbarNavAltMarkup"
-			aria-controls="navbarNavAltMarkup"
 			aria-expanded="false"
-			aria-label="Toggle navigation"
 		>
 			<slot />
 		</div>
-		<ul class="dropdown-menu dropdown-menu-start">
+		<ul class="dropdown-menu dropdown-menu-start" :aria-labelledby="dropdownId">
 			<li>
 				<h6 class="dropdown-header">{{ $t("main.vehicle.changeVehicle") }}</h6>
 			</li>
@@ -31,14 +29,27 @@
 
 <script>
 import "@h2d2/shopicons/es/filled/options";
+import Dropdown from "bootstrap/js/dist/dropdown";
 
 export default {
 	name: "VehicleOptions",
 	props: {
+		id: [String, Number],
 		vehicles: Array,
 		isUnknown: Boolean,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
+	computed: {
+		dropdownId() {
+			return `vehicleOptionsDropdown${this.id}`;
+		},
+	},
+	mounted() {
+		this.dropdown = new Dropdown(document.getElementById(this.dropdownId));
+	},
+	unmounted() {
+		this.dropdown?.dispose();
+	},
 	methods: {
 		changeVehicle(index) {
 			this.$emit("change-vehicle", index);

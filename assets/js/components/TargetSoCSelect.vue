@@ -8,7 +8,7 @@
 					</option>
 				</select>
 				<span class="text-decoration-underline">
-					<AnimatedNumber :to="targetSoc" :format="formatSoC" />
+					<AnimatedNumber :to="77" :format="formatSoC" />
 				</span>
 			</label>
 

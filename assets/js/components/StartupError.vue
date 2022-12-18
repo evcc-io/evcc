@@ -93,7 +93,6 @@ export default {
 		scrollTo(e) {
 			const id = e.currentTarget.getAttribute("href").substring(1);
 			const el = document.getElementById(id);
-			console.log({ id, el });
 			if (el) {
 				el.scrollIntoView({ behavior: "smooth", block: "center" });
 			}

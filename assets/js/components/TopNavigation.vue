@@ -1,12 +1,10 @@
 <template>
 	<div>
 		<button
+			id="topNavigatonDropdown"
 			type="button"
 			data-bs-toggle="dropdown"
-			data-bs-target="#navbarNavAltMarkup"
-			aria-controls="navbarNavAltMarkup"
 			aria-expanded="false"
-			aria-label="Toggle navigation"
 			class="btn btn-sm btn-outline-secondary position-relative border-0 menu-button"
 		>
 			<span
@@ -17,7 +15,7 @@
 			</span>
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</button>
-		<ul class="dropdown-menu dropdown-menu-end">
+		<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="topNavigatonDropdown">
 			<li>
 				<router-link class="dropdown-item" to="/sessions">
 					{{ $t("header.sessions") }}
@@ -25,12 +23,7 @@
 			</li>
 
 			<li>
-				<button
-					type="button"
-					class="dropdown-item"
-					data-bs-toggle="modal"
-					data-bs-target="#globalSettingsModal"
-				>
+				<button type="button" class="dropdown-item" @click="openSettingsModal">
 					{{ $t("header.settings") }}
 				</button>
 			</li>
@@ -104,6 +97,10 @@
 </template>
 
 <script>
+import Modal from "bootstrap/js/dist/modal";
+import Dropdown from "bootstrap/js/dist/dropdown";
+import "@h2d2/shopicons/es/regular/gift";
+import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import GlobalSettingsModal from "./GlobalSettingsModal.vue";
@@ -135,6 +132,12 @@ export default {
 			}));
 		},
 	},
+	mounted() {
+		this.dropdown = new Dropdown(document.getElementById("topNavigatonDropdown"));
+	},
+	unmounted() {
+		this.dropdown?.dispose();
+	},
 	methods: {
 		handleProviderAuthorization: async function (provider) {
 			if (!provider.loggedIn) {
@@ -144,6 +147,10 @@ export default {
 			} else {
 				baseAPI.post(provider.logoutPath);
 			}
+		},
+		openSettingsModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("globalSettingsModal"));
+			modal.show();
 		},
 	},
 };

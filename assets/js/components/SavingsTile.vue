@@ -16,12 +16,7 @@
 				<p class="my-0 fw-bold text-truncate">{{ title }}</p>
 				<strong class="d-flex align-items-baseline lh-sm">
 					<span class="fs-1">
-						<AnimatedNumber
-							v-if="valueFmt"
-							:to="value"
-							:format="valueFmt"
-							:duration="animationDuration"
-						/>
+						<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
 						<span v-else>{{ value }}</span>
 					</span>
 					<span class="ms-1 unit">{{ unit }}</span>
@@ -51,7 +46,6 @@ export default {
 		icon: String,
 		value: [String, Number],
 		valueFmt: Function,
-		animationDuration: Number,
 		unit: String,
 		sub1: String,
 		sub2: String,

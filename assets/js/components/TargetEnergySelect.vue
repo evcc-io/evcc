@@ -16,11 +16,7 @@
 					class="text-decoration-underline"
 					:class="{ 'text-gray fw-normal': !targetEnergy }"
 				>
-					<AnimatedNumber
-						:to="targetEnergy"
-						:format="fmtEnergy"
-						:no-animation="!targetEnergy"
-					/>
+					<AnimatedNumber :to="targetEnergy" :format="fmtEnergy" />
 				</span>
 			</label>
 
