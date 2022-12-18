@@ -35,7 +35,7 @@ func init() {
 type Vitals struct {
 	ContactorClosed   bool    `json:"contactor_closed"`    //false
 	VehicleConnected  bool    `json:"vehicle_connected"`   //false
-	SessionS          float64 `json:"session_s"`           //0
+	SessionS          int64   `json:"session_s"`           //0
 	GridV             float64 `json:"grid_v"`              //230.1
 	GridHz            float64 `json:"grid_hz"`             //49.928
 	VehicleCurrentA   float64 `json:"vehicle_current_a"`   //0.1
@@ -180,6 +180,14 @@ func (v *Tesla) ChargedEnergy() (float64, error) {
 	return res.SessionEnergyWh / 1e3, err
 }
 
+var _ api.ChargeTimer = (*Tesla)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
+func (v *Tesla) ChargingTime() (time.Duration, error) {
+	res, err := v.vitalsG()
+	return time.Duration(res.SessionS) * time.Second, err
+}
+
 var _ api.MeterCurrent = (*Tesla)(nil)
 
 // Currents implements the api.MeterCurrent interface
@@ -187,15 +195,3 @@ func (v *Tesla) Currents() (float64, float64, float64, error) {
 	res, err := v.vitalsG()
 	return res.CurrentAA, res.CurrentBA, res.CurrentCA, err
 }
-
-// var _ api.VehiclePosition = (*Tesla)(nil)
-
-// // Position implements the api.VehiclePosition interface
-// func (v *Tesla) Position() (float64, float64, error) {
-// 	res, err := v.driveStateG()
-// 	if err == nil {
-// 		return res.Latitude, res.Longitude, nil
-// 	}
-
-// 	return 0, 0, err
-// }
