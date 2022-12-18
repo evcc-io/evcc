@@ -18,7 +18,6 @@ modalUpdate = "Aggiorna"
 modalUpdateNow = "Aggiorna ora"
 modalDownload = "Download"
 modalUpdateStatusStart = "Aggiornamento iniziato:"
-modalUpdateStatusFailed = "Aggiornamento fallito:"
 
 [notifications]
 modalTitle = "Notifiche"
