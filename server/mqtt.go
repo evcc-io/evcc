@@ -55,9 +55,19 @@ func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface
 	go m.Handler.WaitForToken(token)
 }
 
-func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
-	if slice, ok := payload.([]float64); ok && len(slice) == 3 {
-		// publish phase values
+func (m *MQTT) publish(topic string, retained bool, payload interface{}, key ...*string) {
+	// publish slices as sub topics
+	if slice, ok := payload.([]float64); ok && len(key) == 1 {
+		// publish count
+		payload = len(slice)
+
+		for i, v := range slice {
+			m.publishSingleValue(fmt.Sprintf("%s/%d/%s", topic, i+1, *key[0]), retained, v)
+		}
+	}
+
+	// publish phase values
+	if slice, ok := payload.([]float64); ok && strings.HasSuffix(topic, "Currents") {
 		var total float64
 		for i, v := range slice {
 			total += v
@@ -68,17 +78,13 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 		payload = total
 	}
 
+	// publish vehicles
 	if slice, ok := payload.([]string); ok && strings.HasSuffix(topic, "vehicles") {
+		// publish count
 		payload = len(slice)
 
-		// unpublish
-		for i := len(slice); i < 10; i++ {
-			slice = append(slice, "")
-		}
-
-		// publish vehicles
 		for i, v := range slice {
-			m.publishSingleValue(fmt.Sprintf("%s/%d", topic, i), retained, v)
+			m.publishSingleValue(fmt.Sprintf("%s/%d", topic, i+1), retained, v)
 		}
 	}
 
@@ -116,9 +122,9 @@ func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 	})
 	m.Handler.ListenSetter(topic+"/vehicle/set", func(payload string) {
 		if vehicle, err := strconv.Atoi(payload); err == nil {
-			if vehicle >= 0 {
-				if vehicles := site.GetVehicles(); vehicle < len(vehicles) {
-					lp.SetVehicle(vehicles[vehicle])
+			if vehicle > 0 {
+				if vehicles := site.GetVehicles(); vehicle <= len(vehicles) {
+					lp.SetVehicle(vehicles[vehicle-1])
 				}
 			} else {
 				lp.SetVehicle(nil)
@@ -166,8 +172,14 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	for id := range site.LoadPoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
 		for _, dep := range []string{"activePhases", "range", "socCharge", "vehicleSoc"} {
-			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, "")
+			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, nil)
 		}
+	}
+
+	for i := 0; i < 10; i++ {
+		m.publish(fmt.Sprintf("%s/site/pv/%d", m.root, i), true, nil)
+		m.publish(fmt.Sprintf("%s/site/battery/%d", m.root, i), true, nil)
+		m.publish(fmt.Sprintf("%s/site/vehicles/%d", m.root, i), true, nil)
 	}
 
 	// alive indicator
@@ -188,7 +200,12 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 
 		// value
-		topic += "/" + p.Key
-		m.publish(topic, true, p.Val)
+		if p.Subkey != nil {
+			topic += "/" + *p.Subkey
+			m.publish(topic, true, p.Val, &p.Key)
+		} else {
+			topic += "/" + p.Key
+			m.publish(topic, true, p.Val)
+		}
 	}
 }
