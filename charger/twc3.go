@@ -118,9 +118,13 @@ func (c *Twc3) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *Twc3) MaxCurrent(current int64) error {
+	if c.lp == nil {
+		return errors.New("loadpoint not initialized")
+	}
+
 	v, ok := c.lp.GetVehicle().(api.CurrentLimiter)
 	if !ok {
-		return errors.New("vehicle capable of current control")
+		return errors.New("vehicle not capable of current control")
 	}
 
 	return v.MaxCurrent(current)
