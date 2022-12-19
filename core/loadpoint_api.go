@@ -95,60 +95,60 @@ func (lp *LoadPoint) SetTargetEnergy(energy float64) {
 	}
 }
 
-// GetTargetSoC returns loadpoint charge target soc
-func (lp *LoadPoint) GetTargetSoC() int {
+// GetTargetSoc returns loadpoint charge target soc
+func (lp *LoadPoint) GetTargetSoc() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.SoC.target
+	return lp.Soc.target
 }
 
-// setTargetSoC sets loadpoint charge target soc (no mutex)
-func (lp *LoadPoint) setTargetSoC(soc int) {
-	lp.SoC.target = soc
+// setTargetSoc sets loadpoint charge target soc (no mutex)
+func (lp *LoadPoint) setTargetSoc(soc int) {
+	lp.Soc.target = soc
 	// test guard
 	if lp.socTimer != nil {
-		lp.socTimer.SoC = soc
+		lp.socTimer.Soc = soc
 	}
-	lp.publish("targetSoC", soc)
+	lp.publish("targetSoc", soc)
 }
 
-// SetTargetSoC sets loadpoint charge target soc
-func (lp *LoadPoint) SetTargetSoC(soc int) {
+// SetTargetSoc sets loadpoint charge target soc
+func (lp *LoadPoint) SetTargetSoc(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set target soc:", soc)
 
 	// apply immediately
-	if lp.SoC.target != soc {
-		lp.setTargetSoC(soc)
+	if lp.Soc.target != soc {
+		lp.setTargetSoc(soc)
 		lp.requestUpdate()
 	}
 }
 
-// GetMinSoC returns loadpoint charge minimum soc
-func (lp *LoadPoint) GetMinSoC() int {
+// GetMinSoc returns loadpoint charge minimum soc
+func (lp *LoadPoint) GetMinSoc() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.SoC.min
+	return lp.Soc.min
 }
 
-// setMinSoC sets loadpoint charge min soc (no mutex)
-func (lp *LoadPoint) setMinSoC(soc int) {
-	lp.SoC.min = soc
-	lp.publish("minSoC", soc)
+// setMinSoc sets loadpoint charge min soc (no mutex)
+func (lp *LoadPoint) setMinSoc(soc int) {
+	lp.Soc.min = soc
+	lp.publish("minSoc", soc)
 }
 
-// SetMinSoC sets loadpoint charge minimum soc
-func (lp *LoadPoint) SetMinSoC(soc int) {
+// SetMinSoc sets loadpoint charge minimum soc
+func (lp *LoadPoint) SetMinSoc(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set min soc:", soc)
 
 	// apply immediately
-	if lp.SoC.min != soc {
-		lp.setMinSoC(soc)
+	if lp.Soc.min != soc {
+		lp.setMinSoc(soc)
 		lp.requestUpdate()
 	}
 }
@@ -185,7 +185,7 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 	return nil
 }
 
-// SetTargetCharge sets loadpoint charge targetSoC
+// SetTargetCharge sets loadpoint charge targetSoc
 func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) error {
 	lp.Lock()
 	defer lp.Unlock()
@@ -197,12 +197,12 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) error {
 	lp.log.DEBUG.Printf("set target charge: %d @ %v", soc, finishAt)
 
 	// apply immediately
-	if lp.socTimer.Time != finishAt || lp.SoC.target != soc {
+	if lp.socTimer.Time != finishAt || lp.Soc.target != soc {
 		lp.socTimer.Set(finishAt)
 
 		// don't remove soc
 		if !finishAt.IsZero() {
-			lp.setTargetSoC(soc)
+			lp.setTargetSoc(soc)
 			lp.requestUpdate()
 		}
 	}

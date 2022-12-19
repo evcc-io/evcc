@@ -110,7 +110,7 @@ default = "Défaut"
 disclaimerHint = "A Noter:"
 disclaimerText = "Les changements ne sont pas encore persistants. Ils seront réinitialisés après le redémarrage du serveur."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Min. État de charge"
 description = 'Portée pour les urgences. Le véhicule est chargé "rapidement" à {0} % en mode PV. Puis continue avec le surplus PV uniquement.'
 
@@ -130,14 +130,14 @@ label = "Min. Courant de charge"
 
 [main.vehicle]
 fallbackName = "Véhicule"
-vehicleSoC = "État de charge"
-targetSoC = "Cible de chargement"
+vehicleSoc = "État de charge"
+targetSoc = "Cible de chargement"
 none = "Pas de véhicule"
 unknown = "Véhicule invité"
 changeVehicle = "Changer de véhicule"
 detectionActive = "Détecter le véhicule ..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "Détaché"
 charging = "Mise en charge"
 ready = "Brêt"
@@ -170,7 +170,7 @@ inactiveLabel = "Temps visé"
 activeLabel = "{time}"
 modalTitle = "Définir l'heure cible"
 setTargetTime = "Non"
-description = "Quand le véhicule doit-il être rechargé à {targetSoC}%?"
+description = "Quand le véhicule doit-il être rechargé à {targetSoc}%?"
 today = "Aujourd'hui"
 tomorrow = "Matin"
 targetIsInThePast = "Le temps est passé."

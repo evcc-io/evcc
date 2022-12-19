@@ -20,8 +20,8 @@
 				</span>
 			</label>
 
-			<div v-if="estimatedTargetSoC" class="extraValue ms-0 ms-sm-1 text-nowrap">
-				<AnimatedNumber :to="estimatedTargetSoC" :format="fmtSoC" />
+			<div v-if="estimatedTargetSoc" class="extraValue ms-0 ms-sm-1 text-nowrap">
+				<AnimatedNumber :to="estimatedTargetSoc" :format="fmtSoc" />
 			</div>
 		</h3>
 	</LabelAndValue>
@@ -61,23 +61,23 @@ export default {
 			for (let energy = 0; energy <= this.maxEnergy; energy += this.steps) {
 				let text = this.fmtEnergy(energy);
 				const disabled = energy < this.chargedEnergy / 1e3 && energy !== 0;
-				const soc = this.estimatedSoC(energy);
+				const soc = this.estimatedSoc(energy);
 				if (soc) {
-					text += ` (${this.fmtSoC(soc)})`;
+					text += ` (${this.fmtSoc(soc)})`;
 				}
 				result.push({ energy, text, disabled });
 			}
 			return result;
 		},
-		estimatedTargetSoC: function () {
-			return this.estimatedSoC(this.targetEnergy);
+		estimatedTargetSoc: function () {
+			return this.estimatedSoc(this.targetEnergy);
 		},
 	},
 	methods: {
 		change: function (e) {
 			return this.$emit("target-energy-updated", parseFloat(e.target.value));
 		},
-		estimatedSoC: function (kWh) {
+		estimatedSoc: function (kWh) {
 			if (this.socPerKwh) {
 				return Math.round(kWh * this.socPerKwh);
 			}
@@ -92,7 +92,7 @@ export default {
 			const digits = inKWh && this.steps < 1 ? 1 : 0;
 			return this.fmtKWh(value * 1e3, inKWh, true, digits);
 		},
-		fmtSoC: function (value) {
+		fmtSoc: function (value) {
 			return `+${Math.round(value)}%`;
 		},
 	},

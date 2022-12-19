@@ -116,7 +116,7 @@ type decorateMeterBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateMeterBatteryImpl) SoC() (float64, error) {
+func (impl *decorateMeterBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }
 

@@ -447,8 +447,8 @@ func (c *EEBus) Identify() (string, error) {
 
 var _ api.Battery = (*EEBus)(nil)
 
-// SoC implements the api.Vehicle interface
-func (c *EEBus) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (c *EEBus) Soc() (float64, error) {
 	socSupported, err := c.emobility.EVSoCSupported()
 	if err != nil {
 		return 0, api.ErrNotAvailable

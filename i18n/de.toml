@@ -127,7 +127,7 @@ default = "default"
 disclaimerHint = "Hinweis:"
 disclaimerText = "Änderungen sind aktuell noch nicht persistent und werden nach einem Serverneustart wieder zurückgesetzt."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Mindestladestand"
 description = 'Reichweite für Notfälle. Fahrzeug wird im PV-Modus "schnell" auf {0}% geladen. Danach weiter mit PV-Überschuss.'
 
@@ -147,14 +147,14 @@ label = "Min. Ladestrom"
 
 [main.vehicle]
 fallbackName = "Fahrzeug"
-vehicleSoC = "Ladestand"
-targetSoC = "Ladeziel"
+vehicleSoc = "Ladestand"
+targetSoc = "Ladeziel"
 none = "Kein Fahrzeug"
 unknown = "Gastfahrzeug"
 changeVehicle = "Fahrzeug ändern"
 detectionActive = "Fahrzeugerkennung läuft ..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "getrennt"
 charging = "lädt"
 ready = "bereit"
@@ -187,7 +187,7 @@ inactiveLabel = "Zielzeit"
 activeLabel = "{time}"
 modalTitle = "Zielzeit festlegen"
 setTargetTime = "keine"
-description = "Wann soll das Fahrzeug auf {targetSoC}% geladen sein?"
+description = "Wann soll das Fahrzeug auf {targetSoc}% geladen sein?"
 today = "heute"
 tomorrow = "morgen"
 targetIsInThePast = "Zeitpunkt liegt in der Vergangenheit."

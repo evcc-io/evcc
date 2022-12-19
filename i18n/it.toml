@@ -51,11 +51,11 @@ remoteDisabledHard = "{source}: Disabilitato"
 
 [main.vehicle]
 fallbackName = "Veicolo"
-vehicleSoC = "SoC"
-targetSoC = "Limite"
+vehicleSoc = "Soc"
+targetSoc = "Limite"
 none = "Nessun veicolo"
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "disconesso"
 charging = "carica"
 ready = "pronto"
@@ -121,8 +121,8 @@ disclaimerHint = "Nota:"
 title = 'Impostazioni "{0}"'
 disclaimerText = "Le modifiche non sono ancora persistenti. Verranno ripristinate dopo il riavvio del server"
 
-[main.loadpointSettings.minSoC]
-label = "SoC minimo"
+[main.loadpointSettings.minSoc]
+label = "Soc minimo"
 description = "Autonomia per le emergenze. Il veicolo viene caricato \"velocemente\" fino a {0}% in modalità FV. Poi continua solo con l'eccedenza FV"
 
 [main.loadpointSettings.phasesConfigured]

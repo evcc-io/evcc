@@ -42,8 +42,8 @@ type Site struct {
 	Voltage                           float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters                            MetersConfig // Meter references
-	PrioritySoC                       float64      `mapstructure:"prioritySoC"`                       // prefer battery up to this SoC
-	BufferSoC                         float64      `mapstructure:"bufferSoC"`                         // ignore battery above this SoC
+	PrioritySoc                       float64      `mapstructure:"prioritySoc"`                       // prefer battery up to this Soc
+	BufferSoc                         float64      `mapstructure:"bufferSoc"`                         // ignore battery above this Soc
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
@@ -439,7 +439,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	if len(site.batteryMeters) > 0 {
 		var socs float64
 		for id, battery := range site.batteryMeters {
-			soc, err := battery.(api.Battery).SoC()
+			soc, err := battery.(api.Battery).Soc()
 			if err != nil {
 				err = fmt.Errorf("battery soc %d: %v", id, err)
 				site.log.ERROR.Println(err)
@@ -448,19 +448,19 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 				socs += soc / float64(len(site.batteryMeters))
 			}
 		}
-		site.publish("batterySoC", math.Round(socs))
+		site.publish("batterySoc", math.Round(socs))
 
 		site.Lock()
 		defer site.Unlock()
 
-		// if battery is charging below prioritySoC give it priority
-		if socs < site.PrioritySoC && batteryPower < 0 {
+		// if battery is charging below prioritySoc give it priority
+		if socs < site.PrioritySoc && batteryPower < 0 {
 			site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f%%", socs)
 			batteryPower = 0
 		}
 
-		// if battery is discharging above bufferSoC ignore it
-		site.batteryBuffered = batteryPower > 0 && site.BufferSoC > 0 && socs > site.BufferSoC
+		// if battery is discharging above bufferSoc ignore it
+		site.batteryBuffered = batteryPower > 0 && site.BufferSoc > 0 && socs > site.BufferSoc
 	}
 
 	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
@@ -515,8 +515,8 @@ func (site *Site) prepare() {
 	site.publish("gridConfigured", site.gridMeter != nil)
 	site.publish("pvConfigured", len(site.pvMeters) > 0)
 	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
-	site.publish("bufferSoC", site.BufferSoC)
-	site.publish("prioritySoC", site.PrioritySoC)
+	site.publish("bufferSoc", site.BufferSoc)
+	site.publish("prioritySoc", site.PrioritySoc)
 	site.publish("residualPower", site.ResidualPower)
 
 	site.publish("currency", site.tariffs.Currency.String())

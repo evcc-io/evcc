@@ -110,7 +110,7 @@ default = "standaard"
 disclaimerHint = "Letop:"
 disclaimerText = "Instellingen worden niet bijgehouden. Ze worden gereset bij het herstarten van de server."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Min batterijniveau"
 description = 'Noodbereik. Voertuig wordt "snel" geladen tot {0}% in PV mode. Daarna wordt enkel de PV-overschot gebruikt.'
 
@@ -130,14 +130,14 @@ label = "Min. vermogen"
 
 [main.vehicle]
 fallbackName = "Voertuig"
-vehicleSoC = "Batterijniveau"
-targetSoC = "Limiet"
+vehicleSoc = "Batterijniveau"
+targetSoc = "Limiet"
 none = "Geen voertuig"
 unknown = "Gast"
 changeVehicle = "Wijzig voertuig"
 detectionActive = "Voertuig detecteren ..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "niet verbonden"
 charging = "laden"
 ready = "klaar"
@@ -170,7 +170,7 @@ inactiveLabel = "Ingestelde tijd"
 activeLabel = "{time}"
 modalTitle = "Stel tijd in"
 setTargetTime = "geen"
-description = "Tegen wanneer moet het voertuig geladen zijn naar {targetSoC}%?"
+description = "Tegen wanneer moet het voertuig geladen zijn naar {targetSoc}%?"
 today = "Vandaag"
 tomorrow = "Morgen"
 targetIsInThePast = "De ingestelde tijd ligt in het verleden"

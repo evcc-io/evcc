@@ -19,7 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VehicleClient interface {
 	New(ctx context.Context, in *NewRequest, opts ...grpc.CallOption) (*NewReply, error)
-	SoC(ctx context.Context, in *SoCRequest, opts ...grpc.CallOption) (*SoCReply, error)
+	Soc(ctx context.Context, in *SocRequest, opts ...grpc.CallOption) (*SocReply, error)
 }
 
 type vehicleClient struct {
@@ -39,9 +39,9 @@ func (c *vehicleClient) New(ctx context.Context, in *NewRequest, opts ...grpc.Ca
 	return out, nil
 }
 
-func (c *vehicleClient) SoC(ctx context.Context, in *SoCRequest, opts ...grpc.CallOption) (*SoCReply, error) {
-	out := new(SoCReply)
-	err := c.cc.Invoke(ctx, "/Vehicle/SoC", in, out, opts...)
+func (c *vehicleClient) Soc(ctx context.Context, in *SocRequest, opts ...grpc.CallOption) (*SocReply, error) {
+	out := new(SocReply)
+	err := c.cc.Invoke(ctx, "/Vehicle/Soc", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (c *vehicleClient) SoC(ctx context.Context, in *SoCRequest, opts ...grpc.Ca
 // for forward compatibility
 type VehicleServer interface {
 	New(context.Context, *NewRequest) (*NewReply, error)
-	SoC(context.Context, *SoCRequest) (*SoCReply, error)
+	Soc(context.Context, *SocRequest) (*SocReply, error)
 	mustEmbedUnimplementedVehicleServer()
 }
 
@@ -64,8 +64,8 @@ type UnimplementedVehicleServer struct {
 func (UnimplementedVehicleServer) New(context.Context, *NewRequest) (*NewReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method New not implemented")
 }
-func (UnimplementedVehicleServer) SoC(context.Context, *SoCRequest) (*SoCReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SoC not implemented")
+func (UnimplementedVehicleServer) Soc(context.Context, *SocRequest) (*SocReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Soc not implemented")
 }
 func (UnimplementedVehicleServer) mustEmbedUnimplementedVehicleServer() {}
 
@@ -98,20 +98,20 @@ func _Vehicle_New_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Vehicle_SoC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SoCRequest)
+func _Vehicle_Soc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SocRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(VehicleServer).SoC(ctx, in)
+		return srv.(VehicleServer).Soc(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Vehicle/SoC",
+		FullMethod: "/Vehicle/Soc",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VehicleServer).SoC(ctx, req.(*SoCRequest))
+		return srv.(VehicleServer).Soc(ctx, req.(*SocRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -128,8 +128,8 @@ var Vehicle_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Vehicle_New_Handler,
 		},
 		{
-			MethodName: "SoC",
-			Handler:    _Vehicle_SoC_Handler,
+			MethodName: "Soc",
+			Handler:    _Vehicle_Soc_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

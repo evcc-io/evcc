@@ -303,10 +303,10 @@ func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 		}
 
 		res := struct {
-			SoC  int       `json:"soc"`
+			Soc  int       `json:"soc"`
 			Time time.Time `json:"time"`
 		}{
-			SoC:  socV,
+			Soc:  socV,
 			Time: timeV,
 		}
 
@@ -380,6 +380,6 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 
 // TargetCharger defines target charge related loadpoint operations
 type targetCharger interface {
-	// SetTargetCharge sets the charge targetSoC
+	// SetTargetCharge sets the charge targetSoc
 	SetTargetCharge(time.Time, int) error
 }

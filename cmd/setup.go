@@ -133,7 +133,7 @@ func configureInflux(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-
 	)
 
 	// eliminate duplicate values
-	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleCapacity", "vehicleSoC", "vehicleRange", "vehicleOdometer", "chargedEnergy", "chargeRemainingEnergy")
+	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleCapacity", "vehicleSoc", "vehicleRange", "vehicleOdometer", "chargedEnergy", "chargeRemainingEnergy")
 	in = dedupe.Pipe(in)
 
 	go influx.Run(loadPoints, in)

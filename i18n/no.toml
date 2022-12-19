@@ -95,7 +95,7 @@ phases_1 = "1-fas"
 phases_1_hint = "({min} til {max})"
 phases_3_hint = "({min} til {max})"
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 description = 'Kurve for nødsfall. Kjøretøyet blir "hurtig"-ladet til {0}% i fotovoltaisk modus. Deretter fortsetter det på kun solcelleoverskudd."'
 label = "Minimumsladestand"
 
@@ -103,15 +103,15 @@ label = "Minimumsladestand"
 label = "Maks. ladestrøm"
 
 [main.vehicle]
-targetSoC = "Grense"
+targetSoc = "Grense"
 none = "Ingen kjøretøy"
 changeVehicle = "Lad kjøretøy"
 detectionActive = "Oppdager kjøretøy …"
-vehicleSoC = "Ladestand"
+vehicleSoc = "Ladestand"
 fallbackName = "Kjøretøy"
 unknown = "Gjestekjøretøy"
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "frakoblet"
 charging = "lader"
 vehicleTarget = "Kjøretøygrense: {soc}%"
@@ -137,7 +137,7 @@ targetChargeWaitForVehicle = "Målladenivå klart. Venter på kjøretøy …"
 [main.targetCharge]
 inactiveLabel = "Mål-tid"
 activeLabel = "{time}"
-description = "Når skal kjøretøyet lades til {targetSoC}%?"
+description = "Når skal kjøretøyet lades til {targetSoc}%?"
 tomorrow = "i morgen"
 experimentalLabel = "Eksperimentelt"
 activate = "Aktiver"

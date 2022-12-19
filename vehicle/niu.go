@@ -127,8 +127,8 @@ func (v *Niu) batteryAPI() (niu.Response, error) {
 	return res, err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Niu) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Niu) Soc() (float64, error) {
 	res, err := v.apiG()
 	return float64(res.Data.Batteries.CompartmentA.BatteryCharging), err
 }

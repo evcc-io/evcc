@@ -127,7 +127,7 @@ default = "default"
 disclaimerHint = "Note:"
 disclaimerText = "Changes will be lost after the server is restarted."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Min. charge %"
 description = 'For emergencies. The vehicle gets "fast" charged to {0}% from all available solar, and then continues with only the solar surplus.'
 
@@ -147,14 +147,14 @@ label = "Min. Current"
 
 [main.vehicle]
 fallbackName = "Vehicle"
-vehicleSoC = "Charge"
-targetSoC = "Limit"
+vehicleSoc = "Charge"
+targetSoc = "Limit"
 none = "No vehicle"
 unknown = "Guest vehicle"
 changeVehicle = "Change Vehicle"
 detectionActive = "Detecting vehicle…"
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "disconnected"
 charging = "charging"
 ready = "ready"
@@ -187,7 +187,7 @@ inactiveLabel = "Target time"
 activeLabel = "{time}"
 modalTitle = "Set Target Time"
 setTargetTime = "none"
-description = "When should the vehicle be charged to {targetSoC}%?"
+description = "When should the vehicle be charged to {targetSoc}%?"
 today = "today"
 tomorrow = "tomorrow"
 targetIsInThePast = "Pick a time in the future, Marty."
