@@ -8,7 +8,7 @@ import (
 // API is the external site API
 type API interface {
 	Healthy() bool
-	LoadPoints() []loadpoint.API
+	Loadpoints() []loadpoint.API
 
 	//
 	// battery

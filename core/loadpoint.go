@@ -90,14 +90,13 @@ type ThresholdConfig struct {
 // Task is the task type
 type Task = func()
 
-// LoadPoint is responsible for controlling charge depending on
-// Soc needs and power availability.
-type LoadPoint struct {
+// Loadpoint is responsible for controlling the charging process
+type Loadpoint struct {
 	clock    clock.Clock       // mockable time
 	bus      evbus.Bus         // event bus
 	pushChan chan<- push.Event // notifications
 	uiChan   chan<- util.Param // client push messages
-	lpChan   chan<- *LoadPoint // update requests
+	lpChan   chan<- *Loadpoint // update requests
 	log      *util.Logger
 
 	// exposed public configuration
@@ -166,9 +165,9 @@ type LoadPoint struct {
 	tasks *util.Queue[Task] // tasks to be executed
 }
 
-// NewLoadPointFromConfig creates a new loadpoint
-func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) (*LoadPoint, error) {
-	lp := NewLoadPoint(log)
+// NewLoadpointFromConfig creates a new loadpoint
+func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) (*Loadpoint, error) {
+	lp := NewLoadpoint(log)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
 	}
@@ -265,12 +264,12 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	return lp, nil
 }
 
-// NewLoadPoint creates a LoadPoint with sane defaults
-func NewLoadPoint(log *util.Logger) *LoadPoint {
+// NewLoadpoint creates a Loadpoint with sane defaults
+func NewLoadpoint(log *util.Logger) *Loadpoint {
 	clock := clock.New()
 	bus := evbus.New()
 
-	lp := &LoadPoint{
+	lp := &Loadpoint{
 		log:           log,   // logger
 		clock:         clock, // mockable time
 		bus:           bus,   // event bus
@@ -288,13 +287,13 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	}
 
 	// allow target charge handler to access loadpoint
-	lp.socTimer = soc.NewTimer(lp.log, &adapter{LoadPoint: lp})
+	lp.socTimer = soc.NewTimer(lp.log, &adapter{Loadpoint: lp})
 
 	return lp
 }
 
 // collectDefaults collects default values for use on disconnect
-func (lp *LoadPoint) collectDefaults() {
+func (lp *Loadpoint) collectDefaults() {
 	// get reference to action config
 	actionCfg := &lp.onDisconnect
 
@@ -312,7 +311,7 @@ func (lp *LoadPoint) collectDefaults() {
 }
 
 // requestUpdate requests site to update this loadpoint
-func (lp *LoadPoint) requestUpdate() {
+func (lp *Loadpoint) requestUpdate() {
 	select {
 	case lp.lpChan <- lp: // request loadpoint update
 	default:
@@ -320,7 +319,7 @@ func (lp *LoadPoint) requestUpdate() {
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
-func (lp *LoadPoint) configureChargerType(charger api.Charger) {
+func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
 
 	// ensure charge meter exists
@@ -367,19 +366,19 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 }
 
 // pushEvent sends push messages to clients
-func (lp *LoadPoint) pushEvent(event string) {
+func (lp *Loadpoint) pushEvent(event string) {
 	lp.pushChan <- push.Event{Event: event}
 }
 
 // publish sends values to UI and databases
-func (lp *LoadPoint) publish(key string, val interface{}) {
+func (lp *Loadpoint) publish(key string, val interface{}) {
 	if lp.uiChan != nil {
 		lp.uiChan <- util.Param{Key: key, Val: val}
 	}
 }
 
 // evChargeStartHandler sends external start event
-func (lp *LoadPoint) evChargeStartHandler() {
+func (lp *Loadpoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.pushEvent(evChargeStart)
 
@@ -397,7 +396,7 @@ func (lp *LoadPoint) evChargeStartHandler() {
 }
 
 // evChargeStopHandler sends external stop event
-func (lp *LoadPoint) evChargeStopHandler() {
+func (lp *Loadpoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
 	lp.pushEvent(evChargeStop)
 
@@ -414,7 +413,7 @@ func (lp *LoadPoint) evChargeStopHandler() {
 }
 
 // evVehicleConnectHandler sends external start event
-func (lp *LoadPoint) evVehicleConnectHandler() {
+func (lp *Loadpoint) evVehicleConnectHandler() {
 	lp.log.INFO.Printf("car connected")
 
 	// energy
@@ -444,7 +443,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 }
 
 // evVehicleDisconnectHandler sends external start event
-func (lp *LoadPoint) evVehicleDisconnectHandler() {
+func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.log.INFO.Println("car disconnected")
 
 	// session is persisted during evChargeStopHandler which runs before
@@ -483,14 +482,14 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 }
 
 // evVehicleSocProgressHandler sends external start event
-func (lp *LoadPoint) evVehicleSocProgressHandler(soc float64) {
+func (lp *Loadpoint) evVehicleSocProgressHandler(soc float64) {
 	if lp.progress.NextStep(soc) {
 		lp.pushEvent(evVehicleSoc)
 	}
 }
 
 // evChargeCurrentHandler publishes the charge current
-func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
+func (lp *Loadpoint) evChargeCurrentHandler(current float64) {
 	if !lp.enabled {
 		current = 0
 	}
@@ -502,7 +501,7 @@ func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
 // It assumes that the charge meter cannot consume more than total household consumption.
 // If physical charge meter is present this handler is not used.
 // The actual value is published by the evChargeCurrentHandler
-func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
+func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
 	power := current * float64(lp.activePhases()) * Voltage
 
 	// if disabled we cannot be charging
@@ -515,7 +514,7 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 }
 
 // applyAction executes the action
-func (lp *LoadPoint) applyAction(actionCfg api.ActionConfig) {
+func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.Mode != nil {
 		lp.SetMode(*actionCfg.Mode)
 	}
@@ -534,12 +533,12 @@ func (lp *LoadPoint) applyAction(actionCfg api.ActionConfig) {
 }
 
 // Name returns the human-readable loadpoint title
-func (lp *LoadPoint) Name() string {
+func (lp *Loadpoint) Name() string {
 	return lp.Title
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *LoadPoint) {
+func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
@@ -595,7 +594,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 }
 
 // syncCharger updates charger status and synchronizes it with expectations
-func (lp *LoadPoint) syncCharger() {
+func (lp *Loadpoint) syncCharger() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil {
 		if enabled != lp.enabled {
@@ -616,7 +615,7 @@ func (lp *LoadPoint) syncCharger() {
 }
 
 // setLimit applies charger current limits and enables/disables accordingly
-func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
+func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
 		var err error
@@ -685,25 +684,25 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 }
 
 // connected returns the EVs connection state
-func (lp *LoadPoint) connected() bool {
+func (lp *Loadpoint) connected() bool {
 	status := lp.GetStatus()
 	return status == api.StatusB || status == api.StatusC
 }
 
 // charging returns the EVs charging state
-func (lp *LoadPoint) charging() bool {
+func (lp *Loadpoint) charging() bool {
 	return lp.GetStatus() == api.StatusC
 }
 
 // charging returns the EVs charging state
-func (lp *LoadPoint) setStatus(status api.ChargeStatus) {
+func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.status = status
 }
 
 // targetEnergyReached checks if target is configured and reached
-func (lp *LoadPoint) targetEnergyReached() bool {
+func (lp *Loadpoint) targetEnergyReached() bool {
 	return (lp.vehicle == nil || lp.vehicleHasFeature(api.Offline)) &&
 		lp.targetEnergy > 0 &&
 		lp.getChargedEnergy()/1e3 >= float64(lp.targetEnergy)
@@ -711,7 +710,7 @@ func (lp *LoadPoint) targetEnergyReached() bool {
 
 // targetSocReached checks if target is configured and reached.
 // If vehicle is not configured this will always return false
-func (lp *LoadPoint) targetSocReached() bool {
+func (lp *Loadpoint) targetSocReached() bool {
 	return lp.vehicle != nil &&
 		lp.Soc.target > 0 &&
 		lp.Soc.target < 100 &&
@@ -720,14 +719,14 @@ func (lp *LoadPoint) targetSocReached() bool {
 
 // minSocNotReached checks if minimum is configured and not reached.
 // If vehicle is not configured this will always return true
-func (lp *LoadPoint) minSocNotReached() bool {
+func (lp *Loadpoint) minSocNotReached() bool {
 	return lp.vehicle != nil &&
 		lp.Soc.min > 0 &&
 		lp.vehicleSoc < float64(lp.Soc.min)
 }
 
 // climateActive checks if vehicle has active climate request
-func (lp *LoadPoint) climateActive() bool {
+func (lp *Loadpoint) climateActive() bool {
 	if cl, ok := lp.vehicle.(api.VehicleClimater); ok {
 		active, outsideTemp, targetTemp, err := cl.Climater()
 		if err == nil {
@@ -758,7 +757,7 @@ func (lp *LoadPoint) climateActive() bool {
 }
 
 // disableUnlessClimater disables the charger unless climate is active
-func (lp *LoadPoint) disableUnlessClimater() error {
+func (lp *Loadpoint) disableUnlessClimater() error {
 	var current float64 // zero disables
 	if lp.climateActive() {
 		lp.log.DEBUG.Println("climater active")
@@ -769,7 +768,7 @@ func (lp *LoadPoint) disableUnlessClimater() error {
 }
 
 // remoteControlled returns true if remote control status is active
-func (lp *LoadPoint) remoteControlled(demand loadpoint.RemoteDemand) bool {
+func (lp *Loadpoint) remoteControlled(demand loadpoint.RemoteDemand) bool {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -777,7 +776,7 @@ func (lp *LoadPoint) remoteControlled(demand loadpoint.RemoteDemand) bool {
 }
 
 // setVehicleIdentifier updated the vehicle id as read from the charger
-func (lp *LoadPoint) setVehicleIdentifier(id string) {
+func (lp *Loadpoint) setVehicleIdentifier(id string) {
 	if lp.vehicleIdentifier != id {
 		lp.vehicleIdentifier = id
 		lp.publish("vehicleIdentity", id)
@@ -785,7 +784,7 @@ func (lp *LoadPoint) setVehicleIdentifier(id string) {
 }
 
 // identifyVehicle reads vehicle identification from charger
-func (lp *LoadPoint) identifyVehicle() {
+func (lp *Loadpoint) identifyVehicle() {
 	identifier, ok := lp.charger.(api.Identifier)
 	if !ok {
 		return
@@ -815,7 +814,7 @@ func (lp *LoadPoint) identifyVehicle() {
 }
 
 // selectVehicleByID selects the vehicle with the given ID
-func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
+func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 	vehicles := lp.coordinatedVehicles()
 
 	// find exact match
@@ -848,7 +847,7 @@ func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 
 // setActiveVehicle assigns currently active vehicle, configures soc estimator
 // and adds an odometer task
-func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
+func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -925,7 +924,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	})
 }
 
-func (lp *LoadPoint) wakeUpVehicle() {
+func (lp *Loadpoint) wakeUpVehicle() {
 	// charger
 	if c, ok := lp.charger.(api.Resurrector); ok {
 		if err := c.WakeUp(); err != nil {
@@ -943,7 +942,7 @@ func (lp *LoadPoint) wakeUpVehicle() {
 }
 
 // unpublishVehicle resets published vehicle data
-func (lp *LoadPoint) unpublishVehicle() {
+func (lp *Loadpoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
 
 	lp.publish("vehicleSoc", 0.0)
@@ -956,7 +955,7 @@ func (lp *LoadPoint) unpublishVehicle() {
 }
 
 // vehicleHasFeature checks availability of vehicle feature
-func (lp *LoadPoint) vehicleHasFeature(f api.Feature) bool {
+func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
 	v, ok := lp.vehicle.(api.FeatureDescriber)
 	if ok {
 		ok = v.Has(f)
@@ -965,14 +964,14 @@ func (lp *LoadPoint) vehicleHasFeature(f api.Feature) bool {
 }
 
 // vehiclePublishFeature availability of vehicle features
-func (lp *LoadPoint) vehiclePublishFeature(f api.Feature) {
+func (lp *Loadpoint) vehiclePublishFeature(f api.Feature) {
 	lp.publish("vehicleFeature"+f.String(), lp.vehicleHasFeature(f))
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.
 // It will also reset the api cache at regular intervals.
 // Detection is stopped after maximum duration and the "guest vehicle" message dispatched.
-func (lp *LoadPoint) vehicleUnidentified() bool {
+func (lp *Loadpoint) vehicleUnidentified() bool {
 	if lp.vehicle != nil || lp.vehicleDetect.IsZero() || len(lp.coordinatedVehicles()) == 0 {
 		return false
 	}
@@ -996,7 +995,7 @@ func (lp *LoadPoint) vehicleUnidentified() bool {
 }
 
 // vehicleDefaultOrDetect will assign and update default vehicle or start detection
-func (lp *LoadPoint) vehicleDefaultOrDetect() {
+func (lp *Loadpoint) vehicleDefaultOrDetect() {
 	if lp.defaultVehicle != nil {
 		if lp.vehicle != lp.defaultVehicle {
 			lp.setActiveVehicle(lp.defaultVehicle)
@@ -1011,7 +1010,7 @@ func (lp *LoadPoint) vehicleDefaultOrDetect() {
 }
 
 // startVehicleDetection reset connection timer and starts api refresh timer
-func (lp *LoadPoint) startVehicleDetection() {
+func (lp *Loadpoint) startVehicleDetection() {
 	// flush all vehicles before detection starts
 	lp.log.DEBUG.Println("vehicle api refresh")
 	provider.ResetCached()
@@ -1022,7 +1021,7 @@ func (lp *LoadPoint) startVehicleDetection() {
 }
 
 // stopVehicleDetection expires the connection timer and ticker
-func (lp *LoadPoint) stopVehicleDetection() {
+func (lp *Loadpoint) stopVehicleDetection() {
 	lp.vehicleDetect = time.Time{}
 	if lp.vehicleDetectTicker != nil {
 		lp.vehicleDetectTicker.Stop()
@@ -1031,7 +1030,7 @@ func (lp *LoadPoint) stopVehicleDetection() {
 }
 
 // identifyVehicleByStatus validates if the active vehicle is still connected to the loadpoint
-func (lp *LoadPoint) identifyVehicleByStatus() {
+func (lp *Loadpoint) identifyVehicleByStatus() {
 	if len(lp.coordinatedVehicles()) == 0 {
 		return
 	}
@@ -1059,7 +1058,7 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 }
 
 // vehicleOdometer updates odometer
-func (lp *LoadPoint) vehicleOdometer() {
+func (lp *Loadpoint) vehicleOdometer() {
 	if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
@@ -1103,7 +1102,7 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 }
 
 // updateChargerStatus updates charger status and detects car connected/disconnected events
-func (lp *LoadPoint) updateChargerStatus() error {
+func (lp *Loadpoint) updateChargerStatus() error {
 	status, err := lp.charger.Status()
 	if err != nil {
 		return err
@@ -1136,7 +1135,7 @@ func (lp *LoadPoint) updateChargerStatus() error {
 }
 
 // effectiveCurrent returns the currently effective charging current
-func (lp *LoadPoint) effectiveCurrent() float64 {
+func (lp *Loadpoint) effectiveCurrent() float64 {
 	if !lp.charging() {
 		return 0
 	}
@@ -1151,7 +1150,7 @@ func (lp *LoadPoint) effectiveCurrent() float64 {
 }
 
 // elapsePVTimer puts the pv enable/disable timer into elapsed state
-func (lp *LoadPoint) elapsePVTimer() {
+func (lp *Loadpoint) elapsePVTimer() {
 	lp.log.DEBUG.Printf("pv timer elapse")
 
 	lp.pvTimer = elapsed
@@ -1161,7 +1160,7 @@ func (lp *LoadPoint) elapsePVTimer() {
 }
 
 // resetPVTimerIfRunning resets the pv enable/disable timer to disabled state
-func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
+func (lp *Loadpoint) resetPVTimerIfRunning(typ ...string) {
 	if lp.pvTimer.IsZero() {
 		return
 	}
@@ -1177,19 +1176,19 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 }
 
 // resetPhaseTimer resets the phase switch timer to disabled state
-func (lp *LoadPoint) resetPhaseTimer() {
+func (lp *Loadpoint) resetPhaseTimer() {
 	lp.phaseTimer = time.Time{}
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 }
 
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
-func (lp *LoadPoint) scalePhasesRequired() bool {
+func (lp *Loadpoint) scalePhasesRequired() bool {
 	_, ok := lp.charger.(api.PhaseSwitcher)
 	return ok && lp.ConfiguredPhases != 0 && lp.ConfiguredPhases != lp.GetPhases()
 }
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
-func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
+func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 	if lp.ConfiguredPhases != 0 {
 		phases = lp.ConfiguredPhases
 	}
@@ -1202,7 +1201,7 @@ func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 }
 
 // setConfiguredPhases sets the default phase configuration
-func (lp *LoadPoint) setConfiguredPhases(phases int) {
+func (lp *Loadpoint) setConfiguredPhases(phases int) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -1217,7 +1216,7 @@ func (lp *LoadPoint) setConfiguredPhases(phases int) {
 }
 
 // setPhases sets the number of enabled phases without modifying the charger
-func (lp *LoadPoint) setPhases(phases int) {
+func (lp *Loadpoint) setPhases(phases int) {
 	if lp.GetPhases() != phases {
 		lp.Lock()
 		lp.phases = phases
@@ -1233,7 +1232,7 @@ func (lp *LoadPoint) setPhases(phases int) {
 
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
 // Returns api.ErrNotAvailable if api.PhaseSwitcher is not available.
-func (lp *LoadPoint) scalePhases(phases int) error {
+func (lp *Loadpoint) scalePhases(phases int) error {
 	cp, ok := lp.charger.(api.PhaseSwitcher)
 	if !ok {
 		panic("charger does not implement api.PhaseSwitcher")
@@ -1261,7 +1260,7 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 }
 
 // pvScalePhases switches phases if necessary and returns if switch occurred
-func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float64) bool {
+func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float64) bool {
 	phases := lp.GetPhases()
 
 	// observed phase state inconsistency
@@ -1337,7 +1336,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 }
 
 // coordinatedVehicles is the slice of vehicles from the coordinator
-func (lp *LoadPoint) coordinatedVehicles() []api.Vehicle {
+func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
 	if lp.coordinator == nil {
 		return nil
 	}
@@ -1345,7 +1344,7 @@ func (lp *LoadPoint) coordinatedVehicles() []api.Vehicle {
 }
 
 // TODO move up to timer functions
-func (lp *LoadPoint) publishTimer(name string, delay time.Duration, action string) {
+func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action string) {
 	timer := lp.pvTimer
 	if name == phaseTimer {
 		timer = lp.phaseTimer
@@ -1367,7 +1366,7 @@ func (lp *LoadPoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered bool) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.GetMinCurrent()
 	maxCurrent := lp.GetMaxCurrent()
@@ -1468,7 +1467,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 }
 
 // UpdateChargePower updates charge meter power
-func (lp *LoadPoint) UpdateChargePower() {
+func (lp *Loadpoint) UpdateChargePower() {
 	err := retry.Do(func() error {
 		value, err := lp.chargeMeter.CurrentPower()
 		if err != nil {
@@ -1495,7 +1494,7 @@ func (lp *LoadPoint) UpdateChargePower() {
 }
 
 // updateChargeCurrents uses MeterCurrent interface to count phases with current >=1A
-func (lp *LoadPoint) updateChargeCurrents() {
+func (lp *Loadpoint) updateChargeCurrents() {
 	lp.chargeCurrents = nil
 
 	phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent)
@@ -1538,7 +1537,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 }
 
 // publish charged energy and duration
-func (lp *LoadPoint) publishChargeProgress() {
+func (lp *Loadpoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
@@ -1563,7 +1562,7 @@ func (lp *LoadPoint) publishChargeProgress() {
 }
 
 // socPollAllowed validates charging state against polling mode
-func (lp *LoadPoint) socPollAllowed() bool {
+func (lp *Loadpoint) socPollAllowed() bool {
 	remaining := lp.Soc.Poll.Interval - lp.clock.Since(lp.socUpdated)
 
 	honourUpdateInterval := lp.Soc.Poll.Mode == pollAlways ||
@@ -1578,7 +1577,7 @@ func (lp *LoadPoint) socPollAllowed() bool {
 }
 
 // checks if the connected charger can provide Soc to the connected vehicle
-func (lp *LoadPoint) socProvidedByCharger() bool {
+func (lp *Loadpoint) socProvidedByCharger() bool {
 	if charger, ok := lp.charger.(api.Battery); ok {
 		if _, err := charger.Soc(); err == nil {
 			return true
@@ -1588,7 +1587,7 @@ func (lp *LoadPoint) socProvidedByCharger() bool {
 }
 
 // publish state of charge, remaining charge duration and range
-func (lp *LoadPoint) publishSocAndRange() {
+func (lp *Loadpoint) publishSocAndRange() {
 	if lp.socEstimator == nil {
 		return
 	}
@@ -1661,7 +1660,7 @@ func (lp *LoadPoint) publishSocAndRange() {
 }
 
 // addTask adds a single task to the queue
-func (lp *LoadPoint) addTask(task func()) {
+func (lp *Loadpoint) addTask(task func()) {
 	// test guard
 	if lp.tasks != nil {
 		// don't add twice
@@ -1674,7 +1673,7 @@ func (lp *LoadPoint) addTask(task func()) {
 }
 
 // processTasks executes a single task from the queue
-func (lp *LoadPoint) processTasks() {
+func (lp *Loadpoint) processTasks() {
 	// test guard
 	if lp.tasks != nil {
 		if task, ok := lp.tasks.Dequeue(); ok {
@@ -1684,7 +1683,7 @@ func (lp *LoadPoint) processTasks() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
+func (lp *Loadpoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 	lp.processTasks()
 
 	mode := lp.GetMode()

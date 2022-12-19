@@ -154,16 +154,16 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// number of loadpoints
 	topic = fmt.Sprintf("%s/loadpoints", m.root)
-	m.publish(topic, true, len(site.LoadPoints()))
+	m.publish(topic, true, len(site.Loadpoints()))
 
 	// loadpoint setters
-	for id, lp := range site.LoadPoints() {
+	for id, lp := range site.Loadpoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
 		m.listenSetters(topic, site, lp)
 	}
 
 	// TODO remove deprecated topics
-	for id := range site.LoadPoints() {
+	for id := range site.Loadpoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
 		for _, dep := range []string{"activePhases", "range", "socCharge", "vehicleSoc"} {
 			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, "")
@@ -176,8 +176,8 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	// publish
 	for p := range in {
 		topic := fmt.Sprintf("%s/site", m.root)
-		if p.LoadPoint != nil {
-			id := *p.LoadPoint + 1
+		if p.Loadpoint != nil {
+			id := *p.Loadpoint + 1
 			topic = fmt.Sprintf("%s/loadpoints/%d", m.root, id)
 		}
 

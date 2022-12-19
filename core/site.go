@@ -22,7 +22,7 @@ import (
 
 const standbyPower = 10 // consider less than 10W as charger in standby
 
-// Updater abstracts the LoadPoint implementation for testing
+// Updater abstracts the Loadpoint implementation for testing
 type Updater interface {
 	Update(availablePower float64, cheapRate, batteryBuffered bool)
 }
@@ -30,7 +30,7 @@ type Updater interface {
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
 	uiChan       chan<- util.Param // client push messages
-	lpUpdateChan chan *LoadPoint
+	lpUpdateChan chan *Loadpoint
 
 	*Health
 
@@ -52,7 +52,7 @@ type Site struct {
 	batteryMeters []api.Meter // Battery charging meters
 
 	tariffs     tariff.Tariffs           // Tariff
-	loadpoints  []*LoadPoint             // Loadpoints
+	loadpoints  []*Loadpoint             // Loadpoints
 	coordinator *coordinator.Coordinator // Savings
 	savings     *Savings                 // Savings
 
@@ -77,7 +77,7 @@ func NewSiteFromConfig(
 	log *util.Logger,
 	cp configProvider,
 	other map[string]interface{},
-	loadpoints []*LoadPoint,
+	loadpoints []*Loadpoint,
 	vehicles []api.Vehicle,
 	tariffs tariff.Tariffs,
 ) (*Site, error) {
@@ -196,8 +196,8 @@ func NewSite() *Site {
 	return lp
 }
 
-// LoadPoints returns the array of associated loadpoints
-func (site *Site) LoadPoints() []loadpoint.API {
+// Loadpoints returns the array of associated loadpoints
+func (site *Site) Loadpoints() []loadpoint.API {
 	res := make([]loadpoint.API, len(site.loadpoints))
 	for id, lp := range site.loadpoints {
 		res[id] = lp
@@ -528,7 +528,7 @@ func (site *Site) prepare() {
 // Prepare attaches communication channels to site and loadpoints
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
 	site.uiChan = uiChan
-	site.lpUpdateChan = make(chan *LoadPoint, 1) // 1 capacity to avoid deadlock
+	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
 
 	site.prepare()
 
@@ -541,10 +541,10 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 			for {
 				select {
 				case param := <-lpUIChan:
-					param.LoadPoint = &id
+					param.Loadpoint = &id
 					uiChan <- param
 				case ev := <-lpPushChan:
-					ev.LoadPoint = &id
+					ev.Loadpoint = &id
 					pushChan <- ev
 				}
 			}

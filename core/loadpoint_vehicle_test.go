@@ -31,7 +31,7 @@ func TestPublishSocAndRange(t *testing.T) {
 	vehicle.EXPECT().OnIdentified().AnyTimes()
 
 	log := util.NewLogger("foo")
-	lp := &LoadPoint{
+	lp := &Loadpoint{
 		log:            log,
 		bus:            evbus.New(),
 		clock:          clck,
@@ -127,7 +127,7 @@ func TestVehicleDetectByID(t *testing.T) {
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
-		lp := &LoadPoint{
+		lp := &Loadpoint{
 			log: util.NewLogger("foo"),
 		}
 
@@ -168,7 +168,7 @@ func TestDefaultVehicle(t *testing.T) {
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().AnyTimes()
 
-	lp := NewLoadPoint(util.NewLogger("foo"))
+	lp := NewLoadpoint(util.NewLogger("foo"))
 	lp.defaultVehicle = dflt
 	lp.collectDefaults()
 
@@ -241,7 +241,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 		}
 	}
 
-	assertConfig := func(lp *LoadPoint, conf api.ActionConfig) {
+	assertConfig := func(lp *Loadpoint, conf api.ActionConfig) {
 		if lp.Mode != *conf.Mode {
 			t.Errorf("expected mode %v, got %v", *conf.Mode, lp.Mode)
 		}
@@ -272,7 +272,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
 
-	lp := NewLoadPoint(util.NewLogger("foo"))
+	lp := NewLoadpoint(util.NewLogger("foo"))
 
 	// populate channels
 	x, y, z := createChannels(t)
@@ -345,7 +345,7 @@ func TestReconnectVehicle(t *testing.T) {
 			charger := mock.NewMockCharger(ctrl)
 			charger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
 
-			lp := &LoadPoint{
+			lp := &Loadpoint{
 				log:         util.NewLogger("foo"),
 				bus:         evbus.New(),
 				clock:       clck,
