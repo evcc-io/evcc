@@ -5,12 +5,11 @@
 		<div ref="carousel" class="carousel d-lg-flex flex-wrap">
 			<div
 				v-for="(loadpoint, index) in loadpoints"
-				:key="index"
+				:key="loadpoint.id"
 				class="flex-grow-1 mb-3 m-lg-0 p-lg-0"
 			>
 				<Loadpoint
 					v-bind="loadpoint"
-					:id="index"
 					:vehicles="vehicles"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
