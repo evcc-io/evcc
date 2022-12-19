@@ -539,7 +539,7 @@ func (lp *LoadPoint) Name() string {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *LoadPoint, id int) {
+func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *LoadPoint) {
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
@@ -553,7 +553,6 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evVehicleSoC, lp.evVehicleSoCProgressHandler)
 
 	// publish initial values
-	lp.publish("id", id)
 	lp.publish("title", lp.Title)
 	lp.publish("minCurrent", lp.MinCurrent)
 	lp.publish("maxCurrent", lp.MaxCurrent)
