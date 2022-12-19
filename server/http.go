@@ -111,7 +111,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 	// loadpoint api
 	for id, lp := range site.LoadPoints() {
-		loadpoint := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
+		loadpoint := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
 			"mode":          {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},

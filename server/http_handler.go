@@ -336,12 +336,12 @@ func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
 		val, err := strconv.Atoi(valS)
 
 		vehicles := site.GetVehicles()
-		if !ok || val >= len(vehicles) || err != nil {
+		if !ok || val < 1 || val > len(vehicles) || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		loadpoint.SetVehicle(vehicles[val])
+		loadpoint.SetVehicle(vehicles[val-1])
 
 		res := struct {
 			Vehicle string `json:"vehicle"`
