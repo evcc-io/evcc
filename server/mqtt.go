@@ -58,7 +58,7 @@ func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface
 
 func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	// publish phase values
-	if slice, ok := payload.([]float64); ok && strings.HasSuffix(topic, "Currents") {
+	if slice, ok := payload.([3]float64); ok {
 		var total float64
 		for i, v := range slice {
 			total += v
