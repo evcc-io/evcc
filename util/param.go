@@ -9,7 +9,6 @@ import (
 type Param struct {
 	LoadPoint *int
 	Key       string
-	Subkey    *string
 	Val       interface{}
 }
 
@@ -19,10 +18,6 @@ func (p Param) UniqueID() string {
 
 	if p.LoadPoint != nil {
 		b.WriteString(strconv.Itoa(*p.LoadPoint) + ".")
-	}
-
-	if p.Subkey != nil {
-		b.WriteString(*p.Subkey + ".")
 	}
 
 	b.WriteString(p.Key)

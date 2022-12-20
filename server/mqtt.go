@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -55,17 +56,7 @@ func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface
 	go m.Handler.WaitForToken(token)
 }
 
-func (m *MQTT) publish(topic string, retained bool, payload interface{}, key ...*string) {
-	// publish slices as sub topics
-	if slice, ok := payload.([]float64); ok && len(key) == 1 {
-		// publish count
-		payload = len(slice)
-
-		for i, v := range slice {
-			m.publishSingleValue(fmt.Sprintf("%s/%d/%s", topic, i+1, *key[0]), retained, v)
-		}
-	}
-
+func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	// publish phase values
 	if slice, ok := payload.([]float64); ok && strings.HasSuffix(topic, "Currents") {
 		var total float64
@@ -76,6 +67,29 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}, key ...
 
 		// publish sum value
 		payload = total
+	}
+
+	// publish slices of structs as sub topics
+	if payload != nil {
+		if typ := reflect.TypeOf(payload); typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Struct {
+			val := reflect.ValueOf(payload)
+
+			// loop slice
+			for i := 0; i < val.Len(); i++ {
+				val := val.Index(i)
+				typ := val.Type()
+
+				// loop struct
+				for j := 0; j < typ.NumField(); j++ {
+					n := typ.Field(j).Name
+					v := val.Field(j).Interface()
+					m.publishSingleValue(fmt.Sprintf("%s/%d/%s", topic, i+1, strings.ToLower(n[:1])+n[1:]), retained, v)
+				}
+			}
+
+			// publish count
+			payload = val.Len()
+		}
 	}
 
 	// publish vehicles
@@ -200,12 +214,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 
 		// value
-		if p.Subkey != nil {
-			topic += "/" + *p.Subkey
-			m.publish(topic, true, p.Val, &p.Key)
-		} else {
-			topic += "/" + p.Key
-			m.publish(topic, true, p.Val)
-		}
+		topic += "/" + p.Key
+		m.publish(topic, true, p.Val)
 	}
 }

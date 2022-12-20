@@ -16,8 +16,4 @@ func TestParam(t *testing.T) {
 
 	p.LoadPoint = &lp
 	assert.Equal(t, "2.power", p.UniqueID())
-
-	subkey := "pv"
-	p.Subkey = &subkey
-	assert.Equal(t, "2.pv.power", p.UniqueID())
 }
