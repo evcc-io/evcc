@@ -324,6 +324,40 @@ func (lp *LoadPoint) GetRemainingEnergy() float64 {
 	return lp.chargeRemainingEnergy
 }
 
+// GetEnableThreshold is the threshold to enable in W
+func (lp *LoadPoint) GetEnableThreshold() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.Enable.Threshold
+}
+
+// SetEnableThreshold sets the threshold to enable in W
+func (lp *LoadPoint) SetEnableThreshold(enableThreshold float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.Enable.Threshold != enableThreshold {
+		lp.Enable.Threshold = enableThreshold
+	}
+}
+
+// GetDisableThreshold is the threshold to disable in W
+func (lp *LoadPoint) GetDisableThreshold() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.Disable.Threshold
+}
+
+// SetDisableThreshold sets the threshold to enable in W
+func (lp *LoadPoint) SetDisableThreshold(disableThreshold float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.Disable.Threshold != disableThreshold {
+		lp.Disable.Threshold = disableThreshold
+	}
+}
+
 // SetVehicle sets the active vehicle
 func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
 	// TODO develop universal locking approach

@@ -75,6 +75,19 @@ type API interface {
 	GetMaxPower() float64
 
 	//
+	// enable and disable threshold
+	//
+
+	// GetEnableThreshold is the threshold to enable in W
+	GetEnableThreshold() float64
+	// SetEnableThreshold sets the threshold to enable in W
+	SetEnableThreshold(float64)
+	// GetDisableThreshold is the threshold to disable in W
+	GetDisableThreshold() float64
+	// SetDisableThreshold sets the threshold to enable in W
+	SetDisableThreshold(float64)
+
+	//
 	// charge progress
 	//
 
