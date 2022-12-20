@@ -27,12 +27,15 @@ type Updater interface {
 	Update(availablePower float64, cheapRate, batteryBuffered bool)
 }
 
+// meterMeasurement is used as slice element for publishing structured data
 type meterMeasurement struct {
-	Power float64
+	Power float64 `json:"power"`
 }
 
+// batteryMeasurement is used as slice element for publishing structured data
 type batteryMeasurement struct {
-	Power, Soc float64
+	Power float64 `json:"power"`
+	Soc   float64 `json:"soc"`
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
