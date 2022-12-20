@@ -71,7 +71,7 @@ greenEnergySub2 = "since October 2022"
 
 [footer.telemetry]
 optIn = "I want to contribute my data."
-optInMoreDetails = "More details at {0}."
+optInMoreDetails = "More details {0}."
 optInMoreDetailsLink = "here"
 optInSponsorship = "Sponsoring required."
 
