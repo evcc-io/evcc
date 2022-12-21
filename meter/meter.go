@@ -13,15 +13,16 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() (float64, error)"
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
-		Power    provider.Config
-		Energy   *provider.Config  // optional
-		SoC      *provider.Config  // optional
-		Currents []provider.Config // optional
+		Capacity_ *float64 `mapstructure:"capacity"`
+		Power     provider.Config
+		Energy    *provider.Config  // optional
+		SoC       *provider.Config  // optional
+		Currents  []provider.Config // optional
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -33,7 +34,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		return nil, fmt.Errorf("power: %w", err)
 	}
 
-	m, _ := NewConfigurable(power)
+	m, _ := NewConfigurable(cc.Capacity_, power)
 
 	// decorate Meter with MeterEnergy
 	var totalEnergyG func() (float64, error)
@@ -96,8 +97,10 @@ func collectCurrentProviders(g []func() (float64, error)) func() (float64, float
 }
 
 // NewConfigurable creates a new meter
-func NewConfigurable(currentPowerG func() (float64, error)) (*Meter, error) {
+func NewConfigurable(capacity *float64, currentPowerG func() (float64, error)) (*Meter, error) {
+
 	m := &Meter{
+		capacity:      capacity,
 		currentPowerG: currentPowerG,
 	}
 	return m, nil
@@ -105,6 +108,7 @@ func NewConfigurable(currentPowerG func() (float64, error)) (*Meter, error) {
 
 // Meter is an api.Meter implementation with configurable getters and setters.
 type Meter struct {
+	capacity      *float64
 	currentPowerG func() (float64, error)
 }
 
@@ -114,10 +118,32 @@ func (m *Meter) Decorate(
 	currents func() (float64, float64, float64, error),
 	batterySoC func() (float64, error),
 ) api.Meter {
-	return decorateMeter(m, totalEnergy, currents, batterySoC)
+
+	var capacityG func() (float64, error)
+
+	if _, ok := m.Capacity(); ok == nil {
+		capacityG = func() (res float64, err error) {
+			return m.Capacity()
+		}
+	} else {
+		capacityG = nil
+	}
+
+	return decorateMeter(m, totalEnergy, currents, batterySoC, capacityG)
 }
 
 // CurrentPower implements the api.Meter interface
 func (m *Meter) CurrentPower() (float64, error) {
 	return m.currentPowerG()
+}
+
+var _ api.BatteryCapacity = (*Meter)(nil)
+
+// Capacity implements the api.BatteryCapacity interface
+func (m *Meter) Capacity() (float64, error) {
+	if m.capacity != nil {
+		return *m.capacity, nil
+	} else {
+		return 0, api.ErrNotAvailable
+	}
 }

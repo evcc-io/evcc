@@ -46,8 +46,24 @@ meters:
       vm: shared
       script: state.pvpower;
 
-  - name: battery
+  - name: battery1
     type: custom
+    power:
+      source: js
+      vm: shared
+      script: state.batterypower;
+    soc:
+      source: js
+      vm: shared
+      script: |
+        if (state.batterypower < 0) state.batterySoC++; else state.batterySoC--;
+        if (state.batterySoC < 5) state.batterySoC = 99;
+        if (state.batterySoC > 99) state.batterySoC = 5;
+        state.batterySoC;
+        
+  - name: battery2
+    type: custom
+    capacity: 100
     power:
       source: js
       vm: shared
@@ -213,7 +229,9 @@ site:
   meters:
     grid: grid
     pv: pv
-    battery: battery
+    batteries: 
+      - battery1
+      - battery2
 
 loadpoints:
   - title: Carport

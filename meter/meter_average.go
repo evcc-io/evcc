@@ -14,8 +14,9 @@ func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error)
 	cc := struct {
 		Decay float64
 		Meter struct {
-			Type  string
-			Other map[string]interface{} `mapstructure:",remain"`
+			Capacity *float64 `mapstructure:"capacity"`
+			Type     string
+			Other    map[string]interface{} `mapstructure:",remain"`
 		}
 	}{
 		Decay: 0.1,
@@ -35,7 +36,7 @@ func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error)
 		currentPowerG: m.CurrentPower,
 	}
 
-	meter, _ := NewConfigurable(mav.CurrentPower)
+	meter, _ := NewConfigurable(cc.Meter.Capacity, mav.CurrentPower)
 
 	// decorate energy reading
 	var totalEnergy func() (float64, error)

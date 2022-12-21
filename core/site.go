@@ -61,6 +61,9 @@ type Site struct {
 	pvPower         float64 // PV power
 	batteryPower    float64 // Battery charge power
 	batteryBuffered bool    // Battery buffer active
+
+	// Constats
+	sumBatteryCapacity float64 // The sum of all Battery meters. Used to speed up SoC calculation
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -157,6 +160,7 @@ func NewSiteFromConfig(
 		site.pvMeters = append(site.pvMeters, pv)
 	}
 
+	site.sumBatteryCapacity = 0
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
 		battery, err := cp.Meter(ref)
@@ -164,6 +168,17 @@ func NewSiteFromConfig(
 			return nil, err
 		}
 		site.batteryMeters = append(site.batteryMeters, battery)
+		if capacity, ok := battery.(api.BatteryCapacity); ok {
+			if value, err := capacity.Capacity(); err == nil {
+				site.sumBatteryCapacity += value
+			} else {
+				site.log.WARN.Printf("Battery meter %d did not return a capacity. SoC calculation might be incorrect", len(site.batteryMeters))
+				site.sumBatteryCapacity += 1
+			}
+		} else {
+			site.log.WARN.Printf("Battery meter %d has no capacity set. SoC calculation might be incorrect", len(site.batteryMeters))
+			site.sumBatteryCapacity += 1
+		}
 	}
 
 	// single battery
@@ -176,7 +191,21 @@ func NewSiteFromConfig(
 			return nil, err
 		}
 		site.batteryMeters = append(site.batteryMeters, battery)
+		if capacity, ok := battery.(api.BatteryCapacity); ok {
+			if value, err := capacity.Capacity(); err == nil {
+				site.sumBatteryCapacity = value
+			}
+		}
 	}
+
+	if site.sumBatteryCapacity == 0 {
+		// None of the batteries has a capacity given.
+		// Therefore, we assume a capacity of 1, which results in the mean SOC of all batteries
+		// Shouldn't happen, becaus we already added 1, but you never know....
+		site.sumBatteryCapacity = float64(len(site.batteryMeters))
+	}
+
+	site.log.DEBUG.Printf("Site overall battery capacity: %.2f", site.sumBatteryCapacity)
 
 	// configure meter from references
 	if site.gridMeter == nil && len(site.pvMeters) == 0 {
@@ -248,11 +277,18 @@ func (site *Site) DumpConfig() {
 	}
 
 	if len(site.batteryMeters) > 0 {
+
 		for i, battery := range site.batteryMeters {
 			_, ok := battery.(api.Battery)
+			site.log.INFO.Printf("    Battery %d:", i+1)
+			Capacity, hasCapacity := battery.(api.BatteryCapacity)
+			if hasCapacity {
+				capacity, _ := Capacity.Capacity()
+				site.log.INFO.Printf("       Capacity:     %f", capacity)
+			}
 			site.log.INFO.Println(
-				meterCapabilities(fmt.Sprintf("battery %d", i+1), battery),
-				fmt.Sprintf("soc %s", presence[ok]),
+				meterCapabilities("   Capabilities", battery),
+				fmt.Sprintf("soc %s Capacity %s", presence[ok], presence[hasCapacity]),
 			)
 		}
 	}
@@ -261,13 +297,17 @@ func (site *Site) DumpConfig() {
 		site.log.INFO.Println("  vehicles:")
 
 		for i, v := range vehicles {
+			var capacity float64
 			_, rng := v.(api.VehicleRange)
 			_, finish := v.(api.VehicleFinishTimer)
 			_, status := v.(api.ChargeState)
 			_, climate := v.(api.VehicleClimater)
 			_, wakeup := v.(api.Resurrector)
-			site.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s wakeup %s",
-				i+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
+			capacity, _ = v.Capacity()
+			site.log.INFO.Printf("    vehicle %d:", i+1)
+			site.log.INFO.Printf("       Capacity:     %f", capacity)
+			site.log.INFO.Printf("       Capabilities: range %s finish %s status %s climate %s wakeup %s",
+				presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
 			)
 		}
 	}
@@ -444,11 +484,22 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 				err = fmt.Errorf("battery soc %d: %v", id, err)
 				site.log.ERROR.Println(err)
 			} else {
-				site.log.DEBUG.Printf("battery soc %d: %.0f%%", id, soc)
-				socs += soc / float64(len(site.batteryMeters))
+				var remainingCapacity float64
+				remainingCapacity = soc
+				site.log.DEBUG.Printf("battery %d SoC: %.0f%%", id, soc)
+				if capacity, ok := battery.(api.BatteryCapacity); ok {
+					if value, err := capacity.Capacity(); err == nil {
+						remainingCapacity *= value
+					}
+				}
+				site.log.DEBUG.Printf("battery %d remainingCapacity: %.2f Wh", id, remainingCapacity/100)
+				socs += remainingCapacity
 			}
 		}
+
+		socs /= site.sumBatteryCapacity
 		site.publish("batterySoC", math.Round(socs))
+		site.log.DEBUG.Printf("Overall SoC: %.2f%%", socs)
 
 		site.Lock()
 		defer site.Unlock()

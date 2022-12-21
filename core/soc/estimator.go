@@ -45,10 +45,12 @@ func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, es
 
 // Reset resets the estimation process to default values
 func (s *Estimator) Reset() {
+	var capacity float64
 	s.prevSoc = 0
 	s.prevChargedEnergy = 0
 	s.initialSoc = 0
-	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
+	capacity, _ = s.vehicle.Capacity()
+	s.capacity = capacity * 1e3                       // cache to simplify debugging
 	s.virtualCapacity = s.capacity / chargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
 }
