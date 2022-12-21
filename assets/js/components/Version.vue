@@ -13,9 +13,8 @@
 		<button
 			v-else-if="newVersionAvailable"
 			href="#"
-			data-bs-toggle="modal"
-			data-bs-target="#updateModal"
 			class="btn btn-link ps-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
+			@click="openModal"
 		>
 			<shopicon-regular-gift class="me-2"></shopicon-regular-gift>
 			v{{ installed }}
@@ -131,11 +130,11 @@
 </template>
 
 <script>
-import api from "../api";
-import Logo from "./Logo.vue";
-
+import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
+import api from "../api";
+import Logo from "./Logo.vue";
 
 export default {
 	name: "Version",
@@ -180,6 +179,10 @@ export default {
 		},
 		releaseNotesUrl: function (version) {
 			return `https://github.com/evcc-io/evcc/releases/tag/${version}`;
+		},
+		openModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("updateModal"));
+			modal.show();
 		},
 	},
 };

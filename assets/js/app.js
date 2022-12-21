@@ -1,11 +1,9 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap";
 import smoothscroll from "smoothscroll-polyfill";
 import "../css/app.css";
 import { createApp, h } from "vue";
 import { createMetaManager, plugin as metaPlugin } from "vue-meta";
 import App from "./views/App.vue";
-import VueNumber from "vue-number-animation";
 import setupRouter from "./router";
 import setupI18n from "./i18n";
 import featureflags from "./featureflags";
@@ -70,7 +68,6 @@ app.use(setupRouter(i18n));
 app.use(createMetaManager());
 app.use(metaPlugin);
 app.use(featureflags);
-app.use(VueNumber);
 window.app = app.mount("#app");
 
 watchThemeChanges();

@@ -75,7 +75,7 @@ export default {
 			}
 			try {
 				const response = await api.get("settings/telemetry");
-				this.enabled = response.data.result;
+				settings.telemetry = response.data.result;
 			} catch (err) {
 				console.error(err);
 			}

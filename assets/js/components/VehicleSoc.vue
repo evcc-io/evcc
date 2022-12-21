@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import { Tooltip } from "bootstrap";
+import Tooltip from "bootstrap/js/dist/tooltip";
 
 export default {
 	name: "VehicleSoc",

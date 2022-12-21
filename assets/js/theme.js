@@ -1,6 +1,6 @@
 import settings from "./settings";
 
-const darkModeMatcher = window.matchMedia("(prefers-color-scheme: dark)");
+const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 
 const THEME_AUTO = "auto";
 const THEME_LIGHT = "light";
@@ -27,7 +27,7 @@ function updateTheme() {
   let theme = getThemePreference();
 
   if (theme === THEME_AUTO) {
-    theme = darkModeMatcher.matches ? THEME_DARK : THEME_LIGHT;
+    theme = darkModeMatcher?.matches ? THEME_DARK : THEME_LIGHT;
   }
 
   // update iOS title bar color
@@ -47,6 +47,6 @@ function updateTheme() {
 }
 
 export function watchThemeChanges() {
-  darkModeMatcher.addEventListener("change", updateTheme);
+  darkModeMatcher?.addEventListener("change", updateTheme);
   updateTheme();
 }
