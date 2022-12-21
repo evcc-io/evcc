@@ -2,7 +2,7 @@ product:
   brand: Tesla
   description: TWC3
 description: |
-  Der Tesla muss dem TWC3 im evcc UI zugewiesen sein.
+  Das Teslafahrzeug muss dem TWC3 im evcc UI zugewiesen sein.
 render:
   - default: |
       type: template
