@@ -235,7 +235,7 @@ auto = Automatiškai
 
 [settings.unit]
 label = Vienetai
-km = kilometrai
+km = km
 mi = mylios
 
 [settings.telemetry]
