@@ -6,23 +6,20 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateGoE(base *GoE, meterEnergy func() (float64, error), phaseSwitcher func(phases int) error) api.Charger {
+func decorateGoE(base *GoE, phaseSwitcher func(phases int) error) api.Charger {
 	switch {
-	case phaseSwitcher == nil && meterEnergy == nil:
+	case phaseSwitcher == nil:
 		return base
 
-	case phaseSwitcher == nil && meterEnergy != nil:
+	case phaseSwitcher == nil:
 		return &struct {
 			*GoE
 			api.MeterEnergy
 		}{
 			GoE: base,
-			MeterEnergy: &decorateGoEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case phaseSwitcher != nil && meterEnergy == nil:
+	case phaseSwitcher != nil:
 		return &struct {
 			*GoE
 			api.PhaseSwitcher
@@ -33,7 +30,7 @@ func decorateGoE(base *GoE, meterEnergy func() (float64, error), phaseSwitcher f
 			},
 		}
 
-	case phaseSwitcher != nil && meterEnergy != nil:
+	case phaseSwitcher != nil:
 		return &struct {
 			*GoE
 			api.PhaseSwitcher
@@ -42,9 +39,6 @@ func decorateGoE(base *GoE, meterEnergy func() (float64, error), phaseSwitcher f
 			GoE: base,
 			PhaseSwitcher: &decorateGoEPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
-			},
-			MeterEnergy: &decorateGoEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 		}
 	}
@@ -58,12 +52,4 @@ type decorateGoEPhaseSwitcherImpl struct {
 
 func (impl *decorateGoEPhaseSwitcherImpl) Phases1p3p(phases int) error {
 	return impl.phaseSwitcher(phases)
-}
-
-type decorateGoEMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateGoEMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }

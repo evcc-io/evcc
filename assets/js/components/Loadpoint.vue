@@ -149,6 +149,7 @@ export default {
 		vehicleRange: Number,
 		vehicleSoC: Number,
 		vehicleTitle: String,
+		vehicleIcon: String,
 		vehicleTargetSoC: Number,
 		vehicleCapacity: Number,
 		vehicleFeatureOffline: Boolean,
@@ -325,7 +326,8 @@ export default {
 	opacity: 0.5;
 	margin: 0 -1rem;
 }
-@media (--sm-and-up) {
+/* breakpoint sm */
+@media (min-width: 576px) {
 	.divider {
 		margin: 0 -1.5rem;
 	}

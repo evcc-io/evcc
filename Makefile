@@ -60,7 +60,7 @@ test-ui::
 
 test::
 	@echo "Running testsuite"
-	go test $(BUILD_TAGS) ./...
+	CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
 
 porcelain::
 	gofmt -w -l $$(find . -name '*.go')
@@ -69,7 +69,7 @@ porcelain::
 
 build::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
+	CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 snapshot:
 	goreleaser --snapshot --skip-publish --rm-dist
@@ -110,6 +110,8 @@ gokrazy::
 	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
 	mkdir -p flags/github.com/evcc-io/evcc
 	echo "--sqlite=/perm/evcc.db" > flags/github.com/evcc-io/evcc/flags.txt
+	mkdir -p env/github.com/evcc-io/evcc
+	echo "EVCC_NETWORK_PORT=80" > env/github.com/evcc-io/evcc/env.txt
 	mkdir -p buildflags/github.com/evcc-io/evcc
 	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
 	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt

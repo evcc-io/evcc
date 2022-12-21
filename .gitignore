@@ -30,3 +30,4 @@ fly.toml
 .idea
 vendor/*
 QEMU_EFI.fd
+asset-stats.html

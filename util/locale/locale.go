@@ -2,10 +2,11 @@ package locale
 
 import (
 	"fmt"
+	"io/fs"
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
-	assets "github.com/evcc-io/evcc/assets/i18n"
+	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util/locale/internal"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
@@ -25,13 +26,13 @@ func Init() error {
 	Bundle = i18n.NewBundle(language.English)
 	Bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 
-	dir, err := assets.LocaleFS.ReadDir(".")
+	dir, err := fs.ReadDir(assets.I18n, ".")
 	if err != nil {
 		panic(err)
 	}
 
 	for _, d := range dir {
-		if _, err := Bundle.LoadMessageFileFS(assets.LocaleFS, d.Name()); err != nil {
+		if _, err := Bundle.LoadMessageFileFS(assets.I18n, d.Name()); err != nil {
 			return fmt.Errorf("loading locales failed: %w", err)
 		}
 	}

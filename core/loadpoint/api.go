@@ -49,7 +49,7 @@ type API interface {
 	SetPhases(int) error
 
 	// SetTargetCharge sets the charge targetSoC
-	SetTargetCharge(time.Time, int)
+	SetTargetCharge(time.Time, int) error
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
 

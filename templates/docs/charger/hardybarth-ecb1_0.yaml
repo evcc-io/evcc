@@ -2,6 +2,8 @@ product:
   brand: HardyBarth
   description: cPH1
 requirements: ["sponsorship"]
+description: |
+  Als Betriebsmodus muss `manual` ausgewählt sein
 render:
   - default: |
       type: template

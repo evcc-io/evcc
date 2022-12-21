@@ -16,6 +16,7 @@ var Instance *gorm.DB
 
 func New(driver, dsn string) (*gorm.DB, error) {
 	var dialect gorm.Dialector
+	log := util.NewLogger("db")
 
 	switch driver {
 	case "sqlite":
@@ -26,6 +27,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		if err := os.MkdirAll(filepath.Dir(file), os.ModePerm); err != nil {
 			return nil, err
 		}
+		log.INFO.Println("using sqlite database:", file)
 		// avoid busy errors
 		dialect = sqlite.Open(file + "?_pragma=busy_timeout(5000)")
 	// case "postgres":
@@ -37,7 +39,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 	}
 
 	return gorm.Open(dialect, &gorm.Config{
-		Logger: &Logger{util.NewLogger("db")},
+		Logger: &Logger{log},
 	})
 }
 

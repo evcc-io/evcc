@@ -20,7 +20,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -218,12 +217,12 @@ func (wb *KSE) Currents() (float64, float64, float64, error) {
 
 // Identify implements the api.Identifier interface
 func (wb *KSE) identify() (string, error) {
-	id, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4)
+	b, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4)
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimSpace(string(id)), nil
+	return bytesAsString(b), nil
 }
 
 var _ api.Diagnosis = (*KSE)(nil)

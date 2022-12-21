@@ -10,7 +10,7 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/server/auth"
+	"github.com/evcc-io/evcc/server/oauth2redirect"
 	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
@@ -93,7 +93,7 @@ func (v *Identity) SetCallbackParams(baseURL, redirectURL string, authC chan<- b
 
 func (v *Identity) LoginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		state := auth.Register(v.callbackHandler)
+		state := oauth2redirect.Register(v.callbackHandler)
 
 		b, _ := json.Marshal(struct {
 			LoginUri string `json:"loginUri"`

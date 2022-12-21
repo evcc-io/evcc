@@ -13,6 +13,9 @@ params:
     valuetype: float
   - name: phases
     advanced: true
+  - name: icon
+    default: car
+    advanced: true
   - preset: vehicleidentify
 render: |
   type: custom

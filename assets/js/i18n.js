@@ -1,12 +1,24 @@
+import toml from "toml";
+import { nextTick } from "vue";
 import { createI18n } from "vue-i18n";
-import de from "../i18n/de.toml";
-import en from "../i18n/en.toml";
-import it from "../i18n/it.toml";
-import lt from "../i18n/lt.toml";
-import nl from "../i18n/nl.toml";
-import pl from "../i18n/pl.toml";
+import en from "../../i18n/en.toml";
+import { i18n as i18nApi } from "./api";
+import settings from "./settings";
 
-const PREFERRED_LOCALE_KEY = "preferred_locale";
+// https://github.com/joker-x/languages.js/blob/master/languages.json
+export const LOCALES = {
+  de: ["German", "Deutsch"],
+  en: ["English", "English"],
+  es: ["Spanish", "Español"],
+  fr: ["French", "Français"],
+  it: ["Italian", "Italiano"],
+  lb: ["Luxembourgish", "Lëtzebuergesch"],
+  lt: ["Lithuanian", "Lietuvių"],
+  nl: ["Dutch", "Nederlands"],
+  no: ["Norwegian", "Norsk"],
+  pl: ["Polish", "Polski"],
+  pt: ["Portuguese", "Português"],
+};
 
 function getBrowserLocale() {
   const navigatorLocale =
@@ -17,8 +29,62 @@ function getBrowserLocale() {
   return navigatorLocale.trim().split(/-|_/)[0];
 }
 
-export default createI18n({
-  locale: window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale(),
-  fallbackLocale: "en",
-  messages: { de, en, it, lt, nl, pl },
-});
+export function getLocalePreference() {
+  return settings.locale;
+}
+
+export function removeLocalePreference(i18n) {
+  settings.locale = null;
+  setI18nLanguage(i18n, getBrowserLocale());
+}
+
+export function setLocalePreference(i18n, locale) {
+  if (!LOCALES[locale]) {
+    console.error("unknown locale", locale);
+    return;
+  }
+  settings.locale = locale;
+  setI18nLanguage(i18n, locale);
+  ensureCurrentLocaleMessages(i18n);
+}
+
+function getLocale() {
+  return getLocalePreference() || getBrowserLocale();
+}
+
+export default function setupI18n() {
+  const i18n = createI18n({
+    legacy: true,
+    silentFallbackWarn: true,
+    silentTranslationWarn: true,
+    locale: "en",
+    fallbackLocale: "en",
+    messages: { en },
+  });
+  setI18nLanguage(i18n.global, getLocale());
+  return i18n;
+}
+
+export function setI18nLanguage(i18n, locale) {
+  i18n.locale = locale;
+  document.querySelector("html").setAttribute("lang", locale);
+}
+
+async function loadLocaleMessages(i18n, locale) {
+  try {
+    const response = await i18nApi.get(`${locale}.toml`, { params: { v: window.evcc?.version } });
+    const messages = toml.parse(response.data);
+    i18n.setLocaleMessage(locale, messages);
+  } catch (e) {
+    console.error(`unable to load translation for [${locale}]`, e);
+  }
+
+  return nextTick();
+}
+
+export async function ensureCurrentLocaleMessages(i18n) {
+  const { locale } = i18n;
+  if (!i18n.availableLocales.includes(locale)) {
+    await loadLocaleMessages(i18n, locale);
+  }
+}

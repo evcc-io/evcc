@@ -2,8 +2,10 @@ import axios from "axios";
 
 const { protocol, hostname, port, pathname } = window.location;
 
+const base = protocol + "//" + hostname + (port ? ":" + port : "") + pathname;
+
 const api = axios.create({
-  baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname + "api/",
+  baseURL: base + "api/",
   headers: {
     Accept: "application/json",
   },
@@ -19,4 +21,12 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 export default api;
+
+export const i18n = axios.create({
+  baseURL: base + "i18n/",
+  headers: {
+    Accept: "application/toml",
+  },
+});

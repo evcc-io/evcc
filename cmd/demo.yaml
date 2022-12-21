@@ -164,7 +164,6 @@ vehicles:
     capacity: 44
     onidentify:
       targetsoc: 90
-
   - name: vehicle_2
     title: weißes Model 3
     type: custom
@@ -196,7 +195,18 @@ vehicles:
     type: template
     template: offline
     title: grüner Honda e
-    capacity: 9
+    capacity: 8
+  - name: vehicle_4
+    type: template
+    template: offline
+    title: schwarzes VanMoof
+    icon: bike
+    capacity: 0.46
+  - name: vehicle_5
+    type: template
+    template: offline
+    title: Wärmepumpe
+    icon: waterheater
 
 site:
   title: Zuhause
@@ -211,8 +221,9 @@ loadpoints:
     mode: pv
     phases: 1
     meter: meter_charger_1
-    # vehicle: vehicle_1 # default
+    vehicle: vehicle_1
   - title: Garage
     charger: charger_2
     mode: "off"
     meter: meter_charger_2
+    vehicle: vehicle_2

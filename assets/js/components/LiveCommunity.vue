@@ -5,8 +5,7 @@
 			icon="car"
 			:title="$t('footer.community.power')"
 			:value="chargePower"
-			:valueFmt="numberAnimationFmt"
-			:animationDuration="animationDuration"
+			:valueFmt="fmtAnimation"
 			unit="kW"
 			:sub1="$t('footer.community.powerSub1', { totalClients, activeClients })"
 			:sub2="$t('footer.community.powerSub2')"
@@ -17,8 +16,7 @@
 			icon="sun"
 			:title="$t('footer.community.greenShare')"
 			:value="greenShare"
-			:valueFmt="numberAnimationFmt"
-			:animationDuration="animationDuration"
+			:valueFmt="fmtAnimationDecimal"
 			unit="%"
 			:sub1="$t('footer.community.greenShareSub1')"
 			:sub2="$t('footer.community.greenShareSub2')"
@@ -29,8 +27,7 @@
 			icon="eco"
 			:title="$t('footer.community.greenEnergy')"
 			:value="greenEnergyMWh"
-			:valueFmt="numberAnimationFmt"
-			:animationDuration="animationDuration"
+			:valueFmt="fmtAnimationDecimal"
 			unit="MWh"
 			:sub1="$t('footer.community.greenEnergySub1')"
 			:sub2="$t('footer.community.greenEnergySub2')"
@@ -55,7 +52,6 @@ export default {
 		return {
 			refresh: null,
 			result: {},
-			animationDuration: 0.5,
 		};
 	},
 	computed: {
@@ -84,9 +80,6 @@ export default {
 	async mounted() {
 		this.refresh = setInterval(this.update, UPDATE_INTERVAL_SECONDS * 1e3);
 		await this.update();
-		this.$nextTick(() => {
-			this.animationDuration = UPDATE_INTERVAL_SECONDS;
-		});
 	},
 	unmounted() {
 		clearInterval(this.refresh);
@@ -100,7 +93,10 @@ export default {
 				console.error(err);
 			}
 		},
-		numberAnimationFmt(number) {
+		fmtAnimation(number) {
+			return this.fmtNumber(number, 0);
+		},
+		fmtAnimationDecimal(number) {
 			return this.fmtNumber(number, 1);
 		},
 	},

@@ -47,6 +47,9 @@
           "title": {
             "type": "string"
           },
+          "icon": {
+            "type": "string"
+          },
           "capacity": {
             "type": "integer"
           },
@@ -87,9 +90,7 @@
     },
     "site": {
       "type": "object",
-      "required": [
-        "meters"
-      ],
+      "required": ["meters"],
       "properties": {
         "title": {
           "type": "string"
@@ -135,9 +136,7 @@
       "description": "List of loadpoints",
       "items": {
         "type": "object",
-        "required": [
-          "charger"
-        ],
+        "required": ["charger"],
         "properties": {
           "title": {
             "type": "string"
@@ -221,10 +220,7 @@
     },
     "namedObject": {
       "type": "object",
-      "required": [
-        "name",
-        "type"
-      ],
+      "required": ["name", "type"],
       "properties": {
         "name": {
           "type": "string"
@@ -238,28 +234,13 @@
       }
     },
     "loglevel": {
-      "enum": [
-        "trace",
-        "debug",
-        "info",
-        "error",
-        "fatal"
-      ]
+      "enum": ["trace", "debug", "info", "error", "fatal"]
     },
     "mode": {
-      "enum": [
-        "off",
-        "now",
-        "pv",
-        "minpv"
-      ]
+      "enum": ["off", "now", "pv", "minpv"]
     },
     "pollMode": {
-      "enum": [
-        "always",
-        "charging",
-        "connected"
-      ]
+      "enum": ["always", "charging", "connected"]
     }
   }
 }

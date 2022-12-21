@@ -164,13 +164,15 @@ type Authorizer interface {
 type Vehicle interface {
 	Battery
 	Title() string
+	Icon() string
 	Capacity() float64
 	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
 }
 
-// VehicleFinishTimer provides estimated charge cycle finish time
+// VehicleFinishTimer provides estimated charge cycle finish time.
+// Finish time is normalized for charging to 100% and may deviate from vehicle display if soc limit is effective.
 type VehicleFinishTimer interface {
 	FinishTime() (time.Time, error)
 }

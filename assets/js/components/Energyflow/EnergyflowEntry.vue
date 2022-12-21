@@ -2,6 +2,7 @@
 	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'evcc-gray': !active }">
 		<span class="d-flex flex-nowrap">
 			<BatteryIcon v-if="isBattery" :soc="soc" />
+			<VehicleIcon v-else-if="isVehicle" :names="vehicleIcons" />
 			<component :is="`shopicon-regular-${icon}`" v-else></component>
 		</span>
 		<span class="text-nowrap flex-grow-1 ms-3">{{ name }}</span>
@@ -16,14 +17,14 @@
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
-import "@h2d2/shopicons/es/regular/car3";
 import BatteryIcon from "./BatteryIcon.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
+import VehicleIcon from "../VehicleIcon";
 
 export default {
 	name: "EnergyflowEntry",
-	components: { BatteryIcon, AnimatedNumber },
+	components: { BatteryIcon, AnimatedNumber, VehicleIcon },
 	mixins: [formatter],
 	props: {
 		name: { type: String },
@@ -31,6 +32,7 @@ export default {
 		power: { type: Number },
 		soc: { type: Number },
 		valuesInKw: { type: Boolean },
+		vehicleIcons: { type: Array },
 	},
 	computed: {
 		active: function () {
@@ -38,6 +40,9 @@ export default {
 		},
 		isBattery: function () {
 			return this.icon === "battery";
+		},
+		isVehicle: function () {
+			return this.icon === "vehicle";
 		},
 		hasSoC: function () {
 			return this.isBattery && !isNaN(this.soc);

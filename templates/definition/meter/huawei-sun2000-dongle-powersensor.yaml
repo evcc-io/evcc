@@ -94,6 +94,6 @@ render: |
     register:
       address: 37004
       type: holding
-      decode: uint16
+      decode: uint16nan
     scale: 0.1
   {{- end }}

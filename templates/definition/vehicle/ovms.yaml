@@ -20,11 +20,17 @@ params:
     default: 12
   - name: phases
     advanced: true
+  - name: icon
+    default: car
+    advanced: true
   - preset: vehicleidentify
 render: |
   type: ovms
   {{- if ne .title "" }}
   title: {{ .title }}
+  {{- end }}
+  {{- if ne .icon "" }}
+  icon: {{ .icon }}
   {{- end }}
   user: {{ .user }}
   password: {{ .password }}

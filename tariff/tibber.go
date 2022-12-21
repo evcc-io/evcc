@@ -35,6 +35,10 @@ func NewTibber(other map[string]interface{}) (*Tibber, error) {
 		return nil, err
 	}
 
+	if cc.Token == "" {
+		return nil, errors.New("missing token")
+	}
+
 	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)
 
 	t := &Tibber{

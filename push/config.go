@@ -37,6 +37,11 @@ func NewMessengerFromConfig(typ string, other map[string]interface{}) (res Sende
 		if err = util.DecodeOther(other, &cc); err == nil {
 			res, err = NewScriptMessenger(cc.CmdLine, cc.Timeout, cc.Scale, cc.Cache)
 		}
+	case "ntfy":
+		var cc ntfyConfig
+		if err = util.DecodeOther(other, &cc); err == nil {
+			res, err = NewNtfyMessenger(cc.URI, cc.Priority, cc.Tags)
+		}
 	default:
 		err = fmt.Errorf("unknown messenger type: %s", typ)
 	}

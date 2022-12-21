@@ -24,8 +24,6 @@ import (
 	"github.com/avast/retry-go/v3"
 	"github.com/benbjohnson/clock"
 	"github.com/cjrd/allocate"
-	"github.com/emirpasic/gods/queues"
-	aq "github.com/emirpasic/gods/queues/arrayqueue"
 )
 
 const (
@@ -88,6 +86,9 @@ type ThresholdConfig struct {
 	Delay     time.Duration
 	Threshold float64
 }
+
+// Task is the task type
+type Task = func()
 
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
@@ -162,7 +163,7 @@ type LoadPoint struct {
 	db      db.Database
 	session *db.Session
 
-	tasks queues.Queue // tasks to be executed
+	tasks *util.Queue[Task] // tasks to be executed
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -283,7 +284,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		GuardDuration: 5 * time.Minute,
 		progress:      NewProgress(0, 10),     // soc progress indicator
 		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
-		tasks:         aq.New(),               // task queue
+		tasks:         util.NewQueue[Task](),  // task queue
 	}
 
 	// allow target charge handler to access loadpoint
@@ -387,7 +388,12 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	lp.startSession()
+	// set created when first charging session segment starts
+	lp.updateSession(func(session *db.Session) {
+		if session.Created.IsZero() {
+			session.Created = lp.clock.Now()
+		}
+	})
 }
 
 // evChargeStopHandler sends external stop event
@@ -432,15 +438,17 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
+
+	// create charging session
+	lp.createSession()
 }
 
 // evVehicleDisconnectHandler sends external start event
 func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.log.INFO.Println("car disconnected")
 
-	// ensure session is persisted and closed before vehicle is changed
-	lp.stopSession()
-	lp.finalizeSession()
+	// session is persisted during evChargeStopHandler which runs before
+	lp.clearSession()
 
 	// phases are unknown when vehicle disconnects
 	lp.resetMeasuredPhases()
@@ -876,6 +884,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())
+		lp.publish("vehicleIcon", lp.vehicle.Icon())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
 		// unblock api
@@ -891,6 +900,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 		lp.publish("vehiclePresent", false)
 		lp.publish("vehicleTitle", "")
+		lp.publish("vehicleIcon", "")
 		lp.publish("vehicleCapacity", int64(0))
 		lp.publish(vehicleOdometer, 0.0)
 	}
@@ -1026,9 +1036,7 @@ func (lp *LoadPoint) identifyVehicleByStatus() {
 		return
 	}
 
-	_, ok := lp.charger.(api.Identifier)
-
-	if vehicle := lp.coordinator.IdentifyVehicleByStatus(!ok); vehicle != nil {
+	if vehicle := lp.coordinator.IdentifyVehicleByStatus(); vehicle != nil {
 		lp.stopVehicleDetection()
 		lp.setActiveVehicle(vehicle)
 		return
@@ -1601,16 +1609,32 @@ func (lp *LoadPoint) publishSoCAndRange() {
 		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
 		lp.publish("vehicleSoC", lp.vehicleSoc)
 
+		// vehicle target soc
+		targetSoC := 100.0
+		if vs, ok := lp.vehicle.(api.SocLimiter); ok {
+			var err error
+			if targetSoC, err = vs.TargetSoC(); err == nil {
+				lp.log.DEBUG.Printf("vehicle target soc: %.0f%%", targetSoC)
+				lp.publish(vehicleTargetSoC, targetSoC)
+			}
+		}
+
+		// use minimum of vehicle and loadpoint
+		socLimit := int(math.Round(targetSoC))
+		if lp.SoC.target < socLimit {
+			socLimit = lp.SoC.target
+		}
+
 		if se := lp.socEstimator; se != nil {
 			if lp.charging() {
-				lp.setRemainingDuration(se.RemainingChargeDuration(lp.chargePower, lp.SoC.target))
+				lp.setRemainingDuration(se.RemainingChargeDuration(lp.chargePower, socLimit))
 			} else {
 				lp.setRemainingDuration(-1)
 			}
 		}
 
 		if se := lp.socEstimator; se != nil {
-			lp.setRemainingEnergy(1e3 * se.RemainingChargeEnergy(lp.SoC.target))
+			lp.setRemainingEnergy(1e3 * se.RemainingChargeEnergy(socLimit))
 		}
 
 		// range
@@ -1618,14 +1642,6 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.publish(vehicleRange, rng)
-			}
-		}
-
-		// vehicle target soc
-		if vs, ok := lp.vehicle.(api.SocLimiter); ok {
-			if targetSoC, err := vs.TargetSoC(); err == nil {
-				lp.log.DEBUG.Printf("vehicle target soc: %.0f%%", targetSoC)
-				lp.publish(vehicleTargetSoC, targetSoC)
 			}
 		}
 
@@ -1639,7 +1655,7 @@ func (lp *LoadPoint) addTask(task func()) {
 	// test guard
 	if lp.tasks != nil {
 		// don't add twice
-		if t, ok := lp.tasks.Peek(); ok &&
+		if t, ok := lp.tasks.First(); ok &&
 			reflect.ValueOf(t).Pointer() == reflect.ValueOf(task).Pointer() {
 			return
 		}
@@ -1652,7 +1668,7 @@ func (lp *LoadPoint) processTasks() {
 	// test guard
 	if lp.tasks != nil {
 		if task, ok := lp.tasks.Dequeue(); ok {
-			task.(func())()
+			task()
 		}
 	}
 }
