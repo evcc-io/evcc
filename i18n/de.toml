@@ -71,14 +71,14 @@ greenEnergySub2 = "seit Oktober 2022"
 
 [footer.telemetry]
 optIn = "Ich möchte meine Ladedaten mit der Community teilen."
-optInMoreDetails = "Mehr Details gibts {0}."
+optInMoreDetails = "Mehr Details {0}."
 optInMoreDetailsLink = "hier"
 optInSponsorship = "Sponsoring erforderlich."
 
 [footer.sponsor]
 titleSponsor = "Du bist Unterstützer"
 titleNoSponsor = "Unterstütze uns"
-thanks = "Danke für dein Sponsoring, {sponsor}! Das hilft uns bei der Weiterentwicklung."
+thanks = "Vielen Dank, {Sponsor}! Dein Beitrag hilft, evcc weiterzuentwickeln."
 confetti = "Lust auf Konfetti?"
 supportUs = "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unterstütze evcc finanziell."
 sticker = "…oder evcc Sticker?"
@@ -106,7 +106,7 @@ pvExport = "Einspeisung"
 
 [main.mode]
 off = "Aus"
-minpv = "Min+PV"
+minpv = "Min+Solar"
 pv = "PV"
 now = "Schnell"
 
@@ -125,10 +125,10 @@ vehicle = "Fahrzeug"
 currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
-disclaimerText = "Änderungen sind aktuell noch nicht persistent und werden nach einem Serverneustart wieder zurückgesetzt."
+disclaimerText = "Änderungen gehen nach einem Neustart des Servers verloren."
 
 [main.loadpointSettings.minSoC]
-label = "Mindestladestand"
+label = "Min. Ladung %"
 description = 'Reichweite für Notfälle. Fahrzeug wird im PV-Modus "schnell" auf {0}% geladen. Danach weiter mit PV-Überschuss.'
 
 [main.loadpointSettings.phasesConfigured]
