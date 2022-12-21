@@ -873,7 +873,6 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.setTargetSoC(100)
 
 	if lp.vehicle = vehicle; vehicle != nil {
-		var capacity float64
 		lp.socUpdated = time.Time{}
 
 		// resolve optional config
@@ -886,8 +885,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleIcon", lp.vehicle.Icon())
-		capacity, _ = lp.vehicle.Capacity()
-		lp.publish("vehicleCapacity", capacity)
+		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
 		// unblock api
 		lp.Unlock()

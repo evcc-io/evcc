@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateMeter(base api.Meter, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error), battery func() (float64, error), batteryCapacity func() (float64, error)) api.Meter {
+func decorateMeter(base api.Meter, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error), battery func() (float64, error), batteryCapacity func() float64) api.Meter {
 	switch {
 	case battery == nil && batteryCapacity == nil && meterCurrent == nil && meterEnergy == nil:
 		return base
@@ -257,10 +257,10 @@ func (impl *decorateMeterBatteryImpl) SoC() (float64, error) {
 }
 
 type decorateMeterBatteryCapacityImpl struct {
-	batteryCapacity func() (float64, error)
+	batteryCapacity func() float64
 }
 
-func (impl *decorateMeterBatteryCapacityImpl) Capacity() (float64, error) {
+func (impl *decorateMeterBatteryCapacityImpl) Capacity() float64 {
 	return impl.batteryCapacity()
 }
 

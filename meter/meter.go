@@ -13,7 +13,7 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -74,7 +74,14 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		}
 	}
 
-	res := m.Decorate(totalEnergyG, currentsG, batterySoCG)
+	var capacityG func() float64 = nil
+	if m.Capacity() > 0 {
+		capacityG = func() (res float64) {
+			return m.Capacity()
+		}
+	}
+
+	res := m.Decorate(totalEnergyG, currentsG, batterySoCG, capacityG)
 
 	return res, nil
 }
@@ -117,19 +124,9 @@ func (m *Meter) Decorate(
 	totalEnergy func() (float64, error),
 	currents func() (float64, float64, float64, error),
 	batterySoC func() (float64, error),
+	capacityGetter func() float64,
 ) api.Meter {
-
-	var capacityG func() (float64, error)
-
-	if _, ok := m.Capacity(); ok == nil {
-		capacityG = func() (res float64, err error) {
-			return m.Capacity()
-		}
-	} else {
-		capacityG = nil
-	}
-
-	return decorateMeter(m, totalEnergy, currents, batterySoC, capacityG)
+	return decorateMeter(m, totalEnergy, currents, batterySoC, capacityGetter)
 }
 
 // CurrentPower implements the api.Meter interface
@@ -140,10 +137,10 @@ func (m *Meter) CurrentPower() (float64, error) {
 var _ api.BatteryCapacity = (*Meter)(nil)
 
 // Capacity implements the api.BatteryCapacity interface
-func (m *Meter) Capacity() (float64, error) {
+func (m *Meter) Capacity() float64 {
 	if m.capacity != nil {
-		return *m.capacity, nil
+		return *m.capacity
 	} else {
-		return 0, api.ErrNotAvailable
+		return 0
 	}
 }

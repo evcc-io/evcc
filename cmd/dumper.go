@@ -88,11 +88,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.BatteryCapacity); ok {
-		if capacity, err := v.Capacity(); err != nil {
-			fmt.Fprintf(w, "Capacity:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", capacity)
-		}
+		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
 	}
 
 	// charger

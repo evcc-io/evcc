@@ -24,7 +24,6 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Topic       string
 		Timeout     time.Duration
 		Usage       string
-		Capacity    *float64 `mapstructure:"capacity"`
 	}{
 		Topic:   "openWB",
 		Timeout: 15 * time.Second,
@@ -107,12 +106,12 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid usage: %s", cc.Usage)
 	}
 
-	m, err := NewConfigurable(cc.Capacity, power)
+	m, err := NewConfigurable(nil, power)
 	if err != nil {
 		return nil, err
 	}
 
-	res := m.Decorate(nil, currents, soc)
+	res := m.Decorate(nil, currents, soc, nil)
 
 	return res, nil
 }

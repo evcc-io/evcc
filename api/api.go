@@ -114,7 +114,7 @@ type Battery interface {
 
 // BatteryCapacity provides a capacity in Wh
 type BatteryCapacity interface {
-	Capacity() (float64, error)
+	Capacity() float64
 }
 
 // ChargeState provides current charging status

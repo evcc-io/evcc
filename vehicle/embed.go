@@ -25,9 +25,9 @@ func (v *embed) Icon() string {
 	return v.Icon_
 }
 
-// Capacity implements the api.BatteryCapacity interface
-func (v *embed) Capacity() (float64, error) {
-	return v.Capacity_, nil
+// Capacity implements the api.Vehicle interface
+func (v *embed) Capacity() float64 {
+	return v.Capacity_
 }
 
 // Phases returns the phases used by the vehicle
