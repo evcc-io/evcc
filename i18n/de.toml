@@ -106,7 +106,7 @@ pvExport = "Einspeisung"
 
 [main.mode]
 off = "Aus"
-minpv = "Min+Solar"
+minpv = "Min+PV"
 pv = "PV"
 now = "Schnell"
 
