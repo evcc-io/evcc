@@ -92,19 +92,29 @@ func (a ActionConfig) String() string {
 	return strings.Join(s, ", ")
 }
 
-// Meter is able to provide current power in W
+// Meter is able to provide total power in W
 type Meter interface {
 	CurrentPower() (float64, error)
 }
 
-// MeterEnergy is able to provide current energy in kWh
+// MeterEnergy is able to provide total energy in kWh
 type MeterEnergy interface {
 	TotalEnergy() (float64, error)
 }
 
-// MeterCurrent is able to provide per-line current A
+// MeterCurrent is able to provide per-phase current A
 type MeterCurrent interface {
 	Currents() (float64, float64, float64, error)
+}
+
+// MeterVoltage is able to provide per-phase voltage V
+type MeterVoltage interface {
+	Voltages() (float64, float64, float64, error)
+}
+
+// MeterPower is able to provide signed per-phase power W
+type MeterPower interface {
+	Powers() (float64, float64, float64, error)
 }
 
 // Battery is able to provide battery SoC in %
