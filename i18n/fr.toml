@@ -219,7 +219,6 @@ finished = "Temps de fin"
 message = "Non connecté à un serveur."
 reload = "Recharger?"
 
-
 [settings]
 title = "Réglages"
 

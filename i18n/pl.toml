@@ -219,7 +219,6 @@ finished = "Zakończony"
 message = "Brak połączenia z serwerem."
 reload = "Przeładować?"
 
-
 [settings]
 title = "Ustawienia"
 

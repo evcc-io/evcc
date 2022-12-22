@@ -144,7 +144,6 @@ label = "Corrente massima"
 [main.loadpointSettings.minCurrent]
 label = "Min. corrente"
 
-
 [settings]
 title = "Impostazioni"
 

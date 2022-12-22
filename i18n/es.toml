@@ -219,7 +219,6 @@ finished = "Hora de finalización"
 message = "No conectado a un servidor."
 reload = "Actualizar?"
 
-
 [settings]
 title = "Ajustes"
 

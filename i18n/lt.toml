@@ -219,24 +219,23 @@ finished = "Pabaigta"
 message = "Nėra ryšio su serveriu."
 reload = "Perkrauti?"
 
-
 [settings]
-title = Nustatymai
+title = "Nustatymai"
 
 [settings.theme]
-label = Dizainas
-auto = sistemos
-light = šviesus
-dark = tamsus
+label = "Dizainas"
+auto = "sistemos"
+light = "šviesus"
+dark = "tamsus"
 
 [settings.language]
-label = Kalba
-auto = Automatiškai
+label = "Kalba"
+auto = "Automatiškai"
 
 [settings.unit]
-label = Vienetai
-km = km
-mi = mylios
+label = "Vienetai"
+km = "km"
+mi = "mylios"
 
 [settings.telemetry]
-label = Telemetrija
+label = "Telemetrija"

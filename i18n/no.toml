@@ -215,7 +215,6 @@ label = "Min. ladestrøm"
 logout = "logg ut"
 login = "logg inn"
 
-
 [settings]
 title = "Innstillinger"
 

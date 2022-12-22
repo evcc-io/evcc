@@ -219,7 +219,6 @@ finished = "Beëindigd"
 message = "Niet verbonden met een server."
 reload = "Opnieuw laden?"
 
-
 [settings]
 title = "Instellingen"
 
