@@ -119,7 +119,7 @@ description = 'Pour les urgences. Le véhicule est chargé "rapidement" à {0} 
 label = "Phases"
 phases_0 = "Commutation automatique"
 phases_1 = "1-phase"
-phases_1_hint = "({min} á {max})"
+phases_1_hint = "({min} à {max})"
 phases_3 = "3-phases"
 phases_3_hint = "({min} á {max})"
 
