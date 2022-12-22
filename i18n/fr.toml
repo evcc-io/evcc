@@ -141,7 +141,7 @@ detectionActive = "Détection de véhicule…"
 [main.vehicleSoC]
 disconnected = "Détaché"
 charging = "Mise en charge"
-ready = "Brêt"
+ready = "Prêt"
 connected = "Connecté"
 vehicleTarget = "Limite de véhicule: {soc}%"
 
