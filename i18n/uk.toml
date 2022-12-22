@@ -1,1 +1,14 @@
 
+
+
+[header]
+blog = "Блоґ"
+docs = "Документація"
+github = "GitHub"
+about = "Про evcc"
+sessions = «Сеанси зарядки»
+settings = "Налаштування"
+login = "Вхід до транспортного засобу"
+
+[settings]
+title = "Налаштування"
