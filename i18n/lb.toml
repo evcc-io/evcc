@@ -85,7 +85,7 @@ loadpoints = "Opluedpunkt | Opluedpunkt | {count} Opluedstatiounen"
 
 [main.loadpointSettings.minSoC]
 label = "Minimum Staat vun charge"
-description = 'Fir Noutfäll. D'Gefier gëtt "séier" gelueden op {0}% vun all verfügbare Solarenergie, a geet dann mat nëmmen dem Solariwwerschoss weider.'
+description = "Fir Noutfäll. D'Gefier gëtt „séier” gelueden op {0}% vun all verfügbare Solarenergie, a geet dann mat nëmmen dem Solariwwerschoss weider."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phasen"
@@ -164,7 +164,7 @@ disclaimerText = "Ännerunge ginn verluer nodeems de Server nei gestart ass."
 vehicle = "Gefier"
 default = "Standard"
 disclaimerHint = "Notiz:"
-title = 'Astellungen "{0}"'
+title = "Astellungen „{0}”"
 
 [main.loadpointSettings.minCurrent]
 label = "Min. Stroum"
