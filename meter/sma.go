@@ -125,6 +125,34 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], err
 }
 
+var _ api.MeterVoltage = (*SMA)(nil)
+
+// Voltages implements the api.MeterVoltage interface
+func (sm *SMA) Voltages() (float64, float64, float64, error) {
+	values, err := sm.device.Values()
+
+	var voltages [3]float64
+	for i, id := range []sunny.ValueID{sunny.VoltageL1, sunny.VoltageL2, sunny.VoltageL3} {
+		voltages[i] = sma.AsFloat(values[id])
+	}
+
+	return voltages[0], voltages[1], voltages[2], err
+}
+
+var _ api.MeterPower = (*SMA)(nil)
+
+// Powers implements the api.MeterPower interface
+func (sm *SMA) Powers() (float64, float64, float64, error) {
+	values, err := sm.device.Values()
+
+	var Powers [3]float64
+	for i, id := range []sunny.ValueID{sunny.ActivePowerPlusL1 - sunny.ActivePowerMinusL1, sunny.ActivePowerPlusL2 - sunny.ActivePowerMinusL2, sunny.ActivePowerPlusL3 - sunny.ActivePowerMinusL3} {
+		Powers[i] = sm.scale * sma.AsFloat(values[id])
+	}
+
+	return Powers[0], Powers[1], Powers[2], err
+}
+
 // soc implements the api.Battery interface
 func (sm *SMA) soc() (float64, error) {
 	values, err := sm.device.Values()
