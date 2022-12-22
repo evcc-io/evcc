@@ -124,7 +124,7 @@ phases_3 = "3-phases"
 phases_3_hint = "({min} à {max})"
 
 [main.loadpointSettings.maxCurrent]
-label = "Max. Courant de charge"
+label = "Max. courant de charge"
 
 [main.loadpointSettings.minCurrent]
 label = "Min. Courant de charge"
