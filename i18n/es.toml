@@ -104,7 +104,7 @@ duration = "Duración"
 remaining = "Tiempo restante"
 
 [main.loadpointSettings]
-title = 'Configuraciones "{0}"'
+title = "Configuraciones „{0}”"
 vehicle = "Vehículo"
 currents = "Corriente de carga"
 default = "default"
@@ -113,7 +113,7 @@ disclaimerText = "Actualmente, los cambios aún no son persistentes y se restabl
 
 [main.loadpointSettings.minSoC]
 label = "Cargo de min. %"
-description = 'Rango para emergencias. El vehículo se carga "rápidamente" a {0}% en modo solar. Luego continuar con el excedente fotovoltaico.'
+description = "Rango para emergencias. El vehículo se carga „rápidamente” a {0}% en modo solar. Luego continuar con el excedente fotovoltaico."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases"
