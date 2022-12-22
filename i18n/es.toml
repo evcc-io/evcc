@@ -176,7 +176,7 @@ today = "hoy"
 tomorrow = "mañana"
 targetIsInThePast = "El tiempo está en el pasado."
 remove = "retirar"
-activate = "activar"
+activate = "Activar"
 experimentalLabel = "Experimental"
 experimentalText = "Esta función funciona, pero aún no es perfecta. Por favor reporte un comportamiento inesperado en nuestro"
 
