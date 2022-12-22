@@ -82,7 +82,7 @@ thanks = "Thank you, {sponsor}! Your contribution helps develop evcc further."
 confetti = "Ready for confetti?"
 supportUs = "Our mission is to make solar the norm. Help evcc by paying what it is worth to you."
 sticker = "… or evcc stickers?"
-confettiPromise = "You get stickers and digital confetti ;) ;)" ;)"
+confettiPromise = "You get stickers and digital confetti ;)" ;) ;)" ;)"
 becomeSponsor = "Become a Sponsor"
 
 [notifications]
