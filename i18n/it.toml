@@ -123,12 +123,12 @@ vehicle = "Veicolo"
 default = "default"
 currents = "Corrente di carica"
 disclaimerHint = "Nota:"
-title = 'Impostazioni "{0}"'
+title = "Impostazioni \"{0}\""
 disclaimerText = "Le modifiche andranno perse dopo il riavvio del server."
 
 [main.loadpointSettings.minSoC]
 label = "Min. carica %"
-description = 'Per le emergenze. Il veicolo viene "veloce" caricato a {0}% da tutto il solare disponibile, e poi continua con solo il surplus solare.'
+description = "Per le emergenze. Il veicolo viene \"veloce\" caricato a {0}% da tutto il solare disponibile, e poi continua con solo il surplus solare."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fasi"

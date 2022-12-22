@@ -103,7 +103,7 @@ duration = "Duração"
 remaining = "Tempo restante"
 
 [main.loadpointSettings]
-title = 'Configurações "{0}"'
+title = "Configurações \"{0}\""
 vehicle = "Veículo"
 currents = "Corrente de carga"
 default = "predefinado"

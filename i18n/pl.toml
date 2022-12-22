@@ -104,7 +104,7 @@ duration = "Czas trwania"
 remaining = "Pozostało"
 
 [main.loadpointSettings]
-title = 'Ustawienia "{0}"'
+title = "Ustawienia \"{0}\""
 vehicle = "Pojazd"
 currents = "Prąd ładowania"
 default = "domyślny"
@@ -113,7 +113,7 @@ disclaimerText = "Zmiany zostaną zresetowane po restarcie serwera."
 
 [main.loadpointSettings.minSoC]
 label = "Minimalne naładowanie %"
-description = 'Zasięg w sytuacjach awaryjnych. Pojazd jest „szybko” ładowany do {0}% w trybie "Słońce". Następnie kontynuuje tylko z nadwyżką fotowoltaiczną.'
+description = "Zasięg w sytuacjach awaryjnych. Pojazd jest „szybko” ładowany do {0}% w trybie "Słońce". Następnie kontynuuje tylko z nadwyżką fotowoltaiczną."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fazy"

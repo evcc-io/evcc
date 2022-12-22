@@ -120,7 +120,7 @@ duration = "Duration"
 remaining = "Remaining"
 
 [main.loadpointSettings]
-title = 'Settings "{0}"'
+title = "Settings \"{0}\""
 vehicle = "Vehicle"
 currents = "Charging current"
 default = "default"
@@ -129,7 +129,7 @@ disclaimerText = "Changes will be lost after the server is restarted."
 
 [main.loadpointSettings.minSoC]
 label = "Min. charge %"
-description = 'For emergencies. The vehicle gets "fast" charged to {0}% from all available solar, and then continues with only the solar surplus.'
+description = "For emergencies. The vehicle gets \"fast\" charged to {0}% from all available solar, and then continues with only the solar surplus."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"
