@@ -5,6 +5,7 @@ about = "Om evcc"
 blog = "Blogg"
 github = "GitHub"
 login = "Kjøretøysinnlogginger"
+settings = "Innstillinger"
 
 [header.theme]
 auto = "Design: system"
