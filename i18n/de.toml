@@ -120,7 +120,7 @@ duration = "Dauer"
 remaining = "Restzeit"
 
 [main.loadpointSettings]
-title = 'Einstellungen "{0}"'
+title = "Einstellungen „{0}”"
 vehicle = "Fahrzeug"
 currents = "Ladestrom"
 default = "default"
@@ -129,7 +129,7 @@ disclaimerText = "Änderungen gehen nach einem Neustart des Servers verloren."
 
 [main.loadpointSettings.minSoC]
 label = "Min. Ladung %"
-description = 'Reichweite für Notfälle. Fahrzeug wird im PV-Modus "schnell" auf {0}% geladen. Danach weiter mit PV-Überschuss.'
+description = "Reichweite für Notfälle. Fahrzeug wird im PV-Modus „schnell” auf {0}% geladen. Danach weiter mit PV-Überschuss."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phasen"
