@@ -4,7 +4,8 @@ docs = "Documentatie"
 blog = "Blog"
 github = "GitHub"
 login = "Voertuig logins"
-about = "Over evcc"
+about = "Over"
+settings = "Instellingen"
 
 [header.theme]
 auto = "Design: systeem"
@@ -12,17 +13,17 @@ light = "Design: licht"
 dark = "Design: donker"
 
 [footer.version]
-availableShort = "update"
-availableLong = "update beschikbaar"
-modalTitle = "Update beschikbaar"
-modalUpdateStarted = "Evcc zal herstarten na de update."
-modalInstalledVersion = "Huidige versie"
-modalNoReleaseNotes = "Geen release notes beschikbaar. Meer informatie over de nieuwe versie vind je hier:"
+availableShort = "intall"
+availableLong = "nieuwe versie beschikbaar"
+modalTitle = "Nieuwe versie beschikbaar"
+modalUpdateStarted = "Starten van de nieuwe versie van evcc..."
+modalInstalledVersion = "Geïnstalleerde versie: "
+modalNoReleaseNotes = "Geen release notes beschikbaar. Meer info over de nieuwe versie:"
 modalCancel = "Annuleer"
-modalUpdate = "Update"
-modalUpdateNow = "Nu updaten"
+modalUpdate = "Install"
+modalUpdateNow = "Nu installeren"
 modalDownload = "Download"
-modalUpdateStatusStart = "Update gestart:"
+modalUpdateStatusStart = "Installatie gestart:"
 
 [footer.savings]
 tabTitle = "Mijn data"
@@ -44,28 +45,28 @@ savingsTotalEnergy = "{total} kWh geladen"
 tabTitle = "Live community"
 power = "Laadvermogen"
 powerSub1 = "{activeClients} van {totalClients} deelnemers"
-powerSub2 = "zijn nu aan het laden"
+powerSub2 = "opladen..."
 greenShare = "Zonne-energie"
-greenShareSub1 = "van de energie"
-greenShareSub2 = "komt van PV & batterijopslag"
-greenEnergy = "Zonne-energie"
+greenShareSub1 = "stroom geleverd door"
+greenShareSub2 = "zon, en batterij opslag"
+greenEnergy = "Zonne"
 greenEnergySub1 = "geladen met evcc"
 greenEnergySub2 = "sinds oktober 2022"
 
 [footer.telemetry]
-optIn = "Ik wil mijn data ook bijdragen."
-optInMoreDetails = "Meer info is {0} beschikbaar."
+optIn = "Ik wil mijn gegevens bijdragen."
+optInMoreDetails = "Meer details {0}."
 optInMoreDetailsLink = "hier"
 optInSponsorship = "(Sponsoring nodig)"
 
 [footer.sponsor]
 titleSponsor = "Je bent een sponsor!"
 titleNoSponsor = "Sponsor ons"
-thanks = "Bedankt voor je hulp, {sponsor}! Je helpt ons bij de verdere ontwikkeling van evcc."
+thanks = "Bedankt, {sponsor}! Jouw bijdrage helpt evcc verder te ontwikkelen."
 confetti = "Klaar voor confetti?"
-supportUs = "Onze missie: Van laden op zonne-energie de standaard maken. Help ons en draag financieel bij aan evcc."
-sticker = "… of evcc stickers?"
-confettiPromise = "Er zullen stickers en digitale confetti zijn ;)"
+supportUs = "Onze missie is om van zonne-energie de norm te maken. Help evcc door te betalen wat het je waard is."
+sticker = "... of evcc stickers?"
+confettiPromise = "Je krijgt stickers en digitale confetti"     ;)"
 becomeSponsor = "Word sponsor"
 
 [notifications]
@@ -217,3 +218,25 @@ finished = "Beëindigd"
 [offline]
 message = "Geen verbinding met de server."
 reload = "Opnieuw laden?"
+
+
+[settings]
+title = "Instellingen"
+
+[settings.theme]
+label = "Design"
+auto = "systeem"
+light = "licht"
+dark = "donker"
+
+[settings.unit]
+km = "km"
+mi = "mijlen"
+label = "Units"
+
+[settings.telemetry]
+label = "Telemetrie"
+
+[settings.language]
+label = "Taal"
+auto = "Automatisch"
