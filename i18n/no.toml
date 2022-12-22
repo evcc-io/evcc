@@ -205,7 +205,7 @@ becomeSponsor = "Bli sponsor"
 confetti = "Klar for konfetti?"
 sticker = "... eller evcc-klistremerker?"
 thanks = "Takk, {sponsor}! Ditt bidrag bidrar til å utvikle evcc videre."
-confettiPromise = "Du får klistremerker og digital konfetti"
+confettiPromise = "Du får klistremerker og digital konfetti ;)"
 supportUs = "Vårt oppdrag er å gjøre solenergi til normen. Hjelp evcc ved å betale det det er verdt for deg."
 
 [main.loadpointSettings.minCurrent]
