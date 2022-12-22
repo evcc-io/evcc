@@ -103,7 +103,7 @@ duration = "Duração"
 remaining = "Tempo restante"
 
 [main.loadpointSettings]
-title = 'Configurações "{0}"'
+title = "Configurações „{0}”"
 vehicle = "Veículo"
 currents = "Corrente de carga"
 default = "predefinado"
@@ -112,7 +112,7 @@ disclaimerText = "As alterações não são persistentes no momento e serão red
 
 [main.loadpointSettings.minSoC]
 label = "Nível mínimo de carga"
-description = 'Alcance para emergências. O veículo carrega até {0}% no modo "Rápido". Em seguida, continue com o modo "PV".'
+description = "Alcance para emergências. O veículo carrega até {0}% no modo „Rápido”. Em seguida, continue com o modo „PV”."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases elétricas"
