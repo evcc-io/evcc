@@ -127,7 +127,7 @@ phases_3_hint = "({min} à {max})"
 label = "Max. courant de charge"
 
 [main.loadpointSettings.minCurrent]
-label = "Min. Courant de charge"
+label = "Min. courant de charge"
 
 [main.vehicle]
 fallbackName = "Véhicule"
