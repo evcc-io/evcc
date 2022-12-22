@@ -71,7 +71,7 @@ becomeSponsor = "Devenir parrain"
 
 [notifications]
 modalTitle = "Notifications"
-dismissAll = "Rejeter la totalité"
+dismissAll = "Rejeter tous"
 
 [main]
 vehicles = "Place de parking"
