@@ -108,7 +108,7 @@ title = 'Réglages "{0}"'
 vehicle = "Véhicule"
 currents = "Courant de Charge"
 default = "Défaut"
-disclaimerHint = "A Noter:"
+disclaimerHint = "A noter:"
 disclaimerText = "Les modifications seront perdues après le redémarrage du serveur."
 
 [main.loadpointSettings.minSoC]
