@@ -5,7 +5,7 @@ blog = "Tinklaraštis"
 github = "GitHub"
 login = " Automobilių prisijungimai"
 about = "Apie"
-settings = Nustatymai
+settings = "Nustatymai"
 
 [header.theme]
 auto = "Dizainas: sistemos"
@@ -66,7 +66,7 @@ thanks = "Ačiū, {sponsor}! Jūs prisidedate prie evcc vystymo."
 confetti = "Norite konfeti?"
 supportUs = "Mūsų misija yra siekti, kad įkrovimas saulės energija taptų įprastu. Padėkite mums ir paremkite evcc."
 sticker = "… ar evcc lipdukų?"
-confettiPromise = "Gausite lipdukų ir skaitmeninių konfeti" ;)"
+confettiPromise = "Gausite lipdukų ir skaitmeninių konfeti ;)" ;)"
 becomeSponsor = "Tapkite rėmėju"
 
 [notifications]
@@ -221,22 +221,22 @@ reload = "Perkrauti?"
 
 
 [settings]
-title = Nustatymai
+title = "Nustatymai"
 
 [settings.theme]
-label = Dizainas
-auto = sistemos
-light = šviesus
-dark = tamsus
+label = "Dizainas"
+auto = "sistemos"
+light = "šviesus"
+dark = "tamsus"
 
 [settings.language]
-label = Kalba
-auto = Automatiškai
+label = "Kalba"
+auto = "Automatiškai"
 
 [settings.unit]
-label = Vienetai
-km = km
-mi = mylios
+label = "Vienetai"
+km = "km"
+mi = "mylios"
 
 [settings.telemetry]
-label = Telemetrija
+label = "Telemetrija"
