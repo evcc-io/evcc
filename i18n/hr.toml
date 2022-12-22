@@ -129,7 +129,7 @@ charged = "Napunjeno"
 duration = "Trajanje"
 
 [main.loadpointSettings]
-title = 'Postavke "{0}"'
+title = "Postavke „{0}”"
 currents = "Struja punjenja"
 vehicle = "Vozilo"
 default = "zadano"
@@ -138,7 +138,7 @@ disclaimerText = "Promjene će biti izgubljene nakon ponovnog pokretanja posluž
 
 [main.loadpointSettings.minSoC]
 label = "Min. naknada %"
-description = 'Za hitne slučajeve. Vozilo se "brzo" puni na {0}% od svih dostupnih solarnih, a zatim nastavlja samo sa solarnim viškom.'
+description = "Za hitne slučajeve. Vozilo se „brzo” puni na {0}% od svih dostupnih solarnih, a zatim nastavlja samo sa solarnim viškom."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Faze"
