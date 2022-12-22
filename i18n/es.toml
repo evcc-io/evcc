@@ -5,6 +5,7 @@ blog = "Blog"
 github = "GitHub"
 login = "Login de vehículo"
 about = "Sobre evcc"
+settings = "Ajustes"
 
 [header.theme]
 auto = "Tema: System"
@@ -217,3 +218,25 @@ finished = "Hora de finalización"
 [offline]
 message = "Sin conexión al servidor."
 reload = "Actualizar?"
+
+
+[settings]
+title = "Ajustes"
+
+[settings.theme]
+label = "Tema"
+auto = "sistema"
+light = "claro"
+dark = "oscuro"
+
+[settings.unit]
+label = "Unidades"
+km = "km"
+mi = "miles"
+
+[settings.language]
+label = "Idioma"
+auto = "Automático"
+
+[settings.telemetry]
+label = "Telemetría"
