@@ -86,7 +86,7 @@ default = "forvalg"
 disclaimerHint = "Merknad:"
 disclaimerText = "Endringer vil gå tapt etter at serveren er startet på nytt."
 vehicle = "Kjøretøy"
-title = 'Innstillinger "{0}"'
+title = "Innstillinger „{0}”"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Faser"
@@ -97,7 +97,7 @@ phases_1_hint = "({min} til {max})"
 phases_3_hint = "({min} til {max})"
 
 [main.loadpointSettings.minSoC]
-description = 'For nødstilfeller. Kjøretøyet blir "raskt" ladet til {0} % fra all tilgjengelig solenergi, og fortsetter deretter med bare solenergioverskuddet.'
+description = "For nødstilfeller. Kjøretøyet blir „raskt” ladet til {0} % fra all tilgjengelig solenergi, og fortsetter deretter med bare solenergioverskuddet."
 label = "Min. kostnad%"
 
 [main.loadpointSettings.maxCurrent]
