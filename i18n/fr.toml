@@ -92,7 +92,7 @@ pvExport = "Grille d'exportation"
 off = "Désactivé"
 minpv = "Min+Solaire"
 pv = "Solaire"
-now = "Rapidement"
+now = "Rapide"
 
 [main.loadpoint]
 fallbackName = "Point de Chargement"
