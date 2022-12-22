@@ -40,3 +40,4 @@ render: |
   phases: {{ .phases }}
   {{- end }}
   server: dexters-web.de # used ovms server [dexters-web.de or api.openvehicles.com]
+  {{ include "vehicle-identify" . }}
