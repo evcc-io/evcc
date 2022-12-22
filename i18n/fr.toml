@@ -104,7 +104,7 @@ duration = "Durée"
 remaining = "Temps restant"
 
 [main.loadpointSettings]
-title = 'Réglages "{0}"'
+title = "Réglages „{0}”"
 vehicle = "Véhicule"
 currents = "Courant de Charge"
 default = "Défaut"
@@ -113,7 +113,7 @@ disclaimerText = "Les modifications seront perdues après le redémarrage du ser
 
 [main.loadpointSettings.minSoC]
 label = "Min. charger %"
-description = 'Pour les urgences. Le véhicule est chargé "rapidement" à {0} % de tout l'énergie solaire disponible, puis continue avec uniquement l'excédent solaire.'
+description = "Pour les urgences. Le véhicule est chargé „rapidement” à {0} % de tout l'énergie solaire disponible, puis continue avec uniquement l'excédent solaire."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"
