@@ -104,7 +104,7 @@ duration = "Duur"
 remaining = "Resterend"
 
 [main.loadpointSettings]
-title = 'Instellingen "{0}"'
+title = "Instellingen „{0}”"
 vehicle = "Voertuig"
 currents = "Laadstroom"
 default = "standaard"
@@ -113,7 +113,7 @@ disclaimerText = "Changes zal verloren zijn nadat de server is herstart."
 
 [main.loadpointSettings.minSoC]
 label = "Min. lading %"
-description = 'Voor noodgevallen. Het voertuig wordt "snel" opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot.'
+description = "Voor noodgevallen. Het voertuig wordt „snel” opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fasen"
