@@ -12,3 +12,48 @@ login = "Вхід до транспортного засобу"
 
 [settings]
 title = "Налаштування"
+
+[settings.theme]
+label = "Дизайн"
+auto = "система"
+light = "світла"
+dark = "темна"
+
+[settings.language]
+auto = "Автоматично"
+label = "Мова"
+
+[settings.unit]
+km = "км"
+mi = "милі"
+label = "Одиниці вимірювання"
+
+[footer.version]
+availableShort = "встановити"
+modalTitle = "Доступна нова версія"
+modalUpdateStarted = "Початок нової версії evcc…"
+modalInstalledVersion = "Встановлена версія: "
+modalCancel = "Скасувати"
+availableLong = "доступна нова версія"
+modalDownload = "Завантажити"
+modalUpdateNow = "Встановити зараз"
+modalNoReleaseNotes = "Жодних нотаток про випуск немає. Детальніше про нову версію:"
+modalUpdate = "Встановити"
+modalUpdateStatusStart = "Встановлення розпочато:"
+
+[footer.savings]
+footerShort = "{percent}% сонячної"
+modalTitle = "Огляд зарядної енергії"
+percentTitle = "Сонячна енергія"
+percentSelf = "{self} кВт/год сонячної енергії"
+percentGrid = "{сітка} кВт/год мережа"
+priceTitle = "Ціна енергії"
+priceGrid = "{gridPrice} мережа"
+savingsTitle = "Економія"
+tabTitle = "Мої дані"
+priceFeedIn = "{feedInPrice} подача"
+footerLong = "{percent}% сонячної енергії"
+since = "оскільки {since}"
+
+[settings.telemetry]
+label = "Телеметрія"
