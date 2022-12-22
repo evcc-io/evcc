@@ -80,22 +80,22 @@ vehicles = "Parking"
 noEnergy = "Geen meter data"
 homePower = "Consumptie"
 pvProduction = "Productie"
-loadpoints = "Laadpunt | Laadpunt | {count} Laadpunten"
+loadpoints = "Lader| Lader | {count} laders"
 battery = "Batterij"
-batteryCharge = "Batterij laden"
+batteryCharge = "Batterij opladen"
 batteryDischarge = "Batterij ontladen"
-gridImport = "Netafname"
+gridImport = "Grid gebruik"
 selfConsumption = "Zelfverbruik"
 pvExport = "Netinjectie"
 
 [main.mode]
 off = "Uit"
-minpv = "Min+PV"
-pv = "PV"
+minpv = "Min+Solar"
+pv = "Solar"
 now = "Snel"
 
 [main.loadpoint]
-fallbackName = "Laadpunt"
+fallbackName = "Charing point"
 remoteDisabledSoft = "{source}: adaptief PV-laden uitgeschakeld"
 remoteDisabledHard = "{source}: uitgeschakeld"
 power = "Snelheid"
@@ -106,21 +106,21 @@ remaining = "Resterend"
 [main.loadpointSettings]
 title = 'Instellingen "{0}"'
 vehicle = "Voertuig"
-currents = "Opladen"
+currents = "Laadstroom"
 default = "standaard"
 disclaimerHint = "Letop:"
-disclaimerText = "Instellingen worden niet bijgehouden. Ze worden gereset bij het herstarten van de server."
+disclaimerText = "Changes zal verloren zijn nadat de server is herstart."
 
 [main.loadpointSettings.minSoC]
-label = "Min batterijniveau"
-description = 'Noodbereik. Voertuig wordt "snel" geladen tot {0}% in PV mode. Daarna wordt enkel de PV-overschot gebruikt.'
+label = "Min. lading %"
+description = 'Voor noodgevallen. Het voertuig wordt "snel" opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot.'
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fasen"
-phases_0 = "automatisch wisselend"
+phases_0 = "auto-switching"
 phases_1 = "1 fase"
 phases_1_hint = "({min} - {max})"
-phases_3 = "3 fasen"
+phases_3 = "3 fase"
 phases_3_hint = "({min} - {max})"
 
 [main.loadpointSettings.maxCurrent]
@@ -131,12 +131,12 @@ label = "Min. vermogen"
 
 [main.vehicle]
 fallbackName = "Voertuig"
-vehicleSoC = "Batterijniveau"
+vehicleSoC = "Opladen"
 targetSoC = "Limiet"
 none = "Geen voertuig"
 unknown = "Gast"
 changeVehicle = "Wijzig voertuig"
-detectionActive = "Voertuig detecteren ..."
+detectionActive = "Detecteer voertuig..."
 
 [main.vehicleSoC]
 disconnected = "niet verbonden"
@@ -146,24 +146,24 @@ connected = "verbonden"
 vehicleTarget = "Voertuiglimiet: {soc}%"
 
 [main.vehicleStatus]
-minCharge = "laden naar {soc}% minimum."
-waitForVehicle = "Klaar. Wachten op voertuig."
+minCharge = "Minimale oplading naar {soc}%."
+waitForVehicle = "Klaar. Wachten op voertuig..."
 vehicleTargetReached = "Voertuiglimiet {soc}% bereikt."
-charging = "Laden."
-targetChargePlanned = "Doel gepland. Starten op {time}."
-targetChargeWaitForVehicle = "Doel gepland. Wachten op voertuig."
-targetChargeActive = "Doelladen actief."
+charging = "Opladen ..."
+targetChargePlanned = "Doelladen begint bij {time}."
+targetChargeWaitForVehicle = "Doellading gereed. Wachten op voertuig..."
+targetChargeActive = "Doelwit lading actief..."
 connected = "Verbonden."
-pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}."
-pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}."
-scale1p = "Wisselen naar 1 fase over {remaining}."
-scale3p = "Wisselen naar 3 fasen over {remaining}."
+pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}..."
+pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}..."
+scale1p = "Wisselen naar 1 fase over {remaining}..."
+scale3p = "Wisselen naar 3 fasen over {remaining}..."
 disconnected = "Niet verbonden."
 unknown = ""
 
 [main.provider]
-login = "aanmelden"
-logout = "afmelden"
+login = "log in"
+logout = "log out"
 
 [main.targetCharge]
 title = "Doel"
@@ -174,11 +174,11 @@ setTargetTime = "geen"
 description = "Tegen wanneer moet het voertuig geladen zijn naar {targetSoC}%?"
 today = "Vandaag"
 tomorrow = "Morgen"
-targetIsInThePast = "De ingestelde tijd ligt in het verleden"
+targetIsInThePast = "Pick een tijd in de toekomst, Marty."
 remove = "Verwijder"
-activate = "Activeer"
+activate = "Turn on"
 experimentalLabel = "Experimenteel"
-experimentalText = "Deze feature werkt nog niet perfect. Rapporteer ongewenst gedrag op"
+experimentalText = "Dit werkt, maar is niet perfect. Meld onverwacht gedrag aan"
 
 [main.targetEnergy]
 label = "Limiet"
@@ -186,37 +186,37 @@ noLimit = "geen"
 
 [startupError]
 title = "Start Error"
-description = "Check je evcc configuratie. Helpt de foutboodschap je niet, bekijk dan de {0}."
+description = "Controleer uw configuratiebestand. Als de foutmelding niet helpt, bekijk dan de {0}."
 discussions = "GitHub Discussions"
-hint = "Je kan deze boodschap ook krijgen bij een kapot toestel (inverter, meter, ...). Check je network connectie."
+hint = "Let op: het kan ook zijn dat je een defect toestel hebt (omvormer, meter, …). Controleer je netwerkverbindingen."
 configuration = "Config"
 configFile = "Gebruikt configuratiebestand:"
-lineError = "Fout gedetecteerd op {0}."
+lineError = "Fout in {0}."
 lineErrorLink = "lijn {0}"
-fixAndRestart = "Verhelp het probleem en herstart de server."
+fixAndRestart = "Los het probleem op en herstart de server."
 restartButton = "Herstart"
 
 [sessions]
-title = "Laadsessies"
+title = "Oplaad sessies"
 downloadCsv = "Download CSV"
-loadpoint = "Laadpunt"
+loadpoint = "Oplaadpunt"
 vehicle = "Voertuig"
 energy = "Geladen"
 date = "Periode"
 
 [sessions.csv]
-loadpoint = "Laadpunt"
+loadpoint = "Oplaadpunt"
 vehicle = "Voertuig"
 odometer = "kilometerstand (km)"
 identifier = "ID"
 chargedenergy = "Energie (kWh)"
-meterstart = "Meter Start (kWh)"
-meterstop = "Meter Stop (kWh)"
+meterstart = "Meter start (kWh)"
+meterstop = "Meter stop (kwh)
 created = "Gestart"
 finished = "Beëindigd"
 
 [offline]
-message = "Geen verbinding met de server."
+message = "Niet verbonden met een server."
 reload = "Opnieuw laden?"
 
 
