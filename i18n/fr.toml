@@ -56,7 +56,7 @@ greenEnergySub2 = "Depuis octobre 2022"
 [footer.telemetry]
 optIn = "Je souhaite partager mes données de chargement avec la communauté."
 optInMoreDetails = "Plus de détails {0}."
-optInMoreDetailsLink = "Ici"
+optInMoreDetailsLink = "ici"
 optInSponsorship = "Parrainage requis."
 
 [footer.sponsor]
