@@ -51,7 +51,7 @@ greenShareSub1 = "Puissance fournie par"
 greenShareSub2 = "Solaire, et stockage de batterie"
 greenEnergy = "Solaire"
 greenEnergySub1 = "Chargé avec evcc"
-greenEnergySub2 = "Depuis Octobre 2022"
+greenEnergySub2 = "Depuis octobre 2022"
 
 [footer.telemetry]
 optIn = "Je veux apporter mes données."
