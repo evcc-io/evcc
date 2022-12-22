@@ -5,7 +5,7 @@ blog = "Tinklaraštis"
 github = "GitHub"
 login = " Automobilių prisijungimai"
 about = "Apie"
-settings = Nustatymai
+settings = "Nustatymai"
 
 [header.theme]
 auto = "Dizainas: sistemos"
