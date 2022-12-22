@@ -54,7 +54,7 @@ greenEnergySub1 = "Chargé avec evcc"
 greenEnergySub2 = "Depuis octobre 2022"
 
 [footer.telemetry]
-optIn = "Je veux apporter mes données."
+optIn = "Je souhaite également partager mes données."
 optInMoreDetails = "Plus de détails {0}."
 optInMoreDetailsLink = "Ici"
 optInSponsorship = "Parrainage requis."
