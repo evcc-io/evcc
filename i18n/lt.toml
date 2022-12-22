@@ -113,7 +113,7 @@ disclaimerText = "Šie pakeitimai neišlieka po EVCC serverio restarto."
 
 [main.loadpointSettings.minSoC]
 label = "Minimali įkrova"
-description = "Minimali įkrova. Automobilis įkraunamas \"Greitai\" iki {0}% nustatyme "Saulė", toliau įkraunamas tik saulės energijos pertekliumi."
+description = "Minimali įkrova. Automobilis įkraunamas \"Greitai\" iki {0}% nustatyme \"Saulė\", toliau įkraunamas tik saulės energijos pertekliumi."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fazės"

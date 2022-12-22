@@ -211,7 +211,7 @@ odometer = "kilometerstand (km)"
 identifier = "ID"
 chargedenergy = "Energie (kWh)"
 meterstart = "Meter start (kWh)"
-meterstop = "Meter stop (kwh)
+meterstop = "Meter stop (kwh)"
 created = "Gestart"
 finished = "Beëindigd"
 

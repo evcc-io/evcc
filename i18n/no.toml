@@ -132,7 +132,7 @@ unknown = ""
 connected = "Tilkoblet."
 vehicleTargetReached = "Kjøretøygrense på {soc}% nådd."
 pvDisable = "Ikke nok overskudd. Pause i {remaining}..."
-scale3p = «Øker til 3-fase strøm i {remaining}...»
+scale3p = "Øker til 3-fase strøm i {remaining}..."
 targetChargeWaitForVehicle = "Mållading klar. Venter på kjøretøy..."
 
 [main.targetCharge]
