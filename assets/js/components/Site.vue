@@ -60,9 +60,9 @@ export default {
 		pvPower: Number,
 		batteryConfigured: Boolean,
 		batteryPower: Number,
-		batterySoC: Number,
+		batterySoc: Number,
 		gridCurrents: Array,
-		prioritySoC: Number,
+		prioritySoc: Number,
 		siteTitle: String,
 		vehicles: Array,
 

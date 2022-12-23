@@ -133,7 +133,7 @@ default = "zadano"
 disclaimerHint = "Bilješka:"
 disclaimerText = "Promjene će biti izgubljene nakon ponovnog pokretanja poslužitelja."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Min. naknada %"
 description = "Za hitne slučajeve. Vozilo se „brzo” puni na {0}% od svih dostupnih solarnih, a zatim nastavlja samo sa solarnim viškom."
 
@@ -153,14 +153,14 @@ label = "Min. struja"
 
 [main.vehicle]
 fallbackName = "Vozilo"
-vehicleSoC = "Naboj"
-targetSoC = "Granica"
+vehicleSoc = "Naboj"
+targetSoc = "Granica"
 none = "Bez vozila"
 unknown = "Vozilo za goste"
 changeVehicle = "Promijeni vozilo"
 detectionActive = "Otkrivanje vozila..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "odspojeno"
 charging = "punjenje"
 ready = "spreman"
@@ -184,7 +184,7 @@ scale1p = "Smanjenje na 1-fazno napajanje za {preostalo}…"
 scale3p = "Povećanje na 3-fazno napajanje za {remaining}…"
 
 [main.targetCharge]
-description = "Kada bi se vozilo trebalo napuniti na {targetSoC}%?"
+description = "Kada bi se vozilo trebalo napuniti na {targetSoc}%?"
 today = "danas"
 targetIsInThePast = "Odaberi vrijeme u budućnosti, Marty."
 activate = "Upaliti"

@@ -22,14 +22,14 @@ func TestRemainingChargeDuration(t *testing.T) {
 	ce.vehicleSoc = 20.0
 
 	chargePower := 1000.0
-	targetSoC := 80
+	targetSoc := 80
 
-	if remaining := ce.RemainingChargeDuration(chargePower, targetSoC); remaining != 6*time.Hour {
+	if remaining := ce.RemainingChargeDuration(chargePower, targetSoc); remaining != 6*time.Hour {
 		t.Error("wrong remaining charge duration")
 	}
 }
 
-func TestSoCEstimation(t *testing.T) {
+func TestSocEstimation(t *testing.T) {
 	type chargerStruct struct {
 		*mock.MockCharger
 		*mock.MockBattery
@@ -48,8 +48,8 @@ func TestSoCEstimation(t *testing.T) {
 
 	tc := []struct {
 		chargedEnergy   float64
-		vehicleSoC      float64
-		estimatedSoC    float64
+		vehicleSoc      float64
+		estimatedSoc    float64
 		virtualCapacity float64
 	}{
 		{0, 0.0, 0.0, 10000},
@@ -72,27 +72,27 @@ func TestSoCEstimation(t *testing.T) {
 	}
 
 	for i := 1; i < 3; i++ {
-		useVehicleSoC := true
+		useVehicleSoc := true
 		if i == 2 {
-			useVehicleSoC = false
+			useVehicleSoc = false
 		}
 		for _, tc := range tc {
 			t.Logf("%+v", tc)
-			if useVehicleSoC {
-				charger.MockBattery.EXPECT().SoC().Return(tc.vehicleSoC, nil)
+			if useVehicleSoc {
+				charger.MockBattery.EXPECT().Soc().Return(tc.vehicleSoc, nil)
 			} else {
-				charger.MockBattery.EXPECT().SoC().Return(0.0, api.ErrNotAvailable)
-				vehicle.EXPECT().SoC().Return(tc.vehicleSoC, nil)
+				charger.MockBattery.EXPECT().Soc().Return(0.0, api.ErrNotAvailable)
+				vehicle.EXPECT().Soc().Return(tc.vehicleSoc, nil)
 			}
 
-			soc, err := ce.SoC(tc.chargedEnergy)
+			soc, err := ce.Soc(tc.chargedEnergy)
 			if err != nil {
 				t.Error(err)
 			}
 
 			// validate soc estimate
-			if tc.estimatedSoC != soc {
-				t.Errorf("expected estimated soc: %g, got: %g", tc.estimatedSoC, soc)
+			if tc.estimatedSoc != soc {
+				t.Errorf("expected estimated soc: %g, got: %g", tc.estimatedSoc, soc)
 			}
 
 			// validate capacity estimate
@@ -102,18 +102,18 @@ func TestSoCEstimation(t *testing.T) {
 
 			// validate duration estimate
 			chargePower := 1e3
-			targetSoC := 100
-			remainingHours := (float64(targetSoC) - soc) / 100 * tc.virtualCapacity / chargePower
+			targetSoc := 100
+			remainingHours := (float64(targetSoc) - soc) / 100 * tc.virtualCapacity / chargePower
 			remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
-			if rm := ce.RemainingChargeDuration(chargePower, targetSoC); rm != remainingDuration {
+			if rm := ce.RemainingChargeDuration(chargePower, targetSoc); rm != remainingDuration {
 				t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
 			}
 		}
 	}
 }
 
-func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
+func TestSocFromChargerAndVehicleWithErrors(t *testing.T) {
 	type chargerStruct struct {
 		*mock.MockCharger
 		*mock.MockBattery
@@ -132,14 +132,14 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 
 	tc := []struct {
 		chargedEnergy   float64
-		vehicleSoC      float64
-		estimatedSoC    float64
+		vehicleSoc      float64
+		estimatedSoc    float64
 		virtualCapacity float64
 		expectVehicle   bool
 		chargerError    error
 		vehicleError    error
 	}{
-		// start with SoC from charger and errors
+		// start with Soc from charger and errors
 		{0, 0.0, 0.0, 10000, false, errors.New("some error"), nil},
 		{0, 0.0, 20.0, 10000, false, api.ErrMustRetry, nil},
 		{0, 20.0, 20.0, 10000, false, nil, nil},
@@ -150,7 +150,7 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 		{1200, 32.0, 32.0, 10000, false, nil, nil},
 		{1900, 39.0, 39.0, 10000, false, nil, nil},
 		{2000, 40.0, 40.0, 10000, false, nil, nil},
-		// move to SoC from vehicle
+		// move to Soc from vehicle
 		{3000, 0.0, 50.0, 10000, true, api.ErrNotAvailable, errors.New("some error")},
 		{3100, 0.0, 51.0, 10000, true, api.ErrNotAvailable, api.ErrMustRetry},
 		{5100, 71.0, 71.0, 10000, true, api.ErrNotAvailable, nil},
@@ -164,7 +164,7 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 		{0, 50.0, 50.0, 10000, true, api.ErrNotAvailable, nil}, // -10000
 		{4990, 50.0, 99.9, 10000, true, api.ErrNotAvailable, nil},
 		{5000, 50.0, 100.0, 10000, true, api.ErrNotAvailable, nil},
-		// back to SoC from charger
+		// back to Soc from charger
 		{5001, 50.0, 100.0, 10000, false, nil, nil},
 		{0, 20.0, 20.0, 10000, false, nil, nil},
 		{1000, 30.0, 30.0, 10000, false, nil, nil},
@@ -172,12 +172,12 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
-		charger.MockBattery.EXPECT().SoC().Return(tc.vehicleSoC, tc.chargerError)
+		charger.MockBattery.EXPECT().Soc().Return(tc.vehicleSoc, tc.chargerError)
 		if tc.expectVehicle {
-			vehicle.EXPECT().SoC().Return(tc.vehicleSoC, tc.vehicleError)
+			vehicle.EXPECT().Soc().Return(tc.vehicleSoc, tc.vehicleError)
 		}
 
-		soc, err := ce.SoC(tc.chargedEnergy)
+		soc, err := ce.Soc(tc.chargedEnergy)
 		if err != nil {
 			if (!tc.expectVehicle && err != tc.chargerError) || (tc.expectVehicle && err != tc.vehicleError) {
 				t.Error(err)
@@ -187,8 +187,8 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 		}
 
 		// validate soc estimate
-		if tc.estimatedSoC != soc {
-			t.Errorf("expected estimated soc: %g, got: %g", tc.estimatedSoC, soc)
+		if tc.estimatedSoc != soc {
+			t.Errorf("expected estimated soc: %g, got: %g", tc.estimatedSoc, soc)
 		}
 
 		// validate capacity estimate
@@ -198,11 +198,11 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 
 		// validate duration estimate
 		chargePower := 1e3
-		targetSoC := 100
-		remainingHours := (float64(targetSoC) - soc) / 100 * tc.virtualCapacity / chargePower
+		targetSoc := 100
+		remainingHours := (float64(targetSoc) - soc) / 100 * tc.virtualCapacity / chargePower
 		remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
-		if rm := ce.RemainingChargeDuration(chargePower, targetSoC); rm != remainingDuration {
+		if rm := ce.RemainingChargeDuration(chargePower, targetSoc); rm != remainingDuration {
 			t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
 		}
 	}

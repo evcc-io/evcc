@@ -51,14 +51,14 @@ remoteDisabledHard = "{source}: Disabilitato"
 
 [main.vehicle]
 fallbackName = "Veicolo"
-vehicleSoC = "Caricato"
-targetSoC = "Limite"
+vehicleSoc = "Caricato"
+targetSoc = "Limite"
 none = "Nessun veicolo"
 unknown = "Veicolo ospite"
 changeVehicle = "Cambia veicolo"
 detectionActive = "Rilevamento del veicolo..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "disconesso"
 charging = "carica"
 ready = "pronto"
@@ -125,7 +125,7 @@ disclaimerHint = "Nota:"
 title = "Impostazioni {0}"
 disclaimerText = "Le modifiche andranno perse dopo il riavvio del server."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Min. carica %"
 description = "Per le emergenze. Il veicolo viene „veloce” caricato a {0}% da tutto il solare disponibile, e poi continua con solo il surplus solare."
 
@@ -187,7 +187,7 @@ inactiveLabel = "Tempo obiettivo"
 activeLabel = "{time}"
 modalTitle = "Imposta orario target"
 setTargetTime = "nessuno"
-description = "Quando dovrebbe essere addebitato il veicolo a {targetSoC}%?"
+description = "Quando dovrebbe essere addebitato il veicolo a {targetSoc}%?"
 tomorrow = "domani"
 targetIsInThePast = "Scegli un momento nel futuro, Marty."
 experimentalLabel = "Sperimentale"

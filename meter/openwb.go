@@ -100,7 +100,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		}
 
 		power = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.PowerTopic))
-		soc = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.SoCTopic))
+		soc = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.SocTopic))
 
 	default:
 		return nil, fmt.Errorf("invalid usage: %s", cc.Usage)

@@ -13,14 +13,14 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
 		Power    provider.Config
 		Energy   *provider.Config  // optional
-		SoC      *provider.Config  // optional
+		Soc      *provider.Config  // optional
 		Currents []provider.Config // optional
 	}
 
@@ -64,16 +64,16 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		currentsG = collectCurrentProviders(curr)
 	}
 
-	// decorate Meter with BatterySoC
-	var batterySoCG func() (float64, error)
-	if cc.SoC != nil {
-		batterySoCG, err = provider.NewFloatGetterFromConfig(*cc.SoC)
+	// decorate Meter with BatterySoc
+	var batterySocG func() (float64, error)
+	if cc.Soc != nil {
+		batterySocG, err = provider.NewFloatGetterFromConfig(*cc.Soc)
 		if err != nil {
 			return nil, fmt.Errorf("battery: %w", err)
 		}
 	}
 
-	res := m.Decorate(totalEnergyG, currentsG, batterySoCG)
+	res := m.Decorate(totalEnergyG, currentsG, batterySocG)
 
 	return res, nil
 }
@@ -112,9 +112,9 @@ type Meter struct {
 func (m *Meter) Decorate(
 	totalEnergy func() (float64, error),
 	currents func() (float64, float64, float64, error),
-	batterySoC func() (float64, error),
+	batterySoc func() (float64, error),
 ) api.Meter {
-	return decorateMeter(m, totalEnergy, currents, batterySoC)
+	return decorateMeter(m, totalEnergy, currents, batterySoc)
 }
 
 // CurrentPower implements the api.Meter interface

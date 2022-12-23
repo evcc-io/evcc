@@ -46,7 +46,7 @@
 								<div class="form-group">
 									<!-- eslint-disable vue/no-v-html -->
 									<label for="targetTimeLabel" class="mb-3">
-										{{ $t("main.targetCharge.description", { targetSoC }) }}
+										{{ $t("main.targetCharge.description", { targetSoc }) }}
 									</label>
 									<!-- eslint-enable vue/no-v-html -->
 									<div
@@ -136,7 +136,7 @@ export default {
 		id: [String, Number],
 		targetTime: String,
 		targetTimeActive: Boolean,
-		targetSoC: Number,
+		targetSoc: Number,
 		disabled: Boolean,
 	},
 	emits: ["target-time-updated", "target-time-removed"],

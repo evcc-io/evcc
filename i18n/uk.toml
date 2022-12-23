@@ -157,7 +157,7 @@ phases_3 = "3 фаза"
 label = "Фази"
 phases_3_hint = "({min} до {max})"
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 description = "Для надзвичайних ситуацій. Транспортний засіб «швидко» заряджається до {0}% від усіх доступних сонячних батарей, а потім продовжує працювати лише з сонячним надлишком."
 label = "Мін. заряд %"
 
@@ -194,8 +194,8 @@ login = "увійти"
 
 [main.vehicle]
 fallbackName = "Транспортний засіб"
-targetSoC = "Ліміт"
-vehicleSoC = "Заряд"
+targetSoc = "Ліміт"
+vehicleSoc = "Заряд"
 none = "Без транспортного засобу"
 unknown = "Гостьовий транспортний засіб"
 detectionActive = "Виявлення транспортного засобу…"
@@ -213,7 +213,7 @@ activate = "Увімкніть"
 inactiveLabel = "Запланований час"
 experimentalLabel = "Експериментальний"
 experimentalText = "Це працює, але не ідеально. Будь ласка, повідомте про несподівану поведінку"
-description = "Коли транспортний засіб повинен бути заряджений на {targetSoC}%?"
+description = "Коли транспортний засіб повинен бути заряджений на {targetSoc}%?"
 
 [main.loadpoint]
 fallbackName = "Точка зарядки"
@@ -224,7 +224,7 @@ duration = "Тривалість"
 [main.loadpointSettings.minCurrent]
 label = "Мін. струм"
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 charging = "зарядка"
 connected = "підключено"
 vehicleTarget = "Ліміт транспортного засобу: {soc}%"

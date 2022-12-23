@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPublishSoCAndRange(t *testing.T) {
+func TestPublishSocAndRange(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	clck := clock.NewMock()
 
@@ -31,7 +31,7 @@ func TestPublishSoCAndRange(t *testing.T) {
 	vehicle.EXPECT().OnIdentified().AnyTimes()
 
 	log := util.NewLogger("foo")
-	lp := &LoadPoint{
+	lp := &Loadpoint{
 		log:            log,
 		bus:            evbus.New(),
 		clock:          clck,
@@ -66,15 +66,15 @@ func TestPublishSoCAndRange(t *testing.T) {
 		lp.status = tc.status
 
 		assert.True(t, lp.socPollAllowed())
-		vehicle.EXPECT().SoC().Return(0.0, errors.New("foo"))
-		lp.publishSoCAndRange()
+		vehicle.EXPECT().Soc().Return(0.0, errors.New("foo"))
+		lp.publishSocAndRange()
 
 		clck.Add(time.Second)
 		assert.Equal(t, tc.allowed, lp.socPollAllowed())
 		if tc.allowed {
-			vehicle.EXPECT().SoC().Return(0.0, errors.New("foo"))
+			vehicle.EXPECT().Soc().Return(0.0, errors.New("foo"))
 		}
-		lp.publishSoCAndRange()
+		lp.publishSocAndRange()
 	}
 }
 
@@ -127,7 +127,7 @@ func TestVehicleDetectByID(t *testing.T) {
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
-		lp := &LoadPoint{
+		lp := &Loadpoint{
 			log: util.NewLogger("foo"),
 		}
 
@@ -157,8 +157,8 @@ func TestDefaultVehicle(t *testing.T) {
 	dflt.EXPECT().Phases().AnyTimes()
 	dflt.EXPECT().OnIdentified().Return(api.ActionConfig{
 		Mode:      &mode,
-		MinSoC:    &minsoc,
-		TargetSoC: &targetsoc,
+		MinSoc:    &minsoc,
+		TargetSoc: &targetsoc,
 	}).AnyTimes()
 
 	vehicle := mock.NewMockVehicle(ctrl)
@@ -168,7 +168,7 @@ func TestDefaultVehicle(t *testing.T) {
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().AnyTimes()
 
-	lp := NewLoadPoint(util.NewLogger("foo"))
+	lp := NewLoadpoint(util.NewLogger("foo"))
 	lp.defaultVehicle = dflt
 	lp.collectDefaults()
 
@@ -201,10 +201,10 @@ func TestDefaultVehicle(t *testing.T) {
 	if m := lp.GetMode(); m != mode {
 		t.Errorf("expected mode %v, got %v", mode, m)
 	}
-	if s := lp.GetMinSoC(); s != minsoc {
+	if s := lp.GetMinSoc(); s != minsoc {
 		t.Errorf("expected minsoc %v, got %v", minsoc, s)
 	}
-	if s := lp.GetTargetSoC(); s != targetsoc {
+	if s := lp.GetTargetSoc(); s != targetsoc {
 		t.Errorf("expected targetsoc %v, got %v", targetsoc, s)
 	}
 	if m := lp.onDisconnect.Mode; *m != api.ModeOff {
@@ -231,17 +231,17 @@ func TestDefaultVehicle(t *testing.T) {
 func TestApplyVehicleDefaults(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	newConfig := func(mode api.ChargeMode, minCurrent, maxCurrent float64, minSoC, targetSoC int) api.ActionConfig {
+	newConfig := func(mode api.ChargeMode, minCurrent, maxCurrent float64, minSoc, targetSoc int) api.ActionConfig {
 		return api.ActionConfig{
 			Mode:       &mode,
 			MinCurrent: &minCurrent,
 			MaxCurrent: &maxCurrent,
-			MinSoC:     &minSoC,
-			TargetSoC:  &targetSoC,
+			MinSoc:     &minSoc,
+			TargetSoc:  &targetSoc,
 		}
 	}
 
-	assertConfig := func(lp *LoadPoint, conf api.ActionConfig) {
+	assertConfig := func(lp *Loadpoint, conf api.ActionConfig) {
 		if lp.Mode != *conf.Mode {
 			t.Errorf("expected mode %v, got %v", *conf.Mode, lp.Mode)
 		}
@@ -251,11 +251,11 @@ func TestApplyVehicleDefaults(t *testing.T) {
 		if lp.MaxCurrent != *conf.MaxCurrent {
 			t.Errorf("expected maxCurrent %v, got %v", *conf.MaxCurrent, lp.MaxCurrent)
 		}
-		if lp.SoC.min != *conf.MinSoC {
-			t.Errorf("expected minSoC %v, got %v", *conf.MinSoC, lp.SoC.min)
+		if lp.Soc.min != *conf.MinSoc {
+			t.Errorf("expected minSoc %v, got %v", *conf.MinSoc, lp.Soc.min)
 		}
-		if lp.SoC.target != *conf.TargetSoC {
-			t.Errorf("expected targetSoC %v, got %v", *conf.TargetSoC, lp.SoC.target)
+		if lp.Soc.target != *conf.TargetSoc {
+			t.Errorf("expected targetSoc %v, got %v", *conf.TargetSoc, lp.Soc.target)
 		}
 	}
 
@@ -272,7 +272,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
 
-	lp := NewLoadPoint(util.NewLogger("foo"))
+	lp := NewLoadpoint(util.NewLogger("foo"))
 
 	// populate channels
 	x, y, z := createChannels(t)
@@ -282,7 +282,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	lp.ResetOnDisconnect = true
 
 	// check loadpoint default currents can't be violated
-	lp.applyAction(newConfig(*od.Mode, 5, 17, *od.MinSoC, *od.TargetSoC))
+	lp.applyAction(newConfig(*od.Mode, 5, 17, *od.MinSoc, *od.TargetSoc))
 	assertConfig(lp, od)
 
 	// vehicle identified
@@ -340,12 +340,12 @@ func TestReconnectVehicle(t *testing.T) {
 			vehicle.MockVehicle.EXPECT().Phases().AnyTimes()
 			vehicle.MockVehicle.EXPECT().OnIdentified().AnyTimes()
 			vehicle.MockVehicle.EXPECT().Identifiers().AnyTimes().Return(tc.vehicleId)
-			vehicle.MockVehicle.EXPECT().SoC().Return(0.0, nil).AnyTimes()
+			vehicle.MockVehicle.EXPECT().Soc().Return(0.0, nil).AnyTimes()
 
 			charger := mock.NewMockCharger(ctrl)
 			charger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
 
-			lp := &LoadPoint{
+			lp := &Loadpoint{
 				log:         util.NewLogger("foo"),
 				bus:         evbus.New(),
 				clock:       clck,

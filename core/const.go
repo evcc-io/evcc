@@ -9,5 +9,5 @@ const (
 
 	vehicleRange     = "vehicleRange"     // vehicle range
 	vehicleOdometer  = "vehicleOdometer"  // vehicle odometer
-	vehicleTargetSoC = "vehicleTargetSoC" // vehicle soc limit
+	vehicleTargetSoc = "vehicleTargetSoc" // vehicle soc limit
 )

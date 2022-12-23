@@ -56,7 +56,7 @@ type decoratePowerWallBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decoratePowerWallBatteryImpl) SoC() (float64, error) {
+func (impl *decoratePowerWallBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }
 

@@ -55,8 +55,8 @@ type ActionConfig struct {
 	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
 	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
 	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
-	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
-	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
+	MinSoc     *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc
+	TargetSoc  *int        `mapstructure:"targetSoc,omitempty"`  // Target Soc
 }
 
 // Merge merges all non-nil properties of the additional config into the base config.
@@ -71,11 +71,11 @@ func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
 	if m.MaxCurrent != nil {
 		a.MaxCurrent = m.MaxCurrent
 	}
-	if m.MinSoC != nil {
-		a.MinSoC = m.MinSoC
+	if m.MinSoc != nil {
+		a.MinSoc = m.MinSoc
 	}
-	if m.TargetSoC != nil {
-		a.TargetSoC = m.TargetSoC
+	if m.TargetSoc != nil {
+		a.TargetSoc = m.TargetSoc
 	}
 	return a
 }
@@ -107,9 +107,9 @@ type MeterCurrent interface {
 	Currents() (float64, float64, float64, error)
 }
 
-// Battery is able to provide battery SoC in %
+// Battery is able to provide battery Soc in %
 type Battery interface {
-	SoC() (float64, error)
+	Soc() (float64, error)
 }
 
 // ChargeState provides current charging status
@@ -204,7 +204,7 @@ type VehiclePosition interface {
 
 // SocLimiter returns the vehicles charge limit
 type SocLimiter interface {
-	TargetSoC() (float64, error)
+	TargetSoc() (float64, error)
 }
 
 // VehicleChargeController allows to start/stop the charging session on the vehicle side

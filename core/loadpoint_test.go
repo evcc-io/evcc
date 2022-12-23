@@ -33,10 +33,10 @@ func (n *Null) ChargingTime() (time.Duration, error) {
 	return 0, nil
 }
 
-func createChannels(t *testing.T) (chan util.Param, chan push.Event, chan *LoadPoint) {
+func createChannels(t *testing.T) (chan util.Param, chan push.Event, chan *Loadpoint) {
 	uiChan := make(chan util.Param)
 	pushChan := make(chan push.Event)
-	lpChan := make(chan *LoadPoint)
+	lpChan := make(chan *Loadpoint)
 
 	log := false
 	go func() {
@@ -61,13 +61,13 @@ func createChannels(t *testing.T) (chan util.Param, chan push.Event, chan *LoadP
 	return uiChan, pushChan, lpChan
 }
 
-func attachChannels(lp *LoadPoint, uiChan chan util.Param, pushChan chan push.Event, lpChan chan *LoadPoint) {
+func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan push.Event, lpChan chan *Loadpoint) {
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
 }
 
-func attachListeners(t *testing.T, lp *LoadPoint) {
+func attachListeners(t *testing.T, lp *Loadpoint) {
 	Voltage = 230 // V
 
 	if charger, ok := lp.charger.(*mock.MockCharger); ok && charger != nil {
@@ -80,7 +80,7 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 }
 
 func TestNew(t *testing.T) {
-	lp := NewLoadPoint(util.NewLogger("foo"))
+	lp := NewLoadpoint(util.NewLogger("foo"))
 
 	if lp.phases != 0 {
 		t.Errorf("Phases %v", lp.phases)
@@ -154,7 +154,7 @@ func TestUpdatePowerZero(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		charger := mock.NewMockCharger(ctrl)
 
-		lp := &LoadPoint{
+		lp := &Loadpoint{
 			log:         util.NewLogger("foo"),
 			bus:         evbus.New(),
 			clock:       clck,
@@ -306,7 +306,7 @@ func TestPVHysteresis(t *testing.T) {
 			charger := mock.NewMockCharger(ctrl)
 
 			Voltage = 100
-			lp := &LoadPoint{
+			lp := &Loadpoint{
 				log:            util.NewLogger("foo"),
 				clock:          clck,
 				charger:        charger,
@@ -355,7 +355,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	Voltage = 100
-	lp := &LoadPoint{
+	lp := &Loadpoint{
 		log:            util.NewLogger("foo"),
 		clock:          clck,
 		MinCurrent:     minA,
@@ -378,7 +378,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	ctrl.Finish()
 }
 
-func TestDisableAndEnableAtTargetSoC(t *testing.T) {
+func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
@@ -389,7 +389,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	vehicle.EXPECT().Phases().Return(0).AnyTimes()
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
-	lp := &LoadPoint{
+	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
@@ -402,10 +402,10 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		// coordinator:  coordinator.NewDummy(), // silence nil panics
 		MinCurrent:   minA,
 		MaxCurrent:   maxA,
-		vehicle:      vehicle,      // needed for targetSoC check
+		vehicle:      vehicle,      // needed for targetSoc check
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
 		Mode:         api.ModeNow,
-		SoC: SoCConfig{
+		Soc: SocConfig{
 			target: 90,
 			Poll: PollConfig{
 				Mode:     pollConnected, // allow polling when connected
@@ -421,7 +421,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	lp.status = api.StatusC
 
 	t.Log("charging below soc target")
-	vehicle.EXPECT().SoC().Return(85.0, nil)
+	vehicle.EXPECT().Soc().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
@@ -429,7 +429,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	t.Log("charging above target - soc deactivates charger")
 	clock.Add(5 * time.Minute)
-	vehicle.EXPECT().SoC().Return(90.0, nil)
+	vehicle.EXPECT().Soc().Return(90.0, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
@@ -437,7 +437,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	t.Log("deactivated charger changes status to B")
 	clock.Add(5 * time.Minute)
-	vehicle.EXPECT().SoC().Return(95.0, nil)
+	vehicle.EXPECT().Soc().Return(95.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-5000, false, false)
@@ -450,7 +450,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	t.Log("soc has fallen below target - soc update timer expired")
 	clock.Add(pollInterval)
-	vehicle.EXPECT().SoC().Return(85.0, nil)
+	vehicle.EXPECT().Soc().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(true).Return(nil)
@@ -464,7 +464,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := mock.NewMockCharger(ctrl)
 
-	lp := &LoadPoint{
+	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
@@ -477,7 +477,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		MaxCurrent:  maxA,
 		status:      api.StatusC,
 		Mode:        api.ModeOff,
-		SoC: SoCConfig{
+		Soc: SocConfig{
 			target: 70,
 		},
 		ResetOnDisconnect: true,
@@ -511,7 +511,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 }
 
 // cacheExpecter can be used to verify asynchronously written values from cache
-func cacheExpecter(t *testing.T, lp *LoadPoint) (*util.Cache, func(key string, val interface{})) {
+func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, val interface{})) {
 	// attach cache for verifying values
 	paramC := make(chan util.Param)
 	lp.uiChan = paramC
@@ -536,7 +536,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	charger := mock.NewMockCharger(ctrl)
 	rater := mock.NewMockChargeRater(ctrl)
 
-	lp := &LoadPoint{
+	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
@@ -608,7 +608,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	ctrl.Finish()
 }
 
-func TestTargetSoC(t *testing.T) {
+func TestTargetSoc(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vhc := mock.NewMockVehicle(ctrl)
 
@@ -634,9 +634,9 @@ func TestTargetSoC(t *testing.T) {
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
-		lp := &LoadPoint{
+		lp := &Loadpoint{
 			vehicle: tc.vehicle,
-			SoC: SoCConfig{
+			Soc: SocConfig{
 				target: tc.target,
 			},
 			vehicleSoc: tc.soc,
@@ -648,15 +648,15 @@ func TestTargetSoC(t *testing.T) {
 	}
 }
 
-func TestSoCPoll(t *testing.T) {
+func TestSocPoll(t *testing.T) {
 	clock := clock.NewMock()
 	tRefresh := pollInterval
 	tNoRefresh := pollInterval / 2
 
-	lp := &LoadPoint{
+	lp := &Loadpoint{
 		clock: clock,
 		log:   util.NewLogger("foo"),
-		SoC: SoCConfig{
+		Soc: SocConfig{
 			Poll: PollConfig{
 				Interval: time.Hour,
 			},
@@ -718,7 +718,7 @@ func TestSoCPoll(t *testing.T) {
 			clock.Add(tc.dt)
 		}
 
-		lp.SoC.Poll.Mode = tc.mode
+		lp.Soc.Poll.Mode = tc.mode
 		lp.status = tc.status
 
 		res := lp.socPollAllowed()
@@ -733,7 +733,7 @@ func TestSoCPoll(t *testing.T) {
 	}
 }
 
-func TestMinSoC(t *testing.T) {
+func TestMinSoc(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vhc := mock.NewMockVehicle(ctrl)
 
@@ -758,9 +758,9 @@ func TestMinSoC(t *testing.T) {
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
-		lp := &LoadPoint{
+		lp := &Loadpoint{
 			vehicle: tc.vehicle,
-			SoC: SoCConfig{
+			Soc: SocConfig{
 				min: tc.min,
 			},
 			vehicleSoc: tc.soc,
