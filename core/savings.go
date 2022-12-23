@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 )
@@ -113,22 +114,23 @@ func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower flo
 	return share
 }
 
-func (s *Savings) currentGridPrice() float64 {
-	if s.tariffs.Grid != nil {
-		if gridPrice, err := s.tariffs.Grid.CurrentPrice(); err == nil {
-			return gridPrice
+func currentPrice(t api.Tariff, dfltPrice float64) float64 {
+	if t != nil {
+		if rr, err := t.Rates(); err == nil {
+			if r, err := rr.Current(time.Now()); err == nil {
+				return r.Price
+			}
 		}
 	}
-	return DefaultGridPrice
+	return dfltPrice
+}
+
+func (s *Savings) currentGridPrice() float64 {
+	return currentPrice(s.tariffs.Grid, DefaultGridPrice)
 }
 
 func (s *Savings) currentFeedInPrice() float64 {
-	if s.tariffs.FeedIn != nil {
-		if gridPrice, err := s.tariffs.FeedIn.CurrentPrice(); err == nil {
-			return gridPrice
-		}
-	}
-	return DefaultFeedInPrice
+	return currentPrice(s.tariffs.FeedIn, DefaultFeedInPrice)
 }
 
 func (s *Savings) updatePrices(p publisher) (float64, float64) {

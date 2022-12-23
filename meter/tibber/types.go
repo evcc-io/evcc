@@ -24,9 +24,9 @@ type Subscription struct {
 	ID        string
 	Status    string
 	PriceInfo struct {
-		Current PriceInfo
-		Today   []PriceInfo
-		// Tomorrow []PriceInfo
+		Current  PriceInfo
+		Today    []PriceInfo
+		Tomorrow []PriceInfo
 	}
 }
 

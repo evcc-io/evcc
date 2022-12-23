@@ -24,8 +24,8 @@ func TestRemainingChargeDuration(t *testing.T) {
 	chargePower := 1000.0
 	targetSoc := 80
 
-	if remaining := ce.RemainingChargeDuration(chargePower, targetSoc); remaining != 6*time.Hour {
-		t.Error("wrong remaining charge duration")
+	if remaining := ce.RemainingChargeDuration(targetSoc, chargePower); remaining != 6*time.Hour {
+		t.Errorf("wrong remaining charge duration: %v", remaining)
 	}
 }
 
@@ -106,7 +106,7 @@ func TestSocEstimation(t *testing.T) {
 			remainingHours := (float64(targetSoc) - soc) / 100 * tc.virtualCapacity / chargePower
 			remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
-			if rm := ce.RemainingChargeDuration(chargePower, targetSoc); rm != remainingDuration {
+			if rm := ce.RemainingChargeDuration(targetSoc, chargePower); rm != remainingDuration {
 				t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
 			}
 		}
@@ -202,7 +202,7 @@ func TestSocFromChargerAndVehicleWithErrors(t *testing.T) {
 		remainingHours := (float64(targetSoc) - soc) / 100 * tc.virtualCapacity / chargePower
 		remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
-		if rm := ce.RemainingChargeDuration(chargePower, targetSoc); rm != remainingDuration {
+		if rm := ce.RemainingChargeDuration(targetSoc, chargePower); rm != remainingDuration {
 			t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
 		}
 	}
