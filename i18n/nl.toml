@@ -12,7 +12,6 @@ light = "Design: licht"
 dark = "Design: donker"
 
 [footer.version]
-availableShort = "update"
 availableLong = "update beschikbaar"
 modalTitle = "Update beschikbaar"
 modalUpdateStarted = "Evcc zal herstarten na de update."

@@ -29,7 +29,6 @@ mi = "miles"
 label = "Telemetry"
 
 [footer.version]
-availableShort = "install"
 availableLong = "new version available"
 modalTitle = "New version available"
 modalUpdateStarted = "Starting the new version of evcc…"

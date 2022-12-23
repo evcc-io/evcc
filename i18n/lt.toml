@@ -12,7 +12,6 @@ light = "Dizainas: šviesus"
 dark = "Dizainas: tamsus"
 
 [footer.version]
-availableShort = "naujinimas"
 availableLong = "yra naujesnė versija"
 modalTitle = "Yra naujesnė versija"
 modalUpdateStarted = "Pasibaigus naujinimui EVCC startuos iš naujo."

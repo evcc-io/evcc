@@ -29,7 +29,6 @@ mi = "Meilen"
 label = "Telemetrie"
 
 [footer.version]
-availableShort = "Update"
 availableLong = "Update verfügbar"
 modalTitle = "Update verfügbar"
 modalUpdateStarted = "Nach der Aktualisierung wird evcc neu gestartet."

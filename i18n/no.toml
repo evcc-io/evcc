@@ -12,7 +12,6 @@ light = "Design: lyst"
 dark = "Design: mørkt"
 
 [footer.version]
-availableShort = "Oppdater"
 availableLong = "oppdatering tilgjengelig"
 modalTitle = "Oppdatering tilgjengelig"
 modalInstalledVersion = "Installert versjon"

@@ -12,7 +12,6 @@ light = "Wygląd: światły"
 dark = "Wygląd: ciemny"
 
 [footer.version]
-availableShort = "aktualizacja"
 availableLong = "dostępna aktualizacja"
 modalTitle = "Dostępna aktualizacja"
 modalUpdateStarted = "Evcc uruchomi się ponownie po aktualizacji.."

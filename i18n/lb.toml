@@ -7,7 +7,6 @@ blog = "Blog"
 github = "GitHub"
 
 [footer.version]
-availableShort = "aktualiséieren"
 modalTitle = "Aktualiséierung verfügbar"
 modalInstalledVersion = "Aktuell installéiert Versioun"
 modalCancel = "Ofbriechen"

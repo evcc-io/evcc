@@ -7,7 +7,6 @@ about = "Informazioni su evcc"
 sessions = "Sessioni di ricarica"
 
 [footer.version]
-availableShort = "aggiornamento"
 availableLong = "aggiornamento disponibile"
 modalTitle = "Aggiornamento disponibile"
 modalUpdateStarted = "Evcc ripartirà dopo l'aggiornamento.."
