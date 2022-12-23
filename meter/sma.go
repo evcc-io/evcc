@@ -126,10 +126,7 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 
 	var currents [3]float64
 	for i, id := range []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3} {
-		currents[i] = sma.AsFloat(values[id])
-		if powers[i] < 0 && currents[i] > 0 {
-			currents[i] *= -1
-		}
+		currents[i] = util.SignFromPower(sma.AsFloat(values[id]), powers[i])
 	}
 
 	return currents[0], currents[1], currents[2], err
