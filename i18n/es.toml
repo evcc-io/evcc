@@ -4,7 +4,8 @@ docs = "Documentación"
 blog = "Blog"
 github = "GitHub"
 login = "Login de vehículo"
-about = "Sobre evcc"
+about = "Sobre"
+settings = "Ajustes"
 
 [header.theme]
 auto = "Tema: System"
@@ -18,10 +19,10 @@ modalUpdateStarted = "Después de la actualización, evcc se reiniciará."
 modalInstalledVersion = "Versión actualmente instalada"
 modalNoReleaseNotes = "No hay notas de lanzamiento disponibles. Puedes encontrar más información sobre la nueva versión aquí:"
 modalCancel = "Abortar"
-modalUpdate = "Actualizar"
-modalUpdateNow = "Actualizar ahora"
+modalUpdate = "Instalar"
+modalUpdateNow = "Instalar ahora"
 modalDownload = "Download"
-modalUpdateStatusStart = "La actualización comenzó:"
+modalUpdateStatusStart = "Instalación iniciada:"
 
 [footer.savings]
 tabTitle = "Mis datos"
@@ -43,11 +44,11 @@ savingsTotalEnergy = "{total} kWh cargado"
 tabTitle = "Live-Community"
 power = "poder de carga"
 powerSub1 = "{activeClients} de {totalClients} usarios"
-powerSub2 = "Cargar con evcc"
+powerSub2 = "cargando..."
 greenShare = "Parte solar"
-greenShareSub1 = "viene la actuación"
-greenShareSub2 = "de soar y batería doméstica"
-greenEnergy = "Energía solar"
+greenShareSub1 = "energía proporcionada por"
+greenShareSub2 = "solar, y almacenamiento de baterías"
+greenEnergy = "Solar"
 greenEnergySub1 = "Cargado sobre evcc"
 greenEnergySub2 = "desde octubre de 2022"
 
@@ -64,7 +65,7 @@ thanks = "¡Gracias por tu patrocinio, {sponsor}! Esto nos ayuda en un mayor des
 confetti = "¿Quieres un poco de confeti?"
 supportUs = "Nuestra misión: hacer que repostar el sol sea la norma. Ayúdanos y apoya económicamente a evcc."
 sticker = "...o pegatinas de evcc?"
-confettiPromise = "También hay pegatinas y confeti digital  ;)"
+confettiPromise = "También hay pegatinas y confeti digital"
 becomeSponsor = "Convertirse en patrocinador"
 
 [notifications]
@@ -88,7 +89,7 @@ pvExport = "Alimento"
 
 [main.mode]
 off = "Acabado"
-minpv = "Mínimo+solar"
+minpv = "Min+Solar"
 pv = "Solar"
 now = "Rápido"
 
@@ -102,7 +103,7 @@ duration = "Duración"
 remaining = "Tiempo restante"
 
 [main.loadpointSettings]
-title = 'Configuraciones "{0}"'
+title = "Configuraciones {0}"
 vehicle = "Vehículo"
 currents = "Corriente de carga"
 default = "default"
@@ -110,8 +111,8 @@ disclaimerHint = "Pipa:"
 disclaimerText = "Actualmente, los cambios aún no son persistentes y se restablecen después de un inicio de servicio."
 
 [main.loadpointSettings.minSoC]
-label = "Nivel mínimo de carga"
-description = 'Rango para emergencias. El vehículo se carga "rápidamente" a {0}% en modo solar. Luego continuar con el excedente fotovoltaico.'
+label = "Cargo de min. %"
+description = "Rango para emergencias. El vehículo se carga „rápidamente” a {0}% en modo solar. Luego continuar con el excedente fotovoltaico."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases"
@@ -147,15 +148,15 @@ vehicleTarget = "límite de vehículo: {soc}%"
 minCharge = "Carga mínima hasta {soc}%."
 waitForVehicle = "Listo para cargar. Esperar vehículo."
 vehicleTargetReached = "Límite de vehículo {soc}% alcanzado."
-charging = "Carga activa."
-targetChargePlanned = "Carga de destino planificada. La carga comienza a las {time}."
+charging = "Cargando ..."
+targetChargePlanned = "La carga objetivo comienza a {time}."
 targetChargeWaitForVehicle = "Carga de destino lista. Esperar vehículo."
-targetChargeActive = "Carga de destino activo."
+targetChargeActive = "Carga objetivo activa..."
 connected = "Conexo."
-pvDisable = "Exceso insuficiente. Pausa en {remaining}."
-pvEnable = "Exceso disponibile. Empezar en {remaining}."
-scale1p = "Reducir a monofásico en {remaining}."
-scale3p = "Aumento a trifásico en {remaining}."
+pvDisable = "Exceso insuficiente. Pausa en {remaining}..."
+pvEnable = "Exceso disponibile. Empezar en {remaining}..."
+scale1p = "Reducir a monofásico en {remaining}..."
+scale3p = "Aumento a trifásico en {remaining}..."
 disconnected = "No conectado."
 unknown = ""
 
@@ -172,11 +173,11 @@ setTargetTime = "niguna"
 description = "¿Cuándo se debe cargar el vehículo al {targetSoC}%?"
 today = "hoy"
 tomorrow = "mañana"
-targetIsInThePast = "El tiempo está en el pasado."
+targetIsInThePast = "Elegir un tiempo en el futuro, Marty."
 remove = "retirar"
-activate = "activar"
+activate = "Activar"
 experimentalLabel = "Experimental"
-experimentalText = "Esta función funciona, pero aún no es perfecta. Por favor reporte un comportamiento inesperado en nuestro"
+experimentalText = "Esto funciona, pero no es perfecto. Informe cualquier comportamiento inesperado a"
 
 [main.targetEnergy]
 label = "Objetivo de carga"
@@ -186,16 +187,16 @@ noLimit = "ningún"
 title = "Error al iniciar"
 description = "Por favor revise su archivo de configuración. Si el mensaje de error no te ayuda, busca una solución en nuestro {0}."
 discussions = "GitHub Discussions"
-hint = "Nota: Otra razón por la que ve este mensaje podría ser un dispositivo defectuoso (inversor, medidor, ...). Compruebe sus conexiones de red."
+hint = "Nota: También puede ser que tengas un aparato averiado (inversor, contador, ...). Compruebe sus conexiones de red."
 configuration = "Konfiguración"
 configFile = "Archivo de configuración utilizado:"
-lineError = "Se encontró un error en {0}."
+lineError = "Error en {0}."
 lineErrorLink = "Línea {0}"
-fixAndRestart = "Elimine el problema y reinicie el servidor."
+fixAndRestart = "Por favor, solucione el problema y reinicie el servidor."
 restartButton = "Empezar de nuevo"
 
 [sessions]
-title = "Operaciones de carga"
+title = "Sesiones de carga"
 downloadCsv = "Descargar como CSV"
 loadpoint = "Punto de carga"
 vehicle = "Vehículo"
@@ -208,11 +209,32 @@ vehicle = "Vehículo"
 odometer = "Kilometraje (km)"
 identifier = "Identificador"
 chargedenergy = "Energía (kWh)"
-meterstart = "Mostrador inicial (kWh)"
-meterstop = "Mostrador final (kWh)"
+meterstart = "Inicio de metro (kWh)"
+meterstop = "Parón de metro (kWh)"
 created = "Hora de inicio"
 finished = "Hora de finalización"
 
 [offline]
-message = "Sin conexión al servidor."
+message = "No conectado a un servidor."
 reload = "Actualizar?"
+
+[settings]
+title = "Ajustes"
+
+[settings.theme]
+label = "Tema"
+auto = "sistema"
+light = "claro"
+dark = "oscuro"
+
+[settings.unit]
+label = "Unidades"
+km = "km"
+mi = "miles"
+
+[settings.language]
+label = "Idioma"
+auto = "Automático"
+
+[settings.telemetry]
+label = "Telemetría"

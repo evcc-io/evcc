@@ -5,7 +5,7 @@ docs = "Dokumentation"
 blog = "Blog"
 github = "GitHub"
 login = "Fahrzeug Logins"
-about = "Über evcc"
+about = "Über"
 
 [settings]
 title = "Einstellungen"
@@ -29,16 +29,16 @@ mi = "Meilen"
 label = "Telemetrie"
 
 [footer.version]
-availableLong = "Update verfügbar"
-modalTitle = "Update verfügbar"
-modalUpdateStarted = "Nach der Aktualisierung wird evcc neu gestartet."
-modalInstalledVersion = "Aktuell installierte Version"
-modalNoReleaseNotes = "Keine Releasenotes verfügbar. Mehr Informationen zur neuen Version findest du hier:"
+availableLong = "Neue Version verfügbar"
+modalTitle = "Neue Version verfügbar"
+modalUpdateStarted = "Starte die neue Version von evcc..."
+modalInstalledVersion = "Installierte Version"
+modalNoReleaseNotes = "Keine Versionshinweise verfügbar. Mehr Informationen zur neuen Version:"
 modalCancel = "Abbrechen"
-modalUpdate = "Aktualisieren"
-modalUpdateNow = "Jetzt aktualisieren"
+modalUpdate = "Installieren"
+modalUpdateNow = "Jetzt installieren"
 modalDownload = "Download"
-modalUpdateStatusStart = "Aktualisierung gestartet:"
+modalUpdateStatusStart = "Installation gestartet:"
 
 [footer.savings]
 tabTitle = "Meine Daten"
@@ -60,28 +60,28 @@ savingsTotalEnergy = "{total} kWh geladen"
 tabTitle = "Live-Community"
 power = "Ladeleistung"
 powerSub1 = "{activeClients} von {totalClients} Nutzern"
-powerSub2 = "laden mit evcc"
+powerSub2 = "laden..."
 greenShare = "Sonnenanteil"
-greenShareSub1 = "der Leistung kommt"
+greenShareSub1 = "Leistung kommt von"
 greenShareSub2 = "aus PV & Hausakku"
-greenEnergy = "Sonnenenergie"
+greenEnergy = "Sonne"
 greenEnergySub1 = "über evcc geladen"
 greenEnergySub2 = "seit Oktober 2022"
 
 [footer.telemetry]
 optIn = "Ich möchte meine Ladedaten mit der Community teilen."
-optInMoreDetails = "Mehr Details gibts {0}."
+optInMoreDetails = "Mehr Details {0}."
 optInMoreDetailsLink = "hier"
 optInSponsorship = "Sponsoring erforderlich."
 
 [footer.sponsor]
 titleSponsor = "Du bist Unterstützer"
 titleNoSponsor = "Unterstütze uns"
-thanks = "Danke für dein Sponsoring, {sponsor}! Das hilft uns bei der Weiterentwicklung."
+thanks = "Vielen Dank, {sponsor}! Dein Beitrag hilft, evcc weiterzuentwickeln."
 confetti = "Lust auf Konfetti?"
 supportUs = "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unterstütze evcc finanziell."
 sticker = "…oder evcc Sticker?"
-confettiPromise = "Es gibt auch Sticker und digitales Konfetti ;)"
+confettiPromise = "Es gibt auch Sticker und digitales Konfetti"
 becomeSponsor = "Sponsor werden"
 
 [notifications]
@@ -119,16 +119,16 @@ duration = "Dauer"
 remaining = "Restzeit"
 
 [main.loadpointSettings]
-title = 'Einstellungen "{0}"'
+title = "Einstellungen {0}s"
 vehicle = "Fahrzeug"
 currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
-disclaimerText = "Änderungen sind aktuell noch nicht persistent und werden nach einem Serverneustart wieder zurückgesetzt."
+disclaimerText = "Änderungen gehen nach einem Neustart des Servers verloren."
 
 [main.loadpointSettings.minSoC]
-label = "Mindestladestand"
-description = 'Reichweite für Notfälle. Fahrzeug wird im PV-Modus "schnell" auf {0}% geladen. Danach weiter mit PV-Überschuss.'
+label = "Min. Ladung %"
+description = "Reichweite für Notfälle. Fahrzeug wird im PV-Modus „schnell” auf {0}% geladen. Danach weiter mit PV-Überschuss."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phasen"
@@ -151,7 +151,7 @@ targetSoC = "Ladeziel"
 none = "Kein Fahrzeug"
 unknown = "Gastfahrzeug"
 changeVehicle = "Fahrzeug ändern"
-detectionActive = "Fahrzeugerkennung läuft ..."
+detectionActive = "Fahrzeugerkennung läuft..."
 
 [main.vehicleSoC]
 disconnected = "getrennt"
@@ -162,9 +162,9 @@ vehicleTarget = "Fahrzeuglimit: {soc}%"
 
 [main.vehicleStatus]
 minCharge = "Mindestladung bis {soc}%."
-waitForVehicle = "Ladebereit. Warte auf Fahrzeug."
+waitForVehicle = "Ladebereit. Warte auf Fahrzeug..."
 vehicleTargetReached = "Fahrzeuglimit {soc}% erreicht."
-charging = "Ladevorgang aktiv."
+charging = "Ladevorgang aktiv..."
 targetChargePlanned = "Zielladen geplant. Ladung startet {time} Uhr."
 targetChargeWaitForVehicle = "Zielladen bereit. Warte auf Fahrzeug."
 targetChargeActive = "Zielladen aktiv."
@@ -189,7 +189,7 @@ setTargetTime = "keine"
 description = "Wann soll das Fahrzeug auf {targetSoC}% geladen sein?"
 today = "heute"
 tomorrow = "morgen"
-targetIsInThePast = "Zeitpunkt liegt in der Vergangenheit."
+targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
 remove = "Entfernen"
 activate = "Aktivieren"
 experimentalLabel = "Experimentell"

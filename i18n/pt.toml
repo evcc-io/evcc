@@ -4,7 +4,7 @@ docs = "Documentação"
 blog = "Blog"
 github = "GitHub"
 login = "Login de veículo"
-about = "Sobre evcc"
+about = "Sobre"
 
 [header.theme]
 auto = "Design: Sistema"
@@ -64,7 +64,7 @@ thanks = "Obrigado por seu patrocínio, {sponsor}! Isso nos ajuda em um maior de
 confetti = "Gosta de confete?"
 supportUs = "Nossa missão: tornar carrega solar a norma. Ajude-nos e apoie financeiramente o evcc."
 sticker = "… ou autocolantes do evcc?"
-confettiPromise = "Também temos autocolantes e confete digital ;)"
+confettiPromise = "Também temos autocolantes e confete digital"
 becomeSponsor = "Torne-se um patrocinador"
 
 [notifications]
@@ -102,7 +102,7 @@ duration = "Duração"
 remaining = "Tempo restante"
 
 [main.loadpointSettings]
-title = 'Configurações "{0}"'
+title = "Configurações {0}"
 vehicle = "Veículo"
 currents = "Corrente de carga"
 default = "predefinado"
@@ -111,7 +111,7 @@ disclaimerText = "As alterações não são persistentes no momento e serão red
 
 [main.loadpointSettings.minSoC]
 label = "Nível mínimo de carga"
-description = 'Alcance para emergências. O veículo carrega até {0}% no modo "Rápido". Em seguida, continue com o modo "PV".'
+description = "Alcance para emergências. O veículo carrega até {0}% no modo „Rápido”. Em seguida, continue com o modo „PV”."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases elétricas"

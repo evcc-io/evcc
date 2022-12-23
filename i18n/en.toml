@@ -32,7 +32,7 @@ label = "Telemetry"
 availableLong = "new version available"
 modalTitle = "New version available"
 modalUpdateStarted = "Starting the new version of evcc…"
-modalInstalledVersion = "Installed version: "
+modalInstalledVersion = "Installed version"
 modalNoReleaseNotes = "No release notes available. More info about the new version:"
 modalCancel = "Cancel"
 modalUpdate = "Install"
@@ -70,7 +70,7 @@ greenEnergySub2 = "since October 2022"
 
 [footer.telemetry]
 optIn = "I want to contribute my data."
-optInMoreDetails = "More details at {0}."
+optInMoreDetails = "More details {0}."
 optInMoreDetailsLink = "here"
 optInSponsorship = "Sponsoring required."
 
@@ -81,7 +81,7 @@ thanks = "Thank you, {sponsor}! Your contribution helps develop evcc further."
 confetti = "Ready for confetti?"
 supportUs = "Our mission is to make solar the norm. Help evcc by paying what it is worth to you."
 sticker = "… or evcc stickers?"
-confettiPromise = "You get stickers and digital confetti ;)"
+confettiPromise = "You get stickers and digital confetti"
 becomeSponsor = "Become a Sponsor"
 
 [notifications]
@@ -119,7 +119,7 @@ duration = "Duration"
 remaining = "Remaining"
 
 [main.loadpointSettings]
-title = 'Settings "{0}"'
+title = "Settings {0}s"
 vehicle = "Vehicle"
 currents = "Charging current"
 default = "default"
@@ -128,7 +128,7 @@ disclaimerText = "Changes will be lost after the server is restarted."
 
 [main.loadpointSettings.minSoC]
 label = "Min. charge %"
-description = 'For emergencies. The vehicle gets "fast" charged to {0}% from all available solar, and then continues with only the solar surplus.'
+description = "For emergencies. The vehicle gets „fast” charged to {0}% from all available solar, and then continues with only the solar surplus."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"

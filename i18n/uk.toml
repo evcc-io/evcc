@@ -1,0 +1,232 @@
+[header]
+blog = "Блог"
+docs = "Документація"
+github = "GitHub"
+about = "Про evcc"
+sessions = "Сеанси зарядки"
+settings = "Налаштування"
+login = "Вхід до транспортного засобу"
+
+[settings]
+title = "Налаштування"
+
+[settings.theme]
+label = "Дизайн"
+auto = "система"
+light = "світла"
+dark = "темна"
+
+[settings.language]
+auto = "Автоматично"
+label = "Мова"
+
+[settings.unit]
+km = "км"
+mi = "милі"
+label = "Одиниці вимірювання"
+
+[footer.version]
+availableShort = "встановити"
+modalTitle = "Доступна нова версія"
+modalUpdateStarted = "Початок нової версії evcc…"
+modalInstalledVersion = "Встановлена версія"
+modalCancel = "Скасувати"
+availableLong = "доступна нова версія"
+modalDownload = "Завантажити"
+modalUpdateNow = "Встановити зараз"
+modalNoReleaseNotes = "Жодних нотаток про випуск немає. Детальніше про нову версію:"
+modalUpdate = "Встановити"
+modalUpdateStatusStart = "Встановлення розпочато:"
+
+[footer.savings]
+footerShort = "{percent}% сонячної"
+modalTitle = "Огляд зарядної енергії"
+percentTitle = "Сонячна енергія"
+percentSelf = "{self} кВт/год сонячної енергії"
+percentGrid = "{grid} кВт/год мережі"
+priceTitle = "Ціна енергії"
+priceGrid = "{gridPrice} мережа"
+savingsTitle = "Економія"
+tabTitle = "Мої дані"
+priceFeedIn = "{feedInPrice} подача"
+footerLong = "{percent}% сонячної енергії"
+since = "оскільки {since}"
+savingsComparedToGrid = "у порівнянні з мережою"
+savingsTotalEnergy = "{total} кВт/год заряджено"
+
+[settings.telemetry]
+label = "Телеметрія"
+
+[footer.community]
+power = "Потужність заряджання"
+powerSub2 = "зарядка"
+greenShareSub2 = "сонячна енергія та батарея"
+greenEnergySub2 = "з жовтня 2022"
+tabTitle = "Жива спільнота"
+powerSub1 = "{activeClients} з {totalClients} учасників"
+greenShare = "Сонячна частка"
+greenShareSub1 = "енергія надається"
+greenEnergySub1 = "заряджено з evcc"
+greenEnergy = "Сонячна"
+
+[footer.telemetry]
+optInMoreDetails = "Детальніше {0}."
+optInMoreDetailsLink = "тут"
+optInSponsorship = "Спонсорування необхідне."
+optIn = "Я хочу внести свої дані."
+
+[footer.sponsor]
+thanks = "Дякуємо, {sponsor}! Ваш внесок допомагає розвивати evcc далі."
+confetti = "Готові до конфетті?"
+becomeSponsor = "Стати спонсором"
+confettiPromise = "Ви отримуєте наклейки та цифрові конфетті"
+supportUs = "Наша місія — зробити сонячну енергію нормою. Допоможіть evcc, заплативши стільки, скільки можете."
+titleSponsor = "Ви спонсор"
+titleNoSponsor = "Підтримайте нас"
+sticker = "… або наклейки evcc?"
+
+[notifications]
+modalTitle = "Сповіщення"
+dismissAll = "Відхилити все"
+
+[main]
+vehicles = "Паркування"
+
+[main.energyflow]
+noEnergy = "Немає даних лічильника"
+homePower = "Споживання"
+battery = "Батарея"
+batteryCharge = "Зарядження батареї"
+gridImport = "Використання мережі"
+pvExport = "Експорт мережі"
+loadpoints = "Зарядний пристрій| Зарядний пристрій | {count} зарядні пристрої"
+pvProduction = "Виробництво"
+batteryDischarge = "Розрядження батареї"
+selfConsumption = "Власне споживання"
+
+[main.mode]
+off = "Вимк."
+minpv = "Мін+Сонячна"
+now = "Швидко"
+pv = "Сонячна"
+
+[main.targetEnergy]
+label = "Ліміт"
+noLimit = "жодного"
+
+[startupError]
+title = "Помилка запуску"
+discussions = "Обговорення GitHub"
+restartButton = "Перезапустити"
+lineError = "Помилка в {0}."
+lineErrorLink = "Лінія {0}"
+description = "Будь ласка, перевірте файл конфігурації. Якщо повідомлення про помилку не допомогло, перевірте {0}."
+hint = "Примітка: Також може бути, що у вас несправний пристрій (інвертор, лічильник, …). Перевірте підключення до мережі."
+configuration = "Конфігурація"
+configFile = "Використаний файл конфігурації:"
+fixAndRestart = "Будь ласка, виправте проблему та перезапустіть сервер."
+
+[sessions]
+title = "Сеанси зарядки"
+downloadCsv = "Завантажити як CSV"
+loadpoint = "Точка зарядки"
+energy = "Заряджено"
+vehicle = "Транспортний засіб"
+date = "Період"
+
+[sessions.csv]
+finished = "Завершено"
+chargedenergy = "Енергія (кВт/год)"
+loadpoint = "Точка зарядки"
+odometer = "Пробіг (км)"
+identifier = "Ідентифікатор"
+vehicle = "Транспортний засіб"
+meterstart = "Лічильник пуску (кВт/год)"
+meterstop = "Лічильник зупинки (кВт/год)"
+created = "Створено"
+
+[offline]
+message = "Не підключено до сервера."
+reload = "Перезавантажити?"
+
+[main.loadpointSettings.phasesConfigured]
+phases_0 = "авто перемикання"
+phases_1 = "1 фаза"
+phases_1_hint = "({min} до {max})"
+phases_3 = "3 фаза"
+label = "Фази"
+phases_3_hint = "({min} до {max})"
+
+[main.loadpointSettings.minSoC]
+description = "Для надзвичайних ситуацій. Транспортний засіб «швидко» заряджається до {0}% від усіх доступних сонячних батарей, а потім продовжує працювати лише з сонячним надлишком."
+label = "Мін. заряд %"
+
+[main.loadpointSettings]
+vehicle = "Транспортний засіб"
+currents = "Струм зарядки"
+default = "за замовчуванням"
+disclaimerText = "Зміни будуть втрачені після перезапуску сервера."
+title = "Налаштування {0}"
+disclaimerHint = "Примітка:"
+
+[main.loadpointSettings.maxCurrent]
+label = "Макс. струм"
+
+[main.vehicleStatus]
+targetChargeActive = "Запланований заряд активний…"
+disconnected = "Відключено."
+connected = "Підключено."
+unknown = ""
+waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
+vehicleTargetReached = "Ліміт транспортного засобу {soc}% досягнуто."
+pvEnable = "Надлишок доступний. Початок через {remaining}…"
+minCharge = "Мінімальна зарядка до {soc}%."
+targetChargePlanned = "Запланована зарядка починається о {time}."
+charging = "Зарядка…"
+scale1p = "Зменшення до 1-фазного живлення через {remaining}…"
+scale3p = "Збільшення до 3-фазного живлення через {remaining}…"
+pvDisable = "Недостатньо надлишку. Пауза через {remaining}…"
+targetChargeWaitForVehicle = "Запланований заряд готовий. В очікуванні транспортного засобу..."
+
+[main.provider]
+logout = "вийти"
+login = "увійти"
+
+[main.vehicle]
+fallbackName = "Транспортний засіб"
+targetSoC = "Ліміт"
+vehicleSoC = "Заряд"
+none = "Без транспортного засобу"
+unknown = "Гостьовий транспортний засіб"
+detectionActive = "Виявлення транспортного засобу…"
+changeVehicle = "Змінити транспортний засіб"
+
+[main.targetCharge]
+title = "Запланований Час"
+setTargetTime = "жодного"
+activeLabel = "{time}"
+tomorrow = "завтра"
+modalTitle = "Встановити запланований час"
+today = "сьогодні"
+targetIsInThePast = "Виберіть час у майбутньому."
+activate = "Увімкніть"
+inactiveLabel = "Запланований час"
+experimentalLabel = "Експериментальний"
+experimentalText = "Це працює, але не ідеально. Будь ласка, повідомте про несподівану поведінку"
+description = "Коли транспортний засіб повинен бути заряджений на {targetSoC}%?"
+
+[main.loadpoint]
+fallbackName = "Точка зарядки"
+charged = "Заряджено"
+power = "Потужність"
+duration = "Тривалість"
+
+[main.loadpointSettings.minCurrent]
+label = "Мін. струм"
+
+[main.vehicleSoC]
+charging = "зарядка"
+connected = "підключено"
+vehicleTarget = "Ліміт транспортного засобу: {soc}%"
+disconnected = "відключено"
+ready = "готовий"

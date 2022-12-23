@@ -4,7 +4,8 @@ docs = "Documentatie"
 blog = "Blog"
 github = "GitHub"
 login = "Voertuig logins"
-about = "Over evcc"
+about = "Over"
+settings = "Instellingen"
 
 [header.theme]
 auto = "Design: systeem"
@@ -12,16 +13,16 @@ light = "Design: licht"
 dark = "Design: donker"
 
 [footer.version]
-availableLong = "update beschikbaar"
-modalTitle = "Update beschikbaar"
-modalUpdateStarted = "Evcc zal herstarten na de update."
-modalInstalledVersion = "Huidige versie"
-modalNoReleaseNotes = "Geen release notes beschikbaar. Meer informatie over de nieuwe versie vind je hier:"
+availableLong = "nieuwe versie beschikbaar"
+modalTitle = "Nieuwe versie beschikbaar"
+modalUpdateStarted = "Starten van de nieuwe versie van evcc..."
+modalInstalledVersion = "Geïnstalleerde versie"
+modalNoReleaseNotes = "Geen release notes beschikbaar. Meer info over de nieuwe versie:"
 modalCancel = "Annuleer"
-modalUpdate = "Update"
-modalUpdateNow = "Nu updaten"
+modalUpdate = "Install"
+modalUpdateNow = "Nu installeren"
 modalDownload = "Download"
-modalUpdateStatusStart = "Update gestart:"
+modalUpdateStatusStart = "Installatie gestart:"
 
 [footer.savings]
 tabTitle = "Mijn data"
@@ -43,28 +44,28 @@ savingsTotalEnergy = "{total} kWh geladen"
 tabTitle = "Live community"
 power = "Laadvermogen"
 powerSub1 = "{activeClients} van {totalClients} deelnemers"
-powerSub2 = "zijn nu aan het laden"
+powerSub2 = "opladen..."
 greenShare = "Zonne-energie"
-greenShareSub1 = "van de energie"
-greenShareSub2 = "komt van PV & batterijopslag"
-greenEnergy = "Zonne-energie"
+greenShareSub1 = "stroom geleverd door"
+greenShareSub2 = "zon, en batterij opslag"
+greenEnergy = "Zonne"
 greenEnergySub1 = "geladen met evcc"
 greenEnergySub2 = "sinds oktober 2022"
 
 [footer.telemetry]
-optIn = "Ik wil mijn data ook bijdragen."
-optInMoreDetails = "Meer info is {0} beschikbaar."
+optIn = "Ik wil mijn gegevens bijdragen."
+optInMoreDetails = "Meer details {0}."
 optInMoreDetailsLink = "hier"
 optInSponsorship = "(Sponsoring nodig)"
 
 [footer.sponsor]
 titleSponsor = "Je bent een sponsor!"
 titleNoSponsor = "Sponsor ons"
-thanks = "Bedankt voor je hulp, {sponsor}! Je helpt ons bij de verdere ontwikkeling van evcc."
+thanks = "Bedankt, {sponsor}! Jouw bijdrage helpt evcc verder te ontwikkelen."
 confetti = "Klaar voor confetti?"
-supportUs = "Onze missie: Van laden op zonne-energie de standaard maken. Help ons en draag financieel bij aan evcc."
-sticker = "… of evcc stickers?"
-confettiPromise = "Er zullen stickers en digitale confetti zijn ;)"
+supportUs = "Onze missie is om van zonne-energie de norm te maken. Help evcc door te betalen wat het je waard is."
+sticker = "... of evcc stickers?"
+confettiPromise = "Je krijgt stickers en digitale confetti"
 becomeSponsor = "Word sponsor"
 
 [notifications]
@@ -78,22 +79,22 @@ vehicles = "Parking"
 noEnergy = "Geen meter data"
 homePower = "Consumptie"
 pvProduction = "Productie"
-loadpoints = "Laadpunt | Laadpunt | {count} Laadpunten"
+loadpoints = "Lader| Lader | {count} laders"
 battery = "Batterij"
-batteryCharge = "Batterij laden"
+batteryCharge = "Batterij opladen"
 batteryDischarge = "Batterij ontladen"
-gridImport = "Netafname"
+gridImport = "Grid gebruik"
 selfConsumption = "Zelfverbruik"
 pvExport = "Netinjectie"
 
 [main.mode]
 off = "Uit"
-minpv = "Min+PV"
-pv = "PV"
+minpv = "Min+Solar"
+pv = "Solar"
 now = "Snel"
 
 [main.loadpoint]
-fallbackName = "Laadpunt"
+fallbackName = "Charing point"
 remoteDisabledSoft = "{source}: adaptief PV-laden uitgeschakeld"
 remoteDisabledHard = "{source}: uitgeschakeld"
 power = "Snelheid"
@@ -102,23 +103,23 @@ duration = "Duur"
 remaining = "Resterend"
 
 [main.loadpointSettings]
-title = 'Instellingen "{0}"'
+title = "Instellingen {0}"
 vehicle = "Voertuig"
-currents = "Opladen"
+currents = "Laadstroom"
 default = "standaard"
 disclaimerHint = "Letop:"
-disclaimerText = "Instellingen worden niet bijgehouden. Ze worden gereset bij het herstarten van de server."
+disclaimerText = "Changes zal verloren zijn nadat de server is herstart."
 
 [main.loadpointSettings.minSoC]
-label = "Min batterijniveau"
-description = 'Noodbereik. Voertuig wordt "snel" geladen tot {0}% in PV mode. Daarna wordt enkel de PV-overschot gebruikt.'
+label = "Min. lading %"
+description = "Voor noodgevallen. Het voertuig wordt „snel” opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fasen"
-phases_0 = "automatisch wisselend"
+phases_0 = "auto-switching"
 phases_1 = "1 fase"
 phases_1_hint = "({min} - {max})"
-phases_3 = "3 fasen"
+phases_3 = "3 fase"
 phases_3_hint = "({min} - {max})"
 
 [main.loadpointSettings.maxCurrent]
@@ -129,12 +130,12 @@ label = "Min. vermogen"
 
 [main.vehicle]
 fallbackName = "Voertuig"
-vehicleSoC = "Batterijniveau"
+vehicleSoC = "Opladen"
 targetSoC = "Limiet"
 none = "Geen voertuig"
 unknown = "Gast"
 changeVehicle = "Wijzig voertuig"
-detectionActive = "Voertuig detecteren ..."
+detectionActive = "Detecteer voertuig..."
 
 [main.vehicleSoC]
 disconnected = "niet verbonden"
@@ -144,24 +145,24 @@ connected = "verbonden"
 vehicleTarget = "Voertuiglimiet: {soc}%"
 
 [main.vehicleStatus]
-minCharge = "laden naar {soc}% minimum."
-waitForVehicle = "Klaar. Wachten op voertuig."
+minCharge = "Minimale oplading naar {soc}%."
+waitForVehicle = "Klaar. Wachten op voertuig..."
 vehicleTargetReached = "Voertuiglimiet {soc}% bereikt."
-charging = "Laden."
-targetChargePlanned = "Doel gepland. Starten op {time}."
-targetChargeWaitForVehicle = "Doel gepland. Wachten op voertuig."
-targetChargeActive = "Doelladen actief."
+charging = "Opladen ..."
+targetChargePlanned = "Doelladen begint bij {time}."
+targetChargeWaitForVehicle = "Doellading gereed. Wachten op voertuig..."
+targetChargeActive = "Doelwit lading actief..."
 connected = "Verbonden."
-pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}."
-pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}."
-scale1p = "Wisselen naar 1 fase over {remaining}."
-scale3p = "Wisselen naar 3 fasen over {remaining}."
+pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}..."
+pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}..."
+scale1p = "Wisselen naar 1 fase over {remaining}..."
+scale3p = "Wisselen naar 3 fasen over {remaining}..."
 disconnected = "Niet verbonden."
 unknown = ""
 
 [main.provider]
-login = "aanmelden"
-logout = "afmelden"
+login = "log in"
+logout = "log out"
 
 [main.targetCharge]
 title = "Doel"
@@ -172,11 +173,11 @@ setTargetTime = "geen"
 description = "Tegen wanneer moet het voertuig geladen zijn naar {targetSoC}%?"
 today = "Vandaag"
 tomorrow = "Morgen"
-targetIsInThePast = "De ingestelde tijd ligt in het verleden"
+targetIsInThePast = "Pick een tijd in de toekomst, Marty."
 remove = "Verwijder"
-activate = "Activeer"
+activate = "Turn on"
 experimentalLabel = "Experimenteel"
-experimentalText = "Deze feature werkt nog niet perfect. Rapporteer ongewenst gedrag op"
+experimentalText = "Dit werkt, maar is niet perfect. Meld onverwacht gedrag aan"
 
 [main.targetEnergy]
 label = "Limiet"
@@ -184,35 +185,56 @@ noLimit = "geen"
 
 [startupError]
 title = "Start Error"
-description = "Check je evcc configuratie. Helpt de foutboodschap je niet, bekijk dan de {0}."
+description = "Controleer uw configuratiebestand. Als de foutmelding niet helpt, bekijk dan de {0}."
 discussions = "GitHub Discussions"
-hint = "Je kan deze boodschap ook krijgen bij een kapot toestel (inverter, meter, ...). Check je network connectie."
+hint = "Let op: het kan ook zijn dat je een defect toestel hebt (omvormer, meter, …). Controleer je netwerkverbindingen."
 configuration = "Config"
 configFile = "Gebruikt configuratiebestand:"
-lineError = "Fout gedetecteerd op {0}."
+lineError = "Fout in {0}."
 lineErrorLink = "lijn {0}"
-fixAndRestart = "Verhelp het probleem en herstart de server."
+fixAndRestart = "Los het probleem op en herstart de server."
 restartButton = "Herstart"
 
 [sessions]
-title = "Laadsessies"
+title = "Oplaad sessies"
 downloadCsv = "Download CSV"
-loadpoint = "Laadpunt"
+loadpoint = "Oplaadpunt"
 vehicle = "Voertuig"
 energy = "Geladen"
 date = "Periode"
 
 [sessions.csv]
-loadpoint = "Laadpunt"
+loadpoint = "Oplaadpunt"
 vehicle = "Voertuig"
 odometer = "kilometerstand (km)"
 identifier = "ID"
 chargedenergy = "Energie (kWh)"
-meterstart = "Meter Start (kWh)"
-meterstop = "Meter Stop (kWh)"
+meterstart = "Meter start (kWh)"
+meterstop = "Meter stop (kwh)"
 created = "Gestart"
 finished = "Beëindigd"
 
 [offline]
-message = "Geen verbinding met de server."
+message = "Niet verbonden met een server."
 reload = "Opnieuw laden?"
+
+[settings]
+title = "Instellingen"
+
+[settings.theme]
+label = "Design"
+auto = "systeem"
+light = "licht"
+dark = "donker"
+
+[settings.unit]
+km = "km"
+mi = "mijlen"
+label = "Units"
+
+[settings.telemetry]
+label = "Telemetrie"
+
+[settings.language]
+label = "Taal"
+auto = "Automatisch"
