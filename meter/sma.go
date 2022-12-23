@@ -117,9 +117,19 @@ var _ api.MeterCurrent = (*SMA)(nil)
 func (sm *SMA) Currents() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 
+	var powers [3]float64
+	for i, id := range []sunny.ValueID{sunny.ActivePowerMinusL1, sunny.ActivePowerMinusL2, sunny.ActivePowerMinusL3} {
+		if sma.AsFloat(values[id]) > 0 {
+			powers[i] = -sma.AsFloat(values[id])
+		}
+	}
+
 	var currents [3]float64
 	for i, id := range []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3} {
 		currents[i] = sma.AsFloat(values[id])
+		if powers[i] < 0 && currents[i] > 0 {
+			currents[i] *= -1
+		}
 	}
 
 	return currents[0], currents[1], currents[2], err
@@ -145,12 +155,15 @@ var _ api.MeterPower = (*SMA)(nil)
 func (sm *SMA) Powers() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 
-	var Powers [3]float64
-	for i, id := range []sunny.ValueID{sunny.ActivePowerPlusL1 - sunny.ActivePowerMinusL1, sunny.ActivePowerPlusL2 - sunny.ActivePowerMinusL2, sunny.ActivePowerPlusL3 - sunny.ActivePowerMinusL3} {
-		Powers[i] = sm.scale * sma.AsFloat(values[id])
+	var powers [3]float64
+	for i, id := range []sunny.ValueID{sunny.ActivePowerPlusL1, sunny.ActivePowerPlusL2, sunny.ActivePowerPlusL3} {
+		powers[i] = sma.AsFloat(values[id])
+	}
+	for i, id := range []sunny.ValueID{sunny.ActivePowerMinusL1, sunny.ActivePowerMinusL2, sunny.ActivePowerMinusL3} {
+		powers[i] -= sma.AsFloat(values[id])
 	}
 
-	return Powers[0], Powers[1], Powers[2], err
+	return powers[0], powers[1], powers[2], err
 }
 
 // soc implements the api.Battery interface
