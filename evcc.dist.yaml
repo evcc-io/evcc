@@ -157,6 +157,10 @@ tariffs:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
     price: 0.08 # EUR/kWh
+  planner:
+    # planner tariff can be used for target charging if not grid tariff is specified
+    # for example, electricitymaps provides CO2 intensity forecast
+    # type: electricitymaps
 
 # mqtt message broker
 mqtt:
