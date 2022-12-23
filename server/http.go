@@ -111,7 +111,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 	// loadpoint api
 	for id, lp := range site.LoadPoints() {
-		loadpoint := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
+		loadpoint := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
 			"mode":          {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
@@ -123,7 +123,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"phases":        {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
 			"targetcharge":  {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:.-]+}", targetChargeHandler(lp)},
 			"targetcharge2": {[]string{"DELETE", "OPTIONS"}, "/targetcharge", targetChargeRemoveHandler(lp)},
-			"vehicle":       {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[0-9]+}", vehicleHandler(site, lp)},
+			"vehicle":       {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[1-9][0-9]*}", vehicleHandler(site, lp)},
 			"vehicle2":      {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
 			"vehicleDetect": {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},
 			"remotedemand":  {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},

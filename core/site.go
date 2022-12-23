@@ -27,6 +27,17 @@ type Updater interface {
 	Update(availablePower float64, cheapRate, batteryBuffered bool)
 }
 
+// meterMeasurement is used as slice element for publishing structured data
+type meterMeasurement struct {
+	Power float64 `json:"power"`
+}
+
+// batteryMeasurement is used as slice element for publishing structured data
+type batteryMeasurement struct {
+	Power float64 `json:"power"`
+	Soc   float64 `json:"soc"`
+}
+
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
 	uiChan       chan<- util.Param // client push messages
@@ -60,6 +71,7 @@ type Site struct {
 	gridPower       float64 // Grid power
 	pvPower         float64 // PV power
 	batteryPower    float64 // Battery charge power
+	batterySoc      float64 // Battery soc
 	batteryBuffered bool    // Battery buffer active
 }
 
@@ -346,43 +358,73 @@ func (site *Site) updateMeters() error {
 
 	if len(site.pvMeters) > 0 {
 		site.pvPower = 0
+		mm := make([]meterMeasurement, len(site.pvMeters))
 
-		for id, meter := range site.pvMeters {
+		for i, meter := range site.pvMeters {
 			var power float64
 			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
+
+			mm[i] = meterMeasurement{Power: power}
 
 			if err == nil {
 				// ignore negative values which represent self-consumption
 				site.pvPower += math.Max(0, power)
 				if power < -500 {
-					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", id, power)
+					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 				}
 			} else {
-				err = fmt.Errorf("pv meter %d: %v", id, err)
+				err = fmt.Errorf("pv %d power: %v", i+1, err)
 				site.log.ERROR.Println(err)
 			}
 		}
 
 		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 		site.publish("pvPower", site.pvPower)
+
+		site.publish("pv", mm)
 	}
 
 	if len(site.batteryMeters) > 0 {
 		site.batteryPower = 0
+		site.batterySoc = 0
 
-		for id, meter := range site.batteryMeters {
+		mm := make([]batteryMeasurement, len(site.batteryMeters))
+
+		for i, meter := range site.batteryMeters {
 			var power float64
 			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
 
 			if err == nil {
 				site.batteryPower += power
+				site.log.DEBUG.Printf("battery %d power: %.0f%%", i+1, power)
 			} else {
-				site.log.ERROR.Printf("battery meter %d: %v", id, err)
+				site.log.ERROR.Printf("battery %d power: %v", i+1, err)
+			}
+
+			soc, err := meter.(api.Battery).SoC()
+
+			if err == nil {
+				site.batterySoc += soc
+				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
+			} else {
+				err = fmt.Errorf("battery %d soc: %v", i+1, err)
+				site.log.ERROR.Println(err)
+			}
+
+			mm[i] = batteryMeasurement{
+				Power: power,
+				Soc:   soc,
 			}
 		}
 
+		site.batterySoc /= float64(len(site.batteryMeters))
+		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
+		site.publish("batterySoC", math.Round(site.batterySoc))
+
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 		site.publish("batteryPower", site.batteryPower)
+
+		site.publish("battery", mm)
 	}
 
 	err := retryMeter("grid", site.gridMeter, &site.gridPower)
@@ -392,7 +434,7 @@ func (site *Site) updateMeters() error {
 		i1, i2, i3, err := phaseMeter.Currents()
 		if err == nil {
 			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
-			site.publish("gridCurrents", []float64{i1, i2, i3})
+			site.publish("gridCurrents", [3]float64{i1, i2, i3}) // array[3] for mqtt special-casing phases
 		} else {
 			site.log.ERROR.Printf("grid meter currents: %v", err)
 		}
@@ -437,30 +479,17 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	batteryPower := site.batteryPower
 
 	if len(site.batteryMeters) > 0 {
-		var socs float64
-		for id, battery := range site.batteryMeters {
-			soc, err := battery.(api.Battery).SoC()
-			if err != nil {
-				err = fmt.Errorf("battery soc %d: %v", id, err)
-				site.log.ERROR.Println(err)
-			} else {
-				site.log.DEBUG.Printf("battery soc %d: %.0f%%", id, soc)
-				socs += soc / float64(len(site.batteryMeters))
-			}
-		}
-		site.publish("batterySoC", math.Round(socs))
-
 		site.Lock()
 		defer site.Unlock()
 
 		// if battery is charging below prioritySoC give it priority
-		if socs < site.PrioritySoC && batteryPower < 0 {
-			site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f%%", socs)
+		if site.batterySoc < site.PrioritySoC && batteryPower < 0 {
+			site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f%%", site.batterySoc)
 			batteryPower = 0
 		}
 
 		// if battery is discharging above bufferSoC ignore it
-		site.batteryBuffered = batteryPower > 0 && site.BufferSoC > 0 && socs > site.BufferSoC
+		site.batteryBuffered = batteryPower > 0 && site.BufferSoC > 0 && site.batterySoc > site.BufferSoC
 	}
 
 	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
