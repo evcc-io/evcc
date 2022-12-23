@@ -127,16 +127,15 @@ func NewSiteFromConfig(
 		})
 	}
 
+	tariff := site.tariffs.Grid
+	if site.tariffs.Planner != nil {
+		tariff = site.tariffs.Planner
+	}
+
 	// give loadpoints access to vehicles and database
 	for _, lp := range loadpoints {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
-
-		// planner
-		gridTariff := site.tariffs.Grid
-		if gridTariff == nil {
-			gridTariff = new(tariff.Fixed)
-		}
-		lp.planner = planner.New(lp.log, gridTariff)
+		lp.planner = planner.New(lp.log, tariff)
 
 		if serverdb.Instance != nil {
 			var err error

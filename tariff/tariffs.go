@@ -6,15 +6,19 @@ import (
 )
 
 type Tariffs struct {
-	Currency currency.Unit
-	Grid     api.Tariff
-	FeedIn   api.Tariff
+	Currency              currency.Unit
+	Grid, FeedIn, Planner api.Tariff
 }
 
-func NewTariffs(currency currency.Unit, grid api.Tariff, feedin api.Tariff) *Tariffs {
-	t := Tariffs{}
-	t.Currency = currency
-	t.Grid = grid
-	t.FeedIn = feedin
-	return &t
+func NewTariffs(currency currency.Unit, grid, feedin, planner api.Tariff) *Tariffs {
+	if planner == nil {
+		planner = grid
+	}
+
+	return &Tariffs{
+		Currency: currency,
+		Grid:     grid,
+		FeedIn:   feedin,
+		Planner:  planner,
+	}
 }

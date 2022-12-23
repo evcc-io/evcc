@@ -23,7 +23,11 @@ type Tibber struct {
 
 var _ api.Tariff = (*Tibber)(nil)
 
-func NewTibber(other map[string]interface{}) (*Tibber, error) {
+func init() {
+	registry.Add("tibber", NewTibberFromConfig)
+}
+
+func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		Token  string
 		HomeID string

@@ -13,8 +13,12 @@ type Fixed struct {
 
 var _ api.Tariff = (*Fixed)(nil)
 
-func NewFixed(other map[string]interface{}) (*Fixed, error) {
-	cc := Fixed{}
+func init() {
+	registry.Add("fixed", NewFixedFromConfig)
+}
+
+func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
+	var cc Fixed
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

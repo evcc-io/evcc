@@ -21,7 +21,11 @@ type Awattar struct {
 
 var _ api.Tariff = (*Awattar)(nil)
 
-func NewAwattar(other map[string]interface{}) (*Awattar, error) {
+func init() {
+	registry.Add("awattar", NewAwattarFromConfig)
+}
+
+func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
 		Cheap  any // TODO deprecated
 		Region string
