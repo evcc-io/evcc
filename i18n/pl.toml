@@ -18,6 +18,11 @@ modalTitle = "Nowa wersja dostępna"
 modalUpdateStarted = "Nowa wersja evcc uruchomi się..."
 modalInstalledVersion = "Zainstalowana wersja"
 modalNoReleaseNotes = "Brak dostępnych notatek. Więcej informacji o nowej wersji:"
+modalUpdate = "Instaluj"
+modalUpdateStatusStart = "Instalacja rozpoczęta:"
+modalDownload = "Pobierz"
+modalCancel = "Anuluj"
+modalUpdateNow = "Instaluj teraz"
 
 [footer.savings]
 tabTitle = "Moje dane"
