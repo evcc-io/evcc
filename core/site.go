@@ -497,7 +497,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 			batteryPower = 0
 		}
 
-		// if battery is discharging above bufferSoC ignore it
+		// if battery is discharging above bufferSoc ignore it
 		site.batteryBuffered = batteryPower > 0 && site.BufferSoc > 0 && site.batterySoc > site.BufferSoc
 	}
 

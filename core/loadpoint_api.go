@@ -101,7 +101,7 @@ func (lp *Loadpoint) GetTargetSoc() int {
 // setTargetSoc sets loadpoint charge target soc (no mutex)
 func (lp *Loadpoint) setTargetSoc(soc int) {
 	lp.Soc.target = soc
-	lp.publish("targetSoc", soc)
+	lp.publish(targetSoc, soc)
 }
 
 // SetTargetSoc sets loadpoint charge target soc
@@ -128,7 +128,7 @@ func (lp *Loadpoint) GetMinSoc() int {
 // setMinSoc sets loadpoint charge min soc (no mutex)
 func (lp *Loadpoint) setMinSoc(soc int) {
 	lp.Soc.min = soc
-	lp.publish("minSoc", soc)
+	lp.publish(minSoc, soc)
 }
 
 // SetMinSoc sets loadpoint charge minimum soc

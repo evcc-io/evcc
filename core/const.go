@@ -12,6 +12,8 @@ const (
 	vehicleSoc       = "vehicleSoc"       // vehicle soc
 	vehicleTargetSoc = "vehicleTargetSoc" // vehicle soc limit
 
+	minSoc           = "minSoc"           // min soc goal
+	targetSoc        = "targetSoc"        // target charging soc goal
 	targetTime       = "targetTime"       // target charging finish time goal
 	targetTimeActive = "targetTimeActive" // target charging plan has determined current slot to be an active slot
 )

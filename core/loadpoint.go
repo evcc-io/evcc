@@ -573,8 +573,8 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
-	lp.publish("targetSoc", lp.Soc.target)
-	lp.publish("minSoc", lp.Soc.min)
+	lp.publish(targetSoc, lp.Soc.target)
+	lp.publish(minSoc, lp.Soc.min)
 	lp.Unlock()
 
 	// reset detection state
