@@ -117,12 +117,17 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
+// CurrentLimiter provides current charging status
+type CurrentLimiter interface {
+	MaxCurrent(current int64) error
+}
+
 // Charger is able to provide current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	MaxCurrent(current int64) error
+	CurrentLimiter
 }
 
 // ChargerEx provides milli-amp precision charger current control
