@@ -161,6 +161,9 @@ tariffs:
     # planner tariff can be used for target charging if not grid tariff is specified
     # for example, electricitymaps provides CO2 intensity forecast
     # type: electricitymaps
+    # uri: <uri>
+    # token: <token>
+    # zone: DE
 
 # mqtt message broker
 mqtt:
