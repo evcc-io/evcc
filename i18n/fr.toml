@@ -17,7 +17,7 @@ availableShort = "Installer"
 availableLong = "Nouvelle version disponible"
 modalTitle = "Nouvelle version disponible"
 modalUpdateStarted = "Démarrage de la nouvelle version d'evcc…"
-modalInstalledVersion = "Version installée: "
+modalInstalledVersion = "Version installée"
 modalNoReleaseNotes = "Aucune note de version disponible. Plus d'infos sur la nouvelle version:"
 modalCancel = "Annuler"
 modalUpdate = "Installer"
@@ -66,7 +66,7 @@ thanks = "Merci, {sponsor} ! Votre contribution permet de poursuivre le dévelop
 confetti = "Prêt pour les confettis?"
 supportUs = "Notre mission est de faire du solaire la norme. Aidez evcc en payant ce que ça vaut pour vous."
 sticker = "… ou autocollants evcc?"
-confettiPromise = "Vous obtenez des autocollants et des confettis numériques ;)" ;)" ;)"
+confettiPromise = "Vous obtenez des autocollants et des confettis numériques ;)" ;)" ;)" ;)"
 becomeSponsor = "Devenir parrain"
 
 [notifications]
