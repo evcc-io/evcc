@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const chargeEfficiency = 0.9 // assume charge 90% efficiency
+const ChargeEfficiency = 0.9 // assume charge 90% efficiency
 
 // Estimator provides vehicle soc and charge duration
 // Vehicle Soc can be estimated to provide more granularity
@@ -49,47 +49,17 @@ func (s *Estimator) Reset() {
 	s.prevChargedEnergy = 0
 	s.initialSoc = 0
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
-	s.virtualCapacity = s.capacity / chargeEfficiency // initial capacity taking efficiency into account
+	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
 }
 
-// AssumedChargeDuration estimates charge duration up to targetSoc based on virtual capacity
-func (s *Estimator) AssumedChargeDuration(targetSoc int, chargePower float64) time.Duration {
-	percentRemaining := float64(targetSoc) - s.vehicleSoc
-
-	if percentRemaining <= 0 || s.virtualCapacity <= 0 {
-		return 0
+// RemainingChargeDuration returns the estimated remaining duration
+func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
+	hours := s.RemainingChargeEnergy(targetSoc) * 1e3 / chargePower
+	if math.IsInf(hours, 0) {
+		hours = 0
 	}
-
-	whRemaining := percentRemaining / 100 * s.virtualCapacity
-	return time.Duration(float64(time.Hour) * whRemaining / chargePower).Round(time.Second)
-}
-
-// RemainingChargeDuration returns the remaining duration estimate based on Soc, target and charge power
-func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoc int) time.Duration {
-	if chargePower > 0 {
-		percentRemaining := float64(targetSoc) - s.vehicleSoc
-		if percentRemaining <= 0 {
-			return 0
-		}
-
-		// use vehicle api if available
-		if vr, ok := s.vehicle.(api.VehicleFinishTimer); ok {
-			finishTime, err := vr.FinishTime()
-			if err == nil {
-				timeRemaining := time.Until(finishTime)
-				return time.Duration(float64(timeRemaining) * percentRemaining / (100 - s.vehicleSoc))
-			}
-
-			if !errors.Is(err, api.ErrNotAvailable) {
-				s.log.WARN.Printf("updating remaining time failed: %v", err)
-			}
-		}
-
-		return s.AssumedChargeDuration(targetSoc, chargePower)
-	}
-
-	return -1
+	return time.Duration(float64(time.Hour) * hours).Round(time.Second)
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh

@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/push"
 	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
@@ -24,7 +25,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 
 // Updater abstracts the Loadpoint implementation for testing
 type Updater interface {
-	Update(availablePower float64, cheapRate, batteryBuffered bool)
+	Update(availablePower float64, batteryBuffered bool)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -64,7 +65,7 @@ type Site struct {
 
 	tariffs     tariff.Tariffs           // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
-	coordinator *coordinator.Coordinator // Savings
+	coordinator *coordinator.Coordinator // Vehicles
 	savings     *Savings                 // Savings
 
 	// cached state
@@ -130,6 +131,13 @@ func NewSiteFromConfig(
 	for _, lp := range loadpoints {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
 
+		// planner
+		gridTariff := site.tariffs.Grid
+		if gridTariff == nil {
+			gridTariff = new(tariff.Fixed)
+		}
+		lp.planner = planner.New(lp.log, gridTariff)
+
 		if serverdb.Instance != nil {
 			var err error
 			if lp.db, err = db.New(lp.Title); err != nil {
@@ -141,6 +149,7 @@ func NewSiteFromConfig(
 		}
 	}
 
+	// grid meter
 	if site.Meters.GridMeterRef != "" {
 		var err error
 		if site.gridMeter, err = cp.Meter(site.Meters.GridMeterRef); err != nil {
@@ -419,7 +428,7 @@ func (site *Site) updateMeters() error {
 
 		site.batterySoc /= float64(len(site.batteryMeters))
 		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
-		site.publish("batterySoC", math.Round(site.batterySoc))
+		site.publish("batterySoc", math.Round(site.batterySoc))
 
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 		site.publish("batteryPower", site.batteryPower)
@@ -488,7 +497,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 			batteryPower = 0
 		}
 
-		// if battery is discharging above bufferSoC ignore it
+		// if battery is discharging above bufferSoc ignore it
 		site.batteryBuffered = batteryPower > 0 && site.BufferSoc > 0 && site.batterySoc > site.BufferSoc
 	}
 
@@ -502,15 +511,6 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
-	var cheap bool
-	var err error
-	if site.tariffs.Grid != nil {
-		cheap, err = site.tariffs.Grid.IsCheap()
-		if err != nil {
-			cheap = false
-		}
-	}
-
 	// update all loadpoint's charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
@@ -519,7 +519,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {
-		lp.Update(sitePower, cheap, site.batteryBuffered)
+		lp.Update(sitePower, site.batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower

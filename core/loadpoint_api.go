@@ -74,10 +74,6 @@ func (lp *Loadpoint) GetTargetEnergy() float64 {
 // setTargetEnergy sets loadpoint charge target energy (no mutex)
 func (lp *Loadpoint) setTargetEnergy(energy float64) {
 	lp.targetEnergy = energy
-	// TODO soctimer
-	// if lp.socTimer != nil {
-	// lp.socTimer.Energy = energy
-	// }
 	lp.publish("targetEnergy", energy)
 }
 
@@ -105,11 +101,7 @@ func (lp *Loadpoint) GetTargetSoc() int {
 // setTargetSoc sets loadpoint charge target soc (no mutex)
 func (lp *Loadpoint) setTargetSoc(soc int) {
 	lp.Soc.target = soc
-	// test guard
-	if lp.socTimer != nil {
-		lp.socTimer.Soc = soc
-	}
-	lp.publish("targetSoc", soc)
+	lp.publish(targetSoc, soc)
 }
 
 // SetTargetSoc sets loadpoint charge target soc
@@ -136,7 +128,7 @@ func (lp *Loadpoint) GetMinSoc() int {
 // setMinSoc sets loadpoint charge min soc (no mutex)
 func (lp *Loadpoint) setMinSoc(soc int) {
 	lp.Soc.min = soc
-	lp.publish("minSoc", soc)
+	lp.publish(minSoc, soc)
 }
 
 // SetMinSoc sets loadpoint charge minimum soc
@@ -197,8 +189,8 @@ func (lp *Loadpoint) SetTargetCharge(finishAt time.Time, soc int) error {
 	lp.log.DEBUG.Printf("set target charge: %d @ %v", soc, finishAt)
 
 	// apply immediately
-	if lp.socTimer.Time != finishAt || lp.Soc.target != soc {
-		lp.socTimer.Set(finishAt)
+	if !lp.targetTime.Equal(finishAt) || lp.Soc.target != soc {
+		lp.setTargetTime(finishAt)
 
 		// don't remove soc
 		if !finishAt.IsZero() {
@@ -208,6 +200,19 @@ func (lp *Loadpoint) SetTargetCharge(finishAt time.Time, soc int) error {
 	}
 
 	return nil
+}
+
+// SetTargetTime sets the charge target time
+func (lp *Loadpoint) SetTargetTime(finishAt time.Time) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.setTargetTime(finishAt)
+}
+
+// setTargetTime sets the charge target time
+func (lp *Loadpoint) setTargetTime(finishAt time.Time) {
+	lp.targetTime = finishAt
+	lp.publish(targetTime, finishAt)
 }
 
 // RemoteControl sets remote status demand
@@ -291,7 +296,14 @@ func (lp *Loadpoint) GetMaxPower() float64 {
 	return Voltage * lp.GetMaxCurrent() * float64(lp.maxActivePhases())
 }
 
-// setRemainingDuration sets the estimated remaining charging duration
+// SetRemainingDuration sets the estimated remaining charging duration
+func (lp *Loadpoint) SetRemainingDuration(chargeRemainingDuration time.Duration) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.setRemainingDuration(chargeRemainingDuration)
+}
+
+// setRemainingDuration sets the estimated remaining charging duration (no mutex)
 func (lp *Loadpoint) setRemainingDuration(chargeRemainingDuration time.Duration) {
 	if lp.chargeRemainingDuration != chargeRemainingDuration {
 		lp.chargeRemainingDuration = chargeRemainingDuration
@@ -306,11 +318,15 @@ func (lp *Loadpoint) GetRemainingDuration() time.Duration {
 	return lp.chargeRemainingDuration
 }
 
-// setRemainingEnergy sets the remaining charge energy in Wh
-func (lp *Loadpoint) setRemainingEnergy(chargeRemainingEnergy float64) {
+// SetRemainingEnergy sets the remaining charge energy in Wh
+func (lp *Loadpoint) SetRemainingEnergy(chargeRemainingEnergy float64) {
 	lp.Lock()
 	defer lp.Unlock()
+	lp.setRemainingEnergy(chargeRemainingEnergy)
+}
 
+// setRemainingEnergy sets the remaining charge energy in Wh (no mutex)
+func (lp *Loadpoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 	if lp.chargeRemainingEnergy != chargeRemainingEnergy {
 		lp.chargeRemainingEnergy = chargeRemainingEnergy
 		lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
