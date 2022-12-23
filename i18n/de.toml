@@ -77,7 +77,7 @@ optInSponsorship = "Sponsoring erforderlich."
 [footer.sponsor]
 titleSponsor = "Du bist Unterstützer"
 titleNoSponsor = "Unterstütze uns"
-thanks = "Vielen Dank, {sponsor}! Dein Beitrag hilft, evcc weiterzuentwickeln."
+thanks = "Vielen Dank, {sponsor}! Dein Beitrag hilft, evcc weiter zu entwickeln."
 confetti = "Lust auf Konfetti?"
 supportUs = "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unterstütze evcc finanziell."
 sticker = "…oder evcc Sticker?"
