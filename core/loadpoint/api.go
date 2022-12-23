@@ -35,20 +35,20 @@ type API interface {
 	GetTargetEnergy() float64
 	// SetTargetEnergy sets the charge target energy
 	SetTargetEnergy(float64)
-	// GetTargetSoC returns the charge target soc
-	GetTargetSoC() int
-	// SetTargetSoC sets the charge target soc
-	SetTargetSoC(int)
-	// GetMinSoC returns the charge minimum soc
-	GetMinSoC() int
-	// SetMinSoC sets the charge minimum soc
-	SetMinSoC(int)
+	// GetTargetSoc returns the charge target soc
+	GetTargetSoc() int
+	// SetTargetSoc sets the charge target soc
+	SetTargetSoc(int)
+	// GetMinSoc returns the charge minimum soc
+	GetMinSoc() int
+	// SetMinSoc sets the charge minimum soc
+	SetMinSoc(int)
 	// GetPhases returns the enabled phases
 	GetPhases() int
 	// SetPhases sets the enabled phases
 	SetPhases(int) error
 
-	// SetTargetCharge sets the charge targetSoC
+	// SetTargetCharge sets the charge targetSoc
 	SetTargetCharge(time.Time, int) error
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)

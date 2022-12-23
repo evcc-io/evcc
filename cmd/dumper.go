@@ -70,7 +70,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		// wait up to 1m for the vehicle to wakeup
 		start := time.Now()
 		for err = api.ErrMustRetry; err != nil && errors.Is(err, api.ErrMustRetry); {
-			if soc, err = v.SoC(); err != nil {
+			if soc, err = v.Soc(); err != nil {
 				if time.Since(start) > time.Minute {
 					err = os.ErrDeadlineExceeded
 				} else {
@@ -81,9 +81,9 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 
 		if err != nil {
-			fmt.Fprintf(w, "SoC:\t%v\n", err)
+			fmt.Fprintf(w, "Soc:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "SoC:\t%.0f%%\n", soc)
+			fmt.Fprintf(w, "Soc:\t%.0f%%\n", soc)
 		}
 	}
 
@@ -170,10 +170,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.SocLimiter); ok {
-		if targetSoC, err := v.TargetSoC(); err != nil {
-			fmt.Fprintf(w, "Target SoC:\t%v\n", err)
+		if targetSoc, err := v.TargetSoc(); err != nil {
+			fmt.Fprintf(w, "Target Soc:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Target SoC:\t%.0f%%\n", targetSoC)
+			fmt.Fprintf(w, "Target Soc:\t%.0f%%\n", targetSoc)
 		}
 	}
 

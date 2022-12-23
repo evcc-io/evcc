@@ -88,8 +88,8 @@ vehicles:
     vin: WREN...
     onIdentify: # set defaults when vehicle is identified
       mode: pv # enable PV-charging when vehicle is identified
-      minSoC: 20 # immediately charge to 0% regardless of mode unless "off" (disabled)
-      targetSoC: 90 # limit charge to 90%
+      minSoc: 20 # immediately charge to 0% regardless of mode unless "off" (disabled)
+      targetSoc: 90 # limit charge to 90%
 
 # site describes the EVU connection, PV and home battery
 site:
@@ -99,8 +99,8 @@ site:
     pvs:
       - pv # list of pv inverters/ meters
     battery: battery # battery meter
-  prioritySoC: # give home battery priority up to this soc (empty to disable)
-  bufferSoC: # ignore home battery discharge above soc (empty to disable)
+  prioritySoc: # give home battery priority up to this soc (empty to disable)
+  bufferSoc: # ignore home battery discharge above soc (empty to disable)
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
@@ -197,8 +197,8 @@ messaging:
       title: Car disconnected
       msg: Car disconnected after ${connectedDuration}
     soc: # vehicle soc update event
-      title: SoC updated
-      msg: Battery charged to ${vehicleSoC:%.0f}%
+      title: Soc updated
+      msg: Battery charged to ${vehicleSoc:%.0f}%
     guest: # vehicle could not be identified
       title: Unknown vehicle
       msg: Unknown vehicle, guest connected?

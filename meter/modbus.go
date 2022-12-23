@@ -19,21 +19,21 @@ type Modbus struct {
 	device   meters.Device
 	opPower  modbus.Operation
 	opEnergy modbus.Operation
-	opSoC    modbus.Operation
+	opSoc    modbus.Operation
 }
 
 func init() {
 	registry.Add("modbus", NewModbusFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Model              string
 		modbus.Settings    `mapstructure:",squash"`
-		Power, Energy, SoC string
+		Power, Energy, Soc string
 		Currents           []string
 		Delay              time.Duration
 		Timeout            time.Duration
@@ -134,9 +134,9 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	// decorate soc reading
 	var soc func() (float64, error)
-	if cc.SoC != "" {
-		if err := modbus.ParseOperation(device, cc.SoC, &m.opSoC); err != nil {
-			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.SoC)
+	if cc.Soc != "" {
+		if err := modbus.ParseOperation(device, cc.Soc, &m.opSoc); err != nil {
+			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.Soc)
 		}
 
 		soc = m.soc
@@ -188,5 +188,5 @@ func (m *Modbus) totalEnergy() (float64, error) {
 
 // soc implements the api.Battery interface
 func (m *Modbus) soc() (float64, error) {
-	return m.floatGetter(m.opSoC)
+	return m.floatGetter(m.opSoc)
 }

@@ -12,11 +12,11 @@ javascript:
         residualpower: 500,
         pvpower: 5000,
         batterypower: -750,
-        batterySoC: 55,
+        batterySoc: 55,
         gridpower: -1000,
         loadpoints: [
-          { enabled: true, vehicleSoC: 62, maxcurrent: 6, phases: 1, chargepower: 0 },
-          { enabled: false, vehicleSoC: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
+          { enabled: true, vehicleSoc: 62, maxcurrent: 6, phases: 1, chargepower: 0 },
+          { enabled: false, vehicleSoc: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
         ]
       };
       function get() {
@@ -56,10 +56,10 @@ meters:
       source: js
       vm: shared
       script: |
-        if (state.batterypower < 0) state.batterySoC++; else state.batterySoC--;
-        if (state.batterySoC < 10) state.batterySoC = 90;
-        if (state.batterySoC > 90) state.batterySoC = 10;
-        state.batterySoC;
+        if (state.batterypower < 0) state.batterySoc++; else state.batterySoc--;
+        if (state.batterySoc < 10) state.batterySoc = 90;
+        if (state.batterySoc > 90) state.batterySoc = 10;
+        state.batterySoc;
 
   - name: meter_charger_1
     type: custom
@@ -150,16 +150,16 @@ vehicles:
       vm: shared
       script: |
         var lp = state.loadpoints[0];
-        if (lp.chargepower > 0) lp.vehicleSoC++; else lp.vehicleSoC--;
-        if (lp.vehicleSoC < 15) lp.vehicleSoC = 80;
-        if (lp.vehicleSoC > 80) lp.vehicleSoC = 15;
-        lp.vehicleSoC;
+        if (lp.chargepower > 0) lp.vehicleSoc++; else lp.vehicleSoc--;
+        if (lp.vehicleSoc < 15) lp.vehicleSoc = 80;
+        if (lp.vehicleSoc > 80) lp.vehicleSoc = 15;
+        lp.vehicleSoc;
     range:
       source: js
       vm: shared
       script: |
         var lp = state.loadpoints[0]
-        var range = (44 * lp.vehicleSoC) / 15;
+        var range = (44 * lp.vehicleSoc) / 15;
         range
     capacity: 44
     onidentify:
@@ -172,16 +172,16 @@ vehicles:
       vm: shared
       script: |
         var lp = state.loadpoints[1];
-        if (lp.chargepower > 0) lp.vehicleSoC++; else lp.vehicleSoC--;
-        if (lp.vehicleSoC < 15) lp.vehicleSoC = 75;
-        if (lp.vehicleSoC > 75) lp.vehicleSoC = 15;
-        lp.vehicleSoC;
+        if (lp.chargepower > 0) lp.vehicleSoc++; else lp.vehicleSoc--;
+        if (lp.vehicleSoc < 15) lp.vehicleSoc = 75;
+        if (lp.vehicleSoc > 75) lp.vehicleSoc = 15;
+        lp.vehicleSoc;
     range:
       source: js
       vm: shared
       script: |
         var lp = state.loadpoints[1]
-        var range = (80 * lp.vehicleSoC) / 17;
+        var range = (80 * lp.vehicleSoc) / 17;
         range
     status:
       source: js

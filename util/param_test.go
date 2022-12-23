@@ -14,6 +14,6 @@ func TestParam(t *testing.T) {
 	}
 	assert.Equal(t, "power", p.UniqueID())
 
-	p.LoadPoint = &lp
+	p.Loadpoint = &lp
 	assert.Equal(t, "2.power", p.UniqueID())
 }
