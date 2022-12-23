@@ -7,17 +7,17 @@ import (
 
 // Param is the broadcast channel data type
 type Param struct {
-	LoadPoint *int
+	Loadpoint *int
 	Key       string
 	Val       interface{}
 }
 
-// UniqueID returns unique identifier for parameter LoadPoint/Key combination
+// UniqueID returns unique identifier for parameter Loadpoint/Key combination
 func (p Param) UniqueID() string {
 	var b strings.Builder
 
-	if p.LoadPoint != nil {
-		b.WriteString(strconv.Itoa(*p.LoadPoint) + ".")
+	if p.Loadpoint != nil {
+		b.WriteString(strconv.Itoa(*p.Loadpoint) + ".")
 	}
 
 	b.WriteString(p.Key)

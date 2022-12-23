@@ -192,8 +192,8 @@ func (v *Ovms) locationAPI() (ovmsLocationResponse, error) {
 	return resp, err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Ovms) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Ovms) Soc() (float64, error) {
 	res, err := v.chargeG()
 	return res.Soc, err
 }

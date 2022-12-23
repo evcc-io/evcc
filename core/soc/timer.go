@@ -17,7 +17,7 @@ type Timer struct {
 	Adapter
 	log       *util.Logger
 	current   float64
-	SoC       int
+	Soc       int
 	Time      time.Time
 	finishAt  time.Time
 	active    bool
@@ -113,10 +113,10 @@ func (lp *Timer) DemandActive() bool {
 	}
 
 	// time
-	remainingDuration := time.Duration(float64(se.AssumedChargeDuration(lp.SoC, power)) / chargeEfficiency)
+	remainingDuration := time.Duration(float64(se.AssumedChargeDuration(lp.Soc, power)) / chargeEfficiency)
 	lp.finishAt = time.Now().Add(remainingDuration).Round(time.Minute)
 
-	lp.log.DEBUG.Printf("estimated charge duration: %v to %d%% at %.0fW", remainingDuration.Round(time.Minute), lp.SoC, power)
+	lp.log.DEBUG.Printf("estimated charge duration: %v to %d%% at %.0fW", remainingDuration.Round(time.Minute), lp.Soc, power)
 	if lp.active {
 		lp.log.DEBUG.Printf("projected end: %v", lp.finishAt)
 		lp.log.DEBUG.Printf("desired finish time: %v", lp.Time)

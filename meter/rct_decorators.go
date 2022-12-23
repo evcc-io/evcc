@@ -56,7 +56,7 @@ type decorateRCTBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateRCTBatteryImpl) SoC() (float64, error) {
+func (impl *decorateRCTBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }
 

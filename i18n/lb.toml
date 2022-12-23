@@ -82,7 +82,7 @@ batteryCharge = "Batterie gelueden"
 pvProduction = "Produktioun"
 loadpoints = "Opluedpunkt | Opluedpunkt | {count} Opluedstatiounen"
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Minimum Staat vun charge"
 description = "Fir Noutfäll. D'Gefier gëtt „séier” gelueden op {0}% vun all verfügbare Solarenergie, a geet dann mat nëmmen dem Solariwwerschoss weider."
 
@@ -95,15 +95,15 @@ phases_1 = "1 Phase"
 phases_3 = "3 Phasen"
 
 [main.vehicle]
-vehicleSoC = "Staat vun charge"
-targetSoC = "Limite"
+vehicleSoc = "Staat vun charge"
+targetSoc = "Limite"
 none = "Keng Gefier"
 unknown = "Gäscht Gefier"
 changeVehicle = "Gefier änneren"
 detectionActive = "Erkennung vum Gefier ..."
 fallbackName = "Gefier"
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 connected = "verbonne"
 disconnected = "deconnectéiert"
 charging = "oplueden"
@@ -116,7 +116,7 @@ activate = "Aktivéieren"
 title = "Zilzäit"
 setTargetTime = "keen"
 experimentalLabel = "Experimentell"
-description = "Wéini soll d'Gefier op {targetSoC}% gelueden ginn?"
+description = "Wéini soll d'Gefier op {targetSoc}% gelueden ginn?"
 modalTitle = "Zielzäit setzen"
 today = "haut"
 tomorrow = "muer"

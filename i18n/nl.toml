@@ -110,7 +110,7 @@ default = "standaard"
 disclaimerHint = "Letop:"
 disclaimerText = "Changes zal verloren zijn nadat de server is herstart."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Min. lading %"
 description = "Voor noodgevallen. Het voertuig wordt „snel” opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot."
 
@@ -130,14 +130,14 @@ label = "Min. vermogen"
 
 [main.vehicle]
 fallbackName = "Voertuig"
-vehicleSoC = "Opladen"
-targetSoC = "Limiet"
+vehicleSoc = "Opladen"
+targetSoc = "Limiet"
 none = "Geen voertuig"
 unknown = "Gast"
 changeVehicle = "Wijzig voertuig"
 detectionActive = "Detecteer voertuig..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "niet verbonden"
 charging = "laden"
 ready = "klaar"
@@ -170,7 +170,7 @@ inactiveLabel = "Ingestelde tijd"
 activeLabel = "{time}"
 modalTitle = "Stel tijd in"
 setTargetTime = "geen"
-description = "Tegen wanneer moet het voertuig geladen zijn naar {targetSoC}%?"
+description = "Tegen wanneer moet het voertuig geladen zijn naar {targetSoc}%?"
 today = "Vandaag"
 tomorrow = "Morgen"
 targetIsInThePast = "Pick een tijd in de toekomst, Marty."

@@ -374,19 +374,19 @@ func (mr *MockVehicleMockRecorder) Phases() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Phases", reflect.TypeOf((*MockVehicle)(nil).Phases))
 }
 
-// SoC mocks base method.
-func (m *MockVehicle) SoC() (float64, error) {
+// Soc mocks base method.
+func (m *MockVehicle) Soc() (float64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SoC")
+	ret := m.ctrl.Call(m, "Soc")
 	ret0, _ := ret[0].(float64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SoC indicates an expected call of SoC.
-func (mr *MockVehicleMockRecorder) SoC() *gomock.Call {
+// Soc indicates an expected call of Soc.
+func (mr *MockVehicleMockRecorder) Soc() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SoC", reflect.TypeOf((*MockVehicle)(nil).SoC))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Soc", reflect.TypeOf((*MockVehicle)(nil).Soc))
 }
 
 // Title mocks base method.
@@ -464,17 +464,17 @@ func (m *MockBattery) EXPECT() *MockBatteryMockRecorder {
 	return m.recorder
 }
 
-// SoC mocks base method.
-func (m *MockBattery) SoC() (float64, error) {
+// Soc mocks base method.
+func (m *MockBattery) Soc() (float64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SoC")
+	ret := m.ctrl.Call(m, "Soc")
 	ret0, _ := ret[0].(float64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SoC indicates an expected call of SoC.
-func (mr *MockBatteryMockRecorder) SoC() *gomock.Call {
+// Soc indicates an expected call of Soc.
+func (mr *MockBatteryMockRecorder) Soc() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SoC", reflect.TypeOf((*MockBattery)(nil).SoC))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Soc", reflect.TypeOf((*MockBattery)(nil).Soc))
 }

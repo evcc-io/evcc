@@ -10,24 +10,24 @@ import (
 	"github.com/evcc-io/evcc/core/wrapper"
 )
 
-var _ loadpoint.API = (*LoadPoint)(nil)
+var _ loadpoint.API = (*Loadpoint)(nil)
 
 // GetStatus returns the charging status
-func (lp *LoadPoint) GetStatus() api.ChargeStatus {
+func (lp *Loadpoint) GetStatus() api.ChargeStatus {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.status
 }
 
 // GetMode returns loadpoint charge mode
-func (lp *LoadPoint) GetMode() api.ChargeMode {
+func (lp *Loadpoint) GetMode() api.ChargeMode {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.Mode
 }
 
 // SetMode sets loadpoint charge mode
-func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
+func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -51,28 +51,28 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 }
 
 // getChargedEnergy returns loadpoint charge target energy
-func (lp *LoadPoint) getChargedEnergy() float64 {
+func (lp *Loadpoint) getChargedEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.chargedEnergy
 }
 
 // setChargedEnergy returns loadpoint charge target energy
-func (lp *LoadPoint) setChargedEnergy(energy float64) {
+func (lp *Loadpoint) setChargedEnergy(energy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.chargedEnergy = energy
 }
 
 // GetTargetEnergy returns loadpoint charge target energy
-func (lp *LoadPoint) GetTargetEnergy() float64 {
+func (lp *Loadpoint) GetTargetEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.targetEnergy
 }
 
 // setTargetEnergy sets loadpoint charge target energy (no mutex)
-func (lp *LoadPoint) setTargetEnergy(energy float64) {
+func (lp *Loadpoint) setTargetEnergy(energy float64) {
 	lp.targetEnergy = energy
 	// TODO soctimer
 	// if lp.socTimer != nil {
@@ -82,7 +82,7 @@ func (lp *LoadPoint) setTargetEnergy(energy float64) {
 }
 
 // SetTargetEnergy sets loadpoint charge target energy
-func (lp *LoadPoint) SetTargetEnergy(energy float64) {
+func (lp *Loadpoint) SetTargetEnergy(energy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -95,73 +95,73 @@ func (lp *LoadPoint) SetTargetEnergy(energy float64) {
 	}
 }
 
-// GetTargetSoC returns loadpoint charge target soc
-func (lp *LoadPoint) GetTargetSoC() int {
+// GetTargetSoc returns loadpoint charge target soc
+func (lp *Loadpoint) GetTargetSoc() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.SoC.target
+	return lp.Soc.target
 }
 
-// setTargetSoC sets loadpoint charge target soc (no mutex)
-func (lp *LoadPoint) setTargetSoC(soc int) {
-	lp.SoC.target = soc
+// setTargetSoc sets loadpoint charge target soc (no mutex)
+func (lp *Loadpoint) setTargetSoc(soc int) {
+	lp.Soc.target = soc
 	// test guard
 	if lp.socTimer != nil {
-		lp.socTimer.SoC = soc
+		lp.socTimer.Soc = soc
 	}
-	lp.publish("targetSoC", soc)
+	lp.publish("targetSoc", soc)
 }
 
-// SetTargetSoC sets loadpoint charge target soc
-func (lp *LoadPoint) SetTargetSoC(soc int) {
+// SetTargetSoc sets loadpoint charge target soc
+func (lp *Loadpoint) SetTargetSoc(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set target soc:", soc)
 
 	// apply immediately
-	if lp.SoC.target != soc {
-		lp.setTargetSoC(soc)
+	if lp.Soc.target != soc {
+		lp.setTargetSoc(soc)
 		lp.requestUpdate()
 	}
 }
 
-// GetMinSoC returns loadpoint charge minimum soc
-func (lp *LoadPoint) GetMinSoC() int {
+// GetMinSoc returns loadpoint charge minimum soc
+func (lp *Loadpoint) GetMinSoc() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.SoC.min
+	return lp.Soc.min
 }
 
-// setMinSoC sets loadpoint charge min soc (no mutex)
-func (lp *LoadPoint) setMinSoC(soc int) {
-	lp.SoC.min = soc
-	lp.publish("minSoC", soc)
+// setMinSoc sets loadpoint charge min soc (no mutex)
+func (lp *Loadpoint) setMinSoc(soc int) {
+	lp.Soc.min = soc
+	lp.publish("minSoc", soc)
 }
 
-// SetMinSoC sets loadpoint charge minimum soc
-func (lp *LoadPoint) SetMinSoC(soc int) {
+// SetMinSoc sets loadpoint charge minimum soc
+func (lp *Loadpoint) SetMinSoc(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set min soc:", soc)
 
 	// apply immediately
-	if lp.SoC.min != soc {
-		lp.setMinSoC(soc)
+	if lp.Soc.min != soc {
+		lp.setMinSoc(soc)
 		lp.requestUpdate()
 	}
 }
 
 // GetPhases returns loadpoint enabled phases
-func (lp *LoadPoint) GetPhases() int {
+func (lp *Loadpoint) GetPhases() int {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.phases
 }
 
 // SetPhases sets loadpoint enabled phases
-func (lp *LoadPoint) SetPhases(phases int) error {
+func (lp *Loadpoint) SetPhases(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
 	if _, ok := lp.charger.(api.PhaseSwitcher); !ok && phases == 0 {
 		return fmt.Errorf("invalid number of phases: %d", phases)
@@ -185,8 +185,8 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 	return nil
 }
 
-// SetTargetCharge sets loadpoint charge targetSoC
-func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) error {
+// SetTargetCharge sets loadpoint charge targetSoc
+func (lp *Loadpoint) SetTargetCharge(finishAt time.Time, soc int) error {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -197,12 +197,12 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) error {
 	lp.log.DEBUG.Printf("set target charge: %d @ %v", soc, finishAt)
 
 	// apply immediately
-	if lp.socTimer.Time != finishAt || lp.SoC.target != soc {
+	if lp.socTimer.Time != finishAt || lp.Soc.target != soc {
 		lp.socTimer.Set(finishAt)
 
 		// don't remove soc
 		if !finishAt.IsZero() {
-			lp.setTargetSoC(soc)
+			lp.setTargetSoc(soc)
 			lp.requestUpdate()
 		}
 	}
@@ -211,7 +211,7 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) error {
 }
 
 // RemoteControl sets remote status demand
-func (lp *LoadPoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
+func (lp *Loadpoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -229,27 +229,27 @@ func (lp *LoadPoint) RemoteControl(source string, demand loadpoint.RemoteDemand)
 }
 
 // HasChargeMeter determines if a physical charge meter is attached
-func (lp *LoadPoint) HasChargeMeter() bool {
+func (lp *Loadpoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
 	return lp.chargeMeter != nil && !isWrapped
 }
 
 // GetChargePower returns the current charge power
-func (lp *LoadPoint) GetChargePower() float64 {
+func (lp *Loadpoint) GetChargePower() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.chargePower
 }
 
 // GetMinCurrent returns the min loadpoint current
-func (lp *LoadPoint) GetMinCurrent() float64 {
+func (lp *Loadpoint) GetMinCurrent() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.MinCurrent
 }
 
 // SetMinCurrent sets the min loadpoint current
-func (lp *LoadPoint) SetMinCurrent(current float64) {
+func (lp *Loadpoint) SetMinCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -262,14 +262,14 @@ func (lp *LoadPoint) SetMinCurrent(current float64) {
 }
 
 // GetMaxCurrent returns the max loadpoint current
-func (lp *LoadPoint) GetMaxCurrent() float64 {
+func (lp *Loadpoint) GetMaxCurrent() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.MaxCurrent
 }
 
 // SetMaxCurrent sets the max loadpoint current
-func (lp *LoadPoint) SetMaxCurrent(current float64) {
+func (lp *Loadpoint) SetMaxCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -282,17 +282,17 @@ func (lp *LoadPoint) SetMaxCurrent(current float64) {
 }
 
 // GetMinPower returns the min loadpoint power for a single phase
-func (lp *LoadPoint) GetMinPower() float64 {
+func (lp *Loadpoint) GetMinPower() float64 {
 	return Voltage * lp.GetMinCurrent()
 }
 
 // GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
-func (lp *LoadPoint) GetMaxPower() float64 {
+func (lp *Loadpoint) GetMaxPower() float64 {
 	return Voltage * lp.GetMaxCurrent() * float64(lp.maxActivePhases())
 }
 
 // setRemainingDuration sets the estimated remaining charging duration
-func (lp *LoadPoint) setRemainingDuration(chargeRemainingDuration time.Duration) {
+func (lp *Loadpoint) setRemainingDuration(chargeRemainingDuration time.Duration) {
 	if lp.chargeRemainingDuration != chargeRemainingDuration {
 		lp.chargeRemainingDuration = chargeRemainingDuration
 		lp.publish("chargeRemainingDuration", chargeRemainingDuration)
@@ -300,14 +300,14 @@ func (lp *LoadPoint) setRemainingDuration(chargeRemainingDuration time.Duration)
 }
 
 // GetRemainingDuration is the estimated remaining charging duration
-func (lp *LoadPoint) GetRemainingDuration() time.Duration {
+func (lp *Loadpoint) GetRemainingDuration() time.Duration {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.chargeRemainingDuration
 }
 
 // setRemainingEnergy sets the remaining charge energy in Wh
-func (lp *LoadPoint) setRemainingEnergy(chargeRemainingEnergy float64) {
+func (lp *Loadpoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -318,21 +318,21 @@ func (lp *LoadPoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 }
 
 // GetRemainingEnergy is the remaining charge energy in Wh
-func (lp *LoadPoint) GetRemainingEnergy() float64 {
+func (lp *Loadpoint) GetRemainingEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.chargeRemainingEnergy
 }
 
 // GetVehicle gets the active vehicle
-func (lp *LoadPoint) GetVehicle() api.Vehicle {
+func (lp *Loadpoint) GetVehicle() api.Vehicle {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.vehicle
 }
 
 // SetVehicle sets the active vehicle
-func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
+func (lp *Loadpoint) SetVehicle(vehicle api.Vehicle) {
 	// TODO develop universal locking approach
 	// setActiveVehicle is protected by lock, hence no locking here
 
@@ -347,7 +347,7 @@ func (lp *LoadPoint) SetVehicle(vehicle api.Vehicle) {
 }
 
 // StartVehicleDetection allows triggering vehicle detection for debugging purposes
-func (lp *LoadPoint) StartVehicleDetection() {
+func (lp *Loadpoint) StartVehicleDetection() {
 	// reset vehicle
 	lp.setActiveVehicle(nil)
 

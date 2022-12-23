@@ -7,13 +7,13 @@ import (
 var _ soc.Adapter = (*adapter)(nil)
 
 type adapter struct {
-	*LoadPoint
+	*Loadpoint
 }
 
 func (a *adapter) Publish(key string, val interface{}) {
-	a.LoadPoint.publish(key, val)
+	a.Loadpoint.publish(key, val)
 }
 
 func (a *adapter) SocEstimator() *soc.Estimator {
-	return a.LoadPoint.socEstimator
+	return a.Loadpoint.socEstimator
 }

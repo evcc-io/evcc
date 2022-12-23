@@ -30,6 +30,6 @@ type decorateSMABatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateSMABatteryImpl) SoC() (float64, error) {
+func (impl *decorateSMABatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }

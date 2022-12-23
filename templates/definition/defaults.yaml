@@ -166,8 +166,8 @@ params:
     valuetype: chargemodes
   - name: minsoc
     description:
-      de: Minimaler Ladestand (SoC) in %
-      en: Minimum state of charge (SoC) in %
+      de: Minimaler Ladestand (Soc) in %
+      en: Minimum state of charge (Soc) in %
     help:
       de: Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht
       en: Charge immediately with maximum power up to the defined state of charge, if the charge mode is not set to 'OFF'
@@ -175,11 +175,11 @@ params:
     valuetype: number
   - name: targetsoc
     description:
-      de: Ziel-Ladestand (SoC) in %
-      en: Target state of charge (SoC) in %
+      de: Ziel-Ladestand (Soc) in %
+      en: Target state of charge (Soc) in %
     help:
-      de: Bis zu welchem Ladestand (SoC) soll das Fahrzeug geladen werden
-      en: Until which state of charge (SoC) should the vehicle be charged
+      de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden
+      en: Until which state of charge (Soc) should the vehicle be charged
     example: 80
     valuetype: number
   - name: mincurrent
@@ -300,9 +300,9 @@ presets:
     params:
       - name: mode
         advanced: true
-      - name: minSoC
+      - name: minSoc
         advanced: true
-      - name: targetSoC
+      - name: targetSoc
         advanced: true
       - name: minCurrent
         advanced: true
@@ -313,16 +313,16 @@ presets:
         valuetype: stringlist
     render: |
       {{define "vehicle-identify"}}
-      {{- if or (ne .mode "") (ne .minSoC "") (ne .targetSoC "") (ne .minCurrent "") (ne .maxCurrent "") }}
+      {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") }}
       onIdentify:
       {{- if (ne .mode "") }}
         mode: {{ .mode }}
       {{- end }}
-      {{- if (ne .minSoC "") }}
-        minSoC: {{ .minSoC }}
+      {{- if (ne .minSoc "") }}
+        minSoc: {{ .minSoc }}
       {{- end }}
-      {{- if (ne .targetSoC "") }}
-        targetSoC: {{ .targetSoC }}
+      {{- if (ne .targetSoc "") }}
+        targetSoc: {{ .targetSoc }}
       {{- end }}
       {{- if (ne .minCurrent "") }}
         minCurrent: {{ .minCurrent }}

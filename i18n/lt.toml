@@ -110,7 +110,7 @@ default = "standartiškai"
 disclaimerHint = "Pastaba:"
 disclaimerText = "Šie pakeitimai neišlieka po evcc serverio restarto."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Minimali įkrova"
 description = "Minimali įkrova. Automobilis įkraunamas „Greitai” iki {0}% nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi."
 
@@ -130,14 +130,14 @@ label = "Min. Srovė"
 
 [main.vehicle]
 fallbackName = "Automobilis"
-vehicleSoC = "Akumuliatorius"
-targetSoC = "Limitas"
+vehicleSoc = "Akumuliatorius"
+targetSoc = "Limitas"
 none = "Nėra automobilio"
 unknown = "Nežinomas automobilis"
 changeVehicle = "Pakeisti automobilį"
 detectionActive = "Bandome atpažinti automobilį ..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "neprijungtas"
 charging = "vyksta įkrovimas"
 ready = "leidžiama įkrauti"
@@ -170,7 +170,7 @@ inactiveLabel = "Suplanuotas įkrovimas"
 activeLabel = "{time}"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
 setTargetTime = "nenustatytas"
-description = "Kada automobilis turėtų būti įkrautas iki {targetSoC}%?"
+description = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
 today = "šiandien"
 tomorrow = "rytoj"
 targetIsInThePast = "Pasirinkite laiką ateityje."

@@ -104,8 +104,8 @@ func (v *Volvo) StatusRequest() (volvo.Status, error) {
 	return res, err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Volvo) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Volvo) Soc() (float64, error) {
 	res, err := v.statusG()
 	return float64(res.HvBattery.HvBatteryLevel), err
 }

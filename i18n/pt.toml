@@ -109,7 +109,7 @@ default = "predefinado"
 disclaimerHint = "Aviso:"
 disclaimerText = "As alterações não são persistentes no momento e serão redefinidas após a reinicialização do servidor."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Nível mínimo de carga"
 description = "Alcance para emergências. O veículo carrega até {0}% no modo „Rápido”. Em seguida, continue com o modo „PV”."
 
@@ -129,14 +129,14 @@ label = "Corrente de carga mínima"
 
 [main.vehicle]
 fallbackName = "Veículo"
-vehicleSoC = "Nível de carga"
-targetSoC = "Alvo de carregamento"
+vehicleSoc = "Nível de carga"
+targetSoc = "Alvo de carregamento"
 none = "Nenhum veículo"
 unknown = "Veículo convidado"
 changeVehicle = "Troca de veículo"
 detectionActive = "Detecção de veículo em obra..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "separado"
 charging = "a carregar"
 ready = "esperando"
@@ -169,7 +169,7 @@ inactiveLabel = "Tempo alvo"
 activeLabel = "{time}"
 modalTitle = "Definir hora-alvo"
 setTargetTime = "sem"
-description = "Quando o veículo deve ser carregado para {targetSoC}%?"
+description = "Quando o veículo deve ser carregado para {targetSoc}%?"
 today = "hoje"
 tomorrow = "amanhã"
 targetIsInThePast = "O ponto do tempo está no passado."

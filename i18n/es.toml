@@ -110,7 +110,7 @@ default = "default"
 disclaimerHint = "Pipa:"
 disclaimerText = "Actualmente, los cambios aún no son persistentes y se restablecen después de un inicio de servicio."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Cargo de min. %"
 description = "Rango para emergencias. El vehículo se carga „rápidamente” a {0}% en modo solar. Luego continuar con el excedente fotovoltaico."
 
@@ -130,14 +130,14 @@ label = "Corriente de carga mínima"
 
 [main.vehicle]
 fallbackName = "Vehículo"
-vehicleSoC = "Nivel de carga"
-targetSoC = "Objetivo de carga"
+vehicleSoc = "Nivel de carga"
+targetSoc = "Objetivo de carga"
 none = "Ningún vehículo"
 unknown = "Vehículo de invitados"
 changeVehicle = "Cambia vehículo"
 detectionActive = "Reconocer vehículo ..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "separado"
 charging = "cargando"
 ready = "listo"
@@ -170,7 +170,7 @@ inactiveLabel = "tiempo objetivo"
 activeLabel = "{time}"
 modalTitle = "Establecer el tiempo objetivo"
 setTargetTime = "niguna"
-description = "¿Cuándo se debe cargar el vehículo al {targetSoC}%?"
+description = "¿Cuándo se debe cargar el vehículo al {targetSoc}%?"
 today = "hoy"
 tomorrow = "mañana"
 targetIsInThePast = "Elegir un tiempo en el futuro, Marty."
