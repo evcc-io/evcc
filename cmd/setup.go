@@ -227,7 +227,7 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) (chan push.Eve
 }
 
 func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
-	var grid, feedin api.Tariff
+	var grid, feedin, planner api.Tariff
 	var currencyCode currency.Unit = currency.EUR
 	var err error
 
@@ -243,11 +243,15 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 		feedin, err = tariff.NewFromConfig(conf.FeedIn.Type, conf.FeedIn.Other)
 	}
 
+	if err == nil && conf.Planner.Type != "" {
+		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
+	}
+
 	if err != nil {
 		err = fmt.Errorf("failed configuring tariff: %w", err)
 	}
 
-	tariffs := tariff.NewTariffs(currencyCode, grid, feedin)
+	tariffs := tariff.NewTariffs(currencyCode, grid, feedin, planner)
 
 	return *tariffs, err
 }
