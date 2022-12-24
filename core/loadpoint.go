@@ -46,7 +46,8 @@ const (
 
 	timerInactive = "inactive"
 
-	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
+	minActiveCurrent      = 1.0       // minimum current at which a phase is treated as active
+	minActiveVoltage      = 230 * 0.9 // minimum voltage at which a phase is treated as active
 	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 
@@ -146,6 +147,7 @@ type LoadPoint struct {
 	remoteDemand   loadpoint.RemoteDemand // External status demand
 	chargePower    float64                // Charging power
 	chargeCurrents []float64              // Phase currents
+	chargeVoltages []float64              // Phase voltages
 	connectedTime  time.Time              // Time when vehicle was connected
 	pvTimer        time.Time              // PV enabled/disable timer
 	phaseTimer     time.Time              // 1p3p switch timer
@@ -1527,6 +1529,48 @@ func (lp *LoadPoint) updateChargeCurrents() {
 	}
 }
 
+// updateChargeVoltages uses MeterVoltage interface to count phases with nominal grid voltage
+func (lp *LoadPoint) updateChargeVoltages() {
+	lp.chargeVoltages = nil
+
+	phaseMeter, ok := lp.chargeMeter.(api.MeterVoltage)
+	if !ok {
+		return // don't guess
+	}
+
+	u1, u2, u3, err := phaseMeter.Voltages()
+	if err != nil {
+		lp.log.ERROR.Printf("charge meter: %v", err)
+		return
+	}
+
+	lp.chargeVoltages = []float64{u1, u2, u3}
+	lp.log.DEBUG.Printf("charge voltages: %.3gV", lp.chargeVoltages)
+	lp.publish("chargeVoltages", lp.chargeVoltages)
+
+	// Quine-McCluskey for (¬L1∧L2∧¬L3) ∨ (L1∧L2∧¬L3) ∨ (¬L1∧¬L2∧L3) ∨ (L1∧¬L2∧L3) ∨ (¬L1∧L2∧L3) -> ¬L1 ∧ L3 ∨ L2 ∧ ¬L3 ∨ ¬L2 ∧ L3
+	if !(u1 > minActiveVoltage) && (u3 > minActiveVoltage) || (u2 > minActiveVoltage) && !(u3 > minActiveVoltage) || !(u2 > minActiveVoltage) && (u3 > minActiveVoltage) {
+		lp.log.WARN.Printf("detected invalid phase voltages on charge meter. check fuses and wiring.")
+	}
+
+	var phases int
+	if (u1 > minActiveVoltage) || (u2 > minActiveVoltage) || (u3 > minActiveVoltage) {
+		phases = 3
+	}
+	if (u1 > minActiveVoltage) && (u2 < minActiveVoltage) && (u3 < minActiveVoltage) {
+		phases = 1
+	}
+
+	if phases >= 1 {
+		lp.Lock()
+		lp.phases = phases
+		lp.Unlock()
+
+		lp.log.DEBUG.Printf("detected phases: %dp", phases)
+	}
+
+}
+
 // publish charged energy and duration
 func (lp *LoadPoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
@@ -1681,6 +1725,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap, batteryBuffered bool) {
 	lp.publish("mode", mode)
 
 	// read and publish meters first- charge power has already been updated by the site
+	lp.updateChargeVoltages()
 	lp.updateChargeCurrents()
 
 	// update ChargeRater here to make sure initial meter update is caught
