@@ -186,7 +186,7 @@ func (lp *Loadpoint) SetTargetCharge(finishAt time.Time, soc int) error {
 		return errors.New("timestamp is in the past")
 	}
 
-	lp.log.DEBUG.Printf("set target charge: %d @ %v", soc, finishAt)
+	lp.log.DEBUG.Printf("set target charge: %d%% @ %v", soc, finishAt)
 
 	// apply immediately
 	if !lp.targetTime.Equal(finishAt) || lp.Soc.target != soc {
