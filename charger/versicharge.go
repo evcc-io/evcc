@@ -92,7 +92,7 @@ const (
     VersichargePause              = 1629 // 1 RW UNIT16  -> On: 1, Off: 2 - AN
     VersichargePhases             = 1642 // 1 RW UNIT16  -> 1Phase: 0 ; 3Phase: 1
 	VersichargeRegMaxCurrent      = 1633 // 1 RW UNIT16  -> Max. Charging Current
- // VersichargeRegTotalEnergy     = 1692 // 2 RO Unit32(BigEndian) 
+    VersichargeRegTotalEnergy     = 1692 // 2 RO Unit32(BigEndian) 
                                          // -> Gesamtleistung Wallbox in WattHours (Mulitplikation mit 0,1)
 )
 
@@ -282,6 +282,18 @@ func (wb *Versicharge) Currents() (float64, float64, float64, error) {
 	}
 
 	return currents[0], currents[1], currents[2], nil
+}
+
+var _ api.MeterEnergy = (*Versicharge)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *Versicharge) TotalEnergy() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(VersichargeRegTotalEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint32(b)) / 10000, err
 }
 
 // ------------------------------------------------------------------------------------------------------
