@@ -86,7 +86,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		voltagesG = collectVoltageProviders(volt)
 	}
 
-	// decorate Meter with MeterCurrent
+	// decorate Meter with MeterPower
 	var powersG func() (float64, float64, float64, error)
 	if len(cc.Powers) > 0 {
 		if len(cc.Powers) != 3 {
