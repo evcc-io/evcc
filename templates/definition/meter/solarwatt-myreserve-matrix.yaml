@@ -26,5 +26,5 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .SData.Soc
+    jq: .SData.SoC
   {{- end }}
