@@ -404,7 +404,7 @@ func (site *Site) updateMeters() error {
 
 			if err == nil {
 				site.batteryPower += power
-				site.log.DEBUG.Printf("battery %d power: %.0f%%", i+1, power)
+				site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
 			} else {
 				site.log.ERROR.Printf("battery %d power: %v", i+1, err)
 			}
