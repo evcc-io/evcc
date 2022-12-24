@@ -11,7 +11,7 @@ import (
 
 // Event is a notification event
 type Event struct {
-	LoadPoint *int // optional loadpoint id
+	Loadpoint *int // optional loadpoint id
 	Event     string
 }
 
@@ -75,7 +75,7 @@ func (h *Hub) apply(ev Event, tmpl *template.Template) (string, error) {
 
 	// get all values from cache
 	for _, p := range h.cache.All() {
-		if p.LoadPoint == nil || ev.LoadPoint == p.LoadPoint {
+		if p.Loadpoint == nil || ev.Loadpoint == p.Loadpoint {
 			attr[p.Key] = p.Val
 		}
 	}

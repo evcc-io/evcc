@@ -44,8 +44,8 @@ func (v *Provider) status(statusG, refreshG func() (StatusResponse, error)) (Sta
 	return res, err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 	return res.Status.Data.Soc.Value, err
 }

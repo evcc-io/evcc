@@ -54,7 +54,7 @@ func (v *Wrapper) OnIdentified() api.ActionConfig {
 
 var _ api.Battery = (*Wrapper)(nil)
 
-// SoC implements the api.Battery interface
-func (v *Wrapper) SoC() (float64, error) {
+// Soc implements the api.Battery interface
+func (v *Wrapper) Soc() (float64, error) {
 	return 0, v.err
 }

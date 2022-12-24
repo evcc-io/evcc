@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -14,18 +13,21 @@ import (
 )
 
 type Awattar struct {
-	mux   sync.Mutex
-	log   *util.Logger
-	uri   string
-	cheap float64
-	data  []awattar.PriceInfo
+	mux  sync.Mutex
+	log  *util.Logger
+	uri  string
+	data api.Rates
 }
 
 var _ api.Tariff = (*Awattar)(nil)
 
-func NewAwattar(other map[string]interface{}) (*Awattar, error) {
+func init() {
+	registry.Add("awattar", NewAwattarFromConfig)
+}
+
+func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		Cheap  float64
+		Cheap  any // TODO deprecated
 		Region string
 	}{
 		Region: "DE",
@@ -36,9 +38,13 @@ func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 	}
 
 	t := &Awattar{
-		log:   util.NewLogger("awattar"),
-		cheap: cc.Cheap,
-		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
+		log: util.NewLogger("awattar"),
+		uri: fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
+	}
+
+	// TODO deprecated
+	if cc.Cheap != nil {
+		t.log.WARN.Println("cheap rate configuration has been replaced by target charging and is deprecated")
 	}
 
 	go t.Run()
@@ -57,27 +63,24 @@ func (t *Awattar) Run() {
 		}
 
 		t.mux.Lock()
-		t.data = res.Data
+		t.data = make(api.Rates, 0, len(res.Data))
+
+		for _, r := range res.Data {
+			ar := api.Rate{
+				Start: r.StartTimestamp,
+				End:   r.EndTimestamp,
+				Price: r.Marketprice / 1e3,
+			}
+			t.data = append(t.data, ar)
+		}
+
 		t.mux.Unlock()
 	}
 }
 
-func (t *Awattar) CurrentPrice() (float64, error) {
+// Rates implements the api.Tariff interface
+func (t *Awattar) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-
-	for i := len(t.data) - 1; i >= 0; i-- {
-		pi := t.data[i]
-
-		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) {
-			return pi.Marketprice / 1000, nil // convert EUR/MWh to EUR/KWh
-		}
-	}
-
-	return 0, errors.New("unable to find current awattar price")
-}
-
-func (t *Awattar) IsCheap() (bool, error) {
-	price, err := t.CurrentPrice()
-	return price <= t.cheap, err
+	return append([]api.Rate{}, t.data...), nil
 }

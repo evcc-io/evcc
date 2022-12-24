@@ -90,9 +90,9 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 	// add points to batch for async writing
 	for param := range in {
 		// vehicle name
-		if param.LoadPoint != nil {
+		if param.Loadpoint != nil {
 			if name, ok := param.Val.(string); ok && param.Key == "vehicleTitle" {
-				vehicles[*param.LoadPoint] = name
+				vehicles[*param.Loadpoint] = name
 				continue
 			}
 		}
@@ -102,9 +102,9 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 		}
 
 		tags := map[string]string{}
-		if param.LoadPoint != nil {
-			tags["loadpoint"] = loadPoints[*param.LoadPoint].Name()
-			tags["vehicle"] = vehicles[*param.LoadPoint]
+		if param.Loadpoint != nil {
+			tags["loadpoint"] = loadPoints[*param.Loadpoint].Name()
+			tags["vehicle"] = vehicles[*param.Loadpoint]
 		}
 
 		fields := map[string]interface{}{}

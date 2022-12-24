@@ -18,6 +18,8 @@ export const LOCALES = {
   no: ["Norwegian", "Norsk"],
   pl: ["Polish", "Polski"],
   pt: ["Portuguese", "Português"],
+  sl: ["Slovenian", "Slovenščina"],
+  uk: ["Ukrainian", "Українська"],
 };
 
 function getBrowserLocale() {

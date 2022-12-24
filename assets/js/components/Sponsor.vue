@@ -40,7 +40,7 @@
 				{{ $t("footer.sponsor.becomeSponsor") }}
 			</a>
 			<div class="small text-muted text-center ms-lg-3">
-				{{ $t("footer.sponsor.confettiPromise") }}
+				{{ $t("footer.sponsor.confettiPromise") }} ;)
 			</div>
 		</div>
 	</div>

@@ -70,7 +70,7 @@ type config struct {
 	Vehicles     []qualifiedConfig
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
-	LoadPoints   []map[string]interface{}
+	Loadpoints   []map[string]interface{}
 }
 
 type mqttConfig struct {
@@ -113,6 +113,7 @@ type tariffConfig struct {
 	Currency string
 	Grid     typedConfig
 	FeedIn   typedConfig
+	Planner  typedConfig
 }
 
 type networkConfig struct {
