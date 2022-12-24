@@ -31,12 +31,14 @@ func init() {
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		Model                      string
-		modbus.Settings            `mapstructure:",squash"`
-		Power, Energy, SoC         string
-		Currents, Voltages, Powers []string
-		Delay                      time.Duration
-		Timeout                    time.Duration
+		Model              string
+		modbus.Settings    `mapstructure:",squash"`
+		Power, Energy, SoC string
+		Currents           []string
+		Voltages           []string
+		Powers             []string
+		Delay              time.Duration
+		Timeout            time.Duration
 	}{
 		Power: "Power",
 		Settings: modbus.Settings{

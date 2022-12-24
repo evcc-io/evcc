@@ -74,7 +74,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		}
 
 		var volt []func() (float64, error)
-		for idx, cc := range cc.Currents {
+		for idx, cc := range cc.Voltages {
 			c, err := provider.NewFloatGetterFromConfig(cc)
 			if err != nil {
 				return nil, fmt.Errorf("voltages[%d]: %w", idx, err)
