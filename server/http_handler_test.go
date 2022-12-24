@@ -2,12 +2,14 @@ package server
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 )
 
 type mockLoadpoint struct {
@@ -71,4 +73,13 @@ func TestTargetChargeHandler(t *testing.T) {
 			t.Errorf("wrong target time year: got %v want %v", mockLp.TargetTime.UTC().Format(isoFormat), tc.outTime.Format(isoFormat))
 		}
 	}
+}
+
+func TestNaNInf(t *testing.T) {
+	c := map[string]any{
+		"foo": math.NaN(),
+		"bar": math.Inf(0),
+	}
+	encodeFloats(c)
+	assert.Equal(t, map[string]any{"foo": nil, "bar": nil}, c, "NaN not encoded as nil")
 }
