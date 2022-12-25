@@ -12,14 +12,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func rates(prices []float64, start time.Time) api.Rates {
+func rates(prices []float64, start time.Time, slotEndFunc ...func(time.Time) time.Time) api.Rates {
 	res := make(api.Rates, 0, len(prices))
+
+	slotEnd := func(start time.Time) time.Time {
+		return start.Add(time.Hour)
+	}
+
+	if len(slotEndFunc) == 1 {
+		slotEnd = slotEndFunc[0]
+	}
 
 	for i, v := range prices {
 		slotStart := start.Add(time.Duration(i) * time.Hour)
 		ar := api.Rate{
 			Start: slotStart,
-			End:   slotStart.Add(1 * time.Hour),
+			End:   slotEnd(slotStart),
 			Price: v,
 		}
 		res = append(res, ar)
@@ -160,6 +168,30 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 	assert.True(t, res, "should start past target time")
 }
 
+func TestFlatTariffLongSlots(t *testing.T) {
+	clck := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	trf := mock.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clck.Now(), func(start time.Time) time.Time {
+		return start.Add(24 * time.Hour)
+	}), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clck,
+		tariff: trf,
+	}
+
+	_, res, err := p.Active(time.Hour, clck.Now().Add(2*time.Hour))
+	assert.NoError(t, err)
+	assert.False(t, res, "should not start long last slot before due time")
+
+	_, res, err = p.Active(time.Hour, clck.Now().Add(time.Hour))
+	assert.NoError(t, err)
+	assert.True(t, res, "should start long last slot after due time")
+}
+
 func TestTargetAfterKnownPrices(t *testing.T) {
 	clck := clock.NewMock()
 	ctrl := gomock.NewController(t)
@@ -179,7 +211,7 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 
 	_, res, err = p.Active(2*time.Hour, clck.Now().Add(2*time.Hour))
 	assert.NoError(t, err)
-	assert.True(t, res, "should plan if car can not be charged completely after known prices ")
+	assert.True(t, res, "should start if car can not be charged completely after known prices ")
 }
 
 func TestChargeAfterTargetTime(t *testing.T) {

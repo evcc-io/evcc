@@ -97,8 +97,13 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 			currentSlot = plannedSlots
 		}
 
-		planDuration += slot.End.Sub(slot.Start)
-		planCost += float64(slot.End.Sub(slot.Start)) / float64(time.Hour) * slot.Price
+		slotDuration := slot.End.Sub(slot.Start)
+		if remainingDuration := requiredDuration - planDuration; remainingDuration < slotDuration {
+			slotDuration = remainingDuration
+		}
+
+		planDuration += slotDuration
+		planCost += float64(slotDuration) / float64(time.Hour) * slot.Price
 
 		t.log.TRACE.Printf("  slot from: %v to %v cost %.2f, duration running total %s, active: %t",
 			slot.Start.Round(time.Minute), slot.End.Round(time.Minute),
