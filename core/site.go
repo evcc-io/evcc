@@ -437,12 +437,35 @@ func (site *Site) updateMeters() error {
 
 	err := retryMeter("grid", site.gridMeter, &site.gridPower)
 
+	// voltages
+	if phaseMeter, ok := site.gridMeter.(api.MeterVoltage); err == nil && ok {
+		u1, u2, u3, err := phaseMeter.Voltages()
+		if err == nil {
+			site.log.DEBUG.Printf("grid voltages: %.3gV", []float64{u1, u2, u3})
+			site.publish("gridVoltages", []float64{u1, u2, u3})
+		} else {
+			site.log.ERROR.Printf("grid meter voltages: %v", err)
+		}
+	}
+
+	// powers
+	var p1, p2, p3 float64
+	if phaseMeter, ok := site.gridMeter.(api.MeterPower); err == nil && ok {
+		p1, p2, p3, err = phaseMeter.Powers()
+		if err == nil {
+			site.log.DEBUG.Printf("grid powers: %.3gW", []float64{p1, p2, p3})
+			site.publish("gridPowers", []float64{p1, p2, p3})
+		} else {
+			site.log.ERROR.Printf("grid meter powers: %v", err)
+		}
+	}
+
 	// currents
 	if phaseMeter, ok := site.gridMeter.(api.MeterCurrent); err == nil && ok {
 		i1, i2, i3, err := phaseMeter.Currents()
 		if err == nil {
-			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
-			site.publish("gridCurrents", []float64{i1, i2, i3})
+			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)})
+			site.publish("gridCurrents", []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)})
 		} else {
 			site.log.ERROR.Printf("grid meter currents: %v", err)
 		}
