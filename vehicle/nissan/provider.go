@@ -81,8 +81,8 @@ func (v *Provider) status(battery func() (StatusResponse, error), refresh func()
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 
 	if err == nil {

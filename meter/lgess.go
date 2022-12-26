@@ -49,7 +49,7 @@ func init() {
 	registry.Add("lgess", NewLgEssFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewLgEssFromConfig creates an LgEss Meter from generic config
 func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -89,13 +89,13 @@ func NewLgEss(uri, usage, password string, cache time.Duration) (api.Meter, erro
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate api.BatterySoC
-	var batterySoC func() (float64, error)
+	// decorate api.BatterySoc
+	var batterySoc func() (float64, error)
 	if usage == "battery" {
-		batterySoC = m.batterySoC
+		batterySoc = m.batterySoc
 	}
 
-	return decorateLgEss(m, totalEnergy, batterySoC), nil
+	return decorateLgEss(m, totalEnergy, batterySoc), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -132,8 +132,8 @@ func (m *LgEss) totalEnergy() (float64, error) {
 	}
 }
 
-// batterySoC implements the api.Battery interface
-func (m *LgEss) batterySoC() (float64, error) {
+// batterySoc implements the api.Battery interface
+func (m *LgEss) batterySoc() (float64, error) {
 	data, err := m.lp.Data()
 	if err != nil {
 		return 0, err

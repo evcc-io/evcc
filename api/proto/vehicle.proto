@@ -6,7 +6,7 @@ option go_package = "proto/pb";
 
 service Vehicle {
 	rpc New (NewRequest) returns (NewReply) {}
-	rpc SoC (SoCRequest) returns (SoCReply) {}
+	rpc Soc (SocRequest) returns (SocReply) {}
 }
 
 message NewRequest {
@@ -19,11 +19,11 @@ message NewReply {
 	int64 vehicle_id = 1;
 }
 
-message SoCRequest {
+message SocRequest {
 	string token = 1;
 	int64 vehicle_id = 2;
 }
 
-message SoCReply {
+message SocReply {
 	double soc = 1;
 }

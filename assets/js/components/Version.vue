@@ -18,9 +18,6 @@
 		>
 			<shopicon-regular-gift class="me-2"></shopicon-regular-gift>
 			v{{ installed }}
-			<span class="ms-2 d-none d-xs-block d-sm-none text-decoration-underline">
-				{{ $t("footer.version.availableShort") }}
-			</span>
 			<span class="ms-2 d-none d-sm-block text-gray-medium text-decoration-underline">
 				{{ $t("footer.version.availableLong") }}
 			</span>

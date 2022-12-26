@@ -4,7 +4,7 @@ docs = "Documentação"
 blog = "Blog"
 github = "GitHub"
 login = "Login de veículo"
-about = "Sobre evcc"
+about = "Sobre"
 
 [header.theme]
 auto = "Design: Sistema"
@@ -12,7 +12,6 @@ light = "Design: Claro"
 dark = "Design: Escuro"
 
 [footer.version]
-availableShort = "Atualização"
 availableLong = "Atualização disponível"
 modalTitle = "Atualização disponível"
 modalUpdateStarted = "Após a atualização, o evcc será reiniciado."
@@ -65,7 +64,7 @@ thanks = "Obrigado por seu patrocínio, {sponsor}! Isso nos ajuda em um maior de
 confetti = "Gosta de confete?"
 supportUs = "Nossa missão: tornar carrega solar a norma. Ajude-nos e apoie financeiramente o evcc."
 sticker = "… ou autocolantes do evcc?"
-confettiPromise = "Também temos autocolantes e confete digital ;)"
+confettiPromise = "Também temos autocolantes e confete digital"
 becomeSponsor = "Torne-se um patrocinador"
 
 [notifications]
@@ -103,16 +102,16 @@ duration = "Duração"
 remaining = "Tempo restante"
 
 [main.loadpointSettings]
-title = 'Configurações "{0}"'
+title = "Configurações {0}"
 vehicle = "Veículo"
 currents = "Corrente de carga"
 default = "predefinado"
 disclaimerHint = "Aviso:"
 disclaimerText = "As alterações não são persistentes no momento e serão redefinidas após a reinicialização do servidor."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Nível mínimo de carga"
-description = 'Alcance para emergências. O veículo carrega até {0}% no modo "Rápido". Em seguida, continue com o modo "PV".'
+description = "Alcance para emergências. O veículo carrega até {0}% no modo „Rápido”. Em seguida, continue com o modo „PV”."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases elétricas"
@@ -130,14 +129,14 @@ label = "Corrente de carga mínima"
 
 [main.vehicle]
 fallbackName = "Veículo"
-vehicleSoC = "Nível de carga"
-targetSoC = "Alvo de carregamento"
+vehicleSoc = "Nível de carga"
+targetSoc = "Alvo de carregamento"
 none = "Nenhum veículo"
 unknown = "Veículo convidado"
 changeVehicle = "Troca de veículo"
 detectionActive = "Detecção de veículo em obra..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "separado"
 charging = "a carregar"
 ready = "esperando"
@@ -170,7 +169,7 @@ inactiveLabel = "Tempo alvo"
 activeLabel = "{time}"
 modalTitle = "Definir hora-alvo"
 setTargetTime = "sem"
-description = "Quando o veículo deve ser carregado para {targetSoC}%?"
+description = "Quando o veículo deve ser carregado para {targetSoc}%?"
 today = "hoje"
 tomorrow = "amanhã"
 targetIsInThePast = "O ponto do tempo está no passado."

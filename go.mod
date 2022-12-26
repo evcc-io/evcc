@@ -98,13 +98,12 @@ require (
 	gorm.io/gorm v1.24.2
 )
 
-require github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
-
 require (
 	cloud.google.com/go/compute v1.14.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.2 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
+	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

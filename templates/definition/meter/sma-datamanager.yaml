@@ -78,7 +78,7 @@ render: |
     uri: {{ .host }}:{{ .port }} # Port 502
     id: 2
     register:
-      address: 30845 # Battery SoC, %
+      address: 30845 # Battery Soc, %
       type: holding
       decode: uint32nan
   {{- end }}

@@ -269,7 +269,7 @@ func (s *SEMP) deviceInfoQuery(w http.ResponseWriter, r *http.Request) {
 	if did == "" {
 		msg.DeviceInfo = append(msg.DeviceInfo, s.allDeviceInfo()...)
 	} else {
-		for id, lp := range s.site.LoadPoints() {
+		for id, lp := range s.site.Loadpoints() {
 			if did != s.deviceID(id) {
 				continue
 			}
@@ -294,7 +294,7 @@ func (s *SEMP) deviceStatusQuery(w http.ResponseWriter, r *http.Request) {
 	if did == "" {
 		msg.DeviceStatus = append(msg.DeviceStatus, s.allDeviceStatus()...)
 	} else {
-		for id, lp := range s.site.LoadPoints() {
+		for id, lp := range s.site.Loadpoints() {
 			if did != s.deviceID(id) {
 				continue
 			}
@@ -319,7 +319,7 @@ func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 	if did == "" {
 		msg.PlanningRequest = append(msg.PlanningRequest, s.allPlanningRequest()...)
 	} else {
-		for id, lp := range s.site.LoadPoints() {
+		for id, lp := range s.site.Loadpoints() {
 			if did != s.deviceID(id) {
 				continue
 			}
@@ -397,7 +397,7 @@ func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
 }
 
 func (s *SEMP) allDeviceInfo() (res []DeviceInfo) {
-	for id, lp := range s.site.LoadPoints() {
+	for id, lp := range s.site.Loadpoints() {
 		res = append(res, s.deviceInfo(id, lp))
 	}
 
@@ -432,7 +432,7 @@ func (s *SEMP) deviceStatus(id int, lp loadpoint.API) DeviceStatus {
 }
 
 func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
-	for id, lp := range s.site.LoadPoints() {
+	for id, lp := range s.site.Loadpoints() {
 		res = append(res, s.deviceStatus(id, lp))
 	}
 
@@ -489,7 +489,7 @@ func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 }
 
 func (s *SEMP) allPlanningRequest() (res []PlanningRequest) {
-	for id, lp := range s.site.LoadPoints() {
+	for id, lp := range s.site.Loadpoints() {
 		if pr := s.planningRequest(id, lp); len(pr.Timeframe) > 0 {
 			res = append(res, pr)
 		}
@@ -512,7 +512,7 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 	for _, dev := range msg.DeviceControl {
 		did := dev.DeviceID
 
-		for id, lp := range s.site.LoadPoints() {
+		for id, lp := range s.site.Loadpoints() {
 			if did != s.deviceID(id) {
 				continue
 			}

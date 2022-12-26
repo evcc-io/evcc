@@ -12,7 +12,7 @@ import (
 	"github.com/fatih/structs"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -55,8 +55,8 @@ type ActionConfig struct {
 	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
 	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
 	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
-	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
-	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
+	MinSoc     *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc
+	TargetSoc  *int        `mapstructure:"targetSoc,omitempty"`  // Target Soc
 }
 
 // Merge merges all non-nil properties of the additional config into the base config.
@@ -71,11 +71,11 @@ func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
 	if m.MaxCurrent != nil {
 		a.MaxCurrent = m.MaxCurrent
 	}
-	if m.MinSoC != nil {
-		a.MinSoC = m.MinSoC
+	if m.MinSoc != nil {
+		a.MinSoc = m.MinSoc
 	}
-	if m.TargetSoC != nil {
-		a.TargetSoC = m.TargetSoC
+	if m.TargetSoc != nil {
+		a.TargetSoc = m.TargetSoc
 	}
 	return a
 }
@@ -117,9 +117,9 @@ type MeterPower interface {
 	Powers() (float64, float64, float64, error)
 }
 
-// Battery is able to provide battery SoC in %
+// Battery is able to provide battery Soc in %
 type Battery interface {
-	SoC() (float64, error)
+	Soc() (float64, error)
 }
 
 // ChargeState provides current charging status
@@ -127,12 +127,17 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
+// CurrentLimiter provides current charging status
+type CurrentLimiter interface {
+	MaxCurrent(current int64) error
+}
+
 // Charger is able to provide current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	MaxCurrent(current int64) error
+	CurrentLimiter
 }
 
 // ChargerEx provides milli-amp precision charger current control
@@ -209,7 +214,7 @@ type VehiclePosition interface {
 
 // SocLimiter returns the vehicles charge limit
 type SocLimiter interface {
-	TargetSoC() (float64, error)
+	TargetSoc() (float64, error)
 }
 
 // VehicleChargeController allows to start/stop the charging session on the vehicle side
@@ -223,10 +228,18 @@ type Resurrector interface {
 	WakeUp() error
 }
 
-// Tariff is the grid tariff
+// Rate is a grid tariff rate
+type Rate struct {
+	Start, End time.Time
+	Price      float64
+}
+
+// Rates is a slice of (future) tariff rates
+type Rates []Rate
+
+// Tariff is a tariff capable of retrieving tariff rates
 type Tariff interface {
-	IsCheap() (bool, error)
-	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
+	Rates() (Rates, error)
 }
 
 // AuthProvider is the ability to provide OAuth authentication through the ui

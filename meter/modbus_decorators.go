@@ -556,7 +556,7 @@ type decorateModbusBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateModbusBatteryImpl) SoC() (float64, error) {
+func (impl *decorateModbusBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }
 

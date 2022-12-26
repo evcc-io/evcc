@@ -56,7 +56,7 @@ type decorateLgEssBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateLgEssBatteryImpl) SoC() (float64, error) {
+func (impl *decorateLgEssBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }
 

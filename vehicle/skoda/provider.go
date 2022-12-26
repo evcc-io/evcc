@@ -39,8 +39,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.chargerG()
 	if err == nil {
 		return float64(res.Battery.StateOfChargeInPercent), nil
@@ -127,8 +127,8 @@ func (v *Provider) Odometer() (odo float64, err error) {
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoC implements the api.SocLimiter interface
-func (v *Provider) TargetSoC() (float64, error) {
+// TargetSoc implements the api.SocLimiter interface
+func (v *Provider) TargetSoc() (float64, error) {
 	res, err := v.settingsG()
 	if err == nil {
 		return float64(res.TargetStateOfChargeInPercent), nil

@@ -13,14 +13,14 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.MeterVoltage,Voltages,func() (float64, float64, float64, error)" -t "api.MeterPower,Powers,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.MeterVoltage,Voltages,func() (float64, float64, float64, error)" -t "api.MeterPower,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
 		Power    provider.Config
 		Energy   *provider.Config  // optional
-		SoC      *provider.Config  // optional
+		Soc      *provider.Config  // optional
 		Currents []provider.Config // optional
 		Voltages []provider.Config // optional
 		Powers   []provider.Config // optional
@@ -106,16 +106,16 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		powersG = collectPowerProviders(pow)
 	}
 
-	// decorate Meter with BatterySoC
-	var batterySoCG func() (float64, error)
-	if cc.SoC != nil {
-		batterySoCG, err = provider.NewFloatGetterFromConfig(*cc.SoC)
+	// decorate Meter with BatterySoc
+	var batterySocG func() (float64, error)
+	if cc.Soc != nil {
+		batterySocG, err = provider.NewFloatGetterFromConfig(*cc.Soc)
 		if err != nil {
 			return nil, fmt.Errorf("battery: %w", err)
 		}
 	}
 
-	res := m.Decorate(totalEnergyG, currentsG, voltagesG, powersG, batterySoCG)
+	res := m.Decorate(totalEnergyG, currentsG, voltagesG, powersG, batterySocG)
 
 	return res, nil
 }
@@ -190,9 +190,9 @@ func (m *Meter) Decorate(
 	currents func() (float64, float64, float64, error),
 	voltages func() (float64, float64, float64, error),
 	powers func() (float64, float64, float64, error),
-	batterySoC func() (float64, error),
+	batterySoc func() (float64, error),
 ) api.Meter {
-	return decorateMeter(m, totalEnergy, currents, voltages, powers, batterySoC)
+	return decorateMeter(m, totalEnergy, currents, voltages, powers, batterySoc)
 }
 
 // CurrentPower implements the api.Meter interface

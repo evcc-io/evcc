@@ -92,7 +92,7 @@ func (v *Cloud) prepareVehicle() error {
 
 // chargeState implements the api.Vehicle interface
 func (v *Cloud) chargeState() (float64, error) {
-	req := &pb.SoCRequest{
+	req := &pb.SocRequest{
 		Token:     v.token,
 		VehicleId: v.vehicleID,
 	}
@@ -100,7 +100,7 @@ func (v *Cloud) chargeState() (float64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 	defer cancel()
 
-	res, err := v.client.SoC(ctx, req)
+	res, err := v.client.Soc(ctx, req)
 
 	if err != nil && strings.Contains(err.Error(), api.ErrMustRetry.Error()) {
 		return 0, api.ErrMustRetry
@@ -108,13 +108,13 @@ func (v *Cloud) chargeState() (float64, error) {
 
 	if err != nil && strings.Contains(err.Error(), cloud.ErrVehicleNotAvailable.Error()) && v.prepareVehicle() == nil {
 		req.VehicleId = v.vehicleID
-		res, err = v.client.SoC(ctx, req)
+		res, err = v.client.Soc(ctx, req)
 	}
 
 	return res.GetSoc(), err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Cloud) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Cloud) Soc() (float64, error) {
 	return v.chargeStateG()
 }
