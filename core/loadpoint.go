@@ -1596,7 +1596,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 }
 
 // updateChargeVoltages uses MeterVoltage interface to count phases with nominal grid voltage
-func (lp *LoadPoint) updateChargeVoltages() {
+func (lp *Loadpoint) updateChargeVoltages() {
 	lp.chargeVoltages = nil
 
 	phaseMeter, ok := lp.chargeMeter.(api.MeterVoltage)
