@@ -228,7 +228,7 @@ func (wb *ABB) Currents() (float64, float64, float64, error) {
 
 var _ api.MeterVoltage = (*ABB)(nil)
 
-// Voltages implements the api.MeterCurrent interface
+// Voltages implements the api.MeterVoltage interface
 func (wb *ABB) Voltages() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(abbRegVoltages, 6)
 	if err != nil {

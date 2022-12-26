@@ -259,7 +259,7 @@ func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
 
 var _ api.MeterVoltage = (*HeidelbergEC)(nil)
 
-// Voltages implements the api.MeterCurrent interface
+// Voltages implements the api.MeterVoltage interface
 func (wb *HeidelbergEC) Voltages() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadInputRegisters(abbRegVoltages, 3)
 	if err != nil {
