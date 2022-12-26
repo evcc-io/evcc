@@ -35,8 +35,6 @@ package charger
     // daher Verwendung Apparent Power.
 //************************************************************************************
 
-// Steuerung Enable/Enabled durch Pause. Andere Variante über Current, siehe ABB?
-
 // Weitere zukünfitge Themen zu implementieren / testen:
 
   // Laden 1/3 Phasen
@@ -233,25 +231,25 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 	return err
 }
 
- var _ api.PhaseSwitcher = (*Versicharge)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface 1Phase: 0 ; 3Phase: 1
-// Feature führt derzeit zum Absturz der Wallbox, nicht verwenden (in evcc.yaml: Phases = 3)
- func (wb *Versicharge) Phases1p3p(phases int) error {
- 	fmt.Printf("%d Phases Umschaltung \n", phases)
- 	
- 	if phases == 1 {
- 		_, err := wb.conn.WriteSingleRegister(VersichargePhases, uint16(0)) // 1 Phase = 0
- 		return err
- 	}
- 
- 	if phases == 3 {
- 		_, err := wb.conn.WriteSingleRegister(VersichargePhases, uint16(1)) // 3 Phasen = 1
- 		return err
- 	}
- 
- 	return nil 
- }
+// var _ api.PhaseSwitcher = (*Versicharge)(nil)
+//
+//// Phases1p3p implements the api.PhaseSwitcher interface 1Phase: 0 ; 3Phase: 1
+//// Feature führt derzeit zum Absturz der Wallbox, nicht verwenden (in evcc.yaml: Phases = 3)
+// func (wb *Versicharge) Phases1p3p(phases int) error {
+// 	fmt.Printf("%d Phases Umschaltung \n", phases)
+// 	
+// 	if phases == 1 {
+// 		_, err := wb.conn.WriteSingleRegister(VersichargePhases, uint16(0)) // 1 Phase = 0
+// 		return err
+// 	}
+// 
+// 	if phases == 3 {
+// 		_, err := wb.conn.WriteSingleRegister(VersichargePhases, uint16(1)) // 3 Phasen = 1
+// 		return err
+// 	}
+// 
+// 	return nil 
+// }
 
 // ------------------------------------------------------------------------------------------------------
 // Meter
