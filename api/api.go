@@ -92,7 +92,7 @@ func (a ActionConfig) String() string {
 	return strings.Join(s, ", ")
 }
 
-// Meter is able to provide total power in W
+// Meter is able to provide total active power in W
 type Meter interface {
 	CurrentPower() (float64, error)
 }
