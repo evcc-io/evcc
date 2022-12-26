@@ -442,7 +442,7 @@ func (site *Site) updateMeters() error {
 		i1, i2, i3, err := phaseMeter.Currents()
 		if err == nil {
 			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
-			site.publish("gridCurrents", [3]float64{i1, i2, i3}) // array[3] for mqtt special-casing phases
+			site.publish("gridCurrents", []float64{i1, i2, i3})
 		} else {
 			site.log.ERROR.Printf("grid meter currents: %v", err)
 		}

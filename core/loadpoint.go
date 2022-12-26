@@ -749,7 +749,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(targetTimeActive, active)
 	}()
 
-	if lp.planner == nil || lp.targetTime.IsZero() {
+	if lp.planner == nil || lp.socEstimator == nil || lp.targetTime.IsZero() {
 		return false
 	}
 
