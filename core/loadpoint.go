@@ -47,8 +47,8 @@ const (
 
 	timerInactive = "inactive"
 
-	minActiveCurrent      = 1.0       // minimum current at which a phase is treated as active
-	minActiveVoltage      = 230 * 0.9 // minimum voltage at which a phase is treated as active
+	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
+	minActiveVoltage      = 208 // minimum voltage at which a phase is treated as active
 	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 
@@ -1628,11 +1628,8 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	}
 
 	if phases >= 1 {
-		lp.Lock()
-		lp.phases = phases
-		lp.Unlock()
-
 		lp.log.DEBUG.Printf("detected phases: %dp", phases)
+		lp.setPhases(phases)
 	}
 
 }
