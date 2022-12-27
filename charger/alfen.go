@@ -55,21 +55,28 @@ func init() {
 	registry.Add("alfen", NewAlfenFromConfig)
 }
 
+// go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b "*Alfen" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+
 // NewAlfenFromConfig creates a Alfen charger from generic config
 func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 1,
+	cc := struct {
+		Phases             int
+		modbus.TcpSettings `mapstructure:",squash"`
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewAlfen(cc.URI, cc.ID)
+	return NewAlfen(cc.URI, cc.ID, cc.Phases)
 }
 
 // NewAlfen creates Alfen charger
-func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
+func NewAlfen(uri string, slaveID uint8, phases int) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -89,7 +96,12 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 
 	go wb.heartbeat()
 
-	return wb, err
+	var phases1p3p func(int) error
+	if phases != 1 {
+		phases1p3p = wb.phases1p3p
+	}
+
+	return decorateAlfen(wb, phases1p3p), err
 }
 
 func (wb *Alfen) heartbeat() {
@@ -232,10 +244,8 @@ func (wb *Alfen) Currents() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-var _ api.PhaseSwitcher = (*Alfen)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (c *Alfen) Phases1p3p(phases int) error {
+// phases1p3p implements the api.PhaseSwitcher interface
+func (c *Alfen) phases1p3p(phases int) error {
 	_, err := c.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
 	return err
 }
