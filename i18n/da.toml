@@ -1,0 +1,231 @@
+[footer.savings]
+modalTitle = "Oversigt over ladeenergi"
+footerLong = "{percent}% solenergi"
+tabTitle = "Mine data"
+footerShort = "{percent}% solenergi"
+since = "siden {siden}"
+percentTitle = "Solenergi"
+percentSelf = "{self} kWh solenergi"
+priceTitle = "Energipris"
+priceFeedIn = "{feedInPrice} feed-in"
+priceGrid = "{gridPrice} gitter"
+savingsTitle = "Opsparing"
+savingsComparedToGrid = "kompareret til gitter"
+savingsTotalEnergy = "{total} kWh opladet"
+percentGrid = "{grid} kWh gitter"
+
+[header]
+sessions = "Opladning sessioner"
+docs = "Dokumentation"
+blog = "Blog"
+github = "GitHub"
+login = "Logins til køretøjer"
+settings = "Indstillinger"
+about = "Om"
+
+[settings]
+title = "Indstillinger"
+
+[settings.theme]
+label = "Design"
+auto = "system"
+light = "lys"
+dark = "mørk"
+
+[settings.language]
+label = "Sprog"
+auto = "Automatisk"
+
+[settings.unit]
+label = "Enheder"
+km = "km"
+mi = "miles"
+
+[settings.telemetry]
+label = "Telemetri"
+
+[footer.version]
+availableLong = "ny version tilgængelig"
+modalTitle = "Ny version tilgængelig"
+modalUpdateStarted = "Starter den nye version af evcc..."
+modalInstalledVersion = "Installeret version"
+modalNoReleaseNotes = "Der er ingen tilgængelige release notes. Mere info om den nye version:"
+modalCancel = "Afbestille"
+modalUpdate = "Installere"
+modalUpdateNow = "Installer nu"
+modalDownload = "Hent"
+modalUpdateStatusStart = "Installation startede:"
+
+[footer.community]
+tabTitle = "Live fællesskab"
+power = "Opladningsstrøm"
+powerSub1 = "{activeClients} af {totalClients} deltagere"
+powerSub2 = "opladning ..."
+greenShare = "Solandel"
+greenShareSub1 = "strøm leveret af"
+greenShareSub2 = "sol, og batteriopbevaring"
+greenEnergy = "Solenergi"
+greenEnergySub1 = "oplader med evcc"
+greenEnergySub2 = "siden oktober 2022"
+
+[footer.telemetry]
+optIn = "Jeg vil gerne bidrage med mine data."
+optInMoreDetails = "Flere detaljer {0}."
+optInMoreDetailsLink = "her"
+optInSponsorship = "Sponsorering påkrævet."
+
+[footer.sponsor]
+titleSponsor = "Du er en tilhænger"
+titleNoSponsor = "Støt os"
+thanks = "Tak, {sponsor}! Dit bidrag hjælper med at udvikle evcc yderligere."
+sticker = "... eller evcc-klistermærker?"
+confettiPromise = "Du får klistermærker og digital konfetti 😉"
+becomeSponsor = "Bliv sponsor"
+supportUs = "Vores mission er at gøre solenergi til normen. Hjælp evcc ved at betale, hvad det er værd for dig."
+confetti = "Klar til konfetti?"
+
+[notifications]
+modalTitle = "Underretninger"
+dismissAll = "Afvis alle"
+
+[main]
+vehicles = "Parkering"
+
+[main.energyflow]
+noEnergy = "Ingen målerdata"
+homePower = "Forbrug"
+batteryCharge = "Battery opladning"
+batteryDischarge = "Batteriet aflades"
+gridImport = "Grid brug"
+selfConsumption = "Self-konsumption"
+pvExport = "Eksport af gitter"
+pvProduction = "Produktion"
+loadpoints = "Oplader| Oplader | {count} opladere"
+battery = "Batteri"
+
+[main.mode]
+off = "Af"
+minpv = "Min+Solar"
+pv = "Solenergi"
+now = "Hurtig"
+
+[main.loadpoint]
+fallbackName = "Ladepunkt"
+power = "Strøm"
+charged = "Opladt"
+duration = "Varighed"
+
+[main.loadpointSettings]
+title = "Indstillinger {0}"
+vehicle = "Køretøj"
+currents = "Ladestrøm"
+default = "standard"
+disclaimerText = "Ændringer vil gå tabt, efter at serveren er genstartet."
+disclaimerHint = "Bemærk:"
+
+[main.loadpointSettings.phasesConfigured]
+label = "Faser"
+phases_0 = "automatisk skift"
+phases_3_hint = "({min} til {max})"
+phases_1 = "1 fase"
+phases_1_hint = "({min} til {max})"
+phases_3 = "3 fase"
+
+[main.loadpointSettings.maxCurrent]
+label = "Max. Nuværende"
+
+[main.vehicle]
+vehicleSoc = "Oplade"
+none = "Intet køretøj"
+unknown = "Gæstekøretøj"
+detectionActive = "Detektering af køretøj ..."
+changeVehicle = "Skift køretøj"
+targetSoc = "Begrænse"
+fallbackName = "Køretøj"
+
+[main.vehicleSoc]
+disconnected = "afbrudt"
+charging = "opladning"
+ready = "parat"
+connected = "forbundet"
+vehicleTarget = "Køretøjsgrænse: {soc}%"
+
+[main.vehicleStatus]
+minCharge = "Minimum opladning til {soc} %."
+waitForVehicle = "Parat. Venter på køretøj ..."
+vehicleTargetReached = "Køretøjsgrænsen {soc} % nået."
+charging = "Opladning..."
+targetChargePlanned = "Målopladning starter kl. {time}."
+targetChargeWaitForVehicle = "Målladning klar. Venter på køretøj..."
+targetChargeActive = "Målladning aktiv..."
+connected = "Forbundet."
+pvDisable = "Ikke nok overskud. Pause i {resterende}..."
+pvEnable = "Overskud tilgængeligt. Starter om {remaining}..."
+scale1p = "Reducerer til 1-faset strøm i {remaining}..."
+scale3p = "Øger til 3-faset strøm i {remaining}..."
+disconnected = "Afbrudt."
+unknown = ""
+
+[main.provider]
+logout = "Log ud"
+login = "Log på"
+
+[main.targetCharge]
+title = "Måltid"
+inactiveLabel = "Måltid"
+activeLabel = "{time}"
+modalTitle = "Sæt måltid"
+description = "Hvornår skal køretøjet oplades til {targetSoc} %?"
+tomorrow = "i morgen"
+activate = "Tænd"
+experimentalLabel = "Eksperimentel"
+today = "i dag"
+targetIsInThePast = "Vælg et tidspunkt i fremtiden, Marty."
+experimentalText = "Dette virker, men er ikke perfekt. Rapportér venligst uventet adfærd til"
+setTargetTime = "ingen"
+
+[startupError]
+title = "Fejl ved opstart"
+discussions = "GitHub Diskussioner"
+hint = "Bemærk: Det kan også være, at du har en defekt enhed (inverter, måler, ...). Tjek dine netværksforbindelser."
+configuration = "Config"
+configFile = "Konfigurationsfil brugt:"
+lineError = "Fejl i {0}."
+lineErrorLink = "linje {0}"
+fixAndRestart = "Løs problemet og genstart serveren."
+description = "Tjek venligst din konfigurationsfil. Hvis fejlmeddelelsen ikke hjælper, så tjek {0}."
+restartButton = "Genstart"
+
+[sessions]
+vehicle = "Køretøj"
+energy = "Opladt"
+date = "Periode"
+title = "Opladning Sessioner"
+downloadCsv = "Download som CSV"
+loadpoint = "Ladepunkt"
+
+[sessions.csv]
+loadpoint = "Ladepunkt"
+vehicle = "Køretøj"
+odometer = "Kilometertal (km)"
+identifier = "Identifier"
+chargedenergy = "Energi (kWh)"
+meterstop = "Målerstop (kWh)"
+finished = "Færdig"
+meterstart = "Målerstart (kWh)"
+created = "Oprettet"
+
+[offline]
+reload = "Genindlæs?"
+message = "Ikke forbundet til en server."
+
+[main.loadpointSettings.minSoc]
+label = "Min. opladning %"
+description = "Til nødstilfælde. Køretøjet bliver „hurtigt” opladet til {0} % fra al tilgængelig solenergi, og fortsætter derefter med kun solenergioverskuddet."
+
+[main.loadpointSettings.minCurrent]
+label = "Min. Nuværende"
+
+[main.targetEnergy]
+noLimit = "ingen"
+label = "Begrænse"
