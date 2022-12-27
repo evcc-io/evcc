@@ -96,7 +96,10 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 
 	var phases1p3p func(int) error
 	if v2 != 0 && v3 != 0 {
+		wb.log.DEBUG.Println("detected 3p alfen")
 		phases1p3p = wb.phases1p3p
+	} else {
+		wb.log.DEBUG.Println("detected 1p alfen")
 	}
 
 	return decorateAlfen(wb, phases1p3p), err
