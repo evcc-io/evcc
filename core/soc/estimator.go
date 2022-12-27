@@ -55,11 +55,11 @@ func (s *Estimator) Reset() {
 
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
-	hours := s.RemainingChargeEnergy(targetSoc) * 1e3 / chargePower
-	if math.IsInf(hours, 0) {
-		hours = 0
+	energy := s.RemainingChargeEnergy(targetSoc) * 1e3 / chargePower
+	if math.IsInf(energy, 0) {
+		energy = 0
 	}
-	return time.Duration(float64(time.Hour) * hours).Round(time.Second)
+	return time.Duration(float64(time.Hour) * energy).Round(time.Second)
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
