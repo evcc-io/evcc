@@ -43,6 +43,7 @@ type Alfen struct {
 }
 
 const (
+	alfenRegVoltages   = 306 // 3 registers
 	alfenRegCurrents   = 320 // 3 registers
 	alfenRegPower      = 344
 	alfenRegEnergy     = 374  // 390
@@ -54,6 +55,8 @@ const (
 func init() {
 	registry.Add("alfen", NewAlfenFromConfig)
 }
+
+// go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b "*Alfen" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
 func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -89,7 +92,17 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 
 	go wb.heartbeat()
 
-	return wb, err
+	_, v2, v3, err := wb.Voltages()
+
+	var phases1p3p func(int) error
+	if v2 != 0 && v3 != 0 {
+		wb.log.DEBUG.Println("detected 3p alfen")
+		phases1p3p = wb.phases1p3p
+	} else {
+		wb.log.DEBUG.Println("detected 1p alfen")
+	}
+
+	return decorateAlfen(wb, phases1p3p), err
 }
 
 func (wb *Alfen) heartbeat() {
@@ -214,7 +227,17 @@ var _ api.MeterCurrent = (*Alfen)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Alfen) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(alfenRegCurrents, 6)
+	return wb.voltagesOrCurrents(alfenRegCurrents)
+}
+
+// Voltages implements the api.MeterVoltage interface (tbc)
+func (wb *Alfen) Voltages() (float64, float64, float64, error) {
+	return wb.voltagesOrCurrents(alfenRegVoltages)
+}
+
+// voltagesOrCurrents returns 3 sequential float registers
+func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -232,20 +255,8 @@ func (wb *Alfen) Currents() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-var _ api.PhaseSwitcher = (*Alfen)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (c *Alfen) Phases1p3p(phases int) error {
-	_, err := c.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *Alfen) phases1p3p(phases int) error {
+	_, err := wb.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
 	return err
 }
-
-// var _ api.Diagnosis = (*Alfen)(nil)
-
-// // Diagnose implements the api.Diagnosis interface
-// func (wb *Alfen) Diagnose() {
-// 	b, err := wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
-// 	if err == nil {
-// 		fmt.Printf("Firmware: %0 x\n", b)
-// 	}
-// }

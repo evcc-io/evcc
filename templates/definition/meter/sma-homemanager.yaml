@@ -25,6 +25,10 @@ params:
   - name: usage
     choice: ["grid"]
   - name: host
+  - name: interface
 render: |
   type: sma
   uri: {{ .host }}
+  {{- if ne .interface "" }}
+  interface: {{ .interface }}
+  {{- end }}

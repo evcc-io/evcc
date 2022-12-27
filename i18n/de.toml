@@ -119,7 +119,7 @@ duration = "Dauer"
 remaining = "Restzeit"
 
 [main.loadpointSettings]
-title = "Einstellungen {0}s"
+title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
 currents = "Ladestrom"
 default = "default"

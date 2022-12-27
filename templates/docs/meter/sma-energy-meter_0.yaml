@@ -8,9 +8,11 @@ render:
       template: sma-energy-meter
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
+      interface: eth0 # Netzwerkinterface # Optional
   - usage: pv
     default: |
       type: template
       template: sma-energy-meter
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
+      interface: eth0 # Netzwerkinterface # Optional
