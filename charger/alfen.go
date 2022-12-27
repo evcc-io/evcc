@@ -95,7 +95,7 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 	_, v2, v3, err := wb.Voltages()
 
 	var phases1p3p func(int) error
-	if !math.IsNaN(v2) && !math.IsNaN(v3) {
+	if v2 != 0 && v3 != 0 {
 		phases1p3p = wb.phases1p3p
 	}
 
