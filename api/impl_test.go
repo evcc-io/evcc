@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRatesSort(t *testing.T) {
+func TestRatesSortLateSlotsFirst(t *testing.T) {
 	clock := clock.NewMock()
 
 	r := Rates{
@@ -24,5 +24,6 @@ func TestRatesSort(t *testing.T) {
 	}
 
 	sort.Sort(r)
+	assert.Equal(t, clock.Now().Add(time.Hour), r[0].Start)
 	assert.Equal(t, clock.Now(), r[1].Start)
 }
