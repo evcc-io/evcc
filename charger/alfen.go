@@ -93,11 +93,11 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 	go wb.heartbeat()
 
 	var phases1p3p func(int) error
-	if wb.is3p() {
+	if wb.is1p() {
+		wb.log.INFO.Println("Detected 1p Alfen")
+	} else {
 		wb.log.INFO.Println("Detected 3p Alfen")
 		phases1p3p = wb.phases1p3p
-	} else {
-		wb.log.INFO.Println("Detected 1p Alfen")
 	}
 
 	return decorateAlfen(wb, phases1p3p), nil
@@ -253,13 +253,13 @@ func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, erro
 	return res[0], res[1], res[2], nil
 }
 
-// is3p answers if Alfen is 1p or 3p. In case of error, 3p is returned for
+// is1p answers if Alfen is 1p or 3p. In case of error, 3p is returned for
 // backward compatibility
-func (wb *Alfen) is3p() bool {
+func (wb *Alfen) is1p() bool {
 	v1, v2, v3, err := wb.Voltages()
 	if err != nil {
 		wb.log.ERROR.Println("Failed to read voltages:", err)
-		return true // default to 3p charger due to backward compatibility
+		return false // default to 3p charger due to backward compatibility
 	}
 
 	if math.IsNaN(v1) && !math.IsNaN(v2) && !math.IsNaN(v3) {
