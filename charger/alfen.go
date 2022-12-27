@@ -227,7 +227,7 @@ func (wb *Alfen) Currents() (float64, float64, float64, error) {
 	return wb.voltagesOrCurrents(alfenRegCurrents)
 }
 
-// Currents implements the future? api.MeterVoltages interface
+// Voltages implements the api.MeterVoltage interface (tbc)
 func (wb *Alfen) Voltages() (float64, float64, float64, error) {
 	return wb.voltagesOrCurrents(alfenRegVoltages)
 }
