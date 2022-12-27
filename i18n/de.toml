@@ -23,7 +23,7 @@ auto = "Automatisch"
 [settings.unit]
 label = "Einheit"
 km = "Km"
-mi = "Meilen"
+mi = "meilen"
 
 [settings.telemetry]
 label = "Telemetrie"
