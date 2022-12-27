@@ -8,6 +8,7 @@ import settings from "./settings";
 // https://github.com/joker-x/languages.js/blob/master/languages.json
 export const LOCALES = {
   de: ["German", "Deutsch"],
+  da: ["Danish", "Dansk"],
   en: ["English", "English"],
   es: ["Spanish", "Español"],
   fr: ["French", "Français"],
@@ -19,6 +20,7 @@ export const LOCALES = {
   pl: ["Polish", "Polski"],
   pt: ["Portuguese", "Português"],
   sl: ["Slovenian", "Slovenščina"],
+  sv: ["Swedish", "Svenska"],
   uk: ["Ukrainian", "Українська"],
 };
 
