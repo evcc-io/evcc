@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/jinzhu/copier"
 )
 
 // Planner plans a series of charging slots for a given (variable) tariff
@@ -32,13 +33,16 @@ func New(log *util.Logger, tariff api.Tariff) *Planner {
 func (t *Planner) Plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
 	var plan api.Rates
 
-	for _, slot := range rates {
+	for _, source := range rates {
 		// slot not relevant
-		if slot.Start.After(targetTime) || slot.Start.Equal(targetTime) || slot.End.Before(t.clock.Now()) {
+		if source.Start.After(targetTime) || source.Start.Equal(targetTime) || source.End.Before(t.clock.Now()) {
 			continue
 		}
 
-		slot := slot
+		var slot api.Rate
+		if err := copier.Copy(&slot, source); err != nil {
+			panic(err)
+		}
 
 		// adjust slot start and end
 		if slot.Start.Before(t.clock.Now()) {
@@ -62,7 +66,7 @@ func (t *Planner) Plan(rates api.Rates, requiredDuration time.Duration, targetTi
 		}
 
 		plan = append(plan, slot)
-		t.log.TRACE.Printf("  slot from: %v to %v cost %.2f", slot.Start.Round(time.Minute), slot.End.Round(time.Minute), slot.Price)
+		t.log.TRACE.Printf("  slot from: %v to %v cost %.2f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
 
 		// we found all necessary slots
 		if requiredDuration == 0 {
@@ -112,13 +116,13 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 
 		// need to use some of the available slots
 		t.log.DEBUG.Printf("target time beyond available slots- reducing plan horizon from %v to %v",
-			requiredDuration.Round(time.Minute), durationAfterRates.Round(time.Minute))
+			requiredDuration.Round(time.Second), durationAfterRates.Round(time.Second))
 
 		targetTime = last
 		requiredDuration -= durationAfterRates
 	}
 
-	t.log.DEBUG.Printf("planning %v until %v", requiredDuration.Round(time.Minute), targetTime.Round(time.Minute).Local())
+	t.log.DEBUG.Printf("planning %v until %v", requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
 
 	plan := t.Plan(rates, requiredDuration, targetTime)
 
@@ -136,7 +140,7 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 		}
 	}
 
-	t.log.DEBUG.Printf("total plan duration: %v, cost: %.2f", planDuration.Round(time.Minute), planCost)
+	t.log.DEBUG.Printf("total plan duration: %v, cost: %.2f", planDuration.Round(time.Second), planCost)
 
 	return activeSlot.End, !activeSlot.End.IsZero(), nil
 }
