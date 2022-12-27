@@ -2,7 +2,7 @@ template: alfen
 products:
   - brand: Alfen
     description:
-      generic: Eve (3p)
+      generic: Eve
 capabilities: ["1p3p", "mA"]
 requirements:
   description:

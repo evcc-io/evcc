@@ -1,6 +1,6 @@
 product:
   brand: Alfen
-  description: Eve (3p)
+  description: Eve
 capabilities: ["1p3p", "mA"]
 requirements: ["sponsorship"]
 description: |
