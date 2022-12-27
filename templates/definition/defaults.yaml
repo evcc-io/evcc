@@ -40,18 +40,18 @@ params:
     required: true
     description:
       de: IP-Adresse oder Hostname
-      en: IP-Address or Hostname
+      en: IP address or hostname
     help:
       de: IP-Adresse oder Hostname
-      en: IP-Address or Hostname
+      en: IP address or hostname
     example: 192.0.2.2
   - name: ip
     description:
       de: IP-Adresse
-      en: IP-Address
+      en: IP address
     help:
       de: IP-Adresse
-      en: IP-Address
+      en: IP address
     example: 192.0.2.2
   - name: port
     description:
@@ -61,6 +61,15 @@ params:
       de: Port
       en: Port
     valuetype: number
+  - name: interface
+    description:
+      de: Netzwerkinterface
+      en: Network interface
+    help:
+      de: Netzwerkinterface
+      en: Network interface
+    advanced: true
+    example: eth0
   - name: topic
     description:
       de: Topic
