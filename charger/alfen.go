@@ -43,6 +43,7 @@ type Alfen struct {
 }
 
 const (
+	alfenRegVoltages   = 306 // 3 registers
 	alfenRegCurrents   = 320 // 3 registers
 	alfenRegPower      = 344
 	alfenRegEnergy     = 374  // 390
@@ -54,6 +55,8 @@ const (
 func init() {
 	registry.Add("alfen", NewAlfenFromConfig)
 }
+
+// go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b "*Alfen" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
 func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -89,7 +92,15 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 
 	go wb.heartbeat()
 
-	return wb, err
+	var phases1p3p func(int) error
+	if wb.is3p() {
+		wb.log.INFO.Println("Detected 3p Alfen")
+		phases1p3p = wb.phases1p3p
+	} else {
+		wb.log.INFO.Println("Detected 1p Alfen")
+	}
+
+	return decorateAlfen(wb, phases1p3p), nil
 }
 
 func (wb *Alfen) heartbeat() {
@@ -214,7 +225,15 @@ var _ api.MeterCurrent = (*Alfen)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Alfen) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(alfenRegCurrents, 6)
+	return wb.voltagesOrCurrents(alfenRegCurrents)
+}
+
+func (wb *Alfen) Voltages() (float64, float64, float64, error) {
+	return wb.voltagesOrCurrents(alfenRegVoltages)
+}
+
+func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -232,11 +251,22 @@ func (wb *Alfen) Currents() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-var _ api.PhaseSwitcher = (*Alfen)(nil)
+func (wb *Alfen) is3p() bool {
+	v1, v2, v3, err := wb.Voltages()
+	if err != nil {
+		wb.log.ERROR.Println("Failed to read voltages:", err)
+		return true // default to 3p charger due to backward compatibility
+	}
 
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (c *Alfen) Phases1p3p(phases int) error {
-	_, err := c.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
+	if math.IsNaN(v1) && !math.IsNaN(v2) && !math.IsNaN(v3) {
+		return true
+	}
+
+	return false // defaults to 3p charger
+}
+
+func (wb *Alfen) phases1p3p(phases int) error {
+	_, err := wb.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
 	return err
 }
 
