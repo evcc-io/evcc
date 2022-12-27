@@ -92,15 +92,14 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 
 	go wb.heartbeat()
 
+	_, v2, v3, err := wb.Voltages()
+
 	var phases1p3p func(int) error
-	if wb.is1p() {
-		wb.log.INFO.Println("Detected 1p Alfen")
-	} else {
-		wb.log.INFO.Println("Detected 3p Alfen")
+	if !math.IsNaN(v2) && !math.IsNaN(v3) {
 		phases1p3p = wb.phases1p3p
 	}
 
-	return decorateAlfen(wb, phases1p3p), nil
+	return decorateAlfen(wb, phases1p3p), err
 }
 
 func (wb *Alfen) heartbeat() {
@@ -233,7 +232,7 @@ func (wb *Alfen) Voltages() (float64, float64, float64, error) {
 	return wb.voltagesOrCurrents(alfenRegVoltages)
 }
 
-// voltagesOrCurrents is a helper function to read voltages/current from Alfen registers
+// voltagesOrCurrents returns 3 sequential float registers
 func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
@@ -253,34 +252,8 @@ func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, erro
 	return res[0], res[1], res[2], nil
 }
 
-// is1p answers if Alfen is 1p or 3p. In case of error, 3p is returned for
-// backward compatibility
-func (wb *Alfen) is1p() bool {
-	v1, v2, v3, err := wb.Voltages()
-	if err != nil {
-		wb.log.ERROR.Println("Failed to read voltages:", err)
-		return false // default to 3p charger due to backward compatibility
-	}
-
-	if math.IsNaN(v1) && !math.IsNaN(v2) && !math.IsNaN(v3) {
-		return true
-	}
-
-	return false // defaults to 3p charger
-}
-
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Alfen) phases1p3p(phases int) error {
 	_, err := wb.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
 	return err
 }
-
-// var _ api.Diagnosis = (*Alfen)(nil)
-
-// // Diagnose implements the api.Diagnosis interface
-// func (wb *Alfen) Diagnose() {
-// 	b, err := wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
-// 	if err == nil {
-// 		fmt.Printf("Firmware: %0 x\n", b)
-// 	}
-// }
