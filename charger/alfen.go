@@ -228,10 +228,12 @@ func (wb *Alfen) Currents() (float64, float64, float64, error) {
 	return wb.voltagesOrCurrents(alfenRegCurrents)
 }
 
+// Currents implements the future? api.MeterVoltages interface
 func (wb *Alfen) Voltages() (float64, float64, float64, error) {
 	return wb.voltagesOrCurrents(alfenRegVoltages)
 }
 
+// voltagesOrCurrents is a helper function to read voltages/current from Alfen registers
 func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
@@ -251,6 +253,8 @@ func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, erro
 	return res[0], res[1], res[2], nil
 }
 
+// is3p answers if Alfen is 1p or 3p. In case of error, 3p is returned for
+// backward compatibility
 func (wb *Alfen) is3p() bool {
 	v1, v2, v3, err := wb.Voltages()
 	if err != nil {
@@ -265,6 +269,7 @@ func (wb *Alfen) is3p() bool {
 	return false // defaults to 3p charger
 }
 
+// phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Alfen) phases1p3p(phases int) error {
 	_, err := wb.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
 	return err
