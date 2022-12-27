@@ -118,7 +118,7 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 		requiredDuration -= durationAfterRates
 	}
 
-	t.log.DEBUG.Printf("planning %v until %v", requiredDuration.Round(time.Minute), targetTime.Round(time.Minute))
+	t.log.DEBUG.Printf("planning %v until %v", requiredDuration.Round(time.Minute), targetTime.Round(time.Minute).Local())
 
 	plan := t.Plan(rates, requiredDuration, targetTime)
 
