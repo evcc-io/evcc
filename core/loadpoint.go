@@ -259,6 +259,7 @@ func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.phases = lp.ConfiguredPhases
 	} else if lp.ConfiguredPhases != 0 {
 		lp.log.WARN.Printf("locking phase config to %dp for switchable charger", lp.ConfiguredPhases)
+		lp.phases = lp.ConfiguredPhases
 	}
 
 	// validate thresholds
