@@ -106,7 +106,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid usage: %s", cc.Usage)
 	}
 
-	m, err := NewConfigurable(nil, power)
+	m, err := NewConfigurable(power)
 	if err != nil {
 		return nil, err
 	}
