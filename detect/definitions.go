@@ -30,7 +30,7 @@ const (
 	taskWallbe       = "wallbe"
 	taskPhoenixEMEth = "phx-em-eth"
 	taskPhoenixEVEth = "phx-ev-eth"
-	taskVersicharge  = "versicharge"
+//	taskVersicharge  = "versicharge"
 	taskEVSEWifi     = "evsewifi"
 	taskGoE          = "go-e"
 	taskInverter     = "inverter"
@@ -161,19 +161,6 @@ func init() {
 		Config: map[string]interface{}{
 			"ids":     []int{180},
 			"address": 100,
-			"type":    "input",
-			"decode":  "uint16",
-			"values":  chargeStatus,
-		},
-	})
-
-	taskList.Add(tasks.Task{
-		ID:      taskVersicharge,
-		Type:    tasks.Modbus,
-		Depends: TaskModbus,
-		Config: map[string]interface{}{
-			"ids":     []int{255},
-			"address": 502,
 			"type":    "input",
 			"decode":  "uint16",
 			"values":  chargeStatus,
