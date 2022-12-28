@@ -24,11 +24,12 @@ func init() {
 	registry.Add("sma", NewSMAFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewSMAFromConfig creates an SMA meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
+		capacity                 `mapstructure:",squash"`
 		URI, Password, Interface string
 		Serial                   uint32
 		Scale                    float64 // power only
@@ -41,11 +42,11 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale)
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, &cc.capacity)
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Meter, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, battCapacity *capacity) (api.Meter, error) {
 	sm := &SMA{
 		uri:   uri,
 		scale: scale,
@@ -94,7 +95,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 		}
 	}
 
-	return decorateSMA(sm, soc), nil
+	return decorateSMA(sm, soc, battCapacity.Decorator()), nil
 }
 
 // CurrentPower implements the api.Meter interface
