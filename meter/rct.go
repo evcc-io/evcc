@@ -70,11 +70,11 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity)
+	return NewRCT(cc.Uri, cc.Usage, cc.Cache, &cc.capacity)
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(uri, usage string, cache time.Duration, battCapacity capacity) (api.Meter, error) {
+func NewRCT(uri, usage string, cache time.Duration, battCapacity *capacity) (api.Meter, error) {
 	conn, err := rct.NewConnection(uri, cache)
 	if err != nil {
 		return nil, err
