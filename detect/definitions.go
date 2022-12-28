@@ -30,7 +30,6 @@ const (
 	taskWallbe       = "wallbe"
 	taskPhoenixEMEth = "phx-em-eth"
 	taskPhoenixEVEth = "phx-ev-eth"
-//	taskVersicharge  = "versicharge"
 	taskEVSEWifi     = "evsewifi"
 	taskGoE          = "go-e"
 	taskInverter     = "inverter"
