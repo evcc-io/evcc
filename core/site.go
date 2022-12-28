@@ -270,15 +270,11 @@ func (site *Site) DumpConfig() {
 	if len(site.batteryMeters) > 0 {
 		for i, battery := range site.batteryMeters {
 			_, ok := battery.(api.Battery)
-			site.log.INFO.Printf("    Battery %d:", i+1)
+			_, hasCapacity := battery.(api.BatteryCapacity)
 
-			Capacity, hasCapacity := battery.(api.BatteryCapacity)
-			if hasCapacity {
-				site.log.INFO.Printf("       Capacity:     %f", Capacity.Capacity())
-			}
 			site.log.INFO.Println(
-				meterCapabilities("   Capabilities", battery),
-				fmt.Sprintf("soc %s Capacity %s", presence[ok], presence[hasCapacity]),
+				meterCapabilities(fmt.Sprintf("battery %d", i+1), battery),
+				fmt.Sprintf("soc %s capacity %s", presence[ok], presence[hasCapacity]),
 			)
 		}
 	}
@@ -402,7 +398,6 @@ func (site *Site) updateMeters() error {
 		var sumBatteryCapacity float64
 		site.batteryPower = 0
 		site.batterySoc = 0
-		sumBatteryCapacity = 0
 
 		mm := make([]batteryMeasurement, len(site.batteryMeters))
 
@@ -422,7 +417,7 @@ func (site *Site) updateMeters() error {
 			if err == nil {
 				var remainingCapacity float64
 				remainingCapacity = soc
-				site.log.DEBUG.Printf("battery %d SoC: %.0f%%", i+1, soc)
+				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
 				if capacity, ok := meter.(api.BatteryCapacity); ok {
 					remainingCapacity *= capacity.Capacity()
 					sumBatteryCapacity += capacity.Capacity()
