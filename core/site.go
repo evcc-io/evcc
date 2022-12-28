@@ -270,9 +270,15 @@ func (site *Site) DumpConfig() {
 	if len(site.batteryMeters) > 0 {
 		for i, battery := range site.batteryMeters {
 			_, ok := battery.(api.Battery)
+			site.log.INFO.Printf("    Battery %d:", i+1)
+
+			Capacity, hasCapacity := battery.(api.BatteryCapacity)
+			if hasCapacity {
+				site.log.INFO.Printf("       Capacity:     %f", Capacity.Capacity())
+			}
 			site.log.INFO.Println(
-				meterCapabilities(fmt.Sprintf("battery %d", i+1), battery),
-				fmt.Sprintf("soc %s", presence[ok]),
+				meterCapabilities("   Capabilities", battery),
+				fmt.Sprintf("soc %s Capacity %s", presence[ok], presence[hasCapacity]),
 			)
 		}
 	}
@@ -393,8 +399,10 @@ func (site *Site) updateMeters() error {
 	}
 
 	if len(site.batteryMeters) > 0 {
+		var sumBatteryCapacity float64
 		site.batteryPower = 0
 		site.batterySoc = 0
+		sumBatteryCapacity = 0
 
 		mm := make([]batteryMeasurement, len(site.batteryMeters))
 
@@ -412,8 +420,19 @@ func (site *Site) updateMeters() error {
 			soc, err := meter.(api.Battery).Soc()
 
 			if err == nil {
-				site.batterySoc += soc
-				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
+				var remainingCapacity float64
+				remainingCapacity = soc
+				site.log.DEBUG.Printf("battery %d SoC: %.0f%%", i+1, soc)
+				if capacity, ok := meter.(api.BatteryCapacity); ok {
+					remainingCapacity *= capacity.Capacity()
+					sumBatteryCapacity += capacity.Capacity()
+				} else {
+					// We add 1 here, since the battery will be counted with a
+					// capacity factor of 1
+					sumBatteryCapacity += 1
+				}
+				site.log.DEBUG.Printf("battery %d remainingCapacity: %.2f Wh", i+1, remainingCapacity/100)
+				site.batterySoc += remainingCapacity
 			} else {
 				err = fmt.Errorf("battery %d soc: %v", i+1, err)
 				site.log.ERROR.Println(err)
@@ -425,7 +444,7 @@ func (site *Site) updateMeters() error {
 			}
 		}
 
-		site.batterySoc /= float64(len(site.batteryMeters))
+		site.batterySoc /= sumBatteryCapacity
 		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
 		site.publish("batterySoc", math.Round(site.batterySoc))
 

@@ -103,6 +103,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.BatteryCapacity); ok {
+		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
+	}
+
 	// charger
 
 	if v, ok := v.(api.ChargeState); ok {
@@ -194,7 +198,6 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.Vehicle); ok {
-		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
 		if len(v.Identifiers()) > 0 {
 			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
 		}

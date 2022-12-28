@@ -12,7 +12,7 @@ import (
 	"github.com/fatih/structs"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryCapacity
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -122,6 +122,11 @@ type Battery interface {
 	Soc() (float64, error)
 }
 
+// BatteryCapacity provides a capacity in Wh
+type BatteryCapacity interface {
+	Capacity() float64
+}
+
 // ChargeState provides current charging status
 type ChargeState interface {
 	Status() (ChargeStatus, error)
@@ -178,9 +183,9 @@ type Authorizer interface {
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
+	BatteryCapacity
 	Title() string
 	Icon() string
-	Capacity() float64
 	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig

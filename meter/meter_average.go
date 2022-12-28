@@ -14,8 +14,9 @@ func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error)
 	cc := struct {
 		Decay float64
 		Meter struct {
-			Type  string
-			Other map[string]interface{} `mapstructure:",remain"`
+			capacity `mapstructure:",squash"`
+			Type     string
+			Other    map[string]interface{} `mapstructure:",remain"`
 		}
 	}{
 		Decay: 0.1,
@@ -55,6 +56,7 @@ func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error)
 		currents = m.Currents
 	}
 
+<<<<<<< HEAD
 	// decorate voltages reading
 	var voltages func() (float64, float64, float64, error)
 	if m, ok := m.(api.MeterVoltage); ok {
@@ -68,6 +70,9 @@ func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error)
 	}
 
 	res := meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc)
+=======
+	res := meter.Decorate(totalEnergy, currents, batterySoc, cc.Meter.capacity.Decorator())
+>>>>>>> bffc4000a (Implementation of Battery capacity as discussed)
 
 	return res, nil
 }
