@@ -122,8 +122,6 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 		requiredDuration -= durationAfterRates
 	}
 
-	t.log.DEBUG.Printf("planning %v until %v", requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
-
 	plan := t.Plan(rates, requiredDuration, targetTime)
 
 	var activeSlot api.Rate
