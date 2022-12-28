@@ -89,7 +89,7 @@ pvExport = "Alimento"
 
 [main.mode]
 off = "Acabado"
-minpv = "Min+Solar"
+minpv = "Min+Sol"
 pv = "Solar"
 now = "Rápido"
 
@@ -186,7 +186,7 @@ noLimit = "ningún"
 [startupError]
 title = "Error al iniciar"
 description = "Por favor revise su archivo de configuración. Si el mensaje de error no te ayuda, busca una solución en nuestro {0}."
-discussions = "GitHub Discussions"
+discussions = "Discusiones de GitHub"
 hint = "Nota: También puede ser que tengas un aparato averiado (inversor, contador, ...). Compruebe sus conexiones de red."
 configuration = "Konfiguración"
 configFile = "Archivo de configuración utilizado:"
@@ -230,7 +230,7 @@ dark = "oscuro"
 [settings.unit]
 label = "Unidades"
 km = "km"
-mi = "mi"
+mi = "millas"
 
 [settings.language]
 label = "Idioma"
