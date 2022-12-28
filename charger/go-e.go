@@ -126,7 +126,7 @@ func (c *GoE) Enable(enable bool) error {
 
 	param := map[bool]string{false: "alw", true: "frc"}[c.api.IsV2()]
 	if c.api.IsV2() {
-		b += 1
+		b ^= 1
 	}
 
 	return c.api.Update(fmt.Sprintf("%s=%d", param, b))
