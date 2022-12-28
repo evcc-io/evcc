@@ -230,8 +230,8 @@ site:
     grid: grid
     pv: pv
     batteries: 
-     - battery
-     - battery2
+      - battery
+      - battery2
 
 loadpoints:
   - title: Carport
