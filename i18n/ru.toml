@@ -1,6 +1,3 @@
-
-
-
 [header]
 blog = "Блог"
 settings = "Настройки"
@@ -99,6 +96,9 @@ noEnergy = "Нет данных счетчика"
 homePower = "Потребление"
 gridImport = "Потребление из сети"
 
+[main]
+vehicles = "Парковка"
+
 [main.mode]
 off = "Выкл"
 pv = "Солн. эн"
@@ -168,9 +168,6 @@ experimentalLabel = "Экспериментально"
 [main.targetEnergy]
 label = "Лимит"
 
-[main]
-vehicles = "Парковка"
-
 [main.loadpointSettings.minCurrent]
 label = "Мин. ток"
 
@@ -178,7 +175,6 @@ label = "Мин. ток"
 title = "Ошибка запуска"
 configFile = "Используемый конфигурационный файл:"
 lineError = "Ошибка в {0}."
-discussions = 
 fixAndRestart = "Пожалуйста исправьте проблему и перезагрузите сервер."
 restartButton = "Рестарт"
 

@@ -19,6 +19,7 @@ export const LOCALES = {
   no: ["Norwegian", "Norsk"],
   pl: ["Polish", "Polski"],
   pt: ["Portuguese", "Português"],
+  ru: ["Russian", "Русский"],
   sl: ["Slovenian", "Slovenščina"],
   sv: ["Swedish", "Svenska"],
   uk: ["Ukrainian", "Українська"],

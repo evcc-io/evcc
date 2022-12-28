@@ -101,6 +101,13 @@ confetti = "Spremni za konfete?"
 modalTitle = "Obavijesti"
 dismissAll = "Odbaciti sve"
 
+[main]
+vehicles = "Parkiralište"
+
+[main.provider]
+login = "prijaviti se"
+logout = "odjavi se"
+
 [main.energyflow]
 pvProduction = "Produkcija"
 loadpoints = "Punjač| Punjač | {count} punjača"
@@ -223,10 +230,3 @@ chargedenergy = "Energija (kWh)"
 [offline]
 message = "Nije spojen na poslužitelj."
 reload = "Ponovno učitati?"
-
-[main]
-vehicles = "Parkiralište"
-
-[main.provider]
-login = "prijaviti se"
-logout = "odjavi se"
