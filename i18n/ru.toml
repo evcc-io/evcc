@@ -65,7 +65,7 @@ power = "Мощность зарядки"
 greenShareSub1 = "энергия предоставляется от"
 greenEnergy = "Солнечная электроэнергия"
 greenShare = "Доля солнечной энергии"
-greenShareSub2 = солнца или батарей
+greenShareSub2 = "солнца или батарей"
 
 [footer.telemetry]
 optInMoreDetails = "Больше информации {0}."
