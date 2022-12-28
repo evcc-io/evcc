@@ -88,7 +88,7 @@ selfConsumption = "Konsumpcja własna"
 pvExport = "Eksport na siec"
 
 [main.mode]
-off = "Wyłączony"
+off = "Stop"
 minpv = "Min+Słońce"
 pv = "Słońce"
 now = "Szybko"
@@ -175,7 +175,7 @@ today = "dzisiaj"
 tomorrow = "jutro"
 targetIsInThePast = "Wybierz czas w przyszłości."
 remove = "Usuń"
-activate = "Aktywuj"
+activate = "Aktywować"
 experimentalLabel = "Eksperymentalna"
 experimentalText = "Ta funkcja działa, ale nie jest jeszcze doskonała. Zgłoś nieoczekiwane zachowanie do naszego"
 
@@ -234,7 +234,7 @@ label = "Język"
 [settings.unit]
 label = "Jednostki"
 km = "km"
-mi = "mile"
+mi = "mi"
 
 [settings.telemetry]
 label = "Telemetria"

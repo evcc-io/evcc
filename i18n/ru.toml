@@ -1,0 +1,200 @@
+[header]
+blog = "Блог"
+settings = "Настройки"
+about = "О нас"
+sessions = "Сеансы зарядки"
+github = "GitHub"
+docs = "Документация"
+
+[settings]
+title = "Настройки"
+
+[settings.theme]
+label = "Дизайн"
+auto = "система"
+light = "светлый"
+dark = "темный"
+
+[settings.language]
+label = "Язык"
+auto = "Автоматически"
+
+[settings.unit]
+label = "Единицы измерения"
+km = "км"
+mi = "мили"
+
+[settings.telemetry]
+label = "Телеметрия"
+
+[footer.version]
+availableLong = "доступна новая версия"
+modalTitle = "Доступна новая версия"
+modalUpdateStarted = "Запускаю новую версию evcc..."
+modalInstalledVersion = "Установленная версия"
+modalCancel = "Отмена"
+modalUpdateNow = "Установить сейчас"
+modalDownload = "Загрузить"
+modalUpdate = "Установить"
+modalUpdateStatusStart = "Установка начата:"
+modalNoReleaseNotes = "Нет доступных примечаний к выпуску. Дополнительная информация о новой версии:"
+
+[footer.savings]
+tabTitle = "Мои данные"
+footerShort = "{percent}% солнечной"
+footerLong = "{percent}% солнечной энергии"
+since = "c {since}"
+percentTitle = "Солнечная энергия"
+percentSelf = "{self} кВт/ч солнечной"
+percentGrid = "{self} кВт/ч сети"
+priceTitle = "Цена эл. энергии"
+priceGrid = "{gridPrice} сеть"
+savingsTitle = "Сэкономлено"
+savingsTotalEnergy = "{total} кВт/ч заряжено"
+modalTitle = "Обзор использованной энергии"
+priceFeedIn = "{feedInPrice} подача"
+savingsComparedToGrid = "в сравнении с потреблением из сети"
+
+[footer.community]
+tabTitle = "Комьюнити"
+powerSub1 = "{activeClients} из {totalClients} участников"
+powerSub2 = "зарядка..."
+greenEnergySub1 = "заряжено с помощью evcc"
+greenEnergySub2 = "c октября 2022 г"
+power = "Мощность зарядки"
+greenShareSub1 = "энергия предоставляется"
+greenEnergy = "Солнечная"
+
+[footer.telemetry]
+optInMoreDetails = "Больше информации {0}."
+optInMoreDetailsLink = "здесь"
+optInSponsorship = "Требуется спонсорство."
+optIn = "Я хочу поделиться своими данными."
+
+[footer.sponsor]
+titleNoSponsor = "Поддержать нас"
+thanks = "Спасибо, {sponsor}! Ваша поддержка поможет развивать evcc."
+becomeSponsor = "Стать спонсором"
+titleSponsor = "Ты нас поддерживаешь"
+confetti = "Готовы к конфети?"
+sticker = "... или стикеры evcc?"
+confettiPromise = "Ты получишь стикеры или цифровое конфети"
+supportUs = "Наша миссия — сделать солнечную энергию нормой. Помоги evcc, заплатив столько, сколько считаешь нужным."
+
+[notifications]
+modalTitle = "Уведомления"
+dismissAll = "Отклонить все"
+
+[main.energyflow]
+pvProduction = "Генерация"
+battery = "Батарея"
+batteryDischarge = "Батарея разряжается"
+batteryCharge = "Батарея заряжается"
+selfConsumption = "Собственное потребление"
+pvExport = "Экспорт в сеть"
+noEnergy = "Нет данных счетчика"
+homePower = "Потребление"
+gridImport = "Потребление из сети"
+
+[main]
+vehicles = "Парковка"
+
+[main.mode]
+off = "Выкл"
+pv = "Солн. эн"
+now = "Быстро"
+minpv = "Мин+солн. эн"
+
+[main.loadpoint]
+charged = "Заряжено"
+duration = "Длительность"
+fallbackName = "Зарядная станция"
+power = "Мощность"
+
+[main.loadpointSettings]
+title = "Настройки {0}"
+vehicle = "Транспортное средство"
+currents = "Ток зарядки"
+default = "по умолчанию"
+disclaimerHint = "Заметка:"
+disclaimerText = "Изменения будут потеряны после перезагрузки сервера"
+
+[main.loadpointSettings.minSoc]
+label = "Мин. заряд %"
+
+[main.loadpointSettings.phasesConfigured]
+phases_0 = "авто переключение"
+phases_1 = "1 фаза"
+phases_1_hint = "({min} до {max})"
+label = "Фазы"
+phases_3_hint = "({min} до {max})"
+phases_3 = "3 фазы"
+
+[main.loadpointSettings.maxCurrent]
+label = "Макс. ток"
+
+[main.vehicle]
+fallbackName = "Транспортное средство"
+none = "Нет транспортного средства"
+targetSoc = "Лимит"
+vehicleSoc = "Заряд"
+unknown = "Гостевое транспортное средство"
+detectionActive = "Определение транспортного средства..."
+
+[main.vehicleSoc]
+disconnected = "отключено"
+charging = "заряжается"
+ready = "готово"
+connected = "подключено"
+
+[main.vehicleStatus]
+minCharge = "Минимальная зарядка до {soc}%."
+charging = "Зарядка..."
+connected = "Подключено."
+disconnected = "Отключено."
+waitForVehicle = "Готов. Ожидание транспортного средства..."
+unknown = ""
+
+[main.provider]
+login = "войти"
+logout = "выйти"
+
+[main.targetCharge]
+today = "сегодня"
+tomorrow = "завтра"
+activate = "Активировать"
+experimentalLabel = "Экспериментально"
+
+[main.targetEnergy]
+label = "Лимит"
+
+[main.loadpointSettings.minCurrent]
+label = "Мин. ток"
+
+[startupError]
+title = "Ошибка запуска"
+configFile = "Используемый конфигурационный файл:"
+lineError = "Ошибка в {0}."
+fixAndRestart = "Пожалуйста исправьте проблему и перезагрузите сервер."
+restartButton = "Рестарт"
+
+[sessions]
+date = "Период"
+title = "Сессии зарядки"
+loadpoint = "Зарядная станция"
+downloadCsv = "Загрузить CSV"
+vehicle = "Транспортное средство"
+energy = "Заряжено"
+
+[offline]
+message = "Не подключено к серверу."
+reload = "Перезагрузить?"
+
+[sessions.csv]
+loadpoint = "Зарядная станция"
+vehicle = "Транспортное средство"
+odometer = "Пробег (км)"
+identifier = "Идентификатор"
+chargedenergy = "Энергия (кВт/ч)"
+created = "Создано"
+finished = "Закончено"

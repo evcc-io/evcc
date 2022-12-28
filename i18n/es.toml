@@ -230,7 +230,7 @@ dark = "oscuro"
 [settings.unit]
 label = "Unidades"
 km = "km"
-mi = "miles"
+mi = "mi"
 
 [settings.language]
 label = "Idioma"
