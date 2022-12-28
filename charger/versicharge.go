@@ -283,6 +283,23 @@ func (wb *Versicharge) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
+// var _ api.MeterVoltage = (*Versicharge)(nil)
+
+// Voltages implements the api.MeterVoltage interface, (noch?) nicht vorhanden (aus Alfen.go) 
+func (wb *Versicharge) Voltages() (float64, float64, float64, error) {
+	var voltages []float64
+	for _, regVoltage := range VersichargeRegVoltages {
+		b, err := wb.conn.ReadHoldingRegisters(regVoltage, 1)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		voltages = append(voltages, float64(binary.BigEndian.Uint16(b))) // in Volt
+	}
+
+	return voltages[0], voltages[1], voltages[2], nil
+}
+
 var _ api.MeterEnergy = (*Versicharge)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
