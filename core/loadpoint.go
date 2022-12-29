@@ -411,7 +411,7 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	// reset pv enable/disable timer
 	// https://github.com/evcc-io/evcc/issues/2289
 	if !lp.pvTimer.Equal(elapsed) {
-		lp.resetPVTimerIfRunning()
+		lp.resetPVTimer()
 	}
 
 	lp.stopSession()
@@ -1243,6 +1243,10 @@ func (lp *Loadpoint) effectiveCurrent() float64 {
 
 // elapsePVTimer puts the pv enable/disable timer into elapsed state
 func (lp *Loadpoint) elapsePVTimer() {
+	if lp.pvTimer.Equal(elapsed) {
+		return
+	}
+
 	lp.log.DEBUG.Printf("pv timer elapse")
 
 	lp.pvTimer = elapsed
@@ -1251,8 +1255,8 @@ func (lp *Loadpoint) elapsePVTimer() {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
-// resetPVTimerIfRunning resets the pv enable/disable timer to disabled state
-func (lp *Loadpoint) resetPVTimerIfRunning(typ ...string) {
+// resetPVTimer resets the pv enable/disable timer to disabled state
+func (lp *Loadpoint) resetPVTimer(typ ...string) {
 	if lp.pvTimer.IsZero() {
 		return
 	}
@@ -1269,6 +1273,10 @@ func (lp *Loadpoint) resetPVTimerIfRunning(typ ...string) {
 
 // resetPhaseTimer resets the phase switch timer to disabled state
 func (lp *Loadpoint) resetPhaseTimer() {
+	if lp.phaseTimer.IsZero() {
+		return
+	}
+
 	lp.phaseTimer = time.Time{}
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 }
@@ -1349,6 +1357,15 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	}
 
 	return nil
+}
+
+// fastCharging scales to 3p if available and sets maximum current
+func (lp *Loadpoint) fastCharging() error {
+	err := lp.scalePhasesIfAvailable(3)
+	if err == nil {
+		err = lp.setLimit(lp.GetMaxCurrent(), true)
+	}
+	return err
 }
 
 // pvScalePhases switches phases if necessary and returns if switch occurred
@@ -1510,7 +1527,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			}
 		} else {
 			// reset timer
-			lp.resetPVTimerIfRunning("disable")
+			lp.resetPVTimer("disable")
 		}
 
 		// lp.log.DEBUG.Println("pv disable timer: keep enabled")
@@ -1542,7 +1559,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			}
 		} else {
 			// reset timer
-			lp.resetPVTimerIfRunning("enable")
+			lp.resetPVTimer("enable")
 		}
 
 		// lp.log.DEBUG.Println("pv enable timer: keep disabled")
@@ -1550,7 +1567,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	}
 
 	// reset timer to disabled state
-	lp.resetPVTimerIfRunning()
+	lp.resetPVTimer()
 
 	// cap at maximum current
 	targetCurrent = math.Min(targetCurrent, maxCurrent)
@@ -1882,22 +1899,26 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
+		lp.resetPhaseTimer()
+		lp.resetPVTimer()
 
-	case lp.minSocNotReached():
-		// 3p if available
-		if err = lp.scalePhasesIfAvailable(3); err == nil {
-			err = lp.setLimit(lp.GetMaxCurrent(), true)
-		}
+	// immediate charging
+	case mode == api.ModeNow:
+		err = lp.fastCharging()
+		lp.resetPhaseTimer()
+		lp.resetPVTimer()
+
+	// minimum or target charging
+	case lp.minSocNotReached() || lp.plannerActive():
+		err = lp.fastCharging()
+		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
-	// immediate or target charging
-	case mode == api.ModeNow || lp.plannerActive():
-		// 3p if available
-		if err = lp.scalePhasesIfAvailable(3); err == nil {
-			err = lp.setLimit(lp.GetMaxCurrent(), true)
+	case mode == api.ModeMinPV || mode == api.ModePV:
+		if mode == api.ModeMinPV {
+			lp.resetPVTimer()
 		}
 
-	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 
 		var required bool // false
