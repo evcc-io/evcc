@@ -119,8 +119,8 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 
 	var powers [3]float64
 	for i, id := range []sunny.ValueID{sunny.ActivePowerMinusL1, sunny.ActivePowerMinusL2, sunny.ActivePowerMinusL3} {
-		if sma.AsFloat(values[id]) > 0 {
-			powers[i] = -sma.AsFloat(values[id])
+		if p := sma.AsFloat(values[id]); p > 0 {
+			powers[i] = -p
 		}
 	}
 
