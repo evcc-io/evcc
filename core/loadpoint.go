@@ -777,9 +777,10 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	// anticipate lower charge rates at end of charging curve
 	if targetSoc >= 80 {
 		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
-	}
-	if targetSoc >= 90 {
-		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+
+		if targetSoc >= 90 {
+			requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+		}
 	}
 
 	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
