@@ -774,6 +774,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 
+	// anticipate lower charge rates at end of charging curve
 	if targetSoc >= 80 {
 		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 	}
