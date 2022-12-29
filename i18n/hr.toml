@@ -105,7 +105,7 @@ dismissAll = "Odbaci sve"
 vehicles = "Parkiralište"
 
 [main.provider]
-login = "prijaviti se"
+login = "prijavi se"
 logout = "odjavi se"
 
 [main.energyflow]
