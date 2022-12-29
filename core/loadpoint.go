@@ -1355,6 +1355,15 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	return nil
 }
 
+// fastCharging scales to 3p if available and sets maximum current
+func (lp *Loadpoint) fastCharging() error {
+	err := lp.scalePhasesIfAvailable(3)
+	if err == nil {
+		err = lp.setLimit(lp.GetMaxCurrent(), true)
+	}
+	return err
+}
+
 // pvScalePhases switches phases if necessary and returns if switch occurred
 func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float64) bool {
 	phases := lp.GetPhases()
@@ -1889,26 +1898,17 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 		lp.resetPVTimerIfRunning()
 
 	case lp.minSocNotReached():
-		// 3p if available
-		if err = lp.scalePhasesIfAvailable(3); err == nil {
-			err = lp.setLimit(lp.GetMaxCurrent(), true)
-		}
+		err = lp.fastCharging()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	// immediate charging
 	case mode == api.ModeNow:
-		// 3p if available
-		if err = lp.scalePhasesIfAvailable(3); err == nil {
-			err = lp.setLimit(lp.GetMaxCurrent(), true)
-		}
+		err = lp.fastCharging()
 		lp.resetPVTimerIfRunning()
 
 	// target charging
 	case lp.plannerActive():
-		// 3p if available
-		if err = lp.scalePhasesIfAvailable(3); err == nil {
-			err = lp.setLimit(lp.GetMaxCurrent(), true)
-		}
+		err = lp.fastCharging()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
