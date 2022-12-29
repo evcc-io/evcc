@@ -37,7 +37,9 @@ type HeidelbergEC struct {
 
 const (
 	hecRegVehicleStatus  = 5   // Input
+	hecRegCurrents       = 6   // Input 6,7,8
 	hecRegTemperature    = 9   // Input
+	hecRegVoltages       = 10  // Input 10,11,12
 	hecRegPower          = 14  // Input
 	hecRegEnergy         = 17  // Input
 	hecRegTimeoutConfig  = 257 // Holding
@@ -48,8 +50,6 @@ const (
 
 	hecStandbyDisabled = 4 // disable standby
 )
-
-var hecRegCurrents = []uint16{6, 7, 8}
 
 func init() {
 	registry.Add("heidelberg", NewHeidelbergECFromConfig)
@@ -244,17 +244,34 @@ var _ api.MeterCurrent = (*HeidelbergEC)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range hecRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 1)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		currents = append(currents, float64(binary.BigEndian.Uint16(b))/10)
+	b, err := wb.conn.ReadInputRegisters(abbRegCurrents, 3)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	var curr [3]float64
+	for l := 0; l < 3; l++ {
+		curr[l] = float64(binary.BigEndian.Uint16(b[2*l:])) / 10
+	}
+
+	return curr[0], curr[1], curr[2], nil
+}
+
+var _ api.MeterVoltage = (*HeidelbergEC)(nil)
+
+// Voltages implements the api.MeterVoltage interface
+func (wb *HeidelbergEC) Voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadInputRegisters(abbRegVoltages, 3)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var volt [3]float64
+	for l := 0; l < 3; l++ {
+		volt[l] = float64(binary.BigEndian.Uint16(b[2*l:]))
+	}
+
+	return volt[0], volt[1], volt[2], nil
 }
 
 var _ api.Diagnosis = (*HeidelbergEC)(nil)

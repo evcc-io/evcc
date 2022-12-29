@@ -69,7 +69,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			curr = append(curr, current)
 		}
 
-		currents = collectCurrentProviders(curr)
+		currents = collectPhaseProviders(curr)
 
 	case "pv":
 		configuredG := boolG(fmt.Sprintf("%s/pv/1/%s", cc.Topic, openwb.PvConfigured)) // first pv
@@ -111,7 +111,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	res := m.Decorate(nil, currents, soc)
+	res := m.Decorate(nil, currents, nil, nil, soc)
 
 	return res, nil
 }

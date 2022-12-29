@@ -63,6 +63,22 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.MeterVoltage); ok {
+		if u1, u2, u3, err := v.Voltages(); err != nil {
+			fmt.Fprintf(w, "Voltage L1..L3:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Voltage L1..L3:\t%.3gV %.3gV %.3gV\n", u1, u2, u3)
+		}
+	}
+
+	if v, ok := v.(api.MeterPower); ok {
+		if p1, p2, p3, err := v.Powers(); err != nil {
+			fmt.Fprintf(w, "Power L1..L3:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Power L1..L3:\t%.3gW %.3gW %.3gW\n", p1, p2, p3)
+		}
+	}
+
 	if v, ok := v.(api.Battery); ok {
 		var soc float64
 		var err error
