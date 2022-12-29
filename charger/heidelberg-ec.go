@@ -240,11 +240,11 @@ func (wb *HeidelbergEC) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-var _ api.MeterCurrent = (*HeidelbergEC)(nil)
+var _ api.PhaseCurrents = (*HeidelbergEC)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(abbRegCurrents, 3)
+	b, err := wb.conn.ReadInputRegisters(hecRegCurrents, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -257,11 +257,11 @@ func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
-var _ api.MeterVoltage = (*HeidelbergEC)(nil)
+var _ api.PhaseVoltages = (*HeidelbergEC)(nil)
 
-// Voltages implements the api.MeterVoltage interface
+// Voltages implements the api.PhaseVoltages interface
 func (wb *HeidelbergEC) Voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(abbRegVoltages, 3)
+	b, err := wb.conn.ReadInputRegisters(hecRegVoltages, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}

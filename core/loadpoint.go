@@ -1602,11 +1602,11 @@ func (lp *Loadpoint) UpdateChargePower() {
 	}
 }
 
-// updateChargeCurrents uses MeterCurrent interface to count phases with current >=1A
+// updateChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
 func (lp *Loadpoint) updateChargeCurrents() {
 	lp.chargeCurrents = nil
 
-	phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent)
+	phaseMeter, ok := lp.chargeMeter.(api.PhaseCurrents)
 	if !ok {
 		return // don't guess
 	}
@@ -1645,9 +1645,9 @@ func (lp *Loadpoint) updateChargeCurrents() {
 	}
 }
 
-// updateChargeVoltages uses MeterVoltage interface to count phases with nominal grid voltage
+// updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
-	phaseMeter, ok := lp.chargeMeter.(api.MeterVoltage)
+	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
 	if !ok {
 		return // don't guess
 	}

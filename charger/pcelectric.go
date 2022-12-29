@@ -30,7 +30,7 @@ func init() {
 	registry.Add("pcelectric", NewPCElectricFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -275,7 +275,7 @@ func (wb *PCElectric) totalEnergy() (float64, error) {
 	return float64(res.AccEnergy) / 1e3, err
 }
 
-// Currents implements the api.MeterCurrents interface A
+// Currents implements the api.PhaseCurrentss interface A
 func (wb *PCElectric) currents() (float64, float64, float64, error) {
 	var res pcelectric.MeterInfo
 	uri := fmt.Sprintf("%s/meterinfo/%s", wb.uri, wb.meter)

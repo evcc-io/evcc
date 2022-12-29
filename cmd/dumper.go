@@ -55,7 +55,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.MeterCurrent); ok {
+	if v, ok := v.(api.PhaseCurrents); ok {
 		if i1, i2, i3, err := v.Currents(); err != nil {
 			fmt.Fprintf(w, "Current L1..L3:\t%v\n", err)
 		} else {
@@ -63,7 +63,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.MeterVoltage); ok {
+	if v, ok := v.(api.PhaseVoltages); ok {
 		if u1, u2, u3, err := v.Voltages(); err != nil {
 			fmt.Fprintf(w, "Voltage L1..L3:\t%v\n", err)
 		} else {
@@ -71,7 +71,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.MeterPower); ok {
+	if v, ok := v.(api.PhasePowers); ok {
 		if p1, p2, p3, err := v.Powers(); err != nil {
 			fmt.Fprintf(w, "Power L1..L3:\t%v\n", err)
 		} else {

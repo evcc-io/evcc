@@ -161,9 +161,9 @@ func (v *Twc3) ChargingTime() (time.Duration, error) {
 	return time.Duration(res.SessionS) * time.Second, err
 }
 
-var _ api.MeterCurrent = (*Twc3)(nil)
+var _ api.PhaseCurrents = (*Twc3)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (v *Twc3) Currents() (float64, float64, float64, error) {
 	res, err := v.vitalsG()
 	return res.CurrentAA, res.CurrentBA, res.CurrentCA, err

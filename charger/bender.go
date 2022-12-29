@@ -82,7 +82,7 @@ func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewBenderCC(cc.URI, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.MeterVoltage,Voltages,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewBenderCC creates BenderCC charger
 func NewBenderCC(uri string, id uint8) (api.Charger, error) {
@@ -280,7 +280,7 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-// currents implements the api.MeterCurrent interface
+// currents implements the api.PhaseCurrents interface
 func (wb *BenderCC) currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(bendRegCurrents, 6)
 	if err != nil {
@@ -295,7 +295,7 @@ func (wb *BenderCC) currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
-// voltages implements the api.MeterVoltage interface
+// voltages implements the api.PhaseVoltages interface
 func (wb *BenderCC) voltages() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 6)
 	if err != nil {

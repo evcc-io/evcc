@@ -69,7 +69,7 @@ func init() {
 	registry.Add("dsmr", NewDsmrFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewDsmrFromConfig creates a DSMR meter from generic config
 func NewDsmrFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -251,7 +251,7 @@ func (m *Dsmr) totalEnergy() (float64, error) {
 	return m.get(m.energy)
 }
 
-// currents implements the api.MeterCurrent interface
+// currents implements the api.PhaseCurrents interface
 func (m *Dsmr) currents() (float64, float64, float64, error) {
 	var res [3]float64
 
