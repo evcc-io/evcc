@@ -29,22 +29,24 @@ import (
 )
 
 const (
-	vestelRegSerial          = 100 // 25
-	vestelRegBrand           = 190 // 10
-	vestelRegModel           = 210 // 5
-	vestelRegFirmware        = 230 // 50
-	vestelRegChargeStatus    = 1001
-	vestelRegCableStatus     = 1004
-	vestelRegChargeTime      = 1508
-	vestelRegMaxCurrent      = 5004
-	vestelRegPower           = 1020
-	vestelRegTotalEnergy     = 1036
-	vestelRegSessionEnergy   = 1502
-	vestelRegFailsafeTimeout = 2002
-	vestelRegAlive           = 6000
+	vestelRegSerial           = 100 // 25
+	vestelRegBrand            = 190 // 10
+	vestelRegModel            = 210 // 5
+	vestelRegFirmware         = 230 // 50
+	vestelRegChargepointState = 1000
+	vestelRegChargeStatus     = 1001
+	vestelRegCableStatus      = 1004
+	vestelRegChargeTime       = 1508
+	vestelRegMaxCurrent       = 5004
+	vestelRegPower            = 1020
+	vestelRegTotalEnergy      = 1036
+	vestelRegSessionEnergy    = 1502
+	vestelRegFailsafeTimeout  = 2002
+	vestelRegAlive            = 6000
 )
 
-var vestelRegCurrents = []uint16{1008, 1010, 1012}
+var vestelRegCurrents = []uint16{1008, 1010, 1012} // non-continuous uint16 registers!
+var vestelRegVoltages = []uint16{1014, 1016, 1018} // non-continuous uint16 registers!
 
 // Vestel is an api.Charger implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
@@ -226,6 +228,23 @@ func (wb *Vestel) Currents() (float64, float64, float64, error) {
 	}
 
 	return currents[0], currents[1], currents[2], nil
+}
+
+var _ api.PhaseVoltages = (*Vestel)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *Vestel) Voltages() (float64, float64, float64, error) {
+	var voltages []float64
+	for _, regVoltage := range vestelRegVoltages {
+		b, err := wb.conn.ReadInputRegisters(regVoltage, 1)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		voltages = append(voltages, float64(binary.BigEndian.Uint16(b)))
+	}
+
+	return voltages[0], voltages[1], voltages[2], nil
 }
 
 var _ api.Diagnosis = (*Vestel)(nil)
