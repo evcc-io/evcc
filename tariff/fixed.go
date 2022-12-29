@@ -103,7 +103,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			}
 
 			if zone == nil {
-				panic("could not find zone")
+				return nil, fmt.Errorf("could not find zone for %02d:%02d", m.Hour, m.Min)
 			}
 
 			// end rate at end of day or next marker
