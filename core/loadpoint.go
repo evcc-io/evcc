@@ -153,7 +153,6 @@ type Loadpoint struct {
 	remoteDemand   loadpoint.RemoteDemand // External status demand
 	chargePower    float64                // Charging power
 	chargeCurrents []float64              // Phase currents
-	chargeVoltages []float64              // Phase voltages
 	connectedTime  time.Time              // Time when vehicle was connected
 	pvTimer        time.Time              // PV enabled/disable timer
 	phaseTimer     time.Time              // 1p3p switch timer
@@ -1574,7 +1573,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 	if lp.charging() {
 		// Quine-McCluskey for (¬L1∧L2∧¬L3) ∨ (¬L1∧¬L2∧L3) ∨ (L1∧¬L2∧L3) ∨ (¬L1∧L2∧L3) -> ¬L1 ∧ L2 ∨ ¬L2 ∧ L3
 		if !(i1 > minActiveCurrent) && (i2 > minActiveCurrent) || !(i2 > minActiveCurrent) && (i3 > minActiveCurrent) {
-			lp.log.WARN.Printf("invalid phase wiring between charge meter and vehicle")
+			lp.log.WARN.Printf("invalid phase wiring between charge meter and charger")
 		}
 
 		var phases int
@@ -1597,8 +1596,6 @@ func (lp *Loadpoint) updateChargeCurrents() {
 
 // updateChargeVoltages uses MeterVoltage interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
-	lp.chargeVoltages = nil
-
 	phaseMeter, ok := lp.chargeMeter.(api.MeterVoltage)
 	if !ok {
 		return // don't guess
@@ -1610,13 +1607,13 @@ func (lp *Loadpoint) updateChargeVoltages() {
 		return
 	}
 
-	lp.chargeVoltages = []float64{u1, u2, u3}
-	lp.log.DEBUG.Printf("charge voltages: %.3gV", lp.chargeVoltages)
-	lp.publish("chargeVoltages", lp.chargeVoltages)
+	chargeVoltages := []float64{u1, u2, u3}
+	lp.log.DEBUG.Printf("charge voltages: %.3gV", chargeVoltages)
+	lp.publish("chargeVoltages", chargeVoltages)
 
 	// Quine-McCluskey for (¬L1∧L2∧¬L3) ∨ (L1∧L2∧¬L3) ∨ (¬L1∧¬L2∧L3) ∨ (L1∧¬L2∧L3) ∨ (¬L1∧L2∧L3) -> ¬L1 ∧ L3 ∨ L2 ∧ ¬L3 ∨ ¬L2 ∧ L3
 	if !(u1 > minActiveVoltage) && (u3 > minActiveVoltage) || (u2 > minActiveVoltage) && !(u3 > minActiveVoltage) || !(u2 > minActiveVoltage) && (u3 > minActiveVoltage) {
-		lp.log.WARN.Printf("detected invalid phase voltages on charge meter. check fuses and wiring.")
+		lp.log.WARN.Printf("invalid phase wiring between charge meter and charger")
 	}
 
 	var phases int
@@ -1631,7 +1628,6 @@ func (lp *Loadpoint) updateChargeVoltages() {
 		lp.log.DEBUG.Printf("detected phases: %dp", phases)
 		lp.setPhases(phases)
 	}
-
 }
 
 // publish charged energy and duration
