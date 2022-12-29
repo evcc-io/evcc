@@ -12,7 +12,7 @@ import (
 	"github.com/fatih/structs"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryCapacity
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
