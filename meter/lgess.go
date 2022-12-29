@@ -49,11 +49,12 @@ func init() {
 	registry.Add("lgess", NewLgEssFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewLgEssFromConfig creates an LgEss Meter from generic config
 func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
+		capacity             `mapstructure:",squash"`
 		URI, Usage, Password string
 		Cache                time.Duration
 	}{
@@ -68,11 +69,11 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewLgEss(cc.URI, cc.Usage, cc.Password, cc.Cache)
+	return NewLgEss(cc.URI, cc.Usage, cc.Password, cc.Cache, cc.capacity.Decorator())
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, password string, cache time.Duration) (api.Meter, error) {
+func NewLgEss(uri, usage, password string, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	lp, err := lgpcs.GetInstance(uri, password, cache)
 	if err != nil {
 		return nil, err
@@ -95,7 +96,7 @@ func NewLgEss(uri, usage, password string, cache time.Duration) (api.Meter, erro
 		batterySoc = m.batterySoc
 	}
 
-	return decorateLgEss(m, totalEnergy, batterySoc), nil
+	return decorateLgEss(m, totalEnergy, batterySoc, capacity), nil
 }
 
 // CurrentPower implements the api.Meter interface
