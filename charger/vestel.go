@@ -232,7 +232,7 @@ func (wb *Vestel) Currents() (float64, float64, float64, error) {
 
 var _ api.PhaseVoltages = (*Vestel)(nil)
 
-// Currents implements the api.PhaseCurrents interface
+// Voltages implements the api.PhaseVoltages interface
 func (wb *Vestel) Voltages() (float64, float64, float64, error) {
 	var voltages []float64
 	for _, regVoltage := range vestelRegVoltages {
