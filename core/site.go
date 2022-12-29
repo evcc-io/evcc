@@ -440,10 +440,10 @@ func (site *Site) updateMeters() error {
 			}
 		}
 
+		site.publish("batteryCapacity", math.Round(totalCapacity))
+
 		// convert weighed socs to total soc
-		if totalCapacity > 0 {
-			site.publish("batteryCapacity", math.Round(totalCapacity))
-		} else {
+		if totalCapacity == 0 {
 			totalCapacity = float64(len(site.batteryMeters))
 		}
 		site.batterySoc /= totalCapacity
