@@ -1899,6 +1899,7 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
+		lp.resetPhaseTimer()
 		lp.resetPVTimer()
 
 	// immediate charging
