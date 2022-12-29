@@ -5,6 +5,7 @@ blog = "Blog"
 github = "GitHub"
 login = "Login de veículo"
 about = "Sobre"
+settings = Definições
 
 [header.theme]
 auto = "Design: Sistema"
@@ -14,8 +15,8 @@ dark = "Design: Escuro"
 [footer.version]
 availableLong = "Atualização disponível"
 modalTitle = "Atualização disponível"
-modalUpdateStarted = "Após a atualização, o evcc será reiniciado."
-modalInstalledVersion = "Versão atualmente instalada"
+modalUpdateStarted = "Reiniciado a nova versâo de evcc"
+modalInstalledVersion = "Versão instalada"
 modalNoReleaseNotes = "Nenhuma nota de versão disponível. Você pode encontrar mais informações sobre a nova versão aqui:"
 modalCancel = "Cancelar"
 modalUpdate = "Atualizar"
@@ -225,3 +226,22 @@ reload = "Iniciar de novo?"
 # Freitag => sexta-feira (6a)
 # Samstag => sábado (sáb)
 # Sonntag => domingo (dom)
+
+
+[settings.theme]
+label = Estilo
+auto = Sistema
+light = claro
+dark = Escuro
+
+[settings.language]
+label = Língua
+auto = Automático
+
+[settings.unit]
+label = Unidades
+km = km
+mi = milhas
+
+[settings.telemetry]
+label = Telemetria
