@@ -122,6 +122,11 @@ type Battery interface {
 	Soc() (float64, error)
 }
 
+// BatteryCapacity provides a capacity in Wh
+type BatteryCapacity interface {
+	Capacity() float64
+}
+
 // ChargeState provides current charging status
 type ChargeState interface {
 	Status() (ChargeStatus, error)
@@ -178,9 +183,9 @@ type Authorizer interface {
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
+	BatteryCapacity
 	Title() string
 	Icon() string
-	Capacity() float64
 	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
