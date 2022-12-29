@@ -273,7 +273,7 @@ func (impl *decorateOCPPPhaseCurrentsImpl) Currents() (float64, float64, float64
 }
 
 type decorateOCPPPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) (error)
+	phaseSwitcher func(int) error
 }
 
 func (impl *decorateOCPPPhaseSwitcherImpl) Phases1p3p(phases int) error {
