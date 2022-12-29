@@ -776,11 +776,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
 
-	slotEnd, active, err := lp.planner.Active(requiredDuration, lp.targetTime)
+	planStart, slotEnd, active, err := lp.planner.Active(requiredDuration, lp.targetTime)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
 		return false
 	}
+	lp.publish(targetTimeProjectedStart, planStart)
 
 	// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 	if active {
