@@ -757,8 +757,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	var requiredDuration time.Duration
+	targetSoc := 100
 	maxPower := lp.GetMaxPower()
+	var requiredDuration time.Duration
 
 	if energy, ok := lp.remainingChargeEnergy(); ok {
 		if energy > 0 {
@@ -766,13 +767,21 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		}
 	} else {
 		// TODO vehicle soc limit
-		targetSoc := 100
 		if lp.Soc.target > 0 {
 			targetSoc = lp.Soc.target
 		}
 		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
 	}
 	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+
+	// anticipate lower charge rates at end of charging curve
+	if targetSoc >= 80 {
+		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+
+		if targetSoc >= 90 {
+			requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+		}
+	}
 
 	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
 
@@ -783,15 +792,32 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 	lp.publish(targetTimeProjectedStart, planStart)
 
-	// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 	if active {
+		// ignore short plans if not already active
+		if !lp.planActive && requiredDuration < 10*time.Minute {
+			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
+			return false
+		}
+
 		// remember last active plan's end time
 		lp.setPlanActive(true)
 		lp.planSlotEnd = slotEnd
-	} else if lp.planActive && ((lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero()) ||
-		(lp.clock.Now().After(lp.targetTime) && !lp.targetTime.IsZero())) {
-		// if slot still not completed or past target time continue charging
-		active = true
+	} else if lp.planActive {
+		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
+		switch {
+		case lp.clock.Now().After(lp.targetTime) && !lp.targetTime.IsZero():
+			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
+			// TODO check when schedule is implemented
+			lp.log.DEBUG.Println("continuing after target time")
+			active = true
+		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero():
+			// TODO why are we doing this
+			lp.log.DEBUG.Println("continuing until end of slot")
+			active = true
+		case requiredDuration < 30*time.Minute:
+			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
+			active = true
+		}
 	}
 
 	return active
