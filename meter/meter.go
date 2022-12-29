@@ -46,17 +46,19 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		}
 	}
 
-	// decorate Meter with MeterCurrent
+	// decorate MeterCurrent
 	currentsG, err := buildPhaseProviders(cc.Currents)
 	if err != nil {
 		return nil, fmt.Errorf("currents: %w", err)
 	}
 
+	// decorate MeterVoltages
 	voltagesG, err := buildPhaseProviders(cc.Voltages)
 	if err != nil {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
+	// decorate MeterPower
 	powersG, err := buildPhaseProviders(cc.Powers)
 	if err != nil {
 		return nil, fmt.Errorf("powers: %w", err)
