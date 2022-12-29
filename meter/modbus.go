@@ -26,7 +26,7 @@ func init() {
 	registry.Add("modbus", NewModbusFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.MeterVoltage,Voltages,func() (float64, float64, float64, error)" -t "api.MeterPower,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -35,6 +35,8 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, Soc string
 		Currents           []string
+		Voltages           []string
+		Powers             []string
 		Delay              time.Duration
 		Timeout            time.Duration
 	}{
@@ -97,7 +99,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
 
-	// decorate energy reading
+	// decorate energy
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
 		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
@@ -107,32 +109,25 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate Meter with MeterCurrent
-	var currentsG func() (float64, float64, float64, error)
-	if len(cc.Currents) > 0 {
-		if len(cc.Currents) != 3 {
-			return nil, errors.New("need 3 currents")
-		}
-
-		var curr []func() (float64, error)
-		for _, cc := range cc.Currents {
-			var opCurrent modbus.Operation
-
-			if err := modbus.ParseOperation(device, cc, &opCurrent); err != nil {
-				return nil, fmt.Errorf("invalid measurement for current: %s", cc)
-			}
-
-			c := func() (float64, error) {
-				return m.floatGetter(opCurrent)
-			}
-
-			curr = append(curr, c)
-		}
-
-		currentsG = collectCurrentProviders(curr)
+	// decorate currents
+	currentsG, err := m.buildPhaseProviders(cc.Currents)
+	if err != nil {
+		return nil, fmt.Errorf("currents: %w", err)
 	}
 
-	// decorate soc reading
+	// decorate voltages
+	voltagesG, err := m.buildPhaseProviders(cc.Voltages)
+	if err != nil {
+		return nil, fmt.Errorf("voltages: %w", err)
+	}
+
+	// decorate powers
+	powersG, err := m.buildPhaseProviders(cc.Powers)
+	if err != nil {
+		return nil, fmt.Errorf("powers: %w", err)
+	}
+
+	// decorate soc
 	var soc func() (float64, error)
 	if cc.Soc != "" {
 		if err := modbus.ParseOperation(device, cc.Soc, &m.opSoc); err != nil {
@@ -142,7 +137,35 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		soc = m.soc
 	}
 
-	return decorateModbus(m, totalEnergy, currentsG, soc), nil
+	return decorateModbus(m, totalEnergy, currentsG, voltagesG, powersG, soc), nil
+}
+
+func (m *Modbus) buildPhaseProviders(readings []string) (func() (float64, float64, float64, error), error) {
+	var res func() (float64, float64, float64, error)
+	if len(readings) > 0 {
+		if len(readings) != 3 {
+			return nil, errors.New("need one per phase, total three")
+		}
+
+		phases := make([]func() (float64, error), 0, 3)
+		for idx, reading := range readings {
+			var opCurrent modbus.Operation
+
+			if err := modbus.ParseOperation(m.device, reading, &opCurrent); err != nil {
+				return nil, fmt.Errorf("invalid measurement [%d]: %s", idx, reading)
+			}
+
+			c := func() (float64, error) {
+				return m.floatGetter(opCurrent)
+			}
+
+			phases = append(phases, c)
+		}
+
+		res = collectPhaseProviders(phases)
+	}
+
+	return res, nil
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)

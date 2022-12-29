@@ -48,6 +48,7 @@ const (
 	timerInactive = "inactive"
 
 	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
+	minActiveVoltage      = 208 // minimum voltage at which a phase is treated as active
 	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 
@@ -1579,7 +1580,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 	if lp.charging() {
 		// Quine-McCluskey for (¬L1∧L2∧¬L3) ∨ (¬L1∧¬L2∧L3) ∨ (L1∧¬L2∧L3) ∨ (¬L1∧L2∧L3) -> ¬L1 ∧ L2 ∨ ¬L2 ∧ L3
 		if !(i1 > minActiveCurrent) && (i2 > minActiveCurrent) || !(i2 > minActiveCurrent) && (i3 > minActiveCurrent) {
-			lp.log.WARN.Printf("invalid phase wiring between charge meter and vehicle")
+			lp.log.WARN.Printf("invalid phase wiring between charge meter and charger")
 		}
 
 		var phases int
@@ -1597,6 +1598,42 @@ func (lp *Loadpoint) updateChargeCurrents() {
 			lp.log.DEBUG.Printf("detected phases: %dp", phases)
 			lp.publish(phasesActive, phases)
 		}
+	}
+}
+
+// updateChargeVoltages uses MeterVoltage interface to count phases with nominal grid voltage
+func (lp *Loadpoint) updateChargeVoltages() {
+	phaseMeter, ok := lp.chargeMeter.(api.MeterVoltage)
+	if !ok {
+		return // don't guess
+	}
+
+	u1, u2, u3, err := phaseMeter.Voltages()
+	if err != nil {
+		lp.log.ERROR.Printf("charge meter: %v", err)
+		return
+	}
+
+	chargeVoltages := []float64{u1, u2, u3}
+	lp.log.DEBUG.Printf("charge voltages: %.3gV", chargeVoltages)
+	lp.publish("chargeVoltages", chargeVoltages)
+
+	// Quine-McCluskey for (¬L1∧L2∧¬L3) ∨ (L1∧L2∧¬L3) ∨ (¬L1∧¬L2∧L3) ∨ (L1∧¬L2∧L3) ∨ (¬L1∧L2∧L3) -> ¬L1 ∧ L3 ∨ L2 ∧ ¬L3 ∨ ¬L2 ∧ L3
+	if !(u1 > minActiveVoltage) && (u3 > minActiveVoltage) || (u2 > minActiveVoltage) && !(u3 > minActiveVoltage) || !(u2 > minActiveVoltage) && (u3 > minActiveVoltage) {
+		lp.log.WARN.Printf("invalid phase wiring between charge meter and charger")
+	}
+
+	var phases int
+	if (u1 > minActiveVoltage) || (u2 > minActiveVoltage) || (u3 > minActiveVoltage) {
+		phases = 3
+	}
+	if (u1 > minActiveVoltage) && (u2 < minActiveVoltage) && (u3 < minActiveVoltage) {
+		phases = 1
+	}
+
+	if phases >= 1 {
+		lp.log.DEBUG.Printf("detected phases: %dp", phases)
+		lp.setPhases(phases)
 	}
 }
 
@@ -1747,6 +1784,7 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 	lp.publish("mode", mode)
 
 	// read and publish meters first- charge power has already been updated by the site
+	lp.updateChargeVoltages()
 	lp.updateChargeCurrents()
 
 	// update ChargeRater here to make sure initial meter update is caught
