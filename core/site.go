@@ -404,6 +404,8 @@ func (site *Site) updateMeters() error {
 
 		for i, meter := range site.batteryMeters {
 			var power float64
+
+			// NOTE battery errors are logged but ignored as we don't consider them relevant
 			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
 
 			if err == nil {
@@ -417,19 +419,18 @@ func (site *Site) updateMeters() error {
 			soc, err := meter.(api.Battery).Soc()
 
 			if err == nil {
-				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
-
 				// weigh soc by capacity and accumulate total capacity
+				weighedSoc := soc
 				if m, ok := meter.(api.BatteryCapacity); ok {
 					capacity = m.Capacity()
 					totalCapacity += capacity
-					soc *= capacity
+					weighedSoc *= capacity
 				}
 
-				site.batterySoc += soc
+				site.batterySoc += weighedSoc
+				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
 			} else {
-				err = fmt.Errorf("battery %d soc: %v", i+1, err)
-				site.log.ERROR.Println(err)
+				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
 			}
 
 			mm[i] = batteryMeasurement{
