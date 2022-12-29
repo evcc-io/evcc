@@ -210,9 +210,9 @@ func (m *OpenWB) TotalEnergy() (float64, error) {
 	return m.totalEnergyG()
 }
 
-var _ api.MeterCurrent = (*OpenWB)(nil)
+var _ api.PhaseCurrents = (*OpenWB)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (m *OpenWB) Currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, currentG := range m.currentsG {

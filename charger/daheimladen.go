@@ -204,9 +204,9 @@ func (c *DaheimLaden) TotalEnergy() (float64, error) {
 	return float64(res.EnergyActiveImportRegister), err
 }
 
-var _ api.MeterCurrent = (*DaheimLaden)(nil)
+var _ api.PhaseCurrents = (*DaheimLaden)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (c *DaheimLaden) Currents() (float64, float64, float64, error) {
 	res, err := c.meterG()
 	return float64(res.CurrentImportPhaseL1), float64(res.CurrentImportPhaseL2), float64(res.CurrentImportPhaseL3), err

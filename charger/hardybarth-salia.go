@@ -50,7 +50,7 @@ func init() {
 	registry.Add("hardybarth-salia", NewSaliaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
 func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -229,7 +229,7 @@ func (wb *Salia) totalEnergy() (float64, error) {
 	return res.Secc.Port0.Metering.Energy.ActiveImport.Actual / 1e3, err
 }
 
-// currents implements the api.MeterCurrent interface
+// currents implements the api.PhaseCurrents interface
 func (wb *Salia) currents() (float64, float64, float64, error) {
 	res, err := wb.get()
 	i := res.Secc.Port0.Metering.Current.AC

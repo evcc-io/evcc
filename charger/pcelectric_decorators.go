@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy func() (float64, error), PhaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && meterCurrent == nil && meterEnergy == nil:
+	case meter == nil && PhaseCurrents == nil && meterEnergy == nil:
 		return base
 
-	case meter != nil && meterCurrent == nil && meterEnergy == nil:
+	case meter != nil && PhaseCurrents == nil && meterEnergy == nil:
 		return &struct {
 			*PCElectric
 			api.Meter
@@ -22,7 +22,7 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 		}
 
-	case meter == nil && meterCurrent == nil && meterEnergy != nil:
+	case meter == nil && PhaseCurrents == nil && meterEnergy != nil:
 		return &struct {
 			*PCElectric
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 		}
 
-	case meter != nil && meterCurrent == nil && meterEnergy != nil:
+	case meter != nil && PhaseCurrents == nil && meterEnergy != nil:
 		return &struct {
 			*PCElectric
 			api.Meter
@@ -48,60 +48,60 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 		}
 
-	case meter == nil && meterCurrent != nil && meterEnergy == nil:
+	case meter == nil && PhaseCurrents != nil && meterEnergy == nil:
 		return &struct {
 			*PCElectric
-			api.MeterCurrent
+			api.PhaseCurrents
 		}{
 			PCElectric: base,
-			MeterCurrent: &decoratePCEMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decoratePCEPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 		}
 
-	case meter != nil && meterCurrent != nil && meterEnergy == nil:
+	case meter != nil && PhaseCurrents != nil && meterEnergy == nil:
 		return &struct {
 			*PCElectric
 			api.Meter
-			api.MeterCurrent
+			api.PhaseCurrents
 		}{
 			PCElectric: base,
 			Meter: &decoratePCEMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decoratePCEMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decoratePCEPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 		}
 
-	case meter == nil && meterCurrent != nil && meterEnergy != nil:
+	case meter == nil && PhaseCurrents != nil && meterEnergy != nil:
 		return &struct {
 			*PCElectric
-			api.MeterCurrent
+			api.PhaseCurrents
 			api.MeterEnergy
 		}{
 			PCElectric: base,
-			MeterCurrent: &decoratePCEMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decoratePCEPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 			MeterEnergy: &decoratePCEMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
 
-	case meter != nil && meterCurrent != nil && meterEnergy != nil:
+	case meter != nil && PhaseCurrents != nil && meterEnergy != nil:
 		return &struct {
 			*PCElectric
 			api.Meter
-			api.MeterCurrent
+			api.PhaseCurrents
 			api.MeterEnergy
 		}{
 			PCElectric: base,
 			Meter: &decoratePCEMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decoratePCEMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decoratePCEPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 			MeterEnergy: &decoratePCEMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -120,12 +120,12 @@ func (impl *decoratePCEMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decoratePCEMeterCurrentImpl struct {
-	meterCurrent func() (float64, float64, float64, error)
+type decoratePCEPhaseCurrentsImpl struct {
+	PhaseCurrents func() (float64, float64, float64, error)
 }
 
-func (impl *decoratePCEMeterCurrentImpl) Currents() (float64, float64, float64, error) {
-	return impl.meterCurrent()
+func (impl *decoratePCEPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.PhaseCurrents()
 }
 
 type decoratePCEMeterEnergyImpl struct {

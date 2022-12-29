@@ -490,9 +490,9 @@ func (c *Easee) ChargedEnergy() (float64, error) {
 	return c.sessionEnergy, nil
 }
 
-var _ api.MeterCurrent = (*Easee)(nil)
+var _ api.PhaseCurrents = (*Easee)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()
@@ -512,7 +512,7 @@ func (c *Easee) TotalEnergy() (float64, error) {
 
 var _ api.Identifier = (*Easee)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (c *Easee) Identify() (string, error) {
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()

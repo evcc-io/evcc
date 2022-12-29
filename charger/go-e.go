@@ -162,9 +162,9 @@ func (c *GoE) ChargedEnergy() (float64, error) {
 	return resp.ChargedEnergy(), err
 }
 
-var _ api.MeterCurrent = (*GoE)(nil)
+var _ api.PhaseCurrents = (*GoE)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (c *GoE) Currents() (float64, float64, float64, error) {
 	resp, err := c.api.Status()
 	if err != nil {

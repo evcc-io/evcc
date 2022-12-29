@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func() (float64, error), PhaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && meterCurrent == nil && meterEnergy == nil:
+	case meter == nil && PhaseCurrents == nil && meterEnergy == nil:
 		return base
 
-	case meter != nil && meterCurrent == nil && meterEnergy == nil:
+	case meter != nil && PhaseCurrents == nil && meterEnergy == nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -22,7 +22,7 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter == nil && meterCurrent == nil && meterEnergy != nil:
+	case meter == nil && PhaseCurrents == nil && meterEnergy != nil:
 		return &struct {
 			*Salia
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && meterCurrent == nil && meterEnergy != nil:
+	case meter != nil && PhaseCurrents == nil && meterEnergy != nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -48,60 +48,60 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter == nil && meterCurrent != nil && meterEnergy == nil:
+	case meter == nil && PhaseCurrents != nil && meterEnergy == nil:
 		return &struct {
 			*Salia
-			api.MeterCurrent
+			api.PhaseCurrents
 		}{
 			Salia: base,
-			MeterCurrent: &decorateSaliaMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 		}
 
-	case meter != nil && meterCurrent != nil && meterEnergy == nil:
+	case meter != nil && PhaseCurrents != nil && meterEnergy == nil:
 		return &struct {
 			*Salia
 			api.Meter
-			api.MeterCurrent
+			api.PhaseCurrents
 		}{
 			Salia: base,
 			Meter: &decorateSaliaMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decorateSaliaMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 		}
 
-	case meter == nil && meterCurrent != nil && meterEnergy != nil:
+	case meter == nil && PhaseCurrents != nil && meterEnergy != nil:
 		return &struct {
 			*Salia
-			api.MeterCurrent
+			api.PhaseCurrents
 			api.MeterEnergy
 		}{
 			Salia: base,
-			MeterCurrent: &decorateSaliaMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 			MeterEnergy: &decorateSaliaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
 
-	case meter != nil && meterCurrent != nil && meterEnergy != nil:
+	case meter != nil && PhaseCurrents != nil && meterEnergy != nil:
 		return &struct {
 			*Salia
 			api.Meter
-			api.MeterCurrent
+			api.PhaseCurrents
 			api.MeterEnergy
 		}{
 			Salia: base,
 			Meter: &decorateSaliaMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decorateSaliaMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 			MeterEnergy: &decorateSaliaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -120,12 +120,12 @@ func (impl *decorateSaliaMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateSaliaMeterCurrentImpl struct {
-	meterCurrent func() (float64, float64, float64, error)
+type decorateSaliaPhaseCurrentsImpl struct {
+	PhaseCurrents func() (float64, float64, float64, error)
 }
 
-func (impl *decorateSaliaMeterCurrentImpl) Currents() (float64, float64, float64, error) {
-	return impl.meterCurrent()
+func (impl *decorateSaliaPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.PhaseCurrents()
 }
 
 type decorateSaliaMeterEnergyImpl struct {

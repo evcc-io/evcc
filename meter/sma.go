@@ -112,9 +112,9 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
-var _ api.MeterCurrent = (*SMA)(nil)
+var _ api.PhaseCurrents = (*SMA)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (sm *SMA) Currents() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 
@@ -133,9 +133,9 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], err
 }
 
-var _ api.MeterVoltage = (*SMA)(nil)
+var _ api.PhaseVoltages = (*SMA)(nil)
 
-// Voltages implements the api.MeterVoltage interface
+// Voltages implements the api.PhaseVoltages interface
 func (sm *SMA) Voltages() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 
@@ -147,9 +147,9 @@ func (sm *SMA) Voltages() (float64, float64, float64, error) {
 	return voltages[0], voltages[1], voltages[2], err
 }
 
-var _ api.MeterPower = (*SMA)(nil)
+var _ api.PhasePowers = (*SMA)(nil)
 
-// Powers implements the api.MeterPower interface
+// Powers implements the api.PhasePowers interface
 func (sm *SMA) Powers() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 

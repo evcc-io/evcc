@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateABLeMH(base *ABLeMH, meter func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decorateABLeMH(base *ABLeMH, meter func() (float64, error), PhaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && meterCurrent == nil:
+	case meter == nil && PhaseCurrents == nil:
 		return base
 
-	case meter != nil && meterCurrent == nil:
+	case meter != nil && PhaseCurrents == nil:
 		return &struct {
 			*ABLeMH
 			api.Meter
@@ -22,29 +22,29 @@ func decorateABLeMH(base *ABLeMH, meter func() (float64, error), meterCurrent fu
 			},
 		}
 
-	case meter == nil && meterCurrent != nil:
+	case meter == nil && PhaseCurrents != nil:
 		return &struct {
 			*ABLeMH
-			api.MeterCurrent
+			api.PhaseCurrents
 		}{
 			ABLeMH: base,
-			MeterCurrent: &decorateABLeMHMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateABLeMHPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 		}
 
-	case meter != nil && meterCurrent != nil:
+	case meter != nil && PhaseCurrents != nil:
 		return &struct {
 			*ABLeMH
 			api.Meter
-			api.MeterCurrent
+			api.PhaseCurrents
 		}{
 			ABLeMH: base,
 			Meter: &decorateABLeMHMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decorateABLeMHMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateABLeMHPhaseCurrentsImpl{
+				PhaseCurrents: PhaseCurrents,
 			},
 		}
 	}
@@ -60,10 +60,10 @@ func (impl *decorateABLeMHMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateABLeMHMeterCurrentImpl struct {
-	meterCurrent func() (float64, float64, float64, error)
+type decorateABLeMHPhaseCurrentsImpl struct {
+	PhaseCurrents func() (float64, float64, float64, error)
 }
 
-func (impl *decorateABLeMHMeterCurrentImpl) Currents() (float64, float64, float64, error) {
-	return impl.meterCurrent()
+func (impl *decorateABLeMHPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.PhaseCurrents()
 }

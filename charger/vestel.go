@@ -211,9 +211,9 @@ func (wb *Vestel) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
-var _ api.MeterCurrent = (*Vestel)(nil)
+var _ api.PhaseCurrents = (*Vestel)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *Vestel) Currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range vestelRegCurrents {

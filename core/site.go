@@ -229,7 +229,7 @@ func (site *Site) Loadpoints() []loadpoint.API {
 func meterCapabilities(name string, meter interface{}) string {
 	_, power := meter.(api.Meter)
 	_, energy := meter.(api.MeterEnergy)
-	_, currents := meter.(api.MeterCurrent)
+	_, currents := meter.(api.PhaseCurrents)
 
 	name += ":"
 	return fmt.Sprintf("    %-10s power %s energy %s currents %s",
@@ -301,7 +301,7 @@ func (site *Site) DumpConfig() {
 
 		_, power := lp.charger.(api.Meter)
 		_, energy := lp.charger.(api.MeterEnergy)
-		_, currents := lp.charger.(api.MeterCurrent)
+		_, currents := lp.charger.(api.PhaseCurrents)
 		_, phases := lp.charger.(api.PhaseSwitcher)
 		_, wakeup := lp.charger.(api.Resurrector)
 
@@ -461,7 +461,7 @@ func (site *Site) updateMeters() error {
 
 	// powers
 	var p1, p2, p3 float64
-	if phaseMeter, ok := site.gridMeter.(api.MeterPower); err == nil && ok {
+	if phaseMeter, ok := site.gridMeter.(api.PhasePowers); err == nil && ok {
 		p1, p2, p3, err = phaseMeter.Powers()
 		if err == nil {
 			phases := []float64{p1, p2, p3}
@@ -473,7 +473,7 @@ func (site *Site) updateMeters() error {
 	}
 
 	// currents
-	if phaseMeter, ok := site.gridMeter.(api.MeterCurrent); err == nil && ok {
+	if phaseMeter, ok := site.gridMeter.(api.PhaseCurrents); err == nil && ok {
 		var i1, i2, i3 float64
 		i1, i2, i3, err = phaseMeter.Currents()
 		if err == nil {
