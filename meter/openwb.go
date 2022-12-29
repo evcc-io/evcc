@@ -24,6 +24,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Topic       string
 		Timeout     time.Duration
 		Usage       string
+		capacity    `mapstructure:",squash"`
 	}{
 		Topic:   "openWB",
 		Timeout: 15 * time.Second,
@@ -56,8 +57,9 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	var power func() (float64, error)
-	var soc func() (float64, error)
 	var currents func() (float64, float64, float64, error)
+	var soc func() (float64, error)
+	var capacity func() float64
 
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
@@ -101,6 +103,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 		power = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.PowerTopic))
 		soc = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.SocTopic))
+		capacity = cc.capacity.Decorator()
 
 	default:
 		return nil, fmt.Errorf("invalid usage: %s", cc.Usage)
@@ -111,7 +114,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	res := m.Decorate(nil, currents, nil, nil, soc, nil)
+	res := m.Decorate(nil, currents, nil, nil, soc, capacity)
 
 	return res, nil
 }
