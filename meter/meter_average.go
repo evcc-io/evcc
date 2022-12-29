@@ -55,7 +55,19 @@ func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error)
 		currents = m.Currents
 	}
 
-	res := meter.Decorate(totalEnergy, currents, batterySoc)
+	// decorate voltages reading
+	var voltages func() (float64, float64, float64, error)
+	if m, ok := m.(api.MeterVoltage); ok {
+		voltages = m.Voltages
+	}
+
+	// decorate powers reading
+	var powers func() (float64, float64, float64, error)
+	if m, ok := m.(api.MeterPower); ok {
+		powers = m.Powers
+	}
+
+	res := meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc)
 
 	return res, nil
 }

@@ -117,12 +117,50 @@ var _ api.MeterCurrent = (*SMA)(nil)
 func (sm *SMA) Currents() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 
+	var powers [3]float64
+	for i, id := range []sunny.ValueID{sunny.ActivePowerMinusL1, sunny.ActivePowerMinusL2, sunny.ActivePowerMinusL3} {
+		if p := sma.AsFloat(values[id]); p > 0 {
+			powers[i] = -p
+		}
+	}
+
 	var currents [3]float64
 	for i, id := range []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3} {
-		currents[i] = sma.AsFloat(values[id])
+		currents[i] = util.SignFromPower(sma.AsFloat(values[id]), powers[i])
 	}
 
 	return currents[0], currents[1], currents[2], err
+}
+
+var _ api.MeterVoltage = (*SMA)(nil)
+
+// Voltages implements the api.MeterVoltage interface
+func (sm *SMA) Voltages() (float64, float64, float64, error) {
+	values, err := sm.device.Values()
+
+	var voltages [3]float64
+	for i, id := range []sunny.ValueID{sunny.VoltageL1, sunny.VoltageL2, sunny.VoltageL3} {
+		voltages[i] = sma.AsFloat(values[id])
+	}
+
+	return voltages[0], voltages[1], voltages[2], err
+}
+
+var _ api.MeterPower = (*SMA)(nil)
+
+// Powers implements the api.MeterPower interface
+func (sm *SMA) Powers() (float64, float64, float64, error) {
+	values, err := sm.device.Values()
+
+	var powers [3]float64
+	for i, id := range []sunny.ValueID{sunny.ActivePowerPlusL1, sunny.ActivePowerPlusL2, sunny.ActivePowerPlusL3} {
+		powers[i] = sma.AsFloat(values[id])
+	}
+	for i, id := range []sunny.ValueID{sunny.ActivePowerMinusL1, sunny.ActivePowerMinusL2, sunny.ActivePowerMinusL3} {
+		powers[i] -= sma.AsFloat(values[id])
+	}
+
+	return powers[0], powers[1], powers[2], err
 }
 
 // soc implements the api.Battery interface
