@@ -270,14 +270,15 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 
 			if ccWithTitle.Title == "" {
 				//lint:ignore SA1019 as Title is safe on ascii
-				cc.Other["title"] = strings.Title(cc.Name)
+				ccWithTitle.Title = strings.Title(cc.Name)
+				cc.Other["title"] = ccWithTitle.Title
 			}
 
 			v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
 				log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
 				// wrap any created errors to prevent fatals
-				v, _ = wrapper.New(v, err)
+				v, _ = wrapper.New(ccWithTitle.Title, err)
 			}
 
 			mu.Lock()
