@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy func() (float64, error), PhaseCurrents func() (float64, float64, float64, error), chargerEx func(current float64) error) api.Charger {
+func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargerEx func(current float64) error) api.Charger {
 	switch {
-	case chargerEx == nil && meter == nil && PhaseCurrents == nil && meterEnergy == nil:
+	case chargerEx == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil:
 		return base
 
-	case chargerEx == nil && meter != nil && PhaseCurrents == nil && meterEnergy == nil:
+	case chargerEx == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil:
 		return &struct {
 			*Wallbe
 			api.Meter
@@ -22,7 +22,7 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx == nil && meter == nil && PhaseCurrents == nil && meterEnergy != nil:
+	case chargerEx == nil && meter == nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*Wallbe
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx == nil && meter != nil && PhaseCurrents == nil && meterEnergy != nil:
+	case chargerEx == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*Wallbe
 			api.Meter
@@ -48,18 +48,18 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx == nil && meter == nil && PhaseCurrents != nil && meterEnergy == nil:
+	case chargerEx == nil && meter == nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*Wallbe
 			api.PhaseCurrents
 		}{
 			Wallbe: base,
 			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case chargerEx == nil && meter != nil && PhaseCurrents != nil && meterEnergy == nil:
+	case chargerEx == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*Wallbe
 			api.Meter
@@ -70,45 +70,45 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 				meter: meter,
 			},
 			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case chargerEx == nil && meter == nil && PhaseCurrents != nil && meterEnergy != nil:
+	case chargerEx == nil && meter == nil && meterEnergy != nil && phaseCurrents != nil:
 		return &struct {
 			*Wallbe
-			api.PhaseCurrents
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			Wallbe: base,
-			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
 			MeterEnergy: &decorateWallbeMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
+			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
 		}
 
-	case chargerEx == nil && meter != nil && PhaseCurrents != nil && meterEnergy != nil:
+	case chargerEx == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil:
 		return &struct {
 			*Wallbe
 			api.Meter
-			api.PhaseCurrents
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			Wallbe: base,
 			Meter: &decorateWallbeMeterImpl{
 				meter: meter,
 			},
+			MeterEnergy: &decorateWallbeMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
 			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
-			MeterEnergy: &decorateWallbeMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case chargerEx != nil && meter == nil && PhaseCurrents == nil && meterEnergy == nil:
+	case chargerEx != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil:
 		return &struct {
 			*Wallbe
 			api.ChargerEx
@@ -119,42 +119,11 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && meter != nil && PhaseCurrents == nil && meterEnergy == nil:
+	case chargerEx != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil:
 		return &struct {
 			*Wallbe
 			api.ChargerEx
 			api.Meter
-		}{
-			Wallbe: base,
-			ChargerEx: &decorateWallbeChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateWallbeMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case chargerEx != nil && meter == nil && PhaseCurrents == nil && meterEnergy != nil:
-		return &struct {
-			*Wallbe
-			api.ChargerEx
-			api.MeterEnergy
-		}{
-			Wallbe: base,
-			ChargerEx: &decorateWallbeChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			MeterEnergy: &decorateWallbeMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargerEx != nil && meter != nil && PhaseCurrents == nil && meterEnergy != nil:
-		return &struct {
-			*Wallbe
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
 		}{
 			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
@@ -163,70 +132,28 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 			Meter: &decorateWallbeMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateWallbeMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case chargerEx != nil && meter == nil && PhaseCurrents != nil && meterEnergy == nil:
+	case chargerEx != nil && meter == nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*Wallbe
 			api.ChargerEx
-			api.PhaseCurrents
-		}{
-			Wallbe: base,
-			ChargerEx: &decorateWallbeChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
-		}
-
-	case chargerEx != nil && meter != nil && PhaseCurrents != nil && meterEnergy == nil:
-		return &struct {
-			*Wallbe
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-		}{
-			Wallbe: base,
-			ChargerEx: &decorateWallbeChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateWallbeMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
-		}
-
-	case chargerEx != nil && meter == nil && PhaseCurrents != nil && meterEnergy != nil:
-		return &struct {
-			*Wallbe
-			api.ChargerEx
-			api.PhaseCurrents
 			api.MeterEnergy
 		}{
 			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
 				chargerEx: chargerEx,
 			},
-			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
 			MeterEnergy: &decorateWallbeMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
 
-	case chargerEx != nil && meter != nil && PhaseCurrents != nil && meterEnergy != nil:
+	case chargerEx != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*Wallbe
 			api.ChargerEx
 			api.Meter
-			api.PhaseCurrents
 			api.MeterEnergy
 		}{
 			Wallbe: base,
@@ -236,11 +163,84 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 			Meter: &decorateWallbeMeterImpl{
 				meter: meter,
 			},
+			MeterEnergy: &decorateWallbeMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case chargerEx != nil && meter == nil && meterEnergy == nil && phaseCurrents != nil:
+		return &struct {
+			*Wallbe
+			api.ChargerEx
+			api.PhaseCurrents
+		}{
+			Wallbe: base,
+			ChargerEx: &decorateWallbeChargerExImpl{
+				chargerEx: chargerEx,
+			},
 			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil:
+		return &struct {
+			*Wallbe
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+		}{
+			Wallbe: base,
+			ChargerEx: &decorateWallbeChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateWallbeMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx != nil && meter == nil && meterEnergy != nil && phaseCurrents != nil:
+		return &struct {
+			*Wallbe
+			api.ChargerEx
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Wallbe: base,
+			ChargerEx: &decorateWallbeChargerExImpl{
+				chargerEx: chargerEx,
 			},
 			MeterEnergy: &decorateWallbeMeterEnergyImpl{
 				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil:
+		return &struct {
+			*Wallbe
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Wallbe: base,
+			ChargerEx: &decorateWallbeChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateWallbeMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateWallbeMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateWallbePhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 	}
@@ -264,18 +264,18 @@ func (impl *decorateWallbeMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateWallbePhaseCurrentsImpl struct {
-	PhaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateWallbePhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.PhaseCurrents()
-}
-
 type decorateWallbeMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
 func (impl *decorateWallbeMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
+}
+
+type decorateWallbePhaseCurrentsImpl struct {
+	phaseCurrents func() (float64, float64, float64, error)
+}
+
+func (impl *decorateWallbePhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.phaseCurrents()
 }
