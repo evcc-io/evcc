@@ -149,11 +149,11 @@ func TestNilTariff(t *testing.T) {
 		clock: clck,
 	}
 
-	_, res, err := p.Active(time.Hour, clck.Now().Add(30*time.Minute))
+	_, _, res, err := p.Active(time.Hour, clck.Now().Add(30*time.Minute))
 	assert.NoError(t, err)
 	assert.True(t, res, "should start past start time")
 
-	_, res, err = p.Active(time.Hour, clck.Now().Add(-30*time.Minute))
+	_, _, res, err = p.Active(time.Hour, clck.Now().Add(-30*time.Minute))
 	assert.NoError(t, err)
 	assert.False(t, res, "should not start past target time")
 }
@@ -171,11 +171,11 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 		tariff: trf,
 	}
 
-	_, res, err := p.Active(time.Hour, clck.Now().Add(30*time.Minute))
+	_, _, res, err := p.Active(time.Hour, clck.Now().Add(30*time.Minute))
 	assert.NoError(t, err)
 	assert.True(t, res, "should start past start time")
 
-	_, res, err = p.Active(time.Hour, clck.Now().Add(-30*time.Minute))
+	_, _, res, err = p.Active(time.Hour, clck.Now().Add(-30*time.Minute))
 	assert.NoError(t, err)
 	assert.False(t, res, "should not start past target time")
 }
@@ -195,11 +195,11 @@ func TestFlatTariffLongSlots(t *testing.T) {
 		tariff: trf,
 	}
 
-	_, res, err := p.Active(time.Hour, clck.Now().Add(2*time.Hour))
+	_, _, res, err := p.Active(time.Hour, clck.Now().Add(2*time.Hour))
 	assert.NoError(t, err)
 	assert.False(t, res, "should not start long last slot before due time")
 
-	_, res, err = p.Active(time.Hour, clck.Now().Add(time.Hour))
+	_, _, res, err = p.Active(time.Hour, clck.Now().Add(time.Hour))
 	assert.NoError(t, err)
 	assert.True(t, res, "should start long last slot after due time")
 }
@@ -217,11 +217,11 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 		tariff: trf,
 	}
 
-	_, res, err := p.Active(40*time.Minute, clck.Now().Add(2*time.Hour)) // charge efficiency does not allow to test with 1h
+	_, _, res, err := p.Active(40*time.Minute, clck.Now().Add(2*time.Hour)) // charge efficiency does not allow to test with 1h
 	assert.NoError(t, err)
 	assert.False(t, res, "should not start if car can be charged completely after known prices ")
 
-	_, res, err = p.Active(2*time.Hour, clck.Now().Add(2*time.Hour))
+	_, _, res, err = p.Active(2*time.Hour, clck.Now().Add(2*time.Hour))
 	assert.NoError(t, err)
 	assert.True(t, res, "should start if car can not be charged completely after known prices ")
 }
@@ -239,11 +239,11 @@ func TestChargeAfterTargetTime(t *testing.T) {
 		tariff: trf,
 	}
 
-	_, res, err := p.Active(time.Hour, clck.Now())
+	_, _, res, err := p.Active(time.Hour, clck.Now())
 	assert.NoError(t, err)
 	assert.False(t, res, "should not start past target time")
 
-	_, res, err = p.Active(time.Hour, clck.Now().Add(-time.Hour))
+	_, _, res, err = p.Active(time.Hour, clck.Now().Add(-time.Hour))
 	assert.NoError(t, err)
 	assert.False(t, res, "should not start past target time")
 }

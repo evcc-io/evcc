@@ -78,9 +78,9 @@ func (t *Planner) Plan(rates api.Rates, requiredDuration time.Duration, targetTi
 }
 
 // Active determines if current slot should be used for charging for a total required duration until target time
-func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (time.Time, bool, error) {
+func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (time.Time, time.Time, bool, error) {
 	if t == nil || requiredDuration <= 0 {
-		return time.Time{}, false, nil
+		return time.Time{}, time.Time{}, false, nil
 	}
 
 	// calculate start time
@@ -90,14 +90,14 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 
 	// target charging without tariff
 	if t.tariff == nil || afterStart {
-		return time.Time{}, afterStart && beforeTarget, nil
+		return latestStart, time.Time{}, afterStart && beforeTarget, nil
 	}
 
 	rates, err := t.tariff.Rates()
 
 	// treat like normal target charging if we don't have rates
 	if len(rates) == 0 || err != nil {
-		return time.Time{}, afterStart && beforeTarget, err
+		return latestStart, time.Time{}, afterStart && beforeTarget, err
 	}
 
 	// rates are by default sorted by date, oldest to newest
@@ -111,7 +111,7 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 		// there is enough time for charging after end of current rates
 		durationAfterRates := targetTime.Sub(last)
 		if durationAfterRates >= requiredDuration {
-			return time.Time{}, false, nil
+			return time.Time{}, time.Time{}, false, nil
 		}
 
 		// need to use some of the available slots
@@ -125,6 +125,7 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 	plan := t.Plan(rates, requiredDuration, targetTime)
 
 	var activeSlot api.Rate
+	var planStart time.Time
 	var planDuration time.Duration
 	var planCost float64
 
@@ -133,6 +134,10 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 		planDuration += slotDuration
 		planCost += float64(slotDuration) / float64(time.Hour) * slot.Price
 
+		if planStart.IsZero() || slot.Start.Before(planStart) {
+			planStart = slot.Start
+		}
+
 		if (slot.Start.Before(t.clock.Now()) || slot.Start.Equal(t.clock.Now())) && slot.End.After(t.clock.Now()) {
 			activeSlot = slot
 		}
@@ -140,5 +145,5 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 
 	t.log.DEBUG.Printf("total plan duration: %v, cost: %.2f", planDuration.Round(time.Second), planCost)
 
-	return activeSlot.End, !activeSlot.End.IsZero(), nil
+	return planStart, activeSlot.End, !activeSlot.End.IsZero(), nil
 }
