@@ -5,7 +5,7 @@ blog = "Blog"
 github = "GitHub"
 login = "Login de veículo"
 about = "Sobre"
-settings = Definições
+settings = "Definições"
 
 [header.theme]
 auto = "Design: Sistema"
@@ -218,30 +218,21 @@ odometer = "Quilometragem (km)"
 [offline]
 message = "Sem conexão com o servidor."
 reload = "Iniciar de novo?"
-# weitere Übersetzungen zu den Wochentagen, da diese in der Auflistung der Ladevorgänge aufgeführt werden (in Klammern die gängige Abkürzung):
-# Montag => segunda-feira (2a)
-# Dienstag => terça-feira (3a)
-# Mittwoch => quarta-feira (4a)
-# Donnerstag => quinta-feira (5a)
-# Freitag => sexta-feira (6a)
-# Samstag => sábado (sáb)
-# Sonntag => domingo (dom)
-
 
 [settings.theme]
-label = Estilo
-auto = Sistema
-light = claro
-dark = Escuro
+label = "Estilo"
+auto = "Sistema"
+light = "claro"
+dark = "Escuro"
 
 [settings.language]
-label = Língua
-auto = Automático
+label = "Língua"
+auto = "Automático"
 
 [settings.unit]
-label = Unidades
-km = km
-mi = milhas
+label = "Unidades"
+km = "km"
+mi = "milhas"
 
 [settings.telemetry]
-label = Telemetria
+label = "Telemetria"
