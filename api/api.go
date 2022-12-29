@@ -2,14 +2,9 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
-	"reflect"
-	"strings"
 	"time"
-
-	"github.com/fatih/structs"
 )
 
 //go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
@@ -50,79 +45,37 @@ func (c ChargeStatus) String() string {
 	return string(c)
 }
 
-// ActionConfig defines an action to take on event
-type ActionConfig struct {
-	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
-	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
-	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
-	MinSoc     *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc
-	TargetSoc  *int        `mapstructure:"targetSoc,omitempty"`  // Target Soc
-}
-
-// Merge merges all non-nil properties of the additional config into the base config.
-// The receiver's config remains immutable.
-func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
-	if m.Mode != nil {
-		a.Mode = m.Mode
-	}
-	if m.MinCurrent != nil {
-		a.MinCurrent = m.MinCurrent
-	}
-	if m.MaxCurrent != nil {
-		a.MaxCurrent = m.MaxCurrent
-	}
-	if m.MinSoc != nil {
-		a.MinSoc = m.MinSoc
-	}
-	if m.TargetSoc != nil {
-		a.TargetSoc = m.TargetSoc
-	}
-	return a
-}
-
-// String implements Stringer and returns the ActionConfig as comma-separated key:value string
-func (a ActionConfig) String() string {
-	var s []string
-	for k, v := range structs.Map(a) {
-		val := reflect.ValueOf(v)
-		if v != nil && !val.IsNil() {
-			s = append(s, fmt.Sprintf("%s:%v", k, val.Elem()))
-		}
-	}
-	return strings.Join(s, ", ")
-}
-
-// Meter is able to provide total active power in W
+// Meter provides total active power in W
 type Meter interface {
 	CurrentPower() (float64, error)
 }
 
-// MeterEnergy is able to provide total energy in kWh
+// MeterEnergy provides total energy in kWh
 type MeterEnergy interface {
 	TotalEnergy() (float64, error)
 }
 
-// MeterCurrent is able to provide per-phase current A
-type MeterCurrent interface {
+// PhaseCurrents provides per-phase current A
+type PhaseCurrents interface {
 	Currents() (float64, float64, float64, error)
 }
 
-// MeterVoltage is able to provide per-phase voltage V
-type MeterVoltage interface {
+// PhaseVoltages provides per-phase voltage V
+type PhaseVoltages interface {
 	Voltages() (float64, float64, float64, error)
 }
 
-// MeterPower is able to provide signed per-phase power W
-type MeterPower interface {
+// PhasePowers provides signed per-phase power W
+type PhasePowers interface {
 	Powers() (float64, float64, float64, error)
 }
 
-// Battery is able to provide battery Soc in %
+// Battery provides battery Soc in %
 type Battery interface {
 	Soc() (float64, error)
 }
 
-// BatteryCapacity provides a capacity in Wh
+// BatteryCapacity provides a capacity in kWh
 type BatteryCapacity interface {
 	Capacity() float64
 }
@@ -132,12 +85,12 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// CurrentLimiter provides current charging status
+// CurrentLimiter provides settings charging maximum charging current
 type CurrentLimiter interface {
 	MaxCurrent(current int64) error
 }
 
-// Charger is able to provide current charging status and enable/disable charging
+// Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)

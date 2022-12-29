@@ -52,19 +52,19 @@ func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error)
 
 	// decorate currents reading
 	var currents func() (float64, float64, float64, error)
-	if m, ok := m.(api.MeterCurrent); ok {
+	if m, ok := m.(api.PhaseCurrents); ok {
 		currents = m.Currents
 	}
 
 	// decorate voltages reading
 	var voltages func() (float64, float64, float64, error)
-	if m, ok := m.(api.MeterVoltage); ok {
+	if m, ok := m.(api.PhaseVoltages); ok {
 		voltages = m.Voltages
 	}
 
 	// decorate powers reading
 	var powers func() (float64, float64, float64, error)
-	if m, ok := m.(api.MeterPower); ok {
+	if m, ok := m.(api.PhasePowers); ok {
 		powers = m.Powers
 	}
 

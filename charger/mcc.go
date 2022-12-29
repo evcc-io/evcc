@@ -350,9 +350,9 @@ func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	return time.Duration(currentSession.Duration) * time.Second, nil
 }
 
-var _ api.MeterCurrent = (*MobileConnect)(nil)
+var _ api.PhaseCurrents = (*MobileConnect)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (mcc *MobileConnect) Currents() (float64, float64, float64, error) {
 	var energy MCCEnergy
 	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)

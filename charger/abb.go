@@ -209,9 +209,9 @@ func (wb *ABB) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
-var _ api.MeterCurrent = (*ABB)(nil)
+var _ api.PhaseCurrents = (*ABB)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *ABB) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(abbRegCurrents, 6)
 	if err != nil {
@@ -226,9 +226,9 @@ func (wb *ABB) Currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
-var _ api.MeterVoltage = (*ABB)(nil)
+var _ api.PhaseVoltages = (*ABB)(nil)
 
-// Voltages implements the api.MeterVoltage interface
+// Voltages implements the api.PhaseVoltages interface
 func (wb *ABB) Voltages() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(abbRegVoltages, 6)
 	if err != nil {
