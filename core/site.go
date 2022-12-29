@@ -35,8 +35,9 @@ type meterMeasurement struct {
 
 // batteryMeasurement is used as slice element for publishing structured data
 type batteryMeasurement struct {
-	Power float64 `json:"power"`
-	Soc   float64 `json:"soc"`
+	Power    float64 `json:"power"`
+	Soc      float64 `json:"soc"`
+	Capacity float64 `json:"capacity"`
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -395,7 +396,7 @@ func (site *Site) updateMeters() error {
 	}
 
 	if len(site.batteryMeters) > 0 {
-		var sumBatteryCapacity float64
+		var totalCapacity float64
 		site.batteryPower = 0
 		site.batterySoc = 0
 
@@ -412,34 +413,40 @@ func (site *Site) updateMeters() error {
 				site.log.ERROR.Printf("battery %d power: %v", i+1, err)
 			}
 
+			var capacity float64
 			soc, err := meter.(api.Battery).Soc()
 
 			if err == nil {
-				var remainingCapacity float64
-				remainingCapacity = soc
 				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
-				if capacity, ok := meter.(api.BatteryCapacity); ok {
-					remainingCapacity *= capacity.Capacity()
-					sumBatteryCapacity += capacity.Capacity()
-				} else {
-					// We add 1 here, since the battery will be counted with a
-					// capacity factor of 1
-					sumBatteryCapacity += 1
+
+				// weigh soc by capacity and accumulate total capacity
+				if m, ok := meter.(api.BatteryCapacity); ok {
+					capacity = m.Capacity()
+					totalCapacity += capacity
+					soc *= capacity
 				}
-				site.log.DEBUG.Printf("battery %d remainingCapacity: %.2f Wh", i+1, remainingCapacity/100)
-				site.batterySoc += remainingCapacity
+
+				site.batterySoc += soc
 			} else {
 				err = fmt.Errorf("battery %d soc: %v", i+1, err)
 				site.log.ERROR.Println(err)
 			}
 
 			mm[i] = batteryMeasurement{
-				Power: power,
-				Soc:   soc,
+				Power:    power,
+				Soc:      soc,
+				Capacity: capacity,
 			}
 		}
 
-		site.batterySoc /= sumBatteryCapacity
+		// convert weighed socs to total soc
+		if totalCapacity > 0 {
+			site.publish("batteryCapacity", math.Round(totalCapacity))
+		} else {
+			totalCapacity = float64(len(site.batteryMeters))
+		}
+		site.batterySoc /= totalCapacity
+
 		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
 		site.publish("batterySoc", math.Round(site.batterySoc))
 
