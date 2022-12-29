@@ -1243,6 +1243,10 @@ func (lp *Loadpoint) effectiveCurrent() float64 {
 
 // elapsePVTimer puts the pv enable/disable timer into elapsed state
 func (lp *Loadpoint) elapsePVTimer() {
+	if lp.pvTimer.Equal(elapsed) {
+		return
+	}
+
 	lp.log.DEBUG.Printf("pv timer elapse")
 
 	lp.pvTimer = elapsed
@@ -1882,6 +1886,7 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
+		lp.resetPVTimerIfRunning()
 
 	case lp.minSocNotReached():
 		// 3p if available
@@ -1890,14 +1895,27 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 		}
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
-	// immediate or target charging
-	case mode == api.ModeNow || lp.plannerActive():
+	// immediate charging
+	case mode == api.ModeNow:
 		// 3p if available
 		if err = lp.scalePhasesIfAvailable(3); err == nil {
 			err = lp.setLimit(lp.GetMaxCurrent(), true)
 		}
+		lp.resetPVTimerIfRunning()
+
+	// target charging
+	case lp.plannerActive():
+		// 3p if available
+		if err = lp.scalePhasesIfAvailable(3); err == nil {
+			err = lp.setLimit(lp.GetMaxCurrent(), true)
+		}
+		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
+		if mode == api.ModeMinPV {
+			lp.resetPVTimerIfRunning()
+		}
+
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 
 		var required bool // false
