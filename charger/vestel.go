@@ -116,11 +116,11 @@ func (wb *Vestel) Status() (api.ChargeStatus, error) {
 	res := api.StatusA
 
 	b, err := wb.conn.ReadInputRegisters(vestelRegCableStatus, 1)
-	if err == nil && binary.BigEndian.Uint16(b) > 0 {
+	if err == nil && binary.BigEndian.Uint16(b) >= 2 {
 		res = api.StatusB
 
 		b, err = wb.conn.ReadInputRegisters(vestelRegChargeStatus, 1)
-		if err == nil && binary.BigEndian.Uint16(b) > 0 {
+		if err == nil && binary.BigEndian.Uint16(b) == 1 {
 			res = api.StatusC
 		}
 	}
