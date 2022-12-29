@@ -411,7 +411,7 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	// reset pv enable/disable timer
 	// https://github.com/evcc-io/evcc/issues/2289
 	if !lp.pvTimer.Equal(elapsed) {
-		lp.resetPVTimerIfRunning()
+		lp.resetPVTimer()
 	}
 
 	lp.stopSession()
@@ -1255,8 +1255,8 @@ func (lp *Loadpoint) elapsePVTimer() {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
-// resetPVTimerIfRunning resets the pv enable/disable timer to disabled state
-func (lp *Loadpoint) resetPVTimerIfRunning(typ ...string) {
+// resetPVTimer resets the pv enable/disable timer to disabled state
+func (lp *Loadpoint) resetPVTimer(typ ...string) {
 	if lp.pvTimer.IsZero() {
 		return
 	}
@@ -1273,6 +1273,10 @@ func (lp *Loadpoint) resetPVTimerIfRunning(typ ...string) {
 
 // resetPhaseTimer resets the phase switch timer to disabled state
 func (lp *Loadpoint) resetPhaseTimer() {
+	if lp.phaseTimer.IsZero() {
+		return
+	}
+
 	lp.phaseTimer = time.Time{}
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 }
@@ -1523,7 +1527,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			}
 		} else {
 			// reset timer
-			lp.resetPVTimerIfRunning("disable")
+			lp.resetPVTimer("disable")
 		}
 
 		// lp.log.DEBUG.Println("pv disable timer: keep enabled")
@@ -1555,7 +1559,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			}
 		} else {
 			// reset timer
-			lp.resetPVTimerIfRunning("enable")
+			lp.resetPVTimer("enable")
 		}
 
 		// lp.log.DEBUG.Println("pv enable timer: keep disabled")
@@ -1563,7 +1567,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	}
 
 	// reset timer to disabled state
-	lp.resetPVTimerIfRunning()
+	lp.resetPVTimer()
 
 	// cap at maximum current
 	targetCurrent = math.Min(targetCurrent, maxCurrent)
@@ -1895,7 +1899,7 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
-		lp.resetPVTimerIfRunning()
+		lp.resetPVTimer()
 
 	case lp.minSocNotReached():
 		err = lp.fastCharging()
@@ -1904,7 +1908,7 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 	// immediate charging
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
-		lp.resetPVTimerIfRunning()
+		lp.resetPVTimer()
 
 	// target charging
 	case lp.plannerActive():
@@ -1913,7 +1917,7 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		if mode == api.ModeMinPV {
-			lp.resetPVTimerIfRunning()
+			lp.resetPVTimer()
 		}
 
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
