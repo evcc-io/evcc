@@ -63,7 +63,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 			curr = append(curr, c)
 		}
 
-		currentsG = collectCurrentProviders(curr)
+		currentsG = collectPhaseProviders(curr)
 	}
 
 	// decorate Meter with MeterVoltage
@@ -83,7 +83,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 			volt = append(volt, c)
 		}
 
-		voltagesG = collectVoltageProviders(volt)
+		voltagesG = collectPhaseProviders(volt)
 	}
 
 	// decorate Meter with MeterPower
@@ -103,7 +103,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 			pow = append(pow, c)
 		}
 
-		powersG = collectPowerProviders(pow)
+		powersG = collectPhaseProviders(pow)
 	}
 
 	// decorate Meter with BatterySoc
@@ -120,54 +120,20 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	return res, nil
 }
 
-// collectCurrentProviders combines phase getters into currents api function
-func collectCurrentProviders(g []func() (float64, error)) func() (float64, float64, float64, error) {
+// collectPhaseProviders combines phase getters into currents api function
+func collectPhaseProviders(g []func() (float64, error)) func() (float64, float64, float64, error) {
 	return func() (float64, float64, float64, error) {
-		var currents []float64
+		var res []float64
 		for _, currentG := range g {
 			c, err := currentG()
 			if err != nil {
 				return 0, 0, 0, err
 			}
 
-			currents = append(currents, c)
+			res = append(res, c)
 		}
 
-		return currents[0], currents[1], currents[2], nil
-	}
-}
-
-// collectCurrentProviders combines phase getters into voltages api function
-func collectVoltageProviders(g []func() (float64, error)) func() (float64, float64, float64, error) {
-	return func() (float64, float64, float64, error) {
-		var voltages []float64
-		for _, voltageG := range g {
-			c, err := voltageG()
-			if err != nil {
-				return 0, 0, 0, err
-			}
-
-			voltages = append(voltages, c)
-		}
-
-		return voltages[0], voltages[1], voltages[2], nil
-	}
-}
-
-// collectPowerProviders combines phase getters into powers api function
-func collectPowerProviders(g []func() (float64, error)) func() (float64, float64, float64, error) {
-	return func() (float64, float64, float64, error) {
-		var powers []float64
-		for _, powerG := range g {
-			c, err := powerG()
-			if err != nil {
-				return 0, 0, 0, err
-			}
-
-			powers = append(powers, c)
-		}
-
-		return powers[0], powers[1], powers[2], nil
+		return res[0], res[1], res[2], nil
 	}
 }
 

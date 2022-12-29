@@ -131,7 +131,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 			curr = append(curr, c)
 		}
 
-		currentsG = collectCurrentProviders(curr)
+		currentsG = collectPhaseProviders(curr)
 	}
 
 	// decorate Meter with MeterVoltage
@@ -156,7 +156,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 			volt = append(volt, c)
 		}
 
-		voltagesG = collectVoltageProviders(volt)
+		voltagesG = collectPhaseProviders(volt)
 	}
 
 	// decorate Meter with MeterPower
@@ -181,7 +181,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 			pow = append(pow, c)
 		}
 
-		powersG = collectPowerProviders(pow)
+		powersG = collectPhaseProviders(pow)
 	}
 
 	// decorate soc reading

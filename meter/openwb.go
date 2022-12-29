@@ -69,7 +69,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			curr = append(curr, current)
 		}
 
-		currents = collectCurrentProviders(curr)
+		currents = collectPhaseProviders(curr)
 
 	case "pv":
 		configuredG := boolG(fmt.Sprintf("%s/pv/1/%s", cc.Topic, openwb.PvConfigured)) // first pv
