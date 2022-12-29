@@ -29,20 +29,20 @@ import (
 )
 
 const (
-	vestelRegSerial           = 100 // 25
-	vestelRegBrand            = 190 // 10
-	vestelRegModel            = 210 // 5
-	vestelRegFirmware         = 230 // 50
-	vestelRegChargepointState = 1000
-	vestelRegChargeStatus     = 1001
-	vestelRegCableStatus      = 1004
-	vestelRegChargeTime       = 1508
-	vestelRegMaxCurrent       = 5004
-	vestelRegPower            = 1020
-	vestelRegTotalEnergy      = 1036
-	vestelRegSessionEnergy    = 1502
-	vestelRegFailsafeTimeout  = 2002
-	vestelRegAlive            = 6000
+	vestelRegSerial          = 100 // 25
+	vestelRegBrand           = 190 // 10
+	vestelRegModel           = 210 // 5
+	vestelRegFirmware        = 230 // 50
+	vestelRegChargeStatus    = 1001
+	vestelRegCableStatus     = 1004
+	vestelRegChargeTime      = 1508
+	vestelRegMaxCurrent      = 5004
+	vestelRegPower           = 1020
+	vestelRegTotalEnergy     = 1036
+	vestelRegSessionEnergy   = 1502
+	vestelRegFailsafeTimeout = 2002
+	vestelRegAlive           = 6000
+	//vestelRegChargepointState = 1000
 )
 
 var vestelRegCurrents = []uint16{1008, 1010, 1012} // non-continuous uint16 registers!
