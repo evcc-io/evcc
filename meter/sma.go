@@ -42,11 +42,11 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, &cc.capacity)
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.capacity.Decorator())
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64, battCapacity *capacity) (api.Meter, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, capacity func() float64) (api.Meter, error) {
 	sm := &SMA{
 		uri:   uri,
 		scale: scale,
@@ -95,7 +95,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, battCapac
 		}
 	}
 
-	return decorateSMA(sm, soc, battCapacity.Decorator()), nil
+	return decorateSMA(sm, soc, capacity), nil
 }
 
 // CurrentPower implements the api.Meter interface

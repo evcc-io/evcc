@@ -69,11 +69,11 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewLgEss(cc.URI, cc.Usage, cc.Password, cc.Cache, &cc.capacity)
+	return NewLgEss(cc.URI, cc.Usage, cc.Password, cc.Cache, cc.capacity.Decorator())
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, password string, cache time.Duration, battCapacity *capacity) (api.Meter, error) {
+func NewLgEss(uri, usage, password string, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	lp, err := lgpcs.GetInstance(uri, password, cache)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func NewLgEss(uri, usage, password string, cache time.Duration, battCapacity *ca
 		batterySoc = m.batterySoc
 	}
 
-	return decorateLgEss(m, totalEnergy, batterySoc, battCapacity.Decorator()), nil
+	return decorateLgEss(m, totalEnergy, batterySoc, capacity), nil
 }
 
 // CurrentPower implements the api.Meter interface
