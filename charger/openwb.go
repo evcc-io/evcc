@@ -18,9 +18,8 @@ func init() {
 
 // OpenWB configures generic charger and charge meter for an openWB loadpoint
 type OpenWB struct {
-	current int64
-	enabled bool
-	// enabledG      func() (int64, error)
+	current       int64
+	enabled       bool
 	statusG       func() (string, error)
 	currentS      func(int64) error
 	currentPowerG func() (float64, error)
@@ -86,9 +85,6 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	chargingG := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargingTopic))
 	statusG := provider.NewOpenWBStatusProvider(pluggedG, chargingG).StringGetter
 
-	// getters
-	// enabledG := intG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.MaxCurrentTopic))
-
 	// setters
 	currentTopic := openwb.SlaveChargeCurrentTopic
 	if id == 2 {
@@ -120,8 +116,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	c := &OpenWB{
-		currentS: currentS,
-		// enabledG:      enabledG,
+		currentS:      currentS,
 		statusG:       statusG,
 		currentPowerG: currentPowerG,
 		totalEnergyG:  totalEnergyG,
@@ -182,7 +177,6 @@ func (m *OpenWB) Enable(enable bool) error {
 }
 
 func (m *OpenWB) Enabled() (bool, error) {
-	// current, err := m.enabledG()
 	return m.enabled, nil
 }
 
