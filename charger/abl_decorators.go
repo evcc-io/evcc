@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateABLeMH(base *ABLeMH, meter func() (float64, error), PhaseCurrents func() (float64, float64, float64, error)) api.Charger {
+func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && PhaseCurrents == nil:
+	case meter == nil && phaseCurrents == nil:
 		return base
 
-	case meter != nil && PhaseCurrents == nil:
+	case meter != nil && phaseCurrents == nil:
 		return &struct {
 			*ABLeMH
 			api.Meter
@@ -22,18 +22,18 @@ func decorateABLeMH(base *ABLeMH, meter func() (float64, error), PhaseCurrents f
 			},
 		}
 
-	case meter == nil && PhaseCurrents != nil:
+	case meter == nil && phaseCurrents != nil:
 		return &struct {
 			*ABLeMH
 			api.PhaseCurrents
 		}{
 			ABLeMH: base,
 			PhaseCurrents: &decorateABLeMHPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter != nil && PhaseCurrents != nil:
+	case meter != nil && phaseCurrents != nil:
 		return &struct {
 			*ABLeMH
 			api.Meter
@@ -44,7 +44,7 @@ func decorateABLeMH(base *ABLeMH, meter func() (float64, error), PhaseCurrents f
 				meter: meter,
 			},
 			PhaseCurrents: &decorateABLeMHPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 	}
@@ -61,9 +61,9 @@ func (impl *decorateABLeMHMeterImpl) CurrentPower() (float64, error) {
 }
 
 type decorateABLeMHPhaseCurrentsImpl struct {
-	PhaseCurrents func() (float64, float64, float64, error)
+	phaseCurrents func() (float64, float64, float64, error)
 }
 
 func (impl *decorateABLeMHPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.PhaseCurrents()
+	return impl.phaseCurrents()
 }

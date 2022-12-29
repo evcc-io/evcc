@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateWarp(base *Warp, meter func() (float64, error), meterEnergy func() (float64, error), PhaseCurrents func() (float64, float64, float64, error)) api.Charger {
+func decorateWarp(base *Warp, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && PhaseCurrents == nil && meterEnergy == nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents == nil:
 		return base
 
-	case meter != nil && PhaseCurrents == nil && meterEnergy == nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents == nil:
 		return &struct {
 			*Warp
 			api.Meter
@@ -22,7 +22,7 @@ func decorateWarp(base *Warp, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter == nil && PhaseCurrents == nil && meterEnergy != nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*Warp
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decorateWarp(base *Warp, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter != nil && PhaseCurrents == nil && meterEnergy != nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*Warp
 			api.Meter
@@ -48,18 +48,18 @@ func decorateWarp(base *Warp, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter == nil && PhaseCurrents != nil && meterEnergy == nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*Warp
 			api.PhaseCurrents
 		}{
 			Warp: base,
 			PhaseCurrents: &decorateWarpPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter != nil && PhaseCurrents != nil && meterEnergy == nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*Warp
 			api.Meter
@@ -70,41 +70,41 @@ func decorateWarp(base *Warp, meter func() (float64, error), meterEnergy func() 
 				meter: meter,
 			},
 			PhaseCurrents: &decorateWarpPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter == nil && PhaseCurrents != nil && meterEnergy != nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents != nil:
 		return &struct {
 			*Warp
-			api.PhaseCurrents
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			Warp: base,
-			PhaseCurrents: &decorateWarpPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
 			MeterEnergy: &decorateWarpMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
+			PhaseCurrents: &decorateWarpPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
 		}
 
-	case meter != nil && PhaseCurrents != nil && meterEnergy != nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents != nil:
 		return &struct {
 			*Warp
 			api.Meter
-			api.PhaseCurrents
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			Warp: base,
 			Meter: &decorateWarpMeterImpl{
 				meter: meter,
 			},
-			PhaseCurrents: &decorateWarpPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
 			MeterEnergy: &decorateWarpMeterEnergyImpl{
 				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateWarpPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 	}
@@ -120,18 +120,18 @@ func (impl *decorateWarpMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateWarpPhaseCurrentsImpl struct {
-	PhaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateWarpPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.PhaseCurrents()
-}
-
 type decorateWarpMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
 func (impl *decorateWarpMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
+}
+
+type decorateWarpPhaseCurrentsImpl struct {
+	phaseCurrents func() (float64, float64, float64, error)
+}
+
+func (impl *decorateWarpPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.phaseCurrents()
 }

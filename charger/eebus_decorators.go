@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateEEBus(base *EEBus, meter func() (float64, error), PhaseCurrents func() (float64, float64, float64, error), chargeRater func() (float64, error)) api.Charger {
+func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargeRater func() (float64, error)) api.Charger {
 	switch {
-	case chargeRater == nil && meter == nil && PhaseCurrents == nil:
+	case chargeRater == nil && meter == nil && phaseCurrents == nil:
 		return base
 
-	case chargeRater == nil && meter != nil && PhaseCurrents == nil:
+	case chargeRater == nil && meter != nil && phaseCurrents == nil:
 		return &struct {
 			*EEBus
 			api.Meter
@@ -22,18 +22,18 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), PhaseCurrents fun
 			},
 		}
 
-	case chargeRater == nil && meter == nil && PhaseCurrents != nil:
+	case chargeRater == nil && meter == nil && phaseCurrents != nil:
 		return &struct {
 			*EEBus
 			api.PhaseCurrents
 		}{
 			EEBus: base,
 			PhaseCurrents: &decorateEEBusPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case chargeRater == nil && meter != nil && PhaseCurrents != nil:
+	case chargeRater == nil && meter != nil && phaseCurrents != nil:
 		return &struct {
 			*EEBus
 			api.Meter
@@ -44,11 +44,11 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), PhaseCurrents fun
 				meter: meter,
 			},
 			PhaseCurrents: &decorateEEBusPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case chargeRater != nil && meter == nil && PhaseCurrents == nil:
+	case chargeRater != nil && meter == nil && phaseCurrents == nil:
 		return &struct {
 			*EEBus
 			api.ChargeRater
@@ -59,7 +59,7 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), PhaseCurrents fun
 			},
 		}
 
-	case chargeRater != nil && meter != nil && PhaseCurrents == nil:
+	case chargeRater != nil && meter != nil && phaseCurrents == nil:
 		return &struct {
 			*EEBus
 			api.ChargeRater
@@ -74,7 +74,7 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), PhaseCurrents fun
 			},
 		}
 
-	case chargeRater != nil && meter == nil && PhaseCurrents != nil:
+	case chargeRater != nil && meter == nil && phaseCurrents != nil:
 		return &struct {
 			*EEBus
 			api.ChargeRater
@@ -85,11 +85,11 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), PhaseCurrents fun
 				chargeRater: chargeRater,
 			},
 			PhaseCurrents: &decorateEEBusPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case chargeRater != nil && meter != nil && PhaseCurrents != nil:
+	case chargeRater != nil && meter != nil && phaseCurrents != nil:
 		return &struct {
 			*EEBus
 			api.ChargeRater
@@ -104,7 +104,7 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), PhaseCurrents fun
 				meter: meter,
 			},
 			PhaseCurrents: &decorateEEBusPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 	}
@@ -129,9 +129,9 @@ func (impl *decorateEEBusMeterImpl) CurrentPower() (float64, error) {
 }
 
 type decorateEEBusPhaseCurrentsImpl struct {
-	PhaseCurrents func() (float64, float64, float64, error)
+	phaseCurrents func() (float64, float64, float64, error)
 }
 
 func (impl *decorateEEBusPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.PhaseCurrents()
+	return impl.phaseCurrents()
 }

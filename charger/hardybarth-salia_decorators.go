@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func() (float64, error), PhaseCurrents func() (float64, float64, float64, error)) api.Charger {
+func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && PhaseCurrents == nil && meterEnergy == nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents == nil:
 		return base
 
-	case meter != nil && PhaseCurrents == nil && meterEnergy == nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents == nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -22,7 +22,7 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter == nil && PhaseCurrents == nil && meterEnergy != nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*Salia
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && PhaseCurrents == nil && meterEnergy != nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -48,18 +48,18 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter == nil && PhaseCurrents != nil && meterEnergy == nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*Salia
 			api.PhaseCurrents
 		}{
 			Salia: base,
 			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter != nil && PhaseCurrents != nil && meterEnergy == nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -70,41 +70,41 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 				meter: meter,
 			},
 			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter == nil && PhaseCurrents != nil && meterEnergy != nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents != nil:
 		return &struct {
 			*Salia
-			api.PhaseCurrents
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			Salia: base,
-			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
 			MeterEnergy: &decorateSaliaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
+			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
 		}
 
-	case meter != nil && PhaseCurrents != nil && meterEnergy != nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents != nil:
 		return &struct {
 			*Salia
 			api.Meter
-			api.PhaseCurrents
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			Salia: base,
 			Meter: &decorateSaliaMeterImpl{
 				meter: meter,
 			},
-			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
 			MeterEnergy: &decorateSaliaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 	}
@@ -120,18 +120,18 @@ func (impl *decorateSaliaMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateSaliaPhaseCurrentsImpl struct {
-	PhaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateSaliaPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.PhaseCurrents()
-}
-
 type decorateSaliaMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
 func (impl *decorateSaliaMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
+}
+
+type decorateSaliaPhaseCurrentsImpl struct {
+	phaseCurrents func() (float64, float64, float64, error)
+}
+
+func (impl *decorateSaliaPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.phaseCurrents()
 }

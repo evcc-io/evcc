@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePhoenixEMEth(base *PhoenixEMEth, meter func() (float64, error), meterEnergy func() (float64, error), PhaseCurrents func() (float64, float64, float64, error)) api.Charger {
+func decoratePhoenixEMEth(base *PhoenixEMEth, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && PhaseCurrents == nil && meterEnergy == nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents == nil:
 		return base
 
-	case meter != nil && PhaseCurrents == nil && meterEnergy == nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents == nil:
 		return &struct {
 			*PhoenixEMEth
 			api.Meter
@@ -22,7 +22,7 @@ func decoratePhoenixEMEth(base *PhoenixEMEth, meter func() (float64, error), met
 			},
 		}
 
-	case meter == nil && PhaseCurrents == nil && meterEnergy != nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*PhoenixEMEth
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decoratePhoenixEMEth(base *PhoenixEMEth, meter func() (float64, error), met
 			},
 		}
 
-	case meter != nil && PhaseCurrents == nil && meterEnergy != nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*PhoenixEMEth
 			api.Meter
@@ -48,18 +48,18 @@ func decoratePhoenixEMEth(base *PhoenixEMEth, meter func() (float64, error), met
 			},
 		}
 
-	case meter == nil && PhaseCurrents != nil && meterEnergy == nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*PhoenixEMEth
 			api.PhaseCurrents
 		}{
 			PhoenixEMEth: base,
 			PhaseCurrents: &decoratePhoenixEMEthPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter != nil && PhaseCurrents != nil && meterEnergy == nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*PhoenixEMEth
 			api.Meter
@@ -70,41 +70,41 @@ func decoratePhoenixEMEth(base *PhoenixEMEth, meter func() (float64, error), met
 				meter: meter,
 			},
 			PhaseCurrents: &decoratePhoenixEMEthPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter == nil && PhaseCurrents != nil && meterEnergy != nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents != nil:
 		return &struct {
 			*PhoenixEMEth
-			api.PhaseCurrents
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			PhoenixEMEth: base,
-			PhaseCurrents: &decoratePhoenixEMEthPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
 			MeterEnergy: &decoratePhoenixEMEthMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
+			PhaseCurrents: &decoratePhoenixEMEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
 		}
 
-	case meter != nil && PhaseCurrents != nil && meterEnergy != nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents != nil:
 		return &struct {
 			*PhoenixEMEth
 			api.Meter
-			api.PhaseCurrents
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			PhoenixEMEth: base,
 			Meter: &decoratePhoenixEMEthMeterImpl{
 				meter: meter,
 			},
-			PhaseCurrents: &decoratePhoenixEMEthPhaseCurrentsImpl{
-				PhaseCurrents: PhaseCurrents,
-			},
 			MeterEnergy: &decoratePhoenixEMEthMeterEnergyImpl{
 				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEMEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 	}
@@ -120,18 +120,18 @@ func (impl *decoratePhoenixEMEthMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decoratePhoenixEMEthPhaseCurrentsImpl struct {
-	PhaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decoratePhoenixEMEthPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.PhaseCurrents()
-}
-
 type decoratePhoenixEMEthMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
 func (impl *decoratePhoenixEMEthMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
+}
+
+type decoratePhoenixEMEthPhaseCurrentsImpl struct {
+	phaseCurrents func() (float64, float64, float64, error)
+}
+
+func (impl *decoratePhoenixEMEthPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.phaseCurrents()
 }
