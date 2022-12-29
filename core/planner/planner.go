@@ -93,6 +93,11 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 		return time.Time{}, afterStart && beforeTarget, nil
 	}
 
+	// don't delay during last hour
+	if t.clock.Until(targetTime) < time.Hour {
+		return t.clock.Now().Add(requiredDuration), true, nil
+	}
+
 	rates, err := t.tariff.Rates()
 
 	// treat like normal target charging if we don't have rates

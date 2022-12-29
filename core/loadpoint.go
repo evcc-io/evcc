@@ -757,8 +757,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	var requiredDuration time.Duration
+	targetSoc := 100
 	maxPower := lp.GetMaxPower()
+	var requiredDuration time.Duration
 
 	if energy, ok := lp.remainingChargeEnergy(); ok {
 		if energy > 0 {
@@ -766,13 +767,19 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		}
 	} else {
 		// TODO vehicle soc limit
-		targetSoc := 100
 		if lp.Soc.target > 0 {
 			targetSoc = lp.Soc.target
 		}
 		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
 	}
 	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+
+	if targetSoc >= 80 {
+		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+	}
+	if targetSoc >= 90 {
+		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+	}
 
 	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
 
