@@ -47,63 +47,19 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	}
 
 	// decorate Meter with MeterCurrent
-	var currentsG func() (float64, float64, float64, error)
-	if len(cc.Currents) > 0 {
-		if len(cc.Currents) != 3 {
-			return nil, errors.New("need 3 currents")
-		}
-
-		var curr []func() (float64, error)
-		for idx, cc := range cc.Currents {
-			c, err := provider.NewFloatGetterFromConfig(cc)
-			if err != nil {
-				return nil, fmt.Errorf("currents[%d]: %w", idx, err)
-			}
-
-			curr = append(curr, c)
-		}
-
-		currentsG = collectPhaseProviders(curr)
+	currentsG, err := buildPhaseProviders(cc.Currents)
+	if err != nil {
+		return nil, fmt.Errorf("currents: %w", err)
 	}
 
-	// decorate Meter with MeterVoltage
-	var voltagesG func() (float64, float64, float64, error)
-	if len(cc.Voltages) > 0 {
-		if len(cc.Voltages) != 3 {
-			return nil, errors.New("need 3 voltages")
-		}
-
-		var volt []func() (float64, error)
-		for idx, cc := range cc.Voltages {
-			c, err := provider.NewFloatGetterFromConfig(cc)
-			if err != nil {
-				return nil, fmt.Errorf("voltages[%d]: %w", idx, err)
-			}
-
-			volt = append(volt, c)
-		}
-
-		voltagesG = collectPhaseProviders(volt)
+	voltagesG, err := buildPhaseProviders(cc.Voltages)
+	if err != nil {
+		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
-	// decorate Meter with MeterPower
-	var powersG func() (float64, float64, float64, error)
-	if len(cc.Powers) > 0 {
-		if len(cc.Powers) != 3 {
-			return nil, errors.New("need 3 powers")
-		}
-
-		var pow []func() (float64, error)
-		for idx, cc := range cc.Powers {
-			c, err := provider.NewFloatGetterFromConfig(cc)
-			if err != nil {
-				return nil, fmt.Errorf("powers[%d]: %w", idx, err)
-			}
-
-			pow = append(pow, c)
-		}
-
-		powersG = collectPhaseProviders(pow)
+	powersG, err := buildPhaseProviders(cc.Powers)
+	if err != nil {
+		return nil, fmt.Errorf("powers: %w", err)
 	}
 
 	// decorate Meter with BatterySoc
@@ -116,6 +72,29 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	}
 
 	res := m.Decorate(totalEnergyG, currentsG, voltagesG, powersG, batterySocG)
+
+	return res, nil
+}
+
+func buildPhaseProviders(providers []provider.Config) (func() (float64, float64, float64, error), error) {
+	var res func() (float64, float64, float64, error)
+	if len(providers) > 0 {
+		if len(providers) != 3 {
+			return nil, errors.New("need one per phase, total three")
+		}
+
+		phases := make([]func() (float64, error), 0, 3)
+		for idx, cc := range providers {
+			c, err := provider.NewFloatGetterFromConfig(cc)
+			if err != nil {
+				return nil, fmt.Errorf("[%d] %w", idx, err)
+			}
+
+			phases = append(phases, c)
+		}
+
+		res = collectPhaseProviders(phases)
+	}
 
 	return res, nil
 }
