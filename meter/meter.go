@@ -37,7 +37,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 
 	m, _ := NewConfigurable(power)
 
-	// decorate Meter with MeterEnergy
+	// decorate energy
 	var totalEnergyG func() (float64, error)
 	if cc.Energy != nil {
 		totalEnergyG, err = provider.NewFloatGetterFromConfig(*cc.Energy)
@@ -46,25 +46,25 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		}
 	}
 
-	// decorate MeterCurrent
+	// decorate currents
 	currentsG, err := buildPhaseProviders(cc.Currents)
 	if err != nil {
 		return nil, fmt.Errorf("currents: %w", err)
 	}
 
-	// decorate MeterVoltages
+	// decorate voltages
 	voltagesG, err := buildPhaseProviders(cc.Voltages)
 	if err != nil {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
-	// decorate MeterPower
+	// decorate powers
 	powersG, err := buildPhaseProviders(cc.Powers)
 	if err != nil {
 		return nil, fmt.Errorf("powers: %w", err)
 	}
 
-	// decorate Meter with BatterySoc
+	// decorate soc
 	var batterySocG func() (float64, error)
 	if cc.Soc != nil {
 		batterySocG, err = provider.NewFloatGetterFromConfig(*cc.Soc)
@@ -86,8 +86,8 @@ func buildPhaseProviders(providers []provider.Config) (func() (float64, float64,
 		}
 
 		phases := make([]func() (float64, error), 0, 3)
-		for idx, cc := range providers {
-			c, err := provider.NewFloatGetterFromConfig(cc)
+		for idx, prov := range providers {
+			c, err := provider.NewFloatGetterFromConfig(prov)
 			if err != nil {
 				return nil, fmt.Errorf("[%d] %w", idx, err)
 			}
