@@ -781,7 +781,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.log.ERROR.Println("planner:", err)
 		return false
 	}
-	lp.publish("targetTimeProjectedStart", planStart)
+	lp.publish(targetTimeProjectedStart, planStart)
 
 	// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 	if active {
