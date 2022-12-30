@@ -28,7 +28,7 @@ func New(log *util.Logger, tariff api.Tariff) *Planner {
 
 // Plan creates a lowest-cost plan or required duration.
 // It MUST already established that
-// - rates are sorted ascendingly by cost and start time
+// - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
 // - target time and required duration are before end of rates
 func (t *Planner) Plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
 	var plan api.Rates
@@ -66,7 +66,7 @@ func (t *Planner) Plan(rates api.Rates, requiredDuration time.Duration, targetTi
 		}
 
 		plan = append(plan, slot)
-		t.log.TRACE.Printf("  slot from: %v to %v cost %.2f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
+		t.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
 
 		// we found all necessary slots
 		if requiredDuration == 0 {
