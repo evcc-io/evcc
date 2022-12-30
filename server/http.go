@@ -45,11 +45,10 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
-	certificate *Certificate
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, certificate *Certificate, hub *SocketHub) *HTTPd {
+func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// websocket
@@ -69,7 +68,6 @@ func NewHTTPd(addr string, certificate *Certificate, hub *SocketHub) *HTTPd {
 	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
 
 	srv := &HTTPd{
-		certificate: certificate,
 		Server: &http.Server{
 			Addr:         addr,
 			Handler:      router,
@@ -170,10 +168,10 @@ func (s *HTTPd) RegisterShutdownHandler(callback func()) {
 }
 
 // ListenAndServe opens a listening socket (TLS if necessary) and starts HTTP server
-func (s *HTTPd) ListenAndServe() error {
-	if s.certificate != nil {
+func (s *HTTPd) ListenAndServeMaybeTLS(certificate *Certificate) error {
+	if certificate != nil {
 		certificate, err := tls.X509KeyPair(
-			[]byte(s.certificate.Public), []byte(s.certificate.Private))
+			[]byte(certificate.Public), []byte(certificate.Private))
 		if err != nil {
 			return err
 		}

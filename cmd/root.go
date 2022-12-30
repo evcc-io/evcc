@@ -132,7 +132,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), conf.Network.Certificate, socketHub)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -282,5 +282,5 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.FATAL.Println(httpd.ListenAndServe())
+	log.FATAL.Println(httpd.ListenAndServeMaybeTLS(conf.Network.Certificate))
 }
