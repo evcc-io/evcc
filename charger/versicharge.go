@@ -216,7 +216,7 @@ func (wb *Versicharge) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the api.Charger interface
+// MaxCurrent implements the api.Charger interface (CurrentLimiter)
 func (wb *Versicharge) MaxCurrent(current int64) error {
 	if current < 7 {
 		return fmt.Errorf("invalid current %d", current)
@@ -266,9 +266,9 @@ func (wb *Versicharge) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)), err 
 }
 
-var _ api.MeterCurrent = (*Versicharge)(nil)
+var _ api.PhaseCurrents = (*Versicharge)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *Versicharge) Currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range VersichargeRegCurrents {
@@ -283,9 +283,9 @@ func (wb *Versicharge) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
-var _ api.MeterVoltage = (*Versicharge)(nil)
+var _ api.PhaseVoltages = (*Versicharge)(nil)
 
-// Voltages implements the api.MeterVoltage interface, (noch?) nicht vorhanden (aus Alfen.go) 
+// Voltages implements the api.PhaseVoltages interface, (noch?) nicht vorhanden (aus Alfen.go) 
 func (wb *Versicharge) Voltages() (float64, float64, float64, error) {
 	var voltages []float64
 	for _, regVoltage := range VersichargeRegVoltages {
@@ -298,6 +298,23 @@ func (wb *Versicharge) Voltages() (float64, float64, float64, error) {
 	}
 
 	return voltages[0], voltages[1], voltages[2], nil
+}
+
+var _ api.PhasePowers = (*Versicharge)(nil)
+
+// Voltages implements the api.PhasePowers interface, (noch?) nicht vorhanden (aus Alfen.go) 
+func (wb *Versicharge) Powers() (float64, float64, float64, error) {
+	var powers []float64
+	for _, regPower := range VersichargeRegPower {
+		b, err := wb.conn.ReadHoldingRegisters(regPower, 1)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		powers = append(powers, float64(binary.BigEndian.Uint16(b))) // in Watt
+	}
+
+	return powers[0], powers[1], powers[2], nil
 }
 
 var _ api.MeterEnergy = (*Versicharge)(nil)
