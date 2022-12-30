@@ -50,11 +50,12 @@ func init() {
 	registry.Add("rct", NewRCTFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
+		capacity   `mapstructure:",squash"`
 		Uri, Usage string
 		Cache      time.Duration
 	}{
@@ -69,11 +70,11 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(cc.Uri, cc.Usage, cc.Cache)
+	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity.Decorator())
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(uri, usage string, cache time.Duration) (api.Meter, error) {
+func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	conn, err := rct.NewConnection(uri, cache)
 	if err != nil {
 		return nil, err
@@ -96,7 +97,7 @@ func NewRCT(uri, usage string, cache time.Duration) (api.Meter, error) {
 		batterySoc = m.batterySoc
 	}
 
-	return decorateRCT(m, totalEnergy, batterySoc), nil
+	return decorateRCT(m, totalEnergy, batterySoc, capacity), nil
 }
 
 // CurrentPower implements the api.Meter interface

@@ -24,7 +24,7 @@ func init() {
 	registry.Add("powerwall", NewPowerWallFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePowerWall -b *PowerWall -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePowerWall -b *PowerWall -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
 func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -82,11 +82,21 @@ func NewPowerWall(uri, usage, user, password string) (api.Meter, error) {
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
+	var batteryCapacity func() float64
 	if usage == "battery" {
 		batterySoc = m.batterySoc
+
+		res, err := m.client.GetSystemStatus()
+		if err != nil {
+			return nil, err
+		}
+
+		batteryCapacity = func() float64 {
+			return float64(res.NominalFullPackEnergy)
+		}
 	}
 
-	return decoratePowerWall(m, totalEnergy, batterySoc), nil
+	return decoratePowerWall(m, totalEnergy, batterySoc, batteryCapacity), nil
 }
 
 var _ api.Meter = (*PowerWall)(nil)

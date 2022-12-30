@@ -49,7 +49,7 @@ export default {
 				return t("minCharge", { soc: this.minSoc });
 			}
 
-			// target charage
+			// target charge
 			if (this.targetTime) {
 				if (this.charging) {
 					return t("targetChargeActive");

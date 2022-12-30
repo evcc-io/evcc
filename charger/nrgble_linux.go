@@ -317,9 +317,9 @@ func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 	return float64(res.TotalEnergy) / 1000, nil
 }
 
-var _ api.MeterCurrent = (*NRGKickBLE)(nil)
+var _ api.PhaseCurrents = (*NRGKickBLE)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 	res := nrgble.VoltageCurrent{}
 	if err := nrg.read(nrgble.VoltageCurrentService, &res); err != nil {

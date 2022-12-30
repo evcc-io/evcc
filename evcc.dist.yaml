@@ -139,9 +139,15 @@ loadpoints:
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
   grid:
-    # either static grid price
+    # either static grid price (or price zones)
     type: fixed
     price: 0.294 # EUR/kWh
+    zones:
+      - days: Mo-Fr
+        hours: 2-5
+        price: 0.2 # EUR/kWh
+      - days: Sa,So
+        price: 0.15 # EUR/kWh
 
     # # or variable via tibber
     # type: tibber

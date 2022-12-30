@@ -223,14 +223,14 @@ func (wb *Alfen) TotalEnergy() (float64, error) {
 	return math.Float64frombits(binary.BigEndian.Uint64(b)) / 1e3, err
 }
 
-var _ api.MeterCurrent = (*Alfen)(nil)
+var _ api.PhaseCurrents = (*Alfen)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *Alfen) Currents() (float64, float64, float64, error) {
 	return wb.voltagesOrCurrents(alfenRegCurrents)
 }
 
-// Voltages implements the api.MeterVoltage interface (tbc)
+// Voltages implements the api.PhaseVoltages interface (tbc)
 func (wb *Alfen) Voltages() (float64, float64, float64, error) {
 	return wb.voltagesOrCurrents(alfenRegVoltages)
 }

@@ -55,11 +55,27 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.MeterCurrent); ok {
+	if v, ok := v.(api.PhaseCurrents); ok {
 		if i1, i2, i3, err := v.Currents(); err != nil {
 			fmt.Fprintf(w, "Current L1..L3:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Current L1..L3:\t%.3gA %.3gA %.3gA\n", i1, i2, i3)
+		}
+	}
+
+	if v, ok := v.(api.PhaseVoltages); ok {
+		if u1, u2, u3, err := v.Voltages(); err != nil {
+			fmt.Fprintf(w, "Voltage L1..L3:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Voltage L1..L3:\t%.3gV %.3gV %.3gV\n", u1, u2, u3)
+		}
+	}
+
+	if v, ok := v.(api.PhasePowers); ok {
+		if p1, p2, p3, err := v.Powers(); err != nil {
+			fmt.Fprintf(w, "Power L1..L3:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Power L1..L3:\t%.3gW %.3gW %.3gW\n", p1, p2, p3)
 		}
 	}
 
@@ -85,6 +101,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 		} else {
 			fmt.Fprintf(w, "Soc:\t%.0f%%\n", soc)
 		}
+	}
+
+	if v, ok := v.(api.BatteryCapacity); ok {
+		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
 	}
 
 	// charger
@@ -178,7 +198,6 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.Vehicle); ok {
-		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
 		if len(v.Identifiers()) > 0 {
 			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
 		}

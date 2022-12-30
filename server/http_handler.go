@@ -356,12 +356,13 @@ func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		loadpoint.SetVehicle(vehicles[val-1])
+		v := vehicles[val-1]
+		loadpoint.SetVehicle(v)
 
 		res := struct {
 			Vehicle string `json:"vehicle"`
 		}{
-			Vehicle: vehicles[val].Title(),
+			Vehicle: v.Title(),
 		}
 
 		jsonResult(w, res)

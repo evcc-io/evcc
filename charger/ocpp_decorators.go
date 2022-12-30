@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error), phaseSwitcher func(int) error) api.Charger {
+func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(phases int) error) api.Charger {
 	switch {
-	case meter == nil && meterCurrent == nil && meterEnergy == nil && phaseSwitcher == nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return base
 
-	case meter != nil && meterCurrent == nil && meterEnergy == nil && phaseSwitcher == nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*OCPP
 			api.Meter
@@ -22,7 +22,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter == nil && meterCurrent == nil && meterEnergy != nil && phaseSwitcher == nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*OCPP
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter != nil && meterCurrent == nil && meterEnergy != nil && phaseSwitcher == nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*OCPP
 			api.Meter
@@ -48,67 +48,67 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter == nil && meterCurrent != nil && meterEnergy == nil && phaseSwitcher == nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*OCPP
-			api.MeterCurrent
+			api.PhaseCurrents
 		}{
 			OCPP: base,
-			MeterCurrent: &decorateOCPPMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateOCPPPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter != nil && meterCurrent != nil && meterEnergy == nil && phaseSwitcher == nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*OCPP
 			api.Meter
-			api.MeterCurrent
+			api.PhaseCurrents
 		}{
 			OCPP: base,
 			Meter: &decorateOCPPMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decorateOCPPMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateOCPPPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter == nil && meterCurrent != nil && meterEnergy != nil && phaseSwitcher == nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*OCPP
-			api.MeterCurrent
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			OCPP: base,
-			MeterCurrent: &decorateOCPPMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
 			MeterEnergy: &decorateOCPPMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
+			PhaseCurrents: &decorateOCPPPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
 		}
 
-	case meter != nil && meterCurrent != nil && meterEnergy != nil && phaseSwitcher == nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*OCPP
 			api.Meter
-			api.MeterCurrent
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			OCPP: base,
 			Meter: &decorateOCPPMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decorateOCPPMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
 			MeterEnergy: &decorateOCPPMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
+			PhaseCurrents: &decorateOCPPPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
 		}
 
-	case meter == nil && meterCurrent == nil && meterEnergy == nil && phaseSwitcher != nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
 			api.PhaseSwitcher
@@ -119,7 +119,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter != nil && meterCurrent == nil && meterEnergy == nil && phaseSwitcher != nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
 			api.Meter
@@ -134,7 +134,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter == nil && meterCurrent == nil && meterEnergy != nil && phaseSwitcher != nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
 			api.MeterEnergy
@@ -149,7 +149,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter != nil && meterCurrent == nil && meterEnergy != nil && phaseSwitcher != nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
 			api.Meter
@@ -168,76 +168,76 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter == nil && meterCurrent != nil && meterEnergy == nil && phaseSwitcher != nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
-			api.MeterCurrent
+			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			OCPP: base,
-			MeterCurrent: &decorateOCPPMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateOCPPPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 			PhaseSwitcher: &decorateOCPPPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case meter != nil && meterCurrent != nil && meterEnergy == nil && phaseSwitcher != nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
 			api.Meter
-			api.MeterCurrent
+			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			OCPP: base,
 			Meter: &decorateOCPPMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decorateOCPPMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateOCPPPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 			PhaseSwitcher: &decorateOCPPPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case meter == nil && meterCurrent != nil && meterEnergy != nil && phaseSwitcher != nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
-			api.MeterCurrent
 			api.MeterEnergy
+			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			OCPP: base,
-			MeterCurrent: &decorateOCPPMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
 			MeterEnergy: &decorateOCPPMeterEnergyImpl{
 				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateOCPPPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 			PhaseSwitcher: &decorateOCPPPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case meter != nil && meterCurrent != nil && meterEnergy != nil && phaseSwitcher != nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
 			api.Meter
-			api.MeterCurrent
 			api.MeterEnergy
+			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			OCPP: base,
 			Meter: &decorateOCPPMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decorateOCPPMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
 			MeterEnergy: &decorateOCPPMeterEnergyImpl{
 				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateOCPPPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 			PhaseSwitcher: &decorateOCPPPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
@@ -256,20 +256,20 @@ func (impl *decorateOCPPMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateOCPPMeterCurrentImpl struct {
-	meterCurrent func() (float64, float64, float64, error)
-}
-
-func (impl *decorateOCPPMeterCurrentImpl) Currents() (float64, float64, float64, error) {
-	return impl.meterCurrent()
-}
-
 type decorateOCPPMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
 func (impl *decorateOCPPMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
+}
+
+type decorateOCPPPhaseCurrentsImpl struct {
+	phaseCurrents func() (float64, float64, float64, error)
+}
+
+func (impl *decorateOCPPPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.phaseCurrents()
 }
 
 type decorateOCPPPhaseSwitcherImpl struct {

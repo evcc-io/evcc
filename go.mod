@@ -31,10 +31,12 @@ require (
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
 	github.com/glebarez/sqlite v1.6.0
+	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-ping/ping v1.1.0
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/gokrazy/updater v0.0.0-20211121155532-30ae8cd650ea
+	github.com/golang-module/carbon v1.7.2
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.3.0
@@ -116,13 +118,15 @@ require (
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/glebarez/go-sqlite v1.20.0 // indirect
-	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27 // indirect
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/gobuffalo/envy v1.7.0 // indirect
+	github.com/gobuffalo/packd v0.3.0 // indirect
+	github.com/gobuffalo/packr v1.30.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -164,6 +168,7 @@ require (
 	github.com/rickb777/date v1.20.1 // indirect
 	github.com/rickb777/plural v1.4.1 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
+	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
