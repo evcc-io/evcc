@@ -331,6 +331,7 @@ func (wb *Versicharge) TotalEnergy() (float64, error) {
 
 // ------------------------------------------------------------------------------------------------------
 // Identifier -> Erkennung Auto am Ladepunkt durch RFID Karte
+// Authorizer verwenden?
 // ------------------------------------------------------------------------------------------------------
 
 // var _ api.Identifier = (*Versicharge)(nil)
@@ -356,35 +357,34 @@ var _ api.Diagnosis = (*Versicharge)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Versicharge) Diagnose() {
-
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegBrand, 5); err == nil {
-		fmt.Printf("Brand:\t%s\n", b) // Ausgabeformat bearbeiten?
+		fmt.Printf("Brand:\t\t\t%s\n", b) 
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegModel, 10); err == nil {
-		fmt.Printf("Model:\t%s\n", b) // Ausgabeformat bearbeiten?
+		fmt.Printf("Model:\t\t\t%s\n", b) 
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegSerial, 5); err == nil {
-		fmt.Printf("Serial:\t%s\n", b) // Ausgabeformat bearbeiten?
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegFirmware, 5); err == nil {
-		fmt.Printf("Firmware:\t%s\n", b) // Ausgabeformat bearbeiten?
+		fmt.Printf("Serial:\t\t\t%s\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegProductionDate, 2); err == nil {
-		fmt.Printf("Production Date:\t%s\n", b)  // Ausgabeformat bearbeiten?
+		fmt.Printf("Production Date:\t%d.%d.%d\n", b[3], b[2], binary.BigEndian.Uint16(b[0:2]))		
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegFirmware, 10); err == nil {
+		fmt.Printf("Firmware:\t\t%s\n", b) 
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegModbusTable, 1); err == nil {
-		fmt.Printf("Modbus Table:\t%s\n", b)  // Ausgabeformat bearbeiten?
+		fmt.Printf("Modbus Table:\t\t%d\n", b[1]) 
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegRatedCurrent, 1); err == nil {
-		fmt.Printf("Rated Current:\t%s\n", b)  // Ausgabeformat bearbeiten?
+		fmt.Printf("Rated Current:\t\t%d\n", b[1]) 
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegCurrentDipSwitch, 1); err == nil {
-		fmt.Printf("Current (DIP Switch):\t%s\n", b)  // Ausgabeformat bearbeiten?
+		fmt.Printf("Current (DIP Switch):\t%d\n", b[1]) 
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegMeterType, 1); err == nil {
-		fmt.Printf("Meter Type:\t%s\n", b)  // Ausgabeformat bearbeiten?
+		fmt.Printf("Meter Type:\t\t%d\n", b[1])
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegTemp, 1); err == nil {
-	    fmt.Printf("Temperature PCB (°C):\t%s\n", b)  // Ausgabeformat bearbeiten?
+	    fmt.Printf("Temperature PCB:\t%d°C\n\n", b[1])
     }
 }
