@@ -14,11 +14,12 @@ import (
 )
 
 type Tibber struct {
-	mux    sync.Mutex
-	log    *util.Logger
-	homeID string
-	client *tibber.Client
-	data   api.Rates
+	mux     sync.Mutex
+	log     *util.Logger
+	homeID  string
+	client  *tibber.Client
+	data    api.Rates
+	updated time.Time
 }
 
 var _ api.Tariff = (*Tibber)(nil)
@@ -62,12 +63,16 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		t.log.WARN.Println("cheap rate configuration has been replaced by target charging and is deprecated")
 	}
 
-	go t.Run()
+	done := make(chan error)
+	go t.run(done)
+	err := <-done
 
-	return t, nil
+	return t, err
 }
 
-func (t *Tibber) Run() {
+func (t *Tibber) run(done chan error) {
+	var once sync.Once
+
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res struct {
 			Viewer struct {
@@ -88,11 +93,16 @@ func (t *Tibber) Run() {
 		cancel()
 
 		if err != nil {
+			once.Do(func() { done <- err })
+
 			t.log.ERROR.Println(err)
 			continue
 		}
 
+		once.Do(func() { close(done) })
+
 		t.mux.Lock()
+		t.updated = time.Now()
 
 		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
 		t.data = make(api.Rates, 0, len(pi.Today)+len(pi.Tomorrow))
@@ -119,5 +129,5 @@ func (t *Tibber) rates(pi []tibber.PriceInfo) api.Rates {
 func (t *Tibber) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	return append([]api.Rate{}, t.data...), nil
+	return append([]api.Rate{}, t.data...), outdatedError(t.updated, time.Hour)
 }

@@ -14,6 +14,9 @@ var ErrSponsorRequired = errors.New("sponsorship required, see https://github.co
 // ErrMissingCredentials indicates that user/password are missing
 var ErrMissingCredentials = errors.New("missing credentials")
 
+// ErrOutdated indicates that result is outdated
+var ErrOutdated = errors.New("outdated")
+
 // ErrTimeout is the error returned when a timeout happened.
 // Modeled after context.DeadlineError
 var ErrTimeout error = errTimeoutError{}

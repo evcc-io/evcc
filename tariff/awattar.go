@@ -13,10 +13,11 @@ import (
 )
 
 type Awattar struct {
-	mux  sync.Mutex
-	log  *util.Logger
-	uri  string
-	data api.Rates
+	mux     sync.Mutex
+	log     *util.Logger
+	uri     string
+	data    api.Rates
+	updated time.Time
 }
 
 var _ api.Tariff = (*Awattar)(nil)
@@ -47,12 +48,15 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		t.log.WARN.Println("cheap rate configuration has been replaced by target charging and is deprecated")
 	}
 
-	go t.Run()
+	done := make(chan error)
+	go t.run(done)
+	err := <-done
 
-	return t, nil
+	return t, err
 }
 
-func (t *Awattar) Run() {
+func (t *Awattar) run(done chan error) {
+	var once sync.Once
 	client := request.NewHelper(t.log)
 
 	for ; true; <-time.NewTicker(time.Hour).C {
@@ -62,9 +66,12 @@ func (t *Awattar) Run() {
 			continue
 		}
 
-		t.mux.Lock()
-		t.data = make(api.Rates, 0, len(res.Data))
+		once.Do(func() { close(done) })
 
+		t.mux.Lock()
+		t.updated = time.Now()
+
+		t.data = make(api.Rates, 0, len(res.Data))
 		for _, r := range res.Data {
 			ar := api.Rate{
 				Start: r.StartTimestamp,
@@ -82,5 +89,5 @@ func (t *Awattar) Run() {
 func (t *Awattar) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	return append([]api.Rate{}, t.data...), nil
+	return append([]api.Rate{}, t.data...), outdatedError(t.updated, time.Hour)
 }
