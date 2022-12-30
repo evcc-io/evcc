@@ -283,7 +283,7 @@ func (wb *Versicharge) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
-// var _ api.MeterVoltage = (*Versicharge)(nil)
+var _ api.MeterVoltage = (*Versicharge)(nil)
 
 // Voltages implements the api.MeterVoltage interface, (noch?) nicht vorhanden (aus Alfen.go) 
 func (wb *Versicharge) Voltages() (float64, float64, float64, error) {
@@ -316,19 +316,20 @@ func (wb *Versicharge) TotalEnergy() (float64, error) {
 // Identifier -> Erkennung Auto am Ladepunkt durch RFID Karte
 // ------------------------------------------------------------------------------------------------------
 
-var _ api.Identifier = (*Versicharge)(nil)
-
-// Identify implements the api.Identifier interface
-// experimental, zum Test. Noch falsches Register
-// aus Template WebastoNext Charger (Webasto-next)
-func (wb *Versicharge) Identify() (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(VersichargeRegBrand, 5)
-	if err != nil {
-		return "", err
-	}
-
-	return bytesAsString(b), nil
-}
+// var _ api.Identifier = (*Versicharge)(nil)
+// 
+// // Identify implements the api.Identifier interface
+// // experimental, zum Test. Noch falsches Register (Brand wird gelesen)
+// // aus Template WebastoNext Charger (Webasto-next)
+// func (wb *Versicharge) Identify() (string, error) {
+// 	b, err := wb.conn.ReadHoldingRegisters(VersichargeRegBrand, 5)
+// 	fmt.Printf("Identifier (Func Identify): ", bytesAsString(b), "/n")
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 
+// 	return bytesAsString(b), nil
+// }
 
 // ------------------------------------------------------------------------------------------------------
 // Diagnoses
