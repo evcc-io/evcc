@@ -237,23 +237,31 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 
 	if conf.Grid.Type != "" {
 		grid, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
+		if err != nil {
+			grid = nil
+			log.ERROR.Printf("failed configuring grid tariff: %v", err)
+		}
 	}
 
-	if err == nil && conf.FeedIn.Type != "" {
+	if conf.FeedIn.Type != "" {
 		feedin, err = tariff.NewFromConfig(conf.FeedIn.Type, conf.FeedIn.Other)
+		if err != nil {
+			feedin = nil
+			log.ERROR.Printf("failed configuring feed-in tariff: %v", err)
+		}
 	}
 
-	if err == nil && conf.Planner.Type != "" {
+	if conf.Planner.Type != "" {
 		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
-	}
-
-	if err != nil {
-		err = fmt.Errorf("failed configuring tariff: %w", err)
+		if err != nil {
+			planner = nil
+			log.ERROR.Printf("failed configuring planner tariff: %v", err)
+		}
 	}
 
 	tariffs := tariff.NewTariffs(currencyCode, grid, feedin, planner)
 
-	return *tariffs, err
+	return *tariffs, nil
 }
 
 func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
