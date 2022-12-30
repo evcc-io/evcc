@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"time"
@@ -13,6 +14,11 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
+
+// Certificate is a PEM-encoded cert/key pair
+type Certificate struct {
+	Public, Private string
+}
 
 type route struct {
 	Methods     []string
@@ -39,10 +45,11 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
+	certificate *Certificate
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
+func NewHTTPd(addr string, certificate *Certificate, hub *SocketHub) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// websocket
@@ -62,6 +69,7 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
 
 	srv := &HTTPd{
+		certificate: certificate,
 		Server: &http.Server{
 			Addr:         addr,
 			Handler:      router,
@@ -159,4 +167,25 @@ func (s *HTTPd) RegisterShutdownHandler(callback func()) {
 	for _, r := range routes {
 		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
+}
+
+// ListenAndServe opens a listening socket (TLS if necessary) and starts HTTP server
+func (s *HTTPd) ListenAndServe() error {
+	if s.certificate != nil {
+		certificate, err := tls.X509KeyPair(
+			[]byte(s.certificate.Public), []byte(s.certificate.Private))
+		if err != nil {
+			return err
+		}
+
+		cfg := &tls.Config{Certificates: []tls.Certificate{certificate}}
+		listener, err := tls.Listen("tcp", s.Addr, cfg)
+		if err != nil {
+			return err
+		}
+
+		return s.Serve(listener)
+	}
+
+	return s.Server.ListenAndServe()
 }

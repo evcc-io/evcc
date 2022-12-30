@@ -132,7 +132,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), conf.Network.Certificate, socketHub)
 
 	// metrics
 	if viper.GetBool("metrics") {

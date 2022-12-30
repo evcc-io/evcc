@@ -117,9 +117,10 @@ type tariffConfig struct {
 }
 
 type networkConfig struct {
-	Schema string
-	Host   string
-	Port   int
+	Schema      string
+	Host        string
+	Port        int
+	Certificate *server.Certificate
 }
 
 func (c networkConfig) HostPort() string {
