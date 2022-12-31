@@ -14,6 +14,7 @@ import (
 
 	"github.com/basvdlei/gotsmart/crc16"
 	"github.com/basvdlei/gotsmart/dsmr"
+	"github.com/cenkalti/backoff"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -138,11 +139,12 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
 func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 	log := util.NewLogger("dsmr")
+	backoff := backoff.NewExponentialBackOff()
+	backoff.MaxInterval = 5 * time.Minute
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)
 		if err == io.EOF || errors.Is(err, net.ErrClosed) {
-			time.Sleep(time.Second) // prevent busy loop
 			conn = nil
 		}
 	}
@@ -153,11 +155,14 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 			conn, err = m.connect()
 			if err != nil {
 				handle("connect", err)
-				time.Sleep(time.Second)
+				sleep := backoff.NextBackOff()
+				log.INFO.Printf("Next attempt after: %s", sleep)
+				time.Sleep(sleep)
 				continue
 			}
 		}
 
+		backoff.Reset()
 		if b, err := conn.Peek(1); err == nil {
 			if string(b) != "/" {
 				log.DEBUG.Printf("ignoring garbage character: %c\n", b)

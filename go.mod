@@ -16,6 +16,7 @@ require (
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.0
 	github.com/bogosj/tesla v1.1.0
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cjrd/allocate v0.0.0-20220510215731-986f24f0fb18
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/containrrr/shoutrrr v0.6.1
