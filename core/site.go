@@ -410,7 +410,9 @@ func (site *Site) updateMeters() error {
 
 			if err == nil {
 				site.batteryPower += power
-				site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
+				if len(site.batteryMeters) > 1 {
+					site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
+				}
 			} else {
 				site.log.ERROR.Printf("battery %d power: %v", i+1, err)
 			}
@@ -428,7 +430,9 @@ func (site *Site) updateMeters() error {
 				}
 
 				site.batterySoc += weighedSoc
-				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
+				if len(site.batteryMeters) > 1 {
+					site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
+				}
 			} else {
 				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
 			}
