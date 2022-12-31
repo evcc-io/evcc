@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strconv"
@@ -140,7 +141,8 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)
-		if errors.Is(err, net.ErrClosed) {
+		if err == io.EOF || errors.Is(err, net.ErrClosed) {
+			time.Sleep(time.Second) // prevent busy loop
 			conn = nil
 		}
 	}
