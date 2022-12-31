@@ -1300,36 +1300,6 @@ func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 	return nil
 }
 
-// setConfiguredPhases sets the default phase configuration
-func (lp *Loadpoint) setConfiguredPhases(phases int) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.ConfiguredPhases = phases
-
-	// publish 1p3p capability and phase configuration
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		lp.publish(phasesConfigured, lp.ConfiguredPhases)
-	} else {
-		lp.publish(phasesConfigured, nil)
-	}
-}
-
-// setPhases sets the number of enabled phases without modifying the charger
-func (lp *Loadpoint) setPhases(phases int) {
-	if lp.GetPhases() != phases {
-		lp.Lock()
-		lp.phases = phases
-		lp.Unlock()
-
-		// reset timer to disabled state
-		lp.resetPhaseTimer()
-
-		// measure phases after switching
-		lp.resetMeasuredPhases()
-	}
-}
-
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
 // Returns api.ErrNotAvailable if api.PhaseSwitcher is not available.
 func (lp *Loadpoint) scalePhases(phases int) error {
@@ -1639,7 +1609,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 			lp.measuredPhases = phases
 			lp.Unlock()
 
-			lp.log.DEBUG.Printf("detected phases: %dp", phases)
+			lp.log.DEBUG.Printf("detected active phases: %dp", phases)
 			lp.publish(phasesActive, phases)
 		}
 	}
@@ -1676,7 +1646,7 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	}
 
 	if phases >= 1 {
-		lp.log.DEBUG.Printf("detected phases: %dp", phases)
+		lp.log.DEBUG.Printf("detected connected phases: %dp", phases)
 		lp.setPhases(phases)
 	}
 }

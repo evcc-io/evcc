@@ -6,6 +6,36 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// setConfiguredPhases sets the default phase configuration
+func (lp *Loadpoint) setConfiguredPhases(phases int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.ConfiguredPhases = phases
+
+	// publish 1p3p capability and phase configuration
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+		lp.publish(phasesConfigured, lp.ConfiguredPhases)
+	} else {
+		lp.publish(phasesConfigured, nil)
+	}
+}
+
+// setPhases sets the number of enabled phases without modifying the charger
+func (lp *Loadpoint) setPhases(phases int) {
+	if lp.GetPhases() != phases {
+		lp.Lock()
+		lp.phases = phases
+		lp.Unlock()
+
+		// reset timer to disabled state
+		lp.resetPhaseTimer()
+
+		// measure phases after switching
+		lp.resetMeasuredPhases()
+	}
+}
+
 // resetMeasuredPhases resets measured phases to unknown on vehicle disconnect, phase switch or phase api call
 func (lp *Loadpoint) resetMeasuredPhases() {
 	lp.Lock()
@@ -49,7 +79,14 @@ func (lp *Loadpoint) activePhases() int {
 	vehicle := lp.getVehiclePhases()
 	measured := lp.getMeasuredPhases()
 
-	return min(expect(vehicle), expect(physical), expect(measured))
+	active := min(expect(vehicle), expect(physical), expect(measured))
+
+	// sanity check - we should not assume less active phases than actually measured
+	if measured > 0 && active < measured {
+		lp.log.WARN.Printf("phase mismatch between %dp measured for %dp vehicle and %dp charger", measured, vehicle, physical)
+	}
+
+	return active
 }
 
 // maxActivePhases returns the maximum number of active phases for the meter.
