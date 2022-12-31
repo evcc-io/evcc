@@ -140,6 +140,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 	log := util.NewLogger("dsmr")
 	backoff := backoff.NewExponentialBackOff()
+	backoff.InitialInterval = time.Second
 	backoff.MaxInterval = 5 * time.Minute
 
 	handle := func(op string, err error) {
