@@ -67,6 +67,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -110,6 +111,7 @@ var (
 type Versicharge struct {
 	log     *util.Logger
 	conn    *modbus.Connection
+	lp      loadpoint.API
 	current uint16
 }
 
@@ -355,6 +357,14 @@ func (wb *Versicharge) TotalEnergy() (float64, error) {
 // 
 // 	return bytesAsString(b), nil
 // }
+
+var _ loadpoint.Controller = (*Versicharge)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+// Funktion?
+func (wb *Versicharge) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
+}
 
 // ------------------------------------------------------------------------------------------------------
 // Diagnoses
