@@ -88,16 +88,16 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 	afterStart := t.clock.Now().After(latestStart) || t.clock.Now().Equal(latestStart)
 	beforeTarget := t.clock.Now().Before(targetTime)
 
-	// target charging without tariff
+	// target charging without tariff or late start
 	if t.tariff == nil || afterStart {
-		return latestStart, time.Time{}, afterStart && beforeTarget, nil
+		return latestStart, targetTime, afterStart && beforeTarget, nil
 	}
 
 	rates, err := t.tariff.Rates()
 
 	// treat like normal target charging if we don't have rates
 	if len(rates) == 0 || err != nil {
-		return latestStart, time.Time{}, afterStart && beforeTarget, err
+		return latestStart, targetTime, afterStart && beforeTarget, err
 	}
 
 	// rates are by default sorted by date, oldest to newest
