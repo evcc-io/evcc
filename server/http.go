@@ -15,11 +15,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Certificate is a PEM-encoded cert/key pair
-type Certificate struct {
-	Public, Private string
-}
-
 type route struct {
 	Methods     []string
 	Pattern     string
@@ -167,7 +162,7 @@ func (s *HTTPd) RegisterShutdownHandler(callback func()) {
 	}
 }
 
-// ListenAndServe opens a listening socket (TLS if necessary) and starts HTTP server
+// ListenAndServeMaybeTLS opens a listening socket (TLS if necessary) and starts HTTP server
 func (s *HTTPd) ListenAndServeMaybeTLS(certificate *Certificate) error {
 	if certificate != nil {
 		certificate, err := tls.X509KeyPair(

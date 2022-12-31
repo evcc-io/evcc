@@ -51,9 +51,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		Uri         string
 		ShipID      string
 		Interfaces  []string
-		Certificate struct {
-			Public, Private []byte
-		}
+		Certificate Certificate
 	}{
 		Uri: ":4712",
 	}
@@ -75,7 +73,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		serial = cc.ShipID
 	}
 
-	certificate, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
+	certificate, err := tls.X509KeyPair([]byte(cc.Certificate.Public), []byte(cc.Certificate.Private))
 	if err != nil {
 		return nil, err
 	}
