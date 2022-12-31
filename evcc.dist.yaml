@@ -165,7 +165,11 @@ tariffs:
     price: 0.08 # EUR/kWh
   planner:
     # planner tariff can be used for target charging if not grid tariff is specified
-    # for example, electricitymaps provides CO2 intensity forecast
+    # GrünStromIndex (Germany only) or ElectricityMaps provide CO2 intensity forecast
+
+    # type: grünstromindex
+    # zip: <zip>
+
     # type: electricitymaps
     # uri: <uri>
     # token: <token>
