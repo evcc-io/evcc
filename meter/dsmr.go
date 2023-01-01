@@ -145,7 +145,9 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)
-		if err == io.EOF || errors.Is(err, net.ErrClosed) {
+		if err == io.EOF ||
+			errors.Is(err, io.ErrUnexpectedEOF) ||
+			errors.Is(err, net.ErrClosed) {
 			conn = nil
 		}
 	}
@@ -156,8 +158,8 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 			conn, err = m.connect()
 			if err != nil {
 				handle("connect", err)
-				sleep := backoff.NextBackOff()
-				log.INFO.Printf("Next attempt after: %s", sleep)
+				sleep := backoff.NextBackOff().Truncate(time.Second)
+				log.DEBUG.Printf("next attempt after: %v", sleep)
 				time.Sleep(sleep)
 				continue
 			}
