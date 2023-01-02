@@ -45,6 +45,6 @@ func TestRatesSortByCost(t *testing.T) {
 
 	slices.SortStableFunc(r, sortByCost)
 	assert.Equal(t, clock.Now().Add(time.Hour), r[0].Start)
-	assert.Equal(t, clock.Now().Add(2*time.Hour), r[1].Start) // late slots first
+	assert.Equal(t, clock.Now().Add(2*time.Hour), r[1].Start)
 	assert.Equal(t, clock.Now(), r[2].Start)
 }

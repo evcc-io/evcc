@@ -118,7 +118,7 @@ type Loadpoint struct {
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
 	onDisconnect      api.ActionConfig
-	targetEnergy      float64 // Target charge energy for dumb vehicles
+	targetEnergy      float64 // Target charge energy for dumb vehicles in kWh
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger

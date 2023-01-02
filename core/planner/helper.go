@@ -26,13 +26,15 @@ func Duration(plan api.Rates) time.Duration {
 	return duration
 }
 
-func Cost(plan api.Rates) float64 {
+func AverageCost(plan api.Rates) float64 {
 	var cost float64
+	var duration time.Duration
 	for _, slot := range plan {
 		slotDuration := slot.End.Sub(slot.Start)
-		cost += float64(slotDuration) / float64(time.Hour) * slot.Price
+		duration += slotDuration
+		cost += float64(slotDuration) * slot.Price
 	}
-	return cost
+	return cost / float64(duration)
 }
 
 func ActiveSlot(clock clock.Clock, plan api.Rates) api.Rate {

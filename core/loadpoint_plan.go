@@ -3,6 +3,7 @@ package core
 import (
 	"time"
 
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/soc"
 )
 
@@ -15,6 +16,25 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	lp.publish("planActive", lp.planActive)
 }
 
+// planRequiredDuration is the estimated total charging duration
+func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
+	var requiredDuration time.Duration
+
+	if energy, ok := lp.remainingChargeEnergy(); ok {
+		requiredDuration = time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
+	} else {
+		// TODO vehicle soc limit
+		targetSoc := lp.Soc.target
+		if targetSoc == 0 {
+			targetSoc = 100
+		}
+
+		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
+	}
+
+	return time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+}
+
 // plannerActive checks if charging plan is active
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
@@ -25,40 +45,21 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	targetSoc := 100
 	maxPower := lp.GetMaxPower()
-	var requiredDuration time.Duration
-
-	if energy, ok := lp.remainingChargeEnergy(); ok {
-		if energy > 0 {
-			requiredDuration = time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
-		}
-	} else {
-		// TODO vehicle soc limit
-		if lp.Soc.target > 0 {
-			targetSoc = lp.Soc.target
-		}
-		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
-	}
-	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
-
-	// anticipate lower charge rates at end of charging curve
-	if targetSoc >= 80 {
-		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
-
-		if targetSoc >= 90 {
-			requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
-		}
-	}
-
+	requiredDuration := lp.planRequiredDuration(maxPower)
 	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
 
-	planStart, slotEnd, active, err := lp.planner.Active(requiredDuration, lp.targetTime)
+	plan, err := lp.planner.Plan(requiredDuration, lp.targetTime)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
 		return false
 	}
-	lp.publish(targetTimeProjectedStart, planStart)
+
+	lp.publish(targetTimeProjectedStart, planner.Start(plan))
+	lp.log.DEBUG.Printf("total plan duration: %v, avg cost: %.3f", planner.Duration(plan).Round(time.Second), planner.AverageCost(plan))
+
+	activeSlot := planner.ActiveSlot(lp.clock, plan)
+	active = !activeSlot.End.IsZero()
 
 	if active {
 		// ignore short plans if not already active
@@ -69,7 +70,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 		// remember last active plan's end time
 		lp.setPlanActive(true)
-		lp.planSlotEnd = slotEnd
+		lp.planSlotEnd = activeSlot.End
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {
