@@ -199,6 +199,6 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 )
 
-replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230102101243-c5cffbdfcf02
+replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230102102528-4d59ac6910c6
 
 replace github.com/mlnoga/rct => github.com/andig/rct v0.0.0-20221101081802-96d01efdc68c
