@@ -309,7 +309,7 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 }
 
 // targetTimeHandler updates target soc
-func targetTimeHandler(lp targetCharger) http.HandlerFunc {
+func targetTimeHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -341,9 +341,9 @@ func targetTimeHandler(lp targetCharger) http.HandlerFunc {
 }
 
 // targetTimeRemoveHandler removes target soc
-func targetTimeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
+func targetTimeRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := loadpoint.SetTargetTime(time.Time{}); err != nil {
+		if err := lp.SetTargetTime(time.Time{}); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -354,7 +354,7 @@ func targetTimeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
 }
 
 // vehicleHandler sets active vehicle
-func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
+func vehicleHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -368,7 +368,7 @@ func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
 		}
 
 		v := vehicles[val-1]
-		loadpoint.SetVehicle(v)
+		lp.SetVehicle(v)
 
 		res := struct {
 			Vehicle string `json:"vehicle"`
@@ -381,19 +381,39 @@ func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
 }
 
 // vehicleRemoveHandler removes vehicle
-func vehicleRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
+func vehicleRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		loadpoint.SetVehicle(nil)
+		lp.SetVehicle(nil)
 		res := struct{}{}
 		jsonResult(w, res)
 	}
 }
 
 // vehicleDetectHandler starts vehicle detection
-func vehicleDetectHandler(loadpoint loadpoint.API) http.HandlerFunc {
+func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		loadpoint.StartVehicleDetection()
+		lp.StartVehicleDetection()
 		res := struct{}{}
+		jsonResult(w, res)
+	}
+}
+
+// planHandler starts vehicle detection
+func planHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		requiredDuration, plan, err := lp.GetPlan(lp.GetMaxPower())
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res := struct {
+			Duration time.Duration `json:"duration"`
+			Plan     api.Rates     `json:"plan"`
+		}{
+			Duration: requiredDuration,
+			Plan:     plan,
+		}
 		jsonResult(w, res)
 	}
 }
@@ -403,20 +423,4 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ServeWebsocket(hub, w, r)
 	}
-}
-
-// TargetCharger defines target charge related loadpoint operations
-type targetCharger interface {
-	// GetTargetTime returns the target time
-	GetTargetTime() time.Time
-	// SetTargetTime sets the target time
-	SetTargetTime(time.Time) error
-	// GetTargetEnergy returns the charge target energy
-	GetTargetEnergy() float64
-	// SetTargetEnergy sets the charge target energy
-	SetTargetEnergy(float64)
-	// GetTargetSoc returns the charge target soc
-	GetTargetSoc() int
-	// SetTargetSoc sets the charge target soc
-	SetTargetSoc(int)
 }

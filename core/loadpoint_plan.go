@@ -3,6 +3,7 @@ package core
 import (
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/soc"
 	"golang.org/x/exp/slices"
@@ -36,20 +37,30 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 	return time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 }
 
+// GetPlan creates a charging plan
+func (lp *Loadpoint) GetPlan(maxPower float64) (time.Duration, api.Rates, error) {
+	if lp.planner == nil || lp.socEstimator == nil || lp.targetTime.IsZero() {
+		return 0, nil, nil
+	}
+
+	requiredDuration := lp.planRequiredDuration(maxPower)
+	plan, err := lp.planner.Plan(requiredDuration, lp.targetTime)
+
+	// sort plan by time
+	slices.SortStableFunc(plan, planner.SortByTime)
+
+	return requiredDuration, plan, err
+}
+
 // plannerActive checks if charging plan is active
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
 		lp.publish(targetTimeActive, active)
 	}()
 
-	if lp.planner == nil || lp.socEstimator == nil || lp.targetTime.IsZero() {
-		return false
-	}
-
 	maxPower := lp.GetMaxPower()
-	requiredDuration := lp.planRequiredDuration(maxPower)
 
-	plan, err := lp.planner.Plan(requiredDuration, lp.targetTime)
+	requiredDuration, plan, err := lp.GetPlan(maxPower)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
 		return false

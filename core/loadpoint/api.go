@@ -52,6 +52,8 @@ type API interface {
 	GetTargetSoc() int
 	// SetTargetSoc sets the charge target soc
 	SetTargetSoc(int)
+	// GetPlan creates a charging plan
+	GetPlan(maxPower float64) (time.Duration, api.Rates, error)
 
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
