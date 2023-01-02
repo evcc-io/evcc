@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/soc"
+	"golang.org/x/exp/slices"
 )
 
 // setPlanActive updates plan active flag
@@ -47,7 +48,6 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	maxPower := lp.GetMaxPower()
 	requiredDuration := lp.planRequiredDuration(maxPower)
-	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
 
 	plan, err := lp.planner.Plan(requiredDuration, lp.targetTime)
 	if err != nil {
@@ -56,7 +56,16 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 
 	lp.publish(targetTimeProjectedStart, planner.Start(plan))
-	lp.log.DEBUG.Printf("total plan duration: %v, avg cost: %.3f", planner.Duration(plan).Round(time.Second), planner.AverageCost(plan))
+
+	lp.log.DEBUG.Printf("planned %v until %v at %.0fW: total plan duration: %v, avg cost: %.3f",
+		requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower,
+		planner.Duration(plan).Round(time.Second), planner.AverageCost(plan))
+
+	// sort plan by time
+	slices.SortStableFunc(plan, planner.SortByTime)
+	for _, slot := range plan {
+		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
+	}
 
 	activeSlot := planner.ActiveSlot(lp.clock, plan)
 	active = !activeSlot.End.IsZero()

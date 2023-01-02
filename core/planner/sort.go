@@ -2,8 +2,8 @@ package planner
 
 import "github.com/evcc-io/evcc/api"
 
-// sortByTime is a sortFunc for slices.Sort
-func sortByTime(i, j api.Rate) bool {
+// SortByTime is a sortFunc for slices.Sort
+func SortByTime(i, j api.Rate) bool {
 	return i.Start.Before(j.Start)
 }
 

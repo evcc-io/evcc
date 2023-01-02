@@ -66,7 +66,6 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 		}
 
 		plan = append(plan, slot)
-		// t.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
 
 		// we found all necessary slots
 		if requiredDuration == 0 {
