@@ -13,14 +13,11 @@ render: |
     source: http
     uri: http://{{ .host }}/status
     jq: .emeters | map(.power) | add
-  {{- if or (eq .usage "charge") (eq .usage "grid") }}
   energy:
     source: http
     uri: http://{{ .host }}/status
     jq: .emeters | map(.total) | add
     scale: 0.001
-  {{ end -}}
-  {{if ne .usage "pv" -}}
   currents:
   - source: http
     uri: http://{{ .host }}/emeter/0
@@ -31,4 +28,23 @@ render: |
   - source: http
     uri: http://{{ .host }}/emeter/2
     jq: .current
-  {{ end -}}
+  voltages:
+  - source: http
+    uri: http://{{ .host }}/emeter/0
+    jq: .voltage
+  - source: http
+    uri: http://{{ .host }}/emeter/1
+    jq: .voltage
+  - source: http
+    uri: http://{{ .host }}/emeter/2
+    jq: .voltage
+  powers:
+  - source: http
+    uri: http://{{ .host }}/emeter/0
+    jq: .power
+  - source: http
+    uri: http://{{ .host }}/emeter/1
+    jq: .power
+  - source: http
+    uri: http://{{ .host }}/emeter/2
+    jq: .power

@@ -185,9 +185,9 @@ func (wb *KSE) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)) / 100, err
 }
 
-var _ api.MeterCurrent = (*KSE)(nil)
+var _ api.PhaseCurrents = (*KSE)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *KSE) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadInputRegisters(kseRegCurrents, 3)
 	if err != nil {

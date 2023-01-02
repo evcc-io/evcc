@@ -9,15 +9,15 @@ import (
 
 var _ site.API = (*Site)(nil)
 
-// GetPrioritySoC returns the PrioritySoC
-func (site *Site) GetPrioritySoC() float64 {
+// GetPrioritySoc returns the PrioritySoc
+func (site *Site) GetPrioritySoc() float64 {
 	site.Lock()
 	defer site.Unlock()
-	return site.PrioritySoC
+	return site.PrioritySoc
 }
 
-// SetPrioritySoC sets the PrioritySoC
-func (site *Site) SetPrioritySoC(soc float64) error {
+// SetPrioritySoc sets the PrioritySoc
+func (site *Site) SetPrioritySoc(soc float64) error {
 	site.Lock()
 	defer site.Unlock()
 
@@ -25,21 +25,21 @@ func (site *Site) SetPrioritySoC(soc float64) error {
 		return errors.New("battery not configured")
 	}
 
-	site.PrioritySoC = soc
-	site.publish("prioritySoC", site.PrioritySoC)
+	site.PrioritySoc = soc
+	site.publish("prioritySoc", site.PrioritySoc)
 
 	return nil
 }
 
-// GetBufferSoC returns the BufferSoC
-func (site *Site) GetBufferSoC() float64 {
+// GetBufferSoc returns the BufferSoc
+func (site *Site) GetBufferSoc() float64 {
 	site.Lock()
 	defer site.Unlock()
-	return site.BufferSoC
+	return site.BufferSoc
 }
 
-// SetBufferSoC sets the BufferSoC
-func (site *Site) SetBufferSoC(soc float64) error {
+// SetBufferSoc sets the BufferSoc
+func (site *Site) SetBufferSoc(soc float64) error {
 	site.Lock()
 	defer site.Unlock()
 
@@ -47,8 +47,8 @@ func (site *Site) SetBufferSoC(soc float64) error {
 		return errors.New("battery not configured")
 	}
 
-	site.BufferSoC = soc
-	site.publish("bufferSoC", site.BufferSoC)
+	site.BufferSoc = soc
+	site.publish("bufferSoc", site.BufferSoc)
 
 	return nil
 }

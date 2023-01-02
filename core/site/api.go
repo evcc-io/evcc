@@ -8,16 +8,16 @@ import (
 // API is the external site API
 type API interface {
 	Healthy() bool
-	LoadPoints() []loadpoint.API
+	Loadpoints() []loadpoint.API
 
 	//
 	// battery
 	//
 
-	GetBufferSoC() float64
-	SetBufferSoC(float64) error
-	GetPrioritySoC() float64
-	SetPrioritySoC(float64) error
+	GetBufferSoc() float64
+	SetBufferSoc(float64) error
+	GetPrioritySoc() float64
+	SetPrioritySoc(float64) error
 
 	//
 	// power and energy

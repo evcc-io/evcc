@@ -10,7 +10,7 @@
 			>
 				<Loadpoint
 					v-bind="loadpoint"
-					:id="index"
+					:id="index + 1"
 					:vehicles="vehicles"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"

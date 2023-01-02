@@ -40,8 +40,8 @@ func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *Mo
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.mobileG()
 	if err == nil {
 		m, err := res.MeasurementByKey("BATTERY_LEVEL")

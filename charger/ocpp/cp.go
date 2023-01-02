@@ -224,7 +224,7 @@ func getKeyCurrentPhase(phase int) string {
 	return string(types.MeasurandCurrentImport) + "@L" + strconv.Itoa(phase)
 }
 
-var _ api.MeterCurrent = (*CP)(nil)
+var _ api.PhaseCurrents = (*CP)(nil)
 
 func (cp *CP) Currents() (float64, float64, float64, error) {
 	cp.mu.Lock()

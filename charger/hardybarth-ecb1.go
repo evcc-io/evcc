@@ -216,9 +216,9 @@ func (wb *HardyBarth) TotalEnergy() (float64, error) {
 	return res.Data[obis.EnergyConsumption], nil
 }
 
-var _ api.MeterCurrent = (*HardyBarth)(nil)
+var _ api.PhaseCurrents = (*HardyBarth)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *HardyBarth) Currents() (float64, float64, float64, error) {
 	res, err := wb.meterG()
 	if err != nil {

@@ -44,11 +44,11 @@ type Gen1SwitchResponse struct {
 type Gen1StatusResponse struct {
 	Meters []struct {
 		Power float64
-		Total int64
+		Total float64
 	}
 	// Shelly EM meter JSON response
 	EMeters []struct {
 		Power float64
-		Total int64
+		Total float64
 	}
 }

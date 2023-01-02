@@ -47,12 +47,12 @@ func (v *embed) OnIdentified() api.ActionConfig {
 
 var _ api.FeatureDescriber = (*embed)(nil)
 
-// Features implements the api.Describer interface
+// Features implements the api.FeatureDescriber interface
 func (v *embed) Features() []api.Feature {
 	return v.Features_
 }
 
-// Features implements the api.Describer interface
+// Features implements the api.FeatureDescriber interface
 func (v *embed) Has(f api.Feature) bool {
 	return slices.Contains(v.Features_, f)
 }

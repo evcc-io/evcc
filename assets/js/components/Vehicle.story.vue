@@ -7,9 +7,9 @@ const state = reactive({
 	enabled: false,
 	connected: true,
 	vehiclePresent: true,
-	vehicleSoC: 42,
+	vehicleSoc: 42,
 	vehicleRange: 231,
-	targetSoC: 90,
+	targetSoc: 90,
 	vehicleCapacity: 72,
 	chargedEnergy: 14123,
 	socBasedCharging: true,
@@ -77,10 +77,10 @@ const hoursFromNow = function (hours) {
 			/>
 		</Variant>
 		<Variant title="vehicle limit">
-			<Vehicle v-bind="state" enabled charging :vehicleTargetSoC="80" />
+			<Vehicle v-bind="state" enabled charging :vehicleTargetSoc="80" />
 		</Variant>
 		<Variant title="vehicle limit reached">
-			<Vehicle v-bind="state" enabled :vehicleTargetSoC="80" :vehicleSoC="80" />
+			<Vehicle v-bind="state" enabled :vehicleTargetSoc="80" :vehicleSoc="80" />
 		</Variant>
 		<Variant title="target charge planned">
 			<Vehicle v-bind="state" :targetTime="hoursFromNow(14)" mode="pv" />

@@ -6,7 +6,7 @@
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
-					<BatteryIcon :soc="batterySoC" />
+					<BatteryIcon :soc="batterySoc" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -64,7 +64,7 @@
 					<VehicleIcon :names="vehicleIcons" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoC" />
+					<BatteryIcon :soc="batterySoc" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -97,7 +97,7 @@ export default {
 		batteryDischarge: { type: Number, default: 0 },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
-		batterySoC: { type: Number, default: 0 },
+		batterySoc: { type: Number, default: 0 },
 		valuesInKw: { type: Boolean, default: false },
 		vehicleIcons: { type: Array },
 	},

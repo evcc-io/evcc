@@ -86,7 +86,7 @@ func main() {
 
 		start := time.Now()
 		for err = api.ErrMustRetry; err != nil && matchesError(err, api.ErrMustRetry); {
-			if soc, err = v.SoC(); err != nil {
+			if soc, err = v.Soc(); err != nil {
 				if time.Since(start) > time.Minute {
 					err = os.ErrDeadlineExceeded
 				} else {

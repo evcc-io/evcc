@@ -1,0 +1,232 @@
+[startupError]
+lineErrorLink = "linijski {0}"
+configFile = "Korištena konfiguracijska datoteka:"
+lineError = "Greška u {0}."
+fixAndRestart = "Riješite problem i ponovno pokrenite poslužitelj."
+title = "Pogreška pri pokretanju"
+discussions = "GitHub rasprave"
+hint = "Napomena: Također može biti da imate neispravan uređaj (inverter, mjerač, …). Provjerite svoje mrežne veze."
+configuration = "Konfiguracija"
+restartButton = "Restart"
+description = "Provjerite konfiguracijsku datoteku. Ako poruka o pogrešci ne pomogne, pogledajte {0}."
+
+[header]
+settings = "Postavke"
+docs = "Dokumentacija"
+blog = "Blog"
+github = "GitHub"
+login = "Prijave vozila"
+about = "O"
+sessions = "Sesije punjenja"
+
+[settings]
+title = "Postavke"
+
+[settings.theme]
+label = "Dizajn"
+auto = "sustav"
+light = "svijetlo"
+dark = "tamno"
+
+[settings.language]
+label = "Jezik"
+auto = "Automatski"
+
+[settings.unit]
+label = "Jedinice"
+km = "km"
+mi = "milje"
+
+[settings.telemetry]
+label = "Telemetrija"
+
+[footer.version]
+availableShort = "instalirati"
+availableLong = "dostupna je nova verzija"
+modalTitle = "Dostupna je nova verzija"
+modalUpdateStarted = "Pokretanje nove evcc verzije..."
+modalInstalledVersion = "Instalirana verzija"
+modalUpdate = "Instaliraj"
+modalUpdateNow = "Instaliraj sada"
+modalDownload = "Preuzmi"
+modalUpdateStatusStart = "Instalacija je započela:"
+modalNoReleaseNotes = "Nema dostupnih napomena o izdanju. Više informacija o novoj verziji:"
+modalCancel = "Odustani"
+
+[footer.savings]
+tabTitle = "Moji podaci"
+footerShort = "{percent} % solarno"
+footerLong = "{percent} % solarne energije"
+modalTitle = "Pregled energije punjenja"
+since = "od {since}"
+percentTitle = "Solarna energija"
+percentSelf = "{self} kWh solarno"
+percentGrid = "{grid} kWh mreža"
+priceTitle = "Cijena energije"
+priceGrid = "{gridPrice} mreža"
+savingsComparedToGrid = "u usporedbi s mrežom"
+savingsTotalEnergy = "{total} kWh napunjeno"
+savingsTitle = "Ušteda"
+priceFeedIn = "{feedInPrice} feed-in"
+
+[footer.community]
+tabTitle = "Živa zajednica"
+powerSub1 = "{activeClients} od {totalClients} sudionika"
+powerSub2 = "punjenje..."
+greenShare = "Solarni dio"
+greenShareSub1 = "snaga koju pruža"
+greenEnergy = "Solarni"
+greenEnergySub2 = "od listopada 2022."
+power = "Snaga punjenja"
+greenShareSub2 = "solarna, i baterijska pohrana"
+greenEnergySub1 = "napunjeno s evcc"
+
+[footer.telemetry]
+optIn = "Želim dati svoje podatke."
+optInSponsorship = "Potrebno sponzorstvo."
+optInMoreDetails = "Više detalja {0}."
+optInMoreDetailsLink = "ovdje"
+
+[footer.sponsor]
+titleSponsor = "Ti si navijač"
+titleNoSponsor = "Podrži nas"
+becomeSponsor = "Postani sponzor"
+confettiPromise = "Dobivaš naljepnice i digitalne konfete"
+thanks = "Hvala, {sponsor}! Tvoj doprinos pomaže u daljnjem razvoju evcc-a."
+sticker = "... ili evcc naljepnice?"
+supportUs = "Naša misija je učiniti solarnu energiju normom. Pomogni evccu plaćajući onoliko koliko ti vrijedi."
+confetti = "Spremni za konfete?"
+
+[notifications]
+modalTitle = "Obavijesti"
+dismissAll = "Odbaci sve"
+
+[main]
+vehicles = "Parkiralište"
+
+[main.provider]
+login = "prijavi se"
+logout = "odjavi se"
+
+[main.energyflow]
+pvProduction = "Produkcija"
+loadpoints = "Punjač| Punjač | {count} punjača"
+battery = "Baterija"
+batteryCharge = "Punjenje baterije"
+batteryDischarge = "Pražnjenje baterije"
+gridImport = "Upotreba mreže"
+selfConsumption = "Samopotrošnja"
+pvExport = "Izvoz mreže"
+noEnergy = "Nema podataka o mjeraču"
+homePower = "Potrošnja"
+
+[main.mode]
+off = "Ugašeno"
+pv = "Solarno"
+minpv = "Min+Solarno"
+now = "Brzo"
+
+[main.loadpoint]
+power = "Energija"
+fallbackName = "Mjesto punjenja"
+charged = "Napunjeno"
+duration = "Trajanje"
+
+[main.loadpointSettings]
+title = "Postavke {0}"
+currents = "Struja punjenja"
+vehicle = "Vozilo"
+default = "zadano"
+disclaimerHint = "Bilješka:"
+disclaimerText = "Promjene će biti izgubljene nakon ponovnog pokretanja poslužitelja."
+
+[main.loadpointSettings.minSoc]
+label = "Min. punjenje %"
+description = "Za hitne slučajeve. Vozilo se „brzo” puni na {0}% od svih dostupnih solarnih, a zatim nastavlja samo sa solarnim viškom."
+
+[main.loadpointSettings.phasesConfigured]
+label = "Faze"
+phases_1_hint = "({min} do {max})"
+phases_3 = "3 faze"
+phases_3_hint = "({min} do {max})"
+phases_0 = "automatsko prebacivanje"
+phases_1 = "1 faza"
+
+[main.loadpointSettings.maxCurrent]
+label = "Maks. struja"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. struja"
+
+[main.vehicle]
+fallbackName = "Vozilo"
+vehicleSoc = "Napunjeno"
+targetSoc = "Granica"
+none = "Bez vozila"
+unknown = "Vozilo gosta"
+changeVehicle = "Promijeni vozilo"
+detectionActive = "Otkrivanje vozila..."
+
+[main.vehicleSoc]
+disconnected = "odspojeno"
+charging = "punjenje"
+ready = "spremno"
+connected = "povezano"
+vehicleTarget = "Granica za vozilo: {soc} %"
+
+[main.vehicleStatus]
+vehicleTargetReached = "Granica za vozilo {soc} % dosegnuto."
+charging = "Punjenje..."
+targetChargePlanned = "Ciljano punjenje počinje u {time}."
+targetChargeWaitForVehicle = "Ciljano punjenje spremno. Čeka se na vozilo..."
+targetChargeActive = "Ciljano terećenje aktivno..."
+connected = "Povezano."
+disconnected = "Nepovezano."
+unknown = ""
+waitForVehicle = "Spremno. Čeka se na vozilo..."
+minCharge = "Minimalno punjenje do {soc} %."
+pvDisable = "Nema dovoljno viška. Pauza za {remaining}…"
+pvEnable = "Dostupan višak. Počevši od {remaining}…"
+scale1p = "Smanjenje na 1-fazno napajanje za {remaining}…"
+scale3p = "Povećanje na 3-fazno napajanje za {remaining}…"
+
+[main.targetCharge]
+description = "Kada bi se vozilo trebalo napuniti na {targetSoc}%?"
+today = "danas"
+targetIsInThePast = "Odaberi vrijeme u budućnosti, Marty."
+activate = "Upaliti"
+experimentalLabel = "Eksperimentalno"
+experimentalText = "Ovo radi, ali nije savršeno. Prijavite neočekivano ponašanje"
+title = "Ciljano vrijeme"
+setTargetTime = "ništa"
+inactiveLabel = "Ciljano vrijeme"
+activeLabel = "{time}"
+modalTitle = "Postavi ciljno vrijeme"
+tomorrow = "sutra"
+
+[main.targetEnergy]
+label = "Granica"
+noLimit = "ništa"
+
+[sessions]
+downloadCsv = "Preuzmi kao CSV"
+energy = "Napunjeno"
+loadpoint = "Mjesto za punjenje"
+date = "Razdoblje"
+title = "Sesije punjenja"
+vehicle = "Vozilo"
+
+[sessions.csv]
+vehicle = "Vozilo"
+odometer = "Kilometraža (km)"
+created = "Stvoreno"
+finished = "Gotovo"
+meterstart = "Početak mjerača (kWh)"
+meterstop = "Zaustavljanje mjerača (kWh)"
+loadpoint = "Mjesto za punjenje"
+identifier = "Identifikator"
+chargedenergy = "Energija (kWh)"
+
+[offline]
+message = "Nije spojen na poslužitelj."
+reload = "Ponovno učitati?"

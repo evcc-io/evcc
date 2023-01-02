@@ -14,21 +14,25 @@ import (
 )
 
 type Tibber struct {
-	mux    sync.Mutex
-	log    *util.Logger
-	homeID string
-	cheap  float64
-	client *tibber.Client
-	data   []tibber.PriceInfo
+	mux     sync.Mutex
+	log     *util.Logger
+	homeID  string
+	client  *tibber.Client
+	data    api.Rates
+	updated time.Time
 }
 
 var _ api.Tariff = (*Tibber)(nil)
 
-func NewTibber(other map[string]interface{}) (*Tibber, error) {
+func init() {
+	registry.Add("tibber", NewTibberFromConfig)
+}
+
+func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		Token  string
 		HomeID string
-		Cheap  float64
+		Cheap  any // TODO deprecated
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -44,7 +48,6 @@ func NewTibber(other map[string]interface{}) (*Tibber, error) {
 	t := &Tibber{
 		log:    log,
 		homeID: cc.HomeID,
-		cheap:  cc.Cheap,
 		client: tibber.NewClient(log, cc.Token),
 	}
 
@@ -55,12 +58,21 @@ func NewTibber(other map[string]interface{}) (*Tibber, error) {
 		}
 	}
 
-	go t.Run()
+	// TODO deprecated
+	if cc.Cheap != nil {
+		t.log.WARN.Println("cheap rate configuration has been replaced by target charging and is deprecated")
+	}
 
-	return t, nil
+	done := make(chan error)
+	go t.run(done)
+	err := <-done
+
+	return t, err
 }
 
-func (t *Tibber) Run() {
+func (t *Tibber) run(done chan error) {
+	var once sync.Once
+
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res struct {
 			Viewer struct {
@@ -81,31 +93,41 @@ func (t *Tibber) Run() {
 		cancel()
 
 		if err != nil {
+			once.Do(func() { done <- err })
+
 			t.log.ERROR.Println(err)
 			continue
 		}
 
+		once.Do(func() { close(done) })
+
 		t.mux.Lock()
-		t.data = res.Viewer.Home.CurrentSubscription.PriceInfo.Today
+		t.updated = time.Now()
+
+		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
+		t.data = make(api.Rates, 0, len(pi.Today)+len(pi.Tomorrow))
+		t.data = append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
+
 		t.mux.Unlock()
 	}
 }
 
-func (t *Tibber) CurrentPrice() (float64, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-
-	for i := len(t.data) - 1; i >= 0; i-- {
-		pi := t.data[i]
-
-		if pi.StartsAt.Before(time.Now()) {
-			return pi.Total, nil
+func (t *Tibber) rates(pi []tibber.PriceInfo) api.Rates {
+	data := make(api.Rates, 0, len(pi))
+	for _, r := range pi {
+		ar := api.Rate{
+			Start: r.StartsAt,
+			End:   r.StartsAt.Add(time.Hour),
+			Price: r.Total,
 		}
+		data = append(data, ar)
 	}
-	return 0, errors.New("unable to find current tibber price")
+	return data
 }
 
-func (t *Tibber) IsCheap() (bool, error) {
-	price, err := t.CurrentPrice()
-	return price <= t.cheap, err
+// Rates implements the api.Tariff interface
+func (t *Tibber) Rates() (api.Rates, error) {
+	t.mux.Lock()
+	defer t.mux.Unlock()
+	return append([]api.Rate{}, t.data...), outdatedError(t.updated, time.Hour)
 }

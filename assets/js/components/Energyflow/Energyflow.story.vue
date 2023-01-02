@@ -25,7 +25,7 @@ import Energyflow from "./Energyflow.vue";
 				:gridPower="1200"
 				:homePower="2000"
 				:batteryPower="800"
-				:batterySoC="77"
+				:batterySoc="77"
 				siteTitle="Home"
 			/>
 		</Variant>
@@ -40,7 +40,7 @@ import Energyflow from "./Energyflow.vue";
 				:loadpointsPower="1400"
 				:activeLoadpointsCount="1"
 				:batteryPower="-1500"
-				:batterySoC="75"
+				:batterySoc="75"
 				siteTitle="Home"
 			/>
 		</Variant>
@@ -53,7 +53,7 @@ import Energyflow from "./Energyflow.vue";
 				:gridPower="700"
 				:homePower="3300"
 				:batteryPower="1500"
-				:batterySoC="30"
+				:batterySoc="30"
 				siteTitle="Home"
 			/>
 		</Variant>
@@ -67,7 +67,7 @@ import Energyflow from "./Energyflow.vue";
 				:loadpointsPower="7500"
 				:activeLoadpointsCount="2"
 				:batteryPower="-700"
-				:batterySoC="95"
+				:batterySoc="95"
 				siteTitle="Home"
 			/>
 		</Variant>
@@ -82,7 +82,7 @@ import Energyflow from "./Energyflow.vue";
 				:loadpointsPower="5600"
 				:activeLoadpointsCount="2"
 				:batteryPower="800"
-				:batterySoC="76"
+				:batterySoc="76"
 				siteTitle="Home"
 			/>
 		</Variant>
@@ -97,7 +97,7 @@ import Energyflow from "./Energyflow.vue";
 				:loadpointsPower="5500"
 				:activeLoadpointsCount="1"
 				:batteryPower="0"
-				:batterySoC="0"
+				:batterySoc="0"
 				siteTitle="Home"
 			/>
 		</Variant>
@@ -110,7 +110,7 @@ import Energyflow from "./Energyflow.vue";
 				:gridPower="-300"
 				:homePower="300"
 				:batteryPower="-100"
-				:batterySoC="55"
+				:batterySoc="55"
 				siteTitle="Home"
 			/>
 		</Variant>

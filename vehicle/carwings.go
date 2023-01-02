@@ -174,8 +174,8 @@ func (v *CarWings) refreshRequest() (err error) {
 	return err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *CarWings) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *CarWings) Soc() (float64, error) {
 	res, err := v.statusG()
 	if err == nil {
 		return float64(res.StateOfCharge), nil

@@ -55,7 +55,7 @@ type TqEm struct {
 	dataG func() (tqemData, error)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateTqEm -b api.Meter -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateTqEm -b api.Meter -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewTqEmFromConfig creates a new configurable meter
 func NewTqEmFromConfig(other map[string]interface{}) (api.Meter, error) {

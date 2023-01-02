@@ -43,6 +43,7 @@ const (
 	abbRegStatus     = 0x400C // Charging state 2 unsigned RO available
 	abbRegGetCurrent = 0x400E // Current charging current limit 2 0.001 A unsigned RO
 	abbRegCurrents   = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
+	abbRegVoltages   = 0x4016 // Voltage phases 6 0.1 V unsigned RO available
 	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
 	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
 	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
@@ -208,9 +209,9 @@ func (wb *ABB) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
-var _ api.MeterCurrent = (*ABB)(nil)
+var _ api.PhaseCurrents = (*ABB)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *ABB) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(abbRegCurrents, 6)
 	if err != nil {
@@ -223,6 +224,23 @@ func (wb *ABB) Currents() (float64, float64, float64, error) {
 	}
 
 	return curr[0], curr[1], curr[2], nil
+}
+
+var _ api.PhaseVoltages = (*ABB)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *ABB) Voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(abbRegVoltages, 6)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var volt [3]float64
+	for l := 0; l < 3; l++ {
+		volt[l] = float64(binary.BigEndian.Uint32(b[4*l:])) / 10
+	}
+
+	return volt[0], volt[1], volt[2], nil
 }
 
 // var _ api.PhaseSwitcher = (*ABB)(nil)

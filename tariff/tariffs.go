@@ -1,22 +1,34 @@
 package tariff
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"golang.org/x/text/currency"
 )
 
 type Tariffs struct {
-	Currency currency.Unit
-	Grid     api.Tariff
-	FeedIn   api.Tariff
+	Currency              currency.Unit
+	Grid, FeedIn, Planner api.Tariff
 }
 
-var _ api.Tariff = (*Fixed)(nil)
+func NewTariffs(currency currency.Unit, grid, feedin, planner api.Tariff) *Tariffs {
+	if planner == nil {
+		planner = grid
+	}
 
-func NewTariffs(currency currency.Unit, grid api.Tariff, feedin api.Tariff) *Tariffs {
-	t := Tariffs{}
-	t.Currency = currency
-	t.Grid = grid
-	t.FeedIn = feedin
-	return &t
+	return &Tariffs{
+		Currency: currency,
+		Grid:     grid,
+		FeedIn:   feedin,
+		Planner:  planner,
+	}
+}
+
+// outdatedError returns api.ErrOutdated if t is older than 2*d
+func outdatedError(t time.Time, d time.Duration) error {
+	if time.Since(t) > 2*d {
+		return api.ErrOutdated
+	}
+	return nil
 }
