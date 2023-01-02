@@ -77,3 +77,28 @@ func (site *Site) GetVehicles() []api.Vehicle {
 	defer site.Unlock()
 	return site.coordinator.GetVehicles()
 }
+
+// GetTariff returns the tariffs rates
+func (site *Site) GetTariff(name string) (api.Rates, error) {
+	site.Lock()
+	defer site.Unlock()
+
+	var tariff api.Tariff
+
+	switch name {
+	case "grid":
+		tariff = site.tariffs.Grid
+	case "feedin":
+		tariff = site.tariffs.FeedIn
+	case "planner":
+		if tariff = site.tariffs.Planner; tariff == nil {
+			tariff = site.tariffs.Grid
+		}
+	}
+
+	if tariff == nil {
+		return nil, errors.New("invalid tariff")
+	}
+
+	return tariff.Rates()
+}
