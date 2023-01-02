@@ -17,10 +17,28 @@ type mockLoadpoint struct {
 	TargetTime time.Time
 }
 
-func (lp *mockLoadpoint) SetTargetCharge(time time.Time, soc int) error {
-	lp.Soc = soc
+func (lp *mockLoadpoint) GetTargetTime() time.Time {
+	return lp.TargetTime
+}
+
+func (lp *mockLoadpoint) SetTargetTime(time time.Time) error {
 	lp.TargetTime = time
 	return nil
+}
+
+func (lp *mockLoadpoint) GetTargetSoc() int {
+	return lp.Soc
+}
+
+func (lp *mockLoadpoint) SetTargetSoc(soc int) {
+	lp.Soc = soc
+}
+
+func (lp *mockLoadpoint) GetTargetEnergy() float64 {
+	return 0
+}
+
+func (lp *mockLoadpoint) SetTargetEnergy(_ float64) {
 }
 
 func TestTargetChargeHandler(t *testing.T) {
@@ -32,17 +50,20 @@ func TestTargetChargeHandler(t *testing.T) {
 		outTime    time.Time
 	}{
 		{
-			"70", "2022-05-17T06:20:59.509Z", http.StatusOK,
-			70, time.Date(2022, 0o5, 17, 0o6, 20, 59, 509000000, time.UTC),
+			"70", "2022-05-17T06:20:59.509Z", http.StatusOK, 70, time.Date(2022, 0o5, 17, 0o6, 20, 59, 509000000, time.UTC),
 		},
-		{"foo", "2022-05-17T06:20:59.509Z", http.StatusBadRequest, 0, time.Time{}},
-		{"70", "2022-05-17 06:20:59", http.StatusBadRequest, 0, time.Time{}},
+		{
+			"foo", "2022-05-17T06:20:59.509Z", http.StatusBadRequest, 0, time.Time{},
+		},
+		{
+			"70", "2022-05-17 06:20:59", http.StatusBadRequest, 0, time.Time{},
+		},
 	}
 
 	for _, tc := range tc {
 		mockLp := &mockLoadpoint{}
 
-		handler := http.HandlerFunc(targetChargeHandler(mockLp))
+		handler := http.HandlerFunc(targetTimeHandler(mockLp))
 
 		req, err := http.NewRequest("GET", fmt.Sprintf("/targetcharge/%s/%s", tc.inSoc, tc.inTime), nil)
 		if err != nil {

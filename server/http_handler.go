@@ -308,18 +308,10 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// targetChargeHandler updates target soc
-func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
+// targetTimeHandler updates target soc
+func targetTimeHandler(lp targetCharger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-
-		socS, ok := vars["soc"]
-		socV, err := strconv.Atoi(socS)
-
-		if !ok || err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
 
 		timeS, ok := vars["time"]
 		timeV, err := time.Parse(time.RFC3339, timeS)
@@ -329,27 +321,29 @@ func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 			return
 		}
 
-		if err := loadpoint.SetTargetCharge(timeV, socV); err != nil {
+		if err := lp.SetTargetTime(timeV); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		res := struct {
-			Soc  int       `json:"soc"`
-			Time time.Time `json:"time"`
+			Soc    int       `json:"soc"`
+			Energy float64   `json:"energy"`
+			Time   time.Time `json:"time"`
 		}{
-			Soc:  socV,
-			Time: timeV,
+			Soc:    lp.GetTargetSoc(),
+			Energy: lp.GetTargetEnergy(),
+			Time:   lp.GetTargetTime(),
 		}
 
 		jsonResult(w, res)
 	}
 }
 
-// targetChargeRemoveHandler removes target soc
-func targetChargeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
+// targetTimeRemoveHandler removes target soc
+func targetTimeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := loadpoint.SetTargetCharge(time.Time{}, 0); err != nil {
+		if err := loadpoint.SetTargetTime(time.Time{}); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -413,6 +407,16 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 
 // TargetCharger defines target charge related loadpoint operations
 type targetCharger interface {
-	// SetTargetCharge sets the charge targetSoc
-	SetTargetCharge(time.Time, int) error
+	// GetTargetTime returns the target time
+	GetTargetTime() time.Time
+	// SetTargetTime sets the target time
+	SetTargetTime(time.Time) error
+	// GetTargetEnergy returns the charge target energy
+	GetTargetEnergy() float64
+	// SetTargetEnergy sets the charge target energy
+	SetTargetEnergy(float64)
+	// GetTargetSoc returns the charge target soc
+	GetTargetSoc() int
+	// SetTargetSoc sets the charge target soc
+	SetTargetSoc(int)
 }

@@ -116,14 +116,14 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 		routes := map[string]route{
 			"mode":          {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
-			"targetenergy":  {[]string{"POST", "OPTIONS"}, "/targetenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetTargetEnergy), lp.GetTargetEnergy)},
-			"targetsoc":     {[]string{"POST", "OPTIONS"}, "/targetsoc/{value:[0-9]+}", intHandler(pass(lp.SetTargetSoc), lp.GetTargetSoc)},
 			"minsoc":        {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intHandler(pass(lp.SetMinSoc), lp.GetMinSoc)},
 			"mincurrent":    {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent)},
 			"maxcurrent":    {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
 			"phases":        {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
-			"targetcharge":  {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:.-]+}", targetChargeHandler(lp)},
-			"targetcharge2": {[]string{"DELETE", "OPTIONS"}, "/targetcharge", targetChargeRemoveHandler(lp)},
+			"targetenergy":  {[]string{"POST", "OPTIONS"}, "/target/energy/{value:[0-9.]+}", floatHandler(pass(lp.SetTargetEnergy), lp.GetTargetEnergy)},
+			"targetsoc":     {[]string{"POST", "OPTIONS"}, "/target/soc/{value:[0-9]+}", intHandler(pass(lp.SetTargetSoc), lp.GetTargetSoc)},
+			"targettime":    {[]string{"POST", "OPTIONS"}, "/target/time/{time:[0-9TZ:.-]+}", targetTimeHandler(lp)},
+			"targettime2":   {[]string{"DELETE", "OPTIONS"}, "/target/time", targetTimeRemoveHandler(lp)},
 			"vehicle":       {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[1-9][0-9]*}", vehicleHandler(site, lp)},
 			"vehicle2":      {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
 			"vehicleDetect": {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},
