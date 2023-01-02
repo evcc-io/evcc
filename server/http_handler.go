@@ -86,19 +86,6 @@ func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
 	}
 }
 
-// healthHandler returns current charge mode
-func healthHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if site == nil || !site.Healthy() {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "OK")
-	}
-}
-
 // pass converts a simple api without return value to api with nil error return value
 func pass[T any](f func(T)) func(T) error {
 	return func(v T) error {
@@ -198,20 +185,44 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 	}
 }
 
-// tariffHandler returns the selected tariff
-func tariffHandler(site site.API) http.HandlerFunc {
+// healthHandler returns current charge mode
+func healthHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		tariff, ok := vars["tariff"]
-		rates, err := site.GetTariff(tariff)
-
-		if !ok || err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+		if site == nil || !site.Healthy() {
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		jsonResult(w, rates)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	}
+}
+
+// tariffHandler returns the configured tariff
+func tariffHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tariff := vars["tariff"]
+
+		t := site.GetTariff(tariff)
+		if t == nil {
+			jsonError(w, http.StatusBadRequest, errors.New("tariff not available"))
+			return
+		}
+
+		rates, err := t.Rates()
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		res := struct {
+			Rates api.Rates `json:"rates"`
+		}{
+			Rates: rates,
+		}
+
+		jsonResult(w, res)
 	}
 }
 
@@ -319,18 +330,10 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// targetChargeHandler updates target soc
-func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
+// targetTimeHandler updates target soc
+func targetTimeHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-
-		socS, ok := vars["soc"]
-		socV, err := strconv.Atoi(socS)
-
-		if !ok || err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
 
 		timeS, ok := vars["time"]
 		timeV, err := time.Parse(time.RFC3339, timeS)
@@ -340,27 +343,29 @@ func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 			return
 		}
 
-		if err := loadpoint.SetTargetCharge(timeV, socV); err != nil {
+		if err := lp.SetTargetTime(timeV); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		res := struct {
-			Soc  int       `json:"soc"`
-			Time time.Time `json:"time"`
+			Soc    int       `json:"soc"`
+			Energy float64   `json:"energy"`
+			Time   time.Time `json:"time"`
 		}{
-			Soc:  socV,
-			Time: timeV,
+			Soc:    lp.GetTargetSoc(),
+			Energy: lp.GetTargetEnergy(),
+			Time:   lp.GetTargetTime(),
 		}
 
 		jsonResult(w, res)
 	}
 }
 
-// targetChargeRemoveHandler removes target soc
-func targetChargeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
+// targetTimeRemoveHandler removes target soc
+func targetTimeRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := loadpoint.SetTargetCharge(time.Time{}, 0); err != nil {
+		if err := lp.SetTargetTime(time.Time{}); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -371,7 +376,7 @@ func targetChargeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
 }
 
 // vehicleHandler sets active vehicle
-func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
+func vehicleHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -385,7 +390,7 @@ func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
 		}
 
 		v := vehicles[val-1]
-		loadpoint.SetVehicle(v)
+		lp.SetVehicle(v)
 
 		res := struct {
 			Vehicle string `json:"vehicle"`
@@ -398,19 +403,56 @@ func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
 }
 
 // vehicleRemoveHandler removes vehicle
-func vehicleRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
+func vehicleRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		loadpoint.SetVehicle(nil)
+		lp.SetVehicle(nil)
 		res := struct{}{}
 		jsonResult(w, res)
 	}
 }
 
 // vehicleDetectHandler starts vehicle detection
-func vehicleDetectHandler(loadpoint loadpoint.API) http.HandlerFunc {
+func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		loadpoint.StartVehicleDetection()
+		lp.StartVehicleDetection()
 		res := struct{}{}
+		jsonResult(w, res)
+	}
+}
+
+// planHandler starts vehicle detection
+func planHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var err error
+
+		targetTime := lp.GetTargetTime()
+		if t := r.URL.Query().Get("targetTime"); t != "" {
+			targetTime, err = time.Parse(time.RFC3339, t)
+		}
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		power := lp.GetMaxPower()
+		requiredDuration, plan, err := lp.GetPlan(targetTime, power)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res := struct {
+			Duration int64     `json:"duration"`
+			Plan     api.Rates `json:"plan"`
+			Unit     string    `json:"unit"`
+			Power    float64   `json:"power"`
+		}{
+			Duration: int64(requiredDuration.Seconds()),
+			Plan:     plan,
+			Unit:     lp.GetPlannerUnit(),
+			Power:    power,
+		}
 		jsonResult(w, res)
 	}
 }
@@ -420,10 +462,4 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ServeWebsocket(hub, w, r)
 	}
-}
-
-// TargetCharger defines target charge related loadpoint operations
-type targetCharger interface {
-	// SetTargetCharge sets the charge targetSoc
-	SetTargetCharge(time.Time, int) error
 }

@@ -43,10 +43,23 @@
 						</div>
 						<form @submit.prevent="setTargetTime">
 							<div class="modal-body">
-								<div class="form-group">
+								<div class="form-group mb-2">
 									<!-- eslint-disable vue/no-v-html -->
 									<label for="targetTimeLabel" class="mb-3">
-										{{ $t("main.targetCharge.description", { targetSoc }) }}
+										<span v-if="socBasedCharging">
+											{{
+												$t("main.targetCharge.descriptionSoc", {
+													targetSoc,
+												})
+											}}
+										</span>
+										<span v-else>
+											{{
+												$t("main.targetCharge.descriptionEnergy", {
+													targetEnergy: targetEnergyFormatted,
+												})
+											}}
+										</span>
 									</label>
 									<!-- eslint-enable vue/no-v-html -->
 									<div
@@ -79,23 +92,14 @@
 								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
 									{{ $t("main.targetCharge.targetIsInThePast") }}
 								</p>
-								<p class="small mt-3 text-muted mb-0">
-									<strong class="text-evcc">
-										{{ $t("main.targetCharge.experimentalLabel") }}:
-									</strong>
-									{{ $t("main.targetCharge.experimentalText") }}
-									<a
-										href="https://github.com/evcc-io/evcc/discussions/1433"
-										target="_blank"
-										>GitHub Discussions</a
-									>.
-								</p>
+								<TargetChargePlanMinimal v-else-if="plan.duration" v-bind="plan" />
 							</div>
 							<div class="modal-footer d-flex justify-content-between">
 								<button
 									type="button"
 									class="btn btn-outline-secondary"
 									data-bs-dismiss="modal"
+									:disabled="!targetTime"
 									@click="removeTargetTime"
 								>
 									{{ $t("main.targetCharge.remove") }}
@@ -122,6 +126,8 @@ import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
 import LabelAndValue from "./LabelAndValue.vue";
+import TargetChargePlanMinimal from "./TargetChargePlanMinimal.vue";
+import api from "../api";
 
 import formatter from "../mixins/formatter";
 
@@ -130,18 +136,20 @@ const LAST_TARGET_TIME_KEY = "last_target_time";
 
 export default {
 	name: "TargetCharge",
-	components: { LabelAndValue },
+	components: { LabelAndValue, TargetChargePlanMinimal },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
+		planActive: Boolean,
 		targetTime: String,
-		targetTimeActive: Boolean,
 		targetSoc: Number,
+		targetEnergy: Number,
+		socBasedCharging: Boolean,
 		disabled: Boolean,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
-		return { selectedDay: null, selectedTime: null };
+		return { selectedDay: null, selectedTime: null, plan: {} };
 	},
 	computed: {
 		targetChargeEnabled: function () {
@@ -157,6 +165,9 @@ export default {
 		modalId: function () {
 			return `targetChargeModal_${this.id}`;
 		},
+		targetEnergyFormatted: function () {
+			return this.fmtKWh(this.targetEnergy * 1e3, true, true, 1);
+		},
 	},
 	watch: {
 		targetTimeLabel: function () {
@@ -167,12 +178,32 @@ export default {
 		},
 		targetTime() {
 			this.initInputFields();
+			this.updatePlan();
+		},
+		selectedTargetTime() {
+			this.updatePlan();
+		},
+		targetSoc() {
+			this.updatePlan();
+		},
+		targetEnergy() {
+			this.updatePlan();
 		},
 	},
-	mounted: function () {
-		this.initInputFields();
-	},
 	methods: {
+		updatePlan: async function () {
+			if (this.selectedTargetTimeValid && (this.targetEnergy || this.targetSoc)) {
+				try {
+					const response = await api.get(`/loadpoints/${this.id}/target/plan`, {
+						params: { targetTime: this.selectedTargetTime },
+					});
+					this.plan = response.data.result;
+				} catch (e) {
+					console.error(e);
+				}
+			}
+		},
+
 		// not computed because it needs to update over time
 		targetTimeLabel: function () {
 			if (this.targetChargeEnabled) {
@@ -245,6 +276,7 @@ export default {
 		},
 		openModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById(this.modalId));
+			this.initInputFields();
 			modal.show();
 		},
 	},

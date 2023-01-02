@@ -114,8 +114,8 @@ func (t *GrünStromIndex) run(done chan error) {
 		for _, r := range res.Forecast {
 			t.data = append(t.data, api.Rate{
 				Price: float64(r.Co2GStandard),
-				Start: time.UnixMilli(r.Timeframe.Start),
-				End:   time.UnixMilli(r.Timeframe.End),
+				Start: time.UnixMilli(r.Timeframe.Start).Local(),
+				End:   time.UnixMilli(r.Timeframe.End).Local(),
 			})
 		}
 
