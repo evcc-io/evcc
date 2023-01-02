@@ -1,7 +1,6 @@
 package planner
 
 import (
-	"sort"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 )
 
 func rates(prices []float64, start time.Time, slotEndFunc ...func(time.Time) time.Time) api.Rates {
@@ -54,7 +54,7 @@ func TestPlan(t *testing.T) {
 	rates, err := trf.Rates()
 	assert.NoError(t, err)
 
-	sort.Sort(rates)
+	slices.SortStableFunc(rates, sortByTime)
 
 	{
 		plan := p.Plan(rates, time.Hour, clck.Now())

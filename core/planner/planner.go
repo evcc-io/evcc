@@ -1,13 +1,13 @@
 package planner
 
 import (
-	"sort"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/copier"
+	"golang.org/x/exp/slices"
 )
 
 // Planner plans a series of charging slots for a given (variable) tariff
@@ -104,7 +104,7 @@ func (t *Planner) Active(requiredDuration time.Duration, targetTime time.Time) (
 	last := rates[len(rates)-1].End
 
 	// sort rates by price and time
-	sort.Sort(rates)
+	slices.SortStableFunc(rates, sortByCost)
 
 	// reduce planning horizon to available rates
 	if targetTime.After(last) {
