@@ -86,6 +86,13 @@ func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 	if !ok {
 		return DeviceTestResultInvalid, errors.New("selected device is not a wallbox")
 	}
+
+	if t, ok := v.(api.ConfigureTest); ok {
+		if !t.TestDeviceConnection() {
+			return DeviceTestResultInvalid, errors.New("selected device does not respond")
+		}
+	}
+
 	if _, err := c.Status(); err != nil {
 		return DeviceTestResultInvalid, err
 	}

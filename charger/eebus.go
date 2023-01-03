@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/enbility/cemd/emobility"
@@ -35,6 +36,8 @@ type EEBus struct {
 	lastIsChargingResult bool
 
 	evConnectedTime time.Time
+
+	mux sync.Mutex
 }
 
 func init() {
@@ -110,10 +113,20 @@ func (c *EEBus) setDefaultValues() {
 }
 
 func (c *EEBus) setConnected(connected bool) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	if connected && !c.connected {
 		c.evConnectedTime = time.Now()
 	}
 	c.connected = connected
+}
+
+func (c *EEBus) isConnected() bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	return c.connected
 }
 
 func (c *EEBus) setLoadpointMinMaxLimits() {
@@ -186,7 +199,7 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if !c.connected {
+	if !c.isConnected() {
 		return api.StatusNone, fmt.Errorf("%s charger reported as disconnected", c.ski)
 	}
 
@@ -410,7 +423,7 @@ var _ api.Identifier = (*EEBus)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *EEBus) Identify() (string, error) {
-	if !c.connected {
+	if !c.isConnected() {
 		return "", nil
 	}
 
@@ -474,3 +487,25 @@ func (c *EEBus) LoadpointControl(lp loadpoint.API) {
 
 	c.setLoadpointMinMaxLimits()
 }
+
+var _ api.ConfigureTest = (*EEBus)(nil)
+
+// TestConfiguration implemented api.ConfigureTest
+func (c *EEBus) TestDeviceConnection() bool {
+	// wait up to 30 seconds for a connection
+	timeout := time.After(30 * time.Second)
+	tick := time.Tick(1 * time.Second)
+
+	// keep trying until we're timed out or got a positive result
+	for {
+		select {
+		case <-timeout:
+			return false
+		case <-tick:
+			if c.isConnected() {
+				return true
+			}
+		}
+	}
+}
+
