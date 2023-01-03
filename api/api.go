@@ -221,5 +221,5 @@ type CsvWriter interface {
 
 // ConfigureTest is an optional interface for the configure process for devices with a more complex connection handling
 type ConfigureTest interface {
-	TestDeviceConnection() bool
+	WaitForDeviceConnection() bool
 }

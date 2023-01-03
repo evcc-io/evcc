@@ -88,7 +88,7 @@ func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 	}
 
 	if t, ok := v.(api.ConfigureTest); ok {
-		if !t.TestDeviceConnection() {
+		if !t.WaitForDeviceConnection() {
 			return DeviceTestResultInvalid, errors.New("selected device does not respond")
 		}
 	}

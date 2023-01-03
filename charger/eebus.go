@@ -491,7 +491,7 @@ func (c *EEBus) LoadpointControl(lp loadpoint.API) {
 var _ api.ConfigureTest = (*EEBus)(nil)
 
 // TestConfiguration implemented api.ConfigureTest
-func (c *EEBus) TestDeviceConnection() bool {
+func (c *EEBus) WaitForDeviceConnection() bool {
 	// wait up to 30 seconds for a connection
 	timeout := time.After(30 * time.Second)
 	tick := time.Tick(1 * time.Second)
@@ -508,4 +508,3 @@ func (c *EEBus) TestDeviceConnection() bool {
 		}
 	}
 }
-
