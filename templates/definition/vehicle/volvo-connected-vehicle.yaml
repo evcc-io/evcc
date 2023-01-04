@@ -1,10 +1,10 @@
-template: volvo
+template: volvo-connected
 products:
-  - brand: Volvo (legacy)
+  - brand: Volvo
 params:
   - preset: vehiclebase
   - preset: vehicleidentify
 render: |
-  type: volvo
+  type: volvo-connected
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}

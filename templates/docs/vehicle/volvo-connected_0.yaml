@@ -1,9 +1,9 @@
 product:
-  brand: Volvo (legacy)
+  brand: Volvo
 render:
   - default: |
       type: template
-      template: volvo
+      template: volvo-connected
       title: # Wird in der Benutzeroberfläche angezeigt # Optional
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
@@ -11,7 +11,7 @@ render:
       capacity: 50 # Akku-Kapazität in kWh # Optional
     advanced: |
       type: template
-      template: volvo
+      template: volvo-connected
       title: # Wird in der Benutzeroberfläche angezeigt # Optional
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
