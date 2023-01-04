@@ -12,6 +12,11 @@ network:
 
 interval: 10s # control cycle interval
 
+# database configuration for persisting charge sessions and settings
+# database:
+#   type: sqlite
+#   dsn: <path-to-db-file>
+
 # sponsor token enables optional features (request at https://cloud.evcc.io)
 # sponsortoken:
 
