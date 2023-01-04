@@ -16,10 +16,12 @@ const (
 	ApiURL = "https://api.volvocars.com"
 )
 
+// API is the Volvo client
 type API struct {
 	*request.Helper
 }
 
+// NewAPI creates a new api client
 func NewAPI(log *util.Logger, identity oauth2.TokenSource, vccapikey string) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
