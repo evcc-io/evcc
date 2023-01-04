@@ -1,8 +1,6 @@
 package vehicle
 
 import (
-	"errors"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -13,22 +11,24 @@ import (
 // VolvoConnectedCar is an api.Vehicle implementation for Volvo Connected Car vehicles
 type VolvoConnectedCar struct {
 	*embed
-	api.ProviderLogin
+	// api.ProviderLogin
 	*connectedcar.Provider
 }
 
 func init() {
-	registry.Add("volvo-cc", NewVolvoConnectedCarFromConfig)
+	registry.Add("volvo-connected-car", NewVolvoConnectedCarFromConfig)
 }
 
 // NewVolvoConnectedCarFromConfig creates a new VolvoConnectedCar vehicle
 func NewVolvoConnectedCarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                  `mapstructure:",squash"`
-		ClientID, ClientSecret string
-		VIN                    string
-		Sandbox                bool
-		Cache                  time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string
+		VIN            string
+		// ClientID, ClientSecret string
+		// Sandbox                bool
+		VccApiKey string
+		Cache     time.Duration
 	}{
 		Cache: interval,
 	}
@@ -37,9 +37,9 @@ func NewVolvoConnectedCarFromConfig(other map[string]interface{}) (api.Vehicle, 
 		return nil, err
 	}
 
-	if cc.ClientID == "" && cc.ClientSecret == "" {
-		return nil, errors.New("missing credentials")
-	}
+	// if cc.ClientID == "" && cc.ClientSecret == "" {
+	// 	return nil, errors.New("missing credentials")
+	// }
 
 	// var options []VolvoConnectedCar.IdentityOptions
 
@@ -53,22 +53,28 @@ func NewVolvoConnectedCarFromConfig(other map[string]interface{}) (api.Vehicle, 
 	// 	}))
 	// }
 
-	log := util.NewLogger("volvo-cc")
+	log := util.NewLogger("volvo-cc").Redact(cc.User, cc.Password, cc.VIN, cc.VccApiKey)
 
-	// TODO session secret from config/persistence
-	// identity, err := VolvoConnectedCar.NewIdentity(log, cc.ClientID, cc.ClientSecret, options...)
-	identity, err := connectedcar.NewIdentity(log, cc.ClientID, cc.ClientSecret)
+	// identity, err := connectedcar.NewIdentity(log, cc.ClientID, cc.ClientSecret)
+	identity, err := connectedcar.NewIdentity(log)
 	if err != nil {
 		return nil, err
 	}
 
+	if err := identity.Login(cc.User, cc.Password); err != nil {
+		return nil, err
+	}
+
 	_ = identity
-	// api := VolvoConnectedCar.NewAPI(log, identity, cc.Sandbox)
+	// api := connectedcar.NewAPI(log, identity, cc.Sandbox)
+	api := connectedcar.NewAPI(log, identity, cc.VccApiKey)
+
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	v := &VolvoConnectedCar{
-		embed:         &cc.embed,
-		Provider:      connectedcar.NewProvider(nil, strings.ToUpper(cc.VIN), cc.Cache),
-		ProviderLogin: identity, // expose the OAuth2 login
+		embed:    &cc.embed,
+		Provider: connectedcar.NewProvider(api, cc.VIN, cc.Cache),
+		// ProviderLogin: identity, // expose the OAuth2 login
 	}
 
 	return v, nil

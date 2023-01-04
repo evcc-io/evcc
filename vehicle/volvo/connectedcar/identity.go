@@ -1,147 +1,85 @@
 package connectedcar
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/server/auth"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
-type IdentityOptions func(c *Identity) error
-
-// WithToken provides an oauth2.Token to the client for auth.
-func WithToken(t *oauth2.Token) IdentityOptions {
-	return func(v *Identity) error {
-		v.ReuseTokenSource.Apply(t)
-		return nil
-	}
+var Oauth2Config = oauth2.Config{
+	Endpoint: oauth2.Endpoint{
+		AuthURL:  "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
+		TokenURL: "https://volvoid.eu.volvocars.com/as/token.oauth2",
+	},
+	Scopes: []string{oidc.ScopeOpenID, "vehicle:attributes",
+		"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
+		"conve:fuel_status", "conve:odometer_status", "conve:environment"},
 }
+
+const (
+	managerId = "JWTh4Yf0b"
+	basicAuth = "Basic aDRZZjBiOlU4WWtTYlZsNnh3c2c1WVFxWmZyZ1ZtSWFEcGhPc3kxUENhVXNpY1F0bzNUUjVrd2FKc2U0QVpkZ2ZJZmNMeXc="
+)
 
 type Identity struct {
-	log *util.Logger
-	*ReuseTokenSource
-	oc      *oauth2.Config
-	baseURL string
-	authC   chan<- bool
+	*request.Helper
+	oauth2.TokenSource
 }
 
-// TODO SessionSecret from config/persistence
-func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOptions) (*Identity, error) {
-	// provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
-	// }
-
-	oc := &oauth2.Config{
-		ClientID:     id,
-		ClientSecret: secret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
-			TokenURL: "https://volvoid.eu.volvocars.com/as/token.oauth2",
-		},
-		Scopes: []string{oidc.ScopeOpenID, "conve:fuel_status", "conve:odometer_status", "conve:environment"},
-	}
-
+func NewIdentity(log *util.Logger) (*Identity, error) {
 	v := &Identity{
-		log: log,
-		oc:  oc,
+		Helper: request.NewHelper(log),
 	}
-
-	ts := &ReuseTokenSource{
-		oc: oc,
-		cb: v.invalidToken,
-	}
-	ts.Apply(nil)
-
-	v.ReuseTokenSource = ts
-
-	// for _, o := range options {
-	// 	if err == nil {
-	// 		err = o(v)
-	// 	}
-	// }
 
 	return v, nil
 }
 
-// invalidToken is the callback for the token source when token expires
-func (v *Identity) invalidToken() {
-	if v.authC != nil {
-		v.authC <- false
+func (v *Identity) Login(user, password string) error {
+	data := url.Values{
+		"username":                {user},
+		"password":                {password},
+		"access_token_manager_id": {managerId},
+		"grant_type":              {"password"},
+		"scope":                   {strings.Join(Oauth2Config.Scopes, " ")},
 	}
+
+	req, err := request.New(http.MethodPost, Oauth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type":  request.FormContent,
+		"Authorization": basicAuth,
+	})
+
+	if err == nil {
+		var token oauth2.Token
+		if err = v.DoJSON(req, &token); err == nil {
+			v.TokenSource = oauth.RefreshTokenSource(&token, v)
+		}
+	}
+
+	return err
 }
 
-var _ api.ProviderLogin = (*Identity)(nil)
-
-func (v *Identity) SetCallbackParams(baseURL, redirectURL string, authC chan<- bool) {
-	v.baseURL = baseURL
-	v.oc.RedirectURL = redirectURL
-	v.authC = authC
-}
-
-func (v *Identity) LoginHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		state := auth.Register(v.callbackHandler)
-
-		fmt.Println(v.oc.AuthCodeURL(state))
-
-		b, _ := json.Marshal(struct {
-			LoginUri string `json:"loginUri"`
-		}{
-			LoginUri: v.oc.AuthCodeURL(state), //, oauth2.AccessTypeOffline), // oauth2.SetAuthURLParam("prompt", "login consent"),
-		})
-
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(b)
-	}
-}
-
-func (v *Identity) LogoutHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		v.ReuseTokenSource.Apply(nil)
-		v.authC <- false
-
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(nil)
-	}
-}
-
-func (v *Identity) callbackHandler(w http.ResponseWriter, r *http.Request) {
-	v.log.TRACE.Println("callback request retrieved")
-
-	data, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
-		fmt.Fprintln(w, "invalid response:", data)
-		return
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	data := url.Values{
+		"access_token_manager_id": {managerId},
+		"grant_type":              {"refresh_token"},
+		"refresh_token":           {token.RefreshToken},
 	}
 
-	codes, ok := data["code"]
-	if !ok || len(codes) != 1 {
-		fmt.Fprintln(w, "invalid response:", data)
-		return
+	req, err := request.New(http.MethodPost, Oauth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type":  request.FormContent,
+		"Authorization": basicAuth,
+	})
+
+	var res oauth2.Token
+	if err == nil {
+		err = v.DoJSON(req, &res)
 	}
 
-	token, err := v.oc.Exchange(context.Background(), codes[0])
-	if err != nil {
-		fmt.Fprintln(w, "token error:", err)
-		return
-	}
-
-	if token.Valid() {
-		v.log.TRACE.Println("sending login update...")
-		v.ReuseTokenSource.Apply(token)
-		v.authC <- true
-
-		provider.ResetCached()
-	}
-
-	http.Redirect(w, r, v.baseURL, http.StatusFound)
+	return &res, err
 }

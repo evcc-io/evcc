@@ -1,46 +1,66 @@
 package connectedcar
 
 import (
-	"errors"
 	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 )
 
 // Provider implements the evcc vehicle api
 type Provider struct {
-	// chargerG func() (EVResponse, error)
-	// rangeG   func() (EVResponse, error)
+	statusG func() (RechargeStatus, error)
 }
 
 // NewProvider provides the evcc vehicle api provider
-func NewProvider(api any, vin string, cache time.Duration) *Provider {
+func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		// chargerG: provider.Cached(func() (EVResponse, error) {
-		// 	return api.SoC(vin)
-		// }, cache),
-		// rangeG: provider.Cached(func() (EVResponse, error) {
-		// 	return api.Range(vin)
-		// }, cache),
+		statusG: provider.Cached(func() (RechargeStatus, error) {
+			return api.RechargeStatus(vin)
+		}, cache),
 	}
 	return impl
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
-	// res, err := v.chargerG()
-	// if err == nil {
-	// 	return float64(res.SoC.Value), nil
-	// }
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
+	res, err := v.statusG()
+	return res.Data.BatteryChargeLevel.Value, err
+}
 
-	// return 0, err
-	return 0, errors.New("no soc")
+// Range implements the api.ChargeState interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+
+	res, err := v.statusG()
+	if err != nil {
+		return status, nil
+	}
+
+	switch res.Data.ChargingConnectionStatus.Value {
+	case "CONNECTION_STATUS_DISCONNECTED":
+		status = api.StatusA
+	case "CONNECTION_STATUS_CONNECTED_AC", "CONNECTION_STATUS_CONNECTED_DC":
+		status = api.StatusB
+	}
+
+	if res.Data.ChargingSystemStatus.Value == "CHARGING_SYSTEM_CHARGING" {
+		status = api.StatusC
+	}
+
+	return status, err
 }
 
 // Range implements the api.VehicleRange interface
-// func (v *Provider) Range() (rng int64, err error) {
-// 	res, err := v.rangeG()
-// 	if err == nil {
-// 		return int64(res.RangeElectric.Value), nil
-// 	}
+func (v *Provider) Range() (rng int64, err error) {
+	res, err := v.statusG()
+	return res.Data.ElectricRange.Value, err
+}
 
-// 	return 0, err
-// }
+var _ api.VehicleFinishTimer = (*Provider)(nil)
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	res, err := v.statusG()
+	return res.Data.EstimatedChargingTime.Timestamp.Add(time.Duration(res.Data.EstimatedChargingTime.Value) * time.Minute), err
+}
