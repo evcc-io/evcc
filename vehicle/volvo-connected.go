@@ -76,5 +76,5 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 		// ProviderLogin: identity, // expose the OAuth2 login
 	}
 
-	return v, nil
+	return v, err
 }
