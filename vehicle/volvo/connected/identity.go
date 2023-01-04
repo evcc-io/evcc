@@ -1,4 +1,4 @@
-package connectedcar
+package connected
 
 import (
 	"net/http"
@@ -19,7 +19,8 @@ var Oauth2Config = oauth2.Config{
 	},
 	Scopes: []string{oidc.ScopeOpenID, "vehicle:attributes",
 		"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
-		"conve:fuel_status", "conve:odometer_status", "conve:environment"},
+		"conve:fuel_status", "conve:odometer_status", "conve:environment",
+	},
 }
 
 const (

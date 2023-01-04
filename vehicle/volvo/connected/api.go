@@ -1,4 +1,4 @@
-package connectedcar
+package connected
 
 import (
 	"fmt"

@@ -5,22 +5,21 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/vehicle/volvo/connectedcar"
+	"github.com/evcc-io/evcc/vehicle/volvo/connected"
 )
 
-// VolvoConnectedCar is an api.Vehicle implementation for Volvo Connected Car vehicles
-type VolvoConnectedCar struct {
+// VolvoConnected is an api.Vehicle implementation for Volvo Connected Car vehicles
+type VolvoConnected struct {
 	*embed
-	// api.ProviderLogin
-	*connectedcar.Provider
+	*connected.Provider
 }
 
 func init() {
-	registry.Add("volvo-connected-car", NewVolvoConnectedCarFromConfig)
+	registry.Add("volvo-connected", NewVolvoConnectedFromConfig)
 }
 
-// NewVolvoConnectedCarFromConfig creates a new VolvoConnectedCar vehicle
-func NewVolvoConnectedCarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
+func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -41,12 +40,12 @@ func NewVolvoConnectedCarFromConfig(other map[string]interface{}) (api.Vehicle, 
 	// 	return nil, errors.New("missing credentials")
 	// }
 
-	// var options []VolvoConnectedCar.IdentityOptions
+	// var options []VolvoConnected.IdentityOptions
 
 	// TODO Load tokens from a persistence storage and use those during startup
 	// e.g. persistence.Load("key")
 	// if tokens != nil {
-	// 	options = append(options, VolvoConnectedCar.WithToken(&oauth2.Token{
+	// 	options = append(options, VolvoConnected.WithToken(&oauth2.Token{
 	// 		AccessToken:  tokens.Access,
 	// 		RefreshToken: tokens.Refresh,
 	// 		Expiry:       tokens.Expiry,
@@ -55,8 +54,8 @@ func NewVolvoConnectedCarFromConfig(other map[string]interface{}) (api.Vehicle, 
 
 	log := util.NewLogger("volvo-cc").Redact(cc.User, cc.Password, cc.VIN, cc.VccApiKey)
 
-	// identity, err := connectedcar.NewIdentity(log, cc.ClientID, cc.ClientSecret)
-	identity, err := connectedcar.NewIdentity(log)
+	// identity, err := connected.NewIdentity(log, cc.ClientID, cc.ClientSecret)
+	identity, err := connected.NewIdentity(log)
 	if err != nil {
 		return nil, err
 	}
@@ -66,14 +65,14 @@ func NewVolvoConnectedCarFromConfig(other map[string]interface{}) (api.Vehicle, 
 	}
 
 	_ = identity
-	// api := connectedcar.NewAPI(log, identity, cc.Sandbox)
-	api := connectedcar.NewAPI(log, identity, cc.VccApiKey)
+	// api := connected.NewAPI(log, identity, cc.Sandbox)
+	api := connected.NewAPI(log, identity, cc.VccApiKey)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
-	v := &VolvoConnectedCar{
+	v := &VolvoConnected{
 		embed:    &cc.embed,
-		Provider: connectedcar.NewProvider(api, cc.VIN, cc.Cache),
+		Provider: connected.NewProvider(api, cc.VIN, cc.Cache),
 		// ProviderLogin: identity, // expose the OAuth2 login
 	}
 
