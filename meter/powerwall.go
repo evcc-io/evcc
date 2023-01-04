@@ -57,7 +57,7 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 // NewPowerWall creates a Tesla PowerWall Meter
 func NewPowerWall(uri, usage, user, password string) (api.Meter, error) {
-	log := util.NewLogger("tesla")
+	log := util.NewLogger("powerwall").Redact(user, password)
 
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),

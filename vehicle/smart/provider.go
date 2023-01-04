@@ -55,20 +55,31 @@ var _ api.ChargeState = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
+	if err != nil {
+		return api.StatusNone, err
+	}
 
-	switch v := res.PreCond.Data.ChargingStatus.Status; v {
+	cs := res.PreCond.Data.ChargingStatus
+	if cs.Status != 0 {
+		return api.StatusNone, fmt.Errorf("unknown status/value: %d/%d", cs.Status, cs.Value)
+	}
+
+	// confirmed status/value/active combinations (https://github.com/evcc-io/evcc/discussions/5596#discussioncomment-4556035)
+	// 0/0/active: charging
+	// 0/2/*:      connected
+	// 0/3/*:      disconnected
+	switch cs.Value {
 	case 0:
 		if res.PreCond.Data.ChargingActive.Value {
-			return api.StatusC, err
+			return api.StatusC, nil
 		}
-		return api.StatusB, err
+		return api.StatusB, nil
+	case 1, 2:
+		return api.StatusB, nil
 	case 3:
-		return api.StatusA, err
+		return api.StatusA, nil
 	default:
-		if err == nil {
-			err = fmt.Errorf("unknown status: %d", v)
-		}
-		return api.StatusNone, err
+		return api.StatusNone, fmt.Errorf("unknown status/value: %d/%d", cs.Status, cs.Value)
 	}
 }
 

@@ -230,6 +230,8 @@ func (wb *Alfen) Currents() (float64, float64, float64, error) {
 	return wb.voltagesOrCurrents(alfenRegCurrents)
 }
 
+var _ api.PhaseVoltages = (*Alfen)(nil)
+
 // Voltages implements the api.PhaseVoltages interface (tbc)
 func (wb *Alfen) Voltages() (float64, float64, float64, error) {
 	return wb.voltagesOrCurrents(alfenRegVoltages)

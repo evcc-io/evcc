@@ -186,7 +186,7 @@ func encodeFloats(data map[string]any) {
 	}
 }
 
-// stateHandler returns current charge mode
+// stateHandler returns the combined state
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State()
@@ -195,6 +195,23 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 		}
 		encodeFloats(res)
 		jsonResult(w, res)
+	}
+}
+
+// tariffHandler returns the selected tariff
+func tariffHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		tariff, ok := vars["tariff"]
+		rates, err := site.GetTariff(tariff)
+
+		if !ok || err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		jsonResult(w, rates)
 	}
 }
 

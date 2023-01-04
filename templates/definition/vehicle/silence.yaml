@@ -3,9 +3,9 @@ products:
   - brand: Silence
     description:
       generic: S01/S02
-  - brand: Seat
-    description:
-      generic: MÓ
+  # - brand: Seat
+  #   description:
+  #     generic: MÓ
 group: scooter
 params:
   - preset: vehiclebase

@@ -20,7 +20,7 @@ type Provider struct {
 	wakeup   func() (kamereon.Response, error)
 }
 
-// NewProvider creates a new vehicle
+// NewProvider creates a vehicle api provider
 func NewProvider(api *kamereon.API, accountID, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		batteryG: provider.Cached(func() (kamereon.Response, error) {

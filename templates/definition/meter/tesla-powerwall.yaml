@@ -15,7 +15,7 @@ params:
       en: Password of the user "customer"
       de: Passwort des Benutzers "Kunde"
 render: |
-  type: tesla
+  type: powerwall
   uri: {{ .host }}
   usage: {{ .usage }}
   user: customer

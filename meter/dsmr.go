@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/basvdlei/gotsmart/crc16"
 	"github.com/basvdlei/gotsmart/dsmr"
+	"github.com/cenkalti/backoff"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -135,15 +137,23 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 }
 
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
-func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
+func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 	log := util.NewLogger("dsmr")
+	backoff := backoff.NewExponentialBackOff()
+	backoff.InitialInterval = time.Second
+	backoff.MaxInterval = 5 * time.Minute
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)
-		if errors.Is(err, net.ErrClosed) {
+		if err == io.EOF ||
+			errors.Is(err, io.ErrUnexpectedEOF) ||
+			errors.Is(err, net.ErrClosed) {
+			conn.Close() // closing on nil socket is safe
 			conn = nil
 		}
 	}
+
+	reader := bufio.NewReader(conn)
 
 	for {
 		if conn == nil {
@@ -151,15 +161,20 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 			conn, err = m.connect()
 			if err != nil {
 				handle("connect", err)
-				time.Sleep(time.Second)
+				sleep := backoff.NextBackOff().Truncate(time.Second)
+				log.DEBUG.Printf("next attempt after: %v", sleep)
+				time.Sleep(sleep)
 				continue
 			}
+
+			reader.Reset(conn)
 		}
 
-		if b, err := conn.Peek(1); err == nil {
+		backoff.Reset()
+		if b, err := reader.Peek(1); err == nil {
 			if string(b) != "/" {
 				log.DEBUG.Printf("ignoring garbage character: %c\n", b)
-				_, _ = conn.ReadByte()
+				_, _ = reader.ReadByte()
 				continue
 			}
 		} else {
@@ -167,13 +182,13 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 			continue
 		}
 
-		frame, err := conn.ReadBytes('!')
+		frame, err := reader.ReadBytes('!')
 		if err != nil {
 			handle("read", err)
 			continue
 		}
 
-		bcrc, err := conn.ReadBytes('\n')
+		bcrc, err := reader.ReadBytes('\n')
 		if err != nil {
 			handle("read", err)
 			continue
@@ -207,7 +222,7 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 	}
 }
 
-func (m *Dsmr) connect() (*bufio.Reader, error) {
+func (m *Dsmr) connect() (net.Conn, error) {
 	dialer := net.Dialer{Timeout: request.Timeout}
 
 	conn, err := dialer.Dial("tcp", m.addr)
@@ -215,7 +230,7 @@ func (m *Dsmr) connect() (*bufio.Reader, error) {
 		return nil, err
 	}
 
-	return bufio.NewReader(conn), nil
+	return conn, nil
 }
 
 func (m *Dsmr) get(id string) (float64, error) {

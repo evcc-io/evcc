@@ -188,8 +188,9 @@ type Resurrector interface {
 
 // Rate is a grid tariff rate
 type Rate struct {
-	Start, End time.Time
-	Price      float64
+	Start time.Time `json:"start"`
+	End   time.Time `json:"end"`
+	Price float64   `json:"price"`
 }
 
 // Rates is a slice of (future) tariff rates
