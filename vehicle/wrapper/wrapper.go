@@ -14,14 +14,14 @@ type Wrapper struct {
 }
 
 // New creates a new Vehicle
-func New(err error) (api.Vehicle, error) {
+func New(err error) api.Vehicle {
 	v := &Wrapper{
 		err:       fmt.Errorf("vehicle not available: %w", err),
 		title:     "unavailable",
 		Features_: []api.Feature{api.Offline},
 	}
 
-	return v, nil
+	return v
 }
 
 var _ api.Vehicle = (*Wrapper)(nil)

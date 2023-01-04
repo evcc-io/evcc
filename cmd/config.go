@@ -262,7 +262,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 			if err != nil {
 				log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
 				// wrap any created errors to prevent fatals
-				v, _ = wrapper.New(err)
+				v = wrapper.New(err)
 			}
 
 			// ensure vehicle config has title
