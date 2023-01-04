@@ -9,6 +9,7 @@ render:
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
       capacity: 50 # Akku-Kapazität in kWh # Optional
+      vccapikey: # Volvo developer portal VCC API Key, siehe https://github.com/evcc-io/evcc/discussions/3677#discussioncomment-4106300
     advanced: |
       type: template
       template: volvo-connected
@@ -26,3 +27,4 @@ render:
       minCurrent: 6 # Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll # Optional
       maxCurrent: 16 # Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll # Optional
       identifiers: # Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox # Optional
+      vccapikey: # Volvo developer portal VCC API Key, siehe https://github.com/evcc-io/evcc/discussions/3677#discussioncomment-4106300

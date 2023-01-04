@@ -4,7 +4,13 @@ products:
 params:
   - preset: vehiclebase
   - preset: vehicleidentify
+  - name: vccapikey
+    required: true
+    help:
+      en: "Volvo developer portal VCC API Key, see https://github.com/evcc-io/evcc/discussions/3677#discussioncomment-4106300"
+      de: "Volvo developer portal VCC API Key, siehe https://github.com/evcc-io/evcc/discussions/3677#discussioncomment-4106300"
 render: |
   type: volvo-connected
+  vccapikey: {{ .vccapikey }}
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
