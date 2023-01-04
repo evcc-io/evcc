@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 )
 
-// Provider implements the evcc vehicle api
+// Provider implements the vehicle api
 type Provider struct {
 	statusG   func() (StatusResponse, error)
 	chargerG  func() (ChargerResponse, error)

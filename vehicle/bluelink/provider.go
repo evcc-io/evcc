@@ -9,7 +9,7 @@ import (
 
 const refreshTimeout = 2 * time.Minute
 
-// Provider implements the Kia/Hyundai bluelink api.
+// Provider implements the vehicle api.
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
 	statusG     func() (VehicleStatus, error)

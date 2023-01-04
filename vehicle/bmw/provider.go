@@ -9,7 +9,7 @@ import (
 
 const kmPerMile = 1.609344
 
-// Provider implements the evcc vehicle api
+// Provider implements the vehicle api
 type Provider struct {
 	statusG func() (VehicleStatus, error)
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 )
 
-// Provider implements the evcc vehicle api
+// Provider implements the vehicle api
 type Provider struct {
 	statusG func() (RechargeStatus, error)
 }
@@ -50,6 +50,8 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	return status, err
 }
+
+var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {

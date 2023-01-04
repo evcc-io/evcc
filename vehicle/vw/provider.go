@@ -15,7 +15,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// Provider implements the evcc vehicle api
+// Provider implements the vehicle api
 type Provider struct {
 	chargerG  func() (ChargerResponse, error)
 	statusG   func() (StatusResponse, error)
