@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 const (
@@ -87,7 +89,29 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 		return decorateEEBus(c, c.currentPower, c.currents, nil), nil
 	}
 
-	return c, nil
+	// wait for first update
+	err := c.waitForInitialUpdate()
+
+	return c, err
+}
+
+// returns an error on failure
+func (c *EEBus) waitForInitialUpdate() error {
+	// wait for a connection
+	timeout := time.After(request.Timeout)
+	tick := time.Tick(1 * time.Second)
+
+	// keep trying until we're timed out or got a positive result
+	for {
+		select {
+		case <-timeout:
+			return os.ErrDeadlineExceeded
+		case <-tick:
+			if c.isConnected() {
+				return nil
+			}
+		}
+	}
 }
 
 func (c *EEBus) onConnect(ski string) {
@@ -486,25 +510,4 @@ func (c *EEBus) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
 
 	c.setLoadpointMinMaxLimits()
-}
-
-var _ api.ConfigureTest = (*EEBus)(nil)
-
-// TestConfiguration implemented api.ConfigureTest
-func (c *EEBus) WaitForDeviceConnection() bool {
-	// wait up to 30 seconds for a connection
-	timeout := time.After(30 * time.Second)
-	tick := time.Tick(1 * time.Second)
-
-	// keep trying until we're timed out or got a positive result
-	for {
-		select {
-		case <-timeout:
-			return false
-		case <-tick:
-			if c.isConnected() {
-				return true
-			}
-		}
-	}
 }

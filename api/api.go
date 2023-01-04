@@ -218,8 +218,3 @@ type FeatureDescriber interface {
 type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
-
-// ConfigureTest is an optional interface for the configure process for devices with a more complex connection handling
-type ConfigureTest interface {
-	WaitForDeviceConnection() bool
-}
