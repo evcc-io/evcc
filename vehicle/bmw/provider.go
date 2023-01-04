@@ -14,7 +14,7 @@ type Provider struct {
 	statusG func() (VehicleStatus, error)
 }
 
-// NewProvider provides the evcc vehicle api provider
+// NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (VehicleStatus, error) {

@@ -15,7 +15,7 @@ type Provider struct {
 	action  func(action, value string) error
 }
 
-// NewProvider creates a new vehicle
+// NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (Status, error) {

@@ -16,7 +16,7 @@ type Provider struct {
 	mobileG    func() (StatusResponseMobile, error)
 }
 
-// NewProvider creates a new vehicle
+// NewProvider creates a vehicle api provider
 func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *MobileAPI, vin, carModel string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (StatusResponse, error) {
