@@ -374,6 +374,18 @@ func (mr *MockVehicleMockRecorder) Phases() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Phases", reflect.TypeOf((*MockVehicle)(nil).Phases))
 }
 
+// SetTitle mocks base method.
+func (m *MockVehicle) SetTitle(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTitle", arg0)
+}
+
+// SetTitle indicates an expected call of SetTitle.
+func (mr *MockVehicleMockRecorder) SetTitle(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTitle", reflect.TypeOf((*MockVehicle)(nil).SetTitle), arg0)
+}
+
 // Soc mocks base method.
 func (m *MockVehicle) Soc() (float64, error) {
 	m.ctrl.T.Helper()
