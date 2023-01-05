@@ -258,27 +258,17 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 		cc := cc
 
 		g.Go(func() error {
-			// ensure vehicle config has title
-			var ccWithTitle struct {
-				Title string
-				Other map[string]interface{} `mapstructure:",remain"`
-			}
-
-			if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
-				return err
-			}
-
-			if ccWithTitle.Title == "" {
-				//lint:ignore SA1019 as Title is safe on ascii
-				ccWithTitle.Title = strings.Title(cc.Name)
-				cc.Other["title"] = ccWithTitle.Title
-			}
-
 			v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
 				log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
 				// wrap any created errors to prevent fatals
-				v, _ = wrapper.New(ccWithTitle.Title, err)
+				v = wrapper.New(err)
+			}
+
+			// ensure vehicle config has title
+			if v.Title() == "" {
+				//lint:ignore SA1019 as Title is safe on ascii
+				v.SetTitle(strings.Title(cc.Name))
 			}
 
 			mu.Lock()

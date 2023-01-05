@@ -138,6 +138,7 @@ type Vehicle interface {
 	Battery
 	BatteryCapacity
 	Title() string
+	SetTitle(string)
 	Icon() string
 	Phases() int
 	Identifiers() []string
