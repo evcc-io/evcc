@@ -777,11 +777,16 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 
 	// anticipate lower charge rates at end of charging curve
-	if targetSoc > 80 && maxPower > 4000 {
-		additionalTime := time.Duration(float64(targetSoc-80) / (float64(targetSoc) - lp.vehicleSoc) * float64(requiredDuration) * (1 - soc.ChargeEfficiency))
-		lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalTime)
-		requiredDuration += additionalTime
+	var additionalTime time.Duration
+
+	if targetSoc > 80 && maxPower > 15000 {
+		additionalTime = 5 * time.Duration(float64(targetSoc-80) / (float64(targetSoc) - lp.vehicleSoc) * float64(requiredDuration) * (1 - soc.ChargeEfficiency))
+		lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalTime.Round(time.Minute))
+	} else if targetSoc > 90 && maxPower > 4000 {
+		additionalTime = 3 * time.Duration(float64(targetSoc-90) / (float64(targetSoc) - lp.vehicleSoc) * float64(requiredDuration) * (1 - soc.ChargeEfficiency))
+		lp.log.DEBUG.Printf("add additional charging time %v for soc > 90%%", additionalTime.Round(time.Minute))
 	}
+	requiredDuration += additionalTime
 
 	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
 
