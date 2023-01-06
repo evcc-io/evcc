@@ -52,6 +52,8 @@ const (
 	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 
+	smallSlotDuration = 10 * time.Minute // small planner slot duration we might ignore
+
 	guardGracePeriod = 10 * time.Second // allow out of sync during this timespan
 )
 
@@ -778,7 +780,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	if targetSoc > 80 && maxPower > 4000 {
 		additionalTime := time.Duration(float64(targetSoc-80) / (float64(targetSoc) - lp.vehicleSoc) * float64(requiredDuration) * (1 - soc.ChargeEfficiency))
 		lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalTime)
-		requiredDuration = requiredDuration + additionalTime
+		requiredDuration += additionalTime
 	}
 
 	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
@@ -792,7 +794,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// ignore short plans if not already active
-		if !lp.planActive && lp.clock.Now().Add(10*time.Minute).After(slotEnd) {
+		if !lp.planActive && lp.clock.Until(slotEnd) < smallSlotDuration {
 			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
 			return false
 		}
@@ -815,8 +817,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		case requiredDuration < 30*time.Minute:
 			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
 			active = true
-		case lp.clock.Now().Add(10 * time.Minute).After(planStart):
-			lp.log.DEBUG.Printf("plan stop too short, continuing")
+		case lp.clock.Until(planStart) < smallSlotDuration:
+			lp.log.DEBUG.Printf("plan will re-start shortly, continuing for remaining %v", lp.clock.Until(planStart).Round(time.Second))
 			active = true
 		}
 	}
