@@ -780,10 +780,10 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	var additionalTime time.Duration
 
 	if targetSoc > 80 && maxPower > 15000 {
-		additionalTime = 5 * time.Duration(float64(targetSoc-80) / (float64(targetSoc) - lp.vehicleSoc) * float64(requiredDuration) * (1 - soc.ChargeEfficiency))
+		additionalTime = 5 * time.Duration(float64(targetSoc-80)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration)*(1-soc.ChargeEfficiency))
 		lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalTime.Round(time.Minute))
 	} else if targetSoc > 90 && maxPower > 4000 {
-		additionalTime = 3 * time.Duration(float64(targetSoc-90) / (float64(targetSoc) - lp.vehicleSoc) * float64(requiredDuration) * (1 - soc.ChargeEfficiency))
+		additionalTime = 3 * time.Duration(float64(targetSoc-90)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration)*(1-soc.ChargeEfficiency))
 		lp.log.DEBUG.Printf("add additional charging time %v for soc > 90%%", additionalTime.Round(time.Minute))
 	}
 	requiredDuration += additionalTime
