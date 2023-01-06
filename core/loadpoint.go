@@ -815,6 +815,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		case requiredDuration < 30*time.Minute:
 			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
 			active = true
+		case lp.clock.Now().Add(10 * time.Minute).After(planStart):
+			lp.log.DEBUG.Printf("plan stop too short, continuing")
+			active = true
 		}
 	}
 
