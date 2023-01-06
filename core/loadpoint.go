@@ -792,7 +792,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// ignore short plans if not already active
-		if !lp.planActive && requiredDuration < 10*time.Minute {
+		if !lp.planActive && lp.clock.Now().Add(10*time.Minute).After(slotEnd) {
 			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
 			return false
 		}
