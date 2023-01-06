@@ -3,6 +3,8 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"os"
+	"sync"
 	"time"
 
 	"github.com/enbility/cemd/emobility"
@@ -10,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 const (
@@ -35,6 +38,8 @@ type EEBus struct {
 	lastIsChargingResult bool
 
 	evConnectedTime time.Time
+
+	mux sync.Mutex
 }
 
 func init() {
@@ -84,7 +89,29 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 		return decorateEEBus(c, c.currentPower, c.currents, nil), nil
 	}
 
-	return c, nil
+	// wait for first update
+	err := c.waitForInitialUpdate()
+
+	return c, err
+}
+
+// returns an error on failure
+func (c *EEBus) waitForInitialUpdate() error {
+	// wait for a connection
+	timeout := time.After(request.Timeout)
+	tick := time.Tick(1 * time.Second)
+
+	// keep trying until we're timed out or got a positive result
+	for {
+		select {
+		case <-timeout:
+			return os.ErrDeadlineExceeded
+		case <-tick:
+			if c.isConnected() {
+				return nil
+			}
+		}
+	}
 }
 
 func (c *EEBus) onConnect(ski string) {
@@ -110,10 +137,20 @@ func (c *EEBus) setDefaultValues() {
 }
 
 func (c *EEBus) setConnected(connected bool) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	if connected && !c.connected {
 		c.evConnectedTime = time.Now()
 	}
 	c.connected = connected
+}
+
+func (c *EEBus) isConnected() bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	return c.connected
 }
 
 func (c *EEBus) setLoadpointMinMaxLimits() {
@@ -186,7 +223,7 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if !c.connected {
+	if !c.isConnected() {
 		return api.StatusNone, fmt.Errorf("%s charger reported as disconnected", c.ski)
 	}
 
@@ -410,7 +447,7 @@ var _ api.Identifier = (*EEBus)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *EEBus) Identify() (string, error) {
-	if !c.connected {
+	if !c.isConnected() {
 		return "", nil
 	}
 
