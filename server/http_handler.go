@@ -401,7 +401,19 @@ func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 // planHandler starts vehicle detection
 func planHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		requiredDuration, plan, err := lp.GetPlan(lp.GetMaxPower())
+		var err error
+
+		targetTime := lp.GetTargetTime()
+		if t := r.URL.Query().Get("targetTime"); t != "" {
+			targetTime, err = time.Parse(time.RFC3339, t)
+		}
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		requiredDuration, plan, err := lp.GetPlan(targetTime, lp.GetMaxPower())
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return

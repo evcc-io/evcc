@@ -38,13 +38,13 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 }
 
 // GetPlan creates a charging plan
-func (lp *Loadpoint) GetPlan(maxPower float64) (time.Duration, api.Rates, error) {
-	if lp.planner == nil || lp.socEstimator == nil || lp.targetTime.IsZero() {
+func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error) {
+	if lp.planner == nil || lp.socEstimator == nil || targetTime.IsZero() {
 		return 0, nil, nil
 	}
 
 	requiredDuration := lp.planRequiredDuration(maxPower)
-	plan, err := lp.planner.Plan(requiredDuration, lp.targetTime)
+	plan, err := lp.planner.Plan(requiredDuration, targetTime)
 
 	// sort plan by time
 	slices.SortStableFunc(plan, planner.SortByTime)
@@ -60,7 +60,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	maxPower := lp.GetMaxPower()
 
-	requiredDuration, plan, err := lp.GetPlan(maxPower)
+	requiredDuration, plan, err := lp.GetPlan(lp.targetTime, maxPower)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
 		return false
