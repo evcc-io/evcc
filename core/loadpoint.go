@@ -801,12 +801,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		// ignore short plans if not already active
 		if !lp.planActive && lp.clock.Until(slotEnd) < smallSlotDuration {
 			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
-			return false
+			active = false
 		}
-
-		// remember last active plan's end time
-		lp.setPlanActive(true)
-		lp.planSlotEnd = slotEnd
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {
@@ -828,6 +824,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		}
 	}
 
+	// remember last active plan's end time
+	lp.setPlanActive(active)
+	lp.planSlotEnd = slotEnd
 	return active
 }
 
