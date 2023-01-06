@@ -37,7 +37,7 @@ type EEBus struct {
 	lastIsChargingCheck  time.Time
 	lastIsChargingResult bool
 
-	evConnectedTime time.Time
+	connectedTime time.Time
 
 	mux sync.Mutex
 }
@@ -82,21 +82,21 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 
 	c.emobility = server.EEBusInstance.Register(ski, ip, c.onConnect, c.onDisconnect)
 
+	// wait for first update
+	err := c.waitConnection()
+
 	if hasMeter {
 		if hasChargedEnergy {
-			return decorateEEBus(c, c.currentPower, c.currents, c.chargedEnergy), nil
+			return decorateEEBus(c, c.currentPower, c.currents, c.chargedEnergy), err
 		}
-		return decorateEEBus(c, c.currentPower, c.currents, nil), nil
+		return decorateEEBus(c, c.currentPower, c.currents, nil), err
 	}
-
-	// wait for first update
-	err := c.waitForInitialUpdate()
 
 	return c, err
 }
 
 // returns an error on failure
-func (c *EEBus) waitForInitialUpdate() error {
+func (c *EEBus) waitConnection() error {
 	// wait for a connection
 	timeout := time.After(request.Timeout)
 	tick := time.Tick(1 * time.Second)
@@ -141,7 +141,7 @@ func (c *EEBus) setConnected(connected bool) {
 	defer c.mux.Unlock()
 
 	if connected && !c.connected {
-		c.evConnectedTime = time.Now()
+		c.connectedTime = time.Now()
 	}
 	c.connected = connected
 }
@@ -475,7 +475,7 @@ func (c *EEBus) Identify() (string, error) {
 		return "", nil
 	}
 
-	if time.Since(c.evConnectedTime) < maxIdRequestTimespan {
+	if time.Since(c.connectedTime) < maxIdRequestTimespan {
 		return "", api.ErrMustRetry
 	}
 
