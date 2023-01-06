@@ -7,6 +7,18 @@ import (
 	"time"
 )
 
+// Vehicles is the /vehicles api
+type Vehicles struct {
+	Data []Vehicle
+}
+
+// Vehicle is the api vehicle
+type Vehicle struct {
+	VIN      string
+	Model    string
+	Nickname string
+}
+
 // Status is the /status api
 type Status struct {
 	Access *struct {

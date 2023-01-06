@@ -48,28 +48,17 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 }
 
 // Vehicles implements the /vehicles response
-func (v *API) Vehicles() (res []string, err error) {
-	uri := fmt.Sprintf("%s/vehicles", BaseURL)
+func (v *API) Vehicles() ([]Vehicle, error) {
+	var res Vehicles
 
+	uri := fmt.Sprintf("%s/vehicles", BaseURL)
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
-	var vehicles struct {
-		Data []struct {
-			VIN      string
-			Model    string
-			Nickname string
-		}
-	}
-
 	if err == nil {
-		err = v.DoJSON(req, &vehicles)
-
-		for _, v := range vehicles.Data {
-			res = append(res, v.VIN)
-		}
+		err = v.DoJSON(req, &res)
 	}
 
-	return res, err
+	return res.Data, err
 }
 
 // Status implements the /status response.
