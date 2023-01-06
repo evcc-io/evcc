@@ -31,13 +31,14 @@ type EEBus struct {
 	communicationStandard emobility.EVCommunicationStandardType
 
 	maxCurrent          float64
-	connected           bool
 	expectedEnableState bool
 
 	lastIsChargingCheck  time.Time
 	lastIsChargingResult bool
 
-	evConnectedTime time.Time
+	connected     bool
+	connectedC    chan bool
+	connectedTime time.Time
 
 	mux sync.Mutex
 }
@@ -77,37 +78,34 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 	c := &EEBus{
 		ski:                   ski,
 		log:                   log,
+		connectedC:            make(chan bool, 1),
 		communicationStandard: emobility.EVCommunicationStandardTypeUnknown,
 	}
 
 	c.emobility = server.EEBusInstance.Register(ski, ip, c.onConnect, c.onDisconnect)
 
-	if hasMeter {
-		if hasChargedEnergy {
-			return decorateEEBus(c, c.currentPower, c.currents, c.chargedEnergy), nil
-		}
-		return decorateEEBus(c, c.currentPower, c.currents, nil), nil
-	}
+	err := c.waitForConnection()
 
-	// wait for first update
-	err := c.waitForInitialUpdate()
+	if hasMeter {
+		var energyG func() (float64, error)
+		if hasChargedEnergy {
+			energyG = c.chargedEnergy
+		}
+		return decorateEEBus(c, c.currentPower, c.currents, energyG), err
+	}
 
 	return c, err
 }
 
-// returns an error on failure
-func (c *EEBus) waitForInitialUpdate() error {
-	// wait for a connection
+// waitForConnection wait for initial connection and returns an error on failure
+func (c *EEBus) waitForConnection() error {
 	timeout := time.After(request.Timeout)
-	tick := time.Tick(1 * time.Second)
-
-	// keep trying until we're timed out or got a positive result
 	for {
 		select {
 		case <-timeout:
 			return os.ErrDeadlineExceeded
-		case <-tick:
-			if c.isConnected() {
+		case connected := <-c.connectedC:
+			if connected {
 				return nil
 			}
 		}
@@ -141,8 +139,14 @@ func (c *EEBus) setConnected(connected bool) {
 	defer c.mux.Unlock()
 
 	if connected && !c.connected {
-		c.evConnectedTime = time.Now()
+		c.connectedTime = time.Now()
 	}
+
+	select {
+	case c.connectedC <- connected:
+	default:
+	}
+
 	c.connected = connected
 }
 
@@ -475,7 +479,7 @@ func (c *EEBus) Identify() (string, error) {
 		return "", nil
 	}
 
-	if time.Since(c.evConnectedTime) < maxIdRequestTimespan {
+	if time.Since(c.connectedTime) < maxIdRequestTimespan {
 		return "", api.ErrMustRetry
 	}
 
