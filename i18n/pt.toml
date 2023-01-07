@@ -236,3 +236,7 @@ mi = "milhas"
 
 [settings.telemetry]
 label = "Telemetria"
+
+
+[settings]
+title = "Configurações"

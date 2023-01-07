@@ -234,7 +234,7 @@ label = "Język"
 [settings.unit]
 label = "Jednostki"
 km = "km"
-mi = "mi"
+mi = "mile"
 
 [settings.telemetry]
 label = "Telemetria"
