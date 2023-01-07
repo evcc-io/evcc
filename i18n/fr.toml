@@ -88,8 +88,8 @@ selfConsumption = "Consommation personnelle"
 pvExport = "Grille d'exportation"
 
 [main.mode]
-off = "Désactivé"
-minpv = "Min+Solaire"
+off = "Éteindre"
+minpv = "Min+Sol"
 pv = "Solaire"
 now = "Rapide"
 
