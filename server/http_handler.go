@@ -86,19 +86,6 @@ func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
 	}
 }
 
-// healthHandler returns current charge mode
-func healthHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if site == nil || !site.Healthy() {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "OK")
-	}
-}
-
 // pass converts a simple api without return value to api with nil error return value
 func pass[T any](f func(T)) func(T) error {
 	return func(v T) error {
@@ -198,20 +185,44 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 	}
 }
 
-// tariffHandler returns the selected tariff
-func tariffHandler(site site.API) http.HandlerFunc {
+// healthHandler returns current charge mode
+func healthHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		tariff, ok := vars["tariff"]
-		rates, err := site.GetTariff(tariff)
-
-		if !ok || err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+		if site == nil || !site.Healthy() {
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		jsonResult(w, rates)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	}
+}
+
+// tariffHandler returns the configured tariff
+func tariffHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tariff := vars["tariff"]
+
+		t := site.GetTariff(tariff)
+		if t == nil {
+			jsonError(w, http.StatusBadRequest, errors.New("tariff not available"))
+			return
+		}
+
+		rates, err := t.Rates()
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		res := struct {
+			Rates api.Rates `json:"rates"`
+		}{
+			Rates: rates,
+		}
+
+		jsonResult(w, res)
 	}
 }
 
