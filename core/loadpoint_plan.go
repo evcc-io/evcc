@@ -32,9 +32,23 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		}
 
 		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
-	}
 
-	return time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+		// anticipate lower charge rates at end of charging curve
+		var additionalDuration time.Duration
+
+		if targetSoc > 80 && maxPower > 15000 {
+			additionalDuration = 5 * time.Duration(float64(targetSoc-80)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
+			lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalDuration.Round(time.Minute))
+		} else if targetSoc > 90 && maxPower > 4000 {
+			additionalDuration = 3 * time.Duration(float64(targetSoc-90)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
+			lp.log.DEBUG.Printf("add additional charging time %v for soc > 90%%", additionalDuration.Round(time.Minute))
+		}
+
+		requiredDuration += additionalDuration
+	}
+	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+
+	return requiredDuration
 }
 
 // GetPlan creates a charging plan
@@ -55,6 +69,7 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 // plannerActive checks if charging plan is active
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
+		lp.setPlanActive(active)
 		lp.publish(targetTimeActive, active)
 	}()
 
@@ -66,7 +81,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	lp.publish(targetTimeProjectedStart, planner.Start(plan))
+	planStart := planner.Start(plan)
+	lp.publish(targetTimeProjectedStart, planStart)
 
 	lp.log.DEBUG.Printf("planned %v until %v at %.0fW: total plan duration: %v, avg cost: %.3f",
 		requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower,
@@ -83,7 +99,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// ignore short plans if not already active
-		if !lp.planActive && requiredDuration < 10*time.Minute {
+		if !lp.planActive && lp.clock.Until(activeSlot.End) < smallSlotDuration {
 			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
 			return false
 		}
@@ -106,6 +122,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		case requiredDuration < 30*time.Minute:
 			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
 			active = true
+		case lp.clock.Until(planStart) < smallSlotDuration:
+			lp.log.DEBUG.Printf("plan will re-start shortly, continuing for remaining %v", lp.clock.Until(planStart).Round(time.Second))
+			return true
 		}
 	}
 
