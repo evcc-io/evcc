@@ -16,6 +16,7 @@ type Awattar struct {
 	mux     sync.Mutex
 	log     *util.Logger
 	uri     string
+	unit    string
 	data    api.Rates
 	updated time.Time
 }
@@ -28,8 +29,9 @@ func init() {
 
 func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		Cheap  any // TODO deprecated
-		Region string
+		Cheap    any // TODO deprecated
+		Currency string
+		Region   string
 	}{
 		Region: "DE",
 	}
@@ -38,9 +40,14 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	if cc.Currency == "" {
+		cc.Currency = "EUR"
+	}
+
 	t := &Awattar{
-		log: util.NewLogger("awattar"),
-		uri: fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
+		log:  util.NewLogger("awattar"),
+		unit: cc.Currency,
+		uri:  fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
 
 	// TODO deprecated
@@ -83,6 +90,11 @@ func (t *Awattar) run(done chan error) {
 
 		t.mux.Unlock()
 	}
+}
+
+// Unit implements the api.Tariff interface
+func (t *Awattar) Unit() string {
+	return t.unit
 }
 
 // Rates implements the api.Tariff interface

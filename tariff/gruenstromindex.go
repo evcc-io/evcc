@@ -113,7 +113,7 @@ func (t *GrünStromIndex) run(done chan error) {
 		t.data = make(api.Rates, 0, len(res.Forecast))
 		for _, r := range res.Forecast {
 			t.data = append(t.data, api.Rate{
-				Price: 100 - r.Gsi, // gsi to cost
+				Price: float64(r.Co2GStandard),
 				Start: time.UnixMilli(r.Timeframe.Start),
 				End:   time.UnixMilli(r.Timeframe.End),
 			})
@@ -121,6 +121,11 @@ func (t *GrünStromIndex) run(done chan error) {
 
 		t.mux.Unlock()
 	}
+}
+
+// Unit implements the api.Tariff interface
+func (t *GrünStromIndex) Unit() string {
+	return "gCO2eq"
 }
 
 // Rates implements the api.Tariff interface
