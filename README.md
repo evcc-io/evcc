@@ -93,7 +93,6 @@ evcc already includes many translations for the UI. Weblate Hosted is used to ma
 [![Weblate Hosted](https://hosted.weblate.org/widgets/evcc/-/evcc/287x66-grey.png)](https://hosted.weblate.org/engage/evcc/)
 [![Languages](https://hosted.weblate.org/widgets/evcc/-/evcc/multi-auto.svg)](https://hosted.weblate.org/engage/evcc/)
 
-
 https://hosted.weblate.org/projects/evcc/evcc/
 
 ## Sponsorship
@@ -105,7 +104,7 @@ Maintaining evcc consumes time and effort. With the vast amount of different dev
 
 While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwise closed hardware. Where this is not the case, evcc requires "sponsor token" to finance ongoing development and support of evcc.
 
-The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/evcc-io) and can be requested at [cloud.evcc.io](https://cloud.evcc.io/).
+The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/evcc-io) and can be requested at [sponsor.evcc.io](https://sponsor.evcc.io/).
 
 [1]: https://golang.org
 [2]: https://nodejs.org/
