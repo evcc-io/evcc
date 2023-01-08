@@ -17,6 +17,7 @@ type Tibber struct {
 	mux     sync.Mutex
 	log     *util.Logger
 	homeID  string
+	unit    string
 	client  *tibber.Client
 	data    api.Rates
 	updated time.Time
@@ -32,6 +33,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		Token  string
 		HomeID string
+		Unit   string
 		Cheap  any // TODO deprecated
 	}
 
@@ -48,13 +50,21 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Tibber{
 		log:    log,
 		homeID: cc.HomeID,
+		unit:   cc.Unit,
 		client: tibber.NewClient(log, cc.Token),
 	}
 
-	if t.homeID == "" {
-		var err error
-		if t.homeID, err = t.client.DefaultHomeID(); err != nil {
+	if t.homeID == "" || t.unit == "" {
+		home, err := t.client.Home()
+		if err != nil {
 			return nil, err
+		}
+
+		if t.homeID == "" {
+			t.homeID = home.ID
+		}
+		if t.unit == "" {
+			t.unit = home.CurrentSubscription.PriceInfo.Current.Currency
 		}
 	}
 
@@ -112,7 +122,7 @@ func (t *Tibber) run(done chan error) {
 	}
 }
 
-func (t *Tibber) rates(pi []tibber.PriceInfo) api.Rates {
+func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 	data := make(api.Rates, 0, len(pi))
 	for _, r := range pi {
 		ar := api.Rate{
@@ -123,6 +133,11 @@ func (t *Tibber) rates(pi []tibber.PriceInfo) api.Rates {
 		data = append(data, ar)
 	}
 	return data
+}
+
+// Unit implements the api.Tariff interface
+func (t *Tibber) Unit() string {
+	return t.unit
 }
 
 // Rates implements the api.Tariff interface

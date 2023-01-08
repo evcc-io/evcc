@@ -12,6 +12,7 @@ import (
 )
 
 type Fixed struct {
+	unit  string
 	clock clock.Clock
 	zones fixed.Zones
 }
@@ -24,8 +25,9 @@ func init() {
 
 func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Price float64
-		Zones []struct {
+		Currency string
+		Price    float64
+		Zones    []struct {
 			Price       float64
 			Days, Hours string
 		}
@@ -35,7 +37,12 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	if cc.Currency == "" {
+		cc.Currency = "EUR"
+	}
+
 	t := &Fixed{
+		unit:  cc.Currency,
 		clock: clock.New(),
 		zones: []fixed.Zone{
 			{Price: cc.Price}, // full week is implicit
@@ -73,6 +80,11 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	sort.Sort(t.zones)
 
 	return t, nil
+}
+
+// Unit implements the api.Tariff interface
+func (t *Fixed) Unit() string {
+	return t.unit
 }
 
 // Rates implements the api.Tariff interface

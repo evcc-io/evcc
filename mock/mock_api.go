@@ -528,3 +528,17 @@ func (mr *MockTariffMockRecorder) Rates() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rates", reflect.TypeOf((*MockTariff)(nil).Rates))
 }
+
+// Unit mocks base method.
+func (m *MockTariff) Unit() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Unit")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Unit indicates an expected call of Unit.
+func (mr *MockTariffMockRecorder) Unit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unit", reflect.TypeOf((*MockTariff)(nil).Unit))
+}
