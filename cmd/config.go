@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -260,8 +261,13 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 		g.Go(func() error {
 			v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
+				var ce *util.ConfigError
+				if errors.As(err, &ce) {
+					return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+				}
+
+				// wrap non-config vehicle errors to prevent fatals
 				log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-				// wrap any created errors to prevent fatals
 				v = wrapper.New(err)
 			}
 

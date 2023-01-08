@@ -21,5 +21,22 @@ func DecodeOther(other, cc interface{}) error {
 		err = decoder.Decode(other)
 	}
 
+	if err != nil {
+		err = &ConfigError{err}
+	}
+
 	return err
+}
+
+// ConfigError wraps yaml configuration errors from mapstructure
+type ConfigError struct {
+	err error
+}
+
+func (e *ConfigError) Error() string {
+	return e.err.Error()
+}
+
+func (e *ConfigError) Unwrap() error {
+	return e.err
 }
