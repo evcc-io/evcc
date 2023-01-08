@@ -52,6 +52,8 @@ const (
 	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 
+	smallSlotDuration = 10 * time.Minute // small planner slot duration we might ignore
+
 	guardGracePeriod = 10 * time.Second // allow out of sync during this timespan
 )
 
@@ -750,6 +752,7 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 // plannerActive checks if charging plan is active
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
+		lp.setPlanActive(active)
 		lp.publish(targetTimeActive, active)
 	}()
 
@@ -775,13 +778,16 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 
 	// anticipate lower charge rates at end of charging curve
-	if targetSoc >= 80 {
-		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
+	var additionalTime time.Duration
 
-		if targetSoc >= 90 {
-			requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
-		}
+	if targetSoc > 80 && maxPower > 15000 {
+		additionalTime = 5 * time.Duration(float64(targetSoc-80)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration)*(1-soc.ChargeEfficiency))
+		lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalTime.Round(time.Minute))
+	} else if targetSoc > 90 && maxPower > 4000 {
+		additionalTime = 3 * time.Duration(float64(targetSoc-90)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration)*(1-soc.ChargeEfficiency))
+		lp.log.DEBUG.Printf("add additional charging time %v for soc > 90%%", additionalTime.Round(time.Minute))
 	}
+	requiredDuration += additionalTime
 
 	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
 
@@ -794,13 +800,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// ignore short plans if not already active
-		if !lp.planActive && requiredDuration < 10*time.Minute {
+		if !lp.planActive && lp.clock.Until(slotEnd) < smallSlotDuration {
 			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
 			return false
 		}
 
 		// remember last active plan's end time
-		lp.setPlanActive(true)
 		lp.planSlotEnd = slotEnd
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
@@ -809,14 +814,17 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 			// TODO check when schedule is implemented
 			lp.log.DEBUG.Println("continuing after target time")
-			active = true
+			return true
 		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero():
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Println("continuing until end of slot")
-			active = true
+			return true
 		case requiredDuration < 30*time.Minute:
 			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
-			active = true
+			return true
+		case lp.clock.Until(planStart) < smallSlotDuration:
+			lp.log.DEBUG.Printf("plan will re-start shortly, continuing for remaining %v", lp.clock.Until(planStart).Round(time.Second))
+			return true
 		}
 	}
 
@@ -1869,14 +1877,10 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
-		lp.resetPhaseTimer()
-		lp.resetPVTimer()
 
 	// immediate charging
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
-		lp.resetPhaseTimer()
-		lp.resetPVTimer()
 
 	// minimum or target charging
 	case lp.minSocNotReached() || lp.plannerActive():
@@ -1885,10 +1889,6 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
-		if mode == api.ModeMinPV {
-			lp.resetPVTimer()
-		}
-
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 
 		var required bool // false
