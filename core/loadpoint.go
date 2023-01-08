@@ -752,6 +752,7 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 // plannerActive checks if charging plan is active
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
+		lp.setPlanActive(active)
 		lp.publish(targetTimeActive, active)
 	}()
 
@@ -801,7 +802,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		// ignore short plans if not already active
 		if !lp.planActive && lp.clock.Until(slotEnd) < smallSlotDuration {
 			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
-			active = false
+			return false
 		}
 
 		// remember last active plan's end time
@@ -813,21 +814,20 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 			// TODO check when schedule is implemented
 			lp.log.DEBUG.Println("continuing after target time")
-			active = true
+			return true
 		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero():
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Println("continuing until end of slot")
-			active = true
+			return true
 		case requiredDuration < 30*time.Minute:
 			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
-			active = true
+			return true
 		case lp.clock.Until(planStart) < smallSlotDuration:
 			lp.log.DEBUG.Printf("plan will re-start shortly, continuing for remaining %v", lp.clock.Until(planStart).Round(time.Second))
-			active = true
+			return true
 		}
 	}
 
-	lp.setPlanActive(active)
 	return active
 }
 
