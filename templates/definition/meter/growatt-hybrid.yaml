@@ -82,6 +82,9 @@ render: |
       address: 1014 # SOC
       type: input
       decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}

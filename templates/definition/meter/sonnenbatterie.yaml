@@ -31,4 +31,7 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
     jq: .USOC
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

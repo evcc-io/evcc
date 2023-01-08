@@ -21,3 +21,8 @@ render: |
   {{- if ne .password "" }}
   password: {{ .password }} # optional
   {{- end }}
+  {{- if eq .usage "battery" }}
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}

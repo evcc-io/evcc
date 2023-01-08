@@ -31,4 +31,7 @@ render: |
     source: http
     uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
     jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.solarwatt.MyReserve") | .tagValues.StateOfCharge.value
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

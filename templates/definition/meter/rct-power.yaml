@@ -15,3 +15,8 @@ render: |
   uri: {{ .host }}
   usage: {{ .usage }}
   cache: 2s
+  {{- if eq .usage "battery" }}
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}

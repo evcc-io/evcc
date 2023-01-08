@@ -34,4 +34,7 @@ render: |
       address: 40082 # Batterie-SOC in Prozent
       type: holding
       decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end}}

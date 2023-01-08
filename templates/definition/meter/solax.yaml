@@ -75,4 +75,7 @@ render: |
       address: 28 # 0x001C Battery Capacity
       type: input
       decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

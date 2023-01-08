@@ -112,4 +112,7 @@ render: |
       type: holding
       decode: uint16nan
     scale: 0.1
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}
