@@ -46,7 +46,20 @@
 								<div class="form-group">
 									<!-- eslint-disable vue/no-v-html -->
 									<label for="targetTimeLabel" class="mb-3">
-										{{ $t("main.targetCharge.description", { targetSoc }) }}
+										<span v-if="socBasedCharging">
+											{{
+												$t("main.targetCharge.descriptionSoc", {
+													targetSoc,
+												})
+											}}
+										</span>
+										<span v-else>
+											{{
+												$t("main.targetCharge.descriptionEnergy", {
+													targetEnergy: targetEnergyFormatted,
+												})
+											}}
+										</span>
 									</label>
 									<!-- eslint-enable vue/no-v-html -->
 									<div
@@ -76,7 +89,7 @@
 										/>
 									</div>
 								</div>
-								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
+								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0 mt-2">
 									{{ $t("main.targetCharge.targetIsInThePast") }}
 								</p>
 								<p class="small mt-3 text-muted mb-0">
@@ -137,6 +150,8 @@ export default {
 		targetTime: String,
 		targetTimeActive: Boolean,
 		targetSoc: Number,
+		targetEnergy: Number,
+		socBasedCharging: Boolean,
 		disabled: Boolean,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
@@ -156,6 +171,9 @@ export default {
 		},
 		modalId: function () {
 			return `targetChargeModal_${this.id}`;
+		},
+		targetEnergyFormatted: function () {
+			return this.fmtKWh(this.targetEnergy * 1e3, true, true, 1);
 		},
 	},
 	watch: {

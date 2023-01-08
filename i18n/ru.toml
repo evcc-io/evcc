@@ -180,7 +180,7 @@ inactiveLabel = "Запланированное время"
 activeLabel = "{time}"
 modalTitle = "Установить запланированное время"
 setTargetTime = "ни одного"
-description = "Когда транспортное средство следует зарядить до {targetSoc}%?"
+descriptionSoc = "Когда транспортное средство следует зарядить до {targetSoc}%?"
 targetIsInThePast = "Выбери время в будущем."
 experimentalText = "Оно работает, но не идеально. Пожалуйста сообщите о проблемах"
 

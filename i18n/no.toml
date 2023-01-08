@@ -137,7 +137,7 @@ targetChargeWaitForVehicle = "Mållading klar. Venter på kjøretøy..."
 [main.targetCharge]
 inactiveLabel = "Mål-tid"
 activeLabel = "{time}"
-description = "Når skal kjøretøyet lades til {targetSoc}%?"
+descriptionSoc = "Når skal kjøretøyet lades til {targetSoc}%?"
 tomorrow = "i morgen"
 experimentalLabel = "Eksperimentelt"
 activate = "Slå på"

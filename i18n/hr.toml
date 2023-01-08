@@ -191,7 +191,7 @@ scale1p = "Smanjenje na 1-fazno napajanje za {remaining}…"
 scale3p = "Povećanje na 3-fazno napajanje za {remaining}…"
 
 [main.targetCharge]
-description = "Kada bi se vozilo trebalo napuniti na {targetSoc}%?"
+descriptionSoc = "Kada bi se vozilo trebalo napuniti na {targetSoc}%?"
 today = "danas"
 targetIsInThePast = "Odaberi vrijeme u budućnosti, Marty."
 activate = "Upaliti"
