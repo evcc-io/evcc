@@ -1856,7 +1856,6 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 		// always disable charger if not connected
 		// https://github.com/evcc-io/evcc/issues/105
 		err = lp.setLimit(0, false)
-		lp.setPlanActive(false)
 
 	case lp.scalePhasesRequired():
 		if err = lp.scalePhases(lp.ConfiguredPhases); err == nil {
