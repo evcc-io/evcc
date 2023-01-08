@@ -10,6 +10,8 @@ params:
   - name: host
   - name: port
     default: 502
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:

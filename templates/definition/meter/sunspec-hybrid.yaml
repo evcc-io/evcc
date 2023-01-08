@@ -20,6 +20,8 @@ params:
       en: Verify Float/Integer setting in inverter
     advanced: true
     valuetype: bool
+  - name: capacity
+    advanced: true
 render: |
   {{- if eq .usage "grid" }}
   type: modbus

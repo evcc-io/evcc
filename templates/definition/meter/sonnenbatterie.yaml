@@ -11,6 +11,8 @@ params:
   - name: host
   - name: port
     default: 8080
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:

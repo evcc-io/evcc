@@ -10,6 +10,8 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:

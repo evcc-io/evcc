@@ -17,6 +17,8 @@ params:
     port: 1502
   - name: timeout
     valuetype: duration
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:

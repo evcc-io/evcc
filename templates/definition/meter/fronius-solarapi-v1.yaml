@@ -8,6 +8,8 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
