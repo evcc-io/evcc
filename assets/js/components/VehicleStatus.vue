@@ -21,6 +21,7 @@ export default {
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
+		targetChargeDisabled: Boolean,
 	},
 	computed: {
 		phaseTimerActive() {
@@ -50,7 +51,7 @@ export default {
 			}
 
 			// target charge
-			if (this.targetTime) {
+			if (this.targetTime && !this.targetChargeDisabled) {
 				if (this.charging) {
 					return t("targetChargeActive");
 				}
