@@ -1878,15 +1878,10 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
-		lp.resetPhaseTimer()
-		lp.resetPVTimer()
-		lp.setPlanActive(false)
 
 	// immediate charging
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
-		lp.resetPhaseTimer()
-		lp.resetPVTimer()
 
 	// minimum or target charging
 	case lp.minSocNotReached() || lp.plannerActive():
@@ -1895,10 +1890,6 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
-		if mode == api.ModeMinPV {
-			lp.resetPVTimer()
-		}
-
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 
 		var required bool // false
