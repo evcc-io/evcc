@@ -866,7 +866,6 @@ func (lp *Loadpoint) climateActive() bool {
 func (lp *Loadpoint) disableUnlessClimater() error {
 	var current float64 // zero disables
 	if lp.climateActive() {
-		lp.log.DEBUG.Println("climater active")
 		current = lp.GetMinCurrent()
 	}
 
@@ -1893,7 +1892,6 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {
-			lp.log.DEBUG.Println("climater active")
 			targetCurrent = lp.GetMinCurrent()
 			required = true
 		}
