@@ -30,7 +30,7 @@ func NewClient(log *util.Logger, token string) *Client {
 	}
 }
 
-func (c *Client) DefaultHomeID() (string, error) {
+func (c *Client) Home() (Home, error) {
 	var res struct {
 		Viewer struct {
 			Homes []Home
@@ -41,12 +41,17 @@ func (c *Client) DefaultHomeID() (string, error) {
 	defer cancel()
 
 	if err := c.Query(ctx, &res, nil); err != nil {
-		return "", err
+		return Home{}, err
 	}
 
 	if len(res.Viewer.Homes) != 1 {
-		return "", fmt.Errorf("could not determine home id: %v", res.Viewer.Homes)
+		return Home{}, fmt.Errorf("could not determine home id: %v", res.Viewer.Homes)
 	}
 
-	return res.Viewer.Homes[0].ID, nil
+	return res.Viewer.Homes[0], nil
+}
+
+func (c *Client) DefaultHomeID() (string, error) {
+	home, err := c.Home()
+	return home.ID, err
 }
