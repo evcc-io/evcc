@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -18,7 +19,7 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
-	autoauth "github.com/evcc-io/evcc/server/auth"
+	"github.com/evcc-io/evcc/server/oauth2redirect"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/vehicle"
@@ -70,7 +71,7 @@ type config struct {
 	Vehicles     []qualifiedConfig
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
-	LoadPoints   []map[string]interface{}
+	Loadpoints   []map[string]interface{}
 }
 
 type mqttConfig struct {
@@ -113,6 +114,7 @@ type tariffConfig struct {
 	Currency string
 	Grid     typedConfig
 	FeedIn   typedConfig
+	Planner  typedConfig
 }
 
 type networkConfig struct {
@@ -257,26 +259,22 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 		cc := cc
 
 		g.Go(func() error {
-			// ensure vehicle config has title
-			var ccWithTitle struct {
-				Title string
-				Other map[string]interface{} `mapstructure:",remain"`
-			}
-
-			if err := util.DecodeOther(cc.Other, &ccWithTitle); err != nil {
-				return err
-			}
-
-			if ccWithTitle.Title == "" {
-				//lint:ignore SA1019 as Title is safe on ascii
-				cc.Other["title"] = strings.Title(cc.Name)
-			}
-
 			v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
+				var ce *util.ConfigError
+				if errors.As(err, &ce) {
+					return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+				}
+
+				// wrap non-config vehicle errors to prevent fatals
 				log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-				// wrap any created errors to prevent fatals
-				v, _ = wrapper.New(v, err)
+				v = wrapper.New(err)
+			}
+
+			// ensure vehicle config has title
+			if v.Title() == "" {
+				//lint:ignore SA1019 as Title is safe on ascii
+				v.SetTitle(strings.Title(cc.Name))
 			}
 
 			mu.Lock()
@@ -303,7 +301,7 @@ func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, par
 	))
 
 	// wire the handler
-	autoauth.Setup(auth)
+	oauth2redirect.SetupRouter(auth)
 
 	// initialize
 	cp.auth = util.NewAuthCollection(paramC)

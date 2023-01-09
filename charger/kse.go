@@ -20,7 +20,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -186,9 +185,9 @@ func (wb *KSE) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)) / 100, err
 }
 
-var _ api.MeterCurrent = (*KSE)(nil)
+var _ api.PhaseCurrents = (*KSE)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *KSE) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadInputRegisters(kseRegCurrents, 3)
 	if err != nil {
@@ -218,12 +217,12 @@ func (wb *KSE) Currents() (float64, float64, float64, error) {
 
 // Identify implements the api.Identifier interface
 func (wb *KSE) identify() (string, error) {
-	id, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4)
+	b, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4)
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimSpace(string(id)), nil
+	return bytesAsString(b), nil
 }
 
 var _ api.Diagnosis = (*KSE)(nil)

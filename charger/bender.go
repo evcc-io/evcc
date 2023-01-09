@@ -27,7 +27,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -50,6 +49,7 @@ const (
 	bendRegCurrents               = 212  // Currents from primary meter (mA)
 	bendRegTotalEnergy            = 218  // Total Energy from primary meter (Wh)
 	bendRegActivePower            = 220  // Active Power from primary meter (W)
+	bendRegVoltages               = 222  // Voltages of the ocpp meter (V)
 	bendRegChargedEnergyLegacy    = 705  // Sum of charged energy for the current session (Wh)
 	bendRegChargingDurationLegacy = 709  // Duration since beginning of charge (Seconds)
 	bendRegChargedEnergy          = 716  // Sum of charged energy for the current session (Wh)
@@ -82,7 +82,7 @@ func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewBenderCC(cc.URI, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewBenderCC creates BenderCC charger
 func NewBenderCC(uri string, id uint8) (api.Charger, error) {
@@ -111,6 +111,7 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	var (
 		currentPower  func() (float64, error)
 		currents      func() (float64, float64, float64, error)
+		voltages      func() (float64, float64, float64, error)
 		chargedEnergy func() (float64, error)
 		totalEnergy   func() (float64, error)
 		identify      func() (string, error)
@@ -125,6 +126,7 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
 		currentPower = wb.currentPower
 		currents = wb.currents
+		voltages = wb.voltages
 		chargedEnergy = wb.chargedEnergy
 		totalEnergy = wb.totalEnergy
 	}
@@ -134,7 +136,7 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 		identify = wb.identify
 	}
 
-	return decorateBenderCC(wb, currentPower, currents, chargedEnergy, totalEnergy, identify), nil
+	return decorateBenderCC(wb, currentPower, currents, voltages, chargedEnergy, totalEnergy, identify), nil
 }
 
 // Status implements the api.Charger interface
@@ -278,7 +280,7 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-// Currents implements the api.MeterCurrent interface
+// currents implements the api.PhaseCurrents interface
 func (wb *BenderCC) currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(bendRegCurrents, 6)
 	if err != nil {
@@ -293,27 +295,40 @@ func (wb *BenderCC) currents() (float64, float64, float64, error) {
 	return curr[0], curr[1], curr[2], nil
 }
 
+// voltages implements the api.PhaseVoltages interface
+func (wb *BenderCC) voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 6)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var volt [3]float64
+	for l := 0; l < 3; l++ {
+		volt[l] = float64(binary.BigEndian.Uint32(b[4*l : 4*(l+1)]))
+	}
+
+	return volt[0], volt[1], volt[2], nil
+}
+
 // identify implements the api.Identifier interface
 func (wb *BenderCC) identify() (string, error) {
 	if !wb.legacy {
-		var id []byte
-
 		b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
 		if err == nil && binary.BigEndian.Uint16(b) != 0 {
-			id, err = wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
+			b, err = wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
 		}
 
-		if id := strings.TrimSpace(string(id)); id != "" || err != nil {
+		if id := bytesAsString(b); id != "" || err != nil {
 			return id, err
 		}
 	}
 
-	id, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
+	b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimSpace(string(id)), nil
+	return bytesAsString(b), nil
 }
 
 var _ api.Diagnosis = (*BenderCC)(nil)

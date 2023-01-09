@@ -1,7 +1,7 @@
 package mercedes
 
 type EVResponse struct {
-	SoC struct {
+	Soc struct {
 		Value     int64 `json:",string"`
 		Timestamp int64
 	}

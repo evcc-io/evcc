@@ -56,9 +56,10 @@ func init() {
 
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 
-	rootCmd.PersistentFlags().String(flagSqlite, "", flagSqliteDescription)
-
 	// config file options
+	rootCmd.PersistentFlags().String(flagSqlite, conf.Database.Dsn, flagSqliteDescription)
+	bindP(rootCmd, "database.dsn", flagSqlite)
+
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
 	bindP(rootCmd, "log")
 
@@ -184,7 +185,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureInflux(conf.Influx, site.LoadPoints(), tee.Attach())
+		configureInflux(conf.Influx, site.Loadpoints(), tee.Attach())
 	}
 
 	// setup mqtt publisher

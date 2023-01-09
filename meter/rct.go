@@ -50,11 +50,12 @@ func init() {
 	registry.Add("rct", NewRCTFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
+		capacity   `mapstructure:",squash"`
 		Uri, Usage string
 		Cache      time.Duration
 	}{
@@ -69,11 +70,11 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(cc.Uri, cc.Usage, cc.Cache)
+	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity.Decorator())
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(uri, usage string, cache time.Duration) (api.Meter, error) {
+func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	conn, err := rct.NewConnection(uri, cache)
 	if err != nil {
 		return nil, err
@@ -90,13 +91,13 @@ func NewRCT(uri, usage string, cache time.Duration) (api.Meter, error) {
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate api.BatterySoC
-	var batterySoC func() (float64, error)
+	// decorate api.BatterySoc
+	var batterySoc func() (float64, error)
 	if usage == "battery" {
-		batterySoC = m.batterySoC
+		batterySoc = m.batterySoc
 	}
 
-	return decorateRCT(m, totalEnergy, batterySoC), nil
+	return decorateRCT(m, totalEnergy, batterySoc, capacity), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -151,8 +152,8 @@ func (m *RCT) totalEnergy() (float64, error) {
 	}
 }
 
-// batterySoC implements the api.Battery interface
-func (m *RCT) batterySoC() (float64, error) {
+// batterySoc implements the api.Battery interface
+func (m *RCT) batterySoc() (float64, error) {
 	res, err := m.conn.QueryFloat32(rct.BatterySoC)
 	return float64(res * 100), err
 }

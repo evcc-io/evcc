@@ -1,6 +1,6 @@
 product:
-  brand: i-CHARGE
-  description: CION
+  brand: Schrack
+  description: i-CHARGE CION
 render:
   - default: |
       type: template

@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import vuePlugin from "@vitejs/plugin-vue";
 import { ViteToml } from "vite-plugin-toml";
-//import analyze from "rollup-plugin-analyzer";
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
   root: "./assets",
@@ -11,6 +11,7 @@ export default defineConfig({
     outDir: "../dist/",
     emptyOutDir: true,
     assetsInlineLimit: 1024,
+    chunkSizeWarningLimit: 550,
     rollupOptions: {
       output: {
         manualChunks: undefined,
@@ -34,6 +35,6 @@ export default defineConfig({
       },
     }),
     ViteToml(),
-    //analyze(),
+    visualizer({ filename: "asset-stats.html" }),
   ],
 });

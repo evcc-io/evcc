@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"crypto/x509/pkix"
 	"os"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	certhelper "github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/evcc/server"
 	"github.com/spf13/cobra"
 )
@@ -34,22 +32,14 @@ eebus:
 `
 
 func generateEEBUSCert() {
-	details := server.EEBUSDetails
-
-	subject := pkix.Name{
-		CommonName:   details.DeviceCode,
-		Country:      []string{"DE"},
-		Organization: []string{details.BrandName},
+	cert, err := server.CreateEEBUSCertificate()
+	if err != nil {
+		log.FATAL.Fatal("could not create certificate", err)
 	}
 
-	cert, err := certhelper.CreateCertificate(true, subject)
+	pubKey, privKey, err := server.GetX509KeyPair(cert)
 	if err != nil {
-		log.FATAL.Fatal("could not create certificate")
-	}
-
-	pubKey, privKey, err := certhelper.GetX509KeyPair(cert)
-	if err != nil {
-		log.FATAL.Fatal("could not process generated certificate")
+		log.FATAL.Fatal("could not process generated certificate", err)
 	}
 
 	t := template.Must(template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl))

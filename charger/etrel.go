@@ -202,9 +202,9 @@ func (wb *Etrel) CurrentPower() (float64, error) {
 	return float64(encoding.Float32(b) * 1e3), err
 }
 
-var _ api.MeterCurrent = (*Etrel)(nil)
+var _ api.PhaseCurrents = (*Etrel)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *Etrel) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadInputRegisters(etrelRegCurrents, 6)
 	if err != nil {

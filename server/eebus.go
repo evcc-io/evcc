@@ -1,53 +1,47 @@
 package server
 
 import (
-	"context"
+	"bytes"
+	"crypto/ecdsa"
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/evcc-io/eebus/cert"
-	"github.com/evcc-io/eebus/communication"
-	"github.com/evcc-io/eebus/mdns"
-	"github.com/evcc-io/eebus/server"
-	"github.com/evcc-io/eebus/ship"
-	"github.com/evcc-io/eebus/spine/model"
+	"github.com/enbility/cemd/cem"
+	"github.com/enbility/cemd/emobility"
+	"github.com/enbility/eebus-go/service"
+	"github.com/enbility/eebus-go/spine/model"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
-	"github.com/libp2p/zeroconf/v2"
 )
 
-var EEBUSDetails = communication.ManufacturerDetails{
-	BrandName:     "EVCC",
-	DeviceName:    "EVCC",
-	DeviceCode:    "EVCC_HEMS_01",
-	DeviceAddress: "EVCC_HEMS",
-}
+const (
+	EEBUSBrandName  string = "EVCC"
+	EEBUSModel      string = "HEMS"
+	EEBUSDeviceCode string = "EVCC_HEMS_01" // used as common name in cert generation
+)
 
 type EEBusClientCBs struct {
-	onConnect    func(string, ship.Conn) error
+	onConnect    func(string) // , ship.Conn) error
 	onDisconnect func(string)
 }
 
 type EEBus struct {
-	mux                sync.Mutex
-	log                *util.Logger
-	srv                *server.Server
-	id                 string
-	zc                 *zeroconf.Server
-	clients            map[string]EEBusClientCBs
-	ipaddress          map[string]string
-	connectedClients   map[string]ship.Conn
-	discoveredClients  map[string]*zeroconf.ServiceEntry
-	clientInConnection map[string]bool
+	Cem *cem.CemImpl
 
-	browseMDNSRunning bool
+	mux sync.Mutex
+	log *util.Logger
 
 	SKI string
+
+	clients map[string]EEBusClientCBs
 }
 
 var EEBusInstance *EEBus
@@ -68,25 +62,17 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		return nil, err
 	}
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, errors.New("eebus requires evcc sponsorship, register at https://cloud.evcc.io")
-	// }
-
-	details := EEBusInstance.DeviceInfo()
-
 	log := util.NewLogger("eebus")
 
-	if len(cc.ShipID) == 0 {
-		var err error
-		protectedID, err := machine.ProtectedID("evcc-eebus")
-		if err != nil {
-			return nil, err
-		}
+	var err error
+	protectedID, err := machine.ProtectedID("evcc-eebus")
+	if err != nil {
+		return nil, err
+	}
+	serial := fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
 
-		cc.ShipID, err = ship.UniqueIDWithProtectedID(details.BrandName, protectedID)
-		if err != nil {
-			return nil, err
-		}
+	if len(cc.ShipID) != 0 {
+		serial = cc.ShipID
 	}
 
 	certificate, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
@@ -94,340 +80,206 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		return nil, err
 	}
 
-	srv := &server.Server{
-		Log:         log.TRACE,
-		Addr:        cc.Uri,
-		Path:        "/ship/",
-		Certificate: certificate,
-		ID:          cc.ShipID,
-		Interfaces:  cc.Interfaces,
-		Brand:       details.BrandName,
-		Model:       details.DeviceCode,
-		Type:        string(model.DeviceTypeEnumTypeEnergyManagementSystem),
-		Register:    true,
-	}
-
-	zc, err := srv.Announce()
+	_, portValue, err := net.SplitHostPort(cc.Uri)
 	if err != nil {
 		return nil, err
 	}
 
-	ski, err := cert.SkiFromCert(certificate)
+	port, err := strconv.Atoi(portValue)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: get the voltage from the site
+	configuration, err := service.NewConfiguration(
+		EEBUSBrandName, EEBUSBrandName, EEBUSModel, serial,
+		model.DeviceTypeTypeEnergyManagementSystem, port, certificate, 230,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// for backward compatibility
+	configuration.SetAlternateMdnsServiceName("EVCC_HEMS_01")
+	configuration.SetAlternateIdentifier(serial)
+	configuration.SetInterfaces(cc.Interfaces)
+	configuration.SetRegisterAutoAccept(true)
+
+	ski, err := SkiFromCert(certificate)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &EEBus{
-		zc:                 zc,
-		log:                log,
-		srv:                srv,
-		id:                 cc.ShipID,
-		clients:            make(map[string]EEBusClientCBs),
-		ipaddress:          make(map[string]string),
-		connectedClients:   make(map[string]ship.Conn),
-		discoveredClients:  make(map[string]*zeroconf.ServiceEntry),
-		clientInConnection: make(map[string]bool),
-		SKI:                ski,
+		log:     log,
+		clients: make(map[string]EEBusClientCBs),
+		SKI:     ski,
+	}
+
+	c.Cem = cem.NewCEM(configuration, c, c)
+	if err := c.Cem.Setup(true); err != nil {
+		return nil, err
 	}
 
 	return c, nil
 }
 
-func (c *EEBus) DeviceInfo() communication.ManufacturerDetails {
-	return EEBUSDetails
-}
-
-func (c *EEBus) Register(ski, ip string, shipConnectHandler func(string, ship.Conn) error, shipDisconnectHandler func(string)) {
+func (c *EEBus) Register(ski, ip string, connectHandler func(string), disconnectHandler func(string)) *emobility.EMobilityImpl {
 	ski = strings.ReplaceAll(ski, "-", "")
 	ski = strings.ReplaceAll(ski, " ", "")
 	ski = strings.ToLower(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	if ski == c.SKI {
-		log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
+		c.log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
 	}
 
-	c.mux.Lock()
-	c.clients[ski] = EEBusClientCBs{onConnect: shipConnectHandler, onDisconnect: shipDisconnectHandler}
-	if ip != "" {
-		c.ipaddress[ski] = ip
-	}
-	c.mux.Unlock()
-
-	// maybe the SKI is already discovered
-	_ = c.handleDiscoveredSKI(ski)
-}
-
-func (c *EEBus) Run() {
-	go c.browseMDNS()
-
-	ln := &server.Listener{
-		Log:          c.log.TRACE,
-		AccessMethod: c.id,
-		Handler:      c.shipHandler,
-	}
-
-	if err := c.srv.Listen(ln, c.certificateHandler); err != nil {
-		c.log.ERROR.Println("eebus listen:", err)
-	}
-}
-
-func (c *EEBus) browseMDNS() {
-	c.browseMDNSRunning = true
-
-	// Let's start from scratch
-	c.mux.Lock()
-	for k := range c.discoveredClients {
-		delete(c.discoveredClients, k)
-	}
-	c.mux.Unlock()
-
-	entries := make(chan *zeroconf.ServiceEntry)
-	defer close(entries)
-
-	go c.discoverDNS(entries, func(entry *zeroconf.ServiceEntry) {
-		c.addDisoveredEntry(entry)
-	})
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if err := zeroconf.Browse(ctx, ship.ZeroconfType, ship.ZeroconfDomain, entries); err != nil {
-		panic(fmt.Errorf("failed to browse: %w", err))
-	}
-}
-
-func (c *EEBus) discoverDNS(results <-chan *zeroconf.ServiceEntry, connector func(*zeroconf.ServiceEntry)) {
-	for entry := range results {
-		c.log.TRACE.Println("mDNS:", entry.HostName, entry.AddrIPv4, entry.Text)
-
-		connector(entry)
-	}
-
-	// The mDNS Browse has timed out
-	c.browseMDNSRunning = false
-
-	c.browseMissingClients()
-}
-
-func (c *EEBus) Shutdown() {
-	c.zc.Shutdown()
-}
-
-func (c *EEBus) addDisoveredEntry(entry *zeroconf.ServiceEntry) {
-	// we need to get the SKI only
-	svc, err := mdns.NewFromDNSEntry(entry)
-
-	if err == nil {
-		if entry.Text == nil {
-			c.log.TRACE.Printf("Ignoring discovered mDNS entry as it has no TXT record: %s", entry.HostName)
-			return
-		}
-
-		if svc.SKI == c.SKI {
-			c.log.TRACE.Println("Ignoring discovered mDNS entry as it is this service itself")
-			return
-		}
-
-		c.patchMdnsEntryWithProvidedIP(svc.SKI, entry)
-
-		if entry.AddrIPv4 == nil && entry.AddrIPv6 == nil {
-			c.log.TRACE.Printf("Ignoring discovered mDNS entry as it has no IPv4 and IPv6 address: %s", entry.HostName)
-			return
-		}
-
-		c.mux.Lock()
-		c.discoveredClients[svc.SKI] = entry
-		c.mux.Unlock()
-
-		// maybe the SKI is already registered
-		_ = c.handleDiscoveredSKI(svc.SKI)
-	} else {
-		c.log.TRACE.Printf("%s: could not create ship service from DNS entry: %v", entry.HostName, err)
-	}
-}
-
-func (c *EEBus) handleDiscoveredSKI(ski string) error {
-	c.mux.Lock()
-	_, connected := c.connectedClients[ski]
-	_, registered := c.clients[ski]
-	entry, discovered := c.discoveredClients[ski]
-	_, connecting := c.clientInConnection[ski]
-	c.mux.Unlock()
-
-	c.log.TRACE.Printf("client %s connected %t, registered %t, discovered %t, connecting %t", ski, connected, registered, discovered, connecting)
-
-	if !connected && discovered && registered && !connecting {
-		c.mux.Lock()
-		c.clientInConnection[ski] = true
-		c.mux.Unlock()
-		if err := c.connectDiscoveredEntry(ski, entry); err != nil {
-			c.mux.Lock()
-			delete(c.connectedClients, ski)
-			delete(c.clientInConnection, ski)
-			c.mux.Unlock()
-			return err
-		}
-		c.mux.Lock()
-		delete(c.clientInConnection, ski)
-		c.mux.Unlock()
-	}
-
-	return nil
-}
-
-// add the IP address from the charger configuration to the mDNS entry if it is missing
-func (c *EEBus) patchMdnsEntryWithProvidedIP(ski string, entry *zeroconf.ServiceEntry) {
-	address, exists := c.ipaddress[ski]
-	if entry.AddrIPv4 == nil && exists && address != "" {
-		if ip := net.ParseIP(address); ip != nil {
-			entry.AddrIPv4 = []net.IP{ip}
-		}
-	}
-}
-
-func (c *EEBus) connectDiscoveredEntry(ski string, entry *zeroconf.ServiceEntry) error {
-	c.patchMdnsEntryWithProvidedIP(ski, entry)
-
-	svc, err := mdns.NewFromDNSEntry(entry)
-
-	var conn ship.Conn
-	if err == nil {
-		c.log.TRACE.Printf("%s: client connect", entry.HostName)
-		conn, err = svc.Connect(c.log.TRACE, c.id, c.srv.Certificate, c.shipCloseHandler)
-	}
-
-	if err != nil {
-		c.log.TRACE.Printf("%s: client done: %v", entry.HostName, err)
-		return err
-	}
-
-	err = c.shipHandler(svc.SKI, conn)
-	if err != nil {
-		log.FATAL.Fatalf("%s: error calling shipHandler: %v", entry.HostName, err)
-		return err
-	}
-
-	return nil
-}
-
-func (c *EEBus) certificateHandler(leaf *x509.Certificate) error {
-	ski, err := cert.SkiFromX509(leaf)
-	if err != nil {
-		return err
-	}
-
-	c.log.TRACE.Printf("verifying client ski: %s", ski)
+	serviceDetails := service.NewServiceDetails(ski)
+	serviceDetails.SetIPv4(ip)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
+	c.clients[ski] = EEBusClientCBs{onConnect: connectHandler, onDisconnect: disconnectHandler}
 
-	for client := range c.clients {
-		if client == ski {
-			c.log.TRACE.Printf("client ski found")
-			return nil
-		}
-	}
-
-	c.log.TRACE.Printf("client ski not found!")
-
-	return fmt.Errorf("client ski not allowed: %s", ski)
+	return c.Cem.RegisterEmobilityRemoteDevice(serviceDetails)
 }
 
-func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
-	for client, cb := range c.clients {
-		if client == ski {
-			c.mux.Lock()
-			currentConnection, found := c.connectedClients[ski]
-			c.mux.Unlock()
-			connect := true
-			c.log.TRACE.Printf("client %s found? %t", ski, found)
-			if found {
-				if currentConnection.IsConnectionClosed() {
-					c.log.TRACE.Printf("client has closed connection")
-				} else {
-					c.log.TRACE.Printf("client has no closed connection")
-					connect = false
-				}
-			}
-			c.log.TRACE.Printf("client %s connect? %t", ski, connect)
-			if connect {
-				c.mux.Lock()
-				c.connectedClients[ski] = conn
-				c.mux.Unlock()
-				return cb.onConnect(ski, conn)
-			}
-		}
-	}
-
-	return errors.New("client not registered")
+func (c *EEBus) Run() {
+	c.Cem.Start()
 }
 
-// handles connection closed
-func (c *EEBus) shipCloseHandler(ski string) {
+func (c *EEBus) Shutdown() {
+	c.Cem.Shutdown()
+}
+
+// EEBUSServiceHandler
+
+// report the Ship ID of a newly trusted connection
+func (c *EEBus) RemoteServiceShipIDReported(service *service.EEBUSService, ski string, shipID string) {
+	// we should associated the Ship ID with the SKI and store it
+	// so the next connection can start trusted
+	c.log.DEBUG.Println("SKI", ski, "has Ship ID:", shipID)
+}
+
+func (c *EEBus) RemoteSKIConnected(service *service.EEBUSService, ski string) {
 	c.mux.Lock()
-	if conn, ok := c.connectedClients[ski]; ok {
-		for clientSki, client := range c.clients {
-			if clientSki != ski {
-				continue
-			}
+	defer c.mux.Unlock()
 
-			if conn.IsConnectionClosed() {
-				c.log.TRACE.Printf("close client %s connection", ski)
-				client.onDisconnect(ski)
-			}
-
-			// always remove client on close
-			delete(c.connectedClients, ski)
-
-			break
-		}
-	}
-
-	c.mux.Unlock()
-	c.browseMissingClients()
-}
-
-// search for registered but not connected clients right away
-// this fixes registered clients closing the connection whysoever
-func (c *EEBus) browseMissingClients() {
-	if c.browseMDNSRunning {
+	client, exists := c.clients[ski]
+	if !exists {
 		return
 	}
+	client.onConnect(ski)
+}
 
-	if len(c.clients) == len(c.connectedClients) {
+func (c *EEBus) RemoteSKIDisconnected(service *service.EEBUSService, ski string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	client, exists := c.clients[ski]
+	if !exists {
 		return
 	}
+	client.onDisconnect(ski)
+}
 
-	c.browseMDNSRunning = true
+func (h *EEBus) ReportServiceShipID(ski string, shipdID string) {}
 
-	// first try the discovered client, if that not works, browse again
-	foundMissingClients := len(c.clients) - len(c.connectedClients)
-	var failedClientSKIs []string
-	for ski, entry := range c.discoveredClients {
-		if _, ok := c.clients[ski]; !ok {
-			continue
+// EEBUS Logging interface
+
+func (c *EEBus) Trace(args ...interface{}) {
+	c.log.TRACE.Println(args...)
+}
+
+func (c *EEBus) Tracef(format string, args ...interface{}) {
+	c.log.TRACE.Printf(format, args...)
+}
+
+func (c *EEBus) Debug(args ...interface{}) {
+	c.log.DEBUG.Println(args...)
+}
+
+func (c *EEBus) Debugf(format string, args ...interface{}) {
+	c.log.DEBUG.Printf(format, args...)
+}
+
+func (c *EEBus) Info(args ...interface{}) {
+	c.log.INFO.Println(args...)
+}
+
+func (c *EEBus) Infof(format string, args ...interface{}) {
+	c.log.INFO.Printf(format, args...)
+}
+
+func (c *EEBus) Error(args ...interface{}) {
+	c.log.ERROR.Println(args...)
+}
+
+func (c *EEBus) Errorf(format string, args ...interface{}) {
+	c.log.ERROR.Printf(format, args...)
+}
+
+// Certificate helpers
+
+// CreateEEBUSCertificate returns a newly created EEBUS compatible certificate
+func CreateEEBUSCertificate() (tls.Certificate, error) {
+	return service.CreateCertificate("", EEBUSBrandName, "DE", EEBUSDeviceCode)
+}
+
+// pemBlockForKey marshals private key into pem block
+func pemBlockForKey(priv interface{}) (*pem.Block, error) {
+	switch k := priv.(type) {
+	case *rsa.PrivateKey:
+		return &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(k)}, nil
+	case *ecdsa.PrivateKey:
+		b, err := x509.MarshalECPrivateKey(k)
+		if err != nil {
+			return nil, fmt.Errorf("unable to marshal ECDSA private key: %w", err)
 		}
+		return &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}, nil
+	default:
+		return nil, errors.New("unknown private key type")
+	}
+}
 
-		if _, ok := c.connectedClients[ski]; !ok {
-			c.log.TRACE.Printf("%s: client not connected, trying to connect\n", entry.HostName)
-			if err := c.handleDiscoveredSKI(ski); err != nil {
-				failedClientSKIs = append(failedClientSKIs, ski)
-				continue
-			}
-			foundMissingClients--
+// GetX509KeyPair saves returns the cert and key string values
+func GetX509KeyPair(cert tls.Certificate) (string, string, error) {
+	var certValue, keyValue string
+
+	out := &bytes.Buffer{}
+	err := pem.Encode(out, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Certificate[0]})
+	if err == nil {
+		certValue = out.String()
+	}
+
+	if len(certValue) > 0 {
+		var pb *pem.Block
+		if pb, err = pemBlockForKey(cert.PrivateKey); err == nil {
+			out.Reset()
+			err = pem.Encode(out, pb)
 		}
 	}
 
-	c.mux.Lock()
-	for _, ski := range failedClientSKIs {
-		delete(c.discoveredClients, ski)
+	if err == nil {
+		keyValue = out.String()
 	}
-	c.mux.Unlock()
 
-	c.browseMDNSRunning = false
+	return certValue, keyValue, err
+}
 
-	if foundMissingClients > 0 {
-		c.browseMDNS()
+// SkiFromX509 extracts SKI from certificate
+func skiFromX509(leaf *x509.Certificate) (string, error) {
+	if len(leaf.SubjectKeyId) == 0 {
+		return "", errors.New("missing SubjectKeyId")
 	}
+	return fmt.Sprintf("%0x", leaf.SubjectKeyId), nil
+}
+
+// SkiFromCert extracts SKI from certificate
+func SkiFromCert(cert tls.Certificate) (string, error) {
+	leaf, err := x509.ParseCertificate(cert.Certificate[0])
+	if err != nil {
+		return "", errors.New("failed parsing certificate: " + err.Error())
+	}
+	return skiFromX509(leaf)
 }

@@ -145,10 +145,15 @@ a:hover {
 	color: var(--evcc-background);
 }
 
-.btn-primary:hover,
-.btn-primary:active {
+.btn-primary:hover {
 	background-color: var(--evcc-accent3);
 	border-color: var(--evcc-accent3);
+}
+
+.btn-primary:active {
+	color: var(--evcc-default-text) !important;
+	background-color: var(--evcc-accent3) !important;
+	border-color: var(--evcc-accent3) !important;
 }
 
 .btn:disabled {
@@ -164,12 +169,17 @@ a:hover {
 	border-width: 2px;
 	border-color: var(--bs-primary);
 }
-.btn-outline-primary:hover,
-.btn-outline-primary:active {
-	color: var(--evcc-accent3);
-	background-color: transparent;
+.btn-outline-primary:hover {
+	color: var(--evcc-accent3) !important;
+	background-color: transparent !important;
 	border-width: 2px;
-	border-color: var(--evcc-accent3);
+	border-color: var(--evcc-accent3) !important;
+}
+.btn-outline-primary:active {
+	color: var(--evcc-default-text) !important;
+	background-color: var(--evcc-accent3) !important;
+	border-width: 2px;
+	border-color: var(--evcc-accent3) !important;
 }
 
 .text-evcc {
@@ -219,7 +229,8 @@ a:hover {
 	}
 }
 
-@media (--lg-and-up) {
+/* breakpoint lg */
+@media (min-width: 992px) {
 	.modal-lg,
 	.modal-xl {
 		--bs-modal-width: 850px;
@@ -247,7 +258,8 @@ a:hover {
 	color: var(--evcc-default-text);
 }
 
-@media (--sm-and-up) {
+/* breakpoint sm */
+@media (min-width: 576px) {
 	.modal-content {
 		padding: 2rem;
 	}

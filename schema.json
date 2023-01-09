@@ -3,9 +3,20 @@
   "title": "EVCC configuration schema",
   "type": "object",
   "properties": {
-    "uri": {
-      "type": "string",
-      "format": "uri"
+    "network": {
+      "type": "object",
+      "description": "Network",
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        }
+      }
     },
     "interval": {
       "$ref": "#/definitions/duration"
@@ -23,6 +34,45 @@
     },
     "sponsortoken": {
       "type": "string"
+    },
+    "plant": {
+      "type": "string"
+    },
+    "telemetry": {
+      "type": "boolean"
+    },
+    "database": {
+      "type": "object",
+      "description": "Database",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "dsn": {
+          "type": "string"
+        }
+      }
+    },
+    "tariffs": {
+      "type": "object",
+      "description": "Tariffs",
+      "properties": {
+        "currency": {
+          "type": "string"
+        },
+        "grid": {
+          "description": "Grid tariff",
+          "$ref": "#/definitions/typedObject"
+        },
+        "feedin": {
+          "description": "Feed-in tariff",
+          "$ref": "#/definitions/typedObject"
+        },
+        "planner": {
+          "description": "Planner tariff",
+          "$ref": "#/definitions/typedObject"
+        }
+      }
     },
     "chargers": {
       "type": "array",
@@ -71,10 +121,10 @@
               "mode": {
                 "$ref": "#/definitions/mode"
               },
-              "minSoC": {
+              "minSoc": {
                 "type": "integer"
               },
-              "targetSoC": {
+              "targetSoc": {
                 "type": "integer"
               },
               "minCurrent": {
@@ -90,7 +140,9 @@
     },
     "site": {
       "type": "object",
-      "required": ["meters"],
+      "required": [
+        "meters"
+      ],
       "properties": {
         "title": {
           "type": "string"
@@ -127,8 +179,8 @@
             }
           }
         },
-        "prioritySoC": {},
-        "bufferSoC": {}
+        "prioritySoc": {},
+        "bufferSoc": {}
       }
     },
     "loadpoints": {
@@ -136,7 +188,9 @@
       "description": "List of loadpoints",
       "items": {
         "type": "object",
-        "required": ["charger"],
+        "required": [
+          "charger"
+        ],
         "properties": {
           "title": {
             "type": "string"
@@ -220,7 +274,10 @@
     },
     "namedObject": {
       "type": "object",
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "properties": {
         "name": {
           "type": "string"
@@ -233,14 +290,40 @@
         }
       }
     },
+    "typedObject": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      }
+    },
     "loglevel": {
-      "enum": ["trace", "debug", "info", "error", "fatal"]
+      "enum": [
+        "trace",
+        "debug",
+        "info",
+        "error",
+        "fatal"
+      ]
     },
     "mode": {
-      "enum": ["off", "now", "pv", "minpv"]
+      "enum": [
+        "off",
+        "now",
+        "pv",
+        "minpv"
+      ]
     },
     "pollMode": {
-      "enum": ["always", "charging", "connected"]
+      "enum": [
+        "always",
+        "charging",
+        "connected"
+      ]
     }
   }
 }

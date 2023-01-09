@@ -56,7 +56,7 @@ type decorateOpenWBBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateOpenWBBatteryImpl) SoC() (float64, error) {
+func (impl *decorateOpenWBBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }
 

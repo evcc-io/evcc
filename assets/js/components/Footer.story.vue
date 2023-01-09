@@ -6,7 +6,6 @@ const state = reactive({
 	version: {
 		installed: "0.401",
 		available: "0.401",
-		commit: "5ce7be4",
 	},
 	savings: {
 		selfConsumptionPercent: 88,
@@ -18,6 +17,15 @@ const state = reactive({
 	<Story>
 		<Variant title="default">
 			<Footer v-bind="state" />
+		</Variant>
+		<Variant title="update nightly">
+			<Footer
+				v-bind="state"
+				:version="{ installed: '0.400', available: '0.400', commit: '5ce7be4' }"
+			/>
+		</Variant>
+		<Variant title="update availabe">
+			<Footer v-bind="state" :version="{ installed: '0.400', available: '0.500' }" />
 		</Variant>
 	</Story>
 </template>

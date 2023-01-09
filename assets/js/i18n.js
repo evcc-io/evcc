@@ -1,10 +1,29 @@
-import toml from "toml";
+import parseToml from "markty-toml";
 import { nextTick } from "vue";
 import { createI18n } from "vue-i18n";
 import en from "../../i18n/en.toml";
 import { i18n as i18nApi } from "./api";
+import settings from "./settings";
 
-const PREFERRED_LOCALE_KEY = "preferred_locale";
+// https://github.com/joker-x/languages.js/blob/master/languages.json
+export const LOCALES = {
+  de: ["German", "Deutsch"],
+  da: ["Danish", "Dansk"],
+  en: ["English", "English"],
+  es: ["Spanish", "Español"],
+  fr: ["French", "Français"],
+  it: ["Italian", "Italiano"],
+  lb: ["Luxembourgish", "Lëtzebuergesch"],
+  lt: ["Lithuanian", "Lietuvių"],
+  nl: ["Dutch", "Nederlands"],
+  no: ["Norwegian", "Norsk"],
+  pl: ["Polish", "Polski"],
+  pt: ["Portuguese", "Português"],
+  ru: ["Russian", "Русский"],
+  sl: ["Slovenian", "Slovenščina"],
+  sv: ["Swedish", "Svenska"],
+  uk: ["Ukrainian", "Українська"],
+};
 
 function getBrowserLocale() {
   const navigatorLocale =
@@ -15,8 +34,27 @@ function getBrowserLocale() {
   return navigatorLocale.trim().split(/-|_/)[0];
 }
 
+export function getLocalePreference() {
+  return settings.locale;
+}
+
+export function removeLocalePreference(i18n) {
+  settings.locale = null;
+  setI18nLanguage(i18n, getBrowserLocale());
+}
+
+export function setLocalePreference(i18n, locale) {
+  if (!LOCALES[locale]) {
+    console.error("unknown locale", locale);
+    return;
+  }
+  settings.locale = locale;
+  setI18nLanguage(i18n, locale);
+  ensureCurrentLocaleMessages(i18n);
+}
+
 function getLocale() {
-  return window.localStorage[PREFERRED_LOCALE_KEY] || getBrowserLocale();
+  return getLocalePreference() || getBrowserLocale();
 }
 
 export default function setupI18n() {
@@ -28,20 +66,20 @@ export default function setupI18n() {
     fallbackLocale: "en",
     messages: { en },
   });
-  setI18nLanguage(i18n, getLocale());
+  setI18nLanguage(i18n.global, getLocale());
   return i18n;
 }
 
 export function setI18nLanguage(i18n, locale) {
-  i18n.global.locale = locale;
+  i18n.locale = locale;
   document.querySelector("html").setAttribute("lang", locale);
 }
 
 async function loadLocaleMessages(i18n, locale) {
   try {
     const response = await i18nApi.get(`${locale}.toml`, { params: { v: window.evcc?.version } });
-    const messages = toml.parse(response.data);
-    i18n.global.setLocaleMessage(locale, messages);
+    const messages = parseToml(response.data);
+    i18n.setLocaleMessage(locale, messages);
   } catch (e) {
     console.error(`unable to load translation for [${locale}]`, e);
   }
@@ -50,8 +88,8 @@ async function loadLocaleMessages(i18n, locale) {
 }
 
 export async function ensureCurrentLocaleMessages(i18n) {
-  const { locale } = i18n.global;
-  if (!i18n.global.availableLocales.includes(locale)) {
+  const { locale } = i18n;
+  if (!i18n.availableLocales.includes(locale)) {
     await loadLocaleMessages(i18n, locale);
   }
 }

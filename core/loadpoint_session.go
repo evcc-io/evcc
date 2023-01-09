@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/core/db"
 )
 
-func (lp *LoadPoint) chargeMeterTotal() float64 {
+func (lp *Loadpoint) chargeMeterTotal() float64 {
 	m, ok := lp.chargeMeter.(api.MeterEnergy)
 	if !ok {
 		return 0
@@ -24,7 +24,7 @@ func (lp *LoadPoint) chargeMeterTotal() float64 {
 
 // createSession creates a charging session. The created timestamp is empty until set by evChargeStartHandler.
 // The session is not persisted yet. That will only happen when stopSession is called.
-func (lp *LoadPoint) createSession() {
+func (lp *Loadpoint) createSession() {
 	// test guard
 	if lp.db == nil || lp.session != nil {
 		return
@@ -41,13 +41,10 @@ func (lp *LoadPoint) createSession() {
 			lp.session.Identifier = id
 		}
 	}
-
-	// TODO remove
-	lp.log.DEBUG.Println("session started")
 }
 
 // stopSession ends a charging session segment and persists the session.
-func (lp *LoadPoint) stopSession() {
+func (lp *Loadpoint) stopSession() {
 	// test guard
 	if lp.db == nil || lp.session == nil {
 		return
@@ -55,8 +52,6 @@ func (lp *LoadPoint) stopSession() {
 
 	// abort the session if charging has never started
 	if lp.session.Created.IsZero() {
-		// TODO remove
-		lp.log.DEBUG.Println("session aborted")
 		return
 	}
 
@@ -67,16 +62,13 @@ func (lp *LoadPoint) stopSession() {
 		lp.session.ChargedEnergy = chargedEnergy
 	}
 
-	// TODO remove
-	lp.log.DEBUG.Println("session stopped")
-
 	lp.db.Persist(lp.session)
 }
 
 type sessionOption func(*db.Session)
 
 // updateSession updates any parameter of a charging session and persists the session.
-func (lp *LoadPoint) updateSession(opts ...sessionOption) {
+func (lp *Loadpoint) updateSession(opts ...sessionOption) {
 	// test guard
 	if lp.db == nil || lp.session == nil {
 		return
@@ -86,16 +78,13 @@ func (lp *LoadPoint) updateSession(opts ...sessionOption) {
 		opt(lp.session)
 	}
 
-	// TODO remove
-	lp.log.DEBUG.Println("session updated")
-
 	if !lp.session.Created.IsZero() {
 		lp.db.Persist(lp.session)
 	}
 }
 
 // clearSession clears the charging session without persisting it.
-func (lp *LoadPoint) clearSession() {
+func (lp *Loadpoint) clearSession() {
 	// test guard
 	if lp.db == nil {
 		return

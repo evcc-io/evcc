@@ -30,6 +30,6 @@ type decorateBoschBpts5HybridBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateBoschBpts5HybridBatteryImpl) SoC() (float64, error) {
+func (impl *decorateBoschBpts5HybridBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }

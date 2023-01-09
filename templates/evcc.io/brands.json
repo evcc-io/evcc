@@ -21,7 +21,6 @@
   "go-eCharger",
   "HardyBarth",
   "Heidelberg",
-  "i-CHARGE",
   "Innogy",
   "Juice",
   "KEBA",
@@ -35,11 +34,13 @@
   "Phoenix",
   "Porsche",
   "Pracht",
+  "Schrack",
   "SENEC",
   "SMA",
   "Sonnen",
   "Stark in Strom",
   "TechniSat",
+  "Tesla",
   "TinkerForge",
   "Ubitricity",
   "Vestel",
@@ -154,6 +155,7 @@
   "Smart",
   "Tesla",
   "Volkswagen",
-  "Volvo"
+  "Volvo",
+  "Volvo (legacy)"
  ]
 }

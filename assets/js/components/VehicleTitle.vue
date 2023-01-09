@@ -19,6 +19,7 @@
 			></shopicon-regular-cablecharge>
 			<VehicleOptions
 				v-if="showOptions"
+				:id="id"
 				class="options"
 				:vehicles="otherVehicles"
 				:is-unknown="isUnknown"
@@ -40,7 +41,7 @@
 import "@h2d2/shopicons/es/regular/refresh";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import VehicleIcon from "./VehicleIcon";
-import { Tooltip } from "bootstrap";
+import Tooltip from "bootstrap/js/dist/tooltip";
 
 import VehicleOptions from "./VehicleOptions.vue";
 
@@ -48,6 +49,7 @@ export default {
 	name: "VehicleTitle",
 	components: { VehicleOptions, VehicleIcon },
 	props: {
+		id: [String, Number],
 		vehiclePresent: Boolean,
 		vehicleTitle: String,
 		vehicleIcon: String,

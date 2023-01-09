@@ -130,7 +130,7 @@ func (x *NewReply) GetVehicleId() int64 {
 	return 0
 }
 
-type SoCRequest struct {
+type SocRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -139,8 +139,8 @@ type SoCRequest struct {
 	VehicleId int64  `protobuf:"varint,2,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
 }
 
-func (x *SoCRequest) Reset() {
-	*x = SoCRequest{}
+func (x *SocRequest) Reset() {
+	*x = SocRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_proto_vehicle_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -148,13 +148,13 @@ func (x *SoCRequest) Reset() {
 	}
 }
 
-func (x *SoCRequest) String() string {
+func (x *SocRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SoCRequest) ProtoMessage() {}
+func (*SocRequest) ProtoMessage() {}
 
-func (x *SoCRequest) ProtoReflect() protoreflect.Message {
+func (x *SocRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_vehicle_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -166,26 +166,26 @@ func (x *SoCRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SoCRequest.ProtoReflect.Descriptor instead.
-func (*SoCRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use SocRequest.ProtoReflect.Descriptor instead.
+func (*SocRequest) Descriptor() ([]byte, []int) {
 	return file_proto_vehicle_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *SoCRequest) GetToken() string {
+func (x *SocRequest) GetToken() string {
 	if x != nil {
 		return x.Token
 	}
 	return ""
 }
 
-func (x *SoCRequest) GetVehicleId() int64 {
+func (x *SocRequest) GetVehicleId() int64 {
 	if x != nil {
 		return x.VehicleId
 	}
 	return 0
 }
 
-type SoCReply struct {
+type SocReply struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -193,8 +193,8 @@ type SoCReply struct {
 	Soc float64 `protobuf:"fixed64,1,opt,name=soc,proto3" json:"soc,omitempty"`
 }
 
-func (x *SoCReply) Reset() {
-	*x = SoCReply{}
+func (x *SocReply) Reset() {
+	*x = SocReply{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_proto_vehicle_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -202,13 +202,13 @@ func (x *SoCReply) Reset() {
 	}
 }
 
-func (x *SoCReply) String() string {
+func (x *SocReply) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SoCReply) ProtoMessage() {}
+func (*SocReply) ProtoMessage() {}
 
-func (x *SoCReply) ProtoReflect() protoreflect.Message {
+func (x *SocReply) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_vehicle_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -220,12 +220,12 @@ func (x *SoCReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SoCReply.ProtoReflect.Descriptor instead.
-func (*SoCReply) Descriptor() ([]byte, []int) {
+// Deprecated: Use SocReply.ProtoReflect.Descriptor instead.
+func (*SocReply) Descriptor() ([]byte, []int) {
 	return file_proto_vehicle_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *SoCReply) GetSoc() float64 {
+func (x *SocReply) GetSoc() float64 {
 	if x != nil {
 		return x.Soc
 	}
@@ -280,16 +280,16 @@ var file_proto_vehicle_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_proto_vehicle_proto_goTypes = []interface{}{
 	(*NewRequest)(nil), // 0: NewRequest
 	(*NewReply)(nil),   // 1: NewReply
-	(*SoCRequest)(nil), // 2: SoCRequest
-	(*SoCReply)(nil),   // 3: SoCReply
+	(*SocRequest)(nil), // 2: SocRequest
+	(*SocReply)(nil),   // 3: SocReply
 	nil,                // 4: NewRequest.ConfigEntry
 }
 var file_proto_vehicle_proto_depIdxs = []int32{
 	4, // 0: NewRequest.config:type_name -> NewRequest.ConfigEntry
 	0, // 1: Vehicle.New:input_type -> NewRequest
-	2, // 2: Vehicle.SoC:input_type -> SoCRequest
+	2, // 2: Vehicle.Soc:input_type -> SocRequest
 	1, // 3: Vehicle.New:output_type -> NewReply
-	3, // 4: Vehicle.SoC:output_type -> SoCReply
+	3, // 4: Vehicle.Soc:output_type -> SocReply
 	3, // [3:5] is the sub-list for method output_type
 	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -328,7 +328,7 @@ func file_proto_vehicle_proto_init() {
 			}
 		}
 		file_proto_vehicle_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SoCRequest); i {
+			switch v := v.(*SocRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -340,7 +340,7 @@ func file_proto_vehicle_proto_init() {
 			}
 		}
 		file_proto_vehicle_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SoCReply); i {
+			switch v := v.(*SocReply); i {
 			case 0:
 				return &v.state
 			case 1:

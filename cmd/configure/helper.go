@@ -398,19 +398,6 @@ func (c *CmdConfigure) processConfig(templateItem *templates.Template, deviceCat
 
 	c.processModbusConfig(templateItem, deviceCategory)
 
-	// TODO remove
-	// type mapped = struct {
-	// 	Name    string
-	// 	Default any
-	// }
-
-	// fmt.Printf("%+v\n", lo.Map(templateItem.Params, func(p templates.Param, _ int) mapped {
-	// 	return mapped{
-	// 		Name:    p.Name,
-	// 		Default: p.Default,
-	// 	}
-	// }))
-
 	return c.processParams(templateItem, deviceCategory)
 }
 

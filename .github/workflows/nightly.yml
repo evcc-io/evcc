@@ -86,7 +86,7 @@ jobs:
         run: make patch-asn1-sudo
 
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
           args: --snapshot -f .goreleaser-nightly.yml --rm-dist

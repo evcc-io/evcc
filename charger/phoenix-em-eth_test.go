@@ -26,8 +26,8 @@ func TestPhoenixEMEthDecorators(t *testing.T) {
 		t.Error("missing MeterEnergy api")
 	}
 
-	if _, ok := wb.(api.MeterCurrent); !ok {
-		t.Error("missing MeterCurrent api")
+	if _, ok := wb.(api.PhaseCurrents); !ok {
+		t.Error("missing PhaseCurrents api")
 	}
 
 	if _, ok := wb.(api.ChargeTimer); !ok {

@@ -40,7 +40,7 @@
 				{{ $t("footer.sponsor.becomeSponsor") }}
 			</a>
 			<div class="small text-muted text-center ms-lg-3">
-				{{ $t("footer.sponsor.confettiPromise") }}
+				{{ $t("footer.sponsor.confettiPromise") }} ;)
 			</div>
 		</div>
 	</div>
@@ -106,13 +106,17 @@ export default {
 .become-sponsor {
 	width: 100%;
 }
-@media (--sm-and-up) {
+
+/* breakpoint sm */
+@media (min-width: 576px) {
 	.confetti-button,
 	.become-sponsor {
 		width: 75%;
 	}
 }
-@media (--lg-and-up) {
+
+/* breakpoint lg */
+@media (min-width: 992px) {
 	.confetti-button,
 	.become-sponsor {
 		width: 40%;

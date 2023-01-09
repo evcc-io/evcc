@@ -1,19 +1,26 @@
 package util
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // Param is the broadcast channel data type
 type Param struct {
-	LoadPoint *int
+	Loadpoint *int
 	Key       string
 	Val       interface{}
 }
 
-// UniqueID returns unique identifier for parameter LoadPoint/Key combination
+// UniqueID returns unique identifier for parameter Loadpoint/Key combination
 func (p Param) UniqueID() string {
-	key := p.Key
-	if p.LoadPoint != nil {
-		key = strconv.Itoa(*p.LoadPoint) + "." + key
+	var b strings.Builder
+
+	if p.Loadpoint != nil {
+		b.WriteString(strconv.Itoa(*p.Loadpoint) + ".")
 	}
-	return key
+
+	b.WriteString(p.Key)
+
+	return b.String()
 }

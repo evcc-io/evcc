@@ -17,9 +17,9 @@
 			<LabelAndValue
 				v-if="socBasedCharging"
 				class="flex-grow-1"
-				:label="$t('main.vehicle.vehicleSoC')"
-				:value="vehicleSoC ? `${vehicleSoC}%` : '--'"
-				:extraValue="vehicleRange ? `${vehicleRange} km` : null"
+				:label="$t('main.vehicle.vehicleSoc')"
+				:value="vehicleSoc ? `${vehicleSoc}%` : '--'"
+				:extraValue="range ? `${Math.round(range)} ${rangeUnit}` : null"
 				align="start"
 			/>
 			<LabelAndValue
@@ -27,7 +27,7 @@
 				class="flex-grow-1"
 				:label="$t('main.loadpoint.charged')"
 				:value="fmtEnergy(chargedEnergy)"
-				:extraValue="chargedSoC"
+				:extraValue="chargedSoc"
 				align="start"
 			/>
 			<TargetCharge
@@ -38,11 +38,11 @@
 				@target-time-updated="setTargetTime"
 				@target-time-removed="removeTargetTime"
 			/>
-			<TargetSoCSelect
+			<TargetSocSelect
 				v-if="socBasedCharging"
 				class="flex-grow-1 text-end"
-				:target-soc="displayTargetSoC"
-				:range-per-soc="rangePerSoC"
+				:target-soc="displayTargetSoc"
+				:range-per-soc="rangePerSoc"
 				@target-soc-updated="targetSocUpdated"
 			/>
 			<TargetEnergySelect
@@ -69,8 +69,9 @@ import VehicleTitle from "./VehicleTitle.vue";
 import VehicleSoc from "./VehicleSoc.vue";
 import VehicleStatus from "./VehicleStatus.vue";
 import TargetCharge from "./TargetCharge.vue";
-import TargetSoCSelect from "./TargetSoCSelect.vue";
+import TargetSocSelect from "./TargetSocSelect.vue";
 import TargetEnergySelect from "./TargetEnergySelect.vue";
+import { distanceUnit, distanceValue } from "../units";
 
 export default {
 	name: "Vehicle",
@@ -80,7 +81,7 @@ export default {
 		VehicleStatus,
 		LabelAndValue,
 		TargetCharge,
-		TargetSoCSelect,
+		TargetSocSelect,
 		TargetEnergySelect,
 	},
 	mixins: [collector, formatter],
@@ -88,11 +89,11 @@ export default {
 		id: [String, Number],
 		connected: Boolean,
 		vehiclePresent: Boolean,
-		vehicleSoC: Number,
-		vehicleTargetSoC: Number,
+		vehicleSoc: Number,
+		vehicleTargetSoc: Number,
 		enabled: Boolean,
 		charging: Boolean,
-		minSoC: Number,
+		minSoc: Number,
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleTitle: String,
@@ -102,7 +103,7 @@ export default {
 		targetTimeActive: Boolean,
 		targetTime: String,
 		targetTimeProjectedStart: String,
-		targetSoC: Number,
+		targetSoc: Number,
 		targetEnergy: Number,
 		chargedEnergy: Number,
 		mode: String,
@@ -123,7 +124,7 @@ export default {
 	],
 	data() {
 		return {
-			displayTargetSoC: this.targetSoC,
+			displayTargetSoc: this.targetSoc,
 		};
 	},
 	computed: {
@@ -139,9 +140,15 @@ export default {
 		targetCharge: function () {
 			return this.collectProps(TargetCharge);
 		},
-		rangePerSoC: function () {
-			if (this.vehicleSoC > 10 && this.vehicleRange) {
-				return this.vehicleRange / this.vehicleSoC;
+		range: function () {
+			return distanceValue(this.vehicleRange);
+		},
+		rangeUnit: function () {
+			return distanceUnit();
+		},
+		rangePerSoc: function () {
+			if (this.vehicleSoc > 10 && this.range) {
+				return this.range / this.vehicleSoc;
 			}
 			return null;
 		},
@@ -151,7 +158,7 @@ export default {
 			}
 			return null;
 		},
-		chargedSoC: function () {
+		chargedSoc: function () {
 			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
 			return value > 1 ? `+${Math.round(value)}%` : null;
 		},
@@ -160,17 +167,17 @@ export default {
 		},
 	},
 	watch: {
-		targetSoC: function () {
-			this.displayTargetSoC = this.targetSoC;
+		targetSoc: function () {
+			this.displayTargetSoc = this.targetSoc;
 		},
 	},
 	methods: {
-		targetSocDrag: function (targetSoC) {
-			this.displayTargetSoC = targetSoC;
+		targetSocDrag: function (targetSoc) {
+			this.displayTargetSoc = targetSoc;
 		},
-		targetSocUpdated: function (targetSoC) {
-			this.displayTargetSoC = targetSoC;
-			this.$emit("target-soc-updated", targetSoC);
+		targetSocUpdated: function (targetSoc) {
+			this.displayTargetSoc = targetSoc;
+			this.$emit("target-soc-updated", targetSoc);
 		},
 		targetEnergyUpdated: function (targetEnergy) {
 			this.$emit("target-energy-updated", targetEnergy);

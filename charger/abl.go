@@ -91,7 +91,7 @@ func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewABLeMH(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewABLeMH creates ABLeMH charger
 func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
@@ -220,7 +220,7 @@ func (wb *ABLeMH) currentPower() (float64, error) {
 	return 230 * (l1 + l2 + l3), err
 }
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *ABLeMH) currents() (float64, float64, float64, error) {
 	b, err := wb.get(ablRegStatusLong, 5)
 	if err != nil {

@@ -41,7 +41,7 @@ func init() {
 	registry.Add("wallbe", NewWallbeFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateWallbe -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
+// go:generate go run ../cmd/tools/decorate.go -f decorateWallbe -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -208,7 +208,7 @@ func (wb *Wallbe) totalEnergy() (float64, error) {
 	return res, nil
 }
 
-// currents implements the api.MeterCurrent interface
+// currents implements the api.PhaseCurrents interface
 func (wb *Wallbe) currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range wbRegCurrents {

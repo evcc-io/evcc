@@ -31,14 +31,14 @@ const state = reactive({
 			/>
 		</Variant>
 		<Variant title="one phase, more available">
-			<Phases v-bind="state" :chargeCurrent="12" :chargeCurrents="[6, 0, 0]" />
+			<Phases v-bind="state" :chargeCurrent="12" :chargeCurrents="[6, 0.2, 0]" />
 		</Variant>
 		<Variant title="two phases active">
 			<Phases
 				v-bind="state"
 				:phasesActive="2"
 				:chargeCurrent="16"
-				:chargeCurrents="[16, 16, 0]"
+				:chargeCurrents="[16, 16, 0.3]"
 			/>
 		</Variant>
 		<Variant title="asymetric phases">
@@ -47,6 +47,14 @@ const state = reactive({
 				:phasesActive="2"
 				:chargeCurrent="16"
 				:chargeCurrents="[8, 0.9, 14]"
+			/>
+		</Variant>
+		<Variant title="only second phase">
+			<Phases
+				v-bind="state"
+				:phasesActive="1"
+				:chargeCurrent="13"
+				:chargeCurrents="[0, 13, 0]"
 			/>
 		</Variant>
 	</Story>

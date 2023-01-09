@@ -13,15 +13,11 @@
 		<button
 			v-else-if="newVersionAvailable"
 			href="#"
-			data-bs-toggle="modal"
-			data-bs-target="#updateModal"
 			class="btn btn-link ps-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
+			@click="openModal"
 		>
 			<shopicon-regular-gift class="me-2"></shopicon-regular-gift>
 			v{{ installed }}
-			<span class="ms-2 d-none d-xs-block d-sm-none text-decoration-underline">
-				{{ $t("footer.version.availableShort") }}
-			</span>
 			<span class="ms-2 d-none d-sm-block text-gray-medium text-decoration-underline">
 				{{ $t("footer.version.availableLong") }}
 			</span>
@@ -68,7 +64,7 @@
 										:style="{ width: uploadProgress + '%' }"
 									></div>
 								</div>
-								<p>{{ updateStatus }}{{ uploadMessage }}</p>
+								<p>{{ updateStatus }} {{ uploadMessage }}</p>
 							</div>
 							<div v-else>
 								<p>
@@ -131,11 +127,11 @@
 </template>
 
 <script>
-import api from "../api";
-import Logo from "./Logo.vue";
-
+import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
+import api from "../api";
+import Logo from "./Logo.vue";
 
 export default {
 	name: "Version",
@@ -175,11 +171,15 @@ export default {
 				this.updateStatus = this.$t("footer.version.modalUpdateStatusStart");
 				this.updateStarted = true;
 			} catch (e) {
-				this.updateStatus = this.$t("footer.version.modalUpdateStatusStart") + e;
+				this.updateStatus = `${this.$t("footer.version.modalUpdateStatusStart")} ${e}`;
 			}
 		},
 		releaseNotesUrl: function (version) {
 			return `https://github.com/evcc-io/evcc/releases/tag/${version}`;
+		},
+		openModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("updateModal"));
+			modal.show();
 		},
 	},
 };

@@ -20,7 +20,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -213,9 +212,9 @@ func (wb *WebastoNext) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-var _ api.MeterCurrent = (*WebastoNext)(nil)
+var _ api.PhaseCurrents = (*WebastoNext)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
 	var curr [3]float64
 	for l := uint16(0); l < 3; l++ {
@@ -234,12 +233,12 @@ var _ api.Identifier = (*WebastoNext)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *WebastoNext) Identify() (string, error) {
-	id, err := wb.conn.ReadHoldingRegisters(tqRegUserID, 10)
+	b, err := wb.conn.ReadHoldingRegisters(tqRegUserID, 10)
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimSpace(string(id)), nil
+	return bytesAsString(b), nil
 }
 
 var _ api.Diagnosis = (*WebastoNext)(nil)

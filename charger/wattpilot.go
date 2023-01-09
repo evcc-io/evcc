@@ -130,9 +130,9 @@ func (c *Wattpilot) ChargedEnergy() (float64, error) {
 	return resp.(float64) / 1e3, err
 }
 
-var _ api.MeterCurrent = (*Wattpilot)(nil)
+var _ api.PhaseCurrents = (*Wattpilot)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.Meter interface
 func (c *Wattpilot) Currents() (float64, float64, float64, error) {
 	return c.api.GetCurrents()
 }

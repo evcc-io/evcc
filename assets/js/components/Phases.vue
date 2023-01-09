@@ -1,11 +1,6 @@
 <template>
-	<div class="phases d-flex justify-content-between">
-		<div
-			v-for="num in [1, 2, 3]"
-			:key="num"
-			class="phase me-1"
-			:class="{ inactive: inactive(num) }"
-		>
+	<div :class="`phases phases--${numberOfVisiblePhases}p d-flex justify-content-between`">
+		<div v-for="num in [1, 2, 3]" :key="num" :class="`phase phase--${num} me-1`">
 			<div class="target" :style="{ width: `${targetWidth()}%` }"></div>
 			<div class="real" :style="{ width: `${realWidth(num)}%` }"></div>
 		</div>
@@ -13,6 +8,8 @@
 </template>
 
 <script>
+const MIN_ACTIVE_CURRENT = 1;
+
 export default {
 	name: "Phases",
 	props: {
@@ -23,17 +20,17 @@ export default {
 		maxCurrent: { type: Number },
 	},
 	computed: {
-		highestActivePhase() {
-			if (this.chargeCurrents) {
-				return this.chargeCurrents.findLastIndex((current) => current > 0) + 1;
+		numberOfVisiblePhases() {
+			if (!this.chargeCurrents) {
+				return this.phasesActive;
 			}
-			return this.phasesActive;
+			const [L1, L2, L3] = this.chargeCurrents.map((c) => c >= MIN_ACTIVE_CURRENT);
+			if (L1 && !L2 && !L3) return 1;
+			if (L1 && L2 && !L3) return 2;
+			return 3;
 		},
 	},
 	methods: {
-		inactive(num) {
-			return num > this.highestActivePhase;
-		},
 		targetWidth() {
 			let current = Math.min(Math.max(this.minCurrent, this.chargeCurrent), this.maxCurrent);
 			return (100 / this.maxCurrent) * current;
@@ -69,7 +66,10 @@ export default {
 html.dark .phase {
 	background-color: var(--bs-gray-bright);
 }
-.phase.inactive {
+
+.phases--1p .phase--2,
+.phases--1p .phase--3,
+.phases--2p .phase--3 {
 	flex-basis: 0;
 	margin-right: 0 !important;
 	opacity: 0;

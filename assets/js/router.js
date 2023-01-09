@@ -13,7 +13,7 @@ export default function setupRouter(i18n) {
     ],
   });
   router.beforeEach(async () => {
-    await ensureCurrentLocaleMessages(i18n);
+    await ensureCurrentLocaleMessages(i18n.global);
     return true;
   });
   return router;

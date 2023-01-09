@@ -8,9 +8,8 @@
 			<button
 				class="btn btn-link p-0 value text-center"
 				:class="targetChargeEnabled ? 'evcc-default-text' : 'text-gray'"
-				data-bs-toggle="modal"
-				:data-bs-target="`#${modalId}`"
 				:disabled="disabled"
+				@click="openModal"
 			>
 				<strong v-if="targetChargeEnabled">{{ targetTimeLabel() }}</strong>
 				<span v-else>{{ $t("main.targetCharge.setTargetTime") }}</span>
@@ -47,7 +46,7 @@
 								<div class="form-group">
 									<!-- eslint-disable vue/no-v-html -->
 									<label for="targetTimeLabel" class="mb-3">
-										{{ $t("main.targetCharge.description", { targetSoC }) }}
+										{{ $t("main.targetCharge.description", { targetSoc }) }}
 									</label>
 									<!-- eslint-enable vue/no-v-html -->
 									<div
@@ -119,6 +118,7 @@
 </template>
 
 <script>
+import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
 import LabelAndValue from "./LabelAndValue.vue";
@@ -136,7 +136,7 @@ export default {
 		id: [String, Number],
 		targetTime: String,
 		targetTimeActive: Boolean,
-		targetSoC: Number,
+		targetSoc: Number,
 		disabled: Boolean,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
@@ -242,6 +242,10 @@ export default {
 		},
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
+		},
+		openModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById(this.modalId));
+			modal.show();
 		},
 	},
 };
