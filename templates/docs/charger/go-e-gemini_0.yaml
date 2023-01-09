@@ -1,7 +1,6 @@
 product:
   brand: go-eCharger
-  description: |
-  Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
+  description: Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
 capabilities: ["1p3p", "rfid"]
 requirements: ["sponsorship"]
 render:
