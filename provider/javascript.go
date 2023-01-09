@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
@@ -11,6 +12,7 @@ type Javascript struct {
 	vm     *otto.Otto
 	script string
 	set    *Config
+	get    []Config
 }
 
 func init() {
@@ -39,6 +41,7 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider,
 		vm:     vm,
 		script: cc.Script,
 		set:    cc.Set,
+		get:    cc.Get,
 	}
 
 	return p, nil
@@ -47,11 +50,13 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider,
 // FloatGetter parses float from request
 func (p *Javascript) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
-		v, err := p.vm.Eval(p.script)
+		err = getTransformed(p)
 		if err == nil {
-			res, err = v.ToFloat()
+			v, err := p.vm.Eval(p.script)
+			if err == nil {
+				res, err = v.ToFloat()
+			}
 		}
-
 		return res, err
 	}
 }
@@ -59,9 +64,12 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 // IntGetter parses int64 from request
 func (p *Javascript) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
-		v, err := p.vm.Eval(p.script)
+		err = getTransformed(p)
 		if err == nil {
-			res, err = v.ToInteger()
+			v, err := p.vm.Eval(p.script)
+			if err == nil {
+				res, err = v.ToInteger()
+			}
 		}
 
 		return res, err
@@ -71,9 +79,12 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 // StringGetter sends string request
 func (p *Javascript) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
-		v, err := p.vm.Eval(p.script)
+		err = getTransformed(p)
 		if err == nil {
-			res, err = v.ToString()
+			v, err := p.vm.Eval(p.script)
+			if err == nil {
+				res, err = v.ToString()
+			}
 		}
 
 		return res, err
@@ -83,9 +94,12 @@ func (p *Javascript) StringGetter() func() (string, error) {
 // BoolGetter parses bool from request
 func (p *Javascript) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
-		v, err := p.vm.Eval(p.script)
+		err = getTransformed(p)
 		if err == nil {
-			res, err = v.ToBoolean()
+			v, err := p.vm.Eval(p.script)
+			if err == nil {
+				res, err = v.ToBoolean()
+			}
 		}
 
 		return res, err
@@ -157,6 +171,24 @@ func (p *Javascript) BoolSetter(param string) func(bool) error {
 		}
 		return err
 	}
+}
+
+func getTransformed(p *Javascript) error {
+	if p.get != nil {
+		for idx, cc := range p.get {
+			//TODO: how to detect types?
+			f, err := NewStringGetterFromConfig(cc)
+			if err != nil {
+				return fmt.Errorf("get[%d]: %w", idx, err)
+			}
+			val, err := f()
+			err = p.vm.Set(fmt.Sprintf("get_%d", idx), val)
+			if err != nil {
+				return fmt.Errorf("get[%d]: %w", idx, err)
+			}
+		}
+	}
+	return nil
 }
 
 func setTransformed(param string, p *Javascript, v otto.Value) {

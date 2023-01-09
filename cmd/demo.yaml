@@ -34,11 +34,21 @@ meters:
       source: js
       vm: shared
       script: |
-        state.pvpower = 8000+500*Math.random();
-        state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
-        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - state.batterypower - state.pvpower;
+        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - get_1 - get_0;
         state.gridpower;
-
+      get:
+        - source: js
+          vm: shared
+          script: |
+            state.pvpower = 8000+500*Math.random();
+            console.log("state.pvpower:", state.pvpower);
+            state.pvpower;
+        - source: js
+          vm: shared
+          script: |
+            state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
+            console.log("state.batterypower:", state.batterypower);
+            state.batterypower;
   - name: pv
     type: custom
     power:
@@ -56,10 +66,17 @@ meters:
       source: js
       vm: shared
       script: |
-        if (state.batterypower < 0) state.batterySoc++; else state.batterySoc--;
+        console.log("get_0:", get_0);
+        if (get_1) state.batterySoc++; else state.batterySoc--;
         if (state.batterySoc < 10) state.batterySoc = 90;
         if (state.batterySoc > 90) state.batterySoc = 10;
         state.batterySoc;
+      get:
+        - source: js
+          vm: shared
+          script: |
+            console.log("state.batterypower:", state.batterypower);
+            state.batterypower < 0;
 
   - name: meter_charger_1
     type: custom
