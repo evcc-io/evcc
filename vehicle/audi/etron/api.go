@@ -5,7 +5,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/samber/lo"
 	"github.com/shurcooL/graphql"
 	"golang.org/x/oauth2"
 )
@@ -33,22 +32,12 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 }
 
 // Vehicles implements the /vehicles response
-func (v *API) Vehicles(ctx context.Context) ([]string, error) {
-	type vehicle struct {
-		VIN, Type, Nickname string
-	}
-
+func (v *API) Vehicles(ctx context.Context) ([]Vehicle, error) {
 	var res struct {
-		UserVehicles []vehicle `json:"userVehicles"`
+		UserVehicles []Vehicle
 	}
 
-	var vins []string
 	err := v.client.Query(ctx, &res, nil)
-	if err == nil {
-		vins = lo.Map(res.UserVehicles, func(v vehicle, _ int) string {
-			return v.VIN
-		})
-	}
 
-	return vins, err
+	return res.UserVehicles, err
 }

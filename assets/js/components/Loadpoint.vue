@@ -5,11 +5,19 @@
 				<h3 class="me-2 mb-0 text-truncate">
 					{{ title || $t("main.loadpoint.fallbackName") }}
 				</h3>
-				<LoadpointSettingsButton :id="id" class="d-block d-sm-none" />
+				<LoadpointSettingsButton
+					v-if="settingsButtonVisible"
+					:id="id"
+					class="d-block d-sm-none"
+				/>
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" :mode="mode" @updated="setTargetMode" />
-				<LoadpointSettingsButton :id="id" class="d-none d-sm-block ms-2" />
+				<LoadpointSettingsButton
+					v-if="settingsButtonVisible"
+					:id="id"
+					class="d-none d-sm-block ms-2"
+				/>
 			</div>
 		</div>
 		<LoadpointSettingsModal
@@ -17,7 +25,7 @@
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
-			@minsoc-updated="setMinSoC"
+			@minsoc-updated="setMinSoc"
 		/>
 
 		<div
@@ -42,7 +50,7 @@
 					<LabelAndValue
 						:label="$t('main.loadpoint.power')"
 						:value="chargePower"
-						:valueFmt="fmtkWUnit"
+						:valueFmt="fmtPower"
 						class="mb-2"
 						align="start"
 					/>
@@ -59,8 +67,9 @@
 				/>
 			</div>
 			<LabelAndValue
+				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
-				:value="fmtKWh(chargedEnergy)"
+				:value="fmtEnergy(chargedEnergy)"
 				align="center"
 			/>
 			<LabelAndValue
@@ -83,7 +92,8 @@
 		<hr class="divider" />
 		<Vehicle
 			v-bind="vehicle"
-			@target-soc-updated="setTargetSoC"
+			@target-soc-updated="setTargetSoc"
+			@target-energy-updated="setTargetEnergy"
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
 			@change-vehicle="changeVehicle"
@@ -123,7 +133,8 @@ export default {
 		// main
 		title: String,
 		mode: String,
-		targetSoC: Number,
+		targetSoc: Number,
+		targetEnergy: Number,
 		remoteDisabled: Boolean,
 		remoteDisabledSource: String,
 		chargeDuration: Number,
@@ -136,10 +147,14 @@ export default {
 		vehicleDetectionActive: Boolean,
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
-		vehicleSoC: Number,
+		vehicleSoc: Number,
 		vehicleTitle: String,
+		vehicleIcon: String,
+		vehicleTargetSoc: Number,
+		vehicleCapacity: Number,
+		vehicleFeatureOffline: Boolean,
 		vehicles: Array,
-		minSoC: Number,
+		minSoc: Number,
 		targetTime: String,
 		targetTimeActive: Boolean,
 		targetTimeProjectedStart: String,
@@ -161,7 +176,6 @@ export default {
 		maxCurrent: Number,
 		phasesActive: Number,
 		chargeCurrent: Number,
-		vehicleCapacity: Number,
 		connectedDuration: Number,
 		chargeCurrents: Array,
 		chargeConfigured: Boolean,
@@ -187,11 +201,17 @@ export default {
 		settingsModal: function () {
 			return this.collectProps(LoadpointSettingsModal);
 		},
+		settingsButtonVisible: function () {
+			return this.$hiddenFeatures || [0, 1, 3].includes(this.phasesConfigured);
+		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);
 		},
 		showChargingIndicator: function () {
 			return this.charging && this.chargePower > 0;
+		},
+		socBasedCharging: function () {
+			return !this.vehicleFeatureOffline && this.vehiclePresent;
 		},
 	},
 	watch: {
@@ -235,8 +255,11 @@ export default {
 		setTargetMode: function (mode) {
 			api.post(this.apiPath("mode") + "/" + mode);
 		},
-		setTargetSoC: function (soc) {
+		setTargetSoc: function (soc) {
 			api.post(this.apiPath("targetsoc") + "/" + soc);
+		},
+		setTargetEnergy: function (kWh) {
+			api.post(this.apiPath("targetenergy") + "/" + kWh);
 		},
 		setMaxCurrent: function (maxCurrent) {
 			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
@@ -247,11 +270,11 @@ export default {
 		setPhasesConfigured: function (phases) {
 			api.post(this.apiPath("phases") + "/" + phases);
 		},
-		setMinSoC: function (soc) {
+		setMinSoc: function (soc) {
 			api.post(this.apiPath("minsoc") + "/" + soc);
 		},
 		setTargetTime: function (date) {
-			api.post(`${this.apiPath("targetcharge")}/${this.targetSoC}/${date.toISOString()}`);
+			api.post(`${this.apiPath("targetcharge")}/${this.targetSoc}/${date.toISOString()}`);
 		},
 		removeTargetTime: function () {
 			api.delete(this.apiPath("targetcharge"));
@@ -262,9 +285,13 @@ export default {
 		removeVehicle() {
 			api.delete(this.apiPath("vehicle"));
 		},
-		fmtkWUnit(value) {
+		fmtPower(value) {
 			const inKw = value == 0 || value >= 1000;
 			return this.fmtKw(value, inKw);
+		},
+		fmtEnergy(value) {
+			const inKw = value == 0 || value >= 1000;
+			return this.fmtKWh(value, inKw);
 		},
 	},
 };
@@ -299,7 +326,8 @@ export default {
 	opacity: 0.5;
 	margin: 0 -1rem;
 }
-@media (--sm-and-up) {
+/* breakpoint sm */
+@media (min-width: 576px) {
 	.divider {
 		margin: 0 -1.5rem;
 	}

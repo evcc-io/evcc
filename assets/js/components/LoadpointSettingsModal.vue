@@ -23,23 +23,26 @@
 					</div>
 					<div class="modal-body">
 						<div class="container">
-							<h4 class="d-flex align-items-center mb-3 mt-0 text-evcc">
+							<h4
+								v-if="showMinSocSettings"
+								class="d-flex align-items-center mb-3 mt-0 text-evcc"
+							>
 								{{ $t("main.loadpointSettings.vehicle") }}
 								<shopicon-bold-car3 class="ms-2"></shopicon-bold-car3>
 							</h4>
-							<div class="mb-3 row">
+							<div v-if="showMinSocSettings" class="mb-3 row">
 								<label
 									:for="formId('minsoc')"
 									class="col-sm-4 col-form-label pt-0 pt-sm-1"
 								>
-									{{ $t("main.loadpointSettings.minSoC.label") }}
+									{{ $t("main.loadpointSettings.minSoc.label") }}
 								</label>
 								<div class="col-sm-8 pe-0">
 									<select
 										:id="formId('minsoc')"
-										v-model.number="selectedMinSoC"
+										v-model.number="selectedMinSoc"
 										class="form-select form-select-sm mb-2 w-50"
-										@change="changeMinSoC"
+										@change="changeMinSoc"
 									>
 										<option
 											v-for="soc in [
@@ -53,8 +56,8 @@
 									</select>
 									<small>
 										{{
-											$t("main.loadpointSettings.minSoC.description", [
-												selectedMinSoC || "x",
+											$t("main.loadpointSettings.minSoc.description", [
+												selectedMinSoc || "x",
 											])
 										}}
 									</small>
@@ -227,7 +230,7 @@ export default {
 	props: {
 		id: [String, Number],
 		phasesConfigured: Number,
-		minSoC: Number,
+		minSoc: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
 		title: String,
@@ -243,7 +246,7 @@ export default {
 			selectedMaxCurrent: this.maxCurrent,
 			selectedMinCurrent: this.minCurrent,
 			selectedPhases: this.phasesConfigured,
-			selectedMinSoC: this.minSoC,
+			selectedMinSoc: this.minSoc,
 		};
 	},
 	computed: {
@@ -271,6 +274,9 @@ export default {
 		showCurrentSettings: function () {
 			return this.$hiddenFeatures;
 		},
+		showMinSocSettings: function () {
+			return this.$hiddenFeatures;
+		},
 	},
 	watch: {
 		maxCurrent: function (value) {
@@ -282,8 +288,8 @@ export default {
 		phasesConfigured: function (value) {
 			this.selectedPhases = value;
 		},
-		minSoC: function (value) {
-			this.selectedMinSoC = value;
+		minSoc: function (value) {
+			this.selectedMinSoc = value;
 		},
 	},
 	methods: {
@@ -299,8 +305,8 @@ export default {
 		changePhasesConfigured: function () {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-		changeMinSoC: function () {
-			this.$emit("minsoc-updated", this.selectedMinSoC);
+		changeMinSoc: function () {
+			this.$emit("minsoc-updated", this.selectedMinSoc);
 		},
 		currentOptions: function (max, defaultCurrent = 16) {
 			const result = [];
@@ -322,5 +328,9 @@ export default {
 .container {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
+}
+
+.container h4:first-child {
+	margin-top: 0 !important;
 }
 </style>

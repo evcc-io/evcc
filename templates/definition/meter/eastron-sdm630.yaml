@@ -13,14 +13,19 @@ params:
     choice: ["rs485"]
 render: |
   type: modbus
+  {{- include "modbus" . }}
   model: sdm
-  {{- if eq .usage "charge" }}
-  energy: Sum # only required for charge meter usage
-  {{- end }}
-  {{- if or (eq .usage "charge") (eq .usage "grid") }}
+  power: Power
+  energy: Sum
   currents:
     - CurrentL1
     - CurrentL2
     - CurrentL3
-  {{- end }}
-  {{- include "modbus" . }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3

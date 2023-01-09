@@ -247,9 +247,9 @@ func (wb *Smaevcharger) ChargedEnergy() (float64, error) {
 	return res / 1e3, err
 }
 
-var _ api.MeterCurrent = (*Smaevcharger)(nil)
+var _ api.PhaseCurrents = (*Smaevcharger)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *Smaevcharger) Currents() (float64, float64, float64, error) {
 	var curr []float64
 

@@ -3,9 +3,20 @@
   "title": "EVCC configuration schema",
   "type": "object",
   "properties": {
-    "uri": {
-      "type": "string",
-      "format": "uri"
+    "network": {
+      "type": "object",
+      "description": "Network",
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        }
+      }
     },
     "interval": {
       "$ref": "#/definitions/duration"
@@ -23,6 +34,45 @@
     },
     "sponsortoken": {
       "type": "string"
+    },
+    "plant": {
+      "type": "string"
+    },
+    "telemetry": {
+      "type": "boolean"
+    },
+    "database": {
+      "type": "object",
+      "description": "Database",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "dsn": {
+          "type": "string"
+        }
+      }
+    },
+    "tariffs": {
+      "type": "object",
+      "description": "Tariffs",
+      "properties": {
+        "currency": {
+          "type": "string"
+        },
+        "grid": {
+          "description": "Grid tariff",
+          "$ref": "#/definitions/typedObject"
+        },
+        "feedin": {
+          "description": "Feed-in tariff",
+          "$ref": "#/definitions/typedObject"
+        },
+        "planner": {
+          "description": "Planner tariff",
+          "$ref": "#/definitions/typedObject"
+        }
+      }
     },
     "chargers": {
       "type": "array",
@@ -47,6 +97,9 @@
           "title": {
             "type": "string"
           },
+          "icon": {
+            "type": "string"
+          },
           "capacity": {
             "type": "integer"
           },
@@ -68,10 +121,10 @@
               "mode": {
                 "$ref": "#/definitions/mode"
               },
-              "minSoC": {
+              "minSoc": {
                 "type": "integer"
               },
-              "targetSoC": {
+              "targetSoc": {
                 "type": "integer"
               },
               "minCurrent": {
@@ -126,14 +179,8 @@
             }
           }
         },
-        "vehicles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "prioritySoC": {},
-        "bufferSoC": {}
+        "prioritySoc": {},
+        "bufferSoc": {}
       }
     },
     "loadpoints": {
@@ -160,6 +207,9 @@
           "meter": {
             "type": "string"
           },
+          "vehicle": {
+            "type": "string"
+          },
           "soc": {
             "type": "object",
             "properties": {
@@ -173,12 +223,6 @@
                     "$ref": "#/definitions/duration"
                   }
                 }
-              },
-              "min": {
-                "type": "integer"
-              },
-              "target": {
-                "type": "integer"
               },
               "estimate": {
                 "type": "boolean"
@@ -242,6 +286,17 @@
           "type": "string"
         },
         "template": {
+          "type": "string"
+        }
+      }
+    },
+    "typedObject": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
           "type": "string"
         }
       }

@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 )
 
 const (
@@ -159,7 +160,7 @@ func (v *Identity) Login() error {
 		headers := map[string]string{
 			"Content-Type":        "application/json",
 			"X-Clientapp-Version": "1.0",
-			"ClientRequestId":     util.RandomString(16),
+			"ClientRequestId":     lo.RandomString(16, lo.LettersCharset),
 			"X-Api-Key":           XApiKey,
 			"X-Originator-Type":   "web",
 		}

@@ -1,7 +1,7 @@
 product:
   description: Solarlog
 description: |
-  Wir empfehlen dieses Gerät für den Netzbezug/Einspeisewerte nur zu verwenden, wenn kein anderes Gerät diese Daten liefert. 
+  Wir empfehlen dieses Gerät für den Netzbezug/Einspeisewerte nur zu verwenden, wenn kein anderes Gerät diese Daten liefert.
   Falls eine Hausbatterie angeschlossen ist sollte dieses Gerät auf keinen Fall für die erwähnten Werte verwendet werden!
 
 render:

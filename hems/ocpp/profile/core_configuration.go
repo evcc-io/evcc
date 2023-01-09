@@ -1,6 +1,9 @@
 package profile
 
-import "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+import (
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"golang.org/x/exp/maps"
+)
 
 // OnGetConfiguration handles the CS message
 func (s *Core) OnGetConfiguration(request *core.GetConfigurationRequest) (confirmation *core.GetConfigurationConfirmation, err error) {
@@ -20,9 +23,7 @@ func (s *Core) OnGetConfiguration(request *core.GetConfigurationRequest) (confir
 
 	// return config for all keys
 	if len(request.Key) == 0 {
-		for _, v := range s.configuration {
-			resultKeys = append(resultKeys, v)
-		}
+		resultKeys = maps.Values(s.configuration)
 	}
 
 	s.log.TRACE.Printf("%s: configuration for requested keys: %v", request.GetFeatureName(), request.Key)

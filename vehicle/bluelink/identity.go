@@ -72,10 +72,11 @@ func (v *Identity) getDeviceID() (string, error) {
 	}
 
 	headers := map[string]string{
-		"ccsp-service-id": v.config.CCSPServiceID,
-		"Content-type":    "application/json;charset=UTF-8",
-		"User-Agent":      "okhttp/3.10.0",
-		"Stamp":           stamp,
+		"ccsp-service-id":     v.config.CCSPServiceID,
+		"ccsp-application-id": v.config.CCSPApplicationID,
+		"Content-type":        "application/json;charset=UTF-8",
+		"User-Agent":          "okhttp/3.10.0",
+		"Stamp":               stamp,
 	}
 
 	var resp struct {

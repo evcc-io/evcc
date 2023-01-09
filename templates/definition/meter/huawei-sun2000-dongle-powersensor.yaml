@@ -3,11 +3,14 @@ products:
   - brand: Huawei
     description:
       generic: SUN2000 with SDongle & Power Sensor
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: storageunit
+    valuetype: number
+    default: 1
+    advanced: true
   - name: modbus
     choice: ["tcpip"]
 render: |
@@ -83,9 +86,14 @@ render: |
     timeout: 15s
     connectdelay: 1s
     register:
+      {{- if eq .storageunit "1" }}
       address: 37001
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37743
+      {{- end }}
       type: holding
-      decode: int32
+      decode: int32nan
     scale: -1
   soc:
     source: modbus
@@ -93,8 +101,13 @@ render: |
     model: huawei
     timeout: 15s
     register:
+      {{- if eq .storageunit "1" }}
       address: 37004
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37738
+      {{- end }}
       type: holding
-      decode: uint16
+      decode: uint16nan
     scale: 0.1
   {{- end }}

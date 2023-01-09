@@ -1,0 +1,16 @@
+product:
+  brand: E.ON Drive
+  description: vBox Smart/Pro
+requirements: ["sponsorship"]
+description: |
+  Firmware 2.77 für Modbus benötigt
+render:
+  - default: |
+      type: template
+      template: eon-vbox      
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 255
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port

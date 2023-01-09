@@ -20,7 +20,7 @@ jobs:
         continue-on-error: true
         name: check latest commit is less than a day
         if: ${{ github.event_name == 'schedule' }}
-        run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "::set-output name=should_run::false"
+        run: test -z $(git rev-list  --after="24 hours" ${{ github.sha }}) && echo "should_run=false" >> $GITHUB_OUTPUT
 
   call-build-workflow:
     name: Call Build
@@ -38,8 +38,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           ref: refs/heads/master # force master
           fetch-depth: 0
@@ -50,7 +49,7 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Set up Docker Buildx
+      - name: Setup Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Publish
@@ -61,6 +60,7 @@ jobs:
           push: true
           tags: |
             andig/evcc:nightly
+            evcc/evcc:nightly
 
   apt:
     name: Publish APT nightly
@@ -69,13 +69,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: ^1.18
           cache: true
@@ -84,8 +82,11 @@ jobs:
       - name: Install Cloudsmith CLI
         run: pip install --upgrade cloudsmith-cli
 
+      - name: Patch ASN1
+        run: make patch-asn1-sudo
+
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
           args: --snapshot -f .goreleaser-nightly.yml --rm-dist

@@ -3,12 +3,14 @@ package provider
 import (
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/evcc-io/evcc/util"
 )
 
 type calcProvider struct {
-	add, mul []func() (float64, error)
+	add, mul, div []func() (float64, error)
+	sign          func() (float64, error)
 }
 
 func init() {
@@ -18,8 +20,10 @@ func init() {
 // NewCalcFromConfig creates calc provider
 func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	var cc struct {
-		Add []Config
-		Mul []Config
+		Add  []Config
+		Mul  []Config
+		Div  []Config
+		Sign *Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -27,9 +31,11 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	}
 
 	o := &calcProvider{}
-
-	if len(cc.Add) > 0 && len(cc.Mul) > 0 {
-		return nil, errors.New("can only have either add or mul")
+	if i := int(math.Min(float64(len(cc.Add)), 1)) + int(math.Min(float64(len(cc.Mul)), 1)) + int(math.Min(float64(len(cc.Div)), 1)); i > 1 ||
+		(len(cc.Add) > 0 && cc.Sign != nil) ||
+		(len(cc.Mul) > 0 && cc.Sign != nil) ||
+		(len(cc.Div) > 0 && cc.Sign != nil) {
+		return nil, errors.New("can only have either add, mul, div or sign")
 	}
 
 	for idx, cc := range cc.Add {
@@ -46,6 +52,22 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 			return nil, fmt.Errorf("mul[%d]: %w", idx, err)
 		}
 		o.mul = append(o.mul, f)
+	}
+
+	for idx, cc := range cc.Div {
+		f, err := NewFloatGetterFromConfig(cc)
+		if err != nil {
+			return nil, fmt.Errorf("div[%d]: %w", idx, err)
+		}
+		o.div = append(o.div, f)
+	}
+
+	if cc.Sign != nil {
+		f, err := NewFloatGetterFromConfig(*cc.Sign)
+		if err != nil {
+			return nil, fmt.Errorf("sign: %w", err)
+		}
+		o.sign = f
 	}
 
 	return o, nil
@@ -72,7 +94,8 @@ func (o *calcProvider) FloatGetter() func() (float64, error) {
 func (o *calcProvider) floatGetter() (float64, error) {
 	var res float64
 
-	if len(o.mul) > 0 {
+	switch {
+	case len(o.mul) > 0:
 		res = 1
 		for idx, p := range o.mul {
 			v, err := p()
@@ -81,7 +104,8 @@ func (o *calcProvider) floatGetter() (float64, error) {
 			}
 			res *= v
 		}
-	} else {
+
+	case len(o.add) > 0:
 		for idx, p := range o.add {
 			v, err := p()
 			if err != nil {
@@ -89,6 +113,32 @@ func (o *calcProvider) floatGetter() (float64, error) {
 			}
 			res += v
 		}
+
+	case len(o.div) > 0:
+		for idx, p := range o.div {
+			v, err := p()
+			if err != nil {
+				return 0, fmt.Errorf("div[%d]: %w", idx, err)
+			}
+			if idx == 0 {
+				if v == 0 {
+					break
+				}
+				res = v
+			} else if v != 0 {
+				res /= v
+			} else if v == 0 {
+				res = 0
+				break
+			}
+		}
+
+	default:
+		v, err := o.sign()
+		if err != nil {
+			return 0, fmt.Errorf("sign: %w", err)
+		}
+		res = map[bool]float64{false: -1, true: 1}[v >= 0]
 	}
 
 	return res, nil

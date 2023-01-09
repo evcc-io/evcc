@@ -4,26 +4,22 @@ products:
   - brand: Solax
     description:
       generic: Hybrid X1/X3 G3/G4
-requirements:
-  description:
-    de: Der Solax Hybrid Inverter muss via Ethernet an das lokale Netzwerk angeschlossen sein.
-    en: The Solax Hybrid inverter has to be connected to the local network via ethernet.
-guidedsetup:
-  enable: true
+  - brand: Qcells
+    description:
+      generic: Q.HOME ESS HYB-G3
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-  - name: host
-  - name: port
-    required: true
-    default: 502
+    allinone: true
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 19200
 render: |
   type: custom
   power:
   {{- if eq .usage "grid" }}
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 70 # 0x0046 feedin_power(meter)
       type: input
@@ -31,8 +27,7 @@ render: |
     scale: -1
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 74 # 0x004A consum_energy_total(meter)
       type: input
@@ -43,23 +38,20 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 10 # 0x000A Powerdc1
         type: input
         decode: uint16
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 11 # 0x000B Powerdc2
         type: input
         decode: uint16
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 148 # 0x0094 SolarEnergyTotal
       type: input
@@ -68,8 +60,7 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 22 # 0x0016 Batpower_Charge1
       type: input
@@ -77,8 +68,7 @@ render: |
     scale: -1
   soc:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 28 # 0x001C Battery Capacity
       type: input

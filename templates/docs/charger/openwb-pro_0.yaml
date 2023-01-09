@@ -1,7 +1,7 @@
 product:
   brand: openWB
   description: Pro
-capabilities: ["mA", "iso151182"]
+capabilities: ["1p3p", "mA", "iso151182"]
 render:
   - default: |
       type: template

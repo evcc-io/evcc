@@ -114,7 +114,7 @@ func (v *Cloud) chargeState() (float64, error) {
 	return res.GetSoc(), err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Cloud) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Cloud) Soc() (float64, error) {
 	return v.chargeStateG()
 }

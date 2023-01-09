@@ -6,7 +6,7 @@ option go_package = "proto/pb";
 
 service Vehicle {
 	rpc New (NewRequest) returns (NewReply) {}
-	rpc SoC (SoCRequest) returns (SoCReply) {}
+	rpc Soc (SoCRequest) returns (SoCReply) {}
 }
 
 message NewRequest {

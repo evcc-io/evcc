@@ -7,12 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/cmd/shutdown"
-	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // cmdEcho.AddCommand
@@ -27,10 +22,8 @@ var chargerRampCmd = &cobra.Command{
 func init() {
 	chargerCmd.AddCommand(chargerRampCmd)
 
-	chargerRampCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
-	chargerRampCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
-	chargerRampCmd.PersistentFlags().StringP(flagDigits, "", "0", "fractional digits (0..2)")
-	chargerRampCmd.PersistentFlags().StringP(flagDelay, "", "1s", "ramp delay")
+	chargerRampCmd.Flags().StringP(flagDigits, "", "0", "fractional digits (0..2)")
+	chargerRampCmd.Flags().StringP(flagDelay, "", "1s", "ramp delay")
 }
 
 func ramp(c api.Charger, digits int, delay time.Duration) {
@@ -72,22 +65,14 @@ func ramp(c api.Charger, digits int, delay time.Duration) {
 }
 
 func runChargerRamp(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
-
 	// load config
-	if err := loadConfigFile(cfgFile, &conf); err != nil {
+	if err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
 	// setup environment
-	if err := configureEnvironment(conf); err != nil {
+	if err := configureEnvironment(cmd, conf); err != nil {
 		log.FATAL.Fatal(err)
-	}
-
-	// full http request log
-	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
-		request.LogHeaders = true
 	}
 
 	// select single charger
@@ -99,21 +84,22 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	stopC := make(chan struct{})
-	go shutdown.Run(stopC)
-
 	chargers := cp.chargers
 	if len(args) == 1 {
-		arg := args[0]
-		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
+		name := args[0]
+		charger, err := cp.Charger(name)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		chargers = map[string]api.Charger{name: charger}
 	}
 
-	digits, err := strconv.Atoi(cmd.PersistentFlags().Lookup(flagDigits).Value.String())
+	digits, err := strconv.Atoi(cmd.Flags().Lookup(flagDigits).Value.String())
 	if err != nil {
 		log.ERROR.Fatalln(err)
 	}
 
-	delay, err := time.ParseDuration(cmd.PersistentFlags().Lookup(flagDelay).Value.String())
+	delay, err := time.ParseDuration(cmd.Flags().Lookup(flagDelay).Value.String())
 	if err != nil {
 		log.ERROR.Fatalln(err)
 	}
@@ -125,6 +111,6 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		ramp(c, digits, delay)
 	}
 
-	close(stopC)
-	<-shutdown.Done()
+	// wait for shutdown
+	<-shutdownDoneC()
 }

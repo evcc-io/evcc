@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -114,7 +115,6 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 	// model + value configured
 	if cc.Value != "" {
-		cc.Value = modbus.ReadingName(cc.Value)
 		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
 			return nil, fmt.Errorf("invalid value %s", cc.Value)
 		}
@@ -174,10 +174,9 @@ func (m *Modbus) floatGetter() (f float64, err error) {
 	// if funccode is not configured, try find the reading on sunspec
 	if dev, ok := m.device.(*sunspec.SunSpec); ok {
 		if m.op.MBMD.IEC61850 != 0 {
-			// client := m.conn.ModbusClient()
 			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
 		} else {
-			if res, err = dev.QueryPoint(
+			if res.Value, err = dev.QueryPoint(
 				m.conn,
 				m.op.SunSpec.Model,
 				m.op.SunSpec.Block,
@@ -223,12 +222,12 @@ func (m *Modbus) IntGetter() func() (int64, error) {
 // StringGetter executes configured modbus read operation and implements IntProvider
 func (m *Modbus) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		bytes, err := m.bytesGetter()
+		b, err := m.bytesGetter()
 		if err != nil {
 			return "", err
 		}
 
-		return strings.TrimSpace(string(bytes)), nil
+		return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00"))), nil
 	}
 }
 

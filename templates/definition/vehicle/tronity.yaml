@@ -17,11 +17,17 @@ params:
     default: 10
   - name: phases
     advanced: true
+  - name: icon
+    default: car
+    advanced: true
   - preset: vehicleidentify
 render: |
   type: tronity
   {{- if ne .title "" }}
   title: {{ .title }}
+  {{- end }}
+  {{- if ne .icon "" }}
+  icon: {{ .icon }}
   {{- end }}
   credentials:
     id: {{ .user }}

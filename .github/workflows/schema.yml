@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: nwisbeta/validate-yaml-schema@v1.0.3
+      - uses: nwisbeta/validate-yaml-schema@v2.0.0
         with:
           yamlSchemasJson: |
             {

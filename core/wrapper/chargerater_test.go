@@ -17,6 +17,13 @@ func TestNoMeter(t *testing.T) {
 	cr.clck = clck
 
 	cr.StartCharge(false)
+	clck.Add(time.Hour)
+
+	if f, err := cr.ChargedEnergy(); f != 0 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
+
+	cr.StartCharge(true)
 
 	// 1kWh
 	clck.Add(time.Hour)

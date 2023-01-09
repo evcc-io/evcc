@@ -6,17 +6,17 @@ import (
 	"github.com/evcc-io/evcc/provider"
 )
 
-// Provider implements the evcc vehicle api
+// Provider implements the vehicle api
 type Provider struct {
 	chargerG func() (EVResponse, error)
 	rangeG   func() (EVResponse, error)
 }
 
-// NewProvider provides the evcc vehicle api provider
+// NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		chargerG: provider.Cached(func() (EVResponse, error) {
-			return api.SoC(vin)
+			return api.Soc(vin)
 		}, cache),
 		rangeG: provider.Cached(func() (EVResponse, error) {
 			return api.Range(vin)
@@ -25,11 +25,11 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	return impl
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.chargerG()
 	if err == nil {
-		return float64(res.SoC.Value), nil
+		return float64(res.Soc.Value), nil
 	}
 
 	return 0, err

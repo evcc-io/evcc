@@ -75,8 +75,8 @@ func (v *Provider) status(
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Battery interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Battery interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 	if err == nil {
 		return res.VehicleStatus.BatteryFillLevel.Value, nil
@@ -130,6 +130,14 @@ var _ api.VehiclePosition = (*Provider)(nil)
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.statusG()
 	return res.VehicleStatus.Gps.Latitude, res.VehicleStatus.Gps.Longitude, err
+}
+
+var _ api.VehicleFinishTimer = (*Provider)(nil)
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	res, err := v.statusG()
+	return res.VehicleStatus.ChargeEndTime.Value.Time, err
 }
 
 var _ api.Resurrector = (*Provider)(nil)

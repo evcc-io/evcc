@@ -65,17 +65,26 @@ func NewEtronFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	// use the etron API for list of vehicles
 	api := etron.NewAPI(log, ats)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
-		defer cancel()
-		return api.Vehicles(ctx)
-	})
+	vehicle, err := ensureVehicleEx(
+		cc.VIN, func() ([]etron.Vehicle, error) {
+			ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
+			defer cancel()
+			return api.Vehicles(ctx)
+		},
+		func(v etron.Vehicle) string {
+			return v.VIN
+		},
+	)
 
 	if err == nil {
+		if v.Title_ == "" {
+			v.Title_ = vehicle.Nickname
+		}
+
 		api := id.NewAPI(log, its)
 		api.Client.Timeout = cc.Timeout
 
-		v.Provider = id.NewProvider(api, cc.VIN, cc.Cache)
+		v.Provider = id.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
 	return v, err

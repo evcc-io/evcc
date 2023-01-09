@@ -54,7 +54,7 @@ type Easee struct {
 	smartCharging         bool
 	enabledStatus         bool
 	phaseMode             int
-	currentPower, sessionEnergy,
+	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid string
 	lp   loadpoint.API
@@ -278,6 +278,8 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
 		c.sessionEnergy = value.(float64)
+	case easee.LIFETIME_ENERGY:
+		c.totalEnergy = value.(float64)
 	case easee.IN_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.IN_CURRENT_T4:
@@ -488,9 +490,9 @@ func (c *Easee) ChargedEnergy() (float64, error) {
 	return c.sessionEnergy, nil
 }
 
-var _ api.MeterCurrent = (*Easee)(nil)
+var _ api.PhaseCurrents = (*Easee)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()
@@ -498,9 +500,19 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 
+var _ api.MeterEnergy = (*Easee)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *Easee) TotalEnergy() (float64, error) {
+	c.mux.L.Lock()
+	defer c.mux.L.Unlock()
+
+	return c.totalEnergy, nil
+}
+
 var _ api.Identifier = (*Easee)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (c *Easee) Identify() (string, error) {
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()
@@ -525,13 +537,14 @@ func (c *Easee) updateSmartCharging() {
 		data := easee.ChargerSettings{
 			SmartCharging: &isSmartCharging,
 		}
+
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+		if err == nil {
+			_, err = c.DoBody(req)
+		}
 		if err != nil {
-			c.log.WARN.Println("smart charging update failed:", err)
-		} else if resp.StatusCode != http.StatusAccepted {
-			resp.Body.Close()
-			c.log.WARN.Println("smart charging update failed:", resp.StatusCode, resp.Status)
+			c.log.WARN.Printf("smart charging: %v", err)
 		}
 
 		c.mux.L.Lock()

@@ -3,10 +3,15 @@
 .vscode
 *.conf
 *.Dockerfile
+*.gz
+*.image
 *.json
 *.sh
 *.yaml
 Dockerfile
+evcc
+evcc.exe
+builddir
 node_modules
 release
 !entrypoint.sh

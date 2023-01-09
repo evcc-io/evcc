@@ -41,7 +41,7 @@ func (c *vehicleClient) New(ctx context.Context, in *NewRequest, opts ...grpc.Ca
 
 func (c *vehicleClient) SoC(ctx context.Context, in *SoCRequest, opts ...grpc.CallOption) (*SoCReply, error) {
 	out := new(SoCReply)
-	err := c.cc.Invoke(ctx, "/Vehicle/SoC", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/Vehicle/Soc", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (UnimplementedVehicleServer) New(context.Context, *NewRequest) (*NewReply, 
 	return nil, status.Errorf(codes.Unimplemented, "method New not implemented")
 }
 func (UnimplementedVehicleServer) SoC(context.Context, *SoCRequest) (*SoCReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SoC not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method Soc not implemented")
 }
 func (UnimplementedVehicleServer) mustEmbedUnimplementedVehicleServer() {}
 
@@ -98,7 +98,7 @@ func _Vehicle_New_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Vehicle_SoC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Vehicle_Soc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SoCRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func _Vehicle_SoC_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Vehicle/SoC",
+		FullMethod: "/Vehicle/Soc",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(VehicleServer).SoC(ctx, req.(*SoCRequest))
@@ -128,8 +128,8 @@ var Vehicle_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Vehicle_New_Handler,
 		},
 		{
-			MethodName: "SoC",
-			Handler:    _Vehicle_SoC_Handler,
+			MethodName: "Soc",
+			Handler:    _Vehicle_Soc_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

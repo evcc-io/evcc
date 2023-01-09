@@ -15,6 +15,7 @@ type StatusResponse struct {
 	Alw int       `json:"alw,string"` // allow charging
 	Amp int       `json:"amp,string"` // current [A]
 	Err int       `json:"err,string"` // error
+	Eto int       `json:"eto,string"` // energy total [0.1kWh]
 	Stp int       `json:"stp,string"` // stop state
 	Tmp int       `json:"tmp,string"` // temperature [°C]
 	Dws int       `json:"dws,string"` // energy [Ws]
@@ -49,6 +50,10 @@ func (g *StatusResponse) CurrentPower() float64 {
 
 func (g *StatusResponse) ChargedEnergy() float64 {
 	return float64(g.Dws) / 3.6e5 // Deka-Watt-Seconds to kWh (100.000 == 0,277kWh)
+}
+
+func (g *StatusResponse) TotalEnergy() float64 {
+	return float64(g.Eto) / 1e1 // 0.1kWh to kWh (130 == 13kWh)
 }
 
 func (g *StatusResponse) Currents() (float64, float64, float64) {

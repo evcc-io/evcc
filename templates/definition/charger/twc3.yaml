@@ -1,0 +1,14 @@
+template: twc3
+products:
+  - brand: Tesla
+    description:
+      generic: TWC3
+requirements:
+  description:
+    en: The Tesla vehicle must be associated with the TWC3 in the evcc ui.
+    de: Das Teslafahrzeug muss dem TWC3 im evcc UI zugewiesen sein.
+params:
+  - name: host
+render: |
+  type: twc3
+  uri: http://{{ .host }}

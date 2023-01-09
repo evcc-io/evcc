@@ -1,10 +1,10 @@
 product:
   brand: Solax
-  description: Hybrid
+  description: Hybrid-Wechselrichter (Cloud)
 description: |
-  Der Solax Inverter muss in der SolaxCloud angemeldet sein.
+  Der Solax Hybrid-Wechselrichter muss in der SolaxCloud angemeldet sein.
 
-  **Achtung**: Die Werte können nur alle 150s abgerufen werden und dann auch 5 Minuten alt sein. Die Laderegelung nach PV kann hiermit nicht optimal gesteuert werden!
+  **Achtung**: Die Werte können nur alle 150s abgerufen werden und dann auch 5 Minuten alt sein. Die Laderegelung nach PV kann hiermit nicht optimal gesteuert werden! Nur als Notfalloption nutzen wenn kein lokaler Zugriff möglich ist.
 
 render:
   - usage: grid

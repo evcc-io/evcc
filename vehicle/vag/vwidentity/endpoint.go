@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -86,7 +87,7 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 
 	// add nonce and state
 	query := url.Values{
-		"nonce": []string{util.RandomString(43)},
+		"nonce": []string{lo.RandomString(43, lo.LettersCharset)},
 		"state": []string{uuid.NewString()},
 	}
 

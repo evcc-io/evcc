@@ -13,6 +13,7 @@ const (
 	cfosRegStatus     = 8092 // Holding
 	cfosRegMaxCurrent = 8093 // Holding
 	cfosRegEnable     = 8094 // Holding
+	cfosRegLastRfid   = 8096 // Holding
 )
 
 // CfosPowerBrain is an charger implementation for cFos PowerBrain wallboxes.
@@ -124,4 +125,16 @@ var _ api.ChargerEx = (*CfosPowerBrain)(nil)
 func (wb *CfosPowerBrain) MaxCurrentMillis(current float64) error {
 	_, err := wb.conn.WriteSingleRegister(cfosRegMaxCurrent, uint16(current*10))
 	return err
+}
+
+var _ api.Identifier = (*CfosPowerBrain)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *CfosPowerBrain) Identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(cfosRegLastRfid, 15)
+	if err != nil {
+		return "", err
+	}
+
+	return bytesAsString(b), nil
 }

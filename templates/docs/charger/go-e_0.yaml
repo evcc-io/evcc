@@ -2,6 +2,7 @@ product:
   brand: go-eCharger
   description: HOME+, HOMEfix, Pro
 capabilities: ["rfid"]
+requirements: ["sponsorship"]
 description: |
   Benötigt mindestens Firmware 040.0 oder neuer.
 render:

@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 )
 
 const (
@@ -40,7 +41,7 @@ func (v *API) request(method, uri string, body io.ReadSeeker) (*http.Request, er
 		"Content-Type":        "application/json",
 		"Accept":              "application/json",
 		"X-Clientapp-Version": "1.0",
-		"ClientrequestId":     util.RandomString(16),
+		"ClientrequestId":     lo.RandomString(16, lo.LettersCharset),
 		"X-Api-Key":           XApiKey,
 		"X-Originator-Type":   "web",
 		"locale":              "de_de", // only required for pinAuth

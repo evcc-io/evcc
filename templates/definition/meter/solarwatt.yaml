@@ -1,0 +1,32 @@
+template: solarwatt
+covers: ["solarwatt-myreserve"]
+products:
+  - brand: Solarwatt
+    description:
+      generic: MyReserve
+  - brand: Solarwatt
+    description:
+      generic: EnergyManager, EnergyManager Pro
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
+  {{- if eq .usage "grid" }}
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.PowerConsumedFromGrid.value - .tagValues.PowerOut.value
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.PowerProduced.value
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.PowerConsumedFromStorage.value - .tagValues.PowerBuffered.value
+  soc:
+    source: http
+    uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.solarwatt.MyReserve") | .tagValues.StateOfCharge.value
+  {{- end }}

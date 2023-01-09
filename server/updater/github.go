@@ -6,15 +6,23 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/google/go-github/v32/github"
 	"github.com/hashicorp/go-version"
+	"golang.org/x/oauth2"
 )
 
-const timeout = 30 * time.Second
+const (
+	owner      = "evcc-io"
+	repository = "evcc"
+
+	timeout = 30 * time.Second
+)
 
 // Repo is a github repository adapter
 type Repo struct {
@@ -23,12 +31,23 @@ type Repo struct {
 }
 
 // NewRepo creates repository adapter
-func NewRepo(owner, repository string) *Repo {
+func NewRepo(log *util.Logger, owner, repository string) *Repo {
+	client := request.NewClient(log)
+
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		log.Redact(token)
+		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
+		client = oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{
+			AccessToken: token,
+		}))
+	}
+
 	r := &Repo{
 		owner:      owner,
 		repository: repository,
-		Client:     github.NewClient(nil),
+		Client:     github.NewClient(client),
 	}
+
 	return r
 }
 
@@ -73,7 +92,7 @@ func (r *Repo) ReleaseNotes(from string) (rendered string, err error) {
 			var md string
 			if md, _, err = r.Markdown(context.Background(), notes, &github.MarkdownOptions{
 				Mode:    "gfm",
-				Context: fmt.Sprintf("%s/%s", server.Owner, server.Repository),
+				Context: fmt.Sprintf("%s/%s", r.owner, r.repository),
 			}); err != nil {
 				return
 			}

@@ -1,0 +1,17 @@
+template: eon-vbox
+products:
+  - brand: E.ON Drive
+    description:
+      generic: vBox Smart/Pro
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: Firmware 2.77 für Modbus benötigt
+    en: Firmware 2.77 required for Modbus connectivity
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: vestel
+  {{- include "modbus" . }}

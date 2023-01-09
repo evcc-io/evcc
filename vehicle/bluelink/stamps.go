@@ -1,6 +1,7 @@
 package bluelink
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -53,6 +54,10 @@ func (c *stampCollection) Get() (string, error) {
 		}
 
 		position = int(time.Since(c.Generated).Milliseconds()) / c.Frequency
+	}
+
+	if len(c.Stamps) == 0 {
+		return "", errors.New("no stamps available")
 	}
 
 	if position >= len(c.Stamps) {

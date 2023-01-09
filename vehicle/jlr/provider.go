@@ -31,8 +31,8 @@ func NewProvider(api *API, vin, user string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Battery interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Battery interface
+func (v *Provider) Soc() (float64, error) {
 	var val float64
 	res, err := v.statusG()
 	if err == nil {

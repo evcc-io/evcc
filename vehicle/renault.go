@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/renault"
 	"github.com/evcc-io/evcc/vehicle/renault/gigya"
 	"github.com/evcc-io/evcc/vehicle/renault/kamereon"
@@ -39,9 +40,11 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
 		Cache                       time.Duration
+		Timeout                     time.Duration
 	}{
-		Region: "de_DE",
-		Cache:  interval,
+		Region:  "de_DE",
+		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -65,26 +68,28 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	api := kamereon.New(log, keys.Kamereon, identity, func() error {
 		return identity.Login(cc.User, cc.Password)
 	})
+	api.Client.Timeout = cc.Timeout
 
 	accountID, err := api.Person(identity.PersonID, brand)
 
-	var car kamereon.Vehicle
-	if err == nil {
-		cc.VIN, car, err = ensureVehicleWithFeature(cc.VIN,
-			func() ([]kamereon.Vehicle, error) {
-				return api.Vehicles(accountID)
-			},
-			func(v kamereon.Vehicle) (string, kamereon.Vehicle) {
-				return v.VIN, v
-			},
-		)
+	if err != nil {
+		return nil, err
 	}
 
+	vehicle, err := ensureVehicleEx(cc.VIN,
+		func() ([]kamereon.Vehicle, error) {
+			return api.Vehicles(accountID)
+		},
+		func(v kamereon.Vehicle) string {
+			return v.VIN
+		},
+	)
+
 	if err == nil {
-		err = car.Available()
+		err = vehicle.Available()
 	}
 
-	v.Provider = renault.NewProvider(api, accountID, cc.VIN, cc.Cache)
+	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.Cache)
 
 	return v, err
 }

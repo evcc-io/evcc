@@ -42,8 +42,8 @@ func (v *API) BaseURI() string {
 	return BaseURI
 }
 
-// SoC implements the /soc response
-func (v *API) SoC(vin string) (EVResponse, error) {
+// Soc implements the /soc response
+func (v *API) Soc(vin string) (EVResponse, error) {
 	var res EVResponse
 
 	uri := fmt.Sprintf("%s/vehicles/%s/resources/soc", v.BaseURI(), vin)
@@ -79,8 +79,8 @@ func (v *API) allinOne(vin string) (EVResponse, error) {
 	evres := EVResponse{}
 
 	for _, r := range res {
-		if r.SoC.Timestamp != 0 {
-			evres.SoC = r.SoC
+		if r.Soc.Timestamp != 0 {
+			evres.Soc = r.Soc
 			continue
 		}
 

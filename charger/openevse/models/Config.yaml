@@ -1,0 +1,352 @@
+description: ""
+type: object
+x-examples:
+  example-1:
+    firmware: D7.1.2
+    protocol: "-"
+    espflash: 4194304
+    espinfo: ESP32r1 2 core WiFi BLE BT
+    buildenv: openevse_esp-wrover-kit
+    version: 4.1.0.dev
+    diode_check: true
+    gfci_check: true
+    ground_check: true
+    relay_check: true
+    vent_check: true
+    temp_check: true
+    service: 0
+    scale: 220
+    offset: 0
+    max_current_soft: 32
+    min_current_hard: 6
+    max_current_hard: 32
+    mqtt_supported_protocols:
+      - mqtt
+      - mqtts
+    http_supported_protocols:
+      - http
+      - https
+    ssid: wibble_ext
+    pass: _DUMMY_PASSWORD
+    www_username: ""
+    www_password: ""
+    hostname: openevse-a7d4
+    sntp_hostname: pool.ntp.org
+    time_zone: "Europe/London|GMT0BST,M3.5.0/1,M10.5.0"
+    emoncms_server: "https://emoncms.org"
+    emoncms_node: openevse-a7d4
+    emoncms_apikey: _DUMMY_PASSWORD
+    emoncms_fingerprint: ""
+    mqtt_server: homeassistant.lan
+    mqtt_port: 1883
+    mqtt_topic: openevse
+    mqtt_user: emonpi
+    mqtt_pass: _DUMMY_PASSWORD
+    mqtt_solar: ""
+    mqtt_grid_ie: emon/test/grid_ie
+    mqtt_vrms: emon/rightbar/voltage
+    mqtt_vehicle_soc: ""
+    mqtt_vehicle_range: ""
+    mqtt_vehicle_eta: ""
+    mqtt_announce_topic: openevse/announce/a7d4
+    ocpp_server: ""
+    ocpp_chargeBoxId: ""
+    ocpp_idTag: ""
+    tx_start_point: tx_pending
+    ohm: ""
+    divert_PV_ratio: 1.1
+    divert_attack_smoothing_factor: 0.4
+    divert_decay_smoothing_factor: 0.05
+    divert_min_charge_time: 10
+    tesla_access_token: _DUMMY_PASSWORD
+    tesla_refresh_token: _DUMMY_PASSWORD
+    tesla_created_at: 2479357952
+    tesla_expires_in: 3888000
+    tesla_vehicle_id: "142960157278"
+    led_brightness: 51
+    flags: 115467
+    emoncms_enabled: true
+    mqtt_enabled: true
+    mqtt_reject_unauthorized: true
+    ohm_enabled: false
+    sntp_enabled: true
+    tesla_enabled: true
+    divert_enabled: true
+    pause_uses_disabled: false
+    mqtt_vehicle_range_miles: false
+    ocpp_enabled: true
+    ocpp_suspend_evse: true
+    ocpp_energize_plug: true
+    mqtt_protocol: mqtt
+    charge_mode: fast
+examples:
+  - firmware: D7.1.2
+    protocol: "-"
+    espflash: 4194304
+    espinfo: ESP32r1 2 core WiFi BLE BT
+    buildenv: openevse_esp-wrover-kit
+    version: 4.1.0.dev
+    diode_check: true
+    gfci_check: true
+    ground_check: true
+    relay_check: true
+    vent_check: true
+    temp_check: true
+    service: 0
+    scale: 220
+    offset: 0
+    max_current_soft: 32
+    min_current_hard: 6
+    max_current_hard: 32
+    mqtt_supported_protocols:
+      - mqtt
+      - mqtts
+    http_supported_protocols:
+      - http
+      - https
+    ssid: wibble_ext
+    pass: _DUMMY_PASSWORD
+    www_username: ""
+    www_password: ""
+    hostname: openevse-a7d4
+    sntp_hostname: pool.ntp.org
+    time_zone: "Europe/London|GMT0BST,M3.5.0/1,M10.5.0"
+    emoncms_server: "https://emoncms.org"
+    emoncms_node: openevse-a7d4
+    emoncms_apikey: _DUMMY_PASSWORD
+    emoncms_fingerprint: ""
+    mqtt_server: homeassistant.lan
+    mqtt_port: 1883
+    mqtt_topic: openevse
+    mqtt_user: emonpi
+    mqtt_pass: _DUMMY_PASSWORD
+    mqtt_solar: ""
+    mqtt_grid_ie: emon/test/grid_ie
+    mqtt_vrms: emon/rightbar/voltage
+    mqtt_vehicle_soc: ""
+    mqtt_vehicle_range: ""
+    mqtt_vehicle_eta: ""
+    mqtt_announce_topic: openevse/announce/a7d4
+    ocpp_server: ""
+    ocpp_chargeBoxId: ""
+    ocpp_idTag: ""
+    tx_start_point: tx_pending
+    ohm: ""
+    divert_PV_ratio: 1.1
+    divert_attack_smoothing_factor: 0.4
+    divert_decay_smoothing_factor: 0.05
+    divert_min_charge_time: 10
+    tesla_access_token: _DUMMY_PASSWORD
+    tesla_refresh_token: _DUMMY_PASSWORD
+    tesla_created_at: 2479357952
+    tesla_expires_in: 3888000
+    tesla_vehicle_id: "142960157278"
+    led_brightness: 51
+    flags: 115467
+    emoncms_enabled: true
+    mqtt_enabled: true
+    mqtt_reject_unauthorized: true
+    ohm_enabled: false
+    sntp_enabled: true
+    tesla_enabled: true
+    divert_enabled: true
+    pause_uses_disabled: false
+    mqtt_vehicle_range_miles: false
+    ocpp_enabled: true
+    ocpp_suspend_evse: true
+    ocpp_energize_plug: true
+    mqtt_protocol: mqtt
+    charge_mode: fast
+x-tags:
+  - Config
+properties:
+  firmware:
+    type: string
+    minLength: 1
+    readOnly: true
+  protocol:
+    type: string
+    minLength: 1
+    readOnly: true
+  espflash:
+    type: number
+    readOnly: true
+  espinfo:
+    type: string
+    minLength: 1
+    readOnly: true
+  buildenv:
+    type: string
+    minLength: 1
+    readOnly: true
+  version:
+    type: string
+    minLength: 1
+    readOnly: true
+  diode_check:
+    type: boolean
+  gfci_check:
+    type: boolean
+  ground_check:
+    type: boolean
+  relay_check:
+    type: boolean
+  vent_check:
+    type: boolean
+  temp_check:
+    type: boolean
+  service:
+    type: integer
+    minimum: 0
+    maximum: 2
+  scale:
+    type: integer
+  offset:
+    type: integer
+  max_current_soft:
+    type: integer
+  min_current_hard:
+    type: integer
+    readOnly: true
+  max_current_hard:
+    type: integer
+    readOnly: true
+  mqtt_supported_protocols:
+    type: array
+    uniqueItems: true
+    items:
+      type: string
+    readOnly: true
+  http_supported_protocols:
+    type: array
+    uniqueItems: true
+    items:
+      type: string
+    readOnly: true
+  ssid:
+    type: string
+    minLength: 1
+  pass:
+    type: string
+    minLength: 1
+  www_username:
+    type: string
+  www_password:
+    type: string
+  hostname:
+    type: string
+    minLength: 1
+  sntp_hostname:
+    type: string
+    minLength: 1
+  time_zone:
+    type: string
+    minLength: 1
+  emoncms_server:
+    type: string
+    minLength: 1
+  emoncms_node:
+    type: string
+    minLength: 1
+  emoncms_apikey:
+    type: string
+    minLength: 1
+  emoncms_fingerprint:
+    type: string
+  mqtt_server:
+    type: string
+    minLength: 1
+  mqtt_port:
+    type: integer
+  mqtt_topic:
+    type: string
+    minLength: 1
+  mqtt_user:
+    type: string
+    minLength: 1
+  mqtt_pass:
+    type: string
+    minLength: 1
+  mqtt_solar:
+    type: string
+  mqtt_grid_ie:
+    type: string
+    minLength: 1
+  mqtt_vrms:
+    type: string
+    minLength: 1
+  mqtt_vehicle_soc:
+    type: string
+  mqtt_vehicle_range:
+    type: string
+  mqtt_vehicle_eta:
+    type: string
+  mqtt_announce_topic:
+    type: string
+    minLength: 1
+  ocpp_server:
+    type: string
+  ocpp_chargeBoxId:
+    type: string
+  ocpp_idTag:
+    type: string
+  tx_start_point:
+    type: string
+    minLength: 1
+  ohm:
+    type: string
+  divert_PV_ratio:
+    type: number
+  divert_attack_smoothing_factor:
+    type: number
+  divert_decay_smoothing_factor:
+    type: number
+  divert_min_charge_time:
+    type: number
+  tesla_access_token:
+    type: string
+    minLength: 1
+  tesla_refresh_token:
+    type: string
+    minLength: 1
+  tesla_created_at:
+    type: number
+  tesla_expires_in:
+    type: number
+  tesla_vehicle_id:
+    type: string
+    minLength: 1
+  led_brightness:
+    type: number
+  flags:
+    type: number
+  emoncms_enabled:
+    type: boolean
+  mqtt_enabled:
+    type: boolean
+  mqtt_reject_unauthorized:
+    type: boolean
+  ohm_enabled:
+    type: boolean
+  sntp_enabled:
+    type: boolean
+  tesla_enabled:
+    type: boolean
+  divert_enabled:
+    type: boolean
+  pause_uses_disabled:
+    type: boolean
+  mqtt_vehicle_range_miles:
+    type: boolean
+  ocpp_enabled:
+    type: boolean
+  ocpp_suspend_evse:
+    type: boolean
+  ocpp_energize_plug:
+    type: boolean
+  mqtt_protocol:
+    type: string
+    minLength: 1
+  charge_mode:
+    type: string
+    minLength: 1

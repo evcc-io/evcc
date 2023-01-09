@@ -111,10 +111,10 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Base:   v.Client.Transport,
 	}
 
-	_, vehicle, err := ensureVehicleWithFeature(
+	vehicle, err := ensureVehicleEx(
 		cc.VIN, v.vehicles,
-		func(v tronity.Vehicle) (string, tronity.Vehicle) {
-			return v.VIN, v
+		func(v tronity.Vehicle) string {
+			return v.VIN
 		},
 	)
 
@@ -187,8 +187,8 @@ func (v *Tronity) bulk() (tronity.Bulk, error) {
 	return res, err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Tronity) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Tronity) Soc() (float64, error) {
 	res, err := v.bulkG()
 	return res.Level, err
 }

@@ -1,6 +1,6 @@
 product:
   brand: Sungrow
-  description: Hybrid Inverter
+  description: SH Series Hybrid Inverter
 description: |
   Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.
 render:

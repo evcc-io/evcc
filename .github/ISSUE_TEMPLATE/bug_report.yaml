@@ -22,6 +22,11 @@ body:
     validations:
       required: true
     attributes:
+      value: |
+        1.
+        2.
+        3.
+        ...
       label: Steps to reproduce
       description: >-
         Steps to reproduce the behavior.
@@ -31,6 +36,7 @@ body:
       required: true
     attributes:
       label: Configuration details
+      render: yaml
       description: >
         Show evcc configuration file <code>evcc.yaml</code>
 
@@ -39,6 +45,7 @@ body:
       required: true
     attributes:
       label: Log details
+      render: text
       description: >
         Show evcc log output by running with <code>evcc --log debug</code>
 
@@ -54,7 +61,7 @@ body:
         - Windows
         - Docker container
 
-  - type: textarea
+  - type: input
     attributes:
       label: Version
       description: >

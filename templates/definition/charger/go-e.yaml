@@ -8,6 +8,7 @@ requirements:
   description:
     en: Requires firmware 040.0 or later.
     de: Benötigt mindestens Firmware 040.0 oder neuer.
+  evcc: ["sponsorship"]
 params:
   - name: host
 render: |

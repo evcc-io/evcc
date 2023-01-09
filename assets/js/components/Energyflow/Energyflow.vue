@@ -15,8 +15,9 @@
 				:batteryDischarge="batteryDischarge"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
-				:batterySoC="batterySoC"
+				:batterySoc="batterySoc"
 				:valuesInKw="valuesInKw"
+				:vehicleIcons="vehicleIcons"
 			/>
 		</div>
 		<div class="details" :style="{ height: detailsHeight }">
@@ -61,7 +62,7 @@
 							v-if="batteryConfigured"
 							:name="$t('main.energyflow.batteryDischarge')"
 							icon="battery"
-							:soc="batterySoC"
+							:soc="batterySoc"
 							:power="batteryDischarge"
 							:valuesInKw="valuesInKw"
 						/>
@@ -95,7 +96,8 @@
 									count: activeLoadpointsCount,
 								})
 							"
-							icon="car3"
+							icon="vehicle"
+							:vehicleIcons="vehicleIcons"
 							:power="loadpointsPower"
 							:valuesInKw="valuesInKw"
 						/>
@@ -103,7 +105,7 @@
 							v-if="batteryConfigured"
 							:name="$t('main.energyflow.batteryCharge')"
 							icon="battery"
-							:soc="batterySoC"
+							:soc="batterySoc"
 							:power="batteryCharge"
 							:valuesInKw="valuesInKw"
 						/>
@@ -141,7 +143,8 @@ export default {
 		activeLoadpointsCount: { type: Number, default: 0 },
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
-		batterySoC: { type: Number, default: 0 },
+		batterySoc: { type: Number, default: 0 },
+		vehicleIcons: { type: Array },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null };

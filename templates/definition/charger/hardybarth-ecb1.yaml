@@ -2,9 +2,15 @@ template: hardybarth-ecb1
 products:
   - brand: HardyBarth
     description:
-      generic: cPH1 (eCB1 Controller)
+      generic: cPH1
+  - brand: echarge
+    description:
+      generic: cPH1
 requirements:
   evcc: ["sponsorship"]
+  description:
+    de: Als Betriebsmodus muss `manual` ausgewählt sein
+    en: Charge mode must be configured as `manual`
 params:
   - name: host
 render: |

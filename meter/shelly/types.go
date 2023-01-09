@@ -25,7 +25,10 @@ type Gen2SwitchResponse struct {
 }
 
 type Gen2Switch struct {
-	Apower float64
+	Apower  float64
+	Aenergy struct {
+		Total float64
+	}
 }
 
 type Gen2StatusResponse struct {
@@ -41,5 +44,11 @@ type Gen1SwitchResponse struct {
 type Gen1StatusResponse struct {
 	Meters []struct {
 		Power float64
+		Total float64
+	}
+	// Shelly EM meter JSON response
+	EMeters []struct {
+		Power float64
+		Total float64
 	}
 }

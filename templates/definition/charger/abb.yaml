@@ -5,10 +5,13 @@ products:
       generic: Terra AC
 capabilities: ["mA"]
 requirements:
+  description:
+    de: Erfordert Firmware >= 1.6.5
+    en: Requires firmware >= 1.6.5
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["rs485", "tcpip"]
 render: |
   type: abb
   {{- include "modbus" . }}

@@ -1,0 +1,91 @@
+template: growatt-hybrid
+products:
+  - brand: Growatt
+    description:
+      generic: Hybrid Inverter
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
+render: |
+  type: custom
+  power:
+  {{- if eq .usage "grid" }}
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register: # manual non-sunspec register configuration
+        address: 1021 # PactouserTotal AC power to user Total
+        type: input
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register: # manual non-sunspec register configuration
+        address: 1029 # Pactogrid total AC power to grid total
+        type: input
+        decode: uint32
+      scale: -0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 1046 # Etouser_total Energy to user total
+      type: input
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 1 # Ppv Input power
+      type: input
+      decode: uint32
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 91 # PV Energy total
+      type: input
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register: # manual non-sunspec register configuration
+        address: 1009 # Pdischarge1 Discharge power
+        type: input
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register: # manual non-sunspec register configuration
+        address: 1011 # Pcharge1 Charge power
+        type: input
+        decode: uint32
+      scale: -0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 1014 # SOC
+      type: input
+      decode: uint16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 1054 # Edischarge1_total Total discharge energy1
+      type: input
+      decode: uint32
+    scale: 0.1
+  {{- end }}

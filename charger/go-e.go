@@ -41,7 +41,7 @@ func init() {
 	registry.Add("go-e", NewGoEFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -77,15 +77,12 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 		c.api = goe.NewLocal(log, util.DefaultScheme(uri, "http"), cache)
 	}
 
-	if c.api.IsV2() {
-		var phases func(int) error
-		if sponsor.IsAuthorized() {
-			phases = c.phases1p3p
-		} else {
-			log.WARN.Println("automatic 1p3p phase switching requires sponsor token")
-		}
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
-		return decorateGoE(c, c.totalEnergy, phases), nil
+	if c.api.IsV2() {
+		return decorateGoE(c, c.phases1p3p), nil
 	}
 
 	return c, nil
@@ -165,9 +162,9 @@ func (c *GoE) ChargedEnergy() (float64, error) {
 	return resp.ChargedEnergy(), err
 }
 
-var _ api.MeterCurrent = (*GoE)(nil)
+var _ api.PhaseCurrents = (*GoE)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (c *GoE) Currents() (float64, float64, float64, error) {
 	resp, err := c.api.Status()
 	if err != nil {
@@ -190,19 +187,16 @@ func (c *GoE) Identify() (string, error) {
 	return resp.Identify(), nil
 }
 
+var _ api.MeterEnergy = (*GoE)(nil)
+
 // totalEnergy implements the api.MeterEnergy interface - v2 only
-func (c *GoE) totalEnergy() (float64, error) {
+func (c *GoE) TotalEnergy() (float64, error) {
 	resp, err := c.api.Status()
 	if err != nil {
 		return 0, err
 	}
 
-	var val float64
-	if res, ok := resp.(*goe.StatusResponse2); ok {
-		val = res.TotalEnergy()
-	}
-
-	return val, err
+	return resp.TotalEnergy(), err
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface - v2 only

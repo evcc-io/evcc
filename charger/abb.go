@@ -30,7 +30,6 @@ import (
 
 // ABB charger implementation
 type ABB struct {
-	log  *util.Logger
 	conn *modbus.Connection
 	curr uint32
 }
@@ -40,16 +39,16 @@ const (
 	abbRegFirmware   = 0x4004 // Firmware version 2 unsigned RO available
 	abbRegMaxRated   = 0x4006 // Max rated current 2 unsigned RO available
 	abbRegErrorCode  = 0x4008 // Error Code 2 unsigned RO available
+	abbRegSocketLock = 0x400A // Socket Lock State 2 unsigned RO available
 	abbRegStatus     = 0x400C // Charging state 2 unsigned RO available
 	abbRegGetCurrent = 0x400E // Current charging current limit 2 0.001 A unsigned RO
 	abbRegCurrents   = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
+	abbRegVoltages   = 0x4016 // Voltage phases 6 0.1 V unsigned RO available
 	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
 	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
 	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
 	// abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 	// abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not supported
-
-	abbMinCurrent = 0x1720 // 5920 mA
 )
 
 func init() {
@@ -59,21 +58,19 @@ func init() {
 // NewABBFromConfig creates a ABB charger from generic config
 func NewABBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
-		ID:       1,
-		Baudrate: 9600,
-		Comset:   "8N1",
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewABB(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewABB(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 }
 
 // NewABB creates ABB charger
-func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Rtu, slaveID)
+func NewABB(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -86,9 +83,8 @@ func NewABB(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	conn.Logger(log.TRACE)
 
 	wb := &ABB{
-		log:  log,
 		conn: conn,
-		curr: abbMinCurrent, // assume min current
+		curr: 6000, // assume min current
 	}
 
 	// keep-alive
@@ -107,18 +103,7 @@ func (wb *ABB) status() (byte, error) {
 		return 0, err
 	}
 
-	wb.log.DEBUG.Printf("status: %d", b[2]&0x7f)
-
 	return b[2] & 0x7f, nil
-}
-
-func (wb *ABB) session() (bool, error) {
-	s, err := wb.status()
-	if err != nil || s == 0 || s == 5 { // ToDo: check if 1 is active/inactive/unknown
-		return false, err
-	}
-
-	return true, err
 }
 
 // Status implements the api.Charger interface
@@ -140,6 +125,13 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 	case 4: // State C2: Charging Contact closed, energy delivering
 		return api.StatusC, nil
 	case 5: // Other: Session stopped
+		b, err := wb.conn.ReadHoldingRegisters(abbRegSocketLock, 2)
+		if err != nil {
+			return api.StatusNone, err
+		}
+		if binary.BigEndian.Uint32(b) >= 0x0101 {
+			return api.StatusB, nil
+		}
 		return api.StatusA, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
@@ -148,26 +140,16 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABB) Enabled() (bool, error) {
-	s, err := wb.session()
-	if err != nil || !s {
-		return false, err
-	}
-
 	b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint32(b) >= abbMinCurrent, nil
+	return binary.BigEndian.Uint32(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	s, err := wb.session()
-	if err != nil || !s {
-		return err
-	}
-
 	var current uint32
 	if enable {
 		current = wb.curr
@@ -196,11 +178,6 @@ var _ api.ChargerEx = (*ABB)(nil)
 func (wb *ABB) MaxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.1f", current)
-	}
-
-	s, err := wb.session()
-	if err != nil || !s {
-		return err
 	}
 
 	wb.curr = uint32(current * 1e3)
@@ -232,9 +209,9 @@ func (wb *ABB) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
-var _ api.MeterCurrent = (*ABB)(nil)
+var _ api.PhaseCurrents = (*ABB)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *ABB) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(abbRegCurrents, 6)
 	if err != nil {
@@ -247,6 +224,23 @@ func (wb *ABB) Currents() (float64, float64, float64, error) {
 	}
 
 	return curr[0], curr[1], curr[2], nil
+}
+
+var _ api.PhaseVoltages = (*ABB)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *ABB) Voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(abbRegVoltages, 6)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var volt [3]float64
+	for l := 0; l < 3; l++ {
+		volt[l] = float64(binary.BigEndian.Uint32(b[4*l:])) / 10
+	}
+
+	return volt[0], volt[1], volt[2], nil
 }
 
 // var _ api.PhaseSwitcher = (*ABB)(nil)
@@ -273,10 +267,13 @@ func (wb *ABB) Diagnose() {
 		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2); err == nil {
-		fmt.Printf("\tMax rated current:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
+		fmt.Printf("\tMax rated current:\t%dmA\n", binary.BigEndian.Uint32(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegGetCurrent, 2); err == nil {
-		fmt.Printf("\tCharging current limit:\t%.1fA\n", float32(binary.BigEndian.Uint32(b))/1e3)
+		fmt.Printf("\tCharging current limit:\t%dmA\n", binary.BigEndian.Uint32(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(abbRegSocketLock, 2); err == nil {
+		fmt.Printf("\tSocket lock state:\t%x\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(abbRegStatus, 2); err == nil {
 		fmt.Printf("\tStatus:\t%x\n", b)

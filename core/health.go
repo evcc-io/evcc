@@ -1,13 +1,13 @@
 package core
 
 import (
-	"sync/atomic"
+	"sync"
 	"time"
 )
 
 // Health is a health checker that needs regular updates to stay healthy
 type Health struct {
-	locker  uint32 // mutex
+	mux     sync.Mutex
 	updated time.Time
 	timeout time.Duration
 }
@@ -23,18 +23,10 @@ func (health *Health) Healthy() bool {
 		return false
 	}
 
-	start := time.Now()
+	health.mux.Lock()
+	defer health.mux.Unlock()
 
-	for time.Since(start) < time.Second {
-		if atomic.CompareAndSwapUint32(&health.locker, 0, 1) {
-			defer atomic.StoreUint32(&health.locker, 0)
-			return time.Since(health.updated) < health.timeout
-		}
-
-		time.Sleep(50 * time.Millisecond)
-	}
-
-	return false
+	return time.Since(health.updated) < health.timeout
 }
 
 // Update updates the health timer on each loadpoint update
@@ -43,15 +35,8 @@ func (health *Health) Update() {
 		return
 	}
 
-	start := time.Now()
+	health.mux.Lock()
+	defer health.mux.Unlock()
 
-	for time.Since(start) < time.Second {
-		if atomic.CompareAndSwapUint32(&health.locker, 0, 1) {
-			health.updated = time.Now()
-			atomic.StoreUint32(&health.locker, 0)
-			return
-		}
-
-		time.Sleep(50 * time.Millisecond)
-	}
+	health.updated = time.Now()
 }

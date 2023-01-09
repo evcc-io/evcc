@@ -32,8 +32,11 @@ type Connection struct {
 	*request.Helper
 	*Settings
 	SID     string
-	Updated time.Time
+	updated time.Time
 }
+
+// https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID_english_2021-05-03.pdf
+const sessionTimeout = 15 * time.Minute
 
 // Devicestats structures getbasicdevicesstats command response (AHA-HTTP-Interface)
 type Devicestats struct {
@@ -79,12 +82,12 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 // ExecCmd execautes an FritzDECT AHA-HTTP-Interface command
 func (c *Connection) ExecCmd(function string) (string, error) {
 	// refresh Fritzbox session id
-	if time.Since(c.Updated) >= 10*time.Minute {
+	if time.Since(c.updated) >= sessionTimeout {
 		if err := c.getSessionID(); err != nil {
 			return "", err
 		}
 		// update session timestamp
-		c.Updated = time.Now()
+		c.updated = time.Now()
 	}
 
 	parameters := url.Values{

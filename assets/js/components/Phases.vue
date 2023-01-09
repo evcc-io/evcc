@@ -1,11 +1,6 @@
 <template>
-	<div class="phases d-flex justify-content-between">
-		<div
-			v-for="num in [1, 2, 3]"
-			:key="num"
-			class="phase me-1"
-			:class="{ inactive: inactive(num) }"
-		>
+	<div :class="`phases phases--${numberOfVisiblePhases}p d-flex justify-content-between`">
+		<div v-for="num in [1, 2, 3]" :key="num" :class="`phase phase--${num} me-1`">
 			<div class="target" :style="{ width: `${targetWidth()}%` }"></div>
 			<div class="real" :style="{ width: `${realWidth(num)}%` }"></div>
 		</div>
@@ -13,6 +8,8 @@
 </template>
 
 <script>
+const MIN_ACTIVE_CURRENT = 1;
+
 export default {
 	name: "Phases",
 	props: {
@@ -22,10 +19,18 @@ export default {
 		minCurrent: { type: Number },
 		maxCurrent: { type: Number },
 	},
-	methods: {
-		inactive(num) {
-			return num > this.phasesActive;
+	computed: {
+		numberOfVisiblePhases() {
+			if (!this.chargeCurrents) {
+				return this.phasesActive;
+			}
+			const [L1, L2, L3] = this.chargeCurrents.map((c) => c >= MIN_ACTIVE_CURRENT);
+			if (L1 && !L2 && !L3) return 1;
+			if (L1 && L2 && !L3) return 2;
+			return 3;
 		},
+	},
+	methods: {
 		targetWidth() {
 			let current = Math.min(Math.max(this.minCurrent, this.chargeCurrent), this.maxCurrent);
 			return (100 / this.maxCurrent) * current;
@@ -52,13 +57,22 @@ export default {
 	position: relative;
 	border-radius: 1px;
 	overflow: hidden;
+	flex-basis: 100%;
+	opacity: 1;
+	transition-property: flex-basis, margin, opacity;
+	transition-duration: var(--evcc-transition-slow);
+	transition-timing-function: ease-in;
 }
 html.dark .phase {
 	background-color: var(--bs-gray-bright);
 }
 
-.phase.inactive {
-	display: none;
+.phases--1p .phase--2,
+.phases--1p .phase--3,
+.phases--2p .phase--3 {
+	flex-basis: 0;
+	margin-right: 0 !important;
+	opacity: 0;
 }
 .target,
 .real {

@@ -10,8 +10,8 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/ocpp/profile"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
 
-	"github.com/denisbrodbeck/machineid"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	ocppcore "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ws"
@@ -40,7 +40,7 @@ func New(conf map[string]interface{}, site site.API) (*OCPP, error) {
 	log := util.NewLogger("ocpp")
 
 	if cc.StationID == "" {
-		id, err := machineid.ProtectedID("evcc-ocpp")
+		id, err := machine.ProtectedID("evcc-ocpp")
 		if err == nil {
 			cc.StationID = fmt.Sprintf("evcc-%s", strings.ToLower(id))
 		} else {
@@ -80,7 +80,7 @@ func (s *OCPP) errorHandler(errC <-chan error) {
 // Run executes the OCPP chargepoint client
 func (s *OCPP) Run() {
 	for {
-		for id, lp := range s.site.LoadPoints() {
+		for id, lp := range s.site.Loadpoints() {
 			connector := id + 1
 
 			status := ocppcore.ChargePointStatusAvailable

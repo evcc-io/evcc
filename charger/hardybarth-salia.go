@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -32,7 +33,6 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-// http://apidoc.ecb1.de
 // https://github.com/evcc-io/evcc/discussions/778
 
 // Salia charger implementation
@@ -50,18 +50,15 @@ func init() {
 	registry.Add("hardybarth-salia", NewSaliaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
 func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI           string
-		ChargeControl int
-		Meter         int
-		Cache         time.Duration
+		URI   string
+		Cache time.Duration
 	}{
-		ChargeControl: 1,
-		Meter:         1,
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -89,7 +86,18 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	err := wb.post(salia.ChargeMode, echarge.ModeManual)
+	// set chargemode manual
+	res, err := wb.get()
+	if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
+		if err = wb.post(salia.ChargeMode, echarge.ModeManual); err == nil {
+			res, err = wb.get()
+		}
+
+		if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
+			err = errors.New("could not change chargemode to manual")
+		}
+	}
+
 	if err == nil {
 		go wb.heartbeat()
 
@@ -221,7 +229,7 @@ func (wb *Salia) totalEnergy() (float64, error) {
 	return res.Secc.Port0.Metering.Energy.ActiveImport.Actual / 1e3, err
 }
 
-// currents implements the api.MeterCurrent interface
+// currents implements the api.PhaseCurrents interface
 func (wb *Salia) currents() (float64, float64, float64, error) {
 	res, err := wb.get()
 	i := res.Secc.Port0.Metering.Current.AC

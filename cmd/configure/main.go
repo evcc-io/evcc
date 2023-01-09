@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"golang.org/x/text/language"
 )
@@ -72,7 +73,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	fmt.Println()
 	fmt.Println(c.localizedString("Intro", nil))
 
-	if !c.advancedMode && category == "" {
+	if !c.advancedMode {
 		// ask the user for his knowledge, so advanced mode can also be turned on this way
 		fmt.Println()
 		flowIndex, _ := c.askChoice(c.localizedString("Flow_Mode", nil), []string{
@@ -97,7 +98,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 			}
 		}
 
-		panic("invalid category: " + category)
+		log.FATAL.Fatalln("invalid category:", category, "have:", maps.Keys(DeviceCategories))
 	}
 
 	fmt.Println()
@@ -322,13 +323,22 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		vehicles := c.configuration.DevicesOfClass(DeviceClassVehicle)
-		if len(vehicles) == 1 {
-			loadpoint.Vehicles = append(loadpoint.Vehicles, vehicles[0].Name)
-		} else if len(vehicles) > 1 {
-			for _, vehicle := range vehicles {
-				if c.askYesNo(c.localizedString("Loadpoint_VehicleChargeHere", localizeMap{"Vehicle": vehicle.Title})) {
-					loadpoint.Vehicles = append(loadpoint.Vehicles, vehicle.Name)
+		vehicles := c.configuration.DevicesOfClass(templates.Vehicle)
+		if len(vehicles) > 0 {
+			fmt.Println()
+			if c.askYesNo(c.localizedString("Loadpoint_VehicleDisableAutoDetection", nil)) {
+				if len(vehicles) == 1 {
+					loadpoint.Vehicle = vehicles[0].Name
+				} else {
+					fmt.Println()
+
+					var vehicleTitles []string
+					for _, vehicle := range vehicles {
+						vehicleTitles = append(vehicleTitles, vehicle.Title)
+					}
+
+					vehicleIndex, _ := c.askChoice(c.localizedString("Loadpoint_VehicleSelection", nil), vehicleTitles)
+					loadpoint.Vehicle = vehicles[vehicleIndex].Name
 				}
 			}
 		}
@@ -339,6 +349,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		if c.advancedMode {
+			fmt.Println()
 			minAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMinAmperage", nil),
 				valueType:      templates.ParamValueTypeNumber,

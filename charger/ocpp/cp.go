@@ -13,185 +13,120 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-const timeout = 2 * time.Minute
-
-// Meter Profile Key
 const (
+	// Core profile keys
+	KeyNumberOfConnectors = "NumberOfConnectors"
+
+	// Meter profile keys
 	KeyMeterValuesSampledData   = "MeterValuesSampledData"
 	KeyMeterValueSampleInterval = "MeterValueSampleInterval"
+
+	// Smart Charging profile keys
+	KeyChargeProfileMaxStackLevel              = "ChargeProfileMaxStackLevel"
+	KeyChargingScheduleAllowedChargingRateUnit = "ChargingScheduleAllowedChargingRateUnit"
+	KeyChargingScheduleMaxPeriods              = "ChargingScheduleMaxPeriods"
+	KeyConnectorSwitch3to1PhaseSupported       = "ConnectorSwitch3to1PhaseSupported"
+	KeyMaxChargingProfilesInstalled            = "MaxChargingProfilesInstalled"
+
+	// Alfen specific keys
+	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
 )
-
-// TODO: Maybe move this to the config?
-const ValuePreferedMeterValuesSampleData = "Current.Import.L1,Current.Import.L2,Current.Import.L3,Current.Offered,Energy.Active.Import.Register,Power.Active.Import,Temperature"
-
-type SmartchargingChargeProfileKey string
-
-// Smart Charging Profile Key
-const (
-	KeyChargeProfileMaxStackLevel              SmartchargingChargeProfileKey = "ChargeProfileMaxStackLevel"
-	KeyChargingScheduleAllowedChargingRateUnit SmartchargingChargeProfileKey = "ChargingScheduleAllowedChargingRateUnit"
-	KeyChargingScheduleMaxPeriods              SmartchargingChargeProfileKey = "ChargingScheduleMaxPeriods"
-	KeyConnectorSwitch3to1PhaseSupported       SmartchargingChargeProfileKey = "ConnectorSwitch3to1PhaseSupported"
-	KeyMaxChargingProfilesInstalled            SmartchargingChargeProfileKey = "MaxChargingProfilesInstalled"
-)
-
-type smartChargingProfile struct {
-	// Max StackLevel of a ChargingProfile. The number defined also indicates the max allowed
-	// number of installed charging scheduls per Charging Profile Purpose
-	ChargeProfileMaxStackLevel int
-	// A list of supported quantities for use in a ChargingSchedule.
-	// Allowed values: 'Current' and 'Power'
-	ChargingScheduleAllowedChargingRateUnit []string
-	// Maximum number of periods that may be defined per ChargingSchedule
-	ChargingScheduleMaxPeriods int
-	// Defines if this Charge Point support switching from 3 to 1 phase during a charging session.
-	ConnectorSwitch3to1PhaseSupported bool
-	// Maximum number of Charging profiles instsalled at a time.
-	MaxChargingProfilesInstalled int
-}
 
 type CP struct {
-	mu  sync.Mutex
-	log *util.Logger
-	id  string
+	mu   sync.Mutex
+	log  *util.Logger
+	once sync.Once
 
-	updated     time.Time
-	initialized *sync.Cond
-	boot        *core.BootNotificationRequest
-	status      *core.StatusNotificationRequest
+	id string
 
-	meterSupported     bool
-	measureDoneCh      chan struct{}
-	meterUpdated       time.Time
-	measurements       map[string]types.SampledValue
-	meterTickerRunning bool
+	connectC, statusC chan struct{}
+	updated           time.Time
+	status            *core.StatusNotificationRequest
 
-	supportedNumberOfConnectors int
-	smartChargingCapabilities   smartChargingProfile
+	timeout      time.Duration
+	meterUpdated time.Time
+	measurements map[string]types.SampledValue
 
-	currentTransaction Transaction
+	txnCount int // change initial value to the last known global transaction. Needs persistence
+	txnId    int
 }
 
-func (cp *CP) DetectCapabilities(opts []core.ConfigurationKey) error {
-	options := make(map[string]core.ConfigurationKey)
-	for _, opt := range opts {
-		options[opt.Key] = opt
+func NewChargePoint(log *util.Logger, id string, timeout time.Duration) *CP {
+	return &CP{
+		log:          log,
+		id:           id,
+		connectC:     make(chan struct{}),
+		statusC:      make(chan struct{}),
+		measurements: make(map[string]types.SampledValue),
+		timeout:      timeout,
 	}
-
-	{
-		supported, err := parseIntOption("NumberOfConnectors", options)
-		if err != nil {
-			return err
-		}
-
-		cp.supportedNumberOfConnectors = supported
-	}
-
-	smartChargingCapabilities, err := detectSmartChargingCapabilities(options)
-	if err != nil {
-		return err
-	}
-
-	cp.smartChargingCapabilities = smartChargingCapabilities
-
-	return nil
 }
 
-func (cp *CP) GetNumberOfSupportedConnectors() int {
-	return cp.supportedNumberOfConnectors
+func (cp *CP) ID() string {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	return cp.id
 }
 
-func detectSmartChargingCapabilities(options map[string]core.ConfigurationKey) (smartChargingProfile, error) {
-	var profile smartChargingProfile
+func (cp *CP) RegisterID(id string) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 
-	{ // required
-		val, err := parseIntOption(KeyChargeProfileMaxStackLevel, options)
-		if err != nil {
-			return profile, err
-		}
-
-		profile.ChargeProfileMaxStackLevel = val
+	if cp.id != "" {
+		panic("ocpp: cannot re-register id")
 	}
 
-	{ // required
-		val, err := parseIntOption(KeyChargingScheduleMaxPeriods, options)
-		if err != nil {
-			return profile, err
-		}
-
-		profile.ChargingScheduleMaxPeriods = val
-	}
-
-	{ // required
-		val, err := parseIntOption(KeyMaxChargingProfilesInstalled, options)
-		if err != nil {
-			return profile, err
-		}
-
-		profile.MaxChargingProfilesInstalled = val
-	}
-
-	{ // required
-		opt, found := options[string(KeyChargingScheduleAllowedChargingRateUnit)]
-		if !found || opt.Value == nil {
-			return profile, fmt.Errorf("smart charging key '%s' not found", KeyChargingScheduleAllowedChargingRateUnit)
-		}
-
-		vals := strings.Split(*opt.Value, ",")
-		profile.ChargingScheduleAllowedChargingRateUnit = append(profile.ChargingScheduleAllowedChargingRateUnit, vals...)
-	}
-
-	{ // optional
-		var supported bool
-		opt, found := options[string(KeyConnectorSwitch3to1PhaseSupported)]
-		if found {
-			var err error
-			supported, err = strconv.ParseBool(*opt.Value)
-			if err != nil {
-				return profile, fmt.Errorf("invalid value for key: %s", opt.Key)
-			}
-		}
-
-		profile.ConnectorSwitch3to1PhaseSupported = supported
-	}
-
-	return profile, nil
+	cp.id = id
 }
 
-func parseIntOption(key SmartchargingChargeProfileKey, options map[string]core.ConfigurationKey) (int, error) {
-	opt, found := options[string(key)]
-	if !found || opt.Value == nil {
-		return 0, fmt.Errorf("smart charging key '%s' not found", key)
-	}
+func (cp *CP) Connect() {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 
-	val, err := strconv.Atoi(*opt.Value)
-	if err != nil {
-		return 0, fmt.Errorf("invalid value for key: %s", key)
-	}
-
-	return val, nil
+	cp.once.Do(func() {
+		close(cp.connectC)
+	})
 }
 
-// Boot waits for the CP to register itself
-func (cp *CP) Boot() error {
-	bootC := make(chan struct{})
-	go func() {
-		cp.mu.Lock()
-		defer cp.mu.Unlock()
+func (cp *CP) HasConnected() <-chan struct{} {
+	return cp.connectC
+}
 
-		for cp.boot == nil || cp.status == nil {
-			cp.initialized.Wait()
+func (cp *CP) Initialized(timeout time.Duration) bool {
+	cp.log.DEBUG.Printf("waiting for chargepoint status: %v", timeout)
+
+	// trigger status
+	time.AfterFunc(5*time.Second, func() {
+		select {
+		case <-cp.statusC:
+			return
+		default:
+			Instance().TriggerMessageRequest(cp.ID(), core.StatusNotificationFeatureName)
 		}
+	})
 
-		close(bootC)
-	}()
-
+	// wait for status
 	select {
-	case <-bootC:
+	case <-cp.statusC:
 		cp.update()
-		return nil
+		return true
 	case <-time.After(timeout):
-		return api.ErrTimeout
+		return false
+	}
+}
+
+// WatchDog triggers meter values messages if older than timeout.
+// Must be wrapped in a goroutine.
+func (cp *CP) WatchDog(timeout time.Duration) {
+	for ; true; <-time.NewTicker(timeout).C {
+		cp.mu.Lock()
+		update := cp.txnId != 0 && time.Since(cp.meterUpdated) > timeout
+		cp.mu.Unlock()
+
+		if update {
+			Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
+		}
 	}
 }
 
@@ -199,8 +134,7 @@ func (cp *CP) Boot() error {
 func (cp *CP) TransactionID() int {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
-
-	return cp.currentTransaction.ID
+	return cp.txnId
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {
@@ -209,15 +143,12 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	cp.log.TRACE.Printf("last status update from CP: %s", cp.updated.Format(time.RFC3339))
-	cp.log.TRACE.Printf("current transaction ID: %d", cp.currentTransaction.ID)
-
-	if time.Since(cp.updated) > timeout {
+	if time.Since(cp.updated) > cp.timeout {
 		return res, api.ErrTimeout
 	}
 
 	if cp.status.ErrorCode != core.NoError {
-		cp.log.DEBUG.Printf("chargepoint error: %s: %s", cp.status.ErrorCode, cp.status.Info)
+		return res, fmt.Errorf("%s: %s", cp.status.ErrorCode, cp.status.Info)
 	}
 
 	switch cp.status.Status {
@@ -242,66 +173,81 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	return res, nil
 }
 
+var _ api.Meter = (*CP)(nil)
+
 func (cp *CP) CurrentPower() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if power, ok := cp.measurements[string(types.MeasurandPowerActiveImport)]; ok {
-		return strconv.ParseFloat(power.Value, 64)
+	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+		return 0, api.ErrNotAvailable
+	}
+
+	if m, ok := cp.measurements[string(types.MeasurandPowerActiveImport)]; ok {
+		f, err := strconv.ParseFloat(m.Value, 64)
+		return scale(f, m.Unit), err
 	}
 
 	return 0, api.ErrNotAvailable
 }
 
-// func (cp *CP) TotalEnergy() (float64, error) {
-// 	cp.mu.Lock()
-// 	defer cp.mu.Unlock()
+var _ api.MeterEnergy = (*CP)(nil)
 
-// 	// if energy, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
-// 	// 	v, err := strconv.ParseInt(energy.Value, 10, 64)
-// 	// 	if err != nil {
-// 	// 		return 0, err
-// 	// 	}
-
-// 	return float64(cp.currentTransaction.Charged) / 1000, nil
-
-// 	// loaded := float64(int(v)-cp.currentTransaction.MeterValueStart) / 1000
-
-// 	// return loaded, nil
-// 	// }
-
-// 	// return 0, nil
-// }
-
-func (cp *CP) ChargedEnergy() (float64, error) {
+func (cp *CP) TotalEnergy() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	return float64(cp.currentTransaction.Charged) / 1000, nil
+	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+		return 0, api.ErrNotAvailable
+	}
+
+	if m, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+		f, err := strconv.ParseFloat(m.Value, 64)
+		return scale(f, m.Unit) / 1e3, err
+	}
+
+	return 0, api.ErrNotAvailable
+}
+
+func scale(f float64, scale types.UnitOfMeasure) float64 {
+	switch {
+	case strings.HasPrefix(string(scale), "k"):
+		return f * 1e3
+	case strings.HasPrefix(string(scale), "m"):
+		return f / 1e3
+	default:
+		return f
+	}
 }
 
 func getKeyCurrentPhase(phase int) string {
 	return string(types.MeasurandCurrentImport) + "@L" + strconv.Itoa(phase)
 }
 
+var _ api.PhaseCurrents = (*CP)(nil)
+
 func (cp *CP) Currents() (float64, float64, float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
+	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
 	currents := make([]float64, 0, 3)
 
 	for phase := 1; phase <= 3; phase++ {
-		current, ok := cp.measurements[getKeyCurrentPhase(phase)]
+		m, ok := cp.measurements[getKeyCurrentPhase(phase)]
 		if !ok {
 			return 0, 0, 0, api.ErrNotAvailable
 		}
 
-		f, err := strconv.ParseFloat(current.Value, 64)
+		f, err := strconv.ParseFloat(m.Value, 64)
 		if err != nil {
 			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
 		}
 
-		currents = append(currents, f)
+		currents = append(currents, scale(f, m.Unit))
 	}
 
 	return currents[0], currents[1], currents[2], nil

@@ -287,9 +287,9 @@ var file_proto_vehicle_proto_goTypes = []interface{}{
 var file_proto_vehicle_proto_depIdxs = []int32{
 	4, // 0: NewRequest.config:type_name -> NewRequest.ConfigEntry
 	0, // 1: Vehicle.New:input_type -> NewRequest
-	2, // 2: Vehicle.SoC:input_type -> SoCRequest
+	2, // 2: Vehicle.Soc:input_type -> SoCRequest
 	1, // 3: Vehicle.New:output_type -> NewReply
-	3, // 4: Vehicle.SoC:output_type -> SoCReply
+	3, // 4: Vehicle.Soc:output_type -> SoCReply
 	3, // [3:5] is the sub-list for method output_type
 	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name

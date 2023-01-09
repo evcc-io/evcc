@@ -63,8 +63,8 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Silence) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Silence) Soc() (float64, error) {
 	res, err := v.apiG()
 	return float64(res.BatterySoc), err
 }

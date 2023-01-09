@@ -52,7 +52,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		v1.MockChargeState.EXPECT().Status().Return(tc.v1, nil)
 		v2.MockChargeState.EXPECT().Status().Return(tc.v2, nil)
 
-		available := c.availableDetectibleVehicles(lp, true) // include id-able vehicles
+		available := c.availableDetectibleVehicles(lp) // include id-able vehicles
 		res := c.identifyVehicleByStatus(available)
 		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)

@@ -33,7 +33,7 @@ func init() {
 	registry.Add("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewPhoenixEVEthFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -166,7 +166,7 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b) / 1000, err
 }
 
-// currents implements the api.MeterCurrent interface
+// currents implements the api.PhaseCurrents interface
 func (wb *PhoenixEVEth) currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range phxEVEthRegCurrents {

@@ -3,8 +3,6 @@ products:
   - brand: Huawei
     description:
       generic: SUN2000 with SDongle
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["pv"]

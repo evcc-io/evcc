@@ -46,7 +46,7 @@ func init() {
 	registry.Add("bosch-bpt", NewBoschBpts5HybridFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,Soc,func() (float64, error)"
 
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
 func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -83,13 +83,13 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, err
 		usage: strings.ToLower(usage),
 	}
 
-	// decorate api.BatterySoC
-	var batterySoC func() (float64, error)
+	// decorate api.BatterySoc
+	var batterySoc func() (float64, error)
 	if usage == "battery" {
-		batterySoC = m.batterySoC
+		batterySoc = m.batterySoc
 	}
 
-	return decorateBoschBpts5Hybrid(m, batterySoC), nil
+	return decorateBoschBpts5Hybrid(m, batterySoc), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -108,8 +108,8 @@ func (m *BoschBpts5Hybrid) CurrentPower() (float64, error) {
 	}
 }
 
-// batterySoC implements the api.Battery interface
-func (m *BoschBpts5Hybrid) batterySoC() (float64, error) {
+// batterySoc implements the api.Battery interface
+func (m *BoschBpts5Hybrid) batterySoc() (float64, error) {
 	status, err := m.api.Status()
 	return status.CurrentBatterySoc, err
 }

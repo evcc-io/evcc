@@ -2,7 +2,10 @@ template: hardybarth-salia
 products:
   - brand: HardyBarth
     description:
-      generic: cPH2 (Salia PLCC Controller)
+      generic: cPH2, cPμ2
+  - brand: echarge
+    description:
+      generic: cPH2, cPμ2
 requirements:
   evcc: ["sponsorship"]
 params:

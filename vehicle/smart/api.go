@@ -15,7 +15,6 @@ import (
 
 const ApiURI = "https://oneapp.microservice.smart.com/seqc/v0"
 
-// https://id.mercedes-benz.com/.well-known/openid-configuration
 var OAuth2Config = &oauth2.Config{
 	ClientID:    "70d89501-938c-4bec-82d0-6abb550b0825",
 	RedirectURL: "https://oneapp.microservice.smart.com",

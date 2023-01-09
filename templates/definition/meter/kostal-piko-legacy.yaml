@@ -3,8 +3,6 @@ products:
   - brand: Kostal
     description:
       generic: Piko (legacy)
-guidedsetup:
-  enable: true
 params:
   - name: usage
     choice: ["pv"]

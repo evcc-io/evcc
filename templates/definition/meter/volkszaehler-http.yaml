@@ -21,8 +21,8 @@ render: |
   power: # power reading
     source: http # use http plugin
     {{- if .host }}
-    uri: http://{{ .host }}:{{ .port }}/api/data/{{ .uuid }}.json?from=now
+    uri: http://{{ .host }}:{{ .port }}/api/data/{{ trimAll "'" .uuid }}.json?from=now
     {{ else }}
-    uri: {{ .url }}/{{ .uuid }}.json?from=now
+    uri: {{ .url }}/{{ trimAll "'" .uuid }}.json?from=now
     {{- end }}
     jq: .data.tuples[0][1] # parse response json

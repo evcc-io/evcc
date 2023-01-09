@@ -87,11 +87,14 @@ func (d *Connection) CurrentPower() (float64, error) {
 			return 0, err
 		}
 
-		if d.channel >= len(res.Meters) {
+		switch {
+		case d.channel < len(res.Meters):
+			power = res.Meters[d.channel].Power
+		case d.channel < len(res.EMeters):
+			power = res.EMeters[d.channel].Power
+		default:
 			return 0, errors.New("invalid channel, missing power meter")
 		}
-
-		power = res.Meters[d.channel].Power
 
 	default:
 		var res Gen2StatusResponse
@@ -166,4 +169,43 @@ func (d *Connection) execGen2Cmd(method string, enable bool, res interface{}) er
 	}
 
 	return d.DoJSON(req, &res)
+}
+
+// TotalEnergy implements the api.Meter interface
+func (d *Connection) TotalEnergy() (float64, error) {
+	var energy float64
+	switch d.gen {
+	case 0, 1:
+		var res Gen1StatusResponse
+		uri := fmt.Sprintf("%s/status", d.uri)
+		if err := d.GetJSON(uri, &res); err != nil {
+			return 0, err
+		}
+
+		switch {
+		case d.channel < len(res.Meters):
+			energy = res.Meters[d.channel].Total / 60
+		case d.channel < len(res.EMeters):
+			energy = res.EMeters[d.channel].Total / 60
+		default:
+			return 0, errors.New("invalid channel, missing power meter")
+		}
+
+	default:
+		var res Gen2StatusResponse
+		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+			return 0, err
+		}
+
+		switch d.channel {
+		case 1:
+			energy = res.Switch1.Aenergy.Total
+		case 2:
+			energy = res.Switch2.Aenergy.Total
+		default:
+			energy = res.Switch0.Aenergy.Total
+		}
+	}
+
+	return energy / 1000, nil
 }
