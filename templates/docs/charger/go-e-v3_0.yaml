@@ -2,11 +2,16 @@ product:
   brand: go-eCharger
   description: HOME+, HOMEfix (V3)
 capabilities: ["1p3p", "rfid"]
-description: |
-  Benötigt mindestens Firmware 052.1 oder neuer.
-
-  Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
-
+requirements: ["sponsorship"]
+  description:
+    de: |
+    Benötigt mindestens Firmware 052.1 oder neuer.
+    
+    Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
+    en: |
+    Requires at least Firmware 0.52.1 or later.
+    
+    In order to use 1P/3P phase switiching HTTP API v2 needs to be activated in the charger settings.
 render:
   - default: |
       type: template
