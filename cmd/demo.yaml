@@ -34,21 +34,27 @@ meters:
       source: js
       vm: shared
       script: |
-        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - get_1 - get_0;
+        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - batterypower - pvpower;
         state.gridpower;
-      get:
-        - source: js
-          vm: shared
-          script: |
-            state.pvpower = 8000+500*Math.random();
-            console.log("state.pvpower:", state.pvpower);
-            state.pvpower;
-        - source: js
-          vm: shared
-          script: |
-            state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
-            console.log("state.batterypower:", state.batterypower);
-            state.batterypower;
+      transform:
+        - name: pvpower
+          type: float
+          config:
+            source: js
+            vm: shared
+            script: |
+              state.pvpower = 8000+500*Math.random();
+              console.log("state.pvpower:", state.pvpower);
+              state.pvpower;
+        - name: batterypower
+          type: float
+          config:
+            source: js
+            vm: shared
+            script: |
+              state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
+              console.log("state.batterypower:", state.batterypower);
+              state.batterypower;
   - name: pv
     type: custom
     power:
@@ -66,17 +72,20 @@ meters:
       source: js
       vm: shared
       script: |
-        console.log("get_0:", get_0);
-        if (get_1) state.batterySoc++; else state.batterySoc--;
+        console.log("battery_charging:", battery_charging);
+        if (battery_charging) state.batterySoc++; else state.batterySoc--;
         if (state.batterySoc < 10) state.batterySoc = 90;
         if (state.batterySoc > 90) state.batterySoc = 10;
         state.batterySoc;
-      get:
-        - source: js
-          vm: shared
-          script: |
-            console.log("state.batterypower:", state.batterypower);
-            state.batterypower < 0;
+      transform:
+        - name: battery_charging
+          type: bool
+          config:
+            source: js
+            vm: shared
+            script: |
+              console.log("state.batterypower:", state.batterypower);
+              state.batterypower < 0;
 
   - name: meter_charger_1
     type: custom
@@ -105,13 +114,16 @@ chargers:
         lp.enabled = val;
         if (lp.enabled) ret = lp.maxcurrent * 230 * lp.phases; else ret = 0;
         ret;
-      set:
-        source: js
-        vm: shared
-        script: |
-          console.log("Inner Set!!!");
-          set();
-          lp.chargepower = val
+      transform:
+        - name: chargepower
+          type: float
+          config:
+            source: js
+            vm: shared
+            script: |
+              console.log("Inner Set!!!");
+              set();
+              lp.chargepower = val
     enabled:
       source: js
       vm: shared
