@@ -193,8 +193,6 @@ tomorrow = "tomorrow"
 targetIsInThePast = "Pick a time in the future, Marty."
 remove = "Remove"
 activate = "Activate"
-experimentalLabel = "Experimental"
-experimentalText = "This works, but isn't perfect. Please report unexpected behaviour to"
 
 [main.targetEnergy]
 label = "Limit"

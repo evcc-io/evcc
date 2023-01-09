@@ -43,7 +43,7 @@
 						</div>
 						<form @submit.prevent="setTargetTime">
 							<div class="modal-body">
-								<div class="form-group">
+								<div class="form-group mb-2">
 									<!-- eslint-disable vue/no-v-html -->
 									<label for="targetTimeLabel" class="mb-3">
 										<span v-if="socBasedCharging">
@@ -89,20 +89,10 @@
 										/>
 									</div>
 								</div>
-								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0 mt-2">
+								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
 									{{ $t("main.targetCharge.targetIsInThePast") }}
 								</p>
-								<p class="small mt-3 text-muted mb-0">
-									<strong class="text-evcc">
-										{{ $t("main.targetCharge.experimentalLabel") }}:
-									</strong>
-									{{ $t("main.targetCharge.experimentalText") }}
-									<a
-										href="https://github.com/evcc-io/evcc/discussions/1433"
-										target="_blank"
-										>GitHub Discussions</a
-									>.
-								</p>
+								<TargetChargePlanMinimal v-else-if="plan" v-bind="plan" />
 							</div>
 							<div class="modal-footer d-flex justify-content-between">
 								<button
@@ -135,6 +125,8 @@ import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
 import LabelAndValue from "./LabelAndValue.vue";
+import TargetChargePlanMinimal from "./TargetChargePlanMinimal.vue";
+import api from "../api";
 
 import formatter from "../mixins/formatter";
 
@@ -143,7 +135,7 @@ const LAST_TARGET_TIME_KEY = "last_target_time";
 
 export default {
 	name: "TargetCharge",
-	components: { LabelAndValue },
+	components: { LabelAndValue, TargetChargePlanMinimal },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
@@ -156,7 +148,7 @@ export default {
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
-		return { selectedDay: null, selectedTime: null };
+		return { selectedDay: null, selectedTime: null, plan: {} };
 	},
 	computed: {
 		targetChargeEnabled: function () {
@@ -186,11 +178,33 @@ export default {
 		targetTime() {
 			this.initInputFields();
 		},
+		selectedTargetTime() {
+			this.updatePlan();
+		},
+		targetSoc() {
+			this.updatePlan();
+		},
+		targetEnergy() {
+			this.updatePlan();
+		},
 	},
 	mounted: function () {
 		this.initInputFields();
 	},
 	methods: {
+		updatePlan: async function () {
+			if (this.selectedTargetTimeValid && (this.targetEnergy || this.targetSoc)) {
+				try {
+					const response = await api.get(`/loadpoints/${this.id}/target/plan`, {
+						params: { targetTime: this.selectedTargetTime },
+					});
+					this.plan = response.data.result;
+				} catch (e) {
+					console.error(e);
+				}
+			}
+		},
+
 		// not computed because it needs to update over time
 		targetTimeLabel: function () {
 			if (this.targetChargeEnabled) {

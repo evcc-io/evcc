@@ -51,6 +51,10 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 	return requiredDuration
 }
 
+func (lp *Loadpoint) GetPlannerUnit() string {
+	return lp.planner.Unit()
+}
+
 // GetPlan creates a charging plan
 func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error) {
 	if lp.planner == nil || lp.socEstimator == nil || targetTime.IsZero() {

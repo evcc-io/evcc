@@ -176,8 +176,6 @@ tomorrow = "rytoj"
 targetIsInThePast = "Pasirinkite laiką ateityje."
 remove = "Panaikinti"
 activate = "Aktyvuoti"
-experimentalLabel = "Eksperimentinė"
-experimentalText = "Ši funkcija veikia, bet nėra tobula. Apie netikėtą elgesį praneškite mūsų"
 
 [main.targetEnergy]
 label = "Limitas"
