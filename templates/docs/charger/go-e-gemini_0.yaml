@@ -2,10 +2,10 @@ product:
   brand: go-eCharger
   description: Gemini
 capabilities: ["1p3p", "rfid"]
-requirements: ["sponsorship"]
+requirements:
   description:
-    de: Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
     en: In order to use 1P/3P phase switiching HTTP API v2 needs to be activated in the charger settings.
+    de: Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
 render:
   - default: |
       type: template
