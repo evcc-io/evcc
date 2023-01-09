@@ -82,10 +82,19 @@ chargers:
       source: js
       vm: shared
       script: |
+        console.log("Outer Set!!!");
         set();
         var lp = state.loadpoints[0];
         lp.enabled = val;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+        if (lp.enabled) ret = lp.maxcurrent * 230 * lp.phases; else ret = 0;
+        ret;
+      set:
+        source: js
+        vm: shared
+        script: |
+          console.log("Inner Set!!!");
+          set();
+          lp.chargepower = val
     enabled:
       source: js
       vm: shared

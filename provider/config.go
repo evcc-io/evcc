@@ -24,6 +24,9 @@ type (
 	SetStringProvider interface {
 		StringSetter(param string) func(string) error
 	}
+	SetFloatProvider interface {
+		FloatSetter(param string) func(float64) error
+	}
 	SetBoolProvider interface {
 		BoolSetter(param string) func(bool) error
 	}
@@ -156,6 +159,25 @@ func NewIntSetterFromConfig(param string, config Config) (res func(int64) error,
 	return
 }
 
+// NewFloatSetterFromConfig creates a FloatSetter from config
+func NewFloatSetterFromConfig(param string, config Config) (res func(float64) error, err error) {
+	factory, err := registry.Get(config.Source)
+	if err == nil {
+		var provider IntProvider
+		provider, err = factory(config.Other)
+
+		if prov, ok := provider.(SetFloatProvider); ok {
+			res = prov.FloatSetter(param)
+		}
+	}
+
+	if err == nil && res == nil {
+		err = fmt.Errorf("invalid plugin source: %s", config.Source)
+	}
+
+	return
+}
+
 // NewBoolSetterFromConfig creates a BoolSetter from config
 func NewBoolSetterFromConfig(param string, config Config) (res func(bool) error, err error) {
 	factory, err := registry.Get(config.Source)
@@ -165,6 +187,25 @@ func NewBoolSetterFromConfig(param string, config Config) (res func(bool) error,
 
 		if prov, ok := provider.(SetBoolProvider); ok {
 			res = prov.BoolSetter(param)
+		}
+	}
+
+	if err == nil && res == nil {
+		err = fmt.Errorf("invalid plugin source: %s", config.Source)
+	}
+
+	return
+}
+
+// NewStringSetterFromConfig creates a StringSetter from config
+func NewStringSetterFromConfig(param string, config Config) (res func(string) error, err error) {
+	factory, err := registry.Get(config.Source)
+	if err == nil {
+		var provider IntProvider
+		provider, err = factory(config.Other)
+
+		if prov, ok := provider.(SetStringProvider); ok {
+			res = prov.StringSetter(param)
 		}
 	}
 
