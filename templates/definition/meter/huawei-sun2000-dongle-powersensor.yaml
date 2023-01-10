@@ -7,10 +7,6 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
-  - name: storageunit
-    valuetype: number
-    default: 1
-    advanced: true
   - name: modbus
     choice: ["tcpip"]
 render: |
@@ -86,12 +82,7 @@ render: |
     timeout: 15s
     connectdelay: 1s
     register:
-      {{- if eq .storageunit "1" }}
       address: 37001
-      {{- end }}
-      {{- if eq .storageunit "2" }}
-      address: 37743
-      {{- end }}
       type: holding
       decode: int32nan
     scale: -1
@@ -101,12 +92,7 @@ render: |
     model: huawei
     timeout: 15s
     register:
-      {{- if eq .storageunit "1" }}
       address: 37004
-      {{- end }}
-      {{- if eq .storageunit "2" }}
-      address: 37738
-      {{- end }}
       type: holding
       decode: uint16nan
     scale: 0.1

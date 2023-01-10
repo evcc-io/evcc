@@ -59,19 +59,10 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	api := id.NewAPI(log, apps.TokenSource(token))
 	api.Client.Timeout = cc.Timeout
 
-	vehicle, err := ensureVehicleEx(
-		cc.VIN, api.Vehicles,
-		func(v id.Vehicle) string {
-			return v.VIN
-		},
-	)
-
-	if v.Title_ == "" {
-		v.Title_ = vehicle.Nickname
-	}
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
-		v.Provider = id.NewProvider(api, vehicle.VIN, cc.Cache)
+		v.Provider = id.NewProvider(api, cc.VIN, cc.Cache)
 	}
 
 	return v, err

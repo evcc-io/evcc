@@ -25,7 +25,7 @@
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
-			@minsoc-updated="setMinSoc"
+			@minsoc-updated="setMinSoC"
 		/>
 
 		<div
@@ -92,7 +92,7 @@
 		<hr class="divider" />
 		<Vehicle
 			v-bind="vehicle"
-			@target-soc-updated="setTargetSoc"
+			@target-soc-updated="setTargetSoC"
 			@target-energy-updated="setTargetEnergy"
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
@@ -133,7 +133,7 @@ export default {
 		// main
 		title: String,
 		mode: String,
-		targetSoc: Number,
+		targetSoC: Number,
 		targetEnergy: Number,
 		remoteDisabled: Boolean,
 		remoteDisabledSource: String,
@@ -147,14 +147,14 @@ export default {
 		vehicleDetectionActive: Boolean,
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
-		vehicleSoc: Number,
+		vehicleSoC: Number,
 		vehicleTitle: String,
 		vehicleIcon: String,
-		vehicleTargetSoc: Number,
+		vehicleTargetSoC: Number,
 		vehicleCapacity: Number,
 		vehicleFeatureOffline: Boolean,
 		vehicles: Array,
-		minSoc: Number,
+		minSoC: Number,
 		targetTime: String,
 		targetTimeActive: Boolean,
 		targetTimeProjectedStart: String,
@@ -255,7 +255,7 @@ export default {
 		setTargetMode: function (mode) {
 			api.post(this.apiPath("mode") + "/" + mode);
 		},
-		setTargetSoc: function (soc) {
+		setTargetSoC: function (soc) {
 			api.post(this.apiPath("targetsoc") + "/" + soc);
 		},
 		setTargetEnergy: function (kWh) {
@@ -270,11 +270,11 @@ export default {
 		setPhasesConfigured: function (phases) {
 			api.post(this.apiPath("phases") + "/" + phases);
 		},
-		setMinSoc: function (soc) {
+		setMinSoC: function (soc) {
 			api.post(this.apiPath("minsoc") + "/" + soc);
 		},
 		setTargetTime: function (date) {
-			api.post(`${this.apiPath("targetcharge")}/${this.targetSoc}/${date.toISOString()}`);
+			api.post(`${this.apiPath("targetcharge")}/${this.targetSoC}/${date.toISOString()}`);
 		},
 		removeTargetTime: function () {
 			api.delete(this.apiPath("targetcharge"));

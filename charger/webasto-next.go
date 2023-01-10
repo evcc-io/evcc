@@ -212,9 +212,9 @@ func (wb *WebastoNext) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-var _ api.PhaseCurrents = (*WebastoNext)(nil)
+var _ api.MeterCurrent = (*WebastoNext)(nil)
 
-// Currents implements the api.PhaseCurrents interface
+// Currents implements the api.MeterCurrent interface
 func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
 	var curr [3]float64
 	for l := uint16(0); l < 3; l++ {

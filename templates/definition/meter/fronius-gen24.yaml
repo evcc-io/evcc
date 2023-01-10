@@ -23,8 +23,8 @@ render: |
   id: 200
   model: sunspec
   power: Power
-  energy: Import
-  currents: # currents are signed already
+  energy: Export
+  currents:
     - CurrentL1
     - CurrentL2
     - CurrentL3

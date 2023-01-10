@@ -7,13 +7,9 @@ params:
   - name: usage
     choice: ["grid", "pv"]
   - name: host
-  - name: interface
 render: |
   type: sma
   uri: {{ .host }}
-  {{- if ne .interface "" }}
-  interface: {{ .interface }}
-  {{- end }}
   {{- if eq .usage "pv" }}
   scale: -1
   {{- end }}

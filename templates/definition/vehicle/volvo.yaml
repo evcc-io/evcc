@@ -1,6 +1,6 @@
 template: volvo
 products:
-  - brand: Volvo (legacy)
+  - brand: Volvo
 params:
   - preset: vehiclebase
   - preset: vehicleidentify

@@ -172,9 +172,9 @@ func (wb *Innogy) CurrentPower() (float64, error) {
 	return 230 * (l1 + l2 + l3), err
 }
 
-var _ api.PhaseCurrents = (*Innogy)(nil)
+var _ api.MeterCurrent = (*Innogy)(nil)
 
-// Currents implements the api.PhaseCurrents interface
+// Currents implements the api.MeterCurrent interface
 func (wb *Innogy) Currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range igyRegCurrents {

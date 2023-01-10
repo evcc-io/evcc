@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
+func decorateABLeMH(base *ABLeMH, meter func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && phaseCurrents == nil:
+	case meter == nil && meterCurrent == nil:
 		return base
 
-	case meter != nil && phaseCurrents == nil:
+	case meter != nil && meterCurrent == nil:
 		return &struct {
 			*ABLeMH
 			api.Meter
@@ -22,29 +22,29 @@ func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents f
 			},
 		}
 
-	case meter == nil && phaseCurrents != nil:
+	case meter == nil && meterCurrent != nil:
 		return &struct {
 			*ABLeMH
-			api.PhaseCurrents
+			api.MeterCurrent
 		}{
 			ABLeMH: base,
-			PhaseCurrents: &decorateABLeMHPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
+			MeterCurrent: &decorateABLeMHMeterCurrentImpl{
+				meterCurrent: meterCurrent,
 			},
 		}
 
-	case meter != nil && phaseCurrents != nil:
+	case meter != nil && meterCurrent != nil:
 		return &struct {
 			*ABLeMH
 			api.Meter
-			api.PhaseCurrents
+			api.MeterCurrent
 		}{
 			ABLeMH: base,
 			Meter: &decorateABLeMHMeterImpl{
 				meter: meter,
 			},
-			PhaseCurrents: &decorateABLeMHPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
+			MeterCurrent: &decorateABLeMHMeterCurrentImpl{
+				meterCurrent: meterCurrent,
 			},
 		}
 	}
@@ -60,10 +60,10 @@ func (impl *decorateABLeMHMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateABLeMHPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
+type decorateABLeMHMeterCurrentImpl struct {
+	meterCurrent func() (float64, float64, float64, error)
 }
 
-func (impl *decorateABLeMHPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
+func (impl *decorateABLeMHMeterCurrentImpl) Currents() (float64, float64, float64, error) {
+	return impl.meterCurrent()
 }

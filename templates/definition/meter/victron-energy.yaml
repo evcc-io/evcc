@@ -105,7 +105,7 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: 100 # com.victronenergy.system
     register:
-      address: 843 # Soc
+      address: 843 # SoC
       type: input
       decode: uint16
   {{- end }}

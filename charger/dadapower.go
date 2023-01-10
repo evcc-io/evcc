@@ -188,9 +188,9 @@ func (wb *Dadapower) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint64(b)) / 1e3, err
 }
 
-var _ api.PhaseCurrents = (*Dadapower)(nil)
+var _ api.MeterCurrent = (*Dadapower)(nil)
 
-// Currents implements the api.PhaseCurrents interface
+// Currents implements the api.MeterCurrent interface
 func (wb *Dadapower) Currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range dadapowerRegCurrents {

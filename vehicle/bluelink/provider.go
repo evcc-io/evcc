@@ -9,7 +9,7 @@ import (
 
 const refreshTimeout = 2 * time.Minute
 
-// Provider implements the vehicle api.
+// Provider implements the Kia/Hyundai bluelink api.
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
 	statusG     func() (VehicleStatus, error)
@@ -93,8 +93,8 @@ func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (Vehicle
 
 var _ api.Battery = (*Provider)(nil)
 
-// Soc implements the api.Battery interface
-func (v *Provider) Soc() (float64, error) {
+// SoC implements the api.Battery interface
+func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
@@ -171,8 +171,8 @@ func (v *Provider) Odometer() (float64, error) {
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
-func (v *Provider) TargetSoc() (float64, error) {
+// TargetSoC implements the api.SocLimiter interface
+func (v *Provider) TargetSoC() (float64, error) {
 	res, err := v.statusG()
 
 	if err == nil {

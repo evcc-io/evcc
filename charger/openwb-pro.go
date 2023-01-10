@@ -168,9 +168,9 @@ func (wb *OpenWBPro) TotalEnergy() (float64, error) {
 	return res.Imported / 1e3, err
 }
 
-var _ api.PhaseCurrents = (*OpenWBPro)(nil)
+var _ api.MeterCurrent = (*OpenWBPro)(nil)
 
-// Currents implements the api.PhaseCurrentss interface
+// Currents implements the api.MeterCurrents interface
 func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
 	res, err := wb.get()
 	if err != nil {

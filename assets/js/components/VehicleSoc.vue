@@ -10,23 +10,23 @@
 					'progress-bar-striped': charging,
 					'progress-bar-animated': charging,
 				}"
-				:style="{ width: `${vehicleSocDisplayWidth}%` }"
+				:style="{ width: `${vehicleSoCDisplayWidth}%` }"
 			></div>
 			<div
-				v-if="remainingSocWidth > 0 && enabled && connected"
+				v-if="remainingSoCWidth > 0 && enabled && connected"
 				class="progress-bar bg-muted"
 				role="progressbar"
 				:class="progressColor"
-				:style="{ width: `${remainingSocWidth}%`, transition: 'none' }"
+				:style="{ width: `${remainingSoCWidth}%`, transition: 'none' }"
 			></div>
 			<div
-				v-show="vehicleTargetSoc"
-				ref="vehicleTargetSoc"
+				v-show="vehicleTargetSoC"
+				ref="vehicleTargetSoC"
 				class="vehicle-target-soc"
 				data-bs-toggle="tooltip"
 				title=" "
-				:class="{ 'vehicle-target-soc--active': vehicleTargetSocActive }"
-				:style="{ left: `${vehicleTargetSoc}%` }"
+				:class="{ 'vehicle-target-soc--active': vehicleTargetSoCActive }"
+				:style="{ left: `${vehicleTargetSoC}%` }"
 			/>
 		</div>
 		<div class="target">
@@ -36,14 +36,14 @@
 				min="0"
 				max="100"
 				step="5"
-				:value="visibleTargetSoc"
+				:value="visibleTargetSoC"
 				class="target-slider"
 				:class="{ 'target-slider--active': targetSliderActive }"
-				@mousedown="changeTargetSocStart"
-				@touchstart="changeTargetSocStart"
-				@input="movedTargetSoc"
-				@mouseup="changeTargetSocEnd"
-				@touchend="changeTargetSocEnd"
+				@mousedown="changeTargetSoCStart"
+				@touchstart="changeTargetSoCStart"
+				@input="movedTargetSoC"
+				@mouseup="changeTargetSoCEnd"
+				@touchend="changeTargetSoCEnd"
 			/>
 		</div>
 	</div>
@@ -57,12 +57,12 @@ export default {
 	props: {
 		connected: Boolean,
 		vehiclePresent: Boolean,
-		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
+		vehicleSoC: Number,
+		vehicleTargetSoC: Number,
 		enabled: Boolean,
 		charging: Boolean,
-		minSoc: Number,
-		targetSoc: Number,
+		minSoC: Number,
+		targetSoC: Number,
 		targetEnergy: Number,
 		chargedEnergy: Number,
 		socBasedCharging: Boolean,
@@ -70,16 +70,16 @@ export default {
 	emits: ["target-soc-drag", "target-soc-updated"],
 	data: function () {
 		return {
-			selectedTargetSoc: null,
+			selectedTargetSoC: null,
 			interactionStartScreenY: null,
 			tooltip: null,
 		};
 	},
 	computed: {
-		vehicleSocDisplayWidth: function () {
+		vehicleSoCDisplayWidth: function () {
 			if (this.socBasedCharging) {
-				if (this.vehicleSoc >= 0) {
-					return this.vehicleSoc;
+				if (this.vehicleSoC >= 0) {
+					return this.vehicleSoC;
 				}
 				return 100;
 			} else {
@@ -89,50 +89,50 @@ export default {
 				return 100;
 			}
 		},
-		vehicleTargetSocActive: function () {
-			return this.vehicleTargetSoc > 0 && this.vehicleTargetSoc > this.vehicleSoc;
+		vehicleTargetSoCActive: function () {
+			return this.vehicleTargetSoC > 0 && this.vehicleTargetSoC > this.vehicleSoC;
 		},
 		targetSliderActive: function () {
-			return !this.vehicleTargetSoc || this.visibleTargetSoc <= this.vehicleTargetSoc;
+			return !this.vehicleTargetSoC || this.visibleTargetSoC <= this.vehicleTargetSoC;
 		},
 		progressColor: function () {
-			if (this.minSocActive) {
+			if (this.minSoCActive) {
 				return "bg-danger";
 			}
 			return "bg-primary";
 		},
-		minSocActive: function () {
-			return this.minSoc > 0 && this.vehicleSoc < this.minSoc;
+		minSoCActive: function () {
+			return this.minSoC > 0 && this.vehicleSoC < this.minSoC;
 		},
-		remainingSocWidth: function () {
+		remainingSoCWidth: function () {
 			if (this.socBasedCharging) {
-				if (this.vehicleSocDisplayWidth === 100) {
+				if (this.vehicleSoCDisplayWidth === 100) {
 					return null;
 				}
-				if (this.minSocActive) {
-					return this.minSoc - this.vehicleSoc;
+				if (this.minSoCActive) {
+					return this.minSoC - this.vehicleSoC;
 				}
-				let targetSoc = this.targetSliderActive
-					? this.visibleTargetSoc
-					: this.vehicleTargetSoc;
-				if (targetSoc > this.vehicleSoc) {
-					return targetSoc - this.vehicleSoc;
+				let targetSoC = this.targetSliderActive
+					? this.visibleTargetSoC
+					: this.vehicleTargetSoC;
+				if (targetSoC > this.vehicleSoC) {
+					return targetSoC - this.vehicleSoC;
 				}
 			} else {
-				return 100 - this.vehicleSocDisplayWidth;
+				return 100 - this.vehicleSoCDisplayWidth;
 			}
 
 			return null;
 		},
-		visibleTargetSoc: function () {
-			return Number(this.selectedTargetSoc || this.targetSoc);
+		visibleTargetSoC: function () {
+			return Number(this.selectedTargetSoC || this.targetSoC);
 		},
 	},
 	watch: {
-		targetSoc: function () {
-			this.selectedTargetSoc = this.targetSoc;
+		targetSoC: function () {
+			this.selectedTargetSoC = this.targetSoC;
 		},
-		vehicleTargetSoc: function () {
+		vehicleTargetSoC: function () {
 			this.updateTooltip();
 		},
 	},
@@ -140,37 +140,37 @@ export default {
 		this.updateTooltip();
 	},
 	methods: {
-		changeTargetSocStart: function (e) {
+		changeTargetSoCStart: function (e) {
 			e.stopPropagation();
 		},
-		changeTargetSocEnd: function (e) {
+		changeTargetSoCEnd: function (e) {
 			const value = parseInt(e.target.value, 10);
 			// value changed
-			if (value !== this.targetSoc) {
+			if (value !== this.targetSoC) {
 				this.$emit("target-soc-updated", value);
 			}
 		},
-		movedTargetSoc: function (e) {
+		movedTargetSoC: function (e) {
 			let value = parseInt(e.target.value, 10);
 			e.stopPropagation();
-			const minTargetSoc = 20;
-			if (value < minTargetSoc) {
-				e.target.value = minTargetSoc;
-				this.selectedTargetSoc = value;
+			const minTargetSoC = 20;
+			if (value < minTargetSoC) {
+				e.target.value = minTargetSoC;
+				this.selectedTargetSoC = value;
 				e.preventDefault();
 				return false;
 			}
-			this.selectedTargetSoc = value;
+			this.selectedTargetSoC = value;
 
-			this.$emit("target-soc-drag", this.selectedTargetSoc);
+			this.$emit("target-soc-drag", this.selectedTargetSoC);
 			return true;
 		},
 		updateTooltip: function () {
 			if (!this.tooltip) {
-				this.tooltip = new Tooltip(this.$refs.vehicleTargetSoc);
+				this.tooltip = new Tooltip(this.$refs.vehicleTargetSoC);
 			}
-			const soc = this.vehicleTargetSoc;
-			const content = this.$t("main.vehicleSoc.vehicleTarget", { soc });
+			const soc = this.vehicleTargetSoC;
+			const content = this.$t("main.vehicleSoC.vehicleTarget", { soc });
 			this.tooltip.setContent({ ".tooltip-inner": content });
 		},
 	},

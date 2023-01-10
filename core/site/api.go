@@ -8,16 +8,16 @@ import (
 // API is the external site API
 type API interface {
 	Healthy() bool
-	Loadpoints() []loadpoint.API
+	LoadPoints() []loadpoint.API
 
 	//
 	// battery
 	//
 
-	GetBufferSoc() float64
-	SetBufferSoc(float64) error
-	GetPrioritySoc() float64
-	SetPrioritySoc(float64) error
+	GetBufferSoC() float64
+	SetBufferSoC(float64) error
+	GetPrioritySoC() float64
+	SetPrioritySoC(float64) error
 
 	//
 	// power and energy
@@ -32,11 +32,4 @@ type API interface {
 
 	// GetVehicles is the list of vehicles
 	GetVehicles() []api.Vehicle
-
-	//
-	// tariffs
-	//
-
-	// GetTariff returns the tariffs rates
-	GetTariff(tariff string) (api.Rates, error)
 }

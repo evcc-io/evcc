@@ -2,12 +2,17 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
+	"reflect"
+	"strings"
 	"time"
+
+	"github.com/fatih/structs"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -45,39 +50,66 @@ func (c ChargeStatus) String() string {
 	return string(c)
 }
 
-// Meter provides total active power in W
+// ActionConfig defines an action to take on event
+type ActionConfig struct {
+	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
+	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
+	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
+	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
+	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
+}
+
+// Merge merges all non-nil properties of the additional config into the base config.
+// The receiver's config remains immutable.
+func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
+	if m.Mode != nil {
+		a.Mode = m.Mode
+	}
+	if m.MinCurrent != nil {
+		a.MinCurrent = m.MinCurrent
+	}
+	if m.MaxCurrent != nil {
+		a.MaxCurrent = m.MaxCurrent
+	}
+	if m.MinSoC != nil {
+		a.MinSoC = m.MinSoC
+	}
+	if m.TargetSoC != nil {
+		a.TargetSoC = m.TargetSoC
+	}
+	return a
+}
+
+// String implements Stringer and returns the ActionConfig as comma-separated key:value string
+func (a ActionConfig) String() string {
+	var s []string
+	for k, v := range structs.Map(a) {
+		val := reflect.ValueOf(v)
+		if v != nil && !val.IsNil() {
+			s = append(s, fmt.Sprintf("%s:%v", k, val.Elem()))
+		}
+	}
+	return strings.Join(s, ", ")
+}
+
+// Meter is able to provide current power in W
 type Meter interface {
 	CurrentPower() (float64, error)
 }
 
-// MeterEnergy provides total energy in kWh
+// MeterEnergy is able to provide current energy in kWh
 type MeterEnergy interface {
 	TotalEnergy() (float64, error)
 }
 
-// PhaseCurrents provides per-phase current A
-type PhaseCurrents interface {
+// MeterCurrent is able to provide per-line current A
+type MeterCurrent interface {
 	Currents() (float64, float64, float64, error)
 }
 
-// PhaseVoltages provides per-phase voltage V
-type PhaseVoltages interface {
-	Voltages() (float64, float64, float64, error)
-}
-
-// PhasePowers provides signed per-phase power W
-type PhasePowers interface {
-	Powers() (float64, float64, float64, error)
-}
-
-// Battery provides battery Soc in %
+// Battery is able to provide battery SoC in %
 type Battery interface {
-	Soc() (float64, error)
-}
-
-// BatteryCapacity provides a capacity in kWh
-type BatteryCapacity interface {
-	Capacity() float64
+	SoC() (float64, error)
 }
 
 // ChargeState provides current charging status
@@ -85,17 +117,12 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// CurrentLimiter provides settings charging maximum charging current
-type CurrentLimiter interface {
-	MaxCurrent(current int64) error
-}
-
-// Charger provides current charging status and enable/disable charging
+// Charger is able to provide current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	CurrentLimiter
+	MaxCurrent(current int64) error
 }
 
 // ChargerEx provides milli-amp precision charger current control
@@ -136,10 +163,9 @@ type Authorizer interface {
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
-	BatteryCapacity
 	Title() string
-	SetTitle(string)
 	Icon() string
+	Capacity() float64
 	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
@@ -173,7 +199,7 @@ type VehiclePosition interface {
 
 // SocLimiter returns the vehicles charge limit
 type SocLimiter interface {
-	TargetSoc() (float64, error)
+	TargetSoC() (float64, error)
 }
 
 // VehicleChargeController allows to start/stop the charging session on the vehicle side
@@ -187,20 +213,10 @@ type Resurrector interface {
 	WakeUp() error
 }
 
-// Rate is a grid tariff rate
-type Rate struct {
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
-	Price float64   `json:"price"`
-}
-
-// Rates is a slice of (future) tariff rates
-type Rates []Rate
-
-// Tariff is a tariff capable of retrieving tariff rates
+// Tariff is the grid tariff
 type Tariff interface {
-	Unit() string
-	Rates() (Rates, error)
+	IsCheap() (bool, error)
+	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
 }
 
 // AuthProvider is the ability to provide OAuth authentication through the ui

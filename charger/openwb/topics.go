@@ -29,11 +29,11 @@ const (
 	ChargeTotalEnergyTopic = "kWhCounter"
 
 	// vehicle
-	VehicleSocTopic = "Soc"
+	VehicleSoCTopic = "Soc"
 
 	// general measurements
 	PowerTopic   = "W"
-	SocTopic     = "%Soc"
+	SoCTopic     = "%Soc"
 	CurrentTopic = "APhase" // 1..3
 
 	// configuration

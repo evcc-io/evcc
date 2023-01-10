@@ -19,25 +19,22 @@ type Modbus struct {
 	device   meters.Device
 	opPower  modbus.Operation
 	opEnergy modbus.Operation
-	opSoc    modbus.Operation
+	opSoC    modbus.Operation
 }
 
 func init() {
 	registry.Add("modbus", NewModbusFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Model              string
-		capacity           `mapstructure:",squash"`
 		modbus.Settings    `mapstructure:",squash"`
-		Power, Energy, Soc string
+		Power, Energy, SoC string
 		Currents           []string
-		Voltages           []string
-		Powers             []string
 		Delay              time.Duration
 		Timeout            time.Duration
 	}{
@@ -100,7 +97,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
 
-	// decorate energy
+	// decorate energy reading
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
 		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
@@ -110,63 +107,42 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate currents
-	currentsG, err := m.buildPhaseProviders(cc.Currents)
-	if err != nil {
-		return nil, fmt.Errorf("currents: %w", err)
-	}
-
-	// decorate voltages
-	voltagesG, err := m.buildPhaseProviders(cc.Voltages)
-	if err != nil {
-		return nil, fmt.Errorf("voltages: %w", err)
-	}
-
-	// decorate powers
-	powersG, err := m.buildPhaseProviders(cc.Powers)
-	if err != nil {
-		return nil, fmt.Errorf("powers: %w", err)
-	}
-
-	// decorate soc
-	var soc func() (float64, error)
-	if cc.Soc != "" {
-		if err := modbus.ParseOperation(device, cc.Soc, &m.opSoc); err != nil {
-			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.Soc)
+	// decorate Meter with MeterCurrent
+	var currentsG func() (float64, float64, float64, error)
+	if len(cc.Currents) > 0 {
+		if len(cc.Currents) != 3 {
+			return nil, errors.New("need 3 currents")
 		}
 
-		soc = m.soc
-	}
-
-	return decorateModbus(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.capacity.Decorator()), nil
-}
-
-func (m *Modbus) buildPhaseProviders(readings []string) (func() (float64, float64, float64, error), error) {
-	var res func() (float64, float64, float64, error)
-	if len(readings) > 0 {
-		if len(readings) != 3 {
-			return nil, errors.New("need one per phase, total three")
-		}
-
-		phases := make([]func() (float64, error), 0, 3)
-		for idx, reading := range readings {
+		var curr []func() (float64, error)
+		for _, cc := range cc.Currents {
 			var opCurrent modbus.Operation
 
-			if err := modbus.ParseOperation(m.device, reading, &opCurrent); err != nil {
-				return nil, fmt.Errorf("invalid measurement [%d]: %s", idx, reading)
+			if err := modbus.ParseOperation(device, cc, &opCurrent); err != nil {
+				return nil, fmt.Errorf("invalid measurement for current: %s", cc)
 			}
 
 			c := func() (float64, error) {
 				return m.floatGetter(opCurrent)
 			}
 
-			phases = append(phases, c)
+			curr = append(curr, c)
 		}
 
-		res = collectPhaseProviders(phases)
+		currentsG = collectCurrentProviders(curr)
 	}
 
-	return res, nil
+	// decorate soc reading
+	var soc func() (float64, error)
+	if cc.SoC != "" {
+		if err := modbus.ParseOperation(device, cc.SoC, &m.opSoC); err != nil {
+			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.SoC)
+		}
+
+		soc = m.soc
+	}
+
+	return decorateModbus(m, totalEnergy, currentsG, soc), nil
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)
@@ -212,5 +188,5 @@ func (m *Modbus) totalEnergy() (float64, error) {
 
 // soc implements the api.Battery interface
 func (m *Modbus) soc() (float64, error) {
-	return m.floatGetter(m.opSoc)
+	return m.floatGetter(m.opSoC)
 }

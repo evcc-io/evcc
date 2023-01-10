@@ -13,9 +13,10 @@ light = "Design: lyst"
 dark = "Design: mørkt"
 
 [footer.version]
+availableShort = "installere"
 availableLong = "ny versjon tilgjengelig"
 modalTitle = "Ny versjon tilgjengelig"
-modalInstalledVersion = "Installert versjon"
+modalInstalledVersion = "Installert versjon: "
 modalUpdate = "Installer"
 modalCancel = "Avbryt"
 modalDownload = "Last ned"
@@ -85,7 +86,7 @@ default = "forvalg"
 disclaimerHint = "Merknad:"
 disclaimerText = "Endringer vil gå tapt etter at serveren er startet på nytt."
 vehicle = "Kjøretøy"
-title = "Innstillinger {0}"
+title = "Innstillinger \"{0}\""
 
 [main.loadpointSettings.phasesConfigured]
 label = "Faser"
@@ -95,23 +96,23 @@ phases_1 = "1-fas"
 phases_1_hint = "({min} til {max})"
 phases_3_hint = "({min} til {max})"
 
-[main.loadpointSettings.minSoc]
-description = "For nødstilfeller. Kjøretøyet blir „raskt” ladet til {0} % fra all tilgjengelig solenergi, og fortsetter deretter med bare solenergioverskuddet."
+[main.loadpointSettings.minSoC]
+description = "For nødstilfeller. Kjøretøyet blir \"raskt\" ladet til {0} % fra all tilgjengelig solenergi, og fortsetter deretter med bare solenergioverskuddet."
 label = "Min. kostnad%"
 
 [main.loadpointSettings.maxCurrent]
 label = "Maks. ladestrøm"
 
 [main.vehicle]
-targetSoc = "Grense"
+targetSoC = "Grense"
 none = "Ingen kjøretøy"
 changeVehicle = "Lad kjøretøy"
 detectionActive = "Oppdager kjøretøy ..."
-vehicleSoc = "Lade"
+vehicleSoC = "Lade"
 fallbackName = "Kjøretøy"
 unknown = "Gjestekjøretøy"
 
-[main.vehicleSoc]
+[main.vehicleSoC]
 disconnected = "frakoblet"
 charging = "lader"
 vehicleTarget = "Kjøretøygrense: {soc}%"
@@ -137,10 +138,10 @@ targetChargeWaitForVehicle = "Mållading klar. Venter på kjøretøy..."
 [main.targetCharge]
 inactiveLabel = "Mål-tid"
 activeLabel = "{time}"
-description = "Når skal kjøretøyet lades til {targetSoc}%?"
+description = "Når skal kjøretøyet lades til {targetSoC}%?"
 tomorrow = "i morgen"
 experimentalLabel = "Eksperimentelt"
-activate = "Aktiver"
+activate = "Slå på"
 experimentalText = "Dette fungerer, men er ikke perfekt. Rapporter uventet oppførsel til"
 title = "Mål-tid"
 modalTitle = "Sett mål-tid"
@@ -204,7 +205,7 @@ becomeSponsor = "Bli sponsor"
 confetti = "Klar for konfetti?"
 sticker = "... eller evcc-klistremerker?"
 thanks = "Takk, {sponsor}! Ditt bidrag bidrar til å utvikle evcc videre."
-confettiPromise = "Du får klistremerker og digital konfetti"
+confettiPromise = "Du får klistremerker og digital konfetti ;)"
 supportUs = "Vårt oppdrag er å gjøre solenergi til normen. Hjelp evcc ved å betale det det er verdt for deg."
 
 [main.loadpointSettings.minCurrent]

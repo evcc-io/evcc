@@ -29,10 +29,11 @@ mi = "Meilen"
 label = "Telemetrie"
 
 [footer.version]
+availableShort = "Installieren"
 availableLong = "Neue Version verfügbar"
 modalTitle = "Neue Version verfügbar"
 modalUpdateStarted = "Starte die neue Version von evcc..."
-modalInstalledVersion = "Installierte Version"
+modalInstalledVersion = "Installierte Version: "
 modalNoReleaseNotes = "Keine Versionshinweise verfügbar. Mehr Informationen zur neuen Version:"
 modalCancel = "Abbrechen"
 modalUpdate = "Installieren"
@@ -77,11 +78,11 @@ optInSponsorship = "Sponsoring erforderlich."
 [footer.sponsor]
 titleSponsor = "Du bist Unterstützer"
 titleNoSponsor = "Unterstütze uns"
-thanks = "Vielen Dank, {sponsor}! Dein Beitrag hilft, evcc weiter zu entwickeln."
+thanks = "Vielen Dank, {Sponsor}! Dein Beitrag hilft, evcc weiterzuentwickeln."
 confetti = "Lust auf Konfetti?"
 supportUs = "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unterstütze evcc finanziell."
 sticker = "…oder evcc Sticker?"
-confettiPromise = "Es gibt auch Sticker und digitales Konfetti"
+confettiPromise = "Es gibt auch Sticker und digitales Konfetti ;)"
 becomeSponsor = "Sponsor werden"
 
 [notifications]
@@ -119,16 +120,16 @@ duration = "Dauer"
 remaining = "Restzeit"
 
 [main.loadpointSettings]
-title = "Einstellungen {0}"
+title = "Einstellungen \"{0}\""
 vehicle = "Fahrzeug"
 currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
 disclaimerText = "Änderungen gehen nach einem Neustart des Servers verloren."
 
-[main.loadpointSettings.minSoc]
+[main.loadpointSettings.minSoC]
 label = "Min. Ladung %"
-description = "Reichweite für Notfälle. Fahrzeug wird im PV-Modus „schnell” auf {0}% geladen. Danach weiter mit PV-Überschuss."
+description = "Reichweite für Notfälle. Fahrzeug wird im PV-Modus \"schnell\" auf {0}% geladen. Danach weiter mit PV-Überschuss."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phasen"
@@ -146,14 +147,14 @@ label = "Min. Ladestrom"
 
 [main.vehicle]
 fallbackName = "Fahrzeug"
-vehicleSoc = "Ladestand"
-targetSoc = "Ladeziel"
+vehicleSoC = "Ladestand"
+targetSoC = "Ladeziel"
 none = "Kein Fahrzeug"
 unknown = "Gastfahrzeug"
 changeVehicle = "Fahrzeug ändern"
 detectionActive = "Fahrzeugerkennung läuft..."
 
-[main.vehicleSoc]
+[main.vehicleSoC]
 disconnected = "getrennt"
 charging = "lädt"
 ready = "bereit"
@@ -186,10 +187,10 @@ inactiveLabel = "Zielzeit"
 activeLabel = "{time}"
 modalTitle = "Zielzeit festlegen"
 setTargetTime = "keine"
-description = "Wann soll das Fahrzeug auf {targetSoc}% geladen sein?"
+description = "Wann soll das Fahrzeug auf {targetSoC}% geladen sein?"
 today = "heute"
 tomorrow = "morgen"
-targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
+targetIsInThePast = "Zeitpunkt liegt in der Vergangenheit."
 remove = "Entfernen"
 activate = "Aktivieren"
 experimentalLabel = "Experimentell"

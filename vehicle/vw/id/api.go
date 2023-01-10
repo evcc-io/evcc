@@ -48,24 +48,35 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 }
 
 // Vehicles implements the /vehicles response
-func (v *API) Vehicles() ([]Vehicle, error) {
-	var res Vehicles
-
+func (v *API) Vehicles() (res []string, err error) {
 	uri := fmt.Sprintf("%s/vehicles", BaseURL)
+
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
-	if err == nil {
-		err = v.DoJSON(req, &res)
+	var vehicles struct {
+		Data []struct {
+			VIN      string
+			Model    string
+			Nickname string
+		}
 	}
 
-	return res.Data, err
+	if err == nil {
+		err = v.DoJSON(req, &vehicles)
+
+		for _, v := range vehicles.Data {
+			res = append(res, v.VIN)
+		}
+	}
+
+	return res, err
 }
 
 // Status implements the /status response.
 // It is callers responsibility to check for embedded (partial) errors.
 func (v *API) Status(vin string) (res Status, err error) {
-	// NOTE use `all` to retrieve entire status (or charging,fuelStatus,climatisation)
-	uri := fmt.Sprintf("%s/vehicles/%s/selectivestatus?jobs=all", BaseURL, vin)
+	// NOTE use `all` to retrieve entire status
+	uri := fmt.Sprintf("%s/vehicles/%s/selectivestatus?jobs=charging,fuelStatus,climatisation", BaseURL, vin)
 
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 

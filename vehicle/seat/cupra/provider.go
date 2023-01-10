@@ -14,7 +14,7 @@ type Provider struct {
 	action  func(string, string) error
 }
 
-// NewProvider creates a vehicle api provider
+// NewProvider creates a new vehicle
 func NewProvider(api *API, userID, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (Status, error) {
@@ -29,8 +29,8 @@ func NewProvider(api *API, userID, vin string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// Soc implements the api.Vehicle interface
-func (v *Provider) Soc() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	return float64(res.Engines.Primary.Level), err
 }
@@ -94,8 +94,8 @@ func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
-func (v *Provider) TargetSoc() (float64, error) {
+// TargetSoC implements the api.SocLimiter interface
+func (v *Provider) TargetSoC() (float64, error) {
 	res, err := v.statusG()
 	if err == nil {
 		return float64(res.Services.Charging.TargetPct), nil

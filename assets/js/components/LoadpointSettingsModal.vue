@@ -24,25 +24,25 @@
 					<div class="modal-body">
 						<div class="container">
 							<h4
-								v-if="showMinSocSettings"
+								v-if="showMinSoCSettings"
 								class="d-flex align-items-center mb-3 mt-0 text-evcc"
 							>
 								{{ $t("main.loadpointSettings.vehicle") }}
 								<shopicon-bold-car3 class="ms-2"></shopicon-bold-car3>
 							</h4>
-							<div v-if="showMinSocSettings" class="mb-3 row">
+							<div v-if="showMinSoCSettings" class="mb-3 row">
 								<label
 									:for="formId('minsoc')"
 									class="col-sm-4 col-form-label pt-0 pt-sm-1"
 								>
-									{{ $t("main.loadpointSettings.minSoc.label") }}
+									{{ $t("main.loadpointSettings.minSoC.label") }}
 								</label>
 								<div class="col-sm-8 pe-0">
 									<select
 										:id="formId('minsoc')"
-										v-model.number="selectedMinSoc"
+										v-model.number="selectedMinSoC"
 										class="form-select form-select-sm mb-2 w-50"
-										@change="changeMinSoc"
+										@change="changeMinSoC"
 									>
 										<option
 											v-for="soc in [
@@ -56,8 +56,8 @@
 									</select>
 									<small>
 										{{
-											$t("main.loadpointSettings.minSoc.description", [
-												selectedMinSoc || "x",
+											$t("main.loadpointSettings.minSoC.description", [
+												selectedMinSoC || "x",
 											])
 										}}
 									</small>
@@ -230,7 +230,7 @@ export default {
 	props: {
 		id: [String, Number],
 		phasesConfigured: Number,
-		minSoc: Number,
+		minSoC: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
 		title: String,
@@ -246,7 +246,7 @@ export default {
 			selectedMaxCurrent: this.maxCurrent,
 			selectedMinCurrent: this.minCurrent,
 			selectedPhases: this.phasesConfigured,
-			selectedMinSoc: this.minSoc,
+			selectedMinSoC: this.minSoC,
 		};
 	},
 	computed: {
@@ -274,7 +274,7 @@ export default {
 		showCurrentSettings: function () {
 			return this.$hiddenFeatures;
 		},
-		showMinSocSettings: function () {
+		showMinSoCSettings: function () {
 			return this.$hiddenFeatures;
 		},
 	},
@@ -288,8 +288,8 @@ export default {
 		phasesConfigured: function (value) {
 			this.selectedPhases = value;
 		},
-		minSoc: function (value) {
-			this.selectedMinSoc = value;
+		minSoC: function (value) {
+			this.selectedMinSoC = value;
 		},
 	},
 	methods: {
@@ -305,8 +305,8 @@ export default {
 		changePhasesConfigured: function () {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-		changeMinSoc: function () {
-			this.$emit("minsoc-updated", this.selectedMinSoc);
+		changeMinSoC: function () {
+			this.$emit("minsoc-updated", this.selectedMinSoC);
 		},
 		currentOptions: function (max, defaultCurrent = 16) {
 			const result = [];

@@ -13,11 +13,12 @@ light = "Désign: Lumière"
 dark = "Désign: Foncé"
 
 [footer.version]
-availableLong = "Mise à jour disponible"
-modalTitle = "Mise à jour disponible"
-modalUpdateStarted = "Evcc redémarrera après la mise à jour."
-modalInstalledVersion = "Version actuellement installée"
-modalNoReleaseNotes = "Aucune note de version disponible. Plus d'informations sur la nouvelle version peuvent être trouvées ici:"
+availableShort = "Installer"
+availableLong = "Nouvelle version disponible"
+modalTitle = "Nouvelle version disponible"
+modalUpdateStarted = "Démarrage de la nouvelle version d'evcc…"
+modalInstalledVersion = "Version installée: "
+modalNoReleaseNotes = "Aucune note de version disponible. Plus d'infos sur la nouvelle version:"
 modalCancel = "Annuler"
 modalUpdate = "Installer"
 modalUpdateNow = "Installer maintenant"
@@ -65,7 +66,7 @@ thanks = "Merci, {sponsor} ! Votre contribution permet de poursuivre le dévelop
 confetti = "Prêt pour les confettis?"
 supportUs = "Notre mission est de faire du solaire la norme. Aidez evcc en payant ce que ça vaut pour vous."
 sticker = "… ou autocollants evcc?"
-confettiPromise = "Vous obtenez des autocollants et des confettis numériques"
+confettiPromise = "Vous obtenez des autocollants et des confettis numériques ;)"
 becomeSponsor = "Devenir parrain"
 
 [notifications]
@@ -88,8 +89,8 @@ selfConsumption = "Consommation personnelle"
 pvExport = "Grille d'exportation"
 
 [main.mode]
-off = "Éteindre"
-minpv = "Min+Sol"
+off = "Désactivé"
+minpv = "Min+Solaire"
 pv = "Solaire"
 now = "Rapide"
 
@@ -103,16 +104,16 @@ duration = "Durée"
 remaining = "Temps restant"
 
 [main.loadpointSettings]
-title = "Réglages {0}"
+title = "Réglages \"{0}\""
 vehicle = "Véhicule"
 currents = "Courant de Charge"
 default = "Défaut"
 disclaimerHint = "A noter:"
 disclaimerText = "Les modifications seront perdues après le redémarrage du serveur."
 
-[main.loadpointSettings.minSoc]
+[main.loadpointSettings.minSoC]
 label = "Min. charger %"
-description = "Pour les urgences. Le véhicule est chargé „rapidement” à {0} % de tout l'énergie solaire disponible, puis continue avec uniquement l'excédent solaire."
+description = "Pour les urgences. Le véhicule est chargé \"rapidement\" à {0} % de tout l'énergie solaire disponible, puis continue avec uniquement l'excédent solaire."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"
@@ -130,14 +131,14 @@ label = "Min. courant de charge"
 
 [main.vehicle]
 fallbackName = "Véhicule"
-vehicleSoc = "Charger"
-targetSoc = "Cible de chargement"
+vehicleSoC = "Charger"
+targetSoC = "Cible de chargement"
 none = "Pas de véhicule"
 unknown = "Véhicule invité"
 changeVehicle = "Changer de véhicule"
 detectionActive = "Détection de véhicule…"
 
-[main.vehicleSoc]
+[main.vehicleSoC]
 disconnected = "Détaché"
 charging = "Mise en charge"
 ready = "Prêt"
@@ -170,7 +171,7 @@ inactiveLabel = "Temps visé"
 activeLabel = "{time}"
 modalTitle = "Définir l'heure cible"
 setTargetTime = "Non"
-description = "Quand le véhicule doit-il être rechargé à {targetSoc}%?"
+description = "Quand le véhicule doit-il être rechargé à {targetSoC}%?"
 today = "Aujourd'hui"
 tomorrow = "Matin"
 targetIsInThePast = "Choisissez une heure dans le futur, Marty."
@@ -234,7 +235,7 @@ auto = "Automatique"
 [settings.unit]
 label = "Unités"
 km = "km"
-mi = "milles"
+mi = "Milles"
 
 [settings.telemetry]
 label = "Télémétrie"

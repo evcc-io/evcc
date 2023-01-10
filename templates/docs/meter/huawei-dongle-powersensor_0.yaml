@@ -13,17 +13,6 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-    advanced: |
-      type: template
-      template: huawei-dongle-powersensor
-      usage: grid
-      storageunit: 1 # Optional      
-
-      # Modbus TCP
-      modbus: tcpip
-      id: 1
-      host: 192.0.2.2 # Hostname
-      port: 502 # Port
   - usage: pv
     default: |
       type: template
@@ -35,33 +24,11 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-    advanced: |
-      type: template
-      template: huawei-dongle-powersensor
-      usage: pv
-      storageunit: 1 # Optional      
-
-      # Modbus TCP
-      modbus: tcpip
-      id: 1
-      host: 192.0.2.2 # Hostname
-      port: 502 # Port
   - usage: battery
     default: |
       type: template
       template: huawei-dongle-powersensor
       usage: battery      
-
-      # Modbus TCP
-      modbus: tcpip
-      id: 1
-      host: 192.0.2.2 # Hostname
-      port: 502 # Port
-    advanced: |
-      type: template
-      template: huawei-dongle-powersensor
-      usage: battery
-      storageunit: 1 # Optional      
 
       # Modbus TCP
       modbus: tcpip

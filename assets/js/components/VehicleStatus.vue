@@ -9,9 +9,9 @@ export default {
 	name: "VehicleStatus",
 	mixins: [formatter],
 	props: {
-		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
-		minSoc: Number,
+		vehicleSoC: Number,
+		vehicleTargetSoC: Number,
+		minSoC: Number,
 		enabled: Boolean,
 		connected: Boolean,
 		charging: Boolean,
@@ -45,11 +45,11 @@ export default {
 			}
 
 			// min charge active
-			if (this.minSoc > 0 && this.vehicleSoc < this.minSoc) {
-				return t("minCharge", { soc: this.minSoc });
+			if (this.minSoC > 0 && this.vehicleSoC < this.minSoC) {
+				return t("minCharge", { soc: this.minSoC });
 			}
 
-			// target charge
+			// target charage
 			if (this.targetTime) {
 				if (this.charging) {
 					return t("targetChargeActive");
@@ -71,8 +71,8 @@ export default {
 			}
 
 			if (this.enabled && !this.charging) {
-				if (this.vehicleTargetSoc > 0 && this.vehicleSoc >= this.vehicleTargetSoc - 1) {
-					return t("vehicleTargetReached", { soc: this.vehicleTargetSoc });
+				if (this.vehicleTargetSoC > 0 && this.vehicleSoC >= this.vehicleTargetSoC - 1) {
+					return t("vehicleTargetReached", { soc: this.vehicleTargetSoC });
 				}
 				return t("waitForVehicle");
 			}

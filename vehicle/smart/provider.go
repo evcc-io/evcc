@@ -44,8 +44,8 @@ func (v *Provider) status(statusG, refreshG func() (StatusResponse, error)) (Sta
 	return res, err
 }
 
-// Soc implements the api.Vehicle interface
-func (v *Provider) Soc() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	return res.Status.Data.Soc.Value, err
 }
@@ -55,31 +55,20 @@ var _ api.ChargeState = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
-	if err != nil {
-		return api.StatusNone, err
-	}
 
-	cs := res.PreCond.Data.ChargingStatus
-	if cs.Status != 0 {
-		return api.StatusNone, fmt.Errorf("unknown status/value: %d/%d", cs.Status, cs.Value)
-	}
-
-	// confirmed status/value/active combinations (https://github.com/evcc-io/evcc/discussions/5596#discussioncomment-4556035)
-	// 0/0/active: charging
-	// 0/2/*:      connected
-	// 0/3/*:      disconnected
-	switch cs.Value {
+	switch v := res.PreCond.Data.ChargingStatus.Status; v {
 	case 0:
 		if res.PreCond.Data.ChargingActive.Value {
-			return api.StatusC, nil
+			return api.StatusC, err
 		}
-		return api.StatusB, nil
-	case 1, 2:
-		return api.StatusB, nil
+		return api.StatusB, err
 	case 3:
-		return api.StatusA, nil
+		return api.StatusA, err
 	default:
-		return api.StatusNone, fmt.Errorf("unknown status/value: %d/%d", cs.Status, cs.Value)
+		if err == nil {
+			err = fmt.Errorf("unknown status: %d", v)
+		}
+		return api.StatusNone, err
 	}
 }
 

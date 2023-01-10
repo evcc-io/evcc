@@ -7,7 +7,7 @@
 		</span>
 		<span class="text-nowrap flex-grow-1 ms-3">{{ name }}</span>
 		<span class="text-end text-nowrap ps-1 fw-bold"
-			><span v-if="hasSoc">{{ soc }}% / </span>
+			><span v-if="hasSoC">{{ soc }}% / </span>
 			<AnimatedNumber :to="power" :format="kw" />
 		</span>
 	</div>
@@ -44,7 +44,7 @@ export default {
 		isVehicle: function () {
 			return this.icon === "vehicle";
 		},
-		hasSoc: function () {
+		hasSoC: function () {
 			return this.isBattery && !isNaN(this.soc);
 		},
 	},

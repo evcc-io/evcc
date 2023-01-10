@@ -42,7 +42,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 122 # Batterie Soc
+      address: 122 # Batterie SoC
       type: input
       decode: int16
   {{- end }}

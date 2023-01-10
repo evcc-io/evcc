@@ -14,7 +14,6 @@ type Home struct {
 	MeteringPointData struct {
 		GridCompany string
 	}
-	CurrentSubscription Subscription
 }
 
 type Address struct {
@@ -24,20 +23,18 @@ type Address struct {
 type Subscription struct {
 	ID        string
 	Status    string
-	PriceInfo PriceInfo
+	PriceInfo struct {
+		Current PriceInfo
+		Today   []PriceInfo
+		// Tomorrow []PriceInfo
+	}
 }
 
 type PriceInfo struct {
-	Current         Price
-	Today, Tomorrow []Price
-}
-
-type Price struct {
-	Currency    string
-	StartsAt    time.Time
-	Total       float64
-	Energy, Tax float64
-	// Level    string
+	Level    string
+	StartsAt time.Time
+	Total    float64
+	// Energy, Tax float64
 }
 
 type LiveMeasurement struct {

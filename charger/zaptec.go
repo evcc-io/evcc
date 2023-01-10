@@ -247,9 +247,9 @@ func (c *Zaptec) ChargedEnergy() (float64, error) {
 	return res.ObservationByID(zaptec.TotalChargePowerSession).Float64()
 }
 
-var _ api.PhaseCurrents = (*Zaptec)(nil)
+var _ api.MeterCurrent = (*Zaptec)(nil)
 
-// Currents implements the api.PhaseCurrents interface
+// Currents implements the api.MeterCurrent interface
 func (c *Zaptec) Currents() (float64, float64, float64, error) {
 	res, err := c.statusG()
 	if err != nil {

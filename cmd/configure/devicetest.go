@@ -86,7 +86,6 @@ func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 	if !ok {
 		return DeviceTestResultInvalid, errors.New("selected device is not a wallbox")
 	}
-
 	if _, err := c.Status(); err != nil {
 		return DeviceTestResultInvalid, err
 	}
@@ -127,11 +126,11 @@ func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v interface{}) (De
 			return DeviceTestResultInvalid, errors.New("selected device is not a battery meter")
 		}
 
-		_, err := b.Soc()
+		_, err := b.SoC()
 
 		for err != nil && errors.Is(err, api.ErrMustRetry) {
 			time.Sleep(3 * time.Second)
-			_, err = b.Soc()
+			_, err = b.SoC()
 		}
 
 		if err != nil {
@@ -149,7 +148,7 @@ func (d *DeviceTest) testVehicle(v interface{}) (DeviceTestResult, error) {
 		return DeviceTestResultInvalid, errors.New("selected device is not a vehicle")
 	}
 
-	if _, err := vv.Soc(); err != nil {
+	if _, err := vv.SoC(); err != nil {
 		return DeviceTestResultInvalid, err
 	}
 

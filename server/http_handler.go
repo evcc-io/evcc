@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"math"
 	"net/http"
 	"strconv"
 	"text/template"
@@ -173,45 +172,14 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 	}
 }
 
-// encodeFloats replaces NaN and Inf with nil
-// TODO handle hierarchical data
-func encodeFloats(data map[string]any) {
-	for k, v := range data {
-		switch v := v.(type) {
-		case float64:
-			if math.IsNaN(v) || math.IsInf(v, 0) {
-				data[k] = nil
-			}
-		}
-	}
-}
-
-// stateHandler returns the combined state
+// stateHandler returns current charge mode
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State()
 		for _, k := range ignoreState {
 			delete(res, k)
 		}
-		encodeFloats(res)
 		jsonResult(w, res)
-	}
-}
-
-// tariffHandler returns the selected tariff
-func tariffHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		tariff, ok := vars["tariff"]
-		rates, err := site.GetTariff(tariff)
-
-		if !ok || err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		jsonResult(w, rates)
 	}
 }
 
@@ -335,10 +303,10 @@ func targetChargeHandler(loadpoint targetCharger) http.HandlerFunc {
 		}
 
 		res := struct {
-			Soc  int       `json:"soc"`
+			SoC  int       `json:"soc"`
 			Time time.Time `json:"time"`
 		}{
-			Soc:  socV,
+			SoC:  socV,
 			Time: timeV,
 		}
 
@@ -368,18 +336,17 @@ func vehicleHandler(site site.API, loadpoint loadpoint.API) http.HandlerFunc {
 		val, err := strconv.Atoi(valS)
 
 		vehicles := site.GetVehicles()
-		if !ok || val < 1 || val > len(vehicles) || err != nil {
+		if !ok || val >= len(vehicles) || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		v := vehicles[val-1]
-		loadpoint.SetVehicle(v)
+		loadpoint.SetVehicle(vehicles[val])
 
 		res := struct {
 			Vehicle string `json:"vehicle"`
 		}{
-			Vehicle: v.Title(),
+			Vehicle: vehicles[val].Title(),
 		}
 
 		jsonResult(w, res)
@@ -413,6 +380,6 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 
 // TargetCharger defines target charge related loadpoint operations
 type targetCharger interface {
-	// SetTargetCharge sets the charge targetSoc
+	// SetTargetCharge sets the charge targetSoC
 	SetTargetCharge(time.Time, int) error
 }

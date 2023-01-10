@@ -42,11 +42,9 @@ const (
 	vestelRegSessionEnergy   = 1502
 	vestelRegFailsafeTimeout = 2002
 	vestelRegAlive           = 6000
-	//vestelRegChargepointState = 1000
 )
 
-var vestelRegCurrents = []uint16{1008, 1010, 1012} // non-continuous uint16 registers!
-var vestelRegVoltages = []uint16{1014, 1016, 1018} // non-continuous uint16 registers!
+var vestelRegCurrents = []uint16{1008, 1010, 1012}
 
 // Vestel is an api.Charger implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
@@ -116,11 +114,11 @@ func (wb *Vestel) Status() (api.ChargeStatus, error) {
 	res := api.StatusA
 
 	b, err := wb.conn.ReadInputRegisters(vestelRegCableStatus, 1)
-	if err == nil && binary.BigEndian.Uint16(b) >= 2 {
+	if err == nil && binary.BigEndian.Uint16(b) > 0 {
 		res = api.StatusB
 
 		b, err = wb.conn.ReadInputRegisters(vestelRegChargeStatus, 1)
-		if err == nil && binary.BigEndian.Uint16(b) == 1 {
+		if err == nil && binary.BigEndian.Uint16(b) > 0 {
 			res = api.StatusC
 		}
 	}
@@ -213,9 +211,9 @@ func (wb *Vestel) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
-var _ api.PhaseCurrents = (*Vestel)(nil)
+var _ api.MeterCurrent = (*Vestel)(nil)
 
-// Currents implements the api.PhaseCurrents interface
+// Currents implements the api.MeterCurrent interface
 func (wb *Vestel) Currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range vestelRegCurrents {
@@ -228,23 +226,6 @@ func (wb *Vestel) Currents() (float64, float64, float64, error) {
 	}
 
 	return currents[0], currents[1], currents[2], nil
-}
-
-var _ api.PhaseVoltages = (*Vestel)(nil)
-
-// Voltages implements the api.PhaseVoltages interface
-func (wb *Vestel) Voltages() (float64, float64, float64, error) {
-	var voltages []float64
-	for _, regVoltage := range vestelRegVoltages {
-		b, err := wb.conn.ReadInputRegisters(regVoltage, 1)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		voltages = append(voltages, float64(binary.BigEndian.Uint16(b)))
-	}
-
-	return voltages[0], voltages[1], voltages[2], nil
 }
 
 var _ api.Diagnosis = (*Vestel)(nil)

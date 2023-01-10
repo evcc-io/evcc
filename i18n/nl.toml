@@ -13,10 +13,11 @@ light = "Design: licht"
 dark = "Design: donker"
 
 [footer.version]
+availableShort = "intall"
 availableLong = "nieuwe versie beschikbaar"
 modalTitle = "Nieuwe versie beschikbaar"
 modalUpdateStarted = "Starten van de nieuwe versie van evcc..."
-modalInstalledVersion = "Geïnstalleerde versie"
+modalInstalledVersion = "Geïnstalleerde versie: "
 modalNoReleaseNotes = "Geen release notes beschikbaar. Meer info over de nieuwe versie:"
 modalCancel = "Annuleer"
 modalUpdate = "Install"
@@ -65,7 +66,7 @@ thanks = "Bedankt, {sponsor}! Jouw bijdrage helpt evcc verder te ontwikkelen."
 confetti = "Klaar voor confetti?"
 supportUs = "Onze missie is om van zonne-energie de norm te maken. Help evcc door te betalen wat het je waard is."
 sticker = "... of evcc stickers?"
-confettiPromise = "Je krijgt stickers en digitale confetti"
+confettiPromise = "Je krijgt stickers en digitale confetti ;)"
 becomeSponsor = "Word sponsor"
 
 [notifications]
@@ -103,16 +104,16 @@ duration = "Duur"
 remaining = "Resterend"
 
 [main.loadpointSettings]
-title = "Instellingen {0}"
+title = "Instellingen \"{0}\""
 vehicle = "Voertuig"
 currents = "Laadstroom"
 default = "standaard"
 disclaimerHint = "Letop:"
 disclaimerText = "Changes zal verloren zijn nadat de server is herstart."
 
-[main.loadpointSettings.minSoc]
+[main.loadpointSettings.minSoC]
 label = "Min. lading %"
-description = "Voor noodgevallen. Het voertuig wordt „snel” opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot."
+description = "Voor noodgevallen. Het voertuig wordt \"snel\" opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fasen"
@@ -130,14 +131,14 @@ label = "Min. vermogen"
 
 [main.vehicle]
 fallbackName = "Voertuig"
-vehicleSoc = "Opladen"
-targetSoc = "Limiet"
+vehicleSoC = "Opladen"
+targetSoC = "Limiet"
 none = "Geen voertuig"
 unknown = "Gast"
 changeVehicle = "Wijzig voertuig"
 detectionActive = "Detecteer voertuig..."
 
-[main.vehicleSoc]
+[main.vehicleSoC]
 disconnected = "niet verbonden"
 charging = "laden"
 ready = "klaar"
@@ -170,12 +171,12 @@ inactiveLabel = "Ingestelde tijd"
 activeLabel = "{time}"
 modalTitle = "Stel tijd in"
 setTargetTime = "geen"
-description = "Tegen wanneer moet het voertuig geladen zijn naar {targetSoc}%?"
+description = "Tegen wanneer moet het voertuig geladen zijn naar {targetSoC}%?"
 today = "Vandaag"
 tomorrow = "Morgen"
 targetIsInThePast = "Pick een tijd in de toekomst, Marty."
 remove = "Verwijder"
-activate = "Activeer"
+activate = "Turn on"
 experimentalLabel = "Experimenteel"
 experimentalText = "Dit werkt, maar is niet perfect. Meld onverwacht gedrag aan"
 

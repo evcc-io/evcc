@@ -80,7 +80,7 @@ func (s *OCPP) errorHandler(errC <-chan error) {
 // Run executes the OCPP chargepoint client
 func (s *OCPP) Run() {
 	for {
-		for id, lp := range s.site.Loadpoints() {
+		for id, lp := range s.site.LoadPoints() {
 			connector := id + 1
 
 			status := ocppcore.ChargePointStatusAvailable

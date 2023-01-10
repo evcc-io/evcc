@@ -91,7 +91,7 @@ type MeasurementMobile struct {
 		LastModified string
 
 		IsEnabled              bool
-		SocPhoneNumber         string
+		SoCPhoneNumber         string
 		Percent                int64
 		DistanceKM             float64
 		ZeroEmissionDistanceKm float64

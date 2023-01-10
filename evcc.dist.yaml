@@ -12,11 +12,6 @@ network:
 
 interval: 10s # control cycle interval
 
-# database configuration for persisting charge sessions and settings
-# database:
-#   type: sqlite
-#   dsn: <path-to-db-file>
-
 # sponsor token enables optional features (request at https://cloud.evcc.io)
 # sponsortoken:
 
@@ -93,8 +88,8 @@ vehicles:
     vin: WREN...
     onIdentify: # set defaults when vehicle is identified
       mode: pv # enable PV-charging when vehicle is identified
-      minSoc: 20 # immediately charge to 0% regardless of mode unless "off" (disabled)
-      targetSoc: 90 # limit charge to 90%
+      minSoC: 20 # immediately charge to 0% regardless of mode unless "off" (disabled)
+      targetSoC: 90 # limit charge to 90%
 
 # site describes the EVU connection, PV and home battery
 site:
@@ -104,8 +99,8 @@ site:
     pvs:
       - pv # list of pv inverters/ meters
     battery: battery # battery meter
-  prioritySoc: # give home battery priority up to this soc (empty to disable)
-  bufferSoc: # ignore home battery discharge above soc (empty to disable)
+  prioritySoC: # give home battery priority up to this soc (empty to disable)
+  bufferSoC: # ignore home battery discharge above soc (empty to disable)
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
@@ -144,15 +139,9 @@ loadpoints:
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
   grid:
-    # either static grid price (or price zones)
+    # either static grid price
     type: fixed
     price: 0.294 # EUR/kWh
-    zones:
-      - days: Mo-Fr
-        hours: 2-5
-        price: 0.2 # EUR/kWh
-      - days: Sa,So
-        price: 0.15 # EUR/kWh
 
     # # or variable via tibber
     # type: tibber
@@ -168,17 +157,6 @@ tariffs:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
     price: 0.08 # EUR/kWh
-  planner:
-    # planner tariff can be used for target charging if not grid tariff is specified
-    # GrünStromIndex (Germany only) or ElectricityMaps provide CO2 intensity forecast
-
-    # type: grünstromindex
-    # zip: <zip>
-
-    # type: electricitymaps
-    # uri: <uri>
-    # token: <token>
-    # zone: DE
 
 # mqtt message broker
 mqtt:
@@ -219,8 +197,8 @@ messaging:
       title: Car disconnected
       msg: Car disconnected after ${connectedDuration}
     soc: # vehicle soc update event
-      title: Soc updated
-      msg: Battery charged to ${vehicleSoc:%.0f}%
+      title: SoC updated
+      msg: Battery charged to ${vehicleSoC:%.0f}%
     guest: # vehicle could not be identified
       title: Unknown vehicle
       msg: Unknown vehicle, guest connected?

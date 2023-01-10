@@ -14,27 +14,21 @@ import (
 )
 
 type Tibber struct {
-	mux     sync.Mutex
-	log     *util.Logger
-	homeID  string
-	unit    string
-	client  *tibber.Client
-	data    api.Rates
-	updated time.Time
+	mux    sync.Mutex
+	log    *util.Logger
+	homeID string
+	cheap  float64
+	client *tibber.Client
+	data   []tibber.PriceInfo
 }
 
 var _ api.Tariff = (*Tibber)(nil)
 
-func init() {
-	registry.Add("tibber", NewTibberFromConfig)
-}
-
-func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewTibber(other map[string]interface{}) (*Tibber, error) {
 	var cc struct {
 		Token  string
 		HomeID string
-		Unit   string
-		Cheap  any // TODO deprecated
+		Cheap  float64
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -50,39 +44,23 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Tibber{
 		log:    log,
 		homeID: cc.HomeID,
-		unit:   cc.Unit,
+		cheap:  cc.Cheap,
 		client: tibber.NewClient(log, cc.Token),
 	}
 
-	if t.homeID == "" || t.unit == "" {
-		home, err := t.client.Home()
-		if err != nil {
+	if t.homeID == "" {
+		var err error
+		if t.homeID, err = t.client.DefaultHomeID(); err != nil {
 			return nil, err
 		}
-
-		if t.homeID == "" {
-			t.homeID = home.ID
-		}
-		if t.unit == "" {
-			t.unit = home.CurrentSubscription.PriceInfo.Current.Currency
-		}
 	}
 
-	// TODO deprecated
-	if cc.Cheap != nil {
-		t.log.WARN.Println("cheap rate configuration has been replaced by target charging and is deprecated")
-	}
+	go t.Run()
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return t, nil
 }
 
-func (t *Tibber) run(done chan error) {
-	var once sync.Once
-
+func (t *Tibber) Run() {
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res struct {
 			Viewer struct {
@@ -103,46 +81,31 @@ func (t *Tibber) run(done chan error) {
 		cancel()
 
 		if err != nil {
-			once.Do(func() { done <- err })
-
 			t.log.ERROR.Println(err)
 			continue
 		}
 
-		once.Do(func() { close(done) })
-
 		t.mux.Lock()
-		t.updated = time.Now()
-
-		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
-		t.data = make(api.Rates, 0, len(pi.Today)+len(pi.Tomorrow))
-		t.data = append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
-
+		t.data = res.Viewer.Home.CurrentSubscription.PriceInfo.Today
 		t.mux.Unlock()
 	}
 }
 
-func (t *Tibber) rates(pi []tibber.Price) api.Rates {
-	data := make(api.Rates, 0, len(pi))
-	for _, r := range pi {
-		ar := api.Rate{
-			Start: r.StartsAt,
-			End:   r.StartsAt.Add(time.Hour),
-			Price: r.Total,
-		}
-		data = append(data, ar)
-	}
-	return data
-}
-
-// Unit implements the api.Tariff interface
-func (t *Tibber) Unit() string {
-	return t.unit
-}
-
-// Rates implements the api.Tariff interface
-func (t *Tibber) Rates() (api.Rates, error) {
+func (t *Tibber) CurrentPrice() (float64, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	return append([]api.Rate{}, t.data...), outdatedError(t.updated, time.Hour)
+
+	for i := len(t.data) - 1; i >= 0; i-- {
+		pi := t.data[i]
+
+		if pi.StartsAt.Before(time.Now()) {
+			return pi.Total, nil
+		}
+	}
+	return 0, errors.New("unable to find current tibber price")
+}
+
+func (t *Tibber) IsCheap() (bool, error) {
+	price, err := t.CurrentPrice()
+	return price <= t.cheap, err
 }

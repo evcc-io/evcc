@@ -2,33 +2,31 @@ package server
 
 import (
 	"fmt"
-	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 )
 
 type mockLoadpoint struct {
-	Soc        int
+	SoC        int
 	TargetTime time.Time
 }
 
 func (lp *mockLoadpoint) SetTargetCharge(time time.Time, soc int) error {
-	lp.Soc = soc
+	lp.SoC = soc
 	lp.TargetTime = time
 	return nil
 }
 
 func TestTargetChargeHandler(t *testing.T) {
 	tc := []struct {
-		inSoc      string
+		inSoC      string
 		inTime     string
 		statusCode int
-		outSoc     int
+		outSoC     int
 		outTime    time.Time
 	}{
 		{
@@ -44,13 +42,13 @@ func TestTargetChargeHandler(t *testing.T) {
 
 		handler := http.HandlerFunc(targetChargeHandler(mockLp))
 
-		req, err := http.NewRequest("GET", fmt.Sprintf("/targetcharge/%s/%s", tc.inSoc, tc.inTime), nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf("/targetcharge/%s/%s", tc.inSoC, tc.inTime), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		vars := map[string]string{
-			"soc":  tc.inSoc,
+			"soc":  tc.inSoC,
 			"time": tc.inTime,
 		}
 
@@ -64,8 +62,8 @@ func TestTargetChargeHandler(t *testing.T) {
 				status, tc.statusCode)
 		}
 
-		if mockLp.Soc != tc.outSoc {
-			t.Errorf("wrong target soc: got %v want %v", mockLp.Soc, tc.outSoc)
+		if mockLp.SoC != tc.outSoC {
+			t.Errorf("wrong target soc: got %v want %v", mockLp.SoC, tc.outSoC)
 		}
 
 		isoFormat := "2006-01-02T15:04:05.999Z07:00"
@@ -73,13 +71,4 @@ func TestTargetChargeHandler(t *testing.T) {
 			t.Errorf("wrong target time year: got %v want %v", mockLp.TargetTime.UTC().Format(isoFormat), tc.outTime.Format(isoFormat))
 		}
 	}
-}
-
-func TestNaNInf(t *testing.T) {
-	c := map[string]any{
-		"foo": math.NaN(),
-		"bar": math.Inf(0),
-	}
-	encodeFloats(c)
-	assert.Equal(t, map[string]any{"foo": nil, "bar": nil}, c, "NaN not encoded as nil")
 }

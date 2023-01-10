@@ -85,8 +85,8 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 	return res, err
 }
 
-// Soc implements the api.Vehicle interface
-func (v *Provider) Soc() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	if err == nil {
 		if res.EvInfo == nil {

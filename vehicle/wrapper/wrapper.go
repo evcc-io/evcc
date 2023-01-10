@@ -8,32 +8,23 @@ import (
 
 // Wrapper wraps an api.Vehicle to capture initialization errors
 type Wrapper struct {
-	err       error
-	title     string
-	Features_ []api.Feature
+	err error
 }
 
 // New creates a new Vehicle
-func New(err error) api.Vehicle {
+func New(w api.Vehicle, err error) (api.Vehicle, error) {
 	v := &Wrapper{
-		err:       fmt.Errorf("vehicle not available: %w", err),
-		title:     "unavailable",
-		Features_: []api.Feature{api.Offline},
+		err: fmt.Errorf("vehicle not available: %w", err),
 	}
 
-	return v
+	return v, nil
 }
 
 var _ api.Vehicle = (*Wrapper)(nil)
 
 // Title implements the api.Vehicle interface
 func (v *Wrapper) Title() string {
-	return v.title
-}
-
-// SetTitle implements the api.TitleSetter interface
-func (v *Wrapper) SetTitle(title string) {
-	v.title = fmt.Sprintf("%s (unavailable)", title)
+	return "unavailable"
 }
 
 // Icon implements the api.Vehicle interface
@@ -61,21 +52,9 @@ func (v *Wrapper) OnIdentified() api.ActionConfig {
 	return api.ActionConfig{}
 }
 
-var _ api.FeatureDescriber = (*Wrapper)(nil)
-
-// Features implements the api.FeatureDescriber interface
-func (v *Wrapper) Features() []api.Feature {
-	return []api.Feature{api.Offline}
-}
-
-// Features implements the api.FeatureDescriber interface
-func (v *Wrapper) Has(f api.Feature) bool {
-	return f == api.Offline
-}
-
 var _ api.Battery = (*Wrapper)(nil)
 
-// Soc implements the api.Battery interface
-func (v *Wrapper) Soc() (float64, error) {
+// SoC implements the api.Battery interface
+func (v *Wrapper) SoC() (float64, error) {
 	return 0, v.err
 }

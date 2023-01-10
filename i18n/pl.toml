@@ -13,16 +13,17 @@ light = "Wygląd: światły"
 dark = "Wygląd: ciemny"
 
 [footer.version]
+availableShort = "zainstalować"
 availableLong = "nowa wersja dostępna"
 modalTitle = "Nowa wersja dostępna"
 modalUpdateStarted = "Nowa wersja evcc uruchomi się..."
-modalInstalledVersion = "Zainstalowana wersja"
+modalInstalledVersion = "Zainstalowana wersja:"
 modalNoReleaseNotes = "Brak dostępnych notatek. Więcej informacji o nowej wersji:"
-modalUpdate = "Instaluj"
-modalUpdateStatusStart = "Instalacja rozpoczęta:"
-modalDownload = "Pobierz"
 modalCancel = "Anuluj"
+modalUpdate = "Instaluj"
 modalUpdateNow = "Instaluj teraz"
+modalDownload = "Pobierz"
+modalUpdateStatusStart = "Instalacja rozpoczęta:"
 
 [footer.savings]
 tabTitle = "Moje dane"
@@ -65,7 +66,7 @@ thanks = "Dzięki za wsparcie, {sponsor}! Pomaga nam to w dalszym rozwoju."
 confetti = "Gotowy na konfetti?"
 supportUs = "Nasza misja: Spraw, aby ładowanie słoneczne stało się standardem. Pomóż nam i wesprzyj evcc finansowo."
 sticker = "… lub naklejki evcc?"
-confettiPromise = "Będą naklejki i cyfrowe konfetti"
+confettiPromise = "Będą naklejki i cyfrowe konfetti ;)"
 becomeSponsor = "Zostań sponsorem"
 
 [notifications]
@@ -88,7 +89,7 @@ selfConsumption = "Konsumpcja własna"
 pvExport = "Eksport na siec"
 
 [main.mode]
-off = "Stop"
+off = "Wyłączony"
 minpv = "Min+Słońce"
 pv = "Słońce"
 now = "Szybko"
@@ -103,16 +104,16 @@ duration = "Czas trwania"
 remaining = "Pozostało"
 
 [main.loadpointSettings]
-title = "Ustawienia {0}"
+title = "Ustawienia \"{0}\""
 vehicle = "Pojazd"
 currents = "Prąd ładowania"
 default = "domyślny"
 disclaimerHint = "Uwaga:"
 disclaimerText = "Zmiany zostaną zresetowane po restarcie serwera."
 
-[main.loadpointSettings.minSoc]
+[main.loadpointSettings.minSoC]
 label = "Minimalne naładowanie %"
-description = "Zasięg w sytuacjach awaryjnych. Pojazd jest „szybko” ładowany do {0}% w trybie „Słońce”. Następnie kontynuuje tylko z nadwyżką fotowoltaiczną."
+description = "Zasięg w sytuacjach awaryjnych. Pojazd jest „szybko” ładowany do {0}% w trybie \"Słońce\". Następnie kontynuuje tylko z nadwyżką fotowoltaiczną."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fazy"
@@ -130,14 +131,14 @@ label = "Min. Prąd"
 
 [main.vehicle]
 fallbackName = "Pojazd"
-vehicleSoc = "Bateria"
-targetSoc = "Ograniczenie"
+vehicleSoC = "Bateria"
+targetSoC = "Ograniczenie"
 none = "Brak pojazdu"
 unknown = "Pojazd gościa"
 changeVehicle = "Zmień pojazd"
 detectionActive = "Wykrywanie pojazdu..."
 
-[main.vehicleSoc]
+[main.vehicleSoC]
 disconnected = "odłączony"
 charging = "ładuje się"
 ready = "gotowy"
@@ -170,12 +171,12 @@ inactiveLabel = "Czas docelowy"
 activeLabel = "{time}"
 modalTitle = "Ustaw docelowy czas"
 setTargetTime = "brak"
-description = "Kiedy pojazd powinien zostać naladowany do {targetSoc}%?"
+description = "Kiedy pojazd powinien zostać naladowany do {targetSoC}%?"
 today = "dzisiaj"
 tomorrow = "jutro"
 targetIsInThePast = "Wybierz czas w przyszłości."
 remove = "Usuń"
-activate = "Aktywować"
+activate = "Aktywuj"
 experimentalLabel = "Eksperymentalna"
 experimentalText = "Ta funkcja działa, ale nie jest jeszcze doskonała. Zgłoś nieoczekiwane zachowanie do naszego"
 

@@ -102,9 +102,9 @@ func (wb *Blueprint) TotalEnergy() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.PhaseCurrents = (*Blueprint)(nil)
+var _ api.MeterCurrent = (*Blueprint)(nil)
 
-// Currents implements the api.PhaseCurrents interface
+// Currents implements the api.MeterCurrent interface
 func (wb *Blueprint) Currents() (float64, float64, float64, error) {
 	return 0, 0, 0, api.ErrNotAvailable
 }

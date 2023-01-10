@@ -1,5 +1,5 @@
 <template>
-	<LabelAndValue class="flex-grow-1" :label="$t('main.vehicle.targetSoc')" align="end">
+	<LabelAndValue class="flex-grow-1" :label="$t('main.vehicle.targetSoC')" align="end">
 		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
 			<label class="position-relative">
 				<select :value="targetSoc" class="custom-select" @change="change">
@@ -8,7 +8,7 @@
 					</option>
 				</select>
 				<span class="text-decoration-underline">
-					<AnimatedNumber :to="targetSoc" :format="formatSoc" />
+					<AnimatedNumber :to="targetSoc" :format="formatSoC" />
 				</span>
 			</label>
 
@@ -25,7 +25,7 @@ import AnimatedNumber from "./AnimatedNumber.vue";
 import { distanceUnit } from "../units";
 
 export default {
-	name: "TargetSocSelect",
+	name: "TargetSoCSelect",
 	components: { LabelAndValue, AnimatedNumber },
 	props: {
 		targetSoc: Number,
@@ -37,7 +37,7 @@ export default {
 		options: function () {
 			const result = [];
 			for (let soc = 20; soc <= 100; soc += 5) {
-				let text = this.formatSoc(soc);
+				let text = this.formatSoC(soc);
 				const range = this.estimatedRange(soc);
 				if (range) {
 					text += ` (${this.formatKm(range)})`;
@@ -60,7 +60,7 @@ export default {
 			}
 			return null;
 		},
-		formatSoc: function (value) {
+		formatSoC: function (value) {
 			return `${Math.round(value)}%`;
 		},
 		formatKm: function (value) {

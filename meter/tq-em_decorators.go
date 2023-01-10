@@ -6,19 +6,19 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateTqEm(base api.Meter, phaseCurrents func() (float64, float64, float64, error)) api.Meter {
+func decorateTqEm(base api.Meter, meterCurrent func() (float64, float64, float64, error)) api.Meter {
 	switch {
-	case phaseCurrents == nil:
+	case meterCurrent == nil:
 		return base
 
-	case phaseCurrents != nil:
+	case meterCurrent != nil:
 		return &struct {
 			api.Meter
-			api.PhaseCurrents
+			api.MeterCurrent
 		}{
 			Meter: base,
-			PhaseCurrents: &decorateTqEmPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
+			MeterCurrent: &decorateTqEmMeterCurrentImpl{
+				meterCurrent: meterCurrent,
 			},
 		}
 	}
@@ -26,10 +26,10 @@ func decorateTqEm(base api.Meter, phaseCurrents func() (float64, float64, float6
 	return nil
 }
 
-type decorateTqEmPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
+type decorateTqEmMeterCurrentImpl struct {
+	meterCurrent func() (float64, float64, float64, error)
 }
 
-func (impl *decorateTqEmPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
+func (impl *decorateTqEmMeterCurrentImpl) Currents() (float64, float64, float64, error) {
+	return impl.meterCurrent()
 }

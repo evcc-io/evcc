@@ -9,12 +9,12 @@ import (
 
 const kmPerMile = 1.609344
 
-// Provider implements the vehicle api
+// Provider implements the evcc vehicle api
 type Provider struct {
 	statusG func() (VehicleStatus, error)
 }
 
-// NewProvider creates a vehicle api provider
+// NewProvider provides the evcc vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (VehicleStatus, error) {
@@ -26,8 +26,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// Soc implements the api.Vehicle interface
-func (v *Provider) Soc() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	if err == nil {
 		if cs := res.Properties.ChargingState; cs != nil {

@@ -85,8 +85,8 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
-// Soc implements the api.Vehicle interface
-func (v *Tesla) Soc() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Tesla) SoC() (float64, error) {
 	res, err := v.chargeStateG()
 
 	if err == nil {
@@ -188,21 +188,14 @@ func (v *Tesla) Position() (float64, float64, error) {
 
 var _ api.SocLimiter = (*Tesla)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
-func (v *Tesla) TargetSoc() (float64, error) {
+// TargetSoC implements the api.SocLimiter interface
+func (v *Tesla) TargetSoC() (float64, error) {
 	res, err := v.chargeStateG()
 	if err == nil {
 		return float64(res.ChargeLimitSoc), nil
 	}
 
 	return 0, err
-}
-
-var _ api.CurrentLimiter = (*Tesla)(nil)
-
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Tesla) MaxCurrent(current int64) error {
-	return v.vehicle.SetChargingAmps(int(current))
 }
 
 var _ api.VehicleChargeController = (*Tesla)(nil)

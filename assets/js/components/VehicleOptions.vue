@@ -52,7 +52,7 @@ export default {
 	},
 	methods: {
 		changeVehicle(index) {
-			this.$emit("change-vehicle", index + 1);
+			this.$emit("change-vehicle", index);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");

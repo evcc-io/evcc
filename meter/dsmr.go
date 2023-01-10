@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"strconv"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/basvdlei/gotsmart/crc16"
 	"github.com/basvdlei/gotsmart/dsmr"
-	"github.com/cenkalti/backoff"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -71,7 +69,7 @@ func init() {
 	registry.Add("dsmr", NewDsmrFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewDsmrFromConfig creates a DSMR meter from generic config
 func NewDsmrFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -137,23 +135,15 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 }
 
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
-func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
+func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 	log := util.NewLogger("dsmr")
-	backoff := backoff.NewExponentialBackOff()
-	backoff.InitialInterval = time.Second
-	backoff.MaxInterval = 5 * time.Minute
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)
-		if err == io.EOF ||
-			errors.Is(err, io.ErrUnexpectedEOF) ||
-			errors.Is(err, net.ErrClosed) {
-			conn.Close() // closing on nil socket is safe
+		if errors.Is(err, net.ErrClosed) {
 			conn = nil
 		}
 	}
-
-	reader := bufio.NewReader(conn)
 
 	for {
 		if conn == nil {
@@ -161,20 +151,15 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			conn, err = m.connect()
 			if err != nil {
 				handle("connect", err)
-				sleep := backoff.NextBackOff().Truncate(time.Second)
-				log.DEBUG.Printf("next attempt after: %v", sleep)
-				time.Sleep(sleep)
+				time.Sleep(time.Second)
 				continue
 			}
-
-			reader.Reset(conn)
 		}
 
-		backoff.Reset()
-		if b, err := reader.Peek(1); err == nil {
+		if b, err := conn.Peek(1); err == nil {
 			if string(b) != "/" {
 				log.DEBUG.Printf("ignoring garbage character: %c\n", b)
-				_, _ = reader.ReadByte()
+				_, _ = conn.ReadByte()
 				continue
 			}
 		} else {
@@ -182,13 +167,13 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			continue
 		}
 
-		frame, err := reader.ReadBytes('!')
+		frame, err := conn.ReadBytes('!')
 		if err != nil {
 			handle("read", err)
 			continue
 		}
 
-		bcrc, err := reader.ReadBytes('\n')
+		bcrc, err := conn.ReadBytes('\n')
 		if err != nil {
 			handle("read", err)
 			continue
@@ -222,7 +207,7 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 	}
 }
 
-func (m *Dsmr) connect() (net.Conn, error) {
+func (m *Dsmr) connect() (*bufio.Reader, error) {
 	dialer := net.Dialer{Timeout: request.Timeout}
 
 	conn, err := dialer.Dial("tcp", m.addr)
@@ -230,7 +215,7 @@ func (m *Dsmr) connect() (net.Conn, error) {
 		return nil, err
 	}
 
-	return conn, nil
+	return bufio.NewReader(conn), nil
 }
 
 func (m *Dsmr) get(id string) (float64, error) {
@@ -266,7 +251,7 @@ func (m *Dsmr) totalEnergy() (float64, error) {
 	return m.get(m.energy)
 }
 
-// currents implements the api.PhaseCurrents interface
+// currents implements the api.MeterCurrent interface
 func (m *Dsmr) currents() (float64, float64, float64, error) {
 	var res [3]float64
 

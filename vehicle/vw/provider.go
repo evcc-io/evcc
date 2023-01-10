@@ -15,7 +15,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// Provider implements the vehicle api
+// Provider implements the evcc vehicle api
 type Provider struct {
 	chargerG  func() (ChargerResponse, error)
 	statusG   func() (StatusResponse, error)
@@ -25,7 +25,7 @@ type Provider struct {
 	rr        func() (RolesRights, error)
 }
 
-// NewProvider creates a vehicle api provider
+// NewProvider provides the evcc vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		chargerG: provider.Cached(func() (ChargerResponse, error) {
@@ -52,8 +52,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// Soc implements the api.Vehicle interface
-func (v *Provider) Soc() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Provider) SoC() (float64, error) {
 	res, err := v.chargerG()
 	if err == nil {
 		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil

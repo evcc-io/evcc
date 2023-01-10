@@ -1,4 +1,4 @@
-import parseToml from "markty-toml";
+import toml from "toml";
 import { nextTick } from "vue";
 import { createI18n } from "vue-i18n";
 import en from "../../i18n/en.toml";
@@ -8,7 +8,6 @@ import settings from "./settings";
 // https://github.com/joker-x/languages.js/blob/master/languages.json
 export const LOCALES = {
   de: ["German", "Deutsch"],
-  da: ["Danish", "Dansk"],
   en: ["English", "English"],
   es: ["Spanish", "Español"],
   fr: ["French", "Français"],
@@ -19,10 +18,6 @@ export const LOCALES = {
   no: ["Norwegian", "Norsk"],
   pl: ["Polish", "Polski"],
   pt: ["Portuguese", "Português"],
-  ru: ["Russian", "Русский"],
-  sl: ["Slovenian", "Slovenščina"],
-  sv: ["Swedish", "Svenska"],
-  uk: ["Ukrainian", "Українська"],
 };
 
 function getBrowserLocale() {
@@ -78,7 +73,7 @@ export function setI18nLanguage(i18n, locale) {
 async function loadLocaleMessages(i18n, locale) {
   try {
     const response = await i18nApi.get(`${locale}.toml`, { params: { v: window.evcc?.version } });
-    const messages = parseToml(response.data);
+    const messages = toml.parse(response.data);
     i18n.setLocaleMessage(locale, messages);
   } catch (e) {
     console.error(`unable to load translation for [${locale}]`, e);

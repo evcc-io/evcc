@@ -15,7 +15,7 @@
 				:batteryDischarge="batteryDischarge"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
-				:batterySoc="batterySoc"
+				:batterySoC="batterySoC"
 				:valuesInKw="valuesInKw"
 				:vehicleIcons="vehicleIcons"
 			/>
@@ -62,7 +62,7 @@
 							v-if="batteryConfigured"
 							:name="$t('main.energyflow.batteryDischarge')"
 							icon="battery"
-							:soc="batterySoc"
+							:soc="batterySoC"
 							:power="batteryDischarge"
 							:valuesInKw="valuesInKw"
 						/>
@@ -105,7 +105,7 @@
 							v-if="batteryConfigured"
 							:name="$t('main.energyflow.batteryCharge')"
 							icon="battery"
-							:soc="batterySoc"
+							:soc="batterySoC"
 							:power="batteryCharge"
 							:valuesInKw="valuesInKw"
 						/>
@@ -143,7 +143,7 @@ export default {
 		activeLoadpointsCount: { type: Number, default: 0 },
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
-		batterySoc: { type: Number, default: 0 },
+		batterySoC: { type: Number, default: 0 },
 		vehicleIcons: { type: Array },
 	},
 	data: () => {

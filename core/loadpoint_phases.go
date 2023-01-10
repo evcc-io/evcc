@@ -6,38 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// setConfiguredPhases sets the default phase configuration
-func (lp *Loadpoint) setConfiguredPhases(phases int) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.ConfiguredPhases = phases
-
-	// publish 1p3p capability and phase configuration
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		lp.publish(phasesConfigured, lp.ConfiguredPhases)
-	} else {
-		lp.publish(phasesConfigured, nil)
-	}
-}
-
-// setPhases sets the number of enabled phases without modifying the charger
-func (lp *Loadpoint) setPhases(phases int) {
-	if lp.GetPhases() != phases {
-		lp.Lock()
-		lp.phases = phases
-		lp.Unlock()
-
-		// reset timer to disabled state
-		lp.resetPhaseTimer()
-
-		// measure phases after switching
-		lp.resetMeasuredPhases()
-	}
-}
-
 // resetMeasuredPhases resets measured phases to unknown on vehicle disconnect, phase switch or phase api call
-func (lp *Loadpoint) resetMeasuredPhases() {
+func (lp *LoadPoint) resetMeasuredPhases() {
 	lp.Lock()
 	lp.measuredPhases = 0
 	lp.Unlock()
@@ -46,7 +16,7 @@ func (lp *Loadpoint) resetMeasuredPhases() {
 }
 
 // getMeasuredPhases provides synchronized access to measuredPhases
-func (lp *Loadpoint) getMeasuredPhases() int {
+func (lp *LoadPoint) getMeasuredPhases() int {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.measuredPhases
@@ -74,23 +44,16 @@ func expect(phases int) int {
 
 // activePhases returns the number of expectedly active phases for the meter.
 // If unknown for 1p3p chargers during startup it will assume 3p.
-func (lp *Loadpoint) activePhases() int {
+func (lp *LoadPoint) activePhases() int {
 	physical := lp.GetPhases()
 	vehicle := lp.getVehiclePhases()
 	measured := lp.getMeasuredPhases()
 
-	active := min(expect(vehicle), expect(physical), expect(measured))
-
-	// sanity check - we should not assume less active phases than actually measured
-	if measured > 0 && active < measured {
-		lp.log.WARN.Printf("phase mismatch between %dp measured for %dp vehicle and %dp charger", measured, vehicle, physical)
-	}
-
-	return active
+	return min(expect(vehicle), expect(physical), expect(measured))
 }
 
 // maxActivePhases returns the maximum number of active phases for the meter.
-func (lp *Loadpoint) maxActivePhases() int {
+func (lp *LoadPoint) maxActivePhases() int {
 	physical := lp.GetPhases()
 	measured := lp.getMeasuredPhases()
 	vehicle := lp.getVehiclePhases()
@@ -111,7 +74,7 @@ func (lp *Loadpoint) maxActivePhases() int {
 	return min(expect(vehicle), expect(physical), expect(measured))
 }
 
-func (lp *Loadpoint) getVehiclePhases() int {
+func (lp *LoadPoint) getVehiclePhases() int {
 	if lp.vehicle != nil {
 		return lp.vehicle.Phases()
 	}

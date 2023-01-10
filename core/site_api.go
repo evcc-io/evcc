@@ -9,15 +9,15 @@ import (
 
 var _ site.API = (*Site)(nil)
 
-// GetPrioritySoc returns the PrioritySoc
-func (site *Site) GetPrioritySoc() float64 {
+// GetPrioritySoC returns the PrioritySoC
+func (site *Site) GetPrioritySoC() float64 {
 	site.Lock()
 	defer site.Unlock()
-	return site.PrioritySoc
+	return site.PrioritySoC
 }
 
-// SetPrioritySoc sets the PrioritySoc
-func (site *Site) SetPrioritySoc(soc float64) error {
+// SetPrioritySoC sets the PrioritySoC
+func (site *Site) SetPrioritySoC(soc float64) error {
 	site.Lock()
 	defer site.Unlock()
 
@@ -25,21 +25,21 @@ func (site *Site) SetPrioritySoc(soc float64) error {
 		return errors.New("battery not configured")
 	}
 
-	site.PrioritySoc = soc
-	site.publish("prioritySoc", site.PrioritySoc)
+	site.PrioritySoC = soc
+	site.publish("prioritySoC", site.PrioritySoC)
 
 	return nil
 }
 
-// GetBufferSoc returns the BufferSoc
-func (site *Site) GetBufferSoc() float64 {
+// GetBufferSoC returns the BufferSoC
+func (site *Site) GetBufferSoC() float64 {
 	site.Lock()
 	defer site.Unlock()
-	return site.BufferSoc
+	return site.BufferSoC
 }
 
-// SetBufferSoc sets the BufferSoc
-func (site *Site) SetBufferSoc(soc float64) error {
+// SetBufferSoC sets the BufferSoC
+func (site *Site) SetBufferSoC(soc float64) error {
 	site.Lock()
 	defer site.Unlock()
 
@@ -47,8 +47,8 @@ func (site *Site) SetBufferSoc(soc float64) error {
 		return errors.New("battery not configured")
 	}
 
-	site.BufferSoc = soc
-	site.publish("bufferSoc", site.BufferSoc)
+	site.BufferSoC = soc
+	site.publish("bufferSoC", site.BufferSoC)
 
 	return nil
 }
@@ -76,29 +76,4 @@ func (site *Site) GetVehicles() []api.Vehicle {
 	site.Lock()
 	defer site.Unlock()
 	return site.coordinator.GetVehicles()
-}
-
-// GetTariff returns the tariffs rates
-func (site *Site) GetTariff(name string) (api.Rates, error) {
-	site.Lock()
-	defer site.Unlock()
-
-	var tariff api.Tariff
-
-	switch name {
-	case "grid":
-		tariff = site.tariffs.Grid
-	case "feedin":
-		tariff = site.tariffs.FeedIn
-	case "planner":
-		if tariff = site.tariffs.Planner; tariff == nil {
-			tariff = site.tariffs.Grid
-		}
-	}
-
-	if tariff == nil {
-		return nil, errors.New("invalid tariff")
-	}
-
-	return tariff.Rates()
 }

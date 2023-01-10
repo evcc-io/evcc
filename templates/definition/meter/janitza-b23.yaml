@@ -10,19 +10,14 @@ params:
     choice: ["rs485", "tcpip"]
 render: |
   type: modbus
-  {{- include "modbus" . }}
   model: janitza
-  power: Power
-  energy: Import
+  {{- include "modbus" . }}
+  {{- if eq .usage "charge" }}
+  energy: Import # only required for charge meter usage
+  {{- end }}
+  {{- if or (eq .usage "charge") (eq .usage "grid") }}
   currents:
     - CurrentL1
     - CurrentL2
     - CurrentL3
-  voltages:
-    - VoltageL1
-    - VoltageL2
-    - VoltageL3
-  powers:
-    - PowerL1
-    - PowerL2
-    - PowerL3
+  {{- end }}
