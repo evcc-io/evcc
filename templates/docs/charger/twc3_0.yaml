@@ -1,0 +1,10 @@
+product:
+  brand: Tesla
+  description: TWC3
+description: |
+  Das Teslafahrzeug muss dem TWC3 im evcc UI zugewiesen sein.
+render:
+  - default: |
+      type: template
+      template: twc3
+      host: 192.0.2.2 # IP-Adresse oder Hostname

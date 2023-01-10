@@ -7,8 +7,37 @@ import (
 	"time"
 )
 
+// Vehicles is the /vehicles api
+type Vehicles struct {
+	Data []Vehicle
+}
+
+// Vehicle is the api vehicle
+type Vehicle struct {
+	VIN      string
+	Model    string
+	Nickname string
+}
+
 // Status is the /status api
 type Status struct {
+	Access *struct {
+		AccessStatus struct {
+			Value struct {
+				OverallStatus        string    `json:"overallStatus"`
+				CarCapturedTimestamp time.Time `json:"carCapturedTimestamp"`
+				Doors                []struct {
+					Name   string   `json:"name"`
+					Status []string `json:"status"`
+				} `json:"doors"`
+				Windows []struct {
+					Name   string   `json:"name"`
+					Status []string `json:"status"`
+				} `json:"windows"`
+				DoorLockStatus string `json:"doorLockStatus"`
+			} `json:"value"`
+		} `json:"accessStatus"`
+	} `json:"access"`
 	Automation *struct {
 		ClimatisationTimer struct {
 			Value struct {
@@ -97,6 +126,11 @@ type Status struct {
 				AvailableChargeModes []string `json:"availableChargeModes"`
 			} `json:"value"`
 		} `json:"chargeMode"`
+		ChargingCareSettings struct {
+			Value struct {
+				BatteryCareMode string `json:"batteryCareMode"`
+			} `json:"value"`
+		} `json:"chargingCareSettings"`
 	} `json:"charging"`
 	Climatisation *struct {
 		ClimatisationStatus struct {
@@ -148,13 +182,38 @@ type Status struct {
 					} `json:"recurringTimer,omitempty"`
 					SingleTimer struct {
 						StartDateTime Timestamp `json:"startDateTime"`
-					} `json:"singleTimer,omitempty"`
+					} `json:"singleTimer"`
 				} `json:"timers"`
 				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
 				TimeInCar            Timestamp `json:"timeInCar"`
 			} `json:"value"`
 		} `json:"climatisationTimersStatus"`
 	} `json:"climatisationTimers"`
+	VehicleLights *struct {
+		LightsStatus struct {
+			Value struct {
+				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+				Lights               []struct {
+					Name   string `json:"name"`
+					Status string `json:"status"`
+				} `json:"lights"`
+			} `json:"value"`
+		} `json:"lightsStatus"`
+	} `json:"vehicleLights"`
+	Measurements *struct {
+		RangeStatus struct {
+			Value struct {
+				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+				ElectricRange        float64   `json:"electricRange"`
+			} `json:"value"`
+		} `json:"rangeStatus"`
+		OdometerStatus struct {
+			Value struct {
+				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+				Odometer             float64   `json:"odometer"`
+			} `json:"value"`
+		} `json:"odometerStatus"`
+	} `json:"measurements"`
 	FuelStatus *FuelStatus `json:"fuelStatus"`
 	Readiness  *struct {
 		ReadinessStatus struct {
@@ -172,12 +231,55 @@ type Status struct {
 			} `json:"value"`
 		} `json:"readinessStatus"`
 	} `json:"readiness"`
+	VehicleHealthWarnings *struct {
+		WarningLights struct {
+			Value struct {
+				CarCapturedTimestamp Timestamp     `json:"carCapturedTimestamp"`
+				MileageKm            int           `json:"mileage_km"`
+				WarningLights        []interface{} `json:"warningLights"`
+			} `json:"value"`
+		} `json:"warningLights"`
+	} `json:"vehicleHealthWarnings"`
+	ChargingTimers *struct {
+		ChargingTimersStatus struct {
+			Value struct {
+				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+				TimeInCar            Timestamp `json:"timeInCar"`
+				Timers               []struct {
+					ID             int  `json:"id"`
+					Enabled        bool `json:"enabled"`
+					Climatisation  bool `json:"climatisation"`
+					RecurringTimer struct {
+						DepartureTime  string   `json:"departureTime"`
+						RepetitionDays []string `json:"repetitionDays"`
+					} `json:"recurringTimer"`
+				} `json:"timers"`
+			} `json:"value"`
+		} `json:"chargingTimersStatus"`
+	} `json:"chargingTimers"`
 	ChargingProfiles *struct {
 		ChargingProfilesStatus struct {
 			Value struct {
-				CarCapturedTimestamp Timestamp     `json:"carCapturedTimestamp"`
-				TimeInCar            Timestamp     `json:"timeInCar"`
-				Profiles             []interface{} `json:"profiles"`
+				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+				TimeInCar            Timestamp `json:"timeInCar"`
+				Profiles             []struct {
+					ID                 int    `json:"id"`
+					Name               string `json:"name"`
+					MaxChargingCurrent string `json:"maxChargingCurrent"`
+					MinSOCPct          int    `json:"minSOC_pct"`
+					TargetSOCPct       int    `json:"targetSOC_pct"`
+					Options            struct {
+						AutoUnlockPlugWhenCharged string `json:"autoUnlockPlugWhenCharged"`
+					} `json:"options"`
+					PreferredChargingTimes []struct {
+						ID        int    `json:"id"`
+						Enabled   bool   `json:"enabled"`
+						StartTime string `json:"startTime"`
+						EndTime   string `json:"endTime"`
+					} `json:"preferredChargingTimes"`
+					Timers        []interface{} `json:"timers"`
+					MinSOCEnabled bool          `json:"minSOC_enabled"`
+				} `json:"profiles"`
 			} `json:"value"`
 		} `json:"chargingProfilesStatus"`
 	} `json:"chargingProfiles"`

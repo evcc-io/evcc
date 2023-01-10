@@ -80,8 +80,8 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	return res, nil
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Vehicle) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Vehicle) Soc() (float64, error) {
 	return v.socG()
 }
 

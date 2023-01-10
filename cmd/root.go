@@ -185,7 +185,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureInflux(conf.Influx, site.LoadPoints(), tee.Attach())
+		configureInflux(conf.Influx, site.Loadpoints(), tee.Attach())
 	}
 
 	// setup mqtt publisher

@@ -502,7 +502,7 @@ paths:
                       - id: "2238974987235987"
                         name: My Tesla
       operationId: get-tesla-vehicles
-      description: Once the Tesla account credentials have been configured via the `/config` API this endpoint will return a list of vehicles associated with the account. The ID of the vehicle to use for SoC/Range can then be set using `tesla_vehicle_id` on the `/config` endpoint.
+      description: Once the Tesla account credentials have been configured via the `/config` API this endpoint will return a list of vehicles associated with the account. The ID of the vehicle to use for Soc/Range can then be set using `tesla_vehicle_id` on the `/config` endpoint.
 components:
   schemas:
     Message:

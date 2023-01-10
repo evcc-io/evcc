@@ -8,9 +8,8 @@ github = "GitHub"
 settings = "Astellungen"
 
 [footer.version]
-availableShort = "installéieren"
-modalTitle = "Nei Versioun verfügbar"
-modalInstalledVersion = "Installéiert Versioun:"
+modalTitle = "Aktualiséierung verfügbar"
+modalInstalledVersion = "Aktuell installéiert Versioun"
 modalCancel = "Ofbriechen"
 modalUpdate = "Installéieren"
 modalUpdateNow = "Elo installéieren"
@@ -38,7 +37,7 @@ priceFeedIn = "{feedInPrice} fidderen"
 
 [footer.community]
 powerSub1 = "{activeClients} vun {totalClients} Participanten"
-powerSub2 = "gëtt elo gelueden"
+powerSub2 = "gëtt elo gelueden…"
 greenShare = "Solar deelen"
 greenEnergySub2 = "zënter Oktober 2022"
 power = "Ladekraaft"
@@ -59,9 +58,9 @@ titleSponsor = "Dir sidd e Supporter"
 confetti = "Prett fir Konfetti?"
 supportUs = "Eis Missioun: Solarladung de Standard maachen. Hëllef evcc andeems Dir bezuelt wat et Iech wäert ass."
 sticker = "… oder evcc Stickeren?"
-confettiPromise = "Et ginn Stickeren an digital Konfetti ;)"
+confettiPromise = "Et ginn Stickeren an digital Konfetti"
 titleNoSponsor = "Ënnerstëtzt eis"
-thanks = "Merci, {Sponsor}! Äre Bäitrag hëlleft evcc weider ze entwéckelen."
+thanks = "Merci, {sponsor}! Äre Bäitrag hëlleft evcc weider ze entwéckelen."
 becomeSponsor = "Gitt e Sponsor"
 
 [notifications]
@@ -83,9 +82,9 @@ batteryCharge = "Batterie gelueden"
 pvProduction = "Produktioun"
 loadpoints = "Opluedpunkt | Opluedpunkt | {count} Opluedstatiounen"
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Minimum Staat vun charge"
-description = "Fir Noutfäll. D'Gefier gëtt \"séier\" gelueden op {0}% vun all verfügbare Solarenergie, a geet dann mat nëmmen dem Solariwwerschoss weider."
+description = "Fir Noutfäll. D'Gefier gëtt „séier” gelueden op {0}% vun all verfügbare Solarenergie, a geet dann mat nëmmen dem Solariwwerschoss weider."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phasen"
@@ -96,15 +95,15 @@ phases_1 = "1 Phase"
 phases_3 = "3 Phasen"
 
 [main.vehicle]
-vehicleSoC = "Staat vun charge"
-targetSoC = "Limite"
+vehicleSoc = "Staat vun charge"
+targetSoc = "Limite"
 none = "Keng Gefier"
 unknown = "Gäscht Gefier"
 changeVehicle = "Gefier änneren"
 detectionActive = "Erkennung vum Gefier ..."
 fallbackName = "Gefier"
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 connected = "verbonne"
 disconnected = "deconnectéiert"
 charging = "oplueden"
@@ -117,7 +116,7 @@ activate = "Aktivéieren"
 title = "Zilzäit"
 setTargetTime = "keen"
 experimentalLabel = "Experimentell"
-description = "Wéini soll d'Gefier op {targetSoC}% gelueden ginn?"
+description = "Wéini soll d'Gefier op {targetSoc}% gelueden ginn?"
 modalTitle = "Zielzäit setzen"
 today = "haut"
 tomorrow = "muer"
@@ -164,7 +163,7 @@ disclaimerText = "Ännerunge ginn verluer nodeems de Server nei gestart ass."
 vehicle = "Gefier"
 default = "Standard"
 disclaimerHint = "Notiz:"
-title = "Astellungen \"{0}\""
+title = "Astellungen {0}"
 
 [main.loadpointSettings.minCurrent]
 label = "Min. Stroum"

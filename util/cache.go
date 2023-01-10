@@ -24,8 +24,8 @@ func (c *Cache) Run(in <-chan Param) {
 
 	for p := range in {
 		key := p.Key
-		if p.LoadPoint != nil {
-			key = fmt.Sprintf("lp-%d/%s", *p.LoadPoint+1, key)
+		if p.Loadpoint != nil {
+			key = fmt.Sprintf("lp-%d/%s", *p.Loadpoint+1, key)
 		}
 		log.TRACE.Printf("%s: %v", key, p.Val)
 		c.Add(p.UniqueID(), p)
@@ -42,13 +42,13 @@ func (c *Cache) State() map[string]interface{} {
 	lps := make(map[int]map[string]interface{})
 
 	for _, param := range c.val {
-		if param.LoadPoint == nil {
+		if param.Loadpoint == nil {
 			res[param.Key] = param.Val
 		} else {
-			lp, ok := lps[*param.LoadPoint]
+			lp, ok := lps[*param.Loadpoint]
 			if !ok {
 				lp = make(map[string]interface{})
-				lps[*param.LoadPoint] = lp
+				lps[*param.Loadpoint] = lp
 			}
 			lp[param.Key] = param.Val
 		}

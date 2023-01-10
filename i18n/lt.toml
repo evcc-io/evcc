@@ -13,11 +13,10 @@ light = "Dizainas: šviesus"
 dark = "Dizainas: tamsus"
 
 [footer.version]
-availableShort = "instaliuoti"
 availableLong = "yra naujesnė versija"
 modalTitle = "Yra naujesnė versija"
-modalUpdateStarted = "Startuoja nauja EVCC versija..."
-modalInstalledVersion = "Instaliuota versija:"
+modalUpdateStarted = "Startuoja nauja evcc versija..."
+modalInstalledVersion = "Instaliuota versija"
 modalNoReleaseNotes = "Naujinimo pastabų nėra. Daugiau informacijos apie naują versiją:"
 modalCancel = "Atšaukti"
 modalUpdate = "Instaliuoti"
@@ -66,7 +65,7 @@ thanks = "Ačiū, {sponsor}! Jūs prisidedate prie evcc vystymo."
 confetti = "Norite konfeti?"
 supportUs = "Mūsų misija yra siekti, kad įkrovimas saulės energija taptų įprastu. Padėkite mums ir paremkite evcc."
 sticker = "… ar evcc lipdukų?"
-confettiPromise = "Gausite lipdukų ir skaitmeninių konfeti ;)"
+confettiPromise = "Gausite lipdukų ir skaitmeninių konfeti"
 becomeSponsor = "Tapkite rėmėju"
 
 [notifications]
@@ -104,16 +103,16 @@ duration = "Trukmė"
 remaining = "Liko"
 
 [main.loadpointSettings]
-title = "Nustatymai \"{0}\""
+title = "Nustatymai {0}"
 vehicle = "Automobilis"
 currents = "Įkrovimo srovė"
 default = "standartiškai"
 disclaimerHint = "Pastaba:"
-disclaimerText = "Šie pakeitimai neišlieka po EVCC serverio restarto."
+disclaimerText = "Šie pakeitimai neišlieka po evcc serverio restarto."
 
-[main.loadpointSettings.minSoC]
+[main.loadpointSettings.minSoc]
 label = "Minimali įkrova"
-description = "Minimali įkrova. Automobilis įkraunamas \"Greitai\" iki {0}% nustatyme \"Saulė\", toliau įkraunamas tik saulės energijos pertekliumi."
+description = "Minimali įkrova. Automobilis įkraunamas „Greitai” iki {0}% nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fazės"
@@ -131,14 +130,14 @@ label = "Min. Srovė"
 
 [main.vehicle]
 fallbackName = "Automobilis"
-vehicleSoC = "Akumuliatorius"
-targetSoC = "Limitas"
+vehicleSoc = "Akumuliatorius"
+targetSoc = "Limitas"
 none = "Nėra automobilio"
 unknown = "Nežinomas automobilis"
 changeVehicle = "Pakeisti automobilį"
 detectionActive = "Bandome atpažinti automobilį ..."
 
-[main.vehicleSoC]
+[main.vehicleSoc]
 disconnected = "neprijungtas"
 charging = "vyksta įkrovimas"
 ready = "leidžiama įkrauti"
@@ -171,7 +170,7 @@ inactiveLabel = "Suplanuotas įkrovimas"
 activeLabel = "{time}"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
 setTargetTime = "nenustatytas"
-description = "Kada automobilis turėtų būti įkrautas iki {targetSoC}%?"
+description = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
 today = "šiandien"
 tomorrow = "rytoj"
 targetIsInThePast = "Pasirinkite laiką ateityje."

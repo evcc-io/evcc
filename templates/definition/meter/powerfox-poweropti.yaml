@@ -11,11 +11,18 @@ params:
   - name: password
     required: true
     mask: true
+  - name: id
+    default: main
+    required: true
+    advanced: true
+    help:
+      en: Id in case of multiple PowerOpti
+      de: Id im Falle mehrerer PowerOpti
 render: |
   type: custom
   power:
     source: http
-    uri: https://backend.powerfox.energy/api/2.0/my/main/current
+    uri: https://backend.powerfox.energy/api/2.0/my/{{ .id }}/current
     auth:
       type: basic
       user: {{ .user }}

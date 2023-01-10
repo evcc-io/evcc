@@ -20,7 +20,7 @@ type Provider struct {
 	wakeup   func() (kamereon.Response, error)
 }
 
-// NewProvider creates a new vehicle
+// NewProvider creates a vehicle api provider
 func NewProvider(api *kamereon.API, accountID, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		batteryG: provider.Cached(func() (kamereon.Response, error) {
@@ -41,8 +41,8 @@ func NewProvider(api *kamereon.API, accountID, vin string, cache time.Duration) 
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.batteryG()
 
 	if err == nil {

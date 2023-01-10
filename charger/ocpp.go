@@ -97,7 +97,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return decorateOCPP(c, powerG, totalEnergyG, currentsG, phasesS), nil
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
 
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, quirks bool, timeout time.Duration) (*OCPP, error) {
@@ -416,7 +416,7 @@ func (c *OCPP) totalEnergy() (float64, error) {
 	return c.cp.TotalEnergy()
 }
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (c *OCPP) currents() (float64, float64, float64, error) {
 	return c.cp.Currents()
 }
