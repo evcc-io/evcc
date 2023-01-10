@@ -181,7 +181,7 @@ connected = "Collegato."
 targetChargeActive = "Carica target attiva..."
 
 [main.targetCharge]
-activate = "Accendi"
+activate = "Attivare"
 title = "Tempo obiettivo"
 inactiveLabel = "Tempo obiettivo"
 activeLabel = "{time}"
