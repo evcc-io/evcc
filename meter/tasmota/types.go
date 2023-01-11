@@ -85,7 +85,3 @@ type StatusSNSResponse struct {
 		}
 	}
 }
-
-// Helper structs to handle single and list response values
-type SingleInt struct{ intsingle int }
-type ListInt struct{ intlist []int }
