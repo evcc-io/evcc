@@ -126,8 +126,8 @@ func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 	data := make(api.Rates, 0, len(pi))
 	for _, r := range pi {
 		ar := api.Rate{
-			Start: r.StartsAt,
-			End:   r.StartsAt.Add(time.Hour),
+			Start: r.StartsAt.Local(),
+			End:   r.StartsAt.Add(time.Hour).Local(),
 			Price: r.Total,
 		}
 		data = append(data, ar)
