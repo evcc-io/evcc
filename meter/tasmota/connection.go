@@ -57,8 +57,16 @@ func (d *Connection) CurrentPower() (float64, error) {
 		switch v := res.StatusSNS.Energy.Power.(type) {
 		case float64:
 			power = res.StatusSNS.Energy.Power.(float64)
-		default:
-			fmt.Println("unkown type: ", v)
+		case []interface{}:
+			// take first power meter value in case of a power meter list
+			for i, vl := range v {
+				switch vv := vl.(type) {
+				case float64:
+					if i == 0 {
+						power = vv
+					}
+				}
+			}
 		}
 	}
 
