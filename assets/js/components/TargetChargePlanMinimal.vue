@@ -26,7 +26,7 @@ export default {
 	},
 	computed: {
 		planDuration() {
-			return this.fmtShortDuration(this.duration / 1e9, true);
+			return this.fmtShortDuration(this.duration, true);
 		},
 		lastSlot() {
 			if (this.plan?.length) {
