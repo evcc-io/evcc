@@ -124,6 +124,20 @@ chargers:
               console.log("Inner Set!!!");
               set();
               lp.chargepower = val
+        - name: chargepower2
+          type: float
+          config:
+            source: go
+            script: |
+              chargepower2 * 2
+            transform:
+              - name: myvalue
+                type: float
+                config:
+                  source: js
+                  vm: shared
+                  script: |
+                    console.log("value from go in javascript: " + myvalue);
     enabled:
       source: js
       vm: shared

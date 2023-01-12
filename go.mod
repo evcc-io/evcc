@@ -85,6 +85,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
+	github.com/traefik/yaegi v0.14.3
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20221223133217-870b3b92b81e
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
