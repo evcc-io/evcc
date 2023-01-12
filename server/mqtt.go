@@ -17,6 +17,7 @@ import (
 var deprecatedTopics = []string{
 	"activePhases", "range", "socCharge", "vehicleSoC",
 	"batterySoC", "bufferSoC", "minSoC", "prioritySoC",
+	"targetSoC", "vehicleTargetSoC",
 }
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
