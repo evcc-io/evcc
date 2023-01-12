@@ -50,27 +50,8 @@ func (d *Connection) ExecCmd(cmd string, res interface{}) error {
 // CurrentPower implements the api.Meter interface
 func (d *Connection) CurrentPower() (float64, error) {
 	var res StatusSNSResponse
-	var err error
-	var power float64
-
-	if err = d.ExecCmd("Status 8", &res); err == nil {
-		switch v := res.StatusSNS.Energy.Power.(type) {
-		case float64:
-			power = res.StatusSNS.Energy.Power.(float64)
-		case []interface{}:
-			// take first power meter value in case of a power meter list
-			for i, vl := range v {
-				switch vv := vl.(type) {
-				case float64:
-					if i == 0 {
-						power = vv
-					}
-				}
-			}
-		}
-	}
-
-	return power, err
+	err := d.ExecCmd("Status 8", &res)
+	return res.StatusSNS.Energy.Power, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
