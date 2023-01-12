@@ -185,9 +185,9 @@ func (c *GoE) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	i1, i2, i3 := resp.Voltages()
+	u1, u2, u3 := resp.Voltages()
 
-	return i1, i2, i3, err
+	return u1, u2, u3, err
 }
 
 var _ api.Identifier = (*GoE)(nil)
