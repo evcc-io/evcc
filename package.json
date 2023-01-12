@@ -13,7 +13,7 @@
   "dependencies": {
     "@babel/core": "^7.17.2",
     "@h2d2/shopicons": "^1.2.0",
-    "@histoire/plugin-vue": "^0.11.6",
+    "@histoire/plugin-vue": "^0.12.4",
     "@popperjs/core": "^2.11.5",
     "@vitejs/plugin-vue": "^3.0.1",
     "@vue/compiler-sfc": "^3.2.30",
@@ -28,7 +28,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-vue": "^9.3.0",
-    "histoire": "^0.11.6",
+    "histoire": "^0.12.4",
     "markty-toml": "^0.1.1",
     "prettier": "^2.5.1",
     "prettier-plugin-toml": "^0.3.1",

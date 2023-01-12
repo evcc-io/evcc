@@ -103,7 +103,7 @@ description = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}%?"
 today = "danes"
 tomorrow = "jutri"
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
-activate = "Vklopi"
+activate = "Aktiviraj"
 experimentalLabel = "Eksperimentalno"
 experimentalText = "To deluje, vendar ni popolno. Nepričakovano obnašanje sporočite na"
 

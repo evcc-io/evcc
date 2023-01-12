@@ -32,4 +32,11 @@ type API interface {
 
 	// GetVehicles is the list of vehicles
 	GetVehicles() []api.Vehicle
+
+	//
+	// tariffs
+	//
+
+	// GetTariff returns the tariffs rates
+	GetTariff(tariff string) (api.Rates, error)
 }

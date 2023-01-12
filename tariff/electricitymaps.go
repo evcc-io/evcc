@@ -102,6 +102,11 @@ func (t *ElectricityMaps) run(done chan error) {
 	}
 }
 
+// Unit implements the api.Tariff interface
+func (t *ElectricityMaps) Unit() string {
+	return "gCO2eq"
+}
+
 func (t *ElectricityMaps) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()

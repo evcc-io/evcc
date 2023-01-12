@@ -43,8 +43,15 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 		lp.Mode = mode
 		lp.publish("mode", mode)
 
-		// immediately allow pv mode activity
-		lp.elapsePVTimer()
+		// reset timers
+		switch mode {
+		case api.ModeNow, api.ModeOff:
+			lp.resetPhaseTimer()
+			lp.resetPVTimer()
+			lp.setPlanActive(false)
+		case api.ModeMinPV:
+			lp.resetPVTimer()
+		}
 
 		lp.requestUpdate()
 	}

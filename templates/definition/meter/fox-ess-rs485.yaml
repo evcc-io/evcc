@@ -1,0 +1,59 @@
+template: fox-ess-rs485
+products:
+  - brand: FoxESS
+    description:
+      generic: FoxESS via RS485 Modbus
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    # register details
+    register:
+      address: 11021 # Grid power
+      type: holding
+      decode: int16
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 11002 # PV1
+        type: holding
+        decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 11005 # PV2
+        type: holding
+        decode: int16
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    # register details
+    register:
+      address: 11008 # Battery Charge/Discharge
+      type: holding
+      decode: int16
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    # register details
+    register:
+      address: 11036 # Soc
+      type: holding
+      decode: int16
+  {{- end }}

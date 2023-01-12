@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 )
 
-// Provider implements the evcc vehicle api
+// Provider implements the vehicle api
 type Provider struct {
 	statusG   func() (StatusResponse, error)
 	chargerG  func() (ChargerResponse, error)
@@ -15,7 +15,7 @@ type Provider struct {
 	action    func(action, value string) error
 }
 
-// NewProvider provides the evcc vehicle api provider
+// NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (StatusResponse, error) {

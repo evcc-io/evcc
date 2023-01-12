@@ -27,9 +27,10 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/libp2p/zeroconf/v2"
-	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	"golang.org/x/text/currency"
 )
 
@@ -275,10 +276,14 @@ func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
 		}
 
 		if err == nil {
-			// list of vehicles
-			vehicles := lo.MapToSlice(cp.vehicles, func(_ string, v api.Vehicle) api.Vehicle {
-				return v
-			})
+			// list of vehicles ordered by name
+			keys := maps.Keys(cp.vehicles)
+			slices.Sort(keys)
+
+			vehicles := make([]api.Vehicle, 0, len(cp.vehicles))
+			for _, k := range keys {
+				vehicles = append(vehicles, cp.vehicles[k])
+			}
 
 			site, err = configureSite(conf.Site, cp, loadPoints, vehicles, tariffs)
 		}

@@ -15,7 +15,7 @@ type Provider struct {
 	action  func(action, value string) error
 }
 
-// NewProvider creates a new vehicle
+// NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (Status, error) {
@@ -103,24 +103,21 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
-// var _ api.VehicleOdometer = (*Provider)(nil)
+var _ api.VehicleOdometer = (*Provider)(nil)
 
-// // Odometer implements the api.VehicleOdometer interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.statusG()
-// 	if err == nil {
-// 		err = res.Error.Extract("maintenanceStatus")
-// 	}
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	if err == nil && res.Measurements == nil {
+		err = errors.New("missing measurements")
+	}
 
-// 	if err == nil {
-// 		if res.Data.MaintenanceStatus == nil {
-// 			return 0, api.ErrNotAvailable
-// 		}
-// 		return float64(res.Data.MaintenanceStatus.MileageKm), nil
-// 	}
+	if err == nil {
+		return res.Measurements.OdometerStatus.Value.Odometer, nil
+	}
 
-// 	return 0, err
-// }
+	return 0, err
+}
 
 var _ api.VehicleClimater = (*Provider)(nil)
 
