@@ -17,7 +17,7 @@ interval: 10s # control cycle interval
 #   type: sqlite
 #   dsn: <path-to-db-file>
 
-# sponsor token enables optional features (request at https://cloud.evcc.io)
+# sponsor token enables optional features (request at https://sponsor.evcc.io)
 # sponsortoken:
 
 # telemetry enables aggregated statistics

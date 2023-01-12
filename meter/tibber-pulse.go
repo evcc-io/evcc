@@ -47,10 +47,11 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		// query client
 		qclient := tibber.NewClient(t.log, cc.Token)
 
-		var err error
-		if cc.HomeID, err = qclient.DefaultHomeID(); err != nil {
+		home, err := qclient.DefaultHome("")
+		if err != nil {
 			return nil, err
 		}
+		cc.HomeID = home.ID
 	}
 
 	// subscription client

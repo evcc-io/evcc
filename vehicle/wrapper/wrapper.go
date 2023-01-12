@@ -14,14 +14,14 @@ type Wrapper struct {
 }
 
 // New creates a new Vehicle
-func New(title string, err error) (api.Vehicle, error) {
+func New(err error) api.Vehicle {
 	v := &Wrapper{
 		err:       fmt.Errorf("vehicle not available: %w", err),
-		title:     fmt.Sprintf("%s (unavailable)", title),
+		title:     "unavailable",
 		Features_: []api.Feature{api.Offline},
 	}
 
-	return v, nil
+	return v
 }
 
 var _ api.Vehicle = (*Wrapper)(nil)
@@ -29,6 +29,11 @@ var _ api.Vehicle = (*Wrapper)(nil)
 // Title implements the api.Vehicle interface
 func (v *Wrapper) Title() string {
 	return v.title
+}
+
+// SetTitle implements the api.TitleSetter interface
+func (v *Wrapper) SetTitle(title string) {
+	v.title = fmt.Sprintf("%s (unavailable)", title)
 }
 
 // Icon implements the api.Vehicle interface
