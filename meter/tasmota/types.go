@@ -68,12 +68,13 @@ type StatusSNSResponse struct {
 			Total          float64
 			Yesterday      float64
 			Today          float64
-			Power          int
-			ApparentPower  int
-			ReactivePower  int
-			Factor         float64
+			Power          interface{}
+			ApparentPower  interface{}
+			ReactivePower  interface{}
+			Factor         interface{}
+			Frequency      int
 			Voltage        int
-			Current        float64
+			Current        interface{}
 		}
 
 		// SML sensor readings

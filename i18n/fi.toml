@@ -1,0 +1,231 @@
+[main.energyflow]
+battery = "Akku"
+batteryCharge = "Akunlataus"
+batteryDischarge = "Akku purkautuu"
+noEnergy = "Ei mittarin tietoja"
+homePower = "Kulutus"
+loadpoints = "Laturi| Laturi | {count} laturia"
+gridImport = "Verkon käyttö"
+selfConsumption = "Oma kulutus"
+pvExport = "Verkkoon syöttö"
+pvProduction = "Tuotanto"
+
+[main.mode]
+off = "Pois"
+pv = "PV"
+minpv = "Minimi+PV"
+now = "Nopea"
+
+[footer.version]
+modalNoReleaseNotes = "Julkaisutietoja ei saatavilla. Lisätietoa uudesta versiosta:"
+modalCancel = "Peruuta"
+modalInstalledVersion = "Nykyinen versio"
+modalUpdate = "Asenna"
+modalUpdateNow = "Asenna nyt"
+modalDownload = "Lataus"
+modalUpdateStatusStart = "Asennus aloitettu:"
+modalTitle = "Uusi versio saatavilla"
+modalUpdateStarted = "Käynnistetään evcc:n uusin versio..."
+availableLong = "uusi versio saatavilla"
+
+[footer.savings]
+tabTitle = "Tietoni"
+modalTitle = "Latausenergian yhteenveto"
+footerShort = "{percent}% aurinkoenergiaa"
+percentTitle = "Aurinkoenergia"
+priceTitle = "Energian hinta"
+savingsTitle = "Säästöt"
+savingsComparedToGrid = "verkkoon verrattuna"
+since = "alkaen {since}"
+priceGrid = "{gridPrice} verkko"
+savingsTotalEnergy = "{total} kWh ladattu"
+priceFeedIn = "{feedInPrice} osto hinta"
+percentSelf = "{self} kWh auringosta"
+percentGrid = "{grid} kWh verkosta"
+footerLong = "{percent}% aurinkoenergiaa"
+
+[footer.community]
+tabTitle = "Yhteisö"
+power = "Latausteho"
+powerSub1 = "{activeClients} / {totalClients} osallistujat"
+greenShare = "Aurinkoenergian osuus"
+greenShareSub1 = "toimittamaa tehoa"
+greenEnergy = "Aurinko"
+greenEnergySub1 = "ladattu evcc:llä"
+greenEnergySub2 = "Lokakuusta 2022 lähtien"
+powerSub2 = "lataa..."
+greenShareSub2 = "aurinko- ja akkuvarastointi"
+
+[footer.telemetry]
+optIn = "haluan antaa tietojani"
+optInMoreDetails = "Lisätietoja {0}."
+optInMoreDetailsLink = "tässä"
+optInSponsorship = "Sponsorointi vaaditaan."
+
+[footer.sponsor]
+titleSponsor = "Olet kannattaja"
+supportUs = "Missiomme on tehdä aurinkoenergiasta normi. Auta evcc:tä maksamalla sen verran minkä arvoinen se on sinulle."
+sticker = "… vai evcc tarroja?"
+confetti = "Valmiina konfetteihin?"
+becomeSponsor = "Ryhdy sponsoriksi"
+titleNoSponsor = "Tue meitä"
+thanks = "Kiitos, {sponsor}! Panoksesi auttaa kehittämään evcc:tä myös jatkossa."
+confettiPromise = "Saat tarroja ja myös digitaali konfetteja"
+
+[notifications]
+dismissAll = "Hylkää kaikki"
+modalTitle = "Ilmoitukset"
+
+[main]
+vehicles = "Pysäköinti"
+
+[main.loadpoint]
+power = "Teho"
+charged = "Ladattu"
+fallbackName = "Latauspiste"
+duration = "Kesto"
+
+[main.loadpointSettings]
+title = "Asetukset {0}"
+currents = "Latausvirta"
+default = "oletus"
+disclaimerHint = "Huomautus:"
+vehicle = "Ajoneuvo"
+disclaimerText = "Muutokset eivät ole voimassa serverin uudelleen käynnistyksen jälkeen."
+
+[main.loadpointSettings.minSoc]
+label = "Min. lataustaso %"
+description = "Hätätapauksia varten. Ajoneuvo ladataan nopeasti kaikella saatavilla olevalla aurinkoenergialla {0}% tämän jälkeen vain auringosta saatavalla muun kulutuksen jälkeen jäävällä ylijäämäenergialla."
+
+[main.loadpointSettings.phasesConfigured]
+label = "Vaiheet"
+phases_0 = "automaattinen"
+phases_1_hint = "({min} to {max})"
+phases_3 = "3-vaihe"
+phases_1 = "1-vaihe"
+phases_3_hint = "({min} to {max})"
+
+[main.loadpointSettings.maxCurrent]
+label = "Maksimivirta"
+
+[main.loadpointSettings.minCurrent]
+label = "Minimivirta"
+
+[main.vehicle]
+fallbackName = "Ajoneuvo"
+vehicleSoc = "Lataa"
+targetSoc = "Raja"
+none = "Ei ajoneuvoa"
+unknown = "Vieras ajoneuvo"
+detectionActive = "Tunnistetaan ajoneuvoa..."
+changeVehicle = "Vaihda ajoneuvo"
+
+[main.vehicleSoc]
+disconnected = "irtikytketty"
+charging = "lataa"
+connected = "yhdistetty"
+vehicleTarget = "Ajoneuvon raja {soc}%"
+ready = "valmis"
+
+[main.vehicleStatus]
+minCharge = "Ladataan minimissään {soc}%."
+waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
+vehicleTargetReached = "Ajoneuvon raja {soc}% saavutettu."
+charging = "Lataa…"
+targetChargePlanned = "Lataus alkaa {time}."
+targetChargeActive = "Lataaminen käynnissä…"
+connected = "Yhdistetty."
+pvDisable = "Ei tarpeeksi ylijäämää. Tauko {remaining}…"
+pvEnable = "Ylijäämää saatavilla. Aloitus {remaining}…"
+scale1p = "Siirrytään 1-vaihe lataukseen {remaining}…"
+scale3p = "Siirrytään 3-vaihe lataukseen {remaining}…"
+disconnected = "Irtikytketty."
+unknown = ""
+targetChargeWaitForVehicle = "Lataus valmiina. Odotetaan ajoneuvoa…"
+
+[main.provider]
+login = "kirjaudu sisään"
+logout = "kirjaudu ulos"
+
+[main.targetCharge]
+title = "Tavoiteaika"
+inactiveLabel = "Tavoiteaika"
+activeLabel = "{time}"
+modalTitle = "Aseta tavoiteaika"
+targetIsInThePast = "Valitse aika tulevaisuudessa"
+activate = "Aktivoi"
+experimentalLabel = "Kokeellinen"
+experimentalText = "Tämä toimii, mutta ei ole täydellinen. Ilmoita odottamattomasta toiminnasta"
+description = "Milloin ajoneuvon tulee olla ladattu {targetSoc}%?"
+today = "tänään"
+setTargetTime = "ei mitään"
+tomorrow = "huomenna"
+
+[main.targetEnergy]
+noLimit = "ei mitään"
+label = "Raja"
+
+[startupError]
+title = "Virhe käynnistyksessä"
+discussions = "GitHub keskustelut"
+hint = "Huomaa: Se saattaa olla sinun viallinen laitteesi (invertteri, mittari, …). Tarkista myös internetyhteytesi."
+configFile = "Käytetty määritystiedostoa:"
+configuration = "Määritys"
+lineError = "Virhe {0}."
+lineErrorLink = "rivi {0}"
+fixAndRestart = "Korjaa ongelma ja käynnistä serveri uudelleen."
+restartButton = "Uudelleen käynnistä"
+description = "Tarkasta sinun asetustiedosto. Jos virheilmoituksesta ei ole apua, katso {0}."
+
+[sessions]
+title = "Lataustapahtumat"
+loadpoint = "Latauspiste"
+vehicle = "Ajoneuvo"
+energy = "Ladattu"
+downloadCsv = "Lataa CSV muodossa"
+date = "Jakso"
+
+[sessions.csv]
+loadpoint = "Latauspiste"
+odometer = "Ajokilometrit (km)"
+meterstart = "Mittarin alku (kWh)"
+meterstop = "Mittarin loppu (kWh)"
+created = "Luotu"
+finished = "Päättynyt"
+vehicle = "Ajoneuvo"
+chargedenergy = "Energia (kWh)"
+identifier = "Tunnus"
+
+[offline]
+message = "Ei yhteyttä serveriin"
+reload = "Lataa uudelleen?"
+
+[header]
+sessions = "Lataustapahtumat"
+settings = "Asetukset"
+about = "Tietoa"
+docs = "Dokumentaatio"
+blog = "Blogi"
+github = "GitHub"
+login = "Ajoneuvon kirjautumiset"
+
+[settings]
+title = "Asetukset"
+
+[settings.unit]
+km = "km"
+mi = "mailit"
+label = "Yksiköt"
+
+[settings.theme]
+light = "vaalea"
+auto = "järjestelmä"
+label = "Design"
+dark = "tumma"
+
+[settings.language]
+label = "Kieli"
+auto = "Automaattinen"
+
+[settings.telemetry]
+label = "Telemetria"

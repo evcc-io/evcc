@@ -25,7 +25,7 @@ type Status struct {
 		AccessStatus struct {
 			Value struct {
 				OverallStatus        string    `json:"overallStatus"`
-				CarCapturedTimestamp time.Time `json:"carCapturedTimestamp"`
+				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
 				Doors                []struct {
 					Name   string   `json:"name"`
 					Status []string `json:"status"`
@@ -61,13 +61,13 @@ type Status struct {
 					} `json:"singleTimer,omitempty"`
 				} `json:"timers"`
 				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
-				TimeInCar            Timestamp `json:"timeInCar"`
+				TimeInCar            string    `json:"timeInCar"`
 			} `json:"value"`
 		} `json:"climatisationTimer"`
 		ChargingProfiles *struct {
 			Value struct {
 				CarCapturedTimestamp Timestamp     `json:"carCapturedTimestamp"`
-				TimeInCar            Timestamp     `json:"timeInCar"`
+				TimeInCar            string        `json:"timeInCar"`
 				Profiles             []interface{} `json:"profiles"`
 			} `json:"value"`
 		} `json:"chargingProfiles"`
@@ -185,7 +185,7 @@ type Status struct {
 					} `json:"singleTimer"`
 				} `json:"timers"`
 				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
-				TimeInCar            Timestamp `json:"timeInCar"`
+				TimeInCar            string    `json:"timeInCar"`
 			} `json:"value"`
 		} `json:"climatisationTimersStatus"`
 	} `json:"climatisationTimers"`
@@ -244,7 +244,7 @@ type Status struct {
 		ChargingTimersStatus struct {
 			Value struct {
 				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
-				TimeInCar            Timestamp `json:"timeInCar"`
+				TimeInCar            string    `json:"timeInCar"`
 				Timers               []struct {
 					ID             int  `json:"id"`
 					Enabled        bool `json:"enabled"`
@@ -261,7 +261,7 @@ type Status struct {
 		ChargingProfilesStatus struct {
 			Value struct {
 				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
-				TimeInCar            Timestamp `json:"timeInCar"`
+				TimeInCar            string    `json:"timeInCar"`
 				Profiles             []struct {
 					ID                 int    `json:"id"`
 					Name               string `json:"name"`

@@ -219,6 +219,9 @@ odometer = "Quilometragem (km)"
 message = "Sem conexão com o servidor."
 reload = "Iniciar de novo?"
 
+[settings]
+title = "Configurações"
+
 [settings.theme]
 label = "Estilo"
 auto = "Sistema"

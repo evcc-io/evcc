@@ -132,5 +132,5 @@ func (t *GrünStromIndex) Unit() string {
 func (t *GrünStromIndex) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	return t.data, outdatedError(t.updated, time.Hour)
+	return append(api.Rates{}, t.data...), outdatedError(t.updated, time.Hour)
 }
