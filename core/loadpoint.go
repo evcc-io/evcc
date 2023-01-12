@@ -1624,6 +1624,10 @@ func (lp *Loadpoint) updateChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
+	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
+		return // we don't need the voltages
+	}
+
 	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
 	if !ok {
 		return // don't guess
