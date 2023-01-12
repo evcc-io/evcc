@@ -112,7 +112,7 @@ disclaimerText = "As alterações serão perdidas depois que o servidor for rein
 
 [main.loadpointSettings.minSoc]
 label = "Mín. de carga %"
-description = "Para emergências. O veículo é "rápido" carregado para {0}% de toda a energia solar disponível e, em seguida, continua com apenas o excedente solar."
+description = "Para emergências. O veículo é „rápido” carregado para {0}% de toda a energia solar disponível e, em seguida, continua com apenas o excedente solar."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases elétricas"
