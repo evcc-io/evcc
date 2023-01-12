@@ -56,6 +56,14 @@ func (g *StatusResponse2) Currents() (float64, float64, float64) {
 	return 0, 0, 0
 }
 
+func (g *StatusResponse2) Voltages() (float64, float64, float64) {
+	if len(g.Nrg) == 16 {
+		return g.Nrg[0], g.Nrg[1], g.Nrg[2]
+	}
+
+	return 0, 0, 0
+}
+
 func (g *StatusResponse2) Identify() string {
 	if g.Trx > 0 {
 		return g.Cards[g.Trx-1].Name
