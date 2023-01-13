@@ -70,13 +70,13 @@ type StatusSNSResponse struct {
 			Total          float64
 			Yesterday      float64
 			Today          float64
-			Power          float64
-			ApparentPower  float64
-			ReactivePower  float64
-			Factor         float64
+			Power          []float64
+			ApparentPower  []float64
+			ReactivePower  []float64
+			Factor         []float64
 			Frequency      int
 			Voltage        int
-			Current        float64
+			Current        []float64
 		}
 
 		// SML sensor readings
@@ -148,44 +148,44 @@ func (v *StatusSNSResponse) UnmarshalJSON(data []byte) error {
 	}
 
 	//Try single energy meter response
-	if err = json.Unmarshal(data, &sr); err == nil {
-		v.StatusSNS.Time = sr.StatusSNS.Time
+	if err = json.Unmarshal(data, &mr); err == nil {
+		v.StatusSNS.Time = mr.StatusSNS.Time
 
-		v.StatusSNS.Energy.TotalStartTime = sr.StatusSNS.Energy.TotalStartTime
-		v.StatusSNS.Energy.Total = sr.StatusSNS.Energy.Total
-		v.StatusSNS.Energy.Yesterday = sr.StatusSNS.Energy.Yesterday
-		v.StatusSNS.Energy.Today = sr.StatusSNS.Energy.Today
-		v.StatusSNS.Energy.Power = sr.StatusSNS.Energy.Power
-		v.StatusSNS.Energy.ApparentPower = sr.StatusSNS.Energy.ApparentPower
-		v.StatusSNS.Energy.ReactivePower = sr.StatusSNS.Energy.ReactivePower
-		v.StatusSNS.Energy.Factor = sr.StatusSNS.Energy.Factor
-		v.StatusSNS.Energy.Frequency = sr.StatusSNS.Energy.Frequency
-		v.StatusSNS.Energy.Voltage = sr.StatusSNS.Energy.Voltage
-		v.StatusSNS.Energy.Current = sr.StatusSNS.Energy.Current
+		v.StatusSNS.Energy.TotalStartTime = mr.StatusSNS.Energy.TotalStartTime
+		v.StatusSNS.Energy.Total = mr.StatusSNS.Energy.Total
+		v.StatusSNS.Energy.Yesterday = mr.StatusSNS.Energy.Yesterday
+		v.StatusSNS.Energy.Today = mr.StatusSNS.Energy.Today
+		v.StatusSNS.Energy.Power = mr.StatusSNS.Energy.Power
+		v.StatusSNS.Energy.ApparentPower = mr.StatusSNS.Energy.ApparentPower
+		v.StatusSNS.Energy.ReactivePower = mr.StatusSNS.Energy.ReactivePower
+		v.StatusSNS.Energy.Factor = mr.StatusSNS.Energy.Factor
+		v.StatusSNS.Energy.Frequency = mr.StatusSNS.Energy.Frequency
+		v.StatusSNS.Energy.Voltage = mr.StatusSNS.Energy.Voltage
+		v.StatusSNS.Energy.Current = mr.StatusSNS.Energy.Current
 
-		v.StatusSNS.SML.TotalIn = sr.StatusSNS.SML.TotalIn
-		v.StatusSNS.SML.TotalOut = sr.StatusSNS.SML.TotalOut
-		v.StatusSNS.SML.PowerCurr = sr.StatusSNS.SML.PowerCurr
+		v.StatusSNS.SML.TotalIn = mr.StatusSNS.SML.TotalIn
+		v.StatusSNS.SML.TotalOut = mr.StatusSNS.SML.TotalOut
+		v.StatusSNS.SML.PowerCurr = mr.StatusSNS.SML.PowerCurr
 	} else {
 		//Try multi energy meter response and take first values from lists
-		if err = json.Unmarshal(data, &mr); err == nil {
-			v.StatusSNS.Time = mr.StatusSNS.Time
+		if err = json.Unmarshal(data, &sr); err == nil {
+			v.StatusSNS.Time = sr.StatusSNS.Time
 
-			v.StatusSNS.Energy.TotalStartTime = mr.StatusSNS.Energy.TotalStartTime
-			v.StatusSNS.Energy.Total = mr.StatusSNS.Energy.Total
-			v.StatusSNS.Energy.Yesterday = mr.StatusSNS.Energy.Yesterday
-			v.StatusSNS.Energy.Today = mr.StatusSNS.Energy.Today
-			v.StatusSNS.Energy.Power = mr.StatusSNS.Energy.Power[0]
-			v.StatusSNS.Energy.ApparentPower = mr.StatusSNS.Energy.ApparentPower[0]
-			v.StatusSNS.Energy.ReactivePower = mr.StatusSNS.Energy.ReactivePower[0]
-			v.StatusSNS.Energy.Factor = mr.StatusSNS.Energy.Factor[0]
-			v.StatusSNS.Energy.Frequency = mr.StatusSNS.Energy.Frequency
-			v.StatusSNS.Energy.Voltage = mr.StatusSNS.Energy.Voltage
-			v.StatusSNS.Energy.Current = mr.StatusSNS.Energy.Current[0]
+			v.StatusSNS.Energy.TotalStartTime = sr.StatusSNS.Energy.TotalStartTime
+			v.StatusSNS.Energy.Total = sr.StatusSNS.Energy.Total
+			v.StatusSNS.Energy.Yesterday = sr.StatusSNS.Energy.Yesterday
+			v.StatusSNS.Energy.Today = sr.StatusSNS.Energy.Today
+			v.StatusSNS.Energy.Power = append(v.StatusSNS.Energy.Power, sr.StatusSNS.Energy.Power)
+			v.StatusSNS.Energy.ApparentPower = append(v.StatusSNS.Energy.ApparentPower, sr.StatusSNS.Energy.ApparentPower)
+			v.StatusSNS.Energy.ReactivePower = append(v.StatusSNS.Energy.ReactivePower, sr.StatusSNS.Energy.ReactivePower)
+			v.StatusSNS.Energy.Factor = append(v.StatusSNS.Energy.Factor, sr.StatusSNS.Energy.Factor)
+			v.StatusSNS.Energy.Frequency = sr.StatusSNS.Energy.Frequency
+			v.StatusSNS.Energy.Voltage = sr.StatusSNS.Energy.Voltage
+			v.StatusSNS.Energy.Current = append(v.StatusSNS.Energy.Current, sr.StatusSNS.Energy.Current)
 
-			v.StatusSNS.SML.TotalIn = mr.StatusSNS.SML.TotalIn
-			v.StatusSNS.SML.TotalOut = mr.StatusSNS.SML.TotalOut
-			v.StatusSNS.SML.PowerCurr = mr.StatusSNS.SML.PowerCurr
+			v.StatusSNS.SML.TotalIn = sr.StatusSNS.SML.TotalIn
+			v.StatusSNS.SML.TotalOut = sr.StatusSNS.SML.TotalOut
+			v.StatusSNS.SML.PowerCurr = sr.StatusSNS.SML.PowerCurr
 		}
 	}
 

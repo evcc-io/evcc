@@ -15,10 +15,11 @@ import (
 type Connection struct {
 	*request.Helper
 	uri, user, password string
+	channel             int
 }
 
 // NewConnection creates a Tasmota connection
-func NewConnection(uri, user, password string) (*Connection, error) {
+func NewConnection(uri, user, password string, channel int) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
@@ -29,6 +30,7 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 		uri:      util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		user:     user,
 		password: password,
+		channel:  channel,
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -51,7 +53,7 @@ func (d *Connection) ExecCmd(cmd string, res interface{}) error {
 func (d *Connection) CurrentPower() (float64, error) {
 	var res StatusSNSResponse
 	err := d.ExecCmd("Status 8", &res)
-	return res.StatusSNS.Energy.Power, err
+	return res.StatusSNS.Energy.Power[d.channel-1], err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
