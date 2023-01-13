@@ -167,7 +167,7 @@ func (v *StatusSNSResponse) UnmarshalJSON(data []byte) error {
 		v.StatusSNS.SML.TotalOut = mr.StatusSNS.SML.TotalOut
 		v.StatusSNS.SML.PowerCurr = mr.StatusSNS.SML.PowerCurr
 	} else {
-		//Try SINGLE energy meter response and take first values from lists
+		//Try SINGLE energy meter response
 		if err = json.Unmarshal(data, &sr); err == nil {
 			v.StatusSNS.Time = sr.StatusSNS.Time
 
