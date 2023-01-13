@@ -56,7 +56,8 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 			err = transformGetter(p)
 		}
 		if err == nil {
-			v, err := p.vm.Eval(p.script)
+			var v otto.Value
+			v, err = p.vm.Eval(p.script)
 			if err == nil {
 				res, err = v.ToFloat()
 			}
@@ -72,7 +73,8 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 			err = transformGetter(p)
 		}
 		if err == nil {
-			v, err := p.vm.Eval(p.script)
+			var v otto.Value
+			v, err = p.vm.Eval(p.script)
 			if err == nil {
 				res, err = v.ToInteger()
 			}
@@ -89,7 +91,8 @@ func (p *Javascript) StringGetter() func() (string, error) {
 			err = transformGetter(p)
 		}
 		if err == nil {
-			v, err := p.vm.Eval(p.script)
+			var v otto.Value
+			v, err = p.vm.Eval(p.script)
 			if err == nil {
 				res, err = v.ToString()
 			}
@@ -106,7 +109,8 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 			err = transformGetter(p)
 		}
 		if err == nil {
-			v, err := p.vm.Eval(p.script)
+			var v otto.Value
+			v, err = p.vm.Eval(p.script)
 			if err == nil {
 				res, err = v.ToBoolean()
 			}
@@ -132,9 +136,10 @@ func (p *Javascript) IntSetter(param string) func(int64) error {
 	return func(val int64) error {
 		err := p.setParam(param, val)
 		if err == nil {
-			v, err := p.vm.Eval(p.script)
+			var v otto.Value
+			v, err = p.vm.Eval(p.script)
 			if err == nil && p.transform != nil {
-				transformSetter(p, v)
+				err = transformSetter(p, v)
 			}
 		}
 		return err
@@ -146,9 +151,10 @@ func (p *Javascript) FloatSetter(param string) func(float64) error {
 	return func(val float64) error {
 		err := p.setParam(param, val)
 		if err == nil {
-			v, err := p.vm.Eval(p.script)
+			var v otto.Value
+			v, err = p.vm.Eval(p.script)
 			if err == nil && p.transform != nil {
-				transformSetter(p, v)
+				err = transformSetter(p, v)
 			}
 		}
 		return err
@@ -160,9 +166,10 @@ func (p *Javascript) StringSetter(param string) func(string) error {
 	return func(val string) error {
 		err := p.setParam(param, val)
 		if err == nil {
-			v, err := p.vm.Eval(p.script)
+			var v otto.Value
+			v, err = p.vm.Eval(p.script)
 			if err == nil && p.transform != nil {
-				transformSetter(p, v)
+				err = transformSetter(p, v)
 			}
 		}
 		return err
@@ -174,9 +181,10 @@ func (p *Javascript) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
 		err := p.setParam(param, val)
 		if err == nil {
-			v, err := p.vm.Eval(p.script)
+			var v otto.Value
+			v, err = p.vm.Eval(p.script)
 			if err == nil && p.transform != nil {
-				transformSetter(p, v)
+				err = transformSetter(p, v)
 			}
 		}
 		return err
@@ -193,24 +201,36 @@ func transformGetter(p *Javascript) error {
 				return fmt.Errorf("%s: %w", name, err)
 			}
 			val, err = f()
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
 		} else if cc.Type == "int" {
 			f, err := NewIntGetterFromConfig(cc.Config)
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
 			val, err = f()
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
 		} else if cc.Type == "float" {
 			f, err := NewFloatGetterFromConfig(cc.Config)
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
 			val, err = f()
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
 		} else {
 			f, err := NewStringGetterFromConfig(cc.Config)
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
 			val, err = f()
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
 		}
 		err := p.vm.Set(name, val)
 		if err != nil {
@@ -232,6 +252,9 @@ func transformSetter(p *Javascript, v otto.Value) error {
 			if err == nil {
 				err = f(s)
 			}
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
 		} else if cc.Type == "int" {
 			f, err := NewIntSetterFromConfig(name, cc.Config)
 			if err != nil {
@@ -240,6 +263,9 @@ func transformSetter(p *Javascript, v otto.Value) error {
 			s, err := v.ToInteger()
 			if err == nil {
 				err = f(s)
+			}
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
 			}
 		} else if cc.Type == "float" {
 			f, err := NewFloatSetterFromConfig(name, cc.Config)
@@ -250,6 +276,9 @@ func transformSetter(p *Javascript, v otto.Value) error {
 			if err == nil {
 				err = f(s)
 			}
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
 		} else {
 			f, err := NewStringSetterFromConfig(name, cc.Config)
 			if err != nil {
@@ -258,6 +287,9 @@ func transformSetter(p *Javascript, v otto.Value) error {
 			s, err := v.ToString()
 			if err == nil {
 				err = f(s)
+			}
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
 			}
 		}
 	}
