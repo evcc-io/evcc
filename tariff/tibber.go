@@ -55,7 +55,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	if t.homeID == "" || t.unit == "" {
-		home, err := t.client.Home()
+		home, err := t.client.DefaultHome(t.homeID)
 		if err != nil {
 			return nil, err
 		}
