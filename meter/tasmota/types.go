@@ -147,7 +147,7 @@ func (v *StatusSNSResponse) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	//Try single energy meter response
+	//Try MULTI energy meter response
 	if err = json.Unmarshal(data, &mr); err == nil {
 		v.StatusSNS.Time = mr.StatusSNS.Time
 
@@ -167,7 +167,7 @@ func (v *StatusSNSResponse) UnmarshalJSON(data []byte) error {
 		v.StatusSNS.SML.TotalOut = mr.StatusSNS.SML.TotalOut
 		v.StatusSNS.SML.PowerCurr = mr.StatusSNS.SML.PowerCurr
 	} else {
-		//Try multi energy meter response and take first values from lists
+		//Try SINGLE energy meter response and take first values from lists
 		if err = json.Unmarshal(data, &sr); err == nil {
 			v.StatusSNS.Time = sr.StatusSNS.Time
 
