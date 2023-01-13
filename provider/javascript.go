@@ -16,7 +16,7 @@ type Javascript struct {
 
 type TransformationConfig struct {
 	Name, Type string
-	Config Config
+	Config     Config
 }
 
 func init() {
