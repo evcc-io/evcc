@@ -175,7 +175,7 @@ today = "Vandaag"
 tomorrow = "Morgen"
 targetIsInThePast = "Pick een tijd in de toekomst, Marty."
 remove = "Verwijder"
-activate = "Activeer"
+activate = "Turn on"
 experimentalLabel = "Experimenteel"
 experimentalText = "Dit werkt, maar is niet perfect. Meld onverwacht gedrag aan"
 
@@ -202,6 +202,8 @@ loadpoint = "Oplaadpunt"
 vehicle = "Voertuig"
 energy = "Geladen"
 date = "Periode"
+reallyDelete = "Wil je deze oplaadsessie echt verwijderen?"
+cancel = "annuleren"
 
 [sessions.csv]
 loadpoint = "Oplaadpunt"

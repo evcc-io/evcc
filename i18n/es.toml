@@ -202,6 +202,8 @@ loadpoint = "Punto de carga"
 vehicle = "Vehículo"
 energy = "Cargado"
 date = "Período"
+reallyDelete = "¿Realmente desea eliminar esta sesión de carga?"
+cancel = "abortar"
 
 [sessions.csv]
 loadpoint = "Punto de carga"

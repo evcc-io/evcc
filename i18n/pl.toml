@@ -202,6 +202,8 @@ loadpoint = "Ładowarka"
 vehicle = "Pojazd"
 energy = "Naładowano"
 date = "Okres"
+reallyDelete = "Czy na pewno chcesz usunąć tę sesję ładowania?"
+cancel = "odłamać"
 
 [sessions.csv]
 loadpoint = "Ładowarka"
@@ -234,7 +236,7 @@ label = "Język"
 [settings.unit]
 label = "Jednostki"
 km = "km"
-mi = "mile"
+mi = "mi"
 
 [settings.telemetry]
 label = "Telemetria"

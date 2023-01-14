@@ -202,6 +202,8 @@ loadpoint = "Įkroviklis"
 vehicle = "Automobilis"
 energy = "Įkrauta"
 date = "Laikotarpis"
+reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo seansą?"
+cancel = "anuliuoti"
 
 [sessions.csv]
 loadpoint = "Įkroviklis"
