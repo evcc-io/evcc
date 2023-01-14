@@ -8,7 +8,7 @@
 			<span v-else>noch unbekannt</span>
 		</div>
 		<div v-if="isCo2 && !incompletePlan">CO₂ Menge: {{ planCO2 }}</div>
-		<div v-if="!isCo2 && !incompletePlan">Geschätzter Preis: {{ planPrice }}</div>
+		<div v-if="!isCo2 && !incompletePlan">Energiepreis: {{ planPrice }}</div>
 	</div>
 </template>
 
