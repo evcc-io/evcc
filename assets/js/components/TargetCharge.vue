@@ -19,7 +19,7 @@
 		<Teleport to="body">
 			<div
 				:id="modalId"
-				class="modal fade text-dark"
+				class="modal fade text-dark modal-md"
 				data-bs-backdrop="true"
 				tabindex="-1"
 				role="dialog"
@@ -92,7 +92,11 @@
 								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
 									{{ $t("main.targetCharge.targetIsInThePast") }}
 								</p>
-								<TargetChargePlanMinimal v-else-if="plan" v-bind="plan" />
+								<TargetChargePlan2
+									v-else-if="plan.duration"
+									v-bind="{ ...plan, ...tariff }"
+									:target-time="selectedTargetTime"
+								/>
 							</div>
 							<div class="modal-footer d-flex justify-content-between">
 								<button
@@ -125,7 +129,7 @@ import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
 import LabelAndValue from "./LabelAndValue.vue";
-import TargetChargePlanMinimal from "./TargetChargePlanMinimal.vue";
+import TargetChargePlan2 from "./TargetChargePlan2.vue";
 import api from "../api";
 
 import formatter from "../mixins/formatter";
@@ -135,7 +139,7 @@ const LAST_TARGET_TIME_KEY = "last_target_time";
 
 export default {
 	name: "TargetCharge",
-	components: { LabelAndValue, TargetChargePlanMinimal },
+	components: { LabelAndValue, TargetChargePlan2 },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
@@ -148,7 +152,7 @@ export default {
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
-		return { selectedDay: null, selectedTime: null, plan: {} };
+		return { selectedDay: null, selectedTime: null, plan: {}, tariff: {} };
 	},
 	computed: {
 		targetChargeEnabled: function () {
@@ -195,10 +199,13 @@ export default {
 		updatePlan: async function () {
 			if (this.selectedTargetTimeValid && (this.targetEnergy || this.targetSoc)) {
 				try {
-					const response = await api.get(`/loadpoints/${this.id}/target/plan`, {
+					const opts = {
 						params: { targetTime: this.selectedTargetTime },
-					});
-					this.plan = response.data.result;
+					};
+					this.plan = (
+						await api.get(`/loadpoints/${this.id}/target/plan`, opts)
+					).data.result;
+					this.tariff = (await api.get(`/tariff/planner`)).data.result;
 				} catch (e) {
 					console.error(e);
 				}

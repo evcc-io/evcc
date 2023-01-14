@@ -132,6 +132,11 @@ export default {
         minute: "numeric",
       }).format(date);
     },
+    weekdayShort: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n.locale, {
+        weekday: "short",
+      }).format(date);
+    },
     fmtAbsoluteDate: function (date) {
       const weekday = this.weekdayPrefix(date);
       const hour = new Intl.DateTimeFormat(this.$i18n.locale, {
