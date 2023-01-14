@@ -103,7 +103,7 @@ description = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}%?"
 today = "danes"
 tomorrow = "jutri"
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
-activate = "Aktiviraj"
+activate = "Vklopi"
 experimentalLabel = "Eksperimentalno"
 experimentalText = "To deluje, vendar ni popolno. Nepričakovano obnašanje sporočite na"
 
@@ -114,6 +114,8 @@ loadpoint = "Polnilno mesto"
 vehicle = "Vozilo"
 energy = "Napolnjeno"
 date = "Obdobje"
+reallyDelete = "Ali res želite izbrisati to sesije polnjenja?"
+cancel = "prekiniti"
 
 [offline]
 reload = "Ponovno naloži?"

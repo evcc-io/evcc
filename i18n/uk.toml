@@ -133,6 +133,8 @@ loadpoint = "Точка зарядки"
 energy = "Заряджено"
 vehicle = "Транспортний засіб"
 date = "Період"
+reallyDelete = "Ви справді хочете видалити цей сеанс зарядки?"
+cancel = "припинити"
 
 [sessions.csv]
 finished = "Завершено"

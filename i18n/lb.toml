@@ -198,6 +198,8 @@ vehicle = "Gefier"
 downloadCsv = "Als CSV eroflueden"
 energy = "Belaascht"
 date = "Period"
+reallyDelete = "Wëllt Dir dës Opluedsession wierklech läschen?"
+cancel = "ofbriechen"
 
 [sessions.csv]
 loadpoint = "Opluedpunkt"

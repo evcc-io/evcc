@@ -135,3 +135,8 @@ phases_3_hint = "({min} till {max})"
 
 [main.loadpointSettings.maxCurrent]
 label = "Max. ström"
+
+[sessions]
+title = "Laddningssessioner"
+reallyDelete = "Vill du verkligen ta bort den här laddningssessionen?"
+cancel = "abortera"

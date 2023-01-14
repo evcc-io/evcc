@@ -218,6 +218,8 @@ loadpoint = "Charging point"
 vehicle = "Vehicle"
 energy = "Charged"
 date = "Period"
+reallyDelete = "Do you really want to delete this session?"
+cancel = "cancel"
 
 [sessions.csv]
 loadpoint = "Charging point"

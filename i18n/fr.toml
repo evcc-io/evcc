@@ -88,8 +88,8 @@ selfConsumption = "Consommation personnelle"
 pvExport = "Grille d'exportation"
 
 [main.mode]
-off = "Éteindre"
-minpv = "Min+Sol"
+off = "Désactivé"
+minpv = "Min+Solaire"
 pv = "Solaire"
 now = "Rapide"
 
@@ -202,6 +202,8 @@ loadpoint = "Point de Chargement"
 vehicle = "Véhicule"
 energy = "Chargé"
 date = "Période"
+reallyDelete = "Voulez-vous vraiment supprimer cette session de charge?"
+cancel = "avorter"
 
 [sessions.csv]
 loadpoint = "Point de Chargement"

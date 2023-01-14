@@ -181,7 +181,7 @@ connected = "Collegato."
 targetChargeActive = "Carica target attiva..."
 
 [main.targetCharge]
-activate = "Attivare"
+activate = "Accendi"
 title = "Tempo obiettivo"
 inactiveLabel = "Tempo obiettivo"
 activeLabel = "{time}"
@@ -228,6 +228,8 @@ loadpoint = "Punto di ricarica"
 vehicle = "Veicolo"
 energy = "Caricato"
 date = "Periodo"
+reallyDelete = "Vuoi davvero eliminare questa sessione di ricarica?"
+cancel = "abortire"
 
 [offline]
 message = "Non connesso a un server."

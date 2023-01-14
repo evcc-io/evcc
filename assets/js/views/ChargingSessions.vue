@@ -61,14 +61,17 @@
 											<th scope="col" class="ps-3 ps-md-4 ps-md-5">
 												{{ $t("sessions.date") }}
 											</th>
+											<th scope="col" class="ps-3"></th>
 										</tr>
 									</thead>
 									<tbody>
 										<tr v-for="(session, id) in loadpoint.sessions" :key="id">
-											<td>
+											<td class="align-middle">
 												{{ session.vehicle }}
 											</td>
-											<td class="text-nowrap text-end ps-sm-4 pe-md-5">
+											<td
+												class="text-nowrap text-end ps-sm-4 pe-md-5 align-middle"
+											>
 												{{ fmtKWh(session.chargedEnergy * 1e3) }}
 											</td>
 											<td class="text-nowrap ps-3 ps-md-4 ps-md-5">
@@ -103,6 +106,14 @@
 													}}
 												</span>
 											</td>
+											<td class="text-nowrap ps-3 text-end align-middle">
+												<button
+													class="btn btn-danger btn-sm"
+													@click="startRemoveSession(session)"
+												>
+													<shopicon-regular-trash size="s" />
+												</button>
+											</td>
 										</tr>
 									</tbody>
 								</table>
@@ -110,14 +121,103 @@
 						</div>
 					</div>
 				</div>
+				<Teleport to="body">
+					<div
+						id="removeSessionModal"
+						class="modal fade text-dark"
+						tabindex="-1"
+						role="dialog"
+						aria-hidden="true"
+					>
+						<div
+							class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+							role="document"
+						>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title">
+										{{ $t("sessions.reallyDelete") }}
+									</h5>
+									<button
+										type="button"
+										class="btn-close"
+										data-bs-dismiss="modal"
+										aria-label="Close"
+									></button>
+								</div>
+								<div v-if="getSession() != undefined" class="modal-body">
+									<table class="table">
+										<tbody>
+											<tr>
+												<th>
+													{{ $t("sessions.vehicle") }}
+												</th>
+												<td>
+													{{ session.vehicle }}
+												</td>
+											</tr>
+											<tr>
+												<th>
+													{{ $t("sessions.date") }}
+												</th>
+												<td>
+													{{
+														fmtFullDateTime(
+															new Date(session.created),
+															false
+														)
+													}}
+													<br />
+													{{
+														fmtFullDateTime(
+															new Date(session.finished),
+															false
+														)
+													}}
+												</td>
+											</tr>
+											<tr>
+												<th>
+													{{ $t("sessions.energy") }}
+												</th>
+												<td>
+													{{ fmtKWh(session.chargedEnergy * 1e3) }}
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer d-flex justify-content-between">
+									<button
+										type="button"
+										class="btn btn-link text-muted"
+										data-bs-dismiss="modal"
+									>
+										{{ $t("sessions.cancel") }}
+									</button>
+									<button
+										type="button"
+										class="btn btn-danger"
+										data-bs-dismiss="modal"
+										@click="removeSession(session.id)"
+									>
+										<shopicon-regular-trash size="s" />
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</Teleport>
 			</main>
 		</div>
 	</div>
 </template>
 
 <script>
+import Modal from "bootstrap/js/dist/modal";
 import TopNavigation from "../components/TopNavigation.vue";
 import "@h2d2/shopicons/es/bold/arrowback";
+import "@h2d2/shopicons/es/regular/trash";
 import formatter from "../mixins/formatter";
 import api from "../api";
 
@@ -129,7 +229,7 @@ export default {
 		notifications: Array,
 	},
 	data() {
-		return { sessions: [] };
+		return { sessions: [], session: undefined };
 	},
 	computed: {
 		sessionsByMonthAndLoadpoint() {
@@ -198,6 +298,18 @@ export default {
 			date.setMonth(month);
 			date.setFullYear(year);
 			return this.fmtMonthYear(date);
+		},
+		getSession() {
+			return this.session;
+		},
+		startRemoveSession(session) {
+			this.session = session;
+			const modal = Modal.getOrCreateInstance(document.getElementById("removeSessionModal"));
+			modal.show();
+		},
+		async removeSession(id) {
+			await api.delete("session/" + id);
+			this.loadSessions();
 		},
 	},
 };

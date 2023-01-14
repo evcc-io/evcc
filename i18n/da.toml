@@ -106,7 +106,7 @@ battery = "Batteri"
 [main.mode]
 off = "Af"
 minpv = "Min+Solar"
-pv = "Solar"
+pv = "Solenergi"
 now = "Hurtig"
 
 [main.loadpoint]
@@ -203,6 +203,8 @@ date = "Periode"
 title = "Opladning Sessioner"
 downloadCsv = "Download som CSV"
 loadpoint = "Ladepunkt"
+reallyDelete = "Er du sikker på, at du vil slette disse opladningssessioner?"
+cancel = "abort"
 
 [sessions.csv]
 loadpoint = "Ladepunkt"

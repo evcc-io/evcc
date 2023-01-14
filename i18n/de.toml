@@ -218,6 +218,8 @@ loadpoint = "Ladepunkt"
 vehicle = "Fahrzeug"
 energy = "Geladen"
 date = "Zeitraum"
+reallyDelete = "Wollen Sie wirklich diesen Ladevorgang löschen?"
+cancel = "abbrechen"
 
 [sessions.csv]
 loadpoint = "Ladepunkt"
