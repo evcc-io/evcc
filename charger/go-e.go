@@ -176,6 +176,20 @@ func (c *GoE) Currents() (float64, float64, float64, error) {
 	return i1, i2, i3, err
 }
 
+var _ api.PhaseVoltages = (*GoE)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *GoE) Voltages() (float64, float64, float64, error) {
+	resp, err := c.api.Status()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	u1, u2, u3 := resp.Voltages()
+
+	return u1, u2, u3, err
+}
+
 var _ api.Identifier = (*GoE)(nil)
 
 // Identify implements the api.Identifier interface

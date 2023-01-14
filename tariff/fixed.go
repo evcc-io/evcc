@@ -126,8 +126,8 @@ func (t *Fixed) Rates() (api.Rates, error) {
 
 			rate := api.Rate{
 				Price: zone.Price,
-				Start: ts.Carbon2Time(),
-				End:   end.Carbon2Time(),
+				Start: ts.Carbon2Time().Local(),
+				End:   end.Carbon2Time().Local(),
 			}
 
 			res = append(res, rate)

@@ -193,6 +193,10 @@ tomorrow = "morgen"
 targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
 remove = "Entfernen"
 activate = "Aktivieren"
+planUnknown = "unbekannt"
+planDuration = "Ladezeit"
+planPeriodLabel = "Zeitraum"
+planPeriodValue = "{start} bis {end}"
 
 [main.targetEnergy]
 label = "Ladeziel"
