@@ -41,7 +41,7 @@ savingsComparedToGrid = "w porównaniu z siecią"
 savingsTotalEnergy = "{total} kWh naładowanych"
 
 [footer.community]
-tabTitle = "Aktualne dane społeczności"
+tabTitle = "Dane społeczności"
 power = "Moc ładowania"
 powerSub1 = "{activeClients} z {totalClients} uczestników"
 powerSub2 = "ładuje się..."

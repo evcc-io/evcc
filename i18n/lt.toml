@@ -25,7 +25,7 @@ modalDownload = "Atsisiųsti"
 modalUpdateStatusStart = "Instaliavimas pradėtas:"
 
 [footer.savings]
-tabTitle = "Mano duomenys"
+tabTitle = "Mano"
 footerShort = "{percent}% saulės"
 footerLong = "{percent}% saulės energija"
 modalTitle = "Įkrovimo energijos apžvalga"
@@ -41,7 +41,7 @@ savingsComparedToGrid = "palyginus su tinklu"
 savingsTotalEnergy = "{total} kWh įkrauta"
 
 [footer.community]
-tabTitle = "Bendruomenės duomenys"
+tabTitle = "Bendruomenės"
 power = "Įkrovimo galia"
 powerSub1 = "{activeClients} iš {totalClients} dalyvių"
 powerSub2 = "įkrauna..."
@@ -89,8 +89,8 @@ pvExport = "Tinklo eksportas"
 
 [main.mode]
 off = "Stop"
-minpv = "Min+Saulės"
-pv = "Saulės"
+minpv = "Min+Saulė"
+pv = "Saulė"
 now = "Greitas"
 
 [main.loadpoint]
