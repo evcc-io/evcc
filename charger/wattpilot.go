@@ -1,25 +1,9 @@
 package charger
 
-// LICENSE
-
-// Copyright (c) 2019-2022 andig
-
-// This module is NOT covered by the MIT license. All rights reserved.
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -40,8 +24,8 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		Password string
+		Cache    time.Duration
 	}{}
-
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -50,16 +34,17 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("must have uri and password")
 	}
 
-	return NewWattpilot(cc.URI, cc.Password)
+	return NewWattpilot(cc.URI, cc.Password, cc.Cache)
 }
 
 // NewWattpilot creates Wattpilot charger
-func NewWattpilot(uri, password string) (*Wattpilot, error) {
-	c := &Wattpilot{
-		api: wattpilot.NewWattpilot(uri, password),
-	}
+func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error) {
+	log := util.NewLogger("wattpilot")
+	c := &Wattpilot{}
 
-	if connected, err := c.api.Connect(); !connected || err != nil {
+	log.INFO.Println("Connecting wattpilot local", uri)
+	c.api = wattpilot.NewWattpilot(uri, password)
+	if _, err := c.api.Connect(); err != nil {
 		return nil, err
 	}
 
@@ -68,6 +53,7 @@ func NewWattpilot(uri, password string) (*Wattpilot, error) {
 
 // Status implements the api.Charger interface
 func (c *Wattpilot) Status() (api.ChargeStatus, error) {
+
 	car, err := c.api.GetProperty("car")
 	if err != nil {
 		return api.StatusNone, err
@@ -96,7 +82,7 @@ func (c *Wattpilot) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Wattpilot) Enable(enable bool) error {
-	var forceState int // neutral
+	var forceState int = 0
 	if !enable {
 		forceState = 1 // off
 	}
@@ -129,9 +115,16 @@ func (c *Wattpilot) ChargedEnergy() (float64, error) {
 
 var _ api.PhaseCurrents = (*Wattpilot)(nil)
 
-// Currents implements the api.Meter interface
+// Currents implements the api.PhaseCurrents interface
 func (c *Wattpilot) Currents() (float64, float64, float64, error) {
 	return c.api.GetCurrents()
+}
+
+var _ api.PhaseVoltages = (*Wattpilot)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Wattpilot) Voltages() (float64, float64, float64, error) {
+	return c.api.GetVoltages()
 }
 
 var _ api.Identifier = (*Wattpilot)(nil)
