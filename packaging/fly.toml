@@ -1,5 +1,3 @@
-# fly.toml file generated for evcc-demo on 2023-01-14T12:59:06+01:00
-
 app = "evcc-demo"
 kill_signal = "SIGINT"
 kill_timeout = 5
@@ -19,6 +17,7 @@ internal_port = 7070
 processes = ["app"]
 protocol = "tcp"
 script_checks = []
+
 [services.concurrency]
 hard_limit = 25
 soft_limit = 20
