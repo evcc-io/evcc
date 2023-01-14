@@ -309,6 +309,7 @@ export default {
 		},
 		async removeSession(id) {
 			await api.delete("session/" + id);
+			this.session = undefined;
 			this.loadSessions();
 		},
 	},
