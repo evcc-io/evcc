@@ -53,7 +53,7 @@ render:
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
       timeout: 10s # Optional
-      capacity: 50 # Akku-Kapazität in kWh # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
@@ -103,7 +103,7 @@ render:
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
       timeout: 10s # Optional
-      capacity: 50 # Akku-Kapazität in kWh # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
@@ -153,4 +153,4 @@ render:
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
       timeout: 10s # Optional
-      capacity: 50 # Akku-Kapazität in kWh # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional
