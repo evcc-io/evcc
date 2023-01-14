@@ -424,8 +424,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		power := lp.GetMaxPower()
-		requiredDuration, plan, err := lp.GetPlan(targetTime, power)
+		requiredDuration, plan, err := lp.GetPlan(targetTime, lp.GetMaxPower())
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -435,12 +434,10 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 			Duration int64     `json:"duration"`
 			Plan     api.Rates `json:"plan"`
 			Unit     string    `json:"unit"`
-			Power    float64   `json:"power"`
 		}{
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,
 			Unit:     lp.GetPlannerUnit(),
-			Power:    power,
 		}
 		jsonResult(w, res)
 	}
