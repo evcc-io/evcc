@@ -125,10 +125,6 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 	return c, err
 }
 
-func (c *Zaptec) reset() {
-	c.statusCache.Reset()
-}
-
 func (c *Zaptec) chargers() ([]string, error) {
 	var res zaptec.ChargersResponse
 
@@ -183,7 +179,7 @@ func (c *Zaptec) Enable(enable bool) error {
 	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
 		_, err = c.DoBody(req)
-		c.reset()
+		c.statusCache.Reset()
 	}
 
 	return err
@@ -195,7 +191,7 @@ func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = c.DoBody(req)
-		c.reset()
+		c.statusCache.Reset()
 	}
 
 	return err
@@ -207,7 +203,7 @@ func (c *Zaptec) sessionPriority(session string, data zaptec.SessionPriority) er
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = c.DoBody(req)
-		c.reset()
+		c.statusCache.Reset()
 	}
 
 	return err
