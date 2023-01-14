@@ -9,7 +9,6 @@ params:
     default: car
     advanced: true
   - name: capacity
-    valuetype: float
   - name: phases
     advanced: true
   - name: mode

@@ -186,6 +186,7 @@ type Param struct {
 	Help          TextLanguage // cli configuration help
 	Value         string       // user provided value via cli configuration
 	Values        []string     // user provided list of values e.g. for ValueType "stringlist"
+	Usages        []string     // restrict param to these usage types, e.g. "battery" for home battery capacity
 	ValueType     string       // string representation of the value type, "string" is default
 	ValidValues   []string     // list of valid values the user can provide
 	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"

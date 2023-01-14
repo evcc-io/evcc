@@ -97,10 +97,11 @@ params:
       de: Akkukapazität in kWh
       en: Battery capacity in kWh
     help:
-      de: Akku-Kapazität in kWh
+      de: Akkukapazität in kWh
       en: Battery capacity in kWh
     example: "50"
     valuetype: float
+    usages: ["vehicle", "battery"]
   - name: vin
     description:
       de: Fahrzeugidentifikationsnummer
