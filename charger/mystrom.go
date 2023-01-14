@@ -21,8 +21,8 @@ func init() {
 type MyStrom struct {
 	conn *mystrom.Connection
 	*switchSocket
-	cache   time.Duration
-	reportG func() (mystrom.Report, error)
+	cache       time.Duration
+	reportCache provider.Cacheable[mystrom.Report]
 }
 
 // NewMyStromFromConfig creates a myStrom charger from generic config
@@ -45,21 +45,21 @@ func NewMyStromFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, cc.StandbyPower)
-	c.reportG = provider.Cached(c.conn.Report, c.cache)
+	c.reportCache = provider.ResettableCached(c.conn.Report, c.cache)
 
 	return c, nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *MyStrom) Enabled() (bool, error) {
-	res, err := c.reportG()
+	res, err := c.reportCache.Get()
 	return res.Relay, err
 }
 
 // Enable implements the api.Charger interface
 func (c *MyStrom) Enable(enable bool) error {
 	// reset cache
-	c.reportG = provider.Cached(c.conn.Report, c.cache)
+	c.reportCache.Reset()
 
 	onoff := map[bool]int{false: 0, true: 1}
 	return c.conn.Request(fmt.Sprintf("relay?state=%d", onoff[enable]))
