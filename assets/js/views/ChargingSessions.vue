@@ -61,11 +61,15 @@
 											<th scope="col" class="ps-3 ps-md-4 ps-md-5">
 												{{ $t("sessions.date") }}
 											</th>
-											<th scope="col" class="ps-3"></th>
 										</tr>
 									</thead>
 									<tbody>
-										<tr v-for="(session, id) in loadpoint.sessions" :key="id">
+										<tr
+											v-for="(session, id) in loadpoint.sessions"
+											:key="id"
+											style="cursor: pointer"
+											@click="showDetails(session)"
+										>
 											<td class="align-middle">
 												{{ session.vehicle }}
 											</td>
@@ -106,14 +110,6 @@
 													}}
 												</span>
 											</td>
-											<td class="text-nowrap ps-3 text-end align-middle">
-												<button
-													class="btn btn-danger btn-sm"
-													@click="startRemoveSession(session)"
-												>
-													<shopicon-regular-trash size="s" />
-												</button>
-											</td>
 										</tr>
 									</tbody>
 								</table>
@@ -121,95 +117,8 @@
 						</div>
 					</div>
 				</div>
-				<Teleport to="body">
-					<div
-						v-if="session != undefined"
-						id="removeSessionModal"
-						class="modal fade text-dark"
-						tabindex="-1"
-						role="dialog"
-						aria-hidden="true"
-					>
-						<div
-							class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
-							role="document"
-						>
-							<div class="modal-content">
-								<div class="modal-header">
-									<h5 class="modal-title">
-										{{ $t("sessions.reallyDelete") }}
-									</h5>
-									<button
-										type="button"
-										class="btn-close"
-										data-bs-dismiss="modal"
-										aria-label="Close"
-									></button>
-								</div>
-								<div class="modal-body">
-									<table class="table">
-										<tbody>
-											<tr>
-												<th>
-													{{ $t("sessions.vehicle") }}
-												</th>
-												<td>
-													{{ session.vehicle }}
-												</td>
-											</tr>
-											<tr>
-												<th>
-													{{ $t("sessions.date") }}
-												</th>
-												<td>
-													{{
-														fmtFullDateTime(
-															new Date(session.created),
-															false
-														)
-													}}
-													<br />
-													{{
-														fmtFullDateTime(
-															new Date(session.finished),
-															false
-														)
-													}}
-												</td>
-											</tr>
-											<tr>
-												<th>
-													{{ $t("sessions.energy") }}
-												</th>
-												<td>
-													{{ fmtKWh(session.chargedEnergy * 1e3) }}
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</div>
-								<div class="modal-footer d-flex justify-content-between">
-									<button
-										type="button"
-										class="btn btn-link text-muted"
-										data-bs-dismiss="modal"
-									>
-										{{ $t("sessions.cancel") }}
-									</button>
-									<button
-										type="button"
-										class="btn btn-danger"
-										data-bs-dismiss="modal"
-										@click="removeSession(session.id)"
-									>
-										<shopicon-regular-trash size="s" />
-									</button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</Teleport>
 			</main>
+			<charging-session-modal :session="selectedSession" :loadSessions="loadSessions" />
 		</div>
 	</div>
 </template>
@@ -221,16 +130,17 @@ import "@h2d2/shopicons/es/bold/arrowback";
 import "@h2d2/shopicons/es/regular/trash";
 import formatter from "../mixins/formatter";
 import api from "../api";
+import ChargingSessionModal from "../components/ChargingSessionModal.vue";
 
 export default {
 	name: "ChargingSessions",
-	components: { TopNavigation },
+	components: { TopNavigation, ChargingSessionModal },
 	mixins: [formatter],
 	props: {
 		notifications: Array,
 	},
 	data() {
-		return { sessions: [], session: undefined };
+		return { sessions: [], selectedSession: undefined };
 	},
 	computed: {
 		sessionsByMonthAndLoadpoint() {
@@ -300,19 +210,10 @@ export default {
 			date.setFullYear(year);
 			return this.fmtMonthYear(date);
 		},
-		startRemoveSession(session) {
-			this.session = session;
-			const modal = Modal.getOrCreateInstance(document.getElementById("removeSessionModal"));
+		showDetails(session) {
+			this.selectedSession = session;
+			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
 			modal.show();
-		},
-		async removeSession(id) {
-			try {
-				await api.delete("sessions/" + id);
-				this.session = undefined;
-				this.loadSessions();
-			} catch (err) {
-				console.error(err);
-			}
 		},
 	},
 };
