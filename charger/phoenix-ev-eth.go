@@ -64,7 +64,7 @@ func init() {
 	registry.Add("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,maxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -104,8 +104,8 @@ func NewPhoenixEVEth(uri string) (api.Charger, error) {
 		totalEnergy      func() (float64, error)
 		currents         func() (float64, float64, float64, error)
 		voltages         func() (float64, float64, float64, error)
-		identify         func() (string, error)
 		maxCurrentMillis func(float64) error
+		identify         func() (string, error)
 	)
 
 	// check presence of meter by voltage on l1
@@ -127,7 +127,7 @@ func NewPhoenixEVEth(uri string) (api.Charger, error) {
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
 
-	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, identify, maxCurrentMillis), err
+	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), err
 }
 
 // Status implements the api.Charger interface
@@ -180,7 +180,7 @@ func (wb *PhoenixEVEth) maxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
 
-	u := uint16(current * 10)
+	u := uint16(current * 10) // 0.1A Steps
 	_, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
 
 	return err
