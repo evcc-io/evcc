@@ -3,7 +3,7 @@ product:
   description: Walli LIGHT
 requirements: ["sponsorship"]
 description: |
-  Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird vorausgesetzt.
+  Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
 render:
   - default: |
       type: template
