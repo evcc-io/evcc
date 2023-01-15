@@ -1,5 +1,28 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) 2023 premultiply
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+// Supports all chargers based on Phoenix Contact "EV-ETH" controller series
+// EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
+// with OEM firmware from Phoenix Contact and modified firmware versions (Wallbe).
+// All features should be autodetected.
+// * Set DIP switch 10 to ON
+
 import (
 	"encoding/binary"
 	"fmt"
@@ -13,10 +36,6 @@ import (
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
-// PhoenixEVEth is an api.Charger implementation for Phoenix EV-***-ETH controller models
-// EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
-// with OEM firmware from Phoenix Contact and modified firmware versions (Wallbe/Compleo).
-// It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type PhoenixEVEth struct {
 	conn     *modbus.Connection
 	isWallbe bool
@@ -90,7 +109,7 @@ func NewPhoenixEVEth(uri string) (api.Charger, error) {
 	)
 
 	// check presence of meter by voltage on l1
-	if b, err := wb.conn.ReadInputRegisters(wbRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) >= 0 {
+	if b, err := wb.conn.ReadInputRegisters(wbRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 		currents = wb.currents
