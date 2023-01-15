@@ -51,8 +51,15 @@ func (d *Connection) ExecCmd(cmd string, res interface{}) error {
 
 // CurrentPower implements the api.Meter interface
 func (d *Connection) CurrentPower() (float64, error) {
+	var err error
 	var res StatusSNSResponse
-	err := d.ExecCmd("Status 8", &res)
+
+	if err = d.ExecCmd("Status 8", &res); err == nil {
+		if d.channel < 1 || d.channel > len(res.StatusSNS.Energy.Power) {
+			return 0, fmt.Errorf("invalid meter channel: %d", d.channel)
+		}
+	}
+
 	return res.StatusSNS.Energy.Power[d.channel-1], err
 }
 
