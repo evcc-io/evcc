@@ -1,7 +1,7 @@
 template: phoenix-ev-eth
 covers: ["wallbe", "wallbe-meter"]
 products:
-  - brand: Phoenix
+  - brand: Phoenix Contact
     description:
       generic: EV-ETH (Modbus TCP)
   - brand: Wallbe
@@ -10,11 +10,12 @@ products:
   - brand: ESL
     description:
       generic: Walli LIGHT
+capabilities: ["mA", "rfid"]
 requirements:
   description:
     en: The Wallbox must be connected via a network cable and the DIP switch 10 in the device must be set to 'ON'.
-    de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
-  uri: https://docs.evcc.io/docs/devices/chargers#phoenix-contact
+    de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird vorausgesetzt.
+  evcc: ["sponsorship"]
 params:
   - name: host
   - name: port

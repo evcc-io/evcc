@@ -1,8 +1,9 @@
 product:
   brand: ESL
   description: Walli LIGHT
+requirements: ["sponsorship"]
 description: |
-  Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
+  Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird vorausgesetzt.
 render:
   - default: |
       type: template
