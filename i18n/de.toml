@@ -224,7 +224,7 @@ loadpoint = "Ladepunkt"
 vehicle = "Fahrzeug"
 energy = "Geladen"
 date = "Zeitraum"
-reallyDelete = "Wollen Sie wirklich diesen Ladevorgang löschen?"
+reallyDelete = "Wollen Sie diesen Ladevorgang wirklich löschen?"
 cancel = "abbrechen"
 
 [sessions.csv]
