@@ -47,7 +47,7 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewTasmota creates Tasmota charger
 func NewTasmota(uri, user, password string, channel int, standbypower float64) (*Tasmota, error) {
-	conn, err := tasmota.NewConnection(uri, user, password)
+	conn, err := tasmota.NewConnection(uri, user, password, channel)
 	if err != nil {
 		return nil, err
 	}
