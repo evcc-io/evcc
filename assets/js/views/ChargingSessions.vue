@@ -123,6 +123,7 @@
 				</div>
 				<Teleport to="body">
 					<div
+						v-if="session != undefined"
 						id="removeSessionModal"
 						class="modal fade text-dark"
 						tabindex="-1"
@@ -145,7 +146,7 @@
 										aria-label="Close"
 									></button>
 								</div>
-								<div v-if="getSession() != undefined" class="modal-body">
+								<div class="modal-body">
 									<table class="table">
 										<tbody>
 											<tr>
