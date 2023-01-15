@@ -22,16 +22,7 @@
 						<table class="table">
 							<tbody>
 								<tr>
-									<th></th>
-									<td></td>
-								</tr>
-								<tr>
-									<th>
-										{{ $t("main.loadpoint.fallbackName") }}
-									</th>
-									<td>
-										{{ session.loadpoint }}
-									</td>
+									<th colspan="2"></th>
 								</tr>
 								<tr>
 									<th>
@@ -51,18 +42,30 @@
 								</tr>
 								<tr>
 									<th>
-										{{ $t("session.meterstart") }}
-									</th>
-									<td>
-										{{ fmtKWh(session.meterStart * 1e3) }}
-									</td>
-								</tr>
-								<tr>
-									<th>
 										{{ $t("sessions.energy") }}
 									</th>
 									<td>
 										{{ fmtKWh(session.chargedEnergy * 1e3) }}
+									</td>
+								</tr>
+								<tr>
+									<th></th>
+									<td></td>
+								</tr>
+								<tr>
+									<th>
+										{{ $t("main.loadpoint.fallbackName") }}
+									</th>
+									<td>
+										{{ session.loadpoint }}
+									</td>
+								</tr>
+								<tr>
+									<th>
+										{{ $t("session.meterstart") }}
+									</th>
+									<td>
+										{{ fmtKWh(session.meterStart * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -74,8 +77,7 @@
 									</td>
 								</tr>
 								<tr>
-									<th></th>
-									<td></td>
+									<th colspan="2"></th>
 								</tr>
 								<tr>
 									<th>
@@ -99,6 +101,39 @@
 							type="button"
 							class="btn btn-danger"
 							data-bs-dismiss="modal"
+							@click="confirmRemoving()"
+						>
+							<shopicon-regular-trash size="s" />
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</Teleport>
+	<Teleport to="body">
+		<div
+			id="deleteSessionConfirmationModal"
+			class="modal fade text-dark"
+			tabindex="-1"
+			role="dialog"
+			aria-hidden="true"
+		>
+			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+				<div v-if="session != undefined" class="modal-content">
+					<div class="modal-header">
+						<h5>{{ $t("sessions.reallyDelete") }}</h5>
+						<button
+							type="button"
+							class="btn-close"
+							data-bs-dismiss="modal"
+							aria-label="Close"
+						></button>
+					</div>
+					<div class="modal-footer d-flex justify-content-center">
+						<button
+							type="button"
+							class="btn btn-danger"
+							data-bs-dismiss="modal"
 							@click="removeSession(session.id)"
 						>
 							<shopicon-regular-trash size="s" />
@@ -111,7 +146,8 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/trash";
+import Modal from "bootstrap/js/dist/modal";
+import "@h2d2/shopicons/es/regular/checkmark";
 import formatter from "../mixins/formatter";
 import api from "../api";
 
@@ -123,6 +159,12 @@ export default {
 		loadSessions: Function,
 	},
 	methods: {
+		confirmRemoving() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("deleteSessionConfirmationModal")
+			);
+			modal.show();
+		},
 		async removeSession(id) {
 			try {
 				await api.delete("sessions/" + id);
