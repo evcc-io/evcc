@@ -229,7 +229,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		id := vars["id"]
 
 		if txn := dbserver.Instance.Delete(&res, id); txn.Error != nil {
-			jsonError(w, http.StatusInternalServerError, txn.Error)
+			jsonError(w, http.StatusBadRequest, txn.Error)
 			return
 		}
 	}

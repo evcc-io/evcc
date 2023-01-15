@@ -106,7 +106,7 @@ battery = "Batteri"
 [main.mode]
 off = "Af"
 minpv = "Min+Solar"
-pv = "Solenergi"
+pv = "Solar"
 now = "Hurtig"
 
 [main.loadpoint]

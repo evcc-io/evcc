@@ -299,18 +299,19 @@ export default {
 			date.setFullYear(year);
 			return this.fmtMonthYear(date);
 		},
-		getSession() {
-			return this.session;
-		},
 		startRemoveSession(session) {
 			this.session = session;
 			const modal = Modal.getOrCreateInstance(document.getElementById("removeSessionModal"));
 			modal.show();
 		},
 		async removeSession(id) {
-			await api.delete("session/" + id);
-			this.session = undefined;
-			this.loadSessions();
+			try {
+				await api.delete("sessions/" + id);
+				this.session = undefined;
+				this.loadSessions();
+			} catch (err) {
+				console.error(err);
+			}
 		},
 	},
 };
