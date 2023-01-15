@@ -1,6 +1,10 @@
 package tasmota
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+)
 
 // StatusResponse is the Status part of the Tasmota Status 0 command response
 // https://tasmota.github.io/docs/JSON-Status-Responses/
@@ -70,13 +74,13 @@ type StatusSNSResponse struct {
 			Total          float64
 			Yesterday      float64
 			Today          float64
-			Power          []float64
-			ApparentPower  []float64
-			ReactivePower  []float64
-			Factor         []float64
+			Power          Channels
+			ApparentPower  Channels
+			ReactivePower  Channels
+			Factor         Channels
 			Frequency      int
 			Voltage        int
-			Current        []float64
+			Current        Channels
 		}
 
 		// SML sensor readings
@@ -88,106 +92,24 @@ type StatusSNSResponse struct {
 	}
 }
 
-func (v *StatusSNSResponse) UnmarshalJSON(data []byte) error {
-	var err error
-	// Single energy meter response
-	var sr struct {
-		StatusSNS struct {
-			Time string
+type Channels []float64
 
-			// Energy readings
-			Energy struct {
-				TotalStartTime string
-				Total          float64
-				Yesterday      float64
-				Today          float64
-				Power          float64
-				ApparentPower  float64
-				ReactivePower  float64
-				Factor         float64
-				Frequency      int
-				Voltage        int
-				Current        float64
-			}
-
-			// SML sensor readings
-			SML struct {
-				TotalIn   float64 `json:"total_in"`
-				TotalOut  float64 `json:"total_out"`
-				PowerCurr int     `json:"power_curr"`
-			}
-		}
+func (ch *Channels) Channel(channel int) (float64, error) {
+	if channel < 1 || channel > len(*ch) {
+		return 0, fmt.Errorf("invalid channel: %d", channel)
 	}
-	// Multi energy meter response
-	var mr struct {
-		StatusSNS struct {
-			Time string
+	return (*ch)[channel-1], nil
+}
 
-			// Energy readings
-			Energy struct {
-				TotalStartTime string
-				Total          float64
-				Yesterday      float64
-				Today          float64
-				Power          []float64
-				ApparentPower  []float64
-				ReactivePower  []float64
-				Factor         []float64
-				Frequency      int
-				Voltage        int
-				Current        []float64
-			}
-
-			// SML sensor readings
-			SML struct {
-				TotalIn   float64 `json:"total_in"`
-				TotalOut  float64 `json:"total_out"`
-				PowerCurr int     `json:"power_curr"`
-			}
-		}
+func (ch *Channels) UnmarshalJSON(data []byte) error {
+	if f, err := strconv.ParseFloat(string(data), 64); err == nil {
+		*ch = Channels([]float64{f})
+		return nil
 	}
 
-	//Try MULTI energy meter response
-	if err = json.Unmarshal(data, &mr); err == nil {
-		v.StatusSNS.Time = mr.StatusSNS.Time
-
-		v.StatusSNS.Energy.TotalStartTime = mr.StatusSNS.Energy.TotalStartTime
-		v.StatusSNS.Energy.Total = mr.StatusSNS.Energy.Total
-		v.StatusSNS.Energy.Yesterday = mr.StatusSNS.Energy.Yesterday
-		v.StatusSNS.Energy.Today = mr.StatusSNS.Energy.Today
-		v.StatusSNS.Energy.Power = mr.StatusSNS.Energy.Power
-		v.StatusSNS.Energy.ApparentPower = mr.StatusSNS.Energy.ApparentPower
-		v.StatusSNS.Energy.ReactivePower = mr.StatusSNS.Energy.ReactivePower
-		v.StatusSNS.Energy.Factor = mr.StatusSNS.Energy.Factor
-		v.StatusSNS.Energy.Frequency = mr.StatusSNS.Energy.Frequency
-		v.StatusSNS.Energy.Voltage = mr.StatusSNS.Energy.Voltage
-		v.StatusSNS.Energy.Current = mr.StatusSNS.Energy.Current
-
-		v.StatusSNS.SML.TotalIn = mr.StatusSNS.SML.TotalIn
-		v.StatusSNS.SML.TotalOut = mr.StatusSNS.SML.TotalOut
-		v.StatusSNS.SML.PowerCurr = mr.StatusSNS.SML.PowerCurr
-	} else {
-		//Try SINGLE energy meter response
-		if err = json.Unmarshal(data, &sr); err == nil {
-			v.StatusSNS.Time = sr.StatusSNS.Time
-
-			v.StatusSNS.Energy.TotalStartTime = sr.StatusSNS.Energy.TotalStartTime
-			v.StatusSNS.Energy.Total = sr.StatusSNS.Energy.Total
-			v.StatusSNS.Energy.Yesterday = sr.StatusSNS.Energy.Yesterday
-			v.StatusSNS.Energy.Today = sr.StatusSNS.Energy.Today
-			v.StatusSNS.Energy.Power = append(v.StatusSNS.Energy.Power, sr.StatusSNS.Energy.Power)
-			v.StatusSNS.Energy.ApparentPower = append(v.StatusSNS.Energy.ApparentPower, sr.StatusSNS.Energy.ApparentPower)
-			v.StatusSNS.Energy.ReactivePower = append(v.StatusSNS.Energy.ReactivePower, sr.StatusSNS.Energy.ReactivePower)
-			v.StatusSNS.Energy.Factor = append(v.StatusSNS.Energy.Factor, sr.StatusSNS.Energy.Factor)
-			v.StatusSNS.Energy.Frequency = sr.StatusSNS.Energy.Frequency
-			v.StatusSNS.Energy.Voltage = sr.StatusSNS.Energy.Voltage
-			v.StatusSNS.Energy.Current = append(v.StatusSNS.Energy.Current, sr.StatusSNS.Energy.Current)
-
-			v.StatusSNS.SML.TotalIn = sr.StatusSNS.SML.TotalIn
-			v.StatusSNS.SML.TotalOut = sr.StatusSNS.SML.TotalOut
-			v.StatusSNS.SML.PowerCurr = sr.StatusSNS.SML.PowerCurr
-		}
-	}
+	var ff []float64
+	err := json.Unmarshal(data, &ff)
+	*ch = Channels(ff)
 
 	return err
 }
