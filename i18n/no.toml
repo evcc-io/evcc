@@ -140,7 +140,7 @@ activeLabel = "{time}"
 description = "Når skal kjøretøyet lades til {targetSoc}%?"
 tomorrow = "i morgen"
 experimentalLabel = "Eksperimentelt"
-activate = "Slå på"
+activate = "Aktiver"
 experimentalText = "Dette fungerer, men er ikke perfekt. Rapporter uventet oppførsel til"
 title = "Mål-tid"
 modalTitle = "Sett mål-tid"
@@ -164,12 +164,6 @@ configuration = "Oppsett"
 description = "Vennligst sjekk konfigurasjonsfilen din. Hvis feilmeldingen ikke hjelper, kan du sjekke ut {0}."
 hint = "Merk: Det kan også være at du har en defekt enhet (omformer, måler, ...). Sjekk nettverkstilkoblingene dine."
 
-[session]
-title = "Opladningssession"
-meterstart = "Målerstart"
-meterstop = "Målerstopp"
-odometer = "Kilometertal"
-
 [sessions]
 title = "Ladeøkter"
 energy = "Oppladet"
@@ -177,8 +171,6 @@ downloadCsv = "Last ned som CSV"
 vehicle = "Kjøretøy"
 date = "Tidsrom"
 loadpoint = "Ladepunkt"
-reallyDelete = "Vil du virkelig slette denne ladeøkten?"
-cancel = "abortere"
 
 [sessions.csv]
 odometer = "Kilometerstand"

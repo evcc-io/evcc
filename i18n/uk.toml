@@ -126,12 +126,6 @@ configuration = "Конфігурація"
 configFile = "Використаний файл конфігурації:"
 fixAndRestart = "Будь ласка, виправте проблему та перезапустіть сервер."
 
-[session]
-title = "сеанс зарядки"
-meterstart = "Лічильник пуску"
-meterstop = "Лічильник зупинки"
-odometer = "Пробіг"
-
 [sessions]
 title = "Сеанси зарядки"
 downloadCsv = "Завантажити як CSV"
@@ -139,8 +133,6 @@ loadpoint = "Точка зарядки"
 energy = "Заряджено"
 vehicle = "Транспортний засіб"
 date = "Період"
-reallyDelete = "Ви справді хочете видалити цей сеанс зарядки?"
-cancel = "припинити"
 
 [sessions.csv]
 finished = "Завершено"

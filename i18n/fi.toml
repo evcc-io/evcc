@@ -177,12 +177,6 @@ fixAndRestart = "Korjaa ongelma ja käynnistä serveri uudelleen."
 restartButton = "Käynnistä uudelleen"
 description = "Tarkasta asetustiedosto. Jos virheilmoituksesta ei ole apua, katso {0}."
 
-[session]
-title = "Latausistunto"
-meterstart = "Mittarin alku"
-meterstop = "Mittarin loppu"
-odometer = "Ajokilometrit"
-
 [sessions]
 title = "Lataustapahtumat"
 loadpoint = "Latauspiste"
@@ -190,8 +184,6 @@ vehicle = "Ajoneuvo"
 energy = "Ladattu"
 downloadCsv = "Lataa CSV muodossa"
 date = "Jakso"
-reallyDelete = "Haluatko todella poistaa tämän latausistunnon?"
-cancel = "keskeyttää"
 
 [sessions.csv]
 loadpoint = "Latauspiste"

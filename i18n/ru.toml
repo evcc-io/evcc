@@ -203,12 +203,6 @@ configuration = "Конфигурация"
 lineErrorLink = "линия {0}"
 discussions = "GitHub Discussions"
 
-[session]
-title = "сеанс зарядки"
-meterstart = "начальный счет"
-meterstop = "окончательный счет"
-odometer = "пробег"
-
 [sessions]
 date = "Период"
 title = "Сессии зарядки"
@@ -216,8 +210,6 @@ loadpoint = "Зарядная станция"
 downloadCsv = "Загрузить CSV"
 vehicle = "Транспортное средство"
 energy = "Заряжено"
-reallyDelete = "Вы действительно хотите удалить этот сеанс зарядки?"
-cancel = "обламывать"
 
 [offline]
 message = "Не подключено к серверу."

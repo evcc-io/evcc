@@ -195,12 +195,6 @@ lineErrorLink = "eilutė {0}"
 fixAndRestart = "Pabandykite Ištaisyti klaidą ir perkrauti serverį."
 restartButton = "Restartuoti"
 
-[session]
-title = "Įkrovimo sesija"
-meterstart = "Skaitiklis pradžia"
-meterstop = "Skaitiklis pabaiga"
-odometer = "Odometras"
-
 [sessions]
 title = "Įkrovimo Sesijos"
 downloadCsv = "Atsisiųsti CSV failą"
@@ -208,8 +202,6 @@ loadpoint = "Įkroviklis"
 vehicle = "Automobilis"
 energy = "Įkrauta"
 date = "Laikotarpis"
-reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo seansą?"
-cancel = "anuliuoti"
 
 [sessions.csv]
 loadpoint = "Įkroviklis"

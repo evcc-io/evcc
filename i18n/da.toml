@@ -196,12 +196,6 @@ fixAndRestart = "Løs problemet og genstart serveren."
 description = "Tjek venligst din konfigurationsfil. Hvis fejlmeddelelsen ikke hjælper, så tjek {0}."
 restartButton = "Genstart"
 
-[session]
-title = "Opladning Session"
-meterstart = "Målerstart"
-meterstop = "Målerstop"
-odometer = "Kilometertal"
-
 [sessions]
 vehicle = "Køretøj"
 energy = "Opladt"
@@ -209,8 +203,6 @@ date = "Periode"
 title = "Opladning Sessioner"
 downloadCsv = "Download som CSV"
 loadpoint = "Ladepunkt"
-reallyDelete = "Er du sikker på, at du vil slette disse opladningssessioner?"
-cancel = "abort"
 
 [sessions.csv]
 loadpoint = "Ladepunkt"

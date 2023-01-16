@@ -218,12 +218,6 @@ disclaimerHint = "Nota:"
 label = "Limita"
 noLimit = "none"
 
-[session]
-title = "Sesiune de încărcare"
-meterstart = "Numărarea inițială"
-meterstop = "Numărătoarea finală"
-odometer = "Kilometraj"
-
 [sessions]
 energy = "Incarcat"
 vehicle = "Vehicul"
@@ -231,8 +225,6 @@ date = "Perioada"
 loadpoint = "Punct incarcare"
 title = "Sesiuni incarcare"
 downloadCsv = "Downloadeaza ca CSV"
-reallyDelete = "Chiar doriți să ștergeți această sesiune de încărcare?"
-cancel = "a avorta"
 
 [main.loadpointSettings.minSoc]
 label = "Min. incarcare %"

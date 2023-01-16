@@ -88,8 +88,8 @@ selfConsumption = "Consommation personnelle"
 pvExport = "Grille d'exportation"
 
 [main.mode]
-off = "Désactivé"
-minpv = "Min+Solaire"
+off = "Éteindre"
+minpv = "Min+Sol"
 pv = "Solaire"
 now = "Rapide"
 
@@ -195,12 +195,6 @@ lineErrorLink = "Ligne {0}"
 fixAndRestart = "Corrigez le problème et redémarrez le serveur."
 restartButton = "Redémarrer"
 
-[session]
-title = "Session de Chargement"
-meterstart = "Début du Compteur"
-meterstop = "Arrêt du Compteur"
-odometer = "kilométrage"
-
 [sessions]
 title = "Sessions de Chargement"
 downloadCsv = "Télécharger au format CSV"
@@ -208,8 +202,6 @@ loadpoint = "Point de Chargement"
 vehicle = "Véhicule"
 energy = "Chargé"
 date = "Période"
-reallyDelete = "Voulez-vous vraiment supprimer cette session de charge?"
-cancel = "avorter"
 
 [sessions.csv]
 loadpoint = "Point de Chargement"

@@ -181,7 +181,7 @@ connected = "Collegato."
 targetChargeActive = "Carica target attiva..."
 
 [main.targetCharge]
-activate = "Accendi"
+activate = "Attivare"
 title = "Tempo obiettivo"
 inactiveLabel = "Tempo obiettivo"
 activeLabel = "{time}"
@@ -221,12 +221,6 @@ restartButton = "Ricomincia"
 title = "Errore di avvio"
 hint = "Nota: potrebbe anche trattarsi di un dispositivo difettoso (inverter, contatore, ...). Controllare le connessioni di rete."
 
-[session]
-title = "Sessione di ricarica"
-meterstart = "Conteggio iniziale"
-meterstop = "Conteggio finale"
-odometer = "Chilometraggio"
-
 [sessions]
 title = "Sessioni di ricarica"
 downloadCsv = "Scarica come CSV"
@@ -234,8 +228,6 @@ loadpoint = "Punto di ricarica"
 vehicle = "Veicolo"
 energy = "Caricato"
 date = "Periodo"
-reallyDelete = "Vuoi davvero eliminare questa sessione di ricarica?"
-cancel = "abortire"
 
 [offline]
 message = "Non connesso a un server."
