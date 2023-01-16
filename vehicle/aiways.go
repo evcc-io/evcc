@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -44,15 +45,22 @@ func NewAiwaysFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("aiways").Redact(cc.User, cc.Password, cc.VIN)
 
-	api := aiways.NewAPI(log, cc.User, cc.Password)
+	identity := aiways.NewIdentity(log)
+	user, err := identity.Login(cc.User, cc.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Redact(strconv.FormatInt(user, 10))
+
+	api := aiways.NewAPI(log, identity)
 	api.Client.Timeout = cc.Timeout
 
-	_, err := api.Vehicles()
-
+	// _, err := api.Vehicles()
 	// cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
-		v.Provider = aiways.NewProvider(api, cc.VIN, cc.Cache)
+		v.Provider = aiways.NewProvider(api, user, cc.VIN, cc.Cache)
 	}
 
 	return v, err

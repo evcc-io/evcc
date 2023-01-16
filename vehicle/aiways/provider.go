@@ -13,10 +13,10 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(api *API, user int64, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (StatusResponse, error) {
-			return api.Status(vin)
+			return api.Status(user, vin)
 		}, cache),
 	}
 	return impl
@@ -76,14 +76,14 @@ func (v *Provider) Odometer() (float64, error) {
 	return 0, err
 }
 
-var _ api.VehiclePosition = (*Provider)(nil)
+// var _ api.VehiclePosition = (*Provider)(nil)
 
-// Position implements the api.VehiclePosition interface
-func (v *Provider) Position() (float64, float64, error) {
-	res, err := v.statusG()
-	if err == nil {
-		return res.Data.Vc.Lat, res.Data.Vc.Lon, nil
-	}
+// // Position implements the api.VehiclePosition interface
+// func (v *Provider) Position() (float64, float64, error) {
+// 	res, err := v.statusG()
+// 	if err == nil {
+// 		return res.Data.Vc.Lat, res.Data.Vc.Lon, nil
+// 	}
 
-	return 0, 0, err
-}
+// 	return 0, 0, err
+// }
