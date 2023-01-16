@@ -73,8 +73,8 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	return nil, err
 }
 
-func (v *API) Status(vin string) (Status, error) {
-	var res Status
+func (v *API) Status(vin string) (StatusResponse, error) {
+	var res StatusResponse
 
 	data2 := struct {
 		UserId int64  `json:"userId"`

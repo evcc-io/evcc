@@ -7,7 +7,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/aiways"
-	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // https://github.com/davidgiga1993/AiwaysAPI
@@ -16,7 +15,7 @@ import (
 // Aiways is an api.Vehicle implementation for Aiways cars
 type Aiways struct {
 	*embed
-	*vw.Provider // provides the api implementations
+	*aiways.Provider // provides the api implementations
 }
 
 func init() {
@@ -46,25 +45,15 @@ func NewAiwaysFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("aiways").Redact(cc.User, cc.Password, cc.VIN)
 
 	api := aiways.NewAPI(log, cc.User, cc.Password)
+	api.Client.Timeout = cc.Timeout
 
 	_, err := api.Vehicles()
 
-	// idk := idkproxy.New(log, Aiways.IDKParams)
-	// ts, err := service.MbbTokenSource(log, idk, Aiways.AuthClientID, Aiways.AuthParams, cc.User, cc.Password)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// api := vw.NewAPI(log, ts, Aiways.Brand, Aiways.Country)
-	// api.Client.Timeout = cc.Timeout
-
 	// cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
-	// if err == nil {
-	// 	if err = api.HomeRegion(cc.VIN); err == nil {
-	// 		v.Provider = vw.NewProvider(api, cc.VIN, cc.Cache)
-	// 	}
-	// }
+	if err == nil {
+		v.Provider = aiways.NewProvider(api, cc.VIN, cc.Cache)
+	}
 
 	return v, err
 }
