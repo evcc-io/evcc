@@ -8,7 +8,7 @@
 			aria-hidden="true"
 		>
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
-				<div v-if="session != undefined" class="modal-content">
+				<div v-if="session" class="modal-content">
 					<div class="modal-header">
 						<h5>{{ $t("session.title") }}</h5>
 						<button
@@ -22,22 +22,27 @@
 						<table class="table">
 							<tbody>
 								<tr>
-									<th colspan="2"></th>
-								</tr>
-								<tr>
 									<th>
-										{{ $t("sessions.csv.created") }}
+										{{ $t("sessions.loadpoint") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(session.created), false) }}
+										{{ session.loadpoint }}
 									</td>
 								</tr>
 								<tr>
 									<th>
-										{{ $t("sessions.csv.finished") }}
+										{{ $t("sessions.vehicle") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(session.finished), false) }}
+										{{ session.vehicle }}
+									</td>
+								</tr>
+								<tr>
+									<th>
+										{{ $t("session.odometer") }}
+									</th>
+									<td>
+										{{ formatKm(session.odometer) }}
 									</td>
 								</tr>
 								<tr>
@@ -46,18 +51,6 @@
 									</th>
 									<td>
 										{{ fmtKWh(session.chargedEnergy * 1e3) }}
-									</td>
-								</tr>
-								<tr>
-									<th></th>
-									<td></td>
-								</tr>
-								<tr>
-									<th>
-										{{ $t("main.loadpoint.fallbackName") }}
-									</th>
-									<td>
-										{{ session.loadpoint }}
 									</td>
 								</tr>
 								<tr>
@@ -77,21 +70,20 @@
 									</td>
 								</tr>
 								<tr>
-									<th colspan="2"></th>
-								</tr>
-								<tr>
 									<th>
-										{{ $t("sessions.vehicle") }}
+										{{ $t("session.started") }}
 									</th>
 									<td>
-										{{ session.vehicle }}
+										{{ fmtFullDateTime(new Date(session.created), false) }}
 									</td>
 								</tr>
 								<tr>
 									<th>
-										{{ $t("session.odometer") }}
+										{{ $t("session.finished") }}
 									</th>
-									<td>{{ session.odometer }} km</td>
+									<td>
+										{{ fmtFullDateTime(new Date(session.finished), false) }}
+									</td>
 								</tr>
 							</tbody>
 						</table>
@@ -99,11 +91,11 @@
 					<div class="modal-footer d-flex justify-content-right">
 						<button
 							type="button"
-							class="btn btn-danger"
+							class="btn btn-outline-danger"
 							data-bs-dismiss="modal"
 							@click="confirmRemoving()"
 						>
-							<shopicon-regular-trash size="s" />
+							{{ $t("session.delete") }}
 						</button>
 					</div>
 				</div>
@@ -119,18 +111,18 @@
 			aria-hidden="true"
 		>
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
-				<div v-if="session != undefined" class="modal-content">
+				<div v-if="session" class="modal-content">
 					<div class="modal-header">
 						<h5>{{ $t("sessions.reallyDelete") }}</h5>
 					</div>
-					<div class="modal-footer d-flex justify-content-right">
+					<div class="modal-footer d-flex justify-content-between">
 						<button
 							type="button"
-							class="btn btn-secondary me-1"
+							class="btn btn-outline-secondary"
 							data-bs-dismiss="modal"
 							@click="openSessionDetailsModal"
 						>
-							{{ $t("sessions.cancel") }}
+							{{ $t("session.cancel") }}
 						</button>
 						<button
 							type="button"
@@ -138,7 +130,7 @@
 							data-bs-dismiss="modal"
 							@click="removeSession(session.id)"
 						>
-							<shopicon-regular-trash size="s" />
+							{{ $t("session.delete") }}
 						</button>
 					</div>
 				</div>
@@ -152,6 +144,7 @@ import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/checkmark";
 import formatter from "../mixins/formatter";
 import api from "../api";
+import { distanceUnit, distanceValue } from "../units";
 
 export default {
 	name: "ChargingSessionModal",
@@ -178,6 +171,9 @@ export default {
 			} catch (err) {
 				console.error(err);
 			}
+		},
+		formatKm: function (value) {
+			return `${distanceValue(value)} ${distanceUnit()}`;
 		},
 	},
 };

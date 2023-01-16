@@ -67,7 +67,7 @@
 										<tr
 											v-for="(session, id) in loadpoint.sessions"
 											:key="id"
-											style="cursor: pointer"
+											role="button"
 											@click="showDetails(session)"
 										>
 											<td class="align-middle">

@@ -216,6 +216,10 @@ title = "Charging Session"
 meterstart = "Meter start"
 meterstop = "Meter stop"
 odometer = "Mileage"
+created = "Created"
+finished = "Finished"
+delete = "Delete"
+cancel = "Cancel"
 
 [sessions]
 title = "Charging Sessions"
@@ -225,7 +229,7 @@ vehicle = "Vehicle"
 energy = "Charged"
 date = "Period"
 reallyDelete = "Do you really want to delete this session?"
-cancel = "cancel"
+
 
 [sessions.csv]
 loadpoint = "Charging point"

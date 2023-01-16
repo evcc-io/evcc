@@ -216,6 +216,10 @@ title = "Ladevorgang"
 meterstart = "Anfangszählerstand"
 meterstop = "Endzählerstand"
 odometer = "Kilometerstand"
+started = "Startzeit"
+finished = "Endzeit"
+delete = "Löschen"
+cancel = "Abbrechen"
 
 [sessions]
 title = "Ladevorgänge"
@@ -225,7 +229,6 @@ vehicle = "Fahrzeug"
 energy = "Geladen"
 date = "Zeitraum"
 reallyDelete = "Wollen Sie diesen Ladevorgang wirklich löschen?"
-cancel = "abbrechen"
 
 [sessions.csv]
 loadpoint = "Ladepunkt"
