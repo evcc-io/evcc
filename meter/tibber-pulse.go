@@ -56,6 +56,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	// subscription client
 	client := graphql.NewSubscriptionClient(tibber.SubscriptionURI).
+		WithProtocol(graphql.GraphQLWS).
 		WithConnectionParams(map[string]any{
 			"token": cc.Token,
 		}).
