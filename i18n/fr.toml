@@ -195,6 +195,12 @@ lineErrorLink = "Ligne {0}"
 fixAndRestart = "Corrigez le problème et redémarrez le serveur."
 restartButton = "Redémarrer"
 
+[session]
+title = "Session de Chargement"
+meterstart = "Début du Compteur"
+meterstop = "Arrêt du Compteur"
+odometer = "kilométrage"
+
 [sessions]
 title = "Sessions de Chargement"
 downloadCsv = "Télécharger au format CSV"

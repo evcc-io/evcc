@@ -218,6 +218,12 @@ disclaimerHint = "Nota:"
 label = "Limita"
 noLimit = "none"
 
+[session]
+title = "Sesiune de încărcare"
+meterstart = "Numărarea inițială"
+meterstop = "Numărătoarea finală"
+odometer = "Kilometraj"
+
 [sessions]
 energy = "Incarcat"
 vehicle = "Vehicul"

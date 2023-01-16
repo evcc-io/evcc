@@ -126,6 +126,12 @@ configuration = "Конфігурація"
 configFile = "Використаний файл конфігурації:"
 fixAndRestart = "Будь ласка, виправте проблему та перезапустіть сервер."
 
+[session]
+title = "сеанс зарядки"
+meterstart = "Лічильник пуску"
+meterstop = "Лічильник зупинки"
+odometer = "Пробіг"
+
 [sessions]
 title = "Сеанси зарядки"
 downloadCsv = "Завантажити як CSV"

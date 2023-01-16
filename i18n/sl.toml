@@ -107,6 +107,12 @@ activate = "Vklopi"
 experimentalLabel = "Eksperimentalno"
 experimentalText = "To deluje, vendar ni popolno. Nepričakovano obnašanje sporočite na"
 
+[session]
+title = "Sejo polnjenja"
+meterstart = "Začetno štetje"
+meterstop = "Končno štetje"
+odometer = "Kilometrina"
+
 [sessions]
 title = "Seje polnjenja"
 downloadCsv = "Prenesi kot CSV"

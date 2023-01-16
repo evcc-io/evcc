@@ -196,6 +196,12 @@ fixAndRestart = "Løs problemet og genstart serveren."
 description = "Tjek venligst din konfigurationsfil. Hvis fejlmeddelelsen ikke hjælper, så tjek {0}."
 restartButton = "Genstart"
 
+[session]
+title = "Opladning Session"
+meterstart = "Målerstart"
+meterstop = "Målerstop"
+odometer = "Kilometertal"
+
 [sessions]
 vehicle = "Køretøj"
 energy = "Opladt"

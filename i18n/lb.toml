@@ -191,6 +191,12 @@ label = "Max. Stroum"
 logout = "ausloggen"
 login = "umellen"
 
+[session]
+title = "Opluedsessioun"
+meterstart = "Initial Zuel"
+meterstop = "Finale Grof"
+odometer = "Kilometerpunkten"
+
 [sessions]
 loadpoint = "Opluedpunkt"
 title = "Opluedsessiounen"

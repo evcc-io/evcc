@@ -203,6 +203,12 @@ configuration = "Конфигурация"
 lineErrorLink = "линия {0}"
 discussions = "GitHub Discussions"
 
+[session]
+title = "сеанс зарядки"
+meterstart = "начальный счет"
+meterstop = "окончательный счет"
+odometer = "пробег"
+
 [sessions]
 date = "Период"
 title = "Сессии зарядки"
