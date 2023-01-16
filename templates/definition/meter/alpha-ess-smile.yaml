@@ -18,14 +18,14 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 33 # 0x21h Total Active power (Grid Meter)
+      address: 33 # 0x21 Total Active power (Grid Meter)
       type: holding
       decode: int32
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 18 # 0x12h Total energy consumed from grid (Grid)
+      address: 18 # 0x12 Total energy consumed from grid (Grid)
       type: holding
       decode: uint32
     scale: 0.01
@@ -33,38 +33,76 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 23 # 0x17h Current of A phase
+      address: 23 # 0x17 Current of A phase
       type: holding
       decode: int16
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 24 # 0x18h Current of B phase
+      address: 24 # 0x18 Current of B phase
       type: holding
       decode: int16
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 25 # 0x19h Current of C phase
+      address: 25 # 0x19 Current of C phase
       type: holding
       decode: int16
     scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 161 # 0xA1h Total Active power (PV Meter)
-      type: holding
-      decode: int32
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 161 # 0xA1 Total Active power (PV Meter)
+        type: holding
+        decode: int32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1055 # 0x41f PV1 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1059 # 0x423 PV2 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1063 # 0x427 PV3 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1067 # 0x42b PV4 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1071 # 0x42f PV5 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1075 # 0x433 PV6 power
+        type: holding
+        decode: uint32
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 144 # 0x90h Total energy feed to Grid (PV)
+      address: 144 # 0x90 Total energy feed to Grid (PV)
       type: holding
       decode: uint32
     scale: 0.01
@@ -74,14 +112,14 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 294 # 0x126h Battery Power
+      address: 294 # 0x126 Battery Power
       type: holding
       decode: int16
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 290 # 0x122h Battery discharge energy
+      address: 290 # 0x122 Battery discharge energy
       type: holding
       decode: uint32
     scale: 0.1
@@ -89,7 +127,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 258 # 0x102h Battery SOC
+      address: 258 # 0x102 Battery SOC
       type: holding
       decode: uint16
     scale: 0.1
