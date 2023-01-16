@@ -122,14 +122,16 @@
 				<div v-if="session != undefined" class="modal-content">
 					<div class="modal-header">
 						<h5>{{ $t("sessions.reallyDelete") }}</h5>
+					</div>
+					<div class="modal-footer d-flex justify-content-right">
 						<button
 							type="button"
-							class="btn-close"
+							class="btn btn-secondary me-1"
 							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
-					</div>
-					<div class="modal-footer d-flex justify-content-center">
+							@click="openSessionDetailsModal"
+						>
+							{{ $t("sessions.cancel") }}
+						</button>
 						<button
 							type="button"
 							class="btn btn-danger"
@@ -159,6 +161,10 @@ export default {
 		loadSessions: Function,
 	},
 	methods: {
+		openSessionDetailsModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
+			modal.show();
+		},
 		confirmRemoving() {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("deleteSessionConfirmationModal")
