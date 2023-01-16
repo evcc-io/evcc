@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(current float64) error, identifier func() (string, error)) api.Charger {
+func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(float64) error, identifier func() (string, error)) api.Charger {
 	switch {
 	case chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return base
