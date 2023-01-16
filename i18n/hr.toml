@@ -208,6 +208,12 @@ tomorrow = "sutra"
 label = "Granica"
 noLimit = "ništa"
 
+[session]
+title = "Sesija punjenja"
+meterstart = "Početak mjerača"
+meterstop = "Zaustavljanje mjerača"
+odometer = "Kilometraža"
+
 [sessions]
 downloadCsv = "Preuzmi kao CSV"
 energy = "Napunjeno"

@@ -164,6 +164,12 @@ configuration = "Oppsett"
 description = "Vennligst sjekk konfigurasjonsfilen din. Hvis feilmeldingen ikke hjelper, kan du sjekke ut {0}."
 hint = "Merk: Det kan også være at du har en defekt enhet (omformer, måler, ...). Sjekk nettverkstilkoblingene dine."
 
+[session]
+title = "Opladningssession"
+meterstart = "Målerstart"
+meterstop = "Målerstopp"
+odometer = "Kilometertal"
+
 [sessions]
 title = "Ladeøkter"
 energy = "Oppladet"

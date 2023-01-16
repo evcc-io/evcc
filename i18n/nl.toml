@@ -195,6 +195,12 @@ lineErrorLink = "lijn {0}"
 fixAndRestart = "Los het probleem op en herstart de server."
 restartButton = "Herstart"
 
+[session]
+title = "Oplaadsessie"
+meterstart = "Aanvankelijke telling"
+meterstop = "Definitieve telling"
+odometer = "Kilometerstand"
+
 [sessions]
 title = "Oplaad sessies"
 downloadCsv = "Download CSV"

@@ -195,6 +195,12 @@ lineErrorLink = "eilutė {0}"
 fixAndRestart = "Pabandykite Ištaisyti klaidą ir perkrauti serverį."
 restartButton = "Restartuoti"
 
+[session]
+title = "Įkrovimo sesija"
+meterstart = "Skaitiklis pradžia"
+meterstop = "Skaitiklis pabaiga"
+odometer = "Odometras"
+
 [sessions]
 title = "Įkrovimo Sesijos"
 downloadCsv = "Atsisiųsti CSV failą"

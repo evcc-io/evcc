@@ -221,6 +221,12 @@ restartButton = "Ricomincia"
 title = "Errore di avvio"
 hint = "Nota: potrebbe anche trattarsi di un dispositivo difettoso (inverter, contatore, ...). Controllare le connessioni di rete."
 
+[session]
+title = "Sessione di ricarica"
+meterstart = "Conteggio iniziale"
+meterstop = "Conteggio finale"
+odometer = "Chilometraggio"
+
 [sessions]
 title = "Sessioni di ricarica"
 downloadCsv = "Scarica come CSV"

@@ -211,6 +211,12 @@ lineErrorLink = "line {0}"
 fixAndRestart = "Please fix the problem and restart the server."
 restartButton = "Restart"
 
+[session]
+title = "Charging Session"
+meterstart = "Meter start"
+meterstop = "Meter stop"
+odometer = "Mileage"
+
 [sessions]
 title = "Charging Sessions"
 downloadCsv = "Download as CSV"

@@ -195,6 +195,12 @@ lineErrorLink = "linha {0}"
 fixAndRestart = "Corrija o problema e reinicie o servidor."
 restartButton = "Iniciar de novo"
 
+[session]
+title = "Processo de carregamento"
+meterstart = "Contagem inicial"
+meterstop = "Contagem final"
+odometer = "Quilometragem"
+
 [sessions]
 title = "Processos de carregamento"
 downloadCsv = "Descarregar como CSV"
