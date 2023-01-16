@@ -1,6 +1,8 @@
 package aiways
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -14,18 +16,24 @@ import (
 
 const URI = "https://coiapp-api-eu.ai-ways.com:10443"
 
-// API implements the Aiways api.
+// API implements the Aiways api
 type API struct {
 	*request.Helper
-	user, password string
+	user, hash string
 }
 
-// New creates a new BlueLink API
+// New creates a new Aiways API
 func NewAPI(log *util.Logger, user, password string) *API {
+	hash := md5.New()
+	hash.Write([]byte(password))
+
+	str := hex.EncodeToString(hash.Sum(nil))
+	log.Redact(str)
+
 	v := &API{
-		Helper:   request.NewHelper(log),
-		user:     user,
-		password: password,
+		Helper: request.NewHelper(log),
+		user:   user,
+		hash:   str,
 	}
 
 	v.Client.Transport = &transport.Decorator{
@@ -43,17 +51,14 @@ type Vehicle struct {
 }
 
 func (v *API) Vehicles() ([]Vehicle, error) {
-	var res struct {
-		Message string
-		Data    any
-	}
+	var res User
 
 	data := struct {
 		Account  string `json:"account"`
 		Password string `json:"password"`
 	}{
 		Account:  v.user,
-		Password: v.password,
+		Password: v.hash,
 	}
 
 	uri := fmt.Sprintf("%s/aiways-passport-service/passport/login/password", URI)
@@ -66,4 +71,31 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	}
 
 	return nil, err
+}
+
+func (v *API) Status(vin string) (Status, error) {
+	var res Status
+
+	data2 := struct {
+		UserId int64  `json:"userId"`
+		VIN    string `json:"vin"`
+	}{
+		UserId: 123,
+		VIN:    vin,
+	}
+
+	uri := fmt.Sprintf("%s/app/vc/getCondition", URI)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data2), map[string]string{
+		"Content-Type": request.JSONContent,
+		"Accept":       request.JSONContent,
+		"Token":        "res.Data.Token",
+	})
+
+	if err == nil {
+		if err = v.DoJSON(req, &res); err == nil && res.Data == nil {
+			err = errors.New(res.Message)
+		}
+	}
+
+	return res, err
 }
