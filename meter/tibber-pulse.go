@@ -43,20 +43,34 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		log: util.NewLogger("pulse").Redact(cc.Token, cc.HomeID),
 	}
 
-	if cc.HomeID == "" {
-		// query client
-		qclient := tibber.NewClient(t.log, cc.Token)
+	// query client
+	qclient := tibber.NewClient(t.log, cc.Token)
 
-		home, err := qclient.DefaultHome("")
-		if err != nil {
+	if cc.HomeID == "" {
+		if home, err := qclient.DefaultHome(""); err != nil {
 			return nil, err
+		} else {
+			cc.HomeID = home.ID
 		}
-		cc.HomeID = home.ID
 	}
+
+	// var res struct {
+	// 	Viewer struct {
+	// 		WebsocketSubscriptionUrl string
+	// 	}
+	// }
+
+	// ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	// defer cancel()
+
+	// if err := qclient.Query(ctx, &res, nil); err != nil {
+	// 	return nil, err
+	// }
 
 	// subscription client
 	client := graphql.NewSubscriptionClient(tibber.SubscriptionURI).
-		WithProtocol(graphql.GraphQLWS).
+		WithProtocol(graphql.SubscriptionsTransportWS).
+		// WithProtocol(graphql.GraphQLWS).
 		WithConnectionParams(map[string]any{
 			"token": cc.Token,
 		}).
