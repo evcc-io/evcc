@@ -3,8 +3,9 @@ package templates
 import (
 	"bufio"
 	"fmt"
-	"reflect"
 	"strings"
+
+	"github.com/imdario/mergo"
 )
 
 const (
@@ -213,48 +214,10 @@ func (p *Param) DefaultValue(renderMode string) interface{} {
 	return p.Default
 }
 
-// overwrite specific properties by using values from another param
-//
-// always overwrites if not provided empty: description, valuetype, default, mask, required
-//
-// only overwrite if not provided empty and empty in param: help, example, requirements
+// OverwriteProperties merges properties from parameter definition
 func (p *Param) OverwriteProperties(withParam Param) {
-	// always overwrite if defined
-	p.Description.Update(withParam.Description, true)
-
-	if len(p.Usages) == 0 {
-		p.Usages = withParam.Usages
-	}
-
-	if withParam.ValueType != "" {
-		p.ValueType = withParam.ValueType
-	}
-
-	if withParam.Required {
-		p.Required = withParam.Required
-	}
-
-	if withParam.Default != "" {
-		p.Default = withParam.Default
-	}
-
-	if withParam.Mask {
-		p.Mask = withParam.Mask
-	}
-
-	// only set if empty
-	p.Help.Update(withParam.Help, false)
-
-	if p.Example == "" && withParam.Example != "" {
-		p.Example = withParam.Example
-	}
-
-	if p.ValidValues == nil && withParam.ValidValues != nil {
-		p.ValidValues = withParam.ValidValues
-	}
-
-	if reflect.DeepEqual(p.Requirements, Requirements{}) {
-		p.Requirements = withParam.Requirements
+	if err := mergo.Merge(p, &withParam); err != nil {
+		panic(err)
 	}
 }
 
