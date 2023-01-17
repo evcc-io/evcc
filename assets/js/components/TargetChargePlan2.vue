@@ -160,7 +160,7 @@ export default {
 }
 .chart {
 	display: flex;
-	height: 95px;
+	height: 120px;
 	align-items: flex-end;
 	overflow-y: none;
 	overflow-x: auto;

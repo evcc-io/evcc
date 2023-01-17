@@ -4,7 +4,7 @@
   "author": "naltatis & andig",
   "scripts": {
     "build": "vite build",
-    "test": "",
+    "test": "vitest",
     "lint": "prettier assets './**/*.{yml,yaml,toml}' --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "dev": "vite",
     "histoire": "histoire dev"
@@ -48,5 +48,8 @@
     "node": ">=18.0.0"
   },
   "license": "MIT",
-  "repository": "github:evcc-io/evcc"
+  "repository": "github:evcc-io/evcc",
+  "devDependencies": {
+    "vitest": "^0.27.1"
+  }
 }
