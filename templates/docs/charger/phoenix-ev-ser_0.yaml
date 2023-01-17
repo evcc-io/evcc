@@ -1,5 +1,5 @@
 product:
-  brand: Phoenix
+  brand: Phoenix Contact
   description: EV-SER (Modbus RTU)
 render:
   - default: |

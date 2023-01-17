@@ -1,6 +1,7 @@
 product:
   brand: ESL
   description: Walli LIGHT
+capabilities: ["mA", "rfid"]
 requirements: ["sponsorship"]
 description: |
   Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
