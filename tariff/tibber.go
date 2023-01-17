@@ -83,21 +83,21 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Tibber) run(done chan error) {
 	var once sync.Once
 
+	var res struct {
+		Viewer struct {
+			Home struct {
+				ID                  string
+				TimeZone            string
+				CurrentSubscription tibber.Subscription
+			} `graphql:"home(id: $id)"`
+		}
+	}
+
+	v := map[string]interface{}{
+		"id": graphql.ID(t.homeID),
+	}
+
 	for ; true; <-time.NewTicker(time.Hour).C {
-		var res struct {
-			Viewer struct {
-				Home struct {
-					ID                  string
-					TimeZone            string
-					CurrentSubscription tibber.Subscription
-				} `graphql:"home(id: $id)"`
-			}
-		}
-
-		v := map[string]interface{}{
-			"id": graphql.ID(t.homeID),
-		}
-
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		err := t.client.Query(ctx, &res, v)
 		cancel()
