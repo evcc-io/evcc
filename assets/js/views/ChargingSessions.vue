@@ -118,7 +118,7 @@
 					</div>
 				</div>
 			</main>
-			<charging-session-modal :session="selectedSession" :loadSessions="loadSessions" />
+			<ChargingSessionModal :session="selectedSession" @sessionDeleted="loadSessions" />
 		</div>
 	</div>
 </template>

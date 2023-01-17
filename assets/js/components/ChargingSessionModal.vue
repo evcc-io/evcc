@@ -128,7 +128,7 @@
 							type="button"
 							class="btn btn-danger"
 							data-bs-dismiss="modal"
-							@click="removeSession(session.id)"
+							@click="removeSession"
 						>
 							{{ $t("session.delete") }}
 						</button>
@@ -151,8 +151,8 @@ export default {
 	mixins: [formatter],
 	props: {
 		session: Object,
-		loadSessions: Function,
 	},
+	emits: ["session-deleted"],
 	methods: {
 		openSessionDetailsModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
@@ -164,10 +164,10 @@ export default {
 			);
 			modal.show();
 		},
-		async removeSession(id) {
+		async removeSession() {
 			try {
-				await api.delete("sessions/" + id);
-				this.loadSessions();
+				await api.delete("sessions/" + this.session.id);
+				this.$emit("session-deleted");
 			} catch (err) {
 				console.error(err);
 			}
