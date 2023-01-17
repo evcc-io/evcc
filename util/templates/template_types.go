@@ -173,7 +173,7 @@ type LinkedTemplate struct {
 type Param struct {
 	Reference     bool         // if this is references another param definition
 	Referencename string       // name of the referenced param if it is not identical to the defined name
-	Preset        string       // Reference a predefined se of params
+	Preset        string       // Reference a predefined set of params
 	Name          string       // Param name which is used for assigning defaults properties and referencing in render
 	Description   TextLanguage // language specific titles (presented in UI instead of Name)
 	Required      bool         // cli if the user has to provide a non empty value
