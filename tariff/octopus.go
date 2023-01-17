@@ -27,10 +27,10 @@ func init() {
 }
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	cc := struct {
+	var cc struct {
 		Region string
 		Tariff string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
