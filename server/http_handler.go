@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"math"
 	"net/http"
@@ -224,16 +225,6 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	var res db.Sessions
 
-	if r.Method == "DELETE" {
-		vars := mux.Vars(r)
-		id := vars["id"]
-
-		if txn := dbserver.Instance.Delete(&res, id); txn.Error != nil {
-			jsonError(w, http.StatusBadRequest, txn.Error)
-			return
-		}
-	}
-
 	if txn := dbserver.Instance.Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
@@ -255,6 +246,50 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResult(w, res)
+}
+
+// deleteSessionHandler removes session in sessions table with given id
+func deleteSessionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbserver.Instance == nil {
+		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
+		return
+	}
+
+	var res db.Sessions
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if txn := dbserver.Instance.Delete(&res, id); txn.Error != nil {
+		jsonError(w, http.StatusBadRequest, txn.Error)
+		return
+	}
+
+	jsonResult(w, res)
+}
+
+// updateSessionHandler updates the data of an existing session
+func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbserver.Instance == nil {
+		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
+		return
+	}
+
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	var session db.Session
+	json.Unmarshal(b, &session)
+
+	if txn := dbserver.Instance.Save(&session); txn.Error != nil {
+		jsonError(w, http.StatusBadRequest, txn.Error)
+		return
+	}
+
+	json.NewEncoder(w)
 }
 
 // chargeModeHandler updates charge mode

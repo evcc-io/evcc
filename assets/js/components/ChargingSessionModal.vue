@@ -19,14 +19,14 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<table class="table">
+						<table class="table align-middle">
 							<tbody>
 								<tr>
 									<th>
 										{{ $t("sessions.loadpoint") }}
 									</th>
 									<td>
-										{{ session.loadpoint }}
+										{{ newSession.loadpoint }}
 									</td>
 								</tr>
 								<tr>
@@ -34,7 +34,16 @@
 										{{ $t("sessions.vehicle") }}
 									</th>
 									<td>
-										{{ session.vehicle }}
+										<select v-model="newSession.vehicle" class="form-select">
+											<option
+												v-for="vehicle in vehicles"
+												:key="vehicle"
+												:value="vehicle"
+												:selected="vehicle == newSession.vehicle"
+											>
+												{{ vehicle }}
+											</option>
+										</select>
 									</td>
 								</tr>
 								<tr>
@@ -42,7 +51,7 @@
 										{{ $t("session.odometer") }}
 									</th>
 									<td>
-										{{ formatKm(session.odometer) }}
+										{{ formatKm(newSession.odometer) }}
 									</td>
 								</tr>
 								<tr>
@@ -50,7 +59,7 @@
 										{{ $t("sessions.energy") }}
 									</th>
 									<td>
-										{{ fmtKWh(session.chargedEnergy * 1e3) }}
+										{{ fmtKWh(newSession.chargedEnergy * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -58,7 +67,7 @@
 										{{ $t("session.meterstart") }}
 									</th>
 									<td>
-										{{ fmtKWh(session.meterStart * 1e3) }}
+										{{ fmtKWh(newSession.meterStart * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -66,7 +75,7 @@
 										{{ $t("session.meterstop") }}
 									</th>
 									<td>
-										{{ fmtKWh(session.meterStop * 1e3) }}
+										{{ fmtKWh(newSession.meterStop * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -74,7 +83,7 @@
 										{{ $t("session.started") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(session.created), false) }}
+										{{ fmtFullDateTime(new Date(newSession.created), false) }}
 									</td>
 								</tr>
 								<tr>
@@ -82,21 +91,40 @@
 										{{ $t("session.finished") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(session.finished), false) }}
+										{{ fmtFullDateTime(new Date(newSession.finished), false) }}
 									</td>
 								</tr>
 							</tbody>
 						</table>
 					</div>
 					<div class="modal-footer d-flex justify-content-right">
-						<button
-							type="button"
-							class="btn btn-outline-danger"
-							data-bs-dismiss="modal"
-							@click="confirmRemoving()"
-						>
-							{{ $t("session.delete") }}
-						</button>
+						<div v-if="sessionUpdated">
+							<button
+								type="button"
+								class="btn btn-outline-warning"
+								@click="resetSessionData"
+							>
+								{{ $t("session.reset") }}
+							</button>
+							<button
+								type="button"
+								class="btn btn-outline-success ms-1"
+								data-bs-dismiss="modal"
+								@click="updateSession"
+							>
+								{{ $t("session.save") }}
+							</button>
+						</div>
+						<div v-else>
+							<button
+								type="button"
+								class="btn btn-outline-danger"
+								data-bs-dismiss="modal"
+								@click="openRemoveConfirmationModal"
+							>
+								{{ $t("session.delete") }}
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -140,25 +168,45 @@
 </template>
 
 <script>
-import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/checkmark";
-import formatter from "../mixins/formatter";
-import api from "../api";
 import { distanceUnit, distanceValue } from "../units";
+import formatter from "../mixins/formatter";
+import Modal from "bootstrap/js/dist/modal";
+import api from "../api";
+import store from "../store";
 
 export default {
 	name: "ChargingSessionModal",
+	components: {},
 	mixins: [formatter],
 	props: {
 		session: Object,
 	},
-	emits: ["session-deleted"],
+	emits: ["reload-sessions"],
+	data: function () {
+		return {
+			newSession: undefined,
+		};
+	},
+	computed: {
+		sessionUpdated: function () {
+			return this.session.vehicle != this.newSession.vehicle;
+		},
+		vehicles: function () {
+			return [...store.state.vehicles, this.$t("main.vehicle.unknown")];
+		},
+	},
+	watch: {
+		session: function (session) {
+			this.newSession = Object.assign({}, session);
+		},
+	},
 	methods: {
 		openSessionDetailsModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
 			modal.show();
 		},
-		confirmRemoving() {
+		openRemoveConfirmationModal() {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("deleteSessionConfirmationModal")
 			);
@@ -167,13 +215,24 @@ export default {
 		async removeSession() {
 			try {
 				await api.delete("sessions/" + this.session.id);
-				this.$emit("session-deleted");
+				this.$emit("reload-sessions");
+			} catch (err) {
+				console.error(err);
+			}
+		},
+		async updateSession() {
+			try {
+				await api.put("sessions", this.newSession);
+				this.$emit("reload-sessions");
 			} catch (err) {
 				console.error(err);
 			}
 		},
 		formatKm: function (value) {
 			return `${distanceValue(value)} ${distanceUnit()}`;
+		},
+		resetSessionData: function () {
+			this.newSession = Object.assign({}, this.session);
 		},
 	},
 };
