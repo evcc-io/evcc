@@ -223,6 +223,17 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var res db.Sessions
+
+	if r.Method == "DELETE" {
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		if txn := dbserver.Instance.Delete(&res, id); txn.Error != nil {
+			jsonError(w, http.StatusBadRequest, txn.Error)
+			return
+		}
+	}
+
 	if txn := dbserver.Instance.Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return

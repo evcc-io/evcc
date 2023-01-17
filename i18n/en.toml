@@ -211,6 +211,16 @@ lineErrorLink = "line {0}"
 fixAndRestart = "Please fix the problem and restart the server."
 restartButton = "Restart"
 
+[session]
+title = "Charging Session"
+meterstart = "Meter start"
+meterstop = "Meter stop"
+odometer = "Mileage"
+started = "Started"
+finished = "Finished"
+delete = "Delete"
+cancel = "Cancel"
+
 [sessions]
 title = "Charging Sessions"
 downloadCsv = "Download as CSV"
@@ -218,6 +228,7 @@ loadpoint = "Charging point"
 vehicle = "Vehicle"
 energy = "Charged"
 date = "Period"
+reallyDelete = "Do you really want to delete this session?"
 
 [sessions.csv]
 loadpoint = "Charging point"

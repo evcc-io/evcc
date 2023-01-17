@@ -211,6 +211,16 @@ lineErrorLink = "Zeile {0}"
 fixAndRestart = "Behebe das Problem und starte den Server neu."
 restartButton = "Neu starten"
 
+[session]
+title = "Ladevorgang"
+meterstart = "Anfangszählerstand"
+meterstop = "Endzählerstand"
+odometer = "Kilometerstand"
+started = "Startzeit"
+finished = "Endzeit"
+delete = "Löschen"
+cancel = "Abbrechen"
+
 [sessions]
 title = "Ladevorgänge"
 downloadCsv = "Als CSV herunterladen"
@@ -218,6 +228,7 @@ loadpoint = "Ladepunkt"
 vehicle = "Fahrzeug"
 energy = "Geladen"
 date = "Zeitraum"
+reallyDelete = "Wollen Sie diesen Ladevorgang wirklich löschen?"
 
 [sessions.csv]
 loadpoint = "Ladepunkt"

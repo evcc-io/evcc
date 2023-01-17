@@ -101,6 +101,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"prioritysoc":   {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower": {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"sessions":      {[]string{"GET"}, "/sessions", sessionHandler},
+		"sessions2":     {[]string{"DELETE"}, "/sessions/{id:[0-9]+}", sessionHandler},
 		"telemetry":     {[]string{"GET"}, "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
 		"telemetry2":    {[]string{"POST", "OPTIONS"}, "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 		"tariff":        {[]string{"GET"}, "/tariff/{tariff:[a-z]+}", tariffHandler(site)},

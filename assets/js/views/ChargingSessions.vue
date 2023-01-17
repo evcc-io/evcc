@@ -64,11 +64,18 @@
 										</tr>
 									</thead>
 									<tbody>
-										<tr v-for="(session, id) in loadpoint.sessions" :key="id">
-											<td>
+										<tr
+											v-for="(session, id) in loadpoint.sessions"
+											:key="id"
+											role="button"
+											@click="showDetails(session)"
+										>
+											<td class="align-middle">
 												{{ session.vehicle }}
 											</td>
-											<td class="text-nowrap text-end ps-sm-4 pe-md-5">
+											<td
+												class="text-nowrap text-end ps-sm-4 pe-md-5 align-middle"
+											>
 												{{ fmtKWh(session.chargedEnergy * 1e3) }}
 											</td>
 											<td class="text-nowrap ps-3 ps-md-4 ps-md-5">
@@ -111,25 +118,29 @@
 					</div>
 				</div>
 			</main>
+			<ChargingSessionModal :session="selectedSession" @session-deleted="loadSessions" />
 		</div>
 	</div>
 </template>
 
 <script>
+import Modal from "bootstrap/js/dist/modal";
 import TopNavigation from "../components/TopNavigation.vue";
 import "@h2d2/shopicons/es/bold/arrowback";
+import "@h2d2/shopicons/es/regular/trash";
 import formatter from "../mixins/formatter";
 import api from "../api";
+import ChargingSessionModal from "../components/ChargingSessionModal.vue";
 
 export default {
 	name: "ChargingSessions",
-	components: { TopNavigation },
+	components: { TopNavigation, ChargingSessionModal },
 	mixins: [formatter],
 	props: {
 		notifications: Array,
 	},
 	data() {
-		return { sessions: [] };
+		return { sessions: [], selectedSession: undefined };
 	},
 	computed: {
 		sessionsByMonthAndLoadpoint() {
@@ -198,6 +209,11 @@ export default {
 			date.setMonth(month);
 			date.setFullYear(year);
 			return this.fmtMonthYear(date);
+		},
+		showDetails(session) {
+			this.selectedSession = session;
+			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
+			modal.show();
 		},
 	},
 };
