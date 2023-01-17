@@ -63,6 +63,8 @@ func (t *Octopus) run(done chan error) {
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res octopus.UnitRates
 		if err := client.GetJSON(t.uri, &res); err != nil {
+			once.Do(func() { done <- err })
+
 			t.log.ERROR.Println(err)
 			continue
 		}
