@@ -148,10 +148,10 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 		current: 7,
 	}
 
-// Check FW Version 2.118	
+// Check FW Version 2.120	
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegFirmware, 5); err == nil {
 		if bytesAsString(b) != "2.118" {
-			fmt.Printf("[VERSI ] WARN Versicharge Firmware:\t%s -> Falsche Version, muss 2.118 sein \n", b)
+			fmt.Printf("[VERSI ] WARN Versicharge Firmware:\t%s -> Falsche Version, muss 2.120 sein \n", b)
 		}
 	}
 
