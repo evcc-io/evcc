@@ -79,7 +79,7 @@ vehicles = "Autoparkas"
 noEnergy = "Nėra skaitiklių duomenų"
 homePower = "Namo suvartojimas"
 pvProduction = "Gamyba"
-loadpoints = "Įkroviklis | Įkroviklis | {count} Įkrovikliai"
+loadpoints = "Įkroviklis | Įkroviklis | {count} įkrovikliai"
 battery = "Kaupiklis"
 batteryCharge = "Kaupiklis įkraunamas"
 batteryDischarge = "Kaupiklis iškraunamas"
@@ -130,7 +130,7 @@ label = "Min. Srovė"
 
 [main.vehicle]
 fallbackName = "Automobilis"
-vehicleSoc = "Akumuliatorius"
+vehicleSoc = "Baterija"
 targetSoc = "Limitas"
 none = "Nėra automobilio"
 unknown = "Nežinomas automobilis"
@@ -202,6 +202,7 @@ loadpoint = "Įkroviklis"
 vehicle = "Automobilis"
 energy = "Įkrauta"
 date = "Laikotarpis"
+reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo sesiją?"
 
 [sessions.csv]
 loadpoint = "Įkroviklis"
@@ -238,3 +239,13 @@ mi = "mylios"
 
 [settings.telemetry]
 label = "Telemetrija"
+
+[session]
+odometer = "Odometras (km)"
+meterstart = "Skaitiklis pradžia (kWh)"
+meterstop = "Skaitiklis pabaiga (kWh)"
+started = "Pradėta"
+finished = "Pabaigta"
+title = "Įkrovimo sesija"
+delete = "Ištrinti"
+cancel = "Atšaukti"
