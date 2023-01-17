@@ -11,7 +11,7 @@ render:
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vehicleid:
-      capacity: 12 # Akku-Kapazität in kWh # Optional
+      capacity: 12 # Akkukapazität in kWh # Optional
     advanced: |
       type: template
       template: ovms
@@ -19,7 +19,7 @@ render:
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vehicleid:
-      capacity: 12 # Akku-Kapazität in kWh # Optional
+      capacity: 12 # Akkukapazität in kWh # Optional
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können # Optional
       icon: car # Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater # Optional
       mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll # Optional

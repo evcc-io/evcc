@@ -24,6 +24,7 @@ render:
       host: 192.0.2.2 # Hostname
       port: 502 # Port
       integer: # Einstellung Float/Integer im Wechselrichter überprüfen # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
@@ -46,6 +47,7 @@ render:
       host: 192.0.2.2 # Hostname
       port: 502 # Port
       integer: # Einstellung Float/Integer im Wechselrichter überprüfen # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
@@ -68,3 +70,4 @@ render:
       host: 192.0.2.2 # Hostname
       port: 502 # Port
       integer: # Einstellung Float/Integer im Wechselrichter überprüfen # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional

@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/fixed"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang-module/carbon"
+	"github.com/golang-module/carbon/v2"
 )
 
 type Fixed struct {
@@ -91,7 +91,7 @@ func (t *Fixed) Unit() string {
 func (t *Fixed) Rates() (api.Rates, error) {
 	var res api.Rates
 
-	start := carbon.Time2Carbon(t.clock.Now().Local()).StartOfDay()
+	start := carbon.FromStdTime(t.clock.Now().Local()).StartOfDay()
 	for i := 0; i < 7; i++ {
 		dow := fixed.Day((start.DayOfWeek() + i) % 7)
 
@@ -126,8 +126,8 @@ func (t *Fixed) Rates() (api.Rates, error) {
 
 			rate := api.Rate{
 				Price: zone.Price,
-				Start: ts.Carbon2Time(),
-				End:   end.Carbon2Time(),
+				Start: ts.ToStdTime(),
+				End:   end.ToStdTime(),
 			}
 
 			res = append(res, rate)

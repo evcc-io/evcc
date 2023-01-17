@@ -13,9 +13,14 @@ params:
     help:
       en: Password for user group Standard
       de: Passwort für Benutzergruppe Benutzer
+  - name: capacity
+    advanced: true
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname
   {{- if ne .password "" }}
   password: {{ .password }} # optional
+  {{- end }}
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
   {{- end }}

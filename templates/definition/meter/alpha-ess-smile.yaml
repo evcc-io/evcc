@@ -11,6 +11,8 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 85
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -131,4 +133,7 @@ render: |
       type: holding
       decode: uint16
     scale: 0.1
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

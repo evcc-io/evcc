@@ -17,6 +17,8 @@ params:
     port: 1502
   - name: timeout
     valuetype: duration
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -62,4 +64,7 @@ render: |
       address: 62852 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32s
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

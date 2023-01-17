@@ -202,6 +202,7 @@ loadpoint = "Punto de carga"
 vehicle = "Vehículo"
 energy = "Cargado"
 date = "Período"
+reallyDelete = "¿De verdad quieres eliminar esta sesión?"
 
 [sessions.csv]
 loadpoint = "Punto de carga"
@@ -238,3 +239,13 @@ auto = "Automático"
 
 [settings.telemetry]
 label = "Telemetría"
+
+[session]
+meterstart = "Iniciar el medidor"
+odometer = "Kilometraje"
+started = "Comenzó"
+finished = "Finalizó"
+delete = "Borrar"
+cancel = "Cancelar"
+title = "Cargando la sesión"
+meterstop = "Parar el medidor"
