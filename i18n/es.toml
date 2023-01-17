@@ -240,7 +240,6 @@ auto = "Automático"
 [settings.telemetry]
 label = "Telemetría"
 
-
 [session]
 meterstart = "Iniciar el medidor"
 odometer = "Kilometraje"
