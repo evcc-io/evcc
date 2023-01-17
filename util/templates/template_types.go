@@ -222,6 +222,10 @@ func (p *Param) OverwriteProperties(withParam Param) {
 	// always overwrite if defined
 	p.Description.Update(withParam.Description, true)
 
+	if len(p.Usages) == 0 {
+		p.Usages = withParam.Usages
+	}
+
 	if withParam.ValueType != "" {
 		p.ValueType = withParam.ValueType
 	}
