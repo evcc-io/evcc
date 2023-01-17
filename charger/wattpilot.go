@@ -21,11 +21,12 @@ func init() {
 
 // NewWattpilotFromConfig creates a wattpilot charger from generic config
 func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		URI      string
 		Password string
 		Cache    time.Duration
-	}{}
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -39,11 +40,10 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewWattpilot creates Wattpilot charger
 func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("wattpilot")
-	c := &Wattpilot{}
+	c := &Wattpilot{
+		api: wattpilot.New(uri, password),
+	}
 
-	log.INFO.Println("Connecting wattpilot local", uri)
-	c.api = wattpilot.New(uri, password)
 	if _, err := c.api.Connect(); err != nil {
 		return nil, err
 	}
@@ -53,7 +53,6 @@ func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error
 
 // Status implements the api.Charger interface
 func (c *Wattpilot) Status() (api.ChargeStatus, error) {
-
 	car, err := c.api.GetProperty("car")
 	if err != nil {
 		return api.StatusNone, err
@@ -82,7 +81,7 @@ func (c *Wattpilot) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Wattpilot) Enable(enable bool) error {
-	var forceState int = 0
+	var forceState int
 	if !enable {
 		forceState = 1 // off
 	}
