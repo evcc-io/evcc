@@ -202,7 +202,7 @@ loadpoint = "Įkroviklis"
 vehicle = "Automobilis"
 energy = "Įkrauta"
 date = "Laikotarpis"
-reallyDelete = “Ar tikrai norite ištrinti šią įkrovimo sesiją?”
+reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo sesiją?"
 
 [sessions.csv]
 loadpoint = "Įkroviklis"
@@ -239,7 +239,6 @@ mi = "mylios"
 
 [settings.telemetry]
 label = "Telemetrija"
-
 
 [session]
 odometer = "Odometras (km)"
