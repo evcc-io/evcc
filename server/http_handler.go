@@ -76,9 +76,9 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 	jsonWrite(w, map[string]interface{}{"error": err.Error()})
 }
 
-func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
+func csvResult(ctx context.Context, w http.ResponseWriter, res any, filename string) {
 	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", `attachment; filename="sessions.csv"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.csv"`)
 
 	if ww, ok := res.(api.CsvWriter); ok {
 		_ = ww.WriteCsv(ctx, w)
@@ -224,10 +224,34 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var res db.Sessions
+	var filename = "session"
 
-	if txn := dbserver.Instance.Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
-		jsonError(w, http.StatusInternalServerError, txn.Error)
-		return
+	var year string = r.URL.Query().Get("year")
+	var month string = r.URL.Query().Get("month")
+
+	if len(year) > 0 {
+		filename += "-" + year
+
+		var fmtMonth string = "%"
+		if len(month) > 0 {
+			iMonth, err := strconv.Atoi(month)
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, err)
+				return
+			}
+			fmtMonth = fmt.Sprintf("%01d", ((iMonth + 1) % 13))
+			filename += "." + fmtMonth
+		}
+
+		if txn := dbserver.Instance.Where("charged_kwh>=0.05 and strftime('%Y', created) = ? and strftime('%m', created) = ?", year, fmtMonth).Order("created desc").Find(&res); txn.Error != nil {
+			jsonError(w, http.StatusInternalServerError, txn.Error)
+			return
+		}
+	} else {
+		if txn := dbserver.Instance.Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
+			jsonError(w, http.StatusInternalServerError, txn.Error)
+			return
+		}
 	}
 
 	if r.URL.Query().Get("format") == "csv" {
@@ -241,7 +265,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		csvResult(ctx, w, &res)
+		csvResult(ctx, w, &res, filename)
 		return
 	}
 

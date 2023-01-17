@@ -12,10 +12,28 @@
 
 		<div class="row">
 			<main class="col-12">
-				<div class="mb-4">
+				<div class="d-flex justify-content-between mb-4">
+					<select
+						v-model="selectedMonthGroup"
+						class="form-select form-select-sm light my-2 me-3"
+						role="button"
+					>
+						<option
+							v-for="group in sessionsByMonthAndLoadpointWithAll"
+							:key="group.month"
+							:value="group.month"
+							:selected="group.month == selectedMonthGroup"
+						>
+							{{
+								group.month != $t("sessions.all")
+									? formatGroupHeadline(group.month)
+									: $t("sessions.all")
+							}}
+						</option>
+					</select>
 					<a
 						class="btn btn-outline-secondary text-nowrap my-2"
-						:href="`./api/sessions?format=csv&amp;lang=${$i18n.locale}`"
+						:href="csvHrefLink($i18n.locale)"
 						download="sessions.csv"
 					>
 						{{ $t("sessions.downloadCsv") }}
@@ -23,7 +41,13 @@
 				</div>
 
 				<div v-for="group in sessionsByMonthAndLoadpoint" :key="group.month">
-					<div class="mx-2">
+					<div
+						v-if="
+							selectedMonthGroup == sessionsAllTranslation ||
+							group.month == selectedMonthGroup
+						"
+						class="mx-2"
+					>
 						<div class="d-flex align-items-baseline my-5">
 							<h2 class="me-4 mb-0">
 								{{ formatGroupHeadline(group.month) }}
@@ -140,7 +164,7 @@ export default {
 		notifications: Array,
 	},
 	data() {
-		return { sessions: [], selectedSession: undefined };
+		return { sessions: [], selectedSession: undefined, selectedMonthGroup: "" };
 	},
 	computed: {
 		sessionsByMonthAndLoadpoint() {
@@ -162,9 +186,16 @@ export default {
 				return { month, loadpoints };
 			});
 		},
+		sessionsByMonthAndLoadpointWithAll() {
+			return [{ month: this.$t("sessions.all") }, ...this.sessionsByMonthAndLoadpoint];
+		},
+		sessionsAllTranslation() {
+			return this.$t("sessions.all");
+		},
 	},
 	mounted() {
 		this.loadSessions();
+		this.selectedMonthGroup = this.$t("sessions.all");
 	},
 	methods: {
 		async loadSessions() {
@@ -215,6 +246,26 @@ export default {
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
 			modal.show();
 		},
+		csvHrefLink(locale) {
+			const url = "./api/sessions?format=csv&lang=" + locale;
+
+			console.log("csvHrefLink", this.selectedMonthGroup);
+			if (this.selectedMonthGroup == this.$t("sessions.all")) {
+				return url;
+			} else {
+				if (this.selectedMonthGroup.includes(".")) {
+					return (
+						url +
+						"&year=" +
+						this.selectedMonthGroup.split(".")[0] +
+						"&month=" +
+						this.selectedMonthGroup.split(".")[1]
+					);
+				} else {
+					return url + "&year=" + this.selectedMonthGroup;
+				}
+			}
+		},
 	},
 };
 </script>
@@ -247,5 +298,9 @@ export default {
 
 .breakdown:empty {
 	display: none;
+}
+
+.dark .form-select {
+	background-color: transparent;
 }
 </style>
