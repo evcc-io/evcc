@@ -8,6 +8,8 @@ params:
   - name: host
   - name: port
     default: 502
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -32,4 +34,7 @@ render: |
       address: 40082 # Batterie-SOC in Prozent
       type: holding
       decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end}}

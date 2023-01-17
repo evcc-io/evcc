@@ -16,6 +16,8 @@ params:
   - name: host
   - name: port
     default: 502
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "pv" }}
@@ -81,4 +83,7 @@ render: |
       address: 30845 # Battery Soc, %
       type: holding
       decode: uint32nan
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

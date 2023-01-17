@@ -8,7 +8,7 @@ render:
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: WREN... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
-      capacity: 50 # Akku-Kapazität in kWh # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional
     advanced: |
       type: template
       template: renault
@@ -16,7 +16,7 @@ render:
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: WREN... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
-      capacity: 50 # Akku-Kapazität in kWh # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können # Optional
       icon: car # Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater # Optional
       cache: 15m # Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden # Optional

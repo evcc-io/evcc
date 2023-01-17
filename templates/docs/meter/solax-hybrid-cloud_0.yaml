@@ -14,6 +14,13 @@ render:
       usage: grid
       tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
       serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+    advanced: |
+      type: template
+      template: solax-hybrid-cloud
+      usage: grid
+      tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
+      serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
@@ -21,6 +28,13 @@ render:
       usage: pv
       tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
       serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+    advanced: |
+      type: template
+      template: solax-hybrid-cloud
+      usage: pv
+      tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
+      serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
@@ -28,3 +42,10 @@ render:
       usage: battery
       tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
       serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+    advanced: |
+      type: template
+      template: solax-hybrid-cloud
+      usage: battery
+      tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
+      serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
+      capacity: 50 # Akkukapazität in kWh # Optional
