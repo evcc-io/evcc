@@ -202,7 +202,7 @@ loadpoint = "Ładowarka"
 vehicle = "Pojazd"
 energy = "Naładowano"
 date = "Okres"
-reallyDelete = "Czy na pewno chcesz usunąć tę sesję?”
+reallyDelete = "Czy na pewno chcesz usunąć tę sesję?"
 
 [sessions.csv]
 loadpoint = "Ładowarka"
@@ -239,7 +239,6 @@ mi = "mile"
 
 [settings.telemetry]
 label = "Telemetria"
-
 
 [session]
 meterstart = "Licznik początek (kWh)"
