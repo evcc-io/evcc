@@ -17,6 +17,7 @@
     "@popperjs/core": "^2.11.5",
     "@vitejs/plugin-vue": "^3.0.1",
     "@vue/compiler-sfc": "^3.2.30",
+    "@vue/test-utils": "^2.2.7",
     "axios": "^1.2.1",
     "bootstrap": "^5.2.2",
     "canvas-confetti": "^1.4.0",
@@ -50,6 +51,7 @@
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
   "devDependencies": {
+    "happy-dom": "^8.1.4",
     "vitest": "^0.27.1"
   }
 }

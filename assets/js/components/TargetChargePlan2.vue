@@ -19,11 +19,11 @@
 		</div>
 		<div class="chart">
 			<div
-				v-for="(slot, index) in slots"
+				v-for="(slot, index) in normalizedSlots"
 				:key="slot.start"
 				:data-index="index"
 				class="slot user-select-none"
-				:class="{ active: isActive(slot), behind: slot.behind }"
+				:class="{ active: isActive(slot), behind: slot.toLate }"
 				@touchstart="activeIndex = index"
 				@mouseenter="activeIndex = index"
 				@touchmove="touchmove"
@@ -82,6 +82,7 @@ export default {
 			return result;
 		},
 		slots() {
+			/*
 			const maxItems = 24 * 1;
 			const oneHour = 60 * 60 * 1000;
 			const slots = [];
@@ -102,6 +103,8 @@ export default {
 				slot.used = i < 3;
 			});
 			return slots;
+			*/
+			return [];
 		},
 		isCo2() {
 			return this.unit === "gCO2eq";
@@ -148,6 +151,49 @@ export default {
 			const index = $el.getAttribute("data-index");
 			if (!index) return;
 			this.activeIndex = index * 1;
+		},
+
+		convertDates(list) {
+			return list.map((item) => {
+				return {
+					start: new Date(item.start),
+					end: new Date(item.end),
+					price: item.price,
+				};
+			});
+		},
+
+		findSlotInRange(start, end, slots) {
+			return slots.find((s) => {
+				if (s.start.getTime() < start.getTime()) {
+					return s.end.getTime() > start.getTime();
+				}
+				return s.start.getTime() < end.getTime();
+			});
+		},
+		normalizedSlots(tariff, plan, startTime, targetTime) {
+			const result = [];
+
+			tariff = this.convertDates(tariff);
+			plan = this.convertDates(plan);
+
+			const oneHour = 60 * 60 * 1000;
+
+			for (let i = 0; i < 36; i++) {
+				const start = new Date(startTime.getTime() + oneHour * i);
+				const startHour = start.getHours();
+				const end = new Date(start.getTime());
+				end.setHours(startHour + 1);
+				const endHour = end.getHours();
+				const day = this.weekdayShort(start);
+				const toLate = targetTime.getTime() <= start.getTime();
+				// TODO: handle multiple matching time slots
+				const price = this.findSlotInRange(start, end, tariff)?.price;
+				const charging = this.findSlotInRange(start, end, plan) != null;
+				result.push({ day, price, startHour, endHour, charging, toLate });
+			}
+
+			return result;
 		},
 	},
 };
