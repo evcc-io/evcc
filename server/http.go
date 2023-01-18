@@ -164,7 +164,7 @@ func (s *HTTPd) RegisterShutdownHandler(callback func()) {
 
 // ListenAndServeMaybeTLS opens a listening socket (TLS if necessary) and starts HTTP server
 func (s *HTTPd) ListenAndServeMaybeTLS(cert *Certificate) error {
-	if certificate == nil {
+	if cert == nil {
 		return s.Server.ListenAndServe()
 	}
 
