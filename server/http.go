@@ -163,22 +163,20 @@ func (s *HTTPd) RegisterShutdownHandler(callback func()) {
 }
 
 // ListenAndServeMaybeTLS opens a listening socket (TLS if necessary) and starts HTTP server
-func (s *HTTPd) ListenAndServeMaybeTLS(certificate *Certificate) error {
-	if certificate != nil {
-		certificate, err := tls.X509KeyPair(
-			[]byte(certificate.Public), []byte(certificate.Private))
-		if err != nil {
-			return err
-		}
-
-		cfg := &tls.Config{Certificates: []tls.Certificate{certificate}}
-		listener, err := tls.Listen("tcp", s.Addr, cfg)
-		if err != nil {
-			return err
-		}
-
-		return s.Serve(listener)
+func (s *HTTPd) ListenAndServeMaybeTLS(cert *Certificate) error {
+	if certificate == nil {
+		return s.Server.ListenAndServe()
 	}
 
-	return s.Server.ListenAndServe()
+	certificate, err := tls.X509KeyPair([]byte(cert.Public), []byte(cert.Private))
+	if err != nil {
+		return err
+	}
+
+	listener, err := tls.Listen("tcp", s.Addr, &tls.Config{Certificates: []tls.Certificate{certificate}})
+	if err != nil {
+		return err
+	}
+
+	return s.Serve(listener)
 }
