@@ -1,14 +1,18 @@
 package meter
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/hasura/go-graphql-client"
 )
 
@@ -43,19 +47,43 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		log: util.NewLogger("pulse").Redact(cc.Token, cc.HomeID),
 	}
 
-	if cc.HomeID == "" {
-		// query client
-		qclient := tibber.NewClient(t.log, cc.Token)
+	// query client
+	qclient := tibber.NewClient(t.log, cc.Token)
 
-		home, err := qclient.DefaultHome("")
-		if err != nil {
+	if cc.HomeID == "" {
+		if home, err := qclient.DefaultHome(""); err != nil {
 			return nil, err
+		} else {
+			cc.HomeID = home.ID
 		}
-		cc.HomeID = home.ID
+	}
+
+	var res struct {
+		Viewer struct {
+			WebsocketSubscriptionUrl string
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	defer cancel()
+
+	if err := qclient.Query(ctx, &res, nil); err != nil {
+		return nil, err
 	}
 
 	// subscription client
-	client := graphql.NewSubscriptionClient(tibber.SubscriptionURI).
+	client := graphql.NewSubscriptionClient(res.Viewer.WebsocketSubscriptionUrl).
+		WithProtocol(graphql.GraphQLWS).
+		WithWebSocketOptions(graphql.WebsocketOptions{
+			HTTPClient: &http.Client{
+				Transport: &transport.Decorator{
+					Base: http.DefaultTransport,
+					Decorator: transport.DecorateHeaders(map[string]string{
+						"User-Agent": "go-graphql-client/0.9.0",
+					}),
+				},
+			},
+		}).
 		WithConnectionParams(map[string]any{
 			"token": cc.Token,
 		}).
@@ -63,36 +91,26 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		WithLog(t.log.TRACE.Println)
 
 	// run the client
-	go func() {
-		if err := client.Run(); err != nil {
-			t.log.ERROR.Println(err)
-		}
-	}()
-
-	err := t.subscribe(client, cc.HomeID)
+	done := make(chan error)
+	go t.subscribe(client, cc.HomeID, done)
+	err := <-done
 
 	return t, err
 }
 
 // subscribe to the websocket query
-func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) error {
+func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string, done chan error) {
 	var query struct {
 		tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
 	}
 
 	var once sync.Once
-	recv := make(chan struct{})
-	errC := make(chan error)
 
 	_, err := client.Subscribe(&query, map[string]any{
 		"homeId": graphql.ID(homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
-			select {
-			case errC <- err:
-			default:
-			}
-			return nil
+			once.Do(func() { done <- err })
 		}
 
 		var res struct {
@@ -100,33 +118,31 @@ func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) er
 		}
 
 		if err := json.Unmarshal(data, &res); err != nil {
+			once.Do(func() { done <- err })
+
 			t.log.ERROR.Println(err)
 			return nil
 		}
-
-		once.Do(func() {
-			close(recv)
-		})
 
 		t.mu.Lock()
 		t.live = res.LiveMeasurement
 		t.updated = time.Now()
 		t.mu.Unlock()
 
+		once.Do(func() { close(done) })
+
 		return nil
 	})
 
-	// wait for connection
-	if err == nil {
-		select {
-		case <-recv:
-		case <-time.After(timeout):
-			err = api.ErrTimeout
-		case err = <-errC:
-		}
+	if err != nil {
+		once.Do(func() { done <- err })
 	}
 
-	return err
+	go func() {
+		if err := client.Run(); err != nil {
+			once.Do(func() { done <- err })
+		}
+	}()
 }
 
 // CurrentPower implements the api.Meter interface
