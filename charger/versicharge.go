@@ -22,23 +22,25 @@ package charger
 //************************************************************************************
 
 // Verwendete Versicharge GEN 3:
-  // Versicharge GEN3 FW2.118 oder höher
+  // Versicharge GEN3 FW 2.120 oder höher
   // Commercial Version (Reg 22 = 2), One Outlet: (Reg 24 = 1)
   // Integrated MID (Reg 30 = 4)
-  // Order Number: 8EM1310-3EJ04-0GA0
+  // Test mit Order Number: 8EM1310-3EJ04-0GA0
 
   //https://support.industry.siemens.com/cs/attachments/109814359/versicharge_wallbox_modBus_map_en-US-FINAL.pdf
 
   // Gefundene Fehler:
-    // Status Wallbox (A-F): Register 1601 nicht im ModbusMap dokumentiert. 
-	// Active Power Phase Sum wird bei Strömen über 10A falsch berechnet (Register 1665)
-    // daher Verwendung Apparent Power.
+    // - Status Wallbox (A-F): Register 1601 nicht im ModbusMap dokumentiert. 
+	// - Active Power Phase Sum wird bei Strömen über 10A falsch berechnet (Register 1665)
+    //   daher Verwendung Apparent Power.
+	// - MaxCurrent wird um 1A reduziert (bekanntes Problem), gilt nicht für 8A, 16A, 24A, 32A
 //************************************************************************************
 
 // Weitere zukünfitge Themen zu implementieren / testen:
 
   // Laden 1/3 Phasen
-  // 1 und 3 phasiges Laden implentmentiert aber funktioniert nicht // Wallbox reagiert nicht/stürzt ab?
+  // 1 und 3 phasiges Laden implentmentiert aber funktioniert nicht 
+  // Trotz Umschaltung und Strom-Werte 1 phasig wird weiterhin mit 3 phasen physisch geladen
 
   //RFID
   // Im ModbusTable fehlt das Register welche Karte freigegen wurde (zur Fahrzeugerkennung)
@@ -145,14 +147,25 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 	wb := &Versicharge{
 		log:     log,
 		conn:    conn,
-		current: 7,
+		current: 6,
 	}
 
 // Check FW Version 2.120	
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegFirmware, 5); err == nil {
-		if bytesAsString(b) != "2.118" {
-			fmt.Printf("[VERSI ] WARN Versicharge Firmware:\t%s -> Falsche Version, muss 2.120 sein \n", b)
+		fmt.Printf("[VERSI ] INFO Versicharge Firmware: \t%s \n", b)
+		if bytesAsString(b) != "2.120" {
+			fmt.Printf("[VERSI ] WARN Versicharge Firmware:\t%s -> Falsche Version, getestet mit FW 2.120 \n", b)
 		}
+	}
+
+// MaxCurrent auf 6A setzen bei Initialisierung
+	b, err := wb.conn.WriteSingleRegister(VersichargeRegMaxCurrent, 7) // Red. um 1A auf 6A -> known Bug
+	if err == nil {
+		wb.current = 6
+		fmt.Printf("[VERSI ] INFO MaxCurrent auf 6A gesetzt")
+		fmt.Printf(" (Bug %x) \n", b)
+	} else {
+		return wb, err	
 	}
 
 	return wb, nil
@@ -227,11 +240,17 @@ func (wb *Versicharge) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface (CurrentLimiter)
 func (wb *Versicharge) MaxCurrent(current int64) error {
-	if current < 7 {
+	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
 	u := uint16(current)
+
+	// Bug Korrektur -> Strom wird um 1A vermindert (außer bei 8, 16,24,32)
+	if (u != 8 && u != 16 && u != 24 && u != 32) {
+		u = u + 1  // Erhöhung um 1A
+	}
+
 	_, err := wb.conn.WriteSingleRegister(VersichargeRegMaxCurrent, u)
 	if err == nil {
 		wb.current = u
