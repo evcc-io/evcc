@@ -231,7 +231,6 @@ vehicle = "Fahrzeug"
 energy = "Geladen"
 date = "Zeitraum"
 reallyDelete = "Wollen Sie diesen Ladevorgang wirklich löschen?"
-all = "Alle"
 
 [sessions.csv]
 loadpoint = "Ladepunkt"

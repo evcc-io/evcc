@@ -231,7 +231,6 @@ vehicle = "Vehicle"
 energy = "Charged"
 date = "Period"
 reallyDelete = "Do you really want to delete this session?"
-all = "All"
 
 [sessions.csv]
 loadpoint = "Charging point"
