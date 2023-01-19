@@ -51,11 +51,11 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 	qclient := tibber.NewClient(t.log, cc.Token)
 
 	if cc.HomeID == "" {
-		if home, err := qclient.DefaultHome(""); err != nil {
+		home, err := qclient.DefaultHome("")
+		if err != nil {
 			return nil, err
-		} else {
-			cc.HomeID = home.ID
 		}
+		cc.HomeID = home.ID
 	}
 
 	var res struct {

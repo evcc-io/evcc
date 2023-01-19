@@ -31,14 +31,6 @@ type API interface {
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
-	// GetTargetEnergy returns the charge target energy
-	GetTargetEnergy() float64
-	// SetTargetEnergy sets the charge target energy
-	SetTargetEnergy(float64)
-	// GetTargetSoc returns the charge target soc
-	GetTargetSoc() int
-	// SetTargetSoc sets the charge target soc
-	SetTargetSoc(int)
 	// GetMinSoc returns the charge minimum soc
 	GetMinSoc() int
 	// SetMinSoc sets the charge minimum soc
@@ -48,8 +40,23 @@ type API interface {
 	// SetPhases sets the enabled phases
 	SetPhases(int) error
 
-	// SetTargetCharge sets the charge targetSoc
-	SetTargetCharge(time.Time, int) error
+	// GetTargetTime returns the target time
+	GetTargetTime() time.Time
+	// SetTargetTime sets the target time
+	SetTargetTime(time.Time) error
+	// GetTargetEnergy returns the charge target energy
+	GetTargetEnergy() float64
+	// SetTargetEnergy sets the charge target energy
+	SetTargetEnergy(float64)
+	// GetTargetSoc returns the charge target soc
+	GetTargetSoc() int
+	// SetTargetSoc sets the charge target soc
+	SetTargetSoc(int)
+	// GetPlannerUnit returns the planning tariffs unit
+	GetPlannerUnit() string
+	// GetPlan creates a charging plan
+	GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error)
+
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
 
