@@ -7,10 +7,14 @@ const (
 
 	vehicleDetectionActive = "vehicleDetectionActive" // vehicle detection is active (bool)
 
-	vehicleRange     = "vehicleRange"     // vehicle range
 	vehicleOdometer  = "vehicleOdometer"  // vehicle odometer
+	vehicleRange     = "vehicleRange"     // vehicle range
 	vehicleSoc       = "vehicleSoc"       // vehicle soc
 	vehicleTargetSoc = "vehicleTargetSoc" // vehicle soc limit
+	vehicleCapacity  = "vehicleCapacity"  // vehicle battery capacity
+	vehicleIcon      = "vehicleIcon"      // vehicle icon for ui
+	vehiclePresent   = "vehiclePresent"   // vehicle detected
+	vehicleTitle     = "vehicleTitle"     // vehicle title
 
 	minSoc                   = "minSoc"                   // min soc goal
 	targetSoc                = "targetSoc"                // target charging soc goal
