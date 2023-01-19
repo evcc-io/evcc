@@ -176,6 +176,11 @@ tomorrow = "rytoj"
 targetIsInThePast = "Pasirinkite laiką ateityje."
 remove = "Panaikinti"
 activate = "Aktyvuoti"
+planUnknown = "nežinoma"
+planDuration = "Įkrovimo laikas"
+planPeriodLabel = "Periodas"
+planPeriodValue = "{start} iki {end}"
+descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"
 
 [main.targetEnergy]
 label = "Limitas"
