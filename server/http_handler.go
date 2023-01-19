@@ -250,7 +250,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 				jsonError(w, http.StatusInternalServerError, err)
 				return
 			}
-			fmtMonth = fmt.Sprintf("%01d", ((iMonth + 1) % 13))
+			fmtMonth = fmt.Sprintf("%02d", ((iMonth + 1) % 13))
 			filename += "." + fmtMonth
 		}
 
