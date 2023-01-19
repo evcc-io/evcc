@@ -989,10 +989,10 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		}
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, estimate)
 
-		lp.publish("vehiclePresent", true)
-		lp.publish("vehicleTitle", lp.vehicle.Title())
-		lp.publish("vehicleIcon", lp.vehicle.Icon())
-		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
+		lp.publish(vehiclePresent, true)
+		lp.publish(vehicleTitle, lp.vehicle.Title())
+		lp.publish(vehicleIcon, lp.vehicle.Icon())
+		lp.publish(vehicleCapacity, lp.vehicle.Capacity())
 
 		// unblock api
 		lp.Unlock()
@@ -1005,10 +1005,10 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	} else {
 		lp.socEstimator = nil
 
-		lp.publish("vehiclePresent", false)
-		lp.publish("vehicleTitle", "")
-		lp.publish("vehicleIcon", "")
-		lp.publish("vehicleCapacity", int64(0))
+		lp.publish(vehiclePresent, false)
+		lp.publish(vehicleTitle, "")
+		lp.publish(vehicleIcon, "")
+		lp.publish(vehicleCapacity, int64(0))
 		lp.publish(vehicleOdometer, 0.0)
 	}
 
