@@ -34,16 +34,18 @@
 										{{ $t("sessions.vehicle") }}
 									</th>
 									<td>
-										<select v-model="newSession.vehicle" class="form-select">
-											<option
-												v-for="vehicle in vehicles"
-												:key="vehicle"
-												:value="vehicle"
-												:selected="vehicle == newSession.vehicle"
-											>
-												{{ vehicle }}
-											</option>
-										</select>
+										<VehicleOptions
+											:id="newSession.vehicle"
+											class="options"
+											:vehicles="vehicles"
+											:is-unknown="false"
+											@change-vehicle="changeVehicle"
+											@remove-vehicle="removeVehicle"
+										>
+											<span class="flex-grow-1 text-truncate vehicle-name">
+												{{ newSession.vehicle }}
+											</span>
+										</VehicleOptions>
 									</td>
 								</tr>
 								<tr>
@@ -98,33 +100,14 @@
 						</table>
 					</div>
 					<div class="modal-footer d-flex justify-content-right">
-						<div v-if="sessionUpdated">
-							<button
-								type="button"
-								class="btn btn-outline-warning"
-								@click="resetSessionData"
-							>
-								{{ $t("session.reset") }}
-							</button>
-							<button
-								type="button"
-								class="btn btn-outline-success ms-1"
-								data-bs-dismiss="modal"
-								@click="updateSession"
-							>
-								{{ $t("session.save") }}
-							</button>
-						</div>
-						<div v-else>
-							<button
-								type="button"
-								class="btn btn-outline-danger"
-								data-bs-dismiss="modal"
-								@click="openRemoveConfirmationModal"
-							>
-								{{ $t("session.delete") }}
-							</button>
-						</div>
+						<button
+							type="button"
+							class="btn btn-outline-danger"
+							data-bs-dismiss="modal"
+							@click="openRemoveConfirmationModal"
+						>
+							{{ $t("session.delete") }}
+						</button>
 					</div>
 				</div>
 			</div>
@@ -173,16 +156,18 @@ import { distanceUnit, distanceValue } from "../units";
 import formatter from "../mixins/formatter";
 import Modal from "bootstrap/js/dist/modal";
 import api from "../api";
-import store from "../store";
+
+import VehicleOptions from "./VehicleOptions.vue";
 
 export default {
 	name: "ChargingSessionModal",
-	components: {},
+	components: { VehicleOptions },
 	mixins: [formatter],
 	props: {
 		session: Object,
+		vehicles: [Object],
 	},
-	emits: ["reload-sessions"],
+	emits: ["session-changed"],
 	data: function () {
 		return {
 			newSession: undefined,
@@ -191,9 +176,6 @@ export default {
 	computed: {
 		sessionUpdated: function () {
 			return this.session.vehicle != this.newSession.vehicle;
-		},
-		vehicles: function () {
-			return [...store.state.vehicles, this.$t("main.vehicle.unknown")];
 		},
 	},
 	watch: {
@@ -215,7 +197,7 @@ export default {
 		async removeSession() {
 			try {
 				await api.delete("sessions/" + this.session.id);
-				this.$emit("reload-sessions");
+				this.$emit("session-changed");
 			} catch (err) {
 				console.error(err);
 			}
@@ -223,18 +205,28 @@ export default {
 		async updateSession() {
 			try {
 				await api.put("sessions", this.newSession);
-				this.$emit("reload-sessions");
+				this.$emit("session-changed");
 			} catch (err) {
 				console.error(err);
 			}
 		},
+		async changeVehicle(index) {
+			this.newSession.vehicle = this.vehicles[index - 1].title;
+			await this.updateSession();
+		},
+		async removeVehicle() {
+			this.newSession.vehicle = this.$t("main.vehicle.unknown");
+			await this.updateSession();
+		},
 		formatKm: function (value) {
 			return `${distanceValue(value)} ${distanceUnit()}`;
-		},
-		resetSessionData: function () {
-			this.newSession = Object.assign({}, this.session);
 		},
 	},
 };
 </script>
-<style scoped></style>
+
+<style scoped>
+.options .vehicle-name {
+	text-decoration: underline;
+}
+</style>

@@ -118,7 +118,11 @@
 					</div>
 				</div>
 			</main>
-			<ChargingSessionModal :session="selectedSession" @reload-sessions="loadSessions" />
+			<ChargingSessionModal
+				:session="selectedSession"
+				:vehicles="vehicles"
+				@session-changed="loadSessions"
+			/>
 		</div>
 	</div>
 </template>
@@ -130,6 +134,7 @@ import "@h2d2/shopicons/es/bold/arrowback";
 import "@h2d2/shopicons/es/regular/trash";
 import formatter from "../mixins/formatter";
 import api from "../api";
+import store from "../store";
 import ChargingSessionModal from "../components/ChargingSessionModal.vue";
 
 export default {
@@ -160,6 +165,11 @@ export default {
 					}
 				);
 				return { month, loadpoints };
+			});
+		},
+		vehicles() {
+			return store.state.vehicles?.map((v, index) => {
+				return { id: index, title: v };
 			});
 		},
 	},
