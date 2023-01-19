@@ -223,8 +223,6 @@ started = "Startzeit"
 finished = "Endzeit"
 delete = "Löschen"
 cancel = "Abbrechen"
-save = "Sichern"
-reset = "Zurücksetzen"
 
 [sessions]
 title = "Ladevorgänge"
