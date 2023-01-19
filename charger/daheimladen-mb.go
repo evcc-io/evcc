@@ -229,9 +229,9 @@ var _ api.Diagnosis = (*DaheimLadenModbus)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *DaheimLadenModbus) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1); err == nil {
-		fmt.Printf("\tSocket lock state:\t%x\n", b)
+		fmt.Printf("\tCharging Station State:\t%x\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegConnectorState, 1); err == nil {
-		fmt.Printf("\tStatus:\t%x\n", b)
+		fmt.Printf("\tConnector State:\t%x\n", b)
 	}
 }
