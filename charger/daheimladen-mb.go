@@ -65,8 +65,8 @@ func NewDaheimLadenModbusFromConfig(other map[string]interface{}) (api.Charger, 
 }
 
 // NewDaheimLadenModbus creates DaheimLadenModbus charger
-func NewDaheimLadenModbus(uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+func NewDaheimLadenModbus(uri string, id uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func NewDaheimLadenModbus(uri string, slaveID uint8) (api.Charger, error) {
 
 	wb := &DaheimLadenModbus{
 		conn: conn,
-		curr: 60, // assume min current
+		curr: 6, // assume min current
 	}
 
 	return wb, err
@@ -84,7 +84,7 @@ func NewDaheimLadenModbus(uri string, slaveID uint8) (api.Charger, error) {
 
 // Status implements the api.Charger interface
 func (wb *DaheimLadenModbus) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(dlRegChargingState, 1)
+	b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -138,18 +138,11 @@ func (wb *DaheimLadenModbus) setCurrent(current uint16) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *DaheimLadenModbus) MaxCurrent(current int64) error {
-	return wb.MaxCurrentMillis(float64(current))
-}
-
-var _ api.ChargerEx = (*DaheimLadenModbus)(nil)
-
-// MaxCurrent implements the api.ChargerEx interface
-func (wb *DaheimLadenModbus) MaxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	wb.curr = uint16(current * 10)
+	wb.curr = uint16(current)
 
 	return wb.setCurrent(wb.curr)
 }
@@ -170,7 +163,7 @@ var _ api.ChargeTimer = (*DaheimLadenModbus)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
 func (wb *DaheimLadenModbus) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(dlRegChargingTime, 2)
+	b, err := wb.conn.ReadHoldingRegisters(dlRegChargingTime, 2)
 	if err != nil {
 		return 0, err
 	}
