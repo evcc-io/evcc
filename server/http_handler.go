@@ -293,7 +293,11 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var session db.Session
-	json.Unmarshal(b, &session)
+
+	if err := json.Unmarshal(b, &session); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
 
 	if txn := dbserver.Instance.Save(&session); txn.Error != nil {
 		jsonError(w, http.StatusBadRequest, txn.Error)
