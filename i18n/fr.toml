@@ -176,8 +176,6 @@ tomorrow = "Matin"
 targetIsInThePast = "Choisissez une heure dans le futur, Marty."
 remove = "Ôter"
 activate = "Activer"
-experimentalLabel = "Expérimental"
-experimentalText = "Cela fonctionne, mais n'est pas parfait. Veuillez signaler tout comportement inattendu à"
 
 [main.targetEnergy]
 label = "Cible de chargement"

@@ -190,8 +190,6 @@ setTargetTime = "nessuno"
 descriptionSoc = "Quando dovrebbe essere addebitato il veicolo a {targetSoc}%?"
 tomorrow = "domani"
 targetIsInThePast = "Scegli un momento nel futuro, Marty."
-experimentalLabel = "Sperimentale"
-experimentalText = "Funziona, ma non è perfetto. Segnala un comportamento imprevisto a"
 today = "oggi"
 
 [sessions.csv]
