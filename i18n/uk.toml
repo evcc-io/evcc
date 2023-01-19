@@ -211,8 +211,6 @@ today = "сьогодні"
 targetIsInThePast = "Виберіть час у майбутньому."
 activate = "Активувати"
 inactiveLabel = "Запланований час"
-experimentalLabel = "Експериментальний"
-experimentalText = "Це працює, але не ідеально. Будь ласка, повідомте про несподівану поведінку"
 description = "Коли транспортний засіб повинен бути заряджений на {targetSoc}%?"
 
 [main.loadpoint]

@@ -191,12 +191,10 @@ scale1p = "Smanjuje se na jednofaznu struju za {remaining}…"
 scale3p = "Povećava se na trofaznu struju za {remaining}…"
 
 [main.targetCharge]
-description = "Kada bi se vozilo trebalo napojiti na {targetSoc} %?"
+descriptionSoc = "Kada bi se vozilo trebalo napojiti na {targetSoc} %?"
 today = "danas"
 targetIsInThePast = "Odaberi vrijeme u budućnosti."
 activate = "Aktiviraj"
-experimentalLabel = "Eksperimentalno"
-experimentalText = "Ovo radi, ali nije savršeno. Prijavi neočekivano ponašanje našem timu"
 title = "Ciljano vrijeme"
 setTargetTime = "ništa"
 inactiveLabel = "Ciljano vrijeme"
