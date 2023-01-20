@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) 2019-2023 andig, premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -36,22 +36,18 @@ type PrachtAlpha struct {
 }
 
 const (
-	// pracht modbus documentation about register offsets is weird.
-	// at least on Pracht PNI ModbusTCP add-on card all registers are holding
 	prachtTotalCurrent = 40003 - 40001 //   2 total limit of all connectors
 	prachtConnCurrent  = 40004 - 40001 //   3 (+1 for second connector)
 	prachtRfidCount    = 30075 - 30001 //  74
 	prachtFirmwareVer1 = 30101 - 30001 // 100
 	prachtFirmwareVer2 = 30102 - 30001 // 101
-	prachtEncTemp      = 30104 - 30001 // 103
+	prachtEnclTemp     = 30104 - 30001 // 103
 	prachtConnStatus   = 30107 - 30001 // 106 (+1 for second connector)
 )
 
 func init() {
 	registry.Add("pracht-alpha", NewPrachtAlphaFromConfig)
 }
-
-// https://www.prachtenergy.com/wp-content/uploads/2021/03/instruction-manual-charging-station-pracht-alphaXT-eng-1.pdf
 
 // NewPrachtAlphaFromConfig creates a PrachtAlpha charger from generic config
 func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -123,8 +119,10 @@ func (wb *PrachtAlpha) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 2, 3:
 		return api.StatusC, nil
+	case 4:
+		return api.StatusF, nil
 	default:
-		return api.StatusF, fmt.Errorf("invalid status: %d", u)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
 }
 
@@ -196,7 +194,7 @@ func (wb *PrachtAlpha) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(prachtFirmwareVer2, 1); err == nil {
 		fmt.Printf("\tFirmware Version 2:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(prachtEncTemp, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(prachtEnclTemp, 1); err == nil {
 		fmt.Printf("\tEnclosure Temperature:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 }
