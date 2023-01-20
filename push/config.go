@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // Sender implements message sending
@@ -33,7 +34,9 @@ func NewMessengerFromConfig(typ string, other map[string]interface{}) (res Sende
 			res, err = NewShoutrrrMessenger(cc.URI)
 		}
 	case "script":
-		var cc scriptConfig
+		cc := scriptConfig{
+			Timeout: request.Timeout,
+		}
 		if err = util.DecodeOther(other, &cc); err == nil {
 			res, err = NewScriptMessenger(cc.CmdLine, cc.Timeout)
 		}
