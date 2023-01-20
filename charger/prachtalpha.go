@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) 2019-2023 andig, premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -36,16 +36,18 @@ type PrachtAlpha struct {
 }
 
 const (
-	prachtTotalCurrent = 40003 - 40001 // total limit of all connectors
-	prachtMaxCurrent   = 40004 - 40001 // +1 for second connector
-	prachtStatus       = 30107 - 30001 // +1 for second connector
+	prachtTotalCurrent = 40003 - 40001 //   2 total limit of all connectors
+	prachtConnCurrent  = 40004 - 40001 //   3 (+1 for second connector)
+	prachtRfidCount    = 30075 - 30001 //  74
+	prachtFirmwareVer1 = 30101 - 30001 // 100
+	prachtFirmwareVer2 = 30102 - 30001 // 101
+	prachtEnclTemp     = 30104 - 30001 // 103
+	prachtConnStatus   = 30107 - 30001 // 106 (+1 for second connector)
 )
 
 func init() {
 	registry.Add("pracht-alpha", NewPrachtAlphaFromConfig)
 }
-
-// https://www.prachtenergy.com/wp-content/uploads/2021/03/instruction-manual-charging-station-pracht-alphaXT-eng-1.pdf
 
 // NewPrachtAlphaFromConfig creates a PrachtAlpha charger from generic config
 func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -104,8 +106,8 @@ func (wb *PrachtAlpha) register(reg int) uint16 {
 
 // Status implements the api.Charger interface
 func (wb *PrachtAlpha) Status() (api.ChargeStatus, error) {
-	reg := wb.register(prachtStatus)
-	b, err := wb.conn.ReadInputRegisters(reg, 1)
+	reg := wb.register(prachtConnStatus)
+	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -118,26 +120,26 @@ func (wb *PrachtAlpha) Status() (api.ChargeStatus, error) {
 	case 2, 3:
 		return api.StatusC, nil
 	default:
-		return api.StatusF, fmt.Errorf("invalid status: %d", u)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
 }
 
 // Enabled implements the api.Charger interface
 func (wb *PrachtAlpha) Enabled() (bool, error) {
-	reg := wb.register(prachtMaxCurrent)
+	reg := wb.register(prachtConnCurrent)
 
-	b, err := wb.conn.ReadInputRegisters(reg, 1)
+	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
 	if err != nil {
 		return false, err
 	}
 
 	// get total current (https://github.com/evcc-io/evcc/issues/3738)
-	tot, err := wb.conn.ReadInputRegisters(prachtTotalCurrent, 1)
+	t, err := wb.conn.ReadHoldingRegisters(prachtTotalCurrent, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0 && binary.BigEndian.Uint16(tot) > 0, nil
+	return binary.BigEndian.Uint16(b) > 0 && binary.BigEndian.Uint16(t) > 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -151,7 +153,7 @@ func (wb *PrachtAlpha) Enable(enable bool) error {
 }
 
 func (wb *PrachtAlpha) setCurrent(current uint16) error {
-	reg := wb.register(prachtMaxCurrent)
+	reg := wb.register(prachtConnCurrent)
 	_, err := wb.conn.WriteSingleRegister(reg, current)
 
 	// set total current (https://github.com/evcc-io/evcc/issues/3738)
@@ -169,4 +171,28 @@ func (wb *PrachtAlpha) MaxCurrent(current int64) error {
 		wb.curr = uint16(current)
 	}
 	return err
+}
+
+var _ api.Diagnosis = (*PrachtAlpha)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *PrachtAlpha) Diagnose() {
+	if b, err := wb.conn.ReadHoldingRegisters(prachtTotalCurrent, 1); err == nil {
+		fmt.Printf("\tTotal Current Limit:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(wb.register(prachtConnCurrent), 1); err == nil {
+		fmt.Printf("\tConn %d Current Limit:\t%d\n", wb.vehicle, binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(prachtRfidCount, 1); err == nil {
+		fmt.Printf("\tRFID cards learned:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(prachtFirmwareVer1, 1); err == nil {
+		fmt.Printf("\tFirmware Version 1:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(prachtFirmwareVer2, 1); err == nil {
+		fmt.Printf("\tFirmware Version 2:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(prachtEnclTemp, 1); err == nil {
+		fmt.Printf("\tEnclosure Temperature:\t%d\n", binary.BigEndian.Uint16(b))
+	}
 }
