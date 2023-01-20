@@ -26,7 +26,7 @@
 										{{ $t("sessions.loadpoint") }}
 									</th>
 									<td>
-										{{ newSession.loadpoint }}
+										{{ session.loadpoint }}
 									</td>
 								</tr>
 								<tr>
@@ -35,7 +35,7 @@
 									</th>
 									<td>
 										<VehicleOptions
-											:id="newSession.vehicle"
+											:id="session.vehicle"
 											class="options"
 											:vehicles="vehicles"
 											:is-unknown="false"
@@ -43,7 +43,7 @@
 											@remove-vehicle="removeVehicle"
 										>
 											<span class="flex-grow-1 text-truncate vehicle-name">
-												{{ newSession.vehicle }}
+												{{ session.vehicle }}
 											</span>
 										</VehicleOptions>
 									</td>
@@ -53,7 +53,7 @@
 										{{ $t("session.odometer") }}
 									</th>
 									<td>
-										{{ formatKm(newSession.odometer) }}
+										{{ formatKm(session.odometer) }}
 									</td>
 								</tr>
 								<tr>
@@ -61,7 +61,7 @@
 										{{ $t("sessions.energy") }}
 									</th>
 									<td>
-										{{ fmtKWh(newSession.chargedEnergy * 1e3) }}
+										{{ fmtKWh(session.chargedEnergy * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -69,7 +69,7 @@
 										{{ $t("session.meterstart") }}
 									</th>
 									<td>
-										{{ fmtKWh(newSession.meterStart * 1e3) }}
+										{{ fmtKWh(session.meterStart * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -77,7 +77,7 @@
 										{{ $t("session.meterstop") }}
 									</th>
 									<td>
-										{{ fmtKWh(newSession.meterStop * 1e3) }}
+										{{ fmtKWh(session.meterStop * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -85,7 +85,7 @@
 										{{ $t("session.started") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(newSession.created), false) }}
+										{{ fmtFullDateTime(new Date(session.created), false) }}
 									</td>
 								</tr>
 								<tr>
@@ -93,7 +93,7 @@
 										{{ $t("session.finished") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(newSession.finished), false) }}
+										{{ fmtFullDateTime(new Date(session.finished), false) }}
 									</td>
 								</tr>
 							</tbody>
@@ -168,21 +168,6 @@ export default {
 		vehicles: [Object],
 	},
 	emits: ["session-changed"],
-	data: function () {
-		return {
-			newSession: undefined,
-		};
-	},
-	computed: {
-		sessionUpdated: function () {
-			return this.session.vehicle != this.newSession.vehicle;
-		},
-	},
-	watch: {
-		session: function (session) {
-			this.newSession = Object.assign({}, session);
-		},
-	},
 	methods: {
 		openSessionDetailsModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
@@ -194,32 +179,34 @@ export default {
 			);
 			modal.show();
 		},
-		async removeSession() {
-			try {
-				await api.delete("sessions/" + this.session.id);
-				this.$emit("session-changed");
-			} catch (err) {
-				console.error(err);
-			}
-		},
-		async updateSession() {
-			try {
-				await api.put("sessions", this.newSession);
-				this.$emit("session-changed");
-			} catch (err) {
-				console.error(err);
-			}
-		},
-		async changeVehicle(index) {
-			this.newSession.vehicle = this.vehicles[index - 1].title;
-			await this.updateSession();
-		},
-		async removeVehicle() {
-			this.newSession.vehicle = this.$t("main.vehicle.unknown");
-			await this.updateSession();
-		},
 		formatKm: function (value) {
 			return `${distanceValue(value)} ${distanceUnit()}`;
+		},
+		async changeVehicle(index) {
+			await this.updateSession({
+				vehicle: this.vehicles[index - 1].title,
+			});
+		},
+		async removeVehicle() {
+			await this.updateSession({
+				vehicle: this.$t("main.vehicle.unknown"),
+			});
+		},
+		async updateSession(data) {
+			try {
+				await api.put("session/" + this.session?.id, data);
+				this.$emit("session-changed", this.session);
+			} catch (err) {
+				console.error(err);
+			}
+		},
+		async removeSession() {
+			try {
+				await api.delete("session/" + this.session?.id);
+				this.$emit("session-changed");
+			} catch (err) {
+				console.error(err);
+			}
 		},
 	},
 };

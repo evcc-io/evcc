@@ -27,6 +27,10 @@ import (
 
 var ignoreState = []string{"releaseNotes"} // excessive size
 
+type SessionUpdateRequest struct {
+	Vehicle *string `json:"vehicle"`
+}
+
 func indexHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
@@ -286,20 +290,23 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := io.ReadAll(r.Body)
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	var session db.Session
+	var requestBody SessionUpdateRequest
 
-	if err := json.Unmarshal(b, &session); err != nil {
+	if err := json.Unmarshal(body, &requestBody); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if txn := dbserver.Instance.Save(&session); txn.Error != nil {
+	if txn := dbserver.Instance.Table("sessions").Where("id = ?", id).Save(&requestBody); txn.Error != nil {
 		jsonError(w, http.StatusBadRequest, txn.Error)
 		return
 	}
