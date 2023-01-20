@@ -121,7 +121,7 @@
 			<ChargingSessionModal
 				:session="selectedSession"
 				:vehicles="vehicles"
-				@session-changed="sessionChanged"
+				@session-changed="loadSessions"
 			/>
 		</div>
 	</div>
@@ -227,10 +227,6 @@ export default {
 			this.selectedSessionId = sessionId;
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
 			modal.show();
-		},
-		async sessionChanged(sessionId) {
-			await this.loadSessions();
-			this.selectedSessionId = sessionId;
 		},
 	},
 };

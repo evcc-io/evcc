@@ -27,10 +27,6 @@ import (
 
 var ignoreState = []string{"releaseNotes"} // excessive size
 
-type SessionUpdateRequest struct {
-	Vehicle *string `json:"vehicle"`
-}
-
 func indexHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
@@ -240,7 +236,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	var res db.Sessions
 
-	if txn := dbserver.Instance.Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
+	if txn := dbserver.Instance.Table("sessions").Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
 	}
@@ -275,7 +271,7 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	if txn := dbserver.Instance.Delete(&res, id); txn.Error != nil {
+	if txn := dbserver.Instance.Table("sessions").Delete(&res, id); txn.Error != nil {
 		jsonError(w, http.StatusBadRequest, txn.Error)
 		return
 	}
@@ -299,19 +295,22 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var requestBody SessionUpdateRequest
+	var requestBody map[string]any
 
 	if err := json.Unmarshal(body, &requestBody); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if txn := dbserver.Instance.Table("sessions").Where("id = ?", id).Save(&requestBody); txn.Error != nil {
+	sessionFields := map[string]interface{}{}
+	for key, value := range requestBody {
+		sessionFields[key] = value
+	}
+
+	if txn := dbserver.Instance.Table("sessions").Where("id = ?", id).Updates(&sessionFields); txn.Error != nil {
 		jsonError(w, http.StatusBadRequest, txn.Error)
 		return
 	}
-
-	json.NewEncoder(w)
 }
 
 // chargeModeHandler updates charge mode

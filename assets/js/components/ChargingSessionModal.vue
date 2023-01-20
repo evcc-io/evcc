@@ -43,7 +43,11 @@
 											@remove-vehicle="removeVehicle"
 										>
 											<span class="flex-grow-1 text-truncate vehicle-name">
-												{{ session.vehicle }}
+												{{
+													session.vehicle
+														? session.vehicle
+														: $t("main.vehicle.unknown")
+												}}
 											</span>
 										</VehicleOptions>
 									</td>
@@ -189,13 +193,13 @@ export default {
 		},
 		async removeVehicle() {
 			await this.updateSession({
-				vehicle: this.$t("main.vehicle.unknown"),
+				vehicle: null,
 			});
 		},
 		async updateSession(data) {
 			try {
 				await api.put("session/" + this.session.id, data);
-				this.$emit("session-changed", this.session.id);
+				this.$emit("session-changed");
 			} catch (err) {
 				console.error(err);
 			}
