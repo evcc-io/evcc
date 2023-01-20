@@ -194,7 +194,7 @@ export default {
 		},
 		async updateSession(data) {
 			try {
-				await api.put("session/" + this.session?.id, data);
+				await api.put("session/" + this.session.id, data);
 				this.$emit("session-changed", this.session);
 			} catch (err) {
 				console.error(err);
@@ -202,7 +202,7 @@ export default {
 		},
 		async removeSession() {
 			try {
-				await api.delete("session/" + this.session?.id);
+				await api.delete("session/" + this.session.id);
 				this.$emit("session-changed");
 			} catch (err) {
 				console.error(err);

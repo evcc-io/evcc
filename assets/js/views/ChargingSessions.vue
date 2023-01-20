@@ -168,7 +168,7 @@ export default {
 			});
 		},
 		vehicles() {
-			return store.state.vehicles?.map((v, index) => {
+			return store.state.vehicles.map((v, index) => {
 				return { id: index, title: v };
 			});
 		},
