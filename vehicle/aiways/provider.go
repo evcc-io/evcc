@@ -1,6 +1,7 @@
 package aiways
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -33,24 +34,30 @@ func (v *Provider) Soc() (float64, error) {
 	return 0, err
 }
 
-// var _ api.ChargeState = (*Provider)(nil)
+var _ api.ChargeState = (*Provider)(nil)
 
-// // Status implements the api.ChargeState interface
-// func (v *Provider) Status() (api.ChargeStatus, error) {
-// 	status := api.StatusA // disconnected
+// Status implements the api.ChargeState interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status := api.StatusNone // disconnected
 
-// 	res, err := v.statusG()
-// 	if err == nil {
-// 		if res.Charger.Status.PlugStatusData.PlugState.Content == "connected" {
-// 			status = api.StatusB
-// 		}
-// 		if res.Charger.Status.ChargingStatusData.ChargingState.Content == "charging" {
-// 			status = api.StatusC
-// 		}
-// 	}
+	res, err := v.statusG()
+	if err != nil {
+		return status, err
+	}
 
-// 	return status, err
-// }
+	switch res.Data.Vc.ChargeSts {
+	case 3:
+		status = api.StatusA
+	case 4:
+		status = api.StatusB
+	case 1:
+		status = api.StatusC
+	default:
+		err = fmt.Errorf("invalid status: %d", res.Data.Vc.ChargeSts)
+	}
+
+	return status, err
+}
 
 var _ api.VehicleRange = (*Provider)(nil)
 
