@@ -119,8 +119,6 @@ func (wb *PrachtAlpha) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 2, 3:
 		return api.StatusC, nil
-	case 4:
-		return api.StatusF, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
