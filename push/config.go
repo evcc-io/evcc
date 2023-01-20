@@ -35,7 +35,7 @@ func NewMessengerFromConfig(typ string, other map[string]interface{}) (res Sende
 	case "script":
 		var cc scriptConfig
 		if err = util.DecodeOther(other, &cc); err == nil {
-			res, err = NewScriptMessenger(cc.CmdLine, cc.Timeout, cc.Scale, cc.Cache)
+			res, err = NewScriptMessenger(cc.CmdLine, cc.Timeout)
 		}
 	case "ntfy":
 		var cc ntfyConfig
