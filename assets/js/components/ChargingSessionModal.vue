@@ -195,7 +195,7 @@ export default {
 		async updateSession(data) {
 			try {
 				await api.put("session/" + this.session.id, data);
-				this.$emit("session-changed", this.session);
+				this.$emit("session-changed", this.session.id);
 			} catch (err) {
 				console.error(err);
 			}

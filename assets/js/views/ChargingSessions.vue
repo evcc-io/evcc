@@ -68,7 +68,7 @@
 											v-for="(session, id) in loadpoint.sessions"
 											:key="id"
 											role="button"
-											@click="showDetails(session)"
+											@click="showDetails(session.id)"
 										>
 											<td class="align-middle">
 												{{ session.vehicle }}
@@ -145,7 +145,7 @@ export default {
 		notifications: Array,
 	},
 	data() {
-		return { sessions: [], selectedSession: undefined };
+		return { sessions: [], selectedSessionId: undefined };
 	},
 	computed: {
 		sessionsByMonthAndLoadpoint() {
@@ -171,6 +171,9 @@ export default {
 			return store.state.vehicles.map((v, index) => {
 				return { id: index, title: v };
 			});
+		},
+		selectedSession() {
+			return this.sessions.find((s) => s.id == this.selectedSessionId);
 		},
 	},
 	mounted() {
@@ -220,16 +223,14 @@ export default {
 			date.setFullYear(year);
 			return this.fmtMonthYear(date);
 		},
-		showDetails(session) {
-			this.selectedSession = session;
+		showDetails(sessionId) {
+			this.selectedSessionId = sessionId;
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
 			modal.show();
 		},
-		async sessionChanged(session) {
+		async sessionChanged(sessionId) {
 			await this.loadSessions();
-			if (session) {
-				this.selectedSession = this.sessions.find((s) => s.id == session.id);
-			}
+			this.selectedSessionId = sessionId;
 		},
 	},
 };
