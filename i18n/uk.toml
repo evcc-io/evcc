@@ -214,7 +214,7 @@ activate = "Активувати"
 inactiveLabel = "Запланований час"
 description = "Коли транспортний засіб повинен бути заряджений на {targetSoc}%?"
 planUnknown = "невідомо"
-planDuration = «Час зарядки»
+planDuration = "Час зарядки"
 planPeriodLabel = "Період"
 descriptionSoc = "Коли автомобіль повинен бути заряджений на {targetSoc}%?"
 descriptionEnergy = "До якого часу {targetEnergy} повинен бути завантажений в транспортний засіб?"
@@ -236,11 +236,10 @@ vehicleTarget = "Ліміт транспортного засобу: {soc}%"
 disconnected = "відключено"
 ready = "готовий"
 
-
 [session]
-title = «Сеанс зарядки»
-meterstart = «Початок лічильника»
-meterstop = «Зупинка лічильника»
+title = "Сеанс зарядки"
+meterstart = "Початок лічильника"
+meterstop = "Зупинка лічильника"
 odometer = "Пробіг"
 started = "Розпочато"
 finished = "Завершено"
