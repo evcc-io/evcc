@@ -4,8 +4,6 @@ import TargetChargePlan2 from "./TargetChargePlan2.vue";
 
 config.global.mocks["$i18n"] = { locale: "de-DE" };
 
-const wrapper = mount(TargetChargePlan2, {});
-
 describe("basics", () => {
   const DATE_START = new Date("11 Jan 2023 11:00:00 GMT+001");
   const DATE_TARGET = new Date("11 Jan 2023 13:00:00 GMT+001");
@@ -23,10 +21,19 @@ describe("basics", () => {
     },
   ];
 
+  const wrapper = mount(TargetChargePlan2, {
+    props: {
+      plan: PLAN,
+      targetTime: DATE_TARGET,
+      rates: TARIFF_FIXED,
+    },
+  });
+  wrapper.setData({ startTime: DATE_START });
+
   let result = null;
 
   beforeAll(() => {
-    result = wrapper.vm.normalizedSlots(TARIFF_FIXED, PLAN, DATE_START, DATE_TARGET);
+    result = wrapper.vm.slots;
   });
 
   test("should return 36 slots", () => {
@@ -98,8 +105,17 @@ describe("zoned tariffs", () => {
 
   let result = null;
 
+  const wrapper = mount(TargetChargePlan2, {
+    props: {
+      plan: PLAN,
+      targetTime: DATE_TARGET,
+      rates: TARIFF_ZONED,
+    },
+  });
+  wrapper.setData({ startTime: DATE_START });
+
   beforeAll(() => {
-    result = wrapper.vm.normalizedSlots(TARIFF_ZONED, PLAN, DATE_START, DATE_TARGET);
+    result = wrapper.vm.slots;
   });
 
   test("handle multiple charging slots", () => {

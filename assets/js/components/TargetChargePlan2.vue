@@ -19,7 +19,7 @@
 		</div>
 		<div class="chart">
 			<div
-				v-for="(slot, index) in normalizedSlots"
+				v-for="(slot, index) in slots"
 				:key="slot.start"
 				:data-index="index"
 				class="slot user-select-none"
@@ -68,7 +68,7 @@ export default {
 		targetTime: Date,
 	},
 	data() {
-		return { activeIndex: null };
+		return { activeIndex: null, startTime: new Date() };
 	},
 	computed: {
 		planDuration() {
@@ -80,31 +80,6 @@ export default {
 				result = Math.max(result, price);
 			});
 			return result;
-		},
-		slots() {
-			/*
-			const maxItems = 24 * 1;
-			const oneHour = 60 * 60 * 1000;
-			const slots = [];
-			const now = new Date().getTime();
-			for (let i = 0; i < maxItems; i++) {
-				const start = new Date(now + oneHour * i);
-				const hour = start.getHours();
-				const end = new Date(start.getTime());
-				end.setHours(hour + 1);
-				const day = hour === 0 ? this.weekdayShort(start) : "";
-				const behind = this.targetTime.getTime() < start.getTime();
-				const price = this.ratePrice(start, end); //Math.round((hour < 5 ? 100 : 400) + Math.random() * 300);
-				slots.push({ hour, day, price, start, end, used: false, behind });
-			}
-			const slotsCopy = [...slots];
-			slotsCopy.sort(sortByPrice);
-			slotsCopy.forEach((slot, i) => {
-				slot.used = i < 3;
-			});
-			return slots;
-			*/
-			return [];
 		},
 		isCo2() {
 			return this.unit === "gCO2eq";
@@ -124,6 +99,35 @@ export default {
 				return `${start.getHours()}–${end.getHours()} Uhr`;
 			}
 			return null;
+		},
+		slots() {
+			const result = [];
+
+			const rates = this.convertDates(this.rates);
+			const plan = this.convertDates(this.plan);
+
+			const oneHour = 60 * 60 * 1000;
+
+			for (let i = 0; i < 36; i++) {
+				const start = new Date(this.startTime.getTime() + oneHour * i);
+				const startHour = start.getHours();
+				const end = new Date(start.getTime());
+				end.setHours(startHour + 1);
+				const endHour = end.getHours();
+				const day = this.weekdayShort(start);
+				const toLate = this.targetTime.getTime() <= start.getTime();
+				// TODO: handle multiple matching time slots
+				const price = this.findSlotInRange(start, end, rates)?.price;
+				const charging = this.findSlotInRange(start, end, plan) != null;
+				result.push({ day, price, startHour, endHour, charging, toLate });
+			}
+
+			return result;
+		},
+	},
+	watch: {
+		rates() {
+			this.startTime = new Date();
 		},
 	},
 	methods: {
@@ -152,7 +156,6 @@ export default {
 			if (!index) return;
 			this.activeIndex = index * 1;
 		},
-
 		convertDates(list) {
 			return list.map((item) => {
 				return {
@@ -162,7 +165,6 @@ export default {
 				};
 			});
 		},
-
 		findSlotInRange(start, end, slots) {
 			return slots.find((s) => {
 				if (s.start.getTime() < start.getTime()) {
@@ -170,30 +172,6 @@ export default {
 				}
 				return s.start.getTime() < end.getTime();
 			});
-		},
-		normalizedSlots(tariff, plan, startTime, targetTime) {
-			const result = [];
-
-			tariff = this.convertDates(tariff);
-			plan = this.convertDates(plan);
-
-			const oneHour = 60 * 60 * 1000;
-
-			for (let i = 0; i < 36; i++) {
-				const start = new Date(startTime.getTime() + oneHour * i);
-				const startHour = start.getHours();
-				const end = new Date(start.getTime());
-				end.setHours(startHour + 1);
-				const endHour = end.getHours();
-				const day = this.weekdayShort(start);
-				const toLate = targetTime.getTime() <= start.getTime();
-				// TODO: handle multiple matching time slots
-				const price = this.findSlotInRange(start, end, tariff)?.price;
-				const charging = this.findSlotInRange(start, end, plan) != null;
-				result.push({ day, price, startHour, endHour, charging, toLate });
-			}
-
-			return result;
 		},
 	},
 };
