@@ -41,11 +41,11 @@ const (
 	dlRegCardId         = 54 // Uint16 RO MAX 32
 	dlRegChargedEnergy  = 72 // Uint16 RO 0.1kWh
 	dlRegChargingTime   = 78 // Uint32 RO 1s
-	dlRegCurrentLimit   = 91 // Uint16 WR 0.1A
+	dlRegCurrentLimit   = 91 // Uint16 WR 1A
 )
 
 var dlRegCurrents = []uint16{6, 8, 10}      // Uint16 RO 0.1A
-var dlRegVoltages = []uint16{109, 111, 113} //Uint16 RO 0.1V
+var dlRegVoltages = []uint16{109, 111, 113} // Uint16 RO 0.1V
 
 func init() {
 	registry.Add("DaheimLadenModbus", NewDaheimLadenModbusFromConfig)
@@ -103,7 +103,7 @@ func (wb *DaheimLadenModbus) Status() (api.ChargeStatus, error) {
 	case 6: // Charging End (C1)
 		return api.StatusC, nil
 	default: // Other
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
 }
 
@@ -127,7 +127,7 @@ func (wb *DaheimLadenModbus) Enable(enable bool) error {
 	return wb.setCurrent(current)
 }
 
-// setCurrent writes the current limit in 0.1A
+// setCurrent writes the current limit in coarse 1A steps
 func (wb *DaheimLadenModbus) setCurrent(current uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, current)
@@ -139,7 +139,7 @@ func (wb *DaheimLadenModbus) setCurrent(current uint16) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *DaheimLadenModbus) MaxCurrent(current int64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %.1f", current)
+		return fmt.Errorf("invalid current %d", current)
 	}
 
 	wb.curr = uint16(current)
@@ -189,7 +189,7 @@ var _ api.PhaseCurrents = (*DaheimLadenModbus)(nil)
 func (wb *DaheimLadenModbus) Currents() (float64, float64, float64, error) {
 	var i []float64
 	for _, regCurrent := range dlRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 1)
+		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 1)
 		if err != nil {
 			return 0, 0, 0, err
 		}
@@ -206,7 +206,7 @@ var _ api.PhaseVoltages = (*DaheimLadenModbus)(nil)
 func (wb *DaheimLadenModbus) Voltages() (float64, float64, float64, error) {
 	var u []float64
 	for _, regVoltage := range dlRegVoltages {
-		b, err := wb.conn.ReadInputRegisters(regVoltage, 1)
+		b, err := wb.conn.ReadHoldingRegisters(regVoltage, 1)
 		if err != nil {
 			return 0, 0, 0, err
 		}
@@ -222,9 +222,9 @@ var _ api.Diagnosis = (*DaheimLadenModbus)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *DaheimLadenModbus) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1); err == nil {
-		fmt.Printf("\tCharging Station State:\t%x\n", b)
+		fmt.Printf("\tCharging Station State:\t%d\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegConnectorState, 1); err == nil {
-		fmt.Printf("\tConnector State:\t%x\n", b)
+		fmt.Printf("\tConnector State:\t%d\n", b)
 	}
 }
