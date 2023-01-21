@@ -44,7 +44,7 @@ jobs:
         id: go
 
       - name: Build
-        run: mkdir dist && touch dist/_ && make build
+        run: mkdir dist && touch dist/empty && make build
 
   test:
     name: Test
@@ -60,7 +60,7 @@ jobs:
         id: go
 
       - name: Test
-        run: mkdir dist && touch dist/_ && make test
+        run: mkdir dist && touch dist/empty && make test
 
   lint:
     name: Lint
@@ -75,7 +75,7 @@ jobs:
           cache: true
         id: go
 
-      - run: mkdir dist && touch dist/_
+      - run: mkdir dist && touch dist/empty
 
       - name: Lint
         uses: golangci/golangci-lint-action@v3
