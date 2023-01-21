@@ -92,10 +92,9 @@
 								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
 									{{ $t("main.targetCharge.targetIsInThePast") }}
 								</p>
-								<TargetChargePlan2
-									v-else-if="plan.duration"
-									v-bind="{ ...plan, ...tariff }"
-									:target-time="selectedTargetTime"
+								<TargetChargePlan
+									v-else-if="targetChargePlanProps"
+									v-bind="targetChargePlanProps"
 								/>
 							</div>
 							<div class="modal-footer d-flex justify-content-between">
@@ -129,7 +128,7 @@ import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
 import LabelAndValue from "./LabelAndValue.vue";
-import TargetChargePlan2 from "./TargetChargePlan2.vue";
+import TargetChargePlan from "./TargetChargePlan.vue";
 import api from "../api";
 
 import formatter from "../mixins/formatter";
@@ -139,7 +138,7 @@ const LAST_TARGET_TIME_KEY = "last_target_time";
 
 export default {
 	name: "TargetCharge",
-	components: { LabelAndValue, TargetChargePlan2 },
+	components: { LabelAndValue, TargetChargePlan },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
@@ -170,6 +169,12 @@ export default {
 		},
 		targetEnergyFormatted: function () {
 			return this.fmtKWh(this.targetEnergy * 1e3, true, true, 1);
+		},
+		targetChargePlanProps: function () {
+			const targetTime = this.selectedTargetTime;
+			const { rates } = this.tariff;
+			const { duration, unit, plan } = this.plan;
+			return duration && rates ? { duration, rates, plan, unit, targetTime } : null;
 		},
 	},
 	watch: {

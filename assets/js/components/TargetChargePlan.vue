@@ -1,44 +1,45 @@
 <template>
-	<div class="root">
-		<h1>Plan</h1>
-		<div class="prices">
-			<div class="me-3">
-				<shopicon-regular-powersupply
-					class="gridIcon"
-					size="m"
-				></shopicon-regular-powersupply>
+	<div class="plan pt-2">
+		<div class="details justify-content-between mb-2 d-flex justify-content-between">
+			<div class="text-start">
+				<div class="label">Ladezeit</div>
+				<div class="value text-primary">{{ planDuration }}</div>
 			</div>
-			<div v-for="price in priceSlots" :key="price.start" class="price">
-				{{ fmtPricePerKWh(price.price, currency).replace("/kWh", "") }}
-				<div class="box" :style="priceStyle(price.price)"></div>
-			</div>
-		</div>
-		<div class="divider">
-			<div class="divider_line"></div>
-			<div class="divider_target"></div>
-		</div>
-		<div class="chargingSlots">
-			<div class="me-3">
-				<shopicon-regular-lightning
-					class="chargingIcon"
-					size="m"
-				></shopicon-regular-lightning>
-			</div>
-			<div
-				v-for="chargingSlot in chargingSlots"
-				:key="chargingSlot.start"
-				class="chargingSlot"
-			>
-				<!--2,3 h-->
-				<div class="d-flex h-100 justify-content-between align-items-center">
-					<div>14:30</div>
-					<div>18:00</div>
+			<div v-if="isCo2" class="text-end">
+				<div class="label">
+					<span v-if="activeSlot">{{ activeSlotName }}</span>
+					<span v-else>CO₂-Menge Ø</span>
 				</div>
+				<div class="value text-primary">{{ avgCo2 }}</div>
 			</div>
-			<div class="chargingSlot chargingSlot--finish">
-				<!--2,3 h-->
-				<div class="d-flex h-100 justify-content-center align-items-center">
-					<div>21:30</div>
+			<div v-else class="text-end">
+				<div class="label">Energiepreis</div>
+				<div class="value text-primary">{{ avgPrice }}</div>
+			</div>
+		</div>
+		<div class="chart">
+			<div
+				v-for="(slot, index) in slots"
+				:key="slot.start"
+				:data-index="index"
+				class="slot user-select-none"
+				:class="{ active: isActive(index), toLate: slot.toLate }"
+				@touchstart="activeIndex = index"
+				@mouseenter="activeIndex = index"
+				@touchmove="touchmove"
+				@touchend="activeIndex = null"
+				@mouseleave="activeIndex = null"
+				@mouseup="activeIndex = null"
+			>
+				<div
+					class="slot-bar"
+					:style="priceStyle(slot.price)"
+					:title="fmtPricePerKWh(slot.price, plan.unit)"
+				></div>
+				<div class="slot-label">
+					{{ slot.startHour }}
+					<br />
+					<span v-if="slot.startHour === 0">{{ slot.day }}</span>
 				</div>
 			</div>
 		</div>
@@ -46,36 +47,127 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/lightning";
-import "@h2d2/shopicons/es/regular/powersupply";
 import formatter from "../mixins/formatter";
+import "@h2d2/shopicons/es/regular/eco1";
+import "@h2d2/shopicons/es/regular/clock";
 
 export default {
 	name: "TargetChargePlan",
 	mixins: [formatter],
 	props: {
-		priceSlots: Array,
-		co2Slots: Array,
-		chargingSlots: Array,
-		currency: String,
-		energyPrice: Number,
-		targetTime: String,
+		duration: Number,
+		rates: Array,
+		plan: Array,
+		unit: String,
+		targetTime: Date,
+	},
+	data() {
+		return { activeIndex: null, startTime: new Date() };
 	},
 	computed: {
+		planDuration() {
+			return this.fmtShortDuration(this.duration, true);
+		},
 		maxPrice() {
 			let result = 0;
-			this.priceSlots.forEach(({ price }) => {
+			this.slots.forEach(({ price }) => {
 				result = Math.max(result, price);
 			});
 			return result;
 		},
+		isCo2() {
+			return this.unit === "gCO2eq";
+		},
+		avgCo2() {
+			return `${this.activeSlot ? this.activeSlot.price : "301"} g/kWh`;
+		},
+		avgPrice() {
+			return this.fmtPricePerKWh(0.32, this.unit);
+		},
+		activeSlot() {
+			return this.slots[this.activeIndex];
+		},
+		activeSlotName() {
+			if (this.activeSlot) {
+				const { startHour, endHour } = this.activeSlot;
+				return `${startHour}–${endHour} Uhr`;
+			}
+			return null;
+		},
+		slots() {
+			const result = [];
+
+			const rates = this.convertDates(this.rates);
+			const plan = this.convertDates(this.plan);
+
+			const oneHour = 60 * 60 * 1000;
+
+			for (let i = 0; i < 36; i++) {
+				const start = new Date(this.startTime.getTime() + oneHour * i);
+				const startHour = start.getHours();
+				const end = new Date(start.getTime());
+				end.setHours(startHour + 1);
+				const endHour = end.getHours();
+				const day = this.weekdayShort(start);
+				const toLate = this.targetTime.getTime() <= start.getTime();
+				// TODO: handle multiple matching time slots
+				const price = this.findSlotInRange(start, end, rates)?.price;
+				const charging = this.findSlotInRange(start, end, plan) != null;
+				result.push({ day, price, startHour, endHour, charging, toLate });
+			}
+
+			return result;
+		},
+	},
+	watch: {
+		rates() {
+			this.startTime = new Date();
+		},
 	},
 	methods: {
+		ratePrice(start, end) {
+			return this.rates?.find((r) => {
+				const rStart = new Date(r.start).getTime();
+				return start.getTime() <= rStart && rStart < end.getTime();
+			}).price;
+		},
+		isActive(index) {
+			return this.activeIndex !== null
+				? this.activeIndex === index
+				: this.slots[index].charging;
+		},
 		priceStyle(price) {
 			return {
 				height: `${(100 / this.maxPrice) * price}%`,
-				opacity: price < 0.3 ? 1 : 0.4,
 			};
+		},
+		touchmove(e) {
+			let $el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+			if (!$el) return;
+			if (!$el.classList.contains("slot")) {
+				$el = $el.parent;
+			}
+			if (!$el) return;
+			const index = $el.getAttribute("data-index");
+			if (!index) return;
+			this.activeIndex = index * 1;
+		},
+		convertDates(list) {
+			return list.map((item) => {
+				return {
+					start: new Date(item.start),
+					end: new Date(item.end),
+					price: item.price,
+				};
+			});
+		},
+		findSlotInRange(start, end, slots) {
+			return slots.find((s) => {
+				if (s.start.getTime() < start.getTime()) {
+					return s.end.getTime() > start.getTime();
+				}
+				return s.start.getTime() < end.getTime();
+			});
 		},
 	},
 };
@@ -84,105 +176,63 @@ export default {
 <style scoped>
 .root {
 	overflow: hidden;
-	--height: 80px;
 	position: relative;
 }
-.prices {
+.chart {
 	display: flex;
-	height: var(--height);
-	justify-content: stretch;
+	height: 120px;
 	align-items: flex-end;
+	overflow-y: none;
+	overflow-x: auto;
+	padding-bottom: 45px;
 }
-.price {
-	flex-basis: 0;
-	flex-grow: 1;
-	flex-shrink: 1;
-	margin: 4px;
-	margin-bottom: 0;
+.slot {
+	width: 20px;
+	flex-grow: 0;
+	flex-shrink: 0;
 	text-align: center;
+	padding: 4px;
 	height: 100%;
 	display: flex;
 	justify-content: flex-end;
 	flex-direction: column;
+	position: relative;
+	opacity: 1;
 }
-.price:last-child .box {
-	background: transparent;
-	border: 2px solid var(--bs-primary);
+
+.slot-bar {
+	background-clip: content-box !important;
+	background: var(--bs-gray-light);
+	border-radius: 8px;
+	width: 100%;
 }
-.box {
+.slot-label {
+	color: var(--bs-gray-light);
+	line-height: 1.1;
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: 100%;
+	text-align: center;
+}
+.slot.active .slot-bar {
 	background: var(--bs-primary);
-	border-radius: 12px;
 }
-.chargingSlots {
-	display: flex;
-	align-items: center;
-}
-.chargingSlot {
-	margin-left: 16.5%;
-	width: 25%;
-	background-color: var(--bs-primary);
-	height: 24px;
-	border-radius: 6px;
-	padding: 0 6px;
-	background-image: linear-gradient(
-		45deg,
-		rgba(255, 255, 255, 0.15) 25%,
-		transparent 25%,
-		transparent 50%,
-		rgba(255, 255, 255, 0.15) 50%,
-		rgba(255, 255, 255, 0.15) 75%,
-		transparent 75%,
-		transparent
-	);
-	background-size: 50px 50px;
-
-	color: white;
-}
-
-.chargingSlot--finish {
-	margin-left: 34%;
-	width: auto;
-	color: var(--evcc-default-text);
-	background-color: transparent;
-}
-
-.gridIcon,
-.chargingIcon {
+.slot.active .slot-label {
 	color: var(--bs-primary);
 }
-.divider {
-	height: 2rem;
-	position: relative;
+.slot.toLate {
+	opacity: 0.33;
 }
-.divider_line {
-	position: absolute;
-	top: 50%;
-	right: 0;
-	left: 0;
-	border-bottom: 1px solid var(--bs-gray-light);
+.slot.active {
+	opacity: 1;
 }
-.divider_target {
-	position: absolute;
-	top: 30%;
-	left: 84%;
-	width: 1px;
-	height: 40%;
-	background: var(--bs-gray-light);
+.value {
+	font-size: 18px;
+	font-weight: bold;
 }
-.target {
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 87.5%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding-bottom: 6px;
-}
-.target_bar {
-	background: var(--bs-gray-light);
-	width: 1px;
-	flex-grow: 1;
-	margin: 6px 0;
+.label {
+	color: var(--evcc-gray);
+	text-transform: uppercase;
 }
 </style>

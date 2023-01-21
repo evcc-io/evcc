@@ -1,6 +1,6 @@
 import { mount, config } from "@vue/test-utils";
 import { beforeAll, describe, expect, test } from "vitest";
-import TargetChargePlan2 from "./TargetChargePlan2.vue";
+import TargetChargePlan from "./TargetChargePlan.vue";
 
 config.global.mocks["$i18n"] = { locale: "de-DE" };
 
@@ -21,7 +21,7 @@ describe("basics", () => {
     },
   ];
 
-  const wrapper = mount(TargetChargePlan2, {
+  const wrapper = mount(TargetChargePlan, {
     props: {
       plan: PLAN,
       targetTime: DATE_TARGET,
@@ -105,7 +105,7 @@ describe("zoned tariffs", () => {
 
   let result = null;
 
-  const wrapper = mount(TargetChargePlan2, {
+  const wrapper = mount(TargetChargePlan, {
     props: {
       plan: PLAN,
       targetTime: DATE_TARGET,
