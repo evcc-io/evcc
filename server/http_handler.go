@@ -296,18 +296,12 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var requestBody map[string]any
-
 	if err := json.Unmarshal(body, &requestBody); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	sessionFields := map[string]interface{}{}
-	for key, value := range requestBody {
-		sessionFields[key] = value
-	}
-
-	if txn := dbserver.Instance.Table("sessions").Where("id = ?", id).Updates(&sessionFields); txn.Error != nil {
+	if txn := dbserver.Instance.Table("sessions").Where("id = ?", id).Updates(&requestBody); txn.Error != nil {
 		jsonError(w, http.StatusBadRequest, txn.Error)
 		return
 	}
