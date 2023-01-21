@@ -68,7 +68,7 @@
 											v-for="(session, id) in loadpoint.sessions"
 											:key="id"
 											role="button"
-											@click="showDetails(session)"
+											@click="showDetails(session.id)"
 										>
 											<td class="align-middle">
 												{{ session.vehicle }}
@@ -118,7 +118,11 @@
 					</div>
 				</div>
 			</main>
-			<ChargingSessionModal :session="selectedSession" @session-deleted="loadSessions" />
+			<ChargingSessionModal
+				:session="selectedSession"
+				:vehicles="vehicles"
+				@session-changed="loadSessions"
+			/>
 		</div>
 	</div>
 </template>
@@ -130,6 +134,7 @@ import "@h2d2/shopicons/es/bold/arrowback";
 import "@h2d2/shopicons/es/regular/trash";
 import formatter from "../mixins/formatter";
 import api from "../api";
+import store from "../store";
 import ChargingSessionModal from "../components/ChargingSessionModal.vue";
 
 export default {
@@ -140,7 +145,7 @@ export default {
 		notifications: Array,
 	},
 	data() {
-		return { sessions: [], selectedSession: undefined };
+		return { sessions: [], selectedSessionId: undefined };
 	},
 	computed: {
 		sessionsByMonthAndLoadpoint() {
@@ -161,6 +166,14 @@ export default {
 				);
 				return { month, loadpoints };
 			});
+		},
+		vehicles() {
+			return store.state.vehicles.map((v, index) => {
+				return { id: index, title: v };
+			});
+		},
+		selectedSession() {
+			return this.sessions.find((s) => s.id == this.selectedSessionId);
 		},
 	},
 	mounted() {
@@ -210,8 +223,8 @@ export default {
 			date.setFullYear(year);
 			return this.fmtMonthYear(date);
 		},
-		showDetails(session) {
-			this.selectedSession = session;
+		showDetails(sessionId) {
+			this.selectedSessionId = sessionId;
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
 			modal.show();
 		},

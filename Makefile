@@ -13,7 +13,7 @@ LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/e
 BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
-DOCKER_IMAGE := andig/evcc
+DOCKER_IMAGE := evcc/evcc
 PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
