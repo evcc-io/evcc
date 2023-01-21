@@ -70,6 +70,15 @@ jobs:
       - name: Patch ASN1
         run: make patch-asn1-sudo
 
+      - run: ls
+      - name: Get dist from cache
+        uses: actions/cache@v3
+        id: cache-dist
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist
+      - run: ls dist
+
       # gokrazy image
       # - name: Prepare Image
       #   run: |

@@ -87,6 +87,12 @@ jobs:
           cache: true
         id: go
 
+      - name: Install Cloudsmith CLI
+        run: pip install --upgrade cloudsmith-cli
+
+      - name: Patch ASN1
+        run: make patch-asn1-sudo
+
       - run: ls
       - name: Get dist from cache
         uses: actions/cache@v3
@@ -95,12 +101,6 @@ jobs:
           path: dist
           key: ${{ runner.os }}-dist
       - run: ls dist
-
-      - name: Install Cloudsmith CLI
-        run: pip install --upgrade cloudsmith-cli
-
-      - name: Patch ASN1
-        run: make patch-asn1-sudo
 
       - name: Create nightly build
         uses: goreleaser/goreleaser-action@v4
