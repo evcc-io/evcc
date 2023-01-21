@@ -184,42 +184,35 @@ func (lp *Loadpoint) SetPhases(phases int) error {
 	return nil
 }
 
-// SetTargetCharge sets loadpoint charge targetSoc
-func (lp *Loadpoint) SetTargetCharge(finishAt time.Time, soc int) error {
+// GetTargetTime returns the target time
+func (lp *Loadpoint) GetTargetTime() time.Time {
 	lp.Lock()
 	defer lp.Unlock()
+	return lp.targetTime
+}
 
+// SetTargetTime sets the charge target time
+func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
 	if !finishAt.IsZero() && finishAt.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
 
-	lp.log.DEBUG.Printf("set target charge: %d%% @ %v", soc, finishAt)
-
-	// apply immediately
-	if !lp.targetTime.Equal(finishAt) || lp.Soc.target != soc {
-		lp.setTargetTime(finishAt)
-
-		// don't remove soc
-		if !finishAt.IsZero() {
-			lp.setTargetSoc(soc)
-			lp.requestUpdate()
-		}
-	}
-
-	return nil
-}
-
-// SetTargetTime sets the charge target time
-func (lp *Loadpoint) SetTargetTime(finishAt time.Time) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.setTargetTime(finishAt)
+
+	return nil
 }
 
 // setTargetTime sets the charge target time
 func (lp *Loadpoint) setTargetTime(finishAt time.Time) {
 	lp.targetTime = finishAt
 	lp.publish(targetTime, finishAt)
+
+	// TODO planActive is not guarded by mutex
+	if finishAt.IsZero() {
+		lp.setPlanActive(false)
+	}
 }
 
 // RemoteControl sets remote status demand

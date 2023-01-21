@@ -10,6 +10,8 @@ params:
   - name: host
   - name: port
     default: 8080
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -27,4 +29,7 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .SData.SoC
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

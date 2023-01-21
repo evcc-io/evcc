@@ -9,6 +9,12 @@ import (
 
 var _ site.API = (*Site)(nil)
 
+const (
+	GridTariff    = "grid"
+	FeedinTariff  = "feedin"
+	PlannerTariff = "planner"
+)
+
 // GetPrioritySoc returns the PrioritySoc
 func (site *Site) GetPrioritySoc() float64 {
 	site.Lock()
@@ -78,27 +84,22 @@ func (site *Site) GetVehicles() []api.Vehicle {
 	return site.coordinator.GetVehicles()
 }
 
-// GetTariff returns the tariffs rates
-func (site *Site) GetTariff(name string) (api.Rates, error) {
+// GetTariff returns the respective tariff if configured or nil
+func (site *Site) GetTariff(tariff string) api.Tariff {
 	site.Lock()
 	defer site.Unlock()
 
-	var tariff api.Tariff
-
-	switch name {
-	case "grid":
-		tariff = site.tariffs.Grid
-	case "feedin":
-		tariff = site.tariffs.FeedIn
-	case "planner":
-		if tariff = site.tariffs.Planner; tariff == nil {
-			tariff = site.tariffs.Grid
+	var t api.Tariff
+	switch tariff {
+	case GridTariff:
+		t = site.tariffs.Grid
+	case FeedinTariff:
+		t = site.tariffs.FeedIn
+	case PlannerTariff:
+		if t = site.tariffs.Planner; t == nil {
+			t = site.tariffs.Grid
 		}
 	}
 
-	if tariff == nil {
-		return nil, errors.New("invalid tariff")
-	}
-
-	return tariff.Rates()
+	return t
 }

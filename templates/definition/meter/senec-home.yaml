@@ -8,6 +8,8 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -40,4 +42,7 @@ render: |
     jq: .ENERGY.GUI_BAT_DATA_FUEL_CHARGE | sub("fl_"; "")
     unpack: hex
     decode: float32
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

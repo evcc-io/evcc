@@ -13,6 +13,17 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
+    advanced: |
+      type: template
+      template: solarmax-maxstorage
+      usage: grid      
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
@@ -24,6 +35,17 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
+    advanced: |
+      type: template
+      template: solarmax-maxstorage
+      usage: pv      
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
@@ -35,3 +57,14 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
+    advanced: |
+      type: template
+      template: solarmax-maxstorage
+      usage: battery      
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+      capacity: 50 # Akkukapazität in kWh # Optional

@@ -17,8 +17,17 @@
         }
       },
       "oneOf": [
-        {"required": ["generic"]},
-        {"required": ["de", "en"]}
+        {
+          "required": [
+            "generic"
+          ]
+        },
+        {
+          "required": [
+            "de",
+            "en"
+          ]
+        }
       ],
       "title": "LanguageText"
     },
@@ -30,7 +39,11 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["sponsorship", "eebus", "mqtt"]
+            "enum": [
+              "sponsorship",
+              "eebus",
+              "mqtt"
+            ]
           }
         },
         "description": {
@@ -41,17 +54,31 @@
           "format": "uri"
         }
       },
-      "anyOf":[
-        {"required": ["evcc"]},
-        {"required": ["description"]}
+      "anyOf": [
+        {
+          "required": [
+            "evcc"
+          ]
+        },
+        {
+          "required": [
+            "description"
+          ]
+        }
       ],
       "title": "Requirements"
     },
     "ParamDevice": {
       "anyOf": [
-        {"$ref": "#/definitions/ParamTemplate"},
-        {"$ref": "#/definitions/ParamUsage"},
-        {"$ref": "#/definitions/ParamModbus"}
+        {
+          "$ref": "#/definitions/ParamTemplate"
+        },
+        {
+          "$ref": "#/definitions/ParamUsage"
+        },
+        {
+          "$ref": "#/definitions/ParamModbus"
+        }
       ]
     },
     "ParamUsage": {
@@ -66,7 +93,12 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["charge", "grid", "pv", "battery"]
+            "enum": [
+              "charge",
+              "grid",
+              "pv",
+              "battery"
+            ]
           }
         },
         "allinone": {
@@ -91,7 +123,10 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["tcpip", "rs485"]
+            "enum": [
+              "tcpip",
+              "rs485"
+            ]
           }
         },
         "id": {
@@ -102,10 +137,19 @@
         },
         "baudrate": {
           "type": "integer",
-          "enum": [9600, 19200, 38400, 57600, 115200]
+          "enum": [
+            9600,
+            19200,
+            38400,
+            57600,
+            115200
+          ]
         },
         "comset": {
-          "enum": [8E1, "8N1"]
+          "enum": [
+            8E1,
+            "8N1"
+          ]
         },
         "help": {
           "$ref": "#/definitions/LanguageText"
@@ -152,7 +196,16 @@
         },
         "valuetype": {
           "type": "string",
-          "enum": ["string", "bool", "number", "float", "int", "stringlist", "chargemodes", "duration"]
+          "enum": [
+            "string",
+            "bool",
+            "number",
+            "float",
+            "int",
+            "stringlist",
+            "chargemodes",
+            "duration"
+          ]
         },
         "validvalues": {
           "type": "array",
@@ -183,8 +236,16 @@
         }
       },
       "oneOf": [
-        {"required": ["name"]},
-        {"required": ["preset"]}
+        {
+          "required": [
+            "name"
+          ]
+        },
+        {
+          "required": [
+            "preset"
+          ]
+        }
       ],
       "title": "ParamTemplate"
     },
@@ -202,6 +263,12 @@
         "referencename": {
           "type": "string",
           "minLength": 1
+        },
+        "usages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "mask": {
           "type": "boolean"
@@ -223,7 +290,15 @@
         },
         "valuetype": {
           "type": "string",
-          "enum": ["string", "bool", "number", "float", "stringlist", "chargemodes", "duration"]
+          "enum": [
+            "string",
+            "bool",
+            "number",
+            "float",
+            "stringlist",
+            "chargemodes",
+            "duration"
+          ]
         },
         "validvalues": {
           "type": "array",
@@ -247,7 +322,9 @@
           "$ref": "#/definitions/Requirements"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "ParamDefaults"
     },
     "ParamDependency": {
@@ -260,7 +337,11 @@
         },
         "check": {
           "type": "string",
-          "enum": ["empty", "notempty", "equal"]
+          "enum": [
+            "empty",
+            "notempty",
+            "equal"
+          ]
         },
         "value": {
           "minLength": 1
@@ -277,9 +358,15 @@
               "value": "equal"
             }
           },
-          "required": ["value"]
+          "required": [
+            "value"
+          ]
         },
-        {"required": ["check"]}
+        {
+          "required": [
+            "check"
+          ]
+        }
       ],
       "title": "ParamDependency"
     }

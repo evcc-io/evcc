@@ -173,7 +173,7 @@ type LinkedTemplate struct {
 type Param struct {
 	Reference     bool         // if this is references another param definition
 	Referencename string       // name of the referenced param if it is not identical to the defined name
-	Preset        string       // Reference a predefined se of params
+	Preset        string       // Reference a predefined set of params
 	Name          string       // Param name which is used for assigning defaults properties and referencing in render
 	Description   TextLanguage // language specific titles (presented in UI instead of Name)
 	Required      bool         // cli if the user has to provide a non empty value
@@ -186,6 +186,7 @@ type Param struct {
 	Help          TextLanguage // cli configuration help
 	Value         string       // user provided value via cli configuration
 	Values        []string     // user provided list of values e.g. for ValueType "stringlist"
+	Usages        []string     // restrict param to these usage types, e.g. "battery" for home battery capacity
 	ValueType     string       // string representation of the value type, "string" is default
 	ValidValues   []string     // list of valid values the user can provide
 	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
@@ -220,6 +221,10 @@ func (p *Param) DefaultValue(renderMode string) interface{} {
 func (p *Param) OverwriteProperties(withParam Param) {
 	// always overwrite if defined
 	p.Description.Update(withParam.Description, true)
+
+	if len(p.Usages) == 0 {
+		p.Usages = withParam.Usages
+	}
 
 	if withParam.ValueType != "" {
 		p.ValueType = withParam.ValueType

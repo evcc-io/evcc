@@ -9,6 +9,13 @@ render:
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
       password: # Passwort für Benutzergruppe Benutzer # Optional
+    advanced: |
+      type: template
+      template: sma-inverter
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      password: # Passwort für Benutzergruppe Benutzer # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
@@ -16,3 +23,10 @@ render:
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
       password: # Passwort für Benutzergruppe Benutzer # Optional
+    advanced: |
+      type: template
+      template: sma-inverter
+      usage: battery
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      password: # Passwort für Benutzergruppe Benutzer # Optional
+      capacity: 50 # Akkukapazität in kWh # Optional

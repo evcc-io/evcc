@@ -68,14 +68,6 @@ make lint
 make lint-ui
 ```
 
-### Changing UI code
-
-To ensure reproducability the build frontend artifacts are part of the source code repository. If you've made changes to frontend code, please make sure to rebuild the production assets before you commit.
-
-```sh
-make ui
-```
-
 ### Changing templates
 
 evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository. Make sure to update this meta-data every time you make changes to a templates.

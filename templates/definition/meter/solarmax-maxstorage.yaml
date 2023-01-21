@@ -10,6 +10,8 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -45,4 +47,7 @@ render: |
       address: 122 # Batterie Soc
       type: input
       decode: int16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

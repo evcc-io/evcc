@@ -9,6 +9,13 @@ render:
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
       registration: DE200... # Registriernummer des LG ESS HOME Wechselrichters.
+    advanced: |
+      type: template
+      template: lg-ess-home-8-10
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      registration: DE200... # Registriernummer des LG ESS HOME Wechselrichters.
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
@@ -16,6 +23,13 @@ render:
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
       registration: DE200... # Registriernummer des LG ESS HOME Wechselrichters.
+    advanced: |
+      type: template
+      template: lg-ess-home-8-10
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      registration: DE200... # Registriernummer des LG ESS HOME Wechselrichters.
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
@@ -23,3 +37,10 @@ render:
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
       registration: DE200... # Registriernummer des LG ESS HOME Wechselrichters.
+    advanced: |
+      type: template
+      template: lg-ess-home-8-10
+      usage: battery
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      registration: DE200... # Registriernummer des LG ESS HOME Wechselrichters.
+      capacity: 50 # Akkukapazität in kWh # Optional

@@ -1,6 +1,6 @@
 product:
   brand: Pracht
-  description: Alpha XT
+  description: Alpha XT, XT+, Mono XT, Mono XT+, PNI
 requirements: ["sponsorship"]
 render:
   - default: |
@@ -19,3 +19,10 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+      connector: 1 # Optional

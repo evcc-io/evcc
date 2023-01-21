@@ -160,6 +160,7 @@ a:hover {
 	color: inherit !important;
 	background-color: inherit !important;
 	border-color: inherit !important;
+	opacity: 0.2;
 }
 
 .btn-outline-primary,

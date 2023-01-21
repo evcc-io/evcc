@@ -19,23 +19,26 @@ func init() {
 
 // NewTasmotaFromConfig creates a Tasmota meter from generic config
 func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
+	cc := struct {
 		URI      string
 		User     string
 		Password string
+		Channel  int
 		Usage    string
+	}{
+		Channel: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewTasmota(cc.URI, cc.User, cc.Password, cc.Usage)
+	return NewTasmota(cc.URI, cc.User, cc.Password, cc.Usage, cc.Channel)
 }
 
 // NewTasmota creates Tasmota meter
-func NewTasmota(uri, user, password, usage string) (*Tasmota, error) {
-	conn, err := tasmota.NewConnection(uri, user, password)
+func NewTasmota(uri, user, password, usage string, channel int) (*Tasmota, error) {
+	conn, err := tasmota.NewConnection(uri, user, password, channel)
 	if err != nil {
 		return nil, err
 	}

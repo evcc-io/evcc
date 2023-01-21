@@ -114,8 +114,8 @@ func (t *ElectricityMaps) Rates() (api.Rates, error) {
 	res := make(api.Rates, 0, len(t.data))
 	for _, r := range t.data {
 		ar := api.Rate{
-			Start: r.Datetime,
-			End:   r.Datetime.Add(time.Hour),
+			Start: r.Datetime.Local(),
+			End:   r.Datetime.Add(time.Hour).Local(),
 			Price: r.CarbonIntensity,
 		}
 		res = append(res, ar)

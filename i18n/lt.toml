@@ -25,7 +25,7 @@ modalDownload = "Atsisiųsti"
 modalUpdateStatusStart = "Instaliavimas pradėtas:"
 
 [footer.savings]
-tabTitle = "Mano duomenys"
+tabTitle = "Mano"
 footerShort = "{percent}% saulės"
 footerLong = "{percent}% saulės energija"
 modalTitle = "Įkrovimo energijos apžvalga"
@@ -41,7 +41,7 @@ savingsComparedToGrid = "palyginus su tinklu"
 savingsTotalEnergy = "{total} kWh įkrauta"
 
 [footer.community]
-tabTitle = "Bendruomenės duomenys"
+tabTitle = "Bendruomenės"
 power = "Įkrovimo galia"
 powerSub1 = "{activeClients} iš {totalClients} dalyvių"
 powerSub2 = "įkrauna..."
@@ -79,7 +79,7 @@ vehicles = "Autoparkas"
 noEnergy = "Nėra skaitiklių duomenų"
 homePower = "Namo suvartojimas"
 pvProduction = "Gamyba"
-loadpoints = "Įkroviklis | Įkroviklis | {count} Įkrovikliai"
+loadpoints = "Įkroviklis | Įkroviklis | {count} įkrovikliai"
 battery = "Kaupiklis"
 batteryCharge = "Kaupiklis įkraunamas"
 batteryDischarge = "Kaupiklis iškraunamas"
@@ -89,8 +89,8 @@ pvExport = "Tinklo eksportas"
 
 [main.mode]
 off = "Stop"
-minpv = "Min+Saulės"
-pv = "Saulės"
+minpv = "Min+Saulė"
+pv = "Saulė"
 now = "Greitas"
 
 [main.loadpoint]
@@ -130,7 +130,7 @@ label = "Min. Srovė"
 
 [main.vehicle]
 fallbackName = "Automobilis"
-vehicleSoc = "Akumuliatorius"
+vehicleSoc = "Baterija"
 targetSoc = "Limitas"
 none = "Nėra automobilio"
 unknown = "Nežinomas automobilis"
@@ -170,14 +170,17 @@ inactiveLabel = "Suplanuotas įkrovimas"
 activeLabel = "{time}"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
 setTargetTime = "nenustatytas"
-description = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
+descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
 today = "šiandien"
 tomorrow = "rytoj"
 targetIsInThePast = "Pasirinkite laiką ateityje."
 remove = "Panaikinti"
 activate = "Aktyvuoti"
-experimentalLabel = "Eksperimentinė"
-experimentalText = "Ši funkcija veikia, bet nėra tobula. Apie netikėtą elgesį praneškite mūsų"
+planUnknown = "nežinoma"
+planDuration = "Įkrovimo laikas"
+planPeriodLabel = "Periodas"
+planPeriodValue = "{start} iki {end}"
+descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"
 
 [main.targetEnergy]
 label = "Limitas"
@@ -202,6 +205,7 @@ loadpoint = "Įkroviklis"
 vehicle = "Automobilis"
 energy = "Įkrauta"
 date = "Laikotarpis"
+reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo sesiją?"
 
 [sessions.csv]
 loadpoint = "Įkroviklis"
@@ -238,3 +242,13 @@ mi = "mylios"
 
 [settings.telemetry]
 label = "Telemetrija"
+
+[session]
+odometer = "Odometras (km)"
+meterstart = "Skaitiklis pradžia (kWh)"
+meterstop = "Skaitiklis pabaiga (kWh)"
+started = "Pradėta"
+finished = "Pabaigta"
+title = "Įkrovimo sesija"
+delete = "Ištrinti"
+cancel = "Atšaukti"

@@ -8,15 +8,33 @@ render:
       template: rct-power
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
+    advanced: |
+      type: template
+      template: rct-power
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
       template: rct-power
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
+    advanced: |
+      type: template
+      template: rct-power
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
       template: rct-power
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
+    advanced: |
+      type: template
+      template: rct-power
+      usage: battery
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      capacity: 50 # Akkukapazität in kWh # Optional

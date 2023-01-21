@@ -10,6 +10,8 @@ params:
   - name: host
   - name: port
     default: 502
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -108,4 +110,7 @@ render: |
       address: 843 # Soc
       type: input
       decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}
