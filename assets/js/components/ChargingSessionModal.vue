@@ -26,7 +26,7 @@
 										{{ $t("sessions.loadpoint") }}
 									</th>
 									<td>
-										{{ newSession.loadpoint }}
+										{{ session.loadpoint }}
 									</td>
 								</tr>
 								<tr>
