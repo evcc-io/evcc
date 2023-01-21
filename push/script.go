@@ -8,8 +8,13 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/kballard/go-shellquote"
 )
+
+func init() {
+	registry.Add("script", NewScriptFromConfig)
+}
 
 // Script implements shell script-based message service and setters
 type Script struct {
@@ -18,17 +23,23 @@ type Script struct {
 	timeout time.Duration
 }
 
-type scriptConfig struct {
-	CmdLine string
-	Timeout time.Duration
-}
+// NewScriptFromConfig creates a Script messenger. Script execution is aborted after given timeout.
+func NewScriptFromConfig(other map[string]interface{}) (Messenger, error) {
+	cc := struct {
+		CmdLine string
+		Timeout time.Duration
+	}{
+		Timeout: request.Timeout,
+	}
 
-// NewScriptMessenger creates a Script messenger. Script execution is aborted after given timeout.
-func NewScriptMessenger(script string, timeout time.Duration) (*Script, error) {
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
 	s := &Script{
 		log:     util.NewLogger("script"),
-		script:  script,
-		timeout: timeout,
+		script:  cc.CmdLine,
+		timeout: cc.Timeout,
 	}
 
 	return s, nil
@@ -38,7 +49,7 @@ func NewScriptMessenger(script string, timeout time.Duration) (*Script, error) {
 func (m *Script) Send(title, msg string) {
 	_, err := m.exec(m.script, title, msg)
 	if err != nil {
-		m.log.ERROR.Printf("script: %v", err)
+		m.log.ERROR.Printf("exec: %v", err)
 	}
 }
 

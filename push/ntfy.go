@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-func inti() {
+func init() {
 	registry.Add("ntfy", NewNtfyFromConfig)
 }
 

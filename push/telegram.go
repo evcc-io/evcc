@@ -6,15 +6,10 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/labstack/gommon/log"
 )
 
 func init() {
 	registry.Add("telegram", NewTelegramFromConfig)
-
-	if err := tgbotapi.SetLogger(log.ERROR); err != nil {
-		log.ERROR.Printf("telegram: %v", err)
-	}
 }
 
 // Telegram implements the Telegram messenger
@@ -41,8 +36,11 @@ func NewTelegramFromConfig(other map[string]interface{}) (Messenger, error) {
 		return nil, errors.New("telegram: invalid bot token")
 	}
 
+	log := util.NewLogger("telegram")
+	_ = tgbotapi.SetLogger(log.ERROR)
+
 	m := &Telegram{
-		log:   util.NewLogger("telegram"),
+		log:   log,
 		bot:   bot,
 		chats: make(map[int64]struct{}),
 	}
@@ -64,8 +62,7 @@ func (m *Telegram) trackChats() {
 	for update := range m.bot.GetUpdatesChan(conf) {
 		m.Lock()
 		if _, ok := m.chats[update.Message.Chat.ID]; !ok {
-			log.INFO.Printf("telegram: new chat id: %d", update.Message.Chat.ID)
-			// m.chats[update.Message.Chat.ID] = struct{}{}
+			m.log.INFO.Printf("new chat id: %d", update.Message.Chat.ID)
 		}
 		m.Unlock()
 	}
@@ -75,11 +72,11 @@ func (m *Telegram) trackChats() {
 func (m *Telegram) Send(title, msg string) {
 	m.Lock()
 	for chat := range m.chats {
-		log.DEBUG.Printf("telegram: sending to %d", chat)
+		m.log.DEBUG.Printf("sending to %d", chat)
 
 		msg := tgbotapi.NewMessage(chat, msg)
 		if _, err := m.bot.Send(msg); err != nil {
-			log.ERROR.Print(err)
+			m.log.ERROR.Println("send:", err)
 		}
 	}
 	m.Unlock()
