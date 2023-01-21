@@ -81,6 +81,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: build-ui
 
     steps:
       - uses: actions/checkout@v3
@@ -109,6 +110,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    needs: build-ui
 
     steps:
       - uses: actions/checkout@v3
@@ -118,6 +120,15 @@ jobs:
           go-version: ^1.18
           cache: true
         id: go
+
+      - run: ls
+      - name: Get dist from cache
+        uses: actions/cache@v3
+        id: cache-dist
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist
+      - run: ls dist
 
       - name: Patch ASN1
         run: make patch-asn1-sudo
