@@ -7,8 +7,6 @@ products:
     description:
       generic: SDM 72v2
 params:
-  - name: usage
-    choice: ["grid", "pv", "battery", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |

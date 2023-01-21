@@ -15,11 +15,12 @@ import (
 
 type ElectricityMaps struct {
 	*request.Helper
-	log  *util.Logger
-	mux  sync.Mutex
-	uri  string
-	zone string
-	data []CarbonIntensitySlot
+	log     *util.Logger
+	mux     sync.Mutex
+	uri     string
+	zone    string
+	data    []CarbonIntensitySlot
+	updated time.Time
 }
 
 type CarbonIntensity struct {
@@ -29,8 +30,8 @@ type CarbonIntensity struct {
 }
 
 type CarbonIntensitySlot struct {
-	CarbonIntensity float64   // : 626,
-	Datetime        time.Time // : "2022-12-12T16:00:00.000Z"
+	CarbonIntensity float64   // 626,
+	Datetime        time.Time // "2022-12-12T16:00:00.000Z"
 }
 
 var _ api.Tariff = (*ElectricityMaps)(nil)
@@ -68,12 +69,15 @@ func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, err
 		}),
 	}
 
-	go t.Run()
+	done := make(chan error)
+	go t.run(done)
+	err := <-done
 
-	return t, nil
+	return t, err
 }
 
-func (t *ElectricityMaps) Run() {
+func (t *ElectricityMaps) run(done chan error) {
+	var once sync.Once
 	uri := fmt.Sprintf("%s/carbon-intensity/forecast?zone=%s", t.uri, t.zone)
 
 	for ; true; <-time.NewTicker(time.Hour).C {
@@ -83,14 +87,24 @@ func (t *ElectricityMaps) Run() {
 				err = errors.New(res.Error)
 			}
 
+			once.Do(func() { done <- err })
+
 			t.log.ERROR.Println(err)
 			continue
 		}
 
+		once.Do(func() { close(done) })
+
 		t.mux.Lock()
+		t.updated = time.Now()
 		t.data = res.Forecast
 		t.mux.Unlock()
 	}
+}
+
+// Unit implements the api.Tariff interface
+func (t *ElectricityMaps) Unit() string {
+	return "gCO2eq"
 }
 
 func (t *ElectricityMaps) Rates() (api.Rates, error) {
@@ -100,12 +114,12 @@ func (t *ElectricityMaps) Rates() (api.Rates, error) {
 	res := make(api.Rates, 0, len(t.data))
 	for _, r := range t.data {
 		ar := api.Rate{
-			Start: r.Datetime,
-			End:   r.Datetime.Add(time.Hour),
+			Start: r.Datetime.Local(),
+			End:   r.Datetime.Add(time.Hour).Local(),
 			Price: r.CarbonIntensity,
 		}
 		res = append(res, ar)
 	}
 
-	return res, nil
+	return res, outdatedError(t.updated, time.Hour)
 }

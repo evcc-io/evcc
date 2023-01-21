@@ -138,6 +138,7 @@ type Vehicle interface {
 	Battery
 	BatteryCapacity
 	Title() string
+	SetTitle(string)
 	Icon() string
 	Phases() int
 	Identifiers() []string
@@ -188,8 +189,9 @@ type Resurrector interface {
 
 // Rate is a grid tariff rate
 type Rate struct {
-	Start, End time.Time
-	Price      float64
+	Start time.Time `json:"start"`
+	End   time.Time `json:"end"`
+	Price float64   `json:"price"`
 }
 
 // Rates is a slice of (future) tariff rates
@@ -197,6 +199,7 @@ type Rates []Rate
 
 // Tariff is a tariff capable of retrieving tariff rates
 type Tariff interface {
+	Unit() string
 	Rates() (Rates, error)
 }
 

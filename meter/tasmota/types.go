@@ -1,5 +1,11 @@
 package tasmota
 
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+)
+
 // StatusResponse is the Status part of the Tasmota Status 0 command response
 // https://tasmota.github.io/docs/JSON-Status-Responses/
 type StatusResponse struct {
@@ -68,12 +74,13 @@ type StatusSNSResponse struct {
 			Total          float64
 			Yesterday      float64
 			Today          float64
-			Power          int
-			ApparentPower  int
-			ReactivePower  int
-			Factor         float64
+			Power          Channels
+			ApparentPower  Channels
+			ReactivePower  Channels
+			Factor         Channels
+			Frequency      int
 			Voltage        int
-			Current        float64
+			Current        Channels
 		}
 
 		// SML sensor readings
@@ -83,4 +90,27 @@ type StatusSNSResponse struct {
 			PowerCurr int     `json:"power_curr"`
 		}
 	}
+}
+
+// Channels is a Tasmota specifc helper type to handle meter value lists and single meter values
+type Channels []float64
+
+func (ch *Channels) Channel(channel int) (float64, error) {
+	if channel < 1 || channel > len(*ch) {
+		return 0, fmt.Errorf("invalid channel: %d", channel)
+	}
+	return (*ch)[channel-1], nil
+}
+
+func (ch *Channels) UnmarshalJSON(data []byte) error {
+	if f, err := strconv.ParseFloat(string(data), 64); err == nil {
+		*ch = Channels([]float64{f})
+		return nil
+	}
+
+	var ff []float64
+	err := json.Unmarshal(data, &ff)
+	*ch = Channels(ff)
+
+	return err
 }

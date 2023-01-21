@@ -27,9 +27,10 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/libp2p/zeroconf/v2"
-	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	"golang.org/x/text/currency"
 )
 
@@ -214,7 +215,7 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) (chan push.Eve
 	}
 
 	for _, service := range conf.Services {
-		impl, err := push.NewMessengerFromConfig(service.Type, service.Other)
+		impl, err := push.NewFromConfig(service.Type, service.Other)
 		if err != nil {
 			return messageChan, fmt.Errorf("failed configuring push service %s: %w", service.Type, err)
 		}
@@ -237,23 +238,31 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 
 	if conf.Grid.Type != "" {
 		grid, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
+		if err != nil {
+			grid = nil
+			log.ERROR.Printf("failed configuring grid tariff: %v", err)
+		}
 	}
 
-	if err == nil && conf.FeedIn.Type != "" {
+	if conf.FeedIn.Type != "" {
 		feedin, err = tariff.NewFromConfig(conf.FeedIn.Type, conf.FeedIn.Other)
+		if err != nil {
+			feedin = nil
+			log.ERROR.Printf("failed configuring feed-in tariff: %v", err)
+		}
 	}
 
-	if err == nil && conf.Planner.Type != "" {
+	if conf.Planner.Type != "" {
 		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
-	}
-
-	if err != nil {
-		err = fmt.Errorf("failed configuring tariff: %w", err)
+		if err != nil {
+			planner = nil
+			log.ERROR.Printf("failed configuring planner tariff: %v", err)
+		}
 	}
 
 	tariffs := tariff.NewTariffs(currencyCode, grid, feedin, planner)
 
-	return *tariffs, err
+	return *tariffs, nil
 }
 
 func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
@@ -267,10 +276,14 @@ func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
 		}
 
 		if err == nil {
-			// list of vehicles
-			vehicles := lo.MapToSlice(cp.vehicles, func(_ string, v api.Vehicle) api.Vehicle {
-				return v
-			})
+			// list of vehicles ordered by name
+			keys := maps.Keys(cp.vehicles)
+			slices.Sort(keys)
+
+			vehicles := make([]api.Vehicle, 0, len(cp.vehicles))
+			for _, k := range keys {
+				vehicles = append(vehicles, cp.vehicles[k])
+			}
 
 			site, err = configureSite(conf.Site, cp, loadPoints, vehicles, tariffs)
 		}

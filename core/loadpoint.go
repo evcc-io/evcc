@@ -52,6 +52,8 @@ const (
 	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 
+	smallSlotDuration = 10 * time.Minute // small planner slot duration we might ignore
+
 	guardGracePeriod = 10 * time.Second // allow out of sync during this timespan
 )
 
@@ -116,7 +118,7 @@ type Loadpoint struct {
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
 	onDisconnect      api.ActionConfig
-	targetEnergy      float64 // Target charge energy for dumb vehicles
+	targetEnergy      float64 // Target charge energy for dumb vehicles in kWh
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
@@ -483,6 +485,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.socUpdated = time.Time{}
 
 	// reset plan once charge goal is met
+	lp.setTargetTime(time.Time{})
 	lp.setPlanActive(false)
 }
 
@@ -738,91 +741,6 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		lp.vehicleSoc < float64(lp.Soc.min)
 }
 
-// setPlanActive updates plan active flag
-func (lp *Loadpoint) setPlanActive(active bool) {
-	if !active {
-		lp.planSlotEnd = time.Time{}
-	}
-	lp.planActive = active
-	lp.publish("planActive", lp.planActive)
-}
-
-// plannerActive checks if charging plan is active
-func (lp *Loadpoint) plannerActive() (active bool) {
-	defer func() {
-		lp.publish(targetTimeActive, active)
-	}()
-
-	if lp.planner == nil || lp.socEstimator == nil || lp.targetTime.IsZero() {
-		return false
-	}
-
-	targetSoc := 100
-	maxPower := lp.GetMaxPower()
-	var requiredDuration time.Duration
-
-	if energy, ok := lp.remainingChargeEnergy(); ok {
-		if energy > 0 {
-			requiredDuration = time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
-		}
-	} else {
-		// TODO vehicle soc limit
-		if lp.Soc.target > 0 {
-			targetSoc = lp.Soc.target
-		}
-		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
-	}
-	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
-
-	// anticipate lower charge rates at end of charging curve
-	if targetSoc >= 80 {
-		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
-
-		if targetSoc >= 90 {
-			requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
-		}
-	}
-
-	lp.log.DEBUG.Printf("planning %v until %v at %.0fW", requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower)
-
-	planStart, slotEnd, active, err := lp.planner.Active(requiredDuration, lp.targetTime)
-	if err != nil {
-		lp.log.ERROR.Println("planner:", err)
-		return false
-	}
-	lp.publish(targetTimeProjectedStart, planStart)
-
-	if active {
-		// ignore short plans if not already active
-		if !lp.planActive && requiredDuration < 10*time.Minute {
-			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
-			return false
-		}
-
-		// remember last active plan's end time
-		lp.setPlanActive(true)
-		lp.planSlotEnd = slotEnd
-	} else if lp.planActive {
-		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
-		switch {
-		case lp.clock.Now().After(lp.targetTime) && !lp.targetTime.IsZero():
-			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
-			// TODO check when schedule is implemented
-			lp.log.DEBUG.Println("continuing after target time")
-			active = true
-		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero():
-			// don't stop an already running slot if goal was not met
-			lp.log.DEBUG.Println("continuing until end of slot")
-			active = true
-		case requiredDuration < 30*time.Minute:
-			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
-			active = true
-		}
-	}
-
-	return active
-}
-
 // climateActive checks if vehicle has active climate request
 func (lp *Loadpoint) climateActive() bool {
 	if cl, ok := lp.vehicle.(api.VehicleClimater); ok {
@@ -858,7 +776,6 @@ func (lp *Loadpoint) climateActive() bool {
 func (lp *Loadpoint) disableUnlessClimater() error {
 	var current float64 // zero disables
 	if lp.climateActive() {
-		lp.log.DEBUG.Println("climater active")
 		current = lp.GetMinCurrent()
 	}
 
@@ -982,10 +899,10 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		}
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, estimate)
 
-		lp.publish("vehiclePresent", true)
-		lp.publish("vehicleTitle", lp.vehicle.Title())
-		lp.publish("vehicleIcon", lp.vehicle.Icon())
-		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
+		lp.publish(vehiclePresent, true)
+		lp.publish(vehicleTitle, lp.vehicle.Title())
+		lp.publish(vehicleIcon, lp.vehicle.Icon())
+		lp.publish(vehicleCapacity, lp.vehicle.Capacity())
 
 		// unblock api
 		lp.Unlock()
@@ -998,10 +915,10 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	} else {
 		lp.socEstimator = nil
 
-		lp.publish("vehiclePresent", false)
-		lp.publish("vehicleTitle", "")
-		lp.publish("vehicleIcon", "")
-		lp.publish("vehicleCapacity", int64(0))
+		lp.publish(vehiclePresent, false)
+		lp.publish(vehicleTitle, "")
+		lp.publish(vehicleIcon, "")
+		lp.publish(vehicleCapacity, int64(0))
 		lp.publish(vehicleOdometer, 0.0)
 	}
 
@@ -1298,36 +1215,6 @@ func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 	}
 
 	return nil
-}
-
-// setConfiguredPhases sets the default phase configuration
-func (lp *Loadpoint) setConfiguredPhases(phases int) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.ConfiguredPhases = phases
-
-	// publish 1p3p capability and phase configuration
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		lp.publish(phasesConfigured, lp.ConfiguredPhases)
-	} else {
-		lp.publish(phasesConfigured, nil)
-	}
-}
-
-// setPhases sets the number of enabled phases without modifying the charger
-func (lp *Loadpoint) setPhases(phases int) {
-	if lp.GetPhases() != phases {
-		lp.Lock()
-		lp.phases = phases
-		lp.Unlock()
-
-		// reset timer to disabled state
-		lp.resetPhaseTimer()
-
-		// measure phases after switching
-		lp.resetMeasuredPhases()
-	}
 }
 
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
@@ -1639,7 +1526,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 			lp.measuredPhases = phases
 			lp.Unlock()
 
-			lp.log.DEBUG.Printf("detected phases: %dp", phases)
+			lp.log.DEBUG.Printf("detected active phases: %dp", phases)
 			lp.publish(phasesActive, phases)
 		}
 	}
@@ -1647,6 +1534,10 @@ func (lp *Loadpoint) updateChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+		return // we don't need the voltages
+	}
+
 	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
 	if !ok {
 		return // don't guess
@@ -1676,7 +1567,7 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	}
 
 	if phases >= 1 {
-		lp.log.DEBUG.Printf("detected phases: %dp", phases)
+		lp.log.DEBUG.Printf("detected connected phases: %dp", phases)
 		lp.setPhases(phases)
 	}
 }
@@ -1899,14 +1790,10 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
-		lp.resetPhaseTimer()
-		lp.resetPVTimer()
 
 	// immediate charging
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
-		lp.resetPhaseTimer()
-		lp.resetPVTimer()
 
 	// minimum or target charging
 	case lp.minSocNotReached() || lp.plannerActive():
@@ -1915,15 +1802,10 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
-		if mode == api.ModeMinPV {
-			lp.resetPVTimer()
-		}
-
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {
-			lp.log.DEBUG.Println("climater active")
 			targetCurrent = lp.GetMinCurrent()
 			required = true
 		}

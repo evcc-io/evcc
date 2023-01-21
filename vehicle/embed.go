@@ -20,6 +20,11 @@ func (v *embed) Title() string {
 	return v.Title_
 }
 
+// SetTitle implements the api.TitleSetter interface
+func (v *embed) SetTitle(title string) {
+	v.Title_ = title
+}
+
 // Icon implements the api.Vehicle interface
 func (v *embed) Icon() string {
 	return v.Icon_

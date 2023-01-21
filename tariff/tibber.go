@@ -14,11 +14,13 @@ import (
 )
 
 type Tibber struct {
-	mux    sync.Mutex
-	log    *util.Logger
-	homeID string
-	client *tibber.Client
-	data   api.Rates
+	mux     sync.Mutex
+	log     *util.Logger
+	homeID  string
+	unit    string
+	client  *tibber.Client
+	data    api.Rates
+	updated time.Time
 }
 
 var _ api.Tariff = (*Tibber)(nil)
@@ -31,6 +33,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		Token  string
 		HomeID string
+		Unit   string
 		Cheap  any // TODO deprecated
 	}
 
@@ -47,13 +50,21 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Tibber{
 		log:    log,
 		homeID: cc.HomeID,
+		unit:   cc.Unit,
 		client: tibber.NewClient(log, cc.Token),
 	}
 
-	if t.homeID == "" {
-		var err error
-		if t.homeID, err = t.client.DefaultHomeID(); err != nil {
+	if t.homeID == "" || t.unit == "" {
+		home, err := t.client.DefaultHome(t.homeID)
+		if err != nil {
 			return nil, err
+		}
+
+		if t.homeID == "" {
+			t.homeID = home.ID
+		}
+		if t.unit == "" {
+			t.unit = home.CurrentSubscription.PriceInfo.Current.Currency
 		}
 	}
 
@@ -62,37 +73,46 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		t.log.WARN.Println("cheap rate configuration has been replaced by target charging and is deprecated")
 	}
 
-	go t.Run()
+	done := make(chan error)
+	go t.run(done)
+	err := <-done
 
-	return t, nil
+	return t, err
 }
 
-func (t *Tibber) Run() {
+func (t *Tibber) run(done chan error) {
+	var once sync.Once
+
+	var res struct {
+		Viewer struct {
+			Home struct {
+				ID                  string
+				TimeZone            string
+				CurrentSubscription tibber.Subscription
+			} `graphql:"home(id: $id)"`
+		}
+	}
+
+	v := map[string]interface{}{
+		"id": graphql.ID(t.homeID),
+	}
+
 	for ; true; <-time.NewTicker(time.Hour).C {
-		var res struct {
-			Viewer struct {
-				Home struct {
-					ID                  string
-					TimeZone            string
-					CurrentSubscription tibber.Subscription
-				} `graphql:"home(id: $id)"`
-			}
-		}
-
-		v := map[string]interface{}{
-			"id": graphql.ID(t.homeID),
-		}
-
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		err := t.client.Query(ctx, &res, v)
 		cancel()
 
 		if err != nil {
+			once.Do(func() { done <- err })
+
 			t.log.ERROR.Println(err)
 			continue
 		}
 
+		once.Do(func() { close(done) })
+
 		t.mux.Lock()
+		t.updated = time.Now()
 
 		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
 		t.data = make(api.Rates, 0, len(pi.Today)+len(pi.Tomorrow))
@@ -102,12 +122,12 @@ func (t *Tibber) Run() {
 	}
 }
 
-func (t *Tibber) rates(pi []tibber.PriceInfo) api.Rates {
+func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 	data := make(api.Rates, 0, len(pi))
 	for _, r := range pi {
 		ar := api.Rate{
-			Start: r.StartsAt,
-			End:   r.StartsAt.Add(time.Hour),
+			Start: r.StartsAt.Local(),
+			End:   r.StartsAt.Add(time.Hour).Local(),
 			Price: r.Total,
 		}
 		data = append(data, ar)
@@ -115,9 +135,14 @@ func (t *Tibber) rates(pi []tibber.PriceInfo) api.Rates {
 	return data
 }
 
+// Unit implements the api.Tariff interface
+func (t *Tibber) Unit() string {
+	return t.unit
+}
+
 // Rates implements the api.Tariff interface
 func (t *Tibber) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	return append([]api.Rate{}, t.data...), nil
+	return append([]api.Rate{}, t.data...), outdatedError(t.updated, time.Hour)
 }

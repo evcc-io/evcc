@@ -8,6 +8,8 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -25,4 +27,7 @@ render: |
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
     jq: .Body.Data.Inverters."1".SOC
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

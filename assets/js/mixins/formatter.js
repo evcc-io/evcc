@@ -61,6 +61,7 @@ export default {
       if (duration <= 0) {
         return "—";
       }
+      duration = Math.round(duration);
       var seconds = duration % 60;
       var minutes = Math.floor(duration / 60) % 60;
       var hours = Math.floor(duration / 3600);
@@ -122,6 +123,13 @@ export default {
       }
       return new Intl.DateTimeFormat(this.$i18n.locale, {
         weekday: "short",
+      }).format(date);
+    },
+    weekdayTime: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n.locale, {
+        weekday: "short",
+        hour: "numeric",
+        minute: "numeric",
       }).format(date);
     },
     fmtAbsoluteDate: function (date) {

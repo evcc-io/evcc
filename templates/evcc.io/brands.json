@@ -16,6 +16,7 @@
   "Elli",
   "Ensto",
   "Etrel",
+  "Fronius",
   "Garo",
   "go-eCharger",
   "HardyBarth",
@@ -65,11 +66,11 @@
   "E3DC",
   "Eastron",
   "FENECON",
+  "FoxESS",
   "Fronius",
   "Growatt",
   "Homematic IP",
   "Huawei",
-  "Janitza",
   "Kostal",
   "LG",
   "myStrom",
@@ -101,11 +102,11 @@
   "E3DC",
   "Eastron",
   "FENECON",
+  "FoxESS",
   "Fronius",
   "Growatt",
   "Homematic IP",
   "Huawei",
-  "Janitza",
   "Kostal",
   "LG",
   "myStrom",
@@ -130,6 +131,7 @@
   "Victron"
  ],
  "Vehicles": [
+  "Aiways",
   "Audi",
   "BMW",
   "Citroën",
@@ -154,6 +156,7 @@
   "Smart",
   "Tesla",
   "Volkswagen",
-  "Volvo"
+  "Volvo",
+  "Volvo (legacy)"
  ]
 }

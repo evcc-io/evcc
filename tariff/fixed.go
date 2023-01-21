@@ -8,10 +8,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/fixed"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang-module/carbon"
+	"github.com/golang-module/carbon/v2"
 )
 
 type Fixed struct {
+	unit  string
 	clock clock.Clock
 	zones fixed.Zones
 }
@@ -24,8 +25,9 @@ func init() {
 
 func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Price float64
-		Zones []struct {
+		Currency string
+		Price    float64
+		Zones    []struct {
 			Price       float64
 			Days, Hours string
 		}
@@ -35,7 +37,12 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	if cc.Currency == "" {
+		cc.Currency = "EUR"
+	}
+
 	t := &Fixed{
+		unit:  cc.Currency,
 		clock: clock.New(),
 		zones: []fixed.Zone{
 			{Price: cc.Price}, // full week is implicit
@@ -75,11 +82,16 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, nil
 }
 
+// Unit implements the api.Tariff interface
+func (t *Fixed) Unit() string {
+	return t.unit
+}
+
 // Rates implements the api.Tariff interface
 func (t *Fixed) Rates() (api.Rates, error) {
 	var res api.Rates
 
-	start := carbon.Time2Carbon(t.clock.Now().Local()).StartOfDay()
+	start := carbon.FromStdTime(t.clock.Now().Local()).StartOfDay()
 	for i := 0; i < 7; i++ {
 		dow := fixed.Day((start.DayOfWeek() + i) % 7)
 
@@ -114,8 +126,8 @@ func (t *Fixed) Rates() (api.Rates, error) {
 
 			rate := api.Rate{
 				Price: zone.Price,
-				Start: ts.Carbon2Time(),
-				End:   end.Carbon2Time(),
+				Start: ts.ToStdTime(),
+				End:   end.ToStdTime(),
 			}
 
 			res = append(res, rate)

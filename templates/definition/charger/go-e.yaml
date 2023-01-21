@@ -6,8 +6,8 @@ products:
 capabilities: ["rfid"]
 requirements:
   description:
-    en: Requires firmware 040.0 or later.
-    de: Benötigt mindestens Firmware 040.0 oder neuer.
+    en: Requires firmware 040.0 or later. HTTP API v1 or v2 must be activated.
+    de: Benötigt mindestens Firmware 040.0 oder neuer. Das HTTP API v1 oder v2 muss aktiviert sein.
   evcc: ["sponsorship"]
 params:
   - name: host

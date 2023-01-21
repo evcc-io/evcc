@@ -2,14 +2,15 @@ template: pracht-alpha
 products:
   - brand: Pracht
     description:
-      generic: Alpha XT
+      generic: Alpha XT, XT+, Mono XT, Mono XT+, PNI
 requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rs485", "tcpip"]
     baudrate: 9600
     comset: 8N1
+    id: 1
 render: |
   type: pracht-alpha
   {{- include "modbus" . }}

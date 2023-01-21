@@ -1,6 +1,8 @@
 package tariff
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"golang.org/x/text/currency"
 )
@@ -21,4 +23,12 @@ func NewTariffs(currency currency.Unit, grid, feedin, planner api.Tariff) *Tarif
 		FeedIn:   feedin,
 		Planner:  planner,
 	}
+}
+
+// outdatedError returns api.ErrOutdated if t is older than 2*d
+func outdatedError(t time.Time, d time.Duration) error {
+	if time.Since(t) > 2*d {
+		return api.ErrOutdated
+	}
+	return nil
 }

@@ -3,6 +3,8 @@ product:
   description: Gemini
 capabilities: ["1p3p", "rfid"]
 requirements: ["sponsorship"]
+description: |
+  Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
 render:
   - default: |
       type: template

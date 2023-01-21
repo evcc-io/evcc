@@ -227,3 +227,15 @@ loadpoints:
     mode: "off"
     meter: meter_charger_2
     vehicle: vehicle_2
+
+tariffs:
+  currency: EUR # three letter ISO-4217 currency code (default EUR)
+  grid:
+    type: fixed
+    price: 0.399 # EUR/kWh
+  feedin:
+    type: fixed
+    price: 0.08 # EUR/kWh
+  planner:
+    type: grünstromindex
+    zip: 12349

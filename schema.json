@@ -3,9 +3,20 @@
   "title": "EVCC configuration schema",
   "type": "object",
   "properties": {
-    "uri": {
-      "type": "string",
-      "format": "uri"
+    "network": {
+      "type": "object",
+      "description": "Network",
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        }
+      }
     },
     "interval": {
       "$ref": "#/definitions/duration"
@@ -23,6 +34,45 @@
     },
     "sponsortoken": {
       "type": "string"
+    },
+    "plant": {
+      "type": "string"
+    },
+    "telemetry": {
+      "type": "boolean"
+    },
+    "database": {
+      "type": "object",
+      "description": "Database",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "dsn": {
+          "type": "string"
+        }
+      }
+    },
+    "tariffs": {
+      "type": "object",
+      "description": "Tariffs",
+      "properties": {
+        "currency": {
+          "type": "string"
+        },
+        "grid": {
+          "description": "Grid tariff",
+          "$ref": "#/definitions/typedObject"
+        },
+        "feedin": {
+          "description": "Feed-in tariff",
+          "$ref": "#/definitions/typedObject"
+        },
+        "planner": {
+          "description": "Planner tariff",
+          "$ref": "#/definitions/typedObject"
+        }
+      }
     },
     "chargers": {
       "type": "array",
@@ -236,6 +286,17 @@
           "type": "string"
         },
         "template": {
+          "type": "string"
+        }
+      }
+    },
+    "typedObject": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
           "type": "string"
         }
       }
