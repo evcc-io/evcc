@@ -86,6 +86,8 @@ jobs:
         with:
           version: latest
           args: --timeout 3m
+          skip-pkg-cache: true
+          skip-build-cache: true
 
   build-ui:
     name: UI
