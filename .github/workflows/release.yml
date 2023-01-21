@@ -35,7 +35,6 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            andig/evcc
             evcc/evcc
 
       - name: Publish
@@ -70,6 +69,13 @@ jobs:
 
       - name: Patch ASN1
         run: make patch-asn1-sudo
+
+      - name: Get dist from cache
+        uses: actions/cache@v3
+        id: cache-dist
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist
 
       # gokrazy image
       # - name: Prepare Image
