@@ -20,6 +20,12 @@ render:
       id: 247
       host: 192.0.2.2 # Hostname
       port: 502 # Port
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 247
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
     advanced: |
       type: template
       template: goodwe-hybrid
@@ -34,6 +40,12 @@ render:
 
       # RS485 via TCP/IP (Modbus RTU)
       modbus: rs485tcpip
+      id: 247
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+
+      # Modbus TCP
+      modbus: tcpip
       id: 247
       host: 192.0.2.2 # Hostname
       port: 502 # Port
@@ -56,6 +68,12 @@ render:
       id: 247
       host: 192.0.2.2 # Hostname
       port: 502 # Port
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 247
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
     advanced: |
       type: template
       template: goodwe-hybrid
@@ -70,6 +88,12 @@ render:
 
       # RS485 via TCP/IP (Modbus RTU)
       modbus: rs485tcpip
+      id: 247
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+
+      # Modbus TCP
+      modbus: tcpip
       id: 247
       host: 192.0.2.2 # Hostname
       port: 502 # Port
@@ -92,6 +116,12 @@ render:
       id: 247
       host: 192.0.2.2 # Hostname
       port: 502 # Port
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 247
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
     advanced: |
       type: template
       template: goodwe-hybrid
@@ -106,6 +136,12 @@ render:
 
       # RS485 via TCP/IP (Modbus RTU)
       modbus: rs485tcpip
+      id: 247
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+
+      # Modbus TCP
+      modbus: tcpip
       id: 247
       host: 192.0.2.2 # Hostname
       port: 502 # Port
