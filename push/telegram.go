@@ -4,40 +4,48 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/evcc-io/evcc/util"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+func init() {
+	registry.Add("telegram", NewTelegramFromConfig)
+}
+
 // Telegram implements the Telegram messenger
 type Telegram struct {
+	log *util.Logger
 	sync.Mutex
 	bot   *tgbotapi.BotAPI
 	chats map[int64]struct{}
 }
 
-type telegramConfig struct {
-	Token string
-	Chats []int64
-}
-
-func init() {
-	if err := tgbotapi.SetLogger(log.ERROR); err != nil {
-		log.ERROR.Printf("telegram: %v", err)
+// NewTelegramFromConfig creates new pushover messenger
+func NewTelegramFromConfig(other map[string]interface{}) (Messenger, error) {
+	var cc struct {
+		Token string
+		Chats []int64
 	}
-}
 
-// NewTelegramMessenger creates new pushover messenger
-func NewTelegramMessenger(token string, chats []int64) (*Telegram, error) {
-	bot, err := tgbotapi.NewBotAPI(token)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	bot, err := tgbotapi.NewBotAPI(cc.Token)
 	if err != nil {
 		return nil, errors.New("telegram: invalid bot token")
 	}
 
+	log := util.NewLogger("telegram")
+	_ = tgbotapi.SetLogger(log.ERROR)
+
 	m := &Telegram{
+		log:   log,
 		bot:   bot,
 		chats: make(map[int64]struct{}),
 	}
 
-	for _, chat := range chats {
+	for _, chat := range cc.Chats {
 		m.chats[chat] = struct{}{}
 	}
 
@@ -54,8 +62,7 @@ func (m *Telegram) trackChats() {
 	for update := range m.bot.GetUpdatesChan(conf) {
 		m.Lock()
 		if _, ok := m.chats[update.Message.Chat.ID]; !ok {
-			log.INFO.Printf("telegram: new chat id: %d", update.Message.Chat.ID)
-			// m.chats[update.Message.Chat.ID] = struct{}{}
+			m.log.INFO.Printf("new chat id: %d", update.Message.Chat.ID)
 		}
 		m.Unlock()
 	}
@@ -65,11 +72,11 @@ func (m *Telegram) trackChats() {
 func (m *Telegram) Send(title, msg string) {
 	m.Lock()
 	for chat := range m.chats {
-		log.DEBUG.Printf("telegram: sending to %d", chat)
+		m.log.DEBUG.Printf("sending to %d", chat)
 
 		msg := tgbotapi.NewMessage(chat, msg)
 		if _, err := m.bot.Send(msg); err != nil {
-			log.ERROR.Print(err)
+			m.log.ERROR.Println("send:", err)
 		}
 	}
 	m.Unlock()
