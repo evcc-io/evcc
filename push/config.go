@@ -14,7 +14,7 @@ type senderRegistry map[string]func(map[string]interface{}) (Messenger, error)
 
 func (r senderRegistry) Add(name string, factory func(map[string]interface{}) (Messenger, error)) {
 	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate meter type: %s", name))
+		panic(fmt.Sprintf("cannot register duplicate messenger type: %s", name))
 	}
 	r[name] = factory
 }
