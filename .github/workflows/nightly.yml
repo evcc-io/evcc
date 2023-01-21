@@ -43,6 +43,15 @@ jobs:
           ref: refs/heads/master # force master
           fetch-depth: 0
 
+      - run: ls
+      - name: Get dist from cache
+        uses: actions/cache@v3
+        id: cache-dist
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist
+      - run: ls dist
+
       - name: Login
         uses: docker/login-action@v2
         with:
@@ -59,7 +68,6 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
           tags: |
-            andig/evcc:nightly
             evcc/evcc:nightly
 
   apt:
@@ -84,6 +92,15 @@ jobs:
 
       - name: Patch ASN1
         run: make patch-asn1-sudo
+
+      - run: ls
+      - name: Get dist from cache
+        uses: actions/cache@v3
+        id: cache-dist
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist
+      - run: ls dist
 
       - name: Create nightly build
         uses: goreleaser/goreleaser-action@v4
