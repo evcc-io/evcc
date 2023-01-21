@@ -57,7 +57,7 @@
 										{{ $t("session.odometer") }}
 									</th>
 									<td>
-										{{ formatKm(newSession.odometer) }}
+										{{ formatKm(session.odometer) }}
 									</td>
 								</tr>
 								<tr>
@@ -65,7 +65,7 @@
 										{{ $t("sessions.energy") }}
 									</th>
 									<td>
-										{{ fmtKWh(newSession.chargedEnergy * 1e3) }}
+										{{ fmtKWh(session.chargedEnergy * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -73,7 +73,7 @@
 										{{ $t("session.meterstart") }}
 									</th>
 									<td>
-										{{ fmtKWh(newSession.meterStart * 1e3) }}
+										{{ fmtKWh(session.meterStart * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -81,7 +81,7 @@
 										{{ $t("session.meterstop") }}
 									</th>
 									<td>
-										{{ fmtKWh(newSession.meterStop * 1e3) }}
+										{{ fmtKWh(session.meterStop * 1e3) }}
 									</td>
 								</tr>
 								<tr>
@@ -89,7 +89,7 @@
 										{{ $t("session.started") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(newSession.created), false) }}
+										{{ fmtFullDateTime(new Date(session.created), false) }}
 									</td>
 								</tr>
 								<tr>
@@ -97,7 +97,7 @@
 										{{ $t("session.finished") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(newSession.finished), false) }}
+										{{ fmtFullDateTime(new Date(session.finished), false) }}
 									</td>
 								</tr>
 							</tbody>

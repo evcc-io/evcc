@@ -223,8 +223,6 @@ started = "Startzeit"
 finished = "Endzeit"
 delete = "Löschen"
 cancel = "Abbrechen"
-save = "Sichern"
-reset = "Zurücksetzen"
 
 [sessions]
 title = "Ladevorgänge"
@@ -234,7 +232,6 @@ vehicle = "Fahrzeug"
 energy = "Geladen"
 date = "Zeitraum"
 reallyDelete = "Wollen Sie diesen Ladevorgang wirklich löschen?"
-all = "Alle"
 
 [sessions.csv]
 loadpoint = "Ladepunkt"

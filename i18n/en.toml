@@ -223,8 +223,6 @@ started = "Started"
 finished = "Finished"
 delete = "Delete"
 cancel = "Cancel"
-save = "Save"
-reset = "Reset"
 
 [sessions]
 title = "Charging Sessions"
@@ -234,7 +232,6 @@ vehicle = "Vehicle"
 energy = "Charged"
 date = "Period"
 reallyDelete = "Do you really want to delete this session?"
-all = "All"
 
 [sessions.csv]
 loadpoint = "Charging point"
