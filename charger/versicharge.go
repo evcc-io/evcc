@@ -68,6 +68,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
@@ -152,20 +153,10 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 
 // Check FW Version 2.120	
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegFirmware, 5); err == nil {
-		fmt.Printf("[VERSI ] INFO Versicharge Firmware: \t%s \n", b)
+		fmt.Printf("[VERSI ] INFO INIT Versicharge Firmware: \t%s \n", b)
 		if bytesAsString(b) != "2.120" {
 			fmt.Printf("[VERSI ] WARN Versicharge Firmware:\t%s -> Falsche Version, getestet mit FW 2.120 \n", b)
 		}
-	}
-
-// MaxCurrent auf 6A setzen bei Initialisierung
-	b, err := wb.conn.WriteSingleRegister(VersichargeRegMaxCurrent, 7) // Red. um 1A auf 6A -> known Bug
-	if err == nil {
-		wb.current = 6
-		fmt.Printf("[VERSI ] INFO MaxCurrent auf 6A gesetzt")
-		fmt.Printf(" (Bug %x) \n", b)
-	} else {
-		return wb, err	
 	}
 
 	return wb, nil
@@ -253,6 +244,10 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 
 	_, err := wb.conn.WriteSingleRegister(VersichargeRegMaxCurrent, u)
 	if err == nil {
+		currentTime := time.Now()
+		fmt.Printf("[VERSI ] INFO ")
+		fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+		fmt.Printf(" MaxCurrent auf %d gesetzt\n", u-1)
 		wb.current = u
 	}
 
