@@ -1,11 +1,9 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"math"
 	"net/http"
@@ -14,15 +12,11 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
-	dbserver "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/locale"
 	"github.com/gorilla/mux"
-	"golang.org/x/text/language"
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
@@ -74,17 +68,6 @@ func jsonResult(w http.ResponseWriter, res interface{}) {
 func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
 	jsonWrite(w, map[string]interface{}{"error": err.Error()})
-}
-
-func csvResult(ctx context.Context, w http.ResponseWriter, res any, filename string) {
-	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.csv"`)
-
-	if ww, ok := res.(api.CsvWriter); ok {
-		_ = ww.WriteCsv(ctx, w)
-	} else {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
 }
 
 // pass converts a simple api without return value to api with nil error return value
@@ -225,110 +208,6 @@ func tariffHandler(site site.API) http.HandlerFunc {
 
 		jsonResult(w, res)
 	}
-}
-
-// sessionHandler returns the list of charging sessions
-func sessionHandler(w http.ResponseWriter, r *http.Request) {
-	if dbserver.Instance == nil {
-		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
-		return
-	}
-
-	var res db.Sessions
-	var filename = "session"
-
-	var year string = r.URL.Query().Get("year")
-	var month string = r.URL.Query().Get("month")
-
-	if len(year) > 0 {
-		filename += "-" + year
-
-		var fmtMonth string = "%"
-		if len(month) > 0 {
-			iMonth, err := strconv.Atoi(month)
-			if err != nil {
-				jsonError(w, http.StatusInternalServerError, err)
-				return
-			}
-			fmtMonth = fmt.Sprintf("%02d", ((iMonth + 1) % 13))
-			filename += "." + fmtMonth
-		}
-
-		if txn := dbserver.Instance.Where("charged_kwh>=0.05 and strftime('%Y', created) = ? and strftime('%m', created) = ?", year, fmtMonth).Order("created desc").Find(&res); txn.Error != nil {
-			jsonError(w, http.StatusInternalServerError, txn.Error)
-			return
-		}
-	} else {
-		if txn := dbserver.Instance.Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
-			jsonError(w, http.StatusInternalServerError, txn.Error)
-			return
-		}
-	}
-
-	if r.URL.Query().Get("format") == "csv" {
-		lang := r.URL.Query().Get("lang")
-		if lang == "" {
-			// get request language
-			lang = r.Header.Get("Accept-Language")
-			if tags, _, err := language.ParseAcceptLanguage(lang); err == nil && len(tags) > 0 {
-				lang = tags[0].String()
-			}
-		}
-
-		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		csvResult(ctx, w, &res, filename)
-		return
-	}
-
-	jsonResult(w, res)
-}
-
-// deleteSessionHandler removes session in sessions table with given id
-func deleteSessionHandler(w http.ResponseWriter, r *http.Request) {
-	if dbserver.Instance == nil {
-		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
-		return
-	}
-
-	var res db.Sessions
-
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	if txn := dbserver.Instance.Delete(&res, id); txn.Error != nil {
-		jsonError(w, http.StatusBadRequest, txn.Error)
-		return
-	}
-
-	jsonResult(w, res)
-}
-
-// updateSessionHandler updates the data of an existing session
-func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
-	if dbserver.Instance == nil {
-		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
-		return
-	}
-
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	var session db.Session
-
-	if err := json.Unmarshal(b, &session); err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	if txn := dbserver.Instance.Save(&session); txn.Error != nil {
-		jsonError(w, http.StatusBadRequest, txn.Error)
-		return
-	}
-
-	json.NewEncoder(w)
 }
 
 // chargeModeHandler updates charge mode

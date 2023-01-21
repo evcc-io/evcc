@@ -14,9 +14,9 @@ import (
 	"golang.org/x/text/language"
 )
 
-func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
+func csvResult(ctx context.Context, w http.ResponseWriter, res any, filename string) {
 	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", `attachment; filename="sessions.csv"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.csv"`)
 
 	if ww, ok := res.(api.CsvWriter); ok {
 		_ = ww.WriteCsv(ctx, w)
