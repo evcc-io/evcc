@@ -208,6 +208,11 @@ func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
 func (lp *Loadpoint) setTargetTime(finishAt time.Time) {
 	lp.targetTime = finishAt
 	lp.publish(targetTime, finishAt)
+
+	// TODO planActive is not guarded by mutex
+	if finishAt.IsZero() {
+		lp.setPlanActive(false)
+	}
 }
 
 // RemoteControl sets remote status demand

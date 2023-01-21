@@ -41,7 +41,7 @@ savingsComparedToGrid = "w porównaniu z siecią"
 savingsTotalEnergy = "{total} kWh naładowanych"
 
 [footer.community]
-tabTitle = "Aktualne dane społeczności"
+tabTitle = "Dane społeczności"
 power = "Moc ładowania"
 powerSub1 = "{activeClients} z {totalClients} uczestników"
 powerSub2 = "ładuje się..."
@@ -200,6 +200,7 @@ loadpoint = "Ładowarka"
 vehicle = "Pojazd"
 energy = "Naładowano"
 date = "Okres"
+reallyDelete = "Czy na pewno chcesz usunąć tę sesję?"
 
 [sessions.csv]
 loadpoint = "Ładowarka"
@@ -236,3 +237,13 @@ mi = "mile"
 
 [settings.telemetry]
 label = "Telemetria"
+
+[session]
+meterstart = "Licznik początek (kWh)"
+meterstop = "Licznik koniec (kWh)"
+odometer = "Przebieg (km)"
+finished = "Zakończony"
+delete = "Usunąć"
+cancel = "Anuluj"
+title = "Sesja ładowania"
+started = "Zaczęło się"

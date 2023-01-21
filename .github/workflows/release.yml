@@ -99,6 +99,18 @@ jobs:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
         run: make apt-release
 
+  demo:
+    name: Demo
+    needs:
+      - docker
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only --app packaging/fly.toml
+
   hassio:
     name: Hassio Addon
     needs:

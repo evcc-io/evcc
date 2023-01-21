@@ -175,7 +175,7 @@ today = "Vandaag"
 tomorrow = "Morgen"
 targetIsInThePast = "Pick een tijd in de toekomst, Marty."
 remove = "Verwijder"
-activate = "Turn on"
+activate = "Activeer"
 
 [main.targetEnergy]
 label = "Limiet"

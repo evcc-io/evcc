@@ -32,7 +32,9 @@ params:
       en: Serial number
     help:
       de: Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
-      en: Go to https://www.solaxcloud.com/#/inverter and take the value of registration number
+      en: Go to https://www.solaxcloud.com/#/inverter and take the value of registration number.
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -68,4 +70,7 @@ render: |
     uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
     cache: 2m30s
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

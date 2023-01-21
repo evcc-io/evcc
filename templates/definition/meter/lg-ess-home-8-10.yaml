@@ -14,9 +14,14 @@ params:
     help:
       en: Registration number of the LG ESS HOME inverter.
       de: Registriernummer des LG ESS HOME Wechselrichters.
+  - name: capacity
+    advanced: true
 render: |
   type: lgess
   usage: {{ .usage }}
   # uri and password are only required once if multiple lgess usages are defined
   uri: https://{{ .host }}
   password: {{ .registration }}
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}

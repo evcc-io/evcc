@@ -103,7 +103,7 @@ descriptionSoc = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}%?"
 today = "danes"
 tomorrow = "jutri"
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
-activate = "Vklopi"
+activate = "Aktiviraj"
 
 [sessions]
 title = "Seje polnjenja"

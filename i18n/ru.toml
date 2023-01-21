@@ -221,3 +221,12 @@ identifier = "Идентификатор"
 chargedenergy = "Электроэнергия (кВт/ч)"
 created = "Создано"
 finished = "Закончено"
+
+[session]
+meterstart = "Початок лічильника"
+meterstop = "Зупинка лічильника"
+started = "Розпочато"
+finished = "Завершено"
+cancel = "Скасувати"
+odometer = "Пробіг"
+delete = "Видалити"

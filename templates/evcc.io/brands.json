@@ -16,6 +16,7 @@
   "Elli",
   "Ensto",
   "Etrel",
+  "Fronius",
   "Garo",
   "go-eCharger",
   "HardyBarth",
@@ -70,7 +71,6 @@
   "Growatt",
   "Homematic IP",
   "Huawei",
-  "Janitza",
   "Kostal",
   "LG",
   "myStrom",
@@ -107,7 +107,6 @@
   "Growatt",
   "Homematic IP",
   "Huawei",
-  "Janitza",
   "Kostal",
   "LG",
   "myStrom",
@@ -132,6 +131,7 @@
   "Victron"
  ],
  "Vehicles": [
+  "Aiways",
   "Audi",
   "BMW",
   "Citroën",

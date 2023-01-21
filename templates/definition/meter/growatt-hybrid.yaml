@@ -10,6 +10,8 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -80,6 +82,9 @@ render: |
       address: 1014 # SOC
       type: input
       decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}

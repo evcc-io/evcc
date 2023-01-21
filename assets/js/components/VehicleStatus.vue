@@ -16,7 +16,7 @@ export default {
 		connected: Boolean,
 		charging: Boolean,
 		targetTime: String,
-		targetTimeProjectedStart: String,
+		planProjectedStart: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
@@ -58,9 +58,9 @@ export default {
 				if (this.enabled) {
 					return t("targetChargeWaitForVehicle");
 				}
-				if (this.targetTimeProjectedStart) {
+				if (this.planProjectedStart) {
 					return t("targetChargePlanned", {
-						time: this.fmtAbsoluteDate(new Date(this.targetTimeProjectedStart)),
+						time: this.fmtAbsoluteDate(new Date(this.planProjectedStart)),
 					});
 				}
 			}

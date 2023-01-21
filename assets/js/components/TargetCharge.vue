@@ -102,6 +102,7 @@
 									type="button"
 									class="btn btn-outline-secondary"
 									data-bs-dismiss="modal"
+									:disabled="!targetTime"
 									@click="removeTargetTime"
 								>
 									{{ $t("main.targetCharge.remove") }}
@@ -142,8 +143,8 @@ export default {
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
+		planActive: Boolean,
 		targetTime: String,
-		targetTimeActive: Boolean,
 		targetSoc: Number,
 		targetEnergy: Number,
 		socBasedCharging: Boolean,
@@ -186,6 +187,7 @@ export default {
 		},
 		targetTime() {
 			this.initInputFields();
+			this.updatePlan();
 		},
 		selectedTargetTime() {
 			this.updatePlan();
@@ -196,9 +198,6 @@ export default {
 		targetEnergy() {
 			this.updatePlan();
 		},
-	},
-	mounted: function () {
-		this.initInputFields();
 	},
 	methods: {
 		updatePlan: async function () {
@@ -289,6 +288,7 @@ export default {
 		},
 		openModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById(this.modalId));
+			this.initInputFields();
 			modal.show();
 		},
 	},

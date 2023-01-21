@@ -485,6 +485,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.socUpdated = time.Time{}
 
 	// reset plan once charge goal is met
+	lp.setTargetTime(time.Time{})
 	lp.setPlanActive(false)
 }
 
@@ -898,10 +899,10 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		}
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, estimate)
 
-		lp.publish("vehiclePresent", true)
-		lp.publish("vehicleTitle", lp.vehicle.Title())
-		lp.publish("vehicleIcon", lp.vehicle.Icon())
-		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
+		lp.publish(vehiclePresent, true)
+		lp.publish(vehicleTitle, lp.vehicle.Title())
+		lp.publish(vehicleIcon, lp.vehicle.Icon())
+		lp.publish(vehicleCapacity, lp.vehicle.Capacity())
 
 		// unblock api
 		lp.Unlock()
@@ -914,10 +915,10 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	} else {
 		lp.socEstimator = nil
 
-		lp.publish("vehiclePresent", false)
-		lp.publish("vehicleTitle", "")
-		lp.publish("vehicleIcon", "")
-		lp.publish("vehicleCapacity", int64(0))
+		lp.publish(vehiclePresent, false)
+		lp.publish(vehicleTitle, "")
+		lp.publish(vehicleIcon, "")
+		lp.publish(vehicleCapacity, int64(0))
 		lp.publish(vehicleOdometer, 0.0)
 	}
 
@@ -1533,6 +1534,10 @@ func (lp *Loadpoint) updateChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
+	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+		return // we don't need the voltages
+	}
+
 	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
 	if !ok {
 		return // don't guess

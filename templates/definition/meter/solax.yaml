@@ -14,6 +14,8 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 19200
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -73,4 +75,7 @@ render: |
       address: 28 # 0x001C Battery Capacity
       type: input
       decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}
