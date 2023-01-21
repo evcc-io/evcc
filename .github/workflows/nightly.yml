@@ -43,7 +43,7 @@ jobs:
           ref: refs/heads/master # force master
           fetch-depth: 0
 
-      - run: ls dist
+      - run: ls
       - name: Get dist from cache
         uses: actions/cache@v3
         id: cache-dist

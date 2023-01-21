@@ -91,7 +91,7 @@ jobs:
           cache: true
         id: go
 
-      - run: ls dist
+      - run: ls
       - name: Get dist from cache
         uses: actions/cache@v3
         id: cache-dist
