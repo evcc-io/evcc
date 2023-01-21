@@ -4,40 +4,50 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/evcc-io/evcc/util"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/labstack/gommon/log"
 )
 
-// Telegram implements the Telegram messenger
-type Telegram struct {
-	sync.Mutex
-	bot   *tgbotapi.BotAPI
-	chats map[int64]struct{}
-}
-
-type telegramConfig struct {
-	Token string
-	Chats []int64
-}
-
 func init() {
+	registry.Add("telegram", NewTelegramFromConfig)
+
 	if err := tgbotapi.SetLogger(log.ERROR); err != nil {
 		log.ERROR.Printf("telegram: %v", err)
 	}
 }
 
-// NewTelegramMessenger creates new pushover messenger
-func NewTelegramMessenger(token string, chats []int64) (*Telegram, error) {
-	bot, err := tgbotapi.NewBotAPI(token)
+// Telegram implements the Telegram messenger
+type Telegram struct {
+	log *util.Logger
+	sync.Mutex
+	bot   *tgbotapi.BotAPI
+	chats map[int64]struct{}
+}
+
+// NewTelegramFromConfig creates new pushover messenger
+func NewTelegramFromConfig(other map[string]interface{}) (Messenger, error) {
+	var cc struct {
+		Token string
+		Chats []int64
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	bot, err := tgbotapi.NewBotAPI(cc.Token)
 	if err != nil {
 		return nil, errors.New("telegram: invalid bot token")
 	}
 
 	m := &Telegram{
+		log:   util.NewLogger("telegram"),
 		bot:   bot,
 		chats: make(map[int64]struct{}),
 	}
 
-	for _, chat := range chats {
+	for _, chat := range cc.Chats {
 		m.chats[chat] = struct{}{}
 	}
 
