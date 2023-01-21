@@ -11,6 +11,8 @@ params:
     baudrate: 9600
     comset: 8N1
     id: 1
+  - name: connector
 render: |
   type: pracht-alpha
   {{- include "modbus" . }}
+  connector: {{ .connector }}
