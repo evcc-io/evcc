@@ -115,9 +115,6 @@ jobs:
       - name: Install tools
         run: make install-ui
 
-      - name: Build
-        run: make ui
-
       - name: Lint
         run: make lint-ui
 
@@ -127,3 +124,13 @@ jobs:
       - name: Porcelain
         run: |
           test -z "$(git status --porcelain)" || (git status; git diff; false)
+
+      - name: Build
+        run: make ui
+
+      - name: Cache dist
+        uses: actions/cache@v3
+        id: cache-dist
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist
