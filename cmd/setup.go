@@ -56,6 +56,10 @@ func loadConfigFile(conf *config) error {
 		parseLogLevels()
 	}
 
+	if err == nil {
+		maybeLoadNetworkCertificateFromEnv(conf)
+	}
+
 	return err
 }
 

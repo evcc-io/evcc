@@ -90,6 +90,8 @@ func initConfig() {
 
 	viper.SetEnvPrefix("evcc")
 	viper.AutomaticEnv() // read in environment variables that match
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
 
 	// print version
 	util.LogLevel("info", nil)

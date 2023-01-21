@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/viper"
 )
@@ -98,4 +99,16 @@ func shutdownDoneC() <-chan struct{} {
 	doneC := make(chan struct{})
 	go shutdown.Cleanup(doneC)
 	return doneC
+}
+
+// replaces conf.network.certificate if found by viper
+func maybeLoadNetworkCertificateFromEnv(conf *config) {
+	pub := viper.GetString("network.certificate.public")
+	priv := viper.GetString("network.certificate.private")
+	if pub != "" && priv != "" {
+		conf.Network.Certificate = &server.Certificate{
+			Public:  pub,
+			Private: priv,
+		}
+	}
 }
