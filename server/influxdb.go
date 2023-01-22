@@ -125,9 +125,14 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 						writer.WritePoint(p)
 					}
 				}
+
+				continue
 			}
 
-			continue
+			// any other unsupported type
+			if param.Val != nil {
+				continue
+			}
 		}
 
 		// write asynchronously
