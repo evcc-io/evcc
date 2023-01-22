@@ -27,7 +27,7 @@ PACKAGES = ./release
 GOROOT := $(shell go env GOROOT)
 CURRDIR := $(shell pwd)
 
-default:: build
+default:: ui build
 
 all:: clean install install-ui ui assets lint test-ui lint-ui test build
 
