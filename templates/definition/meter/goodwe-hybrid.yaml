@@ -1,6 +1,6 @@
 template: goodwe-hybrid
 products:
-  - brand: Goodwe
+  - brand: GoodWe
     description:
       generic: ET/EH/BH/BT Hybrid Inverter
 params:
