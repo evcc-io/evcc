@@ -107,10 +107,10 @@ func (wb *DaheimLadenModbus) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3: // Start-up State (B2)
 		return api.StatusB, nil
-	case 4: // Charging (C2)
+	case 4: // Charging (C)
 		return api.StatusC, nil
-	case 6: // Charging End (C1)
-		return api.StatusC, nil
+	case 6: // Session Terminated by EVSE
+		return api.StatusB, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
@@ -129,11 +129,19 @@ func (wb *DaheimLadenModbus) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (wb *DaheimLadenModbus) Enable(enable bool) error {
 	var current uint16
+	var cmd uint16 = 2 // stop ession
+
 	if enable {
 		current = wb.curr
+		cmd = 1 // start session
 	}
+	wb.setCurrent(current)
 
-	return wb.setCurrent(current)
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, cmd)
+
+	_, err := wb.conn.WriteMultipleRegisters(dhlChargeCmd, 1, b)
+	return err
 }
 
 // setCurrent writes the current limit in coarse 1A steps
@@ -256,6 +264,18 @@ func UTF16BytesToString(b []byte, o binary.ByteOrder) string {
 	return string(utf16.Decode(utf))
 }
 
+var _ api.Identifier = (*DaheimLadenModbus)(nil)
+
+// identify implements the api.Identifier interface
+func (wb *DaheimLadenModbus) Identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dhlCardId, 16)
+	if err != nil {
+		return "", err
+	}
+
+	return UTF16BytesToString(b, binary.BigEndian), nil
+}
+
 var _ api.Diagnosis = (*DaheimLadenModbus)(nil)
 
 // Diagnose implements the api.Diagnosis interface
@@ -270,7 +290,7 @@ func (wb *DaheimLadenModbus) Diagnose() {
 		fmt.Printf("\tEVSE Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dhlCableMaxCurrent, 1); err == nil {
-		fmt.Printf("\tCable Max. Ceurrent:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
+		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dhlStationId, 16); err == nil {
 		fmt.Printf("\tStation ID:\t%s\n", UTF16BytesToString(b, binary.BigEndian))
