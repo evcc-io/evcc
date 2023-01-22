@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/db"
@@ -33,8 +35,31 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var res db.Sessions
+	var year string = r.URL.Query().Get("year")
+	var month string = r.URL.Query().Get("month")
 
-	if txn := dbserver.Instance.Table("sessions").Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
+	var filename = "session"
+
+	var fmtYear string = "%"
+	var fmtMonth string = "%"
+
+	if len(year) > 0 {
+		fmtYear = year
+		filename += "-" + fmtYear
+
+		if len(month) > 0 {
+			iMonth, err := strconv.Atoi(month)
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, err)
+				return
+			}
+			fmtMonth = fmt.Sprintf("%02d", ((iMonth + 1) % 13))
+			filename += "." + fmtMonth
+		}
+	}
+
+	var whereQuery = "charged_kwh>=0.05 and strftime('%Y', created) like ? and strftime('%m', created) like ?"
+	if txn := dbserver.Instance.Where(whereQuery, fmtYear, fmtMonth).Order("created desc").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
 	}
@@ -50,7 +75,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		csvResult(ctx, w, &res)
+		csvResult(ctx, w, &res, filename)
 		return
 	}
 
