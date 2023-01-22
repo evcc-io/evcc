@@ -53,8 +53,8 @@ func redact(src string) string {
 		"mac",                   // infrastructure
 		"sponsortoken", "plant", // global settings
 		"user", "password", "pin", // users
-		"token", "access", "refresh", // tokens
-		"ain", "secret", "serial", "deviceid", "machineid", // devices
+		"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
+		"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
 		"vin"} // vehicles
 	return regexp.
 		MustCompile(fmt.Sprintf(`\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).

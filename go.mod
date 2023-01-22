@@ -33,7 +33,6 @@ require (
 	github.com/foogod/go-powerwall v0.2.0
 	github.com/glebarez/sqlite v1.6.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
-	github.com/go-ping/ping v1.1.0
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/gokrazy/updater v0.0.0-20211121155532-30ae8cd650ea
@@ -75,6 +74,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/philippseith/signalr v0.6.1-0.20220829124759-bd5ffb679356
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common v0.39.0
 	github.com/robertkrimen/otto v0.2.1
