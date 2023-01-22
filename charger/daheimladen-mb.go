@@ -138,7 +138,7 @@ func (wb *DaheimLadenModbus) Enable(enable bool) error {
 		current = wb.curr
 		cmd = 1 // start session
 	}
-	wb.setCurrent(current)
+	_ = wb.setCurrent(current)
 
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, cmd)
