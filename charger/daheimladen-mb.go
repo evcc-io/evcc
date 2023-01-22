@@ -48,7 +48,7 @@ const (
 	dhlChargingTime    = 78 // Uint32 RO 1s
 	dhlSafeCurrent     = 87 // Uint16 WR 0.1A
 	dhlCommTimeout     = 89 // Uint16 WR 1s
-	dhlCurrentLimit    = 91 // Uint16 WR 1A
+	dhlCurrentLimit    = 91 // Uint16 WR 0.1A
 	dhlChargeControl   = 93 // Uint16 WR ENUM
 	dhlChargeCmd       = 95 // Uint16 WR ENUM
 )
