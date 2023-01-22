@@ -14,8 +14,8 @@ params:
     advanced: true
 render: |
   type: custom
-  power:
   {{- if eq .usage "grid" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -33,6 +33,7 @@ render: |
     scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -73,6 +74,7 @@ render: |
     scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
