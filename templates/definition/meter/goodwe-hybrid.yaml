@@ -1,0 +1,102 @@
+template: goodwe-hybrid
+products:
+  - brand: GoodWe
+    description:
+      generic: ET/EH/BH/BT Hybrid Inverter
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 247
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 36025 # MTTotalActivepower Pmeter
+      type: holding
+      decode: int32
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 36017 # E-Total-Buy
+      type: holding
+      decode: float32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register: # manual non-sunspec register configuration
+        address: 35105 # Ppv1 PV1 Power
+        type: holding
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register: # manual non-sunspec register configuration
+        address: 35109 # Ppv2 PV2 Power
+        type: holding
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register: # manual non-sunspec register configuration
+        address: 35113 # Ppv3 PV3 Power
+        type: holding
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register: # manual non-sunspec register configuration
+        address: 35117 # Ppv4 PV4 Power
+        type: holding
+        decode: uint32
+      scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 35191 # PV E-Total Total PV Energy
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 35183 # Pbattery1 First group battery power
+      type: holding
+      decode: int16
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 37007 # SOC First group battery capacity
+      type: holding
+      decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 35209 # E-BatteryDischarge Discharge energy
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
