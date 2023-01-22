@@ -19,7 +19,7 @@
 		<Teleport to="body">
 			<div
 				:id="modalId"
-				class="modal fade text-dark modal-md"
+				class="modal fade text-dark modal-xl"
 				data-bs-backdrop="true"
 				tabindex="-1"
 				role="dialog"

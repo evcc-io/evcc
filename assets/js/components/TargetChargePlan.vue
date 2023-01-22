@@ -102,7 +102,7 @@ export default {
 
 			const oneHour = 60 * 60 * 1000;
 
-			for (let i = 0; i < 36; i++) {
+			for (let i = 0; i < 42; i++) {
 				const start = new Date(this.startTime.getTime() + oneHour * i);
 				const startHour = start.getHours();
 				const end = new Date(start.getTime());
@@ -180,18 +180,19 @@ export default {
 }
 .chart {
 	display: flex;
-	height: 120px;
+	height: 140px;
 	align-items: flex-end;
+	justify-content: space-between;
 	overflow-y: none;
-	overflow-x: auto;
+	overflow-x: hidden;
 	padding-bottom: 45px;
 }
 .slot {
-	width: 20px;
+	width: 18px;
 	flex-grow: 0;
 	flex-shrink: 0;
 	text-align: center;
-	padding: 4px;
+	padding: 3px;
 	height: 100%;
 	display: flex;
 	justify-content: flex-end;
@@ -211,8 +212,8 @@ export default {
 	line-height: 1.1;
 	position: absolute;
 	top: 100%;
-	left: 0;
-	width: 100%;
+	left: -50%;
+	width: 200%;
 	text-align: center;
 }
 .slot.active .slot-bar {
