@@ -176,6 +176,11 @@ tomorrow = "jutro"
 targetIsInThePast = "Wybierz czas w przyszłości."
 remove = "Usuń"
 activate = "Aktywować"
+descriptionEnergy = "Do kiedy należy załadować {targetEnergy} do pojazdu?"
+planUnknown = "nieznany"
+planDuration = "Czas ładowania"
+planPeriodLabel = "Okres"
+planPeriodValue = "{start} do {end}"
 
 [main.targetEnergy]
 label = "Ograniczenie"
