@@ -234,7 +234,6 @@ title = "Nastavitve"
 description = "Za nujne primere. Vozilo se »hitro« napolni na {0}% od vse razpoložljive solarne energije, nato pa nadaljuje samo s solarnim presežkom."
 label = "Min. polnjenje %"
 
-
 [session]
 meterstart = "Začetek merilnika"
 odometer = "Število prevoženih kilometrov"
