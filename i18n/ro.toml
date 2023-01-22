@@ -234,7 +234,6 @@ reallyDelete = "Esti sigur ca doresti sa stergi aceasta sesiune?"
 label = "Min. incarcare %"
 description = "Pentru urgente. Vehiculul primeste incarcare rapida {0}% din toata energia solara disponibila, apoi continua incarcarea cu surplusul solar."
 
-
 [session]
 cancel = "Anuleaza"
 title = "Sesiune de incarcare"
