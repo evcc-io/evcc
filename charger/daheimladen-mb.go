@@ -20,7 +20,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"time"
 	"unicode/utf16"
 	"unicode/utf8"
 
@@ -108,6 +107,10 @@ func (wb *DaheimLadenModbus) Status() (api.ChargeStatus, error) {
 	case 3: // Start-up State (B2)
 		return api.StatusB, nil
 	case 4: // Charging (C)
+		enabled, err := wb.Enabled()
+		if !enabled {
+			return api.StatusB, err
+		}
 		return api.StatusC, nil
 	case 6: // Session Terminated by EVSE
 		return api.StatusB, nil
@@ -155,20 +158,27 @@ func (wb *DaheimLadenModbus) setCurrent(current uint16) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *DaheimLadenModbus) MaxCurrent(current int64) error {
-	return wb.MaxCurrentMillis(float64(current))
-}
-
-var _ api.ChargerEx = (*DaheimLadenModbus)(nil)
-
-// maxCurrentMillis implements the api.ChargerEx interface
-func (wb *DaheimLadenModbus) MaxCurrentMillis(current float64) error {
+	//return wb.MaxCurrentMillis(float64(current))
 	if current < 6 {
-		return fmt.Errorf("invalid current %.1g", current)
+		return fmt.Errorf("invalid current %d", current)
 	}
 
 	return wb.setCurrent(uint16(current * 10))
 }
 
+/*
+var _ api.ChargerEx = (*DaheimLadenModbus)(nil)
+
+// maxCurrentMillis implements the api.ChargerEx interface
+
+	func (wb *DaheimLadenModbus) MaxCurrentMillis(current float64) error {
+		if current < 6 {
+			return fmt.Errorf("invalid current %.1g", current)
+		}
+
+		return wb.setCurrent(uint16(current * 10))
+	}
+*/
 var _ api.Meter = (*DaheimLadenModbus)(nil)
 
 // CurrentPower implements the api.Meter interface
@@ -181,30 +191,33 @@ func (wb *DaheimLadenModbus) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
+/*
 var _ api.ChargeTimer = (*DaheimLadenModbus)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
-func (wb *DaheimLadenModbus) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dhlChargingTime, 2)
-	if err != nil {
-		return 0, err
-	}
 
-	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
-}
+	func (wb *DaheimLadenModbus) ChargingTime() (time.Duration, error) {
+		b, err := wb.conn.ReadHoldingRegisters(dhlChargingTime, 2)
+		if err != nil {
+			return 0, err
+		}
+
+		return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
+	}
 
 var _ api.ChargeRater = (*DaheimLadenModbus)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
-func (wb *DaheimLadenModbus) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dhlChargedEnergy, 1)
-	if err != nil {
-		return 0, err
+
+	func (wb *DaheimLadenModbus) ChargedEnergy() (float64, error) {
+		b, err := wb.conn.ReadHoldingRegisters(dhlChargedEnergy, 1)
+		if err != nil {
+			return 0, err
+		}
+
+		return float64(binary.BigEndian.Uint16(b)) / 10, err
 	}
-
-	return float64(binary.BigEndian.Uint16(b)) / 10, err
-}
-
+*/
 var _ api.MeterEnergy = (*DaheimLadenModbus)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
@@ -264,18 +277,20 @@ func UTF16BytesToString(b []byte, o binary.ByteOrder) string {
 	return string(utf16.Decode(utf))
 }
 
+/*
 var _ api.Identifier = (*DaheimLadenModbus)(nil)
 
 // identify implements the api.Identifier interface
-func (wb *DaheimLadenModbus) Identify() (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dhlCardId, 16)
-	if err != nil {
-		return "", err
+
+	func (wb *DaheimLadenModbus) Identify() (string, error) {
+		b, err := wb.conn.ReadHoldingRegisters(dhlCardId, 16)
+		if err != nil {
+			return "", err
+		}
+
+		return UTF16BytesToString(b, binary.BigEndian), nil
 	}
-
-	return UTF16BytesToString(b, binary.BigEndian), nil
-}
-
+*/
 var _ api.Diagnosis = (*DaheimLadenModbus)(nil)
 
 // Diagnose implements the api.Diagnosis interface
