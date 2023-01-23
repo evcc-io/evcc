@@ -120,7 +120,7 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 						n := typ.Field(j).Name
 						v := val.Field(j).Interface()
 
-						key := param.Key + strings.ToLower(n[:1]) + n[1:]
+						key := param.Key + strings.ToUpper(n[:1]) + n[1:]
 						fields["value"] = v
 						tags["id"] = strconv.Itoa(i + 1)
 
