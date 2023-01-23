@@ -10,6 +10,9 @@ products:
   - brand: ESL
     description:
       generic: Walli LIGHT
+  - brand: E3/DC
+    description:
+      generic: Easy Connect
 capabilities: ["mA", "rfid"]
 requirements:
   description:
