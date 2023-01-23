@@ -2,19 +2,19 @@
 	<div class="plan pt-2">
 		<div class="details justify-content-between mb-2 d-flex justify-content-between">
 			<div class="text-start">
-				<div class="label">Ladezeit</div>
+				<div class="label">{{ $t("main.targetChargePlan.chargingTime") }}</div>
 				<div class="value text-primary">{{ planDuration }}</div>
 			</div>
-			<div v-if="isCo2" class="text-end">
+			<div class="text-end">
 				<div class="label">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
-					<span v-else>CO₂-Menge Ø</span>
+					<span v-else-if="isCo2">{{ $t("main.targetChargePlan.co2Label") }}</span>
+					<span v-else>{{ $t("main.targetChargePlan.priceLabel") }}</span>
 				</div>
-				<div class="value text-primary">{{ avgCo2 }}</div>
-			</div>
-			<div v-else class="text-end">
-				<div class="label">Energiepreis</div>
-				<div class="value text-primary">{{ avgPrice }}</div>
+				<div class="value text-primary">
+					<span v-if="isCo2">{{ avgCo2 }}</span>
+					<span v-else>{{ avgPrice }}</span>
+				</div>
 			</div>
 		</div>
 		<div class="chart">
@@ -89,8 +89,9 @@ export default {
 		},
 		activeSlotName() {
 			if (this.activeSlot) {
-				const { startHour, endHour } = this.activeSlot;
-				return `${startHour}–${endHour} Uhr`;
+				const { day, startHour, endHour } = this.activeSlot;
+				const range = `${startHour}–${endHour}`;
+				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;
 		},
@@ -182,17 +183,12 @@ export default {
 	display: flex;
 	height: 140px;
 	align-items: flex-end;
-	justify-content: space-between;
 	overflow-y: none;
-	overflow-x: hidden;
 	padding-bottom: 45px;
 }
 .slot {
-	width: 18px;
-	flex-grow: 0;
-	flex-shrink: 0;
 	text-align: center;
-	padding: 3px;
+	padding: 4px;
 	height: 100%;
 	display: flex;
 	justify-content: flex-end;
@@ -200,7 +196,27 @@ export default {
 	position: relative;
 	opacity: 1;
 }
-
+@media (max-width: 991px) {
+	.chart {
+		overflow-x: auto;
+	}
+	.slot {
+		width: 20px;
+		flex-grow: 0;
+		flex-shrink: 0;
+	}
+}
+@media (min-width: 992px) {
+	.chart {
+		overflow-x: none;
+		justify-content: stretch;
+	}
+	.slot {
+		flex-grow: 1;
+		flex-shrink: 1;
+		flex-basis: 1;
+	}
+}
 .slot-bar {
 	background-clip: content-box !important;
 	background: var(--bs-gray-light);

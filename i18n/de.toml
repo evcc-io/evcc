@@ -198,6 +198,12 @@ planDuration = "Ladezeit"
 planPeriodLabel = "Zeitraum"
 planPeriodValue = "{start} bis {end}"
 
+[main.targetChargePlan]
+timeRange = "{day} {range} Uhr"
+chargingTime = "Ladezeit"
+co2Label = "CO₂-Emission Ø"
+priceLabel = "Energiepreis"
+
 [main.targetEnergy]
 label = "Ladeziel"
 noLimit = "keins"

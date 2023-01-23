@@ -198,6 +198,12 @@ planDuration = "Charging time"
 planPeriodLabel = "Period"
 planPeriodValue = "{start} to {end}"
 
+[main.targetChargePlan]
+timeRange = "{day} {range} h"
+chargingTime = "Charging time"
+co2Label = "CO₂ emission Ø"
+priceLabel = "Energy price"
+
 [main.targetEnergy]
 label = "Limit"
 noLimit = "none"

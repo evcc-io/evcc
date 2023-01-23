@@ -43,9 +43,11 @@
 						</div>
 						<form @submit.prevent="setTargetTime">
 							<div class="modal-body">
-								<div class="form-group mb-2">
+								<div
+									class="form-group d-lg-flex align-items-baseline mb-2 justify-content-between"
+								>
 									<!-- eslint-disable vue/no-v-html -->
-									<label for="targetTimeLabel" class="mb-3">
+									<label for="targetTimeLabel" class="mb-3 me-3">
 										<span v-if="socBasedCharging">
 											{{
 												$t("main.targetCharge.descriptionSoc", {
@@ -62,15 +64,8 @@
 										</span>
 									</label>
 									<!-- eslint-enable vue/no-v-html -->
-									<div
-										class="d-flex justify-content-between"
-										:style="{ 'max-width': '350px' }"
-									>
-										<select
-											v-model="selectedDay"
-											class="form-select me-2"
-											:style="{ 'flex-basis': '60%' }"
-										>
+									<div class="d-flex justify-content-between date-selection">
+										<select v-model="selectedDay" class="form-select me-2">
 											<option
 												v-for="opt in dayOptions()"
 												:key="opt.value"
@@ -82,8 +77,7 @@
 										<input
 											v-model="selectedTime"
 											type="time"
-											class="form-control ms-2"
-											:style="{ 'flex-basis': '40%' }"
+											class="form-control ms-2 time-selection"
 											:step="60 * 5"
 											required
 										/>
@@ -306,5 +300,13 @@ export default {
 }
 .value:hover {
 	color: var(--bs-color-white);
+}
+@media (min-width: 992px) {
+	.date-selection {
+		width: 370px;
+	}
+}
+.time-selection {
+	flex-basis: 200px;
 }
 </style>
