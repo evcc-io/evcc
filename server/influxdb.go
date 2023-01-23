@@ -101,6 +101,11 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 			}
 
 		default:
+			// allow writing nil values
+			if param.Val == nil {
+				break
+			}
+
 			// slice of structs
 			if typ := reflect.TypeOf(param.Val); typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Struct {
 				val := reflect.ValueOf(param.Val)
@@ -125,14 +130,9 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 						writer.WritePoint(p)
 					}
 				}
-
-				continue
 			}
 
-			// any other unsupported type
-			if param.Val != nil {
-				continue
-			}
+			continue
 		}
 
 		// write asynchronously
