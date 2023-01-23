@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/influxdata/influxdb-client-go/v2/api"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
 
@@ -57,6 +58,12 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 	}
 }
 
+// writePoint asynchronously writes a point to influx
+func (m *Influx) writePoint(writer api.WriteAPI, key string, fields map[string]any, tags map[string]string) {
+	m.log.TRACE.Printf("write %s=%v (%v)", key, fields, tags)
+	writer.WritePoint(influxdb2.NewPoint(key, tags, fields, time.Now()))
+}
+
 // Run Influx publisher
 func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 	writer := m.client.WriteAPI(m.org, m.database)
@@ -82,7 +89,7 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 			}
 		}
 
-		fields := make(map[string]interface{})
+		fields := make(map[string]any)
 
 		tags := make(map[string]string)
 		if param.Loadpoint != nil {
@@ -124,10 +131,7 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 						fields["value"] = v
 						tags["id"] = strconv.Itoa(i + 1)
 
-						// write asynchronously
-						m.log.TRACE.Printf("write %s=%v (%v)", key, fields, tags)
-						p := influxdb2.NewPoint(key, tags, fields, time.Now())
-						writer.WritePoint(p)
+						m.writePoint(writer, key, fields, tags)
 					}
 				}
 			}
@@ -135,10 +139,7 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 			continue
 		}
 
-		// write asynchronously
-		m.log.TRACE.Printf("write %s=%v (%v)", param.Key, fields, tags)
-		p := influxdb2.NewPoint(param.Key, tags, fields, time.Now())
-		writer.WritePoint(p)
+		m.writePoint(writer, param.Key, fields, tags)
 	}
 
 	m.client.Close()
