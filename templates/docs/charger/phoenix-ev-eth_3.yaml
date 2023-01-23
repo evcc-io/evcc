@@ -1,0 +1,13 @@
+product:
+  brand: E3/DC
+  description: Easy Connect
+capabilities: ["mA", "rfid"]
+requirements: ["sponsorship"]
+description: |
+  Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
+render:
+  - default: |
+      type: template
+      template: phoenix-ev-eth
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional
