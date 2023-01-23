@@ -35,25 +35,27 @@ type DaheimLadenModbus struct {
 }
 
 const (
-	dhlChargingState   = 0  // Uint16 RO ENUM
-	dhlConnectorState  = 2  // Uint16 RO ENUM
-	dhlActivePower     = 12 // Uint32 RO 1W
-	dhlTotalEnergy     = 28 // Uint32 RO 0.1KWh
-	dhlEvseMaxCurrent  = 32 // Uint16 RO 0.1A
-	dhlCableMaxCurrent = 36 // Uint16 RO 0.1A
-	dhlStationId       = 38 // Chr[16] RO UTF16
-	dhlCardId          = 54 // Chr[16] RO UTF16
-	dhlChargedEnergy   = 72 // Uint16 RO 0.1kWh
-	dhlChargingTime    = 78 // Uint32 RO 1s
-	dhlSafeCurrent     = 87 // Uint16 WR 0.1A
-	dhlCommTimeout     = 89 // Uint16 WR 1s
-	dhlCurrentLimit    = 91 // Uint16 WR 0.1A
-	dhlChargeControl   = 93 // Uint16 WR ENUM
-	dhlChargeCmd       = 95 // Uint16 WR ENUM
+	dhlChargingState   = 0   // Uint16 RO ENUM
+	dhlConnectorState  = 2   // Uint16 RO ENUM
+	dhlCurrents        = 5   // Uint32 RO 0.1A
+	dhlActivePower     = 12  // Uint32 RO 1W
+	dhlTotalEnergy     = 28  // Uint32 RO 0.1KWh
+	dhlEvseMaxCurrent  = 32  // Uint16 RO 0.1A
+	dhlCableMaxCurrent = 36  // Uint16 RO 0.1A
+	dhlStationId       = 38  // Chr[16] RO UTF16
+	dhlCardId          = 54  // Chr[16] RO UTF16
+	dhlChargedEnergy   = 72  // Uint16 RO 0.1kWh
+	dhlChargingTime    = 78  // Uint32 RO 1s
+	dhlSafeCurrent     = 87  // Uint16 WR 0.1A
+	dhlCommTimeout     = 89  // Uint16 WR 1s
+	dhlCurrentLimit    = 91  // Uint16 WR 0.1A
+	dhlChargeControl   = 93  // Uint16 WR ENUM
+	dhlChargeCmd       = 95  // Uint16 WR ENUM
+	dhlVoltages        = 108 // Uint32 RO 0.1V
 )
 
-var dhlCurrents = []uint16{6, 8, 10}      // Uint16 RO 0.1A
-var dhlVoltages = []uint16{109, 111, 113} // Uint16 RO 0.1V
+//var dhlCurrents = []uint16{6, 8, 10}      // Uint16 RO 0.1A
+//var dhlVoltages = []uint16{109, 111, 113} // Uint16 RO 0.1V
 
 func init() {
 	registry.Add("dhl", NewDaheimLadenModbusFromConfig)
@@ -230,38 +232,33 @@ func (wb *DaheimLadenModbus) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 10, err
 }
 
+// getPhaseValues returns 3 sequential register values
+func (wb *DaheimLadenModbus) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 10
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
 var _ api.PhaseCurrents = (*DaheimLadenModbus)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *DaheimLadenModbus) Currents() (float64, float64, float64, error) {
-	var i []float64
-	for _, regCurrent := range dhlCurrents {
-		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 1)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		i = append(i, float64(binary.BigEndian.Uint16(b))/10)
-	}
-
-	return i[0], i[1], i[2], nil
+	return wb.getPhaseValues(dhlCurrents)
 }
 
 var _ api.PhaseVoltages = (*DaheimLadenModbus)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *DaheimLadenModbus) Voltages() (float64, float64, float64, error) {
-	var u []float64
-	for _, regVoltage := range dhlVoltages {
-		b, err := wb.conn.ReadHoldingRegisters(regVoltage, 1)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		u = append(u, float64(binary.BigEndian.Uint16(b))/10)
-	}
-
-	return u[0], u[1], u[2], nil
+	return wb.getPhaseValues(dhlVoltages)
 }
 
 // UTF16BytesToString converts UTF-16 encoded bytes, in big or little endian byte order,
