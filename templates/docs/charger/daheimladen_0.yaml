@@ -2,10 +2,10 @@ product:
   brand: DaheimLaden
   description: Wallbox
 description: |
-  Für die Nutzung mit evcc muss die Wallbox im RFID Modus betrieben werden.
+  Für die Nutzung mit evcc muss die Wallbox mit einer aktuellen Firmware mit Modbus-Unterstützung betrieben werden. Bitte mit dem Hersteller abklären.
 render:
   - default: |
       type: template
       template: daheimladen
-      token: # Sie bekommen dieses Access Token vom Daheimladen Support: info@daheimladen.de. # Optional
-      stationid: # Die Seriennummer, welche auf dem Bildschirm der Wallbox angezeigt wird. # Optional
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional

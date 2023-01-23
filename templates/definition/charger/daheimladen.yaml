@@ -5,18 +5,14 @@ products:
       generic: Wallbox
 requirements:
   description:
-    de: Für die Nutzung mit evcc muss die Wallbox im RFID Modus betrieben werden.
-    en: For use with evcc, the wallbox must be operated in RFID mode.
+    de: Für die Nutzung mit evcc muss die Wallbox mit einer aktuellen Firmware mit Modbus-Unterstützung betrieben werden. Bitte mit dem Hersteller abklären.
+    en: For use with evcc, the wallbox must be operated with a recent firmware including Modbus support. Please contact vendor.
 params:
-  - name: token
-    help:
-      de: "Sie bekommen dieses Access Token vom Daheimladen Support: info@daheimladen.de."
-      en: "Request your access token from Daheimladen support: info@daheimladen.de."
-  - name: stationid
-    help:
-      de: "Die Seriennummer, welche auf dem Bildschirm der Wallbox angezeigt wird."
-      en: "Serial number as displayed on the wallbox display."
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: port
+    default: 502
 render: |
   type: daheimladen
-  stationID: {{ .stationid }}
-  token: {{ .token }}
+  uri: {{ .host }}:{{ .port }}
