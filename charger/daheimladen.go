@@ -20,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 	"unicode/utf16"
 	"unicode/utf8"
 
@@ -30,6 +31,7 @@ import (
 
 // DaheimLaden charger implementation
 type DaheimLaden struct {
+	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
 }
@@ -85,11 +87,27 @@ func NewDaheimLaden(uri string, id uint8) (api.Charger, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLaden{
+		log:  log,
 		conn: conn,
 		curr: 60, // assume min current
 	}
 
+	// get failsafe timeout from charger
+	b, err := wb.conn.ReadHoldingRegisters(dhlRegCommTimeout, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
+	}
+	go wb.heartbeat(time.Duration(binary.BigEndian.Uint16(b)/2) * time.Second)
+
 	return wb, err
+}
+
+func (wb *DaheimLaden) heartbeat(timeout time.Duration) {
+	for range time.NewTicker(timeout).C {
+		if _, err := wb.conn.ReadInputRegisters(dhlRegSafeCurrent, 1); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // Status implements the api.Charger interface
