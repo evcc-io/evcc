@@ -1,4 +1,4 @@
-package nrgble
+package ble
 
 const (
 	InfoService           = "8f75bba0-c903-11e4-9fe8-0002a5d6b15d"
