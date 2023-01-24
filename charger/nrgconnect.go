@@ -103,7 +103,7 @@ func (nrg *NRGKickConnect) apiURL(api string) string {
 }
 
 func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
-	req, err := request.New(http.MethodPut, url, request.MarshalJSON(data))
+	req, err := request.New(http.MethodPut, url, request.MarshalJSON(data), request.JSONEncoding)
 
 	if err == nil {
 		var resp struct {
