@@ -130,7 +130,7 @@ export default {
 				},
 				sponsor: this.sponsor,
 				savings: {
-					since: new Date(this.savingsSince),
+					since: this.savingsSince,
 					totalCharged: this.savingsTotalCharged,
 					gridCharged: this.savingsGridCharged,
 					selfConsumptionCharged: this.savingsSelfConsumptionCharged,
