@@ -1,4 +1,4 @@
-package nrgble
+package ble
 
 import (
 	"errors"
