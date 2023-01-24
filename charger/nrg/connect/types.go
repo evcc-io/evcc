@@ -37,12 +37,12 @@ type Values struct {
 
 // ChargingStatus is Settings.Values.ChargingStatus
 type ChargingStatus struct {
-	Charging bool `json:"string"`
+	Charging bool
 }
 
 // ChargingCurrent is Settings.Values.ChargingCurrent
 type ChargingCurrent struct {
-	Value float64 `json:"string"`
+	Value float64
 }
 
 // DeviceMetadata is Settings.Values.DeviceMetadata
