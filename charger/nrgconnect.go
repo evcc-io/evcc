@@ -99,6 +99,11 @@ func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
 				return errors.New(res.Message)
 			}
 		}
+
+		if err == nil {
+			nrg.settingsG.Reset()
+			nrg.measurementsG.Reset()
+		}
 	}
 
 	return err
