@@ -75,7 +75,7 @@ export default {
 		savingsGridCharged: Number,
 		savingsSelfConsumptionCharged: Number,
 		savingsSelfConsumptionPercent: Number,
-		savingsSince: Number,
+		savingsSince: String,
 		savingsTotalCharged: Number,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
@@ -130,7 +130,7 @@ export default {
 				},
 				sponsor: this.sponsor,
 				savings: {
-					since: this.savingsSince,
+					since: new Date(this.savingsSince),
 					totalCharged: this.savingsTotalCharged,
 					gridCharged: this.savingsGridCharged,
 					selfConsumptionCharged: this.savingsSelfConsumptionCharged,
