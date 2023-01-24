@@ -22,6 +22,7 @@ type NRGKickConnect struct {
 	uri           string
 	mac           string
 	password      string
+	enabled       bool
 	settingsG     provider.Cacheable[connect.Settings]
 	measurementsG provider.Cacheable[connect.Measurements]
 }
@@ -129,12 +130,7 @@ func (nrg *NRGKickConnect) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (nrg *NRGKickConnect) Enabled() (bool, error) {
-	res, err := nrg.settingsG.Get()
-	if err != nil {
-		return false, err
-	}
-
-	return res.Values.ChargingStatus.Charging, nil
+	return nrg.enabled, nil
 }
 
 // Enable implements the api.Charger interface
@@ -150,7 +146,12 @@ func (nrg *NRGKickConnect) Enable(enable bool) error {
 		},
 	}
 
-	return nrg.putJSON(nrg.apiURL(connect.SettingsPath), data)
+	err := nrg.putJSON(nrg.apiURL(connect.SettingsPath), data)
+	if err == nil {
+		nrg.enabled = enable
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
