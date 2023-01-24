@@ -1,6 +1,6 @@
 product:
   brand: go-eCharger
-  description: HOME+, HOMEfix (V3)
+  description: Gemini, HOME+, HOMEfix (V3)
 capabilities: ["1p3p", "rfid"]
 requirements: ["sponsorship"]
 description: |
