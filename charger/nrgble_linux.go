@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/nrgble"
+	"github.com/evcc-io/evcc/charger/nrg/ble"
 	"github.com/evcc-io/evcc/util"
 	"github.com/godbus/dbus/v5"
 	"github.com/lunixbochs/struc"
@@ -121,12 +121,12 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 }
 
 func (nrg *NRGKickBLE) connect() (*device.Device1, error) {
-	dev, err := nrgble.FindDevice(nrg.adapter, nrg.mac, nrgTimeout)
+	dev, err := ble.FindDevice(nrg.adapter, nrg.mac, nrgTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("find device: %s", err)
 	}
 
-	err = nrgble.Connect(dev, nrg.agent, nrg.device)
+	err = ble.Connect(dev, nrg.agent, nrg.device)
 	if err != nil {
 		return nil, err
 	}
@@ -199,8 +199,8 @@ func (nrg *NRGKickBLE) write(service string, val interface{}) error {
 	return nil
 }
 
-func (nrg *NRGKickBLE) mergeSettings(info nrgble.Info) nrgble.Settings {
-	return nrgble.Settings{
+func (nrg *NRGKickBLE) mergeSettings(info ble.Info) ble.Settings {
+	return ble.Settings{
 		PIN:                  nrg.pin,
 		ChargingEnergyLimit:  19997, // magic const for "disable"
 		KWhPer100:            info.KWhPer100,
@@ -214,8 +214,8 @@ func (nrg *NRGKickBLE) mergeSettings(info nrgble.Info) nrgble.Settings {
 
 // Status implements the api.Charger interface
 func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
-	res := nrgble.Power{}
-	if err := nrg.read(nrgble.PowerService, &res); err != nil {
+	res := ble.Power{}
+	if err := nrg.read(ble.PowerService, &res); err != nil {
 		return api.StatusF, err
 	}
 
@@ -235,8 +235,8 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (nrg *NRGKickBLE) Enabled() (bool, error) {
-	res := nrgble.Info{}
-	if err := nrg.read(nrgble.InfoService, &res); err != nil {
+	res := ble.Info{}
+	if err := nrg.read(ble.InfoService, &res); err != nil {
 		return false, err
 	}
 
@@ -249,8 +249,8 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (nrg *NRGKickBLE) Enable(enable bool) error {
-	res := nrgble.Info{}
-	if err := nrg.read(nrgble.InfoService, &res); err != nil {
+	res := ble.Info{}
+	if err := nrg.read(ble.InfoService, &res); err != nil {
 		return err
 	}
 
@@ -261,7 +261,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 		settings := nrg.mergeSettings(res)
 
 		nrg.log.TRACE.Printf("write settings (workaround): %+v", settings)
-		if err := nrg.write(nrgble.SettingsService, &settings); err != nil {
+		if err := nrg.write(ble.SettingsService, &settings); err != nil {
 			return err
 		}
 	}
@@ -271,13 +271,13 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 
 	nrg.log.TRACE.Printf("write settings: %+v", settings)
 
-	return nrg.write(nrgble.SettingsService, &settings)
+	return nrg.write(ble.SettingsService, &settings)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
-	res := nrgble.Info{}
-	if err := nrg.read(nrgble.InfoService, &res); err != nil {
+	res := ble.Info{}
+	if err := nrg.read(ble.InfoService, &res); err != nil {
 		return err
 	}
 
@@ -286,15 +286,15 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 
 	nrg.log.TRACE.Printf("write settings: %+v", settings)
 
-	return nrg.write(nrgble.SettingsService, &settings)
+	return nrg.write(ble.SettingsService, &settings)
 }
 
 var _ api.Meter = (*NRGKickBLE)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
-	res := nrgble.Power{}
-	if err := nrg.read(nrgble.PowerService, &res); err != nil {
+	res := ble.Power{}
+	if err := nrg.read(ble.PowerService, &res); err != nil {
 		return 0, err
 	}
 
@@ -307,8 +307,8 @@ var _ api.MeterEnergy = (*NRGKickBLE)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
-	res := nrgble.Energy{}
-	if err := nrg.read(nrgble.EnergyService, &res); err != nil {
+	res := ble.Energy{}
+	if err := nrg.read(ble.EnergyService, &res); err != nil {
 		return 0, err
 	}
 
@@ -321,8 +321,8 @@ var _ api.PhaseCurrents = (*NRGKickBLE)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
-	res := nrgble.VoltageCurrent{}
-	if err := nrg.read(nrgble.VoltageCurrentService, &res); err != nil {
+	res := ble.VoltageCurrent{}
+	if err := nrg.read(ble.VoltageCurrentService, &res); err != nil {
 		return 0, 0, 0, err
 	}
 
@@ -337,8 +337,8 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 // ChargedEnergy implements the ChargeRater interface
 // NOTE: apparently shows energy of a stopped charging session, hence substituted by TotalEnergy
 // func (nrg *NRGKickBLE) ChargedEnergy() (float64, error) {
-// 	res := nrgble.Energy{}
-// 	if err := nrg.read(nrgble.EnergyService, &res); err != nil {
+// 	res := ble.Energy{}
+// 	if err := nrg.read(ble.EnergyService, &res); err != nil {
 // 		return 0, err
 // 	}
 // 	nrg.log.TRACE.Printf("energy: %+v", res)
