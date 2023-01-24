@@ -94,7 +94,7 @@ func encode(v interface{}) (string, error) {
 	case time.Time:
 		var b []byte
 		if !val.IsZero() {
-			b, _ = val.MarshalText()
+			b, _ = val.Round(time.Second).Local().MarshalText()
 		}
 		s = fmt.Sprintf(`"%s"`, string(b))
 	case time.Duration:

@@ -75,7 +75,7 @@ export default {
 		savingsGridCharged: Number,
 		savingsSelfConsumptionCharged: Number,
 		savingsSelfConsumptionPercent: Number,
-		savingsSince: Number,
+		savingsSince: String,
 		savingsTotalCharged: Number,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
