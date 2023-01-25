@@ -169,7 +169,7 @@ export default {
 			const targetTime = this.selectedTargetTime;
 			const { rates } = this.tariff;
 			const { duration, unit, plan } = this.plan;
-			return duration && rates ? { duration, rates, plan, unit, targetTime } : null;
+			return rates ? { duration, rates, plan, unit, targetTime } : null;
 		},
 	},
 	watch: {

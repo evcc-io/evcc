@@ -12,8 +12,8 @@
 					<span v-else>{{ $t("main.targetChargePlan.priceLabel") }}</span>
 				</div>
 				<div class="value text-primary">
-					<span v-if="isCo2">{{ avgCo2 }}</span>
-					<span v-else>{{ avgPrice }}</span>
+					<span v-if="isCo2">{{ fmtAvgCo2 }}</span>
+					<span v-else>{{ fmtAvgCurrency }}</span>
 				</div>
 			</div>
 		</div>
@@ -31,12 +31,8 @@
 				@mouseleave="activeIndex = null"
 				@mouseup="activeIndex = null"
 			>
-				<div
-					class="slot-bar"
-					:style="priceStyle(slot.price)"
-					:title="fmtPricePerKWh(slot.price, plan.unit)"
-				>
-					<span v-if="slot.price === undefined">?</span>
+				<div class="slot-bar" :style="priceStyle(slot.price)">
+					<span v-if="slot.price === undefined" class="unknown">?</span>
 				</div>
 				<div class="slot-label">
 					{{ slot.startHour }}
@@ -72,9 +68,12 @@ export default {
 		},
 		maxPrice() {
 			let result = 0;
-			this.slots.forEach(({ price }) => {
-				result = Math.max(result, price);
-			});
+			this.slots
+				.map((s) => s.price)
+				.filter((price) => price !== undefined)
+				.forEach((price) => {
+					result = Math.max(result, price);
+				});
 			return result;
 		},
 		isCo2() {
@@ -83,15 +82,31 @@ export default {
 		chargingPrice() {
 			return 444;
 		},
-		avgCo2() {
-			let price = this.activeSlot ? this.activeSlot.price : this.chargingPrice;
+		avgPrice() {
+			let hourSum = 0;
+			let priceSum = 0;
+			this.convertDates(this.plan).forEach((slot) => {
+				const hours = (slot.end.getTime() - slot.start.getTime()) / 36e5;
+				if (slot.price) {
+					hourSum += hours;
+					priceSum += hours * slot.price;
+				}
+			});
+			return priceSum / hourSum;
+		},
+		fmtAvgCo2() {
+			let price = this.activeSlot ? this.activeSlot.price : Math.round(this.avgPrice);
 			if (price === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}
 			return `${price} g/kWh`;
 		},
-		avgPrice() {
-			return this.fmtPricePerKWh(0.32, this.unit);
+		fmtAvgCurrency() {
+			let price = this.activeSlot ? this.activeSlot.price : this.avgPrice;
+			if (price === undefined) {
+				return this.$t("main.targetChargePlan.unknownPrice");
+			}
+			return this.fmtPricePerKWh(price, this.unit);
 		},
 		activeSlot() {
 			return this.slots[this.activeIndex];
@@ -115,6 +130,9 @@ export default {
 			for (let i = 0; i < 42; i++) {
 				const start = new Date(this.startTime.getTime() + oneHour * i);
 				const startHour = start.getHours();
+				start.setMinutes(0);
+				start.setSeconds(0);
+				start.setMilliseconds(0);
 				const end = new Date(start.getTime());
 				end.setHours(startHour + 1);
 				const endHour = end.getHours();
@@ -163,6 +181,9 @@ export default {
 			this.activeIndex = index * 1;
 		},
 		convertDates(list) {
+			if (!list.length) {
+				return [];
+			}
 			return list.map((item) => {
 				return {
 					start: new Date(item.start),
@@ -264,5 +285,8 @@ export default {
 .label {
 	color: var(--evcc-gray);
 	text-transform: uppercase;
+}
+.unknown {
+	margin: 0 -0.5rem;
 }
 </style>

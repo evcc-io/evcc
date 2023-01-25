@@ -233,6 +233,9 @@ tariffs:
   grid:
     type: fixed
     price: 0.399 # EUR/kWh
+  #  grid:
+  #    type: awattar
+  #    region: de
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
