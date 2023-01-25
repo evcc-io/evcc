@@ -34,8 +34,8 @@ package charger
 	// - Active Power Phase Sum wird bei Strömen über 10A falsch berechnet (Register 1665)
     //   daher Verwendung Apparent Power.
 	// - MaxCurrent wird um 1A reduziert (bekanntes Problem), gilt nicht für 8A, 16A, 24A, 32A
-//************************************************************************************
 
+//************************************************************************************
 // Weitere zukünfitge Themen zu implementieren / testen:
 
   // Laden 1/3 Phasen
@@ -51,17 +51,14 @@ package charger
     //	VersichargeRegRFID_UID2         = 97 // 5  RO
     //  weitere RFID Karten möglich (bis Register 337)
 
-//  Failsafe Current und Timeout
+  // Failsafe Current und Timeout, funktioniert ab FW 2.120, wird noch nicht verwendet
     //  VersichargeRegFailsafeTimeout    = 1661 // RW 
     //  VersichargeRegFailsafeCurrentSum = 1660 // RW 
 
   // Time and Energy of charging session	 
     //  VersichargeRegSessionEnergy   = // derzeit nicht vorhanden im Modbus Table
     //	VersichargeRegChargeTime      = // derzeit nicht vorhanden im Modbus Table
-	//  nur Total Energy (Gesamtladeleistung Wallbox) vorhanden
-
-// Alive Check / Heartbeat Function (notwendig? aus ABB)
-    //  VersichargeRegAlive           = // derzeit nicht vorhanden im Modbus Table
+	//  Total Energy (Gesamtladeleistung Wallbox) vorhanden und implementiert
 
 //************************************************************************************
 
@@ -78,9 +75,9 @@ import (
 
 const (
 // Info Wallbox, nur Lesen
-    VersichargeRegBrand             = 0    // 5   RO ASCII    -> Diagnose
-	VersichargeRegProductionDate    = 5    // 2   RO UNIT16[] -> Diagnose
-	VersichargeRegSerial            = 7    // 5   RO ASCII    -> Diagnose 
+    VersichargeRegBrand             = 0    // 5  RO ASCII     -> Diagnose
+	VersichargeRegProductionDate    = 5    // 2  RO UNIT16[]  -> Diagnose
+	VersichargeRegSerial            = 7    // 5  RO ASCII     -> Diagnose 
 	VersichargeRegModel             = 12   // 10 RO ASCII     -> Diagnose
 	VersichargeRegFirmware          = 31   // 10 RO ASCII     -> Diagnose
 	VersichargeRegModbusTable       = 41   // 1  RO UINT16    -> Diagnose
@@ -223,7 +220,6 @@ func (wb *Versicharge) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-// Enable mit Einstellung auf MinCurrent sinnvoll?
 func (wb *Versicharge) Enable(enable bool) error {
     var u uint16
 	u = 1
@@ -367,7 +363,6 @@ func (wb *Versicharge) TotalEnergy() (float64, error) {
 // 
 // // Identify implements the api.Identifier interface
 // // experimental, zum Test. Noch falsches Register (Brand wird gelesen)
-// // aus Template WebastoNext Charger (Webasto-next)
 // func (wb *Versicharge) Identify() (string, error) {
 // 	b, err := wb.conn.ReadHoldingRegisters(VersichargeRegBrand, 5)
 // 	fmt.Printf("Identifier (Func Identify): ", bytesAsString(b), "/n")
@@ -381,7 +376,7 @@ func (wb *Versicharge) TotalEnergy() (float64, error) {
 var _ loadpoint.Controller = (*Versicharge)(nil)
 
 // LoadpointControl implements loadpoint.Controller
-// Funktion?
+// Funktion implementiert, Verwendung?
 func (wb *Versicharge) LoadpointControl(lp loadpoint.API) {
 	wb.lp = lp
 }
