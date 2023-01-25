@@ -327,7 +327,7 @@ func (wb *Versicharge) Voltages() (float64, float64, float64, error) {
 
 var _ api.PhasePowers = (*Versicharge)(nil)
 
-// Voltages implements the api.PhasePowers interface, (noch?) nicht vorhanden (aus Alfen.go) 
+// Powers implements the api.PhasePowers interface, Verwendung? 
 func (wb *Versicharge) Powers() (float64, float64, float64, error) {
 	var powers []float64
 	for _, regPower := range VersichargeRegPower {
