@@ -35,7 +35,9 @@
 					class="slot-bar"
 					:style="priceStyle(slot.price)"
 					:title="fmtPricePerKWh(slot.price, plan.unit)"
-				></div>
+				>
+					<span v-if="slot.price === undefined">?</span>
+				</div>
 				<div class="slot-label">
 					{{ slot.startHour }}
 					<br />
@@ -78,8 +80,15 @@ export default {
 		isCo2() {
 			return this.unit === "gCO2eq";
 		},
+		chargingPrice() {
+			return 444;
+		},
 		avgCo2() {
-			return `${this.activeSlot ? this.activeSlot.price : "301"} g/kWh`;
+			let price = this.activeSlot ? this.activeSlot.price : this.chargingPrice;
+			if (price === undefined) {
+				return this.$t("main.targetChargePlan.unknownPrice");
+			}
+			return `${price} g/kWh`;
 		},
 		avgPrice() {
 			return this.fmtPricePerKWh(0.32, this.unit);
@@ -139,7 +148,7 @@ export default {
 		},
 		priceStyle(price) {
 			return {
-				height: `${(100 / this.maxPrice) * price}%`,
+				height: price === undefined ? "100%" : `${(100 / this.maxPrice) * price}%`,
 			};
 		},
 		touchmove(e) {
@@ -222,6 +231,10 @@ export default {
 	background: var(--bs-gray-light);
 	border-radius: 8px;
 	width: 100%;
+	align-items: center;
+	display: flex;
+	justify-content: center;
+	color: var(--bs-white);
 }
 .slot-label {
 	color: var(--bs-gray-light);

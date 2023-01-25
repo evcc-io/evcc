@@ -203,6 +203,7 @@ timeRange = "{day} {range} h"
 chargingTime = "Charging time"
 co2Label = "CO₂ emission Ø"
 priceLabel = "Energy price"
+unknownPrice = "unknown"
 
 [main.targetEnergy]
 label = "Limit"

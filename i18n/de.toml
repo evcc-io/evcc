@@ -203,6 +203,7 @@ timeRange = "{day} {range} Uhr"
 chargingTime = "Ladezeit"
 co2Label = "CO₂-Emission Ø"
 priceLabel = "Energiepreis"
+unknownPrice = "unbekannt"
 
 [main.targetEnergy]
 label = "Ladeziel"
