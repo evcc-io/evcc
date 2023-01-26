@@ -5,8 +5,8 @@ products:
       generic: Versicharge GEN3
 requirements:
   description:
-    de: Erfordert Firmware >= 2.118
-    en: Requires firmware >= 2.118
+    de: Erfordert Firmware >= 2.120
+    en: Requires firmware >= 2.120
 params:
   - name: modbus
     choice: ["tcpip"]
