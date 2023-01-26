@@ -158,6 +158,9 @@ func (nrg *NRGKickConnect) Enable(enable bool) error {
 func (nrg *NRGKickConnect) MaxCurrent(current int64) error {
 	data := connect.Settings{
 		Values: connect.Values{
+			ChargingStatus: &connect.ChargingStatus{
+				Charging: nrg.enabled,
+			},
 			ChargingCurrent: &connect.ChargingCurrent{
 				Value: float64(current),
 			},
