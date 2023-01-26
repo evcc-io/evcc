@@ -83,11 +83,17 @@
 										/>
 									</div>
 								</div>
-								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
-									{{ $t("main.targetCharge.targetIsInThePast") }}
+								<p class="mb-0">
+									<span v-if="timeInThePast" class="text-danger">
+										{{ $t("main.targetCharge.targetIsInThePast") }}
+									</span>
+									<span v-else-if="timeTooFarInTheFuture" class="text-secondary">
+										{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
+									</span>
+									&nbsp;
 								</p>
 								<TargetChargePlan
-									v-else-if="targetChargePlanProps"
+									v-if="targetChargePlanProps"
 									v-bind="targetChargePlanProps"
 								/>
 							</div>
@@ -105,9 +111,14 @@
 									type="submit"
 									class="btn btn-primary"
 									data-bs-dismiss="modal"
-									:disabled="!selectedTargetTimeValid"
+									:disabled="timeInThePast"
 								>
-									{{ $t("main.targetCharge.activate") }}
+									<span v-if="targetTime">
+										{{ $t("main.targetCharge.update") }}
+									</span>
+									<span v-else>
+										{{ $t("main.targetCharge.activate") }}
+									</span>
 								</button>
 							</div>
 						</form>
@@ -152,9 +163,19 @@ export default {
 		targetChargeEnabled: function () {
 			return this.targetTime;
 		},
-		selectedTargetTimeValid: function () {
+		timeInThePast: function () {
 			const now = new Date();
-			return now < this.selectedTargetTime;
+			return now >= this.selectedTargetTime;
+		},
+		timeTooFarInTheFuture: function () {
+			if (this.tariff?.rates) {
+				const lastRate = this.tariff.rates[this.tariff.rates.length - 1];
+				if (lastRate.end) {
+					const end = new Date(lastRate.end);
+					return this.selectedTargetTime >= end;
+				}
+			}
+			return false;
 		},
 		selectedTargetTime: function () {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
@@ -195,7 +216,7 @@ export default {
 	},
 	methods: {
 		updatePlan: async function () {
-			if (this.selectedTargetTimeValid && (this.targetEnergy || this.targetSoc)) {
+			if (!this.timeInThePast && (this.targetEnergy || this.targetSoc)) {
 				try {
 					const opts = {
 						params: { targetTime: this.selectedTargetTime },

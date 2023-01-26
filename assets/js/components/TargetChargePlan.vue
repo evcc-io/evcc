@@ -92,14 +92,14 @@ export default {
 					priceSum += hours * slot.price;
 				}
 			});
-			return priceSum / hourSum;
+			return hourSum ? priceSum / hourSum : undefined;
 		},
 		fmtAvgCo2() {
-			let price = this.activeSlot ? this.activeSlot.price : Math.round(this.avgPrice);
+			let price = this.activeSlot ? this.activeSlot.price : this.avgPrice;
 			if (price === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}
-			return `${price} g/kWh`;
+			return `${Math.round(price)} g/kWh`;
 		},
 		fmtAvgCurrency() {
 			let price = this.activeSlot ? this.activeSlot.price : this.avgPrice;
@@ -181,7 +181,7 @@ export default {
 			this.activeIndex = index * 1;
 		},
 		convertDates(list) {
-			if (!list.length) {
+			if (!list?.length) {
 				return [];
 			}
 			return list.map((item) => {
