@@ -125,8 +125,8 @@ jobs:
         run: make ui
 
       - name: Cache dist
-        uses: actions/cache@v3
+        uses: actions/cache/save@v3
         id: cache-dist
         with:
           path: dist
-          key: ${{ runner.os }}-dist
+          key: ${{ runner.os }}-${{ github.sha }}-dist

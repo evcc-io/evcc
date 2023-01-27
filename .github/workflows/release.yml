@@ -71,11 +71,11 @@ jobs:
         run: make patch-asn1-sudo
 
       - name: Get dist from cache
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         id: cache-dist
         with:
           path: dist
-          key: ${{ runner.os }}-dist
+          key: ${{ runner.os }}-${{ github.sha }}-dist
 
       # gokrazy image
       # - name: Prepare Image

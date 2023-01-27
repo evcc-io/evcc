@@ -44,11 +44,11 @@ jobs:
           fetch-depth: 0
 
       - name: Get dist from cache
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         id: cache-dist
         with:
           path: dist
-          key: ${{ runner.os }}-dist
+          key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Login
         uses: docker/login-action@v2
@@ -92,11 +92,11 @@ jobs:
         run: make patch-asn1-sudo
 
       - name: Get dist from cache
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         id: cache-dist
         with:
           path: dist
-          key: ${{ runner.os }}-dist
+          key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Create nightly build
         uses: goreleaser/goreleaser-action@v4
