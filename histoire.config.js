@@ -5,4 +5,5 @@ export default defineConfig({
   plugins: [HstVue()],
   setupFile: "./histoire.setup.js",
   viteNodeInlineDeps: [/!axios/],
+  routerMode: "hash",
 });

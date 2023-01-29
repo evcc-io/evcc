@@ -191,12 +191,21 @@ descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
 today = "heute"
 tomorrow = "morgen"
 targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
+targetIsTooFarInTheFuture = "Wir passen den Plan an sobald wir mehr über die Zukunft wissen."
 remove = "Entfernen"
 activate = "Aktivieren"
+update = "Aktualisieren"
 planUnknown = "unbekannt"
 planDuration = "Ladezeit"
 planPeriodLabel = "Zeitraum"
 planPeriodValue = "{start} bis {end}"
+
+[main.targetChargePlan]
+timeRange = "{day} {range} Uhr"
+chargeDuration = "Ladezeit"
+co2Label = "CO₂-Emission Ø"
+priceLabel = "Energiepreis"
+unknownPrice = "noch unbekannt"
 
 [main.targetEnergy]
 label = "Ladeziel"
