@@ -38,22 +38,22 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	var year string = r.URL.Query().Get("year")
 	var month string = r.URL.Query().Get("month")
 
-	var filename = "session"
+	filename := "session"
 
 	var fmtYear string = "%"
 	var fmtMonth string = "%"
 
-	if len(year) > 0 {
+	if year != "" {
 		fmtYear = year
 		filename += "-" + fmtYear
 
-		if len(month) > 0 {
+		if month != "" {
 			iMonth, err := strconv.Atoi(month)
 			if err != nil {
 				jsonError(w, http.StatusInternalServerError, err)
 				return
 			}
-			fmtMonth = fmt.Sprintf("%02d", ((iMonth + 1) % 13))
+			fmtMonth = fmt.Sprintf("%02d", iMonth)
 			filename += "." + fmtMonth
 		}
 	}

@@ -15,7 +15,7 @@
 				<div class="d-flex justify-content-start mb-4">
 					<a
 						class="btn btn-outline-secondary text-nowrap my-2"
-						:href="csvHrefLink($i18n.locale)"
+						:href="csvHrefLink()"
 						download="sessions.csv"
 					>
 						{{ $t("sessions.downloadCsv") }}
@@ -28,8 +28,8 @@
 							{{ formatGroupHeadline(group.month) }}
 						</h2>
 						<a
-							class="btn btn-sm btn-outline-secondary text-nowrap my-2"
-							:href="csvHrefLink($i18n.locale, group.month)"
+							class="btn btn-xs btn-outline-secondary text-nowrap"
+							:href="csvHrefLink(group.month)"
 							download="sessions.csv"
 						>
 							CSV
@@ -185,7 +185,7 @@ export default {
 		groupByMonth(sessions) {
 			return sessions.reduce((groups, session) => {
 				const date = new Date(session.finished);
-				const month = `${date.getFullYear()}.${date.getMonth()}`;
+				const month = `${date.getFullYear()}.${date.getMonth() + 1}`;
 				if (!groups[month]) groups[month] = [];
 				groups[month].push(session);
 				return groups;
@@ -217,7 +217,7 @@ export default {
 		formatGroupHeadline(group) {
 			const date = new Date();
 			const [year, month] = group.split(".");
-			date.setMonth(month);
+			date.setMonth(month - 1);
 			date.setFullYear(year);
 			return this.fmtMonthYear(date);
 		},
@@ -226,12 +226,14 @@ export default {
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
 			modal.show();
 		},
-		csvHrefLink(locale, month) {
-			var url = "./api/sessions?format=csv&lang=" + locale;
-			if (month) {
-				url += "&year=" + month.split(".")[0];
-				if (month.split(".").length > 1) {
-					url += "&month=" + month.split(".")[1];
+		csvHrefLink(groupKey) {
+			var url = `./api/sessions?format=csv&lang=${this.$i18n.locale}`;
+			if (groupKey) {
+				const [year, month] = groupKey.split(".");
+				url += `&year=${year}`;
+
+				if (month) {
+					url += `&month=${month}`;
 				}
 			}
 			return url;
@@ -268,9 +270,5 @@ export default {
 
 .breakdown:empty {
 	display: none;
-}
-
-.dark .form-select {
-	background-color: transparent;
 }
 </style>
