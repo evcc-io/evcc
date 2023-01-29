@@ -123,7 +123,7 @@
 									<small>
 										{{
 											$t("footer.savings.since", {
-												since: fmtDayMonthYear(startDate),
+												since: startDate,
 											})
 										}}
 									</small>
@@ -157,7 +157,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		selfConsumptionPercent: Number,
-		since: { type: Number, default: 0 },
+		since: String,
 		sponsor: String,
 		amount: { type: Number, default: 0 },
 		effectivePrice: { type: Number, default: 0 },
@@ -182,7 +182,10 @@ export default {
 			return { value, unit };
 		},
 		startDate() {
-			return new Date(this.since * 1000);
+			if (this.since) {
+				return this.fmtDayMonthYear(new Date(this.since));
+			}
+			return "";
 		},
 	},
 	methods: {

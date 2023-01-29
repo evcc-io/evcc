@@ -1,5 +1,5 @@
 # # STEP 1 build ui
-# FROM --platform=$BUILDPLATFORM node:16-alpine as node
+# FROM --platform=$BUILDPLATFORM node:18-alpine as node
 
 # RUN apk update && apk add --no-cache make alpine-sdk
 

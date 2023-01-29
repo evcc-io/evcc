@@ -136,6 +136,8 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 		log.Redact(basicAuth)
 
 		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
+	case "bearer":
+		p.Client.Transport = transport.BearerAuth(password, p.Client.Transport)
 	case "digest":
 		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
 	default:
