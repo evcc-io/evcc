@@ -19,6 +19,7 @@
 		<Teleport to="body">
 			<div
 				:id="modalId"
+				ref="modal"
 				class="modal fade text-dark"
 				data-bs-backdrop="true"
 				tabindex="-1"
@@ -149,7 +150,13 @@ export default {
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
-		return { selectedDay: null, selectedTime: null, plan: {} };
+		return {
+			selectedDay: null,
+			selectedTime: null,
+			plan: {},
+			modal: null,
+			isModalVisible: false,
+		};
 	},
 	computed: {
 		targetChargeEnabled: function () {
@@ -189,10 +196,32 @@ export default {
 		targetEnergy() {
 			this.updatePlan();
 		},
+		isModalVisible() {
+			this.updatePlan();
+		},
+	},
+	mounted() {
+		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
+		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
+		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
+	},
+	unmounted() {
+		this.$refs.modal.removeEventListener("show.bs.modal", this.modalVisible);
+		this.$refs.modal.removeEventListener("hide.bs.modal", this.modalInvisible);
 	},
 	methods: {
+		modalVisible: function () {
+			this.isModalVisible = true;
+		},
+		modalInvisible: function () {
+			this.isModalVisible = false;
+		},
 		updatePlan: async function () {
-			if (this.selectedTargetTimeValid && (this.targetEnergy || this.targetSoc)) {
+			if (
+				this.isModalVisible &&
+				this.selectedTargetTimeValid &&
+				(this.targetEnergy || this.targetSoc)
+			) {
 				try {
 					const response = await api.get(`/loadpoints/${this.id}/target/plan`, {
 						params: { targetTime: this.selectedTargetTime },
@@ -275,9 +304,8 @@ export default {
 			this.$emit("target-time-removed");
 		},
 		openModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById(this.modalId));
-			this.initInputFields();
-			modal.show();
+			this.modal.show();
+			this.$nextTick(this.initInputFields);
 		},
 	},
 };
