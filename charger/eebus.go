@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 )
 
 const (
@@ -99,7 +98,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 
 // waitForConnection wait for initial connection and returns an error on failure
 func (c *EEBus) waitForConnection() error {
-	timeout := time.After(request.Timeout)
+	timeout := time.After(30 * time.Second)
 	for {
 		select {
 		case <-timeout:

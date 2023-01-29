@@ -19,13 +19,13 @@ type Measurements struct {
 // Settings is the /api/settings request/response
 type Settings struct {
 	Message string `json:",omitempty"` // api message if not ok
-	Info    Info   `json:",omitempty"`
+	Info    *Info  `json:",omitempty"`
 	Values  Values
 }
 
 // Info is Settings.Info
 type Info struct {
-	Connected bool `json:",omitempty"`
+	Connected bool
 }
 
 // Values is Settings.Values
