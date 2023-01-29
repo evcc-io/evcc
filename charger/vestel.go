@@ -93,8 +93,8 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 		current: 6,
 	}
 
-	// 5min failsafe timeout
-	if _, err := wb.conn.WriteSingleRegister(vestelRegFailsafeTimeout, 5*60); err != nil {
+	// 20 sec failsafe timeout
+	if _, err := wb.conn.WriteSingleRegister(vestelRegFailsafeTimeout, 20); err != nil {
 		return nil, fmt.Errorf("could not set failsafe timeout: %v", err)
 	}
 
