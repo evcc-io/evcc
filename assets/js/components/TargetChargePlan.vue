@@ -2,7 +2,7 @@
 	<div class="plan pt-2">
 		<div class="details justify-content-between mb-2 d-flex justify-content-between">
 			<div class="text-start">
-				<div class="label">{{ $t("main.targetChargePlan.chargingTime") }}</div>
+				<div class="label">{{ $t("main.targetChargePlan.chargeDuration") }}</div>
 				<div class="value text-primary">{{ planDuration }}</div>
 			</div>
 			<div class="text-end">

@@ -202,7 +202,7 @@ planPeriodValue = "{start} to {end}"
 
 [main.targetChargePlan]
 timeRange = "{day} {range} h"
-chargingTime = "Charging time"
+chargeDuration = "Charging time"
 co2Label = "CO₂ emission Ø"
 priceLabel = "Energy price"
 unknownPrice = "still unknown"
