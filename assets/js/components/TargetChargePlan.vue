@@ -12,8 +12,7 @@
 					<span v-else>{{ $t("main.targetChargePlan.priceLabel") }}</span>
 				</div>
 				<div class="value text-primary">
-					<span v-if="isCo2">{{ fmtAvgCo2 }}</span>
-					<span v-else>{{ fmtAvgCurrency }}</span>
+					{{ fmtAvgPrice }}
 				</div>
 			</div>
 		</div>
@@ -79,9 +78,6 @@ export default {
 		isCo2() {
 			return this.unit === "gCO2eq";
 		},
-		chargingPrice() {
-			return 444;
-		},
 		avgPrice() {
 			let hourSum = 0;
 			let priceSum = 0;
@@ -94,19 +90,14 @@ export default {
 			});
 			return hourSum ? priceSum / hourSum : undefined;
 		},
-		fmtAvgCo2() {
+		fmtAvgPrice() {
 			let price = this.activeSlot ? this.activeSlot.price : this.avgPrice;
 			if (price === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}
-			return `${Math.round(price)} g/kWh`;
-		},
-		fmtAvgCurrency() {
-			let price = this.activeSlot ? this.activeSlot.price : this.avgPrice;
-			if (price === undefined) {
-				return this.$t("main.targetChargePlan.unknownPrice");
-			}
-			return this.fmtPricePerKWh(price, this.unit);
+			return this.isCo2
+				? `${Math.round(price)} g/kWh`
+				: this.fmtPricePerKWh(price, this.unit);
 		},
 		activeSlot() {
 			return this.slots[this.activeIndex];

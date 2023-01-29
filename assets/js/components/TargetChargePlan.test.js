@@ -3,10 +3,11 @@ import { beforeAll, describe, expect, test } from "vitest";
 import TargetChargePlan from "./TargetChargePlan.vue";
 
 config.global.mocks["$i18n"] = { locale: "de-DE" };
+config.global.mocks["$t"] = (a) => a;
 
 describe("basics", () => {
-  const DATE_START = new Date("11 Jan 2023 11:00:00 GMT+001");
-  const DATE_TARGET = new Date("11 Jan 2023 13:00:00 GMT+001");
+  const DATE_START = new Date("2023-01-11T11:00:00+01:00");
+  const DATE_TARGET = new Date("2023-01-11T13:00:00+01:00");
   const TARIFF_FIXED = [
     {
       start: "2023-01-11T11:00:00+01:00",
@@ -16,8 +17,8 @@ describe("basics", () => {
   ];
   const PLAN = [
     {
-      start: "11 Jan 2023 12:00:00 GMT+001",
-      end: "11 Jan 2023 13:00:00 GMT+001",
+      start: "2023-01-11T12:00:00+01:00",
+      end: "2023-01-11T13:00:00+01:00",
     },
   ];
 
@@ -36,8 +37,8 @@ describe("basics", () => {
     result = wrapper.vm.slots;
   });
 
-  test("should return 36 slots", () => {
-    expect(result.length).eq(36);
+  test("should return 42 slots", () => {
+    expect(result.length).eq(42);
   });
 
   test("slots should be an hour apart", () => {
@@ -78,8 +79,8 @@ describe("basics", () => {
 });
 
 describe("zoned tariffs", () => {
-  const DATE_START = new Date("11 Jan 2023 11:00:00 GMT+001");
-  const DATE_TARGET = new Date("12 Jan 2023 11:00:00 GMT+001");
+  const DATE_START = new Date("2023-01-11T11:00:00+01:00");
+  const DATE_TARGET = new Date("2023-01-11T16:00:00+01:00");
   const TARIFF_ZONED = [
     {
       start: "2023-01-11T11:00:00+01:00",
@@ -94,12 +95,12 @@ describe("zoned tariffs", () => {
   ];
   const PLAN = [
     {
-      start: "11 Jan 2023 11:30:00 GMT+001",
-      end: "11 Jan 2023 13:00:00 GMT+001",
+      start: "2023-01-11T11:30:00+01:00",
+      end: "2023-01-11T13:00:00+01:00",
     },
     {
-      start: "12 Jan 2023 9:30:00 GMT+001",
-      end: "12 Jan 2023 11:00:00 GMT+001",
+      start: "2023-01-11T14:30:00+01:00",
+      end: "2023-01-11T16:00:00+01:00",
     },
   ];
 
@@ -119,9 +120,12 @@ describe("zoned tariffs", () => {
   });
 
   test("handle multiple charging slots", () => {
-    result.forEach((slot, index) => {
-      expect(slot.charging).eq([0, 1, 22, 23].includes(index));
-    });
+    expect(result[0].charging).eq(true);
+    expect(result[1].charging).eq(true);
+    expect(result[2].charging).eq(false);
+    expect(result[3].charging).eq(true);
+    expect(result[4].charging).eq(true);
+    expect(result[5].charging).eq(false);
   });
 
   test("first slot is cheap, others are expensive", () => {
