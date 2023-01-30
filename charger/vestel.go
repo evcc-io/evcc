@@ -93,18 +93,18 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 		current: 6,
 	}
 
-	// 5min failsafe timeout
-	if _, err := wb.conn.WriteSingleRegister(vestelRegFailsafeTimeout, 5*60); err != nil {
-		return nil, fmt.Errorf("could not set failsafe timeout: %v", err)
+	// get failsafe timeout from charger
+	b, err := wb.conn.ReadHoldingRegisters(vestelRegFailsafeTimeout, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
-
-	go wb.heartbeat()
+	go wb.heartbeat(time.Duration(binary.BigEndian.Uint16(b)/2) * time.Second)
 
 	return wb, nil
 }
 
-func (wb *Vestel) heartbeat() {
-	for range time.NewTicker(time.Minute).C {
+func (wb *Vestel) heartbeat(timeout time.Duration) {
+	for range time.NewTicker(timeout).C {
 		if _, err := wb.conn.WriteSingleRegister(vestelRegAlive, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
