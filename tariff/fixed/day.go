@@ -78,7 +78,14 @@ func ParseDays(s string) ([]Day, error) {
 			return nil, fmt.Errorf("invalid day range: %s", segment)
 		}
 
-		from, err := ParseDay(fromto[0])
+		fromToFrom := fromto[0]
+
+		// single empty segment
+		if len(fromto) == 1 && strings.TrimSpace(fromToFrom) == "" {
+			return slices.Clone(Week), nil
+		}
+
+		from, err := ParseDay(fromToFrom)
 		if err != nil {
 			return nil, err
 		}

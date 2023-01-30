@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/tariff/awattar"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"golang.org/x/exp/slices"
 )
 
 type Awattar struct {
@@ -103,5 +104,5 @@ func (t *Awattar) Unit() string {
 func (t *Awattar) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	return append([]api.Rate{}, t.data...), outdatedError(t.updated, time.Hour)
+	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }

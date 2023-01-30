@@ -2,13 +2,14 @@ package tariff
 
 import (
 	"errors"
-	"github.com/evcc-io/evcc/tariff/octopus"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff/octopus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"golang.org/x/exp/slices"
 )
 
 type Octopus struct {
@@ -99,5 +100,5 @@ func (t *Octopus) Unit() string {
 func (t *Octopus) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	return append([]api.Rate{}, t.data...), outdatedError(t.updated, time.Hour)
+	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
