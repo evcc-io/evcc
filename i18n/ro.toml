@@ -1,5 +1,5 @@
 [header]
-login = "Autentificare Vehicul"
+login = "Login Vehicul"
 docs = "Documentatie"
 settings = "Configurare"
 sessions = "Sesiuni de Incarcare"
@@ -14,7 +14,7 @@ availableLong = "versiune noua disponibila"
 modalUpdateStarted = "Pornesc noua versiune evcc..."
 modalNoReleaseNotes = "Nu exista info despre aceasta versiune . Vezi:"
 modalCancel = "Inchide"
-modalUpdate = "Instalaza"
+modalUpdate = "Instaleaza"
 modalUpdateNow = "Instaleaza acum"
 modalDownload = "Download"
 modalUpdateStatusStart = "Instalare pornita:"
@@ -22,8 +22,8 @@ modalUpdateStatusStart = "Instalare pornita:"
 [settings.theme]
 auto = "system"
 label = "Design"
-dark = "negru"
-light = "alb"
+dark = "intunecat"
+light = "deschis"
 
 [settings]
 title = "Configurare"

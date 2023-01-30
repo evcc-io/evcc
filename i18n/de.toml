@@ -69,7 +69,7 @@ greenEnergySub1 = "über evcc geladen"
 greenEnergySub2 = "seit Oktober 2022"
 
 [footer.telemetry]
-optIn = "Ich möchte meine Ladedaten mit der Community teilen."
+optIn = "Ich möchte meine Ladedaten teilen."
 optInMoreDetails = "Mehr Details {0}."
 optInMoreDetailsLink = "hier"
 optInSponsorship = "Sponsoring erforderlich."
@@ -195,7 +195,7 @@ targetIsTooFarInTheFuture = "Wir passen den Plan an sobald wir mehr über die Zu
 remove = "Entfernen"
 activate = "Aktivieren"
 update = "Aktualisieren"
-planUnknown = "unbekannt"
+planUnknown = "noch unbekannt"
 planDuration = "Ladezeit"
 planPeriodLabel = "Zeitraum"
 planPeriodValue = "{start} bis {end}"
