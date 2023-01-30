@@ -19,7 +19,8 @@
 		<Teleport to="body">
 			<div
 				:id="modalId"
-				class="modal fade text-dark"
+				ref="modal"
+				class="modal fade text-dark modal-xl"
 				data-bs-backdrop="true"
 				tabindex="-1"
 				role="dialog"
@@ -43,9 +44,11 @@
 						</div>
 						<form @submit.prevent="setTargetTime">
 							<div class="modal-body">
-								<div class="form-group mb-2">
+								<div
+									class="form-group d-lg-flex align-items-baseline mb-2 justify-content-between"
+								>
 									<!-- eslint-disable vue/no-v-html -->
-									<label for="targetTimeLabel" class="mb-3">
+									<label for="targetTimeLabel" class="mb-3 me-3">
 										<span v-if="socBasedCharging">
 											{{
 												$t("main.targetCharge.descriptionSoc", {
@@ -62,15 +65,8 @@
 										</span>
 									</label>
 									<!-- eslint-enable vue/no-v-html -->
-									<div
-										class="d-flex justify-content-between"
-										:style="{ 'max-width': '350px' }"
-									>
-										<select
-											v-model="selectedDay"
-											class="form-select me-2"
-											:style="{ 'flex-basis': '60%' }"
-										>
+									<div class="d-flex justify-content-between date-selection">
+										<select v-model="selectedDay" class="form-select me-2">
 											<option
 												v-for="opt in dayOptions()"
 												:key="opt.value"
@@ -82,17 +78,25 @@
 										<input
 											v-model="selectedTime"
 											type="time"
-											class="form-control ms-2"
-											:style="{ 'flex-basis': '40%' }"
+											class="form-control ms-2 time-selection"
 											:step="60 * 5"
 											required
 										/>
 									</div>
 								</div>
-								<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
-									{{ $t("main.targetCharge.targetIsInThePast") }}
+								<p class="mb-0">
+									<span v-if="timeInThePast" class="text-danger">
+										{{ $t("main.targetCharge.targetIsInThePast") }}
+									</span>
+									<span v-else-if="timeTooFarInTheFuture" class="text-secondary">
+										{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
+									</span>
+									&nbsp;
 								</p>
-								<TargetChargePlanMinimal v-else-if="plan.duration" v-bind="plan" />
+								<TargetChargePlan
+									v-if="targetChargePlanProps"
+									v-bind="targetChargePlanProps"
+								/>
 							</div>
 							<div class="modal-footer d-flex justify-content-between">
 								<button
@@ -108,9 +112,14 @@
 									type="submit"
 									class="btn btn-primary"
 									data-bs-dismiss="modal"
-									:disabled="!selectedTargetTimeValid"
+									:disabled="timeInThePast"
 								>
-									{{ $t("main.targetCharge.activate") }}
+									<span v-if="targetTime">
+										{{ $t("main.targetCharge.update") }}
+									</span>
+									<span v-else>
+										{{ $t("main.targetCharge.activate") }}
+									</span>
 								</button>
 							</div>
 						</form>
@@ -126,7 +135,7 @@ import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
 import LabelAndValue from "./LabelAndValue.vue";
-import TargetChargePlanMinimal from "./TargetChargePlanMinimal.vue";
+import TargetChargePlan from "./TargetChargePlan.vue";
 import api from "../api";
 
 import formatter from "../mixins/formatter";
@@ -136,7 +145,7 @@ const LAST_TARGET_TIME_KEY = "last_target_time";
 
 export default {
 	name: "TargetCharge",
-	components: { LabelAndValue, TargetChargePlanMinimal },
+	components: { LabelAndValue, TargetChargePlan },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
@@ -149,15 +158,32 @@ export default {
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
-		return { selectedDay: null, selectedTime: null, plan: {} };
+		return {
+			selectedDay: null,
+			selectedTime: null,
+			plan: {},
+			tariff: {},
+			modal: null,
+			isModalVisible: false,
+		};
 	},
 	computed: {
 		targetChargeEnabled: function () {
 			return this.targetTime;
 		},
-		selectedTargetTimeValid: function () {
+		timeInThePast: function () {
 			const now = new Date();
-			return now < this.selectedTargetTime;
+			return now >= this.selectedTargetTime;
+		},
+		timeTooFarInTheFuture: function () {
+			if (this.tariff?.rates) {
+				const lastRate = this.tariff.rates[this.tariff.rates.length - 1];
+				if (lastRate.end) {
+					const end = new Date(lastRate.end);
+					return this.selectedTargetTime >= end;
+				}
+			}
+			return false;
 		},
 		selectedTargetTime: function () {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
@@ -167,6 +193,12 @@ export default {
 		},
 		targetEnergyFormatted: function () {
 			return this.fmtKWh(this.targetEnergy * 1e3, true, true, 1);
+		},
+		targetChargePlanProps: function () {
+			const targetTime = this.selectedTargetTime;
+			const { rates } = this.tariff;
+			const { duration, unit, plan } = this.plan;
+			return rates ? { duration, rates, plan, unit, targetTime } : null;
 		},
 	},
 	watch: {
@@ -189,15 +221,40 @@ export default {
 		targetEnergy() {
 			this.updatePlan();
 		},
+		isModalVisible() {
+			this.updatePlan();
+		},
+	},
+	mounted() {
+		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
+		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
+		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
+	},
+	unmounted() {
+		this.$refs.modal.removeEventListener("show.bs.modal", this.modalVisible);
+		this.$refs.modal.removeEventListener("hide.bs.modal", this.modalInvisible);
 	},
 	methods: {
+		modalVisible: function () {
+			this.isModalVisible = true;
+		},
+		modalInvisible: function () {
+			this.isModalVisible = false;
+		},
 		updatePlan: async function () {
-			if (this.selectedTargetTimeValid && (this.targetEnergy || this.targetSoc)) {
+			if (
+				this.isModalVisible &&
+				!this.timeInThePast &&
+				(this.targetEnergy || this.targetSoc)
+			) {
 				try {
-					const response = await api.get(`/loadpoints/${this.id}/target/plan`, {
+					const opts = {
 						params: { targetTime: this.selectedTargetTime },
-					});
-					this.plan = response.data.result;
+					};
+					this.plan = (
+						await api.get(`/loadpoints/${this.id}/target/plan`, opts)
+					).data.result;
+					this.tariff = (await api.get(`/tariff/planner`)).data.result;
 				} catch (e) {
 					console.error(e);
 				}
@@ -275,9 +332,8 @@ export default {
 			this.$emit("target-time-removed");
 		},
 		openModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById(this.modalId));
-			this.initInputFields();
-			modal.show();
+			this.modal.show();
+			this.$nextTick(this.initInputFields);
 		},
 	},
 };
@@ -294,5 +350,13 @@ export default {
 }
 .value:hover {
 	color: var(--bs-color-white);
+}
+@media (min-width: 992px) {
+	.date-selection {
+		width: 370px;
+	}
+}
+.time-selection {
+	flex-basis: 200px;
 }
 </style>

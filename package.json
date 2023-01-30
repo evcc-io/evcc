@@ -4,7 +4,7 @@
   "author": "naltatis & andig",
   "scripts": {
     "build": "vite build",
-    "test": "",
+    "test": "TZ=Europe/Berlin vitest",
     "lint": "prettier assets './**/*.{yml,yaml,toml}' --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "dev": "vite",
     "histoire": "histoire dev"
@@ -17,6 +17,7 @@
     "@popperjs/core": "^2.11.5",
     "@vitejs/plugin-vue": "^3.0.1",
     "@vue/compiler-sfc": "^3.2.30",
+    "@vue/test-utils": "^2.2.7",
     "axios": "^1.2.1",
     "bootstrap": "^5.2.2",
     "canvas-confetti": "^1.4.0",
@@ -48,5 +49,9 @@
     "node": ">=18.0.0"
   },
   "license": "MIT",
-  "repository": "github:evcc-io/evcc"
+  "repository": "github:evcc-io/evcc",
+  "devDependencies": {
+    "happy-dom": "^8.1.4",
+    "vitest": "^0.27.1"
+  }
 }
