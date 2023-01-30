@@ -162,6 +162,10 @@ type Loadpoint struct {
 	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
 	progress                *Progress     // Step-wise progress indicator
 
+	// priorities
+	Priority    int // Priority of this loadpoint
+	prioritizer *Prioritizer
+
 	// session log
 	db      db.Database
 	session *db.Session
@@ -1414,6 +1418,14 @@ func (lp *Loadpoint) processTasks() {
 		}
 	}
 }
+func (lp *Loadpoint) additionallyConsumablePower(sitePower float64) float64 {
+	if lp.connected() {
+		if maxPower := lp.GetMaxPower(); maxPower > lp.chargePower {
+			return maxPower - lp.chargePower
+		}
+	}
+	return 0
+}
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
@@ -1467,6 +1479,9 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 	// track if remote disabled is actually active
 	remoteDisabled := loadpoint.RemoteEnable
 
+	// no demand unless charging in pv mode
+	lp.prioritizer.Prioritize(lp.Priority, 0)
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -1506,6 +1521,18 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
+		sitePower := sitePower
+
+		// de-prioritize if necessary
+		if lp.prioritizer != nil {
+			consumablePower := lp.additionallyConsumablePower(sitePower)
+			reducePower := lp.prioritizer.Prioritize(lp.Priority, consumablePower)
+			if reducePower > 0 {
+				lp.log.DEBUG.Printf("power reduction: %.0fW", reducePower)
+				sitePower += reducePower
+			}
+		}
+
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 
 		var required bool // false

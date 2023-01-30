@@ -118,11 +118,14 @@ func NewSiteFromConfig(
 	}
 
 	tariff := site.GetTariff(PlannerTariff)
+	prioritizer := &Prioritizer{demand: make(map[int]float64)}
 
 	// give loadpoints access to vehicles and database
 	for _, lp := range loadpoints {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
 		lp.planner = planner.New(lp.log, tariff)
+		// lp.prioritizer = prioritizer.NewAdapter(lp, prio)
+		lp.prioritizer = prioritizer
 
 		if serverdb.Instance != nil {
 			var err error
