@@ -246,7 +246,6 @@ mi = "milhas"
 [settings.telemetry]
 label = "Telemetria"
 
-
 [session]
 finished = "Finalizado"
 meterstart = "Início do contador"

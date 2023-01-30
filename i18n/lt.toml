@@ -255,7 +255,6 @@ title = "Įkrovimo sesija"
 delete = "Ištrinti"
 cancel = "Atšaukti"
 
-
 [main.targetChargePlan]
 unknownPrice = "dar nežinoma"
 chargeDuration = "Įkrovimo trukmė"
