@@ -23,7 +23,7 @@
 				</div>
 
 				<div v-for="group in sessionsByMonthAndLoadpoint" :key="group.month">
-					<div class="d-flex align-items-baseline my-5">
+					<div class="d-flex align-items-center my-5">
 						<h2 class="me-4 mb-0">
 							{{ formatGroupHeadline(group.month) }}
 						</h2>
