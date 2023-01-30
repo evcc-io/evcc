@@ -2,6 +2,7 @@ package push
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/gregdel/pushover"
@@ -15,6 +16,7 @@ func init() {
 type PushOver struct {
 	log        *util.Logger
 	app        *pushover.Pushover
+	device     string
 	recipients []string
 }
 
@@ -23,6 +25,7 @@ func NewPushOverFromConfig(other map[string]interface{}) (Messenger, error) {
 	var cc struct {
 		App        string
 		Recipients []string
+		Devices    []string
 		Events     map[string]EventTemplate
 	}
 
@@ -37,6 +40,7 @@ func NewPushOverFromConfig(other map[string]interface{}) (Messenger, error) {
 	m := &PushOver{
 		log:        util.NewLogger("pushover"),
 		app:        pushover.New(cc.App),
+		device:     strings.Join(cc.Devices, ","),
 		recipients: cc.Recipients,
 	}
 
@@ -46,6 +50,7 @@ func NewPushOverFromConfig(other map[string]interface{}) (Messenger, error) {
 // Send sends to all receivers
 func (m *PushOver) Send(title, msg string) {
 	message := pushover.NewMessageWithTitle(msg, title)
+	message.DeviceName = m.device
 
 	for _, id := range m.recipients {
 		go func(id string) {
