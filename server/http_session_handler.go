@@ -35,13 +35,13 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var res db.Sessions
-	var year string = r.URL.Query().Get("year")
-	var month string = r.URL.Query().Get("month")
+	year := r.URL.Query().Get("year")
+	month := r.URL.Query().Get("month")
 
 	filename := "session"
 
-	var fmtYear string = "%"
-	var fmtMonth string = "%"
+	fmtYear := "%"
+	fmtMonth := "%"
 
 	if year != "" {
 		fmtYear = year
@@ -58,7 +58,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var whereQuery = "charged_kwh>=0.05 and strftime('%Y', created) like ? and strftime('%m', created) like ?"
+	whereQuery := "charged_kwh>=0.05 and strftime('%Y', created) like ? and strftime('%m', created) like ?"
 	if txn := dbserver.Instance.Where(whereQuery, fmtYear, fmtMonth).Order("created desc").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
