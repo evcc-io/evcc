@@ -15,7 +15,7 @@ params:
       en: Device address/Serial number
     required: true
     mask: false
-    example: "TEQ0000549" or "0001EE89AAD848"
+    example: "0001EE89AAD848"
     help:
       en: Homematic device id like shown in the CCU web user interface.
       de: Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
