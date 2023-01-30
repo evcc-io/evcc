@@ -128,7 +128,7 @@ import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
-import { BREAKPOINT_MD } from "../../media";
+import settings from "../../settings";
 
 export default {
 	name: "Energyflow",
@@ -190,9 +190,9 @@ export default {
 	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
-		// show details initially if we have enough space
-		if (window.innerWidth > BREAKPOINT_MD && window.innerHeight > 980) {
-			this.toggleDetails();
+		// height must be calculated in case of initially open details
+		if (settings.energyflowDetails) {
+			setTimeout(this.toggleDetails, 50);
 		}
 	},
 	unmounted() {
@@ -205,6 +205,7 @@ export default {
 		toggleDetails: function () {
 			this.updateHeight();
 			this.detailsOpen = !this.detailsOpen;
+			settings.energyflowDetails = this.detailsOpen;
 		},
 		updateHeight: function () {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
