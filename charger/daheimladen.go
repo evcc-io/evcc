@@ -104,7 +104,7 @@ func NewDaheimLaden(uri string, id uint8) (api.Charger, error) {
 
 func (wb *DaheimLaden) heartbeat(timeout time.Duration) {
 	for range time.NewTicker(timeout).C {
-		if _, err := wb.conn.ReadInputRegisters(dhlRegSafeCurrent, 1); err != nil {
+		if _, err := wb.conn.ReadHoldingRegisters(dhlRegSafeCurrent, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
