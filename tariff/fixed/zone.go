@@ -1,8 +1,6 @@
 package fixed
 
 import (
-	"sort"
-
 	"golang.org/x/exp/slices"
 )
 
@@ -39,7 +37,6 @@ func (r Zones) ForDay(day Day) Zones {
 		}
 	}
 
-	sort.Sort(zones)
 	return zones
 }
 
