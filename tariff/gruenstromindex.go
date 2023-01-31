@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"golang.org/x/exp/slices"
 )
 
 type GrünStromIndex struct {
@@ -132,5 +133,5 @@ func (t *GrünStromIndex) Unit() string {
 func (t *GrünStromIndex) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	return append(api.Rates{}, t.data...), outdatedError(t.updated, time.Hour)
+	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }

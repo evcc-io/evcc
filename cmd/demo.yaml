@@ -150,7 +150,7 @@ vehicles:
       vm: shared
       script: |
         var lp = state.loadpoints[0];
-        if (lp.chargepower > 0) lp.vehicleSoc++; else lp.vehicleSoc--;
+        if (lp.chargepower > 0) lp.vehicleSoc+=0.1; else lp.vehicleSoc-=0.1;
         if (lp.vehicleSoc < 15) lp.vehicleSoc = 80;
         if (lp.vehicleSoc > 80) lp.vehicleSoc = 15;
         lp.vehicleSoc;
