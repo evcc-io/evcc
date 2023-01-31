@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -738,36 +739,41 @@ func TestMinSoc(t *testing.T) {
 	vhc := mock.NewMockVehicle(ctrl)
 
 	tc := []struct {
-		vehicle api.Vehicle
+		vehicle *mock.MockVehicle
 		min     int
 		soc     float64
+		energy  float64
 		res     bool
 	}{
-		{nil, 0, 0, false},    // never reached without vehicle
-		{nil, 0, 10, false},   // never reached without vehicle
-		{nil, 80, 0, false},   // never reached without vehicle
-		{nil, 80, 80, false},  // never reached without vehicle
-		{nil, 80, 100, false}, // never reached without vehicle
-		{vhc, 0, 0, false},    // min disabled
-		{vhc, 0, 10, false},   // min disabled
-		{vhc, 80, 0, true},    // min not reached
-		{vhc, 80, 80, false},  // min reached
-		{vhc, 80, 100, false}, // min reached
+		{nil, 0, 0, 0, false},    // never reached without vehicle
+		{nil, 0, 10, 0, false},   // never reached without vehicle
+		{nil, 80, 0, 0, false},   // never reached without vehicle
+		{nil, 80, 80, 0, false},  // never reached without vehicle
+		{nil, 80, 100, 0, false}, // never reached without vehicle
+		{vhc, 0, 0, 0, false},    // min disabled
+		{vhc, 0, 10, 0, false},   // min disabled
+		{vhc, 80, 0, 0, true},    // min not reached
+		{vhc, 80, 10, 0, true},   // min not reached
+		{vhc, 80, 0, 8.0, true},  // min energy not reached
+		{vhc, 80, 0, 9.0, false}, // min energy reached
+		{vhc, 80, 80, 0, false},  // min reached
+		{vhc, 80, 100, 0, false}, // min reached
 	}
 
 	for _, tc := range tc {
-		t.Logf("%+v", tc)
-
 		lp := &Loadpoint{
-			vehicle: tc.vehicle,
 			Soc: SocConfig{
 				min: tc.min,
 			},
-			vehicleSoc: tc.soc,
+			vehicleSoc:    tc.soc,
+			chargedEnergy: tc.energy,
 		}
 
-		if res := lp.minSocNotReached(); tc.res != res {
-			t.Errorf("expected %v, got %v", tc.res, res)
+		if v := tc.vehicle; v != nil {
+			lp.vehicle = tc.vehicle // avoid assigning nil to interface
+			v.EXPECT().Capacity().Return(10.0).MaxTimes(1)
 		}
+
+		assert.Equal(t, tc.res, lp.minSocNotReached(), tc)
 	}
 }

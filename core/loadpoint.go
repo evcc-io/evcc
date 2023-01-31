@@ -744,8 +744,8 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		return lp.vehicleSoc < float64(lp.Soc.min)
 	}
 
-	minEnergy := lp.vehicle.Capacity() * float64(lp.Soc.min) / soc.ChargeEfficiency
-	return minEnergy < lp.getChargedEnergy()
+	minEnergy := lp.vehicle.Capacity() * float64(lp.Soc.min) / 100 / soc.ChargeEfficiency
+	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
 // climateActive checks if vehicle has active climate request
