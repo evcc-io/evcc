@@ -359,7 +359,6 @@ presets:
     params:
       - name: ski
       - name: ip
-        required: false
     render: |
       {{define "eebus-meter"}}
       type: eebus
@@ -371,7 +370,6 @@ presets:
     params:
       - name: ski
       - name: ip
-        required: false
     render: |
       {{define "eebus-no-meter"}}
       type: eebus
