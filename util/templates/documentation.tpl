@@ -28,7 +28,7 @@ render:
       {{- range $.Params }}
       {{- if eq .Name "modbus" -}}
 {{ $.Modbus | indent 6 -}}
-      {{- else if ne .Advanced true }}
+      {{- else if ne .IsAdvanced true }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}
       {{- if ne (len .Values) 0 }}
@@ -36,7 +36,7 @@ render:
         - {{ . }}
       {{ end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if eq .IsRequired false }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{- if $.AdvancedParams }}
@@ -55,7 +55,7 @@ render:
         - {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .IsRequired true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{ end }}
@@ -67,7 +67,7 @@ render:
       {{- range $.Params }}
       {{- if eq .Name "modbus" -}}
 {{ $.Modbus | indent 6 -}}
-      {{- else if ne .Advanced true }}
+      {{- else if ne .IsAdvanced true }}
       {{ .Name }}:
       {{- if len .Value }} {{ .Value }} {{- end }}
       {{- if ne (len .Values) 0 }}
@@ -75,7 +75,7 @@ render:
         - {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .IsRequired true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{- if $.AdvancedParams }}
@@ -93,7 +93,7 @@ render:
         - {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .Required true }} # Optional{{ end }}
+      {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .IsRequired true }} # Optional{{ end }}
       {{- end -}}
       {{- end -}}
 {{- end }}

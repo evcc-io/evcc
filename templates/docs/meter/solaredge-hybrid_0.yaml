@@ -28,7 +28,6 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
-      timeout: 10s # Optional
     advanced: |
       type: template
       template: solaredge-hybrid
@@ -78,7 +77,6 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
-      timeout: 10s # Optional
     advanced: |
       type: template
       template: solaredge-hybrid
@@ -128,7 +126,6 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
-      timeout: 10s # Optional
     advanced: |
       type: template
       template: solaredge-hybrid
