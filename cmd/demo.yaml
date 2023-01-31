@@ -240,32 +240,5 @@ tariffs:
     type: fixed
     price: 0.08 # EUR/kWh
   planner:
-    # type: grünstromindex
-    # zip: 12349
-    type: fixed
-    price: 0.5
-    zones:
-      - price: 0.1
-        hours: 0-2
-      - price: 0.2
-        hours: 2-4
-      - price: 0.3
-        hours: 4-6
-      - price: 0.4
-        hours: 6-8
-      - price: 0.5
-        hours: 8-10
-      - price: 0.6
-        hours: 10-12
-      - price: 0.7
-        hours: 12-14
-      - price: 0.7
-        hours: 14-16
-      - price: 0.9
-        hours: 16-18
-      - price: 1.0
-        hours: 18-20
-      - price: 1.1
-        hours: 20-22
-      - price: 1.2
-        hours: 22-0
+    type: grünstromindex
+    zip: 12349
