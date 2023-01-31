@@ -230,6 +230,10 @@ func (p *Param) OverwriteProperties(withParam Param) {
 		p.ValueType = withParam.ValueType
 	}
 
+	if withParam.Advanced {
+		p.Advanced = withParam.Advanced
+	}
+
 	if withParam.Required {
 		p.Required = withParam.Required
 	}
