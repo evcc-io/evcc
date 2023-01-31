@@ -183,6 +183,14 @@ a:hover {
 	border-color: var(--evcc-accent3) !important;
 }
 
+.btn-xs {
+	--bs-btn-padding-y: 0;
+	--bs-btn-padding-x: 0.5rem;
+	--bs-btn-font-size: 0.7rem;
+	--bs-btn-border-radius: 0.25rem;
+	--bs-btn-line-height: 2;
+}
+
 .text-evcc {
 	color: var(--evcc-dark-green);
 }
