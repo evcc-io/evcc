@@ -1,9 +1,14 @@
 template: homematic
 products:
-  - brand: Homematic IP
+  - brand: Homematic / Homematic IP
 group: switchsockets
 params:
   - name: host
+  - name: port
+    default: 2010
+    description:
+      en: XML-RPC server port number (BidCos-Wired=2000, BidCos-RF=2001, HmIP=2010)
+      de: XML-RPC-Server Port-Nummer (BidCos-Wired=2000, BidCos-RF=2001, HmIP=2010)
   - name: device
     description:
       de: Geräteadresse/Seriennummer
@@ -27,8 +32,8 @@ params:
     required: true
     advanced: true
     description:
-      en: Meter channel number (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
-      de: Kanalnummer des Power-Meters (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
+      en: Meter channel number (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM=2)
+      de: Kanalnummer des Power-Meters (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM=2)
     help:
       en: Homematic meter channel number like shown in the CCU web user interface.
       de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
@@ -38,14 +43,14 @@ params:
     required: true
     advanced: true
     description:
-      en: Switch/Actor channel number (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2)
-      de: Kanalnummer der schaltbaren Steckdose (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2)
+      en: Switch/Actor channel number (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2, HM=1)
+      de: Kanalnummer der schaltbaren Steckdose (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2, HM=1)
     help:
       en: Homematic switch actor channel number like shown in the CCU web user interface.
       de: Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
 render: |
   type: homematic
-  uri: {{ .host }}:2010
+  uri: {{ .host }}:{{ .port }}
   device: {{ .device }}
   meterchannel: {{ .meterchannel }}
   switchchannel: {{ .switchchannel }}
