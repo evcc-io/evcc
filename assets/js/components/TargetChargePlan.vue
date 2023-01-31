@@ -25,7 +25,6 @@
 				:class="{ active: isActive(index), toLate: slot.toLate }"
 				@touchstart="activeIndex = index"
 				@mouseenter="activeIndex = index"
-				@touchmove="touchmove"
 				@touchend="activeIndex = null"
 				@mouseleave="activeIndex = null"
 				@mouseup="activeIndex = null"
@@ -159,17 +158,6 @@ export default {
 			return {
 				height: price === undefined ? "100%" : `${(100 / this.maxPrice) * price}%`,
 			};
-		},
-		touchmove(e) {
-			let $el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-			if (!$el) return;
-			if (!$el.classList.contains("slot")) {
-				$el = $el.parent;
-			}
-			if (!$el) return;
-			const index = $el.getAttribute("data-index");
-			if (!index) return;
-			this.activeIndex = index * 1;
 		},
 		convertDates(list) {
 			if (!list?.length) {
