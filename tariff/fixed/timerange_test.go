@@ -11,11 +11,24 @@ func TestParseTimeRange(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, []TimeRange{{HourMin{7, 0}, HourMin{12, 30}}}, d, "hour:min range")
 
-	d, err = ParseTimeRanges("8-10")
+	d, err = ParseTimeRanges(" 8-10 ")
 	assert.NoError(t, err)
 	assert.Equal(t, []TimeRange{{HourMin{8, 0}, HourMin{10, 0}}}, d, "hour range")
 
-	d, err = ParseTimeRanges("8-10,20-22:30")
+	_, err = ParseTimeRanges("-1-10")
+	assert.EqualError(t, err, "invalid time: ")
+
+	_, err = ParseTimeRanges("8-25")
+	assert.EqualError(t, err, "invalid time: 25", "<to> after midnight")
+
+	d, err = ParseTimeRanges("8-0")
+	assert.NoError(t, err)
+	assert.Equal(t, []TimeRange{{HourMin{8, 0}, HourMin{0, 0}}}, d, "hour till midnight (0)")
+
+	_, err = ParseTimeRanges("10-8")
+	assert.EqualError(t, err, "invalid time range: 10-8, <from> must be before <to>")
+
+	d, err = ParseTimeRanges("8-10, 20-22:30")
 	assert.NoError(t, err)
 	assert.Equal(t, []TimeRange{
 		{HourMin{8, 0}, HourMin{10, 0}},

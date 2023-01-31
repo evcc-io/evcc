@@ -128,6 +128,7 @@ import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
+import settings from "../../settings";
 
 export default {
 	name: "Energyflow",
@@ -189,6 +190,10 @@ export default {
 	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
+		// height must be calculated in case of initially open details
+		if (settings.energyflowDetails) {
+			setTimeout(this.toggleDetails, 50);
+		}
 	},
 	unmounted() {
 		window.removeEventListener("resize", this.updateHeight);
@@ -200,6 +205,7 @@ export default {
 		toggleDetails: function () {
 			this.updateHeight();
 			this.detailsOpen = !this.detailsOpen;
+			settings.energyflowDetails = this.detailsOpen;
 		},
 		updateHeight: function () {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;

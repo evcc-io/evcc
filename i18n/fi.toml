@@ -158,6 +158,11 @@ descriptionSoc = "Milloin ajoneuvon tulee olla ladattu {targetSoc}%?"
 today = "tänään"
 setTargetTime = "ei mitään"
 tomorrow = "huomenna"
+planPeriodLabel = "Jakso"
+planPeriodValue = "{start} - {end}"
+descriptionEnergy = "Mihin mennessä {targetEnergy} tulisi ladata autoon?"
+planUnknown = "tuntematon"
+planDuration = "Latausaika"
 
 [main.targetEnergy]
 noLimit = "ei mitään"
@@ -182,6 +187,7 @@ vehicle = "Ajoneuvo"
 energy = "Ladattu"
 downloadCsv = "Lataa CSV muodossa"
 date = "Jakso"
+reallyDelete = "Haluatko varmasti poistaa tämän istunnon?"
 
 [sessions.csv]
 loadpoint = "Latauspiste"
@@ -227,3 +233,13 @@ auto = "Automaattinen"
 
 [settings.telemetry]
 label = "Telemetria"
+
+[session]
+cancel = "Peruuta"
+started = "Alkoi"
+finished = "Valmis"
+title = "Latausistunto"
+meterstart = "Mittarin käynnistys"
+meterstop = "Mittarin pysähdys"
+delete = "Poista"
+odometer = "Ajokilometrit"

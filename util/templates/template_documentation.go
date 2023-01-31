@@ -68,11 +68,11 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 	var hasAdvancedParam bool
 	var newParams []Param
 	for _, param := range t.Params {
-		if param.Deprecated || param.Name == ParamUsage {
+		if param.IsDeprecated() || param.Name == ParamUsage {
 			continue
 		}
 
-		if param.Advanced {
+		if param.IsAdvanced() {
 			hasAdvancedParam = true
 		}
 

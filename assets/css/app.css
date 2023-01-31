@@ -183,6 +183,14 @@ a:hover {
 	border-color: var(--evcc-accent3) !important;
 }
 
+.btn-xs {
+	--bs-btn-padding-y: 0;
+	--bs-btn-padding-x: 0.5rem;
+	--bs-btn-font-size: 0.7rem;
+	--bs-btn-border-radius: 0.25rem;
+	--bs-btn-line-height: 2;
+}
+
 .text-evcc {
 	color: var(--evcc-dark-green);
 }
@@ -346,4 +354,9 @@ small {
 
 .dark .form-switch .form-check-input:checked {
 	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2328293e'/%3e%3c/svg%3e");
+}
+/* fix desktop safari formatting */
+input::-webkit-datetime-edit {
+	display: block;
+	padding: 0;
 }

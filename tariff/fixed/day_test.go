@@ -35,9 +35,16 @@ func TestParseDays(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, []Day{Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday}, d)
 
+	_, err = ParseDays(" ")
+	assert.NoError(t, err)
+	assert.Equal(t, []Day{Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday}, d)
+
 	d, err = ParseDays("1, 3-7")
 	assert.NoError(t, err)
 	assert.Equal(t, []Day{Monday, Wednesday, Thursday, Friday, Saturday, Sunday}, d)
+
+	_, err = ParseDays("-")
+	assert.EqualError(t, err, "invalid day: ")
 
 	_, err = ParseDays("-1")
 	assert.EqualError(t, err, "invalid day: ")

@@ -38,7 +38,7 @@ func (c *ConfigDefaults) LoadDefaults() {
 	for k := range c.Modbus.Types {
 		for i, p := range c.Modbus.Types[k].Params {
 			// if this is a reference, get the referenced values and then overwrite it with the values defined here
-			if p.Reference {
+			if p.IsReference() {
 				finalName := p.Name
 				referencedItemName := p.Name
 				if p.Referencename != "" {

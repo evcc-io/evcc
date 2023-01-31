@@ -75,6 +75,10 @@ func ParseTimeRange(s string) (TimeRange, error) {
 		return TimeRange{}, err
 	}
 
+	if tom := to.Minutes(); tom != 0 && from.Minutes() >= tom {
+		return TimeRange{}, fmt.Errorf("invalid time range: %s, <from> must be before <to>", s)
+	}
+
 	return TimeRange{from, to}, nil
 }
 

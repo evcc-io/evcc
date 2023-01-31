@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/db"
@@ -14,9 +16,9 @@ import (
 	"golang.org/x/text/language"
 )
 
-func csvResult(ctx context.Context, w http.ResponseWriter, res any) {
+func csvResult(ctx context.Context, w http.ResponseWriter, res any, filename string) {
 	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", `attachment; filename="sessions.csv"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.csv"`)
 
 	if ww, ok := res.(api.CsvWriter); ok {
 		_ = ww.WriteCsv(ctx, w)
@@ -33,8 +35,31 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var res db.Sessions
+	year := r.URL.Query().Get("year")
+	month := r.URL.Query().Get("month")
 
-	if txn := dbserver.Instance.Table("sessions").Where("charged_kwh>=0.05").Order("created desc").Find(&res); txn.Error != nil {
+	filename := "session"
+
+	fmtYear := "%"
+	fmtMonth := "%"
+
+	if year != "" {
+		fmtYear = year
+		filename += "-" + fmtYear
+
+		if month != "" {
+			iMonth, err := strconv.Atoi(month)
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, err)
+				return
+			}
+			fmtMonth = fmt.Sprintf("%02d", iMonth)
+			filename += "." + fmtMonth
+		}
+	}
+
+	whereQuery := "charged_kwh>=0.05 and strftime('%Y', created) like ? and strftime('%m', created) like ?"
+	if txn := dbserver.Instance.Where(whereQuery, fmtYear, fmtMonth).Order("created desc").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
 	}
@@ -50,7 +75,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		csvResult(ctx, w, &res)
+		csvResult(ctx, w, &res, filename)
 		return
 	}
 

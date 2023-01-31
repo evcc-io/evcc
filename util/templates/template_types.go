@@ -3,8 +3,9 @@ package templates
 import (
 	"bufio"
 	"fmt"
-	"reflect"
 	"strings"
+
+	"github.com/imdario/mergo"
 )
 
 const (
@@ -171,16 +172,16 @@ type LinkedTemplate struct {
 // 3. defaults.yaml modbus section
 // 4. template
 type Param struct {
-	Reference     bool         // if this is references another param definition
+	Reference     *bool        // if this is references another param definition
 	Referencename string       // name of the referenced param if it is not identical to the defined name
 	Preset        string       // Reference a predefined set of params
 	Name          string       // Param name which is used for assigning defaults properties and referencing in render
 	Description   TextLanguage // language specific titles (presented in UI instead of Name)
-	Required      bool         // cli if the user has to provide a non empty value
-	Mask          bool         // cli if the value should be masked, e.g. for passwords
-	Advanced      bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Hidden        bool         // cli if the parameter should not be presented in the cli, the default value be assigned
-	Deprecated    bool         // if the parameter is deprecated and thus should not be presented in the cli or docs
+	Required      *bool        // cli if the user has to provide a non empty value
+	Mask          *bool        // cli if the value should be masked, e.g. for passwords
+	Advanced      *bool        // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Hidden        *bool        // cli if the parameter should not be presented in the cli, the default value be assigned
+	Deprecated    *bool        // if the parameter is deprecated and thus should not be presented in the cli or docs
 	Default       string       // default value if no user value is provided in the configuration
 	Example       string       // cli example value
 	Help          TextLanguage // cli configuration help
@@ -190,7 +191,7 @@ type Param struct {
 	ValueType     string       // string representation of the value type, "string" is default
 	ValidValues   []string     // list of valid values the user can provide
 	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
-	AllInOne      bool         // defines if the defined usages can all be present in a single device
+	AllInOne      *bool        // defines if the defined usages can all be present in a single device
 	Requirements  Requirements // requirements for this param to be usable, only supported via ValueType "bool"
 
 	Baudrate int    // device specific default for modbus RS485 baudrate
@@ -213,49 +214,39 @@ func (p *Param) DefaultValue(renderMode string) interface{} {
 	return p.Default
 }
 
-// overwrite specific properties by using values from another param
-//
-// always overwrites if not provided empty: description, valuetype, default, mask, required
-//
-// only overwrite if not provided empty and empty in param: help, example, requirements
+// OverwriteProperties merges properties from parameter definition
 func (p *Param) OverwriteProperties(withParam Param) {
-	// always overwrite if defined
-	p.Description.Update(withParam.Description, true)
-
-	if len(p.Usages) == 0 {
-		p.Usages = withParam.Usages
+	if err := mergo.Merge(p, &withParam); err != nil {
+		panic(err)
 	}
+}
 
-	if withParam.ValueType != "" {
-		p.ValueType = withParam.ValueType
-	}
+func (p *Param) IsReference() bool {
+	return p.Reference != nil && *p.Reference
+}
 
-	if withParam.Required {
-		p.Required = withParam.Required
-	}
+func (p *Param) IsAdvanced() bool {
+	return p.Advanced != nil && *p.Advanced
+}
 
-	if withParam.Default != "" {
-		p.Default = withParam.Default
-	}
+func (p *Param) IsHidden() bool {
+	return p.Hidden != nil && *p.Hidden
+}
 
-	if withParam.Mask {
-		p.Mask = withParam.Mask
-	}
+func (p *Param) IsMask() bool {
+	return p.Mask != nil && *p.Mask
+}
 
-	// only set if empty
-	p.Help.Update(withParam.Help, false)
+func (p *Param) IsRequired() bool {
+	return p.Required != nil && *p.Required
+}
 
-	if p.Example == "" && withParam.Example != "" {
-		p.Example = withParam.Example
-	}
+func (p *Param) IsDeprecated() bool {
+	return p.Deprecated != nil && *p.Deprecated
+}
 
-	if p.ValidValues == nil && withParam.ValidValues != nil {
-		p.ValidValues = withParam.ValidValues
-	}
-
-	if reflect.DeepEqual(p.Requirements, Requirements{}) {
-		p.Requirements = withParam.Requirements
-	}
+func (p *Param) IsAllInOne() bool {
+	return p.AllInOne != nil && *p.AllInOne
 }
 
 // Product contains naming information about a product a template supports
