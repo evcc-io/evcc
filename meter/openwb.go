@@ -101,7 +101,11 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil, errors.New("battery not available")
 		}
 
-		power = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.PowerTopic))
+		inner := floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.PowerTopic))
+		power = func() (float64, error) {
+			f, err := inner()
+			return -f, err
+		}
 		soc = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.SocTopic))
 		capacity = cc.capacity.Decorator()
 
