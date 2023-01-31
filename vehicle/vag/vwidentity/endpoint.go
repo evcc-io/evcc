@@ -148,11 +148,7 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 			}
 
 			if u := resp.Request.URL.Query().Get("updated"); err == nil && u != "" {
-				if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
-					resp.Body.Close()
-				} else {
-					err = fmt.Errorf("updated ToS: %w", err)
-				}
+				err = errors.New("terms of service updated- please open app or website and confirm")
 			}
 		}
 	}
@@ -170,24 +166,4 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 	}
 
 	return nil, err
-}
-
-func (v *Service) postTos(uri string) (*http.Response, error) {
-	var vars FormVars
-	resp, err := v.Get(uri)
-	if err == nil {
-		vars, err = FormValues(resp.Body, "form#emailPasswordForm")
-	}
-
-	if err == nil {
-		data := make(url.Values)
-		for k, v := range vars.Inputs {
-			data.Set(k, v)
-		}
-
-		uri := BaseURL + vars.Action
-		resp, err = v.PostForm(uri, data)
-	}
-
-	return resp, err
 }
