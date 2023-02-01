@@ -55,7 +55,7 @@ func (t *Tariffs) CurrentFeedInPrice() (float64, error) {
 }
 
 // EffectivePrice calculates the real energy price based on self-produced and grid-imported energy.
-func (t *Tariffs) EffectivePrice(greenShare float64) (float64, error) {
+func (t *Tariffs) CurrentEffectivePrice(greenShare float64) (float64, error) {
 	if grid, err := t.CurrentGridPrice(); err == nil {
 		feedin, err := t.CurrentFeedInPrice()
 		if err != nil {

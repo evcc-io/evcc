@@ -68,7 +68,6 @@ export default {
 
 		auth: Object,
 
-		// footer
 		currency: String,
 		savingsAmount: Number,
 		savingsEffectivePrice: Number,
@@ -80,6 +79,7 @@ export default {
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		greenShare: Number,
 		tariffEffective: Number,
 
 		availableVersion: String,
@@ -98,6 +98,12 @@ export default {
 		},
 		activeLoadpointsCount: function () {
 			return this.activeLoadpoints.length;
+		},
+		tariffEffectiveCo2: function () {
+			if (this.tariffCo2 !== undefined) {
+				return this.tariffCo2 * (1 - this.greenShare);
+			}
+			return undefined;
 		},
 		vehicleIcons: function () {
 			if (this.activeLoadpointsCount) {

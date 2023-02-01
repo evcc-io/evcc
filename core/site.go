@@ -561,7 +561,7 @@ func (site *Site) greenShare() float64 {
 
 	site.publish("greenShare", share)
 
-	if price, err := site.tariffs.EffectivePrice(share); err == nil {
+	if price, err := site.tariffs.CurrentEffectivePrice(share); err == nil {
 		site.publish("tariffEffective", price)
 	}
 
