@@ -34,9 +34,12 @@ var conf = config{
 	Interval: 10 * time.Second,
 	Log:      "info",
 	Network: networkConfig{
-		Schema: "http",
-		Host:   "evcc.local",
-		Port:   7070,
+		Schema:   "http",
+		Host:     "evcc.local",
+		Port:     7070,
+		PathCert: "",
+		PathKey:  "",
+		UserAuth: false,
 	},
 	Mqtt: mqttConfig{
 		Topic: "evcc",
@@ -118,9 +121,12 @@ type tariffConfig struct {
 }
 
 type networkConfig struct {
-	Schema string
-	Host   string
-	Port   int
+	Schema   string
+	Host     string
+	Port     int
+	PathCert string
+	PathKey  string
+	UserAuth bool
 }
 
 func (c networkConfig) HostPort() string {

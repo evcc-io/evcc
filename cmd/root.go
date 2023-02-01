@@ -132,7 +132,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
+	var user_auth_cert = ""
+	if conf.Network.UserAuth {
+		user_auth_cert = conf.Network.PathCert
+	}
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, user_auth_cert)
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -285,5 +289,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.FATAL.Println(wrapErrors(httpd.ListenAndServe()))
+	if conf.Network.PathCert == "" || conf.Network.PathKey == "" {
+		log.FATAL.Println(wrapErrors(httpd.ListenAndServe()))
+	} else {
+		log.FATAL.Println(wrapErrors(httpd.ListenAndServeTLS(conf.Network.PathCert, conf.Network.PathKey)))
+	}
+
 }

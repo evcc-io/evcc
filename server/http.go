@@ -1,7 +1,10 @@
 package server
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -42,7 +45,7 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
+func NewHTTPd(addr string, hub *SocketHub, cert_for_client_auth string) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// websocket
@@ -61,6 +64,25 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	}
 	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
 
+	var tlsConfig *tls.Config
+	if cert_for_client_auth != "" {
+
+		// Create a CA certificate pool and add cert.pem to it
+		caCert, err := ioutil.ReadFile(cert_for_client_auth)
+		if err != nil {
+			log.FATAL.Println(err)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		// Create the TLS Config with the CA pool and enable Client certificate validation
+		tlsConfig = &tls.Config{
+			ClientCAs:  caCertPool,
+			ClientAuth: tls.RequireAndVerifyClientCert,
+		}
+
+	}
+
 	srv := &HTTPd{
 		Server: &http.Server{
 			Addr:         addr,
@@ -69,6 +91,7 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 			WriteTimeout: 10 * time.Second,
 			IdleTimeout:  120 * time.Second,
 			ErrorLog:     log.ERROR,
+			TLSConfig:    tlsConfig,
 		},
 	}
 	srv.SetKeepAlivesEnabled(true)
