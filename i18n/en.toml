@@ -25,6 +25,12 @@ label = "Units"
 km = "km"
 mi = "miles"
 
+[settings.gridDetails]
+label = "Grid details"
+none = "none"
+price = "price"
+co2 = "CO₂"
+
 [settings.telemetry]
 label = "Telemetry"
 

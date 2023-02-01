@@ -57,6 +57,8 @@
 							icon="sun"
 							:power="pvProduction"
 							:valuesInKw="valuesInKw"
+							:price="tariffFeedIn"
+							:currency="currency"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -71,6 +73,8 @@
 							icon="powersupply"
 							:power="gridImport"
 							:valuesInKw="valuesInKw"
+							:price="tariffGrid"
+							:currency="currency"
 						/>
 					</div>
 				</div>
@@ -89,6 +93,8 @@
 							icon="home"
 							:power="homePower"
 							:valuesInKw="valuesInKw"
+							:price="tariffEffective"
+							:currency="currency"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -100,6 +106,8 @@
 							:vehicleIcons="vehicleIcons"
 							:power="loadpointsPower"
 							:valuesInKw="valuesInKw"
+							:price="tariffEffective"
+							:currency="currency"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -146,6 +154,11 @@ export default {
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		vehicleIcons: { type: Array },
+		tariffGrid: { type: Number },
+		tariffFeedIn: { type: Number },
+		tariffCo2: { type: Number },
+		tariffEffective: { type: Number },
+		currency: { type: String },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null };

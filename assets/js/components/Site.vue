@@ -79,6 +79,8 @@ export default {
 		savingsTotalCharged: Number,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
+		tariffCo2: Number,
+		tariffEffective: Number,
 
 		availableVersion: String,
 		releaseNotes: String,

@@ -545,6 +545,29 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	return sitePower, nil
 }
 
+func (site *Site) greenShare() float64 {
+	batteryDischarge := math.Max(0, site.batteryPower)
+	batteryCharge := -math.Min(0, site.batteryPower)
+	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
+
+	gridImport := math.Max(0, site.gridPower)
+	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
+
+	share := selfConsumption / (gridImport + selfConsumption)
+
+	if math.IsNaN(share) {
+		return 0
+	}
+
+	site.publish("greenShare", share)
+
+	if price, err := site.tariffs.EffectivePrice(share); err == nil {
+		site.publish("tariffEffective", price)
+	}
+
+	return share
+}
+
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
@@ -566,11 +589,12 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	// update savings and aggregate telemetry
+	greenShare := site.greenShare()
+
 	// TODO: use energy instead of current power for better results
-	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
 	if telemetry.Enabled() && totalChargePower > standbyPower {
-		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
+		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
 	}
 }
 

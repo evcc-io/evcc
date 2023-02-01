@@ -182,7 +182,7 @@ export default {
       const symbols = { EUR: "€", USD: "$" };
       return symbols[currency] || currency;
     },
-    fmtPricePerKWh: function (amout = 0, currency = "EUR") {
+    fmtPricePerKWh: function (amout = 0, currency = "EUR", short = false) {
       let unit = currency;
       let value = amout;
       let maximumFractionDigits = 3;
@@ -194,7 +194,7 @@ export default {
       return `${new Intl.NumberFormat(this.$i18n.locale, {
         style: "decimal",
         maximumFractionDigits,
-      }).format(value)} ${unit}/kWh`;
+      }).format(value)} ${unit}${short ? "" : "/kWh"}`;
     },
     fmtTimeAgo: function (elapsed) {
       const units = {

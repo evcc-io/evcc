@@ -6,8 +6,14 @@
 			<component :is="`shopicon-regular-${icon}`" v-else></component>
 		</span>
 		<span class="text-nowrap flex-grow-1 ms-3">{{ name }}</span>
-		<span class="text-end text-nowrap ps-1 fw-bold"
-			><span v-if="hasSoc">{{ soc }}% / </span>
+		<span class="text-end text-nowrap ps-1 fw-bold">
+			<span v-if="price && active && showPrice()">
+				{{ fmtPricePerKWh(price, currency, true) }} /
+			</span>
+			<span v-if="co2 && active && showCo2()">
+				{{ fmtPricePerKWh(co2, currency, true) }} /
+			</span>
+			<span v-if="hasSoc">{{ soc }}% / </span>
 			<AnimatedNumber :to="power" :format="kw" />
 		</span>
 	</div>
@@ -21,6 +27,7 @@ import BatteryIcon from "./BatteryIcon.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
+import { showGridPrice, showGridCo2 } from "../../gridDetails";
 
 export default {
 	name: "EnergyflowEntry",
@@ -31,8 +38,10 @@ export default {
 		icon: { type: String },
 		power: { type: Number },
 		soc: { type: Number },
+		price: { type: Number },
 		valuesInKw: { type: Boolean },
 		vehicleIcons: { type: Array },
+		currency: { type: String },
 	},
 	computed: {
 		active: function () {
@@ -49,6 +58,12 @@ export default {
 		},
 	},
 	methods: {
+		showPrice() {
+			return showGridPrice();
+		},
+		showCo2() {
+			return showGridCo2();
+		},
 		kw: function (watt) {
 			return this.fmtKw(watt, this.valuesInKw);
 		},

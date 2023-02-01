@@ -30,3 +30,48 @@ func TestSitePower(t *testing.T) {
 		}
 	}
 }
+
+func TestGreenShare(t *testing.T) {
+	tc := []struct {
+		title             string
+		grid, pv, battery float64
+		share             float64
+	}{
+		{"half grid, half pv",
+			2500, 2500, 0,
+			0.5},
+		{"full pv",
+			0, 5000, 0,
+			1},
+		{"full grid",
+			5000, 0, 0,
+			0},
+		{"half grid, half battery",
+			2500, 0, 2500,
+			0.5},
+		{"full pv, pv export",
+			-5000, 10000, 0,
+			1},
+		{"full pv, pv export, battery charge",
+			-2500, 10000, -2500,
+			1},
+		{"double charge speed, full grid",
+			10000, 0, 0,
+			0},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		s := &Site{
+			gridPower:    tc.grid,
+			pvPower:      tc.pv,
+			batteryPower: tc.battery,
+		}
+
+		share := s.greenShare()
+		if share != tc.share {
+			t.Errorf("greenShare wanted %.f, got %.f", tc.share, share)
+		}
+	}
+}
