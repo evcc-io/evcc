@@ -7,6 +7,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// minimal interval to wait between wakeups
+const wakeupTimeout = 5 * time.Minute
+
 // Provider implements the vehicle api.
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
@@ -146,11 +149,11 @@ func (v *Provider) WakeUp() error {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	if time.Since(v.forceUpdateTime) > v.cacheExpiry {
+	if time.Since(v.forceUpdateTime) > wakeupTimeout {
 		// forcing an update will usually make the car start charging even if the (first) resulting status still says it does not charge...
 		return v.forceStatusUpdate()
 	}
-	// do nothing if we already forced an update in the last v.cacheExpiry
+	// do nothing if we already forced an update in the last wakeupTimeout
 	return nil
 }
 
