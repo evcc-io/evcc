@@ -17,7 +17,7 @@
 				@click.stop=""
 			>
 				<span v-if="showPrice()"><AnimatedNumber :to="price" :format="fmtPrice" /></span>
-				<span v-if="showCo2()"><AnimatedNumber :to="co2" :format="fmtCo2" /></span>
+				<span v-if="showCo2()"><AnimatedNumber :to="co2" :format="fmtCo2Short" /></span>
 				<span v-if="hasSoc">{{ soc }}%</span>
 			</div>
 			<AnimatedNumber :to="power" :format="kw" class="power" />
@@ -50,6 +50,10 @@ export default {
 		valuesInKw: { type: Boolean },
 		vehicleIcons: { type: Array },
 		currency: { type: String },
+		tooltip: { type: Array },
+	},
+	data() {
+		return { tooltipInstance: null };
 	},
 	computed: {
 		active: function () {
@@ -66,11 +70,10 @@ export default {
 		},
 	},
 	watch: {
-		price() {
-			this.updateTooltip();
-		},
-		co2() {
-			this.updateTooltip();
+		tooltip(newVal, oldVal) {
+			if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+				this.updateTooltip();
+			}
 		},
 	},
 	mounted: function () {
@@ -89,25 +92,15 @@ export default {
 		fmtPrice: function (price) {
 			return this.fmtPricePerKWh(price, this.currency, true);
 		},
-		fmtCo2: function (co2) {
-			return `${Math.round(co2)} g`;
-		},
 		updateTooltip: function () {
-			if (this.price === undefined && this.co2 === undefined) {
+			if (!Array.isArray(this.tooltip) || !this.tooltip.length) {
 				return;
 			}
-			if (!this.tooltip) {
-				this.tooltip = new Tooltip(this.$refs.details, { html: true });
+			if (!this.tooltipInstance) {
+				this.tooltipInstance = new Tooltip(this.$refs.details, { html: true });
 			}
-			const content = [];
-			if (this.price !== undefined) {
-				content.push(this.fmtPricePerKWh(this.price, this.currency));
-			}
-			if (this.co2 !== undefined) {
-				content.push(`${this.fmtCo2(this.co2, this.currency)}CO₂e/kWh`);
-			}
-			const html = `<div class="text-end">${content.join("<br/>")}</div>`;
-			this.tooltip.setContent({ ".tooltip-inner": html });
+			const html = `<div class="text-end">${this.tooltip.join("<br/>")}</div>`;
+			this.tooltipInstance.setContent({ ".tooltip-inner": html });
 		},
 	},
 };

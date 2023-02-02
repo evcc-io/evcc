@@ -61,6 +61,7 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoc: Number,
+		battery: Array,
 		gridCurrents: Array,
 		prioritySoc: Number,
 		siteTitle: String,

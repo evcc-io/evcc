@@ -65,6 +65,7 @@
 							:soc="batterySoc"
 							:power="batteryDischarge"
 							:valuesInKw="valuesInKw"
+							:tooltip="batteryTooltip"
 						/>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.gridImport')"
@@ -74,6 +75,7 @@
 							:price="tariffGrid"
 							:currency="currency"
 							:co2="tariffCo2"
+							:tooltip="detailsTooltip(tariffGrid, tariffCo2)"
 						/>
 					</div>
 				</div>
@@ -95,6 +97,7 @@
 							:price="tariffEffective"
 							:currency="currency"
 							:co2="tariffEffectiveCo2"
+							:tooltip="detailsTooltip(tariffEffective, tariffEffectiveCo2)"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -109,6 +112,7 @@
 							:price="tariffEffective"
 							:currency="currency"
 							:co2="tariffEffectiveCo2"
+							:tooltip="detailsTooltip(tariffEffective, tariffEffectiveCo2)"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -117,6 +121,7 @@
 							:soc="batterySoc"
 							:power="batteryCharge"
 							:valuesInKw="valuesInKw"
+							:tooltip="batteryTooltip"
 						/>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.pvExport')"
@@ -125,6 +130,7 @@
 							:valuesInKw="valuesInKw"
 							:price="-tariffFeedIn"
 							:currency="currency"
+							:tooltip="detailsTooltip(-tariffFeedIn)"
 						/>
 					</div>
 				</div>
@@ -154,6 +160,7 @@ export default {
 		loadpointsPower: { type: Number, default: 0 },
 		activeLoadpointsCount: { type: Number, default: 0 },
 		batteryConfigured: Boolean,
+		battery: { type: Array },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		vehicleIcons: { type: Array },
@@ -204,6 +211,16 @@ export default {
 		detailsHeight: function () {
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
+		batteryTooltip() {
+			if (!Array.isArray(this.battery)) {
+				return;
+			}
+			return this.battery.map(({ soc, capacity }) => {
+				const energy = this.fmtKWh((capacity / 100) * soc * 1e3, true, false, 1);
+				const total = this.fmtKWh(capacity * 1e3, true, true, 1);
+				return `${energy} of ${total} (${soc}%)`;
+			});
+		},
 	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
@@ -216,6 +233,16 @@ export default {
 		window.removeEventListener("resize", this.updateHeight);
 	},
 	methods: {
+		detailsTooltip(price, co2) {
+			const result = [];
+			if (co2 !== undefined) {
+				result.push(`${this.fmtCo2Long(co2)}`);
+			}
+			if (price !== undefined) {
+				result.push(`${this.fmtPricePerKWh(price, this.currency)}`);
+			}
+			return result;
+		},
 		kw: function (watt) {
 			return this.fmtKw(watt, this.valuesInKw);
 		},

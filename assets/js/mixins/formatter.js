@@ -33,7 +33,7 @@ export default {
       }).format(value)}${unit}`;
     },
     fmtKWh: function (watt, kw, withUnit, digits) {
-      return this.fmtKw(watt, kw, withUnit, digits) + "h";
+      return this.fmtKw(watt, kw, withUnit, digits) + (withUnit ? "h" : "");
     },
     fmtNumber: function (number, decimals) {
       return new Intl.NumberFormat(this.$i18n.locale, {
@@ -41,6 +41,15 @@ export default {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       }).format(number);
+    },
+    fmtCo2Short: function (gramms) {
+      return `${this.fmtNumber(gramms, 0)} g`;
+    },
+    fmtCo2Medium: function (gramms) {
+      return `${this.fmtNumber(gramms, 0)} g/kWh`;
+    },
+    fmtCo2Long: function (gramms) {
+      return `${this.fmtNumber(gramms, 0)} gCO₂e/kWh`;
     },
     fmtUnit: function (val) {
       return Math.abs(val) >= this.fmtLimit ? "k" : "";
