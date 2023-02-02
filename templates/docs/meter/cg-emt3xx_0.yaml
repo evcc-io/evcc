@@ -1,11 +1,11 @@
 product:
   brand: Carlo Gavazzi
-  description: EM24
+  description: EM/ET 330/340
 render:
   - usage: grid
     default: |
       type: template
-      template: cg-em24
+      template: cg-emt3xx
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -29,7 +29,7 @@ render:
   - usage: pv
     default: |
       type: template
-      template: cg-em24
+      template: cg-emt3xx
       usage: pv      
 
       # RS485 via adapter (Modbus RTU)
@@ -53,7 +53,7 @@ render:
   - usage: battery
     default: |
       type: template
-      template: cg-em24
+      template: cg-emt3xx
       usage: battery      
 
       # RS485 via adapter (Modbus RTU)
@@ -77,7 +77,7 @@ render:
   - usage: charge
     default: |
       type: template
-      template: cg-em24
+      template: cg-emt3xx
       usage: charge      
 
       # RS485 via adapter (Modbus RTU)
