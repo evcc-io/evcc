@@ -139,6 +139,21 @@ func (v *Provider) locationAndOdometer() (VehicleLocation, Odometer, error) {
 	return v.cachedVehicleLocation, v.cachedOdometer, err
 }
 
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	if time.Since(v.forceUpdateTime) > v.cacheExpiry {
+		// forcing an update will usually make the car start charging even if the (first) resulting status still says it does not charge...
+		return v.forceStatusUpdate()
+	}
+	// do nothing if we already forced an update in the last v.cacheExpiry
+	return nil
+}
+
 var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Battery interface
