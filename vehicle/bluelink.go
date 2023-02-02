@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"github.com/evcc-io/evcc/api/store"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,12 +16,12 @@ type Bluelink struct {
 }
 
 func init() {
-	registry.Add("kia", NewKiaFromConfig)
-	registry.Add("hyundai", NewHyundaiFromConfig)
+	registry.AddWithStore("kia", NewKiaFromConfig)
+	registry.AddWithStore("hyundai", NewHyundaiFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new vehicle
-func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewHyundaiFromConfig(factory store.Provider, other map[string]interface{}) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
 		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
@@ -30,11 +31,11 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 	}
 
-	return newBluelinkFromConfig("hyundai", other, settings)
+	return newBluelinkFromConfig("hyundai", factory, other, settings)
 }
 
 // NewKiaFromConfig creates a new vehicle
-func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewKiaFromConfig(factory store.Provider, other map[string]interface{}) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.kia.com:8080",
 		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
@@ -44,11 +45,11 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 	}
 
-	return newBluelinkFromConfig("kia", other, settings)
+	return newBluelinkFromConfig("kia", factory, other, settings)
 }
 
 // newBluelinkFromConfig creates a new Vehicle
-func newBluelinkFromConfig(brand string, other map[string]interface{}, settings bluelink.Config) (api.Vehicle, error) {
+func newBluelinkFromConfig(brand string, factory store.Provider, other map[string]interface{}, settings bluelink.Config) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -66,8 +67,10 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 		return nil, err
 	}
 
+	store := factory("bluelink.tokens." + cc.User)
+
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
-	identity := bluelink.NewIdentity(log, settings)
+	identity := bluelink.NewIdentity(log, settings).WithStore(store)
 
 	if err := identity.Login(cc.User, cc.Password, cc.Language); err != nil {
 		return nil, err
