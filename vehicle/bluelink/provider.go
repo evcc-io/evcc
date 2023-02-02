@@ -194,3 +194,12 @@ func (v *Provider) Position() (float64, float64, error) {
 	coord := res.ResMsg.VehicleStatusInfo.VehicleLocation.Coord
 	return coord.Lat, coord.Lon, err
 }
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	// forcing an update will usually make the car start charging even if the (first) resulting status still says it does not charge...
+	_, err := v.refreshG()
+	return err
+}
