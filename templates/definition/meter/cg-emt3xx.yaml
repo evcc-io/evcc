@@ -1,8 +1,8 @@
-template: cg-em24
+template: cg-emt3xx
 products:
   - brand: Carlo Gavazzi
     description:
-      generic: EM24
+      generic: EM/ET 330/340
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]
@@ -10,7 +10,7 @@ params:
     choice: ["rs485", "tcpip"]
 render: |
   type: modbus
-  model: cgem24
+  model: cgex3x0
   {{- include "modbus" . }}
   {{- if eq .usage "charge" }}
   energy: Import # only required for charge meter usage
