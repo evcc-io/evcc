@@ -121,6 +121,13 @@ today = "haut"
 tomorrow = "muer"
 inactiveLabel = "Zilzäit"
 activeLabel = "{time}"
+planDuration = "Opluedzäit"
+planUnknown = "nach net bekannt"
+targetIsTooFarInTheFuture = "Mir wäerten de Plang upassen soubal mir méi iwwer d'Zukunft wëssen."
+update = "Aktualiséieren"
+planPeriodLabel = "Period"
+planPeriodValue = "{Start} bis {end}"
+descriptionEnergy = "Bis wéini soll {targetEnergy} an d'Gefier gelueden ginn?"
 
 [main.targetEnergy]
 noLimit = "keen"
@@ -196,6 +203,7 @@ vehicle = "Gefier"
 downloadCsv = "Als CSV eroflueden"
 energy = "Belaascht"
 date = "Period"
+reallyDelete = "Wëllt Dir dës Sessioun wierklech läschen?"
 
 [sessions.csv]
 loadpoint = "Opluedpunkt"
@@ -232,3 +240,21 @@ mi = "Meilen"
 
 [settings.telemetry]
 label = "Telemetrie"
+
+
+[main.targetChargePlan]
+co2Label = "CO₂ Emissioun Ø"
+timeRange = "{day} {range} Auer"
+chargeDuration = "Opluedzäit"
+priceLabel = "Energiepräis"
+unknownPrice = "nach onbekannt"
+
+[session]
+title = "Charging Sessioun"
+meterstart = "Éischt Meter Liesung"
+meterstop = "Last Meter Liesung"
+odometer = "Kilometerzähler"
+started = "Startzeit"
+finished = "Enn Zäit"
+delete = "Läschen"
+cancel = "Ofbriechen"

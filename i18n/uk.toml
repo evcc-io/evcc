@@ -213,12 +213,14 @@ targetIsInThePast = "Виберіть час у майбутньому."
 activate = "Активувати"
 inactiveLabel = "Запланований час"
 description = "Коли транспортний засіб повинен бути заряджений на {targetSoc}%?"
-planUnknown = "невідомо"
+planUnknown = "ще не відомо"
 planDuration = "Час зарядки"
 planPeriodLabel = "Період"
 descriptionSoc = "Коли автомобіль повинен бути заряджений на {targetSoc}%?"
 descriptionEnergy = "До якого часу {targetEnergy} повинен бути завантажений в транспортний засіб?"
 planPeriodValue = "{start} до {end}"
+update = "Оновлення"
+targetIsTooFarInTheFuture = "Ми скоригуємо план, як тільки дізнаємося більше про майбутнє."
 
 [main.loadpoint]
 fallbackName = "Точка зарядки"
@@ -245,3 +247,11 @@ started = "Розпочато"
 finished = "Завершено"
 delete = "Видалити"
 cancel = "Скасувати"
+
+
+[main.targetChargePlan]
+timeRange = "{day} {range} год"
+co2Label = "Викиди CO₂ Ø"
+chargeDuration = "Час зарядки"
+priceLabel = "Ціна на енергію"
+unknownPrice = "ще невідомо"

@@ -1,5 +1,5 @@
 [header]
-sessions = "Processos de carregamento"
+sessions = "Sessões de carga"
 docs = "Documentação"
 blog = "Blog"
 github = "GitHub"
@@ -42,9 +42,9 @@ savingsTotalEnergy = "{total} kWh carregado"
 
 [footer.community]
 tabTitle = "Comunidade ao vivo"
-power = "Poder de carregamento"
+power = "Poder de carga"
 powerSub1 = "{activeClients} de {totalClients} utilizadores"
-powerSub2 = "carregam..."
+powerSub2 = "carregando..."
 greenShare = "Parte solar"
 greenShareSub1 = "energia fornecida por"
 greenShareSub2 = "solar e bateria doméstica"
@@ -94,7 +94,7 @@ pv = "Sol"
 now = "Rápido"
 
 [main.loadpoint]
-fallbackName = "Ponto de carregamento"
+fallbackName = "Ponto de carga"
 remoteDisabledSoft = "{source}:carregamento PV adaptável desativado"
 remoteDisabledHard = "{source}: desativado"
 power = "Desempenho"
@@ -112,7 +112,7 @@ disclaimerText = "As alterações serão perdidas depois que o servidor for rein
 
 [main.loadpointSettings.minSoc]
 label = "Mín. de carga %"
-description = "Para emergências. O veículo é „rápido” carregado para {0}% de toda a energia solar disponível e, em seguida, continua com apenas o excedente solar."
+description = "Para emergências. O veículo é carregado „rápido” para {0}% de toda a energia solar disponível e, em seguida, continua com apenas o excedente solar."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases elétricas"
@@ -139,7 +139,7 @@ detectionActive = "Detecção de veículo..."
 
 [main.vehicleSoc]
 disconnected = "separado"
-charging = "a carregar"
+charging = "carregando"
 ready = "esperando"
 connected = "ligado"
 vehicleTarget = "Limite de veículo: {soc}%"
@@ -161,8 +161,8 @@ disconnected = "Não conectado."
 unknown = ""
 
 [main.provider]
-login = "entrar no sistema"
-logout = "sair do sistema"
+login = "iniciar sessão"
+logout = "encerrar sessão"
 
 [main.targetCharge]
 title = "Tempo alvo"
@@ -170,7 +170,7 @@ inactiveLabel = "Tempo alvo"
 activeLabel = "{time}"
 modalTitle = "Definir hora-alvo"
 setTargetTime = "sem"
-descriptionSoc = "Quando o veículo deve ser carregado para {targetSoc}%?"
+descriptionSoc = "Quando o veículo deve ser carregado até {targetSoc}%?"
 today = "hoje"
 tomorrow = "amanhã"
 targetIsInThePast = "Escolha um momento no futuro, Marty."
@@ -185,25 +185,25 @@ targetIsTooFarInTheFuture = "Vamos ajustar o plano assim que soubermos mais sobr
 update = "Atualizar"
 
 [main.targetEnergy]
-label = "Alvo de carregamento"
+label = "Alvo de carga"
 noLimit = "sem"
 
 [startupError]
 title = "Erro ao iniciar"
-description = "Verifique seu ficheiro de configuração. Se a mensagem de erro não ajudar, verifique o {0}."
+description = "Verifique seu ficheiro de configuração. Se a mensagem de erro não ajudar, verifique as {0}."
 discussions = "Discussões no GitHub"
-hint = "Nota: Também pode ser que você tenha um equipamento com defeito (inversor, medidor, …). Verifique suas conexões de rede."
+hint = "Nota: Também pode ser que você tenha um equipamento com defeito (inversor, contador, …). Verifique suas conexões de rede."
 configuration = "Configuração"
 configFile = "Ficheiro de configuração em uso:"
 lineError = "Um erro em {0}."
 lineErrorLink = "linha {0}"
 fixAndRestart = "Por favor corrija o problema e reinicie o servidor."
-restartButton = "Iniciar de novo"
+restartButton = "Reiniciar"
 
 [sessions]
-title = "Processos de carregamento"
-downloadCsv = "Descarregar como CSV"
-loadpoint = "Ponto de carregamento"
+title = "Sessões de carga"
+downloadCsv = "Download como CSV"
+loadpoint = "Ponto de carga"
 vehicle = "Veículo"
 odometer = "Quilometragem"
 energy = "Carregado"
@@ -211,14 +211,14 @@ date = "Período"
 reallyDelete = "Você realmente quer excluir esta sessão?"
 
 [sessions.csv]
-loadpoint = "Ponto de carregamento"
+loadpoint = "Ponto de carga"
 vehicle = "Veículo"
 identifier = "Identificador"
 chargedenergy = "Energia (kWh)"
 meterstart = "Início do contador (kWh)"
-meterstop = "Parada do contador (kWh)"
-created = "hora de início"
-finished = "hora final"
+meterstop = "Contagem final (kWh)"
+created = "Hora de início"
+finished = "Hora final"
 odometer = "Quilometragem (km)"
 
 [offline]
@@ -249,8 +249,8 @@ label = "Telemetria"
 [session]
 finished = "Finalizado"
 meterstart = "Início do contador"
-meterstop = "Parada do contador"
-title = "Processo de carregamento"
+meterstop = "Contagem final"
+title = "Sessão de carga"
 odometer = "Quilometragem"
 started = "Começado"
 delete = "Excluir"
