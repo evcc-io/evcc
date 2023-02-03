@@ -3,9 +3,11 @@ package bluelink
 import (
 	"errors"
 	"fmt"
+	"github.com/evcc-io/evcc/api/store"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -43,8 +45,14 @@ type Identity struct {
 	*request.Helper
 	log      *util.Logger
 	config   Config
+	store    store.Store
 	deviceID string
 	oauth2.TokenSource
+}
+
+type storedBluelinkToken struct {
+	*oauth2.Token
+	DeviceID string `json:"device_id"`
 }
 
 // NewIdentity creates BlueLink Identity
@@ -55,6 +63,14 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 		config: config,
 	}
 
+	return v
+}
+
+// WithStore attaches a persistent store
+func (v *Identity) WithStore(store store.Store) *Identity {
+	if store != nil && !reflect.ValueOf(store).IsNil() {
+		v.store = store
+	}
 	return v
 }
 
@@ -319,6 +335,29 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 }
 
 func (v *Identity) Login(user, password, language string) (err error) {
+	if v.store != nil {
+		var storeValue storedBluelinkToken
+		err = v.store.Load(&storeValue)
+
+		if err == nil {
+			token := storeValue.Token
+			v.deviceID = storeValue.DeviceID
+
+			// create a RefreshTokenSource from the stored token
+			v.TokenSource = oauth.RefreshTokenSource(token, v)
+
+			// check if it is still valid or can be refreshed
+			_, err = v.TokenSource.Token() // don't use our shadowed Token() here
+		}
+
+		if err == nil {
+			// Login successfully restored from store
+			return nil
+		} else {
+			v.log.WARN.Println("Restoring saved token failed", err)
+		}
+	}
+
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
@@ -346,6 +385,13 @@ func (v *Identity) Login(user, password, language string) (err error) {
 		var token oauth.Token
 		if token, err = v.exchangeCode(code); err == nil {
 			v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
+
+			// store initial token
+			storeValue := storedBluelinkToken{
+				Token:    (*oauth2.Token)(&token),
+				DeviceID: v.deviceID,
+			}
+			err = v.store.Save(storeValue)
 		}
 	}
 
@@ -380,4 +426,18 @@ func (v *Identity) Request(req *http.Request) error {
 	}
 
 	return nil
+}
+
+// Token implements the oauth2.TokenSource interface
+// Shadowing the Token of the embedded v.TokenSource to save the return value in the store
+func (v *Identity) Token() (*oauth2.Token, error) {
+	token, err := v.TokenSource.Token()
+	if err == nil && v.store != nil {
+		storeValue := storedBluelinkToken{
+			Token:    token,
+			DeviceID: v.deviceID,
+		}
+		err = v.store.Save(storeValue)
+	}
+	return token, err
 }
