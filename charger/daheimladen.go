@@ -173,6 +173,9 @@ func (wb *DaheimLaden) setCurrent(current uint16) error {
 	binary.BigEndian.PutUint16(b, current)
 
 	_, err := wb.conn.WriteMultipleRegisters(dhlRegCurrentLimit, 1, b)
+	if err == nil {
+		wb.curr = current
+	}
 	return err
 }
 
