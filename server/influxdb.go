@@ -93,7 +93,7 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 
 		tags := make(map[string]string)
 		if param.Loadpoint != nil {
-			tags["loadpoint"] = loadPoints[*param.Loadpoint].Name()
+			tags["loadpoint"] = loadPoints[*param.Loadpoint].Title()
 			tags["vehicle"] = vehicles[*param.Loadpoint]
 		}
 

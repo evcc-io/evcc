@@ -12,6 +12,11 @@ import (
 
 var _ loadpoint.API = (*Loadpoint)(nil)
 
+// Title returns the human-readable loadpoint title
+func (lp *Loadpoint) Title() string {
+	return lp.Title_
+}
+
 // GetStatus returns the charging status
 func (lp *Loadpoint) GetStatus() api.ChargeStatus {
 	lp.Lock()

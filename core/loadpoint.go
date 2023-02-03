@@ -108,7 +108,7 @@ type Loadpoint struct {
 	sync.Mutex                // guard status
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
-	Title             string   `mapstructure:"title"`    // UI title
+	Title_            string   `mapstructure:"title"`    // UI title
 	ConfiguredPhases  int      `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
 	ChargerRef        string   `mapstructure:"charger"`  // Charger reference
 	VehicleRef        string   `mapstructure:"vehicle"`  // Vehicle reference
@@ -538,11 +538,6 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.TargetSoc != nil {
 		lp.SetTargetSoc(*actionCfg.TargetSoc)
 	}
-}
-
-// Name returns the human-readable loadpoint title
-func (lp *Loadpoint) Name() string {
-	return lp.Title
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
