@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -50,9 +51,10 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		if month != "" {
 			iMonth, err := strconv.Atoi(month)
 			if err != nil {
-				jsonError(w, http.StatusInternalServerError, err)
+				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
+
 			fmtMonth = fmt.Sprintf("%02d", iMonth)
 			filename += "." + fmtMonth
 		}
@@ -62,6 +64,11 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	if txn := dbserver.Instance.Where(whereQuery, fmtYear, fmtMonth).Order("created desc").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
+	}
+
+	// prepare data
+	for _, s := range res {
+		s.Odometer = math.Round(s.Odometer*10) / 10
 	}
 
 	if r.URL.Query().Get("format") == "csv" {
