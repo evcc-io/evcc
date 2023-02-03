@@ -108,7 +108,7 @@ type Loadpoint struct {
 	sync.Mutex                // guard status
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
-	Title_            string   `mapstructure:"title"`    // UI title
+	Title            string   `mapstructure:"title"`    // UI title
 	ConfiguredPhases  int      `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
 	ChargerRef        string   `mapstructure:"charger"`  // Charger reference
 	VehicleRef        string   `mapstructure:"vehicle"`  // Vehicle reference
