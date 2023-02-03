@@ -66,7 +66,7 @@ RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 
 
 # STEP 3 build a small image including module support
-FROM alpine:3.15
+FROM alpine:3.17
 
 WORKDIR /app
 
