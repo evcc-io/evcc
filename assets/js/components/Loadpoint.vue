@@ -178,7 +178,6 @@ export default {
 		chargeCurrent: Number,
 		connectedDuration: Number,
 		chargeCurrents: Array,
-		chargeConfigured: Boolean,
 		chargeRemainingEnergy: Number,
 		phaseAction: String,
 		phaseRemaining: Number,

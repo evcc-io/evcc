@@ -312,7 +312,6 @@ func (site *Site) DumpConfig() {
 
 		lp.log.INFO.Printf("  meters:      charge %s", presence[lp.HasChargeMeter()])
 
-		lp.publish("chargeConfigured", lp.HasChargeMeter())
 		if lp.HasChargeMeter() {
 			lp.log.INFO.Printf(meterCapabilities("charge", lp.chargeMeter))
 		}
@@ -617,6 +616,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 		}(id)
 
 		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
+		lp.publish("loadpoint", id+1) // 1-based loadpoint id
 	}
 }
 
