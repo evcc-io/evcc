@@ -83,7 +83,7 @@ func ParseCredentialsPage(r io.ReadCloser) (CredentialParams, error) {
 	match := re.FindAllStringSubmatch(buf.String(), -1)
 
 	tmpl := strings.ReplaceAll(match[0][1], `'`, `"`)
-	for _, v := range []string{"templateModel", "currentLocale", "csrf_parameterName", "csrf_token", "userSession", "userId", "countryOfResidence"} {
+	for _, v := range []string{"templateModel", "currentLocale", "csrf_parameterName", "csrf_token", "userSession", "userId", "countryOfResidence", "baseUrl", "consentBaseUrl"} {
 		tmpl = strings.Replace(tmpl, v, fmt.Sprintf(`"%s"`, v), 1)
 	}
 
