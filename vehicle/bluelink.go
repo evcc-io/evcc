@@ -67,7 +67,7 @@ func newBluelinkFromConfig(brand string, factory store.Provider, other map[strin
 		return nil, err
 	}
 
-	store := factory("bluelink.tokens." + cc.User)
+	store := factory("bluelink." + brand + ".tokens." + cc.User)
 
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := bluelink.NewIdentity(log, settings).WithStore(store)
