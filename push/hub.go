@@ -73,6 +73,11 @@ func (h *Hub) apply(ev Event, tmpl *template.Template) (string, error) {
 	// let cache catch up, refs reverted https://github.com/evcc-io/evcc/pull/445
 	time.Sleep(100 * time.Millisecond)
 
+	// loadpoint id
+	if ev.Loadpoint != nil {
+		attr["loadpoint"] = *ev.Loadpoint + 1
+	}
+
 	// get all values from cache
 	for _, p := range h.cache.All() {
 		if p.Loadpoint == nil || ev.Loadpoint == p.Loadpoint {
