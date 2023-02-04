@@ -555,7 +555,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evVehicleSoc, lp.evVehicleSocProgressHandler)
 
 	// publish initial values
-	lp.publish("title", lp.Title)
+	lp.publish("title", lp.Title())
 	lp.publish("minCurrent", lp.MinCurrent)
 	lp.publish("maxCurrent", lp.MaxCurrent)
 
