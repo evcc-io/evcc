@@ -418,11 +418,11 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 			}
 
 		default:
-			if param.Advanced && !c.advancedMode || param.Deprecated {
+			if param.IsAdvanced() && !c.advancedMode || param.IsDeprecated() {
 				continue
 			}
 
-			if param.Hidden && param.Default != "" {
+			if param.IsHidden() && param.Default != "" {
 				additionalConfig[param.Name] = param.Default
 				continue
 			}
@@ -495,8 +495,8 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		help:         help,
 		valueType:    param.ValueType,
 		validValues:  param.ValidValues,
-		mask:         param.Mask,
-		required:     param.Required,
+		mask:         param.IsMask(),
+		required:     param.IsRequired(),
 	})
 
 	if param.ValueType == templates.ParamValueTypeBool && value == "true" {

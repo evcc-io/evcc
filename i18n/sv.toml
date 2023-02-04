@@ -1,137 +1,139 @@
-[footer.savings]
-footerShort = "{percent}% solel"
-tabTitle = "Mina uppgifter"
-percentSelf = "{self} kWh solenergi"
-percentGrid = "{grid} kWh nät"
-modalTitle = "Översikt över laddningsenergi"
-footerLong = "{percent}% solenergi"
-since = "sedan {since}"
-priceTitle = "Energipris"
-percentTitle = "Solenergi"
-savingsTitle = "Sparande"
-priceFeedIn = "{feedInPrice} feed-in"
-savingsTotalEnergy = "{total} kWh laddad"
-savingsComparedToGrid = "jämfört med nätet"
-
-[footer.version]
-modalNoReleaseNotes = "Det finns inga versionsanvisningar tillgängliga. Mer information om den nya versionen:"
-modalDownload = "Nedladdning"
-modalUpdateStarted = "Starta den nya versionen av evcc..."
-modalTitle = "Ny version finns tillgänglig"
-modalUpdate = "Installera"
-modalUpdateStatusStart = "Installationen har påbörjats:"
-modalInstalledVersion = "Installerad version"
-modalCancel = "Avbryt"
-availableLong = "ny version tillgänglig"
-modalUpdateNow = "Installera nu"
-
-[header]
-login = "Fordonsinloggningar"
-about = "Om"
-sessions = "Laddningssessioner"
-blog = "Blogg"
-settings = "Inställningar"
-docs = "Dokumentation"
-github = "GitHub"
-
-[settings]
-title = "Inställningar"
-
-[settings.theme]
-label = "Design"
-dark = "mörk"
-auto = "system"
-light = "ljus"
+[footer]
 
 [footer.community]
-powerSub2 = "laddning..."
-power = "Laddningseffekt"
-greenShare = "Solenergiandel"
-tabTitle = "Levande gemenskap"
-powerSub1 = "{activeClients} av {totalClients} deltagare"
-greenShareSub1 = "kraft som tillhandahålls av"
-greenEnergySub2 = "sedan oktober 2022"
-greenShareSub2 = "solenergi och batterilagring"
 greenEnergySub1 = "anklagad för evcc"
+greenEnergySub2 = "sedan oktober 2022"
+greenShare = "Solenergiandel"
+greenShareSub1 = "kraft som tillhandahålls av"
+greenShareSub2 = "solenergi och batterilagring"
+power = "Laddningseffekt"
+powerSub1 = "{activeClients} av {totalClients} deltagare"
+powerSub2 = "laddning..."
+tabTitle = "Levande gemenskap"
 
-[settings.unit]
-km = "km"
-mi = "miles"
-label = "Enheter"
-
-[settings.telemetry]
-label = "Telemetri"
+[footer.savings]
+footerLong = "{percent}% solenergi"
+footerShort = "{percent}% solel"
+modalTitle = "Översikt över laddningsenergi"
+percentGrid = "{grid} kWh nät"
+percentSelf = "{self} kWh solenergi"
+percentTitle = "Solenergi"
+priceFeedIn = "{feedInPrice} feed-in"
+priceTitle = "Energipris"
+savingsComparedToGrid = "jämfört med nätet"
+savingsTitle = "Sparande"
+savingsTotalEnergy = "{total} kWh laddad"
+since = "sedan {since}"
+tabTitle = "Mina uppgifter"
 
 [footer.sponsor]
 becomeSponsor = "Bli sponsor"
-titleSponsor = "Du är en supporter"
-sticker = "... eller evcc-klistermärken?"
-confettiPromise = "Du får klistermärken och digital konfetti"
-titleNoSponsor = "Stöd oss"
 confetti = "Är du redo för konfetti?"
+confettiPromise = "Du får klistermärken och digital konfetti"
+sticker = "... eller evcc-klistermärken?"
 supportUs = "Vårt uppdrag är att göra solenergi till norm. Hjälp evcc genom att betala vad det är värt för dig."
 thanks = "Tack, {sponsor}! Ditt bidrag hjälper oss att utveckla evcc ytterligare."
+titleNoSponsor = "Stöd oss"
+titleSponsor = "Du är en supporter"
 
-[main.energyflow]
-batteryCharge = "Batteriladdning"
-batteryDischarge = "Batteriet laddas ur"
-gridImport = "Användning av nätet"
-selfConsumption = "Självkonsumtion"
-homePower = "Konsumtion"
-pvProduction = "Produktion"
-noEnergy = "Inga mätaruppgifter"
-loadpoints = "Charger| Charger | {count} chargers"
-battery = "Batteri"
-pvExport = "Grid export"
+[footer.telemetry]
+optIn = "Jag vill bidra med mina uppgifter."
+optInMoreDetails = "Fler detaljer {0}."
+optInMoreDetailsLink = "här"
+optInSponsorship = "Sponsring krävs."
 
-[settings.language]
-label = "Språk"
-auto = "Automatisk"
+[footer.version]
+availableLong = "ny version tillgänglig"
+modalCancel = "Avbryt"
+modalDownload = "Nedladdning"
+modalInstalledVersion = "Installerad version"
+modalNoReleaseNotes = "Det finns inga versionsanvisningar tillgängliga. Mer information om den nya versionen:"
+modalTitle = "Ny version finns tillgänglig"
+modalUpdate = "Installera"
+modalUpdateNow = "Installera nu"
+modalUpdateStarted = "Starta den nya versionen av evcc..."
+modalUpdateStatusStart = "Installationen har påbörjats:"
+
+[header]
+about = "Om"
+blog = "Blogg"
+docs = "Dokumentation"
+github = "GitHub"
+login = "Fordonsinloggningar"
+sessions = "Laddningssessioner"
+settings = "Inställningar"
 
 [main]
 vehicles = "Parkering"
 
-[footer.telemetry]
-optIn = "Jag vill bidra med mina uppgifter."
-optInSponsorship = "Sponsring krävs."
-optInMoreDetails = "Fler detaljer {0}."
-optInMoreDetailsLink = "här"
+[main.energyflow]
+battery = "Batteri"
+batteryCharge = "Batteriladdning"
+batteryDischarge = "Batteriet laddas ur"
+gridImport = "Användning av nätet"
+homePower = "Konsumtion"
+loadpoints = "Charger| Charger | {count} chargers"
+noEnergy = "Inga mätaruppgifter"
+pvExport = "Grid export"
+pvProduction = "Produktion"
+selfConsumption = "Självkonsumtion"
 
 [main.loadpoint]
-power = "Kraft"
+charged = "Laddad"
 duration = "Varaktighet"
 fallbackName = "Laddningspunkt"
-charged = "Laddad"
+power = "Kraft"
 
 [main.loadpointSettings]
-default = "standard"
 currents = "Laddningsström"
-disclaimerText = "Ändringarna försvinner när servern startas om."
-vehicle = "Fordon"
+default = "standard"
 disclaimerHint = "Anmärkning:"
+disclaimerText = "Ändringarna försvinner när servern startas om."
 title = "Inställningar {0}"
-
-[main.loadpointSettings.minSoc]
-label = "Min. laddning %"
-description = "För nödsituationer. Fordonet laddas „snabbt” till {0}% från all tillgänglig solel och fortsätter sedan med endast solelöverskottet."
-
-[notifications]
-modalTitle = "Meddelanden"
-dismissAll = "Avvisa alla"
-
-[main.mode]
-off = "Av"
-now = "Snabbt"
-pv = "Solar"
-minpv = "Min+Solar"
-
-[main.loadpointSettings.phasesConfigured]
-phases_0 = "automatisk växling"
-phases_1_hint = "({min} till {max})"
-label = "Faser"
-phases_1 = "1 fas"
-phases_3 = "3 fas"
-phases_3_hint = "({min} till {max})"
+vehicle = "Fordon"
 
 [main.loadpointSettings.maxCurrent]
 label = "Max. ström"
+
+[main.loadpointSettings.minSoc]
+description = "För nödsituationer. Fordonet laddas „snabbt” till {0}% från all tillgänglig solel och fortsätter sedan med endast solelöverskottet."
+label = "Min. laddning %"
+
+[main.loadpointSettings.phasesConfigured]
+label = "Faser"
+phases_0 = "automatisk växling"
+phases_1 = "1 fas"
+phases_1_hint = "({min} till {max})"
+phases_3 = "3 fas"
+phases_3_hint = "({min} till {max})"
+
+[main.mode]
+minpv = "Min+Solar"
+now = "Snabbt"
+off = "Av"
+pv = "Solar"
+
+[notifications]
+dismissAll = "Avvisa alla"
+modalTitle = "Meddelanden"
+
+[settings]
+title = "Inställningar"
+
+[settings.language]
+auto = "Automatisk"
+label = "Språk"
+
+[settings.telemetry]
+label = "Telemetri"
+
+[settings.theme]
+auto = "system"
+dark = "mörk"
+label = "Design"
+light = "ljus"
+
+[settings.unit]
+km = "km"
+label = "Enheter"
+mi = "miles"

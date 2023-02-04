@@ -1,13 +1,11 @@
 product:
-  brand: SolarEdge
-  description: Wechselrichter
-description: |
-  Nur ein System kann und darf auf den Wechselrichter zugreifen!
+  brand: Carlo Gavazzi
+  description: EM/ET 330/340
 render:
   - usage: grid
     default: |
       type: template
-      template: solaredge-inverter
+      template: cg-emt3xx
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -21,41 +19,17 @@ render:
       modbus: rs485tcpip
       id: 1
       host: 192.0.2.2 # Hostname
-      port: 1502 # Port
+      port: 502 # Port
 
       # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname
-      port: 1502 # Port
-    advanced: |
-      type: template
-      template: solaredge-inverter
-      usage: grid      
-
-      # RS485 via adapter (Modbus RTU)
-      modbus: rs485serial
-      id: 1
-      device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
-      baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-      comset: "8N1" # Kommunikationsparameter für den Adapter
-
-      # RS485 via TCP/IP (Modbus RTU)
-      modbus: rs485tcpip
-      id: 1
-      host: 192.0.2.2 # Hostname
-      port: 1502 # Port
-
-      # Modbus TCP
-      modbus: tcpip
-      id: 1
-      host: 192.0.2.2 # Hostname
-      port: 1502 # Port
-      timeout: 10s # Optional
+      port: 502 # Port
   - usage: pv
     default: |
       type: template
-      template: solaredge-inverter
+      template: cg-emt3xx
       usage: pv      
 
       # RS485 via adapter (Modbus RTU)
@@ -69,17 +43,18 @@ render:
       modbus: rs485tcpip
       id: 1
       host: 192.0.2.2 # Hostname
-      port: 1502 # Port
+      port: 502 # Port
 
       # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname
-      port: 1502 # Port
-    advanced: |
+      port: 502 # Port
+  - usage: battery
+    default: |
       type: template
-      template: solaredge-inverter
-      usage: pv      
+      template: cg-emt3xx
+      usage: battery      
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -92,11 +67,34 @@ render:
       modbus: rs485tcpip
       id: 1
       host: 192.0.2.2 # Hostname
-      port: 1502 # Port
+      port: 502 # Port
 
       # Modbus TCP
       modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname
-      port: 1502 # Port
-      timeout: 10s # Optional
+      port: 502 # Port
+  - usage: charge
+    default: |
+      type: template
+      template: cg-emt3xx
+      usage: charge      
+
+      # RS485 via adapter (Modbus RTU)
+      modbus: rs485serial
+      id: 1
+      device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
+      baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+      comset: "8N1" # Kommunikationsparameter für den Adapter
+
+      # RS485 via TCP/IP (Modbus RTU)
+      modbus: rs485tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port

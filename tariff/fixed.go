@@ -44,9 +44,6 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Fixed{
 		unit:  cc.Currency,
 		clock: clock.New(),
-		zones: []fixed.Zone{
-			{Price: cc.Price}, // full week is implicit
-		},
 	}
 
 	for _, z := range cc.Zones {
@@ -78,6 +75,11 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	sort.Sort(t.zones)
+
+	// prepend catch-all zone
+	t.zones = append([]fixed.Zone{
+		{Price: cc.Price}, // full week is implicit
+	}, t.zones...)
 
 	return t, nil
 }

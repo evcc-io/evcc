@@ -139,7 +139,7 @@ func NewSiteFromConfig(
 
 		if serverdb.Instance != nil {
 			var err error
-			if lp.db, err = db.New(lp.Title); err != nil {
+			if lp.db, err = db.New(lp.Title()); err != nil {
 				return nil, err
 			}
 
@@ -314,7 +314,6 @@ func (site *Site) DumpConfig() {
 
 		lp.log.INFO.Printf("  meters:      charge %s", presence[lp.HasChargeMeter()])
 
-		lp.publish("chargeConfigured", lp.HasChargeMeter())
 		if lp.HasChargeMeter() {
 			lp.log.INFO.Printf(meterCapabilities("charge", lp.chargeMeter))
 		}

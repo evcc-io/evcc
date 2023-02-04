@@ -9,4 +9,9 @@ render:
       template: sma-home-manager
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
+    advanced: |
+      type: template
+      template: sma-home-manager
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
       interface: eth0 # Netzwerkinterface # Optional

@@ -1,234 +1,261 @@
-[header]
-sessions = "Opluedsessiounen"
-docs = "Dokumentatioun"
-login = "Gefier Login"
-about = "Iwwer"
-blog = "Blog"
-github = "GitHub"
-settings = "Astellungen"
-
-[footer.version]
-modalTitle = "Aktualiséierung verfügbar"
-modalInstalledVersion = "Aktuell installéiert Versioun"
-modalCancel = "Ofbriechen"
-modalUpdate = "Installéieren"
-modalUpdateNow = "Elo installéieren"
-modalDownload = "Download"
-modalUpdateStarted = "Déi nei Versioun vun evcc starten ..."
-modalNoReleaseNotes = "Keng Verëffentlechungsnotizen verfügbar. Méi Informatioun iwwer déi nei Versioun:"
-availableLong = "nei Versioun verfügbar"
-modalUpdateStatusStart = "Installatioun ugefaang:"
-
-[footer.savings]
-tabTitle = "Meng Daten"
-footerShort = "{percent}% Solar"
-modalTitle = "Charge Energy Iwwersiicht"
-since = "zënter {since}"
-percentTitle = "Solarenergie"
-percentGrid = "{grid} kWh Stroumnetz"
-savingsComparedToGrid = "verglach mam Stroumnetz"
-savingsTotalEnergy = "{total} kWh gelueden"
-savingsTitle = "Spueren"
-footerLong = "{percent}% Solarenergie"
-percentSelf = "{self} kWh Solar"
-priceTitle = "Energiepräis"
-priceGrid = "{gridPrice} Stroumnetz"
-priceFeedIn = "{feedInPrice} fidderen"
+[footer]
 
 [footer.community]
-powerSub1 = "{activeClients} vun {totalClients} Participanten"
-powerSub2 = "gëtt elo gelueden…"
-greenShare = "Solar deelen"
-greenEnergySub2 = "zënter Oktober 2022"
-power = "Ladekraaft"
 greenEnergy = "Solarenergie"
 greenEnergySub1 = "opgelueden mat evcc"
-tabTitle = "Live Gemeinschaft"
+greenEnergySub2 = "zënter Oktober 2022"
+greenShare = "Solar deelen"
 greenShareSub1 = "Kraaft ass geliwwert vun"
 greenShareSub2 = "PV & Batterie"
+power = "Ladekraaft"
+powerSub1 = "{activeClients} vun {totalClients} Participanten"
+powerSub2 = "gëtt elo gelueden…"
+tabTitle = "Live Gemeinschaft"
+
+[footer.savings]
+footerLong = "{percent}% Solarenergie"
+footerShort = "{percent}% Solar"
+modalTitle = "Charge Energy Iwwersiicht"
+percentGrid = "{grid} kWh Stroumnetz"
+percentSelf = "{self} kWh Solar"
+percentTitle = "Solarenergie"
+priceFeedIn = "{feedInPrice} fidderen"
+priceGrid = "{gridPrice} Stroumnetz"
+priceTitle = "Energiepräis"
+savingsComparedToGrid = "verglach mam Stroumnetz"
+savingsTitle = "Spueren"
+savingsTotalEnergy = "{total} kWh gelueden"
+since = "zënter {since}"
+tabTitle = "Meng Daten"
+
+[footer.sponsor]
+becomeSponsor = "Gitt e Sponsor"
+confetti = "Prett fir Konfetti?"
+confettiPromise = "Et ginn Stickeren an digital Konfetti"
+sticker = "… oder evcc Stickeren?"
+supportUs = "Eis Missioun: Solarladung de Standard maachen. Hëllef evcc andeems Dir bezuelt wat et Iech wäert ass."
+thanks = "Merci, {sponsor}! Äre Bäitrag hëlleft evcc weider ze entwéckelen."
+titleNoSponsor = "Ënnerstëtzt eis"
+titleSponsor = "Dir sidd e Supporter"
 
 [footer.telemetry]
 optIn = "Ech wëll meng Donnéeën och bäidroen."
 optInMoreDetails = "Méi Detailer sinn verfügbar {0}."
-optInSponsorship = "Sponsoring erfuerderlech."
 optInMoreDetailsLink = "hei"
+optInSponsorship = "Sponsoring erfuerderlech."
 
-[footer.sponsor]
-titleSponsor = "Dir sidd e Supporter"
-confetti = "Prett fir Konfetti?"
-supportUs = "Eis Missioun: Solarladung de Standard maachen. Hëllef evcc andeems Dir bezuelt wat et Iech wäert ass."
-sticker = "… oder evcc Stickeren?"
-confettiPromise = "Et ginn Stickeren an digital Konfetti"
-titleNoSponsor = "Ënnerstëtzt eis"
-thanks = "Merci, {sponsor}! Äre Bäitrag hëlleft evcc weider ze entwéckelen."
-becomeSponsor = "Gitt e Sponsor"
+[footer.version]
+availableLong = "nei Versioun verfügbar"
+modalCancel = "Ofbriechen"
+modalDownload = "Download"
+modalInstalledVersion = "Aktuell installéiert Versioun"
+modalNoReleaseNotes = "Keng Verëffentlechungsnotizen verfügbar. Méi Informatioun iwwer déi nei Versioun:"
+modalTitle = "Aktualiséierung verfügbar"
+modalUpdate = "Installéieren"
+modalUpdateNow = "Elo installéieren"
+modalUpdateStarted = "Déi nei Versioun vun evcc starten ..."
+modalUpdateStatusStart = "Installatioun ugefaang:"
 
-[notifications]
-modalTitle = "Notifikatiounen"
-dismissAll = "Alles entloossen"
+[header]
+about = "Iwwer"
+blog = "Blog"
+docs = "Dokumentatioun"
+github = "GitHub"
+login = "Gefier Login"
+sessions = "Opluedsessiounen"
+settings = "Astellungen"
+
+[header.theme]
+auto = "Design: System"
+dark = "Design: donkel"
+light = "Design: Liicht"
 
 [main]
 vehicles = "Parking"
 
 [main.energyflow]
-noEnergy = "Keng Moossdaten"
-homePower = "Verbrauch"
 battery = "Batterie"
+batteryCharge = "Batterie gelueden"
 batteryDischarge = "Batterie Entladung"
 gridImport = "Stroumnetz Import"
-selfConsumption = "eegene Konsum"
-pvExport = "Stroumnetz Export"
-batteryCharge = "Batterie gelueden"
-pvProduction = "Produktioun"
+homePower = "Verbrauch"
 loadpoints = "Opluedpunkt | Opluedpunkt | {count} Opluedstatiounen"
-
-[main.loadpointSettings.minSoc]
-label = "Minimum Staat vun charge"
-description = "Fir Noutfäll. D'Gefier gëtt „séier” gelueden op {0}% vun all verfügbare Solarenergie, a geet dann mat nëmmen dem Solariwwerschoss weider."
-
-[main.loadpointSettings.phasesConfigured]
-label = "Phasen"
-phases_0 = "automatesch wiesselen"
-phases_1_hint = "({min} bis {max})"
-phases_3_hint = "({min} bis {max})"
-phases_1 = "1 Phase"
-phases_3 = "3 Phasen"
-
-[main.vehicle]
-vehicleSoc = "Staat vun charge"
-targetSoc = "Limite"
-none = "Keng Gefier"
-unknown = "Gäscht Gefier"
-changeVehicle = "Gefier änneren"
-detectionActive = "Erkennung vum Gefier ..."
-fallbackName = "Gefier"
-
-[main.vehicleSoc]
-connected = "verbonne"
-disconnected = "deconnectéiert"
-charging = "oplueden"
-ready = "bereet"
-vehicleTarget = "Gefier Limite: {soc}%"
-
-[main.targetCharge]
-targetIsInThePast = "Déi gewielt Zäit ass an der Vergaangenheet."
-activate = "Aktivéieren"
-title = "Zilzäit"
-setTargetTime = "keen"
-descriptionSoc = "Wéini soll d'Gefier op {targetSoc}% gelueden ginn?"
-modalTitle = "Zielzäit setzen"
-today = "haut"
-tomorrow = "muer"
-inactiveLabel = "Zilzäit"
-activeLabel = "{time}"
-
-[main.targetEnergy]
-noLimit = "keen"
-label = "Limite"
-
-[startupError]
-hint = "Notiz: Et kéint och sinn datt Dir e defekten Apparat hutt (Inverter, Meter, ...). Kontrolléiert Är Netzwierkverbindungen."
-configuration = "Configuratioun"
-configFile = "Konfiguratiounsdatei benotzt:"
-title = "Startup Feeler"
-lineErrorLink = "Linn {0}"
-discussions = "GitHub Diskussiounen"
-lineError = "Mir hunn e Feeler am {0} fonnt."
-description = "Kuckt w.e.g. Är Konfiguratiounsdatei. Wann d'Fehlermeldung Iech net hëlleft, kuckt op eis {0}."
-fixAndRestart = "Fir w.e.g. de Problem fixéieren an de Server nei starten."
-restartButton = "Neistart"
-
-[header.theme]
-auto = "Design: System"
-light = "Design: Liicht"
-dark = "Design: donkel"
-
-[main.mode]
-pv = "PV"
-now = "Schnell"
-off = "Off"
-minpv = "Min+PV"
+noEnergy = "Keng Moossdaten"
+pvExport = "Stroumnetz Export"
+pvProduction = "Produktioun"
+selfConsumption = "eegene Konsum"
 
 [main.loadpoint]
-power = "Leeschtung"
-fallbackName = "Opluedpunkt"
-duration = "Dauer"
 charged = "Belaascht"
+duration = "Dauer"
+fallbackName = "Opluedpunkt"
+power = "Leeschtung"
 
 [main.loadpointSettings]
 currents = "Ladestroum"
-disclaimerText = "Ännerunge ginn verluer nodeems de Server nei gestart ass."
-vehicle = "Gefier"
 default = "Standard"
 disclaimerHint = "Notiz:"
+disclaimerText = "Ännerunge ginn verluer nodeems de Server nei gestart ass."
 title = "Astellungen {0}"
-
-[main.loadpointSettings.minCurrent]
-label = "Min. Stroum"
-
-[main.vehicleStatus]
-pvEnable = "Iwwerschoss verfügbar. Vun {remaining}…"
-vehicleTargetReached = "Gefier Limit {soc}% erreecht."
-targetChargePlanned = "Zilladung fänkt um {time} un."
-charging = "Laden ..."
-pvDisable = "Net genuch Iwwerschoss. Pausen an {remaining}…"
-scale3p = "Erhéijung op dräi Phase am {remaining}…"
-waitForVehicle = "Prett. Waart op Gefier ..."
-targetChargeWaitForVehicle = "Ziel Charge prett. Waart op Gefier ..."
-targetChargeActive = "Zilladung aktiv ..."
-connected = "Verbonne."
-scale1p = "Reduktioun op eenzeg Phase am {remaining}…"
-disconnected = "Deconnectéiert."
-minCharge = "Charge op d'mannst op {soc}%."
-unknown = ""
+vehicle = "Gefier"
 
 [main.loadpointSettings.maxCurrent]
 label = "Max. Stroum"
 
+[main.loadpointSettings.minCurrent]
+label = "Min. Stroum"
+
+[main.loadpointSettings.minSoc]
+description = "Fir Noutfäll. D'Gefier gëtt „séier” gelueden op {0}% vun all verfügbare Solarenergie, a geet dann mat nëmmen dem Solariwwerschoss weider."
+label = "Minimum Staat vun charge"
+
+[main.loadpointSettings.phasesConfigured]
+label = "Phasen"
+phases_0 = "automatesch wiesselen"
+phases_1 = "1 Phase"
+phases_1_hint = "({min} bis {max})"
+phases_3 = "3 Phasen"
+phases_3_hint = "({min} bis {max})"
+
+[main.mode]
+minpv = "Min+PV"
+now = "Schnell"
+off = "Off"
+pv = "PV"
+
 [main.provider]
-logout = "ausloggen"
 login = "umellen"
+logout = "ausloggen"
 
-[sessions]
-loadpoint = "Opluedpunkt"
-title = "Opluedsessiounen"
-vehicle = "Gefier"
-downloadCsv = "Als CSV eroflueden"
-energy = "Belaascht"
-date = "Period"
+[main.targetCharge]
+activate = "Aktivéieren"
+activeLabel = "{time}"
+descriptionEnergy = "Bis wéini soll {targetEnergy} an d'Gefier gelueden ginn?"
+descriptionSoc = "Wéini soll d'Gefier op {targetSoc}% gelueden ginn?"
+inactiveLabel = "Zilzäit"
+modalTitle = "Zielzäit setzen"
+planDuration = "Opluedzäit"
+planPeriodLabel = "Period"
+planPeriodValue = "{Start} bis {end}"
+planUnknown = "nach net bekannt"
+setTargetTime = "keen"
+targetIsInThePast = "Déi gewielt Zäit ass an der Vergaangenheet."
+targetIsTooFarInTheFuture = "Mir wäerten de Plang upassen soubal mir méi iwwer d'Zukunft wëssen."
+title = "Zilzäit"
+today = "haut"
+tomorrow = "muer"
+update = "Aktualiséieren"
 
-[sessions.csv]
-loadpoint = "Opluedpunkt"
-vehicle = "Gefier"
-odometer = "Kilometerstand (km)"
-identifier = "Identifier"
-chargedenergy = "Energie (kWh)"
-meterstart = "Meter Start (kWh)"
-meterstop = "Meter Stop (kWh)"
-created = "Erstallt"
-finished = "Fäerdeg"
+[main.targetChargePlan]
+chargeDuration = "Opluedzäit"
+co2Label = "CO₂ Emissioun Ø"
+priceLabel = "Energiepräis"
+timeRange = "{day} {range} Auer"
+unknownPrice = "nach onbekannt"
+
+[main.targetEnergy]
+label = "Limite"
+noLimit = "keen"
+
+[main.vehicle]
+changeVehicle = "Gefier änneren"
+detectionActive = "Erkennung vum Gefier ..."
+fallbackName = "Gefier"
+none = "Keng Gefier"
+targetSoc = "Limite"
+unknown = "Gäscht Gefier"
+vehicleSoc = "Staat vun charge"
+
+[main.vehicleSoc]
+charging = "oplueden"
+connected = "verbonne"
+disconnected = "deconnectéiert"
+ready = "bereet"
+vehicleTarget = "Gefier Limite: {soc}%"
+
+[main.vehicleStatus]
+charging = "Laden ..."
+connected = "Verbonne."
+disconnected = "Deconnectéiert."
+minCharge = "Charge op d'mannst op {soc}%."
+pvDisable = "Net genuch Iwwerschoss. Pausen an {remaining}…"
+pvEnable = "Iwwerschoss verfügbar. Vun {remaining}…"
+scale1p = "Reduktioun op eenzeg Phase am {remaining}…"
+scale3p = "Erhéijung op dräi Phase am {remaining}…"
+targetChargeActive = "Zilladung aktiv ..."
+targetChargePlanned = "Zilladung fänkt um {time} un."
+targetChargeWaitForVehicle = "Ziel Charge prett. Waart op Gefier ..."
+unknown = ""
+vehicleTargetReached = "Gefier Limit {soc}% erreecht."
+waitForVehicle = "Prett. Waart op Gefier ..."
+
+[notifications]
+dismissAll = "Alles entloossen"
+modalTitle = "Notifikatiounen"
 
 [offline]
 message = "Keng Verbindung mam Server."
 reload = "Reload?"
 
+[session]
+cancel = "Ofbriechen"
+delete = "Läschen"
+finished = "Enn Zäit"
+meterstart = "Éischt Meter Liesung"
+meterstop = "Last Meter Liesung"
+odometer = "Kilometerzähler"
+started = "Startzeit"
+title = "Charging Sessioun"
+
+[sessions]
+date = "Period"
+downloadCsv = "Als CSV eroflueden"
+energy = "Belaascht"
+loadpoint = "Opluedpunkt"
+reallyDelete = "Wëllt Dir dës Sessioun wierklech läschen?"
+title = "Opluedsessiounen"
+vehicle = "Gefier"
+
+[sessions.csv]
+chargedenergy = "Energie (kWh)"
+created = "Erstallt"
+finished = "Fäerdeg"
+identifier = "Identifier"
+loadpoint = "Opluedpunkt"
+meterstart = "Meter Start (kWh)"
+meterstop = "Meter Stop (kWh)"
+odometer = "Kilometerstand (km)"
+vehicle = "Gefier"
+
 [settings]
 title = "Astellungen"
-
-[settings.theme]
-label = "Design"
-auto = "System"
-light = "liicht"
-dark = "däischter"
 
 [settings.language]
 auto = "Automatesch"
 label = "Sprooch"
 
-[settings.unit]
-label = "Eenheeten"
-km = "km"
-mi = "Meilen"
-
 [settings.telemetry]
 label = "Telemetrie"
+
+[settings.theme]
+auto = "System"
+dark = "däischter"
+label = "Design"
+light = "liicht"
+
+[settings.unit]
+km = "km"
+label = "Eenheeten"
+mi = "Meilen"
+
+[startupError]
+configFile = "Konfiguratiounsdatei benotzt:"
+configuration = "Configuratioun"
+description = "Kuckt w.e.g. Är Konfiguratiounsdatei. Wann d'Fehlermeldung Iech net hëlleft, kuckt op eis {0}."
+discussions = "GitHub Diskussiounen"
+fixAndRestart = "Fir w.e.g. de Problem fixéieren an de Server nei starten."
+hint = "Notiz: Et kéint och sinn datt Dir e defekten Apparat hutt (Inverter, Meter, ...). Kontrolléiert Är Netzwierkverbindungen."
+lineError = "Mir hunn e Feeler am {0} fonnt."
+lineErrorLink = "Linn {0}"
+restartButton = "Neistart"
+title = "Startup Feeler"

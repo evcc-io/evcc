@@ -1,56 +1,42 @@
-[header]
-sessions = "Ladeøkter"
-docs = "Dokumentasjon"
-about = "Om"
-blog = "Blogg"
-github = "GitHub"
-login = "Kjøretøysinnlogginger"
-settings = "Innstillinger"
-
-[header.theme]
-auto = "Design: system"
-light = "Design: lyst"
-dark = "Design: mørkt"
-
-[footer.version]
-availableLong = "ny versjon tilgjengelig"
-modalTitle = "Ny versjon tilgjengelig"
-modalInstalledVersion = "Installert versjon"
-modalUpdate = "Installer"
-modalCancel = "Avbryt"
-modalDownload = "Last ned"
-modalUpdateStatusStart = "Installasjonen startet:"
-modalUpdateNow = "Installer nå"
-modalUpdateStarted = "Starter den nye versjonen av evcc..."
-modalNoReleaseNotes = "Ingen versjonsmerknader tilgjengelig. Mer info om den nye versjonen:"
-
-[footer.savings]
-tabTitle = "Min data"
-footerShort = "{percent}% solenergi"
-footerLong = "{percent}% solcelleenergi"
-modalTitle = "Oversikt over ladeenergi"
-percentSelf = "{self} kWt sol"
-percentGrid = "{self} kWh lysnett"
-priceTitle = "Kraftpris"
-priceGrid = "{gridPrice} lysnett"
-priceFeedIn = "{feedInPrice} subsidiering"
-savingsTotalEnergy = "{total} kWh ladet"
-percentTitle = "Solenergi"
-savingsTitle = "Besparelser"
-since = "siden {since}"
-savingsComparedToGrid = "sammenlignet med lysnett"
+[footer]
 
 [footer.community]
-tabTitle = "Sanntidsgemenskap"
-greenShareSub1 = "kraft levert av"
 greenEnergy = "Solar"
-greenShareSub2 = "solenergi, og batterilagring"
-powerSub2 = "lading..."
-greenShare = "Solcelleandel"
 greenEnergySub1 = "ladet med evcc"
 greenEnergySub2 = "siden Oktober 2022"
+greenShare = "Solcelleandel"
+greenShareSub1 = "kraft levert av"
+greenShareSub2 = "solenergi, og batterilagring"
 power = "Ladeeffekt"
 powerSub1 = "{activeClients} av {totalClients} deltagere"
+powerSub2 = "lading..."
+tabTitle = "Sanntidsgemenskap"
+
+[footer.savings]
+footerLong = "{percent}% solcelleenergi"
+footerShort = "{percent}% solenergi"
+modalTitle = "Oversikt over ladeenergi"
+percentGrid = "{self} kWh lysnett"
+percentSelf = "{self} kWt sol"
+percentTitle = "Solenergi"
+priceFeedIn = "{feedInPrice} subsidiering"
+priceGrid = "{gridPrice} lysnett"
+priceTitle = "Kraftpris"
+savingsComparedToGrid = "sammenlignet med lysnett"
+savingsTitle = "Besparelser"
+savingsTotalEnergy = "{total} kWh ladet"
+since = "siden {since}"
+tabTitle = "Min data"
+
+[footer.sponsor]
+becomeSponsor = "Bli sponsor"
+confetti = "Klar for konfetti?"
+confettiPromise = "Du får klistremerker og digital konfetti"
+sticker = "... eller evcc-klistremerker?"
+supportUs = "Vårt oppdrag er å gjøre solenergi til normen. Hjelp evcc ved å betale det det er verdt for deg."
+thanks = "Takk, {sponsor}! Ditt bidrag bidrar til å utvikle evcc videre."
+titleNoSponsor = "Støtt oss"
+titleSponsor = "Du er en støttespiller"
 
 [footer.telemetry]
 optIn = "Jeg ønsker å bidra med dataene mine."
@@ -58,177 +44,193 @@ optInMoreDetails = "Flere detaljer {0}."
 optInMoreDetailsLink = "her"
 optInSponsorship = "Sponsing kreves."
 
+[footer.version]
+availableLong = "ny versjon tilgjengelig"
+modalCancel = "Avbryt"
+modalDownload = "Last ned"
+modalInstalledVersion = "Installert versjon"
+modalNoReleaseNotes = "Ingen versjonsmerknader tilgjengelig. Mer info om den nye versjonen:"
+modalTitle = "Ny versjon tilgjengelig"
+modalUpdate = "Installer"
+modalUpdateNow = "Installer nå"
+modalUpdateStarted = "Starter den nye versjonen av evcc..."
+modalUpdateStatusStart = "Installasjonen startet:"
+
+[header]
+about = "Om"
+blog = "Blogg"
+docs = "Dokumentasjon"
+github = "GitHub"
+login = "Kjøretøysinnlogginger"
+sessions = "Ladeøkter"
+settings = "Innstillinger"
+
+[header.theme]
+auto = "Design: system"
+dark = "Design: mørkt"
+light = "Design: lyst"
+
 [main]
 vehicles = "Parkering"
 
 [main.energyflow]
-pvProduction = "Produksjon"
-batteryDischarge = "Batteri utlading"
-loadpoints = "Lader| Lader | {count} ladere"
-pvExport = "Lysnetteksport"
-homePower = "Forbruk"
 battery = "Batteri"
 batteryCharge = "Batterilading"
+batteryDischarge = "Batteri utlading"
 gridImport = "Grid bruk"
-selfConsumption = "Eget forbruk"
+homePower = "Forbruk"
+loadpoints = "Lader| Lader | {count} ladere"
 noEnergy = "Ingen telleverksdata"
+pvExport = "Lysnetteksport"
+pvProduction = "Produksjon"
+selfConsumption = "Eget forbruk"
 
-[main.mode]
-now = "Raskt"
-off = "Stopp"
-minpv = "Min+Solar"
-pv = "Solar"
+[main.loadpoint]
+charged = "Oppladet"
+duration = "Varighet"
+fallbackName = "Ladepunkt"
+power = "Effekt"
 
 [main.loadpointSettings]
 currents = "Ladestrøm"
 default = "forvalg"
 disclaimerHint = "Merknad:"
 disclaimerText = "Endringer vil gå tapt etter at serveren er startet på nytt."
-vehicle = "Kjøretøy"
 title = "Innstillinger {0}"
+vehicle = "Kjøretøy"
 
-[main.loadpointSettings.phasesConfigured]
-label = "Faser"
-phases_0 = "automatisk veksling"
-phases_3 = "3 fase"
-phases_1 = "1-fas"
-phases_1_hint = "({min} til {max})"
-phases_3_hint = "({min} til {max})"
+[main.loadpointSettings.maxCurrent]
+label = "Maks. ladestrøm"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. ladestrøm"
 
 [main.loadpointSettings.minSoc]
 description = "For nødstilfeller. Kjøretøyet blir „raskt” ladet til {0} % fra all tilgjengelig solenergi, og fortsetter deretter med bare solenergioverskuddet."
 label = "Min. kostnad%"
 
-[main.loadpointSettings.maxCurrent]
-label = "Maks. ladestrøm"
+[main.loadpointSettings.phasesConfigured]
+label = "Faser"
+phases_0 = "automatisk veksling"
+phases_1 = "1-fas"
+phases_1_hint = "({min} til {max})"
+phases_3 = "3 fase"
+phases_3_hint = "({min} til {max})"
 
-[main.vehicle]
-targetSoc = "Grense"
-none = "Ingen kjøretøy"
-changeVehicle = "Lad kjøretøy"
-detectionActive = "Oppdager kjøretøy ..."
-vehicleSoc = "Lade"
-fallbackName = "Kjøretøy"
-unknown = "Gjestekjøretøy"
+[main.mode]
+minpv = "Min+Solar"
+now = "Raskt"
+off = "Stopp"
+pv = "Solar"
 
-[main.vehicleSoc]
-disconnected = "frakoblet"
-charging = "lader"
-vehicleTarget = "Kjøretøygrense: {soc}%"
-ready = "klar"
-connected = "tilkoblet"
-
-[main.vehicleStatus]
-waitForVehicle = "Klar. Venter på kjøretøy..."
-minCharge = "Minimumslading til {soc}%."
-charging = "Lading..."
-targetChargePlanned = "Mållading starter på {time}."
-pvEnable = "Overskudd tilgjengelig. Starter om {remaining}..."
-scale1p = "Reduserer til 1-fase strøm i {remaining}..."
-targetChargeActive = "Målladning aktiv ..."
-disconnected = "Frakoblet."
-unknown = ""
-connected = "Tilkoblet."
-vehicleTargetReached = "Kjøretøygrense på {soc}% nådd."
-pvDisable = "Ikke nok overskudd. Pause i {remaining}..."
-scale3p = "Øker til 3-fase strøm i {remaining}..."
-targetChargeWaitForVehicle = "Mållading klar. Venter på kjøretøy..."
+[main.provider]
+login = "logg inn"
+logout = "logg ut"
 
 [main.targetCharge]
-inactiveLabel = "Mål-tid"
+activate = "Aktiver"
 activeLabel = "{time}"
 descriptionSoc = "Når skal kjøretøyet lades til {targetSoc}%?"
-tomorrow = "i morgen"
-activate = "Aktiver"
-title = "Mål-tid"
+inactiveLabel = "Mål-tid"
 modalTitle = "Sett mål-tid"
 setTargetTime = "ingen"
-today = "i dag"
 targetIsInThePast = "Velg et tidspunkt i fremtiden, Marty."
+title = "Mål-tid"
+today = "i dag"
+tomorrow = "i morgen"
 
 [main.targetEnergy]
 label = "Grense"
 noLimit = "ingen"
 
-[startupError]
-discussions = "GitHub-diskusjoner"
-configFile = "Brukt oppsettsfil:"
-lineErrorLink = "linje {0}"
-restartButton = "Omstart"
-lineError = "Feil i {0}."
-fixAndRestart = "Vennligst fiks problemet og start serveren på nytt."
-title = "Oppstartsfeil"
-configuration = "Oppsett"
-description = "Vennligst sjekk konfigurasjonsfilen din. Hvis feilmeldingen ikke hjelper, kan du sjekke ut {0}."
-hint = "Merk: Det kan også være at du har en defekt enhet (omformer, måler, ...). Sjekk nettverkstilkoblingene dine."
+[main.vehicle]
+changeVehicle = "Lad kjøretøy"
+detectionActive = "Oppdager kjøretøy ..."
+fallbackName = "Kjøretøy"
+none = "Ingen kjøretøy"
+targetSoc = "Grense"
+unknown = "Gjestekjøretøy"
+vehicleSoc = "Lade"
 
-[sessions]
-title = "Ladeøkter"
-energy = "Oppladet"
-downloadCsv = "Last ned som CSV"
-vehicle = "Kjøretøy"
-date = "Tidsrom"
-loadpoint = "Ladepunkt"
+[main.vehicleSoc]
+charging = "lader"
+connected = "tilkoblet"
+disconnected = "frakoblet"
+ready = "klar"
+vehicleTarget = "Kjøretøygrense: {soc}%"
 
-[sessions.csv]
-odometer = "Kilometerstand"
-identifier = "Identifikator"
-chargedenergy = "Energi (kWh)"
-created = "Opprettet"
-finished = "Fullført"
-meterstart = "Målerstart (kWh)"
-meterstop = "Målerstopp (kWh)"
-vehicle = "Kjøretøy"
-loadpoint = "Ladepunkt"
+[main.vehicleStatus]
+charging = "Lading..."
+connected = "Tilkoblet."
+disconnected = "Frakoblet."
+minCharge = "Minimumslading til {soc}%."
+pvDisable = "Ikke nok overskudd. Pause i {remaining}..."
+pvEnable = "Overskudd tilgjengelig. Starter om {remaining}..."
+scale1p = "Reduserer til 1-fase strøm i {remaining}..."
+scale3p = "Øker til 3-fase strøm i {remaining}..."
+targetChargeActive = "Målladning aktiv ..."
+targetChargePlanned = "Mållading starter på {time}."
+targetChargeWaitForVehicle = "Mållading klar. Venter på kjøretøy..."
+unknown = ""
+vehicleTargetReached = "Kjøretøygrense på {soc}% nådd."
+waitForVehicle = "Klar. Venter på kjøretøy..."
+
+[notifications]
+dismissAll = "Forkast alle"
+modalTitle = "Merknader"
 
 [offline]
 message = "Ikke koblet til en server."
 reload = "Last inn igjen?"
 
-[notifications]
-modalTitle = "Merknader"
-dismissAll = "Forkast alle"
+[sessions]
+date = "Tidsrom"
+downloadCsv = "Last ned som CSV"
+energy = "Oppladet"
+loadpoint = "Ladepunkt"
+title = "Ladeøkter"
+vehicle = "Kjøretøy"
 
-[main.loadpoint]
-duration = "Varighet"
-charged = "Oppladet"
-power = "Effekt"
-fallbackName = "Ladepunkt"
-
-[footer.sponsor]
-titleSponsor = "Du er en støttespiller"
-titleNoSponsor = "Støtt oss"
-becomeSponsor = "Bli sponsor"
-confetti = "Klar for konfetti?"
-sticker = "... eller evcc-klistremerker?"
-thanks = "Takk, {sponsor}! Ditt bidrag bidrar til å utvikle evcc videre."
-confettiPromise = "Du får klistremerker og digital konfetti"
-supportUs = "Vårt oppdrag er å gjøre solenergi til normen. Hjelp evcc ved å betale det det er verdt for deg."
-
-[main.loadpointSettings.minCurrent]
-label = "Min. ladestrøm"
-
-[main.provider]
-logout = "logg ut"
-login = "logg inn"
+[sessions.csv]
+chargedenergy = "Energi (kWh)"
+created = "Opprettet"
+finished = "Fullført"
+identifier = "Identifikator"
+loadpoint = "Ladepunkt"
+meterstart = "Målerstart (kWh)"
+meterstop = "Målerstopp (kWh)"
+odometer = "Kilometerstand"
+vehicle = "Kjøretøy"
 
 [settings]
 title = "Innstillinger"
 
-[settings.theme]
-label = "Design"
-auto = "system"
-light = "lys"
-dark = "mørk"
-
 [settings.language]
-label = "Språk"
 auto = "Automatisk"
-
-[settings.unit]
-mi = "miles"
-km = "km"
-label = "Enheter"
+label = "Språk"
 
 [settings.telemetry]
 label = "Telemetri"
+
+[settings.theme]
+auto = "system"
+dark = "mørk"
+label = "Design"
+light = "lys"
+
+[settings.unit]
+km = "km"
+label = "Enheter"
+mi = "miles"
+
+[startupError]
+configFile = "Brukt oppsettsfil:"
+configuration = "Oppsett"
+description = "Vennligst sjekk konfigurasjonsfilen din. Hvis feilmeldingen ikke hjelper, kan du sjekke ut {0}."
+discussions = "GitHub-diskusjoner"
+fixAndRestart = "Vennligst fiks problemet og start serveren på nytt."
+hint = "Merk: Det kan også være at du har en defekt enhet (omformer, måler, ...). Sjekk nettverkstilkoblingene dine."
+lineError = "Feil i {0}."
+lineErrorLink = "linje {0}"
+restartButton = "Omstart"
+title = "Oppstartsfeil"

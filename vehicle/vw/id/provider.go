@@ -90,6 +90,9 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
+	if err == nil && res.FuelStatus == nil {
+		err = api.ErrNotAvailable
+	}
 
 	var eng EngineRangeStatus
 	if err == nil {
@@ -109,7 +112,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
 	if err == nil && res.Measurements == nil {
-		err = errors.New("missing measurements")
+		err = api.ErrNotAvailable
 	}
 
 	if err == nil {
@@ -125,7 +128,7 @@ var _ api.VehicleClimater = (*Provider)(nil)
 func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
 	res, err := v.statusG()
 	if err == nil && res.Climatisation == nil {
-		err = errors.New("missing climatisation status")
+		err = api.ErrNotAvailable
 	}
 
 	if err == nil {

@@ -27,7 +27,7 @@ type Template struct {
 // GuidedSetupEnabled returns true if there are linked templates or >1 usage
 func (t *Template) GuidedSetupEnabled() bool {
 	_, p := t.ParamByName(ParamUsage)
-	return len(t.Linked) > 0 || (len(p.Choice) > 1 && p.AllInOne)
+	return len(t.Linked) > 0 || (len(p.Choice) > 1 && p.IsAllInOne())
 }
 
 // UpdateParamWithDefaults adds default values to specific param name entries
@@ -137,7 +137,9 @@ func (t *Template) ResolvePresets() error {
 		}
 
 		if i, _ := t.ParamByName(p.Name); i > -1 {
-			t.Params[i].OverwriteProperties(p)
+			// take the preset values as a base and overwrite it with param values
+			p.OverwriteProperties(t.Params[i])
+			t.Params[i] = p
 		} else {
 			t.Params = append(t.Params, p)
 		}
@@ -251,7 +253,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	// remove params with no values
 	var newParams []Param
 	for _, param := range t.Params {
-		if !param.Required {
+		if !param.IsRequired() {
 			switch param.ValueType {
 			case ParamValueTypeStringList:
 				if len(param.Values) == 0 {
@@ -315,7 +317,7 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 			if !slices.Contains(predefinedTemplateProperties, out) {
 				return nil, values, fmt.Errorf("invalid key: %s", key)
 			}
-		} else if p.Deprecated {
+		} else if p.IsDeprecated() {
 			continue
 		} else {
 			out = p.Name

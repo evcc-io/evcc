@@ -13,8 +13,8 @@ type Controller interface {
 
 // API is the external loadpoint API
 type API interface {
-	// Name returns the defined loadpoint name
-	Name() string
+	// Title returns the defined loadpoint title
+	Title() string
 
 	//
 	// status
