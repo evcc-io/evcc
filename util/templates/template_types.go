@@ -91,9 +91,9 @@ var predefinedTemplateProperties = []string{
 
 // TextLanguage contains language-specific texts
 type TextLanguage struct {
-	Generic string // language independent
-	DE      string // german text
-	EN      string // english text
+	Generic string `json:",omitempty"` // language independent
+	DE      string `json:",omitempty"` // german text
+	EN      string `json:",omitempty"` // english text
 }
 
 func (t *TextLanguage) String(lang string) string {
@@ -252,7 +252,7 @@ func (p *Param) IsAllInOne() bool {
 // Product contains naming information about a product a template supports
 type Product struct {
 	Brand       string       // product brand
-	Description TextLanguage // product name
+	Description TextLanguage `json:",omitempty"` // product name
 }
 
 func (p Product) Title(lang string) string {

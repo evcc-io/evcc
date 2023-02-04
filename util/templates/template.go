@@ -16,7 +16,7 @@ import (
 type Template struct {
 	TemplateDefinition
 
-	ConfigDefaults ConfigDefaults
+	ConfigDefaults ConfigDefaults `json:"-"`
 
 	Lang string
 

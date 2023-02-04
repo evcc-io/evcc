@@ -16,14 +16,6 @@ var (
 	configDefaults = ConfigDefaults{}
 )
 
-type Class string
-
-const (
-	Charger Class = "charger"
-	Meter   Class = "meter"
-	Vehicle Class = "vehicle"
-)
-
 func init() {
 	configDefaults.LoadDefaults()
 
@@ -91,8 +83,12 @@ func loadTemplates(class Class) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		path := Class(path.Dir(filepath))
-		templates[path] = append(templates[path], tmpl)
+		class, err := ClassString(path.Dir(filepath))
+		if err != nil {
+			return fmt.Errorf("invalid template class: '%s'", err)
+		}
+
+		templates[class] = append(templates[class], tmpl)
 
 		return nil
 	})
