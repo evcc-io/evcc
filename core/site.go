@@ -75,6 +75,8 @@ type Site struct {
 	batteryPower    float64 // Battery charge power
 	batterySoc      float64 // Battery soc
 	batteryBuffered bool    // Battery buffer active
+
+	lastPublishedGridPrice, lastPublishedFeedInPrice, lastPublishedCo2 float64 // Store last published tariff values to avoid unnecessary republishing
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -545,7 +547,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	return sitePower, nil
 }
 
-func (site *Site) greenShare() float64 {
+func (site *Site) updateGreenShare() float64 {
 	batteryDischarge := math.Max(0, site.batteryPower)
 	batteryCharge := -math.Min(0, site.batteryPower)
 	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
@@ -561,11 +563,34 @@ func (site *Site) greenShare() float64 {
 
 	site.publish("greenShare", share)
 
-	if price, err := site.tariffs.CurrentEffectivePrice(share); err == nil {
-		site.publish("tariffEffective", price)
-	}
-
 	return share
+}
+
+func (s *Site) publishTariffs(greenShare float64) {
+	if gridPrice, err := s.tariffs.CurrentGridPrice(); err == nil {
+		if gridPrice != s.lastPublishedGridPrice {
+			s.lastPublishedGridPrice = gridPrice
+			s.publish("tariffGrid", gridPrice)
+		}
+	}
+	if feedInPrice, err := s.tariffs.CurrentFeedInPrice(); err == nil {
+		if feedInPrice != s.lastPublishedFeedInPrice {
+			s.lastPublishedFeedInPrice = feedInPrice
+			s.publish("tariffFeedIn", feedInPrice)
+		}
+	}
+	if co2, err := s.tariffs.CurrentCo2(); err == nil {
+		if co2 != s.lastPublishedCo2 {
+			s.lastPublishedCo2 = co2
+			s.publish("tariffCo2", co2)
+		}
+	}
+	if price, err := s.tariffs.CurrentEffectivePrice(greenShare); err == nil {
+		s.publish("tariffEffectivePrice", price)
+	}
+	if co2, err := s.tariffs.CurrentEffectiveCo2(greenShare); err == nil {
+		s.publish("tariffEffectiveCo2", co2)
+	}
 }
 
 func (site *Site) update(lp Updater) {
@@ -589,11 +614,12 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	greenShare := site.greenShare()
+	greenShare := site.updateGreenShare()
+	site.publishTariffs(greenShare)
 
 	// TODO: use energy instead of current power for better results
 	deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
-	if telemetry.Enabled() && totalChargePower > standbyPower {
+	if telemetry.Enabled() {
 		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 )
@@ -21,18 +20,16 @@ type publisher interface {
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Savings struct {
-	clock                                   clock.Clock
-	tariffs                                 tariff.Tariffs
-	started                                 time.Time // Boot time
-	updated                                 time.Time // Time of last charged value update
-	gridCharged                             float64   // Grid energy charged since startup (kWh)
-	gridCost                                float64   // Running total of charged grid energy cost (e.g. EUR)
-	gridSavedCost                           float64   // Running total of saved cost from self consumption (e.g. EUR)
-	selfConsumptionCharged                  float64   // Self-produced energy charged since startup (kWh)
-	selfConsumptionCost                     float64   // Running total of charged self-produced energy cost (e.g. EUR)
-	co2Emitted                              float64   // Running total of emitted CO2 from grid energy (gCO2e)
-	lastGridPrice, lastFeedInPrice, lastCo2 float64   // Stores the last published grid, feedin price and co2 emissons. Needed to detect price changes (Awattar, ..)
-	hasPublished                            bool      // Has initial publish happened?
+	clock                  clock.Clock
+	tariffs                tariff.Tariffs
+	started                time.Time // Boot time
+	updated                time.Time // Time of last charged value update
+	gridCharged            float64   // Grid energy charged since startup (kWh)
+	gridCost               float64   // Running total of charged grid energy cost (e.g. EUR)
+	gridSavedCost          float64   // Running total of saved cost from self consumption (e.g. EUR)
+	selfConsumptionCharged float64   // Self-produced energy charged since startup (kWh)
+	selfConsumptionCost    float64   // Running total of charged self-produced energy cost (e.g. EUR)
+	hasPublished           bool      // Has initial publish happened?
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
@@ -113,37 +110,8 @@ func (s *Savings) currentFeedInPrice() float64 {
 	return price
 }
 
-func (s *Savings) updatePrices(p publisher) (float64, float64) {
-	gridPrice := s.currentGridPrice()
-	if gridPrice != s.lastGridPrice {
-		s.lastGridPrice = gridPrice
-		p.publish("tariffGrid", gridPrice)
-	}
-
-	feedinPrice := s.currentFeedInPrice()
-	if feedinPrice != s.lastFeedInPrice {
-		s.lastFeedInPrice = feedinPrice
-		p.publish("tariffFeedIn", feedinPrice)
-	}
-
-	return gridPrice, feedinPrice
-}
-
-func (s *Savings) updateCo2(p publisher) (float64, error) {
-	if co2, err := s.tariffs.CurrentCo2(); err == nil {
-		if co2 != s.lastCo2 {
-			s.lastCo2 = co2
-			p.publish("tariffCo2", co2)
-		}
-		return co2, nil
-	}
-	return 0, api.ErrNotAvailable
-}
-
 // Update savings calculation and return grid/green energy added since last update
 func (s *Savings) Update(p publisher, greenShare, chargePower float64) float64 {
-	gridPrice, feedinPrice := s.updatePrices(p)
-	co2, co2Err := s.updateCo2(p)
 	defer func() { s.updated = s.clock.Now() }()
 
 	// no charging, no need to update
@@ -157,11 +125,14 @@ func (s *Savings) Update(p publisher, greenShare, chargePower float64) float64 {
 	deltaSelf := deltaCharged * greenShare
 	deltaGrid := deltaCharged - deltaSelf
 
+	gridPrice := s.currentGridPrice()
+	feedInPrice := s.currentFeedInPrice()
+
 	s.gridCharged += deltaGrid
 	s.gridCost += deltaGrid * gridPrice
-	s.gridSavedCost += deltaSelf * (gridPrice - feedinPrice)
+	s.gridSavedCost += deltaSelf * (gridPrice - feedInPrice)
 	s.selfConsumptionCharged += deltaSelf
-	s.selfConsumptionCost += deltaSelf * feedinPrice
+	s.selfConsumptionCost += deltaSelf * feedInPrice
 
 	p.publish("savingsTotalCharged", s.TotalCharged())
 	p.publish("savingsGridCharged", s.gridCharged)
@@ -169,10 +140,7 @@ func (s *Savings) Update(p publisher, greenShare, chargePower float64) float64 {
 	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
-	if co2Err == nil {
-		s.co2Emitted += deltaGrid * co2
-		p.publish("savingsCo2Emitted", s.co2Emitted)
-	}
+
 	s.hasPublished = true
 
 	s.save()

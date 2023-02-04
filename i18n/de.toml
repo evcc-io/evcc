@@ -25,6 +25,12 @@ label = "Einheit"
 km = "Km"
 mi = "Meilen"
 
+[settings.gridDetails]
+label = "Netzstromdetails"
+none = "keine"
+price = "Preis"
+co2 = "CO₂"
+
 [settings.telemetry]
 label = "Telemetrie"
 

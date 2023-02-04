@@ -81,10 +81,10 @@ export default {
 	},
 	methods: {
 		showPrice() {
-			return showGridPrice() && this.price !== undefined;
+			return showGridPrice() && !isNaN(this.price);
 		},
 		showCo2() {
-			return showGridCo2() && this.co2 !== undefined;
+			return showGridCo2() && !isNaN(this.co2);
 		},
 		kw: function (watt) {
 			return this.fmtKw(watt, this.valuesInKw);

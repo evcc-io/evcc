@@ -77,11 +77,12 @@ export default {
 		savingsSelfConsumptionPercent: Number,
 		savingsSince: String,
 		savingsTotalCharged: Number,
+		greenShare: Number,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
+		tariffEffectivePrice: Number,
 		tariffCo2: Number,
-		greenShare: Number,
-		tariffEffective: Number,
+		tariffEffectiveCo2: Number,
 
 		availableVersion: String,
 		releaseNotes: String,
@@ -100,12 +101,6 @@ export default {
 		activeLoadpointsCount: function () {
 			return this.activeLoadpoints.length;
 		},
-		tariffEffectiveCo2: function () {
-			if (this.tariffCo2 !== undefined) {
-				return this.tariffCo2 * (1 - this.greenShare);
-			}
-			return undefined;
-		},
 		vehicleIcons: function () {
 			if (this.activeLoadpointsCount) {
 				return this.activeLoadpoints.map((lp) => lp.vehicleIcon || "car");
@@ -121,6 +116,12 @@ export default {
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation) };
+		},
+		hasPrice: function () {
+			return !isNaN(this.tariffGrid);
+		},
+		hasCo2: function () {
+			return !isNaN(this.tariffCo2);
 		},
 		showParkingLot: function () {
 			// work in progess

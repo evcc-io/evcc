@@ -108,6 +108,7 @@ batteryDischarge = "Battery discharging"
 gridImport = "Grid use"
 selfConsumption = "Self-consumption"
 pvExport = "Grid export"
+batteryTooltip = "{energy} of {total} ({soc}%)"
 
 [main.mode]
 off = "Off"

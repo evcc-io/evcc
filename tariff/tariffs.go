@@ -36,14 +36,6 @@ func currentPrice(t api.Tariff) (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-// CurrentCo2 determins the grids co2 emission.
-func (t *Tariffs) CurrentCo2() (float64, error) {
-	if t.Planner != nil && t.Planner.Unit() == "gCO2eq" {
-		return currentPrice(t.Planner)
-	}
-	return 0, api.ErrNotAvailable
-}
-
 // CurrentGridPrice returns the current feedin price.
 func (t *Tariffs) CurrentGridPrice() (float64, error) {
 	return currentPrice(t.Grid)
@@ -54,7 +46,7 @@ func (t *Tariffs) CurrentFeedInPrice() (float64, error) {
 	return currentPrice(t.FeedIn)
 }
 
-// EffectivePrice calculates the real energy price based on self-produced and grid-imported energy.
+// CurrentEffectivePrice calculates the real energy price based on self-produced and grid-imported energy.
 func (t *Tariffs) CurrentEffectivePrice(greenShare float64) (float64, error) {
 	if grid, err := t.CurrentGridPrice(); err == nil {
 		feedin, err := t.CurrentFeedInPrice()
@@ -62,6 +54,22 @@ func (t *Tariffs) CurrentEffectivePrice(greenShare float64) (float64, error) {
 			feedin = 0
 		}
 		return grid*(1-greenShare) + feedin*greenShare, nil
+	}
+	return 0, api.ErrNotAvailable
+}
+
+// CurrentCo2 determins the grids co2 emission.
+func (t *Tariffs) CurrentCo2() (float64, error) {
+	if t.Planner != nil && t.Planner.Unit() == "gCO2eq" {
+		return currentPrice(t.Planner)
+	}
+	return 0, api.ErrNotAvailable
+}
+
+// CurrentEffectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
+func (t *Tariffs) CurrentEffectiveCo2(greenShare float64) (float64, error) {
+	if co2, err := t.CurrentCo2(); err == nil {
+		return co2 * (1 - greenShare), nil
 	}
 	return 0, api.ErrNotAvailable
 }

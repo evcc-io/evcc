@@ -75,6 +75,7 @@
 										GRID_DETAILS.map((value) => ({
 											value,
 											name: $t(`settings.gridDetails.${value}`),
+											disabled: isDisabled(value),
 										}))
 									"
 								/>
@@ -104,6 +105,8 @@ export default {
 	components: { TelemetrySettings, FormRow, SelectGroup },
 	props: {
 		sponsor: String,
+		hasPrice: Boolean,
+		hasCo2: Boolean,
 	},
 	data: function () {
 		return {
@@ -143,6 +146,11 @@ export default {
 			} else {
 				removeLocalePreference(i18n);
 			}
+		},
+	},
+	methods: {
+		isDisabled(option) {
+			return (option === "co2" && !this.hasCo2) || (option === "price" && !this.hasPrice);
 		},
 	},
 };

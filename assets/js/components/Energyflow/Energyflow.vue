@@ -94,10 +94,10 @@
 							icon="home"
 							:power="homePower"
 							:valuesInKw="valuesInKw"
-							:price="tariffEffective"
+							:price="tariffEffectivePrice"
 							:currency="currency"
 							:co2="tariffEffectiveCo2"
-							:tooltip="detailsTooltip(tariffEffective, tariffEffectiveCo2)"
+							:tooltip="detailsTooltip(tariffEffectivePrice, tariffEffectiveCo2)"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -109,10 +109,10 @@
 							:vehicleIcons="vehicleIcons"
 							:power="loadpointsPower"
 							:valuesInKw="valuesInKw"
-							:price="tariffEffective"
+							:price="tariffEffectivePrice"
 							:currency="currency"
 							:co2="tariffEffectiveCo2"
-							:tooltip="detailsTooltip(tariffEffective, tariffEffectiveCo2)"
+							:tooltip="detailsTooltip(tariffEffectivePrice, tariffEffectiveCo2)"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -166,7 +166,7 @@ export default {
 		vehicleIcons: { type: Array },
 		tariffGrid: { type: Number },
 		tariffFeedIn: { type: Number },
-		tariffEffective: { type: Number },
+		tariffEffectivePrice: { type: Number },
 		tariffCo2: { type: Number },
 		tariffEffectiveCo2: { type: Number },
 		currency: { type: String },
@@ -218,7 +218,7 @@ export default {
 			return this.battery.map(({ soc, capacity }) => {
 				const energy = this.fmtKWh((capacity / 100) * soc * 1e3, true, false, 1);
 				const total = this.fmtKWh(capacity * 1e3, true, true, 1);
-				return `${energy} of ${total} (${soc}%)`;
+				return this.$t("main.energyflow.batteryTooltip", { energy, total, soc });
 			});
 		},
 	},
