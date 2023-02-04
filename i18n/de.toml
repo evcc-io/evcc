@@ -230,10 +230,10 @@ vehicle = "Fahrzeug"
 title = "Einstellungen"
 
 [settings.gridDetails]
+co2 = "CO₂"
 label = "Netzstromdetails"
 none = "keine"
 price = "Preis"
-co2 = "CO₂"
 
 [settings.language]
 auto = "Automatisch"
