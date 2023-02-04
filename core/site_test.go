@@ -69,7 +69,7 @@ func TestGreenShare(t *testing.T) {
 			batteryPower: tc.battery,
 		}
 
-		share := s.greenShare()
+		share := s.updateGreenShare()
 		if share != tc.share {
 			t.Errorf("greenShare wanted %.f, got %.f", tc.share, share)
 		}
