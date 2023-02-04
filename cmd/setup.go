@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
-	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/provider/mqtt"
@@ -123,7 +123,7 @@ func configureDatabase(conf dbConfig) error {
 }
 
 // configureInflux configures influx database
-func configureInflux(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-chan util.Param) {
+func configureInflux(conf server.InfluxConfig, site site.API, in <-chan util.Param) {
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -137,7 +137,7 @@ func configureInflux(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-
 	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleCapacity", "vehicleSoc", "vehicleRange", "vehicleOdometer", "chargedEnergy", "chargeRemainingEnergy")
 	in = dedupe.Pipe(in)
 
-	go influx.Run(loadPoints, in)
+	go influx.Run(site, in)
 }
 
 // setup mqtt
@@ -267,8 +267,8 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 
 func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
 	if err = cp.configure(conf); err == nil {
-		var loadPoints []*core.Loadpoint
-		loadPoints, err = configureLoadpoints(conf, cp)
+		var loadpoints []*core.Loadpoint
+		loadpoints, err = configureLoadpoints(conf, cp)
 
 		var tariffs tariff.Tariffs
 		if err == nil {
@@ -285,15 +285,15 @@ func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
 				vehicles = append(vehicles, cp.vehicles[k])
 			}
 
-			site, err = configureSite(conf.Site, cp, loadPoints, vehicles, tariffs)
+			site, err = configureSite(conf.Site, cp, loadpoints, vehicles, tariffs)
 		}
 	}
 
 	return site, err
 }
 
-func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {
-	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints, vehicles, tariffs)
+func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {
+	site, err := core.NewSiteFromConfig(log, cp, conf, loadpoints, vehicles, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
@@ -301,7 +301,7 @@ func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints [
 	return site, nil
 }
 
-func configureLoadpoints(conf config, cp *ConfigProvider) (loadPoints []*core.Loadpoint, err error) {
+func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Loadpoint, err error) {
 	lpInterfaces, ok := viper.AllSettings()["loadpoints"].([]interface{})
 	if !ok || len(lpInterfaces) == 0 {
 		return nil, errors.New("missing loadpoints")
@@ -319,8 +319,8 @@ func configureLoadpoints(conf config, cp *ConfigProvider) (loadPoints []*core.Lo
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
 
-		loadPoints = append(loadPoints, lp)
+		loadpoints = append(loadpoints, lp)
 	}
 
-	return loadPoints, nil
+	return loadpoints, nil
 }

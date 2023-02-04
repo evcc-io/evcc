@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -98,4 +99,25 @@ func shutdownDoneC() <-chan struct{} {
 	doneC := make(chan struct{})
 	go shutdown.Cleanup(doneC)
 	return doneC
+}
+
+func wrapErrors(err error) error {
+	if err != nil {
+		var opErr *net.OpError
+		var pathErr *os.PathError
+
+		switch {
+		case errors.As(err, &opErr):
+			if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
+				err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
+			}
+
+		case errors.As(err, &pathErr):
+			if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
+				err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
+			}
+		}
+	}
+
+	return err
 }

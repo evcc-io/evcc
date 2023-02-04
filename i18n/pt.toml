@@ -1,56 +1,42 @@
-[header]
-sessions = "Processos de carregamento"
-docs = "Documentação"
-blog = "Blog"
-github = "GitHub"
-login = "Login de veículo"
-about = "Sobre"
-settings = "Configuração"
-
-[header.theme]
-auto = "Design: Sistema"
-light = "Design: Claro"
-dark = "Design: Escuro"
-
-[footer.version]
-availableLong = "versão nova disponível"
-modalTitle = "Versão nova disponível"
-modalUpdateStarted = "Iniciando a nova versão do evcc..."
-modalInstalledVersion = "Versão instalada"
-modalNoReleaseNotes = "Nenhuma nota de versão disponível. Mais informações sobre a nova versão:"
-modalCancel = "Cancelar"
-modalUpdate = "Instalar"
-modalUpdateNow = "Instalar agora"
-modalDownload = "Download"
-modalUpdateStatusStart = "Instalação iniciada:"
-
-[footer.savings]
-tabTitle = "Meus dados"
-footerShort = "{percent}% Sol"
-footerLong = "{percent}% energia solar"
-modalTitle = "Avaliação da energia carregada"
-since = "desde {since}"
-percentTitle = "Energia solar"
-percentSelf = "{self} kWh sol"
-percentGrid = "{grid} kWh rede"
-priceTitle = "Preço da energia"
-priceFeedIn = "{feedInPrice} alimentação"
-priceGrid = "{gridPrice} rede"
-savingsTitle = "Poupança"
-savingsComparedToGrid = "em relação a rede"
-savingsTotalEnergy = "{total} kWh carregado"
+[footer]
 
 [footer.community]
-tabTitle = "Comunidade ao vivo"
-power = "Poder de carregamento"
-powerSub1 = "{activeClients} de {totalClients} utilizadores"
-powerSub2 = "carregam..."
-greenShare = "Parte solar"
-greenShareSub1 = "energia fornecida por"
-greenShareSub2 = "solar e bateria doméstica"
 greenEnergy = "Sol"
 greenEnergySub1 = "carregado com evcc"
 greenEnergySub2 = "desde outubro de 2022"
+greenShare = "Parte solar"
+greenShareSub1 = "energia fornecida por"
+greenShareSub2 = "solar e bateria doméstica"
+power = "Poder de carga"
+powerSub1 = "{activeClients} de {totalClients} utilizadores"
+powerSub2 = "carregando..."
+tabTitle = "Comunidade ao vivo"
+
+[footer.savings]
+footerLong = "{percent}% energia solar"
+footerShort = "{percent}% Sol"
+modalTitle = "Avaliação da energia carregada"
+percentGrid = "{grid} kWh rede"
+percentSelf = "{self} kWh sol"
+percentTitle = "Energia solar"
+priceFeedIn = "{feedInPrice} alimentação"
+priceGrid = "{gridPrice} rede"
+priceTitle = "Preço da energia"
+savingsComparedToGrid = "em relação a rede"
+savingsTitle = "Poupança"
+savingsTotalEnergy = "{total} kWh carregado"
+since = "desde {since}"
+tabTitle = "Meus dados"
+
+[footer.sponsor]
+becomeSponsor = "Torne-se um patrocinador"
+confetti = "Pronto para confete?"
+confettiPromise = "Você recebe autocolantese e confete digital"
+sticker = "… ou autocolantes do evcc?"
+supportUs = "Nossa missão é tornar a energia solar a norma. Ajude o evcc pagando o que vale para você."
+thanks = "Obrigado, {sponsor}! Sua contribuição ajuda a desenvolver ainda mais o evcc."
+titleNoSponsor = "Apoie-nos"
+titleSponsor = "Você é um apoiador"
 
 [footer.telemetry]
 optIn = "Quero contribuir com meus dados."
@@ -58,61 +44,73 @@ optInMoreDetails = "Mais detalhes {0}."
 optInMoreDetailsLink = "aqui"
 optInSponsorship = "Requer patrocínio."
 
-[footer.sponsor]
-titleSponsor = "Você é um apoiador"
-titleNoSponsor = "Apoie-nos"
-thanks = "Obrigado, {sponsor}! Sua contribuição ajuda a desenvolver ainda mais o evcc."
-confetti = "Pronto para confete?"
-supportUs = "Nossa missão é tornar a energia solar a norma. Ajude o evcc pagando o que vale para você."
-sticker = "… ou autocolantes do evcc?"
-confettiPromise = "Você recebe autocolantese e confete digital"
-becomeSponsor = "Torne-se um patrocinador"
+[footer.version]
+availableLong = "versão nova disponível"
+modalCancel = "Cancelar"
+modalDownload = "Download"
+modalInstalledVersion = "Versão instalada"
+modalNoReleaseNotes = "Nenhuma nota de versão disponível. Mais informações sobre a nova versão:"
+modalTitle = "Versão nova disponível"
+modalUpdate = "Instalar"
+modalUpdateNow = "Instalar agora"
+modalUpdateStarted = "Iniciando a nova versão do evcc..."
+modalUpdateStatusStart = "Instalação iniciada:"
 
-[notifications]
-modalTitle = "Notícias"
-dismissAll = "Recusar tudos"
+[header]
+about = "Sobre"
+blog = "Blog"
+docs = "Documentação"
+github = "GitHub"
+login = "Login de veículo"
+sessions = "Sessões de carga"
+settings = "Configuração"
+
+[header.theme]
+auto = "Design: Sistema"
+dark = "Design: Escuro"
+light = "Design: Claro"
 
 [main]
 vehicles = "Estacionamento"
 
 [main.energyflow]
-noEnergy = "Sem leituras"
-homePower = "Consumo"
-pvProduction = "Produção"
-loadpoints = "Carregador | Carregador | {count} Carregadores"
 battery = "Bateria"
 batteryCharge = "Carrego de bateria"
 batteryDischarge = "Descarrego de bateria"
 gridImport = "Consumo de rede"
-selfConsumption = "Consumo próprio"
+homePower = "Consumo"
+loadpoints = "Carregador | Carregador | {count} Carregadores"
+noEnergy = "Sem leituras"
 pvExport = "Alimentação"
-
-[main.mode]
-off = "Off"
-minpv = "Mín+Sol"
-pv = "Sol"
-now = "Rápido"
+pvProduction = "Produção"
+selfConsumption = "Consumo próprio"
 
 [main.loadpoint]
-fallbackName = "Ponto de carregamento"
-remoteDisabledSoft = "{source}:carregamento PV adaptável desativado"
-remoteDisabledHard = "{source}: desativado"
-power = "Desempenho"
 charged = "Carregado"
 duration = "Duração"
+fallbackName = "Ponto de carga"
+power = "Desempenho"
 remaining = "Tempo restante"
+remoteDisabledHard = "{source}: desativado"
+remoteDisabledSoft = "{source}:carregamento PV adaptável desativado"
 
 [main.loadpointSettings]
-title = "Configurações {0}"
-vehicle = "Veículo"
 currents = "Corrente de carga"
 default = "predefinado"
 disclaimerHint = "Aviso:"
 disclaimerText = "As alterações serão perdidas depois que o servidor for reiniciado."
+title = "Configurações {0}"
+vehicle = "Veículo"
+
+[main.loadpointSettings.maxCurrent]
+label = "Corrente de carga máxima"
+
+[main.loadpointSettings.minCurrent]
+label = "Corrente de carga mínima"
 
 [main.loadpointSettings.minSoc]
+description = "Para emergências. O veículo é carregado „rápido” para {0}% de toda a energia solar disponível e, em seguida, continua com apenas o excedente solar."
 label = "Mín. de carga %"
-description = "Para emergências. O veículo é „rápido” carregado para {0}% de toda a energia solar disponível e, em seguida, continua com apenas o excedente solar."
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases elétricas"
@@ -122,143 +120,147 @@ phases_1_hint = "({min} a {max})"
 phases_3 = "3 fases"
 phases_3_hint = "({min} a {max})"
 
-[main.loadpointSettings.maxCurrent]
-label = "Corrente de carga máxima"
+[main.mode]
+minpv = "Mín+Sol"
+now = "Rápido"
+off = "Off"
+pv = "Sol"
 
-[main.loadpointSettings.minCurrent]
-label = "Corrente de carga mínima"
+[main.provider]
+login = "iniciar sessão"
+logout = "encerrar sessão"
+
+[main.targetCharge]
+activate = "Ativar"
+activeLabel = "{time}"
+descriptionEnergy = "Até quando {targetEnergy} deve ser carregado no veículo?"
+descriptionSoc = "Quando o veículo deve ser carregado até {targetSoc}%?"
+inactiveLabel = "Tempo alvo"
+modalTitle = "Definir hora-alvo"
+planDuration = "Tempo de carga"
+planPeriodLabel = "Período"
+planPeriodValue = "{start} até {end}"
+planUnknown = "desconhecido"
+remove = "Remover"
+setTargetTime = "sem"
+targetIsInThePast = "Escolha um momento no futuro, Marty."
+targetIsTooFarInTheFuture = "Vamos ajustar o plano assim que soubermos mais sobre o futuro."
+title = "Tempo alvo"
+today = "hoje"
+tomorrow = "amanhã"
+update = "Atualizar"
+
+[main.targetChargePlan]
+chargeDuration = "Tempo de carga"
+co2Label = "Emissão de CO₂ Ø"
+priceLabel = "Preço da energia"
+timeRange = "{day} {range} h"
+unknownPrice = "ainda desconhecido"
+
+[main.targetEnergy]
+label = "Alvo de carga"
+noLimit = "sem"
 
 [main.vehicle]
-fallbackName = "Veículo"
-vehicleSoc = "Nível de carga"
-targetSoc = "Alvo de carga"
-none = "Nenhum veículo"
-unknown = "Veículo convidado"
 changeVehicle = "Troca de veículo"
 detectionActive = "Detecção de veículo..."
+fallbackName = "Veículo"
+none = "Nenhum veículo"
+targetSoc = "Alvo de carga"
+unknown = "Veículo convidado"
+vehicleSoc = "Nível de carga"
 
 [main.vehicleSoc]
-disconnected = "separado"
-charging = "a carregar"
-ready = "esperando"
+charging = "carregando"
 connected = "ligado"
+disconnected = "separado"
+ready = "esperando"
 vehicleTarget = "Limite de veículo: {soc}%"
 
 [main.vehicleStatus]
-minCharge = "Carga mínima até {soc}%"
-waitForVehicle = "Pronto. Esperando pelo veículo..."
-vehicleTargetReached = "Limite de veículo {soc}% atingido."
 charging = "Carregando..."
-targetChargePlanned = "Carga programada começa às {time} horas."
-targetChargeWaitForVehicle = "Carga programada pronta. Esperando pelo veículo..."
-targetChargeActive = "Carga programada ativa..."
 connected = "Ligado."
+disconnected = "Não conectado."
+minCharge = "Carga mínima até {soc}%"
 pvDisable = "Excesso insuficiente. Pausa em {remaining}..."
 pvEnable = "Excesso disponível. Carga em {remaining}..."
 scale1p = "Reduzindo para alimentação 1-fase em {remaining}..."
 scale3p = "Aumentando para alimentação 3-fases em {remaining}..."
-disconnected = "Não conectado."
+targetChargeActive = "Carga programada ativa..."
+targetChargePlanned = "Carga programada começa às {time} horas."
+targetChargeWaitForVehicle = "Carga programada pronta. Esperando pelo veículo..."
 unknown = ""
+vehicleTargetReached = "Limite de veículo {soc}% atingido."
+waitForVehicle = "Pronto. Esperando pelo veículo..."
 
-[main.provider]
-login = "entrar no sistema"
-logout = "sair do sistema"
-
-[main.targetCharge]
-title = "Tempo alvo"
-inactiveLabel = "Tempo alvo"
-activeLabel = "{time}"
-modalTitle = "Definir hora-alvo"
-setTargetTime = "sem"
-descriptionSoc = "Quando o veículo deve ser carregado para {targetSoc}%?"
-today = "hoje"
-tomorrow = "amanhã"
-targetIsInThePast = "Escolha um momento no futuro, Marty."
-remove = "Remover"
-activate = "Ativar"
-descriptionEnergy = "Até quando {targetEnergy} deve ser carregado no veículo?"
-planUnknown = "desconhecido"
-planPeriodLabel = "Período"
-planPeriodValue = "{start} até {end}"
-planDuration = "Tempo de carga"
-targetIsTooFarInTheFuture = "Vamos ajustar o plano assim que soubermos mais sobre o futuro."
-update = "Atualizar"
-
-[main.targetEnergy]
-label = "Alvo de carregamento"
-noLimit = "sem"
-
-[startupError]
-title = "Erro ao iniciar"
-description = "Verifique seu ficheiro de configuração. Se a mensagem de erro não ajudar, verifique o {0}."
-discussions = "Discussões no GitHub"
-hint = "Nota: Também pode ser que você tenha um equipamento com defeito (inversor, medidor, …). Verifique suas conexões de rede."
-configuration = "Configuração"
-configFile = "Ficheiro de configuração em uso:"
-lineError = "Um erro em {0}."
-lineErrorLink = "linha {0}"
-fixAndRestart = "Por favor corrija o problema e reinicie o servidor."
-restartButton = "Iniciar de novo"
-
-[sessions]
-title = "Processos de carregamento"
-downloadCsv = "Descarregar como CSV"
-loadpoint = "Ponto de carregamento"
-vehicle = "Veículo"
-odometer = "Quilometragem"
-energy = "Carregado"
-date = "Período"
-reallyDelete = "Você realmente quer excluir esta sessão?"
-
-[sessions.csv]
-loadpoint = "Ponto de carregamento"
-vehicle = "Veículo"
-identifier = "Identificador"
-chargedenergy = "Energia (kWh)"
-meterstart = "Início do contador (kWh)"
-meterstop = "Parada do contador (kWh)"
-created = "hora de início"
-finished = "hora final"
-odometer = "Quilometragem (km)"
+[notifications]
+dismissAll = "Recusar tudos"
+modalTitle = "Notícias"
 
 [offline]
 message = "Não conectado a um servidor."
 reload = "Iniciar de novo?"
 
+[session]
+cancel = "Cancelar"
+delete = "Excluir"
+finished = "Finalizado"
+meterstart = "Início do contador"
+meterstop = "Contagem final"
+odometer = "Quilometragem"
+started = "Começado"
+title = "Sessão de carga"
+
+[sessions]
+date = "Período"
+downloadCsv = "Download como CSV"
+energy = "Carregado"
+loadpoint = "Ponto de carga"
+odometer = "Quilometragem"
+reallyDelete = "Você realmente quer excluir esta sessão?"
+title = "Sessões de carga"
+vehicle = "Veículo"
+
+[sessions.csv]
+chargedenergy = "Energia (kWh)"
+created = "Hora de início"
+finished = "Hora final"
+identifier = "Identificador"
+loadpoint = "Ponto de carga"
+meterstart = "Início do contador (kWh)"
+meterstop = "Contagem final (kWh)"
+odometer = "Quilometragem (km)"
+vehicle = "Veículo"
+
 [settings]
 title = "Configuração"
 
-[settings.theme]
-label = "Estilo"
-auto = "sistema"
-light = "claro"
-dark = "escuro"
-
 [settings.language]
-label = "Língua"
 auto = "Automático"
-
-[settings.unit]
-label = "Unidades"
-km = "km"
-mi = "milhas"
+label = "Língua"
 
 [settings.telemetry]
 label = "Telemetria"
 
-[session]
-finished = "Finalizado"
-meterstart = "Início do contador"
-meterstop = "Parada do contador"
-title = "Processo de carregamento"
-odometer = "Quilometragem"
-started = "Começado"
-delete = "Excluir"
-cancel = "Cancelar"
+[settings.theme]
+auto = "sistema"
+dark = "escuro"
+label = "Estilo"
+light = "claro"
 
-[main.targetChargePlan]
-timeRange = "{day} {range} h"
-chargeDuration = "Tempo de carga"
-co2Label = "Emissão de CO₂ Ø"
-unknownPrice = "ainda desconhecido"
-priceLabel = "Preço da energia"
+[settings.unit]
+km = "km"
+label = "Unidades"
+mi = "milhas"
+
+[startupError]
+configFile = "Ficheiro de configuração em uso:"
+configuration = "Configuração"
+description = "Verifique seu ficheiro de configuração. Se a mensagem de erro não ajudar, verifique as {0}."
+discussions = "Discussões no GitHub"
+fixAndRestart = "Por favor corrija o problema e reinicie o servidor."
+hint = "Nota: Também pode ser que você tenha um equipamento com defeito (inversor, contador, …). Verifique suas conexões de rede."
+lineError = "Um erro em {0}."
+lineErrorLink = "linha {0}"
+restartButton = "Reiniciar"
+title = "Erro ao iniciar"

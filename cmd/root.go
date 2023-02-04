@@ -185,7 +185,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureInflux(conf.Influx, site.Loadpoints(), tee.Attach())
+		configureInflux(conf.Influx, site, tee.Attach())
 	}
 
 	// setup mqtt publisher
@@ -268,6 +268,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			once.Do(func() { close(stopC) }) // signal loop to end
 		})
 
+		// improve error message
+		err = wrapErrors(err)
+
 		publishErrorInfo(valueChan, cfgFile, err)
 
 		log.FATAL.Println(err)
@@ -282,5 +285,5 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.FATAL.Println(httpd.ListenAndServe())
+	log.FATAL.Println(wrapErrors(httpd.ListenAndServe()))
 }

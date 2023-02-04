@@ -108,7 +108,7 @@ type Loadpoint struct {
 	sync.Mutex                // guard status
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
-	Title             string   `mapstructure:"title"`    // UI title
+	Title_            string   `mapstructure:"title"`    // UI title
 	ConfiguredPhases  int      `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
 	ChargerRef        string   `mapstructure:"charger"`  // Charger reference
 	VehicleRef        string   `mapstructure:"vehicle"`  // Vehicle reference
@@ -540,11 +540,6 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	}
 }
 
-// Name returns the human-readable loadpoint title
-func (lp *Loadpoint) Name() string {
-	return lp.Title
-}
-
 // Prepare loadpoint configuration by adding missing helper elements
 func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
 	lp.uiChan = uiChan
@@ -734,11 +729,18 @@ func (lp *Loadpoint) targetSocReached() bool {
 }
 
 // minSocNotReached checks if minimum is configured and not reached.
-// If vehicle is not configured this will always return true
+// If vehicle is not configured this will always return false
 func (lp *Loadpoint) minSocNotReached() bool {
-	return lp.vehicle != nil &&
-		lp.Soc.min > 0 &&
-		lp.vehicleSoc < float64(lp.Soc.min)
+	if lp.vehicle == nil || lp.Soc.min == 0 {
+		return false
+	}
+
+	if lp.vehicleSoc != 0 {
+		return lp.vehicleSoc < float64(lp.Soc.min)
+	}
+
+	minEnergy := lp.vehicle.Capacity() * float64(lp.Soc.min) / 100 / soc.ChargeEfficiency
+	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
 // climateActive checks if vehicle has active climate request

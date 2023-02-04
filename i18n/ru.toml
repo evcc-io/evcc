@@ -1,112 +1,83 @@
-[header]
-blog = "Блог"
-settings = "Настройки"
-about = "О нас"
-sessions = "Сеансы зарядки"
-github = "GitHub"
-docs = "Документация"
-
-[settings]
-title = "Настройки"
-
-[settings.theme]
-label = "Дизайн"
-auto = "системный"
-light = "светлый"
-dark = "темный"
-
-[settings.language]
-label = "Язык"
-auto = "Автоматически"
-
-[settings.unit]
-label = "Единицы измерения"
-km = "км"
-mi = "мили"
-
-[settings.telemetry]
-label = "Телеметрия"
-
-[footer.version]
-availableLong = "доступна новая версия"
-modalTitle = "Доступна новая версия"
-modalUpdateStarted = "Запускаю новую версию evcc..."
-modalInstalledVersion = "Установленная версия"
-modalCancel = "Отмена"
-modalUpdateNow = "Установить сейчас"
-modalDownload = "Загрузить"
-modalUpdate = "Установить"
-modalUpdateStatusStart = "Установка начата:"
-modalNoReleaseNotes = "Нет доступных примечаний к выпуску. Дополнительная информация о новой версии:"
-
-[footer.savings]
-tabTitle = "Мои данные"
-footerShort = "{percent}% солнечной"
-footerLong = "{percent}% солнечной энергии"
-since = "c {since}"
-percentTitle = "Солнечная энергия"
-percentSelf = "{self} кВт/ч солнечной"
-percentGrid = "{self} кВт/ч из сети"
-priceTitle = "Цена электроэнергии"
-priceGrid = "{gridPrice} из сети"
-savingsTitle = "Сэкономлено"
-savingsTotalEnergy = "{total} кВт/ч заряжено"
-modalTitle = "Обзор потребленной электроэнергии"
-priceFeedIn = "{feedInPrice} в сеть"
-savingsComparedToGrid = "в сравнении с потреблением из сети"
+[footer]
 
 [footer.community]
-tabTitle = "Данные комьюнити"
-powerSub1 = "{activeClients} из {totalClients} участников"
-powerSub2 = "заряжаются..."
+greenEnergy = "Солнечная электроэнергия"
 greenEnergySub1 = "заряжено с помощью evcc"
 greenEnergySub2 = "c октября 2022 г"
-power = "Мощность зарядки"
-greenShareSub1 = "энергия предоставляется от"
-greenEnergy = "Солнечная электроэнергия"
 greenShare = "Доля солнечной энергии"
+greenShareSub1 = "энергия предоставляется от"
 greenShareSub2 = "солнца или батарей"
+power = "Мощность зарядки"
+powerSub1 = "{activeClients} из {totalClients} участников"
+powerSub2 = "заряжаются..."
+tabTitle = "Данные комьюнити"
+
+[footer.savings]
+footerLong = "{percent}% солнечной энергии"
+footerShort = "{percent}% солнечной"
+modalTitle = "Обзор потребленной электроэнергии"
+percentGrid = "{self} кВт/ч из сети"
+percentSelf = "{self} кВт/ч солнечной"
+percentTitle = "Солнечная энергия"
+priceFeedIn = "{feedInPrice} в сеть"
+priceGrid = "{gridPrice} из сети"
+priceTitle = "Цена электроэнергии"
+savingsComparedToGrid = "в сравнении с потреблением из сети"
+savingsTitle = "Сэкономлено"
+savingsTotalEnergy = "{total} кВт/ч заряжено"
+since = "c {since}"
+tabTitle = "Мои данные"
+
+[footer.sponsor]
+becomeSponsor = "Стать спонсором"
+confetti = "Готовы к конфети?"
+confettiPromise = "Ты получишь стикеры или цифровое конфети"
+sticker = "... или стикеры evcc?"
+supportUs = "Наша миссия — сделать солнечную энергию нормой. Помоги evcc, заплатив столько, сколько считаешь нужным."
+thanks = "Спасибо, {sponsor}! Ваша поддержка поможет развивать evcc."
+titleNoSponsor = "Поддержать нас"
+titleSponsor = "Ты нас поддерживаешь"
 
 [footer.telemetry]
+optIn = "Я хочу поделиться своими данными."
 optInMoreDetails = "Больше информации {0}."
 optInMoreDetailsLink = "здесь"
 optInSponsorship = "Требуется спонсорство."
-optIn = "Я хочу поделиться своими данными."
 
-[footer.sponsor]
-titleNoSponsor = "Поддержать нас"
-thanks = "Спасибо, {sponsor}! Ваша поддержка поможет развивать evcc."
-becomeSponsor = "Стать спонсором"
-titleSponsor = "Ты нас поддерживаешь"
-confetti = "Готовы к конфети?"
-sticker = "... или стикеры evcc?"
-confettiPromise = "Ты получишь стикеры или цифровое конфети"
-supportUs = "Наша миссия — сделать солнечную энергию нормой. Помоги evcc, заплатив столько, сколько считаешь нужным."
+[footer.version]
+availableLong = "доступна новая версия"
+modalCancel = "Отмена"
+modalDownload = "Загрузить"
+modalInstalledVersion = "Установленная версия"
+modalNoReleaseNotes = "Нет доступных примечаний к выпуску. Дополнительная информация о новой версии:"
+modalTitle = "Доступна новая версия"
+modalUpdate = "Установить"
+modalUpdateNow = "Установить сейчас"
+modalUpdateStarted = "Запускаю новую версию evcc..."
+modalUpdateStatusStart = "Установка начата:"
 
-[notifications]
-modalTitle = "Уведомления"
-dismissAll = "Отклонить все"
-
-[main.energyflow]
-pvProduction = "Генерация"
-battery = "Батарея"
-batteryDischarge = "Батарея разряжается"
-batteryCharge = "Батарея заряжается"
-selfConsumption = "Собственное потребление"
-pvExport = "Экспорт в сеть"
-noEnergy = "Нет данных счетчика"
-homePower = "Потребление"
-gridImport = "Потребление из сети"
-loadpoints = "Зарядная станция | Зарядная станция | {count} зарядные станции"
+[header]
+about = "О нас"
+blog = "Блог"
+docs = "Документация"
+github = "GitHub"
+sessions = "Сеансы зарядки"
+settings = "Настройки"
 
 [main]
 vehicles = "Парковка"
 
-[main.mode]
-off = "Выкл"
-pv = "Солн. эн"
-now = "Быстро"
-minpv = "Мин+солн. эн"
+[main.energyflow]
+battery = "Батарея"
+batteryCharge = "Батарея заряжается"
+batteryDischarge = "Батарея разряжается"
+gridImport = "Потребление из сети"
+homePower = "Потребление"
+loadpoints = "Зарядная станция | Зарядная станция | {count} зарядные станции"
+noEnergy = "Нет данных счетчика"
+pvExport = "Экспорт в сеть"
+pvProduction = "Генерация"
+selfConsumption = "Собственное потребление"
 
 [main.loadpoint]
 charged = "Заряжено"
@@ -115,118 +86,149 @@ fallbackName = "Зарядная станция"
 power = "Мощность"
 
 [main.loadpointSettings]
-title = "Настройки {0}"
-vehicle = "Транспортное средство"
 currents = "Ток зарядки"
 default = "по умолчанию"
 disclaimerHint = "Заметка:"
 disclaimerText = "Изменения будут потеряны после перезагрузки сервера"
+title = "Настройки {0}"
+vehicle = "Транспортное средство"
+
+[main.loadpointSettings.maxCurrent]
+label = "Макс. ток"
+
+[main.loadpointSettings.minCurrent]
+label = "Мин. ток"
 
 [main.loadpointSettings.minSoc]
 label = "Мин. заряд %"
 
 [main.loadpointSettings.phasesConfigured]
+label = "Фазы"
 phases_0 = "авто переключение"
 phases_1 = "1 фаза"
 phases_1_hint = "({min} до {max})"
-label = "Фазы"
-phases_3_hint = "({min} до {max})"
 phases_3 = "3 фазы"
+phases_3_hint = "({min} до {max})"
 
-[main.loadpointSettings.maxCurrent]
-label = "Макс. ток"
-
-[main.vehicle]
-fallbackName = "Транспортное средство"
-none = "Нет транспортного средства"
-targetSoc = "Лимит"
-vehicleSoc = "Заряд"
-unknown = "Гостевое транспортное средство"
-detectionActive = "Определение транспортного средства..."
-changeVehicle = "Сменить транспортное средство"
-
-[main.vehicleSoc]
-disconnected = "отключено"
-charging = "заряжается"
-ready = "готово"
-connected = "подключено"
-
-[main.vehicleStatus]
-minCharge = "Минимальная зарядка до {soc}%."
-charging = "Зарядка..."
-connected = "Подключено."
-disconnected = "Отключено."
-waitForVehicle = "Готов. Ожидание транспортного средства..."
-unknown = ""
-targetChargePlanned = "Плановая зарядка начнется в {time}."
-targetChargeWaitForVehicle = "Плановая зарядка готова. Ожидаю транспортное средство..."
-targetChargeActive = "Плановая зарядка активна..."
-pvDisable = "Недостаточно избытка. Пауза через {remaining}..."
-pvEnable = "Доступен избыток. Начинаю через {remaining}..."
-scale1p = "Снижаю до одной фазы через {remaining}..."
-scale3p = "Увеличиваю до трех фаз через {remaining}..."
+[main.mode]
+minpv = "Мин+солн. эн"
+now = "Быстро"
+off = "Выкл"
+pv = "Солн. эн"
 
 [main.provider]
 login = "войти"
 logout = "выйти"
 
 [main.targetCharge]
-today = "сегодня"
-tomorrow = "завтра"
 activate = "Активировать"
-title = "Запланированное время"
-inactiveLabel = "Запланированное время"
 activeLabel = "{time}"
+descriptionSoc = "Когда транспортное средство следует зарядить до {targetSoc}%?"
+inactiveLabel = "Запланированное время"
 modalTitle = "Установить запланированное время"
 setTargetTime = "ни одного"
-descriptionSoc = "Когда транспортное средство следует зарядить до {targetSoc}%?"
 targetIsInThePast = "Выбери время в будущем."
+title = "Запланированное время"
+today = "сегодня"
+tomorrow = "завтра"
 
 [main.targetEnergy]
 label = "Лимит"
 noLimit = "ни одного"
 
-[main.loadpointSettings.minCurrent]
-label = "Мин. ток"
+[main.vehicle]
+changeVehicle = "Сменить транспортное средство"
+detectionActive = "Определение транспортного средства..."
+fallbackName = "Транспортное средство"
+none = "Нет транспортного средства"
+targetSoc = "Лимит"
+unknown = "Гостевое транспортное средство"
+vehicleSoc = "Заряд"
 
-[startupError]
-title = "Ошибка запуска"
-configFile = "Используемый конфигурационный файл:"
-lineError = "Ошибка в {0}."
-fixAndRestart = "Пожалуйста исправьте проблему и перезагрузите сервер."
-restartButton = "Рестарт"
-description = "Пожалуйста проверь конфигурационный файл. Если это сообщение не помогло, проверь {0}."
-hint = "Заметка: Возможно у вас неисправно устройство (инвертор, счетчик, ...). Проверьте сетевые подключения."
-configuration = "Конфигурация"
-lineErrorLink = "линия {0}"
-discussions = "GitHub Discussions"
+[main.vehicleSoc]
+charging = "заряжается"
+connected = "подключено"
+disconnected = "отключено"
+ready = "готово"
 
-[sessions]
-date = "Период"
-title = "Сессии зарядки"
-loadpoint = "Зарядная станция"
-downloadCsv = "Загрузить CSV"
-vehicle = "Транспортное средство"
-energy = "Заряжено"
+[main.vehicleStatus]
+charging = "Зарядка..."
+connected = "Подключено."
+disconnected = "Отключено."
+minCharge = "Минимальная зарядка до {soc}%."
+pvDisable = "Недостаточно избытка. Пауза через {remaining}..."
+pvEnable = "Доступен избыток. Начинаю через {remaining}..."
+scale1p = "Снижаю до одной фазы через {remaining}..."
+scale3p = "Увеличиваю до трех фаз через {remaining}..."
+targetChargeActive = "Плановая зарядка активна..."
+targetChargePlanned = "Плановая зарядка начнется в {time}."
+targetChargeWaitForVehicle = "Плановая зарядка готова. Ожидаю транспортное средство..."
+unknown = ""
+waitForVehicle = "Готов. Ожидание транспортного средства..."
+
+[notifications]
+dismissAll = "Отклонить все"
+modalTitle = "Уведомления"
 
 [offline]
 message = "Не подключено к серверу."
 reload = "Перезагрузить?"
 
-[sessions.csv]
+[session]
+cancel = "Скасувати"
+delete = "Видалити"
+finished = "Завершено"
+meterstart = "Початок лічильника"
+meterstop = "Зупинка лічильника"
+odometer = "Пробіг"
+started = "Розпочато"
+
+[sessions]
+date = "Период"
+downloadCsv = "Загрузить CSV"
+energy = "Заряжено"
 loadpoint = "Зарядная станция"
+title = "Сессии зарядки"
 vehicle = "Транспортное средство"
-odometer = "Пробег (км)"
-identifier = "Идентификатор"
+
+[sessions.csv]
 chargedenergy = "Электроэнергия (кВт/ч)"
 created = "Создано"
 finished = "Закончено"
+identifier = "Идентификатор"
+loadpoint = "Зарядная станция"
+odometer = "Пробег (км)"
+vehicle = "Транспортное средство"
 
-[session]
-meterstart = "Початок лічильника"
-meterstop = "Зупинка лічильника"
-started = "Розпочато"
-finished = "Завершено"
-cancel = "Скасувати"
-odometer = "Пробіг"
-delete = "Видалити"
+[settings]
+title = "Настройки"
+
+[settings.language]
+auto = "Автоматически"
+label = "Язык"
+
+[settings.telemetry]
+label = "Телеметрия"
+
+[settings.theme]
+auto = "системный"
+dark = "темный"
+label = "Дизайн"
+light = "светлый"
+
+[settings.unit]
+km = "км"
+label = "Единицы измерения"
+mi = "мили"
+
+[startupError]
+configFile = "Используемый конфигурационный файл:"
+configuration = "Конфигурация"
+description = "Пожалуйста проверь конфигурационный файл. Если это сообщение не помогло, проверь {0}."
+discussions = "GitHub Discussions"
+fixAndRestart = "Пожалуйста исправьте проблему и перезагрузите сервер."
+hint = "Заметка: Возможно у вас неисправно устройство (инвертор, счетчик, ...). Проверьте сетевые подключения."
+lineError = "Ошибка в {0}."
+lineErrorLink = "линия {0}"
+restartButton = "Рестарт"
+title = "Ошибка запуска"
