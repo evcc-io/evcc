@@ -19,7 +19,7 @@ params:
       de: Einstellung Float/Integer im Wechselrichter überprüfen
       en: Verify Float/Integer setting in inverter
     advanced: true
-    valuetype: bool
+    type: bool
   - name: capacity
     advanced: true
 render: |

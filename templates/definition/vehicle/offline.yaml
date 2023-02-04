@@ -19,7 +19,7 @@ params:
     advanced: true
   - name: identifiers
     advanced: true
-    valuetype: stringlist
+    type: stringlist
 render: |
   type: custom
   features: ["offline"]

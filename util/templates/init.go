@@ -58,6 +58,13 @@ func FromBytes(b []byte) (Template, error) {
 		err = tmpl.Validate()
 	}
 
+	// set default value type
+	for _, p := range tmpl.Params {
+		if p.Type == "" {
+			p.Type = ParamTypeString
+		}
+	}
+
 	return tmpl, err
 }
 

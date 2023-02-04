@@ -16,7 +16,7 @@ params:
     id: 1
     port: 1502
   - name: timeout
-    valuetype: duration
+    type: duration
   - name: capacity
     advanced: true
 render: |

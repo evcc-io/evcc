@@ -41,8 +41,8 @@ func (c *ConfigDefaults) LoadDefaults() {
 			if p.IsReference() {
 				finalName := p.Name
 				referencedItemName := p.Name
-				if p.Referencename != "" {
-					referencedItemName = p.Referencename
+				if p.ReferenceName != "" {
+					referencedItemName = p.ReferenceName
 				}
 				_, referencedParam := c.ParamByName(referencedItemName)
 				referencedParam.OverwriteProperties(p)

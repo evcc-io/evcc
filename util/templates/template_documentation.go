@@ -24,8 +24,8 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 				continue
 			}
 
-			switch p.ValueType {
-			case ParamValueTypeStringList:
+			switch p.Type {
+			case ParamTypeStringList:
 				for _, e := range v.([]string) {
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
