@@ -56,9 +56,10 @@ func redact(src string) string {
 		"user", "password", "pin", // users
 		"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
 		"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
+		"app", "chats", "recipients", // push messaging
 		"vin"} // vehicles
 	return regexp.
-		MustCompile(fmt.Sprintf(`\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).
+		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).
 		ReplaceAllString(src, "$1: *****")
 }
 

@@ -2,6 +2,7 @@ package push
 
 import (
 	"errors"
+	"strconv"
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
@@ -36,8 +37,12 @@ func NewTelegramFromConfig(other map[string]interface{}) (Messenger, error) {
 		return nil, errors.New("telegram: invalid bot token")
 	}
 
-	log := util.NewLogger("telegram")
+	log := util.NewLogger("telegram").Redact(cc.Token)
 	_ = tgbotapi.SetLogger(log.ERROR)
+
+	for _, i := range cc.Chats {
+		log.Redact(strconv.FormatInt(i, 10))
+	}
 
 	m := &Telegram{
 		log:   log,
