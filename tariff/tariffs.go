@@ -36,12 +36,12 @@ func currentPrice(t api.Tariff) (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-// CurrentGridPrice returns the current feedin price.
+// CurrentGridPrice returns the current grid price.
 func (t *Tariffs) CurrentGridPrice() (float64, error) {
 	return currentPrice(t.Grid)
 }
 
-// CurrentFeedInPrice returns the current feedin price.
+// CurrentFeedInPrice returns the current feed-in price.
 func (t *Tariffs) CurrentFeedInPrice() (float64, error) {
 	return currentPrice(t.FeedIn)
 }
