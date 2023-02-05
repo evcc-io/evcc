@@ -78,8 +78,8 @@ type StatusSNSResponse struct {
 			ApparentPower  Channels
 			ReactivePower  Channels
 			Factor         Channels
-			Frequency      int
-			Voltage        int
+			Frequency      Channels
+			Voltage        Channels
 			Current        Channels
 		}
 
