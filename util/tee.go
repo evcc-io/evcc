@@ -12,7 +12,7 @@ type Tee struct {
 
 // Attach creates a new receiver channel and attaches it to the tee
 func (t *Tee) Attach() <-chan Param {
-	out := make(chan Param)
+	out := make(chan Param, 1)
 	t.add(out)
 	return out
 }
