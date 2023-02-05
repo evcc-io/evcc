@@ -3,16 +3,16 @@ package configure
 import (
 	"fmt"
 
+	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/cmd/shutdown"
-	"github.com/evcc-io/evcc/server"
 )
 
 // configureEEBus setup EEBus
 func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 	var err error
-	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
-		go server.EEBusInstance.Run()
-		shutdown.Register(server.EEBusInstance.Shutdown)
+	if eebus.Instance, err = eebus.NewServer(conf); err == nil {
+		go eebus.Instance.Run()
+		shutdown.Register(eebus.Instance.Shutdown)
 	}
 
 	return err
@@ -22,12 +22,12 @@ func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
 	var eebusConfig map[string]interface{}
 
-	cert, err := server.CreateEEBUSCertificate()
+	cert, err := eebus.CreateCertificate()
 	if err != nil {
 		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Create", nil))
 	}
 
-	pubKey, privKey, err := server.GetX509KeyPair(cert)
+	pubKey, privKey, err := eebus.GetX509KeyPair(cert)
 	if err != nil {
 		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Use", nil))
 	}

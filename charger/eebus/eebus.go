@@ -1,4 +1,4 @@
-package server
+package eebus
 
 import (
 	"bytes"
@@ -44,9 +44,9 @@ type EEBus struct {
 	clients map[string]EEBusClientCBs
 }
 
-var EEBusInstance *EEBus
+var Instance *EEBus
 
-func NewEEBus(other map[string]interface{}) (*EEBus, error) {
+func NewServer(other map[string]interface{}) (*EEBus, error) {
 	cc := struct {
 		Uri         string
 		ShipID      string
@@ -221,8 +221,8 @@ func (c *EEBus) Errorf(format string, args ...interface{}) {
 
 // Certificate helpers
 
-// CreateEEBUSCertificate returns a newly created EEBUS compatible certificate
-func CreateEEBUSCertificate() (tls.Certificate, error) {
+// CreateCertificate returns a newly created EEBUS compatible certificate
+func CreateCertificate() (tls.Certificate, error) {
 	return service.CreateCertificate("", EEBUSBrandName, "DE", EEBUSDeviceCode)
 }
 

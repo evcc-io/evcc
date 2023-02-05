@@ -9,8 +9,8 @@ import (
 
 	"github.com/enbility/cemd/emobility"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -70,7 +70,7 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
 	log := util.NewLogger("eebus")
 
-	if server.EEBusInstance == nil {
+	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
@@ -81,7 +81,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 		communicationStandard: emobility.EVCommunicationStandardTypeUnknown,
 	}
 
-	c.emobility = server.EEBusInstance.Register(ski, ip, c.onConnect, c.onDisconnect)
+	c.emobility = eebus.Instance.Register(ski, ip, c.onConnect, c.onDisconnect)
 
 	err := c.waitForConnection()
 
