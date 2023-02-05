@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
-	"github.com/mitchellh/mapstructure"
 )
 
 // templatesHandler returns the list of templates by class
@@ -36,21 +36,21 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var plain map[string]any
-	if err := json.NewDecoder(r.Body).Decode(&plain); err != nil {
+	var req map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	var req struct {
-		Name  string
-		Other map[string]any `mapstructure:",remain"`
-	}
+	// var req struct {
+	// 	Type  string
+	// 	Other map[string]any `mapstructure:",remain"`
+	// }
 
-	if err := mapstructure.Decode(plain, &req); err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
+	// if err := mapstructure.Decode(plain, &req); err != nil {
+	// 	jsonError(w, http.StatusBadRequest, err)
+	// 	return
+	// }
 
 	// tmpl, err := templates.ByName(class, req.Name)
 	// if err != nil {
@@ -70,20 +70,42 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	var res any
+	var dev any
 
 	switch class {
 	case templates.Charger:
-		res, err = charger.NewFromConfig(req.Name, req.Other)
+		dev, err = charger.NewFromConfig("template", req)
 	case templates.Meter:
-		res, err = meter.NewFromConfig(req.Name, req.Other)
+		dev, err = meter.NewFromConfig("template", req)
 	case templates.Vehicle:
-		res, err = vehicle.NewFromConfig(req.Name, req.Other)
+		dev, err = vehicle.NewFromConfig("template", req)
 	}
 
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
+	}
+
+	type result = struct {
+		Value any   `json:"value"`
+		Error error `json:"error"`
+	}
+
+	res := make(map[string]result)
+
+	if dev, ok := dev.(api.Meter); ok {
+		val, err := dev.CurrentPower()
+		res["CurrentPower"] = result{val, err}
+	}
+
+	if dev, ok := dev.(api.MeterEnergy); ok {
+		val, err := dev.TotalEnergy()
+		res["TotalEnergy"] = result{val, err}
+	}
+
+	if dev, ok := dev.(api.Battery); ok {
+		val, err := dev.Soc()
+		res["Soc"] = result{val, err}
 	}
 
 	jsonResult(w, res)
