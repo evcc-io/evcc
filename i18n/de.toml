@@ -231,7 +231,7 @@ title = "Einstellungen"
 
 [settings.gridDetails]
 co2 = "CO₂"
-label = "Netzstromdetails"
+label = "Netztarifdetails"
 none = "keine"
 price = "Preis"
 
