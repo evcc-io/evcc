@@ -126,7 +126,7 @@ func (t *GrünStromIndex) run(done chan error) {
 
 // Unit implements the api.Tariff interface
 func (t *GrünStromIndex) Unit() string {
-	return "gCO2eq"
+	return Co2Equivalent
 }
 
 // Rates implements the api.Tariff interface

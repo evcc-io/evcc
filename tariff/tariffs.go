@@ -7,6 +7,9 @@ import (
 	"golang.org/x/text/currency"
 )
 
+// Co2Equivalent is the unit for co2 emissions
+const Co2Equivalent = "gCO2eq"
+
 type Tariffs struct {
 	Currency              currency.Unit
 	Grid, FeedIn, Planner api.Tariff
@@ -60,7 +63,7 @@ func (t *Tariffs) CurrentEffectivePrice(greenShare float64) (float64, error) {
 
 // CurrentCo2 determines the grids co2 emission.
 func (t *Tariffs) CurrentCo2() (float64, error) {
-	if t.Planner != nil && t.Planner.Unit() == "gCO2eq" {
+	if t.Planner != nil && t.Planner.Unit() == Co2Equivalent {
 		return currentPrice(t.Planner)
 	}
 	return 0, api.ErrNotAvailable
