@@ -42,28 +42,24 @@ render: |
         address: 35105 # Ppv1 PV1 Power
         type: holding
         decode: uint32
-      scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 35109 # Ppv2 PV2 Power
         type: holding
         decode: uint32
-      scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 35113 # Ppv3 PV3 Power
         type: holding
         decode: uint32
-      scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 35117 # Ppv4 PV4 Power
         type: holding
         decode: uint32
-      scale: 0.1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
