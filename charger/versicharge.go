@@ -51,9 +51,8 @@ package charger
     //	VersichargeRegRFID_UID2         = 97 // 5  RO
     //  weitere RFID Karten möglich (bis Register 337)
 
-  // Failsafe Current und Timeout, funktioniert ab FW 2.120, wird noch nicht verwendet
-    //  VersichargeRegFailsafeTimeout    = 1661 // RW 
-    //  VersichargeRegFailsafeCurrentSum = 1660 // RW 
+  // Failsafe Current und Timeout werden gesetzt, funktioniert ab FW 2.120.
+
 
   // Time and Energy of charging session	 
     //  VersichargeRegSessionEnergy   = // derzeit nicht vorhanden im Modbus Table
@@ -85,7 +84,7 @@ const (
 	VersichargeRegCurrentDipSwitch  = 29   // 1  RO UNIT16    -> Diagnose
 	VersichargeRegMeterType         = 30   // 1  RO UINT16    -> Diagnose
 	VersichargeRegTemp				= 1602 // 1  RO INT16     -> Diagnose
-
+	 
 // Charger States / Settings / Steuerung
  	VersichargeRegRFIDEnable      =   79 // 1 RW UNIT16  -> disabled: 0 , enabled: 1	
     VersichargeRegChargeStatus    = 1601 // 1 RO INT16?? -> Status 1-5 nicht dokumentiert
@@ -94,6 +93,8 @@ const (
 	VersichargeRegMaxCurrent      = 1633 // 1 RW UNIT16  -> Max. Charging Current
     VersichargeRegTotalEnergy     = 1692 // 2 RO Unit32(BigEndian) 
                                          // -> Gesamtleistung Wallbox in WattHours (Mulitplikation mit 0,1)
+	VersichargeRegFailsafeTimeout    = 1661 // RW 
+	VersichargeRegFailsafeCurrentSum = 1660 // RW
 )
 
 var (
@@ -156,11 +157,24 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 
 // Check FW Version 2.120	
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegFirmware, 5); err == nil {
-		fmt.Printf("[VERSI ] INFO INIT Versicharge Firmware: \t%s \n", b)
+		fmt.Printf("[VERSI ] INFO INIT Versicharge Firmware: \t\t%s \n", b)
 		if bytesAsString(b) != "2.120" {
-			fmt.Printf("[VERSI ] WARN Versicharge Firmware:\t%s -> Falsche Version, getestet mit FW 2.120 \n", b)
+			fmt.Printf("[VERSI ] WARN Versicharge Firmware:\t\t%s -> Falsche Version, getestet mit FW 2.120 \n", b)
+			return wb, err
 		}
 	}
+
+// Set Fallback Settings (10A und 120s)
+	_, err = wb.conn.WriteSingleRegister(VersichargeRegFailsafeCurrentSum, 10)
+	if err != nil {
+		return wb, err
+	}
+	fmt.Printf("[VERSI ] INFO INIT Versicharge Fallback Current: \t10A \n")
+	_, err = wb.conn.WriteSingleRegister(VersichargeRegFailsafeTimeout, 120)
+	if err != nil {
+		return wb, err
+	}
+	fmt.Printf("[VERSI ] INFO INIT Versicharge Fallback Timeout: \t120s \n")
 
 	return wb, nil
 }
