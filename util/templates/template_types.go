@@ -194,10 +194,11 @@ type Param struct {
 	AllInOne      *bool        `json:"-"`          // defines if the defined usages can all be present in a single device
 	Requirements  Requirements `json:"-"`          // requirements for this param to be usable, only supported via Type "bool"
 
-	Baudrate int    // device specific default for modbus RS485 baudrate
-	Comset   string // device specific default for modbus RS485 comset
-	Port     int    // device specific default for modbus TCPIP port
-	ID       int    // device specific default for modbus ID
+	// TODO move somewhere else should not be part of the param definition
+	Baudrate int    `json:"-"` // device specific default for modbus RS485 baudrate
+	Comset   string `json:"-"` // device specific default for modbus RS485 comset
+	Port     int    `json:"-"` // device specific default for modbus TCPIP port
+	ID       int    `json:"-"` // device specific default for modbus ID
 }
 
 // return a default value or example value depending on the renderMode
