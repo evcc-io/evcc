@@ -58,7 +58,7 @@ func (t *Tariffs) CurrentEffectivePrice(greenShare float64) (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-// CurrentCo2 determins the grids co2 emission.
+// CurrentCo2 determines the grids co2 emission.
 func (t *Tariffs) CurrentCo2() (float64, error) {
 	if t.Planner != nil && t.Planner.Unit() == "gCO2eq" {
 		return currentPrice(t.Planner)
