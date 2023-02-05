@@ -557,7 +557,7 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	return sitePower, nil
 }
 
-func (site *Site) updateGreenShare() float64 {
+func (site *Site) greenShare() float64 {
 	batteryDischarge := math.Max(0, site.batteryPower)
 	batteryCharge := -math.Min(0, site.batteryPower)
 	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
@@ -571,12 +571,34 @@ func (site *Site) updateGreenShare() float64 {
 		return 0
 	}
 
-	site.publish("greenShare", share)
-
 	return share
 }
 
-func (s *Site) publishTariffs(greenShare float64) {
+// effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
+func (s *Site) effectivePrice(greenShare float64) (float64, error) {
+	if grid, err := s.tariffs.CurrentGridPrice(); err == nil {
+		feedin, err := s.tariffs.CurrentFeedInPrice()
+		if err != nil {
+			feedin = 0
+		}
+		return grid*(1-greenShare) + feedin*greenShare, nil
+	}
+	return 0, api.ErrNotAvailable
+}
+
+// effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
+func (s *Site) effectiveCo2(greenShare float64) (float64, error) {
+	if co2, err := s.tariffs.CurrentCo2(); err == nil {
+		return co2 * (1 - greenShare), nil
+	}
+	return 0, api.ErrNotAvailable
+}
+
+func (s *Site) publishTariffs() {
+	greenShare := s.greenShare()
+
+	s.publish("greenShare", greenShare)
+
 	if gridPrice, err := s.tariffs.CurrentGridPrice(); err == nil {
 		s.publishDelta("tariffGrid", gridPrice)
 	}
@@ -586,10 +608,10 @@ func (s *Site) publishTariffs(greenShare float64) {
 	if co2, err := s.tariffs.CurrentCo2(); err == nil {
 		s.publishDelta("tariffCo2", co2)
 	}
-	if price, err := s.tariffs.CurrentEffectivePrice(greenShare); err == nil {
+	if price, err := s.effectivePrice(greenShare); err == nil {
 		s.publish("tariffEffectivePrice", price)
 	}
-	if co2, err := s.tariffs.CurrentEffectiveCo2(greenShare); err == nil {
+	if co2, err := s.effectiveCo2(greenShare); err == nil {
 		s.publish("tariffEffectiveCo2", co2)
 	}
 }
@@ -615,8 +637,8 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	greenShare := site.updateGreenShare()
-	site.publishTariffs(greenShare)
+	site.publishTariffs()
+	greenShare := site.greenShare()
 
 	// TODO: use energy instead of current power for better results
 	deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
