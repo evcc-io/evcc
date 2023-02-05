@@ -201,7 +201,7 @@ export default {
 			return this.collectProps(LoadpointSettingsModal);
 		},
 		settingsButtonVisible: function () {
-			return this.$hiddenFeatures || [0, 1, 3].includes(this.phasesConfigured);
+			return this.$hiddenFeatures() || [0, 1, 3].includes(this.phasesConfigured);
 		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);

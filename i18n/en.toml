@@ -158,9 +158,11 @@ label = "Limit"
 noLimit = "none"
 
 [main.vehicle]
-changeVehicle = "Change Vehicle"
+addVehicle = "Add vehicle"
+changeVehicle = "Change vehicle"
 detectionActive = "Detecting vehicle…"
 fallbackName = "Vehicle"
+moreActions = "More actions"
 none = "No vehicle"
 targetSoc = "Limit"
 unknown = "Guest vehicle"
@@ -242,6 +244,10 @@ label = "Language"
 
 [settings.telemetry]
 label = "Telemetry"
+
+[settings.hiddenFeatures]
+label = "Experimental"
+value = "Show experimental UI features."
 
 [settings.theme]
 auto = "system"

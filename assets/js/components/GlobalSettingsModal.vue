@@ -83,6 +83,25 @@
 							<FormRow id="telemetryEnabled" :label="$t('settings.telemetry.label')">
 								<TelemetrySettings :sponsor="sponsor" class="mt-1 mb-0" />
 							</FormRow>
+							<FormRow
+								id="hiddenFeaturesEnabled"
+								:label="`${$t('settings.hiddenFeatures.label')} 🧪`"
+							>
+								<div class="form-check form-switch my-1">
+									<input
+										id="hiddenFeaturesEnabled"
+										v-model="hiddenFeatures"
+										class="form-check-input"
+										type="checkbox"
+										role="switch"
+									/>
+									<div class="form-check-label">
+										<label for="telemetryEnabled">
+											{{ $t("settings.hiddenFeatures.value") }}
+										</label>
+									</div>
+								</div>
+							</FormRow>
 						</div>
 					</div>
 				</div>
@@ -114,6 +133,7 @@ export default {
 			language: getLocalePreference() || "",
 			unit: getUnits(),
 			gridDetails: getGridDetails(),
+			hiddenFeatures: getHiddenFeatures(),
 			THEMES,
 			UNITS,
 			GRID_DETAILS,
@@ -138,6 +158,9 @@ export default {
 		},
 		theme(value) {
 			setThemePreference(value);
+		},
+		hiddenFeatures(value) {
+			setHiddenFeatures(value);
 		},
 		language(value) {
 			const i18n = this.$root.$i18n;
