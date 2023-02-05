@@ -570,11 +570,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		lp.setActiveVehicle(lp.defaultVehicle)
 	}
 
-	lp.Lock()
-	lp.publish("mode", lp.Mode)
-	lp.publish(targetSoc, lp.Soc.target)
-	lp.publish(minSoc, lp.Soc.min)
-	lp.Unlock()
+	lp.publish("mode", lp.GetMode())
+	lp.publish(targetSoc, lp.GetTargetSoc())
+	lp.publish(minSoc, lp.GetMinSoc())
 
 	// reset detection state
 	lp.publish(vehicleDetectionActive, false)
@@ -869,9 +867,9 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 // and adds an odometer task
 func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.Lock()
-	defer lp.Unlock()
 
 	if lp.vehicle == vehicle {
+		lp.Unlock()
 		return
 	}
 
@@ -887,11 +885,19 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	}
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
+	lp.vehicle = vehicle
+
 	// reset minSoc and targetSoc before change
 	lp.setMinSoc(0)
 	lp.setTargetSoc(100)
 
-	if lp.vehicle = vehicle; vehicle != nil {
+	// reset target energy
+	lp.setTargetEnergy(0)
+
+	// unblock api
+	lp.Unlock()
+
+	if vehicle != nil {
 		lp.socUpdated = time.Time{}
 
 		// resolve optional config
@@ -906,11 +912,7 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(vehicleIcon, lp.vehicle.Icon())
 		lp.publish(vehicleCapacity, lp.vehicle.Capacity())
 
-		// unblock api
-		lp.Unlock()
 		lp.applyAction(vehicle.OnIdentified())
-		lp.Lock()
-
 		lp.addTask(lp.vehicleOdometer)
 
 		lp.progress.Reset()
@@ -924,14 +926,8 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(vehicleOdometer, 0.0)
 	}
 
-	// reset target energy
-	lp.setTargetEnergy(0)
-
 	// re-publish vehicle settings
-	lp.Unlock()
 	lp.publish(phasesActive, lp.activePhases())
-	lp.Lock()
-
 	lp.unpublishVehicle()
 
 	lp.updateSession(func(session *db.Session) {
