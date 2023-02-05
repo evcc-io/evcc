@@ -76,7 +76,7 @@ type Site struct {
 	batterySoc      float64 // Battery soc
 	batteryBuffered bool    // Battery buffer active
 
-	lastPublishedGridPrice, lastPublishedFeedInPrice, lastPublishedCo2 float64 // Store last published tariff values to avoid unnecessary republishing
+	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -209,8 +209,9 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:     util.NewLogger("site"),
-		Voltage: 230, // V
+		log:          util.NewLogger("site"),
+		publishCache: make(map[string]any),
+		Voltage:      230, // V
 	}
 
 	return lp
@@ -331,6 +332,16 @@ func (site *Site) publish(key string, val interface{}) {
 		Key: key,
 		Val: val,
 	}
+}
+
+// publishDelta deduplicates messages before publishing
+func (site *Site) publishDelta(key string, val interface{}) {
+	if v, ok := site.publishCache[key]; ok && v == val {
+		return
+	}
+
+	site.publishCache[key] = val
+	site.publish(key, val)
 }
 
 // updateMeter updates and publishes single meter
@@ -567,22 +578,13 @@ func (site *Site) updateGreenShare() float64 {
 
 func (s *Site) publishTariffs(greenShare float64) {
 	if gridPrice, err := s.tariffs.CurrentGridPrice(); err == nil {
-		if gridPrice != s.lastPublishedGridPrice {
-			s.lastPublishedGridPrice = gridPrice
-			s.publish("tariffGrid", gridPrice)
-		}
+		s.publishDelta("tariffGrid", gridPrice)
 	}
 	if feedInPrice, err := s.tariffs.CurrentFeedInPrice(); err == nil {
-		if feedInPrice != s.lastPublishedFeedInPrice {
-			s.lastPublishedFeedInPrice = feedInPrice
-			s.publish("tariffFeedIn", feedInPrice)
-		}
+		s.publishDelta("tariffFeedIn", feedInPrice)
 	}
 	if co2, err := s.tariffs.CurrentCo2(); err == nil {
-		if co2 != s.lastPublishedCo2 {
-			s.lastPublishedCo2 = co2
-			s.publish("tariffCo2", co2)
-		}
+		s.publishDelta("tariffCo2", co2)
 	}
 	if price, err := s.tariffs.CurrentEffectivePrice(greenShare); err == nil {
 		s.publish("tariffEffectivePrice", price)
