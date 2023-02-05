@@ -70,15 +70,21 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
+	typ := "template"
+	if req["type"] != nil {
+		typ = req["type"].(string)
+		delete(req, "type")
+	}
+
 	var dev any
 
 	switch class {
 	case templates.Charger:
-		dev, err = charger.NewFromConfig("template", req)
+		dev, err = charger.NewFromConfig(typ, req)
 	case templates.Meter:
-		dev, err = meter.NewFromConfig("template", req)
+		dev, err = meter.NewFromConfig(typ, req)
 	case templates.Vehicle:
-		dev, err = vehicle.NewFromConfig("template", req)
+		dev, err = vehicle.NewFromConfig(typ, req)
 	}
 
 	if err != nil {
