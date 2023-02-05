@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
@@ -73,14 +74,17 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch class {
 	case templates.Charger:
-		// res, err = charger.NewFromConfig(req.Name, req.Other)
+		res, err = charger.NewFromConfig(req.Name, req.Other)
 	case templates.Meter:
 		res, err = meter.NewFromConfig(req.Name, req.Other)
 	case templates.Vehicle:
 		res, err = vehicle.NewFromConfig(req.Name, req.Other)
 	}
 
-	_ = res
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
 
-	jsonResult(w, req)
+	jsonResult(w, res)
 }
