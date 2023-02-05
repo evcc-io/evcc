@@ -220,6 +220,40 @@ func (lp *Loadpoint) setTargetTime(finishAt time.Time) {
 	}
 }
 
+// GetEnableThreshold gets the loadpoint enable threshold
+func (lp *Loadpoint) GetEnableThreshold() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.Enable.Threshold
+}
+
+// SetEnableThreshold sets loadpoint enable threshold
+func (lp *Loadpoint) SetEnableThreshold(threshold float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.Enable.Threshold != threshold {
+		lp.Enable.Threshold = threshold
+	}
+}
+
+// GetDisableThreshold gets the loadpoint enable threshold
+func (lp *Loadpoint) GetDisableThreshold() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.Disable.Threshold
+}
+
+// SetDisableThreshold sets loadpoint disable threshold
+func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.Disable.Threshold != threshold {
+		lp.Disable.Threshold = threshold
+	}
+}
+
 // RemoteControl sets remote status demand
 func (lp *Loadpoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()
