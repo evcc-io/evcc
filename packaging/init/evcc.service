@@ -10,12 +10,9 @@ StartLimitIntervalSec=10
 StartLimitBurst=10
 
 [Service]
-ExecStart=/usr/bin/evcc --sqlite /var/lib/evcc/evcc.db
+ExecStart=/usr/bin/evcc
 Restart=always
 RestartSec=10
-
-User=evcc
-Group=evcc
 
 [Install]
 WantedBy=multi-user.target
