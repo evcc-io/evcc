@@ -52,8 +52,6 @@ const (
 	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 
-	smallSlotDuration = 10 * time.Minute // small planner slot duration we might ignore
-
 	guardGracePeriod = 10 * time.Second // allow out of sync during this timespan
 )
 

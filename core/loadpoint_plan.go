@@ -9,6 +9,11 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const (
+	smallSlotDuration = 10 * time.Minute // small planner slot duration we might ignore
+	smallGapDuration  = 30 * time.Minute // small gap duration between planner slots we might ignore
+)
+
 // setPlanActive updates plan active flag
 func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
@@ -138,7 +143,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		case requiredDuration < 30*time.Minute:
 			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
-		case lp.clock.Until(planStart) < smallSlotDuration:
+		case lp.clock.Until(planStart) < smallGapDuration:
 			lp.log.DEBUG.Printf("plan will re-start shortly, continuing for remaining %v", lp.clock.Until(planStart).Round(time.Second))
 			return true
 		}
