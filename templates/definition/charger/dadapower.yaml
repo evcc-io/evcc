@@ -7,7 +7,8 @@ capabilities: ["1p3p", "mA", "rfid"]
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 1
+    modbus:
+      id: 1
 render: |
   type: dadapower
   {{- include "modbus" . }}

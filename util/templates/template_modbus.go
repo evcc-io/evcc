@@ -70,35 +70,14 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 
 			values[p.Name] = p.DefaultValue(renderMode)
 
-			var defaultValue string
-
-			switch p.Name {
-			case ModbusParamNameId:
-				if modbusParam.ID != 0 {
-					defaultValue = fmt.Sprintf("%d", modbusParam.ID)
-				}
-			case ModbusParamNamePort:
-				if modbusParam.Port != 0 {
-					defaultValue = fmt.Sprintf("%d", modbusParam.Port)
-				}
-			case ModbusParamNameBaudrate:
-				if modbusParam.Baudrate != 0 {
-					defaultValue = fmt.Sprintf("%d", modbusParam.Baudrate)
-				}
-			case ModbusParamNameComset:
-				if modbusParam.Comset != "" {
-					defaultValue = modbusParam.Comset
-				}
-			}
-
-			if defaultValue != "" {
+			if override := modbusParam.Modbus.Value(p.Name); override != "" {
 				// for modbus params the default value is carried
 				// using the parameter default, not the value
 				// TODO figure out why that's necessary
 				if renderMode == TemplateRenderModeInstance {
-					t.SetParamDefault(p.Name, defaultValue)
+					t.SetParamDefault(p.Name, override)
 				} else {
-					values[p.Name] = defaultValue
+					values[p.Name] = override
 				}
 			}
 		}

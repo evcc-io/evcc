@@ -11,7 +11,8 @@ params:
     choice: ["pv"]
   - name: modbus
     choice: ["tcpip"]
-    id: 1
+    modbus:
+      id: 1
 render: |
   type: custom
   {{- if eq .usage "pv" }}

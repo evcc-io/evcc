@@ -14,8 +14,9 @@ params:
     allinone: true
   - name: modbus
     choice: ["tcpip", "rs485"]
-    id: 1
-    port: 1502
+    modbus:
+      id: 1
+      port: 1502
   - name: timeout
     valuetype: duration
 render: |

@@ -10,8 +10,9 @@ params:
     allinone: true
   - name: modbus
     choice: ["tcpip"]
-    port: 502
-    id: 3
+    modbus:
+      port: 502
+      id: 3
     help:
       en: The Modbus TCP-Server needs to be enabled on this Smart Energy inverter
       de: Der Modbus TCP-Server muss an diesem Smart Energy Wechselrichter aktiviert sein

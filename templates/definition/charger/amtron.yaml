@@ -8,7 +8,8 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 255
+    modbus:
+      id: 255
 render: |
   type: amtron
   {{- include "modbus" . }}

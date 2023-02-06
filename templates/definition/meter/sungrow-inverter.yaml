@@ -13,7 +13,8 @@ params:
     allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
-    baudrate: 9600
+    modbus:
+      baudrate: 9600
 render: |
   type: custom
   {{- if eq .usage "grid" }}

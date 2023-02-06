@@ -18,8 +18,9 @@ requirements:
 params:
   - name: modbus
     choice: ["rs485"]
-    baudrate: 19200
-    comset: 8E1
+    modbus:
+      baudrate: 19200
+      comset: 8E1
 render: |
   type: heidelberg
   {{- include "modbus" . }}

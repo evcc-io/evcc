@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fatih/structs"
 	"github.com/imdario/mergo"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -24,15 +26,6 @@ const (
 	ModbusKeyRS485Serial = "rs485serial"
 	ModbusKeyRS485TCPIP  = "rs485tcpip"
 	ModbusKeyTCPIP       = "tcpip"
-
-	ModbusParamNameId       = "id"
-	ModbusParamNameDevice   = "device"
-	ModbusParamNameBaudrate = "baudrate"
-	ModbusParamNameComset   = "comset"
-	ModbusParamNameURI      = "uri"
-	ModbusParamNameHost     = "host"
-	ModbusParamNamePort     = "port"
-	ModbusParamNameRTU      = "rtu"
 
 	TemplateRenderModeDocs     = "docs"
 	TemplateRenderModeUnitTest = "unittest"
@@ -82,10 +75,9 @@ const (
 
 var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship}
 
+// predefinedTemplateProperties are accepted properties in the template definition even if not part of the templates parameter list
 var predefinedTemplateProperties = []string{
 	"type", "template", "name",
-	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
-	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
 	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
@@ -160,6 +152,31 @@ type LinkedTemplate struct {
 	ExcludeTemplate string // only consider this if no device of the named linked template was added
 }
 
+type ModbusDefaults struct {
+	Baudrate int    // device specific default for modbus RS485 baudrate
+	Comset   string // device specific default for modbus RS485 comset
+	Port     int    // device specific default for modbus TCPIP port
+	ID       int    // device specific default for modbus ID
+}
+
+func (p *ModbusDefaults) Value(name string) string {
+	for _, f := range structs.Fields(p) {
+		if strings.EqualFold(f.Name(), name) {
+			if f.IsZero() {
+				return ""
+			}
+			return fmt.Sprintf("%v", f.Value())
+		}
+	}
+
+	// TODO remove need for default values outside of ModbusDefaults
+	if slices.Contains([]string{"device", "host", "port", "rtu"}, name) {
+		return ""
+	}
+
+	panic("not a modbus field: " + name)
+}
+
 // Param is a proxy template parameter
 // Params can be defined:
 // 1. in the template: uses entries in 4. for default properties and values, can be overwritten here
@@ -194,10 +211,7 @@ type Param struct {
 	AllInOne      *bool        // defines if the defined usages can all be present in a single device
 	Requirements  Requirements // requirements for this param to be usable, only supported via ValueType "bool"
 
-	Baudrate int    // device specific default for modbus RS485 baudrate
-	Comset   string // device specific default for modbus RS485 comset
-	Port     int    // device specific default for modbus TCPIP port
-	ID       int    // device specific default for modbus ID
+	Modbus ModbusDefaults `json:"-"` // modbus defaults for the modbus param
 }
 
 // return a default value or example value depending on the renderMode

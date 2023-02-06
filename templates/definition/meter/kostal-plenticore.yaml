@@ -15,8 +15,9 @@ params:
     allinone: true
   - name: modbus
     choice: ["tcpip"]
-    id: 71
-    port: 1502
+    modbus:
+      id: 71
+      port: 1502
   - name: capacity
     advanced: true
 render: |

@@ -8,7 +8,8 @@ params:
     choice: ["grid"]
   - name: modbus
     choice: ["tcpip"]
-    id: 71
+    modbus:
+      id: 71
 render: |
   type: modbus
   {{- include "modbus" . }}

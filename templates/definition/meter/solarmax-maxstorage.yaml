@@ -9,7 +9,8 @@ params:
     allinone: true
   - name: modbus
     choice: ["tcpip"]
-    id: 1
+    modbus:
+      id: 1
   - name: capacity
     advanced: true
 render: |

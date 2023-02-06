@@ -14,7 +14,8 @@ params:
     allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
-    baudrate: 9600
+    modbus:
+      baudrate: 9600
   - name: capacity
     advanced: true
 render: |

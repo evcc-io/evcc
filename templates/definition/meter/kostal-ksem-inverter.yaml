@@ -13,8 +13,9 @@ params:
     choice: ["grid"]
   - name: modbus
     choice: ["tcpip"]
-    port: 1502
-    id: 71
+    modbus:
+      port: 1502
+      id: 71
 render: |
   type: custom
   power:

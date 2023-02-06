@@ -8,8 +8,9 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
-    baudrate: 9600
-    id: 247
+    modbus:
+      baudrate: 9600
+      id: 247
   - name: capacity
     advanced: true
 render: |
