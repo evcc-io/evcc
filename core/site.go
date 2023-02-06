@@ -623,7 +623,11 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// prioritize if possible
-	consumablePower := site.prioritizer.Consumable(lp)
+	// TODO handle Min+PV
+	var consumablePower float64
+	if lp.GetMode() == api.ModePV {
+		consumablePower = site.prioritizer.Consumable(lp)
+	}
 
 	if sitePower, err := site.sitePower(totalChargePower, consumablePower); err == nil {
 		lp.Update(sitePower, site.batteryBuffered)
