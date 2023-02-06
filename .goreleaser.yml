@@ -76,6 +76,7 @@ nfpms:
         dst: /lib/systemd/system/evcc.service
 
     scripts:
+      preinstall: ./packaging/scripts/preinstall.sh
       postinstall: ./packaging/scripts/postinstall.sh
       preremove: ./packaging/scripts/preremove.sh
       postremove: ./packaging/scripts/postremove.sh
