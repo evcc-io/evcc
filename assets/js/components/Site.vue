@@ -61,6 +61,7 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoc: Number,
+		battery: Array,
 		gridCurrents: Array,
 		prioritySoc: Number,
 		siteTitle: String,
@@ -68,7 +69,6 @@ export default {
 
 		auth: Object,
 
-		// footer
 		currency: String,
 		savingsAmount: Number,
 		savingsEffectivePrice: Number,
@@ -77,8 +77,12 @@ export default {
 		savingsSelfConsumptionPercent: Number,
 		savingsSince: String,
 		savingsTotalCharged: Number,
+		greenShare: Number,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
+		tariffEffectivePrice: Number,
+		tariffCo2: Number,
+		tariffEffectiveCo2: Number,
 
 		availableVersion: String,
 		releaseNotes: String,
@@ -112,6 +116,12 @@ export default {
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation) };
+		},
+		hasPrice: function () {
+			return !isNaN(this.tariffGrid);
+		},
+		hasCo2: function () {
+			return !isNaN(this.tariffCo2);
 		},
 		showParkingLot: function () {
 			// work in progess

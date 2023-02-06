@@ -94,9 +94,7 @@ export default {
 			if (price === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}
-			return this.isCo2
-				? `${Math.round(price)} g/kWh`
-				: this.fmtPricePerKWh(price, this.unit);
+			return this.isCo2 ? this.fmtCo2Medium(price) : this.fmtPricePerKWh(price, this.unit);
 		},
 		activeSlot() {
 			return this.slots[this.activeIndex];

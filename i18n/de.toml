@@ -229,6 +229,12 @@ vehicle = "Fahrzeug"
 [settings]
 title = "Einstellungen"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Netztarifdetails"
+none = "keine"
+price = "Preis"
+
 [settings.language]
 auto = "Automatisch"
 label = "Sprache"

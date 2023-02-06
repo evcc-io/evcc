@@ -75,6 +75,8 @@ type Site struct {
 	batteryPower    float64 // Battery charge power
 	batterySoc      float64 // Battery soc
 	batteryBuffered bool    // Battery buffer active
+
+	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -207,8 +209,9 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:     util.NewLogger("site"),
-		Voltage: 230, // V
+		log:          util.NewLogger("site"),
+		publishCache: make(map[string]any),
+		Voltage:      230, // V
 	}
 
 	return lp
@@ -329,6 +332,16 @@ func (site *Site) publish(key string, val interface{}) {
 		Key: key,
 		Val: val,
 	}
+}
+
+// publishDelta deduplicates messages before publishing
+func (site *Site) publishDelta(key string, val interface{}) {
+	if v, ok := site.publishCache[key]; ok && v == val {
+		return
+	}
+
+	site.publishCache[key] = val
+	site.publish(key, val)
 }
 
 // updateMeter updates and publishes single meter
@@ -544,6 +557,65 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	return sitePower, nil
 }
 
+func (site *Site) greenShare() float64 {
+	batteryDischarge := math.Max(0, site.batteryPower)
+	batteryCharge := -math.Min(0, site.batteryPower)
+	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
+
+	gridImport := math.Max(0, site.gridPower)
+	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
+
+	share := selfConsumption / (gridImport + selfConsumption)
+
+	if math.IsNaN(share) {
+		return 0
+	}
+
+	return share
+}
+
+// effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
+func (s *Site) effectivePrice(greenShare float64) (float64, error) {
+	if grid, err := s.tariffs.CurrentGridPrice(); err == nil {
+		feedin, err := s.tariffs.CurrentFeedInPrice()
+		if err != nil {
+			feedin = 0
+		}
+		return grid*(1-greenShare) + feedin*greenShare, nil
+	}
+	return 0, api.ErrNotAvailable
+}
+
+// effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
+func (s *Site) effectiveCo2(greenShare float64) (float64, error) {
+	if co2, err := s.tariffs.CurrentCo2(); err == nil {
+		return co2 * (1 - greenShare), nil
+	}
+	return 0, api.ErrNotAvailable
+}
+
+func (s *Site) publishTariffs() {
+	greenShare := s.greenShare()
+
+	s.publish("greenShare", greenShare)
+
+	if gridPrice, err := s.tariffs.CurrentGridPrice(); err == nil {
+		s.publishDelta("tariffGrid", gridPrice)
+	}
+	if feedInPrice, err := s.tariffs.CurrentFeedInPrice(); err == nil {
+		s.publishDelta("tariffFeedIn", feedInPrice)
+	}
+	if co2, err := s.tariffs.CurrentCo2(); err == nil {
+		s.publishDelta("tariffCo2", co2)
+	}
+	if price, err := s.effectivePrice(greenShare); err == nil {
+		s.publish("tariffEffectivePrice", price)
+	}
+	if co2, err := s.effectiveCo2(greenShare); err == nil {
+		s.publish("tariffEffectiveCo2", co2)
+	}
+}
+
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
@@ -565,11 +637,13 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	// update savings and aggregate telemetry
+	site.publishTariffs()
+	greenShare := site.greenShare()
+
 	// TODO: use energy instead of current power for better results
-	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
 	if telemetry.Enabled() && totalChargePower > standbyPower {
-		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
+		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
 	}
 }
 

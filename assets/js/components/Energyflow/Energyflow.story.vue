@@ -27,6 +27,10 @@ import Energyflow from "./Energyflow.vue";
 				:batteryPower="800"
 				:batterySoc="77"
 				siteTitle="Home"
+				:battery="[
+					{ soc: 44, capacity: 13.3 },
+					{ soc: 82, capacity: 21 },
+				]"
 			/>
 		</Variant>
 		<Variant title="battery charging">

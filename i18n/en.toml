@@ -229,6 +229,12 @@ vehicle = "Vehicle"
 [settings]
 title = "Settings"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Grid details"
+none = "none"
+price = "price"
+
 [settings.language]
 auto = "Automatic"
 label = "Language"

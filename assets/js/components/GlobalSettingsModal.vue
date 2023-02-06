@@ -63,6 +63,23 @@
 									"
 								/>
 							</FormRow>
+							<FormRow
+								id="settingsGridDetails"
+								:label="$t('settings.gridDetails.label')"
+							>
+								<SelectGroup
+									id="settingsGridDetails"
+									v-model="gridDetails"
+									class="w-100"
+									:options="
+										GRID_DETAILS.map((value) => ({
+											value,
+											name: $t(`settings.gridDetails.${value}`),
+											disabled: isDisabled(value),
+										}))
+									"
+								/>
+							</FormRow>
 							<FormRow id="telemetryEnabled" :label="$t('settings.telemetry.label')">
 								<TelemetrySettings :sponsor="sponsor" class="mt-1 mb-0" />
 							</FormRow>
@@ -81,20 +98,25 @@ import SelectGroup from "./SelectGroup.vue";
 import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreference } from "../i18n";
 import { getThemePreference, setThemePreference, THEMES } from "../theme";
 import { getUnits, setUnits, UNITS } from "../units";
+import { getGridDetails, setGridDetails, GRID_DETAILS } from "../gridDetails";
 
 export default {
 	name: "GlobalSettingsModal",
 	components: { TelemetrySettings, FormRow, SelectGroup },
 	props: {
 		sponsor: String,
+		hasPrice: Boolean,
+		hasCo2: Boolean,
 	},
 	data: function () {
 		return {
 			theme: getThemePreference(),
 			language: getLocalePreference() || "",
 			unit: getUnits(),
+			gridDetails: getGridDetails(),
 			THEMES,
 			UNITS,
+			GRID_DETAILS,
 		};
 	},
 	computed: {
@@ -111,6 +133,9 @@ export default {
 		unit(value) {
 			setUnits(value);
 		},
+		gridDetails(value) {
+			setGridDetails(value);
+		},
 		theme(value) {
 			setThemePreference(value);
 		},
@@ -121,6 +146,11 @@ export default {
 			} else {
 				removeLocalePreference(i18n);
 			}
+		},
+	},
+	methods: {
+		isDisabled(option) {
+			return (option === "co2" && !this.hasCo2) || (option === "price" && !this.hasPrice);
 		},
 	},
 };

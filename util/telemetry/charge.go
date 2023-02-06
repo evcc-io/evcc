@@ -58,19 +58,19 @@ func Create(machineID string) {
 
 // UpdateChargeProgress accumulates the charge delta and uploads at given interval.
 // This interval must be smaller that the apis expiry interval for treating power values as current.
-func UpdateChargeProgress(log *util.Logger, power, deltaCharged, deltaGreen float64) {
+func UpdateChargeProgress(log *util.Logger, power, deltaCharged, greenShare float64) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	// cache
 	accChargeEnergy += deltaCharged
-	accGreenEnergy += deltaGreen
+	accGreenEnergy += deltaCharged * greenShare
 
 	if time.Since(updated) < 30*time.Second {
 		return
 	}
 
-	if err := upload(log, power, power*deltaGreen/deltaCharged); err != nil {
+	if err := upload(log, power, power*greenShare); err != nil {
 		log.ERROR.Printf("telemetry: upload failed: %v", err)
 	}
 }
