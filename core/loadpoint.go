@@ -1415,14 +1415,6 @@ func (lp *Loadpoint) processTasks() {
 		}
 	}
 }
-func (lp *Loadpoint) additionallyConsumablePower(sitePower float64) float64 {
-	if lp.connected() {
-		if maxPower := lp.GetMaxPower(); maxPower > lp.chargePower {
-			return maxPower - lp.chargePower
-		}
-	}
-	return 0
-}
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
