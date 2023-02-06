@@ -151,6 +151,16 @@ func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 			}
 		}
 	})
+	m.Handler.ListenSetter(topic+"/enable/threshold/set", func(payload string) {
+		if threshold, err := strconv.ParseFloat(payload, 64); err == nil {
+			lp.SetEnableThreshold(threshold)
+		}
+	})
+	m.Handler.ListenSetter(topic+"/disable/threshold/set", func(payload string) {
+		if threshold, err := strconv.ParseFloat(payload, 64); err == nil {
+			lp.SetDisableThreshold(threshold)
+		}
+	})
 }
 
 // Run starts the MQTT publisher for the MQTT API
