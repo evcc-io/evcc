@@ -4,6 +4,7 @@ set -e
 USER_CHOICE_CONFIG="/etc/evcc-userchoices.sh"
 ETC_SERVICE="/etc/systemd/system/evcc.service"
 USR_LOCAL_BIN="/usr/local/bin/evcc"
+RESTART_FLAG_FILE=/var/lib/evcc/.restartOnUpgrade
 
 # Usage: askUserKeepFile <file>
 # Return: 1 = keep, 0 = delete
@@ -88,7 +89,10 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
 	# Restart only if it was already started
 	if [ -d /run/systemd/system ]; then
 		systemctl --system daemon-reload >/dev/null || true
-		if [ -n "$2" ]; then
+		if [ -f $RESTART_FLAG_FILE ]; then
+			deb-systemd-invoke start evcc.service >/dev/null || true
+			rm $RESTART_FLAG_FILE
+		elif [ -n "$2" ]; then
 			deb-systemd-invoke try-restart evcc.service >/dev/null || true
 		else
 			deb-systemd-invoke start evcc.service >/dev/null || true
