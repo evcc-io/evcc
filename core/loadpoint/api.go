@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+//go:generate mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
+
 // Controller gives access to loadpoint
 type Controller interface {
 	LoadpointControl(API)
@@ -15,6 +17,7 @@ type Controller interface {
 type API interface {
 	// Title returns the defined loadpoint title
 	Title() string
+	Priority() int
 
 	//
 	// status

@@ -17,6 +17,11 @@ func (lp *Loadpoint) Title() string {
 	return lp.Title_
 }
 
+// Priority returns the loadpoint priority
+func (lp *Loadpoint) Priority() int {
+	return lp.Priority_
+}
+
 // GetStatus returns the charging status
 func (lp *Loadpoint) GetStatus() api.ChargeStatus {
 	lp.Lock()

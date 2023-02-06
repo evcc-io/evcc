@@ -103,6 +103,7 @@ type Loadpoint struct {
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
 	Title_            string   `mapstructure:"title"`    // UI title
+	Priority_         int      `mapstructure:"priority"` // Priority
 	ConfiguredPhases  int      `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
 	ChargerRef        string   `mapstructure:"charger"`  // Charger reference
 	VehicleRef        string   `mapstructure:"vehicle"`  // Vehicle reference
@@ -161,10 +162,6 @@ type Loadpoint struct {
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
 	progress                *Progress     // Step-wise progress indicator
-
-	// priorities
-	Priority    int // Priority of this loadpoint
-	prioritizer *Prioritizer
 
 	// session log
 	db      db.Database
@@ -1479,9 +1476,6 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 	// track if remote disabled is actually active
 	remoteDisabled := loadpoint.RemoteEnable
 
-	// no demand unless charging in pv mode
-	lp.prioritizer.Prioritize(lp.Priority, 0)
-
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -1521,18 +1515,6 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
-		sitePower := sitePower
-
-		// de-prioritize if necessary
-		if lp.prioritizer != nil {
-			consumablePower := lp.additionallyConsumablePower(sitePower)
-			reducePower := lp.prioritizer.Prioritize(lp.Priority, consumablePower)
-			if reducePower > 0 {
-				lp.log.DEBUG.Printf("power reduction: %.0fW", reducePower)
-				sitePower += reducePower
-			}
-		}
-
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 
 		var required bool // false
