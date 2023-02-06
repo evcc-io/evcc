@@ -137,7 +137,6 @@ var _ api.PhaseSwitcher = (*Wattpilot)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Wattpilot) Phases1p3p(phases int) error {
-
 	if phases == 3 {
 		phases = 2
 	}
