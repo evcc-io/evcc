@@ -271,3 +271,8 @@ lineError = "Error in {0}."
 lineErrorLink = "line {0}"
 restartButton = "Restart"
 title = "Startup Error"
+
+[vehicleSettings]
+cancel = "Cancel"
+template = "Manufacturer"
+test = "Test"

@@ -22,40 +22,60 @@
 					</div>
 					<div class="modal-body">
 						<div class="container">
-							<FormRow id="settingsDesign" label="Icon">
-								<input type="text" />
-							</FormRow>
-							<FormRow id="settingsDesign" label="Zugangsdaten">
-								Volkswagen We Connect ID
-								<div class="d-flex align-items-center">
-									<small class="text-success"> Verbindung erfolgreich </small>
-									<button class="btn-sm btn btn-link text-muted">
-										bearbeiten
-									</button>
-								</div>
-							</FormRow>
-							<FormRow id="settingsLanguage" :label="$t('settings.language.label')">
+							<FormRow id="vehicleTemplate" :label="$t('vehicleSettings.template')">
 								<select
-									id="settingsLanguage"
-									v-model="language"
-									class="form-select form-select-sm w-75"
+									id="vehicleTemplate"
+									v-model="template"
+									class="form-select form-select-sm w-100"
 								>
-									<option value="">{{ $t("settings.language.auto") }}</option>
+									<option
+										v-for="option in vehicleOptions"
+										:key="option.name"
+										:value="option.value"
+									>
+										{{ option.name }}
+									</option>
 								</select>
 							</FormRow>
-							<FormRow id="settingsUnit" :label="$t('settings.unit.label')">
-								<SelectGroup
-									id="settingsUnit"
-									v-model="unit"
-									class="w-75"
-									:options="
-										['1', '2'].map((value) => ({
-											value,
-											name: $t(`settings.unit.${value}`),
-										}))
-									"
+							<FormRow
+								v-for="param in templateParams"
+								:id="`vehicleParam${param.Name}`"
+								:key="param.Name"
+								:label="param.Description.EN || `[${param.Name}]`"
+							>
+								<input
+									:id="`vehicleParam${param.Name}`"
+									v-model="values[param.Name]"
+									:type="param.Mask ? 'password' : 'text'"
+									class="w-100 me-2"
+									:placeholder="param.Example"
+									:required="param.Required"
 								/>
 							</FormRow>
+							<div class="buttons d-flex justify-content-between mb-4">
+								<button
+									type="button"
+									class="btn btn-outline-secondary"
+									data-bs-dismiss="modal"
+								>
+									{{ $t("vehicleSettings.cancel") }}
+								</button>
+								<button type="submit" class="btn btn-primary" @click="test">
+									{{ $t("vehicleSettings.test") }}
+								</button>
+							</div>
+							<div class="card result">
+								<div class="card-body">
+									<pre><code>{{ configYaml }}</code></pre>
+									<code
+										v-if="testResult"
+										:class="testSuccess ? 'text-success' : 'text-danger'"
+									>
+										<hr />
+										{{ testResult }}
+									</code>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -66,19 +86,62 @@
 
 <script>
 import FormRow from "./FormRow.vue";
-import SelectGroup from "./SelectGroup.vue";
+import api from "../api";
+import YAML from "json-to-pretty-yaml";
 
 export default {
 	name: "VehicleSettingsModal",
-	components: { FormRow, SelectGroup },
+	components: { FormRow },
 	data() {
-		return { isModalVisible: false };
+		return {
+			isModalVisible: false,
+			templates: [],
+			template: null,
+			values: {},
+			testResult: "",
+			testSuccess: false,
+		};
+	},
+	computed: {
+		vehicleOptions() {
+			const result = [];
+			this.templates.forEach((t) => {
+				t.Products.forEach((p) => {
+					const value = t.Template;
+					let name = this.productName(p);
+					result.push({ name, value });
+				});
+			});
+			result.sort((a, b) => a.name.localeCompare(b.name));
+			return result;
+		},
+		templateParams() {
+			const params = this.templates.find((t) => t.Template === this.template)?.Params || [];
+			return params.filter((p) => !p.Advanced);
+		},
+		configYaml() {
+			return YAML.stringify([
+				{
+					name: "my_vehicle",
+					...this.apiData,
+				},
+			]);
+		},
+		apiData() {
+			return {
+				template: this.template,
+				...this.values,
+			};
+		},
 	},
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
-				// daten laden
+				this.loadTemplates();
 			}
+		},
+		template() {
+			this.values = {};
 		},
 	},
 	mounted() {
@@ -90,10 +153,32 @@ export default {
 		this.$refs.modal.removeEventListener("hide.bs.modal", this.modalInvisible);
 	},
 	methods: {
-		modalVisible: function () {
+		productName({ Brand, Description }) {
+			const brand = Brand || "";
+			const description = Description.Generic || Description.EN || "";
+			return `${brand} ${description}`.trim();
+		},
+		async loadTemplates() {
+			try {
+				this.templates = (await api.get("config/templates/vehicle")).data.result;
+			} catch (e) {
+				console.error(e);
+			}
+		},
+		async test() {
+			try {
+				this.testResult = (await api.post("config/test/vehicle", this.apiData)).data.result;
+				this.testSuccess = true;
+			} catch (e) {
+				console.error(e);
+				this.testSuccess = false;
+				this.testResult = e.response?.data?.error || e.message;
+			}
+		},
+		modalVisible() {
 			this.isModalVisible = true;
 		},
-		modalInvisible: function () {
+		modalInvisible() {
 			this.isModalVisible = false;
 		},
 	},
@@ -103,9 +188,11 @@ export default {
 .container {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
+	padding-right: 0;
 }
 
-.container h4:first-child {
-	margin-top: 0 !important;
+.buttons,
+.result {
+	margin-right: calc(var(--bs-gutter-x) * -0.5);
 }
 </style>
