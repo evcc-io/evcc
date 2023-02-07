@@ -242,16 +242,17 @@ export default {
 			if (
 				this.isModalVisible &&
 				!this.timeInThePast &&
-				(this.targetEnergy || this.targetSoc)
+				(this.targetEnergy || this.targetSoc) &&
+				!isNaN(this.selectedTargetTime)
 			) {
 				try {
 					const opts = {
 						params: { targetTime: this.selectedTargetTime },
 					};
 					this.plan = (
-						await api.get(`/loadpoints/${this.id}/target/plan`, opts)
+						await api.get(`loadpoints/${this.id}/target/plan`, opts)
 					).data.result;
-					this.tariff = (await api.get(`/tariff/planner`)).data.result;
+					this.tariff = (await api.get(`tariff/planner`)).data.result;
 				} catch (e) {
 					console.error(e);
 				}
