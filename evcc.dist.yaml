@@ -69,6 +69,8 @@ meters:
     type: ...
   - name: charge
     type: ...
+  - name: smart
+    type: ...
 
 # charger definitions
 # name can be freely chosen and is used as reference when assigning charger to vehicle
@@ -103,7 +105,9 @@ site:
     grid: grid # grid meter
     pvs:
       - pv # list of pv inverters/ meters
-    battery: battery # battery meter
+    batteries:
+      - battery # list of battery meters
+    smart: smart # additional smart loads meter
   prioritySoc: # give home battery priority up to this soc (empty to disable)
   bufferSoc: # ignore home battery discharge above soc (empty to disable)
 
