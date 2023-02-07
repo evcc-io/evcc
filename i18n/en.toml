@@ -238,16 +238,16 @@ label = "Grid details"
 none = "none"
 price = "price"
 
+[settings.hiddenFeatures]
+label = "Experimental"
+value = "Show experimental UI features."
+
 [settings.language]
 auto = "Automatic"
 label = "Language"
 
 [settings.telemetry]
 label = "Telemetry"
-
-[settings.hiddenFeatures]
-label = "Experimental"
-value = "Show experimental UI features."
 
 [settings.theme]
 auto = "system"
