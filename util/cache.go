@@ -33,8 +33,8 @@ func (c *Cache) Run(in <-chan Param) {
 	log := NewLogger("cache")
 
 	for p := range in {
-		if cachedC, ok := p.Val.(flush); ok {
-			close(cachedC)
+		if flushC, ok := p.Val.(flush); ok {
+			close(flushC)
 			continue
 		}
 
