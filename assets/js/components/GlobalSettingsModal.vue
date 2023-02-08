@@ -83,6 +83,26 @@
 							<FormRow id="telemetryEnabled" :label="$t('settings.telemetry.label')">
 								<TelemetrySettings :sponsor="sponsor" class="mt-1 mb-0" />
 							</FormRow>
+							<FormRow
+								v-if="isNightly"
+								id="hiddenFeaturesEnabled"
+								:label="`${$t('settings.hiddenFeatures.label')} 🧪`"
+							>
+								<div class="form-check form-switch my-1">
+									<input
+										id="hiddenFeaturesEnabled"
+										v-model="hiddenFeatures"
+										class="form-check-input"
+										type="checkbox"
+										role="switch"
+									/>
+									<div class="form-check-label">
+										<label for="telemetryEnabled">
+											{{ $t("settings.hiddenFeatures.value") }}
+										</label>
+									</div>
+								</div>
+							</FormRow>
 						</div>
 					</div>
 				</div>
@@ -99,6 +119,7 @@ import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreferen
 import { getThemePreference, setThemePreference, THEMES } from "../theme";
 import { getUnits, setUnits, UNITS } from "../units";
 import { getGridDetails, setGridDetails, GRID_DETAILS } from "../gridDetails";
+import { getHiddenFeatures, setHiddenFeatures } from "../featureflags";
 
 export default {
 	name: "GlobalSettingsModal",
@@ -114,6 +135,7 @@ export default {
 			language: getLocalePreference() || "",
 			unit: getUnits(),
 			gridDetails: getGridDetails(),
+			hiddenFeatures: getHiddenFeatures(),
 			THEMES,
 			UNITS,
 			GRID_DETAILS,
@@ -128,6 +150,9 @@ export default {
 			locales.sort((a, b) => (a.name < b.name ? -1 : 1));
 			return locales;
 		},
+		isNightly: () => {
+			return !!window.evcc.commit;
+		},
 	},
 	watch: {
 		unit(value) {
@@ -138,6 +163,9 @@ export default {
 		},
 		theme(value) {
 			setThemePreference(value);
+		},
+		hiddenFeatures(value) {
+			setHiddenFeatures(value);
 		},
 		language(value) {
 			const i18n = this.$root.$i18n;

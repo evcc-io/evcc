@@ -36,7 +36,7 @@ requirements:
       * Local network connection
 params:
   - name: stationid
-    valuetype: string
+    type: string
     advanced: true
     help:
       en: The chargers unique station id (or chargepoint id)
@@ -44,19 +44,19 @@ params:
     example: EVB-P12354
   - name: connector
     default: 1
-    valuetype: int
+    type: int
     advanced: true
     help:
       en: Connector number, usually 1 for first connector.
       de: Verwendeter Ladepunkt, normalerweise 1 für den ersten Anschluss.
   - name: meter
     default: false
-    valuetype: bool
+    type: bool
     help:
       en: Use integrated meter (if present)
       de: Benutze den integrierten Zähler (falls vorhanden)
   - name: idtag
-    valuetype: string
+    type: string
     advanced: true
     help:
       en: Token-ID returned to the charger for authorisation of charging sessions
@@ -65,7 +65,7 @@ params:
   - name: timeout
     advanced: true
     default: 10m
-    valuetype: duration
+    type: duration
 render: |
   type: ocpp
   {{- if ne .stationid "" }}

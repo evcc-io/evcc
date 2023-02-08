@@ -158,9 +158,11 @@ label = "Limit"
 noLimit = "none"
 
 [main.vehicle]
-changeVehicle = "Change Vehicle"
+addVehicle = "Add vehicle"
+changeVehicle = "Change vehicle"
 detectionActive = "Detecting vehicle…"
 fallbackName = "Vehicle"
+moreActions = "More actions"
 none = "No vehicle"
 targetSoc = "Limit"
 unknown = "Guest vehicle"
@@ -236,6 +238,10 @@ label = "Grid details"
 none = "none"
 price = "price"
 
+[settings.hiddenFeatures]
+label = "Experimental"
+value = "Show experimental UI features."
+
 [settings.language]
 auto = "Automatic"
 label = "Language"
@@ -265,3 +271,8 @@ lineError = "Error in {0}."
 lineErrorLink = "line {0}"
 restartButton = "Restart"
 title = "Startup Error"
+
+[vehicleSettings]
+cancel = "Cancel"
+template = "Manufacturer"
+test = "Test"

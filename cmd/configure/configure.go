@@ -88,7 +88,7 @@ func (c *Configure) DevicesOfClass(class templates.Class) []device {
 	case templates.Vehicle:
 		return c.config.Vehicles
 	default:
-		panic("invalid class: " + class)
+		panic("invalid class: " + class.String())
 	}
 }
 

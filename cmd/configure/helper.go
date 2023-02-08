@@ -431,8 +431,8 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 				continue
 			}
 
-			switch param.ValueType {
-			case templates.ParamValueTypeStringList:
+			switch param.Type {
+			case templates.ParamTypeStringList:
 				values := c.processListInputConfig(param)
 				var nonEmptyValues []string
 				for _, value := range values {
@@ -493,13 +493,13 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		defaultValue: param.Default,
 		exampleValue: param.Example,
 		help:         help,
-		valueType:    param.ValueType,
+		valueType:    param.Type,
 		validValues:  param.ValidValues,
 		mask:         param.IsMask(),
 		required:     param.IsRequired(),
 	})
 
-	if param.ValueType == templates.ParamValueTypeBool && value == "true" {
+	if param.Type == templates.ParamTypeBool && value == "true" {
 		if err := c.processParamRequirements(param); err != nil {
 			return "false"
 		}

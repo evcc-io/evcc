@@ -40,16 +40,16 @@ const (
 )
 
 const (
-	ParamValueTypeString      = "string"
-	ParamValueTypeNumber      = "number"
-	ParamValueTypeFloat       = "float"
-	ParamValueTypeBool        = "bool"
-	ParamValueTypeStringList  = "stringlist"
-	ParamValueTypeChargeModes = "chargemodes"
-	ParamValueTypeDuration    = "duration"
+	ParamTypeString      = "string"
+	ParamTypeNumber      = "number"
+	ParamTypeFloat       = "float"
+	ParamTypeBool        = "bool"
+	ParamTypeStringList  = "stringlist"
+	ParamTypeChargeModes = "chargemodes"
+	ParamTypeDuration    = "duration"
 )
 
-var ValidParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes, ParamValueTypeDuration}
+var ValidParamTypes = []string{ParamTypeString, ParamTypeNumber, ParamTypeFloat, ParamTypeBool, ParamTypeStringList, ParamTypeChargeModes, ParamTypeDuration}
 
 var (
 	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
@@ -91,9 +91,9 @@ var predefinedTemplateProperties = []string{
 
 // TextLanguage contains language-specific texts
 type TextLanguage struct {
-	Generic string // language independent
-	DE      string // german text
-	EN      string // english text
+	Generic string `json:",omitempty"` // language independent
+	DE      string `json:",omitempty"` // german text
+	EN      string `json:",omitempty"` // english text
 }
 
 func (t *TextLanguage) String(lang string) string {
@@ -166,44 +166,45 @@ type LinkedTemplate struct {
 // 2. in defaults.yaml presets: can ne referenced in 1 and some values set here can be overwritten in 1. See OverwriteProperties method
 // 3. in defaults.yaml modbus section: are referenced in 1 by a `name:modbus` param entry. Some values here can be overwritten in 1.
 // 4. in defaults.yaml param section: defaults for some params
-// Generelle Reihenfolge der Werte (außer Description, Default, ValueType):
+// Generelle Reihenfolge der Werte (außer Description, Default, Type):
 // 1. defaults.yaml param section
 // 2. defaults.yaml presets
 // 3. defaults.yaml modbus section
 // 4. template
 type Param struct {
-	Reference     *bool        // if this is references another param definition
-	Referencename string       // name of the referenced param if it is not identical to the defined name
-	Preset        string       // Reference a predefined set of params
 	Name          string       // Param name which is used for assigning defaults properties and referencing in render
 	Description   TextLanguage // language specific titles (presented in UI instead of Name)
-	Required      *bool        // cli if the user has to provide a non empty value
-	Mask          *bool        // cli if the value should be masked, e.g. for passwords
-	Advanced      *bool        // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Hidden        *bool        // cli if the parameter should not be presented in the cli, the default value be assigned
-	Deprecated    *bool        // if the parameter is deprecated and thus should not be presented in the cli or docs
-	Default       string       // default value if no user value is provided in the configuration
-	Example       string       // cli example value
 	Help          TextLanguage // cli configuration help
-	Value         string       // user provided value via cli configuration
-	Values        []string     // user provided list of values e.g. for ValueType "stringlist"
-	Usages        []string     // restrict param to these usage types, e.g. "battery" for home battery capacity
-	ValueType     string       // string representation of the value type, "string" is default
-	ValidValues   []string     // list of valid values the user can provide
-	Choice        []string     // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
-	AllInOne      *bool        // defines if the defined usages can all be present in a single device
-	Requirements  Requirements // requirements for this param to be usable, only supported via ValueType "bool"
+	Reference     *bool        `json:",omitempty"` // if this is references another param definition
+	ReferenceName string       `json:",omitempty"` // name of the referenced param if it is not identical to the defined name
+	Preset        string       `json:"-"`          // Reference a predefined set of params
+	Required      *bool        `json:",omitempty"` // cli if the user has to provide a non empty value
+	Mask          *bool        `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
+	Advanced      *bool        `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Hidden        *bool        `json:",omitempty"` // cli if the parameter should not be presented in the cli, the default value be assigned
+	Deprecated    *bool        `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
+	Default       string       `json:",omitempty"` // default value if no user value is provided in the configuration
+	Example       string       `json:",omitempty"` // cli example value
+	Value         string       `json:"-"`          // user provided value via cli configuration
+	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "stringlist"
+	Usages        []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
+	Type          string       // string representation of the value type, "string" is default
+	ValidValues   []string     `json:",omitempty"` // list of valid values the user can provide
+	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	AllInOne      *bool        `json:"-"`          // defines if the defined usages can all be present in a single device
+	Requirements  Requirements `json:"-"`          // requirements for this param to be usable, only supported via Type "bool"
 
-	Baudrate int    // device specific default for modbus RS485 baudrate
-	Comset   string // device specific default for modbus RS485 comset
-	Port     int    // device specific default for modbus TCPIP port
-	ID       int    // device specific default for modbus ID
+	// TODO move somewhere else should not be part of the param definition
+	Baudrate int    `json:"-"` // device specific default for modbus RS485 baudrate
+	Comset   string `json:"-"` // device specific default for modbus RS485 comset
+	Port     int    `json:"-"` // device specific default for modbus TCPIP port
+	ID       int    `json:"-"` // device specific default for modbus ID
 }
 
 // return a default value or example value depending on the renderMode
 func (p *Param) DefaultValue(renderMode string) interface{} {
 	// return empty list to allow iterating over in template
-	if p.ValueType == ParamValueTypeStringList {
+	if p.Type == ParamTypeStringList {
 		return []string{}
 	}
 
@@ -252,7 +253,7 @@ func (p *Param) IsAllInOne() bool {
 // Product contains naming information about a product a template supports
 type Product struct {
 	Brand       string       // product brand
-	Description TextLanguage // product name
+	Description TextLanguage `json:",omitempty"` // product name
 }
 
 func (p Product) Title(lang string) string {
@@ -262,12 +263,12 @@ func (p Product) Title(lang string) string {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
-	Group        string    // the group this template belongs to, references groupList entries
-	Covers       []string  // list of covered outdated template names
-	Products     []Product // list of products this template is compatible with
-	Capabilities []string
-	Requirements Requirements
-	Linked       []LinkedTemplate // a list of templates that should be processed as part of the guided setup
-	Params       []Param
-	Render       string // rendering template
+	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
+	Covers       []string         `json:",omitempty"` // list of covered outdated template names
+	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
+	Capabilities []string         `json:",omitempty"`
+	Requirements Requirements     `json:"-"`
+	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
+	Params       []Param          `json:",omitempty"`
+	Render       string           `json:"-"` // rendering template
 }

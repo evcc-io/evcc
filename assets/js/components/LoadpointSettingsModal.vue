@@ -152,7 +152,7 @@
 								</div>
 							</div>
 
-							<div v-if="$hiddenFeatures" class="mb-3 row">
+							<div v-if="$hiddenFeatures()" class="mb-3 row">
 								<label
 									:for="formId('maxcurrent')"
 									class="col-sm-4 col-form-label pt-0 pt-sm-2"
@@ -178,7 +178,7 @@
 								</div>
 							</div>
 
-							<div v-if="$hiddenFeatures" class="mb-3 row">
+							<div v-if="$hiddenFeatures()" class="mb-3 row">
 								<label
 									:for="formId('mincurrent')"
 									class="col-sm-4 col-form-label pt-0 pt-sm-2"
@@ -272,10 +272,10 @@ export default {
 			return [0, 1, 3].includes(this.phasesConfigured);
 		},
 		showCurrentSettings: function () {
-			return this.$hiddenFeatures;
+			return this.$hiddenFeatures();
 		},
 		showMinSocSettings: function () {
-			return this.$hiddenFeatures;
+			return this.$hiddenFeatures();
 		},
 	},
 	watch: {

@@ -10,7 +10,7 @@ params:
   - name: token
     required: true
   - name: capacity
-    valuetype: float
+    type: float
   - name: phases
     advanced: true
   - name: icon
