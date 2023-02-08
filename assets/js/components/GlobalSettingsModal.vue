@@ -119,6 +119,7 @@ import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreferen
 import { getThemePreference, setThemePreference, THEMES } from "../theme";
 import { getUnits, setUnits, UNITS } from "../units";
 import { getGridDetails, setGridDetails, GRID_DETAILS } from "../gridDetails";
+import { getHiddenFeatures, setHiddenFeatures } from "../featureflags";
 
 export default {
 	name: "GlobalSettingsModal",
