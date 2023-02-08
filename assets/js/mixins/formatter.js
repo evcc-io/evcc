@@ -32,7 +32,7 @@ export default {
         maximumFractionDigits: digits,
       }).format(value)}${unit}`;
     },
-    fmtKWh: function (watt, kw, withUnit, digits) {
+    fmtKWh: function (watt, kw = true, withUnit = true, digits) {
       return this.fmtKw(watt, kw, withUnit, digits) + (withUnit ? "h" : "");
     },
     fmtNumber: function (number, decimals) {
