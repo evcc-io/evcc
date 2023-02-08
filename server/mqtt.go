@@ -132,7 +132,7 @@ func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 	})
 	m.Handler.ListenSetter(topic+"/targetTime/set", func(payload string) {
 		if val, err := time.Parse(time.RFC3339, payload); err == nil {
-			lp.SetTargetTime(val)
+			_ = lp.SetTargetTime(val)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
