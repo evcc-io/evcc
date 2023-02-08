@@ -92,7 +92,7 @@ func NewPowerWall(uri, usage, user, password string) (api.Meter, error) {
 		}
 
 		batteryCapacity = func() float64 {
-			return float64(res.NominalFullPackEnergy)
+			return float64(res.NominalFullPackEnergy) / 1e3
 		}
 	}
 
@@ -125,9 +125,9 @@ func (m *PowerWall) totalEnergy() (float64, error) {
 	if o, ok := res[m.usage]; ok {
 		switch m.usage {
 		case "load":
-			return float64(o.EnergyImported), nil
+			return float64(o.EnergyImported) / 1e3, nil
 		case "solar":
-			return float64(o.EnergyExported), nil
+			return float64(o.EnergyExported) / 1e3, nil
 		}
 	}
 
