@@ -21,7 +21,7 @@ jobs:
         id: go
 
       - name: Build docs
-        run: make docs
+        run: make install docs
 
       - name: Deploy to evcc.io repo
         uses: peaceiris/actions-gh-pages@v3
