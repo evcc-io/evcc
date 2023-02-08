@@ -120,9 +120,19 @@ func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 			lp.SetMinSoc(soc)
 		}
 	})
+	m.Handler.ListenSetter(topic+"/targetEnergy/set", func(payload string) {
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			lp.SetTargetEnergy(val)
+		}
+	})
 	m.Handler.ListenSetter(topic+"/targetSoc/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
 			lp.SetTargetSoc(soc)
+		}
+	})
+	m.Handler.ListenSetter(topic+"/targetTime/set", func(payload string) {
+		if val, err := time.Parse(time.RFC3339, payload); err == nil {
+			lp.SetTargetTime(val)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
