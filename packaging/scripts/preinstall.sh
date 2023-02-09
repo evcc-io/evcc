@@ -58,7 +58,9 @@ if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
       --disabled-password --shell /bin/false \
       --gecos "evcc runtime user" --home "$EVCC_HOME" "$EVCC_USER"
       chown -R "$EVCC_USER:$EVCC_GROUP" "$EVCC_HOME"
+      adduser --quiet "$EVCC_USER" dialout
     else
+      adduser --quiet "$EVCC_USER" dialout
       homedir=$(getent passwd "$EVCC_USER" | cut -d: -f4)
       if [ "$homedir" != "$EVCC_HOME" ]; then
       	mkdir -p "$EVCC_HOME"
