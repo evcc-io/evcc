@@ -63,6 +63,7 @@ type Site struct {
 	gridMeter     api.Meter   // Grid usage meter
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
+	loadMeter     api.Meter   // Smart load meter
 
 	tariffs     tariff.Tariffs           // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
@@ -86,6 +87,7 @@ type MetersConfig struct {
 	PVMetersRef      []string `mapstructure:"pvs"`       // Multiple PV meters
 	BatteryMeterRef  string   `mapstructure:"battery"`   // Battery charging meter
 	BatteryMetersRef []string `mapstructure:"batteries"` // Multiple Battery charging meters
+	SmartLoadRef     string   `mapstructure:"smart"`     // Smart loads meter
 }
 
 // NewSiteFromConfig creates a new site
@@ -196,6 +198,14 @@ func NewSiteFromConfig(
 			return nil, err
 		}
 		site.batteryMeters = append(site.batteryMeters, battery)
+	}
+
+	// smart load meter
+	if site.Meters.SmartLoadRef != "" {
+		var err error
+		if site.loadMeter, err = cp.Meter(site.Meters.SmartLoadRef); err != nil {
+			return nil, err
+		}
 	}
 
 	// configure meter from references
@@ -551,6 +561,17 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	}
 
 	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
+
+	// deduct smart loads
+	if site.loadMeter != nil {
+		if power, err := site.loadMeter.CurrentPower(); err != nil {
+			site.log.ERROR.Printf("smart load meter: %v", err)
+		} else {
+			site.log.DEBUG.Printf("smart load power: %.0fW", power)
+			site.publish("smartLoadPower", power)
+			sitePower -= power
+		}
+	}
 
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 

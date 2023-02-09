@@ -176,6 +176,9 @@
               },
               "minItems": 1,
               "uniqueItems": true
+            },
+            "smart": {
+              "type": "string"
             }
           }
         },
