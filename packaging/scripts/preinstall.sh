@@ -20,10 +20,6 @@ copyDbToUserDir() {
   CURRENT_HOME=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
   COPIED_FLAG="$CURRENT_HOME/.evcc/.copiedToEvccUser"
   if [ -f "$CURRENT_HOME/.evcc/evcc.db" ] && [ ! -f "$COPIED_FLAG" ]; then
-    if [ -d /run/systemd/system ] && /bin/systemctl status evcc.service > /dev/null 2>&1; then
-      deb-systemd-invoke stop evcc.service >/dev/null || true
-      touch "$RESTART_FLAG_FILE"
-    fi
     if [ -f "$EVCC_HOME/evcc.db" ]; then
       echo "Not copying $CURRENT_HOME/.evcc/evcc.db to $EVCC_HOME/evcc.db, since there is already a database there"
       echo "Either delete one of the databases or run 'touch $COPIED_FLAG' to keep both."
@@ -50,6 +46,10 @@ copyDbToUserDir() {
 }
 
 if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
+	if [ -d /run/systemd/system ] && /bin/systemctl status evcc.service > /dev/null 2>&1; then
+	  deb-systemd-invoke stop evcc.service >/dev/null || true
+	  touch "$RESTART_FLAG_FILE"
+	fi
     if ! getent group "$EVCC_GROUP" > /dev/null 2>&1 ; then
       addgroup --system "$EVCC_GROUP" --quiet
     fi
@@ -57,7 +57,10 @@ if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
       adduser --quiet --system --ingroup "$EVCC_GROUP" \
       --disabled-password --shell /bin/false \
       --gecos "evcc runtime user" --home "$EVCC_HOME" "$EVCC_USER"
+      chown -R "$EVCC_USER:$EVCC_GROUP" "$EVCC_HOME"
+      adduser --quiet "$EVCC_USER" dialout
     else
+      adduser --quiet "$EVCC_USER" dialout
       homedir=$(getent passwd "$EVCC_USER" | cut -d: -f4)
       if [ "$homedir" != "$EVCC_HOME" ]; then
       	mkdir -p "$EVCC_HOME"
