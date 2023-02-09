@@ -165,6 +165,8 @@ none = "Kein Fahrzeug"
 targetSoc = "Ladeziel"
 unknown = "Gastfahrzeug"
 vehicleSoc = "Ladestand"
+moreActions = "Mehr aktionen"
+addVehicle = "Fahrzug hinzufügen"
 
 [main.vehicleSoc]
 charging = "lädt"
@@ -265,3 +267,13 @@ lineError = "In {0} wurde ein Fehler gefunden."
 lineErrorLink = "Zeile {0}"
 restartButton = "Neu starten"
 title = "Fehler beim Starten"
+
+
+[settings.hiddenFeatures]
+label = "Experimentell"
+value = "Experimentelle UI-Funktionen zeigen."
+
+[vehicleSettings]
+cancel = "Abbrechen"
+template = "Hersteller"
+test = "Test"

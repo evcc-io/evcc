@@ -33,10 +33,10 @@ becomeSponsor = "Word sponsor"
 confetti = "Klaar voor confetti?"
 confettiPromise = "Je krijgt stickers en digitale confetti"
 sticker = "... of evcc stickers?"
-supportUs = "Onze missie is om van zonne-energie de norm te maken. Help evcc door te betalen wat het je waard is."
-thanks = "Bedankt, {sponsor}! Jouw bijdrage helpt evcc verder te ontwikkelen."
+supportUs = "Onze missie is om van zonne-energie de norm te maken. Help evcc door te betalen wat het u waard is."
+thanks = "Bedankt, {sponsor}! Uw bijdrage helpt evcc verder te ontwikkelen."
 titleNoSponsor = "Sponsor ons"
-titleSponsor = "Je bent een sponsor!"
+titleSponsor = "U bent een sponsor!"
 
 [footer.telemetry]
 optIn = "Ik wil mijn gegevens bijdragen."
@@ -89,8 +89,8 @@ batteryTooltip = "{energy} van {total} ({soc}%)"
 [main.loadpoint]
 charged = "Geladen"
 duration = "Duur"
-fallbackName = "Charing point"
-power = "Snelheid"
+fallbackName = "Laadpunt"
+power = "Vermogen"
 remaining = "Resterend"
 remoteDisabledHard = "{source}: uitgeschakeld"
 remoteDisabledSoft = "{source}: adaptief PV-laden uitgeschakeld"
@@ -98,16 +98,16 @@ remoteDisabledSoft = "{source}: adaptief PV-laden uitgeschakeld"
 [main.loadpointSettings]
 currents = "Laadstroom"
 default = "standaard"
-disclaimerHint = "Letop:"
-disclaimerText = "Changes zal verloren zijn nadat de server is herstart."
+disclaimerHint = "Let op:"
+disclaimerText = "Wijzigingen gaan verloren als de server herstart."
 title = "Instellingen {0}"
 vehicle = "Voertuig"
 
 [main.loadpointSettings.maxCurrent]
-label = "Max. vermogen"
+label = "Max. Stroom"
 
 [main.loadpointSettings.minCurrent]
-label = "Min. vermogen"
+label = "Min. Stroom"
 
 [main.loadpointSettings.minSoc]
 description = "Voor noodgevallen. Het voertuig wordt „snel” opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot."
@@ -115,7 +115,7 @@ label = "Min. lading %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fasen"
-phases_0 = "auto-switching"
+phases_0 = "automatisch omschakelen"
 phases_1 = "1 fase"
 phases_1_hint = "({min} - {max})"
 phases_3 = "3 fase"
@@ -134,19 +134,19 @@ logout = "afmelden"
 [main.targetCharge]
 activate = "Activeren"
 activeLabel = "{time}"
-descriptionSoc = "Tegen wanneer moet het voertuig geladen zijn naar {targetSoc}%?"
+descriptionSoc = "Wanneer moet het voertuig geladen zijn naar {targetSoc}%?"
 inactiveLabel = "Ingestelde tijd"
 modalTitle = "Stel tijd in"
 remove = "Verwijder"
 setTargetTime = "geen"
 targetIsInThePast = "Kies een tijd in de toekomst, Marty."
-title = "Doel"
+title = "Doeltijd”
 today = "Vandaag"
 tomorrow = "Morgen"
-targetIsTooFarInTheFuture = "We passen het plan aan wanneer we meer weten over de toekomst"
-update = "update"
+targetIsTooFarInTheFuture = "We passen het plan aan wanneer we meer weten over de toekomst.”
+update = "Update"
 descriptionEnergy = "Tot wanneer moet {targetEnergy} in het voertuig worden geladen?"
-planDuration = "Oplaad tijd"
+planDuration = "Oplaadtijd"
 planPeriodLabel = "Periode"
 planPeriodValue = "{start} tot {end}"
 planUnknown = "nog niet bekend"
@@ -163,6 +163,8 @@ none = "Geen voertuig"
 targetSoc = "Limiet"
 unknown = "Gast"
 vehicleSoc = "Opladen"
+addVehicle = “Voertuig toevoegen”
+moreActions = “Meer acties”
 
 [main.vehicleSoc]
 charging = "laden"
@@ -175,13 +177,13 @@ vehicleTarget = "Voertuiglimiet: {soc}%"
 charging = "Opladen..."
 connected = "Verbonden."
 disconnected = "Niet verbonden."
-minCharge = "Minimale oplading naar {soc}%."
+minCharge = "Minimaal opladen naar {soc}%."
 pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}..."
 pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}..."
 scale1p = "Wisselen naar 1 fase over {remaining}..."
 scale3p = "Wisselen naar 3 fasen over {remaining}..."
-targetChargeActive = "Doelwit lading actief..."
-targetChargePlanned = "Doelladen begint bij {time}."
+targetChargeActive = "Doelladen actief..."
+targetChargePlanned = "Doelladen begint om {time}."
 targetChargeWaitForVehicle = "Doellading gereed. Wachten op voertuig..."
 unknown = ""
 vehicleTargetReached = "Voertuiglimiet {soc}% bereikt."
@@ -200,7 +202,7 @@ date = "Periode"
 downloadCsv = "Download CSV"
 energy = "Geladen"
 loadpoint = "Oplaadpunt"
-title = "Oplaad sessies"
+title = "Oplaadsessies"
 vehicle = "Voertuig"
 reallyDelete = "Wilt u deze sessie echt verwijderen?"
 
@@ -212,7 +214,7 @@ identifier = "ID"
 loadpoint = "Oplaadpunt"
 meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kwh)"
-odometer = "kilometerstand (km)"
+odometer = "Kilometerstand (km)"
 vehicle = "Voertuig"
 
 [settings]
@@ -228,7 +230,7 @@ label = "Telemetrie"
 [settings.theme]
 auto = "systeem"
 dark = "donker"
-label = "Design"
+label = "Ontwerp"
 light = "licht"
 
 [settings.unit]
@@ -240,9 +242,9 @@ mi = "mijlen"
 configFile = "Gebruikt configuratiebestand:"
 configuration = "Configuratie"
 description = "Controleer uw configuratiebestand. Als de foutmelding niet helpt, bekijk dan de {0}."
-discussions = "GitHub Discussie"
+discussions = "GitHub Discussies"
 fixAndRestart = "Los het probleem op en herstart de server."
-hint = "Let op: het kan ook zijn dat je een defect toestel hebt (omvormer, meter, …). Controleer je netwerkverbindingen."
+hint = "Let op: het kan ook zijn dat u een defect toestel heeft (omvormer, meter, …). Controleer uw netwerkverbindingen."
 lineError = "Fout in {0}."
 lineErrorLink = "lijn {0}"
 restartButton = "Herstart"
@@ -257,7 +259,7 @@ title = "Oplaadsessie"
 odometer = "Kilometerstand"
 started = "Gestart"
 cancel = 'Annuleer"
-delete = "Verwijderen"
+delete = "Verwijder"
 
 [settings.gridDetails]
 label = "Grid detail"
@@ -266,8 +268,17 @@ none = "geen"
 price = "prijs"
 
 [main.targetChargePlan]
-chargeDuration = "Oplaad tijd"
+chargeDuration = "Oplaadtijd"
 co2Label = "CO₂ emissie Ø"
-priceLabel = "Energy prijs"
+priceLabel = "Energieprijs"
 timeRange = "{day} {range} h"
 unknownPrice = "onbekend"
+
+[settings.hiddenFeatures]
+label = “Experimenteel”
+value = “Toon experimentele UI functies.”
+
+[vehicleSettings]
+cancel = “Annuleer”
+template = “Fabrikant”
+test = “Test”
