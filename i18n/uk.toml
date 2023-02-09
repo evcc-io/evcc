@@ -80,6 +80,7 @@ noEnergy = "Немає даних лічильника"
 pvExport = "Експорт мережі"
 pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
+batteryTooltip = "{energy} із {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Заряджено"
@@ -162,6 +163,8 @@ none = "Без транспортного засобу"
 targetSoc = "Ліміт"
 unknown = "Гостьовий транспортний засіб"
 vehicleSoc = "Заряд"
+moreActions = "Більше дій"
+addVehicle = "Додати транспортний засіб"
 
 [main.vehicleSoc]
 charging = "зарядка"
@@ -256,3 +259,19 @@ lineError = "Помилка в {0}."
 lineErrorLink = "Лінія {0}"
 restartButton = "Перезапустити"
 title = "Помилка запуску"
+
+
+[settings.gridDetails]
+none = "жодного"
+label = "Деталі сітки"
+price = "ціна"
+co2 = "CO₂"
+
+[settings.hiddenFeatures]
+label = "Експериментальний"
+value = "Показати експериментальні функції інтерфейсу."
+
+[vehicleSettings]
+cancel = "Скасувати"
+test = "Тест"
+template = "Виробник"
