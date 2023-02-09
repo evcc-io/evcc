@@ -97,27 +97,21 @@ func runDump(cmd *cobra.Command, args []string) {
 		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(cp.Meter(name)))
 	}
 
-	if len(site.Meters.PVMetersRef) == 0 {
-		if name := site.Meters.PVMeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("pv: %s", name), handle(cp.Meter(name)))
-		}
-	} else {
-		for id, name := range site.Meters.PVMetersRef {
-			if name != "" {
-				d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id, name), handle(cp.Meter(name)))
-			}
+	for id, name := range append(site.Meters.PVMetersRef, site.Meters.PVMetersRef_...) {
+		if name != "" {
+			d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id+1, name), handle(cp.Meter(name)))
 		}
 	}
 
-	if len(site.Meters.BatteryMetersRef) == 0 {
-		if name := site.Meters.BatteryMeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("battery: %s", name), handle(cp.Meter(name)))
+	for id, name := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
+		if name != "" {
+			d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id+1, name), handle(cp.Meter(name)))
 		}
-	} else {
-		for id, name := range site.Meters.BatteryMetersRef {
-			if name != "" {
-				d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id, name), handle(cp.Meter(name)))
-			}
+	}
+
+	for id, name := range site.Meters.AuxMetersRef {
+		if name != "" {
+			d.DumpWithHeader(fmt.Sprintf("aux %d: %s", id+1, name), handle(cp.Meter(name)))
 		}
 	}
 

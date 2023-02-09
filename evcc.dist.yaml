@@ -69,7 +69,7 @@ meters:
     type: ...
   - name: charge
     type: ...
-  - name: smart
+  - name: aux
     type: ...
 
 # charger definitions
@@ -103,11 +103,11 @@ site:
   title: Home # display name for UI
   meters:
     grid: grid # grid meter
-    pvs:
+    pv:
       - pv # list of pv inverters/ meters
-    batteries:
+    battery:
       - battery # list of battery meters
-    smart: smart # additional smart loads meter
+    aux: aux # auxiliary meters for adjusting grid operating point
   prioritySoc: # give home battery priority up to this soc (empty to disable)
   bufferSoc: # ignore home battery discharge above soc (empty to disable)
 
