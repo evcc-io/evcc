@@ -84,6 +84,7 @@ noEnergy = "Sem leituras"
 pvExport = "Alimentação"
 pvProduction = "Produção"
 selfConsumption = "Consumo próprio"
+batteryTooltip = "{energy} de {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Carregado"
@@ -169,6 +170,8 @@ none = "Nenhum veículo"
 targetSoc = "Alvo de carga"
 unknown = "Veículo convidado"
 vehicleSoc = "Nível de carga"
+addVehicle = "Adicionar veículo"
+moreActions = "Mais ações"
 
 [main.vehicleSoc]
 charging = "carregando"
@@ -264,3 +267,19 @@ lineError = "Um erro em {0}."
 lineErrorLink = "linha {0}"
 restartButton = "Reiniciar"
 title = "Erro ao iniciar"
+
+
+[settings.gridDetails]
+none = "sem"
+co2 = "CO₂"
+label = "Detalhes da rede"
+price = "preço"
+
+[settings.hiddenFeatures]
+label = "Experimental"
+value = "Mostrar recursos de IU experimentais."
+
+[vehicleSettings]
+cancel = "Cancelar"
+template = "Fabricante"
+test = "Teste"
