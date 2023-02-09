@@ -84,6 +84,7 @@ noEnergy = "Brak danych licznika"
 pvExport = "Eksport na siec"
 pvProduction = "Produkcja"
 selfConsumption = "Konsumpcja własna"
+batteryTooltip = "{energy} z {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Naładowano"
@@ -140,13 +141,15 @@ modalTitle = "Ustaw docelowy czas"
 planDuration = "Czas ładowania"
 planPeriodLabel = "Okres"
 planPeriodValue = "{start} do {end}"
-planUnknown = "nieznany"
+planUnknown = "jeszcze nie wiadomo"
 remove = "Usuń"
 setTargetTime = "brak"
 targetIsInThePast = "Wybierz czas w przyszłości."
 title = "Czas Docelowy"
 today = "dzisiaj"
 tomorrow = "jutro"
+update = "Aktualizować"
+targetIsTooFarInTheFuture = "Dostosujemy plan, gdy tylko dowiemy się więcej o przyszłości."
 
 [main.targetEnergy]
 label = "Ograniczenie"
@@ -160,6 +163,8 @@ none = "Brak pojazdu"
 targetSoc = "Ograniczenie"
 unknown = "Pojazd gościa"
 vehicleSoc = "Bateria"
+addVehicle = "Dodaj pojazd"
+moreActions = "Więcej akcji"
 
 [main.vehicleSoc]
 charging = "ładuje się"
@@ -254,3 +259,26 @@ lineError = "Błąd w {0}."
 lineErrorLink = "wiersz {0}"
 restartButton = "Restartuj"
 title = "Błąd uruchamiania"
+
+
+[main.targetChargePlan]
+co2Label = "CO₂ emisja Ø"
+priceLabel = "Cena energii"
+unknownPrice = "nadal nieznany"
+chargeDuration = "Czas ładowania"
+timeRange = "{day} {range} h"
+
+[settings.gridDetails]
+label = "Szczegóły sieci"
+none = "nic"
+price = "cena"
+co2 = "CO₂"
+
+[settings.hiddenFeatures]
+label = "Eksperymentalny"
+value = "Pokaż eksperymentalne funkcje interfejsu"
+
+[vehicleSettings]
+cancel = "Anulować"
+template = "Producent"
+test = "Test"
