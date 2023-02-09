@@ -84,6 +84,7 @@ noEnergy = "Sin lecturas"
 pvExport = "Alimento"
 pvProduction = "Producción"
 selfConsumption = "Consumo proprio"
+batteryTooltip = "{energy} de {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Cargado"
@@ -162,13 +163,15 @@ label = "Objetivo de carga"
 noLimit = "ningún"
 
 [main.vehicle]
-changeVehicle = "Cambia vehículo"
+changeVehicle = "Cambia de vehículo"
 detectionActive = "Reconocer vehículo ..."
 fallbackName = "Vehículo"
 none = "Ningún vehículo"
 targetSoc = "Objetivo de carga"
 unknown = "Vehículo de invitados"
 vehicleSoc = "Nivel de carga"
+addVehicle = "Añadir un vehículo"
+moreActions = "Más acciones"
 
 [main.vehicleSoc]
 charging = "cargando"
@@ -263,3 +266,19 @@ lineError = "Error en {0}."
 lineErrorLink = "Línea {0}"
 restartButton = "Empezar de nuevo"
 title = "Error al iniciar"
+
+
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Detalles de la cuadrícula"
+none = "ninguno"
+price = "precio"
+
+[settings.hiddenFeatures]
+label = "En pruebas"
+value = "Mostrar las características experimentales de la interfaz de usuario."
+
+[vehicleSettings]
+test = "Prueba"
+cancel = "Cancelar"
+template = "Fabricante"
