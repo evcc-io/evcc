@@ -154,10 +154,19 @@
               "type": "string"
             },
             "pv": {
-              "type": "string"
+              "description": "PV inverter/meter (1 or more)",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
             },
             "pvs": {
-              "description": "List of pv inverters/meters",
+              "description": "PV inverters/meters",
               "type": "array",
               "items": {
                 "type": "string"
@@ -166,10 +175,19 @@
               "uniqueItems": true
             },
             "battery": {
-              "type": "string"
+              "description": "Home battery (1 or more)",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
             },
             "batteries": {
-              "description": "List of home batteries",
+              "description": "Home batteries",
               "type": "array",
               "items": {
                 "type": "string"
