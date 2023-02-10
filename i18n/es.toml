@@ -77,6 +77,7 @@ vehicles = "Estacionamiento"
 battery = "Batería"
 batteryCharge = "Carga la batería"
 batteryDischarge = "Descargar la batería"
+batteryTooltip = "{energy} de {total} ({soc}%)"
 gridImport = "Consumo de red"
 homePower = "Consumo"
 loadpoints = "Punto de carga | Punto de carga | {count} Puntos de carga"
@@ -84,7 +85,6 @@ noEnergy = "Sin lecturas"
 pvExport = "Alimento"
 pvProduction = "Producción"
 selfConsumption = "Consumo proprio"
-batteryTooltip = "{energy} de {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Cargado"
@@ -163,15 +163,15 @@ label = "Objetivo de carga"
 noLimit = "ningún"
 
 [main.vehicle]
+addVehicle = "Añadir un vehículo"
 changeVehicle = "Cambia de vehículo"
 detectionActive = "Reconocer vehículo ..."
 fallbackName = "Vehículo"
+moreActions = "Más acciones"
 none = "Ningún vehículo"
 targetSoc = "Objetivo de carga"
 unknown = "Vehículo de invitados"
 vehicleSoc = "Nivel de carga"
-addVehicle = "Añadir un vehículo"
-moreActions = "Más acciones"
 
 [main.vehicleSoc]
 charging = "cargando"
@@ -237,6 +237,16 @@ vehicle = "Vehículo"
 [settings]
 title = "Ajustes"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Detalles de la cuadrícula"
+none = "ninguno"
+price = "precio"
+
+[settings.hiddenFeatures]
+label = "En pruebas"
+value = "Mostrar las características experimentales de la interfaz de usuario."
+
 [settings.language]
 auto = "Automático"
 label = "Idioma"
@@ -267,18 +277,7 @@ lineErrorLink = "Línea {0}"
 restartButton = "Empezar de nuevo"
 title = "Error al iniciar"
 
-
-[settings.gridDetails]
-co2 = "CO₂"
-label = "Detalles de la cuadrícula"
-none = "ninguno"
-price = "precio"
-
-[settings.hiddenFeatures]
-label = "En pruebas"
-value = "Mostrar las características experimentales de la interfaz de usuario."
-
 [vehicleSettings]
-test = "Prueba"
 cancel = "Cancelar"
 template = "Fabricante"
+test = "Prueba"

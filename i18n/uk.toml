@@ -73,6 +73,7 @@ vehicles = "Паркування"
 battery = "Батарея"
 batteryCharge = "Зарядження батареї"
 batteryDischarge = "Розрядження батареї"
+batteryTooltip = "{energy} із {total} ({soc}%)"
 gridImport = "Використання мережі"
 homePower = "Споживання"
 loadpoints = "Зарядний пристрій| Зарядний пристрій | {count} зарядні пристрої"
@@ -80,7 +81,6 @@ noEnergy = "Немає даних лічильника"
 pvExport = "Експорт мережі"
 pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
-batteryTooltip = "{energy} із {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Заряджено"
@@ -156,15 +156,15 @@ label = "Ліміт"
 noLimit = "жодного"
 
 [main.vehicle]
+addVehicle = "Додати транспортний засіб"
 changeVehicle = "Змінити транспортний засіб"
 detectionActive = "Виявлення транспортного засобу…"
 fallbackName = "Транспортний засіб"
+moreActions = "Більше дій"
 none = "Без транспортного засобу"
 targetSoc = "Ліміт"
 unknown = "Гостьовий транспортний засіб"
 vehicleSoc = "Заряд"
-moreActions = "Більше дій"
-addVehicle = "Додати транспортний засіб"
 
 [main.vehicleSoc]
 charging = "зарядка"
@@ -230,6 +230,16 @@ vehicle = "Транспортний засіб"
 [settings]
 title = "Налаштування"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Деталі сітки"
+none = "жодного"
+price = "ціна"
+
+[settings.hiddenFeatures]
+label = "Експериментальний"
+value = "Показати експериментальні функції інтерфейсу."
+
 [settings.language]
 auto = "Автоматично"
 label = "Мова"
@@ -260,18 +270,7 @@ lineErrorLink = "Лінія {0}"
 restartButton = "Перезапустити"
 title = "Помилка запуску"
 
-
-[settings.gridDetails]
-none = "жодного"
-label = "Деталі сітки"
-price = "ціна"
-co2 = "CO₂"
-
-[settings.hiddenFeatures]
-label = "Експериментальний"
-value = "Показати експериментальні функції інтерфейсу."
-
 [vehicleSettings]
 cancel = "Скасувати"
-test = "Тест"
 template = "Виробник"
+test = "Тест"

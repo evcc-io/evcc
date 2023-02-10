@@ -1,7 +1,7 @@
 [footer]
 
 [footer.community]
-greenEnergy = "PV"
+greenEnergy = "Zonne"
 greenEnergySub1 = "geladen met evcc"
 greenEnergySub2 = "sinds oktober 2022"
 greenShare = "Zonne-energie"
@@ -77,6 +77,7 @@ vehicles = "Parking"
 battery = "Batterij"
 batteryCharge = "Batterij opladen"
 batteryDischarge = "Batterij ontladen"
+batteryTooltip = "{energy} van {total} ({soc}%)"
 gridImport = "Grid gebruik"
 homePower = "Consumptie"
 loadpoints = "Lader| Lader | {count} laders"
@@ -84,7 +85,6 @@ noEnergy = "Geen meter data"
 pvExport = "Netinjectie"
 pvProduction = "Productie"
 selfConsumption = "Zelfverbruik"
-batteryTooltip = "{energy} van {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Geladen"
@@ -122,10 +122,10 @@ phases_3 = "3 fase"
 phases_3_hint = "({min} - {max})"
 
 [main.mode]
-minpv = "Min+PV"
+minpv = "Min+Solar"
 now = "Snel"
 off = "Uit"
-pv = "PV"
+pv = "Solar"
 
 [main.provider]
 login = "log in"
@@ -134,37 +134,44 @@ logout = "afmelden"
 [main.targetCharge]
 activate = "Activeren"
 activeLabel = "{time}"
+descriptionEnergy = "Tot wanneer moet {targetEnergy} in het voertuig worden geladen?"
 descriptionSoc = "Wanneer moet het voertuig geladen zijn naar {targetSoc}%?"
 inactiveLabel = "Ingestelde tijd"
 modalTitle = "Stel tijd in"
-remove = "Verwijder"
-setTargetTime = "geen"
-targetIsInThePast = "Kies een tijd in de toekomst, Marty."
-title = "Doeltijd”
-today = "Vandaag"
-tomorrow = "Morgen"
-targetIsTooFarInTheFuture = "We passen het plan aan wanneer we meer weten over de toekomst.”
-update = "Update"
-descriptionEnergy = "Tot wanneer moet {targetEnergy} in het voertuig worden geladen?"
 planDuration = "Oplaadtijd"
 planPeriodLabel = "Periode"
 planPeriodValue = "{start} tot {end}"
 planUnknown = "nog niet bekend"
+remove = "Verwijder"
+setTargetTime = "geen"
+targetIsInThePast = "Kies een tijd in de toekomst, Marty."
+targetIsTooFarInTheFuture = "We passen het plan aan wanneer we meer weten over de toekomst."
+title = "Doeltijd"
+today = "Vandaag"
+tomorrow = "Morgen"
+update = "Update"
+
+[main.targetChargePlan]
+chargeDuration = "Oplaadtijd"
+co2Label = "CO₂ emissie Ø"
+priceLabel = "Energieprijs"
+timeRange = "{day} {range} h"
+unknownPrice = "onbekend"
 
 [main.targetEnergy]
 label = "Limiet"
 noLimit = "geen"
 
 [main.vehicle]
+addVehicle = "Voertuig toevoegen"
 changeVehicle = "Wijzig voertuig"
 detectionActive = "Detecteer voertuig..."
 fallbackName = "Voertuig"
+moreActions = "Meer acties"
 none = "Geen voertuig"
 targetSoc = "Limiet"
 unknown = "Gast"
 vehicleSoc = "Opladen"
-addVehicle = “Voertuig toevoegen”
-moreActions = “Meer acties”
 
 [main.vehicleSoc]
 charging = "laden"
@@ -197,14 +204,24 @@ modalTitle = "Notificaties"
 message = "Niet verbonden met een server."
 reload = "Verversen?"
 
+[session]
+cancel = "Annuleer"
+delete = "Verwijder"
+finished = "Afgerond"
+meterstart = "Meter start"
+meterstop = "Meter stop"
+odometer = "Kilometerstand"
+started = "Gestart"
+title = "Oplaadsessie"
+
 [sessions]
 date = "Periode"
 downloadCsv = "Download CSV"
 energy = "Geladen"
 loadpoint = "Oplaadpunt"
+reallyDelete = "Wilt u deze sessie echt verwijderen?"
 title = "Oplaadsessies"
 vehicle = "Voertuig"
-reallyDelete = "Wilt u deze sessie echt verwijderen?"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
@@ -219,6 +236,16 @@ vehicle = "Voertuig"
 
 [settings]
 title = "Instellingen"
+
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Grid detail"
+none = "geen"
+price = "prijs"
+
+[settings.hiddenFeatures]
+label = "Experimenteel"
+value = "Toon experimentele UI functies."
 
 [settings.language]
 auto = "Automatisch"
@@ -250,35 +277,7 @@ lineErrorLink = "lijn {0}"
 restartButton = "Herstart"
 title = "Start Error"
 
-
-[session]
-finished = "Afgerond"
-meterstart = "Meter start"
-meterstop = "Meter stop"
-title = "Oplaadsessie"
-odometer = "Kilometerstand"
-started = "Gestart"
-cancel = 'Annuleer"
-delete = "Verwijder"
-
-[settings.gridDetails]
-label = "Grid detail"
-co2 = "CO₂"
-none = "geen"
-price = "prijs"
-
-[main.targetChargePlan]
-chargeDuration = "Oplaadtijd"
-co2Label = "CO₂ emissie Ø"
-priceLabel = "Energieprijs"
-timeRange = "{day} {range} h"
-unknownPrice = "onbekend"
-
-[settings.hiddenFeatures]
-label = “Experimenteel”
-value = “Toon experimentele UI functies.”
-
 [vehicleSettings]
-cancel = “Annuleer”
-template = “Fabrikant”
-test = “Test”
+cancel = "Annuleer"
+template = "Fabrikant"
+test = "Test"

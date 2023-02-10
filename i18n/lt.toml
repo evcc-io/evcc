@@ -77,6 +77,7 @@ vehicles = "Autoparkas"
 battery = "Kaupiklis"
 batteryCharge = "Kaupiklis įkraunamas"
 batteryDischarge = "Kaupiklis iškraunamas"
+batteryTooltip = "{energy} iš {total} ({soc}%)"
 gridImport = "Iš tinklo"
 homePower = "Namo suvartojimas"
 loadpoints = "Įkroviklis | Įkroviklis | {count} įkrovikliai"
@@ -84,7 +85,6 @@ noEnergy = "Nėra skaitiklių duomenų"
 pvExport = "Tinklo eksportas"
 pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
-batteryTooltip = "{energy} iš {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Įkrauta"
@@ -163,15 +163,15 @@ label = "Limitas"
 noLimit = "nėra"
 
 [main.vehicle]
+addVehicle = "Pridėti automobilį"
 changeVehicle = "Pakeisti automobilį"
 detectionActive = "Bandome atpažinti automobilį ..."
 fallbackName = "Automobilis"
+moreActions = "Daugiau veiksmų"
 none = "Nėra automobilio"
 targetSoc = "Limitas"
 unknown = "Nežinomas automobilis"
 vehicleSoc = "Baterija"
-addVehicle = "Pridėti automobilį"
-moreActions = "Daugiau veiksmų"
 
 [main.vehicleSoc]
 charging = "vyksta įkrovimas"
@@ -237,6 +237,16 @@ vehicle = "Automobilis"
 [settings]
 title = "Nustatymai"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Tinklas detaliau"
+none = "nėra"
+price = "kaina"
+
+[settings.hiddenFeatures]
+label = "Eksperimentinė"
+value = "Rodyti eksperimentines funkcijas."
+
 [settings.language]
 auto = "Automatiškai"
 label = "Kalba"
@@ -266,17 +276,6 @@ lineError = "Klaida čia {0}."
 lineErrorLink = "eilutė {0}"
 restartButton = "Restartuoti"
 title = "Klaida startuojant"
-
-
-[settings.gridDetails]
-co2 = "CO₂"
-label = "Tinklas detaliau"
-none = "nėra"
-price = "kaina"
-
-[settings.hiddenFeatures]
-value = "Rodyti eksperimentines funkcijas."
-label = "Eksperimentinė"
 
 [vehicleSettings]
 cancel = "Atšaukti"

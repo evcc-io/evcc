@@ -158,15 +158,15 @@ label = "Ladeziel"
 noLimit = "keins"
 
 [main.vehicle]
+addVehicle = "Fahrzeug hinzufügen"
 changeVehicle = "Fahrzeug ändern"
 detectionActive = "Fahrzeugerkennung läuft..."
 fallbackName = "Fahrzeug"
+moreActions = "Weitere Aktionen"
 none = "Kein Fahrzeug"
 targetSoc = "Ladeziel"
 unknown = "Gastfahrzeug"
 vehicleSoc = "Ladestand"
-moreActions = "Mehr aktionen"
-addVehicle = "Fahrzug hinzufügen"
 
 [main.vehicleSoc]
 charging = "lädt"
@@ -238,6 +238,10 @@ label = "Netztarifdetails"
 none = "keine"
 price = "Preis"
 
+[settings.hiddenFeatures]
+label = "Experimentell"
+value = "Experimentelle UI-Funktionen zeigen."
+
 [settings.language]
 auto = "Automatisch"
 label = "Sprache"
@@ -267,11 +271,6 @@ lineError = "In {0} wurde ein Fehler gefunden."
 lineErrorLink = "Zeile {0}"
 restartButton = "Neu starten"
 title = "Fehler beim Starten"
-
-
-[settings.hiddenFeatures]
-label = "Experimentell"
-value = "Experimentelle UI-Funktionen zeigen."
 
 [vehicleSettings]
 cancel = "Abbrechen"
