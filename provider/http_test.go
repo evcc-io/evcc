@@ -19,7 +19,7 @@ type httpHandler struct {
 func (h *httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.req = req
 	h.val = lo.RandomString(16, lo.LettersCharset)
-	w.Write([]byte(h.val))
+	_, _ = w.Write([]byte(h.val))
 }
 
 func TestHttpGet(t *testing.T) {
