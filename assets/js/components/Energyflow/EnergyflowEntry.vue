@@ -11,7 +11,7 @@
 		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
 			<div
 				ref="details"
-				class="evcc-gray fw-normal"
+				class="fw-normal"
 				data-bs-toggle="tooltip"
 				title=" "
 				@click.stop=""
