@@ -2,7 +2,6 @@ package shelly
 
 import (
 	"encoding/json"
-	"strconv"
 	"testing"
 )
 
@@ -29,7 +28,7 @@ func TestUnmarshalGen1StatusResponse(t *testing.T) {
 		t.Error(err)
 	}
 	if GetGen1Energy("SHSW-1", res.Meters[0].Total) != 0 {
-		t.Error("SHSW-1 res.Meters[0].Total) != 0 ### " + strconv.FormatFloat(GetGen1Energy("SHSW-1", res.Meters[0].Total), 'f', -1, 64))
+		t.Error("SHSW-1 res.Meters[0].Total) != 0")
 	}
 	if res.Meters[0].Power != 81.5 {
 		t.Error("res.Meters[0].Power != -81.5")
