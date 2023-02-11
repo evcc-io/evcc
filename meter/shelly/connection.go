@@ -193,10 +193,7 @@ func (d *Connection) TotalEnergy() (float64, error) {
 			return 0, errors.New("invalid channel, missing power meter")
 		}
 
-		// Gen 1 Shelly EM devices are providing Watt hours, Shelly EM devices are providing Watt minutes
-		if !strings.Contains(d.devicetype, "EM") {
-			energy = energy / 60
-		}
+		energy = GetGen1Energy(d.devicetype, energy)
 
 	default:
 		var res Gen2StatusResponse
