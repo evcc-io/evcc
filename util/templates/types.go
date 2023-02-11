@@ -151,9 +151,6 @@ func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
 	mu.Lock()
 	s := t.String(encoderLanguage)
 	mu.Unlock()
-
-	fmt.Println(encoderLanguage)
-
 	return json.Marshal(s)
 }
 
