@@ -117,9 +117,6 @@ func NewSiteFromConfig(
 		if table := "transactions"; serverdb.Instance.Migrator().HasTable(table) {
 			err = serverdb.Instance.Migrator().RenameTable(table, new(db.Session))
 		}
-		if err == nil {
-			err = serverdb.Instance.AutoMigrate(new(db.Session))
-		}
 		if err != nil {
 			return nil, err
 		}
