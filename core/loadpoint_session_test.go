@@ -5,8 +5,11 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
 	coredb "github.com/evcc-io/evcc/core/db"
+	"github.com/evcc-io/evcc/mock"
 	serverdb "github.com/evcc-io/evcc/server/db"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,12 +23,27 @@ func TestSession(t *testing.T) {
 
 	clock := clock.NewMock()
 
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mm := mock.NewMockMeter(ctrl)
+	me := mock.NewMockMeterEnergy(ctrl)
+
+	type EnergyDecorator struct {
+		api.Meter
+		api.MeterEnergy
+	}
+
+	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
+
 	lp := &Loadpoint{
-		clock: clock,
-		db:    db,
+		clock:       clock,
+		db:          db,
+		chargeMeter: cm,
 	}
 
 	// create session
+	me.EXPECT().TotalEnergy().Return(1.0, nil)
 	lp.createSession()
 	assert.NotNil(t, lp.session)
 
@@ -39,7 +57,8 @@ func TestSession(t *testing.T) {
 
 	// stop charging
 	clock.Add(time.Hour)
-	lp.chargedEnergy = 1.23
+	lp.chargedEnergy = 1.23 * 1e3                                   // Wh
+	me.EXPECT().TotalEnergy().Return(1.0+lp.chargedEnergy/1e3, nil) // match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
@@ -54,10 +73,11 @@ func TestSession(t *testing.T) {
 	// stop charging - 2nd leg
 	clock.Add(time.Hour)
 	lp.chargedEnergy *= 2
+	me.EXPECT().TotalEnergy().Return(3.0, nil) // doesn't match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
-	assert.Equal(t, lp.chargedEnergy/1e3, lp.session.ChargedEnergy)
+	assert.Equal(t, 3.0-1.0, lp.session.ChargedEnergy) // expect actual meter energy delta
 	assert.Equal(t, clock.Now(), lp.session.Finished)
 
 	s, err = db.Sessions()

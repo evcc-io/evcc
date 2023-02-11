@@ -56,7 +56,12 @@ func (lp *Loadpoint) stopSession() {
 	lp.session.Finished = lp.clock.Now()
 	lp.session.MeterStop = lp.chargeMeterTotal()
 
-	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > lp.session.ChargedEnergy {
+	chargedEnergy := lp.getChargedEnergy() / 1e3
+	if delta := lp.session.MeterStop - lp.session.MeterStart; delta < chargedEnergy && lp.session.MeterStart*lp.session.MeterStop > 0 {
+		chargedEnergy = delta
+	}
+
+	if chargedEnergy > lp.session.ChargedEnergy {
 		lp.session.ChargedEnergy = chargedEnergy
 	}
 
