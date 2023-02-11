@@ -84,7 +84,6 @@ func (p products) MarshalJSON() (out []byte, err error) {
 		out = append(out, '}')
 	}
 
-	fmt.Println(string(out))
 	return out, nil
 }
 
