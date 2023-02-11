@@ -2,7 +2,9 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
@@ -10,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
+	"golang.org/x/exp/slices"
 )
 
 // templatesHandler returns the list of templates by class
@@ -23,6 +26,93 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := templates.ByClass(class)
+
+	lang := r.URL.Query().Get("lang")
+	templates.EncoderLanguage(lang)
+
+	if name := r.URL.Query().Get("name"); name != "" {
+		for _, t := range res {
+			if t.TemplateDefinition.Template == name {
+				jsonResult(w, t)
+				return
+			}
+		}
+
+		jsonError(w, http.StatusBadRequest, errors.New("template not found"))
+		return
+	}
+
+	jsonResult(w, res)
+}
+
+type product struct {
+	Name     string `json:"name"`
+	Template string `json:"template"`
+}
+
+type products []product
+
+func (p products) MarshalJSON() (out []byte, err error) {
+	if p == nil {
+		return []byte(`null`), nil
+	}
+	if len(p) == 0 {
+		return []byte(`{}`), nil
+	}
+
+	out = append(out, '{')
+	for _, e := range p {
+		key, err := json.Marshal(e.Name)
+		if err != nil {
+			return nil, err
+		}
+		val, err := json.Marshal(e.Template)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, key...)
+		out = append(out, ':')
+		out = append(out, val...)
+		out = append(out, ',')
+	}
+
+	// replace last ',' with '}'
+	if len(out) > 1 {
+		out[len(out)-1] = '}'
+	} else {
+		out = append(out, '}')
+	}
+
+	return out, nil
+}
+
+// productsHandler returns the list of products by class
+func productsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	class, err := templates.ClassString(vars["class"])
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	tmpl := templates.ByClass(class)
+	lang := r.URL.Query().Get("lang")
+
+	res := make(products, 0)
+	for _, t := range tmpl {
+		for _, p := range t.Products {
+			res = append(res, product{
+				Name:     p.Title(lang),
+				Template: t.TemplateDefinition.Template,
+			})
+		}
+	}
+
+	slices.SortFunc(res, func(a, b product) bool {
+		return strings.ToLower(a.Name) < strings.ToLower(b.Name)
+	})
+
 	jsonResult(w, res)
 }
 

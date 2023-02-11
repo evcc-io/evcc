@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -143,6 +144,14 @@ func (t *TextLanguage) Update(new TextLanguage, always bool) {
 	if (new.EN != "" && always) || (!always && t.EN == "" && new.EN != "") {
 		t.EN = new.EN
 	}
+}
+
+// MarshalJSON implements the json.Marshaler interface
+func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
+	mu.Lock()
+	s := t.String(encoderLanguage)
+	mu.Unlock()
+	return json.Marshal(s)
 }
 
 // Requirements

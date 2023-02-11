@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path"
+	"sync"
 
 	"github.com/evcc-io/evcc/templates/definition"
 	"golang.org/x/exp/slices"
@@ -14,6 +15,9 @@ import (
 var (
 	templates      = make(map[Class][]Template)
 	configDefaults = ConfigDefaults{}
+
+	mu              sync.Mutex
+	encoderLanguage string
 )
 
 func init() {
@@ -96,6 +100,13 @@ func loadTemplates(class Class) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// EncoderLanguage sets the template language for encoding json
+func EncoderLanguage(lang string) {
+	mu.Lock()
+	defer mu.Unlock()
+	encoderLanguage = lang
 }
 
 func ByClass(class Class) []Template {
