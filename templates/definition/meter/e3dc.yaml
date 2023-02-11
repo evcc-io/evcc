@@ -22,6 +22,9 @@ render: |
       address: 40073 # Hausverbrauchs-Leistung in Watt
   {{- end}}
   {{- if eq .usage "pv" }}
+      address: 40075 # Leistung aller zusätzlichen Einspeiser in Watt
+  {{- end}}
+  {{- if eq .usage "pv" }}
       address: 40067 # Photovoltaikleistung in Watt
   {{- end}}
   {{- if eq .usage "battery" }}
