@@ -98,6 +98,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"health":        {[]string{"GET"}, "/health", healthHandler(site)},
 		"state":         {[]string{"GET"}, "/state", stateHandler(cache)},
 		"config":        {[]string{"GET"}, "/config/templates/{class:[a-z]+}", templatesHandler},
+		"products":      {[]string{"GET"}, "/config/products/{class:[a-z]+}", productsHandler},
 		"test":          {[]string{"POST"}, "/config/test/{class:[a-z]+}", testHandler},
 		"buffersoc":     {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"prioritysoc":   {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
