@@ -9,13 +9,7 @@
 			{{ name }}
 		</span>
 		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
-			<div
-				ref="details"
-				class="evcc-gray fw-normal"
-				data-bs-toggle="tooltip"
-				title=" "
-				@click.stop=""
-			>
+			<div ref="details" class="fw-normal" data-bs-toggle="tooltip" title=" " @click.stop="">
 				<span v-if="showPrice()"><AnimatedNumber :to="price" :format="fmtPrice" /></span>
 				<span v-if="showCo2()"><AnimatedNumber :to="co2" :format="fmtCo2Short" /></span>
 				<span v-if="hasSoc">{{ soc }}%</span>
