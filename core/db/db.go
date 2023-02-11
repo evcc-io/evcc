@@ -58,6 +58,7 @@ func (s *DB) Persist(session interface{}) {
 }
 
 // Return sessions
+// TODO make this part of server/db
 func (s *DB) Sessions() (Sessions, error) {
 	var res Sessions
 	tx := s.db.Find(&res)
