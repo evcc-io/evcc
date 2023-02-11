@@ -21,7 +21,15 @@ type Database interface {
 // New creates a database storage driver
 func New(name string) (*DB, error) {
 	db := serverdb.Instance
-	err := db.AutoMigrate(new(Session))
+
+	// TODO deprecate
+	var err error
+	if table := "transactions"; db.Migrator().HasTable(table) {
+		err = db.Migrator().RenameTable(table, new(Session))
+	}
+	if err == nil {
+		err = db.AutoMigrate(new(Session))
+	}
 
 	sessiondb := &DB{
 		log:  util.NewLogger("db"),
