@@ -110,21 +110,6 @@ func NewSiteFromConfig(
 	site.coordinator = coordinator.New(log, vehicles)
 	site.savings = NewSavings(tariffs)
 
-	// migrate session log
-	if serverdb.Instance != nil {
-		var err error
-		// TODO deprecate
-		if table := "transactions"; serverdb.Instance.Migrator().HasTable(table) {
-			err = serverdb.Instance.Migrator().RenameTable(table, new(db.Session))
-		}
-		if err == nil {
-			err = serverdb.Instance.AutoMigrate(new(db.Session))
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
