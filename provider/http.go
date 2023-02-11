@@ -148,7 +148,7 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 }
 
 // request executes the configured request or returns the cached value
-func (p *HTTP) request(body ...string) ([]byte, error) {
+func (p *HTTP) request(url string, body ...string) ([]byte, error) {
 	if time.Since(p.updated) >= p.cache {
 		var b io.Reader
 		if len(body) == 1 {
@@ -156,7 +156,7 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 		}
 
 		// empty method becomes GET
-		req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
+		req, err := request.New(strings.ToUpper(p.method), url, b, p.headers)
 		if err != nil {
 			return []byte{}, err
 		}
@@ -200,7 +200,7 @@ func (p *HTTP) IntGetter() func() (int64, error) {
 // StringGetter sends string request
 func (p *HTTP) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		b, err := p.request(p.body)
+		b, err := p.request(p.url, p.body)
 
 		if err == nil && p.pipeline != nil {
 			b, err = p.pipeline.Process(b)
@@ -221,11 +221,17 @@ func (p *HTTP) BoolGetter() func() (bool, error) {
 }
 
 func (p *HTTP) set(param string, val interface{}) error {
-	body, err := setFormattedValue(p.body, param, val)
-
-	if err == nil {
-		_, err = p.request(body)
+	url, err := setFormattedValue(p.url, param, val)
+	if err != nil {
+		return err
 	}
+
+	body, err := setFormattedValue(p.body, param, val)
+	if err != nil {
+		return err
+	}
+
+	_, err = p.request(url, body)
 
 	return err
 }
