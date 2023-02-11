@@ -28,6 +28,9 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 
 	res := templates.ByClass(class)
 
+	lang := r.URL.Query().Get("lang")
+	templates.EncoderLanguage(lang)
+
 	if name := r.URL.Query().Get("name"); name != "" {
 		for _, t := range res {
 			if t.TemplateDefinition.Template == name {
@@ -101,16 +104,8 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 	res := make(products, 0)
 	for _, t := range tmpl {
 		for _, p := range t.Products {
-			s := p.Brand
-			if d := p.Description.String(lang); d != "" {
-				if len(s) > 0 {
-					s += " "
-				}
-				s += d
-			}
-
 			res = append(res, product{
-				Name:     s,
+				Name:     p.Title(lang),
 				Template: t.TemplateDefinition.Template,
 			})
 		}
