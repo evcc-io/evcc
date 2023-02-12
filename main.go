@@ -5,8 +5,6 @@ import (
 	"io"
 	"io/fs"
 	"log"
-	"math/rand"
-	"time"
 
 	"github.com/evcc-io/evcc/cmd"
 	"github.com/evcc-io/evcc/server/assets"
@@ -23,9 +21,6 @@ var (
 
 // init loads embedded assets unless live assets are already loaded
 func init() {
-	// TODO remove this once Go 1.20 is out with it.
-	rand.Seed(time.Now().UnixNano())
-
 	if !assets.Live() {
 		var err error
 
