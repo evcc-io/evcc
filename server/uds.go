@@ -47,6 +47,6 @@ func HealthListener(site site.API) {
 
 	shutdown.Register(func() {
 		_ = l.Close()
-		removeIfExists(SocketPath) // cleanup
+		_ = removeIfExists(SocketPath) // cleanup
 	})
 }
