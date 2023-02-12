@@ -122,7 +122,7 @@ func (c *CmdConfigure) askBoolValue(label string) string {
 
 // askValue asks for value input for a given question (template param)
 func (c *CmdConfigure) askValue(q question) string {
-	if q.valueType == templates.ParamValueTypeBool {
+	if q.valueType == templates.ParamTypeBool {
 		label := q.label
 		if q.help != "" {
 			helpDescription := stripmd.Strip(q.help)
@@ -135,7 +135,7 @@ func (c *CmdConfigure) askValue(q question) string {
 		return c.askBoolValue(label)
 	}
 
-	if q.valueType == templates.ParamValueTypeChargeModes {
+	if q.valueType == templates.ParamTypeChargeModes {
 		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
 		chargeModes := []string{
 			c.localizedString("ChargeModeOff", nil),
@@ -169,14 +169,14 @@ func (c *CmdConfigure) askValue(q question) string {
 			return nil
 		}
 
-		if q.valueType == templates.ParamValueTypeFloat {
+		if q.valueType == templates.ParamTypeFloat {
 			_, err := strconv.ParseFloat(value, 64)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Float", nil))
 			}
 		}
 
-		if q.valueType == templates.ParamValueTypeNumber {
+		if q.valueType == templates.ParamTypeNumber {
 			intValue, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Number", nil))
@@ -189,7 +189,7 @@ func (c *CmdConfigure) askValue(q question) string {
 			}
 		}
 
-		if q.valueType == templates.ParamValueTypeDuration {
+		if q.valueType == templates.ParamTypeDuration {
 			_, err := time.ParseDuration(value)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Duration", nil))

@@ -77,6 +77,7 @@ vehicles = "Estacionamento"
 battery = "Bateria"
 batteryCharge = "Carrego de bateria"
 batteryDischarge = "Descarrego de bateria"
+batteryTooltip = "{energy} de {total} ({soc}%)"
 gridImport = "Consumo de rede"
 homePower = "Consumo"
 loadpoints = "Carregador | Carregador | {count} Carregadores"
@@ -162,9 +163,11 @@ label = "Alvo de carga"
 noLimit = "sem"
 
 [main.vehicle]
+addVehicle = "Adicionar veículo"
 changeVehicle = "Troca de veículo"
 detectionActive = "Detecção de veículo..."
 fallbackName = "Veículo"
+moreActions = "Mais ações"
 none = "Nenhum veículo"
 targetSoc = "Alvo de carga"
 unknown = "Veículo convidado"
@@ -235,6 +238,16 @@ vehicle = "Veículo"
 [settings]
 title = "Configuração"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Detalhes da rede"
+none = "sem"
+price = "preço"
+
+[settings.hiddenFeatures]
+label = "Experimental"
+value = "Mostrar recursos de IU experimentais."
+
 [settings.language]
 auto = "Automático"
 label = "Língua"
@@ -264,3 +277,8 @@ lineError = "Um erro em {0}."
 lineErrorLink = "linha {0}"
 restartButton = "Reiniciar"
 title = "Erro ao iniciar"
+
+[vehicleSettings]
+cancel = "Cancelar"
+template = "Fabricante"
+test = "Teste"

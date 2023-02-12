@@ -23,7 +23,7 @@ params:
     mask: true
   - name: meterchannel
     default: 6
-    valuetype: int
+    type: int
     required: true
     advanced: true
     description:

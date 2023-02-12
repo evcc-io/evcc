@@ -18,14 +18,14 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"sort"
-	"strings"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/zaptec"
 	"github.com/evcc-io/evcc/provider"
@@ -37,6 +37,7 @@ import (
 )
 
 // https://api.zaptec.com/help/index.html
+// https://api.zaptec.com/.well-known/openid-configuration/
 
 // Zaptec charger implementation
 type Zaptec struct {
@@ -100,21 +101,31 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		return res, err
 	}, c.cache)
 
-	data := url.Values{
-		"grant_type": {"password"},
-		"username":   {user},
-		"password":   {password},
+	provider, err := oidc.NewProvider(context.Background(), zaptec.ApiURL+"/")
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
 	}
 
-	uri := fmt.Sprintf("%s/oauth/token", zaptec.ApiURL)
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	oc := &oauth2.Config{
+		Endpoint: provider.Endpoint(),
+		Scopes: []string{
+			oidc.ScopeOpenID,
+			oidc.ScopeOfflineAccess,
+		},
+	}
+
+	ctx := context.WithValue(
+		context.Background(),
+		oauth2.HTTPClient,
+		c.Client,
+	)
+
+	token, err := oc.PasswordCredentialsToken(ctx, user, password)
+
 	if err == nil {
-		var token oauth2.Token
-		if err = c.DoJSON(req, &token); err == nil {
-			c.Transport = &oauth2.Transport{
-				Source: oauth2.StaticTokenSource(&token),
-				Base:   c.Transport,
-			}
+		c.Transport = &oauth2.Transport{
+			Source: oc.TokenSource(context.Background(), token),
+			Base:   c.Transport,
 		}
 	}
 

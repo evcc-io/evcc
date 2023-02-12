@@ -60,6 +60,7 @@ meters:
         if (state.batterySoc < 10) state.batterySoc = 90;
         if (state.batterySoc > 90) state.batterySoc = 10;
         state.batterySoc;
+    capacity: 13.4
 
   - name: meter_charger_1
     type: custom

@@ -15,9 +15,10 @@ import (
 // Connection is the Shelly connection
 type Connection struct {
 	*request.Helper
-	uri     string
-	channel int
-	gen     int // Shelly api generation
+	uri        string
+	channel    int
+	gen        int    // Shelly api generation
+	devicetype string // Shelly device type
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -40,9 +41,10 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	}
 
 	conn := &Connection{
-		Helper:  client,
-		channel: channel,
-		gen:     resp.Gen,
+		Helper:     client,
+		channel:    channel,
+		gen:        resp.Gen,
+		devicetype: resp.Type,
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -184,12 +186,14 @@ func (d *Connection) TotalEnergy() (float64, error) {
 
 		switch {
 		case d.channel < len(res.Meters):
-			energy = res.Meters[d.channel].Total / 60
+			energy = res.Meters[d.channel].Total
 		case d.channel < len(res.EMeters):
-			energy = res.EMeters[d.channel].Total / 60
+			energy = res.EMeters[d.channel].Total
 		default:
 			return 0, errors.New("invalid channel, missing power meter")
 		}
+
+		energy = GetGen1Energy(d.devicetype, energy)
 
 	default:
 		var res Gen2StatusResponse
@@ -208,4 +212,13 @@ func (d *Connection) TotalEnergy() (float64, error) {
 	}
 
 	return energy / 1000, nil
+}
+
+// GetGen1Energy in kWh
+func GetGen1Energy(devicetype string, energy float64) float64 {
+	// Gen 1 Shelly EM devices are providing Watt hours, Shelly EM devices are providing Watt minutes
+	if !strings.Contains(devicetype, "EM") {
+		energy = energy / 60
+	}
+	return energy
 }

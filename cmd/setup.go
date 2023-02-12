@@ -9,6 +9,7 @@ import (
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/site"
@@ -195,12 +196,12 @@ func configureMDNS(conf networkConfig) error {
 // setup EEBus
 func configureEEBus(conf map[string]interface{}) error {
 	var err error
-	if server.EEBusInstance, err = server.NewEEBus(conf); err != nil {
+	if eebus.Instance, err = eebus.NewServer(conf); err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
-	server.EEBusInstance.Run()
-	shutdown.Register(server.EEBusInstance.Shutdown)
+	eebus.Instance.Run()
+	shutdown.Register(eebus.Instance.Shutdown)
 
 	return nil
 }

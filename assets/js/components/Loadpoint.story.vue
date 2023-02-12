@@ -42,9 +42,10 @@ const state = reactive({
 				:chargeCurrent="0"
 			/>
 		</Variant>
-		<Variant title="disabled">
+		<Variant title="disabled, long title">
 			<Loadpoint
 				v-bind="state"
+				title="Charging point with a very very very long title!!!1!"
 				remoteDisabled="soft"
 				remoteDisabledSource="Sunny Home Manager"
 				mode="now"

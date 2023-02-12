@@ -20,7 +20,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.18-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.20-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -66,7 +66,7 @@ RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 
 
 # STEP 3 build a small image including module support
-FROM alpine:3.15
+FROM alpine:3.17
 
 WORKDIR /app
 

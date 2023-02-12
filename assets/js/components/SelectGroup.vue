@@ -7,6 +7,7 @@
 			type="button"
 			class="btn btn-sm flex-grow-1 flex-shrink-1"
 			:class="{ active: option.value === modelValue }"
+			:disabled="option.disabled"
 			@click="$emit('update:modelValue', option.value)"
 		>
 			{{ option.name }}

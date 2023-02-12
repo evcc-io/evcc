@@ -69,6 +69,8 @@ meters:
     type: ...
   - name: charge
     type: ...
+  - name: aux
+    type: ...
 
 # charger definitions
 # name can be freely chosen and is used as reference when assigning charger to vehicle
@@ -101,9 +103,11 @@ site:
   title: Home # display name for UI
   meters:
     grid: grid # grid meter
-    pvs:
+    pv:
       - pv # list of pv inverters/ meters
-    battery: battery # battery meter
+    battery:
+      - battery # list of battery meters
+    aux: aux # auxiliary meters for adjusting grid operating point
   prioritySoc: # give home battery priority up to this soc (empty to disable)
   bufferSoc: # ignore home battery discharge above soc (empty to disable)
 

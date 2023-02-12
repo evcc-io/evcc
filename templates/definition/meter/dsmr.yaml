@@ -15,7 +15,7 @@ params:
       de: Typischerweise 1-0:1.8.0, bei Mehrtarifzählern 1-0:1.8.1 oder 1-0:1.8.2
       en: Typically 1-0:1.8.0 or 1-0:1.8.1/1-0:1.8.2 with multiple tariffs
     advanced: true
-    valuetype: string
+    type: string
 render: |
   type: dsmr
   uri: {{ .host }}:{{ .port }}

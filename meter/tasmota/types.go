@@ -78,8 +78,8 @@ type StatusSNSResponse struct {
 			ApparentPower  Channels
 			ReactivePower  Channels
 			Factor         Channels
-			Frequency      int
-			Voltage        int
+			Frequency      Channels
+			Voltage        Channels
 			Current        Channels
 		}
 
@@ -96,6 +96,9 @@ type StatusSNSResponse struct {
 type Channels []float64
 
 func (ch *Channels) Channel(channel int) (float64, error) {
+	if *ch == nil {
+		return 0, nil
+	}
 	if channel < 1 || channel > len(*ch) {
 		return 0, fmt.Errorf("invalid channel: %d", channel)
 	}

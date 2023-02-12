@@ -8,7 +8,7 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: storageunit
-    valuetype: number
+    type: number
     default: 1
     advanced: true
   - name: modbus

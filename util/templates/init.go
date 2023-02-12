@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path"
+	"sync"
 
 	"github.com/evcc-io/evcc/templates/definition"
 	"golang.org/x/exp/slices"
@@ -14,14 +15,9 @@ import (
 var (
 	templates      = make(map[Class][]Template)
 	configDefaults = ConfigDefaults{}
-)
 
-type Class string
-
-const (
-	Charger Class = "charger"
-	Meter   Class = "meter"
-	Vehicle Class = "vehicle"
+	mu              sync.Mutex
+	encoderLanguage string
 )
 
 func init() {
@@ -58,6 +54,13 @@ func FromBytes(b []byte) (Template, error) {
 		err = tmpl.Validate()
 	}
 
+	// set default value type
+	for _, p := range tmpl.Params {
+		if p.Type == "" {
+			p.Type = ParamTypeString
+		}
+	}
+
 	return tmpl, err
 }
 
@@ -84,8 +87,12 @@ func loadTemplates(class Class) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		path := Class(path.Dir(filepath))
-		templates[path] = append(templates[path], tmpl)
+		class, err := ClassString(path.Dir(filepath))
+		if err != nil {
+			return fmt.Errorf("invalid template class: '%s'", err)
+		}
+
+		templates[class] = append(templates[class], tmpl)
 
 		return nil
 	})
@@ -93,6 +100,13 @@ func loadTemplates(class Class) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// EncoderLanguage sets the template language for encoding json
+func EncoderLanguage(lang string) {
+	mu.Lock()
+	defer mu.Unlock()
+	encoderLanguage = lang
 }
 
 func ByClass(class Class) []Template {

@@ -18,7 +18,7 @@
 				:loadpoints="loadpoints"
 				:vehicles="vehicles"
 			/>
-			<Vehicles v-if="showParkingLot" />
+			<VehcileSettingsModal />
 			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
@@ -28,9 +28,9 @@
 import "@h2d2/shopicons/es/regular/arrowup";
 import TopNavigation from "./TopNavigation.vue";
 import Notifications from "./Notifications.vue";
+import VehcileSettingsModal from "./VehicleSettingsModal.vue";
 import Energyflow from "./Energyflow/Energyflow.vue";
 import Loadpoints from "./Loadpoints.vue";
-import Vehicles from "./Vehicles.vue";
 import Footer from "./Footer.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
@@ -43,7 +43,7 @@ export default {
 		Footer,
 		Notifications,
 		TopNavigation,
-		Vehicles,
+		VehcileSettingsModal,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -61,6 +61,7 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoc: Number,
+		battery: Array,
 		gridCurrents: Array,
 		prioritySoc: Number,
 		siteTitle: String,
@@ -68,7 +69,6 @@ export default {
 
 		auth: Object,
 
-		// footer
 		currency: String,
 		savingsAmount: Number,
 		savingsEffectivePrice: Number,
@@ -77,8 +77,12 @@ export default {
 		savingsSelfConsumptionPercent: Number,
 		savingsSince: String,
 		savingsTotalCharged: Number,
+		greenShare: Number,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
+		tariffEffectivePrice: Number,
+		tariffCo2: Number,
+		tariffEffectiveCo2: Number,
 
 		availableVersion: String,
 		releaseNotes: String,
@@ -112,6 +116,12 @@ export default {
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation) };
+		},
+		hasPrice: function () {
+			return !isNaN(this.tariffGrid);
+		},
+		hasCo2: function () {
+			return !isNaN(this.tariffCo2);
 		},
 		showParkingLot: function () {
 			// work in progess

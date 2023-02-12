@@ -352,7 +352,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			fmt.Println()
 			minAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMinAmperage", nil),
-				valueType:      templates.ParamValueTypeNumber,
+				valueType:      templates.ParamTypeNumber,
 				minNumberValue: int64(minValue),
 				maxNumberValue: 32,
 				required:       true,
@@ -360,7 +360,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			loadpoint.MinCurrent, _ = strconv.Atoi(minAmperage)
 			maxAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMaxAmperage", nil),
-				valueType:      templates.ParamValueTypeNumber,
+				valueType:      templates.ParamTypeNumber,
 				minNumberValue: 6,
 				maxNumberValue: 32,
 				required:       true,
@@ -402,7 +402,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			case 3:
 				amperage := c.askValue(question{
 					label:          c.localizedString("Loadpoint_WallboxMaxAmperage", nil),
-					valueType:      templates.ParamValueTypeNumber,
+					valueType:      templates.ParamTypeNumber,
 					minNumberValue: int64(minValue),
 					maxNumberValue: 32,
 					required:       true,
@@ -419,12 +419,12 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		fmt.Println()
-		loadpoint.Mode = c.askValue(question{valueType: templates.ParamValueTypeChargeModes, excludeNone: true})
+		loadpoint.Mode = c.askValue(question{valueType: templates.ParamTypeChargeModes, excludeNone: true})
 
 		fmt.Println()
 		loadpoint.ResetOnDisconnect = c.askValue(question{
 			label:     c.localizedString("Loadpoint_ResetOnDisconnect", nil),
-			valueType: templates.ParamValueTypeBool,
+			valueType: templates.ParamTypeBool,
 		})
 		c.configuration.AddLoadpoint(loadpoint)
 

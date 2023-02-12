@@ -92,7 +92,7 @@
 				</a>
 			</li>
 		</ul>
-		<GlobalSettingsModal :sponsor="sponsor" />
+		<GlobalSettingsModal v-bind="globalSettingsModalProps" />
 	</div>
 </template>
 
@@ -104,12 +104,14 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import GlobalSettingsModal from "./GlobalSettingsModal.vue";
+import collector from "../mixins/collector";
 
 import baseAPI from "../baseapi";
 
 export default {
 	name: "TopNavigation",
 	components: { GlobalSettingsModal },
+	mixins: [collector],
 	props: {
 		vehicleLogins: {
 			type: Object,
@@ -118,8 +120,13 @@ export default {
 			},
 		},
 		sponsor: String,
+		hasPrice: Boolean,
+		hasCo2: Boolean,
 	},
 	computed: {
+		globalSettingsModalProps: function () {
+			return this.collectProps(GlobalSettingsModal);
+		},
 		logoutCount() {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},

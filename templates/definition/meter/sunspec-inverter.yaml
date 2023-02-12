@@ -18,7 +18,7 @@ params:
       de: Einstellung Float/Integer im Wechselrichter überprüfen
       en: Verify Float/Integer setting in inverter
     advanced: true
-    valuetype: bool
+    type: bool
 render: |
   type: modbus
   {{- include "modbus" . }}

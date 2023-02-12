@@ -63,6 +63,7 @@ type Site struct {
 	gridMeter     api.Meter   // Grid usage meter
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
+	auxMeters     []api.Meter // Auxiliary meters
 
 	tariffs     tariff.Tariffs           // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
@@ -75,15 +76,18 @@ type Site struct {
 	batteryPower    float64 // Battery charge power
 	batterySoc      float64 // Battery soc
 	batteryBuffered bool    // Battery buffer active
+
+	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 
 // MetersConfig contains the loadpoint's meter configuration
 type MetersConfig struct {
-	GridMeterRef     string   `mapstructure:"grid"`      // Grid usage meter
-	PVMeterRef       string   `mapstructure:"pv"`        // PV meter
-	PVMetersRef      []string `mapstructure:"pvs"`       // Multiple PV meters
-	BatteryMeterRef  string   `mapstructure:"battery"`   // Battery charging meter
-	BatteryMetersRef []string `mapstructure:"batteries"` // Multiple Battery charging meters
+	GridMeterRef      string   `mapstructure:"grid"`      // Grid usage meter
+	PVMetersRef       []string `mapstructure:"pv"`        // PV meter
+	PVMetersRef_      []string `mapstructure:"pvs"`       // TODO deprecated
+	BatteryMetersRef  []string `mapstructure:"battery"`   // Battery charging meter
+	BatteryMetersRef_ []string `mapstructure:"batteries"` // TODO deprecated
+	AuxMetersRef      []string `mapstructure:"aux"`       // Auxiliary meters
 }
 
 // NewSiteFromConfig creates a new site
@@ -105,21 +109,6 @@ func NewSiteFromConfig(
 	site.tariffs = tariffs
 	site.coordinator = coordinator.New(log, vehicles)
 	site.savings = NewSavings(tariffs)
-
-	// migrate session log
-	if serverdb.Instance != nil {
-		var err error
-		// TODO deprecate
-		if table := "transactions"; serverdb.Instance.Migrator().HasTable(table) {
-			err = serverdb.Instance.Migrator().RenameTable(table, new(db.Session))
-		}
-		if err == nil {
-			err = serverdb.Instance.AutoMigrate(new(db.Session))
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
@@ -155,7 +144,7 @@ func NewSiteFromConfig(
 	}
 
 	// multiple pv
-	for _, ref := range site.Meters.PVMetersRef {
+	for _, ref := range append(site.Meters.PVMetersRef, site.Meters.PVMetersRef_...) {
 		pv, err := cp.Meter(ref)
 		if err != nil {
 			return nil, err
@@ -163,20 +152,8 @@ func NewSiteFromConfig(
 		site.pvMeters = append(site.pvMeters, pv)
 	}
 
-	// single pv
-	if site.Meters.PVMeterRef != "" {
-		if len(site.pvMeters) > 0 {
-			return nil, errors.New("cannot have pv and pvs both")
-		}
-		pv, err := cp.Meter(site.Meters.PVMeterRef)
-		if err != nil {
-			return nil, err
-		}
-		site.pvMeters = append(site.pvMeters, pv)
-	}
-
 	// multiple batteries
-	for _, ref := range site.Meters.BatteryMetersRef {
+	for _, ref := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
 		battery, err := cp.Meter(ref)
 		if err != nil {
 			return nil, err
@@ -184,16 +161,13 @@ func NewSiteFromConfig(
 		site.batteryMeters = append(site.batteryMeters, battery)
 	}
 
-	// single battery
-	if site.Meters.BatteryMeterRef != "" {
-		if len(site.batteryMeters) > 0 {
-			return nil, errors.New("cannot have battery and batteries both")
-		}
-		battery, err := cp.Meter(site.Meters.BatteryMeterRef)
+	// auxiliary meters
+	for _, ref := range site.Meters.AuxMetersRef {
+		meter, err := cp.Meter(ref)
 		if err != nil {
 			return nil, err
 		}
-		site.batteryMeters = append(site.batteryMeters, battery)
+		site.auxMeters = append(site.auxMeters, meter)
 	}
 
 	// configure meter from references
@@ -207,8 +181,9 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:     util.NewLogger("site"),
-		Voltage: 230, // V
+		log:          util.NewLogger("site"),
+		publishCache: make(map[string]any),
+		Voltage:      230, // V
 	}
 
 	return lp
@@ -329,6 +304,16 @@ func (site *Site) publish(key string, val interface{}) {
 		Key: key,
 		Val: val,
 	}
+}
+
+// publishDelta deduplicates messages before publishing
+func (site *Site) publishDelta(key string, val interface{}) {
+	if v, ok := site.publishCache[key]; ok && v == val {
+		return
+	}
+
+	site.publishCache[key] = val
+	site.publish(key, val)
 }
 
 // updateMeter updates and publishes single meter
@@ -539,9 +524,81 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 
 	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
 
+	// deduct smart loads
+	var auxPower float64
+	for i, meter := range site.auxMeters {
+		if power, err := meter.CurrentPower(); err != nil {
+			site.log.ERROR.Printf("aux meter %d: %v", i, err)
+		} else {
+			auxPower += power
+			site.log.DEBUG.Printf("aux power %d: %.0fW", i, power)
+		}
+	}
+	site.publish("auxPower", auxPower)
+	sitePower -= auxPower
+
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
 	return sitePower, nil
+}
+
+func (site *Site) greenShare() float64 {
+	batteryDischarge := math.Max(0, site.batteryPower)
+	batteryCharge := -math.Min(0, site.batteryPower)
+	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
+
+	gridImport := math.Max(0, site.gridPower)
+	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
+
+	share := selfConsumption / (gridImport + selfConsumption)
+
+	if math.IsNaN(share) {
+		return 0
+	}
+
+	return share
+}
+
+// effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
+func (s *Site) effectivePrice(greenShare float64) (float64, error) {
+	if grid, err := s.tariffs.CurrentGridPrice(); err == nil {
+		feedin, err := s.tariffs.CurrentFeedInPrice()
+		if err != nil {
+			feedin = 0
+		}
+		return grid*(1-greenShare) + feedin*greenShare, nil
+	}
+	return 0, api.ErrNotAvailable
+}
+
+// effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
+func (s *Site) effectiveCo2(greenShare float64) (float64, error) {
+	if co2, err := s.tariffs.CurrentCo2(); err == nil {
+		return co2 * (1 - greenShare), nil
+	}
+	return 0, api.ErrNotAvailable
+}
+
+func (s *Site) publishTariffs() {
+	greenShare := s.greenShare()
+
+	s.publish("greenShare", greenShare)
+
+	if gridPrice, err := s.tariffs.CurrentGridPrice(); err == nil {
+		s.publishDelta("tariffGrid", gridPrice)
+	}
+	if feedInPrice, err := s.tariffs.CurrentFeedInPrice(); err == nil {
+		s.publishDelta("tariffFeedIn", feedInPrice)
+	}
+	if co2, err := s.tariffs.CurrentCo2(); err == nil {
+		s.publishDelta("tariffCo2", co2)
+	}
+	if price, err := s.effectivePrice(greenShare); err == nil {
+		s.publish("tariffEffectivePrice", price)
+	}
+	if co2, err := s.effectiveCo2(greenShare); err == nil {
+		s.publish("tariffEffectiveCo2", co2)
+	}
 }
 
 func (site *Site) update(lp Updater) {
@@ -565,11 +622,13 @@ func (site *Site) update(lp Updater) {
 		site.Health.Update()
 	}
 
-	// update savings and aggregate telemetry
+	site.publishTariffs()
+	greenShare := site.greenShare()
+
 	// TODO: use energy instead of current power for better results
-	deltaCharged, deltaSelf := site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
 	if telemetry.Enabled() && totalChargePower > standbyPower {
-		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, deltaSelf)
+		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
 	}
 }
 

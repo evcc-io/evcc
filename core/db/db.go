@@ -20,13 +20,24 @@ type Database interface {
 
 // New creates a database storage driver
 func New(name string) (*DB, error) {
-	db := &DB{
+	db := serverdb.Instance
+
+	// TODO deprecate
+	var err error
+	if table := "transactions"; db.Migrator().HasTable(table) {
+		err = db.Migrator().RenameTable(table, new(Session))
+	}
+	if err == nil {
+		err = db.AutoMigrate(new(Session))
+	}
+
+	sessiondb := &DB{
 		log:  util.NewLogger("db"),
-		db:   serverdb.Instance,
+		db:   db,
 		name: name,
 	}
 
-	return db, nil
+	return sessiondb, err
 }
 
 // Session creates a charging session
@@ -44,4 +55,12 @@ func (s *DB) Persist(session interface{}) {
 	if err := s.db.Save(session).Error; err != nil {
 		s.log.ERROR.Printf("persist: %v", err)
 	}
+}
+
+// Return sessions
+// TODO make this part of server/db
+func (s *DB) Sessions() (Sessions, error) {
+	var res Sessions
+	tx := s.db.Find(&res)
+	return res, tx.Error
 }

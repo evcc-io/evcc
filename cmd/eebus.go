@@ -5,7 +5,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/spf13/cobra"
 )
 
@@ -32,12 +32,12 @@ eebus:
 `
 
 func generateEEBUSCert() {
-	cert, err := server.CreateEEBUSCertificate()
+	cert, err := eebus.CreateCertificate()
 	if err != nil {
 		log.FATAL.Fatal("could not create certificate", err)
 	}
 
-	pubKey, privKey, err := server.GetX509KeyPair(cert)
+	pubKey, privKey, err := eebus.GetX509KeyPair(cert)
 	if err != nil {
 		log.FATAL.Fatal("could not process generated certificate", err)
 	}

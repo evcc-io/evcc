@@ -38,11 +38,13 @@ func NewPushOverFromConfig(other map[string]interface{}) (Messenger, error) {
 	}
 
 	m := &PushOver{
-		log:        util.NewLogger("pushover"),
+		log:        util.NewLogger("pushover").Redact(cc.App),
 		app:        pushover.New(cc.App),
 		device:     strings.Join(cc.Devices, ","),
 		recipients: cc.Recipients,
 	}
+
+	m.log.Redact(cc.Recipients...)
 
 	return m, nil
 }

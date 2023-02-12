@@ -77,6 +77,7 @@ vehicles = "Garaż"
 battery = "Bateria"
 batteryCharge = "Ładowanie baterii"
 batteryDischarge = "Rozładowanie baterii"
+batteryTooltip = "{energy} z {total} ({soc}%)"
 gridImport = "Z sieci"
 homePower = "Zużycie"
 loadpoints = "Ładowarka | Ładowarka | {count} Ładowarki"
@@ -140,22 +141,33 @@ modalTitle = "Ustaw docelowy czas"
 planDuration = "Czas ładowania"
 planPeriodLabel = "Okres"
 planPeriodValue = "{start} do {end}"
-planUnknown = "nieznany"
+planUnknown = "jeszcze nie wiadomo"
 remove = "Usuń"
 setTargetTime = "brak"
 targetIsInThePast = "Wybierz czas w przyszłości."
+targetIsTooFarInTheFuture = "Dostosujemy plan, gdy tylko dowiemy się więcej o przyszłości."
 title = "Czas Docelowy"
 today = "dzisiaj"
 tomorrow = "jutro"
+update = "Aktualizować"
+
+[main.targetChargePlan]
+chargeDuration = "Czas ładowania"
+co2Label = "CO₂ emisja Ø"
+priceLabel = "Cena energii"
+timeRange = "{day} {range} h"
+unknownPrice = "nadal nieznany"
 
 [main.targetEnergy]
 label = "Ograniczenie"
 noLimit = "brak"
 
 [main.vehicle]
+addVehicle = "Dodaj pojazd"
 changeVehicle = "Zmień pojazd"
 detectionActive = "Wykrywanie pojazdu..."
 fallbackName = "Pojazd"
+moreActions = "Więcej akcji"
 none = "Brak pojazdu"
 targetSoc = "Ograniczenie"
 unknown = "Pojazd gościa"
@@ -225,6 +237,16 @@ vehicle = "Pojazd"
 [settings]
 title = "Ustawienia"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Szczegóły sieci"
+none = "nic"
+price = "cena"
+
+[settings.hiddenFeatures]
+label = "Eksperymentalny"
+value = "Pokaż eksperymentalne funkcje interfejsu"
+
 [settings.language]
 auto = "Automatyczny"
 label = "Język"
@@ -254,3 +276,8 @@ lineError = "Błąd w {0}."
 lineErrorLink = "wiersz {0}"
 restartButton = "Restartuj"
 title = "Błąd uruchamiania"
+
+[vehicleSettings]
+cancel = "Anulować"
+template = "Producent"
+test = "Test"

@@ -360,3 +360,14 @@ input::-webkit-datetime-edit {
 	display: block;
 	padding: 0;
 }
+
+.tooltip {
+	--bs-tooltip-opacity: 1;
+	--bs-tooltip-bg: var(--bs-gray-deep);
+	--bs-tooltip-color: var(--bs-white);
+}
+
+.dark .tooltip {
+	--bs-tooltip-bg: var(--bs-white);
+	--bs-tooltip-color: var(--bs-gray-deep);
+}

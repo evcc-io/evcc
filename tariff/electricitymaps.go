@@ -104,7 +104,7 @@ func (t *ElectricityMaps) run(done chan error) {
 
 // Unit implements the api.Tariff interface
 func (t *ElectricityMaps) Unit() string {
-	return "gCO2eq"
+	return Co2Equivalent
 }
 
 func (t *ElectricityMaps) Rates() (api.Rates, error) {

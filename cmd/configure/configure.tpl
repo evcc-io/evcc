@@ -68,13 +68,13 @@ site:
     grid: {{ .Site.Grid }}
 {{- end }}
 {{- if len .Site.PVs }}
-    pvs:
+    pv:
 {{-   range .Site.PVs }}
     - {{ . }}
 {{-   end }}
 {{- end }}
 {{- if len .Site.Batteries }}
-    batteries:
+    battery:
 {{-   range .Site.Batteries }}
     - {{ . }}
 {{-   end }}

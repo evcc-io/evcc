@@ -72,6 +72,7 @@ vehicles = "Parkplatz"
 battery = "Batterie"
 batteryCharge = "Batterie laden"
 batteryDischarge = "Batterie entladen"
+batteryTooltip = "{energy} von {total} ({soc}%)"
 gridImport = "Netzbezug"
 homePower = "Verbrauch"
 loadpoints = "Ladepunkt | Ladepunkt | {count} Ladepunkte"
@@ -157,9 +158,11 @@ label = "Ladeziel"
 noLimit = "keins"
 
 [main.vehicle]
+addVehicle = "Fahrzeug hinzufügen"
 changeVehicle = "Fahrzeug ändern"
 detectionActive = "Fahrzeugerkennung läuft..."
 fallbackName = "Fahrzeug"
+moreActions = "Weitere Aktionen"
 none = "Kein Fahrzeug"
 targetSoc = "Ladeziel"
 unknown = "Gastfahrzeug"
@@ -229,6 +232,16 @@ vehicle = "Fahrzeug"
 [settings]
 title = "Einstellungen"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Netztarifdetails"
+none = "keine"
+price = "Preis"
+
+[settings.hiddenFeatures]
+label = "Experimentell"
+value = "Experimentelle UI-Funktionen zeigen."
+
 [settings.language]
 auto = "Automatisch"
 label = "Sprache"
@@ -258,3 +271,8 @@ lineError = "In {0} wurde ein Fehler gefunden."
 lineErrorLink = "Zeile {0}"
 restartButton = "Neu starten"
 title = "Fehler beim Starten"
+
+[vehicleSettings]
+cancel = "Abbrechen"
+template = "Hersteller"
+test = "Test"

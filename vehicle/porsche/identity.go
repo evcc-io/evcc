@@ -181,8 +181,8 @@ func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
 	resp.Body.Close()
 
 	rawQuery := resp.Request.URL.RawQuery
-	if strings.HasPrefix(resp.Header.Get("Location"), "One-Product-App") {
-		rawQuery = strings.Replace(resp.Header.Get("Location"), "One-Product-App://porsche-id/oauth2redirect?", "", 1)
+	if location, ok := strings.CutPrefix(resp.Header.Get("Location"), "One-Product-App://porsche-id/oauth2redirect?"); ok {
+		rawQuery = location
 	}
 	query, err := url.ParseQuery(rawQuery)
 	if err != nil {

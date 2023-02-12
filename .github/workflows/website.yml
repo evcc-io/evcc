@@ -16,12 +16,12 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          go-version: ^1.18
+          go-version: ^1.20
           cache: true
         id: go
 
       - name: Build docs
-        run: make docs
+        run: make install docs
 
       - name: Deploy to evcc.io repo
         uses: peaceiris/actions-gh-pages@v3

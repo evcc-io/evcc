@@ -16,7 +16,7 @@ import (
 type Template struct {
 	TemplateDefinition
 
-	ConfigDefaults ConfigDefaults
+	ConfigDefaults ConfigDefaults `json:"-"`
 
 	Lang string
 
@@ -33,8 +33,8 @@ func (t *Template) GuidedSetupEnabled() bool {
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
-		if p.ValueType == "" || (p.ValueType != "" && !slices.Contains(ValidParamValueTypes, p.ValueType)) {
-			t.Params[i].ValueType = ParamValueTypeString
+		if p.Type == "" || (p.Type != "" && !slices.Contains(ValidParamTypes, p.Type)) {
+			t.Params[i].Type = ParamTypeString
 		}
 
 		if index, resultMapItem := t.ConfigDefaults.ParamByName(strings.ToLower(p.Name)); index > -1 {
@@ -75,8 +75,8 @@ func (t *Template) Validate() error {
 			}
 		}
 
-		if p.ValueType != "" && !slices.Contains(ValidParamValueTypes, p.ValueType) {
-			return fmt.Errorf("invalid value type '%s' in template %s", p.ValueType, t.Template)
+		if p.Type != "" && !slices.Contains(ValidParamTypes, p.Type) {
+			return fmt.Errorf("invalid value type '%s' in template %s", p.Type, t.Template)
 		}
 	}
 
@@ -234,8 +234,8 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 				continue
 			}
 
-			switch p.ValueType {
-			case ParamValueTypeStringList:
+			switch p.Type {
+			case ParamTypeStringList:
 				for _, e := range v.([]string) {
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
@@ -254,8 +254,8 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	var newParams []Param
 	for _, param := range t.Params {
 		if !param.IsRequired() {
-			switch param.ValueType {
-			case ParamValueTypeStringList:
+			switch param.Type {
+			case ParamTypeStringList:
 				if len(param.Values) == 0 {
 					continue
 				}

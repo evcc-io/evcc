@@ -23,6 +23,17 @@
 					{{ $t("main.vehicle.unknown") }}
 				</button>
 			</li>
+			<div v-if="$hiddenFeatures()">
+				<div class="dropdown-divider"></div>
+				<li>
+					<h6 class="dropdown-header">{{ $t("main.vehicle.moreActions") }}</h6>
+				</li>
+				<li>
+					<button type="button" class="dropdown-item" @click="addVehicle">
+						{{ $t("main.vehicle.addVehicle") }} 🧪
+					</button>
+				</li>
+			</div>
 		</ul>
 	</div>
 </template>
@@ -30,6 +41,7 @@
 <script>
 import "@h2d2/shopicons/es/filled/options";
 import Dropdown from "bootstrap/js/dist/dropdown";
+import Modal from "bootstrap/js/dist/modal";
 
 export default {
 	name: "VehicleOptions",
@@ -38,7 +50,7 @@ export default {
 		vehicles: Array,
 		isUnknown: Boolean,
 	},
-	emits: ["change-vehicle", "remove-vehicle"],
+	emits: ["change-vehicle", "remove-vehicle", "add-vehicle"],
 	computed: {
 		dropdownId() {
 			return `vehicleOptionsDropdown${this.id}`;
@@ -56,6 +68,14 @@ export default {
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");
+		},
+		addVehicle() {
+			this.$emit("remove-vehicle");
+
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("vehicleSettingsModal")
+			);
+			modal.show();
 		},
 	},
 };

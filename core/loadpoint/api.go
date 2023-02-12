@@ -56,6 +56,14 @@ type API interface {
 	GetPlannerUnit() string
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error)
+	// GetEnableThreshold gets the loadpoint enable threshold
+	GetEnableThreshold() float64
+	// SetEnableThreshold sets loadpoint enable threshold
+	SetEnableThreshold(threshold float64)
+	// GetDisableThreshold gets the loadpoint disable threshold
+	GetDisableThreshold() float64
+	// SetDisableThreshold sets loadpoint disable threshold
+	SetDisableThreshold(threshold float64)
 
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)

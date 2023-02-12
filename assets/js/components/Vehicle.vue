@@ -54,9 +54,6 @@
 				@target-energy-updated="targetEnergyUpdated"
 			/>
 		</div>
-		<div v-if="$hiddenFeatures" class="d-flex justify-content-start">
-			<small>vor 5 Stunden</small>
-		</div>
 	</div>
 </template>
 

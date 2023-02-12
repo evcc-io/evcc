@@ -10,7 +10,7 @@ params:
     description:
       generic: Modbus ID
     default: 1
-    valuetype: number
+    type: number
   - name: modbusdevice
     description:
       de: Geräteadresse
@@ -27,7 +27,7 @@ params:
       de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
       en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
     default: 9600
-    valuetype: number
+    type: number
   - name: modbuscomset
     description:
       de: ComSet
@@ -60,7 +60,7 @@ params:
     help:
       de: Port
       en: Port
-    valuetype: number
+    type: number
   - name: interface
     description:
       de: Netzwerkinterface
@@ -100,7 +100,7 @@ params:
       de: Akkukapazität in kWh
       en: Battery capacity in kWh
     example: "50"
-    valuetype: float
+    type: float
     usages: ["vehicle", "battery"]
   - name: vin
     description:
@@ -118,7 +118,7 @@ params:
       de: Die maximale Anzahl der Phasen welche genutzt werden können
       en: The maximum number of phases which can be used
     example: 3
-    valuetype: number
+    type: number
   - name: connector
     description:
       de: Ladepunkt (falls >1 Ladepunkt)
@@ -133,7 +133,7 @@ params:
       de: Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden
       en: Time interval with when data should be reloaded from the vehicle
     advanced: true
-    valuetype: duration
+    type: duration
     example: 5m
   - name: cloud
     description:
@@ -158,14 +158,14 @@ params:
         - No waiting for a new evcc version in this case and then requiring an update
     requirements:
       evcc: ["sponsorship"]
-    valuetype: bool
+    type: bool
   - name: timeout
     description:
       de: Zeitüberschreitung
       en: Timeout
     advanced: true
     example: 10s
-    valuetype: duration
+    type: duration
   - name: mode
     description:
       de: Standard-Lademodus, wenn ein Fahrzeug angeschlossen ist
@@ -173,7 +173,7 @@ params:
     help:
       de: Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
       en: Possible values are Off, Now, MinPV and PV, or empty if none should be set
-    valuetype: chargemodes
+    type: chargemodes
   - name: minsoc
     description:
       de: Minimaler Ladestand (Soc) in %
@@ -182,7 +182,7 @@ params:
       de: Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht
       en: Charge immediately with maximum power up to the defined state of charge, if the charge mode is not set to 'OFF'
     example: 25
-    valuetype: number
+    type: number
   - name: targetsoc
     description:
       de: Ziel-Ladestand (Soc) in %
@@ -191,7 +191,7 @@ params:
       de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden
       en: Until which state of charge (Soc) should the vehicle be charged
     example: 80
-    valuetype: number
+    type: number
   - name: mincurrent
     description:
       de: Minimale Stromstärke in Ampere (A)
@@ -200,7 +200,7 @@ params:
       de: Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
       en: The minimum amperage per connected phase with which the car should be charged
     example: 6
-    valuetype: number
+    type: number
   - name: maxcurrent
     description:
       de: Maximale Stromstärke in Ampere (A)
@@ -209,7 +209,7 @@ params:
       de: Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
       en: The maximum amperage per connected phase with which the car shuold be charged
     example: 16
-    valuetype: number
+    type: number
   - name: identifiers
     description:
       de: Identifikation
@@ -217,7 +217,7 @@ params:
     help:
       de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
       en: "Mostly this can be added later, see: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
-    valuetype: stringlist
+    type: stringlist
   - name: standbypower
     description:
       de: Standby-Leistung in W
@@ -225,7 +225,7 @@ params:
     help:
       de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
       en: Power values above this value will be considered as charging pow
-    valuetype: number
+    type: number
   - name: language
     description:
       de: Sprache
@@ -282,7 +282,7 @@ presets:
       - name: cache
         default: 15m
         advanced: true
-        valuetype: duration
+        type: duration
     render: |
       {{define "vehicle-base"}}
       {{- if ne .title "" }}
@@ -320,7 +320,7 @@ presets:
         advanced: true
       - name: identifiers
         advanced: true
-        valuetype: stringlist
+        type: stringlist
     render: |
       {{define "vehicle-identify"}}
       {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") }}

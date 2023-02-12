@@ -1,11 +1,9 @@
 package core
 
 import (
-	"math"
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 )
@@ -22,17 +20,16 @@ type publisher interface {
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Savings struct {
-	clock                          clock.Clock
-	tariffs                        tariff.Tariffs
-	started                        time.Time // Boot time
-	updated                        time.Time // Time of last charged value update
-	gridCharged                    float64   // Grid energy charged since startup (kWh)
-	gridCost                       float64   // Running total of charged grid energy cost (e.g. EUR)
-	gridSavedCost                  float64   // Running total of saved cost from self consumption (e.g. EUR)
-	selfConsumptionCharged         float64   // Self-produced energy charged since startup (kWh)
-	selfConsumptionCost            float64   // Running total of charged self-produced energy cost (e.g. EUR)
-	lastGridPrice, lastFeedInPrice float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
-	hasPublished                   bool      // Has initial publish happened?
+	clock                  clock.Clock
+	tariffs                tariff.Tariffs
+	started                time.Time // Boot time
+	updated                time.Time // Time of last charged value update
+	gridCharged            float64   // Grid energy charged since startup (kWh)
+	gridCost               float64   // Running total of charged grid energy cost (e.g. EUR)
+	gridSavedCost          float64   // Running total of saved cost from self consumption (e.g. EUR)
+	selfConsumptionCharged float64   // Self-produced energy charged since startup (kWh)
+	selfConsumptionCost    float64   // Running total of charged self-produced energy cost (e.g. EUR)
+	hasPublished           bool      // Has initial publish happened?
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
@@ -97,80 +94,45 @@ func (s *Savings) SavingsAmount() float64 {
 	return s.gridSavedCost
 }
 
-func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower float64) float64 {
-	batteryDischarge := math.Max(0, batteryPower)
-	batteryCharge := math.Min(0, batteryPower) * -1
-	pvConsumption := math.Min(pvPower, pvPower+gridPower-batteryCharge)
-
-	gridImport := math.Max(0, gridPower)
-	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
-
-	share := selfConsumption / (gridImport + selfConsumption)
-
-	if math.IsNaN(share) {
-		return 0
-	}
-
-	return share
-}
-
-func currentPrice(t api.Tariff, dfltPrice float64) float64 {
-	if t != nil {
-		if rr, err := t.Rates(); err == nil {
-			if r, err := rr.Current(time.Now()); err == nil {
-				return r.Price
-			}
-		}
-	}
-	return dfltPrice
-}
-
 func (s *Savings) currentGridPrice() float64 {
-	return currentPrice(s.tariffs.Grid, DefaultGridPrice)
+	price, err := s.tariffs.CurrentGridPrice()
+	if err != nil {
+		price = DefaultGridPrice
+	}
+	return price
 }
 
 func (s *Savings) currentFeedInPrice() float64 {
-	return currentPrice(s.tariffs.FeedIn, DefaultFeedInPrice)
-}
-
-func (s *Savings) updatePrices(p publisher) (float64, float64) {
-	gridPrice := s.currentGridPrice()
-	if gridPrice != s.lastGridPrice {
-		s.lastGridPrice = gridPrice
-		p.publish("tariffGrid", gridPrice)
+	price, err := s.tariffs.CurrentFeedInPrice()
+	if err != nil {
+		price = DefaultFeedInPrice
 	}
-
-	feedinPrice := s.currentFeedInPrice()
-	if feedinPrice != s.lastFeedInPrice {
-		s.lastFeedInPrice = feedinPrice
-		p.publish("tariffFeedIn", feedinPrice)
-	}
-
-	return gridPrice, feedinPrice
+	return price
 }
 
 // Update savings calculation and return grid/green energy added since last update
-func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) (float64, float64) {
-	gridPrice, feedinPrice := s.updatePrices(p)
+func (s *Savings) Update(p publisher, greenShare, chargePower float64) float64 {
 	defer func() { s.updated = s.clock.Now() }()
 
 	// no charging, no need to update
 	if chargePower == 0 && s.hasPublished {
-		return 0, 0
+		return 0
 	}
 
 	// assume charge power as constant over the duration -> rough kWh estimate
 	deltaCharged := s.clock.Since(s.updated).Hours() * chargePower / 1e3
-	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
-	deltaSelf := deltaCharged * share
+	deltaSelf := deltaCharged * greenShare
 	deltaGrid := deltaCharged - deltaSelf
+
+	gridPrice := s.currentGridPrice()
+	feedInPrice := s.currentFeedInPrice()
 
 	s.gridCharged += deltaGrid
 	s.gridCost += deltaGrid * gridPrice
-	s.gridSavedCost += deltaSelf * (gridPrice - feedinPrice)
+	s.gridSavedCost += deltaSelf * (gridPrice - feedInPrice)
 	s.selfConsumptionCharged += deltaSelf
-	s.selfConsumptionCost += deltaSelf * feedinPrice
+	s.selfConsumptionCost += deltaSelf * feedInPrice
 
 	p.publish("savingsTotalCharged", s.TotalCharged())
 	p.publish("savingsGridCharged", s.gridCharged)
@@ -178,9 +140,10 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
+
 	s.hasPublished = true
 
 	s.save()
 
-	return deltaCharged, deltaSelf
+	return deltaCharged
 }

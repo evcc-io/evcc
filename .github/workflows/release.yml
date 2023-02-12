@@ -60,7 +60,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
-          go-version: ^1.18
+          go-version: ^1.20
           cache: true
         id: go
 
@@ -115,7 +115,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only --app packaging/fly.toml
+      - run: flyctl deploy --local-only --config packaging/fly.toml
 
   hassio:
     name: Hassio Addon

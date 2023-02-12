@@ -28,7 +28,7 @@ params:
     mask: true
   - name: meterchannel
     default: 6
-    valuetype: int
+    type: int
     required: true
     advanced: true
     description:
@@ -39,7 +39,7 @@ params:
       de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
   - name: switchchannel
     default: 3
-    valuetype: int
+    type: int
     required: true
     advanced: true
     description:

@@ -52,10 +52,10 @@ const secure = "tls://"
 
 // NewClient creates new Mqtt publisher
 func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, opts ...Option) (*Client, error) {
-	isSecure := strings.HasPrefix(broker, secure)
+	broker, isSecure := strings.CutPrefix(broker, secure)
 
 	// strip schema as it breaks net.SplitHostPort
-	broker = util.DefaultPort(strings.TrimPrefix(broker, secure), 1883)
+	broker = util.DefaultPort(broker, 1883)
 	if isSecure {
 		broker = secure + broker
 	}

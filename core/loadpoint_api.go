@@ -86,7 +86,7 @@ func (lp *Loadpoint) GetTargetEnergy() float64 {
 // setTargetEnergy sets loadpoint charge target energy (no mutex)
 func (lp *Loadpoint) setTargetEnergy(energy float64) {
 	lp.targetEnergy = energy
-	lp.publish("targetEnergy", energy)
+	lp.publish(targetEnergy, energy)
 }
 
 // SetTargetEnergy sets loadpoint charge target energy
@@ -220,6 +220,40 @@ func (lp *Loadpoint) setTargetTime(finishAt time.Time) {
 	}
 }
 
+// GetEnableThreshold gets the loadpoint enable threshold
+func (lp *Loadpoint) GetEnableThreshold() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.Enable.Threshold
+}
+
+// SetEnableThreshold sets loadpoint enable threshold
+func (lp *Loadpoint) SetEnableThreshold(threshold float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.Enable.Threshold != threshold {
+		lp.Enable.Threshold = threshold
+	}
+}
+
+// GetDisableThreshold gets the loadpoint enable threshold
+func (lp *Loadpoint) GetDisableThreshold() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.Disable.Threshold
+}
+
+// SetDisableThreshold sets loadpoint disable threshold
+func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.Disable.Threshold != threshold {
+		lp.Disable.Threshold = threshold
+	}
+}
+
 // RemoteControl sets remote status demand
 func (lp *Loadpoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()
@@ -267,7 +301,7 @@ func (lp *Loadpoint) SetMinCurrent(current float64) {
 
 	if current != lp.MinCurrent {
 		lp.MinCurrent = current
-		lp.publish("minCurrent", lp.MinCurrent)
+		lp.publish(minCurrent, lp.MinCurrent)
 	}
 }
 
@@ -287,7 +321,7 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) {
 
 	if current != lp.MaxCurrent {
 		lp.MaxCurrent = current
-		lp.publish("maxCurrent", lp.MaxCurrent)
+		lp.publish(maxCurrent, lp.MaxCurrent)
 	}
 }
 
@@ -309,10 +343,10 @@ func (lp *Loadpoint) SetRemainingDuration(chargeRemainingDuration time.Duration)
 }
 
 // setRemainingDuration sets the estimated remaining charging duration (no mutex)
-func (lp *Loadpoint) setRemainingDuration(chargeRemainingDuration time.Duration) {
-	if lp.chargeRemainingDuration != chargeRemainingDuration {
-		lp.chargeRemainingDuration = chargeRemainingDuration
-		lp.publish("chargeRemainingDuration", chargeRemainingDuration)
+func (lp *Loadpoint) setRemainingDuration(remainingDuration time.Duration) {
+	if lp.chargeRemainingDuration != remainingDuration {
+		lp.chargeRemainingDuration = remainingDuration
+		lp.publish(chargeRemainingDuration, remainingDuration)
 	}
 }
 
