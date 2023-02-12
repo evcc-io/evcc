@@ -159,12 +159,20 @@ func CaptureLogs(c chan<- Param) {
 }
 
 func captureLogger(l *Logger) {
-	captureLogLevel("warn", l.Notepad.WARN)
-	captureLogLevel("error", l.Notepad.ERROR)
-	captureLogLevel("error", l.Notepad.FATAL)
+	captureLogLevelForMessaging("warn", l.Notepad.WARN)
+	captureLogLevelForMessaging("error", l.Notepad.ERROR)
+	captureLogLevelForMessaging("error", l.Notepad.FATAL)
+
+	collectLogMessages(l.Notepad.TRACE)
+	collectLogMessages(l.Notepad.DEBUG)
+	collectLogMessages(l.Notepad.INFO)
+	collectLogMessages(l.Notepad.WARN)
+	collectLogMessages(l.Notepad.ERROR)
+	collectLogMessages(l.Notepad.CRITICAL)
+	collectLogMessages(l.Notepad.FATAL)
 }
 
-func captureLogLevel(level string, l *log.Logger) {
+func captureLogLevelForMessaging(level string, l *log.Logger) {
 	re, err := regexp.Compile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
 	if err != nil {
 		panic(err)
@@ -176,5 +184,51 @@ func captureLogLevel(level string, l *log.Logger) {
 	}
 
 	mw := io.MultiWriter(l.Writer(), &ui)
+	l.SetOutput(mw)
+}
+
+type collectorT struct {
+	data []string
+}
+
+var (
+	collector collectorT
+	mu        sync.Mutex
+)
+
+func init() {
+	collector.data = make([]string, 0, 1000)
+}
+
+// LogEntries returns the collected log messages
+func LogEntries() []string {
+	mu.Lock()
+	defer mu.Unlock()
+	return collector.data
+}
+
+func (w *collectorT) Write(p []byte) (n int, err error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	const offset = 100
+	if len(w.data) == cap(w.data) {
+		copy(w.data, w.data[offset:])
+		w.data = w.data[: len(w.data)-offset : len(w.data)-offset]
+	}
+
+	const maxlen = 256
+	s := string(p)
+	if len(s) > maxlen {
+		s = s[:maxlen]
+	}
+
+	w.data = append(w.data, s)
+	return 0, nil
+}
+
+// collectLogMessages collects log messages for later retrieval
+func collectLogMessages(l *log.Logger) {
+	mw := io.MultiWriter(l.Writer(), &collector)
 	l.SetOutput(mw)
 }

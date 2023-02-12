@@ -22,12 +22,14 @@ import (
 var ignoreState = []string{"releaseNotes"} // excessive size
 
 func indexHandler() http.HandlerFunc {
+	log := util.NewLogger("httpd")
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
 		indexTemplate, err := fs.ReadFile(assets.Web, "index.html")
 		if err != nil {
-			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
+			log.FATAL.Print("failed to load embedded template:", err.Error())
 			log.FATAL.Print("Make sure templates are included using the `release` build tag or use `make build`")
 			w.WriteHeader(http.StatusNotFound)
 			return
@@ -35,14 +37,14 @@ func indexHandler() http.HandlerFunc {
 
 		t, err := template.New("evcc").Delims("[[", "]]").Parse(string(indexTemplate))
 		if err != nil {
-			log.FATAL.Fatal("httpd: failed to create main page template:", err.Error())
+			log.FATAL.Fatal("failed to create main page template:", err.Error())
 		}
 
 		if err := t.Execute(w, map[string]interface{}{
 			"Version": Version,
 			"Commit":  Commit,
 		}); err != nil {
-			log.ERROR.Println("httpd: failed to render main page:", err.Error())
+			log.ERROR.Println("failed to render main page:", err.Error())
 		}
 	})
 }
@@ -57,7 +59,8 @@ func jsonHandler(h http.Handler) http.Handler {
 
 func jsonWrite(w http.ResponseWriter, content interface{}) {
 	if err := json.NewEncoder(w).Encode(content); err != nil {
-		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
+		// TODO create logger only once
+		util.NewLogger("httpd").ERROR.Printf("httpd: failed to encode JSON: %v", err)
 	}
 }
 
@@ -157,16 +160,10 @@ func encodeFloats(data map[string]any) {
 	}
 }
 
-// stateHandler returns the combined state
-func stateHandler(cache *util.Cache) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := cache.State()
-		for _, k := range ignoreState {
-			delete(res, k)
-		}
-		encodeFloats(res)
-		jsonResult(w, res)
-	}
+// logHandler returns the collected log entries
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	res := util.LogEntries()
+	jsonResult(w, res)
 }
 
 // healthHandler returns current charge mode
@@ -179,6 +176,18 @@ func healthHandler(site site.API) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
+	}
+}
+
+// stateHandler returns the combined state
+func stateHandler(cache *util.Cache) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := cache.State()
+		for _, k := range ignoreState {
+			delete(res, k)
+		}
+		encodeFloats(res)
+		jsonResult(w, res)
 	}
 }
 

@@ -9,23 +9,30 @@ import (
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/util"
 )
 
 // SocketPath is the unix domain socket path
 const SocketPath = "/tmp/evcc"
 
 // removeIfExists deletes file if it exists or fails
-func removeIfExists(file string) {
+func removeIfExists(file string) error {
 	if _, err := os.Stat(file); err == nil {
 		if err := os.RemoveAll(file); err != nil {
-			log.FATAL.Fatal(err)
+			return err
 		}
 	}
+	return nil
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
 func HealthListener(site site.API) {
-	removeIfExists(SocketPath)
+	log := util.NewLogger("main")
+
+	err := removeIfExists(SocketPath)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	l, err := net.Listen("unix", SocketPath)
 	if err != nil {

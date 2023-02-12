@@ -20,22 +20,6 @@ type route struct {
 	HandlerFunc http.HandlerFunc
 }
 
-// routeLogger traces matched routes including their executing time
-//
-//lint:ignore U1000 if needed
-func routeLogger(inner http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		inner.ServeHTTP(w, r)
-		log.TRACE.Printf(
-			"%s\t%s\t%s",
-			r.Method,
-			r.RequestURI,
-			time.Since(start),
-		)
-	}
-}
-
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
@@ -68,7 +52,7 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 			IdleTimeout:  120 * time.Second,
-			ErrorLog:     log.ERROR,
+			ErrorLog:     util.NewLogger("httpd").ERROR,
 		},
 	}
 	srv.SetKeepAlivesEnabled(true)
@@ -95,6 +79,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 	// site api
 	routes := map[string]route{
+		"log":           {[]string{"GET"}, "/log", logHandler},
 		"health":        {[]string{"GET"}, "/health", healthHandler(site)},
 		"state":         {[]string{"GET"}, "/state", stateHandler(cache)},
 		"config":        {[]string{"GET"}, "/config/templates/{class:[a-z]+}", templatesHandler},
