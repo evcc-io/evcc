@@ -14,6 +14,7 @@ import Energyflow from "./Energyflow.vue";
 				:loadpointsPower="4200"
 				:activeLoadpointsCount="3"
 				siteTitle="Home"
+				:pv="[{ power: 5000 }, { power: 2300 }]"
 			/>
 		</Variant>
 		<Variant title="battery and grid">

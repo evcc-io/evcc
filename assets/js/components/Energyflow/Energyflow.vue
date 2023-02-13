@@ -57,6 +57,7 @@
 							icon="sun"
 							:power="pvProduction"
 							:valuesInKw="valuesInKw"
+							:tooltip="pvTooltip"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -156,6 +157,7 @@ export default {
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
+		pv: { type: Array },
 		pvPower: { type: Number, default: 0 },
 		loadpointsPower: { type: Number, default: 0 },
 		activeLoadpointsCount: { type: Number, default: 0 },
@@ -210,6 +212,15 @@ export default {
 		},
 		detailsHeight: function () {
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
+		},
+		pvTooltip() {
+			if (!Array.isArray(this.pv)) {
+				return;
+			}
+			return this.pv.map(({ power }) => {
+				const pwr = this.fmtKW(power);
+				return this.$t("main.energyflow.pvTooltip", { pwr });
+			});
 		},
 		batteryTooltip() {
 			if (!Array.isArray(this.battery)) {

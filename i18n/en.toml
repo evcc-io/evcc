@@ -79,6 +79,7 @@ loadpoints = "Charger| Charger | {count} chargers"
 noEnergy = "No meter data"
 pvExport = "Grid export"
 pvProduction = "Production"
+pvTooltip = "{power}"
 selfConsumption = "Self-consumption"
 
 [main.loadpoint]
