@@ -328,10 +328,9 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 			titleTmpl := templates.Template{
 				TemplateDefinition: tmpl.TemplateDefinition,
 				ConfigDefaults:     tmpl.ConfigDefaults,
-				Lang:               c.lang,
 			}
 			title := t
-			groupTitle := titleTmpl.GroupTitle()
+			groupTitle := titleTmpl.GroupTitle(c.lang)
 			if groupTitle != "" {
 				title += " [" + groupTitle + "]"
 			}
@@ -359,7 +358,7 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 			return true
 		}
 		if items[i].Group != items[j].Group {
-			return strings.ToLower(items[i].GroupTitle()) < strings.ToLower(items[j].GroupTitle())
+			return strings.ToLower(items[i].GroupTitle(c.lang)) < strings.ToLower(items[j].GroupTitle(c.lang))
 		}
 		return strings.ToLower(items[i].Title()) < strings.ToLower(items[j].Title())
 	})
