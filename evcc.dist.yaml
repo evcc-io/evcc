@@ -127,11 +127,11 @@ loadpoints:
       poll:
         # poll mode defines under which condition the vehicle API is called if NOT charging:
         #   charging: update vehicle when connected and until charge process is done (w.r.t. targetSoc) (this is the recommended default)
-        #   connected: update vehicle when connected even if charge process is done (w.r.t. targetSoc)
+        #   connected: update vehicle as long as it is connected
         #   always: always update vehicle regardless of connection state (only supported for single vehicle)
         mode: charging
         # poll interval defines how often the vehicle API may be polled if NOT charging and under above conditions
-        # should not be less than the cache key on the vehicle definition (default 15m)
+        # the lower limit is defined per vehicle as `cache` (default 15m)
         interval: 60m
       estimate: true # set false to disable interpolating between api updates (not recommended)
     phases: 3 # electrical connection (normal charger: default 3 for 3 phase, 1p3p charger: 0 for "auto" or 1/3 for fixed phases)
