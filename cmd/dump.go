@@ -52,7 +52,10 @@ func runDump(cmd *cobra.Command, args []string) {
 
 	var site *core.Site
 	if err == nil {
-		site, err = configureSiteAndLoadpoints(conf)
+		site, err = configureSiteLoadpointsCircuits(conf)
+	}
+	if err != nil {
+		log.FATAL.Fatal(err)
 	}
 
 	if *dumpConfig {
@@ -82,10 +85,6 @@ func runDump(cmd *cobra.Command, args []string) {
 		fmt.Println(out.String())
 
 		os.Exit(0)
-	}
-
-	if err != nil {
-		log.FATAL.Fatal(err)
 	}
 
 	d := dumper{len: 2}

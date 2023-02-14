@@ -12,13 +12,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/fatih/structs"
@@ -131,6 +131,24 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	log.INFO.Printf("starting ui and api at :%d", conf.Network.Port)
 
+	// setup environment
+	if err := configureEnvironment(cmd, conf); err != nil {
+		log.FATAL.Fatal(err)
+	}
+
+	// full http request log
+	if cmd.PersistentFlags().Lookup(flagHeaders).Changed {
+		request.LogHeaders = true
+	}
+
+	// setup site and loadpoints
+	site, err := configureSiteLoadpointsCircuits(conf)
+	if err == nil {
+		cp.TrackVisitors() // track duplicate usage
+	} else {
+		log.FATAL.Fatal(err)
+	}
+
 	// start broadcasting values
 	tee := new(util.Tee)
 
@@ -182,13 +200,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 				break
 			}
 		}
-	}
-
-	// setup site and loadpoints
-	var site *core.Site
-	if err == nil {
-		cp.TrackVisitors() // track duplicate usage
-		site, err = configureSiteAndLoadpoints(conf)
 	}
 
 	// setup database

@@ -50,7 +50,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	fmt.Println()
 	switch deviceCategory {
-	case DeviceCategoryPVMeter, DeviceCategoryBatteryMeter, DeviceCategoryGridMeter:
+	case DeviceCategoryPVMeter, DeviceCategoryBatteryMeter, DeviceCategoryGridMeter, DeviceCategoryCircuitMeter:
 		categoryWithUsage = true
 		fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Title(), "Usage": deviceCategory.String()}))
 	default:

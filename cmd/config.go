@@ -15,6 +15,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
@@ -71,7 +72,8 @@ type config struct {
 	Vehicles     []qualifiedConfig
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
-	Loadpoints   []map[string]interface{}
+	LoadPoints   []map[string]interface{}
+	Circuits     []map[string]interface{}
 }
 
 type mqttConfig struct {
@@ -139,6 +141,7 @@ type ConfigProvider struct {
 	meters   map[string]api.Meter
 	chargers map[string]api.Charger
 	vehicles map[string]api.Vehicle
+	circuits map[string]core.Circuit
 	visited  map[string]bool
 	auth     *util.AuthCollection
 }
@@ -161,6 +164,14 @@ func (cp *ConfigProvider) Meter(name string) (api.Meter, error) {
 		return meter, nil
 	}
 	return nil, fmt.Errorf("meter does not exist: %s", name)
+}
+
+// Circuit provides circuits by name
+func (cp *ConfigProvider) Circuit(name string) (*core.Circuit, error) {
+	if cc, ok := cp.circuits[name]; ok {
+		return &cc, nil
+	}
+	return nil, fmt.Errorf("invalid circuit: %s", name)
 }
 
 // Charger provides chargers by name

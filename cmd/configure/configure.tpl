@@ -58,6 +58,35 @@ loadpoints:
   mincurrent: {{ .MinCurrent }}
   maxcurrent: {{ .MaxCurrent }}
   resetOnDisconnect: {{ .ResetOnDisconnect }}
+{{-     if .Circuit }}
+  circuit: {{ .Circuit }}
+{{-   end }}
+{{-   end }}
+{{- end }}
+
+circuits:
+{{-   range .Circuits }}
+- name: {{ .Name }}
+  maxCurrent: {{ .MaxCurrent }}
+  meter: {{ .MeterRef }}
+  circuits:
+{{-   range .Circuits }}
+    - name: {{ .Name }}
+      maxCurrent: {{ .MaxCurrent }}
+      meter: {{ .MeterRef }}
+      circuits:
+{{-   range .Circuits }}
+        - name: {{ .Name }}
+          maxCurrent: {{ .MaxCurrent }}
+          meter: {{ .MeterRef }}
+          circuits:
+{{-   range .Circuits }}
+            - name: {{ .Name }}
+              maxCurrent: {{ .MaxCurrent }}
+              meter: {{ .MeterRef }}
+              circuits:
+{{-   end }} 
+{{-   end }}
 {{-   end }}
 {{- end }}
 

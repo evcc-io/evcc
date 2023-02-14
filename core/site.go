@@ -81,6 +81,7 @@ type Site struct {
 	batteryBuffered bool    // Battery buffer active
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
+	Circuits     []*Circuit     // circuits in site for load management
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -255,6 +256,12 @@ func (site *Site) DumpConfig() {
 			)
 		}
 	}
+	site.log.INFO.Printf("circuits:")
+	for _, circuit := range site.Circuits {
+		for _, subCircuit := range circuit.DumpConfig(2, 13) {
+			site.log.INFO.Printf(subCircuit)
+		}
+	}
 
 	if vehicles := site.GetVehicles(); len(vehicles) > 0 {
 		site.log.INFO.Println("  vehicles:")
@@ -274,6 +281,9 @@ func (site *Site) DumpConfig() {
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
+		if lp.CircuitPtr != nil {
+			lp.log.INFO.Printf("  circuit:     %s", lp.CircuitRef)
+		}
 
 		_, power := lp.charger.(api.Meter)
 		_, energy := lp.charger.(api.MeterEnergy)
@@ -648,6 +658,11 @@ func (site *Site) update(lp Updater) {
 	if telemetry.Enabled() && totalChargePower > standbyPower {
 		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
 	}
+
+	// update all circuits to refresh the data when no loadpoints are upated
+	for ccId := range site.Circuits {
+		site.Circuits[ccId].update()
+	}
 }
 
 // prepare publishes initial values
@@ -694,6 +709,12 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 
 		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
+	// use site channel.
+
+	for _, curCC := range site.Circuits {
+		curCC.Prepare(uiChan)
+	}
+
 }
 
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel

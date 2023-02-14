@@ -21,6 +21,7 @@ func (c DeviceCategory) String() string {
 const (
 	DeviceCategoryCharger      DeviceCategory = "wallbox"
 	DeviceCategoryGridMeter    DeviceCategory = "grid"
+	DeviceCategoryCircuitMeter DeviceCategory = "circuit"
 	DeviceCategoryPVMeter      DeviceCategory = "pv"
 	DeviceCategoryBatteryMeter DeviceCategory = "battery"
 	DeviceCategoryChargeMeter  DeviceCategory = "charge"
@@ -31,6 +32,7 @@ const (
 const (
 	defaultNameCharger      = "wallbox"
 	defaultNameGridMeter    = "grid"
+	defaultNameCircuitMeter = "circuit"
 	defaultNamePVMeter      = "pv"
 	defaultNameBatteryMeter = "battery"
 	defaultNameChargeMeter  = "charge"
@@ -56,6 +58,11 @@ var DeviceCategories = map[DeviceCategory]DeviceCategoryData{
 		class:          templates.Meter,
 		categoryFilter: DeviceCategoryGridMeter,
 		defaultName:    defaultNameGridMeter,
+	},
+	DeviceCategoryCircuitMeter: {
+		class:          templates.Meter,
+		categoryFilter: DeviceCategoryGridMeter, // grid meters are good as selection for circuit meters
+		defaultName:    defaultNameCircuitMeter,
 	},
 	DeviceCategoryPVMeter: {
 		class:          templates.Meter,

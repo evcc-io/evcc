@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
 )
@@ -27,6 +28,7 @@ type loadpoint struct {
 	MaxCurrent        int
 	Phases            int
 	ResetOnDisconnect string
+	Circuit           string
 }
 
 type config struct {
@@ -34,6 +36,7 @@ type config struct {
 	Chargers   []device
 	Vehicles   []device
 	Loadpoints []loadpoint
+	Circuits   []core.Circuit
 	Site       struct { // TODO Perspektivisch können wir was aus core wiederverwenden, für später
 		Title     string
 		Grid      string

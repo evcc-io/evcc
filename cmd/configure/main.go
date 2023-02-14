@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/hems/semp"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
@@ -38,6 +40,9 @@ type CmdConfigure struct {
 	errItemNotPresent, errDeviceNotValid error
 
 	capabilitySMAHems bool
+
+	CircuitNames []string // helper to remember a plain list of circuits to be used in loadpoint config
+
 }
 
 // Run starts the interactive configuration
@@ -124,6 +129,7 @@ func (c *CmdConfigure) flowSingleDevice(category DeviceCategory) {
 	// only consider the device categories that are marked for this flow
 	categoryChoices := []string{
 		DeviceCategories[DeviceCategoryGridMeter].title,
+		DeviceCategories[DeviceCategoryCircuitMeter].title,
 		DeviceCategories[DeviceCategoryPVMeter].title,
 		DeviceCategories[DeviceCategoryBatteryMeter].title,
 		DeviceCategories[DeviceCategoryChargeMeter].title,
@@ -170,8 +176,11 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	_ = c.configureDevices(DeviceCategoryBatteryMeter, true, true)
 	_ = c.configureDevices(DeviceCategoryVehicle, true, true)
 
-	c.configureLoadpoints()
 	c.configureSite()
+	if c.advancedMode {
+		c.configureCircuits()
+	}
+	c.configureLoadpoints()
 
 	// check if SMA HEMS is available and ask the user if it should be added
 	if c.capabilitySMAHems {
@@ -426,6 +435,12 @@ func (c *CmdConfigure) configureLoadpoints() {
 			label:     c.localizedString("Loadpoint_ResetOnDisconnect"),
 			valueType: templates.TypeBool,
 		})
+
+		if len(c.CircuitNames) > 0 && c.askYesNo(c.localizedString("Loadpoint_CircuitYesNo", nil)) {
+			ccNameId, _ := c.askChoice(c.localizedString("Loadpoint_Circuit", nil), c.CircuitNames)
+			loadpoint.Circuit = c.CircuitNames[ccNameId]
+		}
+
 		c.configuration.AddLoadpoint(loadpoint)
 
 		fmt.Println()
@@ -446,4 +461,102 @@ func (c *CmdConfigure) configureSite() {
 		required:     true,
 	})
 	c.configuration.config.Site.Title = siteTitle
+}
+
+// configureCircuits asks for circuits
+func (c *CmdConfigure) configureCircuits() {
+	fmt.Println()
+	fmt.Println(c.localizedString("Circuit_Setup", nil))
+
+	if !c.askYesNo(c.localizedString("Circuit_Add", nil)) {
+		return
+	}
+
+	for {
+		ccName := c.askValue(question{
+			label:    c.localizedString("Circuit_Title", nil),
+			required: true,
+		})
+		curCircuit := *core.NewCircuit(ccName, 0, nil, util.NewLogger(("cc-" + ccName)))
+
+		curChoices := []string{
+			c.localizedString("Circuit_MaxCurrent16A", nil),  // 11kVA
+			c.localizedString("Circuit_MaxCurrent20A", nil),  // 13kVA
+			c.localizedString("Circuit_MaxCurrent25A", nil),  // 17kVA
+			c.localizedString("Circuit_MaxCurrent32A", nil),  // 22kVA
+			c.localizedString("Circuit_MaxCurrent35A", nil),  // 24kVA
+			c.localizedString("Circuit_MaxCurrent50A", nil),  // 34kVA
+			c.localizedString("Circuit_MaxCurrent63A", nil),  // 43kVA
+			c.localizedString("Circuit_MaxCurrent80A", nil),  // 55kVA
+			c.localizedString("Circuit_MaxCurrent100A", nil), // 69kVA
+			c.localizedString("Circuit_MaxCurrentCustom", nil),
+		}
+		fmt.Println()
+		powerIndex, _ := c.askChoice(c.localizedString("Circuit_MaxCurrent", nil), curChoices)
+		switch powerIndex {
+		case 0:
+			curCircuit.MaxCurrent = 16.0
+		case 1:
+			curCircuit.MaxCurrent = 20.0
+		case 2:
+			curCircuit.MaxCurrent = 25.0
+		case 3:
+			curCircuit.MaxCurrent = 32.0
+		case 4:
+			curCircuit.MaxCurrent = 35.0
+		case 5:
+			curCircuit.MaxCurrent = 50.0
+		case 6:
+			curCircuit.MaxCurrent = 63.0
+		case 7:
+			curCircuit.MaxCurrent = 80.0
+		case 8:
+			curCircuit.MaxCurrent = 100.0
+		case 9:
+			amperage := c.askValue(question{
+				label:          c.localizedString("Circuit_MaxCurrentCustomInput", nil),
+				valueType:      templates.ParamValueTypeNumber,
+				maxNumberValue: 1000, // 600kW ... enough?
+				required:       true})
+			curCircuit.MaxCurrent, _ = strconv.ParseFloat(amperage, 64)
+		}
+
+		// check meter
+		if c.askYesNo(c.localizedString("Circuit_Meter", nil)) {
+			ccMeter, _, err := c.configureDeviceCategory(DeviceCategoryCircuitMeter)
+			if err == nil {
+				curCircuit.MeterRef = ccMeter.Name
+			}
+		}
+
+		// in case we have already circuits, ask for parent circuit
+		if len(c.CircuitNames) > 0 {
+			if c.askYesNo(c.localizedString("Circuit_HasParent", nil)) {
+				sort.Strings(c.CircuitNames)
+				parentCCNameId, _ := c.askChoice(c.localizedString("Circuit_Parent", nil), c.CircuitNames)
+
+				// assign this circuit as child to the requested parent
+				for ccId := range c.configuration.config.Circuits {
+					if parentCC := c.configuration.config.Circuits[ccId].GetCircuit(c.CircuitNames[parentCCNameId]); parentCC != nil {
+						parentCC.Circuits = append(parentCC.Circuits, &curCircuit)
+						break
+					}
+				}
+			} else {
+				// no parent,
+				// add as top level circuit
+				c.configuration.config.Circuits = append(c.configuration.config.Circuits, curCircuit)
+			}
+		} else {
+			// first circuit
+			c.configuration.config.Circuits = append(c.configuration.config.Circuits, curCircuit)
+		}
+		// append to known names
+		c.CircuitNames = append(c.CircuitNames, curCircuit.Name)
+
+		fmt.Println()
+		if !c.askYesNo(c.localizedString("Circuit_AddAnother", nil)) {
+			break
+		}
+	}
 }

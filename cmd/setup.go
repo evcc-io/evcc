@@ -262,7 +262,7 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 	return *tariffs, nil
 }
 
-func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
+func configureSiteLoadpointsCircuits(conf config) (site *core.Site, err error) {
 	if err = cp.configure(conf); err == nil {
 		var loadpoints []*core.Loadpoint
 		loadpoints, err = configureLoadpoints(conf, cp)
@@ -283,6 +283,10 @@ func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
 			}
 
 			site, err = configureSite(conf.Site, cp, loadpoints, vehicles, tariffs)
+		}
+
+		if err == nil {
+			err = configureCircuits(site, loadpoints, cp)
 		}
 	}
 
@@ -320,4 +324,43 @@ func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Lo
 	}
 
 	return loadpoints, nil
+}
+
+// configureCircuits loads circuit definition and connects the lp with the circuit
+func configureCircuits(site *core.Site, loadPoints []*core.Loadpoint, cp *ConfigProvider) (err error) {
+	ccInterfaces, _ := viper.AllSettings()["circuits"].([]interface{})
+
+	for _, circuit := range ccInterfaces {
+		var circuitc map[string]interface{}
+		if err := util.DecodeOther(circuit, &circuitc); err != nil {
+			return fmt.Errorf("failed decoding circuit configuration: %w", err)
+		}
+
+		circuit, err := core.NewCircuitFromConfig(cp, circuitc, site)
+		if err != nil {
+			return fmt.Errorf("failed configuring circuit: %w", err)
+		}
+		site.Circuits = append(site.Circuits, circuit)
+	}
+	// connect circuits and lps
+	for _, lpId := range loadPoints {
+		for _, circuit := range site.Circuits {
+			lpId.CircuitPtr = circuit.GetCircuit(lpId.CircuitRef)
+			if lpId.CircuitPtr != nil {
+				// check there is a virtual meter, and add lp in case as consumer
+				if vmtr := lpId.CircuitPtr.GetVMeter(); vmtr != nil {
+					vmtr.AddConsumer(lpId)
+				}
+				break
+			}
+			// error will be checked below. There might be multiple top level circuits
+			// which need to be checked before raising errors
+		}
+		// if we are here, no circuit with this name exists
+		if lpId.CircuitRef != "" && lpId.CircuitPtr == nil {
+			return fmt.Errorf("loadpoint uses undefined circuit: %s", lpId.CircuitRef)
+		}
+	}
+
+	return nil
 }
