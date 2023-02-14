@@ -102,8 +102,6 @@ func (t *Template) Title() string {
 
 // return the language specific product titles
 func (t *Template) Titles(lang string) []string {
-	// t.Lang = lang
-
 	if len(t.titles) == 0 {
 		t.resolveTitles(lang)
 	}
