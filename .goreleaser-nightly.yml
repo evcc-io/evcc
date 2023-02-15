@@ -26,15 +26,17 @@ builds:
 archives:
   - builds:
       - evcc
-    replacements:
-      darwin: macOS
     format: tar.gz
     format_overrides:
       - goos: windows
         format: zip
     files:
       - evcc.dist.yaml
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}"
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "darwin" }}macOS{{ else }}{{ .Os }}{{ end }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}
+
+env:
+  - CGO_ENABLED=0
 
 universal_binaries:
   - replace: true
