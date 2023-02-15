@@ -66,7 +66,7 @@ require (
 	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/mlnoga/rct v0.1.2-0.20220320164346-9f2daa4d6734
+	github.com/mlnoga/rct v0.1.2-0.20230215163419-4242ff35a8ce
 	github.com/muka/go-bluetooth v0.0.0-20220219050759-674a63b8741a
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
@@ -196,5 +196,3 @@ require (
 )
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230102102528-4d59ac6910c6
-
-replace github.com/mlnoga/rct => github.com/andig/rct v0.0.0-20221101081802-96d01efdc68c
