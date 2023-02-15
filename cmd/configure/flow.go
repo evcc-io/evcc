@@ -114,7 +114,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			break
 		}
 
-		linkedTemplateItem.SetCombinedTitle()
+		linkedTemplateItem.SetCombinedTitle(c.lang)
 
 		category := DeviceCategory(linkedTemplate.Usage)
 		localizeMap := localizeMap{

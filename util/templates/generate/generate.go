@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	language    = "de"
 	docsPath    = "../../../templates/docs"
 	websitePath = "../../../templates/evcc.io"
 )
@@ -49,7 +50,7 @@ func generateClass(class templates.Class) error {
 		}
 
 		for index, product := range tmpl.Products {
-			fmt.Println(tmpl.Template + ": " + product.Title(tmpl.Lang))
+			fmt.Println(tmpl.Template + ": " + product.Title(language))
 
 			if err := writeTemplate(class, index, product, tmpl); err != nil {
 				return err

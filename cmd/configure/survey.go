@@ -54,7 +54,7 @@ func (c *CmdConfigure) askSelection(message string, items []string) (string, int
 
 // selectItem selects item from list
 func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Template {
-	emptyItem := templates.Template{Lang: c.lang}
+	var emptyItem templates.Template
 	emptyItem.SetTitle(c.localizedString("ItemNotPresent", nil))
 
 	elements := c.fetchElements(deviceCategory)

@@ -85,7 +85,7 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 		"Template":               t.Template,
 		"ProductBrand":           product.Brand,
 		"ProductDescription":     product.Description.String(lang),
-		"ProductGroup":           t.GroupTitle(),
+		"ProductGroup":           t.GroupTitle(lang),
 		"Capabilities":           t.Capabilities,
 		"Requirements":           t.Requirements.EVCC,
 		"RequirementDescription": t.Requirements.Description.String(lang),

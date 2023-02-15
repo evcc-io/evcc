@@ -18,8 +18,6 @@ type Template struct {
 
 	ConfigDefaults ConfigDefaults `json:"-"`
 
-	Lang string
-
 	title  string
 	titles []string
 }
@@ -84,9 +82,9 @@ func (t *Template) Validate() error {
 }
 
 // set the language title by combining all product titles
-func (t *Template) SetCombinedTitle() {
+func (t *Template) SetCombinedTitle(lang string) {
 	if len(t.titles) == 0 {
-		t.resolveTitles()
+		t.resolveTitles(lang)
 	}
 
 	t.title = strings.Join(t.titles, "/")
@@ -104,19 +102,17 @@ func (t *Template) Title() string {
 
 // return the language specific product titles
 func (t *Template) Titles(lang string) []string {
-	t.Lang = lang
-
 	if len(t.titles) == 0 {
-		t.resolveTitles()
+		t.resolveTitles(lang)
 	}
 
 	return t.titles
 }
 
 // set the language specific product titles
-func (t *Template) resolveTitles() {
+func (t *Template) resolveTitles(lang string) {
 	for _, p := range t.Products {
-		t.titles = append(t.titles, p.Title(t.Lang))
+		t.titles = append(t.titles, p.Title(lang))
 	}
 }
 
@@ -163,9 +159,9 @@ func (t *Template) ResolveGroup() error {
 }
 
 // return the language specific group title
-func (t *Template) GroupTitle() string {
+func (t *Template) GroupTitle(lang string) string {
 	tl := t.ConfigDefaults.DeviceGroups[t.Group]
-	return tl.String(t.Lang)
+	return tl.String(lang)
 }
 
 // Defaults returns a map of default values for the template
