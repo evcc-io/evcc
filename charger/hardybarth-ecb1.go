@@ -95,7 +95,7 @@ func NewHardyBarth(uri string, chargecontrol, meter int, cache time.Duration) (a
 		err := wb.GetJSON(uri, &res)
 
 		return res.Meter.Meter, err
-	}, cache)
+	}, cache, false)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired

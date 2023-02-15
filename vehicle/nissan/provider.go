@@ -33,7 +33,7 @@ func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
 			func() (StatusResponse, error) { return api.BatteryStatus(vin) },
 			func() (ActionResponse, error) { return api.RefreshRequest(vin, "RefreshBatteryStatus") },
 		)
-	}, cache)
+	}, cache, false)
 
 	return impl
 }

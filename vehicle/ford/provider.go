@@ -28,7 +28,7 @@ func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
 			func(id string) (StatusResponse, error) { return api.RefreshResult(vin, id) },
 			func() (string, error) { return api.RefreshRequest(vin) },
 		)
-	}, cache)
+	}, cache, false)
 
 	impl.wakeup = func() error { return api.WakeUp(vin) }
 

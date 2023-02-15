@@ -19,7 +19,7 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (VehicleStatus, error) {
 			return api.Status(vin)
-		}, cache),
+		}, cache, false),
 	}
 	return impl
 }

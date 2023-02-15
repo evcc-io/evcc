@@ -120,7 +120,7 @@ func NewTqEmFromConfig(other map[string]interface{}) (api.Meter, error) {
 		}
 
 		return res, err
-	}, cc.Cache)
+	}, cc.Cache, false)
 
 	m := &TqEm{
 		dataG: dataG,

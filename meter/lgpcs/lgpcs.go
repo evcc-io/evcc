@@ -70,7 +70,7 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 
 		// caches the data access for the "cache" time duration
 		// sends a new request to the pcs if the cache is expired and Data() requested
-		instance.dataG = provider.Cached(instance.refreshData, cache)
+		instance.dataG = provider.Cached(instance.refreshData, cache, false)
 
 		// do first login if no authKey exists and uri and password exist
 		if instance.authKey == "" && instance.uri != "" && instance.password != "" {

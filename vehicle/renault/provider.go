@@ -25,13 +25,13 @@ func NewProvider(api *kamereon.API, accountID, vin string, cache time.Duration) 
 	impl := &Provider{
 		batteryG: provider.Cached(func() (kamereon.Response, error) {
 			return api.Battery(accountID, vin)
-		}, cache),
+		}, cache, false),
 		cockpitG: provider.Cached(func() (kamereon.Response, error) {
 			return api.Cockpit(accountID, vin)
-		}, cache),
+		}, cache, false),
 		hvacG: provider.Cached(func() (kamereon.Response, error) {
 			return api.Hvac(accountID, vin)
-		}, cache),
+		}, cache, false),
 		wakeup: func() (kamereon.Response, error) {
 			return api.WakeUp(accountID, vin)
 		},

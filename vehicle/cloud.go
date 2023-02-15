@@ -66,7 +66,7 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		err = v.prepareVehicle()
 	}
 
-	v.chargeStateG = provider.Cached(v.chargeState, cc.Cache)
+	v.chargeStateG = provider.Cached(v.chargeState, cc.Cache, false)
 
 	return v, err
 }

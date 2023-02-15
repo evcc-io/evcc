@@ -32,11 +32,11 @@ func NewProvider(api *API, vid string, expiry, cache time.Duration) *Provider {
 		return v.status(
 			func() (StatusLatestResponse, error) { return api.StatusLatest(vid) },
 		)
-	}, cache)
+	}, cache, true)
 
 	v.statusLG = provider.Cached(func() (StatusLatestResponse, error) {
 		return api.StatusLatest(vid)
-	}, cache)
+	}, cache, true)
 
 	return v
 }
