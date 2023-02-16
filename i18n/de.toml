@@ -79,7 +79,6 @@ loadpoints = "Ladepunkt | Ladepunkt | {count} Ladepunkte"
 noEnergy = "Kein Messwerte"
 pvExport = "Einspeisung"
 pvProduction = "Erzeugung"
-pvTooltip = "{power}"
 selfConsumption = "Eigenverbrauch"
 
 [main.loadpoint]

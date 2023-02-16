@@ -98,7 +98,7 @@ export default {
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
-		valuesInKw: { type: Boolean, default: false },
+		powerInKw: { type: Boolean, default: false },
 		vehicleIcons: { type: Array },
 	},
 	data: function () {
@@ -148,7 +148,7 @@ export default {
 		},
 		fmtBarValue: function (watt) {
 			const valueInKw = this.powerLabelEnoughSpace(watt);
-			return this.fmtKw(watt, this.valuesInKw, valueInKw);
+			return this.fmtKw(watt, this.powerInKw, valueInKw);
 		},
 		powerLabelAvailableSpace(power) {
 			if (this.totalAdjusted === 0) return 0;
