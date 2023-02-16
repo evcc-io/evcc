@@ -65,7 +65,7 @@ func NewNRGKickConnect(uri, mac, password string, cache time.Duration) (*NRGKick
 		}
 
 		return res, err
-	}, cache, false)
+	}, cache)
 
 	nrg.measurementsG = provider.ResettableCached(func() (connect.Measurements, error) {
 		var res connect.Measurements
@@ -76,7 +76,7 @@ func NewNRGKickConnect(uri, mac, password string, cache time.Duration) (*NRGKick
 		}
 
 		return res, err
-	}, cache, false)
+	}, cache)
 
 	return nrg, nil
 }

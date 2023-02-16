@@ -22,10 +22,10 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 	impl := &Provider{
 		statusG: provider.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
-		}, cache, false),
+		}, cache),
 		locationG: provider.Cached(func() (LocationResponse, error) {
 			return api.Location(vin)
-		}, cache, false),
+		}, cache),
 		action: func(action, cmd string) (ActionResponse, error) {
 			return api.Action(vin, pin, action, cmd)
 		},
@@ -38,7 +38,7 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 			return impl.status(
 				func() (StatusResponse, error) { return api.Status(vin) },
 			)
-		}, cache, false)
+		}, cache)
 	}
 
 	return impl

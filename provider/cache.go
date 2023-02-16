@@ -25,21 +25,20 @@ func ResetCached() {
 
 // cached wraps a getter with a cache
 type cached[T any] struct {
-	mux              sync.Mutex
-	clock            clock.Clock
-	updated          time.Time
-	retried          time.Time
-	cache            time.Duration
-	retryWithBackoff bool
-	backoffCounter   int
-	g                func() (T, error)
-	val              T
-	err              error
+	mux            sync.Mutex
+	clock          clock.Clock
+	updated        time.Time
+	retried        time.Time
+	cache          time.Duration
+	backoffCounter int
+	g              func() (T, error)
+	val            T
+	err            error
 }
 
 // Cached wraps a getter with a cache
-func Cached[T any](g func() (T, error), cache time.Duration, retryWithBackoff bool) func() (T, error) {
-	c := ResettableCached(g, cache, retryWithBackoff)
+func Cached[T any](g func() (T, error), cache time.Duration) func() (T, error) {
+	c := ResettableCached(g, cache)
 	return c.Get
 }
 
@@ -53,13 +52,12 @@ var _ Cacheable[int64] = (*cached[int64])(nil)
 
 // ResettableCached wraps a getter with a cache. It returns a `Cacheable`.
 // Instead of the cached getter, the `Get()` and `Reset()` methods are exposed.
-func ResettableCached[T any](g func() (T, error), cache time.Duration, retryWithBackoff bool) *cached[T] {
+func ResettableCached[T any](g func() (T, error), cache time.Duration) *cached[T] {
 	c := &cached[T]{
-		clock:            clock.New(),
-		cache:            cache,
-		g:                g,
-		retryWithBackoff: retryWithBackoff,
-		retried:          clock.New().Now(),
+		clock:   clock.New(),
+		cache:   cache,
+		g:       g,
+		retried: clock.New().Now(),
 	}
 	_ = bus.Subscribe(reset, c.Reset)
 	return c
@@ -94,7 +92,7 @@ func (c *cached[T]) mustUpdate() bool {
 }
 
 func (c *cached[T]) shouldRetryWithBackoff(err error) bool {
-	if err != nil && c.retryWithBackoff {
+	if err != nil {
 		// Exponentially backoff for 2^n minutes. Maximum backoff wait time is regular cache time
 		waitTime := time.Duration(math.Min(math.Pow(2, float64(c.backoffCounter)), c.cache.Seconds())*60) * time.Second
 

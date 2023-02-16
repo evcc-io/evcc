@@ -73,7 +73,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergy.API, meterID)
 		err := client.GetJSON(uri, &res)
 		return res, err
-	}, cc.Cache, false)
+	}, cc.Cache)
 
 	m := &Discovergy{
 		dataG: dataG,

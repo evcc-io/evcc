@@ -21,18 +21,18 @@ func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *Mo
 	impl := &Provider{
 		statusG: provider.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
-		}, cache, false),
+		}, cache),
 
 		emobilityG: provider.Cached(func() (EmobilityResponse, error) {
 			if carModel != "" {
 				return emobility.Status(vin, carModel)
 			}
 			return EmobilityResponse{}, errors.New("no car model")
-		}, cache, false),
+		}, cache),
 
 		mobileG: provider.Cached(func() (StatusResponseMobile, error) {
 			return mobile.Status(vin, []string{BATTERY_LEVEL, BATTERY_CHARGING_STATE, CLIMATIZER_STATE, E_RANGE, HEATING_STATE, MILEAGE})
-		}, cache, false),
+		}, cache),
 	}
 
 	return impl

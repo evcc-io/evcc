@@ -26,7 +26,7 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 			func() (StatusResponse, error) { return api.Status(vin) },
 			func() (StatusResponse, error) { return api.Refresh(vin) },
 		)
-	}, cache, false)
+	}, cache)
 
 	return v
 }

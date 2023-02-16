@@ -57,7 +57,7 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if err == nil {
 		v.apiG = provider.Cached(func() (silence.Vehicle, error) {
 			return api.Status(vin)
-		}, cc.Cache, false)
+		}, cc.Cache)
 	}
 
 	return v, err

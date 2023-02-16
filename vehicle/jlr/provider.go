@@ -17,10 +17,10 @@ func NewProvider(api *API, vin, user string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
-		}, cache, false),
+		}, cache),
 		positionG: provider.Cached(func() (PositionResponse, error) {
 			return api.Position(vin)
-		}, cache, false),
+		}, cache),
 		actionS: func(start bool) error {
 			return api.ChargeAction(vin, user, start)
 		},

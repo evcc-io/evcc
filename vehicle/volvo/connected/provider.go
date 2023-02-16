@@ -17,7 +17,7 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (RechargeStatus, error) {
 			return api.RechargeStatus(vin)
-		}, cache, false),
+		}, cache),
 	}
 	return impl
 }

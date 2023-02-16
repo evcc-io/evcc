@@ -45,7 +45,7 @@ func NewMyStromFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, cc.StandbyPower)
-	c.reportCache = provider.ResettableCached(c.conn.Report, c.cache, false)
+	c.reportCache = provider.ResettableCached(c.conn.Report, c.cache)
 
 	return c, nil
 }

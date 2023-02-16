@@ -19,7 +19,7 @@ func NewProvider(api *API, userID, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (Status, error) {
 			return api.Status(userID, vin)
-		}, cache, false),
+		}, cache),
 		action: func(action, cmd string) error {
 			return api.Action(vin, action, cmd)
 		},

@@ -99,7 +99,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		err := c.GetJSON(uri, &res)
 
 		return res, err
-	}, c.cache, false)
+	}, c.cache)
 
 	provider, err := oidc.NewProvider(context.Background(), zaptec.ApiURL+"/")
 	if err != nil {

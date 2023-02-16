@@ -71,13 +71,13 @@ func NewDaheimLaden(token, stationID string, cache time.Duration) (*DaheimLaden,
 		var res daheimladen.GetLatestStatus
 		err := c.GetJSON(fmt.Sprintf("%s/cs/%s/status", daheimladen.BASE_URL, c.stationID), &res)
 		return res, err
-	}, c.cache, false)
+	}, c.cache)
 
 	c.meterCache = provider.ResettableCached(func() (daheimladen.GetLatestMeterValueResponse, error) {
 		var res daheimladen.GetLatestMeterValueResponse
 		err := c.GetJSON(fmt.Sprintf("%s/cs/%s/metervalue", daheimladen.BASE_URL, c.stationID), &res)
 		return res, err
-	}, c.cache, false)
+	}, c.cache)
 
 	return c, nil
 }

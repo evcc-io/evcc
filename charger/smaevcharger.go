@@ -95,8 +95,8 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 	}
 
 	// setup cached values
-	wb.measurementCache = provider.ResettableCached(wb._measurementData, wb.cache, false)
-	wb.parameterCache = provider.ResettableCached(wb._parameterData, wb.cache, false)
+	wb.measurementCache = provider.ResettableCached(wb._measurementData, wb.cache)
+	wb.parameterCache = provider.ResettableCached(wb._parameterData, wb.cache)
 
 	ts, err := smaevcharger.TokenSource(log, wb.uri, user, password)
 	if err != nil {

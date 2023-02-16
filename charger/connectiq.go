@@ -76,7 +76,7 @@ func NewConnectIq(uri string, cache time.Duration) (api.Charger, error) {
 		uri := fmt.Sprintf("%s/meter/status", wb.uri)
 		err := wb.GetJSON(uri, &res)
 		return res, err
-	}, wb.cache, false)
+	}, wb.cache)
 
 	return wb, nil
 }

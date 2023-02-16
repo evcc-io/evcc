@@ -79,9 +79,9 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		cache:     cc.Cache,
 	}
 
-	v.chargeG = provider.Cached(v.batteryAPI, cc.Cache, false)
-	v.statusG = provider.Cached(v.statusAPI, cc.Cache, false)
-	v.locationG = provider.Cached(v.locationAPI, cc.Cache, false)
+	v.chargeG = provider.Cached(v.batteryAPI, cc.Cache)
+	v.statusG = provider.Cached(v.statusAPI, cc.Cache)
+	v.locationG = provider.Cached(v.locationAPI, cc.Cache)
 
 	var err error
 	v.Jar, err = cookiejar.New(&cookiejar.Options{

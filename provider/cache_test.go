@@ -27,7 +27,7 @@ func TestCachedGetter(t *testing.T) {
 	}
 
 	duration := time.Second
-	c := ResettableCached(g, duration, false)
+	c := ResettableCached(g, duration)
 	clock := clock.NewMock()
 	c.clock = clock
 
@@ -58,7 +58,7 @@ func TestCacheReset(t *testing.T) {
 		return i, nil
 	}
 
-	c := ResettableCached(g, 10*time.Minute, false)
+	c := ResettableCached(g, 10*time.Minute)
 	clock := clock.NewMock()
 	c.clock = clock
 
@@ -99,7 +99,7 @@ func TestRetryWithBackoff(t *testing.T) {
 		}
 	}
 
-	c := ResettableCached(g, cacheTime, true)
+	c := ResettableCached(g, cacheTime)
 	c.clock = clock
 
 	// Put cache in error state

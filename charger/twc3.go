@@ -81,7 +81,7 @@ func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 		uri := fmt.Sprintf("%s/api/1/vitals", c.uri)
 		err := c.GetJSON(uri, &res)
 		return res, err
-	}, time.Second, false)
+	}, time.Second)
 
 	return c, nil
 }
