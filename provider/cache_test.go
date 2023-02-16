@@ -81,13 +81,26 @@ func TestCacheReset(t *testing.T) {
 // nolint:errcheck
 func TestRetryWithBackoff(t *testing.T) {
 
+	tests := []struct {
+		deltaTime      time.Duration
+		returnError    bool
+		functionCalled bool
+	}{
+		{0 * time.Second, true, true},
+		{30 * time.Second, true, false},
+		{60 * time.Second, true, true},
+		{90 * time.Second, true, false},
+		{90 * time.Second, true, true},
+		{3 * time.Minute, true, false},
+		{5 * time.Minute, false, true},
+		{11 * time.Minute, true, true},
+		{30 * time.Second, true, false},
+		{60 * time.Second, true, true},
+	}
+
 	cacheTime := time.Minute * 10
 
-	clock := clock.NewMock()
-	clock.Set(time.Now())
-
 	returnError := true
-
 	functionCalled := false
 
 	g := func() (float64, error) {
@@ -100,85 +113,20 @@ func TestRetryWithBackoff(t *testing.T) {
 	}
 
 	c := ResettableCached(g, cacheTime)
+	clock := clock.NewMock()
+	clock.Set(time.Now())
 	c.clock = clock
 
-	// Put cache in error state
-	c.Get()
+	for _, tt := range tests {
+		functionCalled = false
+		returnError = tt.returnError
 
-	// Half a minute later -> cache time is 10 minutes, so no regular get. No retry because of backoff wait time after first error is 1m.
-	functionCalled = false
-	clock.Add(30 * time.Second)
-	c.Get()
+		clock.Add(tt.deltaTime)
 
-	if functionCalled {
-		t.Errorf("unexpected function call")
-	}
+		c.Get()
 
-	// Total expired time is now 1m30s. No regular get but retry.
-	clock.Add(60 * time.Second)
-	c.Get()
-
-	if !functionCalled {
-		t.Errorf("expected function call not executed")
-	}
-
-	// Still in error state after first retry. Backoff wait time is now 2m.
-	// 1m30s later: no retry.
-	functionCalled = false
-	clock.Add(90 * time.Second)
-	c.Get()
-
-	if functionCalled {
-		t.Errorf("unexpected function call")
-	}
-
-	// Still in error state after first retry. Backoff wait time is still 2m.
-	// 3m later: retry.
-	clock.Add(90 * time.Second)
-	c.Get()
-
-	if !functionCalled {
-		t.Errorf("expected function call not executed")
-	}
-
-	// Cache getter returned error again. Backoff wait time now at 4m.
-	// No retry because of backoff wait time.
-	functionCalled = false
-	clock.Add(3 * time.Minute)
-	c.Get()
-
-	if functionCalled {
-		t.Errorf("unexpected function call")
-	}
-
-	// 5m later: retry. Cache getter will not return an error this time -> backoff will be reset.
-	returnError = false
-	clock.Add(5 * time.Minute)
-	c.Get()
-
-	if !functionCalled {
-		t.Errorf("expected function call not executed")
-	}
-
-	// Put cache in error state again with regular get after 11 minutes (10 minutes cache time)
-	returnError = true
-	clock.Add(11 * time.Minute)
-	c.Get()
-
-	// Half a minute later -> cache time is 10 minutes, so no regular get. No retry because of backoff wait time after first error is 1m.
-	functionCalled = false
-	clock.Add(30 * time.Second)
-	c.Get()
-
-	if functionCalled {
-		t.Errorf("unexpected function call")
-	}
-
-	// Total expired time is now 1m30s. No regular get but retry.
-	clock.Add(60 * time.Second)
-	c.Get()
-
-	if !functionCalled {
-		t.Errorf("expected function call not executed")
+		if functionCalled != tt.functionCalled {
+			t.Errorf("expected function call")
+		}
 	}
 }
