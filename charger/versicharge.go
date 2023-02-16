@@ -22,15 +22,17 @@ package charger
 //************************************************************************************
 
 // Verwendete Versicharge GEN 3:
-  // Versicharge GEN3 FW 2.120 oder höher
+  // Versicharge GEN3 FW 2.120
   // Commercial Version (Reg 22 = 2), One Outlet: (Reg 24 = 1)
   // Integrated MID (Reg 30 = 4)
   // Test mit Order Number: 8EM1310-3EJ04-0GA0
+  // Failsafe Current und Timeout werden gesetzt, funktioniert ab FW 2.120.
+  // Total Energy (Gesamtladeleistung Wallbox) vorhanden und eingefügt
 
-  //https://support.industry.siemens.com/cs/attachments/109814359/versicharge_wallbox_modBus_map_en-US-FINAL.pdf
+  // Verwendete Modbus Map:
+  // https://support.industry.siemens.com/cs/attachments/109814359/109814359_versicharge_wallbox_modBus_map_en-US.pdf?download=true
 
-  // Gefundene Fehler:
-    // - Status Wallbox (A-F): Register 1601 nicht im ModbusMap dokumentiert. 
+  // Fehler in der Modbus Implementierung der Wallbox:
 	// - Active Power Phase Sum wird bei Strömen über 10A falsch berechnet (Register 1665)
     //   daher Verwendung Apparent Power.
 	// - MaxCurrent wird um 1A reduziert (bekanntes Problem), gilt nicht für 8A, 16A, 24A, 32A
@@ -38,27 +40,18 @@ package charger
 //************************************************************************************
 // Weitere zukünfitge Themen zu implementieren / testen:
 
-  // Laden 1/3 Phasen
-  // 1 und 3 phasiges Laden implentmentiert aber funktioniert nicht 
+  // Laden 1/3 Phasen in GO ausprogrammiert, aber nicht aktiv (als Kommentar siehe unten)
+  // Umschaltung 1 und 3 phasiges Laden funktioniert nicht (Fehler der Modbus Impelentierung Wallbox) 
   // Trotz Umschaltung und Strom-Werte 1 phasig wird weiterhin mit 3 phasen physisch geladen
 
   //RFID
   // Im ModbusTable fehlt das Register welche Karte freigegen wurde (zur Fahrzeugerkennung)
- 	//  VersichargeRegRFIDEnable        = 79 // 1 RW disabled: 0 , enabled: 1	
+ 	//  VersichargeRegRFIDEnable        = 79 // 1  RW disabled: 0 , enabled: 1	
 	//	VersichargeRegRFIDCount         = 87 // 1  RO
     //	VersichargeRegRFID_UID0         = 88 // 5  RO
     //	VersichargeRegRFID_UID1         = 93 // 5  RO
     //	VersichargeRegRFID_UID2         = 97 // 5  RO
     //  weitere RFID Karten möglich (bis Register 337)
-
-  // Failsafe Current und Timeout werden gesetzt, funktioniert ab FW 2.120.
-
-
-  // Time and Energy of charging session	 
-    //  VersichargeRegSessionEnergy   = // derzeit nicht vorhanden im Modbus Table
-    //	VersichargeRegChargeTime      = // derzeit nicht vorhanden im Modbus Table
-	//  Total Energy (Gesamtladeleistung Wallbox) vorhanden und implementiert
-
 //************************************************************************************
 
 import (
@@ -87,7 +80,7 @@ const (
 	 
 // Charger States / Settings / Steuerung
  	VersichargeRegRFIDEnable      =   79 // 1 RW UNIT16  -> disabled: 0 , enabled: 1	
-    VersichargeRegChargeStatus    = 1601 // 1 RO INT16?? -> Status 1-5 nicht dokumentiert
+    VersichargeRegChargeStatus    = 1601 // 1 RO INT16   -> Status 
     VersichargePause              = 1629 // 1 RW UNIT16  -> On: 1, Off: 2 - AN
     VersichargePhases             = 1642 // 1 RW UNIT16  -> 1Phase: 0 ; 3Phase: 1
 	VersichargeRegMaxCurrent      = 1633 // 1 RW UNIT16  -> Max. Charging Current
@@ -148,7 +141,8 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 
 	log := util.NewLogger("versicharge")
 	conn.Logger(log.TRACE)
-
+	
+// Struktur Wallbox -> Weitere Daten in Struktur sinnvoll?
 	wb := &Versicharge{
 		log:     log,
 		conn:    conn,
@@ -192,7 +186,7 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	}
 
 	switch binary.BigEndian.Uint16(s) {
-	case 1: // State A: Idle, Power on
+	case 1: // State A: Available
 		return api.StatusA, nil
 	case 2: // State B: EV Plug in, pending authorization
 		return api.StatusB, nil
@@ -233,7 +227,7 @@ func (wb *Versicharge) Enabled() (bool, error) {
 	return binary.BigEndian.Uint16(b) == 2, nil
 }
 
-// Enable implements the api.Charger interface
+// Enable implements the api.Charger interface -> über Pause
 func (wb *Versicharge) Enable(enable bool) error {
     var u uint16
 	u = 1
@@ -369,7 +363,7 @@ func (wb *Versicharge) TotalEnergy() (float64, error) {
 }
 
 // ------------------------------------------------------------------------------------------------------
-// Identifier -> Erkennung Auto am Ladepunkt durch RFID Karte
+// Identifier -> Erkennung Auto am Ladepunkt durch RFID Karte -> noch zu implementieren
 // Authorizer verwenden?
 // ------------------------------------------------------------------------------------------------------
 
