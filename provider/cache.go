@@ -97,8 +97,6 @@ func (c *cached[T]) shouldRetryWithBackoff(err error) bool {
 		waitTime := time.Duration(math.Min(math.Pow(2, float64(c.backoffCounter)), c.cache.Seconds())*60) * time.Second
 
 		if c.clock.Since(c.retried) > waitTime {
-			log.DEBUG.Printf("Retrying cache get after error with backoff wait time %v", waitTime)
-
 			c.retried = c.clock.Now()
 			c.backoffCounter++
 			return true
@@ -109,7 +107,6 @@ func (c *cached[T]) shouldRetryWithBackoff(err error) bool {
 }
 
 func (c *cached[T]) resetBackoff() {
-	log.DEBUG.Printf("Resetting backoff")
 	c.backoffCounter = 0
 	c.retried = c.clock.Now()
 }
