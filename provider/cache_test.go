@@ -98,8 +98,6 @@ func TestRetryWithBackoff(t *testing.T) {
 		{60 * time.Second, true, true},
 	}
 
-	cache := 10 * time.Minute
-
 	var returnError, functionCalled bool
 
 	g := func() (int64, error) {
@@ -110,7 +108,7 @@ func TestRetryWithBackoff(t *testing.T) {
 		return 1, nil
 	}
 
-	c := ResettableCached(g, cache)
+	c := ResettableCached(g, 10*time.Minute)
 	clock := clock.NewMock()
 	c.clock = clock
 
