@@ -80,6 +80,7 @@ const (
 	 
 // Charger States / Settings / Steuerung
  	VersichargeRegRFIDEnable      =   79 // 1 RW UNIT16  -> disabled: 0 , enabled: 1	
+ 	VersichargeRegErrorCode		  = 1600 // 1 RO INT16  -> 0 - 34, siehe Modbus Map
     VersichargeRegChargeStatus    = 1601 // 1 RO INT16   -> Status 
     VersichargePause              = 1629 // 1 RW UNIT16  -> On: 1, Off: 2 - AN
     VersichargePhases             = 1642 // 1 RW UNIT16  -> 1Phase: 0 ; 3Phase: 1
@@ -141,7 +142,7 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 
 	log := util.NewLogger("versicharge")
 	conn.Logger(log.TRACE)
-	
+
 // Struktur Wallbox -> Weitere Daten in Struktur sinnvoll?
 	wb := &Versicharge{
 		log:     log,
@@ -152,9 +153,16 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 // Check FW Version 2.120	
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegFirmware, 5); err == nil {
 		fmt.Printf("[VERSI ] INFO INIT Versicharge Firmware: \t\t%s \n", b)
-		if bytesAsString(b) != "2.120" {
-			fmt.Printf("[VERSI ] WARN Versicharge Firmware:\t\t%s -> Falsche Version, getestet mit FW 2.120 \n", b)
-			return wb, err
+		if bytesAsString(b) != "2.121.5" {
+			fmt.Printf("[VERSI ] WARN INIT Versicharge Firmware:\t\t%s -> Neue FW Version, getestet mit FW 2.121.5 \n", b)
+		}
+	}
+
+// Check Error Code Wallbox	
+	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegErrorCode, 1); err == nil {
+		fmt.Printf("[VERSI ] INFO INIT Versicharge Error Code: \t\t%d \n", b[1])
+		if b[1] != 0 {
+			fmt.Printf("[VERSI ] WARN INIT Versicharge Error Code:\t\t%d \n", b[1])
 		}
 	}
 
@@ -180,6 +188,15 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 
 // Status implements the api.Charger interface (Charging State A-F)
 func (wb *Versicharge) Status() (api.ChargeStatus, error) {
+	// Check Error Code Wallbox	
+	if s, err := wb.conn.ReadHoldingRegisters(VersichargeRegErrorCode, 1); err == nil {
+		if s[1] != 0 {
+			fmt.Printf("[VERSI ] WARN Versicharge Error Code:\t\t%d \n", s)
+			return api.StatusNone, fmt.Errorf("Versicharge Error: %d", s)
+		}
+	}
+
+	// Get Status Charger
 	s, err := wb.conn.ReadHoldingRegisters(VersichargeRegChargeStatus, 1)
 		if err != nil {
 		return api.StatusNone, err
@@ -426,5 +443,8 @@ func (wb *Versicharge) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegTemp, 1); err == nil {
 	    fmt.Printf("Temperature PCB:\t%d°C\n\n", b[1])
+    }
+	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegErrorCode, 1); err == nil {
+	    fmt.Printf("EVSE Error Code:\t%d\n\n", b[1])
     }
 }
