@@ -88,7 +88,7 @@ func (c *cached[T]) Reset() {
 }
 
 func (c *cached[T]) mustUpdate() bool {
-	return (c.clock.Since(c.updated) > c.cache && c.err == nil) ||
+	return (c.clock.Since(c.updated) > c.cache) ||
 		errors.Is(c.err, api.ErrMustRetry) ||
 		c.shouldRetryWithBackoff()
 }
