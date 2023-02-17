@@ -72,8 +72,8 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 	}
 
 	// setup sponsorship (allow env override)
-	if token := viper.GetString("sponsortoken"); err == nil && token != "" {
-		err = sponsor.ConfigureSponsorship(token)
+	if err == nil && conf.SponsorToken != "" {
+		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
 	// setup translations
