@@ -55,10 +55,9 @@ var _ Cacheable[int64] = (*cached[int64])(nil)
 func ResettableCached[T any](g func() (T, error), cache time.Duration) *cached[T] {
 	clock := clock.New()
 	c := &cached[T]{
-		clock:   clock,
-		cache:   cache,
-		g:       g,
-		retried: clock.Now(),
+		clock: clock,
+		cache: cache,
+		g:     g,
 	}
 	_ = bus.Subscribe(reset, c.Reset)
 	return c
@@ -89,12 +88,14 @@ func (c *cached[T]) Reset() {
 }
 
 func (c *cached[T]) mustUpdate() bool {
-	return (c.clock.Since(c.updated) > c.cache && c.err == nil) || errors.Is(c.err, api.ErrMustRetry) || c.shouldRetryWithBackoff(c.err)
+	return (c.clock.Since(c.updated) > c.cache && c.err == nil) ||
+		errors.Is(c.err, api.ErrMustRetry) ||
+		c.shouldRetryWithBackoff()
 }
 
-func (c *cached[T]) shouldRetryWithBackoff(err error) bool {
-	if err != nil {
-		// Exponentially backoff for 2^n minutes. Maximum backoff wait time is regular cache time
+func (c *cached[T]) shouldRetryWithBackoff() bool {
+	if c.err != nil {
+		// exponentially backoff for 2^n minutes. Maximum backoff wait time is regular cache time
 		waitTime := time.Duration(math.Min(math.Pow(2, float64(c.backoffCounter)), c.cache.Seconds())*60) * time.Second
 
 		if c.clock.Since(c.retried) > waitTime {

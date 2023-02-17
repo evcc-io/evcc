@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCachedGetter(t *testing.T) {
@@ -78,9 +80,7 @@ func TestCacheReset(t *testing.T) {
 	test(3)
 }
 
-// nolint:errcheck
 func TestRetryWithBackoff(t *testing.T) {
-
 	tests := []struct {
 		deltaTime      time.Duration
 		returnError    bool
@@ -98,23 +98,20 @@ func TestRetryWithBackoff(t *testing.T) {
 		{60 * time.Second, true, true},
 	}
 
-	cacheTime := time.Minute * 10
+	cache := 10 * time.Minute
 
-	returnError := true
-	functionCalled := false
+	var returnError, functionCalled bool
 
-	g := func() (float64, error) {
+	g := func() (int64, error) {
 		functionCalled = true
 		if returnError {
-			return float64(1), errors.New("timeout")
-		} else {
-			return float64(1), nil
+			return 1, api.ErrTimeout
 		}
+		return 1, nil
 	}
 
-	c := ResettableCached(g, cacheTime)
+	c := ResettableCached(g, cache)
 	clock := clock.NewMock()
-	clock.Set(time.Now())
 	c.clock = clock
 
 	for _, tt := range tests {
@@ -123,10 +120,12 @@ func TestRetryWithBackoff(t *testing.T) {
 
 		clock.Add(tt.deltaTime)
 
-		c.Get()
+		_, err := c.Get()
 
-		if functionCalled != tt.functionCalled {
-			t.Errorf("expected function call")
+		if returnError {
+			assert.Error(t, err)
 		}
+
+		assert.Equal(t, tt.functionCalled, functionCalled)
 	}
 }
