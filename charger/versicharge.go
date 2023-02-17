@@ -150,7 +150,7 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 		current: 6,
 	}
 
-// Check FW Version 2.120	
+// Check FW Version 2.121.5	
 	if b, err := wb.conn.ReadHoldingRegisters(VersichargeRegFirmware, 5); err == nil {
 		fmt.Printf("[VERSI ] INFO INIT Versicharge Firmware: \t\t%s \n", b)
 		if bytesAsString(b) != "2.121.5" {
@@ -200,9 +200,8 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	s, err := wb.conn.ReadHoldingRegisters(VersichargeRegChargeStatus, 1)
 		if err != nil {
 		return api.StatusNone, err
-	}
-
-	switch binary.BigEndian.Uint16(s) {
+		}
+	switch s[1] {
 	case 1: // State A: Available
 		return api.StatusA, nil
 	case 2: // State B: EV Plug in, pending authorization
@@ -210,26 +209,11 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	case 3: // Charging
 		return api.StatusC, nil
 	case 4: // Charging? kommt nur kurzzeitg beim Starten, dann Rückfall auf 3
-		b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1) // Abfrage Pausiert?
-		if err != nil {
-			return api.StatusNone, err
-		}
-		if binary.BigEndian.Uint16(b) == 0x1 {  
-			//Pause ON -> Fehlerfall/Issue: 
-			//https://github.com/achgut/Modbus_Versicharge/issues/12#issue-1501793186
-			return api.StatusNone, fmt.Errorf("invalid status during pause: %0x", s)
-		}
 		return api.StatusC, nil
-	case 5: // Other: Session stopped (Pause) 
-		b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1) // Abfrage Pausiert?
-		if err != nil {
-			return api.StatusNone, err
-		}
-		if binary.BigEndian.Uint16(b) == 0x1 {  //Pause ON
-			return api.StatusB, nil
-		}
+	case 5: // Session stopped, suspended (Pause) 
+		return api.StatusB, nil
 	default: // Other
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", s[1])
 	}
 	return api.StatusNone, err
 }
