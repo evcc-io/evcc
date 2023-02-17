@@ -57,9 +57,6 @@ func init() {
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 
 	// config file options
-	rootCmd.PersistentFlags().String(flagSqlite, conf.Database.Dsn, flagSqliteDescription)
-	bindP(rootCmd, "database.dsn", flagSqlite)
-
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
 	bindP(rootCmd, "log")
 
@@ -89,6 +86,7 @@ func initConfig() {
 	}
 
 	viper.SetEnvPrefix("evcc")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// print version
