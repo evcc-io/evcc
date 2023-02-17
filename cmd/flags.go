@@ -8,9 +8,6 @@ import (
 )
 
 const (
-	flagSqlite            = "sqlite"
-	flagSqliteDescription = "SQlite database file"
-
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
 
