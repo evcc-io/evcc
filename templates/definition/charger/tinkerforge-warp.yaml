@@ -37,9 +37,7 @@ params:
   - name: topic
     default: warp
   - name: timeout
-    advanced: true
     default: 30s
-    type: duration
     help:
       de: Akzeptiere keine Daten die älter sind als dieser Wert
       en: Don't accept values older than this value
