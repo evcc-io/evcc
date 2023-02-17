@@ -48,3 +48,4 @@ render:
       host: 192.0.2.2 # Hostname
       port: 502 # Port
       connector: 1 # Optional
+      timeout: 10s # Optional
