@@ -20,7 +20,7 @@
 				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
 			>
 				<AnimatedNumber
-					v-if="selfConsumption"
+					v-if="selfConsumption && visualizationReady"
 					class="power"
 					:to="selfConsumption"
 					:format="fmtBarValue"
@@ -31,7 +31,7 @@
 				:style="{ width: widthTotal(gridImportAdjusted) }"
 			>
 				<AnimatedNumber
-					v-if="gridImport"
+					v-if="gridImport && visualizationReady"
 					class="power"
 					:to="gridImport"
 					:format="fmtBarValue"
@@ -42,7 +42,7 @@
 				:style="{ width: widthTotal(pvExportAdjusted) }"
 			>
 				<AnimatedNumber
-					v-if="pvExport"
+					v-if="pvExport && visualizationReady"
 					class="power"
 					:to="pvExport"
 					:format="fmtBarValue"
@@ -102,7 +102,7 @@ export default {
 		vehicleIcons: { type: Array },
 	},
 	data: function () {
-		return { width: 0, visualizationReady: false };
+		return { width: 0 };
 	},
 	computed: {
 		gridExport: function () {
@@ -123,15 +123,11 @@ export default {
 		totalAdjusted: function () {
 			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
 		},
-	},
-	watch: {
-		totalAdjusted: function () {
-			if (!this.visualizationReady && this.totalAdjusted > 0)
-				setTimeout(() => {
-					this.visualizationReady = true;
-				}, 500);
+		visualizationReady: function () {
+			return this.totalAdjusted > 0 && this.width > 0;
 		},
 	},
+
 	mounted: function () {
 		this.$nextTick(function () {
 			window.addEventListener("resize", this.updateElementWidth);
@@ -147,8 +143,8 @@ export default {
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		fmtBarValue: function (watt) {
-			const valueInKw = this.powerLabelEnoughSpace(watt);
-			return this.fmtKw(watt, this.powerInKw, valueInKw);
+			const withUnit = this.powerLabelEnoughSpace(watt);
+			return this.fmtKw(watt, this.powerInKw, withUnit);
 		},
 		powerLabelAvailableSpace(power) {
 			if (this.totalAdjusted === 0) return 0;
@@ -157,9 +153,6 @@ export default {
 		},
 		powerLabelEnoughSpace(power) {
 			return this.powerLabelAvailableSpace(power) > 60;
-		},
-		powerLabelSomeSpace(power) {
-			return this.powerLabelAvailableSpace(power) > 35;
 		},
 		hideLabelIcon(power, minWidth = 32) {
 			if (this.totalAdjusted === 0) return true;
