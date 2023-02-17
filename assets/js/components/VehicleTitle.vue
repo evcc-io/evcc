@@ -132,7 +132,7 @@ export default {
 .spin {
 	animation: rotation 1s infinite cubic-bezier(0.37, 0, 0.63, 1);
 }
-.spin ::v-deep(svg) {
+.spin :deep(svg) {
 	/* workaround to fix the not perfectly centered shopicon. Remove once its fixed in @h2d2/shopicons */
 	transform: translateY(-0.7px);
 }

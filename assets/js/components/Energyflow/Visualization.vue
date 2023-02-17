@@ -239,12 +239,12 @@ html.dark .grid-import {
 	white-space: nowrap;
 	overflow: hidden;
 }
-.visualization--ready ::v-deep(.label-bar) {
+.visualization--ready :deep(.label-bar) {
 	transition-property: width, opacity;
 	transition-duration: var(--evcc-transition-medium), var(--evcc-transition-fast);
 	transition-timing-function: linear, ease;
 }
-.visualization--ready ::v-deep(.label-bar-icon) {
+.visualization--ready :deep(.label-bar-icon) {
 	transition-duration: var(--evcc-transition-very-fast), 500ms;
 }
 </style>
