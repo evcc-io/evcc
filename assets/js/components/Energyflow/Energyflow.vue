@@ -112,7 +112,11 @@
 							:vehicleIcons="vehicleIcons"
 							:power="loadpointsPower"
 							:powerInKw="powerInKw"
-							:details="detailsValue(tariffEffectivePrice, tariffEffectiveCo2)"
+							:details="
+								activeLoadpointsCount
+									? detailsValue(tariffEffectivePrice, tariffEffectiveCo2)
+									: undefined
+							"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="
 								detailsTooltip(tariffEffectivePrice, tariffEffectiveCo2)
