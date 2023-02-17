@@ -11,7 +11,7 @@ require (
 	github.com/andig/mbserver v0.0.0-20221101171752-364e71b0089c
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go/v3 v3.1.1
-	github.com/aws/aws-sdk-go v1.44.198
+	github.com/aws/aws-sdk-go v1.44.203
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.0
@@ -31,11 +31,11 @@ require (
 	github.com/enbility/eebus-go v0.1.6
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
-	github.com/glebarez/sqlite v1.6.0
+	github.com/glebarez/sqlite v1.7.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/godbus/dbus/v5 v5.1.0
-	github.com/gokrazy/updater v0.0.0-20230206220435-64f39da38fa6
+	github.com/gokrazy/updater v0.0.0-20230215172637-813ccc7f21e2
 	github.com/golang-module/carbon/v2 v2.2.3
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v32 v32.1.0
@@ -46,7 +46,7 @@ require (
 	github.com/gregdel/pushover v1.1.0
 	github.com/grid-x/modbus v0.0.0-20230105075906-8b31e0d1647e
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hasura/go-graphql-client v0.8.2-0.20230118111322-12655772463c
+	github.com/hasura/go-graphql-client v0.9.0
 	github.com/imdario/mergo v0.3.13
 	github.com/influxdata/influxdb-client-go/v2 v2.12.2
 	github.com/itchyny/gojq v0.12.11
@@ -90,12 +90,12 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20230202102845-c58e07a6f048
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
-	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
-	golang.org/x/net v0.6.0
+	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
+	golang.org/x/net v0.7.0
 	golang.org/x/oauth2 v0.5.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/text v0.7.0
-	google.golang.org/api v0.109.0
+	google.golang.org/api v0.110.0
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -130,7 +130,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.2.2 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -184,7 +184,7 @@ require (
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
+	google.golang.org/genproto v0.0.0-20230216225411-c8e22ba71e44 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
