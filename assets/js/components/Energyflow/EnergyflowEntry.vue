@@ -10,11 +10,11 @@
 		</span>
 		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
 			<div ref="details" class="fw-normal" data-bs-toggle="tooltip" title=" " @click.stop="">
-				<span v-if="showPrice()"><AnimatedNumber :to="price" :format="fmtPrice" /></span>
-				<span v-if="showCo2()"><AnimatedNumber :to="co2" :format="fmtCo2Short" /></span>
-				<span v-if="hasSoc">{{ soc }}%</span>
+				<AnimatedNumber v-if="details !== undefined" :to="details" :format="detailsFmt" />
 			</div>
-			<AnimatedNumber :to="power" :format="kw" class="power" />
+			<div ref="power" class="power" data-bs-toggle="tooltip" title=" " @click.stop="">
+				<AnimatedNumber :to="power" :format="kw" />
+			</div>
 		</span>
 	</div>
 </template>
@@ -28,7 +28,6 @@ import BatteryIcon from "./BatteryIcon.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
-import { showGridPrice, showGridCo2 } from "../../gridDetails";
 
 export default {
 	name: "EnergyflowEntry",
@@ -37,17 +36,17 @@ export default {
 	props: {
 		name: { type: String },
 		icon: { type: String },
-		power: { type: Number },
-		soc: { type: Number },
-		price: { type: Number },
-		co2: { type: Number },
-		valuesInKw: { type: Boolean },
 		vehicleIcons: { type: Array },
-		currency: { type: String },
-		tooltip: { type: Array },
+		power: { type: Number },
+		powerTooltip: { type: Array },
+		powerInKw: { type: Boolean },
+		soc: { type: Number },
+		details: { type: Number },
+		detailsFmt: { type: Function },
+		detailsTooltip: { type: Array },
 	},
 	data() {
-		return { tooltipInstance: null };
+		return { powerTooltipInstance: null, detailsTooltipInstance: null };
 	},
 	computed: {
 		active: function () {
@@ -59,42 +58,54 @@ export default {
 		isVehicle: function () {
 			return this.icon === "vehicle";
 		},
-		hasSoc: function () {
-			return this.isBattery && !isNaN(this.soc);
-		},
 	},
 	watch: {
-		tooltip(newVal, oldVal) {
+		powerTooltip(newVal, oldVal) {
 			if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
-				this.updateTooltip();
+				this.updatePowerTooltip();
+			}
+		},
+		detailsTooltip(newVal, oldVal) {
+			if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+				this.updateDetailsTooltip();
 			}
 		},
 	},
 	mounted: function () {
-		this.updateTooltip();
+		this.updatePowerTooltip();
+		this.updateDetailsTooltip();
 	},
 	methods: {
-		showPrice() {
-			return showGridPrice() && !isNaN(this.price);
-		},
-		showCo2() {
-			return showGridCo2() && !isNaN(this.co2);
-		},
 		kw: function (watt) {
-			return this.fmtKw(watt, this.valuesInKw);
+			return this.fmtKw(watt, this.powerInKw);
 		},
-		fmtPrice: function (price) {
-			return this.fmtPricePerKWh(price, this.currency, true);
+		updatePowerTooltip() {
+			this.powerTooltipInstance = this.updateTooltip(
+				this.powerTooltipInstance,
+				this.powerTooltip,
+				this.$refs.power
+			);
 		},
-		updateTooltip: function () {
-			if (!Array.isArray(this.tooltip) || !this.tooltip.length) {
+		updateDetailsTooltip() {
+			this.detailsTooltipInstance = this.updateTooltip(
+				this.detailsTooltipInstance,
+				this.detailsTooltip,
+				this.$refs.details
+			);
+		},
+		updateTooltip: function (instance, content, ref) {
+			if (!Array.isArray(content) || !content.length) {
+				if (instance) {
+					instance.dispose();
+				}
 				return;
 			}
-			if (!this.tooltipInstance) {
-				this.tooltipInstance = new Tooltip(this.$refs.details, { html: true });
+			if (!instance) {
+				instance = new Tooltip(ref, { html: true });
 			}
-			const html = `<div class="text-end">${this.tooltip.join("<br/>")}</div>`;
-			this.tooltipInstance.setContent({ ".tooltip-inner": html });
+			const html = `<div class="text-end">${content.join("<br/>")}</div>`;
+			instance.setContent({ ".tooltip-inner": html });
+			return instance;
 		},
 	},
 };

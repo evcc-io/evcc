@@ -58,6 +58,7 @@ export default {
 		homePower: Number,
 		pvConfigured: Boolean,
 		pvPower: Number,
+		pv: Array,
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoc: Number,
