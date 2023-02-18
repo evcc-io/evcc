@@ -26,7 +26,6 @@ func NewPushOverFromConfig(other map[string]interface{}) (Messenger, error) {
 		App        string
 		Recipients []string
 		Devices    []string
-		Events     map[string]EventTemplate
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
