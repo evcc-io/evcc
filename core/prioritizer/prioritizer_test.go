@@ -24,8 +24,13 @@ func TestPrioritzer(t *testing.T) {
 	p.UpdateChargePowerFlexibility(lo)
 	assert.Equal(t, 0.0, p.GetChargePowerFlexibility(lo))
 
-	//  additional power available
+	// additional power available
 	hi.EXPECT().GetChargePowerFlexibility().Return(1e3)
 	p.UpdateChargePowerFlexibility(hi)
 	assert.Equal(t, 300.0, p.GetChargePowerFlexibility(hi))
+
+	// additional power removed
+	lo.EXPECT().GetChargePowerFlexibility().Return(0.0)
+	p.UpdateChargePowerFlexibility(lo)
+	assert.Equal(t, 0.0, p.GetChargePowerFlexibility(hi))
 }
