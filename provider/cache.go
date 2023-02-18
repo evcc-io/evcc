@@ -74,10 +74,10 @@ func (c *cached[T]) Get() (T, error) {
 		c.val, c.err = c.g()
 		c.updated = c.clock.Now()
 		c.retried = c.clock.Now()
-	}
 
-	if c.err == nil {
-		c.resetBackoff()
+		if c.err == nil {
+			c.backoffCounter = 0
+		}
 	}
 
 	return c.val, c.err
@@ -99,15 +99,9 @@ func (c *cached[T]) mustUpdate() bool {
 // shouldRetryWithBackoff returns true when exponential back-off duration has elapsed since last retry
 func (c *cached[T]) shouldRetryWithBackoff() bool {
 	if c.clock.Since(c.retried) > backoffDuration*time.Duration(math.Pow(2, float64(c.backoffCounter))) {
-		c.retried = c.clock.Now()
 		c.backoffCounter++
 		return true
 	}
 
 	return false
-}
-
-func (c *cached[T]) resetBackoff() {
-	c.backoffCounter = 0
-	c.retried = c.clock.Now()
 }
