@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -288,6 +289,22 @@ func (lp *Loadpoint) GetChargePower() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.chargePower
+}
+
+// GetChargePowerFlexibility returns the flexible amount of current charging power
+func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
+	// no locking
+	mode := lp.GetMode()
+	if !lp.charging() || mode == api.ModeNow {
+		return 0
+	}
+
+	if mode == api.ModePV {
+		return lp.GetChargePower()
+	}
+
+	// MinPV mode
+	return math.Max(0, lp.GetChargePower()-lp.GetMinPower())
 }
 
 // GetMinCurrent returns the min loadpoint current

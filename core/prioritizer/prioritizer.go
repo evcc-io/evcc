@@ -14,13 +14,13 @@ func New() *Prioritizer {
 	}
 }
 
-func (p *Prioritizer) Consume(lp loadpoint.API) {
-	if chargePower := lp.GetChargePower(); chargePower >= 0 {
-		p.demand[lp] = chargePower
+func (p *Prioritizer) UpdateChargePowerFlexibility(lp loadpoint.API) {
+	if power := lp.GetChargePowerFlexibility(); power >= 0 {
+		p.demand[lp] = power
 	}
 }
 
-func (p *Prioritizer) Consumable(lp loadpoint.API) float64 {
+func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
 	prio := lp.Priority()
 
 	var reduceBy float64

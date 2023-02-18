@@ -489,7 +489,7 @@ func (site *Site) updateMeters() error {
 
 // sitePower returns the net power exported by the site minus a residual margin.
 // negative values mean grid: export, battery: charging
-func (site *Site) sitePower(totalChargePower, consumablePower float64) (float64, error) {
+func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, error) {
 	if err := site.updateMeters(); err != nil {
 		return 0, err
 	}
@@ -541,9 +541,10 @@ func (site *Site) sitePower(totalChargePower, consumablePower float64) (float64,
 	site.publish("auxPower", auxPower)
 	sitePower -= auxPower
 
-	if consumablePower > 0 {
-		site.log.DEBUG.Printf("giving loadpoint priority for additional: %.0fW", consumablePower)
-		sitePower -= consumablePower
+	// handle priority
+	if flexiblePower > 0 {
+		site.log.DEBUG.Printf("giving loadpoint priority for additional: %.0fW", flexiblePower)
+		sitePower -= flexiblePower
 	}
 
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
@@ -619,17 +620,16 @@ func (site *Site) update(lp Updater) {
 		lp.UpdateChargePower()
 		totalChargePower += lp.GetChargePower()
 
-		site.prioritizer.Consume(lp)
+		site.prioritizer.UpdateChargePowerFlexibility(lp)
 	}
 
 	// prioritize if possible
-	// TODO handle Min+PV
-	var consumablePower float64
+	var flexiblePower float64
 	if lp.GetMode() == api.ModePV {
-		consumablePower = site.prioritizer.Consumable(lp)
+		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	if sitePower, err := site.sitePower(totalChargePower, consumablePower); err == nil {
+	if sitePower, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		lp.Update(sitePower, site.batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption

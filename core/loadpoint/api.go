@@ -79,6 +79,8 @@ type API interface {
 	HasChargeMeter() bool
 	// GetChargePower returns the current charging power
 	GetChargePower() float64
+	// GetChargePowerFlexibility returns the flexible amount of current charging power
+	GetChargePowerFlexibility() float64
 	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64
 	// SetMinCurrent sets the min charging current

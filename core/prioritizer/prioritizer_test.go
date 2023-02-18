@@ -20,12 +20,12 @@ func TestPrioritzer(t *testing.T) {
 	hi.EXPECT().Priority().Return(1).AnyTimes()
 
 	// no additional power available
-	lo.EXPECT().GetChargePower().Return(300.0)
-	p.Consume(lo)
-	assert.Equal(t, 0.0, p.Consumable(lo))
+	lo.EXPECT().GetChargePowerFlexibility().Return(300.0)
+	p.UpdateChargePowerFlexibility(lo)
+	assert.Equal(t, 0.0, p.GetChargePowerFlexibility(lo))
 
 	//  additional power available
-	hi.EXPECT().GetChargePower().Return(1e3)
-	p.Consume(hi)
-	assert.Equal(t, 300.0, p.Consumable(hi))
+	hi.EXPECT().GetChargePowerFlexibility().Return(1e3)
+	p.UpdateChargePowerFlexibility(hi)
+	assert.Equal(t, 300.0, p.GetChargePowerFlexibility(hi))
 }

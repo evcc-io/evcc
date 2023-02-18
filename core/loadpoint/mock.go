@@ -49,6 +49,20 @@ func (mr *MockAPIMockRecorder) GetChargePower() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePower", reflect.TypeOf((*MockAPI)(nil).GetChargePower))
 }
 
+// GetChargePowerFlexibility mocks base method.
+func (m *MockAPI) GetChargePowerFlexibility() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetChargePowerFlexibility")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetChargePowerFlexibility indicates an expected call of GetChargePowerFlexibility.
+func (mr *MockAPIMockRecorder) GetChargePowerFlexibility() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePowerFlexibility", reflect.TypeOf((*MockAPI)(nil).GetChargePowerFlexibility))
+}
+
 // GetDisableThreshold mocks base method.
 func (m *MockAPI) GetDisableThreshold() float64 {
 	m.ctrl.T.Helper()
