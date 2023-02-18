@@ -3,7 +3,6 @@ package push
 import (
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/util"
@@ -70,9 +69,6 @@ func (h *Hub) Add(sender Messenger) {
 func (h *Hub) apply(ev Event, tmpl *template.Template) (string, error) {
 	attr := make(map[string]interface{})
 
-	// let cache catch up, refs reverted https://github.com/evcc-io/evcc/pull/445
-	time.Sleep(100 * time.Millisecond)
-
 	// loadpoint id
 	if ev.Loadpoint != nil {
 		attr["loadpoint"] = *ev.Loadpoint + 1
@@ -95,7 +91,7 @@ func (h *Hub) apply(ev Event, tmpl *template.Template) (string, error) {
 }
 
 // Run is the Hub's main publishing loop
-func (h *Hub) Run(events <-chan Event) {
+func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
 	log := util.NewLogger("push")
 
 	for ev := range events {
@@ -107,6 +103,11 @@ func (h *Hub) Run(events <-chan Event) {
 		if !ok {
 			continue
 		}
+
+		// let cache catch up, refs https://github.com/evcc-io/evcc/pull/445
+		flushC := util.Flusher()
+		valueChan <- util.Param{Val: flushC}
+		<-flushC
 
 		title, err := h.apply(ev, definition.Title)
 		if err != nil {

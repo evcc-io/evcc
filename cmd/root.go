@@ -205,7 +205,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup messaging
 	var pushChan chan push.Event
 	if err == nil {
-		pushChan, err = configureMessengers(conf.Messaging, cache)
+		pushChan, err = configureMessengers(conf.Messaging, valueChan, cache)
 	}
 
 	// run shutdown functions on stop
