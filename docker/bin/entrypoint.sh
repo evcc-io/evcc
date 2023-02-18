@@ -16,7 +16,7 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
     else
         if [ "${SQLITE_FILE}" ]; then
             echo "starting evcc: 'EVCC_DATABASE_DSN=${SQLITE_FILE} evcc --config ${CONFIG}'"
-            exec EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
+            exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
         else
             echo "starting evcc: 'evcc --config ${CONFIG}'"
             exec evcc --config "${CONFIG}"
