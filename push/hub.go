@@ -1,6 +1,7 @@
 package push
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 
@@ -19,41 +20,27 @@ type EventTemplateConfig struct {
 	Title, Msg string
 }
 
-// EventTemplate is the push message template for an event
-type EventTemplate struct {
-	Title, Msg *template.Template
-}
-
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
-	definitions map[string]EventTemplate
+	definitions map[string]EventTemplateConfig
 	sender      []Messenger
 	cache       *util.Cache
 }
 
 // NewHub creates push hub with definitions and receiver
 func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) {
-	definitions := make(map[string]EventTemplate)
-
 	// instantiate all event templates
 	for k, v := range cc {
-		var def EventTemplate
-		var err error
-
-		def.Title, err = template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Title)
-		if err == nil {
-			def.Msg, err = template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Msg)
+		if _, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Title); err != nil {
+			return nil, fmt.Errorf("invalid event title: %s (%w)", k, err)
 		}
-
-		if err != nil {
-			return nil, err
+		if _, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Msg); err != nil {
+			return nil, fmt.Errorf("invalid event message: %s (%w)", k, err)
 		}
-
-		definitions[k] = def
 	}
 
 	h := &Hub{
-		definitions: definitions,
+		definitions: cc,
 		cache:       cache,
 	}
 
@@ -66,7 +53,7 @@ func (h *Hub) Add(sender Messenger) {
 }
 
 // apply applies the event template to the content to produce the actual message
-func (h *Hub) apply(ev Event, tmpl *template.Template) (string, error) {
+func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 	attr := make(map[string]interface{})
 
 	// loadpoint id
@@ -81,13 +68,7 @@ func (h *Hub) apply(ev Event, tmpl *template.Template) (string, error) {
 		}
 	}
 
-	// apply data attributes to template using sprig functions
-	applied := new(strings.Builder)
-	if err := tmpl.Execute(applied, attr); err != nil {
-		return "", err
-	}
-
-	return util.ReplaceFormatted(applied.String(), attr)
+	return util.ReplaceFormatted(tmpl, attr)
 }
 
 // Run is the Hub's main publishing loop

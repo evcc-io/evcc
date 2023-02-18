@@ -61,8 +61,7 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	}
 
 	var rs bytes.Buffer
-	err = tpl.Execute(&rs, kv)
-	if err != nil {
+	if err := tpl.Execute(&rs, kv); err != nil {
 		return s, err
 	}
 	s = rs.String()
