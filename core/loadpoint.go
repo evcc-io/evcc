@@ -1509,7 +1509,7 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 
 		var required bool // false
-		if targetCurrent == 0 && lp.charging() && lp.climateActive() {
+		if targetCurrent == 0 && lp.climateActive() {
 			targetCurrent = lp.GetMinCurrent()
 			required = true
 		}
