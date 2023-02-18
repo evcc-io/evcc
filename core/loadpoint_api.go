@@ -295,7 +295,7 @@ func (lp *Loadpoint) GetChargePower() float64 {
 func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
 	// no locking
 	mode := lp.GetMode()
-	if !lp.charging() || mode == api.ModeNow {
+	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() {
 		return 0
 	}
 
