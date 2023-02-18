@@ -210,8 +210,15 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil
 	case 4: // Charging? kommt nur kurzzeitg beim Starten, dann Rückfall auf 3
 		return api.StatusC, nil
-	case 5: // Session stopped, suspended (Pause) 
-		return api.StatusB, nil
+	case 5: // Session stopped, suspended (Pause an) oder Charging (Pause off) 
+		b, err := wb.conn.ReadHoldingRegisters(VersichargePause, 1) // Abfrage Pausiert?
+		if err != nil {
+			return api.StatusNone, err
+		}
+		if b[1] == 0x1 {  //Pause ON 
+			return api.StatusB, nil
+		}
+		return api.StatusC, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s[1])
 	}
