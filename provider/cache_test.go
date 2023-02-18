@@ -87,14 +87,14 @@ func TestRetryWithBackoff(t *testing.T) {
 		functionCalled bool
 	}{
 		{0 * time.Second, true, true},
-		{500 * time.Millisecond, true, false},
-		{600 * time.Millisecond, true, true},
-		{3 * time.Second, true, false},
-		{3 * time.Second, true, true},
-		{15 * time.Second, true, false},
-		{11 * time.Second, false, true},
+		{4 * time.Second, true, false},
+		{6 * time.Second, true, true},
+		{9 * time.Second, true, false},
+		{11 * time.Second, true, true},
+		{14 * time.Second, true, false},
+		{16 * time.Second, false, true},
 		{16 * time.Minute, true, true},
-		{2 * time.Second, true, true},
+		{4 * time.Second, true, false},
 		{6 * time.Second, true, true},
 	}
 
