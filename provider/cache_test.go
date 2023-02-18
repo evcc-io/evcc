@@ -87,15 +87,15 @@ func TestRetryWithBackoff(t *testing.T) {
 		functionCalled bool
 	}{
 		{0 * time.Second, true, true},
-		{30 * time.Second, true, false},
-		{60 * time.Second, true, true},
-		{90 * time.Second, true, false},
-		{90 * time.Second, true, true},
-		{3 * time.Minute, true, false},
-		{5 * time.Minute, false, true},
-		{11 * time.Minute, true, true},
-		{30 * time.Second, true, false},
-		{60 * time.Second, true, true},
+		{500 * time.Millisecond, true, false},
+		{600 * time.Millisecond, true, true},
+		{3 * time.Second, true, false},
+		{3 * time.Second, true, true},
+		{15 * time.Second, true, false},
+		{11 * time.Second, false, true},
+		{16 * time.Minute, true, true},
+		{2 * time.Second, true, true},
+		{6 * time.Second, true, true},
 	}
 
 	var returnError, functionCalled bool
@@ -108,7 +108,7 @@ func TestRetryWithBackoff(t *testing.T) {
 		return 1, nil
 	}
 
-	c := ResettableCached(g, 10*time.Minute)
+	c := ResettableCached(g, 15*time.Minute)
 	clock := clock.NewMock()
 	c.clock = clock
 

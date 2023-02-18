@@ -95,8 +95,8 @@ func (c *cached[T]) mustUpdate() bool {
 
 func (c *cached[T]) shouldRetryWithBackoff() bool {
 	if c.err != nil {
-		// exponentially backoff for 2^n minutes. Maximum backoff wait time is regular cache time
-		waitTime := time.Duration(math.Min(math.Pow(2, float64(c.backoffCounter)), c.cache.Seconds())*60) * time.Second
+		// exponentially backoff for 5^n seconds. Maximum backoff wait time is regular cache time
+		waitTime := time.Duration(math.Min(math.Pow(5, float64(c.backoffCounter)), c.cache.Seconds())) * time.Second
 
 		if c.clock.Since(c.retried) > waitTime {
 			c.retried = c.clock.Now()
