@@ -12,26 +12,46 @@ params:
     advanced: true
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
   power:
     source: modbus
     uri: {{ .host }}:{{ .port }}
-    register: # manual register configuration for E3/DC "Simple-Mode"
+    register:
       type: holding
       decode: int32s
-  {{- if eq .usage "grid" }}
-      address: 40073 # Hausverbrauchs-Leistung in Watt
+      address: 40073 # Hausverbrauchsleistung in Watt
   {{- end}}
   {{- if eq .usage "pv" }}
-      address: 40067 # Photovoltaikleistung in Watt
+  power:
+    source: calc
+    add:
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      register:
+        type: holding
+        decode: int32s
+        address: 40067 # Photovoltaikleistung in Watt
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      register:
+        type: holding
+        decode: int32s
+        address: 40075 # Leistung zusätzlicher Einspeiser in Watt
   {{- end}}
   {{- if eq .usage "battery" }}
-      address: 40069 # Batterie-Leistung in Watt
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    register:
+      type: holding
+      decode: int32s
+      address: 40069 # Batterieleistung in Watt
     scale: -1 # reverse direction
   soc:
     source: modbus
     uri: {{ .host }}:{{ .port }}
-    register: # manual register configuration for E3/DC "Simple-Mode"
-      address: 40082 # Batterie-SOC in Prozent
+    register:
+      address: 40082 # Batterie-SOC in %
       type: holding
       decode: uint16
   {{- if ne .capacity "" }}
