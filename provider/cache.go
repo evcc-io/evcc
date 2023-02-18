@@ -17,7 +17,10 @@ var (
 	log = util.NewLogger("cache")
 )
 
-const reset = "reset"
+const (
+	reset           = "reset"
+	backoffDuration = 5 * time.Second
+)
 
 func ResetCached() {
 	bus.Publish(reset)
@@ -88,21 +91,17 @@ func (c *cached[T]) Reset() {
 }
 
 func (c *cached[T]) mustUpdate() bool {
-	return (c.clock.Since(c.updated) > c.cache) ||
+	return c.clock.Since(c.updated) > c.cache ||
 		errors.Is(c.err, api.ErrMustRetry) ||
-		c.shouldRetryWithBackoff()
+		c.err != nil && c.shouldRetryWithBackoff()
 }
 
+// shouldRetryWithBackoff returns true when exponential back-off duration has elapsed since last retry
 func (c *cached[T]) shouldRetryWithBackoff() bool {
-	if c.err != nil {
-		// exponentially backoff for 5^n seconds. Maximum backoff wait time is regular cache time
-		waitTime := time.Duration(math.Min(math.Pow(5, float64(c.backoffCounter)), c.cache.Seconds())) * time.Second
-
-		if c.clock.Since(c.retried) > waitTime {
-			c.retried = c.clock.Now()
-			c.backoffCounter++
-			return true
-		}
+	if c.clock.Since(c.retried) > backoffDuration*time.Duration(math.Pow(2, float64(c.backoffCounter))) {
+		c.retried = c.clock.Now()
+		c.backoffCounter++
+		return true
 	}
 
 	return false
