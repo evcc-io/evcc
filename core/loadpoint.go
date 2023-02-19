@@ -119,15 +119,16 @@ type Loadpoint struct {
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
-	enabled             bool      // Charger enabled state
-	phases              int       // Charger enabled phases, guarded by mutex
-	measuredPhases      int       // Charger physically measured phases
-	chargeCurrent       float64   // Charger current limit
-	guardUpdated        time.Time // Charger enabled/disabled timestamp
-	socUpdated          time.Time // Soc updated timestamp (poll: connected)
-	vehicleDetect       time.Time // Vehicle connected timestamp
-	vehicleDetectTicker *clock.Ticker
-	vehicleIdentifier   string
+	enabled                  bool      // Charger enabled state
+	phases                   int       // Charger enabled phases, guarded by mutex
+	measuredPhases           int       // Charger physically measured phases
+	chargeCurrent            float64   // Charger current limit
+	guardUpdated             time.Time // Charger enabled/disabled timestamp
+	socUpdated               time.Time // Soc updated timestamp (poll: connected)
+	didChargeOnLastSocUpdate bool      // There was a charge process when Soc was updated last
+	vehicleDetect            time.Time // Vehicle connected timestamp
+	vehicleDetectTicker      *clock.Ticker
+	vehicleIdentifier        string
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -1308,17 +1309,34 @@ func (lp *Loadpoint) publishChargeProgress() {
 
 // socPollAllowed validates charging state against polling mode
 func (lp *Loadpoint) socPollAllowed() bool {
+	// always update soc when charging
+	if lp.charging() {
+		lp.didChargeOnLastSocUpdate = true
+		return true
+	}
+
+	// update if connected and soc unknown
+	if lp.connected() && lp.socUpdated.IsZero() {
+		return true
+	}
+
 	remaining := lp.Soc.Poll.Interval - lp.clock.Since(lp.socUpdated)
 
 	honourUpdateInterval := lp.Soc.Poll.Mode == pollAlways ||
-		lp.Soc.Poll.Mode == pollConnected && lp.connected() ||
-		lp.Soc.Poll.Mode == pollCharging && lp.connected() && (lp.vehicleSoc < float64(lp.Soc.target))
+		lp.connected() && (lp.Soc.Poll.Mode == pollConnected ||
+			// for mode charging allow one last soc update if did charge previously to not rely on soc estimator too much
+			lp.Soc.Poll.Mode == pollCharging && lp.didChargeOnLastSocUpdate)
 
-	if honourUpdateInterval && remaining > 0 {
-		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
+	if honourUpdateInterval {
+		if remaining > 0 {
+			lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
+		} else {
+			lp.didChargeOnLastSocUpdate = false
+			return true
+		}
 	}
 
-	return lp.charging() || honourUpdateInterval && (remaining <= 0) || lp.connected() && lp.socUpdated.IsZero()
+	return false
 }
 
 // publish state of charge, remaining charge duration and range
