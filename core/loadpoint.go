@@ -1304,29 +1304,31 @@ func (lp *Loadpoint) publishChargeProgress() {
 
 // socPollAllowed validates charging state against polling mode
 func (lp *Loadpoint) socPollAllowed() bool {
+	// always update soc when charging
 	if lp.charging() {
-		// always update Soc when charging
 		lp.didChargeOnLastSocUpdate = true
 		return true
 	}
 
+	// update if connected and soc unknown
 	if lp.connected() && lp.socUpdated.IsZero() {
-		// update if connected and no Soc is known
 		return true
 	}
 
 	remaining := lp.Soc.Poll.Interval - lp.clock.Since(lp.socUpdated)
 
 	honourUpdateInterval := lp.Soc.Poll.Mode == pollAlways ||
-		lp.Soc.Poll.Mode == pollConnected && lp.connected() ||
-		// for mode charging allow one last Soc update if did charge previously to not rely on Soc estimator too much
-		lp.Soc.Poll.Mode == pollCharging && lp.didChargeOnLastSocUpdate && lp.connected()
+		lp.connected() && (lp.Soc.Poll.Mode == pollConnected ||
+			// for mode charging allow one last soc update if did charge previously to not rely on soc estimator too much
+			lp.Soc.Poll.Mode == pollCharging && lp.didChargeOnLastSocUpdate)
 
-	if honourUpdateInterval && remaining > 0 {
-		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
-	} else if honourUpdateInterval && (remaining <= 0) {
-		lp.didChargeOnLastSocUpdate = false
-		return true
+	if honourUpdateInterval {
+		if remaining > 0 {
+			lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
+		} else {
+			lp.didChargeOnLastSocUpdate = false
+			return true
+		}
 	}
 
 	return false
