@@ -95,7 +95,7 @@ func initConfig() {
 	// register all known config keys
 	flat, _ := flatten.Flatten(structs.Map(conf), "", flatten.DotStyle)
 	for _, v := range maps.Keys(flat) {
-		viper.BindEnv(v)
+		_ = viper.BindEnv(v)
 	}
 
 	// print version
