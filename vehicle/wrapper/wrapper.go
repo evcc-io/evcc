@@ -68,11 +68,6 @@ func (v *Wrapper) Features() []api.Feature {
 	return []api.Feature{api.Offline}
 }
 
-// Features implements the api.FeatureDescriber interface
-func (v *Wrapper) Has(f api.Feature) bool {
-	return f == api.Offline
-}
-
 var _ api.Battery = (*Wrapper)(nil)
 
 // Soc implements the api.Battery interface

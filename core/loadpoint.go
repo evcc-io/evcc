@@ -560,6 +560,16 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
+	// charger features
+	for _, f := range []api.Feature{api.FixedConnection} {
+		lp.publishChargerFeature(f)
+	}
+
+	// charger icon
+	if c, ok := lp.charger.(api.IconDescriber); ok {
+		lp.publish(vehicleIcon, c.Icon())
+	}
+
 	// assign and publish default vehicle
 	if lp.defaultVehicle != nil {
 		lp.setActiveVehicle(lp.defaultVehicle)
@@ -1036,14 +1046,6 @@ func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	return false
 }
 
-// coordinatedVehicles is the slice of vehicles from the coordinator
-func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
-	if lp.coordinator == nil {
-		return nil
-	}
-	return lp.coordinator.GetVehicles()
-}
-
 // TODO move up to timer functions
 func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action string) {
 	timer := lp.pvTimer
@@ -1317,24 +1319,23 @@ func (lp *Loadpoint) socPollAllowed() bool {
 	return lp.charging() || honourUpdateInterval && (remaining <= 0) || lp.connected() && lp.socUpdated.IsZero()
 }
 
-// checks if the connected charger can provide Soc to the connected vehicle
-func (lp *Loadpoint) socProvidedByCharger() bool {
-	if charger, ok := lp.charger.(api.Battery); ok {
-		if _, err := charger.Soc(); err == nil {
-			return true
-		}
-	}
-	return false
-}
-
 // publish state of charge, remaining charge duration and range
 func (lp *Loadpoint) publishSocAndRange() {
+	soc, err := lp.chargerSoc()
+
 	// guard for socEstimator removed by api
 	if lp.socEstimator == nil {
+		// This is a workaround for heaters. Without vehicle, the soc estimator is not initialized.
+		// We need to check if the charger can provide soc and use it if available.
+		if err == nil {
+			lp.vehicleSoc = soc
+			lp.publish(vehicleSoc, lp.vehicleSoc)
+		}
+
 		return
 	}
 
-	if lp.socPollAllowed() || lp.socProvidedByCharger() {
+	if err == nil || lp.socPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := lp.socEstimator.Soc(lp.getChargedEnergy())
@@ -1348,7 +1349,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 			return
 		}
 
-		lp.vehicleSoc = math.Trunc(f)
+		lp.vehicleSoc = f
 		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
 		lp.publish(vehicleSoc, lp.vehicleSoc)
 
@@ -1445,7 +1446,7 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 	lp.publish("enabled", lp.enabled)
 
 	// identify connected vehicle
-	if lp.connected() {
+	if lp.connected() && !lp.chargerHasFeature(api.FixedConnection) {
 		// read identity and run associated action
 		lp.identifyVehicle()
 
