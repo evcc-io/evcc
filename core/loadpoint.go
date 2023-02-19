@@ -435,7 +435,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	}
 
 	// set default or start detection
-	lp.vehicleDefaultOrDetect()
+	if !lp.chargerHasFeature(api.FixedConnection) {
+		lp.vehicleDefaultOrDetect()
+	}
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()

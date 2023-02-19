@@ -140,6 +140,9 @@ export default {
 		chargeDuration: Number,
 		charging: Boolean,
 
+		// charger
+		chargerFeatureFixedConnection: Boolean,
+
 		// vehicle
 		connected: Boolean,
 		// charging: Boolean,
@@ -194,6 +197,9 @@ export default {
 		};
 	},
 	computed: {
+		hideTitle: function () {
+			return this.chargerFeatureFixedConnection;
+		},
 		phasesProps: function () {
 			return this.collectProps(Phases);
 		},

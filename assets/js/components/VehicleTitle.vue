@@ -50,6 +50,7 @@ export default {
 	components: { VehicleOptions, VehicleIcon },
 	props: {
 		id: [String, Number],
+		hideTitle: Boolean,
 		vehiclePresent: Boolean,
 		vehicleTitle: String,
 		vehicleIcon: String,
@@ -70,6 +71,9 @@ export default {
 			return null;
 		},
 		name() {
+			if (this.hideTitle) {
+				return "";
+			}
 			if (this.vehiclePresent || this.parked) {
 				return this.vehicleTitle || this.$t("main.vehicle.fallbackName");
 			}

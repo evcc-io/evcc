@@ -84,6 +84,7 @@ export default {
 	props: {
 		id: [String, Number],
 		connected: Boolean,
+		hideTitle: Boolean,
 		vehiclePresent: Boolean,
 		vehicleSoc: Number,
 		vehicleTargetSoc: Number,
