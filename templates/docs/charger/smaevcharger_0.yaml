@@ -4,7 +4,7 @@ product:
 capabilities: ["mA"]
 requirements: ["sponsorship"]
 description: |
-  Der EV Charger muss sich im Modus "Fast" befinden.
+  Der EV Charger muss sich im Modus "Fast" befinden und der Benutzer muss die Rechte "Administrator" haben.
 render:
   - default: |
       type: template
