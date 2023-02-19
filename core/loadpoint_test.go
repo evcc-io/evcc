@@ -680,7 +680,10 @@ func TestSocPoll(t *testing.T) {
 		{pollCharging, api.StatusC, -1, true},
 		{pollCharging, api.StatusC, 0, true},
 		{pollCharging, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollCharging, api.StatusC, tRefresh, true},
+		{pollCharging, api.StatusC, tRefresh, true},   // will set lp.didChargeOnLastSocUpdate
+		{pollCharging, api.StatusB, 0, false},         // last update must wait for interval
+		{pollCharging, api.StatusB, tRefresh, true},   // update once if connected and was charging
+		{pollCharging, api.StatusB, tRefresh, false},  // but only once
 
 		// pollConnected
 		{pollConnected, api.StatusA, -1, false},
