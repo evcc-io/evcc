@@ -9,10 +9,10 @@
 			{{ name }}
 		</span>
 		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
-			<div ref="details" class="fw-normal" data-bs-toggle="tooltip" title=" " @click.stop="">
+			<div ref="details" class="fw-normal" data-bs-toggle="tooltip" @click.stop="">
 				<AnimatedNumber v-if="details !== undefined" :to="details" :format="detailsFmt" />
 			</div>
-			<div ref="power" class="power" data-bs-toggle="tooltip" title=" " @click.stop="">
+			<div ref="power" class="power" data-bs-toggle="tooltip" @click.stop="">
 				<AnimatedNumber :to="power" :format="kw" />
 			</div>
 		</span>
@@ -101,7 +101,7 @@ export default {
 				return;
 			}
 			if (!instance) {
-				instance = new Tooltip(ref, { html: true });
+				instance = new Tooltip(ref, { html: true, title: " " });
 			}
 			const html = `<div class="text-end">${content.join("<br/>")}</div>`;
 			instance.setContent({ ".tooltip-inner": html });
