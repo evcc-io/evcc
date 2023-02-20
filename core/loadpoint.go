@@ -570,7 +570,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	// charger icon
 	if c, ok := lp.charger.(api.IconDescriber); ok {
-		lp.publish(vehicleIcon, c.Icon())
+		lp.publish(chargerIcon, c.Icon())
+	} else {
+		lp.publish(chargerIcon, nil)
 	}
 
 	// assign and publish default vehicle

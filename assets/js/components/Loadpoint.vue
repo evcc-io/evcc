@@ -3,6 +3,7 @@
 		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate">
+					<VehicleIcon :name="chargerIcon" class="me-2 flex-shrink-0" />
 					{{ title || $t("main.loadpoint.fallbackName") }}
 				</h3>
 				<LoadpointSettingsButton
@@ -114,6 +115,7 @@ import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import LoadpointSettingsButton from "./LoadpointSettingsButton.vue";
 import LoadpointSettingsModal from "./LoadpointSettingsModal.vue";
+import VehicleIcon from "./VehicleIcon";
 
 export default {
 	name: "Loadpoint",
@@ -124,6 +126,7 @@ export default {
 		LabelAndValue,
 		LoadpointSettingsButton,
 		LoadpointSettingsModal,
+		VehicleIcon,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -142,6 +145,7 @@ export default {
 
 		// charger
 		chargerFeatureFixedConnection: Boolean,
+		chargerIcon: String,
 
 		// vehicle
 		connected: Boolean,
