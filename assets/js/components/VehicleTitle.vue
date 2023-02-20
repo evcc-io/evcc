@@ -50,12 +50,10 @@ export default {
 	components: { VehicleOptions, VehicleIcon },
 	props: {
 		id: [String, Number],
-		hideTitle: Boolean,
 		vehiclePresent: Boolean,
 		vehicleTitle: String,
 		vehicleIcon: String,
 		vehicleDetectionActive: Boolean,
-		parked: Boolean,
 		connected: Boolean,
 		vehicles: { type: Array, default: () => [] },
 	},
@@ -65,16 +63,13 @@ export default {
 			if (this.vehicleDetectionActive) {
 				return "refresh";
 			}
-			if (this.connected || this.parked) {
+			if (this.connected) {
 				return "vehicle";
 			}
 			return null;
 		},
 		name() {
-			if (this.hideTitle) {
-				return "";
-			}
-			if (this.vehiclePresent || this.parked) {
+			if (this.vehiclePresent) {
 				return this.vehicleTitle || this.$t("main.vehicle.fallbackName");
 			}
 			if (this.connected) {

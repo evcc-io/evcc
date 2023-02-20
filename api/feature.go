@@ -15,5 +15,5 @@ const (
 	_ Feature = iota
 	Offline
 	CoarseCurrent
-	FixedConnection
+	IntegratedVehicle
 )

@@ -1,10 +1,16 @@
 <template>
-	<div class="loadpoint pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
+	<div class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
 		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
-				<h3 class="me-2 mb-0 text-truncate">
-					<VehicleIcon :name="chargerIcon" class="me-2 flex-shrink-0" />
-					{{ title || $t("main.loadpoint.fallbackName") }}
+				<h3 class="me-2 mb-0 text-truncate d-flex">
+					<VehicleIcon
+						v-if="chargerIcon"
+						:name="chargerIcon"
+						class="me-2 flex-shrink-0"
+					/>
+					<div class="text-truncate">
+						{{ title || $t("main.loadpoint.fallbackName") }}
+					</div>
 				</h3>
 				<LoadpointSettingsButton
 					v-if="settingsButtonVisible"
@@ -92,6 +98,7 @@
 		</div>
 		<hr class="divider" />
 		<Vehicle
+			class="flex-grow-1 d-flex flex-column justify-content-end"
 			v-bind="vehicle"
 			@target-soc-updated="setTargetSoc"
 			@target-energy-updated="setTargetEnergy"
@@ -144,7 +151,7 @@ export default {
 		charging: Boolean,
 
 		// charger
-		chargerFeatureFixedConnection: Boolean,
+		chargerFeatureIntegratedVehicle: Boolean,
 		chargerIcon: String,
 
 		// vehicle
@@ -201,8 +208,8 @@ export default {
 		};
 	},
 	computed: {
-		hideTitle: function () {
-			return this.chargerFeatureFixedConnection;
+		integratedVehicle: function () {
+			return this.chargerFeatureIntegratedVehicle;
 		},
 		phasesProps: function () {
 			return this.collectProps(Phases);
