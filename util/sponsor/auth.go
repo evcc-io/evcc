@@ -14,7 +14,7 @@ import (
 
 var (
 	Subject, Token string
-	Valid          time.Time
+	ExpiresAt      time.Time
 )
 
 func IsAuthorized() bool {
@@ -37,7 +37,7 @@ func ConfigureSponsorship(token string) error {
 	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
-		Valid = res.Valid.AsTime()
+		ExpiresAt = res.ExpiresAt.AsTime()
 		Token = token
 	}
 

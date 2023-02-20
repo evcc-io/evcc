@@ -261,7 +261,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		// expose sponsor to UI
 		if sponsor.Subject != "" {
 			valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}
-			if validDuration := time.Until(sponsor.Valid); validDuration < 30*24*time.Hour {
+			if validDuration := time.Until(sponsor.ExpiresAt); validDuration < 30*24*time.Hour {
 				valueChan <- util.Param{Key: "sponsorValid", Val: validDuration}
 			}
 		}
