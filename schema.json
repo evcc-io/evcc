@@ -222,6 +222,9 @@
           "resetOnDisconnect": {
             "type": "boolean"
           },
+          "inGrid": {
+            "type": "boolean"
+          },
           "charger": {
             "type": "string"
           },

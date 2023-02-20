@@ -111,6 +111,7 @@ type Loadpoint struct {
 	Soc               SocConfig
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
+	InGrid            bool `mapstructure:"inGrid"`
 	onDisconnect      api.ActionConfig
 	targetEnergy      float64 // Target charge energy for dumb vehicles in kWh
 

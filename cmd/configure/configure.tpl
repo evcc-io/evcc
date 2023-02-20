@@ -58,6 +58,7 @@ loadpoints:
   mincurrent: {{ .MinCurrent }}
   maxcurrent: {{ .MaxCurrent }}
   resetOnDisconnect: {{ .ResetOnDisconnect }}
+  inGrid: {{ .inGrid }}
 {{-   end }}
 {{- end }}
 

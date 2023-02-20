@@ -607,8 +607,12 @@ func (site *Site) update(lp Updater) {
 	// update all loadpoint's charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
+		// no harm in updating all counters
 		lp.UpdateChargePower()
-		totalChargePower += lp.GetChargePower()
+		// but only count those within our grid
+		if lp.InGrid {
+			totalChargePower += lp.GetChargePower()
+		}
 	}
 
 	if sitePower, err := site.sitePower(totalChargePower); err == nil {

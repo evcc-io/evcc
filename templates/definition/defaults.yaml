@@ -263,6 +263,12 @@ params:
     help:
       en: The SKI of the wallbox, can usually be found on the web interface of the wallbox
       de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
+  - name: inGrid
+    description:
+      de: "Gibt an ob der Charger innerhalb des Grids (Haus-Meter) erfasst wird (Default=True)"
+      en: "Determines whether the charging power is counted within the house grid (default=true)"
+    default: true
+    type: bool
 
 presets:
   vehiclebase:
