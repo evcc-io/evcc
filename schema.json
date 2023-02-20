@@ -231,6 +231,18 @@
           "meter": {
             "type": "string"
           },
+          "minCurrent": {
+            "type": "integer"
+          },
+          "maxCurrent": {
+            "type": "integer"
+          },
+          "phases": {
+            "type": "integer"
+          },
+          "priority": {
+            "type": "integer"
+          },
           "vehicle": {
             "type": "string"
           },
@@ -252,15 +264,6 @@
                 "type": "boolean"
               }
             }
-          },
-          "phases": {
-            "type": "integer"
-          },
-          "minCurrent": {
-            "type": "integer"
-          },
-          "maxCurrent": {
-            "type": "integer"
           },
           "guardDuration": {
             "$ref": "#/definitions/duration"

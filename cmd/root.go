@@ -21,6 +21,9 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/fatih/structs"
+	"github.com/jeremywohl/flatten"
+	"golang.org/x/exp/maps"
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -88,6 +91,12 @@ func initConfig() {
 	viper.SetEnvPrefix("evcc")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv() // read in environment variables that match
+
+	// register all known config keys
+	flat, _ := flatten.Flatten(structs.Map(conf), "", flatten.DotStyle)
+	for _, v := range maps.Keys(flat) {
+		_ = viper.BindEnv(v)
+	}
 
 	// print version
 	util.LogLevel("info", nil)
