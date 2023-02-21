@@ -342,6 +342,13 @@ func (site *Site) updateMeters() error {
 		err := retry.Do(site.updateMeter(meter, power), retryOptions...)
 
 		if err == nil {
+			// we have a (grid)power rating. now we need to decide whether
+			// we need to add the charger depending on the loadpoint's inGrid flag
+			for _, lp := range site.loadpoints {
+				if !lp.InGrid {
+					*power += lp.chargePower
+				}
+			}
 			site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
 			site.publish(name+"Power", *power)
 		} else {
