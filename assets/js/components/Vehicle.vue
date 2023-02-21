@@ -1,11 +1,12 @@
 <template>
 	<div class="vehicle pt-4">
 		<VehicleTitle
+			v-if="!integratedDevice"
 			v-bind="vehicleTitleProps"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 		/>
-		<VehicleStatus v-if="!parked" v-bind="vehicleStatus" class="mb-2" />
+		<VehicleStatus v-bind="vehicleStatus" class="mb-2" />
 		<VehicleSoc
 			v-bind="vehicleSocProps"
 			class="mt-2 mb-4"
@@ -84,6 +85,7 @@ export default {
 	props: {
 		id: [String, Number],
 		connected: Boolean,
+		integratedDevice: Boolean,
 		vehiclePresent: Boolean,
 		vehicleSoc: Number,
 		vehicleTargetSoc: Number,
@@ -107,7 +109,6 @@ export default {
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
-		parked: Boolean,
 		vehicles: Array,
 	},
 	emits: [

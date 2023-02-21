@@ -5,17 +5,20 @@ import "github.com/evcc-io/evcc/api"
 // switchSocket implements the api.Charger Status and CurrentPower methods
 // using basic generic switch socket functions
 type switchSocket struct {
+	*embed
 	enabled      func() (bool, error)
 	currentPower func() (float64, error)
 	standbypower float64
 }
 
 func NewSwitchSocket(
+	embed *embed,
 	enabled func() (bool, error),
 	currentPower func() (float64, error),
 	standbypower float64,
 ) *switchSocket {
 	return &switchSocket{
+		embed:        embed,
 		enabled:      enabled,
 		currentPower: currentPower,
 		standbypower: standbypower,
