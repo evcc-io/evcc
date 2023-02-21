@@ -624,12 +624,11 @@ func (site *Site) update(lp Updater) {
 	// update all loadpoint's charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
-		// no harm in updating all counters
 		lp.UpdateChargePower()
-		// but only count those within our grid
-		if lp.InGrid {
-			totalChargePower += lp.GetChargePower()
-		}
+		// only count those within our grid
+		// if lp.InGrid {
+		totalChargePower += lp.GetChargePower()
+		// }
 		site.prioritizer.UpdateChargePowerFlexibility(lp)
 	}
 
