@@ -137,9 +137,9 @@ type Authorizer interface {
 type Vehicle interface {
 	Battery
 	BatteryCapacity
+	IconDescriber
 	Title() string
 	SetTitle(string)
-	Icon() string
 	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
@@ -210,10 +210,14 @@ type AuthProvider interface {
 	LogoutHandler() http.HandlerFunc
 }
 
+// IconDescriber optionally provides an icon
+type IconDescriber interface {
+	Icon() string
+}
+
 // FeatureDescriber optionally provides a list of supported non-api features
 type FeatureDescriber interface {
 	Features() []Feature
-	Has(Feature) bool
 }
 
 // CsvWriter converts to csv

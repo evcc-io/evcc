@@ -54,5 +54,14 @@ const state = reactive({
 				:chargePower="0"
 			/>
 		</Variant>
+		<Variant title="charger icon, no vehicle">
+			<Loadpoint
+				v-bind="state"
+				chargerIcon="heater"
+				title="Heating device with long name"
+				mode="now"
+				chargerFeatureIntegratedDevice
+			/>
+		</Variant>
 	</Story>
 </template>

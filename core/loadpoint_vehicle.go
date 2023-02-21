@@ -9,12 +9,21 @@ import (
 	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/provider"
+	"golang.org/x/exp/slices"
 )
 
 const (
 	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
 )
+
+// coordinatedVehicles is the slice of vehicles from the coordinator
+func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
+	if lp.coordinator == nil {
+		return nil
+	}
+	return lp.coordinator.GetVehicles()
+}
 
 // setVehicleIdentifier updated the vehicle id as read from the charger
 func (lp *Loadpoint) setVehicleIdentifier(id string) {
@@ -191,20 +200,20 @@ func (lp *Loadpoint) unpublishVehicle() {
 	lp.setRemainingEnergy(0)
 	lp.setRemainingDuration(0)
 
-	lp.vehiclePublishFeature(api.Offline)
+	lp.publishVehicleFeature(api.Offline)
 }
 
 // vehicleHasFeature checks availability of vehicle feature
 func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
 	v, ok := lp.vehicle.(api.FeatureDescriber)
 	if ok {
-		ok = v.Has(f)
+		ok = slices.Contains(v.Features(), f)
 	}
 	return ok
 }
 
-// vehiclePublishFeature availability of vehicle features
-func (lp *Loadpoint) vehiclePublishFeature(f api.Feature) {
+// publishVehicleFeature availability of vehicle features
+func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
 	lp.publish("vehicleFeature"+f.String(), lp.vehicleHasFeature(f))
 }
 

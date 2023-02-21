@@ -23,6 +23,7 @@ func init() {
 // NewTPLinkFromConfig creates a TP-Link charger from generic config
 func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
+		embed        `mapstructure:",squash"`
 		URI          string
 		StandbyPower float64
 	}
@@ -35,11 +36,11 @@ func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	return NewTPLink(cc.URI, cc.StandbyPower)
+	return NewTPLink(cc.embed, cc.URI, cc.StandbyPower)
 }
 
 // NewTPLink creates TP-Link charger
-func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
+func NewTPLink(embed embed, uri string, standbypower float64) (*TPLink, error) {
 	conn, err := tplink.NewConnection(uri)
 	if err != nil {
 		return nil, err
@@ -49,7 +50,7 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
 	return c, nil
 }

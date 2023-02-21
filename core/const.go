@@ -7,16 +7,17 @@ const (
 	phasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
 	phasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
 
-	vehicleDetectionActive = "vehicleDetectionActive" // vehicle detection is active (bool)
+	chargerIcon = "chargerIcon" // charger icon for ui
 
-	vehicleOdometer  = "vehicleOdometer"  // vehicle odometer
-	vehicleRange     = "vehicleRange"     // vehicle range
-	vehicleSoc       = "vehicleSoc"       // vehicle soc
-	vehicleTargetSoc = "vehicleTargetSoc" // vehicle soc limit
-	vehicleCapacity  = "vehicleCapacity"  // vehicle battery capacity
-	vehicleIcon      = "vehicleIcon"      // vehicle icon for ui
-	vehiclePresent   = "vehiclePresent"   // vehicle detected
-	vehicleTitle     = "vehicleTitle"     // vehicle title
+	vehicleCapacity        = "vehicleCapacity"        // vehicle battery capacity
+	vehicleDetectionActive = "vehicleDetectionActive" // vehicle detection active
+	vehicleIcon            = "vehicleIcon"            // vehicle icon for ui
+	vehicleOdometer        = "vehicleOdometer"        // vehicle odometer
+	vehiclePresent         = "vehiclePresent"         // vehicle detected
+	vehicleRange           = "vehicleRange"           // vehicle range
+	vehicleSoc             = "vehicleSoc"             // vehicle soc
+	vehicleTargetSoc       = "vehicleTargetSoc"       // vehicle soc limit
+	vehicleTitle           = "vehicleTitle"           // vehicle title
 
 	minCurrent              = "minCurrent"              // charger min current
 	maxCurrent              = "maxCurrent"              // charger max current

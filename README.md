@@ -48,6 +48,7 @@ To build evcc from source, [Go][1] 1.20 and [Node][2] 18 are required.
 Build and run go backend. The UI becomes available at http://127.0.0.1:7070/
 
 ```sh
+make ui
 make
 ./evcc
 ```
