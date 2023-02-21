@@ -151,7 +151,7 @@ export default {
 		charging: Boolean,
 
 		// charger
-		chargerFeatureIntegratedVehicle: Boolean,
+		chargerFeatureIntegratedDevice: Boolean,
 		chargerIcon: String,
 
 		// vehicle
@@ -208,8 +208,8 @@ export default {
 		};
 	},
 	computed: {
-		integratedVehicle: function () {
-			return this.chargerFeatureIntegratedVehicle;
+		integratedDevice: function () {
+			return this.chargerFeatureIntegratedDevice;
 		},
 		phasesProps: function () {
 			return this.collectProps(Phases);

@@ -31,7 +31,7 @@ const state = reactive({
 		loadpoint({ title: "Carport" }),
 		loadpoint({
 			title: "Water Heater",
-			chargerFeatureIntegratedVehicle: true,
+			chargerFeatureIntegratedDevice: true,
 			chargerIcon: "waterheater",
 		}),
 	],

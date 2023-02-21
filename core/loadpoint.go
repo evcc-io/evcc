@@ -436,7 +436,7 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	}
 
 	// set default or start detection
-	if !lp.chargerHasFeature(api.IntegratedVehicle) {
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
 	}
 
@@ -564,7 +564,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
 	// charger features
-	for _, f := range []api.Feature{api.IntegratedVehicle} {
+	for _, f := range []api.Feature{api.IntegratedDevice} {
 		lp.publishChargerFeature(f)
 	}
 
@@ -1468,7 +1468,7 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 	lp.publish("enabled", lp.enabled)
 
 	// identify connected vehicle
-	if lp.connected() && !lp.chargerHasFeature(api.IntegratedVehicle) {
+	if lp.connected() && !lp.chargerHasFeature(api.IntegratedDevice) {
 		// read identity and run associated action
 		lp.identifyVehicle()
 

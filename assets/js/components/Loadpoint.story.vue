@@ -60,7 +60,7 @@ const state = reactive({
 				chargerIcon="heater"
 				title="Heating device with long name"
 				mode="now"
-				chargerFeatureIntegratedVehicle
+				chargerFeatureIntegratedDevice
 			/>
 		</Variant>
 	</Story>

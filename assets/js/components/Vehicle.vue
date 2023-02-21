@@ -1,7 +1,7 @@
 <template>
 	<div class="vehicle pt-4">
 		<VehicleTitle
-			v-if="!integratedVehicle"
+			v-if="!integratedDevice"
 			v-bind="vehicleTitleProps"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
@@ -85,7 +85,7 @@ export default {
 	props: {
 		id: [String, Number],
 		connected: Boolean,
-		integratedVehicle: Boolean,
+		integratedDevice: Boolean,
 		vehiclePresent: Boolean,
 		vehicleSoc: Number,
 		vehicleTargetSoc: Number,
