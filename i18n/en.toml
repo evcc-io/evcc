@@ -81,6 +81,10 @@ pvExport = "Grid export"
 pvProduction = "Production"
 selfConsumption = "Self-consumption"
 
+[main.heater]
+temperature = "Temperature"
+targetTemperature = "Max. Temperature"
+
 [main.loadpoint]
 charged = "Charged"
 duration = "Duration"

@@ -1,5 +1,5 @@
 <template>
-	<LabelAndValue class="flex-grow-1" :label="$t('main.vehicle.targetSoc')" align="end">
+	<LabelAndValue class="flex-grow-1" :label="label" align="end">
 		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
 			<label class="position-relative">
 				<select :value="targetSoc" class="custom-select" @change="change">
@@ -28,6 +28,8 @@ export default {
 	name: "TargetSocSelect",
 	components: { LabelAndValue, AnimatedNumber },
 	props: {
+		label: String,
+		unit: String,
 		targetSoc: Number,
 		rangePerSoc: Number,
 	},
@@ -61,7 +63,7 @@ export default {
 			return null;
 		},
 		formatSoc: function (value) {
-			return `${Math.round(value)}%`;
+			return `${Math.round(value)}${this.unit}`;
 		},
 		formatKm: function (value) {
 			return `${Math.round(value)} ${distanceUnit()}`;

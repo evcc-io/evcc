@@ -1,12 +1,11 @@
 <template>
 	<div class="vehicle pt-4">
 		<VehicleTitle
-			v-if="!integratedDevice"
 			v-bind="vehicleTitleProps"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 		/>
-		<VehicleStatus v-bind="vehicleStatus" class="mb-2" />
+		<VehicleStatus v-if="!parked" v-bind="vehicleStatus" class="mb-2" />
 		<VehicleSoc
 			v-bind="vehicleSocProps"
 			class="mt-2 mb-4"
@@ -18,9 +17,8 @@
 			<LabelAndValue
 				v-if="socBasedCharging"
 				class="flex-grow-1"
-				:label="$t('main.vehicle.vehicleSoc')"
-				:value="vehicleSoc ? `${Math.round(vehicleSoc)}%` : '--'"
-				:extraValue="range ? `${Math.round(range)} ${rangeUnit}` : null"
+				:label="$t('main.heater.temperature')"
+				:value="vehicleSoc ? `${vehicleSoc}°C` : '--'"
 				align="start"
 			/>
 			<LabelAndValue
@@ -31,20 +29,19 @@
 				:extraValue="chargedSoc"
 				align="start"
 			/>
-			<TargetCharge
+			<!-- <TargetCharge
 				class="flex-grow-1 text-center target-charge"
 				v-bind="targetCharge"
 				:disabled="targetChargeDisabled"
 				@target-time-updated="setTargetTime"
 				@target-time-removed="removeTargetTime"
-			/>
+			/> -->
 			<TargetSocSelect
 				v-if="socBasedCharging"
 				class="flex-grow-1 text-end"
-				unit="%"
-				:label="$t('main.vehicle.targetSoc')"
+				unit="°C"
+				:label="$t('main.heater.targetTemperature')"
 				:target-soc="displayTargetSoc"
-				:range-per-soc="rangePerSoc"
 				@target-soc-updated="targetSocUpdated"
 			/>
 			<TargetEnergySelect
@@ -67,19 +64,19 @@ import LabelAndValue from "./LabelAndValue.vue";
 import VehicleTitle from "./VehicleTitle.vue";
 import VehicleSoc from "./VehicleSoc.vue";
 import VehicleStatus from "./VehicleStatus.vue";
-import TargetCharge from "./TargetCharge.vue";
+// import TargetCharge from "./TargetCharge.vue";
 import TargetSocSelect from "./TargetSocSelect.vue";
 import TargetEnergySelect from "./TargetEnergySelect.vue";
 import { distanceUnit, distanceValue } from "../units";
 
 export default {
-	name: "Vehicle",
+	name: "Heater",
 	components: {
 		VehicleTitle,
 		VehicleSoc,
 		VehicleStatus,
 		LabelAndValue,
-		TargetCharge,
+		// TargetCharge,
 		TargetSocSelect,
 		TargetEnergySelect,
 	},
@@ -87,19 +84,15 @@ export default {
 	props: {
 		id: [String, Number],
 		connected: Boolean,
-		integratedDevice: Boolean,
-		vehiclePresent: Boolean,
 		vehicleSoc: Number,
 		vehicleTargetSoc: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoc: Number,
-		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
-		vehicleTitle: String,
-		vehicleIcon: String,
+		// vehicleTitle: String,
+		// vehicleIcon: String,
 		vehicleCapacity: Number,
-		socBasedCharging: Boolean,
 		planActive: Boolean,
 		planProjectedStart: String,
 		targetTime: String,
@@ -111,8 +104,7 @@ export default {
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
-		guardAction: String,
-		guardRemainingInterpolated: Number,
+		parked: Boolean,
 		vehicles: Array,
 	},
 	emits: [
@@ -126,6 +118,12 @@ export default {
 	data() {
 		return {
 			displayTargetSoc: this.targetSoc,
+			// TODO
+			vehicleIcon: "heater",
+			vehiclePresent: true,
+			vehicleDetectionActive: false,
+			vehicleTitle: " ",
+			socBasedCharging: true,
 		};
 	},
 	computed: {
@@ -138,9 +136,9 @@ export default {
 		vehicleTitleProps: function () {
 			return this.collectProps(VehicleTitle);
 		},
-		targetCharge: function () {
-			return this.collectProps(TargetCharge);
-		},
+		// targetCharge: function () {
+		// 	return this.collectProps(TargetCharge);
+		// },
 		range: function () {
 			return distanceValue(this.vehicleRange);
 		},

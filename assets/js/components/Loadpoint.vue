@@ -97,7 +97,16 @@
 			/>
 		</div>
 		<hr class="divider" />
+		<Heater
+			v-if="chargerFeatureHeating"
+			v-bind="vehicle"
+			@target-soc-updated="setTargetSoc"
+			@target-energy-updated="setTargetEnergy"
+			@target-time-updated="setTargetTime"
+			@target-time-removed="removeTargetTime"
+		/>
 		<Vehicle
+			v-else
 			class="flex-grow-1 d-flex flex-column justify-content-end"
 			v-bind="vehicle"
 			@target-soc-updated="setTargetSoc"
@@ -115,6 +124,7 @@ import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/adjust";
 import api from "../api";
 import Mode from "./Mode.vue";
+import Heater from "./Heater.vue";
 import Vehicle from "./Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "./LabelAndValue.vue";
@@ -128,6 +138,7 @@ export default {
 	name: "Loadpoint",
 	components: {
 		Mode,
+		Heater,
 		Vehicle,
 		Phases,
 		LabelAndValue,
@@ -151,13 +162,12 @@ export default {
 		charging: Boolean,
 
 		// charger
-		chargerFeatureIntegratedDevice: Boolean,
-		chargerIcon: String,
+		connected: Boolean,
+		chargerFeatureFixedConnection: Boolean,
+		chargerFeatureHeating: Boolean,
+		enabled: Boolean,
 
 		// vehicle
-		connected: Boolean,
-		// charging: Boolean,
-		enabled: Boolean,
 		vehicleDetectionActive: Boolean,
 		vehiclePresent: Boolean,
 		vehicleRange: Number,

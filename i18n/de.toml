@@ -81,6 +81,10 @@ pvExport = "Einspeisung"
 pvProduction = "Erzeugung"
 selfConsumption = "Eigenverbrauch"
 
+[main.heater]
+temperature = "Temperatur"
+targetTemperature = "Max. Temperatur"
+
 [main.loadpoint]
 charged = "Geladen"
 duration = "Dauer"
