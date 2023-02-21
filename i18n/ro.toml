@@ -72,6 +72,7 @@ vehicles = "Parcare"
 battery = "Baterie"
 batteryCharge = "Încărcare baterie"
 batteryDischarge = "Descărcare baterie"
+batteryTooltip = "{energy} din {total} ({soc}%)"
 gridImport = "Folosirea rețelei"
 homePower = "Consum"
 loadpoints = "Încărcător| Încărcător | {count} încărcătoare"
@@ -79,7 +80,6 @@ noEnergy = "Lipsă date contor"
 pvExport = "Export in rețea"
 pvProduction = "Producție"
 selfConsumption = "Consum propriu"
-batteryTooltip = "{energy} din {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Încărcat"
@@ -136,26 +136,33 @@ planPeriodValue = "{start} la {end}"
 planUnknown = "necunoscut"
 setTargetTime = "nimic"
 targetIsInThePast = "Alege o dată in viitor, DORELE."
+targetIsTooFarInTheFuture = "Vom ajusta planul de îndată ce vom avea mai multe informații despre viitor."
 title = "Timp dorit"
 today = "astăzi"
 tomorrow = "mâine"
 update = "Actualizare"
-targetIsTooFarInTheFuture = “Vom ajusta planul de îndată ce vom avea mai multe informații despre viitor.”
+
+[main.targetChargePlan]
+chargeDuration = "Timp de încărcare"
+co2Label = "Emisie CO₂ Ø"
+priceLabel = "Prețul energiei"
+timeRange = "{day} {range} h"
+unknownPrice = "încă necunoscut"
 
 [main.targetEnergy]
 label = "Limita"
 noLimit = "nimic"
 
 [main.vehicle]
+addVehicle = "Adăugați un vehicul"
 changeVehicle = "Schimbă vehiculul"
 detectionActive = "Detectare vehicul…"
 fallbackName = "vehicul"
+moreActions = "Mai multe acțiuni"
 none = "Lipsă Vehicul"
 targetSoc = "Limită"
 unknown = "Vehicul musafir"
 vehicleSoc = "Încărcare"
-addVehicle = "Adăugați un vehicul"
-moreActions = "Mai multe acțiuni"
 
 [main.vehicleSoc]
 charging = "încarcă"
@@ -221,6 +228,16 @@ vehicle = "Vehicul"
 [settings]
 title = "Configurare"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Detalii rețea"
+none = "nimic"
+price = "preț"
+
+[settings.hiddenFeatures]
+label = "Experimentală"
+value = "Arată caracteristice experimentale."
+
 [settings.language]
 auto = "Automat"
 label = "Limba"
@@ -250,24 +267,6 @@ lineError = "Eroare la {0}."
 lineErrorLink = "linia {0}"
 restartButton = "Restart"
 title = "Eroare la pornire încărcare"
-
-
-[settings.gridDetails]
-co2 = "CO₂"
-label = "Detalii rețea"
-none = "nimic"
-price = "preț"
-
-[main.targetChargePlan]
-chargeDuration = "Timp de încărcare"
-priceLabel = "Prețul energiei"
-co2Label = "Emisie CO₂ Ø"
-timeRange = "{day} {range} h"
-unknownPrice = "încă necunoscut"
-
-[settings.hiddenFeatures]
-value = "Arată caracteristice experimentale."
-label = "Experimentală"
 
 [vehicleSettings]
 cancel = "Anulați"
