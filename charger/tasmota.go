@@ -29,6 +29,7 @@ func init() {
 // NewTasmotaFromConfig creates a Tasmota charger from generic config
 func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
+		embed        `mapstructure:",squash"`
 		URI          string
 		User         string
 		Password     string
@@ -42,11 +43,11 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewTasmota(cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
+	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
 }
 
 // NewTasmota creates Tasmota charger
-func NewTasmota(uri, user, password string, channel int, standbypower float64) (*Tasmota, error) {
+func NewTasmota(embed embed, uri, user, password string, channel int, standbypower float64) (*Tasmota, error) {
 	conn, err := tasmota.NewConnection(uri, user, password, channel)
 	if err != nil {
 		return nil, err
@@ -57,7 +58,7 @@ func NewTasmota(uri, user, password string, channel int, standbypower float64) (
 		channel: channel,
 	}
 
-	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
 	return c, c.channelExists(channel)
 }

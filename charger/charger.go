@@ -10,6 +10,7 @@ import (
 
 // Charger is an api.Charger implementation with configurable getters and setters.
 type Charger struct {
+	*embed
 	statusG     func() (string, error)
 	enabledG    func() (bool, error)
 	enableS     func(bool) error
@@ -25,9 +26,11 @@ func init() {
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
+		embed                               `mapstructure:",squash"`
 		Status, Enable, Enabled, MaxCurrent provider.Config
 		Identify, Phases1p3p                *provider.Config
 	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -53,6 +56,8 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	}
 
 	c, err := NewConfigurable(status, enabled, enable, maxcurrent)
+
+	c.embed = &cc.embed
 
 	// decorator phases
 	var phases1p3p func(int) error
@@ -82,6 +87,7 @@ func NewConfigurable(
 	maxCurrentS func(int64) error,
 ) (*Charger, error) {
 	c := &Charger{
+		embed:       new(embed),
 		statusG:     statusG,
 		enabledG:    enabledG,
 		enableS:     enableS,
