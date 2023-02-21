@@ -203,25 +203,26 @@ func configureEEBus(conf map[string]interface{}) error {
 }
 
 // setup messaging
-func configureMessengers(conf messagingConfig, valueChan chan util.Param, cache *util.Cache) (chan push.Event, error) {
-	messageChan := make(chan push.Event, 1)
+func configureMessengers(conf messagingConfig, eventChan <-chan push.Event, valueChan chan util.Param, cache *util.Cache) error {
+	pushHub, err := push.NewHub(conf.Events, cache)
 
-	messageHub, err := push.NewHub(conf.Events, cache)
+	if pushHub != nil {
+		go pushHub.Run(eventChan, valueChan)
+	}
+
 	if err != nil {
-		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
+		return fmt.Errorf("failed configuring push services: %w", err)
 	}
 
 	for _, service := range conf.Services {
 		impl, err := push.NewFromConfig(service.Type, service.Other)
 		if err != nil {
-			return messageChan, fmt.Errorf("failed configuring push service %s: %w", service.Type, err)
+			return fmt.Errorf("failed configuring push service %s: %w", service.Type, err)
 		}
-		messageHub.Add(impl)
+		pushHub.Add(impl)
 	}
 
-	go messageHub.Run(messageChan, valueChan)
-
-	return messageChan, nil
+	return nil
 }
 
 func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {

@@ -27,21 +27,21 @@ type Hub struct {
 	cache       *util.Cache
 }
 
-// NewHub creates push hub with definitions and receiver
+// NewHub creates push hub with definitions and receiver. The hub is always created, even on error.
 func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) {
-	// instantiate all event templates
-	for k, v := range cc {
-		if _, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Title); err != nil {
-			return nil, fmt.Errorf("invalid event title: %s (%w)", k, err)
-		}
-		if _, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Msg); err != nil {
-			return nil, fmt.Errorf("invalid event message: %s (%w)", k, err)
-		}
-	}
-
 	h := &Hub{
 		definitions: cc,
 		cache:       cache,
+	}
+
+	// instantiate all event templates
+	for k, v := range cc {
+		if _, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Title); err != nil {
+			return h, fmt.Errorf("invalid event title: %s (%w)", k, err)
+		}
+		if _, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Msg); err != nil {
+			return h, fmt.Errorf("invalid event message: %s (%w)", k, err)
+		}
 	}
 
 	return h, nil
@@ -72,7 +72,7 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 }
 
 // Run is the Hub's main publishing loop
-func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
+func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 	log := util.NewLogger("push")
 
 	for ev := range events {
@@ -103,7 +103,7 @@ func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
 		}
 
 		for _, sender := range h.sender {
-			if strings.TrimSpace(msg) != "" {
+			if strings.TrimSpace(title)+strings.TrimSpace(msg) != "" {
 				go sender.Send(title, msg)
 			} else {
 				log.DEBUG.Printf("did not send empty message template for %s: %v", ev.Event, err)
