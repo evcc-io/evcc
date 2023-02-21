@@ -11,8 +11,10 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/slices"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
@@ -30,6 +32,33 @@ func parseLogLevels() {
 	}
 
 	util.LogLevel(level, levels)
+}
+
+// pushErrorEvents forwards error events as push messages
+func pushErrorEvents(events chan<- push.Event, valueChan <-chan util.Param) {
+	cache := make(map[string]interface{})
+
+	for p := range valueChan {
+		if !slices.Contains([]string{"warn", "error", "fatal"}, p.Key) {
+			continue
+		}
+
+		// deduplicate
+		if v, ok := cache[p.Key]; ok && v == p.Val {
+			continue
+		}
+		cache[p.Key] = p.Val
+
+		// simplify for users
+		if p.Key == "fatal" {
+			p.Key = "error"
+		}
+
+		events <- push.Event{
+			Event:     p.Key,
+			Loadpoint: p.Loadpoint,
+		}
+	}
 }
 
 // unwrap converts a wrapped error into slice of strings

@@ -231,6 +231,10 @@ messaging:
     guest: # vehicle could not be identified
       title: Unknown vehicle
       msg: Unknown vehicle, guest connected?
+    error: # errors (deduplicated)
+      title: "Error: {{ .error }}"
+    warn: # warnings (deduplicated)
+      title: "Warning: {{ .warn }}"
   services:
   # - type: pushover
   #   app: # app id
