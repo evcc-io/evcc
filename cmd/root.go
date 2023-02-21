@@ -37,8 +37,7 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreErrors = []string{"warn", "error"}        // don't add to cache
-	ignoreMqtt   = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
+	ignoreMqtt = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
