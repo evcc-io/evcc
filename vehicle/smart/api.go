@@ -13,11 +13,11 @@ import (
 
 // https://github.com/TA2k/ioBroker.smart-eq
 
-const ApiURI = "https://oneapp.microservice.smart.com/seqc/v0"
+const ApiURI = "https://oneapp.microservice.smart.mercedes-benz.com/seqc/v0"
 
 var OAuth2Config = &oauth2.Config{
 	ClientID:    "70d89501-938c-4bec-82d0-6abb550b0825",
-	RedirectURL: "https://oneapp.microservice.smart.com",
+	RedirectURL: "https://oneapp.microservice.smart.mercedes-benz.com",
 	Endpoint: oauth2.Endpoint{
 		AuthURL:  mb.OAuthURI + "/as/authorization.oauth2",
 		TokenURL: mb.OAuthURI + "/as/token.oauth2",
