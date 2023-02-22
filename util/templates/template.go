@@ -31,10 +31,6 @@ func (t *Template) GuidedSetupEnabled() bool {
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
-		if !p.Type.IsAParamType() {
-			return fmt.Errorf("invalid param type '%s'", p.Type)
-		}
-
 		if index, resultMapItem := t.ConfigDefaults.ParamByName(strings.ToLower(p.Name)); index > -1 {
 			t.Params[i].OverwriteProperties(resultMapItem)
 		}
@@ -71,10 +67,6 @@ func (t *Template) Validate() error {
 					return fmt.Errorf("invalid modbus choice '%s' in template %s", c, t.Template)
 				}
 			}
-		}
-
-		if !p.Type.IsAParamType() {
-			return fmt.Errorf("invalid param type '%s' in template %s", p.Type, t.Template)
 		}
 	}
 
