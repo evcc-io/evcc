@@ -1,0 +1,11 @@
+product:
+  brand: DaheimLaden
+  description: Wallbox (via ModbusTCP)
+description: |
+  Für die Nutzung mit evcc muss die Wallbox mit einer aktuellen Firmware mit Modbus-Unterstützung betrieben werden. Bitte mit dem Hersteller abklären.
+render:
+  - default: |
+      type: template
+      template: daheimladen-mb
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional
