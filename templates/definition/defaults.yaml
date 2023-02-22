@@ -242,6 +242,7 @@ params:
     help:
       de: "Icon in der Benutzeroberfläche"
       en: "Icon as shown in user interface"
+    type: choice
     validvalues:
       - bike
       - bus

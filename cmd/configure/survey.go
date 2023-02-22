@@ -135,6 +135,11 @@ func (c *CmdConfigure) askValue(q question) string {
 		return c.askBoolValue(label)
 	}
 
+	if q.valueType == templates.TypeChoice {
+		idx, _ := c.askChoice(c.localizedString("Value_Choice", nil), q.validValues)
+		return q.validValues[idx]
+	}
+
 	if q.valueType == templates.TypeChargeModes {
 		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
 		chargeModes := []string{

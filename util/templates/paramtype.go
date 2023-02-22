@@ -14,6 +14,7 @@ func (c *ParamType) UnmarshalText(text []byte) error {
 const (
 	TypeString ParamType = iota // default type string
 	TypeBool
+	TypeChoice
 	TypeChargeModes
 	TypeDuration
 	TypeFloat
