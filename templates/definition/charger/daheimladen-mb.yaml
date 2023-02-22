@@ -1,4 +1,4 @@
-template: daheimladen-modbus
+template: daheimladen-mb
 products:
   - brand: DaheimLaden
     description:
@@ -14,5 +14,5 @@ params:
   - name: port
     default: 502
 render: |
-  type: dl-modbus
+  type: daheimladen-mb
   uri: {{ .host }}:{{ .port }}

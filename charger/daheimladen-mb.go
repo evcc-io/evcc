@@ -60,7 +60,7 @@ const (
 )
 
 func init() {
-	registry.Add("dl-modbus", NewDaheimLadenMBFromConfig)
+	registry.Add("daheimladen-mb", NewDaheimLadenMBFromConfig)
 }
 
 // NewDaheimLadenMBFromConfig creates a DaheimLadenMB charger from generic config
@@ -83,7 +83,7 @@ func NewDaheimLadenMB(uri string, id uint8) (api.Charger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("dl-modbus")
+	log := util.NewLogger("daheimladen-mb")
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLadenMB{

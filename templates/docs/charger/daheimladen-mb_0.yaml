@@ -6,6 +6,6 @@ description: |
 render:
   - default: |
       type: template
-      template: daheimladen-modbus
+      template: daheimladen-mb
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 502 # Port # Optional
