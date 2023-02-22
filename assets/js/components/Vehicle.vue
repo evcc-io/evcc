@@ -19,7 +19,7 @@
 				v-if="socBasedCharging"
 				class="flex-grow-1"
 				:label="$t('main.vehicle.vehicleSoc')"
-				:value="vehicleSoc ? `${vehicleSoc}%` : '--'"
+				:value="vehicleSoc ? `${Math.round(vehicleSoc)}%` : '--'"
 				:extraValue="range ? `${Math.round(range)} ${rangeUnit}` : null"
 				align="start"
 			/>
