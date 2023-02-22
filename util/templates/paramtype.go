@@ -12,12 +12,11 @@ func (c *ParamType) UnmarshalText(text []byte) error {
 
 //go:generate enumer -type ParamType -trimprefix Type
 const (
-	_ ParamType = iota
-	TypeString
-	TypeNumber
-	TypeFloat
+	TypeString ParamType = iota // default type string
 	TypeBool
-	TypeStringList
 	TypeChargeModes
 	TypeDuration
+	TypeFloat
+	TypeNumber
+	TypeStringList
 )

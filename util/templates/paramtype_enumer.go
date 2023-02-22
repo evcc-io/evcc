@@ -7,16 +7,15 @@ import (
 	"strings"
 )
 
-const _ParamTypeName = "StringNumberFloatBoolStringListChargeModesDuration"
+const _ParamTypeName = "StringBoolChargeModesDurationFloatNumberStringList"
 
-var _ParamTypeIndex = [...]uint8{0, 6, 12, 17, 21, 31, 42, 50}
+var _ParamTypeIndex = [...]uint8{0, 6, 10, 21, 29, 34, 40, 50}
 
-const _ParamTypeLowerName = "stringnumberfloatboolstringlistchargemodesduration"
+const _ParamTypeLowerName = "stringboolchargemodesdurationfloatnumberstringlist"
 
 func (i ParamType) String() string {
-	i -= 1
 	if i < 0 || i >= ParamType(len(_ParamTypeIndex)-1) {
-		return fmt.Sprintf("ParamType(%d)", i+1)
+		return fmt.Sprintf("ParamType(%d)", i)
 	}
 	return _ParamTypeName[_ParamTypeIndex[i]:_ParamTypeIndex[i+1]]
 }
@@ -25,42 +24,42 @@ func (i ParamType) String() string {
 // Re-run the stringer command to generate them again.
 func _ParamTypeNoOp() {
 	var x [1]struct{}
-	_ = x[TypeString-(1)]
-	_ = x[TypeNumber-(2)]
-	_ = x[TypeFloat-(3)]
-	_ = x[TypeBool-(4)]
-	_ = x[TypeStringList-(5)]
-	_ = x[TypeChargeModes-(6)]
-	_ = x[TypeDuration-(7)]
+	_ = x[TypeString-(0)]
+	_ = x[TypeBool-(1)]
+	_ = x[TypeChargeModes-(2)]
+	_ = x[TypeDuration-(3)]
+	_ = x[TypeFloat-(4)]
+	_ = x[TypeNumber-(5)]
+	_ = x[TypeStringList-(6)]
 }
 
-var _ParamTypeValues = []ParamType{TypeString, TypeNumber, TypeFloat, TypeBool, TypeStringList, TypeChargeModes, TypeDuration}
+var _ParamTypeValues = []ParamType{TypeString, TypeBool, TypeChargeModes, TypeDuration, TypeFloat, TypeNumber, TypeStringList}
 
 var _ParamTypeNameToValueMap = map[string]ParamType{
 	_ParamTypeName[0:6]:        TypeString,
 	_ParamTypeLowerName[0:6]:   TypeString,
-	_ParamTypeName[6:12]:       TypeNumber,
-	_ParamTypeLowerName[6:12]:  TypeNumber,
-	_ParamTypeName[12:17]:      TypeFloat,
-	_ParamTypeLowerName[12:17]: TypeFloat,
-	_ParamTypeName[17:21]:      TypeBool,
-	_ParamTypeLowerName[17:21]: TypeBool,
-	_ParamTypeName[21:31]:      TypeStringList,
-	_ParamTypeLowerName[21:31]: TypeStringList,
-	_ParamTypeName[31:42]:      TypeChargeModes,
-	_ParamTypeLowerName[31:42]: TypeChargeModes,
-	_ParamTypeName[42:50]:      TypeDuration,
-	_ParamTypeLowerName[42:50]: TypeDuration,
+	_ParamTypeName[6:10]:       TypeBool,
+	_ParamTypeLowerName[6:10]:  TypeBool,
+	_ParamTypeName[10:21]:      TypeChargeModes,
+	_ParamTypeLowerName[10:21]: TypeChargeModes,
+	_ParamTypeName[21:29]:      TypeDuration,
+	_ParamTypeLowerName[21:29]: TypeDuration,
+	_ParamTypeName[29:34]:      TypeFloat,
+	_ParamTypeLowerName[29:34]: TypeFloat,
+	_ParamTypeName[34:40]:      TypeNumber,
+	_ParamTypeLowerName[34:40]: TypeNumber,
+	_ParamTypeName[40:50]:      TypeStringList,
+	_ParamTypeLowerName[40:50]: TypeStringList,
 }
 
 var _ParamTypeNames = []string{
 	_ParamTypeName[0:6],
-	_ParamTypeName[6:12],
-	_ParamTypeName[12:17],
-	_ParamTypeName[17:21],
-	_ParamTypeName[21:31],
-	_ParamTypeName[31:42],
-	_ParamTypeName[42:50],
+	_ParamTypeName[6:10],
+	_ParamTypeName[10:21],
+	_ParamTypeName[21:29],
+	_ParamTypeName[29:34],
+	_ParamTypeName[34:40],
+	_ParamTypeName[40:50],
 }
 
 // ParamTypeString retrieves an enum value from the enum constants string name.

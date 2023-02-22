@@ -31,11 +31,6 @@ func (t *Template) GuidedSetupEnabled() bool {
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
-		if p.Type == 0 {
-			p.Type = TypeString
-			t.Params[i].Type = p.Type
-		}
-
 		if !p.Type.IsAParamType() {
 			return fmt.Errorf("invalid param type '%s'", p.Type)
 		}
