@@ -12,7 +12,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var Subject, Token string
+var (
+	Subject, Token string
+	ExpiresAt      time.Time
+)
 
 func IsAuthorized() bool {
 	return len(Subject) > 0
@@ -34,6 +37,7 @@ func ConfigureSponsorship(token string) error {
 	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
+		ExpiresAt = res.ExpiresAt.AsTime()
 		Token = token
 	}
 

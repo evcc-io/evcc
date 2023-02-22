@@ -2,6 +2,8 @@ syntax = "proto3";
 
 // protoc proto/auth.proto --go_out=. --go-grpc_out=.
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "proto/pb";
 
 service Auth {
@@ -15,4 +17,5 @@ message AuthRequest {
 message AuthReply {
 	bool authorized = 1;
 	string subject = 2;
+	google.protobuf.Timestamp expires_at = 3;
 }
