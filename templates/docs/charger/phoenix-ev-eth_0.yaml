@@ -1,6 +1,6 @@
 product:
   brand: Phoenix Contact
-  description: EV-ETH (Modbus TCP)
+  description: EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
 capabilities: ["mA", "rfid"]
 requirements: ["sponsorship"]
 description: |

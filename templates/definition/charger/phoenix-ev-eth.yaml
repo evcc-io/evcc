@@ -3,7 +3,7 @@ covers: ["wallbe", "wallbe-meter"]
 products:
   - brand: Phoenix Contact
     description:
-      generic: EV-ETH (Modbus TCP)
+      generic: EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
   - brand: Wallbe
     description:
       generic: Eco, Eco 2.0(s), Pro
@@ -16,7 +16,7 @@ products:
 capabilities: ["mA", "rfid"]
 requirements:
   description:
-    en: The Wallbox must be connected via a network cable and the DIP switch 10 in the device must be set to 'ON'. A recent controller firmware is recommended.
+    en: The charger has to be connected via network cable and the DIP switch 10 in the device must be set to 'ON'. A recent controller firmware is recommended.
     de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
   evcc: ["sponsorship"]
 params:
