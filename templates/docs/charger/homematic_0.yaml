@@ -22,3 +22,5 @@ render:
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
       meterchannel: 6 # Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
       switchchannel: 3 # Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
+      integrateddevice: # Optional
+      icon: # Icon in der Benutzeroberfläche # Optional

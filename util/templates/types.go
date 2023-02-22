@@ -40,18 +40,6 @@ const (
 	TemplateRenderModeInstance = "instance"
 )
 
-const (
-	ParamTypeString      = "string"
-	ParamTypeNumber      = "number"
-	ParamTypeFloat       = "float"
-	ParamTypeBool        = "bool"
-	ParamTypeStringList  = "stringlist"
-	ParamTypeChargeModes = "chargemodes"
-	ParamTypeDuration    = "duration"
-)
-
-var ValidParamTypes = []string{ParamTypeString, ParamTypeNumber, ParamTypeFloat, ParamTypeBool, ParamTypeStringList, ParamTypeChargeModes, ParamTypeDuration}
-
 var (
 	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
 	ValidUsageChoices  = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
@@ -197,7 +185,7 @@ type Param struct {
 	Value         string       `json:"-"`          // user provided value via cli configuration
 	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "stringlist"
 	Usages        []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
-	Type          string       // string representation of the value type, "string" is default
+	Type          ParamType    // string representation of the value type, "string" is default
 	ValidValues   []string     `json:",omitempty"` // list of valid values the user can provide
 	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	AllInOne      *bool        `json:"-"`          // defines if the defined usages can all be present in a single device
@@ -213,7 +201,7 @@ type Param struct {
 // return a default value or example value depending on the renderMode
 func (p *Param) DefaultValue(renderMode string) interface{} {
 	// return empty list to allow iterating over in template
-	if p.Type == ParamTypeStringList {
+	if p.Type == TypeStringList {
 		return []string{}
 	}
 

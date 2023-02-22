@@ -13,11 +13,11 @@ params:
     type: number
   - name: modbusdevice
     description:
-      de: Geräteadresse
-      en: Device address
+      de: Gerätename
+      en: Device name
     help:
-      de: USB-RS485 Adapter Adresse
-      en: USB-RS485 Adapter address
+      de: USB-RS485 Gerätename
+      en: USB-RS485 device name
     example: /dev/ttyUSB0
   - name: modbusbaudrate
     description:
@@ -33,7 +33,7 @@ params:
       de: ComSet
       en: ComSet
     help:
-      de: Kommunikationsparameter für den Adapter
+      de: Kommunikationsparameter des Adapters
       en: Communication parameter for the adapter
     default: 8N1
   - name: host
@@ -240,29 +240,45 @@ params:
       de: Icon
       en: Icon
     help:
-      de: "Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater"
-      en: "Visible in UI. Possible values: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater"
+      de: "Icon in der Benutzeroberfläche"
+      en: "Icon as shown in user interface"
     validvalues:
-      [
-        "bike",
-        "bus",
-        "car",
-        "heater",
-        "heatercooler",
-        "heatpump",
-        "moped",
-        "motorcycle",
-        "plug",
-        "scooter",
-        "tractor",
-        "van",
-        "waterheater",
-      ]
+      - bike
+      - bus
+      - car
+      - heater
+      - heatercooler
+      - heatpump
+      - moped
+      - motorcycle
+      - plug
+      - scooter
+      - tractor
+      - van
+      - waterheater
   - name: ski
     required: true
+    description:
+      en: Subject Key Identifier (SKI)
+      de: Identifikationsschlüssel (SKI)
     help:
-      en: The SKI of the wallbox, can usually be found on the web interface of the wallbox
-      de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
+      en: The SKI of the wallbox, usually found on the web interface of the wallbox
+      de: Die SKI der Wallbox, üblicherweise im Web Interface der Wallbox zu finden
+  - name: uri
+    description:
+      generic: URI
+    help:
+      en: HTTP(S) address
+      de: HTTP(S) Adresse
+  - name: ain
+    mask: true
+    example: "307788992233"
+    description:
+      en: Actor Identification Number (AIN)
+      de: Aktoridentifikationsnummer (AIN)
+    help:
+      en: The AIN is printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
+      de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
 
 presets:
   vehiclebase:
@@ -376,6 +392,19 @@ presets:
       ski: {{ .ski }}
       {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
       {{end}}
+  switchsocket:
+    params:
+      - name: integrateddevice
+        type: bool
+        advanced: true
+        description:
+          de: Integriertes Gerät (keine Fahrzeugverbindung)
+          en: Integrated device (no vehicle connection)
+      - name: icon
+        advanced: true
+    render: |
+      {{ if eq .integrateddevice "true" }}features: ["integrateddevice"]{{ end }}
+      {{ if ne .icon "" }}icon: {{ .icon }}{{ end }}
 
 modbus:
   interfaces:

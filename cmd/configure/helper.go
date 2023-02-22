@@ -431,7 +431,7 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 			}
 
 			switch param.Type {
-			case templates.ParamTypeStringList:
+			case templates.TypeStringList:
 				values := c.processListInputConfig(param)
 				var nonEmptyValues []string
 				for _, value := range values {
@@ -498,7 +498,7 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		required:     param.IsRequired(),
 	})
 
-	if param.Type == templates.ParamTypeBool && value == "true" {
+	if param.Type == templates.TypeBool && value == "true" {
 		if err := c.processParamRequirements(param); err != nil {
 			return "false"
 		}

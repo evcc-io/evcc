@@ -17,13 +17,14 @@ params:
     default: 1
     required: true
     description:
-      de: Nummer des Schalt-Kanals
+      de: Nummer des Schaltkanals
       en: Device relay channel number
     help:
-      de: Nummer des Schalt-Kanals (1-8), bei Geräten mit mehr als einem Schalter
+      de: Nummer des Schaltkanals (1-8), bei Geräten mit mehr als einem Schalter
       en: Device relay channel number (allowed range 1-8)
   - name: standbypower
     default: 15
+  - preset: switchsocket
 render: |
   type: tasmota
   uri: http://{{ .host }}
