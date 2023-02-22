@@ -146,12 +146,12 @@ func (w *uiWriter) Write(p []byte) (n int, err error) {
 
 // CaptureLogs appends uiWriter to relevant log levels for
 // loggers created before uiChan is initialized
-func CaptureLogs(valueChan chan<- Param) {
+func CaptureLogs(c chan<- Param) {
 	if uiChan != nil {
-		panic("log capturing already initialized")
+		return
 	}
 
-	uiChan = valueChan
+	uiChan = c
 
 	for _, l := range loggers {
 		captureLogger(l)
