@@ -1,8 +1,8 @@
-template: daheimladen
+template: daheimladen-modbus
 products:
   - brand: DaheimLaden
     description:
-      generic: Wallbox
+      generic: Wallbox (via ModbusTCP)
 requirements:
   description:
     de: Für die Nutzung mit evcc muss die Wallbox mit einer aktuellen Firmware mit Modbus-Unterstützung betrieben werden. Bitte mit dem Hersteller abklären.
@@ -14,5 +14,5 @@ params:
   - name: port
     default: 502
 render: |
-  type: daheimladen
+  type: dl-modbus
   uri: {{ .host }}:{{ .port }}

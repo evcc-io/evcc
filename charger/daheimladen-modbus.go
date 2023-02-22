@@ -29,42 +29,42 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
-// DaheimLaden charger implementation
-type DaheimLaden struct {
+// DaheimLadenMB charger implementation
+type DaheimLadenMB struct {
 	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
 }
 
 const (
-	dhlRegChargingState   = 0   // Uint16 RO ENUM
-	dhlRegConnectorState  = 2   // Uint16 RO ENUM
-	dhlRegCurrents        = 5   // 3xUint32 RO 0.1A
-	dhlRegActivePower     = 12  // Uint32 RO 1W
-	dhlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
-	dhlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
-	dhlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
-	dhlRegStationId       = 38  // Chr[16] RO UTF16
-	dhlRegCardId          = 54  // Chr[16] RO UTF16
-	dhlRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
-	dhlRegChargingTime    = 78  // Uint32 RO 1s
-	dhlRegSafeCurrent     = 87  // Uint16 WR 0.1A
-	dhlRegCommTimeout     = 89  // Uint16 WR 1s
-	dhlRegCurrentLimit    = 91  // Uint16 WR 0.1A
-	dhlRegChargeControl   = 93  // Uint16 WR ENUM
-	dhlRegChargeCmd       = 95  // Uint16 WR ENUM
-	dhlRegVoltages        = 108 // 3xUint32 RO 0.1V
+	dlRegChargingState   = 0   // Uint16 RO ENUM
+	dlRegConnectorState  = 2   // Uint16 RO ENUM
+	dlRegCurrents        = 5   // 3xUint32 RO 0.1A
+	dlRegActivePower     = 12  // Uint32 RO 1W
+	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
+	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
+	dlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
+	dlRegStationId       = 38  // Chr[16] RO UTF16
+	dlRegCardId          = 54  // Chr[16] RO UTF16
+	dlRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
+	dlRegChargingTime    = 78  // Uint32 RO 1s
+	dlRegSafeCurrent     = 87  // Uint16 WR 0.1A
+	dlRegCommTimeout     = 89  // Uint16 WR 1s
+	dlRegCurrentLimit    = 91  // Uint16 WR 0.1A
+	dlRegChargeControl   = 93  // Uint16 WR ENUM
+	dlRegChargeCmd       = 95  // Uint16 WR ENUM
+	dlRegVoltages        = 108 // 3xUint32 RO 0.1V
 
-	dhlCmdStartSession = 1
-	dhlCmdStopSession  = 2
+	dlCmdStartSession = 1
+	dlCmdStopSession  = 2
 )
 
 func init() {
-	registry.Add("daheimladen", NewDaheimLadenFromConfig)
+	registry.Add("dl-modbus", NewDaheimLadenMBFromConfig)
 }
 
-// NewDaheimLadenFromConfig creates a DaheimLaden charger from generic config
-func NewDaheimLadenFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewDaheimLadenMBFromConfig creates a DaheimLadenMB charger from generic config
+func NewDaheimLadenMBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -73,27 +73,27 @@ func NewDaheimLadenFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewDaheimLaden(cc.URI, cc.ID)
+	return NewDaheimLadenMB(cc.URI, cc.ID)
 }
 
-// NewDaheimLaden creates DaheimLaden charger
-func NewDaheimLaden(uri string, id uint8) (api.Charger, error) {
+// NewDaheimLadenMB creates DaheimLadenMB charger
+func NewDaheimLadenMB(uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("dhl")
+	log := util.NewLogger("dl-modbus")
 	conn.Logger(log.TRACE)
 
-	wb := &DaheimLaden{
+	wb := &DaheimLadenMB{
 		log:  log,
 		conn: conn,
 		curr: 60, // assume min current
 	}
 
 	// get failsafe timeout from charger
-	b, err := wb.conn.ReadHoldingRegisters(dhlRegCommTimeout, 1)
+	b, err := wb.conn.ReadHoldingRegisters(dlRegCommTimeout, 1)
 	if err != nil {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
@@ -102,17 +102,17 @@ func NewDaheimLaden(uri string, id uint8) (api.Charger, error) {
 	return wb, err
 }
 
-func (wb *DaheimLaden) heartbeat(timeout time.Duration) {
+func (wb *DaheimLadenMB) heartbeat(timeout time.Duration) {
 	for range time.NewTicker(timeout).C {
-		if _, err := wb.conn.ReadHoldingRegisters(dhlRegSafeCurrent, 1); err != nil {
+		if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
 }
 
 // Status implements the api.Charger interface
-func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dhlRegChargingState, 1)
+func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -140,8 +140,8 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *DaheimLaden) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dhlRegCurrentLimit, 1)
+func (wb *DaheimLadenMB) Enabled() (bool, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegCurrentLimit, 1)
 	if err != nil {
 		return false, err
 	}
@@ -150,29 +150,29 @@ func (wb *DaheimLaden) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (wb *DaheimLaden) Enable(enable bool) error {
+func (wb *DaheimLadenMB) Enable(enable bool) error {
 	var current uint16
-	var cmd uint16 = dhlCmdStopSession // stop session
+	var cmd uint16 = dlCmdStopSession // stop session
 
 	if enable {
 		current = wb.curr
-		cmd = dhlCmdStartSession // start (new) session
+		cmd = dlCmdStartSession // start (new) session
 	}
 	_ = wb.setCurrent(current)
 
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, cmd)
 
-	_, err := wb.conn.WriteMultipleRegisters(dhlRegChargeCmd, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(dlRegChargeCmd, 1, b)
 	return err
 }
 
 // setCurrent writes the current limit in coarse 1A steps
-func (wb *DaheimLaden) setCurrent(current uint16) error {
+func (wb *DaheimLadenMB) setCurrent(current uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, current)
 
-	_, err := wb.conn.WriteMultipleRegisters(dhlRegCurrentLimit, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(dlRegCurrentLimit, 1, b)
 	if err == nil {
 		wb.curr = current
 	}
@@ -180,7 +180,7 @@ func (wb *DaheimLaden) setCurrent(current uint16) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *DaheimLaden) MaxCurrent(current int64) error {
+func (wb *DaheimLadenMB) MaxCurrent(current int64) error {
 	//return wb.MaxCurrentMillis(float64(current))
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
@@ -190,11 +190,11 @@ func (wb *DaheimLaden) MaxCurrent(current int64) error {
 }
 
 /*
-var _ api.ChargerEx = (*DaheimLaden)(nil)
+var _ api.ChargerEx = (*DaheimLadenMB)(nil)
 
 // maxCurrentMillis implements the api.ChargerEx interface
 
-	func (wb *DaheimLaden) MaxCurrentMillis(current float64) error {
+	func (wb *DaheimLadenMB) MaxCurrentMillis(current float64) error {
 		if current < 6 {
 			return fmt.Errorf("invalid current %.1g", current)
 		}
@@ -203,11 +203,11 @@ var _ api.ChargerEx = (*DaheimLaden)(nil)
 	}
 */
 
-var _ api.Meter = (*DaheimLaden)(nil)
+var _ api.Meter = (*DaheimLadenMB)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (wb *DaheimLaden) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dhlRegActivePower, 2)
+func (wb *DaheimLadenMB) CurrentPower() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegActivePower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -216,12 +216,12 @@ func (wb *DaheimLaden) CurrentPower() (float64, error) {
 }
 
 /*
-var _ api.ChargeTimer = (*DaheimLaden)(nil)
+var _ api.ChargeTimer = (*DaheimLadenMB)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
 
-	func (wb *DaheimLaden) ChargingTime() (time.Duration, error) {
-		b, err := wb.conn.ReadHoldingRegisters(dhlChargingTime, 2)
+	func (wb *DaheimLadenMB) ChargingTime() (time.Duration, error) {
+		b, err := wb.conn.ReadHoldingRegisters(dlChargingTime, 2)
 		if err != nil {
 			return 0, err
 		}
@@ -231,12 +231,12 @@ var _ api.ChargeTimer = (*DaheimLaden)(nil)
 */
 
 /*
-var _ api.ChargeRater = (*DaheimLaden)(nil)
+var _ api.ChargeRater = (*DaheimLadenMB)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
 
-	func (wb *DaheimLaden) ChargedEnergy() (float64, error) {
-		b, err := wb.conn.ReadHoldingRegisters(dhlChargedEnergy, 1)
+	func (wb *DaheimLadenMB) ChargedEnergy() (float64, error) {
+		b, err := wb.conn.ReadHoldingRegisters(dlChargedEnergy, 1)
 		if err != nil {
 			return 0, err
 		}
@@ -245,11 +245,11 @@ var _ api.ChargeRater = (*DaheimLaden)(nil)
 	}
 */
 
-var _ api.MeterEnergy = (*DaheimLaden)(nil)
+var _ api.MeterEnergy = (*DaheimLadenMB)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (wb *DaheimLaden) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dhlRegTotalEnergy, 2)
+func (wb *DaheimLadenMB) TotalEnergy() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -258,7 +258,7 @@ func (wb *DaheimLaden) TotalEnergy() (float64, error) {
 }
 
 // getPhaseValues returns 3 sequential register values
-func (wb *DaheimLaden) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+func (wb *DaheimLadenMB) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
@@ -272,18 +272,18 @@ func (wb *DaheimLaden) getPhaseValues(reg uint16) (float64, float64, float64, er
 	return res[0], res[1], res[2], nil
 }
 
-var _ api.PhaseCurrents = (*DaheimLaden)(nil)
+var _ api.PhaseCurrents = (*DaheimLadenMB)(nil)
 
 // Currents implements the api.PhaseCurrents interface
-func (wb *DaheimLaden) Currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(dhlRegCurrents)
+func (wb *DaheimLadenMB) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(dlRegCurrents)
 }
 
-var _ api.PhaseVoltages = (*DaheimLaden)(nil)
+var _ api.PhaseVoltages = (*DaheimLadenMB)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
-func (wb *DaheimLaden) Voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(dhlRegVoltages)
+func (wb *DaheimLadenMB) Voltages() (float64, float64, float64, error) {
+	return wb.getPhaseValues(dlRegVoltages)
 }
 
 // utf16BytesToString converts UTF-16 encoded bytes, in big or little endian byte order,
@@ -300,12 +300,12 @@ func utf16BytesToString(b []byte, o binary.ByteOrder) string {
 }
 
 /*
-var _ api.Identifier = (*DaheimLaden)(nil)
+var _ api.Identifier = (*DaheimLadenMB)(nil)
 
 // identify implements the api.Identifier interface
 
-	func (wb *DaheimLaden) Identify() (string, error) {
-		b, err := wb.conn.ReadHoldingRegisters(dhlCardId, 16)
+	func (wb *DaheimLadenMB) Identify() (string, error) {
+		b, err := wb.conn.ReadHoldingRegisters(dlCardId, 16)
 		if err != nil {
 			return "", err
 		}
@@ -314,41 +314,41 @@ var _ api.Identifier = (*DaheimLaden)(nil)
 	}
 */
 
-var _ api.Diagnosis = (*DaheimLaden)(nil)
+var _ api.Diagnosis = (*DaheimLadenMB)(nil)
 
 // Diagnose implements the api.Diagnosis interface
-func (wb *DaheimLaden) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegChargingState, 1); err == nil {
+func (wb *DaheimLadenMB) Diagnose() {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1); err == nil {
 		fmt.Printf("\tCharging Station State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegConnectorState, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegConnectorState, 1); err == nil {
 		fmt.Printf("\tConnector State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegEvseMaxCurrent, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 1); err == nil {
 		fmt.Printf("\tEVSE Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegCableMaxCurrent, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegCableMaxCurrent, 1); err == nil {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegStationId, 16); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
 		fmt.Printf("\tStation ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegCardId, 16); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
 		fmt.Printf("\tCard ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegSafeCurrent, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegCommTimeout, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegCommTimeout, 1); err == nil {
 		fmt.Printf("\tConnection Timeout:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegCurrentLimit, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegCurrentLimit, 1); err == nil {
 		fmt.Printf("\tCurrent Limit:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegChargeControl, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargeControl, 1); err == nil {
 		fmt.Printf("\tCharge Control:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(dhlRegChargeCmd, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargeCmd, 1); err == nil {
 		fmt.Printf("\tCharge Command:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 }
