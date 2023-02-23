@@ -158,7 +158,7 @@ type VehicleRange interface {
 
 // VehicleClimater provides climatisation data
 type VehicleClimater interface {
-	Climater() (active bool, outsideTemp, targetTemp float64, err error)
+	Climater() (bool, error)
 }
 
 // VehicleOdometer returns the vehicles milage

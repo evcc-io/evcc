@@ -218,22 +218,17 @@ func (v *CarWings) Range() (int64, error) {
 var _ api.VehicleClimater = (*CarWings)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *CarWings) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
+func (v *CarWings) Climater() (bool, error) {
 	res, err := v.climateG()
 
 	// silence ErrClimateStatusUnavailable errors
 	if errors.Is(err, carwings.ErrClimateStatusUnavailable) {
-		res.Temperature = 21
-		err = nil
+		return false, nil
 	}
 
 	if err == nil {
-		active = res.Running
-		targetTemp = float64(res.Temperature)
-		outsideTemp = targetTemp
-
-		return active, outsideTemp, targetTemp, err
+		return res.Running, nil
 	}
 
-	return false, 0, 0, err
+	return false, err
 }
