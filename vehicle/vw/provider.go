@@ -138,7 +138,7 @@ func (v *Provider) Odometer() (float64, error) {
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, err error) {
+func (v *Provider) Climater() (bool, error) {
 	res, err := v.climateG()
 	if err == nil {
 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
