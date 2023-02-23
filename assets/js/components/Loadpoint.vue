@@ -180,7 +180,7 @@ export default {
 		chargePower: Number,
 		chargedEnergy: Number,
 		// chargeDuration: Number,
-		climater: String,
+		climaterActive: Boolean,
 		chargeRemainingDuration: Number,
 
 		// other information
