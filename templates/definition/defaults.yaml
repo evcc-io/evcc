@@ -218,6 +218,15 @@ params:
       de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
       en: "Mostly this can be added later, see: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
     type: stringlist
+  - name: priority
+    description:
+      de: Priorität
+      en: Priority
+    help:
+      de: Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von PV-Energie
+      en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating pv energy
+    example: 16
+    type: number
   - name: standbypower
     description:
       de: Standby-Leistung in W
@@ -321,9 +330,11 @@ presets:
       - name: identifiers
         advanced: true
         type: stringlist
+      - name: priority
+        advanced: true
     render: |
       {{define "vehicle-identify"}}
-      {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") }}
+      {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") (ne .priority "") }}
       onIdentify:
       {{- if (ne .mode "") }}
         mode: {{ .mode }}
@@ -339,6 +350,9 @@ presets:
       {{- end }}
       {{- if (ne .maxCurrent "") }}
         maxCurrent: {{ .maxCurrent }}
+      {{- end }}
+      {{- if (ne .priority "") }}
+      - priority: {{ .priority }}
       {{- end }}
       {{- end }}
       {{- if ne (len .identifiers) 0 }}
