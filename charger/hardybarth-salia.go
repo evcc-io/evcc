@@ -114,9 +114,9 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 
 func (wb *Salia) heartbeat() {
 	for ; true; <-time.NewTicker(30 * time.Second).C {
-		// https://github.com/evcc-io/evcc/discussions/6336#discussioncomment-5077530
-		// ignore error with fw 1.8.xx
-		_ = wb.post(salia.HeartBeat, "alive")
+		if err := wb.post(salia.HeartBeat, "alive"); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
 	}
 }
 
