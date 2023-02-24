@@ -4,11 +4,13 @@ products:
     description:
       generic: SDM220/230
 params:
+  - name: usage
+    choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
   type: modbus
+  {{- include "modbus" . }}
   model: sdm220
   power: Power
-  energy: Sum
-  {{- include "modbus" . }}
+  energy: Import
