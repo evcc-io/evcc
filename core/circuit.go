@@ -52,7 +52,7 @@ func (circuit *Circuit) GetRemainingCurrent() float64 {
 	// first update current current, mainly to regularly publish the value
 	current, err := circuit.MaxPhasesCurrent()
 	if err != nil {
-		circuit.log.WARN.Printf("failure getting max phase currents")
+		circuit.log.ERROR.Printf("max phase currents: %v", err)
 		return 0
 	}
 	curAvailable := circuit.MaxCurrent - current
