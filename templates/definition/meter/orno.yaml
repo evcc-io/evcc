@@ -23,10 +23,10 @@ render: |
     - PowerL1
     - PowerL2
     - PowerL3
-  {{- end}}
+  {{- end }}
   {{- if eq .usage "charge" }}
   voltages:
     - VoltageL1
     - VoltageL2
     - VoltageL3
-  {{- end}}
+  {{- end }}

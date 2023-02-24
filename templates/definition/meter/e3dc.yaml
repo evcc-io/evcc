@@ -20,7 +20,7 @@ render: |
       type: holding
       decode: int32s
       address: 40073 # Hausverbrauchsleistung in Watt
-  {{- end}}
+  {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: calc
@@ -37,7 +37,7 @@ render: |
         type: holding
         decode: int32s
         address: 40075 # Leistung zusätzlicher Einspeiser in Watt
-  {{- end}}
+  {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: modbus
@@ -57,4 +57,4 @@ render: |
   {{- if ne .capacity "" }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
-  {{- end}}
+  {{- end }}
