@@ -1,6 +1,6 @@
 template: e3dc
 products:
-  - brand: E3DC
+  - brand: E3/DC
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
