@@ -2,16 +2,15 @@ template: eastron
 products:
   - brand: Eastron
     description:
-      generic: SDM 630
+      generic: SDM630-Modbus
   - brand: Eastron
     description:
-      generic: SDM 72v2
+      generic: SDM72DM-V2
 params:
   - name: modbus
     choice: ["rs485"]
 render: |
   type: modbus
-  {{- include "modbus" . }}
   model: sdm
   power: Power
   energy: Sum
@@ -27,3 +26,4 @@ render: |
     - PowerL1
     - PowerL2
     - PowerL3
+  {{- include "modbus" . }}

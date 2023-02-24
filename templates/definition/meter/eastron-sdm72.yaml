@@ -1,0 +1,14 @@
+template: eastron-sdm72
+products:
+  - brand: Eastron
+    description:
+      generic: SDM72D-M
+params:
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: modbus
+  model: sdm72
+  power: Power
+  energy: Sum
+  {{- include "modbus" . }}
