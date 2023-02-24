@@ -147,7 +147,6 @@ loadpoints:
     guardDuration: 5m # switch charger contactor not more often than this (default 5m)
 
 # tariffs are the fixed or variable tariffs
-# cheap (tibber/awattar) can be used to define a tariff rate considered cheap enough for charging
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
   grid:
@@ -163,13 +162,11 @@ tariffs:
 
     # # or variable via tibber
     # type: tibber
-    # cheap: 0.2 # EUR/kWh
     # token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
     # homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
 
     # # or variable via awattar
     # type: awattar
-    # cheap: 0.2 # EUR/kWh
     # region: de # optional, choose at for Austria
   feedin:
     # rate for feeding excess (pv) energy to the grid
