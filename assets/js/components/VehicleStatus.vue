@@ -26,7 +26,6 @@ export default {
 	computed: {
 		phaseTimerActive() {
 			return (
-				this.enabled &&
 				this.phaseRemainingInterpolated > 0 &&
 				["scale1p", "scale3p"].includes(this.phaseAction)
 			);
