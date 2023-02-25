@@ -26,4 +26,4 @@ render: |
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
-  ain: "{{ .ain }}" # switch actor identification number without blanks (see AIN number on switch sticker)
+  ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)

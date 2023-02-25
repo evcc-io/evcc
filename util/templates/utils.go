@@ -12,6 +12,7 @@ func quote(value string) string {
 	return fmt.Sprintf("'%s'", quoted)
 }
 
+// yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
 func yamlQuote(value string) string {
 	input := fmt.Sprintf("key: %s", value)
 

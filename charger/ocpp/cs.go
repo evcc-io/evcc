@@ -89,17 +89,17 @@ func (cs *CS) Debugf(fmt string, args ...interface{}) {
 }
 
 func (cs *CS) Info(args ...interface{}) {
-	cs.log.DEBUG.Println(args...)
+	cs.log.TRACE.Println(args...)
 }
 
 func (cs *CS) Infof(fmt string, args ...interface{}) {
-	cs.log.DEBUG.Printf(fmt, args...)
+	cs.log.TRACE.Printf(fmt, args...)
 }
 
 func (cs *CS) Error(args ...interface{}) {
-	cs.log.ERROR.Println(args...)
+	cs.log.TRACE.Println(args...)
 }
 
 func (cs *CS) Errorf(fmt string, args ...interface{}) {
-	cs.log.ERROR.Printf(fmt, args...)
+	cs.log.TRACE.Printf(fmt, args...)
 }
