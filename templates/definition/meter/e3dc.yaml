@@ -37,6 +37,7 @@ render: |
         type: holding
         decode: int32s
         address: 40075 # Leistung zusätzlicher Einspeiser in Watt
+      scale: -1 # Invert the value to add it to the other value
   {{- end}}
   {{- if eq .usage "battery" }}
   power:
