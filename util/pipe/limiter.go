@@ -5,6 +5,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/util"
+	"golang.org/x/exp/slices"
 )
 
 // Piper is the interface that data flow plugins must implement
@@ -113,17 +114,11 @@ func NewDropper(filter ...string) Piper {
 
 func (l *Dropper) pipe(in <-chan util.Param, out chan<- util.Param) {
 	for p := range in {
-		var remove bool
-		for _, filtered := range l.filter {
-			if p.Key == filtered {
-				remove = true
-				break
-			}
+		if slices.Contains(l.filter, p.Key) {
+			continue
 		}
 
-		if !remove {
-			out <- p
-		}
+		out <- p
 	}
 }
 

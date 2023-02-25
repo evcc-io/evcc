@@ -37,7 +37,8 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreErrors = []string{"warn", "error"}        // don't add to cache
+	ignoreEmpty  = ""                               // ignore empty keys
+	ignoreErrors = []string{"warn", "error"}        // ignore errors
 	ignoreMqtt   = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
@@ -152,7 +153,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish to UI
-	go socketHub.Run(tee.Attach(), cache)
+	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// setup values channel
 	valueChan := make(chan util.Param)
@@ -192,13 +193,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureInflux(conf.Influx, site, tee.Attach())
+		configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreErrors, ignoreEmpty)...).Pipe(tee.Attach()))
 	}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
 		publisher := server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"))
-		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
+		go publisher.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
 	}
 
 	// announce on mDNS
