@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -68,6 +69,8 @@ func ServeWebsocket(hub *SocketHub, w http.ResponseWriter, r *http.Request) {
 // SocketHub maintains the set of active clients and broadcasts messages to the
 // clients.
 type SocketHub struct {
+	mu sync.RWMutex
+
 	// Registered clients.
 	clients map[*SocketClient]bool
 
@@ -133,7 +136,9 @@ func kv(p util.Param) string {
 }
 
 func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
+	h.mu.Lock()
 	h.clients[client] = true
+	h.mu.Unlock()
 
 	var msg strings.Builder
 	msg.WriteString("{")
@@ -153,6 +158,9 @@ func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
 	if len(h.clients) > 0 {
 		msg := "{" + kv(p) + "}"
 
@@ -173,10 +181,12 @@ func (h *SocketHub) Run(in <-chan util.Param, cache *util.Cache) {
 		case client := <-h.register:
 			h.welcome(client, cache.All())
 		case client := <-h.unregister:
+			h.mu.Lock()
 			if _, ok := h.clients[client]; ok {
 				close(client.send)
 				delete(h.clients, client)
 			}
+			h.mu.Unlock()
 		case msg, ok := <-in:
 			if !ok {
 				return // break if channel closed
