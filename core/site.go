@@ -281,7 +281,7 @@ func (site *Site) DumpConfig() {
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
-		if lp.CircuitPtr != nil {
+		if lp.Circuit != nil {
 			lp.log.INFO.Printf("  circuit:     %s", lp.CircuitRef)
 		}
 

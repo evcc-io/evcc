@@ -321,7 +321,7 @@ func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Lo
 }
 
 // configureCircuits loads circuit definition and connects the loadpoints with the circuit
-func configureCircuits(site *core.Site, loadPoints []*core.Loadpoint, cp *ConfigProvider) (err error) {
+func configureCircuits(site *core.Site, loadpoints []*core.Loadpoint, cp *ConfigProvider) (err error) {
 	for _, cfg := range conf.Circuits {
 		circuit, err := core.NewCircuitFromConfig(cp, cfg, site)
 		if err != nil {
@@ -331,13 +331,13 @@ func configureCircuits(site *core.Site, loadPoints []*core.Loadpoint, cp *Config
 	}
 
 	// connect circuits and loadpoints
-	for _, lpId := range loadPoints {
+	for _, lp := range loadpoints {
 		for _, circuit := range site.Circuits {
-			lpId.CircuitPtr = circuit.GetCircuit(lpId.CircuitRef)
-			if lpId.CircuitPtr != nil {
+			lp.Circuit = circuit.GetCircuit(lp.CircuitRef)
+			if lp.Circuit != nil {
 				// check there is a virtual meter, and add lp in case as consumer
-				if vmtr := lpId.CircuitPtr.GetVMeter(); vmtr != nil {
-					vmtr.AddConsumer(lpId)
+				if vmtr := lp.Circuit.GetVMeter(); vmtr != nil {
+					vmtr.AddConsumer(lp)
 				}
 				break
 			}
@@ -346,8 +346,8 @@ func configureCircuits(site *core.Site, loadPoints []*core.Loadpoint, cp *Config
 		}
 
 		// if we are here, no circuit with this name exists
-		if lpId.CircuitRef != "" && lpId.CircuitPtr == nil {
-			return fmt.Errorf("loadpoint uses undefined circuit: %s", lpId.CircuitRef)
+		if lp.CircuitRef != "" && lp.Circuit == nil {
+			return fmt.Errorf("loadpoint uses undefined circuit: %s", lp.CircuitRef)
 		}
 	}
 
