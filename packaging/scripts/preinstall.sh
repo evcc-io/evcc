@@ -10,7 +10,7 @@ set -e
 EVCC_USER=evcc
 EVCC_GROUP=evcc
 EVCC_HOME="/var/lib/$EVCC_USER"
-RESTART_FLAG_FILE=$EVCC_HOME/.restartOnUpgrade
+RESTART_FLAG_FILE="/tmp/.restartEvccOnUpgrade"
 
 copyDbToUserDir() {
   CURRENT_USER=$(systemctl show -pUser evcc | cut -d= -f2)
