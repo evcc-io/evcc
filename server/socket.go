@@ -120,6 +120,11 @@ func kv(p util.Param) string {
 		panic(err)
 	}
 
+	if p.Key == "" && val == "" {
+		log.ERROR.Printf("invalid key/val for %+v, please report to https://github.com/evcc-io/evcc/issues/6439", p)
+		return "{\"foo\":\"bar\"}"
+	}
+
 	var msg strings.Builder
 	msg.WriteString("\"")
 	if p.Loadpoint != nil {
