@@ -59,7 +59,7 @@ require (
 	github.com/koron/go-ssdp v0.0.3
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
-	github.com/lorenzodonini/ocpp-go v0.16.1-0.20220927200117-d4afed542168
+	github.com/lorenzodonini/ocpp-go v0.16.1-0.20230224180512-0195c3faf41a
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mabunixda/wattpilot v1.1.1
 	github.com/manifoldco/promptui v0.9.0
