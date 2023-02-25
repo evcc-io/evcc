@@ -121,7 +121,7 @@ func kv(p util.Param) string {
 	}
 
 	if p.Key == "" && val == "" {
-		log.ERROR.Printf("invalid key/val for %+v, please report to https://github.com/evcc-io/evcc/issues/6439", p)
+		log.ERROR.Printf("invalid key/val for %+v %+v, please report to https://github.com/evcc-io/evcc/issues/6439", p, p.Val)
 		return "\"foo\":\"bar\""
 	}
 
