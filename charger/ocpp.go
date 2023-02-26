@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -270,8 +271,6 @@ func (c *OCPP) configure(key, val string) error {
 	rc := make(chan error, 1)
 
 	err := ocpp.Instance().ChangeConfiguration(c.cp.ID(), func(resp *core.ChangeConfigurationConfirmation, err error) {
-		c.log.TRACE.Printf("%T: %v", resp, resp)
-
 		if err == nil && resp != nil && resp.Status != core.ConfigurationStatusAccepted {
 			rc <- fmt.Errorf("ChangeConfiguration failed: %s", resp.Status)
 		}
@@ -312,8 +311,6 @@ func (c *OCPP) Enable(enable bool) error {
 
 	if enable {
 		err = ocpp.Instance().RemoteStartTransaction(c.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
-			c.log.TRACE.Printf("%T: %+v", resp, resp)
-
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
 			}
@@ -325,8 +322,6 @@ func (c *OCPP) Enable(enable bool) error {
 		})
 	} else {
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
-			c.log.TRACE.Printf("%T: %+v", resp, resp)
-
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
 			}
@@ -339,12 +334,8 @@ func (c *OCPP) Enable(enable bool) error {
 }
 
 func (c *OCPP) setChargingProfile(connectorId int, profile *types.ChargingProfile) error {
-	c.log.TRACE.Printf("SetChargingProfileRequest: %+v (%+v)", profile, *profile.ChargingSchedule)
-
 	rc := make(chan error, 1)
 	err := ocpp.Instance().SetChargingProfile(c.cp.ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
-		c.log.TRACE.Printf("%T: %+v", resp, resp)
-
 		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}
@@ -362,6 +353,7 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 		return err
 	}
 
+	current = math.Trunc(10*current) / 10
 	c.log.TRACE.Printf("update period with phases: %d, current: %f", phases, current)
 
 	err := c.setChargingProfile(c.connector, getTxChargingProfile(current, phases))
