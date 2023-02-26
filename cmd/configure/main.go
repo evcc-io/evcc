@@ -21,11 +21,13 @@ import (
 	"golang.org/x/text/language"
 )
 
-//go:embed localization/de.toml
-var lang_de string
+var (
+	//go:embed localization/de.toml
+	lang_de string
 
-//go:embed localization/en.toml
-var lang_en string
+	//go:embed localization/en.toml
+	lang_en string
+)
 
 type CmdConfigure struct {
 	configuration Configure

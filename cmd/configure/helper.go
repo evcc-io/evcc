@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	stripmd "github.com/writeas/go-strip-markdown"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
@@ -17,10 +18,9 @@ import (
 // processDeviceSelection processes the user-selected device, checks
 // if it's an actual device and makes sure the requirements are set
 func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (templates.Template, error) {
-	templateItem := c.selectItem(deviceCategory)
-
-	if templateItem.Title() == c.localizedString("ItemNotPresent") {
-		return templateItem, c.errItemNotPresent
+	templateItem, err := c.selectItem(deviceCategory)
+	if err != nil {
+		return templateItem, nil
 	}
 
 	if err := c.processDeviceRequirements(templateItem); err != nil {
@@ -298,44 +298,34 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 	}
 }
 
-// fetchElements returns template items of a given class
-func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) (products []string, items []templates.Template) {
+// fetchProducts returns products and templates for given class
+func (c *CmdConfigure) fetchProducts(deviceCategory DeviceCategory) (products []string, tmpls []templates.Template) {
+	items := make(map[string]templates.Template)
+
 	for _, tmpl := range templates.ByClass(DeviceCategories[deviceCategory].class) {
-		// if len(tmpl.Params) == 0 {
-		// 	continue
-		// }
-
-		// for _, t := range tmpl.Titles(c.lang) {
-		// 	titleTmpl := templates.Template{
-		// 		TemplateDefinition: tmpl.TemplateDefinition,
-		// 		ConfigDefaults:     tmpl.ConfigDefaults,
-		// 	}
-		// 	title := t
-		// 	groupTitle := titleTmpl.GroupTitle(c.lang)
-		// 	if groupTitle != "" {
-		// 		title += " [" + groupTitle + "]"
-		// 	}
-		// 	titleTmpl.SetTitle(title)
-
 		for _, p := range tmpl.Products {
-			product := p.String(c.lang)
+			product := p.Title(c.lang)
+			fmt.Println("GroupTitle", tmpl.GroupTitle(c.lang))
 
 			if deviceCategory == DeviceCategoryGuidedSetup {
 				if tmpl.GuidedSetupEnabled() {
-					products = append(products, product)
-					items = append(items, tmpl)
+					items[product] = tmpl
 				}
 			} else {
 				if len(DeviceCategories[deviceCategory].categoryFilter) == 0 ||
 					c.paramChoiceContains(tmpl.Params, templates.ParamUsage, DeviceCategories[deviceCategory].categoryFilter.String()) {
-					products = append(products, product)
-					items = append(items, tmpl)
+					items[product] = tmpl
 				}
 			}
 		}
 	}
 
-	sort.Slice(items[:], func(i, j int) bool {
+	keys := maps.Keys(items)
+
+	sort.SliceStable(keys, func(ii, jj int) bool {
+		i := keys[ii]
+		j := keys[jj]
+
 		// sort generic templates to the bottom
 		if items[i].Group != "" && items[j].Group == "" {
 			return false
@@ -346,10 +336,15 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) (products []
 		if items[i].Group != items[j].Group {
 			return strings.ToLower(items[i].GroupTitle(c.lang)) < strings.ToLower(items[j].GroupTitle(c.lang))
 		}
-		return strings.ToLower(items[i].Title()) < strings.ToLower(items[j].Title())
+		return strings.ToLower(i) < strings.ToLower(j)
 	})
 
-	return items
+	for _, key := range keys {
+		products = append(products, key)
+		tmpls = append(tmpls, items[key])
+	}
+
+	return
 }
 
 // paramChoiceContains is a helper function to check if a param choice contains a given value

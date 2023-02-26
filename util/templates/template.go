@@ -76,41 +76,6 @@ func (t *Template) Validate() error {
 	return nil
 }
 
-// // set the language title by combining all product titles
-// func (t *Template) SetCombinedTitle(lang string) {
-// 	if len(t.titles) == 0 {
-// 		t.resolveTitles(lang)
-// 	}
-
-// 	t.title = strings.Join(t.titles, "/")
-// }
-
-// // set the title for this templates
-// func (t *Template) SetTitle(title string) {
-// 	t.title = title
-// }
-
-// // return the title for this template
-// func (t *Template) Title() string {
-// 	return t.title
-// }
-
-// // return the language specific product titles
-// func (t *Template) Titles(lang string) []string {
-// 	if len(t.titles) == 0 {
-// 		t.resolveTitles(lang)
-// 	}
-
-// 	return t.titles
-// }
-
-// // set the language specific product titles
-// func (t *Template) resolveTitles(lang string) {
-// 	for _, p := range t.Products {
-// 		t.titles = append(t.titles, p.Title(lang))
-// 	}
-// }
-
 // add the referenced base Params and overwrite existing ones
 func (t *Template) ResolvePresets() error {
 	currentParams := make([]Param, len(t.Params))
@@ -118,11 +83,7 @@ func (t *Template) ResolvePresets() error {
 	t.Params = []Param{}
 	for _, p := range currentParams {
 		if p.Preset != "" {
-<<<<<<< HEAD
 			base, ok := ConfigDefaults.Presets[p.Preset]
-=======
-			base, ok := configDefaults.Presets[p.Preset]
->>>>>>> f39ce261e (Templates: refactor title handling)
 			if !ok {
 				return fmt.Errorf("could not find preset definition: %s", p.Preset)
 			}
@@ -149,11 +110,7 @@ func (t *Template) ResolveGroup() error {
 		return nil
 	}
 
-<<<<<<< HEAD
 	_, ok := ConfigDefaults.DeviceGroups[t.Group]
-=======
-	_, ok := configDefaults.DeviceGroups[t.Group]
->>>>>>> f39ce261e (Templates: refactor title handling)
 	if !ok {
 		return fmt.Errorf("could not find devicegroup definition: %s", t.Group)
 	}
@@ -162,12 +119,8 @@ func (t *Template) ResolveGroup() error {
 }
 
 // return the language specific group title
-func (t *Template) GroupTitle(lang string) string {
-<<<<<<< HEAD
+func (t Template) GroupTitle(lang string) string {
 	tl := ConfigDefaults.DeviceGroups[t.Group]
-=======
-	tl := configDefaults.DeviceGroups[t.Group]
->>>>>>> f39ce261e (Templates: refactor title handling)
 	return tl.String(lang)
 }
 
@@ -292,16 +245,6 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 
 	t.ModbusValues(renderMode, values)
 
-<<<<<<< HEAD
-=======
-	// add the common templates
-	for _, v := range configDefaults.Presets {
-		if !strings.Contains(t.Render, v.Render) {
-			t.Render += "\n" + v.Render
-		}
-	}
-
->>>>>>> f39ce261e (Templates: refactor title handling)
 	res := make(map[string]interface{})
 
 	// TODO this is an utterly horrible hack

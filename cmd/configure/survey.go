@@ -54,31 +54,21 @@ func (c *CmdConfigure) askSelection(message string, items []string) (string, int
 }
 
 // selectItem selects item from list
-func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Template {
-	// var emptyItem templates.Template
-	// emptyItem.SetTitle(c.localizedString("ItemNotPresent"))
-
-	// elements := c.fetchElements(deviceCategory)
-	// elements = append(elements, emptyItem)
-
-	// var items []string
-	// for _, item := range elements {
-	// 	if item.Title() != "" {
-	// 		items = append(items, item.Title())
-	// 	}
-	// }
-
-	// TODO test empty
-	titles, templates := c.fetchElements(deviceCategory)
-	titles = append(titles, c.localizedString("ItemNotPresent"))
+func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) (templates.Template, error) {
+	products, tmpls := c.fetchProducts(deviceCategory)
+	products = append(products, c.localizedString("ItemNotPresent"))
 
 	text := fmt.Sprintf("%s %s %s:", c.localizedString("Choose"), DeviceCategories[deviceCategory].article, DeviceCategories[deviceCategory].title)
-	_, selected, err := c.askSelection(text, items)
+	_, selected, err := c.askSelection(text, products)
 	if err != nil {
 		c.log.FATAL.Fatal(err)
 	}
 
-	return templates[selected]
+	if selected >= len(products) {
+		return templates.Template{}, c.errItemNotPresent
+	}
+
+	return tmpls[selected], nil
 }
 
 // askChoice selects item from list
