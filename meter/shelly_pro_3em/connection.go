@@ -38,8 +38,6 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 		return nil, err
 	}
 
-	log.INFO.Println("resp: ", resp.Id)
-
 	conn := &Connection{
 		Helper:     client,
 		channel:    channel,
