@@ -263,10 +263,10 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 
 	for {
 		fmt.Println()
-		_, paramHost := templateItem.ConfigDefaults.ParamByName("host")
-		_, paramPort := templateItem.ConfigDefaults.ParamByName("port")
-		_, paramUser := templateItem.ConfigDefaults.ParamByName("user")
-		_, paramPassword := templateItem.ConfigDefaults.ParamByName("password")
+		_, paramHost := templates.ConfigDefaults.ParamByName("host")
+		_, paramPort := templates.ConfigDefaults.ParamByName("port")
+		_, paramUser := templates.ConfigDefaults.ParamByName("user")
+		_, paramPassword := templates.ConfigDefaults.ParamByName("password")
 
 		host := c.askParam(paramHost)
 		port := c.askParam(paramPort)
@@ -309,7 +309,6 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 		for _, t := range tmpl.Titles(c.lang) {
 			titleTmpl := templates.Template{
 				TemplateDefinition: tmpl.TemplateDefinition,
-				ConfigDefaults:     tmpl.ConfigDefaults,
 			}
 			title := t
 			groupTitle := titleTmpl.GroupTitle(c.lang)
@@ -500,7 +499,7 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, dev
 		return
 	}
 
-	config := templateItem.ConfigDefaults.Modbus
+	config := templates.ConfigDefaults.Modbus
 
 	for _, choice := range modbusParam.Choice {
 		if config.Interfaces[choice] == nil {

@@ -6,6 +6,6 @@ products:
 requirements:
   evcc: ["eebus"]
 params:
-  - preset: eebusmeter
+  - preset: eebus-meter
 render: |
   {{ include "eebus-meter" . }}

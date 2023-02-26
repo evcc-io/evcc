@@ -4,8 +4,8 @@ products:
     description:
       generic: Cupra Born, My Cupra
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-identify
 render: |
   type: cupra
   {{ include "vehicle-base" . }}

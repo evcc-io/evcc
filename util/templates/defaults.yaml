@@ -290,7 +290,7 @@ params:
       de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
 
 presets:
-  vehiclebase:
+  vehicle-base:
     params:
       - name: title
       - name: user
@@ -308,30 +308,7 @@ presets:
         default: 15m
         advanced: true
         type: duration
-    render: |
-      {{define "vehicle-base"}}
-      {{- if ne .title "" }}
-      title: {{ .title }}
-      {{- end }}
-      {{- if ne .icon "" }}
-      icon: {{ .icon }}
-      {{- end }}
-      user: {{ .user }}
-      password: {{ .password }}
-      {{- if ne .capacity "" }}
-      capacity: {{ .capacity }}
-      {{- end }}
-      {{- if ne .vin "" }}
-      vin: {{ .vin }}
-      {{- end }}
-      {{- if ne .phases "" }}
-      phases: {{ .phases }}
-      {{- end }}
-      {{- if ne .cache "" }}
-      cache: {{ .cache }}
-      {{- end }}
-      {{end}}
-  vehicleidentify:
+  vehicle-identify:
     params:
       - name: mode
         advanced: true
@@ -348,64 +325,17 @@ presets:
         type: stringlist
       - name: priority
         advanced: true
-    render: |
-      {{define "vehicle-identify"}}
-      {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") (ne .priority "") }}
-      onIdentify:
-      {{- if (ne .mode "") }}
-        mode: {{ .mode }}
-      {{- end }}
-      {{- if (ne .minSoc "") }}
-        minSoc: {{ .minSoc }}
-      {{- end }}
-      {{- if (ne .targetSoc "") }}
-        targetSoc: {{ .targetSoc }}
-      {{- end }}
-      {{- if (ne .minCurrent "") }}
-        minCurrent: {{ .minCurrent }}
-      {{- end }}
-      {{- if (ne .maxCurrent "") }}
-        maxCurrent: {{ .maxCurrent }}
-      {{- end }}
-      {{- if (ne .priority "") }}
-      - priority: {{ .priority }}
-      {{- end }}
-      {{- end }}
-      {{- if ne (len .identifiers) 0 }}
-      identifiers:
-      {{-   range .identifiers }}
-      - {{ . }}
-      {{-   end }}
-      {{- end }}
-      {{end}}
-  vehiclelanguage:
+  vehicle-language:
     params:
       - name: language
-    render: |
-      {{define "vehicle-language"}}
-      language: {{ .language }}
-      {{end}}
-  eebusmeter:
+  eebus-meter:
     params:
       - name: ski
       - name: ip
-    render: |
-      {{define "eebus-meter"}}
-      type: eebus
-      ski: {{ .ski }}
-      {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
-      meter: true
-      {{end}}
-  eebusnometer:
+  eebus-no-meter:
     params:
       - name: ski
       - name: ip
-    render: |
-      {{define "eebus-no-meter"}}
-      type: eebus
-      ski: {{ .ski }}
-      {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
-      {{end}}
   switchsocket:
     params:
       - name: integrateddevice
@@ -416,9 +346,6 @@ presets:
           en: Integrated device (no vehicle connection)
       - name: icon
         advanced: true
-    render: |
-      {{ if eq .integrateddevice "true" }}features: ["integrateddevice"]{{ end }}
-      {{ if ne .icon "" }}icon: {{ .icon }}{{ end }}
 
 modbus:
   interfaces:

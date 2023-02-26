@@ -4,9 +4,9 @@ products:
     description:
       generic: Bluelink
 params:
-  - preset: vehiclebase
-  - preset: vehiclelanguage
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-language
+  - preset: vehicle-identify
 render: |
   type: hyundai
   {{ include "vehicle-base" . }}
