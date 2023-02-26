@@ -12,6 +12,7 @@ func (u UsageChoice) String() string {
 	return string(u)
 }
 
+// TODO use enumer
 type DeviceCategory string
 
 func (c DeviceCategory) String() string {

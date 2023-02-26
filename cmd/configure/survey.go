@@ -54,7 +54,7 @@ func (c *CmdConfigure) askSelection(message string, items []string) (string, int
 }
 
 // selectItem selects item from list
-func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) (templates.Template, error) {
+func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) (string, templates.Template, error) {
 	products, tmpls := c.fetchProducts(deviceCategory)
 	products = append(products, c.localizedString("ItemNotPresent"))
 
@@ -65,10 +65,10 @@ func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) (templates.Temp
 	}
 
 	if selected >= len(products) {
-		return templates.Template{}, c.errItemNotPresent
+		return "", templates.Template{}, c.errItemNotPresent
 	}
 
-	return tmpls[selected], nil
+	return products[selected], tmpls[selected], nil
 }
 
 // askChoice selects item from list

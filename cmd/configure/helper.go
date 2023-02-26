@@ -17,17 +17,13 @@ import (
 
 // processDeviceSelection processes the user-selected device, checks
 // if it's an actual device and makes sure the requirements are set
-func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (templates.Template, error) {
-	templateItem, err := c.selectItem(deviceCategory)
-	if err != nil {
-		return templateItem, nil
+func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (string, templates.Template, error) {
+	name, tmpl, err := c.selectItem(deviceCategory)
+	if err == nil {
+		err = c.processDeviceRequirements(tmpl)
 	}
 
-	if err := c.processDeviceRequirements(templateItem); err != nil {
-		return templateItem, err
-	}
-
-	return templateItem, nil
+	return name, tmpl, err
 }
 
 // processDeviceValues processes the user provided values, creates

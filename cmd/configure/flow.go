@@ -15,38 +15,37 @@ import (
 func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	var err error
 
-	var values map[string]interface{}
-	var deviceCategory DeviceCategory
-	var supportedDeviceCategories []DeviceCategory
-	var templateItem templates.Template
-
-	deviceItem := device{}
+	var (
+		values                    map[string]interface{}
+		deviceItem                device
+		deviceCategory            DeviceCategory
+		supportedDeviceCategories []DeviceCategory
+		templateItem              templates.Template
+		name                      string
+	)
 
 	for {
 		fmt.Println()
 
-		templateItem, err = c.processDeviceSelection(DeviceCategoryGuidedSetup)
+		name, templateItem, err = c.processDeviceSelection(DeviceCategoryGuidedSetup)
 		if err != nil {
 			return
 		}
 
 		usageChoices := c.paramChoiceValues(templateItem.Params, templates.ParamUsage)
 		if len(usageChoices) == 0 {
-			panic("ERROR: Device template is missing valid usages!")
-		}
-		if len(usageChoices) == 0 {
-			usageChoices = []string{string(DeviceCategoryGridMeter), string(DeviceCategoryPVMeter), string(DeviceCategoryBatteryMeter)}
+			usageChoices = []string{DeviceCategoryGridMeter.String(), DeviceCategoryPVMeter.String(), DeviceCategoryBatteryMeter.String(), DeviceCategoryChargeMeter.String()}
 		}
 
 		supportedDeviceCategories = []DeviceCategory{}
 
 		for _, usage := range usageChoices {
 			switch usage {
-			case string(DeviceCategoryGridMeter):
+			case DeviceCategoryGridMeter.String():
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryGridMeter)
-			case string(DeviceCategoryPVMeter):
+			case DeviceCategoryPVMeter.String():
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryPVMeter)
-			case string(DeviceCategoryBatteryMeter):
+			case DeviceCategoryBatteryMeter.String():
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryBatteryMeter)
 			}
 		}
@@ -88,7 +87,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	}
 
 	fmt.Println()
-	fmt.Println(templateItem.Title() + " " + c.localizedString("Device_Added"))
+	fmt.Println(name + " " + c.localizedString("Device_Added"))
 
 	c.configureLinkedTypes(templateItem)
 }
@@ -186,32 +185,37 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 		Name: DeviceCategories[deviceCategory].defaultName,
 	}
 
-	var deviceDescription string
+	var name string
 	var capabilities []string
 
 	// repeat until the device is added or the user chooses to continue without adding a device
 	for {
 		fmt.Println()
 
-		templateItem, err := c.processDeviceSelection(deviceCategory)
+		var tmpl templates.Template
+		var err error
+
+		name, tmpl, err = c.processDeviceSelection(deviceCategory)
 		if err != nil {
 			return device, capabilities, c.errItemNotPresent
 		}
 
-		deviceDescription = templateItem.Title()
-		capabilities = templateItem.Capabilities
-		values := c.processConfig(&templateItem, deviceCategory)
-		device, err = c.processDeviceValues(values, templateItem, device, deviceCategory)
+		capabilities = tmpl.Capabilities
+
+		values := c.processConfig(&tmpl, deviceCategory)
+		device, err = c.processDeviceValues(values, tmpl, device, deviceCategory)
 		if err != nil {
 			if err != c.errDeviceNotValid {
 				fmt.Println()
 				fmt.Println(err)
 			}
-			// ask if the user wants to add the
+
+			// ask if the user wants to add the device
 			fmt.Println()
 			if !c.askConfigFailureNextStep() {
 				return device, capabilities, err
 			}
+
 			continue
 		}
 
@@ -227,7 +231,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	}
 
 	fmt.Println()
-	fmt.Println(deviceDescription + deviceTitle + " " + c.localizedString("Device_Added"))
+	fmt.Println(name + deviceTitle + " " + c.localizedString("Device_Added"))
 
 	return device, capabilities, nil
 }
