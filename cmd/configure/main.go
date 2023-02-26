@@ -436,8 +436,8 @@ func (c *CmdConfigure) configureLoadpoints() {
 			valueType: templates.TypeBool,
 		})
 
-		if len(c.CircuitNames) > 0 && c.askYesNo(c.localizedString("Loadpoint_CircuitYesNo", nil)) {
-			ccNameId, _ := c.askChoice(c.localizedString("Loadpoint_Circuit", nil), c.CircuitNames)
+		if len(c.CircuitNames) > 0 && c.askYesNo(c.localizedString("Loadpoint_CircuitYesNo")) {
+			ccNameId, _ := c.askChoice(c.localizedString("Loadpoint_Circuit"), c.CircuitNames)
 			loadpoint.Circuit = c.CircuitNames[ccNameId]
 		}
 
@@ -466,33 +466,33 @@ func (c *CmdConfigure) configureSite() {
 // configureCircuits asks for circuits
 func (c *CmdConfigure) configureCircuits() {
 	fmt.Println()
-	fmt.Println(c.localizedString("Circuit_Setup", nil))
+	fmt.Println(c.localizedString("Circuit_Setup"))
 
-	if !c.askYesNo(c.localizedString("Circuit_Add", nil)) {
+	if !c.askYesNo(c.localizedString("Circuit_Add")) {
 		return
 	}
 
 	for {
 		ccName := c.askValue(question{
-			label:    c.localizedString("Circuit_Title", nil),
+			label:    c.localizedString("Circuit_Title"),
 			required: true,
 		})
 		curCircuit := *core.NewCircuit(ccName, 0, nil, util.NewLogger(("cc-" + ccName)))
 
 		curChoices := []string{
-			c.localizedString("Circuit_MaxCurrent16A", nil),  // 11kVA
-			c.localizedString("Circuit_MaxCurrent20A", nil),  // 13kVA
-			c.localizedString("Circuit_MaxCurrent25A", nil),  // 17kVA
-			c.localizedString("Circuit_MaxCurrent32A", nil),  // 22kVA
-			c.localizedString("Circuit_MaxCurrent35A", nil),  // 24kVA
-			c.localizedString("Circuit_MaxCurrent50A", nil),  // 34kVA
-			c.localizedString("Circuit_MaxCurrent63A", nil),  // 43kVA
-			c.localizedString("Circuit_MaxCurrent80A", nil),  // 55kVA
-			c.localizedString("Circuit_MaxCurrent100A", nil), // 69kVA
-			c.localizedString("Circuit_MaxCurrentCustom", nil),
+			c.localizedString("Circuit_MaxCurrent16A"),  // 11kVA
+			c.localizedString("Circuit_MaxCurrent20A"),  // 13kVA
+			c.localizedString("Circuit_MaxCurrent25A"),  // 17kVA
+			c.localizedString("Circuit_MaxCurrent32A"),  // 22kVA
+			c.localizedString("Circuit_MaxCurrent35A"),  // 24kVA
+			c.localizedString("Circuit_MaxCurrent50A"),  // 34kVA
+			c.localizedString("Circuit_MaxCurrent63A"),  // 43kVA
+			c.localizedString("Circuit_MaxCurrent80A"),  // 55kVA
+			c.localizedString("Circuit_MaxCurrent100A"), // 69kVA
+			c.localizedString("Circuit_MaxCurrentCustom"),
 		}
 		fmt.Println()
-		powerIndex, _ := c.askChoice(c.localizedString("Circuit_MaxCurrent", nil), curChoices)
+		powerIndex, _ := c.askChoice(c.localizedString("Circuit_MaxCurrent"), curChoices)
 		switch powerIndex {
 		case 0:
 			curCircuit.MaxCurrent = 16.0
@@ -514,15 +514,15 @@ func (c *CmdConfigure) configureCircuits() {
 			curCircuit.MaxCurrent = 100.0
 		case 9:
 			amperage := c.askValue(question{
-				label:          c.localizedString("Circuit_MaxCurrentCustomInput", nil),
-				valueType:      templates.ParamTypeNumber,
+				label:          c.localizedString("Circuit_MaxCurrentCustomInput"),
+				valueType:      templates.TypeNumber,
 				maxNumberValue: 1000, // 600kW ... enough?
 				required:       true})
 			curCircuit.MaxCurrent, _ = strconv.ParseFloat(amperage, 64)
 		}
 
 		// check meter
-		if c.askYesNo(c.localizedString("Circuit_Meter", nil)) {
+		if c.askYesNo(c.localizedString("Circuit_Meter")) {
 			ccMeter, _, err := c.configureDeviceCategory(DeviceCategoryCircuitMeter)
 			if err == nil {
 				curCircuit.MeterRef = ccMeter.Name
@@ -531,9 +531,9 @@ func (c *CmdConfigure) configureCircuits() {
 
 		// in case we have already circuits, ask for parent circuit
 		if len(c.CircuitNames) > 0 {
-			if c.askYesNo(c.localizedString("Circuit_HasParent", nil)) {
+			if c.askYesNo(c.localizedString("Circuit_HasParent")) {
 				sort.Strings(c.CircuitNames)
-				parentCCNameId, _ := c.askChoice(c.localizedString("Circuit_Parent", nil), c.CircuitNames)
+				parentCCNameId, _ := c.askChoice(c.localizedString("Circuit_Parent"), c.CircuitNames)
 
 				// assign this circuit as child to the requested parent
 				for ccId := range c.configuration.config.Circuits {
@@ -555,7 +555,7 @@ func (c *CmdConfigure) configureCircuits() {
 		c.CircuitNames = append(c.CircuitNames, curCircuit.Name)
 
 		fmt.Println()
-		if !c.askYesNo(c.localizedString("Circuit_AddAnother", nil)) {
+		if !c.askYesNo(c.localizedString("Circuit_AddAnother")) {
 			break
 		}
 	}
