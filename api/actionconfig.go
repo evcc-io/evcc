@@ -15,6 +15,7 @@ type ActionConfig struct {
 	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
 	MinSoc     *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc
 	TargetSoc  *int        `mapstructure:"targetSoc,omitempty"`  // Target Soc
+	Priority   *int        `mapstructure:"priority,omitempty"`   // Priority
 }
 
 // Merge merges all non-nil properties of the additional config into the base config.

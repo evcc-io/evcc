@@ -83,7 +83,7 @@ params:
       en: Username
     help:
       de: Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
-      en: User-account (e.g. email address, user id, etc.)
+      en: User account (e.g. email address, user id, etc.)
   - name: password
     description:
       de: Passwort
@@ -168,7 +168,7 @@ params:
     type: duration
   - name: mode
     description:
-      de: Standard-Lademodus, wenn ein Fahrzeug angeschlossen ist
+      de: Standardlademodus, wenn ein Fahrzeug angeschlossen ist
       en: Default charging mode when a vehicle is connected
     help:
       de: Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
@@ -179,13 +179,13 @@ params:
       de: Minimaler Ladestand (Soc) in %
       en: Minimum state of charge (Soc) in %
     help:
-      de: Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht
-      en: Charge immediately with maximum power up to the defined state of charge, if the charge mode is not set to 'OFF'
+      de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht
+      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'OFF'
     example: 25
     type: number
   - name: targetsoc
     description:
-      de: Ziel-Ladestand (Soc) in %
+      de: Zielladestand (Soc) in %
       en: Target state of charge (Soc) in %
     help:
       de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden
@@ -218,6 +218,14 @@ params:
       de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
       en: "Mostly this can be added later, see: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
     type: stringlist
+  - name: priority
+    description:
+      de: Priorität
+      en: Priority
+    help:
+      de: Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von PV-Energie
+      en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating pv energy
+    type: number
   - name: standbypower
     description:
       de: Standby-Leistung in W
@@ -321,9 +329,11 @@ presets:
       - name: identifiers
         advanced: true
         type: stringlist
+      - name: priority
+        advanced: true
     render: |
       {{define "vehicle-identify"}}
-      {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") }}
+      {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") (ne .priority "") }}
       onIdentify:
       {{- if (ne .mode "") }}
         mode: {{ .mode }}
@@ -339,6 +349,9 @@ presets:
       {{- end }}
       {{- if (ne .maxCurrent "") }}
         maxCurrent: {{ .maxCurrent }}
+      {{- end }}
+      {{- if (ne .priority "") }}
+      - priority: {{ .priority }}
       {{- end }}
       {{- end }}
       {{- if ne (len .identifiers) 0 }}
