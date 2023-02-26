@@ -20,3 +20,4 @@ render: |
   {{ if ne .user "" }}user: {{ .user }}{{ end }}
   {{ if ne .password "" }}password: {{ .password }}{{ end }}
   channel: {{ .channel }}  # shelly device relay channel
+  deviceType: switch #shelly device type

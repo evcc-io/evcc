@@ -38,7 +38,7 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewShelly creates Shelly charger
 func NewShelly(embed embed, uri, user, password string, channel int, standbypower float64) (*Shelly, error) {
-	conn, err := shelly.NewConnection(uri, user, password, channel)
+	conn, err := shelly.NewConnection(uri, user, password, channel, "switch")
 	if err != nil {
 		return nil, err
 	}

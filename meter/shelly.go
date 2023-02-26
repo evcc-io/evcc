@@ -14,15 +14,16 @@ func init() {
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
-		URI      string
-		User     string
-		Password string
-		Channel  int
+		URI        string
+		User       string
+		Password   string
+		Channel    int
+		DeviceType string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel)
+	return shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel, cc.DeviceType)
 }
