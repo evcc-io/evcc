@@ -13,11 +13,11 @@ params:
     type: number
   - name: modbusdevice
     description:
-      de: Geräteadresse
-      en: Device address
+      de: Gerätename
+      en: Device name
     help:
-      de: USB-RS485 Adapter Adresse
-      en: USB-RS485 Adapter address
+      de: USB-RS485 Gerätename
+      en: USB-RS485 device name
     example: /dev/ttyUSB0
   - name: modbusbaudrate
     description:
@@ -33,7 +33,7 @@ params:
       de: ComSet
       en: ComSet
     help:
-      de: Kommunikationsparameter für den Adapter
+      de: Kommunikationsparameter des Adapters
       en: Communication parameter for the adapter
     default: 8N1
   - name: host
@@ -83,7 +83,7 @@ params:
       en: Username
     help:
       de: Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
-      en: User-account (e.g. email address, user id, etc.)
+      en: User account (e.g. email address, user id, etc.)
   - name: password
     description:
       de: Passwort
@@ -168,7 +168,7 @@ params:
     type: duration
   - name: mode
     description:
-      de: Standard-Lademodus, wenn ein Fahrzeug angeschlossen ist
+      de: Standardlademodus, wenn ein Fahrzeug angeschlossen ist
       en: Default charging mode when a vehicle is connected
     help:
       de: Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
@@ -179,13 +179,13 @@ params:
       de: Minimaler Ladestand (Soc) in %
       en: Minimum state of charge (Soc) in %
     help:
-      de: Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht
-      en: Charge immediately with maximum power up to the defined state of charge, if the charge mode is not set to 'OFF'
+      de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht
+      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'OFF'
     example: 25
     type: number
   - name: targetsoc
     description:
-      de: Ziel-Ladestand (Soc) in %
+      de: Zielladestand (Soc) in %
       en: Target state of charge (Soc) in %
     help:
       de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden
@@ -218,6 +218,14 @@ params:
       de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
       en: "Mostly this can be added later, see: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
     type: stringlist
+  - name: priority
+    description:
+      de: Priorität
+      en: Priority
+    help:
+      de: Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von PV-Energie
+      en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating pv energy
+    type: number
   - name: standbypower
     description:
       de: Standby-Leistung in W
@@ -240,29 +248,46 @@ params:
       de: Icon
       en: Icon
     help:
-      de: "Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater"
-      en: "Visible in UI. Possible values: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater"
+      de: "Icon in der Benutzeroberfläche"
+      en: "Icon as shown in user interface"
+    type: choice
     validvalues:
-      [
-        "bike",
-        "bus",
-        "car",
-        "heater",
-        "heatercooler",
-        "heatpump",
-        "moped",
-        "motorcycle",
-        "plug",
-        "scooter",
-        "tractor",
-        "van",
-        "waterheater",
-      ]
+      - bike
+      - bus
+      - car
+      - heater
+      - heatercooler
+      - heatpump
+      - moped
+      - motorcycle
+      - plug
+      - scooter
+      - tractor
+      - van
+      - waterheater
   - name: ski
     required: true
+    description:
+      en: Subject Key Identifier (SKI)
+      de: Identifikationsschlüssel (SKI)
     help:
-      en: The SKI of the wallbox, can usually be found on the web interface of the wallbox
-      de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
+      en: The SKI of the wallbox, usually found on the web interface of the wallbox
+      de: Die SKI der Wallbox, üblicherweise im Web Interface der Wallbox zu finden
+  - name: uri
+    description:
+      generic: URI
+    help:
+      en: HTTP(S) address
+      de: HTTP(S) Adresse
+  - name: ain
+    mask: true
+    example: "307788992233"
+    description:
+      en: Actor Identification Number (AIN)
+      de: Aktoridentifikationsnummer (AIN)
+    help:
+      en: The AIN is printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
+      de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
 
 presets:
   vehiclebase:
@@ -321,9 +346,11 @@ presets:
       - name: identifiers
         advanced: true
         type: stringlist
+      - name: priority
+        advanced: true
     render: |
       {{define "vehicle-identify"}}
-      {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") }}
+      {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") (ne .priority "") }}
       onIdentify:
       {{- if (ne .mode "") }}
         mode: {{ .mode }}
@@ -339,6 +366,9 @@ presets:
       {{- end }}
       {{- if (ne .maxCurrent "") }}
         maxCurrent: {{ .maxCurrent }}
+      {{- end }}
+      {{- if (ne .priority "") }}
+      - priority: {{ .priority }}
       {{- end }}
       {{- end }}
       {{- if ne (len .identifiers) 0 }}
@@ -376,6 +406,19 @@ presets:
       ski: {{ .ski }}
       {{ if ne .ip "" }}ip: {{ .ip }}{{ end }}
       {{end}}
+  switchsocket:
+    params:
+      - name: integrateddevice
+        type: bool
+        advanced: true
+        description:
+          de: Integriertes Gerät (keine Fahrzeugverbindung)
+          en: Integrated device (no vehicle connection)
+      - name: icon
+        advanced: true
+    render: |
+      {{ if eq .integrateddevice "true" }}features: ["integrateddevice"]{{ end }}
+      {{ if ne .icon "" }}icon: {{ .icon }}{{ end }}
 
 modbus:
   interfaces:

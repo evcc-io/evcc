@@ -28,7 +28,7 @@ params:
     mask: true
   - name: meterchannel
     default: 6
-    type: int
+    type: number
     required: true
     advanced: true
     description:
@@ -39,7 +39,7 @@ params:
       de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
   - name: switchchannel
     default: 3
-    type: int
+    type: number
     required: true
     advanced: true
     description:
@@ -48,6 +48,7 @@ params:
     help:
       en: Homematic switch actor channel number like shown in the CCU web user interface.
       de: Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
+  - preset: switchsocket
 render: |
   type: homematic
   uri: {{ .host }}:{{ .port }}

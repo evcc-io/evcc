@@ -1,0 +1,16 @@
+template: eastron-sdm120
+products:
+  - brand: Eastron
+    description:
+      generic: SDM120-Modbus
+params:
+  - name: usage
+    choice: ["grid", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: modbus
+  {{- include "modbus" . }}
+  model: sdm
+  power: Power
+  energy: Import

@@ -1,6 +1,6 @@
 template: e3dc
 products:
-  - brand: E3DC
+  - brand: E3/DC
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -20,7 +20,7 @@ render: |
       type: holding
       decode: int32s
       address: 40073 # Hausverbrauchsleistung in Watt
-  {{- end}}
+  {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: calc
@@ -38,7 +38,7 @@ render: |
         decode: int32s
         address: 40075 # Leistung zusätzlicher Einspeiser in Watt
       scale: -1 # reverse sign
-  {{- end}}
+  {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: modbus
@@ -58,4 +58,4 @@ render: |
   {{- if ne .capacity "" }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
-  {{- end}}
+  {{- end }}

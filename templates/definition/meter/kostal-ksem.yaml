@@ -19,10 +19,6 @@ render: |
     - CurrentL1
     - CurrentL2
     - CurrentL3
-  voltages:
-    - VoltageL1
-    - VoltageL2
-    - VoltageL3
   powers:
     - PowerL1
     - PowerL2

@@ -5,19 +5,28 @@ products:
       generic: PAC 2200
 params:
   - name: usage
-    choice: ["grid", "pv", "battery", "charge"]
+    choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |
   type: modbus
   model: pac2200
   {{- include "modbus" . }}
-  {{- if eq .usage "charge" }}
-  energy: Import # only required for charge meter usage
-  {{- end }}
-  {{- if or (eq .usage "charge") (eq .usage "grid") }}
+  power: Power
+  energy: Import
   currents:
     - CurrentL1
     - CurrentL2
     - CurrentL3
+  {{- if eq .usage "grid" }}
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- end }}
+  {{- if eq .usage "charge" }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3
   {{- end }}

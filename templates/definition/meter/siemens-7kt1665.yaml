@@ -5,7 +5,7 @@ products:
       generic: 7KT1665
 params:
   - name: usage
-    choice: ["grid", "pv", "battery", "charge"]
+    choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |
@@ -19,7 +19,6 @@ render: |
       decode: uint32
     scale: 0.01
     timeout: 5s
-  {{- if or (eq .usage "charge") (eq .usage "grid") }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -29,8 +28,6 @@ render: |
       decode: uint32
     scale: 0.001
     timeout: 5s
-  {{ end -}}
-  {{- if or (eq .usage "charge") (eq .usage "grid") }}
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -56,4 +53,3 @@ render: |
       decode: uint32
     scale: 0.0001
     timeout: 5s
-  {{ end -}}

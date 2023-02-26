@@ -14,8 +14,6 @@ const (
 )
 
 func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	// TODO check if this authorizes foreign RFID tags
 	res := &core.AuthorizeConfirmation{
 		IdTagInfo: &types.IdTagInfo{
@@ -27,8 +25,6 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 }
 
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
 		Interval:    60, // TODO
@@ -55,8 +51,6 @@ func (cp *CP) timestampValid(t time.Time) bool {
 }
 
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	if request != nil {
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
@@ -75,8 +69,6 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 }
 
 func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	res := &core.DataTransferConfirmation{
 		Status: core.DataTransferStatusRejected,
 	}
@@ -91,8 +83,6 @@ func (cp *CP) update() {
 }
 
 func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	cp.update()
 	res := &core.HeartbeatConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
@@ -102,8 +92,6 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 }
 
 func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
@@ -129,8 +117,6 @@ func getSampleKey(s types.SampledValue) string {
 }
 
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
@@ -153,8 +139,6 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 }
 
 func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
@@ -178,13 +162,9 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 }
 
 func (cp *CP) DiagnosticStatusNotification(request *firmware.DiagnosticsStatusNotificationRequest) (*firmware.DiagnosticsStatusNotificationConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	return &firmware.DiagnosticsStatusNotificationConfirmation{}, nil
 }
 
 func (cp *CP) FirmwareStatusNotification(request *firmware.FirmwareStatusNotificationRequest) (*firmware.FirmwareStatusNotificationConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
 	return &firmware.FirmwareStatusNotificationConfirmation{}, nil
 }

@@ -11,7 +11,7 @@ render:
       type: template
       template: offline
       title: # Wird in der Benutzeroberfläche angezeigt # Optional
-      icon: car # Darstellung in der UI. Mögliche Werte: bike, bus, car, heater, heatercooler, heatpump, moped, motorcycle, plug, scooter, tractor, van, waterheater # Optional
+      icon: car # Icon in der Benutzeroberfläche # Optional
       capacity: 50 # Akkukapazität in kWh # Optional
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können # Optional
       mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll # Optional
