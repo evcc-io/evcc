@@ -299,32 +299,37 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 }
 
 // fetchElements returns template items of a given class
-func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.Template {
-	var items []templates.Template
+func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) (products []string, items []templates.Template) {
 	for _, tmpl := range templates.ByClass(DeviceCategories[deviceCategory].class) {
-		if len(tmpl.Params) == 0 {
-			continue
-		}
+		// if len(tmpl.Params) == 0 {
+		// 	continue
+		// }
 
-		for _, t := range tmpl.Titles(c.lang) {
-			titleTmpl := templates.Template{
-				TemplateDefinition: tmpl.TemplateDefinition,
-			}
-			title := t
-			groupTitle := titleTmpl.GroupTitle(c.lang)
-			if groupTitle != "" {
-				title += " [" + groupTitle + "]"
-			}
-			titleTmpl.SetTitle(title)
+		// for _, t := range tmpl.Titles(c.lang) {
+		// 	titleTmpl := templates.Template{
+		// 		TemplateDefinition: tmpl.TemplateDefinition,
+		// 		ConfigDefaults:     tmpl.ConfigDefaults,
+		// 	}
+		// 	title := t
+		// 	groupTitle := titleTmpl.GroupTitle(c.lang)
+		// 	if groupTitle != "" {
+		// 		title += " [" + groupTitle + "]"
+		// 	}
+		// 	titleTmpl.SetTitle(title)
+
+		for _, p := range tmpl.Products {
+			product := p.String(c.lang)
 
 			if deviceCategory == DeviceCategoryGuidedSetup {
 				if tmpl.GuidedSetupEnabled() {
-					items = append(items, titleTmpl)
+					products = append(products, product)
+					items = append(items, tmpl)
 				}
 			} else {
 				if len(DeviceCategories[deviceCategory].categoryFilter) == 0 ||
 					c.paramChoiceContains(tmpl.Params, templates.ParamUsage, DeviceCategories[deviceCategory].categoryFilter.String()) {
-					items = append(items, titleTmpl)
+					products = append(products, product)
+					items = append(items, tmpl)
 				}
 			}
 		}
