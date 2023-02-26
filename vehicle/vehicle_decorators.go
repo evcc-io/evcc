@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error)) api.Vehicle {
+func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error), vehicleClimater func() (bool, error)) api.Vehicle {
 	switch {
-	case chargeState == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && vehicleClimater == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return base
 
-	case chargeState != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState != nil && vehicleClimater == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.ChargeState
@@ -22,7 +22,7 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			},
 		}
 
-	case chargeState == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && vehicleClimater == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleRange
@@ -33,7 +33,7 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			},
 		}
 
-	case chargeState != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState != nil && vehicleClimater == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.ChargeState
@@ -48,7 +48,7 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			},
 		}
 
-	case chargeState == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && vehicleClimater == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleOdometer
@@ -59,7 +59,7 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			},
 		}
 
-	case chargeState != nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState != nil && vehicleClimater == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.ChargeState
@@ -74,7 +74,7 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			},
 		}
 
-	case chargeState == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && vehicleClimater == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleOdometer
@@ -89,7 +89,7 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			},
 		}
 
-	case chargeState != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState != nil && vehicleClimater == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.ChargeState
@@ -99,6 +99,142 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			Vehicle: base,
 			ChargeState: &decorateVehicleChargeStateImpl{
 				chargeState: chargeState,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
+	case chargeState == nil && vehicleClimater != nil && vehicleOdometer == nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.VehicleClimater
+		}{
+			Vehicle: base,
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+		}
+
+	case chargeState != nil && vehicleClimater != nil && vehicleOdometer == nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.ChargeState
+			api.VehicleClimater
+		}{
+			Vehicle: base,
+			ChargeState: &decorateVehicleChargeStateImpl{
+				chargeState: chargeState,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+		}
+
+	case chargeState == nil && vehicleClimater != nil && vehicleOdometer == nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.VehicleClimater
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
+	case chargeState != nil && vehicleClimater != nil && vehicleOdometer == nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.ChargeState
+			api.VehicleClimater
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			ChargeState: &decorateVehicleChargeStateImpl{
+				chargeState: chargeState,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
+	case chargeState == nil && vehicleClimater != nil && vehicleOdometer != nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.VehicleClimater
+			api.VehicleOdometer
+		}{
+			Vehicle: base,
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+		}
+
+	case chargeState != nil && vehicleClimater != nil && vehicleOdometer != nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.ChargeState
+			api.VehicleClimater
+			api.VehicleOdometer
+		}{
+			Vehicle: base,
+			ChargeState: &decorateVehicleChargeStateImpl{
+				chargeState: chargeState,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+		}
+
+	case chargeState == nil && vehicleClimater != nil && vehicleOdometer != nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.VehicleClimater
+			api.VehicleOdometer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
+	case chargeState != nil && vehicleClimater != nil && vehicleOdometer != nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.ChargeState
+			api.VehicleClimater
+			api.VehicleOdometer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			ChargeState: &decorateVehicleChargeStateImpl{
+				chargeState: chargeState,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
@@ -118,6 +254,14 @@ type decorateVehicleChargeStateImpl struct {
 
 func (impl *decorateVehicleChargeStateImpl) Status() (api.ChargeStatus, error) {
 	return impl.chargeState()
+}
+
+type decorateVehicleVehicleClimaterImpl struct {
+	vehicleClimater func() (bool, error)
+}
+
+func (impl *decorateVehicleVehicleClimaterImpl) Climater() (bool, error) {
+	return impl.vehicleClimater()
 }
 
 type decorateVehicleVehicleOdometerImpl struct {

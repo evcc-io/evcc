@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
@@ -29,6 +29,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		Status   *provider.Config
 		Range    *provider.Config
 		Odometer *provider.Config
+		Climater *provider.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -75,7 +76,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		odo = odoG
 	}
 
-	res := decorateVehicle(v, status, rng, odo)
+	// decorate vehicle with climater
+	var climater func() (bool, error)
+	if cc.Climater != nil {
+		climateG, err := provider.NewBoolGetterFromConfig(*cc.Climater)
+		if err != nil {
+			return nil, fmt.Errorf("climater: %w", err)
+		}
+		climater = climateG
+	}
+
+	res := decorateVehicle(v, status, rng, odo, climater)
 
 	return res, nil
 }
