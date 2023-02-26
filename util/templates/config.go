@@ -1,11 +1,14 @@
 package templates
 
 import (
+	_ "embed"
 	"fmt"
 
-	"github.com/evcc-io/evcc/templates/definition"
 	"gopkg.in/yaml.v3"
 )
+
+//go:embed defaults.yaml
+var defaults []byte
 
 type configDefaults struct {
 	Params  []Param // Default values for common parameters
@@ -30,7 +33,7 @@ func (c *configDefaults) Load() {
 		return
 	}
 
-	if err := yaml.Unmarshal([]byte(definition.DefaultsContent), &c); err != nil {
+	if err := yaml.Unmarshal(defaults, &c); err != nil {
 		panic(fmt.Errorf("failed to parse deviceGroupListDefinition: %v", err))
 	}
 
