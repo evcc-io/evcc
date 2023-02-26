@@ -44,7 +44,7 @@ params:
     example: EVB-P12354
   - name: connector
     default: 1
-    type: int
+    type: number
     advanced: true
     help:
       en: Connector number, usually 1 for first connector.

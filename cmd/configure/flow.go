@@ -88,7 +88,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	}
 
 	fmt.Println()
-	fmt.Println(templateItem.Title() + " " + c.localizedString("Device_Added", nil))
+	fmt.Println(templateItem.Title() + " " + c.localizedString("Device_Added"))
 
 	c.configureLinkedTypes(templateItem)
 }
@@ -169,7 +169,7 @@ func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, 
 			c.processDeviceCapabilities(templateItem.Capabilities)
 
 			fmt.Println()
-			fmt.Println(templateItem.Title() + " " + c.localizedString("Device_Added", nil))
+			fmt.Println(templateItem.Title() + " " + c.localizedString("Device_Added"))
 			return true
 		}
 		break
@@ -180,7 +180,7 @@ func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, 
 // configureDeviceCategory lets the user select and configure a device from a specific category
 func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (device, []string, error) {
 	fmt.Println()
-	fmt.Printf("- %s %s\n", c.localizedString("Device_Configure", nil), DeviceCategories[deviceCategory].title)
+	fmt.Printf("- %s %s\n", c.localizedString("Device_Configure"), DeviceCategories[deviceCategory].title)
 
 	device := device{
 		Name: DeviceCategories[deviceCategory].defaultName,
@@ -227,7 +227,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	}
 
 	fmt.Println()
-	fmt.Println(deviceDescription + deviceTitle + " " + c.localizedString("Device_Added", nil))
+	fmt.Println(deviceDescription + deviceTitle + " " + c.localizedString("Device_Added"))
 
 	return device, capabilities, nil
 }

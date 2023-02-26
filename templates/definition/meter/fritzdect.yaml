@@ -16,11 +16,6 @@ params:
     mask: true
   - name: ain
     required: true
-    mask: true
-    example: "307788992233"
-    help:
-      en: The AIN is printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
-      de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
 render: |
   type: fritzdect
   uri: {{ .uri }}

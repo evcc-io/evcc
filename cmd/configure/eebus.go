@@ -24,12 +24,12 @@ func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
 
 	cert, err := eebus.CreateCertificate()
 	if err != nil {
-		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Create", nil))
+		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Create"))
 	}
 
 	pubKey, privKey, err := eebus.GetX509KeyPair(cert)
 	if err != nil {
-		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Use", nil))
+		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Use"))
 	}
 
 	eebusConfig = map[string]interface{}{

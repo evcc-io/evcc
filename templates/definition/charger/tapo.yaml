@@ -13,6 +13,7 @@ params:
     mask: true
   - name: standbypower
     default: 15
+  - preset: switchsocket
 render: |
   type: tapo
   uri: http://{{ .host }}
