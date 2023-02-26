@@ -2,12 +2,12 @@ template: fiat
 products:
   - brand: Fiat
 params:
-  - preset: vehiclebase
+  - preset: vehicle-base
   - name: vin
     example: ZFAE...
   - name: pin
     mask: true
-  - preset: vehicleidentify
+  - preset: vehicle-identify
 render: |
   type: fiat
   {{ include "vehicle-base" . }}

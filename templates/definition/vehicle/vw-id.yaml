@@ -8,8 +8,8 @@ requirements:
     de: ID.3, ID.4 (funktioniert auch für e-Golf, e-Up)
     en: ID.3, ID.4 (also works for e-Golf, e-Up)
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-identify
   - name: vin
     example: WVWZZZ...
 render: |

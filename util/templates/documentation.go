@@ -96,10 +96,9 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 	}
 
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(documentationTmpl)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		err = tmpl.Execute(out, data)
 	}
-	err = tmpl.Execute(out, data)
 
 	// trim empty lines with whitespace
 	regex, _ := regexp.Compile("\n *\n")

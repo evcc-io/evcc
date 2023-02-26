@@ -2,8 +2,8 @@ template: volvo-connected
 products:
   - brand: Volvo
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-identify
   - name: vccapikey
     required: true
     help:

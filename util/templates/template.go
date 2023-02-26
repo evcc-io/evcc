@@ -275,13 +275,6 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 
 	t.ModbusValues(renderMode, values)
 
-	// add the common templates
-	for _, v := range ConfigDefaults.Presets {
-		if !strings.Contains(t.Render, v.Render) {
-			t.Render += "\n" + v.Render
-		}
-	}
-
 	res := make(map[string]interface{})
 
 	// TODO this is an utterly horrible hack
@@ -348,7 +341,10 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 		},
 	}
 
-	tmpl, err := tmpl.Funcs(template.FuncMap(sprig.FuncMap())).Funcs(funcMap).Parse(t.Render)
+	tmpl, err := baseTmpl.Clone()
+	if err == nil {
+		tmpl, err = tmpl.Funcs(sprig.FuncMap()).Funcs(funcMap).Parse(t.Render)
+	}
 	if err != nil {
 		return nil, res, err
 	}

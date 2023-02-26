@@ -16,7 +16,7 @@ params:
   - name: icon
     default: car
     advanced: true
-  - preset: vehicleidentify
+  - preset: vehicle-identify
 render: |
   type: custom
   {{- if ne .title "" }}

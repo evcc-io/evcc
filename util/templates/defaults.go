@@ -14,7 +14,6 @@ type configDefaults struct {
 	Params  []Param // Default values for common parameters
 	Presets map[string]struct {
 		Params []Param
-		Render string
 	}
 	Modbus struct { // Details about possible ModbusInterfaces and ModbusConnectionTypes
 		Interfaces map[string][]string // Information about physical modbus interface types (rs485, tcpip)
