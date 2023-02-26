@@ -8,11 +8,11 @@ import (
 
 // Shelly meter implementation
 func init() {
-	registry.Add("shelly", NewShellyFromConfig)
+	registry.Add("shelly-energy-meter", NewShellyEnergyMeterFromConfig)
 }
 
 // NewShellyFromConfig creates a Shelly charger from generic config
-func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewShellyEnergyMeterFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
 		URI      string
 		User     string
@@ -29,5 +29,5 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return shelly.NewShellySwitch(conn), nil
+	return shelly.NewShellyMeter(conn), nil
 }

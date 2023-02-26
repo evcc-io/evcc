@@ -19,11 +19,10 @@ type Connection struct {
 	channel    int
 	gen        int    // Shelly api generation
 	devicetype string //Gen1 DeviceType
-	deviceType string // Shelly device type
 }
 
 // NewConnection creates a new Shelly device connection.
-func NewConnection(uri, user, password string, channel int, deviceType string) (*Connection, error) {
+func NewConnection(uri, user, password string, channel int) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
@@ -42,10 +41,9 @@ func NewConnection(uri, user, password string, channel int, deviceType string) (
 	}
 
 	conn := &Connection{
-		Helper:     client,
-		channel:    channel,
-		gen:        resp.Gen,
-		deviceType: deviceType,
+		Helper:  client,
+		channel: channel,
+		gen:     resp.Gen,
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -79,98 +77,6 @@ func NewConnection(uri, user, password string, channel int, deviceType string) (
 	return conn, nil
 }
 
-// CurrentPower implements the api.Meter interface
-func (d *Connection) CurrentPower() (float64, error) {
-	var power float64
-
-	switch d.deviceType {
-	case "switch":
-		switch d.gen {
-		case 0, 1:
-			var res Gen1StatusResponse
-			uri := fmt.Sprintf("%s/status", d.uri)
-			if err := d.GetJSON(uri, &res); err != nil {
-				return 0, err
-			}
-
-			switch {
-			case d.channel < len(res.Meters):
-				power = res.Meters[d.channel].Power
-			case d.channel < len(res.EMeters):
-				power = res.EMeters[d.channel].Power
-			default:
-				return 0, errors.New("invalid channel, missing power meter")
-			}
-
-		default:
-			var res Gen2StatusResponse
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
-				return 0, err
-			}
-
-			switch d.channel {
-			case 1:
-				power = res.Switch1.Apower
-			case 2:
-				power = res.Switch2.Apower
-			default:
-				power = res.Switch0.Apower
-			}
-		}
-
-	case "energyMeter":
-		var res Gen2EmStatusResponse
-		if err := d.execGen2Cmd("EM.GetStatus", false, &res); err != nil {
-			return 0, err
-		}
-
-		power = res.TotalPower
-	}
-
-	return power, nil
-}
-
-// Enabled implements the api.Charger interface
-func (d *Connection) Enabled() (bool, error) {
-	switch d.deviceType {
-	case "switch":
-		switch d.gen {
-		case 0, 1:
-			var res Gen1SwitchResponse
-			uri := fmt.Sprintf("%s/relay/%d", d.uri, d.channel)
-			err := d.GetJSON(uri, &res)
-			return res.Ison, err
-
-		default:
-			var res Gen2SwitchResponse
-			err := d.execGen2Cmd("Switch.GetStatus", false, &res)
-			return res.Output, err
-		}
-
-	default:
-		return false, errors.New("option on energyMeter not available")
-	}
-}
-
-// Enable implements the api.Charger interface
-func (d *Connection) Enable(enable bool) error {
-	var err error
-	onoff := map[bool]string{true: "on", false: "off"}
-
-	switch d.gen {
-	case 0, 1:
-		var res Gen1SwitchResponse
-		uri := fmt.Sprintf("%s/relay/%d?turn=%s", d.uri, d.channel, onoff[enable])
-		err = d.GetJSON(uri, &res)
-
-	default:
-		var res Gen2SwitchResponse
-		err = d.execGen2Cmd("Switch.Set", enable, &res)
-	}
-
-	return err
-}
-
 // execGen2Cmd executes a shelly api gen1/gen2 command and provides the response
 func (d *Connection) execGen2Cmd(method string, enable bool, res interface{}) error {
 	// Shelly gen 2 rfc7616 authentication
@@ -190,114 +96,4 @@ func (d *Connection) execGen2Cmd(method string, enable bool, res interface{}) er
 	}
 
 	return d.DoJSON(req, &res)
-}
-
-// TotalEnergy implements the api.Meter interface
-func (d *Connection) TotalEnergy() (float64, error) {
-	switch d.deviceType {
-	case "switch":
-		var energy float64
-		switch d.gen {
-		case 0, 1:
-			var res Gen1StatusResponse
-			uri := fmt.Sprintf("%s/status", d.uri)
-			if err := d.GetJSON(uri, &res); err != nil {
-				return 0, err
-			}
-
-			switch {
-			case d.channel < len(res.Meters):
-				energy = res.Meters[d.channel].Total
-			case d.channel < len(res.EMeters):
-				energy = res.EMeters[d.channel].Total
-			default:
-				return 0, errors.New("invalid channel, missing power meter")
-			}
-
-			energy = GetGen1Energy(d.devicetype, energy)
-
-		default:
-			var res Gen2StatusResponse
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
-				return 0, err
-			}
-
-			switch d.channel {
-			case 1:
-				energy = res.Switch1.Aenergy.Total
-			case 2:
-				energy = res.Switch2.Aenergy.Total
-			default:
-				energy = res.Switch0.Aenergy.Total
-			}
-		}
-
-		return energy / 1000, nil
-	case "energyMeter":
-		var energy float64
-		var res Gen2EmDataStatusResponce
-		if err := d.execGen2Cmd("EMData.GetStatus", false, &res); err != nil {
-			return 0, err
-		}
-
-		energy = res.TotalEnergy
-
-		return energy, nil
-	default:
-		return 0, errors.New("invalid state")
-	}
-}
-
-// GetGen1Energy in kWh
-func GetGen1Energy(devicetype string, energy float64) float64 {
-	// Gen 1 Shelly EM devices are providing Watt hours, Shelly EM devices are providing Watt minutes
-	if !strings.Contains(devicetype, "EM") {
-		energy = energy / 60
-	}
-	return energy
-}
-
-// Currents implements the api.Meter interface (PhaseCurrents provides per-phase current A)
-func (d *Connection) Currents() (float64, float64, float64, error) {
-	switch d.deviceType {
-	case "energyMeter":
-		var res Gen2EmStatusResponse
-		if err := d.execGen2Cmd("EM.GetStatus", false, &res); err != nil {
-			return 0, 0, 0, err
-		}
-
-		return res.CurrentA, res.CurrentB, res.CurrentC, nil
-	default:
-		return 0, 0, 0, errors.New("not supported")
-	}
-}
-
-// Voltages implements the api.Meter interface (PhaseVoltages provides per-phase voltage V)
-func (d *Connection) Voltages() (float64, float64, float64, error) {
-	switch d.deviceType {
-	case "energyMeter":
-		var res Gen2EmStatusResponse
-		if err := d.execGen2Cmd("EM.GetStatus", false, &res); err != nil {
-			return 0, 0, 0, err
-		}
-
-		return res.VoltageA, res.VoltageB, res.VoltageC, nil
-	default:
-		return 0, 0, 0, errors.New("not supported")
-	}
-}
-
-// Powers implements the api.Meter interface (PhasePowers provides signed per-phase power W)
-func (d *Connection) Powers() (float64, float64, float64, error) {
-	switch d.deviceType {
-	case "energyMeter":
-		var res Gen2EmStatusResponse
-		if err := d.execGen2Cmd("EM.GetStatus", false, &res); err != nil {
-			return 0, 0, 0, err
-		}
-
-		return res.PowerA, res.PowerB, res.PowerC, nil
-	default:
-		return 0, 0, 0, errors.New("not supported")
-	}
 }

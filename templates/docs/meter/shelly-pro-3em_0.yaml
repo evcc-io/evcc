@@ -10,7 +10,6 @@ render:
       host: 192.0.2.2 # IP-Adresse oder Hostname
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
-      channel: 0 # Optional
   - usage: pv
     default: |
       type: template
@@ -19,7 +18,6 @@ render:
       host: 192.0.2.2 # IP-Adresse oder Hostname
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
-      channel: 0 # Optional
   - usage: charge
     default: |
       type: template
@@ -28,4 +26,3 @@ render:
       host: 192.0.2.2 # IP-Adresse oder Hostname
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
-      channel: 0 # Optional
