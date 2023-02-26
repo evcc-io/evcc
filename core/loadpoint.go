@@ -308,6 +308,7 @@ func (lp *Loadpoint) collectDefaults() {
 		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
 		*actionCfg.MinSoc = lp.GetMinSoc()
 		*actionCfg.TargetSoc = lp.GetTargetSoc()
+		*actionCfg.Priority = lp.Priority()
 	} else {
 		lp.log.ERROR.Printf("error allocating action config: %v", err)
 	}

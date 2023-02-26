@@ -44,7 +44,7 @@ render: |
     jq: .result.feedinpower
     cache: 2m30s
     scale: -1
-  {{- end}}
+  {{- end }}
   {{- if eq .usage "pv" }}
     source: calc
     add:

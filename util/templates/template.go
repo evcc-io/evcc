@@ -31,10 +31,6 @@ func (t *Template) GuidedSetupEnabled() bool {
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
-		if p.Type == "" || (p.Type != "" && !slices.Contains(ValidParamTypes, p.Type)) {
-			t.Params[i].Type = ParamTypeString
-		}
-
 		if index, resultMapItem := t.ConfigDefaults.ParamByName(strings.ToLower(p.Name)); index > -1 {
 			t.Params[i].OverwriteProperties(resultMapItem)
 		}
@@ -71,10 +67,6 @@ func (t *Template) Validate() error {
 					return fmt.Errorf("invalid modbus choice '%s' in template %s", c, t.Template)
 				}
 			}
-		}
-
-		if p.Type != "" && !slices.Contains(ValidParamTypes, p.Type) {
-			return fmt.Errorf("invalid value type '%s' in template %s", p.Type, t.Template)
 		}
 	}
 
@@ -231,7 +223,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 			}
 
 			switch p.Type {
-			case ParamTypeStringList:
+			case TypeStringList:
 				for _, e := range v.([]string) {
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
@@ -251,7 +243,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	for _, param := range t.Params {
 		if !param.IsRequired() {
 			switch param.Type {
-			case ParamTypeStringList:
+			case TypeStringList:
 				if len(param.Values) == 0 {
 					continue
 				}

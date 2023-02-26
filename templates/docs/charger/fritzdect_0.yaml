@@ -6,8 +6,18 @@ render:
   - default: |
       type: template
       template: fritzdect
-      uri: https://fritz.box # Optional
+      uri: https://fritz.box # HTTP(S) Adresse # Optional
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       ain: 307788992233 # Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
       standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional
+    advanced: |
+      type: template
+      template: fritzdect
+      uri: https://fritz.box # HTTP(S) Adresse # Optional
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
+      ain: 307788992233 # Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional
+      integrateddevice: # Optional
+      icon: # Icon in der Benutzeroberfläche # Optional
