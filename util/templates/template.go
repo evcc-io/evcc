@@ -16,8 +16,6 @@ import (
 type Template struct {
 	TemplateDefinition
 
-	ConfigDefaults ConfigDefaults `json:"-"`
-
 	title  string
 	titles []string
 }
@@ -31,7 +29,7 @@ func (t *Template) GuidedSetupEnabled() bool {
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
-		if index, resultMapItem := t.ConfigDefaults.ParamByName(strings.ToLower(p.Name)); index > -1 {
+		if index, resultMapItem := configDefaults.ParamByName(strings.ToLower(p.Name)); index > -1 {
 			t.Params[i].OverwriteProperties(resultMapItem)
 		}
 	}
@@ -115,7 +113,7 @@ func (t *Template) ResolvePresets() error {
 	t.Params = []Param{}
 	for _, p := range currentParams {
 		if p.Preset != "" {
-			base, ok := t.ConfigDefaults.Presets[p.Preset]
+			base, ok := configDefaults.Presets[p.Preset]
 			if !ok {
 				return fmt.Errorf("could not find preset definition: %s", p.Preset)
 			}
@@ -142,7 +140,7 @@ func (t *Template) ResolveGroup() error {
 		return nil
 	}
 
-	_, ok := t.ConfigDefaults.DeviceGroups[t.Group]
+	_, ok := configDefaults.DeviceGroups[t.Group]
 	if !ok {
 		return fmt.Errorf("could not find devicegroup definition: %s", t.Group)
 	}
@@ -152,7 +150,7 @@ func (t *Template) ResolveGroup() error {
 
 // return the language specific group title
 func (t *Template) GroupTitle(lang string) string {
-	tl := t.ConfigDefaults.DeviceGroups[t.Group]
+	tl := configDefaults.DeviceGroups[t.Group]
 	return tl.String(lang)
 }
 
@@ -276,6 +274,13 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 	}
 
 	t.ModbusValues(renderMode, values)
+
+	// add the common templates
+	for _, v := range configDefaults.Presets {
+		if !strings.Contains(t.Render, v.Render) {
+			t.Render += "\n" + v.Render
+		}
+	}
 
 	res := make(map[string]interface{})
 

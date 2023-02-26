@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	templates      = make(map[Class][]Template)
-	configDefaults = ConfigDefaults{}
+	templates = make(map[Class][]Template)
 
+	configDefaults  ConfigDefaults
 	mu              sync.Mutex
 	encoderLanguage string
 )
@@ -40,7 +40,6 @@ func FromBytes(b []byte) (Template, error) {
 
 	tmpl := Template{
 		TemplateDefinition: definition,
-		ConfigDefaults:     configDefaults,
 	}
 
 	err := tmpl.ResolvePresets()
