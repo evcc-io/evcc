@@ -20,4 +20,4 @@ render: |
   meter: {{ .meter }}
   {{- if eq .usage "pv" }}
   scale: -1
-  {{- end}}
+  {{- end }}

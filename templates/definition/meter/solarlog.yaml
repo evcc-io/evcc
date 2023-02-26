@@ -47,4 +47,4 @@ render: |
       address: 3502 # Pac
       type: input
       decode: uint32s
-  {{- end}}
+  {{- end }}

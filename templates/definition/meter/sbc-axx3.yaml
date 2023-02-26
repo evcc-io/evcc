@@ -1,17 +1,17 @@
-template: cg-emt3xx
+template: sbc-axx3
 products:
-  - brand: Carlo Gavazzi
+  - brand: Saia-Burgess Controls
     description:
-      generic: EM/ET 330/340
+      generic: ALE3, AWD3
 params:
   - name: usage
     choice: ["grid", "charge"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rs485"]
 render: |
   type: modbus
   {{- include "modbus" . }}
-  model: cgex3x0
+  model: sbc
   power: Power
   energy: Import
   currents:

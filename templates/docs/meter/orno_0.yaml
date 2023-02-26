@@ -1,11 +1,11 @@
 product:
-  brand: Carlo Gavazzi
-  description: EM24
+  brand: Orno
+  description: OR-WE-516, OR-WE-517
 render:
   - usage: grid
     default: |
       type: template
-      template: cg-em24
+      template: orno
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -20,16 +20,10 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-
-      # Modbus TCP
-      modbus: tcpip
-      id: 1
-      host: 192.0.2.2 # Hostname
-      port: 502 # Port
   - usage: charge
     default: |
       type: template
-      template: cg-em24
+      template: orno
       usage: charge      
 
       # RS485 via adapter (Modbus RTU)
@@ -41,12 +35,6 @@ render:
 
       # RS485 via TCP/IP (Modbus RTU)
       modbus: rs485tcpip
-      id: 1
-      host: 192.0.2.2 # Hostname
-      port: 502 # Port
-
-      # Modbus TCP
-      modbus: tcpip
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
