@@ -32,7 +32,7 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if name := r.URL.Query().Get("name"); name != "" {
 		for _, t := range res {
-			if t.TemplateDefinition.Template == name {
+			if t.Template == name {
 				jsonResult(w, t)
 				return
 			}
@@ -104,7 +104,7 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 		for _, p := range t.Products {
 			res = append(res, product{
 				Name:     p.Title(lang),
-				Template: t.TemplateDefinition.Template,
+				Template: t.Template,
 			})
 		}
 	}

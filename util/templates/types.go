@@ -256,16 +256,3 @@ type Product struct {
 func (p Product) Title(lang string) string {
 	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(lang)))
 }
-
-// TemplateDefinition contains properties of a device template
-type TemplateDefinition struct {
-	Template     string
-	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
-	Covers       []string         `json:",omitempty"` // list of covered outdated template names
-	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
-	Capabilities []string         `json:",omitempty"`
-	Requirements Requirements     `json:"-"`
-	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
-	Params       []Param          `json:",omitempty"`
-	Render       string           `json:"-"` // rendering template
-}

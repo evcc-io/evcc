@@ -42,13 +42,9 @@ func FromBytes(b []byte) (Template, error) {
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
 
-	var definition TemplateDefinition
-	if err := dec.Decode(&definition); err != nil {
+	var tmpl Template
+	if err := dec.Decode(&tmpl); err != nil {
 		return Template{}, err
-	}
-
-	tmpl := Template{
-		TemplateDefinition: definition,
 	}
 
 	err := tmpl.ResolvePresets()
