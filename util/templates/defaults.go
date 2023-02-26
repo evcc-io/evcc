@@ -1,17 +1,19 @@
 package templates
 
 import (
+	_ "embed"
 	"fmt"
 
-	"github.com/evcc-io/evcc/templates/definition"
 	"gopkg.in/yaml.v3"
 )
 
-type ConfigDefaults struct {
+//go:embed defaults.yaml
+var defaults []byte
+
+type configDefaults struct {
 	Params  []Param // Default values for common parameters
 	Presets map[string]struct {
 		Params []Param
-		Render string
 	}
 	Modbus struct { // Details about possible ModbusInterfaces and ModbusConnectionTypes
 		Interfaces map[string][]string // Information about physical modbus interface types (rs485, tcpip)
@@ -24,13 +26,13 @@ type ConfigDefaults struct {
 }
 
 // read the actual config into the struct, but only once
-func (c *ConfigDefaults) LoadDefaults() {
+func (c *configDefaults) Load() {
 	// if params are initialized, defaults have been loaded
 	if c.Params != nil {
 		return
 	}
 
-	if err := yaml.Unmarshal([]byte(definition.DefaultsContent), &c); err != nil {
+	if err := yaml.Unmarshal(defaults, &c); err != nil {
 		panic(fmt.Errorf("failed to parse deviceGroupListDefinition: %v", err))
 	}
 
@@ -55,7 +57,7 @@ func (c *ConfigDefaults) LoadDefaults() {
 }
 
 // return the param with the given name
-func (c *ConfigDefaults) ParamByName(name string) (int, Param) {
+func (c *configDefaults) ParamByName(name string) (int, Param) {
 	for i, param := range c.Params {
 		if param.Name == name {
 			return i, param

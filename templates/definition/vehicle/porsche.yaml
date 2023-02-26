@@ -2,8 +2,8 @@ template: porsche
 products:
   - brand: Porsche
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-identify
 render: |
   type: porsche
   {{ include "vehicle-base" . }}

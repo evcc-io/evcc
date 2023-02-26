@@ -8,7 +8,7 @@ products:
   #     generic: MÓ
 group: scooter
 params:
-  - preset: vehiclebase
+  - preset: vehicle-base
   - name: vin
     example: W...
   - name: icon

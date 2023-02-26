@@ -20,7 +20,7 @@ params:
     default: 4
   - name: icon
     default: scooter
-  - preset: vehicleidentify
+  - preset: vehicle-identify
 render: |
   type: niu
   {{- if ne .title "" }}

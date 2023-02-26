@@ -2,10 +2,12 @@ package templates
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"io/fs"
 	"path"
 	"sync"
+	"text/template"
 
 	"github.com/evcc-io/evcc/templates/definition"
 	"golang.org/x/exp/slices"
@@ -13,15 +15,22 @@ import (
 )
 
 var (
-	templates      = make(map[Class][]Template)
-	configDefaults = ConfigDefaults{}
+	//go:embed includes/*.tpl
+	includeFS embed.FS
 
+	// baseTmpl holds all included template definitions
+	baseTmpl *template.Template
+
+	templates       = make(map[Class][]Template)
+	ConfigDefaults  configDefaults
 	mu              sync.Mutex
 	encoderLanguage string
 )
 
 func init() {
-	configDefaults.LoadDefaults()
+	ConfigDefaults.Load()
+
+	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
 
 	loadTemplates(Charger)
 	loadTemplates(Meter)
@@ -40,7 +49,6 @@ func FromBytes(b []byte) (Template, error) {
 
 	tmpl := Template{
 		TemplateDefinition: definition,
-		ConfigDefaults:     configDefaults,
 	}
 
 	err := tmpl.ResolvePresets()

@@ -2,8 +2,8 @@ template: aiways
 products:
   - brand: Aiways
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-identify
   - name: vin
     required: true
 render: |

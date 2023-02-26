@@ -20,7 +20,7 @@ params:
   - name: icon
     default: car
     advanced: true
-  - preset: vehicleidentify
+  - preset: vehicle-identify
 render: |
   type: tronity
   {{- if ne .title "" }}
