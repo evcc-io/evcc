@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type ConfigDefaults struct {
+type configDefaults struct {
 	Params  []Param // Default values for common parameters
 	Presets map[string]struct {
 		Params []Param
@@ -24,7 +24,7 @@ type ConfigDefaults struct {
 }
 
 // read the actual config into the struct, but only once
-func (c *ConfigDefaults) LoadDefaults() {
+func (c *configDefaults) Load() {
 	// if params are initialized, defaults have been loaded
 	if c.Params != nil {
 		return
@@ -55,7 +55,7 @@ func (c *ConfigDefaults) LoadDefaults() {
 }
 
 // return the param with the given name
-func (c *ConfigDefaults) ParamByName(name string) (int, Param) {
+func (c *configDefaults) ParamByName(name string) (int, Param) {
 	for i, param := range c.Params {
 		if param.Name == name {
 			return i, param

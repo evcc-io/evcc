@@ -15,13 +15,13 @@ import (
 var (
 	templates = make(map[Class][]Template)
 
-	configDefaults  ConfigDefaults
+	ConfigDefaults  configDefaults
 	mu              sync.Mutex
 	encoderLanguage string
 )
 
 func init() {
-	configDefaults.LoadDefaults()
+	ConfigDefaults.Load()
 
 	loadTemplates(Charger)
 	loadTemplates(Meter)
