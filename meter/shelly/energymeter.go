@@ -7,11 +7,11 @@ type EnergyMeter struct {
 }
 
 func NewEnergyMeter(conn *Connection) *EnergyMeter {
-	EnergyMeter := &EnergyMeter{
+	res := &EnergyMeter{
 		Connection: conn,
 	}
 
-	return EnergyMeter
+	return res
 }
 
 // CurrentPower implements the api.Meter interface
@@ -26,7 +26,7 @@ func (sh *EnergyMeter) CurrentPower() (float64, error) {
 
 // TotalEnergy implements the api.Meter interface
 func (sh *EnergyMeter) TotalEnergy() (float64, error) {
-	var res Gen2EmDataStatusResponce
+	var res Gen2EmDataStatusResponse
 	if err := sh.Connection.execGen2Cmd("EMData.GetStatus", false, &res); err != nil {
 		return 0, err
 	}

@@ -11,11 +11,11 @@ type Switch struct {
 }
 
 func NewSwitch(conn *Connection) *Switch {
-	Switch := &Switch{
+	res := &Switch{
 		Connection: conn,
 	}
 
-	return Switch
+	return res
 }
 
 // CurrentPower implements the api.Meter interface

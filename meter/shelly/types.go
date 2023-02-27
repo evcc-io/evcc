@@ -50,7 +50,7 @@ type Gen2EmStatusResponse struct {
 	PowerC     float64 `json:"c_act_power"`
 }
 
-type Gen2EmDataStatusResponce struct {
+type Gen2EmDataStatusResponse struct {
 	TotalEnergy float64 `json:"total_act"`
 }
 
