@@ -46,7 +46,7 @@ const (
 )
 
 func init() {
-	registry.Add("Hesotec", NewHesotecFromConfig)
+	registry.Add("hesotec", NewHesotecFromConfig)
 }
 
 // NewHesotecFromConfig creates a Hesotec charger from generic config
@@ -73,7 +73,7 @@ func NewHesotec(uri string, id uint8) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("Hesotec")
+	log := util.NewLogger("hesotec")
 	conn.Logger(log.TRACE)
 
 	wb := &Hesotec{
@@ -100,19 +100,12 @@ func (wb *Hesotec) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	var res api.ChargeStatus
-	switch s := bytesAsString(b); s {
-	case "A":
-		res = api.StatusA
-	case "B":
-		res = api.StatusB
-	case "C":
-		res = api.StatusC
+	switch s := string(b[0]); s {
+	case "A", "B", "C":
+		return api.ChargeStatus(s), nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %s", s)
 	}
-
-	return res, nil
 }
 
 // Enabled implements the api.Charger interface
