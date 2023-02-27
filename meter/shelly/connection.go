@@ -18,7 +18,7 @@ type Connection struct {
 	uri        string
 	channel    int
 	gen        int    // Shelly api generation
-	devicetype string //Gen1 DeviceType
+	devicetype string // Shelly device type
 }
 
 // NewConnection creates a new Shelly device connection.
