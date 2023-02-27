@@ -10,8 +10,7 @@ import (
 
 // Shelly charger implementation
 type Shelly struct {
-	conn         *shelly.Connection
-	shellySwitch *shelly.ShellySwitch
+	conn *shelly.Switch
 	*switchSocket
 }
 
@@ -45,23 +44,22 @@ func NewShelly(embed embed, uri, user, password string, channel int, standbypowe
 	}
 
 	c := &Shelly{
-		conn: conn,
+		conn: shelly.NewSwitch(conn),
 	}
 
-	c.shellySwitch = shelly.NewShellySwitch(conn)
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.shellySwitch.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
 	return c, nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *Shelly) Enabled() (bool, error) {
-	return c.shellySwitch.Enabled()
+	return c.conn.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *Shelly) Enable(enable bool) error {
-	err := c.shellySwitch.Enable(enable)
+	err := c.conn.Enable(enable)
 	if err != nil {
 		return err
 	}
@@ -87,5 +85,5 @@ var _ api.MeterEnergy = (*Shelly)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Shelly) TotalEnergy() (float64, error) {
-	return c.shellySwitch.TotalEnergy()
+	return c.conn.TotalEnergy()
 }

@@ -29,5 +29,5 @@ func NewShellyEnergyMeterFromConfig(other map[string]interface{}) (api.Meter, er
 		return nil, err
 	}
 
-	return shelly.NewShellyMeter(conn), nil
+	return shelly.NewEnergyMeter(conn), nil
 }

@@ -14,7 +14,7 @@ func TestUnmarshalGen1StatusResponse(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonstr), &res); err != nil {
 		t.Error(err)
 	}
-	if GetGen1Energy("SHSW-PM", res.Meters[0].Total) != 107875.21666666666 {
+	if gen1Energy("SHSW-PM", res.Meters[0].Total) != 107875.21666666666 {
 		t.Error("SHSW-PM res.Meters[0].Total) != 107875.21666666666")
 	}
 	if res.Meters[0].Power != 4711.12 {
@@ -27,7 +27,7 @@ func TestUnmarshalGen1StatusResponse(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonstr), &res); err != nil {
 		t.Error(err)
 	}
-	if GetGen1Energy("SHSW-1", res.Meters[0].Total) != 0 {
+	if gen1Energy("SHSW-1", res.Meters[0].Total) != 0 {
 		t.Error("SHSW-1 res.Meters[0].Total) != 0")
 	}
 	if res.Meters[0].Power != 81.5 {
@@ -40,7 +40,7 @@ func TestUnmarshalGen1StatusResponse(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonstr), &res); err != nil {
 		t.Error(err)
 	}
-	if GetGen1Energy("SHEM", res.EMeters[0].Total) != 401472.9 {
+	if gen1Energy("SHEM", res.EMeters[0].Total) != 401472.9 {
 		t.Error("SHEM res.EMeters[0].Total) != 401472.9")
 	}
 	if res.EMeters[0].Power != -620.34 {

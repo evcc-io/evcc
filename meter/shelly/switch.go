@@ -6,23 +6,23 @@ import (
 	"strings"
 )
 
-type ShellySwitch struct {
-	Conn *Connection
+type Switch struct {
+	*Connection
 }
 
-func NewShellySwitch(conn *Connection) *ShellySwitch {
-	shellySwitch := &ShellySwitch{
-		Conn: conn,
+func NewSwitch(conn *Connection) *Switch {
+	Switch := &Switch{
+		Connection: conn,
 	}
 
-	return shellySwitch
+	return Switch
 }
 
 // CurrentPower implements the api.Meter interface
-func (shellySwitch *ShellySwitch) CurrentPower() (float64, error) {
+func (sh *Switch) CurrentPower() (float64, error) {
 	var power float64
-	d := shellySwitch.Conn
 
+	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
 		var res Gen1StatusResponse
@@ -60,8 +60,8 @@ func (shellySwitch *ShellySwitch) CurrentPower() (float64, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (shellySwitch *ShellySwitch) Enabled() (bool, error) {
-	d := shellySwitch.Conn
+func (sh *Switch) Enabled() (bool, error) {
+	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
 		var res Gen1SwitchResponse
@@ -77,11 +77,11 @@ func (shellySwitch *ShellySwitch) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (shellySwitch *ShellySwitch) Enable(enable bool) error {
+func (sh *Switch) Enable(enable bool) error {
 	var err error
 	onoff := map[bool]string{true: "on", false: "off"}
-	d := shellySwitch.Conn
 
+	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
 		var res Gen1SwitchResponse
@@ -97,9 +97,10 @@ func (shellySwitch *ShellySwitch) Enable(enable bool) error {
 }
 
 // TotalEnergy implements the api.Meter interface
-func (shellySwitch *ShellySwitch) TotalEnergy() (float64, error) {
+func (sh *Switch) TotalEnergy() (float64, error) {
 	var energy float64
-	d := shellySwitch.Conn
+
+	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
 		var res Gen1StatusResponse
@@ -117,7 +118,7 @@ func (shellySwitch *ShellySwitch) TotalEnergy() (float64, error) {
 			return 0, errors.New("invalid channel, missing power meter")
 		}
 
-		energy = GetGen1Energy(d.devicetype, energy)
+		energy = gen1Energy(d.devicetype, energy)
 
 	default:
 		var res Gen2StatusResponse
@@ -138,8 +139,8 @@ func (shellySwitch *ShellySwitch) TotalEnergy() (float64, error) {
 	return energy / 1000, nil
 }
 
-// GetGen1Energy in kWh
-func GetGen1Energy(devicetype string, energy float64) float64 {
+// gen1Energy in kWh
+func gen1Energy(devicetype string, energy float64) float64 {
 	// Gen 1 Shelly EM devices are providing Watt hours, Shelly EM devices are providing Watt minutes
 	if !strings.Contains(devicetype, "EM") {
 		energy = energy / 60

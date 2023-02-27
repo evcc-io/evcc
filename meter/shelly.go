@@ -29,5 +29,5 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return shelly.NewShellySwitch(conn), nil
+	return shelly.NewSwitch(conn), nil
 }
