@@ -27,7 +27,7 @@ func TestUnmarshalGen1StatusResponse(t *testing.T) {
 		jsonstr := `{"wifi_sta":{"connected":true,"ssid":"XXXX-WLAN","ip":"192.168.178.XXX","rssi":-57},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"19:25","unixtime":1676139913,"serial":959,"has_update":true,"mac":"E8DB8XXXXXX","cfg_changed_cnt":1,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"source":"timer"}],"meters":[{"power":81.5,"is_valid":true}],"inputs":[{"input":0,"event":"","event_cnt":0}],"ext_sensors":{},"ext_temperature":{},"ext_humidity":{},"update":{"status":"pending","has_update":true,"new_version":"20221027-091427/v1.12.1-ga9117d3","old_version":"20211109-124958/v1.11.7-g682a0db"},"ram_total":50880,"ram_free":38796,"fs_size":233681,"fs_free":151102,"uptime":20319391}`
 		assert.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
 
-		assert.Equal(t, 0, gen1Energy("SHSW-1", res.Meters[0].Total))
+		assert.Equal(t, 0.0, gen1Energy("SHSW-1", res.Meters[0].Total))
 		assert.Equal(t, 81.5, res.Meters[0].Power)
 	}
 
