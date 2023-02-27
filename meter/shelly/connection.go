@@ -41,9 +41,10 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	}
 
 	conn := &Connection{
-		Helper:  client,
-		channel: channel,
-		gen:     resp.Gen,
+		Helper:     client,
+		channel:    channel,
+		gen:        resp.Gen,
+		devicetype: resp.Type,
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
