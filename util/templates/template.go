@@ -205,7 +205,7 @@ func (t *Template) ModbusChoices() []string {
 //go:embed proxy.tpl
 var proxyTmpl string
 
-// RenderProxy renders the proxy template
+// RenderProxyWithValues renders the proxy template
 func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
 	if err != nil {

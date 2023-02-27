@@ -4,7 +4,6 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"regexp"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -16,7 +15,7 @@ var documentationTmpl string
 //go:embed documentation_modbus.tpl
 var documentationModbusTmpl string
 
-// RenderProxy renders the proxy template
+// RenderDocumentation renders the documentation template
 func (t *Template) RenderDocumentation(product Product, values map[string]interface{}, lang string) ([]byte, error) {
 	for index, p := range t.Params {
 		for k, v := range values {
@@ -100,11 +99,5 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 		err = tmpl.Execute(out, data)
 	}
 
-	// trim empty lines with whitespace
-	regex, _ := regexp.Compile("\n *\n")
-	string := regex.ReplaceAllString(out.String(), "\n\n")
-	result := new(bytes.Buffer)
-	result.WriteString(string)
-
-	return result.Bytes(), err
+	return []byte(trimEmptyLines(out.String())), err
 }
