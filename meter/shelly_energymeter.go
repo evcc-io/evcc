@@ -8,7 +8,7 @@ import (
 
 // Shelly meter implementation
 func init() {
-	registry.Add("shelly-energy-meter", NewShellyEnergyMeterFromConfig)
+	registry.Add("shelly-energymeter", NewShellyEnergyMeterFromConfig)
 }
 
 // NewShellyFromConfig creates a Shelly charger from generic config
