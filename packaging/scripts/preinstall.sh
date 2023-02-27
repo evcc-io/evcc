@@ -71,7 +71,7 @@ if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
       adduser --quiet "$EVCC_USER" dialout
     else
       adduser --quiet "$EVCC_USER" dialout
-      homedir=$(getent passwd "$EVCC_USER" | cut -d: -f4)
+      homedir=$(getent passwd "$EVCC_USER" | cut -d: -f6)
       if [ "$homedir" != "$EVCC_HOME" ]; then
       	mkdir -p "$EVCC_HOME"
       	chown "$EVCC_USER:$EVCC_GROUP" "$EVCC_HOME"
@@ -84,8 +84,9 @@ if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
         else
       	  echo "--------------------------------------------------------------------------------"
           echo "Warning: evcc's home directory is incorrect ($homedir)"
-          echo "but can't be changed because another process ($process) is using it."
-          echo "Stop offending process(es), then restart installation"
+          echo "but can't be changed because at least one other process is using it."
+          echo "Stop offending process(es), then restart installation."
+          echo "Hint: You can list the offending processes using 'pgrep -u $EVCC_USER -a'"
           echo "Note that you should NOT use the evcc user as login user, since that will"
           echo "inevitably lead to this error."
           echo "in that case, please create a different user as login user."
