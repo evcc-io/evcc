@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,4 +31,14 @@ func yamlQuote(value string) string {
 	}
 
 	return value
+}
+
+func trimEmptyLines(s string) string {
+	lines := strings.Split(s, "\n")
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			lines[i] = ""
+		}
+	}
+	return strings.Join(lo.Compact(lines), "\n")
 }
