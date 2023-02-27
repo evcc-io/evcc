@@ -10,7 +10,7 @@ import (
 
 // Shelly charger implementation
 type Shelly struct {
-	conn *shelly.Connection
+	conn *shelly.Switch
 	*switchSocket
 }
 
@@ -44,7 +44,7 @@ func NewShelly(embed embed, uri, user, password string, channel int, standbypowe
 	}
 
 	c := &Shelly{
-		conn: conn,
+		conn: shelly.NewSwitch(conn),
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)

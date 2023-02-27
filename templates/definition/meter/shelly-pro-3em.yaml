@@ -1,20 +1,18 @@
-template: shelly-1pm
+template: shelly-pro-3em
 products:
   - brand: Shelly
     description:
-      generic: 1PM, EM
-group: switchsockets
+      generic: Pro 3 EM
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["grid", "pv", "charge"]
   - name: host
     default: 192.0.2.2
   - name: user
   - name: password
-  - name: channel
 render: |
-  type: shelly
+  type: shelly-energymeter
   uri: http://{{ .host }}  # shelly device ip address (local)
   {{ if ne .user "" }}user: {{ .user }}{{ end }}
   {{ if ne .password "" }}password: {{ .password }}{{ end }}
-  channel: {{ .channel }}  # shelly device relay channel
+  channel: 0  # shelly device relay channel
