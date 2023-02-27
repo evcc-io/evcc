@@ -11,7 +11,7 @@ params:
   - name: user
   - name: password
 render: |
-  type: shelly-energy-meter
+  type: shelly-energymeter
   uri: http://{{ .host }}  # shelly device ip address (local)
   {{ if ne .user "" }}user: {{ .user }}{{ end }}
   {{ if ne .password "" }}password: {{ .password }}{{ end }}
