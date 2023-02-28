@@ -8,16 +8,13 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
+	"github.com/evcc-io/evcc/vehicle/vag/cariad"
 	"golang.org/x/oauth2"
 )
 
-const (
-	BaseURL = "https://emea.bff.cariad.digital/user-login"
-)
-
 var Endpoint = &oauth2.Endpoint{
-	AuthURL:  BaseURL + "/login/v1",
-	TokenURL: BaseURL + "/refresh/v1",
+	AuthURL:  cariad.BaseURL + "/user-login/login/v1",
+	TokenURL: cariad.BaseURL + "/user-login/refresh/v1",
 }
 
 type Service struct {

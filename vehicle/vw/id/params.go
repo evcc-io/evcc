@@ -3,10 +3,10 @@ package id
 import (
 	"net/url"
 
-	"github.com/evcc-io/evcc/vehicle/vag/loginapps"
+	"github.com/evcc-io/evcc/vehicle/vag/cariad"
 )
 
-const LoginURL = loginapps.BaseURL + "/v1/authorize"
+const LoginURL = cariad.BaseURL + "/user-login/v1/authorize"
 
 var AuthParams = url.Values{
 	"response_type": {"code id_token token"},
