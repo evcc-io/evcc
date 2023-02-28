@@ -12,12 +12,14 @@ import (
 )
 
 const (
-	BaseURL = "https://login.apps.emea.vwapps.io"
+	BaseURL = "https://emea.bff.cariad.digital"
 )
 
 var Endpoint = &oauth2.Endpoint{
-	AuthURL:  BaseURL + "/login/v1",
-	TokenURL: BaseURL + "/refresh/v1",
+	AuthURL:  BaseURL + "/user-login/login/v1",
+	TokenURL: BaseURL + "/user-login/refresh/v1",
+	// AuthURL:  BaseURL + "/user-login/v1/authorize",
+	// TokenURL: BaseURL + "/user-login/v1/refresh",
 }
 
 type Service struct {
