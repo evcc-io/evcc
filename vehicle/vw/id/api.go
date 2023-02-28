@@ -14,7 +14,7 @@ import (
 // https://customer-profile.apps.emea.vwapps.io/v1/customers/<userId>/realCarData
 
 // BaseURL is the API base url
-const BaseURL = "https://mobileapi.apps.emea.vwapps.io"
+const BaseURL = "https://emea.bff.cariad.digital/vehicle/v1"
 
 // API is an api.Vehicle implementation for VW ID cars
 type API struct {

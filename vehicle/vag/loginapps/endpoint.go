@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	BaseURL = "https://login.apps.emea.vwapps.io"
+	BaseURL = "https://emea.bff.cariad.digital/user-login"
 )
 
 var Endpoint = &oauth2.Endpoint{
