@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -40,5 +39,5 @@ func trimEmptyLines(s string) string {
 			lines[i] = ""
 		}
 	}
-	return strings.Join(lo.Compact(lines), "\n")
+	return strings.Join(lines, "\n")
 }

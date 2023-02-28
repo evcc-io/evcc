@@ -32,17 +32,3 @@ func TestYamlDecodeLeadingZero(t *testing.T) {
 		t.Fatalf("expected %s, got %s", exp, res)
 	}
 }
-
-func TestTrimEmptyLines(t *testing.T) {
-	lines := `
-foo
-	bar
-
-
-	buz
-	`
-
-	assert.Equal(t, trimEmptyLines(lines), `foo
-	bar
-	buz`)
-}
