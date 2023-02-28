@@ -93,15 +93,6 @@ func NewHesotec(uri string, id uint8) (api.Charger, error) {
 	return wb, err
 }
 
-func (wb *Hesotec) setCurrent(current uint16) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, current)
-
-	_, err := wb.conn.WriteMultipleRegisters(hesotecRegCurrent, 1, b)
-
-	return err
-}
-
 // Status implements the api.Charger interface
 func (wb *Hesotec) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(hesotecRegStatus, 1)
@@ -119,22 +110,24 @@ func (wb *Hesotec) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Hesotec) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(hesotecRegCurrent, 1)
+	b, err := wb.conn.ReadHoldingRegisters(hesotecRegSessPause, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	return binary.BigEndian.Uint16(b) == 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Hesotec) Enable(enable bool) error {
-	var current uint16
-	if enable {
-		current = wb.curr
+	b := make([]byte, 2)
+	if !enable {
+		binary.BigEndian.PutUint16(b, 1)
 	}
 
-	return wb.setCurrent(current)
+	_, err := wb.conn.WriteMultipleRegisters(hesotecRegSessPause, 1, b)
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -145,7 +138,12 @@ func (wb *Hesotec) MaxCurrent(current int64) error {
 
 	wb.curr = uint16(current)
 
-	return wb.setCurrent(wb.curr)
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, wb.curr)
+
+	_, err := wb.conn.WriteMultipleRegisters(hesotecRegCurrent, 1, b)
+
+	return err
 }
 
 var _ api.Meter = (*Hesotec)(nil)
