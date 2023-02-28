@@ -12,14 +12,12 @@ import (
 )
 
 const (
-	BaseURL = "https://emea.bff.cariad.digital"
+	BaseURL = "https://emea.bff.cariad.digital/user-login"
 )
 
 var Endpoint = &oauth2.Endpoint{
-	AuthURL:  BaseURL + "/user-login/login/v1",
-	TokenURL: BaseURL + "/user-login/refresh/v1",
-	// AuthURL:  BaseURL + "/user-login/v1/authorize",
-	// TokenURL: BaseURL + "/user-login/v1/refresh",
+	AuthURL:  BaseURL + "/login/v1",
+	TokenURL: BaseURL + "/refresh/v1",
 }
 
 type Service struct {

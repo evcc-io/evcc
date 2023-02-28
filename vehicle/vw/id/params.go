@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/vag/loginapps"
 )
 
-const LoginURL = loginapps.BaseURL + "/user-login/v1/authorize"
+const LoginURL = loginapps.BaseURL + "/v1/authorize"
 
 var AuthParams = url.Values{
 	"response_type": {"code id_token token"},
