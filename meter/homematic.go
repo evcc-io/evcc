@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"errors"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/homematic"
 	"github.com/evcc-io/evcc/util"
@@ -30,6 +32,14 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if cc.User == "" {
+		return nil, errors.New("missing user")
+	}
+
+	if cc.Password == "" {
+		return nil, errors.New("missing password")
 	}
 
 	return NewCCU(cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.Usage)

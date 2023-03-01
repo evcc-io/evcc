@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"errors"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tapo"
 	"github.com/evcc-io/evcc/util"
@@ -21,6 +23,14 @@ func NewTapoFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if cc.User == "" {
+		return nil, errors.New("missing user")
+	}
+
+	if cc.Password == "" {
+		return nil, errors.New("missing password")
 	}
 
 	return tapo.NewConnection(cc.URI, cc.User, cc.Password)
