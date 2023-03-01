@@ -93,7 +93,7 @@ export default {
 			return this.fmtKWh(value * 1e3, inKWh, true, digits);
 		},
 		fmtSoc: function (value) {
-			return `+${Math.round(value)}%`;
+			return `+${Math.round(value)} %`;
 		},
 	},
 };
