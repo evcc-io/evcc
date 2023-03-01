@@ -91,6 +91,7 @@ export default {
 		uploadMessage: String,
 		uploadProgress: Number,
 		sponsor: String,
+		sponsorTokenExpires: Number,
 	},
 	computed: {
 		energyflow: function () {

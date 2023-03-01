@@ -246,6 +246,11 @@ value = "Experimentelle UI-Funktionen zeigen."
 auto = "Automatisch"
 label = "Sprache"
 
+[settings.sponsorToken]
+expires = "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere deine Konfigurationsdatei."
+getNew = "Hol dir ein Neues"
+hint = "Hinweis: Wir werden das zukünfig automatisieren."
+
 [settings.telemetry]
 label = "Telemetrie"
 

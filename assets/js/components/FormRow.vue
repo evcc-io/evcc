@@ -3,7 +3,7 @@
 		<label :for="id" class="col-sm-4 col-form-label pt-0 pt-sm-1">
 			{{ label }}
 		</label>
-		<div class="col-sm-8 pe-0">
+		<div class="col-sm-8">
 			<slot />
 		</div>
 	</div>
