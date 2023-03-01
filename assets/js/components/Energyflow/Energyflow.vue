@@ -236,7 +236,7 @@ export default {
 			});
 		},
 		batteryFmt() {
-			return (soc) => `${Math.round(soc)}%`;
+			return (soc) => `${Math.round(soc)} %`;
 		},
 	},
 	mounted() {
