@@ -87,6 +87,8 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 			if err := xml.Unmarshal(res, &hmr); err != nil {
 				return hmr, err
 			}
+		} else {
+			return hmr, err
 		}
 	}
 
