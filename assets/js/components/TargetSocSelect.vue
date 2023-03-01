@@ -61,7 +61,7 @@ export default {
 			return null;
 		},
 		formatSoc: function (value) {
-			return `${Math.round(value)}%`;
+			return `${Math.round(value)} %`;
 		},
 		formatKm: function (value) {
 			return `${Math.round(value)} ${distanceUnit()}`;
