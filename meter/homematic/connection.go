@@ -68,26 +68,30 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 		return hmr, err
 	}
 
-	headers := map[string]string{
+	req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), map[string]string{
 		"Content-Type": "text/xml",
+	})
+	if err != nil {
+		return hmr, err
 	}
 
-	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
-		if res, err := c.DoBody(req); err == nil {
-			if strings.Contains(string(res), "faultCode") {
-				return hmr, fmt.Errorf("ccu: %s", string(res))
-			}
+	res, err := c.DoBody(req)
+	if err != nil {
+		return hmr, err
+	}
 
-			// correct Homematic IP Legacy API (CCU port 2010) method response encoding value
-			res = []byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1))
+	if strings.Contains(string(res), "faultCode") {
+		return hmr, fmt.Errorf("ccu: %s", string(res))
+	}
 
-			// correct XML-RPC-Schnittstelle (CCU port 2001) method response encoding value
-			res = []byte(strings.Replace(string(res), "iso-8859-1", "UTF-8", 1))
+	// correct Homematic IP Legacy API (CCU port 2010) method response encoding value
+	res = []byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1))
 
-			if err := xml.Unmarshal(res, &hmr); err != nil {
-				return hmr, err
-			}
-		}
+	// correct XML-RPC-Schnittstelle (CCU port 2001) method response encoding value
+	res = []byte(strings.Replace(string(res), "iso-8859-1", "UTF-8", 1))
+
+	if err := xml.Unmarshal(res, &hmr); err != nil {
+		return hmr, err
 	}
 
 	return hmr, err
