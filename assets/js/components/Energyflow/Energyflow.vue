@@ -193,15 +193,11 @@ export default {
 		pvProduction: function () {
 			return Math.abs(this.pvPower);
 		},
-		batteryPowerAdjusted: function () {
-			const batteryPowerThreshold = 50;
-			return Math.abs(this.batteryPower) < batteryPowerThreshold ? 0 : this.batteryPower;
-		},
 		batteryDischarge: function () {
-			return Math.abs(Math.max(0, this.batteryPowerAdjusted));
+			return Math.abs(Math.max(0, this.batteryPower));
 		},
 		batteryCharge: function () {
-			return Math.abs(Math.min(0, this.batteryPowerAdjusted) * -1);
+			return Math.abs(Math.min(0, this.batteryPower) * -1);
 		},
 		selfConsumption: function () {
 			const ownPower = this.batteryDischarge + this.pvProduction;
