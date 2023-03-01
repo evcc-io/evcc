@@ -65,7 +65,7 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 	var hmr MethodResponse
 	body, err := xml.Marshal(hmc)
 	if err != nil {
-		return hmr, err
+		return MethodResponse{}, err
 	}
 
 	headers := map[string]string{
@@ -75,7 +75,7 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 	if req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), headers); err == nil {
 		if res, err := c.DoBody(req); err == nil {
 			if strings.Contains(string(res), "faultCode") {
-				return hmr, fmt.Errorf("ccu: %s", string(res))
+				return MethodResponse{}, fmt.Errorf("ccu: %s", string(res))
 			}
 
 			// correct Homematic IP Legacy API (CCU port 2010) method response encoding value
@@ -85,10 +85,10 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 			res = []byte(strings.Replace(string(res), "iso-8859-1", "UTF-8", 1))
 
 			if err := xml.Unmarshal(res, &hmr); err != nil {
-				return hmr, err
+				return MethodResponse{}, err
 			}
 		} else {
-			return hmr, err
+			return MethodResponse{}, err
 		}
 	}
 
