@@ -21,7 +21,7 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<div class="container">
+						<div class="container mx-0 px-0">
 							<FormRow id="vehicleTemplate" :label="$t('vehicleSettings.template')">
 								<select
 									id="vehicleTemplate"
@@ -189,10 +189,5 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
-}
-
-.buttons,
-.result {
-	margin-right: calc(var(--bs-gutter-x) * -0.5);
 }
 </style>

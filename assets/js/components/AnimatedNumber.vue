@@ -9,7 +9,7 @@ const DURATION = 0.5;
 export default {
 	name: "AnimatedNumber",
 	props: {
-		to: { type: Number },
+		to: { type: Number, default: 0 },
 		format: { type: Function, required: true },
 		duration: { type: Number, default: DURATION },
 	},

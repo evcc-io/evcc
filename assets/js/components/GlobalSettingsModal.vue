@@ -20,7 +20,8 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<div class="container">
+						<SponsorTokenExpires :sponsorTokenExpires="sponsorTokenExpires" />
+						<div class="container mx-0 px-0">
 							<FormRow id="settingsDesign" :label="$t('settings.theme.label')">
 								<SelectGroup
 									id="settingsDesign"
@@ -113,6 +114,7 @@
 
 <script>
 import TelemetrySettings from "./TelemetrySettings.vue";
+import SponsorTokenExpires from "./SponsorTokenExpires.vue";
 import FormRow from "./FormRow.vue";
 import SelectGroup from "./SelectGroup.vue";
 import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreference } from "../i18n";
@@ -123,11 +125,12 @@ import { getHiddenFeatures, setHiddenFeatures } from "../featureflags";
 
 export default {
 	name: "GlobalSettingsModal",
-	components: { TelemetrySettings, FormRow, SelectGroup },
+	components: { TelemetrySettings, FormRow, SelectGroup, SponsorTokenExpires },
 	props: {
 		sponsor: String,
 		hasPrice: Boolean,
 		hasCo2: Boolean,
+		sponsorTokenExpires: Number,
 	},
 	data: function () {
 		return {
@@ -151,7 +154,7 @@ export default {
 			return locales;
 		},
 		isNightly: () => {
-			return !!window.evcc.commit;
+			return !!window?.evcc?.commit;
 		},
 	},
 	watch: {
@@ -183,9 +186,3 @@ export default {
 	},
 };
 </script>
-<style scoped>
-.container {
-	margin-left: calc(var(--bs-gutter-x) * -0.5);
-	margin-right: calc(var(--bs-gutter-x) * -0.5);
-}
-</style>
