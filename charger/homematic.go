@@ -35,11 +35,11 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if cc.User == "" {
+	if cc.User == "" || cc.User == "<nil>" {
 		return nil, errors.New("missing user")
 	}
 
-	if cc.Password == "" {
+	if cc.Password == "" || cc.Password == "<nil>" {
 		return nil, errors.New("missing password")
 	}
 
