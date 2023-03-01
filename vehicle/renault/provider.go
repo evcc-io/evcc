@@ -119,27 +119,25 @@ func (v *Provider) FinishTime() (time.Time, error) {
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+func (v *Provider) Climater() (bool, error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2, Megane e-tech
 	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusBadGateway) {
-		return false, 0, 0, api.ErrNotAvailable
+		return false, api.ErrNotAvailable
 	}
 
 	if err == nil {
 		state := strings.ToLower(res.Data.Attributes.HvacStatus)
-
 		if state == "" {
-			return false, 0, 0, api.ErrNotAvailable
+			return false, api.ErrNotAvailable
 		}
 
 		active := !slices.Contains([]string{"off", "false", "invalid", "error"}, state)
-
-		return active, res.Data.Attributes.ExternalTemperature, 20, nil
+		return active, nil
 	}
 
-	return false, 0, 0, err
+	return false, err
 }
 
 var _ api.Resurrector = (*Provider)(nil)
