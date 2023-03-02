@@ -49,12 +49,6 @@ params:
     help:
       en: Connector number, usually 1 for first connector.
       de: Verwendeter Ladepunkt, normalerweise 1 für den ersten Anschluss.
-  - name: meter
-    default: false
-    type: bool
-    help:
-      en: Use integrated meter (if present)
-      de: Benutze den integrierten Zähler (falls vorhanden)
   - name: idtag
     type: string
     advanced: true
@@ -74,8 +68,5 @@ render: |
   {{- end }}
   {{- if ne .idtag "" }}
   idtag: {{ .idtag }}
-  {{- end }}
-  {{- if ne .meter "false" }}
-  meter: {{ .meter }}
   {{- end }}
   timeout: {{ .timeout }}
