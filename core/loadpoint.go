@@ -119,7 +119,7 @@ type Loadpoint struct {
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
-	Circuit       *Circuit      // circuit this lp belongs to
+	circuit       *Circuit      // circuit this lp belongs to
 
 	enabled                  bool      // Charger enabled state
 	phases                   int       // Charger enabled phases, guarded by mutex
@@ -267,6 +267,17 @@ func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
 	} else if lp.Enable.Threshold > 0 {
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
+	}
+
+	// check for circuit
+	if lp.CircuitRef != "" {
+		if lp.circuit, err = cp.Circuit(lp.CircuitRef); err != nil {
+			return nil, err
+		}
+		// in case of vmeter is present for the circuit, register there
+		if vm := cp.VMeter(lp.CircuitRef); vm != nil {
+			vm.AddConsumer(lp)
+		}
 	}
 
 	return lp, nil
@@ -634,8 +645,8 @@ func (lp *Loadpoint) syncCharger() {
 func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	// apply load management
 	forceCurrentChange := false
-	if lp.Circuit != nil && chargeCurrent > 0.0 {
-		maxCur := lp.Circuit.GetRemainingCurrent()
+	if lp.circuit != nil && chargeCurrent > 0.0 {
+		maxCur := lp.circuit.GetRemainingCurrent()
 		// maxCur includes the consumption of this loadpoint, so adjust using consumer interface
 		curAct, err := lp.MaxPhasesCurrent()
 		if err != nil {
@@ -647,7 +658,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 		chargeCurrentNew := math.Min(math.Max(newCur, 0), chargeCurrent)
 		// later here the function checks for having less than MinCurrent()
 		if chargeCurrentNew < chargeCurrent {
-			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit %s", chargeCurrent, chargeCurrentNew, lp.Circuit.Name)
+			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit %s", chargeCurrent, chargeCurrentNew, lp.circuit.Title)
 			chargeCurrent = chargeCurrentNew
 			// also set force to ensure not overloading the circuit
 			forceCurrentChange = true
@@ -1500,8 +1511,8 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging())
 	lp.publish("enabled", lp.enabled)
-	if lp.Circuit != nil {
-		lp.publish("circuit", lp.Circuit.Name)
+	if lp.circuit != nil {
+		lp.publish("circuit", lp.circuit.Title)
 	}
 
 	// identify connected vehicle

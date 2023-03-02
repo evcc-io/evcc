@@ -7,4 +7,6 @@ type configProvider interface {
 	Meter(string) (api.Meter, error)
 	Charger(string) (api.Charger, error)
 	Vehicle(string) (api.Vehicle, error)
+	Circuit(string) (*Circuit, error)
+	VMeter(string) *VMeter
 }

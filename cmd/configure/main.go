@@ -472,12 +472,23 @@ func (c *CmdConfigure) configureCircuits() {
 		return
 	}
 
+	// top level circtuits
+	circuitsTopLevel := []*core.CircuitConfig{}
+	// map of references to circuits
+	circuitByName := map[string]*core.CircuitConfig{}
+
 	for {
 		ccName := c.askValue(question{
 			label:    c.localizedString("Circuit_Title"),
+			help:     c.localizedString("Circuit_TitleHelp"),
 			required: true,
 		})
-		curCircuit := *core.NewCircuit(ccName, 0, nil, util.NewLogger(("cc-" + ccName)))
+
+		if _, ok := circuitByName[ccName]; ok {
+			fmt.Println(c.localizedString("Circuit_NameAlreadyUsed"))
+			continue
+		}
+		curCircuit := &core.CircuitConfig{Name: ccName}
 
 		curChoices := []string{
 			c.localizedString("Circuit_MaxCurrent16A"),  // 11kVA
@@ -530,33 +541,39 @@ func (c *CmdConfigure) configureCircuits() {
 		}
 
 		// in case we have already circuits, ask for parent circuit
-		if len(c.CircuitNames) > 0 {
+		if len(circuitByName) > 0 {
+			circuitNames := maps.Keys(circuitByName)
+			// circuits exist already, ask for parent
 			if c.askYesNo(c.localizedString("Circuit_HasParent")) {
-				sort.Strings(c.CircuitNames)
-				parentCCNameId, _ := c.askChoice(c.localizedString("Circuit_Parent"), c.CircuitNames)
+				sort.Strings(circuitNames)
+				parentCCNameId, _ := c.askChoice(c.localizedString("Circuit_Parent"), circuitNames)
 
 				// assign this circuit as child to the requested parent
-				for ccId := range c.configuration.config.Circuits {
-					if parentCC := c.configuration.config.Circuits[ccId].GetCircuit(c.CircuitNames[parentCCNameId]); parentCC != nil {
-						parentCC.Circuits = append(parentCC.Circuits, &curCircuit)
-						break
-					}
-				}
+				parentCircuit := circuitByName[circuitNames[parentCCNameId]]
+				parentCircuit.Circuits = append(parentCircuit.Circuits, curCircuit)
+
 			} else {
 				// no parent,
 				// add as top level circuit
-				c.configuration.config.Circuits = append(c.configuration.config.Circuits, curCircuit)
+				circuitsTopLevel = append(circuitsTopLevel, curCircuit)
 			}
 		} else {
 			// first circuit
-			c.configuration.config.Circuits = append(c.configuration.config.Circuits, curCircuit)
+			circuitsTopLevel = append(circuitsTopLevel, curCircuit)
 		}
-		// append to known names
-		c.CircuitNames = append(c.CircuitNames, curCircuit.Name)
+		// append to known names for later lookup
+		circuitByName[ccName] = curCircuit
 
 		fmt.Println()
 		if !c.askYesNo(c.localizedString("Circuit_AddAnother")) {
 			break
 		}
 	}
+	// finally store top level circuits
+	for _, circuit := range circuitsTopLevel {
+		c.configuration.config.Circuits = append(c.configuration.config.Circuits, *circuit)
+	}
+
+	// save circuitnames for loadpoint config
+	c.CircuitNames = maps.Keys(circuitByName)
 }

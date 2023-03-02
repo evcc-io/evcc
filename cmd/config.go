@@ -141,7 +141,8 @@ type ConfigProvider struct {
 	meters   map[string]api.Meter
 	chargers map[string]api.Charger
 	vehicles map[string]api.Vehicle
-	circuits map[string]core.Circuit
+	circuits map[string]*core.Circuit
+	vMeters  map[string]*core.VMeter // use circuit name as key
 	visited  map[string]bool
 	auth     *util.AuthCollection
 }
@@ -169,9 +170,17 @@ func (cp *ConfigProvider) Meter(name string) (api.Meter, error) {
 // Circuit provides circuits by name
 func (cp *ConfigProvider) Circuit(name string) (*core.Circuit, error) {
 	if cc, ok := cp.circuits[name]; ok {
-		return &cc, nil
+		return cc, nil
 	}
 	return nil, fmt.Errorf("invalid circuit: %s", name)
+}
+
+// VMeter provides virtual meter by circuit ref, if exists
+func (cp *ConfigProvider) VMeter(name string) *core.VMeter {
+	if vm, ok := cp.vMeters[name]; ok {
+		return vm
+	}
+	return nil // not every circuit has a virtual meter, this is no error
 }
 
 // Charger provides chargers by name

@@ -102,6 +102,7 @@ func NewSiteFromConfig(
 	loadpoints []*Loadpoint,
 	vehicles []api.Vehicle,
 	tariffs tariff.Tariffs,
+	circuits []*Circuit,
 ) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, site); err != nil {
@@ -180,6 +181,11 @@ func NewSiteFromConfig(
 		return nil, errors.New("missing either grid or pv meter")
 	}
 
+	// get circuits for regular udpates
+	for _, circtuitRef := range circuits {
+		site.Circuits = append(site.Circuits, circtuitRef)
+	}
+
 	return site, nil
 }
 
@@ -256,11 +262,10 @@ func (site *Site) DumpConfig() {
 			)
 		}
 	}
-	site.log.INFO.Printf("circuits:")
+
+	site.log.INFO.Printf("  circuits:")
 	for _, circuit := range site.Circuits {
-		for _, subCircuit := range circuit.DumpConfig(2, 13) {
-			site.log.INFO.Printf(subCircuit)
-		}
+		site.log.INFO.Printf(circuit.DumpConfig(4, 13))
 	}
 
 	if vehicles := site.GetVehicles(); len(vehicles) > 0 {
@@ -281,7 +286,7 @@ func (site *Site) DumpConfig() {
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
-		if lp.Circuit != nil {
+		if lp.circuit != nil {
 			lp.log.INFO.Printf("  circuit:     %s", lp.CircuitRef)
 		}
 

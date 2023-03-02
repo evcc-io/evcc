@@ -36,7 +36,7 @@ type config struct {
 	Chargers   []device
 	Vehicles   []device
 	Loadpoints []loadpoint
-	Circuits   []core.Circuit
+	Circuits   []core.CircuitConfig
 	Site       struct { // TODO Perspektivisch können wir was aus core wiederverwenden, für später
 		Title     string
 		Grid      string

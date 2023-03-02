@@ -2,6 +2,8 @@
 package core
 
 import (
+	"fmt"
+
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -11,6 +13,7 @@ type Consumer interface {
 	MaxPhasesCurrent() (float64, error)
 }
 
+// VMeter evaluates consumtion from assigned list of consumers
 type VMeter struct {
 	log       *util.Logger
 	Consumers []Consumer // all consumers under management. Used for consumption evaluation
@@ -19,7 +22,12 @@ type VMeter struct {
 // AddConsumer adds a consumer to evaluate consumption
 func (vm *VMeter) AddConsumer(c Consumer) {
 	vm.Consumers = append(vm.Consumers, c)
+	vm.log.TRACE.Printf("adding Consumer %T", c)
 }
+
+var (
+	vmeterId int // counter for logger id
+)
 
 // Currents implements MeterCurrent interface
 // return current as it would be used on all 3 phases. We dont phase accurate evaluation for the installation.
@@ -40,7 +48,8 @@ func (vm *VMeter) Currents() (float64, float64, float64, error) {
 // NewVMeter a new vmeter
 func NewVMeter(n string) *VMeter {
 	vm := &VMeter{
-		log: util.NewLogger("vmtr-" + n),
+		log: util.NewLogger(fmt.Sprintf("vmtr-%d", vmeterId)),
 	}
+	vmeterId += 1
 	return vm
 }

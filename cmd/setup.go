@@ -264,6 +264,12 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 
 func configureSiteLoadpointsCircuits(conf config) (site *core.Site, err error) {
 	if err = cp.configure(conf); err == nil {
+
+		var circuits []*core.Circuit
+		if circuits, err = configureCircuits(conf, cp); err != nil {
+			return nil, err
+		}
+
 		var loadpoints []*core.Loadpoint
 		loadpoints, err = configureLoadpoints(conf, cp)
 
@@ -282,19 +288,15 @@ func configureSiteLoadpointsCircuits(conf config) (site *core.Site, err error) {
 				vehicles = append(vehicles, cp.vehicles[k])
 			}
 
-			site, err = configureSite(conf.Site, cp, loadpoints, vehicles, tariffs)
-		}
-
-		if err == nil {
-			err = configureCircuits(site, loadpoints, cp)
+			site, err = configureSite(conf.Site, cp, loadpoints, vehicles, tariffs, circuits)
 		}
 	}
 
 	return site, err
 }
 
-func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {
-	site, err := core.NewSiteFromConfig(log, cp, conf, loadpoints, vehicles, tariffs)
+func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs, circuits []*core.Circuit) (*core.Site, error) {
+	site, err := core.NewSiteFromConfig(log, cp, conf, loadpoints, vehicles, tariffs, circuits)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
@@ -320,36 +322,30 @@ func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Lo
 	return loadpoints, nil
 }
 
-// configureCircuits loads circuit definition and connects the loadpoints with the circuit
-func configureCircuits(site *core.Site, loadpoints []*core.Loadpoint, cp *ConfigProvider) (err error) {
+// configureCircuits loads circuit definition
+func configureCircuits(conf config, cp *ConfigProvider) (circuits []*core.Circuit, err error) {
+	cp.circuits = make(map[string]*core.Circuit)
+	cp.vMeters = make(map[string]*core.VMeter)
+
 	for _, cfg := range conf.Circuits {
-		circuit, err := core.NewCircuitFromConfig(cp, cfg, site)
+		circuitMapNew, vmeterMapNew, err := core.NewCircuitFromConfig(cp, cfg)
 		if err != nil {
-			return fmt.Errorf("failed configuring circuit: %w", err)
+			return nil, fmt.Errorf("failed configuring circuit: %w", err)
 		}
-		site.Circuits = append(site.Circuits, circuit)
-	}
 
-	// connect circuits and loadpoints
-	for _, lp := range loadpoints {
-		for _, circuit := range site.Circuits {
-			lp.Circuit = circuit.GetCircuit(lp.CircuitRef)
-			if lp.Circuit != nil {
-				// check there is a virtual meter, and add lp in case as consumer
-				if vmtr := lp.Circuit.GetVMeter(); vmtr != nil {
-					vmtr.AddConsumer(lp)
-				}
-				break
+		for k, v := range circuitMapNew {
+			if _, ok := cp.circuits[k]; ok {
+				return nil, fmt.Errorf("circuit with name %s defined more than once", k)
 			}
-			// error will be checked below. There might be multiple top level circuits
-			// which need to be checked before raising errors
+			cp.circuits[k] = v
+			circuits = append(circuits, v)
 		}
 
-		// if we are here, no circuit with this name exists
-		if lp.CircuitRef != "" && lp.Circuit == nil {
-			return fmt.Errorf("loadpoint uses undefined circuit: %s", lp.CircuitRef)
+		for k, v := range vmeterMapNew {
+			cp.vMeters[k] = v
 		}
+
 	}
 
-	return nil
+	return circuits, nil
 }
