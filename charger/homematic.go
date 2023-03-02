@@ -66,11 +66,6 @@ func (c *CCU) MaxCurrent(current int64) error {
 
 var _ api.Meter = (*CCU)(nil)
 
-// CurrentPower implements the api.Meter interface
-func (c *CCU) CurrentPower() (float64, error) {
-	return c.conn.CurrentPower()
-}
-
 var _ api.MeterEnergy = (*CCU)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
