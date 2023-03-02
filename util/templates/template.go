@@ -323,6 +323,7 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 
 		default:
 			if res[out] == nil || res[out].(string) == "" {
+				// prevent rendering nil interfaces as "<nil>" string
 				var s string
 				if val != nil {
 					s = yamlQuote(fmt.Sprintf("%v", val))
