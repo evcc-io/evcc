@@ -97,6 +97,7 @@ func (c *TPLink) MaxCurrent(current int64) error {
 	return nil
 }
 
+var _ api.Meter = (*TPLink)(nil)
 var _ api.MeterEnergy = (*TPLink)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
