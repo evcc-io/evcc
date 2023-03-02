@@ -255,7 +255,7 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 
 	u := uint16(current)
 
-	// Bug Korrektur -> Strom wird um 1A vermindert (außer bei 8, 16,24,32)
+	// Bug Korrektur -> Strom wird um 1A vermindert (außer bei 8,16,24,32)
 	if (u != 8 && u != 16 && u != 24 && u != 32) {
 		u = u + 1  // Erhöhung um 1A
 	}
@@ -265,7 +265,7 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 		currentTime := time.Now()
 		fmt.Printf("[VERSI ] INFO ")
 		fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-		fmt.Printf(" MaxCurrent auf %d gesetzt\n", u-1)
+		fmt.Printf(" MaxCurrent auf %d gesetzt\n", current)
 		wb.current = u
 	}
 
