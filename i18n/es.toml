@@ -281,3 +281,9 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
+
+
+[settings.sponsorToken]
+getNew = "Coge uno nuevo"
+hint = "Nota: automatizaremos esto en el futuro."
+expires = "Tú token de patrocinador expira {inXDays}. {getNewToken} y actualiza tu archivo de configuración."
