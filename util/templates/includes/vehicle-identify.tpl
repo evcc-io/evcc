@@ -17,7 +17,7 @@ onIdentify:
   maxCurrent: {{ .maxCurrent }}
 {{- end }}
 {{- if (ne .priority "") }}
-- priority: {{ .priority }}
+  priority: {{ .priority }}
 {{- end }}
 {{- end }}
 {{- if ne (len .identifiers) 0 }}

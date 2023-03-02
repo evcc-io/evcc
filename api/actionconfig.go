@@ -36,6 +36,9 @@ func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
 	if m.TargetSoc != nil {
 		a.TargetSoc = m.TargetSoc
 	}
+	if m.Priority != nil {
+		a.Priority = m.Priority
+	}
 	return a
 }
 
