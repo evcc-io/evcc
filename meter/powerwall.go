@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/foogod/go-powerwall"
@@ -17,6 +18,7 @@ import (
 type PowerWall struct {
 	usage  string
 	client *powerwall.Client
+	meterG func() (map[string]powerwall.MeterAggregatesData, error)
 }
 
 func init() {
@@ -28,8 +30,11 @@ func init() {
 
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
 func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
+	cc := struct {
 		URI, Usage, User, Password string
+		Cache                      time.Duration
+	}{
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -52,11 +57,11 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string) (api.Meter, error) {
+func NewPowerWall(uri, usage, user, password string, cache time.Duration) (api.Meter, error) {
 	log := util.NewLogger("powerwall").Redact(user, password)
 
 	httpClient := &http.Client{
@@ -72,6 +77,7 @@ func NewPowerWall(uri, usage, user, password string) (api.Meter, error) {
 	m := &PowerWall{
 		client: client,
 		usage:  strings.ToLower(usage),
+		meterG: provider.Cached(client.GetMetersAggregates, cache),
 	}
 
 	// decorate api.MeterEnergy
@@ -103,7 +109,7 @@ var _ api.Meter = (*PowerWall)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (m *PowerWall) CurrentPower() (float64, error) {
-	res, err := m.client.GetMetersAggregates()
+	res, err := m.meterG()
 	if err != nil {
 		return 0, err
 	}
@@ -117,7 +123,7 @@ func (m *PowerWall) CurrentPower() (float64, error) {
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *PowerWall) totalEnergy() (float64, error) {
-	res, err := m.client.GetMetersAggregates()
+	res, err := m.meterG()
 	if err != nil {
 		return 0, err
 	}
