@@ -323,7 +323,11 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 
 		default:
 			if res[out] == nil || res[out].(string) == "" {
-				res[out] = yamlQuote(fmt.Sprintf("%v", val))
+				var s string
+				if val != nil {
+					s = yamlQuote(fmt.Sprintf("%v", val))
+				}
+				res[out] = s
 			}
 		}
 	}
