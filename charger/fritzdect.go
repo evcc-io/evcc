@@ -104,6 +104,7 @@ func (c *FritzDECT) MaxCurrent(current int64) error {
 	return nil
 }
 
+var _ api.Meter = (*FritzDECT)(nil)
 var _ api.MeterEnergy = (*FritzDECT)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface

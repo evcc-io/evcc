@@ -173,6 +173,7 @@ func (c *Tasmota) MaxCurrent(current int64) error {
 	return nil
 }
 
+var _ api.Meter = (*Tasmota)(nil)
 var _ api.MeterEnergy = (*Tasmota)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
