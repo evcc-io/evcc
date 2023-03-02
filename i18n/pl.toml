@@ -281,3 +281,9 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
+
+
+[settings.sponsorToken]
+expires = "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj swój plik konfiguracyjny."
+getNew = "Weź świeżego"
+hint = "Uwaga: zautomatyzujemy to w przyszłości."
