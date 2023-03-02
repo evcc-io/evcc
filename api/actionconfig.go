@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/fatih/structs"
+	"github.com/imdario/mergo"
 )
 
 // ActionConfig defines an action to take on event
@@ -21,23 +22,8 @@ type ActionConfig struct {
 // Merge merges all non-nil properties of the additional config into the base config.
 // The receiver's config remains immutable.
 func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
-	if m.Mode != nil {
-		a.Mode = m.Mode
-	}
-	if m.MinCurrent != nil {
-		a.MinCurrent = m.MinCurrent
-	}
-	if m.MaxCurrent != nil {
-		a.MaxCurrent = m.MaxCurrent
-	}
-	if m.MinSoc != nil {
-		a.MinSoc = m.MinSoc
-	}
-	if m.TargetSoc != nil {
-		a.TargetSoc = m.TargetSoc
-	}
-	if m.Priority != nil {
-		a.Priority = m.Priority
+	if err := mergo.MergeWithOverwrite(&a, m); err != nil {
+		panic(err)
 	}
 	return a
 }
