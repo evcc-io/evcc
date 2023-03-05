@@ -1,11 +1,11 @@
 product:
   brand: Janitza
-  description: B23
+  description: B series, UMG series
 render:
   - usage: grid
     default: |
       type: template
-      template: janitza-b23
+      template: janitza
       usage: grid      
 
       # RS485 via adapter (Modbus RTU)
@@ -29,7 +29,7 @@ render:
   - usage: charge
     default: |
       type: template
-      template: janitza-b23
+      template: janitza
       usage: charge      
 
       # RS485 via adapter (Modbus RTU)

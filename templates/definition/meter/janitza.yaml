@@ -1,8 +1,8 @@
-template: janitza-b23
+template: janitza
 products:
   - brand: Janitza
     description:
-      generic: B23
+      generic: B series, UMG series
 params:
   - name: usage
     choice: ["grid", "charge"]
@@ -11,6 +11,7 @@ params:
 render: |
   type: modbus
   {{- include "modbus" . }}
+  model: janitza
   power: Power
   energy: Import
   currents:
