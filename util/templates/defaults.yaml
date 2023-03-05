@@ -338,6 +338,8 @@ presets:
       - name: ip
   switchsocket:
     params:
+      - name: standbypower
+        default: 15
       - name: integrateddevice
         type: bool
         advanced: true

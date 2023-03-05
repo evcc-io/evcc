@@ -212,6 +212,13 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	// features
+
+	if v, ok := v.(api.FeatureDescriber); ok {
+		ff := v.Features()
+		fmt.Fprintf(w, "Features:\t%v\n", ff)
+	}
+
 	w.Flush()
 }
 
