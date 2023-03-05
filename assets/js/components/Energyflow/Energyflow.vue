@@ -232,7 +232,12 @@ export default {
 			return this.battery.map(({ soc, capacity }) => {
 				const energy = this.fmtKWh((capacity / 100) * soc * 1e3, true, false, 1);
 				const total = this.fmtKWh(capacity * 1e3, true, true, 1);
-				return this.$t("main.energyflow.batteryTooltip", { energy, total, soc });
+				const formattedSoc = this.batteryFmt(soc);
+				return this.$t("main.energyflow.batteryTooltip", {
+					energy,
+					total,
+					soc: formattedSoc,
+				});
 			});
 		},
 		batteryFmt() {
