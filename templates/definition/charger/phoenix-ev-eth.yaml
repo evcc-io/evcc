@@ -16,8 +16,8 @@ products:
 capabilities: ["mA", "rfid"]
 requirements:
   description:
-    en: The charger has to be connected via network cable and the DIP switch 10 in the device must be set to 'ON'. A recent controller firmware is recommended.
-    de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
+    en: DIP switch 10 at the controller needs to be set to 'ON'. A recent controller firmware is recommended.
+    de: DIP Schalter 10 des Controllers muss auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
   evcc: ["sponsorship"]
 params:
   - name: host
