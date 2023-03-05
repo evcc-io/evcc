@@ -19,8 +19,6 @@ params:
     help:
       en: Homematic device id like shown in the CCU web user interface.
       de: Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
-  - name: standbypower
-    default: 15
   - name: user
     required: false
   - name: password
@@ -53,12 +51,12 @@ render: |
   type: homematic
   uri: {{ .host }}:{{ .port }}
   device: {{ .device }}
-  meterchannel: {{ .meterchannel }}
-  switchchannel: {{ .switchchannel }}
-  standbypower: {{ .standbypower }}
   {{ if ne .user "" }}
   user: {{ .user }}
   {{ end }}
   {{ if ne .password "" }}
   password: {{ .password }}
   {{ end }}
+  meterchannel: {{ .meterchannel }}
+  switchchannel: {{ .switchchannel }}
+  {{ include "switchsocket" . }}

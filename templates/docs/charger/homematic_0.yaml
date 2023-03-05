@@ -8,19 +8,19 @@ render:
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 2010 # Port # Optional
       device: '0001EE89AAD848' # Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
-      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
+      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional
     advanced: |
       type: template
       template: homematic
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 2010 # Port # Optional
       device: '0001EE89AAD848' # Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
-      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
       meterchannel: 6 # Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
       switchchannel: 3 # Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
+      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional
       integrateddevice: # Optional
       icon: # Icon in der Benutzeroberfläche # Optional

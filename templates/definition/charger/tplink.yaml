@@ -6,10 +6,8 @@ products:
 group: switchsockets
 params:
   - name: host
-  - name: standbypower
-    default: 15
   - preset: switchsocket
 render: |
   type: tplink
   uri: {{ .host }}
-  standbypower: {{ .standbypower }}
+  {{ include "switchsocket" . }}
