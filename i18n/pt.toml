@@ -252,6 +252,11 @@ value = "Mostrar recursos de IU experimentais."
 auto = "Automático"
 label = "Língua"
 
+[settings.sponsorToken]
+expires = "Seu token de patrocinador expira em {inXDays}. {getNewToken} e atualize seu arquivo de configuração."
+getNew = "Pegue um novo"
+hint = "Nota: Vamos automatizar isso no futuro."
+
 [settings.telemetry]
 label = "Telemetria"
 
@@ -282,9 +287,3 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
-
-
-[settings.sponsorToken]
-getNew = "Pegue um novo"
-hint = "Nota: Vamos automatizar isso no futuro."
-expires = "Seu token de patrocinador expira em {inXDays}. {getNewToken} e atualize seu arquivo de configuração."

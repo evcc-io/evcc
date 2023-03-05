@@ -242,6 +242,11 @@ value = "Arată caracteristice experimentale."
 auto = "Automat"
 label = "Limba"
 
+[settings.sponsorToken]
+expires = "Tokenul de sponsorizare expira {inXDays}. {getNewToken} si adauga-l in fisierul de configurare."
+getNew = "Descarcati unul nou"
+hint = "Nota: Vom automatiza acest proces in viitor."
+
 [settings.telemetry]
 label = "Telemetrie"
 
@@ -272,9 +277,3 @@ title = "Eroare la pornire încărcare"
 cancel = "Anulați"
 template = "Producător"
 test = "Test"
-
-
-[settings.sponsorToken]
-expires = "Tokenul de sponsorizare expira {inXDays}. {getNewToken} si adauga-l in fisierul de configurare."
-getNew = "Descarcati unul nou"
-hint = "Nota: Vom automatiza acest proces in viitor."

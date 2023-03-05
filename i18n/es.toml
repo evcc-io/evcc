@@ -251,6 +251,11 @@ value = "Mostrar las características experimentales de la interfaz de usuario."
 auto = "Automático"
 label = "Idioma"
 
+[settings.sponsorToken]
+expires = "Tú token de patrocinador expira {inXDays}. {getNewToken} y actualiza tu archivo de configuración."
+getNew = "Coge uno nuevo"
+hint = "Nota: automatizaremos esto en el futuro."
+
 [settings.telemetry]
 label = "Telemetría"
 
@@ -281,9 +286,3 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
-
-
-[settings.sponsorToken]
-getNew = "Coge uno nuevo"
-hint = "Nota: automatizaremos esto en el futuro."
-expires = "Tú token de patrocinador expira {inXDays}. {getNewToken} y actualiza tu archivo de configuración."

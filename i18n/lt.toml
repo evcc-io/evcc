@@ -251,6 +251,11 @@ value = "Rodyti eksperimentines funkcijas."
 auto = "Automatiškai"
 label = "Kalba"
 
+[settings.sponsorToken]
+expires = "Jūsų rėmėjo tokenas baigiasi {inXDays}. {getNewToken} ir pakeiskite savo configūracinį failą."
+getNew = "Gaukite naują"
+hint = "Pastaba: ateityje šis procesas bus automatizuotas."
+
 [settings.telemetry]
 label = "Telemetrija"
 
@@ -281,9 +286,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[settings.sponsorToken]
-getNew = "Gaukite naują"
-hint = "Pastaba: ateityje šis procesas bus automatizuotas."
-expires = "Jūsų rėmėjo tokenas baigiasi {inXDays}. {getNewToken} ir pakeiskite savo configūracinį failą."

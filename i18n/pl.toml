@@ -251,6 +251,11 @@ value = "Pokaż eksperymentalne funkcje interfejsu"
 auto = "Automatyczny"
 label = "Język"
 
+[settings.sponsorToken]
+expires = "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj swój plik konfiguracyjny."
+getNew = "Weź świeżego"
+hint = "Uwaga: zautomatyzujemy to w przyszłości."
+
 [settings.telemetry]
 label = "Telemetria"
 
@@ -281,9 +286,3 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
-
-
-[settings.sponsorToken]
-expires = "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj swój plik konfiguracyjny."
-getNew = "Weź świeżego"
-hint = "Uwaga: zautomatyzujemy to w przyszłości."
