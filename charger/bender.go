@@ -126,9 +126,13 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
 		currentPower = wb.currentPower
 		currents = wb.currents
-		voltages = wb.voltages
 		chargedEnergy = wb.chargedEnergy
 		totalEnergy = wb.totalEnergy
+
+		// check presence of "ocpp meter"
+		if b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
+			voltages = wb.voltages
+		}
 	}
 
 	// check rfid
@@ -146,19 +150,15 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch sb := binary.BigEndian.Uint16(b); sb {
+	switch s := binary.BigEndian.Uint16(b); s {
 	case 1:
 		return api.StatusA, nil
 	case 2:
 		return api.StatusB, nil
-	case 3:
+	case 3, 4:
 		return api.StatusC, nil
-	case 4:
-		return api.StatusD, nil
-	case 5:
-		return api.StatusE, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
 }
 
