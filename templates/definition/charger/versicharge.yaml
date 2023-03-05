@@ -10,7 +10,7 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 1
+    id: 2
 render: |
   type: versicharge
   {{- include "modbus" . }}
