@@ -9,8 +9,6 @@ params:
     mask: true
   - name: channel
     default: 0
-  - name: standbypower
-    default: 15
   - preset: switchsocket
 render: |
   type: shelly
@@ -18,4 +16,4 @@ render: |
   {{ if ne .user "" }}user: {{ .user }}{{ end }}
   {{ if ne .password "" }}password: {{ .password }}{{ end }}
   channel: {{ .channel }}  # shelly device relay channel
-  standbypower: {{ .standbypower }}
+  {{ include "switchsocket" . }}

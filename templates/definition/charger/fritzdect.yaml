@@ -14,8 +14,6 @@ params:
     mask: true
   - name: ain
     required: true
-  - name: standbypower
-    default: 15
   - preset: switchsocket
 render: |
   type: fritzdect
@@ -23,4 +21,4 @@ render: |
   user: {{ .user }}
   password: {{ .password }}
   ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)
-  standbypower: {{ .standbypower }}
+  {{ include "switchsocket" . }}

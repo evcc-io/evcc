@@ -22,8 +22,6 @@ params:
     help:
       de: Nummer des Schaltkanals (1-8), bei Geräten mit mehr als einem Schalter
       en: Device relay channel number (allowed range 1-8)
-  - name: standbypower
-    default: 15
   - preset: switchsocket
 render: |
   type: tasmota
@@ -35,4 +33,4 @@ render: |
   password: {{ .password }}
   {{ end }}
   channel: {{ .channel }}  # relay channel (allowed range: 1-8)
-  standbypower: {{ .standbypower }}
+  {{ include "switchsocket" . }}
