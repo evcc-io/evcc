@@ -239,21 +239,11 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	}
 
 	assertConfig := func(lp *Loadpoint, conf api.ActionConfig) {
-		if lp.Mode != *conf.Mode {
-			t.Errorf("expected mode %v, got %v", *conf.Mode, lp.Mode)
-		}
-		if lp.MinCurrent != *conf.MinCurrent {
-			t.Errorf("expected minCurrent %v, got %v", *conf.MinCurrent, lp.MinCurrent)
-		}
-		if lp.MaxCurrent != *conf.MaxCurrent {
-			t.Errorf("expected maxCurrent %v, got %v", *conf.MaxCurrent, lp.MaxCurrent)
-		}
-		if lp.Soc.min != *conf.MinSoc {
-			t.Errorf("expected minSoc %v, got %v", *conf.MinSoc, lp.Soc.min)
-		}
-		if lp.Soc.target != *conf.TargetSoc {
-			t.Errorf("expected targetSoc %v, got %v", *conf.TargetSoc, lp.Soc.target)
-		}
+		assert.Equal(t, *conf.Mode, lp.Mode)
+		assert.Equal(t, *conf.MinCurrent, lp.MinCurrent)
+		assert.Equal(t, *conf.MaxCurrent, lp.MaxCurrent)
+		assert.Equal(t, *conf.MinSoc, lp.Soc.min)
+		assert.Equal(t, *conf.TargetSoc, lp.Soc.target)
 	}
 
 	// onIdentified config
@@ -373,14 +363,10 @@ func TestReconnectVehicle(t *testing.T) {
 			ctrl.Finish()
 
 			// detection started
-			if lp.vehicleDetect != lp.clock.Now() {
-				t.Error("vehicle detection not started")
-			}
+			assert.Equal(t, lp.clock.Now(), lp.vehicleDetect, "vehicle detection not started")
 
 			// vehicle not detected yet
-			if lp.vehicle != nil {
-				t.Error("vehicle should be <nil>")
-			}
+			assert.Nil(t, lp.vehicle, "vehicle should be <nil>")
 
 			// sync charger
 			charger.EXPECT().Enabled().Return(true, nil)
@@ -391,9 +377,7 @@ func TestReconnectVehicle(t *testing.T) {
 			ctrl.Finish()
 
 			// vehicle detected
-			if lp.vehicle != vehicle {
-				t.Error("vehicle should be detected")
-			}
+			assert.Equal(t, vehicle, lp.vehicle, "vehicle should be detected")
 		})
 	}
 }
