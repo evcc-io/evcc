@@ -80,6 +80,7 @@ noEnergy = "Ingen målerdata"
 pvExport = "Eksport af gitter"
 pvProduction = "Produktion"
 selfConsumption = "Self-konsumption"
+batteryTooltip = "{energi} af {total} ({soc}%)"
 
 [main.loadpoint]
 charged = "Opladt"
