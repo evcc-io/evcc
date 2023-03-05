@@ -155,7 +155,7 @@ func (m *Influx) Run(site site.API, in <-chan util.Param) {
 				tags["vehicle"] = v.Title()
 			}
 		} else if param.Circuit != nil {
-			tags["circuit"] = *param.Circuit
+			tags["circuit"] = strconv.Itoa(*param.Circuit)
 		}
 
 		m.writeComplexPoint(writer, param, tags)

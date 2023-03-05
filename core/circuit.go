@@ -225,14 +225,8 @@ func (circuit *Circuit) DumpConfig(indent int, maxIndent int) string {
 // publish sends values to UI and databases
 func (circuit *Circuit) publish(key string, val interface{}) {
 	// test helper
-	if circuit.uiChan == nil {
-		return
-	}
-
-	circuit.uiChan <- util.Param{
-		Circuit: &circuit.Title,
-		Key:     key,
-		Val:     val,
+	if circuit.uiChan != nil {
+		circuit.uiChan <- util.Param{Key: key, Val: val}
 	}
 }
 

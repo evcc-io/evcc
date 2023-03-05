@@ -57,7 +57,7 @@ func (c *Cache) State() map[string]interface{} {
 
 	res := map[string]interface{}{}
 	lps := make(map[int]map[string]interface{})
-	ccs := make(map[string]map[string]interface{})
+	ccs := make(map[int]map[string]interface{})
 
 	for _, param := range c.val {
 
@@ -88,11 +88,11 @@ func (c *Cache) State() map[string]interface{} {
 	res["loadpoints"] = loadpoints
 
 	// use sorted list to preserve order in api/state
-	keys := make([]string, 0, len(ccs))
+	keys := make([]int, 0, len(ccs))
 	for k := range ccs {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	sort.Ints(keys)
 
 	circuits := make([]map[string]interface{}, len(ccs))
 	for id, ccKey := range keys {

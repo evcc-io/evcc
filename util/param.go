@@ -8,7 +8,7 @@ import (
 // Param is the broadcast channel data type
 type Param struct {
 	Loadpoint *int
-	Circuit   *string
+	Circuit   *int
 	Key       string
 	Val       interface{}
 }
@@ -21,7 +21,7 @@ func (p Param) UniqueID() string {
 	if p.Loadpoint != nil {
 		b.WriteString(strconv.Itoa(*p.Loadpoint) + ".")
 	} else if p.Circuit != nil {
-		b.WriteString(*p.Circuit + ".")
+		b.WriteString(strconv.Itoa(*p.Circuit) + ".")
 	}
 
 	b.WriteString(p.Key)

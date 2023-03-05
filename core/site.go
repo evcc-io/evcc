@@ -182,9 +182,7 @@ func NewSiteFromConfig(
 	}
 
 	// get circuits for regular udpates
-	for _, circtuitRef := range circuits {
-		site.Circuits = append(site.Circuits, circtuitRef)
-	}
+	site.Circuits = append(site.Circuits, circuits...)
 
 	return site, nil
 }
@@ -687,7 +685,7 @@ func (site *Site) prepare() {
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
 }
 
-// Prepare attaches communication channels to site and loadpoints
+// Prepare attaches communication channels to site, loadpoints and circuits
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
 	site.uiChan = uiChan
 	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
@@ -714,12 +712,22 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 
 		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
-	// use site channel.
 
-	for _, curCC := range site.Circuits {
-		curCC.Prepare(uiChan)
+	// circuits
+	for id, circuit := range site.Circuits {
+		circuitUIChan := make(chan util.Param)
+
+		// pipe messages through go func to add id
+		go func(id int) {
+			for c := range circuitUIChan {
+				c.Circuit = &id
+				uiChan <- c
+
+			}
+		}(id)
+
+		circuit.Prepare(circuitUIChan)
 	}
-
 }
 
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
