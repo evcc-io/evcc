@@ -4,7 +4,7 @@ product:
 capabilities: ["mA", "rfid"]
 requirements: ["sponsorship"]
 description: |
-  Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
+  DIP Schalter 10 des Controllers muss auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
 render:
   - default: |
       type: template
