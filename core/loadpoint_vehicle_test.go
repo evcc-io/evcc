@@ -150,6 +150,11 @@ func TestDefaultVehicle(t *testing.T) {
 	minsoc := 20
 	targetsoc := 80
 
+	// ondisconnect
+	off := api.ModeOff
+	zero := 0
+	hundred := 100
+
 	dflt := mock.NewMockVehicle(ctrl)
 	dflt.EXPECT().Title().Return("default").AnyTimes()
 	dflt.EXPECT().Icon().Return("").AnyTimes()
@@ -170,7 +175,16 @@ func TestDefaultVehicle(t *testing.T) {
 
 	lp := NewLoadpoint(util.NewLogger("foo"))
 	lp.defaultVehicle = dflt
+
 	lp.collectDefaults()
+	assert.Equal(t, lp.onDisconnect, api.ActionConfig{
+		Mode:       &off,
+		MinCurrent: &lp.MinCurrent,
+		MaxCurrent: &lp.MaxCurrent,
+		MinSoc:     &zero,
+		TargetSoc:  &hundred,
+		Priority:   &zero,
+	})
 
 	// populate channels
 	x, y, z := createChannels(t)
