@@ -466,18 +466,17 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.setVehicleIdentifier("")
 	lp.stopVehicleDetection()
 
-	// remove active vehicle if not default
-	if lp.vehicle != lp.defaultVehicle {
-		lp.setActiveVehicle(lp.defaultVehicle)
+	// set default vehicle (may be nil)
+	lp.setActiveVehicle(lp.defaultVehicle)
+
+	// set defaults
+	if lp.ResetOnDisconnect {
+		lp.applyAction(lp.onDisconnect)
 	}
 
-	// set default mode on disconnect
-	if lp.ResetOnDisconnect {
-		actionCfg := lp.onDisconnect
-		if v := lp.defaultVehicle; v != nil {
-			actionCfg = actionCfg.Merge(v.OnIdentified())
-		}
-		lp.applyAction(actionCfg)
+	// override global defaults with default vehicle
+	if lp.defaultVehicle != nil {
+		lp.applyAction(lp.defaultVehicle.OnIdentified())
 	}
 
 	// soc update reset
