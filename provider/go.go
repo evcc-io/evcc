@@ -1,0 +1,151 @@
+package provider
+
+import (
+	"fmt"
+	"github.com/evcc-io/evcc/provider/golang"
+	"github.com/evcc-io/evcc/util"
+	"github.com/traefik/yaegi/interp"
+	"reflect"
+)
+
+// Go implements Go request provider
+type Go struct {
+	vm     *interp.Interpreter
+	script string
+}
+
+func init() {
+	registry.Add("go", NewGoProviderFromConfig)
+}
+
+// NewGoProviderFromConfig creates a Go provider
+func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
+	var cc struct {
+		VM     string
+		Script string
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	vm, err := golang.RegisteredVM(cc.VM, "")
+	if err != nil {
+		return nil, err
+	}
+
+	p := &Go{
+		vm:     vm,
+		script: cc.Script,
+	}
+
+	return p, nil
+}
+
+// FloatGetter parses float from request
+func (p *Go) FloatGetter() func() (float64, error) {
+	return func() (res float64, err error) {
+		if err == nil {
+			var v reflect.Value
+			v, err = p.vm.Eval(p.script)
+			if err == nil {
+				if v.CanConvert(reflect.TypeOf(0.0)) {
+					res = v.Convert(reflect.TypeOf(0.0)).Float()
+				} else {
+					err = fmt.Errorf("not a float: %v", v)
+				}
+			}
+		}
+		return res, err
+	}
+}
+
+// IntGetter parses int64 from request
+func (p *Go) IntGetter() func() (int64, error) {
+	return func() (res int64, err error) {
+		var v reflect.Value
+		v, err = p.vm.Eval(p.script)
+		if err == nil {
+			if v.CanConvert(reflect.TypeOf(0)) {
+				res = v.Convert(reflect.TypeOf(0)).Int()
+			} else {
+				err = fmt.Errorf("not an int: %v", v)
+			}
+		}
+
+		return res, err
+	}
+}
+
+// StringGetter sends string request
+func (p *Go) StringGetter() func() (string, error) {
+	return func() (res string, err error) {
+		var v reflect.Value
+		v, err = p.vm.Eval(p.script)
+		if err == nil {
+			if v.CanConvert(reflect.TypeOf("")) {
+				res = v.Convert(reflect.TypeOf("")).String()
+			} else {
+				err = fmt.Errorf("not a string: %v", v)
+			}
+		}
+
+		return res, err
+	}
+}
+
+// BoolGetter parses bool from request
+func (p *Go) BoolGetter() func() (bool, error) {
+	return func() (res bool, err error) {
+		var v reflect.Value
+		v, err = p.vm.Eval(p.script)
+		if err == nil {
+			if v.CanConvert(reflect.TypeOf(true)) {
+				res = v.Convert(reflect.TypeOf(true)).Bool()
+			} else {
+				err = fmt.Errorf("not a boolean: %v", v)
+			}
+		}
+
+		return res, err
+	}
+}
+
+func (p *Go) setParam(param string, val interface{}) error {
+	log.DEBUG.Printf("Setting param %s := %v;", param, val)
+	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
+	return err
+}
+
+// IntSetter sends int request
+func (p *Go) IntSetter(param string) func(int64) error {
+	return func(val int64) error {
+		err := p.setParam(param, val)
+		if err == nil {
+			_, err = p.vm.Eval(p.script)
+		}
+		return err
+	}
+}
+
+// StringSetter sends string request
+func (p *Go) StringSetter(param string) func(string) error {
+	return func(val string) error {
+		err := p.setParam(param, val)
+		if err == nil {
+			_, err = p.vm.Eval(p.script)
+		}
+		return err
+	}
+}
+
+// BoolSetter sends bool request
+func (p *Go) BoolSetter(param string) func(bool) error {
+	return func(val bool) error {
+		err := p.setParam(param, val)
+		if err == nil {
+			_, err = p.vm.Eval(p.script)
+		}
+		return err
+	}
+}

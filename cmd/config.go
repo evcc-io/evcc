@@ -62,6 +62,7 @@ type config struct {
 	Mqtt         mqttConfig
 	ModbusProxy  []proxyConfig
 	Javascript   []javascriptConfig
+	Go           []goConfig
 	Influx       server.InfluxConfig
 	EEBus        map[string]interface{}
 	HEMS         typedConfig
@@ -80,6 +81,11 @@ type mqttConfig struct {
 }
 
 type javascriptConfig struct {
+	VM     string
+	Script string
+}
+
+type goConfig struct {
 	VM     string
 	Script string
 }
