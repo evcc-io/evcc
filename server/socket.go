@@ -6,10 +6,12 @@ import (
 	"math"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/websocket"
+	"github.com/kr/pretty"
 )
 
 const (
@@ -68,6 +70,8 @@ func ServeWebsocket(hub *SocketHub, w http.ResponseWriter, r *http.Request) {
 // SocketHub maintains the set of active clients and broadcasts messages to the
 // clients.
 type SocketHub struct {
+	mu sync.RWMutex
+
 	// Registered clients.
 	clients map[*SocketClient]bool
 
@@ -92,11 +96,11 @@ func encode(v interface{}) (string, error) {
 	var s string
 	switch val := v.(type) {
 	case time.Time:
-		var b []byte
-		if !val.IsZero() {
-			b, _ = val.Round(time.Second).Local().MarshalText()
+		if val.IsZero() {
+			s = "null"
+		} else {
+			s = fmt.Sprintf(`"%s"`, val.Format(time.RFC3339))
 		}
-		s = fmt.Sprintf(`"%s"`, string(b))
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
 		s = fmt.Sprintf("%d", int64(val.Seconds()))
@@ -109,6 +113,8 @@ func encode(v interface{}) (string, error) {
 	default:
 		if b, err := json.Marshal(v); err == nil {
 			s = string(b)
+		} else {
+			return "", err
 		}
 	}
 	return s, nil
@@ -118,6 +124,11 @@ func kv(p util.Param) string {
 	val, err := encode(p.Val)
 	if err != nil {
 		panic(err)
+	}
+
+	if p.Key == "" && val == "" {
+		log.ERROR.Printf("invalid key/val for %+v %# v, please report to https://github.com/evcc-io/evcc/issues/6439", p, pretty.Formatter(p.Val))
+		return "\"foo\":\"bar\""
 	}
 
 	var msg strings.Builder
@@ -133,7 +144,9 @@ func kv(p util.Param) string {
 }
 
 func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
+	h.mu.Lock()
 	h.clients[client] = true
+	h.mu.Unlock()
 
 	var msg strings.Builder
 	msg.WriteString("{")
@@ -153,6 +166,9 @@ func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
 	if len(h.clients) > 0 {
 		msg := "{" + kv(p) + "}"
 
@@ -173,10 +189,12 @@ func (h *SocketHub) Run(in <-chan util.Param, cache *util.Cache) {
 		case client := <-h.register:
 			h.welcome(client, cache.All())
 		case client := <-h.unregister:
+			h.mu.Lock()
 			if _, ok := h.clients[client]; ok {
 				close(client.send)
 				delete(h.clients, client)
 			}
+			h.mu.Unlock()
 		case msg, ok := <-in:
 			if !ok {
 				return // break if channel closed

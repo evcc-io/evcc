@@ -1,0 +1,40 @@
+product:
+  brand: Orno
+  description: OR-WE-516, OR-WE-517
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: orno
+      usage: grid      
+
+      # RS485 via adapter (Modbus RTU)
+      modbus: rs485serial
+      id: 1
+      device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
+      baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+      comset: "8N1" # Kommunikationsparameter für den Adapter
+
+      # RS485 via TCP/IP (Modbus RTU)
+      modbus: rs485tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+  - usage: charge
+    default: |
+      type: template
+      template: orno
+      usage: charge      
+
+      # RS485 via adapter (Modbus RTU)
+      modbus: rs485serial
+      id: 1
+      device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
+      baudrate: 9600 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+      comset: "8N1" # Kommunikationsparameter für den Adapter
+
+      # RS485 via TCP/IP (Modbus RTU)
+      modbus: rs485tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port

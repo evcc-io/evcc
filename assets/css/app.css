@@ -191,6 +191,13 @@ a:hover {
 	--bs-btn-line-height: 2;
 }
 
+.dark .btn-outline-secondary {
+	--bs-btn-color: var(--bs-gray-bright);
+	--bs-btn-border-color: var(--bs-gray-bright);
+	--bs-btn-hover-bg: var(--bs-gray-bright);
+	--bs-btn-hover-color: var(--bs-gray-dark);
+}
+
 .text-evcc {
 	color: var(--evcc-dark-green);
 }

@@ -170,7 +170,22 @@ func TestDefaultVehicle(t *testing.T) {
 
 	lp := NewLoadpoint(util.NewLogger("foo"))
 	lp.defaultVehicle = dflt
+
+	// ondisconnect
+	off := api.ModeOff
+	zero := 0
+	hundred := 100
+	onDisconnect := api.ActionConfig{
+		Mode:       &off,
+		MinCurrent: &lp.MinCurrent,
+		MaxCurrent: &lp.MaxCurrent,
+		MinSoc:     &zero,
+		TargetSoc:  &hundred,
+		Priority:   &zero,
+	}
+
 	lp.collectDefaults()
+	assert.Equal(t, lp.onDisconnect, onDisconnect)
 
 	// populate channels
 	x, y, z := createChannels(t)
@@ -185,47 +200,29 @@ func TestDefaultVehicle(t *testing.T) {
 
 	// non-default vehicle identified
 	lp.setActiveVehicle(vehicle)
-	if lp.vehicle != vehicle {
-		t.Errorf("expected %v, got %v", title(vehicle), title(lp.vehicle))
-	}
+	assert.Equal(t, vehicle, lp.vehicle, "expected vehicle "+title(vehicle))
 
 	// non-default vehicle disconnected
 	lp.evVehicleDisconnectHandler()
-	if lp.vehicle != dflt {
-		t.Errorf("expected %v, got %v", title(dflt), title(lp.vehicle))
-	}
+	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
 
 	// default vehicle disconnected
 	lp.ResetOnDisconnect = true
 	lp.evVehicleDisconnectHandler()
-	if m := lp.GetMode(); m != mode {
-		t.Errorf("expected mode %v, got %v", mode, m)
-	}
-	if s := lp.GetMinSoc(); s != minsoc {
-		t.Errorf("expected minsoc %v, got %v", minsoc, s)
-	}
-	if s := lp.GetTargetSoc(); s != targetsoc {
-		t.Errorf("expected targetsoc %v, got %v", targetsoc, s)
-	}
-	if m := lp.onDisconnect.Mode; *m != api.ModeOff {
-		t.Errorf("expected ondisconnect mode %v, got %v", api.ModeOff, m)
-	}
+	assert.Equal(t, mode, lp.GetMode(), "mode")
+	assert.Equal(t, minsoc, lp.GetMinSoc(), "minsoc")
+	assert.Equal(t, targetsoc, lp.GetTargetSoc(), "targetsoc")
+	assert.Equal(t, lp.onDisconnect, onDisconnect, "ondisconnect must remain untouched")
 
 	// set non-default vehicle during disconnect - should be default on connect
 	lp.tasks.Clear()
 	lp.evVehicleConnectHandler()
-	if lp.vehicle != dflt {
-		t.Errorf("expected %v, got %v", title(dflt), title(lp.vehicle))
-	}
-	if l := lp.tasks.Size(); l != 1 {
-		t.Error("expected task in queue, got none")
-	}
+	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
+	assert.Equal(t, 1, lp.tasks.Size(), "task queue length")
 
 	// guest connected
 	lp.setActiveVehicle(nil)
-	if lp.vehicle != nil {
-		t.Errorf("expected %v, got %v", nil, title(lp.vehicle))
-	}
+	assert.Nil(t, lp.vehicle, "expected no vehicle")
 }
 
 func TestApplyVehicleDefaults(t *testing.T) {
@@ -242,21 +239,11 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	}
 
 	assertConfig := func(lp *Loadpoint, conf api.ActionConfig) {
-		if lp.Mode != *conf.Mode {
-			t.Errorf("expected mode %v, got %v", *conf.Mode, lp.Mode)
-		}
-		if lp.MinCurrent != *conf.MinCurrent {
-			t.Errorf("expected minCurrent %v, got %v", *conf.MinCurrent, lp.MinCurrent)
-		}
-		if lp.MaxCurrent != *conf.MaxCurrent {
-			t.Errorf("expected maxCurrent %v, got %v", *conf.MaxCurrent, lp.MaxCurrent)
-		}
-		if lp.Soc.min != *conf.MinSoc {
-			t.Errorf("expected minSoc %v, got %v", *conf.MinSoc, lp.Soc.min)
-		}
-		if lp.Soc.target != *conf.TargetSoc {
-			t.Errorf("expected targetSoc %v, got %v", *conf.TargetSoc, lp.Soc.target)
-		}
+		assert.Equal(t, *conf.Mode, lp.Mode)
+		assert.Equal(t, *conf.MinCurrent, lp.MinCurrent)
+		assert.Equal(t, *conf.MaxCurrent, lp.MaxCurrent)
+		assert.Equal(t, *conf.MinSoc, lp.Soc.min)
+		assert.Equal(t, *conf.TargetSoc, lp.Soc.target)
 	}
 
 	// onIdentified config
@@ -376,14 +363,10 @@ func TestReconnectVehicle(t *testing.T) {
 			ctrl.Finish()
 
 			// detection started
-			if lp.vehicleDetect != lp.clock.Now() {
-				t.Error("vehicle detection not started")
-			}
+			assert.Equal(t, lp.clock.Now(), lp.vehicleDetect, "vehicle detection not started")
 
 			// vehicle not detected yet
-			if lp.vehicle != nil {
-				t.Error("vehicle should be <nil>")
-			}
+			assert.Nil(t, lp.vehicle, "vehicle should be <nil>")
 
 			// sync charger
 			charger.EXPECT().Enabled().Return(true, nil)
@@ -394,9 +377,7 @@ func TestReconnectVehicle(t *testing.T) {
 			ctrl.Finish()
 
 			// vehicle detected
-			if lp.vehicle != vehicle {
-				t.Error("vehicle should be detected")
-			}
+			assert.Equal(t, vehicle, lp.vehicle, "vehicle should be detected")
 		})
 	}
 }

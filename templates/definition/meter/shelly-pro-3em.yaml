@@ -1,0 +1,18 @@
+template: shelly-pro-3em
+products:
+  - brand: Shelly
+    description:
+      generic: Pro 3 EM
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+    default: 192.0.2.2
+  - name: user
+  - name: password
+render: |
+  type: shelly-energymeter
+  uri: http://{{ .host }}  # shelly device ip address (local)
+  {{ if ne .user "" }}user: {{ .user }}{{ end }}
+  {{ if ne .password "" }}password: {{ .password }}{{ end }}
+  channel: 0  # shelly device relay channel

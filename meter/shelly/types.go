@@ -37,6 +37,23 @@ type Gen2StatusResponse struct {
 	Switch2 Gen2Switch `json:"switch:2"`
 }
 
+type Gen2EmStatusResponse struct {
+	TotalPower float64 `json:"total_act_power"`
+	CurrentA   float64 `json:"a_current"`
+	CurrentB   float64 `json:"b_current"`
+	CurrentC   float64 `json:"c_current"`
+	VoltageA   float64 `json:"a_voltage"`
+	VoltageB   float64 `json:"b_voltage"`
+	VoltageC   float64 `json:"c_voltage"`
+	PowerA     float64 `json:"a_act_power"`
+	PowerB     float64 `json:"b_act_power"`
+	PowerC     float64 `json:"c_act_power"`
+}
+
+type Gen2EmDataStatusResponse struct {
+	TotalEnergy float64 `json:"total_act"`
+}
+
 type Gen1SwitchResponse struct {
 	Ison bool
 }

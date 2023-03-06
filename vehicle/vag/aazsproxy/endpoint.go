@@ -6,13 +6,12 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vag"
+	"github.com/evcc-io/evcc/vehicle/vag/cariad"
 	"golang.org/x/oauth2"
 )
 
-const BaseURL = "https://aazsproxy-service.apps.emea.vwapps.io"
-
 var Endpoint = &oauth2.Endpoint{
-	AuthURL: BaseURL + "/token",
+	AuthURL: cariad.BaseURL + "/login/v1/audi/token",
 }
 
 type Service struct {

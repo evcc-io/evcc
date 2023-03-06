@@ -1,16 +1,18 @@
-template: janitza-b23
+template: dzg
 products:
-  - brand: Janitza
+  - brand: DZG
     description:
-      generic: B23
+      generic: DVH4013
 params:
+  - name: usage
+    choice: ["charge"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rs485"]
 render: |
   type: modbus
+  model: dzg
   {{- include "modbus" . }}
-  model: janitza
-  power: Power
+  power: ImportPower
   energy: Import
   currents:
     - CurrentL1
@@ -20,7 +22,3 @@ render: |
     - VoltageL1
     - VoltageL2
     - VoltageL3
-  powers:
-    - PowerL1
-    - PowerL2
-    - PowerL3

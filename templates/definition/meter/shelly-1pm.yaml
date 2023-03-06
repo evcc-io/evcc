@@ -11,9 +11,7 @@ params:
     default: 192.0.2.2
   - name: user
   - name: password
-    mask: true
   - name: channel
-    default: 0
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)

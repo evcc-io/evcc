@@ -4,7 +4,6 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"regexp"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -16,7 +15,7 @@ var documentationTmpl string
 //go:embed documentation_modbus.tpl
 var documentationModbusTmpl string
 
-// RenderProxy renders the proxy template
+// RenderDocumentation renders the documentation template
 func (t *Template) RenderDocumentation(product Product, values map[string]interface{}, lang string) ([]byte, error) {
 	for index, p := range t.Params {
 		for k, v := range values {
@@ -25,7 +24,7 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 			}
 
 			switch p.Type {
-			case ParamTypeStringList:
+			case TypeStringList:
 				for _, e := range v.([]string) {
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
@@ -85,7 +84,7 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 		"Template":               t.Template,
 		"ProductBrand":           product.Brand,
 		"ProductDescription":     product.Description.String(lang),
-		"ProductGroup":           t.GroupTitle(),
+		"ProductGroup":           t.GroupTitle(lang),
 		"Capabilities":           t.Capabilities,
 		"Requirements":           t.Requirements.EVCC,
 		"RequirementDescription": t.Requirements.Description.String(lang),
@@ -96,16 +95,9 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 	}
 
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(documentationTmpl)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		err = tmpl.Execute(out, data)
 	}
-	err = tmpl.Execute(out, data)
 
-	// trim empty lines with whitespace
-	regex, _ := regexp.Compile("\n *\n")
-	string := regex.ReplaceAllString(out.String(), "\n\n")
-	result := new(bytes.Buffer)
-	result.WriteString(string)
-
-	return result.Bytes(), err
+	return []byte(trimEmptyLines(out.String())), err
 }

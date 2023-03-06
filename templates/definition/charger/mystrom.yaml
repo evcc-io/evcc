@@ -8,9 +8,8 @@ params:
   - name: usage
     choice: ["pv", "charge"]
   - name: host
-  - name: standbypower
-    default: 15
+  - preset: switchsocket
 render: |
   type: mystrom
   uri: http://{{ .host }}
-  standbypower: {{ .standbypower }}
+  {{ include "switchsocket" . }}

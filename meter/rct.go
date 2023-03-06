@@ -113,7 +113,11 @@ func (m *RCT) CurrentPower() (float64, error) {
 			return 0, err
 		}
 		b, err := m.conn.QueryFloat32(rct.SolarGenBPowerW)
-		return float64(a + b), err
+		if err != nil {
+			return 0, err
+		}
+		c, err := m.conn.QueryFloat32(rct.S0ExternalPowerW)
+		return float64(a + b + c), err
 
 	case "battery":
 		res, err := m.conn.QueryFloat32(rct.BatteryPowerW)

@@ -5,19 +5,28 @@ products:
       generic: EM/ET 330/340
 params:
   - name: usage
-    choice: ["grid", "pv", "battery", "charge"]
+    choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |
   type: modbus
-  model: cgex3x0
   {{- include "modbus" . }}
-  {{- if eq .usage "charge" }}
-  energy: Import # only required for charge meter usage
-  {{- end }}
-  {{- if or (eq .usage "charge") (eq .usage "grid") }}
+  model: cgex3x0
+  power: Power
+  energy: Import
   currents:
     - CurrentL1
     - CurrentL2
     - CurrentL3
+  {{- if eq .usage "grid" }}
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- end }}
+  {{- if eq .usage "charge" }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3
   {{- end }}

@@ -21,7 +21,7 @@ requirements:
 
       The support is in beta state and problems can occur!
 params:
-  - preset: eebusnometer
+  - preset: eebus-no-meter
   - name: ip
     required: true
 render: |

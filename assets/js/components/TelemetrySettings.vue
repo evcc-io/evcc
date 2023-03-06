@@ -90,7 +90,7 @@ export default {
 .form-check-label {
 	max-width: 100%;
 }
-.errorMessage::v-deep pre {
+.errorMessage :deep(pre) {
 	text-overflow: ellipsis;
 	font-size: 1em;
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
+	"github.com/lorenzodonini/ocpp-go/ocppj"
 )
 
 var instance *CS
@@ -19,7 +20,7 @@ func Instance() *CS {
 			CentralSystem: cs,
 		}
 
-		// ocppj.SetLogger(instance)
+		ocppj.SetLogger(instance)
 
 		cs.SetCoreHandler(instance)
 		cs.SetNewChargePointHandler(instance.NewChargePoint)

@@ -54,7 +54,6 @@ export default {
 		vehicleTitle: String,
 		vehicleIcon: String,
 		vehicleDetectionActive: Boolean,
-		parked: Boolean,
 		connected: Boolean,
 		vehicles: { type: Array, default: () => [] },
 	},
@@ -64,13 +63,13 @@ export default {
 			if (this.vehicleDetectionActive) {
 				return "refresh";
 			}
-			if (this.connected || this.parked) {
+			if (this.connected) {
 				return "vehicle";
 			}
 			return null;
 		},
 		name() {
-			if (this.vehiclePresent || this.parked) {
+			if (this.vehiclePresent) {
 				return this.vehicleTitle || this.$t("main.vehicle.fallbackName");
 			}
 			if (this.connected) {
@@ -132,7 +131,7 @@ export default {
 .spin {
 	animation: rotation 1s infinite cubic-bezier(0.37, 0, 0.63, 1);
 }
-.spin ::v-deep(svg) {
+.spin :deep(svg) {
 	/* workaround to fix the not perfectly centered shopicon. Remove once its fixed in @h2d2/shopicons */
 	transform: translateY(-0.7px);
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+//go:generate mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
+
 // Controller gives access to loadpoint
 type Controller interface {
 	LoadpointControl(API)
@@ -15,6 +17,7 @@ type Controller interface {
 type API interface {
 	// Title returns the defined loadpoint title
 	Title() string
+	Priority() int
 
 	//
 	// status
@@ -76,6 +79,8 @@ type API interface {
 	HasChargeMeter() bool
 	// GetChargePower returns the current charging power
 	GetChargePower() float64
+	// GetChargePowerFlexibility returns the flexible amount of current charging power
+	GetChargePowerFlexibility() float64
 	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64
 	// SetMinCurrent sets the min charging current

@@ -68,8 +68,8 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// prepare data
-	for _, s := range res {
-		s.Odometer = math.Round(s.Odometer*10) / 10
+	for i, s := range res {
+		res[i].Odometer = math.Round(s.Odometer*10) / 10
 	}
 
 	if r.URL.Query().Get("format") == "csv" {

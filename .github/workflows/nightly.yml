@@ -102,7 +102,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
-          args: --snapshot -f .goreleaser-nightly.yml --rm-dist
+          args: --snapshot -f .goreleaser-nightly.yml --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

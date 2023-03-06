@@ -246,7 +246,7 @@ func pemBlockForKey(priv interface{}) (*pem.Block, error) {
 func GetX509KeyPair(cert tls.Certificate) (string, string, error) {
 	var certValue, keyValue string
 
-	out := &bytes.Buffer{}
+	out := new(bytes.Buffer)
 	err := pem.Encode(out, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Certificate[0]})
 	if err == nil {
 		certValue = out.String()

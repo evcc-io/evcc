@@ -58,6 +58,7 @@ export default {
 		homePower: Number,
 		pvConfigured: Boolean,
 		pvPower: Number,
+		pv: Array,
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoc: Number,
@@ -90,6 +91,7 @@ export default {
 		uploadMessage: String,
 		uploadProgress: Number,
 		sponsor: String,
+		sponsorTokenExpires: Number,
 	},
 	computed: {
 		energyflow: function () {
@@ -103,7 +105,7 @@ export default {
 		},
 		vehicleIcons: function () {
 			if (this.activeLoadpointsCount) {
-				return this.activeLoadpoints.map((lp) => lp.vehicleIcon || "car");
+				return this.activeLoadpoints.map((lp) => lp.chargerIcon || lp.vehicleIcon || "car");
 			}
 			return ["car"];
 		},

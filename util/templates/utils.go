@@ -12,6 +12,7 @@ func quote(value string) string {
 	return fmt.Sprintf("'%s'", quoted)
 }
 
+// yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
 func yamlQuote(value string) string {
 	input := fmt.Sprintf("key: %s", value)
 
@@ -29,4 +30,14 @@ func yamlQuote(value string) string {
 	}
 
 	return value
+}
+
+func trimEmptyLines(s string) string {
+	lines := strings.Split(s, "\n")
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			lines[i] = ""
+		}
+	}
+	return strings.Join(lines, "\n")
 }

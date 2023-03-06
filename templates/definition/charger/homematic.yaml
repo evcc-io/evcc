@@ -19,8 +19,6 @@ params:
     help:
       en: Homematic device id like shown in the CCU web user interface.
       de: Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
-  - name: standbypower
-    default: 15
   - name: user
     required: false
   - name: password
@@ -28,7 +26,7 @@ params:
     mask: true
   - name: meterchannel
     default: 6
-    type: int
+    type: number
     required: true
     advanced: true
     description:
@@ -39,7 +37,7 @@ params:
       de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
   - name: switchchannel
     default: 3
-    type: int
+    type: number
     required: true
     advanced: true
     description:
@@ -48,16 +46,17 @@ params:
     help:
       en: Homematic switch actor channel number like shown in the CCU web user interface.
       de: Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
+  - preset: switchsocket
 render: |
   type: homematic
   uri: {{ .host }}:{{ .port }}
   device: {{ .device }}
-  meterchannel: {{ .meterchannel }}
-  switchchannel: {{ .switchchannel }}
-  standbypower: {{ .standbypower }}
   {{ if ne .user "" }}
   user: {{ .user }}
   {{ end }}
   {{ if ne .password "" }}
   password: {{ .password }}
   {{ end }}
+  meterchannel: {{ .meterchannel }}
+  switchchannel: {{ .switchchannel }}
+  {{ include "switchsocket" . }}

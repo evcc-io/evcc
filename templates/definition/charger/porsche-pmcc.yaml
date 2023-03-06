@@ -7,6 +7,6 @@ capabilities: ["iso151182", "mA"]
 requirements:
   evcc: ["eebus"]
 params:
-  - preset: eebusmeter
+  - preset: eebus-meter
 render: |
   {{ include "eebus-meter" . }}

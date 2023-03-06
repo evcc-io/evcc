@@ -19,6 +19,7 @@ func init() {
 // NewTapoFromConfig creates a Tapo charger from generic config
 func NewTapoFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
+		embed        `mapstructure:",squash"`
 		URI          string
 		User         string
 		Password     string
@@ -29,11 +30,15 @@ func NewTapoFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewTapo(cc.URI, cc.User, cc.Password, cc.StandbyPower)
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
+	return NewTapo(cc.embed, cc.URI, cc.User, cc.Password, cc.StandbyPower)
 }
 
 // NewTapo creates Tapo charger
-func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
+func NewTapo(embed embed, uri, user, password string, standbypower float64) (*Tapo, error) {
 	conn, err := tapo.NewConnection(uri, user, password)
 	if err != nil {
 		return nil, err
@@ -43,7 +48,7 @@ func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
 	return c, nil
 }
@@ -68,6 +73,7 @@ func (c *Tapo) MaxCurrent(current int64) error {
 	return nil
 }
 
+var _ api.Meter = (*Tapo)(nil)
 var _ api.ChargeRater = (*Tapo)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface

@@ -10,7 +10,9 @@ StartLimitIntervalSec=10
 StartLimitBurst=10
 
 [Service]
-ExecStart=/usr/bin/evcc --sqlite /var/lib/evcc/evcc.db
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+ExecStart=/usr/bin/evcc
+Environment="EVCC_DATABASE_DSN=/var/lib/evcc/evcc.db"
 Restart=always
 RestartSec=10
 

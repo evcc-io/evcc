@@ -8,10 +8,10 @@
 			class="btn btn-sm btn-outline-secondary position-relative border-0 menu-button"
 		>
 			<span
-				v-if="logoutCount > 0"
+				v-if="showBadge"
 				class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle"
 			>
-				<span class="visually-hidden">login available</span>
+				<span class="visually-hidden">action required</span>
 			</span>
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</button>
@@ -24,6 +24,10 @@
 
 			<li>
 				<button type="button" class="dropdown-item" @click="openSettingsModal">
+					<span
+						v-if="sponsorTokenExpires"
+						class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
+					></span>
 					{{ $t("header.settings") }}
 				</button>
 			</li>
@@ -122,6 +126,7 @@ export default {
 		sponsor: String,
 		hasPrice: Boolean,
 		hasCo2: Boolean,
+		sponsorTokenExpires: Number,
 	},
 	computed: {
 		globalSettingsModalProps: function () {
@@ -137,6 +142,12 @@ export default {
 				loginPath: v.uri + "/login",
 				logoutPath: v.uri + "/logout",
 			}));
+		},
+		loginRequired() {
+			return this.logoutCount > 0;
+		},
+		showBadge() {
+			return this.loginRequired || this.sponsorTokenExpires;
 		},
 	},
 	mounted() {

@@ -19,6 +19,7 @@ func init() {
 // NewCCUFromConfig creates a Homematic charger from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
+		embed         `mapstructure:",squash"`
 		URI           string
 		Device        string
 		MeterChannel  string
@@ -32,18 +33,22 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewCCU(cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.StandbyPower)
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
+	return NewCCU(cc.embed, cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.StandbyPower)
 }
 
 // NewCCU creates a new connection with standbypower for charger
-func NewCCU(uri, deviceid, meterid, switchid, user, password string, standbypower float64) (*CCU, error) {
+func NewCCU(embed embed, uri, deviceid, meterid, switchid, user, password string, standbypower float64) (*CCU, error) {
 	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password)
 
 	c := &CCU{
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
 	return c, err
 }
@@ -63,6 +68,7 @@ func (c *CCU) MaxCurrent(current int64) error {
 	return nil
 }
 
+var _ api.Meter = (*CCU)(nil)
 var _ api.MeterEnergy = (*CCU)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface

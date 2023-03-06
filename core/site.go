@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/planner"
+	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/push"
 	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
@@ -25,6 +26,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 
 // Updater abstracts the Loadpoint implementation for testing
 type Updater interface {
+	loadpoint.API
 	Update(availablePower float64, batteryBuffered bool)
 }
 
@@ -68,6 +70,7 @@ type Site struct {
 	tariffs     tariff.Tariffs           // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
 	coordinator *coordinator.Coordinator // Vehicles
+	prioritizer *prioritizer.Prioritizer // Power budgets
 	savings     *Savings                 // Savings
 
 	// cached state
@@ -108,6 +111,7 @@ func NewSiteFromConfig(
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 	site.coordinator = coordinator.New(log, vehicles)
+	site.prioritizer = prioritizer.New()
 	site.savings = NewSavings(tariffs)
 
 	// upload telemetry on shutdown
@@ -485,7 +489,7 @@ func (site *Site) updateMeters() error {
 
 // sitePower returns the net power exported by the site minus a residual margin.
 // negative values mean grid: export, battery: charging
-func (site *Site) sitePower(totalChargePower float64) (float64, error) {
+func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, error) {
 	if err := site.updateMeters(); err != nil {
 		return 0, err
 	}
@@ -536,6 +540,12 @@ func (site *Site) sitePower(totalChargePower float64) (float64, error) {
 	}
 	site.publish("auxPower", auxPower)
 	sitePower -= auxPower
+
+	// handle priority
+	if flexiblePower > 0 {
+		site.log.DEBUG.Printf("giving loadpoint priority for additional: %.0fW", flexiblePower)
+		sitePower -= flexiblePower
+	}
 
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
@@ -609,9 +619,17 @@ func (site *Site) update(lp Updater) {
 	for _, lp := range site.loadpoints {
 		lp.UpdateChargePower()
 		totalChargePower += lp.GetChargePower()
+
+		site.prioritizer.UpdateChargePowerFlexibility(lp)
 	}
 
-	if sitePower, err := site.sitePower(totalChargePower); err == nil {
+	// prioritize if possible
+	var flexiblePower float64
+	if lp.GetMode() == api.ModePV {
+		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
+	}
+
+	if sitePower, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		lp.Update(sitePower, site.batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption

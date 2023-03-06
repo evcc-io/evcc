@@ -2,8 +2,8 @@ template: bmw
 products:
   - brand: BMW
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-identify
   - name: vin
     example: WBMW...
 render: |

@@ -181,15 +181,15 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
+func (v *Provider) Climater() (bool, error) {
 	res, err := v.mobileG()
 	if err == nil {
 		m, err := res.MeasurementByKey("CLIMATIZER_STATE")
 		if err != nil && err != api.ErrNotAvailable {
-			return active, 20, 20, err
+			return false, err
 		}
 		if err != api.ErrNotAvailable {
-			return m.Value.IsOn, 20, 20, err
+			return m.Value.IsOn, err
 		}
 	}
 
@@ -197,15 +197,15 @@ func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err
 	if err == nil {
 		switch res2.DirectClimatisation.ClimatisationState {
 		case "OFF":
-			return false, 20, 20, nil
+			return false, nil
 		case "ON":
-			return true, 20, 20, nil
+			return true, nil
 		default:
-			return active, outsideTemp, targetTemp, errors.New("emobility - unknown climate state: " + res2.DirectClimatisation.ClimatisationState)
+			return false, errors.New("emobility - unknown climate state: " + res2.DirectClimatisation.ClimatisationState)
 		}
 	}
 
-	return active, outsideTemp, targetTemp, err
+	return false, err
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)

@@ -27,17 +27,20 @@ builds:
       - goos: windows
         goarch: arm64
 
+env:
+  - CGO_ENABLED=0
+
 archives:
   - builds:
       - evcc
-    replacements:
-      darwin: macOS
     format: tar.gz
     format_overrides:
       - goos: windows
         format: zip
     files:
       - evcc.dist.yaml
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "darwin" }}macOS{{ else }}{{ .Os }}{{ end }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}
 
 universal_binaries:
   - replace: true

@@ -8,8 +8,8 @@ requirements:
     de: ältere Modelle wie e-Up, e-Golf, etc.
     en: older Models like e-Up, e-Golf, etc.
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-identify
   - name: vin
     example: WVWZZZ...
 render: |

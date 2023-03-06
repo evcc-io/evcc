@@ -15,4 +15,5 @@ const (
 	_ Feature = iota
 	Offline
 	CoarseCurrent
+	IntegratedDevice
 )

@@ -73,7 +73,7 @@ vehicles = "Паркування"
 battery = "Батарея"
 batteryCharge = "Зарядження батареї"
 batteryDischarge = "Розрядження батареї"
-batteryTooltip = "{energy} із {total} ({soc}%)"
+batteryTooltip = "{energy} із {total} ({soc})"
 gridImport = "Використання мережі"
 homePower = "Споживання"
 loadpoints = "Зарядний пристрій| Зарядний пристрій | {count} зарядні пристрої"
@@ -243,6 +243,11 @@ value = "Показати експериментальні функції інт
 [settings.language]
 auto = "Автоматично"
 label = "Мова"
+
+[settings.sponsorToken]
+expires = "Термін дії вашого спонсорського токена закінчується {вXDays}. {getNewToken} та оновіть свій конфігураційний файл."
+getNew = "Візьми свіжий"
+hint = "Примітка: Ми автоматизуємо це в майбутньому."
 
 [settings.telemetry]
 label = "Телеметрія"

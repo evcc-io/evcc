@@ -7,7 +7,7 @@ const state = reactive({
 	enabled: false,
 	connected: true,
 	vehiclePresent: true,
-	vehicleSoc: 42,
+	vehicleSoc: 42.742,
 	vehicleRange: 231,
 	targetSoc: 90,
 	vehicleCapacity: 72,

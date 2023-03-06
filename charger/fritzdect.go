@@ -25,6 +25,7 @@ func init() {
 // NewFritzDECTFromConfig creates a fritzdect charger from generic config
 func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
+		embed              `mapstructure:",squash"`
 		fritzdect.Settings `mapstructure:",squash"`
 		StandbyPower       float64
 	}
@@ -33,18 +34,22 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower)
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
+	return NewFritzDECT(cc.embed, cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower)
 }
 
 // NewFritzDECT creates a new connection with standbypower for charger
-func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
+func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
 	conn, err := fritzdect.NewConnection(uri, ain, user, password)
 
 	c := &FritzDECT{
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
 	return c, err
 }
@@ -103,6 +108,7 @@ func (c *FritzDECT) MaxCurrent(current int64) error {
 	return nil
 }
 
+var _ api.Meter = (*FritzDECT)(nil)
 var _ api.MeterEnergy = (*FritzDECT)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface

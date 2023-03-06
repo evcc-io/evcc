@@ -11,6 +11,16 @@ type Cache struct {
 	val map[string]Param
 }
 
+// flush is the value type used as parameter for flushing the cache.
+// Flushing is implemented by closing the channel. At this time, it is guaranteed
+// that the cache has catched up processing all pending messages.
+type flush chan struct{}
+
+// Flusher returns a new flush channel
+func Flusher() flush {
+	return make(flush)
+}
+
 // NewCache creates cache
 func NewCache() *Cache {
 	return &Cache{
@@ -23,10 +33,16 @@ func (c *Cache) Run(in <-chan Param) {
 	log := NewLogger("cache")
 
 	for p := range in {
+		if flushC, ok := p.Val.(flush); ok {
+			close(flushC)
+			continue
+		}
+
 		key := p.Key
 		if p.Loadpoint != nil {
 			key = fmt.Sprintf("lp-%d/%s", *p.Loadpoint+1, key)
 		}
+
 		log.TRACE.Printf("%s: %v", key, p.Val)
 		c.Add(p.UniqueID(), p)
 	}
