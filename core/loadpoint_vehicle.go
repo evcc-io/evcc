@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"regexp"
 	"strings"
 	"time"
@@ -307,7 +308,7 @@ func (lp *Loadpoint) vehicleOdometer() {
 			lp.updateSession(func(session *db.Session) {
 				session.Odometer = odo
 			})
-		} else {
+		} else if !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
 	}
