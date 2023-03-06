@@ -43,7 +43,7 @@ const (
 	versiRegMaxCurrent     = 1633 //  1 RW UNIT16
 	versiRegCurrents       = 1647 //  3 RO UINT16
 	versiRegVoltages       = 1651 //  3 RO UINT16
-	versiRegPower          = 1665 //  1 RO UINT16
+	versiRegPowers         = 1662 //  1 RO UINT16
 	versiRegTotalEnergy    = 1692 //  2 RO UINT32
 )
 
