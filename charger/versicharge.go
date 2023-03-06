@@ -162,7 +162,6 @@ func (wb *Versicharge) CurrentPower() (float64, error) {
 
 	return sum, nil
 }
-}
 
 var _ api.MeterEnergy = (*Versicharge)(nil)
 
