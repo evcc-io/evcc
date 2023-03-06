@@ -150,12 +150,18 @@ var _ api.Meter = (*Versicharge)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Versicharge) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(versiRegPower, 1)
+	b, err := wb.conn.ReadHoldingRegisters(versiRegPowers, 3)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint16(b)), err
+	var sum float64
+	for i := 0; i < 3; i++ {
+		sum += float64(binary.BigEndian.Uint16(b[2*i:]))
+	}
+
+	return sum, nil
+}
 }
 
 var _ api.MeterEnergy = (*Versicharge)(nil)
