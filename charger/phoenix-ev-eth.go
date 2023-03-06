@@ -122,7 +122,7 @@ func NewPhoenixEVEth(uri string) (api.Charger, error) {
 	}
 
 	// check presence of extended Wallbe firmware
-	if b, err := wb.conn.ReadInputRegisters(wbRegMaxCurrent, 1); err == nil && binary.BigEndian.Uint16(b) >= 60 {
+	if b, err := wb.conn.ReadHoldingRegisters(wbRegMaxCurrent, 1); err == nil && binary.BigEndian.Uint16(b) >= 60 {
 		wb.isWallbe = true
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
@@ -195,8 +195,7 @@ func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
 		return 0, err
 	}
 
-	// 2 words, least significant word first
-	secs := uint64(b[1]) | uint64(b[0])<<8 | uint64(b[3])<<16 | uint64(b[2])<<24
+	secs := rs485.RTUUint32ToFloat64Swapped(b)
 	return time.Duration(secs) * time.Second, nil
 }
 
@@ -213,16 +212,16 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 // totalEnergy implements the api.MeterEnergy interface
 func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 	if wb.isWallbe {
-		b, err := wb.conn.ReadInputRegisters(wbRegEnergyWallbe, 4)
+		b, err := wb.conn.ReadHoldingRegisters(wbRegEnergyWallbe, 4)
 		if err != nil {
 			return 0, err
 		}
 
-		res := float64(uint64(b[1]) | uint64(b[0])<<8 | uint64(b[3])<<16 | uint64(b[2])<<24) // RTUInt64ToFloat64Swapped
+		res := rs485.RTUUint32ToFloat64Swapped(b) // RTUUint64ToFloat64Swapped
 		return res / 1e3, nil
 	}
 
-	b, err := wb.conn.ReadInputRegisters(wbRegEnergyWh, 2)
+	b, err := wb.conn.ReadHoldingRegisters(wbRegEnergyWh, 2)
 	if err != nil {
 		return 0, err
 	}
