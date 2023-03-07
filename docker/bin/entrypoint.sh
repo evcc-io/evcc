@@ -25,7 +25,15 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 else
     if [ "$1" == '"evcc"' ] || expr "$1" : '-*' > /dev/null; then
         exec evcc "$@"
+    elif [ "$1" == 'configure' ]; then
+        evcc configure
+        cat evcc.yaml && echo
+        test -d /etc/evcc && mv evcc.yaml /etc/evcc
     else
-        exec "$@"
+        EVCC_CONFIG="/etc/evcc.yaml"
+        if [ -f /etc/evcc/evcc.yaml ]; then
+            EVCC_CONFIG="/etc/evcc/evcc.yaml"
+        fi
+        exec "$@ -c ${EVCC_CONFIG}"
     fi
 fi
