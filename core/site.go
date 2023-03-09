@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/push"
 	serverdb "github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -123,9 +124,12 @@ func NewSiteFromConfig(
 	tariff := site.GetTariff(PlannerTariff)
 
 	// give loadpoints access to vehicles and database
-	for _, lp := range loadpoints {
+	for i, lp := range loadpoints {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
 		lp.planner = planner.New(lp.log, tariff)
+
+		// no need for a serverdb.Instance since settings are all in memory
+		lp.settings = settings.WithPrefix(fmt.Sprintf("loadpoint.%d.", i))
 
 		if serverdb.Instance != nil {
 			var err error

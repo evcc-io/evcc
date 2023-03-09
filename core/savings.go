@@ -48,6 +48,10 @@ func NewSavings(tariffs tariff.Tariffs) *Savings {
 
 func (s *Savings) load() {
 	s.started, _ = settings.Time("savings.started")
+	if s.started.IsZero() {
+		s.started = time.Now()
+	}
+
 	s.gridCharged, _ = settings.Float("savings.gridCharged")
 	s.gridCost, _ = settings.Float("savings.gridCost")
 	s.gridSavedCost, _ = settings.Float("savings.gridSavedCost")

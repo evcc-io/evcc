@@ -204,7 +204,7 @@ func (lp *Loadpoint) GetTargetTime() time.Time {
 
 // SetTargetTime sets the charge target time
 func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
-	if !finishAt.IsZero() && finishAt.Before(time.Now()) {
+	if !finishAt.IsZero() && finishAt.Before(lp.clock.Now()) {
 		return errors.New("timestamp is in the past")
 	}
 
@@ -218,7 +218,8 @@ func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
 // setTargetTime sets the charge target time
 func (lp *Loadpoint) setTargetTime(finishAt time.Time) {
 	lp.targetTime = finishAt
-	lp.publish(targetTime, finishAt)
+	lp.publish(targetTime, lp.targetTime)
+	lp.settings.SetTime(targetTime, lp.targetTime)
 
 	// TODO planActive is not guarded by mutex
 	if finishAt.IsZero() {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -22,6 +23,7 @@ type setting struct {
 var (
 	settings []setting
 	dirty    int32
+	mu       sync.RWMutex
 )
 
 func Init() error {
@@ -33,6 +35,9 @@ func Init() error {
 }
 
 func Persist() error {
+	mu.Lock()
+	defer mu.Unlock()
+
 	dirty := atomic.CompareAndSwapInt32(&dirty, 1, 0)
 	if !dirty || len(settings) == 0 {
 		// avoid "empty slice found"
@@ -42,6 +47,9 @@ func Persist() error {
 }
 
 func SetString(key string, val string) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	idx := slices.IndexFunc(settings, func(s setting) bool {
 		return s.Key == key
 	})
@@ -67,6 +75,10 @@ func SetTime(key string, val time.Time) {
 	SetString(key, val.Format(time.RFC3339))
 }
 
+func SetBool(key string, val bool) {
+	SetString(key, strconv.FormatBool(val))
+}
+
 func SetJson(key string, val any) error {
 	b, err := json.Marshal(val)
 	if err == nil {
@@ -75,11 +87,10 @@ func SetJson(key string, val any) error {
 	return err
 }
 
-func SetBool(key string, val bool) {
-	SetString(key, strconv.FormatBool(val))
-}
-
 func String(key string) (string, error) {
+	mu.RLock()
+	defer mu.RUnlock()
+
 	idx := slices.IndexFunc(settings, func(s setting) bool {
 		return s.Key == key
 	})
@@ -108,7 +119,7 @@ func Float(key string) (float64, error) {
 func Time(key string) (time.Time, error) {
 	s, err := String(key)
 	if err != nil {
-		return time.Now(), err
+		return time.Time{}, err
 	}
 	return time.Parse(time.RFC3339, s)
 }

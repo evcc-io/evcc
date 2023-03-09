@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -163,6 +164,9 @@ type Loadpoint struct {
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
 	progress                *Progress     // Step-wise progress indicator
+
+	// settings
+	settings settings.Settings
 
 	// session log
 	db      db.Database
@@ -601,6 +605,11 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// allow charger to access loadpoint
 	if ctrl, ok := lp.charger.(loadpoint.Controller); ok {
 		ctrl.LoadpointControl(lp)
+	}
+
+	// settings
+	if v, err := lp.settings.Time(targetTime); err == nil {
+		lp.setTargetTime(v)
 	}
 }
 
