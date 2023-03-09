@@ -93,7 +93,10 @@ func (lp *Loadpoint) GetTargetEnergy() float64 {
 func (lp *Loadpoint) setTargetEnergy(energy float64) {
 	lp.targetEnergy = energy
 	lp.publish(targetEnergy, energy)
-	lp.settings.SetFloat(targetEnergy, energy)
+
+	if lp.settings != nil {
+		lp.settings.SetFloat(targetEnergy, energy)
+	}
 }
 
 // SetTargetEnergy sets loadpoint charge target energy
@@ -121,7 +124,10 @@ func (lp *Loadpoint) GetTargetSoc() int {
 func (lp *Loadpoint) setTargetSoc(soc int) {
 	lp.Soc.target = soc
 	lp.publish(targetSoc, soc)
-	lp.settings.SetInt(targetSoc, int64(soc))
+
+	if lp.settings != nil {
+		lp.settings.SetInt(targetSoc, int64(soc))
+	}
 }
 
 // SetTargetSoc sets loadpoint charge target soc
@@ -221,7 +227,10 @@ func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
 func (lp *Loadpoint) setTargetTime(finishAt time.Time) {
 	lp.targetTime = finishAt
 	lp.publish(targetTime, lp.targetTime)
-	lp.settings.SetTime(targetTime, lp.targetTime)
+
+	if lp.settings != nil {
+		lp.settings.SetTime(targetTime, lp.targetTime)
+	}
 
 	// TODO planActive is not guarded by mutex
 	if finishAt.IsZero() {

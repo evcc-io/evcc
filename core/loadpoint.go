@@ -608,14 +608,16 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	// settings
-	if v, err := lp.settings.Time(targetTime); err == nil && !v.IsZero() && v.After(lp.clock.Now()) {
-		lp.setTargetTime(v)
-	}
-	if v, err := lp.settings.Float(targetEnergy); err == nil {
-		lp.setTargetEnergy(v)
-	}
-	if v, err := lp.settings.Int(targetSoc); err == nil {
-		lp.setTargetSoc(int(v))
+	if lp.settings != nil {
+		if v, err := lp.settings.Time(targetTime); err == nil && !v.IsZero() && v.After(lp.clock.Now()) {
+			lp.setTargetTime(v)
+		}
+		if v, err := lp.settings.Float(targetEnergy); err == nil {
+			lp.setTargetEnergy(v)
+		}
+		if v, err := lp.settings.Int(targetSoc); err == nil {
+			lp.setTargetSoc(int(v))
+		}
 	}
 }
 
