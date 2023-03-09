@@ -49,6 +49,7 @@ Build and run go backend. The UI becomes available at http://127.0.0.1:7070/
 
 ```sh
 make ui
+make install
 make
 ./evcc
 ```
