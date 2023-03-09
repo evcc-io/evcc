@@ -9,27 +9,36 @@ params:
   - name: modbus
     choice: ["tcpip"]
     port: 3600
+    id: 64
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    # register details
-    register:
-      address: 48 # Leistung des Smartmeters
-      type: holding
-      decode: int16
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 48 # Leistung des Smartmeters
+        type: holding
+        decode: uint16
+    - source: const
+      value: -16384
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    # register details
-    register:
-      address: 47 # Leistung P vom Speicher. (Messwert)
-      type: holding
-      decode: int16
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 47 # Leistung P vom Speicher. (Messwert)
+        type: holding
+        decode: uint16
+    - source: const
+      value: -16384
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
