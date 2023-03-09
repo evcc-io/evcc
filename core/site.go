@@ -523,7 +523,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, e
 		}
 
 		// if battery is discharging above bufferSoc ignore it
-		site.batteryBuffered = batteryPower > 0 && site.BufferSoc > 0 && site.batterySoc > site.BufferSoc
+		site.batteryBuffered = site.BufferSoc > 0 && site.batterySoc > site.BufferSoc
 	}
 
 	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
