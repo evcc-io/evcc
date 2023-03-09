@@ -74,11 +74,10 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower       float64 // Grid power
-	pvPower         float64 // PV power
-	batteryPower    float64 // Battery charge power
-	batterySoc      float64 // Battery soc
-	batteryBuffered bool    // Battery buffer active
+	gridPower    float64 // Grid power
+	pvPower      float64 // PV power
+	batteryPower float64 // Battery charge power
+	batterySoc   float64 // Battery soc
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -487,11 +486,13 @@ func (site *Site) updateMeters() error {
 	return err
 }
 
-// sitePower returns the net power exported by the site minus a residual margin.
-// negative values mean grid: export, battery: charging
-func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, error) {
+// sitePower returns
+//   - the net power exported by the site minus a residual margin
+//     (negative values mean grid: export, battery: charging
+//   - if battery buffer can be used for charging
+func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, bool, error) {
 	if err := site.updateMeters(); err != nil {
-		return 0, err
+		return 0, false, err
 	}
 
 	// allow using PV as estimate for grid power
@@ -512,6 +513,9 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, e
 	// honour battery priority
 	batteryPower := site.batteryPower
 
+	// handed to loadpoint
+	var batteryBuffered bool
+
 	if len(site.batteryMeters) > 0 {
 		site.Lock()
 		defer site.Unlock()
@@ -520,10 +524,10 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, e
 		if site.batterySoc < site.PrioritySoc && batteryPower < 0 {
 			site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f%%", site.batterySoc)
 			batteryPower = 0
+		} else {
+			// if battery is above bufferSoc allow using it for charging
+			batteryBuffered = site.BufferSoc > 0 && site.batterySoc > site.BufferSoc
 		}
-
-		// if battery is discharging above bufferSoc ignore it
-		site.batteryBuffered = batteryPower > 0 && site.BufferSoc > 0 && site.batterySoc > site.BufferSoc
 	}
 
 	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
@@ -549,7 +553,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, e
 
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
-	return sitePower, nil
+	return sitePower, batteryBuffered, nil
 }
 
 func (site *Site) greenShare() float64 {
@@ -629,8 +633,8 @@ func (site *Site) update(lp Updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	if sitePower, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
-		lp.Update(sitePower, site.batteryBuffered)
+	if sitePower, batteryBuffered, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
+		lp.Update(sitePower, batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
