@@ -93,6 +93,7 @@ func (lp *Loadpoint) GetTargetEnergy() float64 {
 func (lp *Loadpoint) setTargetEnergy(energy float64) {
 	lp.targetEnergy = energy
 	lp.publish(targetEnergy, energy)
+	lp.settings.SetFloat(targetEnergy, energy)
 }
 
 // SetTargetEnergy sets loadpoint charge target energy
@@ -120,6 +121,7 @@ func (lp *Loadpoint) GetTargetSoc() int {
 func (lp *Loadpoint) setTargetSoc(soc int) {
 	lp.Soc.target = soc
 	lp.publish(targetSoc, soc)
+	lp.settings.SetInt(targetSoc, int64(soc))
 }
 
 // SetTargetSoc sets loadpoint charge target soc
