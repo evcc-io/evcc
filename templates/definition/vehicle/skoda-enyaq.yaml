@@ -6,7 +6,11 @@ products:
 params:
   - preset: vehicle-base
   - preset: vehicle-identify
+  - name: timeout
+    required: false
+    example: 20s
 render: |
   type: enyaq
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
+  timeout: {{ .timeout }}
