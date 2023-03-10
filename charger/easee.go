@@ -67,11 +67,13 @@ func init() {
 
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+	cc := struct {
 		User     string
 		Password string
 		Charger  string
 		Timeout  time.Duration
+	}{
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -108,12 +110,8 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 		Base:   c.Client.Transport,
 	}
 
-	// default timeout is 11s
-	if timeout == "" {
-		c.requestTimeout, _ = time.ParseDuration("11s")
-	} else {
-		c.requestTimeout, _ = time.ParseDuration(timeout)
-	}
+	// set request timeout
+	c.requestTimeout = timeout
 
 	// find charger
 	if charger == "" {
