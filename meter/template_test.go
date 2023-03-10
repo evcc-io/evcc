@@ -13,8 +13,8 @@ var acceptable = []string{
 	"missing token",
 	"mqtt not configured",
 	"not a SunSpec device",
-	"missing password",         // Powerwall
-	"missing user or password", // Tapo
+	"missing credentials", // sockets
+	"missing password",    // Powerwall
 	"connect: no route to host",
 	"connect: connection refused",
 	"connect: network is unreachable",
