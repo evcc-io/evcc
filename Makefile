@@ -14,7 +14,7 @@ BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := evcc/evcc
-PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
+PLATFORM := linux/amd64
 
 # gokrazy image
 IMAGE_FILE := evcc_$(TAG_NAME).image
