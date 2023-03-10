@@ -71,7 +71,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Charger  string
-		Timeout  string
+		Timeout  time.Duration
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
