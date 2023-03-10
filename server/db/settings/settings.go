@@ -12,8 +12,8 @@ type Setter interface {
 	SetInt(key string, val int64)
 	SetFloat(key string, val float64)
 	SetTime(key string, val time.Time)
-	SetJson(key string, val any) error
 	SetBool(key string, val bool)
+	SetJson(key string, val any) error
 }
 
 type Getter interface {
