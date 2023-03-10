@@ -43,7 +43,6 @@ export default {
 			if (!this.connected) {
 				return t("disconnected");
 			}
-
 			// min charge active
 			if (this.minSoc > 0 && this.vehicleSoc < this.minSoc) {
 				return t("minCharge", { soc: this.minSoc });
