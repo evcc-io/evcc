@@ -186,10 +186,10 @@ scale1p = "Reduziere auf einphasig in {remaining}."
 scale3p = "Erhöhe auf dreiphasig in {remaining}."
 targetChargeActive = "Zielladen aktiv."
 targetChargePlanned = "Zielladen geplant. Ladung startet {time} Uhr."
-targetChargeWaitForVehicle = "Zielladen bereit. Warte auf Fahrzeug..."
+targetChargeWaitForVehicle = "Zielladen bereit. Warte auf {vehicle-name}..."
 unknown = ""
 vehicleTargetReached = "Fahrzeuglimit {soc}% erreicht."
-waitForVehicle = "Ladebereit. Warte auf Fahrzeug..."
+waitForVehicle = "Ladebereit. Warte auf {vehicle-name}..."
 
 [notifications]
 dismissAll = "Meldungen entfernen"
