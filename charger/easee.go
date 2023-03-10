@@ -164,7 +164,6 @@ func NewEasee(user, password, charger string, timeout string) (*Easee, error) {
 		// debug with Timeout
 		c.log.DEBUG.Printf("Timeout: %v", c.requestTimeout)
 
-
 		ctx, cancel := context.WithTimeout(context.Background(), c.requestTimeout)
 		defer cancel()
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
@@ -198,10 +197,7 @@ func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error
 			return nil, err
 		}
 
-		// debug with Timeout
-		c.log.DEBUG.Printf("Timeout: %v", c.requestTimeout)
-
-		ctx, cancel := context.WithTimeout(context.Background(), c.requestTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
 
 		return signalr.NewHTTPConnection(ctx, "https://api.easee.cloud/hubs/chargers",
