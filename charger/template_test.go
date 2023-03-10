@@ -5,7 +5,6 @@ import (
 
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
-	"golang.org/x/exp/slices"
 )
 
 var acceptable = []string{
@@ -31,31 +30,10 @@ var acceptable = []string{
 }
 
 func TestTemplates(t *testing.T) {
-	for _, tmpl := range templates.ByClass(templates.Charger) {
-		tmpl := tmpl
-
-		// set default values for all params
-		values := tmpl.Defaults(templates.TemplateRenderModeUnitTest)
-
-		// set the template value which is needed for rendering
-		values["template"] = tmpl.Template
-
-		// set modbus default test values
-		if values[templates.ParamModbus] != nil {
-			modbusChoices := tmpl.ModbusChoices()
-			// we only test one modbus setup
-			if slices.Contains(modbusChoices, templates.ModbusChoiceTCPIP) {
-				values[templates.ModbusKeyTCPIP] = true
-			} else {
-				values[templates.ModbusKeyRS485TCPIP] = true
-			}
-			tmpl.ModbusValues(templates.TemplateRenderModeInstance, values)
+	templates.TestClass(t, templates.Charger, func(t *testing.T, values map[string]any) {
+		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
+			t.Log(values)
+			t.Error(err)
 		}
-
-		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {
-			if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
-				t.Error(err)
-			}
-		})
-	}
+	})
 }
