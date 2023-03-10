@@ -38,8 +38,9 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	// Default timeout is 10s
 	if cc.Timeout == "" {
-		requestTimeout , _ = time.ParseDuration("11s")
+		requestTimeout , _ = time.ParseDuration("10s")
 	} else {
 		requestTimeout , _ = time.ParseDuration(cc.Timeout)
 	}
