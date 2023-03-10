@@ -104,7 +104,7 @@ func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 		}
 
 		if req.WriteFuncCode == gridx.FuncCodeWriteSingleCoil {
-			h.log.TRACE.Printf("write coil: id %d addr %d val %t", req.UnitId, req.Addr, req.Args[0])
+			h.log.TRACE.Printf("write single coil: id %d addr %d val %t", req.UnitId, req.Addr, req.Args[0])
 			var u uint16
 			if req.Args[0] {
 				u = 0xFF00
