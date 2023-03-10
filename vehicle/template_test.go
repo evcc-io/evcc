@@ -36,19 +36,10 @@ var acceptable = []string{
 }
 
 func TestTemplates(t *testing.T) {
-	for _, tmpl := range templates.ByClass(templates.Vehicle) {
-		tmpl := tmpl
-
-		// set default values for all params
-		values := tmpl.Defaults(templates.TemplateRenderModeUnitTest)
-
-		// set the template value which is needed for rendering
-		values["template"] = tmpl.Template
-
-		templates.RenderTest(t, tmpl, values, func(values map[string]interface{}) {
-			if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
-				t.Error(err)
-			}
-		})
-	}
+	templates.TestClass(t, templates.Vehicle, func(t *testing.T, values map[string]any) {
+		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
+			t.Log(values)
+			t.Error(err)
+		}
+	})
 }
