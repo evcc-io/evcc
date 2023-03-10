@@ -2,8 +2,8 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 achgut, Flo56958
 // Copyright (c) 2023 premultiply
+// Initial implementation and testing by achgut, Flo56958
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -43,7 +43,7 @@ const (
 	versiRegMaxCurrent     = 1633 //  1 RW UNIT16
 	versiRegCurrents       = 1647 //  3 RO UINT16
 	versiRegVoltages       = 1651 //  3 RO UINT16
-	versiRegPowers         = 1662 //  1 RO UINT16
+	versiRegPowers         = 1662 //  3 RO UINT16
 	versiRegTotalEnergy    = 1692 //  2 RO UINT32
 )
 
