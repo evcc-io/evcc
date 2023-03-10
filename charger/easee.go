@@ -57,6 +57,7 @@ type Easee struct {
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid string
+	requestTimeout time.Duration
 	lp   loadpoint.API
 }
 
@@ -70,17 +71,18 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Charger  string
+		Timeout  string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger)
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string) (*Easee, error) {
+func NewEasee(user, password, charger string, timeout string) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -104,6 +106,13 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 	c.Client.Transport = &oauth2.Transport{
 		Source: ts,
 		Base:   c.Client.Transport,
+	}
+
+	// default timeout is 11s
+	if timeout == "" {
+		c.requestTimeout, _ = time.ParseDuration("11s")
+	} else {
+		c.requestTimeout, _ = time.ParseDuration(timeout)
 	}
 
 	// find charger
@@ -152,7 +161,11 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 
 		client.Start()
 
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		// debug with Timeout
+		c.log.DEBUG.Printf("Timeout: %v", c.requestTimeout)
+
+
+		ctx, cancel := context.WithTimeout(context.Background(), c.requestTimeout)
 		defer cancel()
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
@@ -163,7 +176,7 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 
 	select {
 	case <-done:
-	case <-time.After(request.Timeout):
+	case <-time.After(c.requestTimeout):
 		err = os.ErrDeadlineExceeded
 	}
 
@@ -185,7 +198,10 @@ func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error
 			return nil, err
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		// debug with Timeout
+		c.log.DEBUG.Printf("Timeout: %v", c.requestTimeout)
+
+		ctx, cancel := context.WithTimeout(context.Background(), c.requestTimeout)
 		defer cancel()
 
 		return signalr.NewHTTPConnection(ctx, "https://api.easee.cloud/hubs/chargers",
