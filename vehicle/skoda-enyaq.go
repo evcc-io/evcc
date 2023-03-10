@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/skoda"
 	"github.com/evcc-io/evcc/vehicle/skoda/connect"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
@@ -24,24 +25,18 @@ func init() {
 
 // NewEnyaqFromConfig creates a new vehicle
 func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	var requestTimeout time.Duration
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
-		Timeout             string
+		Timeout             time.Duration
 	}{
+		Timeout: request.Timeout,
 		Cache:   interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Timeout == "" {
-		requestTimeout , _ = time.ParseDuration("11s")
-	} else {
-		requestTimeout , _ = time.ParseDuration(cc.Timeout)
 	}
 
 	v := &Enyaq{
@@ -51,7 +46,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	var err error
 	log := util.NewLogger("enyaq").Redact(cc.User, cc.Password, cc.VIN)
 
-	log.DEBUG.Printf("Timeout: %v", requestTimeout)
+	log.DEBUG.Printf("Timeout: %v", cc.Timeout)
 
 	// use Skoda credentials to resolve list of vehicles
 	ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)
@@ -60,7 +55,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	api := skoda.NewAPI(log, ts)
-	api.Client.Timeout = requestTimeout
+	api.Client.Timeout = cc.Timeout
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
@@ -84,7 +79,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 
 		api := skoda.NewAPI(log, ts)
-		api.Client.Timeout = requestTimeout
+		api.Client.Timeout = cc.Timeout
 
 		v.Provider = skoda.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
