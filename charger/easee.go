@@ -108,9 +108,9 @@ func NewEasee(user, password, charger string, timeout string) (*Easee, error) {
 		Base:   c.Client.Transport,
 	}
 
-	// default timeout is 11s
+	// default timeout is 10s
 	if timeout == "" {
-		c.requestTimeout, _ = time.ParseDuration("11s")
+		c.requestTimeout, _ = time.ParseDuration("10s")
 	} else {
 		c.requestTimeout, _ = time.ParseDuration(timeout)
 	}
