@@ -4,6 +4,7 @@ products:
     description:
       generic: Versicharge GEN3
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: Erfordert Firmware >= 2.121.5
     en: Requires firmware >= 2.121.5
