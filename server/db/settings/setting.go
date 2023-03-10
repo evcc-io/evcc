@@ -35,8 +35,8 @@ func Init() error {
 }
 
 func Persist() error {
-	mu.Lock()
-	defer mu.Unlock()
+	mu.RLock()
+	defer mu.RUnlock()
 
 	dirty := atomic.CompareAndSwapInt32(&dirty, 1, 0)
 	if !dirty || len(settings) == 0 {
