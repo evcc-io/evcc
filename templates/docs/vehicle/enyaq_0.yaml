@@ -10,6 +10,7 @@ render:
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind # Optional
       capacity: 50 # Akkukapazität in kWh # Optional
+      timeout: 10s # Timeout für Requests # Default 10s # Optional
     advanced: |
       type: template
       template: enyaq
