@@ -63,10 +63,10 @@ params:
     type: number
   - name: interface
     description:
-      de: Netzwerkinterface
+      de: Netzwerkschnittstelle
       en: Network interface
     help:
-      de: Netzwerkinterface
+      de: Netzwerkschnittstelle
       en: Network interface
     advanced: true
     example: eth0
@@ -123,6 +123,9 @@ params:
     description:
       de: Ladepunkt (falls >1 Ladepunkt)
       en: Loadpoint (if >1 loadpoint)
+    help:
+      de: Normalerweise 1 für den ersten Anschluss.
+      en: Usually 1 for first connector.
     advanced: true
     default: 1
   - name: cache
@@ -288,6 +291,18 @@ params:
     help:
       en: The AIN is printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
       de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+  - name: stationid
+    type: string
+    help:
+      en: The chargers unique station id (or chargepoint id)
+      de: Die Stations-ID der Wallbox (oder des Ladepunkts)
+    example: EVB-P12354
+  - name: idtag
+    type: string
+    help:
+      en: Token-ID returned to the charger for authorisation of charging sessions
+      de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
+    example: 04E6B78921BBA0
 
 presets:
   vehicle-base:
@@ -348,6 +363,16 @@ presets:
           en: Integrated device (no vehicle connection)
       - name: icon
         advanced: true
+  ocpp:
+    params:
+      - name: stationid
+        advanced: true
+      - name: connector
+        advanced: true
+      - name: idtag
+        advanced: true
+      - name: timeout
+        default: 10m
 
 modbus:
   interfaces:
