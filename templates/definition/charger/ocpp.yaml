@@ -58,7 +58,7 @@ params:
       en: Activating can help with certain chargers
 render: |
   type: ocpp
-  {{ include ocpp . }}
+  {{ include "ocpp" . }}
   {{- if ne .getconfiguration "true" }}
   getconfiguration: {{ .getconfiguration }}
   {{- end }}
