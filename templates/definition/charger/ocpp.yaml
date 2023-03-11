@@ -36,6 +36,32 @@ requirements:
       * Local network connection
 params:
   - preset: ocpp
+  - name: getconfiguration
+    advanced: true
+    type: bool
+    default: true
+    description:
+      de: GetConfiguration benutzen
+      en: Use GetConfiguration request
+    help:
+      de: Deaktivierung kann bei einigen Chargern hilfreich sein
+      en: Deactivating can help with certain chargers
+  - name: bootnotification
+    advanced: true
+    type: bool
+    default: false
+    description:
+      de: BootNotification benutzen
+      en: Use BootNotification request
+    help:
+      de: Aktivierung kann bei einigen Chargern hilfreich sein
+      en: Activating can help with certain chargers
 render: |
   type: ocpp
   {{ include ocpp . }}
+  {{- if ne .getconfiguration "true" }}
+  getconfiguration: {{ .getconfiguration }}
+  {{- end }}
+  {{- if ne .bootnotification "false" }}
+  bootnotification: {{ .bootnotification }}
+  {{- end }}

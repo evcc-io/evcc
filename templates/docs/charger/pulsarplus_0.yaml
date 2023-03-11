@@ -1,6 +1,6 @@
 product:
-  brand: wallbox.com
-  description: Pulsar Plus
+  brand: wallbox
+  description: Pulsar Plus/ Commander 2/ Copper SB
 render:
   - default: |
       type: template

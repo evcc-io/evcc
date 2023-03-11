@@ -27,3 +27,5 @@ render:
       connector: 1 # Normalerweise 1 für den ersten Anschluss. # Optional
       idtag: '04E6B78921BBA0' # Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird # Optional
       timeout: 10m # Optional
+      getconfiguration: true # Deaktivierung kann bei einigen Chargern hilfreich sein # Optional
+      bootnotification: false # Aktivierung kann bei einigen Chargern hilfreich sein # Optional
