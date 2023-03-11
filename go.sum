@@ -225,8 +225,8 @@ github.com/andig/go-powerwall v0.2.1-0.20230102102528-4d59ac6910c6 h1:DxdKrb4O3B
 github.com/andig/go-powerwall v0.2.1-0.20230102102528-4d59ac6910c6/go.mod h1:MR0vuGPmz9sLXrIAsdkXulW1j6t6svVr2D1nJKaJI78=
 github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71 h1:tnjVNZjuz+CK6fdc7ohJpMHjcEGFI5APp0l5T5Ocr/Y=
 github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
-github.com/andig/mbserver v0.0.0-20221101171752-364e71b0089c h1:H8xwM6qZbn2aE3B+HffaeZQYHGhf3PY34IH3jlmqBIw=
-github.com/andig/mbserver v0.0.0-20221101171752-364e71b0089c/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
+github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
+github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
 github.com/andybalholm/cascadia v1.3.1 h1:nhxRkql1kdYCc8Snf7D5/D3spOX+dBgjA6u8x004T2c=
 github.com/andybalholm/cascadia v1.3.1/go.mod h1:R4bJ1UQfqADjvDa4P6HZHLh/3OxWWEqc0Sk8XGwHqvA=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
@@ -1055,8 +1055,8 @@ github.com/vmihailenco/msgpack/v5 v5.3.5 h1:5gO0H1iULLWGhs2H5tbAHIZTV8/cYafcFOr9
 github.com/vmihailenco/msgpack/v5 v5.3.5/go.mod h1:7xyJ9e+0+9SaZT0Wt1RGleJXzli6Q/V5KbhBonMG9jc=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20230218103719-dd45a8a8dfe9 h1:zsQ/O2dQIF4rF3looZEFno98LH4ZZccGd8CbUUC0iM0=
-github.com/volkszaehler/mbmd v0.0.0-20230218103719-dd45a8a8dfe9/go.mod h1:PVEqdIK81Plg4e/b4QaroxpjtwIGo2IK1mTLuoaDbMU=
+github.com/volkszaehler/mbmd v0.0.0-20230310195335-01cfa4683e53 h1:6zpU3hHjOXjFT50+swYlizSrAnChfDFL0pSiXnMlj2c=
+github.com/volkszaehler/mbmd v0.0.0-20230310195335-01cfa4683e53/go.mod h1:PVEqdIK81Plg4e/b4QaroxpjtwIGo2IK1mTLuoaDbMU=
 github.com/writeas/go-strip-markdown v2.0.1+incompatible h1:IIqxTM5Jr7RzhigcL6FkrCNfXkvbR+Nbu1ls48pXYcw=
 github.com/writeas/go-strip-markdown v2.0.1+incompatible/go.mod h1:Rsyu10ZhbEK9pXdk8V6MVnZmTzRG0alMNLMwa0J01fE=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=

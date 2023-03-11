@@ -103,8 +103,8 @@ func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 			return nil, mbserver.ErrIllegalFunction
 		}
 
-		if req.Quantity == 1 {
-			h.log.TRACE.Printf("write coil: id %d addr %d val %t", req.UnitId, req.Addr, req.Args[0])
+		if req.WriteFuncCode == gridx.FuncCodeWriteSingleCoil {
+			h.log.TRACE.Printf("write single coil: id %d addr %d val %t", req.UnitId, req.Addr, req.Args[0])
 			var u uint16
 			if req.Args[0] {
 				u = 0xFF00
@@ -137,8 +137,8 @@ func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) 
 			return nil, mbserver.ErrIllegalFunction
 		}
 
-		if req.Quantity == 1 {
-			h.log.TRACE.Printf("write holding: id %d addr %d val %0x", req.UnitId, req.Addr, req.Args[0])
+		if req.WriteFuncCode == gridx.FuncCodeWriteSingleRegister {
+			h.log.TRACE.Printf("write single holding: id %d addr %d val %04x", req.UnitId, req.Addr, req.Args[0])
 			b, err := h.conn.WriteSingleRegisterWithSlave(req.UnitId, req.Addr, req.Args[0])
 			return h.exceptionToUint16AndError("write holding", b, err)
 		}

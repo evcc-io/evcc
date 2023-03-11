@@ -8,7 +8,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71
-	github.com/andig/mbserver v0.0.0-20221101171752-364e71b0089c
+	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.44.212
@@ -88,7 +88,7 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20230218103719-dd45a8a8dfe9
+	github.com/volkszaehler/mbmd v0.0.0-20230310195335-01cfa4683e53
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
