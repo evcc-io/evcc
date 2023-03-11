@@ -123,9 +123,6 @@ params:
     description:
       de: Ladepunkt (falls >1 Ladepunkt)
       en: Loadpoint (if >1 loadpoint)
-    help:
-      de: Normalerweise 1 für den ersten Anschluss.
-      en: Usually 1 for first connector.
     advanced: true
     default: 1
   - name: cache
@@ -368,7 +365,11 @@ presets:
       - name: stationid
         advanced: true
       - name: connector
+        help:
+          de: Ladepunkt, normalerweise 1 für den ersten Anschluss.
+          en: Connector number, usually 1 for first connector.
         advanced: true
+        default: 1
       - name: idtag
         advanced: true
       - name: timeout

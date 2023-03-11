@@ -14,6 +14,6 @@ render:
     advanced: |
       type: template
       template: etrel-duo
-      connector: 1 # Normalerweise 1 für den ersten Anschluss. # Optional
+      connector: 1 # Optional
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: 502 # Port # Optional
