@@ -57,7 +57,6 @@ type Easee struct {
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid string
-	requestTimeout time.Duration
 	lp   loadpoint.API
 }
 
@@ -110,9 +109,6 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 		Base:   c.Client.Transport,
 	}
 
-	// set request timeout
-	c.requestTimeout = timeout
-
 	// find charger
 	if charger == "" {
 		chargers, err := c.chargers()
@@ -159,10 +155,10 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 
 		client.Start()
 
-		// debug with Timeout
-		c.log.DEBUG.Printf("Timeout: %v", c.requestTimeout)
+		// debug with timeout
+		c.log.DEBUG.Printf("Timeout: %v", timeout)
 
-		ctx, cancel := context.WithTimeout(context.Background(), c.requestTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
@@ -173,7 +169,7 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 
 	select {
 	case <-done:
-	case <-time.After(c.requestTimeout):
+	case <-time.After(timeout):
 		err = os.ErrDeadlineExceeded
 	}
 
