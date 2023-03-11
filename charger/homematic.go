@@ -33,10 +33,6 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
 	return NewCCU(cc.embed, cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.StandbyPower)
 }
 
