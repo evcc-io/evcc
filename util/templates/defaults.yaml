@@ -63,10 +63,10 @@ params:
     type: number
   - name: interface
     description:
-      de: Netzwerkinterface
+      de: Netzwerkschnittstelle
       en: Network interface
     help:
-      de: Netzwerkinterface
+      de: Netzwerkschnittstelle
       en: Network interface
     advanced: true
     example: eth0
@@ -348,6 +348,30 @@ presets:
           en: Integrated device (no vehicle connection)
       - name: icon
         advanced: true
+  ocpp:
+    params:
+      - name: stationid
+        type: string
+        help:
+          en: The chargers unique station id (or chargepoint id)
+          de: Die Stations-ID der Wallbox (oder des Ladepunkts)
+        advanced: true
+        example: EVB-P12354
+      - name: connector
+        help:
+          de: Ladepunkt, normalerweise 1 für den ersten Anschluss.
+          en: Connector number, usually 1 for first connector.
+        advanced: true
+        default: 1
+      - name: idtag
+        type: string
+        help:
+          en: Token-ID returned to the charger for authorisation of charging sessions
+          de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
+        advanced: true
+        example: 04E6B78921BBA0
+      - name: timeout
+        default: 10m
 
 modbus:
   interfaces:
