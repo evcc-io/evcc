@@ -97,6 +97,12 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 	return hmr, err
 }
 
+// Initialze CCU methods via system.listMethods call
+func (c *Connection) Init() error {
+	_, err := c.XmlCmd("system.listMethods", c.SwitchChannel)
+	return err
+}
+
 // Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
 	res, err := c.XmlCmd("getValue", c.SwitchChannel, Param{CCUString: "STATE"})
