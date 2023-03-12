@@ -558,7 +558,6 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(maxCurrent, lp.MaxCurrent)
 
 	lp.setConfiguredPhases(lp.ConfiguredPhases)
-	lp.publish(phasesEnabled, lp.phases)
 	lp.publish(phasesActive, lp.activePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
