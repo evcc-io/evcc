@@ -35,7 +35,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 			panic("ERROR: Device template is missing valid usages!")
 		}
 		if len(usageChoices) == 0 {
-			usageChoices = []string{string(DeviceCategoryGridMeter), string(DeviceCategoryPVMeter), string(DeviceCategoryBatteryMeter), string(DeviceCategoryCircuitMeter)}
+			usageChoices = []string{string(DeviceCategoryGridMeter), string(DeviceCategoryPVMeter), string(DeviceCategoryBatteryMeter)}
 		}
 
 		supportedDeviceCategories = []DeviceCategory{}
@@ -44,8 +44,6 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 			switch usage {
 			case string(DeviceCategoryGridMeter):
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryGridMeter)
-			case string(DeviceCategoryCircuitMeter):
-				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryGridMeter) // using grid meters for circuits
 			case string(DeviceCategoryPVMeter):
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryPVMeter)
 			case string(DeviceCategoryBatteryMeter):

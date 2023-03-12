@@ -265,8 +265,7 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 func configureSiteLoadpointsCircuits(conf config) (site *core.Site, err error) {
 	if err = cp.configure(conf); err == nil {
 
-		var circuits []*core.Circuit
-		if circuits, err = configureCircuits(conf, cp); err != nil {
+		if err = configureCircuits(conf, cp); err != nil {
 			return nil, err
 		}
 
@@ -288,7 +287,7 @@ func configureSiteLoadpointsCircuits(conf config) (site *core.Site, err error) {
 				vehicles = append(vehicles, cp.vehicles[k])
 			}
 
-			site, err = configureSite(conf.Site, cp, loadpoints, vehicles, tariffs, circuits)
+			site, err = configureSite(conf.Site, cp, loadpoints, vehicles, tariffs, maps.Values(cp.circuits))
 		}
 	}
 
@@ -305,13 +304,19 @@ func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadpoints [
 }
 
 func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Loadpoint, err error) {
-	if len(conf.Loadpoints) == 0 {
+	lpInterfaces, ok := viper.AllSettings()["loadpoints"].([]interface{})
+	if !ok || len(lpInterfaces) == 0 {
 		return nil, errors.New("missing loadpoints")
 	}
 
-	for id, cfg := range conf.Loadpoints {
+	for id, lpcI := range lpInterfaces {
+		var lpc map[string]interface{}
+		if err := util.DecodeOther(lpcI, &lpc); err != nil {
+			return nil, fmt.Errorf("failed decoding loadpoint configuration: %w", err)
+		}
+
 		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
-		lp, err := core.NewLoadpointFromConfig(log, cp, cfg)
+		lp, err := core.NewLoadpointFromConfig(log, cp, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
@@ -323,29 +328,28 @@ func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Lo
 }
 
 // configureCircuits loads circuit definition
-func configureCircuits(conf config, cp *ConfigProvider) (circuits []*core.Circuit, err error) {
+func configureCircuits(conf config, cp *ConfigProvider) error {
 	cp.circuits = make(map[string]*core.Circuit)
 	cp.vMeters = make(map[string]*core.VMeter)
 
-	for _, cfg := range conf.Circuits {
-		circuitMapNew, vmeterMapNew, err := core.NewCircuitFromConfig(cp, cfg)
+	for id, cfg := range conf.Circuits {
+		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
+		circuit, name, pName, err := core.NewCircuitFromConfig(log, cp, cfg)
 		if err != nil {
-			return nil, fmt.Errorf("failed configuring circuit: %w", err)
+			return fmt.Errorf("failed configuring circuit: %w", err)
 		}
-
-		for k, v := range circuitMapNew {
-			if _, ok := cp.circuits[k]; ok {
-				return nil, fmt.Errorf("circuit with name %s defined more than once", k)
+		cp.circuits[name] = circuit
+		// check circuit has meter. if not, add vmeter
+		if circuit.PhaseCurrents == nil {
+			cp.vMeters[name] = core.NewVMeter(name)
+			circuit.PhaseCurrents = cp.VMeter(name)
+		}
+		// check if it has a parent circuit. If so, check there is a vmeter for this circtuit name and add this circuit as consumer
+		if circuit.ParentCircuit != nil {
+			if vm := cp.VMeter(pName); vm != nil {
+				vm.AddConsumer(circuit)
 			}
-			cp.circuits[k] = v
-			circuits = append(circuits, v)
 		}
-
-		for k, v := range vmeterMapNew {
-			cp.vMeters[k] = v
-		}
-
 	}
-
-	return circuits, nil
+	return nil
 }

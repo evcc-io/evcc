@@ -62,8 +62,9 @@ func TestVMeterWithCircuit(t *testing.T) {
 		consumers = append(consumers, cons)
 	}
 	// subcircuit
-	mtrCirc := &testMeter{cur: 10.0}
-	circSub := NewCircuit("testCircuitMain", 20.0, mtrCirc, util.NewLogger("test circuit Main"))
+	circSub := NewCircuit(20.0, nil, util.NewLogger("test circuit Main"))
+	testMeter := testMeter{cur: 10.0}
+	circSub.PhaseCurrents = &testMeter
 	assert.NotNilf(t, circSub, "circuit not created")
 	vm.Consumers = append(vm.Consumers, circSub)
 

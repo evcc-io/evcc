@@ -14,7 +14,6 @@ func (c *CmdConfigure) setDefaultTexts() {
 	c.updateDeviceCategoryTexts(DeviceCategoryCharger, "Category_ChargerTitle", "Category_ChargerArticle", "Category_ChargerAdditional")
 	c.updateDeviceCategoryTexts(DeviceCategoryGuidedSetup, "Category_SystemTitle", "Category_SystemArticle", "Category_SystemAdditional")
 	c.updateDeviceCategoryTexts(DeviceCategoryGridMeter, "Category_GridMeterTitle", "Category_GridMeterArticle", "Category_GridMeterAdditional")
-	c.updateDeviceCategoryTexts(DeviceCategoryCircuitMeter, "Category_CircuitMeterTitle", "Category_CircuitMeterArticle", "Category_CircuitMeterAdditional")
 	c.updateDeviceCategoryTexts(DeviceCategoryPVMeter, "Category_PVMeterTitle", "Category_PVMeterArticle", "Category_PVMeterAdditional")
 	c.updateDeviceCategoryTexts(DeviceCategoryBatteryMeter, "Category_BatteryMeter", "Category_BatteryMeterArticle", "Category_BatteryMeterAdditional")
 	c.updateDeviceCategoryTexts(DeviceCategoryChargeMeter, "Category_ChargeMeterTitle", "Category_ChargeMeterArticle", "Category_ChargeMeterAdditional")

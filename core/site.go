@@ -663,8 +663,8 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// update all circuits to refresh the data when no loadpoints are upated
-	for ccId := range site.Circuits {
-		site.Circuits[ccId].update()
+	for _, cc := range site.Circuits {
+		cc.update()
 	}
 }
 

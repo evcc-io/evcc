@@ -24,7 +24,8 @@ func (dm *testMeter) Currents() (float64, float64, float64, error) {
 func TestCurrentCircuitMeter(t *testing.T) {
 	limit := 20.0
 	mtr := &testMeter{cur: 0.0}
-	circ := NewCircuit("testCircuit", limit, mtr, util.NewLogger("test circuit"))
+	circ := NewCircuit(limit, nil, util.NewLogger("test circuit"))
+	circ.PhaseCurrents = mtr
 	assert.NotNilf(t, circ, "circuit not created")
 
 	var curAv float64
@@ -53,17 +54,19 @@ func TestCurrentCircuitMeter(t *testing.T) {
 func TestParentCircuitHierarchy(t *testing.T) {
 	// two circuits, check limit and consumption from both sides
 	limitMain := 20.0
-	mtrMain := &testMeter{cur: 16.0}
-	circMain := NewCircuit("testCircuitMain", limitMain, mtrMain, util.NewLogger("test circuit Main"))
+	circMain := NewCircuit(limitMain, nil, util.NewLogger("test circuit Main"))
+	mainMtr := testMeter{cur: 16.0}
+	circMain.PhaseCurrents = &mainMtr
 	assert.NotNilf(t, circMain, "circuit not created")
 	// add subcircuit with meter
 	limitSub := 20.0
-	mtrSub := &testMeter{cur: 10.0} // consumption of subCircuit
-	circSub := NewCircuit("testCircuitSub", limitSub, mtrSub, util.NewLogger("test circuit Sub"))
-	circSub.parentCircuit = circMain
+	circSub := NewCircuit(limitSub, nil, util.NewLogger("test circuit Sub"))
+	subMtr := testMeter{cur: 10.0} // consumption of subCircuit
+	circSub.PhaseCurrents = &subMtr
+	circSub.ParentCircuit = circMain
 
-	assert.NotNilf(t, circSub.parentCircuit, "parent circuit not set")
-	assert.NotNilf(t, circSub.phaseMeter, "sub circuit meter not set")
+	assert.NotNilf(t, circSub.ParentCircuit, "parent circuit not set")
+	assert.NotNilf(t, circSub.PhaseCurrents, "sub circuit meter not set")
 	curAv, err := circSub.MaxPhasesCurrent()
 	assert.Equal(t, curAv, 10.0)
 	assert.Nil(t, err)

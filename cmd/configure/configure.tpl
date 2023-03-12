@@ -69,25 +69,7 @@ circuits:
 - name: {{ .Name }}
   maxCurrent: {{ .MaxCurrent }}
   meter: {{ .MeterRef }}
-  circuits:
-{{-   range .Circuits }}
-    - name: {{ .Name }}
-      maxCurrent: {{ .MaxCurrent }}
-      meter: {{ .MeterRef }}
-      circuits:
-{{-   range .Circuits }}
-        - name: {{ .Name }}
-          maxCurrent: {{ .MaxCurrent }}
-          meter: {{ .MeterRef }}
-          circuits:
-{{-   range .Circuits }}
-            - name: {{ .Name }}
-              maxCurrent: {{ .MaxCurrent }}
-              meter: {{ .MeterRef }}
-              circuits:
-{{-   end }} 
-{{-   end }}
-{{-   end }}
+  parent: {{ .ParentRef }}
 {{- end }}
 
 site:

@@ -658,7 +658,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 		chargeCurrentNew := math.Min(math.Max(newCur, 0), chargeCurrent)
 		// later here the function checks for having less than MinCurrent()
 		if chargeCurrentNew < chargeCurrent {
-			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit %s", chargeCurrent, chargeCurrentNew, lp.circuit.Title)
+			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit", chargeCurrent, chargeCurrentNew)
 			chargeCurrent = chargeCurrentNew
 			// also set force to ensure not overloading the circuit
 			forceCurrentChange = true
@@ -1511,9 +1511,6 @@ func (lp *Loadpoint) Update(sitePower float64, batteryBuffered bool) {
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging())
 	lp.publish("enabled", lp.enabled)
-	if lp.circuit != nil {
-		lp.publish("circuit", lp.circuit.Title)
-	}
 
 	// identify connected vehicle
 	if lp.connected() && !lp.chargerHasFeature(api.IntegratedDevice) {

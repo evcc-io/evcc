@@ -40,9 +40,6 @@ type CmdConfigure struct {
 	errItemNotPresent, errDeviceNotValid error
 
 	capabilitySMAHems bool
-
-	CircuitNames []string // helper to remember a plain list of circuits to be used in loadpoint config
-
 }
 
 // Run starts the interactive configuration
@@ -129,7 +126,6 @@ func (c *CmdConfigure) flowSingleDevice(category DeviceCategory) {
 	// only consider the device categories that are marked for this flow
 	categoryChoices := []string{
 		DeviceCategories[DeviceCategoryGridMeter].title,
-		DeviceCategories[DeviceCategoryCircuitMeter].title,
 		DeviceCategories[DeviceCategoryPVMeter].title,
 		DeviceCategories[DeviceCategoryBatteryMeter].title,
 		DeviceCategories[DeviceCategoryChargeMeter].title,
@@ -436,9 +432,14 @@ func (c *CmdConfigure) configureLoadpoints() {
 			valueType: templates.TypeBool,
 		})
 
-		if len(c.CircuitNames) > 0 && c.askYesNo(c.localizedString("Loadpoint_CircuitYesNo")) {
-			ccNameId, _ := c.askChoice(c.localizedString("Loadpoint_Circuit"), c.CircuitNames)
-			loadpoint.Circuit = c.CircuitNames[ccNameId]
+		if len(c.configuration.config.Circuits) > 0 && c.askYesNo(c.localizedString("Loadpoint_CircuitYesNo")) {
+			var circuitNames []string
+			for _, cc := range c.configuration.config.Circuits {
+				circuitNames = append(circuitNames, cc.Name)
+			}
+
+			ccNameId, _ := c.askChoice(c.localizedString("Loadpoint_Circuit"), circuitNames)
+			loadpoint.Circuit = circuitNames[ccNameId]
 		}
 
 		c.configuration.AddLoadpoint(loadpoint)
@@ -472,8 +473,6 @@ func (c *CmdConfigure) configureCircuits() {
 		return
 	}
 
-	// top level circtuits
-	circuitsTopLevel := []*core.CircuitConfig{}
 	// map of references to circuits
 	circuitByName := map[string]*core.CircuitConfig{}
 
@@ -534,7 +533,7 @@ func (c *CmdConfigure) configureCircuits() {
 
 		// check meter
 		if c.askYesNo(c.localizedString("Circuit_Meter")) {
-			ccMeter, _, err := c.configureDeviceCategory(DeviceCategoryCircuitMeter)
+			ccMeter, _, err := c.configureDeviceCategory(DeviceCategoryGridMeter)
 			if err == nil {
 				curCircuit.MeterRef = ccMeter.Name
 			}
@@ -549,31 +548,15 @@ func (c *CmdConfigure) configureCircuits() {
 				parentCCNameId, _ := c.askChoice(c.localizedString("Circuit_Parent"), circuitNames)
 
 				// assign this circuit as child to the requested parent
-				parentCircuit := circuitByName[circuitNames[parentCCNameId]]
-				parentCircuit.Circuits = append(parentCircuit.Circuits, curCircuit)
-
-			} else {
-				// no parent,
-				// add as top level circuit
-				circuitsTopLevel = append(circuitsTopLevel, curCircuit)
+				curCircuit.ParentRef = circuitNames[parentCCNameId]
 			}
-		} else {
-			// first circuit
-			circuitsTopLevel = append(circuitsTopLevel, curCircuit)
 		}
 		// append to known names for later lookup
 		circuitByName[ccName] = curCircuit
-
+		c.configuration.config.Circuits = append(c.configuration.config.Circuits, *curCircuit)
 		fmt.Println()
 		if !c.askYesNo(c.localizedString("Circuit_AddAnother")) {
 			break
 		}
 	}
-	// finally store top level circuits
-	for _, circuit := range circuitsTopLevel {
-		c.configuration.config.Circuits = append(c.configuration.config.Circuits, *circuit)
-	}
-
-	// save circuitnames for loadpoint config
-	c.CircuitNames = maps.Keys(circuitByName)
 }

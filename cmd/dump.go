@@ -54,9 +54,6 @@ func runDump(cmd *cobra.Command, args []string) {
 	if err == nil {
 		site, err = configureSiteLoadpointsCircuits(conf)
 	}
-	if err != nil {
-		log.FATAL.Fatal(err)
-	}
 
 	if *dumpConfig {
 		file, pathErr := filepath.Abs(cfgFile)
@@ -85,6 +82,10 @@ func runDump(cmd *cobra.Command, args []string) {
 		fmt.Println(out.String())
 
 		os.Exit(0)
+	}
+
+	if err != nil {
+		log.FATAL.Fatal(err)
 	}
 
 	d := dumper{len: 2}
