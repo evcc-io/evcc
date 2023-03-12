@@ -38,18 +38,10 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
 // NewCCU creates a new connection with usage for meter
 func NewCCU(uri, deviceid, meterid, switchid, user, password, usage string) (*CCU, error) {
 	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password)
-	if err != nil {
-		return nil, err
-	}
 
 	m := &CCU{
 		conn:  conn,
 		usage: usage,
-	}
-
-	err = m.conn.Init()
-	if err != nil {
-		return nil, err
 	}
 
 	return m, err

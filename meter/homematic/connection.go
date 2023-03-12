@@ -51,6 +51,10 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 		conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 	}
 
+	if err := conn.Init(); err != nil {
+		return conn, err
+	}
+
 	return conn, nil
 }
 
