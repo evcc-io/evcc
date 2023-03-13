@@ -113,7 +113,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	}
 	log := util.NewLogger(unit)
 
-	cp := ocpp.NewChargePoint(log, id, timeout)
+	cp := ocpp.NewChargePoint(log, id, connector, timeout)
 	if err := ocpp.Instance().Register(id, cp); err != nil {
 		return nil, err
 	}
