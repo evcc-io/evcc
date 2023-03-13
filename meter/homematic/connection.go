@@ -51,6 +51,10 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 		conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 	}
 
+	if err := conn.Init(); err != nil {
+		return conn, err
+	}
+
 	return conn, nil
 }
 
@@ -95,6 +99,12 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 	}
 
 	return hmr, err
+}
+
+// Initialze CCU methods via system.listMethods call
+func (c *Connection) Init() error {
+	_, err := c.XmlCmd("system.listMethods", c.SwitchChannel)
+	return err
 }
 
 // Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
