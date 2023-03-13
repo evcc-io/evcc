@@ -644,7 +644,7 @@ func (site *Site) update(lp Updater) {
 		}
 
 		if err == nil {
-			autoCharge = rate.Price <= site.AutoChargeCostLimit
+			autoCharge = rate.Price <= site.GetAutoChargeCostLimit()
 		} else {
 			site.log.ERROR.Println("tariff:", err)
 		}
@@ -681,6 +681,7 @@ func (site *Site) prepare() {
 	site.publish("bufferSoc", site.BufferSoc)
 	site.publish("prioritySoc", site.PrioritySoc)
 	site.publish("residualPower", site.ResidualPower)
+	site.publish("autoChargeCostLimit", site.AutoChargeCostLimit)
 
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since())

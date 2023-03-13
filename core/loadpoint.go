@@ -1425,7 +1425,7 @@ func (lp *Loadpoint) processTasks() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, cheapTariff, batteryBuffered bool) {
+func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool) {
 	lp.processTasks()
 
 	mode := lp.GetMode()
@@ -1516,7 +1516,7 @@ func (lp *Loadpoint) Update(sitePower float64, cheapTariff, batteryBuffered bool
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
-		if cheapTariff && lp.GetTargetTime().IsZero() {
+		if autoCharge && lp.GetTargetTime().IsZero() {
 			err = lp.fastCharging()
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards

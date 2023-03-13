@@ -77,6 +77,24 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
+// GetAutoChargeCostLimit returns the AutoChargeCostLimit
+func (site *Site) GetAutoChargeCostLimit() float64 {
+	site.Lock()
+	defer site.Unlock()
+	return site.AutoChargeCostLimit
+}
+
+// SetAutoChargeCostLimit sets the AutoChargeCostLimit
+func (site *Site) SetAutoChargeCostLimit(val float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	site.AutoChargeCostLimit = val
+	site.publish("autoChargeCostLimit", site.AutoChargeCostLimit)
+
+	return nil
+}
+
 // GetVehicles is the list of vehicles
 func (site *Site) GetVehicles() []api.Vehicle {
 	site.Lock()
