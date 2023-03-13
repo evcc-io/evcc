@@ -163,7 +163,7 @@ func ParseHmError(res MethodResponse) error {
 	}
 
 	if faultCode != 0 {
-		return fmt.Errorf("CCU error: %s (faultcode %v)", faultString, res.Fault[0].Value.CCUInt)
+		return fmt.Errorf("CCU error: %s (faultcode %v)", faultString, faultCode)
 	}
 
 	return nil
