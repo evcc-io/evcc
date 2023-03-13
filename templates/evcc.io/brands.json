@@ -96,6 +96,7 @@
   "Shelly",
   "Siemens",
   "SMA",
+  "SofarSolar",
   "SolarEdge",
   "SolarMax",
   "Solarwatt",
@@ -107,7 +108,8 @@
   "TQ",
   "VARTA",
   "Victron",
-  "Volkszähler"
+  "Volkszähler",
+  "ZCS Azzurro"
  ],
  "PVBattery": [
   "Alpha ESS",
@@ -132,6 +134,7 @@
   "Senergy",
   "Shelly",
   "SMA",
+  "SofarSolar",
   "SolarEdge",
   "SolarMax",
   "Solarwatt",
@@ -141,7 +144,8 @@
   "Tesla",
   "TP-Link",
   "VARTA",
-  "Victron"
+  "Victron",
+  "ZCS Azzurro"
  ],
  "Vehicles": [
   "Aiways",
