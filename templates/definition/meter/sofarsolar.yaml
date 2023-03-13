@@ -1,6 +1,6 @@
 template: sofarsolar
 products:
-  - brand: SOFARSOLAR
+  - brand: SofarSolar
     description:
       generic: Inverter / Hybrid Inverter
   - brand: ZCS Azzurro
@@ -32,21 +32,21 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0207 # Grid A Current 
+      address: 0x0207 # Grid A Current
       type: holding
       decode: int16
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0209 # Grid B Current 
+      address: 0x0209 # Grid B Current
       type: holding
       decode: int16
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x020B # Grid C Current 
+      address: 0x020B # Grid C Current
       type: holding
       decode: int16
     scale: 0.01
