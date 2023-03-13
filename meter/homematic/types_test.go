@@ -12,7 +12,7 @@ import (
 func TestUnmarshalMethodResponse(t *testing.T) {
 
 	{
-		// Double test
+		// Double response test
 		var res MethodResponse
 
 		xmlstr := `<?xml version="1.0" encoding="ISO-8859-1"?><methodResponse><params><param><value><double>20698.0</double></value></param></params></methodResponse>`
@@ -22,7 +22,7 @@ func TestUnmarshalMethodResponse(t *testing.T) {
 	}
 
 	{
-		// Fault test
+		// Faulty response test
 		var res MethodResponse
 
 		xmlstr := `<?xml version="1.0" encoding="ISO-8859-1"?><methodResponse><fault><value><struct><member><name>faultCode</name><value><i4>-2</i4></value></member><member><name>faultString</name><value>Invalid device</value></member></struct></value></fault></methodResponse>`
