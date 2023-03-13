@@ -84,9 +84,9 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 		return hmr, err
 	}
 
-	if strings.Contains(string(res), "faultCode") {
-		return hmr, fmt.Errorf("ccu: %s", string(res))
-	}
+	// if strings.Contains(string(res), "faultCode") {
+	// 	return hmr, fmt.Errorf("ccu: %s", string(res))
+	// }
 
 	// correct Homematic IP Legacy API (CCU port 2010) method response encoding value
 	res = []byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1))
@@ -98,7 +98,7 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 		return hmr, err
 	}
 
-	return hmr, err
+	return hmr, CheckHmError(hmr)
 }
 
 // Initialze CCU methods via system.listMethods call
@@ -148,4 +148,15 @@ func (c *Connection) GridCurrentPower() (float64, error) {
 func (c *Connection) GridTotalEnergy() (float64, error) {
 	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "IEC_ENERGY_COUNTER"})
 	return res.Value.CCUFloat, err
+}
+
+func CheckHmError(res MethodResponse) error {
+	if len(res.Fault) > 0 {
+
+		if res.Fault[0].Value.CCUInt != 0 {
+			return fmt.Errorf("ccu error: %v", res.Fault[0].Value.CCUInt)
+		}
+	}
+
+	return nil
 }
