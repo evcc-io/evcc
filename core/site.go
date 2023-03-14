@@ -182,7 +182,7 @@ func NewSiteFromConfig(
 	}
 
 	// get circuits for regular udpates
-	site.Circuits = append(site.Circuits, circuits...)
+	site.Circuits = circuits
 
 	return site, nil
 }
