@@ -104,9 +104,9 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	switch s {
 	case 1: // Available
 		return api.StatusA, nil
-	case 2, 4, 5: // Preparing, Suspended EV, Suspended EVSE
+	case 2, 5: // Preparing, Suspended EV, Suspended EVSE
 		return api.StatusB, nil
-	case 3: // Charging
+	case 3, 4: // Charging
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
