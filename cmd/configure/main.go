@@ -473,7 +473,7 @@ func (c *CmdConfigure) configureCircuits() {
 		return
 	}
 
-	// helper to know used circtuit names
+	// helper to know used circuit names
 	circuitNames := []string{}
 
 	for {

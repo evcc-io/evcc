@@ -321,7 +321,7 @@ func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Lo
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
 
-		// check if loadpoint has a circtui assignment. If so, check there is a vmeter for it and add as consumer
+		// check if loadpoint has a circui assignment. If so, check there is a vmeter for it and add as consumer
 		if lp.CircuitRef != "" {
 			if vm := cp.VMeter(lp.CircuitRef); vm != nil {
 				vm.AddConsumer(lp)
@@ -359,7 +359,7 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 			cp.vMeters[name] = core.NewVMeter(name)
 			circuit.PhaseCurrents = cp.VMeter(name)
 		}
-		// check if it has a parent circuit. If so, check there is a vmeter for this circtuit name and add this circuit as consumer
+		// check if it has a parent circuit. If so, check there is a vmeter for this circuit name and add this circuit as consumer
 		if circuit.ParentCircuit != nil {
 			if vm := cp.VMeter(pName); vm != nil {
 				vm.AddConsumer(circuit)
