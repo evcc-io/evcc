@@ -473,8 +473,8 @@ func (c *CmdConfigure) configureCircuits() {
 		return
 	}
 
-	// map of references to circuits
-	circuitByName := map[string]*core.CircuitConfig{}
+	// helper to know used circtuit names
+	circuitNames := []string{}
 
 	for {
 		ccName := c.askValue(question{
@@ -483,7 +483,7 @@ func (c *CmdConfigure) configureCircuits() {
 			required: true,
 		})
 
-		if _, ok := circuitByName[ccName]; ok {
+		if slices.Contains(circuitNames, ccName) {
 			fmt.Println(c.localizedString("Circuit_NameAlreadyUsed"))
 			continue
 		}
@@ -540,8 +540,7 @@ func (c *CmdConfigure) configureCircuits() {
 		}
 
 		// in case we have already circuits, ask for parent circuit
-		if len(circuitByName) > 0 {
-			circuitNames := maps.Keys(circuitByName)
+		if len(circuitNames) > 0 {
 			// circuits exist already, ask for parent
 			if c.askYesNo(c.localizedString("Circuit_HasParent")) {
 				sort.Strings(circuitNames)
@@ -552,7 +551,7 @@ func (c *CmdConfigure) configureCircuits() {
 			}
 		}
 		// append to known names for later lookup
-		circuitByName[ccName] = curCircuit
+		circuitNames = append(circuitNames, curCircuit.Name)
 		c.configuration.config.Circuits = append(c.configuration.config.Circuits, *curCircuit)
 		fmt.Println()
 		if !c.askYesNo(c.localizedString("Circuit_AddAnother")) {

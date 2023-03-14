@@ -321,6 +321,13 @@ func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Lo
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
 
+		// check if loadpoint has a circtui assignment. If so, check there is a vmeter for it and add as consumer
+		if lp.CircuitRef != "" {
+			if vm := cp.VMeter(lp.CircuitRef); vm != nil {
+				vm.AddConsumer(lp)
+			}
+		}
+
 		loadpoints = append(loadpoints, lp)
 	}
 
@@ -334,7 +341,15 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 
 	for id, cfg := range conf.Circuits {
 		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
-		circuit, name, pName, err := core.NewCircuitFromConfig(log, cp, cfg)
+		var circuitCfg = new(core.CircuitConfig)
+
+		if err := util.DecodeOther(cfg, circuitCfg); err != nil {
+			return fmt.Errorf("failed configuring circuit: %w", err)
+		}
+		if circuitCfg.Name == "" {
+			return fmt.Errorf("failed configuring circuit, need to have a name")
+		}
+		circuit, name, pName, err := core.NewCircuitFromConfig(log, cp, *circuitCfg)
 		if err != nil {
 			return fmt.Errorf("failed configuring circuit: %w", err)
 		}

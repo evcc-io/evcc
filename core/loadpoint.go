@@ -274,10 +274,6 @@ func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		if lp.circuit, err = cp.Circuit(lp.CircuitRef); err != nil {
 			return nil, err
 		}
-		// in case of vmeter is present for the circuit, register there
-		if vm := cp.VMeter(lp.CircuitRef); vm != nil {
-			vm.AddConsumer(lp)
-		}
 	}
 
 	return lp, nil
@@ -898,7 +894,7 @@ func (lp *Loadpoint) MaxPhasesCurrent() (float64, error) {
 
 	// adjust actual current for vehicles like Zoe where it remains below target
 	if lp.chargeCurrents != nil {
-		return lp.chargeCurrents[0], nil
+		return math.Max(lp.chargeCurrents[0], math.Max(lp.chargeCurrents[1], lp.chargeCurrents[2])), nil
 	}
 
 	return lp.chargeCurrent, nil

@@ -80,15 +80,7 @@ func NewCircuit(limit float64, p *Circuit, l *util.Logger) *Circuit {
 }
 
 // NewCircuitFromConfig creates circuit from config
-func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) (cc *Circuit, name string, parentName string, e error) {
-	var circuitCfg = new(CircuitConfig)
-
-	if err := util.DecodeOther(other, circuitCfg); err != nil {
-		return nil, "", "", err
-	}
-	if circuitCfg.Name == "" {
-		return nil, "", "", fmt.Errorf("circuit name must not be empty")
-	}
+func NewCircuitFromConfig(log *util.Logger, cp configProvider, circuitCfg CircuitConfig) (cc *Circuit, name string, parentName string, e error) {
 
 	var parentCircuit *Circuit
 	var err error
