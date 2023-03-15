@@ -644,7 +644,8 @@ func (site *Site) update(lp Updater) {
 		}
 
 		if err == nil {
-			autoCharge = rate.Price <= site.GetAutoChargeCostLimit()
+			limit := site.GetAutoChargeCostLimit()
+			autoCharge = limit != 0 && rate.Price <= limit
 		} else {
 			site.log.ERROR.Println("tariff:", err)
 		}
