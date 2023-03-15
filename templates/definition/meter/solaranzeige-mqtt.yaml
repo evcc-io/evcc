@@ -1,4 +1,12 @@
-meters:
+template: solaranzeige
+products:
+  - brand: Solaranzeige
+    description:
+      generic: Solaranzeige
+params:
+  - preset: mqtt
+render: |
+  {{ include "mqtt" . }}
   - name: pv
     type: custom
     power: # Leistung (W)
@@ -11,7 +19,3 @@ meters:
       source: mqtt
       topic: solaranzeige/box1/einspeisung_bezug
       scale: -1
-     
-mqtt:
-broker: ip:1883
-      
