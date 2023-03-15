@@ -23,15 +23,15 @@ type Circuit struct {
 	uiChan chan<- util.Param
 
 	maxCurrent    float64           // max allowed current
-	ParentCircuit *Circuit          // parent circuit reference, used to determine current limits from hierarchy
-	PhaseCurrents api.PhaseCurrents // meter to determine phase current
+	parentCircuit *Circuit          // parent circuit reference, used to determine current limits from hierarchy
+	phaseCurrents api.PhaseCurrents // meter to determine phase current
 }
 
 // GetCurrent determines current in use. Implements consumer interface
 func (circuit *Circuit) MaxPhasesCurrent() (float64, error) {
 	var current float64
 
-	i1, i2, i3, err := circuit.PhaseCurrents.Currents()
+	i1, i2, i3, err := circuit.phaseCurrents.Currents()
 	if err != nil {
 		return 0, fmt.Errorf("failed getting meter currents: %w", err)
 	}
@@ -62,59 +62,30 @@ func (circuit *Circuit) GetRemainingCurrent() float64 {
 		circuit.publish("overload", false)
 	}
 	// check parent circuit, return lowest
-	if circuit.ParentCircuit != nil {
-		curAvailable = math.Min(curAvailable, circuit.ParentCircuit.GetRemainingCurrent())
+	if circuit.parentCircuit != nil {
+		curAvailable = math.Min(curAvailable, circuit.parentCircuit.GetRemainingCurrent())
 	}
 	circuit.log.DEBUG.Printf("circuit using %.1fA, %.1fA available", current, curAvailable)
 	return curAvailable
 }
 
 // NewCircuit a circuit with defaults
-func NewCircuit(limit float64, p *Circuit, l *util.Logger) *Circuit {
+func NewCircuit(limit float64, p *Circuit, pc api.PhaseCurrents, l *util.Logger) *Circuit {
 	circuit := &Circuit{
 		log:           l,
 		maxCurrent:    limit,
-		ParentCircuit: p,
+		parentCircuit: p,
+		phaseCurrents: pc,
 	}
 	return circuit
-}
-
-// NewCircuitFromConfig creates circuit from config
-func NewCircuitFromConfig(log *util.Logger, cp configProvider, circuitCfg CircuitConfig) (cc *Circuit, name string, parentName string, e error) {
-
-	var parentCircuit *Circuit
-	var err error
-	if circuitCfg.ParentRef != "" {
-		parentCircuit, err = cp.Circuit(circuitCfg.ParentRef)
-		if err != nil {
-			return nil, "", "", fmt.Errorf("failed to set parent circuit %s: %w", circuitCfg.ParentRef, err)
-		}
-	}
-
-	cc = NewCircuit(circuitCfg.MaxCurrent, parentCircuit, log)
-	var phaseCurrents *api.PhaseCurrents
-	if circuitCfg.MeterRef != "" {
-		mt, err := cp.Meter(circuitCfg.MeterRef)
-		if err != nil {
-			return nil, "", "", fmt.Errorf("failed to set meter %s: %w", circuitCfg.MeterRef, err)
-		}
-		if pm, ok := mt.(api.PhaseCurrents); ok {
-			phaseCurrents = &pm
-		} else {
-			return nil, "", "", fmt.Errorf("circuit needs meter with phase current support: %s", circuitCfg.MeterRef)
-		}
-		cc.PhaseCurrents = *phaseCurrents
-	}
-
-	return cc, circuitCfg.Name, circuitCfg.ParentRef, nil
 }
 
 // DumpConfig dumps the current circuit
 func (circuit *Circuit) DumpConfig(indent int, maxIndent int) string {
 
 	var parentLimit float64
-	if circuit.ParentCircuit != nil {
-		parentLimit = circuit.ParentCircuit.maxCurrent
+	if circuit.parentCircuit != nil {
+		parentLimit = circuit.parentCircuit.maxCurrent
 	}
 	return fmt.Sprintf("%s maxCurrent %.1fA (parent: %.1fA)",
 		strings.Repeat(" ", indent),

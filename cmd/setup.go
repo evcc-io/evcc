@@ -349,19 +349,40 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 		if circuitCfg.Name == "" {
 			return fmt.Errorf("failed configuring circuit, need to have a name")
 		}
-		circuit, name, pName, err := core.NewCircuitFromConfig(log, cp, *circuitCfg)
-		if err != nil {
+
+		var parentCircuit *core.Circuit
+		var err error
+		if circuitCfg.ParentRef != "" {
+			parentCircuit, err = cp.Circuit(circuitCfg.ParentRef)
+			if err != nil {
+				return fmt.Errorf("failed to set parent circuit %s: %w", circuitCfg.ParentRef, err)
+			}
+		}
+		var phaseCurrents api.PhaseCurrents
+		if circuitCfg.MeterRef != "" {
+			mt, err := cp.Meter(circuitCfg.MeterRef)
+			if err != nil {
+				return fmt.Errorf("failed to set meter %s: %w", circuitCfg.MeterRef, err)
+			}
+			if pm, ok := mt.(api.PhaseCurrents); ok {
+				phaseCurrents = pm
+			} else {
+				return fmt.Errorf("circuit needs meter with phase current support: %s", circuitCfg.MeterRef)
+			}
+
+		} else {
+			cp.vMeters[circuitCfg.Name] = core.NewVMeter(circuitCfg.Name)
+			phaseCurrents = cp.VMeter(circuitCfg.Name)
+		}
+		circuit := core.NewCircuit(circuitCfg.MaxCurrent, parentCircuit, phaseCurrents, log)
+		if circuit == nil {
 			return fmt.Errorf("failed configuring circuit: %w", err)
 		}
-		cp.circuits[name] = circuit
+		cp.circuits[circuitCfg.Name] = circuit
 		// check circuit has meter. if not, add vmeter
-		if circuit.PhaseCurrents == nil {
-			cp.vMeters[name] = core.NewVMeter(name)
-			circuit.PhaseCurrents = cp.VMeter(name)
-		}
 		// check if it has a parent circuit. If so, check there is a vmeter for this circuit name and add this circuit as consumer
-		if circuit.ParentCircuit != nil {
-			if vm := cp.VMeter(pName); vm != nil {
+		if circuitCfg.ParentRef != "" {
+			if vm := cp.VMeter(circuitCfg.ParentRef); vm != nil {
 				vm.AddConsumer(circuit)
 			}
 		}
