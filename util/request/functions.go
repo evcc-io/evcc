@@ -36,20 +36,20 @@ func NewStatusError(resp *http.Response) StatusError {
 }
 
 func (e StatusError) Error() string {
-	return fmt.Sprintf("unexpected status: %d", e.resp.StatusCode)
+	return fmt.Sprintf("unexpected status: %d (%s)", e.resp.StatusCode, http.StatusText(e.resp.StatusCode))
 }
 
-// Response returns the respose with the unexpected error
+// Response returns the response with the unexpected error
 func (e StatusError) Response() *http.Response {
 	return e.resp
 }
 
-// StatusCode returns the respose's status code
+// StatusCode returns the response's status code
 func (e StatusError) StatusCode() int {
 	return e.resp.StatusCode
 }
 
-// HasStatus returns true if the respose's status code matches any of the given codes
+// HasStatus returns true if the response's status code matches any of the given codes
 func (e StatusError) HasStatus(codes ...int) bool {
 	for _, code := range codes {
 		if e.resp.StatusCode == code {
