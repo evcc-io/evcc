@@ -190,6 +190,7 @@ targetChargeWaitForVehicle = "Target charge ready. Waiting for vehicle…"
 unknown = ""
 vehicleTargetReached = "Vehicle limit {soc}% reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
+guard = "Starting in {remaining}…"
 
 [notifications]
 dismissAll = "Dismiss all"

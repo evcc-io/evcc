@@ -109,6 +109,8 @@ export default {
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
+		guardAction: String,
+		guardRemainingInterpolated: Number,
 		vehicles: Array,
 	},
 	emits: [

@@ -197,12 +197,15 @@ export default {
 		phaseRemaining: Number,
 		pvRemaining: Number,
 		pvAction: String,
+		guardRemaining: Number,
+		guardAction: String,
 	},
 	data() {
 		return {
 			tickerHandler: null,
 			phaseRemainingInterpolated: this.phaseRemaining,
 			pvRemainingInterpolated: this.pvRemaining,
+			guardRemainingInterpolated: this.guardRemaining,
 			chargeDurationInterpolated: this.chargeDuration,
 			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
 		};
@@ -237,6 +240,9 @@ export default {
 		pvRemaining() {
 			this.pvRemainingInterpolated = this.pvRemaining;
 		},
+		guardRemaining() {
+			this.guardRemainingInterpolated = this.guardRemaining;
+		},
 		chargeDuration() {
 			this.chargeDurationInterpolated = this.chargeDuration;
 		},
@@ -257,6 +263,9 @@ export default {
 			}
 			if (this.pvRemainingInterpolated > 0) {
 				this.pvRemainingInterpolated--;
+			}
+			if (this.guardRemainingInterpolated > 0) {
+				this.guardRemainingInterpolated--;
 			}
 			if (this.chargeDurationInterpolated > 0 && this.charging) {
 				this.chargeDurationInterpolated++;

@@ -21,6 +21,8 @@ export default {
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
+		guardAction: String,
+		guardRemainingInterpolated: Number,
 		targetChargeDisabled: Boolean,
 	},
 	computed: {
@@ -34,6 +36,9 @@ export default {
 			return (
 				this.pvRemainingInterpolated > 0 && ["enable", "disable"].includes(this.pvAction)
 			);
+		},
+		guardTimerActive() {
+			return this.guardRemainingInterpolated > 0 && this.guardAction === "enable";
 		},
 		message: function () {
 			const t = (key, data) => {
@@ -90,6 +95,12 @@ export default {
 
 			if (this.charging) {
 				return t("charging");
+			}
+
+			if (this.guardTimerActive) {
+				return t("guard", {
+					remaining: this.fmtShortDuration(this.guardRemainingInterpolated, true),
+				});
 			}
 
 			return t("connected");
