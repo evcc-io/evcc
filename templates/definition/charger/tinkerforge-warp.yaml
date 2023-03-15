@@ -21,36 +21,10 @@ params:
     help:
       de: Firmware v2 installiert
       en: Firmware v2 installed
-  - name: host
-    help:
-      de: IP Adresse oder der Hostname des MQTT Brokers
-      en: IP address or hostname of the MQTT broker
-  - name: port
-    default: 1883
-    help:
-      de: MQTT Broker Port
-      en: MQTT broker port
-  - name: user
-    advanced: true
-  - name: password
-    advanced: true
+  - preset: mqtt
   - name: topic
     default: warp
-  - name: timeout
-    default: 30s
-    help:
-      de: Akzeptiere keine Daten die älter sind als dieser Wert
-      en: Don't accept values older than this value
 render: |
   type: {{ if eq .fw2 "true" -}} warp-fw2 {{ else -}} warp {{ end }}
-  broker: {{ .host }}:{{ .port }}
-  {{- if .user }}
-  user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
-  password: '{{ .password }}'
-  {{- end }}
+  {{ include "mqtt" . }}
   topic: {{ .topic }}
-  {{- if ne .timeout "30s" }}
-  timeout: {{ .timeout }}
-  {{- end }}

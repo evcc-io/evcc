@@ -70,13 +70,6 @@ params:
       en: Network interface
     advanced: true
     example: eth0
-  - name: topic
-    description:
-      de: Topic
-      en: Topic
-    help:
-      de: Topic (ohne / am Anfang)
-      en: Topic (omit leading /)
   - name: user
     description:
       de: Benutzerkonto
@@ -372,6 +365,34 @@ presets:
         example: 04E6B78921BBA0
       - name: timeout
         default: 10m
+
+  mqtt:
+    params:
+      - name: host
+        help:
+          de: IP Adresse oder der Hostname des MQTT Brokers
+          en: IP address or hostname of the MQTT broker
+      - name: port
+        default: 1883
+        help:
+          de: MQTT Broker Port
+          en: MQTT broker port
+      - name: user
+        advanced: true
+      - name: password
+        advanced: true
+      - name: topic
+        description:
+          de: Topic
+          en: Topic
+        help:
+          de: Topic (ohne / am Anfang)
+          en: Topic (omit leading /)
+      - name: timeout
+        default: 30s
+        help:
+          de: Akzeptiere keine Daten die älter sind als dieser Wert
+          en: Don't accept values older than this value
 
 modbus:
   interfaces:
