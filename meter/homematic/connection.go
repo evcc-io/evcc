@@ -146,7 +146,7 @@ func (c *Connection) GridTotalEnergy() (float64, error) {
 	return res.Value.CCUFloat, err
 }
 
-// ParseHmError checks on Homematic CCU error codes
+// parseError checks on Homematic CCU error codes
 // Refer to page 30 of https://homematic-ip.com/sites/default/files/downloads/HM_XmlRpc_API.pdf
 func parseError(res MethodResponse) error {
 	var faultCode int64
