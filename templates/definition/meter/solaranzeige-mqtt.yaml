@@ -6,16 +6,13 @@ products:
 params:
   - preset: mqtt
 render: |
-  {{ include "mqtt" . }}
-  - name: pv
-    type: custom
-    power: # Leistung (W)
-      source: mqtt
-      topic: solaranzeige/box1/pv_leistung
-
-  - name: grid
-    type: custom
-    power: # Leistung (W)
-      source: mqtt
-      topic: solaranzeige/box1/einspeisung_bezug
-      scale: -1
+  type: custom
+  power:
+    {{ include "mqtt" . | indent 2 }}
+  {{- if eq .usage "grid" }}
+    topic: {{ .topic }}/box1/pv_leistung
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    topic: {{ .topic }}/box1/einspeisung_bezug
+    scale: -1
+  {{- end }}
