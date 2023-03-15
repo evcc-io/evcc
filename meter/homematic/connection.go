@@ -94,7 +94,7 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 		return hmr, err
 	}
 
-	return hmr, ParseHmError(hmr)
+	return hmr, parseError(hmr)
 }
 
 // Initialze CCU methods via system.listMethods call
