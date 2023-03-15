@@ -153,17 +153,17 @@ func ParseHmError(res MethodResponse) error {
 	var faultString string
 
 	faultCode = 0
-	for i := 0; i < len(res.Fault); i++ {
-		if res.Fault[i].Name == "faultCode" {
-			faultCode = res.Fault[i].Value.CCUInt
+	for _, f := range res.Fault {
+		if f.Name == "faultCode" {
+			faultCode = f.Value.CCUInt
 		}
-		if res.Fault[i].Name == "faultString" {
-			faultString = res.Fault[i].Value.CCUString
+		if f.Name == "faultString" {
+			faultString = f.Value.CCUString
 		}
 	}
 
 	if faultCode != 0 {
-		return fmt.Errorf("CCU error: %s (faultcode %v)", faultString, faultCode)
+		return fmt.Errorf("%s (%v)", faultString, faultCode)
 	}
 
 	return nil
