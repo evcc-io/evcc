@@ -339,6 +339,8 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 	cp.circuits = make(map[string]*core.Circuit)
 	cp.vMeters = make(map[string]*core.VMeter)
 
+	siteMeterUsed := false
+
 	for id, cfg := range conf.Circuits {
 		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
 		var circuitCfg = new(core.CircuitConfig)
@@ -348,6 +350,10 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 		}
 		if circuitCfg.Name == "" {
 			return fmt.Errorf("failed configuring circuit, need to have a name")
+		}
+
+		if slices.Contains(maps.Keys(cp.circuits), circuitCfg.Name) {
+			return fmt.Errorf("failed to create circuit, name already used: %s", circuitCfg.Name)
 		}
 
 		var parentCircuit *core.Circuit
@@ -360,10 +366,27 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 		}
 		var phaseCurrents api.PhaseCurrents
 		if circuitCfg.MeterRef != "" {
-			mt, err := cp.Meter(circuitCfg.MeterRef)
-			if err != nil {
-				return fmt.Errorf("failed to set meter %s: %w", circuitCfg.MeterRef, err)
+			// check is site meter, to bypass duplicate use check
+			site := core.NewSite()
+			if err := util.DecodeOther(conf.Site, &site); err != nil {
+				return fmt.Errorf("failed checking site config to get grid meter: %w", err)
 			}
+			var mt api.Meter
+			if circuitCfg.MeterRef == site.Meters.GridMeterRef && !siteMeterUsed {
+				// use grid meter
+				if slices.Contains(maps.Keys(cp.meters), circuitCfg.MeterRef) {
+					mt = cp.meters[circuitCfg.MeterRef]
+					siteMeterUsed = true
+				} else {
+					return fmt.Errorf("failed to set meter for circuit, unknown meter: %s", circuitCfg.MeterRef)
+				}
+			} else {
+				// other meter
+				if mt, err = cp.Meter(circuitCfg.MeterRef); err != nil {
+					return fmt.Errorf("failed to set meter for circuit: %s: %w", circuitCfg.MeterRef, err)
+				}
+			}
+
 			if pm, ok := mt.(api.PhaseCurrents); ok {
 				phaseCurrents = pm
 			} else {
