@@ -4,15 +4,19 @@ products:
     description:
       generic: Solaranzeige
 params:
+  - name: usage
+    choice: ["grid", "pv"]
   - preset: mqtt
+  - name: topic
+    default: solaranzeige/box1
 render: |
   type: custom
   power:
-    {{ include "mqtt" . | indent 2 }}
-  {{- if eq .usage "grid" }}
-    topic: {{ .topic }}/box1/pv_leistung
-  {{- end }}
-  {{- if eq .usage "pv" }}
-    topic: {{ .topic }}/box1/einspeisung_bezug
+    {{- include "mqtt" . | indent 2 }}
+    {{- if eq .usage "grid" }}
+    topic: {{ .topic }}/pv_leistung
+    {{- end }}
+    {{- if eq .usage "pv" }}
+    topic: {{ .topic }}/einspeisung_bezug
     scale: -1
-  {{- end }}
+    {{- end }}
