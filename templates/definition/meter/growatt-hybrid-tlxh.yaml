@@ -1,0 +1,98 @@
+template: growatt-hybrid-tlxh
+products:
+  - brand: Growatt
+    description:
+      generic: TL-X(H) Hybrid Inverter
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3041 # Total forward power
+        type: input
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3043 # Total reverse power
+        type: input
+        decode: uint32
+      scale: -0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3069 # Total energy to user
+      type: input
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3001 # PV total power
+      type: input
+      decode: uint32
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3053 # PV energy total
+      type: input
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3178 # Discharge power
+        type: input
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3180 # Pcharge1 Charge power
+        type: input
+        decode: uint32
+      scale: -0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3171 # SOC
+      type: input
+      decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3127 # Total discharge energy
+      type: input
+      decode: uint32
+    scale: 0.1
+  {{- end }}

@@ -32,12 +32,16 @@ const (
 	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
 )
 
+// TODO support multiple connectors
+// Since ocpp-go interfaces at charge point level, we need to manage multiple connector separately
+
 type CP struct {
 	mu   sync.Mutex
 	log  *util.Logger
 	once sync.Once
 
-	id string
+	id        string
+	connector int
 
 	connectC, statusC chan struct{}
 	updated           time.Time
@@ -51,10 +55,11 @@ type CP struct {
 	txnId    int
 }
 
-func NewChargePoint(log *util.Logger, id string, timeout time.Duration) *CP {
+func NewChargePoint(log *util.Logger, id string, connector int, timeout time.Duration) *CP {
 	return &CP{
 		log:          log,
 		id:           id,
+		connector:    connector,
 		connectC:     make(chan struct{}),
 		statusC:      make(chan struct{}),
 		measurements: make(map[string]types.SampledValue),

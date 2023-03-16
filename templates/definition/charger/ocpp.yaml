@@ -2,21 +2,21 @@ template: ocpp
 products:
   - description:
       de: OCPP 1.6J kompatible Wallbox mit Smart Charging Profil
-      en: OCPP 1.6J compatible charger with smart charging profile
+      en: OCPP 1.6J compatible charger with Smart Charging Profile
 group: generic
 requirements:
   description:
     de: |
       Bei OCPP verbindet sich die Wallbox (Client) zu evcc (Server).
       Die Wallbox muss daher evcc via Hostname (funktionierende DNS-Auflösung erforderlich!) oder über die IP-Adresse auf Port 8887 erreichen können.
-      Standardmäßig wird die erste eingehende Verbindung mit einer beliebigen Ladepunkt-Kennung verwendet.
+      Standardmäßig wird die erste eingehende Verbindung mit einer beliebigen Ladepunktkennung verwendet.
       Um mehrere Ladepunkte eindeutig zuordnen zu können müssen die jeweilige Stationskennung (`stationid: `) und Anschlussnummer (`connector: `) hinterlegt werden.
       Gegebenenfalls benötigt der Ladepunkt eine vorkonfigurierte (virtuelle) Token-ID/RFID-Kennung (`idtag: `) mit der die Ladevorgänge ohne Authentifizierung gestartet werden können.
       Für Zählermesswerte sollte in der Wallbox ein kurzes Zeitintervall konfiguriert werden.
 
       Voraussetzungen:
-      * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallbox-Konfiguration entfernen
-      * Backend-URL (Central System) in der Wallbox-Konfiguration: `ws://<evcc-IP-Adresse>:8887/`
+      * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallboxkonfiguration entfernen
+      * Backend-URL (Central System) in der Wallboxkonfiguration: `ws://<evcc-IP-Adresse>:8887/`
       * Protokoll: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// o.ä.
       * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
       * Verbindung über das lokale Netzwerk
@@ -25,8 +25,8 @@ requirements:
       The charger needs to be able to reach evcc via the host name (functioning DNS resolution required!) or via the IP address on port 8887.
       By default, the first incoming connection with any station identifier is used.
       In order to be able to clearly assign several charging points, the respective station identifier (`stationid: `) and connector number (`connector: `) must be configured.
-      The charger may need a preconfigured (virtual) token ID/RFID identifier (`idtag: `) with which the charging sessions can be started without authorization.
-      If the charger supports sending metering values try to adjust the interval to a short timespan.
+      The charger may need a pre-configured (virtual) token ID/RFID identifier (`idtag: `) with which the charging sessions can be started without authorization.
+      If the charger supports sending metering values try to adjust the interval to a short time span.
 
       Requirements:
       * If necessary, remove previously configured OCPP profiles (e.g. used for a different backend connection) in the charger configuration
@@ -35,38 +35,33 @@ requirements:
       * No encryption, no authentication, no password
       * Local network connection
 params:
-  - name: stationid
-    type: string
+  - preset: ocpp
+  - name: getconfiguration
     advanced: true
+    type: bool
+    default: true
+    description:
+      de: GetConfiguration benutzen
+      en: Use GetConfiguration request
     help:
-      en: The chargers unique station id (or chargepoint id)
-      de: Die Stations-ID der Wallbox (oder des Ladepunkts)
-    example: EVB-P12354
-  - name: connector
-    default: 1
-    type: number
+      de: Deaktivierung kann bei einigen Chargern hilfreich sein
+      en: Deactivating can help with certain chargers
+  - name: bootnotification
     advanced: true
+    type: bool
+    default: false
+    description:
+      de: BootNotification benutzen
+      en: Use BootNotification request
     help:
-      en: Connector number, usually 1 for first connector.
-      de: Verwendeter Ladepunkt, normalerweise 1 für den ersten Anschluss.
-  - name: idtag
-    type: string
-    advanced: true
-    help:
-      en: Token-ID returned to the charger for authorisation of charging sessions
-      de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
-    example: 04E6B78921BBA0
-  - name: timeout
-    default: 10m
+      de: Aktivierung kann bei einigen Chargern hilfreich sein
+      en: Activating can help with certain chargers
 render: |
   type: ocpp
-  {{- if ne .stationid "" }}
-  stationid: {{ .stationid }}
+  {{ include "ocpp" . }}
+  {{- if ne .getconfiguration "true" }}
+  getconfiguration: {{ .getconfiguration }}
   {{- end }}
-  {{- if ne .connector "1"}}
-  connector: {{ .connector }}
+  {{- if ne .bootnotification "false" }}
+  bootnotification: {{ .bootnotification }}
   {{- end }}
-  {{- if ne .idtag "" }}
-  idtag: {{ .idtag }}
-  {{- end }}
-  timeout: {{ .timeout }}

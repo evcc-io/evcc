@@ -16,6 +16,7 @@
   "Elli",
   "Ensto",
   "Etrel",
+  "EVBox",
   "Fronius",
   "Garo",
   "go-eCharger",
@@ -47,6 +48,7 @@
   "Ubitricity",
   "Vestel",
   "Wallbe",
+  "wallbox",
   "Walther Werke",
   "Webasto",
   "Zaptec"
@@ -81,6 +83,7 @@
   "Janitza",
   "Kostal",
   "LG",
+  "my-PV",
   "myStrom",
   "OpenEMS",
   "Orno",
@@ -94,6 +97,8 @@
   "Shelly",
   "Siemens",
   "SMA",
+  "SofarSolar",
+  "Solaranzeige",
   "SolarEdge",
   "SolarMax",
   "Solarwatt",
@@ -105,7 +110,8 @@
   "TQ",
   "VARTA",
   "Victron",
-  "Volkszähler"
+  "Volkszähler",
+  "ZCS Azzurro"
  ],
  "PVBattery": [
   "Alpha ESS",
@@ -130,6 +136,8 @@
   "Senergy",
   "Shelly",
   "SMA",
+  "SofarSolar",
+  "Solaranzeige",
   "SolarEdge",
   "SolarMax",
   "Solarwatt",
@@ -139,7 +147,8 @@
   "Tesla",
   "TP-Link",
   "VARTA",
-  "Victron"
+  "Victron",
+  "ZCS Azzurro"
  ],
  "Vehicles": [
   "Aiways",
