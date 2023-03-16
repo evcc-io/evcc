@@ -28,6 +28,9 @@ func (lp *Loadpoint) setPhases(phases int) {
 		lp.phases = phases
 		lp.Unlock()
 
+		// publish updated phase configuration
+		lp.publish(phasesEnabled, lp.phases)
+
 		// reset timer to disabled state
 		lp.resetPhaseTimer()
 

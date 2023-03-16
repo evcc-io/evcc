@@ -1,0 +1,97 @@
+template: sofarsolar
+products:
+  - brand: SofarSolar
+    description:
+      generic: Inverter / Hybrid Inverter
+  - brand: ZCS Azzurro
+    description:
+      generic: Inverter / Hybrid Inverter
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    comset: 8N1
+    port: 502
+    id: 1
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x0212 # Feed in/out power
+      type: holding
+      decode: int32
+    scale: -0.01
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x0207 # Grid A Current
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x0209 # Grid B Current
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x020B # Grid C Current
+      type: holding
+      decode: int16
+    scale: 0.01
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x0220 # Total energy buy from grid
+      type: holding
+      decode: uint32
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x0215 # The power of generation
+      type: holding
+      decode: uint16
+    scale: 0.01
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x021C # Total generation
+      type: holding
+      decode: uint32
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x020F # Battery Charge/Discharge current
+      type: holding
+      decode: int16
+    scale: 0.01
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x0210 # The residual capacity of battery
+      type: holding
+      decode: uint16
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}

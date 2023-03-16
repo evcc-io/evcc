@@ -42,15 +42,17 @@ func init() {
 // NewOCPPFromConfig creates a OCPP charger from generic config
 func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		StationId     string
-		IdTag         string
-		Connector     int
-		Meter         interface{} // TODO deprecated
-		Quirks        bool
-		MeterInterval time.Duration
-		MeterValues   string
-		InitialReset  interface{} // TODO deprecated
-		Timeout       time.Duration
+		StationId        string
+		IdTag            string
+		Connector        int
+		MeterInterval    time.Duration
+		MeterValues      string
+		Timeout          time.Duration
+		BootNotification *bool
+		GetConfiguration *bool
+		Meter            interface{} // TODO deprecated
+		Quirks           interface{} // TODO deprecated
+		InitialReset     interface{} // TODO deprecated
 	}{
 		Connector: 1,
 		IdTag:     defaultIdTag,
@@ -70,7 +72,10 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	// 	return nil, fmt.Errorf("unknown configuration option detected for reset: %s", cc.InitialReset)
 	// }
 
-	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.Quirks, cc.Timeout)
+	boot := cc.BootNotification != nil && *cc.BootNotification
+	noConfig := cc.GetConfiguration != nil && !*cc.GetConfiguration
+
+	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, boot, noConfig, cc.Timeout)
 	if err != nil {
 		return c, err
 	}
@@ -101,14 +106,14 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, quirks bool, timeout time.Duration) (*OCPP, error) {
+func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, boot, noConfig bool, timeout time.Duration) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
 		unit = id
 	}
 	log := util.NewLogger(unit)
 
-	cp := ocpp.NewChargePoint(log, id, timeout)
+	cp := ocpp.NewChargePoint(log, id, connector, timeout)
 	if err := ocpp.Instance().Register(id, cp); err != nil {
 		return nil, err
 	}
@@ -130,7 +135,9 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	}
 
 	// see who's there
-	// ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
+	if boot {
+		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
+	}
 
 	var (
 		rc                  = make(chan error, 1)
@@ -145,8 +152,8 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	}
 	_ = keys
 
-	// quirks mode disables GetConfiguration
-	if quirks {
+	// noConfig mode disables GetConfiguration
+	if noConfig {
 		c.meterValuesSample = meterValues
 		if meterInterval == 0 {
 			meterInterval = 10 * time.Second
@@ -230,7 +237,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	if c.hasMeasurement("Power.Active.Import") || c.hasMeasurement("Energy.Active.Import.Register") {
 		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
 
-		if !quirks && meterSampleInterval > meterInterval && meterInterval > 0 {
+		if !noConfig && meterSampleInterval > meterInterval && meterInterval > 0 {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 				return nil, err
 			}

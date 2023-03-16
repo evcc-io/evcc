@@ -63,20 +63,13 @@ params:
     type: number
   - name: interface
     description:
-      de: Netzwerkinterface
+      de: Netzwerkschnittstelle
       en: Network interface
     help:
-      de: Netzwerkinterface
+      de: Netzwerkschnittstelle
       en: Network interface
     advanced: true
     example: eth0
-  - name: topic
-    description:
-      de: Topic
-      en: Topic
-    help:
-      de: Topic (ohne / am Anfang)
-      en: Topic (omit leading /)
   - name: user
     description:
       de: Benutzerkonto
@@ -348,6 +341,58 @@ presets:
           en: Integrated device (no vehicle connection)
       - name: icon
         advanced: true
+  ocpp:
+    params:
+      - name: stationid
+        type: string
+        help:
+          en: The chargers unique station id (or chargepoint id)
+          de: Die Stations-ID der Wallbox (oder des Ladepunkts)
+        advanced: true
+        example: EVB-P12354
+      - name: connector
+        help:
+          de: Ladepunkt, normalerweise 1 für den ersten Anschluss.
+          en: Connector number, usually 1 for first connector.
+        advanced: true
+        default: 1
+      - name: idtag
+        type: string
+        help:
+          en: Token-ID returned to the charger for authorisation of charging sessions
+          de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
+        advanced: true
+        example: 04E6B78921BBA0
+      - name: timeout
+        default: 10m
+
+  mqtt:
+    params:
+      - name: host
+        help:
+          de: IP Adresse oder der Hostname des MQTT Brokers
+          en: IP address or hostname of the MQTT broker
+      - name: port
+        default: 1883
+        help:
+          de: MQTT Broker Port
+          en: MQTT broker port
+      - name: user
+        advanced: true
+      - name: password
+        advanced: true
+      - name: topic
+        description:
+          de: Topic
+          en: Topic
+        help:
+          de: Topic (ohne / am Anfang)
+          en: Topic (omit leading /)
+      - name: timeout
+        default: 30s
+        help:
+          de: Akzeptiere keine Daten die älter sind als dieser Wert
+          en: Don't accept values older than this value
 
 modbus:
   interfaces:
