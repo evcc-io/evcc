@@ -82,11 +82,11 @@ release::
 
 docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(VERSION) .
 
 publish-testing::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(VERSION) --push .
 
 publish-nightly::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
