@@ -101,10 +101,22 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 
 	s := binary.BigEndian.Uint16(b)
 
+	// Ausgabe Charger Status von Reg 1601 (OCPP State)
 	currentTime := time.Now()
     fmt.Printf("[VERSI ] INFO ")
     fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
     fmt.Printf(" Charging State: %d \n", s)
+
+	// Ausgabe EVSE State von Reg 1599 (FW2.122.4)
+	b, err := wb.conn.ReadHoldingRegisters(1599, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	fmt.Printf("[VERSI ] INFO ")
+    fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+    fmt.Printf(" Charging State: %d \n", binary.BigEndian.Uint16(b))
+
 
 	switch s {
 	case 1: // Available
