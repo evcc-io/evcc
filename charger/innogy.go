@@ -35,11 +35,9 @@ const (
 	igyRegManufacturer = 100 // Input
 	igyRegFirmware     = 200 // Input
 	igyRegStatus       = 275 // Input
-)
 
-var (
-	igyRegMaxCurrents = []uint16{1012, 1014, 1016} // max current per phase
-	igyRegCurrents    = []uint16{1006, 1008, 1010} // current readings per phase
+	igyRegMaxCurrents = 1012 // max current per phase
+	igyRegCurrents    = 1006 // current readings per phase
 )
 
 // https://www.innogy-emobility.com/content/dam/revu-global/emobility-solutions/neue-website-feb-2021/downloadcenter/digital-services/eld_instman_modbustcpde.pdf
@@ -112,7 +110,7 @@ func (wb *Innogy) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Innogy) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(igyRegMaxCurrents[0], 2)
+	b, err := wb.conn.ReadHoldingRegisters(igyRegMaxCurrents, 2)
 	if err != nil {
 		return false, err
 	}
@@ -131,16 +129,15 @@ func (wb *Innogy) Enable(enable bool) error {
 }
 
 func (wb *Innogy) setCurrent(current float64) error {
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
+	f := math.Float32bits(float32(current))
 
-	for _, reg := range igyRegMaxCurrents {
-		if _, err := wb.conn.WriteMultipleRegisters(reg, 2, b); err != nil {
-			return err
-		}
-	}
+	b := make([]byte, 3*4)
+	binary.BigEndian.PutUint32(b, f)
+	binary.BigEndian.PutUint32(b[4:], f)
+	binary.BigEndian.PutUint32(b[8:], f)
 
-	return nil
+	_, err := wb.conn.WriteMultipleRegisters(igyRegMaxCurrents, 3*2, b)
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -164,29 +161,19 @@ func (wb *Innogy) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-var _ api.Meter = (*Innogy)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (wb *Innogy) CurrentPower() (float64, error) {
-	l1, l2, l3, err := wb.Currents()
-	return 230 * (l1 + l2 + l3), err
-}
-
 var _ api.PhaseCurrents = (*Innogy)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Innogy) Currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range igyRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		currents = append(currents, float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
+	b, err := wb.conn.ReadInputRegisters(igyRegCurrents, 3*2)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))),
+		float64(math.Float32frombits(binary.BigEndian.Uint32(b[4:]))),
+		float64(math.Float32frombits(binary.BigEndian.Uint32(b[8:]))),
+		nil
 }
 
 var _ api.Diagnosis = (*Innogy)(nil)
