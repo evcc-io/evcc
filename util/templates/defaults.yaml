@@ -363,8 +363,15 @@ presets:
           de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
         advanced: true
         example: 04E6B78921BBA0
+      - name: connecttimeout
+        description:
+          de: Zeitlimit für Registrierung des Ladepunktes
+          en: Timeout for initial connection
+        advanced: true
+        type: duration
+        default: 5m
       - name: timeout
-        default: 10m
+        default: 2m
 
   mqtt:
     params:

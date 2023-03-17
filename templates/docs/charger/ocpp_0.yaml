@@ -26,6 +26,7 @@ render:
       stationid: EVB-P12354 # Die Stations-ID der Wallbox (oder des Ladepunkts) # Optional
       connector: 1 # Ladepunkt, normalerweise 1 für den ersten Anschluss. # Optional
       idtag: '04E6B78921BBA0' # Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird # Optional
-      timeout: 10m # Optional
+      connecttimeout: 5m # Optional
+      timeout: 2m # Optional
       getconfiguration: true # Deaktivierung kann bei einigen Chargern hilfreich sein # Optional
       bootnotification: false # Aktivierung kann bei einigen Chargern hilfreich sein # Optional

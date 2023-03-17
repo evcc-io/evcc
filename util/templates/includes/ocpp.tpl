@@ -9,5 +9,6 @@ connector: {{ .connector }}
 {{- if ne .idtag "" }}
 idtag: {{ .idtag }}
 {{- end }}
+connecttimeout: {{ .connecttimeout }}
 timeout: {{ .timeout }}
 {{- end }}

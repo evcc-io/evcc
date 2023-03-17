@@ -44,11 +44,12 @@ type CP struct {
 	connector int
 
 	connectC, statusC chan struct{}
-	updated           time.Time
 	status            *core.StatusNotificationRequest
 
-	timeout      time.Duration
+	updated      time.Time
 	meterUpdated time.Time
+	timeout      time.Duration
+
 	measurements map[string]types.SampledValue
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
@@ -184,7 +185,7 @@ func (cp *CP) CurrentPower() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+	if cp.txnId != 0 && cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -202,7 +203,7 @@ func (cp *CP) TotalEnergy() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+	if cp.txnId != 0 && cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -235,7 +236,7 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+	if cp.txnId != 0 && cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
