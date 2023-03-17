@@ -169,17 +169,6 @@ func (v *Twc3) Currents() (float64, float64, float64, error) {
 	return res.CurrentAA, res.CurrentBA, res.CurrentCA, err
 }
 
-var _ api.Meter = (*Twc3)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (v *Twc3) CurrentPower() (float64, error) {
-	res, err := v.vitalsG()
-	if res.ContactorClosed {
-		return (res.CurrentAA + res.CurrentBA + res.CurrentCA) * res.GridV, err
-	}
-	return 0, err
-}
-
 var _ api.PhaseVoltages = (*Twc3)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
