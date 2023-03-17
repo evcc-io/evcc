@@ -21,7 +21,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-
+	"time"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -100,6 +100,11 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	}
 
 	s := binary.BigEndian.Uint16(b)
+
+	currentTime := time.Now()
+    fmt.Printf("[VERSI ] INFO ")
+    fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+    fmt.Printf(" Charging State: %d \n", s)
 
 	switch s {
 	case 1: // Available
