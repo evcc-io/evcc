@@ -9,6 +9,7 @@ import (
 	coredb "github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/mock"
 	serverdb "github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,6 +38,7 @@ func TestSession(t *testing.T) {
 	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
 
 	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
 		clock:       clock,
 		db:          db,
 		chargeMeter: cm,
