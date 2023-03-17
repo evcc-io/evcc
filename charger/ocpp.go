@@ -47,6 +47,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Connector        int
 		MeterInterval    time.Duration
 		MeterValues      string
+		ConnectTimeout   time.Duration
 		Timeout          time.Duration
 		BootNotification *bool
 		GetConfiguration *bool
@@ -54,9 +55,10 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Quirks           interface{} // TODO deprecated
 		InitialReset     interface{} // TODO deprecated
 	}{
-		Connector: 1,
-		IdTag:     defaultIdTag,
-		Timeout:   time.Minute,
+		Connector:      1,
+		IdTag:          defaultIdTag,
+		ConnectTimeout: 2 * time.Minute,
+		Timeout:        2 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -75,7 +77,10 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	boot := cc.BootNotification != nil && *cc.BootNotification
 	noConfig := cc.GetConfiguration != nil && !*cc.GetConfiguration
 
-	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, boot, noConfig, cc.Timeout)
+	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
+		cc.MeterValues, cc.MeterInterval,
+		boot, noConfig,
+		cc.ConnectTimeout, cc.Timeout)
 	if err != nil {
 		return c, err
 	}
@@ -106,7 +111,11 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, boot, noConfig bool, timeout time.Duration) (*OCPP, error) {
+func NewOCPP(id string, connector int, idtag string,
+	meterValues string, meterInterval time.Duration,
+	boot, noConfig bool,
+	connectTimeout, timeout time.Duration,
+) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
 		unit = id
@@ -126,10 +135,10 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		timeout:   timeout,
 	}
 
-	c.log.DEBUG.Printf("waiting for chargepoint: %v", timeout)
+	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
 
 	select {
-	case <-time.After(timeout):
+	case <-time.After(connectTimeout):
 		return nil, api.ErrTimeout
 	case <-cp.HasConnected():
 	}
