@@ -9,4 +9,8 @@ type EVResponse struct {
 		Value     int64 `json:",string"`
 		Timestamp int64
 	}
+	Odometer struct {
+		Value     int64 `json:",string"`
+		Timestamp int64
+	} `json:"odo"`
 }
