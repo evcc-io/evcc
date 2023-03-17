@@ -68,6 +68,19 @@ func (v *API) Range(vin string) (EVResponse, error) {
 	return res, err
 }
 
+// Odometer implements the /odo response
+func (v *API) Odometer(vin string) (EVResponse, error) {
+	var res EVResponse
+
+	uri := fmt.Sprintf("%s/vehicles/%s/resources/odo", v.BaseURI(), vin)
+	err := v.GetJSON(uri, &res)
+	if err != nil {
+		res, err = v.allinOne(vin)
+	}
+
+	return res, err
+}
+
 // allinOne is a 'fallback' to gather both metrics range and soc.
 // It is used in case for any reason the single endpoints return an error - which happend in the past.
 func (v *API) allinOne(vin string) (EVResponse, error) {
@@ -76,7 +89,7 @@ func (v *API) allinOne(vin string) (EVResponse, error) {
 	uri := fmt.Sprintf("%s/vehicles/%s/containers/electricvehicle", v.BaseURI(), vin)
 	err := v.GetJSON(uri, &res)
 
-	evres := EVResponse{}
+	var evres EVResponse
 
 	for _, r := range res {
 		if r.Soc.Timestamp != 0 {
@@ -86,6 +99,10 @@ func (v *API) allinOne(vin string) (EVResponse, error) {
 
 		if r.RangeElectric.Timestamp != 0 {
 			evres.RangeElectric = r.RangeElectric
+		}
+
+		if r.Odometer.Timestamp != 0 {
+			evres.Odometer = r.Odometer
 		}
 	}
 
