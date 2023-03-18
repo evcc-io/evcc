@@ -62,10 +62,3 @@ func (c *MyStrom) Enable(enable bool) error {
 	onoff := map[bool]int{false: 0, true: 1}
 	return c.conn.Request(fmt.Sprintf("relay?state=%d", onoff[enable]))
 }
-
-// MaxCurrent implements the api.Charger interface
-func (c *MyStrom) MaxCurrent(current int64) error {
-	return nil
-}
-
-var _ api.Meter = (*MyStrom)(nil)
