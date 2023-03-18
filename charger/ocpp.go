@@ -310,7 +310,8 @@ func (c *OCPP) Enable(enable bool) error {
 			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
 		})
 	} else {
-		txn, err := c.cp.TransactionID()
+		var txn int
+		txn, err = c.cp.TransactionID()
 		if err != nil {
 			return err
 		}
