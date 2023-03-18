@@ -141,7 +141,6 @@ func NewOCPP(id string, connector int, idtag string,
 	case <-time.After(connectTimeout):
 		return nil, api.ErrTimeout
 	case <-cp.HasConnected():
-		println("connected")
 	}
 
 	// see who's there
@@ -185,7 +184,6 @@ func NewOCPP(id string, connector int, idtag string,
 
 				for _, opt := range resp.ConfigurationKey {
 					if opt.Value == nil {
-						c.log.ERROR.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], "nil")
 						continue
 					}
 
