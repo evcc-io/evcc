@@ -86,10 +86,12 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currentsG = c.currents
 	}
 
+	// removed to avoid sending phases when updating currents
 	var phasesS func(int) error
-	if c.phaseSwitching {
-		phasesS = c.phases1p3p
-	}
+	// if c.phaseSwitching {
+	// 	phasesS = c.phases1p3p
+	// }
+	_ = c.phases1p3p
 
 	return decorateOCPP(c, powerG, totalEnergyG, currentsG, phasesS), nil
 }
@@ -349,7 +351,6 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 	}
 
 	current = math.Trunc(10*current) / 10
-	c.log.TRACE.Printf("update period with phases: %d, current: %f", phases, current)
 
 	err := c.setChargingProfile(c.connector, getTxChargingProfile(current, phases))
 	if err != nil {
@@ -361,9 +362,11 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 
 func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
 	period := types.NewChargingSchedulePeriod(0, current)
-	if phases != 0 {
-		period.NumberPhases = &phases
-	}
+
+	// TODO add phases support
+	// if phases != 0 {
+	// 	period.NumberPhases = &phases
+	// }
 
 	return &types.ChargingProfile{
 		ChargingProfileId:      1,
