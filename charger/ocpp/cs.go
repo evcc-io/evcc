@@ -28,7 +28,7 @@ func (cs *CS) Register(id string, cp *CP) error {
 
 	// trigger unknown chargepoint connected
 	if unknown, ok := cs.cps[id]; ok && unknown == nil {
-		cp.Connect()
+		cp.connect(true)
 	}
 
 	cs.cps[id] = cp
@@ -65,7 +65,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 			cs.cps[chargePoint.ID()] = cp
 			delete(cs.cps, "")
 
-			cp.Connect()
+			cp.connect(true)
 
 			return
 		}
@@ -80,7 +80,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 		// trigger initial connection if chargepoint is already setup
 		if cp != nil {
-			cp.Connect()
+			cp.connect(true)
 		}
 	}
 }
@@ -89,10 +89,17 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	if _, err := cs.chargepointByID(chargePoint.ID()); err != nil {
+	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
 		cs.log.ERROR.Printf("chargepoint disconnected: %v", err)
 	} else {
 		cs.log.DEBUG.Printf("chargepoint disconnected: %s", chargePoint.ID())
+
+		if cp == nil {
+			// remove unknown chargepoint
+			delete(cs.cps, chargePoint.ID())
+		} else {
+			cp.connect(false)
+		}
 	}
 }
 

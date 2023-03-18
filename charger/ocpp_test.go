@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/charger/ocpp"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -15,7 +16,7 @@ import (
 const (
 	ocppTestUrl            = "ws://localhost:8887"
 	ocppTestConnectTimeout = 10 * time.Second
-	ocppTestTimeout        = 5 * time.Second
+	ocppTestTimeout        = 3 * time.Second
 	ocppTestConnector      = 1
 )
 
@@ -91,5 +92,15 @@ func (suite *ocppTestSuite) TestConnect() {
 	c, err := NewOCPP("test", ocppTestConnector, "", "", 0, false, false, ocppTestConnectTimeout, ocppTestTimeout)
 	suite.NoError(err)
 
-	_ = c
+	if err != nil {
+		return
+	}
+
+	clock := clock.NewMock()
+	c.cp.TestClock(clock)
+
+	clock.Add(ocppTestTimeout)
+
+	_, err = c.Status()
+	suite.NoError(err)
 }

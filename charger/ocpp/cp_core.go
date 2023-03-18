@@ -76,14 +76,7 @@ func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransfe
 	return res, nil
 }
 
-func (cp *CP) update() {
-	cp.mu.Lock()
-	cp.updated = time.Now()
-	cp.mu.Unlock()
-}
-
 func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
-	cp.update()
 	res := &core.HeartbeatConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
 	}

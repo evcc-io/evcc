@@ -18,8 +18,6 @@ import (
 	"github.com/samber/lo"
 )
 
-const statusTimeout = 30 * time.Second
-
 // OCPP charger implementation
 type OCPP struct {
 	log               *util.Logger
@@ -51,9 +49,6 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Timeout          time.Duration
 		BootNotification *bool
 		GetConfiguration *bool
-		Meter            interface{} // TODO deprecated
-		Quirks           interface{} // TODO deprecated
-		InitialReset     interface{} // TODO deprecated
 	}{
 		Connector:      1,
 		IdTag:          defaultIdTag,
@@ -64,15 +59,6 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-
-	// switch cc.InitialReset {
-	// case
-	// 	"",
-	// 	core.ResetTypeSoft,
-	// 	core.ResetTypeHard:
-	// default:
-	// 	return nil, fmt.Errorf("unknown configuration option detected for reset: %s", cc.InitialReset)
-	// }
 
 	boot := cc.BootNotification != nil && *cc.BootNotification
 	noConfig := cc.GetConfiguration != nil && !*cc.GetConfiguration
@@ -258,22 +244,9 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
-	// TODO deprecate
-	// if initialReset != "" {
-	// 	t := core.ResetTypeSoft
-	// 	if initialReset == core.ResetTypeHard {
-	// 		t = core.ResetTypeHard
-	// 	}
-
-	// 	ocpp.Instance().TriggerResetRequest(cp.ID(), t)
-	// }
-
-	// request initial status
-	_ = cp.Initialized(statusTimeout)
-
 	// TODO: check for running transaction
 
-	return c, nil
+	return c, cp.Initialized()
 }
 
 // hasMeasurement checks if meterValuesSample contains given measurement
@@ -316,7 +289,8 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	return c.cp.TransactionID() > 0, nil
+	txn, err := c.cp.TransactionID()
+	return txn > 0, err
 }
 
 // Enable implements the api.Charger interface
@@ -336,13 +310,18 @@ func (c *OCPP) Enable(enable bool) error {
 			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
 		})
 	} else {
+		txn, err := c.cp.TransactionID()
+		if err != nil {
+			return err
+		}
+
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
 			}
 
 			rc <- err
-		}, c.cp.TransactionID())
+		}, txn)
 	}
 
 	return c.wait(err, rc)

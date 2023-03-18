@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -36,17 +37,18 @@ const (
 // Since ocpp-go interfaces at charge point level, we need to manage multiple connector separately
 
 type CP struct {
-	mu   sync.Mutex
-	log  *util.Logger
-	once sync.Once
+	mu    sync.Mutex
+	once  sync.Once
+	clock clock.Clock // mockable time
+	log   *util.Logger
 
 	id        string
 	connector int
 
 	connectC, statusC chan struct{}
+	connected         bool
 	status            *core.StatusNotificationRequest
 
-	updated      time.Time
 	meterUpdated time.Time
 	timeout      time.Duration
 
@@ -58,6 +60,7 @@ type CP struct {
 
 func NewChargePoint(log *util.Logger, id string, connector int, timeout time.Duration) *CP {
 	return &CP{
+		clock:        clock.New(),
 		log:          log,
 		id:           id,
 		connector:    connector,
@@ -66,6 +69,10 @@ func NewChargePoint(log *util.Logger, id string, connector int, timeout time.Dur
 		measurements: make(map[string]types.SampledValue),
 		timeout:      timeout,
 	}
+}
+
+func (cp *CP) TestClock(clock clock.Clock) {
+	cp.clock = clock
 }
 
 func (cp *CP) ID() string {
@@ -86,24 +93,26 @@ func (cp *CP) RegisterID(id string) {
 	cp.id = id
 }
 
-func (cp *CP) Connect() {
+func (cp *CP) connect(connect bool) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	cp.once.Do(func() {
-		close(cp.connectC)
-	})
+	cp.connected = connect
+
+	if connect {
+		cp.once.Do(func() {
+			close(cp.connectC)
+		})
+	}
 }
 
 func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
 }
 
-func (cp *CP) Initialized(timeout time.Duration) bool {
-	cp.log.DEBUG.Printf("waiting for chargepoint status: %v", timeout)
-
+func (cp *CP) Initialized() error {
 	// trigger status
-	time.AfterFunc(5*time.Second, func() {
+	time.AfterFunc(cp.timeout/2, func() {
 		select {
 		case <-cp.statusC:
 			return
@@ -115,32 +124,22 @@ func (cp *CP) Initialized(timeout time.Duration) bool {
 	// wait for status
 	select {
 	case <-cp.statusC:
-		cp.update()
-		return true
-	case <-time.After(timeout):
-		return false
-	}
-}
-
-// WatchDog triggers meter values messages if older than timeout.
-// Must be wrapped in a goroutine.
-func (cp *CP) WatchDog(timeout time.Duration) {
-	for ; true; <-time.NewTicker(timeout).C {
-		cp.mu.Lock()
-		update := cp.txnId != 0 && time.Since(cp.meterUpdated) > timeout
-		cp.mu.Unlock()
-
-		if update {
-			Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
-		}
+		return nil
+	case <-time.After(cp.timeout):
+		return api.ErrTimeout
 	}
 }
 
 // TransactionID returns the current transaction id
-func (cp *CP) TransactionID() int {
+func (cp *CP) TransactionID() (int, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
-	return cp.txnId
+
+	if !cp.connected {
+		return 0, api.ErrTimeout
+	}
+
+	return cp.txnId, nil
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {
@@ -149,7 +148,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	if time.Since(cp.updated) > cp.timeout {
+	if !cp.connected {
 		return res, api.ErrTimeout
 	}
 
@@ -179,13 +178,31 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	return res, nil
 }
 
+// WatchDog triggers meter values messages if older than timeout.
+// Must be wrapped in a goroutine.
+func (cp *CP) WatchDog(timeout time.Duration) {
+	for ; true; <-time.NewTicker(timeout).C {
+		cp.mu.Lock()
+		update := cp.txnId != 0 && cp.clock.Since(cp.meterUpdated) > timeout
+		cp.mu.Unlock()
+
+		if update {
+			Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
+		}
+	}
+}
+
 var _ api.Meter = (*CP)(nil)
 
 func (cp *CP) CurrentPower() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if cp.txnId != 0 && cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+	if !cp.connected {
+		return 0, api.ErrTimeout
+	}
+
+	if cp.txnId != 0 && cp.timeout > 0 && cp.clock.Since(cp.meterUpdated) > cp.timeout {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -203,7 +220,11 @@ func (cp *CP) TotalEnergy() (float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if cp.txnId != 0 && cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+	if !cp.connected {
+		return 0, api.ErrTimeout
+	}
+
+	if cp.txnId != 0 && cp.timeout > 0 && cp.clock.Since(cp.meterUpdated) > cp.timeout {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -236,7 +257,11 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	if cp.txnId != 0 && cp.timeout > 0 && time.Since(cp.meterUpdated) > cp.timeout {
+	if !cp.connected {
+		return 0, 0, 0, api.ErrTimeout
+	}
+
+	if cp.txnId != 0 && cp.timeout > 0 && cp.clock.Since(cp.meterUpdated) > cp.timeout {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
