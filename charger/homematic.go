@@ -59,12 +59,6 @@ func (c *CCU) Enable(enable bool) error {
 	return c.conn.Enable(enable)
 }
 
-// MaxCurrent implements the api.Charger interface
-func (c *CCU) MaxCurrent(current int64) error {
-	return nil
-}
-
-var _ api.Meter = (*CCU)(nil)
 var _ api.MeterEnergy = (*CCU)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
