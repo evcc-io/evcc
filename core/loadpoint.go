@@ -65,8 +65,6 @@ type PollConfig struct {
 type SocConfig struct {
 	Poll     PollConfig `mapstructure:"poll"`
 	Estimate *bool      `mapstructure:"estimate"`
-	Min_     int        `mapstructure:"min"`    // TODO deprecated
-	Target_  int        `mapstructure:"target"` // TODO deprecated
 	min      int        // Default minimum Soc, guarded by mutex
 	target   int        // Default target Soc, guarded by mutex
 }
@@ -209,14 +207,6 @@ func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	if lp.MaxCurrent < lp.MinCurrent {
 		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
-	}
-
-	if lp.Soc.Min_ != 0 {
-		lp.log.WARN.Println("Configuring soc.min at loadpoint is deprecated and must be applied per vehicle")
-	}
-
-	if lp.Soc.Target_ != 0 {
-		lp.log.WARN.Println("Configuring soc.target at loadpoint is deprecated and must be applied per vehicle")
 	}
 
 	// store defaults
@@ -610,13 +600,18 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// settings
 	if lp.settings != nil {
 		if v, err := lp.settings.Time(targetTime); err == nil && !v.IsZero() && v.After(lp.clock.Now()) {
+			fmt.Println("setTargetTime", v)
 			lp.setTargetTime(v)
 		}
 		if v, err := lp.settings.Float(targetEnergy); err == nil {
+			fmt.Println("setTargetEnergy", v)
 			lp.setTargetEnergy(v)
 		}
 		if v, err := lp.settings.Int(targetSoc); err == nil {
-			lp.setTargetSoc(int(v))
+			fmt.Println("setTargetSoc", v)
+			vi := int(v)
+			lp.setTargetSoc(vi)
+			lp.onDisconnect.TargetSoc = &vi
 		}
 	}
 }
