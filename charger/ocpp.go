@@ -141,6 +141,7 @@ func NewOCPP(id string, connector int, idtag string,
 	case <-time.After(connectTimeout):
 		return nil, api.ErrTimeout
 	case <-cp.HasConnected():
+		println("connected")
 	}
 
 	// see who's there
