@@ -12,6 +12,7 @@ params:
 render: |
   type: custom
   power:
+    source: mqtt
     {{- include "mqtt" . | indent 2 }}
     {{- if eq .usage "grid" }}
     topic: {{ .topic }}/pv_leistung
