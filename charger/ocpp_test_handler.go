@@ -36,6 +36,7 @@ func (handler *ChargePointHandler) OnGetConfiguration(request *core.GetConfigura
 	fmt.Printf("%T %+v\n", request, request)
 	one := "1"
 	return core.NewGetConfigurationConfirmation([]core.ConfigurationKey{
+		{Key: "AuthorizationKey"},
 		{Key: "NumberOfConnectors", Value: &one},
 		{Key: "ChargeProfileMaxStackLevel", Value: &one},
 		{Key: "ChargingScheduleMaxPeriods", Value: &one},
