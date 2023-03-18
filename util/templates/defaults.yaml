@@ -346,8 +346,8 @@ presets:
       - name: stationid
         type: string
         help:
-          en: The chargers unique station id (or chargepoint id)
-          de: Die Stations-ID der Wallbox (oder des Ladepunkts)
+          en: The chargers unique station id (or chargepoint id). This id must also be part of the charger OCPP configuration ws://<evcc-address>:8887/<stationid>.
+          de: Die Stations-ID der Wallbox (oder des Ladepunkts). Diese ID muss auch Teil der Wallboxkonfiguration für OCPP sein ws://<evcc-address>:8887/<stationid>.
         advanced: true
         example: EVB-P12354
       - name: connector
@@ -457,7 +457,3 @@ devicegroups:
   scooter:
     de: Scooter
     en: Scooter
-  # TODO check if this is really used?
-  sockets:
-    de: Steckdosen
-    en: Power sockets

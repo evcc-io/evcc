@@ -57,7 +57,6 @@ params:
       de: Aktivierung kann bei einigen Chargern hilfreich sein
       en: Activating can help with certain chargers
 render: |
-  type: ocpp
   {{ include "ocpp" . }}
   {{- if ne .getconfiguration "true" }}
   getconfiguration: {{ .getconfiguration }}
