@@ -53,6 +53,13 @@ func (c *switchSocket) MaxCurrent(current int64) error {
 	return nil
 }
 
+var _ api.ChargerEx = (*switchSocket)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (c *switchSocket) MaxCurrentMillis(current float64) error {
+	return nil
+}
+
 var _ api.Meter = (*switchSocket)(nil)
 
 // CurrentPower calculates a generic switches power
