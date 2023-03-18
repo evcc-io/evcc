@@ -120,11 +120,9 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	lp.vehicle = vehicle
 
-	// reset minSoc and targetSoc before change
+	// reset soc and energy before change
 	lp.setMinSoc(0)
 	lp.setTargetSoc(100)
-
-	// reset target energy
 	lp.setTargetEnergy(0)
 
 	// unblock api

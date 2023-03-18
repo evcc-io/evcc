@@ -129,7 +129,7 @@ func NewSiteFromConfig(
 		lp.planner = planner.New(lp.log, tariff)
 
 		// no need for a serverdb.Instance since settings are all in memory
-		lp.settings = settings.WithPrefix(fmt.Sprintf("loadpoint.%d.", i))
+		lp.settings = settings.WithPrefix(fmt.Sprintf("loadpoint.%d", i))
 
 		if serverdb.Instance != nil {
 			var err error
