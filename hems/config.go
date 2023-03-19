@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/ocpp"
 	"github.com/evcc-io/evcc/hems/semp"
 	"github.com/evcc-io/evcc/server"
@@ -16,7 +16,7 @@ type HEMS interface {
 }
 
 // NewFromConfig creates new HEMS from config
-func NewFromConfig(typ string, other map[string]interface{}, site *core.Site, httpd *server.HTTPd) (HEMS, error) {
+func NewFromConfig(typ string, other map[string]interface{}, site site.API, httpd *server.HTTPd) (HEMS, error) {
 	switch strings.ToLower(typ) {
 	case "sma", "shm", "semp":
 		return semp.New(other, site, httpd)

@@ -84,7 +84,7 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 	return requiredDuration, plan, err
 }
 
-// plannerActive checks if charging plan is active
+// plannerActive checks if the charging plan has an active slot
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
 		lp.setPlanActive(active)
@@ -110,7 +110,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower,
 		planner.Duration(plan).Round(time.Second), planner.AverageCost(plan))
 
-	// sort plan by time
+	// log plan
 	for _, slot := range plan {
 		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
 	}

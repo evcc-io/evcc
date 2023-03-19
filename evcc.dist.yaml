@@ -108,8 +108,11 @@ site:
     battery:
       - battery # list of battery meters
     aux: aux # auxiliary meters for adjusting grid operating point
+  residualPower: # additional household usage margin
   prioritySoc: # give home battery priority up to this soc (empty to disable)
   bufferSoc: # ignore home battery discharge above soc (empty to disable)
+  maxGridSupplyWhileBatteryCharging: # ignore battery charging if AC consumption is above this value
+  smartCostLimit: # set cost limit for automatic charging in PV mode
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
