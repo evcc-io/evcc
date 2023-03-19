@@ -27,7 +27,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // Updater abstracts the Loadpoint implementation for testing
 type Updater interface {
 	loadpoint.API
-	Update(availablePower float64, batteryBuffered bool)
+	Update(availablePower float64, autoCharge, batteryBuffered bool)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -60,6 +60,7 @@ type Site struct {
 	PrioritySoc                       float64      `mapstructure:"prioritySoc"`                       // prefer battery up to this Soc
 	BufferSoc                         float64      `mapstructure:"bufferSoc"`                         // ignore battery above this Soc
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -633,8 +634,25 @@ func (site *Site) update(lp Updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
+	var autoCharge bool
+	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
+		rates, err := tariff.Rates()
+
+		var rate api.Rate
+		if err == nil {
+			rate, err = rates.Current(time.Now())
+		}
+
+		if err == nil {
+			limit := site.GetSmartCostLimit()
+			autoCharge = limit != 0 && rate.Price <= limit
+		} else {
+			site.log.ERROR.Println("tariff:", err)
+		}
+	}
+
 	if sitePower, batteryBuffered, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
-		lp.Update(sitePower, batteryBuffered)
+		lp.Update(sitePower, autoCharge, batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
@@ -664,6 +682,7 @@ func (site *Site) prepare() {
 	site.publish("bufferSoc", site.BufferSoc)
 	site.publish("prioritySoc", site.PrioritySoc)
 	site.publish("residualPower", site.ResidualPower)
+	site.publish("SmartCostLimit", site.SmartCostLimit)
 
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since())
