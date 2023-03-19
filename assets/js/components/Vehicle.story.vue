@@ -100,6 +100,9 @@ const hoursFromNow = function (hours) {
 				:pvRemainingInterpolated="155"
 			/>
 		</Variant>
+		<Variant title="guard timer">
+			<Vehicle v-bind="state" guardAction="enable" :guardRemainingInterpolated="123" />
+		</Variant>
 		<Variant title="vehicle switch">
 			<Vehicle
 				v-bind="state"

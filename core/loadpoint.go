@@ -39,6 +39,9 @@ const (
 	pvEnable  = "enable"
 	pvDisable = "disable"
 
+	guardTimer  = "guard"
+	guardEnable = "enable"
+
 	phaseTimer   = "phase"
 	phaseScale1p = "scale1p"
 	phaseScale3p = "scale3p"
@@ -562,6 +565,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(phasesActive, lp.activePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
+	lp.publishTimer(guardTimer, 0, timerInactive)
 
 	// charger features
 	for _, f := range []api.Feature{api.IntegratedDevice} {
@@ -652,9 +656,10 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	// set enabled/disabled
 	if enabled := chargeCurrent >= lp.GetMinCurrent(); enabled != lp.enabled {
 		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
-			lp.log.DEBUG.Printf("charger %s: contactor delay %v", status[enabled], remaining)
+			lp.publishTimer(guardTimer, lp.GuardDuration, guardEnable)
 			return nil
 		}
+		lp.elapseGuard()
 
 		// remote stop
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
@@ -877,9 +882,9 @@ func (lp *Loadpoint) elapsePVTimer() {
 	lp.log.DEBUG.Printf("pv timer elapse")
 
 	lp.pvTimer = elapsed
-	lp.guardUpdated = elapsed
-
 	lp.publishTimer(pvTimer, 0, timerInactive)
+
+	lp.elapseGuard()
 }
 
 // resetPVTimer resets the pv enable/disable timer to disabled state
@@ -1046,6 +1051,9 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 	timer := lp.pvTimer
 	if name == phaseTimer {
 		timer = lp.phaseTimer
+	}
+	if name == guardTimer {
+		timer = lp.guardUpdated
 	}
 
 	remaining := delay - lp.clock.Since(timer)
@@ -1398,6 +1406,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		// trigger message after variables are updated
 		lp.bus.Publish(evVehicleSoc, f)
+	}
+}
+
+func (lp *Loadpoint) elapseGuard() {
+	if lp.guardUpdated != elapsed {
+		lp.log.DEBUG.Print("charger: guard elapse")
+		lp.guardUpdated = elapsed
+		lp.publishTimer(guardTimer, 0, timerInactive)
 	}
 }
 
