@@ -1,3 +1,3 @@
-{{define "vehicle-language"}}
+{{ define "vehicle-language" }}
 language: {{ .language }}
-{{end}}
+{{- end }}

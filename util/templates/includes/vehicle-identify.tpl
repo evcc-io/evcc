@@ -1,4 +1,4 @@
-{{define "vehicle-identify"}}
+{{ define "vehicle-identify" }}
 {{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") (ne .priority "") }}
 onIdentify:
 {{- if (ne .mode "") }}
@@ -26,4 +26,4 @@ identifiers:
 - {{ . }}
 {{-   end }}
 {{- end }}
-{{end}}
+{{- end }}

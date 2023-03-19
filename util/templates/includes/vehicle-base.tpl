@@ -1,4 +1,4 @@
-{{define "vehicle-base"}}
+{{ define "vehicle-base" }}
 {{- if ne .title "" }}
 title: {{ .title }}
 {{- end }}
@@ -19,4 +19,4 @@ phases: {{ .phases }}
 {{- if ne .cache "" }}
 cache: {{ .cache }}
 {{- end }}
-{{end}}
+{{- end }}
