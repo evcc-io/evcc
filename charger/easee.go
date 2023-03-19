@@ -99,6 +99,15 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 		current: 6, // default current
 	}
 
+	// log timeout with DEBUG level
+	c.log.DEBUG.Printf("Current API.Timeout to %v", c.API.Timeout)
+
+	// log timeout with DEBUG level
+	c.log.DEBUG.Printf("Setting Client.Timeout to %v", timeout)
+
+	// Set the HTTP Client Timeout to <timeout>
+	c.Client.Timeout = timeout
+
 	ts, err := easee.TokenSource(log, user, password)
 	if err != nil {
 		return c, err
@@ -156,7 +165,7 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 
 		client.Start()
 
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		ctx, cancel := context.WithTimeout(context.Background(), c.Client.Timeout)
 		defer cancel()
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
