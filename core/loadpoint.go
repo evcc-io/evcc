@@ -659,9 +659,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			lp.publishTimer(guardTimer, lp.GuardDuration, guardEnable)
 			return nil
 		}
-		if lp.guardUpdated != elapsed {
-			lp.elapseGuard()
-		}
+		lp.elapseGuard()
 
 		// remote stop
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
@@ -1412,9 +1410,11 @@ func (lp *Loadpoint) publishSocAndRange() {
 }
 
 func (lp *Loadpoint) elapseGuard() {
-	lp.log.DEBUG.Print("charger: guard elapse")
-	lp.guardUpdated = elapsed
-	lp.publishTimer(guardTimer, 0, timerInactive)
+	if lp.guardUpdated != elapsed {
+		lp.log.DEBUG.Print("charger: guard elapse")
+		lp.guardUpdated = elapsed
+		lp.publishTimer(guardTimer, 0, timerInactive)
+	}
 }
 
 // addTask adds a single task to the queue
