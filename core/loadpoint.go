@@ -1412,7 +1412,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 }
 
 func (lp *Loadpoint) elapseGuard() {
-	lp.log.DEBUG.Printf("charger: contactor elapse")
+	lp.log.DEBUG.Print("charger: guard elapse")
 	lp.guardUpdated = elapsed
 	lp.publishTimer(guardTimer, 0, timerInactive)
 }
