@@ -1,0 +1,13 @@
+product:
+  brand: D-Parts
+  description: Em2Go
+render:
+  - default: |
+      type: template
+      template: em2go      
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 255
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
