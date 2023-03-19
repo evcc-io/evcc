@@ -112,7 +112,7 @@ site:
   prioritySoc: # give home battery priority up to this soc (empty to disable)
   bufferSoc: # ignore home battery discharge above soc (empty to disable)
   maxGridSupplyWhileBatteryCharging: # ignore battery charging if AC consumption is above this value
-  autoChargeCostLimit: # set cost limit for auto charging
+  smartCostLimit: # set cost limit for automatic charging in PV mode
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:

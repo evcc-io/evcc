@@ -77,20 +77,20 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
-// GetAutoChargeCostLimit returns the AutoChargeCostLimit
-func (site *Site) GetAutoChargeCostLimit() float64 {
+// GetSmartCostLimit returns the SmartCostLimit
+func (site *Site) GetSmartCostLimit() float64 {
 	site.Lock()
 	defer site.Unlock()
-	return site.AutoChargeCostLimit
+	return site.SmartCostLimit
 }
 
-// SetAutoChargeCostLimit sets the AutoChargeCostLimit
-func (site *Site) SetAutoChargeCostLimit(val float64) error {
+// SetSmartCostLimit sets the SmartCostLimit
+func (site *Site) SetSmartCostLimit(val float64) error {
 	site.Lock()
 	defer site.Unlock()
 
-	site.AutoChargeCostLimit = val
-	site.publish("autoChargeCostLimit", site.AutoChargeCostLimit)
+	site.SmartCostLimit = val
+	site.publish("smartCostLimit", site.SmartCostLimit)
 
 	return nil
 }

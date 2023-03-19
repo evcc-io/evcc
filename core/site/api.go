@@ -39,6 +39,6 @@ type API interface {
 
 	// GetTariff returns the respective tariff
 	GetTariff(string) api.Tariff
-	GetAutoChargeCostLimit() float64
-	SetAutoChargeCostLimit(float64) error
+	GetSmartCostLimit() float64
+	SetSmartCostLimit(float64) error
 }
