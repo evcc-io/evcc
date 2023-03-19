@@ -1,0 +1,12 @@
+template: em2go
+products:
+  - brand: D-Parts
+    description:
+      generic: Em2Go
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: em2go
+  {{- include "modbus" . }}

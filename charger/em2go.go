@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) 2019-2023 andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -25,8 +25,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
+
+// https://files2.elv.com/public/25/2522/252210/Internet/252210_modbus_tcp_register.pdf
 
 // Em2Go charger implementation
 type Em2Go struct {
@@ -35,6 +38,7 @@ type Em2Go struct {
 
 const (
 	em2GoRegStatus         = 0
+	em2GoRegCurrents       = 6
 	em2GoRegPower          = 12
 	em2GoRegEnergy         = 28
 	em2GoRegCurrent        = 32
@@ -45,11 +49,8 @@ const (
 	em2GoRegChargeCommand  = 95
 )
 
-var em2GoRegCurrents = []uint16{6, 8, 10}
-
 func init() {
 	registry.Add("em2go", NewEm2GoFromConfig)
-	registry.Add("menneckes-em2go", NewEm2GoFromConfig)
 }
 
 // NewEm2GoFromConfig creates a Mennekes Em2Go charger from generic config
@@ -74,9 +75,9 @@ func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
 		return nil, err
 	}
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, api.ErrSponsorRequired
-	// }
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	log := util.NewLogger("em2go")
 	conn.Logger(log.TRACE)
@@ -85,7 +86,9 @@ func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
 		conn: conn,
 	}
 
-	_, err = wb.conn.WriteSingleRegister(em2GoRegChargeMode, 1) // charge on command
+	// set charge on command
+	// b := make([]byte, 2)
+	// _, err = wb.conn.WriteMultipleRegisters(em2GoRegChargeMode, 1,b)
 
 	return wb, err
 }
@@ -123,12 +126,10 @@ func (wb *Em2Go) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Em2Go) Enable(enable bool) error {
-	u := uint16(2)
-	if enable {
-		u = 1
-	}
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, map[bool]uint16{true: 1, false: 2}[enable])
 
-	_, err := wb.conn.WriteSingleRegister(em2GoRegChargeCommand, u)
+	_, err := wb.conn.WriteMultipleRegisters(em2GoRegChargeCommand, 1, b)
 	return err
 }
 
@@ -141,7 +142,10 @@ var _ api.ChargerEx = (*Em2Go)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Em2Go) MaxCurrentMillis(current float64) error {
-	_, err := wb.conn.WriteSingleRegister(em2GoRegCurrent, uint16(10*current))
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(10*current))
+
+	_, err := wb.conn.WriteMultipleRegisters(em2GoRegCurrent, 1, b)
 	return err
 }
 
@@ -169,28 +173,25 @@ func (wb *Em2Go) TotalEnergy() (float64, error) {
 	return rs485.RTUUint32ToFloat64(b) / 10, nil
 }
 
-var _ api.MeterCurrent = (*Em2Go)(nil)
+var _ api.PhaseCurrents = (*Em2Go)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Em2Go) Currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range em2GoRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 1)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		currents = append(currents, float64(binary.BigEndian.Uint16(b))/10)
+	b, err := wb.conn.ReadHoldingRegisters(em2GoRegCurrents, 3)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return float64(binary.BigEndian.Uint16(b)) / 10,
+		float64(binary.BigEndian.Uint16(b[2:])) / 10,
+		float64(binary.BigEndian.Uint16(b[4:])) / 10, nil
 }
 
 var _ api.ChargeRater = (*Em2Go)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Em2Go) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(em2GoRegChargedEnergy, 2)
+	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
