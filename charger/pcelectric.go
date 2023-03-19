@@ -30,7 +30,7 @@ func init() {
 	registry.Add("pcelectric", NewPCElectricFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -50,7 +50,7 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 	if err == nil && wb.slaveIndex == 0 { // Nur Master hat den Zähler...leider
 		var res pcelectric.MeterInfo
 		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
-			return decoratePCE(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
+			return decoratePCE(wb, wb.totalEnergy, wb.currents), nil
 		}
 
 		wb.meter = ""
@@ -259,12 +259,6 @@ func (wb *PCElectric) MaxCurrent(current int64) error {
 	}
 
 	return err
-}
-
-// CurrentPower implements the api.Meter interface W
-func (wb *PCElectric) currentPower() (float64, error) {
-	l1, l2, l3, err := wb.currents()
-	return 230 * (l1 + l2 + l3), err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface kwh
