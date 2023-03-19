@@ -41,83 +41,152 @@
 						</div>
 						<form @submit.prevent="setTargetTime">
 							<div class="modal-body">
-								<div
-									class="form-group d-lg-flex align-items-baseline mb-2 justify-content-between"
-								>
-									<!-- eslint-disable vue/no-v-html -->
-									<label for="targetTimeLabel" class="mb-3 me-3">
-										<span v-if="socBasedCharging">
-											{{
-												$t("main.targetCharge.descriptionSoc", {
-													targetSoc,
-												})
-											}}
-										</span>
-										<span v-else>
-											{{
-												$t("main.targetCharge.descriptionEnergy", {
-													targetEnergy: targetEnergyFormatted,
-												})
-											}}
-										</span>
-									</label>
-									<!-- eslint-enable vue/no-v-html -->
-									<div class="d-flex justify-content-between date-selection">
-										<select v-model="selectedDay" class="form-select me-2">
-											<option
-												v-for="opt in dayOptions()"
-												:key="opt.value"
-												:value="opt.value"
+								<ul class="nav nav-tabs">
+									<li class="nav-item">
+										<a
+											class="nav-link"
+											:class="{ active: timeTabActive }"
+											href="#"
+											@click.prevent="showTimeTab"
+										>
+											Target time
+											<span class="badge rounded-pill bg-success"
+												>Fr. 7:30</span
 											>
-												{{ opt.name }}
-											</option>
-										</select>
-										<input
-											v-model="selectedTime"
-											type="time"
-											class="form-control ms-2 time-selection"
-											:step="60 * 5"
-											required
-										/>
+										</a>
+									</li>
+									<!--<li class="nav-item">
+										<a
+											class="nav-link"
+											:class="{ active: priceTabActive }"
+											href="#"
+											@click.prevent="showPriceTab"
+										>
+											Cheap energy
+											<span class="badge bg-secondary">&leq; 0,23ct</span>
+										</a>
+									</li>-->
+									<li class="nav-item">
+										<a
+											class="nav-link"
+											:class="{ active: priceTabActive }"
+											href="#"
+											@click.prevent="showPriceTab"
+										>
+											Green energy
+											<span class="badge bg-secondary">&leq; 750g</span>
+										</a>
+									</li>
+								</ul>
+
+								<div v-if="timeTabActive" class="mt-4">
+									<div
+										class="form-group d-lg-flex align-items-baseline mb-2 justify-content-between"
+									>
+										<!-- eslint-disable vue/no-v-html -->
+										<label for="targetTimeLabel" class="mb-3 me-3">
+											<span v-if="socBasedCharging">
+												{{
+													$t("main.targetCharge.descriptionSoc", {
+														targetSoc,
+													})
+												}}
+											</span>
+											<span v-else>
+												{{
+													$t("main.targetCharge.descriptionEnergy", {
+														targetEnergy: targetEnergyFormatted,
+													})
+												}}
+											</span>
+										</label>
+										<!-- eslint-enable vue/no-v-html -->
+										<div class="d-flex justify-content-between date-selection">
+											<select v-model="selectedDay" class="form-select me-2">
+												<option
+													v-for="opt in dayOptions()"
+													:key="opt.value"
+													:value="opt.value"
+												>
+													{{ opt.name }}
+												</option>
+											</select>
+											<input
+												v-model="selectedTime"
+												type="time"
+												class="form-control ms-2 time-selection"
+												:step="60 * 5"
+												required
+											/>
+										</div>
+									</div>
+									<p class="mb-0">
+										<span v-if="timeInThePast" class="text-danger">
+											{{ $t("main.targetCharge.targetIsInThePast") }}
+										</span>
+										<span
+											v-else-if="timeTooFarInTheFuture"
+											class="text-secondary"
+										>
+											{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
+										</span>
+										&nbsp;
+									</p>
+									<TargetChargePlan
+										v-if="targetChargePlanProps"
+										v-bind="targetChargePlanProps"
+									/>
+									<div class="d-flex justify-content-between mt-3">
+										<button
+											type="button"
+											class="btn btn-outline-secondary"
+											data-bs-dismiss="modal"
+											:disabled="!targetTime"
+											@click="removeTargetTime"
+										>
+											{{ $t("main.targetCharge.remove") }}
+										</button>
+										<button
+											type="submit"
+											class="btn btn-primary"
+											data-bs-dismiss="modal"
+											:disabled="timeInThePast"
+										>
+											<span v-if="targetTime">
+												{{ $t("main.targetCharge.update") }}
+											</span>
+											<span v-else>
+												{{ $t("main.targetCharge.activate") }}
+											</span>
+										</button>
 									</div>
 								</div>
-								<p class="mb-0">
-									<span v-if="timeInThePast" class="text-danger">
-										{{ $t("main.targetCharge.targetIsInThePast") }}
-									</span>
-									<span v-else-if="timeTooFarInTheFuture" class="text-secondary">
-										{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
-									</span>
-									&nbsp;
-								</p>
-								<TargetChargePlan
-									v-if="targetChargePlanProps"
-									v-bind="targetChargePlanProps"
-								/>
-							</div>
-							<div class="modal-footer d-flex justify-content-between">
-								<button
-									type="button"
-									class="btn btn-outline-secondary"
-									data-bs-dismiss="modal"
-									:disabled="!targetTime"
-									@click="removeTargetTime"
-								>
-									{{ $t("main.targetCharge.remove") }}
-								</button>
-								<button
-									type="submit"
-									class="btn btn-primary"
-									data-bs-dismiss="modal"
-									:disabled="timeInThePast"
-								>
-									<span v-if="targetTime">
-										{{ $t("main.targetCharge.update") }}
-									</span>
-									<span v-else>
-										{{ $t("main.targetCharge.activate") }}
-									</span>
-								</button>
+								<div v-else class="mt-4">
+									<div class="form-group d-md-flex align-items-baseline mb-2">
+										<label for="cheapPrice" class="mb-3 me-3">
+											Fast charge if the grid price is below
+										</label>
+										<div class="d-flex justify-content-between">
+											<div class="input-group mb-3">
+												<input
+													id="cheapPrice"
+													type="text"
+													class="form-control"
+													value="750"
+													:style="{ width: '70px' }"
+													aria-describedby="cheapPriceUnit"
+												/>
+												<span class="input-group-text" id="cheapPriceUnit"
+													>gCO2eq/kWh</span
+												>
+											</div>
+										</div>
+									</div>
+									<TargetChargePlan
+										v-if="targetChargePlanProps"
+										v-bind="targetChargePlanProps"
+									/>
+								</div>
 							</div>
 						</form>
 					</div>
@@ -162,9 +231,16 @@ export default {
 			tariff: {},
 			modal: null,
 			isModalVisible: false,
+			activeTab: "time",
 		};
 	},
 	computed: {
+		timeTabActive: function () {
+			return this.activeTab === "time";
+		},
+		priceTabActive: function () {
+			return this.activeTab === "price";
+		},
 		targetChargeEnabled: function () {
 			return this.targetTime;
 		},
@@ -196,6 +272,16 @@ export default {
 			const { rates } = this.tariff;
 			const { duration, unit, plan } = this.plan;
 			return rates ? { duration, rates, plan, unit, targetTime } : null;
+		},
+		tariffLowest: function () {
+			return this.tariff?.rates.reduce((res, slot) => {
+				return Math.min(res, slot.price);
+			}, Number.MAX_VALUE);
+		},
+		tariffHighest: function () {
+			return this.tariff?.rates.reduce((res, slot) => {
+				return Math.max(res, slot.price);
+			}, 0);
 		},
 	},
 	watch: {
@@ -332,6 +418,12 @@ export default {
 		openModal() {
 			this.modal.show();
 			this.$nextTick(this.initInputFields);
+		},
+		showTimeTab: function () {
+			this.activeTab = "time";
+		},
+		showPriceTab: function () {
+			this.activeTab = "price";
 		},
 	},
 };

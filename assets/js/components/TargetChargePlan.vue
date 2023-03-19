@@ -1,6 +1,20 @@
 <template>
 	<div class="plan pt-2">
 		<div class="details justify-content-between mb-2 d-flex justify-content-between">
+			<!--<div class="text-start">
+				<div class="label">{{ $t("main.targetChargePlan.chargeDuration") }}</div>
+				<div class="value text-primary">{{ planDuration }}</div>
+			</div>
+			<div class="text-end">
+				<div class="label">
+					<span v-if="activeSlot">{{ activeSlotName }}</span>
+					<span v-else-if="isCo2">{{ $t("main.targetChargePlan.co2Label") }}</span>
+					<span v-else>{{ $t("main.targetChargePlan.priceLabel") }}</span>
+				</div>
+				<div class="value text-primary">
+					{{ fmtAvgPrice }}
+				</div>
+			</div>-->
 			<div class="text-start">
 				<div class="label">{{ $t("main.targetChargePlan.chargeDuration") }}</div>
 				<div class="value text-primary">{{ planDuration }}</div>
@@ -22,7 +36,7 @@
 				:key="slot.start"
 				:data-index="index"
 				class="slot user-select-none"
-				:class="{ active: isActive(index), toLate: slot.toLate }"
+				:class="{ active: slot.price < 750 /*isActive(index), toLate: slot.toLate*/ }"
 				@touchstart="activeIndex = index"
 				@mouseenter="activeIndex = index"
 				@touchend="activeIndex = null"
