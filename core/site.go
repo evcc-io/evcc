@@ -682,7 +682,7 @@ func (site *Site) prepare() {
 	site.publish("bufferSoc", site.BufferSoc)
 	site.publish("prioritySoc", site.PrioritySoc)
 	site.publish("residualPower", site.ResidualPower)
-	site.publish("SmartCostLimit", site.SmartCostLimit)
+	site.publish("smartCostLimit", site.SmartCostLimit)
 
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since())
