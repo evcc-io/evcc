@@ -134,11 +134,11 @@ type Loadpoint struct {
 	vehicleIdentifier        string
 
 	charger          api.Charger
-	chargeTimer      api.ChargeTimer
-	chargeRater      api.ChargeRater
-	chargedAtStartup float64 // session energy at startup
+	chargeTimer      api.ChargeTimer // measures session duration
+	chargeRater      api.ChargeRater // measures session energy
+	chargedAtStartup float64         // session energy at startup
 
-	chargeMeter    api.Meter   // Charger usage meter
+	chargeMeter    api.Meter   // Separate charge meter
 	vehicle        api.Vehicle // Currently active vehicle
 	defaultVehicle api.Vehicle // Default vehicle (disables detection)
 	coordinator    coordinator.API
@@ -336,6 +336,12 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 
 		if mt, ok := charger.(api.Meter); ok {
 			lp.chargeMeter = mt
+		} else if mp, ok := charger.(wrapper.StatusWithCurrents); ok {
+			// if charger has phase currents but not power, use this wrapper
+			lp.chargeMeter = &wrapper.ChargePhaseMeter{
+				Voltage: Voltage,
+				Charger: mp,
+			}
 		} else {
 			mt := new(wrapper.ChargeMeter)
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
