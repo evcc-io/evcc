@@ -46,6 +46,9 @@ func (m *MQTT) encode(v interface{}) string {
 	case float64:
 		return fmt.Sprintf("%.5g", val)
 	case time.Time:
+		if val.IsZero() {
+			return ""
+		}
 		return strconv.FormatInt(val.Unix(), 10)
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
@@ -133,6 +136,8 @@ func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 	m.Handler.ListenSetter(topic+"/targetTime/set", func(payload string) {
 		if val, err := time.Parse(time.RFC3339, payload); err == nil {
 			_ = lp.SetTargetTime(val)
+		} else if string(payload) == "null" {
+			_ = lp.SetTargetTime(time.Time{})
 		}
 	})
 	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
