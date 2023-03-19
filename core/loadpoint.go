@@ -133,9 +133,10 @@ type Loadpoint struct {
 	vehicleDetectTicker      *clock.Ticker
 	vehicleIdentifier        string
 
-	charger     api.Charger
-	chargeTimer api.ChargeTimer
-	chargeRater api.ChargeRater
+	charger          api.Charger
+	chargeTimer      api.ChargeTimer
+	chargeRater      api.ChargeRater
+	chargedAtStartup float64 // session energy at startup
 
 	chargeMeter    api.Meter   // Charger usage meter
 	vehicle        api.Vehicle // Currently active vehicle
@@ -348,6 +349,11 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	// (https://github.com/evcc-io/evcc/issues/2469)
 	if rt, ok := charger.(api.ChargeRater); ok && integrated {
 		lp.chargeRater = rt
+
+		// when restarting in the middle of charging session, use this as negative offset
+		if f, err := rt.ChargedEnergy(); err == nil {
+			lp.chargedAtStartup = f
+		}
 	} else {
 		rt := wrapper.NewChargeRater(lp.log, lp.chargeMeter)
 		_ = lp.bus.Subscribe(evChargePower, rt.SetChargePower)
@@ -464,6 +470,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// energy and duration
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
+
+	// forget startup energy offset
+	lp.chargedAtStartup = 0
 
 	// remove charger vehicle id and stop potential detection
 	lp.setVehicleIdentifier("")
@@ -1283,7 +1292,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > 0 {
-			lp.setChargedEnergy(1e3 * f) // convert to Wh
+			lp.setChargedEnergy(1e3 * (f - lp.chargedAtStartup)) // convert to Wh
 		}
 	} else {
 		lp.log.ERROR.Printf("charge rater: %v", err)
