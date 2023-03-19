@@ -41,6 +41,10 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &Skoda{
 		embed: &cc.embed,
 	}

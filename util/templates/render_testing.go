@@ -51,7 +51,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 				} else {
 					values[ModbusKeyRS485TCPIP] = true
 				}
-				tmpl.ModbusValues(TemplateRenderModeInstance, values)
+				tmpl.ModbusValues(TemplateRenderModeUnitTest, values)
 			}
 
 			usages := tmpl.Usages()

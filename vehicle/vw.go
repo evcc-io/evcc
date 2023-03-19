@@ -40,6 +40,10 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &VW{
 		embed: &cc.embed,
 	}

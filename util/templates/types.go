@@ -198,14 +198,14 @@ type Param struct {
 	ID       int    `json:"-"` // device specific default for modbus ID
 }
 
-// return a default value or example value depending on the renderMode
+// DefaultValue returns a default or example value depending on the renderMode
 func (p *Param) DefaultValue(renderMode string) interface{} {
 	// return empty list to allow iterating over in template
 	if p.Type == TypeStringList {
 		return []string{}
 	}
 
-	if renderMode == TemplateRenderModeDocs && p.Default == "" {
+	if (renderMode == TemplateRenderModeDocs || renderMode == TemplateRenderModeUnitTest) && p.Default == "" {
 		return p.Example
 	}
 

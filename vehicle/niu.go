@@ -44,8 +44,12 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" || cc.Serial == "" {
-		return nil, errors.New("missing user, password or serial")
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
+	if cc.Serial == "" {
+		return nil, errors.New("missing serial")
 	}
 
 	log := util.NewLogger("niu").Redact(cc.User, cc.Password)

@@ -76,6 +76,10 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	return NewEasee(cc.User, cc.Password, cc.Charger)
 }
 

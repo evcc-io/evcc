@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -37,7 +36,7 @@ func NewSilenceFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User == "" || cc.Password == "" {
-		return nil, errors.New("missing user or password")
+		return nil, api.ErrMissingCredentials
 	}
 
 	log := util.NewLogger("s01").Redact(cc.User, cc.Password)

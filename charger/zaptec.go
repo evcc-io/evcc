@@ -69,7 +69,7 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	if cc.User == "" || cc.Password == "" {
-		return nil, errors.New("need user and password")
+		return nil, api.ErrMissingCredentials
 	}
 
 	return NewZaptec(cc.User, cc.Password, cc.Id, cc.Priority, cc.Cache)

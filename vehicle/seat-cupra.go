@@ -41,6 +41,10 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &Cupra{
 		embed: &cc.embed,
 	}
