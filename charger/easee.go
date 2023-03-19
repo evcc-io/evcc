@@ -66,25 +66,24 @@ func init() {
 
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+	cc := struct {
 		User     string
 		Password string
 		Charger  string
+		Timeout  time.Duration
+	}{
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
-	return NewEasee(cc.User, cc.Password, cc.Charger)
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string) (*Easee, error) {
+func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -98,9 +97,6 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 		mux:     sync.NewCond(new(sync.Mutex)),
 		current: 6, // default current
 	}
-
-	// log timeout with DEBUG level
-	c.log.DEBUG.Printf("Current API.Timeout to %v", c.API.Timeout)
 
 	// log timeout with DEBUG level
 	c.log.DEBUG.Printf("Setting Client.Timeout to %v", timeout)
@@ -176,7 +172,7 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 
 	select {
 	case <-done:
-	case <-time.After(request.Timeout):
+	case <-time.After(c.Client.Timeout):
 		err = os.ErrDeadlineExceeded
 	}
 
