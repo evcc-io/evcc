@@ -161,7 +161,7 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 
 		client.Start()
 
-		ctx, cancel := context.WithTimeout(context.Background(), c.Client.Timeout)
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
@@ -172,7 +172,7 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 
 	select {
 	case <-done:
-	case <-time.After(c.Client.Timeout):
+	case <-time.After(request.Timeout):
 		err = os.ErrDeadlineExceeded
 	}
 
