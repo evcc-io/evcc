@@ -186,20 +186,26 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// site setters
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/prioritySoc/set", m.root), func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = site.SetPrioritySoc(float64(soc))
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetPrioritySoc(val)
 		}
 	})
 
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferSoc/set", m.root), func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = site.SetBufferSoc(float64(soc))
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetBufferSoc(val)
 		}
 	})
 
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/residualPower/set", m.root), func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = site.SetResidualPower(float64(soc))
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetResidualPower(val)
+		}
+	})
+
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/smartcostlimit/set", m.root), func(payload string) {
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetSmartCostLimit(val)
 		}
 	})
 
