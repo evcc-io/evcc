@@ -42,22 +42,22 @@ type PhoenixEVEth struct {
 }
 
 const (
-	wbRegStatus          = 100  // Input
-	wbRegChargeTime      = 102  // Input
-	wbRegFirmware        = 105  // Input
-	wbRegVoltages        = 108  // Input
-	wbRegCurrents        = 114  // Input
-	wbRegPower           = 120  // Input
-	wbRegEnergy          = 128  // Input
-	wbRegChargedEnergy   = 132  // Input
-	wbRegFirmwareWallbe  = 149  // Input
-	wbRegEnable          = 400  // Coil
-	wbRegCardEnabled     = 419  // Coil
-	wbRegMaxCurrent      = 528  // Holding
-	wbRegCardUID         = 606  // Holding
-	wbRegEnergyWh        = 904  // Holding, 32bit, Wh (2), Wallbe: 16bit (1)
-	wbRegEnergyWallbe    = 2980 // Holding, 64bit, Wh (4)
-	wbRegChargedEnergyEx = 3376 // Holding, 64bit, Wh (4)
+	phxRegStatus          = 100  // Input
+	phxRegChargeTime      = 102  // Input
+	phxRegFirmware        = 105  // Input
+	phxRegVoltages        = 108  // Input
+	phxRegCurrents        = 114  // Input
+	phxRegPower           = 120  // Input
+	phxRegEnergy          = 128  // Input
+	phxRegChargedEnergy   = 132  // Input
+	phxRegFirmwareWallbe  = 149  // Input
+	phxRegEnable          = 400  // Coil
+	phxRegCardEnabled     = 419  // Coil
+	phxRegMaxCurrent      = 528  // Holding
+	phxRegCardUID         = 606  // Holding
+	phxRegEnergyWh        = 904  // Holding, 32bit, Wh (2), Wallbe: 16bit (1)
+	phxRegEnergyWallbe    = 2980 // Holding, 64bit, Wh (4)
+	phxRegChargedEnergyEx = 3376 // Holding, 64bit, Wh (4)
 )
 
 func init() {
@@ -109,7 +109,7 @@ func NewPhoenixEVEth(uri string) (api.Charger, error) {
 	)
 
 	// check presence of meter by voltage on l1
-	if b, err := wb.conn.ReadInputRegisters(wbRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
+	if b, err := wb.conn.ReadInputRegisters(phxRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 		currents = wb.currents
@@ -117,12 +117,12 @@ func NewPhoenixEVEth(uri string) (api.Charger, error) {
 	}
 
 	// check card reader enabled
-	if b, err := wb.conn.ReadCoils(wbRegCardEnabled, 1); err == nil && b[0] == 1 {
+	if b, err := wb.conn.ReadCoils(phxRegCardEnabled, 1); err == nil && b[0] == 1 {
 		identify = wb.identify
 	}
 
 	// check presence of extended Wallbe firmware
-	if b, err := wb.conn.ReadHoldingRegisters(wbRegMaxCurrent, 1); err == nil && binary.BigEndian.Uint16(b) >= 60 {
+	if b, err := wb.conn.ReadHoldingRegisters(phxRegMaxCurrent, 1); err == nil && binary.BigEndian.Uint16(b) >= 60 {
 		wb.isWallbe = true
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
@@ -132,7 +132,7 @@ func NewPhoenixEVEth(uri string) (api.Charger, error) {
 
 // Status implements the api.Charger interface
 func (wb *PhoenixEVEth) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(wbRegStatus, 1)
+	b, err := wb.conn.ReadInputRegisters(phxRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -142,7 +142,7 @@ func (wb *PhoenixEVEth) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *PhoenixEVEth) Enabled() (bool, error) {
-	b, err := wb.conn.ReadCoils(wbRegEnable, 1)
+	b, err := wb.conn.ReadCoils(phxRegEnable, 1)
 	if err != nil {
 		return false, err
 	}
@@ -157,7 +157,7 @@ func (wb *PhoenixEVEth) Enable(enable bool) error {
 		u = modbus.CoilOn
 	}
 
-	_, err := wb.conn.WriteSingleCoil(wbRegEnable, u)
+	_, err := wb.conn.WriteSingleCoil(phxRegEnable, u)
 
 	return err
 }
@@ -169,7 +169,7 @@ func (wb *PhoenixEVEth) MaxCurrent(current int64) error {
 	}
 
 	u := uint16(current)
-	_, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
+	_, err := wb.conn.WriteSingleRegister(phxRegMaxCurrent, u)
 
 	return err
 }
@@ -181,7 +181,7 @@ func (wb *PhoenixEVEth) maxCurrentMillis(current float64) error {
 	}
 
 	u := uint16(current * 10) // 0.1A Steps
-	_, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
+	_, err := wb.conn.WriteSingleRegister(phxRegMaxCurrent, u)
 
 	return err
 }
@@ -190,7 +190,7 @@ var _ api.ChargeTimer = (*PhoenixEVEth)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
 func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
+	b, err := wb.conn.ReadInputRegisters(phxRegChargeTime, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -201,7 +201,7 @@ func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
 
 // currentPower implements the api.Meter interface
 func (wb *PhoenixEVEth) currentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wbRegPower, 2)
+	b, err := wb.conn.ReadInputRegisters(phxRegPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -212,7 +212,7 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 // totalEnergy implements the api.MeterEnergy interface
 func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 	if wb.isWallbe {
-		b, err := wb.conn.ReadHoldingRegisters(wbRegEnergyWallbe, 4)
+		b, err := wb.conn.ReadHoldingRegisters(phxRegEnergyWallbe, 4)
 		if err != nil {
 			return 0, err
 		}
@@ -221,7 +221,7 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 		return res / 1e3, nil
 	}
 
-	b, err := wb.conn.ReadHoldingRegisters(wbRegEnergyWh, 2)
+	b, err := wb.conn.ReadHoldingRegisters(phxRegEnergyWh, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -233,12 +233,12 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixEVEth) currents() (float64, float64, float64, error) {
-	return wb.getPhases(wbRegCurrents)
+	return wb.getPhases(phxRegCurrents)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixEVEth) voltages() (float64, float64, float64, error) {
-	return wb.getPhases(wbRegVoltages)
+	return wb.getPhases(phxRegVoltages)
 }
 
 // getPhases returns 3 sequential phase values
@@ -258,7 +258,7 @@ func (wb *PhoenixEVEth) getPhases(reg uint16) (float64, float64, float64, error)
 
 // identify implements the api.Identifier interface
 func (wb *PhoenixEVEth) identify() (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wbRegCardUID, 16)
+	b, err := wb.conn.ReadHoldingRegisters(phxRegCardUID, 16)
 	if err != nil {
 		return "", err
 	}
@@ -271,11 +271,11 @@ var _ api.Diagnosis = (*PhoenixEVEth)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *PhoenixEVEth) Diagnose() {
 	if wb.isWallbe {
-		if b, err := wb.conn.ReadInputRegisters(wbRegFirmwareWallbe, 6); err == nil {
+		if b, err := wb.conn.ReadInputRegisters(phxRegFirmwareWallbe, 6); err == nil {
 			fmt.Printf("\tFirmware (Wallbe):\t%s\n", encoding.StringLsbFirst(b))
 		}
 	} else {
-		if b, err := wb.conn.ReadInputRegisters(wbRegFirmware, 2); err == nil {
+		if b, err := wb.conn.ReadInputRegisters(phxRegFirmware, 2); err == nil {
 			fmt.Printf("\tFirmware (Phoenix):\t%s\n", encoding.StringLsbFirst(b))
 		}
 	}
