@@ -79,6 +79,10 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout)
 }
 
@@ -98,10 +102,6 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 		current: 6, // default current
 	}
 
-	// log timeout with DEBUG level
-	c.log.DEBUG.Printf("Setting Client.Timeout to %v", timeout)
-
-	// Set the HTTP Client Timeout to <timeout>
 	c.Client.Timeout = timeout
 
 	ts, err := easee.TokenSource(log, user, password)
