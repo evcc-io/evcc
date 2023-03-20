@@ -115,7 +115,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
 	}
 
-	activeSlot := planner.ActiveSlot(lp.clock, plan)
+	activeSlot := planner.SlotAt(lp.clock.Now(), plan)
 	active = !activeSlot.End.IsZero()
 
 	if active {

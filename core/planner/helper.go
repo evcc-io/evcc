@@ -3,7 +3,6 @@ package planner
 import (
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 )
 
@@ -37,9 +36,10 @@ func AverageCost(plan api.Rates) float64 {
 	return cost / float64(duration)
 }
 
-func ActiveSlot(clock clock.Clock, plan api.Rates) api.Rate {
+// SlotAt returns the slot for the given time or an empty slot
+func SlotAt(time time.Time, plan api.Rates) api.Rate {
 	for _, slot := range plan {
-		if (slot.Start.Before(clock.Now()) || slot.Start.Equal(clock.Now())) && slot.End.After(clock.Now()) {
+		if (slot.Start.Before(time) || slot.Start.Equal(time)) && slot.End.After(time) {
 			return slot
 		}
 	}
