@@ -16,6 +16,7 @@ params:
     required: true
     example: EH______
   - name: timeout
+    default: 10s
 render: |
   type: easee
   user: {{ .user }}
