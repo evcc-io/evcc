@@ -126,13 +126,19 @@ pv = "Solar"
 login = "log in"
 logout = "log out"
 
+[main.smartCharging]
+modalTitle = "Smart charging"
+activeLabel = "{time}"
+title = "smart"
+titleSmartCost = "cheap energy"
+titleTargetCharge = "depature time"
+none = "none"
+
 [main.targetCharge]
 activate = "Activate"
-activeLabel = "{time}"
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
 descriptionSoc = "When should the vehicle be charged to {targetSoc}%?"
 inactiveLabel = "Target time"
-modalTitle = "Smart grid charging"
 planDuration = "Charging time"
 planPeriodLabel = "Period"
 planPeriodValue = "{start} to {end}"
