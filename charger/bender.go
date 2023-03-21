@@ -124,7 +124,9 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
-		currentPower = wb.currentPower
+		if !wb.legacy {
+			currentPower = wb.currentPower
+		}
 		currents = wb.currents
 		chargedEnergy = wb.chargedEnergy
 		totalEnergy = wb.totalEnergy
@@ -224,11 +226,6 @@ func (wb *BenderCC) ChargingTime() (time.Duration, error) {
 
 // CurrentPower implements the api.Meter interface
 func (wb *BenderCC) currentPower() (float64, error) {
-	if wb.legacy {
-		l1, l2, l3, err := wb.currents()
-		return 230 * (l1 + l2 + l3), err
-	}
-
 	b, err := wb.conn.ReadHoldingRegisters(bendRegActivePower, 2)
 	if err != nil {
 		return 0, err
