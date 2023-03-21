@@ -67,6 +67,7 @@ type Site struct {
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
 	auxMeters     []api.Meter // Auxiliary meters
+	extMeters     []api.Meter // External meters (vis only)
 
 	tariffs     tariff.Tariffs           // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
@@ -91,6 +92,7 @@ type MetersConfig struct {
 	BatteryMetersRef  []string `mapstructure:"battery"`   // Battery charging meter
 	BatteryMetersRef_ []string `mapstructure:"batteries"` // TODO deprecated
 	AuxMetersRef      []string `mapstructure:"aux"`       // Auxiliary meters
+	ExtMetersRef      []string `mapstructure:"ext"`       // External meters
 }
 
 // NewSiteFromConfig creates a new site
@@ -172,6 +174,15 @@ func NewSiteFromConfig(
 			return nil, err
 		}
 		site.auxMeters = append(site.auxMeters, meter)
+	}
+
+	// external meters
+	for _, ref := range site.Meters.ExtMetersRef {
+		meter, err := cp.Meter(ref)
+		if err != nil {
+			return nil, err
+		}
+		site.extMeters = append(site.extMeters, meter)
 	}
 
 	// configure meter from references
@@ -553,6 +564,18 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	}
 
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
+
+	// external loads (vis only)
+	var extPower float64
+	for i, meter := range site.extMeters {
+		if power, err := meter.CurrentPower(); err != nil {
+			site.log.ERROR.Printf("ext meter %d: %v", i, err)
+		} else {
+			extPower += power
+			site.log.DEBUG.Printf("ext power %d: %.0fW", i, power)
+		}
+	}
+	site.publish("extPower", extPower)
 
 	return sitePower, batteryBuffered, nil
 }
