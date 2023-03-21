@@ -12,6 +12,8 @@
 					v-bind="loadpoint"
 					:id="index + 1"
 					:vehicles="vehicles"
+					:smartCostLimit="smartCostLimit"
+					:smartCostUnit="smartCostUnit"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -43,6 +45,8 @@ export default {
 	props: {
 		loadpoints: Array,
 		vehicles: Array,
+		smartCostLimit: Number,
+		smartCostUnit: String,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };

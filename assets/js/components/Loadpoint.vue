@@ -199,6 +199,8 @@ export default {
 		pvAction: String,
 		guardRemaining: Number,
 		guardAction: String,
+		smartCostLimit: Number,
+		smartCostUnit: String,
 	},
 	data() {
 		return {

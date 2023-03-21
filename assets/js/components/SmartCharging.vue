@@ -55,38 +55,50 @@
 											href="#"
 											@click.prevent="showTimeTab"
 										>
-											Target time
-											<span class="badge rounded-pill bg-success"
+											Depature
+											<span
+												class="badge rounded-pill bg-success d-none d-sm-inline-block"
 												>Fr. 7:30</span
 											>
 										</a>
 									</li>
-									<!--<li class="nav-item">
+									<li v-if="priceTabAvailable" class="nav-item">
 										<a
 											class="nav-link"
 											:class="{ active: priceTabActive }"
 											href="#"
 											@click.prevent="showPriceTab"
 										>
-											Cheap energy
-											<span class="badge bg-secondary">&leq; 0,23ct</span>
+											Cheap
+											<span
+												class="badge bg-secondary d-none d-sm-inline-block"
+												>&leq; 0,23ct</span
+											>
 										</a>
-									</li>-->
-									<li class="nav-item">
+									</li>
+									<li v-if="co2TabAvailable" class="nav-item">
 										<a
 											class="nav-link"
-											:class="{ active: priceTabActive }"
+											:class="{ active: co2TabActive }"
 											href="#"
-											@click.prevent="showPriceTab"
+											@click.prevent="showCo2Tab"
 										>
 											Green energy
 											<span class="badge bg-secondary">&leq; 750g</span>
 										</a>
 									</li>
+									<li class="nav-item">
+										<a
+											class="nav-link"
+											:class="{ active: minSocTabActive }"
+											href="#"
+											@click.prevent="showMinSocTab"
+										>
+											Min range
+										</a>
+									</li>
 								</ul>
-								<!--
-								<TargetCharge v-if="showTimeTab" />
-								-->
+								<TargetCharge v-if="timeTabActive" />
 							</div>
 						</form>
 					</div>
@@ -116,6 +128,7 @@ export default {
 		socBasedCharging: Boolean,
 		disabled: Boolean,
 		smartCostLimit: Number,
+		smartCostUnit: String,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
@@ -151,6 +164,24 @@ export default {
 			}
 			return this.$t("main.smartCharging.title");
 		},
+		priceTabAvailable: function () {
+			return !this.co2TabAvailable;
+		},
+		co2TabAvailable: function () {
+			return this.smartCostUnit === "gCO2eq";
+		},
+		timeTabActive: function () {
+			return this.activeTab === "time";
+		},
+		co2TabActive: function () {
+			return this.activeTab === "co2";
+		},
+		priceTabActive: function () {
+			return this.activeTab === "price";
+		},
+		minSocTabActive: function () {
+			return this.activeTab === "minsoc";
+		},
 	},
 	mounted() {
 		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
@@ -184,6 +215,12 @@ export default {
 		},
 		showPriceTab: function () {
 			this.activeTab = "price";
+		},
+		showCo2Tab: function () {
+			this.activeTab = "co2";
+		},
+		showMinSocTab: function () {
+			this.activeTab = "minsoc";
 		},
 	},
 };

@@ -113,6 +113,7 @@ export default {
 		guardRemainingInterpolated: Number,
 		vehicles: Array,
 		smartCostLimit: Number,
+		smartCostUnit: String,
 	},
 	emits: [
 		"target-time-removed",
