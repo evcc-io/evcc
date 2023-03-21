@@ -113,7 +113,7 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 }
 
 func (wb *Salia) heartbeat() {
-	for ; true; <-time.NewTicker(30 * time.Second).C {
+	for ; true; <-time.Tick(30 * time.Second) {
 		if err := wb.post(salia.HeartBeat, "alive"); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

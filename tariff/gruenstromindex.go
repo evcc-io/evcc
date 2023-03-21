@@ -92,7 +92,7 @@ func (t *GrünStromIndex) run(done chan error) {
 	var once sync.Once
 	uri := fmt.Sprintf("https://api.corrently.io/v2.0/gsi/prediction?zip=%s", t.zip)
 
-	for ; true; <-time.NewTicker(time.Hour).C {
+	for ; true; <-time.Tick(time.Hour) {
 		var res gsiForecast
 		err := t.GetJSON(uri, &res)
 		if err == nil && res.Err {

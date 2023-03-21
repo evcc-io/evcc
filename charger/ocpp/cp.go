@@ -181,7 +181,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
 func (cp *CP) WatchDog(timeout time.Duration) {
-	for ; true; <-time.NewTicker(timeout).C {
+	for ; true; <-time.Tick(timeout) {
 		cp.mu.Lock()
 		update := cp.txnId != 0 && cp.clock.Since(cp.meterUpdated) > timeout
 		cp.mu.Unlock()

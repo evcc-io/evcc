@@ -98,7 +98,7 @@ func (t *Tibber) run(done chan error) {
 		"id": graphql.ID(t.homeID),
 	}
 
-	for ; true; <-time.NewTicker(time.Hour).C {
+	for ; true; <-time.Tick(time.Hour) {
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		err := t.client.Query(ctx, &res, v)
 		cancel()
