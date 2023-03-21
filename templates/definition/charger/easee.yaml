@@ -15,8 +15,11 @@ params:
   - name: charger
     required: true
     example: EH______
+  - name: timeout
+    default: 10s
 render: |
   type: easee
   user: {{ .user }}
   password: {{ .password }}
   charger: {{ .charger }}
+  timeout: {{ .timeout }}
