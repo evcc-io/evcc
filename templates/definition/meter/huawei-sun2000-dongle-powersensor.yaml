@@ -37,7 +37,7 @@ render: |
     register:
       address: 37121 # Active energy import from the grid
       type: holding
-      decode: int32
+      decode: uint32
     scale: 0.01
   currents:
   - source: modbus
@@ -79,6 +79,16 @@ render: |
       address: 32064 # Input power DC (if no battery in your system - for more precise readings use 32080 # Active generation power AC)
       type: holding
       decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    model: huawei
+    timeout: 15s
+    register:
+      address: 32106 # Accumulated energy yield
+      type: holding
+      decode: uint32
+    scale: 0.01
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -112,6 +122,21 @@ render: |
       type: holding
       decode: uint16nan
     scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    model: huawei
+    timeout: 15s
+    register:
+      {{- if eq .storageunit "1" }}
+      address: 37068 # [Energy storage unit 1] Total discharge
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37755 # [Energy storage unit 2] Total discharge
+      {{- end }}
+      type: holding
+      decode: uint32
+    scale: 0.01
   {{- if ne .capacity "" }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

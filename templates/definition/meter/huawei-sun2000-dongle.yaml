@@ -20,3 +20,13 @@ render: |
       address: 32080 # Active generation power AC
       type: holding
       decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    model: huawei
+    timeout: 15s
+    register:
+      address: 32106 # Accumulated energy yield
+      type: holding
+      decode: uint32
+    scale: 0.01
