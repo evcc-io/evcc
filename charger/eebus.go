@@ -98,7 +98,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 
 // waitForConnection wait for initial connection and returns an error on failure
 func (c *EEBus) waitForConnection() error {
-	timeout := time.After(30 * time.Second)
+	timeout := time.After(90 * time.Second)
 	for {
 		select {
 		case <-timeout:
