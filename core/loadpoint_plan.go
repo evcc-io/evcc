@@ -37,6 +37,9 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		}
 
 		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
+		if requiredDuration <= 0 {
+			return 0
+		}
 
 		// anticipate lower charge rates at end of charging curve
 		var additionalDuration time.Duration
