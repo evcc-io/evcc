@@ -107,7 +107,8 @@ site:
       - pv # list of pv inverters/ meters
     battery:
       - battery # list of battery meters
-    aux: aux # auxiliary meters for adjusting grid operating point
+    aux:
+      - aux # list of auxiliary meters for adjusting grid operating point
   residualPower: # additional household usage margin
   prioritySoc: # give home battery priority up to this soc (empty to disable)
   bufferSoc: # ignore home battery discharge above soc (empty to disable)
