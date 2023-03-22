@@ -62,7 +62,7 @@ func init() {
 
 // NewVestelFromConfig creates a Vestel charger from generic config
 func NewVestelFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
+	cc := modbus.Settings{
 		ID: 255,
 	}
 
@@ -70,12 +70,12 @@ func NewVestelFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewVestel(cc.URI, cc.ID)
+	return NewVestel(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 }
 
 // NewVestel creates a Vestel charger
-func NewVestel(uri string, id uint8) (*Vestel, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewVestel(uri string, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (*Vestel, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, id)
 	if err != nil {
 		return nil, err
 	}
