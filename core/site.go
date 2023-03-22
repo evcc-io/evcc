@@ -534,17 +534,27 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
 
 	// deduct smart loads
-	var auxPower float64
-	for i, meter := range site.auxMeters {
-		if power, err := meter.CurrentPower(); err != nil {
-			site.log.ERROR.Printf("aux meter %d: %v", i, err)
-		} else {
-			auxPower += power
-			site.log.DEBUG.Printf("aux power %d: %.0fW", i, power)
+	if len(site.auxMeters) > 0 {
+		var auxPower float64
+		mm := make([]meterMeasurement, len(site.auxMeters))
+
+		for i, meter := range site.auxMeters {
+			if power, err := meter.CurrentPower(); err == nil {
+				auxPower += power
+				mm[i].Power = power
+				site.log.DEBUG.Printf("aux power %d: %.0fW", i+1, power)
+			} else {
+				site.log.ERROR.Printf("aux meter %d: %v", i+1, err)
+			}
 		}
+
+		sitePower -= auxPower
+
+		site.log.DEBUG.Printf("aux power: %.0fW", auxPower)
+		site.publish("auxPower", auxPower)
+
+		site.publish("aux", mm)
 	}
-	site.publish("auxPower", auxPower)
-	sitePower -= auxPower
 
 	// handle priority
 	if flexiblePower > 0 {
