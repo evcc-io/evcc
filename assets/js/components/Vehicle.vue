@@ -32,7 +32,7 @@
 				align="start"
 			/>
 			<SmartCharging
-				class="flex-grow-1 text-center target-charge"
+				class="flex-grow-1 target-charge"
 				v-bind="smartCharging"
 				:disabled="smartChargingDisabled"
 				@target-time-updated="setTargetTime"

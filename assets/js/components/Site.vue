@@ -19,6 +19,8 @@
 				:vehicles="vehicles"
 				:smartCostLimit="smartCostLimit"
 				:smartCostUnit="smartCostUnit"
+				:tariffGrid="tariffGrid"
+				:tariffCo2="tariffCo2"
 			/>
 			<VehcileSettingsModal />
 			<Footer v-bind="footer"></Footer>

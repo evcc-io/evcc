@@ -48,18 +48,12 @@
 			<button
 				type="button"
 				class="btn btn-outline-secondary"
-				data-bs-dismiss="modal"
 				:disabled="!targetTime"
 				@click="removeTargetTime"
 			>
 				{{ $t("main.targetCharge.remove") }}
 			</button>
-			<button
-				type="submit"
-				class="btn btn-primary"
-				data-bs-dismiss="modal"
-				:disabled="timeInThePast"
-			>
+			<button type="submit" class="btn btn-primary" :disabled="timeInThePast">
 				<span v-if="targetTime">
 					{{ $t("main.targetCharge.update") }}
 				</span>
@@ -124,8 +118,6 @@ export default {
 			selectedTime: null,
 			plan: {},
 			tariff: {},
-			modal: null,
-			isModalVisible: false,
 			activeTab: "time",
 		};
 	},
@@ -190,20 +182,14 @@ export default {
 		targetEnergy() {
 			this.updatePlan();
 		},
-		isModalVisible() {
-			this.updatePlan();
-		},
+	},
+	mounted() {
+		this.initInputFields();
+		this.updatePlan();
 	},
 	methods: {
-		modalVisible: function () {
-			this.isModalVisible = true;
-		},
-		modalInvisible: function () {
-			this.isModalVisible = false;
-		},
 		updatePlan: async function () {
 			if (
-				this.isModalVisible &&
 				!this.timeInThePast &&
 				(this.targetEnergy || this.targetSoc) &&
 				!isNaN(this.selectedTargetTime)
@@ -220,17 +206,6 @@ export default {
 					console.error(e);
 				}
 			}
-		},
-
-		// not computed because it needs to update over time
-		targetTimeLabel: function () {
-			if (this.targetChargeEnabled) {
-				const targetDate = new Date(this.targetTime);
-				return this.$t("main.targetCharge.activeLabel", {
-					time: this.fmtAbsoluteDate(targetDate),
-				});
-			}
-			return this.$t("main.targetCharge.inactiveLabel");
 		},
 		defaultDate: function () {
 			const [hours, minutes] = (

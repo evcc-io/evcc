@@ -201,6 +201,8 @@ export default {
 		guardAction: String,
 		smartCostLimit: Number,
 		smartCostUnit: String,
+		tariffGrid: Number,
+		tariffCo2: Number,
 	},
 	data() {
 		return {
