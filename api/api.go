@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargerSync,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -83,6 +83,11 @@ type BatteryCapacity interface {
 // ChargeState provides current charging status
 type ChargeState interface {
 	Status() (ChargeStatus, error)
+}
+
+// ChargeSync provides update of all charger readings from device
+type ChargerSync interface {
+	Update() error
 }
 
 // CurrentLimiter provides settings charging maximum charging current
