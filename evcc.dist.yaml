@@ -109,7 +109,8 @@ site:
       - pv # list of pv inverters/ meters
     battery:
       - battery # list of battery meters
-    aux: aux # auxiliary meters for adjusting grid operating point
+    aux:
+      - aux # list of auxiliary meters for adjusting grid operating point
     ext:
       - ext # list of external load meters (for visualisation only)
   residualPower: # additional household usage margin
