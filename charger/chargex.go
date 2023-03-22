@@ -146,8 +146,15 @@ func (wb *ChargeX) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *ChargeX) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*ChargeX)(nil)
+
+// MaxCurrent implements the api.ChargerEx interface
+func (wb *ChargeX) MaxCurrentMillis(current float64) error {
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, uint32(current))
+	binary.BigEndian.PutUint32(b, uint32(1e3*current))
 	_, err := wb.conn.WriteMultipleRegisters(chargexRegMaxCurrent, 2, b)
 	return err
 }
@@ -173,7 +180,9 @@ func (wb *ChargeX) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)), float64(binary.BigEndian.Uint32(b[4:])), float64(binary.BigEndian.Uint32(b[8:])), nil
+	return float64(binary.BigEndian.Uint32(b)) / 1e3,
+		float64(binary.BigEndian.Uint32(b[4:])) / 1e3,
+		float64(binary.BigEndian.Uint32(b[8:])) / 1e3, nil
 }
 
 var _ api.Diagnosis = (*ChargeX)(nil)
