@@ -1457,6 +1457,14 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool)
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 
+	// update all charger internals
+	if cp, ok := lp.charger.(api.ChargerSync); ok {
+		if err := cp.Update(); err != nil {
+			lp.log.ERROR.Printf("charger: %v", err)
+			return
+		}
+	}
+
 	// read and publish meters first- charge power has already been updated by the site
 	lp.updateChargeVoltages()
 	lp.updateChargeCurrents()
