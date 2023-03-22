@@ -3,9 +3,6 @@ products:
   - brand: Vestel
     description:
       generic: EVC04
-  - brand: Vestel
-    description:
-      generic: HomeSmart/ HomePlus
   - brand: Webasto
     description:
       generic: Unite

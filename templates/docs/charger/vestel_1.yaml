@@ -1,6 +1,6 @@
 product:
-  brand: Vestel
-  description: HomeSmart/ HomePlus
+  brand: Webasto
+  description: Unite
 requirements: ["sponsorship"]
 render:
   - default: |
