@@ -123,7 +123,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// ignore short plans if not already active
-		// TODO only ignore if the last slot is inactive, too
+		// TODO only ignore if the next adjacent slot is inactive, too
 		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration {
 			lp.log.DEBUG.Printf("plan slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
