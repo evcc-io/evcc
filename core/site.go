@@ -566,16 +566,25 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
 	// external loads (vis only)
-	var extPower float64
-	for i, meter := range site.extMeters {
-		if power, err := meter.CurrentPower(); err != nil {
-			site.log.ERROR.Printf("ext meter %d: %v", i, err)
-		} else {
-			extPower += power
-			site.log.DEBUG.Printf("ext power %d: %.0fW", i, power)
+	if len(site.extMeters) > 0 {
+		var extPower float64
+		mm := make([]meterMeasurement, len(site.extMeters))
+
+		for i, meter := range site.extMeters {
+			if power, err := meter.CurrentPower(); err == nil {
+				extPower += power
+				mm[i].Power = power
+				site.log.DEBUG.Printf("ext power %d: %.0fW", i+1, power)
+			} else {
+				site.log.ERROR.Printf("ext meter %d: %v", i+1, err)
+			}
 		}
+
+		site.log.DEBUG.Printf("ext power: %.0fW", extPower)
+		site.publish("extPower", extPower)
+
+		site.publish("ext", mm)
 	}
-	site.publish("extPower", extPower)
 
 	return sitePower, batteryBuffered, nil
 }

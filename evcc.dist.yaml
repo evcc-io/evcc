@@ -110,6 +110,8 @@ site:
     battery:
       - battery # list of battery meters
     aux: aux # auxiliary meters for adjusting grid operating point
+    ext:
+      - ext # list of external load meters (for visualisation only)
   residualPower: # additional household usage margin
   prioritySoc: # give home battery priority up to this soc (empty to disable)
   bufferSoc: # ignore home battery discharge above soc (empty to disable)
