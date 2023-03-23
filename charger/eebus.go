@@ -252,6 +252,9 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (api.ChargeStatus, error) {
+	// check the current limits and update if necesarry
+	c.setLoadpointMinMaxLimits()
+
 	return c.updateState()
 }
 
