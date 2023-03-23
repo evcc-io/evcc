@@ -21,6 +21,8 @@ params:
     comset: 8N1
     port: 502
     id: 1
+  - name: delay
+    default: 2s
   - name: capacity
     advanced: true
 render: |
@@ -29,7 +31,7 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x0488 # ActivePower_PCC_Total
       type: holding
@@ -38,7 +40,7 @@ render: |
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x0492 # Current_PCC_R
       type: holding
@@ -46,7 +48,7 @@ render: |
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x049D # Current_PCC_S
       type: holding
@@ -54,7 +56,7 @@ render: |
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x04A8 # Current_PCC_T
       type: holding
@@ -63,7 +65,7 @@ render: |
   powers:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x0493 # ActivePower_PCC_R
       type: holding
@@ -71,7 +73,7 @@ render: |
     scale: -10
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x049E # ActivePower_PCC_S
       type: holding
@@ -79,7 +81,7 @@ render: |
     scale: -10
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x04A9 # ActivePower_PCC_T
       type: holding
@@ -88,7 +90,7 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x068E # Energy_Purchase_Total
       type: holding
@@ -99,7 +101,7 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x05C4 # Power_PV_Total
       type: holding
@@ -108,7 +110,7 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x0686 # PV_Generation_Total
       type: holding
@@ -119,7 +121,7 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x0606 # Power_Bat1
       type: holding
@@ -128,7 +130,7 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x0608 # SOC_Bat1
       type: holding
@@ -136,7 +138,7 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: 3s
+    delay: {{ .delay }}
     register:
       address: 0x069A # Bat_Discharge_Total
       type: holding
