@@ -22,7 +22,7 @@ params:
     port: 502
     id: 1
   - name: delay
-    default: 2s
+    default: 1s
   - name: capacity
     advanced: true
 render: |

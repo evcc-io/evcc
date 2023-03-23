@@ -26,7 +26,7 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      delay: 2s # Optional
+      delay: 1s # Optional
     advanced: |
       type: template
       template: sofarsolar-g3
@@ -50,7 +50,7 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      delay: 2s # Optional
+      delay: 1s # Optional
       capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
@@ -76,7 +76,7 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      delay: 2s # Optional
+      delay: 1s # Optional
     advanced: |
       type: template
       template: sofarsolar-g3
@@ -100,7 +100,7 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      delay: 2s # Optional
+      delay: 1s # Optional
       capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
@@ -126,7 +126,7 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      delay: 2s # Optional
+      delay: 1s # Optional
     advanced: |
       type: template
       template: sofarsolar-g3
@@ -150,5 +150,5 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      delay: 2s # Optional
+      delay: 1s # Optional
       capacity: 50 # Akkukapazität in kWh # Optional
