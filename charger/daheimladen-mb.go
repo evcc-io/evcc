@@ -21,8 +21,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"time"
-	"unicode/utf16"
-	"unicode/utf8"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -44,8 +42,6 @@ const (
 	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
 	dlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
-	dlRegStationId       = 38  // Chr[16] RO UTF16
-	dlRegCardId          = 54  // Chr[16] RO UTF16
 	dlRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 	dlRegChargingTime    = 78  // Uint32 RO 1s
 	dlRegSafeCurrent     = 87  // Uint16 WR 0.1A
@@ -54,9 +50,6 @@ const (
 	dlRegChargeControl   = 93  // Uint16 WR ENUM
 	dlRegChargeCmd       = 95  // Uint16 WR ENUM
 	dlRegVoltages        = 108 // 3xUint32 RO 0.1V
-
-	dlCmdStartSession = 1
-	dlCmdStopSession  = 2
 )
 
 func init() {
@@ -152,19 +145,11 @@ func (wb *DaheimLadenMB) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (wb *DaheimLadenMB) Enable(enable bool) error {
 	var current uint16
-	var cmd uint16 = dlCmdStopSession // stop session
-
 	if enable {
 		current = wb.curr
-		cmd = dlCmdStartSession // start (new) session
 	}
-	_ = wb.setCurrent(current)
 
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, cmd)
-
-	_, err := wb.conn.WriteMultipleRegisters(dlRegChargeCmd, 1, b)
-	return err
+	return wb.setCurrent(current)
 }
 
 // setCurrent writes the current limit in coarse 1A steps
@@ -176,32 +161,18 @@ func (wb *DaheimLadenMB) setCurrent(current uint16) error {
 	if err == nil {
 		wb.curr = current
 	}
+
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *DaheimLadenMB) MaxCurrent(current int64) error {
-	//return wb.MaxCurrentMillis(float64(current))
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
 	return wb.setCurrent(uint16(current * 10))
 }
-
-/*
-var _ api.ChargerEx = (*DaheimLadenMB)(nil)
-
-// maxCurrentMillis implements the api.ChargerEx interface
-
-	func (wb *DaheimLadenMB) MaxCurrentMillis(current float64) error {
-		if current < 6 {
-			return fmt.Errorf("invalid current %.1g", current)
-		}
-
-		return wb.setCurrent(uint16(current * 10))
-	}
-*/
 
 var _ api.Meter = (*DaheimLadenMB)(nil)
 
@@ -214,36 +185,6 @@ func (wb *DaheimLadenMB) CurrentPower() (float64, error) {
 
 	return float64(binary.BigEndian.Uint32(b)), err
 }
-
-/*
-var _ api.ChargeTimer = (*DaheimLadenMB)(nil)
-
-// ChargingTime implements the api.ChargeTimer interface
-
-	func (wb *DaheimLadenMB) ChargingTime() (time.Duration, error) {
-		b, err := wb.conn.ReadHoldingRegisters(dlChargingTime, 2)
-		if err != nil {
-			return 0, err
-		}
-
-		return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
-	}
-*/
-
-/*
-var _ api.ChargeRater = (*DaheimLadenMB)(nil)
-
-// ChargedEnergy implements the api.MeterEnergy interface
-
-	func (wb *DaheimLadenMB) ChargedEnergy() (float64, error) {
-		b, err := wb.conn.ReadHoldingRegisters(dlChargedEnergy, 1)
-		if err != nil {
-			return 0, err
-		}
-
-		return float64(binary.BigEndian.Uint16(b)) / 10, err
-	}
-*/
 
 var _ api.MeterEnergy = (*DaheimLadenMB)(nil)
 
@@ -286,34 +227,6 @@ func (wb *DaheimLadenMB) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(dlRegVoltages)
 }
 
-// utf16BytesToString converts UTF-16 encoded bytes, in big or little endian byte order,
-// to a UTF-8 encoded string.
-func utf16BytesToString(b []byte, o binary.ByteOrder) string {
-	utf := make([]uint16, (len(b)+(2-1))/2)
-	for i := 0; i+(2-1) < len(b); i += 2 {
-		utf[i/2] = o.Uint16(b[i:])
-	}
-	if len(b)/2 < len(utf) {
-		utf[len(utf)-1] = utf8.RuneError
-	}
-	return string(utf16.Decode(utf))
-}
-
-/*
-var _ api.Identifier = (*DaheimLadenMB)(nil)
-
-// identify implements the api.Identifier interface
-
-	func (wb *DaheimLadenMB) Identify() (string, error) {
-		b, err := wb.conn.ReadHoldingRegisters(dlCardId, 16)
-		if err != nil {
-			return "", err
-		}
-
-		return UTF16BytesToString(b, binary.BigEndian), nil
-	}
-*/
-
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)
 
 // Diagnose implements the api.Diagnosis interface
@@ -329,12 +242,6 @@ func (wb *DaheimLadenMB) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegCableMaxCurrent, 1); err == nil {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
-		fmt.Printf("\tStation ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
-		fmt.Printf("\tCard ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
