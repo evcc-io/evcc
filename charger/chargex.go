@@ -41,13 +41,13 @@ type ChargeX struct {
 
 const (
 	chargexRegDeviceType     = 0x0c // 8 registers
-	chargexRegFirmware       = 0x16 // 8 registers
+	chargexRegFirmware       = 0x14 // 8 registers
 	chargexRegSerial         = 0x1c // 8 registers
 	chargexRegPowerSum       = 0x24 // 2 registers
 	chargexRegCurrents       = 0x28 // 3x2 registers
 	chargexRegConnectedCars  = 0x2e // 1 register
 	chargexRegActiveSessions = 0x30 // 1 register
-	chargexRegModules        = 0x32 // 1 register
+	chargexRegModules        = 0x32 // 2 registers, doc 1.2 has this wrong as 1 reg
 	chargexRegSystemStatus   = 0x34 // 1 register
 	chargexRegMaxCurrent     = 0x36 // 2 registers
 )
@@ -204,8 +204,8 @@ func (wb *ChargeX) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(chargexRegActiveSessions, 1); err == nil {
 		fmt.Printf("\tActive sessions:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(chargexRegModules, 1); err == nil {
-		fmt.Printf("\tModules:\t%d\n", binary.BigEndian.Uint16(b))
+	if b, err := wb.conn.ReadHoldingRegisters(chargexRegModules, 2); err == nil {
+		fmt.Printf("\tModules:\t%d\n", binary.BigEndian.Uint32(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(chargexRegSystemStatus, 1); err == nil {
 		fmt.Printf("\tSystem status:\t%02x\n", b)
