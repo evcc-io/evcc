@@ -56,24 +56,7 @@ func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	wb, err := NewPhoenixCharx(cc.URI, cc.ID)
-
-	var currentPower func() (float64, error)
-	if cc.Meter.Power {
-		currentPower = wb.currentPower
-	}
-
-	var totalEnergy func() (float64, error)
-	if cc.Meter.Energy {
-		totalEnergy = wb.totalEnergy
-	}
-
-	var currents func() (float64, float64, float64, error)
-	if cc.Meter.Currents {
-		currents = wb.currents
-	}
-
-	return decoratePhoenixCharx(wb, currentPower, totalEnergy, currents), err
+	return NewPhoenixCharx(cc.URI, cc.ID)
 }
 
 // NewPhoenixCharx creates a Phoenix charger
