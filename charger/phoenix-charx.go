@@ -18,8 +18,9 @@ const (
 	charxRegNumControllers = 114
 
 	// per-unit registers
-	charxRegMeter = 112
+	charxOffset = 1000
 
+	charxRegMeter        = 112
 	charxRegVoltages     = 232 // mV
 	charxRegCurrents     = 238 // mA
 	charxRegPower        = 244 // mW
@@ -29,12 +30,9 @@ const (
 	charxRegRfid         = 275 // 10
 	charxRegChargeTime   = 287 // s
 	charxRegChargeEnergy = 289 // Wh
-
-	charxRegStatus     = 299 // IEC 61851-1
-	charxRegEnable     = 300
-	charxRegMaxCurrent = 301 // A
-
-	charxOffset = 1000
+	charxRegStatus       = 299 // IEC 61851-1
+	charxRegEnable       = 300
+	charxRegMaxCurrent   = 301 // A
 )
 
 // PhoenixCharx is an api.Charger implementation for Phoenix CHARX controller
@@ -47,7 +45,7 @@ func init() {
 	registry.Add("phoenix-charx", NewPhoenixCharxFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewPhoenixCharxFromConfig creates a Phoenix charger from generic config
 func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -65,7 +63,21 @@ func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewPhoenixCharx(cc.URI, cc.ID, cc.Connector)
+	wb, err := NewPhoenixCharx(cc.URI, cc.ID, cc.Connector)
+	if err != nil {
+		return nil, err
+	}
+
+	meter, err := wb.meter()
+	if err != nil {
+		return nil, err
+	}
+
+	if meter > 0 && meter != 65535 {
+		return decoratePhoenixCharx(wb, wb.currentPower, wb.totalEnergy, wb.currents, wb.voltages), nil
+	}
+
+	return wb, nil
 }
 
 // NewPhoenixCharx creates a Phoenix charger
@@ -87,10 +99,9 @@ func NewPhoenixCharx(uri string, id uint8, connector uint16) (*PhoenixCharx, err
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("controllers", controllers)
 
-	if connector >= controllers {
-		err = fmt.Errorf("invalid connector number: %d", connector)
+	if connector > controllers {
+		return nil, fmt.Errorf("invalid connector number: %d", connector)
 	}
 
 	return wb, err
@@ -107,6 +118,15 @@ func (wb *PhoenixCharx) controllers() (uint16, error) {
 
 func (wb *PhoenixCharx) register(reg uint16) uint16 {
 	return wb.connector*charxOffset + reg
+}
+
+func (wb *PhoenixCharx) meter() (uint16, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegMeter), 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return encoding.Uint16(b), nil
 }
 
 // Status implements the api.Charger interface
@@ -170,10 +190,8 @@ func (wb *PhoenixCharx) ChargingTime() (time.Duration, error) {
 	return time.Duration(encoding.Uint16(b)) * time.Second, nil
 }
 
-var _ api.Meter = (*PhoenixCharx)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (wb *PhoenixCharx) CurrentPower() (float64, error) {
+// currentPower implements the api.Meter interface
+func (wb *PhoenixCharx) currentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegPower), 2)
 	if err != nil {
 		return 0, err
@@ -182,10 +200,8 @@ func (wb *PhoenixCharx) CurrentPower() (float64, error) {
 	return float64(encoding.Int32(b)) / 1e3, nil
 }
 
-var _ api.MeterEnergy = (*PhoenixCharx)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *PhoenixCharx) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterEnergy interface
+func (wb *PhoenixCharx) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegEnergy), 4)
 	if err != nil {
 		return 0, err
@@ -194,10 +210,8 @@ func (wb *PhoenixCharx) TotalEnergy() (float64, error) {
 	return float64(encoding.Int64(b)) / 1e3, nil
 }
 
-var _ api.PhaseCurrents = (*PhoenixCharx)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (wb *PhoenixCharx) Currents() (float64, float64, float64, error) {
+// currents implements the api.PhaseCurrents interface
+func (wb *PhoenixCharx) currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegCurrents), 3*2)
 	if err != nil {
 		return 0, 0, 0, err
@@ -208,10 +222,8 @@ func (wb *PhoenixCharx) Currents() (float64, float64, float64, error) {
 		float64(encoding.Int32(b[8:])) / 1e3, nil
 }
 
-var _ api.PhaseVoltages = (*PhoenixCharx)(nil)
-
-// Voltages implements the api.PhaseVoltages interface
-func (wb *PhoenixCharx) Voltages() (float64, float64, float64, error) {
+// voltages implements the api.PhaseVoltages interface
+func (wb *PhoenixCharx) voltages() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegVoltages), 3*2)
 	if err != nil {
 		return 0, 0, 0, err
@@ -222,19 +234,45 @@ func (wb *PhoenixCharx) Voltages() (float64, float64, float64, error) {
 		float64(encoding.Int32(b[8:])) / 1e3, nil
 }
 
+var _ api.Identifier = (*PhoenixCharx)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *PhoenixCharx) Identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegEvid), 10)
+	if err != nil {
+		return "", err
+	}
+
+	if res := bytesAsString(b); res != "" {
+		return res, nil
+	}
+
+	b, err = wb.conn.ReadHoldingRegisters(wb.register(charxRegRfid), 10)
+	if err != nil {
+		return "", err
+	}
+
+	return bytesAsString(b), nil
+}
+
 var _ api.Diagnosis = (*PhoenixCharx)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *PhoenixCharx) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(charxRegName, 10); err == nil {
-		fmt.Printf("Name: %s\n", encoding.StringLsbFirst(b))
+		fmt.Printf("Name: %s\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(charxRegSwVersion, 4); err == nil {
-		fmt.Printf("Software version: %s\n", encoding.StringLsbFirst(b))
+		fmt.Printf("Software version: %s\n", b)
 	}
 
 	controllers, err := wb.controllers()
 	if err == nil {
 		fmt.Printf("Controllers: %d\n", controllers)
+	}
+
+	meter, err := wb.meter()
+	if err == nil {
+		fmt.Printf("Meter: %d\n", meter)
 	}
 }

@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
+func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && meterEnergy == nil && phaseCurrents == nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return base
 
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixCharx
 			api.Meter
@@ -22,7 +22,7 @@ func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), met
 			},
 		}
 
-	case meter == nil && meterEnergy != nil && phaseCurrents == nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixCharx
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), met
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixCharx
 			api.Meter
@@ -48,7 +48,7 @@ func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), met
 			},
 		}
 
-	case meter == nil && meterEnergy == nil && phaseCurrents != nil:
+	case meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixCharx
 			api.PhaseCurrents
@@ -59,7 +59,7 @@ func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), met
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil:
+	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixCharx
 			api.Meter
@@ -74,7 +74,7 @@ func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), met
 			},
 		}
 
-	case meter == nil && meterEnergy != nil && phaseCurrents != nil:
+	case meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixCharx
 			api.MeterEnergy
@@ -89,7 +89,7 @@ func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), met
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil:
+	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixCharx
 			api.Meter
@@ -105,6 +105,142 @@ func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), met
 			},
 			PhaseCurrents: &decoratePhoenixCharxPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixCharx
+			api.PhaseVoltages
+		}{
+			PhoenixCharx: base,
+			PhaseVoltages: &decoratePhoenixCharxPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixCharx
+			api.Meter
+			api.PhaseVoltages
+		}{
+			PhoenixCharx: base,
+			Meter: &decoratePhoenixCharxMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decoratePhoenixCharxPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixCharx
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			PhoenixCharx: base,
+			MeterEnergy: &decoratePhoenixCharxMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decoratePhoenixCharxPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixCharx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			PhoenixCharx: base,
+			Meter: &decoratePhoenixCharxMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixCharxMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decoratePhoenixCharxPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixCharx
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixCharx: base,
+			PhaseCurrents: &decoratePhoenixCharxPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixCharxPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixCharx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixCharx: base,
+			Meter: &decoratePhoenixCharxMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixCharxPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixCharxPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixCharx
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixCharx: base,
+			MeterEnergy: &decoratePhoenixCharxMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixCharxPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixCharxPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixCharx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixCharx: base,
+			Meter: &decoratePhoenixCharxMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixCharxMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixCharxPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixCharxPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
 			},
 		}
 	}
@@ -134,4 +270,12 @@ type decoratePhoenixCharxPhaseCurrentsImpl struct {
 
 func (impl *decoratePhoenixCharxPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
 	return impl.phaseCurrents()
+}
+
+type decoratePhoenixCharxPhaseVoltagesImpl struct {
+	phaseVoltages func() (float64, float64, float64, error)
+}
+
+func (impl *decoratePhoenixCharxPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
+	return impl.phaseVoltages()
 }
