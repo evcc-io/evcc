@@ -13,3 +13,14 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
+    advanced: |
+      type: template
+      template: huawei-dongle
+      usage: pv      
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+      timeout: 15s # Optional
