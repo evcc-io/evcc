@@ -101,7 +101,7 @@ func NewPhoenixCharx(uri string, id uint8, connector uint16) (*PhoenixCharx, err
 	}
 
 	if connector > controllers {
-		return nil, fmt.Errorf("invalid connector number: %d", connector)
+		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
 	return wb, err
