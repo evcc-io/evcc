@@ -33,11 +33,14 @@ const (
 	charxRegStatus     = 299 // IEC 61851-1
 	charxRegEnable     = 300
 	charxRegMaxCurrent = 301 // A
+
+	charxOffset = 1000
 )
 
 // PhoenixCharx is an api.Charger implementation for Phoenix CHARX controller
 type PhoenixCharx struct {
-	conn *modbus.Connection
+	conn      *modbus.Connection
+	connector uint16
 }
 
 func init() {
@@ -48,19 +51,25 @@ func init() {
 
 // NewPhoenixCharxFromConfig creates a Phoenix charger from generic config
 func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 1, // default
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Connector          uint16
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 1, // default
+		},
+		Connector: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewPhoenixCharx(cc.URI, cc.ID)
+	return NewPhoenixCharx(cc.URI, cc.ID, cc.Connector)
 }
 
 // NewPhoenixCharx creates a Phoenix charger
-func NewPhoenixCharx(uri string, id uint8) (*PhoenixCharx, error) {
+func NewPhoenixCharx(uri string, id uint8, connector uint16) (*PhoenixCharx, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -70,25 +79,52 @@ func NewPhoenixCharx(uri string, id uint8) (*PhoenixCharx, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixCharx{
-		conn: conn,
+		conn:      conn,
+		connector: connector,
 	}
 
-	return wb, nil
+	controllers, err := wb.controllers()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("controllers", controllers)
+
+	if connector >= controllers {
+		err = fmt.Errorf("invalid connector number: %d", connector)
+	}
+
+	return wb, err
+}
+
+func (wb *PhoenixCharx) controllers() (uint16, error) {
+	b, err := wb.conn.ReadHoldingRegisters(charxRegNumControllers, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint16(b), nil
+}
+
+func (wb *PhoenixCharx) register(reg uint16) uint16 {
+	return wb.connector*charxOffset + reg
 }
 
 // Status implements the api.Charger interface
 func (wb *PhoenixCharx) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(charxRegStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegStatus), 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatus(string(b[1])), nil
+	// TODO check IEC 61851-1 C1 state
+	state := string(b[0])
+
+	return api.ChargeStatus(state), nil
 }
 
 // Enabled implements the api.Charger interface
 func (wb *PhoenixCharx) Enabled() (bool, error) {
-	b, err := wb.conn.ReadCoils(charxRegEnable, 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegEnable), 1)
 	if err != nil {
 		return false, err
 	}
@@ -98,12 +134,12 @@ func (wb *PhoenixCharx) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *PhoenixCharx) Enable(enable bool) error {
-	var u uint16
+	b := make([]byte, 2)
 	if enable {
-		u = 1
+		binary.BigEndian.PutUint16(b, 1)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(charxRegEnable, u)
+	_, err := wb.conn.WriteMultipleRegisters(wb.register(charxRegEnable), 1, b)
 
 	return err
 }
@@ -114,7 +150,10 @@ func (wb *PhoenixCharx) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(charxRegMaxCurrent, uint16(current))
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(current))
+
+	_, err := wb.conn.WriteMultipleRegisters(wb.register(charxRegMaxCurrent), 1, b)
 
 	return err
 }
@@ -123,7 +162,7 @@ var _ api.ChargeTimer = (*PhoenixCharx)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
 func (wb *PhoenixCharx) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(charxRegChargeTime, 2)
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegChargeTime), 2)
 	if err != nil {
 		return 0, err
 	}
@@ -131,56 +170,56 @@ func (wb *PhoenixCharx) ChargingTime() (time.Duration, error) {
 	return time.Duration(encoding.Uint16(b)) * time.Second, nil
 }
 
+var _ api.Meter = (*PhoenixCharx)(nil)
+
 // CurrentPower implements the api.Meter interface
-func (wb *PhoenixCharx) currentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(charxRegPower, 2)
+func (wb *PhoenixCharx) CurrentPower() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegPower), 2)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Float32(b)) / 1e3, nil
+	return float64(encoding.Int32(b)) / 1e3, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *PhoenixCharx) totalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(charxRegEnergy, 4)
+var _ api.MeterEnergy = (*PhoenixCharx)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *PhoenixCharx) TotalEnergy() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegEnergy), 4)
 	if err != nil {
 		return 0, err
 	}
 
-	return encoding.Float64(b) / 1e3, nil
+	return float64(encoding.Int64(b)) / 1e3, nil
 }
 
-// currents implements the api.PhaseCurrents interface
-func (wb *PhoenixCharx) currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(charxRegCurrents, 3*2)
+var _ api.PhaseCurrents = (*PhoenixCharx)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *PhoenixCharx) Currents() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegCurrents), 3*2)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var res [3]float64
-	for i := 0; i < 3; i++ {
-		res[i] = float64(encoding.Float32(b[4*i:])) / 1e3
-	}
-
-	return res[0], res[1], res[2], nil
+	return float64(encoding.Int32(b)) / 1e3,
+		float64(encoding.Int32(b[4:])) / 1e3,
+		float64(encoding.Int32(b[8:])) / 1e3, nil
 }
 
 var _ api.PhaseVoltages = (*PhoenixCharx)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixCharx) Voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(charxRegVoltages, 3*2)
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegVoltages), 3*2)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var res [3]float64
-	for i := 0; i < 3; i++ {
-		res[i] = float64(encoding.Float32(b[4*i:])) / 1e3
-	}
-
-	return res[0], res[1], res[2], nil
+	return float64(encoding.Int32(b)) / 1e3,
+		float64(encoding.Int32(b[4:])) / 1e3,
+		float64(encoding.Int32(b[8:])) / 1e3, nil
 }
 
 var _ api.Diagnosis = (*PhoenixCharx)(nil)
@@ -194,9 +233,8 @@ func (wb *PhoenixCharx) Diagnose() {
 		fmt.Printf("Software version: %s\n", encoding.StringLsbFirst(b))
 	}
 
-	var controllers uint16
-	if b, err := wb.conn.ReadHoldingRegisters(charxRegNumControllers, 1); err == nil {
-		controllers = binary.BigEndian.Uint16(b)
+	controllers, err := wb.controllers()
+	if err == nil {
 		fmt.Printf("Controllers: %d\n", controllers)
 	}
 }
