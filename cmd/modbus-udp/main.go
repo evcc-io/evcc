@@ -15,11 +15,11 @@ func main() {
 		return
 	}
 
-	l, err := net.ListenUDP("udp", a)
+	conn, err := net.ListenUDP("udp", a)
 	if err != nil {
 		panic(err)
 	}
-	defer l.Close()
+	defer conn.Close()
 
 	h := &mbserver.DummyHandler{}
 
@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := srv.Start(l); err != nil {
+	if err := srv.Start(conn); err != nil {
 		panic(err)
 	}
 
