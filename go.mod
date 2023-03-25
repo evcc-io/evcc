@@ -198,3 +198,7 @@ require (
 )
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230102102528-4d59ac6910c6
+
+replace github.com/grid-x/modbus => ../gridx-modbus/
+
+replace github.com/andig/mbserver => ../mbserver/
