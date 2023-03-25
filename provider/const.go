@@ -3,6 +3,7 @@ package provider
 import (
 	"strconv"
 
+	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -17,15 +18,26 @@ func init() {
 // NewConstFromConfig creates const provider
 func NewConstFromConfig(other map[string]interface{}) (IntProvider, error) {
 	var cc struct {
-		Value string
+		Value             string
+		pipeline.Settings `mapstructure:",squash"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
+	pipe, err := pipeline.New(cc.Settings)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := pipe.Process([]byte(cc.Value))
+	if err != nil {
+		return nil, err
+	}
+
 	o := &constProvider{
-		str: cc.Value,
+		str: string(b),
 	}
 
 	return o, nil
