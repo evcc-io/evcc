@@ -42,6 +42,8 @@ func (c *Cache) Run(in <-chan Param) {
 		key := p.Key
 		if p.Loadpoint != nil {
 			key = fmt.Sprintf("lp-%d/%s", *p.Loadpoint+1, key)
+		} else if p.Circuit != nil {
+			key = fmt.Sprintf("circuit-%d/%s", *p.Circuit+1, key)
 		}
 
 		log.TRACE.Printf("%s: %v", key, p.Val)
