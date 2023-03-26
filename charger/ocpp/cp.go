@@ -233,7 +233,7 @@ func (cp *CP) TotalEnergy() (float64, error) {
 		return 0, api.ErrTimeout
 	}
 
-	// last value on timeout
+	// fallthrough for last value on timeout when not charging
 	if cp.txnId != 0 && cp.isTimeout() {
 		return 0, api.ErrTimeout
 	}
