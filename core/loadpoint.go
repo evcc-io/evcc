@@ -412,7 +412,6 @@ func (lp *Loadpoint) evChargeStartHandler() {
 func (lp *Loadpoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
 	lp.pushEvent(evChargeStop)
-	
 	if lp.enabled {
 		lp.startWakeUpTimer()
 	}
