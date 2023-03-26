@@ -27,10 +27,8 @@ func TestCurrentCircuitMeter(t *testing.T) {
 	circ := NewCircuit(util.NewLogger("foo"), limit, nil, mtr)
 	assert.NotNilf(t, circ, "circuit not created")
 
-	var curAv float64
-	var err error
 	// no consumption
-	curAv, err = circ.MaxPhasesCurrent()
+	curAv, err := circ.MaxPhasesCurrent()
 	assert.Equal(t, curAv, 0.0)
 	assert.Nil(t, err)
 
@@ -55,12 +53,14 @@ func TestParentCircuitHierarchy(t *testing.T) {
 	limitMain := 20.0
 	circMain := NewCircuit(util.NewLogger("main"), limitMain, nil, &testMeter{cur: 16.0})
 	assert.NotNilf(t, circMain, "circuit not created")
+
 	// add subcircuit with meter
 	limitSub := 20.0
 	circSub := NewCircuit(util.NewLogger("sub"), limitSub, circMain, &testMeter{cur: 10.0})
 
 	assert.NotNilf(t, circSub.parentCircuit, "parent circuit not set")
 	assert.NotNilf(t, circSub.phaseCurrents, "sub circuit meter not set")
+
 	curAv, err := circSub.MaxPhasesCurrent()
 	assert.Equal(t, curAv, 10.0)
 	assert.Nil(t, err)
@@ -75,5 +75,4 @@ func TestParentCircuitHierarchy(t *testing.T) {
 	circMain.maxCurrent = 30
 	assert.Equal(t, circMain.GetRemainingCurrent(), 14.0)
 	assert.Equal(t, circSub.GetRemainingCurrent(), 10.0)
-
 }

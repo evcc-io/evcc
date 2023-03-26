@@ -17,15 +17,11 @@ func (tc *testConsumerVM) MaxPhasesCurrent() (float64, error) {
 }
 
 func TestVMeter(t *testing.T) {
-	// for testing we setup LP (consumers)
-
 	vm := NewVMeter("test")
 
-	var consumers []*testConsumerVM // internal access for testing
-	for consId := 0; consId < 2; consId++ {
-		cons := &testConsumerVM{}
+	for i := 0; i < 2; i++ {
+		cons := new(testConsumerVM)
 		vm.Consumers = append(vm.Consumers, cons)
-		consumers = append(consumers, cons)
 	}
 
 	var cur1, cur2, cur3 float64
@@ -35,31 +31,30 @@ func TestVMeter(t *testing.T) {
 	assert.Equal(t, cur1, 0.0)
 
 	// one lp consumes current
-	consumers[0].cur = maxA
+	vm.Consumers[0].(*testConsumerVM).cur = maxA
 	cur1, cur2, cur3, _ = vm.Currents()
 	assert.Equal(t, cur1, maxA)
+
 	// also check all 3 currents are identical
 	assert.Equal(t, cur1, cur2)
 	assert.Equal(t, cur1, cur3)
 
 	// 2nd lp consumes current
-	consumers[1].cur = 6.0
+	vm.Consumers[1].(*testConsumerVM).cur = 6.0
 	cur1, _, _, _ = vm.Currents()
 	assert.Equal(t, cur1, maxA+6.0)
 }
 
 func TestVMeterWithCircuit(t *testing.T) {
-	// vmeter might use a circuit as consumer
 	vm := NewVMeter("test")
 
-	var consumers []*testConsumerVM // internal access for testing
-	for consId := 0; consId < 2; consId++ {
+	for i := 0; i < 2; i++ {
 		cons := &testConsumerVM{
 			cur: maxA,
 		}
 		vm.Consumers = append(vm.Consumers, cons)
-		consumers = append(consumers, cons)
 	}
+
 	// subcircuit
 	testMeter := testMeter{cur: 10.0}
 	circSub := NewCircuit(util.NewLogger("foo"), 20.0, nil, &testMeter)
