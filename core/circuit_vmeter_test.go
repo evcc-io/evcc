@@ -50,7 +50,6 @@ func TestVMeter(t *testing.T) {
 
 func TestVMeterWithCircuit(t *testing.T) {
 	// vmeter might use a circuit as consumer
-
 	vm := NewVMeter("test")
 
 	var consumers []*testConsumerVM // internal access for testing
@@ -67,6 +66,7 @@ func TestVMeterWithCircuit(t *testing.T) {
 	assert.NotNilf(t, circSub, "circuit not created")
 	vm.Consumers = append(vm.Consumers, circSub)
 
+	// TODO agree on cur vs i vs l
 	var cur1 float64
 	var cur2 float64
 	var cur3 float64

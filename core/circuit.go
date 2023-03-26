@@ -38,13 +38,14 @@ func NewCircuit(log *util.Logger, limit float64, p *Circuit, pc api.PhaseCurrent
 	return circuit
 }
 
+// TODO DumpConfig dumps to log elsewhere and should not return
 // DumpConfig dumps the current circuit
 func (circuit *Circuit) DumpConfig(indent int, maxIndent int) string {
-
 	var parentLimit float64
 	if circuit.parentCircuit != nil {
 		parentLimit = circuit.parentCircuit.maxCurrent
 	}
+
 	return fmt.Sprintf("%s maxCurrent %.1fA (parent: %.1fA)",
 		strings.Repeat(" ", indent),
 		circuit.maxCurrent,
@@ -68,6 +69,7 @@ func (circuit *Circuit) Prepare(uiChan chan<- util.Param) {
 // update gets called on every site update call.
 // this is used to update the current consumption etc to get published in status and databases
 func (circuit *Circuit) update() {
+	// TODO error handling- can we just ignore it and why?
 	_, _ = circuit.MaxPhasesCurrent()
 }
 

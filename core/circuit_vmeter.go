@@ -19,20 +19,28 @@ type VMeter struct {
 	Consumers []Consumer // all consumers under management. Used for consumption evaluation
 }
 
+var vmeterId int // counter for logger id
+
+// NewVMeter a new vmeter
+func NewVMeter(n string) *VMeter {
+	vm := &VMeter{
+		log: util.NewLogger(fmt.Sprintf("vmtr-%d", vmeterId)),
+	}
+	vmeterId += 1
+	return vm
+}
+
 // AddConsumer adds a consumer to evaluate consumption
 func (vm *VMeter) AddConsumer(c Consumer) {
 	vm.Consumers = append(vm.Consumers, c)
 	vm.log.TRACE.Printf("adding Consumer %T", c)
 }
 
-var (
-	vmeterId int // counter for logger id
-)
-
 // Currents implements MeterCurrent interface
-// return current as it would be used on all 3 phases. We dont phase accurate evaluation for the installation.
+// return current as it would be used on all 3 phases. We don't do phase-accurate evaluation for the installation.
 func (vm *VMeter) Currents() (float64, float64, float64, error) {
 	vm.log.TRACE.Printf("get current from %d consumers", len(vm.Consumers))
+
 	var currentTotal float64
 	for _, consumer := range vm.Consumers {
 		if cur, err := consumer.MaxPhasesCurrent(); err == nil {
@@ -42,14 +50,6 @@ func (vm *VMeter) Currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 	}
-	return currentTotal, currentTotal, currentTotal, nil
-}
 
-// NewVMeter a new vmeter
-func NewVMeter(n string) *VMeter {
-	vm := &VMeter{
-		log: util.NewLogger(fmt.Sprintf("vmtr-%d", vmeterId)),
-	}
-	vmeterId += 1
-	return vm
+	return currentTotal, currentTotal, currentTotal, nil
 }
