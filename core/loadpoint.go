@@ -416,6 +416,9 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
+	// phases are unknown when charging stops
+	lp.resetMeasuredPhases()
+
 	// reset pv enable/disable timer
 	// https://github.com/evcc-io/evcc/issues/2289
 	if !lp.pvTimer.Equal(elapsed) {
@@ -463,9 +466,6 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
-
-	// phases are unknown when vehicle disconnects
-	lp.resetMeasuredPhases()
 
 	// energy and duration
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
