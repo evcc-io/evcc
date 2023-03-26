@@ -192,6 +192,10 @@ func (cp *CP) WatchDog(timeout time.Duration) {
 	}
 }
 
+func (cp *CP) isTimeout() bool {
+	return cp.timeout > 0 && cp.clock.Since(cp.meterUpdated) > cp.timeout
+}
+
 var _ api.Meter = (*CP)(nil)
 
 func (cp *CP) CurrentPower() (float64, error) {
@@ -202,8 +206,13 @@ func (cp *CP) CurrentPower() (float64, error) {
 		return 0, api.ErrTimeout
 	}
 
-	if cp.txnId != 0 && cp.timeout > 0 && cp.clock.Since(cp.meterUpdated) > cp.timeout {
-		return 0, api.ErrNotAvailable
+	// zero value on timeout when not charging
+	if cp.isTimeout() {
+		if cp.txnId != 0 {
+			return 0, api.ErrTimeout
+		}
+
+		return 0, nil
 	}
 
 	if m, ok := cp.measurements[string(types.MeasurandPowerActiveImport)]; ok {
@@ -224,8 +233,9 @@ func (cp *CP) TotalEnergy() (float64, error) {
 		return 0, api.ErrTimeout
 	}
 
-	if cp.txnId != 0 && cp.timeout > 0 && cp.clock.Since(cp.meterUpdated) > cp.timeout {
-		return 0, api.ErrNotAvailable
+	// fallthrough for last value on timeout when not charging
+	if cp.txnId != 0 && cp.isTimeout() {
+		return 0, api.ErrTimeout
 	}
 
 	if m, ok := cp.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
@@ -261,8 +271,13 @@ func (cp *CP) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrTimeout
 	}
 
-	if cp.txnId != 0 && cp.timeout > 0 && cp.clock.Since(cp.meterUpdated) > cp.timeout {
-		return 0, 0, 0, api.ErrNotAvailable
+	// zero value on timeout when not charging
+	if cp.isTimeout() {
+		if cp.txnId != 0 {
+			return 0, 0, 0, api.ErrTimeout
+		}
+
+		return 0, 0, 0, nil
 	}
 
 	currents := make([]float64, 0, 3)
