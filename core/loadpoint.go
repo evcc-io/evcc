@@ -644,8 +644,10 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 
 	// TODO move to separately testable function?
 	if lp.circuit != nil && chargeCurrent > 0.0 {
+		// TODO naming unclear: is maxCur the maximum or the remaining current?
 		maxCur := lp.circuit.GetRemainingCurrent()
 
+		// TODO naming unclear: dito
 		// maxCur includes the consumption of this loadpoint, so adjust using consumer interface
 		curAct, err := lp.MaxPhasesCurrent()
 		if err != nil {
@@ -654,6 +656,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			return err
 		}
 
+		// TODO naming unclear: dito
 		newCur := maxCur + curAct
 
 		// apply not more than requested. If too little current is available, make sure its not negative
