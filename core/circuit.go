@@ -73,6 +73,8 @@ func (circuit *Circuit) update() {
 	_, _ = circuit.MaxPhasesCurrent()
 }
 
+var _ Consumer = (*Circuit)(nil)
+
 // GetCurrent determines current in use. Implements consumer interface
 func (circuit *Circuit) MaxPhasesCurrent() (float64, error) {
 	i1, i2, i3, err := circuit.phaseCurrents.Currents()
