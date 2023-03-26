@@ -341,8 +341,8 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 
 	siteMeterUsed := false
 
+	// TODO cleanup similar to loadpoints
 	for id, cfg := range conf.Circuits {
-		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
 		var circuitCfg = new(core.CircuitConfig)
 
 		if err := util.DecodeOther(cfg, circuitCfg); err != nil {
@@ -364,6 +364,7 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 				return fmt.Errorf("failed to set parent circuit %s: %w", circuitCfg.ParentRef, err)
 			}
 		}
+
 		var phaseCurrents api.PhaseCurrents
 		if circuitCfg.MeterRef != "" {
 			// check is site meter, to bypass duplicate use check
@@ -371,6 +372,7 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 			if err := util.DecodeOther(conf.Site, &site); err != nil {
 				return fmt.Errorf("failed checking site config to get grid meter: %w", err)
 			}
+
 			var mt api.Meter
 			if circuitCfg.MeterRef == site.Meters.GridMeterRef && !siteMeterUsed {
 				// use grid meter
@@ -397,10 +399,14 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 			cp.vMeters[circuitCfg.Name] = core.NewVMeter(circuitCfg.Name)
 			phaseCurrents = cp.VMeter(circuitCfg.Name)
 		}
-		circuit := core.NewCircuit(circuitCfg.MaxCurrent, parentCircuit, phaseCurrents, log)
+
+		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
+
+		circuit := core.NewCircuit(log, circuitCfg.MaxCurrent, parentCircuit, phaseCurrents)
 		if circuit == nil {
 			return fmt.Errorf("failed configuring circuit: %w", err)
 		}
+
 		cp.circuits[circuitCfg.Name] = circuit
 		// check circuit has meter. if not, add vmeter
 		// check if it has a parent circuit. If so, check there is a vmeter for this circuit name and add this circuit as consumer

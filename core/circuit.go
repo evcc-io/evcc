@@ -28,9 +28,9 @@ type Circuit struct {
 }
 
 // NewCircuit a circuit with defaults
-func NewCircuit(limit float64, p *Circuit, pc api.PhaseCurrents, l *util.Logger) *Circuit {
+func NewCircuit(log *util.Logger, limit float64, p *Circuit, pc api.PhaseCurrents) *Circuit {
 	circuit := &Circuit{
-		log:           l,
+		log:           log,
 		maxCurrent:    limit,
 		parentCircuit: p,
 		phaseCurrents: pc,
@@ -73,19 +73,20 @@ func (circuit *Circuit) update() {
 
 // GetCurrent determines current in use. Implements consumer interface
 func (circuit *Circuit) MaxPhasesCurrent() (float64, error) {
-	var current float64
-
 	i1, i2, i3, err := circuit.phaseCurrents.Currents()
 	if err != nil {
 		return 0, fmt.Errorf("failed getting meter currents: %w", err)
 	}
+
 	circuit.log.TRACE.Printf("meter currents: %.3gA", []float64{i1, i2, i3})
 	circuit.publish("meterCurrents", []float64{i1, i2, i3})
+
 	// TODO: phase adjusted handling. Currently we take highest current from all phases
-	current = math.Max(math.Max(i1, i2), i3)
+	current := math.Max(math.Max(i1, i2), i3)
 
 	circuit.log.TRACE.Printf("actual current: %.1fA", current)
 	circuit.publish("actualCurrent", current)
+
 	return current, nil
 }
 
@@ -98,17 +99,19 @@ func (circuit *Circuit) GetRemainingCurrent() float64 {
 		circuit.log.ERROR.Printf("max phase currents: %v", err)
 		return 0
 	}
+
 	curAvailable := circuit.maxCurrent - current
-	if curAvailable < 0.0 {
+	circuit.publish("overload", curAvailable < 0)
+	if curAvailable < 0 {
 		circuit.log.WARN.Printf("overload detected - currents: %.1fA, allowed max current is: %.1fA\n", current, circuit.maxCurrent)
-		circuit.publish("overload", true)
-	} else {
-		circuit.publish("overload", false)
 	}
+
 	// check parent circuit, return lowest
 	if circuit.parentCircuit != nil {
 		curAvailable = math.Min(curAvailable, circuit.parentCircuit.GetRemainingCurrent())
 	}
+
 	circuit.log.DEBUG.Printf("circuit using %.1fA, %.1fA available", current, curAvailable)
+
 	return curAvailable
 }
