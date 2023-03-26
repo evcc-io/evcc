@@ -640,22 +640,31 @@ func (lp *Loadpoint) syncCharger() {
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	// apply load management
-	forceCurrentChange := false
+	var forceCurrentChange bool
+
+	// TODO move to separately testable function?
 	if lp.circuit != nil && chargeCurrent > 0.0 {
 		maxCur := lp.circuit.GetRemainingCurrent()
+
 		// maxCur includes the consumption of this loadpoint, so adjust using consumer interface
 		curAct, err := lp.MaxPhasesCurrent()
 		if err != nil {
+			// TODO handle only once- either log or return
 			lp.log.ERROR.Printf("error getting current consumption: %s", err)
 			return err
 		}
+
 		newCur := maxCur + curAct
-		// apply not more than requested. If too less current is available, make sure its not negative
+
+		// apply not more than requested. If too little current is available, make sure its not negative
 		chargeCurrentNew := math.Min(math.Max(newCur, 0), chargeCurrent)
+
+		// TODO check against minCurrent
 		// later here the function checks for having less than MinCurrent()
 		if chargeCurrentNew < chargeCurrent {
 			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit", chargeCurrent, chargeCurrentNew)
 			chargeCurrent = chargeCurrentNew
+
 			// also set force to ensure not overloading the circuit
 			forceCurrentChange = true
 		}
@@ -884,7 +893,10 @@ func (lp *Loadpoint) updateChargerStatus() error {
 	return nil
 }
 
+var _ Consumer = (*Loadpoint)(nil)
+
 // implements interface Consumer, redirects to effectiveCurrent
+// TODO check oder- if we have currents we should use them
 func (lp *Loadpoint) MaxPhasesCurrent() (float64, error) {
 	// using effective current in use.
 	// potential issue: slow LP might cause interference or overload
