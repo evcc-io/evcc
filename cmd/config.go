@@ -172,7 +172,7 @@ func (cp *ConfigProvider) Circuit(name string) (*core.Circuit, error) {
 	if cc, ok := cp.circuits[name]; ok {
 		return cc, nil
 	}
-	return nil, fmt.Errorf("invalid circuit: %s", name)
+	return nil, fmt.Errorf("circuit does not exist: %s", name)
 }
 
 // VMeter provides virtual meter by circuit ref, if exists
