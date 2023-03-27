@@ -77,7 +77,8 @@
 							:powerInKw="powerInKw"
 							:details="detailsValue(tariffGrid, tariffCo2)"
 							:detailsFmt="detailsFmt"
-							:detailsTooltip="detailsTooltip(tariffGrid, tariffCo2)"
+							detailsClickable
+							@details-clicked="openGridModal"
 						/>
 					</div>
 				</div>
@@ -289,6 +290,9 @@ export default {
 		},
 		updateHeight: function () {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
+		},
+		openGridModal: function () {
+			alert("grid setting");
 		},
 	},
 };

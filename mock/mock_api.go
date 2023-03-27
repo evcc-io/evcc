@@ -529,6 +529,11 @@ func (mr *MockTariffMockRecorder) Rates() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rates", reflect.TypeOf((*MockTariff)(nil).Rates))
 }
 
+// Dynamics mocks base method.
+func (m *MockTariff) Dynamic() bool {
+	return true
+}
+
 // Unit mocks base method.
 func (m *MockTariff) Unit() string {
 	m.ctrl.T.Helper()

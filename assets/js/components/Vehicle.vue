@@ -31,10 +31,10 @@
 				:extraValue="chargedSoc"
 				align="start"
 			/>
-			<SmartCharging
+			<ChargingPlan
 				class="flex-grow-1 target-charge"
-				v-bind="smartCharging"
-				:disabled="smartChargingDisabled"
+				v-bind="chargingPlan"
+				:disabled="chargingPlanDisabled"
 				@target-time-updated="setTargetTime"
 				@target-time-removed="removeTargetTime"
 			/>
@@ -65,7 +65,7 @@ import LabelAndValue from "./LabelAndValue.vue";
 import VehicleTitle from "./VehicleTitle.vue";
 import VehicleSoc from "./VehicleSoc.vue";
 import VehicleStatus from "./VehicleStatus.vue";
-import SmartCharging from "./SmartCharging.vue";
+import ChargingPlan from "./ChargingPlan.vue";
 import TargetSocSelect from "./TargetSocSelect.vue";
 import TargetEnergySelect from "./TargetEnergySelect.vue";
 import { distanceUnit, distanceValue } from "../units";
@@ -77,7 +77,7 @@ export default {
 		VehicleSoc,
 		VehicleStatus,
 		LabelAndValue,
-		SmartCharging,
+		ChargingPlan,
 		TargetSocSelect,
 		TargetEnergySelect,
 	},
@@ -113,7 +113,7 @@ export default {
 		guardRemainingInterpolated: Number,
 		vehicles: Array,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		tariffPlannerUnit: String,
 	},
 	emits: [
 		"target-time-removed",
@@ -138,8 +138,8 @@ export default {
 		vehicleTitleProps: function () {
 			return this.collectProps(VehicleTitle);
 		},
-		smartCharging: function () {
-			return this.collectProps(SmartCharging);
+		chargingPlan: function () {
+			return this.collectProps(ChargingPlan);
 		},
 		range: function () {
 			return distanceValue(this.vehicleRange);
@@ -163,7 +163,7 @@ export default {
 			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
 			return value > 1 ? `+${Math.round(value)}%` : null;
 		},
-		smartChargingDisabled: function () {
+		chargingPlanDisabled: function () {
 			if (!this.connected) {
 				return true;
 			}

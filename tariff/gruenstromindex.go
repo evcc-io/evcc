@@ -135,3 +135,8 @@ func (t *GrünStromIndex) Rates() (api.Rates, error) {
 	defer t.mux.Unlock()
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
+
+// Dynamic implements the api.Tariff interface
+func (t *GrünStromIndex) Dynamic() bool {
+	return true
+}

@@ -9,7 +9,14 @@
 			{{ name }}
 		</span>
 		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
-			<div ref="details" class="fw-normal" data-bs-toggle="tooltip" @click.stop="">
+			<div
+				ref="details"
+				class="fw-normal"
+				:class="{ 'text-decoration-underline': detailsClickable }"
+				data-bs-toggle="tooltip"
+				:tabindex="detailsClickable ? 0 : undefined"
+				@click.stop="detailsClicked"
+			>
 				<AnimatedNumber v-if="details !== undefined" :to="details" :format="detailsFmt" />
 			</div>
 			<div ref="power" class="power" data-bs-toggle="tooltip" @click.stop="">
@@ -44,7 +51,9 @@ export default {
 		details: { type: Number },
 		detailsFmt: { type: Function },
 		detailsTooltip: { type: Array },
+		detailsClickable: { type: Boolean },
 	},
+	emits: ["details-clicked"],
 	data() {
 		return { powerTooltipInstance: null, detailsTooltipInstance: null };
 	},
@@ -106,6 +115,11 @@ export default {
 			const html = `<div class="text-end">${content.join("<br/>")}</div>`;
 			instance.setContent({ ".tooltip-inner": html });
 			return instance;
+		},
+		detailsClicked: function () {
+			if (this.detailsClickable) {
+				this.$emit("details-clicked");
+			}
 		},
 	},
 };

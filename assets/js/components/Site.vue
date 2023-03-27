@@ -18,7 +18,7 @@
 				:loadpoints="loadpoints"
 				:vehicles="vehicles"
 				:smartCostLimit="smartCostLimit"
-				:smartCostUnit="smartCostUnit"
+				:tariffPlannerUnit="tariffPlannerUnit"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 			/>
@@ -97,7 +97,7 @@ export default {
 		sponsor: String,
 		sponsorTokenExpires: Number,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		tariffPlannerUnit: String,
 	},
 	computed: {
 		energyflow: function () {

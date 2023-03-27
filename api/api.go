@@ -201,6 +201,7 @@ type Rates []Rate
 type Tariff interface {
 	Unit() string
 	Rates() (Rates, error)
+	Dynamic() bool
 }
 
 // AuthProvider is the ability to provide OAuth authentication through the ui

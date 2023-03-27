@@ -126,8 +126,8 @@ pv = "Solar"
 login = "log in"
 logout = "log out"
 
-[main.smartCharging]
-modalTitle = "Smart charging"
+[main.chargingPlan]
+modalTitle = "Charging plan"
 activeLabel = "{time}"
 title = "smart"
 titleMinSoc = "min range"

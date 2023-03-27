@@ -14,12 +14,8 @@
 				>
 					<strong v-if="minSocEnabled">{{ minSocLabel }}</strong>
 					<strong v-else-if="targetChargeEnabled">{{ targetTimeLabel() }}</strong>
-					<strong v-else-if="smartCostEnabled">{{ smartCostLabel }}</strong>
-					<span v-else>{{ $t("main.smartCharging.none") }}</span>
+					<span v-else>{{ $t("main.chargingPlan.none") }}</span>
 				</button>
-				<div v-if="smartCostEnabled" class="extraValue ms-0 ms-sm-1 text-nowrap">
-					{{ smartCostLabelNow }}
-				</div>
 			</h3>
 		</LabelAndValue>
 
@@ -37,7 +33,7 @@
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title">
-								{{ $t("main.smartCharging.modalTitle") }}
+								{{ $t("main.chargingPlan.modalTitle") }}
 							</h5>
 							<button
 								type="button"
@@ -47,8 +43,7 @@
 							></button>
 						</div>
 						<form @submit.prevent="setTargetTime">
-							<div class="modal-body">
-								<!--
+							<div class="modal-body pt-2">
 								<ul class="nav nav-tabs">
 									<li class="nav-item">
 										<a
@@ -58,13 +53,9 @@
 											@click.prevent="showTimeTab"
 										>
 											Depature
-											<span
-												class="badge rounded-pill bg-success d-none d-sm-inline-block"
-												>Fr. 7:30</span
-											>
 										</a>
 									</li>
-									<li v-if="smartCostTabAvailable" class="nav-item">
+									<li v-if="smartCostTabAvailable && false" class="nav-item">
 										<a
 											class="nav-link"
 											:class="{ active: smartCostTabActive }"
@@ -91,112 +82,11 @@
 											href="#"
 											@click.prevent="showMinSocTab"
 										>
-											Min range
+											Arrival
 										</a>
 									</li>
 								</ul>
 								<TargetCharge v-if="timeTabActive" v-bind="targetCharge" />
-								-->
-								<div class="accordion accordion-flush" id="accordionFlushExample">
-									<div class="accordion-item">
-										<h2 class="accordion-header" id="flush-headingOne">
-											<button
-												class="accordion-button"
-												type="button"
-												data-bs-toggle="collapse"
-												data-bs-target="#flush-collapseOne"
-												aria-expanded="true"
-												aria-controls="flush-collapseOne"
-											>
-												<div
-													class="d-flex justify-content-between flex-grow-1 me-3"
-												>
-													Depature time
-													<span class="badge rounded-pill bg-success"
-														>Fr. 7:30</span
-													>
-												</div>
-											</button>
-										</h2>
-										<div
-											id="flush-collapseOne"
-											class="accordion-collapse collaps show pb-3"
-											aria-labelledby="flush-headingOne"
-											data-bs-parent="#accordionFlushExample"
-										>
-											<TargetCharge
-												v-if="timeTabActive"
-												v-bind="targetCharge"
-											/>
-										</div>
-									</div>
-									<div class="accordion-item">
-										<h2 class="accordion-header" id="flush-headingTwo">
-											<button
-												class="accordion-button collapsed"
-												type="button"
-												data-bs-toggle="collapse"
-												data-bs-target="#flush-collapseTwo"
-												aria-expanded="false"
-												aria-controls="flush-collapseTwo"
-											>
-												<div
-													class="d-flex justify-content-between flex-grow-1 me-3"
-												>
-													Green energy
-													<span class="badge bg-secondary"
-														>&leq; 750g</span
-													>
-												</div>
-											</button>
-										</h2>
-										<div
-											id="flush-collapseTwo"
-											class="accordion-collapse collapse"
-											aria-labelledby="flush-headingTwo"
-											data-bs-parent="#accordionFlushExample"
-										>
-											<div class="accordion-body">
-												Placeholder content for this accordion, which is
-												intended to demonstrate the
-												<code>.accordion-flush</code> class. This is the
-												second item's accordion body. Let's imagine this
-												being filled with some actual content.
-											</div>
-										</div>
-									</div>
-									<div class="accordion-item">
-										<h2 class="accordion-header" id="flush-headingThree">
-											<button
-												class="accordion-button collapsed"
-												type="button"
-												data-bs-toggle="collapse"
-												data-bs-target="#flush-collapseThree"
-												aria-expanded="false"
-												aria-controls="flush-collapseThree"
-											>
-												Minimum range
-											</button>
-										</h2>
-										<div
-											id="flush-collapseThree"
-											class="accordion-collapse collapse"
-											aria-labelledby="flush-headingThree"
-											data-bs-parent="#accordionFlushExample"
-										>
-											<div class="accordion-body">
-												Placeholder content for this accordion, which is
-												intended to demonstrate the
-												<code>.accordion-flush</code> class. This is the
-												third item's accordion body. Nothing more exciting
-												happening here in terms of content, but just filling
-												up the space to make it look, at least at first
-												glance, a bit more representative of how this would
-												look in a real-world application.
-											</div>
-										</div>
-									</div>
-								</div>
 							</div>
 						</form>
 					</div>
@@ -215,7 +105,7 @@ import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 
 export default {
-	name: "SmartCharging",
+	name: "ChargingPlan",
 	components: { LabelAndValue, TargetCharge },
 	mixins: [formatter, collector],
 	props: {
@@ -227,7 +117,7 @@ export default {
 		socBasedCharging: Boolean,
 		disabled: Boolean,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		tariffPlannerUnit: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		minSoc: Number,
@@ -245,60 +135,37 @@ export default {
 		targetChargeEnabled: function () {
 			return this.targetTime;
 		},
-		smartCostEnabled: function () {
-			return this.smartCostLimit && this.smartCostLimit != 0;
-		},
 		enabled: function () {
-			return this.targetChargeEnabled || this.smartCostEnabled || this.minSocEnabled;
-		},
-		smartCostLabel: function () {
-			const price = this.co2Available
-				? this.fmtCo2Short(this.smartCostLimit)
-				: this.fmtPricePerKWh(this.smartCostLimit, this.smartCostUnit, true);
-			return `< ${price}`;
+			return this.targetChargeEnabled || this.minSocEnabled;
 		},
 		minSocLabel: function () {
 			return `${Math.round(this.minSoc)} %`;
 		},
 		modalId: function () {
-			return `smartChargingModal_${this.id}`;
+			return `chargingPlanModal_${this.id}`;
 		},
 		title: function () {
 			if (this.minSocEnabled) {
-				return this.$t("main.smartCharging.titleMinSoc");
+				return this.$t("main.chargingPlan.titleMinSoc");
 			}
 			if (this.targetChargeEnabled) {
-				return this.$t("main.smartCharging.titleTargetCharge");
+				return this.$t("main.chargingPlan.titleTargetCharge");
 			}
-			if (this.smartCostEnabled) {
-				if (this.co2Available) {
-					return this.$t("main.smartCharging.titleCo2");
-				} else {
-					return this.$t("main.smartCharging.titlePrice");
-				}
-			}
-			return this.$t("main.smartCharging.title");
+			return this.$t("main.chargingPlan.title");
 		},
 		smartCostLabelNow: function () {
 			if (this.co2Available && this.tariffCo2) {
 				return `now ${this.fmtCo2Short(this.tariffCo2)}`;
 			} else if (this.tariffGrid) {
-				return `now ${this.fmtPricePerKWh(this.tariffGrid, this.smartCostUnit, true)}`;
+				return `now ${this.fmtPricePerKWh(this.tariffGrid, this.tariffPlannerUnit, true)}`;
 			}
 			return "";
-		},
-		smartCostTabAvailable: function () {
-			return this.dynamicPricesAvailabe || this.co2Available;
-		},
-		dynamicPricesAvailabe: function () {
-			// TODO: determin if dynamic prices exist
-			return true;
 		},
 		minSocEnabled: function () {
 			return this.minSoc >= this.vehicleSoc;
 		},
 		co2Available: function () {
-			return this.smartCostUnit === "gCO2eq";
+			return this.tariffPlannerUnit === "gCO2eq";
 		},
 		timeTabActive: function () {
 			return this.activeTab === "time";
@@ -336,7 +203,7 @@ export default {
 		// not computed because it needs to update over time
 		targetTimeLabel: function () {
 			const targetDate = new Date(this.targetTime);
-			return this.$t("main.smartCharging.activeLabel", {
+			return this.$t("main.chargingPlan.activeLabel", {
 				time: this.fmtAbsoluteDate(targetDate),
 			});
 		},
@@ -373,14 +240,5 @@ export default {
 .extraValue {
 	color: var(--evcc-gray);
 	font-size: 14px;
-}
-.modal-content {
-	padding: 1.25rem 0 !important;
-}
-.modal-header {
-	padding: 0 1rem 1rem;
-}
-.accordion-collapse {
-	padding: 0 1.25rem;
 }
 </style>
