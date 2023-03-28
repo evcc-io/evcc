@@ -472,7 +472,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.clearSession()
 
     // reset max measured phases
-	lp.resetMaxMeasuredPhases()
+    lp.resetMaxMeasuredPhases()
 
 	// energy and duration
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
