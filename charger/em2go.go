@@ -214,20 +214,6 @@ func (wb *Em2Go) Voltages() (float64, float64, float64, error) {
 		float64(binary.BigEndian.Uint16(b[8:])) / 10, nil
 }
 
-var _ api.PhasePowers = (*Em2Go)(nil)
-
-// Currents implements the api.PhasePowers interface
-func (wb *Em2Go) Powers() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(em2GoRegPowers, 6)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)) / 10,
-		float64(binary.BigEndian.Uint16(b[8:])) / 10,
-		float64(binary.BigEndian.Uint16(b[8:])) / 10, nil
-}
-
 var _ api.ChargeRater = (*Em2Go)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
