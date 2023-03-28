@@ -93,7 +93,7 @@ func TestMaxActivePhases(t *testing.T) {
 				ConfiguredPhases: dflt, // fixed phases or default
 				vehicle:          vehicle,
 				phases:           tc.physical,
-				measuredPhases:   tc.measuredPhases,
+				measuredPhases:   tc.maxMeasuredPhases,
 			}
 
 			if phaseCharger != nil {
