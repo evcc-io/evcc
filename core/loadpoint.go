@@ -125,6 +125,7 @@ type Loadpoint struct {
 	enabled                  bool      // Charger enabled state
 	phases                   int       // Charger enabled phases, guarded by mutex
 	measuredPhases           int       // Charger physically measured phases
+	maxMeasuredPhases        int       // Charger physically max measured phases with this connected vehicle
 	chargeCurrent            float64   // Charger current limit
 	guardUpdated             time.Time // Charger enabled/disabled timestamp
 	socUpdated               time.Time // Soc updated timestamp (poll: connected)
@@ -469,6 +470,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
+	
+    // reset max measured phases
+	lp.resetMaxMeasuredPhases()
 
 	// energy and duration
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
@@ -1240,6 +1244,9 @@ func (lp *Loadpoint) updateChargeCurrents() {
 		if phases >= 1 {
 			lp.Lock()
 			lp.measuredPhases = phases
+			if phases > lp.maxMeasuredPhases {
+				lp.maxMeasuredPhases = phases
+			}
 			lp.Unlock()
 
 			lp.log.DEBUG.Printf("detected active phases: %dp", phases)
