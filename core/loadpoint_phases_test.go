@@ -214,7 +214,7 @@ func TestPvScalePhases(t *testing.T) {
 
 		lp.measuredPhases = tc.measuredPhases
 		lp.maxMeasuredPhases = tc.measuredPhases
-		if tc.maxMeasuredPhases > 0 && tc.vehicle > 0 {
+		if tc.measuredPhases > 0 && tc.vehicle > 0 {
 			t.Fatalf("%v invalid test case", tc)
 		}
 
