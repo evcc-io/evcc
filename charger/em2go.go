@@ -252,19 +252,6 @@ func (wb *Em2Go) ChargingTime() (time.Duration, error) {
 	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
-// utf16BytesToString converts UTF-16 encoded bytes, in big or little endian byte order,
-// to a UTF-8 encoded string.
-func utf16BytesToString(b []byte, o binary.ByteOrder) string {
-	utf := make([]uint16, (len(b)+(2-1))/2)
-	for i := 0; i+(2-1) < len(b); i += 2 {
-		utf[i/2] = o.Uint16(b[i:])
-	}
-	if len(b)/2 < len(utf) {
-		utf[len(utf)-1] = utf8.RuneError
-	}
-	return string(utf16.Decode(utf))
-}
-
 var _ api.Diagnosis = (*Em2Go)(nil)
 
 // Diagnose implements the api.Diagnosis interface
