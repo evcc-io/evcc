@@ -90,11 +90,11 @@ func TestMaxActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &Loadpoint{
-				ConfiguredPhases: dflt, // fixed phases or default
-				vehicle:          vehicle,
-				phases:           tc.physical,
-				measuredPhases:   tc.measuredPhases,
-				maxMeasuredPhases:   tc.measuredPhases,
+				ConfiguredPhases:   dflt, // fixed phases or default
+				vehicle:            vehicle,
+				phases:             tc.physical,
+				measuredPhases:     tc.measuredPhases,
+				maxMeasuredPhases:  tc.measuredPhases,
 			}
 
 			if phaseCharger != nil {
@@ -348,13 +348,13 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		clock.Add(time.Hour) // avoid time.IsZero
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			clock:          clock,
-			charger:        charger,
-			MinCurrent:     minA,
-			MaxCurrent:     maxA,
-			phases:         tc.phases,
-			measuredPhases: tc.measuredPhases,
+			log:               util.NewLogger("foo"),
+			clock:             clock,
+			charger:           charger,
+			MinCurrent:        minA,
+			MaxCurrent:        maxA,
+			phases:            tc.phases,
+			measuredPhases:    tc.measuredPhases,
 			maxMeasuredPhases: tc.measuredPhases,
 			Enable: ThresholdConfig{
 				Delay: dt,
