@@ -93,7 +93,8 @@ func TestMaxActivePhases(t *testing.T) {
 				ConfiguredPhases: dflt, // fixed phases or default
 				vehicle:          vehicle,
 				phases:           tc.physical,
-				measuredPhases:   tc.maxMeasuredPhases,
+				measuredPhases:   tc.measuredPhases,
+				maxMeasuredPhases:   tc.measuredPhases,
 			}
 
 			if phaseCharger != nil {
@@ -212,7 +213,8 @@ func TestPvScalePhases(t *testing.T) {
 		attachListeners(t, lp)
 
 		lp.measuredPhases = tc.measuredPhases
-		if tc.measuredPhases > 0 && tc.vehicle > 0 {
+		lp.maxMeasuredPhases = tc.measuredPhases
+		if tc.maxMeasuredPhases > 0 && tc.vehicle > 0 {
 			t.Fatalf("%v invalid test case", tc)
 		}
 
@@ -247,6 +249,7 @@ func TestPvScalePhases(t *testing.T) {
 			// reset to initial state
 			lp.phases = tc.physical
 			lp.measuredPhases = tc.measuredPhases
+			lp.maxMeasuredPhases = tc.measuredPhases
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
@@ -352,6 +355,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			MaxCurrent:     maxA,
 			phases:         tc.phases,
 			measuredPhases: tc.measuredPhases,
+			maxMeasuredPhases: tc.measuredPhases,
 			Enable: ThresholdConfig{
 				Delay: dt,
 			},
