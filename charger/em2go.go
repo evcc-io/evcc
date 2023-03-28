@@ -21,6 +21,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"time"
+	"unicode/utf16"
+	"unicode/utf8"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -286,7 +288,15 @@ func (wb *Em2Go) Diagnose() {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegSerial, 16); err == nil {
-		fmt.Printf("\tSerial:\t%s\n", utf16BytesToString(b, binary.BigEndian))
+		var serial []byte
+		for reg := 0; reg < 8; reg++ {
+			b, err := wb.conn.ReadHoldingRegisters(em2GoRegSerial+2*uint16(reg), 2)
+			if err != nil {
+				return
+			}
+			serial = append(serial, b...)
+		}
+		fmt.Printf("\tSerial:\t%s\n", string(serial))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2goRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
