@@ -1,8 +1,13 @@
 template: em2go
 products:
-  - brand: D-Parts
+  - brand: EM2GO
     description:
-      generic: Em2Go
+      generic: Pro Power/OCPP/ONC
+capabilities: ["mA", "rfid"]
+requirements:
+  description:
+    de: Für die Nutzung mit evcc muss die Wallbox mit einer aktuellen Firmware mit Modbus-Unterstützung betrieben werden. Bitte mit dem Hersteller abklären.
+    en: For use with evcc, the wallbox must be operated with a recent firmware including Modbus support. Please contact vendor.
 params:
   - name: modbus
     choice: ["tcpip"]
