@@ -6,7 +6,7 @@ products:
 group: switchsockets
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["pv", "charge"]
   - name: host
     default: 192.0.2.2
   - name: user
