@@ -90,11 +90,11 @@ func TestMaxActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &Loadpoint{
-				ConfiguredPhases:   dflt, // fixed phases or default
-				vehicle:            vehicle,
-				phases:             tc.physical,
-				measuredPhases:     tc.measuredPhases,
-				maxMeasuredPhases:  tc.measuredPhases,
+				ConfiguredPhases:  dflt, // fixed phases or default
+				vehicle:           vehicle,
+				phases:            tc.physical,
+				measuredPhases:    tc.measuredPhases,
+				maxMeasuredPhases: tc.measuredPhases,
 			}
 
 			if phaseCharger != nil {
