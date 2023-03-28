@@ -39,7 +39,7 @@ func (lp *Loadpoint) setPhases(phases int) {
 	}
 }
 
-// resetMeasuredPhases resets measured phases to unknown on vehicle disconnect, phase switch or phase api call
+// resetMeasuredPhases resets measured phases to unknown on charge stop, phase switch or phase api call
 func (lp *Loadpoint) resetMeasuredPhases() {
 	lp.Lock()
 	lp.measuredPhases = 0
@@ -48,11 +48,25 @@ func (lp *Loadpoint) resetMeasuredPhases() {
 	lp.publish(phasesActive, lp.activePhases())
 }
 
+// resetMaxMeasuredPhases resets max measured phases to unknown on vehicle disconnect
+func (lp *Loadpoint) resetMaxMeasuredPhases() {
+	lp.Lock()
+	lp.maxMeasuredPhases = 0
+	lp.Unlock()
+}
+
 // getMeasuredPhases provides synchronized access to measuredPhases
 func (lp *Loadpoint) getMeasuredPhases() int {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.measuredPhases
+}
+
+// getMaxMeasuredPhases provides synchronized access to maxMeasuredPhases
+func (lp *Loadpoint) getMaxMeasuredPhases() int {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.maxMeasuredPhases
 }
 
 // assume 3p for switchable charger during startup
@@ -95,7 +109,7 @@ func (lp *Loadpoint) activePhases() int {
 // maxActivePhases returns the maximum number of active phases for the meter.
 func (lp *Loadpoint) maxActivePhases() int {
 	physical := lp.GetPhases()
-	measured := lp.getMeasuredPhases()
+	measured := lp.getMaxMeasuredPhases()
 	vehicle := lp.getVehiclePhases()
 
 	// during 1p or unknown config, 1p measured is not a restriction
