@@ -470,7 +470,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
-	
+
     // reset max measured phases
 	lp.resetMaxMeasuredPhases()
 
