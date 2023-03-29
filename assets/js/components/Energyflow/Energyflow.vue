@@ -77,8 +77,9 @@
 							:powerInKw="powerInKw"
 							:details="detailsValue(tariffGrid, tariffCo2)"
 							:detailsFmt="detailsFmt"
-							detailsClickable
-							@details-clicked="openGridModal"
+							:detailsClickable="gridSettingsAvailable"
+							:detailsTooltip="detailsTooltip(tariffGrid, tariffCo2)"
+							@details-clicked="openGridSettingsModal"
 						/>
 					</div>
 				</div>
@@ -147,22 +148,26 @@
 				</div>
 			</div>
 		</div>
+		<GridSettingsModal v-bind="gridSettings" />
 	</div>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/filled/square";
+import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
+import GridSettingsModal from "../GridSettingsModal.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
-import { showGridPrice, showGridCo2 } from "../../gridDetails";
+import { CO2_UNIT } from "../../units";
+import collector from "../../mixins/collector";
 
 export default {
 	name: "Energyflow",
-	components: { Visualization, EnergyflowEntry, AnimatedNumber },
-	mixins: [formatter],
+	components: { Visualization, EnergyflowEntry, AnimatedNumber, GridSettingsModal },
+	mixins: [formatter, collector],
 	props: {
 		gridConfigured: Boolean,
 		gridPower: { type: Number, default: 0 },
@@ -172,7 +177,7 @@ export default {
 		pvPower: { type: Number, default: 0 },
 		loadpointsPower: { type: Number, default: 0 },
 		activeLoadpointsCount: { type: Number, default: 0 },
-		batteryConfigured: Boolean,
+		batteryConfigured: { type: Boolean },
 		battery: { type: Array },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
@@ -182,10 +187,13 @@ export default {
 		tariffEffectivePrice: { type: Number },
 		tariffCo2: { type: Number },
 		tariffEffectiveCo2: { type: Number },
+		tariffGridDynamic: { type: Boolean },
+		tariffPlannerUnit: { type: String },
 		currency: { type: String },
+		smartCostLimit: { type: Number },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null };
+		return { detailsOpen: false, detailsCompleteHeight: null, gridSettingsModal: null };
 	},
 	computed: {
 		gridImport: function () {
@@ -244,8 +252,20 @@ export default {
 		batteryFmt() {
 			return (soc) => `${Math.round(soc)}%`;
 		},
+		gridSettingsAvailable() {
+			return this.tariffGridDynamic || this.co2Available;
+		},
+		gridSettings() {
+			return this.collectProps(GridSettingsModal);
+		},
+		co2Available() {
+			return this.tariffPlannerUnit === CO2_UNIT;
+		},
 	},
 	mounted() {
+		this.gridSettingsModal = Modal.getOrCreateInstance(
+			document.querySelector("#gridSettingsModal")
+		);
 		window.addEventListener("resize", this.updateHeight);
 		// height must be calculated in case of initially open details
 		if (settings.energyflowDetails) {
@@ -267,18 +287,16 @@ export default {
 			return result;
 		},
 		detailsValue(price, co2) {
-			if (showGridPrice() && !isNaN(price)) {
-				return price;
-			}
-			if (showGridCo2() && !isNaN(co2)) {
+			if (this.co2Available) {
 				return co2;
 			}
+			return price;
 		},
 		detailsFmt(value) {
-			if (showGridPrice()) {
-				return this.fmtPricePerKWh(value, this.currency, true);
+			if (this.co2Available) {
+				return this.fmtCo2Short(value);
 			}
-			return this.fmtCo2Short(value);
+			return this.fmtPricePerKWh(value, this.currency, true);
 		},
 		kw: function (watt) {
 			return this.fmtKw(watt, this.powerInKw);
@@ -291,8 +309,8 @@ export default {
 		updateHeight: function () {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
 		},
-		openGridModal: function () {
-			alert("grid setting");
+		openGridSettingsModal() {
+			this.gridSettingsModal.show();
 		},
 	},
 };

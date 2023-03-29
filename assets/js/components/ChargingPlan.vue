@@ -42,53 +42,38 @@
 								aria-label="Close"
 							></button>
 						</div>
-						<form @submit.prevent="setTargetTime">
-							<div class="modal-body pt-2">
-								<ul class="nav nav-tabs">
-									<li class="nav-item">
-										<a
-											class="nav-link"
-											:class="{ active: timeTabActive }"
-											href="#"
-											@click.prevent="showTimeTab"
-										>
-											Depature
-										</a>
-									</li>
-									<li v-if="smartCostTabAvailable && false" class="nav-item">
-										<a
-											class="nav-link"
-											:class="{ active: smartCostTabActive }"
-											href="#"
-											@click.prevent="showSmartCostTab"
-										>
-											<div v-if="co2Available">
-												Green energy
-												<span class="badge bg-secondary">&leq; 750g</span>
-											</div>
-											<div v-else>
-												Cheap
-												<span
-													class="badge bg-secondary d-none d-sm-inline-block"
-													>&leq; 0,23ct</span
-												>
-											</div>
-										</a>
-									</li>
-									<li class="nav-item">
-										<a
-											class="nav-link"
-											:class="{ active: minSocTabActive }"
-											href="#"
-											@click.prevent="showMinSocTab"
-										>
-											Arrival
-										</a>
-									</li>
-								</ul>
-								<TargetCharge v-if="timeTabActive" v-bind="targetCharge" />
+						<div class="modal-body pt-2">
+							<ul class="nav nav-tabs">
+								<li class="nav-item">
+									<a
+										class="nav-link"
+										:class="{ active: departureTabActive }"
+										href="#"
+										@click.prevent="showDeatureTab"
+									>
+										Depature
+									</a>
+								</li>
+								<li class="nav-item">
+									<a
+										class="nav-link"
+										:class="{ active: arrivalTabActive }"
+										href="#"
+										@click.prevent="showArrivalTab"
+									>
+										Arrival
+									</a>
+								</li>
+							</ul>
+							<div v-if="isModalVisible">
+								<TargetCharge
+									v-if="departureTabActive"
+									v-bind="targetCharge"
+									@target-time-updated="setTargetTime"
+									@target-time-removed="removeTargetTime"
+								/>
 							</div>
-						</form>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -116,10 +101,6 @@ export default {
 		targetEnergy: Number,
 		socBasedCharging: Boolean,
 		disabled: Boolean,
-		smartCostLimit: Number,
-		tariffPlannerUnit: String,
-		tariffGrid: Number,
-		tariffCo2: Number,
 		minSoc: Number,
 		vehicleSoc: Number,
 	},
@@ -128,7 +109,7 @@ export default {
 		return {
 			modal: null,
 			isModalVisible: false,
-			activeTab: "time",
+			activeTab: "departure",
 		};
 	},
 	computed: {
@@ -153,28 +134,14 @@ export default {
 			}
 			return this.$t("main.chargingPlan.title");
 		},
-		smartCostLabelNow: function () {
-			if (this.co2Available && this.tariffCo2) {
-				return `now ${this.fmtCo2Short(this.tariffCo2)}`;
-			} else if (this.tariffGrid) {
-				return `now ${this.fmtPricePerKWh(this.tariffGrid, this.tariffPlannerUnit, true)}`;
-			}
-			return "";
-		},
 		minSocEnabled: function () {
 			return this.minSoc >= this.vehicleSoc;
 		},
-		co2Available: function () {
-			return this.tariffPlannerUnit === "gCO2eq";
+		departureTabActive: function () {
+			return this.activeTab === "departure";
 		},
-		timeTabActive: function () {
-			return this.activeTab === "time";
-		},
-		smartCostTabActive: function () {
-			return this.activeTab === "smartcost";
-		},
-		minSocTabActive: function () {
-			return this.activeTab === "minsoc";
+		arrivalTabActive: function () {
+			return this.activeTab === "arrival";
 		},
 		targetCharge: function () {
 			return this.collectProps(TargetCharge);
@@ -207,14 +174,19 @@ export default {
 				time: this.fmtAbsoluteDate(targetDate),
 			});
 		},
-		showTimeTab: function () {
-			this.activeTab = "time";
+		showDeatureTab: function () {
+			this.activeTab = "departure";
 		},
-		showSmartCostTab: function () {
-			this.activeTab = "smartcost";
+		showArrivalTab: function () {
+			this.activeTab = "arrival";
 		},
-		showMinSocTab: function () {
-			this.activeTab = "minsoc";
+		setTargetTime: function (targetTime) {
+			this.$emit("target-time-updated", targetTime);
+			this.modal.hide();
+		},
+		removeTargetTime: function () {
+			this.$emit("target-time-removed");
+			this.modal.hide();
 		},
 	},
 };
@@ -236,9 +208,5 @@ export default {
 }
 .value:hover {
 	color: var(--bs-color-white);
-}
-.extraValue {
-	color: var(--evcc-gray);
-	font-size: 14px;
 }
 </style>

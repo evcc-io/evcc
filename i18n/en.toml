@@ -56,6 +56,18 @@ modalUpdateNow = "Install now"
 modalUpdateStarted = "Starting the new version of evcc…"
 modalUpdateStatusStart = "Installation started:"
 
+[gridSettings]
+activeHours = "{charging} of {total}"
+activeHoursLabel = "Active hours"
+co2Label = "CO₂ emission"
+co2Limit = "CO₂ limit"
+modalTitle = "Smart Grid Charging"
+priceLabel = "Energy price"
+priceLimit = "Price limit"
+priceLimitDescription = "Enables temporary fast-charging in solar mode."
+timeRange = "{day} {range} h"
+unknownCost = "still unknown"
+
 [header]
 about = "About"
 blog = "Blog"
@@ -67,6 +79,14 @@ settings = "Settings"
 
 [main]
 vehicles = "Parking"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+modalTitle = "Charging Plan"
+none = "none"
+title = "plan"
+titleMinSoc = "min range"
+titleTargetCharge = "depature time"
 
 [main.energyflow]
 battery = "Battery"
@@ -126,16 +146,6 @@ pv = "Solar"
 login = "log in"
 logout = "log out"
 
-[main.chargingPlan]
-modalTitle = "Charging plan"
-activeLabel = "{time}"
-title = "smart"
-titleMinSoc = "min range"
-titlePrice = "cheap energy"
-titleCo2 = "green energy"
-titleTargetCharge = "depature time"
-none = "none"
-
 [main.targetCharge]
 activate = "Activate"
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
@@ -185,6 +195,8 @@ vehicleTarget = "Vehicle limit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Charging…"
+cheapEnergyCharging = "Cheap energy available. Charging…"
+cleanEnergyCharging = "Clean energy available. Charging…"
 connected = "Connected."
 disconnected = "Disconnected."
 guard = "Starting in {remaining}…"

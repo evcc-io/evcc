@@ -114,6 +114,8 @@ export default {
 		vehicles: Array,
 		smartCostLimit: Number,
 		tariffPlannerUnit: String,
+		tariffGrid: Number,
+		tariffCo2: Number,
 	},
 	emits: [
 		"target-time-removed",

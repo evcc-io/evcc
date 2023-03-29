@@ -124,8 +124,6 @@ export default {
 			},
 		},
 		sponsor: String,
-		hasPrice: Boolean,
-		hasCo2: Boolean,
 		sponsorTokenExpires: Number,
 	},
 	computed: {

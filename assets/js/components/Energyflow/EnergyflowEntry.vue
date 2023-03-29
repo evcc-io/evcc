@@ -15,11 +15,11 @@
 				:class="{ 'text-decoration-underline': detailsClickable }"
 				data-bs-toggle="tooltip"
 				:tabindex="detailsClickable ? 0 : undefined"
-				@click.stop="detailsClicked"
+				@click="detailsClicked"
 			>
-				<AnimatedNumber v-if="details !== undefined" :to="details" :format="detailsFmt" />
+				<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
 			</div>
-			<div ref="power" class="power" data-bs-toggle="tooltip" @click.stop="">
+			<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
 				<AnimatedNumber :to="power" :format="kw" />
 			</div>
 		</span>
@@ -96,6 +96,9 @@ export default {
 			);
 		},
 		updateDetailsTooltip() {
+			if (this.detailsClickable) {
+				return;
+			}
 			this.detailsTooltipInstance = this.updateTooltip(
 				this.detailsTooltipInstance,
 				this.detailsTooltip,
@@ -116,7 +119,15 @@ export default {
 			instance.setContent({ ".tooltip-inner": html });
 			return instance;
 		},
-		detailsClicked: function () {
+		powerClicked: function ($event) {
+			if (this.powerTooltip) {
+				$event.stopPropagation();
+			}
+		},
+		detailsClicked: function ($event) {
+			if (this.detailsClickable || this.detailsTooltip) {
+				$event.stopPropagation();
+			}
 			if (this.detailsClickable) {
 				this.$emit("details-clicked");
 			}

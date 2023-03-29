@@ -98,6 +98,7 @@ export default {
 		sponsorTokenExpires: Number,
 		smartCostLimit: Number,
 		tariffPlannerUnit: String,
+		tariffGridDynamic: Boolean,
 	},
 	computed: {
 		energyflow: function () {
@@ -124,12 +125,6 @@ export default {
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation) };
-		},
-		hasPrice: function () {
-			return !isNaN(this.tariffGrid);
-		},
-		hasCo2: function () {
-			return !isNaN(this.tariffCo2);
 		},
 		showParkingLot: function () {
 			// work in progess
