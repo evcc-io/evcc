@@ -21,8 +21,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"time"
-	"unicode/utf16"
-	"unicode/utf8"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -42,10 +40,10 @@ const (
 	em2GoRegStatus          = 0   // Uint16 RO ENUM
 	em2goRegConnectorState  = 2   // Uint16 RO ENUM
 	em2goRegErrorCode       = 4   // Uint16 RO ENUM
-	em2GoRegCurrents        = 6   // 3xUint32 RO 0.1A
+	em2GoRegCurrents        = 6   // 3xUint16 RO 0.1A
 	em2GoRegPower           = 12  // Uint32 RO 1W
-	em2GoRegPowers          = 16  // 3xUint32 RO 1W
-	em2GoRegEnergy          = 28  // Uint32 RO 0.1KWh
+	em2GoRegPowers          = 16  // 3xUint16 RO 1W
+	em2GoRegEnergy          = 28  // Uint16 RO 0.1KWh
 	em2GoRegMaxCurrent      = 32  // Uint16 RO 0.1A
 	em2GoRegMinCurrent      = 34  // Uint16 RO 0.1A
 	em2goRegCableMaxCurrent = 36  // Uint16 RO 0.1A
@@ -57,7 +55,7 @@ const (
 	em2goRegCurrentLimit    = 91  // Uint16 WR 0.1A
 	em2GoRegChargeMode      = 93  // Uint16 WR ENUM
 	em2GoRegChargeCommand   = 95  // Uint16 WR ENUM
-	em2goRegVoltages        = 109 // 3xUint32 RO 0.1V
+	em2goRegVoltages        = 109 // 3xUint16 RO 0.1V
 )
 
 func init() {
@@ -183,7 +181,7 @@ func (wb *Em2Go) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64(b) / 10, nil
+	return float64(binary.BigEndian.Uint16(b)) / 10, nil
 }
 
 var _ api.PhaseCurrents = (*Em2Go)(nil)
@@ -223,7 +221,7 @@ func (wb *Em2Go) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64(b) / 10, nil
+	return float64(binary.BigEndian.Uint16(b)) / 10, nil
 }
 
 var _ api.ChargeTimer = (*Em2Go)(nil)
@@ -260,17 +258,15 @@ func (wb *Em2Go) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(em2goRegCableMaxCurrent, 1); err == nil {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegSerial, 16); err == nil {
-		var serial []byte
-		for reg := 0; reg < 8; reg++ {
-			b, err := wb.conn.ReadHoldingRegisters(em2GoRegSerial+2*uint16(reg), 2)
-			if err != nil {
-				return
-			}
-			serial = append(serial, b...)
+	var serial []byte
+	for reg := 0; reg < 8; reg++ {
+		b, err := wb.conn.ReadHoldingRegisters(em2GoRegSerial+2*uint16(reg), 2)
+		if err != nil {
+			return
 		}
-		fmt.Printf("\tSerial:\t%s\n", string(serial))
+		serial = append(serial, b...)
 	}
+	fmt.Printf("\tSerial: %s\n", string(serial))
 	if b, err := wb.conn.ReadHoldingRegisters(em2goRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
