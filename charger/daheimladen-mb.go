@@ -177,6 +177,8 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 			return api.StatusB, err
 		}
 		return api.StatusC, nil
+	case 5: // Start-UP Fail (B2)
+		return api.StatusB, nil
 	case 6: // Session Terminated by EVSE
 		return api.StatusB, nil
 	default: // Other
