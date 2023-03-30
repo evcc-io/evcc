@@ -79,6 +79,7 @@ noEnergy = "Ni podatkov o merilniku"
 pvExport = "Izvoz v omreže"
 pvProduction = "Proizvodnja"
 selfConsumption = "Samoporaba"
+batteryTooltip = "{energy} od {total} ({soc})"
 
 [main.loadpoint]
 charged = "Napolnjeno"
@@ -132,12 +133,14 @@ modalTitle = "Nastavite ciljni čas"
 planDuration = "Čas polnjenja"
 planPeriodLabel = "Obdobje"
 planPeriodValue = "{start} do {end}"
-planUnknown = "neznano"
+planUnknown = "še ni znano"
 setTargetTime = "brez"
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
 title = "Ciljni čas"
 today = "danes"
 tomorrow = "jutri"
+targetIsTooFarInTheFuture = "Načrt bomo prilagodili takoj, ko bomo izvedeli več o novi funkcionalnosti."
+update = "Posodobitev"
 
 [main.targetEnergy]
 label = "Omejitev"
@@ -151,6 +154,8 @@ none = "Ni vozila"
 targetSoc = "Omejitev"
 unknown = "Neznano vozilo"
 vehicleSoc = "Napolnjeno"
+addVehicle = "Dodaj vozilo"
+moreActions = "Več dejanj"
 
 [main.vehicleSoc]
 charging = "polnjenje"
@@ -174,6 +179,7 @@ targetChargeWaitForVehicle = "Ciljno polnjenje je pripravljeno. Čakam na vozilo
 unknown = ""
 vehicleTargetReached = "Omejitev vozila {soc}% dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
+guard = "Začne se čez {remaining} ..."
 
 [notifications]
 dismissAll = "Opusti vse"
@@ -245,3 +251,31 @@ lineError = "Napaka v {0}."
 lineErrorLink = "vrstica {0}"
 restartButton = "Ponovni zagon"
 title = "Napaka pri zagonu"
+
+
+[settings.gridDetails]
+co2 = "CO₂"
+price = "cena"
+none = "brez"
+label = "Podatki o omrežju"
+
+[main.targetChargePlan]
+chargeDuration = "Čas polnjenja"
+co2Label = "Emisije CO₂ Ø"
+priceLabel = "Cena energije"
+timeRange = "{day} {range} h"
+unknownPrice = "še vedno neznano"
+
+[settings.sponsorToken]
+expires = "Sponzorskemu žetonu poteče veljavnost čez {inXDays}. {getNewToken} in posodobite svojo konfiguracijsko datoteko."
+getNew = "Zgrabi svežega"
+hint = "Opomba: To bomo v prihodnosti avtomatizirali."
+
+[vehicleSettings]
+cancel = "Prekliči"
+template = "Proizvajalec"
+test = "Test"
+
+[settings.hiddenFeatures]
+label = "Eksperimentalno"
+value = "Prikaži eksperimentalne funkcije uporabniškega vmesnika."
