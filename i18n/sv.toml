@@ -10,6 +10,7 @@ power = "Laddningseffekt"
 powerSub1 = "{activeClients} av {totalClients} deltagare"
 powerSub2 = "laddning..."
 tabTitle = "Levande gemenskap"
+greenEnergy = "Solar"
 
 [footer.savings]
 footerLong = "{percent}% solenergi"
@@ -18,13 +19,14 @@ modalTitle = "Översikt över laddningsenergi"
 percentGrid = "{grid} kWh nät"
 percentSelf = "{self} kWh solenergi"
 percentTitle = "Solenergi"
-priceFeedIn = "{feedInPrice} feed-in"
+priceFeedIn = "{feedInPrice} inmatning"
 priceTitle = "Energipris"
 savingsComparedToGrid = "jämfört med nätet"
 savingsTitle = "Sparande"
 savingsTotalEnergy = "{total} kWh laddad"
 since = "sedan {since}"
 tabTitle = "Mina uppgifter"
+priceGrid = "{gridPrice} Nätet"
 
 [footer.sponsor]
 becomeSponsor = "Bli sponsor"
@@ -77,6 +79,7 @@ noEnergy = "Inga mätaruppgifter"
 pvExport = "Grid export"
 pvProduction = "Produktion"
 selfConsumption = "Självkonsumtion"
+batteryTooltip = "{energy} av {total} ({soc})"
 
 [main.loadpoint]
 charged = "Laddad"
@@ -137,3 +140,141 @@ light = "ljus"
 km = "km"
 label = "Enheter"
 mi = "miles"
+
+
+[sessions]
+date = "Period"
+energy = "Laddad"
+loadpoint = "Laddningspunkt"
+downloadCsv = "Ladda ner som CSV"
+title = "Laddningssessioner"
+reallyDelete = "Vill du verkligen radera den här sessionen?"
+vehicle = "Fordon"
+
+[main.vehicleStatus]
+connected = "Uppkopplad."
+waitForVehicle = "Redo. Väntar på fordon..."
+charging = "Laddning..."
+minCharge = "Minimiladdning till {soc}%."
+targetChargePlanned = "Målladdning startar vid {time}."
+vehicleTargetReached = "Fordonsgränsen {soc}% nådd."
+disconnected = "Avbruten."
+scale1p = "Minskar till 1-fas-laddning i {remaining}..."
+scale3p = "Ökning till 3-fas-laddning i {remaining}..."
+pvDisable = "Inte tillräckligt med överskott. Pausar i {remaining}..."
+targetChargeActive = "Målsökarladdning aktiv..."
+pvEnable = "Överskott tillgängligt. Börjar i {remaining}..."
+targetChargeWaitForVehicle = "Målsändning klar. Väntar på fordon..."
+unknown = ""
+
+[session]
+title = "Laddningssession"
+cancel = "Avbryt"
+delete = "Radera"
+finished = "Färdig"
+meterstart = "Start av mätare"
+meterstop = "Meter stop"
+odometer = "Miljökostnad"
+started = "Startat"
+
+[sessions.csv]
+meterstop = "Mätarstopp (kWh)"
+loadpoint = "Laddningspunkt"
+odometer = "Körsträcka (km)"
+meterstart = "Start av mätare (kWh)"
+vehicle = "Fordon"
+finished = "Färdig"
+chargedenergy = "Energi (kWh)"
+created = "Skapad"
+identifier = "Identifier"
+
+[main.targetCharge]
+targetIsTooFarInTheFuture = "Vi kommer att justera planen så snart vi vet mer om framtiden."
+activeLabel = "{time}"
+inactiveLabel = "Måltid"
+title = "Måltid"
+modalTitle = "Ange måltid"
+setTargetTime = "ingen"
+targetIsInThePast = "Välj en tid i framtiden, Marty."
+today = "idag"
+tomorrow = "i morgon"
+activate = "Aktivera"
+descriptionEnergy = "Fram till när ska {targetEnergy} lastas in i fordonet?"
+descriptionSoc = "När ska fordonet laddas till {targetSoc}%?"
+planDuration = "Laddningstid"
+planPeriodLabel = "Period"
+planPeriodValue = "{start} till {end}"
+planUnknown = "ännu inte känt"
+update = "Uppdatering"
+
+[main.targetChargePlan]
+timeRange = "{day} {range} h"
+priceLabel = "Energipris"
+unknownPrice = "fortfarande okänd"
+chargeDuration = "Laddningstid"
+co2Label = "CO₂-utsläpp Ø"
+
+[main.targetEnergy]
+noLimit = "ingen"
+label = "Gräns"
+
+[settings.gridDetails]
+price = "pris"
+co2 = "CO₂"
+label = "Detaljer om rutnätet"
+none = "ingen"
+
+[main.vehicle]
+detectionActive = "Upptäckande av fordon..."
+fallbackName = "Fordon"
+changeVehicle = "Byt fordon"
+vehicleSoc = "Avgift"
+none = "Inget fordon"
+targetSoc = "Gräns"
+unknown = "Gästfordon"
+addVehicle = "Lägg till fordon"
+moreActions = "Fler åtgärder"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. ström"
+
+[main.vehicleSoc]
+charging = "laddning"
+vehicleTarget = "Fordonsgräns: {soc}%"
+connected = "ansluten"
+disconnected = "bortkopplad"
+ready = "redo"
+
+[main.provider]
+login = "logga in"
+logout = "logga ut"
+
+[startupError]
+configFile = "Konfigurationsfil som använts:"
+configuration = "Config"
+discussions = "GitHub-diskussioner"
+description = "Kontrollera din konfigurationsfil. Om felmeddelandet inte hjälper, kontrollera {0}."
+fixAndRestart = "Vänligen åtgärda problemet och starta om servern."
+hint = "Observera: Det kan också vara så att du har en felaktig enhet (växelriktare, mätare, ...). Kontrollera dina nätverksanslutningar."
+lineError = "Fel i {0}."
+lineErrorLink = "linje {0}"
+restartButton = "Starta om"
+title = "Startfel"
+
+[offline]
+message = "Inte ansluten till en server."
+reload = "Ladda om?"
+
+[settings.sponsorToken]
+getNew = "Ta en ny"
+hint = "Observera: Vi kommer att automatisera detta i framtiden."
+expires = "Din sponsortoken löper ut {inXDays}. {getNewToken} och uppdatera din konfigurationsfil."
+
+[settings.hiddenFeatures]
+label = "Experimentell"
+value = "Visa experimentella UI-funktioner."
+
+[vehicleSettings]
+cancel = "Avbryt"
+template = "Tillverkare"
+test = "Test"
