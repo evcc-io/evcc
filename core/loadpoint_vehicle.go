@@ -314,6 +314,7 @@ func (lp *Loadpoint) vehicleOdometer() {
 	}
 }
 
+// vehiclePollAllowed determines if polling depending on mode and connection status
 func (lp *Loadpoint) vehiclePollAllowed() bool {
 	switch {
 	case lp.Soc.Poll.Mode == pollAlways:
