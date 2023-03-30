@@ -328,8 +328,8 @@ func (lp *Loadpoint) vehiclePollAllowed() bool {
 	}
 }
 
-// socPollAllowed validates charging state against polling mode
-func (lp *Loadpoint) socPollAllowed() bool {
+// vehicleSocPollAllowed validates charging state against polling mode
+func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 	// always update soc when charging
 	if lp.charging() {
 		lp.didChargeOnLastSocUpdate = true
