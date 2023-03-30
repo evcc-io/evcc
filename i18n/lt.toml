@@ -195,6 +195,7 @@ targetChargeWaitForVehicle = "Planinis įkrovimas leidžiamas. Laukiama automobi
 unknown = ""
 vehicleTargetReached = "Automobilyje nustatytas limitas {soc}% pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
+guard = "Pradėsime už {remaining}…"
 
 [notifications]
 dismissAll = "Išvalyti visus"
