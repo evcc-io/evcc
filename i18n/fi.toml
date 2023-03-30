@@ -79,6 +79,7 @@ noEnergy = "Ei mittarin tietoja"
 pvExport = "Verkkoon vienti"
 pvProduction = "Tuotanto"
 selfConsumption = "Oma kulutus"
+batteryTooltip = "{energy} / {total} ({soc})"
 
 [main.loadpoint]
 charged = "Ladattu"
@@ -132,12 +133,14 @@ modalTitle = "Aseta tavoiteaika"
 planDuration = "Latausaika"
 planPeriodLabel = "Jakso"
 planPeriodValue = "{start} - {end}"
-planUnknown = "tuntematon"
+planUnknown = "ei vielä tiedossa"
 setTargetTime = "ei mitään"
 targetIsInThePast = "Valitse aika tulevaisuudessa"
 title = "Tavoiteaika"
 today = "tänään"
 tomorrow = "huomenna"
+targetIsTooFarInTheFuture = "Muokkaamme suunnitelmaa heti kun tiedämme enemmän tulevaisuudesta."
+update = "Päivittää"
 
 [main.targetEnergy]
 label = "Raja"
@@ -151,6 +154,8 @@ none = "Ei ajoneuvoa"
 targetSoc = "Raja"
 unknown = "Vieras ajoneuvo"
 vehicleSoc = "Lataus"
+addVehicle = "Lisää ajoneuvo"
+moreActions = "Lisää toimintoja"
 
 [main.vehicleSoc]
 charging = "lataa"
@@ -174,6 +179,7 @@ targetChargeWaitForVehicle = "Tavoite lataus valmis. Odotetaan ajoneuvoa…"
 unknown = ""
 vehicleTargetReached = "Ajoneuvon raja {soc}% saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
+guard = "Alkaa {remaining}…"
 
 [notifications]
 dismissAll = "Hylkää kaikki"
@@ -245,3 +251,31 @@ lineError = "Virhe {0}."
 lineErrorLink = "rivi {0}"
 restartButton = "Käynnistä uudelleen"
 title = "Virhe käynnistyksessä"
+
+
+[main.targetChargePlan]
+chargeDuration = "Latausaika"
+co2Label = "CO₂ päästö Ø"
+timeRange = "{day} {range} t"
+priceLabel = "Energian hinta"
+unknownPrice = "ei vielä tiedossa"
+
+[settings.gridDetails]
+label = "Verkon tiedot"
+none = "ei mitään"
+co2 = "CO₂"
+price = "hinta"
+
+[settings.hiddenFeatures]
+value = "Näytä kokeelliset käyttöliittymän ominaisuudet"
+label = "Kokeellinen"
+
+[vehicleSettings]
+test = "Testi"
+cancel = "Peruuta"
+template = "Valmistaja"
+
+[settings.sponsorToken]
+expires = "Sponsorointi tunnuksesi vanhenee {inXDays}. {getNewToken} ja päivitä määritystiedostosi"
+getNew = "Ota uusi"
+hint = "Huomaa: automatisoimme tämän tulevaisuudessa."
