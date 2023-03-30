@@ -29,9 +29,10 @@ import (
 
 // DaheimLadenMB charger implementation
 type DaheimLadenMB struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	curr uint16
+	log     *util.Logger
+	conn    *modbus.Connection
+	curr    uint16
+	enabled bool
 }
 
 const (
@@ -80,9 +81,20 @@ func NewDaheimLadenMB(uri string, id uint8) (api.Charger, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLadenMB{
-		log:  log,
-		conn: conn,
-		curr: 60, // assume min current
+		log:     log,
+		conn:    conn,
+		curr:    60, // assume min current
+		enabled: false,
+	}
+
+	// get initial state from charger
+	curr, err := wb.getCurrent()
+	if err != nil {
+		return nil, fmt.Errorf("current limit: %w", err)
+	}
+	wb.enabled = curr > 0
+	if curr > wb.curr {
+		wb.curr = curr
 	}
 
 	// get failsafe timeout from charger
@@ -103,16 +115,47 @@ func (wb *DaheimLadenMB) heartbeat(timeout time.Duration) {
 	}
 }
 
-// Status implements the api.Charger interface
-func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
-	// work around firmware issue ignoring some current commands
-	c, err := wb.conn.ReadHoldingRegisters(dlRegCurrentLimit, 1)
+func (wb *DaheimLadenMB) setCurrent(current uint16) error {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, current)
+
+	_, err := wb.conn.WriteMultipleRegisters(dlRegCurrentLimit, 1, b)
+
+	return err
+}
+
+func (wb *DaheimLadenMB) getCurrent() (uint16, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegCurrentLimit, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint16(b), nil
+}
+
+// debug and work around potential firmware issue ignoring currentlimit register update
+func (wb *DaheimLadenMB) enforceState() error {
+	curr, err := wb.getCurrent()
 	if err == nil {
-		curr := binary.BigEndian.Uint16(c)
-		if curr > 0 && curr != wb.curr {
-			_ = wb.setCurrent(wb.curr)
+		if wb.enabled {
+			if curr != wb.curr {
+				wb.log.DEBUG.Printf("current sync missmatch: actual value: %d, setpoint: %d\n", curr, wb.curr)
+				return wb.setCurrent(wb.curr)
+			}
+		} else {
+			if curr > 0 {
+				wb.log.DEBUG.Printf("enabled sync missmatch: actual value: %t, setpoint: %t\n", curr > 0, wb.enabled)
+				return wb.setCurrent(0)
+			}
 		}
 	}
+
+	return err
+}
+
+// Status implements the api.Charger interface
+func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
+	_ = wb.enforceState() // debug
 
 	b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1)
 	if err != nil {
@@ -143,12 +186,9 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *DaheimLadenMB) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dlRegCurrentLimit, 1)
-	if err != nil {
-		return false, err
-	}
+	curr, err := wb.getCurrent()
 
-	return binary.BigEndian.Uint16(b) != 0, nil
+	return curr > 0, err
 }
 
 // Enable implements the api.Charger interface
@@ -157,21 +197,9 @@ func (wb *DaheimLadenMB) Enable(enable bool) error {
 	if enable {
 		current = wb.curr
 	}
+	wb.enabled = enable
 
 	return wb.setCurrent(current)
-}
-
-// setCurrent writes the current limit in coarse 1A steps
-func (wb *DaheimLadenMB) setCurrent(current uint16) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, current)
-
-	_, err := wb.conn.WriteMultipleRegisters(dlRegCurrentLimit, 1, b)
-	if err == nil {
-		wb.curr = current
-	}
-
-	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -180,7 +208,9 @@ func (wb *DaheimLadenMB) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	return wb.setCurrent(uint16(current * 10))
+	wb.curr = uint16(current * 10)
+
+	return wb.setCurrent(wb.curr)
 }
 
 var _ api.Meter = (*DaheimLadenMB)(nil)
