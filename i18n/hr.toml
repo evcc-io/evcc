@@ -135,6 +135,13 @@ targetIsInThePast = "Odaberi vrijeme u budućnosti."
 title = "Ciljano vrijeme"
 today = "danas"
 tomorrow = "sutra"
+planPeriodLabel = "Razdoblje"
+planPeriodValue = "{start} do {end}"
+targetIsTooFarInTheFuture = "Prilagodit ćemo plan čim budemo znali više o budućnosti."
+planDuration = "Vrijeme punjenja"
+planUnknown = "još nije poznato"
+update = "Ažuriraj"
+descriptionEnergy = "Do kada bi se {targetEnergy} trebao učitati u vozilo?"
 
 [main.targetEnergy]
 label = "Ograničenje"
@@ -173,6 +180,7 @@ targetChargeWaitForVehicle = "Ciljano napajanje je spremno. Čeka se na vozilo �
 unknown = ""
 vehicleTargetReached = "Ograničenje vozila od {soc} % dosegnuto."
 waitForVehicle = "Spremno. Čeka se na vozilo …"
+guard = "Počinje za {remaining}…"
 
 [notifications]
 dismissAll = "Odbaci sve"
@@ -189,6 +197,7 @@ energy = "Napojeno"
 loadpoint = "Mjesto napajanja"
 title = "Napajanja"
 vehicle = "Vozilo"
+reallyDelete = "Želite li stvarno izbrisati ovu sesiju?"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -240,3 +249,34 @@ chargeDuration = "Vrijeme punjenja"
 priceLabel = "Cijena energije"
 unknownPrice = "jos nepoznato"
 co2Label = "CO₂ emisija Ø"
+timeRange = "{day} {range} h"
+
+[session]
+finished = "Gotovo"
+meterstart = "Početak mjerača"
+meterstop = "Zaustavljanje mjerača"
+title = "Sesije punjenja"
+cancel = "Odustani"
+started = "Počelo"
+delete = "Izbriši"
+odometer = "Kilometraža"
+
+[settings.gridDetails]
+label = "Detalji mreže"
+none = "ništa"
+co2 = "CO₂"
+price = "cijena"
+
+[settings.hiddenFeatures]
+value = "Prikaži eksperimentalne značajke korisničkog sučelja."
+label = "Eksperimentalno"
+
+[settings.sponsorToken]
+expires = "Vaš sponzorski token ističe {inXDays}. {getNewToken} i ažurirajte svoju konfiguracijsku datoteku."
+getNew = "Uzmite svježu"
+hint = "Napomena: To ćemo automatizirati u budućnosti."
+
+[vehicleSettings]
+test = "Test"
+template = "Proizvođač"
+cancel = "Otkazati"
