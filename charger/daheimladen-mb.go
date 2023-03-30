@@ -110,7 +110,7 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 	if err == nil {
 		curr := binary.BigEndian.Uint16(c)
 		if curr > 0 && curr != wb.curr {
-			wb.setCurrent(wb.curr)
+			_ = wb.setCurrent(wb.curr)
 		}
 	}
 
