@@ -80,6 +80,7 @@ noEnergy = "Nema mjernih podataka"
 pvExport = "Izvoz mreže"
 pvProduction = "Produkcija"
 selfConsumption = "Samopotrošnja"
+batteryTooltip = "{energy} od {total} ({soc})"
 
 [main.loadpoint]
 charged = "Napunjeno"
@@ -147,6 +148,8 @@ none = "Nijedno vozilo"
 targetSoc = "Ograničenje"
 unknown = "Vozilo gosta"
 vehicleSoc = "Napajanje"
+addVehicle = "Dodaj vozilo"
+moreActions = "Više radnji"
 
 [main.vehicleSoc]
 charging = "napajanje"
@@ -162,8 +165,8 @@ disconnected = "Nepovezano."
 minCharge = "Minimalno napajanje do {soc} %."
 pvDisable = "Nema dovoljno viška. Zaustavlja se za {remaining}…"
 pvEnable = "Dostupan višak. Počinje za {remaining}…"
-scale1p = "Smanjuje se na jednofaznu struju za {remaining}…"
-scale3p = "Povećava se na trofaznu struju za {remaining}…"
+scale1p = "Smanjivanje na jednofazno napajanje za {remaining} …"
+scale3p = "Povećavanje na trofaznu napajanje za {remaining} …"
 targetChargeActive = "Ciljano napajanje je aktivno …"
 targetChargePlanned = "Ciljano napajanje počinje u {time}."
 targetChargeWaitForVehicle = "Ciljano napajanje je spremno. Čeka se na vozilo …"
@@ -230,3 +233,10 @@ lineError = "Greška u {0}."
 lineErrorLink = "{0}. retku"
 restartButton = "Restart"
 title = "Pogreška pri pokretanju"
+
+
+[main.targetChargePlan]
+chargeDuration = "Vrijeme punjenja"
+priceLabel = "Cijena energije"
+unknownPrice = "jos nepoznato"
+co2Label = "CO₂ emisija Ø"
