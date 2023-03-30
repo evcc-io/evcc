@@ -166,6 +166,7 @@ targetChargeActive = "Målsökarladdning aktiv..."
 pvEnable = "Överskott tillgängligt. Börjar i {remaining}..."
 targetChargeWaitForVehicle = "Målsändning klar. Väntar på fordon..."
 unknown = ""
+guard = "Startar om {remaining}…"
 
 [session]
 title = "Laddningssession"
