@@ -1,10 +1,11 @@
 product:
-  brand: D-Parts
-  description: Em2Go
+  brand: EM2GO
+  description: Pro Power/OCPP/ONC
+capabilities: ["mA", "rfid"]
 render:
   - default: |
       type: template
-      template: em2go      
+      template: em2go
 
       # Modbus TCP
       modbus: tcpip
