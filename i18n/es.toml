@@ -195,6 +195,7 @@ targetChargeWaitForVehicle = "Carga de destino lista. Esperar vehículo."
 unknown = ""
 vehicleTargetReached = "Límite de vehículo {soc}% alcanzado."
 waitForVehicle = "Listo para cargar. Esperar vehículo."
+guard = "Comenzando en {remaining}..."
 
 [notifications]
 dismissAll = "Eliminar notificaciones"
