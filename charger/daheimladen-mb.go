@@ -105,6 +105,15 @@ func (wb *DaheimLadenMB) heartbeat(timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
+	// work around firmware issue ignoring some current commands
+	c, err := wb.conn.ReadHoldingRegisters(dlRegCurrentLimit, 1)
+	if err == nil {
+		curr := binary.BigEndian.Uint16(c)
+		if curr > 0 && curr != wb.curr {
+			wb.setCurrent(wb.curr)
+		}
+	}
+
 	b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1)
 	if err != nil {
 		return api.StatusNone, err
