@@ -77,7 +77,7 @@
 							:powerInKw="powerInKw"
 							:details="detailsValue(tariffGrid, tariffCo2)"
 							:detailsFmt="detailsFmt"
-							:detailsClickable="gridSettingsAvailable"
+							:detailsClickable="smartCostAvailable"
 							:detailsTooltip="detailsTooltip(tariffGrid, tariffCo2)"
 							@details-clicked="openGridSettingsModal"
 						/>
@@ -187,7 +187,7 @@ export default {
 		tariffEffectivePrice: { type: Number },
 		tariffCo2: { type: Number },
 		tariffEffectiveCo2: { type: Number },
-		tariffGridDynamic: { type: Boolean },
+		smartCostAvailable: { type: Boolean },
 		smartCostLimit: { type: Number },
 		smartCostUnit: { type: String },
 		currency: { type: String },
@@ -251,9 +251,6 @@ export default {
 		},
 		batteryFmt() {
 			return (soc) => `${Math.round(soc)}%`;
-		},
-		gridSettingsAvailable() {
-			return this.tariffGridDynamic || this.co2Available;
 		},
 		gridSettings() {
 			return this.collectProps(GridSettingsModal);

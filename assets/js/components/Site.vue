@@ -98,7 +98,7 @@ export default {
 		sponsorTokenExpires: Number,
 		smartCostLimit: Number,
 		smartCostUnit: String,
-		tariffGridDynamic: Boolean,
+		smartCostAvailable: Boolean,
 	},
 	computed: {
 		energyflow: function () {

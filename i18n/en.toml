@@ -65,8 +65,6 @@ costLimitDescription = "Enables temporary fast-charging in solar mode."
 modalTitle = "Smart Grid Charging"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
-timeRange = "{day} {range} h"
-unknownCost = "still unknown"
 
 [header]
 about = "About"
@@ -82,11 +80,13 @@ vehicles = "Parking"
 
 [main.chargingPlan]
 activeLabel = "{time}"
+arrivalTab = "Arrival"
+departureTab = "Departure"
 modalTitle = "Charging Plan"
 none = "none"
-title = "plan"
-titleMinSoc = "min range"
-titleTargetCharge = "depature time"
+title = "Plan"
+titleMinSoc = "Min charge"
+titleTargetCharge = "Depature"
 
 [main.energyflow]
 battery = "Battery"
@@ -148,7 +148,8 @@ logout = "log out"
 
 [main.targetCharge]
 activate = "Activate"
-co2LimitIgnore = "The configured CO₂ limit of < {limit} will be ignored during this period."
+co2Limit = "CO₂ limit of {co2}"
+costLimitIgnore = "The configured {limit} will be ignored during this period."
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
 descriptionSoc = "When should the vehicle be charged to {targetSoc}%?"
 inactiveLabel = "Target time"
@@ -156,7 +157,7 @@ planDuration = "Charging time"
 planPeriodLabel = "Period"
 planPeriodValue = "{start} to {end}"
 planUnknown = "not known yet"
-priceLimitIgnore = "Your configured price limit of < {limit} will be ignored during this period."
+priceLimit = "price limit of {price}"
 remove = "Remove"
 setTargetTime = "none"
 targetIsInThePast = "Pick a time in the future, Marty."
@@ -254,12 +255,6 @@ vehicle = "Vehicle"
 
 [settings]
 title = "Settings"
-
-[settings.gridDetails]
-co2 = "CO₂"
-label = "Grid details"
-none = "none"
-price = "price"
 
 [settings.hiddenFeatures]
 label = "Experimental"

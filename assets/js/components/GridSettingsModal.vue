@@ -199,14 +199,14 @@ export default {
 			if (this.activeSlot) {
 				const { day, startHour, endHour } = this.activeSlot;
 				const range = `${startHour}–${endHour}`;
-				return this.$t("gridSettings.timeRange", { day, range });
+				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;
 		},
 		activeSlotCost() {
 			const price = this.activeSlot.price;
 			if (price === undefined) {
-				return this.$t("gridSettings.unknownCost");
+				return this.$t("main.targetChargePlan.unknownPrice");
 			}
 			if (this.isCo2) {
 				return this.fmtCo2Medium(price);
@@ -226,11 +226,11 @@ export default {
 	},
 	mounted() {
 		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
+		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	unmounted() {
 		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
+		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	methods: {
 		updateTariff: async function () {

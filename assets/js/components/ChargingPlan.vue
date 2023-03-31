@@ -51,7 +51,7 @@
 										href="#"
 										@click.prevent="showDeatureTab"
 									>
-										Depature
+										{{ $t("main.chargingPlan.departureTab") }}
 									</a>
 								</li>
 								<li class="nav-item">
@@ -61,7 +61,7 @@
 										href="#"
 										@click.prevent="showArrivalTab"
 									>
-										Arrival
+										{{ $t("main.chargingPlan.arrivalTab") }} 🧪
 									</a>
 								</li>
 							</ul>
@@ -165,11 +165,11 @@ export default {
 	mounted() {
 		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
 		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
+		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	unmounted() {
 		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
+		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	methods: {
 		modalVisible: function () {

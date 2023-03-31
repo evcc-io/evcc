@@ -231,15 +231,12 @@ loadpoints:
 
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
-  #grid:
-  #  type: fixed
-  #  price: 0.399 # EUR/kWh
   grid:
-    type: tibber
-    token: 1Gcp1CMk04kIqD45iFH6njnXivpt_GTK0tOLkvaF8jA
+    type: fixed
+    price: 0.399 # EUR/kWh
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
-  #planner:
-  #  type: grünstromindex
-  #  zip: 12349
+  planner:
+    type: grünstromindex
+    zip: 12349

@@ -42,17 +42,21 @@
 				<span v-else-if="timeTooFarInTheFuture" class="d-block text-secondary">
 					{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
 				</span>
-				<span v-if="priceLimitExists" class="d-block text-secondary">
+				<span v-if="costLimitExists" class="d-block text-secondary">
 					{{
-						$t("main.targetCharge.priceLimitIgnore", {
-							limit: fmtPricePerKWh(smartCostLimit, smartCostUnit, true),
-						})
-					}}
-				</span>
-				<span v-if="co2LimitExists" class="d-block text-secondary">
-					{{
-						$t("main.targetCharge.co2LimitIgnore", {
-							limit: fmtCo2Short(smartCostLimit),
+						$t("main.targetCharge.costLimitIgnore", {
+							limit:
+								"< " + isCo2
+									? $t("main.targetCharge.co2Limit", {
+											co2: fmtCo2Short(smartCostLimit),
+									  })
+									: $t("main.targetCharge.priceLimit", {
+											price: fmtPricePerKWh(
+												smartCostLimit,
+												smartCostUnit,
+												true
+											),
+									  }),
 						})
 					}}
 				</span>
@@ -164,11 +168,8 @@ export default {
 				return Math.max(res, slot.price);
 			}, 0);
 		},
-		priceLimitExists: function () {
-			return !this.isCo2 && this.smartCostLimit !== 0;
-		},
-		co2LimitExists: function () {
-			return this.isCo2 && this.smartCostLimit !== 0;
+		costLimitExists: function () {
+			return this.smartCostLimit !== 0;
 		},
 		isCo2() {
 			return this.smartCostUnit === CO2_UNIT;
