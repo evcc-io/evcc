@@ -32,7 +32,6 @@
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
-			@minsoc-updated="setMinSoc"
 		/>
 
 		<div
@@ -106,6 +105,7 @@
 			@target-time-removed="removeTargetTime"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
+			@minsoc-updated="setMinSoc"
 		/>
 	</div>
 </template>

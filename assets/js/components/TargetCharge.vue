@@ -36,11 +36,25 @@
 				</div>
 			</div>
 			<p class="mb-0">
-				<span v-if="timeInThePast" class="text-danger">
+				<span v-if="timeInThePast" class="d-block text-danger">
 					{{ $t("main.targetCharge.targetIsInThePast") }}
 				</span>
-				<span v-else-if="timeTooFarInTheFuture" class="text-secondary">
+				<span v-else-if="timeTooFarInTheFuture" class="d-block text-secondary">
 					{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
+				</span>
+				<span v-if="priceLimitExists" class="d-block text-secondary">
+					{{
+						$t("main.targetCharge.priceLimitIgnore", {
+							limit: fmtPricePerKWh(smartCostLimit, tariffPlannerUnit, true),
+						})
+					}}
+				</span>
+				<span v-if="co2LimitExists" class="d-block text-secondary">
+					{{
+						$t("main.targetCharge.co2LimitIgnore", {
+							limit: fmtCo2Short(smartCostLimit),
+						})
+					}}
 				</span>
 				&nbsp;
 			</p>
@@ -70,6 +84,7 @@
 <script>
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
+import { CO2_UNIT } from "../units";
 import TargetChargePlan from "./TargetChargePlan.vue";
 import api from "../api";
 
@@ -90,6 +105,8 @@ export default {
 		targetEnergy: Number,
 		socBasedCharging: Boolean,
 		disabled: Boolean,
+		smartCostLimit: Number,
+		tariffPlannerUnit: String,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
@@ -146,6 +163,15 @@ export default {
 			return this.tariff?.rates.reduce((res, slot) => {
 				return Math.max(res, slot.price);
 			}, 0);
+		},
+		priceLimitExists: function () {
+			return !this.isCo2 && this.smartCostLimit !== 0;
+		},
+		co2LimitExists: function () {
+			return this.isCo2 && this.smartCostLimit !== 0;
+		},
+		isCo2() {
+			return this.tariffPlannerUnit === CO2_UNIT;
 		},
 	},
 	watch: {

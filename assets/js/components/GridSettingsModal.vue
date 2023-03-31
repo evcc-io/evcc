@@ -114,7 +114,6 @@ export default {
 	props: {
 		smartCostLimit: Number,
 		tariffPlannerUnit: String,
-		currency: String,
 	},
 	data: function () {
 		return {
@@ -137,7 +136,7 @@ export default {
 				const name = `< ${
 					this.isCo2
 						? this.fmtCo2Medium(value)
-						: this.fmtPricePerKWh(value, this.currency)
+						: this.fmtPricePerKWh(value, this.tariffPlannerUnit)
 				}`;
 				result.push({ value, name });
 			}
@@ -175,7 +174,8 @@ export default {
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
 				const charging = price < this.selectedSmartCostLimit;
-				result.push({ day, price, startHour, endHour, charging });
+				const selectable = price !== undefined;
+				result.push({ day, price, startHour, endHour, charging, selectable });
 			}
 
 			return result;
@@ -211,7 +211,7 @@ export default {
 			if (this.isCo2) {
 				return this.fmtCo2Medium(price);
 			}
-			return this.fmtPricePerKWh(price, this.currency);
+			return this.fmtPricePerKWh(price, this.tariffPlannerUnit);
 		},
 	},
 	watch: {
@@ -229,8 +229,8 @@ export default {
 		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
 	},
 	unmounted() {
-		this.$refs.modal.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.removeEventListener("hide.bs.modal", this.modalInvisible);
+		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
+		this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
 	},
 	methods: {
 		updateTariff: async function () {
@@ -277,9 +277,13 @@ export default {
 			return { min, max };
 		},
 		fmtCostRange({ min, max }) {
-			if (this.isCo2) {
-				return `${this.fmtCo2Short(min)} - ${this.fmtCo2Short(max)}`;
-			}
+			const fmtMin = this.isCo2
+				? this.fmtCo2Short(min)
+				: this.fmtPricePerKWh(min, this.tariffPlannerUnit, true);
+			const fmtMax = this.isCo2
+				? this.fmtCo2Short(max)
+				: this.fmtPricePerKWh(max, this.tariffPlannerUnit, true);
+			return `${fmtMin} - ${fmtMax}`;
 		},
 		slotHovered(index) {
 			this.activeIndex = index;

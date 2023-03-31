@@ -5,7 +5,11 @@
 			:key="slot.start"
 			:data-index="index"
 			class="slot user-select-none"
-			:class="{ active: isActive(index), toLate: slot.toLate }"
+			:class="{
+				active: isActive(index),
+				toLate: slot.toLate,
+				'cursor-pointer': slot.selectable,
+			}"
 			@touchstart="hoverSlot(index)"
 			@mouseenter="hoverSlot(index)"
 			@touchend="hoverSlot(null)"
@@ -74,7 +78,9 @@ export default {
 			this.$emit("slot-hovered", index);
 		},
 		selectSlot(index) {
-			this.$emit("slot-selected", index);
+			if (this.slots[index]?.selectable) {
+				this.$emit("slot-selected", index);
+			}
 		},
 		isActive(index) {
 			return this.activeIndex !== null

@@ -37,6 +37,7 @@
 				:disabled="chargingPlanDisabled"
 				@target-time-updated="setTargetTime"
 				@target-time-removed="removeTargetTime"
+				@minsoc-updated="setMinSoc"
 			/>
 			<TargetSocSelect
 				v-if="socBasedCharging"
@@ -124,6 +125,7 @@ export default {
 		"target-energy-updated",
 		"change-vehicle",
 		"remove-vehicle",
+		"minsoc-updated",
 	],
 	data() {
 		return {
@@ -202,6 +204,9 @@ export default {
 		},
 		setTargetTime: function (targetTime) {
 			this.$emit("target-time-updated", targetTime);
+		},
+		setMinSoc: function (minSoc) {
+			this.$emit("minsoc-updated", minSoc);
 		},
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");

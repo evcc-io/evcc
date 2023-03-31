@@ -43,7 +43,7 @@
 							></button>
 						</div>
 						<div class="modal-body pt-2">
-							<ul class="nav nav-tabs">
+							<ul v-if="showTabs" class="nav nav-tabs">
 								<li class="nav-item">
 									<a
 										class="nav-link"
@@ -72,6 +72,11 @@
 									@target-time-updated="setTargetTime"
 									@target-time-removed="removeTargetTime"
 								/>
+								<ChargingPlanArrival
+									v-if="arrivalTabActive"
+									v-bind="chargingPlanArrival"
+									@minsoc-updated="setMinSoc"
+								/>
 							</div>
 						</div>
 					</div>
@@ -85,13 +90,14 @@
 import Modal from "bootstrap/js/dist/modal";
 import LabelAndValue from "./LabelAndValue.vue";
 import TargetCharge from "./TargetCharge.vue";
+import ChargingPlanArrival from "./ChargingPlanArrival.vue";
 
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 
 export default {
 	name: "ChargingPlan",
-	components: { LabelAndValue, TargetCharge },
+	components: { LabelAndValue, TargetCharge, ChargingPlanArrival },
 	mixins: [formatter, collector],
 	props: {
 		id: [String, Number],
@@ -103,8 +109,11 @@ export default {
 		disabled: Boolean,
 		minSoc: Number,
 		vehicleSoc: Number,
+		vehicleName: String,
+		smartCostLimit: Number,
+		tariffPlannerUnit: String,
 	},
-	emits: ["target-time-updated", "target-time-removed"],
+	emits: ["target-time-updated", "target-time-removed", "minsoc-updated"],
 	data: function () {
 		return {
 			modal: null,
@@ -135,7 +144,7 @@ export default {
 			return this.$t("main.chargingPlan.title");
 		},
 		minSocEnabled: function () {
-			return this.minSoc >= this.vehicleSoc;
+			return this.minSoc >= this.vehicleSoc && this.$hiddenFeatures();
 		},
 		departureTabActive: function () {
 			return this.activeTab === "departure";
@@ -146,6 +155,12 @@ export default {
 		targetCharge: function () {
 			return this.collectProps(TargetCharge);
 		},
+		chargingPlanArrival: function () {
+			return this.collectProps(ChargingPlanArrival);
+		},
+		showTabs: function () {
+			return this.$hiddenFeatures();
+		},
 	},
 	mounted() {
 		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
@@ -153,8 +168,8 @@ export default {
 		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
 	},
 	unmounted() {
-		this.$refs.modal.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.removeEventListener("hide.bs.modal", this.modalInvisible);
+		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
+		this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
 	},
 	methods: {
 		modalVisible: function () {
@@ -164,8 +179,13 @@ export default {
 			this.isModalVisible = false;
 		},
 		openModal() {
+			if (this.minSocEnabled) {
+				this.showArrivalTab();
+			}
+			if (this.targetChargeEnabled) {
+				this.showDeatureTab();
+			}
 			this.modal.show();
-			this.$nextTick(this.initInputFields);
 		},
 		// not computed because it needs to update over time
 		targetTimeLabel: function () {
@@ -187,6 +207,9 @@ export default {
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
 			this.modal.hide();
+		},
+		setMinSoc: function (minSoc) {
+			this.$emit("minsoc-updated", minSoc);
 		},
 	},
 };
