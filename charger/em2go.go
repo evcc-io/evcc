@@ -117,7 +117,7 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 	case 4, 6:
 		return api.StatusC, nil
 	case 5, 7:
-		return api.StatusF, nil		
+		return api.StatusF, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[1])
 	}
