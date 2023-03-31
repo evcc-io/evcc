@@ -3,6 +3,7 @@ package shelly
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -56,7 +57,8 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 	}
 
-	return power, nil
+	// Assure positive power response (Gen 1 EM devices can provide negative values)
+	return math.Abs(power), nil
 }
 
 // Enabled implements the api.Charger interface
@@ -141,7 +143,7 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 
 // gen1Energy in kWh
 func gen1Energy(devicetype string, energy float64) float64 {
-	// Gen 1 Shelly EM devices are providing Watt hours, Shelly EM devices are providing Watt minutes
+	// Gen 1 Shelly EM devices are providing Watt hours, Gen 1 Shelly PM devices are providing Watt minutes
 	if !strings.Contains(devicetype, "EM") {
 		energy = energy / 60
 	}

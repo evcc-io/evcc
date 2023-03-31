@@ -37,6 +37,9 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		}
 
 		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
+		if requiredDuration <= 0 {
+			return 0
+		}
 
 		// anticipate lower charge rates at end of charging curve
 		var additionalDuration time.Duration
@@ -120,8 +123,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// ignore short plans if not already active
-		if !lp.planActive && lp.clock.Until(activeSlot.End) < smallSlotDuration {
-			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
+		// TODO only ignore if the next adjacent slot is inactive, too
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration {
+			lp.log.DEBUG.Printf("plan slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
 

@@ -1,0 +1,15 @@
+product:
+  brand: Phoenix
+  description: CHARX
+render:
+  - default: |
+      type: template
+      template: phoenix-charx
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional
+    advanced: |
+      type: template
+      template: phoenix-charx
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional
+      connector: 1 # Optional

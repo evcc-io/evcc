@@ -395,7 +395,7 @@ func (lp *Loadpoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.pushEvent(evChargeStart)
 
-	lp.wakeUpTimer.Stop()
+	lp.stopWakeUpTimer()
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -412,6 +412,9 @@ func (lp *Loadpoint) evChargeStartHandler() {
 func (lp *Loadpoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
 	lp.pushEvent(evChargeStop)
+	if lp.enabled {
+		lp.startWakeUpTimer()
+	}
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -691,11 +694,9 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 
 		// start/stop vehicle wake-up timer
 		if enabled {
-			lp.log.DEBUG.Printf("wake-up timer: start")
-			lp.wakeUpTimer.Start()
+			lp.startWakeUpTimer()
 		} else {
-			lp.log.DEBUG.Printf("wake-up timer: stop")
-			lp.wakeUpTimer.Stop()
+			lp.stopWakeUpTimer()
 		}
 
 		// remote start
@@ -731,7 +732,7 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 
 // remainingChargeEnergy returns missing energy amount in kWh if vehicle has a valid energy target
 func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
-	return float64(lp.targetEnergy) - lp.getChargedEnergy()/1e3,
+	return math.Max(0, lp.targetEnergy-lp.getChargedEnergy()/1e3),
 		(lp.vehicle == nil || lp.vehicleHasFeature(api.Offline)) && lp.targetEnergy > 0
 }
 
@@ -1196,8 +1197,9 @@ func (lp *Loadpoint) UpdateChargePower() {
 		lp.log.DEBUG.Printf("charge power: %.0fW", value)
 		lp.publish("chargePower", value)
 
-		// use -1 for https://github.com/evcc-io/evcc/issues/2153
-		if lp.chargePower < -1 {
+		// https://github.com/evcc-io/evcc/issues/2153
+		// https://github.com/evcc-io/evcc/issues/6986
+		if lp.chargePower < -20 {
 			lp.log.WARN.Printf("charge power must not be negative: %.0f", lp.chargePower)
 		}
 
@@ -1447,6 +1449,18 @@ func (lp *Loadpoint) processTasks() {
 			task()
 		}
 	}
+}
+
+// startWakeUpTimer starts wakeUpTimer
+func (lp *Loadpoint) startWakeUpTimer() {
+	lp.log.DEBUG.Printf("wake-up timer: start")
+	lp.wakeUpTimer.Start()
+}
+
+// stopWakeUpTimer stops wakeUpTimer
+func (lp *Loadpoint) stopWakeUpTimer() {
+	lp.log.DEBUG.Printf("wake-up timer: stop")
+	lp.wakeUpTimer.Stop()
 }
 
 // Update is the main control function. It reevaluates meters and charger state

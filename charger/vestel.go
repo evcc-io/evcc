@@ -99,7 +99,7 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 }
 
 func (wb *Vestel) heartbeat() {
-	for range time.NewTicker(time.Second * 3).C {
+	for range time.Tick(time.Second * 3) {
 		if _, err := wb.conn.WriteSingleRegister(vestelRegAlive, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

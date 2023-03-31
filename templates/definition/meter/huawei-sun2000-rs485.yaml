@@ -7,17 +7,116 @@ products:
       generic: SUN2000 via RS485 Modbus
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rs485", "tcpip"]
     baudrate: 9600
+  - name: storageunit
+    type: number
+    default: 1
+    advanced: true
+  - name: capacity
+    advanced: true
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    # register details
     register:
-      address: 32080 # Active generation power AC
+      address: 37113 # Grid import export power
       type: holding
       decode: int32
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 37121 # Active energy import from the grid
+      type: holding
+      decode: uint32
+    scale: 0.01
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 37107 # Huawei phase A grid current
+      type: holding
+      decode: int32
+    scale: -0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 37109 # Huawei phase B grid current
+      type: holding
+      decode: int32
+    scale: -0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 37111 # Huawei phase C grid current
+      type: holding
+      decode: int32
+    scale: -0.01
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 32064 # Input power DC (if no battery in your system - for more precise readings use 32080 # Active generation power AC)
+      type: holding
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 32106 # Accumulated energy yield
+      type: holding
+      decode: uint32
+    scale: 0.01
+    {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      {{- if eq .storageunit "1" }}
+      address: 37001
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37743
+      {{- end }}
+      type: holding
+      decode: int32nan
+    scale: -1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      {{- if eq .storageunit "1" }}
+      address: 37004
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37738
+      {{- end }}
+      type: holding
+      decode: uint16nan
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      {{- if eq .storageunit "1" }}
+      address: 37068 # [Energy storage unit 1] Total discharge
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37755 # [Energy storage unit 2] Total discharge
+      {{- end }}
+      type: holding
+      decode: uint32
+    scale: 0.01
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}
