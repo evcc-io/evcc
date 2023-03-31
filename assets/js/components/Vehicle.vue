@@ -114,7 +114,7 @@ export default {
 		guardRemainingInterpolated: Number,
 		vehicles: Array,
 		smartCostLimit: Number,
-		tariffPlannerUnit: String,
+		smartCostUnit: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 	},

@@ -49,7 +49,7 @@
 								</select>
 							</div>
 							<small v-if="selectedSmartCostLimit > 0">
-								{{ $t("gridSettings.priceLimitDescription") }}
+								{{ $t("gridSettings.costLimitDescription") }}
 							</small>
 						</div>
 						<div class="justify-content-between mb-2 d-flex justify-content-between">
@@ -113,7 +113,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		smartCostLimit: Number,
-		tariffPlannerUnit: String,
+		smartCostUnit: String,
 	},
 	data: function () {
 		return {
@@ -126,7 +126,7 @@ export default {
 	},
 	computed: {
 		isCo2() {
-			return this.tariffPlannerUnit === CO2_UNIT;
+			return this.smartCostUnit === CO2_UNIT;
 		},
 		costOptions() {
 			const result = [];
@@ -136,7 +136,7 @@ export default {
 				const name = `< ${
 					this.isCo2
 						? this.fmtCo2Medium(value)
-						: this.fmtPricePerKWh(value, this.tariffPlannerUnit)
+						: this.fmtPricePerKWh(value, this.smartCostUnit)
 				}`;
 				result.push({ value, name });
 			}
@@ -211,7 +211,7 @@ export default {
 			if (this.isCo2) {
 				return this.fmtCo2Medium(price);
 			}
-			return this.fmtPricePerKWh(price, this.tariffPlannerUnit);
+			return this.fmtPricePerKWh(price, this.smartCostUnit);
 		},
 	},
 	watch: {
@@ -279,10 +279,10 @@ export default {
 		fmtCostRange({ min, max }) {
 			const fmtMin = this.isCo2
 				? this.fmtCo2Short(min)
-				: this.fmtPricePerKWh(min, this.tariffPlannerUnit, true);
+				: this.fmtPricePerKWh(min, this.smartCostUnit, true);
 			const fmtMax = this.isCo2
 				? this.fmtCo2Short(max)
-				: this.fmtPricePerKWh(max, this.tariffPlannerUnit, true);
+				: this.fmtPricePerKWh(max, this.smartCostUnit, true);
 			return `${fmtMin} - ${fmtMax}`;
 		},
 		slotHovered(index) {

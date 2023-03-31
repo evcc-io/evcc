@@ -175,7 +175,7 @@ describe("smart grid charging", () => {
         charging: true,
         tariffCo2: 400,
         smartCostLimit: 500,
-        tariffPlannerUnit: "gCO2eq",
+        smartCostUnit: "gCO2eq",
       },
       "cleanEnergyCharging"
     );

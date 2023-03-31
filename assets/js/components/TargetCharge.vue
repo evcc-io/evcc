@@ -45,7 +45,7 @@
 				<span v-if="priceLimitExists" class="d-block text-secondary">
 					{{
 						$t("main.targetCharge.priceLimitIgnore", {
-							limit: fmtPricePerKWh(smartCostLimit, tariffPlannerUnit, true),
+							limit: fmtPricePerKWh(smartCostLimit, smartCostUnit, true),
 						})
 					}}
 				</span>
@@ -106,7 +106,7 @@ export default {
 		socBasedCharging: Boolean,
 		disabled: Boolean,
 		smartCostLimit: Number,
-		tariffPlannerUnit: String,
+		smartCostUnit: String,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
@@ -171,7 +171,7 @@ export default {
 			return this.isCo2 && this.smartCostLimit !== 0;
 		},
 		isCo2() {
-			return this.tariffPlannerUnit === CO2_UNIT;
+			return this.smartCostUnit === CO2_UNIT;
 		},
 	},
 	watch: {

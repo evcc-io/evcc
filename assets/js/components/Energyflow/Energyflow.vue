@@ -188,9 +188,9 @@ export default {
 		tariffCo2: { type: Number },
 		tariffEffectiveCo2: { type: Number },
 		tariffGridDynamic: { type: Boolean },
-		tariffPlannerUnit: { type: String },
-		currency: { type: String },
 		smartCostLimit: { type: Number },
+		smartCostUnit: { type: String },
+		currency: { type: String },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null, gridSettingsModal: null };
@@ -259,7 +259,7 @@ export default {
 			return this.collectProps(GridSettingsModal);
 		},
 		co2Available() {
-			return this.tariffPlannerUnit === CO2_UNIT;
+			return this.smartCostUnit === CO2_UNIT;
 		},
 	},
 	mounted() {

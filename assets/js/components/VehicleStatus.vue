@@ -26,7 +26,7 @@ export default {
 		guardRemainingInterpolated: Number,
 		targetChargeDisabled: Boolean,
 		smartCostLimit: Number,
-		tariffPlannerUnit: String,
+		smartCostUnit: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 	},
@@ -46,7 +46,7 @@ export default {
 			return this.guardRemainingInterpolated > 0 && this.guardAction === "enable";
 		},
 		isCo2() {
-			return this.tariffPlannerUnit === CO2_UNIT;
+			return this.smartCostUnit === CO2_UNIT;
 		},
 		message: function () {
 			const t = (key, data) => {

@@ -255,9 +255,6 @@ export default {
 		changePhasesConfigured: function () {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-		changeMinSoc: function () {
-			this.$emit("minsoc-updated", this.selectedMinSoc);
-		},
 		currentOptions: function (max, defaultCurrent = 16) {
 			const result = [];
 			const toValue = max ? 32 : this.maxCurrent;

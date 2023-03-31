@@ -18,7 +18,7 @@
 				:loadpoints="loadpoints"
 				:vehicles="vehicles"
 				:smartCostLimit="smartCostLimit"
-				:tariffPlannerUnit="tariffPlannerUnit"
+				:smartCostUnit="smartCostUnit"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 			/>
@@ -97,7 +97,7 @@ export default {
 		sponsor: String,
 		sponsorTokenExpires: Number,
 		smartCostLimit: Number,
-		tariffPlannerUnit: String,
+		smartCostUnit: String,
 		tariffGridDynamic: Boolean,
 	},
 	computed: {
