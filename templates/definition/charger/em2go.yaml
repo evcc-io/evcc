@@ -6,8 +6,8 @@ products:
 capabilities: ["mA", "rfid"]
 requirements:
   description:
-    de: Für die Nutzung mit evcc muss die Wallbox mit einer aktuellen Firmware mit Modbus-Unterstützung betrieben werden. Bitte mit dem Hersteller abklären.
-    en: For use with evcc, the wallbox must be operated with a recent firmware including Modbus support. Please contact vendor.
+    de: "Aktuelle Firmware mit Modbus-Unterstützung notwendig (Pro Power: 1.01 bzw. OCPP/ONC: 3.15)"
+    en: "Recent firmware with Modbus support required (Pro Power: 1.01 and OCPP/ONC: 3.15)"
 params:
   - name: modbus
     choice: ["tcpip"]

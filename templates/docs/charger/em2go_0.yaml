@@ -3,7 +3,7 @@ product:
   description: Pro Power/OCPP/ONC
 capabilities: ["mA", "rfid"]
 description: |
-  Für die Nutzung mit evcc muss die Wallbox mit einer aktuellen Firmware mit Modbus-Unterstützung betrieben werden. Bitte mit dem Hersteller abklären.
+  Aktuelle Firmware mit Modbus-Unterstützung notwendig (Pro Power: 1.01 bzw. OCPP/ONC: 3.15)
 render:
   - default: |
       type: template
