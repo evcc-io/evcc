@@ -1474,6 +1474,14 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool)
 			lp.log.DEBUG.Printf("switched phases: %dp", lp.ConfiguredPhases)
 		}
 
+	case lp.targetEnergyReached():
+		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)
+		err = lp.disableUnlessClimater()
+
+	case lp.targetSocReached():
+		lp.log.DEBUG.Printf("targetSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.Soc.target)
+		err = lp.disableUnlessClimater()
+
 	case lp.remoteControlled(loadpoint.RemoteHardDisable):
 		remoteDisabled = loadpoint.RemoteHardDisable
 		fallthrough
@@ -1484,14 +1492,6 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool)
 	// immediate charging
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
-
-	case lp.targetEnergyReached():
-		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)
-		err = lp.disableUnlessClimater()
-
-	case lp.targetSocReached():
-		lp.log.DEBUG.Printf("targetSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.Soc.target)
-		err = lp.disableUnlessClimater()
 
 	// minimum or target charging
 	case lp.minSocNotReached() || lp.plannerActive():
