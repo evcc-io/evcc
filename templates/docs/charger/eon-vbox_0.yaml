@@ -7,7 +7,7 @@ description: |
 render:
   - default: |
       type: template
-      template: eon-vbox      
+      template: eon-vbox
 
       # Modbus TCP
       modbus: tcpip

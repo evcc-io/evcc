@@ -31,10 +31,10 @@ type Hub struct {
 func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) {
 	// instantiate all event templates
 	for k, v := range cc {
-		if _, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Title); err != nil {
+		if _, err := template.New("out").Funcs(sprig.TxtFuncMap()).Parse(v.Title); err != nil {
 			return nil, fmt.Errorf("invalid event title: %s (%w)", k, err)
 		}
-		if _, err := template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(v.Msg); err != nil {
+		if _, err := template.New("out").Funcs(sprig.TxtFuncMap()).Parse(v.Msg); err != nil {
 			return nil, fmt.Errorf("invalid event message: %s (%w)", k, err)
 		}
 	}

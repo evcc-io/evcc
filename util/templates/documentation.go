@@ -44,7 +44,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 	var modbusRender string
 	if modbusChoices := t.ModbusChoices(); len(modbusChoices) > 0 {
 		if i, _ := t.ParamByName(ParamModbus); i > -1 {
-			modbusTmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(documentationModbusTmpl)
+			modbusTmpl, err := template.New("yaml").Funcs(sprig.TxtFuncMap()).Parse(documentationModbusTmpl)
 			if err != nil {
 				panic(err)
 			}
@@ -77,6 +77,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		filteredParams = append(filteredParams, param)
 	}
 
+	// fmt.Println(t.Template, "<")
 	data := map[string]interface{}{
 		"Template":               t.Template,
 		"ProductBrand":           product.Brand,
@@ -92,10 +93,11 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 	}
 
 	out := new(bytes.Buffer)
-	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(documentationTmpl)
+
+	tmpl, err := FuncMap(template.New("yaml")).Parse(documentationTmpl)
 	if err == nil {
 		err = tmpl.Execute(out, data)
 	}
 
-	return []byte(trimEmptyLines(out.String())), err
+	return []byte(trimLines(out.String())), err
 }

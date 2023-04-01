@@ -8,7 +8,7 @@ description: |
 render:
   - default: |
       type: template
-      template: alfen      
+      template: alfen
 
       # Modbus TCP
       modbus: tcpip

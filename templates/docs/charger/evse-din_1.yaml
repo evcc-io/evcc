@@ -3,7 +3,7 @@ product:
 render:
   - default: |
       type: template
-      template: evse-din      
+      template: evse-din
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
