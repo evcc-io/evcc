@@ -1,11 +1,26 @@
-{{- define "default" }}
+{{- define "param" }}
+  {{ .Name }}:
+  {{- if .Value }} {{ .Value }} {{- end }}
+  {{- if .Values }}
+  {{ range .Values }}
+  - {{ . }}
+  {{- end }}
+  {{- end }}
+  {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}
+>{{ printf "%+v" . }}
+  {{/* {{- if ne .IsRequired true }} # Optional{{ end }} */}}
+{{- end }}
+
+{{- define "header" }}
   type: template
   template: {{ $.Template }}
   {{- if hasKey . "Usage" }}
   usage: {{ .Usage }}
   {{- end }}
-  {{- if .Name }}
-  {{- end }}
+{{- end }}
+
+{{- define "default" }}
+  {{- include "header" . }}
   {{- range $.Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 -}}
@@ -23,11 +38,7 @@
 {{- end }}
 
 {{- define "advanced" }}
-  type: template
-  template: {{ $.Template }}
-  {{- if hasKey . "Usage" }}
-  usage: {{ .Usage }}
-  {{- end }}
+  {{- include "header" . }}
   {{- range $.Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 -}}
