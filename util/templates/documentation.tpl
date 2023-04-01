@@ -1,14 +1,10 @@
 {{- define "param" }}
   {{ .Name }}:
   {{- if .Value }} {{ .Value }} {{- end }}
-  {{- if .Values }}
-  {{ range .Values }}
+  {{- range .Values }}
   - {{ . }}
   {{- end }}
-  {{- end }}
-  {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}
->{{ printf "%+v" . }}
-  {{/* {{- if ne .IsRequired true }} # Optional{{ end }} */}}
+  {{- if .Help.DE }} # {{ .Help.DE }}{{- end }}{{- if not .IsRequired }} # Optional{{- end }}
 {{- end }}
 
 {{- define "header" }}
@@ -25,16 +21,9 @@
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 -}}
   {{- else if ne .IsAdvanced true }}
-  {{ .Name }}:
-  {{- if .Value }} {{ .Value }} {{- end }}
-  {{- if .Values }}
-  {{ range .Values }}
-  - {{ . }}
+  {{- template "param" . }}
   {{- end }}
   {{- end }}
-  {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .IsRequired true }} # Optional{{ end }}
-  {{- end -}}
-  {{- end -}}
 {{- end }}
 
 {{- define "advanced" }}
@@ -43,14 +32,7 @@
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 -}}
   {{- else }}
-  {{ .Name }}:
-  {{- if .Value }} {{ .Value }} {{- end }}
-  {{- if .Values }}
-  {{ range .Values }}
-  - {{ . }}
-  {{- end }}
-  {{- end }}
-  {{- if .Help.DE }} # {{ .Help.DE }}{{ end }}{{ if ne .IsRequired true }} # Optional{{ end }}
+  {{- template "param" . }}
   {{- end -}}
   {{- end -}}
 {{- end -}}
