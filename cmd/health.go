@@ -27,13 +27,18 @@ func init() {
 }
 
 func runHealth(cmd *cobra.Command, args []string) {
+	// load config
+	if err := loadConfigFile(&conf); err != nil {
+		log.FATAL.Fatal(err)
+	}
+
 	u := &httpunix.Transport{
 		DialTimeout:           100 * time.Millisecond,
 		RequestTimeout:        1 * time.Second,
 		ResponseHeaderTimeout: 1 * time.Second,
 	}
 
-	u.RegisterLocation(serviceName, server.SocketPath)
+	u.RegisterLocation(serviceName, server.SocketPath(conf.Network.Port))
 
 	client := http.Client{
 		Transport: u,
