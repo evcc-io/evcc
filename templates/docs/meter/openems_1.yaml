@@ -12,7 +12,7 @@ render:
       template: openems
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      password: user # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
+      password: user # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) (Optional)
   - usage: pv
     default: |
       type: template
@@ -24,7 +24,7 @@ render:
       template: openems
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      password: user # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
+      password: user # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) (Optional)
   - usage: battery
     default: |
       type: template
@@ -36,5 +36,5 @@ render:
       template: openems
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      password: user # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
-      capacity: 50 # Akkukapazität in kWh # Optional
+      password: user # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) (Optional)
+      capacity: 50 # Akkukapazität in kWh (Optional)

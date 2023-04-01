@@ -8,37 +8,37 @@ render:
       template: solarwatt-myreserve-matrix
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 8080 # Port # Optional
+      port: 8080 # Port (Optional)
     advanced: |
       type: template
       template: solarwatt-myreserve-matrix
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 8080 # Port # Optional
+      port: 8080 # Port (Optional)
   - usage: pv
     default: |
       type: template
       template: solarwatt-myreserve-matrix
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 8080 # Port # Optional
+      port: 8080 # Port (Optional)
     advanced: |
       type: template
       template: solarwatt-myreserve-matrix
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 8080 # Port # Optional
+      port: 8080 # Port (Optional)
   - usage: battery
     default: |
       type: template
       template: solarwatt-myreserve-matrix
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 8080 # Port # Optional
+      port: 8080 # Port (Optional)
     advanced: |
       type: template
       template: solarwatt-myreserve-matrix
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 8080 # Port # Optional
-      capacity: 50 # Akkukapazität in kWh # Optional
+      port: 8080 # Port (Optional)
+      capacity: 50 # Akkukapazität in kWh (Optional)

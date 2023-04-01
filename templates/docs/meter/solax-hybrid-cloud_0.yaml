@@ -46,4 +46,4 @@ render:
       usage: battery
       tokenid: # Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
       serial: # Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
-      capacity: 50 # Akkukapazität in kWh # Optional
+      capacity: 50 # Akkukapazität in kWh (Optional)
