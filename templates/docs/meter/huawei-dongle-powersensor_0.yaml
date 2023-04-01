@@ -6,7 +6,7 @@ render:
     default: |
       type: template
       template: huawei-dongle-powersensor
-      usage: grid      
+      usage: grid
 
       # Modbus TCP
       modbus: tcpip
@@ -17,7 +17,7 @@ render:
       type: template
       template: huawei-dongle-powersensor
       usage: grid
-      storageunit: 1 # Optional      
+      storageunit: 1 # Optional
 
       # Modbus TCP
       modbus: tcpip
@@ -30,7 +30,7 @@ render:
     default: |
       type: template
       template: huawei-dongle-powersensor
-      usage: pv      
+      usage: pv
 
       # Modbus TCP
       modbus: tcpip
@@ -41,7 +41,7 @@ render:
       type: template
       template: huawei-dongle-powersensor
       usage: pv
-      storageunit: 1 # Optional      
+      storageunit: 1 # Optional
 
       # Modbus TCP
       modbus: tcpip
@@ -54,7 +54,7 @@ render:
     default: |
       type: template
       template: huawei-dongle-powersensor
-      usage: battery      
+      usage: battery
 
       # Modbus TCP
       modbus: tcpip
@@ -65,7 +65,7 @@ render:
       type: template
       template: huawei-dongle-powersensor
       usage: battery
-      storageunit: 1 # Optional      
+      storageunit: 1 # Optional
 
       # Modbus TCP
       modbus: tcpip

@@ -6,7 +6,7 @@ render:
     default: |
       type: template
       template: huawei-dongle
-      usage: pv      
+      usage: pv
 
       # Modbus TCP
       modbus: tcpip
@@ -16,7 +16,7 @@ render:
     advanced: |
       type: template
       template: huawei-dongle
-      usage: pv      
+      usage: pv
 
       # Modbus TCP
       modbus: tcpip

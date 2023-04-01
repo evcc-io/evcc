@@ -5,7 +5,7 @@ capabilities: ["1p3p", "mA", "rfid"]
 render:
   - default: |
       type: template
-      template: dadapower      
+      template: dadapower
 
       # Modbus TCP
       modbus: tcpip

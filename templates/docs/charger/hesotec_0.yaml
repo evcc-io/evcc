@@ -5,7 +5,7 @@ requirements: ["sponsorship"]
 render:
   - default: |
       type: template
-      template: hesotec      
+      template: hesotec
 
       # Modbus TCP
       modbus: tcpip

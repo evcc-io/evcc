@@ -4,7 +4,7 @@ product:
 render:
   - default: |
       type: template
-      template: phoenix-ev-ser      
+      template: phoenix-ev-ser
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial

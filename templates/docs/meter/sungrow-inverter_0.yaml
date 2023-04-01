@@ -8,7 +8,7 @@ render:
     default: |
       type: template
       template: sungrow-inverter
-      usage: grid      
+      usage: grid
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -32,7 +32,7 @@ render:
     default: |
       type: template
       template: sungrow-inverter
-      usage: pv      
+      usage: pv
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial

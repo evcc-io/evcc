@@ -6,7 +6,7 @@ render:
     default: |
       type: template
       template: fox-ess-ethernet
-      usage: pv      
+      usage: pv
 
       # Modbus TCP
       modbus: tcpip
@@ -17,7 +17,7 @@ render:
     default: |
       type: template
       template: fox-ess-ethernet
-      usage: battery      
+      usage: battery
 
       # Modbus TCP
       modbus: tcpip

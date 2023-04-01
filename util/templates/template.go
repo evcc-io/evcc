@@ -207,7 +207,7 @@ var proxyTmpl string
 
 // RenderProxyWithValues renders the proxy template
 func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
-	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
+	tmpl, err := template.New("yaml").Funcs(sprig.TxtFuncMap()).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
 	}
@@ -333,22 +333,9 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 		}
 	}
 
-	tmpl := template.New("yaml")
-	funcMap := template.FuncMap{
-		// include function
-		// copied from: https://github.com/helm/helm/blob/8648ccf5d35d682dcd5f7a9c2082f0aaf071e817/pkg/engine/engine.go#L147-L154
-		"include": func(name string, data interface{}) (string, error) {
-			buf := bytes.NewBuffer(nil)
-			if err := tmpl.ExecuteTemplate(buf, name, data); err != nil {
-				return "", err
-			}
-			return buf.String(), nil
-		},
-	}
-
 	tmpl, err := baseTmpl.Clone()
 	if err == nil {
-		tmpl, err = tmpl.Funcs(sprig.FuncMap()).Funcs(funcMap).Parse(t.Render)
+		tmpl, err = FuncMap(tmpl).Parse(t.Render)
 	}
 	if err != nil {
 		return nil, res, err
