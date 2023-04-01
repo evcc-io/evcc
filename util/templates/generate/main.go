@@ -52,23 +52,19 @@ func generateClass(class templates.Class) error {
 		for index, product := range tmpl.Products {
 			fmt.Println(tmpl.Template + ": " + product.Title(language))
 
-			if err := writeTemplate(class, index, product, tmpl); err != nil {
+			b, err := tmpl.RenderDocumentation(product, "de")
+			if err != nil {
+				return err
+			}
+
+			filename := fmt.Sprintf("%s/%s/%s_%d.yaml", docsPath, strings.ToLower(class.String()), tmpl.Template, index)
+			if err := os.WriteFile(filename, b, 0o644); err != nil {
 				return err
 			}
 		}
 	}
 
 	return nil
-}
-
-func writeTemplate(class templates.Class, index int, product templates.Product, tmpl templates.Template) error {
-	b, err := tmpl.RenderDocumentation(product, "de")
-	if err == nil {
-		filename := fmt.Sprintf("%s/%s/%s_%d.yaml", docsPath, strings.ToLower(class.String()), tmpl.Template, index)
-		err = os.WriteFile(filename, b, 0o644)
-	}
-
-	return err
 }
 
 func clearDir(dir string) error {
