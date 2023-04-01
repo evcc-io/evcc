@@ -18,7 +18,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ^1.20
-          cache: true
         id: go
 
       - name: Install tools
@@ -40,7 +39,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ^1.20
-          cache: true
         id: go
 
       - name: Build
@@ -56,7 +54,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ^1.20
-          cache: true
         id: go
 
       - name: Test
@@ -72,7 +69,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ^1.20
-          cache: true
         id: go
 
       - run: mkdir dist && touch dist/empty
@@ -120,7 +116,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ^1.20
-          cache: true
         id: go
 
       - name: Toml
