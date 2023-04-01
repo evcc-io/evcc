@@ -3,6 +3,7 @@
 package server
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -12,7 +13,7 @@ import (
 )
 
 // SocketPath is the unix domain socket path
-const SocketPath = "/tmp/evcc"
+const SocketPath = "/tmp/evcc-%d"
 
 // removeIfExists deletes file if it exists or fails
 func removeIfExists(file string) {
@@ -24,10 +25,13 @@ func removeIfExists(file string) {
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
-func HealthListener(site site.API) {
-	removeIfExists(SocketPath)
+func HealthListener(site site.API, port int) {
 
-	l, err := net.Listen("unix", SocketPath)
+	instanceSocketPath := fmt.Sprintf(SocketPath, port)
+
+	removeIfExists(instanceSocketPath)
+
+	l, err := net.Listen("unix", instanceSocketPath)
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
@@ -40,6 +44,6 @@ func HealthListener(site site.API) {
 
 	shutdown.Register(func() {
 		_ = l.Close()
-		removeIfExists(SocketPath) // cleanup
+		removeIfExists(instanceSocketPath) // cleanup
 	})
 }
