@@ -313,3 +313,68 @@ func (lp *Loadpoint) vehicleOdometer() {
 		}
 	}
 }
+
+// vehicleClimatePollAllowed determines if polling depending on mode and connection status
+func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
+	switch {
+	case lp.Soc.Poll.Mode == pollCharging && lp.charging():
+		return true
+	case (lp.Soc.Poll.Mode == pollConnected || lp.Soc.Poll.Mode == pollAlways) && lp.connected():
+		return true
+	default:
+		return false
+	}
+}
+
+// vehicleSocPollAllowed validates charging state against polling mode
+func (lp *Loadpoint) vehicleSocPollAllowed() bool {
+	// always update soc when charging
+	if lp.charging() {
+		lp.didChargeOnLastSocUpdate = true
+		return true
+	}
+
+	// update if connected and soc unknown
+	if lp.connected() && lp.socUpdated.IsZero() {
+		return true
+	}
+
+	remaining := lp.Soc.Poll.Interval - lp.clock.Since(lp.socUpdated)
+
+	honourUpdateInterval := lp.Soc.Poll.Mode == pollAlways ||
+		lp.connected() && (lp.Soc.Poll.Mode == pollConnected ||
+			// for mode charging allow one last soc update if did charge previously to not rely on soc estimator too much
+			lp.Soc.Poll.Mode == pollCharging && lp.didChargeOnLastSocUpdate)
+
+	if honourUpdateInterval {
+		if remaining > 0 {
+			lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
+		} else {
+			lp.didChargeOnLastSocUpdate = false
+			return true
+		}
+	}
+
+	return false
+}
+
+// vehicleClimateActive checks if vehicle has active climate request
+func (lp *Loadpoint) vehicleClimateActive() bool {
+	if cl, ok := lp.vehicle.(api.VehicleClimater); ok && lp.vehicleClimatePollAllowed() {
+		active, err := cl.Climater()
+		if err == nil {
+			if active {
+				lp.log.DEBUG.Println("climater active")
+			}
+
+			lp.publish("climaterActive", active)
+			return active
+		}
+
+		if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("climater: %v", err)
+		}
+	}
+
+	return false
+}
