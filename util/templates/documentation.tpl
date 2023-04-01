@@ -1,6 +1,5 @@
 {{- define "param" }}
-  {{ .Name }}:
-  {{- if .Value }} {{ .Value }} {{- end }}
+  {{ .Name }}:{{ if .Value }} {{ .Value }}{{ end }}
   {{- range .Values }}
   - {{ . }}
   {{- end }}
@@ -9,7 +8,7 @@
 
 {{- define "header" }}
   type: template
-  template: {{ $.Template }}
+  template: {{ .Template }}
   {{- if hasKey . "Usage" }}
   usage: {{ .Usage }}
   {{- end }}
@@ -18,7 +17,7 @@
 {{- define "default" }}
   {{- include "header" . }}
   {{- $usage := "" }}{{ if hasKey . "Usage" }}{{ $usage = .Usage }}{{ end }}
-  {{- range $.Params }}
+  {{- range .Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 }}
   {{- else if and (not .IsAdvanced) (or (not $usage) (not .Usages) (has $usage .Usages)) }}
@@ -30,7 +29,7 @@
 {{- define "advanced" }}
   {{- include "header" . }}
   {{- $usage := "" }}{{ if hasKey . "Usage" }}{{ $usage = .Usage }}{{ end }}
-  {{- range $.Params }}
+  {{- range .Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 }}
   {{- else if or (not $usage) (not .Usages) (has $usage .Usages) }}

@@ -6,7 +6,7 @@ id: {{ .id }}
 device: {{ .device }} # USB-RS485 Adapter Adresse
 baudrate: {{ .baudrate }} # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
 comset: "{{ .comset }}" # Kommunikationsparameter für den Adapter
-{{- end -}}
+{{- end }}
 {{- if .rs485tcpip }}
 
 # RS485 via TCP/IP (Modbus RTU)
@@ -14,7 +14,7 @@ modbus: rs485tcpip
 id: {{ .id }}
 host: {{ .host }} # Hostname
 port: {{ .port }} # Port
-{{- end -}}
+{{- end }}
 {{- if .tcpip }}
 
 # Modbus TCP

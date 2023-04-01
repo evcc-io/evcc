@@ -22,8 +22,8 @@ onIdentify:
 {{- end }}
 {{- if len .identifiers }}
 identifiers:
-{{-   range .identifiers }}
+{{- range .identifiers }}
 - {{ . }}
-{{-   end }}
+{{- end }}
 {{- end }}
 {{- end }}
