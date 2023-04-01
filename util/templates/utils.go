@@ -43,6 +43,7 @@ func trimLines(s string) string {
 	return strings.Join(lines, "\n")
 }
 
+// FuncMap returns a sprig template.FuncMap with additional include function
 func FuncMap(tmpl *template.Template) *template.Template {
 	funcMap := template.FuncMap{
 		// include function

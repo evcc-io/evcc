@@ -77,7 +77,6 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		filteredParams = append(filteredParams, param)
 	}
 
-	// fmt.Println(t.Template, "<")
 	data := map[string]interface{}{
 		"Template":               t.Template,
 		"ProductBrand":           product.Brand,
