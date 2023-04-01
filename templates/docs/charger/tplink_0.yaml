@@ -7,11 +7,11 @@ render:
       type: template
       template: tplink
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional
+      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet (Optional)
     advanced: |
       type: template
       template: tplink
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet # Optional
+      standbypower: 15 # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet (Optional)
       integrateddevice: # Optional
-      icon: # Icon in der Benutzeroberfläche # Optional
+      icon: # Icon in der Benutzeroberfläche (Optional)

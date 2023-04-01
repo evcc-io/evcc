@@ -4,7 +4,7 @@
   {{- range .Values }}
   - {{ . }}
   {{- end }}
-  {{- if .Help.DE }} # {{ .Help.DE }}{{- end }}{{- if not .IsRequired }} # Optional{{- end }}
+  {{- if .Help.DE }} # {{ .Help.DE }}{{- end }}{{- if not .IsRequired }}{{ if not .Help.DE }} # {{ else }} ({{ end }}Optional{{ if .Help.DE }}){{ end }}{{ end }}
 {{- end }}
 
 {{- define "header" }}
@@ -21,7 +21,7 @@
   {{- range $.Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 }}
-  {{- else if and (not .IsAdvanced) (or (or (not $usage) (not .Usages)) (and $usage .Usages (has $usage .Usages))) }}
+  {{- else if and (not .IsAdvanced) (or (not $usage) (not .Usages) (has $usage .Usages)) }}
   {{- template "param" . }}
   {{- end }}
   {{- end }}
@@ -33,7 +33,7 @@
   {{- range $.Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 }}
-  {{- else if or (or (not $usage) (not .Usages)) (and $usage .Usages (has $usage .Usages)) }}
+  {{- else if or (not $usage) (not .Usages) (has $usage .Usages) }}
   {{- template "param" . }}
   {{- end }}
   {{- end }}

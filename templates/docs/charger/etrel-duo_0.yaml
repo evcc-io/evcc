@@ -10,10 +10,10 @@ render:
       type: template
       template: etrel-duo
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port # Optional
+      port: 502 # Port (Optional)
     advanced: |
       type: template
       template: etrel-duo
       connector: 1 # Optional
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port # Optional
+      port: 502 # Port (Optional)

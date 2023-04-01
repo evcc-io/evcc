@@ -23,7 +23,7 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      integer: # Einstellung Float/Integer im Wechselrichter überprüfen # Optional
+      integer: # Einstellung Float/Integer im Wechselrichter überprüfen (Optional)
   - usage: pv
     default: |
       type: template
@@ -45,4 +45,4 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      integer: # Einstellung Float/Integer im Wechselrichter überprüfen # Optional
+      integer: # Einstellung Float/Integer im Wechselrichter überprüfen (Optional)
