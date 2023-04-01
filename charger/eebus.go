@@ -441,7 +441,7 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 	count := len(currents)
 	if count < 3 {
-		for fill := 0; fill < count-3; fill++ {
+		for fill := 0; fill < 3-count; fill++ {
 			currents = append(currents, 0)
 		}
 	}
