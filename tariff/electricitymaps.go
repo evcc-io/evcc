@@ -124,7 +124,7 @@ func (t *ElectricityMaps) Rates() (api.Rates, error) {
 	return res, outdatedError(t.updated, time.Hour)
 }
 
-// Dynamic implements the api.Tariff interface
-func (t *ElectricityMaps) Dynamic() bool {
+// IsDynamic implements the api.Tariff interface
+func (t *ElectricityMaps) IsDynamic() bool {
 	return true
 }

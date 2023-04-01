@@ -141,7 +141,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 	return res, nil
 }
 
-// Dynamic implements the api.Tariff interface
-func (t *Fixed) Dynamic() bool {
+// IsDynamic implements the api.Tariff interface
+func (t *Fixed) IsDynamic() bool {
 	return t.dynamic
 }

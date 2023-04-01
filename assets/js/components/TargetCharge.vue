@@ -45,18 +45,7 @@
 				<span v-if="costLimitExists" class="d-block text-secondary">
 					{{
 						$t("main.targetCharge.costLimitIgnore", {
-							limit:
-								"< " + isCo2
-									? $t("main.targetCharge.co2Limit", {
-											co2: fmtCo2Short(smartCostLimit),
-									  })
-									: $t("main.targetCharge.priceLimit", {
-											price: fmtPricePerKWh(
-												smartCostLimit,
-												smartCostUnit,
-												true
-											),
-									  }),
+							limit: costLimitText,
 						})
 					}}
 				</span>
@@ -170,6 +159,16 @@ export default {
 		},
 		costLimitExists: function () {
 			return this.smartCostLimit !== 0;
+		},
+		costLimitText: function () {
+			if (this.isCo2) {
+				this.$t("main.targetCharge.co2Limit", {
+					co2: this.fmtCo2Short(this.smartCostLimit),
+				});
+			}
+			return this.$t("main.targetCharge.priceLimit", {
+				price: this.fmtPricePerKWh(this.smartCostLimit, this.smartCostUnit, true),
+			});
 		},
 		isCo2() {
 			return this.smartCostUnit === CO2_UNIT;

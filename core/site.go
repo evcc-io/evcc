@@ -695,7 +695,7 @@ func (site *Site) prepare() {
 	site.publish("smartCostLimit", site.SmartCostLimit)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
 		site.publish("smartCostUnit", tariff.Unit())
-		site.publish("smartCostAvailable", tariff.Dynamic())
+		site.publish("smartCostAvailable", tariff.IsDynamic())
 	}
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since())

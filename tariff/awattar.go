@@ -107,7 +107,7 @@ func (t *Awattar) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// Dynamic implements the api.Tariff interface
-func (t *Awattar) Dynamic() bool {
+// IsDynamic implements the api.Tariff interface
+func (t *Awattar) IsDynamic() bool {
 	return true
 }
