@@ -416,6 +416,9 @@ func (lp *Loadpoint) evChargeStopHandler() {
 		lp.startWakeUpTimer()
 	}
 
+	// reset measured phases
+	lp.resetMeasuredPhases()
+
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
@@ -466,9 +469,6 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
-
-	// phases are unknown when vehicle disconnects
-	lp.resetMeasuredPhases()
 
 	// energy and duration
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
@@ -934,9 +934,6 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		if err := lp.setLimit(0, true); err != nil {
 			return err
 		}
-
-		// reset measured phases
-		lp.resetMeasuredPhases()
 
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
