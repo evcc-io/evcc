@@ -314,14 +314,12 @@ func (lp *Loadpoint) vehicleOdometer() {
 	}
 }
 
-// vehiclePollAllowed determines if polling depending on mode and connection status
-func (lp *Loadpoint) vehiclePollAllowed() bool {
+// vehicleClimatePollAllowed determines if polling depending on mode and connection status
+func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
 	switch {
-	case lp.Soc.Poll.Mode == pollAlways:
-		return true
 	case lp.Soc.Poll.Mode == pollCharging && lp.charging():
 		return true
-	case lp.Soc.Poll.Mode == pollConnected && lp.connected():
+	case (lp.Soc.Poll.Mode == pollConnected || lp.Soc.Poll.Mode == pollAlways) && lp.connected():
 		return true
 	default:
 		return false
@@ -362,7 +360,7 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 
 // vehicleClimateActive checks if vehicle has active climate request
 func (lp *Loadpoint) vehicleClimateActive() bool {
-	if cl, ok := lp.vehicle.(api.VehicleClimater); ok && lp.vehiclePollAllowed() {
+	if cl, ok := lp.vehicle.(api.VehicleClimater); ok && lp.vehicleClimatePollAllowed() {
 		active, err := cl.Climater()
 		if err == nil {
 			if active {
