@@ -12,7 +12,7 @@ levels:
 plant: {{ .Plant }}
 
 interval: 10s # control cycle interval
-{{- if ne (len .SponsorToken) 0 }}
+{{- if .SponsorToken }}
 
 sponsortoken: {{ .SponsorToken }}
 
@@ -20,45 +20,45 @@ sponsortoken: {{ .SponsorToken }}
 # see https://github.com/evcc-io/evcc/discussions/4554
 telemetry: {{ .Telemetry }}
 {{- end}}
-{{- if ne (len .Meters) 0 }}
+{{- if .Meters }}
 
 meters:
-{{-   range .Meters }}
+{{- range .Meters }}
 - {{ .Yaml | indent 2 | trim }}
-{{-   end }}
 {{- end }}
-{{- if ne (len .Chargers) 0 }}
+{{- end }}
+{{- if .Chargers }}
 
 chargers:
-{{-   range .Chargers }}
+{{- range .Chargers }}
 - {{ .Yaml | indent 2 | trim }}
-{{-   end }}
 {{- end }}
-{{- if ne (len .Vehicles) 0 }}
+{{- end }}
+{{- if .Vehicles }}
 
 vehicles:
-{{-   range .Vehicles }}
+{{- range .Vehicles }}
 - {{ .Yaml | indent 2 | trim }}
-{{-   end }}
 {{- end }}
-{{- if ne (len .Chargers) 0 }}
+{{- end }}
+{{- if .Chargers }}
 
 loadpoints:
-{{-   range .Loadpoints }}
+{{- range .Loadpoints }}
 - title: {{ .Title }}
   charger: {{ .Charger }}
-{{-     if .ChargeMeter }}
+{{- if .ChargeMeter }}
   meter: {{ .ChargeMeter }}
-{{-     end }}
-{{-     if .Vehicle }}
+{{- end }}
+{{- if .Vehicle }}
   vehicle: {{ .Vehicle }}
-{{-     end }}
+{{- end }}
   mode: {{ .Mode }}
   phases: {{ .Phases }}
   mincurrent: {{ .MinCurrent }}
   maxcurrent: {{ .MaxCurrent }}
   resetOnDisconnect: {{ .ResetOnDisconnect }}
-{{-   end }}
+{{- end }}
 {{- end }}
 
 site:
@@ -67,24 +67,24 @@ site:
 {{- if .Site.Grid }}
     grid: {{ .Site.Grid }}
 {{- end }}
-{{- if len .Site.PVs }}
+{{- if .Site.PVs }}
     pv:
-{{-   range .Site.PVs }}
+    {{- range .Site.PVs }}
     - {{ . }}
-{{-   end }}
+    {{- end }}
 {{- end }}
-{{- if len .Site.Batteries }}
+{{- if .Site.Batteries }}
     battery:
-{{-   range .Site.Batteries }}
+    {{- range .Site.Batteries }}
     - {{ . }}
-{{-   end }}
+    {{- end }}
 {{- end }}
-{{- if ne (len .Hems) 0 }}
+{{- if .Hems }}
 
 hems:
 {{ .Hems | indent 2 }}
 {{- end }}
-{{- if ne (len .EEBUS) 0 }}
+{{- if .EEBUS }}
 
 eebus:
 {{ .EEBUS | indent 2 }}

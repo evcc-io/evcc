@@ -49,7 +49,6 @@ render:
       id: 247
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
@@ -97,7 +96,6 @@ render:
       id: 247
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template

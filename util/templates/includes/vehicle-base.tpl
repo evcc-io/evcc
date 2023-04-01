@@ -1,22 +1,22 @@
 {{ define "vehicle-base" }}
-{{- if ne .title "" }}
+{{- if .title }}
 title: {{ .title }}
 {{- end }}
-{{- if ne .icon "" }}
+{{- if .icon }}
 icon: {{ .icon }}
 {{- end }}
 user: {{ .user }}
 password: {{ .password }}
-{{- if ne .capacity "" }}
+{{- if .capacity }}
 capacity: {{ .capacity }}
 {{- end }}
-{{- if ne .vin "" }}
+{{- if .vin }}
 vin: {{ .vin }}
 {{- end }}
-{{- if ne .phases "" }}
+{{- if .phases }}
 phases: {{ .phases }}
 {{- end }}
-{{- if ne .cache "" }}
+{{- if .cache }}
 cache: {{ .cache }}
 {{- end }}
 {{- end }}
