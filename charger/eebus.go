@@ -81,7 +81,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 		communicationStandard: emobility.EVCommunicationStandardTypeUnknown,
 	}
 
-	c.emobility = eebus.Instance.Register(ski, ip, c.onConnect, c.onDisconnect)
+	c.emobility = eebus.Instance.RegisterEVSE(ski, ip, c.onConnect, c.onDisconnect, nil)
 
 	err := c.waitForConnection()
 
