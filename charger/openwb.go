@@ -130,7 +130,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		heartbeatS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, openwb.SlaveHeartbeatTopic),
 			timeout).WithRetained().IntSetter("heartbeat")
 
-		for range time.NewTicker(openwb.HeartbeatInterval).C {
+		for range time.Tick(openwb.HeartbeatInterval) {
 			if err := heartbeatS(1); err != nil {
 				log.ERROR.Printf("heartbeat: %v", err)
 			}

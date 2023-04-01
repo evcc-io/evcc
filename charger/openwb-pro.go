@@ -62,7 +62,7 @@ func NewOpenWBPro(uri string, cache time.Duration) (*OpenWBPro, error) {
 }
 
 func (wb *OpenWBPro) heartbeat(log *util.Logger) {
-	for range time.NewTicker(30 * time.Second).C {
+	for range time.Tick(30 * time.Second) {
 		if _, err := wb.get(); err != nil {
 			log.ERROR.Printf("heartbeat: %v", err)
 		}

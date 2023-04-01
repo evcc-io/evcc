@@ -7,7 +7,7 @@ description: |
 render:
   - default: |
       type: template
-      template: versicharge      
+      template: versicharge
 
       # Modbus TCP
       modbus: tcpip

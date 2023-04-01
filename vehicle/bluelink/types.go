@@ -38,8 +38,9 @@ type VehicleStatus struct {
 				Value, Unit int
 			}
 		}
-		DrvDistance       []DrivingDistance
-		ReservChargeInfos ReservChargeInfo
+		ChargePortDoorOpenStatus int
+		DrvDistance              []DrivingDistance
+		ReservChargeInfos        ReservChargeInfo
 	}
 	Vehicles []Vehicle
 }

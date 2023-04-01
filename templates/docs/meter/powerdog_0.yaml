@@ -5,7 +5,7 @@ render:
     default: |
       type: template
       template: powerdog
-      usage: grid      
+      usage: grid
 
       # Modbus TCP
       modbus: tcpip
@@ -16,7 +16,7 @@ render:
     default: |
       type: template
       template: powerdog
-      usage: pv      
+      usage: pv
 
       # Modbus TCP
       modbus: tcpip

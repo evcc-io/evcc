@@ -113,7 +113,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusNone
 	if err == nil {
 		status = api.StatusA
-		if res.EvStatus.BatteryPlugin > 0 {
+		if res.EvStatus.BatteryPlugin > 0 || res.EvStatus.ChargePortDoorOpenStatus == 1 {
 			status = api.StatusB
 		}
 		if res.EvStatus.BatteryCharge {

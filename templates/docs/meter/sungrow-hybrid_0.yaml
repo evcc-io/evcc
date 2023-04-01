@@ -8,7 +8,7 @@ render:
     default: |
       type: template
       template: sungrow-hybrid
-      usage: grid      
+      usage: grid
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -31,7 +31,7 @@ render:
     advanced: |
       type: template
       template: sungrow-hybrid
-      usage: grid      
+      usage: grid
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -51,12 +51,11 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
       template: sungrow-hybrid
-      usage: pv      
+      usage: pv
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -79,7 +78,7 @@ render:
     advanced: |
       type: template
       template: sungrow-hybrid
-      usage: pv      
+      usage: pv
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -99,12 +98,11 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
       template: sungrow-hybrid
-      usage: battery      
+      usage: battery
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -127,7 +125,7 @@ render:
     advanced: |
       type: template
       template: sungrow-hybrid
-      usage: battery      
+      usage: battery
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -147,4 +145,4 @@ render:
       id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port
-      capacity: 50 # Akkukapazität in kWh # Optional
+      capacity: 50 # Akkukapazität in kWh (Optional)

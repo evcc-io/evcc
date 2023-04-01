@@ -6,7 +6,7 @@ render:
     default: |
       type: template
       template: mypv-wifi-meter
-      usage: grid      
+      usage: grid
 
       # Modbus TCP
       modbus: tcpip

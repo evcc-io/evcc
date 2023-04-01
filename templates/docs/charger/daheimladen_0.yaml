@@ -7,5 +7,5 @@ render:
   - default: |
       type: template
       template: daheimladen
-      token: # Sie bekommen dieses Access Token vom Daheimladen Support: info@daheimladen.de. # Optional
-      stationid: # Die Seriennummer, welche auf dem Bildschirm der Wallbox angezeigt wird. # Optional
+      token: # Sie bekommen dieses Access Token vom Daheimladen Support: info@daheimladen.de. (Optional)
+      stationid: # Die Seriennummer, welche auf dem Bildschirm der Wallbox angezeigt wird. (Optional)

@@ -1,0 +1,14 @@
+template: phoenix-charx
+products:
+  - brand: Phoenix
+    description:
+      generic: CHARX
+params:
+  - name: host
+  - name: port
+    default: 502
+  - name: connector
+render: |
+  type: phoenix-charx
+  uri: {{ .host }}:{{ .port }}
+  connector: {{ .connector }}

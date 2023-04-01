@@ -66,10 +66,13 @@ func init() {
 
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+	cc := struct {
 		User     string
 		Password string
 		Charger  string
+		Timeout  time.Duration
+	}{
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -80,11 +83,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger)
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string) (*Easee, error) {
+func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -98,6 +101,8 @@ func NewEasee(user, password, charger string) (*Easee, error) {
 		mux:     sync.NewCond(new(sync.Mutex)),
 		current: 6, // default current
 	}
+
+	c.Client.Timeout = timeout
 
 	ts, err := easee.TokenSource(log, user, password)
 	if err != nil {

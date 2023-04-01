@@ -8,33 +8,33 @@ render:
       template: solaranzeige
       usage: grid
       host: 192.0.2.2 # IP Adresse oder der Hostname des MQTT Brokers
-      port: 1883 # MQTT Broker Port # Optional
-      topic: solaranzeige/box1 # Topic (ohne / am Anfang) # Optional
+      port: 1883 # MQTT Broker Port (Optional)
+      topic: solaranzeige/box1 # Topic (ohne / am Anfang) (Optional)
     advanced: |
       type: template
       template: solaranzeige
       usage: grid
       host: 192.0.2.2 # IP Adresse oder der Hostname des MQTT Brokers
-      port: 1883 # MQTT Broker Port # Optional
-      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
-      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
-      topic: solaranzeige/box1 # Topic (ohne / am Anfang) # Optional
-      timeout: 30s # Akzeptiere keine Daten die älter sind als dieser Wert # Optional
+      port: 1883 # MQTT Broker Port (Optional)
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) (Optional)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) (Optional)
+      topic: solaranzeige/box1 # Topic (ohne / am Anfang) (Optional)
+      timeout: 30s # Akzeptiere keine Daten die älter sind als dieser Wert (Optional)
   - usage: pv
     default: |
       type: template
       template: solaranzeige
       usage: pv
       host: 192.0.2.2 # IP Adresse oder der Hostname des MQTT Brokers
-      port: 1883 # MQTT Broker Port # Optional
-      topic: solaranzeige/box1 # Topic (ohne / am Anfang) # Optional
+      port: 1883 # MQTT Broker Port (Optional)
+      topic: solaranzeige/box1 # Topic (ohne / am Anfang) (Optional)
     advanced: |
       type: template
       template: solaranzeige
       usage: pv
       host: 192.0.2.2 # IP Adresse oder der Hostname des MQTT Brokers
-      port: 1883 # MQTT Broker Port # Optional
-      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) # Optional
-      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) # Optional
-      topic: solaranzeige/box1 # Topic (ohne / am Anfang) # Optional
-      timeout: 30s # Akzeptiere keine Daten die älter sind als dieser Wert # Optional
+      port: 1883 # MQTT Broker Port (Optional)
+      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) (Optional)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) (Optional)
+      topic: solaranzeige/box1 # Topic (ohne / am Anfang) (Optional)
+      timeout: 30s # Akzeptiere keine Daten die älter sind als dieser Wert (Optional)

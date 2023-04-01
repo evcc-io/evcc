@@ -98,7 +98,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 
 // waitForConnection wait for initial connection and returns an error on failure
 func (c *EEBus) waitForConnection() error {
-	timeout := time.After(30 * time.Second)
+	timeout := time.After(90 * time.Second)
 	for {
 		select {
 		case <-timeout:
@@ -227,7 +227,7 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	}
 
 	if !c.isConnected() {
-		return api.StatusNone, fmt.Errorf("%s charger reported as disconnected", c.ski)
+		return api.StatusNone, fmt.Errorf("%s disconnected", c.ski)
 	}
 
 	switch currentState {
@@ -252,6 +252,9 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (api.ChargeStatus, error) {
+	// check the current limits and update if necesarry
+	c.setLoadpointMinMaxLimits()
+
 	return c.updateState()
 }
 

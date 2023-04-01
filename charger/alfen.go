@@ -106,7 +106,7 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 }
 
 func (wb *Alfen) heartbeat() {
-	for range time.NewTicker(25 * time.Second).C {
+	for range time.Tick(25 * time.Second) {
 		wb.mu.Lock()
 		var curr float64
 		if wb.enabled {

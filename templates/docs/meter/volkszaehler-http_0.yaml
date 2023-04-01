@@ -8,5 +8,5 @@ render:
       type: template
       template: volkszaehler-http
       usage: grid
-      url: # Beispiel: http://zaehler.network.local:8080/api/data # Optional
+      url: # Beispiel: http://zaehler.network.local:8080/api/data (Optional)
       uuid:
