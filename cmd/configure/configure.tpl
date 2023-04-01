@@ -23,42 +23,42 @@ telemetry: {{ .Telemetry }}
 {{- if .Meters }}
 
 meters:
-{{-   range .Meters }}
+{{- range .Meters }}
 - {{ .Yaml | indent 2 | trim }}
-{{-   end }}
+{{- end }}
 {{- end }}
 {{- if .Chargers }}
 
 chargers:
-{{-   range .Chargers }}
+{{- range .Chargers }}
 - {{ .Yaml | indent 2 | trim }}
-{{-   end }}
+{{- end }}
 {{- end }}
 {{- if .Vehicles }}
 
 vehicles:
-{{-   range .Vehicles }}
+{{- range .Vehicles }}
 - {{ .Yaml | indent 2 | trim }}
-{{-   end }}
+{{- end }}
 {{- end }}
 {{- if .Chargers }}
 
 loadpoints:
-{{-   range .Loadpoints }}
+{{- range .Loadpoints }}
 - title: {{ .Title }}
   charger: {{ .Charger }}
-{{-     if .ChargeMeter }}
+{{- if .ChargeMeter }}
   meter: {{ .ChargeMeter }}
-{{-     end }}
-{{-     if .Vehicle }}
+{{- end }}
+{{- if .Vehicle }}
   vehicle: {{ .Vehicle }}
-{{-     end }}
+{{- end }}
   mode: {{ .Mode }}
   phases: {{ .Phases }}
   mincurrent: {{ .MinCurrent }}
   maxcurrent: {{ .MaxCurrent }}
   resetOnDisconnect: {{ .ResetOnDisconnect }}
-{{-   end }}
+{{- end }}
 {{- end }}
 
 site:
@@ -69,15 +69,15 @@ site:
 {{- end }}
 {{- if .Site.PVs }}
     pv:
-{{-   range .Site.PVs }}
+    {{- range .Site.PVs }}
     - {{ . }}
-{{-   end }}
+    {{- end }}
 {{- end }}
 {{- if .Site.Batteries }}
     battery:
-{{-   range .Site.Batteries }}
+    {{- range .Site.Batteries }}
     - {{ . }}
-{{-   end }}
+    {{- end }}
 {{- end }}
 {{- if .Hems }}
 
