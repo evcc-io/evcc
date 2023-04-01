@@ -18,7 +18,7 @@ const (
 	websitePath = "../../../templates/evcc.io"
 )
 
-//go:generate go run generate.go
+//go:generate go run main.go
 
 func main() {
 	for _, class := range []templates.Class{templates.Meter, templates.Charger, templates.Vehicle} {

@@ -7,7 +7,7 @@ render:
     default: |
       type: template
       template: cfos
-      usage: charge      
+      usage: charge
 
       # Modbus TCP
       modbus: tcpip

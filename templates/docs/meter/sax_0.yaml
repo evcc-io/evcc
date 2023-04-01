@@ -6,7 +6,7 @@ render:
     default: |
       type: template
       template: sax
-      usage: grid      
+      usage: grid
 
       # Modbus TCP
       modbus: tcpip
@@ -17,7 +17,7 @@ render:
     default: |
       type: template
       template: sax
-      usage: battery      
+      usage: battery
 
       # Modbus TCP
       modbus: tcpip

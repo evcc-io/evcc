@@ -6,7 +6,7 @@ requirements: ["sponsorship"]
 render:
   - default: |
       type: template
-      template: innogy-ebox      
+      template: innogy-ebox
 
       # Modbus TCP
       modbus: tcpip

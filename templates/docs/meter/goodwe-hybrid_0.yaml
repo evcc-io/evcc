@@ -6,7 +6,7 @@ render:
     default: |
       type: template
       template: goodwe-hybrid
-      usage: grid      
+      usage: grid
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -29,7 +29,7 @@ render:
     advanced: |
       type: template
       template: goodwe-hybrid
-      usage: grid      
+      usage: grid
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -54,7 +54,7 @@ render:
     default: |
       type: template
       template: goodwe-hybrid
-      usage: pv      
+      usage: pv
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -77,7 +77,7 @@ render:
     advanced: |
       type: template
       template: goodwe-hybrid
-      usage: pv      
+      usage: pv
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -102,7 +102,7 @@ render:
     default: |
       type: template
       template: goodwe-hybrid
-      usage: battery      
+      usage: battery
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -125,7 +125,7 @@ render:
     advanced: |
       type: template
       template: goodwe-hybrid
-      usage: battery      
+      usage: battery
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
