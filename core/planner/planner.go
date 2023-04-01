@@ -57,7 +57,11 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 
 		// slot covers more than we need, so shorten it
 		if requiredDuration < 0 {
-			slot.End = slot.End.Add(requiredDuration)
+			if SlotHasPredecessor(slot, plan) || !SlotHasSuccessor(slot, plan) {
+				slot.End = slot.End.Add(requiredDuration)
+			} else {
+				slot.Start = slot.Start.Add(-requiredDuration)
+			}
 			requiredDuration = 0
 
 			if slot.End.Before(slot.Start) {

@@ -45,3 +45,21 @@ func SlotAt(time time.Time, plan api.Rates) api.Rate {
 	}
 	return api.Rate{}
 }
+
+func SlotHasPredecessor(r api.Rate, plan api.Rates) bool {
+	for i, slot := range plan {
+		if r.Start.Equal(slot.Start) && r.End.Equal(slot.End) && i > 0 {
+			return plan[i-1].End.Equal(r.Start)
+		}
+	}
+	return false
+}
+
+func SlotHasSuccessor(r api.Rate, plan api.Rates) bool {
+	for i, slot := range plan {
+		if r.Start.Equal(slot.Start) && r.End.Equal(slot.End) && len(plan) > i+1 {
+			return plan[i+1].Start.Equal(r.End)
+		}
+	}
+	return false
+}
