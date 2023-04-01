@@ -1,12 +1,12 @@
 {{ define "ocpp" }}
 type: ocpp
-{{- if ne .stationid "" }}
+{{- if .stationid }}
 stationid: {{ .stationid }}
 {{- end }}
 {{- if ne .connector "1" }}
 connector: {{ .connector }}
 {{- end }}
-{{- if ne .idtag "" }}
+{{- if .idtag }}
 idtag: {{ .idtag }}
 {{- end }}
 connecttimeout: {{ .connecttimeout }}

@@ -1,26 +1,26 @@
 {{ define "vehicle-identify" }}
-{{- if or (ne .mode "") (ne .minSoc "") (ne .targetSoc "") (ne .minCurrent "") (ne .maxCurrent "") (ne .priority "") }}
+{{- if or .mode .minSoc .targetSoc .minCurrent .maxCurrent .priority }}
 onIdentify:
-{{- if (ne .mode "") }}
+{{- if .mode }}
   mode: {{ .mode }}
 {{- end }}
-{{- if (ne .minSoc "") }}
+{{- if .minSoc }}
   minSoc: {{ .minSoc }}
 {{- end }}
-{{- if (ne .targetSoc "") }}
+{{- if .targetSoc }}
   targetSoc: {{ .targetSoc }}
 {{- end }}
-{{- if (ne .minCurrent "") }}
+{{- if .minCurrent }}
   minCurrent: {{ .minCurrent }}
 {{- end }}
-{{- if (ne .maxCurrent "") }}
+{{- if .maxCurrent }}
   maxCurrent: {{ .maxCurrent }}
 {{- end }}
-{{- if (ne .priority "") }}
+{{- if .priority }}
   priority: {{ .priority }}
 {{- end }}
 {{- end }}
-{{- if ne (len .identifiers) 0 }}
+{{- if len .identifiers }}
 identifiers:
 {{-   range .identifiers }}
 - {{ . }}

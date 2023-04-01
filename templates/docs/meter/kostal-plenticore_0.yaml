@@ -23,7 +23,6 @@ render:
       id: 71
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
-      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
