@@ -17,10 +17,11 @@
 
 {{- define "default" }}
   {{- include "header" . }}
+  {{- $usage := "" }}{{- if hasKey . "Usage" }}{{ $usage = .Usage }}{{ end }}
   {{- range $.Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 -}}
-  {{- else if ne .IsAdvanced true }}
+  {{- else if and (not .IsAdvanced) (or (or (not $usage) (not .Usages)) (and $usage .Usages (has $usage .Usages))) }}
   {{- template "param" . }}
   {{- end }}
   {{- end }}
@@ -28,10 +29,11 @@
 
 {{- define "advanced" }}
   {{- include "header" . }}
+  {{- $usage := "" }}{{- if hasKey . "Usage" }}{{ $usage = .Usage }}{{ end }}
   {{- range $.Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 -}}
-  {{- else }}
+  {{- else if or (or (not $usage) (not .Usages)) (and $usage .Usages (has $usage .Usages)) }}
   {{- template "param" . }}
   {{- end -}}
   {{- end -}}

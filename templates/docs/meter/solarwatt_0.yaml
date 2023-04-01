@@ -13,7 +13,6 @@ render:
       template: solarwatt
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
@@ -25,7 +24,6 @@ render:
       template: solarwatt
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
