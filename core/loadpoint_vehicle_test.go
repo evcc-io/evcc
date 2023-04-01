@@ -65,12 +65,12 @@ func TestPublishSocAndRange(t *testing.T) {
 		clck.Add(time.Hour)
 		lp.status = tc.status
 
-		assert.True(t, lp.socPollAllowed())
+		assert.True(t, lp.vehicleSocPollAllowed())
 		vehicle.EXPECT().Soc().Return(0.0, errors.New("foo"))
 		lp.publishSocAndRange()
 
 		clck.Add(time.Second)
-		assert.Equal(t, tc.allowed, lp.socPollAllowed())
+		assert.Equal(t, tc.allowed, lp.vehicleSocPollAllowed())
 		if tc.allowed {
 			vehicle.EXPECT().Soc().Return(0.0, errors.New("foo"))
 		}

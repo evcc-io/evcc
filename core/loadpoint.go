@@ -766,31 +766,10 @@ func (lp *Loadpoint) minSocNotReached() bool {
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
-// climateActive checks if vehicle has active climate request
-func (lp *Loadpoint) climateActive() bool {
-	if cl, ok := lp.vehicle.(api.VehicleClimater); ok {
-		active, err := cl.Climater()
-		if err == nil {
-			if active {
-				lp.log.DEBUG.Println("climater active")
-			}
-
-			lp.publish("climaterActive", active)
-			return active
-		}
-
-		if !errors.Is(err, api.ErrNotAvailable) {
-			lp.log.ERROR.Printf("climater: %v", err)
-		}
-	}
-
-	return false
-}
-
 // disableUnlessClimater disables the charger unless climate is active
 func (lp *Loadpoint) disableUnlessClimater() error {
 	var current float64 // zero disables
-	if lp.climateActive() {
+	if lp.vehicleClimateActive() {
 		current = lp.GetMinCurrent()
 	}
 
@@ -1313,38 +1292,6 @@ func (lp *Loadpoint) publishChargeProgress() {
 	}
 }
 
-// socPollAllowed validates charging state against polling mode
-func (lp *Loadpoint) socPollAllowed() bool {
-	// always update soc when charging
-	if lp.charging() {
-		lp.didChargeOnLastSocUpdate = true
-		return true
-	}
-
-	// update if connected and soc unknown
-	if lp.connected() && lp.socUpdated.IsZero() {
-		return true
-	}
-
-	remaining := lp.Soc.Poll.Interval - lp.clock.Since(lp.socUpdated)
-
-	honourUpdateInterval := lp.Soc.Poll.Mode == pollAlways ||
-		lp.connected() && (lp.Soc.Poll.Mode == pollConnected ||
-			// for mode charging allow one last soc update if did charge previously to not rely on soc estimator too much
-			lp.Soc.Poll.Mode == pollCharging && lp.didChargeOnLastSocUpdate)
-
-	if honourUpdateInterval {
-		if remaining > 0 {
-			lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
-		} else {
-			lp.didChargeOnLastSocUpdate = false
-			return true
-		}
-	}
-
-	return false
-}
-
 // publish state of charge, remaining charge duration and range
 func (lp *Loadpoint) publishSocAndRange() {
 	soc, err := lp.chargerSoc()
@@ -1361,7 +1308,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return
 	}
 
-	if err == nil || lp.socPollAllowed() {
+	if err == nil || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := lp.socEstimator.Soc(lp.getChargedEnergy())
@@ -1535,7 +1482,6 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool)
 		lp.log.DEBUG.Printf("targetSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.Soc.target)
 		err = lp.disableUnlessClimater()
 
-	// OCPP has priority over target charging
 	case lp.remoteControlled(loadpoint.RemoteHardDisable):
 		remoteDisabled = loadpoint.RemoteHardDisable
 		fallthrough
@@ -1565,7 +1511,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool)
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 
 		var required bool // false
-		if targetCurrent == 0 && lp.climateActive() {
+		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.GetMinCurrent()
 			required = true
 		}
