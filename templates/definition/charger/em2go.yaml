@@ -3,7 +3,7 @@ products:
   - brand: EM2GO
     description:
       generic: Pro Power/OCPP/ONC
-capabilities: ["mA", "rfid"]
+capabilities: ["mA"]
 requirements:
   description:
     de: "Aktuelle Firmware mit Modbus-Unterstützung notwendig (Pro Power: 1.01 bzw. OCPP/ONC: 3.15)"
