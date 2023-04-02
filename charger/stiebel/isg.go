@@ -1,5 +1,11 @@
 package stiebel
 
+import (
+	"math"
+
+	"github.com/volkszaehler/mbmd/encoding"
+)
+
 type Type int
 
 const (
@@ -13,6 +19,29 @@ type Register struct {
 	Name, Comment, Unit string
 	Typ                 Type
 	Divider             float64
+}
+
+func (reg Register) Float(b []byte) float64 {
+	var i int64
+
+	switch reg.Typ {
+	case Int16:
+		i = int64(encoding.Int16(b))
+		if i == math.MinInt16 {
+			return math.NaN()
+		}
+	case Uint16:
+		i = int64(encoding.Uint16(b))
+	default:
+		panic("invalid register type")
+	}
+
+	f := float64(i)
+	if reg.Divider != 0 {
+		f = f / reg.Divider
+	}
+
+	return f
 }
 
 var IsgInput = []Register{

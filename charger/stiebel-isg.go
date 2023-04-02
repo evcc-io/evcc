@@ -26,7 +26,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/volkszaehler/mbmd/encoding"
 )
 
 // StiebelIsg charger implementation
@@ -112,21 +111,9 @@ func (wb *StiebelIsg) Diagnose() {
 }
 
 func (wb *StiebelIsg) print(reg stiebel.Register, b []byte) {
-	var i int64
-
-	switch reg.Typ {
-	case stiebel.Int16:
-		i = int64(encoding.Int16(b))
-		if i == math.MinInt16 {
-			return
-		}
-	case stiebel.Uint16:
-		i = int64(encoding.Uint16(b))
-	}
-
-	f := float64(i)
-	if reg.Divider != 0 {
-		f = f / reg.Divider
+	f := reg.Float(b)
+	if math.IsNaN(f) {
+		return
 	}
 
 	name := reg.Name
