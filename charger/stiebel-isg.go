@@ -31,14 +31,13 @@ import (
 // StiebelIsg charger implementation
 type StiebelIsg struct {
 	conn *modbus.Connection
-	curr uint32
 }
 
 func init() {
 	registry.Add("stiebel-isg", NewStiebelIsgFromConfig)
 }
 
-// NewStiebelIsgFromConfig creates a ABB charger from generic config
+// NewStiebelIsgFromConfig creates a Stiebel ISG charger from generic config
 func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
@@ -51,7 +50,7 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 	return NewStiebelIsg(cc.URI, cc.ID)
 }
 
-// NewStiebelIsg creates ABB charger
+// NewStiebelIsg creates Stiebel ISG charger
 func NewStiebelIsg(uri string, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
@@ -69,7 +68,7 @@ func NewStiebelIsg(uri string, slaveID uint8) (api.Charger, error) {
 		conn: conn,
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 // Status implements the api.Charger interface
@@ -96,30 +95,67 @@ var _ api.Diagnosis = (*StiebelIsg)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *StiebelIsg) Diagnose() {
-	for _, reg := range stiebel.IsgInput {
+	for _, reg := range stiebel.Block1 {
 		if b, err := wb.conn.ReadInputRegisters(reg.Addr, 1); err == nil {
 			wb.print(reg, b)
 		}
 	}
 
 	fmt.Println()
-	for _, reg := range stiebel.IsgHolding {
+	for _, reg := range stiebel.Block2 {
 		if b, err := wb.conn.ReadHoldingRegisters(reg.Addr, 1); err == nil {
+			wb.print(reg, b)
+		}
+	}
+
+	fmt.Println()
+	for _, reg := range stiebel.Block3 {
+		if b, err := wb.conn.ReadInputRegisters(reg.Addr, 1); err == nil {
+			wb.print(reg, b)
+		}
+	}
+
+	fmt.Println()
+	for _, reg := range stiebel.Block4 {
+		if b, err := wb.conn.ReadInputRegisters(reg.Addr, 1); err == nil {
+			wb.print(reg, b)
+		}
+	}
+
+	fmt.Println()
+	for _, reg := range stiebel.Block5 {
+		if b, err := wb.conn.ReadHoldingRegisters(reg.Addr, 1); err == nil {
+			wb.print(reg, b)
+		}
+	}
+
+	fmt.Println()
+	for _, reg := range stiebel.Block6 {
+		if b, err := wb.conn.ReadInputRegisters(reg.Addr, 1); err == nil {
 			wb.print(reg, b)
 		}
 	}
 }
 
 func (wb *StiebelIsg) print(reg stiebel.Register, b []byte) {
-	f := reg.Float(b)
-	if math.IsNaN(f) {
-		return
-	}
-
 	name := reg.Name
 	if reg.Comment != "" {
 		name = fmt.Sprintf("%s (%s)", name, reg.Comment)
 	}
 
-	fmt.Printf("\t%d %s:\t%.1f%s\n", reg.Addr, name, f, reg.Unit)
+	switch reg.Typ {
+	case stiebel.Bits:
+		if stiebel.Invalid(b) {
+			return
+		}
+		fmt.Printf("\t%d %s:\t%04X\n", reg.Addr, name, b)
+
+	default:
+		f := reg.Float(b)
+		if math.IsNaN(f) {
+			return
+		}
+
+		fmt.Printf("\t%d %s:\t%.1f%s\n", reg.Addr, name, f, reg.Unit)
+	}
 }
