@@ -969,7 +969,10 @@ func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	// - https://github.com/evcc-io/evcc/issues/2613
 	measuredPhases := lp.getMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
-		lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
+		if time.Since(lp.guardUpdated) > guardGracePeriod {
+			lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
+		}
+		lp.resetMeasuredPhases()
 	}
 
 	var waiting bool
