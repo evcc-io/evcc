@@ -625,14 +625,14 @@ func (lp *Loadpoint) syncCharger() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil {
 		if enabled != lp.enabled {
-			if time.Since(lp.guardUpdated) > guardGracePeriod {
+			if lp.guardGracePeriodElapsed() {
 				lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 			}
 			err = lp.charger.Enable(lp.enabled)
 		}
 
 		if !enabled && lp.charging() {
-			if time.Since(lp.guardUpdated) > guardGracePeriod {
+			if lp.guardGracePeriodElapsed() {
 				lp.log.WARN.Println("charger logic error: disabled but charging")
 			}
 			err = lp.charger.Enable(false)
@@ -969,7 +969,7 @@ func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	// - https://github.com/evcc-io/evcc/issues/2613
 	measuredPhases := lp.getMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
-		if time.Since(lp.guardUpdated) > guardGracePeriod {
+		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
 		}
 		lp.resetMeasuredPhases()
@@ -1411,6 +1411,11 @@ func (lp *Loadpoint) startWakeUpTimer() {
 func (lp *Loadpoint) stopWakeUpTimer() {
 	lp.log.DEBUG.Printf("wake-up timer: stop")
 	lp.wakeUpTimer.Stop()
+}
+
+// pvScalePhases switches phases if necessary and returns if switch occurred
+func (lp *Loadpoint) guardGracePeriodElapsed() bool {
+	return time.Since(lp.guardUpdated) > guardGracePeriod
 }
 
 // Update is the main control function. It reevaluates meters and charger state
