@@ -7,7 +7,7 @@ description: |
 render:
   - default: |
       type: template
-      template: em2go      
+      template: em2go
 
       # Modbus TCP
       modbus: tcpip
