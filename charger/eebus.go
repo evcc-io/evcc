@@ -29,7 +29,8 @@ type EEBus struct {
 
 	communicationStandard emobility.EVCommunicationStandardType
 
-	current float64
+	expectedEnableUnpluggedState bool
+	current                      float64
 
 	lastIsChargingCheck  time.Time
 	lastIsChargingResult bool
@@ -114,6 +115,7 @@ func (c *EEBus) waitForConnection() error {
 func (c *EEBus) onConnect(ski string) {
 	c.log.TRACE.Println("!! onConnect invoked on ski ", ski)
 
+	c.expectedEnableUnpluggedState = false
 	c.setDefaultValues()
 	c.setConnected(true)
 }
@@ -121,6 +123,7 @@ func (c *EEBus) onConnect(ski string) {
 func (c *EEBus) onDisconnect(ski string) {
 	c.log.TRACE.Println("!! onDisconnect invoked on ski ", ski)
 
+	c.expectedEnableUnpluggedState = false
 	c.setConnected(false)
 	c.setDefaultValues()
 }
@@ -230,6 +233,7 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 
 	switch currentState {
 	case emobility.EVChargeStateTypeUnknown, emobility.EVChargeStateTypeUnplugged: // Unplugged
+		c.expectedEnableUnpluggedState = false
 		return api.StatusA, nil
 	case emobility.EVChargeStateTypeFinished, emobility.EVChargeStateTypePaused: // Finished, Paused
 		return api.StatusB, nil
@@ -259,7 +263,7 @@ func (c *EEBus) Enabled() (bool, error) {
 	// when unplugged there is no overload limit data available
 	state, err := c.updateState()
 	if err != nil || state == api.StatusA {
-		return true, nil
+		return c.expectedEnableUnpluggedState, nil
 	}
 
 	limits, err := c.emobility.EVLoadControlObligationLimits()
@@ -282,13 +286,10 @@ func (c *EEBus) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *EEBus) Enable(enable bool) error {
-	if !c.isConnected() {
-		return nil
-	}
-
 	// if the ev is unplugged or the state is unknown, there is nothing to be done
-	currentState, err := c.emobility.EVCurrentChargeState()
-	if err != nil || currentState == emobility.EVChargeStateTypeUnplugged {
+	state, err := c.updateState()
+	if err != nil || state == api.StatusA {
+		c.expectedEnableUnpluggedState = enable
 		return nil
 	}
 
