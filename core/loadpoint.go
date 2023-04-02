@@ -195,12 +195,8 @@ func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 
 	// set vehicle polling interval
-	if lp.Soc.Poll.Interval < pollInterval {
-		if lp.Soc.Poll.Interval == 0 {
-			lp.Soc.Poll.Interval = pollInterval
-		} else {
-			lp.log.WARN.Printf("poll interval '%v' is lower than %v and may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.Soc.Poll.Interval, pollInterval)
-		}
+	if lp.Soc.Poll.Interval == 0 {
+		lp.Soc.Poll.Interval = pollInterval
 	}
 
 	if lp.MinCurrent == 0 {
