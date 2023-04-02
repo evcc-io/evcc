@@ -46,20 +46,24 @@ func SlotAt(time time.Time, plan api.Rates) api.Rate {
 	return api.Rate{}
 }
 
-func SlotHasPredecessor(r api.Rate, plan api.Rates) bool {
-	for i, slot := range plan {
-		if r.Start.Equal(slot.Start) && r.End.Equal(slot.End) && i > 0 {
-			return plan[i-1].End.Equal(r.Start)
+// SlotHasSuccessor returns if the slot has an immediate successor.
+// Does not require the plan to be sorted by start time.
+func SlotHasSuccessor(r api.Rate, plan api.Rates) bool {
+	for _, slot := range plan {
+		if r.End.Equal(slot.Start) {
+			return true
 		}
 	}
 	return false
 }
 
-func SlotHasSuccessor(r api.Rate, plan api.Rates) bool {
-	for i, slot := range plan {
-		if r.Start.Equal(slot.Start) && r.End.Equal(slot.End) && len(plan) > i+1 {
-			return plan[i+1].Start.Equal(r.End)
+// IsFirst returns if the slot is the first slot in the plan.
+// Does not require the plan to be sorted by start time.
+func IsFirst(r api.Rate, plan api.Rates) bool {
+	for _, slot := range plan {
+		if r.Start.After(slot.Start) {
+			return false
 		}
 	}
-	return false
+	return true
 }

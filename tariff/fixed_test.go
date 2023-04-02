@@ -19,14 +19,16 @@ func TestFixed(t *testing.T) {
 	}
 
 	var expect api.Rates
-	for i := 0; i < 7; i++ {
-		dayStart := carbon.FromStdTime(tf.clock.Now()).StartOfDay().AddDays(i)
+	for dow := 0; dow < 7; dow++ {
+		dayStart := carbon.FromStdTime(tf.clock.Now()).StartOfDay().AddDays(dow)
 
-		expect = append(expect, api.Rate{
-			Price: 0.3,
-			Start: dayStart.ToStdTime(),
-			End:   dayStart.AddDay().ToStdTime(),
-		})
+		for hour := 0; hour < 24; hour++ {
+			expect = append(expect, api.Rate{
+				Price: 0.3,
+				Start: dayStart.AddHours(hour).ToStdTime(),
+				End:   dayStart.AddHours(hour + 1).ToStdTime(),
+			})
+		}
 	}
 
 	rates, err := tf.Rates()
@@ -53,23 +55,46 @@ func TestFixedSplitZones(t *testing.T) {
 	for i := 0; i < 7; i++ {
 		dayStart := carbon.FromStdTime(tf.clock.Now()).StartOfDay().AddDays(i)
 
-		expect = append(expect,
-			api.Rate{
+		// 00:00-05:00 0.1
+		for hour := 0; hour < 5; hour++ {
+			expect = append(expect, api.Rate{
 				Price: 0.1,
-				Start: dayStart.ToStdTime(),
-				End:   dayStart.AddHours(5).AddMinutes(30).ToStdTime(),
-			},
-			api.Rate{
+				Start: dayStart.AddHours(hour).ToStdTime(),
+				End:   dayStart.AddHours(hour + 1).ToStdTime(),
+			})
+		}
+
+		// 05:00-05:30 0.1
+		expect = append(expect, api.Rate{
+			Price: 0.1,
+			Start: dayStart.AddHours(5).ToStdTime(),
+			End:   dayStart.AddHours(5).AddMinutes(30).ToStdTime(),
+		})
+
+		// 05:30-06:00 0.5
+		expect = append(expect, api.Rate{
+			Price: 0.5,
+			Start: dayStart.AddHours(5).AddMinutes(30).ToStdTime(),
+			End:   dayStart.AddHours(6).ToStdTime(),
+		})
+
+		// 06:00-21:00 0.5
+		for hour := 6; hour < 21; hour++ {
+			expect = append(expect, api.Rate{
 				Price: 0.5,
-				Start: dayStart.AddHours(5).AddMinutes(30).ToStdTime(),
-				End:   dayStart.AddHours(21).ToStdTime(),
-			},
-			api.Rate{
+				Start: dayStart.AddHours(hour).ToStdTime(),
+				End:   dayStart.AddHours(hour + 1).ToStdTime(),
+			})
+		}
+
+		// 21:00-00:00 0.1
+		for hour := 21; hour < 24; hour++ {
+			expect = append(expect, api.Rate{
 				Price: 0.1,
-				Start: dayStart.AddHours(21).ToStdTime(),
-				End:   dayStart.AddDay().ToStdTime(),
-			},
-		)
+				Start: dayStart.AddHours(hour).ToStdTime(),
+				End:   dayStart.AddHours(hour + 1).ToStdTime(),
+			})
+		}
 	}
 
 	rates, err := tf.Rates()

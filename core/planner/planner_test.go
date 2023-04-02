@@ -81,11 +81,11 @@ func TestPlan(t *testing.T) {
 			30,
 		},
 		{
-			"plan 30(30)-0-60-0-0-0",
+			"plan (30)30-0-60-0-0-0",
 			time.Duration(90 * time.Minute),
 			clock.Now(),
 			clock.Now().Add(6 * time.Hour),
-			clock.Now(),
+			clock.Now().Add(30 * time.Minute),
 			20,
 		},
 		{
@@ -176,6 +176,8 @@ func TestFlatTariffLongSlots(t *testing.T) {
 		clock:  clock,
 		tariff: trf,
 	}
+
+	// for a single slot, we always expect charging to start early
 
 	// expect 00:00-01:00 UTC
 	plan, err := p.Plan(time.Hour, clock.Now().Add(2*time.Hour))
