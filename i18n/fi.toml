@@ -72,6 +72,7 @@ vehicles = "Pysäköinti"
 battery = "Akku"
 batteryCharge = "Akunlataus"
 batteryDischarge = "Akku purkautuu"
+batteryTooltip = "{energy} / {total} ({soc})"
 gridImport = "Verkon käyttö"
 homePower = "Kulutus"
 loadpoints = "Laturi| Laturi | {count} laturia"
@@ -132,21 +133,32 @@ modalTitle = "Aseta tavoiteaika"
 planDuration = "Latausaika"
 planPeriodLabel = "Jakso"
 planPeriodValue = "{start} - {end}"
-planUnknown = "tuntematon"
+planUnknown = "ei vielä tiedossa"
 setTargetTime = "ei mitään"
 targetIsInThePast = "Valitse aika tulevaisuudessa"
+targetIsTooFarInTheFuture = "Muokkaamme suunnitelmaa heti kun tiedämme enemmän tulevaisuudesta."
 title = "Tavoiteaika"
 today = "tänään"
 tomorrow = "huomenna"
+update = "Päivittää"
+
+[main.targetChargePlan]
+chargeDuration = "Latausaika"
+co2Label = "CO₂ päästö Ø"
+priceLabel = "Energian hinta"
+timeRange = "{day} {range} t"
+unknownPrice = "ei vielä tiedossa"
 
 [main.targetEnergy]
 label = "Raja"
 noLimit = "ei mitään"
 
 [main.vehicle]
+addVehicle = "Lisää ajoneuvo"
 changeVehicle = "Vaihda ajoneuvo"
 detectionActive = "Tunnistetaan ajoneuvoa..."
 fallbackName = "Ajoneuvo"
+moreActions = "Lisää toimintoja"
 none = "Ei ajoneuvoa"
 targetSoc = "Raja"
 unknown = "Vieras ajoneuvo"
@@ -163,6 +175,7 @@ vehicleTarget = "Ajoneuvon raja {soc}%"
 charging = "Lataa…"
 connected = "Yhdistetty."
 disconnected = "Irroitettu."
+guard = "Alkaa {remaining}…"
 minCharge = "Ladataan minimissään {soc}%."
 pvDisable = "Ei tarpeeksi ylijäämää. Tauko {remaining}…"
 pvEnable = "Ylijäämää saatavilla. Aloitus {remaining}…"
@@ -216,9 +229,24 @@ vehicle = "Ajoneuvo"
 [settings]
 title = "Asetukset"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Verkon tiedot"
+none = "ei mitään"
+price = "hinta"
+
+[settings.hiddenFeatures]
+label = "Kokeellinen"
+value = "Näytä kokeelliset käyttöliittymän ominaisuudet"
+
 [settings.language]
 auto = "Automaattinen"
 label = "Kieli"
+
+[settings.sponsorToken]
+expires = "Sponsorointi tunnuksesi vanhenee {inXDays}. {getNewToken} ja päivitä määritystiedostosi"
+getNew = "Ota uusi"
+hint = "Huomaa: automatisoimme tämän tulevaisuudessa."
 
 [settings.telemetry]
 label = "Telemetria"
@@ -245,3 +273,8 @@ lineError = "Virhe {0}."
 lineErrorLink = "rivi {0}"
 restartButton = "Käynnistä uudelleen"
 title = "Virhe käynnistyksessä"
+
+[vehicleSettings]
+cancel = "Peruuta"
+template = "Valmistaja"
+test = "Testi"

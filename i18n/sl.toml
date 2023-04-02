@@ -72,6 +72,7 @@ vehicles = "Parkiranje"
 battery = "Baterija"
 batteryCharge = "Polnjenje baterije"
 batteryDischarge = "Praznjenje baterije"
+batteryTooltip = "{energy} od {total} ({soc})"
 gridImport = "Uporaba omrežja"
 homePower = "Poraba"
 loadpoints = "Polnilnik | Polnilnik | {count} polnilnih mest"
@@ -132,21 +133,32 @@ modalTitle = "Nastavite ciljni čas"
 planDuration = "Čas polnjenja"
 planPeriodLabel = "Obdobje"
 planPeriodValue = "{start} do {end}"
-planUnknown = "neznano"
+planUnknown = "še ni znano"
 setTargetTime = "brez"
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
+targetIsTooFarInTheFuture = "Načrt bomo prilagodili takoj, ko bomo izvedeli več o novi funkcionalnosti."
 title = "Ciljni čas"
 today = "danes"
 tomorrow = "jutri"
+update = "Posodobitev"
+
+[main.targetChargePlan]
+chargeDuration = "Čas polnjenja"
+co2Label = "Emisije CO₂ Ø"
+priceLabel = "Cena energije"
+timeRange = "{day} {range} h"
+unknownPrice = "še vedno neznano"
 
 [main.targetEnergy]
 label = "Omejitev"
 noLimit = "brez"
 
 [main.vehicle]
+addVehicle = "Dodaj vozilo"
 changeVehicle = "Zamenjaj vozilo"
 detectionActive = "Zaznavanje vozila..."
 fallbackName = "Vozilo"
+moreActions = "Več dejanj"
 none = "Ni vozila"
 targetSoc = "Omejitev"
 unknown = "Neznano vozilo"
@@ -163,6 +175,7 @@ vehicleTarget = "Omejitev vozila: {soc}%"
 charging = "Polnjenje…"
 connected = "Povezan."
 disconnected = "Odklopljen."
+guard = "Začne se čez {remaining} ..."
 minCharge = "Minimalno polnjenje na {soc}%."
 pvDisable = "Premalo presežka. Prekinitev čez {remaining}..."
 pvEnable = "Na voljo so presežki. Začetek čez {remaining}..."
@@ -216,9 +229,24 @@ vehicle = "Vozilo"
 [settings]
 title = "Nastavitve"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Podatki o omrežju"
+none = "brez"
+price = "cena"
+
+[settings.hiddenFeatures]
+label = "Eksperimentalno"
+value = "Prikaži eksperimentalne funkcije uporabniškega vmesnika."
+
 [settings.language]
 auto = "Samodejno"
 label = "Jezik"
+
+[settings.sponsorToken]
+expires = "Sponzorskemu žetonu poteče veljavnost čez {inXDays}. {getNewToken} in posodobite svojo konfiguracijsko datoteko."
+getNew = "Zgrabi svežega"
+hint = "Opomba: To bomo v prihodnosti avtomatizirali."
 
 [settings.telemetry]
 label = "Telemetrija"
@@ -245,3 +273,8 @@ lineError = "Napaka v {0}."
 lineErrorLink = "vrstica {0}"
 restartButton = "Ponovni zagon"
 title = "Napaka pri zagonu"
+
+[vehicleSettings]
+cancel = "Prekliči"
+template = "Proizvajalec"
+test = "Test"
