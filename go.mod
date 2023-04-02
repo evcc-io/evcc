@@ -27,8 +27,8 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.2
-	github.com/enbility/cemd v0.1.7
-	github.com/enbility/eebus-go v0.1.7
+	github.com/enbility/cemd v0.0.0-20230402154135-5cd7ed8d2b3e
+	github.com/enbility/eebus-go v0.0.0-20230330085405-a9841f4bca6b
 	github.com/fatih/structs v1.1.0
 	github.com/foogod/go-powerwall v0.2.0
 	github.com/glebarez/sqlite v1.7.0
