@@ -177,6 +177,7 @@ vehicleTarget = "Ліміт транспортного засобу: {soc}%"
 charging = "Зарядка…"
 connected = "Підключено."
 disconnected = "Відключено."
+guard = "Початок о {remaining}..."
 minCharge = "Мінімальна зарядка до {soc}%."
 pvDisable = "Недостатньо надлишку. Пауза через {remaining}…"
 pvEnable = "Надлишок доступний. Початок через {remaining}…"
@@ -188,7 +189,6 @@ targetChargeWaitForVehicle = "Запланований заряд готовий
 unknown = ""
 vehicleTargetReached = "Ліміт транспортного засобу {soc}% досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
-guard = "Початок о {remaining}..."
 
 [notifications]
 dismissAll = "Відхилити все"

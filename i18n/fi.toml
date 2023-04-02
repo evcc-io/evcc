@@ -72,6 +72,7 @@ vehicles = "Pysäköinti"
 battery = "Akku"
 batteryCharge = "Akunlataus"
 batteryDischarge = "Akku purkautuu"
+batteryTooltip = "{energy} / {total} ({soc})"
 gridImport = "Verkon käyttö"
 homePower = "Kulutus"
 loadpoints = "Laturi| Laturi | {count} laturia"
@@ -79,7 +80,6 @@ noEnergy = "Ei mittarin tietoja"
 pvExport = "Verkkoon vienti"
 pvProduction = "Tuotanto"
 selfConsumption = "Oma kulutus"
-batteryTooltip = "{energy} / {total} ({soc})"
 
 [main.loadpoint]
 charged = "Ladattu"
@@ -136,26 +136,33 @@ planPeriodValue = "{start} - {end}"
 planUnknown = "ei vielä tiedossa"
 setTargetTime = "ei mitään"
 targetIsInThePast = "Valitse aika tulevaisuudessa"
+targetIsTooFarInTheFuture = "Muokkaamme suunnitelmaa heti kun tiedämme enemmän tulevaisuudesta."
 title = "Tavoiteaika"
 today = "tänään"
 tomorrow = "huomenna"
-targetIsTooFarInTheFuture = "Muokkaamme suunnitelmaa heti kun tiedämme enemmän tulevaisuudesta."
 update = "Päivittää"
+
+[main.targetChargePlan]
+chargeDuration = "Latausaika"
+co2Label = "CO₂ päästö Ø"
+priceLabel = "Energian hinta"
+timeRange = "{day} {range} t"
+unknownPrice = "ei vielä tiedossa"
 
 [main.targetEnergy]
 label = "Raja"
 noLimit = "ei mitään"
 
 [main.vehicle]
+addVehicle = "Lisää ajoneuvo"
 changeVehicle = "Vaihda ajoneuvo"
 detectionActive = "Tunnistetaan ajoneuvoa..."
 fallbackName = "Ajoneuvo"
+moreActions = "Lisää toimintoja"
 none = "Ei ajoneuvoa"
 targetSoc = "Raja"
 unknown = "Vieras ajoneuvo"
 vehicleSoc = "Lataus"
-addVehicle = "Lisää ajoneuvo"
-moreActions = "Lisää toimintoja"
 
 [main.vehicleSoc]
 charging = "lataa"
@@ -168,6 +175,7 @@ vehicleTarget = "Ajoneuvon raja {soc}%"
 charging = "Lataa…"
 connected = "Yhdistetty."
 disconnected = "Irroitettu."
+guard = "Alkaa {remaining}…"
 minCharge = "Ladataan minimissään {soc}%."
 pvDisable = "Ei tarpeeksi ylijäämää. Tauko {remaining}…"
 pvEnable = "Ylijäämää saatavilla. Aloitus {remaining}…"
@@ -179,7 +187,6 @@ targetChargeWaitForVehicle = "Tavoite lataus valmis. Odotetaan ajoneuvoa…"
 unknown = ""
 vehicleTargetReached = "Ajoneuvon raja {soc}% saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
-guard = "Alkaa {remaining}…"
 
 [notifications]
 dismissAll = "Hylkää kaikki"
@@ -222,9 +229,24 @@ vehicle = "Ajoneuvo"
 [settings]
 title = "Asetukset"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Verkon tiedot"
+none = "ei mitään"
+price = "hinta"
+
+[settings.hiddenFeatures]
+label = "Kokeellinen"
+value = "Näytä kokeelliset käyttöliittymän ominaisuudet"
+
 [settings.language]
 auto = "Automaattinen"
 label = "Kieli"
+
+[settings.sponsorToken]
+expires = "Sponsorointi tunnuksesi vanhenee {inXDays}. {getNewToken} ja päivitä määritystiedostosi"
+getNew = "Ota uusi"
+hint = "Huomaa: automatisoimme tämän tulevaisuudessa."
 
 [settings.telemetry]
 label = "Telemetria"
@@ -252,30 +274,7 @@ lineErrorLink = "rivi {0}"
 restartButton = "Käynnistä uudelleen"
 title = "Virhe käynnistyksessä"
 
-
-[main.targetChargePlan]
-chargeDuration = "Latausaika"
-co2Label = "CO₂ päästö Ø"
-timeRange = "{day} {range} t"
-priceLabel = "Energian hinta"
-unknownPrice = "ei vielä tiedossa"
-
-[settings.gridDetails]
-label = "Verkon tiedot"
-none = "ei mitään"
-co2 = "CO₂"
-price = "hinta"
-
-[settings.hiddenFeatures]
-value = "Näytä kokeelliset käyttöliittymän ominaisuudet"
-label = "Kokeellinen"
-
 [vehicleSettings]
-test = "Testi"
 cancel = "Peruuta"
 template = "Valmistaja"
-
-[settings.sponsorToken]
-expires = "Sponsorointi tunnuksesi vanhenee {inXDays}. {getNewToken} ja päivitä määritystiedostosi"
-getNew = "Ota uusi"
-hint = "Huomaa: automatisoimme tämän tulevaisuudessa."
+test = "Testi"

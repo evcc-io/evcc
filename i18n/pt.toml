@@ -184,6 +184,7 @@ vehicleTarget = "Limite de veículo: {soc}%"
 charging = "Carregando..."
 connected = "Ligado."
 disconnected = "Não conectado."
+guard = "Iniciando em {remaining}..."
 minCharge = "Carga mínima até {soc}%"
 pvDisable = "Excesso insuficiente. Pausa em {remaining}..."
 pvEnable = "Excesso disponível. Carga em {remaining}..."
@@ -195,7 +196,6 @@ targetChargeWaitForVehicle = "Carga programada pronta. Esperando pelo veículo..
 unknown = ""
 vehicleTargetReached = "Limite de veículo {soc}% atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
-guard = "Iniciando em {remaining}..."
 
 [notifications]
 dismissAll = "Recusar tudos"

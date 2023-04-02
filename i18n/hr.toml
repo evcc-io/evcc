@@ -73,6 +73,7 @@ vehicles = "Parkiralište"
 battery = "Baterija"
 batteryCharge = "Napajanje baterije"
 batteryDischarge = "Pražnjenje baterije"
+batteryTooltip = "{energy} od {total} ({soc})"
 gridImport = "Upotreba mreže"
 homePower = "Potrošnja"
 loadpoints = "Punjač| Punjač | {count} punjača"
@@ -80,7 +81,6 @@ noEnergy = "Nema mjernih podataka"
 pvExport = "Izvoz mreže"
 pvProduction = "Produkcija"
 selfConsumption = "Samopotrošnja"
-batteryTooltip = "{energy} od {total} ({soc})"
 
 [main.loadpoint]
 charged = "Napunjeno"
@@ -127,36 +127,43 @@ logout = "odjavi se"
 [main.targetCharge]
 activate = "Aktiviraj"
 activeLabel = "{time}"
+descriptionEnergy = "Do kada bi se {targetEnergy} trebao učitati u vozilo?"
 descriptionSoc = "Kada bi se vozilo trebalo napojiti na {targetSoc} %?"
 inactiveLabel = "Ciljano vrijeme"
 modalTitle = "Postavi ciljano vrijeme"
+planDuration = "Vrijeme punjenja"
+planPeriodLabel = "Razdoblje"
+planPeriodValue = "{start} do {end}"
+planUnknown = "još nije poznato"
 setTargetTime = "ništa"
 targetIsInThePast = "Odaberi vrijeme u budućnosti."
+targetIsTooFarInTheFuture = "Prilagodit ćemo plan čim budemo znali više o budućnosti."
 title = "Ciljano vrijeme"
 today = "danas"
 tomorrow = "sutra"
-planPeriodLabel = "Razdoblje"
-planPeriodValue = "{start} do {end}"
-targetIsTooFarInTheFuture = "Prilagodit ćemo plan čim budemo znali više o budućnosti."
-planDuration = "Vrijeme punjenja"
-planUnknown = "još nije poznato"
 update = "Ažuriraj"
-descriptionEnergy = "Do kada bi se {targetEnergy} trebao učitati u vozilo?"
+
+[main.targetChargePlan]
+chargeDuration = "Vrijeme punjenja"
+co2Label = "CO₂ emisija Ø"
+priceLabel = "Cijena energije"
+timeRange = "{day} {range} h"
+unknownPrice = "jos nepoznato"
 
 [main.targetEnergy]
 label = "Ograničenje"
 noLimit = "bez"
 
 [main.vehicle]
+addVehicle = "Dodaj vozilo"
 changeVehicle = "Promijeni vozilo"
 detectionActive = "Otkrivanje vozila …"
 fallbackName = "Vozilo"
+moreActions = "Više radnji"
 none = "Nijedno vozilo"
 targetSoc = "Ograničenje"
 unknown = "Vozilo gosta"
 vehicleSoc = "Napajanje"
-addVehicle = "Dodaj vozilo"
-moreActions = "Više radnji"
 
 [main.vehicleSoc]
 charging = "napajanje"
@@ -169,6 +176,7 @@ vehicleTarget = "Ograničenje vozila: {soc} %"
 charging = "Napajanje …"
 connected = "Povezano."
 disconnected = "Nepovezano."
+guard = "Počinje za {remaining}…"
 minCharge = "Minimalno napajanje do {soc} %."
 pvDisable = "Nema dovoljno viška. Zaustavlja se za {remaining}…"
 pvEnable = "Dostupan višak. Počinje za {remaining}…"
@@ -180,7 +188,6 @@ targetChargeWaitForVehicle = "Ciljano napajanje je spremno. Čeka se na vozilo �
 unknown = ""
 vehicleTargetReached = "Ograničenje vozila od {soc} % dosegnuto."
 waitForVehicle = "Spremno. Čeka se na vozilo …"
-guard = "Počinje za {remaining}…"
 
 [notifications]
 dismissAll = "Odbaci sve"
@@ -190,14 +197,24 @@ modalTitle = "Obavijesti"
 message = "Ne postoji veza s poslužiteljam."
 reload = "Ponovo učitati?"
 
+[session]
+cancel = "Odustani"
+delete = "Izbriši"
+finished = "Gotovo"
+meterstart = "Početak mjerača"
+meterstop = "Zaustavljanje mjerača"
+odometer = "Kilometraža"
+started = "Počelo"
+title = "Sesije punjenja"
+
 [sessions]
 date = "Razdoblje"
 downloadCsv = "Preuzmi kao CSV"
 energy = "Napojeno"
 loadpoint = "Mjesto napajanja"
+reallyDelete = "Želite li stvarno izbrisati ovu sesiju?"
 title = "Napajanja"
 vehicle = "Vozilo"
-reallyDelete = "Želite li stvarno izbrisati ovu sesiju?"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -213,9 +230,24 @@ vehicle = "Vozilo"
 [settings]
 title = "Postavke"
 
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Detalji mreže"
+none = "ništa"
+price = "cijena"
+
+[settings.hiddenFeatures]
+label = "Eksperimentalno"
+value = "Prikaži eksperimentalne značajke korisničkog sučelja."
+
 [settings.language]
 auto = "Automatski"
 label = "Jezik"
+
+[settings.sponsorToken]
+expires = "Vaš sponzorski token ističe {inXDays}. {getNewToken} i ažurirajte svoju konfiguracijsku datoteku."
+getNew = "Uzmite svježu"
+hint = "Napomena: To ćemo automatizirati u budućnosti."
 
 [settings.telemetry]
 label = "Telemetrija"
@@ -243,40 +275,7 @@ lineErrorLink = "{0}. retku"
 restartButton = "Restart"
 title = "Pogreška pri pokretanju"
 
-
-[main.targetChargePlan]
-chargeDuration = "Vrijeme punjenja"
-priceLabel = "Cijena energije"
-unknownPrice = "jos nepoznato"
-co2Label = "CO₂ emisija Ø"
-timeRange = "{day} {range} h"
-
-[session]
-finished = "Gotovo"
-meterstart = "Početak mjerača"
-meterstop = "Zaustavljanje mjerača"
-title = "Sesije punjenja"
-cancel = "Odustani"
-started = "Počelo"
-delete = "Izbriši"
-odometer = "Kilometraža"
-
-[settings.gridDetails]
-label = "Detalji mreže"
-none = "ništa"
-co2 = "CO₂"
-price = "cijena"
-
-[settings.hiddenFeatures]
-value = "Prikaži eksperimentalne značajke korisničkog sučelja."
-label = "Eksperimentalno"
-
-[settings.sponsorToken]
-expires = "Vaš sponzorski token ističe {inXDays}. {getNewToken} i ažurirajte svoju konfiguracijsku datoteku."
-getNew = "Uzmite svježu"
-hint = "Napomena: To ćemo automatizirati u budućnosti."
-
 [vehicleSettings]
-test = "Test"
-template = "Proizvođač"
 cancel = "Otkazati"
+template = "Proizvođač"
+test = "Test"
