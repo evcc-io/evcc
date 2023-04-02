@@ -94,7 +94,7 @@ func NewDaheimLadenMB(uri string, id uint8) (api.Charger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("current limit: %w", err)
 	}
-	if curr > wb.curr {
+	if curr > 0 {
 		wb.curr = curr
 	}
 
