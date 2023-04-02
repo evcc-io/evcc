@@ -177,7 +177,8 @@ func TestFlatTariffLongSlots(t *testing.T) {
 		tariff: trf,
 	}
 
-	// for a single slot, we always expect charging to start early
+	// for a single slot, we always expect charging to start early because tariffs ensure
+	// that slots are not longer than 1 hour and with that context this is not a problem
 
 	// expect 00:00-01:00 UTC
 	plan, err := p.Plan(time.Hour, clock.Now().Add(2*time.Hour))
