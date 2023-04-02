@@ -97,62 +97,42 @@ var _ api.Diagnosis = (*StiebelIsg)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *StiebelIsg) Diagnose() {
-	if b, err := wb.conn.ReadInputRegisters(522, 1); err == nil {
-		fmt.Printf("\tIst Temperatur:\t%.1f°C\n", float32(encoding.Int16(b))/10)
-	}
-
 	for _, reg := range stiebel.IsgInput {
 		if b, err := wb.conn.ReadInputRegisters(reg.Addr, 1); err == nil {
-			var i int64
-
-			switch reg.Typ {
-			case stiebel.Int16:
-				i = int64(encoding.Int16(b))
-				if i == math.MinInt16 {
-					continue
-				}
-			case stiebel.Uint16:
-				i = int64(encoding.Uint16(b))
-			}
-
-			f := float64(i)
-			if reg.Divider != 0 {
-				f = f / reg.Divider
-			}
-
-			name := reg.Name
-			if reg.Comment != "" {
-				name = fmt.Sprintf("%s (%s)", name, reg.Comment)
-			}
-			fmt.Printf("\t%d %s:\t%.1f%s\n", reg.Addr, name, f, reg.Unit)
+			wb.print(reg, b)
 		}
 	}
 
 	fmt.Println()
 	for _, reg := range stiebel.IsgHolding {
 		if b, err := wb.conn.ReadHoldingRegisters(reg.Addr, 1); err == nil {
-			var i int64
-
-			switch reg.Typ {
-			case stiebel.Int16:
-				i = int64(encoding.Int16(b))
-				if i == math.MinInt16 {
-					continue
-				}
-			case stiebel.Uint16:
-				i = int64(encoding.Uint16(b))
-			}
-
-			f := float64(i)
-			if reg.Divider != 0 {
-				f = f / reg.Divider
-			}
-
-			name := reg.Name
-			if reg.Comment != "" {
-				name = fmt.Sprintf("%s (%s)", name, reg.Comment)
-			}
-			fmt.Printf("\t%d %s:\t%.1f%s\n", reg.Addr, name, f, reg.Unit)
+			wb.print(reg, b)
 		}
 	}
+}
+
+func (wb *StiebelIsg) print(reg stiebel.Register, b []byte) {
+	var i int64
+
+	switch reg.Typ {
+	case stiebel.Int16:
+		i = int64(encoding.Int16(b))
+		if i == math.MinInt16 {
+			return
+		}
+	case stiebel.Uint16:
+		i = int64(encoding.Uint16(b))
+	}
+
+	f := float64(i)
+	if reg.Divider != 0 {
+		f = f / reg.Divider
+	}
+
+	name := reg.Name
+	if reg.Comment != "" {
+		name = fmt.Sprintf("%s (%s)", name, reg.Comment)
+	}
+
+	fmt.Printf("\t%d %s:\t%.1f%s\n", reg.Addr, name, f, reg.Unit)
 }
