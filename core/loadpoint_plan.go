@@ -118,13 +118,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
 	}
 
-	activeSlot := planner.ActiveSlot(lp.clock, plan)
+	activeSlot := planner.SlotAt(lp.clock.Now(), plan)
 	active = !activeSlot.End.IsZero()
 
 	if active {
 		// ignore short plans if not already active
-		// TODO only ignore if the next adjacent slot is inactive, too
-		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration {
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration && !planner.SlotHasSuccessor(activeSlot, plan) {
 			lp.log.DEBUG.Printf("plan slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
