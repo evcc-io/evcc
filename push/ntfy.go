@@ -37,8 +37,13 @@ func NewNtfyFromConfig(other map[string]interface{}) (Messenger, error) {
 		return nil, errors.New("missing uri")
 	}
 
+	log := util.NewLogger("ntfy")
+	if token, ok := strings.CutPrefix(cc.URI, "https://ntfy.sh/"); ok {
+		log = log.Redact(token)
+	}
+
 	m := &Ntfy{
-		log:      util.NewLogger("ntfy"),
+		log:      log,
 		uri:      cc.URI,
 		priority: cc.Priority,
 		tags:     cc.Tags,

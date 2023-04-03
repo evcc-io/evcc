@@ -50,7 +50,8 @@ func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOption)
 		Scopes: []string{
 			oidc.ScopeOpenID,
 			oidc.ScopeOfflineAccess,
-			"mb:vehicle:mbdata:evstatus",
+			"mb:vehicle:mbdata:evstatus",      // soc, range
+			"mb:vehicle:mbdata:payasyoudrive", // odo
 		},
 	}
 

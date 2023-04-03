@@ -68,7 +68,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		tmpl := template.Must(
 			template.New("dump").
-				Funcs(template.FuncMap(sprig.FuncMap())).
+				Funcs(sprig.TxtFuncMap()).
 				Parse(dumpTmpl))
 
 		out := new(bytes.Buffer)

@@ -6,7 +6,7 @@ render:
     default: |
       type: template
       template: sunspec-inverter
-      usage: grid      
+      usage: grid
 
       # Modbus TCP
       modbus: tcpip
@@ -16,7 +16,7 @@ render:
     advanced: |
       type: template
       template: sunspec-inverter
-      usage: grid      
+      usage: grid
 
       # Modbus TCP
       modbus: tcpip
@@ -28,7 +28,7 @@ render:
     default: |
       type: template
       template: sunspec-inverter
-      usage: pv      
+      usage: pv
 
       # Modbus TCP
       modbus: tcpip
@@ -38,7 +38,7 @@ render:
     advanced: |
       type: template
       template: sunspec-inverter
-      usage: pv      
+      usage: pv
 
       # Modbus TCP
       modbus: tcpip

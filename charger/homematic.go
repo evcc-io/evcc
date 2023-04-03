@@ -33,10 +33,6 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
 	return NewCCU(cc.embed, cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.StandbyPower)
 }
 
@@ -63,12 +59,6 @@ func (c *CCU) Enable(enable bool) error {
 	return c.conn.Enable(enable)
 }
 
-// MaxCurrent implements the api.Charger interface
-func (c *CCU) MaxCurrent(current int64) error {
-	return nil
-}
-
-var _ api.Meter = (*CCU)(nil)
 var _ api.MeterEnergy = (*CCU)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface

@@ -8,7 +8,7 @@ render:
     default: |
       type: template
       template: solaredge-inverter
-      usage: grid      
+      usage: grid
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -31,7 +31,7 @@ render:
     advanced: |
       type: template
       template: solaredge-inverter
-      usage: grid      
+      usage: grid
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -56,7 +56,7 @@ render:
     default: |
       type: template
       template: solaredge-inverter
-      usage: pv      
+      usage: pv
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -79,7 +79,7 @@ render:
     advanced: |
       type: template
       template: solaredge-inverter
-      usage: pv      
+      usage: pv
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial

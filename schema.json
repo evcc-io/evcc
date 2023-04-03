@@ -200,8 +200,21 @@
             }
           }
         },
-        "prioritySoc": {},
-        "bufferSoc": {}
+        "residualPower": {
+          "type": "number"
+        },
+        "prioritySoc": {
+          "type": "number"
+        },
+        "bufferSoc": {
+          "type": "number"
+        },
+        "maxGridSupplyWhileBatteryCharging": {
+          "type": "number"
+        },
+        "autoChargeCostLimit": {
+          "type": "number"
+        }
       }
     },
     "loadpoints": {

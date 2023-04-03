@@ -4,7 +4,7 @@ product:
 render:
   - default: |
       type: template
-      template: ichargecion      
+      template: ichargecion
 
       # Modbus TCP
       modbus: tcpip

@@ -39,6 +39,10 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)
 	log := util.NewLogger("discgy").Redact(cc.User, cc.Password, cc.Meter, basicAuth)
 

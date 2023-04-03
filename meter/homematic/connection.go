@@ -51,6 +51,10 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 		conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 	}
 
+	if err := conn.Init(); err != nil {
+		return conn, err
+	}
+
 	return conn, nil
 }
 
@@ -80,10 +84,6 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 		return hmr, err
 	}
 
-	if strings.Contains(string(res), "faultCode") {
-		return hmr, fmt.Errorf("ccu: %s", string(res))
-	}
-
 	// correct Homematic IP Legacy API (CCU port 2010) method response encoding value
 	res = []byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1))
 
@@ -94,7 +94,13 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 		return hmr, err
 	}
 
-	return hmr, err
+	return hmr, parseError(hmr)
+}
+
+// Initialze CCU methods via system.listMethods call
+func (c *Connection) Init() error {
+	_, err := c.XmlCmd("system.listMethods", c.SwitchChannel)
+	return err
 }
 
 // Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
@@ -138,4 +144,27 @@ func (c *Connection) GridCurrentPower() (float64, error) {
 func (c *Connection) GridTotalEnergy() (float64, error) {
 	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "IEC_ENERGY_COUNTER"})
 	return res.Value.CCUFloat, err
+}
+
+// parseError checks on Homematic CCU error codes
+// Refer to page 30 of https://homematic-ip.com/sites/default/files/downloads/HM_XmlRpc_API.pdf
+func parseError(res MethodResponse) error {
+	var faultCode int64
+	var faultString string
+
+	faultCode = 0
+	for _, f := range res.Fault {
+		if f.Name == "faultCode" {
+			faultCode = f.Value.CCUInt
+		}
+		if f.Name == "faultString" {
+			faultString = f.Value.CCUString
+		}
+	}
+
+	if faultCode != 0 {
+		return fmt.Errorf("%s (%v)", faultString, faultCode)
+	}
+
+	return nil
 }

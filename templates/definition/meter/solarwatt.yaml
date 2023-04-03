@@ -16,21 +16,39 @@ params:
     advanced: true
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
   power:
     source: http
     uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
-  {{- if eq .usage "grid" }}
-    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.PowerConsumedFromGrid.value - .tagValues.PowerOut.value
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.PowerIn.value - .tagValues.PowerOut.value
+  energy:
+    source: http
+    uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.WorkIn.value / 1000
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
     jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.PowerProduced.value
+  energy:
+    source: http
+    uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.WorkProduced.value / 1000
   {{- end }}
   {{- if eq .usage "battery" }}
-    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.PowerConsumedFromStorage.value - .tagValues.PowerBuffered.value
+  power:
+    source: http
+    uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.PowerReleased.value - .tagValues.PowerBuffered.value
   soc:
     source: http
     uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
-    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.solarwatt.MyReserve") | .tagValues.StateOfCharge.value
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.batteryconverter.BatteryConverter") | .tagValues.StateOfCharge.value
+  energy:
+    source: http
+    uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
+    jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.WorkReleased.value / 1000
   {{- if ne .capacity "" }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

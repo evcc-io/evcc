@@ -81,7 +81,7 @@ func NewDadapower(uri string, id uint8) (*Dadapower, error) {
 }
 
 func (wb *Dadapower) heartbeat() {
-	for range time.NewTicker(time.Minute).C {
+	for range time.Tick(time.Minute) {
 		if _, err := wb.conn.ReadInputRegisters(dadapowerRegFailsafeTimeout, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

@@ -4,7 +4,7 @@ network:
   host: evcc.local # .local suffix announces the hostname on MDNS
   port: 7070
 
-log: info
+log: debug
 levels:
   cache: error
 

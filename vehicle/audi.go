@@ -41,6 +41,10 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &Audi{
 		embed: &cc.embed,
 	}

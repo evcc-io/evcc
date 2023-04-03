@@ -1,0 +1,70 @@
+template: mypv-wifi-meter
+products:
+  - brand: my-PV
+    description:
+      generic: WiFi Meter
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 32 # 0x0020 sum of power, signed, value=data, unit: W
+      type: holding
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 34 # 0x0022 sum of forward energy; unsigned, value=data/800, unit: kWh
+      type: holding
+      decode: uint32
+    scale: 0.08
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1 # 0x0001 Phase A current, unsigned, value=data/100, unit: A
+      type: holding
+      decode: uint16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 11 # 0x000B Phase B current, unsigned, value=data/100, unit: A
+      type: holding
+      decode: uint16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 21 # 0x0015 Phase C current, unsigned, value=data/100, unit: A
+      type: holding
+      decode: uint16
+    scale: 0.01
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2 # 0x0001 Phase A active power, signed, value=data, unit: "W"
+      type: holding
+      decode: int32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 12 # 0x000C Phase B active power, signed, value=data, unit: "W"
+      type: holding
+      decode: int32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 22 # 0x0016 Phase C active power, signed, value=data, unit: "W"
+      type: holding
+      decode: int32

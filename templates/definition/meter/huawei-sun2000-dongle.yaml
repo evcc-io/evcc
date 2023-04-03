@@ -8,15 +8,27 @@ params:
     choice: ["pv"]
   - name: modbus
     choice: ["tcpip"]
+  - name: timeout
+    default: 15s
 render: |
   type: custom
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     model: huawei
-    timeout: 15s
+    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       address: 32080 # Active generation power AC
       type: holding
       decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    model: huawei
+    timeout: {{ .timeout }}
+    register:
+      address: 32106 # Accumulated energy yield
+      type: holding
+      decode: uint32
+    scale: 0.01

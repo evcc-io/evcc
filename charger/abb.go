@@ -89,7 +89,7 @@ func NewABB(uri, device, comset string, baudrate int, proto modbus.Protocol, sla
 
 	// keep-alive
 	go func() {
-		for range time.NewTicker(30 * time.Second).C {
+		for range time.Tick(30 * time.Second) {
 			_, _ = wb.status()
 		}
 	}()

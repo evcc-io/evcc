@@ -38,6 +38,10 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)
 
 	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN, basicAuth)

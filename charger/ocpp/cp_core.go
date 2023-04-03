@@ -26,7 +26,7 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	res := &core.BootNotificationConfirmation{
-		CurrentTime: types.NewDateTime(time.Now()),
+		CurrentTime: types.NewDateTime(cp.clock.Now()),
 		Interval:    60, // TODO
 		Status:      core.RegistrationStatusAccepted,
 	}
@@ -51,7 +51,7 @@ func (cp *CP) timestampValid(t time.Time) bool {
 }
 
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	if request != nil {
+	if request != nil && request.ConnectorId == cp.connector {
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
@@ -76,31 +76,26 @@ func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransfe
 	return res, nil
 }
 
-func (cp *CP) update() {
-	cp.mu.Lock()
-	cp.updated = time.Now()
-	cp.mu.Unlock()
-}
-
 func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
-	cp.update()
 	res := &core.HeartbeatConfirmation{
-		CurrentTime: types.NewDateTime(time.Now()),
+		CurrentTime: types.NewDateTime(cp.clock.Now()),
 	}
 
 	return res, nil
 }
 
 func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	if request != nil && request.ConnectorId == cp.connector {
+		cp.mu.Lock()
+		defer cp.mu.Unlock()
 
-	for _, meterValue := range request.MeterValue {
-		// ignore old meter value requests
-		if meterValue.Timestamp.Time.After(cp.meterUpdated) {
-			for _, sample := range meterValue.SampledValue {
-				cp.measurements[getSampleKey(sample)] = sample
-				cp.meterUpdated = time.Now()
+		for _, meterValue := range request.MeterValue {
+			// ignore old meter value requests
+			if meterValue.Timestamp.Time.After(cp.meterUpdated) {
+				for _, sample := range meterValue.SampledValue {
+					cp.measurements[getSampleKey(sample)] = sample
+					cp.meterUpdated = cp.clock.Now()
+				}
 			}
 		}
 	}
@@ -117,6 +112,10 @@ func getSampleKey(s types.SampledValue) string {
 }
 
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
+	if request == nil || request.ConnectorId != cp.connector {
+		return new(core.StartTransactionConfirmation), nil
+	}
+
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
@@ -139,17 +138,19 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 }
 
 func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	if request != nil {
+		cp.mu.Lock()
+		defer cp.mu.Unlock()
 
-	// reset transaction
-	if request != nil && time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
-		// log mismatching id but close transaction anyway
-		if request.TransactionId != cp.txnId {
-			cp.log.ERROR.Printf("stop transaction: invalid id %d", request.TransactionId)
+		// reset transaction
+		if time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
+			// log mismatching id but close transaction anyway
+			if request.TransactionId != cp.txnId {
+				cp.log.ERROR.Printf("stop transaction: invalid id %d", request.TransactionId)
+			}
+
+			cp.txnId = 0
 		}
-
-		cp.txnId = 0
 	}
 
 	res := &core.StopTransactionConfirmation{

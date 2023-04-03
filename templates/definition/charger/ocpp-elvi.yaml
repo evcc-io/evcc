@@ -1,0 +1,9 @@
+template: elvi
+products:
+  - brand: EVBox
+    description:
+      generic: Elvi
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

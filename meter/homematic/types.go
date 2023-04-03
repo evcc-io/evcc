@@ -21,7 +21,19 @@ type MethodCall struct {
 	Params     []Param  `xml:"params>param,omitempty"`
 }
 
+type Member struct {
+	Name  string     `xml:"name,omitempty"`
+	Value FaultValue `xml:"value,omitempty"`
+}
+
+type FaultValue struct {
+	XMLName   xml.Name `xml:"value"`
+	CCUString string   `xml:",chardata"`
+	CCUInt    int64    `xml:"i4,omitempty"`
+}
+
 type MethodResponse struct {
 	XMLName xml.Name `xml:"methodResponse"`
 	Value   Param    `xml:"params>param,omitempty"`
+	Fault   []Member `xml:"fault>value>struct>member,omitempty"`
 }

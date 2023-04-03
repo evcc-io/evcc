@@ -67,7 +67,7 @@ func (t *Awattar) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	for ; true; <-time.NewTicker(time.Hour).C {
+	for ; true; <-time.Tick(time.Hour) {
 		var res awattar.Prices
 		if err := client.GetJSON(t.uri, &res); err != nil {
 			once.Do(func() { done <- err })

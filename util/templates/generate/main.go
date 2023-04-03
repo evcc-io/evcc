@@ -18,7 +18,7 @@ const (
 	websitePath = "../../../templates/evcc.io"
 )
 
-//go:generate go run generate.go
+//go:generate go run main.go
 
 func main() {
 	for _, class := range []templates.Class{templates.Meter, templates.Charger, templates.Vehicle} {
@@ -62,9 +62,7 @@ func generateClass(class templates.Class) error {
 }
 
 func writeTemplate(class templates.Class, index int, product templates.Product, tmpl templates.Template) error {
-	values := tmpl.Defaults(templates.TemplateRenderModeDocs)
-
-	b, err := tmpl.RenderDocumentation(product, values, "de")
+	b, err := tmpl.RenderDocumentation(product, "de")
 	if err == nil {
 		filename := fmt.Sprintf("%s/%s/%s_%d.yaml", docsPath, strings.ToLower(class.String()), tmpl.Template, index)
 		err = os.WriteFile(filename, b, 0o644)
