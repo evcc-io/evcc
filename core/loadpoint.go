@@ -51,7 +51,7 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
 
-	guardGracePeriod = 10 * time.Second // allow out of sync during this timespan
+	guardGracePeriod = 30 * time.Second // allow out of sync during this timespan
 )
 
 // elapsed is the time an expired timer will be set to
