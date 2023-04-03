@@ -637,40 +637,39 @@ func (lp *Loadpoint) syncCharger() {
 	}
 }
 
+// checkCircuitAvailableLimit determines remaining usable current using circuit limits and consumption
+func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float64, error) {
+	if lp.circuit != nil && requestedCurrent > 0.0 {
+
+		// circuits remaining current includes the consumption of this loadpoint, so adjust using consumer interface
+		curLP, err := lp.MaxPhasesCurrent()
+		if err != nil {
+			return 0, fmt.Errorf("error getting current consumption: %s", err)
+		}
+
+		// apply not more than requested. If too little current is available, make sure its not negative
+		// consider als this LPs actuall current, since it is included in the circuit remaining current calculation
+		chargeCurrentNew := math.Min(math.Max(lp.circuit.GetRemainingCurrent()+curLP, 0), requestedCurrent)
+
+		if chargeCurrentNew < requestedCurrent {
+			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit", requestedCurrent, chargeCurrentNew)
+			return chargeCurrentNew, nil
+		}
+	}
+	return requestedCurrent, nil
+}
+
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	// apply load management
-	var forceCurrentChange bool
-
-	// TODO move to separately testable function?
-	if lp.circuit != nil && chargeCurrent > 0.0 {
-		// TODO naming unclear: is maxCur the maximum or the remaining current?
-		maxCur := lp.circuit.GetRemainingCurrent()
-
-		// TODO naming unclear: dito
-		// maxCur includes the consumption of this loadpoint, so adjust using consumer interface
-		curAct, err := lp.MaxPhasesCurrent()
-		if err != nil {
-			// TODO handle only once- either log or return
-			lp.log.ERROR.Printf("error getting current consumption: %s", err)
-			return err
-		}
-
-		// TODO naming unclear: dito
-		newCur := maxCur + curAct
-
-		// apply not more than requested. If too little current is available, make sure its not negative
-		chargeCurrentNew := math.Min(math.Max(newCur, 0), chargeCurrent)
-
-		// TODO check against minCurrent
-		// later here the function checks for having less than MinCurrent()
-		if chargeCurrentNew < chargeCurrent {
-			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit", chargeCurrent, chargeCurrentNew)
-			chargeCurrent = chargeCurrentNew
-
-			// also set force to ensure not overloading the circuit
-			forceCurrentChange = true
-		}
+	forceCurrentChange := false
+	maxCurAvailable, err := lp.checkCircuitAvailableLimit(chargeCurrent)
+	if err != nil {
+		return err
+	}
+	if maxCurAvailable < chargeCurrent {
+		chargeCurrent = maxCurAvailable
+		forceCurrentChange = true
 	}
 
 	// set current

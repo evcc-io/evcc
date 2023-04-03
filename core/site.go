@@ -263,7 +263,14 @@ func (site *Site) DumpConfig() {
 
 	site.log.INFO.Printf("  circuits:")
 	for _, circuit := range site.Circuits {
-		site.log.INFO.Printf(circuit.DumpConfig(4, 13))
+
+		var parentLimit float64
+		if circuit.parentCircuit != nil {
+			parentLimit = circuit.parentCircuit.maxCurrent
+		}
+
+		site.log.INFO.Println(
+			fmt.Sprintf("     maxCurrent %.1fA (parent: %.1fA)", circuit.maxCurrent, parentLimit))
 	}
 
 	if vehicles := site.GetVehicles(); len(vehicles) > 0 {
@@ -664,7 +671,9 @@ func (site *Site) update(lp Updater) {
 
 	// update all circuits to refresh the data when no loadpoints are upated
 	for _, cc := range site.Circuits {
-		cc.update()
+		if err := cc.update(); err != nil {
+			site.log.WARN.Printf("update circuit values: %s", err)
+		}
 	}
 }
 
