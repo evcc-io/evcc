@@ -143,25 +143,12 @@ type ConfigProvider struct {
 	vehicles map[string]api.Vehicle
 	circuits map[string]*core.Circuit
 	vMeters  map[string]*core.VMeter // use circuit name as key
-	visited  map[string]bool
 	auth     *util.AuthCollection
-}
-
-func (cp *ConfigProvider) TrackVisitors() {
-	cp.visited = make(map[string]bool)
 }
 
 // Meter provides meters by name
 func (cp *ConfigProvider) Meter(name string) (api.Meter, error) {
 	if meter, ok := cp.meters[name]; ok {
-		// track duplicate usage https://github.com/evcc-io/evcc/issues/1744
-		if cp.visited != nil {
-			if _, ok := cp.visited[name]; ok {
-				log.FATAL.Fatalf("duplicate meter usage: %s", name)
-			}
-			cp.visited[name] = true
-		}
-
 		return meter, nil
 	}
 	return nil, fmt.Errorf("meter does not exist: %s", name)

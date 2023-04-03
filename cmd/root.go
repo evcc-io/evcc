@@ -187,7 +187,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
-		cp.TrackVisitors() // track duplicate usage
 		site, err = configureSiteLoadpointsCircuits(conf)
 	}
 
