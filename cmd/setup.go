@@ -339,82 +339,21 @@ func configureCircuits(conf config, cp *ConfigProvider) error {
 	cp.circuits = make(map[string]*core.Circuit)
 	cp.vMeters = make(map[string]*core.VMeter)
 
-	siteMeterUsed := false
-
 	// TODO cleanup similar to loadpoints
 	for id, cfg := range conf.Circuits {
-		var circuitCfg = new(core.CircuitConfig)
-
-		if err := util.DecodeOther(cfg, circuitCfg); err != nil {
-			return fmt.Errorf("failed configuring circuit: %w", err)
-		}
-		if circuitCfg.Name == "" {
-			return fmt.Errorf("failed configuring circuit, need to have a name")
-		}
-
-		if slices.Contains(maps.Keys(cp.circuits), circuitCfg.Name) {
-			return fmt.Errorf("failed to create circuit, name already used: %s", circuitCfg.Name)
-		}
-
-		var parentCircuit *core.Circuit
-		var err error
-		if circuitCfg.ParentRef != "" {
-			parentCircuit, err = cp.Circuit(circuitCfg.ParentRef)
-			if err != nil {
-				return fmt.Errorf("failed to set parent circuit %s: %w", circuitCfg.ParentRef, err)
-			}
-		}
-
-		var phaseCurrents api.PhaseCurrents
-		if circuitCfg.MeterRef != "" {
-			// check is site meter, to bypass duplicate use check
-			site := core.NewSite()
-			if err := util.DecodeOther(conf.Site, &site); err != nil {
-				return fmt.Errorf("failed checking site config to get grid meter: %w", err)
-			}
-
-			var mt api.Meter
-			if circuitCfg.MeterRef == site.Meters.GridMeterRef && !siteMeterUsed {
-				// use grid meter
-				if slices.Contains(maps.Keys(cp.meters), circuitCfg.MeterRef) {
-					mt = cp.meters[circuitCfg.MeterRef]
-					siteMeterUsed = true
-				} else {
-					return fmt.Errorf("failed to set meter for circuit, unknown meter: %s", circuitCfg.MeterRef)
-				}
-			} else {
-				// other meter
-				if mt, err = cp.Meter(circuitCfg.MeterRef); err != nil {
-					return fmt.Errorf("failed to set meter for circuit: %s: %w", circuitCfg.MeterRef, err)
-				}
-			}
-
-			if pm, ok := mt.(api.PhaseCurrents); ok {
-				phaseCurrents = pm
-			} else {
-				return fmt.Errorf("circuit needs meter with phase current support: %s", circuitCfg.MeterRef)
-			}
-
-		} else {
-			cp.vMeters[circuitCfg.Name] = core.NewVMeter(circuitCfg.Name)
-			phaseCurrents = cp.VMeter(circuitCfg.Name)
-		}
 
 		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
 
-		circuit := core.NewCircuit(log, circuitCfg.MaxCurrent, parentCircuit, phaseCurrents)
+		circuit, vMeter, ccName, err := core.NewCircuitFromConfig(log, cp, cfg)
 		if circuit == nil {
 			return fmt.Errorf("failed configuring circuit: %w", err)
 		}
-
-		cp.circuits[circuitCfg.Name] = circuit
-		// check circuit has meter. if not, add vmeter
-		// check if it has a parent circuit. If so, check there is a vmeter for this circuit name and add this circuit as consumer
-		if circuitCfg.ParentRef != "" {
-			if vm := cp.VMeter(circuitCfg.ParentRef); vm != nil {
-				vm.AddConsumer(circuit)
-			}
+		// save vMeter for LP access
+		if vMeter != nil {
+			cp.vMeters[ccName] = vMeter
 		}
+
+		cp.circuits[ccName] = circuit
 	}
 	return nil
 }

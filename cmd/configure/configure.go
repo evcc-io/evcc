@@ -6,7 +6,6 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
 )
@@ -31,12 +30,19 @@ type loadpoint struct {
 	Circuit           string
 }
 
+type circuit struct {
+	Name       string  `mapstructure:"name"`       // unique name, used as reference in lp
+	MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current of this circuit
+	MeterRef   string  `mapstructure:"meter"`      // Charge meter reference
+	ParentRef  string  `mapstructure:"parent"`     // name of parent circuit
+}
+
 type config struct {
 	Meters     []device
 	Chargers   []device
 	Vehicles   []device
 	Loadpoints []loadpoint
-	Circuits   []core.CircuitConfig
+	Circuits   []circuit
 	Site       struct { // TODO Perspektivisch können wir was aus core wiederverwenden, für später
 		Title     string
 		Grid      string

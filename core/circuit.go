@@ -9,14 +9,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// struct to setup the circuit hierarchy
-type CircuitConfig struct {
-	Name       string  `mapstructure:"name"`       // unique name, used as reference in lp
-	MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current of this circuit
-	MeterRef   string  `mapstructure:"meter"`      // Charge meter reference
-	ParentRef  string  `mapstructure:"parent"`     // name of parent circuit
-}
-
 // the circuit instances to control the load
 type Circuit struct {
 	log    *util.Logger
@@ -25,6 +17,65 @@ type Circuit struct {
 	maxCurrent    float64           // max allowed current
 	parentCircuit *Circuit          // parent circuit reference, used to determine current limits from hierarchy
 	phaseCurrents api.PhaseCurrents // meter to determine phase current
+}
+
+// NewCircuitFromConfig creates a new Circuit
+func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) (*Circuit, *VMeter, string, error) {
+	var cc struct {
+		Name       string  `mapstructure:"name"`       // unique name, used as reference in lp
+		MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current of this circuit
+		MeterRef   string  `mapstructure:"meter"`      // Charge meter reference
+		ParentRef  string  `mapstructure:"parent"`     // name of parent circuit
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, nil, "", err
+	}
+
+	var err error
+
+	if cc.Name == "" {
+		return nil, nil, "", fmt.Errorf("failed configuring circuit, need to have a name")
+	}
+
+	if c, _ := cp.Circuit(cc.Name); c != nil {
+		return nil, nil, "", fmt.Errorf("failed to create circuit, name already used: %s", cc.Name)
+	}
+
+	var parent *Circuit
+	if cc.ParentRef != "" {
+		if parent, err = cp.Circuit(cc.ParentRef); err != nil {
+			return nil, nil, "", err
+		}
+	}
+
+	var vMeter *VMeter
+	var meter api.PhaseCurrents
+
+	if cc.MeterRef != "" {
+		var m api.Meter
+		if m, err = cp.Meter(cc.MeterRef); err != nil {
+			return nil, nil, "", err
+		}
+
+		var ok bool
+		if meter, ok = m.(api.PhaseCurrents); !ok {
+			return nil, nil, "", fmt.Errorf("meter %s does not support phase currents", cc.MeterRef)
+		}
+	} else {
+		// no dedicated vMeter given, create vmeter
+		vMeter = NewVMeter(cc.Name)
+		meter = vMeter
+	}
+
+	newCC := NewCircuit(log, cc.MaxCurrent, parent, meter)
+
+	if cc.ParentRef != "" {
+		if vm := cp.VMeter(cc.ParentRef); vm != nil {
+			vm.AddConsumer(newCC)
+		}
+	}
+	return newCC, vMeter, cc.Name, nil
 }
 
 // NewCircuit a circuit with defaults

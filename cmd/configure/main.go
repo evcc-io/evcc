@@ -12,7 +12,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
-	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/hems/semp"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
@@ -487,7 +486,7 @@ func (c *CmdConfigure) configureCircuits() {
 			fmt.Println(c.localizedString("Circuit_NameAlreadyUsed"))
 			continue
 		}
-		curCircuit := &core.CircuitConfig{Name: ccName}
+		curCircuit := &circuit{Name: ccName}
 
 		curChoices := []string{
 			c.localizedString("Circuit_MaxCurrent16A"),  // 11kVA
