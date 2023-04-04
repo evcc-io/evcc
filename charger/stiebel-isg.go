@@ -216,7 +216,7 @@ func (wb *StiebelIsg) Enable(enable bool) error {
 		// TODO remove
 		return errors.New("forbidden")
 
-		_, err = wb.conn.WriteSingleRegister(wb.conf.ModeAddr, value)
+		// _, err = wb.conn.WriteSingleRegister(wb.conf.ModeAddr, value)
 	}
 
 	return err
