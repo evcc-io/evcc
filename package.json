@@ -13,9 +13,9 @@
   "dependencies": {
     "@babel/core": "^7.17.2",
     "@h2d2/shopicons": "^1.2.0",
-    "@histoire/plugin-vue": "^0.12.4",
+    "@histoire/plugin-vue": "^0.15.8",
     "@popperjs/core": "^2.11.5",
-    "@vitejs/plugin-vue": "^3.0.1",
+    "@vitejs/plugin-vue": "^4.1.0",
     "@vue/compiler-sfc": "^3.2.30",
     "@vue/test-utils": "^2.2.7",
     "axios": "^1.2.1",
@@ -29,14 +29,14 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-vue": "^9.3.0",
-    "histoire": "^0.12.4",
+    "histoire": "^0.15.9",
     "json-to-pretty-yaml": "^1.2.2",
     "markty-toml": "^0.1.1",
     "prettier": "^2.5.1",
     "prettier-plugin-toml": "^0.3.1",
     "rollup-plugin-visualizer": "^5.8.3",
     "smoothscroll-polyfill": "^0.4.4",
-    "vite": "^3.2.5",
+    "vite": "^4.2.1",
     "vite-plugin-toml": "^0.5.0",
     "vue": "^3.2.29",
     "vue-eslint-parser": "^9.1.0",
@@ -52,7 +52,7 @@
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
   "devDependencies": {
-    "happy-dom": "^8.1.4",
-    "vitest": "^0.27.1"
+    "happy-dom": "^9.1.7",
+    "vitest": "^0.29.8"
   }
 }
