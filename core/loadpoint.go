@@ -194,11 +194,6 @@ func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.Soc.Poll.Mode = pollCharging
 	}
 
-	// set vehicle polling interval
-	if lp.Soc.Poll.Interval == 0 {
-		lp.Soc.Poll.Interval = pollInterval
-	}
-
 	if lp.MinCurrent == 0 {
 		lp.log.WARN.Println("minCurrent must not be zero")
 	}
@@ -276,14 +271,21 @@ func NewLoadpoint(log *util.Logger) *Loadpoint {
 	bus := evbus.New()
 
 	lp := &Loadpoint{
-		log:           log,   // logger
-		clock:         clock, // mockable time
-		bus:           bus,   // event bus
-		Mode:          api.ModeOff,
-		status:        api.StatusNone,
-		MinCurrent:    6,                                                     // A
-		MaxCurrent:    16,                                                    // A
-		Soc:           SocConfig{min: 0, target: 100},                        // %
+		log:        log,   // logger
+		clock:      clock, // mockable time
+		bus:        bus,   // event bus
+		Mode:       api.ModeOff,
+		status:     api.StatusNone,
+		MinCurrent: 6,  // A
+		MaxCurrent: 16, // A
+		Soc: SocConfig{
+			Poll: PollConfig{
+				Interval: pollInterval,
+				Mode:     pollCharging,
+			},
+			min:    0,   // %
+			target: 100, // %
+		},
 		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
 		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		GuardDuration: 5 * time.Minute,
