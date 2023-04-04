@@ -96,10 +96,10 @@ func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 	case 3:
 		res = api.StatusC
 	case 8:
+		res = wb.status
 		if wb.status == api.StatusC {
 			res = api.StatusB
 		}
-		res = wb.status
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
