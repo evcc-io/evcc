@@ -32,11 +32,10 @@ import (
 
 // StiebelIsg charger implementation
 type StiebelIsg struct {
-	log        *util.Logger
-	conn       *modbus.Connection
-	enabled    bool
-	lp         loadpoint.API
-	tempConfig TempConfig
+	log  *util.Logger
+	conn *modbus.Connection
+	lp   loadpoint.API
+	conf TempConfig
 }
 
 type TempConfig struct {
@@ -45,8 +44,8 @@ type TempConfig struct {
 	ModeAddr          uint16
 	EnableMode        uint16
 	DisableMode       uint16
-	EnabledAddr       uint16
-	EnabledBits       uint16
+	StatusAddr        uint16
+	StatusBits        uint16
 	Speicher          float64
 	Wärmekoeffizient  float64
 }
@@ -73,9 +72,9 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 			ModeAddr:    1500, // Betriebsart
 			EnableMode:  3,    // Komfortbetrieb
 			DisableMode: 2,    // Programmbetrieb
-			// enabled
-			EnabledAddr: 2500,   // Betriebsstatus
-			EnabledBits: 1 << 5, // WW Betrieb
+			// status
+			StatusAddr: 2500,   // Betriebsstatus
+			StatusBits: 1 << 5, // WW Betrieb
 			// medium
 			Wärmekoeffizient: 4.18, // kJ/kgK
 		},
@@ -89,7 +88,7 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 }
 
 // NewStiebelIsg creates Stiebel ISG charger
-func NewStiebelIsg(uri string, slaveID uint8, tempConfig TempConfig) (api.Charger, error) {
+func NewStiebelIsg(uri string, slaveID uint8, conf TempConfig) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -103,9 +102,9 @@ func NewStiebelIsg(uri string, slaveID uint8, tempConfig TempConfig) (api.Charge
 	conn.Logger(log.TRACE)
 
 	wb := &StiebelIsg{
-		log:        log,
-		conn:       conn,
-		tempConfig: tempConfig,
+		log:  log,
+		conn: conn,
+		conf: conf,
 	}
 
 	return wb, nil
@@ -115,40 +114,63 @@ func NewStiebelIsg(uri string, slaveID uint8, tempConfig TempConfig) (api.Charge
 func (wb *StiebelIsg) Status() (api.ChargeStatus, error) {
 	res := api.StatusNone
 
-	ist, err := wb.conn.ReadInputRegisters(wb.tempConfig.IstAddr, 1)
+	ist, err := wb.conn.ReadInputRegisters(wb.conf.IstAddr, 1)
 	if err != nil {
 		return res, err
 	}
 
-	soll, err := wb.conn.ReadInputRegisters(wb.tempConfig.SollAddr, 1)
+	soll, err := wb.conn.ReadInputRegisters(wb.conf.SollAddr, 1)
 	if err != nil {
 		return res, err
 	}
 
 	istF := float64(encoding.Int16(ist)) / 10
 	sollF := float64(encoding.Int16(soll)) / 10
-	energyRequired := (sollF - istF) * wb.tempConfig.Speicher * wb.tempConfig.Wärmekoeffizient / 3.6e3
+	energyRequired := (sollF - istF) * wb.conf.Speicher * wb.conf.Wärmekoeffizient / 3.6e3
 
 	wb.log.DEBUG.Printf("ist: %.1f°C, soll: %.1f°C, energy required: %.3fkWh", istF, sollF, energyRequired)
+
+	charging, err := wb.charging()
+	if err != nil {
+		return res, err
+	}
 
 	res = api.StatusA
 
 	// become "connected" if temp is outside of temp delta
-	if sollF-istF > wb.tempConfig.TempDelta {
+	if sollF-istF > wb.conf.TempDelta {
 		res = api.StatusB
+	}
+
+	if charging {
+		res = api.StatusC
 	}
 
 	return res, nil
 }
 
-// Enabled implements the api.Charger interface
-func (wb *StiebelIsg) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.tempConfig.EnabledAddr, 1)
+func (wb *StiebelIsg) charging() (bool, error) {
+	b, err := wb.conn.ReadInputRegisters(wb.conf.StatusAddr, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return encoding.Uint16(b)&wb.tempConfig.EnabledBits != 0, nil
+	return encoding.Uint16(b)&wb.conf.StatusBits != 0, nil
+}
+
+func (wb *StiebelIsg) mode() (uint16, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.conf.ModeAddr, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return encoding.Uint16(b), nil
+}
+
+// Enabled implements the api.Charger interface
+func (wb *StiebelIsg) Enabled() (bool, error) {
+	mode, err := wb.mode()
+	return mode == wb.conf.EnableMode, err
 }
 
 // Enable implements the api.Charger interface
@@ -162,28 +184,23 @@ func (wb *StiebelIsg) Enable(enable bool) error {
 		return nil
 	}
 
-	b, err := wb.conn.ReadHoldingRegisters(wb.tempConfig.ModeAddr, 1)
-	if err != nil {
-		return err
-	}
-
-	status := encoding.Uint16(b)
-	value := map[bool]uint16{true: wb.tempConfig.EnableMode, false: wb.tempConfig.DisableMode}[enable]
-
-	if status != value {
-		// don't disable unless pump is silent
-		if enabled && !enable {
-			return api.ErrMustRetry
-		}
-
-		// set new mode
-		_, err := wb.conn.WriteSingleRegister(wb.tempConfig.ModeAddr, value)
+	// don't disable unless pump is silent
+	if enabled && !enable {
+		charging, err := wb.charging()
 		if err != nil {
 			return err
 		}
+
+		if charging {
+			return api.ErrMustRetry
+		}
 	}
 
-	return nil
+	// set new mode
+	value := map[bool]uint16{true: wb.conf.EnableMode, false: wb.conf.DisableMode}[enable]
+	_, err = wb.conn.WriteSingleRegister(wb.conf.ModeAddr, value)
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
