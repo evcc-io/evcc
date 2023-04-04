@@ -205,6 +205,13 @@ func (v *Tesla) MaxCurrent(current int64) error {
 	return v.vehicle.SetChargingAmps(int(current))
 }
 
+var _ api.Resurrector = (*Tesla)(nil)
+
+func (v *Tesla) WakeUp() error {
+	_, err := v.vehicle.Wakeup()
+	return err
+}
+
 var _ api.VehicleChargeController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
