@@ -42,6 +42,9 @@ type StiebelIsg struct {
 type TempConfig struct {
 	SollAddr, IstAddr uint16
 	TempDelta         float64
+	ModeAddr          uint16
+	EnableMode        uint16
+	DisableMode       uint16
 	EnabledAddr       uint16
 	EnabledBits       uint16
 	Speicher          float64
@@ -62,12 +65,19 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 			ID: 1,
 		},
 		TempConfig: TempConfig{
-			SollAddr:         522,    // WW
-			IstAddr:          521,    // WW
-			TempDelta:        5,      // °C
-			EnabledAddr:      1500,   // Betriebsart
-			EnabledBits:      1 << 5, // WW Betrieb
-			Wärmekoeffizient: 4.18,   // kJ/kgK
+			// temp
+			SollAddr:  522, // WW
+			IstAddr:   521, // WW
+			TempDelta: 5,   // °C
+			// enable/disable
+			ModeAddr:    1500, // Betriebsart
+			EnableMode:  3,    // Komfortbetrieb
+			DisableMode: 2,    // Programmbetrieb
+			// enabled
+			EnabledAddr: 2500,   // Betriebsstatus
+			EnabledBits: 1 << 5, // WW Betrieb
+			// medium
+			Wärmekoeffizient: 4.18, // kJ/kgK
 		},
 	}
 
@@ -133,7 +143,7 @@ func (wb *StiebelIsg) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *StiebelIsg) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.tempConfig.EnabledAddr, 1)
+	b, err := wb.conn.ReadInputRegisters(wb.tempConfig.EnabledAddr, 1)
 	if err != nil {
 		return false, err
 	}
@@ -152,8 +162,28 @@ func (wb *StiebelIsg) Enable(enable bool) error {
 		return nil
 	}
 
-	// TODO enable/disable
-	return api.ErrNotAvailable
+	b, err := wb.conn.ReadHoldingRegisters(wb.tempConfig.ModeAddr, 1)
+	if err != nil {
+		return err
+	}
+
+	status := encoding.Uint16(b)
+	value := map[bool]uint16{true: wb.tempConfig.EnableMode, false: wb.tempConfig.DisableMode}[enable]
+
+	if status != value {
+		// don't disable unless pump is silent
+		if enabled && !enable {
+			return api.ErrMustRetry
+		}
+
+		// set new mode
+		_, err := wb.conn.WriteSingleRegister(wb.tempConfig.ModeAddr, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
