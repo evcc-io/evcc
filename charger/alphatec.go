@@ -91,18 +91,20 @@ func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 	switch u := binary.BigEndian.Uint16(b); u {
 	case 1:
 		res = api.StatusA
-		wb.status = res
 	case 2:
 		res = api.StatusB
-		wb.status = res
 	case 3:
 		res = api.StatusC
-		wb.status = res
 	case 8:
+		if wb.status == api.StatusC {
+			res = api.StatusB
+		}
 		res = wb.status
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
+
+	wb.status = res
 
 	return res, nil
 }
