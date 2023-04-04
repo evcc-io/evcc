@@ -16,7 +16,7 @@ const (
 )
 
 type Register struct {
-	Addr                uint16
+	addr                uint16
 	Name, Comment, Unit string
 	Typ                 Type
 	Divider             float64
@@ -24,6 +24,10 @@ type Register struct {
 
 func Invalid(b []byte) bool {
 	return encoding.Int16(b) == math.MinInt16
+}
+
+func (reg Register) Addr() uint16 {
+	return reg.addr - 1
 }
 
 func (reg Register) Float(b []byte) float64 {

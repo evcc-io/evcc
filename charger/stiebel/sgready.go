@@ -1,5 +1,7 @@
 package stiebel
 
+// Note: all registers are 1-based, i.e. actual value is addr-1
+
 var Block5 = []Register{
 	{4001, "SG READY EIN- UND AUSSCHALTEN", "", "", Bits, 0},
 	{4002, "SG READY EINGANG 1", "", "", Bits, 0},
