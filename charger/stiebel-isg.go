@@ -33,6 +33,7 @@ import (
 
 // StiebelIsg charger implementation
 type StiebelIsg struct {
+	*embed
 	log  *util.Logger
 	conn *modbus.Connection
 	lp   loadpoint.API
@@ -60,6 +61,7 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		TempConfig         `mapstructure:",squash"`
+		embed              `mapstructure:",squash"`
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
@@ -79,17 +81,21 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 			// medium
 			Wärmekoeffizient: 4.18, // kJ/kgK
 		},
+		embed: embed{
+			Icon_:     "heatpump",
+			Features_: []api.Feature{api.IntegratedDevice},
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewStiebelIsg(cc.URI, cc.ID, cc.TempConfig)
+	return NewStiebelIsg(&cc.embed, cc.URI, cc.ID, cc.TempConfig)
 }
 
 // NewStiebelIsg creates Stiebel ISG charger
-func NewStiebelIsg(uri string, slaveID uint8, conf TempConfig) (api.Charger, error) {
+func NewStiebelIsg(embed *embed, uri string, slaveID uint8, conf TempConfig) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -103,9 +109,10 @@ func NewStiebelIsg(uri string, slaveID uint8, conf TempConfig) (api.Charger, err
 	conn.Logger(log.TRACE)
 
 	wb := &StiebelIsg{
-		log:  log,
-		conn: conn,
-		conf: conf,
+		embed: embed,
+		log:   log,
+		conn:  conn,
+		conf:  conf,
 	}
 
 	return wb, nil
@@ -335,11 +342,4 @@ func (wb *StiebelIsg) print(reg stiebel.Register, b []byte) {
 // LoadpointControl implements loadpoint.Controller
 func (c *StiebelIsg) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
-}
-
-var _ api.FeatureDescriber = (*StiebelIsg)(nil)
-
-// Features implements the api.FeatureDescriber interface
-func (v *StiebelIsg) Features() []api.Feature {
-	return []api.Feature{api.IntegratedDevice}
 }
