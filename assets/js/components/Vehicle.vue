@@ -113,6 +113,7 @@ export default {
 		guardAction: String,
 		guardRemainingInterpolated: Number,
 		vehicles: Array,
+		climaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostUnit: String,
 		tariffGrid: Number,

@@ -179,7 +179,6 @@ export default {
 		// details
 		chargePower: Number,
 		chargedEnergy: Number,
-		// chargeDuration: Number,
 		climaterActive: Boolean,
 		chargeRemainingDuration: Number,
 
