@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -110,25 +111,35 @@ func NewStiebelIsg(uri string, slaveID uint8, conf TempConfig) (api.Charger, err
 	return wb, nil
 }
 
+func (wb *StiebelIsg) sollIst() (float64, float64, error) {
+	soll, err := wb.conn.ReadInputRegisters(wb.conf.SollAddr, 1)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	ist, err := wb.conn.ReadInputRegisters(wb.conf.IstAddr, 1)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if stiebel.Invalid(soll) || stiebel.Invalid(ist) {
+		return 0, 0, errors.New("invalid reading")
+	}
+
+	return float64(encoding.Int16(soll)) / 10, float64(encoding.Int16(ist)) / 10, nil
+}
+
 // Status implements the api.Charger interface
 func (wb *StiebelIsg) Status() (api.ChargeStatus, error) {
 	res := api.StatusNone
 
-	ist, err := wb.conn.ReadInputRegisters(wb.conf.IstAddr, 1)
+	soll, ist, err := wb.sollIst()
 	if err != nil {
 		return res, err
 	}
 
-	soll, err := wb.conn.ReadInputRegisters(wb.conf.SollAddr, 1)
-	if err != nil {
-		return res, err
-	}
-
-	istF := float64(encoding.Int16(ist)) / 10
-	sollF := float64(encoding.Int16(soll)) / 10
-	energyRequired := (sollF - istF) * wb.conf.Speicher * wb.conf.Wärmekoeffizient / 3.6e3
-
-	wb.log.DEBUG.Printf("ist: %.1f°C, soll: %.1f°C, energy required: %.3fkWh", istF, sollF, energyRequired)
+	energyRequired := (soll - ist) * wb.conf.Speicher * wb.conf.Wärmekoeffizient / 3.6e3
+	wb.log.DEBUG.Printf("ist: %.1f°C, soll: %.1f°C, energy required: %.3fkWh", ist, soll, energyRequired)
 
 	charging, err := wb.charging()
 	if err != nil {
@@ -138,7 +149,7 @@ func (wb *StiebelIsg) Status() (api.ChargeStatus, error) {
 	res = api.StatusA
 
 	// become "connected" if temp is outside of temp delta
-	if sollF-istF > wb.conf.TempDelta {
+	if soll-ist > wb.conf.TempDelta {
 		res = api.StatusB
 	}
 
@@ -206,6 +217,20 @@ func (wb *StiebelIsg) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *StiebelIsg) MaxCurrent(current int64) error {
 	return nil
+}
+
+var _ api.Battery = (*StiebelIsg)(nil)
+
+func (wb *StiebelIsg) Soc() (float64, error) {
+	_, ist, err := wb.sollIst()
+	return ist, err
+}
+
+var _ api.SocLimiter = (*StiebelIsg)(nil)
+
+func (wb *StiebelIsg) TargetSoc() (float64, error) {
+	soll, _, err := wb.sollIst()
+	return soll, err
 }
 
 var _ api.Diagnosis = (*StiebelIsg)(nil)
@@ -300,4 +325,11 @@ func (wb *StiebelIsg) print(reg stiebel.Register, b []byte) {
 // LoadpointControl implements loadpoint.Controller
 func (c *StiebelIsg) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
+}
+
+var _ api.FeatureDescriber = (*StiebelIsg)(nil)
+
+// Features implements the api.FeatureDescriber interface
+func (v *StiebelIsg) Features() []api.Feature {
+	return []api.Feature{api.IntegratedDevice}
 }
