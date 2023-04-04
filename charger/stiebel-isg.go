@@ -146,7 +146,8 @@ func (wb *StiebelIsg) Status() (api.ChargeStatus, error) {
 		return res, err
 	}
 
-	res = api.StatusA
+	// TODO StatusA
+	res = api.StatusB
 
 	// become "connected" if temp is outside of temp delta
 	if soll-ist > wb.conf.TempDelta {
@@ -209,7 +210,14 @@ func (wb *StiebelIsg) Enable(enable bool) error {
 
 	// set new mode
 	value := map[bool]uint16{true: wb.conf.EnableMode, false: wb.conf.DisableMode}[enable]
-	_, err = wb.conn.WriteSingleRegister(wb.conf.ModeAddr, value)
+
+	mode, err := wb.mode()
+	if mode != value && err == nil {
+		// TODO remove
+		return errors.New("forbidden")
+
+		_, err = wb.conn.WriteSingleRegister(wb.conf.ModeAddr, value)
+	}
 
 	return err
 }
@@ -229,8 +237,10 @@ func (wb *StiebelIsg) Soc() (float64, error) {
 var _ api.SocLimiter = (*StiebelIsg)(nil)
 
 func (wb *StiebelIsg) TargetSoc() (float64, error) {
-	soll, _, err := wb.sollIst()
-	return soll, err
+	// TODO soll
+	// soll, _, err := wb.sollIst()
+	// return soll, err
+	return 100, nil
 }
 
 var _ api.Diagnosis = (*StiebelIsg)(nil)
