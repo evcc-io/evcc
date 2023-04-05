@@ -268,7 +268,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 
 				// wrap non-config vehicle errors to prevent fatals
 				log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-				v = wrapper.New(err)
+				v = wrapper.New(cc.Name, cc.Other, err)
 			}
 
 			// ensure vehicle config has title

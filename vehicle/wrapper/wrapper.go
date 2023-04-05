@@ -2,22 +2,46 @@ package wrapper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Wrapper wraps an api.Vehicle to capture initialization errors
 type Wrapper struct {
 	err       error
 	title     string
+	icon      string
+	phases    int
+	capacity  float64
 	Features_ []api.Feature
 }
 
 // New creates a new Vehicle
-func New(err error) api.Vehicle {
+func New(name string, other map[string]interface{}, err error) api.Vehicle {
+	var cc struct {
+		Title    string
+		Icon     string
+		Phases   int
+		Capacity float64
+		Other    map[string]interface{} `mapstructure:",remain"`
+	}
+
+	// try to decode vehicle-specific config and look for title attribute
+	_ = util.DecodeOther(other, &cc)
+
+	if cc.Title == "" {
+		//lint:ignore SA1019 as Title is safe on ascii
+		cc.Title = strings.Title(name)
+	}
+
 	v := &Wrapper{
 		err:       fmt.Errorf("vehicle not available: %w", err),
-		title:     "unavailable",
+		title:     fmt.Sprintf("%s (offline)", cc.Title),
+		icon:      cc.Icon,
+		phases:    cc.Phases,
+		capacity:  cc.Capacity,
 		Features_: []api.Feature{api.Offline},
 	}
 
@@ -38,17 +62,17 @@ func (v *Wrapper) SetTitle(title string) {
 
 // Icon implements the api.Vehicle interface
 func (v *Wrapper) Icon() string {
-	return ""
+	return v.icon
 }
 
 // Capacity implements the api.Vehicle interface
 func (v *Wrapper) Capacity() float64 {
-	return 0
+	return v.capacity
 }
 
 // Phases implements the api.Vehicle interface
 func (v *Wrapper) Phases() int {
-	return 0
+	return v.phases
 }
 
 // Identifiers implements the api.Vehicle interface
