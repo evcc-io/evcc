@@ -13,15 +13,19 @@ type Wrapper struct {
 	err       error
 	title     string
 	icon      string
+	phases    int
+	capacity  float64
 	Features_ []api.Feature
 }
 
 // New creates a new Vehicle
 func New(name string, other map[string]interface{}, err error) api.Vehicle {
 	var cc struct {
-		Title string
-		Icon  string
-		Other map[string]interface{} `mapstructure:",remain"`
+		Title    string
+		Icon     string
+		Phases   int
+		Capacity float64
+		Other    map[string]interface{} `mapstructure:",remain"`
 	}
 
 	// try to decode vehicle-specific config and look for title attribute
@@ -36,6 +40,8 @@ func New(name string, other map[string]interface{}, err error) api.Vehicle {
 		err:       fmt.Errorf("vehicle not available: %w", err),
 		title:     fmt.Sprintf("%s (offline)", cc.Title),
 		icon:      cc.Icon,
+		phases:    cc.Phases,
+		capacity:  cc.Capacity,
 		Features_: []api.Feature{api.Offline},
 	}
 
