@@ -62,17 +62,17 @@ func (v *Wrapper) SetTitle(title string) {
 
 // Icon implements the api.Vehicle interface
 func (v *Wrapper) Icon() string {
-	return v.Icon
+	return v.icon
 }
 
 // Capacity implements the api.Vehicle interface
 func (v *Wrapper) Capacity() float64 {
-	return 0
+	return v.capacity
 }
 
 // Phases implements the api.Vehicle interface
 func (v *Wrapper) Phases() int {
-	return 0
+	return v.phases
 }
 
 // Identifiers implements the api.Vehicle interface
