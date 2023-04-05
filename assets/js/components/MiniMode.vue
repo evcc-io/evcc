@@ -1,37 +1,38 @@
 <template>
-	<div class="mode-group border d-inline-flex" role="group">
+	<div class="mode-group border d-inline-flex" :class="{ disabled: !mode }" role="group">
 		<button
-			v-for="m in modes"
-			:key="m"
 			type="button"
 			class="btn flex-grow-1 flex-shrink-1"
-			:class="{ active: isActive(m) }"
-			@click="setTargetMode(m)"
+			:class="{ active: isActive('aus') }"
 		>
-			{{ $t(`main.mode.${m}`) }}
+			aus
+		</button>
+		<button
+			type="button"
+			class="btn flex-grow-1 flex-shrink-1"
+			:class="{ active: isActive('an') }"
+		>
+			an
+		</button>
+		<button
+			type="button"
+			class="btn flex-grow-1 flex-shrink-1"
+			:class="{ active: isActive('smart') }"
+		>
+			smart
 		</button>
 	</div>
 </template>
 
 <script>
 export default {
-	name: "Mode",
+	name: "MiniMode",
 	props: {
 		mode: String,
-		mini: Boolean,
-	},
-	emits: ["updated"],
-	data() {
-		return {
-			modes: this.mini ? ["off", "pv", "now"] : ["off", "pv", "minpv", "now"],
-		};
 	},
 	methods: {
 		isActive: function (mode) {
 			return this.mode === mode;
-		},
-		setTargetMode: function (mode) {
-			this.$emit("updated", mode);
 		},
 	},
 };
@@ -43,6 +44,10 @@ export default {
 	border-radius: 20px;
 	padding: 4px;
 	min-width: 255px;
+}
+
+.disabled button {
+	opacity: 0.2;
 }
 
 .btn {
