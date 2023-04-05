@@ -12,6 +12,7 @@ import (
 type Wrapper struct {
 	err       error
 	title     string
+	icon      string
 	Features_ []api.Feature
 }
 
@@ -19,6 +20,7 @@ type Wrapper struct {
 func New(name string, other map[string]interface{}, err error) api.Vehicle {
 	var cc struct {
 		Title string
+		Icon  string
 		Other map[string]interface{} `mapstructure:",remain"`
 	}
 
@@ -33,6 +35,7 @@ func New(name string, other map[string]interface{}, err error) api.Vehicle {
 	v := &Wrapper{
 		err:       fmt.Errorf("vehicle not available: %w", err),
 		title:     fmt.Sprintf("%s (offline)", cc.Title),
+		icon:      cc.Icon,
 		Features_: []api.Feature{api.Offline},
 	}
 
@@ -53,7 +56,7 @@ func (v *Wrapper) SetTitle(title string) {
 
 // Icon implements the api.Vehicle interface
 func (v *Wrapper) Icon() string {
-	return ""
+	return v.Icon
 }
 
 // Capacity implements the api.Vehicle interface
