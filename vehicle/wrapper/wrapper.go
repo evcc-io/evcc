@@ -2,8 +2,10 @@ package wrapper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Wrapper wraps an api.Vehicle to capture initialization errors
@@ -14,10 +16,23 @@ type Wrapper struct {
 }
 
 // New creates a new Vehicle
-func New(err error) api.Vehicle {
+func New(name string, other map[string]interface{}, err error) api.Vehicle {
+	var cc struct {
+		Title string
+		Other map[string]interface{} `mapstructure:",remain"`
+	}
+
+	_ = util.DecodeOther(other, &cc)
+
+	title := cc.Title
+	if title == "" {
+		//lint:ignore SA1019 as Title is safe on ascii
+		title = strings.Title(name)
+	}
+
 	v := &Wrapper{
 		err:       fmt.Errorf("vehicle not available: %w", err),
-		title:     "unavailable",
+		title:     fmt.Sprintf("%s (offline)", title),
 		Features_: []api.Feature{api.Offline},
 	}
 
