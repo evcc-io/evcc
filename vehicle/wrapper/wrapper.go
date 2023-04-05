@@ -22,17 +22,17 @@ func New(name string, other map[string]interface{}, err error) api.Vehicle {
 		Other map[string]interface{} `mapstructure:",remain"`
 	}
 
+	// try to decode vehicle-specific config and look for title attribute
 	_ = util.DecodeOther(other, &cc)
 
-	title := cc.Title
-	if title == "" {
+	if cc.Title == "" {
 		//lint:ignore SA1019 as Title is safe on ascii
-		title = strings.Title(name)
+		cc.Title = strings.Title(name)
 	}
 
 	v := &Wrapper{
 		err:       fmt.Errorf("vehicle not available: %w", err),
-		title:     fmt.Sprintf("%s (offline)", title),
+		title:     fmt.Sprintf("%s (offline)", cc.Title),
 		Features_: []api.Feature{api.Offline},
 	}
 
