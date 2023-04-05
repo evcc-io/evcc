@@ -147,3 +147,8 @@ func (t *Tibber) Rates() (api.Rates, error) {
 	defer t.mux.Unlock()
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
+
+// IsDynamic implements the api.Tariff interface
+func (t *Tibber) IsDynamic() bool {
+	return true
+}

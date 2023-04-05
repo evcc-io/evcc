@@ -52,12 +52,14 @@
 	--evcc-transition-very-fast: 100ms;
 
 	--bs-primary: var(--evcc-darker-green);
-	--bs-primary-rgb: 58, 186, 44;
+	--bs-primary-rgb: 11, 166, 49;
 
 	--bs-body-font-size: 14px;
 	--bs-font-sans-serif: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
 		Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
 		"Segoe UI Symbol", "Noto Color Emoji";
+	--bs-success: var(--evcc-primary);
+	--bs-success-rgb: var(--bs-primary-rgb);
 }
 
 :root.dark {
@@ -103,6 +105,11 @@ h2 {
 h3,
 h4 {
 	font-size: 1.25rem;
+}
+
+h5 {
+	font-size: 1rem;
+	font-weight: bold;
 }
 
 .large {
@@ -196,6 +203,12 @@ a:hover {
 	--bs-btn-border-color: var(--bs-gray-bright);
 	--bs-btn-hover-bg: var(--bs-gray-bright);
 	--bs-btn-hover-color: var(--bs-gray-dark);
+}
+
+.accordion {
+	--bs-accordion-active-color: var(--bs-text);
+	--bs-accordion-active-bg: var(--evcc-background);
+	--bs-accordion-btn-active-icon: var(--bs-accordion-btn-icon);
 }
 
 .text-evcc {

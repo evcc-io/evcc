@@ -12,9 +12,10 @@ import (
 )
 
 type Fixed struct {
-	unit  string
-	clock clock.Clock
-	zones fixed.Zones
+	unit    string
+	clock   clock.Clock
+	zones   fixed.Zones
+	dynamic bool
 }
 
 var _ api.Tariff = (*Fixed)(nil)
@@ -42,8 +43,9 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	t := &Fixed{
-		unit:  cc.Currency,
-		clock: clock.New(),
+		unit:    cc.Currency,
+		clock:   clock.New(),
+		dynamic: len(cc.Zones) > 1,
 	}
 
 	for _, z := range cc.Zones {
@@ -137,4 +139,9 @@ func (t *Fixed) Rates() (api.Rates, error) {
 	}
 
 	return res, nil
+}
+
+// IsDynamic implements the api.Tariff interface
+func (t *Fixed) IsDynamic() bool {
+	return t.dynamic
 }

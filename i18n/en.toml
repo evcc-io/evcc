@@ -56,6 +56,16 @@ modalUpdateNow = "Install now"
 modalUpdateStarted = "Starting the new version of evcc…"
 modalUpdateStatusStart = "Installation started:"
 
+[gridSettings]
+activeHours = "{charging} of {total}"
+activeHoursLabel = "Active hours"
+co2Label = "CO₂ emission"
+co2Limit = "CO₂ limit"
+costLimitDescription = "Enables temporary fast-charging in solar mode."
+modalTitle = "Smart Grid Charging"
+priceLabel = "Energy price"
+priceLimit = "Price limit"
+
 [header]
 about = "About"
 blog = "Blog"
@@ -67,6 +77,16 @@ settings = "Settings"
 
 [main]
 vehicles = "Parking"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Arrival"
+departureTab = "Departure"
+modalTitle = "Charging Plan"
+none = "none"
+title = "Plan"
+titleMinSoc = "Min charge"
+titleTargetCharge = "Depature"
 
 [main.energyflow]
 battery = "Battery"
@@ -128,15 +148,16 @@ logout = "log out"
 
 [main.targetCharge]
 activate = "Activate"
-activeLabel = "{time}"
+co2Limit = "CO₂ limit of {co2}"
+costLimitIgnore = "The configured {limit} will be ignored during this period."
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
 descriptionSoc = "When should the vehicle be charged to {targetSoc}%?"
 inactiveLabel = "Target time"
-modalTitle = "Set Target Time"
 planDuration = "Charging time"
 planPeriodLabel = "Period"
 planPeriodValue = "{start} to {end}"
 planUnknown = "not known yet"
+priceLimit = "price limit of {price}"
 remove = "Remove"
 setTargetTime = "none"
 targetIsInThePast = "Pick a time in the future, Marty."
@@ -177,6 +198,8 @@ vehicleTarget = "Vehicle limit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Charging…"
+cheapEnergyCharging = "Cheap energy available. Charging…"
+cleanEnergyCharging = "Clean energy available. Charging…"
 connected = "Connected."
 disconnected = "Disconnected."
 guard = "Starting in {remaining}…"
@@ -232,12 +255,6 @@ vehicle = "Vehicle"
 
 [settings]
 title = "Settings"
-
-[settings.gridDetails]
-co2 = "CO₂"
-label = "Grid details"
-none = "none"
-price = "price"
 
 [settings.hiddenFeatures]
 label = "Experimental"

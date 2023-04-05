@@ -17,6 +17,10 @@
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="loadpoints"
 				:vehicles="vehicles"
+				:smartCostLimit="smartCostLimit"
+				:smartCostUnit="smartCostUnit"
+				:tariffGrid="tariffGrid"
+				:tariffCo2="tariffCo2"
 			/>
 			<VehcileSettingsModal />
 			<Footer v-bind="footer"></Footer>
@@ -92,6 +96,9 @@ export default {
 		uploadProgress: Number,
 		sponsor: String,
 		sponsorTokenExpires: Number,
+		smartCostLimit: Number,
+		smartCostUnit: String,
+		smartCostAvailable: Boolean,
 	},
 	computed: {
 		energyflow: function () {
@@ -118,12 +125,6 @@ export default {
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation) };
-		},
-		hasPrice: function () {
-			return !isNaN(this.tariffGrid);
-		},
-		hasCo2: function () {
-			return !isNaN(this.tariffCo2);
 		},
 		showParkingLot: function () {
 			// work in progess

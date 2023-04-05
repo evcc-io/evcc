@@ -56,6 +56,16 @@ modalUpdateNow = "Jetzt installieren"
 modalUpdateStarted = "Starte die neue Version von evcc..."
 modalUpdateStatusStart = "Installation gestartet:"
 
+[gridSettings]
+activeHours = "{charging} von {total}"
+activeHoursLabel = "Aktive Stunden"
+co2Label = "CO₂-Emission"
+co2Limit = "CO₂-Grenze"
+costLimitDescription = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
+modalTitle = "Smartes Netzladen"
+priceLabel = "Energiepreis"
+priceLimit = "Preisgrenze"
+
 [header]
 about = "Über"
 blog = "Blog"
@@ -67,6 +77,16 @@ settings = "Einstellungen"
 
 [main]
 vehicles = "Parkplatz"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Ankunft"
+departureTab = "Abfahrt"
+modalTitle = "Ladeplanung"
+none = "none"
+title = "Plan"
+titleMinSoc = "Min. Ladung"
+titleTargetCharge = "Abfahrt"
 
 [main.energyflow]
 battery = "Batterie"
@@ -128,15 +148,16 @@ logout = "abmelden"
 
 [main.targetCharge]
 activate = "Aktivieren"
-activeLabel = "{time}"
+co2Limit = "CO₂-Grenze von {co2}"
+costLimitIgnore = "Die eingestellte {limit} wird in diesem Zeitraum ignoriert."
 descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
 descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc}% geladen sein?"
 inactiveLabel = "Zielzeit"
-modalTitle = "Zielzeit festlegen"
 planDuration = "Ladezeit"
 planPeriodLabel = "Zeitraum"
 planPeriodValue = "{start} bis {end}"
 planUnknown = "noch unbekannt"
+priceLimit = "Preisgrenze von {price}"
 remove = "Entfernen"
 setTargetTime = "keine"
 targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
@@ -177,6 +198,8 @@ vehicleTarget = "Fahrzeuglimit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Ladevorgang aktiv…"
+cheapEnergyCharging = "Günstige Energie verfügbar. Ladevorgang aktiv…"
+cleanEnergyCharging = "Saubere Energie verfügbar. Ladevorgang aktiv…"
 connected = "Verbunden."
 disconnected = "Nicht verbunden."
 guard = "Starte in {remaining}…"
@@ -232,12 +255,6 @@ vehicle = "Fahrzeug"
 
 [settings]
 title = "Einstellungen"
-
-[settings.gridDetails]
-co2 = "CO₂"
-label = "Netztarifdetails"
-none = "keine"
-price = "Preis"
 
 [settings.hiddenFeatures]
 label = "Experimentell"

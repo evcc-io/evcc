@@ -9,10 +9,17 @@
 			{{ name }}
 		</span>
 		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
-			<div ref="details" class="fw-normal" data-bs-toggle="tooltip" @click.stop="">
-				<AnimatedNumber v-if="details !== undefined" :to="details" :format="detailsFmt" />
+			<div
+				ref="details"
+				class="fw-normal"
+				:class="{ 'text-decoration-underline': detailsClickable }"
+				data-bs-toggle="tooltip"
+				:tabindex="detailsClickable ? 0 : undefined"
+				@click="detailsClicked"
+			>
+				<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
 			</div>
-			<div ref="power" class="power" data-bs-toggle="tooltip" @click.stop="">
+			<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
 				<AnimatedNumber :to="power" :format="kw" />
 			</div>
 		</span>
@@ -44,7 +51,9 @@ export default {
 		details: { type: Number },
 		detailsFmt: { type: Function },
 		detailsTooltip: { type: Array },
+		detailsClickable: { type: Boolean },
 	},
+	emits: ["details-clicked"],
 	data() {
 		return { powerTooltipInstance: null, detailsTooltipInstance: null };
 	},
@@ -87,6 +96,9 @@ export default {
 			);
 		},
 		updateDetailsTooltip() {
+			if (this.detailsClickable) {
+				return;
+			}
 			this.detailsTooltipInstance = this.updateTooltip(
 				this.detailsTooltipInstance,
 				this.detailsTooltip,
@@ -106,6 +118,19 @@ export default {
 			const html = `<div class="text-end">${content.join("<br/>")}</div>`;
 			instance.setContent({ ".tooltip-inner": html });
 			return instance;
+		},
+		powerClicked: function ($event) {
+			if (this.powerTooltip) {
+				$event.stopPropagation();
+			}
+		},
+		detailsClicked: function ($event) {
+			if (this.detailsClickable || this.detailsTooltip) {
+				$event.stopPropagation();
+			}
+			if (this.detailsClickable) {
+				this.$emit("details-clicked");
+			}
 		},
 	},
 };

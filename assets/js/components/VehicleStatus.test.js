@@ -165,3 +165,32 @@ describe("vehicle target soc", () => {
     );
   });
 });
+
+describe("smart grid charging", () => {
+  test("show clean energy message", () => {
+    expectStatus(
+      {
+        connected: true,
+        enabled: true,
+        charging: true,
+        tariffCo2: 400,
+        smartCostLimit: 500,
+        smartCostUnit: "gCO2eq",
+      },
+      "cleanEnergyCharging"
+    );
+  });
+  test("show cheap energy message", () => {
+    expectStatus(
+      {
+        connected: true,
+        enabled: true,
+        charging: true,
+        tariffGrid: 0.28,
+        smartCostLimit: 0.29,
+        currency: "EUR",
+      },
+      "cheapEnergyCharging"
+    );
+  });
+});
