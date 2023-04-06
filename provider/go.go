@@ -114,35 +114,30 @@ func (p *Go) setParam(param string, val interface{}) error {
 	return err
 }
 
-// IntSetter sends int request
+func (p *Go) paramAndEval(param string, val any) error {
+	err := p.setParam(param, val)
+	if err == nil {
+		_, err = p.vm.Eval(p.script)
+	}
+	return err
+}
+
 func (p *Go) IntSetter(param string) func(int64) error {
 	return func(val int64) error {
-		err := p.setParam(param, val)
-		if err == nil {
-			_, err = p.vm.Eval(p.script)
-		}
-		return err
+		return p.paramAndEval(param, val)
 	}
 }
 
 // StringSetter sends string request
 func (p *Go) StringSetter(param string) func(string) error {
 	return func(val string) error {
-		err := p.setParam(param, val)
-		if err == nil {
-			_, err = p.vm.Eval(p.script)
-		}
-		return err
+		return p.paramAndEval(param, val)
 	}
 }
 
 // BoolSetter sends bool request
 func (p *Go) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
-		err := p.setParam(param, val)
-		if err == nil {
-			_, err = p.vm.Eval(p.script)
-		}
-		return err
+		return p.paramAndEval(param, val)
 	}
 }
