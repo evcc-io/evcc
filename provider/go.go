@@ -75,7 +75,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 	}
 }
 
-// StringGetter sends string request
+// StringGetter parses string from request
 func (p *Go) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
 		v, err := p.vm.Eval(p.script)
@@ -107,14 +107,8 @@ func (p *Go) BoolGetter() func() (bool, error) {
 	}
 }
 
-func (p *Go) setParam(param string, val interface{}) error {
-	log.DEBUG.Printf("Setting param %s := %v;", param, val)
-	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
-	return err
-}
-
 func (p *Go) paramAndEval(param string, val any) error {
-	err := p.setParam(param, val)
+	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
 	if err == nil {
 		_, err = p.vm.Eval(p.script)
 	}
