@@ -228,7 +228,7 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	}
 
 	if !c.isConnected() {
-		return api.StatusNone, fmt.Errorf("%s disconnected", c.ski)
+		return api.StatusNone, api.ErrTimeout
 	}
 
 	switch currentState {
