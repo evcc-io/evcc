@@ -46,17 +46,15 @@ func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) 
 // FloatGetter parses float from request
 func (p *Go) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
+		v, err := p.vm.Eval(p.script)
 		if err == nil {
-			var v reflect.Value
-			v, err = p.vm.Eval(p.script)
-			if err == nil {
-				if typ := reflect.TypeOf(res); v.CanConvert(typ) {
-					res = v.Convert(typ).Float()
-				} else {
-					err = fmt.Errorf("not a float: %v", v)
-				}
+			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
+				res = v.Convert(typ).Float()
+			} else {
+				err = fmt.Errorf("not a float: %v", v)
 			}
 		}
+
 		return res, err
 	}
 }
@@ -64,8 +62,7 @@ func (p *Go) FloatGetter() func() (float64, error) {
 // IntGetter parses int64 from request
 func (p *Go) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
-		var v reflect.Value
-		v, err = p.vm.Eval(p.script)
+		v, err := p.vm.Eval(p.script)
 		if err == nil {
 			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
 				res = v.Convert(typ).Int()
@@ -81,8 +78,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 // StringGetter sends string request
 func (p *Go) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
-		var v reflect.Value
-		v, err = p.vm.Eval(p.script)
+		v, err := p.vm.Eval(p.script)
 		if err == nil {
 			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
 				res = v.Convert(typ).String()
