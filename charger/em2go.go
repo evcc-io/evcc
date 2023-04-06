@@ -65,7 +65,7 @@ func init() {
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
 func NewEm2GoFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
-		ID: 0xff,
+		ID: 255,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
