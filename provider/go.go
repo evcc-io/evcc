@@ -2,10 +2,11 @@ package provider
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/util"
 	"github.com/traefik/yaegi/interp"
-	"reflect"
 )
 
 // Go implements Go request provider
@@ -49,8 +50,8 @@ func (p *Go) FloatGetter() func() (float64, error) {
 			var v reflect.Value
 			v, err = p.vm.Eval(p.script)
 			if err == nil {
-				if v.CanConvert(reflect.TypeOf(0.0)) {
-					res = v.Convert(reflect.TypeOf(0.0)).Float()
+				if typ := reflect.TypeOf(res); v.CanConvert(typ) {
+					res = v.Convert(typ).Float()
 				} else {
 					err = fmt.Errorf("not a float: %v", v)
 				}
@@ -66,8 +67,8 @@ func (p *Go) IntGetter() func() (int64, error) {
 		var v reflect.Value
 		v, err = p.vm.Eval(p.script)
 		if err == nil {
-			if v.CanConvert(reflect.TypeOf(0)) {
-				res = v.Convert(reflect.TypeOf(0)).Int()
+			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
+				res = v.Convert(typ).Int()
 			} else {
 				err = fmt.Errorf("not an int: %v", v)
 			}
@@ -83,8 +84,8 @@ func (p *Go) StringGetter() func() (string, error) {
 		var v reflect.Value
 		v, err = p.vm.Eval(p.script)
 		if err == nil {
-			if v.CanConvert(reflect.TypeOf("")) {
-				res = v.Convert(reflect.TypeOf("")).String()
+			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
+				res = v.Convert(typ).String()
 			} else {
 				err = fmt.Errorf("not a string: %v", v)
 			}
@@ -100,8 +101,8 @@ func (p *Go) BoolGetter() func() (bool, error) {
 		var v reflect.Value
 		v, err = p.vm.Eval(p.script)
 		if err == nil {
-			if v.CanConvert(reflect.TypeOf(true)) {
-				res = v.Convert(reflect.TypeOf(true)).Bool()
+			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
+				res = v.Convert(typ).Bool()
 			} else {
 				err = fmt.Errorf("not a boolean: %v", v)
 			}
