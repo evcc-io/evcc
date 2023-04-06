@@ -94,8 +94,7 @@ func (p *Go) StringGetter() func() (string, error) {
 // BoolGetter parses bool from request
 func (p *Go) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
-		var v reflect.Value
-		v, err = p.vm.Eval(p.script)
+		v, err := p.vm.Eval(p.script)
 		if err == nil {
 			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
 				res = v.Convert(typ).Bool()
