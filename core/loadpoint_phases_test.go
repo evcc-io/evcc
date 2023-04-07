@@ -166,17 +166,20 @@ func TestPvScalePhases(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	scaled := ""
+	current := minA
 
 	for _, tc := range phaseTests {
 		t.Log(tc)
 
+		if scaled == "d" {
+			current = maxA
+		} else if scaled == "u" {
+			current = minA
+		}
+
 		plainCharger := mock.NewMockCharger(ctrl)
 		plainCharger.EXPECT().Enabled().Return(true, nil)
-		if scaled == "d" {
-			plainCharger.EXPECT().MaxCurrent(int64(maxA)).Return(nil) // MaxCurrentEx not implemented
-		} else {
-			plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil) // MaxCurrentEx not implemented
-		}
+		plainCharger.EXPECT().MaxCurrent(int64(current)).Return(nil) // MaxCurrentEx not implemented
 
 		// 1p3p
 		var phaseCharger *mock.MockPhaseSwitcher
