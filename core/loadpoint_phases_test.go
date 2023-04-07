@@ -158,7 +158,7 @@ func testScale(t *testing.T, lp *Loadpoint, power float64, direction string, tc 
 	if scaled {
 		return testDirection
 	} else {
-		return nil
+		return ""
 	}
 }
 
@@ -245,7 +245,7 @@ func TestPvScalePhases(t *testing.T) {
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(1).Return(nil).MaxTimes(1)
 
-			if testScale(t, lp, min1p, "down", tc) != nil {
+			if testScale(t, lp, min1p, "down", tc) != "" {
 				scaled = true
 			}
 			ctrl.Finish()
@@ -261,7 +261,7 @@ func TestPvScalePhases(t *testing.T) {
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
 
-			if testScale(t, lp, min3p, "up", tc) != nil {
+			if testScale(t, lp, min3p, "up", tc) != "" {
 				scaled = true
 			}
 			ctrl.Finish()
