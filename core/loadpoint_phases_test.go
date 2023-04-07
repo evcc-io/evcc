@@ -165,14 +165,16 @@ func testScale(t *testing.T, lp *Loadpoint, power float64, direction string, tc 
 func TestPvScalePhases(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
-	scaled := false
+	scaled := ""
 
 	for _, tc := range phaseTests {
 		t.Log(tc)
 
 		plainCharger := mock.NewMockCharger(ctrl)
 		plainCharger.EXPECT().Enabled().Return(true, nil)
-		if !scaled {
+		if scaled == "d" {
+			plainCharger.EXPECT().MaxCurrent(int64(maxA)).Return(nil) // MaxCurrentEx not implemented
+		} else {
 			plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil) // MaxCurrentEx not implemented
 		}
 
@@ -245,9 +247,7 @@ func TestPvScalePhases(t *testing.T) {
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(1).Return(nil).MaxTimes(1)
 
-			if testScale(t, lp, min1p, "down", tc) != "" {
-				scaled = true
-			}
+			scaled = testScale(t, lp, min1p, "down", tc)
 			ctrl.Finish()
 
 			// scale up
@@ -261,9 +261,7 @@ func TestPvScalePhases(t *testing.T) {
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
 
-			if testScale(t, lp, min3p, "up", tc) != "" {
-				scaled = true
-			}
+			scaled = testScale(t, lp, min3p, "up", tc)
 			ctrl.Finish()
 		}
 	}
