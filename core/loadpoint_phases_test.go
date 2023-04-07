@@ -158,7 +158,7 @@ func testScale(t *testing.T, lp *Loadpoint, power float64, direction string, tc 
 	return scaled
 }
 
-func TestPvScalePhases(t *testing.T) bool {
+func TestPvScalePhases(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	scaled := false
@@ -259,7 +259,6 @@ func TestPvScalePhases(t *testing.T) bool {
 			ctrl.Finish()
 		}
 	}
-	return scaled
 }
 
 func TestPvScalePhasesTimer(t *testing.T) {
