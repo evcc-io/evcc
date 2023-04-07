@@ -165,7 +165,7 @@ func testScale(t *testing.T, lp *Loadpoint, power float64, direction string, tc 
 func TestPvScalePhases(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
-	scale := false
+	scaled := false
 
 	for _, tc := range phaseTests {
 		t.Log(tc)
