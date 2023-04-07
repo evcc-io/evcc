@@ -330,7 +330,6 @@ func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
 func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 	// always update soc when charging
 	if lp.charging() {
-		lp.didChargeOnLastSocUpdate = true
 		return true
 	}
 
@@ -342,15 +341,12 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 	remaining := lp.Soc.Poll.Interval - lp.clock.Since(lp.socUpdated)
 
 	honourUpdateInterval := lp.Soc.Poll.Mode == pollAlways ||
-		lp.connected() && (lp.Soc.Poll.Mode == pollConnected ||
-			// for mode charging allow one last soc update if did charge previously to not rely on soc estimator too much
-			lp.Soc.Poll.Mode == pollCharging && lp.didChargeOnLastSocUpdate)
+		lp.connected() && lp.Soc.Poll.Mode == pollConnected
 
 	if honourUpdateInterval {
 		if remaining > 0 {
 			lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
 		} else {
-			lp.didChargeOnLastSocUpdate = false
 			return true
 		}
 	}
