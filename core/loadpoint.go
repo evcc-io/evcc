@@ -1412,7 +1412,7 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 	lp.wakeUpTimer.Stop()
 }
 
-// pvScalePhases switches phases if necessary and returns if switch occurred
+// guardGracePeriodElapsed checks if last guard update is within guard grace period
 func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 	return time.Since(lp.guardUpdated) > guardGracePeriod
 }
