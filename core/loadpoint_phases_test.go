@@ -237,7 +237,7 @@ func TestPvScalePhases(t *testing.T) {
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(1).Return(nil).MaxTimes(1)
 
-			scaled = testScale(t, lp, min1p, "down", tc)
+			testScale(t, lp, min1p, "down", tc)
 			ctrl.Finish()
 
 			// scale up
