@@ -681,8 +681,8 @@ func TestSocPoll(t *testing.T) {
 		{pollCharging, api.StatusC, 0, true},
 		{pollCharging, api.StatusC, tNoRefresh, true}, // cached by vehicle
 		{pollCharging, api.StatusC, tRefresh, true},
-		{pollCharging, api.StatusB, 0, false},         // no more polling
-		{pollCharging, api.StatusB, tRefresh, false},  // no more polling
+		{pollCharging, api.StatusB, 0, false},        // no more polling
+		{pollCharging, api.StatusB, tRefresh, false}, // no more polling
 
 		// pollConnected
 		{pollConnected, api.StatusA, -1, false},
