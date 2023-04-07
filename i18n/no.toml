@@ -84,6 +84,7 @@ noEnergy = "Ingen telleverksdata"
 pvExport = "Lysnetteksport"
 pvProduction = "Produksjon"
 selfConsumption = "Eget forbruk"
+batteryTooltip = "{energy} av {total} ({soc})"
 
 [main.loadpoint]
 charged = "Oppladet"
@@ -138,6 +139,16 @@ targetIsInThePast = "Velg et tidspunkt i fremtiden, Marty."
 title = "Mål-tid"
 today = "i dag"
 tomorrow = "i morgen"
+planUnknown = "ikke kjent enda"
+priceLimit = "prisgrense på {price}"
+update = "Oppdater"
+targetIsTooFarInTheFuture = "Planen vil bli justert så snart mer info tilkommer."
+co2Limit = "CO₂ grense på {co2}"
+costLimitIgnore = "Ser bort fra oppsatt grense på {limit} i løpet av denne perioden."
+planDuration = "Ladetid"
+planPeriodLabel = "Periode"
+planPeriodValue = "{start} til {end}"
+descriptionEnergy = "Når skal {targetEnergy} være på kjøretøyet?"
 
 [main.targetEnergy]
 label = "Grense"
@@ -151,6 +162,8 @@ none = "Ingen kjøretøy"
 targetSoc = "Grense"
 unknown = "Gjestekjøretøy"
 vehicleSoc = "Lade"
+addVehicle = "Legg til kjøretøy"
+moreActions = "Flere handlinger"
 
 [main.vehicleSoc]
 charging = "lader"
@@ -174,6 +187,9 @@ targetChargeWaitForVehicle = "Mållading klar. Venter på kjøretøy..."
 unknown = ""
 vehicleTargetReached = "Kjøretøygrense på {soc}% nådd."
 waitForVehicle = "Klar. Venter på kjøretøy..."
+cheapEnergyCharging = "Billig energi tilgjengelig. Lader …"
+guard = "Starter om {remaining} …"
+cleanEnergyCharging = "Ren energi tilgjengelig. Lader …"
 
 [notifications]
 dismissAll = "Forkast alle"
@@ -190,6 +206,7 @@ energy = "Oppladet"
 loadpoint = "Ladepunkt"
 title = "Ladeøkter"
 vehicle = "Kjøretøy"
+reallyDelete = "Slett denne økten?"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -234,3 +251,55 @@ lineError = "Feil i {0}."
 lineErrorLink = "linje {0}"
 restartButton = "Omstart"
 title = "Oppstartsfeil"
+
+
+[gridSettings]
+activeHours = "{charging} av {total}"
+priceLimit = "Prisgrense"
+activeHoursLabel = "Aktive timer"
+co2Label = "CO₂-utslipp"
+co2Limit = "CO₂-grense"
+modalTitle = "Smart lysnettlading"
+costLimitDescription = "Slår på midlertidig hurtiglading i solcellemodus.
+priceLabel = "Energipris"
+
+[main.chargingPlan]
+arrivalTab = "Ankomst"
+modalTitle = "Ladeplan"
+departureTab = "Avgang"
+none = "ingen"
+title = "Plan"
+titleMinSoc = "Min.-lading"
+titleTargetCharge = "Avgang"
+activeLabel = "{time}"
+
+[main.targetChargePlan]
+chargeDuration = "Ladetid"
+co2Label = "CO₂-utslipp Ø"
+timeRange = "{day} {range} t"
+unknownPrice = "fremdeles ukjent"
+priceLabel = "Energipris"
+
+[session]
+meterstop = "Sluttstand"
+odometer = "Kilometerstand"
+started = "Startet"
+delete = "Slett"
+finished = "Fullført"
+title = "Ladeøkt"
+cancel = "Avbryt"
+meterstart = "Startstand"
+
+[settings.sponsorToken]
+getNew = "Hent et ferskt symbol"
+hint = "Merk: Dette vil bli automatisert i fremtiden."
+expires = "Sponsorsymbolet ditt utløper om {inXDays}. {getNewToken} og oppdater oppsettsfilen din."
+
+[vehicleSettings]
+cancel = "Avbryt"
+test = "Test"
+template = "Fabrikant"
+
+[settings.hiddenFeatures]
+label = "Eksperimentelt"
+value = "Vis eksperimentelle grensesnittsfunksjoner."
