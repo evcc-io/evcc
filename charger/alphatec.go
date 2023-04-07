@@ -74,7 +74,7 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 
 	wb := &Alphatec{
 		conn:   conn,
-		status: api.StatusNone,
+		status: api.StatusB,
 	}
 
 	return wb, err
