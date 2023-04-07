@@ -129,7 +129,6 @@ type Loadpoint struct {
 	chargeCurrent            float64   // Charger current limit
 	guardUpdated             time.Time // Charger enabled/disabled timestamp
 	socUpdated               time.Time // Soc updated timestamp (poll: connected)
-	didChargeOnLastSocUpdate bool      // There was a charge process when Soc was updated last
 	vehicleDetect            time.Time // Vehicle connected timestamp
 	vehicleDetectTicker      *clock.Ticker
 	vehicleIdentifier        string
