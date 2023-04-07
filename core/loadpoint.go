@@ -626,14 +626,14 @@ func (lp *Loadpoint) syncCharger() {
 	if err == nil {
 		if enabled != lp.enabled {
 			if lp.guardGracePeriodElapsed() {
-				lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
+				lp.log.DEBUG.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 			}
 			err = lp.charger.Enable(lp.enabled)
 		}
 
 		if !enabled && lp.charging() {
 			if lp.guardGracePeriodElapsed() {
-				lp.log.WARN.Println("charger logic error: disabled but charging")
+				lp.log.DEBUG.Println("charger logic error: disabled but charging")
 			}
 			err = lp.charger.Enable(false)
 		}
