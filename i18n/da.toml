@@ -56,6 +56,16 @@ modalUpdateNow = "Installer nu"
 modalUpdateStarted = "Starter den nye version af evcc..."
 modalUpdateStatusStart = "Installation startede:"
 
+[gridSettings]
+activeHours = "{charging} af {total}"
+activeHoursLabel = "Aktive timer"
+co2Label = "CO₂ udledning"
+co2Limit = "CO₂ grænse"
+costLimitDescription = "Aktiverer midlertidig hurtig ladning i solcelle tilstand"
+modalTitle = "Smart net opladning"
+priceLabel = "Energi pris"
+priceLimit = "Pris grænse"
+
 [header]
 about = "Om"
 blog = "Blog"
@@ -67,6 +77,16 @@ settings = "Indstillinger"
 
 [main]
 vehicles = "Parkering"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Ankomst"
+departureTab = "Afgang"
+modalTitle = "Lade plan"
+none = "ingen"
+title = "Plan"
+titleMinSoc = "Min. ladning"
+titleTargetCharge = "Afgang"
 
 [main.energyflow]
 battery = "Batteri"
@@ -126,39 +146,46 @@ logout = "Log ud"
 [main.targetCharge]
 activate = "Tænd"
 activeLabel = "{time}"
+co2Limit = "CO₂ grænse på {co2}"
+costLimitIgnore = "Den konfigurerede {limit} vil blive ignoreret i denne periode."
+descriptionEnergy = "Hvornår skal {targetEnergy} være sendt til køretøjet?"
 descriptionSoc = "Hvornår skal køretøjet oplades til {targetSoc} %?"
 inactiveLabel = "Måltid"
 modalTitle = "Sæt måltid"
+planDuration = "Opladningstid"
+planPeriodLabel = "Periode"
+planPeriodValue = "{start} til {end}"
+planUnknown = "Ikke kendt endnu"
+priceLimit = "pris grænse på {price}"
 setTargetTime = "ingen"
 targetIsInThePast = "Vælg et tidspunkt i fremtiden, Marty."
+targetIsTooFarInTheFuture = "Vi justerer planen så snart vi ved mere om fremtiden."
 title = "Måltid"
 today = "i dag"
 tomorrow = "i morgen"
-planDuration = "Opladningstid"
-planPeriodLabel = "Periode"
-descriptionEnergy = "Hvornår skal {targetEnergy} være sendt til køretøjet?"
-planPeriodValue = "{start} til {end}"
-planUnknown = "Ikke kendt endnu"
-co2Limit = "CO₂ grænse på {co2}"
-priceLimit = "pris grænse på {price}"
-targetIsTooFarInTheFuture = "Vi justerer planen så snart vi ved mere om fremtiden."
 update = "Opdatering"
-costLimitIgnore = "Den konfigurerede {limit} vil blive ignoreret i denne periode."
+
+[main.targetChargePlan]
+chargeDuration = "Opladningstid"
+co2Label = "CO₂ udledning Ø"
+priceLabel = "Energi pris"
+timeRange = "{day} {range} t"
+unknownPrice = "stadig ukendt"
 
 [main.targetEnergy]
 label = "Begrænse"
 noLimit = "ingen"
 
 [main.vehicle]
+addVehicle = "Tilføj køretøj"
 changeVehicle = "Ændre køretøj"
 detectionActive = "Detektering af køretøj ..."
 fallbackName = "Køretøj"
+moreActions = "Flere handlinger"
 none = "Intet køretøj"
 targetSoc = "Begrænse"
 unknown = "Gæstekøretøj"
 vehicleSoc = "Oplade"
-addVehicle = "Tilføj køretøj"
-moreActions = "Flere handlinger"
 
 [main.vehicleSoc]
 charging = "opladning"
@@ -169,8 +196,11 @@ vehicleTarget = "Køretøjsgrænse: {soc}%"
 
 [main.vehicleStatus]
 charging = "Opladning..."
+cheapEnergyCharging = "Billig energi tilgængelig. Oplader..."
+cleanEnergyCharging = "Ren energi tilgængelig. Oplader..."
 connected = "Forbundet."
 disconnected = "Afbrudt."
+guard = "Starter om {remaining}…"
 minCharge = "Minimum opladning til {soc} %."
 pvDisable = "Ikke nok overskud. Pause i {remaining}..."
 pvEnable = "Overskud tilgængeligt. Starter om {remaining}..."
@@ -182,9 +212,6 @@ targetChargeWaitForVehicle = "Målladning klar. Venter på køretøj..."
 unknown = ""
 vehicleTargetReached = "Køretøjsgrænsen {soc} % nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
-cheapEnergyCharging = "Billig energi tilgængelig. Oplader..."
-cleanEnergyCharging = "Ren energi tilgængelig. Oplader..."
-guard = "Starter om {remaining}…"
 
 [notifications]
 dismissAll = "Afvis alle"
@@ -194,14 +221,24 @@ modalTitle = "Underretninger"
 message = "Ikke forbundet til en server."
 reload = "Genindlæs?"
 
+[session]
+cancel = "Afbryd"
+delete = "Slet"
+finished = "Fuldført"
+meterstart = "Meter start"
+meterstop = "Meter slut"
+odometer = "Kilometerstand"
+started = "Startet"
+title = "Lade session"
+
 [sessions]
 date = "Periode"
 downloadCsv = "Download som CSV"
 energy = "Opladt"
 loadpoint = "Ladepunkt"
+reallyDelete = "Er du sikker på at du vil slette denne session?"
 title = "Opladning Sessioner"
 vehicle = "Køretøj"
-reallyDelete = Er du sikker på at du vil slette denne session?"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -217,9 +254,18 @@ vehicle = "Køretøj"
 [settings]
 title = "Indstillinger"
 
+[settings.hiddenFeatures]
+label = "Experimentalt"
+value = "Vis eksperimentielle UI funktioner"
+
 [settings.language]
 auto = "Automatisk"
 label = "Sprog"
+
+[settings.sponsorToken]
+expires = "Dit sponsor token udløber om {inXDays}. {getNewToken} og opdater din konfigurations fil."
+getNew = "Hent en ny"
+hint = "Note: Vi automatiserer dette i fremtiden."
 
 [settings.telemetry]
 label = "Telemetri"
@@ -247,54 +293,7 @@ lineErrorLink = "linje {0}"
 restartButton = "Genstart"
 title = "Fejl ved opstart"
 
-
-[main.targetChargePlan]
-chargeDuration = "Opladningstid"
-co2Label = "CO₂ udledning Ø"
-priceLabel = "Energi pris"
-timeRange = "{day} {range} t"
-unknownPrice = "stadig ukendt"
-
-[gridSettings]
-activeHoursLabel = "Aktive timer"
-co2Label = "CO₂ udledning"
-costLimitDescription = "Aktiverer midlertidig hurtig ladning i solcelle tilstand"
-modalTitle = "Smart net opladning"
-priceLabel = "Energi pris"
-priceLimit = "Pris grænse"
-activeHours = "{charging} af {total}"
-co2Limit = "CO₂ grænse"
-
-[main.chargingPlan]
-activeLabel = "{time}"
-arrivalTab = "Ankomst"
-departureTab = Afgang
-modalTitle = "Lade plan"
-none = "ingen"
-title = "Plan"
-titleMinSoc = "Min. ladning"
-titleTargetCharge = "Afgang"
-
-[session]
-finished = "Fuldført"
-meterstart = "Meter start"
-meterstop = "Meter slut"
-odometer = "Kilometerstand"
-started = "Startet"
-title = "Lade session"
-cancel = "Afbryd"
-delete = "Slet"
-
-[settings.sponsorToken]
-hint = "Note: Vi automatiserer dette i fremtiden."
-expires = "Dit sponsor token udløber om {inXDays}. {getNewToken} og opdater din konfigurations fil."
-getNew = "Hent en ny"
-
 [vehicleSettings]
+cancel = "Afbryd"
 template = "Producent"
 test = "Test"
-cancel = "Afbryd"
-
-[settings.hiddenFeatures]
-label = "Experimentalt"
-value = "Vis eksperimentielle UI funktioner

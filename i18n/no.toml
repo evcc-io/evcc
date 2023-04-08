@@ -56,6 +56,16 @@ modalUpdateNow = "Installer nå"
 modalUpdateStarted = "Starter den nye versjonen av evcc..."
 modalUpdateStatusStart = "Installasjonen startet:"
 
+[gridSettings]
+activeHours = "{charging} av {total}"
+activeHoursLabel = "Aktive timer"
+co2Label = "CO₂-utslipp"
+co2Limit = "CO₂-grense"
+costLimitDescription = "Slår på midlertidig hurtiglading i solcellemodus."
+modalTitle = "Smart lysnettlading"
+priceLabel = "Energipris"
+priceLimit = "Prisgrense"
+
 [header]
 about = "Om"
 blog = "Blogg"
@@ -73,10 +83,21 @@ light = "Design: lyst"
 [main]
 vehicles = "Parkering"
 
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Ankomst"
+departureTab = "Avgang"
+modalTitle = "Ladeplan"
+none = "ingen"
+title = "Plan"
+titleMinSoc = "Min.-lading"
+titleTargetCharge = "Avgang"
+
 [main.energyflow]
 battery = "Batteri"
 batteryCharge = "Batterilading"
 batteryDischarge = "Batteri utlading"
+batteryTooltip = "{energy} av {total} ({soc})"
 gridImport = "Grid bruk"
 homePower = "Forbruk"
 loadpoints = "Lader| Lader | {count} ladere"
@@ -84,7 +105,6 @@ noEnergy = "Ingen telleverksdata"
 pvExport = "Lysnetteksport"
 pvProduction = "Produksjon"
 selfConsumption = "Eget forbruk"
-batteryTooltip = "{energy} av {total} ({soc})"
 
 [main.loadpoint]
 charged = "Oppladet"
@@ -131,39 +151,46 @@ logout = "logg ut"
 [main.targetCharge]
 activate = "Aktiver"
 activeLabel = "{time}"
+co2Limit = "CO₂ grense på {co2}"
+costLimitIgnore = "Ser bort fra oppsatt grense på {limit} i løpet av denne perioden."
+descriptionEnergy = "Når skal {targetEnergy} være på kjøretøyet?"
 descriptionSoc = "Når skal kjøretøyet lades til {targetSoc}%?"
 inactiveLabel = "Mål-tid"
 modalTitle = "Sett mål-tid"
-setTargetTime = "ingen"
-targetIsInThePast = "Velg et tidspunkt i fremtiden, Marty."
-title = "Mål-tid"
-today = "i dag"
-tomorrow = "i morgen"
-planUnknown = "ikke kjent enda"
-priceLimit = "prisgrense på {price}"
-update = "Oppdater"
-targetIsTooFarInTheFuture = "Planen vil bli justert så snart mer info tilkommer."
-co2Limit = "CO₂ grense på {co2}"
-costLimitIgnore = "Ser bort fra oppsatt grense på {limit} i løpet av denne perioden."
 planDuration = "Ladetid"
 planPeriodLabel = "Periode"
 planPeriodValue = "{start} til {end}"
-descriptionEnergy = "Når skal {targetEnergy} være på kjøretøyet?"
+planUnknown = "ikke kjent enda"
+priceLimit = "prisgrense på {price}"
+setTargetTime = "ingen"
+targetIsInThePast = "Velg et tidspunkt i fremtiden, Marty."
+targetIsTooFarInTheFuture = "Planen vil bli justert så snart mer info tilkommer."
+title = "Mål-tid"
+today = "i dag"
+tomorrow = "i morgen"
+update = "Oppdater"
+
+[main.targetChargePlan]
+chargeDuration = "Ladetid"
+co2Label = "CO₂-utslipp Ø"
+priceLabel = "Energipris"
+timeRange = "{day} {range} t"
+unknownPrice = "fremdeles ukjent"
 
 [main.targetEnergy]
 label = "Grense"
 noLimit = "ingen"
 
 [main.vehicle]
+addVehicle = "Legg til kjøretøy"
 changeVehicle = "Lad kjøretøy"
 detectionActive = "Oppdager kjøretøy ..."
 fallbackName = "Kjøretøy"
+moreActions = "Flere handlinger"
 none = "Ingen kjøretøy"
 targetSoc = "Grense"
 unknown = "Gjestekjøretøy"
 vehicleSoc = "Lade"
-addVehicle = "Legg til kjøretøy"
-moreActions = "Flere handlinger"
 
 [main.vehicleSoc]
 charging = "lader"
@@ -174,8 +201,11 @@ vehicleTarget = "Kjøretøygrense: {soc}%"
 
 [main.vehicleStatus]
 charging = "Lading..."
+cheapEnergyCharging = "Billig energi tilgjengelig. Lader …"
+cleanEnergyCharging = "Ren energi tilgjengelig. Lader …"
 connected = "Tilkoblet."
 disconnected = "Frakoblet."
+guard = "Starter om {remaining} …"
 minCharge = "Minimumslading til {soc}%."
 pvDisable = "Ikke nok overskudd. Pause i {remaining}..."
 pvEnable = "Overskudd tilgjengelig. Starter om {remaining}..."
@@ -187,9 +217,6 @@ targetChargeWaitForVehicle = "Mållading klar. Venter på kjøretøy..."
 unknown = ""
 vehicleTargetReached = "Kjøretøygrense på {soc}% nådd."
 waitForVehicle = "Klar. Venter på kjøretøy..."
-cheapEnergyCharging = "Billig energi tilgjengelig. Lader …"
-guard = "Starter om {remaining} …"
-cleanEnergyCharging = "Ren energi tilgjengelig. Lader …"
 
 [notifications]
 dismissAll = "Forkast alle"
@@ -199,14 +226,24 @@ modalTitle = "Merknader"
 message = "Ikke koblet til en server."
 reload = "Last inn igjen?"
 
+[session]
+cancel = "Avbryt"
+delete = "Slett"
+finished = "Fullført"
+meterstart = "Startstand"
+meterstop = "Sluttstand"
+odometer = "Kilometerstand"
+started = "Startet"
+title = "Ladeøkt"
+
 [sessions]
 date = "Tidsrom"
 downloadCsv = "Last ned som CSV"
 energy = "Oppladet"
 loadpoint = "Ladepunkt"
+reallyDelete = "Slett denne økten?"
 title = "Ladeøkter"
 vehicle = "Kjøretøy"
-reallyDelete = "Slett denne økten?"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -222,9 +259,18 @@ vehicle = "Kjøretøy"
 [settings]
 title = "Innstillinger"
 
+[settings.hiddenFeatures]
+label = "Eksperimentelt"
+value = "Vis eksperimentelle grensesnittsfunksjoner."
+
 [settings.language]
 auto = "Automatisk"
 label = "Språk"
+
+[settings.sponsorToken]
+expires = "Sponsorsymbolet ditt utløper om {inXDays}. {getNewToken} og oppdater oppsettsfilen din."
+getNew = "Hent et ferskt symbol"
+hint = "Merk: Dette vil bli automatisert i fremtiden."
 
 [settings.telemetry]
 label = "Telemetri"
@@ -252,54 +298,7 @@ lineErrorLink = "linje {0}"
 restartButton = "Omstart"
 title = "Oppstartsfeil"
 
-
-[gridSettings]
-activeHours = "{charging} av {total}"
-priceLimit = "Prisgrense"
-activeHoursLabel = "Aktive timer"
-co2Label = "CO₂-utslipp"
-co2Limit = "CO₂-grense"
-modalTitle = "Smart lysnettlading"
-costLimitDescription = "Slår på midlertidig hurtiglading i solcellemodus.
-priceLabel = "Energipris"
-
-[main.chargingPlan]
-arrivalTab = "Ankomst"
-modalTitle = "Ladeplan"
-departureTab = "Avgang"
-none = "ingen"
-title = "Plan"
-titleMinSoc = "Min.-lading"
-titleTargetCharge = "Avgang"
-activeLabel = "{time}"
-
-[main.targetChargePlan]
-chargeDuration = "Ladetid"
-co2Label = "CO₂-utslipp Ø"
-timeRange = "{day} {range} t"
-unknownPrice = "fremdeles ukjent"
-priceLabel = "Energipris"
-
-[session]
-meterstop = "Sluttstand"
-odometer = "Kilometerstand"
-started = "Startet"
-delete = "Slett"
-finished = "Fullført"
-title = "Ladeøkt"
-cancel = "Avbryt"
-meterstart = "Startstand"
-
-[settings.sponsorToken]
-getNew = "Hent et ferskt symbol"
-hint = "Merk: Dette vil bli automatisert i fremtiden."
-expires = "Sponsorsymbolet ditt utløper om {inXDays}. {getNewToken} og oppdater oppsettsfilen din."
-
 [vehicleSettings]
 cancel = "Avbryt"
-test = "Test"
 template = "Fabrikant"
-
-[settings.hiddenFeatures]
-label = "Eksperimentelt"
-value = "Vis eksperimentelle grensesnittsfunksjoner."
+test = "Test"
