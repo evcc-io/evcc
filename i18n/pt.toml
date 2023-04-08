@@ -56,6 +56,16 @@ modalUpdateNow = "Instalar agora"
 modalUpdateStarted = "Iniciando a nova versão do evcc..."
 modalUpdateStatusStart = "Instalação iniciada:"
 
+[gridSettings]
+activeHours = "{charging} de {total}"
+activeHoursLabel = "Horas ativas"
+co2Label = "Emissão de CO₂"
+co2Limit = "Limite de CO₂"
+costLimitDescription = "Permite carregamento rápido temporário no modo solar."
+modalTitle = "Carregamento de Rede Inteligente"
+priceLabel = "Preço da energia"
+priceLimit = "Limite de preço"
+
 [header]
 about = "Sobre"
 blog = "Blog"
@@ -72,6 +82,16 @@ light = "Design: Claro"
 
 [main]
 vehicles = "Estacionamento"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Chegada"
+departureTab = "Partida"
+modalTitle = "Plano de carregamento"
+none = "sem"
+title = "Plano"
+titleMinSoc = "Carga mínima"
+titleTargetCharge = "Partida"
 
 [main.energyflow]
 battery = "Bateria"
@@ -134,6 +154,8 @@ logout = "encerrar sessão"
 [main.targetCharge]
 activate = "Ativar"
 activeLabel = "{time}"
+co2Limit = "Limite de CO₂ de {co2}"
+costLimitIgnore = "O {limit} configurado será ignorado durante este período."
 descriptionEnergy = "Até quando {targetEnergy} deve ser carregado no veículo?"
 descriptionSoc = "Quando o veículo deve ser carregado até {targetSoc}%?"
 inactiveLabel = "Tempo alvo"
@@ -142,6 +164,7 @@ planDuration = "Tempo de carga"
 planPeriodLabel = "Período"
 planPeriodValue = "{start} até {end}"
 planUnknown = "desconhecido"
+priceLimit = "limite de preço de {preço}"
 remove = "Remover"
 setTargetTime = "sem"
 targetIsInThePast = "Escolha um momento no futuro, Marty."
@@ -182,6 +205,8 @@ vehicleTarget = "Limite de veículo: {soc}%"
 
 [main.vehicleStatus]
 charging = "Carregando..."
+cheapEnergyCharging = "Energia barata disponível. Carregando..."
+cleanEnergyCharging = "Energia limpa disponível. Carregando..."
 connected = "Ligado."
 disconnected = "Não conectado."
 guard = "Iniciando em {remaining}..."

@@ -56,6 +56,16 @@ modalUpdateNow = "Instaliuoti dabar"
 modalUpdateStarted = "Startuoja nauja evcc versija..."
 modalUpdateStatusStart = "Instaliavimas pradėtas:"
 
+[gridSettings]
+activeHours = "{charging} iš {total}"
+activeHoursLabel = "Aktyvumo valandos"
+co2Label = "CO₂ emisijos"
+co2Limit = "CO₂ limitas"
+costLimitDescription = "Laikinai aktyvuoja greitą įkrovimą režime saulė."
+modalTitle = "Išmanaus tinklo įkrovimas"
+priceLabel = "Energijos kaina"
+priceLimit = "Kainos limitas"
+
 [header]
 about = "Apie"
 blog = "Tinklaraštis"
@@ -72,6 +82,16 @@ light = "Dizainas: šviesus"
 
 [main]
 vehicles = "Autoparkas"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Atvykimas"
+departureTab = "Išvykimas"
+modalTitle = "Įkrovimo planas"
+none = "nėra"
+title = "Planas"
+titleMinSoc = "Minimali įkrova"
+titleTargetCharge = "Išvykimas"
 
 [main.energyflow]
 battery = "Kaupiklis"
@@ -134,6 +154,8 @@ logout = "atsijungti"
 [main.targetCharge]
 activate = "Aktyvuoti"
 activeLabel = "{time}"
+co2Limit = "CO₂ riba iš {co2}"
+costLimitIgnore = "Šiuo laikotarpiu sukonfigūruotas {limit} bus ignoruojamas."
 descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"
 descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
 inactiveLabel = "Planinis įkrovimas"
@@ -142,6 +164,7 @@ planDuration = "Įkrovimo laikas"
 planPeriodLabel = "Periodas"
 planPeriodValue = "{start} iki {end}"
 planUnknown = "dar nežinome"
+priceLimit = "kainos limitas iš {price}"
 remove = "Panaikinti"
 setTargetTime = "nesuplanuotas"
 targetIsInThePast = "Pasirinkite laiką ateityje."
@@ -182,6 +205,8 @@ vehicleTarget = "Automobilyje nustatytas limitas: {soc}%"
 
 [main.vehicleStatus]
 charging = "Įkraunama..."
+cheapEnergyCharging = "Energijos kaina žema. Įkraunama…"
+cleanEnergyCharging = "Yra švarios energijos. Įkraunama..."
 connected = "Prijungtas."
 disconnected = "Neprijungtas."
 guard = "Pradėsime už {remaining}…"

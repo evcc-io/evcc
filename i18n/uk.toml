@@ -57,6 +57,16 @@ modalUpdateNow = "Встановити зараз"
 modalUpdateStarted = "Початок нової версії evcc…"
 modalUpdateStatusStart = "Встановлення розпочато:"
 
+[gridSettings]
+activeHours = "{charging} зі {total}"
+activeHoursLabel = "Активні години"
+co2Label = "Викиди CO₂"
+co2Limit = "Ліміт CO₂"
+costLimitDescription = "Вмикає тимчасову швидку зарядку в сонячному режимі."
+modalTitle = "Розумна зарядка"
+priceLabel = "Ціна енергії"
+priceLimit = "Ліміт ціни"
+
 [header]
 about = "Про evcc"
 blog = "Блог"
@@ -68,6 +78,16 @@ settings = "Налаштування"
 
 [main]
 vehicles = "Паркування"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Прибуття"
+departureTab = "Від'їзд"
+modalTitle = "Тарифний план"
+none = "немає"
+title = "План"
+titleMinSoc = "Мінімальна плата"
+titleTargetCharge = "Від'їзд"
 
 [main.energyflow]
 battery = "Батарея"
@@ -127,6 +147,8 @@ logout = "вийти"
 [main.targetCharge]
 activate = "Активувати"
 activeLabel = "{time}"
+co2Limit = "Ліміт CO₂ для {co2}"
+costLimitIgnore = "Налаштований {ліміт} буде ігноруватися протягом цього періоду."
 description = "Коли транспортний засіб повинен бути заряджений на {targetSoc}%?"
 descriptionEnergy = "До якого часу {targetEnergy} повинен бути завантажений в транспортний засіб?"
 descriptionSoc = "Коли автомобіль повинен бути заряджений на {targetSoc}%?"
@@ -136,6 +158,7 @@ planDuration = "Час зарядки"
 planPeriodLabel = "Період"
 planPeriodValue = "{start} до {end}"
 planUnknown = "ще не відомо"
+priceLimit = "ліміт ціни {price}"
 setTargetTime = "жодного"
 targetIsInThePast = "Виберіть час у майбутньому."
 targetIsTooFarInTheFuture = "Ми скоригуємо план, як тільки дізнаємося більше про майбутнє."
@@ -175,6 +198,8 @@ vehicleTarget = "Ліміт транспортного засобу: {soc}%"
 
 [main.vehicleStatus]
 charging = "Зарядка…"
+cheapEnergyCharging = "Доступна дешева енергія. Заряджання..."
+cleanEnergyCharging = "Чиста енергія доступна. Заряджання..."
 connected = "Підключено."
 disconnected = "Відключено."
 guard = "Початок о {remaining}..."
