@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/evcc-io/evcc/provider/golang"
 	"strconv"
 	"strings"
 	"time"
@@ -96,6 +97,11 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 		err = configureJavascript(conf.Javascript)
 	}
 
+	// setup go VMs
+	if err == nil {
+		err = configureGo(conf.Go)
+	}
+
 	// setup EEBus server
 	if err == nil && conf.EEBus != nil {
 		err = configureEEBus(conf.EEBus)
@@ -158,6 +164,16 @@ func configureJavascript(conf []javascriptConfig) error {
 	for _, cc := range conf {
 		if _, err := javascript.RegisteredVM(cc.VM, cc.Script); err != nil {
 			return fmt.Errorf("failed configuring javascript: %w", err)
+		}
+	}
+	return nil
+}
+
+// setup go
+func configureGo(conf []goConfig) error {
+	for _, cc := range conf {
+		if _, err := golang.RegisteredVM(cc.VM, cc.Script); err != nil {
+			return fmt.Errorf("failed configuring go: %w", err)
 		}
 	}
 	return nil
