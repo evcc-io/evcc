@@ -1,0 +1,14 @@
+product:
+  brand: E.ON Drive
+  description: vBox
+requirements: ["sponsorship"]
+render:
+  - default: |
+      type: template
+      template: vestel
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 255
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
