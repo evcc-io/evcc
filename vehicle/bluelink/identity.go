@@ -201,7 +201,6 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		}
 	}
 
-	var userId string
 	if err == nil {
 		resp, err = cookieClient.Get(resp.Header.Get("Location"))
 		if err == nil {
