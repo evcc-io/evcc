@@ -25,6 +25,7 @@ export default {
 		guardAction: String,
 		guardRemainingInterpolated: Number,
 		targetChargeDisabled: Boolean,
+		climaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostUnit: String,
 		tariffGrid: Number,
@@ -90,6 +91,10 @@ export default {
 				return t("pvEnable", {
 					remaining: this.fmtShortDuration(this.pvRemainingInterpolated, true),
 				});
+			}
+
+			if (this.enabled && this.climaterActive) {
+				return t("climating");
 			}
 
 			if (this.enabled && !this.charging) {

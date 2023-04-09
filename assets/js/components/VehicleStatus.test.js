@@ -57,6 +57,22 @@ describe("target charge", () => {
   });
 });
 
+describe("climating", () => {
+  test("show climating status", () => {
+    expectStatus(
+      { connected: true, enabled: true, climaterActive: true, charging: true },
+      "climating"
+    );
+    expectStatus(
+      { connected: true, enabled: true, climaterActive: true, charging: false },
+      "climating"
+    );
+  });
+  test("only show climating if enabled", () => {
+    expectStatus({ connected: true, enabled: false, climaterActive: true }, "connected");
+  });
+});
+
 describe("timer", () => {
   test("show pv enable timer if not enabled yet and timer exists", () => {
     expectStatus(
