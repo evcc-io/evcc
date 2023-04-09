@@ -10,7 +10,6 @@ import (
 type Provider struct {
 	chargerG func() (EVResponse, error)
 	rangeG   func() (EVResponse, error)
-	odoG     func() (EVResponse, error)
 }
 
 // NewProvider creates a vehicle api provider
@@ -21,9 +20,6 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		}, cache),
 		rangeG: provider.Cached(func() (EVResponse, error) {
 			return api.Range(vin)
-		}, cache),
-		odoG: provider.Cached(func() (EVResponse, error) {
-			return api.Odometer(vin)
 		}, cache),
 	}
 	return impl
@@ -40,20 +36,10 @@ func (v *Provider) Soc() (float64, error) {
 }
 
 // Range implements the api.VehicleRange interface
-func (v *Provider) Range() (int64, error) {
+func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.rangeG()
 	if err == nil {
 		return int64(res.RangeElectric.Value), nil
-	}
-
-	return 0, err
-}
-
-// Odometer implements the api.VehicleOdometer interface
-func (v *Provider) Odometer() (int64, error) {
-	res, err := v.odoG()
-	if err == nil {
-		return int64(res.Odometer.Value), nil
 	}
 
 	return 0, err
