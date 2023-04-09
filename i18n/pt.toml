@@ -221,6 +221,7 @@ targetChargeWaitForVehicle = "Carga programada pronta. Esperando pelo veículo..
 unknown = ""
 vehicleTargetReached = "Limite de veículo {soc}% atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
+climating = "Pré-condicionamento detectado."
 
 [notifications]
 dismissAll = "Recusar tudos"
