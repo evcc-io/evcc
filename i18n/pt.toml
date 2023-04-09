@@ -207,6 +207,7 @@ vehicleTarget = "Limite de veículo: {soc}%"
 charging = "Carregando..."
 cheapEnergyCharging = "Energia barata disponível. Carregando..."
 cleanEnergyCharging = "Energia limpa disponível. Carregando..."
+climating = "Pré-condicionamento detectado."
 connected = "Ligado."
 disconnected = "Não conectado."
 guard = "Iniciando em {remaining}..."
@@ -221,7 +222,6 @@ targetChargeWaitForVehicle = "Carga programada pronta. Esperando pelo veículo..
 unknown = ""
 vehicleTargetReached = "Limite de veículo {soc}% atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
-climating = "Pré-condicionamento detectado."
 
 [notifications]
 dismissAll = "Recusar tudos"
