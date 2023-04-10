@@ -143,7 +143,7 @@ type ChargerEx interface {
 
 // PowerController limits maximum charging power
 type PowerController interface {
-	MaxPower(power float64) error
+	MaxPower(power float64) (float64, error)
 }
 
 // Charger provides current charging status and enable/disable charging

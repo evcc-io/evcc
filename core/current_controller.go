@@ -1,9 +1,14 @@
 package core
 
-import "github.com/evcc-io/evcc/api"
+import (
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+)
 
 type currentController struct {
-	charger api.CurrentController
+	log                    *util.Logger
+	charger                api.CurrentController
+	minCurrent, maxCurrent float64
 }
 
 var _ api.PowerController = (*currentController)(nil)

@@ -73,8 +73,11 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 
 	if charger, ok := lp.charger.(*mock.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
-		charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
 	}
+
+	// if charger, ok := lp.chargeController.(*mock.MockCurrentController); ok && charger != nil {
+	// 	charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
+	// }
 
 	uiChan, pushChan, lpChan := createChannels(t)
 	lp.Prepare(uiChan, pushChan, lpChan)

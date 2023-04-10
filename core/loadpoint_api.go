@@ -359,11 +359,13 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) {
 }
 
 // GetMinPower returns the min loadpoint power for a single phase
+// TODO differentiate between controller types
 func (lp *Loadpoint) GetMinPower() float64 {
 	return Voltage * lp.GetMinCurrent()
 }
 
 // GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
+// TODO differentiate between controller types
 func (lp *Loadpoint) GetMaxPower() float64 {
 	return Voltage * lp.GetMaxCurrent() * float64(lp.maxActivePhases())
 }
