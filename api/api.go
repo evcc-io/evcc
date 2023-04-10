@@ -124,7 +124,7 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// CurrentLimiter provides settings charging maximum charging current
+// CurrentLimiter limits maximum charging current
 type CurrentLimiter interface {
 	MaxCurrent(current int64) error
 }
@@ -134,17 +134,21 @@ type CurrentGetter interface {
 	GetMaxCurrent() (float64, error)
 }
 
+// ChargerEx provides milli-amp precision charger current control
+type ChargerEx interface {
+	MaxCurrentMillis(current float64) error
+}
+
+// PowerLimiter limits maximum charging power
+type PowerLimiter interface {
+	MaxPower(power float64) error
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	CurrentLimiter
-}
-
-// ChargerEx provides milli-amp precision charger current control
-type ChargerEx interface {
-	MaxCurrentMillis(current float64) error
 }
 
 // PhaseSwitcher provides 1p3p switching

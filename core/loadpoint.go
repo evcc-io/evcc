@@ -698,11 +698,11 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
 		var err error
-		if charger, ok := lp.charger.(api.ChargerEx); ok {
-			err = charger.MaxCurrentMillis(chargeCurrent)
-		} else {
-			err = lp.charger.MaxCurrent(int64(chargeCurrent))
-		}
+		// if charger, ok := lp.charger.(api.ChargerEx); ok {
+		// 	err = charger.MaxCurrentMillis(chargeCurrent)
+		// } else {
+		// 	err = lp.charger.MaxCurrent(int64(chargeCurrent))
+		// }
 
 		if err != nil {
 			v := lp.GetVehicle()
