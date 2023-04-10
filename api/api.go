@@ -124,8 +124,8 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// CurrentLimiter limits maximum charging current
-type CurrentLimiter interface {
+// CurrentController limits maximum charging current
+type CurrentController interface {
 	MaxCurrent(current int64) error
 }
 
@@ -139,8 +139,8 @@ type ChargerEx interface {
 	MaxCurrentMillis(current float64) error
 }
 
-// PowerLimiter limits maximum charging power
-type PowerLimiter interface {
+// PowerController limits maximum charging power
+type PowerController interface {
 	MaxPower(power float64) error
 }
 
@@ -149,6 +149,18 @@ type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
+}
+
+// CurrentControllable combines Charger with CurrentController
+type CurrentControllable interface {
+	Charger
+	CurrentController
+}
+
+// PowerControllable combines Charger with PowerController
+type PowerControllable interface {
+	Charger
+	PowerController
 }
 
 // PhaseSwitcher provides 1p3p switching

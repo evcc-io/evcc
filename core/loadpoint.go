@@ -141,7 +141,8 @@ type Loadpoint struct {
 	charger          api.Charger
 	chargeTimer      api.ChargeTimer
 	chargeRater      api.ChargeRater
-	chargedAtStartup float64 // session energy at startup
+	chargeController api.PowerController // Power controller (proxy for CurrentController)
+	chargedAtStartup float64             // session energy at startup
 
 	chargeMeter    api.Meter   // Charger usage meter
 	vehicle        api.Vehicle // Currently active vehicle
@@ -337,6 +338,15 @@ func (lp *Loadpoint) requestUpdate() {
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
+
+	switch c := charger.(type) {
+	case api.CurrentControllable:
+		lp.chargeController = &currentController{c}
+	case api.PowerController:
+		lp.chargeController = c
+	default:
+		panic("charger does not implement api.(Power|Current)Controller")
+	}
 
 	// ensure charge meter exists
 	if lp.chargeMeter == nil {
