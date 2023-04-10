@@ -9,6 +9,10 @@ connector: {{ .connector }}
 {{- if .idtag }}
 idtag: {{ .idtag }}
 {{- end }}
+{{- if ne .connecttimeout "5m" }}
 connecttimeout: {{ .connecttimeout }}
+{{- end }}
+{{- if ne .timeout "2m" }}
 timeout: {{ .timeout }}
+{{- end }}
 {{- end }}
