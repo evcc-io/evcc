@@ -195,7 +195,7 @@ func (v *Tesla) TargetSoc() (float64, error) {
 	return float64(res.Response.ChargeState.ChargeLimitSoc), nil
 }
 
-var _ api.CurrentLimiter = (*Tesla)(nil)
+var _ api.CurrentController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) MaxCurrent(current int64) error {
