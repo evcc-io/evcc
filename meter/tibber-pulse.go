@@ -87,7 +87,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		WithConnectionParams(map[string]any{
 			"token": cc.Token,
 		}).
-		WithRetryTimeout(timeout).
+		WithRetryTimeout(0).
 		WithLog(t.log.TRACE.Println)
 
 	// run the client
