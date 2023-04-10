@@ -141,8 +141,8 @@ type Loadpoint struct {
 	charger          api.Charger
 	chargeTimer      api.ChargeTimer
 	chargeRater      api.ChargeRater
-	chargeController api.PowerController // Power controller (proxy for CurrentController)
-	chargedAtStartup float64             // session energy at startup
+	chargeController api.PowerLimiter // Power controller (proxy for CurrentController)
+	chargedAtStartup float64          // session energy at startup
 
 	chargeMeter    api.Meter   // Charger usage meter
 	vehicle        api.Vehicle // Currently active vehicle
@@ -340,8 +340,8 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
 
 	switch c := charger.(type) {
-	case api.CurrentControllable:
-		lp.chargeController = &currentController{
+	case api.CurrentLimiter:
+		lp.chargeController = &currentLimiter{
 			log:        lp.log,
 			charger:    c,
 			minCurrent: lp.MinCurrent,

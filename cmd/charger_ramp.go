@@ -26,7 +26,7 @@ func init() {
 	chargerRampCmd.Flags().StringP(flagDelay, "", "1s", "ramp delay")
 }
 
-func ramp(c api.CurrentControllable, digits int, delay time.Duration) {
+func ramp(c api.CurrentController, digits int, delay time.Duration) {
 	steps := math.Pow10(digits)
 	delta := 1 / steps
 
@@ -97,7 +97,7 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 	chargers := config.Chargers().Devices()
 
 	for _, c := range config.Instances(chargers) {
-		cc, ok := c.(api.CurrentControllable)
+		cc, ok := c.(api.CurrentController)
 		if !ok {
 			log.ERROR.Fatalf("current limiter: not implemented")
 		}
