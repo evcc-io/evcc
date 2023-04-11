@@ -9,9 +9,15 @@ requirements:
 params:
   - name: user
     required: true
+    help:
+      de: E-Mail Adresse oder Telefonnummer mit Ländervorwahl (+XX)
+      en: email or phone number with area code (+XX)
   - name: password
     required: true
     mask: true
+    help:
+      de: wie Login für Easee App oder Web Portal (https://easee.cloud)
+      en: same as Easee app or the web portal (https://easee.cloud)
   - name: charger
     required: true
     example: EH______
