@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"sort"
 	"sync"
 )
 
@@ -89,16 +88,9 @@ func (c *Cache) State() map[string]interface{} {
 	}
 	res["loadpoints"] = loadpoints
 
-	// use sorted list to preserve order in api/state
-	keys := make([]int, 0, len(ccs))
-	for k := range ccs {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-
 	circuits := make([]map[string]interface{}, len(ccs))
-	for id, ccKey := range keys {
-		circuits[id] = ccs[ccKey]
+	for id, cc := range ccs {
+		circuits[id] = cc
 	}
 	res["circuits"] = circuits
 

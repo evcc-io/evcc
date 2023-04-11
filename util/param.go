@@ -14,6 +14,7 @@ type Param struct {
 }
 
 // UniqueID returns unique identifier for parameter Loadpoint/Key combination
+// ID has to be unique for the channel, not per LP. Using offset for circuit to avoid clashes
 func (p Param) UniqueID() string {
 
 	var b strings.Builder
@@ -21,7 +22,7 @@ func (p Param) UniqueID() string {
 	if p.Loadpoint != nil {
 		b.WriteString(strconv.Itoa(*p.Loadpoint) + ".")
 	} else if p.Circuit != nil {
-		b.WriteString(strconv.Itoa(*p.Circuit) + ".")
+		b.WriteString(strconv.Itoa(*p.Circuit+100) + ".")
 	}
 
 	b.WriteString(p.Key)
