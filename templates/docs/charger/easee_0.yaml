@@ -7,13 +7,13 @@ render:
   - default: |
       type: template
       template: easee
-      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
-      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
+      user: # E-Mail Adresse oder Telefonnummer mit Ländervorwahl (+XX)
+      password: # wie Login für Easee App oder Web Portal (https://easee.cloud)
       charger: EH______
     advanced: |
       type: template
       template: easee
-      user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
-      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
+      user: # E-Mail Adresse oder Telefonnummer mit Ländervorwahl (+XX)
+      password: # wie Login für Easee App oder Web Portal (https://easee.cloud)
       charger: EH______
       timeout: 10s # Optional
