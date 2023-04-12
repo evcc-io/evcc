@@ -1,4 +1,4 @@
-template: fox-ess-ethernet
+template: fox-ess-h3
 products:
   - brand: FoxESS
     description:
