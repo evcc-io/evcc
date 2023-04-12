@@ -32,3 +32,7 @@ render: |
     source: http
     uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
     jq: .timed_odometer.mileage
+  climater:
+    source: http
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+    jq: .preconditionning.air_conditioning.status != "Disabled"
