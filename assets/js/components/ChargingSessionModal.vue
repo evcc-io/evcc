@@ -53,11 +53,13 @@
 									</td>
 								</tr>
 								<tr>
-									<th>
-										{{ $t("session.odometer") }}
+									<th class="align-baseline">
+										{{ $t("session.date") }}
 									</th>
 									<td>
-										{{ formatKm(session.odometer) }}
+										{{ fmtFullDateTime(new Date(session.created), false) }}
+										<br />
+										{{ fmtFullDateTime(new Date(session.finished), false) }}
 									</td>
 								</tr>
 								<tr>
@@ -70,34 +72,43 @@
 								</tr>
 								<tr>
 									<th>
-										{{ $t("session.meterstart") }}
+										{{ $t("sessions.solar") }}
+									</th>
+									<td>{{ fmtNumber(session.solarPercentage, 1) }} %</td>
+								</tr>
+								<tr>
+									<th class="align-baseline">
+										{{ $t("session.price") }}
 									</th>
 									<td>
-										{{ fmtKWh(session.meterStart * 1e3) }}
+										{{ fmtMoney(session.price, currency) }}
+										{{ fmtCurrencySymbol(currency) }}<br />
+										{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
 									</td>
 								</tr>
 								<tr>
 									<th>
-										{{ $t("session.meterstop") }}
+										{{ $t("session.co2") }}
 									</th>
 									<td>
+										{{ fmtCo2Medium(session.co2PerKWh) }}
+									</td>
+								</tr>
+								<tr>
+									<th>
+										{{ $t("session.odometer") }}
+									</th>
+									<td>
+										{{ formatKm(session.odometer) }}
+									</td>
+								</tr>
+								<tr>
+									<th class="align-baseline">
+										{{ $t("session.meter") }}
+									</th>
+									<td>
+										{{ fmtKWh(session.meterStart * 1e3) }}<br />
 										{{ fmtKWh(session.meterStop * 1e3) }}
-									</td>
-								</tr>
-								<tr>
-									<th>
-										{{ $t("session.started") }}
-									</th>
-									<td>
-										{{ fmtFullDateTime(new Date(session.created), false) }}
-									</td>
-								</tr>
-								<tr>
-									<th>
-										{{ $t("session.finished") }}
-									</th>
-									<td>
-										{{ fmtFullDateTime(new Date(session.finished), false) }}
 									</td>
 								</tr>
 							</tbody>

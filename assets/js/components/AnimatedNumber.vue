@@ -31,7 +31,7 @@ export default {
 			startVal: this.to,
 			formattingFn: this.format,
 			duration: this.duration,
-			decimalPlaces: 2,
+			decimalPlaces: 3,
 		});
 		if (this.instance.error) {
 			console.error(this.instance.error);

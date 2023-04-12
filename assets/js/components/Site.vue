@@ -21,6 +21,7 @@
 				:smartCostUnit="smartCostUnit"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
+				:currency="currency"
 			/>
 			<VehcileSettingsModal />
 			<Footer v-bind="footer"></Footer>

@@ -1,6 +1,8 @@
 package db
 
 import (
+	"math"
+
 	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"gorm.io/gorm"
@@ -43,8 +45,12 @@ func New(name string) (*DB, error) {
 // Session creates a charging session
 func (s *DB) Session(meter float64) *Session {
 	t := Session{
-		Loadpoint:  s.name,
-		MeterStart: meter,
+		Loadpoint:       s.name,
+		MeterStart:      meter,
+		SolarPercentage: math.NaN(),
+		Price:           math.NaN(),
+		PricePerKWh:     math.NaN(),
+		Co2PerKWh:       math.NaN(),
 	}
 
 	return &t
