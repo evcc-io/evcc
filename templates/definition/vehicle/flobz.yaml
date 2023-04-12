@@ -11,28 +11,26 @@ params:
 render: |
   type: custom
   soc:
-    source: http
-    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+    {{- include "source" . | indent 2 }}
     jq: .energy[0].level
   status:
     source: combined
     plugged:
-      source: http
-      uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+      {{- include "source" . | indent 4 }}
       jq: .energy[0].charging.plugged
     charging:
-      source: http
-      uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+      {{- include "source" . | indent 4 }}
       jq: .energy[0].charging.status == "InProgress"
   range:
-    source: http
-    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+    {{- include "source" . | indent 2 }}
     jq: .energy[0].autonomy
   odometer:
-    source: http
-    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+    {{- include "source" . | indent 2 }}
     jq: .timed_odometer.mileage
   climater:
-    source: http
-    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+    {{- include "source" . | indent 2 }}
     jq: .preconditionning.air_conditioning.status != "Disabled"
+  {{- define "source" }}
+  source: http
+  uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+  {{- end }}
