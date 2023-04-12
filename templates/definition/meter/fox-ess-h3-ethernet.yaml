@@ -2,7 +2,7 @@ template: fox-ess-h3
 products:
   - brand: FoxESS
     description:
-      generic: FoxESS H3 via Ethernet
+      generic: H3 via Ethernet
 params:
   - name: usage
     choice: ["pv", "battery"]

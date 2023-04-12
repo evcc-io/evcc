@@ -1,6 +1,6 @@
 product:
   brand: FoxESS
-  description: FoxESS H3 via Ethernet
+  description: H3 via Ethernet
 render:
   - usage: pv
     default: |
