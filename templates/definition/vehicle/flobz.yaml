@@ -1,0 +1,34 @@
+template: flobz
+products:
+  - brand: PSA
+    description:
+      generic: PSA Car Controller (flobz)
+params:
+  - name: host
+  - name: port
+  - name: vin
+  - name: capacity
+render: |
+  type: custom
+  soc:
+    source: http
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+    jq: .energy[0].level
+  status:
+    source: combined
+    plugged:
+      source: http
+      uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+      jq: .energy[0].charging.plugged
+    charging:
+      source: http
+      uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+      jq: .energy[0].charging.status == "InProgress"
+  range:
+    source: http
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+    jq: .energy[0].autonomy
+  odometer:
+    source: http
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+    jq: .timed_odometer.mileage
