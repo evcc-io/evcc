@@ -2,7 +2,7 @@ template: fox-ess-ethernet
 products:
   - brand: FoxESS
     description:
-      generic: FoxESS via Ethernet
+      generic: FoxESS H3 via Ethernet
 params:
   - name: usage
     choice: ["pv", "battery"]
@@ -35,7 +35,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     # register details
     register:
-      address: 31022 # Battery Charge/Discharge
+      address: 31036 # Battery Charge/Discharge
       type: holding
       decode: int16
   soc:
@@ -43,7 +43,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     # register details
     register:
-      address: 31024 # Soc
+      address: 31038 # Soc
       type: holding
       decode: int16
   {{- end }}
