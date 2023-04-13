@@ -121,7 +121,7 @@ func (cp *CP) Initialized() error {
 		case <-cp.statusC:
 			return
 		default:
-			Instance().TriggerMeterValuesRequest(cp.ID(), cp.Connector())
+			Instance().TriggerMessageRequest(cp.ID(), core.StatusNotificationFeatureName)
 		}
 	})
 
