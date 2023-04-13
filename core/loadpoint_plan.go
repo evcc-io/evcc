@@ -29,6 +29,9 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 
 	if energy, ok := lp.remainingChargeEnergy(); ok {
 		requiredDuration = time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
+
+		// Multiply with e.g. 90% charge efficiency which is normaly done internaly in the Estimator
+		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 	} else if lp.socEstimator != nil {
 		// TODO vehicle soc limit
 		targetSoc := lp.Soc.target
@@ -36,6 +39,7 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 			targetSoc = 100
 		}
 
+		// Charge efficiency is calculated internaly in remaining charge duration via a modified virtualCapacity
 		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
 		if requiredDuration <= 0 {
 			return 0
@@ -45,16 +49,15 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		var additionalDuration time.Duration
 
 		if targetSoc > 80 && maxPower > 15000 {
-			additionalDuration = 5 * time.Duration(float64(targetSoc-80)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
+			additionalDuration = 1 * time.Duration(float64(targetSoc-80)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
 			lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalDuration.Round(time.Minute))
 		} else if targetSoc > 90 && maxPower > 4000 {
-			additionalDuration = 3 * time.Duration(float64(targetSoc-90)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
+			additionalDuration = 1 * time.Duration(float64(targetSoc-90)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
 			lp.log.DEBUG.Printf("add additional charging time %v for soc > 90%%", additionalDuration.Round(time.Minute))
 		}
 
 		requiredDuration += additionalDuration
 	}
-	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 
 	return requiredDuration
 }
