@@ -108,6 +108,10 @@ func (p *Go) BoolGetter() func() (bool, error) {
 }
 
 func (p *Go) paramAndEval(param string, val any) error {
+	if str, ok := val.(string); ok {
+		val = "\"" + str + "\""
+	}
+
 	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
 	if err == nil {
 		_, err = p.vm.Eval(p.script)
