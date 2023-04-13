@@ -8,12 +8,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/gorilla/websocket"
-	"github.com/itchyny/gojq"
 )
 
 const retryDelay = 5 * time.Second
@@ -21,14 +20,14 @@ const retryDelay = 5 * time.Second
 // Socket implements websocket request provider
 type Socket struct {
 	*request.Helper
-	log     *util.Logger
-	mux     sync.Mutex
-	wait    *util.Waiter
-	url     string
-	headers map[string]string
-	scale   float64
-	jq      *gojq.Query
-	val     interface{}
+	log      *util.Logger
+	mux      sync.Mutex
+	wait     *util.Waiter
+	url      string
+	headers  map[string]string
+	scale    float64
+	pipeline *pipeline.Pipeline
+	val      []byte // Cached http response value
 }
 
 func init() {
@@ -39,15 +38,16 @@ func init() {
 // NewSocketProviderFromConfig creates a HTTP provider
 func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
-		URI      string
-		Headers  map[string]string
-		Jq       string
-		Scale    float64
-		Insecure bool
-		Auth     Auth
-		Timeout  time.Duration
+		URI               string
+		Headers           map[string]string
+		pipeline.Settings `mapstructure:",squash"`
+		Scale             float64
+		Insecure          bool
+		Auth              Auth
+		Timeout           time.Duration
 	}{
 		Headers: make(map[string]string),
+		Scale:   1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -83,13 +83,9 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
-	if cc.Jq != "" {
-		op, err := gojq.Parse(cc.Jq)
-		if err != nil {
-			return nil, fmt.Errorf("invalid jq query: %s", p.jq)
-		}
-
-		p.jq = op
+	var err error
+	if p.pipeline, err = pipeline.New(cc.Settings); err != nil {
+		return nil, err
 	}
 
 	go p.listen()
@@ -127,22 +123,14 @@ func (p *Socket) listen() {
 			p.log.TRACE.Printf("recv: %s", b)
 
 			p.mux.Lock()
-			if p.jq != nil {
-				v, err := jq.Query(p.jq, b)
-				if err == nil {
-					p.val = v
-					p.wait.Update()
-				}
-			} else {
-				p.val = string(b)
-				p.wait.Update()
-			}
+			p.val = b
+			p.wait.Update()
 			p.mux.Unlock()
 		}
 	}
 }
 
-func (p *Socket) hasValue() (interface{}, error) {
+func (p *Socket) hasValue() ([]byte, error) {
 	if late := p.wait.Overdue(); late > 0 {
 		return nil, fmt.Errorf("outdated: %v", late.Truncate(time.Second))
 	}
@@ -153,75 +141,60 @@ func (p *Socket) hasValue() (interface{}, error) {
 	return p.val, nil
 }
 
+var _ StringProvider = (*Socket)(nil)
+
 // StringGetter sends string request
 func (p *Socket) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		v, err := p.hasValue()
+		b, err := p.hasValue()
 		if err != nil {
 			return "", err
 		}
 
-		return jq.String(v)
+		v, err := p.pipeline.Process(b)
+
+		return string(v), err
 	}
 }
 
+var _ FloatProvider = (*Socket)(nil)
+
 // FloatGetter parses float from string getter
 func (p *Socket) FloatGetter() func() (float64, error) {
+	g := p.StringGetter()
+
 	return func() (float64, error) {
-		v, err := p.hasValue()
+		s, err := g()
 		if err != nil {
 			return 0, err
 		}
 
-		// v is always string when jq not used
-		if p.jq == nil {
-			v, err = strconv.ParseFloat(v.(string), 64)
-			if err != nil {
-				return 0, err
-			}
-		}
+		f, err := strconv.ParseFloat(s, 64)
 
-		f, err := jq.Float64(v)
 		return f * p.scale, err
 	}
 }
 
+var _ IntProvider = (*Socket)(nil)
+
 // IntGetter parses int64 from float getter
 func (p *Socket) IntGetter() func() (int64, error) {
+	g := p.FloatGetter()
+
 	return func() (int64, error) {
-		v, err := p.hasValue()
-		if err != nil {
-			return 0, err
-		}
-
-		// v is always string when jq not used
-		if p.jq == nil {
-			v, err = strconv.ParseInt(v.(string), 10, 64)
-			if err != nil {
-				return 0, err
-			}
-		}
-
-		i, err := jq.Int64(v)
-		f := float64(i) * p.scale
-
+		f, err := g()
 		return int64(math.Round(f)), err
 	}
 }
 
+var _ BoolProvider = (*Socket)(nil)
+
 // BoolGetter parses bool from string getter
 func (p *Socket) BoolGetter() func() (bool, error) {
+	g := p.StringGetter()
+
 	return func() (bool, error) {
-		v, err := p.hasValue()
-		if err != nil {
-			return false, err
-		}
-
-		// v is always string when jq not used
-		if p.jq == nil {
-			v = util.Truish(v.(string))
-		}
-
-		return jq.Bool(v)
+		s, err := g()
+		return util.Truish(s), err
 	}
 }
