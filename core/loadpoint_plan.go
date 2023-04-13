@@ -30,7 +30,7 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 	if energy, ok := lp.remainingChargeEnergy(); ok {
 		requiredDuration = time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
 
-		// Multiply with e.g. 90% charge efficiency which is normaly done internaly in the Estimator
+		// Consider charge efficiency manually because we calulate outside the estimator
 		requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 	} else if lp.socEstimator != nil {
 		// TODO vehicle soc limit
