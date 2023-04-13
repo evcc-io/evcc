@@ -7,6 +7,10 @@ params:
   - name: host
   - name: port
   - name: vin
+    required: true
+    help:
+      de: Erforderlich
+      en: Required
   - name: capacity
 render: |
   type: custom

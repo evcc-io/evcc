@@ -7,5 +7,5 @@ render:
       template: flobz
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: # Port (Optional)
-      vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind (Optional)
+      vin: W... # Erforderlich
       capacity: 50 # Akkukapazität in kWh (Optional)
