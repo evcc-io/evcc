@@ -27,6 +27,9 @@ type Estimator struct {
 	prevSoc           float64 // previous vehicle Soc in %
 	prevChargedEnergy float64 // previous charged energy in Wh
 	energyPerSocStep  float64 // Energy per Soc percent in Wh
+	minChargePower    float64 // Lowest charge power (before vehicle stops charging)
+	maxChargePower    float64 // Highest charge power the battery can handle on any charger
+	maxChargeSoc      float64 // SoC at/after which maxChargePower is reduced
 }
 
 // NewEstimator creates new estimator
@@ -55,11 +58,36 @@ func (s *Estimator) Reset() {
 
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
-	energy := s.RemainingChargeEnergy(targetSoc) * 1e3 / chargePower
-	if math.IsInf(energy, 0) {
-		energy = 0
+	// Reduktionspunkt
+	rrp := 100 - chargePower/s.maxChargePower*(100-s.maxChargeSoc)
+
+	var t1, t2 float64
+
+	// Ladedauer 1 Zeit von vehicleSoc bis Reduktionspunkt
+	if s.vehicleSoc < rrp {
+		t1 = (rrp - s.vehicleSoc) / 100 * s.virtualCapacity / 1e3 / chargePower
 	}
-	return time.Duration(float64(time.Hour) * energy).Round(time.Second)
+
+	// Ladedauer 2 Zeit von Reduktionspunkt bis targetSoc
+	if float64(targetSoc) > rrp {
+		if s.vehicleSoc > rrp {
+			t2 = (float64(targetSoc) - s.vehicleSoc) / 100 * s.virtualCapacity / 1e3 / ((chargePower-s.minChargePower)/2 + s.minChargePower)
+		} else {
+			t2 = (float64(targetSoc) - rrp) / 100 * s.virtualCapacity / 1e3 / ((chargePower-s.minChargePower)/2 + s.minChargePower)
+		}
+	}
+
+	dur := t1 + t2
+
+	return time.Duration(float64(time.Hour) * dur).Round(time.Second)
+
+	/*
+		energy := s.RemainingChargeEnergy(targetSoc) * 1e3 / chargePower
+		if math.IsInf(energy, 0) {
+			energy = 0
+		}
+		return time.Duration(float64(time.Hour) * energy).Round(time.Second)
+	*/
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
