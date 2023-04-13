@@ -16,7 +16,7 @@ func init() {
 	registry.Add("js", NewJavascriptProviderFromConfig)
 }
 
-// NewJavascriptProviderFromConfig creates a HTTP provider
+// NewJavascriptProviderFromConfig creates a Javascript provider
 func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
 	var cc struct {
 		VM     string
@@ -64,7 +64,7 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 	}
 }
 
-// StringGetter sends string request
+// StringGetter parses string from request
 func (p *Javascript) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
 		v, err := p.vm.Eval(p.script)
@@ -88,7 +88,7 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 	}
 }
 
-func (p *Javascript) setParam(param string, val interface{}) error {
+func (p *Javascript) paramAndEval(param string, val any) error {
 	err := p.vm.Set(param, val)
 	if err == nil {
 		err = p.vm.Set("param", param)
@@ -96,38 +96,29 @@ func (p *Javascript) setParam(param string, val interface{}) error {
 	if err == nil {
 		err = p.vm.Set("val", val)
 	}
+	if err == nil {
+		_, err = p.vm.Eval(p.script)
+	}
 	return err
 }
 
 // IntSetter sends int request
 func (p *Javascript) IntSetter(param string) func(int64) error {
 	return func(val int64) error {
-		err := p.setParam(param, val)
-		if err == nil {
-			_, err = p.vm.Eval(p.script)
-		}
-		return err
+		return p.paramAndEval(param, val)
 	}
 }
 
 // StringSetter sends string request
 func (p *Javascript) StringSetter(param string) func(string) error {
 	return func(val string) error {
-		err := p.setParam(param, val)
-		if err == nil {
-			_, err = p.vm.Eval(p.script)
-		}
-		return err
+		return p.paramAndEval(param, val)
 	}
 }
 
 // BoolSetter sends bool request
 func (p *Javascript) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
-		err := p.setParam(param, val)
-		if err == nil {
-			_, err = p.vm.Eval(p.script)
-		}
-		return err
+		return p.paramAndEval(param, val)
 	}
 }

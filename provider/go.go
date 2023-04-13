@@ -114,11 +114,18 @@ func (p *Go) paramAndEval(param string, val any) error {
 
 	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
 	if err == nil {
+		_, err = p.vm.Eval(fmt.Sprintf("param := %v;", param))
+	}
+	if err == nil {
+		_, err = p.vm.Eval(fmt.Sprintf("val := %v;", val))
+	}
+	if err == nil {
 		_, err = p.vm.Eval(p.script)
 	}
 	return err
 }
 
+// IntSetter sends int request
 func (p *Go) IntSetter(param string) func(int64) error {
 	return func(val int64) error {
 		return p.paramAndEval(param, val)
