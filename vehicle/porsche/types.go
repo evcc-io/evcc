@@ -150,7 +150,7 @@ func (s *StatusResponseMobile) MeasurementByKey(key string) (*MeasurementMobile,
 				switch m.Status.Cause {
 				case "UNKNOWN":
 					break
-				case "PRIVACY_ACTIVATED":
+				case "PRIVACY_ACTIVATED", "LICENSE_DEACTIVATED", "NOT_SUPPORTED":
 					err = api.ErrNotAvailable
 				default:
 					err = errors.New(m.Status.Cause)
