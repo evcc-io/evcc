@@ -54,40 +54,30 @@ func (s *Estimator) Reset() {
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
 	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
+	s.minChargePower = 1380
+	s.maxChargePower = 11040
+	s.maxChargeSoc = 90
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
-	// Reduktionspunkt
-	rrp := 100 - chargePower/s.maxChargePower*(100-s.maxChargeSoc)
-
 	var t1, t2 float64
 
-	// Ladedauer 1 Zeit von vehicleSoc bis Reduktionspunkt
+	// Relativer Reduktionspunkt
+	rrp := 100 - chargePower/s.maxChargePower*(100-s.maxChargeSoc)
+
+	// Zeit von vehicleSoc bis Reduktionspunkt (linear)
 	if s.vehicleSoc < rrp {
-		t1 = (rrp - s.vehicleSoc) / 100 * s.virtualCapacity / 1e3 / chargePower
+		t1 = (math.Min(float64(targetSoc), rrp) - s.vehicleSoc) / 100 * s.virtualCapacity / chargePower
 	}
 
-	// Ladedauer 2 Zeit von Reduktionspunkt bis targetSoc
+	// Zeit von Reduktionspunkt bis targetSoc (degressiv)
 	if float64(targetSoc) > rrp {
-		if s.vehicleSoc > rrp {
-			t2 = (float64(targetSoc) - s.vehicleSoc) / 100 * s.virtualCapacity / 1e3 / ((chargePower-s.minChargePower)/2 + s.minChargePower)
-		} else {
-			t2 = (float64(targetSoc) - rrp) / 100 * s.virtualCapacity / 1e3 / ((chargePower-s.minChargePower)/2 + s.minChargePower)
-		}
+		t2 = (float64(targetSoc) - math.Max(s.vehicleSoc, rrp)) / 100 * s.virtualCapacity / ((chargePower-s.minChargePower)/2 + s.minChargePower)
+
 	}
 
-	dur := t1 + t2
-
-	return time.Duration(float64(time.Hour) * dur).Round(time.Second)
-
-	/*
-		energy := s.RemainingChargeEnergy(targetSoc) * 1e3 / chargePower
-		if math.IsInf(energy, 0) {
-			energy = 0
-		}
-		return time.Duration(float64(time.Hour) * energy).Round(time.Second)
-	*/
+	return time.Duration(float64(time.Hour) * (t1 + t2)).Round(time.Second)
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
