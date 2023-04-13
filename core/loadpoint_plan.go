@@ -143,7 +143,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Println("continuing until end of slot")
 			return true
-		case requiredDuration < 30*time.Minute:
+		case requiredDuration < smallGapDuration:
 			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
 		case lp.clock.Until(planStart) < smallGapDuration:
