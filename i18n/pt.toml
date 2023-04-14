@@ -65,6 +65,7 @@ costLimitDescription = "Permite carregamento rápido temporário no modo solar."
 modalTitle = "Carregamento de Rede Inteligente"
 priceLabel = "Preço da energia"
 priceLimit = "Limite de preço"
+none = "sem"
 
 [header]
 about = "Sobre"
