@@ -6,12 +6,13 @@ description: |
   Die Wallbox muss daher evcc via Hostname (funktionierende DNS-Auflösung erforderlich!) oder über die IP-Adresse auf Port 8887 erreichen können.
   Standardmäßig wird die erste eingehende Verbindung mit einer beliebigen Ladepunktkennung verwendet.
   Um mehrere Ladepunkte eindeutig zuordnen zu können müssen die jeweilige Stationskennung (`stationid: `) und Anschlussnummer (`connector: `) hinterlegt werden.
+  Viele Wallboxen fügen die `stationid` automatisch der Backend-URL hinzu, bei manchen muss dies händisch geschehen `ws://<evcc>:8887/<stationid>`.
   Gegebenenfalls benötigt der Ladepunkt eine vorkonfigurierte (virtuelle) Token-ID/RFID-Kennung (`idtag: `) mit der die Ladevorgänge ohne Authentifizierung gestartet werden können.
   Für Zählermesswerte sollte in der Wallbox ein kurzes Zeitintervall konfiguriert werden.
 
   Voraussetzungen:
   * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallboxkonfiguration entfernen
-  * Backend-URL (Central System) in der Wallboxkonfiguration: `ws://<evcc-IP-Adresse>:8887/`
+  * Backend-URL (Central System) in der Wallboxkonfiguration: `ws://<evcc-IP-Adresse>:8887/` (evtl noch um `stationid` erweitern)
   * Protokoll: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// o.ä.
   * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
   * Verbindung über das lokale Netzwerk
