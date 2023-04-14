@@ -11,7 +11,7 @@ requirements:
       Die Wallbox muss daher evcc via Hostname (funktionierende DNS-Auflösung erforderlich!) oder über die IP-Adresse auf Port 8887 erreichen können.
       Standardmäßig wird die erste eingehende Verbindung mit einer beliebigen Ladepunktkennung verwendet.
       Um mehrere Ladepunkte eindeutig zuordnen zu können müssen die jeweilige Stationskennung (`stationid: `) und Anschlussnummer (`connector: `) hinterlegt werden.
-      Viele Wallboxen fügen die `stationid` automatisch der Backend-URL hinzu, bei manchen muss dies händisch geschehen `ws://<evcc>:8887/<stationid>`. 
+      Viele Wallboxen fügen die `stationid` automatisch der Backend-URL hinzu, bei manchen muss dies händisch geschehen `ws://<evcc>:8887/<stationid>`.
       Gegebenenfalls benötigt der Ladepunkt eine vorkonfigurierte (virtuelle) Token-ID/RFID-Kennung (`idtag: `) mit der die Ladevorgänge ohne Authentifizierung gestartet werden können.
       Für Zählermesswerte sollte in der Wallbox ein kurzes Zeitintervall konfiguriert werden.
 
@@ -26,7 +26,7 @@ requirements:
       The charger needs to be able to reach evcc via the host name (functioning DNS resolution required!) or via the IP address on port 8887.
       By default, the first incoming connection with any station identifier is used.
       In order to be able to clearly assign several charging points, the respective station identifier (`stationid: `) and connector number (`connector: `) must be configured.
-      Many wallboxes automatically add the `station id` to the backend URL, some have to do this manually `ws://<evcc>:8887/<stationid>`. 
+      Many wallboxes automatically add the `station id` to the backend URL, some have to do this manually `ws://<evcc>:8887/<stationid>`.
       The charger may need a pre-configured (virtual) token ID/RFID identifier (`idtag: `) with which the charging sessions can be started without authorization.
       If the charger supports sending metering values try to adjust the interval to a short time span.
 
