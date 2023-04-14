@@ -71,7 +71,7 @@ vehicles = "Parkiralište"
 
 [main.energyflow]
 battery = "Baterija"
-batteryCharge = "Napajanje baterije"
+batteryCharge = "Punjenje baterije"
 batteryDischarge = "Pražnjenje baterije"
 batteryTooltip = "{energy} od {total} ({soc})"
 gridImport = "Upotreba mreže"
