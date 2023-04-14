@@ -150,6 +150,9 @@ title = "Czas Docelowy"
 today = "dzisiaj"
 tomorrow = "jutro"
 update = "Aktualizować"
+co2Limit = "Limit CO₂ z {co2}"
+costLimitIgnore = "Skonfigurowany {limit} będzie ignorowany w tym okresie."
+priceLimit = "limit ceny {cena}"
 
 [main.targetChargePlan]
 chargeDuration = "Czas ładowania"
@@ -196,6 +199,9 @@ targetChargeWaitForVehicle = "Zaplanowane ładowanie. Czekajem na pojazd..."
 unknown = ""
 vehicleTargetReached = "Osiągnięto limit pojazdu {soc}%."
 waitForVehicle = "Gotowe. Czekam na pojazd..."
+cheapEnergyCharging = "Dostępna tania energia. Ładowanie…"
+cleanEnergyCharging = "Dostępna czysta energia. Ładowanie…"
+climating = "Wykryto wstępne przygotowanie"
 
 [notifications]
 dismissAll = "Odrzuć wszystkie"
@@ -287,3 +293,24 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
+
+
+[gridSettings]
+activeHours = "{charging} z {total}"
+activeHoursLabel = "Aktywne godziny"
+co2Label = "Emisja CO₂"
+co2Limit = "Limit CO₂"
+costLimitDescription = "Umożliwia tymczasowe szybkie ładowanie w trybie solarnym."
+modalTitle = "Ładowanie z inteligentnej sieci"
+priceLabel = "Cena energii"
+priceLimit = "Limit ceny"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Przyjazd"
+departureTab = "Wyjazd"
+modalTitle = "Plan ładowania"
+none = "nic"
+title = "Plan"
+titleMinSoc = "Minimalne ładowanie"
+titleTargetCharge = "Wyjazd"
