@@ -1,11 +1,12 @@
 product:
   brand: PSA
-  description: PSA Car Controller (flobz)
+  description: Car Controller (flobz)
 render:
   - default: |
       type: template
       template: flobz
+      title: # Wird in der Benutzeroberfläche angezeigt (Optional)
       host: 192.0.2.2 # IP-Adresse oder Hostname
       port: # Port (Optional)
-      vin: W... # Erforderlich
+      vin: V... # Erforderlich
       capacity: 50 # Akkukapazität in kWh (Optional)
