@@ -224,7 +224,7 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	currentState, err := c.emobility.EVCurrentChargeState()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusNone, api.ErrNotAvailable
 	}
 
 	if !c.isConnected() {
@@ -351,7 +351,7 @@ var _ api.ChargerEx = (*EEBus)(nil)
 func (c *EEBus) MaxCurrentMillis(current float64) error {
 	chargeState, err := c.emobility.EVCurrentChargeState()
 	if err != nil {
-		return err
+		return api.ErrNotAvailable
 	}
 	if chargeState == emobility.EVChargeStateTypeUnplugged {
 		return errors.New("can't set new current as ev is unplugged")
@@ -369,7 +369,7 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 func (c *EEBus) currentPower() (float64, error) {
 	chargeState, err := c.emobility.EVCurrentChargeState()
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 	if chargeState == emobility.EVChargeStateTypeUnplugged {
 		return 0, nil
@@ -377,12 +377,12 @@ func (c *EEBus) currentPower() (float64, error) {
 
 	connectedPhases, err := c.emobility.EVConnectedPhases()
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 
 	powers, err := c.emobility.EVPowerPerPhase()
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 
 	var power float64
@@ -400,7 +400,7 @@ func (c *EEBus) currentPower() (float64, error) {
 func (c *EEBus) chargedEnergy() (float64, error) {
 	chargeState, err := c.emobility.EVCurrentChargeState()
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 	if chargeState == emobility.EVChargeStateTypeUnplugged {
 		return 0, nil
@@ -408,7 +408,7 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 
 	energy, err := c.emobility.EVChargedEnergy()
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 
 	// return kWh
@@ -421,7 +421,7 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 func (c *EEBus) currents() (float64, float64, float64, error) {
 	chargeState, err := c.emobility.EVCurrentChargeState()
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, api.ErrNotAvailable
 	}
 	if chargeState == emobility.EVChargeStateTypeUnplugged {
 		return 0, 0, 0, nil
@@ -429,7 +429,7 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 	currents, err := c.emobility.EVCurrentsPerPhase()
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, api.ErrNotAvailable
 	}
 
 	count := len(currents)
@@ -452,7 +452,7 @@ func (c *EEBus) Identify() (string, error) {
 
 	chargeState, err := c.emobility.EVCurrentChargeState()
 	if err != nil {
-		return "", err
+		return "", api.ErrNotAvailable
 	}
 	if chargeState == emobility.EVChargeStateTypeUnplugged || chargeState == emobility.EVChargeStateTypeUnknown {
 		return "", nil
@@ -460,7 +460,7 @@ func (c *EEBus) Identify() (string, error) {
 
 	identification, err := c.emobility.EVIdentification()
 	if err != nil {
-		return "", err
+		return "", api.ErrNotAvailable
 	}
 	if identification != "" {
 		return identification, nil
@@ -468,7 +468,7 @@ func (c *EEBus) Identify() (string, error) {
 
 	comStandard, err := c.emobility.EVCommunicationStandard()
 	if err != nil {
-		return "", err
+		return "", api.ErrNotAvailable
 	}
 	if comStandard == emobility.EVCommunicationStandardTypeIEC61851 {
 		return "", nil
