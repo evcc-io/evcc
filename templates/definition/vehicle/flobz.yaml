@@ -4,6 +4,7 @@ products:
     description:
       generic: PSA Car Controller (flobz)
 params:
+  - name: title
   - name: host
   - name: port
   - name: vin
@@ -12,6 +13,12 @@ params:
       de: Erforderlich
       en: Required
   - name: capacity
+  - name: phases
+    advanced: true
+  - name: icon
+    default: car
+    advanced: true
+  - preset: vehicle-identify
 render: |
   type: custom
   soc:
@@ -38,3 +45,4 @@ render: |
   source: http
   uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
   {{- end }}
+  {{ include "vehicle-identify" . }}
