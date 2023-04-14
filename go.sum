@@ -747,8 +747,8 @@ github.com/lorenzodonini/ocpp-go v0.16.1-0.20230316233416-0374c843ff52/go.mod h1
 github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 h1:EnfXoSqDfSNJv0VBNqY/88RNnhSGYkrHaO0mmFGbVsc=
 github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40/go.mod h1:vy1vK6wD6j7xX6O6hXe621WabdtNkou2h7uRtTfRMyg=
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
-github.com/mabunixda/wattpilot v1.2.0 h1:CJRYLOUYBELOmshNNTFWyu+ReqmH6KvL+ijHh2QO2Yg=
-github.com/mabunixda/wattpilot v1.2.0/go.mod h1:h+EsQdE8PtdgoICydM7/2ki/Das1b/TAQWMXJTnKZLk=
+github.com/mabunixda/wattpilot v1.3.0 h1:GiK9b4xWwUgvwCwhk41tkYj3nHOrsDo0/UOLPDmERZQ=
+github.com/mabunixda/wattpilot v1.3.0/go.mod h1:h+EsQdE8PtdgoICydM7/2ki/Das1b/TAQWMXJTnKZLk=
 github.com/magiconair/properties v1.8.6/go.mod h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=
 github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0VQdvPDY=
 github.com/magiconair/properties v1.8.7/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=

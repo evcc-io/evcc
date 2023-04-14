@@ -1,0 +1,40 @@
+template: flobz
+products:
+  - brand: PSA
+    description:
+      generic: PSA Car Controller (flobz)
+params:
+  - name: host
+  - name: port
+  - name: vin
+    required: true
+    help:
+      de: Erforderlich
+      en: Required
+  - name: capacity
+render: |
+  type: custom
+  soc:
+    {{- include "source" . | indent 2 }}
+    jq: .energy[0].level
+  status:
+    source: combined
+    plugged:
+      {{- include "source" . | indent 4 }}
+      jq: .energy[0].charging.plugged
+    charging:
+      {{- include "source" . | indent 4 }}
+      jq: .energy[0].charging.status == "InProgress"
+  range:
+    {{- include "source" . | indent 2 }}
+    jq: .energy[0].autonomy
+  odometer:
+    {{- include "source" . | indent 2 }}
+    jq: .timed_odometer.mileage
+  climater:
+    {{- include "source" . | indent 2 }}
+    jq: .preconditionning.air_conditioning.status != "Disabled"
+  {{- define "source" }}
+  source: http
+  uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+  {{- end }}

@@ -231,7 +231,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// get initial meter values and configure sample rate
 	if c.hasMeasurement("Power.Active.Import") || c.hasMeasurement("Energy.Active.Import.Register") {
-		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
+		ocpp.Instance().TriggerMeterValuesRequest(cp.ID(), cp.Connector())
 
 		if !noConfig && meterSampleInterval > meterInterval && meterInterval > 0 {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {

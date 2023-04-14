@@ -93,6 +93,10 @@ func (cp *CP) RegisterID(id string) {
 	cp.id = id
 }
 
+func (cp *CP) Connector() int {
+	return cp.connector
+}
+
 func (cp *CP) connect(connect bool) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
@@ -187,7 +191,7 @@ func (cp *CP) WatchDog(timeout time.Duration) {
 		cp.mu.Unlock()
 
 		if update {
-			Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
+			Instance().TriggerMeterValuesRequest(cp.ID(), cp.Connector())
 		}
 	}
 }
