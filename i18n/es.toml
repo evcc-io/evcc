@@ -144,7 +144,7 @@ phases_3_hint = "({min} a {max})"
 minpv = "Min+Sol"
 now = "Rápido"
 off = "Acabado"
-pv = "Solar"
+pv = "Energía Solar"
 
 [main.provider]
 login = "iniciar sesión"
@@ -220,6 +220,7 @@ targetChargeWaitForVehicle = "Carga de destino lista. Esperar vehículo."
 unknown = ""
 vehicleTargetReached = "Límite de vehículo {soc}% alcanzado."
 waitForVehicle = "Listo para cargar. Esperar vehículo."
+climating = "Preacondicionamiento detectado."
 
 [notifications]
 dismissAll = "Eliminar notificaciones"
