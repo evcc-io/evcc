@@ -5,7 +5,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/planner"
-	"github.com/evcc-io/evcc/core/soc"
 	"golang.org/x/exp/slices"
 )
 
@@ -25,38 +24,37 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 
 // planRequiredDuration is the estimated total charging duration
 func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
-	var requiredDuration time.Duration
-
 	if energy, ok := lp.remainingChargeEnergy(); ok {
-		requiredDuration = time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
-	} else if lp.socEstimator != nil {
-		// TODO vehicle soc limit
-		targetSoc := lp.Soc.target
-		if targetSoc == 0 {
-			targetSoc = 100
-		}
-
-		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
-		if requiredDuration <= 0 {
-			return 0
-		}
-
-		// anticipate lower charge rates at end of charging curve
-		var additionalDuration time.Duration
-
-		if targetSoc > 80 && maxPower > 15000 {
-			additionalDuration = 5 * time.Duration(float64(targetSoc-80)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
-			lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalDuration.Round(time.Minute))
-		} else if targetSoc > 90 && maxPower > 4000 {
-			additionalDuration = 3 * time.Duration(float64(targetSoc-90)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
-			lp.log.DEBUG.Printf("add additional charging time %v for soc > 90%%", additionalDuration.Round(time.Minute))
-		}
-
-		requiredDuration += additionalDuration
+		return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
 	}
-	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 
-	return requiredDuration
+	if lp.socEstimator == nil {
+		return 0
+	}
+
+	// TODO vehicle soc limit
+	targetSoc := lp.Soc.target
+	if targetSoc == 0 {
+		targetSoc = 100
+	}
+
+	requiredDuration := lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
+	if requiredDuration <= 0 {
+		return 0
+	}
+
+	// anticipate lower charge rates at end of charging curve
+	var additionalDuration time.Duration
+
+	if targetSoc > 80 && maxPower > 15000 {
+		additionalDuration = time.Duration(float64(targetSoc-80) / (float64(targetSoc) - lp.vehicleSoc) * float64(requiredDuration))
+		lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalDuration.Round(time.Minute))
+	} else if targetSoc > 90 && maxPower > 4000 {
+		additionalDuration = time.Duration(float64(targetSoc-90) / (float64(targetSoc) - lp.vehicleSoc) * float64(requiredDuration))
+		lp.log.DEBUG.Printf("add additional charging time %v for soc > 90%%", additionalDuration.Round(time.Minute))
+	}
+
+	return requiredDuration + additionalDuration
 }
 
 func (lp *Loadpoint) GetPlannerUnit() string {
