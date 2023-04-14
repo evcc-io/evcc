@@ -35,6 +35,7 @@ func (handler *ChargePointHandler) OnDataTransfer(request *core.DataTransferRequ
 func (handler *ChargePointHandler) OnGetConfiguration(request *core.GetConfigurationRequest) (confirmation *core.GetConfigurationConfirmation, err error) {
 	fmt.Printf("%T %+v\n", request, request)
 	one := "1"
+	meter := "Power.Active.Import"
 	return core.NewGetConfigurationConfirmation([]core.ConfigurationKey{
 		{Key: "AuthorizationKey"},
 		{Key: "NumberOfConnectors", Value: &one},
@@ -42,6 +43,7 @@ func (handler *ChargePointHandler) OnGetConfiguration(request *core.GetConfigura
 		{Key: "ChargingScheduleMaxPeriods", Value: &one},
 		{Key: "MaxChargingProfilesInstalled", Value: &one},
 		{Key: "ChargingScheduleAllowedChargingRateUnit", Value: &one},
+		{Key: "MeterValuesSampledData", Value: &meter},
 	}), nil
 }
 

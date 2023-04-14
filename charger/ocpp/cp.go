@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -121,7 +122,9 @@ func (cp *CP) Initialized() error {
 		case <-cp.statusC:
 			return
 		default:
-			Instance().TriggerMessageRequest(cp.ID(), core.StatusNotificationFeatureName)
+			Instance().TriggerMessageRequest(cp.ID(), core.StatusNotificationFeatureName, func(request *remotetrigger.TriggerMessageRequest) {
+				request.ConnectorId = &cp.connector
+			})
 		}
 	})
 

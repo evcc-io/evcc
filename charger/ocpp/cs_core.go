@@ -39,7 +39,7 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 		}
 
 		log.Printf("TriggerMessage %s for %s: %+v", requestedMessage, id, status)
-	}, requestedMessage); err != nil {
+	}, requestedMessage, props...); err != nil {
 		cs.log.ERROR.Printf("send TriggerMessage %s for %s failed: %v", requestedMessage, id, err)
 	}
 }
