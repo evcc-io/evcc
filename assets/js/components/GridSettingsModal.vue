@@ -38,7 +38,7 @@
 									class="form-select smartCostLimitSelect"
 									@change="changeSmartCostLimit"
 								>
-									<option value="0">none</option>
+									<option value="0">{{ $t("gridSettings.none") }}</option>
 									<option
 										v-for="{ value, name } in costOptions"
 										:key="value"
