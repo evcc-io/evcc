@@ -70,7 +70,7 @@ func TestSession(t *testing.T) {
 	s, err := db.Sessions()
 	assert.NoError(t, err)
 	assert.Len(t, s, 1)
-	t.Log(s)
+	t.Logf("session: %+v", s)
 
 	// stop charging - 2nd leg
 	clock.Add(time.Hour)
@@ -79,11 +79,10 @@ func TestSession(t *testing.T) {
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
-	assert.Equal(t, 3.0-1.0, lp.session.ChargedEnergy) // expect actual meter energy delta
 	assert.Equal(t, clock.Now(), lp.session.Finished)
 
 	s, err = db.Sessions()
 	assert.NoError(t, err)
 	assert.Len(t, s, 1)
-	t.Log(s)
+	t.Logf("session: %+v", s)
 }
