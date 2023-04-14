@@ -54,26 +54,32 @@ func (s *Estimator) Reset() {
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
 	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
-	s.minChargePower = 1380
-	s.maxChargePower = 11040
-	s.maxChargeSoc = 90
+	s.minChargePower = 1000
+	s.maxChargePower = 50000
+	s.maxChargeSoc = 50
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
+	const minChargeSoc = 100
 	var t1, t2 float64
 
+	dy := s.minChargePower - s.maxChargePower
+	dx := minChargeSoc - s.maxChargeSoc
+	m := dy / dx
+	b := s.minChargePower - m*minChargeSoc
+
 	// Relativer Reduktionspunkt
-	rrp := 100 - chargePower/s.maxChargePower*(100-s.maxChargeSoc)
+	rrp := (chargePower - b) / m
 
 	// Zeit von vehicleSoc bis Reduktionspunkt (linear)
 	if s.vehicleSoc < rrp {
-		t1 = (math.Min(float64(targetSoc), rrp) - s.vehicleSoc) / 100 * s.virtualCapacity / chargePower
+		t1 = (math.Min(float64(targetSoc), rrp) - s.vehicleSoc) / minChargeSoc * s.virtualCapacity / chargePower
 	}
 
 	// Zeit von Reduktionspunkt bis targetSoc (degressiv)
 	if float64(targetSoc) > rrp {
-		t2 = (float64(targetSoc) - math.Max(s.vehicleSoc, rrp)) / 100 * s.virtualCapacity / ((chargePower-s.minChargePower)/2 + s.minChargePower)
+		t2 = (float64(targetSoc) - math.Max(s.vehicleSoc, rrp)) / minChargeSoc * s.virtualCapacity / ((chargePower-s.minChargePower)/2 + s.minChargePower)
 
 	}
 
