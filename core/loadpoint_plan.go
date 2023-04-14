@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	smallSlotDuration = 15 * time.Minute // small planner slot duration we might ignore
+	smallSlotDuration = 10 * time.Minute // small planner slot duration we might ignore
 	smallGapDuration  = 60 * time.Minute // small gap duration between planner slots we might ignore
 )
 
