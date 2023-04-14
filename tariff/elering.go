@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/tariff/nordpool"
+	"github.com/evcc-io/evcc/tariff/elering"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/exp/slices"
 )
 
-type Nordpool struct {
+type Elering struct {
 	mux     sync.Mutex
 	log     *util.Logger
 	unit    string
@@ -24,13 +24,13 @@ type Nordpool struct {
 	updated time.Time
 }
 
-var _ api.Tariff = (*Nordpool)(nil)
+var _ api.Tariff = (*Elering)(nil)
 
 func init() {
-	registry.Add("nordpool", NewNordpoolFromConfig)
+	registry.Add("elering", NewEleringFromConfig)
 }
 
-func NewNordpoolFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
 		Currency string
 		Region   string
@@ -46,8 +46,8 @@ func NewNordpoolFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing region")
 	}
 
-	t := &Nordpool{
-		log:    util.NewLogger("nordpool"),
+	t := &Elering{
+		log:    util.NewLogger("Elering"),
 		unit:   cc.Currency,
 		region: strings.ToLower(cc.Region),
 	}
@@ -59,15 +59,15 @@ func NewNordpoolFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, err
 }
 
-func (t *Nordpool) run(done chan error) {
+func (t *Elering) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
 	for ; true; <-time.Tick(time.Hour) {
-		var res nordpool.NpsPrice
+		var res elering.NpsPrice
 
 		ts := time.Now().Truncate(time.Hour)
-		uri := fmt.Sprintf("%s/nps/price?start=%s&end=%s", nordpool.URI,
+		uri := fmt.Sprintf("%s/nps/price?start=%s&end=%s", elering.URI,
 			url.QueryEscape(ts.Format(time.RFC3339)),
 			url.QueryEscape(ts.Add(2*48*time.Hour).Format(time.RFC3339)))
 
@@ -102,18 +102,18 @@ func (t *Nordpool) run(done chan error) {
 }
 
 // Unit implements the api.Tariff interface
-func (t *Nordpool) Unit() string {
+func (t *Elering) Unit() string {
 	return t.unit
 }
 
 // Rates implements the api.Tariff interface
-func (t *Nordpool) Rates() (api.Rates, error) {
+func (t *Elering) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
 // IsDynamic implements the api.Tariff interface
-func (t *Nordpool) IsDynamic() bool {
+func (t *Elering) IsDynamic() bool {
 	return true
 }

@@ -1,4 +1,4 @@
-package nordpool
+package elering
 
 const URI = "https://dashboard.elering.ee/api"
 
