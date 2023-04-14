@@ -26,7 +26,7 @@ func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) {
 	}
 }
 
-func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger) {
+func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) {
 	if err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
 		log := cs.log.TRACE
 		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
@@ -39,9 +39,15 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 		}
 
 		log.Printf("TriggerMessage %s for %s: %+v", requestedMessage, id, status)
-	}, requestedMessage); err != nil {
+	}, requestedMessage, props...); err != nil {
 		cs.log.ERROR.Printf("send TriggerMessage %s for %s failed: %v", requestedMessage, id, err)
 	}
+}
+
+func (cs *CS) TriggerMeterValuesRequest(id string, connector int) {
+	cs.TriggerMessageRequest(id, core.MeterValuesFeatureName, func(request *remotetrigger.TriggerMessageRequest) {
+		request.ConnectorId = &connector
+	})
 }
 
 // cp actions

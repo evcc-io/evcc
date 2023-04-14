@@ -69,9 +69,12 @@ func (suite *ocppTestSuite) handleTrigger(msg remotetrigger.MessageTrigger) {
 
 	case core.MeterValuesFeatureName:
 		if res, err := suite.cp.MeterValues(1, []types.MeterValue{
-			{SampledValue: []types.SampledValue{
-				{Measurand: types.MeasurandPowerActiveImport, Value: "1000"},
-			}},
+			{
+				Timestamp: types.NewDateTime(time.Now()),
+				SampledValue: []types.SampledValue{
+					{Measurand: types.MeasurandPowerActiveImport, Value: "1000"},
+				},
+			},
 		}); err != nil {
 			suite.T().Log("MeterValues:", err)
 		} else {
