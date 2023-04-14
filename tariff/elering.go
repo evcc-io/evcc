@@ -69,7 +69,7 @@ func (t *Elering) run(done chan error) {
 		ts := time.Now().Truncate(time.Hour)
 		uri := fmt.Sprintf("%s/nps/price?start=%s&end=%s", elering.URI,
 			url.QueryEscape(ts.Format(time.RFC3339)),
-			url.QueryEscape(ts.Add(2*48*time.Hour).Format(time.RFC3339)))
+			url.QueryEscape(ts.Add(48*time.Hour).Format(time.RFC3339)))
 
 		if err := client.GetJSON(uri, &res); err != nil {
 			once.Do(func() { done <- err })
