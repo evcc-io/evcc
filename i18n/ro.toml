@@ -212,6 +212,7 @@ targetChargeWaitForVehicle = "Încărcare terminată. Aștept după vehicul…"
 unknown = ""
 vehicleTargetReached = "Limita {soc}% a fost atinsă."
 waitForVehicle = "Pregătit. Aștept după vehicul…"
+climating = "Preconditionare detectata."
 
 [notifications]
 dismissAll = "Închide tot"
