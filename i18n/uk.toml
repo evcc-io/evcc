@@ -200,6 +200,7 @@ vehicleTarget = "Ліміт транспортного засобу: {soc}%"
 charging = "Зарядка…"
 cheapEnergyCharging = "Доступна дешева енергія. Заряджання..."
 cleanEnergyCharging = "Чиста енергія доступна. Заряджання..."
+climating = "Виявлено попередню підготовку."
 connected = "Підключено."
 disconnected = "Відключено."
 guard = "Початок о {remaining}..."
@@ -214,7 +215,6 @@ targetChargeWaitForVehicle = "Запланований заряд готовий
 unknown = ""
 vehicleTargetReached = "Ліміт транспортного засобу {soc}% досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
-climating = "Виявлено попередню підготовку."
 
 [notifications]
 dismissAll = "Відхилити все"

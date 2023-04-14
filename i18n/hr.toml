@@ -57,6 +57,16 @@ modalUpdateNow = "Instaliraj sada"
 modalUpdateStarted = "Pokretanje nove evcc verzije …"
 modalUpdateStatusStart = "Instalacija je pokrenuta:"
 
+[gridSettings]
+activeHours = "{charging} od {total}"
+activeHoursLabel = "Aktivno radno vrijeme"
+co2Label = "Co₂ emisija"
+co2Limit = "Ograničenje CO₂"
+costLimitDescription = "Omogućuje privremeno brzo punjenje u solarnom načinu."
+modalTitle = "Smart Grid punjenje"
+priceLabel = "Cijena energije"
+priceLimit = "Ograničenje cijene"
+
 [header]
 about = "O"
 blog = "Blog"
@@ -68,6 +78,16 @@ settings = "Postavke"
 
 [main]
 vehicles = "Parkiralište"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Dolazak"
+departureTab = "Odlazak"
+modalTitle = "Plan punjenja"
+none = "ništa"
+title = "Plan"
+titleMinSoc = "Min. naknada"
+titleTargetCharge = "Odlazak"
 
 [main.energyflow]
 battery = "Baterija"
@@ -127,6 +147,8 @@ logout = "odjavi se"
 [main.targetCharge]
 activate = "Aktiviraj"
 activeLabel = "{time}"
+co2Limit = "Ograničenje CO₂ od {co2}"
+costLimitIgnore = "Konfigurirani {limit} zanemarit će se tijekom tog razdoblja."
 descriptionEnergy = "Do kada bi se {targetEnergy} trebao učitati u vozilo?"
 descriptionSoc = "Kada bi se vozilo trebalo napojiti na {targetSoc} %?"
 inactiveLabel = "Ciljano vrijeme"
@@ -135,6 +157,7 @@ planDuration = "Vrijeme punjenja"
 planPeriodLabel = "Razdoblje"
 planPeriodValue = "{start} do {end}"
 planUnknown = "još nije poznato"
+priceLimit = "ograničenje cijene od {price}"
 setTargetTime = "ništa"
 targetIsInThePast = "Odaberi vrijeme u budućnosti."
 targetIsTooFarInTheFuture = "Prilagodit ćemo plan čim budemo znali više o budućnosti."
@@ -142,9 +165,6 @@ title = "Ciljano vrijeme"
 today = "danas"
 tomorrow = "sutra"
 update = "Ažuriraj"
-priceLimit = "ograničenje cijene od {price}"
-co2Limit = "Ograničenje CO₂ od {co2}"
-costLimitIgnore = "Konfigurirani {limit} zanemarit će se tijekom tog razdoblja."
 
 [main.targetChargePlan]
 chargeDuration = "Vrijeme punjenja"
@@ -177,6 +197,9 @@ vehicleTarget = "Ograničenje vozila: {soc} %"
 
 [main.vehicleStatus]
 charging = "Napajanje …"
+cheapEnergyCharging = "Jeftina energija dostupna. Punjenje..."
+cleanEnergyCharging = "Čista energija dostupna. Punjenje..."
+climating = "Otkriveno predkondicioniranje."
 connected = "Povezano."
 disconnected = "Nepovezano."
 guard = "Počinje za {remaining}…"
@@ -191,9 +214,6 @@ targetChargeWaitForVehicle = "Ciljano napajanje je spremno. Čeka se na vozilo �
 unknown = ""
 vehicleTargetReached = "Ograničenje vozila od {soc} % dosegnuto."
 waitForVehicle = "Spremno. Čeka se na vozilo …"
-cleanEnergyCharging = "Čista energija dostupna. Punjenje..."
-climating = "Otkriveno predkondicioniranje."
-cheapEnergyCharging = "Jeftina energija dostupna. Punjenje..."
 
 [notifications]
 dismissAll = "Odbaci sve"
@@ -285,24 +305,3 @@ title = "Pogreška pri pokretanju"
 cancel = "Otkazati"
 template = "Proizvođač"
 test = "Test"
-
-
-[gridSettings]
-activeHours = "{charging} od {total}"
-co2Limit = "Ograničenje CO₂"
-activeHoursLabel = "Aktivno radno vrijeme"
-co2Label = "Co₂ emisija"
-costLimitDescription = "Omogućuje privremeno brzo punjenje u solarnom načinu."
-priceLabel = "Cijena energije"
-modalTitle = "Smart Grid punjenje"
-priceLimit = "Ograničenje cijene"
-
-[main.chargingPlan]
-title = "Plan"
-modalTitle = "Plan punjenja"
-none = "ništa"
-arrivalTab = "Dolazak"
-departureTab = "Odlazak"
-activeLabel = "{time}"
-titleTargetCharge = "Odlazak"
-titleMinSoc = "Min. naknada"

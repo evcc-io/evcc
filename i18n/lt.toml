@@ -207,6 +207,7 @@ vehicleTarget = "Automobilyje nustatytas limitas: {soc}%"
 charging = "Įkraunama..."
 cheapEnergyCharging = "Energijos kaina žema. Įkraunama…"
 cleanEnergyCharging = "Yra švarios energijos. Įkraunama..."
+climating = "Aptiktas išankstinis kondicionavimas."
 connected = "Prijungtas."
 disconnected = "Neprijungtas."
 guard = "Pradėsime už {remaining}…"
@@ -221,7 +222,6 @@ targetChargeWaitForVehicle = "Planinis įkrovimas leidžiamas. Laukiama automobi
 unknown = ""
 vehicleTargetReached = "Automobilyje nustatytas limitas {soc}% pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
-climating = "Aptiktas išankstinis kondicionavimas."
 
 [notifications]
 dismissAll = "Išvalyti visus"

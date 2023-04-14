@@ -63,9 +63,9 @@ co2Label = "Emissão de CO₂"
 co2Limit = "Limite de CO₂"
 costLimitDescription = "Permite carregamento rápido temporário no modo solar."
 modalTitle = "Carregamento de Rede Inteligente"
+none = "sem"
 priceLabel = "Preço da energia"
 priceLimit = "Limite de preço"
-none = "sem"
 
 [header]
 about = "Sobre"
