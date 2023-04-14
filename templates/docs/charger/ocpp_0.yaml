@@ -31,3 +31,5 @@ render:
       timeout: 2m # Optional
       getconfiguration: true # Deaktivierung kann bei einigen Chargern hilfreich sein (Optional)
       bootnotification: false # Aktivierung kann bei einigen Chargern hilfreich sein (Optional)
+      meterinterval: # Optional
+      metervalues: # Optional

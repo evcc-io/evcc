@@ -58,6 +58,18 @@ params:
     help:
       de: Aktivierung kann bei einigen Chargern hilfreich sein
       en: Activating can help with certain chargers
+  - name: meterinterval
+    advanced: true
+    type: duration
+    description:
+      de: Zählerwerte nach Intervall anfordern
+      en: Interval for requesting meter values
+  - name: metervalues
+    advanced: true
+    type: string
+    description:
+      de: Liste der Zählerwerte
+      en: List of meter values
 render: |
   {{ include "ocpp" . }}
   {{- if ne .getconfiguration "true" }}
@@ -65,4 +77,10 @@ render: |
   {{- end }}
   {{- if ne .bootnotification "false" }}
   bootnotification: {{ .bootnotification }}
+  {{- end }}
+  {{- if .meterinterval }}
+  meterinterval: {{ .meterinterval }}
+  {{- end }}
+  {{- if .metervalues }}
+  metervalues: {{ .metervalues }}
   {{- end }}
