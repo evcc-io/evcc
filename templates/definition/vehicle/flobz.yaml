@@ -4,6 +4,7 @@ products:
     description:
       generic: PSA Car Controller (flobz)
 params:
+  - name: title
   - name: host
   - name: port
   - name: vin
