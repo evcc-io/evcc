@@ -142,7 +142,7 @@ today = "danes"
 tomorrow = "jutri"
 update = "Posodobitev"
 costLimitIgnore = "V tem obdobju se nastavljena {limit} ne bo upoštevala."
-co2Limit = »Omejitev CO₂ {co2}«
+co2Limit = "Omejitev CO₂ {co2}"
 priceLimit = "cenovna omejitev {price}"
 
 [main.targetChargePlan]
