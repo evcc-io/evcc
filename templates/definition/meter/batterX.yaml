@@ -1,0 +1,40 @@
+template: batterX
+covers: ["batterX-Home"]
+products:
+  - brand: batterX
+    description:
+      generic: batterX liveX interface provided by @gramss
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: port
+    default: 80
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/api.php?get=currentstate
+    timeout: 1s
+  {{- if eq .usage "grid" }}
+    jq: .["2913"].["0"] # Grid meter (Power Total in W)
+    #scale: -1 # reverse direction
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    jq: .["2913"].["3"] + .["1634"].["0"] # External Solar + BatterX Solar (Power Total in W)
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    jq: .["1121"].["1"]
+    scale: -1 # reverse direction: Positive = Charging; Negative = Discharching
+  soc:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/api.php?get=currentstate
+    timeout: 1s
+    jq: .["1074"].["1"]
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}
