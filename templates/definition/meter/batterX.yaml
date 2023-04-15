@@ -13,6 +13,8 @@ params:
     default: 80
   - name: capacity
     advanced: true
+  - name: externalpv
+    default: "false"
 render: |
   type: custom
   power:
@@ -24,7 +26,11 @@ render: |
     #scale: -1 # reverse direction
   {{- end }}
   {{- if eq .usage "pv" }}
+  {{- if ne .externalpv "false" }}
     jq: .["2913"].["3"] + .["1634"].["0"] # External Solar + BatterX Solar (Power Total in W)
+  {{- else }}
+    jq: .["1634"].["0"] # BatterX Solar (Power Total in W)
+  {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
     jq: .["1121"].["1"]
