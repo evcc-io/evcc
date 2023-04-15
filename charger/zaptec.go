@@ -45,6 +45,7 @@ type Zaptec struct {
 	log         *util.Logger
 	statusCache provider.Cacheable[zaptec.StateResponse]
 	id          string
+	enabled     bool
 	priority    bool
 	cache       time.Duration
 }
@@ -175,7 +176,7 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c *Zaptec) Enabled() (bool, error) {
 	res, err := c.statusCache.Get()
-	return res.ObservationByID(zaptec.IsEnabled).Bool() && !res.ObservationByID(zaptec.FinalStopActive).Bool(), err
+	return c.enabled && !res.ObservationByID(zaptec.FinalStopActive).Bool(), err
 }
 
 // Enable implements the api.Charger interface
@@ -190,6 +191,7 @@ func (c *Zaptec) Enable(enable bool) error {
 	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
 		_, err = c.DoBody(req)
+		c.enabled = enable
 		c.statusCache.Reset()
 	}
 
