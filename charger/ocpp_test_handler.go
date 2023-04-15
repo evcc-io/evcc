@@ -35,7 +35,7 @@ func (handler *ChargePointHandler) OnDataTransfer(request *core.DataTransferRequ
 func (handler *ChargePointHandler) OnGetConfiguration(request *core.GetConfigurationRequest) (confirmation *core.GetConfigurationConfirmation, err error) {
 	fmt.Printf("%T %+v\n", request, request)
 	one := "1"
-	meter := "Power.Active.Import"
+	meter := "Power.Active.Import,Energy.Active.Import.Register"
 	return core.NewGetConfigurationConfirmation([]core.ConfigurationKey{
 		{Key: "AuthorizationKey"},
 		{Key: "NumberOfConnectors", Value: &one},
