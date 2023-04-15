@@ -21,6 +21,19 @@ params:
   - preset: vehicle-identify
 render: |
   type: custom
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .phases }}
+  phases: {{ .phases }}
+  {{- end }}
+  {{- include "vehicle-identify" . }}
   soc:
     {{- include "source" . | indent 2 }}
     jq: .energy[0].level
@@ -45,4 +58,3 @@ render: |
   source: http
   uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
   {{- end }}
-  {{ include "vehicle-identify" . }}
