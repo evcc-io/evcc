@@ -60,21 +60,17 @@ func (lp *Loadpoint) stopSession() {
 	s.Finished = lp.clock.Now()
 	s.MeterStop = lp.chargeMeterTotal()
 
-	chargedEnergy := lp.getChargedEnergy() / 1e3
-	if delta := s.MeterStop - s.MeterStart; delta < chargedEnergy && s.MeterStart*s.MeterStop > 0 {
-		chargedEnergy = delta
-	}
-	lp.sessionEnergy.Update(chargedEnergy)
-
-	if chargedEnergy > s.ChargedEnergy {
-		s.SolarPercentage = lp.sessionEnergy.SolarPercentage()
-		s.Price = lp.sessionEnergy.Price()
-		s.PricePerKWh = lp.sessionEnergy.PricePerKWh()
-		s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
-		s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
+	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
+		lp.sessionEnergy.Update(chargedEnergy)
 	}
 
-	lp.db.Persist(lp.session)
+	s.SolarPercentage = lp.sessionEnergy.SolarPercentage()
+	s.Price = lp.sessionEnergy.Price()
+	s.PricePerKWh = lp.sessionEnergy.PricePerKWh()
+	s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
+	s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
+
+	lp.db.Persist(s)
 }
 
 type sessionOption func(*db.Session)

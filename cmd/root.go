@@ -296,7 +296,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// uds health check listener
-	go server.HealthListener(site, conf.Network.Port)
+	go server.HealthListener(site)
 
 	log.FATAL.Println(wrapErrors(httpd.ListenAndServe()))
 }

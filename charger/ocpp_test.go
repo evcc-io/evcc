@@ -26,7 +26,8 @@ func TestOcpp(t *testing.T) {
 
 type ocppTestSuite struct {
 	suite.Suite
-	cp ocpp16.ChargePoint
+	clock *clock.Mock
+	cp    ocpp16.ChargePoint
 }
 
 func (suite *ocppTestSuite) SetupSuite() {
@@ -34,6 +35,7 @@ func (suite *ocppTestSuite) SetupSuite() {
 	suite.NotNil(ocpp.Instance())
 
 	// setup cp
+	suite.clock = clock.NewMock()
 	cp := ocpp16.NewChargePoint("test", nil, nil)
 
 	// set a handler for all callback functions
@@ -70,9 +72,10 @@ func (suite *ocppTestSuite) handleTrigger(msg remotetrigger.MessageTrigger) {
 	case core.MeterValuesFeatureName:
 		if res, err := suite.cp.MeterValues(1, []types.MeterValue{
 			{
-				Timestamp: types.NewDateTime(time.Now()),
+				Timestamp: types.NewDateTime(suite.clock.Now()),
 				SampledValue: []types.SampledValue{
 					{Measurand: types.MeasurandPowerActiveImport, Value: "1000"},
+					{Measurand: types.MeasurandEnergyActiveImportRegister, Value: "1.2", Unit: "kWh"},
 				},
 			},
 		}); err != nil {
@@ -99,11 +102,19 @@ func (suite *ocppTestSuite) TestConnect() {
 		return
 	}
 
-	clock := clock.NewMock()
-	c.cp.TestClock(clock)
-
-	clock.Add(ocppTestTimeout)
+	suite.clock.Add(ocppTestTimeout)
+	c.cp.TestClock(suite.clock)
 
 	_, err = c.Status()
 	suite.NoError(err)
+
+	// power
+	f, err := c.currentPower()
+	suite.NoError(err)
+	suite.Equal(1e3, f)
+
+	// energy
+	f, err = c.totalEnergy()
+	suite.NoError(err)
+	suite.Equal(1.2, f)
 }

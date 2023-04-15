@@ -63,6 +63,7 @@ co2Label = "CO₂ emission"
 co2Limit = "CO₂ limit"
 costLimitDescription = "Enables temporary fast-charging in solar mode."
 modalTitle = "Smart Grid Charging"
+none = "none"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
 

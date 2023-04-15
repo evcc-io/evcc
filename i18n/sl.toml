@@ -56,6 +56,16 @@ modalUpdateNow = "Namesti zdaj"
 modalUpdateStarted = "Zagon nove različice evcc…"
 modalUpdateStatusStart = "Namestitev se je začela:"
 
+[gridSettings]
+activeHours = "{charging} od {total}"
+activeHoursLabel = "Aktivne ure"
+co2Label = "Emisije CO₂"
+co2Limit = "Omejitev CO₂"
+costLimitDescription = "Omogoči začasno hitro polnjenje v solarnem načinu."
+modalTitle = "Smart Grid Polnjenje"
+priceLabel = "Cena energije"
+priceLimit = "Omejitev cene"
+
 [header]
 about = "Informacije"
 blog = "Blog"
@@ -67,6 +77,16 @@ settings = "Nastavitve"
 
 [main]
 vehicles = "Parkiranje"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Prihod"
+departureTab = "Odhod"
+modalTitle = "Načrt polnjenja"
+none = "brez"
+title = "Načrt"
+titleMinSoc = "Min. polnjenje"
+titleTargetCharge = "Odhod"
 
 [main.energyflow]
 battery = "Baterija"
@@ -126,6 +146,8 @@ logout = "odjava"
 [main.targetCharge]
 activate = "Aktiviraj"
 activeLabel = "{time}"
+co2Limit = "Omejitev CO₂ {co2}"
+costLimitIgnore = "V tem obdobju se nastavljena {limit} ne bo upoštevala."
 descriptionEnergy = "Do kdaj želite da se vozilo napolni za {targetEnergy}?"
 descriptionSoc = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}%?"
 inactiveLabel = "Ciljni čas"
@@ -134,6 +156,7 @@ planDuration = "Čas polnjenja"
 planPeriodLabel = "Obdobje"
 planPeriodValue = "{start} do {end}"
 planUnknown = "še ni znano"
+priceLimit = "cenovna omejitev {price}"
 setTargetTime = "brez"
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
 targetIsTooFarInTheFuture = "Načrt bomo prilagodili takoj, ko bomo izvedeli več o novi funkcionalnosti."
@@ -173,6 +196,9 @@ vehicleTarget = "Omejitev vozila: {soc}%"
 
 [main.vehicleStatus]
 charging = "Polnjenje…"
+cheapEnergyCharging = "Na voljo je poceni energija. Polnjenje..."
+cleanEnergyCharging = "Na voljo je čista energija. Polnjenje..."
+climating = "Zaznano predkondicioniranje."
 connected = "Povezan."
 disconnected = "Odklopljen."
 guard = "Začne se čez {remaining} ..."
