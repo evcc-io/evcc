@@ -92,7 +92,7 @@ func (t *Elering) run(done chan error) {
 			ar := api.Rate{
 				Start: ts.Local(),
 				End:   ts.Add(time.Hour).Local(),
-				Price: r.Price / 100,
+				Price: r.Price / 1e3,
 			}
 			t.data = append(t.data, ar)
 		}
