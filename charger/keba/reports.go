@@ -40,6 +40,9 @@ type Report2 struct {
 	Output         int    `json:"Output"`
 	Input          int    `json:"Input"`
 	Sec            int64  `json:"Sec"`
+
+	X2PhaseSwitchSource int `json:"X2 phaseSwitch source"`
+	X2PhaseSwitch       int `json:"X2 phaseSwitch"`
 }
 
 // Report3 is the report 3 command answer

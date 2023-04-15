@@ -12,7 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf
+// https://www.keba.com/download/x/4a925c4c61/kecontactp30udp_pgen.pdf
 
 const (
 	udpTimeout = time.Second
@@ -37,7 +37,7 @@ func init() {
 	registry.Add("keba", NewKebaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewKebaFromConfig creates a new configurable charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -64,11 +64,25 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
+	var currentPower, totalEnergy func() (float64, error)
+	var currents func() (float64, float64, float64, error)
 	if energy > 0 {
-		return decorateKeba(k, k.currentPower, k.totalEnergy, k.currents), nil
+		currentPower = k.currentPower
+		totalEnergy = k.totalEnergy
+		currents = k.currents
 	}
 
-	return k, err
+	kr, err := k.report2()
+	if err != nil {
+		return nil, err
+	}
+
+	var phases func(int) error
+	if kr.X2PhaseSwitchSource == 4 { // UDP
+		phases = k.phases1p3p
+	}
+
+	return decorateKeba(k, currentPower, totalEnergy, currents, phases), nil
 }
 
 // NewKeba creates a new charger
@@ -171,10 +185,15 @@ func (c *Keba) roundtrip(msg string, report int, res interface{}) error {
 	}
 }
 
+func (c *Keba) report2() (keba.Report2, error) {
+	var res keba.Report2
+	err := c.roundtrip("report", 2, &res)
+	return res, err
+}
+
 // Status implements the api.Charger interface
 func (c *Keba) Status() (api.ChargeStatus, error) {
-	var kr keba.Report2
-	err := c.roundtrip("report", 2, &kr)
+	kr, err := c.report2()
 	if err != nil {
 		return api.StatusA, err
 	}
@@ -194,8 +213,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Keba) Enabled() (bool, error) {
-	var kr keba.Report2
-	err := c.roundtrip("report", 2, &kr)
+	kr, err := c.report2()
 	if err != nil {
 		return false, err
 	}
@@ -250,14 +268,7 @@ func (c *Keba) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *Keba) MaxCurrent(current int64) error {
-	d := 1000 * current
-
-	var resp string
-	if err := c.roundtrip(fmt.Sprintf("curr %d", d), 0, &resp); err != nil {
-		return err
-	}
-
-	return nil
+	return c.MaxCurrentMillis(float64(current))
 }
 
 var _ api.ChargerEx = (*Keba)(nil)
@@ -311,6 +322,28 @@ func (c *Keba) Identify() (string, error) {
 	var kr keba.Report100
 	err := c.roundtrip("report", 100, &kr)
 	return kr.RFIDTag, err
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (c *Keba) phases1p3p(phases int) error {
+	var phs int
+	if phases == 3 {
+		phs = 1
+	}
+
+	var resp string
+	if err := c.roundtrip(fmt.Sprintf("x2 %d", phs), 0, &resp); err != nil {
+		return err
+	}
+
+	switch resp {
+	case keba.OK:
+		return nil
+	case keba.X2NotNow:
+		return api.ErrMustRetry
+	default:
+		return fmt.Errorf("x2 %d unexpected response: %s", phs, resp)
+	}
 }
 
 var _ api.Diagnosis = (*Keba)(nil)

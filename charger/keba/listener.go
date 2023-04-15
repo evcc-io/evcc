@@ -19,6 +19,9 @@ const (
 	// OK is the KEBA confirmation message
 	OK = "TCH-OK :done"
 
+	// Phase switching not allowed
+	X2NotNow = "TCH-ERR:X2 : not allowed now"
+
 	// Any subscriber receives all messages
 	Any = "<any>"
 )
