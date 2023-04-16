@@ -213,6 +213,11 @@ func (wb *Keba) voltages() (float64, float64, float64, error) {
 		res[i] = float64(binary.BigEndian.Uint32(b))
 	}
 
+	// no voltages unless charging
+	if res[0]+res[1]+res[2] == 0 {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
 	return res[0], res[1], res[2], nil
 }
 
