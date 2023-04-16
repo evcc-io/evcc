@@ -5,9 +5,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        This issue form is for reporting bugs only!
+        This issue form is for reporting issues only! If you want to start a discussion or ask a question, please use the [discussion forum][df].
 
-        If you want to start a discussion or ask a question, please use the [discussion forum][df].
+        **NOTE** Due to amount of issues raised we will close incomplete issues (unclear description what the issue actually is, missing log file, unsupported platform) without further comments.
 
         [df]: https://github.com/evcc-io/evcc/discussions
   - type: textarea
