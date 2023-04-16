@@ -1,0 +1,16 @@
+product:
+  brand: KEBA
+  description: KeContact P20, P30, C/X Series
+capabilities: ["mA", "rfid"]
+description: |
+  Erfordert Firmwareversion 3.10.16 (C-series) bzw. 1.11 (X-series)
+render:
+  - default: |
+      type: template
+      template: keba-modbus
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 255
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
