@@ -1,6 +1,6 @@
 product:
   brand: Deye
-  description: Mini Inverter
+  description: SUN series micro inverter
 render:
   - usage: pv
     default: |

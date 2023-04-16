@@ -1,6 +1,6 @@
 product:
   brand: Bosswerk
-  description: Mini Inverter
+  description: MI series micro inverter
 render:
   - usage: pv
     default: |
