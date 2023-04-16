@@ -2,10 +2,10 @@ template: keba
 products:
   - brand: KEBA
     description:
-      generic: KeContact P20, P30, C/X Series
+      generic: KeContact P20, P30, C/X Series (legacy UDP protocol)
   - brand: BMW
     description:
-      generic: i Wallbox
+      generic: i Wallbox (legacy UDP protocol)
 capabilities: ["mA", "rfid"]
 requirements:
   description:
@@ -25,7 +25,7 @@ params:
       de: Die Seriennummer, ermöglicht es auch mit der Wallbox zu kommunizieren wenn evcc in Docker läuft.
       en: The serial number, allows to communicate with the Wallbox when running evcc in docker
 render: |
-  type: keba
+  type: keba-udp
   uri: {{ .host }}
   {{ if ne .rfid "" }}
   rfid:
