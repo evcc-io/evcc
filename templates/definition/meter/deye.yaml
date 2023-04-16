@@ -2,13 +2,10 @@ template: deye
 products:
   - brand: Deye
     description:
-      generic: Mini Inverter
+      generic: SUN series micro inverter
   - brand: Bosswerk
     description:
-      generic: Mini Inverter
-  - brand: Solarman
-    description:
-      generic: Mini Inverter
+      generic: MI series micro inverter
 params:
   - name: usage
     choice: ["pv"]
