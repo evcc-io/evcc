@@ -54,9 +54,9 @@ func (s *Estimator) Reset() {
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
 	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
-	s.minChargePower = 1000  // default to 1 kW
-	s.maxChargePower = 50000 // default to 50 kW
-	s.maxChargeSoc = 50      // default to 50%
+	s.minChargePower = 1000  // default 1 kW
+	s.maxChargePower = 50000 // default 50 kW
+	s.maxChargeSoc = 50      // default 50%
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
