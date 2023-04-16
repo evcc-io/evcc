@@ -646,13 +646,17 @@ func (lp *Loadpoint) syncCharger() {
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	// set current
-	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
+	if chargeCurrent >= lp.GetMinCurrent() {
 		var err error
 		if charger, ok := lp.charger.(api.ChargerEx); ok && !lp.vehicleHasFeature(api.CoarseCurrent) {
-			err = charger.MaxCurrentMillis(chargeCurrent)
+			if chargeCurrent != lp.chargeCurrent {
+				err = charger.MaxCurrentMillis(chargeCurrent)
+			}
 		} else {
 			chargeCurrent = math.Trunc(chargeCurrent)
-			err = lp.charger.MaxCurrent(int64(chargeCurrent))
+			if chargeCurrent != lp.chargeCurrent {
+				err = lp.charger.MaxCurrent(int64(chargeCurrent))
+			}
 		}
 
 		if err != nil {
