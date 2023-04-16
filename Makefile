@@ -66,7 +66,6 @@ test::
 	CGO_ENABLED=0 go test $(BUILD_TAGS),test ./...
 
 porcelain::
-	go version -m $S(which gofmt)
 	gofmt -w -l $$(find . -name '*.go')
 	go mod tidy
 	test -z "$$(git status --porcelain)" || (git status; git diff; false)
