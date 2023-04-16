@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -69,7 +69,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	var currentPower, totalEnergy func() (float64, error)
 	var currents, voltages func() (float64, float64, float64, error)
-	if features := binary.BigEndian.Uint32(b); features&0xFF00 > 0 {
+	if features := binary.BigEndian.Uint32(b); (features/100)%10 > 0 {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 		currents = wb.currents
@@ -104,7 +104,7 @@ func NewKeba(uri string, slaveID uint8) (*Keba, error) {
 	conn.Logger(log.TRACE)
 
 	// per Keba docs
-	conn.Delay(500 * time.Millisecond)
+	// conn.Delay(500 * time.Millisecond)
 
 	wb := &Keba{
 		conn: conn,
@@ -115,17 +115,17 @@ func NewKeba(uri string, slaveID uint8) (*Keba, error) {
 
 // Status implements the api.Charger interface
 func (wb *Keba) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kebaRegChargingState, 1)
+	b, err := wb.conn.ReadHoldingRegisters(kebaRegCableState, 2)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch status := binary.BigEndian.Uint16(b); status {
-	case 0, 1:
+	switch status := binary.BigEndian.Uint32(b); status {
+	case 0:
 		return api.StatusA, nil
-	case 2:
+	case 1, 3, 5:
 		return api.StatusB, nil
-	case 3:
+	case 7:
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
@@ -134,17 +134,21 @@ func (wb *Keba) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Keba) Enabled() (bool, error) {
-	return false, nil
+	b, err := wb.conn.ReadHoldingRegisters(kebaRegChargingState, 2)
+	if err != nil {
+		return false, err
+	}
+
+	return binary.BigEndian.Uint32(b) != 5, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Keba) Enable(enable bool) error {
-	b := make([]byte, 2)
+	var u uint16
 	if enable {
-		binary.BigEndian.PutUint16(b, 1)
+		u = 1
 	}
-
-	_, err := wb.conn.WriteMultipleRegisters(kebaRegEnable, 1, b)
+	_, err := wb.conn.WriteSingleRegister(kebaRegEnable, u)
 	return err
 }
 
@@ -157,9 +161,8 @@ var _ api.ChargerEx = (*Keba)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Keba) MaxCurrentMillis(current float64) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(current*1000))
-	_, err := wb.conn.WriteMultipleRegisters(kebaRegMaxCurrent, 1, b)
+	u := uint16(current * 1000)
+	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, u)
 	return err
 }
 
@@ -222,17 +225,22 @@ func (wb *Keba) Identify() (string, error) {
 		return "", err
 	}
 
-	return hex.EncodeToString(b), nil
+	id := hex.EncodeToString(b)
+	if id == "00000000" {
+		id = ""
+	}
+
+	return id, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Keba) phases1p3p(phases int) error {
-	b := make([]byte, 2)
+	var u uint16
 	if phases == 3 {
-		binary.BigEndian.PutUint16(b, 1)
+		u = 1
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(kebaRegPhases, 1, b)
+	_, err := wb.conn.WriteSingleRegister(kebaRegPhases, u)
 	return err
 }
 
@@ -241,12 +249,12 @@ var _ api.Diagnosis = (*Keba)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *Keba) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegSerial, 2); err == nil {
-		fmt.Printf("\tSerial:\t%s\n", strings.TrimLeft(string(b), "0"))
+		fmt.Printf("\tSerial:\t%s\n", strings.TrimLeft(strconv.Itoa(int(binary.BigEndian.Uint32(b))), "0"))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegFirmware, 2); err == nil {
 		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegProduct, 2); err == nil {
-		fmt.Printf("\tProduct:\t%0x\n", b)
+		fmt.Printf("\tProduct:\t%6d\n", binary.BigEndian.Uint32(b))
 	}
 }
