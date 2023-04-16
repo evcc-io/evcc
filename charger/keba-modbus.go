@@ -22,23 +22,23 @@ type Keba struct {
 }
 
 const (
-	kebaRegChargingState = 1000
-	kebaRegCableState    = 1004
-	kebaRegCurrents      = 1008 // 6 regs, mA
-	kebaRegSerial        = 1014 // leading zeros trimmed
-	kebaRegProduct       = 1016
-	kebaRegFirmware      = 1018
-	kebaRegPower         = 1020 // mW
-	kebaRegEnergy        = 1036 // Wh
-	kebaRegVoltages      = 1040 // 6 regs, V
-	kebaRegPhases        = 1215
-	kebaRegRfid          = 1500 // hex
-	kebaRegSessionEnergy = 1502 // Wh
-	kebaRegPhaseSource   = 1550
-	kebaRegPhaseState    = 1552
-	kebaRegMaxCurrent    = 5004 // mA
-	kebaRegEnable        = 5014
-	kebaRegSetPhase      = 5052
+	kebaRegChargingState   = 1000
+	kebaRegCableState      = 1004
+	kebaRegCurrents        = 1008 // 6 regs, mA
+	kebaRegSerial          = 1014 // leading zeros trimmed
+	kebaRegProduct         = 1016
+	kebaRegFirmware        = 1018
+	kebaRegPower           = 1020 // mW
+	kebaRegEnergy          = 1036 // Wh
+	kebaRegVoltages        = 1040 // 6 regs, V
+	kebaRegRfid            = 1500 // hex
+	kebaRegSessionEnergy   = 1502 // Wh
+	kebaRegPhaseSource     = 1550
+	kebaRegPhaseState      = 1552
+	kebaRegFailsafeTimeout = 1602
+	kebaRegMaxCurrent      = 5004 // mA
+	kebaRegEnable          = 5014
+	kebaRegTriggerPhase    = 5052
 )
 
 func init() {
@@ -245,7 +245,7 @@ func (wb *Keba) phases1p3p(phases int) error {
 		u = 1
 	}
 
-	_, err := wb.conn.WriteSingleRegister(kebaRegPhases, u)
+	_, err := wb.conn.WriteSingleRegister(kebaRegTriggerPhase, u)
 	return err
 }
 
@@ -261,5 +261,14 @@ func (wb *Keba) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegProduct, 2); err == nil {
 		fmt.Printf("\tProduct:\t%6d\n", binary.BigEndian.Uint32(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseSource, 2); err == nil {
+		fmt.Printf("\tPhases source:\t%d\n", binary.BigEndian.Uint32(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseState, 2); err == nil {
+		fmt.Printf("\tPhases state:\t%d\n", binary.BigEndian.Uint32(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(kebaRegFailsafeTimeout, 2); err == nil {
+		fmt.Printf("\tFailsafe timeout:\t%ds\n", binary.BigEndian.Uint32(b))
 	}
 }
