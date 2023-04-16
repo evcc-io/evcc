@@ -119,6 +119,8 @@
  "PVBattery": [
   "Alpha ESS",
   "AVM",
+  "Bosswerk",
+  "Deye",
   "E3/DC",
   "FENECON",
   "FoxESS",
@@ -142,6 +144,7 @@
   "SofarSolar",
   "Solaranzeige",
   "SolarEdge",
+  "Solarman",
   "SolarMax",
   "Solarwatt",
   "Solax",

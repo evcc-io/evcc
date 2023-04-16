@@ -1,0 +1,31 @@
+template: deye
+products:
+  - brand: Deye
+    description:
+      generic: Mini Inverter
+  - brand: Bosswerk
+    description:
+      generic: Mini Inverter
+  - brand: Solarman
+    description:
+      generic: Mini Inverter
+params:
+  - name: usage
+    choice: ["pv"]
+    allinone: true
+  - name: host
+  - name: port
+    default: 80
+  - name: user
+    default: admin
+  - name: password
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/status.html
+    auth: # basic authorization
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    regex: webdata_now_p\s*=\s*\"(\d+)\"
