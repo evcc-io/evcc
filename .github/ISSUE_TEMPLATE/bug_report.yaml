@@ -47,7 +47,7 @@ body:
       label: Log details
       render: text
       description: >
-        Show evcc log output by running with <code>evcc --log debug</code>
+        Show evcc log output by running with <code>evcc --log debug</code>. The evcc service **MUST** be stopped before running this command.
 
   - type: dropdown
     validations:
@@ -55,11 +55,12 @@ body:
     attributes:
       label: What type of operating system are you running?
       description: >
-        Note that if you're using Docker we ask you to reproduce the problem without Docker first.
+        **NOTE** if you're using HomeAssistant or Docker we ask you to reproduce the problem on plain Linux or Windows first.
       options:
         - Linux
         - Windows
         - Docker container
+        - HomeAssistant Add-on
 
   - type: input
     attributes:
