@@ -2,6 +2,7 @@ product:
   brand: BMW
   description: i Wallbox
 capabilities: ["mA", "rfid"]
+requirements: ["sponsorship"]
 description: |
   Erfordert Firmwareversion 3.10.16 (C-series) bzw. 1.11 (X-series)
 render:

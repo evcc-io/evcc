@@ -8,6 +8,7 @@ products:
       generic: i Wallbox
 capabilities: ["mA", "rfid"]
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: Erfordert Firmwareversion 3.10.16 (C-series) bzw. 1.11 (X-series)
     en: Requires firmware version 3.10.16 (C-series) bzw. 1.11 (X-series)
