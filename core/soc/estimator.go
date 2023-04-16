@@ -27,9 +27,9 @@ type Estimator struct {
 	prevSoc           float64 // previous vehicle Soc in %
 	prevChargedEnergy float64 // previous charged energy in Wh
 	energyPerSocStep  float64 // Energy per Soc percent in Wh
-	minChargePower    float64 // Lowest charge power (before vehicle stops charging)
+	minChargePower    float64 // Lowest charge power (just before vehicle stops charging at 100%)
 	maxChargePower    float64 // Highest charge power the battery can handle on any charger
-	maxChargeSoc      float64 // SoC at/after which maxChargePower is reduced
+	maxChargeSoc      float64 // SoC at/after which maxChargePower is degressive
 }
 
 // NewEstimator creates new estimator
@@ -54,23 +54,29 @@ func (s *Estimator) Reset() {
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
 	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
-	s.minChargePower = 1000
-	s.maxChargePower = 50000
-	s.maxChargeSoc = 50
+	s.minChargePower = 1000  // default to 1 kW
+	s.maxChargePower = 50000 // default to 50 kW
+	s.maxChargeSoc = 50      // default to 50%
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
 	const minChargeSoc = 100
-	var t1, t2 float64
 
 	dy := s.minChargePower - s.maxChargePower
 	dx := minChargeSoc - s.maxChargeSoc
-	m := dy / dx
-	b := s.minChargePower - m*minChargeSoc
 
-	// Relativer Reduktionspunkt
-	rrp := (chargePower - b) / m
+	var rrp float64 = 100
+
+	if dy > 0 && dx > 0 {
+		m := dy / dx
+		b := s.minChargePower - m*minChargeSoc
+
+		// Relativer Reduktionspunkt
+		rrp = (chargePower - b) / m
+	}
+
+	var t1, t2 float64
 
 	// Zeit von vehicleSoc bis Reduktionspunkt (linear)
 	if s.vehicleSoc < rrp {

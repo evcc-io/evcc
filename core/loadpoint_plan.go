@@ -24,6 +24,10 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 
 // planRequiredDuration is the estimated total charging duration
 func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
+	if energy, ok := lp.remainingChargeEnergy(); ok {
+		return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
+	}
+
 	if lp.socEstimator == nil {
 		return 0
 	}
