@@ -45,7 +45,7 @@ func init() {
 	registry.Add("keba-modbus", NewKebaFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+// go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -62,13 +62,18 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
+	// features
+	var (
+		currentPower, totalEnergy func() (float64, error)
+		currents, voltages        func() (float64, float64, float64, error)
+		identify                  func() (string, error)
+	)
+
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegProduct, 2)
 	if err != nil {
 		return nil, err
 	}
 
-	var currentPower, totalEnergy func() (float64, error)
-	var currents, voltages func() (float64, float64, float64, error)
 	if features := binary.BigEndian.Uint32(b); (features/100)%10 > 0 {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
@@ -76,6 +81,11 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		voltages = wb.voltages
 	}
 
+	if features := binary.BigEndian.Uint32(b); features%10 > 0 {
+		identify = wb.identify
+	}
+
+	// phases
 	b, err = wb.conn.ReadHoldingRegisters(kebaRegPhaseSource, 2)
 	if err != nil {
 		return nil, err
@@ -86,7 +96,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		phases = wb.phases1p3p
 	}
 
-	return decorateKeba(wb, currentPower, totalEnergy, currents, voltages, phases), nil
+	return decorateKeba(wb, currentPower, totalEnergy, currents, voltages, identify, phases), nil
 }
 
 // NewKeba creates a new charger
@@ -221,10 +231,8 @@ func (wb *Keba) voltages() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-var _ api.Identifier = (*Keba)(nil)
-
-// Identify implements the api.Identifier interface
-func (wb *Keba) Identify() (string, error) {
+// identify implements the api.Identifier interface
+func (wb *Keba) identify() (string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegRfid, 2)
 	if err != nil {
 		return "", err
