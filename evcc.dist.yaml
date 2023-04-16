@@ -178,6 +178,7 @@ tariffs:
     price: 0.08 # EUR/kWh
   planner:
     # planner tariff can be used for target charging if not grid tariff is specified
+
     # GrünStromIndex (Germany only) or ElectricityMaps provide CO2 intensity forecast
 
     # type: grünstromindex
@@ -187,6 +188,10 @@ tariffs:
     # uri: <uri>
     # token: <token>
     # zone: DE
+
+    # # or variable Nordpool via elering.ee (only for LT, LV, EE, FI)
+    # type: elering
+    # region: ee # or lt, lv, fi
 
 # mqtt message broker
 mqtt:
