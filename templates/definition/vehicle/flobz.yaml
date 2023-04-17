@@ -55,5 +55,5 @@ render: |
     jq: .preconditionning.air_conditioning.status != "Disabled"
   {{- define "source" }}
   source: http
-  uri: {{ .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+  uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
   {{- end }}
