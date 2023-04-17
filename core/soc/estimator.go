@@ -27,9 +27,6 @@ type Estimator struct {
 	prevSoc           float64 // previous vehicle Soc in %
 	prevChargedEnergy float64 // previous charged energy in Wh
 	energyPerSocStep  float64 // Energy per Soc percent in Wh
-	minChargePower    float64 // Lowest charge power (just before vehicle stops charging at 100%)
-	maxChargePower    float64 // Highest charge power the battery can handle on any charger
-	maxChargeSoc      float64 // SoC at/after which maxChargePower is degressive
 }
 
 // NewEstimator creates new estimator
@@ -54,42 +51,15 @@ func (s *Estimator) Reset() {
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
 	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
-	s.minChargePower = 1000  // default 1 kW
-	s.maxChargePower = 50000 // default 50 kW
-	s.maxChargeSoc = 50      // default 50%
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
-	const minChargeSoc = 100
-
-	dy := s.minChargePower - s.maxChargePower
-	dx := minChargeSoc - s.maxChargeSoc
-
-	var rrp float64 = 100
-
-	if dy > 0 && dx > 0 {
-		m := dy / dx
-		b := s.minChargePower - m*minChargeSoc
-
-		// Relativer Reduktionspunkt
-		rrp = (chargePower - b) / m
+	energy := s.RemainingChargeEnergy(targetSoc) * 1e3 / chargePower
+	if math.IsInf(energy, 0) {
+		energy = 0
 	}
-
-	var t1, t2 float64
-
-	// Zeit von vehicleSoc bis Reduktionspunkt (linear)
-	if s.vehicleSoc < rrp {
-		t1 = (math.Min(float64(targetSoc), rrp) - s.vehicleSoc) / minChargeSoc * s.virtualCapacity / chargePower
-	}
-
-	// Zeit von Reduktionspunkt bis targetSoc (degressiv)
-	if float64(targetSoc) > rrp {
-		t2 = (float64(targetSoc) - math.Max(s.vehicleSoc, rrp)) / minChargeSoc * s.virtualCapacity / ((chargePower-s.minChargePower)/2 + s.minChargePower)
-
-	}
-
-	return time.Duration(float64(time.Hour) * (t1 + t2)).Round(time.Second)
+	return time.Duration(float64(time.Hour) * energy).Round(time.Second)
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
