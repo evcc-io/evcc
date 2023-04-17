@@ -6,11 +6,12 @@ products:
 params:
   - name: title
   - name: url
+  - name: host
+    deprecated: true
+  - name: port
+    deprecated: true
   - name: vin
     required: true
-    help:
-      de: Erforderlich
-      en: Required
   - name: capacity
   - name: phases
     advanced: true
@@ -55,5 +56,9 @@ render: |
     jq: .preconditionning.air_conditioning.status != "Disabled"
   {{- define "source" }}
   source: http
+  {{- if .host }}
+  uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+  {{- else }}
   uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+  {{- end }}
   {{- end }}

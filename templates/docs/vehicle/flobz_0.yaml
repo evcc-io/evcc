@@ -1,20 +1,20 @@
 product:
   brand: PSA
-  description: Car Controller (flobz)
+  description: PSA Car Controller (flobz)
 render:
   - default: |
       type: template
       template: flobz
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
-      url: http/https:\\192.0.2.2 # IP-Adresse oder Hostname; Port Optional 
-      vin: V... # Fahrzeugidentifikationsnummer (Erforderlich)
+      url: # Optional
+      vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
       capacity: 50 # Akkukapazität in kWh (Optional)
     advanced: |
       type: template
       template: flobz
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
-      url: http/https:\\192.0.2.2 # IP-Adresse oder Hostname; Port Optional 
-      vin: V... # Fahrzeugidentifikationsnummer (Erforderlich)
+      url: # Optional
+      vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
       capacity: 50 # Akkukapazität in kWh (Optional)
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können (Optional)
       icon: car # Icon in der Benutzeroberfläche (Optional)
