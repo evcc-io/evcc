@@ -55,7 +55,7 @@ func tryCreate(o *ignoreerrorProvider) error {
 	f, err := NewFloatGetterFromConfig(o.config)
 	if err != nil {
 		ignoreError := false
-		errortype := fmt.Sprintf("%s", reflect.TypeOf(err))
+		errortype := reflect.TypeOf(err).String()
 		for idx, errorstoignore := range o.errorstoignore {
 			if errorstoignore.MatchString(errortype) {
 				ignoreError = true
@@ -87,7 +87,7 @@ func (o *ignoreerrorProvider) FloatGetter() func() (float64, error) {
 
 func (o *ignoreerrorProvider) floatGetter() (float64, error) {
 	if o.ignoreerror == nil {
-		tryCreate(o)
+		_ = tryCreate(o)
 	}
 	if o.ignoreerror != nil {
 		return o.ignoreerror()
