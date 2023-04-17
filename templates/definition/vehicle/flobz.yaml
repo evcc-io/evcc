@@ -14,6 +14,9 @@ params:
     deprecated: true
   - name: vin
     required: true
+    help:
+      de: Erforderlich
+      en: Required
   - name: capacity
   - name: phases
     advanced: true
