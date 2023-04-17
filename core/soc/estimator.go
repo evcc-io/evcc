@@ -68,7 +68,7 @@ func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) 
 
 	var rrp float64 = 100
 
-	if dy > 0 && dx > 0 {
+	if dy != 0 && dx != 0 {
 		m := dy / dx
 		b := s.minChargePower - m*minChargeSoc
 
