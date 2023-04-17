@@ -38,7 +38,7 @@ func NewPantabox(uri string) (*Pantabox, error) {
 
 	wb := &Pantabox{
 		Helper: request.NewHelper(log),
-		uri:    strings.TrimRight(uri, "/") + "/api",
+		uri:    util.DefaultScheme(strings.TrimRight(uri, "/"), "http") + "/api",
 	}
 
 	return wb, nil
