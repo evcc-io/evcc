@@ -6,6 +6,8 @@ products:
 params:
   - name: title
   - name: url
+    required: true
+    example: http://192.0.2.2
   - name: host
     deprecated: true
   - name: port
