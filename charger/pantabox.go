@@ -65,7 +65,7 @@ func (wb *Pantabox) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *Pantabox) Enabled() (bool, error) {
 	var res struct {
-		Enabled int
+		Enabled int `json:",string"`
 	}
 
 	err := wb.GetJSON(wb.uri+"/charger/enabled", &res)
@@ -105,9 +105,28 @@ var _ api.Meter = (*Pantabox)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *Pantabox) CurrentPower() (float64, error) {
 	var res struct {
-		Power float64
+		Power float64 `json:",string"`
 	}
 
-	err := wb.GetJSON(wb.uri+"/charger/power", &res)
+	err := wb.GetJSON(wb.uri+"/meter/power", &res)
 	return res.Power, err
+}
+
+var _ api.Diagnosis = (*Pantabox)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *Pantabox) Diagnose() {
+	// var ser struct {
+	// 	Serial string
+	// }
+	// if err := wb.GetJSON(wb.uri+"/charger/id", &ser); err == nil {
+	// 	fmt.Printf("\tSerial:\t%s\n", ser.Serial)
+	// }
+
+	var curr struct {
+		MaxCurrent int `json:",string"`
+	}
+	if err := wb.GetJSON(wb.uri+"/charger/maxcurrent", &curr); err == nil {
+		fmt.Printf("\tMax current:\t%dA\n", curr.MaxCurrent)
+	}
 }
