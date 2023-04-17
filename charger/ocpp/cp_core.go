@@ -70,7 +70,7 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 
 func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
 	res := &core.DataTransferConfirmation{
-		Status: core.DataTransferStatusRejected,
+		Status: core.DataTransferStatusAccepted,
 	}
 
 	return res, nil
