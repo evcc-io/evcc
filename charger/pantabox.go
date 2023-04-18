@@ -116,13 +116,6 @@ var _ api.Diagnosis = (*Pantabox)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Pantabox) Diagnose() {
-	// var ser struct {
-	// 	Serial string
-	// }
-	// if err := wb.GetJSON(wb.uri+"/charger/id", &ser); err == nil {
-	// 	fmt.Printf("\tSerial:\t%s\n", ser.Serial)
-	// }
-
 	var curr struct {
 		MaxCurrent int `json:",string"`
 	}
