@@ -21,13 +21,13 @@ render: |
   currents:
   - source: http
     uri: http://{{ .host }}/emeter/0
-    jq: .current
+    jq: if .power < 0 then - .current else .current end
   - source: http
     uri: http://{{ .host }}/emeter/1
-    jq: .current
+    jq: if .power < 0 then - .current else .current end
   - source: http
     uri: http://{{ .host }}/emeter/2
-    jq: .current
+    jq: if .power < 0 then - .current else .current end
   voltages:
   - source: http
     uri: http://{{ .host }}/emeter/0
