@@ -3,7 +3,6 @@ package charger
 import (
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -22,7 +21,6 @@ func init() {
 // OpenWBPro charger implementation
 type OpenWBPro struct {
 	*request.Helper
-	mu      sync.Mutex
 	uri     string
 	current float64
 	statusG provider.Cacheable[pro.Status]
