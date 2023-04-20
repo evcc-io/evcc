@@ -155,21 +155,27 @@ func (t *Tibber) subscribe(done chan error) {
 	}()
 }
 
-func (t *Tibber) restart() error {
+func (t *Tibber) restart() {
 	_ = t.client.Close()
-
-	done := make(chan error)
 	t.newSubscriptionClient()
+}
+
+func (t *Tibber) resubscribe() {
+	done := make(chan error)
 	go t.subscribe(done)
-	return <-done
+	if err := <-done; err != nil {
+		t.log.ERROR.Println(err)
+	}
 }
 
 func (t *Tibber) CurrentPower() (float64, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	// if time.Since(t.updated) > timeout && t.restart() != nil {
-	if t.restart() != nil {
+	if time.Since(t.updated) > timeout {
+		t.restart()           // recreate client while holding lock
+		defer t.resubscribe() // run after releasing lock
+
 		return 0, api.ErrTimeout
 	}
 
@@ -183,7 +189,10 @@ func (t *Tibber) Currents() (float64, float64, float64, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	if time.Since(t.updated) > timeout && t.restart() != nil {
+	if time.Since(t.updated) > timeout {
+		t.restart()           // recreate client while holding lock
+		defer t.resubscribe() // run after releasing lock
+
 		return 0, 0, 0, api.ErrTimeout
 	}
 
