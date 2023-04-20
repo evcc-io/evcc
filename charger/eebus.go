@@ -170,10 +170,10 @@ func (c *EEBus) setLoadpointMinMaxLimits() {
 	newMin := minLimits[0]
 	newMax := maxLimits[0]
 
-	if c.lp.GetMinCurrent() != newMin && newMin > 0 {
+	if c.lp.GetMinCurrent() != newMin && newMin > 0 && c.lp.GetVehicle().OnIdentified().MinCurrent == nil {
 		c.lp.SetMinCurrent(newMin)
 	}
-	if c.lp.GetMaxCurrent() != newMax && newMax > 0 {
+	if c.lp.GetMaxCurrent() != newMax && newMax > 0 && c.lp.GetVehicle().OnIdentified().MaxCurrent == nil {
 		c.lp.SetMaxCurrent(newMax)
 	}
 }
