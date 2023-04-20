@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRemainingChargeDuration(t *testing.T) {
@@ -205,5 +206,40 @@ func TestSocFromChargerAndVehicleWithErrors(t *testing.T) {
 		if rm := ce.RemainingChargeDuration(targetSoc, chargePower); rm != remainingDuration {
 			t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
 		}
+	}
+}
+
+func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := mock.NewMockCharger(ctrl)
+	vehicle := mock.NewMockVehicle(ctrl)
+
+	// https://github.com/evcc-io/evcc/pull/7510#issuecomment-1512688548
+	tc := []struct {
+		capacity    float64
+		soc         float64
+		targetsoc   int
+		chargePower float64
+		duration    time.Duration
+	}{
+		{0.75, 10, 60, 300, 1*time.Hour + 23*time.Minute + 20*time.Second},
+		{0.75, 50, 100, 300, 1*time.Hour + 23*time.Minute + 20*time.Second},
+		{17, 10, 60, 7 * 1e3, 1*time.Hour + 20*time.Minute + 57*time.Second},
+		{17, 50, 100, 7 * 1e3, 1*time.Hour + 28*time.Minute + 23*time.Second},
+		{50, 10, 60, 11 * 1e3, 2*time.Hour + 31*time.Minute + 31*time.Second},
+		{50, 50, 100, 11 * 1e3, 2*time.Hour + 57*time.Minute + 17*time.Second},
+		{80, 10, 60, 22 * 1e3, 2*time.Hour + 01*time.Minute + 13*time.Second},
+		{80, 50, 100, 22 * 1e3, 2*time.Hour + 48*time.Minute + 39*time.Second},
+	}
+
+	for _, tc := range tc {
+		t.Log(tc)
+
+		vehicle.EXPECT().Capacity().Return(tc.capacity)
+
+		ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
+		ce.vehicleSoc = tc.soc
+
+		assert.Equal(t, tc.duration, ce.RemainingChargeDuration(tc.targetsoc, tc.chargePower))
 	}
 }
