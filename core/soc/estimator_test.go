@@ -222,14 +222,14 @@ func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 		chargePower float64
 		duration    time.Duration
 	}{
-		{075, 10, 60, 0.3, 1*time.Hour + 23*time.Minute},
-		{075, 50, 100, 0.3, 1*time.Hour + 23*time.Minute},
-		{17, 10, 60, 7, 1*time.Hour + 20*time.Minute},
-		{17, 50, 100, 7, 1*time.Hour + 28*time.Minute},
-		{50, 10, 60, 11, 2*time.Hour + 31*time.Minute},
-		{50, 50, 100, 11, 2*time.Hour + 57*time.Minute},
-		{80, 10, 60, 22, 2*time.Hour + 01*time.Minute},
-		{80, 50, 100, 22, 2*time.Hour + 48*time.Minute},
+		{0.75, 10, 60, 300, 1*time.Hour + 23*time.Minute + 20*time.Second},
+		{0.75, 50, 100, 300, 1*time.Hour + 23*time.Minute + 20*time.Second},
+		{17, 10, 60, 7 * 1e3, 1*time.Hour + 20*time.Minute + 57*time.Second},
+		{17, 50, 100, 7 * 1e3, 1*time.Hour + 28*time.Minute + 23*time.Second},
+		{50, 10, 60, 11 * 1e3, 2*time.Hour + 31*time.Minute + 31*time.Second},
+		{50, 50, 100, 11 * 1e3, 2*time.Hour + 57*time.Minute + 17*time.Second},
+		{80, 10, 60, 22 * 1e3, 2*time.Hour + 01*time.Minute + 13*time.Second},
+		{80, 50, 100, 22 * 1e3, 2*time.Hour + 48*time.Minute + 39*time.Second},
 	}
 
 	for _, tc := range tc {
