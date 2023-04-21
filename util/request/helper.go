@@ -82,3 +82,13 @@ func (r *Helper) GetJSON(url string, res interface{}) error {
 	}
 	return err
 }
+
+// PostJSON executes HTTP POST request and decodes JSON response.
+// It returns a StatusError on response codes other than HTTP 2xx.
+func (r *Helper) PostJSON(url string, res interface{}) error {
+	req, err := New(http.MethodPost, url, nil, AcceptJSON)
+	if err == nil {
+		err = r.DoJSON(req, &res)
+	}
+	return err
+}

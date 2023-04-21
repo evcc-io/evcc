@@ -3,11 +3,6 @@ package easee
 // API is the Easee API endpoint
 const API = "https://api.easee.cloud/api"
 
-const (
-	ChargePause  = "pause_charging"
-	ChargeResume = "resume_charging"
-)
-
 // charge mode definition
 const (
 	ModeOffline       int = 0
