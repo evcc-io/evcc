@@ -1,6 +1,6 @@
 template: pantabox
 products:
-  - brand: Inro
+  - brand: INRO
     description:
       generic: Pantabox
 params:
