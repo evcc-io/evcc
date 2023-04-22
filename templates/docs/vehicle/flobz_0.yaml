@@ -6,16 +6,14 @@ render:
       type: template
       template: flobz
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: # Port (Optional)
+      url: http://192.0.2.2
       vin: W... # Erforderlich
       capacity: 50 # Akkukapazität in kWh (Optional)
     advanced: |
       type: template
       template: flobz
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: # Port (Optional)
+      url: http://192.0.2.2
       vin: W... # Erforderlich
       capacity: 50 # Akkukapazität in kWh (Optional)
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können (Optional)

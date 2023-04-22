@@ -1,0 +1,13 @@
+product:
+  brand: Bosswerk
+  description: MI series micro inverter
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: deye
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 80 # Port (Optional)
+      user: admin # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) (Optional)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) (Optional)

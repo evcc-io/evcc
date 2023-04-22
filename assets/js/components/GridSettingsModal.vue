@@ -129,25 +129,32 @@ export default {
 			return this.smartCostUnit === CO2_UNIT;
 		},
 		costOptions() {
-			const result = [];
+			const values = [];
 			const stepSize = this.optionStepSize;
 			for (let i = 1; i <= 100; i++) {
-				const value = stepSize * i;
+				values.push(stepSize * i);
+			}
+			// add special entry if currently selected value is not in the scale
+			const selected = this.selectedSmartCostLimit;
+			if (selected !== undefined && !values.includes(selected)) {
+				values.push(selected);
+			}
+			values.sort((a, b) => a - b);
+			return values.map((value) => {
 				const name = `< ${
 					this.isCo2
 						? this.fmtCo2Medium(value)
 						: this.fmtPricePerKWh(value, this.smartCostUnit)
 				}`;
-				result.push({ value, name });
-			}
-			return result;
+				return { value, name };
+			});
 		},
 		optionStepSize() {
 			if (!this.tariff) {
 				return 1;
 			}
 			const { max } = this.costRange(this.totalSlots);
-			for (const scale of [0.1, 1, 10, 100, 1000]) {
+			for (const scale of [0.1, 1, 10, 50, 100, 200, 500, 1000, 2000, 5000, 10000]) {
 				if (max < scale) {
 					return scale / 100;
 				}
