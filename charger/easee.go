@@ -239,13 +239,15 @@ func (c *Easee) waitForInitialUpdate(done chan struct{}) {
 func (c *Easee) ProductUpdate(i json.RawMessage) {
 	var res easee.Observation
 
-	err := json.Unmarshal(i, &res)
-	if err != nil {
+	if err := json.Unmarshal(i, &res); err != nil {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
 		return
 	}
 
-	var value interface{}
+	var (
+		value interface{}
+		err   error
+	)
 
 	switch res.DataType {
 	case easee.Boolean:
@@ -338,8 +340,7 @@ func (c *Easee) ChargerUpdate(i json.RawMessage) {
 func (c *Easee) CommandResponse(i json.RawMessage) {
 	var res easee.SignalRCommandResponse
 
-	err := json.Unmarshal(i, &res)
-	if err != nil {
+	if err := json.Unmarshal(i, &res); err != nil {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
 		return
 	}
