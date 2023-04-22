@@ -56,9 +56,8 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid               string
-	resumeCommandTicks int64
-	lp                 loadpoint.API
+	rfid string
+	lp   loadpoint.API
 }
 
 func init() {
@@ -278,7 +277,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	}
 	c.updated = time.Now()
 
-	c.log.TRACE.Printf("%s: %s %v", res.Mid, res.ID, value)
+	c.log.TRACE.Printf("ProductUpdate %s: %s %v", res.Mid, res.ID, value)
 
 	switch res.ID {
 	case easee.USER_IDTOKEN:
@@ -303,6 +302,12 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.phaseMode = value.(int)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
+		// ensure that charger current matches evcc's expectation
+		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current {
+			if err = c.MaxCurrent(int64(c.current)); err != nil {
+				c.log.ERROR.Println(err)
+			}
+		}
 	case easee.CHARGER_OP_MODE:
 		switch value.(int) {
 		case easee.ModeDisconnected:
@@ -326,7 +331,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 // ChargerUpdate implements the signalr receiver
 func (c *Easee) ChargerUpdate(i json.RawMessage) {
-	c.log.TRACE.Printf("JSON ChargerUpdate: %s", i)
 	// c.observe("ChargerUpdate", i)
 }
 
@@ -339,15 +343,7 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
 		return
 	}
-
-	// reapply current limit after successfull resume command
-	if res.Ticks == c.resumeCommandTicks {
-		c.log.TRACE.Printf("resume confirmed, reapply current limit: %dA", int64(c.current))
-		c.resumeCommandTicks = 0
-		if err = c.MaxCurrent(int64(c.current)); err != nil {
-			c.log.ERROR.Println(err)
-		}
-	}
+	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {
@@ -395,19 +391,12 @@ func (c *Easee) Enable(enable bool) error {
 		resp.Body.Close()
 	}
 
-	// resume
+	// resume/stop charger
+	action := easee.ChargePause
 	if enable {
-		var cmd easee.RestCommandResponse
-		uri := fmt.Sprintf("%s/chargers/%s/commands/resume_charging", easee.API, c.charger)
-		err := c.PostJSON(uri, &cmd)
-		if err == nil {
-			c.resumeCommandTicks = cmd.Ticks
-		}
-		return err
+		action = easee.ChargeResume
 	}
-
-	// pause
-	uri := fmt.Sprintf("%s/chargers/%s/commands/pause_charging", easee.API, c.charger)
+	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	_, err := c.Post(uri, request.JSONContent, nil)
 
 	return err
