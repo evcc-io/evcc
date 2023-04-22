@@ -1429,7 +1429,7 @@ func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool, greenShare float64, effPrice float64, effCo2 float64) {
+func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool, greenShare float64, effPrice *float64, effCo2 *float64) {
 	lp.processTasks()
 
 	mode := lp.GetMode()

@@ -70,13 +70,19 @@
 										{{ fmtKWh(session.chargedEnergy * 1e3) }}
 									</td>
 								</tr>
-								<tr>
-									<th>
+								<tr v-if="session.solarPercentage != null">
+									<th class="align-baseline">
 										{{ $t("sessions.solar") }}
 									</th>
-									<td>{{ fmtNumber(session.solarPercentage, 1) }} %</td>
+									<td>
+										{{ fmtNumber(session.solarPercentage, 1) }} % ({{
+											fmtKWh(
+												session.chargedEnergy * 10 * session.solarPercentage
+											)
+										}})
+									</td>
 								</tr>
-								<tr>
+								<tr v-if="session.price != null">
 									<th class="align-baseline">
 										{{ $t("session.price") }}
 									</th>
@@ -86,7 +92,7 @@
 										{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
 									</td>
 								</tr>
-								<tr>
+								<tr v-if="session.co2PerKWh != null">
 									<th>
 										{{ $t("session.co2") }}
 									</th>
@@ -94,7 +100,7 @@
 										{{ fmtCo2Medium(session.co2PerKWh) }}
 									</td>
 								</tr>
-								<tr>
+								<tr v-if="session.odometer">
 									<th>
 										{{ $t("session.odometer") }}
 									</th>
@@ -102,7 +108,7 @@
 										{{ formatKm(session.odometer) }}
 									</td>
 								</tr>
-								<tr>
+								<tr v-if="session.meterStart">
 									<th class="align-baseline">
 										{{ $t("session.meter") }}
 									</th>

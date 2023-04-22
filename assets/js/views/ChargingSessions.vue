@@ -93,17 +93,29 @@
 											{{ fmtKWh(session.chargedEnergy * 1e3) }}
 										</td>
 										<td class="text-end">
-											{{ fmtNumber(session.solarPercentage, 1) }}%
+											<span v-if="session.solarPercentage != null">
+												{{ fmtNumber(session.solarPercentage, 1) }}%
+											</span>
+											<span v-else class="text-muted">-</span>
 										</td>
 										<td class="text-end">
-											{{ fmtMoney(session.price, currency) }}
-											{{ fmtCurrencySymbol(currency) }}
+											<span v-if="session.price != null">
+												{{ fmtMoney(session.price, currency) }}
+												{{ fmtCurrencySymbol(currency) }}
+											</span>
+											<span v-else class="text-muted">-</span>
 										</td>
 										<td class="text-end">
-											{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
+											<span v-if="session.pricePerKWh != null">
+												{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
+											</span>
+											<span v-else class="text-muted">-</span>
 										</td>
 										<td class="text-end pe-0">
-											{{ fmtCo2Medium(session.co2PerKWh) }}
+											<span v-if="session.co2PerKWh != null">
+												{{ fmtCo2Medium(session.co2PerKWh) }}
+											</span>
+											<span v-else class="text-muted">-</span>
 										</td>
 									</tr>
 								</tbody>

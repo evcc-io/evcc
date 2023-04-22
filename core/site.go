@@ -27,7 +27,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // Updater abstracts the Loadpoint implementation for testing
 type Updater interface {
 	loadpoint.API
-	Update(availablePower float64, autoCharge, batteryBuffered bool, greenShare float64, effectivePrice float64, effectiveCo2 float64)
+	Update(availablePower float64, autoCharge, batteryBuffered bool, greenShare float64, effectivePrice *float64, effectiveCo2 *float64)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -585,23 +585,25 @@ func (site *Site) greenShare() float64 {
 }
 
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
-func (s *Site) effectivePrice(greenShare float64) float64 {
+func (s *Site) effectivePrice(greenShare float64) *float64 {
 	if grid, err := s.tariffs.CurrentGridPrice(); err == nil {
 		feedin, err := s.tariffs.CurrentFeedInPrice()
 		if err != nil {
 			feedin = 0
 		}
-		return grid*(1-greenShare) + feedin*greenShare
+		effPrice := grid*(1-greenShare) + feedin*greenShare
+		return &effPrice
 	}
-	return math.NaN()
+	return nil
 }
 
 // effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
-func (s *Site) effectiveCo2(greenShare float64) float64 {
+func (s *Site) effectiveCo2(greenShare float64) *float64 {
 	if co2, err := s.tariffs.CurrentCo2(); err == nil {
-		return co2 * (1 - greenShare)
+		effCo2 := co2 * (1 - greenShare)
+		return &effCo2
 	}
-	return math.NaN()
+	return nil
 }
 
 func (s *Site) publishTariffs() {
@@ -618,10 +620,10 @@ func (s *Site) publishTariffs() {
 	if co2, err := s.tariffs.CurrentCo2(); err == nil {
 		s.publishDelta("tariffCo2", co2)
 	}
-	if price := s.effectivePrice(greenShare); !math.IsNaN(price) {
+	if price := s.effectivePrice(greenShare); price != nil {
 		s.publish("tariffEffectivePrice", price)
 	}
-	if co2 := s.effectiveCo2(greenShare); !math.IsNaN(co2) {
+	if co2 := s.effectiveCo2(greenShare); co2 != nil {
 		s.publish("tariffEffectiveCo2", co2)
 	}
 }
