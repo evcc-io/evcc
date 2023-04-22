@@ -235,16 +235,19 @@ func (c *Easee) waitForInitialUpdate(done chan struct{}) {
 	close(done)
 }
 
-// observe handles the subscription messages
-func (c *Easee) observe(typ string, i json.RawMessage) {
+// ProductUpdate implements the signalr receiver
+func (c *Easee) ProductUpdate(i json.RawMessage) {
 	var res easee.Observation
-	err := json.Unmarshal(i, &res)
-	if err != nil {
-		c.log.ERROR.Printf("invalid message: %s %s %v", i, typ, err)
+
+	if err := json.Unmarshal(i, &res); err != nil {
+		c.log.ERROR.Printf("invalid message: %s %v", i, err)
 		return
 	}
 
-	var value interface{}
+	var (
+		value interface{}
+		err   error
+	)
 
 	switch res.DataType {
 	case easee.Boolean:
@@ -275,6 +278,8 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		}()
 	}
 	c.updated = time.Now()
+
+	c.log.TRACE.Printf("ProductUpdate %s: %s %v", res.Mid, res.ID, value)
 
 	switch res.ID {
 	case easee.USER_IDTOKEN:
@@ -324,13 +329,6 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			value.(int) == easee.ModeCompleted ||
 			value.(int) == easee.ModeReadyToCharge
 	}
-
-	c.log.TRACE.Printf("%s %s: %s %v", typ, res.Mid, res.ID, value)
-}
-
-// ProductUpdate implements the signalr receiver
-func (c *Easee) ProductUpdate(i json.RawMessage) {
-	c.observe("ProductUpdate", i)
 }
 
 // ChargerUpdate implements the signalr receiver
@@ -340,7 +338,13 @@ func (c *Easee) ChargerUpdate(i json.RawMessage) {
 
 // CommandResponse implements the signalr receiver
 func (c *Easee) CommandResponse(i json.RawMessage) {
-	// c.observe("CommandResponse", i)
+	var res easee.SignalRCommandResponse
+
+	if err := json.Unmarshal(i, &res); err != nil {
+		c.log.ERROR.Printf("invalid message: %s %v", i, err)
+		return
+	}
+	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {
@@ -393,7 +397,6 @@ func (c *Easee) Enable(enable bool) error {
 	if enable {
 		action = easee.ChargeResume
 	}
-
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	_, err := c.Post(uri, request.JSONContent, nil)
 

@@ -10,6 +10,23 @@ type Observation struct {
 	Value     string
 }
 
+type SignalRCommandResponse struct {
+	SerialNumber string
+	ID           int
+	Timestamp    time.Time
+	DeliveredAt  time.Time
+	WasAccepted  bool
+	ResultCode   string
+	Comment      string
+	Ticks        int64
+}
+
+type RestCommandResponse struct {
+	Device    string
+	CommandId int
+	Ticks     int64
+}
+
 type DataType int
 
 // https://github.com/Masterloop/Masterloop.Core.Types/blob/master/src/Masterloop.Core.Types/Base/DataType.cs
