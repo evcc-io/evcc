@@ -8,5 +8,3 @@ render: |
   type: peugeot
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
-  {{ if ne .gigyaapikey "" }}gigyaapikey: {{ .gigyaapikey }}{{ end }}
-  {{ if ne .kameronapikey "" }}kameronapikey: {{ .kameronapikey }}{{ end }}
