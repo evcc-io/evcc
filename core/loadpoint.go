@@ -36,23 +36,10 @@ const (
 	evVehicleSoc          = "soc"        // vehicle soc progress
 	evVehicleUnidentified = "guest"      // vehicle unidentified
 
-	pvTimer   = "pv"
-	pvEnable  = "enable"
-	pvDisable = "disable"
-
-	guardTimer  = "guard"
-	guardEnable = "enable"
-
-	phaseTimer   = "phase"
-	phaseScale1p = "scale1p"
-	phaseScale3p = "scale3p"
-
-	timerInactive = "inactive"
-
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
 
-	guardGracePeriod = 60 * time.Second // allow out of sync during this timespan
+	guardGracePeriod = 60 * time.Second // allow out of sync during behavior for this duration
 )
 
 // elapsed is the time an expired timer will be set to
@@ -574,6 +561,8 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.setConfiguredPhases(lp.ConfiguredPhases)
 	lp.publish(phasesEnabled, lp.phases)
 	lp.publish(phasesActive, lp.activePhases())
+
+	// timers
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 	lp.publishTimer(guardTimer, 0, timerInactive)
@@ -674,7 +663,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			lp.publishTimer(guardTimer, lp.GuardDuration, guardEnable)
 			return nil
 		}
-		lp.elapseGuard()
+		lp.elapseGuardTimer()
 
 		// remote stop
 		// TODO https://github.com/evcc-io/evcc/discussions/1929
@@ -865,46 +854,6 @@ func (lp *Loadpoint) effectiveCurrent() float64 {
 	return lp.chargeCurrent
 }
 
-// elapsePVTimer puts the pv enable/disable timer into elapsed state
-func (lp *Loadpoint) elapsePVTimer() {
-	if lp.pvTimer.Equal(elapsed) {
-		return
-	}
-
-	lp.log.DEBUG.Printf("pv timer elapse")
-
-	lp.pvTimer = elapsed
-	lp.publishTimer(pvTimer, 0, timerInactive)
-
-	lp.elapseGuard()
-}
-
-// resetPVTimer resets the pv enable/disable timer to disabled state
-func (lp *Loadpoint) resetPVTimer(typ ...string) {
-	if lp.pvTimer.IsZero() {
-		return
-	}
-
-	msg := "pv timer reset"
-	if len(typ) == 1 {
-		msg = fmt.Sprintf("pv %s timer reset", typ[0])
-	}
-	lp.log.DEBUG.Printf(msg)
-
-	lp.pvTimer = time.Time{}
-	lp.publishTimer(pvTimer, 0, timerInactive)
-}
-
-// resetPhaseTimer resets the phase switch timer to disabled state
-func (lp *Loadpoint) resetPhaseTimer() {
-	if lp.phaseTimer.IsZero() {
-		return
-	}
-
-	lp.phaseTimer = time.Time{}
-	lp.publishTimer(phaseTimer, 0, timerInactive)
-}
-
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (lp *Loadpoint) scalePhasesRequired() bool {
 	_, ok := lp.charger.(api.PhaseSwitcher)
@@ -1033,37 +982,12 @@ func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		waiting = true
 	}
 
-	// reset timer to disabled state
+	// reset timer to inactive state
 	if !waiting && !lp.phaseTimer.IsZero() {
 		lp.resetPhaseTimer()
 	}
 
 	return false
-}
-
-// TODO move up to timer functions
-func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action string) {
-	timer := lp.pvTimer
-	if name == phaseTimer {
-		timer = lp.phaseTimer
-	}
-	if name == guardTimer {
-		timer = lp.guardUpdated
-	}
-
-	remaining := delay - lp.clock.Since(timer)
-	if remaining < 0 {
-		remaining = 0
-	}
-
-	lp.publish(name+"Action", action)
-	lp.publish(name+"Remaining", remaining)
-
-	if action == timerInactive {
-		lp.log.DEBUG.Printf("%s timer %s", name, action)
-	} else {
-		lp.log.DEBUG.Printf("%s %s in %v", name, action, remaining.Round(time.Second))
-	}
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
@@ -1119,10 +1043,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			}
 		} else {
 			// reset timer
-			lp.resetPVTimer("disable")
+			lp.resetPVTimer(pvDisable)
 		}
 
-		// lp.log.DEBUG.Println("pv disable timer: keep enabled")
+		// keep enabled
 		return minCurrent
 	}
 
@@ -1151,14 +1075,14 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			}
 		} else {
 			// reset timer
-			lp.resetPVTimer("enable")
+			lp.resetPVTimer(pvEnable)
 		}
 
-		// lp.log.DEBUG.Println("pv enable timer: keep disabled")
+		// keep disabled
 		return 0
 	}
 
-	// reset timer to disabled state
+	// reset timer to inactive state
 	lp.resetPVTimer()
 
 	// cap at maximum current
@@ -1370,14 +1294,6 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		// trigger message after variables are updated
 		lp.bus.Publish(evVehicleSoc, f)
-	}
-}
-
-func (lp *Loadpoint) elapseGuard() {
-	if lp.guardUpdated != elapsed {
-		lp.log.DEBUG.Print("charger: guard elapse")
-		lp.guardUpdated = elapsed
-		lp.publishTimer(guardTimer, 0, timerInactive)
 	}
 }
 
