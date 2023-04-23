@@ -4,16 +4,6 @@ products:
 params:
   - preset: vehicle-base
   - preset: vehicle-identify
-  - name: gigyaapikey
-    type: string
-    description:
-      en: Manual Gigya API-Key overwrite (optional)
-      de: Manuelle Eingabe des Gigya API-Schlüssels (optional)
-  - name: kameronapikey
-    type: string
-    description:
-      en: Manual Kameron API-Key overwrite (optional)
-      de: Manuelle Eingabe des Kameron API-Schlüssels (optional)
 render: |
   type: peugeot
   {{ include "vehicle-base" . }}
