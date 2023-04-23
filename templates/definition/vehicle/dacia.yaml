@@ -6,7 +6,19 @@ params:
   - preset: vehicle-identify
   - name: capacity
     default: 27.4
+  - name: gigyaapikey
+    type: string
+    description:
+      en: Manual Gigya API-Key overwrite (optional)
+      de: Manuelle Eingabe des Gigya API-Schlüssels (optional)
+  - name: kameronapikey
+    type: string
+    description:
+      en: Manual Kameron API-Key overwrite (optional)
+      de: Manuelle Eingabe des Kameron API-Schlüssels (optional)
 render: |
   type: dacia
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
+  {{ if ne .gigyaapikey "" }}gigyaapikey: {{ .gigyaapikey }}{{ end }}
+  {{ if ne .kameronapikey "" }}kameronapikey: {{ .kameronapikey }}{{ end }}

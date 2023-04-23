@@ -37,10 +37,10 @@ func init() {
 // NewRenaultDaciaFromConfig creates a new Renault/Dacia vehicle
 func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                       `mapstructure:",squash"`
-		User, Password, Region, VIN string
-		Cache                       time.Duration
-		Timeout                     time.Duration
+		embed                                                   `mapstructure:",squash"`
+		User, Password, Region, VIN, GigyaAPIKey, KameronAPIKey string
+		Cache                                                   time.Duration
+		Timeout                                                 time.Duration
 	}{
 		Region:  "de_DE",
 		Cache:   interval,
@@ -64,11 +64,17 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	keys := keys.New(log)
 	keys.Load(cc.Region)
 
+	if cc.GigyaAPIKey != "" {
+		keys.Gigya.APIKey = cc.GigyaAPIKey
+	}
 	identity := gigya.NewIdentity(log, keys.Gigya)
 	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return nil, err
 	}
 
+	if cc.KameronAPIKey != "" {
+		keys.Kamereon.APIKey = cc.KameronAPIKey
+	}
 	api := kamereon.New(log, keys.Kamereon, identity, func() error {
 		return identity.Login(cc.User, cc.Password)
 	})

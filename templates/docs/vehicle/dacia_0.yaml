@@ -9,6 +9,8 @@ render:
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind (Optional)
       capacity: 27.4 # Akkukapazität in kWh (Optional)
+      gigyaapikey: # Optional
+      kameronapikey: # Optional
     advanced: |
       type: template
       template: dacia
@@ -27,3 +29,5 @@ render:
       maxCurrent: 16 # Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll (Optional)
       identifiers: # Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox (Optional)
       priority: # Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von PV-Energie (Optional)
+      gigyaapikey: # Optional
+      kameronapikey: # Optional
