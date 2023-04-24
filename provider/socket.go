@@ -122,10 +122,12 @@ func (p *Socket) listen() {
 
 			p.log.TRACE.Printf("recv: %s", b)
 
-			p.mux.Lock()
-			p.val = b
-			p.wait.Update()
-			p.mux.Unlock()
+			if v, err := p.pipeline.Process(b); err == nil {
+				p.mux.Lock()
+				p.val = v
+				p.wait.Update()
+				p.mux.Unlock()
+			}
 		}
 	}
 }
@@ -146,12 +148,10 @@ var _ StringProvider = (*Socket)(nil)
 // StringGetter sends string request
 func (p *Socket) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		b, err := p.hasValue()
+		v, err := p.hasValue()
 		if err != nil {
 			return "", err
 		}
-
-		v, err := p.pipeline.Process(b)
 
 		return string(v), err
 	}

@@ -102,6 +102,7 @@ require (
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.25.0
+	nhooyr.io/websocket v1.8.7
 )
 
 require (
@@ -196,7 +197,6 @@ require (
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.21.1 // indirect
-	nhooyr.io/websocket v1.8.7 // indirect
 )
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230102102528-4d59ac6910c6
