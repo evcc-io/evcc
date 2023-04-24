@@ -13,7 +13,6 @@ import (
 )
 
 func TestSocketProvider(t *testing.T) {
-	// ctx, cancel := context.WithTimeout(r.Context(), time.Second*10)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -24,7 +23,7 @@ func TestSocketProvider(t *testing.T) {
 
 		uuids := []string{"foo", "bar"}
 		for i := 0; ; i++ {
-			json := fmt.Sprintf(`{"data":{"uuid":"%s","tuples":[[1682319567986,%d,1]]}}`, uuids[i%2], i%2)
+			json := fmt.Sprintf(`{"data":{"uuid":"%s","tuples":[[1682319567986,%d]]}}`, uuids[i%2], i%2)
 
 			if err := c.Write(ctx, websocket.MessageText, []byte(json)); err != nil {
 				require.NoError(t, err)
