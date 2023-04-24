@@ -222,13 +222,13 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 }
 
 func (c *EEBus) updateState() (api.ChargeStatus, error) {
+	if !c.isConnected() {
+		return api.StatusNone, api.ErrTimeout
+	}
+
 	currentState, err := c.emobility.EVCurrentChargeState()
 	if err != nil {
 		return api.StatusNone, err
-	}
-
-	if !c.isConnected() {
-		return api.StatusNone, api.ErrTimeout
 	}
 
 	switch currentState {
