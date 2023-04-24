@@ -52,7 +52,7 @@ func NewWattpilot(uri, password string, cache time.Duration, loglevel string) (a
 		c.log.WARN.Printf("Could not parse loglevel %s - %v", loglevel, err)
 	}
 
-	if _, err := c.api.Connect(); err != nil {
+	if err := c.api.Connect(); err != nil {
 		return nil, err
 	}
 
