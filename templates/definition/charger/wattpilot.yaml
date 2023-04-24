@@ -14,6 +14,7 @@ requirements:
 params:
   - name: host
   - name: password
+  - name: loglevel
 render: |
   type: wattpilot
   {{ if .host }}
@@ -21,4 +22,7 @@ render: |
   {{ end }}
   {{ if ne .password "" }}
   password: {{ .password }}
+  {{ end }}
+  {{ if ne .loglevel "" }}
+  loglevel: {{ .loglevel }}
   {{ end }}
