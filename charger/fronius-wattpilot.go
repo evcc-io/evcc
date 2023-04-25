@@ -13,7 +13,6 @@ import (
 // Wattpilot charger implementation
 type Wattpilot struct {
 	api *wattpilot.Wattpilot
-	log *util.Logger
 }
 
 func init() {
@@ -45,11 +44,6 @@ func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error
 
 	c := &Wattpilot{
 		api: wattpilot.New(uri, password),
-		log: util.NewLogger("wattpilot"),
-	}
-	loglevel := util.LogLevelForArea("wattpilot").String()
-	if err := c.api.ParseLogLevel(loglevel); err != nil {
-		c.log.WARN.Printf("Could not parse loglevel %s - %v", loglevel, err)
 	}
 
 	if err := c.api.Connect(); err != nil {
