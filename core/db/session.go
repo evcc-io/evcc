@@ -93,9 +93,7 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 				val = mp.Sprint(number.Decimal(fVal, number.NoSeparator(), number.MaxFractionDigits(3)))
 			}
 		case reflect.Ptr:
-			if rVal.IsNil() {
-				val = ""
-			} else {
+			if !rVal.IsNil() {
 				val = mp.Sprint(number.Decimal(*fVal.(*float64), number.NoSeparator(), number.MaxFractionDigits(3)))
 			}
 		case reflect.Struct:
