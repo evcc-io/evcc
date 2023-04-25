@@ -11,4 +11,3 @@ render:
       template: fronius-wattpilot
       host: 192.0.2.2 # IP-Adresse oder Hostname
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) (Optional)
-      loglevel: warn # Optional

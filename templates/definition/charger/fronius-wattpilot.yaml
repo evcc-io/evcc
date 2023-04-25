@@ -21,6 +21,3 @@ render: |
   type: wattpilot
   uri: {{ .host }}
   password: {{ .password }}
-  {{ if ne .loglevel "" }}
-  loglevel: {{ .loglevel }}
-  {{ end }}

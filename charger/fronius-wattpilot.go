@@ -26,7 +26,6 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 		URI      string
 		Password string
 		Cache    time.Duration
-		Loglevel string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -37,17 +36,18 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("must have uri and password")
 	}
 
-	return NewWattpilot(cc.URI, cc.Password, cc.Cache, cc.Loglevel)
+	return NewWattpilot(cc.URI, cc.Password, cc.Cache)
 
 }
 
 // NewWattpilot creates Wattpilot charger
-func NewWattpilot(uri, password string, cache time.Duration, loglevel string) (api.Charger, error) {
+func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error) {
 
 	c := &Wattpilot{
 		api: wattpilot.New(uri, password),
 		log: util.NewLogger("wattpilot"),
 	}
+	loglevel := util.LogLevelForArea("wattpilot").String()
 	if err := c.api.ParseLogLevel(loglevel); err != nil {
 		c.log.WARN.Printf("Could not parse loglevel %s - %v", loglevel, err)
 	}
