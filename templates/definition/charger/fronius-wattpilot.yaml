@@ -15,8 +15,6 @@ params:
   - name: host
   - name: password
     mask: true
-  - name: loglevel
-    default: warn
 render: |
   type: wattpilot
   uri: {{ .host }}
