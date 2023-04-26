@@ -73,9 +73,9 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fahrzeug Logins"
+needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
 settings = "Einstellungen"
-needHelp = "Hilfe benötigt?"
 
 [main]
 vehicles = "Parkplatz"
