@@ -80,31 +80,26 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 		}
 
 		var val string
-		format := f.Tag("format")
+		var digits int
+		if format := f.Tag("format"); format == "int" {
+			digits = 3
+		}
 
-		fVal := f.Value()
-		rVal := reflect.ValueOf(fVal)
-		switch rVal.Kind() {
-		case reflect.Float64:
-			switch format {
-			case "int":
-				val = mp.Sprint(number.Decimal(fVal, number.NoSeparator(), number.MaxFractionDigits(0)))
-			default:
-				val = mp.Sprint(number.Decimal(fVal, number.NoSeparator(), number.MaxFractionDigits(3)))
-			}
-		case reflect.Ptr:
-			if !rVal.IsNil() {
-				val = mp.Sprint(number.Decimal(*fVal.(*float64), number.NoSeparator(), number.MaxFractionDigits(3)))
-			}
-		case reflect.Struct:
-			if rVal.Type() == reflect.TypeOf(time.Time{}) {
-				if !fVal.(time.Time).IsZero() {
-					val = fVal.(time.Time).Local().Format("2006-01-02 15:04:05")
-				}
-			} else {
-				val = "unknown struct"
+		switch v := f.Value().(type) {
+		case float64:
+			val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(digits)))
+		case time.Time:
+			if !v.IsZero() {
+				val = v.Local().Format("2006-01-02 15:04:05")
 			}
 		default:
+			if rv := reflect.ValueOf(v); rv.Kind() == reflect.Ptr {
+				if pv := reflect.Indirect(rv); pv.CanFloat() && !rv.IsNil() {
+					val = mp.Sprint(number.Decimal(pv.Float(), number.NoSeparator(), number.MaxFractionDigits(digits)))
+				}
+				break
+			}
+
 			val = fmt.Sprintf("%v", f.Value())
 		}
 
