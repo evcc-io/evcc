@@ -10,13 +10,15 @@ const (
 
 // charge mode definition
 const (
-	ModeOffline       int = 0
-	ModeDisconnected  int = 1
-	ModeAwaitingStart int = 2
-	ModeCharging      int = 3
-	ModeCompleted     int = 4
-	ModeError         int = 5
-	ModeReadyToCharge int = 6
+	ModeOffline                int = 0
+	ModeDisconnected           int = 1
+	ModeAwaitingStart          int = 2
+	ModeCharging               int = 3
+	ModeCompleted              int = 4
+	ModeError                  int = 5
+	ModeReadyToCharge          int = 6
+	ModeAwaitingAuthentication int = 7
+	ModeDeauthenticating       int = 8
 )
 
 // Charger is the charger type
