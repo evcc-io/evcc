@@ -75,6 +75,7 @@ github = "GitHub"
 login = "Fahrzeug Logins"
 sessions = "Ladevorgänge"
 settings = "Einstellungen"
+needHelp = "Hilfe benötigt?"
 
 [main]
 vehicles = "Parkplatz"

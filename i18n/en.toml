@@ -75,6 +75,24 @@ github = "GitHub"
 login = "Vehicle logins"
 sessions = "Charging sessions"
 settings = "Settings"
+needHelp = "Need help?"
+
+[help]
+modalTitle = "Need help?"
+primaryActions = "Something does not work the way it supposed to do? These are good places to get help."
+documentationButton = "Documentation"
+discussionsButton = "GitHub discussions"
+secondaryActions = "Still not able to solve your problem? Here are some more heavy handed options."
+issueDescription = "Found a strange or wrong behavior?"
+issueButton = "Report a bug"
+restartDescription = "Tried turning it off and on again?"
+restartButton = "Restart evcc"
+
+[help.restart]
+modalTitle = "Are you sure you want to restart?"
+description = "Under normal circumsances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
+confirm = "Yes, restart!"
+cancel = "Cancel"
 
 [main]
 vehicles = "Parking"

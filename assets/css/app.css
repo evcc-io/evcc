@@ -145,6 +145,10 @@ a:hover {
 	border-radius: 10px !important;
 }
 
+.btn {
+	--bs-btn-border-width: 2px;
+}
+
 .btn-primary,
 .btn-primary:focus {
 	background-color: var(--bs-primary);
@@ -174,19 +178,16 @@ a:hover {
 .btn-outline-primary:focus {
 	color: var(--bs-primary);
 	background-color: transparent;
-	border-width: 2px;
 	border-color: var(--bs-primary);
 }
 .btn-outline-primary:hover {
 	color: var(--evcc-accent3) !important;
 	background-color: transparent !important;
-	border-width: 2px;
 	border-color: var(--evcc-accent3) !important;
 }
 .btn-outline-primary:active {
 	color: var(--evcc-default-text) !important;
 	background-color: var(--evcc-accent3) !important;
-	border-width: 2px;
 	border-color: var(--evcc-accent3) !important;
 }
 
