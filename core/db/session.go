@@ -80,9 +80,9 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 		}
 
 		var val string
-		var digits int
+		digits := 3
 		if format := f.Tag("format"); format == "int" {
-			digits = 3
+			digits = 0
 		}
 
 		switch v := f.Value().(type) {
