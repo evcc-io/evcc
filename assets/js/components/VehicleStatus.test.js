@@ -119,6 +119,17 @@ describe("timer", () => {
       { remaining: "1:30m" }
     );
   });
+  test("dont show phase enable time of not charging", () => {
+    expectStatus(
+      {
+        phaseAction: "scale1p",
+        connected: true,
+        charging: false,
+        phaseRemainingInterpolated: 90,
+      },
+      "connected"
+    );
+  });
   test("show phase disable timer if it exists", () => {
     expectStatus(
       {
@@ -129,6 +140,17 @@ describe("timer", () => {
       },
       "scale3p",
       { remaining: "1:30m" }
+    );
+  });
+  test("dont show phase disable time of not charging", () => {
+    expectStatus(
+      {
+        phaseAction: "scale3p",
+        connected: true,
+        charging: false,
+        phaseRemainingInterpolated: 90,
+      },
+      "connected"
     );
   });
   test("show guard timer if it exists", () => {

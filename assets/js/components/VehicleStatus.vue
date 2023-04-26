@@ -110,7 +110,7 @@ export default {
 				});
 			}
 
-			if (this.phaseTimerActive) {
+			if (this.phaseTimerActive && this.charging) {
 				return t(this.phaseAction, {
 					remaining: this.fmtShortDuration(this.phaseRemainingInterpolated, true),
 				});
