@@ -142,7 +142,7 @@ describe("timer", () => {
       { remaining: "1:30m" }
     );
   });
-  test("dont show phase disable time of not charging", () => {
+  test("don't show phase disable time if not charging", () => {
     expectStatus(
       {
         phaseAction: "scale3p",
