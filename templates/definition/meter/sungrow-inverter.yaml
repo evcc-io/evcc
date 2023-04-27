@@ -38,7 +38,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 5030 # Total Active Power
+      address: 5008 # Total apparent power
       type: input
       decode: uint32s
   energy:
