@@ -4,12 +4,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"math/rand"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -129,7 +129,7 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) error
 	if token.WaitTimeout(publishTimeout) {
 		return token.Error()
 	}
-	return os.ErrDeadlineExceeded
+	return api.ErrTimeout
 }
 
 // Listen validates uniqueness and registers and attaches listener
@@ -144,9 +144,12 @@ func (m *Client) Listen(topic string, callback func(string)) {
 // ListenSetter creates a /set listener that resets the payload after handling
 func (m *Client) ListenSetter(topic string, callback func(string)) {
 	m.Listen(topic, func(payload string) {
-		callback(payload)
-		if err := m.Publish(topic, true, ""); err != nil {
-			m.log.ERROR.Printf("clear: %v", err)
+		// short-circuit payload reset
+		if payload != "" {
+			callback(payload)
+			if err := m.Publish(topic, true, ""); err != nil {
+				m.log.ERROR.Printf("clear %s: %v", topic, err)
+			}
 		}
 	})
 }
