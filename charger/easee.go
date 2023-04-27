@@ -45,14 +45,13 @@ type Easee struct {
 	charger               string
 	site, circuit         int
 	updated               time.Time
-	chargeStatus          api.ChargeStatus
 	log                   *util.Logger
 	mux                   *sync.Cond
 	dynamicChargerCurrent float64
 	current               float64
 	chargerEnabled        bool
 	smartCharging         bool
-	enabledStatus         bool
+	opMode                int
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -311,23 +310,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			}
 		}
 	case easee.CHARGER_OP_MODE:
-		switch value.(int) {
-		case easee.ModeDisconnected:
-			c.chargeStatus = api.StatusA
-		case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge:
-			c.chargeStatus = api.StatusB
-		case easee.ModeCharging:
-			c.chargeStatus = api.StatusC
-		case easee.ModeError:
-			c.chargeStatus = api.StatusF
-		default:
-			c.chargeStatus = api.StatusNone
-			c.log.ERROR.Printf("unknown opmode: %d", value.(int))
-		}
-		c.enabledStatus = value.(int) == easee.ModeCharging ||
-			value.(int) == easee.ModeAwaitingStart ||
-			value.(int) == easee.ModeCompleted ||
-			value.(int) == easee.ModeReadyToCharge
+		c.opMode = value.(int)
 	}
 }
 
@@ -361,7 +344,21 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()
 
-	return c.chargeStatus, nil
+	res := api.StatusNone
+
+	switch c.opMode {
+	case easee.ModeDisconnected:
+		res = api.StatusA
+	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge,
+		easee.ModeAwaitingAuthentication, easee.ModeDeauthenticating:
+		res = api.StatusB
+	case easee.ModeCharging:
+		res = api.StatusC
+	default:
+		return res, fmt.Errorf("invalid opmode: %d", c.opMode)
+	}
+
+	return res, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -369,7 +366,12 @@ func (c *Easee) Enabled() (bool, error) {
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()
 
-	return c.enabledStatus && c.dynamicChargerCurrent > 0, nil
+	enabled := c.opMode == easee.ModeCharging ||
+		c.opMode == easee.ModeAwaitingStart ||
+		c.opMode == easee.ModeCompleted ||
+		c.opMode == easee.ModeReadyToCharge
+
+	return enabled && c.dynamicChargerCurrent > 0, nil
 }
 
 // Enable implements the api.Charger interface
