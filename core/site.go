@@ -27,7 +27,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // Updater abstracts the Loadpoint implementation for testing
 type Updater interface {
 	loadpoint.API
-	Update(availablePower float64, autoCharge, batteryBuffered bool)
+	Update(availablePower float64, autoCharge, batteryBuffered, batteryStart bool)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -57,8 +57,10 @@ type Site struct {
 	Voltage                           float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters                            MetersConfig // Meter references
-	PrioritySoc                       float64      `mapstructure:"prioritySoc"`                       // prefer battery up to this Soc
-	BufferSoc                         float64      `mapstructure:"bufferSoc"`                         // ignore battery above this Soc
+	PrioritySoc                       float64      `mapstructure:"prioritySoc"`                       // prioritize battery up to this soc
+	BufferSoc_                        float64      `mapstructure:"bufferSoc"`                         // deprecated
+	BufferMin                         float64      `mapstructure:"bufferMin"`                         // continue charging from battery above this soc
+	BufferMax                         float64      `mapstructure:"bufferMax"`                         // start charging from battery above this soc
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
 
@@ -177,6 +179,19 @@ func NewSiteFromConfig(
 	// configure meter from references
 	if site.gridMeter == nil && len(site.pvMeters) == 0 {
 		return nil, errors.New("missing either grid or pv meter")
+	}
+
+	if site.BufferSoc_ > 0 {
+		site.BufferMin = site.BufferSoc_
+		site.log.WARN.Println("bufferSoc is deprecated, use bufferMin and bufferMax instead")
+	}
+
+	if site.BufferMax <= site.BufferMin {
+		site.log.WARN.Println("bufferMax must be larger than bufferMin")
+	}
+
+	if site.PrioritySoc > site.BufferMin {
+		site.log.WARN.Println("prioritySoc must not be larger than bufferMin")
 	}
 
 	return site, nil
@@ -491,9 +506,9 @@ func (site *Site) updateMeters() error {
 //   - the net power exported by the site minus a residual margin
 //     (negative values mean grid: export, battery: charging
 //   - if battery buffer can be used for charging
-func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, bool, error) {
+func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, bool, bool, error) {
 	if err := site.updateMeters(); err != nil {
-		return 0, false, err
+		return 0, false, false, err
 	}
 
 	// allow using PV as estimate for grid power
@@ -515,7 +530,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	batteryPower := site.batteryPower
 
 	// handed to loadpoint
-	var batteryBuffered bool
+	var batteryBuffered, batteryStart bool
 
 	if len(site.batteryMeters) > 0 {
 		site.Lock()
@@ -527,7 +542,8 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 			batteryPower = 0
 		} else {
 			// if battery is above bufferSoc allow using it for charging
-			batteryBuffered = site.BufferSoc > 0 && site.batterySoc > site.BufferSoc
+			batteryBuffered = site.BufferMin > 0 && site.batterySoc > site.BufferMin
+			batteryStart = site.BufferMax > 0 && site.batterySoc > site.BufferMax
 		}
 	}
 
@@ -564,7 +580,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
-	return sitePower, batteryBuffered, nil
+	return sitePower, batteryBuffered, batteryStart, nil
 }
 
 func (site *Site) greenShare() float64 {
@@ -661,8 +677,8 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
-	if sitePower, batteryBuffered, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
-		lp.Update(sitePower, autoCharge, batteryBuffered)
+	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
+		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
@@ -689,7 +705,8 @@ func (site *Site) prepare() {
 	site.publish("gridConfigured", site.gridMeter != nil)
 	site.publish("pvConfigured", len(site.pvMeters) > 0)
 	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
-	site.publish("bufferSoc", site.BufferSoc)
+	site.publish("bufferMin", site.BufferMin)
+	site.publish("bufferMax", site.BufferMax)
 	site.publish("prioritySoc", site.PrioritySoc)
 	site.publish("residualPower", site.ResidualPower)
 	site.publish("smartCostLimit", site.SmartCostLimit)

@@ -191,9 +191,15 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 	})
 
-	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferSoc/set", m.root), func(payload string) {
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferMin/set", m.root), func(payload string) {
 		if val, err := strconv.ParseFloat(payload, 64); err == nil {
-			_ = site.SetBufferSoc(val)
+			_ = site.SetBufferMin(val)
+		}
+	})
+
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferMax/set", m.root), func(payload string) {
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetBufferMax(val)
 		}
 	})
 

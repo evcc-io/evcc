@@ -14,8 +14,10 @@ type API interface {
 	// battery
 	//
 
-	GetBufferSoc() float64
-	SetBufferSoc(float64) error
+	GetBufferMin() float64
+	SetBufferMin(float64) error
+	GetBufferMax() float64
+	SetBufferMax(float64) error
 	GetPrioritySoc() float64
 	SetPrioritySoc(float64) error
 

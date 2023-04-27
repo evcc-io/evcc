@@ -1067,7 +1067,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered bool) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.GetMinCurrent()
 	maxCurrent := lp.GetMaxCurrent()
@@ -1091,7 +1091,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
 
 	// in MinPV mode or under special conditions return at least minCurrent
-	if (mode == api.ModeMinPV || batteryBuffered && lp.charging()) && targetCurrent < minCurrent {
+	if (mode == api.ModeMinPV || batteryStart || batteryBuffered && lp.charging()) && targetCurrent < minCurrent {
 		return minCurrent
 	}
 
@@ -1422,7 +1422,7 @@ func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool) {
+func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool) {
 	lp.processTasks()
 
 	mode := lp.GetMode()
@@ -1519,7 +1519,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool)
 			break
 		}
 
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered, batteryStart)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.vehicleClimateActive() {

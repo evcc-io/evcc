@@ -37,15 +37,15 @@ func (site *Site) SetPrioritySoc(soc float64) error {
 	return nil
 }
 
-// GetBufferSoc returns the BufferSoc
-func (site *Site) GetBufferSoc() float64 {
+// GetBufferMin returns the BufferMin
+func (site *Site) GetBufferMin() float64 {
 	site.Lock()
 	defer site.Unlock()
-	return site.BufferSoc
+	return site.BufferMin
 }
 
-// SetBufferSoc sets the BufferSoc
-func (site *Site) SetBufferSoc(soc float64) error {
+// SetBufferMin sets the BufferMin
+func (site *Site) SetBufferMin(soc float64) error {
 	site.Lock()
 	defer site.Unlock()
 
@@ -53,8 +53,30 @@ func (site *Site) SetBufferSoc(soc float64) error {
 		return errors.New("battery not configured")
 	}
 
-	site.BufferSoc = soc
-	site.publish("bufferSoc", site.BufferSoc)
+	site.BufferMin = soc
+	site.publish("bufferMin", site.BufferMin)
+
+	return nil
+}
+
+// GetBufferMax returns the BufferMax
+func (site *Site) GetBufferMax() float64 {
+	site.Lock()
+	defer site.Unlock()
+	return site.BufferMax
+}
+
+// SetBufferMax sets the BufferMax
+func (site *Site) SetBufferMax(soc float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if len(site.batteryMeters) == 0 {
+		return errors.New("battery not configured")
+	}
+
+	site.BufferMax = soc
+	site.publish("bufferMax", site.BufferMax)
 
 	return nil
 }
