@@ -349,14 +349,11 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 	switch c.opMode {
 	case easee.ModeDisconnected:
 		res = api.StatusA
-	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge:
+	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge,
+		easee.ModeAwaitingAuthentication, easee.ModeDeauthenticating:
 		res = api.StatusB
 	case easee.ModeCharging:
 		res = api.StatusC
-	case easee.ModeAwaitingAuthentication:
-		return res, errors.New("awaiting authentication")
-	case easee.ModeDeauthenticating:
-		return res, errors.New("deauthenticating")
 	default:
 		return res, fmt.Errorf("invalid opmode: %d", c.opMode)
 	}
