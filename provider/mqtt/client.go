@@ -172,11 +172,11 @@ func (m *Client) listen(topic string) {
 
 // WaitForToken synchronously waits until token operation completed
 func (m *Client) WaitForToken(action, topic string, token paho.Token) {
+	err := api.ErrTimeout
 	if token.WaitTimeout(publishTimeout) {
-		if token.Error() != nil {
-			m.log.ERROR.Printf("%s: %s: %v", action, topic, token.Error())
-		}
-	} else {
-		m.log.ERROR.Printf("%s: %s: %v", action, topic, api.ErrTimeout)
+		err = token.Error()
+	}
+	if err != nil {
+		m.log.ERROR.Printf("%s: %s: %v", action, topic, err)
 	}
 }
