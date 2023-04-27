@@ -161,12 +161,10 @@ func (m *Client) listen(topic string) {
 		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
 		if len(payload) > 0 {
 			m.mux.Lock()
-			callbacks := m.listener[topic]
-			m.mux.Unlock()
-
-			for _, cb := range callbacks {
-				cb(payload)
+			for _, cb := range m.listener[topic] {
+				go cb(payload)
 			}
+			m.mux.Unlock()
 		}
 	})
 	m.WaitForToken(token)
