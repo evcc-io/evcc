@@ -8,6 +8,6 @@ render:
       type: template
       template: volkszaehler-importexport
       usage: grid
-      url: # Die URL ist zum Beispiel: http://zaehler.network.local:8080/api/data # Optional
+      url: # Die URL ist zum Beispiel: http://zaehler.network.local:8080/api/data (Optional)
       importuuid:
       exportuuid:

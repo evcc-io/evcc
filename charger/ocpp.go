@@ -52,8 +52,8 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		Connector:      1,
 		IdTag:          defaultIdTag,
-		ConnectTimeout: 2 * time.Minute,
-		Timeout:        2 * time.Minute,
+		ConnectTimeout: ocppConnectTimeout,
+		Timeout:        ocppTimeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -230,8 +230,8 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	// get initial meter values and configure sample rate
-	if c.hasMeasurement("Power.Active.Import") || c.hasMeasurement("Energy.Active.Import.Register") {
-		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName)
+	if c.hasMeasurement(types.MeasurandPowerActiveImport) || c.hasMeasurement(types.MeasurandEnergyActiveImportRegister) {
+		ocpp.Instance().TriggerMeterValuesRequest(cp.ID(), cp.Connector())
 
 		if !noConfig && meterSampleInterval > meterInterval && meterInterval > 0 {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {

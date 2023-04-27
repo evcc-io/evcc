@@ -57,6 +57,22 @@ describe("target charge", () => {
   });
 });
 
+describe("climating", () => {
+  test("show climating status", () => {
+    expectStatus(
+      { connected: true, enabled: true, climaterActive: true, charging: true },
+      "climating"
+    );
+    expectStatus(
+      { connected: true, enabled: true, climaterActive: true, charging: false },
+      "climating"
+    );
+  });
+  test("only show climating if enabled", () => {
+    expectStatus({ connected: true, enabled: false, climaterActive: true }, "connected");
+  });
+});
+
 describe("timer", () => {
   test("show pv enable timer if not enabled yet and timer exists", () => {
     expectStatus(
@@ -162,6 +178,35 @@ describe("vehicle target soc", () => {
       },
       "vehicleTargetReached",
       { soc: 70 }
+    );
+  });
+});
+
+describe("smart grid charging", () => {
+  test("show clean energy message", () => {
+    expectStatus(
+      {
+        connected: true,
+        enabled: true,
+        charging: true,
+        tariffCo2: 400,
+        smartCostLimit: 500,
+        smartCostUnit: "gCO2eq",
+      },
+      "cleanEnergyCharging"
+    );
+  });
+  test("show cheap energy message", () => {
+    expectStatus(
+      {
+        connected: true,
+        enabled: true,
+        charging: true,
+        tariffGrid: 0.28,
+        smartCostLimit: 0.29,
+        currency: "EUR",
+      },
+      "cheapEnergyCharging"
     );
   });
 });

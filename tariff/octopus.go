@@ -102,3 +102,8 @@ func (t *Octopus) Rates() (api.Rates, error) {
 	defer t.mux.Unlock()
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
+
+// IsDynamic implements the api.Tariff interface
+func (t *Octopus) IsDynamic() bool {
+	return true
+}

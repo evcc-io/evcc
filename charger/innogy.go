@@ -168,6 +168,10 @@ var _ api.Meter = (*Innogy)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Innogy) CurrentPower() (float64, error) {
+	// https://github.com/evcc-io/evcc/issues/6848
+	if status, err := wb.Status(); status != api.StatusC || err != nil {
+		return 0, err
+	}
 	l1, l2, l3, err := wb.Currents()
 	return 230 * (l1 + l2 + l3), err
 }

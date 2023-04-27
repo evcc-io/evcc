@@ -45,8 +45,8 @@ type Zaptec struct {
 	log         *util.Logger
 	statusCache provider.Cacheable[zaptec.StateResponse]
 	id          string
+	enabled     bool
 	priority    bool
-	cache       time.Duration
 }
 
 func init() {
@@ -88,7 +88,6 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		log:      log,
 		id:       id,
 		priority: priority,
-		cache:    cache,
 	}
 
 	// setup cached values
@@ -99,7 +98,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		err := c.GetJSON(uri, &res)
 
 		return res, err
-	}, c.cache)
+	}, cache)
 
 	provider, err := oidc.NewProvider(context.Background(), zaptec.ApiURL+"/")
 	if err != nil {
@@ -121,17 +120,16 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 	)
 
 	token, err := oc.PasswordCredentialsToken(ctx, user, password)
-
-	if err == nil {
-		c.Transport = &oauth2.Transport{
-			Source: oc.TokenSource(context.Background(), token),
-			Base:   c.Transport,
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	if err == nil {
-		c.id, err = ensureCharger(c.id, c.chargers)
+	c.Transport = &oauth2.Transport{
+		Source: oc.TokenSource(context.Background(), token),
+		Base:   c.Transport,
 	}
+
+	c.id, err = ensureCharger(c.id, c.chargers)
 
 	return c, err
 }
@@ -175,7 +173,7 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c *Zaptec) Enabled() (bool, error) {
 	res, err := c.statusCache.Get()
-	return res.ObservationByID(zaptec.IsEnabled).Bool() && !res.ObservationByID(zaptec.FinalStopActive).Bool(), err
+	return c.enabled && !res.ObservationByID(zaptec.FinalStopActive).Bool(), err
 }
 
 // Enable implements the api.Charger interface
@@ -190,6 +188,7 @@ func (c *Zaptec) Enable(enable bool) error {
 	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
 		_, err = c.DoBody(req)
+		c.enabled = enable
 		c.statusCache.Reset()
 	}
 

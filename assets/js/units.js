@@ -4,6 +4,8 @@ const KM = "km";
 const MILES = "mi";
 export const UNITS = [KM, MILES];
 
+export const CO2_UNIT = "gCO2eq";
+
 const MILES_FACTOR = 0.6213711922;
 
 function isMiles() {

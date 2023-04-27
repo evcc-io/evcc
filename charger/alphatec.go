@@ -31,7 +31,8 @@ import (
 
 // Alphatec charger implementation
 type Alphatec struct {
-	conn *modbus.Connection
+	conn   *modbus.Connection
+	status api.ChargeStatus
 }
 
 const (
@@ -72,7 +73,8 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 	conn.Logger(log.TRACE)
 
 	wb := &Alphatec{
-		conn: conn,
+		conn:   conn,
+		status: api.StatusB,
 	}
 
 	return wb, err
@@ -93,9 +95,16 @@ func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 		res = api.StatusB
 	case 3:
 		res = api.StatusC
+	case 8:
+		res = wb.status
+		if wb.status == api.StatusC {
+			res = api.StatusB
+		}
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
+
+	wb.status = res
 
 	return res, nil
 }

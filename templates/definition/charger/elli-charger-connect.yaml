@@ -21,8 +21,8 @@ requirements:
 
       The support is in beta state and problems can occur!
 params:
-  - preset: eebus-no-meter
+  - preset: eebus
   - name: ip
     required: true
 render: |
-  {{ include "eebus-no-meter" . }}
+  {{ include "eebus" . }}

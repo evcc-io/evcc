@@ -9,5 +9,5 @@ render:
       template: volkszaehler-ws
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 8082 # Port # Optional
+      port: 8082 # Port (Optional)
       uuid:

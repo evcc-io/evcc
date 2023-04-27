@@ -31,11 +31,20 @@ func TestZonesTimeTableMarkers(t *testing.T) {
 		}},
 	}
 
-	assert.Equal(t, []HourMin{
+	expect := []HourMin{
 		{0, 0},
 		{1, 0},
 		{2, 0},
+		{3, 0}, // 1hr intervals
 		{3, 30},
+		{4, 0}, // 1hr intervals
 		{4, 30},
-	}, zones.TimeTableMarkers())
+	}
+
+	// 1hr intervals
+	for hour := 5; hour < 24; hour++ {
+		expect = append(expect, HourMin{hour, 0})
+	}
+
+	assert.Equal(t, expect, zones.TimeTableMarkers())
 }

@@ -321,11 +321,7 @@ presets:
   vehicle-language:
     params:
       - name: language
-  eebus-meter:
-    params:
-      - name: ski
-      - name: ip
-  eebus-no-meter:
+  eebus:
     params:
       - name: ski
       - name: ip

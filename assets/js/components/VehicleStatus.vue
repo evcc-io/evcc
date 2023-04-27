@@ -4,6 +4,7 @@
 
 <script>
 import formatter from "../mixins/formatter";
+import { CO2_UNIT } from "../units";
 
 export default {
 	name: "VehicleStatus",
@@ -24,6 +25,11 @@ export default {
 		guardAction: String,
 		guardRemainingInterpolated: Number,
 		targetChargeDisabled: Boolean,
+		climaterActive: Boolean,
+		smartCostLimit: Number,
+		smartCostUnit: String,
+		tariffGrid: Number,
+		tariffCo2: Number,
 	},
 	computed: {
 		phaseTimerActive() {
@@ -39,6 +45,9 @@ export default {
 		},
 		guardTimerActive() {
 			return this.guardRemainingInterpolated > 0 && this.guardAction === "enable";
+		},
+		isCo2() {
+			return this.smartCostUnit === CO2_UNIT;
 		},
 		message: function () {
 			const t = (key, data) => {
@@ -68,10 +77,24 @@ export default {
 				}
 			}
 
+			// clean energy
+			if (this.charging && this.isCo2 && this.tariffCo2 < this.smartCostLimit) {
+				return t("cleanEnergyCharging");
+			}
+
+			// cheap energy
+			if (this.charging && !this.isCo2 && this.tariffGrid < this.smartCostLimit) {
+				return t("cheapEnergyCharging");
+			}
+
 			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {
 				return t("pvEnable", {
 					remaining: this.fmtShortDuration(this.pvRemainingInterpolated, true),
 				});
+			}
+
+			if (this.enabled && this.climaterActive) {
+				return t("climating");
 			}
 
 			if (this.enabled && !this.charging) {

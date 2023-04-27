@@ -1,16 +1,15 @@
 product:
-  brand: E.ON Drive
-  description: vBox Smart/Pro
+  brand: Compleo
+  description: eBox
+capabilities: ["mA"]
 requirements: ["sponsorship"]
-description: |
-  Firmware 2.77 für Modbus benötigt
 render:
   - default: |
       type: template
-      template: eon-vbox
+      template: innogy-ebox
 
       # Modbus TCP
       modbus: tcpip
-      id: 255
+      id: 1
       host: 192.0.2.2 # Hostname
       port: 502 # Port

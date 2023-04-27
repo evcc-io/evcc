@@ -1,0 +1,17 @@
+template: em2go
+products:
+  - brand: EM2GO
+    description:
+      generic: Pro Power/OCPP/ONC
+capabilities: ["mA"]
+requirements:
+  description:
+    de: "Aktuelle Firmware mit Modbus-Unterstützung notwendig (Pro Power: 1.01 bzw. OCPP/ONC: 3.15)"
+    en: "Recent firmware with Modbus support required (Pro Power: 1.01 and OCPP/ONC: 3.15)"
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: em2go
+  {{- include "modbus" . }}

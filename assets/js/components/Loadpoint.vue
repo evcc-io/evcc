@@ -32,7 +32,6 @@
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
-			@minsoc-updated="setMinSoc"
 		/>
 
 		<div
@@ -106,6 +105,7 @@
 			@target-time-removed="removeTargetTime"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
+			@minsoc-updated="setMinSoc"
 		/>
 	</div>
 </template>
@@ -179,7 +179,6 @@ export default {
 		// details
 		chargePower: Number,
 		chargedEnergy: Number,
-		// chargeDuration: Number,
 		climaterActive: Boolean,
 		chargeRemainingDuration: Number,
 
@@ -199,6 +198,10 @@ export default {
 		pvAction: String,
 		guardRemaining: Number,
 		guardAction: String,
+		smartCostLimit: Number,
+		smartCostUnit: String,
+		tariffGrid: Number,
+		tariffCo2: Number,
 	},
 	data() {
 		return {

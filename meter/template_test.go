@@ -24,6 +24,8 @@ var acceptable = []string{
 	"can only have either uri or device",               // modbus
 	"(Client.Timeout exceeded while awaiting headers)", // http
 	"context deadline exceeded",                        // LG ESS
+	"no ping response for 192.0.2.2",                   // SMA
+	"no such network interface",                        // SMA
 }
 
 func TestTemplates(t *testing.T) {
