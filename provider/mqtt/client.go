@@ -167,16 +167,16 @@ func (m *Client) listen(topic string) {
 			m.mux.Unlock()
 		}
 	})
-	m.WaitForToken(token)
+	m.WaitForToken("subscribe", topic, token)
 }
 
 // WaitForToken synchronously waits until token operation completed
-func (m *Client) WaitForToken(token paho.Token) {
+func (m *Client) WaitForToken(action, topic string, token paho.Token) {
 	if token.WaitTimeout(publishTimeout) {
 		if token.Error() != nil {
-			m.log.ERROR.Printf("error: %s", token.Error())
+			m.log.ERROR.Printf("%s: %s: %v", action, topic, token.Error())
 		}
 	} else {
-		m.log.DEBUG.Println("timeout")
+		m.log.ERROR.Printf("%s: %s: %v", action, topic, api.ErrTimeout)
 	}
 }
