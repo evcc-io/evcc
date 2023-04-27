@@ -146,7 +146,7 @@ func (m *Client) ListenSetter(topic string, callback func(string)) {
 	m.Listen(topic, func(payload string) {
 		callback(payload)
 		if err := m.Publish(topic, true, ""); err != nil {
-			m.log.ERROR.Printf("clear %s: %v", topic, err)
+			m.log.ERROR.Printf("clear: %s: %v", topic, err)
 		}
 	})
 }
