@@ -3,9 +3,9 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
-	"math"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -165,17 +165,14 @@ func (v *Twc3) ChargingTime() (time.Duration, error) {
 }
 
 // Use workaround if voltageC_v is approximately half of grid_v
-//   "voltageA_v": 241.5,
-//   "voltageB_v": 241.5,
-//   "voltageC_v": 118.7,
+//
+//	"voltageA_v": 241.5,
+//	"voltageB_v": 241.5,
+//	"voltageC_v": 118.7,
+//
 // Default state is ~2V on all phases unless charging
-func IsSplitPhase(v *Twc3, res Vitals) (bool) {
-	if math.Abs(res.VoltageCV - res.GridV / 2) < 25 {
-		v.log.DEBUG.Println("Using split-phase workaround")
-		return true
-	} else {
-		return false
-	}
+func (v *Twc3) isSplitPhase(res Vitals) bool {
+	return math.Abs(res.VoltageCV-res.GridV/2) < 25
 }
 
 var _ api.PhaseCurrents = (*Twc3)(nil)
@@ -183,11 +180,10 @@ var _ api.PhaseCurrents = (*Twc3)(nil)
 // Currents implements the api.PhaseCurrents interface
 func (v *Twc3) Currents() (float64, float64, float64, error) {
 	res, err := v.vitalsG()
-	if IsSplitPhase(v, res) {
+	if v.isSplitPhase(res) {
 		return res.CurrentAA + res.CurrentBA, 0, 0, err
-	} else {
-		return res.CurrentAA, res.CurrentBA, res.CurrentCA, err
 	}
+	return res.CurrentAA, res.CurrentBA, res.CurrentCA, err
 }
 
 var _ api.Meter = (*Twc3)(nil)
@@ -196,11 +192,10 @@ var _ api.Meter = (*Twc3)(nil)
 func (v *Twc3) CurrentPower() (float64, error) {
 	res, err := v.vitalsG()
 	if res.ContactorClosed {
-	        if IsSplitPhase(v, res) {
+		if v.isSplitPhase(res) {
 			return (res.CurrentAA * res.VoltageAV) + (res.CurrentBA * res.VoltageBV), err
-		} else {
-			return (res.CurrentAA * res.VoltageAV) + (res.CurrentBA * res.VoltageBV) + (res.CurrentCA * res.VoltageCV), err
 		}
+		return (res.CurrentAA * res.VoltageAV) + (res.CurrentBA * res.VoltageBV) + (res.CurrentCA * res.VoltageCV), err
 	}
 	return 0, err
 }
@@ -210,11 +205,10 @@ var _ api.PhaseVoltages = (*Twc3)(nil)
 // Voltages implements the api.PhaseVoltages interface
 func (v *Twc3) Voltages() (float64, float64, float64, error) {
 	res, err := v.vitalsG()
-	if IsSplitPhase(v, res) {
+	if v.isSplitPhase(res) {
 		return (res.VoltageAV + res.VoltageBV) / 2, 0, 0, err
-	} else {
-		return res.VoltageAV, res.VoltageBV, res.VoltageCV, err
 	}
+	return res.VoltageAV, res.VoltageBV, res.VoltageCV, err
 }
 
 var _ loadpoint.Controller = (*Twc3)(nil)
