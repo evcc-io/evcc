@@ -109,12 +109,6 @@ func (c *Connection) Init() error {
 	return err
 }
 
-// Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
-func (c *Connection) Enabled() (bool, error) {
-	res, err := c.XmlCmd("getValue", c.SwitchChannel, Param{CCUString: "STATE"})
-	return res.CCUBool == "1", err
-}
-
 // Enable sets the homematic HMIP-PSM switchchannel state to true=on/false=off
 func (c *Connection) Enable(enable bool) error {
 	onoff := map[bool]string{true: "1", false: "0"}
@@ -122,10 +116,16 @@ func (c *Connection) Enable(enable bool) error {
 	return err
 }
 
+// Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
+func (c *Connection) Enabled() (bool, error) {
+	res, err := c.getParamset(c.MeterChannel)
+	return getBoolValue(res, "STATE"), err
+}
+
 // CurrentPower reads the homematic HMIP-PSM meterchannel power in W
 func (c *Connection) CurrentPower() (float64, error) {
-	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "POWER"})
-	return res.CCUFloat, err
+	res, err := c.getParamset(c.MeterChannel)
+	return getFloatValue(res, "POWER"), err
 }
 
 // TotalEnergy reads the homematic HMIP-PSM meterchannel energy in Wh
@@ -136,8 +136,8 @@ func (c *Connection) TotalEnergy() (float64, error) {
 
 // Currents reads the homematic HMIP-PSM meterchannel L1 current in A
 func (c *Connection) Currents() (float64, float64, float64, error) {
-	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "CURRENT"})
-	return res.CCUFloat / 1000, 0, 0, err
+	res, err := c.getParamset(c.MeterChannel)
+	return getFloatValue(res, "CURRENT") / 1000, 0, 0, err
 }
 
 // GridCurrentPower reads the homematic HM-ES-TX-WM grid meterchannel power in W
@@ -165,6 +165,19 @@ func getFloatValue(res MethodResponse, valueName string) float64 {
 	return ccuFloat
 }
 
+// getCCUBool selects a float value of a CCU API response member
+func getBoolValue(res MethodResponse, valueName string) bool {
+	var ccuBool bool
+
+	for _, m := range res.Member {
+		if m.Name == valueName {
+			ccuBool = m.Value.CCUBool
+		}
+	}
+
+	return ccuBool
+}
+
 // parseError checks on Homematic CCU error codes
 // Refer to page 30 of https://homematic-ip.com/sites/default/files/downloads/HM_XmlRpc_API.pdf
 func parseError(res MethodResponse) error {
@@ -179,6 +192,10 @@ func parseError(res MethodResponse) error {
 		if f.Name == "faultString" {
 			faultString = f.Value.CCUString
 		}
+	}
+
+	if faultString == "" {
+		faultString = "Unknown Homematic API Error"
 	}
 
 	if faultCode != 0 {
