@@ -9,8 +9,6 @@ render:
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: WREN... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind (Optional)
       capacity: 50 # Akkukapazität in kWh (Optional)
-      gigyaapikey: # Optional
-      kameronapikey: # Optional
     advanced: |
       type: template
       template: renault

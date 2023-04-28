@@ -8,13 +8,15 @@ params:
     default: 27.4
   - name: gigyaapikey
     type: string
+    advanced: true
     description:
-      en: Manual Gigya API-Key overwrite (optional)
+      en: Manual Gigya API-Key overwrite for all configured Dacia/Renault vehicles (optional)
       de: Manuelle Eingabe des Gigya API-Schlüssels (optional)
   - name: kameronapikey
     type: string
+    advanced: true
     description:
-      en: Manual Kameron API-Key overwrite (optional)
+      en: Manual Kameron API-Key overwrite for all configured Dacia/Renault vehicles (optional)
       de: Manuelle Eingabe des Kameron API-Schlüssels (optional)
 render: |
   type: dacia

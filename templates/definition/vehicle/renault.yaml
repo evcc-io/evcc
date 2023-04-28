@@ -8,14 +8,16 @@ params:
     example: WREN...
   - name: gigyaapikey
     type: string
+    advanced: true
     description:
-      en: Manual Gigya API-Key overwrite (optional)
-      de: Manuelle Eingabe des Gigya API-Schlüssels (optional)
+      en: Manual Gigya API-Key overwrite for all configured Renault/Dacia vehicles (optional) 
+      de: Manuelle Eingabe des Gigya API-Schlüssels für alle definierten Renault/Dacia Fahrzeuge (optional)
   - name: kameronapikey
     type: string
+    advanced: true
     description:
-      en: Manual Kameron API-Key overwrite (optional)
-      de: Manuelle Eingabe des Kameron API-Schlüssels (optional)
+      en: Manual Kameron API-Key overwrite for all configured Renault/Dacia vehicles (optional)
+      de: Manuelle Eingabe des Kameron API-Schlüssels für alle definierten Renault/Dacia Fahrzeuge (optional)
 render: |
   type: renault
   {{ include "vehicle-base" . }}
