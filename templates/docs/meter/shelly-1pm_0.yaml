@@ -1,6 +1,6 @@
 product:
   brand: Shelly
-  description: 1PM, EM
+  description: 1PM, EM, Plug S
   group: Schaltbare Steckdosen
 render:
   - usage: pv
