@@ -97,6 +97,12 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 	return hmr, parseError(hmr)
 }
 
+// getParamset reads all parameter values of a device channel
+func (c *Connection) getParamset(channel string) (MethodResponse, error) {
+	res, err := c.XmlCmd("getParamset", c.MeterChannel, Param{CCUString: "VALUES"})
+	return res, err
+}
+
 // Initialze CCU methods via system.listMethods call
 func (c *Connection) Init() error {
 	_, err := c.XmlCmd("system.listMethods", c.SwitchChannel)
@@ -124,8 +130,8 @@ func (c *Connection) CurrentPower() (float64, error) {
 
 // TotalEnergy reads the homematic HMIP-PSM meterchannel energy in Wh
 func (c *Connection) TotalEnergy() (float64, error) {
-	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "ENERGY_COUNTER"})
-	return res.CCUFloat / 1000, err
+	res, err := c.getParamset(c.MeterChannel)
+	return getFloatValue(res, "ENERGY_COUNTER") / 1000, err
 }
 
 // Currents reads the homematic HMIP-PSM meterchannel L1 current in A
@@ -136,14 +142,27 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 
 // GridCurrentPower reads the homematic HM-ES-TX-WM grid meterchannel power in W
 func (c *Connection) GridCurrentPower() (float64, error) {
-	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "IEC_POWER"})
-	return res.CCUFloat, err
+	res, err := c.getParamset(c.MeterChannel)
+	return getFloatValue(res, "IEC_POWER"), err
 }
 
 // GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in Wh
 func (c *Connection) GridTotalEnergy() (float64, error) {
-	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "IEC_ENERGY_COUNTER"})
-	return res.CCUFloat, err
+	res, err := c.getParamset(c.MeterChannel)
+	return getFloatValue(res, "IEC_ENERGY_COUNTER"), err
+}
+
+// getCCUFloat selects a float value of a CCU API response member
+func getFloatValue(res MethodResponse, valueName string) float64 {
+	var ccuFloat float64
+
+	for _, m := range res.Member {
+		if m.Name == valueName {
+			ccuFloat = m.Value.CCUFloat
+		}
+	}
+
+	return ccuFloat
 }
 
 // parseError checks on Homematic CCU error codes
