@@ -106,7 +106,7 @@ func (c *Connection) Init() error {
 // Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
 	res, err := c.XmlCmd("getValue", c.SwitchChannel, Param{CCUString: "STATE"})
-	return res.Value.CCUBool == "1", err
+	return res.CCUBool == "1", err
 }
 
 // Enable sets the homematic HMIP-PSM switchchannel state to true=on/false=off
@@ -119,31 +119,31 @@ func (c *Connection) Enable(enable bool) error {
 // CurrentPower reads the homematic HMIP-PSM meterchannel power in W
 func (c *Connection) CurrentPower() (float64, error) {
 	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "POWER"})
-	return res.Value.CCUFloat, err
+	return res.CCUFloat, err
 }
 
 // TotalEnergy reads the homematic HMIP-PSM meterchannel energy in Wh
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "ENERGY_COUNTER"})
-	return res.Value.CCUFloat / 1000, err
+	return res.CCUFloat / 1000, err
 }
 
 // Currents reads the homematic HMIP-PSM meterchannel L1 current in A
 func (c *Connection) Currents() (float64, float64, float64, error) {
 	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "CURRENT"})
-	return res.Value.CCUFloat / 1000, 0, 0, err
+	return res.CCUFloat / 1000, 0, 0, err
 }
 
 // GridCurrentPower reads the homematic HM-ES-TX-WM grid meterchannel power in W
 func (c *Connection) GridCurrentPower() (float64, error) {
 	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "IEC_POWER"})
-	return res.Value.CCUFloat, err
+	return res.CCUFloat, err
 }
 
 // GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in Wh
 func (c *Connection) GridTotalEnergy() (float64, error) {
 	res, err := c.XmlCmd("getValue", c.MeterChannel, Param{CCUString: "IEC_ENERGY_COUNTER"})
-	return res.Value.CCUFloat, err
+	return res.CCUFloat, err
 }
 
 // parseError checks on Homematic CCU error codes

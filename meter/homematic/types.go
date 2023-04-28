@@ -26,10 +26,13 @@ type Member struct {
 }
 
 type MethodResponse struct {
-	XMLName xml.Name `xml:"methodResponse"`
-	Value   Param    `xml:"params>param>xxxx,omitempty"`
-	Member  []Member `xml:"params>param>value>struct>member,omitempty"`
-	Fault   []Member `xml:"fault>value>struct>member,omitempty"`
+	XMLName   xml.Name `xml:"methodResponse"`
+	CCUBool   string   `xml:"params>param>value>boolean,omitempty"`
+	CCUFloat  float64  `xml:"params>param>value>double,omitempty"`
+	CCUInt    int64    `xml:"params>param>value>i4,omitempty"`
+	CCUString string   `xml:"params>param>value>string,omitempty"`
+	Member    []Member `xml:"params>param>value>struct>member,omitempty"`
+	Fault     []Member `xml:"fault>value>struct>member,omitempty"`
 }
 type Value struct {
 	XMLName   xml.Name `xml:"value"`
