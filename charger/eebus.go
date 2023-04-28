@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/enbility/cemd/emobility"
+	"github.com/enbility/eebus-go/features"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -15,9 +16,10 @@ import (
 )
 
 const (
-	maxIdRequestTimespan         = time.Second * 120
-	idleFactor                   = 0.6
-	voltage              float64 = 230
+	maxIdRequestTimespan                     = time.Second * 120
+	maxCurrentNoDataErrorIgnoreCount         = 6
+	idleFactor                               = 0.6
+	voltage                          float64 = 230
 )
 
 type EEBus struct {
@@ -38,6 +40,8 @@ type EEBus struct {
 	connected     bool
 	connectedC    chan bool
 	connectedTime time.Time
+
+	currentNoDataErrorCount int
 
 	mux sync.Mutex
 }
@@ -240,6 +244,7 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 
 	switch currentState {
 	case emobility.EVChargeStateTypeUnknown, emobility.EVChargeStateTypeUnplugged: // Unplugged
+		c.currentNoDataErrorCount = 0
 		c.expectedEnableUnpluggedState = false
 		return api.StatusA, nil
 	case emobility.EVChargeStateTypeFinished, emobility.EVChargeStateTypePaused: // Finished, Paused
@@ -420,6 +425,12 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 	currents, err := c.emobility.EVCurrentsPerPhase()
 	if err != nil {
+		if err == features.ErrDataNotAvailable {
+			c.currentNoDataErrorCount++
+			if c.currentNoDataErrorCount <= maxCurrentNoDataErrorIgnoreCount {
+				return 0, 0, 0, nil
+			}
+		}
 		return 0, 0, 0, err
 	}
 
