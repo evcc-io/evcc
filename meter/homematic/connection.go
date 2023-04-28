@@ -58,51 +58,6 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 	return conn, nil
 }
 
-func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResponse, error) {
-	target := fmt.Sprintf("%s:%s", c.Device, channel)
-	hmc := MethodCall{
-		XMLName:    xml.Name{},
-		MethodName: method,
-		Params:     append([]Param{{CCUString: target}}, values...),
-	}
-
-	var hmr MethodResponse
-	body, err := xml.Marshal(hmc)
-	if err != nil {
-		return hmr, err
-	}
-
-	req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), map[string]string{
-		"Content-Type": "text/xml",
-	})
-	if err != nil {
-		return hmr, err
-	}
-
-	res, err := c.DoBody(req)
-	if err != nil {
-		return hmr, err
-	}
-
-	// correct Homematic IP Legacy API (CCU port 2010) method response encoding value
-	res = []byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1))
-
-	// correct XML-RPC-Schnittstelle (CCU port 2001) method response encoding value
-	res = []byte(strings.Replace(string(res), "iso-8859-1", "UTF-8", 1))
-
-	if err := xml.Unmarshal(res, &hmr); err != nil {
-		return hmr, err
-	}
-
-	return hmr, parseError(hmr)
-}
-
-// getParamset reads all parameter values of a device channel
-func (c *Connection) getParamset(channel string) (MethodResponse, error) {
-	res, err := c.XmlCmd("getParamset", c.MeterChannel, Param{CCUString: "VALUES"})
-	return res, err
-}
-
 // Initialze CCU methods via system.listMethods call
 func (c *Connection) Init() error {
 	_, err := c.XmlCmd("system.listMethods", c.SwitchChannel)
@@ -150,6 +105,51 @@ func (c *Connection) GridCurrentPower() (float64, error) {
 func (c *Connection) GridTotalEnergy() (float64, error) {
 	res, err := c.getParamset(c.MeterChannel)
 	return getFloatValue(res, "IEC_ENERGY_COUNTER"), err
+}
+
+func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResponse, error) {
+	target := fmt.Sprintf("%s:%s", c.Device, channel)
+	hmc := MethodCall{
+		XMLName:    xml.Name{},
+		MethodName: method,
+		Params:     append([]Param{{CCUString: target}}, values...),
+	}
+
+	var hmr MethodResponse
+	body, err := xml.Marshal(hmc)
+	if err != nil {
+		return hmr, err
+	}
+
+	req, err := request.New(http.MethodPost, c.URI, strings.NewReader(xml.Header+string(body)), map[string]string{
+		"Content-Type": "text/xml",
+	})
+	if err != nil {
+		return hmr, err
+	}
+
+	res, err := c.DoBody(req)
+	if err != nil {
+		return hmr, err
+	}
+
+	// correct Homematic IP Legacy API (CCU port 2010) method response encoding value
+	res = []byte(strings.Replace(string(res), "ISO-8859-1", "UTF-8", 1))
+
+	// correct XML-RPC-Schnittstelle (CCU port 2001) method response encoding value
+	res = []byte(strings.Replace(string(res), "iso-8859-1", "UTF-8", 1))
+
+	if err := xml.Unmarshal(res, &hmr); err != nil {
+		return hmr, err
+	}
+
+	return hmr, parseError(hmr)
+}
+
+// getParamset reads all parameter values of a device channel
+func (c *Connection) getParamset(channel string) (MethodResponse, error) {
+	res, err := c.XmlCmd("getParamset", c.MeterChannel, Param{CCUString: "VALUES"})
+	return res, err
 }
 
 // getCCUFloat selects a float value of a CCU API response member
