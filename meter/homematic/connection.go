@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -19,6 +20,7 @@ import (
 // Homematic CCU settings
 type Settings struct {
 	URI, Device, MeterChannel, SwitchChannel, User, Password string
+	Cache                                                    time.Duration
 }
 
 // Connection is the Homematic CCU connection
@@ -26,16 +28,14 @@ type Connection struct {
 	log *util.Logger
 	*request.Helper
 	*Settings
-	meterCache    MethodResponse
+	meterCache    provider.Cacheable[MethodResponse]
 	meterUpdated  time.Time
-	switchCache   MethodResponse
+	switchCache   provider.Cacheable[MethodResponse]
 	switchUpdated time.Time
 }
 
-const cacheTimeout = 5 * time.Second
-
 // NewConnection creates a new Homematic device connection.
-func NewConnection(uri, device, meterchannel, switchchannel, user, password string) (*Connection, error) {
+func NewConnection(uri, device, meterchannel, switchchannel, user, password string, cache time.Duration) (*Connection, error) {
 	log := util.NewLogger("homematic")
 
 	settings := &Settings{
@@ -43,6 +43,7 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 		Device:        device,
 		MeterChannel:  meterchannel,
 		SwitchChannel: switchchannel,
+		Cache:         cache,
 	}
 
 	conn := &Connection{
@@ -58,7 +59,27 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 		conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 	}
 
+	conn.switchCache = provider.ResettableCached(func() (MethodResponse, error) {
+		var res MethodResponse
+		var err error
+		res, err = conn.XmlCmd("getParamset", conn.SwitchChannel, Param{CCUString: "VALUES"})
+		return res, err
+	}, conn.Cache)
+
+	conn.meterCache = provider.ResettableCached(func() (MethodResponse, error) {
+		var res MethodResponse
+		var err error
+		res, err = conn.XmlCmd("getParamset", conn.MeterChannel, Param{CCUString: "VALUES"})
+		return res, err
+	}, conn.Cache)
+
 	return conn, nil
+}
+
+// reset caches
+func (c *Connection) reset() {
+	c.switchCache.Reset()
+	c.meterCache.Reset()
 }
 
 // Enable sets the homematic HMIP-PSM switchchannel state to true=on/false=off
@@ -149,25 +170,9 @@ func (c *Connection) getParamsetValue(valueName string) (float64, bool, error) {
 	var err error
 
 	if valueName == "STATE" {
-		// check switchCache
-		if time.Since(c.switchUpdated) <= cacheTimeout {
-			res = c.switchCache
-		} else {
-			res, err = c.XmlCmd("getParamset", c.SwitchChannel, Param{CCUString: "VALUES"})
-			c.switchCache = res
-			// update switchUpdated timestamp
-			c.switchUpdated = time.Now()
-		}
+		res, err = c.switchCache.Get()
 	} else {
-		// check meterCache
-		if time.Since(c.meterUpdated) <= cacheTimeout {
-			res = c.meterCache
-		} else {
-			res, err = c.XmlCmd("getParamset", c.MeterChannel, Param{CCUString: "VALUES"})
-			c.meterCache = res
-			// update meterUpdated timestamp
-			c.meterUpdated = time.Now()
-		}
+		res, err = c.meterCache.Get()
 	}
 
 	return getFloatValue(res, valueName), getBoolValue(res, valueName), err
