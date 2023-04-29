@@ -58,17 +58,11 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 	}
 
 	conn.switchCache = provider.ResettableCached(func() (MethodResponse, error) {
-		var res MethodResponse
-		var err error
-		res, err = conn.XmlCmd("getParamset", conn.SwitchChannel, Param{CCUString: "VALUES"})
-		return res, err
+		return conn.XmlCmd("getParamset", conn.SwitchChannel, Param{CCUString: "VALUES"})
 	}, conn.Cache)
 
 	conn.meterCache = provider.ResettableCached(func() (MethodResponse, error) {
-		var res MethodResponse
-		var err error
-		res, err = conn.XmlCmd("getParamset", conn.MeterChannel, Param{CCUString: "VALUES"})
-		return res, err
+		return conn.XmlCmd("getParamset", conn.MeterChannel, Param{CCUString: "VALUES"})
 	}, conn.Cache)
 
 	return conn, nil
