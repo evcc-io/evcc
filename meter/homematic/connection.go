@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -25,7 +26,13 @@ type Connection struct {
 	log *util.Logger
 	*request.Helper
 	*Settings
+	meterCache    MethodResponse
+	meterUpdated  time.Time
+	switchCache   MethodResponse
+	switchUpdated time.Time
 }
+
+const cacheTimeout = 5 * time.Second
 
 // NewConnection creates a new Homematic device connection.
 func NewConnection(uri, device, meterchannel, switchchannel, user, password string) (*Connection, error) {
@@ -73,38 +80,38 @@ func (c *Connection) Enable(enable bool) error {
 
 // Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
-	res, err := c.getParamset(c.MeterChannel)
-	return getBoolValue(res, "STATE"), err
+	_, ccuBool, err := c.getParamsetValue(c.SwitchChannel, "STATE")
+	return ccuBool, err
 }
 
 // CurrentPower reads the homematic HMIP-PSM meterchannel power in W
 func (c *Connection) CurrentPower() (float64, error) {
-	res, err := c.getParamset(c.MeterChannel)
-	return getFloatValue(res, "POWER"), err
+	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "POWER")
+	return ccuFloat, err
 }
 
 // TotalEnergy reads the homematic HMIP-PSM meterchannel energy in Wh
 func (c *Connection) TotalEnergy() (float64, error) {
-	res, err := c.getParamset(c.MeterChannel)
-	return getFloatValue(res, "ENERGY_COUNTER") / 1000, err
+	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "ENERGY_COUNTER")
+	return ccuFloat / 1000, err
 }
 
 // Currents reads the homematic HMIP-PSM meterchannel L1 current in A
 func (c *Connection) Currents() (float64, float64, float64, error) {
-	res, err := c.getParamset(c.MeterChannel)
-	return getFloatValue(res, "CURRENT") / 1000, 0, 0, err
+	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "CURRENT")
+	return ccuFloat / 1000, 0, 0, err
 }
 
 // GridCurrentPower reads the homematic HM-ES-TX-WM grid meterchannel power in W
 func (c *Connection) GridCurrentPower() (float64, error) {
-	res, err := c.getParamset(c.MeterChannel)
-	return getFloatValue(res, "IEC_POWER"), err
+	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "IEC_POWER")
+	return ccuFloat, err
 }
 
 // GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in Wh
 func (c *Connection) GridTotalEnergy() (float64, error) {
-	res, err := c.getParamset(c.MeterChannel)
-	return getFloatValue(res, "IEC_ENERGY_COUNTER"), err
+	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "IEC_ENERGY_COUNTER")
+	return ccuFloat, err
 }
 
 func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResponse, error) {
@@ -146,10 +153,10 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 	return hmr, parseError(hmr)
 }
 
-// getParamset reads all parameter values of a device channel
-func (c *Connection) getParamset(channel string) (MethodResponse, error) {
-	res, err := c.XmlCmd("getParamset", c.MeterChannel, Param{CCUString: "VALUES"})
-	return res, err
+// getParamsetValue reads all parameter values of a device channel
+func (c *Connection) getParamsetValue(channel, valueName string) (float64, bool, error) {
+	res, err := c.XmlCmd("getParamset", channel, Param{CCUString: "VALUES"})
+	return getFloatValue(res, valueName), getBoolValue(res, valueName), err
 }
 
 // getCCUFloat selects a float value of a CCU API response member
