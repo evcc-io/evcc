@@ -80,37 +80,37 @@ func (c *Connection) Enable(enable bool) error {
 
 // Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
-	_, ccuBool, err := c.getParamsetValue(c.SwitchChannel, "STATE")
+	_, ccuBool, err := c.getParamsetValue("STATE")
 	return ccuBool, err
 }
 
 // CurrentPower reads the homematic HMIP-PSM meterchannel power in W
 func (c *Connection) CurrentPower() (float64, error) {
-	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "POWER")
+	ccuFloat, _, err := c.getParamsetValue("POWER")
 	return ccuFloat, err
 }
 
 // TotalEnergy reads the homematic HMIP-PSM meterchannel energy in Wh
 func (c *Connection) TotalEnergy() (float64, error) {
-	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "ENERGY_COUNTER")
+	ccuFloat, _, err := c.getParamsetValue("ENERGY_COUNTER")
 	return ccuFloat / 1000, err
 }
 
 // Currents reads the homematic HMIP-PSM meterchannel L1 current in A
 func (c *Connection) Currents() (float64, float64, float64, error) {
-	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "CURRENT")
+	ccuFloat, _, err := c.getParamsetValue("CURRENT")
 	return ccuFloat / 1000, 0, 0, err
 }
 
 // GridCurrentPower reads the homematic HM-ES-TX-WM grid meterchannel power in W
 func (c *Connection) GridCurrentPower() (float64, error) {
-	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "IEC_POWER")
+	ccuFloat, _, err := c.getParamsetValue("IEC_POWER")
 	return ccuFloat, err
 }
 
 // GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in Wh
 func (c *Connection) GridTotalEnergy() (float64, error) {
-	ccuFloat, _, err := c.getParamsetValue(c.MeterChannel, "IEC_ENERGY_COUNTER")
+	ccuFloat, _, err := c.getParamsetValue("IEC_ENERGY_COUNTER")
 	return ccuFloat, err
 }
 
@@ -154,7 +154,7 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 }
 
 // getParamsetValue reads all parameter values of a device channel
-func (c *Connection) getParamsetValue(channel, valueName string) (float64, bool, error) {
+func (c *Connection) getParamsetValue(valueName string) (float64, bool, error) {
 	var res MethodResponse
 	var err error
 
@@ -163,7 +163,7 @@ func (c *Connection) getParamsetValue(channel, valueName string) (float64, bool,
 		if time.Since(c.switchUpdated) <= cacheTimeout {
 			res = c.switchCache
 		} else {
-			res, err = c.XmlCmd("getParamset", channel, Param{CCUString: "VALUES"})
+			res, err = c.XmlCmd("getParamset", c.SwitchChannel, Param{CCUString: "VALUES"})
 			c.switchCache = res
 			// update switchUpdated timestamp
 			c.switchUpdated = time.Now()
@@ -173,7 +173,7 @@ func (c *Connection) getParamsetValue(channel, valueName string) (float64, bool,
 		if time.Since(c.meterUpdated) <= cacheTimeout {
 			res = c.meterCache
 		} else {
-			res, err = c.XmlCmd("getParamset", channel, Param{CCUString: "VALUES"})
+			res, err = c.XmlCmd("getParamset", c.MeterChannel, Param{CCUString: "VALUES"})
 			c.meterCache = res
 			// update meterUpdated timestamp
 			c.meterUpdated = time.Now()
