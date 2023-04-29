@@ -155,7 +155,31 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 
 // getParamsetValue reads all parameter values of a device channel
 func (c *Connection) getParamsetValue(channel, valueName string) (float64, bool, error) {
-	res, err := c.XmlCmd("getParamset", channel, Param{CCUString: "VALUES"})
+	var res MethodResponse
+	var err error
+
+	if valueName == "STATE" {
+		// check switchCache
+		if time.Since(c.switchUpdated) <= cacheTimeout {
+			res = c.switchCache
+		} else {
+			res, err = c.XmlCmd("getParamset", channel, Param{CCUString: "VALUES"})
+			c.switchCache = res
+			// update switchUpdated timestamp
+			c.switchUpdated = time.Now()
+		}
+	} else {
+		// check meterCache
+		if time.Since(c.meterUpdated) <= cacheTimeout {
+			res = c.meterCache
+		} else {
+			res, err = c.XmlCmd("getParamset", channel, Param{CCUString: "VALUES"})
+			c.meterCache = res
+			// update meterUpdated timestamp
+			c.meterUpdated = time.Now()
+		}
+	}
+
 	return getFloatValue(res, valueName), getBoolValue(res, valueName), err
 }
 
