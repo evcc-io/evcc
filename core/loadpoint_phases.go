@@ -31,9 +31,6 @@ func (lp *Loadpoint) setPhases(phases int) {
 		// publish updated phase configuration
 		lp.publish(phasesEnabled, lp.phases)
 
-		// reset timer to disabled state
-		lp.resetPhaseTimer()
-
 		// measure phases after switching
 		lp.resetMeasuredPhases()
 	}

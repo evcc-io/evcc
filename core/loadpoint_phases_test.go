@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 type testCase struct {
@@ -358,6 +359,8 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			Disable: ThresholdConfig{
 				Delay: dt,
 			},
+			phaseTimer: clock.Now(),
+			pvTimer:    clock.Now(),
 		}
 
 		if tc.prepare != nil {
@@ -370,12 +373,8 @@ func TestPvScalePhasesTimer(t *testing.T) {
 
 		res := lp.pvScalePhases(tc.availablePower, minA, maxA)
 
-		switch {
-		case tc.res != res:
-			t.Errorf("expected %v, got %v", tc.res, res)
-		case lp.phases != tc.toPhases:
-			t.Errorf("expected %dp, got %dp", tc.toPhases, lp.phases)
-		}
+		assert.Equal(t, tc.res, res)
+		assert.Equal(t, lp.phases, tc.toPhases, "phases")
 	}
 }
 

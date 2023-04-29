@@ -276,16 +276,15 @@ func TestPVHysteresis(t *testing.T) {
 			{-500, 1, 0},
 			{-499, dt - 1, 0}, // should reset timer
 			{-500, dt + 1, 0}, // new begin of timer
-			{-500, 2 * dt, 0},
-			{-500, 2*dt + 1, minA},
+			{-500, 2 * dt, minA},
 		}},
 		// reset enable timer when threshold not met while timer active and threshold not configured
 		{false, 0, 0, []se{
-			{-6*100*10 - 1, dt + 1, 0},
+			{-6 * 100 * phases, 0, 0},
+			{-6 * 100 * phases, 1, 0},
+			{-6*100*phases + 1, dt - 1, 0},
 			{-6 * 100 * phases, dt + 1, 0},
-			{-6 * 100 * phases, dt + 2, 0},
-			{-6 * 100 * phases, 2 * dt, 0},
-			{-6 * 100 * phases, 2*dt + 1, minA},
+			{-6 * 100 * phases, 2 * dt, minA},
 		}},
 		// reset disable timer when threshold not met while timer active
 		{true, 0, 500, []se{
@@ -293,8 +292,7 @@ func TestPVHysteresis(t *testing.T) {
 			{500, 1, minA},
 			{499, dt - 1, minA}, // reset timer
 			{500, dt + 1, minA}, // within reset timer duration
-			{500, 2 * dt, minA}, // still within reset timer duration
-			{500, 2*dt + 1, 0},  // reset timer elapsed
+			{500, 2 * dt, 0},    // still within reset timer duration
 		}},
 	}
 
@@ -323,6 +321,8 @@ func TestPVHysteresis(t *testing.T) {
 					Threshold: tc.disable,
 					Delay:     dt,
 				},
+				phaseTimer: clck.Now(),
+				pvTimer:    clck.Now(),
 			}
 
 			// charging, otherwise PV mode logic is short-circuited
@@ -339,8 +339,8 @@ func TestPVHysteresis(t *testing.T) {
 				lp.enabled = tc.enabled
 				current := lp.pvMaxCurrent(api.ModePV, se.site, false)
 
-				if current != se.current {
-					t.Errorf("step %d: wanted %.1f, got %.1f", step, se.current, current)
+				if !assert.Equal(t, se.current, current, "step %d", step) {
+					break
 				}
 			}
 
