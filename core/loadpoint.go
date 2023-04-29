@@ -55,9 +55,6 @@ const (
 	guardGracePeriod = 60 * time.Second // allow out of sync during behavior for this duration
 )
 
-// elapsed is the time an expired timer will be set to
-var elapsed = time.Unix(0, 1)
-
 // PollConfig defines the vehicle polling mode and interval
 type PollConfig struct {
 	Mode     string        `mapstructure:"mode"`     // polling mode charging (default), connected, always
