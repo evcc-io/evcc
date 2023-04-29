@@ -121,7 +121,7 @@ func (c *Connection) GridCurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return getFloatValue(res, "IEC_POWER") / 1e3, nil
+	return getFloatValue(res, "IEC_POWER"), nil
 }
 
 // GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in Wh
@@ -130,7 +130,7 @@ func (c *Connection) GridTotalEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return getFloatValue(res, "IEC_ENERGY_COUNTER") / 1e3, nil
+	return getFloatValue(res, "IEC_ENERGY_COUNTER"), nil
 }
 
 func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResponse, error) {
