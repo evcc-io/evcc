@@ -28,10 +28,8 @@ type Connection struct {
 	log *util.Logger
 	*request.Helper
 	*Settings
-	meterCache    provider.Cacheable[MethodResponse]
-	meterUpdated  time.Time
-	switchCache   provider.Cacheable[MethodResponse]
-	switchUpdated time.Time
+	meterCache  provider.Cacheable[MethodResponse]
+	switchCache provider.Cacheable[MethodResponse]
 }
 
 // NewConnection creates a new Homematic device connection.
@@ -77,10 +75,10 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 }
 
 // reset caches
-func (c *Connection) reset() {
-	c.switchCache.Reset()
-	c.meterCache.Reset()
-}
+// func (c *Connection) reset() {
+// 	c.switchCache.Reset()
+// 	c.meterCache.Reset()
+// }
 
 // Enable sets the homematic HMIP-PSM switchchannel state to true=on/false=off
 func (c *Connection) Enable(enable bool) error {
