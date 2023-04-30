@@ -11,8 +11,8 @@ import (
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 )
 
 type route struct {
@@ -57,77 +57,78 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 }
 
 // Router returns the main router
-func (s *HTTPd) Router() *mux.Router {
-	return s.Handler.(*mux.Router)
+func (s *HTTPd) Router() *chi.Mux {
+	return s.Handler.(*chi.Mux)
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
 func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
-	router := s.Server.Handler.(*mux.Router)
+	router := s.Server.Handler.(*chi.Mux)
 
 	// api
-	api := router.PathPrefix("/api").Subrouter()
-	api.Use(jsonHandler)
-	api.Use(handlers.CompressHandler)
-	api.Use(handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-Type"}),
-	))
+	// api := router.PathPrefix("/api").Subrouter()
+	// api.Use(jsonHandler)
+	// api.Use(handlers.CompressHandler)
+	// api.Use(handlers.CORS(
+	// 	handlers.AllowedHeaders([]string{"Content-Type"}),
+	// ))
 
 	// site api
-	routes := map[string]route{
-		"health":        {[]string{"GET"}, "/health", healthHandler(site)},
-		"state":         {[]string{"GET"}, "/state", stateHandler(cache)},
-		"config":        {[]string{"GET"}, "/config/templates/{class:[a-z]+}", templatesHandler},
-		"products":      {[]string{"GET"}, "/config/products/{class:[a-z]+}", productsHandler},
-		"test":          {[]string{"POST"}, "/config/test/{class:[a-z]+}", testHandler},
-		"buffersoc":     {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
-		"prioritysoc":   {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
-		"residualpower": {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"smartcost":     {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[-0-9.]+}", floatHandler(site.SetSmartCostLimit, site.GetSmartCostLimit)},
-		"tariff":        {[]string{"GET"}, "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
-		"sessions":      {[]string{"GET"}, "/sessions", sessionHandler},
-		"session1":      {[]string{"PUT"}, "/session/{id:[0-9]+}", updateSessionHandler},
-		"session2":      {[]string{"DELETE"}, "/session/{id:[0-9]+}", deleteSessionHandler},
-		"telemetry":     {[]string{"GET"}, "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
-		"telemetry2":    {[]string{"POST", "OPTIONS"}, "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
-	}
+	router.Route("/api", func(r chi.Router) {
+		r.Use(cors.Handler(cors.Options{
+			// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+			AllowedOrigins: []string{"https://*", "http://*"},
+			// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: false,
+			MaxAge:           300, // Maximum value not ignored by any of major browsers
+		}))
 
-	for _, r := range routes {
-		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
-	}
+		r.Get("/health", healthHandler(site))
+		r.Get("/state", stateHandler(cache))
+		r.Get("/config/templates/{class:[a-z]+}", templatesHandler)
+		r.Get("/config/products/{class:[a-z]+}", productsHandler)
+		r.Post("/config/test/{class:[a-z]+}", testHandler)
+		r.Post("/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc))
+		r.Post("/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc))
+		r.Post("/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower))
+		r.Post("/smartcostlimit/{value:[-0-9.]+}", floatHandler(site.SetSmartCostLimit, site.GetSmartCostLimit))
+		r.Get("/tariff/{tariff:[a-z]+}", tariffHandler(site))
+		r.Get("/sessions", sessionHandler)
+		r.Put("/session/{id:[0-9]+}", updateSessionHandler)
+		r.Delete("/session/{id:[0-9]+}", deleteSessionHandler)
+		r.Get("/settings/telemetry", boolGetHandler(telemetry.Enabled))
+		r.Post("/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled))
 
-	// loadpoint api
-	for id, lp := range site.Loadpoints() {
-		loadpoint := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
-
-		routes := map[string]route{
-			"mode":             {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
-			"minsoc":           {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intHandler(pass(lp.SetMinSoc), lp.GetMinSoc)},
-			"mincurrent":       {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent)},
-			"maxcurrent":       {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
-			"phases":           {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
-			"targetenergy":     {[]string{"POST", "OPTIONS"}, "/target/energy/{value:[0-9.]+}", floatHandler(pass(lp.SetTargetEnergy), lp.GetTargetEnergy)},
-			"targetsoc":        {[]string{"POST", "OPTIONS"}, "/target/soc/{value:[0-9]+}", intHandler(pass(lp.SetTargetSoc), lp.GetTargetSoc)},
-			"targettime":       {[]string{"POST", "OPTIONS"}, "/target/time/{time:[0-9TZ:.-]+}", targetTimeHandler(lp)},
-			"targettime2":      {[]string{"DELETE", "OPTIONS"}, "/target/time", targetTimeRemoveHandler(lp)},
-			"plan":             {[]string{"GET"}, "/target/plan", planHandler(lp)},
-			"vehicle":          {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[1-9][0-9]*}", vehicleHandler(site, lp)},
-			"vehicle2":         {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
-			"vehicleDetect":    {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},
-			"remotedemand":     {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
-			"enableThreshold":  {[]string{"POST", "OPTIONS"}, "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
-			"disableThreshold": {[]string{"POST", "OPTIONS"}, "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
+		// loadpoint api
+		for id, lp := range site.Loadpoints() {
+			r.Route(fmt.Sprintf("/loadpoints/%d", id+1), func(r chi.Router) {
+				r.Post("/mode/{value:[a-z]+}", chargeModeHandler(lp))
+				r.Post("/minsoc/{value:[0-9]+}", intHandler(pass(lp.SetMinSoc), lp.GetMinSoc))
+				r.Post("/mincurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent))
+				r.Post("/maxcurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent))
+				r.Post("/phases/{value:[0-9]+}", phasesHandler(lp))
+				r.Post("/target/energy/{value:[0-9.]+}", floatHandler(pass(lp.SetTargetEnergy), lp.GetTargetEnergy))
+				r.Post("/target/soc/{value:[0-9]+}", intHandler(pass(lp.SetTargetSoc), lp.GetTargetSoc))
+				r.Post("/target/time/{time:[0-9TZ:.-]+}", targetTimeHandler(lp))
+				r.Delete("/target/time", targetTimeRemoveHandler(lp))
+				r.Get("/target/plan", planHandler(lp))
+				r.Post("/vehicle/{vehicle:[1-9][0-9]*}", vehicleHandler(site, lp))
+				r.Delete("/vehicle", vehicleRemoveHandler(lp))
+				r.Patch("/vehicle", vehicleDetectHandler(lp))
+				r.Post("/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", remoteDemandHandler(lp))
+				r.Post("/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold))
+				r.Post("/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold))
+			})
 		}
-
-		for _, r := range routes {
-			loadpoint.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
-		}
-	}
+	})
 }
 
 // RegisterShutdownHandler connects the http handlers to the site
 func (s *HTTPd) RegisterShutdownHandler(callback func()) {
-	router := s.Server.Handler.(*mux.Router)
+	router := s.Server.Handler.(*chi.Mux)
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()

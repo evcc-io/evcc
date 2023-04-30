@@ -24,8 +24,8 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
+	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 )
@@ -299,7 +299,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 }
 
 // webControl handles routing for devices. For now only api.AuthProvider related routes
-func (cp *ConfigProvider) webControl(conf networkConfig, router *mux.Router, paramC chan<- util.Param) {
+func (cp *ConfigProvider) webControl(conf networkConfig, router *chi.Mux, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/oauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(

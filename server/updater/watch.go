@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/go-github/v32/github"
-	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-version"
 )
 
 type webServer interface {
-	Router() *mux.Router
+	Router() *chi.Mux
 }
 
 type watch struct {

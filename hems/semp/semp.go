@@ -18,8 +18,8 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
 )
 
@@ -196,7 +196,7 @@ func (s *SEMP) callbackURI() string {
 	return uri
 }
 
-func (s *SEMP) handlers(router *mux.Router) {
+func (s *SEMP) handlers(router *chi.Mux) {
 	sempRouter := router.PathPrefix(basePath).Subrouter()
 	getRouter := sempRouter.Methods(http.MethodGet).Subrouter()
 

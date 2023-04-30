@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 var instance *Handler
@@ -42,8 +42,8 @@ func init() {
 }
 
 // SetupRouter connects the redirect handler to the router
-func SetupRouter(router *mux.Router) {
-	router.Methods(http.MethodGet).HandlerFunc(instance.handle)
+func SetupRouter(router *chi.Mux) {
+	router.Get("/", instance.handle)
 }
 
 // Register registers a specific handler with the redirect handler
