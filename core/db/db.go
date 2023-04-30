@@ -46,6 +46,10 @@ func (s *DB) Session(meter float64) *Session {
 		Loadpoint: s.name,
 	}
 
+	if meter > 0 {
+		t.MeterStart = &meter
+	}
+
 	return &t
 }
 
