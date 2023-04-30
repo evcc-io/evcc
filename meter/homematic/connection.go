@@ -124,7 +124,7 @@ func (c *Connection) GridCurrentPower() (float64, error) {
 	return getFloatValue(res, "IEC_POWER"), nil
 }
 
-// GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in Wh
+// GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in kWh
 func (c *Connection) GridTotalEnergy() (float64, error) {
 	res, err := c.meterCache.Get()
 	if err != nil {
