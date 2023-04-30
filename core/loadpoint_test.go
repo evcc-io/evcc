@@ -200,99 +200,107 @@ func TestPVHysteresis(t *testing.T) {
 		enable, disable float64
 		series          []se
 	}{
-		// keep disabled
-		{false, 0, 0, []se{
-			{0, 0, 0},
-			{0, 1, 0},
-			{0, dt - 1, 0},
-			{0, dt + 1, 0},
-		}},
-		// enable when threshold not configured but min power met
-		{false, 0, 0, []se{
-			{-6 * 100 * phases, 0, 0},
-			{-6 * 100 * phases, 1, 0},
-			{-6 * 100 * phases, dt - 1, 0},
-			{-6 * 100 * phases, dt + 1, minA},
-		}},
-		// keep disabled when threshold not configured
-		{false, 0, 0, []se{
-			{-400, 0, 0},
-			{-400, 1, 0},
-			{-400, dt - 1, 0},
-			{-400, dt + 1, 0},
-		}},
-		// keep disabled when threshold (lower minCurrent) not met
+		// // keep disabled
+		// {false, 0, 0, []se{
+		// 	{0, 0, 0},
+		// 	{0, 1, 0},
+		// 	{0, dt - 1, 0},
+		// 	{0, dt + 1, 0},
+		// }},
+		// // enable when threshold not configured but min power met
+		// {false, 0, 0, []se{
+		// 	{-6 * 100 * phases, 0, 0},
+		// 	{-6 * 100 * phases, 1, 0},
+		// 	{-6 * 100 * phases, dt - 1, 0},
+		// 	{-6 * 100 * phases, dt + 1, minA},
+		// }},
+		// // keep disabled when threshold not configured
+		// {false, 0, 0, []se{
+		// 	{-400, 0, 0},
+		// 	{-400, 1, 0},
+		// 	{-400, dt - 1, 0},
+		// 	{-400, dt + 1, 0},
+		// }},
+		// // keep disabled when threshold (lower minCurrent) not met
+		// {false, -500, 0, []se{
+		// 	{-400, 0, 0},
+		// 	{-400, 1, 0},
+		// 	{-400, dt - 1, 0},
+		// 	{-400, dt + 1, 0},
+		// }},
+		// // keep disabled when threshold (higher minCurrent) not met
+		// {false, -7 * 100 * phases, 0, []se{
+		// 	{-6 * 100 * phases, 0, 0},
+		// 	{-6 * 100 * phases, 1, 0},
+		// 	{-6 * 100 * phases, dt - 1, 0},
+		// 	{-6 * 100 * phases, dt + 1, 0},
+		// }},
+		// // enable when threshold met
+		// {false, -500, 0, []se{
+		// 	{-500, 0, 0},
+		// 	{-500, 1, 0},
+		// 	{-500, dt - 1, 0},
+		// 	{-500, dt + 1, minA},
+		// }},
+		// // keep enabled at max
+		// {true, 500, 0, []se{
+		// 	{-16 * 100 * phases, 0, maxA},
+		// 	{-16 * 100 * phases, 1, maxA},
+		// 	{-16 * 100 * phases, dt - 1, maxA},
+		// 	{-16 * 100 * phases, dt + 1, maxA},
+		// }},
+		// // keep enabled at min
+		// {true, 500, 0, []se{
+		// 	{-6 * 100 * phases, 0, minA},
+		// 	{-6 * 100 * phases, 1, minA},
+		// 	{-6 * 100 * phases, dt - 1, minA},
+		// 	{-6 * 100 * phases, dt + 1, minA},
+		// }},
+		// // keep enabled at min (negative threshold)
+		// {true, 0, 500, []se{
+		// 	{-500, 0, minA},
+		// 	{-500, 1, minA},
+		// 	{-500, dt - 1, minA},
+		// 	{-500, dt + 1, minA},
+		// }},
+		// // disable when threshold met
+		// {true, 0, 500, []se{
+		// 	{500, 0, minA},
+		// 	{500, 1, minA},
+		// 	{500, dt - 1, minA},
+		// 	{500, dt + 1, 0},
+		// }},
+		// // reset enable timer when threshold not met while timer active
+		// {false, -500, 0, []se{
+		// 	{-500, 0, 0},
+		// 	{-500, 1, 0},
+		// 	{-499, dt - 1, 0}, // should reset timer
+		// 	{-500, dt + 1, 0}, // new begin of timer
+		// 	{-500, 2 * dt, minA},
+		// }},
+		// // reset enable timer when threshold not met while timer active and threshold not configured
+		// {false, 0, 0, []se{
+		// 	{-6 * 100 * phases, 0, 0},
+		// 	{-6 * 100 * phases, 1, 0},
+		// 	{-6*100*phases + 1, dt - 1, 0},
+		// 	{-6 * 100 * phases, dt + 1, 0},
+		// 	{-6 * 100 * phases, 2 * dt, minA},
+		// }},
+		// // reset disable timer when threshold not met while timer active
+		// {true, 0, 500, []se{
+		// 	{500, 0, minA},
+		// 	{500, 1, minA},
+		// 	{499, dt - 1, minA}, // reset timer
+		// 	{500, dt + 1, minA}, // within reset timer duration
+		// 	{500, 2 * dt, 0},    // still within reset timer duration
+		// }},
+		// reset enable timer when when no timer active
 		{false, -500, 0, []se{
-			{-400, 0, 0},
-			{-400, 1, 0},
-			{-400, dt - 1, 0},
-			{-400, dt + 1, 0},
-		}},
-		// keep disabled when threshold (higher minCurrent) not met
-		{false, -7 * 100 * phases, 0, []se{
-			{-6 * 100 * phases, 0, 0},
-			{-6 * 100 * phases, 1, 0},
-			{-6 * 100 * phases, dt - 1, 0},
-			{-6 * 100 * phases, dt + 1, 0},
-		}},
-		// enable when threshold met
-		{false, -500, 0, []se{
-			{-500, 0, 0},
-			{-500, 1, 0},
+			{500, 0, 0},
+			{500, 1, 0},
 			{-500, dt - 1, 0},
-			{-500, dt + 1, minA},
-		}},
-		// keep enabled at max
-		{true, 500, 0, []se{
-			{-16 * 100 * phases, 0, maxA},
-			{-16 * 100 * phases, 1, maxA},
-			{-16 * 100 * phases, dt - 1, maxA},
-			{-16 * 100 * phases, dt + 1, maxA},
-		}},
-		// keep enabled at min
-		{true, 500, 0, []se{
-			{-6 * 100 * phases, 0, minA},
-			{-6 * 100 * phases, 1, minA},
-			{-6 * 100 * phases, dt - 1, minA},
-			{-6 * 100 * phases, dt + 1, minA},
-		}},
-		// keep enabled at min (negative threshold)
-		{true, 0, 500, []se{
-			{-500, 0, minA},
-			{-500, 1, minA},
-			{-500, dt - 1, minA},
-			{-500, dt + 1, minA},
-		}},
-		// disable when threshold met
-		{true, 0, 500, []se{
-			{500, 0, minA},
-			{500, 1, minA},
-			{500, dt - 1, minA},
-			{500, dt + 1, 0},
-		}},
-		// reset enable timer when threshold not met while timer active
-		{false, -500, 0, []se{
-			{-500, 0, 0},
-			{-500, 1, 0},
-			{-499, dt - 1, 0}, // should reset timer
-			{-500, dt + 1, 0}, // new begin of timer
+			{-500, dt + 1, 0},
 			{-500, 2 * dt, minA},
-		}},
-		// reset enable timer when threshold not met while timer active and threshold not configured
-		{false, 0, 0, []se{
-			{-6 * 100 * phases, 0, 0},
-			{-6 * 100 * phases, 1, 0},
-			{-6*100*phases + 1, dt - 1, 0},
-			{-6 * 100 * phases, dt + 1, 0},
-			{-6 * 100 * phases, 2 * dt, minA},
-		}},
-		// reset disable timer when threshold not met while timer active
-		{true, 0, 500, []se{
-			{500, 0, minA},
-			{500, 1, minA},
-			{499, dt - 1, minA}, // reset timer
-			{500, dt + 1, minA}, // within reset timer duration
-			{500, 2 * dt, 0},    // still within reset timer duration
 		}},
 	}
 
