@@ -3,11 +3,11 @@ package charger
 import (
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/openwb/pro"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -21,12 +21,9 @@ func init() {
 // OpenWBPro charger implementation
 type OpenWBPro struct {
 	*request.Helper
-	mu      sync.Mutex
-	uri     string
-	current float64
-	status  pro.Status
-	updated time.Time
-	cache   time.Duration
+	uri         string
+	current     float64
+	statusCache provider.Cacheable[pro.Status]
 }
 
 // NewOpenWBProFromConfig creates a OpenWBPro charger from generic config
@@ -53,8 +50,14 @@ func NewOpenWBPro(uri string, cache time.Duration) (*OpenWBPro, error) {
 		Helper:  request.NewHelper(log),
 		uri:     strings.TrimRight(uri, "/"),
 		current: 6, // 6A defined value
-		cache:   cache,
 	}
+
+	wb.statusCache = provider.ResettableCached(func() (pro.Status, error) {
+		var res pro.Status
+		uri := fmt.Sprintf("%s/%s", wb.uri, "connect.php")
+		err := wb.GetJSON(uri, &res)
+		return res, err
+	}, cache)
 
 	go wb.heartbeat(log)
 
@@ -63,29 +66,10 @@ func NewOpenWBPro(uri string, cache time.Duration) (*OpenWBPro, error) {
 
 func (wb *OpenWBPro) heartbeat(log *util.Logger) {
 	for range time.Tick(30 * time.Second) {
-		if _, err := wb.get(); err != nil {
+		if _, err := wb.statusCache.Get(); err != nil {
 			log.ERROR.Printf("heartbeat: %v", err)
 		}
 	}
-}
-
-func (wb *OpenWBPro) get() (pro.Status, error) {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
-	if time.Since(wb.updated) < wb.cache {
-		return wb.status, nil
-	}
-
-	var res pro.Status
-	uri := fmt.Sprintf("%s/%s", wb.uri, "connect.php")
-	err := wb.GetJSON(uri, &res)
-	if err == nil {
-		wb.updated = time.Now()
-		wb.status = res
-	}
-
-	return res, err
 }
 
 func (wb *OpenWBPro) set(payload string) error {
@@ -93,18 +77,15 @@ func (wb *OpenWBPro) set(payload string) error {
 	resp, err := wb.Post(uri, "application/x-www-form-urlencoded", strings.NewReader(payload))
 	if err == nil {
 		resp.Body.Close()
+		wb.statusCache.Reset()
 	}
-
-	wb.mu.Lock()
-	wb.updated = time.Time{}
-	wb.mu.Unlock()
 
 	return err
 }
 
 // Status implements the api.Charger interface
 func (wb *OpenWBPro) Status() (api.ChargeStatus, error) {
-	resp, err := wb.get()
+	resp, err := wb.statusCache.Get()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -122,7 +103,7 @@ func (wb *OpenWBPro) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *OpenWBPro) Enabled() (bool, error) {
-	res, err := wb.get()
+	res, err := wb.statusCache.Get()
 	return res.OfferedCurrent > 0, err
 }
 
@@ -156,7 +137,7 @@ var _ api.Meter = (*OpenWBPro)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *OpenWBPro) CurrentPower() (float64, error) {
-	res, err := wb.get()
+	res, err := wb.statusCache.Get()
 	return res.PowerAll, err
 }
 
@@ -164,7 +145,7 @@ var _ api.MeterEnergy = (*OpenWBPro)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *OpenWBPro) TotalEnergy() (float64, error) {
-	res, err := wb.get()
+	res, err := wb.statusCache.Get()
 	return res.Imported / 1e3, err
 }
 
@@ -172,7 +153,7 @@ var _ api.PhaseCurrents = (*OpenWBPro)(nil)
 
 // Currents implements the api.PhaseCurrentss interface
 func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
-	res, err := wb.get()
+	res, err := wb.statusCache.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -195,7 +176,7 @@ var _ api.Identifier = (*OpenWBPro)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *OpenWBPro) Identify() (string, error) {
-	res, err := wb.get()
+	res, err := wb.statusCache.Get()
 	if err != nil || res.VehicleID == "--" {
 		return "", err
 	}

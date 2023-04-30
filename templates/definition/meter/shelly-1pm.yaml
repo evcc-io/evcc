@@ -2,7 +2,7 @@ template: shelly-1pm
 products:
   - brand: Shelly
     description:
-      generic: 1PM, EM
+      generic: 1PM, EM, Plug S
 group: switchsockets
 params:
   - name: usage
