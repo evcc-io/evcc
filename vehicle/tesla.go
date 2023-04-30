@@ -15,10 +15,8 @@ import (
 // Tesla is an api.Vehicle implementation for Tesla cars
 type Tesla struct {
 	*embed
-	vehicle       *tesla.Vehicle
-	chargeStateG  func() (*tesla.ChargeState, error)
-	vehicleStateG func() (*tesla.VehicleState, error)
-	driveStateG   func() (*tesla.DriveState, error)
+	vehicle *tesla.Vehicle
+	dataG   func() (*tesla.VehicleData, error)
 }
 
 func init() {
@@ -78,19 +76,17 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		v.Title_ = v.vehicle.DisplayName
 	}
 
-	v.chargeStateG = provider.Cached(v.vehicle.ChargeState, cc.Cache)
-	v.vehicleStateG = provider.Cached(v.vehicle.VehicleState, cc.Cache)
-	v.driveStateG = provider.Cached(v.vehicle.DriveState, cc.Cache)
+	v.dataG = provider.Cached(v.vehicle.Data, cc.Cache)
 
 	return v, nil
 }
 
 // Soc implements the api.Vehicle interface
 func (v *Tesla) Soc() (float64, error) {
-	res, err := v.chargeStateG()
+	res, err := v.dataG()
 
 	if err == nil {
-		return float64(res.UsableBatteryLevel), nil
+		return float64(res.Response.ChargeState.UsableBatteryLevel), nil
 	}
 
 	return 0, err
@@ -101,31 +97,30 @@ var _ api.ChargeState = (*Tesla)(nil)
 // Status implements the api.ChargeState interface
 func (v *Tesla) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
-	res, err := v.chargeStateG()
-
-	if err == nil {
-		if res.ChargingState == "Stopped" || res.ChargingState == "NoPower" || res.ChargingState == "Complete" {
-			status = api.StatusB
-		}
-		if res.ChargingState == "Charging" {
-			status = api.StatusC
-		}
+	res, err := v.dataG()
+	if err != nil {
+		return status, err
 	}
 
-	return status, err
+	switch res.Response.ChargeState.ChargingState {
+	case "Stopped", "NoPower", "Complete":
+		status = api.StatusB
+	case "Charging":
+		status = api.StatusC
+	}
+
+	return status, nil
 }
 
 var _ api.ChargeRater = (*Tesla)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (v *Tesla) ChargedEnergy() (float64, error) {
-	res, err := v.chargeStateG()
-
-	if err == nil {
-		return res.ChargeEnergyAdded, nil
+	res, err := v.dataG()
+	if err != nil {
+		return 0, err
 	}
-
-	return 0, err
+	return res.Response.ChargeState.ChargeEnergyAdded, nil
 }
 
 const kmPerMile = 1.609344
@@ -134,42 +129,35 @@ var _ api.VehicleRange = (*Tesla)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Tesla) Range() (int64, error) {
-	res, err := v.chargeStateG()
-
-	if err == nil {
-		// miles to km
-		return int64(kmPerMile * res.BatteryRange), nil
+	res, err := v.dataG()
+	if err != nil {
+		return 0, err
 	}
-
-	return 0, err
+	// miles to km
+	return int64(kmPerMile * res.Response.ChargeState.BatteryRange), nil
 }
 
 var _ api.VehicleOdometer = (*Tesla)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
 func (v *Tesla) Odometer() (float64, error) {
-	res, err := v.vehicleStateG()
-
-	if err == nil {
-		// miles to km
-		return kmPerMile * res.Odometer, nil
+	res, err := v.dataG()
+	if err != nil {
+		return 0, err
 	}
-
-	return 0, err
+	// miles to km
+	return kmPerMile * res.Response.VehicleState.Odometer, nil
 }
 
 var _ api.VehicleFinishTimer = (*Tesla)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Tesla) FinishTime() (time.Time, error) {
-	res, err := v.chargeStateG()
-
-	if err == nil {
-		t := time.Now()
-		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
+	res, err := v.dataG()
+	if err != nil {
+		return time.Time{}, err
 	}
-
-	return time.Time{}, err
+	return time.Now().Add(time.Duration(res.Response.ChargeState.MinutesToFullCharge) * time.Minute), nil
 }
 
 // TODO api.Climater implementation has been removed as it drains battery. Re-check at a later time.
@@ -178,24 +166,22 @@ var _ api.VehiclePosition = (*Tesla)(nil)
 
 // Position implements the api.VehiclePosition interface
 func (v *Tesla) Position() (float64, float64, error) {
-	res, err := v.driveStateG()
-	if err == nil {
-		return res.Latitude, res.Longitude, nil
+	res, err := v.dataG()
+	if err != nil {
+		return 0, 0, err
 	}
-
-	return 0, 0, err
+	return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
 }
 
 var _ api.SocLimiter = (*Tesla)(nil)
 
 // TargetSoc implements the api.SocLimiter interface
 func (v *Tesla) TargetSoc() (float64, error) {
-	res, err := v.chargeStateG()
-	if err == nil {
-		return float64(res.ChargeLimitSoc), nil
+	res, err := v.dataG()
+	if err != nil {
+		return 0, err
 	}
-
-	return 0, err
+	return float64(res.Response.ChargeState.ChargeLimitSoc), nil
 }
 
 var _ api.CurrentLimiter = (*Tesla)(nil)

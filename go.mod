@@ -200,3 +200,5 @@ require (
 )
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230102102528-4d59ac6910c6
+
+replace github.com/bogosj/tesla => github.com/andig/tesla v0.0.0-20230430113650-bb32755b6f40
