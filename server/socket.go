@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -10,20 +11,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/gorilla/websocket"
 	"github.com/kr/pretty"
+	"nhooyr.io/websocket"
 )
 
 const (
 	// Time allowed to write a message to the peer
 	socketWriteTimeout = 10 * time.Second
 )
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
-}
 
 // SocketClient is a middleman between the websocket connection and the hub.
 type SocketClient struct {
@@ -39,15 +34,16 @@ type SocketClient struct {
 // writePump pumps messages from the hub to the websocket connection.
 func (c *SocketClient) writePump() {
 	defer func() {
-		c.conn.Close()
+		c.conn.Close(websocket.StatusNormalClosure, "done")
 		c.hub.unregister <- c
 	}()
 
 	for msg := range c.send {
-		if err := c.conn.SetWriteDeadline(time.Now().Add(socketWriteTimeout)); err != nil {
-			return
-		}
-		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), socketWriteTimeout)
+		err := c.conn.Write(ctx, websocket.MessageText, msg)
+		cancel()
+
+		if err != nil {
 			return
 		}
 	}
@@ -55,7 +51,7 @@ func (c *SocketClient) writePump() {
 
 // ServeWebsocket handles websocket requests from the peer.
 func ServeWebsocket(hub *SocketHub, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := websocket.Accept(w, r, nil)
 	if err != nil {
 		log.ERROR.Println(err)
 		return
