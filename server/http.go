@@ -9,7 +9,8 @@ import (
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/telemetry"
-	"github.com/go-http-utils/etag"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -20,22 +21,6 @@ type route struct {
 	HandlerFunc http.HandlerFunc
 }
 
-// routeLogger traces matched routes including their executing time
-//
-//lint:ignore U1000 if needed
-func routeLogger(inner http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		inner.ServeHTTP(w, r)
-		log.TRACE.Printf(
-			"%s\t%s\t%s",
-			r.Method,
-			r.RequestURI,
-			time.Since(start),
-		)
-	}
-}
-
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
@@ -43,23 +28,18 @@ type HTTPd struct {
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
-	router := mux.NewRouter().StrictSlash(true)
+	router := chi.NewRouter()
+	router.Use(middleware.Compress(5))
+	router.Use(middleware.Recoverer)
 
 	// websocket
 	router.HandleFunc("/ws", socketHandler(hub))
 
-	// static - individual handlers per root and folders
-	static := router.PathPrefix("/").Subrouter()
-	static.Use(handlers.CompressHandler)
-	static.Use(handlers.CompressHandler, func(h http.Handler) http.Handler {
-		return etag.Handler(h, false)
-	})
-
-	static.HandleFunc("/", indexHandler())
-	for _, dir := range []string{"assets", "meta"} {
-		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
-	}
-	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
+	// static files
+	router.HandleFunc("/", indexHandler())
+	router.Handle("/assets", http.FileServer(http.FS(assets.Web)))
+	router.Handle("/meta", http.FileServer(http.FS(assets.Web)))
+	router.Handle("/i18n", http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
 
 	srv := &HTTPd{
 		Server: &http.Server{
