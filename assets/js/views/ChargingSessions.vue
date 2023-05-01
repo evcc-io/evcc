@@ -184,7 +184,7 @@ export default {
 		},
 		groupByMonth(sessions) {
 			return sessions.reduce((groups, session) => {
-				const date = new Date(session.finished);
+				const date = new Date(session.created);
 				const month = `${date.getFullYear()}.${date.getMonth() + 1}`;
 				if (!groups[month]) groups[month] = [];
 				groups[month].push(session);
