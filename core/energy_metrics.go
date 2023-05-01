@@ -19,7 +19,7 @@ func NewEnergyMetrics() *EnergyMetrics {
 }
 
 // SetEnvironment updates site information like solar share, price, co2 for use in later calculations
-func (em *EnergyMetrics) SetEnvironment(greenShare float64, effPrice *float64, effCo2 *float64) {
+func (em *EnergyMetrics) SetEnvironment(greenShare float64, effPrice, effCo2 *float64) {
 	em.currentGreenShare = greenShare
 	em.currentPrice = effPrice
 	em.currentCo2 = effCo2
