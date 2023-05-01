@@ -44,6 +44,7 @@ export function getLocalePreference() {
 export function removeLocalePreference(i18n) {
   settings.locale = null;
   setI18nLanguage(i18n, getBrowserLocale());
+  ensureCurrentLocaleMessages(i18n);
 }
 
 export function setLocalePreference(i18n, locale) {

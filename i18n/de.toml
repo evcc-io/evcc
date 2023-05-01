@@ -73,8 +73,27 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fahrzeug Logins"
+needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
 settings = "Einstellungen"
+
+[help]
+discussionsButton = "GitHub Discussions"
+documentationButton = "Dokumentation"
+issueButton = "Bug melden"
+issueDescription = "Komisches Verhalten gefunden?"
+modalTitle = "Hilfe benötigt?"
+primaryActions = "Funktioniert etwas nicht so, wie es soll? Dies sind gute Anlaufstellen, um Hilfe zu erhalten."
+restartButton = "Neu starten"
+restartDescription = "Tried turning it off and on again?"
+secondaryActions = "Noch keine Lösung gefunden? Hier noch ein paar weitere Möglichkeiten."
+
+[help.restart]
+cancel = "Abbrechen"
+confirm = "Ja, neu starten!"
+description = "Unter normalen Umständen sollte ein Neustart nicht notwendig sein. Melde einen Bug, wenn du evcc regelmäßig neu starten musst."
+disclaimer = "Hinweis: evcc beendet sich und verlässt sich darauf, vom Betriebssystem neu gestartet zu werden."
+modalTitle = "Sicher, dass du neu starten möchtest?"
 
 [main]
 vehicles = "Parkplatz"
