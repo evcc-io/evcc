@@ -16,6 +16,8 @@ params:
   - name: icon
     default: car
     advanced: true
+  - name: status
+  - name: range
   - preset: vehicle-identify
 render: |
   type: custom
@@ -25,6 +27,12 @@ render: |
   capacity: {{ .capacity }}
   {{- if ne .phases "" }}
   phases: {{ .phases }}
+  {{- end }}
+  {{- if .status }}
+  status: {{ .status }}
+  {{- end }}
+  {{- if .range }}
+  range: {{ .range }}
   {{- end }}
   soc:
     source: http
