@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -49,7 +48,17 @@ func NewSocketHub() *SocketHub {
 
 // ServeWebsocket handles websocket requests from the peer.
 func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
+	acceptOptions := &websocket.AcceptOptions{
+		InsecureSkipVerify: true,
+	}
+
+	// https://github.com/nhooyr/websocket/issues/218
+	ua := strings.ToLower(r.Header.Get("User-Agent"))
+	if strings.Contains(ua, "safari") && !strings.Contains(ua, "chrome") && !strings.Contains(ua, "android") {
+		acceptOptions.CompressionMode = websocket.CompressionDisabled
+	}
+
+	conn, err := websocket.Accept(w, r, acceptOptions)
 	if err != nil {
 		log.ERROR.Println(err)
 		return
@@ -84,7 +93,7 @@ func (h *SocketHub) subscribe(ctx context.Context, conn *websocket.Conn) error {
 	defer h.deleteSubscriber(s)
 
 	// send welcome message
-	// go func() { h.register <- s }()
+	h.register <- s
 
 	for {
 		select {
@@ -113,7 +122,6 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 }
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
-	fmt.Println(len(params))
 	var msg strings.Builder
 	msg.WriteString("{")
 	for _, p := range params {
@@ -124,12 +132,8 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 	}
 	msg.WriteString("}")
 
+	// should not block
 	subscriber.send <- []byte(msg.String())
-	// select {
-	// case subscriber.send <- []byte(msg.String()):
-	// default:
-	// 	close(subscriber.send)
-	// }
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
