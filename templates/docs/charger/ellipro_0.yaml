@@ -1,5 +1,5 @@
 product:
-  brand: Elli
+  brand: Elli (Volkswagen)
   description: Charger Connect (mit Meter)/Pro (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
