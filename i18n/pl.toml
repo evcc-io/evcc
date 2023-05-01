@@ -65,6 +65,7 @@ costLimitDescription = "Umożliwia tymczasowe szybkie ładowanie w trybie solarn
 modalTitle = "Ładowanie z inteligentnej sieci"
 priceLabel = "Cena energii"
 priceLimit = "Limit ceny"
+none = "nie ma"
 
 [header]
 about = "O evcc"
