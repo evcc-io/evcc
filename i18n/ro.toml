@@ -65,6 +65,7 @@ costLimitDescription = "Activeaza temporar Incarcarea Rapida in mod Solar."
 modalTitle = "Incarcare Smart Grid"
 priceLabel = "Pretul curentului"
 priceLimit = "Limita de pret"
+none = "nimic"
 
 [header]
 about = "Despre"
