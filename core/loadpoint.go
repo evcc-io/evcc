@@ -1282,9 +1282,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
-			lp.Lock()
 			lp.sessionEnergy.Update(f - lp.chargedAtStartup)
-			lp.Unlock()
 		}
 	} else {
 		lp.log.ERROR.Printf("charge rater: %v", err)
