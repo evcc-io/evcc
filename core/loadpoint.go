@@ -116,6 +116,7 @@ type Loadpoint struct {
 	Soc               SocConfig
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
+	UseVehCurrentCtrl bool `mapstructure:"UseVehCurrentCtrl"`
 	onDisconnect      api.ActionConfig
 	targetEnergy      float64 // Target charge energy for dumb vehicles in kWh
 
@@ -653,12 +654,19 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
 		var err error
-		if charger, ok := lp.charger.(api.ChargerEx); ok {
-			err = charger.MaxCurrentMillis(chargeCurrent)
+		if lp.UseVehCurrentCtrl {
+			v, ok := c.lp.GetVehicle().(api.CurrentLimiter)
+			if !ok {
+				return fmt.Errorf("vehicle not capable of current control")
+			}
+			err = v.MaxCurrent(chargeCurrent)
 		} else {
-			err = lp.charger.MaxCurrent(int64(chargeCurrent))
+			if charger, ok := lp.charger.(api.ChargerEx); ok {
+				err = charger.MaxCurrentMillis(chargeCurrent)
+			} else {
+				err = lp.charger.MaxCurrent(int64(chargeCurrent))
+			}
 		}
-
 		if err != nil {
 			return fmt.Errorf("max charge current %.3gA: %w", chargeCurrent, err)
 		}

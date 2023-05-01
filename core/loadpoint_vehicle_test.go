@@ -208,6 +208,7 @@ func TestDefaultVehicle(t *testing.T) {
 
 	// default vehicle disconnected
 	lp.ResetOnDisconnect = true
+	lp.UseVehCurrentCtrl = false
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, mode, lp.GetMode(), "mode")
 	assert.Equal(t, minsoc, lp.GetMinSoc(), "minsoc")
@@ -267,6 +268,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 
 	lp.onDisconnect = od
 	lp.ResetOnDisconnect = true
+	lp.UseVehCurrentCtrl = false
 
 	// check loadpoint default currents can't be violated
 	lp.applyAction(newConfig(*od.Mode, 5, 17, *od.MinSoc, *od.TargetSoc))

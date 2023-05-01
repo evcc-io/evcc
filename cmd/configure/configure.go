@@ -27,6 +27,7 @@ type loadpoint struct {
 	MaxCurrent        int
 	Phases            int
 	ResetOnDisconnect string
+	UseVehCurrentCtrl string
 }
 
 type config struct {

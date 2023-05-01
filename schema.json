@@ -235,6 +235,9 @@
           "resetOnDisconnect": {
             "type": "boolean"
           },
+         "useVehCurrentCtrl": {
+            "type": "boolean"
+          },
           "charger": {
             "type": "string"
           },

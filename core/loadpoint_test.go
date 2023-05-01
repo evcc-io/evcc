@@ -482,6 +482,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 			target: 70,
 		},
 		ResetOnDisconnect: true,
+		UseVehCurrentCtrl: true,
 	}
 
 	attachListeners(t, lp)

@@ -426,6 +426,12 @@ func (c *CmdConfigure) configureLoadpoints() {
 			label:     c.localizedString("Loadpoint_ResetOnDisconnect"),
 			valueType: templates.TypeBool,
 		})
+
+		fmt.Println()
+		loadpoint.UseVehCurrentCtrl = c.askValue(question{
+			label:     c.localizedString("Loadpoint_UseVehCurrentCtrl"),
+			valueType: templates.TypeBool,
+		})
 		c.configuration.AddLoadpoint(loadpoint)
 
 		fmt.Println()
