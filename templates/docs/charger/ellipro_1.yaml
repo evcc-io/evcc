@@ -1,6 +1,6 @@
 product:
-  brand: Elli
-  description: Charger Pro (Beta)
+  brand: Volkswagen
+  description: ID. Charger Pro (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
 description: |

@@ -1,6 +1,6 @@
 product:
-  brand: Elli
-  description: Charger Pro (Beta)
+  brand: Audi
+  description: Audi Wallbox pro (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
 description: |
