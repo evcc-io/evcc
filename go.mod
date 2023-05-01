@@ -42,6 +42,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/websocket v1.5.0
 	github.com/gregdel/pushover v1.1.0
 	github.com/grid-x/modbus v0.0.0-20230412120016-b867b6a2a633
 	github.com/hashicorp/go-version v1.6.0
@@ -138,7 +139,6 @@ require (
 	github.com/google/s2a-go v0.1.1 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holoplot/go-avahi v1.0.1 // indirect
