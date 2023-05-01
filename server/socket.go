@@ -22,45 +22,36 @@ const (
 
 // SocketClient is a middleman between the websocket connection and the hub.
 type SocketClient struct {
-	hub *SocketHub
-
-	// The websocket connection.
-	conn *websocket.Conn
-
 	// Buffered channel of outbound messages.
 	send chan []byte
 }
 
-// writePump pumps messages from the hub to the websocket connection.
-func (c *SocketClient) writePump() {
-	defer func() {
-		c.conn.Close(websocket.StatusNormalClosure, "done")
-		c.hub.unregister <- c
-	}()
-
-	for msg := range c.send {
-		ctx, cancel := context.WithTimeout(context.Background(), socketWriteTimeout)
-		err := c.conn.Write(ctx, websocket.MessageText, msg)
-		cancel()
-
-		if err != nil {
-			return
-		}
-	}
-}
-
 // ServeWebsocket handles websocket requests from the peer.
 func ServeWebsocket(hub *SocketHub, w http.ResponseWriter, r *http.Request) {
-	conn, err := websocket.Accept(w, r, nil)
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
 	if err != nil {
 		log.ERROR.Println(err)
 		return
 	}
-	client := &SocketClient{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	client.hub.register <- client
 
-	// run writing to client in goroutine
-	go client.writePump()
+	client := &SocketClient{send: make(chan []byte, 256)}
+	hub.register <- client
+
+	defer func() {
+		conn.Close(websocket.StatusNormalClosure, "done")
+		hub.unregister <- client
+	}()
+
+	for msg := range client.send {
+		// ctx, cancel := context.WithTimeout(context.Background(), socketWriteTimeout)
+		err := conn.Write(context.Background(), websocket.MessageText, msg)
+		// cancel()
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
 }
 
 // SocketHub maintains the set of active clients and broadcasts messages to the
