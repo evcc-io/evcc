@@ -1224,7 +1224,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 	lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
 	lp.publish("chargeCurrents", lp.chargeCurrents)
 
-	if lp.charging() {
+	if lp.charging() && lp.phaseSwitchTimeoutElapsed() {
 		var phases int
 		for _, i := range lp.chargeCurrents {
 			if i > minActiveCurrent {
@@ -1431,6 +1431,13 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 // guardGracePeriodElapsed checks if last guard update is within guard grace period
 func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 	return time.Since(lp.guardUpdated) > guardGracePeriod
+}
+
+// phaseSwitchTimeoutElapsed checks if phase switch is just about to happen
+func (lp *Loadpoint) phaseSwitchTimeoutElapsed() bool {
+	// timeout := guardGracePeriod // just for a start - this should rather be 2 or 3 times the control cycle interval
+	timeout := 3 * conf.Interval
+	return time.Since(lp.phaseTimer) > timeout
 }
 
 // Update is the main control function. It reevaluates meters and charger state
