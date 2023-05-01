@@ -26,34 +26,6 @@ type SocketClient struct {
 	send chan []byte
 }
 
-// ServeWebsocket handles websocket requests from the peer.
-func ServeWebsocket(hub *SocketHub, w http.ResponseWriter, r *http.Request) {
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
-	if err != nil {
-		log.ERROR.Println(err)
-		return
-	}
-
-	client := &SocketClient{send: make(chan []byte, 256)}
-	hub.register <- client
-
-	defer func() {
-		conn.Close(websocket.StatusNormalClosure, "done")
-		hub.unregister <- client
-	}()
-
-	for msg := range client.send {
-		// ctx, cancel := context.WithTimeout(context.Background(), socketWriteTimeout)
-		err := conn.Write(context.Background(), websocket.MessageText, msg)
-		// cancel()
-
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-	}
-}
-
 // SocketHub maintains the set of active clients and broadcasts messages to the
 // clients.
 type SocketHub struct {
@@ -73,9 +45,46 @@ type SocketHub struct {
 // query results for the ui or other clients
 func NewSocketHub() *SocketHub {
 	return &SocketHub{
-		register:   make(chan *SocketClient),
-		unregister: make(chan *SocketClient),
+		register:   make(chan *SocketClient, 1),
+		unregister: make(chan *SocketClient, 1),
 		clients:    make(map[*SocketClient]bool),
+	}
+}
+
+// ServeWebsocket handles websocket requests from the peer.
+func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("<")
+
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
+	if err != nil {
+		log.ERROR.Println(err)
+		return
+	}
+	fmt.Print("a")
+
+	client := &SocketClient{send: make(chan []byte, 0)}
+	h.register <- client
+
+	defer func() {
+		fmt.Println(">")
+		// h.unregister <- client
+		conn.Close(websocket.StatusNormalClosure, "done")
+	}()
+
+	for msg := range client.send {
+		fmt.Print(".")
+		fmt.Printf("w%d", len(msg))
+		ctx, cancel := context.WithTimeout(context.Background(), socketWriteTimeout)
+		err := conn.Write(ctx, websocket.MessageText, msg)
+		cancel()
+		fmt.Print("c")
+		// err := conn.Write(context.Background(), websocket.MessageText, msg)
+
+		if err != nil {
+			fmt.Print("e")
+			// fmt.Println(err)
+			return
+		}
 	}
 }
 
@@ -172,10 +181,13 @@ func (h *SocketHub) broadcast(p util.Param) {
 // Run starts data and status distribution
 func (h *SocketHub) Run(in <-chan util.Param, cache *util.Cache) {
 	for {
+		fmt.Print("_")
 		select {
 		case client := <-h.register:
+			fmt.Print("r")
 			h.welcome(client, cache.All())
 		case client := <-h.unregister:
+			fmt.Print("u")
 			h.mu.Lock()
 			if _, ok := h.clients[client]; ok {
 				close(client.send)
@@ -186,6 +198,7 @@ func (h *SocketHub) Run(in <-chan util.Param, cache *util.Cache) {
 			if !ok {
 				return // break if channel closed
 			}
+			fmt.Print("b")
 			h.broadcast(msg)
 		}
 	}
