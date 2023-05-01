@@ -402,6 +402,6 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 // socketHandler attaches websocket handler to uri
 func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ServeWebsocket(hub, w, r)
+		hub.ServeWebsocket(w, r)
 	}
 }
