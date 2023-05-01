@@ -65,6 +65,7 @@ costLimitDescription = "Aktiverer midlertidig hurtig ladning i solcelle tilstand
 modalTitle = "Smart net opladning"
 priceLabel = "Energi pris"
 priceLimit = "Pris grænse"
+none = "ingen"
 
 [header]
 about = "Om"

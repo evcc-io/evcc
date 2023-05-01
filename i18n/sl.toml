@@ -65,6 +65,7 @@ costLimitDescription = "Omogoči začasno hitro polnjenje v solarnem načinu."
 modalTitle = "Smart Grid Polnjenje"
 priceLabel = "Cena energije"
 priceLimit = "Omejitev cene"
+none = "brez"
 
 [header]
 about = "Informacije"
