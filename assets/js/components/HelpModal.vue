@@ -96,6 +96,11 @@
 					</div>
 					<div class="modal-body">
 						<p>{{ $t("help.restart.description") }}</p>
+						<p>
+							<small>
+								{{ $t("help.restart.disclaimer") }}
+							</small>
+						</p>
 					</div>
 					<div class="modal-footer d-flex justify-content-between">
 						<button
