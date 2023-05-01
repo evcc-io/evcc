@@ -1,6 +1,6 @@
 product:
-  brand: Elli
-  description: Charger Connect (Beta)
+  brand: Audi
+  description: Wallbox plus (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
 description: |

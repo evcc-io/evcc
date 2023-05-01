@@ -1,6 +1,6 @@
 product:
-  brand: Elli
-  description: Charger Connect (Beta)
+  brand: Skoda
+  description: iV Charger Connect (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
 description: |

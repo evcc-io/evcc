@@ -2,8 +2,19 @@ template: elliconnect
 products:
   - brand: Elli
     description:
-      de: Charger Connect (ohne Meter) (Beta)
-      en: Charger Connect (without Meter) (Beta)
+      generic: Charger Connect (Beta)
+  - brand: Volkswagen
+    description:
+      generic: ID. Charger Connect (Beta)
+  - brand: Skoda
+    description:
+      generic: iV Charger Connect (Beta)
+  - brand: Elli
+    description:
+      generic: Charger Connect (Beta)
+  - brand: Audi
+    description:
+      generic: Wallbox plus (Beta)
 capabilities: ["mA"]
 requirements:
   evcc: ["eebus"]
@@ -14,12 +25,16 @@ requirements:
       Eine Identifikation des Fahrzeugs über die RFID Karte ist nicht möglich.
 
       Die Unterstützung ist im Beta Stadium und es kann noch zu Problemen kommen!
+
+      Hinweis: Wenn du deiner Wallbox nachträglich einen Energiezähler hinzugefügt hast, nutze bitte die Pro bzw. Connected+ Integration.
     en: |
       The device has to have a fix IP address (manuall or via DHCP).
 
       The identification of a vehicle using the RFID card is not possible.
 
       The support is in beta state and problems can occur!
+
+      Note: If you've added an energy meter to your charger please use the Pro or Connected+ integration.
 params:
   - preset: eebus
   - name: ip

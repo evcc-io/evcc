@@ -1,6 +1,6 @@
 product:
-  brand: Elli
-  description: Charger Connect (Beta)
+  brand: Volkswagen
+  description: ID. Charger Connect (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
 description: |

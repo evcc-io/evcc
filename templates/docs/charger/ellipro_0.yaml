@@ -1,6 +1,6 @@
 product:
   brand: Elli
-  description: Charger Connect (mit Meter)/Pro (Beta)
+  description: Charger Pro (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
 description: |
