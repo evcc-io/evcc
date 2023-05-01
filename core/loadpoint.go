@@ -1435,8 +1435,8 @@ func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 
 // phaseSwitchTimeoutElapsed checks if phase switch is just about to happen
 func (lp *Loadpoint) phaseSwitchTimeoutElapsed() bool {
-	// timeout := guardGracePeriod // just for a start - this should rather be 2 or 3 times the control cycle interval
-	timeout := 3 * conf.Interval
+	timeout := guardGracePeriod // just for a start - this should rather be 2 or 3 times the control cycle interval
+	// timeout := 3 * conf.Interval
 	return time.Since(lp.phaseTimer) > timeout
 }
 
