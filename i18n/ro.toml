@@ -63,9 +63,9 @@ co2Label = "emisii CO₂"
 co2Limit = "limita CO₂"
 costLimitDescription = "Activeaza temporar Incarcarea Rapida in mod Solar."
 modalTitle = "Incarcare Smart Grid"
+none = "nimic"
 priceLabel = "Pretul curentului"
 priceLimit = "Limita de pret"
-none = "nimic"
 
 [header]
 about = "Despre"

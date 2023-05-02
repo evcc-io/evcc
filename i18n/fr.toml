@@ -56,6 +56,17 @@ modalUpdateNow = "Installer maintenant"
 modalUpdateStarted = "Démarrage de la nouvelle version de evcc..."
 modalUpdateStatusStart = "L'installation a commencé:"
 
+[gridSettings]
+activeHours = "{charging} sur {total}"
+activeHoursLabel = "Heures actives"
+co2Label = "Émissions de CO₂"
+co2Limit = "Limite CO₂"
+costLimitDescription = "Autorise la charge rapide temporaire en mode solaire."
+modalTitle = "Recharge réseau intelligente"
+none = "aucun"
+priceLabel = "Prix de l'énergie"
+priceLimit = "Limite de prix"
+
 [header]
 about = "À propos"
 blog = "Blog"
@@ -73,10 +84,21 @@ light = "Désign: Lumière"
 [main]
 vehicles = "Place de stationnement"
 
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Arrivée"
+departureTab = "Départ"
+modalTitle = "Planification de la charge"
+none = "aucun"
+title = "Planification"
+titleMinSoc = "Charge min."
+titleTargetCharge = "Départ"
+
 [main.energyflow]
 battery = "Batterie"
 batteryCharge = "Batterie en charge"
 batteryDischarge = "Décharge de la batterie"
+batteryTooltip = "{energy} sur {total} ({soc})"
 gridImport = "Utilisation du réseau"
 homePower = "Consommation"
 loadpoints = "Chargeur| Chargeur | {count} chargeurs"
@@ -84,7 +106,6 @@ noEnergy = "Aucune donnée de compteur"
 pvExport = "Injection"
 pvProduction = "Production"
 selfConsumption = "Consommation propre"
-batteryTooltip = "{energy} sur {total} ({soc})"
 
 [main.loadpoint]
 charged = "Chargé"
@@ -134,40 +155,47 @@ logout = "déconnexion"
 [main.targetCharge]
 activate = "Activer"
 activeLabel = "{time}"
+co2Limit = "Limite de CO₂ {co2]"
+costLimitIgnore = "La limite configurée {limit} sera ignorée durant cette période."
+descriptionEnergy = "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy}?"
 descriptionSoc = "Quand le véhicule doit-il être chargé à {targetSoc}%?"
 inactiveLabel = "Temps visé"
 modalTitle = "Définir l'heure cible"
-remove = "Ôter"
-setTargetTime = "aucun"
-targetIsInThePast = "Choisis une période dans le futur, Marty."
-title = "Temps visé"
-today = "aujourd'hui"
-tomorrow = "demain"
-targetIsTooFarInTheFuture = "Nous ajusterons le plan dès qu'on en saura plus sur le futur."
-update = "Mettre à jour"
-descriptionEnergy = "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy}?"
 planDuration = "Durée de charge"
 planPeriodLabel = "Période"
 planPeriodValue = "{start} à {end}"
 planUnknown = "encore inconnu"
-co2Limit = "Limite de CO₂ {co2]"
-costLimitIgnore = "La limite configurée {limit} sera ignorée durant cette période."
 priceLimit = "limite de prix : {price}"
+remove = "Ôter"
+setTargetTime = "aucun"
+targetIsInThePast = "Choisis une période dans le futur, Marty."
+targetIsTooFarInTheFuture = "Nous ajusterons le plan dès qu'on en saura plus sur le futur."
+title = "Temps visé"
+today = "aujourd'hui"
+tomorrow = "demain"
+update = "Mettre à jour"
+
+[main.targetChargePlan]
+chargeDuration = "Durée de charge"
+co2Label = "Émissions de CO₂ Ø"
+priceLabel = "Prix de l'énergie"
+timeRange = "{day} {range} h"
+unknownPrice = "encore inconnu"
 
 [main.targetEnergy]
 label = "Limite de charge"
 noLimit = "aucune"
 
 [main.vehicle]
+addVehicle = "Ajouter un véhicule"
 changeVehicle = "Changer de véhicule"
 detectionActive = "Détection du véhicule…"
 fallbackName = "Véhicule"
+moreActions = "Plus d'actions"
 none = "Pas de véhicule"
 targetSoc = "Limite"
 unknown = "Véhicule invité"
 vehicleSoc = "Charge"
-moreActions = "Plus d'actions"
-addVehicle = "Ajouter un véhicule"
 
 [main.vehicleSoc]
 charging = "en charge"
@@ -178,8 +206,12 @@ vehicleTarget = "Limite du véhicule : {soc}%"
 
 [main.vehicleStatus]
 charging = "En charge..."
+cheapEnergyCharging = "Énergie bon marché disponible. En charge..."
+cleanEnergyCharging = "Énergie propre disponible. En charge..."
+climating = "Pré-conditionnement détecté."
 connected = "Connecté."
 disconnected = "Déconnecté."
+guard = "Démarre dans {remaining}..."
 minCharge = "Charge minimale jusqu'à {soc}%."
 pvDisable = "Pas assez de surplus. Pause dans {remaining}…"
 pvEnable = "Surplus disponible. Démarre dans {remaining}…"
@@ -191,10 +223,6 @@ targetChargeWaitForVehicle = "Charge cible prête. Attente du véhicule..."
 unknown = ""
 vehicleTargetReached = "Limite de véhicule {soc}% atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
-cleanEnergyCharging = "Énergie propre disponible. En charge..."
-guard = "Démarre dans {remaining}..."
-climating = "Pré-conditionnement détecté."
-cheapEnergyCharging = "Énergie bon marché disponible. En charge..."
 
 [notifications]
 dismissAll = "Supprimer tout"
@@ -204,14 +232,24 @@ modalTitle = "Notifications"
 message = "Pas de connexion au serveur."
 reload = "Recharger?"
 
+[session]
+cancel = "Annuler"
+delete = "Supprimer"
+finished = "Terminé"
+meterstart = "Compteur début"
+meterstop = "Compteur fin"
+odometer = "Kilométrage"
+started = "Début"
+title = "Session de charge"
+
 [sessions]
 date = "Période"
 downloadCsv = "Télécharger au format CSV"
 energy = "Chargé"
 loadpoint = "Point de chargement"
+reallyDelete = "Voulez-vous vraiment supprimer cette session?"
 title = "Sessions de charge"
 vehicle = "Véhicule"
-reallyDelete = "Voulez-vous vraiment supprimer cette session?"
 
 [sessions.csv]
 chargedenergy = "Énergie (kWh)"
@@ -227,9 +265,18 @@ vehicle = "Véhicule"
 [settings]
 title = "Réglages"
 
+[settings.hiddenFeatures]
+label = "Expérimental"
+value = "Afficher les fonctions expérimentales."
+
 [settings.language]
 auto = "Automatique"
 label = "Langue"
+
+[settings.sponsorToken]
+expires = "Votre jeton de supporter expire dans {inXDays}. {getNewToken} et mettez à jour votre fichier de configuration."
+getNew = "Obtenez-en un nouveau"
+hint = "Remarque : nous allons automatiser cela à l'avenir."
 
 [settings.telemetry]
 label = "Télémétrie"
@@ -256,54 +303,6 @@ lineError = "Erreur à la ligne {0}."
 lineErrorLink = "Ligne {0}"
 restartButton = "Redémarrer"
 title = "Erreur au démarrage"
-
-
-[gridSettings]
-activeHours = "{charging} sur {total}"
-activeHoursLabel = Heures actives
-co2Label = "Émissions de CO₂"
-co2Limit = "Limite CO₂"
-costLimitDescription = "Autorise la charge rapide temporaire en mode solaire."
-modalTitle = "Recharge réseau intelligente"
-priceLabel = "Prix de l'énergie"
-priceLimit = "Limite de prix"
-none = "aucun"
-
-[main.chargingPlan]
-arrivalTab = "Arrivée"
-departureTab = "Départ"
-activeLabel = "{time}"
-modalTitle = "Planification de la charge"
-none = "aucun"
-title = "Planification"
-titleTargetCharge = "Départ"
-titleMinSoc = "Charge min."
-
-[session]
-meterstart = "Compteur début"
-meterstop = "Compteur fin"
-odometer = "Kilométrage"
-started = "Début"
-cancel = Annuler
-title = "Session de charge"
-delete = Supprimer
-finished = Terminé
-
-[settings.hiddenFeatures]
-label = "Expérimental"
-value = "Afficher les fonctions expérimentales."
-
-[main.targetChargePlan]
-chargeDuration = "Durée de charge"
-co2Label = "Émissions de CO₂ Ø"
-priceLabel = "Prix de l'énergie"
-timeRange = "{day} {range} h"
-unknownPrice = "encore inconnu"
-
-[settings.sponsorToken]
-expires = "Votre jeton de supporter expire dans {inXDays}. {getNewToken} et mettez à jour votre fichier de configuration."
-getNew = "Obtenez-en un nouveau"
-hint = "Remarque : nous allons automatiser cela à l'avenir."
 
 [vehicleSettings]
 cancel = "Annuler"
