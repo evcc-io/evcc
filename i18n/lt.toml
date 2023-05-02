@@ -63,6 +63,7 @@ co2Label = "CO₂ emisijos"
 co2Limit = "CO₂ limitas"
 costLimitDescription = "Laikinai aktyvuoja greitą įkrovimą (režime Saulė)."
 modalTitle = "Išmanaus tinklo įkrovimas"
+none = "nėra"
 priceLabel = "Energijos kaina"
 priceLimit = "Kainos limitas"
 
@@ -72,6 +73,7 @@ blog = "Tinklaraštis"
 docs = "Dokumentacija (Vokiečių k.)"
 github = "GitHub"
 login = " Automobilių prisijungimai"
+needHelp = "Reikia pagalbos?"
 sessions = "Įkrovimo sesijos "
 settings = "Nustatymai"
 
@@ -79,6 +81,24 @@ settings = "Nustatymai"
 auto = "Dizainas: sistemos"
 dark = "Dizainas: tamsus"
 light = "Dizainas: šviesus"
+
+[help]
+discussionsButton = "GitHub diskusijos"
+documentationButton = "Dokumentacija"
+issueButton = "Pranešti apie klaidą"
+issueDescription = "Pastebėjote keistą ar netinkamą veikimą?"
+modalTitle = "Reikia pagalbos?"
+primaryActions = "Kažkas veikia ne taip, kaip turėtų? Pagalbos ieškokite čia."
+restartButton = "Restartuoti"
+restartDescription = "Ar pabandėte išjungti ir vėl įjungti?"
+secondaryActions = "Vis dar nepavyksta išspręsti problemos? Čia rasite drastiškesnes opcijas."
+
+[help.restart]
+cancel = "Atšaukti"
+confirm = "Taip, restartuoti!"
+description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums reikia vis restartuoti, pasvarstykite - gal derėtų pranešti apie problemą."
+disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
+modalTitle = "Ar tikrai norite restartuoti?"
 
 [main]
 vehicles = "Autoparkas"

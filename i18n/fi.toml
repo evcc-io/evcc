@@ -22,7 +22,7 @@ percentTitle = "Aurinkoenergia"
 priceFeedIn = "{feedInPrice} verkkoon myynti"
 priceGrid = "{gridPrice} verkosta osto"
 priceTitle = "Energian hinta"
-savingsComparedToGrid = "Verrattuna verkosta"
+savingsComparedToGrid = "Verrattuna verkkoon"
 savingsTitle = "Säästöt"
 savingsTotalEnergy = "ladattuun {total} kWh"
 since = "alkaen {since}"
@@ -56,6 +56,17 @@ modalUpdateNow = "Asenna nyt"
 modalUpdateStarted = "Käynnistetään evcc:n uusin versio..."
 modalUpdateStatusStart = "Asennus aloitettu:"
 
+[gridSettings]
+activeHours = "{charging} / {total}"
+activeHoursLabel = "Aktiiviset tunnit"
+co2Label = "CO₂ päästö"
+co2Limit = "CO₂ raja"
+costLimitDescription = "Mahdollistaa väliaikaisesti latauksen nopeasti PV tilassa."
+modalTitle = "Älykäs lataus verkosta"
+none = "ei mitään"
+priceLabel = "Energian hinta"
+priceLimit = "Hintaraja"
+
 [header]
 about = "Tietoa"
 blog = "Blogi"
@@ -68,18 +79,28 @@ settings = "Asetukset"
 [main]
 vehicles = "Pysäköinti"
 
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Saapuminen"
+departureTab = "Lähtö"
+modalTitle = "Lataussuunnitelma"
+none = "ei mitään"
+title = "Suunnitelma"
+titleMinSoc = "Minimi lataus"
+titleTargetCharge = "Lähtö"
+
 [main.energyflow]
 battery = "Akku"
 batteryCharge = "Akunlataus"
 batteryDischarge = "Akku purkautuu"
 batteryTooltip = "{energy} / {total} ({soc})"
-gridImport = "Verkon käyttö"
+gridImport = "Kulutus verkosta"
 homePower = "Kulutus"
 loadpoints = "Laturi| Laturi | {count} laturia"
 noEnergy = "Ei mittarin tietoja"
 pvExport = "Verkkoon vienti"
 pvProduction = "Tuotanto"
-selfConsumption = "Oma kulutus"
+selfConsumption = "Tuotannon kulutus"
 
 [main.loadpoint]
 charged = "Ladattu"
@@ -126,6 +147,8 @@ logout = "kirjaudu ulos"
 [main.targetCharge]
 activate = "Aktivoi"
 activeLabel = "{time}"
+co2Limit = "Raja CO₂ / {co2}"
+costLimitIgnore = "Määritetty {limit} ohitetaan tänä aikana."
 descriptionEnergy = "Mihin mennessä {targetEnergy} tulisi ladata autoon?"
 descriptionSoc = "Milloin ajoneuvon tulee olla ladattu {targetSoc}%?"
 inactiveLabel = "Tavoiteaika"
@@ -134,6 +157,7 @@ planDuration = "Latausaika"
 planPeriodLabel = "Jakso"
 planPeriodValue = "{start} - {end}"
 planUnknown = "ei vielä tiedossa"
+priceLimit = "{price} hintaraja"
 setTargetTime = "ei mitään"
 targetIsInThePast = "Valitse aika tulevaisuudessa"
 targetIsTooFarInTheFuture = "Muokkaamme suunnitelmaa heti kun tiedämme enemmän tulevaisuudesta."
@@ -173,6 +197,9 @@ vehicleTarget = "Ajoneuvon raja {soc}%"
 
 [main.vehicleStatus]
 charging = "Lataa…"
+cheapEnergyCharging = "Edullista energiaa saatavilla. Lataa…"
+cleanEnergyCharging = "Puhdasta energiaa saataville. Lataa..."
+climating = "Esilämmitys/-viilennys havaittu."
 connected = "Yhdistetty."
 disconnected = "Irroitettu."
 guard = "Alkaa {remaining}…"
@@ -237,7 +264,7 @@ price = "hinta"
 
 [settings.hiddenFeatures]
 label = "Kokeellinen"
-value = "Näytä kokeelliset käyttöliittymän ominaisuudet"
+value = "Näytä kokeellisen käyttöliittymän ominaisuudet"
 
 [settings.language]
 auto = "Automaattinen"

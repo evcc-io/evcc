@@ -63,6 +63,7 @@ co2Label = "CO₂-utslipp"
 co2Limit = "CO₂-grense"
 costLimitDescription = "Slår på midlertidig hurtiglading i solcellemodus."
 modalTitle = "Smart lysnettlading"
+none = "ingen"
 priceLabel = "Energipris"
 priceLimit = "Prisgrense"
 
@@ -183,7 +184,7 @@ noLimit = "ingen"
 
 [main.vehicle]
 addVehicle = "Legg til kjøretøy"
-changeVehicle = "Lad kjøretøy"
+changeVehicle = "Endre kjøretøy"
 detectionActive = "Oppdager kjøretøy ..."
 fallbackName = "Kjøretøy"
 moreActions = "Flere handlinger"
@@ -203,6 +204,7 @@ vehicleTarget = "Kjøretøygrense: {soc}%"
 charging = "Lading..."
 cheapEnergyCharging = "Billig energi tilgjengelig. Lader …"
 cleanEnergyCharging = "Ren energi tilgjengelig. Lader …"
+climating = "Klimaanlegg på forhånd oppdaget."
 connected = "Tilkoblet."
 disconnected = "Frakoblet."
 guard = "Starter om {remaining} …"
@@ -269,7 +271,7 @@ label = "Språk"
 
 [settings.sponsorToken]
 expires = "Sponsorsymbolet ditt utløper om {inXDays}. {getNewToken} og oppdater oppsettsfilen din."
-getNew = "Hent et ferskt symbol"
+getNew = "Få en ny token"
 hint = "Merk: Dette vil bli automatisert i fremtiden."
 
 [settings.telemetry]
@@ -284,7 +286,7 @@ light = "lys"
 [settings.unit]
 km = "km"
 label = "Enheter"
-mi = "miles"
+mi = "mil"
 
 [startupError]
 configFile = "Brukt oppsettsfil:"

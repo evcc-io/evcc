@@ -63,6 +63,7 @@ co2Label = "Emisja CO₂"
 co2Limit = "Limit CO₂"
 costLimitDescription = "Umożliwia tymczasowe szybkie ładowanie w trybie solarnym."
 modalTitle = "Ładowanie z inteligentnej sieci"
+none = "nie ma"
 priceLabel = "Cena energii"
 priceLimit = "Limit ceny"
 
