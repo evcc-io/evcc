@@ -122,13 +122,17 @@ pvProduction = "Erzeugung"
 selfConsumption = "Eigenverbrauch"
 
 [main.loadpoint]
+avgPrice = "Ø Preis"
 charged = "Geladen"
+co2 = "Ø CO₂"
 duration = "Dauer"
 fallbackName = "Ladepunkt"
 power = "Leistung"
+price = "Σ Preis"
 remaining = "Restzeit"
 remoteDisabledHard = "{source}: Deaktiviert"
 remoteDisabledSoft = "{source}: Adaptives PV-Laden deaktiviert"
+solar = "Sonne"
 
 [main.loadpointSettings]
 currents = "Ladestrom"
@@ -246,20 +250,28 @@ reload = "Erneut laden?"
 
 [session]
 cancel = "Abbrechen"
+co2 = "CO₂"
+date = "Zeitraum"
 delete = "Löschen"
 finished = "Endzeit"
+meter = "Zählerstand"
 meterstart = "Anfangszählerstand"
 meterstop = "Endzählerstand"
 odometer = "Kilometerstand"
+price = "Preis"
 started = "Startzeit"
 title = "Ladevorgang"
 
 [sessions]
-date = "Zeitraum"
+avgPrice = "Ø Preis"
+co2 = "Ø CO₂"
+date = "Anfang"
 downloadCsv = "Als CSV herunterladen"
 energy = "Geladen"
 loadpoint = "Ladepunkt"
+price = "Σ Preis"
 reallyDelete = "Wollen Sie diesen Ladevorgang wirklich löschen?"
+solar = "Sonne"
 title = "Ladevorgänge"
 vehicle = "Fahrzeug"
 
