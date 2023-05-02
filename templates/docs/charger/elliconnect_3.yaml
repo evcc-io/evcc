@@ -1,5 +1,5 @@
 product:
-  brand: Elli
+  brand: Cupra
   description: Charger Connect (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
