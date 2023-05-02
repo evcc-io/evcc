@@ -63,6 +63,7 @@ co2Label = "Emisiones de CO₂"
 co2Limit = "Límite de CO₂"
 costLimitDescription = "Habilita la carga rápida temporal en modo solar"
 modalTitle = "Red inteligente de carga"
+none = "ninguno"
 priceLabel = "Precio de la energía"
 priceLimit = "Límite de precio"
 
@@ -91,6 +92,7 @@ modalTitle = "Plan de carga"
 none = "ninguno"
 title = "Plan"
 titleMinSoc = "Carga mínima"
+titleTargetCharge = "Salidas"
 
 [main.energyflow]
 battery = "Batería"
@@ -144,7 +146,7 @@ phases_3_hint = "({min} a {max})"
 minpv = "Min+Sol"
 now = "Rápido"
 off = "Acabado"
-pv = "Energía Solar"
+pv = "Solar"
 
 [main.provider]
 login = "iniciar sesión"

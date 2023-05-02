@@ -73,6 +73,7 @@ blog = "Blog"
 docs = "Documentação"
 github = "GitHub"
 login = "Login de veículo"
+needHelp = "Precisa ajuda?"
 sessions = "Sessões de carga"
 settings = "Configuração"
 
@@ -80,6 +81,24 @@ settings = "Configuração"
 auto = "Design: Sistema"
 dark = "Design: Escuro"
 light = "Design: Claro"
+
+[help]
+discussionsButton = "Discussões no GitHub"
+documentationButton = "Documentação"
+issueButton = "Reportar um erro"
+issueDescription = "Encontrou um comportamento estranho ou errado?"
+modalTitle = "Precisa ajuda?"
+primaryActions = "Alguma coisa não funciona como deveria? Estes são bons lugares para obter ajuda."
+restartButton = "Reiniciar"
+restartDescription = "Tentou desligar e ligar de novo?"
+secondaryActions = "Ainda não conseguiu resolver o seu problema? Aqui estão algumas opções mais pesadas."
+
+[help.restart]
+cancel = "Cancelar"
+confirm = "Sim, reinicie!"
+description = "Em circunstâncias normais, a reinicialização não deve ser necessária. Considere registrar um erro se precisar reiniciar o evcc regularmente."
+disclaimer = "Nota: o evcc terminará e confiará no sistema operacional para reiniciar o serviço."
+modalTitle = "Tens a certeza que queres reiniciar"
 
 [main]
 vehicles = "Estacionamento"

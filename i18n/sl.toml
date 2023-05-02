@@ -63,6 +63,7 @@ co2Label = "Emisije CO₂"
 co2Limit = "Omejitev CO₂"
 costLimitDescription = "Omogoči začasno hitro polnjenje v solarnem načinu."
 modalTitle = "Smart Grid Polnjenje"
+none = "brez"
 priceLabel = "Cena energije"
 priceLimit = "Omejitev cene"
 
