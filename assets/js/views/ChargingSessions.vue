@@ -54,15 +54,25 @@
 							</li>
 						</ul>
 						<div class="table-responsive my-3">
-							<table class="table">
+							<table class="table text-nowrap">
 								<thead>
 									<tr>
+										<th scope="col" class="ps-0">{{ $t("sessions.date") }}</th>
 										<th scope="col">{{ $t("sessions.vehicle") }}</th>
-										<th scope="col" class="text-end ps-sm-4 pe-md-5">
+										<th scope="col" class="text-end">
 											{{ $t("sessions.energy") }}
 										</th>
-										<th scope="col" class="ps-3 ps-md-4 ps-md-5">
-											{{ $t("sessions.date") }}
+										<th scope="col" class="text-end">
+											{{ $t("sessions.solar") }}
+										</th>
+										<th scope="col" class="text-end">
+											{{ $t("sessions.price") }}
+										</th>
+										<th scope="col" class="text-end">
+											{{ $t("sessions.avgPrice") }}
+										</th>
+										<th scope="col" class="text-end pe-0">
+											{{ $t("sessions.co2") }}
 										</th>
 									</tr>
 								</thead>
@@ -73,42 +83,39 @@
 										role="button"
 										@click="showDetails(session.id)"
 									>
-										<td class="align-middle">
+										<td class="ps-0">
+											{{ fmtFullDateTime(new Date(session.finished), true) }}
+										</td>
+										<td>
 											{{ session.vehicle }}
 										</td>
-										<td
-											class="text-nowrap text-end ps-sm-4 pe-md-5 align-middle"
-										>
+										<td class="text-end">
 											{{ fmtKWh(session.chargedEnergy * 1e3) }}
 										</td>
-										<td class="text-nowrap ps-3 ps-md-4 ps-md-5">
-											<span class="d-block d-sm-none">
-												{{
-													fmtFullDateTime(new Date(session.created), true)
-												}}
-												<br />
-												{{
-													fmtFullDateTime(
-														new Date(session.finished),
-														true
-													)
-												}}
+										<td class="text-end">
+											<span v-if="session.solarPercentage != null">
+												{{ fmtNumber(session.solarPercentage, 1) }}%
 											</span>
-											<span class="d-none d-sm-block">
-												{{
-													fmtFullDateTime(
-														new Date(session.created),
-														false
-													)
-												}}
-												<br />
-												{{
-													fmtFullDateTime(
-														new Date(session.finished),
-														false
-													)
-												}}
+											<span v-else class="text-muted">-</span>
+										</td>
+										<td class="text-end">
+											<span v-if="session.price != null">
+												{{ fmtMoney(session.price, currency) }}
+												{{ fmtCurrencySymbol(currency) }}
 											</span>
+											<span v-else class="text-muted">-</span>
+										</td>
+										<td class="text-end">
+											<span v-if="session.pricePerKWh != null">
+												{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
+											</span>
+											<span v-else class="text-muted">-</span>
+										</td>
+										<td class="text-end pe-0">
+											<span v-if="session.co2PerKWh != null">
+												{{ fmtCo2Medium(session.co2PerKWh) }}
+											</span>
+											<span v-else class="text-muted">-</span>
 										</td>
 									</tr>
 								</tbody>
@@ -166,12 +173,17 @@ export default {
 			});
 		},
 		vehicles() {
-			return store.state.vehicles.map((v, index) => {
-				return { id: index, title: v };
-			});
+			return (
+				store.state.vehicles?.map((v, index) => {
+					return { id: index, title: v };
+				}) || []
+			);
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);
+		},
+		currency() {
+			return store.state.currency;
 		},
 	},
 	mounted() {

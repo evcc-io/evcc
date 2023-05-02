@@ -53,11 +53,13 @@
 									</td>
 								</tr>
 								<tr>
-									<th>
-										{{ $t("session.odometer") }}
+									<th class="align-baseline">
+										{{ $t("session.date") }}
 									</th>
 									<td>
-										{{ formatKm(session.odometer) }}
+										{{ fmtFullDateTime(new Date(session.created), false) }}
+										<br />
+										{{ fmtFullDateTime(new Date(session.finished), false) }}
 									</td>
 								</tr>
 								<tr>
@@ -68,36 +70,51 @@
 										{{ fmtKWh(session.chargedEnergy * 1e3) }}
 									</td>
 								</tr>
-								<tr>
-									<th>
-										{{ $t("session.meterstart") }}
+								<tr v-if="session.solarPercentage != null">
+									<th class="align-baseline">
+										{{ $t("sessions.solar") }}
 									</th>
 									<td>
-										{{ fmtKWh(session.meterStart * 1e3) }}
+										{{ fmtNumber(session.solarPercentage, 1) }} % ({{
+											fmtKWh(
+												session.chargedEnergy * 10 * session.solarPercentage
+											)
+										}})
 									</td>
 								</tr>
-								<tr>
-									<th>
-										{{ $t("session.meterstop") }}
+								<tr v-if="session.price != null">
+									<th class="align-baseline">
+										{{ $t("session.price") }}
 									</th>
 									<td>
+										{{ fmtMoney(session.price, currency) }}
+										{{ fmtCurrencySymbol(currency) }}<br />
+										{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
+									</td>
+								</tr>
+								<tr v-if="session.co2PerKWh != null">
+									<th>
+										{{ $t("session.co2") }}
+									</th>
+									<td>
+										{{ fmtCo2Medium(session.co2PerKWh) }}
+									</td>
+								</tr>
+								<tr v-if="session.odometer">
+									<th>
+										{{ $t("session.odometer") }}
+									</th>
+									<td>
+										{{ formatKm(session.odometer) }}
+									</td>
+								</tr>
+								<tr v-if="session.meterStart">
+									<th class="align-baseline">
+										{{ $t("session.meter") }}
+									</th>
+									<td>
+										{{ fmtKWh(session.meterStart * 1e3) }}<br />
 										{{ fmtKWh(session.meterStop * 1e3) }}
-									</td>
-								</tr>
-								<tr>
-									<th>
-										{{ $t("session.started") }}
-									</th>
-									<td>
-										{{ fmtFullDateTime(new Date(session.created), false) }}
-									</td>
-								</tr>
-								<tr>
-									<th>
-										{{ $t("session.finished") }}
-									</th>
-									<td>
-										{{ fmtFullDateTime(new Date(session.finished), false) }}
 									</td>
 								</tr>
 							</tbody>

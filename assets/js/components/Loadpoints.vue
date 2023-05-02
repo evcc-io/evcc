@@ -16,6 +16,7 @@
 					:smartCostUnit="smartCostUnit"
 					:tariffGrid="tariffGrid"
 					:tariffCo2="tariffCo2"
+					:currency="currency"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -51,6 +52,7 @@ export default {
 		smartCostUnit: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		currency: String,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };

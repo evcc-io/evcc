@@ -194,14 +194,17 @@ export default {
     fmtPricePerKWh: function (amout = 0, currency = "EUR", short = false) {
       let unit = currency;
       let value = amout;
+      let minimumFractionDigits = "auto";
       let maximumFractionDigits = 3;
       if (["EUR", "USD"].includes(currency)) {
         value *= 100;
         unit = "ct";
+        minimumFractionDigits = 1;
         maximumFractionDigits = 1;
       }
       return `${new Intl.NumberFormat(this.$i18n.locale, {
         style: "decimal",
+        minimumFractionDigits,
         maximumFractionDigits,
       }).format(value)} ${unit}${short ? "" : "/kWh"}`;
     },

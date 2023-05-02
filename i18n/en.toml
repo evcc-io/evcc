@@ -122,13 +122,17 @@ pvProduction = "Production"
 selfConsumption = "Self-consumption"
 
 [main.loadpoint]
+avgPrice = "Ø Price"
 charged = "Charged"
+co2 = "Ø CO₂"
 duration = "Duration"
 fallbackName = "Charging point"
 power = "Power"
+price = "Σ Price"
 remaining = "Remaining"
 remoteDisabledHard = "{source}: turned off"
 remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
+solar = "Solar"
 
 [main.loadpointSettings]
 currents = "Charging current"
@@ -246,20 +250,28 @@ reload = "Reload?"
 
 [session]
 cancel = "Cancel"
+co2 = "CO₂"
+date = "Period"
 delete = "Delete"
 finished = "Finished"
+meter = "Meter"
 meterstart = "Meter start"
 meterstop = "Meter stop"
 odometer = "Mileage"
+price = "Price"
 started = "Started"
 title = "Charging Session"
 
 [sessions]
-date = "Period"
+avgPrice = "Ø Price"
+co2 = "Ø CO₂"
+date = "Finished"
 downloadCsv = "Download as CSV"
 energy = "Charged"
 loadpoint = "Charging point"
+price = "Σ Price"
 reallyDelete = "Do you really want to delete this session?"
+solar = "Solar"
 title = "Charging Sessions"
 vehicle = "Vehicle"
 

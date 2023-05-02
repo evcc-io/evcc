@@ -45,24 +45,36 @@ func (lp *Loadpoint) createSession() {
 
 // stopSession ends a charging session segment and persists the session.
 func (lp *Loadpoint) stopSession() {
+	s := lp.session
+
 	// test guard
-	if lp.db == nil || lp.session == nil {
+	if lp.db == nil || s == nil {
 		return
 	}
 
 	// abort the session if charging has never started
-	if lp.session.Created.IsZero() {
+	if s.Created.IsZero() {
 		return
 	}
 
-	lp.session.Finished = lp.clock.Now()
-	lp.session.MeterStop = lp.chargeMeterTotal()
-
-	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > lp.session.ChargedEnergy {
-		lp.session.ChargedEnergy = chargedEnergy
+	s.Finished = lp.clock.Now()
+	meterStop := lp.chargeMeterTotal()
+	if meterStop > 0 {
+		s.MeterStop = &meterStop
 	}
 
-	lp.db.Persist(lp.session)
+	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
+		lp.sessionEnergy.Update(chargedEnergy)
+	}
+
+	solarPerc := lp.sessionEnergy.SolarPercentage()
+	s.SolarPercentage = &solarPerc
+	s.Price = lp.sessionEnergy.Price()
+	s.PricePerKWh = lp.sessionEnergy.PricePerKWh()
+	s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
+	s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
+
+	lp.db.Persist(s)
 }
 
 type sessionOption func(*db.Session)
