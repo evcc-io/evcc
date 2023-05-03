@@ -250,6 +250,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// show main ui
 	if err == nil {
 		httpd.RegisterSiteHandlers(site, cache)
+		httpd.RegisterShutdownHandler(func() {
+			log.FATAL.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
+			once.Do(func() { close(stopC) }) // signal loop to end
+		})
 
 		// set channels
 		site.DumpConfig()
