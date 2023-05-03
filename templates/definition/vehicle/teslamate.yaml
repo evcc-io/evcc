@@ -31,22 +31,21 @@ render: |
   soc:
     {{- include "source" . | indent 2 }}
     source: mqtt
-    topic: teslamate/cars/&ID/battery_level
+    topic: teslamate/cars/{{ .id }}/battery_level
     timeout: 720h # 30d
   status:
     source: combined
     plugged:
       source: mqtt
-      topic: teslamate/cars/&ID/plugged_in
+      topic: teslamate/cars/{{ .id }}/plugged_in
       timeout: 720h # 30d
     charging:
       {{- include "source" . | indent 4 }}
       source: mqtt
-      topic: teslamate/cars/&ID/charger_actual_current
+      topic: teslamate/cars/{{ .id }}/charger_actual_current
       timeout: 720h # 30d
   range:
     {{- include "source" . | indent 2 }}
     source: mqtt
-    topic: teslamate/cars/&ID/rated_battery_range_km
+    topic: teslamate/cars/{{ .id }}/rated_battery_range_km
     timeout: 720h # 30d
-
