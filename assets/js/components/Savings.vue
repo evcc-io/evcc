@@ -74,13 +74,14 @@
 												self: fmtKw(
 													selfConsumptionCharged * 1000,
 													true,
-													false
+													false,
+													0
 												),
 											})
 										"
 										:sub2="
 											$t('footer.savings.percentGrid', {
-												grid: fmtKw(gridCharged * 1000, true, false),
+												grid: fmtKw(gridCharged * 1000, true, false, 0),
 											})
 										"
 									/>
@@ -112,7 +113,7 @@
 										:sub1="$t('footer.savings.savingsComparedToGrid')"
 										:sub2="
 											$t('footer.savings.savingsTotalEnergy', {
-												total: fmtKw(totalCharged * 1000, true, false),
+												total: fmtKw(totalCharged * 1000, true, false, 0),
 											})
 										"
 									/>
