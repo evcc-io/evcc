@@ -67,6 +67,14 @@ none = "none"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
 
+[batterySettings]
+modalTitle = "Battery settings"
+bufferSoc = "Buffer"
+prioritySoc = "Reserve"
+sectionTop = "Encouraged for charging"
+sectionMiddle = "Available for charging"
+sectionBottom = "Reserved for home"
+
 [header]
 about = "About"
 blog = "Blog"

@@ -121,6 +121,18 @@ h5 {
 	background-color: var(--evcc-dark-green) !important;
 }
 
+.bg-dark-green {
+	background-color: var(--evcc-dark-green) !important;
+}
+
+.bg-darker-green {
+	background-color: var(--evcc-darker-green) !important;
+}
+
+.bg-darkest-green {
+	background-color: var(--evcc-darkest-green) !important;
+}
+
 .text-primary {
 	color: var(--bs-primary) !important;
 }
@@ -236,6 +248,9 @@ a:hover {
 }
 .text-dark {
 	color: var(--bs-gray-dark);
+}
+.text-light {
+	color: var(--bs-gray-bright);
 }
 .text-gray {
 	color: var(--bs-gray-medium);

@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/push"
 	serverdb "github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -114,6 +115,8 @@ func NewSiteFromConfig(
 	site.prioritizer = prioritizer.New()
 	site.savings = NewSavings(tariffs)
 
+	site.restoreSettings()
+
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
@@ -200,6 +203,18 @@ func (site *Site) Loadpoints() []loadpoint.API {
 		res[id] = lp
 	}
 	return res
+}
+
+func (site *Site) restoreSettings() {
+	if v, err := settings.Float("site.bufferSoc"); err == nil {
+		site.BufferSoc = v
+	}
+	if v, err := settings.Float("site.prioritySoc"); err == nil {
+		site.PrioritySoc = v
+	}
+	if v, err := settings.Float("site.smartCostLimit"); err == nil {
+		site.SmartCostLimit = v
+	}
 }
 
 func meterCapabilities(name string, meter interface{}) string {
