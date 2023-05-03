@@ -1,6 +1,6 @@
 product:
   brand: Hoymiles
-  description: HM and HMS Series via OpenDTU HTTP API
+  description: HM and HMS Series (via OpenDTU)
 render:
   - usage: pv
     default: |
