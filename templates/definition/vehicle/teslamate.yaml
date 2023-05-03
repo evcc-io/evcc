@@ -1,22 +1,11 @@
-template: flobz
+template: teslamate
 products:
-  - brand: PSA
+  - brand: Tesla
     description:
-      generic: PSA Car Controller (flobz)
+      generic: A self-hosted data logger for your Tesla (teslamate)
 params:
   - name: title
-  - name: url
-    required: true
-    example: http://192.0.2.2
-  - name: host
-    deprecated: true
-  - name: port
-    deprecated: true
-  - name: vin
-    required: true
-    help:
-      de: Erforderlich
-      en: Required
+  - name: id #Default 1
   - name: capacity
   - name: phases
     advanced: true
@@ -41,29 +30,23 @@ render: |
   {{- include "vehicle-identify" . }}
   soc:
     {{- include "source" . | indent 2 }}
-    jq: .energy[0].level
+    source: mqtt
+    topic: teslamate/cars/&ID/battery_level
+    timeout: 720h # 30d
   status:
     source: combined
     plugged:
-      {{- include "source" . | indent 4 }}
-      jq: .energy[0].charging.plugged
+      source: mqtt
+      topic: teslamate/cars/&ID/plugged_in
+      timeout: 720h # 30d
     charging:
       {{- include "source" . | indent 4 }}
-      jq: .energy[0].charging.status == "InProgress"
+      source: mqtt
+      topic: teslamate/cars/&ID/charger_actual_current
+      timeout: 720h # 30d
   range:
     {{- include "source" . | indent 2 }}
-    jq: .energy[0].autonomy
-  odometer:
-    {{- include "source" . | indent 2 }}
-    jq: .timed_odometer.mileage
-  climater:
-    {{- include "source" . | indent 2 }}
-    jq: .preconditionning.air_conditioning.status != "Disabled"
-  {{- define "source" }}
-  source: http
-  {{- if .host }}
-  uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
-  {{- else }}
-  uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
-  {{- end }}
-  {{- end }}
+    source: mqtt
+    topic: teslamate/cars/&ID/rated_battery_range_km
+    timeout: 720h # 30d
+
