@@ -5,7 +5,7 @@ products:
       generic: A self-hosted data logger for your Tesla (teslamate)
 params:
   - name: title
-  - name: id #Default 1
+  - name: id
   - name: capacity
   - name: phases
     advanced: true
