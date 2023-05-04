@@ -4,12 +4,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -129,7 +129,7 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) error
 	if token.WaitTimeout(publishTimeout) {
 		return token.Error()
 	}
-	return api.ErrTimeout
+	return os.ErrDeadlineExceeded
 }
 
 // Listen validates uniqueness and registers and attaches listener
@@ -146,7 +146,7 @@ func (m *Client) ListenSetter(topic string, callback func(string)) {
 	m.Listen(topic, func(payload string) {
 		callback(payload)
 		if err := m.Publish(topic, true, ""); err != nil {
-			m.log.ERROR.Printf("clear: %s: %v", topic, err)
+			m.log.ERROR.Printf("clear: %v", err)
 		}
 	})
 }
@@ -158,22 +158,24 @@ func (m *Client) listen(topic string) {
 		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
 		if len(payload) > 0 {
 			m.mux.Lock()
-			for _, cb := range m.listener[topic] {
-				go cb(payload)
-			}
+			callbacks := m.listener[topic]
 			m.mux.Unlock()
+
+			for _, cb := range callbacks {
+				cb(payload)
+			}
 		}
 	})
-	m.WaitForToken("subscribe", topic, token)
+	m.WaitForToken(token)
 }
 
 // WaitForToken synchronously waits until token operation completed
-func (m *Client) WaitForToken(action, topic string, token paho.Token) {
-	err := api.ErrTimeout
+func (m *Client) WaitForToken(token paho.Token) {
 	if token.WaitTimeout(publishTimeout) {
-		err = token.Error()
-	}
-	if err != nil {
-		m.log.ERROR.Printf("%s: %s: %v", action, topic, err)
+		if token.Error() != nil {
+			m.log.ERROR.Printf("error: %s", token.Error())
+		}
+	} else {
+		m.log.DEBUG.Println("timeout")
 	}
 }
