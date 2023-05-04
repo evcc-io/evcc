@@ -177,11 +177,12 @@ export default {
         year: "numeric",
       }).format(date);
     },
-    fmtMoney: function (amout = 0, currency = "EUR") {
+    fmtMoney: function (amout = 0, currency = "EUR", decimals = true) {
       return new Intl.NumberFormat(this.$i18n.locale, {
         style: "currency",
         currency,
         currencyDisplay: "code",
+        maximumFractionDigits: decimals ? undefined : 0,
       })
         .format(amout)
         .replace(currency, "")

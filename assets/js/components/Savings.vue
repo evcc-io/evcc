@@ -66,20 +66,22 @@
 										class="text-accent1"
 										icon="sun"
 										:title="$t('footer.savings.percentTitle')"
-										:value="percent"
+										:value="selfConsumptionPercent"
+										:valueFmt="fmtAnimation"
 										unit="%"
 										:sub1="
 											$t('footer.savings.percentSelf', {
 												self: fmtKw(
 													selfConsumptionCharged * 1000,
 													true,
-													false
+													false,
+													0
 												),
 											})
 										"
 										:sub2="
 											$t('footer.savings.percentGrid', {
-												grid: fmtKw(gridCharged * 1000, true, false),
+												grid: fmtKw(gridCharged * 1000, true, false, 0),
 											})
 										"
 									/>
@@ -106,12 +108,12 @@
 										class="text-accent3"
 										icon="coinjar"
 										:title="$t('footer.savings.savingsTitle')"
-										:value="fmtMoney(amount, currency)"
+										:value="fmtMoney(amount, currency, amount < 100)"
 										:unit="fmtCurrencySymbol(currency)"
 										:sub1="$t('footer.savings.savingsComparedToGrid')"
 										:sub2="
 											$t('footer.savings.savingsTotalEnergy', {
-												total: fmtKw(totalCharged * 1000, true, false),
+												total: fmtKw(totalCharged * 1000, true, false, 0),
 											})
 										"
 									/>
@@ -195,6 +197,12 @@ export default {
 		openModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("savingsModal"));
 			modal.show();
+		},
+		fmtAnimation(number) {
+			let decimals = 0;
+			if (number < 100) decimals = 1;
+			if (number < 10) decimals = 2;
+			return this.fmtNumber(number, decimals);
 		},
 	},
 };
