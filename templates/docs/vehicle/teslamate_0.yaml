@@ -5,7 +5,7 @@ render:
   - default: |
       type: template
       template: teslamate
-      id: # Wird benötigt um das korrekte Fahrzeug per MQTT auszuwählen.
+      id: 1 # Wird benötigt um das korrekte Fahrzeug per MQTT auszuwählen.
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
       capacity: 50 # Akkukapazität in kWh (Optional)
     advanced: |
