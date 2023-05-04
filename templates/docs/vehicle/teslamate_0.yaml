@@ -1,17 +1,18 @@
 product:
   brand: Tesla
-  description: A self-hosted data logger for your Tesla (Teslamate)
+  description: A self-hosted data logger for your Tesla (teslamate)
 render:
   - default: |
       type: template
       template: teslamate
-      id: 1 # Wird benötigt um das korrekte Fahrzeug per MQTT auszuwählen.
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
+      id: 1 # Optional
       capacity: 50 # Akkukapazität in kWh (Optional)
     advanced: |
       type: template
-      template: template
+      template: teslamate
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
+      id: 1 # Optional
       capacity: 50 # Akkukapazität in kWh (Optional)
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können (Optional)
       icon: car # Icon in der Benutzeroberfläche (Optional)

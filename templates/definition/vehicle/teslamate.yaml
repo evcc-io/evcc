@@ -6,6 +6,7 @@ products:
 params:
   - name: title
   - name: id
+    default: 1
   - name: capacity
   - name: phases
     advanced: true
