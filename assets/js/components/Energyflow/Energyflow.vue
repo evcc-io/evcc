@@ -205,6 +205,7 @@ export default {
 		currency: { type: String },
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
+		bufferStart: { type: Number },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null, gridSettingsModal: null };
