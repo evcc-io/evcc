@@ -164,7 +164,7 @@ func (m *Client) listen(topic string) {
 			}
 		}
 	})
-	m.WaitForToken("subscribe", topic, token)
+	go m.WaitForToken("subscribe", topic, token)
 }
 
 // WaitForToken synchronously waits until token operation completed
