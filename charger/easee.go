@@ -417,8 +417,8 @@ func (c *Easee) MaxCurrent(current int64) error {
 	if err == nil {
 		if resp.StatusCode == 202 && resp.ContentLength <= 2 {
 			//lost update case, Easee effectively ignored this
-			c.log.TRACE.Printf("empty async repsonse, settings call was ignored")
-			return errors.New("update DynamicChargerCurrent failed")
+			resp.Body.Close()
+			return api.ErrMustRetry
 		}
 		c.current = cur
 		resp.Body.Close()
