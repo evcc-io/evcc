@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/fs"
 	"math"
@@ -187,17 +186,19 @@ func tariffHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		tariff := vars["tariff"]
+		var rates api.Rates
+		var err error
 
 		t := site.GetTariff(tariff)
 		if t == nil {
-			jsonError(w, http.StatusBadRequest, errors.New("tariff not available"))
-			return
-		}
-
-		rates, err := t.Rates()
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+			// to tariff, empty list
+			rates = make(api.Rates, 0)
+		} else {
+			rates, err = t.Rates()
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
 		}
 
 		res := struct {

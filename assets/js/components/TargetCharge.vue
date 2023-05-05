@@ -128,7 +128,7 @@ export default {
 		timeTooFarInTheFuture: function () {
 			if (this.tariff?.rates) {
 				const lastRate = this.tariff.rates[this.tariff.rates.length - 1];
-				if (lastRate.end) {
+				if (lastRate?.end) {
 					const end = new Date(lastRate.end);
 					return this.selectedTargetTime >= end;
 				}
