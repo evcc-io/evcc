@@ -40,7 +40,7 @@ params:
   - preset: vehicle-identify
 render: |
   type: tesla
-  {{- if ne .title "" }}
+  {{- if .title }}
   title: {{ .title }}
   {{- end }}
   {{- if ne .icon "" }}
@@ -50,7 +50,7 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   capacity: {{ .capacity }}
-  {{- if ne .phases "" }}
+  {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
   {{- if ne .vin "" }}

@@ -23,14 +23,14 @@ params:
 render: |
   type: custom
   features: ["offline"]
-  {{- if ne .title "" }}
+  {{- if .title }}
   title: {{ .title }}
   {{- end }}
   {{- if ne .icon "" }}
   icon: {{ .icon }}
   {{- end }}
   capacity: {{ .capacity }} # kWh
-  {{- if ne .phases "" }}
+  {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
   soc: # fixed - no Soc available
