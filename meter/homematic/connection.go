@@ -70,8 +70,12 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 
 // Enable sets the homematic HMIP-PSM switchchannel state to true=on/false=off
 func (c *Connection) Enable(enable bool) error {
+	current, err := c.Enabled()
+	if err == nil && current == enable {
+		return nil
+	}
 	onoff := map[bool]string{true: "1", false: "0"}
-	_, err := c.XmlCmd("setValue", c.SwitchChannel, Param{CCUString: "STATE"}, Param{CCUBool: onoff[enable]})
+	_, err = c.XmlCmd("setValue", c.SwitchChannel, Param{CCUString: "STATE"}, Param{CCUBool: onoff[enable]})
 	if err == nil {
 		c.switchCache.Reset()
 		c.meterCache.Reset()
