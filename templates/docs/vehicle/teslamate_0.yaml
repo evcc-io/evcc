@@ -2,11 +2,7 @@ product:
   brand: Tesla
   description: A self-hosted data logger for your Tesla (teslamate)
 description: |
-  Bei diesem Template greift EVCC per MQTT auf die von Teslamate zur Verfügung gestellten Datenpunkten zu.
-
-  Voraussetzungen:
-  * MQTT Server in der EVCC configuration.
-
+  Voraussetzung ist konfigurierter MQTT Broker
 render:
   - default: |
       type: template

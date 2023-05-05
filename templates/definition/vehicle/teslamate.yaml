@@ -3,6 +3,10 @@ products:
   - brand: Tesla
     description:
       generic: A self-hosted data logger for your Tesla (teslamate)
+requirements:
+  description:
+    en: Required MQTT broker configuration
+    de: Voraussetzung ist konfigurierter MQTT Broker
 params:
   - name: title
   - name: id
