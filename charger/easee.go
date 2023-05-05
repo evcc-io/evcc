@@ -415,6 +415,11 @@ func (c *Easee) MaxCurrent(current int64) error {
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
+		if resp.StatusCode == 202 && resp.ContentLength <= 2 {
+			//lost update case, Easee effectively ignored this
+			c.log.TRACE.Printf("empty async repsonse, settings call was ignored")
+			return errors.New("update DynamicChargerCurrent failed")
+		}
 		c.current = cur
 		resp.Body.Close()
 	}
