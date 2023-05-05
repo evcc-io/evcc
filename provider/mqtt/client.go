@@ -4,12 +4,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"math/rand"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -126,10 +126,8 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 func (m *Client) Publish(topic string, retained bool, payload interface{}) error {
 	m.log.TRACE.Printf("send %s: '%v'", topic, payload)
 	token := m.Client.Publish(topic, m.Qos, retained, payload)
-	if token.WaitTimeout(publishTimeout) {
-		return token.Error()
-	}
-	return os.ErrDeadlineExceeded
+	go m.WaitForToken("send", topic, token)
+	return nil
 }
 
 // Listen validates uniqueness and registers and attaches listener
@@ -166,16 +164,16 @@ func (m *Client) listen(topic string) {
 			}
 		}
 	})
-	m.WaitForToken(token)
+	m.WaitForToken("subscribe", topic, token)
 }
 
 // WaitForToken synchronously waits until token operation completed
-func (m *Client) WaitForToken(token paho.Token) {
+func (m *Client) WaitForToken(action, topic string, token paho.Token) {
+	err := api.ErrTimeout
 	if token.WaitTimeout(publishTimeout) {
-		if token.Error() != nil {
-			m.log.ERROR.Printf("error: %s", token.Error())
-		}
-	} else {
-		m.log.DEBUG.Println("timeout")
+		err = token.Error()
+	}
+	if err != nil {
+		m.log.ERROR.Printf("%s: %s: %v", action, topic, err)
 	}
 }
