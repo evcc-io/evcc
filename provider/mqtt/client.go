@@ -6,16 +6,11 @@ import (
 	"math/rand"
 	"strings"
 	"sync"
-	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-)
-
-const (
-	connectTimeout = 2 * time.Second
-	publishTimeout = 2 * time.Second
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // Instance is the paho Mqtt client singleton
@@ -75,7 +70,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	options.SetAutoReconnect(true)
 	options.SetOnConnectHandler(mc.ConnectionHandler)
 	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
-	options.SetConnectTimeout(connectTimeout)
+	options.SetConnectTimeout(request.Timeout)
 
 	if insecure {
 		options.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
@@ -170,7 +165,7 @@ func (m *Client) listen(topic string) {
 // WaitForToken synchronously waits until token operation completed
 func (m *Client) WaitForToken(action, topic string, token paho.Token) {
 	err := api.ErrTimeout
-	if token.WaitTimeout(publishTimeout) {
+	if token.WaitTimeout(request.Timeout) {
 		err = token.Error()
 	}
 	if err != nil {
