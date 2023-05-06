@@ -13,8 +13,8 @@ import (
 type Go struct {
 	vm     *interp.Interpreter
 	script string
-	param  []TransformationConfig
-	result []TransformationConfig
+	in     []TransformationConfig
+	out    []TransformationConfig
 }
 
 //type TransformationConfig struct {
@@ -31,8 +31,8 @@ func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) 
 	var cc struct {
 		VM     string
 		Script string
-		Param  []TransformationConfig
-		Result []TransformationConfig
+		In     []TransformationConfig
+		Out    []TransformationConfig
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -47,8 +47,8 @@ func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) 
 	p := &Go{
 		vm:     vm,
 		script: cc.Script,
-		param:  cc.Param,
-		result: cc.Result,
+		in:     cc.In,
+		out:    cc.Out,
 	}
 
 	return p, nil
@@ -57,7 +57,7 @@ func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) 
 // FloatGetter parses float from request
 func (p *Go) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
-		if p.param != nil {
+		if p.in != nil {
 			err = transformGetterGo(p)
 		}
 		if err == nil {
@@ -79,7 +79,7 @@ func (p *Go) FloatGetter() func() (float64, error) {
 func (p *Go) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
 
-		if p.param != nil {
+		if p.in != nil {
 			err = transformGetterGo(p)
 		}
 		if err == nil {
@@ -101,7 +101,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 // StringGetter parses string from request
 func (p *Go) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
-		if p.param != nil {
+		if p.in != nil {
 			err = transformGetterGo(p)
 		}
 		if err == nil {
@@ -122,7 +122,7 @@ func (p *Go) StringGetter() func() (string, error) {
 // BoolGetter parses bool from request
 func (p *Go) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
-		if p.param != nil {
+		if p.in != nil {
 			err = transformGetterGo(p)
 		}
 		if err == nil {
@@ -156,8 +156,8 @@ func (p *Go) paramAndEval(param string, val any) error {
 	if err == nil {
 		var v reflect.Value
 		v, err = p.vm.Eval(p.script)
-		if err == nil && p.result != nil {
-			err = transformSetterGo(p.result, v)
+		if err == nil && p.out != nil {
+			err = transformSetterGo(p.out, v)
 		}
 	}
 	return err
@@ -192,7 +192,7 @@ func (p *Go) BoolSetter(param string) func(bool) error {
 }
 
 func transformGetterGo(p *Go) error {
-	for _, cc := range p.param {
+	for _, cc := range p.in {
 		name := cc.Name
 		var val any
 		if cc.Type == "bool" {
