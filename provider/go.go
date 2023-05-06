@@ -62,7 +62,7 @@ func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 // FloatGetter parses float from request
 func (p *Go) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
-		err = transformGetter(p)
+		err = handleInTransformation(p)
 		if err == nil {
 			var v reflect.Value
 			v, err = p.evaluate()
@@ -78,7 +78,7 @@ func (p *Go) FloatGetter() func() (float64, error) {
 // IntGetter parses int64 from request
 func (p *Go) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
-		err = transformGetter(p)
+		err = handleInTransformation(p)
 		if err == nil {
 			var v reflect.Value
 			v, err = p.evaluate()
@@ -94,7 +94,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 // StringGetter parses string from request
 func (p *Go) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
-		err = transformGetter(p)
+		err = handleInTransformation(p)
 		if err == nil {
 			var v reflect.Value
 			v, err = p.evaluate()
@@ -110,7 +110,7 @@ func (p *Go) StringGetter() func() (string, error) {
 // BoolGetter parses bool from request
 func (p *Go) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
-		err = transformGetter(p)
+		err = handleInTransformation(p)
 		if err == nil {
 			var v reflect.Value
 			v, err = p.evaluate()
@@ -132,7 +132,7 @@ func (p *Go) paramAndEval(param string, val any) error {
 	if err != nil {
 		return err
 	}
-	err = transformSetter(p, v)
+	err = handleOutTransformation(p, v)
 	return err
 }
 

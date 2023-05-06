@@ -168,7 +168,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 	return out, nil
 }
 
-func transformGetter[P InTransformationProvider](p P) error {
+func handleInTransformation[P InTransformationProvider](p P) error {
 	if p.inTransformations() != nil {
 		for _, cc := range p.inTransformations() {
 			val, err := cc.function()
@@ -185,7 +185,7 @@ func transformGetter[P InTransformationProvider](p P) error {
 	return nil
 }
 
-func transformSetter[P OutTransformationProvider[A], A any](p P, v A) error {
+func handleOutTransformation[P OutTransformationProvider[A], A any](p P, v A) error {
 	if p.outTransformations() != nil {
 		for _, cc := range p.outTransformations() {
 			name := cc.name

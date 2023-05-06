@@ -59,7 +59,7 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 // FloatGetter parses float from request
 func (p *Javascript) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
-		err = transformGetter(p)
+		err = handleInTransformation(p)
 		if err == nil {
 			var v otto.Value
 			v, err = p.evaluate()
@@ -75,7 +75,7 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 // IntGetter parses int64 from request
 func (p *Javascript) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
-		err = transformGetter(p)
+		err = handleInTransformation(p)
 		if err == nil {
 			var v otto.Value
 			v, err = p.evaluate()
@@ -91,7 +91,7 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 // StringGetter parses string from request
 func (p *Javascript) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
-		err = transformGetter(p)
+		err = handleInTransformation(p)
 		if err == nil {
 			var v otto.Value
 			v, err = p.evaluate()
@@ -107,7 +107,7 @@ func (p *Javascript) StringGetter() func() (string, error) {
 // BoolGetter parses bool from request
 func (p *Javascript) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
-		err = transformGetter(p)
+		err = handleInTransformation(p)
 		if err == nil {
 			var v otto.Value
 			v, err = p.evaluate()
@@ -129,7 +129,7 @@ func (p *Javascript) paramAndEval(param string, val any) error {
 	if err != nil {
 		return err
 	}
-	err = transformSetter(p, v)
+	err = handleOutTransformation(p, v)
 	return err
 }
 
