@@ -13,8 +13,8 @@ import (
 type Go struct {
 	vm     *interp.Interpreter
 	script string
-	in     []TransformationConfig
-	out    []TransformationConfig
+	in     []InTransformation
+	out    []OutTransformation
 }
 
 //type TransformationConfig struct {
@@ -44,11 +44,21 @@ func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) 
 		return nil, err
 	}
 
+	in, err := ConvertInFunctions(cc.In)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := ConvertOutFunctions(cc.Out)
+	if err != nil {
+		return nil, err
+	}
+
 	p := &Go{
 		vm:     vm,
 		script: cc.Script,
-		in:     cc.In,
-		out:    cc.Out,
+		in:     in,
+		out:    out,
 	}
 
 	return p, nil
@@ -193,62 +203,25 @@ func (p *Go) BoolSetter(param string) func(bool) error {
 
 func transformGetterGo(p *Go) error {
 	for _, cc := range p.in {
-		name := cc.Name
-		var val any
-		if cc.Type == "bool" {
-			f, err := NewBoolGetterFromConfig(cc.Config)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-			val, err = f()
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		} else if cc.Type == "int" {
-			f, err := NewIntGetterFromConfig(cc.Config)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-			val, err = f()
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		} else if cc.Type == "float" {
-			f, err := NewFloatGetterFromConfig(cc.Config)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-			val, err = f()
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		} else {
-			f, err := NewStringGetterFromConfig(cc.Config)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-			val, err = f()
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		}
-		err := p.paramAndEval(name, val)
+		val, err := cc.function()
 		if err != nil {
-			return fmt.Errorf("%s: %w", name, err)
+			return fmt.Errorf("%s: %w", cc.name, err)
+		}
+
+		err = p.paramAndEval(cc.name, val)
+		if err != nil {
+			return fmt.Errorf("%s: %w", cc.name, err)
 		}
 	}
 	return nil
 }
-func transformSetterGo(transforms []TransformationConfig, v reflect.Value) error {
+func transformSetterGo(transforms []OutTransformation, v reflect.Value) error {
 	for _, cc := range transforms {
-		name := cc.Name
+		name := cc.name
 		if cc.Type == "bool" {
-			f, err := NewBoolSetterFromConfig(name, cc.Config)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
+			var err error
 			if v.CanConvert(reflect.TypeOf(true)) {
-				err = f(v.Convert(reflect.TypeOf(true)).Bool())
+				err = cc.function(v.Convert(reflect.TypeOf(true)).Bool())
 			} else {
 				err = fmt.Errorf("not a int: %s", v)
 			}
@@ -256,12 +229,9 @@ func transformSetterGo(transforms []TransformationConfig, v reflect.Value) error
 				return fmt.Errorf("%s: %w", name, err)
 			}
 		} else if cc.Type == "int" {
-			f, err := NewIntSetterFromConfig(name, cc.Config)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
+			var err error
 			if v.CanConvert(reflect.TypeOf(0)) {
-				err = f(v.Convert(reflect.TypeOf(0)).Int())
+				err = cc.function(v.Convert(reflect.TypeOf(0)).Int())
 			} else {
 				err = fmt.Errorf("not a int: %s", v)
 			}
@@ -269,12 +239,9 @@ func transformSetterGo(transforms []TransformationConfig, v reflect.Value) error
 				return fmt.Errorf("%s: %w", name, err)
 			}
 		} else if cc.Type == "float" {
-			f, err := NewFloatSetterFromConfig(name, cc.Config)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
+			var err error
 			if v.CanConvert(reflect.TypeOf(0.0)) {
-				err = f(v.Convert(reflect.TypeOf(0.0)).Float())
+				err = cc.function(v.Convert(reflect.TypeOf(0.0)).Float())
 			} else {
 				err = fmt.Errorf("not a int: %s", v)
 			}
@@ -282,12 +249,9 @@ func transformSetterGo(transforms []TransformationConfig, v reflect.Value) error
 				return fmt.Errorf("%s: %w", name, err)
 			}
 		} else {
-			f, err := NewStringSetterFromConfig(name, cc.Config)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
+			var err error
 			if v.CanConvert(reflect.TypeOf("")) {
-				err = f(v.Convert(reflect.TypeOf("")).String())
+				err = cc.function(v.Convert(reflect.TypeOf("")).String())
 			} else {
 				err = fmt.Errorf("not a int: %s", v)
 			}
