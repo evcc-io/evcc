@@ -213,7 +213,8 @@ func (p *Go) transformGetter() error {
 func (p *Go) transformSetter(v reflect.Value) error {
 	for _, cc := range p.out {
 		name := cc.name
-		if cc.Type == "bool" {
+		switch cc.Type {
+		case "bool":
 			var err error
 			if v.CanConvert(reflect.TypeOf(true)) {
 				err = cc.function(v.Convert(reflect.TypeOf(true)).Bool())
@@ -223,7 +224,7 @@ func (p *Go) transformSetter(v reflect.Value) error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
-		} else if cc.Type == "int" {
+		case "int":
 			var err error
 			if v.CanConvert(reflect.TypeOf(0)) {
 				err = cc.function(v.Convert(reflect.TypeOf(0)).Int())
@@ -233,7 +234,7 @@ func (p *Go) transformSetter(v reflect.Value) error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
-		} else if cc.Type == "float" {
+		case "float":
 			var err error
 			if v.CanConvert(reflect.TypeOf(0.0)) {
 				err = cc.function(v.Convert(reflect.TypeOf(0.0)).Float())
@@ -243,7 +244,7 @@ func (p *Go) transformSetter(v reflect.Value) error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
-		} else {
+		case "string":
 			var err error
 			if v.CanConvert(reflect.TypeOf("")) {
 				err = cc.function(v.Convert(reflect.TypeOf("")).String())
@@ -253,6 +254,8 @@ func (p *Go) transformSetter(v reflect.Value) error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
+		default:
+			return fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
 		}
 	}
 	return nil

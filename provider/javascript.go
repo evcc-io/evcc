@@ -191,7 +191,8 @@ func (p *Javascript) transformGetter() error {
 func (p *Javascript) transformSetter(v otto.Value) error {
 	for _, cc := range p.out {
 		name := cc.name
-		if cc.Type == "bool" {
+		switch cc.Type {
+		case "bool":
 			s, err := v.ToBoolean()
 			if err == nil {
 				err = cc.function(s)
@@ -199,7 +200,7 @@ func (p *Javascript) transformSetter(v otto.Value) error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
-		} else if cc.Type == "int" {
+		case "int":
 			s, err := v.ToInteger()
 			if err == nil {
 				err = cc.function(s)
@@ -207,7 +208,7 @@ func (p *Javascript) transformSetter(v otto.Value) error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
-		} else if cc.Type == "float" {
+		case "float":
 			s, err := v.ToFloat()
 			if err == nil {
 				err = cc.function(s)
@@ -215,7 +216,7 @@ func (p *Javascript) transformSetter(v otto.Value) error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
-		} else {
+		case "string":
 			s, err := v.ToString()
 			if err == nil {
 				err = cc.function(s)
@@ -223,6 +224,8 @@ func (p *Javascript) transformSetter(v otto.Value) error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
+		default:
+			return fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
 		}
 	}
 	return nil

@@ -23,7 +23,8 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 	in := []InTransformation{}
 	for _, cc := range inConfig {
 		name := cc.Name
-		if cc.Type == "bool" {
+		switch cc.Type {
+		case "bool":
 			f, err := NewBoolGetterFromConfig(cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", name, err)
@@ -34,7 +35,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 					return f()
 				},
 			})
-		} else if cc.Type == "int" {
+		case "int":
 			f, err := NewIntGetterFromConfig(cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", name, err)
@@ -45,7 +46,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 					return f()
 				},
 			})
-		} else if cc.Type == "float" {
+		case "float":
 			f, err := NewFloatGetterFromConfig(cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", name, err)
@@ -56,7 +57,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 					return f()
 				},
 			})
-		} else {
+		case "string":
 			f, err := NewStringGetterFromConfig(cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", name, err)
@@ -67,6 +68,8 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 					return f()
 				},
 			})
+		default:
+			return nil, fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
 		}
 	}
 	return in, nil
@@ -76,7 +79,8 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 	out := []OutTransformation{}
 	for _, cc := range outConfig {
 		name := cc.Name
-		if cc.Type == "bool" {
+		switch cc.Type {
+		case "bool":
 			f, err := NewBoolSetterFromConfig(cc.Name, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", name, err)
@@ -92,7 +96,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 					return f(b)
 				},
 			})
-		} else if cc.Type == "int" {
+		case "int":
 			f, err := NewIntSetterFromConfig(cc.Name, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", name, err)
@@ -108,7 +112,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 					return f(b)
 				},
 			})
-		} else if cc.Type == "float" {
+		case "float":
 			f, err := NewFloatSetterFromConfig(cc.Name, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", name, err)
@@ -124,7 +128,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 					return f(b)
 				},
 			})
-		} else {
+		case "string":
 			f, err := NewStringSetterFromConfig(cc.Name, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", name, err)
@@ -140,6 +144,8 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 					return f(b)
 				},
 			})
+		default:
+			return nil, fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
 		}
 	}
 	return out, nil
