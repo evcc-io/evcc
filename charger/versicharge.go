@@ -101,19 +101,23 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 
 	s := binary.BigEndian.Uint16(b)
 
-	// Ausgabe Charger Status von Reg 1601 (OCPP State)
-	currentTime := time.Now()
-    fmt.Printf("[VERSI ] INFO ")
-    fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-    fmt.Printf(" Charging State (OCPP - 1601): %d ", s)
-
-	// Ausgabe EVSE State von Reg 1599 (FW2.122.4)
+	// Abfrage EVSE State von Reg 1599 (FW2.122.4)
 	c, err := wb.conn.ReadHoldingRegisters(1599, 1)
-    fmt.Printf(" (EVSE - 1599): %d ", binary.BigEndian.Uint16(c))
-
-	// Ausgabe Pause von Reg 1629 
+	e := binary.BigEndian.Uint16(c)
+	// Abfrage Pause von Reg 1629 
 	d, err := wb.conn.ReadHoldingRegisters(1629, 1)
-    fmt.Printf(" Pause: %d \n", binary.BigEndian.Uint16(d))
+
+	switch e {
+	case 65, 66, 67, 16945: // bekannte Stati A, B, C, B1
+	//do nothing		fmt.Printf(" (EVSE - 1599) bekannt: %d \n", binary.BigEndian.Uint16(c))
+	default: // Neuer Status EVSE
+		currentTime := time.Now()
+		fmt.Printf("[VERSI ] INFO ")
+		fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+		fmt.Printf(" Charging State (OCPP - 1601): %d ", s)
+		fmt.Printf(" (EVSE Neu - 1599): %d ", binary.BigEndian.Uint16(c))
+		fmt.Printf(" Pause: %d \n", binary.BigEndian.Uint16(d))
+	}
 
 	switch s {
 	case 1: // Available
@@ -134,6 +138,12 @@ func (wb *Versicharge) Enabled() (bool, error) {
 		return false, err
 	}
 
+//	// Print Abfrage Enable
+//	currentTime := time.Now()
+//	fmt.Printf("[VERSI ] INFO ")
+//	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+//	fmt.Printf(" Abfrage Enabled: %d \n", b)
+//	
 	return binary.BigEndian.Uint16(b) == 2, nil
 }
 
@@ -144,6 +154,13 @@ func (wb *Versicharge) Enable(enable bool) error {
 		u = 2
 	}
 
+//	// Print Umschalten Enable
+//	currentTime := time.Now()
+//	fmt.Printf("[VERSI ] INFO ")
+//	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+//	fmt.Printf(" Umschalten Enabled: %d \n", u)
+//	
+//
 	_, err := wb.conn.WriteSingleRegister(versiRegPause, u)
 
 	return err
@@ -154,6 +171,12 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
+
+//	// Print Setzen MaxCurrent
+//	currentTime := time.Now()
+//	fmt.Printf("[VERSI ] INFO ")
+//	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+//	fmt.Printf(" Setze MaxCurrent auf %d \n", current)
 
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, uint16(current))
 
