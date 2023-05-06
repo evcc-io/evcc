@@ -13,22 +13,14 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func rates(prices []float64, start time.Time, slotEndFunc ...func(time.Time) time.Time) api.Rates {
+func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Rates {
 	res := make(api.Rates, 0, len(prices))
-
-	slotEnd := func(start time.Time) time.Time {
-		return start.Add(time.Hour)
-	}
-
-	if len(slotEndFunc) == 1 {
-		slotEnd = slotEndFunc[0]
-	}
 
 	for i, v := range prices {
 		slotStart := start.Add(time.Duration(i) * time.Hour)
 		ar := api.Rate{
 			Start: slotStart,
-			End:   slotEnd(slotStart),
+			End:   slotStart.Add(slotDuration),
 			Price: v,
 		}
 		res = append(res, ar)
@@ -44,7 +36,7 @@ func TestPlan(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	trf := mock.NewMockTariff(ctrl)
-	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{20, 60, 10, 80, 40, 90}, clock.Now()), nil)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{20, 60, 10, 80, 40, 90}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
 		log:   util.NewLogger("foo"),
@@ -68,9 +60,8 @@ func TestPlan(t *testing.T) {
 		now      time.Time
 		target   time.Time
 		// result
-		planStart    time.Time
-		planDuration time.Duration
-		planCost     float64
+		planStart time.Time
+		planCost  float64
 	}{
 		// numbers in brackets denote inactive partial slots
 		{
@@ -79,7 +70,6 @@ func TestPlan(t *testing.T) {
 			clock.Now(),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(2 * time.Hour),
-			time.Hour,
 			10,
 		},
 		{
@@ -88,7 +78,6 @@ func TestPlan(t *testing.T) {
 			clock.Now(),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(0 * time.Hour),
-			2 * time.Hour,
 			30,
 		},
 		{
@@ -97,17 +86,14 @@ func TestPlan(t *testing.T) {
 			clock.Now(),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(30 * time.Minute),
-			time.Duration(90 * time.Minute),
 			20,
 		},
-
 		{
 			"plan 0-0-60-0-0-0",
 			time.Hour,
 			clock.Now().Add(30 * time.Minute),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(2 * time.Hour),
-			time.Hour,
 			10,
 		},
 		{
@@ -116,7 +102,6 @@ func TestPlan(t *testing.T) {
 			clock.Now().Add(30 * time.Minute),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(30 * time.Minute),
-			2 * time.Hour,
 			40,
 		},
 		{
@@ -125,7 +110,6 @@ func TestPlan(t *testing.T) {
 			clock.Now().Add(30 * time.Minute),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(30 * time.Minute),
-			time.Duration(90 * time.Minute),
 			20,
 		},
 	}
@@ -136,7 +120,7 @@ func TestPlan(t *testing.T) {
 		plan := p.plan(rates, tc.duration, tc.target)
 
 		assert.Equalf(t, tc.planStart.UTC(), Start(plan).UTC(), "case %d start", i)
-		assert.Equalf(t, tc.planDuration, Duration(plan), "case %d duration", i)
+		assert.Equalf(t, tc.duration, Duration(plan), "case %d duration", i)
 		assert.Equalf(t, tc.planCost, AverageCost(plan)*float64(Duration(plan))/float64(time.Hour), "case %d cost", i)
 	}
 }
@@ -151,11 +135,11 @@ func TestNilTariff(t *testing.T) {
 
 	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
 	assert.NoError(t, err)
-	assert.True(t, !ActiveSlot(clock, plan).End.IsZero(), "should start past start time")
+	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start past start time")
 
 	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute))
 	assert.NoError(t, err)
-	assert.False(t, !ActiveSlot(clock, plan).End.IsZero(), "should not start past target time")
+	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
 }
 
 func TestFlatTariffTargetInThePast(t *testing.T) {
@@ -163,7 +147,7 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	trf := mock.NewMockTariff(ctrl)
-	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now()), nil)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
 		log:    util.NewLogger("foo"),
@@ -173,11 +157,11 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 
 	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
 	assert.NoError(t, err)
-	assert.True(t, !ActiveSlot(clock, plan).End.IsZero(), "should start past start time")
+	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start past start time")
 
 	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute))
 	assert.NoError(t, err)
-	assert.False(t, !ActiveSlot(clock, plan).End.IsZero(), "should not start past target time")
+	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
 }
 
 func TestFlatTariffLongSlots(t *testing.T) {
@@ -185,9 +169,7 @@ func TestFlatTariffLongSlots(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	trf := mock.NewMockTariff(ctrl)
-	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), func(start time.Time) time.Time {
-		return start.Add(24 * time.Hour)
-	}), nil)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), 24*time.Hour), nil)
 
 	p := &Planner{
 		log:    util.NewLogger("foo"),
@@ -195,13 +177,19 @@ func TestFlatTariffLongSlots(t *testing.T) {
 		tariff: trf,
 	}
 
+	// for a single slot, we always expect charging to start early because tariffs ensure
+	// that slots are not longer than 1 hour and with that context this is not a problem
+
+	// expect 00:00-01:00 UTC
 	plan, err := p.Plan(time.Hour, clock.Now().Add(2*time.Hour))
 	assert.NoError(t, err)
-	assert.False(t, !ActiveSlot(clock, plan).End.IsZero(), "should not start long last slot before due time")
+	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
+	assert.Equal(t, api.Rate{}, SlotAt(clock.Now().Add(time.Hour), plan))
 
+	// expect 00:00-01:00 UTC
 	plan, err = p.Plan(time.Hour, clock.Now().Add(time.Hour))
 	assert.NoError(t, err)
-	assert.True(t, !ActiveSlot(clock, plan).End.IsZero(), "should start long last slot after due time")
+	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 }
 
 func TestTargetAfterKnownPrices(t *testing.T) {
@@ -209,7 +197,7 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	trf := mock.NewMockTariff(ctrl)
-	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now()), nil)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
 		log:    util.NewLogger("foo"),
@@ -219,11 +207,11 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 
 	plan, err := p.Plan(40*time.Minute, clock.Now().Add(2*time.Hour)) // charge efficiency does not allow to test with 1h
 	assert.NoError(t, err)
-	assert.False(t, !ActiveSlot(clock, plan).End.IsZero(), "should not start if car can be charged completely after known prices ")
+	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start if car can be charged completely after known prices ")
 
 	plan, err = p.Plan(2*time.Hour, clock.Now().Add(2*time.Hour))
 	assert.NoError(t, err)
-	assert.True(t, !ActiveSlot(clock, plan).End.IsZero(), "should start if car can not be charged completely after known prices ")
+	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start if car can not be charged completely after known prices ")
 }
 
 func TestChargeAfterTargetTime(t *testing.T) {
@@ -231,7 +219,7 @@ func TestChargeAfterTargetTime(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	trf := mock.NewMockTariff(ctrl)
-	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0, 0, 0, 0}, clock.Now()), nil)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0, 0, 0, 0}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
 		log:    util.NewLogger("foo"),
@@ -241,9 +229,9 @@ func TestChargeAfterTargetTime(t *testing.T) {
 
 	plan, err := p.Plan(time.Hour, clock.Now())
 	assert.NoError(t, err)
-	assert.False(t, !ActiveSlot(clock, plan).End.IsZero(), "should not start past target time")
+	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
 
 	plan, err = p.Plan(time.Hour, clock.Now().Add(-time.Hour))
 	assert.NoError(t, err)
-	assert.False(t, !ActiveSlot(clock, plan).End.IsZero(), "should not start past target time")
+	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
 }

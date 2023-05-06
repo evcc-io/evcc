@@ -34,9 +34,11 @@ type API interface {
 	GetVehicles() []api.Vehicle
 
 	//
-	// Tariffs
+	// tariffs and costs
 	//
 
 	// GetTariff returns the respective tariff
 	GetTariff(string) api.Tariff
+	GetSmartCostLimit() float64
+	SetSmartCostLimit(float64) error
 }

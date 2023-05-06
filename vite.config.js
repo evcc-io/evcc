@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import vuePlugin from "@vitejs/plugin-vue";
 import { ViteToml } from "vite-plugin-toml";
+import legacy from "@vitejs/plugin-legacy";
 import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
@@ -11,12 +12,7 @@ export default defineConfig({
     outDir: "../dist/",
     emptyOutDir: true,
     assetsInlineLimit: 1024,
-    chunkSizeWarningLimit: 550,
-    rollupOptions: {
-      output: {
-        manualChunks: undefined,
-      },
-    },
+    chunkSizeWarningLimit: 700, // legacy build increases file size
   },
   server: {
     port: 7071,
@@ -27,6 +23,9 @@ export default defineConfig({
     },
   },
   plugins: [
+    legacy({
+      targets: ["defaults", "iOS >= 14"],
+    }),
     vuePlugin({
       template: {
         compilerOptions: {

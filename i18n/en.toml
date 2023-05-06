@@ -56,17 +56,57 @@ modalUpdateNow = "Install now"
 modalUpdateStarted = "Starting the new version of evcc…"
 modalUpdateStatusStart = "Installation started:"
 
+[gridSettings]
+activeHours = "{charging} of {total}"
+activeHoursLabel = "Active hours"
+co2Label = "CO₂ emission"
+co2Limit = "CO₂ limit"
+costLimitDescription = "Enables temporary fast-charging in solar mode."
+modalTitle = "Smart Grid Charging"
+none = "none"
+priceLabel = "Energy price"
+priceLimit = "Price limit"
+
 [header]
 about = "About"
 blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Vehicle logins"
+needHelp = "Need help?"
 sessions = "Charging sessions"
 settings = "Settings"
 
+[help]
+discussionsButton = "GitHub discussions"
+documentationButton = "Documentation"
+issueButton = "Report a bug"
+issueDescription = "Found a strange or wrong behavior?"
+modalTitle = "Need help?"
+primaryActions = "Something does not work the way it supposed to do? These are good places to get help."
+restartButton = "Restart"
+restartDescription = "Tried turning it off and on again?"
+secondaryActions = "Still not able to solve your problem? Here are some more heavy handed options."
+
+[help.restart]
+cancel = "Cancel"
+confirm = "Yes, restart!"
+description = "Under normal circumsances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
+disclaimer = "Note: evcc will terminate and rely on the operating system to restart the service."
+modalTitle = "Are you sure you want to restart?"
+
 [main]
 vehicles = "Parking"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Arrival"
+departureTab = "Departure"
+modalTitle = "Charging Plan"
+none = "none"
+title = "Plan"
+titleMinSoc = "Min charge"
+titleTargetCharge = "Depature"
 
 [main.energyflow]
 battery = "Battery"
@@ -82,13 +122,17 @@ pvProduction = "Production"
 selfConsumption = "Self-consumption"
 
 [main.loadpoint]
+avgPrice = "Ø Price"
 charged = "Charged"
+co2 = "Ø CO₂"
 duration = "Duration"
 fallbackName = "Charging point"
 power = "Power"
+price = "Σ Price"
 remaining = "Remaining"
 remoteDisabledHard = "{source}: turned off"
 remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
+solar = "Solar"
 
 [main.loadpointSettings]
 currents = "Charging current"
@@ -128,15 +172,16 @@ logout = "log out"
 
 [main.targetCharge]
 activate = "Activate"
-activeLabel = "{time}"
+co2Limit = "CO₂ limit of {co2}"
+costLimitIgnore = "The configured {limit} will be ignored during this period."
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
 descriptionSoc = "When should the vehicle be charged to {targetSoc}%?"
 inactiveLabel = "Target time"
-modalTitle = "Set Target Time"
 planDuration = "Charging time"
 planPeriodLabel = "Period"
 planPeriodValue = "{start} to {end}"
 planUnknown = "not known yet"
+priceLimit = "price limit of {price}"
 remove = "Remove"
 setTargetTime = "none"
 targetIsInThePast = "Pick a time in the future, Marty."
@@ -177,8 +222,12 @@ vehicleTarget = "Vehicle limit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Charging…"
+cheapEnergyCharging = "Cheap energy available. Charging…"
+cleanEnergyCharging = "Clean energy available. Charging…"
+climating = "Pre-conditioning detected."
 connected = "Connected."
 disconnected = "Disconnected."
+guard = "Starting in {remaining}…"
 minCharge = "Minimum charging to {soc}%."
 pvDisable = "Not enough surplus. Pausing in {remaining}…"
 pvEnable = "Surplus available. Starting in {remaining}…"
@@ -201,20 +250,28 @@ reload = "Reload?"
 
 [session]
 cancel = "Cancel"
+co2 = "CO₂"
+date = "Period"
 delete = "Delete"
 finished = "Finished"
+meter = "Meter"
 meterstart = "Meter start"
 meterstop = "Meter stop"
 odometer = "Mileage"
+price = "Price"
 started = "Started"
 title = "Charging Session"
 
 [sessions]
-date = "Period"
+avgPrice = "Ø Price"
+co2 = "Ø CO₂"
+date = "Finished"
 downloadCsv = "Download as CSV"
 energy = "Charged"
 loadpoint = "Charging point"
+price = "Σ Price"
 reallyDelete = "Do you really want to delete this session?"
+solar = "Solar"
 title = "Charging Sessions"
 vehicle = "Vehicle"
 
@@ -231,12 +288,6 @@ vehicle = "Vehicle"
 
 [settings]
 title = "Settings"
-
-[settings.gridDetails]
-co2 = "CO₂"
-label = "Grid details"
-none = "none"
-price = "price"
 
 [settings.hiddenFeatures]
 label = "Experimental"

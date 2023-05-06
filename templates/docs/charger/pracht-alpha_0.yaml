@@ -5,7 +5,7 @@ requirements: ["sponsorship"]
 render:
   - default: |
       type: template
-      template: pracht-alpha      
+      template: pracht-alpha
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -27,7 +27,7 @@ render:
       port: 502 # Port
     advanced: |
       type: template
-      template: pracht-alpha      
+      template: pracht-alpha
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial

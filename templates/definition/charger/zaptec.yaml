@@ -3,6 +3,8 @@ products:
   - brand: Zaptec
     description:
       generic: Go/Pro
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: id
     help:

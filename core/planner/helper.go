@@ -3,7 +3,6 @@ package planner
 import (
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 )
 
@@ -37,11 +36,34 @@ func AverageCost(plan api.Rates) float64 {
 	return cost / float64(duration)
 }
 
-func ActiveSlot(clock clock.Clock, plan api.Rates) api.Rate {
+// SlotAt returns the slot for the given time or an empty slot
+func SlotAt(time time.Time, plan api.Rates) api.Rate {
 	for _, slot := range plan {
-		if (slot.Start.Before(clock.Now()) || slot.Start.Equal(clock.Now())) && slot.End.After(clock.Now()) {
+		if (slot.Start.Before(time) || slot.Start.Equal(time)) && slot.End.After(time) {
 			return slot
 		}
 	}
 	return api.Rate{}
+}
+
+// SlotHasSuccessor returns if the slot has an immediate successor.
+// Does not require the plan to be sorted by start time.
+func SlotHasSuccessor(r api.Rate, plan api.Rates) bool {
+	for _, slot := range plan {
+		if r.End.Equal(slot.Start) {
+			return true
+		}
+	}
+	return false
+}
+
+// IsFirst returns if the slot is the first slot in the plan.
+// Does not require the plan to be sorted by start time.
+func IsFirst(r api.Rate, plan api.Rates) bool {
+	for _, slot := range plan {
+		if r.Start.After(slot.Start) {
+			return false
+		}
+	}
+	return true
 }

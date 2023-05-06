@@ -5,13 +5,12 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/planner"
-	"github.com/evcc-io/evcc/core/soc"
 	"golang.org/x/exp/slices"
 )
 
 const (
 	smallSlotDuration = 10 * time.Minute // small planner slot duration we might ignore
-	smallGapDuration  = 30 * time.Minute // small gap duration between planner slots we might ignore
+	smallGapDuration  = 60 * time.Minute // small gap duration between planner slots we might ignore
 )
 
 // setPlanActive updates plan active flag
@@ -25,35 +24,21 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 
 // planRequiredDuration is the estimated total charging duration
 func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
-	var requiredDuration time.Duration
-
 	if energy, ok := lp.remainingChargeEnergy(); ok {
-		requiredDuration = time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
-	} else if lp.socEstimator != nil {
-		// TODO vehicle soc limit
-		targetSoc := lp.Soc.target
-		if targetSoc == 0 {
-			targetSoc = 100
-		}
-
-		requiredDuration = lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
-
-		// anticipate lower charge rates at end of charging curve
-		var additionalDuration time.Duration
-
-		if targetSoc > 80 && maxPower > 15000 {
-			additionalDuration = 5 * time.Duration(float64(targetSoc-80)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
-			lp.log.DEBUG.Printf("add additional charging time %v for soc > 80%%", additionalDuration.Round(time.Minute))
-		} else if targetSoc > 90 && maxPower > 4000 {
-			additionalDuration = 3 * time.Duration(float64(targetSoc-90)/(float64(targetSoc)-lp.vehicleSoc)*float64(requiredDuration))
-			lp.log.DEBUG.Printf("add additional charging time %v for soc > 90%%", additionalDuration.Round(time.Minute))
-		}
-
-		requiredDuration += additionalDuration
+		return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
 	}
-	requiredDuration = time.Duration(float64(requiredDuration) / soc.ChargeEfficiency)
 
-	return requiredDuration
+	if lp.socEstimator == nil {
+		return 0
+	}
+
+	// TODO vehicle soc limit
+	targetSoc := lp.Soc.target
+	if targetSoc == 0 {
+		targetSoc = 100
+	}
+
+	return lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
 }
 
 func (lp *Loadpoint) GetPlannerUnit() string {
@@ -84,7 +69,7 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 	return requiredDuration, plan, err
 }
 
-// plannerActive checks if charging plan is active
+// plannerActive checks if the charging plan has an active slot
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
 		lp.setPlanActive(active)
@@ -110,18 +95,18 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower,
 		planner.Duration(plan).Round(time.Second), planner.AverageCost(plan))
 
-	// sort plan by time
+	// log plan
 	for _, slot := range plan {
 		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
 	}
 
-	activeSlot := planner.ActiveSlot(lp.clock, plan)
+	activeSlot := planner.SlotAt(lp.clock.Now(), plan)
 	active = !activeSlot.End.IsZero()
 
 	if active {
 		// ignore short plans if not already active
-		if !lp.planActive && lp.clock.Until(activeSlot.End) < smallSlotDuration {
-			lp.log.DEBUG.Printf("plan too short- ignoring remaining %v", requiredDuration.Round(time.Second))
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration && !planner.SlotHasSuccessor(activeSlot, plan) {
+			lp.log.DEBUG.Printf("plan slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
 
@@ -140,7 +125,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Println("continuing until end of slot")
 			return true
-		case requiredDuration < 30*time.Minute:
+		case requiredDuration < smallGapDuration:
 			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
 		case lp.clock.Until(planStart) < smallGapDuration:

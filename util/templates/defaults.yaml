@@ -321,11 +321,7 @@ presets:
   vehicle-language:
     params:
       - name: language
-  eebus-meter:
-    params:
-      - name: ski
-      - name: ip
-  eebus-no-meter:
+  eebus:
     params:
       - name: ski
       - name: ip
@@ -346,8 +342,8 @@ presets:
       - name: stationid
         type: string
         help:
-          en: The chargers unique station id (or chargepoint id)
-          de: Die Stations-ID der Wallbox (oder des Ladepunkts)
+          en: The chargers unique station id (or chargepoint id). This id must also be part of the charger OCPP configuration ws://<evcc-address>:8887/<stationid>.
+          de: Die Stations-ID der Wallbox (oder des Ladepunkts). Diese ID muss auch Teil der Wallboxkonfiguration für OCPP sein ws://<evcc-address>:8887/<stationid>.
         advanced: true
         example: EVB-P12354
       - name: connector
@@ -363,8 +359,15 @@ presets:
           de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
         advanced: true
         example: 04E6B78921BBA0
+      - name: connecttimeout
+        description:
+          de: Zeitlimit für Registrierung des Ladepunktes
+          en: Timeout for initial connection
+        advanced: true
+        type: duration
+        default: 5m
       - name: timeout
-        default: 10m
+        default: 2m
 
   mqtt:
     params:
@@ -450,7 +453,3 @@ devicegroups:
   scooter:
     de: Scooter
     en: Scooter
-  # TODO check if this is really used?
-  sockets:
-    de: Steckdosen
-    en: Power sockets

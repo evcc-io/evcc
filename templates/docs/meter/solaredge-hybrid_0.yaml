@@ -8,7 +8,7 @@ render:
     default: |
       type: template
       template: solaredge-hybrid
-      usage: grid      
+      usage: grid
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -31,7 +31,7 @@ render:
     advanced: |
       type: template
       template: solaredge-hybrid
-      usage: grid      
+      usage: grid
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -52,12 +52,11 @@ render:
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
       timeout: 10s # Optional
-      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: pv
     default: |
       type: template
       template: solaredge-hybrid
-      usage: pv      
+      usage: pv
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -80,7 +79,7 @@ render:
     advanced: |
       type: template
       template: solaredge-hybrid
-      usage: pv      
+      usage: pv
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -101,12 +100,11 @@ render:
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
       timeout: 10s # Optional
-      capacity: 50 # Akkukapazität in kWh # Optional
   - usage: battery
     default: |
       type: template
       template: solaredge-hybrid
-      usage: battery      
+      usage: battery
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -129,7 +127,7 @@ render:
     advanced: |
       type: template
       template: solaredge-hybrid
-      usage: battery      
+      usage: battery
 
       # RS485 via adapter (Modbus RTU)
       modbus: rs485serial
@@ -150,4 +148,4 @@ render:
       host: 192.0.2.2 # Hostname
       port: 1502 # Port
       timeout: 10s # Optional
-      capacity: 50 # Akkukapazität in kWh # Optional
+      capacity: 50 # Akkukapazität in kWh (Optional)

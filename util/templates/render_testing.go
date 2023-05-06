@@ -9,46 +9,26 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// renderTest renders and instantiates plus yaml-parses the template per usage
-func renderTest(t *testing.T, tmpl Template, values map[string]interface{}, cb func(values map[string]interface{})) {
-	t.Run(tmpl.Template, func(t *testing.T) {
-		t.Parallel()
+// test renders and instantiates plus yaml-parses the template per usage
+func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(values map[string]interface{})) {
+	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, values)
+	if err != nil {
+		t.Log(string(b))
+		t.Error(err)
+		return
+	}
 
-		_, values, err := tmpl.RenderResult(TemplateRenderModeUnitTest, values)
-		if err != nil {
-			t.Log(tmpl.Render)
-			t.Error(err)
-		}
+	var instance interface{}
+	if err := yaml.Unmarshal(b, &instance); err != nil {
+		t.Log(string(b))
+		t.Error(err)
+		return
+	}
 
-		// instantiate all usage variants
-		for _, u := range tmpl.Usages() {
-			t.Run(u, func(t *testing.T) {
-				// t.Parallel()
-
-				// create a copy of the map for parallel execution
-				usageValues := make(map[string]interface{}, len(values)+1)
-				if err := copier.Copy(&usageValues, values); err != nil {
-					panic(err)
-				}
-				usageValues[ParamUsage] = u
-
-				b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, usageValues)
-				if err != nil {
-					t.Errorf("usage: %s, result: %v", u, err)
-				}
-
-				var instance interface{}
-				if err := yaml.Unmarshal(b, &instance); err != nil {
-					t.Errorf("usage: %s, yaml: %v", u, err)
-				}
-
-				// actually run the instance if not on CI
-				if os.Getenv("CI") == "" {
-					cb(usageValues)
-				}
-			})
-		}
-	})
+	// actually run the instance if not on CI
+	if os.Getenv("CI") == "" {
+		cb(values)
+	}
 }
 
 func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]interface{})) {
@@ -71,12 +51,35 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 				} else {
 					values[ModbusKeyRS485TCPIP] = true
 				}
-				tmpl.ModbusValues(TemplateRenderModeInstance, values)
+				tmpl.ModbusValues(TemplateRenderModeUnitTest, values)
 			}
 
-			renderTest(t, tmpl, values, func(values map[string]interface{}) {
-				instantiate(t, values)
-			})
+			usages := tmpl.Usages()
+			if len(usages) == 0 {
+				test(t, tmpl, values, func(values map[string]interface{}) {
+					instantiate(t, values)
+				})
+
+				return
+			}
+
+			for _, u := range usages {
+				// create a copy of the map for parallel execution
+				usageValues := make(map[string]interface{}, len(values)+1)
+				if err := copier.Copy(&usageValues, values); err != nil {
+					panic(err)
+				}
+				usageValues[ParamUsage] = u
+
+				// subtest for each usage
+				t.Run(u, func(t *testing.T) {
+					t.Parallel()
+
+					test(t, tmpl, usageValues, func(values map[string]interface{}) {
+						instantiate(t, values)
+					})
+				})
+			}
 		})
 	}
 }

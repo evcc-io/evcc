@@ -76,12 +76,6 @@ func (c *Shelly) Enable(enable bool) error {
 	}
 }
 
-// MaxCurrent implements the api.Charger interface
-func (c *Shelly) MaxCurrent(current int64) error {
-	return nil
-}
-
-var _ api.Meter = (*Shelly)(nil)
 var _ api.MeterEnergy = (*Shelly)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface

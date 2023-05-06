@@ -77,6 +77,24 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
+// GetSmartCostLimit returns the SmartCostLimit
+func (site *Site) GetSmartCostLimit() float64 {
+	site.Lock()
+	defer site.Unlock()
+	return site.SmartCostLimit
+}
+
+// SetSmartCostLimit sets the SmartCostLimit
+func (site *Site) SetSmartCostLimit(val float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	site.SmartCostLimit = val
+	site.publish("smartCostLimit", site.SmartCostLimit)
+
+	return nil
+}
+
 // GetVehicles is the list of vehicles
 func (site *Site) GetVehicles() []api.Vehicle {
 	site.Lock()

@@ -38,10 +38,11 @@ func TestSession(t *testing.T) {
 	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
 
 	lp := &Loadpoint{
-		log:         util.NewLogger("foo"),
-		clock:       clock,
-		db:          db,
-		chargeMeter: cm,
+		log:           util.NewLogger("foo"),
+		clock:         clock,
+		db:            db,
+		chargeMeter:   cm,
+		sessionEnergy: NewEnergyMetrics(),
 	}
 
 	// create session
@@ -59,31 +60,30 @@ func TestSession(t *testing.T) {
 
 	// stop charging
 	clock.Add(time.Hour)
-	lp.chargedEnergy = 1.23 * 1e3                                   // Wh
-	me.EXPECT().TotalEnergy().Return(1.0+lp.chargedEnergy/1e3, nil) // match chargedEnergy
+	lp.sessionEnergy.Update(1.23)
+	me.EXPECT().TotalEnergy().Return(1.0+lp.getChargedEnergy()/1e3, nil) // match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
-	assert.Equal(t, lp.chargedEnergy/1e3, lp.session.ChargedEnergy)
+	assert.Equal(t, lp.getChargedEnergy()/1e3, lp.session.ChargedEnergy)
 	assert.Equal(t, clock.Now(), lp.session.Finished)
 
 	s, err := db.Sessions()
 	assert.NoError(t, err)
 	assert.Len(t, s, 1)
-	t.Log(s)
+	t.Logf("session: %+v", s)
 
 	// stop charging - 2nd leg
 	clock.Add(time.Hour)
-	lp.chargedEnergy *= 2
+	lp.sessionEnergy.Update(lp.getChargedEnergy() * 2)
 	me.EXPECT().TotalEnergy().Return(3.0, nil) // doesn't match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
-	assert.Equal(t, 3.0-1.0, lp.session.ChargedEnergy) // expect actual meter energy delta
 	assert.Equal(t, clock.Now(), lp.session.Finished)
 
 	s, err = db.Sessions()
 	assert.NoError(t, err)
 	assert.Len(t, s, 1)
-	t.Log(s)
+	t.Logf("session: %+v", s)
 }

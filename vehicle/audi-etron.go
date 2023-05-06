@@ -43,6 +43,10 @@ func NewEtronFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &Etron{
 		embed: &cc.embed,
 	}

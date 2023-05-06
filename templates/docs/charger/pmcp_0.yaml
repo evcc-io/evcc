@@ -7,4 +7,4 @@ render:
       type: template
       template: pmcp
       ski: # Die SKI der Wallbox, üblicherweise im Web Interface der Wallbox zu finden
-      ip: 192.0.2.2 # IP-Adresse # Optional
+      ip: 192.0.2.2 # IP-Adresse (Optional)

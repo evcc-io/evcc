@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -8,10 +9,13 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 )
 
-var instance *CS
+var (
+	once     sync.Once
+	instance *CS
+)
 
 func Instance() *CS {
-	if instance == nil {
+	once.Do(func() {
 		cs := ocpp16.NewCentralSystem(nil, nil)
 
 		instance = &CS{
@@ -27,11 +31,11 @@ func Instance() *CS {
 		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 		cs.SetFirmwareManagementHandler(instance)
 
-		go Instance().errorHandler(cs.Errors())
+		go instance.errorHandler(cs.Errors())
 		go cs.Start(8887, "/{ws}")
 
 		time.Sleep(time.Second)
-	}
+	})
 
 	return instance
 }

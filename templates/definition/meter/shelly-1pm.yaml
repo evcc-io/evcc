@@ -2,11 +2,11 @@ template: shelly-1pm
 products:
   - brand: Shelly
     description:
-      generic: 1PM, EM
+      generic: 1PM, EM, Plug S
 group: switchsockets
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["pv", "charge"]
   - name: host
     default: 192.0.2.2
   - name: user

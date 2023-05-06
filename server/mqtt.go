@@ -46,6 +46,9 @@ func (m *MQTT) encode(v interface{}) string {
 	case float64:
 		return fmt.Sprintf("%.5g", val)
 	case time.Time:
+		if val.IsZero() {
+			return ""
+		}
 		return strconv.FormatInt(val.Unix(), 10)
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
@@ -59,7 +62,7 @@ func (m *MQTT) encode(v interface{}) string {
 
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
 	token := m.Handler.Client.Publish(topic, m.Handler.Qos, retained, m.encode(payload))
-	go m.Handler.WaitForToken(token)
+	go m.Handler.WaitForToken("send", topic, token)
 }
 
 func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
@@ -133,6 +136,8 @@ func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 	m.Handler.ListenSetter(topic+"/targetTime/set", func(payload string) {
 		if val, err := time.Parse(time.RFC3339, payload); err == nil {
 			_ = lp.SetTargetTime(val)
+		} else if string(payload) == "null" {
+			_ = lp.SetTargetTime(time.Time{})
 		}
 	})
 	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
@@ -181,20 +186,26 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// site setters
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/prioritySoc/set", m.root), func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = site.SetPrioritySoc(float64(soc))
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetPrioritySoc(val)
 		}
 	})
 
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferSoc/set", m.root), func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = site.SetBufferSoc(float64(soc))
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetBufferSoc(val)
 		}
 	})
 
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/residualPower/set", m.root), func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = site.SetResidualPower(float64(soc))
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetResidualPower(val)
+		}
+	})
+
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/smartcostlimit/set", m.root), func(payload string) {
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetSmartCostLimit(val)
 		}
 	})
 

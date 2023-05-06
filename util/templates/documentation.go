@@ -16,7 +16,9 @@ var documentationTmpl string
 var documentationModbusTmpl string
 
 // RenderDocumentation renders the documentation template
-func (t *Template) RenderDocumentation(product Product, values map[string]interface{}, lang string) ([]byte, error) {
+func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, error) {
+	values := t.Defaults(TemplateRenderModeDocs)
+
 	for index, p := range t.Params {
 		for k, v := range values {
 			if p.Name != k {
@@ -39,47 +41,42 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 		}
 	}
 
-	usages := t.Usages()
-	modbusChoices := t.ModbusChoices()
-	modbusRender := ""
-	if len(modbusChoices) > 0 {
+	var modbusRender string
+	if modbusChoices := t.ModbusChoices(); len(modbusChoices) > 0 {
 		if i, _ := t.ParamByName(ParamModbus); i > -1 {
-			modbusTmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(documentationModbusTmpl)
+			modbusTmpl, err := template.New("yaml").Funcs(sprig.TxtFuncMap()).Parse(documentationModbusTmpl)
 			if err != nil {
 				panic(err)
 			}
 
-			modbusData := map[string]interface{}{}
+			modbusData := make(map[string]interface{})
 			t.ModbusValues(TemplateRenderModeDocs, modbusData)
 
-			modbusOut := new(bytes.Buffer)
-
-			err = modbusTmpl.Execute(modbusOut, modbusData)
-			if err != nil {
+			out := new(bytes.Buffer)
+			if err := modbusTmpl.Execute(out, modbusData); err != nil {
 				panic(err)
 			}
 
-			modbusRender = modbusOut.String()
+			modbusRender = out.String()
 		}
 	}
 
+	var hasAdvancedParams bool
+
 	// remove usage and deprecated from params and check if there are advanced params
-	var hasAdvancedParam bool
-	var newParams []Param
+	var filteredParams []Param
 	for _, param := range t.Params {
 		if param.IsDeprecated() || param.Name == ParamUsage {
 			continue
 		}
 
 		if param.IsAdvanced() {
-			hasAdvancedParam = true
+			hasAdvancedParams = true
 		}
 
-		newParams = append(newParams, param)
+		filteredParams = append(filteredParams, param)
 	}
-	t.Params = newParams
 
-	out := new(bytes.Buffer)
 	data := map[string]interface{}{
 		"Template":               t.Template,
 		"ProductBrand":           product.Brand,
@@ -88,16 +85,18 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 		"Capabilities":           t.Capabilities,
 		"Requirements":           t.Requirements.EVCC,
 		"RequirementDescription": t.Requirements.Description.String(lang),
-		"Params":                 t.Params,
-		"AdvancedParams":         hasAdvancedParam,
-		"Usages":                 usages,
+		"Params":                 filteredParams,
+		"AdvancedParams":         hasAdvancedParams,
+		"Usages":                 t.Usages(),
 		"Modbus":                 modbusRender,
 	}
 
-	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(documentationTmpl)
+	out := new(bytes.Buffer)
+
+	tmpl, err := FuncMap(template.New("yaml")).Parse(documentationTmpl)
 	if err == nil {
 		err = tmpl.Execute(out, data)
 	}
 
-	return []byte(trimEmptyLines(out.String())), err
+	return []byte(trimLines(out.String())), err
 }

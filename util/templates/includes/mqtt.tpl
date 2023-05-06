@@ -1,5 +1,4 @@
 {{ define "mqtt" }}
-source: mqtt
 broker: {{ .host }}:{{ .port }}
 {{- if .user }}
 user: {{ .user }}

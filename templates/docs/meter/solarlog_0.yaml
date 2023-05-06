@@ -11,11 +11,11 @@ render:
       template: solarlog
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port # Optional
+      port: 502 # Port (Optional)
   - usage: pv
     default: |
       type: template
       template: solarlog
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port # Optional
+      port: 502 # Port (Optional)

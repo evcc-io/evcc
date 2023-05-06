@@ -62,6 +62,7 @@ type config struct {
 	Mqtt         mqttConfig
 	ModbusProxy  []proxyConfig
 	Javascript   []javascriptConfig
+	Go           []goConfig
 	Influx       server.InfluxConfig
 	EEBus        map[string]interface{}
 	HEMS         typedConfig
@@ -80,6 +81,11 @@ type mqttConfig struct {
 }
 
 type javascriptConfig struct {
+	VM     string
+	Script string
+}
+
+type goConfig struct {
 	VM     string
 	Script string
 }
@@ -268,7 +274,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 
 				// wrap non-config vehicle errors to prevent fatals
 				log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-				v = wrapper.New(err)
+				v = wrapper.New(cc.Name, cc.Other, err)
 			}
 
 			// ensure vehicle config has title

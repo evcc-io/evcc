@@ -68,18 +68,11 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	}
 }
 
-// getChargedEnergy returns loadpoint charge target energy
+// getChargedEnergy returns loadpoint charge target energy in Wh
 func (lp *Loadpoint) getChargedEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.chargedEnergy
-}
-
-// setChargedEnergy returns loadpoint charge target energy
-func (lp *Loadpoint) setChargedEnergy(energy float64) {
-	lp.Lock()
-	defer lp.Unlock()
-	lp.chargedEnergy = energy
+	return lp.sessionEnergy.TotalWh()
 }
 
 // GetTargetEnergy returns loadpoint charge target energy

@@ -1,4 +1,5 @@
 template: vestel
+covers: ["eon-vbox"]
 products:
   - brand: Vestel
     description:
@@ -6,6 +7,9 @@ products:
   - brand: Webasto
     description:
       generic: Unite
+  - brand: E.ON Drive
+    description:
+      generic: vBox
 requirements:
   evcc: ["sponsorship"]
 params:

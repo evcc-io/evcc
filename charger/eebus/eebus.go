@@ -117,14 +117,17 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 	}
 
 	c.Cem = cem.NewCEM(configuration, c, c)
-	if err := c.Cem.Setup(true); err != nil {
+	if err := c.Cem.Setup(); err != nil {
 		return nil, err
 	}
+	c.Cem.EnableEmobility(emobility.EmobilityConfiguration{
+		CoordinatedChargingEnabled: false,
+	})
 
 	return c, nil
 }
 
-func (c *EEBus) Register(ski, ip string, connectHandler func(string), disconnectHandler func(string)) *emobility.EMobilityImpl {
+func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), disconnectHandler func(string), dataProvider emobility.EmobilityDataProvider) *emobility.EMobilityImpl {
 	ski = strings.ReplaceAll(ski, "-", "")
 	ski = strings.ReplaceAll(ski, " ", "")
 	ski = strings.ToLower(ski)
@@ -141,7 +144,7 @@ func (c *EEBus) Register(ski, ip string, connectHandler func(string), disconnect
 	defer c.mux.Unlock()
 	c.clients[ski] = EEBusClientCBs{onConnect: connectHandler, onDisconnect: disconnectHandler}
 
-	return c.Cem.RegisterEmobilityRemoteDevice(serviceDetails)
+	return c.Cem.RegisterEmobilityRemoteDevice(serviceDetails, dataProvider)
 }
 
 func (c *EEBus) Run() {

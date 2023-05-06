@@ -1,6 +1,6 @@
 product:
   brand: Elli
-  description: Charger Connect (ohne Meter) (Beta)
+  description: Charger Connect (Beta)
 capabilities: ["mA"]
 requirements: ["eebus"]
 description: |
@@ -9,6 +9,8 @@ description: |
   Eine Identifikation des Fahrzeugs über die RFID Karte ist nicht möglich.
 
   Die Unterstützung ist im Beta Stadium und es kann noch zu Problemen kommen!
+
+  Hinweis: Wenn du deiner Wallbox nachträglich einen Energiezähler hinzugefügt hast, nutze bitte die Pro bzw. Connected+ Integration.
 
 render:
   - default: |

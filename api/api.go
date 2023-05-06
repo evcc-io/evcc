@@ -194,6 +194,11 @@ type Rate struct {
 	Price float64   `json:"price"`
 }
 
+// IsEmpty returns is the rate is the zero value
+func (r Rate) IsEmpty() bool {
+	return r.Start.IsZero() && r.End.IsZero() && r.Price == 0
+}
+
 // Rates is a slice of (future) tariff rates
 type Rates []Rate
 
@@ -201,6 +206,7 @@ type Rates []Rate
 type Tariff interface {
 	Unit() string
 	Rates() (Rates, error)
+	IsDynamic() bool
 }
 
 // AuthProvider is the ability to provide OAuth authentication through the ui

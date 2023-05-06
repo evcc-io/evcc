@@ -114,10 +114,10 @@ func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 			return h.coilsToResult("write coil", req.Quantity, b, err)
 		}
 
-		h.log.TRACE.Printf("write multiple coils: id %d addr %d qty %d val %v", req.UnitId, req.Addr, req.Quantity, req.Args)
+		h.log.TRACE.Printf("write coils: id %d addr %d qty %d val %v", req.UnitId, req.Addr, req.Quantity, req.Args)
 		args := coilsToBytes(req.Args)
 		b, err := h.conn.WriteMultipleCoilsWithSlave(req.UnitId, req.Addr, req.Quantity, args)
-		return h.coilsToResult("write multiple coils", req.Quantity, b, err)
+		return h.coilsToResult("write coils", req.Quantity, b, err)
 	}
 
 	h.log.TRACE.Printf("read coil: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
@@ -138,12 +138,12 @@ func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) 
 		}
 
 		if req.WriteFuncCode == gridx.FuncCodeWriteSingleRegister {
-			h.log.TRACE.Printf("write single holding: id %d addr %d val %04x", req.UnitId, req.Addr, req.Args[0])
+			h.log.TRACE.Printf("write holding: id %d addr %d val %04x", req.UnitId, req.Addr, req.Args[0])
 			b, err := h.conn.WriteSingleRegisterWithSlave(req.UnitId, req.Addr, req.Args[0])
 			return h.exceptionToUint16AndError("write holding", b, err)
 		}
 
-		h.log.TRACE.Printf("write multiple holding: id %d addr %d qty %d val %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
+		h.log.TRACE.Printf("write holding: id %d addr %d qty %d val %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
 		b, err := h.conn.WriteMultipleRegistersWithSlave(req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
 		return h.exceptionToUint16AndError("write multiple holding", b, err)
 	}

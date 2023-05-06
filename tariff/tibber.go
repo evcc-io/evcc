@@ -98,7 +98,7 @@ func (t *Tibber) run(done chan error) {
 		"id": graphql.ID(t.homeID),
 	}
 
-	for ; true; <-time.NewTicker(time.Hour).C {
+	for ; true; <-time.Tick(time.Hour) {
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		err := t.client.Query(ctx, &res, v)
 		cancel()
@@ -146,4 +146,9 @@ func (t *Tibber) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
+}
+
+// IsDynamic implements the api.Tariff interface
+func (t *Tibber) IsDynamic() bool {
+	return true
 }

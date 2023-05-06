@@ -63,7 +63,7 @@ toml:
 
 test::
 	@echo "Running testsuite"
-	CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
+	CGO_ENABLED=0 go test $(BUILD_TAGS),test ./...
 
 porcelain::
 	gofmt -w -l $$(find . -name '*.go')

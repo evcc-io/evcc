@@ -56,17 +56,57 @@ modalUpdateNow = "Jetzt installieren"
 modalUpdateStarted = "Starte die neue Version von evcc..."
 modalUpdateStatusStart = "Installation gestartet:"
 
+[gridSettings]
+activeHours = "{charging} von {total}"
+activeHoursLabel = "Aktive Stunden"
+co2Label = "CO₂-Emission"
+co2Limit = "CO₂-Grenze"
+costLimitDescription = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
+modalTitle = "Smartes Netzladen"
+none = "keine"
+priceLabel = "Energiepreis"
+priceLimit = "Preisgrenze"
+
 [header]
 about = "Über"
 blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fahrzeug Logins"
+needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
 settings = "Einstellungen"
 
+[help]
+discussionsButton = "GitHub Discussions"
+documentationButton = "Dokumentation"
+issueButton = "Bug melden"
+issueDescription = "Komisches Verhalten gefunden?"
+modalTitle = "Hilfe benötigt?"
+primaryActions = "Funktioniert etwas nicht so, wie es soll? Dies sind gute Anlaufstellen, um Hilfe zu erhalten."
+restartButton = "Neu starten"
+restartDescription = "Tried turning it off and on again?"
+secondaryActions = "Noch keine Lösung gefunden? Hier noch ein paar weitere Möglichkeiten."
+
+[help.restart]
+cancel = "Abbrechen"
+confirm = "Ja, neu starten!"
+description = "Unter normalen Umständen sollte ein Neustart nicht notwendig sein. Melde einen Bug, wenn du evcc regelmäßig neu starten musst."
+disclaimer = "Hinweis: evcc beendet sich und verlässt sich darauf, vom Betriebssystem neu gestartet zu werden."
+modalTitle = "Sicher, dass du neu starten möchtest?"
+
 [main]
 vehicles = "Parkplatz"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Ankunft"
+departureTab = "Abfahrt"
+modalTitle = "Ladeplanung"
+none = "keiner"
+title = "Plan"
+titleMinSoc = "Min. Ladung"
+titleTargetCharge = "Abfahrt"
 
 [main.energyflow]
 battery = "Batterie"
@@ -82,13 +122,17 @@ pvProduction = "Erzeugung"
 selfConsumption = "Eigenverbrauch"
 
 [main.loadpoint]
+avgPrice = "Ø Preis"
 charged = "Geladen"
+co2 = "Ø CO₂"
 duration = "Dauer"
 fallbackName = "Ladepunkt"
 power = "Leistung"
+price = "Σ Preis"
 remaining = "Restzeit"
 remoteDisabledHard = "{source}: Deaktiviert"
 remoteDisabledSoft = "{source}: Adaptives PV-Laden deaktiviert"
+solar = "Sonne"
 
 [main.loadpointSettings]
 currents = "Ladestrom"
@@ -128,15 +172,16 @@ logout = "abmelden"
 
 [main.targetCharge]
 activate = "Aktivieren"
-activeLabel = "{time}"
+co2Limit = "CO₂-Grenze von {co2}"
+costLimitIgnore = "Die eingestellte {limit} wird in diesem Zeitraum ignoriert."
 descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
 descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc}% geladen sein?"
 inactiveLabel = "Zielzeit"
-modalTitle = "Zielzeit festlegen"
 planDuration = "Ladezeit"
 planPeriodLabel = "Zeitraum"
 planPeriodValue = "{start} bis {end}"
 planUnknown = "noch unbekannt"
+priceLimit = "Preisgrenze von {price}"
 remove = "Entfernen"
 setTargetTime = "keine"
 targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
@@ -176,20 +221,24 @@ ready = "bereit"
 vehicleTarget = "Fahrzeuglimit: {soc}%"
 
 [main.vehicleStatus]
-charging = "Ladevorgang aktiv..."
+charging = "Ladevorgang aktiv…"
+cheapEnergyCharging = "Günstige Energie verfügbar. Ladevorgang aktiv…"
+cleanEnergyCharging = "Saubere Energie verfügbar. Ladevorgang aktiv…"
+climating = "Vorklimatisierung erkannt."
 connected = "Verbunden."
 disconnected = "Nicht verbunden."
+guard = "Starte in {remaining}…"
 minCharge = "Mindestladung bis {soc}%."
-pvDisable = "Zu wenig Überschuss. Pausiere in {remaining}."
-pvEnable = "Überschuss verfügbar. Starte in {remaining}."
-scale1p = "Reduziere auf einphasig in {remaining}."
-scale3p = "Erhöhe auf dreiphasig in {remaining}."
-targetChargeActive = "Zielladen aktiv."
+pvDisable = "Zu wenig Überschuss. Pausiere in {remaining}…"
+pvEnable = "Überschuss verfügbar. Starte in {remaining}…"
+scale1p = "Reduziere auf einphasig in {remaining}…"
+scale3p = "Erhöhe auf dreiphasig in {remaining}…"
+targetChargeActive = "Zielladen aktiv…"
 targetChargePlanned = "Zielladen geplant. Ladung startet {time} Uhr."
-targetChargeWaitForVehicle = "Zielladen bereit. Warte auf Fahrzeug..."
+targetChargeWaitForVehicle = "Zielladen bereit. Warte auf Fahrzeug…"
 unknown = ""
 vehicleTargetReached = "Fahrzeuglimit {soc}% erreicht."
-waitForVehicle = "Ladebereit. Warte auf Fahrzeug..."
+waitForVehicle = "Ladebereit. Warte auf Fahrzeug…"
 
 [notifications]
 dismissAll = "Meldungen entfernen"
@@ -201,20 +250,28 @@ reload = "Erneut laden?"
 
 [session]
 cancel = "Abbrechen"
+co2 = "CO₂"
+date = "Zeitraum"
 delete = "Löschen"
 finished = "Endzeit"
+meter = "Zählerstand"
 meterstart = "Anfangszählerstand"
 meterstop = "Endzählerstand"
 odometer = "Kilometerstand"
+price = "Preis"
 started = "Startzeit"
 title = "Ladevorgang"
 
 [sessions]
-date = "Zeitraum"
+avgPrice = "Ø Preis"
+co2 = "Ø CO₂"
+date = "Anfang"
 downloadCsv = "Als CSV herunterladen"
 energy = "Geladen"
 loadpoint = "Ladepunkt"
+price = "Σ Preis"
 reallyDelete = "Wollen Sie diesen Ladevorgang wirklich löschen?"
+solar = "Sonne"
 title = "Ladevorgänge"
 vehicle = "Fahrzeug"
 
@@ -231,12 +288,6 @@ vehicle = "Fahrzeug"
 
 [settings]
 title = "Einstellungen"
-
-[settings.gridDetails]
-co2 = "CO₂"
-label = "Netztarifdetails"
-none = "keine"
-price = "Preis"
 
 [settings.hiddenFeatures]
 label = "Experimentell"

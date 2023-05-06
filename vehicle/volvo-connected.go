@@ -36,6 +36,10 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	// if cc.ClientID == "" && cc.ClientSecret == "" {
 	// 	return nil, errors.New("missing credentials")
 	// }

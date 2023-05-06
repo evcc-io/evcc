@@ -201,23 +201,17 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		}
 	}
 
-	var userId string
 	if err == nil {
 		resp, err = cookieClient.Get(resp.Header.Get("Location"))
 		if err == nil {
 			defer resp.Body.Close()
-
-			userId = resp.Request.URL.Query().Get("intUserId")
-			if len(userId) == 0 {
-				err = errors.New("usedId not found")
-			}
 		}
 	}
 
 	var code string
 	if err == nil {
 		data := map[string]string{
-			"intUserId": userId,
+			"intUserId": "",
 		}
 
 		req, err = request.New(http.MethodPost, v.config.URI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)

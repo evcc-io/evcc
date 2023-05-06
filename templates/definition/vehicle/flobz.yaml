@@ -1,0 +1,69 @@
+template: flobz
+products:
+  - brand: PSA
+    description:
+      generic: PSA Car Controller (flobz)
+params:
+  - name: title
+  - name: url
+    required: true
+    example: http://192.0.2.2
+  - name: host
+    deprecated: true
+  - name: port
+    deprecated: true
+  - name: vin
+    required: true
+    help:
+      de: Erforderlich
+      en: Required
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: icon
+    default: car
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: custom
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .phases }}
+  phases: {{ .phases }}
+  {{- end }}
+  {{- include "vehicle-identify" . }}
+  soc:
+    {{- include "source" . | indent 2 }}
+    jq: .energy[0].level
+  status:
+    source: combined
+    plugged:
+      {{- include "source" . | indent 4 }}
+      jq: .energy[0].charging.plugged
+    charging:
+      {{- include "source" . | indent 4 }}
+      jq: .energy[0].charging.status == "InProgress"
+  range:
+    {{- include "source" . | indent 2 }}
+    jq: .energy[0].autonomy
+  odometer:
+    {{- include "source" . | indent 2 }}
+    jq: .timed_odometer.mileage
+  climater:
+    {{- include "source" . | indent 2 }}
+    jq: .preconditionning.air_conditioning.status != "Disabled"
+  {{- define "source" }}
+  source: http
+  {{- if .host }}
+  uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+  {{- else }}
+  uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+  {{- end }}
+  {{- end }}

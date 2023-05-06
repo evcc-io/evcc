@@ -27,7 +27,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // Updater abstracts the Loadpoint implementation for testing
 type Updater interface {
 	loadpoint.API
-	Update(availablePower float64, batteryBuffered bool)
+	Update(availablePower float64, autoCharge, batteryBuffered bool, greenShare float64, effectivePrice *float64, effectiveCo2 *float64)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -60,6 +60,7 @@ type Site struct {
 	PrioritySoc                       float64      `mapstructure:"prioritySoc"`                       // prefer battery up to this Soc
 	BufferSoc                         float64      `mapstructure:"bufferSoc"`                         // ignore battery above this Soc
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -533,17 +534,27 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
 
 	// deduct smart loads
-	var auxPower float64
-	for i, meter := range site.auxMeters {
-		if power, err := meter.CurrentPower(); err != nil {
-			site.log.ERROR.Printf("aux meter %d: %v", i, err)
-		} else {
-			auxPower += power
-			site.log.DEBUG.Printf("aux power %d: %.0fW", i, power)
+	if len(site.auxMeters) > 0 {
+		var auxPower float64
+		mm := make([]meterMeasurement, len(site.auxMeters))
+
+		for i, meter := range site.auxMeters {
+			if power, err := meter.CurrentPower(); err == nil {
+				auxPower += power
+				mm[i].Power = power
+				site.log.DEBUG.Printf("aux power %d: %.0fW", i+1, power)
+			} else {
+				site.log.ERROR.Printf("aux meter %d: %v", i+1, err)
+			}
 		}
+
+		sitePower -= auxPower
+
+		site.log.DEBUG.Printf("aux power: %.0fW", auxPower)
+		site.publish("auxPower", auxPower)
+
+		site.publish("aux", mm)
 	}
-	site.publish("auxPower", auxPower)
-	sitePower -= auxPower
 
 	// handle priority
 	if flexiblePower > 0 {
@@ -574,23 +585,25 @@ func (site *Site) greenShare() float64 {
 }
 
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
-func (s *Site) effectivePrice(greenShare float64) (float64, error) {
+func (s *Site) effectivePrice(greenShare float64) *float64 {
 	if grid, err := s.tariffs.CurrentGridPrice(); err == nil {
 		feedin, err := s.tariffs.CurrentFeedInPrice()
 		if err != nil {
 			feedin = 0
 		}
-		return grid*(1-greenShare) + feedin*greenShare, nil
+		effPrice := grid*(1-greenShare) + feedin*greenShare
+		return &effPrice
 	}
-	return 0, api.ErrNotAvailable
+	return nil
 }
 
 // effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
-func (s *Site) effectiveCo2(greenShare float64) (float64, error) {
+func (s *Site) effectiveCo2(greenShare float64) *float64 {
 	if co2, err := s.tariffs.CurrentCo2(); err == nil {
-		return co2 * (1 - greenShare), nil
+		effCo2 := co2 * (1 - greenShare)
+		return &effCo2
 	}
-	return 0, api.ErrNotAvailable
+	return nil
 }
 
 func (s *Site) publishTariffs() {
@@ -607,10 +620,10 @@ func (s *Site) publishTariffs() {
 	if co2, err := s.tariffs.CurrentCo2(); err == nil {
 		s.publishDelta("tariffCo2", co2)
 	}
-	if price, err := s.effectivePrice(greenShare); err == nil {
+	if price := s.effectivePrice(greenShare); price != nil {
 		s.publish("tariffEffectivePrice", price)
 	}
-	if co2, err := s.effectiveCo2(greenShare); err == nil {
+	if co2 := s.effectiveCo2(greenShare); co2 != nil {
 		s.publish("tariffEffectiveCo2", co2)
 	}
 }
@@ -633,8 +646,26 @@ func (site *Site) update(lp Updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
+	var autoCharge bool
+	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
+		rates, err := tariff.Rates()
+
+		var rate api.Rate
+		if err == nil {
+			rate, err = rates.Current(time.Now())
+		}
+
+		if err == nil {
+			limit := site.GetSmartCostLimit()
+			autoCharge = limit != 0 && rate.Price <= limit
+		} else {
+			site.log.ERROR.Println("tariff:", err)
+		}
+	}
+
 	if sitePower, batteryBuffered, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
-		lp.Update(sitePower, batteryBuffered)
+		greenShare := site.greenShare()
+		lp.Update(sitePower, autoCharge, batteryBuffered, greenShare, site.effectivePrice(greenShare), site.effectiveCo2(greenShare))
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
@@ -664,7 +695,11 @@ func (site *Site) prepare() {
 	site.publish("bufferSoc", site.BufferSoc)
 	site.publish("prioritySoc", site.PrioritySoc)
 	site.publish("residualPower", site.ResidualPower)
-
+	site.publish("smartCostLimit", site.SmartCostLimit)
+	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
+		site.publish("smartCostUnit", tariff.Unit())
+		site.publish("smartCostAvailable", tariff.IsDynamic())
+	}
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since())
 

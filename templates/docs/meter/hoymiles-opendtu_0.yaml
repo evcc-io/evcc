@@ -1,0 +1,10 @@
+product:
+  brand: Hoymiles
+  description: HM and HMS Series (via OpenDTU)
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: hoymiles-opendtu
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname

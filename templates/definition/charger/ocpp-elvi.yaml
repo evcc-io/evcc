@@ -6,5 +6,4 @@ products:
 params:
   - preset: ocpp
 render: |
-  type: ocpp
   {{ include "ocpp" . }}

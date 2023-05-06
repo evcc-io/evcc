@@ -56,6 +56,14 @@ const zoned = {
 	unit: "DKK",
 	targetTime: createDate(17),
 };
+
+const unknown = {
+	rates: co2.rates.slice(0, 16),
+	duration: 8695,
+	plan: [createRate(213, 4), createRate(336, 11), createRate(336, 12)],
+	unit: "gCO2eq",
+	targetTime: createDate(14),
+};
 </script>
 
 <template>
@@ -68,6 +76,9 @@ const zoned = {
 		</Variant>
 		<Variant title="zoned">
 			<TargetChargePlan v-bind="zoned" />
+		</Variant>
+		<Variant title="unknown">
+			<TargetChargePlan v-bind="unknown" />
 		</Variant>
 	</Story>
 </template>

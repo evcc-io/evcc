@@ -51,6 +51,10 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Renault{

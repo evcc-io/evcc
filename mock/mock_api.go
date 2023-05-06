@@ -514,6 +514,20 @@ func (m *MockTariff) EXPECT() *MockTariffMockRecorder {
 	return m.recorder
 }
 
+// IsDynamic mocks base method.
+func (m *MockTariff) IsDynamic() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsDynamic")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsDynamic indicates an expected call of IsDynamic.
+func (mr *MockTariffMockRecorder) IsDynamic() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsDynamic", reflect.TypeOf((*MockTariff)(nil).IsDynamic))
+}
+
 // Rates mocks base method.
 func (m *MockTariff) Rates() (api.Rates, error) {
 	m.ctrl.T.Helper()

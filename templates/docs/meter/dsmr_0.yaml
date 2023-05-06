@@ -7,11 +7,11 @@ render:
       template: dsmr
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 1502 # Port # Optional
+      port: 1502 # Port (Optional)
     advanced: |
       type: template
       template: dsmr
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 1502 # Port # Optional
-      energy: # Typischerweise 1-0:1.8.0, bei Mehrtarifzählern 1-0:1.8.1 oder 1-0:1.8.2 # Optional
+      port: 1502 # Port (Optional)
+      energy: # Typischerweise 1-0:1.8.0, bei Mehrtarifzählern 1-0:1.8.1 oder 1-0:1.8.2 (Optional)

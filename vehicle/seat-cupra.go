@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle/seat"
 	"github.com/evcc-io/evcc/vehicle/seat/cupra"
 	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
@@ -41,6 +40,10 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &Cupra{
 		embed: &cc.embed,
 	}
@@ -48,12 +51,12 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("cupra").Redact(cc.User, cc.Password, cc.VIN)
 
 	// get initial VW identity id_token
-	q, err := vwidentity.Login(log, seat.AuthParams, cc.User, cc.Password)
+	q, err := vwidentity.Login(log, cupra.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	trs := tokenrefreshservice.New(log, seat.TRSParams)
+	trs := tokenrefreshservice.New(log, cupra.TRSParams)
 	token, err := trs.Exchange(q)
 	if err != nil {
 		return nil, err

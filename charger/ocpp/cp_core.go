@@ -26,7 +26,7 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	res := &core.BootNotificationConfirmation{
-		CurrentTime: types.NewDateTime(time.Now()),
+		CurrentTime: types.NewDateTime(cp.clock.Now()),
 		Interval:    60, // TODO
 		Status:      core.RegistrationStatusAccepted,
 	}
@@ -70,22 +70,15 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 
 func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
 	res := &core.DataTransferConfirmation{
-		Status: core.DataTransferStatusRejected,
+		Status: core.DataTransferStatusAccepted,
 	}
 
 	return res, nil
 }
 
-func (cp *CP) update() {
-	cp.mu.Lock()
-	cp.updated = time.Now()
-	cp.mu.Unlock()
-}
-
 func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
-	cp.update()
 	res := &core.HeartbeatConfirmation{
-		CurrentTime: types.NewDateTime(time.Now()),
+		CurrentTime: types.NewDateTime(cp.clock.Now()),
 	}
 
 	return res, nil
@@ -101,7 +94,7 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 			if meterValue.Timestamp.Time.After(cp.meterUpdated) {
 				for _, sample := range meterValue.SampledValue {
 					cp.measurements[getSampleKey(sample)] = sample
-					cp.meterUpdated = time.Now()
+					cp.meterUpdated = cp.clock.Now()
 				}
 			}
 		}

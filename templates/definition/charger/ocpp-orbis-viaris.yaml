@@ -1,0 +1,10 @@
+template: orbis-viaris
+products:
+  - brand: Orbis
+    description:
+      generic: Viaris Uni
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  bootnotification: true

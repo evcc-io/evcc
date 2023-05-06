@@ -10,15 +10,12 @@ requirements:
       Benötigt mindestens Firmware 36.3 oder neuer.
     en: |
       Requires firmware 36.3 or later.
-  uri: https://docs.evcc.io/docs/devices/chargers#
+  uri: https://docs.evcc.io/docs/devices/chargers/#fronius-wattpilot
 params:
   - name: host
   - name: password
+    mask: true
 render: |
   type: wattpilot
-  {{ if .host }}
   uri: {{ .host }}
-  {{ end }}
-  {{ if ne .password "" }}
   password: {{ .password }}
-  {{ end }}
