@@ -178,26 +178,6 @@ func NewFloatSetterFromConfig(param string, config Config) (func(float642 float6
 	return prov.FloatSetter(param), nil
 }
 
-// NewBoolSetterFromConfig creates a BoolSetter from config
-func NewBoolSetterFromConfig(param string, config Config) (func(bool) error, error) {
-	factory, err := registry.Get(config.Source)
-	if err != nil {
-		return nil, err
-	}
-
-	provider, err := factory(config.Other)
-	if err != nil {
-		return nil, err
-	}
-
-	prov, ok := provider.(SetBoolProvider)
-	if !ok {
-		return nil, fmt.Errorf("invalid plugin source for type bool: %s", config.Source)
-	}
-
-	return prov.BoolSetter(param), nil
-}
-
 // NewStringSetterFromConfig creates a StringSetter from config
 func NewStringSetterFromConfig(param string, config Config) (func(string) error, error) {
 	factory, err := registry.Get(config.Source)
@@ -216,4 +196,24 @@ func NewStringSetterFromConfig(param string, config Config) (func(string) error,
 	}
 
 	return prov.StringSetter(param), nil
+}
+
+// NewBoolSetterFromConfig creates a BoolSetter from config
+func NewBoolSetterFromConfig(param string, config Config) (func(bool) error, error) {
+	factory, err := registry.Get(config.Source)
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := factory(config.Other)
+	if err != nil {
+		return nil, err
+	}
+
+	prov, ok := provider.(SetBoolProvider)
+	if !ok {
+		return nil, fmt.Errorf("invalid plugin source for type bool: %s", config.Source)
+	}
+
+	return prov.BoolSetter(param), nil
 }
