@@ -31,8 +31,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 			in = append(in, InTransformation{
 				name: cc.Name,
 				function: func() (any, error) {
-					v, err := f()
-					return v, err
+					return f()
 				},
 			})
 		} else if cc.Type == "int" {
@@ -43,8 +42,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 			in = append(in, InTransformation{
 				name: cc.Name,
 				function: func() (any, error) {
-					v, err := f()
-					return v, err
+					return f()
 				},
 			})
 		} else if cc.Type == "float" {
@@ -55,8 +53,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 			in = append(in, InTransformation{
 				name: cc.Name,
 				function: func() (any, error) {
-					v, err := f()
-					return v, err
+					return f()
 				},
 			})
 		} else {
@@ -67,8 +64,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 			in = append(in, InTransformation{
 				name: cc.Name,
 				function: func() (any, error) {
-					v, err := f()
-					return v, err
+					return f()
 				},
 			})
 		}
@@ -89,7 +85,11 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 				name: cc.Name,
 				Type: cc.Type,
 				function: func(v any) error {
-					return f(v.(bool))
+					b, ok := v.(bool)
+					if !ok {
+						return fmt.Errorf("%s: Could not convert %v to bool", name, b)
+					}
+					return f(b)
 				},
 			})
 		} else if cc.Type == "int" {
@@ -101,7 +101,11 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 				name: cc.Name,
 				Type: cc.Type,
 				function: func(v any) error {
-					return f(v.(int64))
+					b, ok := v.(int64)
+					if !ok {
+						return fmt.Errorf("%s: Could not convert %v to int", name, b)
+					}
+					return f(b)
 				},
 			})
 		} else if cc.Type == "float" {
@@ -113,7 +117,11 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 				name: cc.Name,
 				Type: cc.Type,
 				function: func(v any) error {
-					return f(v.(float64))
+					b, ok := v.(float64)
+					if !ok {
+						return fmt.Errorf("%s: Could not convert %v to float", name, b)
+					}
+					return f(b)
 				},
 			})
 		} else {
@@ -125,7 +133,11 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 				name: cc.Name,
 				Type: cc.Type,
 				function: func(v any) error {
-					return f(v.(string))
+					b, ok := v.(string)
+					if !ok {
+						return fmt.Errorf("%s: Could not convert %v to string", name, b)
+					}
+					return f(b)
 				},
 			})
 		}
