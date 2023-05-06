@@ -5,14 +5,16 @@ import (
 )
 
 type (
-	TransformationProvider[A any] interface {
+	OutTransformationProvider[A any] interface {
 		convertToInt(A) (int64, error)
 		convertToString(A) (string, error)
 		convertToFloat(A) (float64, error)
 		convertToBool(A) (bool, error)
+		outTransformations() []OutTransformation
 	}
-	GetterTransformationProvider interface {
+	InTransformationProvider interface {
 		paramAndEval(string, any) error
+		inTransformations() []InTransformation
 	}
 )
 
@@ -163,8 +165,8 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 	return out, nil
 }
 
-func transformGetter[P GetterTransformationProvider](p P, in []InTransformation) error {
-	for _, cc := range in {
+func transformGetter[P InTransformationProvider](p P) error {
+	for _, cc := range p.inTransformations() {
 		val, err := cc.function()
 		if err != nil {
 			return fmt.Errorf("%s: %w", cc.name, err)
@@ -178,8 +180,8 @@ func transformGetter[P GetterTransformationProvider](p P, in []InTransformation)
 	return nil
 }
 
-func transformSetter[P TransformationProvider[A], A any](p P, out []OutTransformation, v A) error {
-	for _, cc := range out {
+func transformSetter[P OutTransformationProvider[A], A any](p P, v A) error {
+	for _, cc := range p.outTransformations() {
 		name := cc.name
 		switch cc.Type {
 		case "bool":

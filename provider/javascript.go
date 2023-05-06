@@ -60,7 +60,7 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 func (p *Javascript) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
 		if p.in != nil {
-			err = p.transformGetter()
+			err = transformGetter(p)
 		}
 		if err == nil {
 			var v otto.Value
@@ -78,7 +78,7 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 func (p *Javascript) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
 		if p.in != nil {
-			err = p.transformGetter()
+			err = transformGetter(p)
 		}
 		if err == nil {
 			var v otto.Value
@@ -96,7 +96,7 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 func (p *Javascript) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
 		if p.in != nil {
-			err = p.transformGetter()
+			err = transformGetter(p)
 		}
 		if err == nil {
 			var v otto.Value
@@ -114,7 +114,7 @@ func (p *Javascript) StringGetter() func() (string, error) {
 func (p *Javascript) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
 		if p.in != nil {
-			err = p.transformGetter()
+			err = transformGetter(p)
 		}
 		if err == nil {
 			var v otto.Value
@@ -140,7 +140,7 @@ func (p *Javascript) paramAndEval(param string, val any) error {
 		var v otto.Value
 		v, err = p.vm.Eval(p.script)
 		if err == nil && p.out != nil {
-			err = p.transformSetter(v)
+			err = transformSetter(p, v)
 		}
 	}
 	return err
@@ -174,14 +174,6 @@ func (p *Javascript) BoolSetter(param string) func(bool) error {
 	}
 }
 
-func (p *Javascript) transformGetter() error {
-	return transformGetter(p, p.in)
-}
-
-func (p *Javascript) transformSetter(v otto.Value) error {
-	return transformSetter(p, p.out, v)
-}
-
 func (p *Javascript) convertToInt(v otto.Value) (int64, error) {
 	return v.ToInteger()
 }
@@ -196,4 +188,12 @@ func (p *Javascript) convertToFloat(v otto.Value) (float64, error) {
 
 func (p *Javascript) convertToBool(v otto.Value) (bool, error) {
 	return v.ToBoolean()
+}
+
+func (p *Javascript) inTransformations() []InTransformation {
+	return p.in
+}
+
+func (p *Javascript) outTransformations() []OutTransformation { //nolint:golint,unused
+	return p.out
 }

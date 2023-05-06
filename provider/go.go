@@ -63,7 +63,7 @@ func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 func (p *Go) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
 		if p.in != nil {
-			err = p.transformGetter()
+			err = transformGetter(p)
 		}
 		if err == nil {
 			var v reflect.Value
@@ -81,7 +81,7 @@ func (p *Go) FloatGetter() func() (float64, error) {
 func (p *Go) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
 		if p.in != nil {
-			err = p.transformGetter()
+			err = transformGetter(p)
 		}
 		if err == nil {
 			var v reflect.Value
@@ -99,7 +99,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 func (p *Go) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
 		if p.in != nil {
-			err = p.transformGetter()
+			err = transformGetter(p)
 		}
 		if err == nil {
 			var v reflect.Value
@@ -117,7 +117,7 @@ func (p *Go) StringGetter() func() (string, error) {
 func (p *Go) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
 		if p.in != nil {
-			err = p.transformGetter()
+			err = transformGetter(p)
 		}
 		if err == nil {
 			var v reflect.Value
@@ -147,7 +147,7 @@ func (p *Go) paramAndEval(param string, val any) error {
 		var v reflect.Value
 		v, err = p.vm.Eval(p.script)
 		if err == nil && p.out != nil {
-			err = p.transformSetter(v)
+			err = transformSetter(p, v)
 		}
 	}
 	return err
@@ -181,14 +181,6 @@ func (p *Go) BoolSetter(param string) func(bool) error {
 	}
 }
 
-func (p *Go) transformGetter() error {
-	return transformGetter(p, p.in)
-}
-
-func (p *Go) transformSetter(v reflect.Value) error {
-	return transformSetter(p, p.out, v)
-}
-
 func (p *Go) convertToInt(v reflect.Value) (int64, error) {
 	if v.CanConvert(reflect.TypeOf(0)) {
 		return v.Convert(reflect.TypeOf(0)).Int(), nil
@@ -219,4 +211,12 @@ func (p *Go) convertToBool(v reflect.Value) (bool, error) {
 	} else {
 		return false, fmt.Errorf("not a bool: %s", v)
 	}
+}
+
+func (p *Go) inTransformations() []InTransformation {
+	return p.in
+}
+
+func (p *Go) outTransformations() []OutTransformation { //nolint:golint,unused
+	return p.out
 }
