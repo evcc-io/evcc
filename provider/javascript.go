@@ -61,7 +61,7 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider,
 func (p *Javascript) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
 		if p.in != nil {
-			err = transformGetter(p)
+			err = p.transformGetter()
 		}
 		if err == nil {
 			var v otto.Value
@@ -78,7 +78,7 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 func (p *Javascript) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
 		if p.in != nil {
-			err = transformGetter(p)
+			err = p.transformGetter()
 		}
 		if err == nil {
 			var v otto.Value
@@ -96,7 +96,7 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 func (p *Javascript) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
 		if p.in != nil {
-			err = transformGetter(p)
+			err = p.transformGetter()
 		}
 		if err == nil {
 			var v otto.Value
@@ -114,7 +114,7 @@ func (p *Javascript) StringGetter() func() (string, error) {
 func (p *Javascript) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
 		if p.in != nil {
-			err = transformGetter(p)
+			err = p.transformGetter()
 		}
 		if err == nil {
 			var v otto.Value
@@ -140,7 +140,7 @@ func (p *Javascript) paramAndEval(param string, val any) error {
 		var v otto.Value
 		v, err = p.vm.Eval(p.script)
 		if err == nil && p.out != nil {
-			err = transformSetter(p, v)
+			err = p.transformSetter(v)
 		}
 	}
 	return err
@@ -174,7 +174,7 @@ func (p *Javascript) BoolSetter(param string) func(bool) error {
 	}
 }
 
-func transformGetter(p *Javascript) error {
+func (p *Javascript) transformGetter() error {
 	for _, cc := range p.in {
 		val, err := cc.function()
 		if err != nil {
@@ -188,7 +188,7 @@ func transformGetter(p *Javascript) error {
 	return nil
 }
 
-func transformSetter(p *Javascript, v otto.Value) error {
+func (p *Javascript) transformSetter(v otto.Value) error {
 	for _, cc := range p.out {
 		name := cc.name
 		if cc.Type == "bool" {

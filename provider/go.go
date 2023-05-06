@@ -63,7 +63,7 @@ func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) 
 func (p *Go) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
 		if p.in != nil {
-			err = transformGetterGo(p)
+			err = p.transformGetter()
 		}
 		if err == nil {
 			var v reflect.Value
@@ -85,7 +85,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
 
 		if p.in != nil {
-			err = transformGetterGo(p)
+			err = p.transformGetter()
 		}
 		if err == nil {
 			var v reflect.Value
@@ -107,7 +107,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 func (p *Go) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
 		if p.in != nil {
-			err = transformGetterGo(p)
+			err = p.transformGetter()
 		}
 		if err == nil {
 			var v reflect.Value
@@ -128,7 +128,7 @@ func (p *Go) StringGetter() func() (string, error) {
 func (p *Go) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
 		if p.in != nil {
-			err = transformGetterGo(p)
+			err = p.transformGetter()
 		}
 		if err == nil {
 			var v reflect.Value
@@ -162,7 +162,7 @@ func (p *Go) paramAndEval(param string, val any) error {
 		var v reflect.Value
 		v, err = p.vm.Eval(p.script)
 		if err == nil && p.out != nil {
-			err = transformSetterGo(p.out, v)
+			err = p.transformSetter(v)
 		}
 	}
 	return err
@@ -196,7 +196,7 @@ func (p *Go) BoolSetter(param string) func(bool) error {
 	}
 }
 
-func transformGetterGo(p *Go) error {
+func (p *Go) transformGetter() error {
 	for _, cc := range p.in {
 		val, err := cc.function()
 		if err != nil {
@@ -210,8 +210,8 @@ func transformGetterGo(p *Go) error {
 	}
 	return nil
 }
-func transformSetterGo(transforms []OutTransformation, v reflect.Value) error {
-	for _, cc := range transforms {
+func (p *Go) transformSetter(v reflect.Value) error {
+	for _, cc := range p.out {
 		name := cc.name
 		if cc.Type == "bool" {
 			var err error
