@@ -211,52 +211,34 @@ func (p *Go) transformGetter() error {
 	return nil
 }
 func (p *Go) transformSetter(v reflect.Value) error {
-	for _, cc := range p.out {
-		name := cc.name
-		switch cc.Type {
-		case "bool":
-			var err error
-			if v.CanConvert(reflect.TypeOf(true)) {
-				err = cc.function(v.Convert(reflect.TypeOf(true)).Bool())
-			} else {
-				err = fmt.Errorf("not a int: %s", v)
-			}
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		case "int":
-			var err error
-			if v.CanConvert(reflect.TypeOf(0)) {
-				err = cc.function(v.Convert(reflect.TypeOf(0)).Int())
-			} else {
-				err = fmt.Errorf("not a int: %s", v)
-			}
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		case "float":
-			var err error
-			if v.CanConvert(reflect.TypeOf(0.0)) {
-				err = cc.function(v.Convert(reflect.TypeOf(0.0)).Float())
-			} else {
-				err = fmt.Errorf("not a int: %s", v)
-			}
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		case "string":
-			var err error
-			if v.CanConvert(reflect.TypeOf("")) {
-				err = cc.function(v.Convert(reflect.TypeOf("")).String())
-			} else {
-				err = fmt.Errorf("not a int: %s", v)
-			}
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		default:
-			return fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
-		}
+	return transformSetter(p, p.out, v)
+}
+
+func (p *Go) convertToInt(v reflect.Value) (int64, error) {
+	if v.CanConvert(reflect.TypeOf(0)) {
+		return v.Convert(reflect.TypeOf(0)).Int(), nil
+	} else {
+		return 0, fmt.Errorf("not a bool: %s", v)
 	}
-	return nil
+}
+func (p *Go) convertToString(v reflect.Value) (string, error) {
+	if v.CanConvert(reflect.TypeOf("")) {
+		return v.Convert(reflect.TypeOf("")).String(), nil
+	} else {
+		return "", fmt.Errorf("not a bool: %s", v)
+	}
+}
+func (p *Go) convertToFloat(v reflect.Value) (float64, error) {
+	if v.CanConvert(reflect.TypeOf(0.0)) {
+		return v.Convert(reflect.TypeOf(0.0)).Float(), nil
+	} else {
+		return 0.0, fmt.Errorf("not a bool: %s", v)
+	}
+}
+func (p *Go) convertToBool(v reflect.Value) (bool, error) {
+	if v.CanConvert(reflect.TypeOf(true)) {
+		return v.Convert(reflect.TypeOf(true)).Bool(), nil
+	} else {
+		return false, fmt.Errorf("not a bool: %s", v)
+	}
 }

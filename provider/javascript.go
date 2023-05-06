@@ -189,44 +189,19 @@ func (p *Javascript) transformGetter() error {
 }
 
 func (p *Javascript) transformSetter(v otto.Value) error {
-	for _, cc := range p.out {
-		name := cc.name
-		switch cc.Type {
-		case "bool":
-			s, err := v.ToBoolean()
-			if err == nil {
-				err = cc.function(s)
-			}
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		case "int":
-			s, err := v.ToInteger()
-			if err == nil {
-				err = cc.function(s)
-			}
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		case "float":
-			s, err := v.ToFloat()
-			if err == nil {
-				err = cc.function(s)
-			}
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		case "string":
-			s, err := v.ToString()
-			if err == nil {
-				err = cc.function(s)
-			}
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		default:
-			return fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
-		}
-	}
-	return nil
+	return transformSetter(p, p.out, v)
+}
+
+
+func (p *Javascript) convertToInt(v otto.Value) (int64, error) {
+	return v.ToInteger()
+}
+func (p *Javascript) convertToString(v otto.Value) (string, error) {
+	return v.ToString()
+}
+func (p *Javascript) convertToFloat(v otto.Value) (float64, error) {
+	return v.ToFloat()
+}
+func (p *Javascript) convertToBool(v otto.Value) (bool, error) {
+	return v.ToBoolean()
 }

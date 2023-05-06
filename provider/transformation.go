@@ -4,6 +4,15 @@ import (
 	"fmt"
 )
 
+type (
+	TransformationProvider[A any] interface {
+		convertToInt(A) (int64, error)
+		convertToString(A) (string, error)
+		convertToFloat(A) (float64, error)
+		convertToBool(A) (bool, error)
+	}
+)
+
 type TransformationConfig struct {
 	Name, Type string
 	Config     Config
@@ -149,4 +158,51 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 		}
 	}
 	return out, nil
+}
+
+func transformSetter[P TransformationProvider[A], A any](p P, out []OutTransformation, v A) error {
+	for _, cc := range out {
+		name := cc.name
+		switch cc.Type {
+		case "bool":
+			v, err := p.convertToBool(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+			err = cc.function(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+		case "int":
+			v, err := p.convertToInt(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+			err = cc.function(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+		case "float":
+			v, err := p.convertToFloat(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+			err = cc.function(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+		case "string":
+			v, err := p.convertToString(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+			err = cc.function(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+		default:
+			return fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
+		}
+	}
+	return nil
 }
