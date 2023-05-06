@@ -62,7 +62,7 @@ func (m *MQTT) encode(v interface{}) string {
 
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
 	token := m.Handler.Client.Publish(topic, m.Handler.Qos, retained, m.encode(payload))
-	go m.Handler.WaitForToken(token)
+	go m.Handler.WaitForToken("send", topic, token)
 }
 
 func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
