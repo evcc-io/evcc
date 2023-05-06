@@ -20,7 +20,7 @@ func init() {
 }
 
 // NewJavascriptProviderFromConfig creates a Javascript provider
-func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		VM     string
 		Script string

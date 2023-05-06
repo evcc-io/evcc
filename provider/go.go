@@ -22,7 +22,7 @@ func init() {
 }
 
 // NewGoProviderFromConfig creates a Go provider
-func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		VM     string
 		Script string

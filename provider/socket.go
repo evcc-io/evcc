@@ -37,7 +37,7 @@ func init() {
 }
 
 // NewSocketProviderFromConfig creates a HTTP provider
-func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		URI               string
 		Headers           map[string]string
