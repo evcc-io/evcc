@@ -38,7 +38,8 @@ const (
 	versiRegMeterType      = 30   //  1 RO UINT16
 	versiRegErrorCode      = 1600 //  1 RO INT16
 	versiRegTemp           = 1602 //  1 RO INT16
-	versiRegChargeStatus   = 1601 //  1 RO INT16
+//	versiRegChargeStatus   = 1601 //  1 RO INT16
+	versiRegChargeStatus   = 1599 //  1 RO INT16 (EVSE Status)
 	versiRegPause          = 1629 //  1 RW UNIT16
 	versiRegMaxCurrent     = 1633 //  1 RW UNIT16
 	versiRegCurrents       = 1647 //  3 RO UINT16
@@ -101,30 +102,33 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 
 	s := binary.BigEndian.Uint16(b)
 
-	// Abfrage EVSE State von Reg 1599 (FW2.122.4)
-	c, err := wb.conn.ReadHoldingRegisters(1599, 1)
-	e := binary.BigEndian.Uint16(c)
+	// Abfrage OCPP State Reg 1601
+	c, err := wb.conn.ReadHoldingRegisters(1601, 1)
+
 	// Abfrage Pause von Reg 1629 
 	d, err := wb.conn.ReadHoldingRegisters(1629, 1)
 
-	switch e {
+	switch s {
 	case 65, 66, 67, 16945: // bekannte Stati A, B, C, B1
-	//do nothing		fmt.Printf(" (EVSE - 1599) bekannt: %d \n", binary.BigEndian.Uint16(c))
+		currentTime := time.Now()
+		fmt.Printf("[VERSI ] INFO ")
+		fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+		fmt.Printf(" (EVSE - 1599) bekannt: %d \n", s)
 	default: // Neuer Status EVSE
 		currentTime := time.Now()
 		fmt.Printf("[VERSI ] INFO ")
 		fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-		fmt.Printf(" Charging State (OCPP - 1601): %d ", s)
-		fmt.Printf(" (EVSE Neu - 1599): %d ", binary.BigEndian.Uint16(c))
+		fmt.Printf(" Charging State (OCPP - 1601): %d ", binary.BigEndian.Uint16(c))
+		fmt.Printf(" (EVSE Neu - 1599): %d ", s)
 		fmt.Printf(" Pause: %d \n", binary.BigEndian.Uint16(d))
 	}
 
 	switch s {
-	case 1: // Available
+	case 65: // Status A
 		return api.StatusA, nil
-	case 2, 5: // Preparing, Suspended EV, Suspended EVSE
+	case 66, 16945: // Status B, B1
 		return api.StatusB, nil
-	case 3, 4: // Charging
+	case 67, 17201: // Status C, C1
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
