@@ -59,12 +59,10 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 // FloatGetter parses float from request
 func (p *Javascript) FloatGetter() func() (float64, error) {
 	return func() (res float64, err error) {
-		if p.in != nil {
-			err = transformGetter(p)
-		}
+		err = transformGetter(p)
 		if err == nil {
 			var v otto.Value
-			v, err = p.vm.Eval(p.script)
+			v, err = p.evaluate()
 			if err == nil {
 				res, err = p.convertToFloat(v)
 			}
@@ -77,12 +75,10 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 // IntGetter parses int64 from request
 func (p *Javascript) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
-		if p.in != nil {
-			err = transformGetter(p)
-		}
+		err = transformGetter(p)
 		if err == nil {
 			var v otto.Value
-			v, err = p.vm.Eval(p.script)
+			v, err = p.evaluate()
 			if err == nil {
 				res, err = p.convertToInt(v)
 			}
@@ -95,12 +91,10 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 // StringGetter parses string from request
 func (p *Javascript) StringGetter() func() (string, error) {
 	return func() (res string, err error) {
-		if p.in != nil {
-			err = transformGetter(p)
-		}
+		err = transformGetter(p)
 		if err == nil {
 			var v otto.Value
-			v, err = p.vm.Eval(p.script)
+			v, err = p.evaluate()
 			if err == nil {
 				res, err = p.convertToString(v)
 			}
@@ -113,12 +107,10 @@ func (p *Javascript) StringGetter() func() (string, error) {
 // BoolGetter parses bool from request
 func (p *Javascript) BoolGetter() func() (bool, error) {
 	return func() (res bool, err error) {
-		if p.in != nil {
-			err = transformGetter(p)
-		}
+		err = transformGetter(p)
 		if err == nil {
 			var v otto.Value
-			v, err = p.vm.Eval(p.script)
+			v, err = p.evaluate()
 			if err == nil {
 				res, err = p.convertToBool(v)
 			}
@@ -129,6 +121,19 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 }
 
 func (p *Javascript) paramAndEval(param string, val any) error {
+	err := p.setParam(param, val)
+	if err != nil {
+		return err
+	}
+	v, err := p.evaluate()
+	if err != nil {
+		return err
+	}
+	err = transformSetter(p, v)
+	return err
+}
+
+func (p *Javascript) setParam(param string, val any) error {
 	err := p.vm.Set(param, val)
 	if err == nil {
 		err = p.vm.Set("param", param)
@@ -136,14 +141,10 @@ func (p *Javascript) paramAndEval(param string, val any) error {
 	if err == nil {
 		err = p.vm.Set("val", val)
 	}
-	if err == nil {
-		var v otto.Value
-		v, err = p.vm.Eval(p.script)
-		if err == nil && p.out != nil {
-			err = transformSetter(p, v)
-		}
-	}
 	return err
+}
+func (p *Javascript) evaluate() (otto.Value, error) {
+	return p.vm.Eval(p.script)
 }
 
 // IntSetter sends int request

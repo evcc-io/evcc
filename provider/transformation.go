@@ -13,8 +13,11 @@ type (
 		outTransformations() []OutTransformation
 	}
 	InTransformationProvider interface {
-		paramAndEval(string, any) error
+		setParam(string, any) error
 		inTransformations() []InTransformation
+	}
+	ScriptTransformationProvider[A any] interface {
+		evaluate() (A, error)
 	}
 )
 
@@ -166,62 +169,66 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 }
 
 func transformGetter[P InTransformationProvider](p P) error {
-	for _, cc := range p.inTransformations() {
-		val, err := cc.function()
-		if err != nil {
-			return fmt.Errorf("%s: %w", cc.name, err)
-		}
+	if p.inTransformations() != nil {
+		for _, cc := range p.inTransformations() {
+			val, err := cc.function()
+			if err != nil {
+				return fmt.Errorf("%s: %w", cc.name, err)
+			}
 
-		err = p.paramAndEval(cc.name, val)
-		if err != nil {
-			return fmt.Errorf("%s: %w", cc.name, err)
+			err = p.setParam(cc.name, val)
+			if err != nil {
+				return fmt.Errorf("%s: %w", cc.name, err)
+			}
 		}
 	}
 	return nil
 }
 
 func transformSetter[P OutTransformationProvider[A], A any](p P, v A) error {
-	for _, cc := range p.outTransformations() {
-		name := cc.name
-		switch cc.Type {
-		case "bool":
-			v, err := p.convertToBool(v)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
+	if p.outTransformations() != nil {
+		for _, cc := range p.outTransformations() {
+			name := cc.name
+			switch cc.Type {
+			case "bool":
+				v, err := p.convertToBool(v)
+				if err != nil {
+					return fmt.Errorf("%s: %w", name, err)
+				}
+				err = cc.function(v)
+				if err != nil {
+					return fmt.Errorf("%s: %w", name, err)
+				}
+			case "int":
+				v, err := p.convertToInt(v)
+				if err != nil {
+					return fmt.Errorf("%s: %w", name, err)
+				}
+				err = cc.function(v)
+				if err != nil {
+					return fmt.Errorf("%s: %w", name, err)
+				}
+			case "float":
+				v, err := p.convertToFloat(v)
+				if err != nil {
+					return fmt.Errorf("%s: %w", name, err)
+				}
+				err = cc.function(v)
+				if err != nil {
+					return fmt.Errorf("%s: %w", name, err)
+				}
+			case "string":
+				v, err := p.convertToString(v)
+				if err != nil {
+					return fmt.Errorf("%s: %w", name, err)
+				}
+				err = cc.function(v)
+				if err != nil {
+					return fmt.Errorf("%s: %w", name, err)
+				}
+			default:
+				return fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
 			}
-			err = cc.function(v)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		case "int":
-			v, err := p.convertToInt(v)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-			err = cc.function(v)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		case "float":
-			v, err := p.convertToFloat(v)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-			err = cc.function(v)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		case "string":
-			v, err := p.convertToString(v)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-			err = cc.function(v)
-			if err != nil {
-				return fmt.Errorf("%s: %w", name, err)
-			}
-		default:
-			return fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
 		}
 	}
 	return nil
