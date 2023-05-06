@@ -66,9 +66,10 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 			var v otto.Value
 			v, err = p.vm.Eval(p.script)
 			if err == nil {
-				res, err = v.ToFloat()
+				res, err = p.convertToFloat(v)
 			}
 		}
+
 		return res, err
 	}
 }
@@ -83,7 +84,7 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 			var v otto.Value
 			v, err = p.vm.Eval(p.script)
 			if err == nil {
-				res, err = v.ToInteger()
+				res, err = p.convertToInt(v)
 			}
 		}
 
@@ -101,7 +102,7 @@ func (p *Javascript) StringGetter() func() (string, error) {
 			var v otto.Value
 			v, err = p.vm.Eval(p.script)
 			if err == nil {
-				res, err = v.ToString()
+				res, err = p.convertToString(v)
 			}
 		}
 
@@ -119,7 +120,7 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 			var v otto.Value
 			v, err = p.vm.Eval(p.script)
 			if err == nil {
-				res, err = v.ToBoolean()
+				res, err = p.convertToBool(v)
 			}
 		}
 
@@ -152,7 +153,7 @@ func (p *Javascript) IntSetter(param string) func(int64) error {
 	}
 }
 
-// FloatSetter sends int request
+// FloatSetter sends float request
 func (p *Javascript) FloatSetter(param string) func(float64) error {
 	return func(val float64) error {
 		return p.paramAndEval(param, val)

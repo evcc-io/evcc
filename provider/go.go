@@ -69,13 +69,10 @@ func (p *Go) FloatGetter() func() (float64, error) {
 			var v reflect.Value
 			v, err = p.vm.Eval(p.script)
 			if err == nil {
-				if typ := reflect.TypeOf(res); v.CanConvert(typ) {
-					res = v.Convert(typ).Float()
-				} else {
-					err = fmt.Errorf("not a float: %v", v)
-				}
+				res, err = p.convertToFloat(v)
 			}
 		}
+
 		return res, err
 	}
 }
@@ -83,7 +80,6 @@ func (p *Go) FloatGetter() func() (float64, error) {
 // IntGetter parses int64 from request
 func (p *Go) IntGetter() func() (int64, error) {
 	return func() (res int64, err error) {
-
 		if p.in != nil {
 			err = p.transformGetter()
 		}
@@ -91,11 +87,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 			var v reflect.Value
 			v, err = p.vm.Eval(p.script)
 			if err == nil {
-				if typ := reflect.TypeOf(res); v.CanConvert(typ) {
-					res = v.Convert(typ).Int()
-				} else {
-					err = fmt.Errorf("not an int: %v", v)
-				}
+				res, err = p.convertToInt(v)
 			}
 		}
 
@@ -113,13 +105,10 @@ func (p *Go) StringGetter() func() (string, error) {
 			var v reflect.Value
 			v, err = p.vm.Eval(p.script)
 			if err == nil {
-				if typ := reflect.TypeOf(res); v.CanConvert(typ) {
-					res = v.Convert(typ).String()
-				} else {
-					err = fmt.Errorf("not a string: %v", v)
-				}
+				res, err = p.convertToString(v)
 			}
 		}
+
 		return res, err
 	}
 }
@@ -134,11 +123,7 @@ func (p *Go) BoolGetter() func() (bool, error) {
 			var v reflect.Value
 			v, err = p.vm.Eval(p.script)
 			if err == nil {
-				if typ := reflect.TypeOf(res); v.CanConvert(typ) {
-					res = v.Convert(typ).Bool()
-				} else {
-					err = fmt.Errorf("not a boolean: %v", v)
-				}
+				res, err = p.convertToBool(v)
 			}
 		}
 
@@ -208,7 +193,7 @@ func (p *Go) convertToInt(v reflect.Value) (int64, error) {
 	if v.CanConvert(reflect.TypeOf(0)) {
 		return v.Convert(reflect.TypeOf(0)).Int(), nil
 	} else {
-		return 0, fmt.Errorf("not a bool: %s", v)
+		return 0, fmt.Errorf("not a int: %s", v)
 	}
 }
 
@@ -216,7 +201,7 @@ func (p *Go) convertToString(v reflect.Value) (string, error) {
 	if v.CanConvert(reflect.TypeOf("")) {
 		return v.Convert(reflect.TypeOf("")).String(), nil
 	} else {
-		return "", fmt.Errorf("not a bool: %s", v)
+		return "", fmt.Errorf("not a string: %s", v)
 	}
 }
 
@@ -224,7 +209,7 @@ func (p *Go) convertToFloat(v reflect.Value) (float64, error) {
 	if v.CanConvert(reflect.TypeOf(0.0)) {
 		return v.Convert(reflect.TypeOf(0.0)).Float(), nil
 	} else {
-		return 0.0, fmt.Errorf("not a bool: %s", v)
+		return 0.0, fmt.Errorf("not a float: %s", v)
 	}
 }
 
