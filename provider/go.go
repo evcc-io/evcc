@@ -17,11 +17,6 @@ type Go struct {
 	out    []OutTransformation
 }
 
-//type TransformationConfig struct {
-//	Name, Type string
-//	Config     Config
-//}
-
 func init() {
 	registry.Add("go", NewGoProviderFromConfig)
 }
