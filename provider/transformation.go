@@ -11,6 +11,9 @@ type (
 		convertToFloat(A) (float64, error)
 		convertToBool(A) (bool, error)
 	}
+	GetterTransformationProvider interface {
+		paramAndEval(string, any) error
+	}
 )
 
 type TransformationConfig struct {
@@ -158,6 +161,21 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 		}
 	}
 	return out, nil
+}
+
+func transformGetter[P GetterTransformationProvider](p P, in []InTransformation) error {
+	for _, cc := range in {
+		val, err := cc.function()
+		if err != nil {
+			return fmt.Errorf("%s: %w", cc.name, err)
+		}
+
+		err = p.paramAndEval(cc.name, val)
+		if err != nil {
+			return fmt.Errorf("%s: %w", cc.name, err)
+		}
+	}
+	return nil
 }
 
 func transformSetter[P TransformationProvider[A], A any](p P, out []OutTransformation, v A) error {

@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"fmt"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
@@ -175,33 +174,25 @@ func (p *Javascript) BoolSetter(param string) func(bool) error {
 }
 
 func (p *Javascript) transformGetter() error {
-	for _, cc := range p.in {
-		val, err := cc.function()
-		if err != nil {
-			return fmt.Errorf("%s: %w", cc.name, err)
-		}
-		err = p.vm.Set(cc.name, val)
-		if err != nil {
-			return fmt.Errorf("%s: %w", cc.name, err)
-		}
-	}
-	return nil
+	return transformGetter(p, p.in)
 }
 
 func (p *Javascript) transformSetter(v otto.Value) error {
 	return transformSetter(p, p.out, v)
 }
 
-
 func (p *Javascript) convertToInt(v otto.Value) (int64, error) {
 	return v.ToInteger()
 }
+
 func (p *Javascript) convertToString(v otto.Value) (string, error) {
 	return v.ToString()
 }
+
 func (p *Javascript) convertToFloat(v otto.Value) (float64, error) {
 	return v.ToFloat()
 }
+
 func (p *Javascript) convertToBool(v otto.Value) (bool, error) {
 	return v.ToBoolean()
 }

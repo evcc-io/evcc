@@ -197,19 +197,9 @@ func (p *Go) BoolSetter(param string) func(bool) error {
 }
 
 func (p *Go) transformGetter() error {
-	for _, cc := range p.in {
-		val, err := cc.function()
-		if err != nil {
-			return fmt.Errorf("%s: %w", cc.name, err)
-		}
-
-		err = p.paramAndEval(cc.name, val)
-		if err != nil {
-			return fmt.Errorf("%s: %w", cc.name, err)
-		}
-	}
-	return nil
+	return transformGetter(p, p.in)
 }
+
 func (p *Go) transformSetter(v reflect.Value) error {
 	return transformSetter(p, p.out, v)
 }
@@ -221,6 +211,7 @@ func (p *Go) convertToInt(v reflect.Value) (int64, error) {
 		return 0, fmt.Errorf("not a bool: %s", v)
 	}
 }
+
 func (p *Go) convertToString(v reflect.Value) (string, error) {
 	if v.CanConvert(reflect.TypeOf("")) {
 		return v.Convert(reflect.TypeOf("")).String(), nil
@@ -228,6 +219,7 @@ func (p *Go) convertToString(v reflect.Value) (string, error) {
 		return "", fmt.Errorf("not a bool: %s", v)
 	}
 }
+
 func (p *Go) convertToFloat(v reflect.Value) (float64, error) {
 	if v.CanConvert(reflect.TypeOf(0.0)) {
 		return v.Convert(reflect.TypeOf(0.0)).Float(), nil
@@ -235,6 +227,7 @@ func (p *Go) convertToFloat(v reflect.Value) (float64, error) {
 		return 0.0, fmt.Errorf("not a bool: %s", v)
 	}
 }
+
 func (p *Go) convertToBool(v reflect.Value) (bool, error) {
 	if v.CanConvert(reflect.TypeOf(true)) {
 		return v.Convert(reflect.TypeOf(true)).Bool(), nil
