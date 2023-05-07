@@ -125,22 +125,17 @@ func (p *Javascript) paramAndEval(param string, val any) error {
 	if err != nil {
 		return err
 	}
+
 	v, err := p.evaluate()
 	if err != nil {
 		return err
 	}
+
 	return handleOutTransformation(p, v)
 }
 
 func (p *Javascript) setParam(param string, val any) error {
-	err := p.vm.Set(param, val)
-	if err == nil {
-		err = p.vm.Set("param", param)
-	}
-	if err == nil {
-		err = p.vm.Set("val", val)
-	}
-	return err
+	return p.vm.Set(param, val)
 }
 
 func (p *Javascript) evaluate() (otto.Value, error) {
