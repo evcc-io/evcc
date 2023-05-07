@@ -119,7 +119,7 @@
 									class="bufferStartIndicator pe-none"
 									:class="{
 										'bufferStartIndicator--hidden':
-											!selectedBufferStart || selectedBufferSoc === 100,
+											!selectedBufferStartSoc || selectedBufferSoc === 100,
 									}"
 									:style="{ top: `${bufferStartTop}%` }"
 								>
@@ -240,7 +240,7 @@ export default {
 		bufferSoc: Number,
 		prioritySoc: Number,
 		batterySoc: Number,
-		bufferStart: Number,
+		bufferStartSoc: Number,
 		battery: { type: Array },
 	},
 	data: function () {
@@ -248,7 +248,7 @@ export default {
 			isModalVisible: false,
 			selectedBufferSoc: 100,
 			selectedPrioritySoc: 0,
-			selectedBufferStart: null,
+			selectedBufferStartSoc: 0,
 		};
 	},
 	computed: {
@@ -275,8 +275,8 @@ export default {
 			return options;
 		},
 		bufferStartTop() {
-			if (!this.selectedBufferStart) return 0;
-			return 100 - this.selectedBufferStart;
+			if (!this.selectedBufferStartSoc) return 0;
+			return 100 - this.selectedBufferStartSoc;
 		},
 		topHeight() {
 			return 100 - (this.bufferSoc || 100);
@@ -288,9 +288,10 @@ export default {
 			return this.prioritySoc;
 		},
 		bufferStartOption() {
-			if (!this.selectedBufferStart) return "never";
-			if (this.selectedBufferStart >= this.bufferStartOptionToSoc("full")) return "full";
-			if (this.selectedBufferStart >= this.bufferStartOptionToSoc("medium")) return "medium";
+			if (!this.selectedBufferStartSoc) return "never";
+			if (this.selectedBufferStartSoc >= this.bufferStartOptionToSoc("full")) return "full";
+			if (this.selectedBufferStartSoc >= this.bufferStartOptionToSoc("medium"))
+				return "medium";
 			return "low";
 		},
 		batteryDetails() {
@@ -323,8 +324,8 @@ export default {
 		bufferSoc(soc) {
 			this.selectedBufferSoc = soc || 100;
 		},
-		bufferStart(soc) {
-			this.selectedBufferStart = soc;
+		bufferStartSoc(soc) {
+			this.selectedBufferStartSoc = soc;
 		},
 	},
 	mounted() {
@@ -368,7 +369,7 @@ export default {
 				case "full":
 					return bufferSoc + bufferHeight * 0.8;
 				case "never":
-					return null;
+					return 0;
 			}
 		},
 		toggleBufferStart() {
@@ -384,8 +385,8 @@ export default {
 			}
 		},
 		setBufferStart(option) {
-			this.selectedBufferStart = this.bufferStartOptionToSoc(option);
-			this.saveBufferStart(this.selectedBufferSoc);
+			this.selectedBufferStartSoc = this.bufferStartOptionToSoc(option);
+			this.saveBufferStartSoc(this.selectedBufferStartSoc);
 		},
 		changeBufferSoc($event) {
 			const startOption = this.bufferStartOption;
@@ -408,13 +409,9 @@ export default {
 				console.error(err);
 			}
 		},
-		async saveBufferStart(soc) {
+		async saveBufferStartSoc(soc) {
 			try {
-				if (soc === null) {
-					await api.delete(`bufferstart`);
-				} else {
-					await api.post(`bufferstart/${encodeURIComponent(soc)}`);
-				}
+				await api.post(`bufferstartsoc/${encodeURIComponent(soc)}`);
 			} catch (err) {
 				console.error(err);
 			}

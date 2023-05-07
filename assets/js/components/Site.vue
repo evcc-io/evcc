@@ -71,7 +71,7 @@ export default {
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
-		bufferStart: Number,
+		bufferStartSoc: Number,
 		siteTitle: String,
 		vehicles: Array,
 
