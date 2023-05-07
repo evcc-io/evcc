@@ -58,65 +58,65 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 
 // FloatGetter parses float from request
 func (p *Javascript) FloatGetter() func() (float64, error) {
-	return func() (res float64, err error) {
-		err = handleInTransformation(p)
-		if err == nil {
-			var v otto.Value
-			v, err = p.evaluate()
-			if err == nil {
-				res, err = p.convertToFloat(v)
-			}
+	return func() (float64, error) {
+		if err := handleInTransformation(p); err != nil {
+			return 0, err
 		}
 
-		return res, err
+		v, err := p.evaluate()
+		if err != nil {
+			return 0, err
+		}
+
+		return p.convertToFloat(v)
 	}
 }
 
 // IntGetter parses int64 from request
 func (p *Javascript) IntGetter() func() (int64, error) {
-	return func() (res int64, err error) {
-		err = handleInTransformation(p)
-		if err == nil {
-			var v otto.Value
-			v, err = p.evaluate()
-			if err == nil {
-				res, err = p.convertToInt(v)
-			}
+	return func() (int64, error) {
+		if err := handleInTransformation(p); err != nil {
+			return 0, err
 		}
 
-		return res, err
+		v, err := p.evaluate()
+		if err != nil {
+			return 0, err
+		}
+
+		return p.convertToInt(v)
 	}
 }
 
 // StringGetter parses string from request
 func (p *Javascript) StringGetter() func() (string, error) {
-	return func() (res string, err error) {
-		err = handleInTransformation(p)
-		if err == nil {
-			var v otto.Value
-			v, err = p.evaluate()
-			if err == nil {
-				res, err = p.convertToString(v)
-			}
+	return func() (string, error) {
+		if err := handleInTransformation(p); err != nil {
+			return "", err
 		}
 
-		return res, err
+		v, err := p.evaluate()
+		if err != nil {
+			return "", err
+		}
+
+		return p.convertToString(v)
 	}
 }
 
 // BoolGetter parses bool from request
 func (p *Javascript) BoolGetter() func() (bool, error) {
-	return func() (res bool, err error) {
-		err = handleInTransformation(p)
-		if err == nil {
-			var v otto.Value
-			v, err = p.evaluate()
-			if err == nil {
-				res, err = p.convertToBool(v)
-			}
+	return func() (bool, error) {
+		if err := handleInTransformation(p); err != nil {
+			return false, err
 		}
 
-		return res, err
+		v, err := p.evaluate()
+		if err != nil {
+			return false, err
+		}
+
+		return p.convertToBool(v)
 	}
 }
 
@@ -129,8 +129,7 @@ func (p *Javascript) paramAndEval(param string, val any) error {
 	if err != nil {
 		return err
 	}
-	err = handleOutTransformation(p, v)
-	return err
+	return handleOutTransformation(p, v)
 }
 
 func (p *Javascript) setParam(param string, val any) error {
@@ -143,6 +142,7 @@ func (p *Javascript) setParam(param string, val any) error {
 	}
 	return err
 }
+
 func (p *Javascript) evaluate() (otto.Value, error) {
 	return p.vm.Eval(p.script)
 }
