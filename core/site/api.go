@@ -16,6 +16,8 @@ type API interface {
 
 	GetBufferSoc() float64
 	SetBufferSoc(float64) error
+	GetBufferStartSoc() float64
+	SetBufferStartSoc(float64) error
 	GetPrioritySoc() float64
 	SetPrioritySoc(float64) error
 

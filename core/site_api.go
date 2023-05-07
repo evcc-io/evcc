@@ -62,6 +62,29 @@ func (site *Site) SetBufferSoc(soc float64) error {
 	return nil
 }
 
+// GetBufferStartSoc returns the BufferStartSoc
+func (site *Site) GetBufferStartSoc() float64 {
+	site.Lock()
+	defer site.Unlock()
+	return site.BufferStartSoc
+}
+
+// SetBufferStartSoc sets the BufferStartSoc
+func (site *Site) SetBufferStartSoc(soc float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if len(site.batteryMeters) == 0 {
+		return errors.New("battery not configured")
+	}
+
+	site.BufferStartSoc = soc
+	settings.SetFloat("site.bufferStartSoc", site.BufferStartSoc)
+	site.publish("bufferStartSoc", site.BufferStartSoc)
+
+	return nil
+}
+
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.Lock()
