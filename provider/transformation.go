@@ -40,54 +40,45 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 	var in []InTransformation
 
 	for _, cc := range inConfig {
+		var f func() (any, error)
+
 		switch cc.Type {
 		case "bool":
-			f, err := NewBoolGetterFromConfig(cc.Config)
+			ff, err := NewBoolGetterFromConfig(cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
-			in = append(in, InTransformation{
-				name: cc.Name,
-				function: func() (any, error) {
-					return f()
-				},
-			})
+			f = func() (any, error) { return ff() }
+
 		case "int":
-			f, err := NewIntGetterFromConfig(cc.Config)
+			ff, err := NewIntGetterFromConfig(cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
-			in = append(in, InTransformation{
-				name: cc.Name,
-				function: func() (any, error) {
-					return f()
-				},
-			})
+			f = func() (any, error) { return ff() }
+
 		case "float":
-			f, err := NewFloatGetterFromConfig(cc.Config)
+			ff, err := NewFloatGetterFromConfig(cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
-			in = append(in, InTransformation{
-				name: cc.Name,
-				function: func() (any, error) {
-					return f()
-				},
-			})
+			f = func() (any, error) { return ff() }
+
 		case "string":
-			f, err := NewStringGetterFromConfig(cc.Config)
+			ff, err := NewStringGetterFromConfig(cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
-			in = append(in, InTransformation{
-				name: cc.Name,
-				function: func() (any, error) {
-					return f()
-				},
-			})
+			f = func() (any, error) { return ff() }
+
 		default:
 			return nil, fmt.Errorf("%s: Could not find converter for %s", cc.Name, cc.Type)
 		}
+
+		in = append(in, InTransformation{
+			name:     cc.Name,
+			function: f,
+		})
 	}
 	return in, nil
 }
