@@ -12,10 +12,10 @@ func init() {
 // NewCombinedFromConfig creates combined provider
 func NewCombinedFromConfig(other map[string]interface{}) (Provider, error) {
 	status, err := NewOpenWBStatusProviderFromConfig(other)
-
 	if err != nil {
 		return nil, err
 	}
+
 	o := &combinedProvider{status: status}
 	return o, nil
 }
