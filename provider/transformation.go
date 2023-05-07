@@ -5,11 +5,11 @@ import (
 )
 
 type (
-	OutTransformationProvider[A any] interface {
-		convertToInt(A) (int64, error)
-		convertToString(A) (string, error)
-		convertToFloat(A) (float64, error)
-		convertToBool(A) (bool, error)
+	OutTransformationProvider[T any] interface {
+		convertToInt(T) (int64, error)
+		convertToString(T) (string, error)
+		convertToFloat(T) (float64, error)
+		convertToBool(T) (bool, error)
 		outTransformations() []OutTransformation
 	}
 	InTransformationProvider interface {
@@ -37,14 +37,14 @@ type OutTransformation struct {
 }
 
 func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, error) {
-	in := []InTransformation{}
+	var in []InTransformation
+
 	for _, cc := range inConfig {
-		name := cc.Name
 		switch cc.Type {
 		case "bool":
 			f, err := NewBoolGetterFromConfig(cc.Config)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", name, err)
+				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			in = append(in, InTransformation{
 				name: cc.Name,
@@ -55,7 +55,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 		case "int":
 			f, err := NewIntGetterFromConfig(cc.Config)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", name, err)
+				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			in = append(in, InTransformation{
 				name: cc.Name,
@@ -66,7 +66,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 		case "float":
 			f, err := NewFloatGetterFromConfig(cc.Config)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", name, err)
+				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			in = append(in, InTransformation{
 				name: cc.Name,
@@ -77,7 +77,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 		case "string":
 			f, err := NewStringGetterFromConfig(cc.Config)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", name, err)
+				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			in = append(in, InTransformation{
 				name: cc.Name,
@@ -86,150 +86,133 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 				},
 			})
 		default:
-			return nil, fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
+			return nil, fmt.Errorf("%s: Could not find converter for %s", cc.Name, cc.Type)
 		}
 	}
 	return in, nil
 }
 
 func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation, error) {
-	out := []OutTransformation{}
+	var out []OutTransformation
+
 	for _, cc := range outConfig {
-		name := cc.Name
+		var f func(v any) error
+
 		switch cc.Type {
 		case "bool":
-			f, err := NewBoolSetterFromConfig(cc.Name, cc.Config)
+			ff, err := NewBoolSetterFromConfig(cc.Name, cc.Config)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", name, err)
+				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
-			out = append(out, OutTransformation{
-				name: cc.Name,
-				Type: cc.Type,
-				function: func(v any) error {
-					b, ok := v.(bool)
-					if !ok {
-						return fmt.Errorf("%s: Could not convert %v to bool", name, b)
-					}
-					return f(b)
-				},
-			})
+
+			f = func(v any) error {
+				b, ok := v.(bool)
+				if !ok {
+					return fmt.Errorf("%s: could not convert %v to bool", cc.Name, b)
+				}
+				return ff(b)
+			}
+
 		case "int":
-			f, err := NewIntSetterFromConfig(cc.Name, cc.Config)
+			ff, err := NewIntSetterFromConfig(cc.Name, cc.Config)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", name, err)
+				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
-			out = append(out, OutTransformation{
-				name: cc.Name,
-				Type: cc.Type,
-				function: func(v any) error {
-					b, ok := v.(int64)
-					if !ok {
-						return fmt.Errorf("%s: Could not convert %v to int", name, b)
-					}
-					return f(b)
-				},
-			})
+
+			f = func(v any) error {
+				b, ok := v.(int64)
+				if !ok {
+					return fmt.Errorf("%s: could not convert %v to int", cc.Name, b)
+				}
+				return ff(b)
+			}
+
 		case "float":
-			f, err := NewFloatSetterFromConfig(cc.Name, cc.Config)
+			ff, err := NewFloatSetterFromConfig(cc.Name, cc.Config)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", name, err)
+				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
-			out = append(out, OutTransformation{
-				name: cc.Name,
-				Type: cc.Type,
-				function: func(v any) error {
-					b, ok := v.(float64)
-					if !ok {
-						return fmt.Errorf("%s: Could not convert %v to float", name, b)
-					}
-					return f(b)
-				},
-			})
+
+			f = func(v any) error {
+				b, ok := v.(float64)
+				if !ok {
+					return fmt.Errorf("%s: could not convert %v to float", cc.Name, b)
+				}
+				return ff(b)
+			}
+
 		case "string":
-			f, err := NewStringSetterFromConfig(cc.Name, cc.Config)
+			ff, err := NewStringSetterFromConfig(cc.Name, cc.Config)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", name, err)
+				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
-			out = append(out, OutTransformation{
-				name: cc.Name,
-				Type: cc.Type,
-				function: func(v any) error {
-					b, ok := v.(string)
-					if !ok {
-						return fmt.Errorf("%s: Could not convert %v to string", name, b)
-					}
-					return f(b)
-				},
-			})
+
+			f = func(v any) error {
+				b, ok := v.(string)
+				if !ok {
+					return fmt.Errorf("%s: could not convert %v to string", cc.Name, b)
+				}
+				return ff(b)
+			}
+
 		default:
-			return nil, fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
+			return nil, fmt.Errorf("%s: invalid type %s", cc.Name, cc.Type)
 		}
+
+		out = append(out, OutTransformation{
+			name:     cc.Name,
+			Type:     cc.Type,
+			function: f,
+		})
 	}
+
 	return out, nil
 }
 
 func handleInTransformation[P InTransformationProvider](p P) error {
-	if p.inTransformations() != nil {
-		for _, cc := range p.inTransformations() {
-			val, err := cc.function()
-			if err != nil {
-				return fmt.Errorf("%s: %w", cc.name, err)
-			}
+	for _, cc := range p.inTransformations() {
+		val, err := cc.function()
 
+		if err == nil {
 			err = p.setParam(cc.name, val)
-			if err != nil {
-				return fmt.Errorf("%s: %w", cc.name, err)
-			}
+		}
+
+		if err != nil {
+			return fmt.Errorf("%s: %w", cc.name, err)
 		}
 	}
+
 	return nil
 }
 
 func handleOutTransformation[P OutTransformationProvider[A], A any](p P, v A) error {
-	if p.outTransformations() != nil {
-		for _, cc := range p.outTransformations() {
-			name := cc.name
-			switch cc.Type {
-			case "bool":
-				v, err := p.convertToBool(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", name, err)
-				}
-				err = cc.function(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", name, err)
-				}
-			case "int":
-				v, err := p.convertToInt(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", name, err)
-				}
-				err = cc.function(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", name, err)
-				}
-			case "float":
-				v, err := p.convertToFloat(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", name, err)
-				}
-				err = cc.function(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", name, err)
-				}
-			case "string":
-				v, err := p.convertToString(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", name, err)
-				}
-				err = cc.function(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", name, err)
-				}
-			default:
-				return fmt.Errorf("%s: Could not find converter for %s", name, cc.Type)
-			}
+	for _, cc := range p.outTransformations() {
+		var (
+			vv  any
+			err error
+		)
+
+		switch cc.Type {
+		case "bool":
+			vv, err = p.convertToBool(v)
+		case "int":
+			vv, err = p.convertToInt(v)
+		case "float":
+			vv, err = p.convertToFloat(v)
+		case "string":
+			vv, err = p.convertToString(v)
+		default:
+			return fmt.Errorf("%s: invalid type %s", cc.name, cc.Type)
+		}
+
+		if err == nil {
+			err = cc.function(vv)
+		}
+
+		if err != nil {
+			return fmt.Errorf("%s: %w", cc.name, err)
 		}
 	}
+
 	return nil
 }

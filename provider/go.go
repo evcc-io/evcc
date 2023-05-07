@@ -128,12 +128,13 @@ func (p *Go) paramAndEval(param string, val any) error {
 	if err != nil {
 		return err
 	}
+
 	v, err := p.evaluate()
 	if err != nil {
 		return err
 	}
-	err = handleOutTransformation(p, v)
-	return err
+
+	return handleOutTransformation(p, v)
 }
 
 func (p *Go) setParam(param string, val any) error {
