@@ -94,11 +94,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 			}
 
 			f = func(v any) error {
-				b, ok := v.(bool)
-				if !ok {
-					return fmt.Errorf("%s: could not convert %v to bool", cc.Name, b)
-				}
-				return ff(b)
+				return ff(v.(bool))
 			}
 
 		case "int":
@@ -108,11 +104,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 			}
 
 			f = func(v any) error {
-				b, ok := v.(int64)
-				if !ok {
-					return fmt.Errorf("%s: could not convert %v to int", cc.Name, b)
-				}
-				return ff(b)
+				return ff(v.(int64))
 			}
 
 		case "float":
@@ -122,11 +114,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 			}
 
 			f = func(v any) error {
-				b, ok := v.(float64)
-				if !ok {
-					return fmt.Errorf("%s: could not convert %v to float", cc.Name, b)
-				}
-				return ff(b)
+				return ff(v.(float64))
 			}
 
 		case "string":
@@ -136,11 +124,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 			}
 
 			f = func(v any) error {
-				b, ok := v.(string)
-				if !ok {
-					return fmt.Errorf("%s: could not convert %v to string", cc.Name, b)
-				}
-				return ff(b)
+				return ff(v.(string))
 			}
 
 		default:
