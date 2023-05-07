@@ -188,7 +188,7 @@ func NewSiteFromConfig(
 	}
 
 	if site.PrioritySoc > site.BufferSoc {
-		site.log.WARN.Println("prioritySoc must not be larger than bufferSoc")
+		site.log.WARN.Println("bufferSoc must be larger than prioritySoc")
 	}
 
 	return site, nil
