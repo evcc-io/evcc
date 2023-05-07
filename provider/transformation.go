@@ -29,8 +29,8 @@ type InTransformation struct {
 }
 
 type OutTransformation struct {
-	name, Type string
-	function   func(any) error
+	name, typ string
+	function  func(any) error
 }
 
 func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, error) {
@@ -149,7 +149,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 
 		out = append(out, OutTransformation{
 			name:     cc.Name,
-			Type:     cc.Type,
+			typ:      cc.Type,
 			function: f,
 		})
 	}
@@ -180,7 +180,7 @@ func handleOutTransformation[P OutTransformationProvider[A], A any](p P, v A) er
 			err error
 		)
 
-		switch cc.Type {
+		switch cc.typ {
 		case "bool":
 			vv, err = p.convertToBool(v)
 		case "int":
@@ -190,7 +190,7 @@ func handleOutTransformation[P OutTransformationProvider[A], A any](p P, v A) er
 		case "string":
 			vv, err = p.convertToString(v)
 		default:
-			return fmt.Errorf("%s: invalid type %s", cc.name, cc.Type)
+			return fmt.Errorf("%s: invalid type %s", cc.name, cc.typ)
 		}
 
 		if err == nil {
