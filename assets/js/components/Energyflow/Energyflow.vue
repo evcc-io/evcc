@@ -68,7 +68,6 @@
 							:soc="batterySoc"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
-							:detailsTooltip="batteryTooltip"
 							detailsClickable
 							@details-clicked="openBatterySettingsModal"
 						/>
@@ -135,7 +134,6 @@
 							:soc="batterySoc"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
-							:detailsTooltip="batteryTooltip"
 							detailsClickable
 							@details-clicked="openBatterySettingsModal"
 						/>
@@ -248,21 +246,6 @@ export default {
 				return;
 			}
 			return this.pv.map(({ power }) => this.fmtKw(power, this.powerInKw));
-		},
-		batteryTooltip() {
-			if (!Array.isArray(this.battery)) {
-				return;
-			}
-			return this.battery.map(({ soc, capacity }) => {
-				const energy = this.fmtKWh((capacity / 100) * soc * 1e3, true, false, 1);
-				const total = this.fmtKWh(capacity * 1e3, true, true, 1);
-				const formattedSoc = this.batteryFmt(soc);
-				return this.$t("main.energyflow.batteryTooltip", {
-					energy,
-					total,
-					soc: formattedSoc,
-				});
-			});
 		},
 		batteryFmt() {
 			return (soc) => `${Math.round(soc)}%`;

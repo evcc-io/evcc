@@ -29,6 +29,7 @@
 							<div class="batteryLimits">
 								<label
 									class="bufferSoc p-2 end-0"
+									role="button"
 									:class="{
 										'bufferSoc--hidden':
 											selectedBufferSoc === selectedPrioritySoc,
@@ -49,17 +50,16 @@
 											{{ name }}
 										</option>
 									</select>
-									<span class="text-decoration-underline text-nowrap">
-										{{ selectedBufferSoc }} %
+									<span class="text-decoration-underline text-nowrap pe-none">
+										{{ fmtSoc(selectedBufferSoc) }}
 									</span>
 								</label>
 								<label
 									class="prioritySoc p-2 end-0"
-									for="batteryPrioritySoc"
+									role="button"
 									:style="{ top: `${100 - bottomHeight}%` }"
 								>
 									<select
-										id="batteryPrioritySoc"
 										:value="selectedPrioritySoc"
 										class="custom-select"
 										@change="changePrioritySoc"
@@ -73,54 +73,36 @@
 											{{ name }}
 										</option>
 									</select>
-									<span class="text-decoration-underline text-nowrap">
-										{{ selectedPrioritySoc }} %
+									<span class="text-decoration-underline text-nowrap pe-none">
+										{{ fmtSoc(selectedPrioritySoc) }}
 									</span>
-								</label>
-								<label
-									class="bufferStart p-2 end-0 pe-0"
-									:class="{
-										'bufferStart--hidden':
-											!selectedBufferStart || selectedBufferSoc === 100,
-									}"
-									role="button"
-									:style="{ top: `${bufferStartTop}%` }"
-									@click="toggleBufferStart"
-								>
-									<shopicon-regular-lightning
-										size="s"
-										class="me-2 text-primary"
-									></shopicon-regular-lightning>
 								</label>
 							</div>
 							<div class="progress">
 								<div
 									class="bg-dark-green progress-bar text-light align-items-center"
-									role="progressbar"
+									role="button"
 									:style="{ height: `${topHeight}%` }"
+									@click="toggleBufferStart"
 								>
-									<shopicon-regular-car3
+									<shopicon-regular-lightning
 										size="m"
 										class="icon"
 										:style="iconStyle(topHeight)"
-									></shopicon-regular-car3>
+									></shopicon-regular-lightning>
 								</div>
 								<div
 									class="bg-darker-green progress-bar text-light align-items-center"
-									role="progressbar"
 									:style="{ height: `${middleHeight}%` }"
 								>
-									<!--
 									<shopicon-regular-car3
 										size="m"
 										class="icon"
 										:style="iconStyle(middleHeight)"
 									></shopicon-regular-car3>
-									-->
 								</div>
 								<div
 									class="bg-darkest-green progress-bar text-light align-items-center"
-									role="progressbar"
 									:style="{ height: `${bottomHeight}%` }"
 								>
 									<shopicon-regular-home
@@ -130,70 +112,91 @@
 									></shopicon-regular-home>
 								</div>
 								<div
-									class="batterySoc ps-0 bg-white"
+									class="batterySoc ps-0 bg-white pe-none"
 									:style="{ top: `${100 - batterySoc}%` }"
 								></div>
 								<div
-									class="bufferStartIndicator ps-0 start-0 bg-white"
+									class="bufferStartIndicator pe-none"
 									:class="{
 										'bufferStartIndicator--hidden':
 											!selectedBufferStart || selectedBufferSoc === 100,
 									}"
 									:style="{ top: `${bufferStartTop}%` }"
-								></div>
+								>
+									<div class="bufferStartIndicator__left"></div>
+									<div class="bufferStartIndicator__right"></div>
+								</div>
 							</div>
 						</div>
 						<div class="me-sm-4">
 							<p>
-								Battery level: <strong>{{ batterySoc }} %</strong>
+								{{ $t("batterySettings.batteryLevel") }}:
+								<strong>{{ fmtSoc(batterySoc) }}</strong>
+								<small
+									v-for="(line, index) in batteryDetails"
+									:key="index"
+									class="d-block"
+								>
+									{{ line }}
+								</small>
 							</p>
-							<p>How to use the battery:</p>
+							<p>{{ $t("batterySettings.legendTitle") }}</p>
+							<p class="d-flex">
+								<shopicon-regular-lightning
+									size="s"
+									class="flex-shrink-0 me-2"
+								></shopicon-regular-lightning>
+								<span class="d-block">
+									{{ $t("batterySettings.legendTopName") }}
+									<small v-if="selectedBufferSoc == 100" class="d-block">
+										{{ $t("batterySettings.legendTopSubline") }}
+									</small>
+									<small v-else class="d-block">
+										{{ $t("batterySettings.legendTopAutostart") }}
+										<label
+											for="bufferStartSelect"
+											class="position-relative d-block"
+										>
+											<select
+												id="bufferStartSelect"
+												class="custom-select"
+												@change="changeBufferStart"
+											>
+												<option
+													v-for="option in [
+														'never',
+														'full',
+														'medium',
+														'low',
+													]"
+													:key="option"
+													:value="option"
+												>
+													{{
+														$t(`batterySettings.bufferStart.${option}`)
+													}}
+												</option>
+											</select>
+											<span class="text-decoration-underline">
+												{{
+													$t(
+														`batterySettings.bufferStart.${bufferStartOption}`
+													)
+												}}
+											</span>
+										</label>
+									</small>
+								</span>
+							</p>
 							<p class="d-flex">
 								<shopicon-regular-car3
 									size="s"
 									class="flex-shrink-0 me-2"
 								></shopicon-regular-car3>
 								<span class="d-block">
-									for charging
-									<small class="d-block"> without interruptions </small>
-								</span>
-							</p>
-							<p
-								class="d-flex ms-4 pb-2 bufferStartLegend"
-								:class="{ 'bufferStartLegend--hidden': selectedBufferSoc == 100 }"
-							>
-								<shopicon-regular-lightning
-									size="s"
-									class="flex-shrink-0 me-2"
-								></shopicon-regular-lightning>
-								<span class="d-block">
-									start automatically when
+									{{ $t("batterySettings.legendMiddleName") }}
 									<small class="d-block">
-										<a
-											href=""
-											:class="{ small: bufferStartOption !== 'low' }"
-											@click.prevent="setBufferStart('low')"
-											>low</a
-										>,
-										<a
-											href=""
-											:class="{ small: bufferStartOption !== 'medium' }"
-											@click.prevent="setBufferStart('medium')"
-											>medium</a
-										>,
-										<a
-											href=""
-											:class="{ small: bufferStartOption !== 'high' }"
-											@click.prevent="setBufferStart('high')"
-											>full</a
-										>
-										or
-										<a
-											href=""
-											:class="{ small: bufferStartOption !== 'never' }"
-											@click.prevent="removeBufferStart"
-											>never</a
-										>
+										{{ $t("batterySettings.legendMiddleSubline") }}
 									</small>
 								</span>
 							</p>
@@ -203,12 +206,16 @@
 									class="flex-shrink-0 me-2"
 								></shopicon-regular-home>
 								<span class="d-block">
-									for home use
-									<small class="d-block"> for nightly consumption </small>
+									{{ $t("batterySettings.legendBottomName") }}
+									<small class="d-block">
+										{{ $t("batterySettings.legendBottomSubline") }}
+									</small>
 								</span>
 							</p>
 							<p>
-								<small> Note: These settings only affect the solar mode. </small>
+								<small>
+									{{ $t("batterySettings.note") }}
+								</small>
 							</p>
 						</div>
 					</div>
@@ -222,16 +229,19 @@
 import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/home";
+import formatter from "../mixins/formatter";
 
 import api from "../api";
 
 export default {
 	name: "BatterySettingsModal",
+	mixins: [formatter],
 	props: {
 		bufferSoc: Number,
 		prioritySoc: Number,
 		batterySoc: Number,
 		bufferStart: Number,
+		battery: { type: Array },
 	},
 	data: function () {
 		return {
@@ -249,14 +259,18 @@ export default {
 				const disabled =
 					i > this.selectedBufferSoc &&
 					!(this.selectedBufferSoc == this.selectedPrioritySoc);
-				options.push({ value: i, name: `${i} %`, disabled });
+				options.push({ value: i, name: this.fmtSoc(i), disabled });
 			}
 			return options;
 		},
 		bufferOptions() {
 			const options = [];
 			for (let i = 100; i >= 5; i -= 5) {
-				options.push({ value: i, name: `${i} %`, disabled: i < this.selectedPrioritySoc });
+				options.push({
+					value: i,
+					name: this.fmtSoc(i),
+					disabled: i < this.selectedPrioritySoc,
+				});
 			}
 			return options;
 		},
@@ -275,9 +289,31 @@ export default {
 		},
 		bufferStartOption() {
 			if (!this.selectedBufferStart) return "never";
-			if (this.selectedBufferStart >= 95) return "high";
-			if (this.selectedBufferStart - 5 <= this.selectedBufferSoc) return "low";
-			return "medium";
+			if (this.selectedBufferStart >= this.bufferStartOptionToSoc("full")) return "full";
+			if (this.selectedBufferStart >= this.bufferStartOptionToSoc("medium")) return "medium";
+			return "low";
+		},
+		batteryDetails() {
+			if (!Array.isArray(this.battery)) {
+				return;
+			}
+			return this.battery.map(({ soc, capacity }) => {
+				const multipleBatteries = this.battery.length > 1;
+				const energy = this.fmtKWh(
+					(capacity / 100) * soc * 1e3,
+					true,
+					!multipleBatteries,
+					1
+				);
+				const total = this.fmtKWh(capacity * 1e3, true, true, 1);
+				const name = multipleBatteries ? "↳ " : "";
+				const formattedSoc = multipleBatteries ? ` (${this.fmtSoc(soc)})` : "";
+				const formattedEnergy = this.$t("batterySettings.capacity", {
+					energy,
+					total,
+				});
+				return `${name}${formattedEnergy}${formattedSoc}`;
+			});
 		},
 	},
 	watch: {
@@ -287,12 +323,12 @@ export default {
 		bufferSoc(soc) {
 			this.selectedBufferSoc = soc || 100;
 		},
-		selectedBufferStart(soc) {
-			this.saveBufferStart(soc);
+		bufferStart(soc) {
+			this.selectedBufferStart = soc;
 		},
 	},
 	mounted() {
-		this.selectedBufferSoc = this.bufferSoc;
+		this.selectedBufferSoc = this.bufferSoc || 100;
 		this.selectedPrioritySoc = this.prioritySoc;
 		this.selectedBufferSoc = this.bufferStart;
 		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
@@ -309,6 +345,9 @@ export default {
 		modalInvisible: function () {
 			this.isModalVisible = false;
 		},
+		changeBufferStart($event) {
+			this.setBufferStart($event.target.value);
+		},
 		changePrioritySoc($event) {
 			const value = parseInt($event.target.value, 10);
 			if (value > this.bufferSoc) {
@@ -317,33 +356,36 @@ export default {
 				this.savePrioritySoc(value);
 			}
 		},
+		bufferStartOptionToSoc(option) {
+			const bufferSoc = this.selectedBufferSoc;
+			const bufferHeight = 100 - bufferSoc;
+			console.log("bufferStartOptionToSoc", { bufferSoc, bufferHeight, option });
+			switch (option) {
+				case "low":
+					return bufferSoc + bufferHeight * 0.2;
+				case "medium":
+					return bufferSoc + bufferHeight * 0.5;
+				case "full":
+					return bufferSoc + bufferHeight * 0.8;
+				case "never":
+					return null;
+			}
+		},
 		toggleBufferStart() {
 			const next = {
+				never: "low",
 				low: "medium",
-				medium: "high",
-				high: "low",
+				medium: "full",
+				full: "never",
 			};
 			const nextOption = next[this.bufferStartOption];
 			if (nextOption) {
 				this.setBufferStart(nextOption);
 			}
 		},
-		setBufferStart(position) {
-			switch (position) {
-				case "low":
-					this.selectedBufferStart = this.selectedBufferSoc + 5;
-					break;
-				case "medium":
-					this.selectedBufferStart =
-						this.selectedBufferSoc + (100 - this.selectedBufferSoc) / 2;
-					break;
-				case "high":
-					this.selectedBufferStart = 95;
-					break;
-			}
-		},
-		removeBufferStart() {
-			this.selectedBufferStart = null;
+		setBufferStart(option) {
+			this.selectedBufferStart = this.bufferStartOptionToSoc(option);
+			this.saveBufferStart(this.selectedBufferSoc);
 		},
 		changeBufferSoc($event) {
 			const startOption = this.bufferStartOption;
@@ -368,7 +410,11 @@ export default {
 		},
 		async saveBufferStart(soc) {
 			try {
-				await api.post(`bufferstart/${encodeURIComponent(soc)}`);
+				if (soc === null) {
+					await api.delete(`bufferstart`);
+				} else {
+					await api.post(`bufferstart/${encodeURIComponent(soc)}`);
+				}
 			} catch (err) {
 				console.error(err);
 			}
@@ -378,6 +424,9 @@ export default {
 			if (height <= 10) scale = 0.75;
 			if (height <= 5) scale = 0;
 			return { transform: `scale(${scale})` };
+		},
+		fmtSoc(soc) {
+			return `${Math.round(soc)}%`;
 		},
 	},
 };
@@ -425,28 +474,28 @@ export default {
 	height: 0.5rem;
 	opacity: 0.5;
 }
+
 .bufferStartIndicator {
-	border-radius: 0 0.5rem 0.5rem 0;
-	height: 0.5rem;
-	width: 0.5rem;
+	display: flex;
+	justify-content: space-between;
+	left: 0;
+	right: 0;
 }
 .bufferStartIndicator--hidden {
 	opacity: 0;
 	transform: translateY(-50%);
 }
-.bufferStartLegend {
-	transition: opacity;
-	transition-duration: var(--evcc-transition-medium);
-	transition-timing-function: linear;
-	opacity: 1;
-	overflow: hidden;
-	height: auto;
+.bufferStartIndicator__left,
+.bufferStartIndicator__right {
+	height: 0.5rem;
+	width: 0.5rem;
+	background-color: var(--evcc-box);
 }
-.bufferStartLegend--hidden {
-	opacity: 0;
-	height: 0;
-	margin: 0 !important;
-	padding: 0 !important;
+.bufferStartIndicator__left {
+	border-radius: 0 0.5rem 0.5rem 0;
+}
+.bufferStartIndicator__right {
+	border-radius: 0.5rem 0 0 0.5rem;
 }
 .progress {
 	height: 100%;
@@ -454,6 +503,7 @@ export default {
 	flex-direction: column;
 	position: relative;
 	border-radius: 10px;
+	background-color: var(--evcc-box) !important;
 }
 .progress-bar {
 	transition: height var(--evcc-transition-fast) linear;
@@ -470,5 +520,6 @@ export default {
 	right: 0;
 	position: absolute;
 	opacity: 0;
+	-webkit-appearance: menulist-button;
 }
 </style>

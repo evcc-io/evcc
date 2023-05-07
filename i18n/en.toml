@@ -1,10 +1,22 @@
 [batterySettings]
-bufferSoc = "Buffer"
+batteryLevel = "Battery level"
+capacity = "{energy} of {total}"
+legendBottomName = "home priority"
+legendBottomSubline = "not used for charging"
+legendMiddleName = "vehicles first"
+legendMiddleSubline = "home second"
+legendTitle = "How should solar energy be used?"
+legendTopAutostart = "starts automatically"
+legendTopName = "battery supported charging"
+legendTopSubline = "without interruptions"
 modalTitle = "Battery settings"
-prioritySoc = "Reserve"
-sectionBottom = "Reserved for home"
-sectionMiddle = "Available for charging"
-sectionTop = "Encouraged for charging"
+note = "Note: These settings only affect the solar mode. evcc will adjusts charging behaviour accordingly."
+
+[batterySettings.bufferStart]
+full = "when nearly full"
+low = "when somewhat full"
+medium = "when half full"
+never = "only with enough surplus"
 
 [footer]
 
