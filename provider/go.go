@@ -143,12 +143,6 @@ func (p *Go) setParam(param string, val any) error {
 	}
 
 	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
-	if err == nil {
-		_, err = p.vm.Eval(fmt.Sprintf("param := %v;", param))
-	}
-	if err == nil {
-		_, err = p.vm.Eval(fmt.Sprintf("val := %v;", val))
-	}
 	return err
 }
 func (p *Go) evaluate() (reflect.Value, error) {
