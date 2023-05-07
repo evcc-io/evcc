@@ -1,0 +1,30 @@
+template: huawei-smartlogger
+products:
+  - brand: Huawei
+    description:
+      generic: SmartLogger
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 0
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40525 # Active power
+      type: holding
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40560 # E-Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
