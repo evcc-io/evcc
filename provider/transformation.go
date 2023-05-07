@@ -16,9 +16,6 @@ type (
 		setParam(string, any) error
 		inTransformations() []InTransformation
 	}
-	ScriptTransformationProvider[A any] interface {
-		evaluate() (A, error)
-	}
 )
 
 type TransformationConfig struct {
