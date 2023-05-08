@@ -76,6 +76,7 @@ github = "GitHub"
 login = "Вхід до транспортного засобу"
 sessions = "Сеанси зарядки"
 settings = "Налаштування"
+needHelp = "Потрібна допомога?"
 
 [main]
 vehicles = "Паркування"
@@ -108,6 +109,10 @@ charged = "Заряджено"
 duration = "Тривалість"
 fallbackName = "Точка зарядки"
 power = "Потужність"
+avgPrice = "Ø Ціна"
+co2 = "Ø CO₂"
+price = "Σ Ціна"
+solar = "Сонячна"
 
 [main.loadpointSettings]
 currents = "Струм зарядки"
@@ -234,15 +239,23 @@ meterstop = "Зупинка лічильника"
 odometer = "Пробіг"
 started = "Розпочато"
 title = "Сеанс зарядки"
+co2 = "CO₂"
+date = "Період"
+meter = "Лічильник"
+price = "Ціна"
 
 [sessions]
-date = "Період"
+date = "Завершено"
 downloadCsv = "Завантажити як CSV"
 energy = "Заряджено"
 loadpoint = "Точка зарядки"
 reallyDelete = "Ви дійсно хочете видалити цей сеанс?"
 title = "Сеанси зарядки"
 vehicle = "Транспортний засіб"
+avgPrice = "Ø Ціна"
+co2 = "Ø CO₂"
+price = "Σ Ціна"
+solar = "Сонячна"
 
 [sessions.csv]
 chargedenergy = "Енергія (кВт/год)"
@@ -307,3 +320,22 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
+
+
+[help]
+discussionsButton = "Обговорення GitHub"
+documentationButton = "Документація"
+issueButton = "Повідомити про помилку"
+issueDescription = «Знайшли дивну чи неправильну поведінку?»
+modalTitle = "Потрібна допомога?"
+primaryActions = "Щось не працює так, як повинно? Це хороші місця, де можна отримати допомогу."
+restartButton = "Перезапустити"
+restartDescription = "Спробували вимкнути і знову увімкнути?"
+secondaryActions = "Все ще не можете вирішити свою проблему? Ось кілька більш жорстких варіантів."
+
+[help.restart]
+cancel = "Скасувати"
+confirm = "Так, перезапустити!"
+disclaimer = "Примітка: evcc завершить роботу і покладатиметься на операційну систему для перезапуску служби."
+modalTitle = "Ви впевнені, що хочете перезапустити?"
+description = "За звичайних обставин перезапуск не має бути необхідним. Якщо вам потрібно регулярно перезапускати evcc, будь ласка, створіть повідомлення про проблему"
