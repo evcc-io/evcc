@@ -73,6 +73,7 @@ blog = "Blog"
 docs = "Dokumentacja"
 github = "GitHub"
 login = "Dane logowania pojazdu"
+needHelp = "Potrzebuję pomocy?"
 sessions = "Sesje ładowania"
 settings = "Ustawienia"
 
@@ -80,6 +81,24 @@ settings = "Ustawienia"
 auto = "Wygląd: system"
 dark = "Wygląd: ciemny"
 light = "Wygląd: światły"
+
+[help]
+discussionsButton = "Dyskusje na GitHub'ie"
+documentationButton = "Dokumentacja"
+issueButton = "Zgłoś błąd"
+issueDescription = "Znalazłeś dziwne lub niewłaściwe zachowanie?"
+modalTitle = "Potrzebuję pomocy?"
+primaryActions = "Coś nie działa tak, jak powinno? To dobre miejsca, aby uzyskać pomoc."
+restartButton = "Uruchom ponownie"
+restartDescription = "Próbowałeś go wyłączyć i włączyć ponownie?"
+secondaryActions = "Nadal nie możesz rozwiązać swojego problemu? Oto kilka bardziej wymagających opcji."
+
+[help.restart]
+cancel = "Anulować"
+confirm = "Tak, uruchom ponownie!"
+description = "Normalne ponowne uruchamianie nie powinno być konieczne. Rozważ zgłoszenie błędu, jeśli chcesz regularnie restartować evcc."
+disclaimer = "Uwaga: evcc zakończy działanie i będzie polegać na systemie operacyjnym w celu ponownego uruchomienia evcc."
+modalTitle = "Czy na pewno chcesz uruchomić ponownie?"
 
 [main]
 vehicles = "Garaż"
@@ -108,13 +127,17 @@ pvProduction = "Produkcja"
 selfConsumption = "Konsumpcja własna"
 
 [main.loadpoint]
+avgPrice = "Ø Cena"
 charged = "Naładowano"
+co2 = "Ø CO₂"
 duration = "Czas trwania"
 fallbackName = "Ładowarka"
 power = "Moc"
+price = "Σ Cena"
 remaining = "Pozostało"
 remoteDisabledHard = "{source}: wyłączone"
 remoteDisabledSoft = "{source}: adaptacyjne ładowanie słonecznie wyłączone"
+solar = "Słoneczna"
 
 [main.loadpointSettings]
 currents = "Prąd ładowania"
@@ -234,20 +257,28 @@ reload = "Przeładować?"
 
 [session]
 cancel = "Anuluj"
+co2 = "CO₂"
+date = "Okres"
 delete = "Usunąć"
 finished = "Zakończony"
+meter = "Licznik"
 meterstart = "Licznik początek (kWh)"
 meterstop = "Licznik koniec (kWh)"
 odometer = "Przebieg (km)"
+price = "Cena"
 started = "Zaczęło się"
 title = "Sesja ładowania"
 
 [sessions]
-date = "Okres"
+avgPrice = "Ø Cena"
+co2 = "Ø CO₂"
+date = "Skończone"
 downloadCsv = "Pobierz jako CSV"
 energy = "Naładowano"
 loadpoint = "Ładowarka"
+price = "Σ Cena"
 reallyDelete = "Czy na pewno chcesz usunąć tę sesję?"
+solar = "Słoneczna"
 title = "Sesje ładowania"
 vehicle = "Pojazd"
 

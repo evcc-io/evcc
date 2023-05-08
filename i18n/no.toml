@@ -1,10 +1,10 @@
 [footer]
 
 [footer.community]
-greenEnergy = "Solar"
+greenEnergy = "Solenergi"
 greenEnergySub1 = "ladet med evcc"
 greenEnergySub2 = "siden Oktober 2022"
-greenShare = "Solcelleandel"
+greenShare = "Solenergiandel"
 greenShareSub1 = "kraft levert av"
 greenShareSub2 = "solenergi, og batterilagring"
 power = "Ladeeffekt"
@@ -73,6 +73,7 @@ blog = "Blogg"
 docs = "Dokumentasjon"
 github = "GitHub"
 login = "Kjøretøysinnlogginger"
+needHelp = "Trenger du hjelp?"
 sessions = "Ladeøkter"
 settings = "Innstillinger"
 
@@ -80,6 +81,24 @@ settings = "Innstillinger"
 auto = "Design: system"
 dark = "Design: mørkt"
 light = "Design: lyst"
+
+[help]
+discussionsButton = "GitHub-diskusjoner"
+documentationButton = "Dokumentasjon"
+issueButton = "Rapporter feil"
+issueDescription = "Funnet noe merkelig eller feil?"
+modalTitle = "Trenger du hjelp?"
+primaryActions = "Er det noe som ikke virker som det skal? Dette er gode ressurser å starte med."
+restartButton = "Start på ny"
+restartDescription = "Prøvd å slå av og på igjen?"
+secondaryActions = "Vedvarer problemet? Her har du mer drastiske tiltak."
+
+[help.restart]
+cancel = "Avbryt"
+confirm = "Ja, start på ny."
+description = "I normale fall bør ikke omstart være nødvendig. Overvei å sende en feilrapport hvis du må starte evcc på ny ofte."
+disclaimer = "Merk: evcc vil avsluttes og be operativsystemet om å starte enheten på ny."
+modalTitle = "Er du sikker på at du vil utføre omstart?"
 
 [main]
 vehicles = "Parkering"
@@ -108,10 +127,14 @@ pvProduction = "Produksjon"
 selfConsumption = "Eget forbruk"
 
 [main.loadpoint]
+avgPrice = "Ø-pris"
 charged = "Oppladet"
+co2 = "Ø-CO₂"
 duration = "Varighet"
 fallbackName = "Ladepunkt"
 power = "Effekt"
+price = "Σ-price"
+solar = "Solenergi"
 
 [main.loadpointSettings]
 currents = "Ladestrøm"
@@ -140,10 +163,10 @@ phases_3 = "3 fase"
 phases_3_hint = "({min} til {max})"
 
 [main.mode]
-minpv = "Min+Solar"
+minpv = "Min+Sol-e."
 now = "Raskt"
 off = "Stopp"
-pv = "Solar"
+pv = "Solenergi"
 
 [main.provider]
 login = "logg inn"
@@ -230,20 +253,27 @@ reload = "Last inn igjen?"
 
 [session]
 cancel = "Avbryt"
+co2 = "CO₂"
+date = "Tidsrom"
 delete = "Slett"
 finished = "Fullført"
 meterstart = "Startstand"
 meterstop = "Sluttstand"
 odometer = "Kilometerstand"
+price = "Pris"
 started = "Startet"
 title = "Ladeøkt"
 
 [sessions]
+avgPrice = "Ø-pris"
+co2 = "Ø-CO₂"
 date = "Tidsrom"
 downloadCsv = "Last ned som CSV"
 energy = "Oppladet"
 loadpoint = "Ladepunkt"
+price = "Σ-price"
 reallyDelete = "Slett denne økten?"
+solar = "Solenergi"
 title = "Ladeøkter"
 vehicle = "Kjøretøy"
 

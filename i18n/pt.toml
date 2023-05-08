@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Nível da bateria"
+capacity = "{energy} de {total}"
+legendBottomName = "prioridade doméstica"
+legendBottomSubline = "não usado para carregar"
+legendMiddleName = "veículo primeiro"
+legendMiddleSubline = "segunda casa"
+legendTitle = "Como a energia solar deve ser usada?"
+legendTopAutostart = "inicio automatico"
+legendTopName = "carregamento suportado por bateria"
+legendTopSubline = "sem interrupções"
+modalTitle = "Configuraçao da bateria"
+note = "Nota: Estas configurações só afetam o modo solar. O comportamento de carregamento é ajustado de acordo."
+
+[batterySettings.bufferStart]
+full = "quando quase cheio"
+low = "quando um pouco cheio"
+medium = "quando meio cheio"
+never = "apenas com excesso suficiente"
+
 [footer]
 
 [footer.community]
@@ -127,13 +147,17 @@ pvProduction = "Produção"
 selfConsumption = "Consumo próprio"
 
 [main.loadpoint]
+avgPrice = "Preço Ø"
 charged = "Carregado"
+co2 = "CO₂ Ø"
 duration = "Duração"
 fallbackName = "Ponto de carga"
 power = "Desempenho"
+price = "Preço Σ"
 remaining = "Tempo restante"
 remoteDisabledHard = "{source}: desativado"
 remoteDisabledSoft = "{source}:carregamento PV adaptável desativado"
+solar = "Sol"
 
 [main.loadpointSettings]
 currents = "Corrente de carga"
@@ -253,21 +277,29 @@ reload = "Iniciar de novo?"
 
 [session]
 cancel = "Cancelar"
+co2 = "CO₂"
+date = "Período"
 delete = "Excluir"
 finished = "Finalizado"
+meter = "Medidor"
 meterstart = "Início do contador"
 meterstop = "Contagem final"
 odometer = "Quilometragem"
+price = "Preço"
 started = "Começado"
 title = "Sessão de carga"
 
 [sessions]
+avgPrice = "Preço Ø"
+co2 = "CO₂ Ø"
 date = "Período"
 downloadCsv = "Download como CSV"
 energy = "Carregado"
 loadpoint = "Ponto de carga"
 odometer = "Quilometragem"
+price = "Preço Σ"
 reallyDelete = "Você realmente quer excluir esta sessão?"
+solar = "Sol"
 title = "Sessões de carga"
 vehicle = "Veículo"
 
