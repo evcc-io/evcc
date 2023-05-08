@@ -1,5 +1,4 @@
-
-
+[footer]
 
 [footer.community]
 greenEnergy = "Energia Solar"
@@ -12,50 +11,6 @@ power = "potencia de carrega"
 powerSub1 = "{activeClients} de {totalClients} usuaris"
 powerSub2 = "carregant..."
 tabTitle = "Comunitat en viu"
-
-[header]
-about = "Sobre"
-blog = "Blog"
-docs = "Documentació"
-github = "GitHub"
-login = "Login de vehicle"
-needHelp = "Necessites ajuda?"
-sessions = "Processos de càrrega"
-settings = "Paràmetres"
-
-[main.loadpoint]
-avgPrice = "Preu Ø"
-charged = "Carregat"
-co2 = "CO₂ Ø "
-duration = "Duració"
-fallbackName = "Punt de càrrega"
-power = "Potència"
-price = "Σ Preu"
-solar = "Solar"
-
-[sessions]
-avgPrice = "Preu Ø"
-downloadCsv = "Descarregar com a CSV"
-energy = "Carregada"
-loadpoint = "Punt de recàrrega"
-reallyDelete = "Realment vols esborrar aquesta sessió?"
-solar = "Solar"
-vehicle = "Vehicle"
-co2 = "CO₂"
-date = "Període"
-price = "Preu"
-title = "Carregant la sessió"
-
-[sessions.csv]
-odometer = "Kilometratge (km)"
-chargedenergy = "Energia (kWh)"
-created = "Hora d'inici"
-finished = "Hora de finalització"
-identifier = "Identificador"
-loadpoint = "Punt de càrrega"
-meterstart = "Inici de mesura (kWh)"
-meterstop = "Paró de mesura (kWh)"
-vehicle = "Vehicle"
 
 [footer.savings]
 footerLong = "{percent}% Autoconsum"
@@ -73,11 +28,21 @@ savingsTotalEnergy = "{total} kWh carregats"
 since = "desde {since}"
 tabTitle = "Les meves dades"
 
+[footer.sponsor]
+becomeSponsor = "Convertir-se en patrocinador"
+confetti = "¿Vols una mica de confeti?"
+confettiPromise = "També hi ha adhesius i confeti digital"
+sticker = "...o adhesius de evcc?"
+supportUs = "La nostre missió: fer que repostar del sol sigui la norma. Ajuda'ns i dona suport econòmic a evcc!"
+thanks = "Gràcies pel teu patrocini, {sponsor}! Això ens ajudarà a continuar desenvolupant evcc."
+titleNoSponsor = "Dona'ns suport"
+titleSponsor = "Ets un seguidor"
+
 [footer.telemetry]
+optIn = "També voldria contribuir amb les meves dades."
 optInMoreDetails = "Més detalls {0}."
 optInMoreDetailsLink = "aquí"
 optInSponsorship = "Es requereix patrocini."
-optIn = "També voldria contribuir amb les meves dades."
 
 [footer.version]
 availableLong = "Actualitzacions disponibles"
@@ -91,16 +56,6 @@ modalUpdateNow = "Instal·lar ara"
 modalUpdateStarted = "Després de l'actualització, evcc es reiniciarà."
 modalUpdateStatusStart = "Instal·lació iniciada:"
 
-[footer.sponsor]
-becomeSponsor = "Convertir-se en patrocinador"
-confetti = "¿Vols una mica de confeti?"
-confettiPromise = "També hi ha adhesius i confeti digital"
-sticker = "...o adhesius de evcc?"
-supportUs = "La nostre missió: fer que repostar del sol sigui la norma. Ajuda'ns i dona suport econòmic a evcc!"
-thanks = "Gràcies pel teu patrocini, {sponsor}! Això ens ajudarà a continuar desenvolupant evcc."
-titleNoSponsor = "Dona'ns suport"
-titleSponsor = "Ets un seguidor"
-
 [gridSettings]
 activeHours = "{charging} de {total}"
 activeHoursLabel = "Hores funcionant"
@@ -112,8 +67,17 @@ none = "cap"
 priceLabel = "Preu de l'energia"
 priceLimit = "Límit de preu"
 
+[header]
+about = "Sobre"
+blog = "Blog"
+docs = "Documentació"
+github = "GitHub"
+login = "Login de vehicle"
+needHelp = "Necessites ajuda?"
+sessions = "Processos de càrrega"
+settings = "Paràmetres"
+
 [help]
-restartDescription = "¿Has provat d'apagar i tornar a engegar?"
 discussionsButton = "Debat sobre GitHub"
 documentationButton = "Documentació"
 issueButton = "Informar d'un error"
@@ -121,6 +85,7 @@ issueDescription = "¿Has trobat un comportament extrany o incorrecte?"
 modalTitle = "Necessites ajuda?"
 primaryActions = "Si quelcom no funciona com hauria, podeu obtenir ajuda aqui."
 restartButton = "Reiniciar"
+restartDescription = "¿Has provat d'apagar i tornar a engegar?"
 secondaryActions = "¿Segeixes sense poder resoldre el teu problema? Aquí tens altres opcions més contundents"
 
 [help.restart]
@@ -129,19 +94,6 @@ confirm = "¡Sí, reinicia!"
 description = "Sota circumstàncies normals no hauria de ser necessari reiniciar. Considereu sisplau la possibilitat de reportar un error si necessiteu reiniciar-lo regularment."
 disclaimer = "Nota: evcc es pararà i dependrà del sistema operatiu per reiniciar el servei"
 modalTitle = "¿Segur que vols tornar començar?"
-
-[main.energyflow]
-pvProduction = "Producció"
-selfConsumption = "Autoconsum"
-battery = "Bateria"
-batteryCharge = "Carregar la bateria"
-batteryDischarge = "Descarregar la bateria"
-batteryTooltip = "{energy} de {total} ({soc})"
-gridImport = "Consum de xarxa"
-homePower = "Consum"
-loadpoints = "Punt de càrrega | Punt de càrrega | {count} Punts de càrrega"
-noEnergy = "Sense lectures"
-pvExport = "Excedent"
 
 [main]
 vehicles = "Estacionament"
@@ -155,6 +107,29 @@ none = "cap"
 title = "Plà"
 titleMinSoc = "Càrrega mínima"
 titleTargetCharge = "Sortides"
+
+[main.energyflow]
+battery = "Bateria"
+batteryCharge = "Carregar la bateria"
+batteryDischarge = "Descarregar la bateria"
+batteryTooltip = "{energy} de {total} ({soc})"
+gridImport = "Consum de xarxa"
+homePower = "Consum"
+loadpoints = "Punt de càrrega | Punt de càrrega | {count} Punts de càrrega"
+noEnergy = "Sense lectures"
+pvExport = "Excedent"
+pvProduction = "Producció"
+selfConsumption = "Autoconsum"
+
+[main.loadpoint]
+avgPrice = "Preu Ø"
+charged = "Carregat"
+co2 = "CO₂ Ø "
+duration = "Duració"
+fallbackName = "Punt de càrrega"
+power = "Potència"
+price = "Σ Preu"
+solar = "Solar"
 
 [main.loadpointSettings]
 currents = "Corrent de càrrega"
@@ -171,7 +146,7 @@ label = "Corrent de carrega màxima "
 label = "Corriente de carrega mínima"
 
 [main.loadpointSettings.minSoc]
-description = "Marge per a emergències. El vehicle es carrega "ràpidament" a {0}% en mode solar. Després continua amb l'excedent fotovoltaic."
+description = "Marge per a emergències. El vehicle es carrega 'ràpidament' a {0}% en mode solar. Després continua amb l'excedent fotovoltaic."
 label = "Càrrega de min. %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -180,7 +155,7 @@ phases_0 = "Canvi automàtic"
 phases_1 = "monofàsica"
 phases_1_hint = "({min} a {max})"
 phases_3 = "trifàsica"
-phases_3_hint = "({min} a {
+phases_3_hint = "({min} a {max})"
 
 [main.mode]
 minpv = "Min+Sol"
@@ -203,13 +178,13 @@ planDuration = "Temps de càrrega"
 planPeriodLabel = "Període"
 planPeriodValue = "de {start} a {end}"
 planUnknown = "encara no se sap"
-title = "hora objectiu"
-today = "avui"
-tomorrow = "matí"
 priceLimit = "límit en el preu de {price}"
 setTargetTime = "cap"
 targetIsInThePast = "Tria un temps en el futur, Marty."
 targetIsTooFarInTheFuture = "Ajustarém el pla quan sapiguém més sobre el futur."
+title = "hora objectiu"
+today = "avui"
+tomorrow = "matí"
 update = "Actualitzar"
 
 [main.targetChargePlan]
@@ -237,9 +212,9 @@ vehicleSoc = "Nivell de càrrega"
 [main.vehicleSoc]
 charging = "carregant"
 connected = "connectat"
-vehicleTarget = "límit de vehicle: {soc}%"
 disconnected = "desconnectat"
 ready = "preparat"
+vehicleTarget = "límit de vehicle: {soc}%"
 
 [main.vehicleStatus]
 charging = "Carregant..."
@@ -282,6 +257,30 @@ odometer = "Kilometraje"
 price = "Precio"
 started = "Comenzó"
 title = "Cargando la sesión"
+
+[sessions]
+avgPrice = "Preu Ø"
+co2 = "CO₂"
+date = "Període"
+downloadCsv = "Descarregar com a CSV"
+energy = "Carregada"
+loadpoint = "Punt de recàrrega"
+price = "Preu"
+reallyDelete = "Realment vols esborrar aquesta sessió?"
+solar = "Solar"
+title = "Carregant la sessió"
+vehicle = "Vehicle"
+
+[sessions.csv]
+chargedenergy = "Energia (kWh)"
+created = "Hora d'inici"
+finished = "Hora de finalització"
+identifier = "Identificador"
+loadpoint = "Punt de càrrega"
+meterstart = "Inici de mesura (kWh)"
+meterstop = "Paró de mesura (kWh)"
+odometer = "Kilometratge (km)"
+vehicle = "Vehicle"
 
 [settings]
 title = "Configuració"

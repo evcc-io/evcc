@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Kaupiklio įkrova"
+capacity = "{energy} iš {total}"
+legendBottomName = "namo pirmumas"
+legendBottomSubline = "nenaudojama įkrovimui"
+legendMiddleName = "pirmiau automobilis"
+legendMiddleSubline = "namas po to"
+legendTitle = "Kaip naudoti saulės energiją?"
+legendTopAutostart = "startuoja automatiškai"
+legendTopName = "kaupiklis padeda įkrauti"
+legendTopSubline = "be pertraukų"
+modalTitle = "Kaupiklio nustatymai"
+note = "Pastaba: Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
+
+[batterySettings.bufferStart]
+full = "kai beveik pilnas"
+low = "kai nevisai pilnas"
+medium = "kai puspilnis"
+never = "tik su pakankamu pertekliumi"
+
 [footer]
 
 [footer.community]
@@ -127,17 +147,17 @@ pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
 
 [main.loadpoint]
+avgPrice = "Ø Kaina"
 charged = "Įkrauta"
+co2 = "Ø CO₂"
 duration = "Trukmė"
 fallbackName = "Įkroviklis"
 power = "Galia"
-co2 = "Ø CO₂"
 price = "Σ Kaina"
-solar = "Saulės"
-avgPrice = "Ø Kaina"
 remaining = "Liko"
 remoteDisabledHard = "{source}: išjungtas"
 remoteDisabledSoft = "{source}: adaptyvus Saulės įkrovimas išjungtas"
+solar = "Saulės"
 
 [main.loadpointSettings]
 currents = "Įkrovimo srovė"
@@ -257,30 +277,30 @@ reload = "Perkrauti?"
 
 [session]
 cancel = "Atšaukti"
+co2 = "CO₂"
+date = "Periodas"
 delete = "Ištrinti"
 finished = "Pabaigta"
+meter = "Skaitiklis"
 meterstart = "Skaitiklis pradžia (kWh)"
 meterstop = "Skaitiklis pabaiga (kWh)"
 odometer = "Odometras (km)"
+price = "Kaina"
 started = "Pradėta"
 title = "Įkrovimo sesija"
-date = "Periodas"
-meter = "Skaitiklis"
-price = "Kaina"
-co2 = "CO₂"
 
 [sessions]
+avgPrice = "Ø Kaina"
+co2 = "Ø CO₂"
 date = "Užbaigta"
 downloadCsv = "Atsisiųsti CSV failą"
 energy = "Įkrauta"
 loadpoint = "Įkroviklis"
+price = "Σ Kaina"
 reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo sesiją?"
+solar = "Saulės"
 title = "Įkrovimo Sesijos"
 vehicle = "Automobilis"
-avgPrice = "Ø Kaina"
-co2 = "Ø CO₂"
-price = "Σ Kaina"
-solar = "Saulės"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -345,24 +365,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[batterySettings]
-legendMiddleName = "pirmiau automobilis"
-legendMiddleSubline = "namas po to"
-legendTitle = "Kaip naudoti saulės energiją?"
-legendTopAutostart = "startuoja automatiškai"
-legendTopName = "kaupiklis padeda įkrauti"
-modalTitle = "Kaupiklio nustatymai"
-capacity = "{energy} iš {total}"
-legendBottomName = "namo pirmumas"
-batteryLevel = "Kaupiklio įkrova"
-legendBottomSubline = "nenaudojama įkrovimui"
-legendTopSubline = "be pertraukų"
-note = "Pastaba: Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
-
-[batterySettings.bufferStart]
-full = "kai beveik pilnas"
-medium = "kai puspilnis"
-low = "kai nevisai pilnas"
-never = "tik su pakankamu pertekliumi"
