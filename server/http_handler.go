@@ -190,13 +190,13 @@ func tariffHandler(site site.API) http.HandlerFunc {
 
 		t := site.GetTariff(tariff)
 		if t == nil {
-			jsonError(w, http.StatusBadRequest, errors.New("tariff not available"))
+			jsonError(w, http.StatusNotFound, errors.New("tariff not available"))
 			return
 		}
 
 		rates, err := t.Rates()
 		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
+			jsonError(w, http.StatusNotFound, err)
 			return
 		}
 
