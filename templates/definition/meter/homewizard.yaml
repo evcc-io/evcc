@@ -23,4 +23,4 @@ render: |
     method: GET
     headers:
       - content-type: application/json
-    jq: [to_entries[] | select(.key|startswith("total_power_import_t")) | .value] | add
+    jq: '[to_entries[] | select(.key|startswith("total_power_import_t")) | .value] | add'
