@@ -1,6 +1,5 @@
 template: solarman
-covers: 
-  - deye
+covers: ["deye"]
 products:
   - brand: IGEN Tech
     description:
