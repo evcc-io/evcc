@@ -1,0 +1,10 @@
+product:
+  brand: HomeWizard
+  description: Wi-Fi P1 Meter
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: homewizard
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
