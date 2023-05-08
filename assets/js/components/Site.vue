@@ -70,6 +70,8 @@ export default {
 		battery: Array,
 		gridCurrents: Array,
 		prioritySoc: Number,
+		bufferSoc: Number,
+		bufferStartSoc: Number,
 		siteTitle: String,
 		vehicles: Array,
 

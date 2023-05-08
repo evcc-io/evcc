@@ -95,21 +95,22 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 	// site api
 	routes := map[string]route{
-		"health":        {[]string{"GET"}, "/health", healthHandler(site)},
-		"state":         {[]string{"GET"}, "/state", stateHandler(cache)},
-		"config":        {[]string{"GET"}, "/config/templates/{class:[a-z]+}", templatesHandler},
-		"products":      {[]string{"GET"}, "/config/products/{class:[a-z]+}", productsHandler},
-		"test":          {[]string{"POST"}, "/config/test/{class:[a-z]+}", testHandler},
-		"buffersoc":     {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
-		"prioritysoc":   {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
-		"residualpower": {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"smartcost":     {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[-0-9.]+}", floatHandler(site.SetSmartCostLimit, site.GetSmartCostLimit)},
-		"tariff":        {[]string{"GET"}, "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
-		"sessions":      {[]string{"GET"}, "/sessions", sessionHandler},
-		"session1":      {[]string{"PUT"}, "/session/{id:[0-9]+}", updateSessionHandler},
-		"session2":      {[]string{"DELETE"}, "/session/{id:[0-9]+}", deleteSessionHandler},
-		"telemetry":     {[]string{"GET"}, "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
-		"telemetry2":    {[]string{"POST", "OPTIONS"}, "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
+		"health":         {[]string{"GET"}, "/health", healthHandler(site)},
+		"state":          {[]string{"GET"}, "/state", stateHandler(cache)},
+		"config":         {[]string{"GET"}, "/config/templates/{class:[a-z]+}", templatesHandler},
+		"products":       {[]string{"GET"}, "/config/products/{class:[a-z]+}", productsHandler},
+		"test":           {[]string{"POST"}, "/config/test/{class:[a-z]+}", testHandler},
+		"buffersoc":      {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
+		"bufferstartsoc": {[]string{"POST", "OPTIONS"}, "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
+		"prioritysoc":    {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
+		"residualpower":  {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
+		"smartcost":      {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[-0-9.]+}", floatHandler(site.SetSmartCostLimit, site.GetSmartCostLimit)},
+		"tariff":         {[]string{"GET"}, "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
+		"sessions":       {[]string{"GET"}, "/sessions", sessionHandler},
+		"session1":       {[]string{"PUT"}, "/session/{id:[0-9]+}", updateSessionHandler},
+		"session2":       {[]string{"DELETE"}, "/session/{id:[0-9]+}", deleteSessionHandler},
+		"telemetry":      {[]string{"GET"}, "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
+		"telemetry2":     {[]string{"POST", "OPTIONS"}, "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 	}
 
 	for _, r := range routes {

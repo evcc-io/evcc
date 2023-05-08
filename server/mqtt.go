@@ -197,6 +197,12 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 	})
 
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferStartSoc/set", m.root), func(payload string) {
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetBufferStartSoc(val)
+		}
+	})
+
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/residualPower/set", m.root), func(payload string) {
 		if val, err := strconv.ParseFloat(payload, 64); err == nil {
 			_ = site.SetResidualPower(val)

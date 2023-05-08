@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Ladestand"
+capacity = "{energy} von {total}"
+legendBottomName = "Haus hat Priorität"
+legendBottomSubline = "nicht zum Laden verwenden"
+legendMiddleName = "Fahrzeug zuerst"
+legendMiddleSubline = "dann das Haus"
+legendTitle = "Wie soll Sonnenstrom genutzt werden?"
+legendTopAutostart = "startet automatisch"
+legendTopName = "batterieunterstütztes Laden"
+legendTopSubline = "ohne Unterbrechungen"
+modalTitle = "Batterie Einstellungen"
+note = "Hinweis: Nur relevant im PV Modus. Das Ladeverhalten wird entsprechend angepasst."
+
+[batterySettings.bufferStart]
+full = "wenn fast voll"
+low = "wenn etwas voll"
+medium = "wenn halbvoll"
+never = "nur mit genug PV-Überschuss"
+
 [footer]
 
 [footer.community]
