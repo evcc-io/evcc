@@ -18,7 +18,7 @@
 			@click="selectSlot(index)"
 		>
 			<div class="slot-bar" :style="priceStyle(slot.price)">
-				<span v-if="slot.price === undefined" class="unknown">?</span>
+				<span v-if="slot.price === undefined && avgPrice" class="unknown">?</span>
 			</div>
 			<div class="slot-label">
 				{{ slot.startHour }}
