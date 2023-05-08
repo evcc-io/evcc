@@ -14,7 +14,6 @@ params:
     help:
       en: The Modbus TCP-Server needs to be enabled on this WebBox
       de: Der Modbus TCP-Server muss auf dieser WebBox aktiviert sein
-
 render: |
   type: custom
   {{- if eq .usage "pv" }}
