@@ -1,10 +1,10 @@
 [footer]
 
 [footer.community]
-greenEnergy = "Solar"
+greenEnergy = "Solenergi"
 greenEnergySub1 = "ladet med evcc"
 greenEnergySub2 = "siden Oktober 2022"
-greenShare = "Solcelleandel"
+greenShare = "Solenergiandel"
 greenShareSub1 = "kraft levert av"
 greenShareSub2 = "solenergi, og batterilagring"
 power = "Ladeeffekt"
@@ -75,6 +75,7 @@ github = "GitHub"
 login = "Kjøretøysinnlogginger"
 sessions = "Ladeøkter"
 settings = "Innstillinger"
+needHelp = "Trenger du hjelp?"
 
 [header.theme]
 auto = "Design: system"
@@ -112,6 +113,10 @@ charged = "Oppladet"
 duration = "Varighet"
 fallbackName = "Ladepunkt"
 power = "Effekt"
+avgPrice = "Ø-pris"
+co2 = "Ø-CO₂"
+price = "Σ-price"
+solar = "Solenergi"
 
 [main.loadpointSettings]
 currents = "Ladestrøm"
@@ -140,10 +145,10 @@ phases_3 = "3 fase"
 phases_3_hint = "({min} til {max})"
 
 [main.mode]
-minpv = "Min+Solar"
+minpv = "Min+Sol-e."
 now = "Raskt"
 off = "Stopp"
-pv = "Solar"
+pv = "Solenergi"
 
 [main.provider]
 login = "logg inn"
@@ -237,6 +242,9 @@ meterstop = "Sluttstand"
 odometer = "Kilometerstand"
 started = "Startet"
 title = "Ladeøkt"
+price = "Pris"
+co2 = "CO₂"
+date = "Tidsrom"
 
 [sessions]
 date = "Tidsrom"
@@ -246,6 +254,10 @@ loadpoint = "Ladepunkt"
 reallyDelete = "Slett denne økten?"
 title = "Ladeøkter"
 vehicle = "Kjøretøy"
+avgPrice = "Ø-pris"
+co2 = "Ø-CO₂"
+price = "Σ-price"
+solar = "Solenergi"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -304,3 +316,22 @@ title = "Oppstartsfeil"
 cancel = "Avbryt"
 template = "Fabrikant"
 test = "Test"
+
+
+[help]
+discussionsButton = "GitHub-diskusjoner"
+documentationButton = "Dokumentasjon"
+issueButton = "Rapporter feil"
+issueDescription = "Funnet noe merkelig eller feil?"
+modalTitle = "Trenger du hjelp?"
+restartButton = "Start på ny"
+restartDescription = "Prøvd å slå av og på igjen?"
+primaryActions = "Er det noe som ikke virker som det skal? Dette er gode ressurser å starte med."
+secondaryActions = "Vedvarer problemet? Her har du mer drastiske tiltak."
+
+[help.restart]
+cancel = "Avbryt"
+confirm = "Ja, start på ny."
+description = "I normale fall bør ikke omstart være nødvendig. Overvei å sende en feilrapport hvis du må starte evcc på ny ofte."
+disclaimer = "Merk: evcc vil avsluttes og be operativsystemet om å starte enheten på ny."
+modalTitle = "Er du sikker på at du vil utføre omstart?"
