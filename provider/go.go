@@ -62,7 +62,7 @@ func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 // FloatGetter parses float from request
 func (p *Go) FloatGetter() func() (float64, error) {
 	return func() (float64, error) {
-		if err := handleInTransformation(p); err != nil {
+		if err := handleInTransformation(p.in, p.setParam); err != nil {
 			return 0, err
 		}
 
@@ -82,7 +82,7 @@ func (p *Go) FloatGetter() func() (float64, error) {
 // IntGetter parses int64 from request
 func (p *Go) IntGetter() func() (int64, error) {
 	return func() (int64, error) {
-		if err := handleInTransformation(p); err != nil {
+		if err := handleInTransformation(p.in, p.setParam); err != nil {
 			return 0, err
 		}
 
@@ -102,7 +102,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 // StringGetter parses string from request
 func (p *Go) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		if err := handleInTransformation(p); err != nil {
+		if err := handleInTransformation(p.in, p.setParam); err != nil {
 			return "", err
 		}
 
@@ -122,7 +122,7 @@ func (p *Go) StringGetter() func() (string, error) {
 // BoolGetter parses bool from request
 func (p *Go) BoolGetter() func() (bool, error) {
 	return func() (bool, error) {
-		if err := handleInTransformation(p); err != nil {
+		if err := handleInTransformation(p.in, p.setParam); err != nil {
 			return false, err
 		}
 
@@ -150,7 +150,7 @@ func (p *Go) paramAndEval(param string, val any) error {
 		return err
 	}
 
-	return handleOutTransformation(p, v)
+	return handleOutTransformation(p.out, v)
 }
 
 func (p *Go) setParam(param string, val any) error {
@@ -188,12 +188,4 @@ func (p *Go) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
 		return p.paramAndEval(param, val)
 	}
-}
-
-func (p *Go) inTransformations() []InTransformation {
-	return p.in
-}
-
-func (p *Go) outTransformations() []OutTransformation { //nolint:golint,unused
-	return p.out
 }

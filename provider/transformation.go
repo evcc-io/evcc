@@ -4,21 +4,6 @@ import (
 	"fmt"
 )
 
-type (
-	// OutTransformationProvider[T any] interface {
-	OutTransformationProvider interface {
-		// convertToInt(T) (int64, error)
-		// convertToString(T) (string, error)
-		// convertToFloat(T) (float64, error)
-		// convertToBool(T) (bool, error)
-		outTransformations() []OutTransformation
-	}
-	InTransformationProvider interface {
-		setParam(string, any) error
-		inTransformations() []InTransformation
-	}
-)
-
 type TransformationConfig struct {
 	Name, Type string
 	Config     Config
@@ -142,12 +127,12 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 	return out, nil
 }
 
-func handleInTransformation(p InTransformationProvider) error {
-	for _, cc := range p.inTransformations() {
+func handleInTransformation(in []InTransformation, set func(string, any) error) error {
+	for _, cc := range in {
 		val, err := cc.function()
 
 		if err == nil {
-			err = p.setParam(cc.name, val)
+			err = set(cc.name, val)
 		}
 
 		if err != nil {
@@ -158,8 +143,8 @@ func handleInTransformation(p InTransformationProvider) error {
 	return nil
 }
 
-func handleOutTransformation(p OutTransformationProvider, v any) error {
-	for _, cc := range p.outTransformations() {
+func handleOutTransformation(out []OutTransformation, v any) error {
+	for _, cc := range out {
 		var (
 			vv any
 			ok bool
