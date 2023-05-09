@@ -331,7 +331,7 @@ export default {
 	mounted() {
 		this.selectedBufferSoc = this.bufferSoc || 100;
 		this.selectedPrioritySoc = this.prioritySoc;
-		this.selectedBufferSoc = this.bufferStart;
+		this.selectedBufferStartSoc = this.bufferStartSoc;
 		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
 		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
 	},
