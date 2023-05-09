@@ -142,7 +142,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 	return out, nil
 }
 
-func handleInTransformation[P InTransformationProvider](p P) error {
+func handleInTransformation(p InTransformationProvider) error {
 	for _, cc := range p.inTransformations() {
 		val, err := cc.function()
 
