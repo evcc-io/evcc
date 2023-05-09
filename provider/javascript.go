@@ -59,7 +59,7 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 // FloatGetter parses float from request
 func (p *Javascript) FloatGetter() func() (float64, error) {
 	return func() (float64, error) {
-		if err := handleInTransformation(p); err != nil {
+		if err := handleInTransformation(p.in, p.setParam); err != nil {
 			return 0, err
 		}
 
@@ -68,14 +68,14 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 			return 0, err
 		}
 
-		return p.convertToFloat(v)
+		return v.ToFloat()
 	}
 }
 
 // IntGetter parses int64 from request
 func (p *Javascript) IntGetter() func() (int64, error) {
 	return func() (int64, error) {
-		if err := handleInTransformation(p); err != nil {
+		if err := handleInTransformation(p.in, p.setParam); err != nil {
 			return 0, err
 		}
 
@@ -84,14 +84,14 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 			return 0, err
 		}
 
-		return p.convertToInt(v)
+		return v.ToInteger()
 	}
 }
 
 // StringGetter parses string from request
 func (p *Javascript) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		if err := handleInTransformation(p); err != nil {
+		if err := handleInTransformation(p.in, p.setParam); err != nil {
 			return "", err
 		}
 
@@ -100,14 +100,14 @@ func (p *Javascript) StringGetter() func() (string, error) {
 			return "", err
 		}
 
-		return p.convertToString(v)
+		return v.ToString()
 	}
 }
 
 // BoolGetter parses bool from request
 func (p *Javascript) BoolGetter() func() (bool, error) {
 	return func() (bool, error) {
-		if err := handleInTransformation(p); err != nil {
+		if err := handleInTransformation(p.in, p.setParam); err != nil {
 			return false, err
 		}
 
@@ -116,7 +116,7 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 			return false, err
 		}
 
-		return p.convertToBool(v)
+		return v.ToBoolean()
 	}
 }
 
@@ -131,7 +131,7 @@ func (p *Javascript) paramAndEval(param string, val any) error {
 		return err
 	}
 
-	return handleOutTransformation(p, v)
+	return handleOutTransformation(p.out, v)
 }
 
 func (p *Javascript) setParam(param string, val any) error {
@@ -168,28 +168,4 @@ func (p *Javascript) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
 		return p.paramAndEval(param, val)
 	}
-}
-
-func (p *Javascript) convertToInt(v otto.Value) (int64, error) {
-	return v.ToInteger()
-}
-
-func (p *Javascript) convertToString(v otto.Value) (string, error) {
-	return v.ToString()
-}
-
-func (p *Javascript) convertToFloat(v otto.Value) (float64, error) {
-	return v.ToFloat()
-}
-
-func (p *Javascript) convertToBool(v otto.Value) (bool, error) {
-	return v.ToBoolean()
-}
-
-func (p *Javascript) inTransformations() []InTransformation {
-	return p.in
-}
-
-func (p *Javascript) outTransformations() []OutTransformation { //nolint:golint,unused
-	return p.out
 }
