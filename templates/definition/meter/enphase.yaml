@@ -1,0 +1,23 @@
+template: enphase
+products:
+  - brand: Enphase
+    description:
+      generic: IQ Envoy
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+    required: true
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/production.json
+    method: GET
+    jq: .production[0].wNow
+  energy:
+    source: http
+    uri: http://{{ .host }}/production.json
+    method: GET
+    jq: .production[0].whLifetime
+    scale: 0.001
