@@ -128,7 +128,7 @@ export default {
 		timeTooFarInTheFuture: function () {
 			if (this.tariff?.rates) {
 				const lastRate = this.tariff.rates[this.tariff.rates.length - 1];
-				if (lastRate.end) {
+				if (lastRate?.end) {
 					const end = new Date(lastRate.end);
 					return this.selectedTargetTime >= end;
 				}
@@ -201,13 +201,18 @@ export default {
 				!isNaN(this.selectedTargetTime)
 			) {
 				try {
-					const opts = {
-						params: { targetTime: this.selectedTargetTime },
-					};
 					this.plan = (
-						await api.get(`loadpoints/${this.id}/target/plan`, opts)
+						await api.get(`loadpoints/${this.id}/target/plan`, {
+							params: { targetTime: this.selectedTargetTime },
+						})
 					).data.result;
-					this.tariff = (await api.get(`tariff/planner`)).data.result;
+
+					const tariffRes = await api.get(`tariff/planner`, {
+						validateStatus: function (status) {
+							return status >= 200 && status < 500;
+						},
+					});
+					this.tariff = tariffRes.status === 404 ? { rates: [] } : tariffRes.data.result;
 				} catch (e) {
 					console.error(e);
 				}

@@ -74,8 +74,27 @@ blog = "Блог"
 docs = "Документація"
 github = "GitHub"
 login = "Вхід до транспортного засобу"
+needHelp = "Потрібна допомога?"
 sessions = "Сеанси зарядки"
 settings = "Налаштування"
+
+[help]
+discussionsButton = "Обговорення GitHub"
+documentationButton = "Документація"
+issueButton = "Повідомити про помилку"
+issueDescription = "Знайшли дивну чи неправильну поведінку?"
+modalTitle = "Потрібна допомога?"
+primaryActions = "Щось не працює так, як повинно? Це хороші місця, де можна отримати допомогу."
+restartButton = "Перезапустити"
+restartDescription = "Спробували вимкнути і знову увімкнути?"
+secondaryActions = "Все ще не можете вирішити свою проблему? Ось кілька більш жорстких варіантів."
+
+[help.restart]
+cancel = "Скасувати"
+confirm = "Так, перезапустити!"
+description = "За звичайних обставин перезапуск не має бути необхідним. Якщо вам потрібно регулярно перезапускати evcc, будь ласка, створіть повідомлення про проблему"
+disclaimer = "Примітка: evcc завершить роботу і покладатиметься на операційну систему для перезапуску служби."
+modalTitle = "Ви впевнені, що хочете перезапустити?"
 
 [main]
 vehicles = "Паркування"
@@ -104,10 +123,14 @@ pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
 
 [main.loadpoint]
+avgPrice = "Ø Ціна"
 charged = "Заряджено"
+co2 = "Ø CO₂"
 duration = "Тривалість"
 fallbackName = "Точка зарядки"
 power = "Потужність"
+price = "Σ Ціна"
+solar = "Сонячна"
 
 [main.loadpointSettings]
 currents = "Струм зарядки"
@@ -227,20 +250,28 @@ reload = "Перезавантажити?"
 
 [session]
 cancel = "Скасувати"
+co2 = "CO₂"
+date = "Період"
 delete = "Видалити"
 finished = "Завершено"
+meter = "Лічильник"
 meterstart = "Початок лічильника"
 meterstop = "Зупинка лічильника"
 odometer = "Пробіг"
+price = "Ціна"
 started = "Розпочато"
 title = "Сеанс зарядки"
 
 [sessions]
-date = "Період"
+avgPrice = "Ø Ціна"
+co2 = "Ø CO₂"
+date = "Завершено"
 downloadCsv = "Завантажити як CSV"
 energy = "Заряджено"
 loadpoint = "Точка зарядки"
+price = "Σ Ціна"
 reallyDelete = "Ви дійсно хочете видалити цей сеанс?"
+solar = "Сонячна"
 title = "Сеанси зарядки"
 vehicle = "Транспортний засіб"
 

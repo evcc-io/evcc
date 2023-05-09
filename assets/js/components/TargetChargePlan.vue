@@ -5,7 +5,7 @@
 				<div class="label">{{ $t("main.targetChargePlan.chargeDuration") }}</div>
 				<div class="value text-primary">{{ planDuration }}</div>
 			</div>
-			<div class="text-end">
+			<div v-if="hasTariff" class="text-end">
 				<div class="label">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
 					<span v-else-if="isCo2">{{ $t("main.targetChargePlan.co2Label") }}</span>
@@ -45,6 +45,9 @@ export default {
 		},
 		isCo2() {
 			return this.unit === CO2_UNIT;
+		},
+		hasTariff() {
+			return this.rates?.length > 1;
 		},
 		avgPrice() {
 			let hourSum = 0;

@@ -23,7 +23,7 @@ params:
   - preset: vehicle-identify
 render: |
   type: niu
-  {{- if ne .title "" }}
+  {{- if .title }}
   title: {{ .title }}
   {{- end }}
   {{- if ne .icon "" }}
@@ -33,3 +33,4 @@ render: |
   password: {{ .password }} # NIU app password
   serial: {{ .serial }} # NIU E-Scooter serial number like shown in app
   capacity: {{ .capacity }}
+  {{ include "vehicle-identify" . }}

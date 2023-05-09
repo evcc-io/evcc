@@ -1,0 +1,53 @@
+template: teslamate
+products:
+  - brand: Tesla
+    description:
+      generic: A self-hosted data logger for your Tesla (teslamate)
+requirements:
+  description:
+    en: Required MQTT broker configuration
+    de: Voraussetzung ist konfigurierter MQTT Broker
+params:
+  - name: title
+  - name: id
+    default: 1
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: icon
+    default: car
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: custom
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .phases }}
+  phases: {{ .phases }}
+  {{- end }}
+  {{- include "vehicle-identify" . }}
+  soc:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/battery_level
+    timeout: 720h # 30d
+  status:
+    source: combined
+    plugged:
+      source: mqtt
+      topic: teslamate/cars/{{ .id }}/plugged_in
+      timeout: 720h # 30d
+    charging:
+      source: mqtt
+      topic: teslamate/cars/{{ .id }}/charger_actual_current
+      timeout: 720h # 30d
+  range:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/rated_battery_range_km
+    timeout: 720h # 30d

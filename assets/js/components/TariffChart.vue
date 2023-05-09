@@ -18,7 +18,7 @@
 			@click="selectSlot(index)"
 		>
 			<div class="slot-bar" :style="priceStyle(slot.price)">
-				<span v-if="slot.price === undefined" class="unknown">?</span>
+				<span v-if="slot.price === undefined && avgPrice" class="unknown">?</span>
 			</div>
 			<div class="slot-label">
 				{{ slot.startHour }}
@@ -89,9 +89,8 @@ export default {
 		},
 		priceStyle(price) {
 			const value = price === undefined ? this.avgPrice : price;
-			return {
-				height: `${(100 / this.maxPrice) * value}%`,
-			};
+			const height = value ? `${(100 / this.maxPrice) * value}%` : "100%";
+			return { height };
 		},
 	},
 };
