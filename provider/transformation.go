@@ -5,11 +5,12 @@ import (
 )
 
 type (
-	OutTransformationProvider[T any] interface {
-		convertToInt(T) (int64, error)
-		convertToString(T) (string, error)
-		convertToFloat(T) (float64, error)
-		convertToBool(T) (bool, error)
+	// OutTransformationProvider[T any] interface {
+	OutTransformationProvider interface {
+		// convertToInt(T) (int64, error)
+		// convertToString(T) (string, error)
+		// convertToFloat(T) (float64, error)
+		// convertToBool(T) (bool, error)
 		outTransformations() []OutTransformation
 	}
 	InTransformationProvider interface {
@@ -157,31 +158,35 @@ func handleInTransformation[P InTransformationProvider](p P) error {
 	return nil
 }
 
-func handleOutTransformation[P OutTransformationProvider[A], A any](p P, v A) error {
+func handleOutTransformation(p OutTransformationProvider, v any) error {
 	for _, cc := range p.outTransformations() {
 		var (
-			vv  any
-			err error
+			vv any
+			ok bool
 		)
 
 		switch cc.typ {
 		case "bool":
-			vv, err = p.convertToBool(v)
+			vv, ok = v.(bool)
+
 		case "int":
-			vv, err = p.convertToInt(v)
+			vv, ok = v.(int64)
+
 		case "float":
-			vv, err = p.convertToFloat(v)
+			vv, ok = v.(float64)
+
 		case "string":
-			vv, err = p.convertToString(v)
+			vv, ok = v.(string)
+
 		default:
 			return fmt.Errorf("%s: invalid type %s", cc.name, cc.typ)
 		}
 
-		if err == nil {
-			err = cc.function(vv)
+		if !ok {
+			return fmt.Errorf("%s: not a %s: %v", cc.name, cc.typ, v)
 		}
 
-		if err != nil {
+		if err := cc.function(vv); err != nil {
 			return fmt.Errorf("%s: %w", cc.name, err)
 		}
 	}

@@ -66,12 +66,16 @@ func (p *Go) FloatGetter() func() (float64, error) {
 			return 0, err
 		}
 
-		v, err := p.evaluate()
+		v, err := p.vm.Eval(p.script)
 		if err != nil {
 			return 0, err
 		}
 
-		return p.convertToFloat(v)
+		if typ := reflect.TypeOf(0.0); v.CanConvert(typ) {
+			return v.Convert(typ).Float(), nil
+		}
+
+		return 0, fmt.Errorf("not a string: %s", v)
 	}
 }
 
@@ -82,12 +86,16 @@ func (p *Go) IntGetter() func() (int64, error) {
 			return 0, err
 		}
 
-		v, err := p.evaluate()
+		v, err := p.vm.Eval(p.script)
 		if err != nil {
 			return 0, err
 		}
 
-		return p.convertToInt(v)
+		if typ := reflect.TypeOf(0); v.CanConvert(typ) {
+			return v.Convert(typ).Int(), nil
+		}
+
+		return 0, fmt.Errorf("not a string: %s", v)
 	}
 }
 
@@ -98,12 +106,16 @@ func (p *Go) StringGetter() func() (string, error) {
 			return "", err
 		}
 
-		v, err := p.evaluate()
+		v, err := p.vm.Eval(p.script)
 		if err != nil {
 			return "", err
 		}
 
-		return p.convertToString(v)
+		if typ := reflect.TypeOf(""); v.CanConvert(typ) {
+			return v.Convert(typ).String(), nil
+		}
+
+		return "", fmt.Errorf("not a string: %s", v)
 	}
 }
 
@@ -114,12 +126,16 @@ func (p *Go) BoolGetter() func() (bool, error) {
 			return false, err
 		}
 
-		v, err := p.evaluate()
+		v, err := p.vm.Eval(p.script)
 		if err != nil {
 			return false, err
 		}
 
-		return p.convertToBool(v)
+		if typ := reflect.TypeOf(false); v.CanConvert(typ) {
+			return v.Convert(typ).Bool(), nil
+		}
+
+		return false, fmt.Errorf("not a string: %s", v)
 	}
 }
 
@@ -129,7 +145,7 @@ func (p *Go) paramAndEval(param string, val any) error {
 		return err
 	}
 
-	v, err := p.evaluate()
+	v, err := p.vm.Eval(p.script)
 	if err != nil {
 		return err
 	}
@@ -144,9 +160,6 @@ func (p *Go) setParam(param string, val any) error {
 
 	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
 	return err
-}
-func (p *Go) evaluate() (reflect.Value, error) {
-	return p.vm.Eval(p.script)
 }
 
 // IntSetter sends int request
@@ -175,34 +188,6 @@ func (p *Go) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
 		return p.paramAndEval(param, val)
 	}
-}
-
-func (p *Go) convertToInt(v reflect.Value) (int64, error) {
-	if typ := reflect.TypeOf(0); v.CanConvert(typ) {
-		return v.Convert(typ).Int(), nil
-	}
-	return 0, fmt.Errorf("not a int: %s", v)
-}
-
-func (p *Go) convertToString(v reflect.Value) (string, error) {
-	if typ := reflect.TypeOf(""); v.CanConvert(typ) {
-		return v.Convert(typ).String(), nil
-	}
-	return "", fmt.Errorf("not a string: %s", v)
-}
-
-func (p *Go) convertToFloat(v reflect.Value) (float64, error) {
-	if typ := reflect.TypeOf(0.0); v.CanConvert(typ) {
-		return v.Convert(typ).Float(), nil
-	}
-	return 0.0, fmt.Errorf("not a float: %s", v)
-}
-
-func (p *Go) convertToBool(v reflect.Value) (bool, error) {
-	if typ := reflect.TypeOf(true); v.CanConvert(typ) {
-		return v.Convert(typ).Bool(), nil
-	}
-	return false, fmt.Errorf("not a bool: %s", v)
 }
 
 func (p *Go) inTransformations() []InTransformation {
