@@ -139,18 +139,18 @@ func (p *Go) BoolGetter() func() (bool, error) {
 	}
 }
 
-func (p *Go) paramAndEval(param string, val any) error {
+func (p *Go) paramAndEval(param string, val any) (*reflect.Value, error) {
 	err := p.setParam(param, val)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	v, err := p.vm.Eval(p.script)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return handleOutTransformation(p.out, v)
+	return &v, nil
 }
 
 func (p *Go) setParam(param string, val any) error {
@@ -165,7 +165,17 @@ func (p *Go) setParam(param string, val any) error {
 // IntSetter sends int request
 func (p *Go) IntSetter(param string) func(int64) error {
 	return func(val int64) error {
-		return p.paramAndEval(param, val)
+		v, err := p.paramAndEval(param, val)
+		if err != nil {
+			return err
+		}
+
+		typ := reflect.TypeOf(0)
+		if !v.CanConvert(typ) {
+			return fmt.Errorf("not a int: %v", v)
+		}
+
+		return handleOutTransformation(p.out, v.Convert(typ).Int())
 	}
 }
 
