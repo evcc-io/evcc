@@ -1,28 +1,41 @@
-template: deye
+template: solarman
+covers: ["deye"]
 products:
+  - brand: IGEN Tech
+    description:
+      generic: Solarman Logger
   - brand: Deye
     description:
       generic: SUN series micro inverter
   - brand: Bosswerk
     description:
       generic: MI series micro inverter
+  - brand: Ginlong
+    description:
+      generic: Solis inverter
 params:
   - name: usage
     choice: ["pv"]
-    allinone: true
   - name: host
-  - name: port
-    default: 80
   - name: user
     default: admin
   - name: password
+    default: admin
 render: |
   type: custom
   power:
     source: http
-    uri: http://{{ .host }}:{{ .port }}/status.html
+    uri: http://{{ .host }}/status.html
     auth: # basic authorization
       type: basic
       user: {{ .user }}
       password: {{ .password }}
     regex: webdata_now_p\s*=\s*\"(\d+)\"
+  energy:
+    source: http
+    uri: http://{{ .host }}/status.html
+    auth: # basic authorization
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    regex: webdata_total_e\s*=\s*\"(\d+[.]\d+)\"
