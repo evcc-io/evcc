@@ -163,12 +163,12 @@ type Loadpoint struct {
 	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
 
 	// charge progress
-	vehicleSoc              float64       // Vehicle Soc
-	chargeDuration          time.Duration // Charge duration
-	chargedEnergy           float64       // Charged energy while connected in Wh
-	chargeRemainingDuration time.Duration // Remaining charge duration
-	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
-	progress                *Progress     // Step-wise progress indicator
+	vehicleSoc              float64        // Vehicle Soc
+	chargeDuration          time.Duration  // Charge duration
+	sessionEnergy           *EnergyMetrics // Stats for charged energy by session
+	chargeRemainingDuration time.Duration  // Remaining charge duration
+	chargeRemainingEnergy   float64        // Remaining charge energy in Wh
+	progress                *Progress      // Step-wise progress indicator
 
 	// session log
 	db      db.Database
@@ -298,6 +298,7 @@ func NewLoadpoint(log *util.Logger) *Loadpoint {
 		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
 		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		GuardDuration: 5 * time.Minute,
+		sessionEnergy: NewEnergyMetrics(),
 		progress:      NewProgress(0, 10),     // soc progress indicator
 		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
 		tasks:         util.NewQueue[Task](),  // task queue
@@ -441,7 +442,8 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	lp.log.INFO.Printf("car connected")
 
 	// energy
-	lp.setChargedEnergy(0)
+	lp.sessionEnergy.Reset()
+	lp.sessionEnergy.Publish("session", lp)
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
 
 	// duration
@@ -479,6 +481,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.resetMeasuredPhases()
 
 	// energy and duration
+	lp.sessionEnergy.Publish("session", lp)
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
@@ -1137,7 +1140,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered bool) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.GetMinCurrent()
 	maxCurrent := lp.GetMaxCurrent()
@@ -1349,7 +1352,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
-			lp.setChargedEnergy(1e3 * (f - lp.chargedAtStartup)) // convert to Wh
+			lp.sessionEnergy.Update(f - lp.chargedAtStartup)
 		}
 	} else {
 		lp.log.ERROR.Printf("charge rater: %v", err)
@@ -1361,6 +1364,8 @@ func (lp *Loadpoint) publishChargeProgress() {
 		lp.log.ERROR.Printf("charge timer: %v", err)
 	}
 
+	lp.sessionEnergy.Publish("session", lp)
+	// deprecated: use sessionEnergy instead
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
 	lp.publish("chargeDuration", lp.chargeDuration)
 	if _, ok := lp.chargeMeter.(api.MeterEnergy); ok {
@@ -1492,7 +1497,7 @@ func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool) {
+func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	lp.processTasks()
 
 	mode := lp.GetMode()
@@ -1501,6 +1506,8 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool)
 	// read and publish meters first- charge power has already been updated by the site
 	lp.updateChargeVoltages()
 	lp.updateChargeCurrents()
+
+	lp.sessionEnergy.SetEnvironment(greenShare, effPrice, effCo2)
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
@@ -1589,7 +1596,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered bool)
 			break
 		}
 
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered, batteryStart)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.vehicleClimateActive() {

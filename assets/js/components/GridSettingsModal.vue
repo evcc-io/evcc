@@ -211,7 +211,7 @@ export default {
 			return null;
 		},
 		activeSlotCost() {
-			const price = this.activeSlot.price;
+			const price = this.activeSlot?.price;
 			if (price === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}
@@ -232,6 +232,7 @@ export default {
 		},
 	},
 	mounted() {
+		this.selectedSmartCostLimit = this.smartCostLimit;
 		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
 		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
 	},

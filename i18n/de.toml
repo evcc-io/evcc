@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Ladestand"
+capacity = "{energy} von {total}"
+legendBottomName = "Haus hat Priorität"
+legendBottomSubline = "nicht zum Laden verwenden"
+legendMiddleName = "Fahrzeug zuerst"
+legendMiddleSubline = "dann das Haus"
+legendTitle = "Wie soll Sonnenstrom genutzt werden?"
+legendTopAutostart = "startet automatisch"
+legendTopName = "batterieunterstütztes Laden"
+legendTopSubline = "ohne Unterbrechungen"
+modalTitle = "Batterie Einstellungen"
+note = "Hinweis: Nur relevant im PV Modus. Das Ladeverhalten wird entsprechend angepasst."
+
+[batterySettings.bufferStart]
+full = "wenn fast voll"
+low = "wenn etwas voll"
+medium = "wenn halbvoll"
+never = "nur mit genug PV-Überschuss"
+
 [footer]
 
 [footer.community]
@@ -6,7 +26,7 @@ greenEnergySub1 = "über evcc geladen"
 greenEnergySub2 = "seit Oktober 2022"
 greenShare = "Sonnenanteil"
 greenShareSub1 = "der Leistung kommt"
-greenShareSub2 = "von PV & Hausakku"
+greenShareSub2 = "von PV und Speicher"
 power = "Ladeleistung"
 powerSub1 = "{activeClients} von {totalClients} Nutzern"
 powerSub2 = "laden..."
@@ -73,8 +93,27 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fahrzeug Logins"
+needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
 settings = "Einstellungen"
+
+[help]
+discussionsButton = "GitHub Discussions"
+documentationButton = "Dokumentation"
+issueButton = "Bug melden"
+issueDescription = "Komisches Verhalten gefunden?"
+modalTitle = "Hilfe benötigt?"
+primaryActions = "Funktioniert etwas nicht so, wie es soll? Dies sind gute Anlaufstellen, um Hilfe zu erhalten."
+restartButton = "Neu starten"
+restartDescription = "Tried turning it off and on again?"
+secondaryActions = "Noch keine Lösung gefunden? Hier noch ein paar weitere Möglichkeiten."
+
+[help.restart]
+cancel = "Abbrechen"
+confirm = "Ja, neu starten!"
+description = "Unter normalen Umständen sollte ein Neustart nicht notwendig sein. Melde einen Bug, wenn du evcc regelmäßig neu starten musst."
+disclaimer = "Hinweis: evcc beendet sich und verlässt sich darauf, vom Betriebssystem neu gestartet zu werden."
+modalTitle = "Sicher, dass du neu starten möchtest?"
 
 [main]
 vehicles = "Parkplatz"
@@ -103,13 +142,17 @@ pvProduction = "Erzeugung"
 selfConsumption = "Eigenverbrauch"
 
 [main.loadpoint]
+avgPrice = "Ø Preis"
 charged = "Geladen"
+co2 = "Ø CO₂"
 duration = "Dauer"
 fallbackName = "Ladepunkt"
 power = "Leistung"
+price = "Σ Preis"
 remaining = "Restzeit"
 remoteDisabledHard = "{source}: Deaktiviert"
 remoteDisabledSoft = "{source}: Adaptives PV-Laden deaktiviert"
+solar = "Sonne"
 
 [main.loadpointSettings]
 currents = "Ladestrom"
@@ -227,20 +270,28 @@ reload = "Erneut laden?"
 
 [session]
 cancel = "Abbrechen"
+co2 = "CO₂"
+date = "Zeitraum"
 delete = "Löschen"
 finished = "Endzeit"
+meter = "Zählerstand"
 meterstart = "Anfangszählerstand"
 meterstop = "Endzählerstand"
 odometer = "Kilometerstand"
+price = "Preis"
 started = "Startzeit"
 title = "Ladevorgang"
 
 [sessions]
-date = "Zeitraum"
+avgPrice = "Ø Preis"
+co2 = "Ø CO₂"
+date = "Anfang"
 downloadCsv = "Als CSV herunterladen"
 energy = "Geladen"
 loadpoint = "Ladepunkt"
+price = "Σ Preis"
 reallyDelete = "Wollen Sie diesen Ladevorgang wirklich löschen?"
+solar = "Sonne"
 title = "Ladevorgänge"
 vehicle = "Fahrzeug"
 

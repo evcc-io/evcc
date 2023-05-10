@@ -1,0 +1,10 @@
+product:
+  brand: Enphase
+  description: IQ Envoy
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: enphase
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname

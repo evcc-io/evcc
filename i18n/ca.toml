@@ -1,0 +1,330 @@
+[footer]
+
+[footer.community]
+greenEnergy = "Energia Solar"
+greenEnergySub1 = "Carregat amb evcc"
+greenEnergySub2 = "desde octubre de 2022"
+greenShare = "Part solar"
+greenShareSub1 = "energía proporcionada per"
+greenShareSub2 = "solar i emmagatzematge de bateries"
+power = "potencia de carrega"
+powerSub1 = "{activeClients} de {totalClients} usuaris"
+powerSub2 = "carregant..."
+tabTitle = "Comunitat en viu"
+
+[footer.savings]
+footerLong = "{percent}% Autoconsum"
+footerShort = "{percent}% Sol"
+modalTitle = "Avaluació de l'energia de càrrega"
+percentGrid = "{grid} kWh xarxa"
+percentSelf = "{self} kWh solar"
+percentTitle = "Energia solar"
+priceFeedIn = "{feedInPrice} excedent"
+priceGrid = "{gridPrice} xarxa"
+priceTitle = "Preu de l'energia"
+savingsComparedToGrid = "comparat amb la xarxa"
+savingsTitle = "Estalvi"
+savingsTotalEnergy = "{total} kWh carregats"
+since = "desde {since}"
+tabTitle = "Les meves dades"
+
+[footer.sponsor]
+becomeSponsor = "Convertir-se en patrocinador"
+confetti = "¿Vols una mica de confeti?"
+confettiPromise = "També hi ha adhesius i confeti digital"
+sticker = "...o adhesius de evcc?"
+supportUs = "La nostre missió: fer que repostar del sol sigui la norma. Ajuda'ns i dona suport econòmic a evcc!"
+thanks = "Gràcies pel teu patrocini, {sponsor}! Això ens ajudarà a continuar desenvolupant evcc."
+titleNoSponsor = "Dona'ns suport"
+titleSponsor = "Ets un seguidor"
+
+[footer.telemetry]
+optIn = "També voldria contribuir amb les meves dades."
+optInMoreDetails = "Més detalls {0}."
+optInMoreDetailsLink = "aquí"
+optInSponsorship = "Es requereix patrocini."
+
+[footer.version]
+availableLong = "Actualitzacions disponibles"
+modalCancel = "Cancel·lar"
+modalDownload = "Descarregar"
+modalInstalledVersion = "Versió instal·lada"
+modalNoReleaseNotes = "No hi ha notes de llançament disponibles. Pots trobar més informació sobre la nova versió aquí:"
+modalTitle = "Actualitzacions disponibles"
+modalUpdate = "Instal·lar"
+modalUpdateNow = "Instal·lar ara"
+modalUpdateStarted = "Després de l'actualització, evcc es reiniciarà."
+modalUpdateStatusStart = "Instal·lació iniciada:"
+
+[gridSettings]
+activeHours = "{charging} de {total}"
+activeHoursLabel = "Hores funcionant"
+co2Label = "Emissions de CO₂"
+co2Limit = "Límit de CO₂"
+costLimitDescription = "Habilita temporalment la càrrega ràpida en mode solar"
+modalTitle = "Xarxa intel·ligent de càrrega"
+none = "cap"
+priceLabel = "Preu de l'energia"
+priceLimit = "Límit de preu"
+
+[header]
+about = "Sobre"
+blog = "Blog"
+docs = "Documentació"
+github = "GitHub"
+login = "Login de vehicle"
+needHelp = "Necessites ajuda?"
+sessions = "Processos de càrrega"
+settings = "Paràmetres"
+
+[help]
+discussionsButton = "Debat sobre GitHub"
+documentationButton = "Documentació"
+issueButton = "Informar d'un error"
+issueDescription = "¿Has trobat un comportament extrany o incorrecte?"
+modalTitle = "Necessites ajuda?"
+primaryActions = "Si quelcom no funciona com hauria, podeu obtenir ajuda aqui."
+restartButton = "Reiniciar"
+restartDescription = "¿Has provat d'apagar i tornar a engegar?"
+secondaryActions = "¿Segeixes sense poder resoldre el teu problema? Aquí tens altres opcions més contundents"
+
+[help.restart]
+cancel = "Cancel·lar"
+confirm = "¡Sí, reinicia!"
+description = "Sota circumstàncies normals no hauria de ser necessari reiniciar. Considereu sisplau la possibilitat de reportar un error si necessiteu reiniciar-lo regularment."
+disclaimer = "Nota: evcc es pararà i dependrà del sistema operatiu per reiniciar el servei"
+modalTitle = "¿Segur que vols tornar començar?"
+
+[main]
+vehicles = "Estacionament"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Arribades"
+departureTab = "Sortides"
+modalTitle = "Plà de càrrega"
+none = "cap"
+title = "Plà"
+titleMinSoc = "Càrrega mínima"
+titleTargetCharge = "Sortides"
+
+[main.energyflow]
+battery = "Bateria"
+batteryCharge = "Carregar la bateria"
+batteryDischarge = "Descarregar la bateria"
+batteryTooltip = "{energy} de {total} ({soc})"
+gridImport = "Consum de xarxa"
+homePower = "Consum"
+loadpoints = "Punt de càrrega | Punt de càrrega | {count} Punts de càrrega"
+noEnergy = "Sense lectures"
+pvExport = "Excedent"
+pvProduction = "Producció"
+selfConsumption = "Autoconsum"
+
+[main.loadpoint]
+avgPrice = "Preu Ø"
+charged = "Carregat"
+co2 = "CO₂ Ø "
+duration = "Duració"
+fallbackName = "Punt de càrrega"
+power = "Potència"
+price = "Σ Preu"
+solar = "Solar"
+
+[main.loadpointSettings]
+currents = "Corrent de càrrega"
+default = "defecte"
+disclaimerHint = "Nota:"
+disclaimerText = "Els canvis encara no són persistents i es restableixen al iniciar el servei."
+title = "Configuracions {0}"
+vehicle = "Vehicle"
+
+[main.loadpointSettings.maxCurrent]
+label = "Corrent de carrega màxima "
+
+[main.loadpointSettings.minCurrent]
+label = "Corriente de carrega mínima"
+
+[main.loadpointSettings.minSoc]
+description = "Marge per a emergències. El vehicle es carrega 'ràpidament' a {0}% en mode solar. Després continua amb l'excedent fotovoltaic."
+label = "Càrrega de min. %"
+
+[main.loadpointSettings.phasesConfigured]
+label = "Fases"
+phases_0 = "Canvi automàtic"
+phases_1 = "monofàsica"
+phases_1_hint = "({min} a {max})"
+phases_3 = "trifàsica"
+phases_3_hint = "({min} a {max})"
+
+[main.mode]
+minpv = "Min+Sol"
+now = "Ràpid"
+off = "Apagat"
+pv = "Solar"
+
+[main.provider]
+login = "iniciar sessió"
+logout = "tancar sessió"
+
+[main.targetCharge]
+activate = "Activar"
+co2Limit = "Límit de CO₂ del {co2}"
+costLimitIgnore = "El {limit} configurat serà ignorat durant aquest període."
+descriptionEnergy = "Fins quan s'ha d'haver carregat {targetEnergy} el vehicle?"
+descriptionSoc = "Fins quan s'ha d'haver carregat el vehicle al {targetSoc}%?"
+inactiveLabel = "hora objectiu"
+planDuration = "Temps de càrrega"
+planPeriodLabel = "Període"
+planPeriodValue = "de {start} a {end}"
+planUnknown = "encara no se sap"
+priceLimit = "límit en el preu de {price}"
+setTargetTime = "cap"
+targetIsInThePast = "Tria un temps en el futur, Marty."
+targetIsTooFarInTheFuture = "Ajustarém el pla quan sapiguém més sobre el futur."
+title = "hora objectiu"
+today = "avui"
+tomorrow = "matí"
+update = "Actualitzar"
+
+[main.targetChargePlan]
+chargeDuration = "Temps de càrrega"
+co2Label = "Emissió de CO₂ Ø"
+priceLabel = "Preu de l'energia"
+timeRange = "{day} {range} hora"
+unknownPrice = "encara desconegut"
+
+[main.targetEnergy]
+label = "Objectiu de càrrega"
+noLimit = "cap"
+
+[main.vehicle]
+addVehicle = "Afegir un vehicle"
+changeVehicle = "Canvia de vehicle"
+detectionActive = "Reconeixent vehicle..."
+fallbackName = "Vehicle"
+moreActions = "Més accions"
+none = "Cap vehicle"
+targetSoc = "Objectiu de càrrega"
+unknown = "Vehicle convidat"
+vehicleSoc = "Nivell de càrrega"
+
+[main.vehicleSoc]
+charging = "carregant"
+connected = "connectat"
+disconnected = "desconnectat"
+ready = "preparat"
+vehicleTarget = "límit de vehicle: {soc}%"
+
+[main.vehicleStatus]
+charging = "Carregant..."
+cheapEnergyCharging = "Energia barata disponible. Carregant..."
+cleanEnergyCharging = "Energia neta disponible. Carregant..."
+climating = "Precondicionament detectat."
+connected = "Connectat."
+disconnected = "Desconnectat."
+guard = "Començant a {remaining}..."
+minCharge = "Càrrega mínima fins a {soc}%."
+pvDisable = "Excedent insuficient. Pausa en {remaining}..."
+pvEnable = "Excedent disponible. Començar en {remaining}..."
+scale1p = "Reduint a càrrega monofàsica a {remaining}..."
+scale3p = "Augmentant la càrrega trifàsica en {remaining}..."
+targetChargeActive = "Càrrega objectiu activa..."
+targetChargePlanned = "La càrrega objectiu comença a {time}."
+targetChargeWaitForVehicle = "Càrrega objectiu llesta. Esperar vehicle."
+unknown = ""
+vehicleTargetReached = "Límit de vehicle {soc}% assolit."
+waitForVehicle = "A punt per carregar. Esperant vehicle."
+
+[notifications]
+dismissAll = "Eliminar notificacions"
+modalTitle = "Notificacions"
+
+[offline]
+message = "No connectat amb servidor."
+reload = "Actualitzar?"
+
+[session]
+cancel = "Cancelar"
+co2 = "CO₂"
+date = "Período"
+delete = "Borrar"
+finished = "Finalizó"
+meter = "Contador"
+meterstart = "Iniciar el medidor"
+meterstop = "Parar el medidor"
+odometer = "Kilometraje"
+price = "Precio"
+started = "Comenzó"
+title = "Cargando la sesión"
+
+[sessions]
+avgPrice = "Preu Ø"
+co2 = "CO₂"
+date = "Període"
+downloadCsv = "Descarregar com a CSV"
+energy = "Carregada"
+loadpoint = "Punt de recàrrega"
+price = "Preu"
+reallyDelete = "Realment vols esborrar aquesta sessió?"
+solar = "Solar"
+title = "Carregant la sessió"
+vehicle = "Vehicle"
+
+[sessions.csv]
+chargedenergy = "Energia (kWh)"
+created = "Hora d'inici"
+finished = "Hora de finalització"
+identifier = "Identificador"
+loadpoint = "Punt de càrrega"
+meterstart = "Inici de mesura (kWh)"
+meterstop = "Paró de mesura (kWh)"
+odometer = "Kilometratge (km)"
+vehicle = "Vehicle"
+
+[settings]
+title = "Configuració"
+
+[settings.hiddenFeatures]
+label = "En proves"
+value = "Mostra les característiques experimentals de la interfície d'usuari."
+
+[settings.language]
+auto = "Automàtic"
+label = "Idioma"
+
+[settings.sponsorToken]
+expires = "El teu token de patrocinador expira en {inXDays}. {getNewToken} i actualitza el teu fitxer de configuració."
+getNew = "Agafa'n un de nou"
+hint = "Nota: automatitzarém això en el futur."
+
+[settings.telemetry]
+label = "Telemetria"
+
+[settings.theme]
+auto = "sistema"
+dark = "fosc"
+label = "Tema"
+light = "clar"
+
+[settings.unit]
+km = "km"
+label = "Unitats"
+mi = "milles"
+
+[startupError]
+configFile = "Arxiu de configuració utilitzat:"
+configuration = "Configuració"
+description = "Sisplau reviseu el vostre fitxer de configuració. Si el missatge d'error no us ajuda, busqueu una solució al nostre {0}."
+discussions = "Discussions de GitHub"
+fixAndRestart = "Soluciona sisplau el problema i reinicia el servidor."
+hint = "Nota: També pot ser que tinguis un aparell avariat (inversor, mesura, ...). Comprova les seves connexions a la xarxa."
+lineError = "Error en {0}."
+lineErrorLink = "Línia {0}"
+restartButton = "Reiniciar"
+title = "Error a l'inici"
+
+[vehicleSettings]
+cancel = "Cancel·lar"
+template = "Fabricant"
+test = "Prova"

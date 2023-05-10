@@ -3,6 +3,9 @@ products:
   - brand: Phoenix
     description:
       generic: CHARX
+  - brand: LadeFoxx
+    description:
+      generic: EvLoad/ Mikro 2.0
 params:
   - name: host
   - name: port

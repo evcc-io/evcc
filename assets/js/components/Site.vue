@@ -21,6 +21,7 @@
 				:smartCostUnit="smartCostUnit"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
+				:currency="currency"
 			/>
 			<VehcileSettingsModal />
 			<Footer v-bind="footer"></Footer>
@@ -69,6 +70,8 @@ export default {
 		battery: Array,
 		gridCurrents: Array,
 		prioritySoc: Number,
+		bufferSoc: Number,
+		bufferStartSoc: Number,
 		siteTitle: String,
 		vehicles: Array,
 

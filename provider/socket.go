@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/gorilla/websocket"
+	"nhooyr.io/websocket"
 )
 
 const retryDelay = 5 * time.Second
@@ -99,13 +100,15 @@ func (p *Socket) listen() {
 		headers.Set(k, v)
 	}
 
-	dialer := &websocket.Dialer{
-		Proxy:            http.ProxyFromEnvironment,
-		HandshakeTimeout: request.Timeout,
+	opts := &websocket.DialOptions{
+		HTTPHeader: headers,
 	}
 
 	for {
-		client, _, err := dialer.Dial(p.url, headers)
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		conn, _, err := websocket.Dial(ctx, p.url, opts)
+		cancel()
+
 		if err != nil {
 			p.log.ERROR.Println(err)
 			time.Sleep(retryDelay)
@@ -113,10 +116,10 @@ func (p *Socket) listen() {
 		}
 
 		for {
-			_, b, err := client.ReadMessage()
+			_, b, err := conn.Read(context.Background())
 			if err != nil {
 				p.log.TRACE.Println("read:", err)
-				_ = client.Close()
+				_ = conn.Close(websocket.StatusAbnormalClosure, "done")
 				break
 			}
 

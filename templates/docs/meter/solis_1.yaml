@@ -1,0 +1,12 @@
+product:
+  brand: Ginglong
+  description: Inverter
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: solis
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      user: # Standard-User ist admin (Optional)
+      password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) (Optional)

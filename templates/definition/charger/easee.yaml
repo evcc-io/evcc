@@ -10,8 +10,8 @@ params:
   - name: user
     required: true
     help:
-      de: E-Mail Adresse oder Telefonnummer mit Ländervorwahl (+XX)
-      en: email or phone number with area code (+XX)
+      de: Emailadresse
+      en: Email address
   - name: password
     required: true
     mask: true

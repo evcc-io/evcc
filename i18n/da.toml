@@ -63,6 +63,7 @@ co2Label = "CO₂ udledning"
 co2Limit = "CO₂ grænse"
 costLimitDescription = "Aktiverer midlertidig hurtig ladning i solcelle tilstand"
 modalTitle = "Smart net opladning"
+none = "ingen"
 priceLabel = "Energi pris"
 priceLimit = "Pris grænse"
 

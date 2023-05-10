@@ -62,7 +62,7 @@ func (m *MQTT) encode(v interface{}) string {
 
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
 	token := m.Handler.Client.Publish(topic, m.Handler.Qos, retained, m.encode(payload))
-	go m.Handler.WaitForToken(token)
+	go m.Handler.WaitForToken("send", topic, token)
 }
 
 func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
@@ -194,6 +194,12 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferSoc/set", m.root), func(payload string) {
 		if val, err := strconv.ParseFloat(payload, 64); err == nil {
 			_ = site.SetBufferSoc(val)
+		}
+	})
+
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferStartSoc/set", m.root), func(payload string) {
+		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+			_ = site.SetBufferStartSoc(val)
 		}
 	})
 

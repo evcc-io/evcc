@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/enbility/cemd/emobility"
+	"github.com/enbility/eebus-go/features"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -420,6 +421,9 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 	currents, err := c.emobility.EVCurrentsPerPhase()
 	if err != nil {
+		if err == features.ErrDataNotAvailable {
+			return 0, 0, 0, api.ErrNotAvailable
+		}
 		return 0, 0, 0, err
 	}
 

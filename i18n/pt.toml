@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Nível da bateria"
+capacity = "{energy} de {total}"
+legendBottomName = "prioridade doméstica"
+legendBottomSubline = "não usado para carregar"
+legendMiddleName = "veículo primeiro"
+legendMiddleSubline = "segunda casa"
+legendTitle = "Como a energia solar deve ser usada?"
+legendTopAutostart = "inicio automatico"
+legendTopName = "carregamento suportado por bateria"
+legendTopSubline = "sem interrupções"
+modalTitle = "Configuraçao da bateria"
+note = "Nota: Estas configurações só afetam o modo solar. O comportamento de carregamento é ajustado de acordo."
+
+[batterySettings.bufferStart]
+full = "quando quase cheio"
+low = "quando um pouco cheio"
+medium = "quando meio cheio"
+never = "apenas com excesso suficiente"
+
 [footer]
 
 [footer.community]
@@ -73,6 +93,7 @@ blog = "Blog"
 docs = "Documentação"
 github = "GitHub"
 login = "Login de veículo"
+needHelp = "Precisa ajuda?"
 sessions = "Sessões de carga"
 settings = "Configuração"
 
@@ -80,6 +101,24 @@ settings = "Configuração"
 auto = "Design: Sistema"
 dark = "Design: Escuro"
 light = "Design: Claro"
+
+[help]
+discussionsButton = "Discussões no GitHub"
+documentationButton = "Documentação"
+issueButton = "Reportar um erro"
+issueDescription = "Encontrou um comportamento estranho ou errado?"
+modalTitle = "Precisa ajuda?"
+primaryActions = "Alguma coisa não funciona como deveria? Estes são bons lugares para obter ajuda."
+restartButton = "Reiniciar"
+restartDescription = "Tentou desligar e ligar de novo?"
+secondaryActions = "Ainda não conseguiu resolver o seu problema? Aqui estão algumas opções mais pesadas."
+
+[help.restart]
+cancel = "Cancelar"
+confirm = "Sim, reinicie!"
+description = "Em circunstâncias normais, a reinicialização não deve ser necessária. Considere registrar um erro se precisar reiniciar o evcc regularmente."
+disclaimer = "Nota: o evcc terminará e confiará no sistema operacional para reiniciar o serviço."
+modalTitle = "Tens a certeza que queres reiniciar"
 
 [main]
 vehicles = "Estacionamento"
@@ -108,13 +147,17 @@ pvProduction = "Produção"
 selfConsumption = "Consumo próprio"
 
 [main.loadpoint]
+avgPrice = "Preço Ø"
 charged = "Carregado"
+co2 = "CO₂ Ø"
 duration = "Duração"
 fallbackName = "Ponto de carga"
 power = "Desempenho"
+price = "Preço Σ"
 remaining = "Tempo restante"
 remoteDisabledHard = "{source}: desativado"
 remoteDisabledSoft = "{source}:carregamento PV adaptável desativado"
+solar = "Sol"
 
 [main.loadpointSettings]
 currents = "Corrente de carga"
@@ -234,21 +277,29 @@ reload = "Iniciar de novo?"
 
 [session]
 cancel = "Cancelar"
+co2 = "CO₂"
+date = "Período"
 delete = "Excluir"
 finished = "Finalizado"
+meter = "Medidor"
 meterstart = "Início do contador"
 meterstop = "Contagem final"
 odometer = "Quilometragem"
+price = "Preço"
 started = "Começado"
 title = "Sessão de carga"
 
 [sessions]
+avgPrice = "Preço Ø"
+co2 = "CO₂ Ø"
 date = "Período"
 downloadCsv = "Download como CSV"
 energy = "Carregado"
 loadpoint = "Ponto de carga"
 odometer = "Quilometragem"
+price = "Preço Σ"
 reallyDelete = "Você realmente quer excluir esta sessão?"
+solar = "Sol"
 title = "Sessões de carga"
 vehicle = "Veículo"
 
