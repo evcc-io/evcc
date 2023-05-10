@@ -96,7 +96,6 @@ require (
 	golang.org/x/oauth2 v0.8.0
 	golang.org/x/sync v0.2.0
 	golang.org/x/text v0.9.0
-	google.golang.org/api v0.122.0
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -105,8 +104,6 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute v1.19.2 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
@@ -132,12 +129,8 @@ require (
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.2.0 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/google/s2a-go v0.1.3 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
-	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -185,7 +178,6 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
-	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
