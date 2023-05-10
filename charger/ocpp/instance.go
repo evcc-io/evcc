@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
+	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
 var (
@@ -16,7 +17,13 @@ var (
 
 func Instance() *CS {
 	once.Do(func() {
-		cs := ocpp16.NewCentralSystem(nil, nil)
+		timeoutConfig := ws.NewServerTimeoutConfig()
+		timeoutConfig.PingWait = 90 * time.Second
+
+		server := ws.NewServer()
+		server.SetTimeoutConfig(timeoutConfig)
+
+		cs := ocpp16.NewCentralSystem(nil, server)
 
 		instance = &CS{
 			log:           util.NewLogger("ocpp"),
