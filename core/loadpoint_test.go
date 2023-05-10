@@ -784,3 +784,44 @@ func TestMinSoc(t *testing.T) {
 		assert.Equal(t, tc.res, lp.minSocNotReached(), tc)
 	}
 }
+
+func TestLoadmanagement(t *testing.T) {
+
+	tc := []struct {
+		caseName     string
+		lpPhases     int
+		lpChargeCur  float64
+		mtrCur       float64
+		circCurLimit float64
+		circPwrLimit float64
+		requestedCur float64
+		expectedCur  float64
+	}{
+		{"no limit checking", 3, 0, 5, 0, 0, 16, 16},           // circuit has no limits, no restrictions
+		{"limit current", 3, 0, 5, 16, 0, 16, 11},              // current limited
+		{"enough current", 3, 16, 5, 16, 0, 16, 16},            // current checking but enough available
+		{"limit current on charging", 3, 0, 10, 20, 0, 16, 10}, // charging already, but not enough for requested
+		{"enough power", 3, 0, 0, 0, 11500, 16, 16},            // enough power left for charging
+		{"limit power", 3, 0, 0, 0, 8000, 16, 11},              // not enough power left for charging
+		{"not enough power 1p", 1, 0, 0, 0, 3000, 16, 13},      // not enough power left for charging
+		{"not enough power 3p", 3, 0, 0, 0, 3000, 16, 4},       // not enough power left for charging
+	}
+
+	for _, tc := range tc {
+
+		lp := NewLoadpoint(util.NewLogger("foo"))
+		lp.phases = tc.lpPhases
+		lp.status = api.StatusC // charging status
+		lp.chargeCurrent = tc.lpChargeCur
+		lp.chargePower = CurrentToPower(tc.lpChargeCur, uint(lp.phases))
+
+		// create circuit with meter
+		mtr := &testMeter{cur: tc.mtrCur, pwr: CurrentToPower(tc.mtrCur, uint(lp.phases))}
+		lp.circuit = NewCircuit(util.NewLogger("foo"), tc.circCurLimit, tc.circPwrLimit, nil, mtr, mtr)
+		assert.NotNilf(t, lp.circuit, "circuit not created", tc.caseName)
+
+		res, err := lp.checkCircuitAvailableLimit(tc.requestedCur)
+		assert.Nil(t, err, tc.caseName)
+		assert.Equal(t, int(tc.expectedCur), int(res), tc.caseName)
+	}
+}

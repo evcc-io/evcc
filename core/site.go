@@ -291,13 +291,33 @@ func (site *Site) DumpConfig() {
 	site.log.INFO.Printf("  circuits:")
 	for _, circuit := range site.Circuits {
 
-		var parentLimit float64
-		if circuit.parentCircuit != nil {
-			parentLimit = circuit.parentCircuit.maxCurrent
+		var (
+			curLmtStr string
+			pwrLmtStr string
+		)
+
+		if circuit.maxCurrent != math.MaxFloat64 {
+			curLmtStr = fmt.Sprintf("Current: max %.1fA", circuit.maxCurrent)
+		} else {
+			curLmtStr = "Current: " + presence[false]
+
+		}
+		if circuit.parentCircuit != nil && circuit.parentCircuit.maxCurrent != math.MaxFloat64 {
+			curLmtStr = fmt.Sprintf("%s (parent: %.1fA)", curLmtStr, circuit.parentCircuit.maxCurrent)
+		}
+
+		if circuit.maxPower != math.MaxFloat64 {
+			pwrLmtStr = fmt.Sprintf("Power: max %.1fkW", circuit.maxPower/1000)
+		} else {
+			pwrLmtStr = "Power: " + presence[false]
+
+		}
+		if circuit.parentCircuit != nil && circuit.parentCircuit.maxPower != math.MaxFloat64 {
+			pwrLmtStr = fmt.Sprintf("%s (parent: %.1fkW)", pwrLmtStr, circuit.parentCircuit.maxPower/1000)
 		}
 
 		site.log.INFO.Printf(
-			"     maxCurrent %.1fA (parent: %.1fA)", circuit.maxCurrent, parentLimit)
+			"     %s, %s", pwrLmtStr, curLmtStr)
 	}
 
 	if vehicles := site.GetVehicles(); len(vehicles) > 0 {

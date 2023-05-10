@@ -33,6 +33,7 @@ type loadpoint struct {
 type circuit struct {
 	Name       string  `mapstructure:"name"`       // unique name, used as reference in lp
 	MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current of this circuit
+	MaxPower   float64 `mapstructure:"maxPower"`   // the max allowed power of this circuit
 	MeterRef   string  `mapstructure:"meter"`      // Charge meter reference
 	ParentRef  string  `mapstructure:"parent"`     // name of parent circuit
 }

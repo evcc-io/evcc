@@ -11,6 +11,7 @@ import (
 // it is expected to get the max current over all phases
 type Consumer interface {
 	MaxPhasesCurrent() (float64, error)
+	CurrentPower() (float64, error) // reuse meter.api
 }
 
 // VMeter evaluates consumtion from assigned list of consumers
@@ -52,4 +53,21 @@ func (vm *VMeter) Currents() (float64, float64, float64, error) {
 	}
 
 	return currentTotal, currentTotal, currentTotal, nil
+}
+
+// power implements meter.CurrentPower() interface
+func (vm *VMeter) CurrentPower() (float64, error) {
+	vm.log.TRACE.Printf("get power from %d consumers", len(vm.Consumers))
+
+	var powerTotal float64
+	for _, consumer := range vm.Consumers {
+		if pwr, err := consumer.CurrentPower(); err == nil {
+			vm.log.TRACE.Printf("add %.2fkW power from consumer", pwr/1000)
+			powerTotal += pwr
+		} else {
+			return 0, err
+		}
+	}
+
+	return powerTotal, nil
 }

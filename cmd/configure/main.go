@@ -489,45 +489,77 @@ func (c *CmdConfigure) configureCircuits() {
 		curCircuit := &circuit{Name: ccName}
 
 		curChoices := []string{
-			c.localizedString("Circuit_MaxCurrent16A"),  // 11kVA
-			c.localizedString("Circuit_MaxCurrent20A"),  // 13kVA
-			c.localizedString("Circuit_MaxCurrent25A"),  // 17kVA
-			c.localizedString("Circuit_MaxCurrent32A"),  // 22kVA
-			c.localizedString("Circuit_MaxCurrent35A"),  // 24kVA
-			c.localizedString("Circuit_MaxCurrent50A"),  // 34kVA
-			c.localizedString("Circuit_MaxCurrent63A"),  // 43kVA
-			c.localizedString("Circuit_MaxCurrent80A"),  // 55kVA
-			c.localizedString("Circuit_MaxCurrent100A"), // 69kVA
+			c.localizedString("Circuit_MaxCurrentDisable"), // no current checking
+			c.localizedString("Circuit_MaxCurrent16A"),     // 11kVA
+			c.localizedString("Circuit_MaxCurrent20A"),     // 13kVA
+			c.localizedString("Circuit_MaxCurrent25A"),     // 17kVA
+			c.localizedString("Circuit_MaxCurrent32A"),     // 22kVA
+			c.localizedString("Circuit_MaxCurrent35A"),     // 24kVA
+			c.localizedString("Circuit_MaxCurrent50A"),     // 34kVA
+			c.localizedString("Circuit_MaxCurrent63A"),     // 43kVA
+			c.localizedString("Circuit_MaxCurrent80A"),     // 55kVA
+			c.localizedString("Circuit_MaxCurrent100A"),    // 69kVA
 			c.localizedString("Circuit_MaxCurrentCustom"),
 		}
 		fmt.Println()
-		powerIndex, _ := c.askChoice(c.localizedString("Circuit_MaxCurrent"), curChoices)
-		switch powerIndex {
+		curIndex, _ := c.askChoice(c.localizedString("Circuit_MaxCurrent"), curChoices)
+		switch curIndex {
 		case 0:
 			curCircuit.MaxCurrent = 16.0
 		case 1:
-			curCircuit.MaxCurrent = 20.0
+			curCircuit.MaxCurrent = 16.0
 		case 2:
-			curCircuit.MaxCurrent = 25.0
+			curCircuit.MaxCurrent = 20.0
 		case 3:
-			curCircuit.MaxCurrent = 32.0
+			curCircuit.MaxCurrent = 25.0
 		case 4:
-			curCircuit.MaxCurrent = 35.0
+			curCircuit.MaxCurrent = 32.0
 		case 5:
-			curCircuit.MaxCurrent = 50.0
+			curCircuit.MaxCurrent = 35.0
 		case 6:
-			curCircuit.MaxCurrent = 63.0
+			curCircuit.MaxCurrent = 50.0
 		case 7:
-			curCircuit.MaxCurrent = 80.0
+			curCircuit.MaxCurrent = 63.0
 		case 8:
-			curCircuit.MaxCurrent = 100.0
+			curCircuit.MaxCurrent = 80.0
 		case 9:
+			curCircuit.MaxCurrent = 100.0
+		case 10:
 			amperage := c.askValue(question{
 				label:          c.localizedString("Circuit_MaxCurrentCustomInput"),
 				valueType:      templates.TypeNumber,
 				maxNumberValue: 1000, // 600kW ... enough?
 				required:       true})
 			curCircuit.MaxCurrent, _ = strconv.ParseFloat(amperage, 64)
+		}
+		pwrChoices := []string{
+			c.localizedString("Circuit_MaxPowerDisable"), // no current checking
+			c.localizedString("Circuit_MaxPower11kW"),
+			c.localizedString("Circuit_MaxPower20kW"),
+			c.localizedString("Circuit_MaxPower50kW"),
+			c.localizedString("Circuit_MaxPower100kW"),
+			c.localizedString("Circuit_MaxCurrentCustom"),
+		}
+		fmt.Println()
+		pwrIndex, _ := c.askChoice(c.localizedString("Circuit_MaxPower"), pwrChoices)
+		switch pwrIndex {
+		case 0:
+			curCircuit.MaxPower = 0.0
+		case 1:
+			curCircuit.MaxPower = 11.0
+		case 2:
+			curCircuit.MaxPower = 20.0
+		case 3:
+			curCircuit.MaxPower = 50.0
+		case 4:
+			curCircuit.MaxPower = 100.0
+		case 5:
+			power := c.askValue(question{
+				label:          c.localizedString("Circuit_MaxPowerCustomInput"),
+				valueType:      templates.TypeNumber,
+				maxNumberValue: 1000, // 1GkW ... enough?
+				required:       true})
+			curCircuit.MaxPower, _ = strconv.ParseFloat(power, 64)
 		}
 
 		// check meter

@@ -68,6 +68,7 @@ circuits:
 {{-   range .Circuits }}
 - name: {{ .Name }}
   maxCurrent: {{ .MaxCurrent }}
+  maxPower: {{ .MaxPower }}
   meter: {{ .MeterRef }}
   parent: {{ .ParentRef }}
 {{- end }}

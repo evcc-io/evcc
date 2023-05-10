@@ -13,9 +13,11 @@ type Circuit struct {
 	log    *util.Logger
 	uiChan chan<- util.Param
 
-	maxCurrent    float64           // max allowed current
+	maxCurrent    float64           // max allowed current. will not be used when 0
+	maxPower      float64           // max allowed power. will not be used when 0
 	parentCircuit *Circuit          // parent circuit reference, used to determine current limits from hierarchy
 	phaseCurrents api.PhaseCurrents // meter to determine phase current
+	powerMeter    api.Meter         // meter to determine current power
 }
 
 // NewCircuitFromConfig creates a new Circuit
@@ -23,6 +25,7 @@ func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]
 	var cc struct {
 		Name       string  `mapstructure:"name"`       // unique name, used as reference in lp
 		MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current of this circuit
+		MaxPower   float64 `mapstructure:"maxPower"`   // the max allowed power of this circuit (kW)
 		MeterRef   string  `mapstructure:"meter"`      // Charge meter reference
 		ParentRef  string  `mapstructure:"parent"`     // name of parent circuit
 	}
@@ -49,7 +52,8 @@ func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]
 	}
 
 	var vMeter *VMeter
-	var meter api.PhaseCurrents
+	var meterPhaseCurrents api.PhaseCurrents
+	var meterPower api.Meter
 
 	if cc.MeterRef != "" {
 		var m api.Meter
@@ -57,17 +61,22 @@ func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]
 			return nil, nil, "", err
 		}
 
+		meterPower = m
+
 		var ok bool
-		if meter, ok = m.(api.PhaseCurrents); !ok {
-			return nil, nil, "", fmt.Errorf("meter %s does not support phase currents", cc.MeterRef)
+		if meterPhaseCurrents, ok = m.(api.PhaseCurrents); !ok {
+			if cc.MaxCurrent != 0 {
+				return nil, nil, "", fmt.Errorf("meter %s does not support phase currents, but current checking configured", cc.MeterRef)
+			}
 		}
 	} else {
 		// no dedicated vMeter given, create vmeter
 		vMeter = NewVMeter(cc.Name)
-		meter = vMeter
+		meterPhaseCurrents = vMeter
+		meterPower = vMeter
 	}
 
-	newCC := NewCircuit(log, cc.MaxCurrent, parent, meter)
+	newCC := NewCircuit(log, cc.MaxCurrent, cc.MaxPower*1000, parent, meterPhaseCurrents, meterPower)
 
 	if cc.ParentRef != "" {
 		if vm := cp.VMeter(cc.ParentRef); vm != nil {
@@ -78,12 +87,35 @@ func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]
 }
 
 // NewCircuit a circuit with defaults
-func NewCircuit(log *util.Logger, limit float64, p *Circuit, pc api.PhaseCurrents) *Circuit {
+func NewCircuit(log *util.Logger, limitCurrent float64, limitPower float64, p *Circuit, pc api.PhaseCurrents, pm api.Meter) *Circuit {
+	if pm == nil {
+		// we always need a power meter
+		log.ERROR.Printf("power meter not allowed to be nil")
+		return nil
+	}
 	circuit := &Circuit{
 		log:           log,
-		maxCurrent:    limit,
+		maxCurrent:    limitCurrent,
+		maxPower:      limitPower,
 		parentCircuit: p,
 		phaseCurrents: pc,
+		powerMeter:    pm,
+	}
+
+	// if either MaxCurrent or MaxPower is 0, consider to be not relevant. Set to MaxFloat to never hit a limit
+	// support both to be 0 for logging purposes (e.g. use it to log current aggregatated consumption to influx)
+	if limitCurrent == 0 {
+		circuit.maxCurrent = math.MaxFloat64
+		circuit.log.DEBUG.Printf("current checking disabled")
+	} else {
+		if pc == nil {
+			log.ERROR.Printf("need phase meter when current checking is enabled")
+			return nil
+		}
+	}
+	if limitPower == 0 {
+		circuit.maxPower = math.MaxFloat64
+		circuit.log.DEBUG.Printf("power checking disabled")
 	}
 	return circuit
 }
@@ -99,20 +131,72 @@ func (circuit *Circuit) publish(key string, val interface{}) {
 // Prepare set the UI channel to publish information
 func (circuit *Circuit) Prepare(uiChan chan<- util.Param) {
 	circuit.uiChan = uiChan
-	circuit.publish("maxCurrent", circuit.maxCurrent)
+	if circuit.maxCurrent != math.MaxFloat64 {
+		circuit.publish("maxCurrent", circuit.maxCurrent)
+	}
+	if circuit.maxPower != math.MaxFloat64 {
+		circuit.publish("maxPower", circuit.maxPower)
+	}
 }
 
 // update gets called on every site update call.
 // this is used to update the current consumption etc to get published in status and databases
 func (circuit *Circuit) update() error {
-	_, err := circuit.MaxPhasesCurrent()
+	if circuit.phaseCurrents != nil {
+		if _, err := circuit.MaxPhasesCurrent(); err != nil {
+			return err
+		}
+	}
+	_, err := circuit.CurrentPower()
 	return err
 }
 
 var _ Consumer = (*Circuit)(nil)
 
-// GetCurrent determines current in use. Implements consumer interface
+// MaxPower determines current in use. Implements consumer interface
+func (circuit *Circuit) CurrentPower() (float64, error) {
+	return circuit.powerMeter.CurrentPower()
+}
+
+// GetRemainingPower determines the power left to be used from confgigured maxPower
+func (circuit *Circuit) GetRemainingPower() float64 {
+
+	power, err := circuit.CurrentPower()
+	if err != nil {
+		circuit.log.ERROR.Printf("power currents: %v", err)
+		return 0
+	}
+
+	if circuit.maxPower == math.MaxFloat64 && circuit.parentCircuit == nil {
+		return circuit.maxPower
+	}
+
+	powerAvailable := circuit.maxPower - power
+	circuit.publish("overload", powerAvailable < 0)
+	if powerAvailable < 0 {
+		circuit.log.WARN.Printf("overload detected - power: %.2fkW, allowed max power is: %.2fkW\n", power/1000, circuit.maxPower/1000)
+	}
+
+	// check parent circuit, return lowest
+	if circuit.parentCircuit != nil {
+		powerAvailable = math.Min(powerAvailable, circuit.parentCircuit.GetRemainingPower())
+	}
+
+	if powerAvailable/1000 > 10000.0 {
+		circuit.log.DEBUG.Printf("circuit using %.2fkW, no limit checking", power/1000)
+	} else {
+		circuit.log.DEBUG.Printf("circuit using %.2fkW, %.2fkW available", power/1000, powerAvailable/1000)
+
+	}
+
+	return powerAvailable
+}
+
+// MaxPhasesCurrent determines current in use. Implements consumer interface
 func (circuit *Circuit) MaxPhasesCurrent() (float64, error) {
+	if circuit.phaseCurrents == nil {
+		return 0, fmt.Errorf("no phase meter assigned")
+	}
 	i1, i2, i3, err := circuit.phaseCurrents.Currents()
 	if err != nil {
 		return 0, fmt.Errorf("failed getting meter currents: %w", err)
@@ -133,7 +217,11 @@ func (circuit *Circuit) MaxPhasesCurrent() (float64, error) {
 // GetRemainingCurrent available current based on limit and consumption
 // checks down up to top level parent
 func (circuit *Circuit) GetRemainingCurrent() float64 {
-	// first update current current, mainly to regularly publish the value
+
+	if circuit.maxCurrent == math.MaxFloat64 && circuit.parentCircuit == nil {
+		return circuit.maxCurrent
+	}
+
 	current, err := circuit.MaxPhasesCurrent()
 	if err != nil {
 		circuit.log.ERROR.Printf("max phase currents: %v", err)
@@ -150,8 +238,10 @@ func (circuit *Circuit) GetRemainingCurrent() float64 {
 	if circuit.parentCircuit != nil {
 		curAvailable = math.Min(curAvailable, circuit.parentCircuit.GetRemainingCurrent())
 	}
-
-	circuit.log.DEBUG.Printf("circuit using %.1fA, %.1fA available", current, curAvailable)
-
+	if curAvailable > 10000.0 {
+		circuit.log.DEBUG.Printf("circuit using %.1fA, no limit checking", current)
+	} else {
+		circuit.log.DEBUG.Printf("circuit using %.1fA, %.1fA available", current, curAvailable)
+	}
 	return curAvailable
 }

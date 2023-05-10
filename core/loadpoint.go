@@ -671,6 +671,30 @@ func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float
 
 		if chargeCurrentNew < requestedCurrent {
 			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit", requestedCurrent, chargeCurrentNew)
+		}
+
+		// also check power availability
+		// need to calculate from /to currents using phases
+		requestedPower := CurrentToPower(chargeCurrentNew, uint(lp.phases))
+		availablePower := lp.circuit.GetRemainingPower() + lp.chargePower // since current power is included in circuit consumtion, add
+		chargePowerNew := math.Min(math.Max(availablePower, 0), requestedPower)
+		lp.log.TRACE.Printf("request: %.1f, avialable: %.1f, new: %.1f, phases: %d", requestedPower, availablePower, chargePowerNew, lp.phases)
+
+		if chargePowerNew < requestedPower {
+			// lower the current based on phases
+			chargeCurrentNew = powerToCurrent(chargePowerNew, lp.phases)
+			lp.log.DEBUG.Printf("get power limitation from %.1fW to %.1fW (%.1fA) from circuit", requestedPower, chargePowerNew, chargeCurrentNew)
+
+			// TODO: do we want to switch phases in case of lower load available due to load management?
+			// // exception: we are < minCurrent and phases > 1 and we can switch phases, then switch to 1 phase in order to not stop charging
+			// if chargeCurrentNew < lp.GetMinCurrent() && lp.phases > 1 && powerToCurrent(chargePowerNew, 1) > lp.GetMinCurrent() {
+			// 	if err := lp.scalePhasesIfAvailable(1); err == nil {
+			// 		lp.log.DEBUG.Printf("switched to 1 phase")
+			// 		chargeCurrentNew = powerToCurrent(chargePowerNew, 1)
+			// 	}
+			// }
+		}
+		if chargeCurrentNew < requestedCurrent {
 			return chargeCurrentNew, nil
 		}
 	}
@@ -901,26 +925,24 @@ var _ Consumer = (*Loadpoint)(nil)
 // TODO check oder- if we have currents we should use them
 func (lp *Loadpoint) MaxPhasesCurrent() (float64, error) {
 	// using effective current in use.
-	// potential issue: slow LP might cause interference or overload
+	// potential issue: slow LP might cause interference or short overload
 	if !lp.charging() {
 		return 0, nil
 	}
 
-	// adjust actual current for vehicles like Zoe where it remains below target
 	if lp.chargeCurrents != nil {
 		return math.Max(lp.chargeCurrents[0], math.Max(lp.chargeCurrents[1], lp.chargeCurrents[2])), nil
 	}
 
 	return lp.chargeCurrent, nil
-	// alternatively use assigned current
-	// potential issue: LP in mode != "off" will always report their assigned current, but not real used
-	// if the vehicle remains in state "charging" but only uses 500W for Aircon, this might block 16A in the circuit
+}
 
-	// if !lp.charging() {
-	// 	return 0
-	// } else {
-	// 	return lp.chargeCurrent
-	// }
+// CurrentPower() implements consumer interface
+func (lp *Loadpoint) CurrentPower() (float64, error) {
+	if !lp.charging() {
+		return 0, nil
+	}
+	return lp.chargePower, nil
 }
 
 // effectiveCurrent returns the currently effective charging current
