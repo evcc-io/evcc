@@ -299,6 +299,9 @@ export default {
 				return;
 			}
 			return this.battery.map(({ soc, capacity }) => {
+				if (!capacity) {
+					return;
+				}
 				const multipleBatteries = this.battery.length > 1;
 				const energy = this.fmtKWh(
 					(capacity / 100) * soc * 1e3,
