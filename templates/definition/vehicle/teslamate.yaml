@@ -10,6 +10,9 @@ requirements:
 params:
   - name: title
   - name: id
+    description:
+      de: Fahrzeug-ID
+      en: Vehicle ID
     default: 1
   - name: capacity
   - name: phases
