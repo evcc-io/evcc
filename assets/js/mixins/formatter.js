@@ -197,7 +197,7 @@ export default {
       let value = amout;
       return `${new Intl.NumberFormat(this.$i18n.locale, {
         style: "currency",
-        currency: currency
+        currency: currency,
       }).format(value)}${short ? "" : "/kWh"}`;
     },
     fmtTimeAgo: function (elapsed) {
