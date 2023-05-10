@@ -195,10 +195,22 @@ export default {
     fmtPricePerKWh: function (amout = 0, currency = "EUR", short = false) {
       let unit = currency;
       let value = amout;
-      return `${new Intl.NumberFormat(this.$i18n.locale, {
-        style: "currency",
-        currency: currency,
-      }).format(value)}${short ? "" : "/kWh"}`;
+      if (["EUR", "USD"].includes(currency)) {
+        value *= 100;
+        unit = "ct";
+        let minimumFractionDigits = 1;
+        let maximumFractionDigits = 1;
+        return `${new Intl.NumberFormat(this.$i18n.locale, {
+          style: "decimal",
+          minimumFractionDigits,
+          maximumFractionDigits,
+        }).format(value)} ${unit}${short ? "" : "/kWh"}`;
+      } else {
+        return `${new Intl.NumberFormat(this.$i18n.locale, {
+          style: "currency",
+          currency: currency,
+        }).format(value)}${short ? "" : "/kWh"}`;
+      }
     },
     fmtTimeAgo: function (elapsed) {
       const units = {
