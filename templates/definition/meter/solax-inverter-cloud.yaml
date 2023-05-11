@@ -19,6 +19,7 @@ params:
     choice: ["pv"]
   - name: tokenid
     required: true
+    type: string
     description:
       generic: SolaxCloud TokenID
     help:
