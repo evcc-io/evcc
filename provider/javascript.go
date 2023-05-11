@@ -120,18 +120,18 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 	}
 }
 
-func (p *Javascript) paramAndEval(param string, val any) error {
+func (p *Javascript) paramAndEval(param string, val any) (*otto.Value, error) {
 	err := p.setParam(param, val)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	v, err := p.evaluate()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return handleOutTransformation(p.out, v)
+	return &v, nil
 }
 
 func (p *Javascript) setParam(param string, val any) error {
@@ -145,27 +145,67 @@ func (p *Javascript) evaluate() (otto.Value, error) {
 // IntSetter sends int request
 func (p *Javascript) IntSetter(param string) func(int64) error {
 	return func(val int64) error {
-		return p.paramAndEval(param, val)
+		v, err := p.paramAndEval(param, val)
+		if err != nil {
+			return err
+		}
+
+		vv, err := v.Export()
+
+		if err != nil {
+			return err
+		}
+		return handleOutTransformation(p.out, vv)
 	}
 }
 
 // FloatSetter sends float request
 func (p *Javascript) FloatSetter(param string) func(float64) error {
 	return func(val float64) error {
-		return p.paramAndEval(param, val)
+		v, err := p.paramAndEval(param, val)
+		if err != nil {
+			return err
+		}
+
+		vv, err := v.Export()
+
+		if err != nil {
+			return err
+		}
+		return handleOutTransformation(p.out, vv)
 	}
 }
 
 // StringSetter sends string request
 func (p *Javascript) StringSetter(param string) func(string) error {
 	return func(val string) error {
-		return p.paramAndEval(param, val)
+		v, err := p.paramAndEval(param, val)
+		if err != nil {
+			return err
+		}
+
+		vv, err := v.Export()
+
+		if err != nil {
+			return err
+		}
+		return handleOutTransformation(p.out, vv)
 	}
 }
 
 // BoolSetter sends bool request
 func (p *Javascript) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
-		return p.paramAndEval(param, val)
+		v, err := p.paramAndEval(param, val)
+		if err != nil {
+			return err
+		}
+
+		vv, err := v.Export()
+
+		if err != nil {
+			return err
+		}
+		return handleOutTransformation(p.out, vv)
 	}
 }

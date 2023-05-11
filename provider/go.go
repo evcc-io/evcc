@@ -170,32 +170,42 @@ func (p *Go) IntSetter(param string) func(int64) error {
 			return err
 		}
 
-		typ := reflect.TypeOf(0)
-		if !v.CanConvert(typ) {
-			return fmt.Errorf("not a int: %v", v)
-		}
-
-		return handleOutTransformation(p.out, v.Convert(typ).Int())
+		return handleOutTransformation(p.out, v.Interface())
 	}
 }
 
 // FloatSetter sends float request
 func (p *Go) FloatSetter(param string) func(float64) error {
 	return func(val float64) error {
-		return p.paramAndEval(param, val)
+		v, err := p.paramAndEval(param, val)
+		if err != nil {
+			return err
+		}
+
+		return handleOutTransformation(p.out, v.Interface())
 	}
 }
 
 // StringSetter sends string request
 func (p *Go) StringSetter(param string) func(string) error {
 	return func(val string) error {
-		return p.paramAndEval(param, val)
+		v, err := p.paramAndEval(param, val)
+		if err != nil {
+			return err
+		}
+
+		return handleOutTransformation(p.out, v.Interface())
 	}
 }
 
 // BoolSetter sends bool request
 func (p *Go) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
-		return p.paramAndEval(param, val)
+		v, err := p.paramAndEval(param, val)
+		if err != nil {
+			return err
+		}
+
+		return handleOutTransformation(p.out, v.Interface())
 	}
 }
