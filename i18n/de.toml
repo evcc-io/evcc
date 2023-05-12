@@ -129,6 +129,8 @@ titleMinSoc = "Min. Ladung"
 titleTargetCharge = "Abfahrt"
 
 [main.energyflow]
+input = "Eingang"
+output = "Ausgang"
 battery = "Batterie"
 batteryCharge = "Batterie laden"
 batteryDischarge = "Batterie entladen"
