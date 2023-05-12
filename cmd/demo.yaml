@@ -30,10 +30,25 @@ meters:
       source: js
       vm: shared
       script: |
-        state.pvpower = 8000+500*Math.random();
-        state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
-        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - state.batterypower - state.pvpower;
+        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - batterypower - pvpower;
         state.gridpower;
+      in:
+        - name: pvpower
+          type: float
+          config:
+            source: js
+            vm: shared
+            script: |
+              state.pvpower = 8000+500*Math.random();
+              state.pvpower
+        - name: batterypower
+          type: float
+          config:
+            source: js
+            vm: shared
+            script: |
+              state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
+              state.batterypower
 
   - name: pv
     type: custom
@@ -82,7 +97,15 @@ chargers:
         logState();
         var lp = state.loadpoints[0];
         lp.enabled = enable;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+        enable;
+      out:
+        - name: enable
+          type: bool
+          config:
+            source: js
+            vm: shared
+            script: |
+              if (enable) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
     enabled:
       source: js
       vm: shared
