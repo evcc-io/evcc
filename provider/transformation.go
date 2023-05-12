@@ -15,8 +15,8 @@ type InTransformation struct {
 }
 
 type OutTransformation struct {
-	name, typ string
-	function  func(any) error
+	name     string
+	function func(any) error
 }
 
 func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, error) {
@@ -119,7 +119,6 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 
 		out = append(out, OutTransformation{
 			name:     cc.Name,
-			typ:      cc.Type,
 			function: f,
 		})
 	}
@@ -145,33 +144,7 @@ func handleInTransformation(in []InTransformation, set func(string, any) error) 
 
 func handleOutTransformation(out []OutTransformation, v any) error {
 	for _, cc := range out {
-		var (
-			vv any
-			ok bool
-		)
-
-		switch cc.typ {
-		case "bool":
-			vv, ok = v.(bool)
-
-		case "int":
-			vv, ok = v.(int64)
-
-		case "float":
-			vv, ok = v.(float64)
-
-		case "string":
-			vv, ok = v.(string)
-
-		default:
-			return fmt.Errorf("%s: invalid type %s", cc.name, cc.typ)
-		}
-
-		if !ok {
-			return fmt.Errorf("%s: not a %s: %v", cc.name, cc.typ, v)
-		}
-
-		if err := cc.function(vv); err != nil {
+		if err := cc.function(v); err != nil {
 			return fmt.Errorf("%s: %w", cc.name, err)
 		}
 	}
