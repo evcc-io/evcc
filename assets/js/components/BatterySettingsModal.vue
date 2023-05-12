@@ -354,7 +354,9 @@ export default {
 		changePrioritySoc($event) {
 			const value = parseInt($event.target.value, 10);
 			if (value > this.bufferSoc) {
+				const startOption = this.bufferStartOption;
 				this.saveBufferSoc(value);
+				this.setBufferStart(startOption);
 			} else {
 				this.savePrioritySoc(value);
 			}
