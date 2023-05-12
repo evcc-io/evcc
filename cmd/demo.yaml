@@ -19,7 +19,7 @@ javascript:
           { enabled: false, vehicleSoc: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
         ]
       };
-      function state() {
+      function logState() {
         console.log("state:", JSON.stringify(state));
       }
 
@@ -79,7 +79,7 @@ chargers:
       source: js
       vm: shared
       script: |
-        state();
+        logState();
         var lp = state.loadpoints[0];
         lp.enabled = enable;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
@@ -97,7 +97,7 @@ chargers:
       source: js
       vm: shared
       script: |
-        state();
+        logState();
         var lp = state.loadpoints[0];
         lp.maxcurrent = maxcurrent;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
@@ -108,7 +108,7 @@ chargers:
       source: js
       vm: shared
       script: |
-        state();
+        logState();
         var lp = state.loadpoints[1];
         lp.enabled = enable;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
@@ -126,7 +126,7 @@ chargers:
       source: js
       vm: shared
       script: |
-        state();
+        logState();
         var lp = state.loadpoints[1];
         lp.maxcurrent = maxcurrent;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
@@ -134,7 +134,7 @@ chargers:
       source: js
       vm: shared
       script: |
-        state();
+        logState();
         if (phases === 1) lp.phases = 1; else lp.phases = 3;
         lp.phases;
 
