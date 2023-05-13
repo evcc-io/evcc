@@ -48,6 +48,7 @@ params:
       de: Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
   - name: cache
     advanced: true
+    default: 1s
     description:
       en: XML-RPC api cache duration - Default 1s. (valid units are s,m,h)
       de: XML-RPC API Cache Zeitraum - Default 1s. (gültige Einheiten s,m,h)
