@@ -9,10 +9,10 @@ requirements:
     de: Voraussetzung ist ein konfigurierter MQTT Broker
 params:
   - name: title
-  - name: id
+  - name: vin
     description:
-      de: Fahrzeug-FIN
-      en: Vehicle FIN
+      de: Fahrzeug-VIN
+      en: Vehicle VIN
     default: 1
   - name: capacity
   - name: phases
@@ -38,19 +38,19 @@ render: |
   {{- include "vehicle-identify" . }}
   soc:
     source: mqtt
-    topic: mazda2mqtt/{{ .id }}/chargeInfo/batteryLevelPercentage
+    topic: mazda2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage
     timeout: 720h # 30d
   status:
     source: combined
     plugged:
       source: mqtt
-      topic: mazda2mqtt/{{ .id }}/chargeInfo/pluggedIn
+      topic: mazda2mqtt/{{ .vin }}/chargeInfo/pluggedIn
       timeout: 720h # 30d
     charging:
       source: mqtt
-      topic: mazda2mqtt/{{ .id }}/chargeInfo/charging
+      topic: mazda2mqtt/{{ .vin }}/chargeInfo/charging
       timeout: 720h # 30d
   range:
     source: mqtt
-    topic: mazda2mqtt/{{ .id }}/chargeInfo/drivingRangeKm
+    topic: mazda2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
     timeout: 720h # 30d
