@@ -110,10 +110,10 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 
 	switch s {
 	case 65, 66, 67, 16945: // bekannte Stati A, B, C, B1
-		currentTime := time.Now()
-		fmt.Printf("[VERSI ] INFO ")
-		fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-		fmt.Printf(" (EVSE - 1599) bekannt: %d \n", s)
+//		currentTime := time.Now()
+//		fmt.Printf("[VERSI ] INFO ")
+//		fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+//		fmt.Printf(" (EVSE - 1599) bekannt: %d \n", s)
 	default: // Neuer Status EVSE
 		currentTime := time.Now()
 		fmt.Printf("[VERSI ] INFO ")
