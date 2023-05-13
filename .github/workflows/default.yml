@@ -26,6 +26,9 @@ jobs:
       - name: Assets
         run: make assets
 
+      - name: Docs
+        run: make docs
+
       - name: Porcelain
         run: make porcelain
 
