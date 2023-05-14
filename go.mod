@@ -171,7 +171,6 @@ require (
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/sostronk/enumer v0.0.0-20210216185328-9ca19f4277f2 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
