@@ -10,11 +10,15 @@ requirements:
 params:
   - name: title
   - name: vin
+    required: true
   - name: capacity
   - name: phases
     advanced: true
   - name: icon
     default: car
+    advanced: true
+  - name: timeout
+    default: 1h
     advanced: true
   - preset: vehicle-identify
 render: |
@@ -35,18 +39,18 @@ render: |
   soc:
     source: mqtt
     topic: mazda2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage
-    timeout: 720h # 30d
+    timeout: {{ .timeout }}
   status:
     source: combined
     plugged:
       source: mqtt
       topic: mazda2mqtt/{{ .vin }}/chargeInfo/pluggedIn
-      timeout: 1h
+      timeout: {{ .timeout }}
     charging:
       source: mqtt
       topic: mazda2mqtt/{{ .vin }}/chargeInfo/charging
-      timeout: 1h
+      timeout: {{ .timeout }}
   range:
     source: mqtt
     topic: mazda2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
-    timeout: 1h
+    timeout: {{ .timeout }}
