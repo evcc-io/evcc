@@ -10,10 +10,6 @@ requirements:
 params:
   - name: title
   - name: vin
-    description:
-      de: Fahrzeug-VIN
-      en: Vehicle VIN
-    default: 1
   - name: capacity
   - name: phases
     advanced: true
@@ -45,12 +41,12 @@ render: |
     plugged:
       source: mqtt
       topic: mazda2mqtt/{{ .vin }}/chargeInfo/pluggedIn
-      timeout: 720h # 30d
+      timeout: 1h
     charging:
       source: mqtt
       topic: mazda2mqtt/{{ .vin }}/chargeInfo/charging
-      timeout: 720h # 30d
+      timeout: 1h
   range:
     source: mqtt
     topic: mazda2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
-    timeout: 720h # 30d
+    timeout: 1h
