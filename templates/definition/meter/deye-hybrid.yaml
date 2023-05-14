@@ -2,7 +2,7 @@ template: deye-hybrid
 products:
   - brand: Deye
     description:
-      generic: SUN-(5-12)K-SG04LP3-EU series hybrid inverter
+      generic: SUN-(5/6/8/10/12)K-SG04LP3-EU series hybrid inverter
   - brand: Sunsynk
     description:
       generic: SUN-(8/10/12)K-SG04LP3 *untested*
@@ -26,14 +26,13 @@ render: |
       address: 625 # Grid side total power 
       type: holding
       decode: int16
-    scale: 1.0
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 520 # "Day_GridBuy_Power Wh"
+      address: 522 # "Total_GridBuy_Power Wh"
       type: holding
-      decode: uint16
+      decode: uint32
     scale: 0.1
   currents:
     - source: modbus
@@ -90,9 +89,9 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 529 # "Day_PV_Power_Wh"
+      address: 534 # "Total_PV_Power_Wh"
       type: holding
-      decode: uint16
+      decode: uint32
     scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
