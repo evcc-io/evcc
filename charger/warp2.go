@@ -18,7 +18,6 @@ import (
 // Warp2 is the Warp charger v2 firmware implementation
 type Warp2 struct {
 	log           *util.Logger
-	root, em      string
 	client        *mqtt.Client
 	features      []string
 	maxcurrentG   func() (string, error)
@@ -28,6 +27,8 @@ type Warp2 struct {
 	chargeG       func() (string, error)
 	userconfigG   func() (string, error)
 	maxcurrentS   func(int64) error
+	emConfigG     func() (string, error)
+	phasesS       func(int64) error
 	current       int64
 }
 
@@ -35,7 +36,7 @@ func init() {
 	registry.Add("warp-fw2", NewWarp2FromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -45,9 +46,8 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 		EnergyManager string
 		Timeout       time.Duration
 	}{
-		Topic:         warp.RootTopic,
-		EnergyManager: warp.EnergyManagerTopic,
-		Timeout:       warp.Timeout,
+		Topic:   warp.RootTopic,
+		Timeout: warp.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -60,22 +60,29 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	var currentPower, totalEnergy func() (float64, error)
-	if wb.hasFeature(v2.FeatureMeter) {
+	if wb.hasFeature(cc.Topic, v2.FeatureMeter) {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 	}
 
 	var currents func() (float64, float64, float64, error)
-	if wb.hasFeature(v2.FeatureMeterPhases) {
+	if wb.hasFeature(cc.Topic, v2.FeatureMeterPhases) {
 		currents = wb.currents
 	}
 
 	var identity func() (string, error)
-	if wb.hasFeature(v2.FeatureNfc) {
+	if wb.hasFeature(cc.Topic, v2.FeatureNfc) {
 		identity = wb.identify
 	}
 
-	return decorateWarp2(wb, currentPower, totalEnergy, currents, identity), err
+	var phases func(int) error
+	if cc.EnergyManager != "" {
+		if res, err := wb.emConfig(); err == nil && res.ContactorInstalled {
+			phases = wb.phases1p3p
+		}
+	}
+
+	return decorateWarp2(wb, currentPower, totalEnergy, currents, identity, phases), err
 }
 
 // NewWarp2 creates a new configurable charger
@@ -89,8 +96,6 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 
 	wb := &Warp2{
 		log:     log,
-		root:    topic,
-		em:      emTopic,
 		client:  client,
 		current: 6000, // mA
 	}
@@ -117,15 +122,21 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 		WithPayload(`{ "current": ${maxcurrent} }`).
 		IntSetter("maxcurrent")
 
+	wb.emConfigG = stringG(fmt.Sprintf("%s/energy_manager/config", emTopic))
+	wb.phasesS = provider.NewMqtt(log, client,
+		fmt.Sprintf("%s/energy_manager/config", emTopic), 0).
+		WithPayload(`{ "phase_switching_mode": ${phases} }`).
+		IntSetter("phases")
+
 	return wb, nil
 }
 
-func (wb *Warp2) hasFeature(feature string) bool {
+func (wb *Warp2) hasFeature(root, feature string) bool {
 	if wb.features != nil {
 		return slices.Contains(wb.features, feature)
 	}
 
-	topic := fmt.Sprintf("%s/info/features", wb.root)
+	topic := fmt.Sprintf("%s/info/features", root)
 
 	if data, err := provider.NewMqtt(wb.log, wb.client, topic, 0).StringGetter()(); err == nil {
 		if err := json.Unmarshal([]byte(data), &wb.features); err == nil {
@@ -255,4 +266,20 @@ func (wb *Warp2) identify() (string, error) {
 	}
 
 	return res.AuthorizationInfo.TagId, err
+}
+
+func (wb *Warp2) emConfig() (v2.EmConfig, error) {
+	var res v2.EmConfig
+
+	s, err := wb.emConfigG()
+	if err == nil {
+		err = json.Unmarshal([]byte(s), &res)
+	}
+
+	return res, err
+}
+
+func (wb *Warp2) phases1p3p(phases int) error {
+	err := wb.phasesS(int64(phases))
+	return err
 }

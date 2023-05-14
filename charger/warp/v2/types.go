@@ -80,3 +80,16 @@ type LastNfcTag struct {
 	Type   int    `json:"tag_type"`
 	ID     string `json:"tag_id"`
 }
+
+type EmConfig struct {
+	ContactorInstalled bool `json:"contactor_installed"`
+	PhaseSwitchingMode int  `json:"phase_switching_mode"`
+}
+
+type EmState struct {
+	PhasesSwitched int  `json:"phases_switched"`
+	Input3State    bool `json:"input3_state"`
+	Input4State    bool `json:"input4_state"`
+	RelayState     bool `json:"relay_state"`
+	ErrorFlags     int  `json:"error_flags"`
+}
