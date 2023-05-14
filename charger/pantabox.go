@@ -109,7 +109,7 @@ func (wb *Pantabox) CurrentPower() (float64, error) {
 	}
 
 	err := wb.GetJSON(wb.uri+"/meter/power", &res)
-	return res.Power, err
+	return res.Power * 1e3, err
 }
 
 var _ api.Diagnosis = (*Pantabox)(nil)
