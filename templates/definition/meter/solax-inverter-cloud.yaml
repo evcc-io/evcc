@@ -39,7 +39,7 @@ render: |
     # Mini WR  XXXXXXXXXXXX
     # AC Power
     source: http
-    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+    uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{.tokenid}}&sn={{.serial}}
     jq: if .result.acpower < 10 then 0 else .result.acpower end  # Solax API Inverter.AC.power.total
     cache: 2m30s
   {{- end }}

@@ -40,7 +40,7 @@ render: |
   power:
   {{- if eq .usage "grid" }}
     source: http
-    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+    uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{.tokenid}}&sn={{.serial}}
     jq: .result.feedinpower
     cache: 2m30s
     scale: -1
@@ -51,23 +51,23 @@ render: |
     # Hybrid WR XXXXXXXXXXXXXX
     # DC MPPT1 + MPPT2
     - source: http
-      uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+      uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{.tokenid}}&sn={{.serial}}
       jq: .result.powerdc1  # Solax API Inverter.DC.PV.power.MPPT1
       cache: 2m30s
     - source: http
-      uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+      uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{.tokenid}}&sn={{.serial}}
       jq: .result.powerdc2  # Solax API Inverter.DC.PV.power.MPPT2
       cache: 2m30s
   {{- end }}
   {{- if eq .usage "battery" }}
     source: http
-    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+    uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{.tokenid}}&sn={{.serial}}
     jq: .result.batPower  # Solax API inverter.DC.battery.power.total
     scale: -1
     cache: 2m30s
   soc:
     source: http
-    uri: https://www.eu.solaxcloud.com:9443/proxy/api/getRealtimeInfo.do?tokenId={{ .tokenid }}&sn={{ .serial}}
+    uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{.tokenid}}&sn={{.serial}}
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
     cache: 2m30s
   {{- if ne .capacity "" }}
