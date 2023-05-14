@@ -18,7 +18,7 @@ import (
 // Warp2 is the Warp charger v2 firmware implementation
 type Warp2 struct {
 	log           *util.Logger
-	root          string
+	root, em      string
 	client        *mqtt.Client
 	features      []string
 	maxcurrentG   func() (string, error)
@@ -40,19 +40,21 @@ func init() {
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		mqtt.Config `mapstructure:",squash"`
-		Topic       string
-		Timeout     time.Duration
+		mqtt.Config   `mapstructure:",squash"`
+		Topic         string
+		EnergyManager string
+		Timeout       time.Duration
 	}{
-		Topic:   warp.RootTopic,
-		Timeout: warp.Timeout,
+		Topic:         warp.RootTopic,
+		EnergyManager: warp.EnergyManagerTopic,
+		Timeout:       warp.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb, err := NewWarp2(cc.Config, cc.Topic, cc.Timeout)
+	wb, err := NewWarp2(cc.Config, cc.Topic, cc.EnergyManager, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +79,7 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewWarp2 creates a new configurable charger
-func NewWarp2(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp2, error) {
+func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration) (*Warp2, error) {
 	log := util.NewLogger("warp")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
@@ -88,6 +90,7 @@ func NewWarp2(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp2
 	wb := &Warp2{
 		log:     log,
 		root:    topic,
+		em:      emTopic,
 		client:  client,
 		current: 6000, // mA
 	}
