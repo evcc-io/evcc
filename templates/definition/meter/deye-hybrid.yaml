@@ -26,7 +26,6 @@ render: |
       address: 625 # Grid side total power 
       type: holding
       decode: int16
-    scale: 1.0
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
