@@ -6,22 +6,26 @@ products:
 params:
   - name: usage
     choice: ["pv"]
-  - name: modbus
-    choice: ["tcpip"]
-    id: 0
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: port
+    default: 502
 render: |
   type: custom
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    uri: {{ .host }}:{{ .port }}
     register:
       address: 40525 # Active power
       type: holding
       decode: int32
   energy:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    uri: {{ .host }}:{{ .port }}
     register:
       address: 40560 # E-Total
       type: holding
