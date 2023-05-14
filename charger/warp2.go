@@ -8,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/warp"
-	v2 "github.com/evcc-io/evcc/charger/warp/v2"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
@@ -61,18 +60,18 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	var currentPower, totalEnergy func() (float64, error)
-	if wb.hasFeature(cc.Topic, v2.FeatureMeter) {
+	if wb.hasFeature(cc.Topic, warp.FeatureMeter) {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 	}
 
 	var currents func() (float64, float64, float64, error)
-	if wb.hasFeature(cc.Topic, v2.FeatureMeterPhases) {
+	if wb.hasFeature(cc.Topic, warp.FeatureMeterPhases) {
 		currents = wb.currents
 	}
 
 	var identity func() (string, error)
-	if wb.hasFeature(cc.Topic, v2.FeatureNfc) {
+	if wb.hasFeature(cc.Topic, warp.FeatureNfc) {
 		identity = wb.identify
 	}
 
@@ -159,7 +158,7 @@ func (wb *Warp2) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (wb *Warp2) Enabled() (bool, error) {
-	var res v2.EvseExternalCurrent
+	var res warp.EvseExternalCurrent
 
 	s, err := wb.maxcurrentG()
 	if err == nil {
@@ -171,7 +170,7 @@ func (wb *Warp2) Enabled() (bool, error) {
 
 // Status implements the api.Charger interface
 func (wb *Warp2) Status() (api.ChargeStatus, error) {
-	var status v2.EvseState
+	var status warp.EvseState
 
 	s, err := wb.statusG()
 	if err == nil {
@@ -218,7 +217,7 @@ func (wb *Warp2) MaxCurrentMillis(current float64) error {
 
 // CurrentPower implements the api.Meter interface
 func (wb *Warp2) currentPower() (float64, error) {
-	var res v2.MeterValues
+	var res warp.MeterValues
 
 	s, err := wb.meterG()
 	if err == nil {
@@ -230,7 +229,7 @@ func (wb *Warp2) currentPower() (float64, error) {
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Warp2) totalEnergy() (float64, error) {
-	var res v2.MeterValues
+	var res warp.MeterValues
 
 	s, err := wb.meterG()
 	if err == nil {
@@ -259,7 +258,7 @@ func (wb *Warp2) currents() (float64, float64, float64, error) {
 }
 
 func (wb *Warp2) identify() (string, error) {
-	var res v2.ChargeTrackerCurrentCharge
+	var res warp.ChargeTrackerCurrentCharge
 
 	s, err := wb.chargeG()
 	if err == nil {
@@ -269,8 +268,8 @@ func (wb *Warp2) identify() (string, error) {
 	return res.AuthorizationInfo.TagId, err
 }
 
-func (wb *Warp2) emConfig() (v2.EmConfig, error) {
-	var res v2.EmConfig
+func (wb *Warp2) emConfig() (warp.EmConfig, error) {
+	var res warp.EmConfig
 
 	s, err := wb.emConfigG()
 	if err == nil {
