@@ -126,7 +126,7 @@ render: |
       address: 0x0606 # Power_Bat1
       type: holding
       decode: int16
-    scale: 0.01
+    scale: 100
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
