@@ -116,8 +116,8 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 515 # "Today discharge of the battery"
+      address: 518 # "Total discharge of the battery (Wh)"
       type: holding
-      decode: int16
+      decode: uint32
     scale: 0.1
   {{- end }}
