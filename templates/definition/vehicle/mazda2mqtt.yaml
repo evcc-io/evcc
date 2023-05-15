@@ -1,0 +1,56 @@
+template: mazda2mqtt
+products:
+  - brand: Mazda
+    description:
+      generic: Publish all myMazda Car Data to MQTT (mazda2mqtt)
+requirements:
+  description:
+    en: Required MQTT broker configuration
+    de: Voraussetzung ist ein konfigurierter MQTT Broker
+params:
+  - name: title
+  - name: vin
+    required: true
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: icon
+    default: car
+    advanced: true
+  - name: timeout
+    default: 1h
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: custom
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .phases }}
+  phases: {{ .phases }}
+  {{- end }}
+  {{- include "vehicle-identify" . }}
+  soc:
+    source: mqtt
+    topic: mazda2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage
+    timeout: {{ .timeout }}
+  status:
+    source: combined
+    plugged:
+      source: mqtt
+      topic: mazda2mqtt/{{ .vin }}/chargeInfo/pluggedIn
+      timeout: {{ .timeout }}
+    charging:
+      source: mqtt
+      topic: mazda2mqtt/{{ .vin }}/chargeInfo/charging
+      timeout: {{ .timeout }}
+  range:
+    source: mqtt
+    topic: mazda2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
+    timeout: {{ .timeout }}
