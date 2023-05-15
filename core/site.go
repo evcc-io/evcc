@@ -183,11 +183,11 @@ func NewSiteFromConfig(
 		return nil, errors.New("missing either grid or pv meter")
 	}
 
-	if site.BufferStartSoc <= site.BufferSoc {
+	if site.BufferStartSoc != 0 && site.BufferStartSoc <= site.BufferSoc {
 		site.log.WARN.Println("bufferStartSoc must be larger than bufferSoc")
 	}
 
-	if site.PrioritySoc > site.BufferSoc {
+	if site.BufferSoc != 0 && site.BufferSoc <= site.PrioritySoc {
 		site.log.WARN.Println("bufferSoc must be larger than prioritySoc")
 	}
 
