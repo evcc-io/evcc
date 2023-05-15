@@ -60,11 +60,8 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 // FloatGetter parses float from request
 func (p *Javascript) FloatGetter() func() (float64, error) {
 	return func() (float64, error) {
-		if err := handleInTransformation(p.in, p.setParam); err != nil {
-			return 0, err
-		}
+		v, err := p.handleGetter()
 
-		v, err := p.evaluate()
 		if err != nil {
 			return 0, err
 		}
@@ -81,11 +78,8 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 // IntGetter parses int64 from request
 func (p *Javascript) IntGetter() func() (int64, error) {
 	return func() (int64, error) {
-		if err := handleInTransformation(p.in, p.setParam); err != nil {
-			return 0, err
-		}
+		v, err := p.handleGetter()
 
-		v, err := p.evaluate()
 		if err != nil {
 			return 0, err
 		}
@@ -102,11 +96,8 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 // StringGetter parses string from request
 func (p *Javascript) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		if err := handleInTransformation(p.in, p.setParam); err != nil {
-			return "", err
-		}
+		v, err := p.handleGetter()
 
-		v, err := p.evaluate()
 		if err != nil {
 			return "", err
 		}
@@ -123,11 +114,8 @@ func (p *Javascript) StringGetter() func() (string, error) {
 // BoolGetter parses bool from request
 func (p *Javascript) BoolGetter() func() (bool, error) {
 	return func() (bool, error) {
-		if err := handleInTransformation(p.in, p.setParam); err != nil {
-			return false, err
-		}
+		v, err := p.handleGetter()
 
-		v, err := p.evaluate()
 		if err != nil {
 			return false, err
 		}
@@ -139,6 +127,18 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 
 		return vv, nil
 	}
+}
+
+func (p *Javascript) handleGetter() (any, error) {
+	if err := handleInTransformation(p.in, p.setParam); err != nil {
+		return nil, err
+	}
+
+	v, err := p.evaluate()
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
 }
 
 func (p *Javascript) handleSetter(param string, val any) error {
