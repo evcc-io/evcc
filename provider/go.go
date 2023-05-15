@@ -164,23 +164,7 @@ func (p *Go) evaluate() (any, error) {
 
 	vv := v.Interface()
 
-	switch t := vv.(type) {
-	case int:
-		return int64(vv.(int)), nil
-	case int32:
-		return int64(vv.(int32)), nil
-	case float32:
-		return float64(vv.(float32)), nil
-	case int64:
-	case float64:
-	case bool:
-	case string:
-		return vv, nil
-	default:
-		return nil, fmt.Errorf("type not supported: %v", t)
-	}
-
-	return vv, nil
+	return normalizeValue(vv)
 }
 
 func (p *Go) setParam(param string, val any) error {
