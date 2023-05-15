@@ -27,9 +27,13 @@ func (r tariffRegistry) Get(name string) (func(map[string]interface{}) (api.Tari
 var registry tariffRegistry = make(map[string]func(map[string]interface{}) (api.Tariff, error))
 
 // NewFromConfig creates tariff from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (v api.Tariff, err error) {
-	factory, err := registry.Get(strings.ToLower(typ))
+func NewFromConfig(typ string, other map[string]interface{}, currency string) (v api.Tariff, err error) {
+	lowerType := strings.ToLower(typ)
+	factory, err := registry.Get(lowerType)
 	if err == nil {
+		if lowerType == "fixed" {
+			other["currency"] = currency
+		}
 		if v, err = factory(other); err != nil {
 			err = fmt.Errorf("cannot create tariff '%s': %w", typ, err)
 		}

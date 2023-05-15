@@ -47,7 +47,7 @@ func runTariff(cmd *cobra.Command, args []string) {
 			fmt.Println(key + ":")
 		}
 
-		tf, err := tariff.NewFromConfig(cc.Type, cc.Other)
+		tf, err := tariff.NewFromConfig(cc.Type, cc.Other, conf.Tariffs.Currency)
 		if err != nil {
 			fatal(err)
 		}

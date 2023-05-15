@@ -253,7 +253,7 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 	}
 
 	if conf.Grid.Type != "" {
-		grid, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
+		grid, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other, conf.Currency)
 		if err != nil {
 			grid = nil
 			log.ERROR.Printf("failed configuring grid tariff: %v", err)
@@ -261,7 +261,7 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 	}
 
 	if conf.FeedIn.Type != "" {
-		feedin, err = tariff.NewFromConfig(conf.FeedIn.Type, conf.FeedIn.Other)
+		feedin, err = tariff.NewFromConfig(conf.FeedIn.Type, conf.FeedIn.Other, conf.Currency)
 		if err != nil {
 			feedin = nil
 			log.ERROR.Printf("failed configuring feed-in tariff: %v", err)
@@ -269,7 +269,7 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 	}
 
 	if conf.Planner.Type != "" {
-		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
+		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other, conf.Currency)
 		if err != nil {
 			planner = nil
 			log.ERROR.Printf("failed configuring planner tariff: %v", err)
