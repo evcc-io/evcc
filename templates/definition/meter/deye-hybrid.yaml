@@ -36,21 +36,21 @@ render: |
     scale: 0.1
   currents:
     - source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 613 # "Out-of-grid - current A"
         type: holding
         decode: int16
       scale: 0.01 
     - source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 614 # "Out-of-grid - current B"
         type: holding
         decode: int16
       scale: 0.01 
     - source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 615 # "Out-of-grid - current C"
         type: holding
