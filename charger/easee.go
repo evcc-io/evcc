@@ -415,8 +415,12 @@ func (c *Easee) MaxCurrent(current int64) error {
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
-		c.current = cur
 		resp.Body.Close()
+		if resp.StatusCode == 202 && resp.ContentLength <= 2 {
+			// no tick id, Easee effectively ignored this update
+			return api.ErrMustRetry
+		}
+		c.current = cur
 	}
 
 	return err
