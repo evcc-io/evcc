@@ -44,10 +44,7 @@ export default {
 			);
 		},
 		guardTimerActive() {
-			return (
-				this.guardRemainingInterpolated > 0 &&
-				["enable", "disable"].includes(this.guardAction)
-			);
+			return this.guardRemainingInterpolated > 0 && this.guardAction === "enable";
 		},
 		isCo2() {
 			return this.smartCostUnit === CO2_UNIT;
@@ -119,18 +116,12 @@ export default {
 				});
 			}
 
-			if (this.guardTimerActive && this.charging && this.guardAction === "disable") {
-				return t("guardDisable", {
-					remaining: this.fmtShortDuration(this.guardRemainingInterpolated, true),
-				});
-			}
-
 			if (this.charging) {
 				return t("charging");
 			}
 
-			if (this.guardTimerActive && this.guardAction === "enable") {
-				return t("guardEnable", {
+			if (this.guardTimerActive) {
+				return t("guard", {
 					remaining: this.fmtShortDuration(this.guardRemainingInterpolated, true),
 				});
 			}
