@@ -131,18 +131,18 @@ describe("timer", () => {
       { remaining: "1:30m" }
     );
   });
-  test("show guard enable timer if it exists", () => {
+  test("show guard timer if it exists", () => {
     expectStatus(
       {
         guardAction: "enable",
         connected: true,
         guardRemainingInterpolated: 90,
       },
-      "guardEnable",
+      "guard",
       { remaining: "1:30m" }
     );
   });
-  test("don't show guard enable timer if charging", () => {
+  test("don't show guard timer if charging", () => {
     expectStatus(
       {
         guardAction: "enable",
@@ -151,29 +151,6 @@ describe("timer", () => {
         guardRemainingInterpolated: 90,
       },
       "charging"
-    );
-  });
-  test("show guard disable timer if it exists", () => {
-    expectStatus(
-      {
-        guardAction: "disable",
-        connected: true,
-        charging: true,
-        guardRemainingInterpolated: 90,
-      },
-      "guardDisable",
-      { remaining: "1:30m" }
-    );
-  });
-  test("don't show guard disable timer if not charging", () => {
-    expectStatus(
-      {
-        guardAction: "disable",
-        connected: true,
-        charging: false,
-        guardRemainingInterpolated: 90,
-      },
-      "connected"
     );
   });
 });
