@@ -172,14 +172,18 @@ func (wb *Warp2) Enabled() (bool, error) {
 
 // Status implements the api.Charger interface
 func (wb *Warp2) Status() (api.ChargeStatus, error) {
-	var status warp.EvseState
+	res := api.StatusNone
 
 	s, err := wb.statusG()
-	if err == nil {
-		err = json.Unmarshal([]byte(s), &status)
+	if err != nil {
+		return res, err
 	}
 
-	res := api.StatusNone
+	var status warp.EvseState
+	if err := json.Unmarshal([]byte(s), &status); err != nil {
+		return res, err
+	}
+
 	switch status.Iec61851State {
 	case 0:
 		res = api.StatusA
@@ -188,9 +192,7 @@ func (wb *Warp2) Status() (api.ChargeStatus, error) {
 	case 2:
 		res = api.StatusC
 	default:
-		if err == nil {
-			err = fmt.Errorf("invalid status: %d", status.Iec61851State)
-		}
+		err = fmt.Errorf("invalid status: %d", status.Iec61851State)
 	}
 
 	return res, err
@@ -246,17 +248,19 @@ func (wb *Warp2) currents() (float64, float64, float64, error) {
 	var res []float64
 
 	s, err := wb.meterDetailsG()
-	if err == nil {
-		if err = json.Unmarshal([]byte(s), &res); err == nil {
-			if len(res) > 5 {
-				return res[3], res[4], res[5], nil
-			}
-
-			err = errors.New("invalid length")
-		}
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return 0, 0, 0, err
+	if err := json.Unmarshal([]byte(s), &res); err != nil {
+		return 0, 0, 0, err
+	}
+
+	if len(res) <= 5 {
+		return 0, 0, 0, errors.New("invalid length")
+	}
+
+	return res[3], res[4], res[5], nil
 }
 
 func (wb *Warp2) identify() (string, error) {
