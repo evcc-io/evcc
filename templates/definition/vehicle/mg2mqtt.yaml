@@ -1,0 +1,84 @@
+template: mg2mqtt
+products:
+  - brand: MG
+    description:
+      generic: Publish all MG iSmart Car Data to MQTT (mg2mqtt)
+requirements:
+  description:
+    en: Required MQTT broker configuration and a SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway or https://github.com/SAIC-iSmart-API/saic-java-client)
+    de: Voraussetzung ist ein konfigurierter MQTT Broker und ein SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway oder https://github.com/SAIC-iSmart-API/saic-java-client)
+params:
+  - name: title
+  - name: user
+    required: true
+  - name: vin
+    required: true
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: icon
+    default: car
+    advanced: true
+  - name: timeout
+    default: 1h
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: custom
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .phases }}
+  phases: {{ .phases }}
+  {{- end }}
+  {{- include "vehicle-identify" . }}
+  soc: # battery soc (%)
+    source: mqtt
+    topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/soc
+    timeout: {{ .timeout }}
+  status:
+    source: combined
+    plugged:
+      source: mqtt
+      topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/chargerConnected
+      timeout: {{ .timeout }}
+    charging:
+      source: mqtt
+      topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/charging
+      timeout: {{ .timeout }}
+  range:
+    source: mqtt
+    topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/range
+    timeout: {{ .timeout }}
+  climater:
+    source: go
+    script: |
+      remoteClimateState != "off"
+    in:
+      - name: remoteClimateState
+        type: string
+        config:
+          source: mqtt
+          topic: saic/{{ .user }}/vehicles/{{ .vin }}/climate/remoteClimateState
+          timeout: {{ .timeout }}
+  odometer:
+    source: mqtt
+    topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/mileage
+    timeout: {{ .timeout }}
+  wakeup:
+    source: go
+    script: |
+      "force"
+    out:
+      - name: wakeUp
+        type: string
+        config:
+          source: mqtt
+          topic: saic/{{ .user }}/vehicles/{{ .vin }}/refresh/mode/set
+          timeout: {{ .timeout }}
