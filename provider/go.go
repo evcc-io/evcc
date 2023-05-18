@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+
 	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/util"
 	"github.com/traefik/yaegi/interp"
@@ -11,8 +12,8 @@ import (
 type Go struct {
 	vm     *interp.Interpreter
 	script string
-	in     []InTransformation
-	out    []OutTransformation
+	in     []inputTransformation
+	out    []outputTransformation
 }
 
 func init() {
@@ -24,8 +25,8 @@ func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		VM     string
 		Script string
-		In     []TransformationConfig
-		Out    []TransformationConfig
+		In     []transformationConfig
+		Out    []transformationConfig
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -37,12 +38,12 @@ func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	in, err := ConvertInFunctions(cc.In)
+	in, err := configureInputs(cc.In)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := ConvertOutFunctions(cc.Out)
+	out, err := configureOutputs(cc.Out)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +62,6 @@ func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 func (p *Go) FloatGetter() func() (float64, error) {
 	return func() (float64, error) {
 		v, err := p.handleGetter()
-
 		if err != nil {
 			return 0, err
 		}
@@ -79,7 +79,6 @@ func (p *Go) FloatGetter() func() (float64, error) {
 func (p *Go) IntGetter() func() (int64, error) {
 	return func() (int64, error) {
 		v, err := p.handleGetter()
-
 		if err != nil {
 			return 0, err
 		}
@@ -97,7 +96,6 @@ func (p *Go) IntGetter() func() (int64, error) {
 func (p *Go) StringGetter() func() (string, error) {
 	return func() (string, error) {
 		v, err := p.handleGetter()
-
 		if err != nil {
 			return "", err
 		}
@@ -115,7 +113,6 @@ func (p *Go) StringGetter() func() (string, error) {
 func (p *Go) BoolGetter() func() (bool, error) {
 	return func() (bool, error) {
 		v, err := p.handleGetter()
-
 		if err != nil {
 			return false, err
 		}
@@ -130,41 +127,33 @@ func (p *Go) BoolGetter() func() (bool, error) {
 }
 
 func (p *Go) handleGetter() (any, error) {
-	if err := handleInTransformation(p.in, p.setParam); err != nil {
+	if err := transformInputs(p.in, p.setParam); err != nil {
 		return nil, err
 	}
 
-	v, err := p.evaluate()
-	if err != nil {
-		return nil, err
-	}
-	return v, nil
+	return p.evaluate()
 }
 
 func (p *Go) handleSetter(param string, val any) error {
-	err := p.setParam(param, val)
+	if err := p.setParam(param, val); err != nil {
+		return err
+	}
+
+	vv, err := p.evaluate()
 	if err != nil {
 		return err
 	}
 
-	vv, err2 := p.evaluate()
-	if err2 != nil {
-		return err2
-	}
-
-	return handleOutTransformation(p.out, vv)
+	return transformOutputs(p.out, vv)
 }
 
 func (p *Go) evaluate() (any, error) {
 	v, err := p.vm.Eval(p.script)
-
 	if err != nil {
 		return nil, err
 	}
 
-	vv := v.Interface()
-
-	return normalizeValue(vv)
+	return normalizeValue(v.Interface())
 }
 
 func (p *Go) setParam(param string, val any) error {

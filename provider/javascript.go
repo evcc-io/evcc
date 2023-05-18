@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
@@ -11,8 +12,8 @@ import (
 type Javascript struct {
 	vm     *otto.Otto
 	script string
-	in     []InTransformation
-	out    []OutTransformation
+	in     []inputTransformation
+	out    []outputTransformation
 }
 
 func init() {
@@ -24,8 +25,8 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 	var cc struct {
 		VM     string
 		Script string
-		In     []TransformationConfig
-		Out    []TransformationConfig
+		In     []transformationConfig
+		Out    []transformationConfig
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -37,12 +38,12 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 		return nil, err
 	}
 
-	in, err := ConvertInFunctions(cc.In)
+	in, err := configureInputs(cc.In)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := ConvertOutFunctions(cc.Out)
+	out, err := configureOutputs(cc.Out)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +62,6 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 func (p *Javascript) FloatGetter() func() (float64, error) {
 	return func() (float64, error) {
 		v, err := p.handleGetter()
-
 		if err != nil {
 			return 0, err
 		}
@@ -79,7 +79,6 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 func (p *Javascript) IntGetter() func() (int64, error) {
 	return func() (int64, error) {
 		v, err := p.handleGetter()
-
 		if err != nil {
 			return 0, err
 		}
@@ -97,7 +96,6 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 func (p *Javascript) StringGetter() func() (string, error) {
 	return func() (string, error) {
 		v, err := p.handleGetter()
-
 		if err != nil {
 			return "", err
 		}
@@ -115,7 +113,6 @@ func (p *Javascript) StringGetter() func() (string, error) {
 func (p *Javascript) BoolGetter() func() (bool, error) {
 	return func() (bool, error) {
 		v, err := p.handleGetter()
-
 		if err != nil {
 			return false, err
 		}
@@ -130,7 +127,7 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 }
 
 func (p *Javascript) handleGetter() (any, error) {
-	if err := handleInTransformation(p.in, p.setParam); err != nil {
+	if err := transformInputs(p.in, p.setParam); err != nil {
 		return nil, err
 	}
 
@@ -138,32 +135,30 @@ func (p *Javascript) handleGetter() (any, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return v, nil
 }
 
 func (p *Javascript) handleSetter(param string, val any) error {
-	err := p.setParam(param, val)
+	if err := p.setParam(param, val); err != nil {
+		return err
+	}
+
+	v, err := p.evaluate()
 	if err != nil {
 		return err
 	}
 
-	vv, err2 := p.evaluate()
-	if err2 != nil {
-		return err2
-	}
-
-	return handleOutTransformation(p.out, vv)
+	return transformOutputs(p.out, v)
 }
 
 func (p *Javascript) evaluate() (any, error) {
 	v, err := p.vm.Eval(p.script)
-
 	if err != nil {
 		return nil, err
 	}
 
 	vv, err := v.Export()
-
 	if err != nil {
 		return nil, err
 	}

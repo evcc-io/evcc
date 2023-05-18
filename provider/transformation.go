@@ -4,23 +4,23 @@ import (
 	"fmt"
 )
 
-type TransformationConfig struct {
+type transformationConfig struct {
 	Name, Type string
 	Config     Config
 }
 
-type InTransformation struct {
+type inputTransformation struct {
 	name     string
 	function func() (any, error)
 }
 
-type OutTransformation struct {
+type outputTransformation struct {
 	name     string
 	function func(any) error
 }
 
-func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, error) {
-	var in []InTransformation
+func configureInputs(inConfig []transformationConfig) ([]inputTransformation, error) {
+	var in []inputTransformation
 
 	for _, cc := range inConfig {
 		var f func() (any, error)
@@ -58,7 +58,7 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 			return nil, fmt.Errorf("%s: Could not find converter for %s", cc.Name, cc.Type)
 		}
 
-		in = append(in, InTransformation{
+		in = append(in, inputTransformation{
 			name:     cc.Name,
 			function: f,
 		})
@@ -66,8 +66,8 @@ func ConvertInFunctions(inConfig []TransformationConfig) ([]InTransformation, er
 	return in, nil
 }
 
-func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation, error) {
-	var out []OutTransformation
+func configureOutputs(outConfig []transformationConfig) ([]outputTransformation, error) {
+	var out []outputTransformation
 
 	for _, cc := range outConfig {
 		var f func(v any) error
@@ -117,7 +117,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 			return nil, fmt.Errorf("%s: invalid type %s", cc.Name, cc.Type)
 		}
 
-		out = append(out, OutTransformation{
+		out = append(out, outputTransformation{
 			name:     cc.Name,
 			function: f,
 		})
@@ -126,7 +126,7 @@ func ConvertOutFunctions(outConfig []TransformationConfig) ([]OutTransformation,
 	return out, nil
 }
 
-func handleInTransformation(in []InTransformation, set func(string, any) error) error {
+func transformInputs(in []inputTransformation, set func(string, any) error) error {
 	for _, cc := range in {
 		val, err := cc.function()
 
@@ -142,7 +142,7 @@ func handleInTransformation(in []InTransformation, set func(string, any) error) 
 	return nil
 }
 
-func handleOutTransformation(out []OutTransformation, v any) error {
+func transformOutputs(out []outputTransformation, v any) error {
 	for _, cc := range out {
 		if err := cc.function(v); err != nil {
 			return fmt.Errorf("%s: %w", cc.name, err)
@@ -152,23 +152,18 @@ func handleOutTransformation(out []OutTransformation, v any) error {
 	return nil
 }
 
-func normalizeValue(vv any) (any, error) {
-	// transformation plugins may return arbitrary types, make sure only supported ones are used
-	switch t := vv.(type) {
+// normalizeValue transforms compatible plugin return types to ensure only supported ones are used
+func normalizeValue(val any) (any, error) {
+	switch v := val.(type) {
 	case int:
-		return int64(vv.(int)), nil
+		return int64(v), nil
 	case int32:
-		return int64(vv.(int32)), nil
+		return int64(v), nil
 	case float32:
-		return float64(vv.(float32)), nil
-	case int64:
-	case float64:
-	case bool:
-	case string:
-		return vv, nil
+		return float64(v), nil
+	case int64, float64, bool, string:
+		return v, nil
 	default:
-		return nil, fmt.Errorf("type not supported: %v", t)
+		return nil, fmt.Errorf("type not supported: %T", val)
 	}
-
-	return vv, nil
 }
