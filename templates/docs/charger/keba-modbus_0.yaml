@@ -1,10 +1,10 @@
 product:
   brand: KEBA
   description: KeContact P20, P30, C/X Series
-capabilities: ["mA", "rfid"]
+capabilities: ["1p3p", "mA", "rfid"]
 requirements: ["sponsorship"]
 description: |
-  Erfordert Firmwareversion 3.10.16 (C-series) bzw. 1.11 (X-series)
+  Erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series)
 render:
   - default: |
       type: template
