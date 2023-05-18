@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"strings"
 )
 
 type transformationConfig struct {
@@ -25,7 +26,7 @@ func configureInputs(inConfig []transformationConfig) ([]inputTransformation, er
 	for _, cc := range inConfig {
 		var f func() (any, error)
 
-		switch cc.Type {
+		switch strings.ToLower(cc.Type) {
 		case "bool":
 			ff, err := NewBoolGetterFromConfig(cc.Config)
 			if err != nil {
@@ -72,7 +73,7 @@ func configureOutputs(outConfig []transformationConfig) ([]outputTransformation,
 	for _, cc := range outConfig {
 		var f func(v any) error
 
-		switch cc.Type {
+		switch strings.ToLower(cc.Type) {
 		case "bool":
 			ff, err := NewBoolSetterFromConfig(cc.Name, cc.Config)
 			if err != nil {
