@@ -107,12 +107,12 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 
 		wb.pause(false)
 
-		if res, err := wb.apiG.Get(); err == nil && res.Secc.Port0.Metering.Meter.Available > 0 {
+		if res.Secc.Port0.Metering.Meter.Available > 0 {
 			return decorateSalia(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
 		}
 	}
 
-	return nil, err
+	return wb, err
 }
 
 func (wb *Salia) heartbeat() {
