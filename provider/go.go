@@ -2,7 +2,6 @@ package provider
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/util"
@@ -13,6 +12,8 @@ import (
 type Go struct {
 	vm     *interp.Interpreter
 	script string
+	in     []inputTransformation
+	out    []outputTransformation
 }
 
 func init() {
@@ -20,10 +21,12 @@ func init() {
 }
 
 // NewGoProviderFromConfig creates a Go provider
-func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		VM     string
 		Script string
+		In     []transformationConfig
+		Out    []transformationConfig
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -35,9 +38,21 @@ func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) 
 		return nil, err
 	}
 
+	in, err := configureInputs(cc.In)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := configureOutputs(cc.Out)
+	if err != nil {
+		return nil, err
+	}
+
 	p := &Go{
 		vm:     vm,
 		script: cc.Script,
+		in:     in,
+		out:    out,
 	}
 
 	return p, nil
@@ -45,92 +60,135 @@ func NewGoProviderFromConfig(other map[string]interface{}) (IntProvider, error) 
 
 // FloatGetter parses float from request
 func (p *Go) FloatGetter() func() (float64, error) {
-	return func() (res float64, err error) {
-		v, err := p.vm.Eval(p.script)
-		if err == nil {
-			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
-				res = v.Convert(typ).Float()
-			} else {
-				err = fmt.Errorf("not a float: %v", v)
-			}
+	return func() (float64, error) {
+		v, err := p.handleGetter()
+		if err != nil {
+			return 0, err
 		}
 
-		return res, err
+		vv, ok := v.(float64)
+		if !ok {
+			return 0, fmt.Errorf("not a float: %s", v)
+		}
+
+		return vv, nil
 	}
 }
 
 // IntGetter parses int64 from request
 func (p *Go) IntGetter() func() (int64, error) {
-	return func() (res int64, err error) {
-		v, err := p.vm.Eval(p.script)
-		if err == nil {
-			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
-				res = v.Convert(typ).Int()
-			} else {
-				err = fmt.Errorf("not an int: %v", v)
-			}
+	return func() (int64, error) {
+		v, err := p.handleGetter()
+		if err != nil {
+			return 0, err
 		}
 
-		return res, err
+		vv, ok := v.(int64)
+		if !ok {
+			return 0, fmt.Errorf("not a int: %s", v)
+		}
+
+		return vv, nil
 	}
 }
 
 // StringGetter parses string from request
 func (p *Go) StringGetter() func() (string, error) {
-	return func() (res string, err error) {
-		v, err := p.vm.Eval(p.script)
-		if err == nil {
-			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
-				res = v.Convert(typ).String()
-			} else {
-				err = fmt.Errorf("not a string: %v", v)
-			}
+	return func() (string, error) {
+		v, err := p.handleGetter()
+		if err != nil {
+			return "", err
 		}
 
-		return res, err
+		vv, ok := v.(string)
+		if !ok {
+			return "", fmt.Errorf("not a string: %s", v)
+		}
+
+		return vv, nil
 	}
 }
 
 // BoolGetter parses bool from request
 func (p *Go) BoolGetter() func() (bool, error) {
-	return func() (res bool, err error) {
-		v, err := p.vm.Eval(p.script)
-		if err == nil {
-			if typ := reflect.TypeOf(res); v.CanConvert(typ) {
-				res = v.Convert(typ).Bool()
-			} else {
-				err = fmt.Errorf("not a boolean: %v", v)
-			}
+	return func() (bool, error) {
+		v, err := p.handleGetter()
+		if err != nil {
+			return false, err
 		}
 
-		return res, err
+		vv, ok := v.(bool)
+		if !ok {
+			return false, fmt.Errorf("not a bool: %s", v)
+		}
+
+		return vv, nil
 	}
 }
 
-func (p *Go) paramAndEval(param string, val any) error {
-	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
-	if err == nil {
-		_, err = p.vm.Eval(p.script)
+func (p *Go) handleGetter() (any, error) {
+	if err := transformInputs(p.in, p.setParam); err != nil {
+		return nil, err
 	}
+
+	return p.evaluate()
+}
+
+func (p *Go) handleSetter(param string, val any) error {
+	if err := p.setParam(param, val); err != nil {
+		return err
+	}
+
+	vv, err := p.evaluate()
+	if err != nil {
+		return err
+	}
+
+	return transformOutputs(p.out, vv)
+}
+
+func (p *Go) evaluate() (any, error) {
+	v, err := p.vm.Eval(p.script)
+	if err != nil {
+		return nil, err
+	}
+
+	return normalizeValue(v.Interface())
+}
+
+func (p *Go) setParam(param string, val any) error {
+	if str, ok := val.(string); ok {
+		val = "\"" + str + "\""
+	}
+
+	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
 	return err
 }
 
+// IntSetter sends int request
 func (p *Go) IntSetter(param string) func(int64) error {
 	return func(val int64) error {
-		return p.paramAndEval(param, val)
+		return p.handleSetter(param, val)
+	}
+}
+
+// FloatSetter sends float request
+func (p *Go) FloatSetter(param string) func(float64) error {
+	return func(val float64) error {
+		return p.handleSetter(param, val)
 	}
 }
 
 // StringSetter sends string request
 func (p *Go) StringSetter(param string) func(string) error {
 	return func(val string) error {
-		return p.paramAndEval(param, val)
+		return p.handleSetter(param, val)
 	}
 }
 
 // BoolSetter sends bool request
 func (p *Go) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
-		return p.paramAndEval(param, val)
+		return p.handleSetter(param, val)
 	}
 }
