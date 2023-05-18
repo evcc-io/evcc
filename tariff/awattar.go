@@ -34,7 +34,8 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Currency string
 		Region   string
 	}{
-		Region: "DE",
+		Currency: "EUR",
+		Region:   "DE",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
