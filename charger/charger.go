@@ -57,14 +57,20 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	}
 
 	c, err := NewConfigurable(status, enabled, enable, maxcurrent)
+	if err != nil {
+		return nil, err
+	}
 
 	c.embed = &cc.embed
 
 	// decorator phases
 	var phases1p3p func(int) error
-	if err == nil && cc.Phases1p3p != nil {
+	if cc.Phases1p3p != nil {
 		var phases1p3pi64 func(int64) error
 		phases1p3pi64, err = provider.NewIntSetterFromConfig("phases", *cc.Phases1p3p)
+		if err != nil {
+			return nil, fmt.Errorf("phases: %w", err)
+		}
 
 		phases1p3p = func(phases int) error {
 			return phases1p3pi64(int64(phases))
@@ -73,8 +79,12 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 
 	// decorator identifier
 	var identify func() (string, error)
-	if err == nil && cc.Identify != nil {
+	if cc.Identify != nil {
 		identify, err = provider.NewStringGetterFromConfig(*cc.Identify)
+		if err != nil {
+			return nil, fmt.Errorf("identify: %w", err)
+		}
+
 	}
 
 	// decorate charger with wakeup
