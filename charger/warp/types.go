@@ -87,9 +87,10 @@ type EmConfig struct {
 }
 
 type EmState struct {
-	PhasesSwitched int  `json:"phases_switched"`
-	Input3State    bool `json:"input3_state"`
-	Input4State    bool `json:"input4_state"`
-	RelayState     bool `json:"relay_state"`
-	ErrorFlags     int  `json:"error_flags"`
+	ExternalControl int  `json:"external_control"`
+	PhasesSwitched  int  `json:"phases_switched"`
+	Input3State     bool `json:"input3_state"`
+	Input4State     bool `json:"input4_state"`
+	RelayState      bool `json:"relay_state"`
+	ErrorFlags      int  `json:"error_flags"`
 }

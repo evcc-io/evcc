@@ -26,9 +26,10 @@ type Warp2 struct {
 	chargeG       func() (string, error)
 	userconfigG   func() (string, error)
 	maxcurrentS   func(int64) error
-	emConfigG     func() (string, error)
-	phasesS       func(int64) error
-	current       int64
+	// emConfigG     func() (string, error)
+	emStateG func() (string, error)
+	phasesS  func(int64) error
+	current  int64
 }
 
 func init() {
@@ -77,7 +78,7 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	var phases func(int) error
 	if cc.EnergyManager != "" {
-		if res, err := wb.emConfig(); err == nil && res.ContactorInstalled {
+		if res, err := wb.emState(); err == nil && res.ExternalControl != 1 {
 			phases = wb.phases1p3p
 		}
 	}
@@ -122,10 +123,11 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 		WithPayload(`{ "current": ${maxcurrent} }`).
 		IntSetter("maxcurrent")
 
-	wb.emConfigG = stringG(fmt.Sprintf("%s/energy_manager/config", emTopic))
+	// wb.emConfigG = stringG(fmt.Sprintf("%s/energy_manager/config", emTopic))
+	wb.emStateG = stringG(fmt.Sprintf("%s/energy_manager/state", emTopic))
 	wb.phasesS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/energy_manager/config", emTopic), 0).
-		WithPayload(`{ "phase_switching_mode": ${phases} }`).
+		fmt.Sprintf("%s/external_control_update", emTopic), 0).
+		WithPayload(`{ "phases_wanted": ${phases} }`).
 		IntSetter("phases")
 
 	return wb, nil
@@ -268,10 +270,21 @@ func (wb *Warp2) identify() (string, error) {
 	return res.AuthorizationInfo.TagId, err
 }
 
-func (wb *Warp2) emConfig() (warp.EmConfig, error) {
-	var res warp.EmConfig
+// func (wb *Warp2) emConfig() (warp.EmConfig, error) {
+// 	var res warp.EmConfig
 
-	s, err := wb.emConfigG()
+// 	s, err := wb.emConfigG()
+// 	if err == nil {
+// 		err = json.Unmarshal([]byte(s), &res)
+// 	}
+
+// 	return res, err
+// }
+
+func (wb *Warp2) emState() (warp.EmState, error) {
+	var res warp.EmState
+
+	s, err := wb.emStateG()
 	if err == nil {
 		err = json.Unmarshal([]byte(s), &res)
 	}
@@ -280,6 +293,14 @@ func (wb *Warp2) emConfig() (warp.EmConfig, error) {
 }
 
 func (wb *Warp2) phases1p3p(phases int) error {
-	err := wb.phasesS(int64(phases))
-	return err
+	res, err := wb.emState()
+	if err != nil {
+		return err
+	}
+
+	if res.ExternalControl > 0 {
+		return fmt.Errorf("external control not available: %d", res.ExternalControl)
+	}
+
+	return wb.phasesS(int64(phases))
 }
