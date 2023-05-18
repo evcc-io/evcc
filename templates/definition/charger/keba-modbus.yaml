@@ -1,0 +1,21 @@
+template: keba-modbus
+products:
+  - brand: KEBA
+    description:
+      generic: KeContact P20, P30, C/X Series
+  - brand: BMW
+    description:
+      generic: i Wallbox
+capabilities: ["1p3p", "mA", "rfid"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: Erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series)
+    en: Requires firmware version 3.10.42 (C-series) bzw. 1.11 (X-series)
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: keba-modbus
+  {{- include "modbus" . }}
