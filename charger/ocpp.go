@@ -318,6 +318,10 @@ func (c *OCPP) Enable(enable bool) error {
 			return err
 		}
 
+		if txn == 0 {
+			return errors.New("unknown transaction running, cannot disable")
+		}
+
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
