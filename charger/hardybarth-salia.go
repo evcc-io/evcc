@@ -151,13 +151,7 @@ func (wb *Salia) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
-
-	switch s := res.Secc.Port0.Ci.Charge.Cp.Status; s {
-	case "A", "B", "C":
-		return api.ChargeStatus(s), nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid state: %s", s)
-	}
+	return api.ChargeStatusString(res.Secc.Port0.Ci.Charge.Cp.Status)
 }
 
 // Enabled implements the api.Charger interface
