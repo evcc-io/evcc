@@ -121,6 +121,11 @@ func NewConfigurable(
 
 // Status implements the api.Charger interface
 func (m *Charger) Status() (api.ChargeStatus, error) {
+	s, err := m.statusG()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
 	return api.ChargeStatusString(s)
 }
 
