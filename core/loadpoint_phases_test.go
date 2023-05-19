@@ -166,8 +166,6 @@ func TestPvScalePhases(t *testing.T) {
 
 		plainCharger := mock.NewMockCharger(ctrl)
 		plainCharger.EXPECT().Enabled().Return(true, nil)
-
-		//first call is always with minA
 		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil) // MaxCurrentEx not implemented
 
 		// 1p3p
@@ -239,9 +237,6 @@ func TestPvScalePhases(t *testing.T) {
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(1).Return(nil).MaxTimes(1)
 
-			//scale down moves to maxA (with 1p)
-			plainCharger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
-
 			testScale(t, lp, min1p, "down", tc)
 			ctrl.Finish()
 
@@ -255,9 +250,6 @@ func TestPvScalePhases(t *testing.T) {
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
-
-			//scale up moves to minA (with 3p)
-			plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil)
 
 			testScale(t, lp, min3p, "up", tc)
 			ctrl.Finish()
@@ -354,12 +346,10 @@ func TestPvScalePhasesTimer(t *testing.T) {
 
 		lp := &Loadpoint{
 			log:            util.NewLogger("foo"),
-			bus:            evbus.New(),
 			clock:          clock,
 			charger:        charger,
 			MinCurrent:     minA,
 			MaxCurrent:     maxA,
-			wakeUpTimer:    NewTimer(),
 			phases:         tc.phases,
 			measuredPhases: tc.measuredPhases,
 			Enable: ThresholdConfig{
@@ -376,8 +366,6 @@ func TestPvScalePhasesTimer(t *testing.T) {
 
 		if tc.res {
 			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
-			charger.MockCharger.EXPECT().Enable(true).Return(nil)
-			charger.MockCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil)
 		}
 
 		res := lp.pvScalePhases(tc.availablePower, minA, maxA)
@@ -416,7 +404,6 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 
 		lp := &Loadpoint{
 			log:   util.NewLogger("foo"),
-			bus:   evbus.New(),
 			clock: clock.NewMock(),
 			charger: struct {
 				*mock.MockCharger
@@ -425,7 +412,6 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 				plainCharger,
 				phaseCharger,
 			},
-			wakeUpTimer:      NewTimer(),
 			MinCurrent:       minA,
 			ConfiguredPhases: tc.dflt,     // fixed phases or default
 			phases:           tc.physical, // current phase status
@@ -434,8 +420,6 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 		// restrict scalable charger by config
 		if tc.dflt == 0 || tc.dflt != tc.physical {
 			phaseCharger.EXPECT().Phases1p3p(tc.maxExpected).Return(nil)
-			plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil)
-			plainCharger.EXPECT().Enable(true).Return(nil)
 		}
 
 		_ = lp.scalePhasesIfAvailable(3)
