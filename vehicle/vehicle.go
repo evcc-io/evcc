@@ -8,13 +8,12 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)" -t "api.Resurrector,WakeUp,func() (error)"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
 	*embed
-	socG    func() (float64, error)
-	statusG func() (string, error)
+	socG func() (float64, error)
 }
 
 func init() {
@@ -30,6 +29,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		Range    *provider.Config
 		Odometer *provider.Config
 		Climater *provider.Config
+		Wakeup   *provider.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -49,11 +49,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate vehicle with Status
 	var status func() (api.ChargeStatus, error)
 	if cc.Status != nil {
-		v.statusG, err = provider.NewStringGetterFromConfig(*cc.Status)
+		statusG, err := provider.NewStringGetterFromConfig(*cc.Status)
 		if err != nil {
 			return nil, fmt.Errorf("status: %w", err)
 		}
-		status = v.status
+		status = func() (api.ChargeStatus, error) {
+			s, err := statusG()
+			if err != nil {
+				return api.StatusNone, err
+			}
+			return api.ChargeStatusString(s)
+		}
 	}
 
 	// decorate vehicle with range
@@ -86,24 +92,22 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		climater = climateG
 	}
 
-	res := decorateVehicle(v, status, rng, odo, climater)
+	// decorate vehicle with wakeup
+	var wakeup func() error
+	if cc.Wakeup != nil {
+		wakeupS, err := provider.NewBoolSetterFromConfig("wakeup", *cc.Wakeup)
+		if err != nil {
+			return nil, fmt.Errorf("wakeup: %w", err)
+		}
+		wakeup = func() error {
+			return wakeupS(true)
+		}
+	}
 
-	return res, nil
+	return decorateVehicle(v, status, rng, odo, climater, wakeup), nil
 }
 
 // Soc implements the api.Vehicle interface
 func (v *Vehicle) Soc() (float64, error) {
 	return v.socG()
-}
-
-// status implements the api.ChargeState interface
-func (v *Vehicle) status() (api.ChargeStatus, error) {
-	status := api.StatusF
-
-	statusS, err := v.statusG()
-	if err == nil {
-		status = api.ChargeStatus(statusS)
-	}
-
-	return status, err
 }
