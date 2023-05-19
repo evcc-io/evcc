@@ -2,7 +2,6 @@ package charger
 
 import (
 	"encoding/binary"
-	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -62,14 +61,7 @@ func (wb *Obo) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch r := 'A' + rune(b[1]); r {
-	case 'A', 'B', 'C', 'D':
-		return api.ChargeStatus(r), nil
-	case 'E':
-		return api.StatusF, nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", binary.BigEndian.Uint16(b))
-	}
+	return api.ChargeStatusString(string('A' + rune(b[1])))
 }
 
 // Enabled implements the api.Charger interface
