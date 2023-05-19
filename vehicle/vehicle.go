@@ -13,8 +13,7 @@ import (
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
 	*embed
-	socG    func() (float64, error)
-	statusG func() (string, error)
+	socG func() (float64, error)
 }
 
 func init() {
@@ -50,11 +49,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate vehicle with Status
 	var status func() (api.ChargeStatus, error)
 	if cc.Status != nil {
-		v.statusG, err = provider.NewStringGetterFromConfig(*cc.Status)
+		statusG, err := provider.NewStringGetterFromConfig(*cc.Status)
 		if err != nil {
 			return nil, fmt.Errorf("status: %w", err)
 		}
-		status = v.status
+		status = func() (api.ChargeStatus, error) {
+			s, err := statusG()
+			if err != nil {
+				return api.StatusNone, err
+			}
+			return api.ChargeStatusString(s)
+		}
 	}
 
 	// decorate vehicle with range
@@ -105,16 +110,4 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 // Soc implements the api.Vehicle interface
 func (v *Vehicle) Soc() (float64, error) {
 	return v.socG()
-}
-
-// status implements the api.ChargeState interface
-func (v *Vehicle) status() (api.ChargeStatus, error) {
-	status := api.StatusF
-
-	statusS, err := v.statusG()
-	if err == nil {
-		status = api.ChargeStatus(statusS)
-	}
-
-	return status, err
 }
