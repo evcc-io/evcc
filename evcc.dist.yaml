@@ -173,6 +173,8 @@ tariffs:
     # # or variable via awattar
     # type: awattar
     # region: de # optional, choose at for Austria
+    # taxes: 0.2 # optional
+    # netcharges: 0.07 # optional EUR/kWh
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
