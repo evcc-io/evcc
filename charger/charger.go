@@ -126,7 +126,7 @@ func (m *Charger) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatus(s), nil
+	return api.ChargeStatusString(s)
 }
 
 // Enabled implements the api.Charger interface

@@ -44,11 +44,11 @@ const (
 
 // ChargeStatusString converts a string to ChargeStatus
 func ChargeStatusString(s string) (ChargeStatus, error) {
-	switch strings.ToUpper(s) {
+	switch status := strings.ToUpper(s); status {
 	case "A", "B", "C":
-		return ChargeStatus(s), nil
+		return ChargeStatus(status), nil
 	case "D", "E", "F":
-		return ChargeStatus(s), fmt.Errorf("invalid status: %s", s)
+		return ChargeStatus(status), fmt.Errorf("invalid status: %s", status)
 	default:
 		return StatusNone, fmt.Errorf("invalid status: %s", s)
 	}
