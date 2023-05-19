@@ -106,10 +106,6 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 	if err == nil {
 		go wb.heartbeat()
 
-		if err := wb.post(salia.HeartBeat, "alive"); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
-
 		wb.pause(false)
 
 		if res.Secc.Port0.Metering.Meter.Available > 0 {
