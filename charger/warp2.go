@@ -126,7 +126,7 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 	// wb.emConfigG = stringG(fmt.Sprintf("%s/energy_manager/config", emTopic))
 	wb.emStateG = stringG(fmt.Sprintf("%s/energy_manager/state", emTopic))
 	wb.phasesS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/external_control_update", emTopic), 0).
+		fmt.Sprintf("%s/energy_manager/external_control_update", emTopic), 0).
 		WithPayload(`{ "phases_wanted": ${phases} }`).
 		IntSetter("phases")
 
@@ -303,7 +303,7 @@ func (wb *Warp2) phases1p3p(phases int) error {
 	}
 
 	if res.ExternalControl > 0 {
-		return fmt.Errorf("external control not available: %d", res.ExternalControl)
+		return fmt.Errorf("external control not available: %s", res.ExternalControl.String())
 	}
 
 	return wb.phasesS(int64(phases))

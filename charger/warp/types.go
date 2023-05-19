@@ -86,11 +86,21 @@ type EmConfig struct {
 	PhaseSwitchingMode int  `json:"phase_switching_mode"`
 }
 
+//go:generate enumer -type ExternalControl -trimprefix ExternalControl -transform whitespace
+type ExternalControl int
+
+const (
+	ExternalControlAvailable ExternalControl = iota
+	ExternalControlDeactivated
+	ExternalControlRuntimeConditionsNotMet
+	ExternalControlCurrentlySwitching
+)
+
 type EmState struct {
-	ExternalControl int  `json:"external_control"`
-	PhasesSwitched  int  `json:"phases_switched"`
-	Input3State     bool `json:"input3_state"`
-	Input4State     bool `json:"input4_state"`
-	RelayState      bool `json:"relay_state"`
-	ErrorFlags      int  `json:"error_flags"`
+	ExternalControl ExternalControl `json:"external_control"`
+	PhasesSwitched  int             `json:"phases_switched"`
+	Input3State     bool            `json:"input3_state"`
+	Input4State     bool            `json:"input4_state"`
+	RelayState      bool            `json:"relay_state"`
+	ErrorFlags      int             `json:"error_flags"`
 }
