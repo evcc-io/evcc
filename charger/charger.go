@@ -66,14 +66,13 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	// decorator phases
 	var phases1p3p func(int) error
 	if cc.Phases1p3p != nil {
-		var phases1p3pi64 func(int64) error
-		phases1p3pi64, err = provider.NewIntSetterFromConfig("phases", *cc.Phases1p3p)
+		phases1p3pS, err := provider.NewIntSetterFromConfig("phases", *cc.Phases1p3p)
 		if err != nil {
 			return nil, fmt.Errorf("phases: %w", err)
 		}
 
 		phases1p3p = func(phases int) error {
-			return phases1p3pi64(int64(phases))
+			return phases1p3pS(int64(phases))
 		}
 	}
 
@@ -84,20 +83,22 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		if err != nil {
 			return nil, fmt.Errorf("identify: %w", err)
 		}
-
 	}
 
-	// decorate charger with wakeup
+	// decorate wakeup
 	var wakeup func() error
 	if cc.Wakeup != nil {
 		wakeupS, err := provider.NewBoolSetterFromConfig("wakeup", *cc.Wakeup)
 		if err != nil {
 			return nil, fmt.Errorf("wakeup: %w", err)
 		}
-		wakeup = func() error { return wakeupS(true) }
+
+		wakeup = func() error {
+			return wakeupS(true)
+		}
 	}
 
-	return decorateCustom(c, identify, phases1p3p, wakeup), err
+	return decorateCustom(c, identify, phases1p3p, wakeup), nil
 }
 
 // NewConfigurable creates a new charger

@@ -99,12 +99,12 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		if err != nil {
 			return nil, fmt.Errorf("wakeup: %w", err)
 		}
-		wakeup = func() error { return wakeupS(true) }
+		wakeup = func() error {
+			return wakeupS(true)
+		}
 	}
 
-	res := decorateVehicle(v, status, rng, odo, climater, wakeup)
-
-	return res, nil
+	return decorateVehicle(v, status, rng, odo, climater, wakeup), nil
 }
 
 // Soc implements the api.Vehicle interface
