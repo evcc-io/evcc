@@ -938,19 +938,6 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 	if lp.GetPhases() != phases {
 
-		// set new current
-
-		current := lp.chargeCurrent * float64(lp.GetPhases())
-		if phases > 1 {
-			current = current / float64(lp.maxActivePhases())
-		}
-		if current < lp.GetMinCurrent() {
-			current = lp.GetMinCurrent()
-		} else if current > lp.GetMaxCurrent() {
-			current = lp.GetMaxCurrent()
-		}
-		_ = lp.setLimit(current, true)
-
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
