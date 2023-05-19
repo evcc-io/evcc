@@ -41,7 +41,7 @@ func init() {
 	registry.Add("go-e", NewGoEFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
