@@ -89,7 +89,7 @@ require (
 	github.com/traefik/yaegi v0.15.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20230312113724-f6764040a78e
-	github.com/writeas/go-strip-markdown v2.0.1+incompatible
+	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 	golang.org/x/net v0.10.0
