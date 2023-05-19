@@ -14,7 +14,7 @@ import (
 
 	"github.com/basvdlei/gotsmart/crc16"
 	"github.com/basvdlei/gotsmart/dsmr"
-	"github.com/cenkalti/backoff"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
