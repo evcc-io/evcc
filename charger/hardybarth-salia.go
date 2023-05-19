@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
 	"github.com/evcc-io/evcc/charger/echarge/salia"
@@ -116,8 +117,14 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 }
 
 func (wb *Salia) heartbeat() {
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = 5 * time.Second
+	bo.MaxElapsedTime = time.Minute
+
 	for ; true; <-time.Tick(30 * time.Second) {
-		if err := wb.post(salia.HeartBeat, "alive"); err != nil {
+		if err := backoff.Retry(func() error {
+			return wb.post(salia.HeartBeat, "alive")
+		}, bo); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
