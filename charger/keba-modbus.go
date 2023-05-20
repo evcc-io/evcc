@@ -130,8 +130,6 @@ func (wb *Keba) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	fmt.Printf("1004: %0x\n", b)
-
 	switch status := binary.BigEndian.Uint32(b); status {
 	case 0:
 		return api.StatusA, nil
@@ -144,7 +142,6 @@ func (wb *Keba) Status() (api.ChargeStatus, error) {
 		if err != nil {
 			return api.StatusNone, err
 		}
-		fmt.Printf("1000: %0x\n", b)
 		if binary.BigEndian.Uint32(b) == 3 {
 			return api.StatusC, err
 		}
@@ -161,9 +158,6 @@ func (wb *Keba) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
-	fmt.Printf("1000: %0x\n", b)
-
 	return binary.BigEndian.Uint32(b) != 5, nil
 }
 
