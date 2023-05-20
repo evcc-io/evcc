@@ -46,7 +46,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		socG:  socG,
 	}
 
-	// decorate vehicle with Status
+	// decorate status
 	var status func() (api.ChargeStatus, error)
 	if cc.Status != nil {
 		statusG, err := provider.NewStringGetterFromConfig(*cc.Status)
@@ -62,7 +62,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		}
 	}
 
-	// decorate vehicle with range
+	// decorate range
 	var rng func() (int64, error)
 	if cc.Range != nil {
 		rangeG, err := provider.NewIntGetterFromConfig(*cc.Range)
@@ -72,7 +72,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		rng = rangeG
 	}
 
-	// decorate vehicle with odometer
+	// decorate odometer
 	var odo func() (float64, error)
 	if cc.Odometer != nil {
 		odoG, err := provider.NewFloatGetterFromConfig(*cc.Odometer)
@@ -82,7 +82,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		odo = odoG
 	}
 
-	// decorate vehicle with climater
+	// decorate climater
 	var climater func() (bool, error)
 	if cc.Climater != nil {
 		climateG, err := provider.NewBoolGetterFromConfig(*cc.Climater)
@@ -92,7 +92,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		climater = climateG
 	}
 
-	// decorate vehicle with wakeup
+	// decorate wakeup
 	var wakeup func() error
 	if cc.Wakeup != nil {
 		wakeupS, err := provider.NewBoolSetterFromConfig("wakeup", *cc.Wakeup)
