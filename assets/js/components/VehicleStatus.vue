@@ -116,14 +116,14 @@ export default {
 				});
 			}
 
-			if (this.charging) {
-				return t("charging");
-			}
-
 			if (this.guardTimerActive) {
 				return t("guard", {
 					remaining: this.fmtShortDuration(this.guardRemainingInterpolated, true),
 				});
+			}
+
+			if (this.charging) {
+				return t("charging");
 			}
 
 			return t("connected");
