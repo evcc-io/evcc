@@ -75,6 +75,7 @@ github = "GitHub"
 login = "Prijave v vozila"
 sessions = "Seje polnjenja"
 settings = "Nastavitve"
+needHelp = "Potrebuješ pomoč?"
 
 [main]
 vehicles = "Parkiranje"
@@ -305,3 +306,39 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[batterySettings.bufferStart]
+never = "le z dovolj presežka"
+full = "ko je skoraj poln"
+low = "ko je nekoliko poln"
+medium = "ko je napol poln"
+
+[help]
+restartButton = "Ponovni zagon"
+restartDescription = "Ste poskusili izklopiti in znova vklopiti?"
+secondaryActions = "Še vedno ne morete rešiti svoje težave? Tukaj je nekaj zahtevnejših možnosti."
+discussionsButton = "GitHub razprave"
+documentationButton = "Dokumentacija"
+issueButton = "Prijavi napako"
+issueDescription = "Ste našli čudno ali napačno vedenje?"
+modalTitle = "Potrebuješ pomoč?"
+primaryActions = "Nekaj ne deluje tako, kot bi moralo? Na teh mestih lahko poiščete pomoč."
+
+[help.restart]
+cancel = "Prekliči"
+confirm = "Da, ponovno zaženi!"
+
+[batterySettings]
+batteryLevel = "Raven baterije"
+capacity = "{energy} od {total}"
+legendBottomName = "domača prednost"
+legendBottomSubline = "se ne uporablja za polnjenje"
+legendMiddleName = "najprej vozilo"
+legendMiddleSubline = "Dom je drugi"
+legendTitle = "Kako naj se uporablja sončna energija?"
+legendTopAutostart = "samodejno se zažene"
+legendTopName = "polnjenje, ki ga podpira baterija"
+legendTopSubline = "brez prekinitev"
+modalTitle = "Nastavitve baterije"
+note = "Opomba: Te nastavitve vplivajo samo na solarni način. Obnašanje pri polnjenju je ustrezno prilagojeno."
