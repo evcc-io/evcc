@@ -141,6 +141,10 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 	case FeedinTariff:
 		t = site.tariffs.FeedIn
 	case PlannerTariff:
+		// TODO priority
+		// 1. dynamic tariff
+		// 2. co2
+		// 3. grid (for display)
 		if t = site.tariffs.Planner; t == nil {
 			t = site.tariffs.Grid
 		}
