@@ -16,6 +16,7 @@ import (
 )
 
 type Elering struct {
+	*embed
 	mux     sync.Mutex
 	log     *util.Logger
 	unit    string
@@ -32,6 +33,7 @@ func init() {
 
 func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
+		embed    `mapstructure:",squash"`
 		Currency string
 		Region   string
 	}{
@@ -47,6 +49,7 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	t := &Elering{
+		embed:  &cc.embed,
 		log:    util.NewLogger("Elering"),
 		unit:   cc.Currency,
 		region: strings.ToLower(cc.Region),
@@ -92,7 +95,7 @@ func (t *Elering) run(done chan error) {
 			ar := api.Rate{
 				Start: ts.Local(),
 				End:   ts.Add(time.Hour).Local(),
-				Price: r.Price / 1e3,
+				Price: t.totalPrice(r.Price / 1e3),
 			}
 			t.data = append(t.data, ar)
 		}

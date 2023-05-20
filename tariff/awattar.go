@@ -14,6 +14,7 @@ import (
 )
 
 type Awattar struct {
+	*embed
 	mux     sync.Mutex
 	log     *util.Logger
 	uri     string
@@ -30,6 +31,7 @@ func init() {
 
 func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
+		embed    `mapstructure:",squash"`
 		Cheap    any // TODO deprecated
 		Currency string
 		Region   string
@@ -47,9 +49,10 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	t := &Awattar{
-		log:  util.NewLogger("awattar"),
-		unit: cc.Currency,
-		uri:  fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
+		embed: &cc.embed,
+		log:   util.NewLogger("awattar"),
+		unit:  cc.Currency,
+		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
 
 	// TODO deprecated
@@ -87,7 +90,7 @@ func (t *Awattar) run(done chan error) {
 			ar := api.Rate{
 				Start: r.StartTimestamp.Local(),
 				End:   r.EndTimestamp.Local(),
-				Price: r.Marketprice / 1e3,
+				Price: t.totalPrice(r.Marketprice / 1e3),
 			}
 			t.data = append(t.data, ar)
 		}
