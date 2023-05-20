@@ -32,13 +32,13 @@ func init() {
 
 func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		Cheap    any // TODO deprecated
+		Cheap      any // TODO deprecated
 		Currency   string
 		NetCharges float64
 		Region     string
 		Taxes      float64
 	}{
-		Currency: "EUR",
+		Currency:   "EUR",
 		NetCharges: 0,
 		Region:     "DE",
 		Taxes:      0,
@@ -53,7 +53,7 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	t := &Awattar{
-		log:  util.NewLogger("awattar"),
+		log:        util.NewLogger("awattar"),
 		unit:       cc.Currency,
 		netcharges: cc.NetCharges,
 		uri:        fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
@@ -95,7 +95,7 @@ func (t *Awattar) run(done chan error) {
 			ar := api.Rate{
 				Start: r.StartTimestamp.Local(),
 				End:   r.EndTimestamp.Local(),
-				Price: (r.Marketprice / 1e3 + t.netcharges) * (1 + t.taxes),
+				Price: (r.Marketprice/1e3 + t.netcharges) * (1 + t.taxes),
 			}
 			t.data = append(t.data, ar)
 		}
