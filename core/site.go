@@ -176,7 +176,7 @@ func NewSiteFromConfig(
 
 	// TODO deprecated
 	if len(site.Meters.BatteryMetersRef_) > 0 {
-		site.log.WARN.Println("deprecated: use 'pv' instead of 'pvs'")
+		site.log.WARN.Println("deprecated: use 'battery' instead of 'batteries'")
 	}
 
 	if len(site.batteryMeters) > 0 && site.ResidualPower <= 0 {
