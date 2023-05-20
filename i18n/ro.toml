@@ -234,7 +234,7 @@ started = "Pornit"
 title = "Sesiune de încărcare"
 
 [sessions]
-date = "Perioada"
+date = "Terminat"
 downloadCsv = "Descarcă ca CSV"
 energy = "Încărcat"
 loadpoint = "Punct încărcare"
@@ -305,3 +305,10 @@ title = "Eroare la pornire încărcare"
 cancel = "Anulați"
 template = "Producător"
 test = "Test"
+
+
+[batterySettings]
+batteryLevel = "Nivelul bateriei"
+capacity = "{energy} din {total}"
+legendBottomName = "prioritate casa"
+legendBottomSubline = "neutilizat pentru incarcare"
