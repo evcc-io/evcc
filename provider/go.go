@@ -68,7 +68,7 @@ func (p *Go) FloatGetter() func() (float64, error) {
 
 		vv, ok := v.(float64)
 		if !ok {
-			return 0, fmt.Errorf("not a float: %s", v)
+			return 0, fmt.Errorf("not a float: %v", v)
 		}
 
 		return vv, nil
@@ -85,7 +85,7 @@ func (p *Go) IntGetter() func() (int64, error) {
 
 		vv, ok := v.(int64)
 		if !ok {
-			return 0, fmt.Errorf("not a int: %s", v)
+			return 0, fmt.Errorf("not a int: %v", v)
 		}
 
 		return vv, nil
@@ -102,7 +102,7 @@ func (p *Go) StringGetter() func() (string, error) {
 
 		vv, ok := v.(string)
 		if !ok {
-			return "", fmt.Errorf("not a string: %s", v)
+			return "", fmt.Errorf("not a string: %v", v)
 		}
 
 		return vv, nil
@@ -119,7 +119,7 @@ func (p *Go) BoolGetter() func() (bool, error) {
 
 		vv, ok := v.(bool)
 		if !ok {
-			return false, fmt.Errorf("not a bool: %s", v)
+			return false, fmt.Errorf("not a bool: %v", v)
 		}
 
 		return vv, nil
