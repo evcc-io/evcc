@@ -89,7 +89,7 @@ export default {
 		},
 		priceStyle(price) {
 			const value = price === undefined ? this.avgPrice : price;
-			const height = value ? `${(100 / this.maxPrice) * value}%` : "100%";
+			const height = value !== undefined ? `${5 + (95 / this.maxPrice) * value}%` : "100%";
 			return { height };
 		},
 	},
