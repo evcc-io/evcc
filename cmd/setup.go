@@ -354,6 +354,7 @@ func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 		err = configureEEBus(conf.EEBus)
 	}
 
+	// setup config database
 	if err == nil {
 		err = config.Init(db.Instance)
 	}
