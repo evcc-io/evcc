@@ -2,6 +2,7 @@ package meter
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
@@ -10,7 +11,7 @@ func init() {
 }
 
 func NewMeterFromTemplateConfig(other map[string]interface{}) (api.Meter, error) {
-	instance, err := templates.RenderInstance(templates.Meter, other)
+	instance, err := templates.RenderInstance(config.Meter, other)
 
 	var res api.Meter
 	if err == nil {

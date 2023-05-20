@@ -11,6 +11,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +35,7 @@ func init() {
 	dumpConfig = dumpCmd.Flags().Bool("cfg", false, "Dump config file")
 }
 
-func handle(device any, err error) any {
+func handle(device any, _ int, err error) any {
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
@@ -94,24 +95,24 @@ func runDump(cmd *cobra.Command, args []string) {
 	fmt.Println("")
 
 	if name := site.Meters.GridMeterRef; name != "" {
-		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(cp.Meter(name)))
+		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(config.MeterByName(name)))
 	}
 
 	for id, name := range append(site.Meters.PVMetersRef, site.Meters.PVMetersRef_...) {
 		if name != "" {
-			d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id+1, name), handle(cp.Meter(name)))
+			d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id+1, name), handle(config.MeterByName(name)))
 		}
 	}
 
 	for id, name := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
 		if name != "" {
-			d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id+1, name), handle(cp.Meter(name)))
+			d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id+1, name), handle(config.MeterByName(name)))
 		}
 	}
 
 	for id, name := range site.Meters.AuxMetersRef {
 		if name != "" {
-			d.DumpWithHeader(fmt.Sprintf("aux %d: %s", id+1, name), handle(cp.Meter(name)))
+			d.DumpWithHeader(fmt.Sprintf("aux %d: %s", id+1, name), handle(config.MeterByName(name)))
 		}
 	}
 
@@ -126,11 +127,11 @@ func runDump(cmd *cobra.Command, args []string) {
 		fmt.Println("")
 
 		if name := lp.MeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), handle(cp.Meter(name)))
+			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), handle(config.MeterByName(name)))
 		}
 
 		if name := lp.ChargerRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(cp.Charger(name)))
+			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(config.ChargerByName(name)))
 		}
 	}
 }

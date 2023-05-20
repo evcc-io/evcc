@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/hems/semp"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -201,7 +202,7 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	filename := DefaultConfigFilename
 
 	for {
-		file, err := os.OpenFile(filename, os.O_WRONLY, 0666)
+		file, err := os.OpenFile(filename, os.O_WRONLY, 0o666)
 		if errors.Is(err, os.ErrNotExist) {
 			break
 		}
@@ -332,7 +333,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		vehicles := c.configuration.DevicesOfClass(templates.Vehicle)
+		vehicles := c.configuration.DevicesOfClass(config.Vehicle)
 		if len(vehicles) > 0 {
 			fmt.Println()
 			if c.askYesNo(c.localizedString("Loadpoint_VehicleDisableAutoDetection")) {

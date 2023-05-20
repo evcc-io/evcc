@@ -292,13 +292,6 @@ export default {
 	name: "ChargingSessions",
 	components: { TopNavigation, ChargingSessionModal, CustomSelect },
 	mixins: [formatter],
-	props: {
-		notifications: Array,
-		month: { type: Number, default: () => new Date().getMonth() + 1 },
-		year: { type: Number, default: () => new Date().getFullYear() },
-		loadpointFilter: { type: String, default: "" },
-		vehicleFilter: { type: String, default: "" },
-	},
 	data() {
 		return {
 			sessions: [],
@@ -646,5 +639,8 @@ export default {
 	.table th.text-truncate {
 		max-width: 1px;
 	}
+}
+.container {
+	max-width: 700px;
 }
 </style>

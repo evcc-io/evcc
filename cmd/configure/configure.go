@@ -6,7 +6,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/evcc-io/evcc/util/templates"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 type device struct {
@@ -28,7 +28,7 @@ type loadpoint struct {
 	ResetOnDisconnect string
 }
 
-type config struct {
+type globalConfig struct {
 	Meters     []device
 	Chargers   []device
 	Vehicles   []device
@@ -48,17 +48,17 @@ type config struct {
 }
 
 type Configure struct {
-	config config
+	config globalConfig
 }
 
 // AddDevice adds a device reference of a specific category to the configuration
 // e.g. a PV meter to site.PVs
 func (c *Configure) AddDevice(d device, category DeviceCategory) {
 	switch DeviceCategories[category].class {
-	case templates.Charger:
+	case config.Charger:
 		c.config.Chargers = append(c.config.Chargers, d)
 
-	case templates.Meter:
+	case config.Meter:
 		c.config.Meters = append(c.config.Meters, d)
 		switch DeviceCategories[category].categoryFilter {
 		case DeviceCategoryGridMeter:
@@ -69,7 +69,7 @@ func (c *Configure) AddDevice(d device, category DeviceCategory) {
 			c.config.Site.Batteries = append(c.config.Site.Batteries, d.Name)
 		}
 
-	case templates.Vehicle:
+	case config.Vehicle:
 		c.config.Vehicles = append(c.config.Vehicles, d)
 
 	default:
@@ -78,13 +78,13 @@ func (c *Configure) AddDevice(d device, category DeviceCategory) {
 }
 
 // DevicesOfClass returns all configured devices of a given DeviceClass
-func (c *Configure) DevicesOfClass(class templates.Class) []device {
+func (c *Configure) DevicesOfClass(class config.Class) []device {
 	switch class {
-	case templates.Charger:
+	case config.Charger:
 		return c.config.Chargers
-	case templates.Meter:
+	case config.Meter:
 		return c.config.Meters
-	case templates.Vehicle:
+	case config.Vehicle:
 		return c.config.Vehicles
 	default:
 		panic("invalid class: " + class.String())

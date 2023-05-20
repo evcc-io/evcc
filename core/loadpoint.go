@@ -11,14 +11,15 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
-	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/planner"
+	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v4"
@@ -173,14 +174,14 @@ type Loadpoint struct {
 	progress                *Progress      // Step-wise progress indicator
 
 	// session log
-	db      db.Database
-	session *db.Session
+	db      session.Database
+	session *session.Session
 
 	tasks *util.Queue[Task] // tasks to be executed
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, other map[string]interface{}) (*Loadpoint, error) {
 	lp := NewLoadpoint(log)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
@@ -219,7 +220,7 @@ func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	if lp.MeterRef != "" {
 		var err error
-		if lp.chargeMeter, err = cp.Meter(lp.MeterRef); err != nil {
+		if lp.chargeMeter, _, err = config.MeterByName(lp.MeterRef); err != nil {
 			return nil, err
 		}
 	}
@@ -227,7 +228,7 @@ func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	// default vehicle
 	if lp.VehicleRef != "" {
 		var err error
-		if lp.defaultVehicle, err = cp.Vehicle(lp.VehicleRef); err != nil {
+		if lp.defaultVehicle, _, err = config.VehicleByName(lp.VehicleRef); err != nil {
 			return nil, err
 		}
 	}
@@ -241,7 +242,7 @@ func NewLoadpointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		return nil, errors.New("missing charger")
 	}
 	var err error
-	if lp.charger, err = cp.Charger(lp.ChargerRef); err != nil {
+	if lp.charger, _, err = config.ChargerByName(lp.ChargerRef); err != nil {
 		return nil, err
 	}
 	lp.configureChargerType(lp.charger)
@@ -404,7 +405,7 @@ func (lp *Loadpoint) evChargeStartHandler() {
 	lp.socUpdated = time.Time{}
 
 	// set created when first charging session segment starts
-	lp.updateSession(func(session *db.Session) {
+	lp.updateSession(func(session *session.Session) {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
 		}
