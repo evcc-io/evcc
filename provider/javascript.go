@@ -1,11 +1,10 @@
 package provider
 
 import (
-	"fmt"
-
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
+	"github.com/spf13/cast"
 )
 
 // Javascript implements Javascript request provider
@@ -66,12 +65,7 @@ func (p *Javascript) FloatGetter() func() (float64, error) {
 			return 0, err
 		}
 
-		vv, ok := v.(float64)
-		if !ok {
-			return 0, fmt.Errorf("not a float: %s", v)
-		}
-
-		return vv, nil
+		return cast.ToFloat64E(v)
 	}
 }
 
@@ -83,12 +77,7 @@ func (p *Javascript) IntGetter() func() (int64, error) {
 			return 0, err
 		}
 
-		vv, ok := v.(int64)
-		if !ok {
-			return 0, fmt.Errorf("not a int: %s", v)
-		}
-
-		return vv, nil
+		return cast.ToInt64E(v)
 	}
 }
 
@@ -100,12 +89,7 @@ func (p *Javascript) StringGetter() func() (string, error) {
 			return "", err
 		}
 
-		vv, ok := v.(string)
-		if !ok {
-			return "", fmt.Errorf("not a string: %s", v)
-		}
-
-		return vv, nil
+		return cast.ToStringE(v)
 	}
 }
 
@@ -117,12 +101,7 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 			return false, err
 		}
 
-		vv, ok := v.(bool)
-		if !ok {
-			return false, fmt.Errorf("not a bool: %s", v)
-		}
-
-		return vv, nil
+		return cast.ToBoolE(v)
 	}
 }
 
@@ -131,12 +110,7 @@ func (p *Javascript) handleGetter() (any, error) {
 		return nil, err
 	}
 
-	v, err := p.evaluate()
-	if err != nil {
-		return nil, err
-	}
-
-	return v, nil
+	return p.evaluate()
 }
 
 func (p *Javascript) handleSetter(param string, val any) error {
