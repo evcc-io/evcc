@@ -146,9 +146,6 @@ export default {
 	name: "ChargingSessions",
 	components: { TopNavigation, ChargingSessionModal },
 	mixins: [formatter],
-	props: {
-		notifications: Array,
-	},
 	data() {
 		return { sessions: [], selectedSessionId: undefined };
 	},
@@ -282,5 +279,8 @@ export default {
 
 .breakdown:empty {
 	display: none;
+}
+.container {
+	max-width: 700px;
 }
 </style>

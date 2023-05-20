@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/evcc-io/evcc/templates/definition"
+	"github.com/evcc-io/evcc/util/config"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
@@ -21,7 +22,7 @@ var (
 	// baseTmpl holds all included template definitions
 	baseTmpl *template.Template
 
-	templates       = make(map[Class][]Template)
+	templates       = make(map[config.Class][]Template)
 	ConfigDefaults  configDefaults
 	mu              sync.Mutex
 	encoderLanguage string
@@ -32,9 +33,9 @@ func init() {
 
 	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
 
-	loadTemplates(Charger)
-	loadTemplates(Meter)
-	loadTemplates(Vehicle)
+	loadTemplates(config.Charger)
+	loadTemplates(config.Meter)
+	loadTemplates(config.Vehicle)
 }
 
 func FromBytes(b []byte) (Template, error) {
@@ -65,7 +66,7 @@ func FromBytes(b []byte) (Template, error) {
 	return tmpl, err
 }
 
-func loadTemplates(class Class) {
+func loadTemplates(class config.Class) {
 	if templates[class] != nil {
 		return
 	}
@@ -88,7 +89,7 @@ func loadTemplates(class Class) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		class, err := ClassString(path.Dir(filepath))
+		class, err := config.ClassString(path.Dir(filepath))
 		if err != nil {
 			return fmt.Errorf("invalid template class: '%s'", err)
 		}
@@ -110,11 +111,11 @@ func EncoderLanguage(lang string) {
 	encoderLanguage = lang
 }
 
-func ByClass(class Class) []Template {
+func ByClass(class config.Class) []Template {
 	return templates[class]
 }
 
-func ByName(class Class, name string) (Template, error) {
+func ByName(class config.Class, name string) (Template, error) {
 	for _, tmpl := range templates[class] {
 		if tmpl.Template == name || slices.Contains(tmpl.Covers, name) {
 			return tmpl, nil

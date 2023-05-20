@@ -11,15 +11,16 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/coordinator"
-	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/prioritizer"
+	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/push"
-	serverdb "github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
 )
 
@@ -98,7 +99,6 @@ type MetersConfig struct {
 // NewSiteFromConfig creates a new site
 func NewSiteFromConfig(
 	log *util.Logger,
-	cp configProvider,
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
 	vehicles []api.Vehicle,
@@ -132,9 +132,9 @@ func NewSiteFromConfig(
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
 		lp.planner = planner.New(lp.log, tariff)
 
-		if serverdb.Instance != nil {
+		if db.Instance != nil {
 			var err error
-			if lp.db, err = db.New(lp.Title()); err != nil {
+			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
 				return nil, err
 			}
 
@@ -146,14 +146,14 @@ func NewSiteFromConfig(
 	// grid meter
 	if site.Meters.GridMeterRef != "" {
 		var err error
-		if site.gridMeter, err = cp.Meter(site.Meters.GridMeterRef); err != nil {
+		if site.gridMeter, _, err = config.MeterByName(site.Meters.GridMeterRef); err != nil {
 			return nil, err
 		}
 	}
 
 	// multiple pv
 	for _, ref := range append(site.Meters.PVMetersRef, site.Meters.PVMetersRef_...) {
-		pv, err := cp.Meter(ref)
+		pv, _, err := config.MeterByName(ref)
 		if err != nil {
 			return nil, err
 		}
@@ -167,7 +167,7 @@ func NewSiteFromConfig(
 
 	// multiple batteries
 	for _, ref := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
-		battery, err := cp.Meter(ref)
+		battery, _, err := config.MeterByName(ref)
 		if err != nil {
 			return nil, err
 		}
@@ -185,7 +185,7 @@ func NewSiteFromConfig(
 
 	// auxiliary meters
 	for _, ref := range site.Meters.AuxMetersRef {
-		meter, err := cp.Meter(ref)
+		meter, _, err := config.MeterByName(ref)
 		if err != nil {
 			return nil, err
 		}

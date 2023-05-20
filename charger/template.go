@@ -2,6 +2,7 @@ package charger
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
@@ -10,7 +11,7 @@ func init() {
 }
 
 func NewChargerFromTemplateConfig(other map[string]interface{}) (api.Charger, error) {
-	instance, err := templates.RenderInstance(templates.Charger, other)
+	instance, err := templates.RenderInstance(config.Charger, other)
 
 	var res api.Charger
 	if err == nil {

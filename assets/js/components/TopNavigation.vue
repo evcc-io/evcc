@@ -21,7 +21,6 @@
 					{{ $t("header.sessions") }}
 				</router-link>
 			</li>
-
 			<li>
 				<button type="button" class="dropdown-item" @click="openSettingsModal">
 					<span
@@ -30,6 +29,9 @@
 					></span>
 					{{ $t("header.settings") }}
 				</button>
+			</li>
+			<li v-if="$hiddenFeatures()">
+				<router-link class="dropdown-item" to="/config"> Configuration 🧪 </router-link>
 			</li>
 			<template v-if="providerLogins.length > 0">
 				<li><hr class="dropdown-divider" /></li>

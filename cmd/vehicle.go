@@ -1,23 +1,24 @@
 package cmd
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
 // vehicleCmd represents the vehicle command
 var vehicleCmd = &cobra.Command{
-	Use:   "vehicle [name]",
-	Short: "Query configured vehicles",
-	Run:   runVehicle,
+	Use:       "vehicle [name]",
+	Short:     "Query configured vehicles",
+	Args:      cobra.MaximumNArgs(1),
+	ValidArgs: []string{"name"},
+	Run:       runVehicle,
 }
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
-	vehicleCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "vehicle"))
 	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
 	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
 	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
@@ -37,23 +38,15 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	// select single vehicle
-	if err := selectByName(cmd, &conf.Vehicles); err != nil {
+	if err := selectByName(args, &conf.Vehicles); err != nil {
 		fatal(err)
 	}
 
-	if err := cp.configureVehicles(conf); err != nil {
+	if err := configureVehicles(conf.Vehicles); err != nil {
 		fatal(err)
 	}
 
-	vehicles := cp.vehicles
-	if len(args) == 1 {
-		name := args[0]
-		vehicle, err := cp.Vehicle(name)
-		if err != nil {
-			log.FATAL.Fatal(err)
-		}
-		vehicles = map[string]api.Vehicle{name: vehicle}
-	}
+	vehicles := config.VehiclesMap()
 
 	var flagUsed bool
 	for _, v := range vehicles {

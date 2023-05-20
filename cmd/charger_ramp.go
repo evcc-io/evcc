@@ -7,16 +7,17 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
-// cmdEcho.AddCommand
-
 // chargerRampCmd represents the charger command
 var chargerRampCmd = &cobra.Command{
-	Use:   "ramp [name]",
-	Short: "Ramp current from 6..16A in configurable steps",
-	Run:   runChargerRamp,
+	Use:       "ramp [name]",
+	Short:     "Ramp current from 6..16A in configurable steps",
+	Args:      cobra.MaximumNArgs(1),
+	ValidArgs: []string{"name"},
+	Run:       runChargerRamp,
 }
 
 func init() {
@@ -76,23 +77,15 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 	}
 
 	// select single charger
-	if err := selectByName(cmd, &conf.Chargers); err != nil {
+	if err := selectByName(args, &conf.Chargers); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
-	if err := cp.configureChargers(conf); err != nil {
+	if err := configureChargers(conf.Chargers); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
-	chargers := cp.chargers
-	if len(args) == 1 {
-		name := args[0]
-		charger, err := cp.Charger(name)
-		if err != nil {
-			log.FATAL.Fatal(err)
-		}
-		chargers = map[string]api.Charger{name: charger}
-	}
+	chargers := config.Chargers()
 
 	digits, err := strconv.Atoi(cmd.Flags().Lookup(flagDigits).Value.String())
 	if err != nil {

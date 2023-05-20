@@ -350,5 +350,6 @@ title = "Startup Error"
 
 [vehicleSettings]
 cancel = "Cancel"
+create = "Create"
 template = "Manufacturer"
 test = "Test"

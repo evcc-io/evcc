@@ -1,26 +1,27 @@
 package cmd
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
 // chargerCmd represents the charger command
 var chargerCmd = &cobra.Command{
-	Use:   "charger [name]",
-	Short: "Query configured chargers",
-	Run:   runCharger,
+	Use:       "charger [name]",
+	Short:     "Query configured chargers",
+	Args:      cobra.MaximumNArgs(1),
+	ValidArgs: []string{"name"},
+	Run:       runCharger,
 }
 
 const noCurrent = -1
 
 func init() {
 	rootCmd.AddCommand(chargerCmd)
-	chargerCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
 	chargerCmd.Flags().IntP(flagCurrent, "i", noCurrent, flagCurrentDescription)
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
@@ -44,23 +45,15 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	// select single charger
-	if err := selectByName(cmd, &conf.Chargers); err != nil {
+	if err := selectByName(args, &conf.Chargers); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
-	if err := cp.configureChargers(conf); err != nil {
+	if err := configureChargers(conf.Chargers); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
-	chargers := cp.chargers
-	if len(args) == 1 {
-		name := args[0]
-		charger, err := cp.Charger(name)
-		if err != nil {
-			log.FATAL.Fatal(err)
-		}
-		chargers = map[string]api.Charger{name: charger}
-	}
+	chargers := config.ChargersMap()
 
 	current := int64(noCurrent)
 	if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {

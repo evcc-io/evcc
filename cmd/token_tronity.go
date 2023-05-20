@@ -14,6 +14,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/tronity"
 	"github.com/skratchdot/open-golang/open"
@@ -111,7 +112,7 @@ func tronityAuthorize(addr string, oc *oauth2.Config) (*oauth2.Token, error) {
 	}
 }
 
-func tronityToken(conf config, vehicleConf qualifiedConfig) (*oauth2.Token, error) {
+func tronityToken(conf globalConfig, vehicleConf config.Named) (*oauth2.Token, error) {
 	var cc struct {
 		Credentials vehicle.ClientCredentials
 		RedirectURI string
