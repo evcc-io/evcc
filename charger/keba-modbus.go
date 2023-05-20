@@ -74,7 +74,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if features := binary.BigEndian.Uint32(b); (features/100)%10 > 0 {
+	if features := binary.BigEndian.Uint32(b); (features/10)%10 > 0 {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 		currents = wb.currents
