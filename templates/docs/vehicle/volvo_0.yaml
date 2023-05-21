@@ -1,5 +1,6 @@
 product:
-  brand: Volvo (legacy)
+  brand: Volvo
+  description: legacy
 render:
   - default: |
       type: template

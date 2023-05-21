@@ -1,6 +1,6 @@
 product:
-  brand: MG
-  description: Publish all MG iSmart Car Data to MQTT (mg2mqtt)
+  description: mg2mqtt
+  group: Generische Unterstützung
 description: |
   Voraussetzung ist ein konfigurierter MQTT Broker und ein SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway oder https://github.com/SAIC-iSmart-API/saic-java-client)
 render:

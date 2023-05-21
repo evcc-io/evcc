@@ -1,6 +1,6 @@
 product:
   brand: Audi
-  description: Andere
+  description: legacy
 render:
   - default: |
       type: template

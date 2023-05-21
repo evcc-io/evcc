@@ -1,8 +1,8 @@
 product:
-  brand: Tesla
-  description: A self-hosted data logger for your Tesla (teslamate)
+  description: TeslaMate
+  group: Generische Unterstützung
 description: |
-  Voraussetzung ist konfigurierter MQTT Broker
+  Open Source Tesla Datenlogger https://github.com/adriankumpf/teslamate. Voraussetzung ist konfigurierter MQTT Broker.
 render:
   - default: |
       type: template
