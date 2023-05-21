@@ -169,7 +169,7 @@ label = "Max. Ladestrom"
 label = "Min. Ladestrom"
 
 [main.loadpointSettings.minSoc]
-description = "Reichweite für Notfälle. Fahrzeug wird im PV-Modus „schnell” auf {0}% geladen. Danach weiter mit PV-Überschuss."
+description = "Fahrzeug wird im PV-Modus „schnell” auf {0}% geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
 label = "Min. Ladung %"
 
 [main.loadpointSettings.phasesConfigured]
