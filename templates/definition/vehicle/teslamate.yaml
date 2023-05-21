@@ -1,12 +1,12 @@
 template: teslamate
 products:
-  - brand: Tesla
-    description:
-      generic: A self-hosted data logger for your Tesla (teslamate)
+  - description:
+      generic: TeslaMate
+group: generic
 requirements:
   description:
-    en: Required MQTT broker configuration
-    de: Voraussetzung ist konfigurierter MQTT Broker
+    en: Open source Tesla data logger https://github.com/adriankumpf/teslamate. MQTT broker required.
+    de: Open Source Tesla Datenlogger https://github.com/adriankumpf/teslamate. Voraussetzung ist konfigurierter MQTT Broker.
 params:
   - name: title
   - name: id
