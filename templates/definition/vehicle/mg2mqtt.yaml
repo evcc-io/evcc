@@ -1,8 +1,8 @@
 template: mg2mqtt
 products:
-  - brand: MG
-    description:
-      generic: Publish all MG iSmart Car Data to MQTT (mg2mqtt)
+  - description:
+      generic: mg2mqtt
+group: generic
 requirements:
   description:
     en: Required MQTT broker configuration and a SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway or https://github.com/SAIC-iSmart-API/saic-java-client)

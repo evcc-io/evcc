@@ -1,12 +1,12 @@
 template: mazda2mqtt
 products:
-  - brand: Mazda
-    description:
-      generic: Publish all myMazda Car Data to MQTT (mazda2mqtt)
+  - description:
+      generic: mazda2mqtt
+group: generic
 requirements:
   description:
-    en: Required MQTT broker configuration
-    de: Voraussetzung ist ein konfigurierter MQTT Broker
+    en: MQTT broker configuration required.
+    de: Voraussetzung ist ein konfigurierter MQTT Broker.
 params:
   - name: title
   - name: vin
