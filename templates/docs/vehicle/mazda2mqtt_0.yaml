@@ -2,7 +2,7 @@ product:
   brand: Mazda
   description: Publish all myMazda Car Data to MQTT (mazda2mqtt)
 description: |
-  Voraussetzung ist ein konfigurierter MQTT Broker
+  Voraussetzung ist ein konfigurierter MQTT Broker mit open source mazda2mqtt https://github.com/C64Axel/mazda2mqtt
 render:
   - default: |
       type: template

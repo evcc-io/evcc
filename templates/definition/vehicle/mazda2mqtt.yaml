@@ -5,8 +5,8 @@ products:
       generic: Publish all myMazda Car Data to MQTT (mazda2mqtt)
 requirements:
   description:
-    en: Required MQTT broker configuration
-    de: Voraussetzung ist ein konfigurierter MQTT Broker
+    en: Required MQTT broker configuration with open source mazda2mqtt https://github.com/C64Axel/mazda2mqtt
+    de: Voraussetzung ist ein konfigurierter MQTT Broker mit open source mazda2mqtt https://github.com/C64Axel/mazda2mqtt
 params:
   - name: title
   - name: vin
