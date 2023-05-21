@@ -409,7 +409,7 @@ input::-webkit-datetime-edit {
 }
 
 .card {
-	--bs-card-bg: var(--evcc-background)
+	--bs-card-bg: var(--evcc-background);
 }
 
 .form-control {
