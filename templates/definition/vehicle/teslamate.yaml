@@ -5,7 +5,7 @@ products:
 group: generic
 requirements:
   description:
-    en: Open source Tesla data logger https://github.com/adriankumpf/teslamate. MQTT broker configuration required.
+    en: Open source Tesla data logger https://github.com/adriankumpf/teslamate. MQTT broker required.
     de: Open Source Tesla Datenlogger https://github.com/adriankumpf/teslamate. Voraussetzung ist konfigurierter MQTT Broker.
 params:
   - name: title
