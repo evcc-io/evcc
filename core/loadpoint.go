@@ -625,24 +625,23 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 // syncCharger updates charger status and synchronizes it with expectations
 func (lp *Loadpoint) syncCharger() {
 	enabled, err := lp.charger.Enabled()
-	if err == nil {
-		if enabled != lp.enabled {
-			if lp.guardGracePeriodElapsed() {
-				lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
-			}
-			err = lp.charger.Enable(lp.enabled)
-		}
-
-		if !enabled && lp.charging() {
-			if lp.guardGracePeriodElapsed() {
-				lp.log.WARN.Println("charger logic error: disabled but charging")
-			}
-			err = lp.charger.Enable(false)
-		}
-	}
-
 	if err != nil {
 		lp.log.ERROR.Printf("charger: %v", err)
+		return
+	}
+
+	if enabled != lp.enabled {
+		if lp.guardGracePeriodElapsed() {
+			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
+		}
+		err = lp.charger.Enable(lp.enabled)
+	}
+
+	if !enabled && lp.charging() {
+		if lp.guardGracePeriodElapsed() {
+			lp.log.WARN.Println("charger logic error: disabled but charging")
+		}
+		err = lp.charger.Enable(false)
 	}
 }
 
