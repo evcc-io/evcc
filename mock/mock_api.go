@@ -542,3 +542,17 @@ func (mr *MockTariffMockRecorder) Rates() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rates", reflect.TypeOf((*MockTariff)(nil).Rates))
 }
+
+// Type mocks base method.
+func (m *MockTariff) Type() api.TariffType {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Type")
+	ret0, _ := ret[0].(api.TariffType)
+	return ret0
+}
+
+// Type indicates an expected call of Type.
+func (mr *MockTariffMockRecorder) Type() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockTariff)(nil).Type))
+}

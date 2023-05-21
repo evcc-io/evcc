@@ -107,3 +107,8 @@ func (t *Octopus) Rates() (api.Rates, error) {
 func (t *Octopus) IsDynamic() bool {
 	return true
 }
+
+// Type returns the tariff type
+func (t *Octopus) Type() api.TariffType {
+	return api.TariffTypePrice
+}

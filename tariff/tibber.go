@@ -141,3 +141,8 @@ func (t *Tibber) Rates() (api.Rates, error) {
 func (t *Tibber) IsDynamic() bool {
 	return true
 }
+
+// Type returns the tariff type
+func (t *Tibber) Type() api.TariffType {
+	return api.TariffTypePrice
+}

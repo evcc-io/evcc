@@ -139,3 +139,8 @@ func (t *GrünStromIndex) Rates() (api.Rates, error) {
 func (t *GrünStromIndex) IsDynamic() bool {
 	return true
 }
+
+// Type returns the tariff type
+func (t *GrünStromIndex) Type() api.TariffType {
+	return api.TariffTypeCo2
+}

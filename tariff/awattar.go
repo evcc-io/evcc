@@ -103,3 +103,8 @@ func (t *Awattar) Rates() (api.Rates, error) {
 func (t *Awattar) IsDynamic() bool {
 	return true
 }
+
+// Type returns the tariff type
+func (t *Awattar) Type() api.TariffType {
+	return api.TariffTypePrice
+}

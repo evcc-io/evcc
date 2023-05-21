@@ -113,3 +113,8 @@ func (t *Elering) Rates() (api.Rates, error) {
 func (t *Elering) IsDynamic() bool {
 	return true
 }
+
+// Type returns the tariff type
+func (t *Elering) Type() api.TariffType {
+	return api.TariffTypePrice
+}
