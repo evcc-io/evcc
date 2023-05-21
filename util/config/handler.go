@@ -50,6 +50,21 @@ func (cp *handler[T]) Update(conf Named, device T) error {
 	return nil
 }
 
+// Delete deletes device
+func (cp *handler[T]) Delete(name string) error {
+	_, i, err := cp.ByName(name)
+	if err != nil {
+		return err
+	}
+
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	cp.container = append(cp.container[:i], cp.container[i+1:]...)
+
+	return nil
+}
+
 // ByName provides device by name
 func (cp *handler[T]) ByName(name string) (T, int, error) {
 	var empty T

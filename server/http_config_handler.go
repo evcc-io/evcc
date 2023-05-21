@@ -169,43 +169,48 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	named := namedConfig(&req)
-
 	var id int
+	named := namedConfig(&req)
 
 	switch class {
 	case config.Charger:
 		var c api.Charger
-		if c, err = charger.NewFromConfig(named.Type, req); err == nil {
-			id, err = config.AddDevice(config.Charger, named.Type, req)
-
-			if err == nil {
-				named.Name = config.NameForID(id)
-				err = config.AddCharger(named, c)
-			}
+		if c, err = charger.NewFromConfig(named.Type, req); err != nil {
+			break
 		}
+
+		if id, err = config.AddDevice(config.Charger, named.Type, req); err != nil {
+			break
+		}
+
+		named.Name = config.NameForID(id)
+		err = config.AddCharger(named, c)
 
 	case config.Meter:
 		var m api.Meter
-		if m, err = meter.NewFromConfig(named.Type, req); err == nil {
-			id, err = config.AddDevice(config.Meter, named.Type, req)
-
-			if err == nil {
-				named.Name = config.NameForID(id)
-				err = config.AddMeter(named, m)
-			}
+		if m, err = meter.NewFromConfig(named.Type, req); err != nil {
+			break
 		}
+
+		if id, err = config.AddDevice(config.Meter, named.Type, req); err != nil {
+			break
+		}
+
+		named.Name = config.NameForID(id)
+		err = config.AddMeter(named, m)
 
 	case config.Vehicle:
 		var v api.Vehicle
-		if v, err = vehicle.NewFromConfig(named.Type, req); err == nil {
-			id, err = config.AddDevice(config.Vehicle, named.Type, req)
-
-			if err == nil {
-				named.Name = config.NameForID(id)
-				err = config.AddVehicle(named, v)
-			}
+		if v, err = vehicle.NewFromConfig(named.Type, req); err != nil {
+			break
 		}
+
+		if id, err = config.AddDevice(config.Vehicle, named.Type, req); err != nil {
+			break
+		}
+
+		named.Name = config.NameForID(id)
+		err = config.AddVehicle(named, v)
 	}
 
 	if err != nil {
@@ -220,25 +225,6 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResult(w, res)
-}
-
-// rowID converts a named config name to database row id
-func rowID(id int, conf []config.Named) (int, error) {
-	if id > len(conf) {
-		return 0, errors.New("id out of range")
-	}
-
-	cfg := conf[id-1]
-	if cfg.Type != typeTemplate {
-		return 0, errors.New("invalid type")
-	}
-
-	sid, ok := strings.CutPrefix(cfg.Name, "db:")
-	if !ok {
-		return 0, errors.New("invalid id")
-	}
-
-	return strconv.Atoi(sid)
 }
 
 // updateDeviceHandler updates database device's configuration by class
@@ -267,52 +253,92 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch class {
 	case config.Charger:
-		var rowid int
-		rowid, err = rowID(id, config.ChargersConfig())
-		if err != nil {
+		var c api.Charger
+		if c, err = charger.NewFromConfig(named.Type, req); err != nil {
 			break
 		}
 
-		var c api.Charger
-		if c, err = charger.NewFromConfig(named.Type, req); err == nil {
-			_, err = config.UpdateDevice(config.Charger, rowid, named.Other)
+		if _, err = config.UpdateDevice(config.Charger, id, named.Other); err != nil {
+			break
 		}
 
-		if err == nil {
-			err = config.UpdateCharger(named, c)
-		}
+		err = config.UpdateCharger(named, c)
 
 	case config.Meter:
-		var rowid int
-		rowid, err = rowID(id, config.MetersConfig())
-		if err != nil {
+		var m api.Meter
+		if m, err = meter.NewFromConfig(named.Type, req); err != nil {
 			break
 		}
 
-		var m api.Meter
-		if m, err = meter.NewFromConfig(named.Type, req); err == nil {
-			_, err = config.UpdateDevice(config.Meter, rowid, named.Other)
+		if _, err = config.UpdateDevice(config.Meter, id, named.Other); err != nil {
+			break
 		}
 
-		if err == nil {
-			err = config.UpdateMeter(named, m)
-		}
+		err = config.UpdateMeter(named, m)
 
 	case config.Vehicle:
-		var rowid int
-		rowid, err = rowID(id, config.VehiclesConfig())
-		if err != nil {
+		var v api.Vehicle
+		if v, err = vehicle.NewFromConfig(named.Type, req); err != nil {
 			break
 		}
 
-		var v api.Vehicle
-		if v, err = vehicle.NewFromConfig(named.Type, req); err == nil {
-			_, err = config.UpdateDevice(config.Vehicle, rowid, named.Other)
+		if _, err = config.UpdateDevice(config.Vehicle, id, named.Other); err != nil {
+			break
 		}
 
-		if err == nil {
-			err = config.UpdateVehicle(named, v)
+		err = config.UpdateVehicle(named, v)
+	}
+
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	res := struct {
+		ID int `json:"id"`
+	}{
+		ID: id,
+	}
+
+	jsonResult(w, res)
+}
+
+// deleteDeviceHandler deletes a device from database by class
+func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	class, err := config.ClassString(vars["class"])
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	name := config.NameForID(id)
+
+	switch class {
+	case config.Charger:
+		if err = config.DeleteCharger(name); err != nil {
+			break
 		}
+		_, err = config.DeleteDevice(config.Charger, id)
+
+	case config.Meter:
+		if err = config.DeleteMeter(name); err != nil {
+			break
+		}
+		_, err = config.DeleteDevice(config.Meter, id)
+
+	case config.Vehicle:
+		if err = config.DeleteVehicle(name); err != nil {
+			break
+		}
+		_, err = config.DeleteDevice(config.Vehicle, id)
 	}
 
 	if err != nil {

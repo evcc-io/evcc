@@ -174,7 +174,7 @@ func devicesAsSlice(devices []config.Device) []config.Named {
 	var res []config.Named
 	for _, d := range devices {
 		res = append(res, config.Named{
-			Name:  fmt.Sprintf("db:%d", d.ID),
+			Name:  config.NameForID(d.ID),
 			Type:  d.Type,
 			Other: d.DetailsAsMap(),
 		})

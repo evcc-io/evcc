@@ -109,3 +109,17 @@ func UpdateDevice(class Class, id int, config map[string]any) (int64, error) {
 
 	return tx.RowsAffected, tx.Error
 }
+
+// DeleteDevice deletes a device from the database
+func DeleteDevice(class Class, id int) (int64, error) {
+	if tx := db.Where(DeviceDetail{DeviceID: id}); tx.Error != nil {
+		return 0, tx.Error
+	} else if tx.RowsAffected > 0 {
+		if tx := db.Delete(DeviceDetail{DeviceID: id}); tx.Error != nil {
+			return 0, tx.Error
+		}
+	}
+
+	tx := db.Delete(Device{ID: id})
+	return tx.RowsAffected, tx.Error
+}

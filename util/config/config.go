@@ -30,6 +30,10 @@ func UpdateMeter(conf Named, meter api.Meter) error {
 	return instance.meters.Update(conf, meter)
 }
 
+func DeleteMeter(name string) error {
+	return instance.meters.Delete(name)
+}
+
 func MeterByName(name string) (api.Meter, int, error) {
 	return instance.meters.ByName(name)
 }
@@ -54,6 +58,10 @@ func UpdateCharger(conf Named, charger api.Charger) error {
 	return instance.chargers.Update(conf, charger)
 }
 
+func DeleteCharger(name string) error {
+	return instance.chargers.Delete(name)
+}
+
 func ChargerByName(name string) (api.Charger, int, error) {
 	return instance.chargers.ByName(name)
 }
@@ -76,6 +84,10 @@ func AddVehicle(conf Named, vehicle api.Vehicle) error {
 
 func UpdateVehicle(conf Named, vehicle api.Vehicle) error {
 	return instance.vehicles.Update(conf, vehicle)
+}
+
+func DeleteVehicle(name string) error {
+	return instance.vehicles.Delete(name)
 }
 
 func VehicleByName(name string) (api.Vehicle, int, error) {
