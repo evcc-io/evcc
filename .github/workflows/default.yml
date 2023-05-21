@@ -138,13 +138,45 @@ jobs:
           path: dist
           key: ${{ runner.os }}-${{ github.sha }}-dist
 
-      - name: Build Go
-        run: make build
+  test_e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-      - name: Install Playwright Browsers
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Get NPM cache dir
+        id: npm-cache-dir
+        run: |
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+
+      - name: Cache NPM modules
+        uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install tools
+        run: make install-ui
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ^1.20
+        id: go
+
+      - name: Build evcc
+        run: make
+
+      - name: Install browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright tests
+      - name: Run tests
         run: npx playwright test
 
       - uses: actions/upload-artifact@v3
