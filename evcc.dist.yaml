@@ -175,8 +175,8 @@ tariffs:
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
 
-    # type: elering
-    # region: fi
+    # type: elering # Nordpool
+    # region: ee # or lt, lv, fi
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
   feedin:
@@ -184,21 +184,14 @@ tariffs:
     type: fixed
     price: 0.08 # EUR/kWh
   planner:
-    # planner tariff can be used for target charging if not grid tariff is specified
-
-    # GrünStromIndex (Germany only) or ElectricityMaps provide CO2 intensity forecast
-
-    # type: grünstromindex
+    # planner tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
+    # type: grünstromindex # GrünStromIndex (Germany only)
     # zip: <zip>
 
-    # type: electricitymaps
+    # type: electricitymaps # https://app.electricitymaps.com/map
     # uri: <uri>
     # token: <token>
     # zone: DE
-
-    # # or variable Nordpool via elering.ee (only for LT, LV, EE, FI)
-    # type: elering
-    # region: ee # or lt, lv, fi
 
 # mqtt message broker
 mqtt:
