@@ -255,6 +255,8 @@ climating = "Pré-condicionamento detectado."
 connected = "Ligado."
 disconnected = "Não conectado."
 guard = "Proteção de ligação ativa para {remaining}."
+guardDisable = "Pausar em {remaining}…"
+guardEnable = "Iniciando em {remaining}..."
 minCharge = "Carga mínima até {soc}%"
 pvDisable = "Excesso insuficiente. Pausa em {remaining}..."
 pvEnable = "Excesso disponível. Carga em {remaining}..."
@@ -266,8 +268,6 @@ targetChargeWaitForVehicle = "Carga programada pronta. Esperando pelo veículo..
 unknown = ""
 vehicleTargetReached = "Limite de veículo {soc}% atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
-guardDisable = "Pausar em {remaining}…"
-guardEnable = "Iniciando em {remaining}..."
 
 [notifications]
 dismissAll = "Recusar tudos"

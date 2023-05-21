@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Poziom baterii"
+capacity = "{energy} z {total}"
+legendBottomName = "priorytet domu"
+legendBottomSubline = "nie używany do ładowania"
+legendMiddleName = "pojazd najpierw"
+legendMiddleSubline = "priorytet nie domu"
+legendTitle = "Jak należy wykorzystać energię słoneczną?"
+legendTopAutostart = "uruchamia się automatycznie"
+legendTopName = "ładowanie wspomagane bateryjnie"
+legendTopSubline = "bez przerw"
+modalTitle = "Ustawienia baterii"
+note = "Uwaga: te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany."
+
+[batterySettings.bufferStart]
+full = "kiedy prawie pełny"
+low = "kiedy nieco pełny"
+medium = "kiedy w połowie pełny"
+never = "tylko z wystarczającą nadwyżką"
+
 [footer]
 
 [footer.community]
@@ -345,24 +365,3 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
-
-
-[batterySettings.bufferStart]
-low = "kiedy nieco pełny"
-medium = "kiedy w połowie pełny"
-never = "tylko z wystarczającą nadwyżką"
-full = "kiedy prawie pełny"
-
-[batterySettings]
-batteryLevel = "Poziom baterii"
-capacity = "{energy} z {total}"
-legendBottomName = "priorytet domu"
-legendBottomSubline = "nie używany do ładowania"
-legendMiddleName = "pojazd najpierw"
-legendMiddleSubline = "priorytet nie domu"
-legendTitle = "Jak należy wykorzystać energię słoneczną?"
-legendTopAutostart = "uruchamia się automatycznie"
-legendTopName = "ładowanie wspomagane bateryjnie"
-legendTopSubline = "bez przerw"
-modalTitle = "Ustawienia baterii"
-note = "Uwaga: te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany."

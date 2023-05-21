@@ -255,6 +255,8 @@ climating = "Aptiktas išankstinis kondicionavimas."
 connected = "Prijungtas."
 disconnected = "Neprijungtas."
 guard = "Per dažno junginėjimo apsauga {remaining}…"
+guardDisable = "Pauzė už {remaining}…"
+guardEnable = "Pradedam už {remaining}…"
 minCharge = "Minimalus įkrovimas iki {soc}%."
 pvDisable = "Trūksta saulės. Pauzė už {remaining}..."
 pvEnable = "Saulės užtenka, įkrovimas už {remaining}..."
@@ -266,8 +268,6 @@ targetChargeWaitForVehicle = "Planinis įkrovimas leidžiamas. Laukiama automobi
 unknown = ""
 vehicleTargetReached = "Automobilyje nustatytas limitas {soc}% pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
-guardEnable = "Pradedam už {remaining}…"
-guardDisable = "Pauzė už {remaining}…"
 
 [notifications]
 dismissAll = "Išvalyti visus"

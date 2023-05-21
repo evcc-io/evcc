@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Ladenivå"
+capacity = "{energy} av {total}"
+legendBottomName = "Hjemmelading har prioritet"
+legendBottomSubline = "ikke bruk til lading"
+legendMiddleName = "kjøretøy først"
+legendMiddleSubline = "hjemme etterpå"
+legendTitle = "Hvordan skal solenergien brukes?"
+legendTopAutostart = "starter automatisk"
+legendTopName = "batteriassistert lading"
+legendTopSubline = "uten avbrudd"
+modalTitle = "Batteriinnstillinger"
+note = "Merk: Kun relevant i PV-modus. Ladeadferden justeres deretter."
+
+[batterySettings.bufferStart]
+full = "når det er nesten fullt"
+low = "når det er noe fullt"
+medium = "når det er halvfullt"
+never = "bare med nok PV-overskudd"
+
 [footer]
 
 [footer.community]
@@ -257,13 +277,13 @@ co2 = "CO₂"
 date = "Tidsrom"
 delete = "Slett"
 finished = "Fullført"
+meter = "Måleravlesning"
 meterstart = "Start-målerstand"
 meterstop = "Stopp-målerstand"
 odometer = "Kilometerstand"
 price = "Pris"
 started = "Startet"
 title = "Ladeøkt"
-meter = "Måleravlesning"
 
 [sessions]
 avgPrice = "Ø-pris"
@@ -335,24 +355,3 @@ title = "Oppstartsfeil"
 cancel = "Avbryt"
 template = "Fabrikant"
 test = "Test"
-
-
-[batterySettings]
-batteryLevel = "Ladenivå"
-capacity = "{energy} av {total}"
-legendBottomName = "Hjemmelading har prioritet"
-legendBottomSubline = "ikke bruk til lading"
-legendMiddleName = "kjøretøy først"
-legendMiddleSubline = "hjemme etterpå"
-legendTitle = "Hvordan skal solenergien brukes?"
-legendTopAutostart = "starter automatisk"
-legendTopName = "batteriassistert lading"
-legendTopSubline = "uten avbrudd"
-modalTitle = "Batteriinnstillinger"
-note = "Merk: Kun relevant i PV-modus. Ladeadferden justeres deretter."
-
-[batterySettings.bufferStart]
-never = "bare med nok PV-overskudd"
-full = "når det er nesten fullt"
-low = "når det er noe fullt"
-medium = "når det er halvfullt"

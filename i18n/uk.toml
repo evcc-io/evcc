@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Рівень заряду батареї"
+capacity = "{energy} із {total}"
+legendBottomName = "домашній пріоритет"
+legendBottomSubline = "не використовується для зарядки"
+legendMiddleName = "спочатку транспортний засіб"
+legendMiddleSubline = "другий дім"
+legendTitle = "Як використовувати сонячну енергію?"
+legendTopAutostart = "запускається автоматично"
+legendTopName = "заряджання з підтримкою батареї"
+legendTopSubline = "без перебоїв"
+modalTitle = "Налаштування батареї"
+note = "Примітка: Ці налаштування впливають лише на сонячний режим. Поведінка зарядки регулюється відповідно."
+
+[batterySettings.bufferStart]
+full = "коли майже повний"
+low = "коли трохи повний"
+medium = "коли наполовину повна"
+never = "тільки з достатнім надлишком"
+
 [footer]
 
 [footer.community]
@@ -228,6 +248,8 @@ climating = "Виявлено попередню підготовку."
 connected = "Підключено."
 disconnected = "Відключено."
 guard = "Захист від перемикання активовано для {remaining}."
+guardDisable = "Пауза через {remaining}…"
+guardEnable = "Початок через {remaining}…"
 minCharge = "Мінімальна зарядка до {soc}%."
 pvDisable = "Недостатньо надлишку. Пауза через {remaining}…"
 pvEnable = "Надлишок доступний. Початок через {remaining}…"
@@ -239,8 +261,6 @@ targetChargeWaitForVehicle = "Запланований заряд готовий
 unknown = ""
 vehicleTargetReached = "Ліміт транспортного засобу {soc}% досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
-guardDisable = "Пауза через {remaining}…"
-guardEnable = "Початок через {remaining}…"
 
 [notifications]
 dismissAll = "Відхилити все"
@@ -340,24 +360,3 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
-
-
-[batterySettings]
-legendBottomName = "домашній пріоритет"
-legendMiddleSubline = "другий дім"
-legendTitle = "Як використовувати сонячну енергію?"
-legendTopAutostart = "запускається автоматично"
-legendTopName = "заряджання з підтримкою батареї"
-legendTopSubline = "без перебоїв"
-modalTitle = «Налаштування батареї»
-batteryLevel = "Рівень заряду батареї"
-capacity = "{energy} із {total}"
-legendBottomSubline = "не використовується для зарядки"
-legendMiddleName = "спочатку транспортний засіб"
-note = "Примітка: Ці налаштування впливають лише на сонячний режим. Поведінка зарядки регулюється відповідно."
-
-[batterySettings.bufferStart]
-full = "коли майже повний"
-medium = "коли наполовину повна"
-never = "тільки з достатнім надлишком"
-low = "коли трохи повний"

@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Nivell de bateria"
+capacity = "{energy} de {total}"
+legendBottomName = "prioritat de la casa"
+legendBottomSubline = "no utilitzat per carregar"
+legendMiddleName = "primer, el vehicle"
+legendMiddleSubline = "segón, la casa"
+legendTitle = "¿Com s'ha d'utilitzar l'energia?"
+legendTopAutostart = "s'inicia automaticament"
+legendTopName = "càrrega soportada per bateria"
+legendTopSubline = "sensa interrupcions"
+modalTitle = "Configuració bateria"
+note = "Nota: aquests paràmetres només afecten el mode solar. El comportament de càrrega s'ajusta en conseqüència."
+
+[batterySettings.bufferStart]
+full = "quan gairebé ple"
+low = "quan una mica ple"
+medium = "quan mig ple"
+never = "només amb prous excedents"
+
 [footer]
 
 [footer.community]
@@ -328,24 +348,3 @@ title = "Error a l'inici"
 cancel = "Cancel·lar"
 template = "Fabricant"
 test = "Prova"
-
-
-[batterySettings]
-capacity = "{energy} de {total}"
-legendMiddleName = "primer, el vehicle"
-legendBottomName = "prioritat de la casa"
-legendTitle = "¿Com s'ha d'utilitzar l'energia?"
-legendTopName = "càrrega soportada per bateria"
-modalTitle = "Configuració bateria"
-legendBottomSubline = "no utilitzat per carregar"
-batteryLevel = "Nivell de bateria"
-legendMiddleSubline = "segón, la casa"
-legendTopAutostart = "s'inicia automaticament"
-legendTopSubline = "sensa interrupcions"
-note = "Nota: aquests paràmetres només afecten el mode solar. El comportament de càrrega s'ajusta en conseqüència."
-
-[batterySettings.bufferStart]
-full = "quan gairebé ple"
-low = "quan una mica ple"
-medium = "quan mig ple"
-never = "només amb prous excedents"

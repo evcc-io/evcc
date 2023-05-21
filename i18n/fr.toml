@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Niveau de la batterie"
+capacity = "{energy} sur {total}"
+legendBottomName = "priorité maison"
+legendBottomSubline = "pas utilisé pour la recharge"
+legendMiddleName = "véhicule en premier"
+legendMiddleSubline = "maison en deuxième"
+legendTitle = "Comment l'énergie solaire doit-elle être utilisée?"
+legendTopAutostart = "démarre automatiquement"
+legendTopName = "recharge soutenue par la batterie"
+legendTopSubline = "sans interruption"
+modalTitle = "Réglages de la batterie"
+note = "NB : ces réglages n'affectent que le mode solaire. Le comportement de charge est adapté en conséquence."
+
+[batterySettings.bufferStart]
+full = "quand presque pleine"
+low = "quand partiellement pleine"
+medium = "quand à moitié pleine"
+never = "seulement quand surplus suffisant"
+
 [footer]
 
 [footer.community]
@@ -73,14 +93,32 @@ blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Connexions véhicule"
+needHelp = "Besoin d'aide?"
 sessions = "Sessions de recharge"
 settings = "Réglages"
-needHelp = "Besoin d'aide?"
 
 [header.theme]
 auto = "Désign: Système"
 dark = "Désign: Foncé"
 light = "Désign: Lumière"
+
+[help]
+discussionsButton = "Discussions GitHub"
+documentationButton = "Documentation"
+issueButton = "Signaler un bug"
+issueDescription = "Trouvé un comportement étrange ou erroné?"
+modalTitle = "Besoin d'aide?"
+primaryActions = "Quelque chose ne fonctionne pas comme ça devrait ? Voici où trouver de l'aide."
+restartButton = "Redémarrer"
+restartDescription = "Déjà essayé de redémarrer ?"
+secondaryActions = "Toujours pas de solution ? Voici quelques options plus avancées."
+
+[help.restart]
+cancel = "Annuler"
+confirm = "Oui, redémarrer!"
+description = "En temps normal, un redémarrage ne devrait pas être nécessaire. Envisagez de signaler un bug si vous devez redémarrer evcc régulièrement."
+disclaimer = "NB : evcc va s'arrêter et s'en remettre au système d'exploitation pour redémarrer le service."
+modalTitle = "Voulez-vous vraiment redémarrer ?"
 
 [main]
 vehicles = "Place de stationnement"
@@ -109,17 +147,17 @@ pvProduction = "Production"
 selfConsumption = "Consommation propre"
 
 [main.loadpoint]
+avgPrice = "Prix Ø"
 charged = "Chargé"
+co2 = "CO₂ Ø"
 duration = "Durée"
 fallbackName = "Point de chargement"
 power = "Puissance"
-avgPrice = "Prix Ø"
-co2 = "CO₂ Ø"
 price = "Σ Prix"
-solar = "Solaire"
 remaining = "Temps restant"
 remoteDisabledHard = "{source}: Désactivé"
 remoteDisabledSoft = "{source}: Charge PV adaptative désactivée"
+solar = "Solaire"
 
 [main.loadpointSettings]
 currents = "Courant de charge"
@@ -239,30 +277,30 @@ reload = "Recharger?"
 
 [session]
 cancel = "Annuler"
+co2 = "CO₂"
+date = "Période"
 delete = "Supprimer"
 finished = "Terminé"
+meter = "Compteur"
 meterstart = "Compteur début"
 meterstop = "Compteur fin"
 odometer = "Kilométrage"
+price = "Prix"
 started = "Début"
 title = "Session de charge"
-co2 = "CO₂"
-date = "Période"
-meter = "Compteur"
-price = "Prix"
 
 [sessions]
+avgPrice = "Prix Ø"
+co2 = "CO₂ Ø"
 date = "Fin"
 downloadCsv = "Télécharger au format CSV"
 energy = "Chargé"
 loadpoint = "Point de chargement"
+price = "Σ Prix"
 reallyDelete = "Voulez-vous vraiment supprimer cette session?"
+solar = "Solaire"
 title = "Sessions de charge"
 vehicle = "Véhicule"
-avgPrice = "Prix Ø"
-co2 = "CO₂ Ø"
-price = "Σ Prix"
-solar = "Solaire"
 
 [sessions.csv]
 chargedenergy = "Énergie (kWh)"
@@ -321,42 +359,3 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
-
-
-[help]
-discussionsButton = "Discussions GitHub"
-documentationButton = "Documentation"
-issueButton = "Signaler un bug"
-issueDescription = "Trouvé un comportement étrange ou erroné?"
-modalTitle = "Besoin d'aide?"
-primaryActions = "Quelque chose ne fonctionne pas comme ça devrait ? Voici où trouver de l'aide."
-restartButton = "Redémarrer"
-restartDescription = "Déjà essayé de redémarrer ?"
-secondaryActions = "Toujours pas de solution ? Voici quelques options plus avancées."
-
-[help.restart]
-description = "En temps normal, un redémarrage ne devrait pas être nécessaire. Envisagez de signaler un bug si vous devez redémarrer evcc régulièrement."
-cancel = "Annuler"
-confirm = "Oui, redémarrer!"
-modalTitle = "Voulez-vous vraiment redémarrer ?"
-disclaimer = "NB : evcc va s'arrêter et s'en remettre au système d'exploitation pour redémarrer le service."
-
-[batterySettings.bufferStart]
-full = "quand presque pleine"
-low = "quand partiellement pleine"
-medium = "quand à moitié pleine"
-never = "seulement quand surplus suffisant"
-
-[batterySettings]
-capacity = "{energy} sur {total}"
-batteryLevel = "Niveau de la batterie"
-legendBottomName = "priorité maison"
-legendBottomSubline = "pas utilisé pour la recharge"
-legendMiddleName = "véhicule en premier"
-legendMiddleSubline = "maison en deuxième"
-legendTitle = "Comment l'énergie solaire doit-elle être utilisée?"
-legendTopAutostart = "démarre automatiquement"
-legendTopName = "recharge soutenue par la batterie"
-legendTopSubline = "sans interruption"
-modalTitle = "Réglages de la batterie"
-note = "NB : ces réglages n'affectent que le mode solaire. Le comportement de charge est adapté en conséquence."
