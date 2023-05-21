@@ -8,6 +8,7 @@
 				:id="formId('minsoc')"
 				v-model.number="selectedMinSoc"
 				class="minSocSelect form-select mb-2"
+				:disabled="!socBasedCharging"
 				@change="changeMinSoc"
 			>
 				<option
@@ -32,6 +33,7 @@ export default {
 		id: [String, Number],
 		minSoc: Number,
 		vehicleName: String,
+		socBasedCharging: Boolean,
 	},
 	emits: ["minsoc-updated"],
 	data: function () {

@@ -43,7 +43,7 @@
 							></button>
 						</div>
 						<div class="modal-body pt-2">
-							<ul v-if="showTabs" class="nav nav-tabs">
+							<ul class="nav nav-tabs">
 								<li class="nav-item">
 									<a
 										class="nav-link"
@@ -61,7 +61,7 @@
 										href="#"
 										@click.prevent="showArrivalTab"
 									>
-										{{ $t("main.chargingPlan.arrivalTab") }} 🧪
+										{{ $t("main.chargingPlan.arrivalTab") }}
 									</a>
 								</li>
 							</ul>
@@ -144,7 +144,7 @@ export default {
 			return this.$t("main.chargingPlan.title");
 		},
 		minSocEnabled: function () {
-			return this.minSoc >= this.vehicleSoc && this.$hiddenFeatures();
+			return this.minSoc > this.vehicleSoc;
 		},
 		departureTabActive: function () {
 			return this.activeTab === "departure";
@@ -157,9 +157,6 @@ export default {
 		},
 		chargingPlanArrival: function () {
 			return this.collectProps(ChargingPlanArrival);
-		},
-		showTabs: function () {
-			return this.$hiddenFeatures();
 		},
 	},
 	mounted() {
@@ -179,11 +176,9 @@ export default {
 			this.isModalVisible = false;
 		},
 		openModal() {
+			this.showDeatureTab();
 			if (this.minSocEnabled) {
 				this.showArrivalTab();
-			}
-			if (this.targetChargeEnabled) {
-				this.showDeatureTab();
 			}
 			this.modal.show();
 		},

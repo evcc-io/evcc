@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/gosimple/slug"
 )
 
 type embed struct {
@@ -56,4 +57,9 @@ var _ api.FeatureDescriber = (*embed)(nil)
 // Features implements the api.FeatureDescriber interface
 func (v *embed) Features() []api.Feature {
 	return v.Features_
+}
+
+func (v *embed) Id() string {
+	// TODO: use database id later
+	return slug.Make(v.Title())
 }

@@ -55,6 +55,12 @@ func (v *Wrapper) Title() string {
 	return v.title
 }
 
+// Id implements the api.Vehicle interface
+func (v *Wrapper) Id() string {
+	// TODO: use real id later
+	return v.Title()
+}
+
 // SetTitle implements the api.TitleSetter interface
 func (v *Wrapper) SetTitle(title string) {
 	v.title = fmt.Sprintf("%s (unavailable)", title)

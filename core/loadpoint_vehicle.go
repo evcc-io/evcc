@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"golang.org/x/exp/slices"
 )
 
@@ -144,7 +146,7 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(vehicleTitle, lp.vehicle.Title())
 		lp.publish(vehicleIcon, lp.vehicle.Icon())
 		lp.publish(vehicleCapacity, lp.vehicle.Capacity())
-
+		lp.restoreVehicleSettings()
 		lp.applyAction(vehicle.OnIdentified())
 		lp.addTask(lp.vehicleOdometer)
 
@@ -216,6 +218,45 @@ func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
 // publishVehicleFeature availability of vehicle features
 func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
 	lp.publish("vehicleFeature"+f.String(), lp.vehicleHasFeature(f))
+}
+
+// persistVehicleSettings stores user configuration (via UI/API) for the current vehicle
+func (lp *Loadpoint) persistVehicleSettings() {
+	if lp.vehicle == nil {
+		return
+	}
+
+	id := lp.vehicle.Id()
+	settings.SetInt(fmt.Sprintf("vehicle.%s.targetSoc", id), int64(lp.Soc.target))
+	settings.SetFloat(fmt.Sprintf("vehicle.%s.targetEnergy", id), lp.targetEnergy)
+	settings.SetInt(fmt.Sprintf("vehicle.%s.minSoc", id), int64(lp.Soc.min))
+	settings.SetTime(fmt.Sprintf("vehicle.%s.targetTime", id), lp.targetTime)
+}
+
+// restoreVehicleSettings restores user configuration (via UI/API) for the current vehicle
+func (lp *Loadpoint) restoreVehicleSettings() {
+	if lp.vehicle == nil {
+		return
+	}
+
+	id := lp.vehicle.Id()
+	if v, err := settings.Int(fmt.Sprintf("vehicle.%s.targetSoc", id)); err == nil {
+		lp.setTargetSoc(int(v))
+	}
+	if v, err := settings.Float(fmt.Sprintf("vehicle.%s.targetEnergy", id)); err == nil {
+		lp.setTargetEnergy(v)
+	}
+	if v, err := settings.Int(fmt.Sprintf("vehicle.%s.targetSoc", id)); err == nil {
+		lp.setTargetSoc(int(v))
+	}
+	if v, err := settings.Int(fmt.Sprintf("vehicle.%s.minSoc", id)); err == nil {
+		lp.setMinSoc(int(v))
+	}
+	if v, err := settings.Time(fmt.Sprintf("vehicle.%s.targetTime", id)); err == nil {
+		if v.After(time.Now()) {
+			lp.setTargetTime(v)
+		}
+	}
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.
