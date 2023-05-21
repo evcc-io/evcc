@@ -244,7 +244,7 @@ func configureMessengers(conf messagingConfig, valueChan chan util.Param, cache 
 }
 
 func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
-	var grid, feedin, planner api.Tariff
+	var grid, feedin, co2 api.Tariff
 	var currencyCode currency.Unit = currency.EUR
 	var err error
 
@@ -268,15 +268,19 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 		}
 	}
 
-	if conf.Planner.Type != "" {
-		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
+	if conf.Co2.Type != "" {
+		co2, err = tariff.NewFromConfig(conf.Co2.Type, conf.Co2.Other)
 		if err != nil {
-			planner = nil
-			log.ERROR.Printf("failed configuring planner tariff: %v", err)
+			co2 = nil
+			log.ERROR.Printf("failed configuring co2 tariff: %v", err)
 		}
 	}
 
-	tariffs := tariff.NewTariffs(currencyCode, grid, feedin, planner)
+	if conf.Planner_.Type != "" {
+		log.WARN.Println("planner tariff is deprectaed, use co2 instead")
+	}
+
+	tariffs := tariff.NewTariffs(currencyCode, grid, feedin, co2)
 
 	return *tariffs, nil
 }

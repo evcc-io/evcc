@@ -120,7 +120,8 @@ type tariffConfig struct {
 	Currency string
 	Grid     typedConfig
 	FeedIn   typedConfig
-	Planner  typedConfig
+	Co2      typedConfig
+	Planner_ typedConfig `mapstructure:"planner"` // TODO deprecated
 }
 
 type networkConfig struct {
