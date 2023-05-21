@@ -14,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
-	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
 
@@ -102,12 +101,34 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 		named = config.VehiclesConfig()
 	}
 
-	res := make([]map[string]any, 0, len(named))
+	type deviceConfig map[string]any
+	res := make([]deviceConfig, 0, len(named))
 
 	// omit name from config
 	for _, v := range named {
-		conf := maps.Clone(v.Other)
-		conf["type"] = v.Type
+		conf := deviceConfig{
+			"name": v.Name,
+			"type": v.Type,
+		}
+
+		// convert name to id
+		var id int
+		if sid, ok := strings.CutPrefix(v.Name, "db:"); ok {
+			if i, err := strconv.Atoi(sid); err == nil {
+				id = i
+			}
+		}
+
+		if id > 0 {
+			// from database
+			conf["id"] = id
+			conf["config"] = v.Other
+		} else if title := v.Other["title"]; title != nil {
+			// from yaml- add title only
+			if s, ok := title.(string); ok {
+				conf["config"] = map[string]any{"title": s}
+			}
+		}
 
 		res = append(res, conf)
 	}
@@ -115,6 +136,7 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
+// namedConfig strips the config of type and name
 func namedConfig(req *map[string]any) config.Named {
 	res := config.Named{
 		Type:  typeTemplate,
