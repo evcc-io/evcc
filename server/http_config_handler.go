@@ -234,10 +234,6 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
-	if id < 1 {
-		jsonError(w, http.StatusBadRequest, errors.New("id out of range"))
-		return
-	}
 
 	var req map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -259,7 +255,10 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		if c, err = charger.NewFromConfig(named.Type, req); err == nil {
 			_, err = config.UpdateDevice(config.Charger, rowid, named.Other)
 		}
-		_ = c
+
+		if err == nil {
+			err = config.UpdateCharger(named, c)
+		}
 
 	case config.Meter:
 		var rowid int
@@ -272,7 +271,10 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		if m, err = meter.NewFromConfig(named.Type, req); err == nil {
 			_, err = config.UpdateDevice(config.Meter, rowid, named.Other)
 		}
-		_ = m
+
+		if err == nil {
+			err = config.UpdateMeter(named, m)
+		}
 
 	case config.Vehicle:
 		var rowid int
@@ -285,7 +287,10 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		if v, err = vehicle.NewFromConfig(named.Type, req); err == nil {
 			_, err = config.UpdateDevice(config.Vehicle, rowid, named.Other)
 		}
-		_ = v
+
+		if err == nil {
+			err = config.UpdateVehicle(named, v)
+		}
 	}
 
 	if err != nil {

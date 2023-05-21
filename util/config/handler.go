@@ -3,9 +3,11 @@ package config
 import (
 	"errors"
 	"fmt"
+	"sync"
 )
 
 type handler[T any] struct {
+	mu        sync.Mutex
 	container []container[T]
 	visited   map[string]bool
 }
@@ -29,9 +31,31 @@ func (cp *handler[T]) Add(conf Named, device T) error {
 	return nil
 }
 
+// Update updates device and config
+func (cp *handler[T]) Update(conf Named, device T) error {
+	if conf.Name == "" {
+		return errors.New("missing name")
+	}
+
+	_, i, err := cp.ByName(conf.Name)
+	if err != nil {
+		return err
+	}
+
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	cp.container[i] = container[T]{device: device, config: conf}
+
+	return nil
+}
+
 // ByName provides device by name
 func (cp *handler[T]) ByName(name string) (T, int, error) {
 	var empty T
+
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 
 	for i, container := range cp.container {
 		if name == container.config.Name {
