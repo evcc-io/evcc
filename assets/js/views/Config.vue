@@ -112,7 +112,11 @@
 				>
 					<VehicleIcon :name="vehicle.icon" class="me-2" />
 					{{ vehicle.config?.title || vehicle.name }}
-					<button class="btn btn-sm btn-link text-gray" @click="editVehicle(index + 1)">
+					<button
+						v-if="vehicle.id"
+						class="btn btn-sm btn-link text-gray"
+						@click="editVehicle(vehicle.id)"
+					>
 						edit
 					</button>
 				</li>

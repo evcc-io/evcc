@@ -23,78 +23,67 @@
 					</div>
 					<div class="modal-body">
 						<div class="container mx-0 px-0">
-							<div v-if="isEditable">
-								<FormRow
+							<FormRow id="vehicleTemplate" :label="$t('vehicleSettings.template')">
+								<select
 									id="vehicleTemplate"
-									:label="$t('vehicleSettings.template')"
+									v-model="templateName"
+									class="form-select w-100"
 								>
-									<select
-										id="vehicleTemplate"
-										v-model="templateName"
-										class="form-select w-100"
+									<option
+										v-for="option in templateOptions"
+										:key="option.productName"
+										:value="option.template"
 									>
-										<option
-											v-for="option in templateOptions"
-											:key="option.productName"
-											:value="option.template"
-										>
-											{{ option.productName }}
-										</option>
-									</select>
-								</FormRow>
-								<FormRow
-									v-for="param in templateParams"
+										{{ option.productName }}
+									</option>
+								</select>
+							</FormRow>
+							<FormRow
+								v-for="param in templateParams"
+								:id="`vehicleParam${param.Name}`"
+								:key="param.Name"
+								:optional="!param.Required"
+								:label="param.Description || `[${param.Name}]`"
+								:small-value="['capacity', 'vin'].includes(param.Name)"
+							>
+								<InputField
 									:id="`vehicleParam${param.Name}`"
-									:key="param.Name"
-									:optional="!param.Required"
-									:label="param.Description || `[${param.Name}]`"
-									:small-value="['capacity', 'vin'].includes(param.Name)"
+									v-model="values[param.Name]"
+									:masked="param.Mask"
+									:property="param.Name"
+									class="me-2"
+									:placeholder="param.Example"
+									:required="param.Required"
+								/>
+							</FormRow>
+							<div class="buttons d-flex justify-content-between mb-4">
+								<button
+									type="button"
+									class="btn btn-outline-secondary"
+									data-bs-dismiss="modal"
 								>
-									<InputField
-										:id="`vehicleParam${param.Name}`"
-										v-model="values[param.Name]"
-										:masked="param.Mask"
-										:property="param.Name"
-										class="me-2"
-										:placeholder="param.Example"
-										:required="param.Required"
-									/>
-								</FormRow>
-								<div class="buttons d-flex justify-content-between mb-4">
-									<button
-										type="button"
-										class="btn btn-outline-secondary"
-										data-bs-dismiss="modal"
-									>
-										{{ $t("vehicleSettings.cancel") }}
-									</button>
-									<button
-										v-if="!testPerformed"
-										type="submit"
-										class="btn btn-primary"
-										@click="test"
-									>
-										{{ $t("vehicleSettings.test") }}
-									</button>
-									<button
-										v-else
-										type="submit"
-										class="btn"
-										:class="testSuccess ? 'btn-primary' : 'btn-warning'"
-										@click="isNew ? create() : update()"
-									>
-										{{ isNew ? "Create" : "Update" }}
-										<span v-if="!testSuccess"> anyway</span>
-									</button>
-								</div>
+									{{ $t("vehicleSettings.cancel") }}
+								</button>
+								<button
+									v-if="!testPerformed"
+									type="submit"
+									class="btn btn-primary"
+									@click="test"
+								>
+									{{ $t("vehicleSettings.test") }}
+								</button>
+								<button
+									v-else
+									type="submit"
+									class="btn"
+									:class="testSuccess ? 'btn-primary' : 'btn-warning'"
+									@click="isNew ? create() : update()"
+								>
+									{{ isNew ? "Create" : "Update" }}
+									<span v-if="!testSuccess"> anyway</span>
+								</button>
 							</div>
-							<div v-else>
-								<div class="alert alert-warning" role="alert">
-									Configuration for
-									<code>[type: {{ values.type }}]</code>
-									coming later.
-								</div>
-							</div>
+
 							<div class="card result">
 								<div class="card-body evcc-box">
 									<pre><code>{{ configYaml }}</code></pre>
@@ -175,14 +164,11 @@ export default {
 				...this.values,
 			};
 		},
-		isEditable() {
-			return this.id > 0;
-		},
 		isNew() {
 			return this.id === undefined;
 		},
 		isDeletable() {
-			return !this.isNew && this.isEditable;
+			return !this.isNew;
 		},
 	},
 	watch: {
@@ -226,7 +212,9 @@ export default {
 		},
 		async loadConfiguration() {
 			try {
-				this.values = (await api.get("config/devices/vehicle")).data.result[this.id - 1];
+				const vehicles = (await api.get("config/devices/vehicle")).data.result;
+				const vehicle = vehicles.find((v) => v.id === this.id);
+				this.values = vehicle.config;
 				this.templateName = this.values.template;
 			} catch (e) {
 				console.error(e);
