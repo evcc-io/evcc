@@ -178,7 +178,6 @@ type Param struct {
 	Required      *bool        `json:",omitempty"` // cli if the user has to provide a non empty value
 	Mask          *bool        `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
 	Advanced      *bool        `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Hidden        *bool        `json:",omitempty"` // cli if the parameter should not be presented in the cli, the default value be assigned
 	Deprecated    *bool        `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
 	Default       string       `json:",omitempty"` // default value if no user value is provided in the configuration
 	Example       string       `json:",omitempty"` // cli example value
@@ -225,10 +224,6 @@ func (p *Param) IsReference() bool {
 
 func (p *Param) IsAdvanced() bool {
 	return p.Advanced != nil && *p.Advanced
-}
-
-func (p *Param) IsHidden() bool {
-	return p.Hidden != nil && *p.Hidden
 }
 
 func (p *Param) IsMask() bool {
