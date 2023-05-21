@@ -278,7 +278,7 @@ export default {
 			} catch (e) {
 				console.error(e);
 				this.testResult = e.response?.data?.error || e.message;
-				alert("not implemented yet");
+				alert("delete failed");
 			}
 		},
 		modalVisible() {
