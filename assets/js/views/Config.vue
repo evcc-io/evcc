@@ -110,7 +110,8 @@
 					:key="index"
 					class="d-flex align-items-center"
 				>
-					<VehicleIcon :name="vehicle.icon" class="me-2" /> {{ vehicle.title }}
+					<VehicleIcon :name="vehicle.icon" class="me-2" />
+					{{ vehicle.config?.title || vehicle.name }}
 					<button class="btn btn-sm btn-link text-gray" @click="editVehicle(index + 1)">
 						edit
 					</button>

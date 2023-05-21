@@ -176,7 +176,7 @@ export default {
 			};
 		},
 		isEditable() {
-			return this.values.type === "template";
+			return this.id > 0;
 		},
 		isNew() {
 			return this.id === undefined;
