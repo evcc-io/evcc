@@ -258,7 +258,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if _, err = config.UpdateDevice(config.Charger, id, named.Other); err != nil {
+		if err = config.UpdateDevice(config.Charger, id, named.Other); err != nil {
 			break
 		}
 
@@ -270,7 +270,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if _, err = config.UpdateDevice(config.Meter, id, named.Other); err != nil {
+		if err = config.UpdateDevice(config.Meter, id, named.Other); err != nil {
 			break
 		}
 
@@ -282,7 +282,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if _, err = config.UpdateDevice(config.Vehicle, id, named.Other); err != nil {
+		if err = config.UpdateDevice(config.Vehicle, id, named.Other); err != nil {
 			break
 		}
 

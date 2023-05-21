@@ -79,35 +79,34 @@ func DeviceByID(id int) (Device, error) {
 // AddDevice adds a new device to the database
 func AddDevice(class Class, typ string, config map[string]any) (int, error) {
 	device := Device{Class: class, Type: typ}
-	if tx := db.Create(&device); tx.Error != nil {
-		return 0, tx.Error
-	}
 
-	details := device.mapAsDetails(config)
-	tx := db.Create(&details)
+	err := db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&device).Error; err != nil {
+			return err
+		}
 
-	return device.ID, tx.Error
+		details := device.mapAsDetails(config)
+		return tx.Create(&details).Error
+	})
+
+	return device.ID, err
 }
 
 // UpdateDevice updates a device's details to the database
-func UpdateDevice(class Class, id int, config map[string]any) (int64, error) {
-	var device Device
-	if tx := db.Where(Device{Class: class, ID: id}).First(&device); tx.Error != nil {
-		return 0, tx.Error
-	}
-
-	if tx := db.Where(DeviceDetail{DeviceID: id}); tx.Error != nil {
-		return 0, tx.Error
-	} else if tx.RowsAffected > 0 {
-		if tx := db.Delete(DeviceDetail{DeviceID: id}); tx.Error != nil {
-			return 0, tx.Error
+func UpdateDevice(class Class, id int, config map[string]any) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		var device Device
+		if err := tx.Where(Device{Class: class, ID: id}).First(&device).Error; err != nil {
+			return err
 		}
-	}
 
-	details := device.mapAsDetails(config)
-	tx := db.Save(&details)
+		if err := tx.Delete(new(DeviceDetail), DeviceDetail{DeviceID: id}).Error; err != nil {
+			return err
+		}
 
-	return tx.RowsAffected, tx.Error
+		details := device.mapAsDetails(config)
+		return tx.Save(&details).Error
+	})
 }
 
 // DeleteDevice deletes a device from the database
