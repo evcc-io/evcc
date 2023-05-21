@@ -35,7 +35,6 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Token  string
 		HomeID string
 		Unit   string
-		Cheap  any // TODO deprecated
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -67,11 +66,6 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if t.unit == "" {
 			t.unit = home.CurrentSubscription.PriceInfo.Current.Currency
 		}
-	}
-
-	// TODO deprecated
-	if cc.Cheap != nil {
-		t.log.WARN.Println("cheap rate configuration has been replaced by target charging and is deprecated")
 	}
 
 	done := make(chan error)
@@ -134,11 +128,6 @@ func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 		data = append(data, ar)
 	}
 	return data
-}
-
-// Unit implements the api.Tariff interface
-func (t *Tibber) Unit() string {
-	return t.unit
 }
 
 // Rates implements the api.Tariff interface

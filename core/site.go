@@ -739,8 +739,9 @@ func (site *Site) prepare() {
 	site.publish("prioritySoc", site.PrioritySoc)
 	site.publish("residualPower", site.ResidualPower)
 	site.publish("smartCostLimit", site.SmartCostLimit)
+	// TODO
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
-		site.publish("smartCostUnit", tariff.Unit())
+		// site.publish("smartCostUnit", tariff.Unit())
 		site.publish("smartCostAvailable", tariff.IsDynamic())
 	} else {
 		site.publish("smartCostUnit", nil)

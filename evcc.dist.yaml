@@ -183,8 +183,8 @@ tariffs:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
     price: 0.08 # EUR/kWh
-  planner:
-    # planner tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
+  co2:
+    # co2 tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
     # type: grünstromindex # GrünStromIndex (Germany only)
     # zip: <zip>
 

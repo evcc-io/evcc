@@ -32,12 +32,10 @@ func init() {
 func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
-		Cheap    any // TODO deprecated
-		Currency string
+		Currency string // TODO deprecated
 		Region   string
 	}{
-		Currency: "EUR",
-		Region:   "DE",
+		Region: "DE",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -53,11 +51,6 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:   util.NewLogger("awattar"),
 		unit:  cc.Currency,
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
-	}
-
-	// TODO deprecated
-	if cc.Cheap != nil {
-		t.log.WARN.Println("cheap rate configuration has been replaced by target charging and is deprecated")
 	}
 
 	done := make(chan error)
@@ -97,11 +90,6 @@ func (t *Awattar) run(done chan error) {
 
 		t.mux.Unlock()
 	}
-}
-
-// Unit implements the api.Tariff interface
-func (t *Awattar) Unit() string {
-	return t.unit
 }
 
 // Rates implements the api.Tariff interface

@@ -218,7 +218,6 @@ type Rates []Rate
 
 // Tariff is a tariff capable of retrieving tariff rates
 type Tariff interface {
-	Unit() string
 	Rates() (Rates, error)
 	IsDynamic() bool
 }

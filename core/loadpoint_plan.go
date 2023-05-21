@@ -41,9 +41,9 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 	return lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
 }
 
-func (lp *Loadpoint) GetPlannerUnit() string {
-	return lp.planner.Unit()
-}
+// func (lp *Loadpoint) GetPlannerUnit() string {
+// 	return lp.planner.Unit()
+// }
 
 // GetPlan creates a charging plan
 //
