@@ -623,26 +623,27 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 }
 
 // syncCharger updates charger status and synchronizes it with expectations
-func (lp *Loadpoint) syncCharger() {
+func (lp *Loadpoint) syncCharger() error {
 	enabled, err := lp.charger.Enabled()
 	if err != nil {
-		lp.log.ERROR.Printf("charger: %v", err)
-		return
+		return err
 	}
 
 	if enabled != lp.enabled {
 		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		}
-		err = lp.charger.Enable(lp.enabled)
+		return lp.charger.Enable(lp.enabled)
 	}
 
 	if !enabled && lp.charging() {
 		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
-		err = lp.charger.Enable(false)
+		return lp.charger.Enable(false)
 	}
+
+	return nil
 }
 
 // setLimit applies charger current limits and enables/disables accordingly
@@ -1471,7 +1472,10 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	lp.publishSocAndRange()
 
 	// sync settings with charger
-	lp.syncCharger()
+	if err := lp.syncCharger(); err != nil {
+		lp.log.ERROR.Printf("charger: %v", err)
+		return
+	}
 
 	// check if car connected and ready for charging
 	var err error
