@@ -165,14 +165,20 @@ tariffs:
       - days: Sa,So
         price: 0.15 # EUR/kWh
 
-    # # or variable via tibber
+    # or variable tariffs
     # type: tibber
     # token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
     # homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
 
-    # # or variable via awattar
     # type: awattar
     # region: de # optional, choose at for Austria
+    # charges: # optional, additional charges per kWh
+    # tax: # optional, additional tax (0.1 for 10%)
+
+    # type: elering
+    # region: fi
+    # charges: # optional, additional charges per kWh
+    # tax: # optional, additional tax (0.1 for 10%)
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
