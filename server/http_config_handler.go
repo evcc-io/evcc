@@ -326,19 +326,19 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		if err = config.DeleteCharger(name); err != nil {
 			break
 		}
-		_, err = config.DeleteDevice(config.Charger, id)
+		err = config.DeleteDevice(config.Charger, id)
 
 	case config.Meter:
 		if err = config.DeleteMeter(name); err != nil {
 			break
 		}
-		_, err = config.DeleteDevice(config.Meter, id)
+		err = config.DeleteDevice(config.Meter, id)
 
 	case config.Vehicle:
 		if err = config.DeleteVehicle(name); err != nil {
 			break
 		}
-		_, err = config.DeleteDevice(config.Vehicle, id)
+		err = config.DeleteDevice(config.Vehicle, id)
 	}
 
 	if err != nil {

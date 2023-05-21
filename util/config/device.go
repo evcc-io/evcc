@@ -14,8 +14,8 @@ type Device struct {
 }
 
 type DeviceDetail struct {
-	DeviceID int    `gorm:"primarykey"`
-	Key      string `gorm:"primarykey"`
+	DeviceID int    `gorm:"index:idx_unique"`
+	Key      string `gorm:"index:idx_unique"`
 	Value    string
 }
 
@@ -111,15 +111,12 @@ func UpdateDevice(class Class, id int, config map[string]any) (int64, error) {
 }
 
 // DeleteDevice deletes a device from the database
-func DeleteDevice(class Class, id int) (int64, error) {
-	if tx := db.Where(DeviceDetail{DeviceID: id}); tx.Error != nil {
-		return 0, tx.Error
-	} else if tx.RowsAffected > 0 {
-		if tx := db.Delete(DeviceDetail{DeviceID: id}); tx.Error != nil {
-			return 0, tx.Error
+func DeleteDevice(class Class, id int) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Delete(new(DeviceDetail), DeviceDetail{DeviceID: id}).Error; err != nil {
+			return err
 		}
-	}
 
-	tx := db.Delete(Device{ID: id})
-	return tx.RowsAffected, tx.Error
+		return tx.Delete(Device{ID: id}).Error
+	})
 }
