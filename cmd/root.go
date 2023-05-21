@@ -259,9 +259,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		// show and check version
-		valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
-		go updater.Run(log, httpd, valueChan)
+		// show and check version, reduce api load during development
+		if server.Version != server.DevVersion {
+			valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
+			go updater.Run(log, httpd, valueChan)
+		}
 
 		// expose sponsor to UI
 		if sponsor.Subject != "" {

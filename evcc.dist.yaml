@@ -165,34 +165,33 @@ tariffs:
       - days: Sa,So
         price: 0.15 # EUR/kWh
 
-    # # or variable via tibber
+    # or variable tariffs
     # type: tibber
     # token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
     # homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
 
-    # # or variable via awattar
     # type: awattar
     # region: de # optional, choose at for Austria
+    # charges: # optional, additional charges per kWh
+    # tax: # optional, additional tax (0.1 for 10%)
+
+    # type: elering # Nordpool
+    # region: ee # or lt, lv, fi
+    # charges: # optional, additional charges per kWh
+    # tax: # optional, additional tax (0.1 for 10%)
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
     price: 0.08 # EUR/kWh
   planner:
-    # planner tariff can be used for target charging if not grid tariff is specified
-
-    # GrünStromIndex (Germany only) or ElectricityMaps provide CO2 intensity forecast
-
-    # type: grünstromindex
+    # planner tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
+    # type: grünstromindex # GrünStromIndex (Germany only)
     # zip: <zip>
 
-    # type: electricitymaps
+    # type: electricitymaps # https://app.electricitymaps.com/map
     # uri: <uri>
     # token: <token>
     # zone: DE
-
-    # # or variable Nordpool via elering.ee (only for LT, LV, EE, FI)
-    # type: elering
-    # region: ee # or lt, lv, fi
 
 # mqtt message broker
 mqtt:

@@ -63,7 +63,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 
 	c.embed = &cc.embed
 
-	// decorator phases
+	// decorate phases
 	var phases1p3p func(int) error
 	if cc.Phases1p3p != nil {
 		phases1p3pS, err := provider.NewIntSetterFromConfig("phases", *cc.Phases1p3p)
@@ -76,7 +76,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		}
 	}
 
-	// decorator identifier
+	// decorate identifier
 	var identify func() (string, error)
 	if cc.Identify != nil {
 		identify, err = provider.NewStringGetterFromConfig(*cc.Identify)

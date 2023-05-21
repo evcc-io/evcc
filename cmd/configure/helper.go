@@ -402,11 +402,6 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 				continue
 			}
 
-			if param.IsHidden() && param.Default != "" {
-				additionalConfig[param.Name] = param.Default
-				continue
-			}
-
 			if usageFilter != "" && len(param.Usages) > 0 && !slices.Contains(param.Usages, string(usageFilter)) {
 				continue
 			}
