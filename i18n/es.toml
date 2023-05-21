@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Nivel de bateria"
+capacity = "{energy} de {total}"
+legendBottomName = "prioridad de la casa"
+legendBottomSubline = "no se usa para la carga"
+legendMiddleName = "primero el vehículo"
+legendMiddleSubline = "segundo la casa"
+legendTitle = "¿Cómo debería usarse la energía solar?"
+legendTopAutostart = "inicio automático"
+legendTopName = "carga soportada por bateria"
+legendTopSubline = "sin interrupciones"
+modalTitle = "Configuración de batería"
+note = "Nota: Estos parámetros solo afectan al modo solar. El comportamiento de carga se ajusta correspondientemente."
+
+[batterySettings.bufferStart]
+full = "cuando está casi llena"
+low = "cuando está algo llena"
+medium = "cuando está medio llena"
+never = "cuando hay suficiente excedente"
+
 [footer]
 
 [footer.community]
@@ -234,7 +254,9 @@ cleanEnergyCharging = "Energía limpia disponible. Cargando..."
 climating = "Preacondicionamiento detectado."
 connected = "Conectado."
 disconnected = "Desconectado."
-guard = "Comenzando en {remaining}..."
+guard = "Cambiando la protección activa para {remaining}"
+guardDisable = "Pausando en {remaining}..."
+guardEnable = "Comenzando en {remaining}..."
 minCharge = "Carga mínima hasta {soc}%."
 pvDisable = "Excedente insuficiente. Pausa en {remaining}..."
 pvEnable = "Excedente disponibile. Empezar en {remaining}..."

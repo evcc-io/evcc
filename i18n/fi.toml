@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Akun varaustaso"
+capacity = "{energy} / {total}"
+legendBottomName = "talo on etusijalla"
+legendBottomSubline = "ei käytetty lataamiseen"
+legendMiddleName = "ajoneuvo ensin"
+legendMiddleSubline = "koti on toissijainen"
+legendTitle = "Kuinka aurinkoenergiaa pitäisi käyttää?"
+legendTopAutostart = "alkaa automaattisesti"
+legendTopName = "akkutuettu lataus"
+legendTopSubline = "keskeytyksettä"
+modalTitle = "Akun asetukset"
+note = "Huomaa: Nämä asetukset vaikuttavat vain aurinkotilaan. Latauskäyttäytymistä säädetään vastaavasti."
+
+[batterySettings.bufferStart]
+full = "kun melkein täynnä"
+low = "jos jonkin verran täynnä"
+medium = "kun puolillaan"
+never = "ainoastaan kun riittävästi ylijäämää"
+
 [footer]
 
 [footer.community]
@@ -73,8 +93,27 @@ blog = "Blogi"
 docs = "Dokumentaatio"
 github = "GitHub"
 login = "Ajoneuvon kirjautumiset"
+needHelp = "Tarvitsetko apua?"
 sessions = "Lataustapahtumat"
 settings = "Asetukset"
+
+[help]
+discussionsButton = "GitHub keskustelut"
+documentationButton = "Dokumentaatio"
+issueButton = "Ilmoita virheestä"
+issueDescription = "Löysitkö outoa tai vääränlaista käytöstä?"
+modalTitle = "Tarvitsetko apua?"
+primaryActions = "Jokin ei toimi niin kuin sen pitäisi toimia? Nämä ovat hyviä paikkoja saada apua."
+restartButton = "Uudelleen käynnistä"
+restartDescription = "Yrititkö sammuttaa ja uudelleen käynnistää sen?"
+secondaryActions = "Etkö vieläkään pysty ratkaisemaan ongelmaasi? Tässä on joitain raskaampia vaihtoehtoja."
+
+[help.restart]
+cancel = "Peruuta"
+confirm = "Kyllä, uudelleen käynnistä!"
+description = "Normaaleissa olosuhteissa uudelleenkäynnistyksen ei pitäisi olla välttämätöntä. Harkitse virheilmoituksen tekemistä, jos sinun on käynnistettävä evcc uudelleen säännöllisesti."
+disclaimer = "Huomaa: evcc lopettaa toimintansa ja käynnistää palvelun uudelleen"
+modalTitle = "Oletko varma että haluat uudelleen käynnistää?"
 
 [main]
 vehicles = "Pysäköinti"
@@ -103,10 +142,14 @@ pvProduction = "Tuotanto"
 selfConsumption = "Tuotannon kulutus"
 
 [main.loadpoint]
+avgPrice = "Ø Hinta"
 charged = "Ladattu"
+co2 = "Ø CO₂"
 duration = "Kesto"
 fallbackName = "Latauspiste"
 power = "Teho"
+price = "Σ Hinta"
+solar = "Aurinkoenergia"
 
 [main.loadpointSettings]
 currents = "Latausvirta"
@@ -225,20 +268,28 @@ reload = "Lataa uudelleen?"
 
 [session]
 cancel = "Peruuta"
+co2 = "CO₂"
+date = "Ajanjakso"
 delete = "Poista"
 finished = "Valmis"
+meter = "Mittari"
 meterstart = "Mittarin käynnistys"
 meterstop = "Mittarin pysähdys"
 odometer = "Ajokilometrit"
+price = "Hinta"
 started = "Alkoi"
 title = "Latausistunto"
 
 [sessions]
-date = "Jakso"
+avgPrice = "Ø Hinta"
+co2 = "Ø CO₂"
+date = "Valmis"
 downloadCsv = "Lataa CSV muodossa"
 energy = "Ladattu"
 loadpoint = "Latauspiste"
+price = "Σ Hinta"
 reallyDelete = "Haluatko varmasti poistaa tämän istunnon?"
+solar = "Aurinkoenergia"
 title = "Lataustapahtumat"
 vehicle = "Ajoneuvo"
 
