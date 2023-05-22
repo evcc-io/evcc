@@ -5,7 +5,7 @@ products:
       generic: SUN-(5/6/8/10/12)K-SG04LP3-EU series hybrid inverter
   - brand: Sunsynk
     description:
-      generic: SUN-(8/10/12)K-SG04LP3 *untested*
+      generic: SYNK-(8/10/12)K-SG04LP3 *untested*
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
