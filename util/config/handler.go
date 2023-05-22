@@ -9,12 +9,6 @@ import (
 type handler[T any] struct {
 	mu        sync.Mutex
 	container []container[T]
-	visited   map[string]bool
-}
-
-// TrackVisitors tracks visited devices
-func (cp *handler[T]) TrackVisitors() {
-	cp.visited = make(map[string]bool)
 }
 
 // Add adds device and config
@@ -74,14 +68,6 @@ func (cp *handler[T]) ByName(name string) (T, int, error) {
 
 	for i, container := range cp.container {
 		if name == container.config.Name {
-			// track duplicate usage https://github.com/evcc-io/evcc/issues/1744
-			if cp.visited != nil {
-				if _, ok := cp.visited[name]; ok {
-					return empty, 0, fmt.Errorf("duplicate usage: %s", name)
-				}
-				cp.visited[name] = true
-			}
-
 			return container.device, i, nil
 		}
 	}

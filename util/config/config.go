@@ -12,16 +12,6 @@ type provider struct {
 
 var instance = new(provider)
 
-func init() {
-	instance.meters.visited = make(map[string]bool)
-	instance.chargers.visited = make(map[string]bool)
-	instance.vehicles.visited = make(map[string]bool)
-}
-
-func TrackVisitors() {
-	instance.meters.TrackVisitors()
-}
-
 func AddMeter(conf Named, meter api.Meter) error {
 	return instance.meters.Add(conf, meter)
 }
