@@ -202,7 +202,7 @@ func (wb *Keba) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
+	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
 }
 
 // chargedEnergy implements the api.ChargeRater interface
@@ -212,7 +212,7 @@ func (wb *Keba) chargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
+	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
 }
 
 // currents implements the api.PhaseCurrents interface
