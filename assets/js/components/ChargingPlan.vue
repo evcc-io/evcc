@@ -129,7 +129,7 @@ export default {
 			return this.targetChargeEnabled || this.minSocEnabled;
 		},
 		minSocLabel: function () {
-			return `${Math.round(this.minSoc)} %`;
+			return `${Math.round(this.minSoc)}%`;
 		},
 		modalId: function () {
 			return `chargingPlanModal_${this.id}`;

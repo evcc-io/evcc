@@ -188,11 +188,11 @@ func NewSiteFromConfig(
 	// get circuits for regular udpates
 	site.Circuits = circuits
 
-	if site.BufferStartSoc <= site.BufferSoc {
+	if site.BufferStartSoc != 0 && site.BufferStartSoc <= site.BufferSoc {
 		site.log.WARN.Println("bufferStartSoc must be larger than bufferSoc")
 	}
 
-	if site.PrioritySoc > site.BufferSoc {
+	if site.BufferSoc != 0 && site.BufferSoc <= site.PrioritySoc {
 		site.log.WARN.Println("bufferSoc must be larger than prioritySoc")
 	}
 

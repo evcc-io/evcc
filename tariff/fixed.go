@@ -25,21 +25,19 @@ func init() {
 }
 
 func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	var cc struct {
+	cc := struct {
 		Currency string
 		Price    float64
 		Zones    []struct {
 			Price       float64
 			Days, Hours string
 		}
+	}{
+		Currency: "EUR",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Currency == "" {
-		cc.Currency = "EUR"
 	}
 
 	t := &Fixed{

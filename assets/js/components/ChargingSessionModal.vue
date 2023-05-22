@@ -75,7 +75,7 @@
 										{{ $t("sessions.solar") }}
 									</th>
 									<td>
-										{{ fmtNumber(session.solarPercentage, 1) }} % ({{
+										{{ fmtNumber(session.solarPercentage, 1) }}% ({{
 											fmtKWh(
 												session.chargedEnergy * 10 * session.solarPercentage
 											)
