@@ -175,7 +175,8 @@ func (wb *Keba) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return binary.BigEndian.Uint32(b) != 5, nil
+	status := binary.BigEndian.Uint32(b)
+	return !(status == 5 || status == 1), nil
 }
 
 // Enable implements the api.Charger interface
