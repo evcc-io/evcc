@@ -250,6 +250,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	named := namedConfig(&req)
+	named.Name = config.NameForID(id)
+	named.Type = "template"
 
 	switch class {
 	case config.Charger:
