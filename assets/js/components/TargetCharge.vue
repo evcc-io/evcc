@@ -36,18 +36,24 @@
 				</div>
 			</div>
 			<p class="mb-0">
-				<span v-if="timeInThePast" class="d-block text-danger">
+				<span v-if="timeInThePast" class="d-block text-danger mb-1">
 					{{ $t("main.targetCharge.targetIsInThePast") }}
 				</span>
-				<span v-else-if="timeTooFarInTheFuture" class="d-block text-secondary">
+				<span v-if="!socBasedCharging && !targetEnergy" class="d-block text-danger mb-1">
+					{{ $t("main.targetCharge.targetEnergyRequired") }}
+				</span>
+				<span v-if="timeTooFarInTheFuture" class="d-block text-secondary mb-1">
 					{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
 				</span>
-				<span v-if="costLimitExists" class="d-block text-secondary">
+				<span v-if="costLimitExists" class="d-block text-secondary mb-1">
 					{{
 						$t("main.targetCharge.costLimitIgnore", {
 							limit: costLimitText,
 						})
 					}}
+				</span>
+				<span v-if="['off', 'now'].includes(mode)" class="d-block text-secondary mb-1">
+					{{ $t("main.targetCharge.onlyInPvMode") }}
 				</span>
 				&nbsp;
 			</p>
@@ -100,6 +106,7 @@ export default {
 		disabled: Boolean,
 		smartCostLimit: Number,
 		smartCostUnit: String,
+		mode: String,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {

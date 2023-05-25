@@ -23,6 +23,10 @@ func (a *adapter) GetVehicles() []api.Vehicle {
 	return a.c.GetVehicles()
 }
 
+func (a *adapter) GetVehicleIndex(v api.Vehicle) int {
+	return a.c.GetVehicleIndex(v)
+}
+
 func (a *adapter) Acquire(v api.Vehicle) {
 	a.c.acquire(a.lp, v)
 }

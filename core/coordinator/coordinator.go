@@ -22,8 +22,19 @@ func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
 	}
 }
 
+// GetVehicles returns the list of all vehicles
 func (c *Coordinator) GetVehicles() []api.Vehicle {
 	return c.vehicles
+}
+
+// GetVehicleIndex returns the position of the given vehicle
+func (c *Coordinator) GetVehicleIndex(vehicle api.Vehicle) int {
+	for i, v := range c.vehicles {
+		if v == vehicle {
+			return i
+		}
+	}
+	return -1
 }
 
 func (c *Coordinator) acquire(owner loadpoint.API, vehicle api.Vehicle) {

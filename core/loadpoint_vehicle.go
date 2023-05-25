@@ -222,37 +222,32 @@ func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
 
 // persistVehicleSettings stores user configuration (via UI/API) for the current vehicle
 func (lp *Loadpoint) persistVehicleSettings() {
-	if lp.vehicle == nil {
+	idx := lp.coordinator.GetVehicleIndex(lp.vehicle)
+	if idx == -1 {
 		return
 	}
-
-	id := lp.vehicle.Id()
-	settings.SetInt(fmt.Sprintf("vehicle.%s.targetSoc", id), int64(lp.Soc.target))
-	settings.SetFloat(fmt.Sprintf("vehicle.%s.targetEnergy", id), lp.targetEnergy)
-	settings.SetInt(fmt.Sprintf("vehicle.%s.minSoc", id), int64(lp.Soc.min))
-	settings.SetTime(fmt.Sprintf("vehicle.%s.targetTime", id), lp.targetTime)
+	settings.SetInt(fmt.Sprintf("vehicle.%d.targetSoc", idx), int64(lp.Soc.target))
+	settings.SetFloat(fmt.Sprintf("vehicle.%d.targetEnergy", idx), lp.targetEnergy)
+	settings.SetInt(fmt.Sprintf("vehicle.%d.minSoc", idx), int64(lp.Soc.min))
+	settings.SetTime(fmt.Sprintf("vehicle.%d.targetTime", idx), lp.targetTime)
 }
 
 // restoreVehicleSettings restores user configuration (via UI/API) for the current vehicle
 func (lp *Loadpoint) restoreVehicleSettings() {
-	if lp.vehicle == nil {
+	idx := lp.coordinator.GetVehicleIndex(lp.vehicle)
+	if idx == -1 {
 		return
 	}
-
-	id := lp.vehicle.Id()
-	if v, err := settings.Int(fmt.Sprintf("vehicle.%s.targetSoc", id)); err == nil {
+	if v, err := settings.Int(fmt.Sprintf("vehicle.%d.targetSoc", idx)); err == nil {
 		lp.setTargetSoc(int(v))
 	}
-	if v, err := settings.Float(fmt.Sprintf("vehicle.%s.targetEnergy", id)); err == nil {
+	if v, err := settings.Float(fmt.Sprintf("vehicle.%d.targetEnergy", idx)); err == nil {
 		lp.setTargetEnergy(v)
 	}
-	if v, err := settings.Int(fmt.Sprintf("vehicle.%s.targetSoc", id)); err == nil {
-		lp.setTargetSoc(int(v))
-	}
-	if v, err := settings.Int(fmt.Sprintf("vehicle.%s.minSoc", id)); err == nil {
+	if v, err := settings.Int(fmt.Sprintf("vehicle.%d.minSoc", idx)); err == nil {
 		lp.setMinSoc(int(v))
 	}
-	if v, err := settings.Time(fmt.Sprintf("vehicle.%s.targetTime", id)); err == nil {
+	if v, err := settings.Time(fmt.Sprintf("vehicle.%d.targetTime", idx)); err == nil {
 		if v.After(time.Now()) {
 			lp.setTargetTime(v)
 		}

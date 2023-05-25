@@ -3,13 +3,12 @@
 		<LabelAndValue
 			class="root flex-grow-1"
 			:label="title"
-			:class="disabled ? 'opacity-0' : 'opacity-1'"
+			:class="disabled ? 'opacity-25' : 'opacity-100'"
 		>
 			<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-center">
 				<button
 					class="value-button p-0"
 					:class="enabled ? 'evcc-default-text' : 'text-gray'"
-					:disabled="disabled"
 					@click="openModal"
 				>
 					<strong v-if="minSocEnabled">{{ minSocLabel }}</strong>
@@ -112,6 +111,7 @@ export default {
 		vehicleName: String,
 		smartCostLimit: Number,
 		smartCostUnit: String,
+		mode: String,
 	},
 	emits: ["target-time-updated", "target-time-removed", "minsoc-updated"],
 	data: function () {
