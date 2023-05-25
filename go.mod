@@ -193,4 +193,4 @@ require (
 	modernc.org/sqlite v1.22.1 // indirect
 )
 
-replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230102102528-4d59ac6910c6
+replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230525091927-777196024a18
