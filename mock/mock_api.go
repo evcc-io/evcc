@@ -332,20 +332,6 @@ func (mr *MockVehicleMockRecorder) Icon() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Icon", reflect.TypeOf((*MockVehicle)(nil).Icon))
 }
 
-// Id mocks base method.
-func (m *MockVehicle) Id() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Id")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// Id indicates an expected call of Id.
-func (mr *MockVehicleMockRecorder) Id() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Id", reflect.TypeOf((*MockVehicle)(nil).Id))
-}
-
 // Identifiers mocks base method.
 func (m *MockVehicle) Identifiers() []string {
 	m.ctrl.T.Helper()
