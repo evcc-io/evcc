@@ -417,5 +417,5 @@ input::-webkit-datetime-edit {
 	color: var(--evcc-default-text);
 }
 input[type="time"]::-webkit-calendar-picker-indicator {
-    display: none;
+	display: none;
 }
