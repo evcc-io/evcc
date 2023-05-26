@@ -13,7 +13,7 @@
 					:id="index + 1"
 					:vehicles="vehicles"
 					:smartCostLimit="smartCostLimit"
-					:smartCostUnit="smartCostUnit"
+					:smartCostType="smartCostType"
 					:tariffGrid="tariffGrid"
 					:tariffCo2="tariffCo2"
 					:currency="currency"
@@ -49,7 +49,7 @@ export default {
 		loadpoints: Array,
 		vehicles: Array,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,

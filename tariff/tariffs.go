@@ -12,9 +12,7 @@ type Tariffs struct {
 	Grid, FeedIn, Co2, Planner api.Tariff
 }
 
-func NewTariffs(currency currency.Unit, grid, feedin, co2 api.Tariff) *Tariffs {
-	planner := grid
-
+func NewTariffs(currency currency.Unit, grid, feedin, co2 api.Tariff, planner api.Tariff) *Tariffs {
 	return &Tariffs{
 		Currency: currency,
 		Grid:     grid,

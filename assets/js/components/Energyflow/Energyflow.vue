@@ -164,7 +164,7 @@ import GridSettingsModal from "../GridSettingsModal.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
-import { CO2_UNIT } from "../../units";
+import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
 import BatterySettingsModal from "../BatterySettingsModal.vue";
 
@@ -199,7 +199,7 @@ export default {
 		tariffEffectiveCo2: { type: Number },
 		smartCostAvailable: { type: Boolean },
 		smartCostLimit: { type: Number },
-		smartCostUnit: { type: String },
+		smartCostType: { type: String },
 		currency: { type: String },
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
@@ -257,7 +257,7 @@ export default {
 			return this.collectProps(BatterySettingsModal);
 		},
 		co2Available() {
-			return this.smartCostUnit === CO2_UNIT;
+			return this.smartCostType === CO2_TYPE;
 		},
 	},
 	mounted() {
