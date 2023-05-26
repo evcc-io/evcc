@@ -72,9 +72,6 @@ jobs:
         run: |
           test -z "$(git status --porcelain)" || (git status; git diff; false)
 
-      - name: Build UI
-        run: make ui
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -111,12 +108,16 @@ jobs:
     name: Integration Test
     runs-on: ubuntu-latest
     needs: build
+
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/download-artifact@v3
         with:
           name: evcc-binary
+
+      - name: Display structure of downloaded files
+        run: ls -R
 
       - uses: actions/setup-node@v3
         with:
