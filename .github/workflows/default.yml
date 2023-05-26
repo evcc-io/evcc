@@ -116,6 +116,9 @@ jobs:
         with:
           name: evcc-binary
 
+      - name: Make executable
+        run: chmod +x evcc
+
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
