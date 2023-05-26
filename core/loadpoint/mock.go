@@ -205,20 +205,6 @@ func (mr *MockAPIMockRecorder) GetPlan(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), arg0, arg1)
 }
 
-// GetPlannerUnit mocks base method.
-func (m *MockAPI) GetPlannerUnit() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPlannerUnit")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// GetPlannerUnit indicates an expected call of GetPlannerUnit.
-func (mr *MockAPIMockRecorder) GetPlannerUnit() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlannerUnit", reflect.TypeOf((*MockAPI)(nil).GetPlannerUnit))
-}
-
 // GetRemainingDuration mocks base method.
 func (m *MockAPI) GetRemainingDuration() time.Duration {
 	m.ctrl.T.Helper()
