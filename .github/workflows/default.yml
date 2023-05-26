@@ -123,6 +123,9 @@ jobs:
           node-version: "18"
           cache: "npm"
 
+      - name: Install npm
+        run: make install-ui
+
       - name: Install browsers
         run: npx playwright install --with-deps
 
