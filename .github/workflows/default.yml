@@ -116,9 +116,6 @@ jobs:
         with:
           name: evcc-binary
 
-      - name: Display structure of downloaded files
-        run: ls -R
-
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
@@ -128,7 +125,7 @@ jobs:
         run: make install-ui
 
       - name: Install browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
 
       - name: Run tests
         run: npx playwright test

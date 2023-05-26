@@ -1,17 +1,10 @@
 const { test, expect } = require("@playwright/test");
-import { exec } from "child_process";
+const { execEvcc } = require("./utils");
 
 let server;
 
 test.beforeAll(async () => {
-  server = await exec(`./evcc --config tests/basics.evcc.yaml`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-    console.error(`stderr: ${stderr}`);
-  });
+  server = await execEvcc("basics.evcc.yaml");
 });
 
 test.afterAll(async () => {
