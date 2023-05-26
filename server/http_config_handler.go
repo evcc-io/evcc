@@ -69,6 +69,7 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 			res = append(res, product{
 				Name:     p.Title(lang),
 				Template: t.TemplateDefinition.Template,
+				Group:    t.Group,
 			})
 		}
 	}

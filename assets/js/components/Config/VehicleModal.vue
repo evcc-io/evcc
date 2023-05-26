@@ -27,15 +27,38 @@
 								<select
 									id="vehicleTemplate"
 									v-model="templateName"
+									:disabled="!isNew"
 									class="form-select w-100"
 								>
-									<option
-										v-for="option in templateOptions"
-										:key="option.productName"
-										:value="option.template"
-									>
-										{{ option.productName }}
-									</option>
+									<option value="offline">Generisches Fahrzeug</option>
+									<option disabled>----------</option>
+									<optgroup label="Fahrzeuge mit Schnittstelle">
+										<option
+											v-for="option in templateOptions.online"
+											:key="option.name"
+											:value="option.template"
+										>
+											{{ option.name }}
+										</option>
+									</optgroup>
+									<optgroup label="Scooter">
+										<option
+											v-for="option in templateOptions.scooter"
+											:key="option.name"
+											:value="option.template"
+										>
+											{{ option.name }}
+										</option>
+									</optgroup>
+									<optgroup label="Weitere Integrationen">
+										<option
+											v-for="option in templateOptions.generic"
+											:key="option.name"
+											:value="option.template"
+										>
+											{{ option.name }}
+										</option>
+									</optgroup>
 								</select>
 							</FormRow>
 							<FormRow
@@ -139,12 +162,11 @@ export default {
 	},
 	computed: {
 		templateOptions() {
-			const result = Object.entries(this.products).map(([productName, template]) => ({
-				productName,
-				template,
-			}));
-			result.sort((a, b) => a.productName.localeCompare(b.productName));
-			return result;
+			return {
+				online: this.products.filter((p) => p.group === "" && p.template !== "offline"),
+				generic: this.products.filter((p) => p.group === "generic"),
+				scooter: this.products.filter((p) => p.group === "scooter"),
+			};
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
