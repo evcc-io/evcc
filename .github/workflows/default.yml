@@ -8,8 +8,8 @@ on:
   workflow_call:
 
 jobs:
-  clean:
-    name: Clean
+  check-go:
+    name: Test & Lint Go
     runs-on: ubuntu-latest
 
     steps:
@@ -19,6 +19,9 @@ jobs:
         with:
           go-version: ^1.20
         id: go
+
+      - name: Prepare
+        run: mkdir dist && touch dist/empty
 
       - name: Install tools
         run: make install
@@ -29,52 +32,14 @@ jobs:
       - name: Docs
         run: make docs
 
+      - name: Toml
+        run: make toml
+
       - name: Porcelain
         run: make porcelain
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ^1.20
-        id: go
-
-      - name: Build
-        run: mkdir dist && touch dist/empty && make build
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ^1.20
-        id: go
-
       - name: Test
-        run: mkdir dist && touch dist/empty && make test
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ^1.20
-        id: go
-
-      - run: mkdir dist && touch dist/empty
+        run: make test
 
       - name: Lint
         uses: golangci/golangci-lint-action@v3
@@ -82,8 +47,8 @@ jobs:
           version: latest
           args: --timeout 5m
 
-  build-ui:
-    name: UI
+  check-ui:
+    name: Test & Lint UI
     runs-on: ubuntu-latest
 
     steps:
@@ -103,14 +68,6 @@ jobs:
       - name: Test
         run: make test-ui
 
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ^1.20
-        id: go
-
-      - name: Toml
-        run: make toml
-
       - name: Porcelain
         run: |
           test -z "$(git status --porcelain)" || (git status; git diff; false)
@@ -118,16 +75,10 @@ jobs:
       - name: Build UI
         run: make ui
 
-      - name: Cache dist
-        uses: actions/cache/save@v3
-        id: cache-dist
-        with:
-          path: dist
-          key: ${{ runner.os }}-${{ github.sha }}-dist
-
-  test_e2e:
-    name: E2E
+  build:
+    name: Build
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
@@ -136,16 +87,41 @@ jobs:
           node-version: "18"
           cache: "npm"
 
-      - name: Install tools
-        run: make install-ui
-
       - uses: actions/setup-go@v4
         with:
           go-version: ^1.20
         id: go
 
-      - name: Build evcc
-        run: make
+      - name: Install UI
+        run: make install-ui
+
+      - name: Build UI
+        run: make ui
+
+      - name: Build
+        run: make build
+
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: evcc-binary
+          path: ./evcc
+
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: evcc-binary
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
 
       - name: Install browsers
         run: npx playwright install --with-deps
