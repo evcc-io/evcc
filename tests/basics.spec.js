@@ -3,12 +3,12 @@ const { execEvcc } = require("./utils");
 
 let server;
 
-test.beforeAll(async () => {
-  server = await execEvcc("basics.evcc.yaml");
+test.beforeAll(() => {
+  server = execEvcc("basics.evcc.yaml");
 });
 
-test.afterAll(async () => {
-  await server.kill();
+test.afterAll(() => {
+  server.kill();
 });
 
 test.beforeEach(async ({ page }) => {
