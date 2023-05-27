@@ -58,4 +58,3 @@ render: |
   {{- end }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]
-  
