@@ -235,10 +235,8 @@ var _ api.Resurrector = (*Provider)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (v *Provider) WakeUp() error {
-	_ := api.Status(vin)
-	if carModel != "" {
-		_ := emobility.Status(vin, carModel)
-	}
-	_ := mobile.Status(vin, []string{BATTERY_LEVEL})
+	_, _ := v.statusG()
+	_, _ := v.emobilityG()
+	_, _ := v.mobileG()
 	return nil
 }
