@@ -52,7 +52,7 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
 
-	guardGracePeriod = 60 * time.Second // allow out of sync during this timespan
+	guardGracePeriod   = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchTimeout = 60 * time.Second // do not measure phases during this timespan
 )
 
@@ -944,7 +944,7 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
 		}
-		
+
 		// prevent premature measurement of active phases
 		lp.phasesSwitched = lp.clock.Now()
 
