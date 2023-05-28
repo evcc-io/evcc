@@ -1,21 +1,11 @@
 package api
 
-import "fmt"
+//go:generate enumer -type TariffType -trimprefix TariffType -transform=lower
 
 type TariffType int
 
 const (
-	TariffTypePrice TariffType = iota
+	_ TariffType = iota
+	TariffTypePrice
 	TariffTypeCo2
 )
-
-func (t TariffType) String() string {
-	switch t {
-	case TariffTypePrice:
-		return "price"
-	case TariffTypeCo2:
-		return "co2"
-	default:
-		return fmt.Sprintf("Unknown TariffType (%d)", t)
-	}
-}
