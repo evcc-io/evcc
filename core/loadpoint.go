@@ -53,6 +53,7 @@ const (
 	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
 
 	guardGracePeriod = 60 * time.Second // allow out of sync during this timespan
+	phaseSwitchTimeout = 60 * time.Second // do not measure phases during this timespan
 )
 
 // elapsed is the time an expired timer will be set to
@@ -130,6 +131,7 @@ type Loadpoint struct {
 	guardUpdated        time.Time // Charger enabled/disabled timestamp
 	socUpdated          time.Time // Soc updated timestamp (poll: connected)
 	vehicleDetect       time.Time // Vehicle connected timestamp
+	phasesSwitched      time.Time // Phase switch timestamp
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
 
@@ -942,6 +944,9 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
 		}
+		
+		// prevent premature measurement of active phases
+		lp.phasesSwitched = lp.clock.Now()
 
 		// update setting and reset timer
 		lp.setPhases(phases)
@@ -1211,7 +1216,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 	lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
 	lp.publish("chargeCurrents", lp.chargeCurrents)
 
-	if lp.charging() {
+	if lp.charging() && lp.phaseSwitchTimeoutElapsed() {
 		var phases int
 		for _, i := range lp.chargeCurrents {
 			if i > minActiveCurrent {
@@ -1418,6 +1423,11 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 // guardGracePeriodElapsed checks if last guard update is within guard grace period
 func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 	return time.Since(lp.guardUpdated) > guardGracePeriod
+}
+
+// phaseSwitchTimeoutElapsed checks if phase switch is just about to happen
+func (lp *Loadpoint) phaseSwitchTimeoutElapsed() bool {
+	return time.Since(lp.phasesSwitched) > phaseSwitchTimeout
 }
 
 // Update is the main control function. It reevaluates meters and charger state
