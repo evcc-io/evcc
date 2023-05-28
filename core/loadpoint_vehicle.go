@@ -179,7 +179,6 @@ func (lp *Loadpoint) wakeUpVehicle() {
 		if err := c.WakeUp(); err != nil {
 			lp.log.ERROR.Printf("wake-up charger: %v", err)
 		}
-		return
 	}
 
 	// vehicle
