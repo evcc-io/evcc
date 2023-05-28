@@ -69,9 +69,3 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 	return res, err
 }
 
-// WakeUp performs a wakeup request
-func (v *API) WakeUp(vin string) error {
-	// try to request status and hope this will wake up the car from sleep
-	_, err := v.Status(vin)
-	return err
-}
