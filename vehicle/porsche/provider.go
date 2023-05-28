@@ -36,11 +36,11 @@ func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *Mo
 		}, cache),
 
 		wakeup: func() error {
-			_ := api.Status(vin)
+			_, _ = api.Status(vin)
 			if carModel != "" {
-				_ := emobility.Status(vin, carModel)
+				_, _ = emobility.Status(vin, carModel)
 			}
-			_ := mobile.Status(vin, []string{BATTERY_LEVEL})
+			_, _ = mobile.Status(vin, []string{BATTERY_LEVEL})
 			return nil
 		},
 	}
