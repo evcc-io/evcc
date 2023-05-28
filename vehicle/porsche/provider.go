@@ -14,6 +14,7 @@ type Provider struct {
 	statusG    func() (StatusResponse, error)
 	emobilityG func() (EmobilityResponse, error)
 	mobileG    func() (StatusResponseMobile, error)
+	wakeup     func() error
 }
 
 // NewProvider creates a vehicle api provider
@@ -33,6 +34,8 @@ func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *Mo
 		mobileG: provider.Cached(func() (StatusResponseMobile, error) {
 			return mobile.Status(vin, []string{BATTERY_LEVEL, BATTERY_CHARGING_STATE, CLIMATIZER_STATE, E_RANGE, HEATING_STATE, MILEAGE})
 		}, cache),
+
+		wakeup = func() error { return api.WakeUp(vin) }
 	}
 
 	return impl
@@ -229,4 +232,11 @@ func (v *Provider) Odometer() (float64, error) {
 	}
 
 	return 0, err
+}
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	return v.wakeup()
 }
