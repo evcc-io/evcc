@@ -68,4 +68,3 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
-
