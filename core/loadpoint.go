@@ -862,7 +862,7 @@ func (lp *Loadpoint) effectiveCurrent() float64 {
 
 	// adjust actual current for vehicles like Zoe where it remains below target
 	if lp.chargeCurrents != nil {
-		cur := lp.chargeCurrents[0]
+		cur := max(lp.chargeCurrents)
 		return math.Min(cur+2.0, lp.chargeCurrent)
 	}
 
