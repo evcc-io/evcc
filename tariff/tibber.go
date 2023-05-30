@@ -137,12 +137,7 @@ func (t *Tibber) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *Tibber) IsDynamic() bool {
-	return true
-}
-
 // Type returns the tariff type
 func (t *Tibber) Type() api.TariffType {
-	return api.TariffTypePrice
+	return api.TariffTypePriceDynamic
 }

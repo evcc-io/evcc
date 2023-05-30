@@ -741,7 +741,7 @@ func (site *Site) prepare() {
 	site.publish("smartCostLimit", site.SmartCostLimit)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
 		site.publish("smartCostType", tariff.Type().String())
-		site.publish("smartCostAvailable", tariff.IsDynamic())
+		site.publish("smartCostAvailable", tariff.Type() != api.TariffTypePriceStatic)
 	} else {
 		site.publish("smartCostType", nil)
 		site.publish("smartCostAvailable", nil)

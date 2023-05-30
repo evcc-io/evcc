@@ -109,12 +109,7 @@ func (t *Elering) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *Elering) IsDynamic() bool {
-	return true
-}
-
 // Type returns the tariff type
 func (t *Elering) Type() api.TariffType {
-	return api.TariffTypePrice
+	return api.TariffTypePriceDynamic
 }

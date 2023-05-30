@@ -6,6 +6,7 @@ type TariffType int
 
 const (
 	_ TariffType = iota
-	TariffTypePrice
+	TariffTypePriceStatic
+	TariffTypePriceDynamic
 	TariffTypeCo2
 )

@@ -148,7 +148,7 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 			site.log.DEBUG.Printf("planner tariff")
 			return site.tariffs.Planner
 
-		case site.tariffs.Grid != nil && site.tariffs.Grid.IsDynamic():
+		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceDynamic:
 			// prio 1: dynamic grid tariff
 			site.log.DEBUG.Printf("dynamic grid tariff")
 			return site.tariffs.Grid

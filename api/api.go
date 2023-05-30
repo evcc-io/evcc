@@ -204,7 +204,6 @@ type Resurrector interface {
 // Tariff is a tariff capable of retrieving tariff rates
 type Tariff interface {
 	Rates() (Rates, error)
-	IsDynamic() bool
 	Type() TariffType
 }
 

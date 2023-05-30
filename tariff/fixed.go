@@ -132,12 +132,10 @@ func (t *Fixed) Rates() (api.Rates, error) {
 	return res, nil
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *Fixed) IsDynamic() bool {
-	return t.dynamic
-}
-
 // Type returns the tariff type
 func (t *Fixed) Type() api.TariffType {
-	return api.TariffTypePrice
+	if t.dynamic {
+		return api.TariffTypePriceDynamic
+	}
+	return api.TariffTypePriceStatic
 }
