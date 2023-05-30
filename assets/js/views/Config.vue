@@ -192,7 +192,7 @@ export default {
 			this.grid = meters[0];
 		},
 		vehicleModal() {
-			return Modal.getOrCreateInstance(document.getElementById("vehicleSettingsModal"));
+			return Modal.getOrCreateInstance(document.getElementById("vehicleModal"));
 		},
 		editVehicle(id) {
 			this.vehicleId = id;

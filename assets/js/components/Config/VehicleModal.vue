@@ -1,7 +1,7 @@
 <template>
 	<Teleport to="body">
 		<div
-			id="vehicleSettingsModal"
+			id="vehicleModal"
 			ref="modal"
 			class="modal fade text-dark"
 			data-bs-backdrop="true"
