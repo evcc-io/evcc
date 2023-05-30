@@ -29,6 +29,9 @@ jobs:
       - name: Docs
         run: make docs
 
+      - name: Toml
+        run: make toml
+
       - name: Porcelain
         run: make porcelain
 
@@ -116,18 +119,6 @@ jobs:
 
       - name: Test
         run: make test-ui
-
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ^1.20
-        id: go
-
-      - name: Toml
-        run: make toml
-
-      - name: Porcelain
-        run: |
-          test -z "$(git status --porcelain)" || (git status; git diff; false)
 
       - name: Build
         run: make ui
