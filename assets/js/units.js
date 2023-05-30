@@ -5,6 +5,7 @@ const MILES = "mi";
 export const UNITS = [KM, MILES];
 
 export const CO2_TYPE = "co2";
+export const PRICE_DYNAMIC_TYPE = "pricedynamic";
 
 const MILES_FACTOR = 0.6213711922;
 

@@ -101,7 +101,6 @@ export default {
 		sponsorTokenExpires: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
-		smartCostAvailable: Boolean,
 	},
 	computed: {
 		energyflow: function () {
