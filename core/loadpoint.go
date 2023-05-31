@@ -1421,7 +1421,7 @@ func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 	return time.Since(lp.guardUpdated) > guardGracePeriod
 }
 
-// phaseSwitchTimeoutElapsed checks if phase switch is just about to happen
+// phaseSwitchTimeoutElapsed returns true if phase switch has completed
 func (lp *Loadpoint) phaseSwitchTimeoutElapsed() bool {
 	return time.Since(lp.phasesSwitched) > phaseSwitchTimeout
 }
