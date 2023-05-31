@@ -32,12 +32,10 @@ func init() {
 }
 
 func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	cc := struct {
+	var cc struct {
 		embed    `mapstructure:",squash"`
-		Currency string
+		Currency string // TODO deprecated
 		Region   string
-	}{
-		Currency: "EUR",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -104,11 +102,6 @@ func (t *Elering) run(done chan error) {
 	}
 }
 
-// Unit implements the api.Tariff interface
-func (t *Elering) Unit() string {
-	return t.unit
-}
-
 // Rates implements the api.Tariff interface
 func (t *Elering) Rates() (api.Rates, error) {
 	t.mux.Lock()
@@ -116,7 +109,7 @@ func (t *Elering) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *Elering) IsDynamic() bool {
-	return true
+// Type returns the tariff type
+func (t *Elering) Type() api.TariffType {
+	return api.TariffTypePriceDynamic
 }

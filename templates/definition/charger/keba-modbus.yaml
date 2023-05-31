@@ -6,6 +6,9 @@ products:
   - brand: BMW
     description:
       generic: i Wallbox
+  - brand: SolarEdge
+    description:
+      generic: Home EV Charger
 capabilities: ["1p3p", "mA", "rfid"]
 requirements:
   evcc: ["sponsorship"]

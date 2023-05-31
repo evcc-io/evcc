@@ -103,7 +103,7 @@ func (t *Octopus) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *Octopus) IsDynamic() bool {
-	return true
+// Type returns the tariff type
+func (t *Octopus) Type() api.TariffType {
+	return api.TariffTypePriceDynamic
 }

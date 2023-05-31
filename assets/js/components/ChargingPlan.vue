@@ -111,7 +111,8 @@ export default {
 		vehicleSoc: Number,
 		vehicleName: String,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
+		currency: String,
 	},
 	emits: ["target-time-updated", "target-time-removed", "minsoc-updated"],
 	data: function () {

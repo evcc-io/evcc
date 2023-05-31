@@ -57,3 +57,4 @@ render: |
   vin: {{ .vin }}
   {{- end }}
   {{ include "vehicle-identify" . }}
+  features: ["coarsecurrent"]
