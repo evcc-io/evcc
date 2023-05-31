@@ -37,6 +37,39 @@ jobs:
       - name: Porcelain
         run: make porcelain
 
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: erezrokah/setup-go@feat/add_cache_prefix
+        with:
+          go-version: ^1.20
+          cache-key-prefix: build-cache-
+        id: go
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install UI
+        run: make install-ui
+
+      - name: Build UI
+        run: make ui
+
+      - name: Build
+        run: make build
+
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: evcc-binary
+          path: ./evcc
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -102,6 +135,7 @@ jobs:
   integration:
     name: Integration
     runs-on: ubuntu-latest
+    needs: build
 
     steps:
       - uses: actions/checkout@v3
@@ -111,11 +145,12 @@ jobs:
           node-version: "18"
           cache: "npm"
 
-      - uses: erezrokah/setup-go@feat/add_cache_prefix
+      - uses: actions/download-artifact@v3
         with:
-          go-version: ^1.20
-          cache-key-prefix: test-cache-
-        id: go
+          name: evcc-binary
+
+      - name: Make executable
+        run: chmod +x evcc
 
       - name: Get installed Playwright version
         id: playwright-version
@@ -129,14 +164,8 @@ jobs:
             ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
-      - name: Install UI
-        run: make install-ui
-
-      - name: Build UI
-        run: make ui
-
-      - name: Build Go
-        run: make build
+      - name: Install npm
+        run: npm ci
 
       - run: npx playwright install --with-deps chromium
 
