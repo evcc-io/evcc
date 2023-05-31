@@ -7,44 +7,51 @@ params:
   - name: usage
     choice: ["grid", "pv", "charge"]
   - name: host
+  - name: user
+    advanced: true
+  - name: password
+    advanced: true
 render: |
+  {{- define "uri" -}}
+  http://{{ if .user }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}
+  {{- end }}
   type: custom
   power:
     source: http
-    uri: http://{{ .host }}/status
+    uri: {{ include "uri" . }}/status
     jq: .emeters | map(.power) | add
   energy:
     source: http
-    uri: http://{{ .host }}/status
+    uri: {{ include "uri" . }}/status
     jq: .emeters | map(.total) | add
     scale: 0.001
   currents:
   - source: http
-    uri: http://{{ .host }}/emeter/0
+    uri: {{ include "uri" . }}/emeter/0
     jq: .current
   - source: http
-    uri: http://{{ .host }}/emeter/1
+    uri: {{ include "uri" . }}/emeter/1
     jq: .current
   - source: http
-    uri: http://{{ .host }}/emeter/2
+    uri: {{ include "uri" . }}/emeter/2
     jq: .current
   voltages:
   - source: http
-    uri: http://{{ .host }}/emeter/0
+    uri: {{ include "uri" . }}/emeter/0
     jq: .voltage
   - source: http
-    uri: http://{{ .host }}/emeter/1
+    uri: {{ include "uri" . }}/emeter/1
     jq: .voltage
   - source: http
-    uri: http://{{ .host }}/emeter/2
+    uri: {{ include "uri" . }}/emeter/2
     jq: .voltage
   powers:
   - source: http
-    uri: http://{{ .host }}/emeter/0
+    uri: {{ include "uri" . }}/emeter/0
     jq: .power
   - source: http
-    uri: http://{{ .host }}/emeter/1
+    uri: {{ include "uri" . }}/emeter/1
     jq: .power
   - source: http
-    uri: http://{{ .host }}/emeter/2
+    uri: {{ include "uri" . }}/emeter/2
     jq: .power
