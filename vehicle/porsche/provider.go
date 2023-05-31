@@ -54,7 +54,7 @@ func (v *Provider) Soc() (float64, error) {
 	}
 
 	res3, err := v.emobilityG()
-	if err == nil {
+	if err == nil && res3.BatteryChargeStatus != nil {
 		return float64(res3.BatteryChargeStatus.StateOfChargeInPercentage), nil
 	}
 
@@ -82,7 +82,7 @@ func (v *Provider) Range() (int64, error) {
 	}
 
 	res3, err := v.emobilityG()
-	if err == nil {
+	if err == nil && res3.BatteryChargeStatus != nil {
 		return res3.BatteryChargeStatus.RemainingERange.ValueInKilometers, nil
 	}
 
@@ -118,6 +118,10 @@ func (v *Provider) FinishTime() (time.Time, error) {
 
 	res2, err := v.emobilityG()
 	if err == nil {
+		if res2.BatteryChargeStatus == nil {
+			return time.Time{}, api.ErrNotAvailable
+		}
+
 		return time.Now().Add(time.Duration(res2.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
 	}
 
@@ -154,6 +158,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res2, err := v.emobilityG()
 	if err == nil {
+		if res2.BatteryChargeStatus == nil {
+			return api.StatusNone, api.ErrNotAvailable
+		}
+
 		switch res2.BatteryChargeStatus.PlugState {
 		case "DISCONNECTED":
 			return api.StatusA, nil
@@ -195,6 +203,10 @@ func (v *Provider) Climater() (bool, error) {
 
 	res2, err := v.emobilityG()
 	if err == nil {
+		if res2.BatteryChargeStatus == nil {
+			return false, api.ErrNotAvailable
+		}
+
 		switch res2.DirectClimatisation.ClimatisationState {
 		case "OFF":
 			return false, nil
