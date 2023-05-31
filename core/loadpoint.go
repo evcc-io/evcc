@@ -1211,7 +1211,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 	lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
 	lp.publish("chargeCurrents", lp.chargeCurrents)
 
-	if lp.charging() && lp.phaseSwitchTimeoutElapsed() {
+	if lp.charging() && lp.phaseSwitchCompleted() {
 		var phases int
 		for _, i := range lp.chargeCurrents {
 			if i > minActiveCurrent {
@@ -1420,8 +1420,8 @@ func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 	return time.Since(lp.guardUpdated) > guardGracePeriod
 }
 
-// phaseSwitchTimeoutElapsed returns true if phase switch has completed
-func (lp *Loadpoint) phaseSwitchTimeoutElapsed() bool {
+// phaseSwitchCompleted returns true if phase switch has completed
+func (lp *Loadpoint) phaseSwitchCompleted() bool {
 	return time.Since(lp.phasesSwitched) > phaseSwitchTimeout
 }
 
