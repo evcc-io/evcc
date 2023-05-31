@@ -53,7 +53,7 @@ const (
 	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
 
 	guardGracePeriod   = 60 * time.Second // allow out of sync during this timespan
-	phaseSwitchTimeout = 60 * time.Second // do not measure phases during this timespan
+	phaseSwitchDuration = 60 * time.Second // do not measure phases during this timespan
 )
 
 // elapsed is the time an expired timer will be set to
