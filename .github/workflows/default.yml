@@ -61,8 +61,8 @@ jobs:
       - name: Test
         run: mkdir dist && touch dist/empty && make test
 
-  check-ui:
-    name: Test & Lint UI
+  ui:
+    name: UI
     runs-on: ubuntu-latest
 
     steps:
@@ -125,10 +125,6 @@ jobs:
         run: make build
 
       - run: npx playwright install --with-deps chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-
-      - run: npx playwright install-deps
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
 
       - name: Run tests
         run: npx playwright test
