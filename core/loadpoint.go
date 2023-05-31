@@ -939,7 +939,6 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	}
 
 	if lp.GetPhases() != phases {
-
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
