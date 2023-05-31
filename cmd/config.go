@@ -121,7 +121,7 @@ type tariffConfig struct {
 	Grid     typedConfig
 	FeedIn   typedConfig
 	Co2      typedConfig
-	Planner_ typedConfig `mapstructure:"planner"` // TODO deprecated
+	Planner  typedConfig
 }
 
 type networkConfig struct {

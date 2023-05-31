@@ -276,12 +276,13 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 		}
 	}
 
-	if conf.Planner_.Type != "" {
-		log.WARN.Println("planner tariff is deprectaed, use co2 instead")
-		planner, err = tariff.NewFromConfig(conf.Planner_.Type, conf.Planner_.Other)
+	if conf.Planner.Type != "" {
+		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
 		if err != nil {
 			planner = nil
 			log.ERROR.Printf("failed configuring planner tariff: %v", err)
+		} else if planner.Type() == api.TariffTypeCo2 {
+			log.WARN.Printf("tariff configuration changed, use co2 instead of planner for co2 tariff")
 		}
 	}
 
