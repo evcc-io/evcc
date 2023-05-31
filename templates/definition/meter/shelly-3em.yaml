@@ -12,7 +12,7 @@ params:
   - name: password
     advanced: true
 render: |
-  {{- define "uri" }}
+  {{- define "uri" -}}
   http://{{ if .user }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}
   {{- end }}
   type: custom
