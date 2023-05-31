@@ -4,7 +4,7 @@
 
 <script>
 import formatter from "../mixins/formatter";
-import { CO2_UNIT } from "../units";
+import { CO2_TYPE } from "../units";
 
 export default {
 	name: "VehicleStatus",
@@ -27,7 +27,7 @@ export default {
 		targetChargeDisabled: Boolean,
 		climaterActive: Boolean,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 	},
@@ -47,7 +47,7 @@ export default {
 			return this.guardRemainingInterpolated > 0 && this.guardAction === "enable";
 		},
 		isCo2() {
-			return this.smartCostUnit === CO2_UNIT;
+			return this.smartCostType === CO2_TYPE;
 		},
 		message: function () {
 			const t = (key, data) => {

@@ -15,9 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-go@v4
+      # - uses: actions/setup-go@v4
+      - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
           go-version: ^1.20
+          cache-key-prefix: clean-cache-
         id: go
 
       - name: Install tools
@@ -29,6 +31,9 @@ jobs:
       - name: Docs
         run: make docs
 
+      - name: Toml
+        run: make toml
+
       - name: Porcelain
         run: make porcelain
 
@@ -39,9 +44,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-go@v4
+      # - uses: actions/setup-go@v4
+      - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
           go-version: ^1.20
+          cache-key-prefix: build-cache-
         id: go
 
       - name: Build
@@ -54,9 +61,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-go@v4
+      # - uses: actions/setup-go@v4
+      - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
           go-version: ^1.20
+          cache-key-prefix: test-cache-
         id: go
 
       - name: Test
@@ -72,6 +81,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ^1.20
+          cache: false # avoid cache thrashing
         id: go
 
       - run: mkdir dist && touch dist/empty
@@ -92,20 +102,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
-
-      - name: Get NPM cache dir
-        id: npm-cache-dir
-        run: |
-          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-
-      - name: Cache NPM modules
-        uses: actions/cache@v3
-        id: npm-cache
-        with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          cache: "npm"
 
       - name: Install tools
         run: make install-ui
@@ -115,18 +112,6 @@ jobs:
 
       - name: Test
         run: make test-ui
-
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ^1.20
-        id: go
-
-      - name: Toml
-        run: make toml
-
-      - name: Porcelain
-        run: |
-          test -z "$(git status --porcelain)" || (git status; git diff; false)
 
       - name: Build
         run: make ui

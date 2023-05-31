@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Poziom baterii"
+capacity = "{energy} z {total}"
+legendBottomName = "priorytet domu"
+legendBottomSubline = "nie używany do ładowania"
+legendMiddleName = "pojazd najpierw"
+legendMiddleSubline = "priorytet nie domu"
+legendTitle = "Jak należy wykorzystać energię słoneczną?"
+legendTopAutostart = "uruchamia się automatycznie"
+legendTopName = "ładowanie wspomagane bateryjnie"
+legendTopSubline = "bez przerw"
+modalTitle = "Ustawienia baterii"
+note = "Uwaga: te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany."
+
+[batterySettings.bufferStart]
+full = "kiedy prawie pełny"
+low = "kiedy nieco pełny"
+medium = "kiedy w połowie pełny"
+never = "tylko z wystarczającą nadwyżką"
+
 [footer]
 
 [footer.community]
@@ -234,7 +254,7 @@ cleanEnergyCharging = "Dostępna czysta energia. Ładowanie…"
 climating = "Wykryto wstępne przygotowanie"
 connected = "Połączony."
 disconnected = "Rozłączony."
-guard = "Rozpocznie się za {remaining}…"
+guard = "Ochrona przełączania aktywna {remaining}…"
 minCharge = "Minimalne ładowanie do {soc}%."
 pvDisable = "Za mało nadwyżki. Pauza po {remaining}..."
 pvEnable = "Dostępna nadwyżka. Począwszy po {remaining}..."

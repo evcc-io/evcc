@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) 2023 andig
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"encoding/binary"
 	"encoding/hex"
@@ -131,10 +148,10 @@ func (wb *Keba) Status() (api.ChargeStatus, error) {
 	}
 
 	switch status := binary.BigEndian.Uint32(b); status {
-	case 0:
+	case 0, 3:
 		return api.StatusA, nil
 
-	case 1, 3, 5:
+	case 1, 5:
 		return api.StatusB, nil
 
 	case 7:
@@ -158,7 +175,8 @@ func (wb *Keba) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return binary.BigEndian.Uint32(b) != 5, nil
+	status := binary.BigEndian.Uint32(b)
+	return !(status == 5 || status == 1), nil
 }
 
 // Enable implements the api.Charger interface
@@ -202,7 +220,7 @@ func (wb *Keba) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
+	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
 }
 
 // chargedEnergy implements the api.ChargeRater interface
@@ -212,7 +230,7 @@ func (wb *Keba) chargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
+	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
 }
 
 // currents implements the api.PhaseCurrents interface
