@@ -15,13 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-go@v4
+      - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
           go-version: ^1.20
+          cache-key-prefix: clean-cache-
         id: go
-
-      - name: Prepare
-        run: mkdir dist && touch dist/empty
 
       - name: Install tools
         run: make install
@@ -39,7 +37,7 @@ jobs:
         run: make porcelain
 
       - name: Test
-        run: make test
+        run: mkdir dist && touch dist/empty && make test
 
       - name: Lint
         uses: golangci/golangci-lint-action@v3
@@ -69,25 +67,25 @@ jobs:
         run: make test-ui
 
       - name: Porcelain
-        run: |
-          test -z "$(git status --porcelain)" || (git status; git diff; false)
+        run: make porcelain
 
-  build:
-    name: Build
+  integration:
+    name: Integration
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
           cache: "npm"
 
-      - uses: actions/setup-go@v4
+      - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
           go-version: ^1.20
+          cache-key-prefix: test-cache-
         id: go
+
+      - uses: actions/checkout@v3
 
       - name: Install UI
         run: make install-ui
@@ -95,37 +93,8 @@ jobs:
       - name: Build UI
         run: make ui
 
-      - name: Build
+      - name: Build Go
         run: make build
-
-      - name: Upload
-        uses: actions/upload-artifact@v3
-        with:
-          name: evcc-binary
-          path: ./evcc
-
-  integration:
-    name: Integration Test
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/download-artifact@v3
-        with:
-          name: evcc-binary
-
-      - name: Make executable
-        run: chmod +x evcc
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-          cache: "npm"
-
-      - name: Install npm
-        run: make install-ui
 
       - name: Install browsers
         run: npx playwright install --with-deps chromium
