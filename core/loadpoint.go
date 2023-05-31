@@ -52,7 +52,7 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
 
-	guardGracePeriod   = 60 * time.Second // allow out of sync during this timespan
+	guardGracePeriod    = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration = 60 * time.Second // do not measure phases during this timespan
 )
 
@@ -1422,7 +1422,7 @@ func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 
 // phaseSwitchCompleted returns true if phase switch has completed
 func (lp *Loadpoint) phaseSwitchCompleted() bool {
-	return time.Since(lp.phasesSwitched) > phaseSwitchTimeout
+	return time.Since(lp.phasesSwitched) > phaseSwitchDuration
 }
 
 // Update is the main control function. It reevaluates meters and charger state
