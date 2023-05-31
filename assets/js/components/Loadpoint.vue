@@ -257,7 +257,7 @@ export default {
 		guardRemaining: Number,
 		guardAction: String,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,

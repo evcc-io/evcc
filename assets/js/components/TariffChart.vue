@@ -31,7 +31,7 @@
 
 <script>
 import formatter from "../mixins/formatter";
-import { CO2_UNIT } from "../units";
+import { CO2_TYPE } from "../units";
 
 export default {
 	name: "TariffChart",
@@ -66,7 +66,7 @@ export default {
 			return sum / count;
 		},
 		isCo2() {
-			return this.unit === CO2_UNIT;
+			return this.unit === CO2_TYPE;
 		},
 		activeSlot() {
 			return this.slots[this.activeIndex];

@@ -120,6 +120,7 @@ type tariffConfig struct {
 	Currency string
 	Grid     typedConfig
 	FeedIn   typedConfig
+	Co2      typedConfig
 	Planner  typedConfig
 }
 

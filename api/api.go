@@ -201,26 +201,10 @@ type Resurrector interface {
 	WakeUp() error
 }
 
-// Rate is a grid tariff rate
-type Rate struct {
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
-	Price float64   `json:"price"`
-}
-
-// IsEmpty returns is the rate is the zero value
-func (r Rate) IsEmpty() bool {
-	return r.Start.IsZero() && r.End.IsZero() && r.Price == 0
-}
-
-// Rates is a slice of (future) tariff rates
-type Rates []Rate
-
 // Tariff is a tariff capable of retrieving tariff rates
 type Tariff interface {
-	Unit() string
 	Rates() (Rates, error)
-	IsDynamic() bool
+	Type() TariffType
 }
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
