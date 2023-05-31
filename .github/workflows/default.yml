@@ -102,20 +102,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
-
-      - name: Get NPM cache dir
-        id: npm-cache-dir
-        run: |
-          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-
-      - name: Cache NPM modules
-        uses: actions/cache@v3
-        id: npm-cache
-        with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          cache: "npm"
 
       - name: Install tools
         run: make install-ui
