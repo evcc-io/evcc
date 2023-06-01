@@ -41,8 +41,8 @@ render: |
   {{- end }}
   credentials:
     id: {{ .clientid }}
-    secret: {{ .password }}
-  capacity: {{ .clientsecret }}
+    secret: {{ .clientsecret }}
+  capacity: {{ .capacity }}
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
