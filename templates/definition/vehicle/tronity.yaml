@@ -7,9 +7,19 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: title
-  - name: user
+  - name: clientid
+    description:
+      generic: Tronity API Client ID
+    help:
+      de: Einrichtung unter https://app.tronity.tech
+      en: Setup at https://app.tronity.tech
     required: true
-  - name: password
+  - name: clientsecret
+    description:
+      generic: Tronity API Client Secret
+    help:
+      de: Einrichtung unter https://app.tronity.tech
+      en: Setup at https://app.tronity.tech
     required: true
   - name: vin
     example: W...
@@ -30,9 +40,9 @@ render: |
   icon: {{ .icon }}
   {{- end }}
   credentials:
-    id: {{ .user }}
+    id: {{ .clientid }}
     secret: {{ .password }}
-  capacity: {{ .capacity }}
+  capacity: {{ .clientsecret }}
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
