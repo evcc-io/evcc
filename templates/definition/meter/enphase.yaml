@@ -9,6 +9,9 @@ params:
   - name: host
     required: true
   - name: token
+    help:
+      en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
+      de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
 render: |
   type: custom
   {{- if eq .usage "grid" }}
