@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -35,6 +36,7 @@ import (
 
 // Keba is an api.Charger implementation
 type Keba struct {
+	log  *util.Logger
 	conn *modbus.Connection
 }
 
@@ -113,6 +115,16 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		phases = wb.phases1p3p
 	}
 
+	// failsafe
+	b, err = wb.conn.ReadHoldingRegisters(kebaRegFailsafeTimeout, 2)
+	if err != nil {
+		return nil, err
+	}
+
+	if timeout := binary.BigEndian.Uint32(b); timeout > 0 {
+		go wb.heartbeat(900 * time.Millisecond * time.Duration(timeout))
+	}
+
 	return decorateKeba(wb, currentPower, totalEnergy, chargedEnergy, currents, identify, phases), nil
 }
 
@@ -134,10 +146,19 @@ func NewKeba(uri string, slaveID uint8) (*Keba, error) {
 	// conn.Delay(500 * time.Millisecond)
 
 	wb := &Keba{
+		log:  log,
 		conn: conn,
 	}
 
 	return wb, err
+}
+
+func (wb *Keba) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
+		if _, err := wb.Enabled(); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // Status implements the api.Charger interface
