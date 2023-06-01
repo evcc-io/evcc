@@ -9,23 +9,8 @@ params:
   - name: host
     required: true
   - name: token
-    required: true
 render: |
   type: custom
-  {{- if eq .usage "pv" }}
-  power:
-    source: http
-    uri: http://{{ .host }}/production.json
-    method: GET
-    {{- if .token }}
-    auth:
-      type: bearer
-      password: {{ .token }}
-    insecure: true
-    {{- end }}
-    jq: .production[] | select(.measurementType == "production").wNow
-    scale: 1
-  {{- end }}
   {{- if eq .usage "grid" }}
   power:
     source: http
@@ -38,5 +23,19 @@ render: |
     insecure: true
     {{- end }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
+    scale: 1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/production.json
+    method: GET
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .production[] | select(.measurementType == "production").wNow
     scale: 1
   {{- end }}
