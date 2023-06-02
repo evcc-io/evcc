@@ -474,7 +474,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// energy and duration
 	lp.sessionEnergy.Publish("session", lp)
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
-	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
+	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime).Round(time.Second))
 
 	// forget startup energy offset
 	lp.chargedAtStartup = 0
