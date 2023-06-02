@@ -1,7 +1,7 @@
 package easee
 
 // API is the Easee API endpoint
-const API = "https://api.easee.cloud/api"
+const API = "https://api.easee.com/api"
 
 const (
 	ChargePause  = "pause_charging"
