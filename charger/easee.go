@@ -46,9 +46,11 @@ type Easee struct {
 	site, circuit         int
 	updated               time.Time
 	log                   *util.Logger
-	mux                   *sync.Cond
+	mux                   sync.Mutex
+	done                  chan struct{}
 	dynamicChargerCurrent float64
 	current               float64
+	currentUpdated        time.Time
 	chargerEnabled        bool
 	smartCharging         bool
 	opMode                int
@@ -97,8 +99,8 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 		Helper:  request.NewHelper(log),
 		charger: charger,
 		log:     log,
-		mux:     sync.NewCond(new(sync.Mutex)),
 		current: 6, // default current
+		done:    make(chan struct{}),
 	}
 
 	c.Client.Timeout = timeout
@@ -166,11 +168,8 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	}
 
 	// wait for first update
-	done := make(chan struct{})
-	go c.waitForInitialUpdate(done)
-
 	select {
-	case <-done:
+	case <-c.done:
 	case <-time.After(request.Timeout):
 		err = os.ErrDeadlineExceeded
 	}
@@ -223,20 +222,12 @@ func (c *Easee) subscribe(client signalr.Client) {
 	}()
 }
 
-// waitForInitialUpdate waits for observe to trigger the the timestamp updated condition
-func (c *Easee) waitForInitialUpdate(done chan struct{}) {
-	c.mux.L.Lock()
-	c.mux.Wait()
-	for c.updated.IsZero() {
-		c.mux.Wait()
-	}
-	c.mux.L.Unlock()
-	close(done)
-}
-
 // ProductUpdate implements the signalr receiver
 func (c *Easee) ProductUpdate(i json.RawMessage) {
-	var res easee.Observation
+	var (
+		once sync.Once
+		res  easee.Observation
+	)
 
 	if err := json.Unmarshal(i, &res); err != nil {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
@@ -267,18 +258,19 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		value = res.Value
 	}
 
-	c.mux.L.Lock()
-	defer c.mux.L.Unlock()
+	// https://github.com/evcc-io/evcc/issues/8009
+	// logging might be slow or block, execute outside lock
+	c.log.TRACE.Printf("ProductUpdate %s: %s %v", res.Mid, res.ID, value)
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	if c.updated.IsZero() {
-		go func() {
-			<-time.After(3 * time.Second)
-			c.mux.Broadcast()
-		}()
+		defer once.Do(func() {
+			close(c.done)
+		})
 	}
 	c.updated = time.Now()
-
-	c.log.TRACE.Printf("ProductUpdate %s: %s %v", res.Mid, res.ID, value)
 
 	switch res.ID {
 	case easee.USER_IDTOKEN:
@@ -303,11 +295,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.phaseMode = value.(int)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
+
 		// ensure that charger current matches evcc's expectation
-		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current {
-			if err = c.MaxCurrent(int64(c.current)); err != nil {
-				c.log.ERROR.Println(err)
-			}
+		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current &&
+			time.Since(c.currentUpdated) > 10*time.Second {
+			c.log.DEBUG.Printf("current mismatch, expected %.1f, got %.1f", c.current, c.dynamicChargerCurrent)
 		}
 	case easee.CHARGER_OP_MODE:
 		c.opMode = value.(int)
@@ -341,8 +333,8 @@ func (c *Easee) chargers() ([]easee.Charger, error) {
 func (c *Easee) Status() (api.ChargeStatus, error) {
 	c.updateSmartCharging()
 
-	c.mux.L.Lock()
-	defer c.mux.L.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	res := api.StatusNone
 
@@ -363,8 +355,8 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
-	c.mux.L.Lock()
-	defer c.mux.L.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	enabled := c.opMode == easee.ModeCharging ||
 		c.opMode == easee.ModeAwaitingStart ||
@@ -376,9 +368,9 @@ func (c *Easee) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Easee) Enable(enable bool) error {
-	c.mux.L.Lock()
+	c.mux.Lock()
 	enablingRequired := enable && !c.chargerEnabled
-	c.mux.L.Unlock()
+	c.mux.Unlock()
 
 	// enable charger once if it's switched off
 	if enablingRequired {
@@ -420,7 +412,11 @@ func (c *Easee) MaxCurrent(current int64) error {
 			// no tick id, Easee effectively ignored this update
 			return api.ErrMustRetry
 		}
+
+		c.mux.Lock()
+		defer c.mux.Unlock()
 		c.current = cur
+		c.currentUpdated = time.Now()
 	}
 
 	return err
@@ -492,8 +488,8 @@ var _ api.Meter = (*Easee)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Easee) CurrentPower() (float64, error) {
-	c.mux.L.Lock()
-	defer c.mux.L.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	return c.currentPower, nil
 }
@@ -502,8 +498,8 @@ var _ api.ChargeRater = (*Easee)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *Easee) ChargedEnergy() (float64, error) {
-	c.mux.L.Lock()
-	defer c.mux.L.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	return c.sessionEnergy, nil
 }
@@ -512,8 +508,8 @@ var _ api.PhaseCurrents = (*Easee)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (c *Easee) Currents() (float64, float64, float64, error) {
-	c.mux.L.Lock()
-	defer c.mux.L.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
@@ -522,8 +518,8 @@ var _ api.MeterEnergy = (*Easee)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Easee) TotalEnergy() (float64, error) {
-	c.mux.L.Lock()
-	defer c.mux.L.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	return c.totalEnergy, nil
 }
@@ -532,8 +528,8 @@ var _ api.Identifier = (*Easee)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (c *Easee) Identify() (string, error) {
-	c.mux.L.Lock()
-	defer c.mux.L.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	return c.rfid, nil
 }
@@ -547,9 +543,9 @@ func (c *Easee) updateSmartCharging() {
 	mode := c.lp.GetMode()
 	isSmartCharging := mode == api.ModePV || mode == api.ModeMinPV
 
-	c.mux.L.Lock()
+	c.mux.Lock()
 	updateNeeded := isSmartCharging != c.smartCharging
-	c.mux.L.Unlock()
+	c.mux.Unlock()
 
 	if updateNeeded {
 		data := easee.ChargerSettings{
@@ -565,9 +561,9 @@ func (c *Easee) updateSmartCharging() {
 			c.log.WARN.Printf("smart charging: %v", err)
 		}
 
-		c.mux.L.Lock()
+		c.mux.Lock()
 		c.smartCharging = isSmartCharging
-		c.mux.L.Unlock()
+		c.mux.Unlock()
 	}
 }
 
