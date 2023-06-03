@@ -130,7 +130,12 @@ func (c *Twc3) MaxCurrent(current int64) error {
 		return errors.New("vehicle not capable of current control")
 	}
 
-	return v.MaxCurrent(current)
+	err := v.MaxCurrent(current)
+	if errors.Is(err, api.ErrTimeout) {
+		err = api.ErrMustRetry
+	}
+
+	return err
 }
 
 // Status implements the api.Charger interface

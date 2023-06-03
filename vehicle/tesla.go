@@ -2,6 +2,9 @@ package vehicle
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/bogosj/tesla"
@@ -76,7 +79,15 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		v.Title_ = v.vehicle.DisplayName
 	}
 
-	v.dataG = provider.Cached(v.vehicle.Data, cc.Cache)
+	httpTimeout := fmt.Sprintf("%d %s", http.StatusRequestTimeout, http.StatusText(http.StatusRequestTimeout))
+	v.dataG = provider.Cached(func() (*tesla.VehicleData, error) {
+		res, err := v.vehicle.Data()
+		// convert HTTP 408 error to ErrTimeout
+		if err != nil && err.Error() == httpTimeout {
+			return nil, api.ErrTimeout
+		}
+		return res, err
+	}, cc.Cache)
 
 	return v, nil
 }
@@ -204,7 +215,7 @@ var _ api.VehicleChargeController = (*Tesla)(nil)
 func (v *Tesla) StartCharge() error {
 	err := v.vehicle.StartCharging()
 
-	if err != nil && err.Error() == "408 Request Timeout" {
+	if errors.Is(err, api.ErrTimeout) {
 		if _, err := v.vehicle.Wakeup(); err != nil {
 			return err
 		}
@@ -217,7 +228,7 @@ func (v *Tesla) StartCharge() error {
 				return api.ErrTimeout
 			default:
 				time.Sleep(2 * time.Second)
-				if err := v.vehicle.StartCharging(); err == nil || err.Error() != "408 Request Timeout" {
+				if err := v.vehicle.StartCharging(); err == nil || !errors.Is(err, api.ErrTimeout) {
 					return err
 				}
 			}
@@ -232,7 +243,7 @@ func (v *Tesla) StopCharge() error {
 	err := v.vehicle.StopCharging()
 
 	// ignore sleeping vehicle
-	if err != nil && err.Error() == "408 Request Timeout" {
+	if errors.Is(err, api.ErrTimeout) {
 		err = nil
 	}
 

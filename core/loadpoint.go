@@ -664,7 +664,13 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("max charge current %.3gA: %w", chargeCurrent, err)
+			if errors.Is(err, api.ErrMustRetry) {
+				// https://github.com/evcc-io/evcc/issues/8254
+				// ignore Tesla api timeout and fallthrough to enable which will try wakeup
+				lp.log.DEBUG.Printf("max charge current: %v", err)
+			} else {
+				return fmt.Errorf("max charge current %.3gA: %w", chargeCurrent, err)
+			}
 		}
 
 		lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
