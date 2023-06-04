@@ -119,7 +119,11 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 
 func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
-		lp.SetMode(api.ChargeMode(payload))
+		if mode, err := api.ChargeModeString(payload); err == nil {
+			lp.SetMode(mode)
+		} else {
+			m.log.ERROR.Printf("set %s: %v", topic+"/mode", err)
+		}
 	})
 	m.Handler.ListenSetter(topic+"/minSoc/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
