@@ -22,14 +22,16 @@ params:
     type: stringlist
   - name: minSoc
     advanced: true
+    default: 0
     help:
-      de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht. Nur unterstützt wenn das EV den SoC an die verbundene EVSE übermitteln kann!
-      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'OFF'. Only supported if the EV can provided the SoC to the connected EVSE!
+      de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht. Nur unterstützt wenn das Fahrzeug den Ladestand an die verbundene Wallbox übermitteln kann.
+      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'OFF'. Only supported if the vehicle can provided the state of charge to the connected wallbox.
   - name: targetSoc
     advanced: true
+    default: 100
     help:
-      de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden. Nur unterstützt wenn das EV den SoC an die verbundene EVSE übermitteln kann!
-      en: Until which state of charge (Soc) should the vehicle be charged. Only supported if the EV can provided the SoC to the connected EVSE!
+      de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden. Nur unterstützt wenn das Fahrzeug den Ladestand an die verbundene Wallbox übermitteln kann.
+      en: Until which state of charge (Soc) should the vehicle be charged. Only supported if the vehicle can provided the state of charge to the connected wallbox.
 render: |
   type: custom
   features: ["offline"]
@@ -50,15 +52,11 @@ render: |
   {{- if (ne .mode "") }}
     mode: {{ .mode }}
   {{- end }}
-  {{- if (ne .minSoc "") }}
+  {{- if .minSoc }}
     minSoc: {{ .minSoc }}
-  {{- else }}
-    minSoc: 0 # fixed - no Soc available
   {{- end }}
-  {{- if (ne .targetSoc "") }}
+  {{- if .targetSoc }}
     targetSoc: {{ .targetSoc }}
-  {{- else }}
-    targetSoc: 100 # fixed - no Soc available
   {{- end }}
   {{- if (ne .minCurrent "") }}
     minCurrent: {{ .minCurrent }}
