@@ -57,8 +57,10 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid string
-	lp   loadpoint.API
+	rfid             string
+	lp               loadpoint.API
+	pauseResumeTicks int64
+	pauseResumeTime  time.Time
 }
 
 func init() {
@@ -96,11 +98,12 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	}
 
 	c := &Easee{
-		Helper:  request.NewHelper(log),
-		charger: charger,
-		log:     log,
-		current: 6, // default current
-		done:    make(chan struct{}),
+		Helper:           request.NewHelper(log),
+		charger:          charger,
+		log:              log,
+		current:          6, // default current
+		pauseResumeTicks: 0,
+		done:             make(chan struct{}),
 	}
 
 	c.Client.Timeout = timeout
@@ -320,6 +323,12 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 		return
 	}
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
+
+	c.mux.Lock()
+	if res.Ticks == c.pauseResumeTicks {
+		c.pauseResumeTicks = 0
+	}
+	c.mux.Unlock()
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {
@@ -386,15 +395,48 @@ func (c *Easee) Enable(enable bool) error {
 		resp.Body.Close()
 	}
 
+	if c.outstandingPauseResumeAck() {
+		return errors.New("cannot pause/resume, still waiting for previous command's acknowledge")
+	}
+
 	// resume/stop charger
 	action := easee.ChargePause
 	if enable {
 		action = easee.ChargeResume
 	}
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	_, err := c.Post(uri, request.JSONContent, nil)
+
+	var cmd easee.RestCommandResponse
+
+	err := c.PostJSON(uri, &cmd)
+	if err == nil {
+		c.mux.Lock()
+		c.pauseResumeTicks = cmd.Ticks
+		c.pauseResumeTime = time.Now()
+		c.mux.Unlock()
+	}
 
 	return err
+}
+
+// indicates if reply to pause or resume command is outstanding
+// resets internally after 30s, assuming command was lost
+func (c *Easee) outstandingPauseResumeAck() bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if c.pauseResumeTicks == 0 {
+		return false
+	}
+
+	//don't wait for replies longer than 30 seconds
+	if time.Since(c.pauseResumeTime) > 30*time.Second {
+		//reset stored ticks
+		c.pauseResumeTicks = 0
+		return false
+	}
+
+	return true
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -570,4 +612,14 @@ func (c *Easee) updateSmartCharging() {
 // LoadpointControl implements loadpoint.Controller
 func (c *Easee) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
+}
+
+// PostJSON executes HTTP POST request and decodes JSON response.
+// It returns a StatusError on response codes other than HTTP 2xx.
+func (c *Easee) PostJSON(url string, res interface{}) error {
+	req, err := request.New(http.MethodPost, url, nil, request.AcceptJSON)
+	if err == nil {
+		err = c.Helper.DoJSON(req, &res)
+	}
+	return err
 }
