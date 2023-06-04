@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -408,7 +409,7 @@ func (c *Easee) Enable(enable bool) error {
 
 	var cmd easee.RestCommandResponse
 
-	err := c.PostJSON(uri, &cmd)
+	err := c.postJSON(uri, nil, &cmd)
 	if err == nil {
 		c.mux.Lock()
 		c.pauseResumeTicks = cmd.Ticks
@@ -616,8 +617,8 @@ func (c *Easee) LoadpointControl(lp loadpoint.API) {
 
 // PostJSON executes HTTP POST request and decodes JSON response.
 // It returns a StatusError on response codes other than HTTP 2xx.
-func (c *Easee) PostJSON(url string, res interface{}) error {
-	req, err := request.New(http.MethodPost, url, nil, request.AcceptJSON)
+func (c *Easee) postJSON(url string, data io.Reader, res interface{}) error {
+	req, err := request.New(http.MethodPost, url, data, request.AcceptJSON)
 	if err == nil {
 		err = c.Helper.DoJSON(req, &res)
 	}
