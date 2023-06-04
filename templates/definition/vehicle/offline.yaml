@@ -24,14 +24,14 @@ params:
     advanced: true
     default: 0
     help:
-      de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht. Nur unterstützt wenn das Fahrzeug den Ladestand an die verbundene Wallbox übermitteln kann.
-      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'OFF'. Only supported if the vehicle can provided the state of charge to the connected wallbox.
+      de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht. Nur unterstützt wenn das Fahrzeug den Ladestand (Soc) an die verbundene Wallbox übermitteln kann.
+      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'OFF'. Only supported if the vehicle can provided the state of charge (Soc) to the connected wallbox.
   - name: targetSoc
     advanced: true
     default: 100
     help:
-      de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden. Nur unterstützt wenn das Fahrzeug den Ladestand an die verbundene Wallbox übermitteln kann.
-      en: Until which state of charge (Soc) should the vehicle be charged. Only supported if the vehicle can provided the state of charge to the connected wallbox.
+      de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden. Nur unterstützt wenn das Fahrzeug den Ladestand (Soc) an die verbundene Wallbox übermitteln kann.
+      en: Until which state of charge (Soc) should the vehicle be charged. Only supported if the vehicle can provided the state of charge (Soc) to the connected wallbox.
 render: |
   type: custom
   features: ["offline"]
