@@ -27,10 +27,10 @@ params:
 render: |
   type: keba-udp
   uri: {{ .host }}
-  {{ if ne .rfid "" }}
+  {{- if .rfid }}
   rfid:
     tag: {{ .rfid }}
-  {{ end }}
-  {{ if ne .serial "" }}
+  {{- end }}
+  {{- if .serial }}
   serial: {{ .serial }}
-  {{ end }}
+  {{- end }}

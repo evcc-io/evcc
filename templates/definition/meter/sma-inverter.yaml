@@ -18,9 +18,9 @@ params:
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname
-  {{- if ne .password "" }}
+  {{- if .password }}
   password: {{ .password }} # optional
   {{- end }}
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
