@@ -43,7 +43,7 @@ render: |
   {{- if .title }}
   title: {{ .title }}
   {{- end }}
-  {{- if ne .icon "" }}
+  {{- if .icon }}
   icon: {{ .icon }}
   {{- end }}
   tokens:
@@ -53,7 +53,7 @@ render: |
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
-  {{- if ne .vin "" }}
+  {{- if .vin }}
   vin: {{ .vin }}
   {{- end }}
   {{ include "vehicle-identify" . }}

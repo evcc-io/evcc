@@ -11,7 +11,7 @@ params:
 render: |
   type: fiat
   {{ include "vehicle-base" . }}
-  {{- if ne .pin "" }}
+  {{- if .pin }}
   pin: {{ .pin }} # mandatory to deep refresh Soc
   {{- end }}
   {{ include "vehicle-identify" . }}

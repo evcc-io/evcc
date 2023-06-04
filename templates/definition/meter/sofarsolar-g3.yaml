@@ -144,7 +144,7 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

@@ -23,7 +23,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 625 # Grid side total power 
+      address: 625 # Grid side total power
       type: holding
       decode: int16
   energy:
@@ -41,21 +41,21 @@ render: |
         address: 613 # "Out-of-grid - current A"
         type: holding
         decode: int16
-      scale: 0.01 
+      scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 614 # "Out-of-grid - current B"
         type: holding
         decode: int16
-      scale: 0.01 
+      scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 615 # "Out-of-grid - current C"
         type: holding
         decode: int16
-      scale: 0.01       
+      scale: 0.01
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -109,7 +109,7 @@ render: |
       address: 588 # "battery capacity"
       type: holding
       decode: int16
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   energy:

@@ -83,7 +83,7 @@ render: |
       address: 30845 # Battery Soc, %
       type: holding
       decode: uint32nan
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

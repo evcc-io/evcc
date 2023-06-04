@@ -49,7 +49,7 @@ render: |
       address: 1068 # SOC
       type: holding
       decode: int16
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}
