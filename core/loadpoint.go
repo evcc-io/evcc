@@ -673,9 +673,10 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			}
 		} else {
 			lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
-			lp.chargeCurrent = chargeCurrent
-			lp.bus.Publish(evChargeCurrent, chargeCurrent)
 		}
+
+		lp.chargeCurrent = chargeCurrent
+		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 	}
 
 	// set enabled/disabled
