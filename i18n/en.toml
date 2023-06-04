@@ -295,6 +295,11 @@ solar = "Solar"
 title = "Charging Sessions"
 vehicle = "Vehicle"
 
+[sessions.filter]
+allVehicles = "all vehicles"
+allLoadpoints = "all charging points"
+filter = "filter"
+
 [sessions.csv]
 chargedenergy = "Energy (kWh)"
 created = "Created"
