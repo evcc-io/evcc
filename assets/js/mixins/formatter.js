@@ -170,6 +170,11 @@ export default {
         year: "numeric",
       }).format(date);
     },
+    fmtMonth: function (date, short) {
+      return new Intl.DateTimeFormat(this.$i18n.locale, {
+        month: short ? "short" : "long",
+      }).format(date);
+    },
     fmtDayMonthYear: function (date) {
       return new Intl.DateTimeFormat(this.$i18n.locale, {
         day: "numeric",

@@ -13,16 +13,26 @@
 		<div class="row">
 			<main class="col-12">
 				<div class="d-flex align-items-baseline justify-content-between my-5">
-					<router-link class="d-flex text-decoration-none align-items-center" to="/">
+					<router-link
+						class="d-flex text-decoration-none align-items-center"
+						:class="{ 'pe-none': !hasPrev, 'text-muted': !hasPrev }"
+						:to="{ query: { ...$route.query, ...prevYearMonth } }"
+					>
 						<shopicon-regular-angledoubleleftsmall
 							size="s"
 							class="me-1"
 						></shopicon-regular-angledoubleleftsmall>
-						April
+						<span class="d-none d-sm-block">{{ prevMonthName }}</span>
+						<span class="d-block d-sm-none">{{ prevMonthNameShort }}</span>
 					</router-link>
-					<h2 class="text-center">Mai 2023</h2>
-					<router-link class="d-flex text-decoration-none align-items-center" to="/">
-						Juni
+					<h2 class="text-center">{{ headline }}</h2>
+					<router-link
+						class="d-flex text-decoration-none align-items-center"
+						:class="{ 'pe-none': !hasNext, 'text-muted': !hasNext }"
+						:to="{ query: { ...$route.query, ...nextYearMonth } }"
+					>
+						<span class="d-none d-sm-block">{{ nextMonthName }}</span>
+						<span class="d-block d-sm-none">{{ nextMonthNameShort }}</span>
 						<shopicon-regular-angledoublerightsmall
 							size="s"
 							class="ms-1"
@@ -30,23 +40,10 @@
 					</router-link>
 				</div>
 
-				<!--
-				<div v-for="group in sessionsByLoadpoint" :key="group.month">
-					<div class="d-flex align-items-center my-5">
-						<h2 class="me-4 mb-0">
-							{{ formatGroupHeadline(group.month) }}
-						</h2>
-						<a
-							class="btn btn-xs btn-outline-secondary text-nowrap"
-							:href="csvHrefLink(group.month)"
-							download="sessions.csv"
-						>
-							CSV
-						</a>
-					</div>
-					-->
-
-				<div class="table-responsive my-3">
+				<div v-if="currentSessions.length === 0">
+					<p>{{ $t("sessions.noSessions") }}</p>
+				</div>
+				<div v-else class="table-responsive my-3">
 					<table class="table text-nowrap">
 						<thead>
 							<tr>
@@ -103,26 +100,30 @@
 									{{ $t("sessions.energy") }}
 									<div>{{ fmtKWh(chargedEnergy * 1e3) }}</div>
 								</th>
-								<th scope="col" class="align-top text-end">
+								<th
+									v-if="hasSolarPercentage"
+									scope="col"
+									class="align-top text-end"
+								>
 									{{ $t("sessions.solar") }}
 									<div v-if="solarPercentage != null">
 										{{ fmtNumber(solarPercentage, 1) }}%
 									</div>
 								</th>
-								<th scope="col" class="align-top text-end">
+								<th v-if="hasPrice" scope="col" class="align-top text-end">
 									{{ $t("sessions.price") }}
 									<div v-if="price != null">
 										{{ fmtMoney(price, currency) }}
 										{{ fmtCurrencySymbol(currency) }}
 									</div>
 								</th>
-								<th scope="col" class="align-top text-end">
+								<th v-if="hasPrice" scope="col" class="align-top text-end">
 									{{ $t("sessions.avgPrice") }}
 									<div v-if="pricePerKWh != null">
 										{{ fmtPricePerKWh(pricePerKWh, currency) }}
 									</div>
 								</th>
-								<th scope="col" class="align-top text-end pe-0">
+								<th v-if="hasCo2" scope="col" class="align-top text-end pe-0">
 									{{ $t("sessions.co2") }}
 									<div v-if="co2PerKWh != null">
 										{{ fmtCo2Medium(co2PerKWh) }}
@@ -149,26 +150,26 @@
 								<td class="text-end">
 									{{ fmtKWh(session.chargedEnergy * 1e3) }}
 								</td>
-								<td class="text-end">
+								<td v-if="hasSolarPercentage" class="text-end">
 									<span v-if="session.solarPercentage != null">
 										{{ fmtNumber(session.solarPercentage, 1) }}%
 									</span>
 									<span v-else class="text-muted">-</span>
 								</td>
-								<td class="text-end">
+								<td v-if="hasPrice" class="text-end">
 									<span v-if="session.price != null">
 										{{ fmtMoney(session.price, currency) }}
 										{{ fmtCurrencySymbol(currency) }}
 									</span>
 									<span v-else class="text-muted">-</span>
 								</td>
-								<td class="text-end">
+								<td v-if="hasPrice" class="text-end">
 									<span v-if="session.pricePerKWh != null">
 										{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
 									</span>
 									<span v-else class="text-muted">-</span>
 								</td>
-								<td class="text-end pe-0">
+								<td v-if="hasCo2" class="text-end pe-0">
 									<span v-if="session.co2PerKWh != null">
 										{{ fmtCo2Medium(session.co2PerKWh) }}
 									</span>
@@ -178,20 +179,22 @@
 						</tbody>
 					</table>
 				</div>
-				<div class="d-flex mb-5">
+				<div class="d-flex mb-5 my-4">
 					<a
+						v-if="currentSessions.length"
 						class="btn btn-outline-secondary text-nowrap me-3"
-						:href="csvHrefLink('2023.05')"
-						download="sessions.csv"
+						:href="csvLink"
+						download
 					>
-						CSV Mai 2023 herunterladen
+						{{ $t("sessions.csvMonth", { month: headline }) }}
 					</a>
 					<a
+						v-if="sessions.length"
 						class="btn btn-outline-secondary text-nowrap"
-						:href="csvHrefLink()"
-						download="sessions.csv"
+						:href="csvTotalLink"
+						download
 					>
-						CSV Gesamt herunterladen
+						{{ $t("sessions.csvTotal") }}
 					</a>
 				</div>
 			</main>
@@ -221,15 +224,15 @@ export default {
 	mixins: [formatter],
 	props: {
 		notifications: Array,
+		month: { type: Number, default: () => new Date().getMonth() + 1 },
+		year: { type: Number, default: () => new Date().getFullYear() },
+		loadpointFilter: { type: String, default: "" },
+		vehicleFilter: { type: String, default: "" },
 	},
 	data() {
 		return {
 			sessions: [],
 			selectedSessionId: undefined,
-			month: 5,
-			year: 2023,
-			vehicleFilter: "",
-			loadpointFilter: "",
 		};
 	},
 	computed: {
@@ -265,19 +268,35 @@ export default {
 			return options;
 		},
 		chargedEnergy() {
-			return this.totalKWh(this.filteredSessions);
+			return this.filteredSessions.reduce((total, s) => total + s.chargedEnergy, 0);
 		},
 		price() {
-			return this.totalPrice(this.filteredSessions);
+			return this.filteredSessions.reduce((total, s) => total + s.price, 0);
+		},
+		hasPrice() {
+			return this.filteredSessions.find((s) => s.price != null) != null;
+		},
+		hasSolarPercentage() {
+			return this.filteredSessions.find((s) => s.solarPercentage != null) != null;
+		},
+		hasCo2() {
+			return this.filteredSessions.find((s) => s.co2PerKWh != null) != null;
 		},
 		pricePerKWh() {
 			return this.price / this.chargedEnergy;
 		},
 		co2PerKWh() {
-			return 999;
+			const emittedCo2 = this.filteredSessions.reduce(
+				(total, s) => total + s.chargedEnergy * s.co2PerKWh,
+				0
+			);
+			return emittedCo2 / this.chargedEnergy;
 		},
 		solarPercentage() {
-			const chargedSolarEnergy = this.chargedSolarEnergyKWh(this.filteredSessions);
+			const chargedSolarEnergy = this.filteredSessions.reduce(
+				(total, s) => total + s.chargedEnergy * (s.solarPercentage / 100),
+				0
+			);
 			return (100 / this.chargedEnergy) * chargedSolarEnergy;
 		},
 		loadpoints() {
@@ -306,82 +325,92 @@ export default {
 		currency() {
 			return store.state.currency;
 		},
+		headline() {
+			const date = new Date();
+			date.setMonth(this.month - 1);
+			date.setFullYear(this.year);
+			return this.fmtMonthYear(date);
+		},
+		csvLink() {
+			return this.csvHrefLink(this.year, this.month);
+		},
+		csvTotalLink() {
+			return this.csvHrefLink();
+		},
+		prevDate() {
+			const date = new Date();
+			date.setFullYear(this.year);
+			date.setMonth(this.month - 2);
+			return date;
+		},
+		prevYearMonth() {
+			return { year: this.prevDate.getFullYear(), month: this.prevDate.getMonth() + 1 };
+		},
+		prevMonthName() {
+			return this.fmtMonth(this.prevDate);
+		},
+		prevMonthNameShort() {
+			return this.fmtMonth(this.prevDate, true);
+		},
+		nextDate() {
+			const date = new Date();
+			date.setFullYear(this.year);
+			date.setMonth(this.month);
+			return date;
+		},
+		nextYearMonth() {
+			return { year: this.nextDate.getFullYear(), month: this.nextDate.getMonth() + 1 };
+		},
+		nextMonthName() {
+			return this.fmtMonth(this.nextDate);
+		},
+		nextMonthNameShort() {
+			return this.fmtMonth(this.nextDate, true);
+		},
+		hasNext() {
+			const now = new Date();
+			return this.year < now.getFullYear() || this.month < now.getMonth() + 1;
+		},
+		hasPrev() {
+			const length = this.sessions.length;
+			if (length === 0) {
+				return false;
+			}
+			const first = new Date(this.sessions[length - 1].created);
+			return this.year > first.getFullYear() || this.month > first.getMonth() + 1;
+		},
 	},
 	mounted() {
 		this.loadSessions();
 	},
 	methods: {
 		changeLoadpointFilter(event) {
-			this.loadpointFilter = event.target.value;
+			const loadpoint = event.target.value || undefined;
+			this.$router.push({ query: { ...this.$route.query, loadpoint } });
 		},
 		changeVehicleFilter(event) {
-			this.vehicleFilter = event.target.value;
+			const vehicle = event.target.value || undefined;
+			this.$router.push({ query: { ...this.$route.query, vehicle } });
 		},
 		async loadSessions() {
 			const response = await api.get("sessions");
 			this.sessions = response.data?.result;
-		},
-		sessionsByMonth(sessions, month, year) {
-			return sessions.filter((session) => {
-				const date = new Date(session.created);
-				return date.getFullYear() === year && date.getMonth() + 1 === month;
-			});
-		},
-		groupByLoadpoint(sessions) {
-			return sessions.reduce((groups, session) => {
-				const loadpoint = session.loadpoint;
-				if (!groups[loadpoint]) groups[loadpoint] = [];
-				groups[loadpoint].push(session);
-				return groups;
-			}, {});
-		},
-		totalKWh(sessions) {
-			return sessions.reduce((total, session) => total + session.chargedEnergy, 0);
-		},
-		chargedSolarEnergyKWh(sessions) {
-			return sessions.reduce(
-				(total, session) => total + session.chargedEnergy * (session.solarPercentage / 100),
-				0
-			);
-		},
-		totalPrice(sessions) {
-			return sessions.reduce((total, session) => total + session.price, 0);
-		},
-		groupedKWh(by, sessions) {
-			const grouped = sessions.reduce((groups, session) => {
-				const name = session[by];
-				if (!groups[name]) groups[name] = 0;
-				groups[name] += session.chargedEnergy * 1e3;
-				return groups;
-			}, {});
-			const list = Object.entries(grouped).map(([name, energy]) => {
-				return { name, energy };
-			});
-			return list.length >= 2 ? list : [];
-		},
-		formatGroupHeadline(group) {
-			const date = new Date();
-			const [year, month] = group.split(".");
-			date.setMonth(month - 1);
-			date.setFullYear(year);
-			return this.fmtMonthYear(date);
 		},
 		showDetails(sessionId) {
 			this.selectedSessionId = sessionId;
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
 			modal.show();
 		},
-		csvHrefLink(groupKey) {
-			var url = `./api/sessions?format=csv&lang=${this.$i18n.locale}`;
-			if (groupKey) {
-				const [year, month] = groupKey.split(".");
-				url += `&year=${year}`;
-
-				if (month) {
-					url += `&month=${month}`;
-				}
+		csvHrefLink(year, month) {
+			const params = new URLSearchParams({
+				format: "csv",
+				lang: this.$i18n.locale,
+			});
+			if (year && month) {
+				params.append("year", year);
+				params.append("month", month);
 			}
-			return url;
+			return `./api/sessions?${params.toString()}`;
 		},
 	},
 };

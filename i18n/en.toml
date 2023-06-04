@@ -285,6 +285,8 @@ title = "Charging Session"
 [sessions]
 avgPrice = "Ø Price"
 co2 = "Ø CO₂"
+csvMonth = "Download {month} CSV"
+csvTotal = "Download total CSV"
 date = "Finished"
 downloadCsv = "Download as CSV"
 energy = "Charged"
@@ -294,11 +296,6 @@ reallyDelete = "Do you really want to delete this session?"
 solar = "Solar"
 title = "Charging Sessions"
 vehicle = "Vehicle"
-
-[sessions.filter]
-allVehicles = "all vehicles"
-allLoadpoints = "all charging points"
-filter = "filter"
 
 [sessions.csv]
 chargedenergy = "Energy (kWh)"
@@ -310,6 +307,11 @@ meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kWh)"
 odometer = "Mileage (km)"
 vehicle = "Vehicle"
+
+[sessions.filter]
+allLoadpoints = "all charging points"
+allVehicles = "all vehicles"
+filter = "filter"
 
 [settings]
 title = "Settings"
