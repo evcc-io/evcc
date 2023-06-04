@@ -3,7 +3,7 @@ covers: ["eon-vbox"]
 products:
   - brand: Vestel
     description:
-      generic: EVC04
+      generic: EVC04 Home Smart/Connect Plus
   - brand: Webasto
     description:
       generic: Unite
