@@ -93,7 +93,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     model: sunspec
     value: ChargeState
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}
