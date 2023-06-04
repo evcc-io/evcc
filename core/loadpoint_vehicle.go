@@ -101,10 +101,9 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 // setActiveVehicle assigns currently active vehicle, configures soc estimator
 // and adds an odometer task
 func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
-	lp.Lock()
-
+	lp.vehicleMux.Lock()
 	if lp.vehicle == vehicle {
-		lp.Unlock()
+		lp.vehicleMux.Unlock()
 		return
 	}
 
@@ -118,9 +117,14 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.coordinator.Acquire(vehicle)
 		to = vehicle.Title()
 	}
-	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
 	lp.vehicle = vehicle
+	lp.vehicleMux.Unlock()
+
+	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
+
+	// lock api
+	lp.Lock()
 
 	// reset minSoc and targetSoc before change
 	lp.setMinSoc(0)
@@ -129,7 +133,7 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	// reset target energy
 	lp.setTargetEnergy(0)
 
-	// unblock api
+	// unlock api
 	lp.Unlock()
 
 	if vehicle != nil {
@@ -143,11 +147,12 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, estimate)
 
 		lp.publish(vehiclePresent, true)
-		lp.publish(vehicleTitle, lp.vehicle.Title())
-		lp.publish(vehicleIcon, lp.vehicle.Icon())
-		lp.publish(vehicleCapacity, lp.vehicle.Capacity())
+		lp.publish(vehicleTitle, vehicle.Title())
+		lp.publish(vehicleIcon, vehicle.Icon())
+		lp.publish(vehicleCapacity, vehicle.Capacity())
 		lp.restoreVehicleSettings()
-		lp.applyAction(vehicle.OnIdentified())
+
+    lp.applyAction(vehicle.OnIdentified())
 		lp.addTask(lp.vehicleOdometer)
 
 		lp.progress.Reset()
@@ -167,8 +172,8 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	lp.updateSession(func(session *db.Session) {
 		var title string
-		if lp.vehicle != nil {
-			title = lp.vehicle.Title()
+		if vehicle != nil {
+			title = vehicle.Title()
 		}
 
 		lp.session.Vehicle = title
@@ -181,11 +186,10 @@ func (lp *Loadpoint) wakeUpVehicle() {
 		if err := c.WakeUp(); err != nil {
 			lp.log.ERROR.Printf("wake-up charger: %v", err)
 		}
-		return
 	}
 
 	// vehicle
-	if vs, ok := lp.vehicle.(api.Resurrector); ok {
+	if vs, ok := lp.GetVehicle().(api.Resurrector); ok {
 		if err := vs.WakeUp(); err != nil {
 			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
 		}
@@ -208,7 +212,7 @@ func (lp *Loadpoint) unpublishVehicle() {
 
 // vehicleHasFeature checks availability of vehicle feature
 func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
-	v, ok := lp.vehicle.(api.FeatureDescriber)
+	v, ok := lp.GetVehicle().(api.FeatureDescriber)
 	if ok {
 		ok = slices.Contains(v.Features(), f)
 	}
@@ -328,14 +332,14 @@ func (lp *Loadpoint) identifyVehicleByStatus() {
 	}
 
 	// remove previous vehicle if status was not confirmed
-	if _, ok := lp.vehicle.(api.ChargeState); ok {
+	if _, ok := lp.GetVehicle().(api.ChargeState); ok {
 		lp.setActiveVehicle(nil)
 	}
 }
 
 // vehicleOdometer updates odometer
 func (lp *Loadpoint) vehicleOdometer() {
-	if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
+	if vs, ok := lp.GetVehicle().(api.VehicleOdometer); ok {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
 			lp.publish(vehicleOdometer, odo)
@@ -392,7 +396,7 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 
 // vehicleClimateActive checks if vehicle has active climate request
 func (lp *Loadpoint) vehicleClimateActive() bool {
-	if cl, ok := lp.vehicle.(api.VehicleClimater); ok && lp.vehicleClimatePollAllowed() {
+	if cl, ok := lp.GetVehicle().(api.VehicleClimater); ok && lp.vehicleClimatePollAllowed() {
 		active, err := cl.Climater()
 		if err == nil {
 			if active {
