@@ -153,7 +153,7 @@ jobs:
       - name: Wait for Build
         uses: lewagon/wait-on-check-action@v1.3.1
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           check-name: Build
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
