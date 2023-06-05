@@ -483,7 +483,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 				return err
 			}
 			resp.Body.Close()
-			
+
 			err = c.Enable(false)
 		}
 	}
