@@ -53,6 +53,6 @@ render: |
   {{ if ne .password "" }}
   password: {{ .password }}
   {{ end }}
-  {{- if ne .cache "" }}
+  {{- if .cache }}
   cache: {{ .cache }}
   {{- end }}
