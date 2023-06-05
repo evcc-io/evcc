@@ -26,16 +26,8 @@ params:
     type: stringlist
   - name: minSoc
     advanced: true
-    default: 0
-    help:
-      de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht.
-      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'Off'.
   - name: targetSoc
     advanced: true
-    default: 100
-    help:
-      de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden.
-      en: Until which state of charge (Soc) should the vehicle be charged.
 render: |
   type: custom
   features: ["offline"]
