@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Razina baterije"
+capacity = "{energy} od {total}"
+legendBottomName = "Kućni prioritet"
+legendBottomSubline = "ne koristi se za punjenje"
+legendMiddleName = "vozilo na prvom mjestu"
+legendMiddleSubline = "Kućna sekunda"
+legendTitle = "Kako bi se trebala koristiti solarna energija?"
+legendTopAutostart = "pokreće se automatski"
+legendTopName = "punjenje podržano baterijom"
+legendTopSubline = "bez prekida"
+modalTitle = "Postavke baterije"
+note = "Napomena: Ove postavke utječu samo na solarni način. Ponašanje punjenja prilagođava se u skladu s tim."
+
+[batterySettings.bufferStart]
+full = "kad je skoro pun"
+low = "kad je donekle pun"
+medium = "kad je napola pun"
+never = "samo s dovoljno viška"
+
 [footer]
 
 [footer.community]
@@ -74,9 +94,27 @@ blog = "Blog"
 docs = "Dokumentacija"
 github = "GitHub"
 login = "Prijave vozila"
+needHelp = "Trebate pomoć?"
 sessions = "Napajanja"
 settings = "Postavke"
-needHelp = "Trebate pomoć?"
+
+[help]
+discussionsButton = "GitHub rasprave"
+documentationButton = "Dokumentacija"
+issueButton = "Prijavi grešku"
+issueDescription = "Pronašao čudno ili pogrešno ponašanje?"
+modalTitle = "Trebate pomoć?"
+primaryActions = "Nešto ne radi onako kako bi trebalo? Ovo su dobra mjesta za pomoć."
+restartButton = "Restart"
+restartDescription = "Jesi li ga pokušao ugasiti i ponovno uključiti?"
+secondaryActions = "Još uvijek ne možete riješiti svoj problem? Evo još nekih teških opcija."
+
+[help.restart]
+cancel = "Otkazati"
+confirm = "Da, ponovno pokreni!"
+description = "U normalnim okolnostima ponovno pokretanje ne bi trebalo biti potrebno. Razmislite o podnošenju greške ako trebate redovito ponovno pokretati evcc."
+disclaimer = "Napomena: evcc će prekinuti i osloniti se na operativni sustav za ponovno pokretanje usluge."
+modalTitle = "Jeste li sigurni da želite ponovno pokrenuti?"
 
 [main]
 vehicles = "Parkiralište"
@@ -105,12 +143,12 @@ pvProduction = "Produkcija"
 selfConsumption = "Samopotrošnja"
 
 [main.loadpoint]
+avgPrice = "Ø Cijena"
 charged = "Napunjeno"
+co2 = "Ø CO₂"
 duration = "Trajanje"
 fallbackName = "Mjesto punjenja"
 power = "Energija"
-avgPrice = "Ø Cijena"
-co2 = "Ø CO₂"
 price = "Σ Cijena"
 solar = "Solarno"
 
@@ -231,30 +269,30 @@ reload = "Ponovo učitati?"
 
 [session]
 cancel = "Odustani"
+co2 = "CO₂"
+date = "Razdoblje"
 delete = "Izbriši"
 finished = "Gotovo"
+meter = "Mjerač"
 meterstart = "Početak mjerača"
 meterstop = "Zaustavljanje mjerača"
 odometer = "Kilometraža"
+price = "Cijena"
 started = "Počelo"
 title = "Sesije punjenja"
-co2 = "CO₂"
-date = "Razdoblje"
-meter = "Mjerač"
-price = "Cijena"
 
 [sessions]
+avgPrice = "Ø Cijena"
+co2 = "Ø CO₂"
 date = "Gotovo"
 downloadCsv = "Preuzmi kao CSV"
 energy = "Napojeno"
 loadpoint = "Mjesto napajanja"
+price = "Σ Cijena"
 reallyDelete = "Želite li stvarno izbrisati ovu sesiju?"
+solar = "Solarno"
 title = "Napajanja"
 vehicle = "Vozilo"
-avgPrice = "Ø Cijena"
-co2 = "Ø CO₂"
-price = "Σ Cijena"
-solar = "Solarno"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -319,42 +357,3 @@ title = "Pogreška pri pokretanju"
 cancel = "Otkazati"
 template = "Proizvođač"
 test = "Test"
-
-
-[help]
-discussionsButton = "GitHub rasprave"
-restartButton = "Restart"
-restartDescription = "Jesi li ga pokušao ugasiti i ponovno uključiti?"
-documentationButton = "Dokumentacija"
-issueDescription = "Pronašao čudno ili pogrešno ponašanje?"
-modalTitle = "Trebate pomoć?"
-issueButton = "Prijavi grešku"
-primaryActions = "Nešto ne radi onako kako bi trebalo? Ovo su dobra mjesta za pomoć."
-secondaryActions = "Još uvijek ne možete riješiti svoj problem? Evo još nekih teških opcija."
-
-[help.restart]
-cancel = "Otkazati"
-confirm = "Da, ponovno pokreni!"
-description = "U normalnim okolnostima ponovno pokretanje ne bi trebalo biti potrebno. Razmislite o podnošenju greške ako trebate redovito ponovno pokretati evcc."
-disclaimer = "Napomena: evcc će prekinuti i osloniti se na operativni sustav za ponovno pokretanje usluge."
-modalTitle = "Jeste li sigurni da želite ponovno pokrenuti?"
-
-[batterySettings]
-legendBottomSubline = "ne koristi se za punjenje"
-legendTitle = "Kako bi se trebala koristiti solarna energija?"
-legendMiddleSubline = "Kućna sekunda"
-batteryLevel = "Razina baterije"
-capacity = "{energy} od {total}"
-legendBottomName = "Kućni prioritet"
-legendMiddleName = "vozilo na prvom mjestu"
-legendTopAutostart = "pokreće se automatski"
-legendTopSubline = "bez prekida"
-modalTitle = "Postavke baterije"
-note = "Napomena: Ove postavke utječu samo na solarni način. Ponašanje punjenja prilagođava se u skladu s tim."
-legendTopName = "punjenje podržano baterijom"
-
-[batterySettings.bufferStart]
-full = "kad je skoro pun"
-low = "kad je donekle pun"
-medium = "kad je napola pun"
-never = "samo s dovoljno viška"

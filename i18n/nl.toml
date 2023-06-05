@@ -1,3 +1,16 @@
+[batterySettings]
+batteryLevel = "Batterijniveau"
+capacity = "{energy} van {total}"
+legendBottomName = "prioriteit huis"
+legendBottomSubline = "niet gebruikt voor opladen"
+legendMiddleName = "eerst voertuig"
+legendTitle = "Hoe moet zonne-energie gebruikt worden?"
+legendTopAutostart = "start automatisch"
+legendTopName = "batterij-ondersteund opladen"
+legendTopSubline = "zonder onderbrekingen"
+modalTitle = "Batterij-instellingen"
+note = "Opgelet: Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast."
+
 [footer]
 
 [footer.community]
@@ -281,17 +294,3 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
-
-
-[batterySettings]
-batteryLevel = "Batterijniveau"
-capacity = "{energy} van {total}"
-legendBottomSubline = "niet gebruikt voor opladen"
-legendMiddleName = "eerst voertuig"
-legendTitle = "Hoe moet zonne-energie gebruikt worden?"
-legendTopName = "batterij-ondersteund opladen"
-legendTopAutostart = "start automatisch"
-legendTopSubline = "zonder onderbrekingen"
-modalTitle = "Batterij-instellingen"
-note = "Opgelet: Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast."
-legendBottomName = "prioriteit huis"
