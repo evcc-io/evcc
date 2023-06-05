@@ -3,8 +3,6 @@ package vehicle
 import (
 	"context"
 	"errors"
-	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/bogosj/tesla"
@@ -87,11 +85,9 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
+// timeoutError converts HTTP 408 error to ErrTimeout
 func (v *Tesla) timeoutError(err error) error {
-	httpTimeout := fmt.Sprintf("%d %s", http.StatusRequestTimeout, http.StatusText(http.StatusRequestTimeout))
-	// convert HTTP 408 error to ErrTimeout
-	if err != nil && err.Error() == httpTimeout {
-		println("match timeout")
+	if err != nil && err.Error() == "408 Request Timeout" {
 		err = api.ErrTimeout
 	}
 	return err
