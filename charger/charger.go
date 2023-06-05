@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -31,7 +30,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		Status, Enable, Enabled, MaxCurrent provider.Config
 		Identify, Phases1p3p                *provider.Config
 		Wakeup                              *provider.Config
-		Tos                                 bool
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -68,10 +66,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	// decorate phases
 	var phases1p3p func(int) error
 	if cc.Phases1p3p != nil {
-		if !cc.Tos {
-			return nil, errors.New("1p3p does no longer handle disable/enable. Use tos: true to confirm you understand the consequences")
-		}
-
 		phases1p3pS, err := provider.NewIntSetterFromConfig("phases", *cc.Phases1p3p)
 		if err != nil {
 			return nil, fmt.Errorf("phases: %w", err)
