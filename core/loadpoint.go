@@ -52,8 +52,9 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
 
-	guardGracePeriod    = 60 * time.Second // allow out of sync during this timespan
-	phaseSwitchDuration = 60 * time.Second // do not measure phases during this timespan
+	guardGracePeriod           = 60 * time.Second // allow out of sync during this timespan
+	phaseSwitchCommandTimeout  = 30 * time.Second // do not sync charger enabeld/disabled state during this timespan
+	phaseSwitchDuration        = 60 * time.Second // do not measure phases during this timespan
 )
 
 // elapsed is the time an expired timer will be set to
@@ -631,9 +632,9 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	if (enabled != lp.enabled) && (!lp.enabled || lp.phaseSwitchCompleted()) {
+	if (enabled != lp.enabled) && (!lp.enabled || lp.phaseSwitchCommandTimeoutElapsed()) {
 		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
-		if lp.guardGracePeriodElapsed() && (!lp.enabled || lp.connected()) {
+		if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (!lp.enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		}
 		return lp.charger.Enable(lp.enabled)
@@ -1418,6 +1419,11 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 // guardGracePeriodElapsed checks if last guard update is within guard grace period
 func (lp *Loadpoint) guardGracePeriodElapsed() bool {
 	return time.Since(lp.guardUpdated) > guardGracePeriod
+}
+
+// phaseSwitchCommandTimeoutElapsed returns true if phase switch command should be already processed by the charger
+func (lp *Loadpoint) phaseSwitchCommandTimeoutElapsed() bool {
+	return time.Since(lp.phasesSwitched) > phaseSwitchCommandTimeout
 }
 
 // phaseSwitchCompleted returns true if phase switch has completed
