@@ -479,9 +479,12 @@ func (c *Easee) Phases1p3p(phases int) error {
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
 			var resp *http.Response
-			if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err == nil {
-				resp.Body.Close()
+			if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err != nil {
+				return err
 			}
+			resp.Body.Close()
+			
+			err = c.Enable(false)
 		}
 	}
 
