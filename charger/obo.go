@@ -97,11 +97,13 @@ func (wb *Obo) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch i := b[1]; i {
+	switch u := binary.BigEndian.Uint16(b); u {
 	case 0, 1, 2:
-		return api.ChargeStatusString(string('A' + rune(i)))
+		// A..C
+		return api.ChargeStatus(string('A' + rune(u))), nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", i)
+		// D, F
+		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
 }
 
