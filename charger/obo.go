@@ -2,6 +2,8 @@ package charger
 
 import (
 	"encoding/binary"
+	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -10,13 +12,15 @@ import (
 
 // Obo charger implementation
 type Obo struct {
+	log  *util.Logger
 	conn *modbus.Connection
 }
 
 const (
-	oboRegEnable     = 40006
-	oboRegAmpsConfig = 40007
-	oboRegStatus     = 40012
+	oboRegEnable     = 5
+	oboRegAmpsConfig = 6
+	oboRegStatus     = 11
+	oboRegTimeout    = 28
 )
 
 func init() {
@@ -26,7 +30,9 @@ func init() {
 // NewOboFromConfig creates a OBO Bettermann charger from generic config
 func NewOboFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
-		ID: 1,
+		Baudrate: 19200,
+		Comset:   "8E1",
+		ID:       0x65,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -34,7 +40,6 @@ func NewOboFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	return NewObo(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
-
 }
 
 // NewObo creates OBO Bettermann charger
@@ -48,10 +53,41 @@ func NewObo(uri, device, comset string, baudrate int, proto modbus.Protocol, sla
 	conn.Logger(log.TRACE)
 
 	wb := &Obo{
+		log:  log,
 		conn: conn,
 	}
 
+	b, err := conn.ReadHoldingRegisters(oboRegTimeout, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	if u := binary.BigEndian.Uint16(b); u > 0 {
+		go wb.heartbeat(time.Duration(u/2) * time.Millisecond)
+	}
+
+	// lightshow
+	// go func() {
+	// 	conn.WriteSingleRegister(3, 1)
+	// 	for {
+	// 		for i := 0; i < 3; i++ {
+	// 			u := rand.Int31n(256)
+	// 			conn.WriteSingleRegister(uint16(i), uint16(u))
+	// 		}
+	// 		time.Sleep(10 * time.Millisecond)
+	// 	}
+	// }()
+	// time.Sleep(10 * time.Second)
+
 	return wb, nil
+}
+
+func (wb *Obo) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
+		if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // Status implements the api.Charger interface
@@ -61,7 +97,12 @@ func (wb *Obo) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatusString(string('A' + rune(b[1])))
+	switch i := b[1]; i {
+	case 0, 1, 2:
+		return api.ChargeStatusString(string('A' + rune(i)))
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %d", i)
+	}
 }
 
 // Enabled implements the api.Charger interface
@@ -76,10 +117,8 @@ func (wb *Obo) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Obo) Enable(enable bool) error {
-	// b := make([]byte, 2)
 	var u uint16
 	if enable {
-		// binary.BigEndian.PutUint16(b, 1)
 		u = 1
 	}
 
