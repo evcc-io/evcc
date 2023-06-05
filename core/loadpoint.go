@@ -53,7 +53,7 @@ const (
 	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
 
 	guardGracePeriod          = 60 * time.Second // allow out of sync during this timespan
-	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabeld/disabled state during this timespan
+	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabled/disabled state during this timespan
 	phaseSwitchDuration       = 60 * time.Second // do not measure phases during this timespan
 )
 
