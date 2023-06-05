@@ -1,0 +1,26 @@
+product:
+  brand: FoxESS
+  description: H1 via Ethernet
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: fox-ess-h1
+      usage: pv
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+  - usage: battery
+    default: |
+      type: template
+      template: fox-ess-h1
+      usage: battery
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
