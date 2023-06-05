@@ -2,19 +2,19 @@ product:
   description: mazda2mqtt
   group: Generische Unterstützung
 description: |
-  Voraussetzung ist ein konfigurierter MQTT Broker und eine mazda2mqtt Installation https://github.com/C64Axel/mazda2mqtt
+  Voraussetzung ist ein konfigurierter MQTT Broker und eine mazda2mqtt Installation https://github.com/C64Axel/mazda2mqtt.
 render:
   - default: |
       type: template
       template: mazda2mqtt
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
-      vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
+      vin: W... # Erforderlich
       capacity: 50 # Akkukapazität in kWh (Optional)
     advanced: |
       type: template
       template: mazda2mqtt
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
-      vin: W... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
+      vin: W... # Erforderlich
       capacity: 50 # Akkukapazität in kWh (Optional)
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können (Optional)
       icon: car # Icon in der Benutzeroberfläche (Optional)

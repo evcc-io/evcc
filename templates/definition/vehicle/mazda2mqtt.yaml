@@ -5,12 +5,15 @@ products:
 group: generic
 requirements:
   description:
-    en: Required MQTT broker configuration and a mazda2mqtt installation https://github.com/C64Axel/mazda2mqtt
-    de: Voraussetzung ist ein konfigurierter MQTT Broker und eine mazda2mqtt Installation https://github.com/C64Axel/mazda2mqtt
+    en: Required MQTT broker configuration and a mazda2mqtt installation https://github.com/C64Axel/mazda2mqtt.
+    de: Voraussetzung ist ein konfigurierter MQTT Broker und eine mazda2mqtt Installation https://github.com/C64Axel/mazda2mqtt.
 params:
   - name: title
   - name: vin
     required: true
+    help:
+      de: Erforderlich
+      en: Required
   - name: capacity
   - name: phases
     advanced: true
