@@ -1,5 +1,9 @@
 <template>
-	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
+	<div
+		data-testid="visualization"
+		class="visualization"
+		:class="{ 'visualization--ready': visualizationReady }"
+	>
 		<div class="label-scale d-flex">
 			<div class="d-flex justify-content-start flex-grow-1">
 				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">

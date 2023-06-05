@@ -11,6 +11,7 @@
 				<Loadpoint
 					v-bind="loadpoint"
 					:id="index + 1"
+					data-testid="loadpoint"
 					:vehicles="vehicles"
 					:smartCostLimit="smartCostLimit"
 					:smartCostType="smartCostType"
