@@ -1,5 +1,5 @@
 template: fox-ess-h1
-covers: [fox-ess-ethernet]
+covers: ["fox-ess-ethernet"]
 products:
   - brand: FoxESS
     description:
