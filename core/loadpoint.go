@@ -631,7 +631,7 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	if enabled != lp.enabled {
+	if (enabled != lp.enabled) && (!lp.enabled || lp.phaseSwitchCompleted()) {
 		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
 		if lp.guardGracePeriodElapsed() && (!lp.enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
