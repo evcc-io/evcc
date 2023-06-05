@@ -46,7 +46,7 @@ render: |
   usage: {{ .usage }}
   uri: {{ .host }}:{{- if (eq .usage "grid") }}2001{{- else }}2010{{- end }}
   device: {{ .device }}
-  meterchannel: {{- if (eq .usage "grid") }}1{{- else }}{{ .meterchannel }}{{- end }}
+  meterchannel: {{ if (eq .usage "grid") }}1{{ else }}{{ .meterchannel }}{{ end }}
   {{- if .user }}
   user: {{ .user }}
   {{- end }}
