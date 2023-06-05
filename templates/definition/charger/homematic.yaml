@@ -60,12 +60,12 @@ render: |
   type: homematic
   uri: {{ .host }}:{{ .port }}
   device: {{ .device }}
-  {{ if .user }}
+  {{- if .user }}
   user: {{ .user }}
-  {{ end }}
-  {{ if .password }}
+  {{- end }}
+  {{- if .password }}
   password: {{ .password }}
-  {{ end }}
+  {{- end }}
   meterchannel: {{ .meterchannel }}
   switchchannel: {{ .switchchannel }}
   {{ include "switchsocket" . }}
