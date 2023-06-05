@@ -32,7 +32,7 @@ func NewOboFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		Baudrate: 19200,
 		Comset:   "8E1",
-		ID:       0x65,
+		ID:       101,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
