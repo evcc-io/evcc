@@ -57,11 +57,11 @@ func NewObo(uri, device, comset string, baudrate int, proto modbus.Protocol, sla
 		conn: conn,
 	}
 
+	// get failsafe timeout from charger
 	b, err := conn.ReadHoldingRegisters(oboRegTimeout, 1)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
-
 	if u := binary.BigEndian.Uint16(b); u > 0 {
 		go wb.heartbeat(time.Duration(u/2) * time.Millisecond)
 	}
