@@ -114,7 +114,7 @@ func (wb *Obo) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) == 1, nil
+	return binary.BigEndian.Uint16(b) > 0, nil
 }
 
 // Enable implements the api.Charger interface
