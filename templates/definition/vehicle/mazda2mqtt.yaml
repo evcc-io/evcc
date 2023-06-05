@@ -12,8 +12,8 @@ params:
   - name: vin
     required: true
     help:
-      de: Erforderlich, so wie im MQTT-Broker unter /mazda2mqtt angezeigt.
-      en: Required, as displayed in the MQTT broker under /mazda2mqtt..
+      de: Erforderlich
+      en: Required
   - name: capacity
   - name: phases
     advanced: true

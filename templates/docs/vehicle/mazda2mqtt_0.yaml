@@ -8,13 +8,13 @@ render:
       type: template
       template: mazda2mqtt
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
-      vin: W... # Erforderlich, so wie im MQTT-Broker unter /mazda2mqtt angezeigt.
+      vin: W... # Erforderlich
       capacity: 50 # Akkukapazität in kWh (Optional)
     advanced: |
       type: template
       template: mazda2mqtt
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
-      vin: W... # Erforderlich, so wie im MQTT-Broker unter /mazda2mqtt angezeigt.
+      vin: W... # Erforderlich
       capacity: 50 # Akkukapazität in kWh (Optional)
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können (Optional)
       icon: car # Icon in der Benutzeroberfläche (Optional)
