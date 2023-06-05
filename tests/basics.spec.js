@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { execEvcc } = require("./utils");
+const { execEvcc, stopEvcc } = require("./utils");
 
 let server;
 
@@ -8,7 +8,7 @@ test.beforeAll(() => {
 });
 
 test.afterAll(() => {
-  server.kill();
+  stopEvcc(server);
 });
 
 test.beforeEach(async ({ page }) => {
