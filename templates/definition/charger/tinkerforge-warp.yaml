@@ -11,20 +11,21 @@ products:
 capabilities: ["mA"]
 requirements:
   description:
-    en: An MQTT broker is required. The charger must be have a configured MQTT connection.
-    de: Es muss ein MQTT Broker installiert sein. Die MQTT Verbindung muss in der Wallbox eingerichtet sein.
+    en: Firmware v2 required.
+    de: Firmware v2 erforderlich.
   uri: https://docs.evcc.io/docs/devices/chargers#tinkerforge
 params:
-  - name: fw2
-    required: true
-    type: bool
-    help:
-      de: Firmware v2 installiert
-      en: Firmware v2 installed
   - preset: mqtt
   - name: topic
     default: warp
+  - name: energymanager
+    help:
+      de: EnergyManager MQTT Topic (falls installiert)
+      en: EnergyManager MQTT topic if installed
 render: |
-  type: {{ if eq .fw2 "true" -}} warp-fw2 {{ else -}} warp {{ end }}
+  type: warp2
   {{ include "mqtt" . }}
   topic: {{ .topic }}
+  {{- if .energymanager }}
+  energymanager: {{ .energymanager }}
+  {{- end }}

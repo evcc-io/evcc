@@ -1,4 +1,4 @@
-package v2
+package warp
 
 const (
 	FeatureMeter       = "meter"
@@ -79,4 +79,28 @@ type LastNfcTag struct {
 	UserID int    `json:"user_id"`
 	Type   int    `json:"tag_type"`
 	ID     string `json:"tag_id"`
+}
+
+type EmConfig struct {
+	ContactorInstalled bool `json:"contactor_installed"`
+	PhaseSwitchingMode int  `json:"phase_switching_mode"`
+}
+
+//go:generate enumer -type ExternalControl -trimprefix ExternalControl -transform whitespace
+type ExternalControl int
+
+const (
+	ExternalControlAvailable ExternalControl = iota
+	ExternalControlDeactivated
+	ExternalControlRuntimeConditionsNotMet
+	ExternalControlCurrentlySwitching
+)
+
+type EmState struct {
+	ExternalControl ExternalControl `json:"external_control"`
+	PhasesSwitched  int             `json:"phases_switched"`
+	Input3State     bool            `json:"input3_state"`
+	Input4State     bool            `json:"input4_state"`
+	RelayState      bool            `json:"relay_state"`
+	ErrorFlags      int             `json:"error_flags"`
 }

@@ -1,3 +1,13 @@
+[batterySettings]
+batteryLevel = "Batteri niveau"
+capacity = "{energy} af {total}"
+legendBottomName = "Prioritér hjemmet"
+legendBottomSubline = "Anvendes ikke til opladning"
+legendMiddleName = "Bil først"
+legendMiddleSubline = "Hjem efterfølgende"
+legendTitle = "Hvordan skal solenergi benyttes?"
+legendTopAutostart = "starter automatisk"
+
 [footer]
 
 [footer.community]

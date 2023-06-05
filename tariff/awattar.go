@@ -14,6 +14,7 @@ import (
 )
 
 type Awattar struct {
+	*embed
 	mux     sync.Mutex
 	log     *util.Logger
 	uri     string
@@ -30,8 +31,8 @@ func init() {
 
 func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		Cheap    any // TODO deprecated
-		Currency string
+		embed    `mapstructure:",squash"`
+		Currency string // TODO deprecated
 		Region   string
 	}{
 		Region: "DE",
@@ -46,14 +47,10 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	t := &Awattar{
-		log:  util.NewLogger("awattar"),
-		unit: cc.Currency,
-		uri:  fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
-	}
-
-	// TODO deprecated
-	if cc.Cheap != nil {
-		t.log.WARN.Println("cheap rate configuration has been replaced by target charging and is deprecated")
+		embed: &cc.embed,
+		log:   util.NewLogger("awattar"),
+		unit:  cc.Currency,
+		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
 
 	done := make(chan error)
@@ -86,18 +83,13 @@ func (t *Awattar) run(done chan error) {
 			ar := api.Rate{
 				Start: r.StartTimestamp.Local(),
 				End:   r.EndTimestamp.Local(),
-				Price: r.Marketprice / 1e3,
+				Price: t.totalPrice(r.Marketprice / 1e3),
 			}
 			t.data = append(t.data, ar)
 		}
 
 		t.mux.Unlock()
 	}
-}
-
-// Unit implements the api.Tariff interface
-func (t *Awattar) Unit() string {
-	return t.unit
 }
 
 // Rates implements the api.Tariff interface
@@ -107,7 +99,7 @@ func (t *Awattar) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *Awattar) IsDynamic() bool {
-	return true
+// Type returns the tariff type
+func (t *Awattar) Type() api.TariffType {
+	return api.TariffTypePriceDynamic
 }

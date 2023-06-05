@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
-	stripmd "github.com/writeas/go-strip-markdown"
+	stripmd "github.com/writeas/go-strip-markdown/v2"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
@@ -399,11 +399,6 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 
 		default:
 			if param.IsAdvanced() && !c.advancedMode || param.IsDeprecated() {
-				continue
-			}
-
-			if param.IsHidden() && param.Default != "" {
-				additionalConfig[param.Name] = param.Default
 				continue
 			}
 

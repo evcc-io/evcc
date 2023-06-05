@@ -111,7 +111,8 @@ export default {
 		vehicleSoc: Number,
 		vehicleName: String,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
+		currency: String,
 	},
 	emits: ["target-time-updated", "target-time-removed", "minsoc-updated"],
 	data: function () {
@@ -129,7 +130,7 @@ export default {
 			return this.targetChargeEnabled || this.minSocEnabled;
 		},
 		minSocLabel: function () {
-			return `${Math.round(this.minSoc)} %`;
+			return `${Math.round(this.minSoc)}%`;
 		},
 		modalId: function () {
 			return `chargingPlanModal_${this.id}`;

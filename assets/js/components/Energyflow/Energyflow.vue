@@ -68,7 +68,8 @@
 							:soc="batterySoc"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
-							:detailsTooltip="batteryTooltip"
+							detailsClickable
+							@details-clicked="openBatterySettingsModal"
 						/>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.gridImport')"
@@ -133,7 +134,8 @@
 							:soc="batterySoc"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
-							:detailsTooltip="batteryTooltip"
+							detailsClickable
+							@details-clicked="openBatterySettingsModal"
 						/>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.pvExport')"
@@ -149,6 +151,7 @@
 			</div>
 		</div>
 		<GridSettingsModal v-bind="gridSettings" />
+		<BatterySettingsModal v-bind="batterySettings" />
 	</div>
 </template>
 
@@ -161,12 +164,19 @@ import GridSettingsModal from "../GridSettingsModal.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
-import { CO2_UNIT } from "../../units";
+import { CO2_TYPE, PRICE_DYNAMIC_TYPE } from "../../units";
 import collector from "../../mixins/collector";
+import BatterySettingsModal from "../BatterySettingsModal.vue";
 
 export default {
 	name: "Energyflow",
-	components: { Visualization, EnergyflowEntry, AnimatedNumber, GridSettingsModal },
+	components: {
+		Visualization,
+		EnergyflowEntry,
+		AnimatedNumber,
+		GridSettingsModal,
+		BatterySettingsModal,
+	},
 	mixins: [formatter, collector],
 	props: {
 		gridConfigured: Boolean,
@@ -187,15 +197,20 @@ export default {
 		tariffEffectivePrice: { type: Number },
 		tariffCo2: { type: Number },
 		tariffEffectiveCo2: { type: Number },
-		smartCostAvailable: { type: Boolean },
 		smartCostLimit: { type: Number },
-		smartCostUnit: { type: String },
+		smartCostType: { type: String },
 		currency: { type: String },
+		prioritySoc: { type: Number },
+		bufferSoc: { type: Number },
+		bufferStartSoc: { type: Number },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null, gridSettingsModal: null };
 	},
 	computed: {
+		smartCostAvailable: function () {
+			return [CO2_TYPE, PRICE_DYNAMIC_TYPE].includes(this.smartCostType);
+		},
 		gridImport: function () {
 			return Math.max(0, this.gridPower);
 		},
@@ -234,34 +249,25 @@ export default {
 			}
 			return this.pv.map(({ power }) => this.fmtKw(power, this.powerInKw));
 		},
-		batteryTooltip() {
-			if (!Array.isArray(this.battery)) {
-				return;
-			}
-			return this.battery.map(({ soc, capacity }) => {
-				const energy = this.fmtKWh((capacity / 100) * soc * 1e3, true, false, 1);
-				const total = this.fmtKWh(capacity * 1e3, true, true, 1);
-				const formattedSoc = this.batteryFmt(soc);
-				return this.$t("main.energyflow.batteryTooltip", {
-					energy,
-					total,
-					soc: formattedSoc,
-				});
-			});
-		},
 		batteryFmt() {
 			return (soc) => `${Math.round(soc)}%`;
 		},
 		gridSettings() {
 			return this.collectProps(GridSettingsModal);
 		},
+		batterySettings() {
+			return this.collectProps(BatterySettingsModal);
+		},
 		co2Available() {
-			return this.smartCostUnit === CO2_UNIT;
+			return this.smartCostType === CO2_TYPE;
 		},
 	},
 	mounted() {
 		this.gridSettingsModal = Modal.getOrCreateInstance(
 			document.querySelector("#gridSettingsModal")
+		);
+		this.batterySettingsModal = Modal.getOrCreateInstance(
+			document.querySelector("#batterySettingsModal")
 		);
 		window.addEventListener("resize", this.updateHeight);
 		// height must be calculated in case of initially open details
@@ -308,6 +314,9 @@ export default {
 		},
 		openGridSettingsModal() {
 			this.gridSettingsModal.show();
+		},
+		openBatterySettingsModal() {
+			this.batterySettingsModal.show();
 		},
 	},
 };

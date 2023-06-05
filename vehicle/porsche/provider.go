@@ -14,6 +14,7 @@ type Provider struct {
 	statusG    func() (StatusResponse, error)
 	emobilityG func() (EmobilityResponse, error)
 	mobileG    func() (StatusResponseMobile, error)
+	wakeup     func() error
 }
 
 // NewProvider creates a vehicle api provider
@@ -33,6 +34,15 @@ func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, mobile *Mo
 		mobileG: provider.Cached(func() (StatusResponseMobile, error) {
 			return mobile.Status(vin, []string{BATTERY_LEVEL, BATTERY_CHARGING_STATE, CLIMATIZER_STATE, E_RANGE, HEATING_STATE, MILEAGE})
 		}, cache),
+
+		wakeup: func() error {
+			_, _ = api.Status(vin)
+			if carModel != "" {
+				_, _ = emobility.Status(vin, carModel)
+			}
+			_, _ = mobile.Status(vin, []string{BATTERY_LEVEL})
+			return nil
+		},
 	}
 
 	return impl
@@ -54,7 +64,7 @@ func (v *Provider) Soc() (float64, error) {
 	}
 
 	res3, err := v.emobilityG()
-	if err == nil {
+	if err == nil && res3.BatteryChargeStatus != nil {
 		return float64(res3.BatteryChargeStatus.StateOfChargeInPercentage), nil
 	}
 
@@ -82,7 +92,7 @@ func (v *Provider) Range() (int64, error) {
 	}
 
 	res3, err := v.emobilityG()
-	if err == nil {
+	if err == nil && res3.BatteryChargeStatus != nil {
 		return res3.BatteryChargeStatus.RemainingERange.ValueInKilometers, nil
 	}
 
@@ -118,6 +128,10 @@ func (v *Provider) FinishTime() (time.Time, error) {
 
 	res2, err := v.emobilityG()
 	if err == nil {
+		if res2.BatteryChargeStatus == nil {
+			return time.Time{}, api.ErrNotAvailable
+		}
+
 		return time.Now().Add(time.Duration(res2.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
 	}
 
@@ -154,6 +168,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res2, err := v.emobilityG()
 	if err == nil {
+		if res2.BatteryChargeStatus == nil {
+			return api.StatusNone, api.ErrNotAvailable
+		}
+
 		switch res2.BatteryChargeStatus.PlugState {
 		case "DISCONNECTED":
 			return api.StatusA, nil
@@ -195,6 +213,10 @@ func (v *Provider) Climater() (bool, error) {
 
 	res2, err := v.emobilityG()
 	if err == nil {
+		if res2.BatteryChargeStatus == nil {
+			return false, api.ErrNotAvailable
+		}
+
 		switch res2.DirectClimatisation.ClimatisationState {
 		case "OFF":
 			return false, nil
@@ -229,4 +251,11 @@ func (v *Provider) Odometer() (float64, error) {
 	}
 
 	return 0, err
+}
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	return v.wakeup()
 }

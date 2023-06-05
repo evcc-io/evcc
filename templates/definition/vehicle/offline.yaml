@@ -26,7 +26,7 @@ render: |
   {{- if .title }}
   title: {{ .title }}
   {{- end }}
-  {{- if ne .icon "" }}
+  {{- if .icon }}
   icon: {{ .icon }}
   {{- end }}
   capacity: {{ .capacity }} # kWh
@@ -37,18 +37,18 @@ render: |
     source: js
     script: 0;
   onIdentify:
-  {{- if (ne .mode "") }}
+  {{- if .mode }}
     mode: {{ .mode }}
   {{- end }}
     minSoc: 0 # fixed - no Soc available
     targetSoc: 100 # fixed - no Soc available
-  {{- if (ne .minCurrent "") }}
+  {{- if .minCurrent }}
     minCurrent: {{ .minCurrent }}
   {{- end }}
-  {{- if (ne .maxCurrent "") }}
+  {{- if .maxCurrent }}
     maxCurrent: {{ .maxCurrent }}
   {{- end }}
-  {{- if ne (len .identifiers) 0 }}
+  {{- if (len .identifiers) }}
   identifiers:
   {{-   range .identifiers }}
   - {{ . }}

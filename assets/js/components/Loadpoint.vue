@@ -257,7 +257,7 @@ export default {
 		guardRemaining: Number,
 		guardAction: String,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
@@ -294,7 +294,7 @@ export default {
 			return this.charging && this.chargePower > 0;
 		},
 		socBasedCharging: function () {
-			return !this.vehicleFeatureOffline && this.vehiclePresent;
+			return (!this.vehicleFeatureOffline && this.vehiclePresent) || this.vehicleSoc > 0;
 		},
 		sessionOptions: function () {
 			const result = [SESSION.TIME, SESSION.SOLAR];

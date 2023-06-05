@@ -9,6 +9,7 @@ import settings from "./settings";
 export const LOCALES = {
   da: ["Danish", "Dansk"],
   de: ["German", "Deutsch"],
+  ca: ["Catalan", "Català"],
   en: ["English", "English"],
   es: ["Spanish", "Español"],
   fi: ["Finnish", "Suomi"],

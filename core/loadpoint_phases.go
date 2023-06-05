@@ -85,7 +85,7 @@ func (lp *Loadpoint) activePhases() int {
 	active := min(expect(vehicle), expect(physical), expect(measured))
 
 	// sanity check - we should not assume less active phases than actually measured
-	if measured > 0 && active < measured && lp.guardGracePeriodElapsed() {
+	if measured > 0 && active < measured {
 		lp.log.WARN.Printf("phase mismatch between %dp measured for %dp vehicle and %dp charger", measured, vehicle, physical)
 	}
 
@@ -112,8 +112,8 @@ func (lp *Loadpoint) maxActivePhases() int {
 }
 
 func (lp *Loadpoint) getVehiclePhases() int {
-	if lp.vehicle != nil {
-		return lp.vehicle.Phases()
+	if vehicle := lp.GetVehicle(); vehicle != nil {
+		return vehicle.Phases()
 	}
 
 	return 0

@@ -195,7 +195,7 @@ export default {
     fmtPricePerKWh: function (amout = 0, currency = "EUR", short = false) {
       let unit = currency;
       let value = amout;
-      let minimumFractionDigits = "auto";
+      let minimumFractionDigits = 1;
       let maximumFractionDigits = 3;
       if (["EUR", "USD"].includes(currency)) {
         value *= 100;

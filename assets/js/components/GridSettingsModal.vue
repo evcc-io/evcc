@@ -104,7 +104,7 @@
 <script>
 import formatter from "../mixins/formatter";
 import TariffChart from "./TariffChart.vue";
-import { CO2_UNIT } from "../units";
+import { CO2_TYPE } from "../units";
 import api from "../api";
 
 export default {
@@ -113,7 +113,8 @@ export default {
 	mixins: [formatter],
 	props: {
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
+		currency: String,
 	},
 	data: function () {
 		return {
@@ -126,7 +127,7 @@ export default {
 	},
 	computed: {
 		isCo2() {
-			return this.smartCostUnit === CO2_UNIT;
+			return this.smartCostType === CO2_TYPE;
 		},
 		costOptions() {
 			const values = [];
@@ -144,7 +145,7 @@ export default {
 				const name = `< ${
 					this.isCo2
 						? this.fmtCo2Medium(value)
-						: this.fmtPricePerKWh(value, this.smartCostUnit)
+						: this.fmtPricePerKWh(value, this.currency)
 				}`;
 				return { value, name };
 			});
@@ -218,7 +219,7 @@ export default {
 			if (this.isCo2) {
 				return this.fmtCo2Medium(price);
 			}
-			return this.fmtPricePerKWh(price, this.smartCostUnit);
+			return this.fmtPricePerKWh(price, this.currency);
 		},
 	},
 	watch: {
@@ -287,10 +288,10 @@ export default {
 		fmtCostRange({ min, max }) {
 			const fmtMin = this.isCo2
 				? this.fmtCo2Short(min)
-				: this.fmtPricePerKWh(min, this.smartCostUnit, true);
+				: this.fmtPricePerKWh(min, this.currency, true);
 			const fmtMax = this.isCo2
 				? this.fmtCo2Short(max)
-				: this.fmtPricePerKWh(max, this.smartCostUnit, true);
+				: this.fmtPricePerKWh(max, this.currency, true);
 			return `${fmtMin} - ${fmtMax}`;
 		},
 		slotHovered(index) {

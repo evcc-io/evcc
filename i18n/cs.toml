@@ -1,0 +1,79 @@
+[batterySettings]
+batteryLevel = "Nabití baterie"
+capacity = "{energy} z {total}"
+legendBottomSubline = "nepoužito pro dobíjení"
+legendMiddleName = "nejdříve vozidlo"
+legendMiddleSubline = "domácnost druhá"
+legendTitle = "Jak má být použita solární energie?"
+legendTopAutostart = "startuje automaticky"
+legendTopName = "dobíjení podporované baterií"
+legendTopSubline = "bez přerušování"
+modalTitle = "Nastavení baterie"
+note = "Poznámka: Tato nastavení ovlivňují pouze solární režim. Chování dobíjení je příslušně upraveno."
+
+[batterySettings.bufferStart]
+full = "když je skoro plná"
+low = "když dost plná"
+medium = "když je z poloviny plná"
+never = "pouze když je dost přebytků"
+
+[footer]
+
+[footer.community]
+greenEnergy = "Solár"
+greenEnergySub1 = "nabito s evcc"
+greenEnergySub2 = "od října 2022"
+greenShare = "Solární sdílení"
+greenShareSub1 = "energie dodaná "
+greenShareSub2 = "solární, a bateriové úložiště"
+power = "Dobíjecí energie"
+powerSub1 = "{activeClients} z {totalClients} účastníků"
+powerSub2 = "dobíjení..."
+tabTitle = "Komunita Live"
+
+[footer.savings]
+footerLong = "{percent}% solární energie"
+footerShort = "{percent}% solár"
+modalTitle = "Přehled energie"
+percentGrid = "{grid} kWh síť"
+percentSelf = "{self} kWh solár"
+percentTitle = "Solární energie"
+priceFeedIn = "{feedInPrice} přebytky"
+priceGrid = "{gridPrice} síť"
+priceTitle = "Ceny energií"
+savingsComparedToGrid = "srovnání se sítí"
+savingsTitle = "Úspory"
+savingsTotalEnergy = "{total} kWh dobito"
+since = "od {since}"
+tabTitle = "Moje údaje"
+
+[footer.sponsor]
+becomeSponsor = "Staň se sponzorem"
+supportUs = "Našim clem je udělat ze soláru standard. Pomozte EVCC zaplacením tolik, kolik pro vás znamená."
+thanks = "Děkujeme, {sponsor}! Tvůj příspěvěk pomáhá vyvíjet evcc i nadále."
+titleNoSponsor = "Podpořte nás"
+titleSponsor = "Jste podporovatel"
+
+[footer.telemetry]
+optInMoreDetails = "Více informací {0}."
+optInMoreDetailsLink = "zde"
+optInSponsorship = "Sponzorování vyžadováno"
+
+[footer.version]
+availableLong = "nová verze je k dispozici"
+modalCancel = "Zrušit"
+modalDownload = "Stáhnout"
+modalInstalledVersion = "Instalovaná verze"
+modalNoReleaseNotes = "Žádné bližší informace k vydání nejsou k dispozici. Více informací o nové verzi:"
+modalTitle = "Nová verze nalezena"
+modalUpdate = "Instalovat"
+modalUpdateNow = "Instalovat nyní"
+modalUpdateStarted = "Spouštím novou verzi evcc..."
+modalUpdateStatusStart = "Instalace spuštěna:"
+
+[gridSettings]
+activeHours = "{charging} z {total}"
+activeHoursLabel = "Aktivně hodin"
+co2Label = "CO₂ emise"
+co2Limit = "CO₂ limit"
+costLimitDescription = "Umožňuje dočasné rychlé dobíjení v solárním režimu"

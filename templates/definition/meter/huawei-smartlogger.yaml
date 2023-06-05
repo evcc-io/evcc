@@ -1,0 +1,34 @@
+template: huawei-smartlogger
+products:
+  - brand: Huawei
+    description:
+      generic: SmartLogger
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+    required: true
+    example: 192.0.2.2
+  - name: port
+    default: 502
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    id: 0
+    uri: {{ .host }}:{{ .port }}
+    register:
+      address: 40525 # Active power
+      type: holding
+      decode: int32
+  energy:
+    source: modbus
+    id: 0
+    uri: {{ .host }}:{{ .port }}
+    register:
+      address: 40560 # E-Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}

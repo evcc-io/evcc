@@ -84,7 +84,7 @@
 										@click="showDetails(session.id)"
 									>
 										<td class="ps-0">
-											{{ fmtFullDateTime(new Date(session.finished), true) }}
+											{{ fmtFullDateTime(new Date(session.created), true) }}
 										</td>
 										<td>
 											{{ session.vehicle }}

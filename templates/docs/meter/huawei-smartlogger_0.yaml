@@ -1,0 +1,11 @@
+product:
+  brand: Huawei
+  description: SmartLogger
+render:
+  - usage: pv
+    default: |
+      type: template
+      template: huawei-smartlogger
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port (Optional)

@@ -55,8 +55,6 @@ type API interface {
 	GetTargetSoc() int
 	// SetTargetSoc sets the charge target soc
 	SetTargetSoc(int)
-	// GetPlannerUnit returns the planning tariffs unit
-	GetPlannerUnit() string
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error)
 	// GetEnableThreshold gets the loadpoint enable threshold
