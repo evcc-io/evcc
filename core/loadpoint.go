@@ -52,9 +52,9 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
 
-	guardGracePeriod           = 60 * time.Second // allow out of sync during this timespan
-	phaseSwitchCommandTimeout  = 30 * time.Second // do not sync charger enabeld/disabled state during this timespan
-	phaseSwitchDuration        = 60 * time.Second // do not measure phases during this timespan
+	guardGracePeriod          = 60 * time.Second // allow out of sync during this timespan
+	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabeld/disabled state during this timespan
+	phaseSwitchDuration       = 60 * time.Second // do not measure phases during this timespan
 )
 
 // elapsed is the time an expired timer will be set to
