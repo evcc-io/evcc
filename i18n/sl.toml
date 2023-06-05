@@ -111,6 +111,9 @@ secondaryActions = "Še vedno ne morete rešiti svoje težave? Tukaj je nekaj za
 [help.restart]
 cancel = "Prekliči"
 confirm = "Da, ponovno zaženi!"
+description = "V normalnih okoliščinah ponovni zagon ne bi smel biti potreben. Prosimo, razmislite o prijavi napake, če morate redno ponovno zaganjati evcc."
+disclaimer = "Opomba: evcc bo prenehal delovati in se bo za ponovni zagon storitve zanašal na operacijski sistem."
+modalTitle = "Ali ste prepričani, da želite znova zagnati?"
 
 [main]
 vehicles = "Parkiranje"
@@ -139,10 +142,14 @@ pvProduction = "Proizvodnja"
 selfConsumption = "Samoporaba"
 
 [main.loadpoint]
+avgPrice = "Ø Cena"
 charged = "Napolnjeno"
+co2 = "Ø CO₂"
 duration = "Trajanje"
 fallbackName = "Polnilno mesto"
 power = "Moč"
+price = "Σ Cena"
+solar = "Sončna energija"
 
 [main.loadpointSettings]
 currents = "Polnilni tok"
@@ -238,7 +245,7 @@ cleanEnergyCharging = "Na voljo je čista energija. Polnjenje..."
 climating = "Zaznano predkondicioniranje."
 connected = "Povezan."
 disconnected = "Odklopljen."
-guard = "Začne se čez {remaining} ..."
+guard = "Zaščita preklopa je aktivna za {remaining}."
 minCharge = "Minimalno polnjenje na {soc}%."
 pvDisable = "Premalo presežka. Prekinitev čez {remaining}..."
 pvEnable = "Na voljo so presežki. Začetek čez {remaining}..."
@@ -261,20 +268,28 @@ reload = "Ponovno naloži?"
 
 [session]
 cancel = "Prekliči"
+co2 = "CO₂"
+date = "Obdobje"
 delete = "Izbriši"
 finished = "Končano"
+meter = "Merilnik"
 meterstart = "Začetek merilnika"
 meterstop = "Zaključek merilnika"
 odometer = "Število prevoženih kilometrov"
+price = "Cena"
 started = "Začetek"
 title = "Seja polnjenja"
 
 [sessions]
-date = "Obdobje"
+avgPrice = "Ø Cena"
+co2 = "Ø CO₂"
+date = "Končano"
 downloadCsv = "Prenesi kot CSV"
 energy = "Napolnjeno"
 loadpoint = "Polnilno mesto"
+price = "Σ Cena"
 reallyDelete = "Ali res želite izbrisati to sejo?"
+solar = "Sončna energija"
 title = "Seje polnjenja"
 vehicle = "Vozilo"
 

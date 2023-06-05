@@ -1,6 +1,6 @@
 product:
   brand: Vestel
-  description: EVC04
+  description: EVC04 Home Smart/Connect Plus
 requirements: ["sponsorship"]
 render:
   - default: |

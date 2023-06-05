@@ -1,8 +1,9 @@
-template: fox-ess-ethernet
+template: fox-ess-h1
+covers: ["fox-ess-ethernet"]
 products:
   - brand: FoxESS
     description:
-      generic: FoxESS via Ethernet
+      generic: H1 via Ethernet
 params:
   - name: usage
     choice: ["pv", "battery"]
