@@ -9,25 +9,13 @@ requirements:
     en: Only supported if the vehicle can provided the state of charge (Soc) to the connected wallbox.
 params:
   - name: title
-  - name: icon
-    default: car
-    advanced: true
   - name: capacity
   - name: phases
     advanced: true
-  - name: mode
+  - name: icon
+    default: car
     advanced: true
-  - name: minCurrent
-    advanced: true
-  - name: maxCurrent
-    advanced: true
-  - name: identifiers
-    advanced: true
-    type: stringlist
-  - name: minSoc
-    advanced: true
-  - name: targetSoc
-    advanced: true
+  - preset: vehicle-identify
 render: |
   type: custom
   features: ["offline"]
