@@ -173,7 +173,7 @@ params:
       en: Minimum state of charge (Soc) in %
     help:
       de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht
-      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'OFF'
+      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'Off'
     example: 25
     type: number
   - name: targetsoc

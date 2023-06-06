@@ -194,7 +194,7 @@
         "deprecated": {
           "type": "boolean"
         },
-        "valuetype": {
+        "type": {
           "type": "string",
           "enum": [
             "string",
@@ -288,7 +288,7 @@
         "default": {
           "minLength": 1
         },
-        "valuetype": {
+        "type": {
           "type": "string",
           "enum": [
             "string",
