@@ -54,3 +54,4 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/rated_battery_range_km
     timeout: 720h # 30d
+  features: ["coarsecurrent"]

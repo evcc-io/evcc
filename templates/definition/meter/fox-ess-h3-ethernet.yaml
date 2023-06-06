@@ -1,0 +1,49 @@
+template: fox-ess-h3
+products:
+  - brand: FoxESS
+    description:
+      generic: H3 via Ethernet
+params:
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 31002 # PV1
+        type: holding
+        decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 31005 # PV2
+        type: holding
+        decode: int16
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    # register details
+    register:
+      address: 31036 # Battery Charge/Discharge
+      type: holding
+      decode: int16
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    # register details
+    register:
+      address: 31038 # Soc
+      type: holding
+      decode: int16
+  {{- end }}

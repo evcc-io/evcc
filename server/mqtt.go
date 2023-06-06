@@ -118,65 +118,65 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 }
 
 func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
-	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
-		lp.SetMode(api.ChargeMode(payload))
+	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) error {
+		mode, err := api.ChargeModeString(payload)
+		if err == nil {
+			lp.SetMode(mode)
+		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/minSoc/set", func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/minSoc/set", func(payload string) error {
+		soc, err := strconv.Atoi(payload)
+		if err == nil {
 			lp.SetMinSoc(soc)
-		} else {
-			m.log.ERROR.Printf("set %s: %v", topic+"/minSoc", err)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/targetEnergy/set", func(payload string) {
-		if val, err := parseFloat(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/targetEnergy/set", func(payload string) error {
+		val, err := parseFloat(payload)
+		if err == nil {
 			lp.SetTargetEnergy(val)
-		} else {
-			m.log.ERROR.Printf("set %s: %v", topic+"/targetEnergy", err)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/targetSoc/set", func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/targetSoc/set", func(payload string) error {
+		soc, err := strconv.Atoi(payload)
+		if err == nil {
 			lp.SetTargetSoc(soc)
-		} else {
-			m.log.ERROR.Printf("set %s: %v", topic+"/targetSoc", err)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/targetTime/set", func(payload string) {
+	m.Handler.ListenSetter(topic+"/targetTime/set", func(payload string) error {
 		val, err := time.Parse(time.RFC3339, payload)
 		if err == nil {
 			err = lp.SetTargetTime(val)
 		} else if string(payload) == "null" {
 			err = lp.SetTargetTime(time.Time{})
 		}
-		if err != nil {
-			m.log.ERROR.Printf("set %s: %v", topic+"/targetTime", err)
-		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
-		if current, err := parseFloat(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) error {
+		current, err := parseFloat(payload)
+		if err == nil {
 			lp.SetMinCurrent(current)
-		} else {
-			m.log.ERROR.Printf("set %s: %v", topic+"/minCurrent", err)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/maxCurrent/set", func(payload string) {
-		if current, err := parseFloat(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/maxCurrent/set", func(payload string) error {
+		current, err := parseFloat(payload)
+		if err == nil {
 			lp.SetMaxCurrent(current)
-		} else {
-			m.log.ERROR.Printf("set %s: %v", topic+"/maxCurrent", err)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/phases/set", func(payload string) {
+	m.Handler.ListenSetter(topic+"/phases/set", func(payload string) error {
 		phases, err := strconv.Atoi(payload)
 		if err == nil {
 			err = lp.SetPhases(phases)
 		}
-		if err != nil {
-			m.log.ERROR.Printf("set %s: %v", topic+"/phases", err)
-		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/vehicle/set", func(payload string) {
+	m.Handler.ListenSetter(topic+"/vehicle/set", func(payload string) error {
 		vehicle, err := strconv.Atoi(payload)
 		if err == nil {
 			if vehicle > 0 {
@@ -189,23 +189,21 @@ func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 				lp.SetVehicle(nil)
 			}
 		}
-		if err != nil {
-			m.log.ERROR.Printf("set %s: %v", topic+"/vehicle", err)
-		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/enableThreshold/set", func(payload string) {
-		if threshold, err := parseFloat(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/enableThreshold/set", func(payload string) error {
+		threshold, err := parseFloat(payload)
+		if err == nil {
 			lp.SetEnableThreshold(threshold)
-		} else {
-			m.log.ERROR.Printf("set %s: %v", topic+"/enableThreshold", err)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/disableThreshold/set", func(payload string) {
-		if threshold, err := parseFloat(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/disableThreshold/set", func(payload string) error {
+		threshold, err := parseFloat(payload)
+		if err == nil {
 			lp.SetDisableThreshold(threshold)
-		} else {
-			m.log.ERROR.Printf("set %s: %v", topic+"/disableThreshold", err)
 		}
+		return err
 	})
 }
 
@@ -216,54 +214,44 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	m.publish(topic, true, "online")
 
 	// site setters
-	m.Handler.ListenSetter(m.root+"/site/prioritySoc/set", func(payload string) {
+	m.Handler.ListenSetter(m.root+"/site/prioritySoc/set", func(payload string) error {
 		val, err := parseFloat(payload)
 		if err == nil {
 			err = site.SetPrioritySoc(val)
 		}
-		if err != nil {
-			m.log.ERROR.Printf("set %s: %v", m.root+"/site/prioritySoc", err)
-		}
+		return err
 	})
 
-	m.Handler.ListenSetter(m.root+"/site/bufferSoc/set", func(payload string) {
+	m.Handler.ListenSetter(m.root+"/site/bufferSoc/set", func(payload string) error {
 		val, err := parseFloat(payload)
 		if err == nil {
 			err = site.SetBufferSoc(val)
 		}
-		if err != nil {
-			m.log.ERROR.Printf("set %s: %v", m.root+"/site/bufferSoc", err)
-		}
+		return err
 	})
 
-	m.Handler.ListenSetter(m.root+"/site/bufferStartSoc/set", func(payload string) {
+	m.Handler.ListenSetter(m.root+"/site/bufferStartSoc/set", func(payload string) error {
 		val, err := parseFloat(payload)
 		if err == nil {
 			err = site.SetBufferStartSoc(val)
 		}
-		if err != nil {
-			m.log.ERROR.Printf("set %s: %v", m.root+"/site/bufferStartSoc", err)
-		}
+		return err
 	})
 
-	m.Handler.ListenSetter(m.root+"/site/residualPower/set", func(payload string) {
+	m.Handler.ListenSetter(m.root+"/site/residualPower/set", func(payload string) error {
 		val, err := parseFloat(payload)
 		if err == nil {
 			err = site.SetResidualPower(val)
 		}
-		if err != nil {
-			m.log.ERROR.Printf("set %s: %v", m.root+"/site/residualPower", err)
-		}
+		return err
 	})
 
-	m.Handler.ListenSetter(m.root+"/site/smartcostlimit/set", func(payload string) {
+	m.Handler.ListenSetter(m.root+"/site/smartcostlimit/set", func(payload string) error {
 		val, err := parseFloat(payload)
 		if err == nil {
 			err = site.SetSmartCostLimit(val)
 		}
-		if err != nil {
-			m.log.ERROR.Printf("set %s: %v", m.root+"/site/smartcostlimit", err)
-		}
+		return err
 	})
 
 	// number of loadpoints
