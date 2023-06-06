@@ -22,7 +22,7 @@ render: |
   {{- if .title }}
   title: {{ .title }}
   {{- end }}
-  {{- if ne .icon "" }}
+  {{- if .icon }}
   icon: {{ .icon }}
   {{- end }}
   capacity: {{ .capacity }} # kWh
