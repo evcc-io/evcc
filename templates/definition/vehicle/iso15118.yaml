@@ -29,28 +29,4 @@ render: |
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
-  soc: # fixed - no Soc available
-    source: js
-    script: 0;
-  onIdentify:
-  {{- if .mode }}
-    mode: {{ .mode }}
-  {{- end }}
-  {{- if .minSoc }}
-    minSoc: {{ .minSoc }}
-  {{- end }}
-  {{- if .targetSoc }}
-    targetSoc: {{ .targetSoc }}
-  {{- end }}
-  {{- if .minCurrent }}
-    minCurrent: {{ .minCurrent }}
-  {{- end }}
-  {{- if .maxCurrent }}
-    maxCurrent: {{ .maxCurrent }}
-  {{- end }}
-  {{- if ne (len .identifiers) 0 }}
-  identifiers:
-  {{-   range .identifiers }}
-  - {{ . }}
-  {{-   end }}
-  {{- end }}
+  {{ include "vehicle-identify" . }}
