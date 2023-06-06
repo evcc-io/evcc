@@ -246,7 +246,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		return err
 	})
 
-	m.Handler.ListenSetter(m.root+"/site/smartcostlimit/set", func(payload string) error {
+	m.Handler.ListenSetter(m.root+"/site/smartCostLimit/set", func(payload string) error {
 		val, err := parseFloat(payload)
 		if err == nil {
 			err = site.SetSmartCostLimit(val)
