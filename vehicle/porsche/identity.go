@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -39,21 +38,14 @@ var (
 		Endpoint:    OAuth2Config.Endpoint,
 		Scopes:      []string{"openid"},
 	}
-
-	MobileOAuth2Config = &oauth2.Config{
-		ClientID:    "L20OiZ0kBgWt958NWbuCB8gb970y6V6U",
-		RedirectURL: "One-Product-App://porsche-id/oauth2redirect",
-		Endpoint:    OAuth2Config.Endpoint,
-		Scopes:      []string{"openid", "magiclink", "mbb"},
-	}
 )
 
 // Identity is the Porsche Identity client
 type Identity struct {
 	*request.Helper
-	user, password                               string
-	defaultToken, emobilityToken, mobileToken    *oauth2.Token
-	DefaultSource, EmobilitySource, MobileSource oauth2.TokenSource
+	user, password                 string
+	defaultToken, emobilityToken   *oauth2.Token
+	DefaultSource, EmobilitySource oauth2.TokenSource
 }
 
 // NewIdentity creates Porsche identity
@@ -73,7 +65,7 @@ func (v *Identity) Login() error {
 	if err == nil {
 		v.DefaultSource = oauth.RefreshTokenSource(v.defaultToken, v)
 		v.EmobilitySource = oauth.RefreshTokenSource(v.emobilityToken, &emobilityAdapter{v})
-		v.MobileSource = oauth.RefreshTokenSource(v.mobileToken, &mobileAdapter{v})
+		// v.MobileSource = oauth.RefreshTokenSource(v.mobileToken, &mobileAdapter{v})
 	}
 
 	return err
@@ -146,10 +138,6 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		if token, err = v.fetchToken(EmobilityOAuth2Config); err == nil {
 			v.emobilityToken = token
 		}
-
-		if token, err = v.fetchToken(MobileOAuth2Config); err == nil {
-			v.mobileToken = token
-		}
 	}
 
 	return v.defaultToken, err
@@ -181,11 +169,7 @@ func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
 	}
 	resp.Body.Close()
 
-	rawQuery := resp.Request.URL.RawQuery
-	if location, ok := strings.CutPrefix(resp.Header.Get("Location"), "One-Product-App://porsche-id/oauth2redirect?"); ok {
-		rawQuery = location
-	}
-	query, err := url.ParseQuery(rawQuery)
+	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -216,18 +200,6 @@ func (v *emobilityAdapter) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) 
 	token, err := v.tr.RefreshToken(nil)
 	if err == nil {
 		token = v.tr.emobilityToken
-	}
-	return token, err
-}
-
-type mobileAdapter struct {
-	tr *Identity
-}
-
-func (v *mobileAdapter) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
-	token, err := v.tr.RefreshToken(nil)
-	if err == nil {
-		token = v.tr.mobileToken
 	}
 	return token, err
 }
