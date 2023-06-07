@@ -68,18 +68,11 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	}
 }
 
-// getChargedEnergy returns loadpoint charge target energy
+// getChargedEnergy returns loadpoint charge target energy in Wh
 func (lp *Loadpoint) getChargedEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.chargedEnergy
-}
-
-// setChargedEnergy returns loadpoint charge target energy
-func (lp *Loadpoint) setChargedEnergy(energy float64) {
-	lp.Lock()
-	defer lp.Unlock()
-	lp.chargedEnergy = energy
+	return lp.sessionEnergy.TotalWh()
 }
 
 // GetTargetEnergy returns loadpoint charge target energy
@@ -403,21 +396,18 @@ func (lp *Loadpoint) GetRemainingEnergy() float64 {
 
 // GetVehicle gets the active vehicle
 func (lp *Loadpoint) GetVehicle() api.Vehicle {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.vehicleMux.Lock()
+	defer lp.vehicleMux.Unlock()
 	return lp.vehicle
 }
 
 // SetVehicle sets the active vehicle
 func (lp *Loadpoint) SetVehicle(vehicle api.Vehicle) {
-	// TODO develop universal locking approach
-	// setActiveVehicle is protected by lock, hence no locking here
-
-	// set desired vehicle
+	// set desired vehicle (protected by lock, no locking here)
 	lp.setActiveVehicle(vehicle)
 
-	lp.Lock()
-	defer lp.Unlock()
+	lp.vehicleMux.Lock()
+	defer lp.vehicleMux.Unlock()
 
 	// disable auto-detect
 	lp.stopVehicleDetection()

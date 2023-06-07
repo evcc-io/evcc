@@ -99,13 +99,7 @@ func (wb *Hesotec) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
-
-	switch s := string(b[0]); s {
-	case "A", "B", "C":
-		return api.ChargeStatus(s), nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", s)
-	}
+	return api.ChargeStatusString(string(b[0]))
 }
 
 // Enabled implements the api.Charger interface
@@ -155,7 +149,7 @@ func (wb *Hesotec) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b) * 1e3), nil
+	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
 var _ api.ChargeTimer = (*Hesotec)(nil)
@@ -193,7 +187,7 @@ func (wb *Hesotec) Currents() (float64, float64, float64, error) {
 
 	var curr [3]float64
 	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint32(b[4*l:]))
+		curr[l] = float64(binary.BigEndian.Uint32(b[4*l:])) / 1e3
 	}
 
 	return curr[0], curr[1], curr[2], nil

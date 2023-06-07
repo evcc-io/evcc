@@ -1,8 +1,11 @@
 template: flobz
 products:
-  - brand: PSA
-    description:
-      generic: PSA Car Controller (flobz)
+  - description:
+      generic: PSA Car Controller
+group: generic
+requirements:
+  description:
+    generic: Remote Control of PSA car https://github.com/flobz/psa_car_controller
 params:
   - name: title
   - name: url

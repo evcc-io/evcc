@@ -1,3 +1,9 @@
+[batterySettings]
+batteryLevel = "Nivelul bateriei"
+capacity = "{energy} din {total}"
+legendBottomName = "prioritate casa"
+legendBottomSubline = "neutilizat pentru incarcare"
+
 [footer]
 
 [footer.community]
@@ -63,6 +69,7 @@ co2Label = "emisii CO₂"
 co2Limit = "limita CO₂"
 costLimitDescription = "Activeaza temporar Incarcarea Rapida in mod Solar."
 modalTitle = "Incarcare Smart Grid"
+none = "nimic"
 priceLabel = "Pretul curentului"
 priceLimit = "Limita de pret"
 
@@ -233,7 +240,7 @@ started = "Pornit"
 title = "Sesiune de încărcare"
 
 [sessions]
-date = "Perioada"
+date = "Terminat"
 downloadCsv = "Descarcă ca CSV"
 energy = "Încărcat"
 loadpoint = "Punct încărcare"

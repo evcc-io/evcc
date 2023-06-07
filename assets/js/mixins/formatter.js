@@ -177,11 +177,12 @@ export default {
         year: "numeric",
       }).format(date);
     },
-    fmtMoney: function (amout = 0, currency = "EUR") {
+    fmtMoney: function (amout = 0, currency = "EUR", decimals = true) {
       return new Intl.NumberFormat(this.$i18n.locale, {
         style: "currency",
         currency,
         currencyDisplay: "code",
+        maximumFractionDigits: decimals ? undefined : 0,
       })
         .format(amout)
         .replace(currency, "")
@@ -194,14 +195,17 @@ export default {
     fmtPricePerKWh: function (amout = 0, currency = "EUR", short = false) {
       let unit = currency;
       let value = amout;
+      let minimumFractionDigits = 1;
       let maximumFractionDigits = 3;
       if (["EUR", "USD"].includes(currency)) {
         value *= 100;
         unit = "ct";
+        minimumFractionDigits = 1;
         maximumFractionDigits = 1;
       }
       return `${new Intl.NumberFormat(this.$i18n.locale, {
         style: "decimal",
+        minimumFractionDigits,
         maximumFractionDigits,
       }).format(value)} ${unit}${short ? "" : "/kWh"}`;
     },

@@ -12,7 +12,7 @@ import (
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
-	stripmd "github.com/writeas/go-strip-markdown"
+	stripmd "github.com/writeas/go-strip-markdown/v2"
 	"golang.org/x/exp/slices"
 )
 

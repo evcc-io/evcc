@@ -250,14 +250,20 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// show main ui
 	if err == nil {
 		httpd.RegisterSiteHandlers(site, cache)
+		httpd.RegisterShutdownHandler(func() {
+			log.FATAL.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
+			once.Do(func() { close(stopC) }) // signal loop to end
+		})
 
 		// set channels
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		// show and check version
-		valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
-		go updater.Run(log, httpd, valueChan)
+		// show and check version, reduce api load during development
+		if server.Version != server.DevVersion {
+			valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
+			go updater.Run(log, httpd, valueChan)
+		}
 
 		// expose sponsor to UI
 		if sponsor.Subject != "" {

@@ -29,6 +29,6 @@ params:
 render: |
   type: sma
   uri: {{ .host }}
-  {{- if ne .interface "" }}
+  {{- if .interface }}
   interface: {{ .interface }}
   {{- end }}

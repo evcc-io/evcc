@@ -97,8 +97,9 @@ func NewWebastoNext(uri string, id uint8) (api.Charger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
-
-	go wb.heartbeat(time.Duration(binary.BigEndian.Uint16(b)/2) * time.Second)
+	if u := binary.BigEndian.Uint16(b); u > 0 {
+		go wb.heartbeat(time.Duration(u/2) * time.Second)
+	}
 
 	return wb, err
 }

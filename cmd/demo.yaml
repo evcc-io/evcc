@@ -19,11 +19,7 @@ javascript:
           { enabled: false, vehicleSoc: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
         ]
       };
-      function get() {
-        console.log("state:", JSON.stringify(state));
-      }
-      function set() {
-        console.log(param+":", val);
+      function logState() {
         console.log("state:", JSON.stringify(state));
       }
 
@@ -34,10 +30,25 @@ meters:
       source: js
       vm: shared
       script: |
-        state.pvpower = 8000+500*Math.random();
-        state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
-        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - state.batterypower - state.pvpower;
+        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - batterypower - pvpower;
         state.gridpower;
+      in:
+        - name: pvpower
+          type: float
+          config:
+            source: js
+            vm: shared
+            script: |
+              state.pvpower = 8000+500*Math.random();
+              state.pvpower
+        - name: batterypower
+          type: float
+          config:
+            source: js
+            vm: shared
+            script: |
+              state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
+              state.batterypower
 
   - name: pv
     type: custom
@@ -83,10 +94,18 @@ chargers:
       source: js
       vm: shared
       script: |
-        set();
+        logState();
         var lp = state.loadpoints[0];
-        lp.enabled = val;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+        lp.enabled = enable;
+        enable;
+      out:
+        - name: enable
+          type: bool
+          config:
+            source: js
+            vm: shared
+            script: |
+              if (enable) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
     enabled:
       source: js
       vm: shared
@@ -101,9 +120,9 @@ chargers:
       source: js
       vm: shared
       script: |
-        set();
+        logState();
         var lp = state.loadpoints[0];
-        lp.maxcurrent = val;
+        lp.maxcurrent = maxcurrent;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
 
   - name: charger_2
@@ -112,9 +131,9 @@ chargers:
       source: js
       vm: shared
       script: |
-        set();
+        logState();
         var lp = state.loadpoints[1];
-        lp.enabled = val;
+        lp.enabled = enable;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
     enabled:
       source: js
@@ -130,16 +149,16 @@ chargers:
       source: js
       vm: shared
       script: |
-        set();
+        logState();
         var lp = state.loadpoints[1];
-        lp.maxcurrent = val;
+        lp.maxcurrent = maxcurrent;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
     phases1p3p:
       source: js
       vm: shared
       script: |
-        set();
-        if (val === 1) lp.phases = 1; else lp.phases = 3;
+        logState();
+        if (phases === 1) lp.phases = 1; else lp.phases = 3;
         lp.phases;
 
 vehicles:

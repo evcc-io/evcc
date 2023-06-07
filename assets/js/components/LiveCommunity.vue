@@ -4,9 +4,9 @@
 			class="text-accent2"
 			icon="car"
 			:title="$t('footer.community.power')"
-			:value="chargePower"
+			:value="chargePower.value"
 			:valueFmt="fmtAnimation"
-			unit="kW"
+			:unit="chargePower.unit"
 			:sub1="$t('footer.community.powerSub1', { totalClients, activeClients })"
 			:sub2="$t('footer.community.powerSub2')"
 		/>
@@ -16,7 +16,7 @@
 			icon="sun"
 			:title="$t('footer.community.greenShare')"
 			:value="greenShare"
-			:valueFmt="fmtAnimationDecimal"
+			:valueFmt="fmtAnimation"
 			unit="%"
 			:sub1="$t('footer.community.greenShareSub1')"
 			:sub2="$t('footer.community.greenShareSub2')"
@@ -26,9 +26,9 @@
 			class="text-accent3"
 			icon="eco"
 			:title="$t('footer.community.greenEnergy')"
-			:value="greenEnergyMWh"
-			:valueFmt="fmtAnimationDecimal"
-			unit="MWh"
+			:value="greenEnergy.value"
+			:valueFmt="fmtAnimation"
+			:unit="greenEnergy.unit"
 			:sub1="$t('footer.community.greenEnergySub1')"
 			:sub2="$t('footer.community.greenEnergySub2')"
 		/>
@@ -62,8 +62,11 @@ export default {
 			return this.result.activeClients;
 		},
 		chargePower() {
-			const { chargePower = 0 } = this.result;
-			return chargePower / 1e3;
+			let { chargePower = 0 } = this.result;
+			if (chargePower < 1e6) return { value: chargePower / 1e3, unit: "kW" };
+			if (chargePower < 1e9) return { value: chargePower / 1e6, unit: "MW" };
+			if (chargePower < 1e12) return { value: chargePower / 1e9, unit: "GW" };
+			return { value: chargePower / 1e12, unit: "TW" };
 		},
 		greenShare() {
 			const { chargePower, greenPower } = this.result;
@@ -72,9 +75,12 @@ export default {
 			}
 			return (100 / chargePower) * greenPower;
 		},
-		greenEnergyMWh() {
+		greenEnergy() {
 			const { greenEnergy = 0 } = this.result;
-			return greenEnergy / 1e3;
+			if (greenEnergy < 1e3) return { value: greenEnergy, unit: "kWh" };
+			if (greenEnergy < 1e6) return { value: greenEnergy / 1e3, unit: "MWh" };
+			if (greenEnergy < 1e9) return { value: greenEnergy / 1e6, unit: "GWh" };
+			return { value: greenEnergy / 1e9, unit: "TWh" };
 		},
 	},
 	async mounted() {
@@ -94,10 +100,10 @@ export default {
 			}
 		},
 		fmtAnimation(number) {
-			return this.fmtNumber(number, 0);
-		},
-		fmtAnimationDecimal(number) {
-			return this.fmtNumber(number, 1);
+			let decimals = 0;
+			if (number < 100) decimals = 1;
+			if (number < 10) decimals = 2;
+			return this.fmtNumber(number, decimals);
 		},
 	},
 };

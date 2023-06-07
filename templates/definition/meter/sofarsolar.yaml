@@ -91,7 +91,7 @@ render: |
       address: 0x0210 # The residual capacity of battery
       type: holding
       decode: uint16
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

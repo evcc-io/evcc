@@ -75,7 +75,7 @@ render: |
     id: 1
     model: sunspec
     value: ChargeState
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

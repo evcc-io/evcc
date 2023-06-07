@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ var deprecatedTopics = []string{
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
+	log     *util.Logger
 	Handler *mqtt.Client
 	root    string
 }
@@ -29,6 +31,7 @@ type MQTT struct {
 // NewMQTT creates MQTT server
 func NewMQTT(root string) *MQTT {
 	return &MQTT{
+		log:     util.NewLogger("mqtt"),
 		Handler: mqtt.Instance,
 		root:    root,
 	}
@@ -115,66 +118,92 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 }
 
 func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
-	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
-		lp.SetMode(api.ChargeMode(payload))
+	m.Handler.ListenSetter(topic+"/mode", func(payload string) error {
+		mode, err := api.ChargeModeString(payload)
+		if err == nil {
+			lp.SetMode(mode)
+		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/minSoc/set", func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/minSoc", func(payload string) error {
+		soc, err := strconv.Atoi(payload)
+		if err == nil {
 			lp.SetMinSoc(soc)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/targetEnergy/set", func(payload string) {
-		if val, err := strconv.ParseFloat(payload, 64); err == nil {
+	m.Handler.ListenSetter(topic+"/targetEnergy", func(payload string) error {
+		val, err := parseFloat(payload)
+		if err == nil {
 			lp.SetTargetEnergy(val)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/targetSoc/set", func(payload string) {
-		if soc, err := strconv.Atoi(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/targetSoc", func(payload string) error {
+		soc, err := strconv.Atoi(payload)
+		if err == nil {
 			lp.SetTargetSoc(soc)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/targetTime/set", func(payload string) {
-		if val, err := time.Parse(time.RFC3339, payload); err == nil {
-			_ = lp.SetTargetTime(val)
+	m.Handler.ListenSetter(topic+"/targetTime", func(payload string) error {
+		val, err := time.Parse(time.RFC3339, payload)
+		if err == nil {
+			err = lp.SetTargetTime(val)
 		} else if string(payload) == "null" {
-			_ = lp.SetTargetTime(time.Time{})
+			err = lp.SetTargetTime(time.Time{})
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
-		if current, err := strconv.ParseFloat(payload, 64); err == nil {
+	m.Handler.ListenSetter(topic+"/minCurrent", func(payload string) error {
+		current, err := parseFloat(payload)
+		if err == nil {
 			lp.SetMinCurrent(current)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/maxCurrent/set", func(payload string) {
-		if current, err := strconv.ParseFloat(payload, 64); err == nil {
+	m.Handler.ListenSetter(topic+"/maxCurrent", func(payload string) error {
+		current, err := parseFloat(payload)
+		if err == nil {
 			lp.SetMaxCurrent(current)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/phases/set", func(payload string) {
-		if phases, err := strconv.Atoi(payload); err == nil {
-			_ = lp.SetPhases(phases)
+	m.Handler.ListenSetter(topic+"/phases", func(payload string) error {
+		phases, err := strconv.Atoi(payload)
+		if err == nil {
+			err = lp.SetPhases(phases)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/vehicle/set", func(payload string) {
-		if vehicle, err := strconv.Atoi(payload); err == nil {
+	m.Handler.ListenSetter(topic+"/vehicle", func(payload string) error {
+		vehicle, err := strconv.Atoi(payload)
+		if err == nil {
 			if vehicle > 0 {
 				if vehicles := site.GetVehicles(); vehicle <= len(vehicles) {
 					lp.SetVehicle(vehicles[vehicle-1])
+				} else {
+					err = fmt.Errorf("invalid vehicle: %d", vehicle)
 				}
 			} else {
 				lp.SetVehicle(nil)
 			}
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/enableThreshold/set", func(payload string) {
-		if threshold, err := strconv.ParseFloat(payload, 64); err == nil {
+	m.Handler.ListenSetter(topic+"/enableThreshold", func(payload string) error {
+		threshold, err := parseFloat(payload)
+		if err == nil {
 			lp.SetEnableThreshold(threshold)
 		}
+		return err
 	})
-	m.Handler.ListenSetter(topic+"/disableThreshold/set", func(payload string) {
-		if threshold, err := strconv.ParseFloat(payload, 64); err == nil {
+	m.Handler.ListenSetter(topic+"/disableThreshold", func(payload string) error {
+		threshold, err := parseFloat(payload)
+		if err == nil {
 			lp.SetDisableThreshold(threshold)
 		}
+		return err
 	})
 }
 
@@ -185,28 +214,44 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	m.publish(topic, true, "online")
 
 	// site setters
-	m.Handler.ListenSetter(fmt.Sprintf("%s/site/prioritySoc/set", m.root), func(payload string) {
-		if val, err := strconv.ParseFloat(payload, 64); err == nil {
-			_ = site.SetPrioritySoc(val)
+	m.Handler.ListenSetter(m.root+"/site/prioritySoc", func(payload string) error {
+		val, err := parseFloat(payload)
+		if err == nil {
+			err = site.SetPrioritySoc(val)
 		}
+		return err
 	})
 
-	m.Handler.ListenSetter(fmt.Sprintf("%s/site/bufferSoc/set", m.root), func(payload string) {
-		if val, err := strconv.ParseFloat(payload, 64); err == nil {
-			_ = site.SetBufferSoc(val)
+	m.Handler.ListenSetter(m.root+"/site/bufferSoc", func(payload string) error {
+		val, err := parseFloat(payload)
+		if err == nil {
+			err = site.SetBufferSoc(val)
 		}
+		return err
 	})
 
-	m.Handler.ListenSetter(fmt.Sprintf("%s/site/residualPower/set", m.root), func(payload string) {
-		if val, err := strconv.ParseFloat(payload, 64); err == nil {
-			_ = site.SetResidualPower(val)
+	m.Handler.ListenSetter(m.root+"/site/bufferStartSoc", func(payload string) error {
+		val, err := parseFloat(payload)
+		if err == nil {
+			err = site.SetBufferStartSoc(val)
 		}
+		return err
 	})
 
-	m.Handler.ListenSetter(fmt.Sprintf("%s/site/smartcostlimit/set", m.root), func(payload string) {
-		if val, err := strconv.ParseFloat(payload, 64); err == nil {
-			_ = site.SetSmartCostLimit(val)
+	m.Handler.ListenSetter(m.root+"/site/residualPower", func(payload string) error {
+		val, err := parseFloat(payload)
+		if err == nil {
+			err = site.SetResidualPower(val)
 		}
+		return err
+	})
+
+	m.Handler.ListenSetter(m.root+"/site/smartCostLimit", func(payload string) error {
+		val, err := parseFloat(payload)
+		if err == nil {
+			err = site.SetSmartCostLimit(val)
+		}
+		return err
 	})
 
 	// number of loadpoints
@@ -258,4 +303,13 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		topic += "/" + p.Key
 		m.publish(topic, true, p.Val)
 	}
+}
+
+// parseFloat rejects NaN and Inf values
+func parseFloat(payload string) (float64, error) {
+	f, err := strconv.ParseFloat(payload, 64)
+	if err == nil && (math.IsNaN(f) || math.IsInf(f, 0)) {
+		err = fmt.Errorf("invalid float value: %s", payload)
+	}
+	return f, err
 }

@@ -16,7 +16,7 @@ type SignalRCommandResponse struct {
 	Timestamp    time.Time
 	DeliveredAt  time.Time
 	WasAccepted  bool
-	ResultCode   string
+	ResultCode   int
 	Comment      string
 	Ticks        int64
 }

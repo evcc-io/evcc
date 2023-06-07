@@ -11,6 +11,8 @@ builds:
       - -tags=release
     ldflags:
       - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w
+    env:
+      - CGO_ENABLED=0
     goos:
       - linux
       - darwin

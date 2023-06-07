@@ -1,3 +1,23 @@
+[batterySettings]
+batteryLevel = "Battery level"
+capacity = "{energy} of {total}"
+legendBottomName = "home priority"
+legendBottomSubline = "not used for charging"
+legendMiddleName = "vehicle first"
+legendMiddleSubline = "home second"
+legendTitle = "How should solar energy be used?"
+legendTopAutostart = "starts automatically"
+legendTopName = "battery supported charging"
+legendTopSubline = "without interruptions"
+modalTitle = "Battery settings"
+note = "Note: These settings only affect the solar mode. Charging behaviour is adjusted accordingly."
+
+[batterySettings.bufferStart]
+full = "when nearly full"
+low = "when somewhat full"
+medium = "when half full"
+never = "only with enough surplus"
+
 [footer]
 
 [footer.community]
@@ -73,8 +93,27 @@ blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Vehicle logins"
+needHelp = "Need help?"
 sessions = "Charging sessions"
 settings = "Settings"
+
+[help]
+discussionsButton = "GitHub discussions"
+documentationButton = "Documentation"
+issueButton = "Report a bug"
+issueDescription = "Found a strange or wrong behavior?"
+modalTitle = "Need help?"
+primaryActions = "Something does not work the way it supposed to do? These are good places to get help."
+restartButton = "Restart"
+restartDescription = "Tried turning it off and on again?"
+secondaryActions = "Still not able to solve your problem? Here are some more heavy handed options."
+
+[help.restart]
+cancel = "Cancel"
+confirm = "Yes, restart!"
+description = "Under normal circumsances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
+disclaimer = "Note: evcc will terminate and rely on the operating system to restart the service."
+modalTitle = "Are you sure you want to restart?"
 
 [main]
 vehicles = "Parking"
@@ -103,13 +142,17 @@ pvProduction = "Production"
 selfConsumption = "Self-consumption"
 
 [main.loadpoint]
+avgPrice = "Ø Price"
 charged = "Charged"
+co2 = "Ø CO₂"
 duration = "Duration"
 fallbackName = "Charging point"
 power = "Power"
+price = "Σ Price"
 remaining = "Remaining"
 remoteDisabledHard = "{source}: turned off"
 remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
+solar = "Solar"
 
 [main.loadpointSettings]
 currents = "Charging current"
@@ -204,7 +247,7 @@ cleanEnergyCharging = "Clean energy available. Charging…"
 climating = "Pre-conditioning detected."
 connected = "Connected."
 disconnected = "Disconnected."
-guard = "Starting in {remaining}…"
+guard = "Switching protection active for {remaining}."
 minCharge = "Minimum charging to {soc}%."
 pvDisable = "Not enough surplus. Pausing in {remaining}…"
 pvEnable = "Surplus available. Starting in {remaining}…"
@@ -227,20 +270,28 @@ reload = "Reload?"
 
 [session]
 cancel = "Cancel"
+co2 = "CO₂"
+date = "Period"
 delete = "Delete"
 finished = "Finished"
+meter = "Meter"
 meterstart = "Meter start"
 meterstop = "Meter stop"
 odometer = "Mileage"
+price = "Price"
 started = "Started"
 title = "Charging Session"
 
 [sessions]
-date = "Period"
+avgPrice = "Ø Price"
+co2 = "Ø CO₂"
+date = "Finished"
 downloadCsv = "Download as CSV"
 energy = "Charged"
 loadpoint = "Charging point"
+price = "Σ Price"
 reallyDelete = "Do you really want to delete this session?"
+solar = "Solar"
 title = "Charging Sessions"
 vehicle = "Vehicle"
 

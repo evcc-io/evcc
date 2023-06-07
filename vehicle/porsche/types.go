@@ -200,7 +200,7 @@ type CapabilitiesResponse struct {
 }
 
 type EmobilityResponse struct {
-	BatteryChargeStatus struct {
+	BatteryChargeStatus *struct {
 		ChargeRate struct {
 			Unit             string
 			Value            float64
