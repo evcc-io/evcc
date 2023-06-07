@@ -107,7 +107,9 @@
 								</th>
 								<th scope="col" class="align-top text-end">
 									{{ $t("sessions.energy") }}
-									<div>{{ fmtKWh(chargedEnergy * 1e3) }}</div>
+									<div class="text-muted fw-normal">
+										{{ fmtKWh(chargedEnergy * 1e3) }}
+									</div>
 								</th>
 								<th
 									v-if="hasSolarPercentage"
@@ -115,26 +117,29 @@
 									class="align-top text-end"
 								>
 									{{ $t("sessions.solar") }}
-									<div v-if="solarPercentage != null">
+									<div
+										v-if="solarPercentage != null"
+										class="text-muted fw-normal"
+									>
 										{{ fmtNumber(solarPercentage, 1) }}%
 									</div>
 								</th>
 								<th v-if="hasPrice" scope="col" class="align-top text-end">
 									{{ $t("sessions.price") }}
-									<div v-if="price != null">
+									<div v-if="price != null" class="text-muted fw-normal">
 										{{ fmtMoney(price, currency) }}
 										{{ fmtCurrencySymbol(currency) }}
 									</div>
 								</th>
 								<th v-if="hasPrice" scope="col" class="align-top text-end">
 									{{ $t("sessions.avgPrice") }}
-									<div v-if="pricePerKWh != null">
+									<div v-if="pricePerKWh != null" class="text-muted fw-normal">
 										{{ fmtPricePerKWh(pricePerKWh, currency) }}
 									</div>
 								</th>
 								<th v-if="hasCo2" scope="col" class="align-top text-end pe-0">
 									{{ $t("sessions.co2") }}
-									<div v-if="co2PerKWh != null">
+									<div v-if="co2PerKWh != null" class="text-muted fw-normal">
 										{{ fmtCo2Medium(co2PerKWh) }}
 									</div>
 								</th>
