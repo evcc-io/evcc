@@ -65,7 +65,6 @@ func (v *Identity) Login() error {
 	if err == nil {
 		v.DefaultSource = oauth.RefreshTokenSource(v.defaultToken, v)
 		v.EmobilitySource = oauth.RefreshTokenSource(v.emobilityToken, &emobilityAdapter{v})
-		// v.MobileSource = oauth.RefreshTokenSource(v.mobileToken, &mobileAdapter{v})
 	}
 
 	return err
