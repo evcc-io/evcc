@@ -1,14 +1,11 @@
 const { test, expect } = require("@playwright/test");
-const { execEvcc, stopEvcc } = require("./utils");
+const { start, stop } = require("./evcc");
 
-let server;
-
-test.beforeAll(() => {
-  server = execEvcc("basics.evcc.yaml");
+test.beforeAll(async () => {
+  await start("basics.evcc.yaml");
 });
-
-test.afterAll(() => {
-  stopEvcc(server);
+test.afterAll(async () => {
+  await stop();
 });
 
 test.beforeEach(async ({ page }) => {

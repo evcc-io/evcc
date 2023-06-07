@@ -39,14 +39,13 @@
 						></shopicon-regular-angledoublerightsmall>
 					</router-link>
 				</div>
-
-				<div v-if="currentSessions.length === 0">
-					<p>{{ $t("sessions.noSessions") }}</p>
+				<div v-if="currentSessions.length === 0" data-testid="sessions-nodata" class="my-5">
+					<p>{{ $t("sessions.noData") }}</p>
 				</div>
 				<div v-else class="table-responsive my-3">
 					<table class="table text-nowrap">
 						<thead>
-							<tr>
+							<tr data-testid="sessions-head">
 								<th scope="col" class="align-top ps-0">
 									{{ $t("sessions.date") }}
 								</th>
@@ -59,11 +58,16 @@
 											@change="changeLoadpointFilter"
 										>
 											<option
-												v-for="{ name, value } in loadpointFilterOptions"
+												v-for="{
+													name,
+													value,
+													count,
+												} in loadpointFilterOptions"
 												:key="value"
 												:value="value"
+												:disabled="count === 0"
 											>
-												{{ name }}
+												{{ name }} ({{ count }})
 											</option>
 										</select>
 										<span
@@ -82,11 +86,16 @@
 											@change="changeVehicleFilter"
 										>
 											<option
-												v-for="{ name, value } in vehicleFilterOptions"
+												v-for="{
+													name,
+													value,
+													count,
+												} in vehicleFilterOptions"
 												:key="value"
 												:value="value"
+												:disabled="count === 0"
 											>
-												{{ name }}
+												{{ name }} ({{ count }})
 											</option>
 										</select>
 										<span
@@ -136,6 +145,7 @@
 								v-for="(session, id) in filteredSessions"
 								:key="id"
 								role="button"
+								data-testid="sessions-entry"
 								@click="showDetails(session.id)"
 							>
 								<td class="ps-0">
@@ -249,21 +259,33 @@ export default {
 			});
 		},
 		filteredSessions() {
-			return this.currentSessions
-				.filter((s) => !this.loadpointFilter || s.loadpoint === this.loadpointFilter)
-				.filter((s) => !this.vehicleFilter || s.vehicle === this.vehicleFilter);
+			return this.currentSessions.filter(this.filterByLoadpoint).filter(this.filterByVehicle);
 		},
 		vehicleFilterOptions() {
-			const options = [{ name: this.$t("sessions.filter.allVehicles"), value: "" }];
-			this.vehicles.forEach((v) => {
-				options.push({ name: `${v.name} (${v.count})`, value: v.name });
+			const options = [
+				{
+					name: this.$t("sessions.filter.allVehicles"),
+					value: "",
+					count: this.filterCountForVehicle(),
+				},
+			];
+			this.vehicles.forEach((name) => {
+				const count = this.filterCountForVehicle(name);
+				options.push({ name, value: name, count });
 			});
 			return options;
 		},
 		loadpointFilterOptions() {
-			const options = [{ name: this.$t("sessions.filter.allLoadpoints"), value: "" }];
-			this.loadpoints.forEach((v) => {
-				options.push({ name: `${v.name} (${v.count})`, value: v.name });
+			const options = [
+				{
+					name: this.$t("sessions.filter.allLoadpoints"),
+					value: "",
+					count: this.filterCountForLoadpoint(),
+				},
+			];
+			this.loadpoints.forEach((name) => {
+				const count = this.filterCountForLoadpoint(name);
+				options.push({ name, value: name, count });
 			});
 			return options;
 		},
@@ -300,24 +322,10 @@ export default {
 			return (100 / this.chargedEnergy) * chargedSolarEnergy;
 		},
 		loadpoints() {
-			const result = {};
-			this.currentSessions.forEach((s) => {
-				if (result[s.loadpoint] === undefined) {
-					result[s.loadpoint] = 0;
-				}
-				result[s.loadpoint]++;
-			});
-			return Object.entries(result).map(([name, count]) => ({ name, count }));
+			return [...new Set(this.currentSessions.map((s) => s.loadpoint))];
 		},
 		vehicles() {
-			const result = {};
-			this.currentSessions.forEach((s) => {
-				if (result[s.vehicle] === undefined) {
-					result[s.vehicle] = 0;
-				}
-				result[s.vehicle]++;
-			});
-			return Object.entries(result).map(([name, count]) => ({ name, count }));
+			return [...new Set(this.currentSessions.map((s) => s.vehicle))];
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);
@@ -384,6 +392,22 @@ export default {
 		this.loadSessions();
 	},
 	methods: {
+		filterByLoadpoint(session) {
+			return !this.loadpointFilter || session.loadpoint === this.loadpointFilter;
+		},
+		filterByVehicle(session) {
+			return !this.vehicleFilter || session.vehicle === this.vehicleFilter;
+		},
+		filterCountForVehicle(vehicle) {
+			return this.currentSessions
+				.filter(this.filterByLoadpoint)
+				.filter((s) => !vehicle || s.vehicle === vehicle).length;
+		},
+		filterCountForLoadpoint(loadpoint) {
+			return this.currentSessions
+				.filter(this.filterByVehicle)
+				.filter((s) => !loadpoint || s.loadpoint === loadpoint).length;
+		},
 		changeLoadpointFilter(event) {
 			const loadpoint = event.target.value || undefined;
 			this.$router.push({ query: { ...this.$route.query, loadpoint } });
