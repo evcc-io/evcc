@@ -109,11 +109,7 @@ var _ api.SocLimiter = (*Provider)(nil)
 // TargetSoc implements the api.SocLimiter interface
 func (v *Provider) TargetSoc() (float64, error) {
 	res, err := v.statusG()
-	if err == nil {
-		return float64(res.Services.Charging.TargetPct), nil
-	}
-
-	return 0, err
+	return float64(res.Measurements.MileageKm), err
 }
 
 var _ api.VehicleChargeController = (*Provider)(nil)
