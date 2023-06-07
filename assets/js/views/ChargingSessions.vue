@@ -210,7 +210,7 @@
 			</main>
 			<ChargingSessionModal
 				:session="selectedSession"
-				:vehicles="vehicles"
+				:vehicles="vehiclesObjects"
 				@session-changed="loadSessions"
 			/>
 		</div>
@@ -326,6 +326,13 @@ export default {
 		},
 		vehicles() {
 			return [...new Set(this.currentSessions.map((s) => s.vehicle))];
+		},
+		vehiclesObjects() {
+			return (
+				store.state.vehicles?.map((v, index) => {
+					return { id: index, title: v };
+				}) || []
+			);
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);
