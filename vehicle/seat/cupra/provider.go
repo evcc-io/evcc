@@ -84,6 +84,18 @@ func (v *Provider) Range() (int64, error) {
 	return int64(res.Engines.Primary.Range.Value), err
 }
 
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	if err == nil {
+		return float64(res.Measurements.MileageKm), nil
+	}
+
+	return 0, err
+}
+
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
