@@ -71,6 +71,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	options.SetOnConnectHandler(mc.ConnectionHandler)
 	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
 	options.SetConnectTimeout(request.Timeout)
+	options.SetOrderMatters(false)
 
 	if insecure {
 		options.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
