@@ -89,11 +89,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-	if err == nil {
-		return float64(res.Measurements.MileageKm), nil
-	}
-
-	return 0, err
+	return float64(res.Measurements.MileageKm), err
 }
 
 var _ api.VehicleClimater = (*Provider)(nil)
