@@ -98,9 +98,19 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		v.Client.CheckRedirect = nil
 	}()
 
+	preLogin := url.Values{
+		"sec":          []string{""},
+		"resume":       []string{""},
+		"thirdPartyId": []string{""},
+		"state":        []string{""},
+		"username":     []string{v.user},
+		"password":     []string{v.password},
+		"keeploggedin": []string{"false"},
+	}
+
 	// get the login page
 	uri := fmt.Sprintf("%s/auth/api/v1/de/de_DE/public/login", OAuthURI)
-	resp, err := v.Get(uri)
+	resp, err := v.PostForm(uri, preLogin)
 	if err != nil {
 		return nil, err
 	}
@@ -111,28 +121,19 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	sec := query.Get("sec")
-	resume := query.Get("resume")
-	state := query.Get("state")
-	thirdPartyID := query.Get("thirdPartyId")
-
 	dataLoginAuth := url.Values{
-		"sec":          []string{sec},
-		"resume":       []string{resume},
-		"thirdPartyId": []string{thirdPartyID},
-		"state":        []string{state},
+		"sec":          []string{query.Get("sec")},
+		"resume":       []string{query.Get("resume")},
+		"thirdPartyId": []string{query.Get("thirdPartyID")},
+		"state":        []string{query.Get("state")},
 		"username":     []string{v.user},
 		"password":     []string{v.password},
 		"keeploggedin": []string{"false"},
 	}
 
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(dataLoginAuth.Encode()), request.URLEncoding)
-	if err != nil {
-		return nil, err
-	}
-
 	// process the auth so the session is authenticated
-	if resp, err = v.Client.Do(req); err != nil {
+	resp, err = v.PostForm(uri, dataLoginAuth)
+	if err != nil {
 		return nil, err
 	}
 	resp.Body.Close()
