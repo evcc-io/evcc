@@ -18,7 +18,7 @@ render:
       capacity: 50 # Akkukapazität in kWh (Optional)
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können (Optional)
       icon: car # Icon in der Benutzeroberfläche (Optional)
-      timeout: 1h # Optional
+      timeout: 720h # Optional
       mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll (Optional)
       minSoc: 25 # Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht (Optional)
       targetSoc: 80 # Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden (Optional)
