@@ -58,10 +58,9 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid             string
-	lp               loadpoint.API
-	pauseResumeTicks int64
-	pauseResumeTime  time.Time
+	rfid     string
+	lp       loadpoint.API
+	respChan chan easee.SignalRCommandResponse
 }
 
 func init() {
@@ -99,12 +98,12 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	}
 
 	c := &Easee{
-		Helper:           request.NewHelper(log),
-		charger:          charger,
-		log:              log,
-		current:          6, // default current
-		pauseResumeTicks: 0,
-		done:             make(chan struct{}),
+		Helper:   request.NewHelper(log),
+		charger:  charger,
+		log:      log,
+		current:  6, // default current
+		done:     make(chan struct{}),
+		respChan: make(chan easee.SignalRCommandResponse),
 	}
 
 	c.Client.Timeout = timeout
@@ -325,11 +324,7 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 	}
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 
-	c.mux.Lock()
-	if res.Ticks == c.pauseResumeTicks {
-		c.pauseResumeTicks = 0
-	}
-	c.mux.Unlock()
+	c.respChan <- res
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {
@@ -389,15 +384,11 @@ func (c *Easee) Enable(enable bool) error {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+
+		err := c.postJSONAndWait(uri, request.MarshalJSON(data))
 		if err != nil {
 			return err
 		}
-		resp.Body.Close()
-	}
-
-	if c.outstandingPauseResumeAck() {
-		return errors.New("cannot pause/resume, still waiting for previous command's acknowledge")
 	}
 
 	// resume/stop charger
@@ -407,37 +398,61 @@ func (c *Easee) Enable(enable bool) error {
 	}
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 
-	var cmd easee.RestCommandResponse
-
-	err := c.postJSON(uri, nil, &cmd)
-	if err == nil {
-		c.mux.Lock()
-		c.pauseResumeTicks = cmd.Ticks
-		c.pauseResumeTime = time.Now()
-		c.mux.Unlock()
-	}
-
-	return err
+	return c.postJSONAndWait(uri, nil)
 }
 
-// indicates if reply to pause or resume command is outstanding
-// resets internally after 30s, assuming command was lost
-func (c *Easee) outstandingPauseResumeAck() bool {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+// posts JSON to the Easee API endpoint and waits for the async response
+func (c *Easee) postJSONAndWait(uri string, data io.Reader) error {
 
-	if c.pauseResumeTicks == 0 {
-		return false
+	for retriesLeft := 2; retriesLeft > 0; retriesLeft-- {
+
+		resp, err := c.Post(uri, request.JSONContent, data)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == 200 { //sync call
+			return nil
+		}
+
+		if resp.StatusCode == 202 { //async call, wait for response
+			var cmd easee.RestCommandResponse
+			if err := decodeJSON(resp, &cmd); err != nil {
+				return err
+			}
+
+			if cmd.Ticks == 0 { //Easee API ignored this call, retry
+				continue
+			}
+			return c.waitForTickResponse(cmd.Ticks)
+		}
+
+		// all other response codes lead to an error
+		return fmt.Errorf("unexpected HTTP result code %d, response: %v", resp.StatusCode, resp)
 	}
 
-	//don't wait for replies longer than 30 seconds
-	if time.Since(c.pauseResumeTime) > 30*time.Second {
-		//reset stored ticks
-		c.pauseResumeTicks = 0
-		return false
-	}
+	//retries exhausted
+	return api.ErrMustRetry
+}
 
-	return true
+func (c *Easee) waitForTickResponse(expectedTick int64) error {
+	c.log.TRACE.Printf("sent request, waiting for response, tick ID %d", expectedTick)
+	for {
+		select {
+		case cmdResp := <-c.respChan:
+			if cmdResp.Ticks != expectedTick {
+				c.log.WARN.Printf("unexpected response tickId, waiting for %d, but got ID %d", expectedTick, cmdResp.Ticks)
+			} else if !cmdResp.WasAccepted {
+				return fmt.Errorf("easee rejected command, tick ID %d", cmdResp.Ticks)
+			} else {
+				c.log.TRACE.Printf("received response, tick ID %d", cmdResp.Ticks)
+				return nil
+			}
+		case <-time.After(3 * time.Second):
+			return os.ErrDeadlineExceeded
+		}
+	}
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -448,21 +463,17 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
-	if err == nil {
-		resp.Body.Close()
-		if resp.StatusCode == 202 && resp.ContentLength <= 2 {
-			// no tick id, Easee effectively ignored this update
-			return api.ErrMustRetry
-		}
 
-		c.mux.Lock()
-		defer c.mux.Unlock()
-		c.current = cur
-		c.currentUpdated = time.Now()
+	err := c.postJSONAndWait(uri, request.MarshalJSON(data))
+	if err != nil {
+		return err
 	}
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.current = cur
+	c.currentUpdated = time.Now()
 
-	return err
+	return nil
 }
 
 var _ api.PhaseSwitcher = (*Easee)(nil)
@@ -499,10 +510,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 			data.DynamicCircuitCurrentP3 = &max3
 		}
 
-		var resp *http.Response
-		if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err == nil {
-			resp.Body.Close()
-		}
+		err = c.postJSONAndWait(uri, request.MarshalJSON(data))
 	} else {
 		// charger level
 		if phases == 3 {
@@ -517,10 +525,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			var resp *http.Response
-			if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err == nil {
-				resp.Body.Close()
-			}
+			err = c.postJSONAndWait(uri, request.MarshalJSON(data))
 		}
 	}
 
@@ -615,12 +620,12 @@ func (c *Easee) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
 }
 
-// PostJSON executes HTTP POST request and decodes JSON response.
-// It returns a StatusError on response codes other than HTTP 2xx.
-func (c *Easee) postJSON(url string, data io.Reader, res interface{}) error {
-	req, err := request.New(http.MethodPost, url, data, request.AcceptJSON)
-	if err == nil {
-		err = c.Helper.DoJSON(req, &res)
+// decodeJSON reads HTTP response and decodes JSON body if error is nil
+func decodeJSON(resp *http.Response, res interface{}) error {
+	if err := request.ResponseError(resp); err != nil {
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		return err
 	}
-	return err
+
+	return json.NewDecoder(resp.Body).Decode(&res)
 }
