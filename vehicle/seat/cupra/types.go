@@ -38,6 +38,6 @@ type Status struct {
 		}
 	}
 	Measurements struct {
-		MileageKm	float64
+		MileageKm float64
 	}
 }
