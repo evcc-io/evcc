@@ -59,21 +59,21 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-	if err == nil {
-		rsc := res.Services.Charging
-		if !rsc.Active {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		rt := rsc.RemainingTime
-		if rsc.TargetPct > 0 && rsc.TargetPct < 100 {
-			rt = rt * 100 / int64(rsc.TargetPct)
-		}
-
-		return time.Now().Add(time.Duration(rt) * time.Minute), err
+	if err != nil {
+		return time.Time{}, err
 	}
 
-	return time.Time{}, err
+	rsc := res.Services.Charging
+	if !rsc.Active {
+		return time.Time{}, api.ErrNotAvailable
+	}
+
+	rt := rsc.RemainingTime
+	if rsc.TargetPct > 0 && rsc.TargetPct < 100 {
+		rt = rt * 100 / int64(rsc.TargetPct)
+	}
+
+	return time.Now().Add(time.Duration(rt) * time.Minute), nil
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
