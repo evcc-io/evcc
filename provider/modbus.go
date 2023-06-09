@@ -13,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
-	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
@@ -140,11 +139,11 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 func (m *Modbus) bytesGetter() ([]byte, error) {
 	if op := m.op.MBMD; op.FuncCode != 0 {
 		switch op.FuncCode {
-		case rs485.ReadHoldingReg:
+		case gridx.FuncCodeReadHoldingRegisters:
 			return m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
-		case rs485.ReadInputReg:
+		case gridx.FuncCodeReadInputRegisters:
 			return m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
-		case rs485.ReadCoil:
+		case gridx.FuncCodeReadCoils:
 			return m.conn.ReadCoils(op.OpCode, op.ReadLen)
 		default:
 			return nil, fmt.Errorf("unknown function code %d", op.FuncCode)
