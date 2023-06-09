@@ -422,7 +422,7 @@ func (c *Easee) postJSONAndWait(uri string, data io.Reader) error {
 				return err
 			}
 
-			if cmd[0].Ticks == 0 { //Easee API ignored this call, retry
+			if len(cmd) == 0 || cmd[0].Ticks == 0 { //Easee API ignored this call, retry
 				continue
 			}
 			return c.waitForTickResponse(cmd[0].Ticks)
