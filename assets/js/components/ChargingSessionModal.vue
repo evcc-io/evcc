@@ -67,7 +67,12 @@
 										{{ $t("sessions.energy") }}
 									</th>
 									<td>
-										{{ fmtKWh(session.chargedEnergy * 1e3) }}
+										{{
+											fmtKWh(
+												session.chargedEnergy * 1e3,
+												session.chargedEnergy >= 1
+											)
+										}}
 									</td>
 								</tr>
 								<tr v-if="session.solarPercentage != null">
