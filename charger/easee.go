@@ -417,15 +417,15 @@ func (c *Easee) postJSONAndWait(uri string, data io.Reader) error {
 		}
 
 		if resp.StatusCode == 202 { //async call, wait for response
-			var cmd easee.RestCommandResponse
+			var cmd []easee.RestCommandResponse
 			if err := decodeJSON(resp, &cmd); err != nil {
 				return err
 			}
 
-			if cmd.Ticks == 0 { //Easee API ignored this call, retry
+			if cmd[0].Ticks == 0 { //Easee API ignored this call, retry
 				continue
 			}
-			return c.waitForTickResponse(cmd.Ticks)
+			return c.waitForTickResponse(cmd[0].Ticks)
 		}
 
 		// all other response codes lead to an error
