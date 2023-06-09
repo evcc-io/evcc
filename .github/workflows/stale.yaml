@@ -9,11 +9,10 @@ jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@main
+      - uses: actions/stale@v8
         id: stale
         with:
           days-before-stale: 20
           days-before-close: 5
-          exempt-issue-labels: "blocked,must,should,keep,pinned"
-      - name: Print outputs
-        run: echo ${{ join(steps.stale.outputs.*, ',') }}
+          exempt-issue-labels: "pinned,security,backlog,bug"
+          exempt-pr-labels: "pinned,security,backlog,bug"

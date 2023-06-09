@@ -37,8 +37,7 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 			Base:   v.Client.Transport,
 		},
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"apikey":      OAuth2Config.ClientID,
-			"x-client-id": "52064df8-6daa-46f7-bc9e-e3232622ab26",
+			"apikey": OAuth2Config.ClientID,
 		}),
 	}
 
