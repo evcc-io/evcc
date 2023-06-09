@@ -9,6 +9,6 @@ params:
   - name: vin
     example: WAUZZZ...
 render: |
-  type: audi
+  type: etron
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
