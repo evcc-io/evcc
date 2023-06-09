@@ -36,7 +36,12 @@ func process(filepath string) error {
 				continue
 			}
 
-			fmt.Fprintf(pre, "%s = \"%s\"\n", key, val)
+			quote := `"`
+			if strings.Contains(val, quote) {
+				quote = `'`
+			}
+
+			fmt.Fprintf(pre, "%s = %s%s%s\n", key, quote, val, quote)
 		}
 	}
 
