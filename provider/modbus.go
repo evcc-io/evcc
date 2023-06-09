@@ -144,6 +144,8 @@ func (m *Modbus) bytesGetter() ([]byte, error) {
 			return m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
 		case rs485.ReadInputReg:
 			return m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
+		case rs485.ReadCoil:
+			return m.conn.ReadCoils(op.OpCode, op.ReadLen)
 		default:
 			return nil, fmt.Errorf("unknown function code %d", op.FuncCode)
 		}
@@ -234,6 +236,8 @@ func (m *Modbus) StringGetter() func() (string, error) {
 // UintFromBytes converts byte slice to bigendian uint value
 func UintFromBytes(bytes []byte) (u uint64, err error) {
 	switch l := len(bytes); l {
+	case 1:
+		u = uint64(bytes[0])
 	case 2:
 		u = uint64(binary.BigEndian.Uint16(bytes))
 	case 4:
@@ -272,6 +276,8 @@ func (m *Modbus) IntSetter(param string) func(int64) error {
 			switch op.FuncCode {
 			case gridx.FuncCodeWriteSingleRegister:
 				_, err = m.conn.WriteSingleRegister(op.OpCode, uval)
+			case gridx.FuncCodeWriteSingleCoil:
+				_, err = m.conn.WriteSingleCoil(op.OpCode, uval)
 			default:
 				err = fmt.Errorf("unknown function code %d", op.FuncCode)
 			}
