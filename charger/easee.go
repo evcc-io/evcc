@@ -398,7 +398,15 @@ func (c *Easee) Enable(enable bool) error {
 	}
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 
-	return c.postJSONAndWait(uri, true, nil)
+	if err := c.postJSONAndWait(uri, true, nil); err != nil {
+		return err
+	}
+
+	if enable {
+		//reset currents after enable, as easee automatically resets to maxA
+		return c.MaxCurrent(int64(c.current))
+	}
+	return nil
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
@@ -466,6 +474,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 				return nil
 			}
 		case <-time.After(10 * time.Second):
+			c.log.TRACE.Printf("timeout, tick ID %d", expectedTick)
 			return os.ErrDeadlineExceeded
 		}
 	}
