@@ -2,7 +2,7 @@ product:
   brand: Tesla
   description: TWC3
 description: |
-  Das Teslafahrzeug muss dem TWC3 im evcc UI zugewiesen sein.
+  Das Teslafahrzeug muss dem TWC3 im evcc UI zugewiesen sein. Die Wallbox ist durch evcc nicht direkt regelbar. Die Regelung erfolgt über das Fahrzeug. Deshalb ist die Wallbox ausschließlich mit Tesla Fahrzeugen nutzbar.
 render:
   - default: |
       type: template
