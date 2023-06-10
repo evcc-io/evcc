@@ -276,6 +276,11 @@ func (m *Modbus) IntSetter(param string) func(int64) error {
 			case gridx.FuncCodeWriteSingleRegister:
 				_, err = m.conn.WriteSingleRegister(op.OpCode, uval)
 			case gridx.FuncCodeWriteSingleCoil:
+				if uval != 0 {
+					// Modbus protocol requires 0xFF00 for ON
+					// and 0x0000 for OFF
+					uval = 0xFF00
+				}
 				_, err = m.conn.WriteSingleCoil(op.OpCode, uval)
 			default:
 				err = fmt.Errorf("unknown function code %d", op.FuncCode)
