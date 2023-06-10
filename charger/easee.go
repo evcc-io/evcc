@@ -436,7 +436,9 @@ func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) 
 			}
 
 			if cmd.Ticks == 0 { //Easee API ignored this call, retry
-				data.Seek(0, io.SeekStart)
+				if _, err := data.Seek(0, io.SeekStart); err != nil {
+					return err
+				}
 				continue
 			}
 			return c.waitForTickResponse(cmd.Ticks)
