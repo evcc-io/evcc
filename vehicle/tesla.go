@@ -212,29 +212,7 @@ var _ api.VehicleChargeController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StartCharge() error {
-	err := v.apiError(v.vehicle.StartCharging())
-
-	if errors.Is(err, api.ErrAsleep) {
-		if err := v.WakeUp(); err != nil {
-			return err
-		}
-
-		timer := time.NewTimer(90 * time.Second)
-
-		for {
-			select {
-			case <-timer.C:
-				return api.ErrAsleep
-			default:
-				time.Sleep(2 * time.Second)
-				if err := v.apiError(v.vehicle.StartCharging()); err == nil || !errors.Is(err, api.ErrAsleep) {
-					return err
-				}
-			}
-		}
-	}
-
-	return err
+	return v.apiError(v.vehicle.StartCharging())
 }
 
 // StopCharge implements the api.VehicleChargeController interface
