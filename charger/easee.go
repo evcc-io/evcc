@@ -385,7 +385,7 @@ func (c *Easee) Enable(enable bool) error {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		err := c.postJSONAndWait(uri, request.MarshalJSON(data))
+		err := c.postJSONAndWait(uri, false, request.MarshalJSON(data))
 		if err != nil {
 			return err
 		}
@@ -398,11 +398,11 @@ func (c *Easee) Enable(enable bool) error {
 	}
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 
-	return c.postJSONAndWait(uri, nil)
+	return c.postJSONAndWait(uri, true, nil)
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
-func (c *Easee) postJSONAndWait(uri string, data io.Reader) error {
+func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) error {
 
 	for retriesLeft := 2; retriesLeft > 0; retriesLeft-- {
 
@@ -417,15 +417,29 @@ func (c *Easee) postJSONAndWait(uri string, data io.Reader) error {
 		}
 
 		if resp.StatusCode == 202 { //async call, wait for response
-			var cmd []easee.RestCommandResponse
-			if err := decodeJSON(resp, &cmd); err != nil {
-				return err
+
+			var cmd easee.RestCommandResponse
+
+			if isCommand { //command endpoint
+				if err := decodeJSON(resp, &cmd); err != nil {
+					return err
+				}
+			} else { //settings endpoint
+				var cmdArr []easee.RestCommandResponse
+				if err := decodeJSON(resp, &cmdArr); err != nil {
+					return err
+				}
+
+				if len(cmdArr) != 0 {
+					cmd = cmdArr[0]
+				}
 			}
 
-			if len(cmd) == 0 || cmd[0].Ticks == 0 { //Easee API ignored this call, retry
+			if cmd.Ticks == 0 { //Easee API ignored this call, retry
+				data.Seek(0, io.SeekStart)
 				continue
 			}
-			return c.waitForTickResponse(cmd[0].Ticks)
+			return c.waitForTickResponse(cmd.Ticks)
 		}
 
 		// all other response codes lead to an error
@@ -464,7 +478,7 @@ func (c *Easee) MaxCurrent(current int64) error {
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-	err := c.postJSONAndWait(uri, request.MarshalJSON(data))
+	err := c.postJSONAndWait(uri, false, request.MarshalJSON(data))
 	if err != nil {
 		return err
 	}
@@ -510,7 +524,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 			data.DynamicCircuitCurrentP3 = &max3
 		}
 
-		err = c.postJSONAndWait(uri, request.MarshalJSON(data))
+		err = c.postJSONAndWait(uri, false, request.MarshalJSON(data))
 	} else {
 		// charger level
 		if phases == 3 {
@@ -525,7 +539,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			err = c.postJSONAndWait(uri, request.MarshalJSON(data))
+			err = c.postJSONAndWait(uri, false, request.MarshalJSON(data))
 		}
 	}
 
@@ -601,10 +615,8 @@ func (c *Easee) updateSmartCharging() {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-		if err == nil {
-			_, err = c.DoBody(req)
-		}
+
+		err := c.postJSONAndWait(uri, false, request.MarshalJSON(data))
 		if err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 		}
