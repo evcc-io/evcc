@@ -448,6 +448,7 @@ func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) 
 				if _, err := data.Seek(0, io.SeekStart); err != nil {
 					return err
 				}
+				time.Sleep(time.Second)
 				continue
 			}
 			return c.waitForTickResponse(cmd.Ticks)
