@@ -79,16 +79,16 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v.dataG = provider.Cached(func() (*tesla.VehicleData, error) {
 		res, err := v.vehicle.Data()
-		return res, v.timeoutError(err)
+		return res, v.apiError(err)
 	}, cc.Cache)
 
 	return v, nil
 }
 
-// timeoutError converts HTTP 408 error to ErrTimeout
-func (v *Tesla) timeoutError(err error) error {
+// apiError converts HTTP 408 error to ErrTimeout
+func (v *Tesla) apiError(err error) error {
 	if err != nil && err.Error() == "408 Request Timeout" {
-		err = api.ErrTimeout
+		err = api.ErrAsleep
 	}
 	return err
 }
@@ -96,12 +96,10 @@ func (v *Tesla) timeoutError(err error) error {
 // Soc implements the api.Vehicle interface
 func (v *Tesla) Soc() (float64, error) {
 	res, err := v.dataG()
-
-	if err == nil {
-		return float64(res.Response.ChargeState.UsableBatteryLevel), nil
+	if err != nil {
+		return 0, err
 	}
-
-	return 0, err
+	return float64(res.Response.ChargeState.UsableBatteryLevel), nil
 }
 
 var _ api.ChargeState = (*Tesla)(nil)
@@ -200,25 +198,25 @@ var _ api.CurrentLimiter = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) MaxCurrent(current int64) error {
-	return v.timeoutError(v.vehicle.SetChargingAmps(int(current)))
+	return v.apiError(v.vehicle.SetChargingAmps(int(current)))
 }
 
 var _ api.Resurrector = (*Tesla)(nil)
 
 func (v *Tesla) WakeUp() error {
 	_, err := v.vehicle.Wakeup()
-	return v.timeoutError(err)
+	return v.apiError(err)
 }
 
 var _ api.VehicleChargeController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StartCharge() error {
-	err := v.timeoutError(v.vehicle.StartCharging())
+	err := v.apiError(v.vehicle.StartCharging())
 
-	if errors.Is(err, api.ErrTimeout) {
-		if _, err := v.vehicle.Wakeup(); err != nil {
-			return v.timeoutError(err)
+	if errors.Is(err, api.ErrAsleep) {
+		if err := v.WakeUp(); err != nil {
+			return err
 		}
 
 		timer := time.NewTimer(90 * time.Second)
@@ -226,10 +224,10 @@ func (v *Tesla) StartCharge() error {
 		for {
 			select {
 			case <-timer.C:
-				return api.ErrTimeout
+				return api.ErrAsleep
 			default:
 				time.Sleep(2 * time.Second)
-				if err := v.timeoutError(v.vehicle.StartCharging()); err == nil || !errors.Is(err, api.ErrTimeout) {
+				if err := v.apiError(v.vehicle.StartCharging()); err == nil || !errors.Is(err, api.ErrAsleep) {
 					return err
 				}
 			}
@@ -241,10 +239,10 @@ func (v *Tesla) StartCharge() error {
 
 // StopCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StopCharge() error {
-	err := v.timeoutError(v.vehicle.StopCharging())
+	err := v.apiError(v.vehicle.StopCharging())
 
 	// ignore sleeping vehicle
-	if errors.Is(err, api.ErrTimeout) {
+	if errors.Is(err, api.ErrAsleep) {
 		err = nil
 	}
 

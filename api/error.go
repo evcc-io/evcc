@@ -26,3 +26,11 @@ type errTimeoutError struct{}
 func (errTimeoutError) Error() string   { return "timeout" }
 func (errTimeoutError) Timeout() bool   { return true }
 func (errTimeoutError) Temporary() bool { return true }
+
+// ErrAsleep indicates that vehicle is asleep. Caller may chose to wake up the vehicle and retry.
+var ErrAsleep error = errAsleep{}
+
+type errAsleep struct{}
+
+func (errAsleep) Error() string { return "asleep" }
+func (errAsleep) Unwrap() error { return ErrTimeout }
