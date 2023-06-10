@@ -412,7 +412,7 @@ func (c *Easee) Enable(enable bool) error {
 // posts JSON to the Easee API endpoint and waits for the async response
 func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) error {
 
-	for retriesLeft := 2; retriesLeft > 0; retriesLeft-- {
+	for retriesLeft := 2; retriesLeft >= 0; retriesLeft-- {
 
 		resp, err := c.Post(uri, request.JSONContent, data)
 		if err != nil {
@@ -444,6 +444,7 @@ func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) 
 			}
 
 			if cmd.Ticks == 0 { //Easee API ignored this call, retry
+				c.log.DEBUG.Printf("Easee ignored API call, %d retries left", retriesLeft)
 				if _, err := data.Seek(0, io.SeekStart); err != nil {
 					return err
 				}
@@ -457,7 +458,7 @@ func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) 
 	}
 
 	//retries exhausted
-	return api.ErrMustRetry
+	return errors.New("retries exhausted, API call failed")
 }
 
 func (c *Easee) waitForTickResponse(expectedTick int64) error {
