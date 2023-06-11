@@ -327,7 +327,7 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 
 	select {
 	case c.respChan <- res:
-	default: //NoOp
+	default:
 	}
 }
 
