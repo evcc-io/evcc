@@ -482,7 +482,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 				return nil
 			}
 		case <-time.After(10 * time.Second):
-			return os.ErrDeadlineExceeded
+			return api.ErrTimeout
 		}
 	}
 }
