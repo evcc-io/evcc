@@ -79,9 +79,9 @@ func (h *ModbusHandler) testRegister(log *util.Logger, conn gridx.Client) bool {
 	var err error
 
 	switch h.op.FuncCode {
-	case rs485.ReadHoldingReg:
+	case gridx.FuncCodeReadHoldingRegisters:
 		bytes, err = conn.ReadHoldingRegisters(h.op.OpCode, h.op.ReadLen)
-	case rs485.ReadInputReg:
+	case gridx.FuncCodeReadInputRegisters:
 		bytes, err = conn.ReadInputRegisters(h.op.OpCode, h.op.ReadLen)
 	}
 
