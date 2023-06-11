@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -388,7 +387,7 @@ func (c *Easee) Enable(enable bool) error {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if err := c.postJSONAndWait(uri, request.MarshalJSON(data)); err != nil {
+		if err := c.postJSONAndWait(uri, data); err != nil {
 			return err
 		}
 	}
@@ -417,7 +416,7 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 	isCommand := strings.Contains(uri, "/commands/")
 
 	for retriesLeft := 2; retriesLeft >= 0; retriesLeft-- {
-		resp, err := c.Post(uri, request.JSONContent, data)
+		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 		if err != nil {
 			return err
 		}
@@ -446,9 +445,6 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 			}
 
 			if cmd.Ticks == 0 { //Easee API ignored this call, retry
-				if _, err := data.Seek(0, io.SeekStart); err != nil {
-					return err
-				}
 				time.Sleep(time.Second)
 				continue
 			}
@@ -497,7 +493,7 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	if err := c.postJSONAndWait(uri, request.MarshalJSON(data)); err != nil {
+	if err := c.postJSONAndWait(uri, data); err != nil {
 		return err
 	}
 
@@ -543,7 +539,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 			data.DynamicCircuitCurrentP3 = &max3
 		}
 
-		err = c.postJSONAndWait(uri, request.MarshalJSON(data))
+		err = c.postJSONAndWait(uri, data)
 	} else {
 		// charger level
 		if phases == 3 {
@@ -558,7 +554,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			err = c.postJSONAndWait(uri, request.MarshalJSON(data))
+			err = c.postJSONAndWait(uri, data)
 		}
 	}
 
@@ -635,7 +631,7 @@ func (c *Easee) updateSmartCharging() {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		err := c.postJSONAndWait(uri, request.MarshalJSON(data))
+		err := c.postJSONAndWait(uri, data)
 		if err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 		}
