@@ -389,10 +389,11 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 
 	switch strings.ToLower(r.Decode) {
 
-	// 1 byte (coil)
+	// 8 bit (coil)
 	case "bool8":
 		op.Transform = decodeBool8
 		op.ReadLen = 1
+
 	// 16 bit
 	case "int16":
 		op.Transform = asFloat64(encoding.Int16)
@@ -413,6 +414,7 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		}
 		op.Transform = decodeBool16(mask)
 		op.ReadLen = 1
+
 	// 32 bit
 	case "int32":
 		op.Transform = asFloat64(encoding.Int32)
