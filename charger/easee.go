@@ -478,7 +478,6 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 		select {
 		case cmdResp := <-c.respChan:
 			if cmdResp.Ticks != expectedTick {
-				c.log.TRACE.Printf("unexpected response tickId, waiting for %d, but got ID %d", expectedTick, cmdResp.Ticks)
 			} else if !cmdResp.WasAccepted {
 				return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
 			} else {
