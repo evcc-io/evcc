@@ -29,4 +29,7 @@ render: |
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
+  soc: # fixed - Soc fetched via charger available
+    source: js
+    script: 0;
   {{ include "vehicle-identify" . }}
