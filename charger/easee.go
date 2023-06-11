@@ -482,7 +482,6 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 				return nil
 			}
 		case <-time.After(10 * time.Second):
-			c.log.TRACE.Printf("timeout, tick ID %d", expectedTick)
 			return os.ErrDeadlineExceeded
 		}
 	}
