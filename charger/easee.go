@@ -463,7 +463,7 @@ func (c *Easee) postJSONAndWait(uri string, data io.ReadSeeker) error {
 	}
 
 	// retries exhausted
-	return errors.New("retries exhausted, API call failed")
+	return api.ErrTimeout
 }
 
 // decodeJSON reads HTTP response and decodes JSON body if error is nil
