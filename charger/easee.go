@@ -448,7 +448,6 @@ func (c *Easee) postJSONAndWait(uri string, data io.ReadSeeker) error {
 			}
 
 			if cmd.Ticks == 0 { //Easee API ignored this call, retry
-				c.log.DEBUG.Printf("api call ignored, %d retries left", retriesLeft)
 				if _, err := data.Seek(0, io.SeekStart); err != nil {
 					return err
 				}
