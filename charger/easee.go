@@ -474,7 +474,6 @@ func decodeJSON(resp *http.Response, res interface{}) error {
 }
 
 func (c *Easee) waitForTickResponse(expectedTick int64) error {
-	c.log.TRACE.Printf("sent request, waiting for response, tick ID %d", expectedTick)
 	for {
 		select {
 		case cmdResp := <-c.respChan:
