@@ -413,7 +413,7 @@ func (c *Easee) Enable(enable bool) error {
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
-func (c *Easee) postJSONAndWait(uri string, data io.ReadSeeker) error {
+func (c *Easee) postJSONAndWait(uri string, data any) error {
 	isCommand := strings.Contains(uri, "/commands/")
 
 	for retriesLeft := 2; retriesLeft >= 0; retriesLeft-- {
