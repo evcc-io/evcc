@@ -2,6 +2,7 @@ template: iso15118
 products:
   - description:
       generic: ISO15118
+capabilities: ["iso151182"]
 group: generic
 requirements:
   description:
@@ -29,7 +30,7 @@ render: |
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
-  soc: # fixed - Soc fetched via charger available
-    source: js
-    script: 0;
+  soc:
+    source: const
+    value: 0
   {{ include "vehicle-identify" . }}
