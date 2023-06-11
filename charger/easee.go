@@ -476,7 +476,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 			if cmdResp.Ticks != expectedTick {
 				c.log.WARN.Printf("unexpected response tickId, waiting for %d, but got ID %d", expectedTick, cmdResp.Ticks)
 			} else if !cmdResp.WasAccepted {
-				return fmt.Errorf("easee rejected command, tick ID %d", cmdResp.Ticks)
+				return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
 			} else {
 				c.log.TRACE.Printf("received response, tick ID %d", cmdResp.Ticks)
 				return nil
