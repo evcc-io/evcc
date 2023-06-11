@@ -484,7 +484,6 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 			} else if !cmdResp.WasAccepted {
 				return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
 			} else {
-				c.log.TRACE.Printf("received response: %d", cmdResp.Ticks)
 				return nil
 			}
 		case <-time.After(10 * time.Second):
