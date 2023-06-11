@@ -384,9 +384,7 @@ func (c *Easee) Enable(enable bool) error {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-
-		err := c.postJSONAndWait(uri, false, request.MarshalJSON(data))
-		if err != nil {
+		if err := c.postJSONAndWait(uri, false, request.MarshalJSON(data)); err != nil {
 			return err
 		}
 	}
@@ -396,24 +394,23 @@ func (c *Easee) Enable(enable bool) error {
 	if enable {
 		action = easee.ChargeResume
 	}
-	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 
+	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	if err := c.postJSONAndWait(uri, true, nil); err != nil {
 		return err
 	}
 
 	if enable {
-		//reset currents after enable, as easee automatically resets to maxA
+		// reset currents after enable, as easee automatically resets to maxA
 		return c.MaxCurrent(int64(c.current))
 	}
+
 	return nil
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
 func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) error {
-
 	for retriesLeft := 2; retriesLeft >= 0; retriesLeft-- {
-
 		resp, err := c.Post(uri, request.JSONContent, data)
 		if err != nil {
 			return err
@@ -425,7 +422,6 @@ func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) 
 		}
 
 		if resp.StatusCode == 202 { //async call, wait for response
-
 			var cmd easee.RestCommandResponse
 
 			if isCommand { //command endpoint
@@ -444,7 +440,7 @@ func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) 
 			}
 
 			if cmd.Ticks == 0 { //Easee API ignored this call, retry
-				c.log.DEBUG.Printf("Easee ignored API call, %d retries left", retriesLeft)
+				c.log.DEBUG.Printf("api call ignored, %d retries left", retriesLeft)
 				if _, err := data.Seek(0, io.SeekStart); err != nil {
 					return err
 				}
@@ -458,8 +454,18 @@ func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) 
 		return fmt.Errorf("unexpected HTTP result code %d, response: %v", resp.StatusCode, resp)
 	}
 
-	//retries exhausted
+	// retries exhausted
 	return errors.New("retries exhausted, API call failed")
+}
+
+// decodeJSON reads HTTP response and decodes JSON body if error is nil
+func decodeJSON(resp *http.Response, res interface{}) error {
+	if err := request.ResponseError(resp); err != nil {
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		return err
+	}
+
+	return json.NewDecoder(resp.Body).Decode(&res)
 }
 
 func (c *Easee) waitForTickResponse(expectedTick int64) error {
@@ -490,11 +496,10 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-
-	err := c.postJSONAndWait(uri, false, request.MarshalJSON(data))
-	if err != nil {
+	if err := c.postJSONAndWait(uri, false, request.MarshalJSON(data)); err != nil {
 		return err
 	}
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.current = cur
@@ -643,14 +648,4 @@ func (c *Easee) updateSmartCharging() {
 // LoadpointControl implements loadpoint.Controller
 func (c *Easee) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
-}
-
-// decodeJSON reads HTTP response and decodes JSON body if error is nil
-func decodeJSON(resp *http.Response, res interface{}) error {
-	if err := request.ResponseError(resp); err != nil {
-		_ = json.NewDecoder(resp.Body).Decode(&res)
-		return err
-	}
-
-	return json.NewDecoder(resp.Body).Decode(&res)
 }
