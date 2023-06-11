@@ -327,8 +327,7 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 
 	select {
 	case c.respChan <- res:
-	default:
-		c.log.TRACE.Printf("CommandResponse %s arrived too late, ignoring: %+v", res.SerialNumber, res)
+	default: //NoOp
 	}
 }
 
