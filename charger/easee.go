@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -324,7 +325,11 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 	}
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 
-	c.respChan <- res
+	select {
+	case c.respChan <- res:
+	default:
+		c.log.TRACE.Printf("CommandResponse %s arrived too late, ignoring: %+v", res.SerialNumber, res)
+	}
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {
@@ -384,7 +389,7 @@ func (c *Easee) Enable(enable bool) error {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if err := c.postJSONAndWait(uri, false, request.MarshalJSON(data)); err != nil {
+		if err := c.postJSONAndWait(uri, request.MarshalJSON(data)); err != nil {
 			return err
 		}
 	}
@@ -396,7 +401,7 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if err := c.postJSONAndWait(uri, true, nil); err != nil {
+	if err := c.postJSONAndWait(uri, nil); err != nil {
 		return err
 	}
 
@@ -409,7 +414,10 @@ func (c *Easee) Enable(enable bool) error {
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
-func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) error {
+func (c *Easee) postJSONAndWait(uri string, data io.ReadSeeker) error {
+
+	isCommand := strings.Contains(uri, "/commands/")
+
 	for retriesLeft := 2; retriesLeft >= 0; retriesLeft-- {
 		resp, err := c.Post(uri, request.JSONContent, data)
 		if err != nil {
@@ -474,11 +482,11 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 		select {
 		case cmdResp := <-c.respChan:
 			if cmdResp.Ticks != expectedTick {
-				c.log.WARN.Printf("unexpected response tickId, waiting for %d, but got ID %d", expectedTick, cmdResp.Ticks)
+				c.log.TRACE.Printf("unexpected response tickId, waiting for %d, but got ID %d", expectedTick, cmdResp.Ticks)
 			} else if !cmdResp.WasAccepted {
 				return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
 			} else {
-				c.log.TRACE.Printf("received response, tick ID %d", cmdResp.Ticks)
+				c.log.TRACE.Printf("received response: %d", cmdResp.Ticks)
 				return nil
 			}
 		case <-time.After(10 * time.Second):
@@ -495,7 +503,7 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	if err := c.postJSONAndWait(uri, false, request.MarshalJSON(data)); err != nil {
+	if err := c.postJSONAndWait(uri, request.MarshalJSON(data)); err != nil {
 		return err
 	}
 
@@ -541,7 +549,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 			data.DynamicCircuitCurrentP3 = &max3
 		}
 
-		err = c.postJSONAndWait(uri, false, request.MarshalJSON(data))
+		err = c.postJSONAndWait(uri, request.MarshalJSON(data))
 	} else {
 		// charger level
 		if phases == 3 {
@@ -556,7 +564,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			err = c.postJSONAndWait(uri, false, request.MarshalJSON(data))
+			err = c.postJSONAndWait(uri, request.MarshalJSON(data))
 		}
 	}
 
@@ -633,7 +641,7 @@ func (c *Easee) updateSmartCharging() {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		err := c.postJSONAndWait(uri, false, request.MarshalJSON(data))
+		err := c.postJSONAndWait(uri, request.MarshalJSON(data))
 		if err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 		}
