@@ -451,7 +451,7 @@ func (c *Easee) postJSONAndWait(uri string, isCommand bool, data io.ReadSeeker) 
 		}
 
 		// all other response codes lead to an error
-		return fmt.Errorf("unexpected HTTP result code %d, response: %v", resp.StatusCode, resp)
+		return fmt.Errorf("invalid status: %d", resp.StatusCode)
 	}
 
 	// retries exhausted
