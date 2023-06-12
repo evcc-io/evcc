@@ -48,16 +48,8 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	api := porsche.NewAPI(log, identity.DefaultSource)
-	mobile := porsche.NewMobileAPI(log, identity.MobileSource)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
-		mobileVehicles, err := mobile.Vehicles()
-		if err == nil {
-			return lo.Map(mobileVehicles, func(v porsche.StatusResponseMobile, _ int) string {
-				return v.VIN
-			}), err
-		}
-
 		vehicles, err := api.Vehicles()
 		return lo.Map(vehicles, func(v porsche.Vehicle, _ int) string {
 			return v.VIN
@@ -80,7 +72,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	provider := porsche.NewProvider(log, api, emobility, mobile, cc.VIN, capabilities.CarModel, cc.Cache)
+	provider := porsche.NewProvider(log, api, emobility, cc.VIN, capabilities.CarModel, cc.Cache)
 
 	v := &Porsche{
 		embed:    &cc.embed,

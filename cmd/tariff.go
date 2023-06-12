@@ -35,9 +35,9 @@ func runTariff(cmd *cobra.Command, args []string) {
 	name := cmd.Flags().Lookup(flagName).Value.String()
 
 	for key, cc := range map[string]typedConfig{
-		"grid":    conf.Tariffs.Grid,
-		"feedin":  conf.Tariffs.FeedIn,
-		"planner": conf.Tariffs.Planner,
+		"grid":   conf.Tariffs.Grid,
+		"feedin": conf.Tariffs.FeedIn,
+		"co2":    conf.Tariffs.Co2,
 	} {
 		if cc.Type == "" || (name != "" && key != name) {
 			continue

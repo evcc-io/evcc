@@ -37,4 +37,7 @@ type Status struct {
 			ProgressBarPct float64
 		}
 	}
+	Measurements struct {
+		MileageKm float64
+	}
 }

@@ -54,12 +54,7 @@ func (wb *Pantabox) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch res.State {
-	case "A", "B", "C", "D", "E", "F":
-		return api.ChargeStatus(res.State), nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid state: %s", res.State)
-	}
+	return api.ChargeStatusString(res.State)
 }
 
 // Enabled implements the api.Charger interface

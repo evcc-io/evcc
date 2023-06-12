@@ -1,5 +1,10 @@
 package keba
 
+// RFID contains access credentials
+type RFID struct {
+	Tag string
+}
+
 // Report contains report id and device serial
 type Report struct {
 	ID     int    `json:"ID,string"`

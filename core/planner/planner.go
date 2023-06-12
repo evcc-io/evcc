@@ -81,13 +81,6 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 	return plan
 }
 
-func (t *Planner) Unit() string {
-	if t.tariff == nil {
-		return ""
-	}
-	return t.tariff.Unit()
-}
-
 // Plan creates a lowest-cost charging plan, considering edge conditions
 func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) (api.Rates, error) {
 	if t == nil || requiredDuration <= 0 {

@@ -16,7 +16,7 @@ func init() {
 }
 
 // NewConstFromConfig creates const provider
-func NewConstFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewConstFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Value             string
 		pipeline.Settings `mapstructure:",squash"`

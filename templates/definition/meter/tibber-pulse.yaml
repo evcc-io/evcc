@@ -15,6 +15,6 @@ params:
 render: |
   type: tibber-pulse
   token: {{ .token }}
-  {{- if ne .homeid "" }}
+  {{- if .homeid }}
   homeid: {{ .homeid }}
   {{- end }}

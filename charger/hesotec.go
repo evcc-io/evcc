@@ -99,13 +99,7 @@ func (wb *Hesotec) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
-
-	switch s := string(b[0]); s {
-	case "A", "B", "C":
-		return api.ChargeStatus(s), nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", s)
-	}
+	return api.ChargeStatusString(string(b[0]))
 }
 
 // Enabled implements the api.Charger interface

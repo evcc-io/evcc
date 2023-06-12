@@ -77,7 +77,7 @@
 <script>
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
-import { CO2_UNIT } from "../units";
+import { CO2_TYPE } from "../units";
 import TargetChargePlan from "./TargetChargePlan.vue";
 import api from "../api";
 
@@ -99,7 +99,8 @@ export default {
 		socBasedCharging: Boolean,
 		disabled: Boolean,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
+		currency: String,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
@@ -144,8 +145,9 @@ export default {
 		targetChargePlanProps: function () {
 			const targetTime = this.selectedTargetTime;
 			const { rates } = this.tariff;
-			const { duration, unit, plan } = this.plan;
-			return rates ? { duration, rates, plan, unit, targetTime } : null;
+			const { duration, plan } = this.plan;
+			const { currency, smartCostType } = this;
+			return rates ? { duration, rates, plan, targetTime, currency, smartCostType } : null;
 		},
 		tariffLowest: function () {
 			return this.tariff?.rates.reduce((res, slot) => {
@@ -167,11 +169,11 @@ export default {
 				});
 			}
 			return this.$t("main.targetCharge.priceLimit", {
-				price: this.fmtPricePerKWh(this.smartCostLimit, this.smartCostUnit, true),
+				price: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
 			});
 		},
 		isCo2() {
-			return this.smartCostUnit === CO2_UNIT;
+			return this.smartCostType === CO2_TYPE;
 		},
 	},
 	watch: {

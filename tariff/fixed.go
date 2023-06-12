@@ -25,15 +25,13 @@ func init() {
 }
 
 func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	cc := struct {
-		Currency string
+	var cc struct {
+		Currency string // TODO deprecated
 		Price    float64
 		Zones    []struct {
 			Price       float64
 			Days, Hours string
 		}
-	}{
-		Currency: "EUR",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -82,11 +80,6 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}, t.zones...)
 
 	return t, nil
-}
-
-// Unit implements the api.Tariff interface
-func (t *Fixed) Unit() string {
-	return t.unit
 }
 
 // Rates implements the api.Tariff interface
@@ -139,7 +132,10 @@ func (t *Fixed) Rates() (api.Rates, error) {
 	return res, nil
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *Fixed) IsDynamic() bool {
-	return t.dynamic
+// Type returns the tariff type
+func (t *Fixed) Type() api.TariffType {
+	if t.dynamic {
+		return api.TariffTypePriceDynamic
+	}
+	return api.TariffTypePriceStatic
 }

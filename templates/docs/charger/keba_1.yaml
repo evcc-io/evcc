@@ -1,6 +1,6 @@
 product:
   brand: BMW
-  description: i Wallbox
+  description: i Wallbox (legacy UDP protocol)
 capabilities: ["mA", "rfid"]
 description: |
   Es muss eine sogenannte UDP Funktion über den DIP Schalter 1.3 eingeschaltet (ON) werden. Die Installationsanleitung der Wallbox hilft hier weiter.

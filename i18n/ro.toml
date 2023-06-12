@@ -1,3 +1,9 @@
+[batterySettings]
+batteryLevel = "Nivelul bateriei"
+capacity = "{energy} din {total}"
+legendBottomName = "prioritate casa"
+legendBottomSubline = "neutilizat pentru incarcare"
+
 [footer]
 
 [footer.community]
@@ -234,7 +240,7 @@ started = "Pornit"
 title = "Sesiune de încărcare"
 
 [sessions]
-date = "Perioada"
+date = "Terminat"
 downloadCsv = "Descarcă ca CSV"
 energy = "Încărcat"
 loadpoint = "Punct încărcare"

@@ -21,7 +21,7 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)" -t "api.Resurrector,WakeUp,func() (error)"
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -29,6 +29,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		embed                               `mapstructure:",squash"`
 		Status, Enable, Enabled, MaxCurrent provider.Config
 		Identify, Phases1p3p                *provider.Config
+		Wakeup                              *provider.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -56,27 +57,48 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	}
 
 	c, err := NewConfigurable(status, enabled, enable, maxcurrent)
+	if err != nil {
+		return nil, err
+	}
 
 	c.embed = &cc.embed
 
-	// decorator phases
+	// decorate phases
 	var phases1p3p func(int) error
-	if err == nil && cc.Phases1p3p != nil {
-		var phases1p3pi64 func(int64) error
-		phases1p3pi64, err = provider.NewIntSetterFromConfig("phases", *cc.Phases1p3p)
+	if cc.Phases1p3p != nil {
+		phases1p3pS, err := provider.NewIntSetterFromConfig("phases", *cc.Phases1p3p)
+		if err != nil {
+			return nil, fmt.Errorf("phases: %w", err)
+		}
 
 		phases1p3p = func(phases int) error {
-			return phases1p3pi64(int64(phases))
+			return phases1p3pS(int64(phases))
 		}
 	}
 
-	// decorator identifier
+	// decorate identifier
 	var identify func() (string, error)
-	if err == nil && cc.Identify != nil {
+	if cc.Identify != nil {
 		identify, err = provider.NewStringGetterFromConfig(*cc.Identify)
+		if err != nil {
+			return nil, fmt.Errorf("identify: %w", err)
+		}
 	}
 
-	return decorateCustom(c, identify, phases1p3p), err
+	// decorate wakeup
+	var wakeup func() error
+	if cc.Wakeup != nil {
+		wakeupS, err := provider.NewBoolSetterFromConfig("wakeup", *cc.Wakeup)
+		if err != nil {
+			return nil, fmt.Errorf("wakeup: %w", err)
+		}
+
+		wakeup = func() error {
+			return wakeupS(true)
+		}
+	}
+
+	return decorateCustom(c, identify, phases1p3p, wakeup), nil
 }
 
 // NewConfigurable creates a new charger
@@ -104,7 +126,7 @@ func (m *Charger) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatus(s), nil
+	return api.ChargeStatusString(s)
 }
 
 // Enabled implements the api.Charger interface

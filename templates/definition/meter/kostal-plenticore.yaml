@@ -44,7 +44,7 @@ render: |
   model: sunspec
   power: 802:W # sunspec model 802 battery
   soc: 802:SoC # sunspec model 802 battery
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

@@ -102,11 +102,6 @@ func (t *ElectricityMaps) run(done chan error) {
 	}
 }
 
-// Unit implements the api.Tariff interface
-func (t *ElectricityMaps) Unit() string {
-	return Co2Equivalent
-}
-
 func (t *ElectricityMaps) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
@@ -124,7 +119,7 @@ func (t *ElectricityMaps) Rates() (api.Rates, error) {
 	return res, outdatedError(t.updated, time.Hour)
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *ElectricityMaps) IsDynamic() bool {
-	return true
+// Type returns the tariff type
+func (t *ElectricityMaps) Type() api.TariffType {
+	return api.TariffTypeCo2
 }

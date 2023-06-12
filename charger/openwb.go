@@ -29,7 +29,7 @@ type OpenWB struct {
 	authS         func(string) error
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b *OpenWB -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)" -t "api.Battery,Soc,func() (float64, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b *OpenWB -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -185,7 +185,7 @@ func (m *OpenWB) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
-	return api.ChargeStatus(status), nil
+	return api.ChargeStatusString(status)
 }
 
 func (m *OpenWB) MaxCurrent(current int64) error {

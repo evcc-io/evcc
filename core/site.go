@@ -162,6 +162,11 @@ func NewSiteFromConfig(
 		site.pvMeters = append(site.pvMeters, pv)
 	}
 
+	// TODO deprecated
+	if len(site.Meters.PVMetersRef_) > 0 {
+		site.log.WARN.Println("deprecated: use 'pv' instead of 'pvs'")
+	}
+
 	// multiple batteries
 	for _, ref := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
 		battery, err := cp.Meter(ref)
@@ -169,6 +174,15 @@ func NewSiteFromConfig(
 			return nil, err
 		}
 		site.batteryMeters = append(site.batteryMeters, battery)
+	}
+
+	// TODO deprecated
+	if len(site.Meters.BatteryMetersRef_) > 0 {
+		site.log.WARN.Println("deprecated: use 'battery' instead of 'batteries'")
+	}
+
+	if len(site.batteryMeters) > 0 && site.ResidualPower <= 0 {
+		site.log.WARN.Println("battery configured but residualPower is missing (add residualPower: 100 to site)")
 	}
 
 	// auxiliary meters
@@ -772,12 +786,9 @@ func (site *Site) prepare() {
 	site.publish("prioritySoc", site.PrioritySoc)
 	site.publish("residualPower", site.ResidualPower)
 	site.publish("smartCostLimit", site.SmartCostLimit)
+	site.publish("smartCostType", nil)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
-		site.publish("smartCostUnit", tariff.Unit())
-		site.publish("smartCostAvailable", tariff.IsDynamic())
-	} else {
-		site.publish("smartCostUnit", nil)
-		site.publish("smartCostAvailable", nil)
+		site.publish("smartCostType", tariff.Type().String())
 	}
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since())
