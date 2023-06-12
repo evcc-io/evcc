@@ -90,7 +90,12 @@
 											{{ session.vehicle }}
 										</td>
 										<td class="text-end">
-											{{ fmtKWh(session.chargedEnergy * 1e3) }}
+											{{
+												fmtKWh(
+													session.chargedEnergy * 1e3,
+													session.chargedEnergy >= 1
+												)
+											}}
 										</td>
 										<td class="text-end">
 											<span v-if="session.solarPercentage != null">
