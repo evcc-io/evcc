@@ -413,50 +413,43 @@ func (c *Easee) Enable(enable bool) error {
 
 // posts JSON to the Easee API endpoint and waits for the async response
 func (c *Easee) postJSONAndWait(uri string, data any) error {
-	isCommand := strings.Contains(uri, "/commands/")
 
-	for retriesLeft := 2; retriesLeft >= 0; retriesLeft-- {
-		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
+	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 
-		if resp.StatusCode == 200 { //sync call
-			return nil
-		}
-
-		if resp.StatusCode == 202 { //async call, wait for response
-			var cmd easee.RestCommandResponse
-
-			if isCommand { //command endpoint
-				if err := decodeJSON(resp, &cmd); err != nil {
-					return err
-				}
-			} else { //settings endpoint
-				var cmdArr []easee.RestCommandResponse
-				if err := decodeJSON(resp, &cmdArr); err != nil {
-					return err
-				}
-
-				if len(cmdArr) != 0 {
-					cmd = cmdArr[0]
-				}
-			}
-
-			if cmd.Ticks == 0 { //Easee API ignored this call, retry
-				time.Sleep(time.Second)
-				continue
-			}
-			return c.waitForTickResponse(cmd.Ticks)
-		}
-
-		// all other response codes lead to an error
-		return fmt.Errorf("invalid status: %d", resp.StatusCode)
+	if resp.StatusCode == 200 { //sync call
+		return nil
 	}
 
-	// retries exhausted
-	return api.ErrTimeout
+	if resp.StatusCode == 202 { //async call, wait for response
+		var cmd easee.RestCommandResponse
+
+		if strings.Contains(uri, "/commands/") { //command endpoint
+			if err := decodeJSON(resp, &cmd); err != nil {
+				return err
+			}
+		} else { //settings endpoint
+			var cmdArr []easee.RestCommandResponse
+			if err := decodeJSON(resp, &cmdArr); err != nil {
+				return err
+			}
+
+			if len(cmdArr) != 0 {
+				cmd = cmdArr[0]
+			}
+		}
+
+		if cmd.Ticks == 0 { //Easee API thinks this was a noop
+			return nil
+		}
+		return c.waitForTickResponse(cmd.Ticks)
+	}
+
+	// all other response codes lead to an error
+	return fmt.Errorf("invalid status: %d", resp.StatusCode)
 }
 
 // decodeJSON reads HTTP response and decodes JSON body if error is nil
