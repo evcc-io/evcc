@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -57,8 +58,9 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid string
-	lp   loadpoint.API
+	rfid     string
+	lp       loadpoint.API
+	respChan chan easee.SignalRCommandResponse
 }
 
 func init() {
@@ -96,11 +98,12 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	}
 
 	c := &Easee{
-		Helper:  request.NewHelper(log),
-		charger: charger,
-		log:     log,
-		current: 6, // default current
-		done:    make(chan struct{}),
+		Helper:   request.NewHelper(log),
+		charger:  charger,
+		log:      log,
+		current:  6, // default current
+		done:     make(chan struct{}),
+		respChan: make(chan easee.SignalRCommandResponse),
 	}
 
 	c.Client.Timeout = timeout
@@ -320,6 +323,11 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 		return
 	}
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
+
+	select {
+	case c.respChan <- res:
+	default:
+	}
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {
@@ -379,11 +387,9 @@ func (c *Easee) Enable(enable bool) error {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
-		if err != nil {
+		if err := c.postJSONAndWait(uri, data); err != nil {
 			return err
 		}
-		resp.Body.Close()
 	}
 
 	// resume/stop charger
@@ -391,10 +397,92 @@ func (c *Easee) Enable(enable bool) error {
 	if enable {
 		action = easee.ChargeResume
 	}
-	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	_, err := c.Post(uri, request.JSONContent, nil)
 
-	return err
+	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
+	if err := c.postJSONAndWait(uri, nil); err != nil {
+		return err
+	}
+
+	if enable {
+		// reset currents after enable, as easee automatically resets to maxA
+		return c.MaxCurrent(int64(c.current))
+	}
+
+	return nil
+}
+
+// posts JSON to the Easee API endpoint and waits for the async response
+func (c *Easee) postJSONAndWait(uri string, data any) error {
+	isCommand := strings.Contains(uri, "/commands/")
+
+	for retriesLeft := 2; retriesLeft >= 0; retriesLeft-- {
+		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == 200 { //sync call
+			return nil
+		}
+
+		if resp.StatusCode == 202 { //async call, wait for response
+			var cmd easee.RestCommandResponse
+
+			if isCommand { //command endpoint
+				if err := decodeJSON(resp, &cmd); err != nil {
+					return err
+				}
+			} else { //settings endpoint
+				var cmdArr []easee.RestCommandResponse
+				if err := decodeJSON(resp, &cmdArr); err != nil {
+					return err
+				}
+
+				if len(cmdArr) != 0 {
+					cmd = cmdArr[0]
+				}
+			}
+
+			if cmd.Ticks == 0 { //Easee API ignored this call, retry
+				time.Sleep(time.Second)
+				continue
+			}
+			return c.waitForTickResponse(cmd.Ticks)
+		}
+
+		// all other response codes lead to an error
+		return fmt.Errorf("invalid status: %d", resp.StatusCode)
+	}
+
+	// retries exhausted
+	return api.ErrTimeout
+}
+
+// decodeJSON reads HTTP response and decodes JSON body if error is nil
+func decodeJSON(resp *http.Response, res interface{}) error {
+	if err := request.ResponseError(resp); err != nil {
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		return err
+	}
+
+	return json.NewDecoder(resp.Body).Decode(&res)
+}
+
+func (c *Easee) waitForTickResponse(expectedTick int64) error {
+	for {
+		select {
+		case cmdResp := <-c.respChan:
+			if cmdResp.Ticks == expectedTick {
+				if !cmdResp.WasAccepted {
+					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
+				}
+				return nil
+			}
+		case <-time.After(10 * time.Second):
+			return api.ErrTimeout
+		}
+	}
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -405,21 +493,16 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
-	if err == nil {
-		resp.Body.Close()
-		if resp.StatusCode == 202 && resp.ContentLength <= 2 {
-			// no tick id, Easee effectively ignored this update
-			return api.ErrMustRetry
-		}
-
-		c.mux.Lock()
-		defer c.mux.Unlock()
-		c.current = cur
-		c.currentUpdated = time.Now()
+	if err := c.postJSONAndWait(uri, data); err != nil {
+		return err
 	}
 
-	return err
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.current = cur
+	c.currentUpdated = time.Now()
+
+	return nil
 }
 
 var _ api.PhaseSwitcher = (*Easee)(nil)
@@ -456,10 +539,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 			data.DynamicCircuitCurrentP3 = &max3
 		}
 
-		var resp *http.Response
-		if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err == nil {
-			resp.Body.Close()
-		}
+		err = c.postJSONAndWait(uri, data)
 	} else {
 		// charger level
 		if phases == 3 {
@@ -474,10 +554,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			var resp *http.Response
-			if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err == nil {
-				resp.Body.Close()
-			}
+			err = c.postJSONAndWait(uri, data)
 		}
 	}
 
@@ -553,10 +630,8 @@ func (c *Easee) updateSmartCharging() {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-		if err == nil {
-			_, err = c.DoBody(req)
-		}
+
+		err := c.postJSONAndWait(uri, data)
 		if err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 			return
