@@ -473,10 +473,11 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 	for {
 		select {
 		case cmdResp := <-c.respChan:
-			if cmdResp.Ticks != expectedTick {
-			} else if !cmdResp.WasAccepted {
-				return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
-			} else {
+			if cmdResp.Ticks == expectedTick {
+				if !cmdResp.WasAccepted {
+					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
+				}
+
 				return nil
 			}
 		case <-time.After(10 * time.Second):
