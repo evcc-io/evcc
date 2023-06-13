@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - "*"
-env:
-  skip_integration: true
 
 jobs:
   call-build-workflow:
