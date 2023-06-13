@@ -413,7 +413,6 @@ func (c *Easee) Enable(enable bool) error {
 
 // posts JSON to the Easee API endpoint and waits for the async response
 func (c *Easee) postJSONAndWait(uri string, data any) error {
-
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err != nil {
 		return err
