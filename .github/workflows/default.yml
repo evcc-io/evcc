@@ -145,7 +145,7 @@ jobs:
   integration:
     name: Integration
     runs-on: ubuntu-latest
-    if: ${{ env.skip_integration != 'true' }}
+    if: env.skip_integration != 'true'
 
     steps:
       - uses: actions/checkout@v3
