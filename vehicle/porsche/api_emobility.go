@@ -36,7 +36,7 @@ func NewEmobilityAPI(log *util.Logger, identity oauth2.TokenSource) *EmobilityAP
 
 func (v *EmobilityAPI) Capabilities(vin string) (CapabilitiesResponse, error) {
 	var res CapabilitiesResponse
-	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/vcs/capabilities/%s", vin)
+	uri := fmt.Sprintf("%s/e-mobility/vcs/capabilities/%s", ApiURI, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
@@ -45,7 +45,7 @@ func (v *EmobilityAPI) Capabilities(vin string) (CapabilitiesResponse, error) {
 func (v *EmobilityAPI) Status(vin, model string) (EmobilityResponse, error) {
 	var res EmobilityResponse
 
-	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/de/de_DE/%s/%s?timezone=Europe/Berlin", model, vin)
+	uri := fmt.Sprintf("%s/e-mobility/de/de_DE/%s/%s?timezone=Europe/Berlin", ApiURI, model, vin)
 	err := v.GetJSON(uri, &res)
 	if err != nil && res.PcckErrorMessage != "" {
 		err = errors.New(res.PcckErrorMessage)

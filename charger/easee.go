@@ -562,6 +562,7 @@ func (c *Easee) updateSmartCharging() {
 		}
 		if err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
+			return
 		}
 
 		c.mux.Lock()

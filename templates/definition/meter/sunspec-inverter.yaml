@@ -9,7 +9,7 @@ params:
     choice: ["grid", "pv"]
     allinone: true
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcpip", "rs485"]
   - name: integer
     description:
       de: Integer Registerzugriff (nur für Netzzähler)
@@ -60,4 +60,5 @@ render: |
   {{- else }}
   model: sunspec
   power: Power
+  energy: Export
   {{- end }}

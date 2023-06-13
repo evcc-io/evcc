@@ -39,6 +39,15 @@ func decodeMask(mask string) (uint64, error) {
 	return strconv.ParseUint(mask, 10, 64)
 }
 
+// decodeBool8 converts a masked uint1 to a bool
+func decodeBool8(b []byte) float64 {
+	u := b[0]
+	if u > 0 {
+		return 1
+	}
+	return 0
+}
+
 // decodeBool16 converts a masked uint16 to a bool
 func decodeBool16(mask uint64) func(b []byte) float64 {
 	return func(b []byte) float64 {

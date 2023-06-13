@@ -172,9 +172,9 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 `example` provides an example value, so the user can get an idea of what is expected and what to look out for
 
-### `valuetype`
+### `type`
 
-`valuetype` allows to define the value type to let the CLI verify the user provided content
+`type` allows to define the value type to let the CLI verify the user provided content
 
 **Possible values**:
 
