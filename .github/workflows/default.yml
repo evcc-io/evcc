@@ -6,6 +6,8 @@ on:
       - master
   pull_request:
   workflow_call:
+env:
+  skip_integration: true
 
 jobs:
   clean:
@@ -63,6 +65,13 @@ jobs:
 
       - name: Build
         run: make build
+
+      - name: Cache dist
+        uses: actions/cache/save@v3
+        id: cache-dist
+        with:
+          path: dist
+          key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Upload
         uses: actions/upload-artifact@v3
@@ -136,6 +145,7 @@ jobs:
   integration:
     name: Integration
     runs-on: ubuntu-latest
+    if: ${{ env.skip_integration != 'true' }}
 
     steps:
       - uses: actions/checkout@v3
