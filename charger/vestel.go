@@ -44,7 +44,6 @@ const (
 	vestelRegAlive           = 6000
 	vestelRegExtEnable       = 7000
 	vestelRegTemperature     = 7001
-	//vestelRegChargepointState = 1000
 )
 
 var vestelRegCurrents = []uint16{1008, 1010, 1012} // non-continuous uint16 registers!
@@ -89,8 +88,8 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Vestel{
-		log:     log,
-		conn:    conn,
+		log:  log,
+		conn: conn,
 	}
 
 	go wb.heartbeat()
