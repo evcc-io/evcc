@@ -3,6 +3,14 @@ batteryLevel = "Nivelul bateriei"
 capacity = "{energy} din {total}"
 legendBottomName = "prioritate casa"
 legendBottomSubline = "neutilizat pentru incarcare"
+legendTopName = "Incarcare ajutata de baterie"
+legendTopSubline = "fara intreruperi"
+modalTitle = "Setari baterie"
+note = "Nota: Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
+legendMiddleName = "in primul rand vehiculul"
+legendMiddleSubline = "in al doilea rand casa"
+legendTitle = "Cum ar trebui utilizata energia solara?"
+legendTopAutostart = "porneste automat"
 
 [footer]
 
@@ -311,3 +319,10 @@ title = "Eroare la pornire încărcare"
 cancel = "Anulați"
 template = "Producător"
 test = "Test"
+
+
+[batterySettings.bufferStart]
+low = "cand este destul de plin"
+never = "numai cand exista surplus suficient"
+full = "cand este aproape plin"
+medium = "cand este pe jumatate plin"
