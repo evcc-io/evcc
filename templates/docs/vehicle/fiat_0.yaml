@@ -14,12 +14,12 @@ render:
       type: template
       template: fiat
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
+      icon: car # Icon in der Benutzeroberfläche (Optional)
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       vin: ZFAE... # Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind (Optional)
       capacity: 50 # Akkukapazität in kWh (Optional)
       phases: 3 # Die maximale Anzahl der Phasen welche genutzt werden können (Optional)
-      icon: car # Icon in der Benutzeroberfläche (Optional)
       cache: 15m # Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden (Optional)
       pin: # Optional
       mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll (Optional)
