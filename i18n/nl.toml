@@ -4,13 +4,19 @@ capacity = "{energy} van {total}"
 legendBottomName = "huis heeft prioriteit"
 legendBottomSubline = "niet gebruikt voor opladen"
 legendMiddleName = "eerst voertuig"
+legendMiddleSubline = "dan het huis"
 legendTitle = "Hoe moet zonne-energie gebruikt worden?"
 legendTopAutostart = "start automatisch"
 legendTopName = "batterij-ondersteund opladen"
 legendTopSubline = "zonder onderbrekingen"
 modalTitle = "Batterij-instellingen"
 note = "Opgelet: Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast."
-legendMiddleSubline = "dan het huis"
+
+[batterySettings.bufferStart]
+full = "als bijna vol"
+low = "als beetje vol"
+medium = "als half vol"
+never = "enkel bij voldoende overschot"
 
 [footer]
 
@@ -70,23 +76,62 @@ modalUpdateNow = "Nu installeren"
 modalUpdateStarted = "Starten van de nieuwe versie van evcc..."
 modalUpdateStatusStart = "Installatie gestart:"
 
+[gridSettings]
+activeHours = "{charging} van {total}"
+activeHoursLabel = "Actieve uren"
+co2Label = "CO₂ emissie"
+co2Limit = "CO₂ limiet"
+costLimitDescription = "Zet tijdelijk snel-laden in solar mode aan"
+modalTitle = "Smart Grid laden"
+none = "geen"
+priceLabel = "Energieprijs"
+priceLimit = "Prijslimiet"
+
 [header]
 about = "Over"
 blog = "Blog"
 docs = "Documentatie"
 github = "GitHub"
 login = "Voertuig logins"
+needHelp = "Hulp nodig?"
 sessions = "Laadsessies"
 settings = "Instellingen"
-needHelp = "Hulp nodig?"
 
 [header.theme]
 auto = "Design: systeem"
 dark = "Design: donker"
 light = "Design: licht"
 
+[help]
+discussionsButton = "GitHub discussies"
+documentationButton = "Documentatie"
+issueButton = "Een bug melden"
+issueDescription = "Vreemd of fout gedrag gevonden?"
+modalTitle = "Hulp nodig?"
+primaryActions = "Werkt iets niet naar behoren? Er zijn goede plaatsen om hulp te krijgen."
+restartButton = "Herstart"
+restartDescription = "Geprobeerd het uit en terug aan te zetten?"
+secondaryActions = "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
+
+[help.restart]
+cancel = "Cancel"
+confirm = "Ja, herstarten!"
+description = "Herstarten niet nodig onder normale omstandigheden. Overweeg een bug in te dienen als je evcc geregeld moet herstarten."
+disclaimer = "Nota: evcc zal afsluiten en rekenen op het besturingssysteem om de service te herstarten."
+modalTitle = "Ben je zeker dat je wil herstarten?"
+
 [main]
 vehicles = "Parking"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "Aankomst"
+departureTab = "Vertrek"
+modalTitle = "Laad Plan"
+none = "geen"
+title = "Plan"
+titleMinSoc = "Min lading"
+titleTargetCharge = "Vertrek"
 
 [main.energyflow]
 battery = "Batterij"
@@ -102,17 +147,17 @@ pvProduction = "Productie"
 selfConsumption = "Zelfverbruik"
 
 [main.loadpoint]
+avgPrice = "Ø Prijs"
 charged = "Geladen"
+co2 = "Ø CO₂"
 duration = "Duur"
 fallbackName = "Laadpunt"
 power = "Spanning"
-avgPrice = "Ø Prijs"
-co2 = "Ø CO₂"
 price = "Σ Prijs"
-solar = "Zon"
 remaining = "Resterend"
 remoteDisabledHard = "{source}: uitgeschakeld"
 remoteDisabledSoft = "{source}: adaptief PV-laden uitgeschakeld"
+solar = "Zon"
 
 [main.loadpointSettings]
 currents = "Laadstroom"
@@ -153,6 +198,8 @@ logout = "afmelden"
 [main.targetCharge]
 activate = "Activeren"
 activeLabel = "{time}"
+co2Limit = "CO₂ limiet van {co2}"
+costLimitIgnore = "De geconfigureerde {limit} zal genegeerd worden tijdens deze periode."
 descriptionEnergy = "Tegen wanneer moet {targetEnergy} in het voertuig geladen zijn?"
 descriptionSoc = "Wanneer moet het voertuig geladen zijn naar {targetSoc}%?"
 inactiveLabel = "Ingestelde tijd"
@@ -161,6 +208,7 @@ planDuration = "Oplaadtijd"
 planPeriodLabel = "Periode"
 planPeriodValue = "{start} tot {end}"
 planUnknown = "nog niet bekend"
+priceLimit = "prijslimiet van {price}"
 remove = "Verwijder"
 setTargetTime = "geen"
 targetIsInThePast = "Kies een tijd in de toekomst, Marty."
@@ -169,9 +217,6 @@ title = "Doeltijd"
 today = "Vandaag"
 tomorrow = "Morgen"
 update = "Updaten"
-co2Limit = "CO₂ limiet van {co2}"
-costLimitIgnore = "De geconfigureerde {limit} zal genegeerd worden tijdens deze periode."
-priceLimit = "prijslimiet van {price}"
 
 [main.targetChargePlan]
 chargeDuration = "Oplaadtijd"
@@ -204,8 +249,12 @@ vehicleTarget = "Voertuiglimiet: {soc}%"
 
 [main.vehicleStatus]
 charging = "Opladen..."
+cheapEnergyCharging = "Goedkope energie beschikbaar. Aan het laden…"
+cleanEnergyCharging = "Groene energie beschikbaar. Aan het laden…"
+climating = "Voor-conditionering gedetecteerd."
 connected = "Verbonden."
 disconnected = "Niet verbonden."
+guard = "Schakelbeveiliging actief voor {remaining}."
 minCharge = "Minimaal opladen naar {soc}%."
 pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}..."
 pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}..."
@@ -217,10 +266,6 @@ targetChargeWaitForVehicle = "Doellading gereed. Wachten op voertuig..."
 unknown = ""
 vehicleTargetReached = "Voertuiglimiet {soc}% bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
-guard = "Schakelbeveiliging actief voor {remaining}."
-cleanEnergyCharging = "Groene energie beschikbaar. Aan het laden…"
-climating = "Voor-conditionering gedetecteerd."
-cheapEnergyCharging = "Goedkope energie beschikbaar. Aan het laden…"
 
 [notifications]
 dismissAll = "Alles verwijderen"
@@ -232,30 +277,30 @@ reload = "Verversen?"
 
 [session]
 cancel = "Annuleer"
+co2 = "CO₂"
+date = "Periode"
 delete = "Verwijder"
 finished = "Afgerond"
+meter = "Meter"
 meterstart = "Meter start"
 meterstop = "Meter stop"
 odometer = "Kilometerstand"
+price = "Prijs"
 started = "Gestart"
 title = "Oplaadsessie"
-price = "Prijs"
-co2 = "CO₂"
-date = "Periode"
-meter = "Meter"
 
 [sessions]
+avgPrice = "Ø Prijs"
+co2 = "Ø CO₂"
 date = "Start"
 downloadCsv = "Download als CSV"
 energy = "Geladen"
 loadpoint = "Oplaadpunt"
+price = "Σ Prijs"
 reallyDelete = "Wilt u deze sessie echt verwijderen?"
+solar = "Zon"
 title = "Oplaadsessies"
 vehicle = "Voertuig"
-avgPrice = "Ø Prijs"
-co2 = "Ø CO₂"
-price = "Σ Prijs"
-solar = "Zon"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
@@ -284,6 +329,11 @@ value = "Toon experimentele UI functies."
 [settings.language]
 auto = "Automatisch"
 label = "Taal"
+
+[settings.sponsorToken]
+expires = "Je sponsor token vervalt {inXDays}. {getNewToken} en update je configuratie bestand."
+getNew = "Neem een nieuwe"
+hint = "Nota: We zullen dit in de toekomst automatiseren."
 
 [settings.telemetry]
 label = "Telemetrie"
@@ -315,54 +365,3 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
-
-
-[gridSettings]
-activeHours = "{charging} van {total}"
-co2Limit = "CO₂ limiet"
-costLimitDescription = "Zet tijdelijk snel-laden in solar mode aan"
-activeHoursLabel = "Actieve uren"
-co2Label = "CO₂ emissie"
-modalTitle = "Smart Grid laden"
-none = "geen"
-priceLabel = "Energieprijs"
-priceLimit = "Prijslimiet"
-
-[main.chargingPlan]
-modalTitle = "Laad Plan"
-activeLabel = "{time}"
-departureTab = "Vertrek"
-arrivalTab = "Aankomst"
-none = "geen"
-title = "Plan"
-titleMinSoc = "Min lading"
-titleTargetCharge = "Vertrek"
-
-[settings.sponsorToken]
-expires = "Je sponsor token vervalt {inXDays}. {getNewToken} en update je configuratie bestand."
-getNew = "Neem een nieuwe"
-hint = "Nota: We zullen dit in de toekomst automatiseren."
-
-[batterySettings.bufferStart]
-full = "als bijna vol"
-low = "als beetje vol"
-medium = "als half vol"
-never = "enkel bij voldoende overschot"
-
-[help]
-discussionsButton = "GitHub discussies"
-documentationButton = "Documentatie"
-issueButton = "Een bug melden"
-issueDescription = "Vreemd of fout gedrag gevonden?"
-modalTitle = "Hulp nodig?"
-primaryActions = "Werkt iets niet naar behoren? Er zijn goede plaatsen om hulp te krijgen."
-restartButton = "Herstart"
-restartDescription = "Geprobeerd het uit en terug aan te zetten?"
-secondaryActions = "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
-
-[help.restart]
-cancel = "Cancel"
-confirm = "Ja, herstarten!"
-description = "Herstarten niet nodig onder normale omstandigheden. Overweeg een bug in te dienen als je evcc geregeld moet herstarten."
-disclaimer = "Nota: evcc zal afsluiten en rekenen op het besturingssysteem om de service te herstarten."
-modalTitle = "Ben je zeker dat je wil herstarten?"

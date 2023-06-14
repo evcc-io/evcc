@@ -294,18 +294,18 @@ title = "Įkrovimo sesija"
 [sessions]
 avgPrice = "Ø Kaina"
 co2 = "Ø CO₂"
+csvMonth = "Atsisiųsti {month} CSV"
+csvTotal = "Atsisiųsti visą CSV"
 date = "Pabaigta"
 downloadCsv = "Atsisiųsti CSV failą"
 energy = "Įkrauta"
 loadpoint = "Įkroviklis"
+noData = "Šį mėnesį įkrovimų nebuvo."
 price = "Σ Kaina"
 reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo sesiją?"
 solar = "Saulės"
 title = "Įkrovimo Sesijos"
 vehicle = "Automobilis"
-csvMonth = "Atsisiųsti {month} CSV"
-csvTotal = "Atsisiųsti visą CSV"
-noData = "Šį mėnesį įkrovimų nebuvo."
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -317,6 +317,11 @@ meterstart = "Skaitiklis pradžia (kWh)"
 meterstop = "Skaitiklis pabaiga (kWh)"
 odometer = "Odometras (km)"
 vehicle = "Automobilis"
+
+[sessions.filter]
+allLoadpoints = "visi įkrovikliai"
+allVehicles = "visi automobiliai"
+filter = "filtruoti"
 
 [settings]
 title = "Nustatymai"
@@ -370,9 +375,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[sessions.filter]
-allLoadpoints = "visi įkrovikliai"
-allVehicles = "visi automobiliai"
-filter = "filtruoti"
