@@ -42,6 +42,8 @@ const (
 	vestelRegSessionEnergy   = 1502
 	vestelRegFailsafeTimeout = 2002
 	vestelRegAlive           = 6000
+	vestelRegExtEnable       = 7000
+	vestelRegTemperature     = 7001
 	//vestelRegChargepointState = 1000
 )
 
@@ -53,7 +55,6 @@ var vestelRegVoltages = []uint16{1014, 1016, 1018} // non-continuous uint16 regi
 type Vestel struct {
 	log     *util.Logger
 	conn    *modbus.Connection
-	current uint16
 }
 
 func init() {
@@ -90,7 +91,6 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 	wb := &Vestel{
 		log:     log,
 		conn:    conn,
-		current: 6,
 	}
 
 	go wb.heartbeat()
@@ -125,22 +125,22 @@ func (wb *Vestel) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Vestel) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(vestelRegMaxCurrent, 1)
+	b, err := wb.conn.ReadHoldingRegisters(vestelRegExtEnable, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	return binary.BigEndian.Uint16(b) == 1, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Vestel) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = wb.current
+		u = 1
 	}
 
-	_, err := wb.conn.WriteSingleRegister(vestelRegMaxCurrent, u)
+	_, err := wb.conn.WriteSingleRegister(vestelRegExtEnable, u)
 
 	return err
 }
@@ -151,11 +151,7 @@ func (wb *Vestel) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	u := uint16(current)
-	_, err := wb.conn.WriteSingleRegister(vestelRegMaxCurrent, u)
-	if err == nil {
-		wb.current = u
-	}
+	_, err := wb.conn.WriteSingleRegister(vestelRegMaxCurrent, uint16(current))
 
 	return err
 }
@@ -257,5 +253,8 @@ func (wb *Vestel) Diagnose() {
 	}
 	if b, err := wb.conn.ReadInputRegisters(vestelRegFirmware, 50); err == nil {
 		fmt.Printf("Firmware:\t%s\n", b)
+	}
+	if b, err := wb.conn.ReadInputRegisters(vestelRegTemperature, 1); err == nil {
+		fmt.Printf("Temperature:\t%d °C\n", b)
 	}
 }
