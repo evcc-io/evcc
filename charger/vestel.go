@@ -52,8 +52,8 @@ var vestelRegVoltages = []uint16{1014, 1016, 1018} // non-continuous uint16 regi
 // Vestel is an api.Charger implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Vestel struct {
-	log     *util.Logger
-	conn    *modbus.Connection
+	log  *util.Logger
+	conn *modbus.Connection
 }
 
 func init() {
