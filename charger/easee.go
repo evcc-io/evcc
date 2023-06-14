@@ -427,12 +427,12 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 		var cmd easee.RestCommandResponse
 
 		if strings.Contains(uri, "/commands/") { //command endpoint
-			if err := decodeJSON(resp, &cmd); err != nil {
+			if err := json.NewDecoder(resp.Body).Decode(&cmd); err != nil {
 				return err
 			}
 		} else { //settings endpoint
 			var cmdArr []easee.RestCommandResponse
-			if err := decodeJSON(resp, &cmdArr); err != nil {
+			if err := json.NewDecoder(resp.Body).Decode(&cmdArr); err != nil {
 				return err
 			}
 
@@ -449,16 +449,6 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 
 	// all other response codes lead to an error
 	return fmt.Errorf("invalid status: %d", resp.StatusCode)
-}
-
-// decodeJSON reads HTTP response and decodes JSON body if error is nil
-func decodeJSON(resp *http.Response, res interface{}) error {
-	if err := request.ResponseError(resp); err != nil {
-		_ = json.NewDecoder(resp.Body).Decode(&res)
-		return err
-	}
-
-	return json.NewDecoder(resp.Body).Decode(&res)
 }
 
 func (c *Easee) waitForTickResponse(expectedTick int64) error {
