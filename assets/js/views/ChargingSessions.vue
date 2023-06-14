@@ -108,9 +108,7 @@
 								<th scope="col" class="align-top text-end">
 									{{ $t("sessions.energy") }}
 									<div class="text-muted fw-normal">
-										{{
-											fmtKWh(chargedEnergy * 1e3, session.chargedEnergy >= 1)
-										}}
+										{{ fmtKWh(chargedEnergy * 1e3, chargedEnergy >= 1) }}
 									</div>
 								</th>
 								<th
