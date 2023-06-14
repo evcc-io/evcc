@@ -115,9 +115,10 @@ export default {
 		vehicles: Array,
 		climaterActive: Boolean,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		currency: String,
 	},
 	emits: [
 		"target-time-removed",

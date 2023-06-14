@@ -29,6 +29,7 @@
 									v-model="templateName"
 									:disabled="!isNew"
 									class="form-select w-100"
+									@change="templateChanged"
 								>
 									<option value="offline">Generisches Fahrzeug</option>
 									<option disabled>----------</option>
@@ -69,7 +70,7 @@
 								:label="param.Description || `[${param.Name}]`"
 								:small-value="['capacity', 'vin'].includes(param.Name)"
 							>
-								<InputField
+								<PropertyField
 									:id="`vehicleParam${param.Name}`"
 									v-model="values[param.Name]"
 									:masked="param.Mask"
@@ -77,6 +78,7 @@
 									class="me-2"
 									:placeholder="param.Example"
 									:required="param.Required"
+									:validValues="param.ValidValues"
 								/>
 							</FormRow>
 							<div class="buttons d-flex justify-content-between mb-4">
@@ -134,7 +136,7 @@
 
 <script>
 import FormRow from "../FormRow.vue";
-import InputField from "../forms/InputField.vue";
+import PropertyField from "./PropertyField.vue";
 import api from "../../api";
 import YAML from "json-to-pretty-yaml";
 
@@ -142,7 +144,7 @@ const initialValues = { type: "template" };
 
 export default {
 	name: "VehicleModal",
-	components: { FormRow, InputField },
+	components: { FormRow, PropertyField },
 	props: {
 		id: Number,
 	},
@@ -170,7 +172,14 @@ export default {
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
-			return params.filter((p) => !p.Advanced);
+			const filteredParams = params.filter((p) => !p.Advanced || p.Name === "icon");
+			const adjustedParams = filteredParams.map((p) => {
+				if (p.Name === "title" || p.Name === "icon") {
+					p.Required = true;
+				}
+				return p;
+			});
+			return adjustedParams;
 		},
 		configYaml() {
 			return YAML.stringify([
@@ -237,6 +246,7 @@ export default {
 				const vehicles = (await api.get("config/devices/vehicle")).data.result;
 				const vehicle = vehicles.find((v) => v.id === this.id);
 				this.values = vehicle.config;
+				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
 				console.error(e);
@@ -258,9 +268,21 @@ export default {
 					},
 				};
 				this.template = (await api.get("config/templates/vehicle", opts)).data.result;
+				this.applyDefaultsFromTemplate();
 			} catch (e) {
 				console.error(e);
 			}
+		},
+		templateChanged() {
+			this.reset();
+		},
+		applyDefaultsFromTemplate() {
+			const params = this.template?.Params || [];
+			params
+				.filter((p) => p.Default && !this.values[p.Name])
+				.forEach((p) => {
+					this.values[p.Name] = p.Default;
+				});
 		},
 		async test() {
 			try {

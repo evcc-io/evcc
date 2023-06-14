@@ -8,6 +8,9 @@ requirements:
     generic: Remote Control of PSA car https://github.com/flobz/psa_car_controller
 params:
   - name: title
+  - name: icon
+    default: car
+    advanced: true
   - name: url
     required: true
     example: http://192.0.2.2
@@ -22,9 +25,6 @@ params:
       en: Required
   - name: capacity
   - name: phases
-    advanced: true
-  - name: icon
-    default: car
     advanced: true
   - preset: vehicle-identify
 render: |

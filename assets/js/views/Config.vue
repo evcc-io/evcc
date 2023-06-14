@@ -15,6 +15,7 @@
 			what your doing. Otherwise you might have to reset or manually repair you database.
 		</div>
 
+		<!--
 		<h2 class="d-flex align-items-center text-evcc">
 			<shopicon-regular-powersupply size="m" class="me-2"></shopicon-regular-powersupply>
 			Grid
@@ -98,11 +99,9 @@
 		</h2>
 		<div>Bar</div>
 		<hr />
+		-->
 
-		<h2 class="d-flex align-items-center text-evcc">
-			<shopicon-regular-car3 size="m" class="me-2"></shopicon-regular-car3>
-			Vehicles
-		</h2>
+		<h2 class="d-flex align-items-center text-evcc">Vehicles</h2>
 		<div>
 			<ul class="p-0">
 				<li
@@ -110,7 +109,7 @@
 					:key="index"
 					class="d-flex align-items-center"
 				>
-					<VehicleIcon :name="vehicle.icon" class="me-2" />
+					<VehicleIcon :name="vehicle.config?.icon" class="me-2" />
 					{{ vehicle.config?.title || vehicle.name }}
 					<button
 						v-if="vehicle.id"
@@ -130,12 +129,14 @@
 		</div>
 		<hr />
 
+		<!--
 		<h2 class="d-flex align-items-center text-evcc">
 			<shopicon-regular-megaphone size="m" class="me-2"></shopicon-regular-megaphone>
 			Notifications
 		</h2>
 		<div>Bar</div>
 		<hr />
+	-->
 	</div>
 </template>
 

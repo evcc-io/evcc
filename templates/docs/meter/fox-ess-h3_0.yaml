@@ -1,11 +1,11 @@
 product:
   brand: FoxESS
-  description: FoxESS via Ethernet
+  description: H3 via Ethernet
 render:
   - usage: pv
     default: |
       type: template
-      template: fox-ess-ethernet
+      template: fox-ess-h3
       usage: pv
 
       # Modbus TCP
@@ -16,7 +16,7 @@ render:
   - usage: battery
     default: |
       type: template
-      template: fox-ess-ethernet
+      template: fox-ess-h3
       usage: battery
 
       # Modbus TCP

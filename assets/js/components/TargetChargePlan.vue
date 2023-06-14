@@ -22,7 +22,7 @@
 
 <script>
 import formatter from "../mixins/formatter";
-import { CO2_UNIT } from "../units";
+import { CO2_TYPE } from "../units";
 import TariffChart from "./TariffChart.vue";
 
 export default {
@@ -33,8 +33,9 @@ export default {
 		duration: Number,
 		rates: Array,
 		plan: Array,
-		unit: String,
+		smartCostType: String,
 		targetTime: Date,
+		currency: String,
 	},
 	data() {
 		return { activeIndex: null, startTime: new Date() };
@@ -44,7 +45,7 @@ export default {
 			return this.fmtShortDuration(this.duration, true);
 		},
 		isCo2() {
-			return this.unit === CO2_UNIT;
+			return this.smartCostType === CO2_TYPE;
 		},
 		hasTariff() {
 			return this.rates?.length > 1;
@@ -66,7 +67,9 @@ export default {
 			if (price === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}
-			return this.isCo2 ? this.fmtCo2Medium(price) : this.fmtPricePerKWh(price, this.unit);
+			return this.isCo2
+				? this.fmtCo2Medium(price)
+				: this.fmtPricePerKWh(price, this.currency);
 		},
 		activeSlot() {
 			return this.slots[this.activeIndex];

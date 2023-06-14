@@ -12,6 +12,12 @@
 		/>
 		<span :id="id + '_unit'" class="input-group-text">{{ unit }}</span>
 	</div>
+	<select v-else-if="select" :id="id" v-model="value" class="form-select">
+		<option v-if="!required" value="">---</option>
+		<option v-for="{ key, name } in selectOptions" :key="key" :value="key">
+			{{ name }}
+		</option>
+	</select>
 	<textarea
 		v-else-if="textarea"
 		:id="id"
@@ -35,14 +41,14 @@
 
 <script>
 export default {
-	name: "InputField",
+	name: "PropertyField",
 	props: {
 		id: String,
 		property: String,
 		masked: Boolean,
-		optional: Boolean,
 		placeholder: String,
 		required: Boolean,
+		validValues: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],
@@ -58,6 +64,15 @@ export default {
 		},
 		textarea() {
 			return ["accessToken", "refreshToken"].includes(this.property);
+		},
+		select() {
+			return this.validValues.length > 0;
+		},
+		selectOptions() {
+			return this.validValues.map((value) => ({
+				key: value,
+				name: this.$t(`config.options.${this.property}.${value}`),
+			}));
 		},
 		value: {
 			get() {

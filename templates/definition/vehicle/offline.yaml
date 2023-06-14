@@ -20,35 +20,36 @@ params:
   - name: identifiers
     advanced: true
     type: stringlist
+  - preset: vehicle-identify
 render: |
   type: custom
   features: ["offline"]
   {{- if .title }}
   title: {{ .title }}
   {{- end }}
-  {{- if ne .icon "" }}
+  {{- if .icon }}
   icon: {{ .icon }}
   {{- end }}
   capacity: {{ .capacity }} # kWh
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
-  soc: # fixed - no Soc available
-    source: js
-    script: 0;
+  soc:
+    source: const
+    value: 0
   onIdentify:
-  {{- if (ne .mode "") }}
+  {{- if .mode }}
     mode: {{ .mode }}
   {{- end }}
-    minSoc: 0 # fixed - no Soc available
-    targetSoc: 100 # fixed - no Soc available
-  {{- if (ne .minCurrent "") }}
+    minSoc: 0 # fixed - no soc available
+    targetSoc: 100 # fixed - no soc available
+  {{- if .minCurrent }}
     minCurrent: {{ .minCurrent }}
   {{- end }}
-  {{- if (ne .maxCurrent "") }}
+  {{- if .maxCurrent }}
     maxCurrent: {{ .maxCurrent }}
   {{- end }}
-  {{- if ne (len .identifiers) 0 }}
+  {{- if (len .identifiers) }}
   identifiers:
   {{-   range .identifiers }}
   - {{ . }}

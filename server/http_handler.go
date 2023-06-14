@@ -392,7 +392,6 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		}{
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,
-			Unit:     lp.GetPlannerUnit(),
 			Power:    power,
 		}
 		jsonResult(w, res)

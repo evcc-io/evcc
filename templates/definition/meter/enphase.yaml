@@ -5,19 +5,64 @@ products:
       generic: IQ Envoy
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["grid", "pv"]
   - name: host
     required: true
+  - name: token
+    help:
+      en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
+      de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
   power:
     source: http
     uri: http://{{ .host }}/production.json
     method: GET
-    jq: .production[0].wNow
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .consumption[] | select(.measurementType == "net-consumption").wNow
+    scale: 1
   energy:
     source: http
     uri: http://{{ .host }}/production.json
     method: GET
-    jq: .production[0].whLifetime
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .consumption[] | select(.measurementType == "net-consumption").whLifetime
     scale: 0.001
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/production.json
+    method: GET
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .production[] | select(.measurementType == "production").wNow
+    scale: 1
+  energy:
+    source: http
+    uri: http://{{ .host }}/production.json
+    method: GET
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .production[] | select(.measurementType == "production").whLifetime
+    scale: 0.001
+  {{- end }}

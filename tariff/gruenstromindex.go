@@ -128,11 +128,6 @@ func (t *GrünStromIndex) run(done chan error) {
 	}
 }
 
-// Unit implements the api.Tariff interface
-func (t *GrünStromIndex) Unit() string {
-	return Co2Equivalent
-}
-
 // Rates implements the api.Tariff interface
 func (t *GrünStromIndex) Rates() (api.Rates, error) {
 	t.mux.Lock()
@@ -140,7 +135,7 @@ func (t *GrünStromIndex) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *GrünStromIndex) IsDynamic() bool {
-	return true
+// Type returns the tariff type
+func (t *GrünStromIndex) Type() api.TariffType {
+	return api.TariffTypeCo2
 }

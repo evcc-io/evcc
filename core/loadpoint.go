@@ -105,6 +105,7 @@ type Loadpoint struct {
 
 	// exposed public configuration
 	sync.Mutex                // guard status
+	vehicleMux sync.Mutex     // guard vehicle
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
 	Title_            string   `mapstructure:"title"`    // UI title
@@ -475,7 +476,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// energy and duration
 	lp.sessionEnergy.Publish("session", lp)
 	lp.publish("chargedEnergy", lp.getChargedEnergy())
-	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
+	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime).Round(time.Second))
 
 	// forget startup energy offset
 	lp.chargedAtStartup = 0
@@ -665,6 +666,14 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 		}
 
 		if err != nil {
+			v := lp.GetVehicle()
+			if vv, ok := v.(api.Resurrector); ok && errors.Is(err, api.ErrAsleep) {
+				// https://github.com/evcc-io/evcc/issues/8254
+				// wakeup vehicle
+				lp.log.DEBUG.Printf("max charge current: waking up vehicle")
+				return vv.WakeUp()
+			}
+
 			return fmt.Errorf("max charge current %.3gA: %w", chargeCurrent, err)
 		}
 
@@ -680,15 +689,6 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			return nil
 		}
 		lp.elapseGuard()
-
-		// remote stop
-		// TODO https://github.com/evcc-io/evcc/discussions/1929
-		// if car, ok := lp.vehicle.(api.VehicleChargeController); !enabled && ok {
-		// 	// log but don't propagate
-		// 	if err := car.StopCharge(); err != nil {
-		// 		lp.log.ERROR.Printf("vehicle remote charge stop: %v", err)
-		// 	}
-		// }
 
 		if err := lp.charger.Enable(enabled); err != nil {
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
@@ -706,15 +706,6 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 		} else {
 			lp.stopWakeUpTimer()
 		}
-
-		// remote start
-		// TODO https://github.com/evcc-io/evcc/discussions/1929
-		// if car, ok := lp.vehicle.(api.VehicleChargeController); enabled && ok {
-		// 	// log but don't propagate
-		// 	if err := car.StartCharge(); err != nil {
-		// 		lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
-		// 	}
-		// }
 	}
 
 	return nil
@@ -762,7 +753,8 @@ func (lp *Loadpoint) targetSocReached() bool {
 // minSocNotReached checks if minimum is configured and not reached.
 // If vehicle is not configured this will always return false
 func (lp *Loadpoint) minSocNotReached() bool {
-	if lp.vehicle == nil || lp.Soc.min == 0 {
+	vehicle := lp.GetVehicle()
+	if vehicle == nil || lp.Soc.min == 0 {
 		return false
 	}
 
@@ -770,7 +762,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		return lp.vehicleSoc < float64(lp.Soc.min)
 	}
 
-	minEnergy := lp.vehicle.Capacity() * float64(lp.Soc.min) / 100 / soc.ChargeEfficiency
+	minEnergy := vehicle.Capacity() * float64(lp.Soc.min) / 100 / soc.ChargeEfficiency
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
@@ -863,7 +855,7 @@ func (lp *Loadpoint) effectiveCurrent() float64 {
 
 	// adjust actual current for vehicles like Zoe where it remains below target
 	if lp.chargeCurrents != nil {
-		cur := lp.chargeCurrents[0]
+		cur := max(lp.chargeCurrents)
 		return math.Min(cur+2.0, lp.chargeCurrent)
 	}
 
@@ -1341,7 +1333,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		// vehicle target soc
 		targetSoc := 100
-		if vs, ok := lp.vehicle.(api.SocLimiter); ok {
+		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
 			if limit, err := vs.TargetSoc(); err == nil {
 				targetSoc = int(math.Trunc(limit))
 				lp.log.DEBUG.Printf("vehicle soc limit: %.0f%%", limit)
@@ -1366,7 +1358,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.SetRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(socLimit))
 
 		// range
-		if vs, ok := lp.vehicle.(api.VehicleRange); ok {
+		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.publish(vehicleRange, rng)

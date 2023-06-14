@@ -396,21 +396,18 @@ func (lp *Loadpoint) GetRemainingEnergy() float64 {
 
 // GetVehicle gets the active vehicle
 func (lp *Loadpoint) GetVehicle() api.Vehicle {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.vehicleMux.Lock()
+	defer lp.vehicleMux.Unlock()
 	return lp.vehicle
 }
 
 // SetVehicle sets the active vehicle
 func (lp *Loadpoint) SetVehicle(vehicle api.Vehicle) {
-	// TODO develop universal locking approach
-	// setActiveVehicle is protected by lock, hence no locking here
-
-	// set desired vehicle
+	// set desired vehicle (protected by lock, no locking here)
 	lp.setActiveVehicle(vehicle)
 
-	lp.Lock()
-	defer lp.Unlock()
+	lp.vehicleMux.Lock()
+	defer lp.vehicleMux.Unlock()
 
 	// disable auto-detect
 	lp.stopVehicleDetection()

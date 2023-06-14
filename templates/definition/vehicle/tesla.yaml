@@ -19,6 +19,9 @@ requirements:
       - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
 params:
   - name: title
+  - name: icon
+    default: car
+    advanced: true
   - name: accessToken
     required: true
     help:
@@ -34,16 +37,13 @@ params:
   - name: capacity
   - name: phases
     advanced: true
-  - name: icon
-    default: car
-    advanced: true
   - preset: vehicle-identify
 render: |
   type: tesla
   {{- if .title }}
   title: {{ .title }}
   {{- end }}
-  {{- if ne .icon "" }}
+  {{- if .icon }}
   icon: {{ .icon }}
   {{- end }}
   tokens:
@@ -53,7 +53,8 @@ render: |
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
-  {{- if ne .vin "" }}
+  {{- if .vin }}
   vin: {{ .vin }}
   {{- end }}
   {{ include "vehicle-identify" . }}
+  features: ["coarsecurrent"]

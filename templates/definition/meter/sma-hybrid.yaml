@@ -60,7 +60,7 @@ render: |
       address: 30845 # SMA Modbus Profile: Battery state of charge
       type: holding
       decode: uint32nan
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}
