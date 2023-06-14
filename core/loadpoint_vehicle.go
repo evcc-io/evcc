@@ -152,7 +152,7 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(vehicleCapacity, vehicle.Capacity())
 		lp.restoreVehicleSettings()
 
-    lp.applyAction(vehicle.OnIdentified())
+		lp.applyAction(vehicle.OnIdentified())
 		lp.addTask(lp.vehicleOdometer)
 
 		lp.progress.Reset()
