@@ -22,8 +22,14 @@ export async function stop() {
   await _clean();
 }
 
-export async function restartKeepState(config) {
+export async function restart(config) {
   await _stop();
+  await _start(config);
+}
+
+export async function cleanRestart(config) {
+  await _stop();
+  await _clean();
   await _start(config);
 }
 

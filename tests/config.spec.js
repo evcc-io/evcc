@@ -1,8 +1,11 @@
 const { test, expect } = require("@playwright/test");
-const { start, stop } = require("./evcc");
+const { start, stop, restart, cleanRestart } = require("./evcc");
+
+const CONFIG_EMPTY = "config-empty.evcc.yaml";
+const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
 
 test.beforeAll(async () => {
-  await start("config.evcc.yaml");
+  await start(CONFIG_EMPTY);
 });
 test.afterAll(async () => {
   await stop();
@@ -29,6 +32,8 @@ test.describe("vehicles", async () => {
   test("create, edit and delete vehicles", async ({ page }) => {
     await page.goto("/#/config");
 
+    await expect(page.getByTestId("vehicle")).toHaveCount(0);
+
     // create #1
     await page.getByRole("button", { name: "add vehicle" }).click();
     await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
@@ -42,7 +47,6 @@ test.describe("vehicles", async () => {
     await page.getByRole("button", { name: "add vehicle" }).click();
     await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
     await page.getByLabel("Title").fill("Yellow Van");
-    await page.getByLabel("Icon").selectOption("van");
     await page.getByRole("button", { name: "Test" }).click();
     await page.getByRole("button", { name: "Create" }).click();
 
@@ -53,7 +57,6 @@ test.describe("vehicles", async () => {
     // edit #1
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
     await expect(page.getByLabel("Title")).toHaveValue("Green Car");
-    await expect(page.getByLabel("Icon")).toHaveValue("car");
     await page.getByLabel("Title").fill("Fancy Car");
     await page.getByRole("button", { name: "Test" }).click();
     await page.getByRole("button", { name: "Update" }).click();
@@ -67,5 +70,59 @@ test.describe("vehicles", async () => {
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Yellow Van/);
+
+    // delete #2
+    await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
+    await page.getByRole("button", { name: "Delete Vehicle" }).click();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(0);
+  });
+
+  test("config should survive restart", async ({ page }) => {
+    await page.goto("/#/config");
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(0);
+
+    // create #1 & #2
+    await page.getByRole("button", { name: "add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByLabel("Title").fill("Green Car");
+    await page.getByRole("button", { name: "Test" }).click();
+    await page.getByRole("button", { name: "Create" }).click();
+    await page.getByRole("button", { name: "add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByLabel("Title").fill("Yellow Van");
+    await page.getByLabel("Icon").selectOption("van");
+    await page.getByRole("button", { name: "Test" }).click();
+    await page.getByRole("button", { name: "Create" }).click();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(2);
+
+    // restart evcc
+    await restart(CONFIG_EMPTY);
+    await page.reload();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(2);
+    await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Green Car/);
+    await expect(page.getByTestId("vehicle").nth(1)).toHaveText(/Yellow Van/);
+  });
+
+  test("mixed config (yaml + db)", async ({ page }) => {
+    await cleanRestart(CONFIG_WITH_VEHICLE);
+
+    await page.goto("/#/config");
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(1);
+
+    // create #1
+    await page.getByRole("button", { name: "add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByLabel("Title").fill("Green Car");
+    await page.getByRole("button", { name: "Test" }).click();
+    await page.getByRole("button", { name: "Create" }).click();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(2);
+    await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/YAML Bike/);
+    await expect(page.getByTestId("vehicle").nth(1)).toHaveText(/Green Car/);
   });
 });
