@@ -294,10 +294,13 @@ title = "Sessão de carga"
 [sessions]
 avgPrice = "Preço Ø"
 co2 = "CO₂ Ø"
-date = "Período"
+csvMonth = "Download {month} CSV"
+csvTotal = "Download tudo CSV"
+date = "Terminado"
 downloadCsv = "Download como CSV"
 energy = "Carregado"
 loadpoint = "Ponto de carga"
+noData = "Nenhuma sessão de carregamento este mês."
 odometer = "Quilometragem"
 price = "Preço Σ"
 reallyDelete = "Você realmente quer excluir esta sessão?"
@@ -315,6 +318,11 @@ meterstart = "Início do contador (kWh)"
 meterstop = "Contagem final (kWh)"
 odometer = "Quilometragem (km)"
 vehicle = "Veículo"
+
+[sessions.filter]
+allLoadpoints = "todos pontos de carregamento"
+allVehicles = "todos veículos"
+filter = "filtro"
 
 [settings]
 title = "Configuração"
