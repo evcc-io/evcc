@@ -9,7 +9,19 @@ export default function setupRouter(i18n) {
     history: createWebHashHistory(),
     routes: [
       { path: "/", component: Main, props: true },
-      { path: "/sessions", component: ChargingSessions, props: true },
+      {
+        path: "/sessions",
+        component: ChargingSessions,
+        props: (route) => {
+          const { month, year, loadpoint, vehicle } = route.query;
+          return {
+            month: month ? parseInt(month, 10) : undefined,
+            year: year ? parseInt(year, 10) : undefined,
+            loadpointFilter: loadpoint,
+            vehicleFilter: vehicle,
+          };
+        },
+      },
     ],
   });
   router.beforeEach(async () => {

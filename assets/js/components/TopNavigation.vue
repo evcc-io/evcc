@@ -6,6 +6,7 @@
 			data-bs-toggle="dropdown"
 			aria-expanded="false"
 			class="btn btn-sm btn-outline-secondary position-relative border-0 menu-button"
+			data-testid="topnavigation-button"
 		>
 			<span
 				v-if="showBadge"
@@ -15,7 +16,11 @@
 			</span>
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</button>
-		<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="topNavigatonDropdown">
+		<ul
+			class="dropdown-menu dropdown-menu-end"
+			aria-labelledby="topNavigatonDropdown"
+			data-testid="topnavigation-dropdown"
+		>
 			<li>
 				<router-link class="dropdown-item" to="/sessions">
 					{{ $t("header.sessions") }}

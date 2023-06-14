@@ -12,126 +12,215 @@
 
 		<div class="row">
 			<main class="col-12">
-				<div class="d-flex justify-content-start mb-4">
-					<a
-						class="btn btn-outline-secondary text-nowrap my-2"
-						:href="csvHrefLink()"
-						download="sessions.csv"
+				<div class="d-flex align-items-baseline justify-content-between my-5">
+					<router-link
+						class="d-flex text-decoration-none align-items-center"
+						:class="{ 'pe-none': !hasPrev, 'text-muted': !hasPrev }"
+						:to="{ query: { ...$route.query, ...prevYearMonth } }"
 					>
-						{{ $t("sessions.downloadCsv") }}
-					</a>
+						<shopicon-regular-angledoubleleftsmall
+							size="s"
+							class="me-1"
+						></shopicon-regular-angledoubleleftsmall>
+						<span class="d-none d-sm-block">{{ prevMonthName }}</span>
+						<span class="d-block d-sm-none">{{ prevMonthNameShort }}</span>
+					</router-link>
+					<h2 class="text-center">{{ headline }}</h2>
+					<router-link
+						class="d-flex text-decoration-none align-items-center"
+						:class="{ 'pe-none': !hasNext, 'text-muted': !hasNext }"
+						:to="{ query: { ...$route.query, ...nextYearMonth } }"
+					>
+						<span class="d-none d-sm-block">{{ nextMonthName }}</span>
+						<span class="d-block d-sm-none">{{ nextMonthNameShort }}</span>
+						<shopicon-regular-angledoublerightsmall
+							size="s"
+							class="ms-1"
+						></shopicon-regular-angledoublerightsmall>
+					</router-link>
 				</div>
-
-				<div v-for="group in sessionsByMonthAndLoadpoint" :key="group.month">
-					<div class="d-flex align-items-center my-5">
-						<h2 class="me-4 mb-0">
-							{{ formatGroupHeadline(group.month) }}
-						</h2>
-						<a
-							class="btn btn-xs btn-outline-secondary text-nowrap"
-							:href="csvHrefLink(group.month)"
-							download="sessions.csv"
-						>
-							CSV
-						</a>
-					</div>
-
-					<div v-for="loadpoint in group.loadpoints" :key="loadpoint.name">
-						<div class="d-flex align-items-baseline mb-3">
-							<h3 class="me-4 mb-0">
-								{{ loadpoint.name }}
-							</h3>
-							<div class="large">{{ fmtKWh(loadpoint.total) }}</div>
-						</div>
-
-						<ul class="breakdown text-gray d-sm-flex flex-sm-wrap ps-0 mb-2">
-							<li
-								v-for="(vehicle, id) in groupedKWh('vehicle', loadpoint.sessions)"
-								:key="id"
-								class="breakdown-item"
-							>
-								{{ vehicle.name }}: {{ fmtKWh(vehicle.energy) }}
-							</li>
-						</ul>
-						<div class="table-responsive my-3">
-							<table class="table text-nowrap">
-								<thead>
-									<tr>
-										<th scope="col" class="ps-0">{{ $t("sessions.date") }}</th>
-										<th scope="col">{{ $t("sessions.vehicle") }}</th>
-										<th scope="col" class="text-end">
-											{{ $t("sessions.energy") }}
-										</th>
-										<th scope="col" class="text-end">
-											{{ $t("sessions.solar") }}
-										</th>
-										<th scope="col" class="text-end">
-											{{ $t("sessions.price") }}
-										</th>
-										<th scope="col" class="text-end">
-											{{ $t("sessions.avgPrice") }}
-										</th>
-										<th scope="col" class="text-end pe-0">
-											{{ $t("sessions.co2") }}
-										</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr
-										v-for="(session, id) in loadpoint.sessions"
-										:key="id"
-										role="button"
-										@click="showDetails(session.id)"
+				<div v-if="currentSessions.length === 0" data-testid="sessions-nodata" class="my-5">
+					<p>{{ $t("sessions.noData") }}</p>
+				</div>
+				<div v-else class="table-responsive my-3">
+					<table class="table text-nowrap">
+						<thead>
+							<tr data-testid="sessions-head">
+								<th scope="col" class="align-top ps-0">
+									{{ $t("sessions.date") }}
+								</th>
+								<th scope="col" class="align-top">
+									{{ $t("sessions.loadpoint") }}
+									<label class="position-relative d-block">
+										<select
+											:value="loadpointFilter"
+											class="custom-select"
+											@change="changeLoadpointFilter"
+										>
+											<option
+												v-for="{
+													name,
+													value,
+													count,
+												} in loadpointFilterOptions"
+												:key="value"
+												:value="value"
+												:disabled="count === 0"
+											>
+												{{ name }} ({{ count }})
+											</option>
+										</select>
+										<span
+											class="fw-normal text-decoration-underline text-nowrap text-muted pe-none"
+										>
+											{{ loadpointFilter || $t("sessions.filter.filter") }}
+										</span>
+									</label>
+								</th>
+								<th scope="col" class="align-top">
+									{{ $t("sessions.vehicle") }}
+									<label class="position-relative d-block">
+										<select
+											:value="vehicleFilter"
+											class="custom-select"
+											@change="changeVehicleFilter"
+										>
+											<option
+												v-for="{
+													name,
+													value,
+													count,
+												} in vehicleFilterOptions"
+												:key="value"
+												:value="value"
+												:disabled="count === 0"
+											>
+												{{ name }} ({{ count }})
+											</option>
+										</select>
+										<span
+											class="fw-normal text-decoration-underline text-nowrap text-muted pe-none"
+										>
+											{{ vehicleFilter || $t("sessions.filter.filter") }}
+										</span>
+									</label>
+								</th>
+								<th scope="col" class="align-top text-end">
+									{{ $t("sessions.energy") }}
+									<div class="text-muted fw-normal">
+										{{ fmtKWh(chargedEnergy * 1e3, chargedEnergy >= 1) }}
+									</div>
+								</th>
+								<th
+									v-if="hasSolarPercentage"
+									scope="col"
+									class="align-top text-end"
+								>
+									{{ $t("sessions.solar") }}
+									<div
+										v-if="solarPercentage != null"
+										class="text-muted fw-normal"
 									>
-										<td class="ps-0">
-											{{ fmtFullDateTime(new Date(session.created), true) }}
-										</td>
-										<td>
-											{{ session.vehicle }}
-										</td>
-										<td class="text-end">
-											{{
-												fmtKWh(
-													session.chargedEnergy * 1e3,
-													session.chargedEnergy >= 1
-												)
-											}}
-										</td>
-										<td class="text-end">
-											<span v-if="session.solarPercentage != null">
-												{{ fmtNumber(session.solarPercentage, 1) }}%
-											</span>
-											<span v-else class="text-muted">-</span>
-										</td>
-										<td class="text-end">
-											<span v-if="session.price != null">
-												{{ fmtMoney(session.price, currency) }}
-												{{ fmtCurrencySymbol(currency) }}
-											</span>
-											<span v-else class="text-muted">-</span>
-										</td>
-										<td class="text-end">
-											<span v-if="session.pricePerKWh != null">
-												{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
-											</span>
-											<span v-else class="text-muted">-</span>
-										</td>
-										<td class="text-end pe-0">
-											<span v-if="session.co2PerKWh != null">
-												{{ fmtCo2Medium(session.co2PerKWh) }}
-											</span>
-											<span v-else class="text-muted">-</span>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
+										{{ fmtNumber(solarPercentage, 1) }}%
+									</div>
+								</th>
+								<th v-if="hasPrice" scope="col" class="align-top text-end">
+									{{ $t("sessions.price") }}
+									<div v-if="price != null" class="text-muted fw-normal">
+										{{ fmtMoney(price, currency) }}
+										{{ fmtCurrencySymbol(currency) }}
+									</div>
+								</th>
+								<th v-if="hasPrice" scope="col" class="align-top text-end">
+									{{ $t("sessions.avgPrice") }}
+									<div v-if="pricePerKWh != null" class="text-muted fw-normal">
+										{{ fmtPricePerKWh(pricePerKWh, currency) }}
+									</div>
+								</th>
+								<th v-if="hasCo2" scope="col" class="align-top text-end pe-0">
+									{{ $t("sessions.co2") }}
+									<div v-if="co2PerKWh != null" class="text-muted fw-normal">
+										{{ fmtCo2Medium(co2PerKWh) }}
+									</div>
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr
+								v-for="(session, id) in filteredSessions"
+								:key="id"
+								role="button"
+								data-testid="sessions-entry"
+								@click="showDetails(session.id)"
+							>
+								<td class="ps-0">
+									{{ fmtFullDateTime(new Date(session.created), true) }}
+								</td>
+								<td>
+									{{ session.loadpoint }}
+								</td>
+								<td>
+									{{ session.vehicle }}
+								</td>
+								<td class="text-end">
+									{{
+										fmtKWh(
+											session.chargedEnergy * 1e3,
+											session.chargedEnergy >= 1
+										)
+									}}
+								</td>
+								<td v-if="hasSolarPercentage" class="text-end">
+									<span v-if="session.solarPercentage != null">
+										{{ fmtNumber(session.solarPercentage, 1) }}%
+									</span>
+									<span v-else class="text-muted">-</span>
+								</td>
+								<td v-if="hasPrice" class="text-end">
+									<span v-if="session.price != null">
+										{{ fmtMoney(session.price, currency) }}
+										{{ fmtCurrencySymbol(currency) }}
+									</span>
+									<span v-else class="text-muted">-</span>
+								</td>
+								<td v-if="hasPrice" class="text-end">
+									<span v-if="session.pricePerKWh != null">
+										{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
+									</span>
+									<span v-else class="text-muted">-</span>
+								</td>
+								<td v-if="hasCo2" class="text-end pe-0">
+									<span v-if="session.co2PerKWh != null">
+										{{ fmtCo2Medium(session.co2PerKWh) }}
+									</span>
+									<span v-else class="text-muted">-</span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="d-flex mb-5 my-4">
+					<a
+						v-if="currentSessions.length"
+						class="btn btn-outline-secondary text-nowrap me-3"
+						:href="csvLink"
+						download
+					>
+						{{ $t("sessions.csvMonth", { month: headline }) }}
+					</a>
+					<a
+						v-if="sessions.length"
+						class="btn btn-outline-secondary text-nowrap"
+						:href="csvTotalLink"
+						download
+					>
+						{{ $t("sessions.csvTotal") }}
+					</a>
 				</div>
 			</main>
 			<ChargingSessionModal
 				:session="selectedSession"
-				:vehicles="vehicles"
+				:vehicles="vehiclesObjects"
 				@session-changed="loadSessions"
 			/>
 		</div>
@@ -142,6 +231,8 @@
 import Modal from "bootstrap/js/dist/modal";
 import TopNavigation from "../components/TopNavigation.vue";
 import "@h2d2/shopicons/es/bold/arrowback";
+import "@h2d2/shopicons/es/regular/angledoubleleftsmall";
+import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import formatter from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -153,31 +244,100 @@ export default {
 	mixins: [formatter],
 	props: {
 		notifications: Array,
+		month: { type: Number, default: () => new Date().getMonth() + 1 },
+		year: { type: Number, default: () => new Date().getFullYear() },
+		loadpointFilter: { type: String, default: "" },
+		vehicleFilter: { type: String, default: "" },
 	},
 	data() {
-		return { sessions: [], selectedSessionId: undefined };
+		return {
+			sessions: [],
+			selectedSessionId: undefined,
+		};
 	},
 	computed: {
-		sessionsByMonthAndLoadpoint() {
+		currentSessions() {
 			const sessionsWithDefaults = this.sessions.map((session) => {
 				const loadpoint = session.loadpoint || this.$t("main.loadpoint.fallbackName");
 				const vehicle = session.vehicle || this.$t("main.vehicle.unknown");
 				return { ...session, loadpoint, vehicle };
 			});
 
-			const sessionsByMonth = this.groupByMonth(sessionsWithDefaults);
-
-			return Object.entries(sessionsByMonth).map(([month, sessions]) => {
-				const loadpoints = Object.entries(this.groupByLoadpoint(sessions)).map(
-					([loadpoint, sessionsByLoadpoint]) => {
-						const total = this.totalKWh(sessionsByLoadpoint);
-						return { name: loadpoint, total, sessions: sessionsByLoadpoint };
-					}
-				);
-				return { month, loadpoints };
+			return sessionsWithDefaults.filter((session) => {
+				const date = new Date(session.created);
+				return date.getFullYear() === this.year && date.getMonth() + 1 === this.month;
 			});
 		},
+		filteredSessions() {
+			return this.currentSessions.filter(this.filterByLoadpoint).filter(this.filterByVehicle);
+		},
+		vehicleFilterOptions() {
+			const options = [
+				{
+					name: this.$t("sessions.filter.allVehicles"),
+					value: "",
+					count: this.filterCountForVehicle(),
+				},
+			];
+			this.vehicles.forEach((name) => {
+				const count = this.filterCountForVehicle(name);
+				options.push({ name, value: name, count });
+			});
+			return options;
+		},
+		loadpointFilterOptions() {
+			const options = [
+				{
+					name: this.$t("sessions.filter.allLoadpoints"),
+					value: "",
+					count: this.filterCountForLoadpoint(),
+				},
+			];
+			this.loadpoints.forEach((name) => {
+				const count = this.filterCountForLoadpoint(name);
+				options.push({ name, value: name, count });
+			});
+			return options;
+		},
+		chargedEnergy() {
+			return this.filteredSessions.reduce((total, s) => total + s.chargedEnergy, 0);
+		},
+		price() {
+			return this.filteredSessions.reduce((total, s) => total + s.price, 0);
+		},
+		hasPrice() {
+			return this.filteredSessions.find((s) => s.price != null) != null;
+		},
+		hasSolarPercentage() {
+			return this.filteredSessions.find((s) => s.solarPercentage != null) != null;
+		},
+		hasCo2() {
+			return this.filteredSessions.find((s) => s.co2PerKWh != null) != null;
+		},
+		pricePerKWh() {
+			return this.price / this.chargedEnergy;
+		},
+		co2PerKWh() {
+			const emittedCo2 = this.filteredSessions.reduce(
+				(total, s) => total + s.chargedEnergy * s.co2PerKWh,
+				0
+			);
+			return emittedCo2 / this.chargedEnergy;
+		},
+		solarPercentage() {
+			const chargedSolarEnergy = this.filteredSessions.reduce(
+				(total, s) => total + s.chargedEnergy * (s.solarPercentage / 100),
+				0
+			);
+			return (100 / this.chargedEnergy) * chargedSolarEnergy;
+		},
+		loadpoints() {
+			return [...new Set(this.currentSessions.map((s) => s.loadpoint))];
+		},
 		vehicles() {
+			return [...new Set(this.currentSessions.map((s) => s.vehicle))];
+		},
+		vehiclesObjects() {
 			return (
 				store.state.vehicles?.map((v, index) => {
 					return { id: index, title: v };
@@ -190,70 +350,108 @@ export default {
 		currency() {
 			return store.state.currency;
 		},
+		headline() {
+			const date = new Date();
+			date.setMonth(this.month - 1);
+			date.setFullYear(this.year);
+			return this.fmtMonthYear(date);
+		},
+		csvLink() {
+			return this.csvHrefLink(this.year, this.month);
+		},
+		csvTotalLink() {
+			return this.csvHrefLink();
+		},
+		prevDate() {
+			const date = new Date();
+			date.setFullYear(this.year);
+			date.setMonth(this.month - 2);
+			return date;
+		},
+		prevYearMonth() {
+			return { year: this.prevDate.getFullYear(), month: this.prevDate.getMonth() + 1 };
+		},
+		prevMonthName() {
+			return this.fmtMonth(this.prevDate);
+		},
+		prevMonthNameShort() {
+			return this.fmtMonth(this.prevDate, true);
+		},
+		nextDate() {
+			const date = new Date();
+			date.setFullYear(this.year);
+			date.setMonth(this.month);
+			return date;
+		},
+		nextYearMonth() {
+			return { year: this.nextDate.getFullYear(), month: this.nextDate.getMonth() + 1 };
+		},
+		nextMonthName() {
+			return this.fmtMonth(this.nextDate);
+		},
+		nextMonthNameShort() {
+			return this.fmtMonth(this.nextDate, true);
+		},
+		hasNext() {
+			const now = new Date();
+			return this.year < now.getFullYear() || this.month < now.getMonth() + 1;
+		},
+		hasPrev() {
+			const length = this.sessions.length;
+			if (length === 0) {
+				return false;
+			}
+			const first = new Date(this.sessions[length - 1].created);
+			return this.year > first.getFullYear() || this.month > first.getMonth() + 1;
+		},
 	},
 	mounted() {
 		this.loadSessions();
 	},
 	methods: {
+		filterByLoadpoint(session) {
+			return !this.loadpointFilter || session.loadpoint === this.loadpointFilter;
+		},
+		filterByVehicle(session) {
+			return !this.vehicleFilter || session.vehicle === this.vehicleFilter;
+		},
+		filterCountForVehicle(vehicle) {
+			return this.currentSessions
+				.filter(this.filterByLoadpoint)
+				.filter((s) => !vehicle || s.vehicle === vehicle).length;
+		},
+		filterCountForLoadpoint(loadpoint) {
+			return this.currentSessions
+				.filter(this.filterByVehicle)
+				.filter((s) => !loadpoint || s.loadpoint === loadpoint).length;
+		},
+		changeLoadpointFilter(event) {
+			const loadpoint = event.target.value || undefined;
+			this.$router.push({ query: { ...this.$route.query, loadpoint } });
+		},
+		changeVehicleFilter(event) {
+			const vehicle = event.target.value || undefined;
+			this.$router.push({ query: { ...this.$route.query, vehicle } });
+		},
 		async loadSessions() {
 			const response = await api.get("sessions");
 			this.sessions = response.data?.result;
-		},
-		groupByMonth(sessions) {
-			return sessions.reduce((groups, session) => {
-				const date = new Date(session.created);
-				const month = `${date.getFullYear()}.${date.getMonth() + 1}`;
-				if (!groups[month]) groups[month] = [];
-				groups[month].push(session);
-				return groups;
-			}, {});
-		},
-		groupByLoadpoint(sessions) {
-			return sessions.reduce((groups, session) => {
-				const loadpoint = session.loadpoint;
-				if (!groups[loadpoint]) groups[loadpoint] = [];
-				groups[loadpoint].push(session);
-				return groups;
-			}, {});
-		},
-		totalKWh(sessions) {
-			return sessions.reduce((total, session) => total + session.chargedEnergy, 0) * 1e3;
-		},
-		groupedKWh(by, sessions) {
-			const grouped = sessions.reduce((groups, session) => {
-				const name = session[by];
-				if (!groups[name]) groups[name] = 0;
-				groups[name] += session.chargedEnergy * 1e3;
-				return groups;
-			}, {});
-			const list = Object.entries(grouped).map(([name, energy]) => {
-				return { name, energy };
-			});
-			return list.length >= 2 ? list : [];
-		},
-		formatGroupHeadline(group) {
-			const date = new Date();
-			const [year, month] = group.split(".");
-			date.setMonth(month - 1);
-			date.setFullYear(year);
-			return this.fmtMonthYear(date);
 		},
 		showDetails(sessionId) {
 			this.selectedSessionId = sessionId;
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
 			modal.show();
 		},
-		csvHrefLink(groupKey) {
-			var url = `./api/sessions?format=csv&lang=${this.$i18n.locale}`;
-			if (groupKey) {
-				const [year, month] = groupKey.split(".");
-				url += `&year=${year}`;
-
-				if (month) {
-					url += `&month=${month}`;
-				}
+		csvHrefLink(year, month) {
+			const params = new URLSearchParams({
+				format: "csv",
+				lang: this.$i18n.locale,
+			});
+			if (year && month) {
+				params.append("year", year);
+				params.append("month", month);
 			}
-			return url;
+			return `./api/sessions?${params.toString()}`;
 		},
 	},
 };
@@ -265,27 +463,13 @@ export default {
 	position: relative;
 	top: -2px;
 }
-.breakdown {
-	list-style: none;
-}
-
-.breakdown-item {
-	white-space: nowrap;
-}
-
-/* breakpoint sm */
-@media (min-width: 576px) {
-	.breakdown-item:after {
-		content: ", ";
-		white-space: wrap;
-		margin-right: 0.25rem;
-	}
-	.breakdown-item:last-child:after {
-		content: "";
-	}
-}
-
-.breakdown:empty {
-	display: none;
+.custom-select {
+	left: 0;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	position: absolute;
+	opacity: 0;
+	-webkit-appearance: menulist-button;
 }
 </style>
