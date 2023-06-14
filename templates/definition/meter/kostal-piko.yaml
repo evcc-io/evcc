@@ -23,9 +23,9 @@ render: |
   {{- if eq .usage "pv" }}
     # PV
     source: http
-    uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556736 # PV Power (all strings)
-    #   | ----------------------------- PV W ------------- |
-    jq: (.dxsEntries[] | select(.dxsId==33556736) | .value )
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # total AC output
+    #   | ----------------------------- AC W ------------- |
+    jq: (.dxsEntries[] | select(.dxsId==67109120) | .value )
   {{- end -}}
   {{- if eq .usage "battery" }}
     # Battery
