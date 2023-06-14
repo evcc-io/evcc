@@ -2106,7 +2106,7 @@ type GetStatusResponse struct {
 		Voltage *float32 `json:"voltage,omitempty"`
 
 		// The total amount of energy transfered, in W/hour
-		Watthour *int `json:"watthour,omitempty"`
+		Watthour *float32 `json:"watthour,omitempty"`
 
 		// The amount of energy transfered in this charge session, in W/sec
 		Wattsec *float32 `json:"wattsec,omitempty"`
@@ -2285,7 +2285,7 @@ type StatusUpdatesResponse struct {
 		Voltage *float32 `json:"voltage,omitempty"`
 
 		// The total amount of energy transfered, in W/hour
-		Watthour *int `json:"watthour,omitempty"`
+		Watthour *float32 `json:"watthour,omitempty"`
 
 		// The amount of energy transfered in this charge session, in W/sec
 		Wattsec *float32 `json:"wattsec,omitempty"`
@@ -3284,7 +3284,7 @@ func ParseGetStatusResponse(rsp *http.Response) (*GetStatusResponse, error) {
 			Voltage *float32 `json:"voltage,omitempty"`
 
 			// The total amount of energy transfered, in W/hour
-			Watthour *int `json:"watthour,omitempty"`
+			Watthour *float32 `json:"watthour,omitempty"`
 
 			// The amount of energy transfered in this charge session, in W/sec
 			Wattsec *float32 `json:"wattsec,omitempty"`
@@ -3471,7 +3471,7 @@ func ParseStatusUpdatesResponse(rsp *http.Response) (*StatusUpdatesResponse, err
 			Voltage *float32 `json:"voltage,omitempty"`
 
 			// The total amount of energy transfered, in W/hour
-			Watthour *int `json:"watthour,omitempty"`
+			Watthour *float32 `json:"watthour,omitempty"`
 
 			// The amount of energy transfered in this charge session, in W/sec
 			Wattsec *float32 `json:"wattsec,omitempty"`

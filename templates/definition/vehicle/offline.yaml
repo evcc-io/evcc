@@ -20,6 +20,7 @@ params:
   - name: identifiers
     advanced: true
     type: stringlist
+  - preset: vehicle-identify
 render: |
   type: custom
   features: ["offline"]
@@ -33,15 +34,15 @@ render: |
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
-  soc: # fixed - no Soc available
-    source: js
-    script: 0;
+  soc:
+    source: const
+    value: 0
   onIdentify:
   {{- if .mode }}
     mode: {{ .mode }}
   {{- end }}
-    minSoc: 0 # fixed - no Soc available
-    targetSoc: 100 # fixed - no Soc available
+    minSoc: 0 # fixed - no soc available
+    targetSoc: 100 # fixed - no soc available
   {{- if .minCurrent }}
     minCurrent: {{ .minCurrent }}
   {{- end }}

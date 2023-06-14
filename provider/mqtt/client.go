@@ -71,6 +71,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	options.SetOnConnectHandler(mc.ConnectionHandler)
 	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
 	options.SetConnectTimeout(request.Timeout)
+	options.SetOrderMatters(false)
 
 	if insecure {
 		options.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
@@ -136,9 +137,9 @@ func (m *Client) Listen(topic string, callback func(string)) {
 
 // ListenSetter creates a /set listener that resets the payload after handling
 func (m *Client) ListenSetter(topic string, callback func(string) error) {
-	m.Listen(topic, func(payload string) {
+	m.Listen(topic+"/set", func(payload string) {
 		if err := callback(payload); err != nil {
-			m.log.ERROR.Printf("set %s: %v", strings.TrimSuffix(topic, "/set"), err)
+			m.log.ERROR.Printf("set %s: %v", topic, err)
 		}
 		if err := m.Publish(topic, true, ""); err != nil {
 			m.log.ERROR.Printf("clear: %s: %v", topic, err)

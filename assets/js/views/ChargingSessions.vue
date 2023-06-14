@@ -108,7 +108,9 @@
 								<th scope="col" class="align-top text-end">
 									{{ $t("sessions.energy") }}
 									<div class="text-muted fw-normal">
-										{{ fmtKWh(chargedEnergy * 1e3) }}
+										{{
+											fmtKWh(chargedEnergy * 1e3, session.chargedEnergy >= 1)
+										}}
 									</div>
 								</th>
 								<th
@@ -163,7 +165,12 @@
 									{{ session.vehicle }}
 								</td>
 								<td class="text-end">
-									{{ fmtKWh(session.chargedEnergy * 1e3) }}
+									{{
+										fmtKWh(
+											session.chargedEnergy * 1e3,
+											session.chargedEnergy >= 1
+										)
+									}}
 								</td>
 								<td v-if="hasSolarPercentage" class="text-end">
 									<span v-if="session.solarPercentage != null">

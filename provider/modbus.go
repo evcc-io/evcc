@@ -13,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
-	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
@@ -140,10 +139,12 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 func (m *Modbus) bytesGetter() ([]byte, error) {
 	if op := m.op.MBMD; op.FuncCode != 0 {
 		switch op.FuncCode {
-		case rs485.ReadHoldingReg:
+		case gridx.FuncCodeReadHoldingRegisters:
 			return m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
-		case rs485.ReadInputReg:
+		case gridx.FuncCodeReadInputRegisters:
 			return m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
+		case gridx.FuncCodeReadCoils:
+			return m.conn.ReadCoils(op.OpCode, op.ReadLen)
 		default:
 			return nil, fmt.Errorf("unknown function code %d", op.FuncCode)
 		}
@@ -234,6 +235,8 @@ func (m *Modbus) StringGetter() func() (string, error) {
 // UintFromBytes converts byte slice to bigendian uint value
 func UintFromBytes(bytes []byte) (u uint64, err error) {
 	switch l := len(bytes); l {
+	case 1:
+		u = uint64(bytes[0])
 	case 2:
 		u = uint64(binary.BigEndian.Uint16(bytes))
 	case 4:
@@ -272,6 +275,13 @@ func (m *Modbus) IntSetter(param string) func(int64) error {
 			switch op.FuncCode {
 			case gridx.FuncCodeWriteSingleRegister:
 				_, err = m.conn.WriteSingleRegister(op.OpCode, uval)
+			case gridx.FuncCodeWriteSingleCoil:
+				if uval != 0 {
+					// Modbus protocol requires 0xFF00 for ON
+					// and 0x0000 for OFF
+					uval = 0xFF00
+				}
+				_, err = m.conn.WriteSingleCoil(op.OpCode, uval)
 			default:
 				err = fmt.Errorf("unknown function code %d", op.FuncCode)
 			}

@@ -1,0 +1,14 @@
+template: obo
+products:
+  - brand: OBO Bettermann
+    description:
+      generic: Ion
+params:
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 19200
+    comset: 8E1
+    id: 101
+render: |
+  type: obo
+  {{- include "modbus" . }}
