@@ -24,3 +24,48 @@ test.describe("basics", async () => {
     await expect(page.getByRole("alert")).toBeVisible();
   });
 });
+
+test.describe("vehicles", async () => {
+  test("create, edit and delete vehicles", async ({ page }) => {
+    await page.goto("/#/config");
+
+    // create #1
+    await page.getByRole("button", { name: "add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByLabel("Title").fill("Green Car");
+    await page.getByRole("button", { name: "Test" }).click();
+    await page.getByRole("button", { name: "Create" }).click();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(1);
+
+    // create #2
+    await page.getByRole("button", { name: "add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByLabel("Title").fill("Yellow Van");
+    await page.getByLabel("Icon").selectOption("van");
+    await page.getByRole("button", { name: "Test" }).click();
+    await page.getByRole("button", { name: "Create" }).click();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(2);
+    await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Green Car/);
+    await expect(page.getByTestId("vehicle").nth(1)).toHaveText(/Yellow Van/);
+
+    // edit #1
+    await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
+    await expect(page.getByLabel("Title")).toHaveValue("Green Car");
+    await expect(page.getByLabel("Icon")).toHaveValue("car");
+    await page.getByLabel("Title").fill("Fancy Car");
+    await page.getByRole("button", { name: "Test" }).click();
+    await page.getByRole("button", { name: "Update" }).click();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(2);
+    await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Fancy Car/);
+
+    // delete #1
+    await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
+    await page.getByRole("button", { name: "Delete Vehicle" }).click();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(1);
+    await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Yellow Van/);
+  });
+});

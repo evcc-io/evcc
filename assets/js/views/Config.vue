@@ -108,6 +108,7 @@
 					v-for="(vehicle, index) in vehicles"
 					:key="index"
 					class="d-flex align-items-center"
+					data-testid="vehicle"
 				>
 					<VehicleIcon :name="vehicle.config?.icon" class="me-2" />
 					{{ vehicle.config?.title || vehicle.name }}
