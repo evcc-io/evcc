@@ -5,13 +5,15 @@ products:
       generic: IQ Envoy
 params:
   - name: usage
-    choice: ["grid", "pv"]
+    choice: ["grid", "pv", "battery"]
   - name: host
     required: true
   - name: token
     help:
       en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
       de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -65,4 +67,32 @@ render: |
     {{- end }}
     jq: .production[] | select(.measurementType == "production").whLifetime
     scale: 0.001
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/production.json?details=1
+    method: GET
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .storage[] | select(.type == "acb").wNow
+    scale: 1
+  soc:
+    source: http
+    uri: http://{{ .host }}/production.json?details=1
+    method: GET
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .storage[] | select(.type == "acb").percentFull
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}
