@@ -36,8 +36,9 @@ import (
 
 // Keba is an api.Charger implementation
 type Keba struct {
-	log  *util.Logger
-	conn *modbus.Connection
+	log               *util.Logger
+	conn              *modbus.Connection
+	resetSessionValue bool
 }
 
 const (
@@ -146,8 +147,9 @@ func NewKeba(uri string, slaveID uint8) (*Keba, error) {
 	// conn.Delay(500 * time.Millisecond)
 
 	wb := &Keba{
-		log:  log,
-		conn: conn,
+		log:               log,
+		conn:              conn,
+		resetSessionValue: false,
 	}
 
 	return wb, err
@@ -251,7 +253,17 @@ func (wb *Keba) chargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
+	var chargedEnergy = float64(binary.BigEndian.Uint32(b)) / 1e4
+
+	// Workaround for chargedEnergy using value from previous session
+	// Return 0 until charging started
+	if wb.resetSessionValue && chargedEnergy > 0.25 {
+		return 0, nil
+	} else {
+		wb.resetSessionValue = false
+	}
+
+	return chargedEnergy, nil
 }
 
 // currents implements the api.PhaseCurrents interface
