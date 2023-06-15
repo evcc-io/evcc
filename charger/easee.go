@@ -536,12 +536,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			if err = c.postJSONAndWait(uri, data); err != nil {
-				return err
-			}
-
-			// disable charger to activate changed settings (loadpoint will reenable it)
-			err = c.Enable(false)
+			err = c.postJSONAndWait(uri, data)
 		}
 	}
 
