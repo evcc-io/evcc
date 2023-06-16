@@ -5,11 +5,45 @@ products:
       generic: H3 via Ethernet
 params:
   - name: usage
-    choice: ["pv", "battery"]
+    choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 31026 # Meter Power R
+        type: holding
+        decode: int16
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 31027 # Meter Power S
+        type: holding
+        decode: int16
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 31028 # Meter Power T
+        type: holding
+        decode: int16
+      scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 31012 # Grid Consumption Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: calc

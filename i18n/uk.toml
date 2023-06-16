@@ -287,10 +287,13 @@ title = "Сеанс зарядки"
 [sessions]
 avgPrice = "Ø Ціна"
 co2 = "Ø CO₂"
+csvMonth = "Завантажити {month} CSV"
+csvTotal = "Завантажити повний CSV"
 date = "Завершено"
 downloadCsv = "Завантажити як CSV"
 energy = "Заряджено"
 loadpoint = "Точка зарядки"
+noData = "Ніяких зарядних сесій цього місяця"
 price = "Σ Ціна"
 reallyDelete = "Ви дійсно хочете видалити цей сеанс?"
 solar = "Сонячна"
@@ -307,6 +310,11 @@ meterstart = "Лічильник пуску (кВт/год)"
 meterstop = "Лічильник зупинки (кВт/год)"
 odometer = "Пробіг (км)"
 vehicle = "Транспортний засіб"
+
+[sessions.filter]
+allLoadpoints = "всі точки зарядки"
+allVehicles = "всі транспортні засоби"
+filter = "фільтр"
 
 [settings]
 title = "Налаштування"
