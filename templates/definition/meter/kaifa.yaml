@@ -1,0 +1,30 @@
+template: kaifa
+products:
+  - brand: Smart Meter Adapter (AT)
+params:
+  - name: host
+    required: true
+  - name: token
+    required: true
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/api/data/measurement.json
+    method: GET
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    {{- end }}
+    jq: . | .["1-0: 1.8.0"].value
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/data/measurement.json
+    method: GET
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    {{- end }}
+    jq: . | .["1-0: 1.8.0"].value
