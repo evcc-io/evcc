@@ -20,7 +20,7 @@ func init() {
 	registry.Add("tibber-pulse", NewTibberFromConfig)
 }
 
-var timeout = 3 * time.Minute
+const timeout = time.Minute
 
 // var timeout = 3 * time.Second
 
