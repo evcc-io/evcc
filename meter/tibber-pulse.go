@@ -83,10 +83,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	// run the client
-	done := make(chan error)
-	t.newSubscriptionClient()
-	go t.subscribe(done)
-	err := <-done
+	err := t.reconnect()
 
 	return t, err
 }
@@ -173,32 +170,35 @@ func (t *Tibber) subscribe(done chan error) {
 	}()
 }
 
-func (t *Tibber) restart() error {
-	// fmt.Println("restart")
-	// defer fmt.Println("restart done")
+func (t *Tibber) reconnect() error {
+	t.mu.Lock()
+	if time.Since(t.updated) <= timeout {
+		t.mu.Unlock()
+		return nil
+	}
+	t.mu.Unlock()
 
-	_ = t.client.Close()
+	if t.client != nil {
+		if err := t.client.Close(); err != nil {
+			t.log.DEBUG.Println("close:", err)
+		}
+	}
+
 	t.newSubscriptionClient()
 
 	done := make(chan error)
 	go t.subscribe(done)
+
 	return <-done
 }
 
 func (t *Tibber) CurrentPower() (float64, error) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-
-	if time.Since(t.updated) > timeout {
-		t.mu.Unlock()
-		err := t.restart() // recreate client while holding lock
-		t.mu.Lock()
-
-		if err != nil {
-			return 0, err
-		}
+	if err := t.reconnect(); err != nil {
+		return 0, err
 	}
 
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	return t.live.Power - t.live.PowerProduction, nil
 }
 
@@ -206,18 +206,11 @@ var _ api.PhaseCurrents = (*Tibber)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (t *Tibber) Currents() (float64, float64, float64, error) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-
-	if time.Since(t.updated) > timeout {
-		t.mu.Unlock()
-		err := t.restart() // recreate client while holding lock
-		t.mu.Lock()
-
-		if err != nil {
-			return 0, 0, 0, err
-		}
+	if err := t.reconnect(); err != nil {
+		return 0, 0, 0, err
 	}
 
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	return t.live.CurrentL1, t.live.CurrentL2, t.live.CurrentL3, nil
 }
