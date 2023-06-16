@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -92,7 +93,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 func (v *Ovms) loginToServer() (err error) {
-	uri := fmt.Sprintf("https://%s:6869/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
+	uri := fmt.Sprintf("https://%s:6869/api/cookie?username=%s&password=%s", v.server, url.QueryEscape(v.user), url.QueryEscape(v.password))
 
 	var resp *http.Response
 	if resp, err = v.Get(uri); err == nil {
