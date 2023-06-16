@@ -46,6 +46,9 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	// TODO remove
+	time.Sleep(3 * time.Second)
+
 	if v, ok := v.(api.MeterEnergy); ok {
 		if energy, err := v.TotalEnergy(); err != nil {
 			fmt.Fprintf(w, "Energy:\t%v\n", err)

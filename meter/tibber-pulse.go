@@ -20,7 +20,9 @@ func init() {
 	registry.Add("tibber-pulse", NewTibberFromConfig)
 }
 
-var timeout = time.Minute
+var timeout = 3 * time.Minute
+
+// var timeout = 3 * time.Second
 
 type Tibber struct {
 	mu            sync.Mutex
@@ -30,6 +32,7 @@ type Tibber struct {
 	url           string
 	token, homeID string
 	client        *graphql.SubscriptionClient
+	// atm           uint64
 }
 
 func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -116,12 +119,23 @@ func (t *Tibber) subscribe(done chan error) {
 
 	var once sync.Once
 
+	// var count int
+	// id := atomic.AddUint64(&t.atm, 1)
+
 	_, err := t.client.Subscribe(&query, map[string]any{
 		"homeId": graphql.ID(t.homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
 			once.Do(func() { done <- err })
 		}
+
+		// TODO remove
+		// if count > 0 {
+		// 	fmt.Printf("%d recv abort\n", id)
+		// 	return nil
+		// }
+
+		// fmt.Printf("%d recv\n", id)
 
 		var res struct {
 			LiveMeasurement tibber.LiveMeasurement
@@ -134,16 +148,20 @@ func (t *Tibber) subscribe(done chan error) {
 			return nil
 		}
 
+		// count++
+		// fmt.Printf("%d recv count\n", id)
+
 		t.mu.Lock()
 		t.live = res.LiveMeasurement
 		t.updated = time.Now()
 		t.mu.Unlock()
 
+		// fmt.Printf("%d recv done\n", id)
+
 		once.Do(func() { close(done) })
 
 		return nil
 	})
-
 	if err != nil {
 		once.Do(func() { done <- err })
 	}
@@ -155,17 +173,16 @@ func (t *Tibber) subscribe(done chan error) {
 	}()
 }
 
-func (t *Tibber) restart() {
+func (t *Tibber) restart() error {
+	// fmt.Println("restart")
+	// defer fmt.Println("restart done")
+
 	_ = t.client.Close()
 	t.newSubscriptionClient()
-}
 
-func (t *Tibber) resubscribe() {
 	done := make(chan error)
 	go t.subscribe(done)
-	if err := <-done; err != nil {
-		t.log.ERROR.Println(err)
-	}
+	return <-done
 }
 
 func (t *Tibber) CurrentPower() (float64, error) {
@@ -173,10 +190,13 @@ func (t *Tibber) CurrentPower() (float64, error) {
 	defer t.mu.Unlock()
 
 	if time.Since(t.updated) > timeout {
-		t.restart()           // recreate client while holding lock
-		defer t.resubscribe() // run after releasing lock
+		t.mu.Unlock()
+		err := t.restart() // recreate client while holding lock
+		t.mu.Lock()
 
-		return 0, api.ErrTimeout
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	return t.live.Power - t.live.PowerProduction, nil
@@ -190,10 +210,13 @@ func (t *Tibber) Currents() (float64, float64, float64, error) {
 	defer t.mu.Unlock()
 
 	if time.Since(t.updated) > timeout {
-		t.restart()           // recreate client while holding lock
-		defer t.resubscribe() // run after releasing lock
+		t.mu.Unlock()
+		err := t.restart() // recreate client while holding lock
+		t.mu.Lock()
 
-		return 0, 0, 0, api.ErrTimeout
+		if err != nil {
+			return 0, 0, 0, err
+		}
 	}
 
 	return t.live.CurrentL1, t.live.CurrentL2, t.live.CurrentL3, nil
