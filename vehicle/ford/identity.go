@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -66,7 +67,8 @@ func (v *Identity) login() (*oauth.Token, error) {
 		return nil, err
 	}
 
-	uri := OAuth2Config.AuthCodeURL("",
+	state := lo.RandomString(16, lo.AlphanumericCharset)
+	uri := OAuth2Config.AuthCodeURL(state,
 		oauth2.SetAuthURLParam("max_age", "3600"),
 		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),

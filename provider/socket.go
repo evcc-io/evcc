@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/gorilla/websocket"
+	"nhooyr.io/websocket"
 )
 
 const retryDelay = 5 * time.Second
@@ -36,7 +37,7 @@ func init() {
 }
 
 // NewSocketProviderFromConfig creates a HTTP provider
-func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		URI               string
 		Headers           map[string]string
@@ -99,13 +100,15 @@ func (p *Socket) listen() {
 		headers.Set(k, v)
 	}
 
-	dialer := &websocket.Dialer{
-		Proxy:            http.ProxyFromEnvironment,
-		HandshakeTimeout: request.Timeout,
+	opts := &websocket.DialOptions{
+		HTTPHeader: headers,
 	}
 
 	for {
-		client, _, err := dialer.Dial(p.url, headers)
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		conn, _, err := websocket.Dial(ctx, p.url, opts)
+		cancel()
+
 		if err != nil {
 			p.log.ERROR.Println(err)
 			time.Sleep(retryDelay)
@@ -113,19 +116,21 @@ func (p *Socket) listen() {
 		}
 
 		for {
-			_, b, err := client.ReadMessage()
+			_, b, err := conn.Read(context.Background())
 			if err != nil {
 				p.log.TRACE.Println("read:", err)
-				_ = client.Close()
+				_ = conn.Close(websocket.StatusAbnormalClosure, "done")
 				break
 			}
 
 			p.log.TRACE.Printf("recv: %s", b)
 
-			p.mux.Lock()
-			p.val = b
-			p.wait.Update()
-			p.mux.Unlock()
+			if v, err := p.pipeline.Process(b); err == nil {
+				p.mux.Lock()
+				p.val = v
+				p.wait.Update()
+				p.mux.Unlock()
+			}
 		}
 	}
 }
@@ -146,12 +151,10 @@ var _ StringProvider = (*Socket)(nil)
 // StringGetter sends string request
 func (p *Socket) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		b, err := p.hasValue()
+		v, err := p.hasValue()
 		if err != nil {
 			return "", err
 		}
-
-		v, err := p.pipeline.Process(b)
 
 		return string(v), err
 	}

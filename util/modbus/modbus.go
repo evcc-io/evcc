@@ -375,13 +375,24 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.FuncCode = modbus.FuncCodeReadHoldingRegisters
 	case "input":
 		op.FuncCode = modbus.FuncCodeReadInputRegisters
-	case "writesingle":
+	case "coil":
+		op.FuncCode = modbus.FuncCodeReadCoils
+		r.Decode = "bool8"
+	case "writesingle", "writeholding":
 		op.FuncCode = modbus.FuncCodeWriteSingleRegister
+	case "writecoil":
+		op.FuncCode = modbus.FuncCodeWriteSingleCoil
+		r.Decode = "bool8"
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register type: %s", r.Type)
 	}
 
 	switch strings.ToLower(r.Decode) {
+
+	// 8 bit (coil)
+	case "bool8":
+		op.Transform = decodeBool8
+		op.ReadLen = 1
 
 	// 16 bit
 	case "int16":

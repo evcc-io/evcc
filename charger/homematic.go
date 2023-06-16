@@ -1,6 +1,8 @@
 package charger
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/homematic"
 	"github.com/evcc-io/evcc/util"
@@ -18,7 +20,7 @@ func init() {
 
 // NewCCUFromConfig creates a Homematic charger from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+	cc := struct {
 		embed         `mapstructure:",squash"`
 		URI           string
 		Device        string
@@ -27,18 +29,21 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User          string
 		Password      string
 		StandbyPower  float64
+		Cache         time.Duration
+	}{
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewCCU(cc.embed, cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.StandbyPower)
+	return NewCCU(cc.embed, cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.StandbyPower, cc.Cache)
 }
 
 // NewCCU creates a new connection with standbypower for charger
-func NewCCU(embed embed, uri, deviceid, meterid, switchid, user, password string, standbypower float64) (*CCU, error) {
-	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password)
+func NewCCU(embed embed, uri, deviceid, meterid, switchid, user, password string, standbypower float64, cache time.Duration) (*CCU, error) {
+	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password, cache)
 
 	c := &CCU{
 		conn: conn,

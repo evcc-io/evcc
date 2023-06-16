@@ -3,22 +3,22 @@ product:
   description: WARP Charger Smart
 capabilities: ["mA"]
 description: |
-  Es muss ein MQTT Broker installiert sein. Die MQTT Verbindung muss in der Wallbox eingerichtet sein.
+  Firmware v2 erforderlich.
 render:
   - default: |
       type: template
       template: tinkerforge-warp
-      fw2: # Firmware v2 installiert
       host: 192.0.2.2 # IP Adresse oder der Hostname des MQTT Brokers
       port: 1883 # MQTT Broker Port (Optional)
       topic: warp # Topic (ohne / am Anfang) (Optional)
+      energymanager: # EnergyManager MQTT Topic (falls installiert) (Optional)
     advanced: |
       type: template
       template: tinkerforge-warp
-      fw2: # Firmware v2 installiert
       host: 192.0.2.2 # IP Adresse oder der Hostname des MQTT Brokers
       port: 1883 # MQTT Broker Port (Optional)
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.) (Optional)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen) (Optional)
       topic: warp # Topic (ohne / am Anfang) (Optional)
       timeout: 30s # Akzeptiere keine Daten die älter sind als dieser Wert (Optional)
+      energymanager: # EnergyManager MQTT Topic (falls installiert) (Optional)

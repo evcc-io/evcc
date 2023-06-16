@@ -16,7 +16,7 @@ import Energyflow from "./Energyflow.vue";
 				:tariffGrid="0.25"
 				:tariffFeedIn="0.08"
 				:tariffEffectivePrice="0.08"
-				smartCostUnit="EUR"
+				smartCostType="price"
 				smartCostAvailable
 				currency="EUR"
 				siteTitle="Home"
@@ -147,7 +147,7 @@ import Energyflow from "./Energyflow.vue";
 				:tariffEffectivePrice="0.08"
 				:tariffCo2="723"
 				:tariffEffectiveCo2="0"
-				smartCostUnit="gCO2eq"
+				smartCostType="co2"
 				smartCostAvailable
 				currency="EUR"
 				siteTitle="Home"

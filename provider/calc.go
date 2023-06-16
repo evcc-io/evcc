@@ -18,7 +18,7 @@ func init() {
 }
 
 // NewCalcFromConfig creates calc provider
-func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewCalcFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Add  []Config
 		Mul  []Config

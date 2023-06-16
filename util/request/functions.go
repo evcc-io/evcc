@@ -7,8 +7,9 @@ import (
 )
 
 var (
-	FormContent = "application/x-www-form-urlencoded"
-	JSONContent = "application/json"
+	FormContent  = "application/x-www-form-urlencoded"
+	JSONContent  = "application/json"
+	PlainContent = "text/plain"
 
 	// URLEncoding specifies application/x-www-form-urlencoded
 	URLEncoding = map[string]string{"Content-Type": FormContent}

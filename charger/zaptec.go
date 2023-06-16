@@ -47,7 +47,6 @@ type Zaptec struct {
 	id          string
 	enabled     bool
 	priority    bool
-	cache       time.Duration
 }
 
 func init() {
@@ -89,7 +88,6 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		log:      log,
 		id:       id,
 		priority: priority,
-		cache:    cache,
 	}
 
 	// setup cached values
@@ -100,7 +98,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		err := c.GetJSON(uri, &res)
 
 		return res, err
-	}, c.cache)
+	}, cache)
 
 	provider, err := oidc.NewProvider(context.Background(), zaptec.ApiURL+"/")
 	if err != nil {
@@ -122,17 +120,16 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 	)
 
 	token, err := oc.PasswordCredentialsToken(ctx, user, password)
-
-	if err == nil {
-		c.Transport = &oauth2.Transport{
-			Source: oc.TokenSource(context.Background(), token),
-			Base:   c.Transport,
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	if err == nil {
-		c.id, err = ensureCharger(c.id, c.chargers)
+	c.Transport = &oauth2.Transport{
+		Source: oc.TokenSource(context.Background(), token),
+		Base:   c.Transport,
 	}
+
+	c.id, err = ensureCharger(c.id, c.chargers)
 
 	return c, err
 }

@@ -139,7 +139,7 @@ func (wb *PhoenixCharx) Status() (api.ChargeStatus, error) {
 	// TODO check IEC 61851-1 C1 state
 	state := string(b[0])
 
-	return api.ChargeStatus(state), nil
+	return api.ChargeStatusString(state)
 }
 
 // Enabled implements the api.Charger interface

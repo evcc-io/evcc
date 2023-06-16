@@ -1,6 +1,7 @@
 product:
   brand: Zaptec
   description: Go/Pro
+requirements: ["sponsorship"]
 render:
   - default: |
       type: template

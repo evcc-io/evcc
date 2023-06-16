@@ -54,11 +54,22 @@ make
 ./evcc
 ```
 
+### UI development
+
 For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the livelreloading development server. It pulls its data from port 7070 (see above).
 
 ```sh
 npm install
 npm run start
+```
+
+### Integration tests
+
+We use Playwright for end-to-end integration tests. They start a local evcc instance with different configuration yamls and prefilled databases. To run them, you have to do a local build first.
+
+```sh
+make ui build
+npm run playwright
 ```
 
 ### Code formatting

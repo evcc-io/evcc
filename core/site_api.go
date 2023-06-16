@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/server/db/settings"
 )
 
 var _ site.API = (*Site)(nil)
@@ -32,6 +33,7 @@ func (site *Site) SetPrioritySoc(soc float64) error {
 	}
 
 	site.PrioritySoc = soc
+	settings.SetFloat("site.prioritySoc", site.PrioritySoc)
 	site.publish("prioritySoc", site.PrioritySoc)
 
 	return nil
@@ -54,7 +56,31 @@ func (site *Site) SetBufferSoc(soc float64) error {
 	}
 
 	site.BufferSoc = soc
+	settings.SetFloat("site.bufferSoc", site.BufferSoc)
 	site.publish("bufferSoc", site.BufferSoc)
+
+	return nil
+}
+
+// GetBufferStartSoc returns the BufferStartSoc
+func (site *Site) GetBufferStartSoc() float64 {
+	site.Lock()
+	defer site.Unlock()
+	return site.BufferStartSoc
+}
+
+// SetBufferStartSoc sets the BufferStartSoc
+func (site *Site) SetBufferStartSoc(soc float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if len(site.batteryMeters) == 0 {
+		return errors.New("battery not configured")
+	}
+
+	site.BufferStartSoc = soc
+	settings.SetFloat("site.bufferStartSoc", site.BufferStartSoc)
+	site.publish("bufferStartSoc", site.BufferStartSoc)
 
 	return nil
 }
@@ -90,6 +116,7 @@ func (site *Site) SetSmartCostLimit(val float64) error {
 	defer site.Unlock()
 
 	site.SmartCostLimit = val
+	settings.SetFloat("site.smartCostLimit", site.SmartCostLimit)
 	site.publish("smartCostLimit", site.SmartCostLimit)
 
 	return nil
@@ -107,17 +134,37 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 	site.Lock()
 	defer site.Unlock()
 
-	var t api.Tariff
 	switch tariff {
 	case GridTariff:
-		t = site.tariffs.Grid
-	case FeedinTariff:
-		t = site.tariffs.FeedIn
-	case PlannerTariff:
-		if t = site.tariffs.Planner; t == nil {
-			t = site.tariffs.Grid
-		}
-	}
+		return site.tariffs.Grid
 
-	return t
+	case FeedinTariff:
+		return site.tariffs.FeedIn
+
+	case PlannerTariff:
+		switch {
+		case site.tariffs.Planner != nil:
+			// prio 0: manually set planner tariff
+			site.log.DEBUG.Printf("planner tariff")
+			return site.tariffs.Planner
+
+		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceDynamic:
+			// prio 1: dynamic grid tariff
+			site.log.DEBUG.Printf("dynamic grid tariff")
+			return site.tariffs.Grid
+
+		case site.tariffs.Co2 != nil:
+			// prio 2: co2 tariff
+			site.log.DEBUG.Printf("co2 tariff")
+			return site.tariffs.Co2
+
+		default:
+			// prio 3: static grid tariff
+			site.log.DEBUG.Printf("static grid tariff")
+			return site.tariffs.Grid
+		}
+
+	default:
+		return nil
+	}
 }

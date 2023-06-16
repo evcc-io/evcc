@@ -10,6 +10,23 @@ type Observation struct {
 	Value     string
 }
 
+type SignalRCommandResponse struct {
+	SerialNumber string
+	ID           int
+	Timestamp    time.Time
+	DeliveredAt  time.Time
+	WasAccepted  bool
+	ResultCode   int
+	Comment      string
+	Ticks        int64
+}
+
+type RestCommandResponse struct {
+	Device    string
+	CommandId int
+	Ticks     int64
+}
+
 type DataType int
 
 // https://github.com/Masterloop/Masterloop.Core.Types/blob/master/src/Masterloop.Core.Types/Base/DataType.cs
@@ -188,6 +205,8 @@ const (
 	EQ_AVAILABLE_CURRENT_P1                            ObservationID = 230 // Available current for charging on P1 according to Equalizer [Double]
 	EQ_AVAILABLE_CURRENT_P2                            ObservationID = 231 // Available current for charging on P2 according to Equalizer [Double]
 	EQ_AVAILABLE_CURRENT_P3                            ObservationID = 232 // Available current for charging on P3 according to Equalizer [Double]
+	CONNECTED_TO_CLOUD                                 ObservationID = 250 // If charger connected to cloud or not
+	CLOUD_DISCONNECT_REASON                            ObservationID = 251 // Reason why charger disconnected from cloud
 	LISTEN_TO_CONTROL_PULSE                            ObservationID = 56  // True = charger needs control pulse to consider itself online. Readback on charger setting [event] [Boolean]
 	CONTROL_PULSE_RTT                                  ObservationID = 57  // Control pulse round-trip time in milliseconds [Integer]
 )

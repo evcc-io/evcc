@@ -6,6 +6,7 @@
 			data-bs-toggle="dropdown"
 			aria-expanded="false"
 			class="btn btn-sm btn-outline-secondary position-relative border-0 menu-button"
+			data-testid="topnavigation-button"
 		>
 			<span
 				v-if="showBadge"
@@ -15,7 +16,11 @@
 			</span>
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</button>
-		<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="topNavigatonDropdown">
+		<ul
+			class="dropdown-menu dropdown-menu-end"
+			aria-labelledby="topNavigatonDropdown"
+			data-testid="topnavigation-dropdown"
+		>
 			<li>
 				<router-link class="dropdown-item" to="/sessions">
 					{{ $t("header.sessions") }}
@@ -52,43 +57,13 @@
 				</li>
 			</template>
 			<li>
-				<a class="dropdown-item d-flex" href="https://docs.evcc.io/blog/" target="_blank">
-					<span>{{ $t("header.blog") }}</span>
-					<shopicon-regular-newtab
-						size="s"
-						class="ms-2 external"
-					></shopicon-regular-newtab>
-				</a>
-			</li>
-			<li>
-				<a
-					class="dropdown-item d-flex"
-					href="https://docs.evcc.io/docs/Home/"
-					target="_blank"
-				>
-					<span>{{ $t("header.docs") }}</span>
-					<shopicon-regular-newtab
-						size="s"
-						class="ms-2 external"
-					></shopicon-regular-newtab>
-				</a>
-			</li>
-			<li>
-				<a
-					class="dropdown-item d-flex"
-					href="https://github.com/evcc-io/evcc"
-					target="_blank"
-				>
-					<span>{{ $t("header.github") }}</span>
-					<shopicon-regular-newtab
-						size="s"
-						class="ms-2 external"
-					></shopicon-regular-newtab>
-				</a>
+				<button type="button" class="dropdown-item" @click="openHelpModal">
+					<span>{{ $t("header.needHelp") }}</span>
+				</button>
 			</li>
 			<li>
 				<a class="dropdown-item d-flex" href="https://evcc.io/" target="_blank">
-					<span>{{ $t("header.about") }}</span>
+					<span>evcc.io</span>
 					<shopicon-regular-newtab
 						size="s"
 						class="ms-2 external"
@@ -97,6 +72,7 @@
 			</li>
 		</ul>
 		<GlobalSettingsModal v-bind="globalSettingsModalProps" />
+		<HelpModal />
 	</div>
 </template>
 
@@ -108,13 +84,14 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import GlobalSettingsModal from "./GlobalSettingsModal.vue";
+import HelpModal from "./HelpModal.vue";
 import collector from "../mixins/collector";
 
 import baseAPI from "../baseapi";
 
 export default {
 	name: "TopNavigation",
-	components: { GlobalSettingsModal },
+	components: { GlobalSettingsModal, HelpModal },
 	mixins: [collector],
 	props: {
 		vehicleLogins: {
@@ -166,6 +143,10 @@ export default {
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("globalSettingsModal"));
+			modal.show();
+		},
+		openHelpModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
 			modal.show();
 		},
 	},

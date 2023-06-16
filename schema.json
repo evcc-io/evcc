@@ -209,6 +209,9 @@
         "bufferSoc": {
           "type": "number"
         },
+        "bufferStartSoc": {
+          "type": "number"
+        },
         "maxGridSupplyWhileBatteryCharging": {
           "type": "number"
         },

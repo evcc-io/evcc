@@ -97,7 +97,7 @@ render: |
       type: input
       decode: int16
     scale: 0.1
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

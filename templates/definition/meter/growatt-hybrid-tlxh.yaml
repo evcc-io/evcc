@@ -84,7 +84,7 @@ render: |
       address: 3171 # SOC
       type: input
       decode: uint16
-  {{- if ne .capacity "" }}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   energy:

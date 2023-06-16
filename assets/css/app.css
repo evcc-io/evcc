@@ -121,6 +121,18 @@ h5 {
 	background-color: var(--evcc-dark-green) !important;
 }
 
+.bg-dark-green {
+	background-color: var(--evcc-dark-green) !important;
+}
+
+.bg-darker-green {
+	background-color: var(--evcc-darker-green) !important;
+}
+
+.bg-darkest-green {
+	background-color: var(--evcc-darkest-green) !important;
+}
+
 .text-primary {
 	color: var(--bs-primary) !important;
 }
@@ -143,6 +155,10 @@ a:hover {
 
 .rounded {
 	border-radius: 10px !important;
+}
+
+.btn {
+	--bs-btn-border-width: 2px;
 }
 
 .btn-primary,
@@ -174,19 +190,16 @@ a:hover {
 .btn-outline-primary:focus {
 	color: var(--bs-primary);
 	background-color: transparent;
-	border-width: 2px;
 	border-color: var(--bs-primary);
 }
 .btn-outline-primary:hover {
 	color: var(--evcc-accent3) !important;
 	background-color: transparent !important;
-	border-width: 2px;
 	border-color: var(--evcc-accent3) !important;
 }
 .btn-outline-primary:active {
 	color: var(--evcc-default-text) !important;
 	background-color: var(--evcc-accent3) !important;
-	border-width: 2px;
 	border-color: var(--evcc-accent3) !important;
 }
 
@@ -235,6 +248,9 @@ a:hover {
 }
 .text-dark {
 	color: var(--bs-gray-dark);
+}
+.text-light {
+	color: var(--bs-gray-bright);
 }
 .text-gray {
 	color: var(--bs-gray-medium);

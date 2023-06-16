@@ -43,8 +43,11 @@ func New(name string) (*DB, error) {
 // Session creates a charging session
 func (s *DB) Session(meter float64) *Session {
 	t := Session{
-		Loadpoint:  s.name,
-		MeterStart: meter,
+		Loadpoint: s.name,
+	}
+
+	if meter > 0 {
+		t.MeterStart = &meter
 	}
 
 	return &t
