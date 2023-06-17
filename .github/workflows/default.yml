@@ -143,7 +143,7 @@ jobs:
       - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
           go-version: ^1.20
-          cache-key-prefix: build-cache-
+          cache-key-prefix: integration-cache-
         id: go
 
       - uses: actions/setup-node@v3
