@@ -20,10 +20,6 @@ func init() {
 	registry.Add("tibber-pulse", NewTibberFromConfig)
 }
 
-const timeout = time.Minute
-
-// var timeout = 3 * time.Second
-
 type Tibber struct {
 	mu            sync.Mutex
 	log           *util.Logger
@@ -32,7 +28,6 @@ type Tibber struct {
 	url           string
 	token, homeID string
 	client        *graphql.SubscriptionClient
-	// atm           uint64
 }
 
 func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -110,14 +105,12 @@ func (t *Tibber) newSubscriptionClient() {
 }
 
 func (t *Tibber) subscribe(done chan error) {
-	var query struct {
-		tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
-	}
-
-	var once sync.Once
-
-	// var count int
-	// id := atomic.AddUint64(&t.atm, 1)
+	var (
+		once  sync.Once
+		query struct {
+			tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
+		}
+	)
 
 	_, err := t.client.Subscribe(&query, map[string]any{
 		"homeId": graphql.ID(t.homeID),
@@ -125,14 +118,6 @@ func (t *Tibber) subscribe(done chan error) {
 		if err != nil {
 			once.Do(func() { done <- err })
 		}
-
-		// TODO remove
-		// if count > 0 {
-		// 	fmt.Printf("%d recv abort\n", id)
-		// 	return nil
-		// }
-
-		// fmt.Printf("%d recv\n", id)
 
 		var res struct {
 			LiveMeasurement tibber.LiveMeasurement
@@ -145,15 +130,10 @@ func (t *Tibber) subscribe(done chan error) {
 			return nil
 		}
 
-		// count++
-		// fmt.Printf("%d recv count\n", id)
-
 		t.mu.Lock()
 		t.live = res.LiveMeasurement
 		t.updated = time.Now()
 		t.mu.Unlock()
-
-		// fmt.Printf("%d recv done\n", id)
 
 		once.Do(func() { close(done) })
 
@@ -171,6 +151,8 @@ func (t *Tibber) subscribe(done chan error) {
 }
 
 func (t *Tibber) reconnect() error {
+	const timeout = time.Minute
+
 	t.mu.Lock()
 	if time.Since(t.updated) <= timeout {
 		t.mu.Unlock()
