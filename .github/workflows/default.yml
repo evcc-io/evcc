@@ -151,8 +151,11 @@ jobs:
           node-version: "18"
           cache: "npm"
 
-      - name: Build evcc binary
-        run: make install-ui ui build
+      - name: Build UI
+        run: make install-ui ui
+
+      - name: Build Go
+        run: make build
 
       - name: Install playwright
         run: npx playwright install --with-deps chromium
