@@ -199,10 +199,10 @@
 						</tbody>
 					</table>
 				</div>
-				<div class="d-flex mb-5 my-4">
+				<div class="d-grid gap-2 d-sm-block mt-3 mb-5">
 					<a
 						v-if="currentSessions.length"
-						class="btn btn-outline-secondary text-nowrap me-3"
+						class="btn btn-outline-secondary text-nowrap me-sm-2"
 						:href="csvLink"
 						download
 					>
