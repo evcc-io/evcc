@@ -131,7 +131,7 @@ modalTitle = "Plan de carga"
 none = "ninguno"
 title = "Plan"
 titleMinSoc = "Carga mínima"
-titleTargetCharge = "Salidas"
+titleTargetCharge = "Partida"
 
 [main.energyflow]
 battery = "Batería"
