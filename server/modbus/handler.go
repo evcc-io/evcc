@@ -98,6 +98,8 @@ LOOP:
 }
 
 func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
+	conn := h.conn.Clone(req.UnitId)
+
 	if req.IsWrite {
 		if h.readOnly {
 			return nil, mbserver.ErrIllegalFunction
@@ -110,28 +112,31 @@ func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 				u = 0xFF00
 			}
 
-			b, err := h.conn.WriteSingleCoilWithSlave(req.UnitId, req.Addr, u)
+			b, err := conn.WriteSingleCoil(req.Addr, u)
 			return h.coilsToResult("write coil", req.Quantity, b, err)
 		}
 
 		h.log.TRACE.Printf("write coils: id %d addr %d qty %d val %v", req.UnitId, req.Addr, req.Quantity, req.Args)
 		args := coilsToBytes(req.Args)
-		b, err := h.conn.WriteMultipleCoilsWithSlave(req.UnitId, req.Addr, req.Quantity, args)
+		b, err := conn.WriteMultipleCoils(req.Addr, req.Quantity, args)
 		return h.coilsToResult("write coils", req.Quantity, b, err)
 	}
 
 	h.log.TRACE.Printf("read coil: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
-	b, err := h.conn.ReadCoilsWithSlave(req.UnitId, req.Addr, req.Quantity)
+	b, err := conn.ReadCoils(req.Addr, req.Quantity)
 	return h.coilsToResult("read coil", req.Quantity, b, err)
 }
 
 func (h *handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) (res []uint16, err error) {
+	conn := h.conn.Clone(req.UnitId)
 	h.log.TRACE.Printf("read input: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
-	b, err := h.conn.ReadInputRegistersWithSlave(req.UnitId, req.Addr, req.Quantity)
+	b, err := conn.ReadInputRegisters(req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read input", b, err)
 }
 
 func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) (res []uint16, err error) {
+	conn := h.conn.Clone(req.UnitId)
+
 	if req.IsWrite {
 		if h.readOnly {
 			return nil, mbserver.ErrIllegalFunction
@@ -139,16 +144,16 @@ func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) 
 
 		if req.WriteFuncCode == gridx.FuncCodeWriteSingleRegister {
 			h.log.TRACE.Printf("write holding: id %d addr %d val %04x", req.UnitId, req.Addr, req.Args[0])
-			b, err := h.conn.WriteSingleRegisterWithSlave(req.UnitId, req.Addr, req.Args[0])
+			b, err := conn.WriteSingleRegister(req.Addr, req.Args[0])
 			return h.exceptionToUint16AndError("write holding", b, err)
 		}
 
 		h.log.TRACE.Printf("write holding: id %d addr %d qty %d val %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
-		b, err := h.conn.WriteMultipleRegistersWithSlave(req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
+		b, err := conn.WriteMultipleRegisters(req.Addr, req.Quantity, asBytes(req.Args))
 		return h.exceptionToUint16AndError("write multiple holding", b, err)
 	}
 
 	h.log.TRACE.Printf("read holding: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
-	b, err := h.conn.ReadHoldingRegistersWithSlave(req.UnitId, req.Addr, req.Quantity)
+	b, err := conn.ReadHoldingRegisters(req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read holding", b, err)
 }

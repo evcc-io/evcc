@@ -40,7 +40,7 @@ func TestConcurrentRead(t *testing.T) {
 				addr := uint16(rand.Int31n(200) + 1)
 				qty := uint16(rand.Int31n(32) + 1)
 
-				b, err := conn.ReadInputRegistersWithSlave(uint8(id), addr, qty)
+				b, err := conn.Clone(uint8(id)).ReadInputRegisters(addr, qty)
 				assert.NoError(t, err)
 
 				if err == nil {
@@ -94,24 +94,24 @@ func TestReadCoils(t *testing.T) {
 		assert.NoError(t, err)
 
 		{ // read
-			b, err := conn.ReadCoilsWithSlave(1, 1, 1)
+			b, err := conn.ReadCoils(1, 1)
 			assert.NoError(t, err)
 			assert.Equal(t, []byte{0x01}, b)
 
-			b, err = conn.ReadCoilsWithSlave(1, 1, 2)
+			b, err = conn.ReadCoils(1, 2)
 			assert.NoError(t, err)
 			assert.Equal(t, []byte{0x03}, b)
 
-			b, err = conn.ReadCoilsWithSlave(1, 1, 9)
+			b, err = conn.ReadCoils(1, 9)
 			assert.NoError(t, err)
 			assert.Equal(t, []byte{0xFF, 0x01}, b)
 		}
 		{ // write
-			b, err := conn.WriteSingleCoilWithSlave(1, 1, 0xFF00)
+			b, err := conn.WriteSingleCoil(1, 0xFF00)
 			assert.NoError(t, err)
 			assert.Equal(t, []byte{0xFF, 0x00}, b)
 
-			b, err = conn.WriteMultipleCoilsWithSlave(1, 1, 9, []byte{0xFF, 0x01})
+			b, err = conn.WriteMultipleCoils(1, 9, []byte{0xFF, 0x01})
 			assert.NoError(t, err)
 			assert.Equal(t, []byte{0x00, 0x09}, b)
 		}
