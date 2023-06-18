@@ -21,7 +21,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 
 	evbus "github.com/asaskevich/EventBus"
-	"github.com/avast/retry-go/v3"
+	"github.com/avast/retry-go/v4"
 	"github.com/benbjohnson/clock"
 	"github.com/cjrd/allocate"
 )
