@@ -169,7 +169,7 @@ label = "Max. Current"
 label = "Min. Current"
 
 [main.loadpointSettings.minSoc]
-description = "The vehicle gets „fast” charged to {0}% in solar mode. Then continues with solar surplus. Usefull to ensure a minimum range even for darker days."
+description = "The vehicle gets „fast” charged to {0}% in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days."
 label = "Min. charge %"
 
 [main.loadpointSettings.phasesConfigured]
