@@ -226,7 +226,7 @@ func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
 
 // persistVehicleSettings stores user configuration (via UI/API) for the current vehicle
 func (lp *Loadpoint) persistVehicleSettings() {
-	idx := lp.coordinator.GetVehicleIndex(lp.vehicle)
+	idx := lp.coordinator.GetVehicleIndex(lp.GetVehicle())
 	if idx == -1 {
 		return
 	}
@@ -238,7 +238,7 @@ func (lp *Loadpoint) persistVehicleSettings() {
 
 // restoreVehicleSettings restores user configuration (via UI/API) for the current vehicle
 func (lp *Loadpoint) restoreVehicleSettings() {
-	idx := lp.coordinator.GetVehicleIndex(lp.vehicle)
+	idx := lp.coordinator.GetVehicleIndex(lp.GetVehicle())
 	if idx == -1 {
 		return
 	}
