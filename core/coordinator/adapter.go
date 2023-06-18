@@ -3,6 +3,7 @@ package coordinator
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"golang.org/x/exp/slices"
 )
 
 type adapter struct {
@@ -24,7 +25,7 @@ func (a *adapter) GetVehicles() []api.Vehicle {
 }
 
 func (a *adapter) GetVehicleIndex(v api.Vehicle) int {
-	return a.c.GetVehicleIndex(v)
+	return slices.Index(a.c.vehicles, v)
 }
 
 func (a *adapter) Acquire(v api.Vehicle) {
