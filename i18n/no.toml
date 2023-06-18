@@ -297,6 +297,9 @@ reallyDelete = "Slett denne økten?"
 solar = "Solenergi"
 title = "Ladeøkter"
 vehicle = "Kjøretøy"
+csvMonth = "Last ned (måned) CSV"
+csvTotal = Last ned total CSV"
+noData = "Ingen ladeøkter denne måneden."
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -355,3 +358,9 @@ title = "Oppstartsfeil"
 cancel = "Avbryt"
 template = "Fabrikant"
 test = "Test"
+
+
+[sessions.filter]
+allLoadpoints = "alle ladepunkter"
+allVehicles = "alle kjøretøy"
+filter = "filter"
