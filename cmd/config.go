@@ -198,26 +198,36 @@ func (cp *ConfigProvider) configure(conf config) error {
 }
 
 func (cp *ConfigProvider) configureMeters(conf config) error {
+	var mu sync.Mutex
+	g, _ := errgroup.WithContext(context.Background())
+
 	cp.meters = make(map[string]api.Meter)
 	for id, cc := range conf.Meters {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create %s meter: missing name", humanize.Ordinal(id+1))
 		}
 
-		m, err := meter.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			err = fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
-			return err
-		}
+		cc := cc
 
-		if _, exists := cp.meters[cc.Name]; exists {
-			return fmt.Errorf("duplicate meter name: %s already defined and must be unique", cc.Name)
-		}
+		g.Go(func() error {
+			m, err := meter.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
+			}
 
-		cp.meters[cc.Name] = m
+			mu.Lock()
+			defer mu.Unlock()
+
+			if _, exists := cp.meters[cc.Name]; exists {
+				return fmt.Errorf("duplicate meter name: %s already defined and must be unique", cc.Name)
+			}
+
+			cp.meters[cc.Name] = m
+			return nil
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
 func (cp *ConfigProvider) configureChargers(conf config) error {
