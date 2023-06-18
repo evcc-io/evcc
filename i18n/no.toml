@@ -288,18 +288,18 @@ title = "Ladeøkt"
 [sessions]
 avgPrice = "Ø-pris"
 co2 = "Ø-CO₂"
+csvMonth = "Last ned (måned) CSV"
+csvTotal = "Last ned total CSV"
 date = "Start"
 downloadCsv = "Last ned som CSV"
 energy = "Oppladet"
 loadpoint = "Ladepunkt"
+noData = "Ingen ladeøkter denne måneden."
 price = "Σ-pris"
 reallyDelete = "Slett denne økten?"
 solar = "Solenergi"
 title = "Ladeøkter"
 vehicle = "Kjøretøy"
-csvMonth = "Last ned (måned) CSV"
-csvTotal = Last ned total CSV"
-noData = "Ingen ladeøkter denne måneden."
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -311,6 +311,11 @@ meterstart = "Start-målerstand (kWh)"
 meterstop = "Stopp-målerstand (kWh)"
 odometer = "Kilometerstand"
 vehicle = "Kjøretøy"
+
+[sessions.filter]
+allLoadpoints = "alle ladepunkter"
+allVehicles = "alle kjøretøy"
+filter = "filter"
 
 [settings]
 title = "Innstillinger"
@@ -358,9 +363,3 @@ title = "Oppstartsfeil"
 cancel = "Avbryt"
 template = "Fabrikant"
 test = "Test"
-
-
-[sessions.filter]
-allLoadpoints = "alle ladepunkter"
-allVehicles = "alle kjøretøy"
-filter = "filter"
