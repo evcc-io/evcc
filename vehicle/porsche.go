@@ -39,7 +39,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.NewLogger("porsche") //.Redact(cc.User, cc.Password, cc.VIN)
 	identity := porsche.NewIdentity(log, cc.User, cc.Password)
 
 	err := identity.Login()
