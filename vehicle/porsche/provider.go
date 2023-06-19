@@ -82,78 +82,78 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
+// var _ api.VehicleFinishTimer = (*Provider)(nil)
 
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res2, err := v.emobilityG()
-	if err == nil {
-		if res2.BatteryChargeStatus == nil {
-			return time.Time{}, api.ErrNotAvailable
-		}
+// // FinishTime implements the api.VehicleFinishTimer interface
+// func (v *Provider) FinishTime() (time.Time, error) {
+// 	res2, err := v.emobilityG()
+// 	if err == nil {
+// 		if res2.BatteryChargeStatus == nil {
+// 			return time.Time{}, api.ErrNotAvailable
+// 		}
 
-		return time.Now().Add(time.Duration(res2.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
-	}
+// 		return time.Now().Add(time.Duration(res2.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
+// 	}
 
-	return time.Time{}, err
-}
+// 	return time.Time{}, err
+// }
 
-var _ api.ChargeState = (*Provider)(nil)
+// var _ api.ChargeState = (*Provider)(nil)
 
-// Status implements the api.ChargeState interface
-func (v *Provider) Status() (api.ChargeStatus, error) {
-	res2, err := v.emobilityG()
-	if err == nil {
-		if res2.BatteryChargeStatus == nil {
-			return api.StatusNone, api.ErrNotAvailable
-		}
+// // Status implements the api.ChargeState interface
+// func (v *Provider) Status() (api.ChargeStatus, error) {
+// 	res2, err := v.emobilityG()
+// 	if err == nil {
+// 		if res2.BatteryChargeStatus == nil {
+// 			return api.StatusNone, api.ErrNotAvailable
+// 		}
 
-		switch res2.BatteryChargeStatus.PlugState {
-		case "DISCONNECTED":
-			return api.StatusA, nil
-		case "CONNECTED":
-			// ignore if the car is connected to a DC charging station
-			if res2.BatteryChargeStatus.ChargingInDCMode {
-				return api.StatusA, nil
-			}
-			switch res2.BatteryChargeStatus.ChargingState {
-			case "ERROR":
-				return api.StatusF, nil
-			case "OFF", "COMPLETED":
-				return api.StatusB, nil
-			case "ON", "CHARGING":
-				return api.StatusC, nil
-			default:
-				return api.StatusNone, errors.New("emobility - unknown charging state: " + res2.BatteryChargeStatus.ChargingState)
-			}
-		}
-	}
+// 		switch res2.BatteryChargeStatus.PlugState {
+// 		case "DISCONNECTED":
+// 			return api.StatusA, nil
+// 		case "CONNECTED":
+// 			// ignore if the car is connected to a DC charging station
+// 			if res2.BatteryChargeStatus.ChargingInDCMode {
+// 				return api.StatusA, nil
+// 			}
+// 			switch res2.BatteryChargeStatus.ChargingState {
+// 			case "ERROR":
+// 				return api.StatusF, nil
+// 			case "OFF", "COMPLETED":
+// 				return api.StatusB, nil
+// 			case "ON", "CHARGING":
+// 				return api.StatusC, nil
+// 			default:
+// 				return api.StatusNone, errors.New("emobility - unknown charging state: " + res2.BatteryChargeStatus.ChargingState)
+// 			}
+// 		}
+// 	}
 
-	return api.StatusNone, err
-}
+// 	return api.StatusNone, err
+// }
 
-var _ api.VehicleClimater = (*Provider)(nil)
+// var _ api.VehicleClimater = (*Provider)(nil)
 
-// Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (bool, error) {
-	res2, err := v.emobilityG()
-	if err == nil {
-		if res2.BatteryChargeStatus == nil {
-			return false, api.ErrNotAvailable
-		}
+// // Climater implements the api.VehicleClimater interface
+// func (v *Provider) Climater() (bool, error) {
+// 	res2, err := v.emobilityG()
+// 	if err == nil {
+// 		if res2.BatteryChargeStatus == nil {
+// 			return false, api.ErrNotAvailable
+// 		}
 
-		switch res2.DirectClimatisation.ClimatisationState {
-		case "OFF":
-			return false, nil
-		case "ON":
-			return true, nil
-		default:
-			return false, errors.New("emobility - unknown climate state: " + res2.DirectClimatisation.ClimatisationState)
-		}
-	}
+// 		switch res2.DirectClimatisation.ClimatisationState {
+// 		case "OFF":
+// 			return false, nil
+// 		case "ON":
+// 			return true, nil
+// 		default:
+// 			return false, errors.New("emobility - unknown climate state: " + res2.DirectClimatisation.ClimatisationState)
+// 		}
+// 	}
 
-	return false, err
-}
+// 	return false, err
+// }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
