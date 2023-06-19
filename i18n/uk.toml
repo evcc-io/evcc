@@ -29,7 +29,7 @@ greenShareSub1 = "енергія надається"
 greenShareSub2 = "сонячна енергія та батарея"
 power = "Потужність заряджання"
 powerSub1 = "{activeClients} з {totalClients} учасників"
-powerSub2 = "зарядка"
+powerSub2 = "зарядка…"
 tabTitle = "Жива спільнота"
 
 [footer.savings]

@@ -126,7 +126,7 @@ modalTitle = "Charging Plan"
 none = "none"
 title = "Plan"
 titleMinSoc = "Min charge"
-titleTargetCharge = "Depature"
+titleTargetCharge = "Departure"
 
 [main.energyflow]
 battery = "Battery"

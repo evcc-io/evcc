@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"strings"
 	"text/template"
 
@@ -54,6 +55,9 @@ func FuncMap(tmpl *template.Template) *template.Template {
 				return "", err
 			}
 			return buf.String(), nil
+		},
+		"urlEncode": func(v string) string {
+			return url.QueryEscape(v)
 		},
 	}
 
