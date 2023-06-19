@@ -39,6 +39,12 @@ func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, vin, carMo
 		},
 	}
 
+	if emobility == nil {
+		impl.emobilityG = func() (EmobilityResponse, error) {
+			return EmobilityResponse{}, errors.New("no emobility api")
+		}
+	}
+
 	return impl
 }
 

@@ -8,7 +8,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 
-	"github.com/evcc-io/evcc/api"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -30,7 +30,7 @@ var (
 			AuthURL:  OAuthURI + "/authorize",
 			TokenURL: OAuthURI + "/oauth/token",
 		},
-		Scopes: []string{"openid"},
+		Scopes: []string{"openid", "offline_access"},
 	}
 
 	EmobilityOAuth2Config = &oauth2.Config{
@@ -107,14 +107,17 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	query := u.Query()
-	query.Del("client")
-	query.Del("code_challenge")
-	query.Del("scope")
-	query.Del("protocol")
+	for _, p := range []string{"client_id", "code_challenge", "scope", "protocol"} {
+		query.Del(p)
+	}
+	for k, v := range map[string]string{
+		"connection": "Username-Password-Authentication",
+		"tenant":     "porsche-production",
+		"sec":        "high",
+	} {
+		query.Set(k, v)
+	}
 	query.Set("client_id", OAuth2Config.ClientID)
-	query.Set("connection", "Username-Password-Authentication")
-	query.Set("tenant", "porsche-production")
-	query.Set("sec", "high")
 	query.Set("username", v.user)
 	query.Set("password", v.password)
 
@@ -125,77 +128,36 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	}
 	resp.Body.Close()
 
-	// 	tok, err := OAuth2Config.Exchange(ctx, code,
-	// 	oauth2.SetAuthURLParam("grant_type", "authorization_code"),
-	// 	oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
-	// )
-
-	return nil, api.ErrAsleep
-
-	// dataLoginAuth := url.Values{
-	// 	"sec":          []string{query.Get("sec")},
-	// 	"resume":       []string{query.Get("resume")},
-	// 	"thirdPartyId": []string{query.Get("thirdPartyID")},
-	// 	"state":        []string{query.Get("state")},
-	// 	"username":     []string{v.user},
-	// 	"password":     []string{v.password},
-	// 	"keeploggedin": []string{"false"},
-	// }
-
-	// // process the auth so the session is authenticated
-	// resp, err = v.PostForm(uri, dataLoginAuth)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// resp.Body.Close()
-
-	// // get the token for the generic API
-	// token, err := v.fetchToken(OAuth2Config)
-	// if err == nil {
-	// 	v.defaultToken = token
-
-	// 	if token, err = v.fetchToken(EmobilityOAuth2Config); err == nil {
-	// 		v.emobilityToken = token
-	// 	}
-	// }
-
-	// return v.defaultToken, err
-}
-
-func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
-	cv, err := cv.CreateCodeVerifier()
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	uri := oc.AuthCodeURL("uvobn7XJs1", oauth2.AccessTypeOffline,
-		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
-		oauth2.SetAuthURLParam("country", "de"),
-		oauth2.SetAuthURLParam("locale", "de_DE"),
-	)
+	query = make(url.Values)
+	doc.Find("input[type=hidden]").Each(func(_ int, el *goquery.Selection) {
+		if name, ok := el.Attr("name"); ok {
+			val, _ := el.Attr("value")
+			query.Set(name, val)
+		}
+	})
 
+	var code string
 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		if req.URL.Scheme != "https" {
+		if code = req.URL.Query().Get("code"); code != "" {
 			return http.ErrUseLastResponse
 		}
 		return nil
 	}
 
-	resp, err := v.Client.Get(uri)
+	uri = fmt.Sprintf("%s/login/callback", OAuthURI)
+	resp, err = v.PostForm(uri, query)
 	if err != nil {
 		return nil, err
 	}
 	resp.Body.Close()
 
-	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
-	if err != nil {
-		return nil, err
-	}
-
-	code := query.Get("code")
 	if code == "" {
-		return nil, errors.New("no auth code")
+		return nil, errors.New("auth code not found")
 	}
 
 	ctx, cancel := context.WithTimeout(
@@ -204,12 +166,62 @@ func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
 	)
 	defer cancel()
 
-	token, err := oc.Exchange(ctx, code,
+	v.defaultToken, err = OAuth2Config.Exchange(ctx, code,
+		oauth2.SetAuthURLParam("client_id", OAuth2Config.ClientID),
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
 
-	return token, err
+	return v.defaultToken, err
 }
+
+// func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
+// 	cv, err := cv.CreateCodeVerifier()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	uri := oc.AuthCodeURL("uvobn7XJs1", oauth2.AccessTypeOffline,
+// 		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
+// 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+// 		oauth2.SetAuthURLParam("country", "de"),
+// 		oauth2.SetAuthURLParam("locale", "de_DE"),
+// 	)
+
+// 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+// 		if req.URL.Scheme != "https" {
+// 			return http.ErrUseLastResponse
+// 		}
+// 		return nil
+// 	}
+
+// 	resp, err := v.Client.Get(uri)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	resp.Body.Close()
+
+// 	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	code := query.Get("code")
+// 	if code == "" {
+// 		return nil, errors.New("no auth code")
+// 	}
+
+// 	ctx, cancel := context.WithTimeout(
+// 		context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
+// 		request.Timeout,
+// 	)
+// 	defer cancel()
+
+// 	token, err := oc.Exchange(ctx, code,
+// 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
+// 	)
+
+// 	return token, err
+// }
 
 type emobilityAdapter struct {
 	tr *Identity

@@ -66,13 +66,14 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// get eMobility capabilities
-	emobility := porsche.NewEmobilityAPI(log, identity.EmobilitySource)
-	capabilities, err := emobility.Capabilities(cc.VIN)
-	if err != nil {
-		return nil, err
-	}
+	// emobility := porsche.NewEmobilityAPI(log, identity.EmobilitySource)
+	// capabilities, err := emobility.Capabilities(cc.VIN)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	provider := porsche.NewProvider(log, api, emobility, cc.VIN, capabilities.CarModel, cc.Cache)
+	// provider := porsche.NewProvider(log, api, emobility, cc.VIN, capabilities.CarModel, cc.Cache)
+	provider := porsche.NewProvider(log, api, nil, cc.VIN, "", cc.Cache)
 
 	v := &Porsche{
 		embed:    &cc.embed,
