@@ -8,7 +8,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"github.com/samber/lo"
@@ -32,48 +31,32 @@ var (
 	}
 
 	EmobilityOAuth2Config = &oauth2.Config{
-		ClientID:    "NJOxLv4QQNrpZnYQbb7mCvdiMxQWkHDq",
+		ClientID:    OAuth2Config.ClientID,
 		RedirectURL: "https://my.porsche.com/myservices/auth/auth.html",
 		Endpoint:    OAuth2Config.Endpoint,
-		Scopes:      []string{"openid"},
+		Scopes:      []string{"openid", "offline_access"},
 	}
 )
 
 // Identity is the Porsche Identity client
 type Identity struct {
 	*request.Helper
-	user, password                 string
-	defaultToken, emobilityToken   *oauth2.Token
-	DefaultSource, EmobilitySource oauth2.TokenSource
+	oauth2.TokenSource
 }
 
 // NewIdentity creates Porsche identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log *util.Logger) *Identity {
 	v := &Identity{
-		Helper:   request.NewHelper(log),
-		user:     user,
-		password: password,
+		Helper: request.NewHelper(log),
 	}
 
 	return v
 }
 
-func (v *Identity) Login() error {
-	_, err := v.RefreshToken(nil)
-
-	if err == nil {
-		v.DefaultSource = oauth.RefreshTokenSource(v.defaultToken, v)
-		v.EmobilitySource = oauth.RefreshTokenSource(v.emobilityToken, &emobilityAdapter{v})
-	}
-
-	return err
-}
-
-// RefreshToken performs new login and creates default and emobility tokens
-func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	cv, err := cv.CreateCodeVerifier()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
@@ -93,13 +76,13 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 
 	resp, err := v.Client.Get(uri)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer resp.Body.Close()
 
 	u, err := url.Parse(resp.Header.Get("Location"))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	query := u.Query()
@@ -114,19 +97,19 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		query.Set(k, v)
 	}
 	query.Set("client_id", OAuth2Config.ClientID)
-	query.Set("username", v.user)
-	query.Set("password", v.password)
+	query.Set("username", user)
+	query.Set("password", password)
 
 	uri = fmt.Sprintf("%s/usernamepassword/login", OAuthURI)
 	resp, err = v.PostForm(uri, query)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	resp.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	query = make(url.Values)
@@ -143,13 +126,13 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	uri = fmt.Sprintf("%s/login/callback", OAuthURI)
 	resp, err = v.PostForm(uri, query)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	resp.Body.Close()
 
 	code, err := param()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ctx, cancel := context.WithTimeout(
@@ -158,71 +141,15 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	)
 	defer cancel()
 
-	v.defaultToken, err = OAuth2Config.Exchange(ctx, code,
+	token, err := OAuth2Config.Exchange(ctx, code,
 		oauth2.SetAuthURLParam("client_id", OAuth2Config.ClientID),
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
-
-	return v.defaultToken, err
-}
-
-// func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
-// 	cv, err := cv.CreateCodeVerifier()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	uri := oc.AuthCodeURL("uvobn7XJs1", oauth2.AccessTypeOffline,
-// 		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
-// 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
-// 		oauth2.SetAuthURLParam("country", "de"),
-// 		oauth2.SetAuthURLParam("locale", "de_DE"),
-// 	)
-
-// 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-// 		if req.URL.Scheme != "https" {
-// 			return http.ErrUseLastResponse
-// 		}
-// 		return nil
-// 	}
-
-// 	resp, err := v.Client.Get(uri)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	resp.Body.Close()
-
-// 	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	code := query.Get("code")
-// 	if code == "" {
-// 		return nil, errors.New("no auth code")
-// 	}
-
-// 	ctx, cancel := context.WithTimeout(
-// 		context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
-// 		request.Timeout,
-// 	)
-// 	defer cancel()
-
-// 	token, err := oc.Exchange(ctx, code,
-// 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
-// 	)
-
-// 	return token, err
-// }
-
-type emobilityAdapter struct {
-	tr *Identity
-}
-
-func (v *emobilityAdapter) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
-	token, err := v.tr.RefreshToken(nil)
-	if err == nil {
-		token = v.tr.emobilityToken
+	if err != nil {
+		return err
 	}
-	return token, err
+
+	v.TokenSource = oc.TokenSource(context.WithValue(context.Background(), oauth2.HTTPClient, v.Client), token)
+
+	return nil
 }
