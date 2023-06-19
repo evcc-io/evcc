@@ -2,9 +2,7 @@ package porsche
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 
@@ -87,9 +85,7 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	)
 
 	v.Client.Jar, _ = cookiejar.New(nil)
-	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
-	}
+	v.Client.CheckRedirect = request.DontFollow
 	defer func() {
 		v.Client.Jar = nil
 		v.Client.CheckRedirect = nil
@@ -141,13 +137,8 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		}
 	})
 
-	var code string
-	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		if code = req.URL.Query().Get("code"); code != "" {
-			return http.ErrUseLastResponse
-		}
-		return nil
-	}
+	var param request.InterceptResult
+	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
 
 	uri = fmt.Sprintf("%s/login/callback", OAuthURI)
 	resp, err = v.PostForm(uri, query)
@@ -156,8 +147,9 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	}
 	resp.Body.Close()
 
-	if code == "" {
-		return nil, errors.New("auth code not found")
+	code, err := param()
+	if err != nil {
+		return nil, err
 	}
 
 	ctx, cancel := context.WithTimeout(
