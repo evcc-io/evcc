@@ -135,10 +135,8 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(
-		context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
-		request.Timeout,
-	)
+	cctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
+	ctx, cancel := context.WithTimeout(cctx, request.Timeout)
 	defer cancel()
 
 	token, err := oc.Exchange(ctx, code,
@@ -149,7 +147,7 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 		return err
 	}
 
-	v.TokenSource = oc.TokenSource(context.WithValue(context.Background(), oauth2.HTTPClient, v.Client), token)
+	v.TokenSource = oc.TokenSource(cctx, token)
 
 	return nil
 }
