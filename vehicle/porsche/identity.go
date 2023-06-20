@@ -96,7 +96,7 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	} {
 		query.Set(k, v)
 	}
-	query.Set("client_id", OAuth2Config.ClientID)
+	query.Set("client_id", oc.ClientID)
 	query.Set("username", user)
 	query.Set("password", password)
 
@@ -141,8 +141,8 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	)
 	defer cancel()
 
-	token, err := OAuth2Config.Exchange(ctx, code,
-		oauth2.SetAuthURLParam("client_id", OAuth2Config.ClientID),
+	token, err := oc.Exchange(ctx, code,
+		oauth2.SetAuthURLParam("client_id", oc.ClientID),
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
 	if err != nil {
