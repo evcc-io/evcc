@@ -1,6 +1,7 @@
 product:
   description: ISO15118
   group: Generische Unterstützung
+capabilities: ["iso151182"]
 description: |
   Nur unterstützt wenn das Fahrzeug den Ladestand (Soc) an die verbundene Wallbox übermitteln kann.
 render:

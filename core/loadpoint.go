@@ -21,7 +21,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 
 	evbus "github.com/asaskevich/EventBus"
-	"github.com/avast/retry-go/v3"
+	"github.com/avast/retry-go/v4"
 	"github.com/benbjohnson/clock"
 	"github.com/cjrd/allocate"
 )
@@ -731,6 +731,14 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 		}
 
 		if err != nil {
+			v := lp.GetVehicle()
+			if vv, ok := v.(api.Resurrector); ok && errors.Is(err, api.ErrAsleep) {
+				// https://github.com/evcc-io/evcc/issues/8254
+				// wakeup vehicle
+				lp.log.DEBUG.Printf("max charge current: waking up vehicle")
+				return vv.WakeUp()
+			}
+
 			return fmt.Errorf("max charge current %.3gA: %w", chargeCurrent, err)
 		}
 

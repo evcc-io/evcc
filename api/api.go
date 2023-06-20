@@ -54,6 +54,15 @@ func ChargeStatusString(s string) (ChargeStatus, error) {
 	}
 }
 
+// ChargeStatusStringWithMapping converts a string to ChargeStatus. In case of error, mapping is applied.
+func ChargeStatusStringWithMapping(s string, m map[ChargeStatus]ChargeStatus) (ChargeStatus, error) {
+	status, err := ChargeStatusString(s)
+	if mappedStatus, ok := m[status]; ok && err != nil {
+		return mappedStatus, nil
+	}
+	return status, err
+}
+
 // String implements Stringer
 func (c ChargeStatus) String() string {
 	return string(c)

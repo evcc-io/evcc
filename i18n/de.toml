@@ -285,10 +285,13 @@ title = "Ladevorgang"
 [sessions]
 avgPrice = "Ø Preis"
 co2 = "Ø CO₂"
+csvMonth = "Download {month} CSV"
+csvTotal = "Download total CSV"
 date = "Anfang"
 downloadCsv = "Als CSV herunterladen"
 energy = "Geladen"
 loadpoint = "Ladepunkt"
+noData = "Noch keine Ladevorgänge in diesem Monat."
 price = "Σ Preis"
 reallyDelete = "Wollen Sie diesen Ladevorgang wirklich löschen?"
 solar = "Sonne"
@@ -305,6 +308,11 @@ meterstart = "Anfangszählerstand (kWh)"
 meterstop = "Endzählerstand (kWh)"
 odometer = "Kilometerstand (km)"
 vehicle = "Fahrzeug"
+
+[sessions.filter]
+allLoadpoints = "Alle Ladepunkte"
+allVehicles = "Alle Fahrzeuge"
+filter = "filtern"
 
 [settings]
 title = "Einstellungen"
