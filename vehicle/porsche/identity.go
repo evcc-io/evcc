@@ -2,7 +2,10 @@ package porsche
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 
@@ -105,7 +108,17 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var res struct {
+			Description string `json:"description"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&res); err == nil && res.Description != "" {
+			return errors.New(res.Description)
+		}
+		return fmt.Errorf("unexpected status %d", resp.StatusCode)
+	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
