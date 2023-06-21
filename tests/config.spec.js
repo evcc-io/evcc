@@ -35,16 +35,16 @@ test.describe("vehicles", async () => {
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
 
     // create #1
-    await page.getByRole("button", { name: "add vehicle" }).click();
-    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByRole("button", { name: "Add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
     await page.getByLabel("Title").fill("Green Car");
     await page.getByRole("button", { name: "Validate & save" }).click();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
 
     // create #2
-    await page.getByRole("button", { name: "add vehicle" }).click();
-    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByRole("button", { name: "Add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
     await page.getByLabel("Title").fill("Yellow Van");
     await page.getByRole("button", { name: "Validate & save" }).click();
 
@@ -81,12 +81,12 @@ test.describe("vehicles", async () => {
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
 
     // create #1 & #2
-    await page.getByRole("button", { name: "add vehicle" }).click();
-    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByRole("button", { name: "Add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
     await page.getByLabel("Title").fill("Green Car");
     await page.getByRole("button", { name: "Validate & save" }).click();
-    await page.getByRole("button", { name: "add vehicle" }).click();
-    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByRole("button", { name: "Add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
     await page.getByLabel("Title").fill("Yellow Van");
     await page.getByLabel("van").check();
     await page.getByRole("button", { name: "Validate & save" }).click();
@@ -110,8 +110,8 @@ test.describe("vehicles", async () => {
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
 
     // create #1
-    await page.getByRole("button", { name: "add vehicle" }).click();
-    await page.getByLabel("Manufacturer").selectOption("Generisches Fahrzeug");
+    await page.getByRole("button", { name: "Add vehicle" }).click();
+    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
     await page.getByLabel("Title").fill("Green Car");
     await page.getByRole("button", { name: "Validate & save" }).click();
 

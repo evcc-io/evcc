@@ -21,6 +21,7 @@
 				class="btn-check"
 				:name="property"
 				autocomplete="off"
+				:required="required"
 				:value="key"
 			/>
 			<label class="btn btn-outline-secondary" :for="`icon_${key}`" :aria-label="key">

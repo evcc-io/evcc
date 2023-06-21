@@ -12,8 +12,9 @@
 			<div class="modal-dialog modal-dialog-centered" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 v-if="isNew" class="modal-title">Add New Vehicle</h5>
-						<h5 v-else class="modal-title">Edit Vehicle</h5>
+						<h5 class="modal-title">
+							{{ $t(`config.vehicle.${isNew ? "titleAdd" : "titleEdit"}`) }}
+						</h5>
 						<button
 							type="button"
 							class="btn-close"
@@ -22,8 +23,8 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<div class="container mx-0 px-0">
-							<FormRow id="vehicleTemplate" :label="$t('vehicleSettings.template')">
+						<form ref="form" class="container mx-0 px-0">
+							<FormRow id="vehicleTemplate" :label="$t('config.vehicle.template')">
 								<select
 									id="vehicleTemplate"
 									v-model="templateName"
@@ -31,9 +32,11 @@
 									class="form-select w-100"
 									@change="templateChanged"
 								>
-									<option value="offline">Generisches Fahrzeug</option>
+									<option value="offline">
+										{{ $t("config.vehicle.offline") }}
+									</option>
 									<option disabled>----------</option>
-									<optgroup label="Fahrzeuge mit Schnittstelle">
+									<optgroup :label="$t('config.vehicle.online')">
 										<option
 											v-for="option in templateOptions.online"
 											:key="option.name"
@@ -42,7 +45,7 @@
 											{{ option.name }}
 										</option>
 									</optgroup>
-									<optgroup label="Scooter">
+									<optgroup :label="$t('config.vehicle.scooter')">
 										<option
 											v-for="option in templateOptions.scooter"
 											:key="option.name"
@@ -51,7 +54,7 @@
 											{{ option.name }}
 										</option>
 									</optgroup>
-									<optgroup label="Weitere Integrationen">
+									<optgroup :label="$t('config.vehicle.generic')">
 										<option
 											v-for="option in templateOptions.generic"
 											:key="option.name"
@@ -95,22 +98,22 @@
 							>
 								<div class="d-flex justify-content-between align-items-center">
 									<div>
-										{{ $t("vehicleSettings.status.label") }}:
+										{{ $t("config.validation.label") }}:
 										<span v-if="testUnknown">{{
-											$t("vehicleSettings.status.unknown")
+											$t("config.validation.unknown")
 										}}</span>
 										<span v-if="testRunning">{{
-											$t("vehicleSettings.status.running")
+											$t("config.validation.running")
 										}}</span>
 										<strong v-if="testSuccess">{{
-											$t("vehicleSettings.status.success")
+											$t("config.validation.success")
 										}}</strong>
 										<strong v-if="testFailed">{{
-											$t("vehicleSettings.status.failed")
+											$t("config.validation.failed")
 										}}</strong>
 									</div>
 									<a href="#" class="alert-link" @click.prevent="test">
-										{{ $t("vehicleSettings.validate") }}
+										{{ $t("config.validation.validate") }}
 									</a>
 								</div>
 								<hr v-if="testResult" />
@@ -126,23 +129,23 @@
 									:disabled="testRunning"
 									@click="isNew ? create() : update()"
 								>
-									{{ $t(`vehicleSettings.update`) }}
+									{{ $t(`config.vehicle.update`) }}
 								</button>
 								<button
 									type="button"
 									class="btn btn-link text-muted"
 									data-bs-dismiss="modal"
 								>
-									{{ $t("vehicleSettings.cancel") }}
+									{{ $t("config.vehicle.cancel") }}
 								</button>
 							</div>
 
 							<div v-if="isDeletable" class="text-center mt-4">
 								<button class="btn btn-link text-danger" @click="remove">
-									{{ $t("vehicleSettings.delete") }}
+									{{ $t("config.vehicle.delete") }}
 								</button>
 							</div>
-						</div>
+						</form>
 					</div>
 				</div>
 			</div>
@@ -155,7 +158,7 @@ import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import api from "../../api";
 
-const initialValues = { type: "template" };
+const initialValues = { type: "template", icon: "car" };
 
 const TEST_UNKNOWN = "unknown";
 const TEST_SUCCESS = "success";
@@ -311,6 +314,7 @@ export default {
 				});
 		},
 		async test() {
+			if (!this.$refs.form.reportValidity()) return false;
 			this.testState = TEST_RUNNING;
 			try {
 				await api.post("config/test/vehicle", this.apiData);

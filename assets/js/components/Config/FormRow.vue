@@ -3,14 +3,14 @@
 		<label :for="id">
 			<div class="form-label">
 				{{ label }}
-				<small v-if="optional">{{ $t("vehicleSettings.optional") }}</small>
+				<small v-if="optional">{{ $t("config.form.optional") }}</small>
 			</div>
 		</label>
 		<div :class="smallValue ? 'w-50' : 'w-100'">
 			<slot />
 		</div>
 		<div class="form-text">
-			<div v-if="example">{{ $t("vehicleSettings.example") }}: {{ example }}</div>
+			<div v-if="example">{{ $t("config.form.example") }}: {{ example }}</div>
 			<div v-if="help" v-linkify:options="{ target: '_blank' }">{{ help }}</div>
 		</div>
 	</div>
