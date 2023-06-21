@@ -46,6 +46,8 @@ offline = "Generic vehicle"
 online = "Vehicles with online API"
 scooter = "Scooter"
 template = "Manufacturer"
+titleAdd = "Add Vehicle"
+titleEdit = "Edit Vehicle"
 update = "Validate & save"
 
 [footer]
