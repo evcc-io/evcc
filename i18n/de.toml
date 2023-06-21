@@ -358,5 +358,16 @@ title = "Fehler beim Starten"
 
 [vehicleSettings]
 cancel = "Abbrechen"
+delete = "Fahrzeug entfernen"
+example = "Beispiel"
+optional = "optional"
 template = "Hersteller"
-test = "Test"
+update = "Prüfen & speichern"
+validate = "prüfen"
+
+[vehicleSettings.status]
+failed = "fehlgeschlagen"
+label = "Status"
+running = "prüfe…"
+success = "erfolgreich"
+unknown = "unbekannt"

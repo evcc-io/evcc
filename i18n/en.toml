@@ -358,6 +358,17 @@ title = "Startup Error"
 
 [vehicleSettings]
 cancel = "Cancel"
-create = "Create"
+create = "Validate & create"
+delete = "Delete vehicle"
+example = "Example"
+optional = "optional"
 template = "Manufacturer"
-test = "Test"
+update = "Validate & save"
+validate = "validate"
+
+[vehicleSettings.status]
+failed = "failed"
+label = "Status"
+running = "validating…"
+success = "successfull"
+unknown = "unknown"

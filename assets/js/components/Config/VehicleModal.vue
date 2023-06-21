@@ -13,7 +13,7 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 v-if="isNew" class="modal-title">Add New Vehicle</h5>
-						<h5 v-else>Edit Vehicle</h5>
+						<h5 v-else class="modal-title">Edit Vehicle</h5>
 						<button
 							type="button"
 							class="btn-close"
@@ -68,7 +68,9 @@
 								:key="param.Name"
 								:optional="!param.Required"
 								:label="param.Description || `[${param.Name}]`"
-								:small-value="['capacity', 'vin'].includes(param.Name)"
+								:help="param.Description === param.Help ? undefined : param.Help"
+								:small-value="['capacity'].includes(param.Name)"
+								:example="param.Example"
 							>
 								<PropertyField
 									:id="`vehicleParam${param.Name}`"
@@ -76,54 +78,68 @@
 									:masked="param.Mask"
 									:property="param.Name"
 									class="me-2"
-									:placeholder="param.Example"
 									:required="param.Required"
 									:validValues="param.ValidValues"
 								/>
 							</FormRow>
-							<div class="buttons d-flex justify-content-between mb-4">
+
+							<div
+								v-if="templateName"
+								class="alert my-4"
+								:class="{
+									'alert-secondary': testUnknown || testRunning,
+									'alert-success': testSuccess,
+									'alert-danger': testFailed,
+								}"
+								role="alert"
+							>
+								<div class="d-flex justify-content-between align-items-center">
+									<div>
+										{{ $t("vehicleSettings.status.label") }}:
+										<span v-if="testUnknown">{{
+											$t("vehicleSettings.status.unknown")
+										}}</span>
+										<span v-if="testRunning">{{
+											$t("vehicleSettings.status.running")
+										}}</span>
+										<strong v-if="testSuccess">{{
+											$t("vehicleSettings.status.success")
+										}}</strong>
+										<strong v-if="testFailed">{{
+											$t("vehicleSettings.status.failed")
+										}}</strong>
+									</div>
+									<a href="#" class="alert-link" @click.prevent="test">
+										{{ $t("vehicleSettings.validate") }}
+									</a>
+								</div>
+								<hr v-if="testResult" />
+								<div v-if="testResult">
+									{{ testResult }}
+								</div>
+							</div>
+
+							<div v-if="templateName" class="my-4">
+								<button
+									type="submit"
+									class="btn btn-primary me-3"
+									:disabled="testRunning"
+									@click="isNew ? create() : update()"
+								>
+									{{ $t(`vehicleSettings.update`) }}
+								</button>
 								<button
 									type="button"
-									class="btn btn-outline-secondary"
+									class="btn btn-link text-muted"
 									data-bs-dismiss="modal"
 								>
 									{{ $t("vehicleSettings.cancel") }}
 								</button>
-								<button
-									v-if="!testPerformed"
-									type="submit"
-									class="btn btn-primary"
-									@click="test"
-								>
-									{{ $t("vehicleSettings.test") }}
-								</button>
-								<button
-									v-else
-									type="submit"
-									class="btn"
-									:class="testSuccess ? 'btn-primary' : 'btn-warning'"
-									@click="isNew ? create() : update()"
-								>
-									{{ isNew ? "Create" : "Update" }}
-									<span v-if="!testSuccess"> anyway</span>
-								</button>
 							</div>
 
-							<div class="card result">
-								<div class="card-body evcc-box">
-									<pre><code>{{ configYaml }}</code></pre>
-									<code
-										v-if="testResult"
-										:class="testSuccess ? 'text-primary' : 'text-danger'"
-									>
-										<hr />
-										{{ testResult }}
-									</code>
-								</div>
-							</div>
 							<div v-if="isDeletable" class="text-center mt-4">
 								<button class="btn btn-link text-danger" @click="remove">
-									Delete vehicle
+									{{ $t("vehicleSettings.delete") }}
 								</button>
 							</div>
 						</div>
@@ -135,12 +151,20 @@
 </template>
 
 <script>
-import FormRow from "../FormRow.vue";
+import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import api from "../../api";
-import YAML from "json-to-pretty-yaml";
 
 const initialValues = { type: "template" };
+
+const TEST_UNKNOWN = "unknown";
+const TEST_SUCCESS = "success";
+const TEST_FAILED = "failed";
+const TEST_RUNNING = "running";
+
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export default {
 	name: "VehicleModal",
@@ -158,11 +182,22 @@ export default {
 			template: null,
 			values: { ...initialValues },
 			testResult: "",
-			testSuccess: false,
-			testPerformed: false,
+			testState: TEST_UNKNOWN,
 		};
 	},
 	computed: {
+		testRunning() {
+			return this.testState === TEST_RUNNING;
+		},
+		testSuccess() {
+			return this.testState === TEST_SUCCESS;
+		},
+		testFailed() {
+			return this.testState === TEST_FAILED;
+		},
+		testUnknown() {
+			return this.testState === TEST_UNKNOWN;
+		},
 		templateOptions() {
 			return {
 				online: this.products.filter((p) => p.group === "" && p.template !== "offline"),
@@ -180,14 +215,6 @@ export default {
 				return p;
 			});
 			return adjustedParams;
-		},
-		configYaml() {
-			return YAML.stringify([
-				{
-					name: "my_vehicle",
-					...this.apiData,
-				},
-			]);
 		},
 		apiData() {
 			return {
@@ -237,9 +264,8 @@ export default {
 			this.resetTest();
 		},
 		resetTest() {
-			this.testPerformed = false;
-			this.testSuccess = false;
-			this.testResult = "";
+			this.testState = TEST_UNKNOWN;
+			this.testResult = null;
 		},
 		async loadConfiguration() {
 			try {
@@ -285,43 +311,47 @@ export default {
 				});
 		},
 		async test() {
+			this.testState = TEST_RUNNING;
 			try {
-				this.testResult = (await api.post("config/test/vehicle", this.apiData)).data.result;
-				this.testSuccess = true;
+				await api.post("config/test/vehicle", this.apiData);
+				this.testState = TEST_SUCCESS;
+				this.testResult = null;
+				return true;
 			} catch (e) {
 				console.error(e);
-				this.testSuccess = false;
+				this.testState = TEST_FAILED;
 				this.testResult = e.response?.data?.error || e.message;
 			}
-			this.testPerformed = true;
+			return false;
 		},
 		async create() {
+			if (!(await this.test())) return;
+			await sleep(500);
 			try {
-				this.result = (await api.post("config/devices/vehicle", this.apiData)).data.result;
+				await api.post("config/devices/vehicle", this.apiData);
 				this.$emit("vehicle-changed");
 			} catch (e) {
 				console.error(e);
-				this.testResult = e.response?.data?.error || e.message;
+				this.testState = TEST_FAILED;
 			}
 		},
 		async update() {
+			if (!(await this.test())) return;
+			await sleep(500);
 			try {
-				this.result = (
-					await api.put(`config/devices/vehicle/${this.id}`, this.apiData)
-				).data.result;
+				await api.put(`config/devices/vehicle/${this.id}`, this.apiData);
 				this.$emit("vehicle-changed");
 			} catch (e) {
 				console.error(e);
-				this.testResult = e.response?.data?.error || e.message;
+				this.testState = TEST_FAILED;
 			}
 		},
 		async remove() {
 			try {
-				this.result = (await api.delete(`config/devices/vehicle/${this.id}`)).data.result;
+				await api.delete(`config/devices/vehicle/${this.id}`);
 				this.$emit("vehicle-changed");
 			} catch (e) {
 				console.error(e);
-				this.testResult = e.response?.data?.error || e.message;
 				alert("delete failed");
 			}
 		},

@@ -245,18 +245,18 @@ params:
       en: "Icon as shown in user interface"
     type: choice
     validvalues:
-      - bike
-      - bus
       - car
-      - cooler
-      - generic
-      - heater
+      - bus
+      - van
+      - tractor
+      - bike
+      - scooter
       - moped
       - motorcycle
-      - scooter
-      - tractor
-      - van
+      - generic
       - waterheater
+      - heater
+      - cooler
   - name: ski
     required: true
     description:
