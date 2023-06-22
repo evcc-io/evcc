@@ -58,9 +58,10 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid     string
-	lp       loadpoint.API
-	respChan chan easee.SignalRCommandResponse
+	rfid       string
+	lp         loadpoint.API
+	respChan   chan easee.SignalRCommandResponse
+	curUpdChan chan float64
 }
 
 func init() {
@@ -98,12 +99,13 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	}
 
 	c := &Easee{
-		Helper:   request.NewHelper(log),
-		charger:  charger,
-		log:      log,
-		current:  6, // default current
-		done:     make(chan struct{}),
-		respChan: make(chan easee.SignalRCommandResponse),
+		Helper:     request.NewHelper(log),
+		charger:    charger,
+		log:        log,
+		current:    6, // default current
+		done:       make(chan struct{}),
+		respChan:   make(chan easee.SignalRCommandResponse),
+		curUpdChan: make(chan float64, 2), //buffer up to 2 updates
 	}
 
 	c.Client.Timeout = timeout
@@ -317,6 +319,10 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			time.Since(c.currentUpdated) > 10*time.Second {
 			c.log.DEBUG.Printf("current mismatch, expected %.1f, got %.1f", c.current, c.dynamicChargerCurrent)
 		}
+		select {
+		case c.curUpdChan <- c.dynamicChargerCurrent:
+		default:
+		}
 	case easee.CHARGER_OP_MODE:
 		c.opMode = value.(int)
 	}
@@ -484,17 +490,22 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 
 // wait for up to 3s for current become 32A
 func (c *Easee) waitForDynamicCharger32A() {
+	c.mux.Lock()
+	if c.dynamicChargerCurrent == 32 {
+		return
+	}
+	c.mux.Unlock()
+
 	timer := time.NewTimer(3 * time.Second)
 	for {
 		select {
-		case <-timer.C: //time is up, bail
-			return
-		default:
-			if c.dynamicChargerCurrent == 32 {
+		case newVal := <-c.curUpdChan:
+			if newVal == 32 {
 				timer.Stop()
 				return
 			}
-			time.Sleep(300 * time.Millisecond)
+		case <-timer.C:
+			return
 		}
 	}
 }
