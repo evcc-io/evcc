@@ -405,6 +405,11 @@ func (c *Easee) Enable(enable bool) error {
 		}
 	}
 
+	// do not send pause/resume if disconnected
+	if c.opMode == easee.ModeDisconnected {
+		return nil
+	}
+
 	// resume/stop charger
 	action := easee.ChargePause
 	if enable {
