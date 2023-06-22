@@ -132,6 +132,33 @@ test.describe("filter", async () => {
   });
 });
 
+test.describe("columns", async () => {
+  test("show vehicle column if multiple different exist", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=5");
+    await expect(page.getByTestId("vehicle")).toBeVisible();
+  });
+  test("hide vehicle column only one exists", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=3");
+    await expect(page.getByTestId("vehicle")).toHaveCount(0);
+  });
+  test("show loadpoint column if multiple different exist", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=5");
+    await expect(page.getByTestId("loadpoint")).toBeVisible();
+  });
+  test("hide loadpoint column only one exists", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=3");
+    await expect(page.getByTestId("loadpoint")).toHaveCount(0);
+  });
+  test("show co2 column it has values", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=3");
+    await expect(page.getByTestId("co2")).toBeVisible();
+  });
+  test("hide co2 column if it doesnt have values", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=5");
+    await expect(page.getByTestId("co2")).toHaveCount(0);
+  });
+});
+
 test.describe("csv export", async () => {
   test("total export", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
