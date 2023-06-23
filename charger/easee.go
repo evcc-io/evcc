@@ -105,7 +105,7 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 		current:    6, // default current
 		done:       make(chan struct{}),
 		respChan:   make(chan easee.SignalRCommandResponse),
-		curUpdChan: make(chan float64, 2), //buffer up to 2 updates
+		curUpdChan: make(chan float64),
 	}
 
 	c.Client.Timeout = timeout
