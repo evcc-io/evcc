@@ -15,6 +15,14 @@ id: {{ .id }}
 host: {{ .host }} # Hostname
 port: {{ .port }} # Port
 {{- end }}
+{{- if .tcp }}
+
+# RS485 via protocol converter (Modbus TCP)
+modbus: tcp
+id: {{ .id }}
+host: {{ .host }} # Hostname
+port: {{ .port }} # Port
+{{- end -}}
 {{- if .tcpip }}
 
 # Modbus TCP
