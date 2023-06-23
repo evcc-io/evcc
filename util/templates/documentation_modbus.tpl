@@ -3,9 +3,9 @@
 # RS485 via adapter (Modbus RTU)
 modbus: serial
 id: {{ .id }}
-device: {{ .device }} # USB-RS485 Adapter Adresse
-baudrate: {{ .baudrate }} # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-comset: "{{ .comset }}" # Kommunikationsparameter für den Adapter
+device: {{ .device }} # USB-RS485 Geräteadresse, typische Werte sind /dev/ttyUSB0, /dev/ttyAMA0, /dev/ttyS0
+baudrate: {{ .baudrate }} # Baudrate, typische Werte sind 9600, 19200, 38400, 57600, 115200
+comset: {{ .comset }} # Parität, Datenbits, Stoppbits, typische Werte sind 8N1, 8E1, 8O1
 {{- end }}
 {{- if .rtu }}
 
