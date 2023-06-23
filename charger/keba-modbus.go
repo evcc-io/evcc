@@ -243,7 +243,7 @@ func (wb *Keba) totalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
 }
 
-// chargedEnergy for the api.ChargeRater interface is not supported as the Keba does not reset it when plugging in a new car.
+// chargedEnergy is not supported since Keba does not reset it when plugging in a new car
 
 // currents implements the api.PhaseCurrents interface
 func (wb *Keba) currents() (float64, float64, float64, error) {
