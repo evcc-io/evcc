@@ -488,9 +488,13 @@ func (c *Easee) waitForDynamicChargerMaxA() {
 	for {
 		select {
 		case <-timer.C: //time is up, bail
+			c.log.WARN.Print("missing DynamicChargerCurrent update after resume")
 			return
 		default:
-			if c.dynamicChargerCurrent == c.lp.GetMaxCurrent() {
+			c.mux.Lock()
+			dcc := c.dynamicChargerCurrent
+			c.mux.Unlock()
+			if dcc == c.lp.GetMaxCurrent() {
 				timer.Stop()
 				return
 			}
