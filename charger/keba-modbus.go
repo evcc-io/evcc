@@ -64,7 +64,7 @@ func init() {
 	registry.Add("keba-modbus", NewKebaFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+// go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -83,9 +83,9 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	// features
 	var (
-		currentPower, totalEnergy, chargedEnergy func() (float64, error)
-		currents                                 func() (float64, float64, float64, error)
-		identify                                 func() (string, error)
+		currentPower, totalEnergy func() (float64, error)
+		currents                  func() (float64, float64, float64, error)
+		identify                  func() (string, error)
 	)
 
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegProduct, 2)
@@ -96,7 +96,6 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	if features := binary.BigEndian.Uint32(b); (features/10)%10 > 0 {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
-		chargedEnergy = wb.chargedEnergy
 		currents = wb.currents
 	}
 
@@ -125,7 +124,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		go wb.heartbeat(900 * time.Millisecond * time.Duration(timeout))
 	}
 
-	return decorateKeba(wb, currentPower, totalEnergy, chargedEnergy, currents, identify, phases), nil
+	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, phases), nil
 }
 
 // NewKeba creates a new charger
@@ -244,15 +243,7 @@ func (wb *Keba) totalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
 }
 
-// chargedEnergy implements the api.ChargeRater interface
-func (wb *Keba) chargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kebaRegSessionEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
-}
+// chargedEnergy is not supported since Keba does not reset it when plugging in a new car
 
 // currents implements the api.PhaseCurrents interface
 func (wb *Keba) currents() (float64, float64, float64, error) {
