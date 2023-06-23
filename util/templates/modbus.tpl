@@ -1,15 +1,15 @@
 {{- define "modbus" }}
 id: {{ .id }}
-{{- if or (eq .modbus "rs485serial") .rs485serial }}
+{{- if or (eq .modbus "rs485serial") (eq .modbus "serial") }}
 # RS485 via adapter (Modbus RTU)
 device: {{ .device }}
 baudrate: {{ .baudrate }}
 comset: "{{ .comset }}"
-{{- else if or (eq .modbus "rs485tcpip") .rs485tcpip }}
+{{- else if or (eq .modbus "rs485tcpip") (eq .modbus "rtu") }}
 # RS485 via TCP/IP (Modbus RTU)
 uri: {{ .host }}:{{ .port }}
 rtu: true
-{{- else if or (eq .modbus "tcpip") .tcpip }}
+{{- else if or (eq .modbus "tcpip") (eq .modbus "tcp") }}
 # Modbus TCP
 uri: {{ .host }}:{{ .port }}
 rtu: false
