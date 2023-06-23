@@ -375,7 +375,7 @@ func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
 	return &types.ChargingProfile{
 		ChargingProfileId:      1,
 		StackLevel:             0,
-		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
+		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
 		ChargingProfileKind:    types.ChargingProfileKindRelative,
 		ChargingSchedule: &types.ChargingSchedule{
 			ChargingRateUnit:       types.ChargingRateUnitAmperes,
