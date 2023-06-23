@@ -1,6 +1,6 @@
 {{- if .serial }}
 
-# RS485 via adapter (Modbus RTU)
+# RS485 via USB adapter (Modbus RTU)
 modbus: serial
 id: {{ .id }}
 device: {{ .device }} # USB-RS485 Geräteadresse, typische Werte sind /dev/ttyUSB0, /dev/ttyAMA0, /dev/ttyS0
@@ -9,12 +9,11 @@ comset: {{ .comset }} # Parität, Datenbits, Stoppbits, typische Werte sind 8N1,
 {{- end }}
 {{- if .rtu }}
 
-# RS485 via TCP/IP (Modbus RTU)
+# RS485 via Ethernet adapter (Modbus RTU)
 modbus: rtu
 id: {{ .id }}
 host: {{ .host }} # Hostname
 port: {{ .port }} # Port
-rtu: true
 {{- end }}
 {{- if .tcpip }}
 
