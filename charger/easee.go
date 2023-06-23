@@ -422,6 +422,7 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	if enable {
+		c.waitForDynamicChargerMaxA()
 		// reset currents after enable, as easee automatically resets to maxA
 		return c.MaxCurrent(int64(c.current))
 	}
@@ -482,6 +483,27 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 			}
 		case <-time.After(10 * time.Second):
 			return api.ErrTimeout
+		}
+	}
+}
+
+// wait for up to 3s for current become 32A
+func (c *Easee) waitForDynamicChargerMaxA() {
+	timer := time.NewTimer(3 * time.Second)
+	for {
+		select {
+		case <-timer.C: //time is up, bail
+			c.log.WARN.Print("missing DynamicChargerCurrent update after resume")
+			return
+		default:
+			c.mux.Lock()
+			dcc := c.dynamicChargerCurrent
+			c.mux.Unlock()
+			if dcc == c.lp.GetMaxCurrent() {
+				timer.Stop()
+				return
+			}
+			time.Sleep(300 * time.Millisecond)
 		}
 	}
 }
