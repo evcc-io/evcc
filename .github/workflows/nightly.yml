@@ -70,4 +70,3 @@ jobs:
           push: true
           tags: |
             grimmimeloni/evcc:nightly
-
