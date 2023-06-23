@@ -244,7 +244,6 @@ func (wb *Keba) totalEnergy() (float64, error) {
 }
 
 // chargedEnergy for the api.ChargeRater interface is not supported as the Keba does not reset it when plugging in a new car.
-// The reset is done after starting to charge
 
 // currents implements the api.PhaseCurrents interface
 func (wb *Keba) currents() (float64, float64, float64, error) {
