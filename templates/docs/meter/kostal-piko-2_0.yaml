@@ -8,18 +8,8 @@ render:
       template: kostal-piko-2
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
-    advanced: |
-      type: template
-      template: kostal-piko-2
-      usage: grid
-      host: 192.0.2.2 # IP-Adresse oder Hostname
   - usage: pv
     default: |
-      type: template
-      template: kostal-piko-2
-      usage: pv
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-    advanced: |
       type: template
       template: kostal-piko-2
       usage: pv
