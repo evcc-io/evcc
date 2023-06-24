@@ -1,4 +1,5 @@
 template: kostal-piko-hybrid
+covers: ["kostal-piko"]
 products:
   - brand: Kostal
     description:
