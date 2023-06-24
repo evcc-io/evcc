@@ -398,12 +398,12 @@ presets:
 
 modbus:
   interfaces:
-    rs485: ["serial", "rtu", "tcp"]
-    ethernet: ["tcpip"]
+    rs485: ["rtuserial", "rtutcp", "tcp"]
+    ethernet: ["tcp"]
   types:
-    serial:
+    rtuserial:
       description:
-        generic: Serial (ModbusRTU via USB-RS485 adapter)
+        generic: Serial port (Modbus RTU)
       params:
         - reference: true
           referencename: modbusid
@@ -417,9 +417,9 @@ modbus:
         - reference: true
           referencename: modbuscomset
           name: comset
-    rtu:
+    rtutcp:
       description:
-        generic: Serial (ModbusRTU via Ethernet-RS485 adapter)
+        generic: Serial device server (Modbus RTU)
       params:
         - reference: true
           referencename: modbusid
@@ -431,7 +431,7 @@ modbus:
           default: 502
     tcp:
       description:
-        generic: Serial (ModbusTCP via protocol converter)
+        generic: Modbus TCP
       params:
         - reference: true
           referencename: modbusid
@@ -441,9 +441,25 @@ modbus:
         - reference: true
           name: port
           default: 502
-    tcpip:
+    asciiserial:
       description:
-        generic: ModbusTCP
+        generic: Serial port (Modbus ASCII)
+      params:
+        - reference: true
+          referencename: modbusid
+          name: id
+        - reference: true
+          referencename: modbusdevice
+          name: device
+        - reference: true
+          referencename: modbusbaudrate
+          name: baudrate
+        - reference: true
+          referencename: modbuscomset
+          name: comset
+    asciitcp:
+      description:
+        generic: Serial device server (Modbus ASCII)
       params:
         - reference: true
           referencename: modbusid
