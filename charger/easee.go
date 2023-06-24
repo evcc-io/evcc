@@ -406,7 +406,7 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	// do not send pause/resume if disconnected
-	if c.opMode == easee.ModeDisconnected {
+	if c.opMode == easee.ModeDisconnected || c.opMode == easee.ModeAwaitingAuthentication {
 		return nil
 	}
 
