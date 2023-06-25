@@ -57,11 +57,12 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
 		// check for anonymous chargepoint
-		if cp, ok := cs.cps[""]; ok {
+		if cp, err := cs.chargepointByID(""); err == nil {
 			cs.log.INFO.Printf("chargepoint connected, registering: %s", chargePoint.ID())
 
 			// update id
 			cp.RegisterID(chargePoint.ID())
+
 			cs.cps[chargePoint.ID()] = cp
 			delete(cs.cps, "")
 
