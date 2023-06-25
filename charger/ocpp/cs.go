@@ -75,9 +75,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 		// register unknown chargepoint
 		// when chargepoint setup is complete, it will eventually be associated with the connected id
-		cs.mu.Lock()
 		cs.cps[chargePoint.ID()] = nil
-		cs.mu.Unlock()
 	} else {
 		cs.log.DEBUG.Printf("chargepoint connected: %s", chargePoint.ID())
 
