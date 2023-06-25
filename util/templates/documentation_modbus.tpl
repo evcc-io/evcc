@@ -1,7 +1,7 @@
 {{- if .rtuserial }}
 
 # Attached to local serial interface (Modbus RTU)
-modbus: rtuserial
+modbus: rtu
 id: {{ .id }}
 device: {{ .device }} # Geräteadresse, typische Werte sind /dev/ttyUSB0, /dev/ttyAMA0, /dev/ttyS0 oder COM3
 baudrate: {{ .baudrate }} # Baudrate, typische Werte sind 9600, 19200, 38400, 57600, 115200
@@ -10,7 +10,7 @@ comset: {{ .comset }} # Parität, Datenbits, Stoppbits, typische Werte sind 8N1,
 {{- if .rtutcp }}
 
 # Attached to transparent serial device server (Modbus RTU over TCP/IP)
-modbus: rtutcp
+modbus: rtu-over-tcpip
 id: {{ .id }}
 host: {{ .host }} # Hostname
 port: {{ .port }} # Port
@@ -18,7 +18,7 @@ port: {{ .port }} # Port
 {{- if .asciiserial }}
 
 # Attached to local serial interface (Modbus ASCII)
-modbus: asciiserial
+modbus: ascii
 id: {{ .id }}
 device: {{ .device }} # Geräteadresse, typische Werte sind /dev/ttyUSB0, /dev/ttyAMA0, /dev/ttyS0 oder COM3
 baudrate: {{ .baudrate }} # Baudrate, typische Werte sind 9600, 19200, 38400, 57600, 115200
@@ -27,7 +27,7 @@ comset: {{ .comset }} # Parität, Datenbits, Stoppbits, typische Werte sind 8N1,
 {{- if .asciitcp }}
 
 # Attached to transparent serial device server (Modbus ASCII over TCP/IP)
-modbus: asciitcp
+modbus: ascii-over-tcpip
 id: {{ .id }}
 host: {{ .host }} # Hostname
 port: {{ .port }} # Port

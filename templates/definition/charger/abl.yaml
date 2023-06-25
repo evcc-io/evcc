@@ -11,7 +11,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["ascii", "tcp"]
+    choice: ["ascii"]
     baudrate: 38400
     comset: 8E1
   - name: timeout
