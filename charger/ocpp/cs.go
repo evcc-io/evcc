@@ -56,17 +56,17 @@ func (cs *CS) chargepointByID(id string) (*CP, error) {
 
 func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
-		cs.mu.Lock()
-		defer cs.mu.Unlock()
-
 		// check for anonymous chargepoint
-		if cp, ok := cs.cps[""]; ok {
+		if cp, err := cs.chargepointByID(""); err == nil {
 			cs.log.INFO.Printf("chargepoint connected, registering: %s", chargePoint.ID())
 
 			// update id
 			cp.RegisterID(chargePoint.ID())
+
+			cs.mu.Lock()
 			cs.cps[chargePoint.ID()] = cp
 			delete(cs.cps, "")
+			cs.mu.Unlock()
 
 			cp.connect(true)
 
@@ -77,7 +77,9 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 		// register unknown chargepoint
 		// when chargepoint setup is complete, it will eventually be associated with the connected id
+		cs.mu.Lock()
 		cs.cps[chargePoint.ID()] = nil
+		cs.mu.Unlock()
 	} else {
 		cs.log.DEBUG.Printf("chargepoint connected: %s", chargePoint.ID())
 
