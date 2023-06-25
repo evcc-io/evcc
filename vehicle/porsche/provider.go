@@ -17,10 +17,10 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, vin, carModel string, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, connect *API, emobility *EmobilityAPI, vin, carModel string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (StatusResponse, error) {
-			return api.Status(vin)
+			return connect.Status(vin)
 		}, cache),
 
 		emobilityG: provider.Cached(func() (EmobilityResponse, error) {
@@ -31,7 +31,7 @@ func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, vin, carMo
 		}, cache),
 
 		wakeup: func() error {
-			_, _ = api.Status(vin)
+			_, _ = connect.Status(vin)
 			if carModel != "" {
 				_, _ = emobility.Status(vin, carModel)
 			}
@@ -41,7 +41,7 @@ func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, vin, carMo
 
 	if emobility == nil {
 		impl.emobilityG = func() (EmobilityResponse, error) {
-			return EmobilityResponse{}, errors.New("no emobility api")
+			return EmobilityResponse{}, api.ErrNotAvailable
 		}
 	}
 
