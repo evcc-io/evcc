@@ -44,6 +44,9 @@ func (cs *CS) errorHandler(errC <-chan error) {
 }
 
 func (cs *CS) chargepointByID(id string) (*CP, error) {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
 	cp, ok := cs.cps[id]
 	if !ok {
 		return nil, fmt.Errorf("unknown charge point: %s", id)
@@ -52,10 +55,10 @@ func (cs *CS) chargepointByID(id string) (*CP, error) {
 }
 
 func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-
 	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
+		cs.mu.Lock()
+		defer cs.mu.Unlock()
+
 		// check for anonymous chargepoint
 		if cp, ok := cs.cps[""]; ok {
 			cs.log.INFO.Printf("chargepoint connected, registering: %s", chargePoint.ID())
@@ -86,9 +89,6 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 }
 
 func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-
 	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
 		cs.log.ERROR.Printf("chargepoint disconnected: %v", err)
 	} else {
@@ -96,7 +96,9 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 
 		if cp == nil {
 			// remove unknown chargepoint
+			cs.mu.Lock()
 			delete(cs.cps, chargePoint.ID())
+			cs.mu.Unlock()
 		} else {
 			cp.connect(false)
 		}
