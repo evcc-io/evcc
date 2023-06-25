@@ -27,8 +27,9 @@ var (
 		ClientID:    "UYsK00My6bCqJdbQhTQ0PbWmcSdIAMig",
 		RedirectURL: "https://my.porsche.com/",
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  OAuthURI + "/authorize",
-			TokenURL: OAuthURI + "/oauth/token",
+			AuthURL:   OAuthURI + "/authorize",
+			TokenURL:  OAuthURI + "/oauth/token",
+			AuthStyle: oauth2.AuthStyleInParams,
 		},
 		Scopes: []string{"openid", "offline_access"},
 	}
@@ -153,7 +154,6 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	defer cancel()
 
 	token, err := oc.Exchange(ctx, code,
-		oauth2.SetAuthURLParam("client_id", oc.ClientID),
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
 	if err != nil {
