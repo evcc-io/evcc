@@ -1,7 +1,7 @@
 {{- define "modbus" }}
 id: {{ .id }}
 {{- if or (eq .modbus "rs485serial") (eq .modbus "rtu") (eq .modbus "ascii") }}
-# Serial interface (Modbus RTU/ASCII)
+# Local serial interface (Modbus RTU/ASCII)
 device: {{ .device }}
 baudrate: {{ .baudrate }}
 comset: "{{ .comset }}"
