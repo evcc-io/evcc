@@ -12,7 +12,7 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: modbus
-    choice: ["tcpip", "rs485"]
+    choice: ["tcp", "rtu"]
     id: 1
     port: 1502
   - name: timeout

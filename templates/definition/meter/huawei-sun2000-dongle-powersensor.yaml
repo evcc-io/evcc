@@ -12,7 +12,7 @@ params:
     default: 1
     advanced: true
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
   - name: timeout
     default: 15s
   - name: capacity

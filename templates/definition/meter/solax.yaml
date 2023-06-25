@@ -12,7 +12,7 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rtu", "tcp"]
     baudrate: 19200
   - name: capacity
     advanced: true

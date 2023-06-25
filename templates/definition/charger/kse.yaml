@@ -8,7 +8,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rtu"]
     baudrate: 9600
     comset: 8E1
     id: 100

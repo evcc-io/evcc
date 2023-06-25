@@ -124,8 +124,9 @@
           "items": {
             "type": "string",
             "enum": [
-              "tcpip",
-              "rs485"
+              "tcp",
+              "rtu",
+              "ascii"
             ]
           }
         },

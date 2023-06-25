@@ -8,7 +8,7 @@ params:
     choice: ["pv"]
     allinone: true
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     port: 502
     id: 2
     help:

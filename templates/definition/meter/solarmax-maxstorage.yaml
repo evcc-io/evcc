@@ -8,7 +8,7 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     id: 1
   - name: capacity
     advanced: true

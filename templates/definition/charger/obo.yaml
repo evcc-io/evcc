@@ -5,7 +5,7 @@ products:
       generic: Ion
 params:
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rtu"]
     baudrate: 19200
     comset: 8E1
     id: 101

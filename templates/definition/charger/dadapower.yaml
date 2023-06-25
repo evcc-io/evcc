@@ -6,7 +6,7 @@ products:
 capabilities: ["1p3p", "mA", "rfid"]
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     id: 1
 render: |
   type: dadapower

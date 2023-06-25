@@ -1,18 +1,20 @@
 {{- define "modbus" }}
 id: {{ .id }}
-{{- if or (eq .modbus "rs485serial") (eq .modbus "rtuserial") }}
-# Attached on local serial port (Modbus RTU)
+{{- if or (eq .modbus "rs485serial") (eq .modbus "rtuserial") (eq .modbus "asciiserial") }}
+# Serial interface (Modbus RTU/ASCII)
 device: {{ .device }}
 baudrate: {{ .baudrate }}
 comset: "{{ .comset }}"
 {{- else if or (eq .modbus "rs485tcpip") (eq .modbus "rtutcp") }}
-# Attached to transparent serial device gateway server (Modbus RTU over TCP/IP)
+# Modbus RTU via TCP/IP
 uri: {{ .host }}:{{ .port }}
 rtu: true
-{{- else if or (eq .modbus "tcpip") (eq .modbus "tcp") }}
-# Modbus TCP (native interface or translated serial device)
+{{- else if or (eq .modbus "asciitcp") }}
+# Modbus ASCII via TCP/IP
 uri: {{ .host }}:{{ .port }}
-rtu: false
+{{- else if or (eq .modbus "tcpip") (eq .modbus "tcp") }}
+# Modbus TCP
+uri: {{ .host }}:{{ .port }}
 {{- else }}
 # configuration error - should not happen
 modbusConnectionTypeNotDefined: {{ .modbus }}

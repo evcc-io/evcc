@@ -8,7 +8,7 @@ params:
     choice: ["grid", "pv"]
     allinone: true
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rtu", "tcp"]
     baudrate: 9600
 render: |
   type: custom

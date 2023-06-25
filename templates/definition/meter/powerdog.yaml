@@ -7,7 +7,7 @@ params:
     choice: ["grid", "pv"]
     allinone: true
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
 render: |
   type: custom
   power:

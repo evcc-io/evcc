@@ -10,7 +10,7 @@ params:
   - name: usage
     choice: ["pv"]
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     id: 1
 render: |
   type: custom

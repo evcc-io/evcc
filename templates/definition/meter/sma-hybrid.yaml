@@ -9,7 +9,7 @@ params:
     choice: ["pv", "battery"]
     allinone: true
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     port: 502
     id: 3
     help:

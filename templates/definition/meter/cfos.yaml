@@ -9,7 +9,7 @@ params:
   - name: usage
     choice: ["charge"]
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     port: 4702
     id: 2
 render: |

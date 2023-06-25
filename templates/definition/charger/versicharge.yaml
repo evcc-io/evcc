@@ -10,7 +10,7 @@ requirements:
     en: Requires firmware >= 2.121.5
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     id: 2
 render: |
   type: versicharge

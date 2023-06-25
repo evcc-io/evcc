@@ -16,8 +16,8 @@ params:
       de: Gerätename
       en: Device name
     help:
-      de: USB-RS485 Gerätename
-      en: USB-RS485 device name
+      de: Gerätename der lokalen seriellen Schnittstelle
+      en: Device name of local serial port interface
     example: /dev/ttyUSB0
   - name: modbusbaudrate
     description:
@@ -398,8 +398,9 @@ presets:
 
 modbus:
   interfaces:
-    rs485: ["rtuserial", "rtutcp", "tcp"]
-    ethernet: ["tcp"]
+    tcp: ["tcp"]
+    rtu: ["rtuserial", "rtutcp", "tcp"]
+    ascii: ["asciiserial", "asciitcp"]
   types:
     rtuserial:
       description:

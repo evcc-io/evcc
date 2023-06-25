@@ -20,7 +20,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rtu"]
     baudrate: 19200
     comset: 8E1
 render: |

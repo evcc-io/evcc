@@ -5,7 +5,7 @@ products:
       generic: EV-SER (Modbus RTU)
 params:
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rtu"]
 render: |
   type: phoenix-ev-ser
   {{- include "modbus" . }}

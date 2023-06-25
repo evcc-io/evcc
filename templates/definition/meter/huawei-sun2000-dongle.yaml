@@ -7,7 +7,7 @@ params:
   - name: usage
     choice: ["pv"]
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
   - name: timeout
     default: 15s
 render: |

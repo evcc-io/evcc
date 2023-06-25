@@ -7,7 +7,7 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rtu", "tcp"]
     baudrate: 9600
     id: 247
   - name: capacity

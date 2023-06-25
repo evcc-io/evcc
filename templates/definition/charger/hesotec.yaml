@@ -7,7 +7,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
 render: |
   type: hesotec
   {{- include "modbus" . }}

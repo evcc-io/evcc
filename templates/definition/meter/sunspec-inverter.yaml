@@ -8,7 +8,7 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["tcpip", "rs485"]
+    choice: ["tcp", "rtu"]
   - name: integer
     description:
       de: Integer Registerzugriff (nur für Netzzähler)
