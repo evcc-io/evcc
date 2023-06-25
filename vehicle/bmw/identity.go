@@ -91,8 +91,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 }
 
 func (v *Identity) login() (*oauth2.Token, error) {
-	// don't follow redirects
-	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
+	v.Client.CheckRedirect = request.DontFollow
 	defer func() { v.Client.CheckRedirect = nil }()
 
 	cv, err := cv.CreateCodeVerifier()

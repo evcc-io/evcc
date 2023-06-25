@@ -181,7 +181,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 		req, err = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
 		if err == nil {
-			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
+			cookieClient.CheckRedirect = request.DontFollow
 			if resp, err = cookieClient.Do(req); err == nil {
 				defer resp.Body.Close()
 
@@ -217,7 +217,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		req, err = request.New(http.MethodPost, v.config.URI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)
 		if err == nil {
 			req.Header.Set("ccsp-service-id", v.config.CCSPServiceID)
-			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
+			cookieClient.CheckRedirect = request.DontFollow
 
 			var res struct {
 				RedirectUrl string `json:"redirectUrl"`
