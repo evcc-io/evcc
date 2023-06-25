@@ -46,10 +46,10 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			if values[ParamModbus] != nil {
 				modbusChoices := tmpl.ModbusChoices()
 				// we only test one modbus setup
-				if slices.Contains(modbusChoices, ModbusChoiceTCPIP) {
-					values[ModbusKeyTCPIP] = true
+				if slices.Contains(modbusChoices, ModbusChoiceTCP) {
+					values[ModbusKeyTCP] = true
 				} else {
-					values[ModbusKeyRS485TCPIP] = true
+					values[ModbusKeyRTUTCP] = true
 				}
 				tmpl.ModbusValues(TemplateRenderModeUnitTest, values)
 			}

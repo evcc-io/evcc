@@ -20,11 +20,14 @@ const (
 
 	HemsTypeSMA = "sma"
 
-	ModbusChoiceRS485    = "rs485"
-	ModbusChoiceTCPIP    = "tcpip"
-	ModbusKeyRS485Serial = "rs485serial"
-	ModbusKeyRS485TCPIP  = "rs485tcpip"
-	ModbusKeyTCPIP       = "tcpip"
+	ModbusChoiceRTU      = "rtu"
+	ModbusChoiceTCP      = "tcp"
+	ModbusChoiceASCII    = "ascii"
+	ModbusKeyRTUSerial   = "rtuserial"
+	ModbusKeyRTUTCP      = "rtutcp"
+	ModbusKeyTCP         = "tcp"
+	ModbusKeyASCIISerial = "asciiserial"
+	ModbusKeyASCIITCP    = "asciitcp"
 
 	ModbusParamNameId       = "id"
 	ModbusParamNameDevice   = "device"
@@ -41,7 +44,7 @@ const (
 )
 
 var (
-	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+	ValidModbusChoices = []string{ModbusChoiceRTU, ModbusChoiceTCP, ModbusChoiceASCII}
 	ValidUsageChoices  = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
 )
 
@@ -75,7 +78,7 @@ var predefinedTemplateProperties = []string{
 	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
 	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
+	ModbusKeyTCP, ModbusKeyRTUSerial, ModbusKeyRTUTCP, ModbusKeyASCIISerial, ModbusKeyASCIITCP,
 }
 
 // TextLanguage contains language-specific texts
