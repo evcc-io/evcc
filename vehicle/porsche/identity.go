@@ -23,21 +23,23 @@ const (
 
 // https://identity.porsche.com/.well-known/openid-configuration
 var (
+	endpoint = oauth2.Endpoint{
+		AuthURL:   OAuthURI + "/authorize",
+		TokenURL:  OAuthURI + "/oauth/token",
+		AuthStyle: oauth2.AuthStyleInParams,
+	}
+
 	OAuth2Config = &oauth2.Config{
 		ClientID:    "UYsK00My6bCqJdbQhTQ0PbWmcSdIAMig",
 		RedirectURL: "https://my.porsche.com/",
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   OAuthURI + "/authorize",
-			TokenURL:  OAuthURI + "/oauth/token",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
-		Scopes: []string{"openid", "offline_access"},
+		Endpoint:    endpoint,
+		Scopes:      []string{"openid", "offline_access"},
 	}
 
 	EmobilityOAuth2Config = &oauth2.Config{
 		ClientID:    OAuth2Config.ClientID,
 		RedirectURL: "https://my.porsche.com/myservices/auth/auth.html",
-		Endpoint:    OAuth2Config.Endpoint,
+		Endpoint:    endpoint,
 		Scopes:      []string{"openid", "offline_access"},
 	}
 )
