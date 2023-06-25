@@ -150,11 +150,16 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 			if charger.ID == c.charger {
 				c.site = site.ID
 				c.circuit = circuit.ID
-				c.maxCurrent = circuit.RatedCurrent
 				break
 			}
 		}
 	}
+
+	config, err := c.chargerConfig(c.charger)
+	if err != nil {
+		return nil, err
+	}
+	c.maxCurrent = config.MaxChargerCurrent
 
 	client, err := signalr.NewClient(context.Background(),
 		signalr.WithConnector(c.connect(ts)),
@@ -198,6 +203,13 @@ func (c *Easee) heartbeat() {
 func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 	var res easee.Site
 	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, charger)
+	err := c.GetJSON(uri, &res)
+	return res, err
+}
+
+func (c *Easee) chargerConfig(charger string) (easee.ChargerConfig, error) {
+	var res easee.ChargerConfig
+	uri := fmt.Sprintf("%s/chargers/%s/config", easee.API, charger)
 	err := c.GetJSON(uri, &res)
 	return res, err
 }
