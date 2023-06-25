@@ -50,6 +50,7 @@ type Easee struct {
 	mux                   sync.Mutex
 	done                  chan struct{}
 	dynamicChargerCurrent float64
+	maxCurrent            float64
 	current               float64
 	currentUpdated        time.Time
 	chargerEnabled        bool
@@ -149,6 +150,7 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 			if charger.ID == c.charger {
 				c.site = site.ID
 				c.circuit = circuit.ID
+				c.maxCurrent = circuit.RatedCurrent
 				break
 			}
 		}
@@ -495,7 +497,7 @@ func (c *Easee) waitForDynamicChargerMaxA() error {
 			c.mux.Lock()
 			dcc := c.dynamicChargerCurrent
 			c.mux.Unlock()
-			if dcc == c.lp.GetMaxCurrent() {
+			if dcc == c.maxCurrent {
 				timer.Stop()
 				return nil
 			}
