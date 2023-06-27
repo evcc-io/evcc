@@ -76,7 +76,8 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	v.Client.Jar, _ = cookiejar.New(nil)
 	v.Client.CheckRedirect = request.DontFollow
 	defer func() {
-		v.Client.Jar = nil
+		// keep cookies around
+		// v.Client.Jar = nil
 		v.Client.CheckRedirect = nil
 	}()
 
