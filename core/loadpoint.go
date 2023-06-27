@@ -734,7 +734,11 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 // remainingChargeEnergy returns missing energy amount in kWh if vehicle has a valid energy target
 func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
 	return math.Max(0, lp.targetEnergy-lp.getChargedEnergy()/1e3),
-		(lp.vehicle == nil || lp.vehicleHasFeature(api.Offline)) && lp.targetEnergy > 0
+		lp.vehicleHasSoc() && lp.targetEnergy > 0
+}
+
+func (lp *Loadpoint) vehicleHasSoc() bool {
+	return lp.vehicle != nil && !lp.vehicleHasFeature(api.Offline)
 }
 
 // targetEnergyReached checks if target is configured and reached
@@ -1295,7 +1299,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	soc, err := lp.chargerSoc()
 
 	// guard for socEstimator removed by api
-	if lp.socEstimator == nil {
+	if lp.socEstimator == nil || !lp.vehicleHasSoc() {
 		// This is a workaround for heaters. Without vehicle, the soc estimator is not initialized.
 		// We need to check if the charger can provide soc and use it if available.
 		if err == nil {
