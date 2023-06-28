@@ -427,16 +427,20 @@ func (c *Easee) Enable(enable bool) error {
 		targetCurrent = c.maxCurrent
 	}
 
+	c.log.DEBUG.Printf("sending %s command", action)
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	if err := c.postJSONAndWait(uri, nil); err != nil {
 		return err
 	}
 
+	c.log.DEBUG.Printf("%s command sent and processed, wait for DCC update", action)
 	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
 		return err
 	}
 
+	c.log.DEBUG.Printf("command fully processed, current: %.3f, dynamicChargerCurrent: %.3f", c.current, c.dynamicChargerCurrent)
 	if enable {
+		c.log.DEBUG.Printf("post enable, resetting current to %.3f", c.current)
 		// reset currents after enable, as easee automatically resets to maxA
 		return c.MaxCurrent(int64(c.current))
 	}
@@ -486,6 +490,7 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 }
 
 func (c *Easee) waitForTickResponse(expectedTick int64) error {
+	c.log.DEBUG.Printf("waiting for Tick Response: %d", expectedTick)
 	for {
 		select {
 		case cmdResp := <-c.respChan:
@@ -493,29 +498,35 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 				if !cmdResp.WasAccepted {
 					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
 				}
+				c.log.DEBUG.Printf("Tick Response arrived: %d", cmdResp.Ticks)
 				return nil
 			}
 		case <-time.After(10 * time.Second):
+			c.log.DEBUG.Printf("Tick Response timed out: %d", expectedTick)
 			return api.ErrTimeout
 		}
 	}
 }
 
-// wait for up to 3s for current become 32A
+// wait for up to 3s for current become targetCurrent
 func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
+	c.log.DEBUG.Printf("start waiting for DCC update for %.3f", targetCurrent)
 	timer := time.NewTimer(3 * time.Second)
 	for {
 		select {
 		case <-timer.C: //time is up, bail
+			c.log.DEBUG.Printf("Timeout waiting for DCC update for %.3f", targetCurrent)
 			return api.ErrTimeout
 		default:
 			c.mux.Lock()
 			dcc := c.dynamicChargerCurrent
 			c.mux.Unlock()
 			if dcc == targetCurrent {
+				c.log.DEBUG.Printf("received DCC update for %.3f", targetCurrent)
 				timer.Stop()
 				return nil
 			}
+			c.log.DEBUG.Printf("expected DCC update for %.3f, but got %.3f", targetCurrent, dcc)
 			time.Sleep(300 * time.Millisecond)
 		}
 	}
