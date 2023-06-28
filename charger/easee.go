@@ -421,7 +421,7 @@ func (c *Easee) Enable(enable bool) error {
 
 	// resume/stop charger
 	action := easee.ChargePause
-	targetCurrent := float64(0.0)
+	targetCurrent := float64(0)
 	if enable {
 		action = easee.ChargeResume
 		targetCurrent = c.maxCurrent
@@ -432,15 +432,12 @@ func (c *Easee) Enable(enable bool) error {
 		return err
 	}
 
-	if enable {
-		if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
-			return err
-		}
-		// reset currents after enable, as easee automatically resets to maxA
-		return c.MaxCurrent(int64(c.current))
+	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
+		return err
 	}
+	// reset currents after enable, as easee automatically resets to maxA
+	return c.MaxCurrent(int64(c.current))
 
-	return nil
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
