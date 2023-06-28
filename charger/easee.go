@@ -437,7 +437,6 @@ func (c *Easee) Enable(enable bool) error {
 			return err
 		}
 		// reset currents after enable, as easee automatically resets to maxA
-		// time.Sleep(2 * time.Second) //give Easee more time to process maxA change
 		return c.MaxCurrent(int64(c.current))
 	}
 
