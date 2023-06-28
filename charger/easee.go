@@ -435,9 +435,13 @@ func (c *Easee) Enable(enable bool) error {
 	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
 		return err
 	}
-	// reset currents after enable, as easee automatically resets to maxA
-	return c.MaxCurrent(int64(c.current))
 
+	if enable {
+		// reset currents after enable, as easee automatically resets to maxA
+		return c.MaxCurrent(int64(c.current))
+	}
+
+	return nil
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
