@@ -421,8 +421,10 @@ func (c *Easee) Enable(enable bool) error {
 
 	// resume/stop charger
 	action := easee.ChargePause
+	targetCurrent := float64(0.0)
 	if enable {
 		action = easee.ChargeResume
+		targetCurrent = c.maxCurrent
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
@@ -431,10 +433,11 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	if enable {
-		if err := c.waitForDynamicChargerMaxA(); err != nil {
+		if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
 			return err
 		}
 		// reset currents after enable, as easee automatically resets to maxA
+		time.Sleep(2 * time.Second) //give Easee more time to process maxA change
 		return c.MaxCurrent(int64(c.current))
 	}
 
@@ -499,7 +502,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 }
 
 // wait for up to 3s for current become 32A
-func (c *Easee) waitForDynamicChargerMaxA() error {
+func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 	timer := time.NewTimer(3 * time.Second)
 	for {
 		select {
@@ -509,7 +512,7 @@ func (c *Easee) waitForDynamicChargerMaxA() error {
 			c.mux.Lock()
 			dcc := c.dynamicChargerCurrent
 			c.mux.Unlock()
-			if dcc == c.maxCurrent {
+			if dcc == targetCurrent {
 				timer.Stop()
 				return nil
 			}
