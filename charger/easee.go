@@ -59,9 +59,10 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid     string
-	lp       loadpoint.API
-	respChan chan easee.SignalRCommandResponse
+	rfid string
+	lp   loadpoint.API
+	cmdC chan easee.SignalRCommandResponse
+	obsC chan easee.Observation
 }
 
 func init() {
@@ -99,12 +100,13 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	}
 
 	c := &Easee{
-		Helper:   request.NewHelper(log),
-		charger:  charger,
-		log:      log,
-		current:  6, // default current
-		done:     make(chan struct{}),
-		respChan: make(chan easee.SignalRCommandResponse),
+		Helper:  request.NewHelper(log),
+		charger: charger,
+		log:     log,
+		current: 6, // default current
+		done:    make(chan struct{}),
+		cmdC:    make(chan easee.SignalRCommandResponse),
+		obsC:    make(chan easee.Observation),
 	}
 
 	c.Client.Timeout = timeout
@@ -334,6 +336,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.CHARGER_OP_MODE:
 		c.opMode = value.(int)
 	}
+
+	select {
+	case c.obsC <- res:
+	default:
+	}
 }
 
 // ChargerUpdate implements the signalr receiver
@@ -352,7 +359,7 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 
 	select {
-	case c.respChan <- res:
+	case c.cmdC <- res:
 	default:
 	}
 }
@@ -493,7 +500,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 	c.log.DEBUG.Printf("waiting for Tick Response: %d", expectedTick)
 	for {
 		select {
-		case cmdResp := <-c.respChan:
+		case cmdResp := <-c.cmdC:
 			if cmdResp.Ticks == expectedTick {
 				if !cmdResp.WasAccepted {
 					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
@@ -511,23 +518,26 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 // wait for up to 3s for current become targetCurrent
 func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 	c.log.DEBUG.Printf("start waiting for DCC update for %.3f", targetCurrent)
+
+	// check any updates received meanwhile
+	c.mux.Lock()
+	if c.dynamicChargerCurrent == c.maxCurrent {
+		c.mux.Unlock()
+		return nil
+	}
+	c.mux.Unlock()
+
 	timer := time.NewTimer(3 * time.Second)
 	for {
 		select {
-		case <-timer.C: //time is up, bail
-			c.log.DEBUG.Printf("Timeout waiting for DCC update for %.3f", targetCurrent)
-			return api.ErrTimeout
-		default:
-			c.mux.Lock()
-			dcc := c.dynamicChargerCurrent
-			c.mux.Unlock()
-			if dcc == targetCurrent {
+		case obs := <-c.obsC:
+			if obs.ID == easee.DYNAMIC_CHARGER_CURRENT {
 				c.log.DEBUG.Printf("received DCC update for %.3f", targetCurrent)
-				timer.Stop()
 				return nil
 			}
-			c.log.DEBUG.Printf("expected DCC update for %.3f, but got %.3f", targetCurrent, dcc)
-			time.Sleep(300 * time.Millisecond)
+		case <-timer.C: // time is up, bail
+			c.log.DEBUG.Printf("timeout waiting for DCC update for %.3f", targetCurrent)
+			return api.ErrTimeout
 		}
 	}
 }
