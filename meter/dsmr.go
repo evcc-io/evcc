@@ -178,6 +178,7 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			}
 		} else {
 			handle("peek", err)
+			time.Sleep(backoff.NextBackOff().Truncate(time.Second))
 			continue
 		}
 
