@@ -49,7 +49,7 @@
 						<div
 							class="d-block d-sm-flex justify-content-between align-items-baseline mb-3"
 						>
-							<p class="flex-sm-grow-1 text-muted me-sm-3">
+							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
 								{{ $t("help.issueDescription") }}
 							</p>
 							<a
@@ -64,7 +64,7 @@
 						<div
 							class="d-block d-sm-flex justify-content-between align-items-baseline mb-3"
 						>
-							<p class="flex-sm-grow-1 text-muted me-sm-3">
+							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
 								{{ $t("help.restartDescription") }}
 							</p>
 							<button
