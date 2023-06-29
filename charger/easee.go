@@ -512,12 +512,15 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 	for {
 		select {
 		case obs := <-c.obsC:
-			value, err := obs.TypedValue()
-			if err != nil || obs.ID != easee.DYNAMIC_CHARGER_CURRENT {
+			if obs.ID != easee.DYNAMIC_CHARGER_CURRENT {
 				continue
 			}
+			value, err := obs.TypedValue()
+			if err != nil {
+				continue
+			}
+			c.log.DEBUG.Printf("received DCC update: %.3f (want: %.3f)", value.(float64), targetCurrent)
 			if value.(float64) == targetCurrent {
-				c.log.DEBUG.Printf("received DCC update for %.3f", targetCurrent)
 				return nil
 			}
 		case <-timer.C: // time is up, bail
