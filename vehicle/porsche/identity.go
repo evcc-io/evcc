@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/util"
@@ -46,6 +47,7 @@ var (
 
 // Identity is the Porsche Identity client
 type Identity struct {
+	log *util.Logger
 	*request.Helper
 	oauth2.TokenSource
 }
@@ -53,6 +55,7 @@ type Identity struct {
 // NewIdentity creates Porsche identity
 func NewIdentity(log *util.Logger) *Identity {
 	v := &Identity{
+		log:    log,
 		Helper: request.NewHelper(log),
 	}
 
@@ -76,8 +79,7 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	v.Client.Jar, _ = cookiejar.New(nil)
 	v.Client.CheckRedirect = request.DontFollow
 	defer func() {
-		// keep cookies around
-		// v.Client.Jar = nil
+		v.Client.Jar = nil
 		v.Client.CheckRedirect = nil
 	}()
 
@@ -165,5 +167,15 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 
 	v.TokenSource = oc.TokenSource(cctx, token)
 
+	go v.refresh()
+
 	return nil
+}
+
+func (v *Identity) refresh() {
+	for range time.Tick(6 * time.Hour) {
+		if _, err := v.Token(); err != nil {
+			v.log.ERROR.Printf("token refresh: %v", err)
+		}
+	}
 }
