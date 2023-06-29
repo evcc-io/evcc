@@ -27,22 +27,16 @@ func NewProvider(log *util.Logger, connect *API, emobility *EmobilityAPI, vin, c
 			if carModel != "" {
 				return emobility.Status(vin, carModel)
 			}
-			return EmobilityResponse{}, errors.New("no car model")
+			return EmobilityResponse{}, api.ErrNotAvailable
 		}, cache),
 
 		wakeup: func() error {
-			_, _ = connect.Status(vin)
-			if carModel != "" {
+			_, err := connect.Status(vin)
+			if err != nil && carModel != "" {
 				_, _ = emobility.Status(vin, carModel)
 			}
 			return nil
 		},
-	}
-
-	if emobility == nil {
-		impl.emobilityG = func() (EmobilityResponse, error) {
-			return EmobilityResponse{}, api.ErrNotAvailable
-		}
 	}
 
 	return impl
