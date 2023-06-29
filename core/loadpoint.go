@@ -699,6 +699,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
+				lp.log.DEBUG.Printf("charger %s: waking up vehicle", status[enabled])
 				if err := vv.WakeUp(); err != nil {
 					return fmt.Errorf("wake-up vehicle: %w", err)
 				}
