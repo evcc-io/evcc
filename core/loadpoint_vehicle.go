@@ -181,7 +181,7 @@ func (lp *Loadpoint) wakeUpVehicle() {
 	// charger
 	if c, ok := lp.charger.(api.Resurrector); ok {
 		lp.log.DEBUG.Println("wake-up charger")
-		if err := c.WakeUp(); err == nil {
+		if err := c.WakeUp(); err != nil {
 			lp.log.ERROR.Printf("wake-up charger: %v", err)
 		}
 	}
