@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -266,28 +265,10 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		return
 	}
 
-	var (
-		value interface{}
-		err   error
-	)
-
-	switch res.DataType {
-	case easee.Boolean:
-		value = res.Value == "1"
-	case easee.Double:
-		value, err = strconv.ParseFloat(res.Value, 64)
-		if err != nil {
-			c.log.ERROR.Println(err)
-			return
-		}
-	case easee.Integer:
-		value, err = strconv.Atoi(res.Value)
-		if err != nil {
-			c.log.ERROR.Println(err)
-			return
-		}
-	case easee.String:
-		value = res.Value
+	value, err := res.TypedValue()
+	if err != nil {
+		c.log.ERROR.Println(err)
+		return
 	}
 
 	// https://github.com/evcc-io/evcc/issues/8009
@@ -521,7 +502,7 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 
 	// check any updates received meanwhile
 	c.mux.Lock()
-	if c.dynamicChargerCurrent == c.maxCurrent {
+	if c.dynamicChargerCurrent == targetCurrent {
 		c.mux.Unlock()
 		return nil
 	}
@@ -531,7 +512,11 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 	for {
 		select {
 		case obs := <-c.obsC:
-			if obs.ID == easee.DYNAMIC_CHARGER_CURRENT {
+			value, err := obs.TypedValue()
+			if err != nil || obs.ID != easee.DYNAMIC_CHARGER_CURRENT {
+				continue
+			}
+			if value.(float64) == targetCurrent {
 				c.log.DEBUG.Printf("received DCC update for %.3f", targetCurrent)
 				return nil
 			}
