@@ -388,26 +388,29 @@ func (c *Easee) Enable(enable bool) error {
 
 	// resume/stop charger
 	action := easee.ChargePause
-	targetCurrent := float64(0)
+	targetCurrent := 0.0
 	if enable {
 		action = easee.ChargeResume
 		targetCurrent = 32
 	}
 
-	c.log.DEBUG.Printf("sending %s command", action)
+	c.log.DEBUG.Printf("send command: %s", action)
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	if err := c.postJSONAndWait(uri, nil); err != nil {
 		return err
 	}
 
-	c.log.DEBUG.Printf("%s command sent and processed, wait for DCC update", action)
 	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
 		return err
 	}
 
-	c.log.DEBUG.Printf("command fully processed, current: %.3f, dynamicChargerCurrent: %.3f", c.current, c.dynamicChargerCurrent)
+	c.mux.Lock()
+	dynamicChargerCurrent := c.dynamicChargerCurrent
+	c.mux.Unlock()
+
+	c.log.DEBUG.Printf("DCC update received, current: %.3f, dynamicChargerCurrent: %.3f", c.current, dynamicChargerCurrent)
 	if enable {
-		c.log.DEBUG.Printf("post enable, resetting current to %.3f", c.current)
+		c.log.DEBUG.Printf("send enable, reset current: %.3f", c.current)
 		// reset currents after enable, as easee automatically resets to maxA
 		return c.MaxCurrent(int64(c.current))
 	}
@@ -457,7 +460,7 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 }
 
 func (c *Easee) waitForTickResponse(expectedTick int64) error {
-	c.log.TRACE.Printf("waiting for Tick Response: %d", expectedTick)
+	c.log.TRACE.Printf("wait for tick response: %d", expectedTick)
 	for {
 		select {
 		case cmdResp := <-c.cmdC:
@@ -465,11 +468,11 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 				if !cmdResp.WasAccepted {
 					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
 				}
-				c.log.TRACE.Printf("Tick Response arrived: %d", cmdResp.Ticks)
+				c.log.TRACE.Printf("received tick response: %d", cmdResp.Ticks)
 				return nil
 			}
 		case <-time.After(10 * time.Second):
-			c.log.DEBUG.Printf("Tick Response timed out: %d", expectedTick)
+			c.log.TRACE.Printf("tick response timed out: %d", expectedTick)
 			return api.ErrTimeout
 		}
 	}
@@ -477,7 +480,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 
 // wait for up to 3s for current become targetCurrent
 func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
-	c.log.TRACE.Printf("start waiting for DCC update for %.3f", targetCurrent)
+	c.log.DEBUG.Printf("wait for DCC update: %.3f", targetCurrent)
 
 	// check any updates received meanwhile
 	c.mux.Lock()
@@ -498,12 +501,11 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 			if err != nil {
 				continue
 			}
-			c.log.TRACE.Printf("received DCC update: %.3f (want: %.3f)", value.(float64), targetCurrent)
+			c.log.TRACE.Printf("DCC update received: %.3f (want: %.3f)", value.(float64), targetCurrent)
 			if value.(float64) == targetCurrent {
 				return nil
 			}
 		case <-timer.C: // time is up, bail
-			c.log.DEBUG.Printf("timeout waiting for DCC update for %.3f", targetCurrent)
 			return api.ErrTimeout
 		}
 	}
