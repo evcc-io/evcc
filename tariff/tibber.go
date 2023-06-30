@@ -18,7 +18,6 @@ type Tibber struct {
 	mux     sync.Mutex
 	log     *util.Logger
 	homeID  string
-	unit    string
 	client  *tibber.Client
 	data    api.Rates
 	updated time.Time
@@ -50,22 +49,16 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Tibber{
 		log:    log,
 		homeID: cc.HomeID,
-		unit:   cc.Unit,
 		client: tibber.NewClient(log, cc.Token),
 	}
 
-	if t.homeID == "" || t.unit == "" {
+	if t.homeID == "" {
 		home, err := t.client.DefaultHome(t.homeID)
 		if err != nil {
 			return nil, err
 		}
 
-		if t.homeID == "" {
-			t.homeID = home.ID
-		}
-		if t.unit == "" {
-			t.unit = home.CurrentSubscription.PriceInfo.Current.Currency
-		}
+		t.homeID = home.ID
 	}
 
 	done := make(chan error)
