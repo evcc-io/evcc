@@ -50,7 +50,6 @@ type Easee struct {
 	done                  chan struct{}
 	dynamicChargerCurrent float64
 	current               float64
-	currentUpdated        time.Time
 	chargerEnabled        bool
 	smartCharging         bool
 	opMode                int
@@ -294,12 +293,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.phaseMode = value.(int)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
-
-		// ensure that charger current matches evcc's expectation
-		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current &&
-			time.Since(c.currentUpdated) > 10*time.Second {
-			c.log.DEBUG.Printf("current mismatch, expected %.1f, got %.1f", c.current, c.dynamicChargerCurrent)
-		}
 	case easee.CHARGER_OP_MODE:
 		c.opMode = value.(int)
 	}
@@ -536,7 +529,6 @@ func (c *Easee) MaxCurrent(current int64) error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.current = cur
-	c.currentUpdated = time.Now()
 
 	return nil
 }
