@@ -1,6 +1,9 @@
 package easee
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
 type Observation struct {
 	Mid       string
@@ -8,6 +11,21 @@ type Observation struct {
 	ID        ObservationID
 	Timestamp time.Time
 	Value     string
+}
+
+func (o *Observation) TypedValue() (interface{}, error) {
+	switch o.DataType {
+	case Boolean:
+		return o.Value == "1", nil
+	case Double:
+		return strconv.ParseFloat(o.Value, 64)
+	case Integer:
+		return strconv.Atoi(o.Value)
+	case String:
+		fallthrough
+	default:
+		return o.Value, nil
+	}
 }
 
 type SignalRCommandResponse struct {
