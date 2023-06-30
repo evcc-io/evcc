@@ -457,7 +457,7 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 }
 
 func (c *Easee) waitForTickResponse(expectedTick int64) error {
-	c.log.DEBUG.Printf("waiting for Tick Response: %d", expectedTick)
+	c.log.TRACE.Printf("waiting for Tick Response: %d", expectedTick)
 	for {
 		select {
 		case cmdResp := <-c.cmdC:
@@ -465,7 +465,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 				if !cmdResp.WasAccepted {
 					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
 				}
-				c.log.DEBUG.Printf("Tick Response arrived: %d", cmdResp.Ticks)
+				c.log.TRACE.Printf("Tick Response arrived: %d", cmdResp.Ticks)
 				return nil
 			}
 		case <-time.After(10 * time.Second):
@@ -477,7 +477,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 
 // wait for up to 3s for current become targetCurrent
 func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
-	c.log.DEBUG.Printf("start waiting for DCC update for %.3f", targetCurrent)
+	c.log.TRACE.Printf("start waiting for DCC update for %.3f", targetCurrent)
 
 	// check any updates received meanwhile
 	c.mux.Lock()
@@ -498,7 +498,7 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 			if err != nil {
 				continue
 			}
-			c.log.DEBUG.Printf("received DCC update: %.3f (want: %.3f)", value.(float64), targetCurrent)
+			c.log.TRACE.Printf("received DCC update: %.3f (want: %.3f)", value.(float64), targetCurrent)
 			if value.(float64) == targetCurrent {
 				return nil
 			}
@@ -521,7 +521,6 @@ func (c *Easee) MaxCurrent(current int64) error {
 		return err
 	}
 
-	c.log.DEBUG.Print("DCC command sent and processed, wait for DCC update")
 	if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
 		return err
 	}
