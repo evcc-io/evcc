@@ -542,6 +542,11 @@ func (c *Easee) MaxCurrent(current int64) error {
 		return err
 	}
 
+	c.log.DEBUG.Print("DCC command sent and processed, wait for DCC update")
+	if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
+		return err
+	}
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.current = cur
