@@ -49,7 +49,6 @@ type Easee struct {
 	mux                   sync.Mutex
 	done                  chan struct{}
 	dynamicChargerCurrent float64
-	maxCurrent            float64
 	current               float64
 	currentUpdated        time.Time
 	chargerEnabled        bool
@@ -156,12 +155,6 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 		}
 	}
 
-	config, err := c.chargerConfig(c.charger)
-	if err != nil {
-		return nil, err
-	}
-	c.maxCurrent = config.MaxChargerCurrent
-
 	client, err := signalr.NewClient(context.Background(),
 		signalr.WithConnector(c.connect(ts)),
 		signalr.WithReceiver(c),
@@ -204,13 +197,6 @@ func (c *Easee) heartbeat() {
 func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 	var res easee.Site
 	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, charger)
-	err := c.GetJSON(uri, &res)
-	return res, err
-}
-
-func (c *Easee) chargerConfig(charger string) (easee.ChargerConfig, error) {
-	var res easee.ChargerConfig
-	uri := fmt.Sprintf("%s/chargers/%s/config", easee.API, charger)
 	err := c.GetJSON(uri, &res)
 	return res, err
 }
@@ -412,7 +398,7 @@ func (c *Easee) Enable(enable bool) error {
 	targetCurrent := float64(0)
 	if enable {
 		action = easee.ChargeResume
-		targetCurrent = c.maxCurrent
+		targetCurrent = 32
 	}
 
 	c.log.DEBUG.Printf("sending %s command", action)
