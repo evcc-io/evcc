@@ -12,7 +12,6 @@ import (
 )
 
 type Fixed struct {
-	unit    string
 	clock   clock.Clock
 	zones   fixed.Zones
 	dynamic bool
@@ -39,7 +38,6 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	t := &Fixed{
-		unit:    cc.Currency,
 		clock:   clock.New(),
 		dynamic: len(cc.Zones) > 1,
 	}
