@@ -508,7 +508,7 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 	}
 	c.mux.Unlock()
 
-	timer := time.NewTimer(3 * time.Second)
+	timer := time.NewTimer(10 * time.Second)
 	for {
 		select {
 		case obs := <-c.obsC:
