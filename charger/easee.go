@@ -273,7 +273,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 	// https://github.com/evcc-io/evcc/issues/8009
 	// logging might be slow or block, execute outside lock
-	c.log.TRACE.Printf("ProductUpdate %s: %s %v (%v)", res.Mid, res.ID, value, res.Timestamp)
+	c.log.TRACE.Printf("ProductUpdate %s: (%v) %s %v", res.Mid, res.Timestamp, res.ID, value)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
