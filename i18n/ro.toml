@@ -84,7 +84,7 @@ co2Limit = "limita CO₂"
 costLimitDescription = "Activeaza temporar Incarcarea Rapida in mod Solar."
 modalTitle = "Incarcare Smart Grid"
 none = "nimic"
-priceLabel = "Pretul curentului"
+priceLabel = "Pretul energiei"
 priceLimit = "Limita de pret"
 
 [header]
@@ -95,6 +95,7 @@ github = "GitHub"
 login = "Login Vehicul"
 sessions = "Sesiuni de încărcare"
 settings = "Configurare"
+needHelp = "Ai nevoie de Ajutor ?"
 
 [main]
 vehicles = "Parcare"
@@ -325,3 +326,14 @@ title = "Eroare la pornire încărcare"
 cancel = "Anulați"
 template = "Producător"
 test = "Test"
+
+
+[help]
+discussionsButton = Discutii GitHub
+documentationButton = Documentatie
+issueButton = Raporteaza un Bug
+issueDescription = "Functionare bizara sau gresita ?"
+modalTitle = "Ai nevoie de ajutor ?"
+primaryActions = "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit sa primesti ajutor."
+restartButton = "Restart"
+restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "
