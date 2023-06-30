@@ -179,6 +179,11 @@ tariffs:
     # region: ee # or lt, lv, fi
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
+
+    # type: energinet # Energinet using the price in DKK
+    # region: dk1 # or dk2
+    # charges: # optional, additional charges per kWh
+    # tax: # optional, additional tax (0.1 for 10%)
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
