@@ -117,7 +117,7 @@ disclaimer = "Napomena: evcc će prekinuti rad i osloniti se na operacijski sust
 modalTitle = "Stvarno želiš ponovo pokrenuti aplikaciju?"
 
 [main]
-vehicles = Parkiranje
+vehicles = "Parkiranje"
 
 [main.chargingPlan]
 activeLabel = "{time}"
@@ -284,18 +284,18 @@ title = "Sesije napajanja"
 [sessions]
 avgPrice = "Ø cijena"
 co2 = "Ø CO₂"
+csvMonth = "Preuzmi CSV za {month}"
+csvTotal = "Preuzmi CSV za ukupno"
 date = "Gotovo"
 downloadCsv = "Preuzmi kao CSV"
 energy = "Napojeno"
 loadpoint = "Mjesto napajanja"
+noData = "U ovom mjesecu nema sesija napajanja."
 price = "Σ cijena"
 reallyDelete = "Stvarno želiš izbrisati ovu sesiju?"
 solar = "Solarno"
 title = "Sesije napajanja"
 vehicle = "Vozilo"
-csvMonth = "Preuzmi CSV za {month}"
-csvTotal = "Preuzmi CSV za ukupno"
-noData = "U ovom mjesecu nema sesija napajanja."
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -307,6 +307,11 @@ meterstart = "Početno stanje mjerača (kWh)"
 meterstop = "Završno stanje mjerača (kWh)"
 odometer = "Kilometraža (km)"
 vehicle = "Vozilo"
+
+[sessions.filter]
+allLoadpoints = "sva mjesta napajanja"
+allVehicles = "sva vozila"
+filter = "filtar"
 
 [settings]
 title = "Postavke"
@@ -360,9 +365,3 @@ title = "Pogreška pri pokretanju"
 cancel = "Odustani"
 template = "Proizvođač"
 test = "Test"
-
-
-[sessions.filter]
-allVehicles = "sva vozila"
-allLoadpoints = "sva mjesta napajanja"
-filter = "filtar"

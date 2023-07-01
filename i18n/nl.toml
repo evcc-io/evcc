@@ -292,18 +292,18 @@ title = "Oplaadsessie"
 [sessions]
 avgPrice = "Ø Prijs"
 co2 = "Ø CO₂"
+csvMonth = "Download CSV van {month}"
+csvTotal = "Download totale CSV"
 date = "Start"
 downloadCsv = "Download als CSV"
 energy = "Geladen"
 loadpoint = "Oplaadpunt"
+noData = "Geen oplaadsessies deze maand"
 price = "Σ Prijs"
 reallyDelete = "Wilt u deze sessie echt verwijderen?"
 solar = "Zon"
 title = "Oplaadsessies"
 vehicle = "Voertuig"
-noData = Geen oplaadsessies deze maand
-csvMonth = "Download CSV van {month}"
-csvTotal = "Download totale CSV"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
@@ -315,6 +315,11 @@ meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kwh)"
 odometer = "Kilometerstand (km)"
 vehicle = "Voertuig"
+
+[sessions.filter]
+allLoadpoints = "alle oplaadpunten"
+allVehicles = "alle voertuigen"
+filter = "filter"
 
 [settings]
 title = "Instellingen"
@@ -368,9 +373,3 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
-
-
-[sessions.filter]
-allLoadpoints = alle oplaadpunten
-allVehicles = "alle voertuigen"
-filter = filter

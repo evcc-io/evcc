@@ -93,9 +93,19 @@ blog = "Blog"
 docs = "Documentație"
 github = "GitHub"
 login = "Login Vehicul"
+needHelp = "Ai nevoie de Ajutor ?"
 sessions = "Sesiuni de încărcare"
 settings = "Configurare"
-needHelp = "Ai nevoie de Ajutor ?"
+
+[help]
+discussionsButton = "Discutii GitHub"
+documentationButton = "Documentatie"
+issueButton = "Raporteaza un Bug"
+issueDescription = "Functionare bizara sau gresita ?"
+modalTitle = "Ai nevoie de ajutor ?"
+primaryActions = "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit sa primesti ajutor."
+restartButton = "Restart"
+restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "
 
 [main]
 vehicles = "Parcare"
@@ -326,14 +336,3 @@ title = "Eroare la pornire încărcare"
 cancel = "Anulați"
 template = "Producător"
 test = "Test"
-
-
-[help]
-discussionsButton = Discutii GitHub
-documentationButton = Documentatie
-issueButton = Raporteaza un Bug
-issueDescription = "Functionare bizara sau gresita ?"
-modalTitle = "Ai nevoie de ajutor ?"
-primaryActions = "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit sa primesti ajutor."
-restartButton = "Restart"
-restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "

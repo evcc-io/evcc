@@ -292,18 +292,18 @@ title = "Sesja ładowania"
 [sessions]
 avgPrice = "Ø Cena"
 co2 = "Ø CO₂"
+csvMonth = "Pobierz plik {month} CSV"
+csvTotal = "Pobierz plik CSV"
 date = "Skończone"
 downloadCsv = "Pobierz jako CSV"
 energy = "Naładowano"
 loadpoint = "Ładowarka"
+noData = "Brak sesji ładowania w tym miesiącu."
 price = "Σ Cena"
 reallyDelete = "Czy na pewno chcesz usunąć tę sesję?"
 solar = "Słoneczna"
 title = "Sesje ładowania"
 vehicle = "Pojazd"
-csvMonth = "Pobierz plik {month} CSV"
-csvTotal = "Pobierz plik CSV"
-noData = "Brak sesji ładowania w tym miesiącu."
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -315,6 +315,11 @@ meterstart = "Licznik początek (kWh)"
 meterstop = "Licznik koniec (kWh)"
 odometer = "Przebieg (km)"
 vehicle = "Pojazd"
+
+[sessions.filter]
+allLoadpoints = "wszystkie punkty ładowania"
+allVehicles = "wszystkie pojazdy"
+filter = "filtrować"
 
 [settings]
 title = "Ustawienia"
@@ -368,9 +373,3 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
-
-
-[sessions.filter]
-allLoadpoints = "wszystkie punkty ładowania"
-allVehicles = "wszystkie pojazdy"
-filter = "filtrować"
