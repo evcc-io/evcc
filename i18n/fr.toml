@@ -22,8 +22,8 @@ never = "seulement quand surplus suffisant"
 
 [footer.community]
 greenEnergy = "Solaire"
-greenEnergySub1 = "chargé avec evcc"
-greenEnergySub2 = "depuis le octobre 2022"
+greenEnergySub1 = "chargés avec evcc"
+greenEnergySub2 = "depuis octobre 2022"
 greenShare = "Part solaire"
 greenShareSub1 = "puissance fournie par"
 greenShareSub2 = "solaire et stockage de batterie"
@@ -292,10 +292,13 @@ title = "Session de charge"
 [sessions]
 avgPrice = "Prix Ø"
 co2 = "CO₂ Ø"
-date = "Fin"
+csvMonth = "Télécharger CSV {month}"
+csvTotal = "Télécharger CSV total"
+date = "Début session"
 downloadCsv = "Télécharger au format CSV"
 energy = "Chargé"
 loadpoint = "Point de chargement"
+noData = "Pas de session de charge ce mois-ci"
 price = "Σ Prix"
 reallyDelete = "Voulez-vous vraiment supprimer cette session?"
 solar = "Solaire"
@@ -312,6 +315,11 @@ meterstart = "Compteur début (kWh)"
 meterstop = "Compteur fin (kWh)"
 odometer = "Kilométrage (km)"
 vehicle = "Véhicule"
+
+[sessions.filter]
+allLoadpoints = "tous les points de chargement"
+allVehicles = "tous les véhicules"
+filter = "filtrer"
 
 [settings]
 title = "Réglages"
