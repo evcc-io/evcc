@@ -327,6 +327,10 @@ func (d *Connection) CheckErrorCode(errorCode int) error {
 		-1501: "Invalid Request or Credentials",
 	}
 
+	if errorCode == 9999 {
+		d.Login()
+	}
+
 	if errorCode != 0 {
 		return fmt.Errorf("tapo error %d: %s", errorCode, errorDesc[errorCode])
 	}
