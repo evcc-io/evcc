@@ -2,7 +2,7 @@ product:
   brand: Sungrow
   description: SH Series Hybrid Inverter
 description: |
-  Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.
+  Die Verbindung ist seriell (RS485) oder über die native (hintere) LAN-Buchse am Wechselrichter möglich. Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren NICHT korrekt.
 render:
   - usage: grid
     default: |
