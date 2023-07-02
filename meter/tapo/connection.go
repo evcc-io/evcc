@@ -292,6 +292,14 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 		return nil, err
 	}
 
+	// Login atempt in case of tapo switch connection hicups
+	if res.ErrorCode == 9999 {
+		d.Login()
+		if err := d.DoJSON(req, &res); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := d.CheckErrorCode(res.ErrorCode); err != nil {
 		return nil, err
 	}
@@ -325,10 +333,6 @@ func (d *Connection) CheckErrorCode(errorCode int) error {
 		-1010: "Invalid Public Key Length",
 		-1012: "Invalid terminalUUID",
 		-1501: "Invalid Request or Credentials",
-	}
-
-	if errorCode == 9999 {
-		d.Login()
 	}
 
 	if errorCode != 0 {
