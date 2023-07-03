@@ -30,17 +30,22 @@ func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.To
 func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
-	var err error
-	if !ts.token.Valid() {
-		var token *oauth2.Token
-		if token, err = ts.refresher.RefreshToken(ts.token); err == nil {
-			if token.AccessToken == "" {
-				err = errors.New("token refresh failed to obtain access token")
-			} else {
-				err = ts.mergeToken(token)
-			}
-		}
+
+	if ts.token.Valid() {
+		return ts.token, nil
 	}
+
+	token, err := ts.refresher.RefreshToken(ts.token)
+	if err != nil {
+		return ts.token, err
+	}
+
+	if token.AccessToken == "" {
+		err = errors.New("token refresh failed to obtain access token")
+	} else {
+		err = ts.mergeToken(token)
+	}
+
 	return ts.token, err
 }
 
