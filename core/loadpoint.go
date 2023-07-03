@@ -746,7 +746,7 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 // remainingChargeEnergy returns missing energy amount in kWh if vehicle has a valid energy target
 func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
 	return math.Max(0, lp.targetEnergy-lp.getChargedEnergy()/1e3),
-		lp.vehicleHasSoc() && lp.targetEnergy > 0
+		!lp.vehicleHasSoc() && lp.targetEnergy > 0
 }
 
 func (lp *Loadpoint) vehicleHasSoc() bool {
