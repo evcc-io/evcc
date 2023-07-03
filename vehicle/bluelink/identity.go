@@ -36,6 +36,7 @@ type Config struct {
 	BasicToken        string
 	CCSPServiceID     string
 	CCSPApplicationID string
+	PushType          string
 }
 
 // Identity implements the Kia/Hyundai bluelink identity.
@@ -68,7 +69,7 @@ func (v *Identity) getDeviceID() (string, error) {
 	uuid := uuid.NewString()
 	data := map[string]interface{}{
 		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
-		"pushType":  "APNS",
+		"pushType":  v.config.PushType,
 		"uuid":      uuid,
 	}
 
