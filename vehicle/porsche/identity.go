@@ -165,7 +165,8 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 		return err
 	}
 
-	v.TokenSource = oc.TokenSource(cctx, token)
+	ts := oc.TokenSource(cctx, token)
+	v.TokenSource = oauth2.ReuseTokenSourceWithExpiry(token, ts, 6*time.Hour)
 
 	go v.refresh()
 
@@ -173,7 +174,7 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 }
 
 func (v *Identity) refresh() {
-	for range time.Tick(6 * time.Hour) {
+	for range time.Tick(time.Hour) {
 		if _, err := v.Token(); err != nil {
 			v.log.ERROR.Printf("token refresh: %v", err)
 		}
