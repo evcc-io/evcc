@@ -33,7 +33,6 @@ func init() {
 func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		embed    `mapstructure:",squash"`
-		Currency string // TODO deprecated
 		Region   string
 	}
 
