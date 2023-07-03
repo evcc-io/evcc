@@ -47,7 +47,7 @@ func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	t := &Energinet{
 		embed:  &cc.embed,
-		log:    util.NewLogger("Energinet"),
+		log:    util.NewLogger("energinet"),
 		unit:   cc.Currency,
 		region: strings.ToLower(cc.Region),
 	}
