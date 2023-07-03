@@ -1,8 +1,7 @@
 template: audi
+covers: ["etron"]
 products:
   - brand: Audi
-    description:
-      generic: legacy
 params:
   - preset: vehicle-base
   - preset: vehicle-identify
