@@ -294,7 +294,10 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 
 	// Login atempt in case of tapo switch connection hicups
 	if res.ErrorCode == 9999 {
-		d.Login()
+		if err := d.Login(); err != nil {
+			return nil, err
+		}
+
 		if err := d.DoJSON(req, &res); err != nil {
 			return nil, err
 		}
