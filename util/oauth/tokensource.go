@@ -17,17 +17,36 @@ type TokenSource struct {
 	mu        sync.Mutex
 	token     *oauth2.Token
 	refresher TokenRefresher
+	margin    time.Duration
 }
 
-func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.TokenSource {
-	return &TokenSource{token: token, refresher: refresher}
+type TokenSourceOption func(*TokenSource)
+
+func WithExpiryMargin(margin time.Duration) TokenSourceOption {
+	return func(ts *TokenSource) {
+		ts.margin = margin
+	}
+}
+
+func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher, opt ...TokenSourceOption) oauth2.TokenSource {
+	ts := &TokenSource{
+		token:     token,
+		refresher: refresher,
+		margin:    time.Minute,
+	}
+
+	for _, o := range opt {
+		o(ts)
+	}
+
+	return ts
 }
 
 func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 	var err error
-	if ts.token == nil || time.Until(ts.token.Expiry) < time.Minute {
+	if ts.token == nil || time.Until(ts.token.Expiry) < ts.margin {
 		var token *oauth2.Token
 		if token, err = ts.refresher.RefreshToken(ts.token); err == nil {
 			if token.AccessToken == "" {
