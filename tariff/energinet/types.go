@@ -12,10 +12,10 @@ type Prices struct {
 }
 
 type PriceInfo struct {
-	HourUTC string `json:"HourUTC"`
-	HourDK string `json:"HourDK"`
-	PriceArea string `json:"PriceArea"`
-	SpotPriceDKK float64 `json:"SpotPriceDKK"`
-	SpotPriceEUR float64 `json:"SpotPriceEUR"`
+	HourUTC string
+	HourDK string
+	PriceArea string
+	SpotPriceDKK float64
+	SpotPriceEUR float64
 }
 
