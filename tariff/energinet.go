@@ -67,7 +67,7 @@ func (t *Energinet) run(done chan error) {
                 uri := fmt.Sprintf(energinet.URI,
                         ts.Format(time.RFC3339),
                         ts.Add(24*time.Hour).Format(time.RFC3339),
-                        strings.ToLower(t.region))
+                        t.region
 
                 if err := client.GetJSON(uri, &res); err != nil {
                         once.Do(func() { done <- err })
