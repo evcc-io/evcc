@@ -68,7 +68,7 @@ func (v *Identity) getDeviceID() (string, error) {
 	uuid := uuid.NewString()
 	data := map[string]interface{}{
 		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
-		"pushType":  "GCM",
+		"pushType":  "APNS",
 		"uuid":      uuid,
 	}
 

@@ -8,6 +8,9 @@ import (
 	"github.com/evcc-io/evcc/vehicle/bluelink"
 )
 
+// https://github.com/Hacksore/bluelinky
+// https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/353/files
+
 // Bluelink is an api.Vehicle implementation
 type Bluelink struct {
 	*embed
@@ -81,7 +84,6 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 			return v.VIN
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
