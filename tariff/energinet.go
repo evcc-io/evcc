@@ -83,7 +83,7 @@ func (t *Energinet) run(done chan error) {
 		
 
 		t.data = make(api.Rates, 0, len(data))
-		for _, r := range data {
+		for _, r := range res.Records {
 			date, _ := time.Parse("2006-01-02T15:04:05", r.HourUTC)
 			ar := api.Rate{
 				Start: date.Local(),
