@@ -81,7 +81,6 @@ func (t *Energinet) run(done chan error) {
 		t.mux.Lock()
 		t.updated = time.Now()
 		
-		data := res.Records
 
 		t.data = make(api.Rates, 0, len(data))
 		for _, r := range data {
