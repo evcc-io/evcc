@@ -3,7 +3,6 @@ package oauth
 import (
 	"errors"
 	"sync"
-	"time"
 
 	"github.com/imdario/mergo"
 	"golang.org/x/oauth2"
@@ -32,7 +31,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 	var err error
-	if ts.token == nil || time.Until(ts.token.Expiry) < time.Minute {
+	if !ts.token.Valid() {
 		var token *oauth2.Token
 		if token, err = ts.refresher.RefreshToken(ts.token); err == nil {
 			if token.AccessToken == "" {
