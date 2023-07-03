@@ -18,7 +18,6 @@ type Energinet struct {
 	*embed
 	mux     sync.Mutex
 	log     *util.Logger
-	unit    string
 	region  string
 	data    api.Rates
 	updated time.Time
