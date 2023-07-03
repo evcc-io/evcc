@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -66,7 +67,7 @@ func (v *Identity) getDeviceID() (string, error) {
 
 	uuid := uuid.NewString()
 	data := map[string]interface{}{
-		"pushRegId": "1",
+		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
 		"pushType":  "GCM",
 		"uuid":      uuid,
 	}
@@ -79,7 +80,7 @@ func (v *Identity) getDeviceID() (string, error) {
 		"Stamp":               stamp,
 	}
 
-	var resp struct {
+	var res struct {
 		RetCode string
 		ResMsg  struct {
 			DeviceID string
@@ -88,10 +89,14 @@ func (v *Identity) getDeviceID() (string, error) {
 
 	req, err := request.New(http.MethodPost, v.config.URI+DeviceIdURL, request.MarshalJSON(data), headers)
 	if err == nil {
-		err = v.DoJSON(req, &resp)
+		err = v.DoJSON(req, &res)
 	}
 
-	return resp.ResMsg.DeviceID, err
+	if res.ResMsg.DeviceID == "" {
+		err = errors.New("deviceid not found")
+	}
+
+	return res.ResMsg.DeviceID, err
 }
 
 func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
