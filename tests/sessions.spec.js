@@ -30,10 +30,19 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-nodata")).toHaveCount(0);
     await expect(page.getByRole("table")).toBeVisible();
     await expect(page.getByTestId("sessions-head")).toHaveCount(1);
-    await expect(page.getByText("Charged 20.0 kWh")).toBeVisible();
-    await expect(page.getByText("Solar 67.3%")).toBeVisible();
-    await expect(page.getByText("Σ Price 5.50 €")).toBeVisible();
-    await expect(page.getByText("Ø Price 27.5 ct/kWh")).toBeVisible();
+
+    await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
+    await expect(page.getByTestId("sessions-foot-energy")).toBeVisible("20.0");
+
+    await expect(page.getByTestId("sessions-head-solar")).toContainText("Solar%");
+    await expect(page.getByTestId("sessions-foot-solar")).toBeVisible("67.3");
+
+    await expect(page.getByTestId("sessions-head-price")).toContainText("Σ Price€");
+    await expect(page.getByTestId("sessions-foot-price")).toBeVisible("5.50");
+
+    await expect(page.getByTestId("sessions-head-avgPrice")).toContainText("Ø Pricect/kWh");
+    await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible("27.5");
+
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
   });
 });
@@ -63,17 +72,17 @@ test.describe("filter", async () => {
     await page.goto("/#/sessions?year=2023&month=5");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
 
-    await page.getByLabel("all vehicles").selectOption("blauer e-Golf (2)");
+    await page.getByTestId("filter-vehicle").selectOption("blauer e-Golf (2)");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(2);
     await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/blauer e-Golf/);
     await expect(page.getByTestId("sessions-entry").nth(1)).toHaveText(/blauer e-Golf/);
 
-    await page.getByLabel("all vehicles").selectOption("weißes Model 3 (2)");
+    await page.getByTestId("filter-vehicle").selectOption("weißes Model 3 (2)");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(2);
     await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/weißes Model 3/);
     await expect(page.getByTestId("sessions-entry").nth(1)).toHaveText(/weißes Model 3/);
 
-    await page.getByLabel("all vehicles").selectOption("all vehicles (4)");
+    await page.getByTestId("filter-vehicle").selectOption("all vehicles (4)");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
   });
 
@@ -81,30 +90,30 @@ test.describe("filter", async () => {
     await page.goto("/#/sessions?year=2023&month=5");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
 
-    await page.getByLabel("all charging points").selectOption("Carport (3)");
+    await page.getByTestId("filter-loadpoint").selectOption("Carport (3)");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(3);
     await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/Carport/);
     await expect(page.getByTestId("sessions-entry").nth(1)).toHaveText(/Carport/);
     await expect(page.getByTestId("sessions-entry").nth(2)).toHaveText(/Carport/);
 
-    await page.getByLabel("all charging points").selectOption("Garage (1)");
+    await page.getByTestId("filter-loadpoint").selectOption("Garage (1)");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(1);
     await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/Garage/);
 
-    await page.getByLabel("all charging points").selectOption("all charging points (4)");
+    await page.getByTestId("filter-loadpoint").selectOption("all charging points (4)");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
   });
 
   test("by vehicle and loadpoint", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
 
-    await page.getByLabel("all charging points").selectOption("Carport (3)");
-    await page.getByLabel("all vehicles").selectOption("weißes Model 3 (1)");
+    await page.getByTestId("filter-loadpoint").selectOption("Carport (3)");
+    await page.getByTestId("filter-vehicle").selectOption("weißes Model 3 (1)");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(1);
     await expect(page.getByTestId("sessions-entry")).toHaveText(/Carport/);
     await expect(page.getByTestId("sessions-entry")).toHaveText(/weißes Model 3/);
 
-    await page.getByLabel("all vehicles").selectOption("blauer e-Golf (2)");
+    await page.getByTestId("filter-vehicle").selectOption("blauer e-Golf (2)");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(2);
     await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/Carport/);
     await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/blauer e-Golf/);
@@ -115,8 +124,8 @@ test.describe("filter", async () => {
   test("by vehicle and loadpoint disabled options", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
 
-    await page.getByLabel("all vehicles").selectOption("blauer e-Golf (2)");
-    const option = page.locator("option[value=Garage]");
+    await page.getByTestId("filter-vehicle").selectOption("blauer e-Golf (2)");
+    const option = page.getByTestId("filter-loadpoint").locator("option[value=Garage]");
     await expect(option).toHaveAttribute("disabled", "");
     await expect(option).toHaveText("Garage (0)");
   });
@@ -124,7 +133,7 @@ test.describe("filter", async () => {
   test("keep filter when paging", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
 
-    await page.getByLabel("all charging points").selectOption("Carport (3)");
+    await page.getByTestId("filter-loadpoint").selectOption("Carport (3)");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(3);
     await page.getByRole("link", { name: "June" }).click();
     await page.getByRole("link", { name: "May" }).click();
@@ -151,11 +160,11 @@ test.describe("columns", async () => {
   });
   test("show co2 column it has values", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=3");
-    await expect(page.getByTestId("co2")).toBeVisible();
+    await expect(page.getByTestId("sessions-head-co2")).toBeVisible();
   });
   test("hide co2 column if it doesnt have values", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
-    await expect(page.getByTestId("co2")).toHaveCount(0);
+    await expect(page.getByTestId("sessions-head-co2")).toHaveCount(0);
   });
 });
 
