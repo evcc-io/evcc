@@ -83,7 +83,7 @@ render: |
     scale: 1
   soc:
     source: http
-    uri: http://{{ .host }}/production.json?details=1
+    uri: http://{{ .host }}/ivp/ensemble/inventory
     method: GET
     {{- if .token }}
     auth:
@@ -91,7 +91,7 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: .storage[] | select(.type == "acb").percentFull
+    jq: [.[].devices[].percentFull] | add / length
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
