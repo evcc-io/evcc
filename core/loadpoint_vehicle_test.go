@@ -32,20 +32,20 @@ func TestPublishSocAndRange(t *testing.T) {
 
 	log := util.NewLogger("foo")
 	lp := &Loadpoint{
-		log:            log,
-		bus:            evbus.New(),
-		clock:          clck,
-		charger:        charger,
-		defaultVehicle: vehicle,
-		chargeMeter:    &Null{}, // silence nil panics
-		chargeRater:    &Null{}, // silence nil panics
-		chargeTimer:    &Null{}, // silence nil panics
-		socEstimator:   soc.NewEstimator(log, charger, vehicle, false),
-		sessionEnergy:  NewEnergyMetrics(),
-		MinCurrent:     minA,
-		MaxCurrent:     maxA,
-		phases:         1,
-		Mode:           api.ModeNow,
+		log:           log,
+		bus:           evbus.New(),
+		clock:         clck,
+		charger:       charger,
+		vehicle:       vehicle,
+		chargeMeter:   &Null{}, // silence nil panics
+		chargeRater:   &Null{}, // silence nil panics
+		chargeTimer:   &Null{}, // silence nil panics
+		socEstimator:  soc.NewEstimator(log, charger, vehicle, false),
+		sessionEnergy: NewEnergyMetrics(),
+		MinCurrent:    minA,
+		MaxCurrent:    maxA,
+		phases:        1,
+		Mode:          api.ModeNow,
 	}
 
 	// populate channels

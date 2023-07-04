@@ -89,7 +89,7 @@ require (
 	github.com/stretchr/testify v1.8.3
 	github.com/traefik/yaegi v0.15.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20230608121516-d3c3174def13
+	github.com/volkszaehler/mbmd v0.0.0-20230619194555-eff79d92007e
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1

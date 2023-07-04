@@ -8,6 +8,9 @@ import (
 	"github.com/evcc-io/evcc/vehicle/bluelink"
 )
 
+// https://github.com/Hacksore/bluelinky
+// https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/353/files
+
 // Bluelink is an api.Vehicle implementation
 type Bluelink struct {
 	*embed
@@ -28,6 +31,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		CCSPApplicationID: bluelink.HyundaiAppID,
 		AuthClientID:      "64621b96-0f0d-11ec-82a8-0242ac130003",
 		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+		PushType:          "GCM",
 	}
 
 	return newBluelinkFromConfig("hyundai", other, settings)
@@ -42,6 +46,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		CCSPApplicationID: bluelink.KiaAppID,
 		AuthClientID:      "572e0304-5f8d-4b4c-9dd5-41aa84eed160",
 		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+		PushType:          "APNS",
 	}
 
 	return newBluelinkFromConfig("kia", other, settings)
@@ -81,7 +86,6 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 			return v.VIN
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}

@@ -18,7 +18,6 @@ type Awattar struct {
 	mux     sync.Mutex
 	log     *util.Logger
 	uri     string
-	unit    string
 	data    api.Rates
 	updated time.Time
 }
@@ -49,7 +48,6 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Awattar{
 		embed: &cc.embed,
 		log:   util.NewLogger("awattar"),
-		unit:  cc.Currency,
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
 

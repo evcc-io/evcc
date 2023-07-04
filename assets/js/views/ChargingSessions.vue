@@ -49,7 +49,12 @@
 								<th scope="col" class="align-top ps-0">
 									{{ $t("sessions.date") }}
 								</th>
-								<th scope="col" class="align-top">
+								<th
+									v-if="showLoadpoints"
+									scope="col"
+									class="align-top"
+									data-testid="loadpoint"
+								>
 									{{ $t("sessions.loadpoint") }}
 									<label class="position-relative d-block">
 										<select
@@ -77,7 +82,12 @@
 										</span>
 									</label>
 								</th>
-								<th scope="col" class="align-top">
+								<th
+									v-if="showVehicles"
+									scope="col"
+									class="align-top"
+									data-testid="vehicle"
+								>
 									{{ $t("sessions.vehicle") }}
 									<label class="position-relative d-block">
 										<select
@@ -137,7 +147,12 @@
 										{{ fmtPricePerKWh(pricePerKWh, currency) }}
 									</div>
 								</th>
-								<th v-if="hasCo2" scope="col" class="align-top text-end pe-0">
+								<th
+									v-if="hasCo2"
+									scope="col"
+									class="align-top text-end pe-0"
+									data-testid="co2"
+								>
 									{{ $t("sessions.co2") }}
 									<div v-if="co2PerKWh != null" class="text-muted fw-normal">
 										{{ fmtCo2Medium(co2PerKWh) }}
@@ -154,12 +169,12 @@
 								@click="showDetails(session.id)"
 							>
 								<td class="ps-0">
-									{{ fmtFullDateTime(new Date(session.created), true) }}
+									<u>{{ fmtFullDateTime(new Date(session.created), true) }}</u>
 								</td>
-								<td>
+								<td v-if="showLoadpoints">
 									{{ session.loadpoint }}
 								</td>
-								<td>
+								<td v-if="showVehicles">
 									{{ session.vehicle }}
 								</td>
 								<td class="text-end">
@@ -313,6 +328,20 @@ export default {
 		},
 		hasCo2() {
 			return this.filteredSessions.find((s) => s.co2PerKWh != null) != null;
+		},
+		showVehicles() {
+			return this.hasMultipleVehicles || this.vehicleFilter;
+		},
+		showLoadpoints() {
+			return this.hasMultipleLoadpoints || this.loadpointFilter;
+		},
+		hasMultipleVehicles() {
+			const vehicles = this.currentSessions.map((s) => s.vehicle);
+			return new Set(vehicles).size > 1;
+		},
+		hasMultipleLoadpoints() {
+			const loadpoints = this.currentSessions.map((s) => s.loadpoint);
+			return new Set(loadpoints).size > 1;
 		},
 		pricePerKWh() {
 			return this.price / this.chargedEnergy;

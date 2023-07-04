@@ -153,6 +153,7 @@ chargers:
         var lp = state.loadpoints[1];
         lp.maxcurrent = maxcurrent;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+    tos: true
     phases1p3p:
       source: js
       vm: shared

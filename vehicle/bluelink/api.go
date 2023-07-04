@@ -26,7 +26,6 @@ const (
 var ErrAuthFail = errors.New("authorization failed")
 
 // API implements the Kia/Hyundai bluelink api.
-// Based on https://github.com/Hacksore/bluelinky.
 type API struct {
 	*request.Helper
 	baseURI string

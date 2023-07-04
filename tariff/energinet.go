@@ -3,19 +3,18 @@ package tariff
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/tariff/elering"
+	"github.com/evcc-io/evcc/tariff/energinet"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/exp/slices"
 )
 
-type Elering struct {
+type Energinet struct {
 	*embed
 	mux     sync.Mutex
 	log     *util.Logger
@@ -24,17 +23,16 @@ type Elering struct {
 	updated time.Time
 }
 
-var _ api.Tariff = (*Elering)(nil)
+var _ api.Tariff = (*Energinet)(nil)
 
 func init() {
-	registry.Add("elering", NewEleringFromConfig)
+	registry.Add("energinet", NewEnerginetFromConfig)
 }
 
-func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		embed    `mapstructure:",squash"`
-		Currency string // TODO deprecated
-		Region   string
+		embed  `mapstructure:",squash"`
+		Region string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -45,9 +43,9 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing region")
 	}
 
-	t := &Elering{
+	t := &Energinet{
 		embed:  &cc.embed,
-		log:    util.NewLogger("Elering"),
+		log:    util.NewLogger("energinet"),
 		region: strings.ToLower(cc.Region),
 	}
 
@@ -58,17 +56,18 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, err
 }
 
-func (t *Elering) run(done chan error) {
+func (t *Energinet) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
 	for ; true; <-time.Tick(time.Hour) {
-		var res elering.NpsPrice
+		var res energinet.Prices
 
 		ts := time.Now().Truncate(time.Hour)
-		uri := fmt.Sprintf("%s/nps/price?start=%s&end=%s", elering.URI,
-			url.QueryEscape(ts.Format(time.RFC3339)),
-			url.QueryEscape(ts.Add(48*time.Hour).Format(time.RFC3339)))
+		uri := fmt.Sprintf(energinet.URI,
+			ts.Format(time.RFC3339),
+			ts.Add(24*time.Hour).Format(time.RFC3339),
+			t.region)
 
 		if err := client.GetJSON(uri, &res); err != nil {
 			once.Do(func() { done <- err })
@@ -82,16 +81,13 @@ func (t *Elering) run(done chan error) {
 		t.mux.Lock()
 		t.updated = time.Now()
 
-		data := res.Data[t.region]
-
-		t.data = make(api.Rates, 0, len(data))
-		for _, r := range data {
-			ts := time.Unix(r.Timestamp, 0)
-
+		t.data = make(api.Rates, 0, len(res.Records))
+		for _, r := range res.Records {
+			date, _ := time.Parse("2006-01-02T15:04:05", r.HourUTC)
 			ar := api.Rate{
-				Start: ts.Local(),
-				End:   ts.Add(time.Hour).Local(),
-				Price: t.totalPrice(r.Price / 1e3),
+				Start: date.Local(),
+				End:   date.Add(time.Hour).Local(),
+				Price: t.totalPrice(r.SpotPriceDKK / 1e3),
 			}
 			t.data = append(t.data, ar)
 		}
@@ -101,13 +97,13 @@ func (t *Elering) run(done chan error) {
 }
 
 // Rates implements the api.Tariff interface
-func (t *Elering) Rates() (api.Rates, error) {
+func (t *Energinet) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
 // Type returns the tariff type
-func (t *Elering) Type() api.TariffType {
+func (t *Energinet) Type() api.TariffType {
 	return api.TariffTypePriceDynamic
 }
