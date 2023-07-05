@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/elering"
 	"github.com/evcc-io/evcc/util"
@@ -61,6 +62,7 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Elering) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
+	bo := newBackoff()
 
 	for ; true; <-time.Tick(time.Hour) {
 		var res elering.NpsPrice
@@ -70,7 +72,9 @@ func (t *Elering) run(done chan error) {
 			url.QueryEscape(ts.Format(time.RFC3339)),
 			url.QueryEscape(ts.Add(48*time.Hour).Format(time.RFC3339)))
 
-		if err := client.GetJSON(uri, &res); err != nil {
+		if err := backoff.Retry(func() error {
+			return client.GetJSON(uri, &res)
+		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/awattar"
 	"github.com/evcc-io/evcc/util"
@@ -60,11 +61,15 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Awattar) run(done chan error) {
 	var once sync.Once
+	bo := newBackoff()
 	client := request.NewHelper(t.log)
 
 	for ; true; <-time.Tick(time.Hour) {
 		var res awattar.Prices
-		if err := client.GetJSON(t.uri, &res); err != nil {
+
+		if err := backoff.Retry(func() error {
+			return client.GetJSON(t.uri, &res)
+		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
