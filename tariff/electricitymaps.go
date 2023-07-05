@@ -124,7 +124,7 @@ func (t *ElectricityMaps) Rates() (api.Rates, error) {
 	return res, outdatedError(t.updated, time.Hour)
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *ElectricityMaps) Type() api.TariffType {
 	return api.TariffTypeCo2
 }

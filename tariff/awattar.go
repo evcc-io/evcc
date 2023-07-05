@@ -102,7 +102,7 @@ func (t *Awattar) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *Awattar) Type() api.TariffType {
 	return api.TariffTypePriceDynamic
 }
