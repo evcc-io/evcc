@@ -361,6 +361,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.m
 github.com/envoyproxy/go-control-plane v0.9.10-0.20210907150352-cf90f659a021/go.mod h1:AFq3mo9L8Lqqiid3OhADV3RfLJnjiw63cSpi+fDTRC0=
 github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1/go.mod h1:KJwIaB5Mv44NWtYuAOFCVOjcI94vtpEz2JU/D2v6IjE=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
+github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3 h1:QBtLqy85cy9KLRWqKxX+42bN1rWti8iU7pL7Vwf2UbE=
+github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3/go.mod h1:qVX2WhsI5xyAoM6I/MV1bXSKBPdLAjp7pCvieO/S0AY=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
@@ -586,9 +588,6 @@ github.com/graph-gophers/graphql-transport-ws v0.0.2 h1:DbmSkbIGzj8SvHei6n8Mh9eL
 github.com/graph-gophers/graphql-transport-ws v0.0.2/go.mod h1:5BVKvFzOd2BalVIBFfnfmHjpJi/MZ5rOj8G55mXvZ8g=
 github.com/gregdel/pushover v1.2.0 h1:SLnpvJijUyEZvkJNyrldGhFhryYgQYlThSLpB5Oqt5k=
 github.com/gregdel/pushover v1.2.0/go.mod h1:EcaO66Nn1StkpEm1iKtBTV3d2A16SoMsVER1PthX7to=
-github.com/grid-x/modbus v0.0.0-20210714071042-7af2b65ec03b/go.mod h1:YaK0rKJenZ74vZFcSSLlAQqtG74PMI68eDjpDCDDmTw=
-github.com/grid-x/modbus v0.0.0-20230511111420-e90d491dbd4f h1:kYCn76Qlwsjbw3Bh4kF6ljySsK+uQODzGi3HUIZ+TpU=
-github.com/grid-x/modbus v0.0.0-20230511111420-e90d491dbd4f/go.mod h1:qVX2WhsI5xyAoM6I/MV1bXSKBPdLAjp7pCvieO/S0AY=
 github.com/grid-x/serial v0.0.0-20191104121038-e24bc9bf6f08/go.mod h1:kdOd86/VGFWRrtkNwf1MPk0u1gIjc4Y7R2j7nhwc7Rk=
 github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa h1:Rsn6ARgNkXrsXJIzhkE4vQr5Gbx2LvtEMv4BJOK4LyU=
 github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa/go.mod h1:kdOd86/VGFWRrtkNwf1MPk0u1gIjc4Y7R2j7nhwc7Rk=
