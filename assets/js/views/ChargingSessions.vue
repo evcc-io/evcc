@@ -101,6 +101,7 @@
 										<CustomSelect
 											:selected="loadpointFilter"
 											:options="loadpointFilterOptions"
+											data-testid="filter-loadpoint"
 											@change="changeLoadpointFilter"
 										>
 											<span
@@ -122,6 +123,7 @@
 										<CustomSelect
 											:selected="vehicleFilter"
 											:options="vehicleFilterOptions"
+											data-testid="filter-vehicle"
 											@change="changeVehicleFilter"
 										>
 											<span
@@ -154,6 +156,7 @@
 										v-else
 										:selected="selectedMobileColumn"
 										:options="mobileColumnOptions"
+										data-testid="mobile-column"
 										@change="changeMobileColumn"
 									>
 										<span class="text-decoration-underline">
