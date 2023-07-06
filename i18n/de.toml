@@ -312,7 +312,7 @@ vehicle = "Fahrzeug"
 [sessions.filter]
 allLoadpoints = "Alle Ladepunkte"
 allVehicles = "Alle Fahrzeuge"
-filter = "filtern"
+filter = "Filtern"
 
 [settings]
 title = "Einstellungen"
