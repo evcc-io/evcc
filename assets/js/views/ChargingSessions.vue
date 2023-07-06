@@ -346,10 +346,10 @@ export default {
 				},
 				{
 					name: "avgPrice",
-					unit: this.fmtPricePerKWh(0, this.currency).split(" ")[1],
+					unit: this.pricePerKWhUnit(this.currency),
 					total: this.pricePerKWh,
 					value: (session) => session.pricePerKWh,
-					format: (value) => this.fmtPricePerKWh(value, this.currency).split(" ")[0],
+					format: (value) => this.fmtPricePerKWh(value, this.currency, false, false),
 				},
 				{
 					name: "co2",

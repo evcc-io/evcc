@@ -197,22 +197,31 @@ export default {
       const symbols = { EUR: "€", USD: "$" };
       return symbols[currency] || currency;
     },
-    fmtPricePerKWh: function (amout = 0, currency = "EUR", short = false) {
-      let unit = currency;
+    fmtPricePerKWh: function (amout = 0, currency = "EUR", short = false, withUnit = true) {
       let value = amout;
       let minimumFractionDigits = 1;
       let maximumFractionDigits = 3;
       if (["EUR", "USD"].includes(currency)) {
         value *= 100;
-        unit = "ct";
         minimumFractionDigits = 1;
         maximumFractionDigits = 1;
       }
-      return `${new Intl.NumberFormat(this.$i18n.locale, {
+      const price = new Intl.NumberFormat(this.$i18n.locale, {
         style: "decimal",
         minimumFractionDigits,
         maximumFractionDigits,
-      }).format(value)} ${unit}${short ? "" : "/kWh"}`;
+      }).format(value);
+      if (withUnit) {
+        return `${price} ${this.pricePerKWhUnit(currency, short)}`;
+      }
+      return price;
+    },
+    pricePerKWhUnit: function (currency = "EUR", short = false) {
+      let unit = currency;
+      if (["EUR", "USD"].includes(currency)) {
+        unit = "ct";
+      }
+      return `${unit}${short ? "" : "/kWh"}`;
     },
     fmtTimeAgo: function (elapsed) {
       const units = {
