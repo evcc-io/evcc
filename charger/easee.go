@@ -186,7 +186,7 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 
 // refresh ensures tokens are refreshed even when not charging for longer time
 func (c *Easee) refresh() {
-	for range time.Tick(time.Hour) {
+	for range time.Tick(5 * time.Minute) {
 		if _, err := c.Client.Transport.(*oauth2.Transport).Source.Token(); err != nil {
 			c.log.ERROR.Println("token refresh:", err)
 		}
