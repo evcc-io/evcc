@@ -1,0 +1,37 @@
+
+
+
+[batterySettings]
+legendBottomName = "أولوية المنزل"
+legendMiddleName = "السيارة أولا"
+legendMiddleSubline = "المنزل الثاني"
+legendTopAutostart = "يبدأ تلقائيًا"
+legendTopSubline = "بدون انقطاع"
+modalTitle = "إعدادات البطارية"
+batteryLevel = "مستوى البطارية"
+legendBottomSubline = "لا تستخدم للشحن"
+legendTitle = "كيف يجب استخدام الطاقة الشمسية?"
+legendTopName = "بطارية تدعم الشحن"
+note = "ملحوظة: تؤثر هذه الإعدادات فقط على الوضع الشمسي. يتم تعديل سلوك الشحن وفقًا لذلك."
+
+[batterySettings.bufferStart]
+low = "عندما تكون ممتلئة إلى حد ما"
+medium = "عندما نصف ممتلئ"
+never = "فقط مع فائض كافٍ"
+full = "عندما أوشكت على الامتلاء"
+
+[footer.community]
+greenEnergy = "شمسي"
+greenEnergySub2 = "منذ أكتوبر ٢٠٢٢"
+greenShareSub2 = "تخزين الطاقة الشمسية وتخزين البطارية"
+power = "قوة الشحن"
+powerSub2 = "الشحن ..."
+tabTitle = "مجتمع مباشر"
+greenEnergySub1 = "مشحونة بـ evcc"
+greenShare = "حصة الطاقة الشمسية"
+greenShareSub1 = "القوة المقدمة من"
+powerSub1 = "{activeClients} من إجمالي {totalClients} مشاركين"
+
+[footer.savings]
+footerLong = "{percent}٪ من الطاقة الشمسية"
+footerShort = {percent}٪ شمسي"
