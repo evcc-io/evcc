@@ -715,6 +715,8 @@ func (site *Site) update(lp Updater) {
 		site.publish("homePower", homePower)
 
 		site.Health.Update()
+	} else {
+		site.log.ERROR.Println(err)
 	}
 
 	site.publishTariffs()
