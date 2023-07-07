@@ -296,7 +296,7 @@ avgPrice = "Preço Ø"
 co2 = "CO₂ Ø"
 csvMonth = "Download {month} CSV"
 csvTotal = "Download tudo CSV"
-date = "Terminado"
+date = "Início"
 downloadCsv = "Download como CSV"
 energy = "Carregado"
 loadpoint = "Ponto de carga"
@@ -307,6 +307,7 @@ reallyDelete = "Você realmente quer excluir esta sessão?"
 solar = "Sol"
 title = "Sessões de carga"
 vehicle = "Veículo"
+total = "Total"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -322,7 +323,7 @@ vehicle = "Veículo"
 [sessions.filter]
 allLoadpoints = "todos pontos de carregamento"
 allVehicles = "todos veículos"
-filter = "filtro"
+filter = "Filtro"
 
 [settings]
 title = "Configuração"
