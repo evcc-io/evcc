@@ -147,9 +147,9 @@ pvProduction = "Productie"
 selfConsumption = "Zelfverbruik"
 
 [main.loadpoint]
-avgPrice = "Ø Prijs"
+avgPrice = "⌀ Prijs"
 charged = "Geladen"
-co2 = "Ø CO₂"
+co2 = "⌀ CO₂"
 duration = "Duur"
 fallbackName = "Laadpunt"
 power = "Vermogen"
@@ -220,7 +220,7 @@ update = "Updaten"
 
 [main.targetChargePlan]
 chargeDuration = "Oplaadtijd"
-co2Label = "CO₂ emissie Ø"
+co2Label = "CO₂ emissie ⌀"
 priceLabel = "Energieprijs"
 timeRange = "{day} {range} h"
 unknownPrice = "nog onbekend"
@@ -290,8 +290,8 @@ started = "Gestart"
 title = "Oplaadsessie"
 
 [sessions]
-avgPrice = "Ø Prijs"
-co2 = "Ø CO₂"
+avgPrice = "⌀ Prijs"
+co2 = "⌀ CO₂"
 csvMonth = "Download CSV van {month}"
 csvTotal = "Download totale CSV"
 date = "Start"

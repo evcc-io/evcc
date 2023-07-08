@@ -199,7 +199,7 @@ update = "Actualizare"
 
 [main.targetChargePlan]
 chargeDuration = "Timp de încărcare"
-co2Label = "Emisie CO₂ Ø"
+co2Label = "Emisie CO₂ ⌀"
 priceLabel = "Prețul energiei"
 timeRange = "{day} {range} h"
 unknownPrice = "încă necunoscut"
