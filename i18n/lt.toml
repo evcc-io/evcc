@@ -305,8 +305,8 @@ price = "Σ Kaina"
 reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo sesiją?"
 solar = "Saulės"
 title = "Įkrovimo Sesijos"
-vehicle = "Automobilis"
 total = "Viso"
+vehicle = "Automobilis"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"

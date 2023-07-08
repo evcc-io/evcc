@@ -305,8 +305,8 @@ price = "Σ Precio"
 reallyDelete = "¿De verdad quieres eliminar esta sesión?"
 solar = "Solar"
 title = "Sesiones de carga"
-vehicle = "Vehículo"
 total = "Total"
+vehicle = "Vehículo"
 
 [sessions.csv]
 chargedenergy = "Energía (kWh)"
