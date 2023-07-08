@@ -106,12 +106,12 @@ modalTitle = "Need help?"
 primaryActions = "Something does not work the way it supposed to do? These are good places to get help."
 restartButton = "Restart"
 restartDescription = "Tried turning it off and on again?"
-secondaryActions = "Still not able to solve your problem? Here are some more heavy handed options."
+secondaryActions = "Still not able to solve your problem? Here are some more heavy-handed options."
 
 [help.restart]
 cancel = "Cancel"
 confirm = "Yes, restart!"
-description = "Under normal circumsances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
+description = "Under normal circumstances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
 disclaimer = "Note: evcc will terminate and rely on the operating system to restart the service."
 modalTitle = "Are you sure you want to restart?"
 
