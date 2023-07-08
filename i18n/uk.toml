@@ -143,9 +143,9 @@ pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
 
 [main.loadpoint]
-avgPrice = "Ø Ціна"
+avgPrice = "⌀ Ціна"
 charged = "Заряджено"
-co2 = "Ø CO₂"
+co2 = "⌀ CO₂"
 duration = "Тривалість"
 fallbackName = "Точка зарядки"
 power = "Потужність"
@@ -213,7 +213,7 @@ update = "Оновлення"
 
 [main.targetChargePlan]
 chargeDuration = "Час зарядки"
-co2Label = "Викиди CO₂ Ø"
+co2Label = "Викиди CO₂ ⌀"
 priceLabel = "Ціна на енергію"
 timeRange = "{day} {range} год"
 unknownPrice = "ще невідомо"
@@ -285,8 +285,8 @@ started = "Розпочато"
 title = "Сеанс зарядки"
 
 [sessions]
-avgPrice = "Ø Ціна"
-co2 = "Ø CO₂"
+avgPrice = "⌀ Ціна"
+co2 = "⌀ CO₂"
 csvMonth = "Завантажити {month} CSV"
 csvTotal = "Завантажити повний CSV"
 date = "Завершено"

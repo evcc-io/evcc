@@ -147,9 +147,9 @@ pvProduction = "Producción"
 selfConsumption = "Autoconsumo"
 
 [main.loadpoint]
-avgPrice = "Precio Ø"
+avgPrice = "Precio ⌀"
 charged = "Cargado"
-co2 = "CO₂ Ø "
+co2 = "CO₂ ⌀ "
 duration = "Duración"
 fallbackName = "Punto de carga"
 power = "Potencia"
@@ -220,7 +220,7 @@ update = "Actualizar"
 
 [main.targetChargePlan]
 chargeDuration = "Tiempo de carga"
-co2Label = "Emisión de CO₂ Ø"
+co2Label = "Emisión de CO₂ ⌀"
 priceLabel = "Precio de la energía"
 timeRange = "{day} {range} hora"
 unknownPrice = "aún desconocido"
@@ -292,8 +292,8 @@ started = "Comenzó"
 title = "Cargando la sesión"
 
 [sessions]
-avgPrice = "Precio Ø"
-co2 = "CO₂ Ø"
+avgPrice = "Precio ⌀"
+co2 = "CO₂ ⌀"
 csvMonth = "Descargar el {month} CSV"
 csvTotal = "Descargar todos los CSV"
 date = "Acabado"

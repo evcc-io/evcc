@@ -147,9 +147,9 @@ pvProduction = "Produksjon"
 selfConsumption = "Eget forbruk"
 
 [main.loadpoint]
-avgPrice = "Ø-pris"
+avgPrice = "⌀-pris"
 charged = "Oppladet"
-co2 = "Ø-CO₂"
+co2 = "⌀-CO₂"
 duration = "Varighet"
 fallbackName = "Ladepunkt"
 power = "Effekt"
@@ -216,7 +216,7 @@ update = "Oppdater"
 
 [main.targetChargePlan]
 chargeDuration = "Ladetid"
-co2Label = "CO₂-utslipp Ø"
+co2Label = "CO₂-utslipp ⌀"
 priceLabel = "Energipris"
 timeRange = "{day} {range} t"
 unknownPrice = "fremdeles ukjent"
@@ -286,8 +286,8 @@ started = "Startet"
 title = "Ladeøkt"
 
 [sessions]
-avgPrice = "Ø-pris"
-co2 = "Ø-CO₂"
+avgPrice = "⌀-pris"
+co2 = "⌀-CO₂"
 csvMonth = "Last ned (måned) CSV"
 csvTotal = "Last ned total CSV"
 date = "Start"

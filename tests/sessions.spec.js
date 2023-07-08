@@ -43,7 +43,7 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-head-price")).toContainText("Σ Price€");
     await expect(page.getByTestId("sessions-foot-price")).toBeVisible("5.50");
 
-    await expect(page.getByTestId("sessions-head-avgPrice")).toContainText("Ø Pricect/kWh");
+    await expect(page.getByTestId("sessions-head-avgPrice")).toContainText("⌀ Pricect/kWh");
     await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible("27.5");
 
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
@@ -76,8 +76,8 @@ test.describe("mobile basics", async () => {
     await expect(page.getByTestId("sessions-head-mobile")).toContainText("Σ Price€");
     await expect(page.getByTestId("sessions-foot-mobile")).toBeVisible("5.50");
 
-    await page.getByTestId("mobile-column").selectOption("Ø Price");
-    await expect(page.getByTestId("sessions-head-mobile")).toContainText("Ø Pricect/kWh");
+    await page.getByTestId("mobile-column").selectOption("⌀ Price");
+    await expect(page.getByTestId("sessions-head-mobile")).toContainText("⌀ Pricect/kWh");
     await expect(page.getByTestId("sessions-foot-mobile")).toBeVisible("27.5");
   });
 

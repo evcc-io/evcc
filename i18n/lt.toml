@@ -147,9 +147,9 @@ pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
 
 [main.loadpoint]
-avgPrice = "Ø Kaina"
+avgPrice = "⌀ Kaina"
 charged = "Įkrauta"
-co2 = "Ø CO₂"
+co2 = "⌀ CO₂"
 duration = "Trukmė"
 fallbackName = "Įkroviklis"
 power = "Galia"
@@ -220,7 +220,7 @@ update = "Atnaujinti"
 
 [main.targetChargePlan]
 chargeDuration = "Įkrovimo trukmė"
-co2Label = "CO₂ emisijos Ø"
+co2Label = "CO₂ emisijos ⌀"
 priceLabel = "Energijos kaina"
 timeRange = "{day} {range} val"
 unknownPrice = "dar nežinoma"
@@ -292,8 +292,8 @@ started = "Pradėta"
 title = "Įkrovimo sesija"
 
 [sessions]
-avgPrice = "Ø Kaina"
-co2 = "Ø CO₂"
+avgPrice = "⌀ Kaina"
+co2 = "⌀ CO₂"
 csvMonth = "Atsisiųsti {month} CSV"
 csvTotal = "Atsisiųsti visą CSV"
 date = "Pabaigta"
