@@ -178,7 +178,7 @@ tariffs:
     # type: octopusenergy
     # tariff: AGILE-FLEX-22-11-25 # Tariff code
     # region: A # optional
-    
+
     # type: elering # Nordpool
     # region: ee # or lt, lv, fi
     # charges: # optional, additional charges per kWh
