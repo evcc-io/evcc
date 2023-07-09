@@ -300,6 +300,7 @@ reallyDelete = "Slett denne økten?"
 solar = "Solenergi"
 title = "Ladeøkter"
 vehicle = "Kjøretøy"
+total = "Totalt"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
