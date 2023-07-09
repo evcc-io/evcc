@@ -3,6 +3,9 @@ products:
   - brand: Kostal
     description:
       generic: Piko MP Plus
+  - brand: Steca
+    description:
+      generic: coolcept fleX
 linked:
   - template: kostal-ksem-inverter
     usage: grid

@@ -5,6 +5,6 @@ render:
   - usage: pv
     default: |
       type: template
-      template: steca-coolcept-flex
+      template: kostal-piko-mp-plus
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
