@@ -87,7 +87,7 @@ nfpms:
       postremove: ./packaging/scripts/postremove.sh
 
 brews:
-  - tap:
+  - repository:
       owner: evcc-io
       name: homebrew-tap
     commit_author:
