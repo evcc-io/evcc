@@ -145,22 +145,18 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 		switch {
 		case site.tariffs.Planner != nil:
 			// prio 0: manually set planner tariff
-			site.log.DEBUG.Printf("planner tariff")
 			return site.tariffs.Planner
 
 		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceDynamic:
 			// prio 1: dynamic grid tariff
-			site.log.DEBUG.Printf("dynamic grid tariff")
 			return site.tariffs.Grid
 
 		case site.tariffs.Co2 != nil:
 			// prio 2: co2 tariff
-			site.log.DEBUG.Printf("co2 tariff")
 			return site.tariffs.Co2
 
 		default:
 			// prio 3: static grid tariff
-			site.log.DEBUG.Printf("static grid tariff")
 			return site.tariffs.Grid
 		}
 
