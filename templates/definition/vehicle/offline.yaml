@@ -11,15 +11,6 @@ params:
   - name: capacity
   - name: phases
     advanced: true
-  - name: mode
-    advanced: true
-  - name: minCurrent
-    advanced: true
-  - name: maxCurrent
-    advanced: true
-  - name: identifiers
-    advanced: true
-    type: stringlist
   - preset: vehicle-identify
 render: |
   type: custom
@@ -37,21 +28,4 @@ render: |
   soc:
     source: const
     value: 0
-  onIdentify:
-  {{- if .mode }}
-    mode: {{ .mode }}
-  {{- end }}
-    minSoc: 0 # fixed - no soc available
-    targetSoc: 100 # fixed - no soc available
-  {{- if .minCurrent }}
-    minCurrent: {{ .minCurrent }}
-  {{- end }}
-  {{- if .maxCurrent }}
-    maxCurrent: {{ .maxCurrent }}
-  {{- end }}
-  {{- if (len .identifiers) }}
-  identifiers:
-  {{-   range .identifiers }}
-  - {{ . }}
-  {{-   end }}
-  {{- end }}
+  {{ include "vehicle-identify" . }}
