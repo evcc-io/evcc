@@ -116,7 +116,7 @@ secondaryActions = "Vis dar nepavyksta išspręsti problemos? Čia rasite drasti
 [help.restart]
 cancel = "Atšaukti"
 confirm = "Taip, restartuoti!"
-description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums reikia vis restartuoti, pasvarstykite - gal derėtų pranešti apie problemą."
+description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums vis reikia restartuoti, pasvarstykite, gal derėtų pranešti apie problemą."
 disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
 modalTitle = "Ar tikrai norite restartuoti?"
 
