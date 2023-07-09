@@ -298,8 +298,8 @@ price = "Σ Ціна"
 reallyDelete = "Ви дійсно хочете видалити цей сеанс?"
 solar = "Сонячна"
 title = "Сеанси зарядки"
-vehicle = "Транспортний засіб"
 total = "Всього"
+vehicle = "Транспортний засіб"
 
 [sessions.csv]
 chargedenergy = "Енергія (кВт/год)"
