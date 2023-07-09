@@ -29,7 +29,6 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-vue": "^9.3.0",
     "happy-dom": "^10.0.3",
@@ -56,5 +55,8 @@
     "node": ">=18.0.0"
   },
   "license": "MIT",
-  "repository": "github:evcc-io/evcc"
+  "repository": "github:evcc-io/evcc",
+  "devDependencies": {
+    "eslint-plugin-prettier": "^5.0.0-alpha.1"
+  }
 }
