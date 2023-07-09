@@ -14,9 +14,11 @@ func TestPrioritzer(t *testing.T) {
 	p := New()
 
 	lo := loadpoint.NewMockAPI(ctrl)
+	lo.EXPECT().Title().AnyTimes()
 	lo.EXPECT().GetPriority().Return(0).AnyTimes()
 
 	hi := loadpoint.NewMockAPI(ctrl)
+	hi.EXPECT().Title().AnyTimes()
 	hi.EXPECT().GetPriority().Return(1).AnyTimes()
 
 	// no additional power available
