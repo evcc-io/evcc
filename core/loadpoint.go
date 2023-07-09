@@ -557,6 +557,9 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.TargetSoc != nil {
 		lp.SetTargetSoc(*actionCfg.TargetSoc)
 	}
+	if actionCfg.Priority != nil {
+		lp.SetPriority(*actionCfg.Priority)
+	}
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
@@ -603,7 +606,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	lp.publish("mode", lp.GetMode())
-	lp.publish("prio", lp.GetPriority())
+	lp.publish("priority", lp.GetPriority())
 	lp.publish(targetSoc, lp.GetTargetSoc())
 	lp.publish(minSoc, lp.GetMinSoc())
 
