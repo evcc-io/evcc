@@ -418,9 +418,9 @@ func (site *Site) updateMeters() error {
 
 			var energy float64
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-				val, err := m.TotalEnergy()
+				energy, err := m.TotalEnergy()
 				if err == nil {
-					site.pvEnergy += val
+					site.pvEnergy += energy
 				}
 			}
 
@@ -463,9 +463,9 @@ func (site *Site) updateMeters() error {
 
 			var energy float64
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-				val, err := m.TotalEnergy()
+				energy, err := m.TotalEnergy()
 				if err == nil {
-					site.batteryEnergy += val
+					site.batteryEnergy += energy
 				}
 			}
 
