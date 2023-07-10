@@ -4,14 +4,17 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/util"
 )
 
 type Prioritizer struct {
+	log    *util.Logger
 	demand map[loadpoint.API]float64
 }
 
-func New() *Prioritizer {
+func New(log *util.Logger) *Prioritizer {
 	return &Prioritizer{
+		log:    log,
 		demand: make(map[loadpoint.API]float64),
 	}
 }
@@ -38,7 +41,7 @@ func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
 	}
 
 	if reduceBy > 0 {
-		fmt.Printf("> lp %s at prio %d gets additional %stotal %.0fW\n", lp.Title(), lp.GetPriority(), msg, reduceBy)
+		p.log.DEBUG.Printf("lp %s at prio %d gets additional %stotal %.0fW\n", lp.Title(), lp.GetPriority(), msg, reduceBy)
 	}
 
 	return reduceBy

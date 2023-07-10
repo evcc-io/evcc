@@ -113,7 +113,7 @@ func NewSiteFromConfig(
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 	site.coordinator = coordinator.New(log, vehicles)
-	site.prioritizer = prioritizer.New()
+	site.prioritizer = prioritizer.New(log)
 	site.savings = NewSavings(tariffs)
 
 	site.restoreSettings()

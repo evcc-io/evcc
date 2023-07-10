@@ -11,7 +11,7 @@ import (
 func TestPrioritzer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	p := New()
+	p := New(nil)
 
 	lo := loadpoint.NewMockAPI(ctrl)
 	lo.EXPECT().Title().AnyTimes()
