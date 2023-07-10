@@ -111,12 +111,12 @@ modalTitle = "¿Necesitas ayuda?"
 primaryActions = "Si algo no funciona como debería, puedes obtener ayuda aqui."
 restartButton = "Reiniciar"
 restartDescription = "¿Has probado de apagar y volver a encender"
-secondaryActions = "¿Sigues sin poder resolver tu problema? Aquí tienes otras opciones más contundentes"
+secondaryActions = "¿Sigues sin poder resolver tu problema? Aquí tienes otras opciones más contundentes."
 
 [help.restart]
 cancel = "Cancelar"
 confirm = "¡Sí, reinicia!"
-description = "Bajo circunstancias normales no debería ser necesario reiniciar. Por favor, considera la posibilidad de reportar un error si necesitas reiniciar evcc regularmente."
+description = "En circunstancias normales no debería ser necesario reiniciar. Por favor, considera la posibilidad de presentar un error si necesita reiniciar evcc de forma regular."
 disclaimer = "Nota: evcc terminará y dependerá del sistema operativo para reiniciar el servicio"
 modalTitle = "¿Seguro que quieres volver a empezar?"
 
