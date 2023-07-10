@@ -1,6 +1,6 @@
 product:
   brand: Seat
-  description: Andere
+  description: CupraConnect Gen3 (Ateca, Leon, Formentor)
 render:
   - default: |
       type: template

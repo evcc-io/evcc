@@ -1,6 +1,6 @@
 product:
   brand: Seat
-  description: Cupra Born, My Cupra
+  description: CupraConnect Gen4 (Born)
 render:
   - default: |
       type: template
