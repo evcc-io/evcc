@@ -33,12 +33,14 @@ type Updater interface {
 
 // meterMeasurement is used as slice element for publishing structured data
 type meterMeasurement struct {
-	Power float64 `json:"power"`
+	Power  float64 `json:"power"`
+	Energy float64 `json:"energy"`
 }
 
 // batteryMeasurement is used as slice element for publishing structured data
 type batteryMeasurement struct {
 	Power    float64 `json:"power"`
+	Energy   float64 `json:"energy"`
 	Soc      float64 `json:"soc"`
 	Capacity float64 `json:"capacity"`
 }
@@ -77,10 +79,12 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower    float64 // Grid power
-	pvPower      float64 // PV power
-	batteryPower float64 // Battery charge power
-	batterySoc   float64 // Battery soc
+	gridPower     float64 // Grid power
+	pvPower       float64 // PV power
+	pvEnergy      float64 // PV total energy
+	batteryPower  float64 // Battery charge power
+	batteryEnergy float64 // Battery total discharge energy
+	batterySoc    float64 // Battery soc
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -401,8 +405,6 @@ func (site *Site) updateMeters() error {
 			var power float64
 			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
 
-			mm[i] = meterMeasurement{Power: power}
-
 			if err == nil {
 				// ignore negative values which represent self-consumption
 				site.pvPower += math.Max(0, power)
@@ -413,10 +415,25 @@ func (site *Site) updateMeters() error {
 				err = fmt.Errorf("pv %d power: %v", i+1, err)
 				site.log.ERROR.Println(err)
 			}
+
+			var energy float64
+			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
+				val, err := m.TotalEnergy()
+				if err == nil {
+					site.pvEnergy += val
+				}
+			}
+
+			mm[i] = meterMeasurement{
+				Power:  power,
+				Energy: energy,
+			}
 		}
 
 		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 		site.publish("pvPower", site.pvPower)
+
+		site.publish("pvEnergy", site.pvEnergy)
 
 		site.publish("pv", mm)
 	}
@@ -424,6 +441,7 @@ func (site *Site) updateMeters() error {
 	if len(site.batteryMeters) > 0 {
 		var totalCapacity float64
 		site.batteryPower = 0
+		site.batteryEnergy = 0
 		site.batterySoc = 0
 
 		mm := make([]batteryMeasurement, len(site.batteryMeters))
@@ -441,6 +459,14 @@ func (site *Site) updateMeters() error {
 				}
 			} else {
 				site.log.ERROR.Printf("battery %d power: %v", i+1, err)
+			}
+
+			var energy float64
+			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
+				val, err := m.TotalEnergy()
+				if err == nil {
+					site.batteryEnergy += val
+				}
 			}
 
 			var capacity float64
@@ -465,6 +491,7 @@ func (site *Site) updateMeters() error {
 
 			mm[i] = batteryMeasurement{
 				Power:    power,
+				Energy:   energy,
 				Soc:      soc,
 				Capacity: capacity,
 			}
@@ -483,6 +510,8 @@ func (site *Site) updateMeters() error {
 
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 		site.publish("batteryPower", site.batteryPower)
+
+		site.publish("batteryEnergy", site.batteryEnergy)
 
 		site.publish("battery", mm)
 	}
