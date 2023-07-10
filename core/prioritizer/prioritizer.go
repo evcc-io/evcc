@@ -40,7 +40,7 @@ func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
 		}
 	}
 
-	if reduceBy > 0 {
+	if p.log != nil && reduceBy > 0 {
 		p.log.DEBUG.Printf("lp %s at prio %d gets additional %stotal %.0fW\n", lp.Title(), lp.GetPriority(), msg, reduceBy)
 	}
 
