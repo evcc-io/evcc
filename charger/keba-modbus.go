@@ -168,10 +168,10 @@ func (wb *Keba) Status() (api.ChargeStatus, error) {
 	}
 
 	switch status := binary.BigEndian.Uint32(b); status {
-	case 0, 3:
+	case 0, 1, 3:
 		return api.StatusA, nil
 
-	case 1, 5:
+	case 5:
 		return api.StatusB, nil
 
 	case 7:
