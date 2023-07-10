@@ -205,6 +205,20 @@ func (mr *MockAPIMockRecorder) GetPlan(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), arg0, arg1)
 }
 
+// GetPriority mocks base method.
+func (m *MockAPI) GetPriority() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPriority")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetPriority indicates an expected call of GetPriority.
+func (mr *MockAPIMockRecorder) GetPriority() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriority", reflect.TypeOf((*MockAPI)(nil).GetPriority))
+}
+
 // GetRemainingDuration mocks base method.
 func (m *MockAPI) GetRemainingDuration() time.Duration {
 	m.ctrl.T.Helper()
@@ -317,20 +331,6 @@ func (mr *MockAPIMockRecorder) HasChargeMeter() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasChargeMeter", reflect.TypeOf((*MockAPI)(nil).HasChargeMeter))
 }
 
-// Priority mocks base method.
-func (m *MockAPI) Priority() int {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Priority")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// Priority indicates an expected call of Priority.
-func (mr *MockAPIMockRecorder) Priority() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Priority", reflect.TypeOf((*MockAPI)(nil).Priority))
-}
-
 // RemoteControl mocks base method.
 func (m *MockAPI) RemoteControl(arg0 string, arg1 RemoteDemand) {
 	m.ctrl.T.Helper()
@@ -427,6 +427,18 @@ func (m *MockAPI) SetPhases(arg0 int) error {
 func (mr *MockAPIMockRecorder) SetPhases(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhases", reflect.TypeOf((*MockAPI)(nil).SetPhases), arg0)
+}
+
+// SetPriority mocks base method.
+func (m *MockAPI) SetPriority(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPriority", arg0)
+}
+
+// SetPriority indicates an expected call of SetPriority.
+func (mr *MockAPIMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockAPI)(nil).SetPriority), arg0)
 }
 
 // SetTargetEnergy mocks base method.
