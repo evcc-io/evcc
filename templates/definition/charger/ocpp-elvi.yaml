@@ -9,11 +9,11 @@ params:
     type: bool
     default: true
     description:
-      de: Wallbox hat einen integrierten Zähler
-      en: Charger has integrated metering device
+      de: Hat die Wallbox einen integrierten Zähler verbaut?
+      en: The charger has an integrated metering device installed?
     help:
-      de: Aktivieren wenn die Wallbox einen integrierten Zähler verbaut hat
-      en: Activate if the charger has an integrated metering device installed
+      de: Deaktiveren wenn die Wallbox keinen integrierten Zähler verbaut hat
+      en: Deactivate if the charger has no integrated metering device installed
   - name: meterinterval
     advanced: true
     type: duration
