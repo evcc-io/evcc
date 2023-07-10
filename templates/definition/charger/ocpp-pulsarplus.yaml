@@ -3,6 +3,18 @@ products:
   - brand: wallbox
     description:
       generic: Pulsar Plus/ Commander 2/ Copper SB
+requirements:
+  description:
+    de: |
+      OCPP-Konfiguration der Wallbox:
+      * OCPP-Server-URL: ws://<evcc-IP-Adresse>:8887/ (Verbindung über das lokale Netzwerk)
+      * Identität: beliebiger Wert, der als *stationid* verwendet wird
+      * Passwort: leer lassen
+    en: |
+      Charger OCPP setup:
+      * OCPP-Server-URL: ws://<evcc-IP-address>:8887/ (local network connection)
+      * Identity: Custom value which is reused in configuration as *stationid*
+      * Password: leave empty
 params:
   - preset: ocpp
 render: |
