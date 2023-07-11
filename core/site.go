@@ -399,6 +399,8 @@ func (site *Site) updateMeters() error {
 
 	if len(site.pvMeters) > 0 {
 		site.pvPower = 0
+		site.pvEnergy = 0
+
 		mm := make([]meterMeasurement, len(site.pvMeters))
 
 		for i, meter := range site.pvMeters {
