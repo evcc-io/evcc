@@ -28,6 +28,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -202,7 +203,18 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 
 // connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
-	return func() (signalr.Connection, error) {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Minute
+
+	return func() (conn signalr.Connection, err error) {
+		defer func() {
+			if err != nil {
+				time.Sleep(bo.NextBackOff())
+			} else {
+				bo.Reset()
+			}
+		}()
+
 		tok, err := ts.Token()
 		if err != nil {
 			return nil, err
