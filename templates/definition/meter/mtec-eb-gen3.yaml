@@ -1,0 +1,47 @@
+template: mtec-eb-gen3
+products:
+  - brand: M-TEC
+    description:
+      generic: Energy Butler GEN3
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 11000 # Zähler (NVP) Leistung
+      type: holding
+      decode: int32
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 11028 # PV Leistung
+      type: holding
+      decode: uint32
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30258 # Batterie Leistung
+      type: holding
+      decode: int32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 33000 # State of Charge (SOC)
+      type: holding
+      decode: uint16
+      scale: 0.01
+  {{- end }}
