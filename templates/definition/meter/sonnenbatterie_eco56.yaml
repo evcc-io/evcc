@@ -1,0 +1,54 @@
+template: sonnenbatterie-eco56
+products:
+  - brand: Sonnen
+    description:
+      generic: comfort, eco 5, eco 6, oem 6.5
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: port
+    default: 7979
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
+    jq: .M39 - .M38 # current purchase - current feed-in at the interconnection point
+  energy:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
+    jq: .M41 # cumulated purchase since installation
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
+    jq: .M03 # current pv power
+  energy:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
+    jq: .M37 # cumulated pv production since installation of Sonnenbatterie
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
+    # M34 current discharging power, S65 max inverter power
+    # M35 current charging power, S65 max inverter power
+    jq: (if .M34 <= .S65 then .M34 else 0 end) - (if .M35 <= .S65 then .M35 else 0 end)
+  energy:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
+    jq: .M31 # total stored energy over lifetime
+  soc:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
+    jq: .M30 # SOC relative to usable capacity (.M05 # display SOC)
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}
