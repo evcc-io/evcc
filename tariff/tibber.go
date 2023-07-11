@@ -15,6 +15,7 @@ import (
 )
 
 type Tibber struct {
+	*embed
 	mux     sync.Mutex
 	log     *util.Logger
 	homeID  string
@@ -31,6 +32,7 @@ func init() {
 
 func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
+		embed  `mapstructure:",squash"`
 		Token  string
 		HomeID string
 		Unit   string
@@ -47,6 +49,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)
 
 	t := &Tibber{
+		embed:  &cc.embed,
 		log:    log,
 		homeID: cc.HomeID,
 		client: tibber.NewClient(log, cc.Token),
@@ -116,7 +119,7 @@ func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 		ar := api.Rate{
 			Start: r.StartsAt.Local(),
 			End:   r.StartsAt.Add(time.Hour).Local(),
-			Price: r.Total,
+			Price: t.totalPrice(r.Total),
 		}
 		data = append(data, ar)
 	}
