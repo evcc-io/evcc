@@ -32,9 +32,8 @@ func init() {
 
 func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		embed    `mapstructure:",squash"`
-		Currency string // TODO deprecated
-		Region   string
+		embed  `mapstructure:",squash"`
+		Region string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
