@@ -25,9 +25,8 @@ func init() {
 
 func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Currency string // TODO deprecated
-		Price    float64
-		Zones    []struct {
+		Price float64
+		Zones []struct {
 			Price       float64
 			Days, Hours string
 		}
