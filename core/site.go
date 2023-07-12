@@ -552,9 +552,10 @@ func (site *Site) updateMeters() error {
 
 	// energy (import)
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); err == nil && ok {
-		val, err := energyMeter.TotalEnergy()
+		var e float64
+		e, err = energyMeter.TotalEnergy()
 		if err == nil {
-			site.publish("gridEnergy", val)
+			site.publish("gridEnergy", e)
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)
 		}
