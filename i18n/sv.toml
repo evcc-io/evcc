@@ -99,7 +99,7 @@ modalTitle = "Är du säker på att du vill starta om?"
 vehicles = "Parkering"
 
 [main.chargingPlan]
-activeLabel = "{tid}"
+activeLabel = "{time}"
 arrivalTab = "Ankomst"
 departureTab = "Avfärd"
 modalTitle = "Laddplan"
