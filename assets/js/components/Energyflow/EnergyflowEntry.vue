@@ -5,7 +5,7 @@
 			<VehicleIcon v-else-if="isVehicle" :names="vehicleIcons" />
 			<component :is="`shopicon-regular-${icon}`" v-else></component>
 		</span>
-		<span class="text-nowrap flex-grow-1 ms-3">
+		<span class="text-nowrap flex-grow-1 ms-3 text-truncate">
 			{{ name }}
 		</span>
 		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
