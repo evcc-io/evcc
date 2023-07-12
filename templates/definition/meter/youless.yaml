@@ -19,4 +19,4 @@ render: |
     source: http
     uri: http://{{ .host }}/e
     method: GET
-    jq: .[0]|.net
+    jq: .[0]|.p1+.p2
