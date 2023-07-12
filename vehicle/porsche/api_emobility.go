@@ -27,7 +27,7 @@ func NewEmobilityAPI(log *util.Logger, identity oauth2.TokenSource) *EmobilityAP
 			Base:   v.Client.Transport,
 		},
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"apikey": EmobilityOAuth2Config.ClientID,
+			"apikey": ClientID,
 		}),
 	}
 
