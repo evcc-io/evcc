@@ -396,7 +396,7 @@ func (site *Site) updateMeters() error {
 	}
 
 	if len(site.pvMeters) > 0 {
-		var energySum float64
+		var totalEnergy float64
 
 		site.pvPower = 0
 
@@ -421,7 +421,7 @@ func (site *Site) updateMeters() error {
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 				energy, err := m.TotalEnergy()
 				if err == nil {
-					energySum += energy
+					totalEnergy += energy
 				} else {
 					site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
 				}
@@ -436,14 +436,14 @@ func (site *Site) updateMeters() error {
 		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 		site.publish("pvPower", site.pvPower)
 
-		site.publish("pvEnergy", energySum)
+		site.publish("pvEnergy", totalEnergy)
 
 		site.publish("pv", mm)
 	}
 
 	if len(site.batteryMeters) > 0 {
 		var totalCapacity float64
-		var energySum float64
+		var totalEnergy float64
 
 		site.batteryPower = 0
 		site.batterySoc = 0
@@ -469,7 +469,7 @@ func (site *Site) updateMeters() error {
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 				energy, err := m.TotalEnergy()
 				if err == nil {
-					energySum += energy
+					totalEnergy += energy
 				} else {
 					site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
 				}
@@ -517,7 +517,7 @@ func (site *Site) updateMeters() error {
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 		site.publish("batteryPower", site.batteryPower)
 
-		site.publish("batteryEnergy", energySum)
+		site.publish("batteryEnergy", totalEnergy)
 
 		site.publish("battery", mm)
 	}
@@ -550,7 +550,7 @@ func (site *Site) updateMeters() error {
 		}
 	}
 
-	// energy
+	// energy (import)
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); err == nil && ok {
 		val, err := energyMeter.TotalEnergy()
 		if err == nil {
