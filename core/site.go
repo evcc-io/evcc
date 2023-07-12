@@ -79,12 +79,10 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower     float64 // Grid power
-	pvPower       float64 // PV power
-	pvEnergy      float64 // PV total energy
-	batteryPower  float64 // Battery charge power
-	batteryEnergy float64 // Battery total discharge energy
-	batterySoc    float64 // Battery soc
+	gridPower    float64 // Grid power
+	pvPower      float64 // PV power
+	batteryPower float64 // Battery charge power
+	batterySoc   float64 // Battery soc
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -398,8 +396,9 @@ func (site *Site) updateMeters() error {
 	}
 
 	if len(site.pvMeters) > 0 {
+		var energySum float64
+
 		site.pvPower = 0
-		site.pvEnergy = 0
 
 		mm := make([]meterMeasurement, len(site.pvMeters))
 
@@ -422,7 +421,7 @@ func (site *Site) updateMeters() error {
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 				energy, err := m.TotalEnergy()
 				if err == nil {
-					site.pvEnergy += energy
+					energySum += energy
 				} else {
 					site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
 				}
@@ -437,15 +436,16 @@ func (site *Site) updateMeters() error {
 		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 		site.publish("pvPower", site.pvPower)
 
-		site.publish("pvEnergy", site.pvEnergy)
+		site.publish("pvEnergy", energySum)
 
 		site.publish("pv", mm)
 	}
 
 	if len(site.batteryMeters) > 0 {
 		var totalCapacity float64
+		var energySum float64
+
 		site.batteryPower = 0
-		site.batteryEnergy = 0
 		site.batterySoc = 0
 
 		mm := make([]batteryMeasurement, len(site.batteryMeters))
@@ -469,7 +469,7 @@ func (site *Site) updateMeters() error {
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 				energy, err := m.TotalEnergy()
 				if err == nil {
-					site.batteryEnergy += energy
+					energySum += energy
 				} else {
 					site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
 				}
@@ -517,7 +517,7 @@ func (site *Site) updateMeters() error {
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 		site.publish("batteryPower", site.batteryPower)
 
-		site.publish("batteryEnergy", site.batteryEnergy)
+		site.publish("batteryEnergy", energySum)
 
 		site.publish("battery", mm)
 	}
