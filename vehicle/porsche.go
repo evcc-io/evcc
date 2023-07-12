@@ -65,13 +65,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vehicle is not paired with the My Porsche account")
 	}
 
-	// get eMobility capabilities
-	emobIdentity := porsche.NewIdentity(log)
-	if err := emobIdentity.Login(porsche.EmobilityOAuth2Config, cc.User, cc.Password); err != nil {
-		return nil, fmt.Errorf("emobility login failed: %w", err)
-	}
-
-	emobApi := porsche.NewEmobilityAPI(log, emobIdentity)
+	emobApi := porsche.NewEmobilityAPI(log, identity)
 	capabilities, err := emobApi.Capabilities(cc.VIN)
 	if err != nil {
 		return nil, err
