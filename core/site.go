@@ -423,6 +423,8 @@ func (site *Site) updateMeters() error {
 				energy, err := m.TotalEnergy()
 				if err == nil {
 					site.pvEnergy += energy
+				} else {
+					site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
 				}
 			}
 
@@ -468,6 +470,8 @@ func (site *Site) updateMeters() error {
 				energy, err := m.TotalEnergy()
 				if err == nil {
 					site.batteryEnergy += energy
+				} else {
+					site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
 				}
 			}
 
