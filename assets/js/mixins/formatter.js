@@ -1,3 +1,19 @@
+// list of currencies where energy price should be displayed in subunits (factor 100)
+const ENERGY_PRICE_IN_SUBUNIT = {
+  AUD: "c", // Australian cent
+  BGN: "st", // Bulgarian stotinka
+  BRL: "¢", // Brazilian centavo
+  CAD: "¢", // Canadian cent
+  CHF: "rp", // Swiss Rappen
+  CNY: "f", // Chinese fen
+  EUR: "ct", // Euro cent
+  GBP: "p", // GB pence
+  ILS: "ag", // Israeli agora
+  NZD: "c", // New Zealand cent
+  PLN: "gr", // Polish grosz
+  USD: "¢", // US cent
+};
+
 export default {
   data: function () {
     return {
@@ -201,7 +217,7 @@ export default {
       let value = amout;
       let minimumFractionDigits = 1;
       let maximumFractionDigits = 3;
-      if (["EUR", "USD"].includes(currency)) {
+      if (ENERGY_PRICE_IN_SUBUNIT[currency]) {
         value *= 100;
         minimumFractionDigits = 1;
         maximumFractionDigits = 1;
@@ -217,10 +233,7 @@ export default {
       return price;
     },
     pricePerKWhUnit: function (currency = "EUR", short = false) {
-      let unit = currency;
-      if (["EUR", "USD"].includes(currency)) {
-        unit = "ct";
-      }
+      const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || currency;
       return `${unit}${short ? "" : "/kWh"}`;
     },
     fmtTimeAgo: function (elapsed) {

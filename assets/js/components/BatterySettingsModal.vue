@@ -364,7 +364,6 @@ export default {
 		bufferStartOptionToSoc(option) {
 			const bufferSoc = this.selectedBufferSoc;
 			const bufferHeight = 100 - bufferSoc;
-			console.log("bufferStartOptionToSoc", { bufferSoc, bufferHeight, option });
 			switch (option) {
 				case "low":
 					return bufferSoc + bufferHeight * 0.2;
