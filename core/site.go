@@ -794,6 +794,10 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	site.Health = NewHealth(time.Minute + interval)
 
+	if max := 30 * time.Second; interval < max {
+		site.log.WARN.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
+	}
+
 	loadpointChan := make(chan Updater)
 	go site.loopLoadpoints(loadpointChan)
 
