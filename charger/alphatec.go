@@ -20,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -47,22 +48,31 @@ func init() {
 
 // NewAlphatecFromConfig creates a Alphatec charger from generic config
 func NewAlphatecFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
-		ID: 1,
+	cc := struct {
+		modbus.Settings `mapstructure:",squash"`
+		Timeout         time.Duration
+	}{
+		Settings: modbus.Settings{
+			ID: 1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewAlphatec(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	return NewAlphatec(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout)
 }
 
 // NewAlphatec creates Alphatec charger
-func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
+	}
+
+	if timeout > 0 {
+		conn.Timeout(timeout)
 	}
 
 	if !sponsor.IsAuthorized() {

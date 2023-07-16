@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -15,7 +14,6 @@ import (
 // https://github.com/TA2k/ioBroker.bmw
 
 const (
-	ApiURI     = "https://b2vapi.bmwgroup.com/webapi/v1"
 	CocoApiURI = "https://cocoapi.bmwgroup.com"
 )
 
@@ -41,30 +39,25 @@ func NewAPI(log *util.Logger, brand string, identity oauth2.TokenSource) *API {
 	return v
 }
 
-func (v *API) eadrax() (VehiclesStatusResponse, error) {
-	var res VehiclesStatusResponse
-	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=120&appDateTime=%d", CocoApiURI, time.Now().UnixMilli())
+// Vehicles implements returns the /user/vehicles api
+func (v *API) Vehicles() ([]string, error) {
+	var res []Vehicle
+	uri := fmt.Sprintf("%s/eadrax-vcs/v4/vehicles?apptimezone=120&appDateTime=%d", CocoApiURI, time.Now().UnixMilli())
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Content-Type": request.JSONContent,
 		"X-User-Agent": v.xUserAgent,
 	})
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	return res, err
-}
-
-// Vehicles implements returns the /user/vehicles api
-func (v *API) Vehicles() ([]string, error) {
-	resp, err := v.eadrax()
 	if err != nil {
 		return nil, err
 	}
 
+	if err := v.DoJSON(req, &res); err != nil {
+		return nil, err
+	}
+
 	var vehicles []string
-	for _, v := range resp {
+	for _, v := range res {
 		vehicles = append(vehicles, v.VIN)
 	}
 
@@ -73,16 +66,17 @@ func (v *API) Vehicles() ([]string, error) {
 
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status(vin string) (VehicleStatus, error) {
-	resp, err := v.eadrax()
-	if err == nil {
-		for _, res := range resp {
-			if res.VIN == vin {
-				return res, nil
-			}
-		}
+	var res VehicleStatus
+	uri := fmt.Sprintf("%s/eadrax-vcs/v4/vehicles/state?apptimezone=120&appDateTime=%d", CocoApiURI, time.Now().UnixMilli())
 
-		err = api.ErrNotAvailable
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Content-Type": request.JSONContent,
+		"X-User-Agent": v.xUserAgent,
+		"bmw-vin":      vin,
+	})
+	if err == nil {
+		err = v.DoJSON(req, &res)
 	}
 
-	return VehicleStatus{}, err
+	return res, err
 }

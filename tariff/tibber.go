@@ -15,10 +15,10 @@ import (
 )
 
 type Tibber struct {
+	*embed
 	mux     sync.Mutex
 	log     *util.Logger
 	homeID  string
-	unit    string
 	client  *tibber.Client
 	data    api.Rates
 	updated time.Time
@@ -32,6 +32,7 @@ func init() {
 
 func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
+		embed  `mapstructure:",squash"`
 		Token  string
 		HomeID string
 		Unit   string
@@ -48,24 +49,19 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)
 
 	t := &Tibber{
+		embed:  &cc.embed,
 		log:    log,
 		homeID: cc.HomeID,
-		unit:   cc.Unit,
 		client: tibber.NewClient(log, cc.Token),
 	}
 
-	if t.homeID == "" || t.unit == "" {
+	if t.homeID == "" {
 		home, err := t.client.DefaultHome(t.homeID)
 		if err != nil {
 			return nil, err
 		}
 
-		if t.homeID == "" {
-			t.homeID = home.ID
-		}
-		if t.unit == "" {
-			t.unit = home.CurrentSubscription.PriceInfo.Current.Currency
-		}
+		t.homeID = home.ID
 	}
 
 	done := make(chan error)
@@ -123,7 +119,7 @@ func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 		ar := api.Rate{
 			Start: r.StartsAt.Local(),
 			End:   r.StartsAt.Add(time.Hour).Local(),
-			Price: r.Total,
+			Price: t.totalPrice(r.Total),
 		}
 		data = append(data, ar)
 	}

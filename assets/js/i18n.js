@@ -7,9 +7,12 @@ import settings from "./settings";
 
 // https://github.com/joker-x/languages.js/blob/master/languages.json
 export const LOCALES = {
+  ar: ["Arabic", "العربية"],
+  bh: ["Bihari", "भोजपुरी"],
+  ca: ["Catalan", "Català"],
+  cs: ["Czech", "Česky"],
   da: ["Danish", "Dansk"],
   de: ["German", "Deutsch"],
-  ca: ["Catalan", "Català"],
   en: ["English", "English"],
   es: ["Spanish", "Español"],
   fi: ["Finnish", "Suomi"],

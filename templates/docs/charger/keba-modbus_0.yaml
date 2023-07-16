@@ -4,7 +4,7 @@ product:
 capabilities: ["1p3p", "mA", "rfid"]
 requirements: ["sponsorship"]
 description: |
-  Erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series)
+  Erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series). Zur Phasenumschaltung wird zusätzlich der Keba Phasenumschalter (KeContact S10) benötigt.
 render:
   - default: |
       type: template

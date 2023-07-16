@@ -175,14 +175,27 @@ tariffs:
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
 
+    # type: octopusenergy
+    # tariff: AGILE-FLEX-22-11-25 # Tariff code
+    # region: A # optional
+
     # type: elering # Nordpool
     # region: ee # or lt, lv, fi
+    # charges: # optional, additional charges per kWh
+    # tax: # optional, additional tax (0.1 for 10%)
+
+    # type: energinet # Energinet using the price in DKK
+    # region: dk1 # or dk2
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
     price: 0.08 # EUR/kWh
+
+    # type: octopusenergy
+    # tariff: AGILE-FLEX-22-11-25 # Tariff code
+    # region: A # optional
   co2:
     # co2 tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
     # type: grünstromindex # GrünStromIndex (Germany only)

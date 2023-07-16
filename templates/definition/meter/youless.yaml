@@ -1,0 +1,22 @@
+template: youless
+products:
+  - brand: Youless
+    description:
+      generic: Energy Monitor
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+    required: true
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/e
+    method: GET
+    jq: .[0]|.pwr
+  energy:
+    source: http
+    uri: http://{{ .host }}/e
+    method: GET
+    jq: .[0]|.p1+.p2

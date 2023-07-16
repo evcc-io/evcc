@@ -258,7 +258,7 @@ export default {
 		currentOptions: function (max, defaultCurrent = 16) {
 			const result = [];
 			const toValue = max ? 32 : this.maxCurrent;
-			const fromValue = max ? this.minCurrent : 6;
+			const fromValue = max ? this.minCurrent : 1;
 			for (let value = toValue; value >= fromValue; value--) {
 				let name = `${value} A`;
 				if (value === defaultCurrent) {

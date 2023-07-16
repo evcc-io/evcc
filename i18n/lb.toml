@@ -148,7 +148,7 @@ update = "Aktualiséieren"
 
 [main.targetChargePlan]
 chargeDuration = "Opluedzäit"
-co2Label = "CO₂ Emissioun Ø"
+co2Label = "CO₂ Emissioun ⌀"
 priceLabel = "Energiepräis"
 timeRange = "{day} {range} Auer"
 unknownPrice = "nach onbekannt"

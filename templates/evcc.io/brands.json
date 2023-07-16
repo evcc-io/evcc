@@ -97,6 +97,7 @@
   "Janitza",
   "Kostal",
   "LG",
+  "M-TEC",
   "my-PV",
   "myStrom",
   "OpenEMS",
@@ -126,6 +127,7 @@
   "VARTA",
   "Victron",
   "Volkszähler",
+  "Youless",
   "ZCS Azzurro"
  ],
  "PVBattery": [
@@ -147,6 +149,7 @@
   "IGEN Tech",
   "Kostal",
   "LG",
+  "M-TEC",
   "myStrom",
   "OpenEMS",
   "Powerfox",
@@ -164,6 +167,7 @@
   "Solarwatt",
   "Solax",
   "Sonnen",
+  "Steca",
   "Sungrow",
   "Sunsynk",
   "Tesla",

@@ -5,6 +5,11 @@ import (
 	"net/http"
 )
 
+// DontFollow is a redirect policy that does not follow redirects
+func DontFollow(req *http.Request, via []*http.Request) error {
+	return http.ErrUseLastResponse
+}
+
 type InterceptResult = func() (string, error)
 
 // InterceptRedirect captures a redirect url parameter

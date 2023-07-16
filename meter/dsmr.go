@@ -161,17 +161,16 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			conn, err = m.connect()
 			if err != nil {
 				handle("connect", err)
-				sleep := backoff.NextBackOff().Truncate(time.Second)
-				log.DEBUG.Printf("next attempt after: %v", sleep)
-				time.Sleep(sleep)
+				time.Sleep(backoff.NextBackOff().Truncate(time.Second))
 				continue
 			}
 
 			reader.Reset(conn)
 		}
 
-		backoff.Reset()
 		if b, err := reader.Peek(1); err == nil {
+			backoff.Reset()
+
 			if string(b) != "/" {
 				log.DEBUG.Printf("ignoring garbage character: %c\n", b)
 				_, _ = reader.ReadByte()
@@ -179,6 +178,7 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			}
 		} else {
 			handle("peek", err)
+			time.Sleep(backoff.NextBackOff().Truncate(time.Second))
 			continue
 		}
 
@@ -194,19 +194,19 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			continue
 		}
 
-		log.TRACE.Printf("read: %s\n", frame)
+		log.TRACE.Printf("read: %s", frame)
 
 		// Check CRC
 		mcrc := strings.ToUpper(strings.TrimSpace(string(bcrc)))
 		crc := fmt.Sprintf("%04X", crc16.Checksum(frame))
 		if mcrc != crc {
-			log.ERROR.Printf("crc mismatch: %q != %q\n", mcrc, crc)
+			log.ERROR.Printf("crc mismatch: %q != %q", mcrc, crc)
 			continue
 		}
 
 		dsmrFrame, err := dsmr.ParseFrame(string(frame))
 		if err != nil {
-			log.ERROR.Printf("could not parse frame: %v\n", err)
+			log.ERROR.Printf("could not parse frame: %v", err)
 			continue
 		}
 

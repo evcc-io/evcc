@@ -99,7 +99,7 @@ modalTitle = "Är du säker på att du vill starta om?"
 vehicles = "Parkering"
 
 [main.chargingPlan]
-activeLabel = "{tid}"
+activeLabel = "{time}"
 arrivalTab = "Ankomst"
 departureTab = "Avfärd"
 modalTitle = "Laddplan"
@@ -187,7 +187,7 @@ update = "Uppdatering"
 
 [main.targetChargePlan]
 chargeDuration = "Laddningstid"
-co2Label = "CO₂-utsläpp Ø"
+co2Label = "CO₂-utsläpp ⌀"
 priceLabel = "Energipris"
 timeRange = "{day} {range} h"
 unknownPrice = "fortfarande okänd"

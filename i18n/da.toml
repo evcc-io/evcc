@@ -178,7 +178,7 @@ update = "Opdatering"
 
 [main.targetChargePlan]
 chargeDuration = "Opladningstid"
-co2Label = "CO₂ udledning Ø"
+co2Label = "CO₂ udledning ⌀"
 priceLabel = "Energi pris"
 timeRange = "{day} {range} t"
 unknownPrice = "stadig ukendt"

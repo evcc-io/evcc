@@ -144,7 +144,6 @@ func (v *Identity) login() (*oauth.Token, error) {
 	}
 
 	tok, err := OAuth2Config.Exchange(ctx, code,
-		oauth2.SetAuthURLParam("grant_type", "authorization_code"),
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
 

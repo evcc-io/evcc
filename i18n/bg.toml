@@ -1,0 +1,44 @@
+[batterySettings]
+batteryLevel = "Батерия %"
+capacity = "{energy} от{total}"
+legendBottomName = "приоритизиране на дом"
+legendBottomSubline = "не се използва за зареждане"
+legendMiddleName = "приоритизиране на кола"
+legendMiddleSubline = "дом на заден план"
+legendTitle = "Как да се използва енергията от фотоволтаиците?"
+legendTopAutostart = "автоматично стартиране"
+legendTopName = "зареждане използвайки батерия"
+legendTopSubline = "без прекъсвания"
+modalTitle = "Настройки на батерия"
+note = "Бележка: Тези настройки важат само за режим на работа използвайки енергия от фотоволтаици. Зареждането ще бъде настроено спрямо тях"
+
+[batterySettings.bufferStart]
+full = "при почти заредена батерия"
+low = "при донякъде заредена батерия"
+medium = "при наполовина заредена батерия"
+never = "само при наличие на излишък"
+
+[footer]
+
+[footer.community]
+greenEnergySub1 = "заредено с помощтта на evcc"
+greenEnergySub2 = "от октомври 2022"
+greenShare = "дял на соларна енергия"
+greenShareSub1 = "мощност доставена от"
+greenShareSub2 = "енергия от слънцето и батерията"
+power = "Мощност на зареждане"
+powerSub1 = "{activeClients} от {totalClients} участници"
+powerSub2 = "зарежда..."
+tabTitle = "Общност"
+
+[footer.savings]
+footerLong = "{percent}% енергия от слънцето"
+footerShort = "{percent}% слънчева енергия"
+modalTitle = "Информация за зареждането"
+percentGrid = "{grid} кВч от мрежата"
+percentSelf = "{self} кВч от фотоволтаици"
+percentTitle = "Енергия от фотоволтаици"
+priceFeedIn = "{feedInPrice} feed-in"
+priceGrid = "{gridPrice} мрежа"
+priceTitle = "Цена"
+savingsComparedToGrid = "сравнено с мрежата"

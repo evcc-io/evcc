@@ -24,11 +24,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -51,16 +51,16 @@ type Easee struct {
 	done                  chan struct{}
 	dynamicChargerCurrent float64
 	current               float64
-	currentUpdated        time.Time
 	chargerEnabled        bool
 	smartCharging         bool
 	opMode                int
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid     string
-	lp       loadpoint.API
-	respChan chan easee.SignalRCommandResponse
+	rfid string
+	lp   loadpoint.API
+	cmdC chan easee.SignalRCommandResponse
+	obsC chan easee.Observation
 }
 
 func init() {
@@ -98,12 +98,13 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	}
 
 	c := &Easee{
-		Helper:   request.NewHelper(log),
-		charger:  charger,
-		log:      log,
-		current:  6, // default current
-		done:     make(chan struct{}),
-		respChan: make(chan easee.SignalRCommandResponse),
+		Helper:  request.NewHelper(log),
+		charger: charger,
+		log:     log,
+		current: 6, // default current
+		done:    make(chan struct{}),
+		cmdC:    make(chan easee.SignalRCommandResponse),
+		obsC:    make(chan easee.Observation),
 	}
 
 	c.Client.Timeout = timeout
@@ -177,7 +178,20 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 		err = os.ErrDeadlineExceeded
 	}
 
+	if err == nil {
+		go c.refresh()
+	}
+
 	return c, err
+}
+
+// refresh ensures tokens are refreshed even when not charging for longer time
+func (c *Easee) refresh() {
+	for range time.Tick(5 * time.Minute) {
+		if _, err := c.Client.Transport.(*oauth2.Transport).Source.Token(); err != nil {
+			c.log.ERROR.Println("token refresh:", err)
+		}
+	}
 }
 
 func (c *Easee) chargerSite(charger string) (easee.Site, error) {
@@ -189,7 +203,18 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 
 // connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
-	return func() (signalr.Connection, error) {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Minute
+
+	return func() (conn signalr.Connection, err error) {
+		defer func() {
+			if err != nil {
+				time.Sleep(bo.NextBackOff())
+			} else {
+				bo.Reset()
+			}
+		}()
+
 		tok, err := ts.Token()
 		if err != nil {
 			return nil, err
@@ -237,33 +262,15 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		return
 	}
 
-	var (
-		value interface{}
-		err   error
-	)
-
-	switch res.DataType {
-	case easee.Boolean:
-		value = res.Value == "1"
-	case easee.Double:
-		value, err = strconv.ParseFloat(res.Value, 64)
-		if err != nil {
-			c.log.ERROR.Println(err)
-			return
-		}
-	case easee.Integer:
-		value, err = strconv.Atoi(res.Value)
-		if err != nil {
-			c.log.ERROR.Println(err)
-			return
-		}
-	case easee.String:
-		value = res.Value
+	value, err := res.TypedValue()
+	if err != nil {
+		c.log.ERROR.Println(err)
+		return
 	}
 
 	// https://github.com/evcc-io/evcc/issues/8009
 	// logging might be slow or block, execute outside lock
-	c.log.TRACE.Printf("ProductUpdate %s: %s %v", res.Mid, res.ID, value)
+	c.log.TRACE.Printf("ProductUpdate %s: (%v) %s %v", res.Mid, res.Timestamp, res.ID, value)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -298,14 +305,13 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.phaseMode = value.(int)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
-
-		// ensure that charger current matches evcc's expectation
-		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current &&
-			time.Since(c.currentUpdated) > 10*time.Second {
-			c.log.DEBUG.Printf("current mismatch, expected %.1f, got %.1f", c.current, c.dynamicChargerCurrent)
-		}
 	case easee.CHARGER_OP_MODE:
 		c.opMode = value.(int)
+	}
+
+	select {
+	case c.obsC <- res:
+	default:
 	}
 }
 
@@ -325,7 +331,7 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 
 	select {
-	case c.respChan <- res:
+	case c.cmdC <- res:
 	default:
 	}
 }
@@ -392,14 +398,25 @@ func (c *Easee) Enable(enable bool) error {
 		}
 	}
 
+	// do not send pause/resume if disconnected or unauthenticated
+	if c.opMode == easee.ModeDisconnected || c.opMode == easee.ModeAwaitingAuthentication {
+		return nil
+	}
+
 	// resume/stop charger
 	action := easee.ChargePause
+	targetCurrent := 0.0
 	if enable {
 		action = easee.ChargeResume
+		targetCurrent = 32
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	if err := c.postJSONAndWait(uri, nil); err != nil {
+		return err
+	}
+
+	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
 		return err
 	}
 
@@ -419,18 +436,18 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 { //sync call
+	if resp.StatusCode == 200 { // sync call
 		return nil
 	}
 
-	if resp.StatusCode == 202 { //async call, wait for response
+	if resp.StatusCode == 202 { // async call, wait for response
 		var cmd easee.RestCommandResponse
 
-		if strings.Contains(uri, "/commands/") { //command endpoint
+		if strings.Contains(uri, "/commands/") { // command endpoint
 			if err := json.NewDecoder(resp.Body).Decode(&cmd); err != nil {
 				return err
 			}
-		} else { //settings endpoint
+		} else { // settings endpoint
 			var cmdArr []easee.RestCommandResponse
 			if err := json.NewDecoder(resp.Body).Decode(&cmdArr); err != nil {
 				return err
@@ -441,9 +458,10 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 			}
 		}
 
-		if cmd.Ticks == 0 { //Easee API thinks this was a noop
+		if cmd.Ticks == 0 { // api thinks this was a noop
 			return nil
 		}
+
 		return c.waitForTickResponse(cmd.Ticks)
 	}
 
@@ -454,7 +472,7 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 func (c *Easee) waitForTickResponse(expectedTick int64) error {
 	for {
 		select {
-		case cmdResp := <-c.respChan:
+		case cmdResp := <-c.cmdC:
 			if cmdResp.Ticks == expectedTick {
 				if !cmdResp.WasAccepted {
 					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
@@ -462,6 +480,36 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 				return nil
 			}
 		case <-time.After(10 * time.Second):
+			return api.ErrTimeout
+		}
+	}
+}
+
+// wait for up to 3s for current become targetCurrent
+func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
+	// check any updates received meanwhile
+	c.mux.Lock()
+	if c.dynamicChargerCurrent == targetCurrent {
+		c.mux.Unlock()
+		return nil
+	}
+	c.mux.Unlock()
+
+	timer := time.NewTimer(10 * time.Second)
+	for {
+		select {
+		case obs := <-c.obsC:
+			if obs.ID != easee.DYNAMIC_CHARGER_CURRENT {
+				continue
+			}
+			value, err := obs.TypedValue()
+			if err != nil {
+				continue
+			}
+			if value.(float64) == targetCurrent {
+				return nil
+			}
+		case <-timer.C: // time is up, bail
 			return api.ErrTimeout
 		}
 	}
@@ -479,10 +527,13 @@ func (c *Easee) MaxCurrent(current int64) error {
 		return err
 	}
 
+	if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
+		return err
+	}
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.current = cur
-	c.currentUpdated = time.Now()
 
 	return nil
 }
@@ -536,7 +587,12 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			err = c.postJSONAndWait(uri, data)
+			if err = c.postJSONAndWait(uri, data); err != nil {
+				return err
+			}
+
+			// disable charger to activate changed settings (loadpoint will reenable it)
+			err = c.Enable(false)
 		}
 	}
 
@@ -613,8 +669,7 @@ func (c *Easee) updateSmartCharging() {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		err := c.postJSONAndWait(uri, data)
-		if err != nil {
+		if err := c.postJSONAndWait(uri, data); err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 			return
 		}

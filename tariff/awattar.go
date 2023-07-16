@@ -18,7 +18,6 @@ type Awattar struct {
 	mux     sync.Mutex
 	log     *util.Logger
 	uri     string
-	unit    string
 	data    api.Rates
 	updated time.Time
 }
@@ -31,9 +30,8 @@ func init() {
 
 func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		embed    `mapstructure:",squash"`
-		Currency string // TODO deprecated
-		Region   string
+		embed  `mapstructure:",squash"`
+		Region string
 	}{
 		Region: "DE",
 	}
@@ -42,14 +40,9 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
-	if cc.Currency == "" {
-		cc.Currency = "EUR"
-	}
-
 	t := &Awattar{
 		embed: &cc.embed,
 		log:   util.NewLogger("awattar"),
-		unit:  cc.Currency,
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
 

@@ -92,7 +92,7 @@ func Persist(log *util.Logger) {
 // upload executes the actual upload.
 // Lock must be held when calling upload.
 func upload(log *util.Logger, chargePower, greenPower float64) error {
-	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", accGreenEnergy*1e3, accChargeEnergy*1e3, chargePower)
+	log.TRACE.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", accGreenEnergy*1e3, accChargeEnergy*1e3, chargePower)
 
 	data := InstanceChargeProgress{
 		InstanceID: instanceID,

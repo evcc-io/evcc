@@ -13,8 +13,8 @@ capabilities: ["1p3p", "mA", "rfid"]
 requirements:
   evcc: ["sponsorship"]
   description:
-    de: Erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series)
-    en: Requires firmware version 3.10.42 (C-series) bzw. 1.11 (X-series)
+    de: Erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series). Zur Phasenumschaltung wird zusätzlich der Keba Phasenumschalter (KeContact S10) benötigt.
+    en: Requires firmware version 3.10.42 (C-series) bzw. 1.11 (X-series). For phase switching the Keba phase switch (KeContact S10) is also required.
 params:
   - name: modbus
     choice: ["tcpip"]

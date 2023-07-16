@@ -19,7 +19,6 @@ type Elering struct {
 	*embed
 	mux     sync.Mutex
 	log     *util.Logger
-	unit    string
 	region  string
 	data    api.Rates
 	updated time.Time
@@ -33,9 +32,8 @@ func init() {
 
 func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		embed    `mapstructure:",squash"`
-		Currency string // TODO deprecated
-		Region   string
+		embed  `mapstructure:",squash"`
+		Region string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -49,7 +47,6 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Elering{
 		embed:  &cc.embed,
 		log:    util.NewLogger("Elering"),
-		unit:   cc.Currency,
 		region: strings.ToLower(cc.Region),
 	}
 

@@ -407,3 +407,7 @@ input::-webkit-datetime-edit {
 	--bs-tooltip-bg: var(--bs-white);
 	--bs-tooltip-color: var(--bs-gray-deep);
 }
+
+.table {
+	--bs-table-bg: transparent;
+}

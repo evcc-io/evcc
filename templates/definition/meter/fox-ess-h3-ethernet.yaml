@@ -39,7 +39,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 31012 # Grid Consumption Total
+      address: 32012 # Grid Consumption Total
       type: holding
       decode: uint32
     scale: 0.1

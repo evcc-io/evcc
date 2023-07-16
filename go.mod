@@ -10,7 +10,7 @@ require (
 	github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/avast/retry-go/v3 v3.1.1
+	github.com/avast/retry-go/v4 v4.3.4
 	github.com/aws/aws-sdk-go v1.44.283
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
@@ -67,7 +67,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mlnoga/rct v0.1.2-0.20230227143934-71af1fb7dfa1
-	github.com/muka/go-bluetooth v0.0.0-20220219050759-674a63b8741a
+	github.com/muka/go-bluetooth v0.0.0-20221213043340-85dc80edc4e1
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20220510032225-4f9f17eaec4c
@@ -89,7 +89,7 @@ require (
 	github.com/stretchr/testify v1.8.3
 	github.com/traefik/yaegi v0.15.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20230608121516-d3c3174def13
+	github.com/volkszaehler/mbmd v0.0.0-20230619194555-eff79d92007e
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
@@ -209,3 +209,5 @@ require (
 )
 
 replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230525091927-777196024a18
+
+replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3

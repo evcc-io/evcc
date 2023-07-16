@@ -6,7 +6,6 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
@@ -122,10 +121,6 @@ func (c *Configure) RenderConfiguration() ([]byte, error) {
 	if err != nil {
 		panic(err)
 	}
-
-	// Assign random plant id. Don't use actual machine-id as file might
-	// be copied around to a different machine.
-	c.config.Plant = machine.RandomID()
 
 	out := new(bytes.Buffer)
 	err = tmpl.Execute(out, c.config)
