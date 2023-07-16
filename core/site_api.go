@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
@@ -163,4 +164,25 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 	default:
 		return nil
 	}
+}
+
+func (site *Site) GetPowerData(year int, month int, day int, offset int) []api.PowerDataItem {
+	result := site.db.GetPowerStatesForDay(uint16(year), uint16(month), uint16(day), uint16(offset))
+	data := []api.PowerDataItem{}
+	for i := 0; i < len(result); i++ {
+		var item api.PowerDataItem
+		item.TimePoint = fmt.Sprintf("%04d-%02d-%02dT%02d:%02d:00Z", result[i].Year, result[i].Month, result[i].Day, result[i].Hour, result[i].Minute)
+		item.FromPvs = fmt.Sprintf("%d", uint16(result[i].FromPvs))
+		item.FromStorage = fmt.Sprintf("%d", uint16(result[i].FromStorage))
+		item.FromGrid = fmt.Sprintf("%d", uint16(result[i].FromGrid))
+		item.ToGrid = fmt.Sprintf("%d", uint16(result[i].ToGrid))
+		item.ToHouse = fmt.Sprintf("%d", uint16(result[i].ToHouse))
+		item.ToStorage = fmt.Sprintf("%d", uint16(result[i].ToStorage))
+		item.ToHeating = fmt.Sprintf("%d", uint16(result[i].ToHeating))
+		item.ToCars = fmt.Sprintf("%d", uint16(result[i].ToCars))
+		item.BatterySoC = fmt.Sprintf("%d", uint16(result[i].BatterySoC))
+		data = append(data, item)
+	}
+	return data
+
 }

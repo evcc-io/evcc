@@ -43,4 +43,6 @@ type API interface {
 	GetTariff(string) api.Tariff
 	GetSmartCostLimit() float64
 	SetSmartCostLimit(float64) error
+
+	GetPowerData(year int, month int, day int, offset int) []api.PowerDataItem
 }

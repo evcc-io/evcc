@@ -19,7 +19,7 @@ func TestSession(t *testing.T) {
 	serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
 	assert.NoError(t, err)
 
-	db, err := coredb.New("foo")
+	db, err := coredb.NewSession("foo")
 	assert.NoError(t, err)
 
 	clock := clock.NewMock()

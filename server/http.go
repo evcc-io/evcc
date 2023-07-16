@@ -111,6 +111,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"session2":       {[]string{"DELETE", "OPTIONS"}, "/session/{id:[0-9]+}", deleteSessionHandler},
 		"telemetry":      {[]string{"GET"}, "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
 		"telemetry2":     {[]string{"POST", "OPTIONS"}, "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
+		"dataUTC":        {[]string{"GET"}, "/data/{year:[0-9]+}/{month:[0-9]+}/{day:[0-9]+}", powerDataHandler(site)},
+		"dataOffset":     {[]string{"GET"}, "/data/{year:[0-9]+}/{month:[0-9]+}/{day:[0-9]+}/{offset:[0-9]+}", powerDataHandler(site)},
 	}
 
 	for _, r := range routes {

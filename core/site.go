@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"encoding/json"
+
 	"github.com/avast/retry-go/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -77,12 +79,19 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower    float64 // Grid power
-	pvPower      float64 // PV power
-	batteryPower float64 // Battery charge power
-	batterySoc   float64 // Battery soc
+	gridPower      float64 // Grid power
+	pvPower        float64 // PV power
+	batteryPower   float64 // Battery charge power
+	batterySoc     float64 // Battery soc
+	homeConsuption float64 // Home consuption
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
+
+	// Database
+	db             db.Database
+	powerState     *db.PowerState
+	lastPowerState time.Time
+	powerDataItems []api.PowerDataItem
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -116,6 +125,13 @@ func NewSiteFromConfig(
 	site.prioritizer = prioritizer.New(log)
 	site.savings = NewSavings(tariffs)
 
+	if serverdb.Instance != nil {
+		var err error
+		if site.db, err = db.NewPowerState("PowerState"); err != nil {
+			return nil, err
+		}
+	}
+
 	site.restoreSettings()
 
 	// upload telemetry on shutdown
@@ -134,7 +150,7 @@ func NewSiteFromConfig(
 
 		if serverdb.Instance != nil {
 			var err error
-			if lp.db, err = db.New(lp.Title()); err != nil {
+			if lp.db, err = db.NewSession(lp.Title()); err != nil {
 				return nil, err
 			}
 
@@ -204,6 +220,9 @@ func NewSiteFromConfig(
 	if site.BufferSoc != 0 && site.BufferSoc <= site.PrioritySoc {
 		site.log.WARN.Println("bufferSoc must be larger than prioritySoc")
 	}
+
+	// lastPowerstate
+	site.lastPowerState = time.Now().UTC()
 
 	return site, nil
 }
@@ -670,6 +689,21 @@ func (s *Site) publishTariffs() {
 	}
 }
 
+func (s *Site) convertPowerData(dbData db.PowerState) api.PowerDataItem {
+	return api.PowerDataItem{
+		TimePoint:   fmt.Sprintf("%04d-%02d-%02dT%02d:%02d:00Z", dbData.Year, dbData.Month, dbData.Day, dbData.Hour, dbData.Minute),
+		FromPvs:     fmt.Sprintf("%d", uint16(dbData.FromPvs)),
+		FromStorage: fmt.Sprintf("%d", uint16(dbData.FromStorage)),
+		FromGrid:    fmt.Sprintf("%d", uint16(dbData.FromGrid)),
+		ToGrid:      fmt.Sprintf("%d", uint16(dbData.ToGrid)),
+		ToHouse:     fmt.Sprintf("%d", uint16(dbData.ToHouse)),
+		ToStorage:   fmt.Sprintf("%d", uint16(dbData.ToStorage)),
+		ToHeating:   fmt.Sprintf("%d", uint16(dbData.ToHeating)),
+		ToCars:      fmt.Sprintf("%d", uint16(dbData.ToCars)),
+		BatterySoC:  fmt.Sprintf("%d", uint16(dbData.BatterySoC)),
+	}
+}
+
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
@@ -712,6 +746,7 @@ func (site *Site) update(lp Updater) {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
 		homePower = math.Max(homePower, 0)
+		site.homeConsuption = homePower
 		site.publish("homePower", homePower)
 
 		site.Health.Update()
@@ -726,6 +761,29 @@ func (site *Site) update(lp Updater) {
 	deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
 	if telemetry.Enabled() && totalChargePower > standbyPower {
 		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
+	}
+
+	if time.Now().UTC().After(site.lastPowerState.Add(60 * time.Second)) {
+		if time.Now().UTC().Day() != site.lastPowerState.Day() {
+			site.powerDataItems = []api.PowerDataItem{}
+		}
+		site.lastPowerState = time.Now().UTC()
+		powerState := site.db.CreatePowerState(site.lastPowerState)
+		powerState.FromPvs = math.Max(0, site.pvPower)
+		powerState.FromStorage = math.Max(0, site.batteryPower)
+		powerState.FromGrid = math.Max(0, site.gridPower)
+		powerState.ToGrid = -math.Min(0, site.gridPower)
+		powerState.ToStorage = -math.Min(0, site.batteryPower)
+		powerState.ToHouse = site.homeConsuption
+		powerState.ToCars = totalChargePower
+		powerState.ToHeating = 0
+		powerState.BatterySoC = site.batterySoc
+
+		site.db.AddPowerState(powerState)
+		site.powerDataItems = append(site.powerDataItems, site.convertPowerData(*powerState))
+		var powerDataJson, _ = json.Marshal(site.powerDataItems)
+		site.publish("powerData", string(powerDataJson))
+
 	}
 }
 
@@ -749,6 +807,14 @@ func (site *Site) prepare() {
 	site.publish("savingsSince", site.savings.Since())
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
+
+	site.powerDataItems = []api.PowerDataItem{}
+	var t = time.Now().UTC()
+	//var _, o = time.Now().Zone()
+	site.powerDataItems = site.GetPowerData(int(t.Year()), int(t.Month()), int(t.Day()), 0)
+	//site.powerDataItems = site.GetPowerData(int(t.Year()), int(t.Month()), int(t.Day()), int(o/3600))
+	var powerDataJson, _ = json.Marshal(site.powerDataItems)
+	site.publish("powerData", string(powerDataJson))
 }
 
 // Prepare attaches communication channels to site and loadpoints

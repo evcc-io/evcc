@@ -169,6 +169,35 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 	}
 }
 
+// powerDataHandler returns collected power data (production / consumption)
+func powerDataHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		year, err := strconv.ParseInt(vars["year"], 10, 16)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		month, err := strconv.ParseInt(vars["month"], 10, 16)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		day, err := strconv.ParseInt(vars["day"], 10, 16)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		offset, err := strconv.ParseInt(vars["offset"], 10, 16)
+		if err != nil {
+			offset = 0
+		}
+		result := site.GetPowerData(int(year), int(month), int(day), int(offset))
+		jsonResult(w, result)
+	}
+}
+
 // healthHandler returns current charge mode
 func healthHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

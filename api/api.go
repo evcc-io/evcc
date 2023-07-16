@@ -237,3 +237,17 @@ type FeatureDescriber interface {
 type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
+
+type PowerDataItem struct {
+	//0 date, 1 FromPvs, 2 FromStorage, 3 FromGrid, 4 ToGrid, 5 ToStorage, 6 ToHouse, 7 ToHeating, 8 ToCars, 9 BatterySoC
+	TimePoint   string `json:"timePoint"`
+	FromPvs     string `json:"fromPvs"`
+	FromStorage string `json:"fromStorage"`
+	FromGrid    string `json:"fromGrid"`
+	ToGrid      string `json:"toGrid"`
+	ToStorage   string `json:"toStorage"`
+	ToHouse     string `json:"toHouse"`
+	ToHeating   string `json:"toHeating"`
+	ToCars      string `json:"toCars"`
+	BatterySoC  string `json:"batterySoC"`
+}

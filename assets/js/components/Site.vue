@@ -75,6 +75,9 @@ export default {
 		siteTitle: String,
 		vehicles: Array,
 
+		// power data
+		powerData: String,
+
 		auth: Object,
 
 		currency: String,

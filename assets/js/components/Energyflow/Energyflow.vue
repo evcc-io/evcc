@@ -20,7 +20,16 @@
 				:vehicleIcons="vehicleIcons"
 			/>
 		</div>
-		<div class="details" :style="{ height: detailsHeight }">
+<!-- -->
+		<div class="row">
+			<EnergyDayChart 
+				class="col-12" 
+				:style="{ height: chartHeight, visibility: hidden}"
+				:powerData="powerData"
+			></EnergyDayChart>
+		</div>
+<!-- -->
+		<div class="details" :style="{ height: detailsHeight}">
 			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
 					<div class="d-flex flex-nowrap align-items-center text-truncate">
@@ -168,6 +177,7 @@
 import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
+import EnergyDayChart from "./EnergyDayChart.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
 import GridSettingsModal from "../GridSettingsModal.vue";
 import formatter from "../../mixins/formatter";
@@ -181,6 +191,7 @@ export default {
 	name: "Energyflow",
 	components: {
 		Visualization,
+		EnergyDayChart,
 		EnergyflowEntry,
 		AnimatedNumber,
 		GridSettingsModal,
@@ -209,6 +220,7 @@ export default {
 		smartCostLimit: { type: Number },
 		smartCostType: { type: String },
 		currency: { type: String },
+		powerData: { type: String },
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
@@ -217,6 +229,9 @@ export default {
 		return { detailsOpen: false, detailsCompleteHeight: null, gridSettingsModal: null };
 	},
 	computed: {
+		energyDayChart: function() {
+			return this.collectProps(EnergyDayChart);
+		},
 		smartCostAvailable: function () {
 			return [CO2_TYPE, PRICE_DYNAMIC_TYPE].includes(this.smartCostType);
 		},
@@ -249,6 +264,10 @@ export default {
 		outPower: function () {
 			return this.homePower + this.loadpointsPower + this.pvExport + this.batteryCharge;
 		},
+		chartHeight: function() {
+			return this.detailsOpen ? (400) + "px" : 0;
+			//return this.detailsOpen ? (this.detailsCompleteHeight * 2) + "px" : 0;
+		},
 		detailsHeight: function () {
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
@@ -257,6 +276,24 @@ export default {
 				return;
 			}
 			return this.pv.map(({ power }) => this.fmtKw(power, this.powerInKw));
+		},
+		chartVisible() {
+			return this.detailsOpen;
+		},
+		batteryTooltip() {
+			if (!Array.isArray(this.battery)) {
+				return;
+			}
+			return this.battery.map(({ soc, capacity }) => {
+				const energy = this.fmtKWh((capacity / 100) * soc * 1e3, true, false, 1);
+				const total = this.fmtKWh(capacity * 1e3, true, true, 1);
+				const formattedSoc = this.batteryFmt(soc);
+				return this.$t("main.energyflow.batteryTooltip", {
+					energy,
+					total,
+					soc: formattedSoc,
+				});
+			});
 		},
 		batteryFmt() {
 			return (soc) => `${Math.round(soc)}%`;
