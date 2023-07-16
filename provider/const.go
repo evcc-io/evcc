@@ -26,7 +26,7 @@ func NewConstFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	pipe, err := pipeline.New(cc.Settings)
+	pipe, err := pipeline.New(nil, cc.Settings)
 	if err != nil {
 		return nil, err
 	}

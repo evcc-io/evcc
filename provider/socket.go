@@ -85,7 +85,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error)
 	}
 
 	var err error
-	if p.pipeline, err = pipeline.New(cc.Settings); err != nil {
+	if p.pipeline, err = pipeline.New(log, cc.Settings); err != nil {
 		return nil, err
 	}
 
