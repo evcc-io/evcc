@@ -10,7 +10,7 @@ network:
   # evcc will listen on all available interfaces
   port: 7070
 
-interval: 10s # control cycle interval
+interval: 30s # control cycle interval
 
 # database configuration for persisting charge sessions and settings
 # database:
