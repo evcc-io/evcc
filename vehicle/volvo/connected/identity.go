@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/util"
@@ -63,7 +64,8 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 		return nil, err
 	}
 
-	return oauth.RefreshTokenSource(&token, v), nil
+	ts := oauth.RefreshTokenSource(&token, v)
+	return oauth2.ReuseTokenSourceWithExpiry(&token, ts, 15*time.Minute), nil
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
