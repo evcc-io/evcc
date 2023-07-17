@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -41,7 +42,6 @@ var (
 type Identity struct {
 	log *util.Logger
 	*request.Helper
-	oauth2.TokenSource
 }
 
 // NewIdentity creates Porsche identity
@@ -54,10 +54,10 @@ func NewIdentity(log *util.Logger) *Identity {
 	return v
 }
 
-func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
+func (v *Identity) Login(oc *oauth2.Config, user, password string) (oauth2.TokenSource, error) {
 	cv, err := cv.CreateCodeVerifier()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
@@ -77,13 +77,13 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 
 	resp, err := v.Client.Get(uri)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	u, err := url.Parse(resp.Header.Get("Location"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	query := u.Query()
@@ -104,7 +104,7 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	uri = fmt.Sprintf("%s/usernamepassword/login", OAuthURI)
 	resp, err = v.PostForm(uri, query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -113,14 +113,14 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 			Description string `json:"description"`
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&res); err == nil && res.Description != "" {
-			return errors.New(res.Description)
+			return nil, errors.New(res.Description)
 		}
-		return fmt.Errorf("unexpected status %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	query = make(url.Values)
@@ -137,13 +137,13 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	uri = fmt.Sprintf("%s/login/callback", OAuthURI)
 	resp, err = v.PostForm(uri, query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	resp.Body.Close()
 
 	code, err := param()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
@@ -154,21 +154,38 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ts := oc.TokenSource(cctx, token)
-	v.TokenSource = oauth2.ReuseTokenSourceWithExpiry(token, ts, 15*time.Minute)
+	if maxDuration := time.Hour; time.Until(token.Expiry) > maxDuration {
+		token.Expiry = time.Now().Add(maxDuration)
+	}
 
-	go v.refresh()
+	ts := oauth2.ReuseTokenSourceWithExpiry(token, oc.TokenSource(cctx, token), 15*time.Minute)
+	go v.refresh(token, ts)
 
-	return nil
+	return ts, err
 }
 
-func (v *Identity) refresh() {
+func (v *Identity) refresh(initial *oauth2.Token, ts oauth2.TokenSource) {
+	token := initial
+
 	for range time.Tick(5 * time.Minute) {
-		if _, err := v.Token(); err != nil {
+		t, err := ts.Token()
+		if err != nil {
 			v.log.ERROR.Printf("token refresh: %v", err)
+			if strings.Contains(err.Error(), "invalid_grant") {
+				return
+			}
+		}
+
+		// limit lifetime of new tokens
+		if t.Expiry != token.Expiry {
+			token = t
+			if maxDuration := time.Hour; time.Until(token.Expiry) > maxDuration {
+				token.Expiry = time.Now().Add(maxDuration)
+				v.log.TRACE.Printf("token refresh: lifetime limited to %v", maxDuration)
+			}
 		}
 	}
 }

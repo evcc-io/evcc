@@ -42,12 +42,12 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
 	identity := porsche.NewIdentity(log)
 
-	err := identity.Login(porsche.OAuth2Config, cc.User, cc.Password)
+	ts, err := identity.Login(porsche.OAuth2Config, cc.User, cc.Password)
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	api := porsche.NewAPI(log, identity)
+	api := porsche.NewAPI(log, ts)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
 		vehicles, err := api.Vehicles()
@@ -65,7 +65,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vehicle is not paired with the My Porsche account")
 	}
 
-	emobApi := porsche.NewEmobilityAPI(log, identity)
+	emobApi := porsche.NewEmobilityAPI(log, ts)
 	capabilities, err := emobApi.Capabilities(cc.VIN)
 	if err != nil {
 		return nil, err
