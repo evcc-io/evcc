@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"github.com/samber/lo"
@@ -22,6 +22,8 @@ import (
 const (
 	OAuthURI = "https://identity.porsche.com"
 	ClientID = "UYsK00My6bCqJdbQhTQ0PbWmcSdIAMig"
+
+	maxTokenLifetime = time.Hour
 )
 
 // https://identity.porsche.com/.well-known/openid-configuration
@@ -157,35 +159,8 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) (oauth2.Token
 		return nil, err
 	}
 
-	if maxDuration := time.Hour; time.Until(token.Expiry) > maxDuration {
-		token.Expiry = time.Now().Add(maxDuration)
-	}
-
 	ts := oauth2.ReuseTokenSourceWithExpiry(token, oc.TokenSource(cctx, token), 15*time.Minute)
-	go v.refresh(token, ts)
+	go oauth.Refresh(v.log, token, ts, maxTokenLifetime)
 
 	return ts, err
-}
-
-func (v *Identity) refresh(initial *oauth2.Token, ts oauth2.TokenSource) {
-	token := initial
-
-	for range time.Tick(5 * time.Minute) {
-		t, err := ts.Token()
-		if err != nil {
-			v.log.ERROR.Printf("token refresh: %v", err)
-			if strings.Contains(err.Error(), "invalid_grant") {
-				return
-			}
-		}
-
-		// limit lifetime of new tokens
-		if t.Expiry != token.Expiry {
-			token = t
-			if maxDuration := time.Hour; time.Until(token.Expiry) > maxDuration {
-				token.Expiry = time.Now().Add(maxDuration)
-				v.log.TRACE.Printf("token refresh: lifetime limited to %v", maxDuration)
-			}
-		}
-	}
 }

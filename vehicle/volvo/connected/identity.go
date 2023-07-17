@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/util"
@@ -17,7 +18,8 @@ var Oauth2Config = oauth2.Config{
 		AuthURL:  "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
 		TokenURL: "https://volvoid.eu.volvocars.com/as/token.oauth2",
 	},
-	Scopes: []string{oidc.ScopeOpenID, "vehicle:attributes",
+	Scopes: []string{
+		oidc.ScopeOpenID, "vehicle:attributes",
 		"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
 		"conve:fuel_status", "conve:odometer_status", "conve:environment",
 	},
@@ -29,19 +31,20 @@ const (
 )
 
 type Identity struct {
+	log *util.Logger
 	*request.Helper
-	oauth2.TokenSource
 }
 
 func NewIdentity(log *util.Logger) (*Identity, error) {
 	v := &Identity{
+		log:    log,
 		Helper: request.NewHelper(log),
 	}
 
 	return v, nil
 }
 
-func (v *Identity) Login(user, password string) error {
+func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 	data := url.Values{
 		"username":                {user},
 		"password":                {password},
@@ -54,15 +57,20 @@ func (v *Identity) Login(user, password string) error {
 		"Content-Type":  request.FormContent,
 		"Authorization": basicAuth,
 	})
-
-	if err == nil {
-		var token oauth2.Token
-		if err = v.DoJSON(req, &token); err == nil {
-			v.TokenSource = oauth.RefreshTokenSource(&token, v)
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	return err
+	var token oauth.Token
+	if err := v.DoJSON(req, &token); err != nil {
+		return nil, err
+	}
+
+	oauthToken := (*oauth2.Token)(&token)
+	ts := oauth2.ReuseTokenSourceWithExpiry(oauthToken, oauth.RefreshTokenSource(oauthToken, v), 15*time.Minute)
+	go oauth.Refresh(v.log, oauthToken, ts)
+
+	return ts, nil
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
@@ -76,11 +84,12 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"Content-Type":  request.FormContent,
 		"Authorization": basicAuth,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	var res oauth2.Token
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
+	err = v.DoJSON(req, &res)
 
 	return &res, err
 }
