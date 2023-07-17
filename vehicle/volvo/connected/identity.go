@@ -31,11 +31,13 @@ const (
 )
 
 type Identity struct {
+	log *util.Logger
 	*request.Helper
 }
 
 func NewIdentity(log *util.Logger) (*Identity, error) {
 	v := &Identity{
+		log:    log,
 		Helper: request.NewHelper(log),
 	}
 
@@ -59,13 +61,16 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 		return nil, err
 	}
 
-	var token oauth2.Token
-	if err = v.DoJSON(req, &token); err != nil {
+	var token oauth.Token
+	if err := v.DoJSON(req, &token); err != nil {
 		return nil, err
 	}
 
-	ts := oauth.RefreshTokenSource(&token, v)
-	return oauth2.ReuseTokenSourceWithExpiry(&token, ts, 15*time.Minute), nil
+	oauthToken := (*oauth2.Token)(&token)
+	ts := oauth2.ReuseTokenSourceWithExpiry(oauthToken, oauth.RefreshTokenSource(oauthToken, v), 15*time.Minute)
+	go oauth.Refresh(v.log, oauthToken, ts)
+
+	return ts, nil
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
