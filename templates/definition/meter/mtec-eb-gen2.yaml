@@ -43,5 +43,5 @@ render: |
       address: 43000 # State of Charge (SOC)
       type: holding
       decode: uint16
-      scale: 0.01
+    scale: 0.01
   {{- end }}
