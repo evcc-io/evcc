@@ -197,7 +197,8 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 		}
 	}
 
-	return false, errors.New("invalid EVSE state")
+	// no override:
+	return false, c.Enable(false)
 }
 
 // Enable implements the api.Charger interface
