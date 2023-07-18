@@ -11,6 +11,9 @@ import (
 func Refresh(log *util.Logger, token *oauth2.Token, ts oauth2.TokenSource, optMaxTokenLifetime ...time.Duration) {
 	var failed int
 
+	// limit lifetime of initial token
+	limitTokenLife(token, optMaxTokenLifetime...)
+
 	for range time.Tick(5 * time.Minute) {
 		if _, err := ts.Token(); err != nil {
 			t, err := ts.Token()
@@ -26,13 +29,21 @@ func Refresh(log *util.Logger, token *oauth2.Token, ts oauth2.TokenSource, optMa
 			failed = 0
 
 			// limit lifetime of new tokens
-			if len(optMaxTokenLifetime) == 1 && t.Expiry != token.Expiry {
+			if t.Expiry != token.Expiry {
 				token = t
-				maxTokenLifetime := optMaxTokenLifetime[0]
-				if time.Until(token.Expiry) > maxTokenLifetime {
-					token.Expiry = time.Now().Add(maxTokenLifetime)
-				}
+				limitTokenLife(token, optMaxTokenLifetime...)
 			}
 		}
+	}
+}
+
+func limitTokenLife(token *oauth2.Token, optMaxTokenLifetime ...time.Duration) {
+	if len(optMaxTokenLifetime) != 1 {
+		return
+	}
+
+	maxTokenLifetime := optMaxTokenLifetime[0]
+	if time.Until(token.Expiry) > maxTokenLifetime {
+		token.Expiry = time.Now().Add(maxTokenLifetime)
 	}
 }
