@@ -458,6 +458,7 @@ func (c *Easee) postJSONAndWait(uri string, data any) error {
 			}
 		}
 
+		c.log.TRACE.Printf("decoded command response: %v", cmd)
 		if cmd.Ticks == 0 { // api thinks this was a noop
 			return nil
 		}
