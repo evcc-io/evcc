@@ -82,8 +82,14 @@ func ParseCredentialsPage(r io.ReadCloser) (CredentialParams, error) {
 	re := regexp.MustCompile(`(?s)window._IDK\s*=\s*(.*?)[;<]`)
 	match := re.FindAllStringSubmatch(buf.String(), -1)
 
+	// clean quotes
 	tmpl := strings.ReplaceAll(match[0][1], `'`, `"`)
-	for _, v := range []string{"templateModel", "currentLocale", "csrf_parameterName", "csrf_token", "userSession", "userId", "countryOfResidence", "baseUrl", "consentBaseUrl"} {
+
+	// strip , }
+	re2 := regexp.MustCompile(`(?s),\s+}`)
+	tmpl = re2.ReplaceAllString(tmpl, "}")
+
+	for _, v := range []string{"templateModel", "disabledFeatures", "isFooterEnabled", "currentLocale", "csrf_parameterName", "csrf_token", "userSession", "userId", "countryOfResidence", "baseUrl", "consentBaseUrl"} {
 		tmpl = strings.Replace(tmpl, v, fmt.Sprintf(`"%s"`, v), 1)
 	}
 
