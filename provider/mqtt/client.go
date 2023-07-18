@@ -137,11 +137,12 @@ func (m *Client) Listen(topic string, callback func(string)) {
 
 // ListenSetter creates a /set listener that resets the payload after handling
 func (m *Client) ListenSetter(topic string, callback func(string) error) {
-	m.Listen(topic+"/set", func(payload string) {
+	setterTopic := topic + "/set"
+	m.Listen(setterTopic, func(payload string) {
 		if err := callback(payload); err != nil {
 			m.log.ERROR.Printf("set %s: %v", topic, err)
 		}
-		if err := m.Publish(topic, true, ""); err != nil {
+		if err := m.Publish(setterTopic, true, ""); err != nil {
 			m.log.ERROR.Printf("clear: %s: %v", topic, err)
 		}
 	})
