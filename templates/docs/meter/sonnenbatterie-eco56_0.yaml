@@ -1,0 +1,44 @@
+product:
+  brand: Sonnen
+  description: comfort, eco 5, eco 6, oem 6.5
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: sonnenbatterie-eco56
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 7979 # Port (Optional)
+    advanced: |
+      type: template
+      template: sonnenbatterie-eco56
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 7979 # Port (Optional)
+  - usage: pv
+    default: |
+      type: template
+      template: sonnenbatterie-eco56
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 7979 # Port (Optional)
+    advanced: |
+      type: template
+      template: sonnenbatterie-eco56
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 7979 # Port (Optional)
+  - usage: battery
+    default: |
+      type: template
+      template: sonnenbatterie-eco56
+      usage: battery
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 7979 # Port (Optional)
+    advanced: |
+      type: template
+      template: sonnenbatterie-eco56
+      usage: battery
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 7979 # Port (Optional)
+      capacity: 50 # Akkukapazität in kWh (Optional)

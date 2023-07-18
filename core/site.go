@@ -115,7 +115,7 @@ func NewSiteFromConfig(
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 	site.coordinator = coordinator.New(log, vehicles)
-	site.prioritizer = prioritizer.New()
+	site.prioritizer = prioritizer.New(log)
 	site.savings = NewSavings(tariffs)
 
 	site.restoreSettings()
@@ -755,6 +755,8 @@ func (site *Site) update(lp Updater) {
 		site.publish("homePower", homePower)
 
 		site.Health.Update()
+	} else {
+		site.log.ERROR.Println(err)
 	}
 
 	site.publishTariffs()

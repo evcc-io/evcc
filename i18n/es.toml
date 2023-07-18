@@ -111,12 +111,12 @@ modalTitle = "¿Necesitas ayuda?"
 primaryActions = "Si algo no funciona como debería, puedes obtener ayuda aqui."
 restartButton = "Reiniciar"
 restartDescription = "¿Has probado de apagar y volver a encender"
-secondaryActions = "¿Sigues sin poder resolver tu problema? Aquí tienes otras opciones más contundentes"
+secondaryActions = "¿Sigues sin poder resolver tu problema? Aquí tienes otras opciones más contundentes."
 
 [help.restart]
 cancel = "Cancelar"
 confirm = "¡Sí, reinicia!"
-description = "Bajo circunstancias normales no debería ser necesario reiniciar. Por favor, considera la posibilidad de reportar un error si necesitas reiniciar evcc regularmente."
+description = "En circunstancias normales no debería ser necesario reiniciar. Por favor, considera la posibilidad de presentar un error si necesita reiniciar evcc de forma regular."
 disclaimer = "Nota: evcc terminará y dependerá del sistema operativo para reiniciar el servicio"
 modalTitle = "¿Seguro que quieres volver a empezar?"
 
@@ -147,9 +147,9 @@ pvProduction = "Producción"
 selfConsumption = "Autoconsumo"
 
 [main.loadpoint]
-avgPrice = "Precio Ø"
+avgPrice = "Precio ⌀"
 charged = "Cargado"
-co2 = "CO₂ Ø "
+co2 = "CO₂ ⌀ "
 duration = "Duración"
 fallbackName = "Punto de carga"
 power = "Potencia"
@@ -220,7 +220,7 @@ update = "Actualizar"
 
 [main.targetChargePlan]
 chargeDuration = "Tiempo de carga"
-co2Label = "Emisión de CO₂ Ø"
+co2Label = "Emisión de CO₂ ⌀"
 priceLabel = "Precio de la energía"
 timeRange = "{day} {range} hora"
 unknownPrice = "aún desconocido"
@@ -292,11 +292,11 @@ started = "Comenzó"
 title = "Cargando la sesión"
 
 [sessions]
-avgPrice = "Precio Ø"
-co2 = "CO₂ Ø"
+avgPrice = "Precio ⌀"
+co2 = "CO₂ ⌀"
 csvMonth = "Descargar el {month} CSV"
 csvTotal = "Descargar todos los CSV"
-date = "Acabado"
+date = "Comenzar"
 downloadCsv = "Descargar como CSV"
 energy = "Cargado"
 loadpoint = "Punto de carga"
@@ -305,6 +305,7 @@ price = "Σ Precio"
 reallyDelete = "¿De verdad quieres eliminar esta sesión?"
 solar = "Solar"
 title = "Sesiones de carga"
+total = "Total"
 vehicle = "Vehículo"
 
 [sessions.csv]
@@ -321,7 +322,7 @@ vehicle = "Vehículo"
 [sessions.filter]
 allLoadpoints = "todos los puntos de recarga"
 allVehicles = "todos los vehiculos"
-filter = "filtrar"
+filter = "Filtrar"
 
 [settings]
 title = "Ajustes"

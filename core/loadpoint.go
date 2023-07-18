@@ -50,7 +50,7 @@ const (
 	timerInactive = "inactive"
 
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
-	minActiveVoltage = 208 // minimum voltage at which a phase is treated as active
+	minActiveVoltage = 207 // minimum voltage at which a phase is treated as active
 
 	guardGracePeriod          = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabled/disabled state during this timespan
@@ -324,7 +324,7 @@ func (lp *Loadpoint) collectDefaults() {
 		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
 		*actionCfg.MinSoc = lp.GetMinSoc()
 		*actionCfg.TargetSoc = lp.GetTargetSoc()
-		*actionCfg.Priority = lp.Priority()
+		*actionCfg.Priority = lp.GetPriority()
 	} else {
 		lp.log.ERROR.Printf("error allocating action config: %v", err)
 	}
@@ -566,6 +566,9 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.TargetSoc != nil {
 		lp.SetTargetSoc(*actionCfg.TargetSoc)
 	}
+	if actionCfg.Priority != nil {
+		lp.SetPriority(*actionCfg.Priority)
+	}
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
@@ -612,6 +615,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	lp.publish("mode", lp.GetMode())
+	lp.publish("priority", lp.GetPriority())
 	lp.publish(targetSoc, lp.GetTargetSoc())
 	lp.publish(minSoc, lp.GetMinSoc())
 
@@ -1353,15 +1357,15 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	lp.publish("chargeVoltages", chargeVoltages)
 
 	// Quine-McCluskey for (¬L1∧L2∧¬L3) ∨ (L1∧L2∧¬L3) ∨ (¬L1∧¬L2∧L3) ∨ (L1∧¬L2∧L3) ∨ (¬L1∧L2∧L3) -> ¬L1 ∧ L3 ∨ L2 ∧ ¬L3 ∨ ¬L2 ∧ L3
-	if !(u1 > minActiveVoltage) && (u3 > minActiveVoltage) || (u2 > minActiveVoltage) && !(u3 > minActiveVoltage) || !(u2 > minActiveVoltage) && (u3 > minActiveVoltage) {
+	if !(u1 >= minActiveVoltage) && (u3 >= minActiveVoltage) || (u2 >= minActiveVoltage) && !(u3 >= minActiveVoltage) || !(u2 >= minActiveVoltage) && (u3 >= minActiveVoltage) {
 		lp.log.WARN.Printf("invalid phase wiring between charge meter and charger")
 	}
 
 	var phases int
-	if (u1 > minActiveVoltage) || (u2 > minActiveVoltage) || (u3 > minActiveVoltage) {
+	if (u1 >= minActiveVoltage) || (u2 >= minActiveVoltage) || (u3 >= minActiveVoltage) {
 		phases = 3
 	}
-	if (u1 > minActiveVoltage) && (u2 < minActiveVoltage) && (u3 < minActiveVoltage) {
+	if (u1 >= minActiveVoltage) && (u2 < minActiveVoltage) && (u3 < minActiveVoltage) {
 		phases = 1
 	}
 

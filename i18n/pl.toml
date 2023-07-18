@@ -147,9 +147,9 @@ pvProduction = "Produkcja"
 selfConsumption = "Konsumpcja własna"
 
 [main.loadpoint]
-avgPrice = "Ø Cena"
+avgPrice = "⌀ Cena"
 charged = "Naładowano"
-co2 = "Ø CO₂"
+co2 = "⌀ CO₂"
 duration = "Czas trwania"
 fallbackName = "Ładowarka"
 power = "Moc"
@@ -220,7 +220,7 @@ update = "Aktualizować"
 
 [main.targetChargePlan]
 chargeDuration = "Czas ładowania"
-co2Label = "CO₂ emisja Ø"
+co2Label = "CO₂ emisja ⌀"
 priceLabel = "Cena energii"
 timeRange = "{day} {range} h"
 unknownPrice = "nadal nieznany"
@@ -290,11 +290,11 @@ started = "Zaczęło się"
 title = "Sesja ładowania"
 
 [sessions]
-avgPrice = "Ø Cena"
-co2 = "Ø CO₂"
+avgPrice = "⌀ Cena"
+co2 = "⌀ CO₂"
 csvMonth = "Pobierz plik {month} CSV"
 csvTotal = "Pobierz plik CSV"
-date = "Skończone"
+date = "Rozpoczęty"
 downloadCsv = "Pobierz jako CSV"
 energy = "Naładowano"
 loadpoint = "Ładowarka"
@@ -303,6 +303,7 @@ price = "Σ Cena"
 reallyDelete = "Czy na pewno chcesz usunąć tę sesję?"
 solar = "Słoneczna"
 title = "Sesje ładowania"
+total = "Totalny"
 vehicle = "Pojazd"
 
 [sessions.csv]
@@ -319,7 +320,7 @@ vehicle = "Pojazd"
 [sessions.filter]
 allLoadpoints = "wszystkie punkty ładowania"
 allVehicles = "wszystkie pojazdy"
-filter = "filtrować"
+filter = "Filtrować"
 
 [settings]
 title = "Ustawienia"

@@ -17,7 +17,6 @@ type Controller interface {
 type API interface {
 	// Title returns the defined loadpoint title
 	Title() string
-	Priority() int
 
 	//
 	// status
@@ -29,6 +28,11 @@ type API interface {
 	//
 	// settings
 	//
+
+	// GetPriority returns the loadpoint priority
+	GetPriority() int
+	// SetPriority sets the loadpoint priority
+	SetPriority(int)
 
 	// GetMode returns the charge mode
 	GetMode() api.ChargeMode

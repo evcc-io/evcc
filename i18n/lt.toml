@@ -116,7 +116,7 @@ secondaryActions = "Vis dar nepavyksta išspręsti problemos? Čia rasite drasti
 [help.restart]
 cancel = "Atšaukti"
 confirm = "Taip, restartuoti!"
-description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums reikia vis restartuoti, pasvarstykite - gal derėtų pranešti apie problemą."
+description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums vis reikia restartuoti, pasvarstykite, gal derėtų pranešti apie problemą."
 disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
 modalTitle = "Ar tikrai norite restartuoti?"
 
@@ -147,9 +147,9 @@ pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
 
 [main.loadpoint]
-avgPrice = "Ø Kaina"
+avgPrice = "⌀ Kaina"
 charged = "Įkrauta"
-co2 = "Ø CO₂"
+co2 = "⌀ CO₂"
 duration = "Trukmė"
 fallbackName = "Įkroviklis"
 power = "Galia"
@@ -220,7 +220,7 @@ update = "Atnaujinti"
 
 [main.targetChargePlan]
 chargeDuration = "Įkrovimo trukmė"
-co2Label = "CO₂ emisijos Ø"
+co2Label = "CO₂ emisijos ⌀"
 priceLabel = "Energijos kaina"
 timeRange = "{day} {range} val"
 unknownPrice = "dar nežinoma"
@@ -292,11 +292,11 @@ started = "Pradėta"
 title = "Įkrovimo sesija"
 
 [sessions]
-avgPrice = "Ø Kaina"
-co2 = "Ø CO₂"
+avgPrice = "⌀ Kaina"
+co2 = "⌀ CO₂"
 csvMonth = "Atsisiųsti {month} CSV"
 csvTotal = "Atsisiųsti visą CSV"
-date = "Pabaigta"
+date = "Pradžia"
 downloadCsv = "Atsisiųsti CSV failą"
 energy = "Įkrauta"
 loadpoint = "Įkroviklis"
@@ -305,6 +305,7 @@ price = "Σ Kaina"
 reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo sesiją?"
 solar = "Saulės"
 title = "Įkrovimo Sesijos"
+total = "Viso"
 vehicle = "Automobilis"
 
 [sessions.csv]
@@ -321,7 +322,7 @@ vehicle = "Automobilis"
 [sessions.filter]
 allLoadpoints = "visi įkrovikliai"
 allVehicles = "visi automobiliai"
-filter = "filtruoti"
+filter = "Filtruoti"
 
 [settings]
 title = "Nustatymai"

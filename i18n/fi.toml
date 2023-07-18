@@ -142,9 +142,9 @@ pvProduction = "Tuotanto"
 selfConsumption = "Tuotannon kulutus"
 
 [main.loadpoint]
-avgPrice = "Ø Hinta"
+avgPrice = "⌀ Hinta"
 charged = "Ladattu"
-co2 = "Ø CO₂"
+co2 = "⌀ CO₂"
 duration = "Kesto"
 fallbackName = "Latauspiste"
 power = "Teho"
@@ -211,7 +211,7 @@ update = "Päivittää"
 
 [main.targetChargePlan]
 chargeDuration = "Latausaika"
-co2Label = "CO₂ päästö Ø"
+co2Label = "CO₂ päästö ⌀"
 priceLabel = "Energian hinta"
 timeRange = "{day} {range} t"
 unknownPrice = "ei vielä tiedossa"
@@ -281,8 +281,8 @@ started = "Alkoi"
 title = "Latausistunto"
 
 [sessions]
-avgPrice = "Ø Hinta"
-co2 = "Ø CO₂"
+avgPrice = "⌀ Hinta"
+co2 = "⌀ CO₂"
 date = "Valmis"
 downloadCsv = "Lataa CSV muodossa"
 energy = "Ladattu"

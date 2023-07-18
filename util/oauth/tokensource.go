@@ -3,7 +3,6 @@ package oauth
 import (
 	"errors"
 	"sync"
-	"time"
 
 	"github.com/imdario/mergo"
 	"golang.org/x/oauth2"
@@ -17,26 +16,12 @@ type TokenSource struct {
 	mu        sync.Mutex
 	token     *oauth2.Token
 	refresher TokenRefresher
-	margin    time.Duration
 }
 
-type TokenSourceOption func(*TokenSource)
-
-func WithExpiryMargin(margin time.Duration) TokenSourceOption {
-	return func(ts *TokenSource) {
-		ts.margin = margin
-	}
-}
-
-func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher, opt ...TokenSourceOption) oauth2.TokenSource {
+func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.TokenSource {
 	ts := &TokenSource{
 		token:     token,
 		refresher: refresher,
-		margin:    time.Minute,
-	}
-
-	for _, o := range opt {
-		o(ts)
 	}
 
 	return ts
@@ -45,17 +30,22 @@ func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher, opt ...To
 func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
-	var err error
-	if ts.token == nil || time.Until(ts.token.Expiry) < ts.margin {
-		var token *oauth2.Token
-		if token, err = ts.refresher.RefreshToken(ts.token); err == nil {
-			if token.AccessToken == "" {
-				err = errors.New("token refresh failed to obtain access token")
-			} else {
-				err = ts.mergeToken(token)
-			}
-		}
+
+	if ts.token.Valid() {
+		return ts.token, nil
 	}
+
+	token, err := ts.refresher.RefreshToken(ts.token)
+	if err != nil {
+		return ts.token, err
+	}
+
+	if token.AccessToken == "" {
+		err = errors.New("token refresh failed to obtain access token")
+	} else {
+		err = ts.mergeToken(token)
+	}
+
 	return ts.token, err
 }
 

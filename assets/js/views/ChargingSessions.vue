@@ -1,18 +1,19 @@
 <template>
 	<div class="container px-4">
 		<header class="d-flex justify-content-between align-items-center py-3">
-			<h1 class="mb-1 pt-1 d-flex text-nowrap">
-				<router-link class="dropdown-item mx-2 me-2" to="/">
-					<shopicon-bold-arrowback size="s" class="back"></shopicon-bold-arrowback>
+			<h1 class="mb-1 pt-1 d-flex text-nowrap text-truncate">
+				<router-link class="evcc-default-text" to="/">
+					<shopicon-regular-home size="s" class="home"></shopicon-regular-home>
 				</router-link>
-				{{ $t("sessions.title") }}
+				<div size="s" class="mx-2 flex-grow-0 flex-shrink-0 fw-normal">/</div>
+				<span class="text-truncate">{{ $t("sessions.title") }}</span>
 			</h1>
 			<TopNavigation />
 		</header>
 
 		<div class="row">
 			<main class="col-12">
-				<div class="d-flex align-items-baseline justify-content-between my-5">
+				<div class="d-flex align-items-baseline justify-content-between my-3 my-md-5">
 					<router-link
 						class="d-flex text-decoration-none align-items-center"
 						:class="{ 'pe-none': !hasPrev, 'text-muted': !hasPrev }"
@@ -42,9 +43,9 @@
 				<div v-if="currentSessions.length === 0" data-testid="sessions-nodata" class="my-5">
 					<p>{{ $t("sessions.noData") }}</p>
 				</div>
-				<div v-else class="table-responsive my-3">
+				<div v-else class="my-3 my-md-5 table-outer">
 					<table class="table text-nowrap">
-						<thead>
+						<thead class="sticky-top">
 							<tr data-testid="sessions-head">
 								<th scope="col" class="align-top ps-0">
 									{{ $t("sessions.date") }}
@@ -52,114 +53,154 @@
 								<th
 									v-if="showLoadpoints"
 									scope="col"
-									class="align-top"
+									class="align-top d-none d-md-table-cell"
 									data-testid="loadpoint"
 								>
 									{{ $t("sessions.loadpoint") }}
-									<label class="position-relative d-block">
-										<select
-											:value="loadpointFilter"
-											class="custom-select"
-											@change="changeLoadpointFilter"
-										>
-											<option
-												v-for="{
-													name,
-													value,
-													count,
-												} in loadpointFilterOptions"
-												:key="value"
-												:value="value"
-												:disabled="count === 0"
-											>
-												{{ name }} ({{ count }})
-											</option>
-										</select>
+									<CustomSelect
+										:selected="loadpointFilter"
+										:options="loadpointFilterOptions"
+										data-testid="filter-loadpoint"
+										@change="changeLoadpointFilter"
+									>
 										<span
-											class="fw-normal text-decoration-underline text-nowrap text-muted pe-none"
+											class="fw-normal text-decoration-underline text-nowrap text-gray pe-none"
 										>
 											{{ loadpointFilter || $t("sessions.filter.filter") }}
 										</span>
-									</label>
+									</CustomSelect>
 								</th>
 								<th
 									v-if="showVehicles"
 									scope="col"
-									class="align-top"
+									class="align-top d-none d-md-table-cell"
 									data-testid="vehicle"
 								>
 									{{ $t("sessions.vehicle") }}
-									<label class="position-relative d-block">
-										<select
-											:value="vehicleFilter"
-											class="custom-select"
-											@change="changeVehicleFilter"
-										>
-											<option
-												v-for="{
-													name,
-													value,
-													count,
-												} in vehicleFilterOptions"
-												:key="value"
-												:value="value"
-												:disabled="count === 0"
-											>
-												{{ name }} ({{ count }})
-											</option>
-										</select>
+									<CustomSelect
+										:selected="vehicleFilter"
+										:options="vehicleFilterOptions"
+										data-testid="filter-vehicle"
+										@change="changeVehicleFilter"
+									>
 										<span
-											class="fw-normal text-decoration-underline text-nowrap text-muted pe-none"
+											class="fw-normal text-decoration-underline text-nowrap text-gray pe-none"
 										>
 											{{ vehicleFilter || $t("sessions.filter.filter") }}
 										</span>
-									</label>
+									</CustomSelect>
 								</th>
-								<th scope="col" class="align-top text-end">
-									{{ $t("sessions.energy") }}
-									<div class="text-muted fw-normal">
-										{{ fmtKWh(chargedEnergy * 1e3, chargedEnergy >= 1) }}
-									</div>
-								</th>
-								<th
-									v-if="hasSolarPercentage"
-									scope="col"
-									class="align-top text-end"
-								>
-									{{ $t("sessions.solar") }}
+								<th scope="col" class="align-top d-md-none text-truncate">
 									<div
-										v-if="solarPercentage != null"
-										class="text-muted fw-normal"
+										v-if="showLoadpoints"
+										class="d-flex flex-wrap text-truncate"
 									>
-										{{ fmtNumber(solarPercentage, 1) }}%
+										<div class="me-2 text-truncate">
+											{{ $t("sessions.loadpoint") }}
+										</div>
+										<CustomSelect
+											:selected="loadpointFilter"
+											:options="loadpointFilterOptions"
+											data-testid="filter-loadpoint"
+											@change="changeLoadpointFilter"
+										>
+											<span
+												class="fw-normal text-decoration-underline text-nowrap text-gray pe-none text-truncate"
+											>
+												{{
+													loadpointFilter || $t("sessions.filter.filter")
+												}}
+											</span>
+										</CustomSelect>
 									</div>
-								</th>
-								<th v-if="hasPrice" scope="col" class="align-top text-end">
-									{{ $t("sessions.price") }}
-									<div v-if="price != null" class="text-muted fw-normal">
-										{{ fmtMoney(price, currency) }}
-										{{ fmtCurrencySymbol(currency) }}
-									</div>
-								</th>
-								<th v-if="hasPrice" scope="col" class="align-top text-end">
-									{{ $t("sessions.avgPrice") }}
-									<div v-if="pricePerKWh != null" class="text-muted fw-normal">
-										{{ fmtPricePerKWh(pricePerKWh, currency) }}
+									<div
+										class="text-truncate"
+										:class="{ 'd-flex flex-wrap': showLoadpoints }"
+									>
+										<div class="me-2 text-truncate">
+											{{ $t("sessions.vehicle") }}
+										</div>
+										<CustomSelect
+											:selected="vehicleFilter"
+											:options="vehicleFilterOptions"
+											data-testid="filter-vehicle"
+											@change="changeVehicleFilter"
+										>
+											<span
+												class="fw-normal text-decoration-underline text-nowrap text-gray pe-none text-truncate"
+											>
+												{{ vehicleFilter || $t("sessions.filter.filter") }}
+											</span>
+										</CustomSelect>
 									</div>
 								</th>
 								<th
-									v-if="hasCo2"
+									v-for="column in columns"
+									:key="column.name"
 									scope="col"
-									class="align-top text-end pe-0"
-									data-testid="co2"
+									:data-testid="`sessions-head-${column.name}`"
+									class="align-top text-end d-none d-md-table-cell"
 								>
-									{{ $t("sessions.co2") }}
-									<div v-if="co2PerKWh != null" class="text-muted fw-normal">
-										{{ fmtCo2Medium(co2PerKWh) }}
-									</div>
+									{{ $t(`sessions.${column.name}`) }}<br />
+									<div class="text-gray fw-normal">{{ column.unit }}</div>
+								</th>
+								<th
+									scope="col"
+									class="align-top text-end d-md-none"
+									data-testid="sessions-head-mobile"
+								>
+									<span v-if="columns.length === 1">
+										{{ $t(`sessions.${mobileColumn.name}`) }}
+									</span>
+									<CustomSelect
+										v-else
+										:selected="selectedMobileColumn"
+										:options="mobileColumnOptions"
+										data-testid="mobile-column"
+										@change="changeMobileColumn"
+									>
+										<span class="text-decoration-underline">
+											{{ $t(`sessions.${mobileColumn.name}`) }}
+										</span>
+									</CustomSelect>
+									<div class="text-gray fw-normal">{{ mobileColumn.unit }}</div>
 								</th>
 							</tr>
 						</thead>
+						<tfoot class="sticky-bottom">
+							<tr data-testid="sessions-foot">
+								<th scope="col" class="align-top ps-0">
+									{{ $t("sessions.total") }}
+								</th>
+								<th
+									v-if="showLoadpoints"
+									scope="col"
+									class="d-none d-md-table-cell"
+								></th>
+								<th
+									v-if="showVehicles"
+									scope="col"
+									class="d-none d-md-table-cell"
+								></th>
+								<th scope="col" class="d-md-none"></th>
+								<th
+									v-for="column in columns"
+									:key="column.name"
+									:data-testid="`sessions-foot-${column.name}`"
+									scope="col"
+									class="align-top text-end d-none d-md-table-cell"
+								>
+									{{ column.format(column.total) }}
+								</th>
+								<th
+									scope="col"
+									data-testid="sessions-foot-mobile"
+									class="align-top text-end d-md-none"
+								>
+									{{ mobileColumn.format(mobileColumn.total) }}
+								</th>
+							</tr>
+						</tfoot>
 						<tbody>
 							<tr
 								v-for="(session, id) in filteredSessions"
@@ -169,55 +210,47 @@
 								@click="showDetails(session.id)"
 							>
 								<td class="ps-0">
-									<u>{{ fmtFullDateTime(new Date(session.created), true) }}</u>
+									{{ fmtFullDateTime(new Date(session.created), true) }}
 								</td>
-								<td v-if="showLoadpoints">
+								<td v-if="showLoadpoints" class="d-none d-md-table-cell">
 									{{ session.loadpoint }}
 								</td>
-								<td v-if="showVehicles">
+								<td v-if="showVehicles" class="d-none d-md-table-cell">
 									{{ session.vehicle }}
 								</td>
-								<td class="text-end">
-									{{
-										fmtKWh(
-											session.chargedEnergy * 1e3,
-											session.chargedEnergy >= 1
-										)
-									}}
+								<td class="d-md-none text-truncate">
+									<div v-if="showLoadpoints">{{ session.loadpoint }}</div>
+									<div>{{ session.vehicle }}</div>
 								</td>
-								<td v-if="hasSolarPercentage" class="text-end">
-									<span v-if="session.solarPercentage != null">
-										{{ fmtNumber(session.solarPercentage, 1) }}%
+								<td
+									v-for="column in columns"
+									:key="column.name"
+									class="text-end d-none d-md-table-cell"
+								>
+									<span v-if="column.value(session) === null" class="text-gray">
+										-
 									</span>
-									<span v-else class="text-muted">-</span>
+									<span v-else>{{ column.format(column.value(session)) }}</span>
 								</td>
-								<td v-if="hasPrice" class="text-end">
-									<span v-if="session.price != null">
-										{{ fmtMoney(session.price, currency) }}
-										{{ fmtCurrencySymbol(currency) }}
+								<td class="text-end d-md-none">
+									<span
+										v-if="mobileColumn.value(session) === null"
+										class="text-gray"
+									>
+										-
 									</span>
-									<span v-else class="text-muted">-</span>
-								</td>
-								<td v-if="hasPrice" class="text-end">
-									<span v-if="session.pricePerKWh != null">
-										{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
-									</span>
-									<span v-else class="text-muted">-</span>
-								</td>
-								<td v-if="hasCo2" class="text-end pe-0">
-									<span v-if="session.co2PerKWh != null">
-										{{ fmtCo2Medium(session.co2PerKWh) }}
-									</span>
-									<span v-else class="text-muted">-</span>
+									<span v-else>{{
+										mobileColumn.format(mobileColumn.value(session))
+									}}</span>
 								</td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
-				<div class="d-grid gap-2 d-sm-block mt-3 mb-5">
+				<div class="d-grid gap-2 d-md-block mt-3 mb-5">
 					<a
 						v-if="currentSessions.length"
-						class="btn btn-outline-secondary text-nowrap me-sm-2"
+						class="btn btn-outline-secondary text-nowrap me-md-2"
 						:href="csvLink"
 						download
 					>
@@ -245,17 +278,18 @@
 <script>
 import Modal from "bootstrap/js/dist/modal";
 import TopNavigation from "../components/TopNavigation.vue";
-import "@h2d2/shopicons/es/bold/arrowback";
+import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/angledoubleleftsmall";
 import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import formatter from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
+import CustomSelect from "../components/CustomSelect.vue";
 import ChargingSessionModal from "../components/ChargingSessionModal.vue";
 
 export default {
 	name: "ChargingSessions",
-	components: { TopNavigation, ChargingSessionModal },
+	components: { TopNavigation, ChargingSessionModal, CustomSelect },
 	mixins: [formatter],
 	props: {
 		notifications: Array,
@@ -268,6 +302,7 @@ export default {
 		return {
 			sessions: [],
 			selectedSessionId: undefined,
+			selectedMobileColumn: undefined,
 		};
 	},
 	computed: {
@@ -285,6 +320,62 @@ export default {
 		},
 		filteredSessions() {
 			return this.currentSessions.filter(this.filterByLoadpoint).filter(this.filterByVehicle);
+		},
+		columns() {
+			const columns = [
+				{
+					name: "energy",
+					unit: "kWh",
+					total: this.chargedEnergy,
+					value: (session) => session.chargedEnergy,
+					format: (value) => this.fmtKWh(value * 1e3, true, false),
+				},
+				{
+					name: "solar",
+					unit: "%",
+					total: this.solarPercentage,
+					value: (session) => session.solarPercentage,
+					format: (value) => this.fmtNumber(value, 1),
+				},
+				{
+					name: "price",
+					unit: this.fmtCurrencySymbol(this.currency),
+					total: this.price,
+					value: (session) => session.price,
+					format: (value) => this.fmtMoney(value, this.currency),
+				},
+				{
+					name: "avgPrice",
+					unit: this.pricePerKWhUnit(this.currency),
+					total: this.pricePerKWh,
+					value: (session) => session.pricePerKWh,
+					format: (value) => this.fmtPricePerKWh(value, this.currency, false, false),
+				},
+				{
+					name: "co2",
+					unit: "g/kWh",
+					total: this.co2PerKWh,
+					value: (session) => session.co2PerKWh,
+					format: (value) => this.fmtNumber(value, 0),
+				},
+			];
+			// only columns with values are shown
+			return columns.filter((column) => {
+				if (column.name === "energy") return true;
+				return this.currentSessions.some((s) => column.value(s));
+			});
+		},
+		mobileColumn() {
+			const column = this.columns.find((column) => column.name === this.selectedMobileColumn);
+			return column || this.columns[0];
+		},
+		mobileColumnOptions() {
+			return this.columns.map((column) => {
+				return {
+					name: this.$t(`sessions.${column.name}`),
+					value: column.name,
+				};
+			});
 		},
 		vehicleFilterOptions() {
 			const options = [
@@ -320,15 +411,6 @@ export default {
 		price() {
 			return this.filteredSessions.reduce((total, s) => total + s.price, 0);
 		},
-		hasPrice() {
-			return this.filteredSessions.find((s) => s.price != null) != null;
-		},
-		hasSolarPercentage() {
-			return this.filteredSessions.find((s) => s.solarPercentage != null) != null;
-		},
-		hasCo2() {
-			return this.filteredSessions.find((s) => s.co2PerKWh != null) != null;
-		},
 		showVehicles() {
 			return this.hasMultipleVehicles || this.vehicleFilter;
 		},
@@ -344,21 +426,42 @@ export default {
 			return new Set(loadpoints).size > 1;
 		},
 		pricePerKWh() {
-			return this.price / this.chargedEnergy;
+			const total = this.filteredSessions
+				.filter((s) => s.price !== null)
+				.reduce(
+					(total, s) => ({
+						price: total.price + s.price,
+						chargedEnergy: total.chargedEnergy + s.chargedEnergy,
+					}),
+					{ price: 0, chargedEnergy: 0 }
+				);
+			return total.price / total.chargedEnergy;
 		},
 		co2PerKWh() {
-			const emittedCo2 = this.filteredSessions.reduce(
-				(total, s) => total + s.chargedEnergy * s.co2PerKWh,
-				0
-			);
-			return emittedCo2 / this.chargedEnergy;
+			const total = this.filteredSessions
+				.filter((s) => s.co2PerKWh !== null)
+				.reduce(
+					(total, s) => ({
+						emittedCo2: total.emittedCo2 + s.chargedEnergy * s.co2PerKWh,
+						chargedEnergy: total.chargedEnergy + s.chargedEnergy,
+					}),
+					{ emittedCo2: 0, chargedEnergy: 0 }
+				);
+			return total.emittedCo2 / total.chargedEnergy;
 		},
 		solarPercentage() {
-			const chargedSolarEnergy = this.filteredSessions.reduce(
-				(total, s) => total + s.chargedEnergy * (s.solarPercentage / 100),
-				0
-			);
-			return (100 / this.chargedEnergy) * chargedSolarEnergy;
+			const total = this.filteredSessions
+				.filter((s) => s.solarPercentage !== null)
+				.reduce(
+					(total, s) => ({
+						chargedSolarEnergy:
+							total.chargedSolarEnergy + s.chargedEnergy * (s.solarPercentage / 100),
+						chargedEnergy: total.chargedEnergy + s.chargedEnergy,
+					}),
+					{ chargedSolarEnergy: 0, chargedEnergy: 0 }
+				);
+
+			return (100 / total.chargedEnergy) * total.chargedSolarEnergy;
 		},
 		loadpoints() {
 			return [...new Set(this.currentSessions.map((s) => s.loadpoint))];
@@ -454,6 +557,9 @@ export default {
 				.filter(this.filterByVehicle)
 				.filter((s) => !loadpoint || s.loadpoint === loadpoint).length;
 		},
+		changeMobileColumn(event) {
+			this.selectedMobileColumn = event.target.value;
+		},
 		changeLoadpointFilter(event) {
 			const loadpoint = event.target.value || undefined;
 			this.$router.push({ query: { ...this.$route.query, loadpoint } });
@@ -486,11 +592,11 @@ export default {
 };
 </script>
 <style scoped>
-.back {
-	width: 22px;
+.home {
 	height: 22px;
+	width: 22px;
 	position: relative;
-	top: -2px;
+	top: -3px;
 }
 .custom-select {
 	left: 0;
@@ -500,5 +606,44 @@ export default {
 	position: absolute;
 	opacity: 0;
 	-webkit-appearance: menulist-button;
+}
+.table {
+	border-collapse: separate;
+	border-spacing: 0;
+}
+.table thead,
+.table tfoot {
+	background: var(--evcc-background);
+}
+.table tfoot th {
+	border-top-width: 2px;
+}
+.table thead th {
+	border-bottom-width: 2px;
+}
+.table tbody tr:last-child td {
+	border-bottom-width: 0;
+}
+
+.sticky-top,
+.sticky-bottom {
+	z-index: 1;
+}
+@media (max-width: 576px) {
+	.table td,
+	.table th {
+		width: 50%;
+	}
+	.table td:first-child,
+	.table th:first-child,
+	.table td:last-child,
+	.table th:last-child {
+		width: 25%;
+	}
+
+	.table td.text-truncate,
+	.table th.text-truncate {
+		max-width: 1px;
+	}
 }
 </style>
