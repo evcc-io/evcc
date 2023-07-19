@@ -8,7 +8,7 @@ requirements:
     de: |
       Zur Erfassung der PV-Produktion wird ein extern angebundenener S0-Erzeugungszähler benötigt.
     en: |
-      An externally connected S0 generation meter is required to record the PV production.
+      An externally connected S0 generation meter is required to record the solar production.
 params:
   - name: usage
     choice: ["grid", "pv"]
