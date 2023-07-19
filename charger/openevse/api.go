@@ -2087,8 +2087,11 @@ type GetStatusResponse struct {
 		// WiFi RSSI signal strength
 		Srssi *int `json:"srssi,omitempty"`
 
-		// The EVSE status
+		// The EVSE state
 		State *int `json:"state,omitempty"`
+
+		// The EVSE status
+		Status *string `json:"status,omitempty"`
 
 		// Number of stuck relay errors
 		Stuckcount *int `json:"stuckcount,omitempty"`
@@ -3265,8 +3268,11 @@ func ParseGetStatusResponse(rsp *http.Response) (*GetStatusResponse, error) {
 			// WiFi RSSI signal strength
 			Srssi *int `json:"srssi,omitempty"`
 
-			// The EVSE status
+			// The EVSE state
 			State *int `json:"state,omitempty"`
+
+			// The EVSE status
+			Status *string `json:"status,omitempty"`
 
 			// Number of stuck relay errors
 			Stuckcount *int `json:"stuckcount,omitempty"`
