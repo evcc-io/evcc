@@ -91,7 +91,7 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: [.[].devices[].percentFull] | add / length
+    jq: .[].devices | map(.percentFull) | add / length
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
