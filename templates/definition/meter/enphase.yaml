@@ -28,7 +28,6 @@ render: |
     insecure: true
     {{- end }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
-    scale: 1
   energy:
     source: http
     uri: http://{{ .host }}/production.json
@@ -54,7 +53,6 @@ render: |
     insecure: true
     {{- end }}
     jq: .production[] | select(.measurementType == "production").wNow
-    scale: 1
   energy:
     source: http
     uri: http://{{ .host }}/production.json
@@ -80,7 +78,6 @@ render: |
     insecure: true
     {{- end }}
     jq: .storage[] | select(.type == "acb").wNow
-    scale: 1
   soc:
     source: http
     uri: http://{{ .host }}/ivp/ensemble/inventory
