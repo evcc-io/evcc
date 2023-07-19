@@ -2,7 +2,7 @@ product:
   brand: Youless
   description: Energy Monitor
 description: |
-  Zur Erfassung der PV-Produktion ein exter angebundenener S0-Erzeugungszähler benötigt.
+  Zur Erfassung der PV-Produktion wird ein extern angebundenener S0-Erzeugungszähler benötigt.
 
 render:
   - usage: grid
