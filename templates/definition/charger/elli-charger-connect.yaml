@@ -37,7 +37,7 @@ requirements:
       The support is in beta state and problems can occur!
 
       Important: A mostly flawless functionality can only be provided with an external energy meter and no usage of CT coils, due to sosftware bugs of the Wallbox. Using a LAN connection is highly recommended.
-      
+
       Note: If you've added an energy meter to your charger please use the Pro or Connected+ integration.
 params:
   - preset: eebus
