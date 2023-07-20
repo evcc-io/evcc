@@ -26,6 +26,8 @@ requirements:
 
       Die Unterstützung ist im Beta Stadium und es kann noch zu Problemen kommen!
 
+      Wichtig: Die möglichst reibungslose Funktionalität ist aufgrund von Software-Fehlern in der Wallbox nur mit einem externen Energiezähler möglich!
+
       Hinweis: Wenn du deiner Wallbox nachträglich einen Energiezähler hinzugefügt hast, nutze bitte die Pro bzw. Connected+ Integration.
     en: |
       The device has to have a fix IP address (manuall or via DHCP).
@@ -34,6 +36,8 @@ requirements:
 
       The support is in beta state and problems can occur!
 
+      Important: A mostly flawless functionality can only be provided with an external energy meter, due to sosftware bugs of the Wallbox.
+        
       Note: If you've added an energy meter to your charger please use the Pro or Connected+ integration.
 params:
   - preset: eebus
