@@ -417,7 +417,7 @@ func (c *Easee) Enable(enable bool) error {
 		return err
 	}
 	if noop {
-		return nil
+		return c.confirmChargerCurrent(targetCurrent)
 	}
 
 	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
@@ -429,6 +429,16 @@ func (c *Easee) Enable(enable bool) error {
 		return c.MaxCurrent(int64(c.current))
 	}
 
+	return nil
+}
+
+// ensures that
+func (c *Easee) confirmChargerCurrent(cur float64) error {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	if c.dynamicChargerCurrent != cur {
+		return api.ErrMustRetry
+	}
 	return nil
 }
 
@@ -533,7 +543,7 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	if noop {
-		return nil
+		return c.confirmChargerCurrent(float64(current))
 	}
 
 	if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
