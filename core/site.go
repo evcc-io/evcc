@@ -421,7 +421,7 @@ func (site *Site) updateMeters() error {
 			// pv energy (production)
 			var energy float64
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-				energy, err := m.TotalEnergy()
+				energy, err = m.TotalEnergy()
 				if err == nil {
 					totalEnergy += energy
 				} else {
@@ -471,7 +471,7 @@ func (site *Site) updateMeters() error {
 			// battery energy (discharge)
 			var energy float64
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-				energy, err := m.TotalEnergy()
+				energy, err = m.TotalEnergy()
 				if err == nil {
 					totalEnergy += energy
 				} else {
