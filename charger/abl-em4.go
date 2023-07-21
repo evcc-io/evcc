@@ -90,9 +90,7 @@ func NewAblEm4(uri string, id uint8, connector uint16) (*AblEm4, error) {
 		current: 60, // assume min current
 	}
 
-	if connector > 1 {
-		wb.base = (connector - 1) * abl4Offset
-	}
+	wb.base = (connector - 1) * abl4Offset
 
 	// get initial state from charger
 	curr, err := wb.getCurrent()
@@ -106,21 +104,17 @@ func NewAblEm4(uri string, id uint8, connector uint16) (*AblEm4, error) {
 	return wb, nil
 }
 
-func (wb *AblEm4) register(reg uint16) uint16 {
-	return wb.base + reg
-}
-
 func (wb *AblEm4) setCurrent(current uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, current)
 
-	_, err := wb.conn.WriteMultipleRegisters(wb.register(abl4RegMaxCurrent), 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(wb.base+abl4RegMaxCurrent, 1, b)
 
 	return err
 }
 
 func (wb *AblEm4) getCurrent() (uint16, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(abl4RegMaxCurrent), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.base+abl4RegMaxCurrent, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -130,7 +124,7 @@ func (wb *AblEm4) getCurrent() (uint16, error) {
 
 // Status implements the api.Charger interface
 func (wb *AblEm4) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(abl4RegStatus), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.base+abl4RegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -189,7 +183,7 @@ var _ api.Meter = (*AblEm4)(nil)
 
 // currentPower implements the api.Meter interface
 func (wb *AblEm4) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(abl4RegPower), 2)
+	b, err := wb.conn.ReadHoldingRegisters(wb.base+abl4RegPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -201,7 +195,7 @@ var _ api.MeterEnergy = (*AblEm4)(nil)
 
 // totalEnergy implements the api.MeterEnergy interface
 func (wb *AblEm4) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(abl4RegEnergy), 2)
+	b, err := wb.conn.ReadHoldingRegisters(wb.base+abl4RegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -228,12 +222,12 @@ var _ api.PhaseCurrents = (*AblEm4)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *AblEm4) Currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(wb.register(abl4RegCurrents))
+	return wb.getPhaseValues(wb.base + abl4RegCurrents)
 }
 
 var _ api.PhaseVoltages = (*AblEm4)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *AblEm4) Voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(wb.register(abl4RegVoltages))
+	return wb.getPhaseValues(wb.base + abl4RegVoltages)
 }
