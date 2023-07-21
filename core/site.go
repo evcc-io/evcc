@@ -403,6 +403,7 @@ func (site *Site) updateMeters() error {
 		mm := make([]meterMeasurement, len(site.pvMeters))
 
 		for i, meter := range site.pvMeters {
+			// pv power
 			var power float64
 			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
 
@@ -417,6 +418,7 @@ func (site *Site) updateMeters() error {
 				site.log.ERROR.Println(err)
 			}
 
+			// pv energy (production)
 			var energy float64
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 				energy, err := m.TotalEnergy()
@@ -451,6 +453,7 @@ func (site *Site) updateMeters() error {
 		mm := make([]batteryMeasurement, len(site.batteryMeters))
 
 		for i, meter := range site.batteryMeters {
+			// battery power
 			var power float64
 
 			// NOTE battery errors are logged but ignored as we don't consider them relevant
@@ -465,6 +468,7 @@ func (site *Site) updateMeters() error {
 				site.log.ERROR.Printf("battery %d power: %v", i+1, err)
 			}
 
+			// battery energy (discharge)
 			var energy float64
 			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 				energy, err := m.TotalEnergy()
@@ -475,6 +479,7 @@ func (site *Site) updateMeters() error {
 				}
 			}
 
+			// battery soc and capacity
 			var capacity float64
 			soc, err := meter.(api.Battery).Soc()
 
@@ -522,9 +527,10 @@ func (site *Site) updateMeters() error {
 		site.publish("battery", mm)
 	}
 
+	// grid power
 	err := retryMeter("grid", site.gridMeter, &site.gridPower)
 
-	// powers
+	// grid phase powers
 	var p1, p2, p3 float64
 	if phaseMeter, ok := site.gridMeter.(api.PhasePowers); err == nil && ok {
 		p1, p2, p3, err = phaseMeter.Powers()
@@ -537,7 +543,7 @@ func (site *Site) updateMeters() error {
 		}
 	}
 
-	// currents
+	// grid phase currents (signed)
 	if phaseMeter, ok := site.gridMeter.(api.PhaseCurrents); err == nil && ok {
 		var i1, i2, i3 float64
 		i1, i2, i3, err = phaseMeter.Currents()
@@ -550,7 +556,7 @@ func (site *Site) updateMeters() error {
 		}
 	}
 
-	// energy (import)
+	// grid energy (import)
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); err == nil && ok {
 		var e float64
 		e, err = energyMeter.TotalEnergy()
