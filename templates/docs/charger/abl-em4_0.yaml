@@ -1,6 +1,6 @@
 product:
   brand: ABL
-  description: eM4
+  description: eM4 (SBCx)
 capabilities: ["mA"]
 requirements: ["sponsorship"]
 render:
