@@ -523,7 +523,12 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 			if value.(float64) == targetCurrent {
 				return nil
 			}
-		case <-timer.C: // time is up, bail
+		case <-timer.C: // time is up, bail after one final check
+			c.mux.Lock()
+			defer c.mux.Unlock()
+			if c.dynamicChargerCurrent == targetCurrent {
+				return nil
+			}
 			return api.ErrTimeout
 		}
 	}
