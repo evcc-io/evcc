@@ -48,7 +48,7 @@ type AblEm4 struct {
 }
 
 func init() {
-	registry.Add("ablem4", NewAblEm4FromConfig)
+	registry.Add("abl-em4", NewAblEm4FromConfig)
 }
 
 // NewAblEm4FromConfig creates an ABL eM4 charger from generic config
@@ -81,7 +81,7 @@ func NewAblEm4(uri string, id uint8, connector uint16) (*AblEm4, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("ablem4")
+	log := util.NewLogger("abl-em4")
 	conn.Logger(log.TRACE)
 
 	wb := &AblEm4{
