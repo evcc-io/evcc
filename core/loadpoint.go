@@ -127,6 +127,7 @@ type Loadpoint struct {
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
 	enabled             bool      // Charger enabled state
+	outOfSync           bool      // Charger sync state
 	phases              int       // Charger enabled phases, guarded by mutex
 	measuredPhases      int       // Charger physically measured phases
 	chargeCurrent       float64   // Charger current limit
@@ -630,6 +631,23 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 }
 
+// syncIfRequired implements hysteresis for syncCharger
+func (lp *Loadpoint) syncIfRequired(enable bool) error {
+	// accept out of sync for one interval
+	if !lp.outOfSync {
+		lp.outOfSync = true
+		return nil
+	}
+
+	// try to sync enabled state
+	err := lp.charger.Enable(enable)
+	if err == nil {
+		lp.outOfSync = false
+	}
+
+	return err
+}
+
 // syncCharger updates charger status and synchronizes it with expectations
 func (lp *Loadpoint) syncCharger() error {
 	enabled, err := lp.charger.Enabled()
@@ -642,14 +660,14 @@ func (lp *Loadpoint) syncCharger() error {
 		if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (!lp.enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		}
-		return lp.charger.Enable(lp.enabled)
+		return lp.syncIfRequired(lp.enabled)
 	}
 
 	if !enabled && lp.charging() {
 		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
-		return lp.charger.Enable(false)
+		return lp.syncIfRequired(false)
 	}
 
 	return nil
