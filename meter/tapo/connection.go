@@ -104,6 +104,10 @@ func (d *Connection) Login() error {
 		return err
 	}
 
+	if err := d.CheckErrorCode(res.ErrorCode); err != nil {
+		return err
+	}
+
 	d.Token = res.Result.Token
 
 	deviceResponse, err := d.ExecMethod("get_device_info", false)
