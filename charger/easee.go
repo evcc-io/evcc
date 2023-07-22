@@ -57,10 +57,11 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid string
-	lp   loadpoint.API
-	cmdC chan easee.SignalRCommandResponse
-	obsC chan easee.Observation
+	rfid    string
+	lp      loadpoint.API
+	cmdC    chan easee.SignalRCommandResponse
+	obsC    chan easee.Observation
+	obsTime map[easee.ObservationID]time.Time
 }
 
 func init() {
@@ -105,6 +106,7 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 		done:    make(chan struct{}),
 		cmdC:    make(chan easee.SignalRCommandResponse),
 		obsC:    make(chan easee.Observation),
+		obsTime: make(map[easee.ObservationID]time.Time),
 	}
 
 	c.Client.Timeout = timeout
@@ -281,6 +283,12 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		})
 	}
 	c.updated = time.Now()
+
+	if prevTime, ok := c.obsTime[res.ID]; ok && prevTime.After(res.Timestamp) {
+		// received observation is outdated, ignoring
+		return
+	}
+	c.obsTime[res.ID] = res.Timestamp
 
 	switch res.ID {
 	case easee.USER_IDTOKEN:
