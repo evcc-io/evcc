@@ -24,13 +24,13 @@ requirements:
 
       Eine Identifikation des Fahrzeugs über die RFID Karte ist nicht möglich.
 
-      Die Unterstützung ist im Beta Stadium und es kann noch zu Problemen kommen!
+      Wichtig: Die möglichst reibungslose Funktionalität ist aufgrund von Software-Fehlern in der Wallbox nur mit einem externen Energiezähler und ohne Stromwandlerspulen möglich! Eine LAN Anbindung wird sehr empfohlen.
     en: |
       The device has to have a fix IP address (manuall or via DHCP).
 
       The identification of a vehicle using the RFID card is not possible.
 
-      The support is in beta state and problems can occur!
+      Important: A mostly flawless functionality can only be provided with an external energy meter and no usage of CT coils, due to sosftware bugs of the Wallbox.  Using a LAN connection is highly recommended.
 params:
   - preset: eebus
   - name: ip
