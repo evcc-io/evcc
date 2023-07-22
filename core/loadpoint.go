@@ -632,15 +632,16 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 }
 
 // syncIfRequired implements hysteresis for syncCharger
-func (lp *Loadpoint) syncIfRequired(enable bool) error {
+func (lp *Loadpoint) syncIfRequired(enabled bool) error {
 	// accept out of sync for one interval
 	if !lp.outOfSync {
+		lp.log.DEBUG.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		lp.outOfSync = true
 		return nil
 	}
 
 	// try to sync enabled state
-	err := lp.charger.Enable(enable)
+	err := lp.charger.Enable(enabled)
 	if err == nil {
 		lp.outOfSync = false
 	}
