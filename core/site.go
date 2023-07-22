@@ -375,26 +375,27 @@ func (site *Site) updateMeter(meter api.Meter, power *float64) func() error {
 	}
 }
 
-// updateMeter updates and publishes single meter
-func (site *Site) updateMeters() error {
-	retryMeter := func(name string, meter api.Meter, power *float64) error {
-		if meter == nil {
-			return nil
-		}
-
-		err := retry.Do(site.updateMeter(meter, power), retryOptions...)
-
-		if err == nil {
-			site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
-			site.publish(name+"Power", *power)
-		} else {
-			err = fmt.Errorf("%s meter: %v", name, err)
-			site.log.ERROR.Println(err)
-		}
-
-		return err
+// retryMeter retries meter update
+func (site *Site) retryMeter(name string, meter api.Meter, power *float64) error {
+	if meter == nil {
+		return nil
 	}
 
+	err := retry.Do(site.updateMeter(meter, power), retryOptions...)
+
+	if err == nil {
+		site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
+		site.publish(name+"Power", *power)
+	} else {
+		err = fmt.Errorf("%s meter: %v", name, err)
+		site.log.ERROR.Println(err)
+	}
+
+	return err
+}
+
+// updateMeter updates and publishes single meter
+func (site *Site) updateMeters() error {
 	if len(site.pvMeters) > 0 {
 		var totalEnergy float64
 
@@ -528,7 +529,7 @@ func (site *Site) updateMeters() error {
 	}
 
 	// grid power
-	err := retryMeter("grid", site.gridMeter, &site.gridPower)
+	err := site.retryMeter("grid", site.gridMeter, &site.gridPower)
 
 	// grid phase powers
 	var p1, p2, p3 float64
@@ -558,10 +559,10 @@ func (site *Site) updateMeters() error {
 
 	// grid energy (import)
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); err == nil && ok {
-		var e float64
-		e, err = energyMeter.TotalEnergy()
+		var f float64
+		f, err = energyMeter.TotalEnergy()
 		if err == nil {
-			site.publish("gridEnergy", e)
+			site.publish("gridEnergy", f)
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)
 		}
