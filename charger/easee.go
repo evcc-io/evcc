@@ -285,7 +285,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	c.updated = time.Now()
 
 	if prevTime, ok := c.obsTime[res.ID]; ok && prevTime.After(res.Timestamp) {
-		//received observation is outdated, ignoring
+		// received observation is outdated, ignoring
 		return
 	}
 	c.obsTime[res.ID] = res.Timestamp
