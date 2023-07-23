@@ -8,6 +8,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485"]
+    id: 247
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -18,6 +19,7 @@ render: |
       address: 11000 # Zähler (NVP) Leistung
       type: holding
       decode: int32
+    scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
