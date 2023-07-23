@@ -110,4 +110,3 @@ render: |
       - content-type: application/json
       jq: .value
       scale: -1
-      
