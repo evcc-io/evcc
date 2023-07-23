@@ -85,6 +85,7 @@
   "E3/DC",
   "Eastron",
   "Enphase",
+  "ESPHome",
   "FENECON",
   "FoxESS",
   "Fronius",
@@ -128,7 +129,8 @@
   "Victron",
   "Volkszähler",
   "Youless",
-  "ZCS Azzurro"
+  "ZCS Azzurro",
+  "Zuidwijk"
  ],
  "PVBattery": [
   "Alpha ESS",
