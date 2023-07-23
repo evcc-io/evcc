@@ -73,13 +73,14 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
+      scale: 1000
     - source: http
       uri: http://{{ .host }}/sensor/power_returned_l1
       method: GET
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1
+      scale: -1000
   - source: calc
     add:
     - source: http
@@ -88,13 +89,14 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
+      scale: 1000
     - source: http
       uri: http://{{ .host }}/sensor/power_returned_l2
       method: GET
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1
+      scale: -1000
   - source: calc
     add:
     - source: http
@@ -103,10 +105,11 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
+      scale: 1000
     - source: http
       uri: http://{{ .host }}/sensor/power_returned_l3
       method: GET
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1
+      scale: -1000
