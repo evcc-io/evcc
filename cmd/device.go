@@ -32,7 +32,7 @@ func runDevice(cmd *cobra.Command, args []string) {
 	}
 
 	for _, class := range []config.Class{config.Meter, config.Charger, config.Vehicle} {
-		devs, err := config.Devices(class)
+		devs, err := config.ConfigurationsByClass(class)
 		if err != nil {
 			log.FATAL.Fatal(err)
 		}
@@ -48,7 +48,7 @@ func runDevice(cmd *cobra.Command, args []string) {
 			fmt.Printf("%d. %s\n", d.ID, d.Type)
 
 			details := d.Details
-			slices.SortFunc(details, func(i, j config.DeviceDetail) bool {
+			slices.SortFunc(details, func(i, j config.ConfigDetail) bool {
 				return i.Key < j.Key
 			})
 

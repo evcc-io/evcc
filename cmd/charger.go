@@ -53,8 +53,6 @@ func runCharger(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	chargers := config.ChargersMap()
-
 	current := int64(noCurrent)
 	if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {
 		var err error
@@ -73,8 +71,10 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	chargers := config.Chargers()
+
 	var flagUsed bool
-	for _, v := range chargers {
+	for _, v := range config.Instances(chargers) {
 		if current != noCurrent {
 			flagUsed = true
 
@@ -128,8 +128,10 @@ func runCharger(cmd *cobra.Command, args []string) {
 		d := dumper{len: len(chargers)}
 		flag := cmd.Flags().Lookup(flagDiagnose).Changed
 
-		for name, v := range chargers {
-			d.DumpWithHeader(name, v)
+		for _, dev := range chargers {
+			v := dev.Instance()
+
+			d.DumpWithHeader(dev.Config().Name, v)
 			if flag {
 				d.DumpDiagnosis(v)
 			}

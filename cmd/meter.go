@@ -38,11 +38,13 @@ func runMeter(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	meters := config.MetersMap()
+	meters := config.Meters()
 
 	d := dumper{len: len(meters)}
-	for name, v := range meters {
-		d.DumpWithHeader(name, v)
+	for _, dev := range meters {
+		v := dev.Instance()
+
+		d.DumpWithHeader(dev.Config().Name, v)
 	}
 
 	// wait for shutdown

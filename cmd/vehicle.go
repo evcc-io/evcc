@@ -46,10 +46,10 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
-	vehicles := config.VehiclesMap()
+	vehicles := config.Vehicles()
 
 	var flagUsed bool
-	for _, v := range vehicles {
+	for _, v := range config.Instances(vehicles) {
 		if cmd.Flags().Lookup(flagWakeup).Changed {
 			flagUsed = true
 
@@ -91,8 +91,10 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		d := dumper{len: len(vehicles)}
 		flag := cmd.Flags().Lookup(flagDiagnose).Changed
 
-		for name, v := range vehicles {
-			d.DumpWithHeader(name, v)
+		for _, dev := range vehicles {
+			v := dev.Instance()
+
+			d.DumpWithHeader(dev.Config().Name, v)
 			if flag {
 				d.DumpDiagnosis(v)
 			}

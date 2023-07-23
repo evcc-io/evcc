@@ -145,19 +145,20 @@ func NewSiteFromConfig(
 
 	// grid meter
 	if site.Meters.GridMeterRef != "" {
-		var err error
-		if site.gridMeter, _, err = config.MeterByName(site.Meters.GridMeterRef); err != nil {
+		dev, _, err := config.MeterByName(site.Meters.GridMeterRef)
+		if err != nil {
 			return nil, err
 		}
+		site.gridMeter = dev.Instance()
 	}
 
 	// multiple pv
 	for _, ref := range append(site.Meters.PVMetersRef, site.Meters.PVMetersRef_...) {
-		pv, _, err := config.MeterByName(ref)
+		dev, _, err := config.MeterByName(ref)
 		if err != nil {
 			return nil, err
 		}
-		site.pvMeters = append(site.pvMeters, pv)
+		site.pvMeters = append(site.pvMeters, dev.Instance())
 	}
 
 	// TODO deprecated
@@ -167,11 +168,11 @@ func NewSiteFromConfig(
 
 	// multiple batteries
 	for _, ref := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
-		battery, _, err := config.MeterByName(ref)
+		dev, _, err := config.MeterByName(ref)
 		if err != nil {
 			return nil, err
 		}
-		site.batteryMeters = append(site.batteryMeters, battery)
+		site.batteryMeters = append(site.batteryMeters, dev.Instance())
 	}
 
 	// TODO deprecated
@@ -185,11 +186,11 @@ func NewSiteFromConfig(
 
 	// auxiliary meters
 	for _, ref := range site.Meters.AuxMetersRef {
-		meter, _, err := config.MeterByName(ref)
+		dev, _, err := config.MeterByName(ref)
 		if err != nil {
 			return nil, err
 		}
-		site.auxMeters = append(site.auxMeters, meter)
+		site.auxMeters = append(site.auxMeters, dev.Instance())
 	}
 
 	// configure meter from references

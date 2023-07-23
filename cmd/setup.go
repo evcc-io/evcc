@@ -171,38 +171,41 @@ func loadConfigFile(conf *globalConfig) error {
 	return err
 }
 
-func devicesAsSlice(devices []config.Device) []config.Named {
-	var res []config.Named
-	for _, d := range devices {
-		res = append(res, config.Named{
-			Name:  config.NameForID(d.ID),
-			Type:  d.Type,
-			Other: d.DetailsAsMap(),
-		})
+// devices returns a list of devices from static and configurable device configurations
+func devices[T any](static []config.Named, configurable []config.Config) []config.Device[T] {
+	res := make([]config.Device[T], 0, len(static)+len(configurable))
+	for _, c := range static {
+		res = append(res, config.NewStaticDevice[T](c))
+	}
+	for _, c := range configurable {
+		res = append(res, config.NewConfigurableDevice[T](c))
 	}
 	return res
 }
 
-func configureMeters(conf []config.Named) error {
+func configureMeters(static []config.Named) error {
 	// append devices from database
-	devs, err := config.Devices(config.Meter)
+	configurable, err := config.ConfigurationsByClass(config.Meter)
 	if err != nil {
 		return err
 	}
-	conf = append(conf, devicesAsSlice(devs)...)
 
-	for i, cc := range conf {
+	for i, dev := range devices[api.Meter](static, configurable) {
+		cc := dev.Config()
+
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create meter %d: missing name", i+1)
 		}
 
-		m, err := meter.NewFromConfig(cc.Type, cc.Other)
+		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
 			return err
 		}
 
-		if err := config.AddMeter(cc, m); err != nil {
+		dev.Connect(instance)
+
+		if err := config.AddMeter(dev); err != nil {
 			return err
 		}
 	}
@@ -210,32 +213,34 @@ func configureMeters(conf []config.Named) error {
 	return nil
 }
 
-func configureChargers(conf []config.Named) error {
+func configureChargers(static []config.Named) error {
 	g, _ := errgroup.WithContext(context.Background())
 
 	// append devices from database
-	devs, err := config.Devices(config.Charger)
+	configurable, err := config.ConfigurationsByClass(config.Charger)
 	if err != nil {
 		return err
 	}
-	conf = append(conf, devicesAsSlice(devs)...)
 
-	res := make([]api.Charger, len(conf))
-	for i, cc := range conf {
+	res := devices[api.Charger](static, configurable)
+
+	for i, dev := range res {
+		cc := dev.Config()
+
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create charger %d: missing name", i+1)
 		}
 
 		i := i
-		cc := cc
 
 		g.Go(func() error {
-			c, err := charger.NewFromConfig(cc.Type, cc.Other)
+			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			}
 
-			res[i] = c
+			res[i].Connect(instance)
+
 			return nil
 		})
 	}
@@ -244,8 +249,8 @@ func configureChargers(conf []config.Named) error {
 		return err
 	}
 
-	for i, c := range res {
-		if err := config.AddCharger(conf[i], c); err != nil {
+	for _, dev := range res {
+		if err := config.AddCharger(dev); err != nil {
 			return err
 		}
 	}
@@ -253,27 +258,28 @@ func configureChargers(conf []config.Named) error {
 	return nil
 }
 
-func configureVehicles(conf []config.Named) error {
+func configureVehicles(static []config.Named) error {
 	g, _ := errgroup.WithContext(context.Background())
 
 	// append devices from database
-	devs, err := config.Devices(config.Vehicle)
+	configurable, err := config.ConfigurationsByClass(config.Vehicle)
 	if err != nil {
 		return err
 	}
-	conf = append(conf, devicesAsSlice(devs)...)
 
-	res := make([]api.Vehicle, len(conf))
-	for i, cc := range conf {
+	res := devices[api.Vehicle](static, configurable)
+
+	for i, dev := range res {
+		cc := dev.Config()
+
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create vehicle %d: missing name", i+1)
 		}
 
 		i := i
-		cc := cc
 
 		g.Go(func() error {
-			v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
+			instance, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
 				var ce *util.ConfigError
 				if errors.As(err, &ce) {
@@ -282,16 +288,17 @@ func configureVehicles(conf []config.Named) error {
 
 				// wrap non-config vehicle errors to prevent fatals
 				log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-				v = wrapper.New(cc.Name, cc.Other, err)
+				instance = wrapper.New(cc.Name, cc.Other, err)
 			}
 
 			// ensure vehicle config has title
-			if v.Title() == "" {
+			if instance.Title() == "" {
 				//lint:ignore SA1019 as Title is safe on ascii
-				v.SetTitle(strings.Title(cc.Name))
+				instance.SetTitle(strings.Title(cc.Name))
 			}
 
-			res[i] = v
+			res[i].Connect(instance)
+
 			return nil
 		})
 	}
@@ -300,8 +307,8 @@ func configureVehicles(conf []config.Named) error {
 		return err
 	}
 
-	for i, v := range res {
-		if err := config.AddVehicle(conf[i], v); err != nil {
+	for _, dev := range res {
+		if err := config.AddVehicle(dev); err != nil {
 			return err
 		}
 	}
@@ -545,14 +552,13 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 }
 
 func configureDevices(conf globalConfig) error {
-	err := configureMeters(conf.Meters)
-	if err == nil {
-		err = configureChargers(conf.Chargers)
+	if err := configureMeters(conf.Meters); err != nil {
+		return err
 	}
-	if err == nil {
-		err = configureVehicles(conf.Vehicles)
+	if err := configureChargers(conf.Chargers); err != nil {
+		return err
 	}
-	return err
+	return configureVehicles(conf.Vehicles)
 }
 
 func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
@@ -570,7 +576,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	return configureSite(conf.Site, loadpoints, config.Vehicles(), tariffs)
+	return configureSite(conf.Site, loadpoints, config.Instances(config.Vehicles()), tariffs)
 }
 
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {

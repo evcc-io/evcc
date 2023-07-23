@@ -216,18 +216,20 @@ func NewLoadpointFromConfig(log *util.Logger, other map[string]interface{}) (*Lo
 	lp.collectDefaults()
 
 	if lp.MeterRef != "" {
-		var err error
-		if lp.chargeMeter, _, err = config.MeterByName(lp.MeterRef); err != nil {
+		meter, _, err := config.MeterByName(lp.MeterRef)
+		if err != nil {
 			return nil, err
 		}
+		lp.chargeMeter = meter.Instance()
 	}
 
 	// default vehicle
 	if lp.VehicleRef != "" {
-		var err error
-		if lp.defaultVehicle, _, err = config.VehicleByName(lp.VehicleRef); err != nil {
+		vehicle, _, err := config.VehicleByName(lp.VehicleRef)
+		if err != nil {
 			return nil, err
 		}
+		lp.defaultVehicle = vehicle.Instance()
 	}
 
 	// TODO deprecated
@@ -238,10 +240,11 @@ func NewLoadpointFromConfig(log *util.Logger, other map[string]interface{}) (*Lo
 	if lp.ChargerRef == "" {
 		return nil, errors.New("missing charger")
 	}
-	var err error
-	if lp.charger, _, err = config.ChargerByName(lp.ChargerRef); err != nil {
+	charger, _, err := config.ChargerByName(lp.ChargerRef)
+	if err != nil {
 		return nil, err
 	}
+	lp.charger = charger.Instance()
 	lp.configureChargerType(lp.charger)
 
 	// setup fixed phases:
