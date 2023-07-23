@@ -1,6 +1,6 @@
 product:
   brand: ABL
-  description: eMH1, eMH2, eMH3
+  description: eMH1, eMH2
 capabilities: ["mA"]
 requirements: ["sponsorship"]
 render:
