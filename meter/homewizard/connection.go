@@ -13,8 +13,7 @@ import (
 // Connection is the homewizard connection
 type Connection struct {
 	*request.Helper
-	uri     string
-	channel int
+	uri string
 }
 
 // NewConnection creates a homewizard connection
@@ -35,20 +34,23 @@ func NewConnection(uri string) (*Connection, error) {
 }
 
 // ExecCmd executes an api command and provides the response
-func (d *Connection) ExecCmd(cmd string, res interface{}) error {
-	return d.GetJSON(fmt.Sprintf("%s/api/v1/%s", d.uri, cmd), res)
+func (d *Connection) ExecCmd(method, endpoint string, res interface{}) error {
+	if method == "Get" {
+		return d.GetJSON(fmt.Sprintf("%s/api/v1/%s", d.uri, endpoint), res)
+	}
+	return nil
 }
 
 // CurrentPower implements the api.Meter interface
 func (d *Connection) CurrentPower() (float64, error) {
 	var res DataResponse
-	err := d.ExecCmd("data", &res)
+	err := d.ExecCmd("Get", "data", &res)
 	return res.ActivePowerW, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (d *Connection) TotalEnergy() (float64, error) {
 	var res DataResponse
-	err := d.ExecCmd("data", &res)
+	err := d.ExecCmd("Get", "data", &res)
 	return res.TotalPowerImportT1kWh, err
 }
