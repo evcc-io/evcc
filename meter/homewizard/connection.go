@@ -3,6 +3,7 @@ package homewizard
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -34,9 +35,19 @@ func NewConnection(uri string) (*Connection, error) {
 }
 
 // ExecCmd executes an api command and provides the response
-func (d *Connection) ExecCmd(method, endpoint string, res interface{}) error {
+func (d *Connection) ExecCmd(method, endpoint string, on bool, res interface{}) error {
 	if method == "Get" {
 		return d.GetJSON(fmt.Sprintf("%s/api/v1/%s", d.uri, endpoint), res)
+	}
+	if method == "Put" {
+		data := map[string]interface{}{
+			"power_on": on,
+		}
+		req, err := request.New(http.MethodPut, fmt.Sprintf("%s/api/v1/%s", d.uri, endpoint), request.MarshalJSON(data), request.JSONEncoding)
+		if err != nil {
+			return err
+		}
+		return d.DoJSON(req, &res)
 	}
 	return nil
 }
