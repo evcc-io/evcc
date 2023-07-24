@@ -55,13 +55,13 @@ func (d *Connection) ExecCmd(method, endpoint string, on bool, res interface{}) 
 // CurrentPower implements the api.Meter interface
 func (d *Connection) CurrentPower() (float64, error) {
 	var res DataResponse
-	err := d.ExecCmd("Get", "data", &res)
+	err := d.ExecCmd("Get", "data", false, &res)
 	return res.ActivePowerW, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (d *Connection) TotalEnergy() (float64, error) {
 	var res DataResponse
-	err := d.ExecCmd("Get", "data", &res)
+	err := d.ExecCmd("Get", "data", false, &res)
 	return res.TotalPowerImportT1kWh, err
 }
