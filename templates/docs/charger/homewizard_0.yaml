@@ -1,0 +1,8 @@
+product:
+  brand: HomeWizard
+  group: Schaltbare Steckdosen
+render:
+  - default: |
+      type: template
+      template: homewizard
+      host: 192.0.2.2 # IP-Adresse oder Hostname

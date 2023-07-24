@@ -11,4 +11,7 @@ type StateResponse struct {
 type DataResponse struct {
 	ActivePowerW          float64 `json:"active_power_w"`
 	TotalPowerImportT1kWh float64 `json:"total_power_import_t1_kwh"`
+	TotalPowerImportT2kWh float64 `json:"total_power_import_t2_kwh"`
+	TotalPowerImportT3kWh float64 `json:"total_power_import_t3_kwh"`
+	TotalPowerImportT4kWh float64 `json:"total_power_import_t4_kwh"`
 }

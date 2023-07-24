@@ -1,13 +1,9 @@
 template: homewizard
 products:
   - brand: HomeWizard
-    description:
-      generic: Wi-Fi P1 Meter
+group: switchsockets
 params:
-  - name: usage
-    choice: ["grid", "pv"]
   - name: host
-    required: true
 render: |
   type: homewizard
   uri: http://{{ .host }}

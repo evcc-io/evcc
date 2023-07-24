@@ -64,5 +64,5 @@ func (d *Connection) CurrentPower() (float64, error) {
 func (d *Connection) TotalEnergy() (float64, error) {
 	var res DataResponse
 	err := d.ExecCmd("Get", "data", false, &res)
-	return res.TotalPowerImportT1kWh, err
+	return res.TotalPowerImportT1kWh + res.TotalPowerImportT2kWh + res.TotalPowerImportT3kWh + res.TotalPowerImportT4kWh, err
 }
