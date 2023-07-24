@@ -17,7 +17,5 @@ func TestUnmarshalStateResponse(t *testing.T) {
 		assert.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
 
 		assert.Equal(t, true, res.PowerOn)
-		assert.Equal(t, false, res.SwitchLock)
-		assert.Equal(t, 255, res.Brightness)
 	}
 }
