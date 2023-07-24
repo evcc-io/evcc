@@ -36,20 +36,21 @@ func NewConnection(uri string) (*Connection, error) {
 
 // ExecCmd executes an api command and provides the response
 func (d *Connection) ExecCmd(method, endpoint string, on bool, res interface{}) error {
+	url := fmt.Sprintf("%s/api/v1/%s", d.uri, endpoint)
 	if method == "Get" {
-		return d.GetJSON(fmt.Sprintf("%s/api/v1/%s", d.uri, endpoint), res)
+		return d.GetJSON(url, res)
 	}
 	if method == "Put" {
 		data := map[string]interface{}{
 			"power_on": on,
 		}
-		req, err := request.New(http.MethodPut, fmt.Sprintf("%s/api/v1/%s", d.uri, endpoint), request.MarshalJSON(data), request.JSONEncoding)
+		req, err := request.New(http.MethodPut, url, request.MarshalJSON(data), request.JSONEncoding)
 		if err != nil {
 			return err
 		}
 		return d.DoJSON(req, &res)
 	}
-	return nil
+	return errors.New("unkown method: " + method)
 }
 
 // CurrentPower implements the api.Meter interface
