@@ -9,5 +9,6 @@ type StateResponse struct {
 // DataResponse returns the most recent measurements from the HomeWizard device
 // https://homewizard-energy-api.readthedocs.io/endpoints.html#state-api-v1-state
 type DataResponse struct {
-	ActivePowerW float64 `json:"active_power_w"`
+	ActivePowerW          float64 `json:"active_power_w"`
+	TotalPowerImportT1kWh float64 `json:"total_power_import_t1_kwh"`
 }
