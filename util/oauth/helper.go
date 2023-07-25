@@ -23,7 +23,9 @@ func Refresh(log *util.Logger, token *oauth2.Token, ts oauth2.TokenSource, optMa
 					log.ERROR.Printf("token refresh: %v, giving up", err)
 					return
 				}
+
 				log.ERROR.Printf("token refresh: %v", err)
+				continue
 			}
 
 			failed = 0
