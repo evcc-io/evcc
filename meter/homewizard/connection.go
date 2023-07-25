@@ -39,6 +39,7 @@ func NewConnection(uri string) (*Connection, error) {
 	if res.ApiVersion != "v1" {
 		return nil, errors.New("not supported api version: " + res.ApiVersion)
 	}
+
 	c.URI = c.URI + "/" + res.ApiVersion
 	c.ProductType = res.ProductType
 
