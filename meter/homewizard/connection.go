@@ -13,7 +13,8 @@ import (
 // Connection is the homewizard connection
 type Connection struct {
 	*request.Helper
-	URI string
+	URI         string
+	ProductType string
 }
 
 // NewConnection creates a homewizard connection
@@ -25,10 +26,21 @@ func NewConnection(uri string) (*Connection, error) {
 	log := util.NewLogger("homewizard")
 	c := &Connection{
 		Helper: request.NewHelper(log),
-		URI:    fmt.Sprintf("%s/api/v1", util.DefaultScheme(strings.TrimRight(uri, "/"), "http")),
+		URI:    fmt.Sprintf("%s/api", util.DefaultScheme(strings.TrimRight(uri, "/"), "http")),
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
+
+	// Check and set API version + product type
+	var res ApiResponse
+	if err := c.GetJSON(c.URI, &res); err != nil {
+		return c, err
+	}
+	if res.ApiVersion != "v1" {
+		return nil, errors.New("not supported api version: " + res.ApiVersion)
+	}
+	c.URI = c.URI + "/" + res.ApiVersion
+	c.ProductType = res.ProductType
 
 	return c, nil
 }
