@@ -68,4 +68,4 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
           tags: |
-            grimmimeloni/evcc:nightly
+            grimmimeloni/evcc:${{ github.ref_name }}
