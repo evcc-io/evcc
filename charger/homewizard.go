@@ -58,10 +58,8 @@ func NewHomeWizard(embed embed, uri string, standbypower float64) (*HomeWizard, 
 // Enabled implements the api.Charger interface
 func (c *HomeWizard) Enabled() (bool, error) {
 	var res homewizard.StateResponse
-	if err := c.conn.GetJSON(fmt.Sprintf("%s/data", c.conn.URI), &res); err != nil {
-		return false, err
-	}
-	return res.PowerOn, nil
+	err := c.conn.GetJSON(fmt.Sprintf("%s/data", c.conn.URI), &res)
+	return res.PowerOn, err
 }
 
 // Enable implements the api.Charger interface

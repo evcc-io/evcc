@@ -36,17 +36,13 @@ func NewConnection(uri string) (*Connection, error) {
 // CurrentPower implements the api.Meter interface
 func (d *Connection) CurrentPower() (float64, error) {
 	var res DataResponse
-    err := d.GetJSON(fmt.Sprintf("%s/data", d.URI), &res)
-		return 0, err
-	}
-	return res.ActivePowerW, nil
+	err := d.GetJSON(fmt.Sprintf("%s/data", d.URI), &res)
+	return res.ActivePowerW, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (d *Connection) TotalEnergy() (float64, error) {
 	var res DataResponse
-	if err := d.GetJSON(fmt.Sprintf("%s/data", d.URI), &res); err != nil {
-		return 0, err
-	}
-	return res.TotalPowerImportT1kWh + res.TotalPowerImportT2kWh + res.TotalPowerImportT3kWh + res.TotalPowerImportT4kWh, nil
+	err := d.GetJSON(fmt.Sprintf("%s/data", d.URI), &res)
+	return res.TotalPowerImportT1kWh + res.TotalPowerImportT2kWh + res.TotalPowerImportT3kWh + res.TotalPowerImportT4kWh, err
 }
