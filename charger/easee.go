@@ -381,7 +381,6 @@ func (c *Easee) Enabled() (bool, error) {
 	defer c.mux.Unlock()
 
 	enabled := c.opMode == easee.ModeCharging ||
-		c.opMode == easee.ModeAwaitingStart ||
 		c.opMode == easee.ModeCompleted ||
 		c.opMode == easee.ModeReadyToCharge
 
