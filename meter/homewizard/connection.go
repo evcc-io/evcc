@@ -36,7 +36,7 @@ func NewConnection(uri string) (*Connection, error) {
 // CurrentPower implements the api.Meter interface
 func (d *Connection) CurrentPower() (float64, error) {
 	var res DataResponse
-	if err := d.GetJSON(fmt.Sprintf("%s/data", d.URI), &res); err != nil {
+    err := d.GetJSON(fmt.Sprintf("%s/data", d.URI), &res)
 		return 0, err
 	}
 	return res.ActivePowerW, nil
