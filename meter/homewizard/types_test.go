@@ -7,6 +7,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Test ApiResponse
+func TestUnmarshalApiResponse(t *testing.T) {
+	{
+		var res ApiResponse
+
+		jsonstr := `{"product_type": "HWE-SKT","product_name": "P1 Meter","serial": "3c39e7aabbcc","firmware_version": "2.11","api_version": "v1"}`
+		assert.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
+
+		assert.Equal(t, "HWE-SKT", res.ProductType)
+		assert.Equal(t, "v1", res.ApiVersion)
+	}
+}
+
 // Test StateResponse
 func TestUnmarshalStateResponse(t *testing.T) {
 	{

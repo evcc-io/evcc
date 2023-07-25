@@ -1,5 +1,12 @@
 package homewizard
 
+// ApiResponse returns allows you to get basic information from the HomeWizard Energy Socket
+// https://homewizard-energy-api.readthedocs.io/endpoints.html#basic-information-api
+type ApiResponse struct {
+	ProductType string `json:"product_type"`
+	ApiVersion  string `json:"api_version"`
+}
+
 // StateResponse returns the actual state of the HomeWizard Energy Socket
 // https://homewizard-energy-api.readthedocs.io/endpoints.html#recent-measurement-api-v1-data
 type StateResponse struct {
