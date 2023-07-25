@@ -88,8 +88,10 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	var res oauth2.Token
-	err = v.DoJSON(req, &res)
+	var res oauth.Token
+	if err := v.DoJSON(req, &res); err != nil {
+		return nil, err
+	}
 
-	return &res, err
+	return (*oauth2.Token)(&res), err
 }
