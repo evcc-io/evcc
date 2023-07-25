@@ -2,10 +2,13 @@ package charger
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/homewizard"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // HomeWizard project homepage
@@ -23,7 +26,7 @@ func init() {
 
 // NewHomeWizardFromConfig creates a HomeWizard charger from generic config
 func NewHomeWizardFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc = struct {
 		embed        `mapstructure:",squash"`
 		URI          string
 		StandbyPower float64
@@ -55,20 +58,24 @@ func NewHomeWizard(embed embed, uri string, standbypower float64) (*HomeWizard, 
 // Enabled implements the api.Charger interface
 func (c *HomeWizard) Enabled() (bool, error) {
 	var res homewizard.StateResponse
-	err := c.conn.ExecCmd("Get", "data", false, &res)
-	if err != nil {
+	if err := c.conn.GetJSON(fmt.Sprintf("%s/data", c.conn.URI), &res); err != nil {
 		return false, err
 	}
-
-	return res.PowerOn, err
+	return res.PowerOn, nil
 }
 
 // Enable implements the api.Charger interface
 func (c *HomeWizard) Enable(enable bool) error {
 	var res homewizard.StateResponse
+	data := map[string]interface{}{
+		"power_on": enable,
+	}
 
-	err := c.conn.ExecCmd("Put", "state", enable, &res)
+	req, err := request.New(http.MethodPut, fmt.Sprintf("%s/state", c.conn.URI), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
+		return err
+	}
+	if err := c.conn.DoJSON(req, &res); err != nil {
 		return err
 	}
 
