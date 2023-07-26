@@ -2,7 +2,7 @@ template: abl
 products:
   - brand: ABL
     description:
-      generic: eMH
+      generic: eMH1, eMH2
   - brand: SENEC
     description:
       generic: Wallbox pro
