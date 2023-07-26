@@ -1476,9 +1476,6 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	lp.processTasks()
 
-	mode := lp.GetMode()
-	lp.publish("mode", mode)
-
 	// read and publish meters first- charge power has already been updated by the site
 	lp.updateChargeVoltages()
 	lp.updateChargeCurrents()
@@ -1528,6 +1525,9 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// track if remote disabled is actually active
 	remoteDisabled := loadpoint.RemoteEnable
+
+	mode := lp.GetMode()
+	lp.publish("mode", mode)
 
 	// execute loading strategy
 	switch {
