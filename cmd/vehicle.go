@@ -52,6 +52,11 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.FATAL.Fatal(err)
 		}
+
+		if err, ok := vehicle.(error); ok {
+			fatal(err)
+		}
+
 		vehicles = map[string]api.Vehicle{name: vehicle}
 	}
 
