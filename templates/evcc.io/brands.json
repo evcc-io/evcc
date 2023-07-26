@@ -67,6 +67,7 @@
  "SmartPlugs": [
   "AVM",
   "Homematic / Homematic IP",
+  "HomeWizard",
   "myStrom",
   "Shelly",
   "Tasmota",
@@ -146,6 +147,7 @@
   "GoodWe",
   "Growatt",
   "Homematic IP",
+  "HomeWizard",
   "Hoymiles",
   "Huawei",
   "IGEN Tech",

@@ -4,7 +4,6 @@ products:
 group: switchsockets
 params:
   - name: host
-  - name: host
   - name: user
     required: false
     help:
