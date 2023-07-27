@@ -671,8 +671,8 @@ func (site *Site) greenShareMarginal(baselinePower float64) float64 {
 	greenPower := site.pvPower + site.gridPower - batteryCharge
 	pvConsumption := math.Min(site.pvPower, greenPower)
 
-	gridImport := math.Max(0, site.gridPower - baselinePower)
-	selfConsumption := math.Max(0, batteryDischarge + pvConsumption + batteryCharge - baselinePower)
+	gridImport := math.Max(0, site.gridPower-baselinePower)
+	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge-baselinePower)
 
 	share := selfConsumption / (gridImport + selfConsumption)
 
