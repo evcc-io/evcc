@@ -677,10 +677,11 @@ func (site *Site) greenShareMarginal(baselinePower float64) float64 {
 	share := selfConsumption / (gridImport + selfConsumption)
 
 	if math.IsNaN(share) {
-		if (greenPower > baselinePower)
+		if greenPower > baselinePower {
 			return 1
-		else
+		} else {
 			return 0
+		}
 	}
 
 	return share
