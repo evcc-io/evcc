@@ -15,26 +15,26 @@ func Refresh(log *util.Logger, token *oauth2.Token, ts oauth2.TokenSource, optMa
 	limitTokenLife(token, optMaxTokenLifetime...)
 
 	for range time.Tick(5 * time.Minute) {
-		if _, err := ts.Token(); err != nil {
-			t, err := ts.Token()
-			if err != nil {
-				failed++
-				if failed > 5 {
-					log.ERROR.Printf("token refresh: %v, giving up", err)
-					return
-				}
-
-				log.ERROR.Printf("token refresh: %v", err)
-				continue
+		// get token- either previous or new
+		t, err := ts.Token()
+		if err != nil {
+			// error means refresh failed
+			failed++
+			if failed > 5 {
+				log.ERROR.Printf("token refresh: %v, giving up", err)
+				return
 			}
 
-			failed = 0
+			log.ERROR.Printf("token refresh: %v", err)
+			continue
+		}
 
-			// limit lifetime of new tokens
-			if t.Expiry != token.Expiry {
-				token = t
-				limitTokenLife(token, optMaxTokenLifetime...)
-			}
+		failed = 0
+
+		// limit lifetime of new tokens
+		if t.Expiry != token.Expiry {
+			token = t
+			limitTokenLife(token, optMaxTokenLifetime...)
 		}
 	}
 }
