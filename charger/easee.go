@@ -392,6 +392,7 @@ func (c *Easee) Enabled() (bool, error) {
 func (c *Easee) Enable(enable bool) error {
 	c.mux.Lock()
 	enablingRequired := enable && !c.chargerEnabled
+	prevDcc := c.dynamicChargerCurrent
 	c.mux.Unlock()
 
 	// enable charger once if it's switched off
@@ -424,17 +425,7 @@ func (c *Easee) Enable(enable bool) error {
 	if err != nil {
 		return err
 	}
-
 	//from this point onward, the charger is active with maxA
-	//disable again if any of the following operations fail, otherwise we end up charging uncontrolled
-	defer func() {
-		if err != nil {
-			uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.ChargePause)
-			if _, errDisable := c.postJSONAndWait(uri, nil); errDisable != nil {
-				c.log.ERROR.Printf("failed to disable, after unsuccesful enable: %v", errDisable)
-			}
-		}
-	}()
 
 	if noop {
 		err = c.confirmChargerCurrent(targetCurrent)
@@ -442,16 +433,28 @@ func (c *Easee) Enable(enable bool) error {
 		err = c.waitForDynamicChargerCurrent(targetCurrent)
 	}
 
-	if err != nil {
-		return err
-	}
-
-	if enable {
+	if err == nil && enable {
 		// reset currents after enable, as easee automatically resets to maxA
 		err = c.MaxCurrent(int64(c.current))
 	}
 
+	//if any of the previous operations failed, try to recover by pausing
+	//and restoring previous DCC so it matches state of the loadpoint again
+	if err != nil {
+		c.recoverFailedEnable(prevDcc)
+	}
 	return err
+}
+
+// pauses the charger and sets given current on a best-effort basis
+func (c *Easee) recoverFailedEnable(prevDcc float64) {
+	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.ChargePause)
+	if _, errDisable := c.postJSONAndWait(uri, nil); errDisable != nil {
+		c.log.ERROR.Printf("enable recovery - failed to disable: %v", errDisable)
+	}
+	if errMaxCur := c.MaxCurrent(int64(prevDcc)); errMaxCur != nil {
+		c.log.ERROR.Printf("enable recovery - failed to reset dcc: %v", errMaxCur)
+	}
 }
 
 // ensures that DCC ProductUpdate for given cur was received
