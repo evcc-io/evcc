@@ -79,10 +79,11 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower    float64 // Grid power
-	pvPower      float64 // PV power
-	batteryPower float64 // Battery charge power
-	batterySoc   float64 // Battery soc
+	gridPower        float64 // Grid power
+	pvPower          float64 // PV power
+	batteryPower     float64 // Battery charge power
+	batterySoc       float64 // Battery soc
+	totalChargePower float64 // Total charge power of all loadpoints
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -575,7 +576,7 @@ func (site *Site) updateMeters() error {
 //   - the net power exported by the site minus a residual margin
 //     (negative values mean grid: export, battery: charging
 //   - if battery buffer can be used for charging
-func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, bool, bool, error) {
+func (site *Site) sitePower(flexiblePower float64) (float64, bool, bool, error) {
 	if err := site.updateMeters(); err != nil {
 		return 0, false, false, err
 	}
@@ -717,7 +718,7 @@ func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
 	// update all loadpoint's charge power
-	var totalChargePower float64
+	totalChargePower = 0
 	for _, lp := range site.loadpoints {
 		lp.UpdateChargePower()
 		totalChargePower += lp.GetChargePower()
@@ -748,7 +749,7 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
-	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
+	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(flexiblePower); err == nil {
 		greenShare := site.greenShare()
 		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShare, site.effectivePrice(greenShare), site.effectiveCo2(greenShare))
 
