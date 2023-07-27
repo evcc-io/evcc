@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
@@ -73,27 +74,28 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Tibber) run(done chan error) {
 	var once sync.Once
-
-	var res struct {
-		Viewer struct {
-			Home struct {
-				ID                  string
-				TimeZone            string
-				CurrentSubscription tibber.Subscription
-			} `graphql:"home(id: $id)"`
-		}
-	}
+	bo := newBackoff()
 
 	v := map[string]interface{}{
 		"id": graphql.ID(t.homeID),
 	}
 
 	for ; true; <-time.Tick(time.Hour) {
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-		err := t.client.Query(ctx, &res, v)
-		cancel()
+		var res struct {
+			Viewer struct {
+				Home struct {
+					ID                  string
+					TimeZone            string
+					CurrentSubscription tibber.Subscription
+				} `graphql:"home(id: $id)"`
+			}
+		}
 
-		if err != nil {
+		if err := backoff.Retry(func() error {
+			ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+			defer cancel()
+			return t.client.Query(ctx, &res, v)
+		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -137,7 +139,7 @@ func (t *Tibber) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *Tibber) Type() api.TariffType {
 	return api.TariffTypePriceDynamic
 }
