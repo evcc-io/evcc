@@ -662,40 +662,32 @@ func (site *Site) homePower() float64 {
 	return homePower
 }
 
-func (site *Site) greenShare() float64 {
+// greenShareMarginal returns
+//   - the current green share, ignoring part of the consumption while assuming that this
+//     part will get the green power first
+func (site *Site) greenShareMarginal(baselinePower float64) float64 {
 	batteryDischarge := math.Max(0, site.batteryPower)
 	batteryCharge := -math.Min(0, site.batteryPower)
-	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
+	greenPower := site.pvPower + site.gridPower - batteryCharge
+	pvConsumption := math.Min(site.pvPower, greenPower)
 
-	gridImport := math.Max(0, site.gridPower)
-	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
+	gridImport := math.Max(0, site.gridPower - baselinePower)
+	selfConsumption := math.Max(0, batteryDischarge + pvConsumption + batteryCharge - baselinePower)
 
 	share := selfConsumption / (gridImport + selfConsumption)
 
 	if math.IsNaN(share) {
-		return 0
+		if (greenPower > baselinePower)
+			return 1
+		else
+			return 0
 	}
 
 	return share
 }
 
-// greenShareMarginal returns
-//   - the current green share, assuming that part of the green power was used already
-func (site *Site) greenShareMarginal(baselinePower float64) float64 {
-	batteryDischarge := math.Max(0, site.batteryPower)
-	batteryCharge := -math.Min(0, site.batteryPower)
-	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
-
-	gridImport := math.Max(0, site.gridPower)
-	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge-baselinePower)
-
-	share := selfConsumption / (gridImport + selfConsumption)
-
-	if math.IsNaN(share) {
-		return 0
-	}
-
-	return share
+func (site *Site) greenShare() float64 {
+	return site.greenShareMarginal(0)
 }
 
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
@@ -737,8 +729,11 @@ func (s *Site) publishTariffs() {
 	if price := s.effectivePrice(greenShare); price != nil {
 		s.publish("tariffEffectivePrice", price)
 	}
-	if co2 := s.effectiveCo2(greenShare); co2 != nil {
-		s.publish("tariffEffectiveCo2", co2)
+	if price := s.effectivePrice(s.greenShareMarginal(s.homePower)); price != nil {
+		s.publish("tariffEffectivePriceLoadpoints", price)
+	}
+	if co2 := s.effectiveCo2(s.greenShareMarginal(s.homePower)); co2 != nil {
+		s.publish("tariffEffectiveCo2Loadpoints", co2)
 	}
 }
 
