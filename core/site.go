@@ -583,12 +583,12 @@ func (site *Site) sitePower(flexiblePower float64) (float64, bool, bool, error) 
 
 	// allow using PV as estimate for grid power
 	if site.gridMeter == nil {
-		site.gridPower = totalChargePower - site.pvPower
+		site.gridPower = site.totalChargePower - site.pvPower
 	}
 
 	// allow using grid and charge as estimate for pv power
 	if site.pvMeters == nil {
-		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
+		site.pvPower = site.totalChargePower - site.gridPower + site.ResidualPower
 		if site.pvPower < 0 {
 			site.pvPower = 0
 		}
@@ -657,7 +657,7 @@ func (site *Site) sitePower(flexiblePower float64) (float64, bool, bool, error) 
 //   - the net power used by the site minus all loadpoints total consumption
 func (site *Site) homePower() float64 {
 	// ignore negative pvPower values as that means it is not an energy source but consumption
-	homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
+	homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - site.totalChargePower
 	homePower = math.Max(homePower, 0)
 	return homePower
 }
@@ -746,10 +746,10 @@ func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
 	// update all loadpoint's charge power
-	totalChargePower = 0
+	site.totalChargePower = 0
 	for _, lp := range site.loadpoints {
 		lp.UpdateChargePower()
-		totalChargePower += lp.GetChargePower()
+		site.totalChargePower += lp.GetChargePower()
 
 		site.prioritizer.UpdateChargePowerFlexibility(lp)
 	}
@@ -792,9 +792,9 @@ func (site *Site) update(lp Updater) {
 	greenShare := site.greenShare()
 
 	// TODO: use energy instead of current power for better results
-	deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
-	if telemetry.Enabled() && totalChargePower > standbyPower {
-		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
+	deltaCharged := site.savings.Update(site, greenShare, site.totalChargePower)
+	if telemetry.Enabled() && site.totalChargePower > standbyPower {
+		go telemetry.UpdateChargeProgress(site.log, site.totalChargePower, deltaCharged, greenShare)
 	}
 }
 
