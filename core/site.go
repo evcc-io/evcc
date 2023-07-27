@@ -653,6 +653,15 @@ func (site *Site) sitePower(flexiblePower float64) (float64, bool, bool, error) 
 	return sitePower, batteryBuffered, batteryStart, nil
 }
 
+// homePower returns
+//   - the net power used by the site minus all loadpoints total consumption
+func (site *Site) homePower() float64 {
+	// ignore negative pvPower values as that means it is not an energy source but consumption
+	homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
+	homePower = math.Max(homePower, 0)
+	return homePower
+}
+
 func (site *Site) greenShare() float64 {
 	batteryDischarge := math.Max(0, site.batteryPower)
 	batteryCharge := -math.Min(0, site.batteryPower)
@@ -660,6 +669,25 @@ func (site *Site) greenShare() float64 {
 
 	gridImport := math.Max(0, site.gridPower)
 	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
+
+	share := selfConsumption / (gridImport + selfConsumption)
+
+	if math.IsNaN(share) {
+		return 0
+	}
+
+	return share
+}
+
+// greenShareMarginal returns
+//   - the current green share, assuming that part of the green power was used already
+func (site *Site) greenShareMarginal(baselinePower float64) float64 {
+	batteryDischarge := math.Max(0, site.batteryPower)
+	batteryCharge := -math.Min(0, site.batteryPower)
+	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
+
+	gridImport := math.Max(0, site.gridPower)
+	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge-baselinePower)
 
 	share := selfConsumption / (gridImport + selfConsumption)
 
@@ -753,10 +781,7 @@ func (site *Site) update(lp Updater) {
 		greenShare := site.greenShare()
 		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShare, site.effectivePrice(greenShare), site.effectiveCo2(greenShare))
 
-		// ignore negative pvPower values as that means it is not an energy source but consumption
-		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
-		homePower = math.Max(homePower, 0)
-		site.publish("homePower", homePower)
+		site.publish("homePower", site.homePower)
 
 		site.Health.Update()
 	} else {
