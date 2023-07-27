@@ -730,10 +730,10 @@ func (s *Site) publishTariffs() {
 	if price := s.effectivePrice(greenShare); price != nil {
 		s.publish("tariffEffectivePrice", price)
 	}
-	if price := s.effectivePrice(s.greenShareMarginal(s.homePower)); price != nil {
+	if price := s.effectivePrice(s.greenShareMarginal(s.homePower())); price != nil {
 		s.publish("tariffEffectivePriceLoadpoints", price)
 	}
-	if co2 := s.effectiveCo2(s.greenShareMarginal(s.homePower)); co2 != nil {
+	if co2 := s.effectiveCo2(s.greenShareMarginal(s.homePower())); co2 != nil {
 		s.publish("tariffEffectiveCo2Loadpoints", co2)
 	}
 }
