@@ -42,4 +42,6 @@ func main() {
 	log.SetOutput(io.Discard)
 
 	cmd.Execute()
+
+	// pending
 }
