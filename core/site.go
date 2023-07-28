@@ -766,26 +766,27 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
-	greenShare := site.greenShare()
-
-	// ignore negative pvPower values as that means it is not an energy source but consumption
-	homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
-	homePower = math.Max(homePower, 0)
-	site.publish("homePower", homePower)
-
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
+		greenShare := site.greenShare()
+
 		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShare, site.effectivePrice(greenShare), site.effectiveCo2(greenShare))
+
 		site.Health.Update()
+
+		// ignore negative pvPower values as that means it is not an energy source but consumption
+		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
+		homePower = math.Max(homePower, 0)
+		site.publish("homePower", homePower)
+
+		site.publishTariffs(site.greenShareMarginal(homePower))
+
+		// TODO: use energy instead of current power for better results
+		deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
+		if telemetry.Enabled() && totalChargePower > standbyPower {
+			go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
+		}
 	} else {
 		site.log.ERROR.Println(err)
-	}
-
-	site.publishTariffs(site.greenShareMarginal(homePower))
-
-	// TODO: use energy instead of current power for better results
-	deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
-	if telemetry.Enabled() && totalChargePower > standbyPower {
-		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
 	}
 }
 
