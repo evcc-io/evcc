@@ -79,10 +79,10 @@ type Site struct {
 	savings     *Savings                 // Savings
 
 	// cached state
-	gridPower        float64 // Grid power
-	pvPower          float64 // PV power
-	batteryPower     float64 // Battery charge power
-	batterySoc       float64 // Battery soc
+	gridPower    float64 // Grid power
+	pvPower      float64 // PV power
+	batteryPower float64 // Battery charge power
+	batterySoc   float64 // Battery soc
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
