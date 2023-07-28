@@ -53,7 +53,7 @@ func ChargeStatusString(s string) (ChargeStatus, error) {
 		case "C1", "D1":
 			return StatusB, nil
 		default:
-			return ChargeStatus(s1), nil
+			return StatusC, nil
 		}
 	case "E", "F":
 		return ChargeStatus(s1), fmt.Errorf("invalid status: %s", status)
