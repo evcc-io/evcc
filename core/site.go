@@ -83,7 +83,6 @@ type Site struct {
 	pvPower          float64 // PV power
 	batteryPower     float64 // Battery charge power
 	batterySoc       float64 // Battery soc
-	totalChargePower float64 // Total charge power of all loadpoints
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -576,19 +575,19 @@ func (site *Site) updateMeters() error {
 //   - the net power exported by the site minus a residual margin
 //     (negative values mean grid: export, battery: charging
 //   - if battery buffer can be used for charging
-func (site *Site) sitePower(flexiblePower float64) (float64, bool, bool, error) {
+func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, bool, bool, error) {
 	if err := site.updateMeters(); err != nil {
 		return 0, false, false, err
 	}
 
 	// allow using PV as estimate for grid power
 	if site.gridMeter == nil {
-		site.gridPower = site.totalChargePower - site.pvPower
+		site.gridPower = totalChargePower - site.pvPower
 	}
 
 	// allow using grid and charge as estimate for pv power
 	if site.pvMeters == nil {
-		site.pvPower = site.totalChargePower - site.gridPower + site.ResidualPower
+		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
 		if site.pvPower < 0 {
 			site.pvPower = 0
 		}
@@ -653,15 +652,6 @@ func (site *Site) sitePower(flexiblePower float64) (float64, bool, bool, error) 
 	return sitePower, batteryBuffered, batteryStart, nil
 }
 
-// homePower returns
-//   - the net power used by the site minus all loadpoints total consumption
-func (site *Site) homePower() float64 {
-	// ignore negative pvPower values as that means it is not an energy source but consumption
-	homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - site.totalChargePower
-	homePower = math.Max(homePower, 0)
-	return homePower
-}
-
 // greenShareMarginal returns
 //   - the current green share, ignoring part of the consumption while assuming that this
 //     part will get the green power first
@@ -713,7 +703,7 @@ func (s *Site) effectiveCo2(greenShare float64) *float64 {
 	return nil
 }
 
-func (s *Site) publishTariffs() {
+func (s *Site) publishTariffs(greenShareLoadpoints float64) {
 	greenShare := s.greenShare()
 
 	s.publish("greenShare", greenShare)
@@ -733,10 +723,10 @@ func (s *Site) publishTariffs() {
 	if co2 := s.effectiveCo2(greenShare); co2 != nil {
 		s.publish("tariffEffectiveCo2", co2)
 	}
-	if price := s.effectivePrice(s.greenShareMarginal(s.homePower())); price != nil {
+	if price := s.effectivePrice(greenShareLoadpoints); price != nil {
 		s.publish("tariffEffectivePriceLoadpoints", price)
 	}
-	if co2 := s.effectiveCo2(s.greenShareMarginal(s.homePower())); co2 != nil {
+	if co2 := s.effectiveCo2(greenShareLoadpoints); co2 != nil {
 		s.publish("tariffEffectiveCo2Loadpoints", co2)
 	}
 }
@@ -745,10 +735,10 @@ func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
 	// update all loadpoint's charge power
-	site.totalChargePower = 0
+	var totalChargePower float64
 	for _, lp := range site.loadpoints {
 		lp.UpdateChargePower()
-		site.totalChargePower += lp.GetChargePower()
+		totalChargePower += lp.GetChargePower()
 
 		site.prioritizer.UpdateChargePowerFlexibility(lp)
 	}
@@ -776,24 +766,26 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
-	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(flexiblePower); err == nil {
-		greenShare := site.greenShare()
+	greenShare := site.greenShare()
+
+	// ignore negative pvPower values as that means it is not an energy source but consumption
+	homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
+	homePower = math.Max(homePower, 0)
+	site.publish("homePower", homePower)
+	
+	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShare, site.effectivePrice(greenShare), site.effectiveCo2(greenShare))
-
-		site.publish("homePower", site.homePower)
-
 		site.Health.Update()
 	} else {
 		site.log.ERROR.Println(err)
 	}
 
-	site.publishTariffs()
-	greenShare := site.greenShare()
+	site.publishTariffs(site.greenShareMarginal(homePower))
 
 	// TODO: use energy instead of current power for better results
-	deltaCharged := site.savings.Update(site, greenShare, site.totalChargePower)
-	if telemetry.Enabled() && site.totalChargePower > standbyPower {
-		go telemetry.UpdateChargeProgress(site.log, site.totalChargePower, deltaCharged, greenShare)
+	deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
+	if telemetry.Enabled() && totalChargePower > standbyPower {
+		go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
 	}
 }
 
