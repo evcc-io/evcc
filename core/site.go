@@ -772,7 +772,7 @@ func (site *Site) update(lp Updater) {
 	homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
 	homePower = math.Max(homePower, 0)
 	site.publish("homePower", homePower)
-	
+
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShare, site.effectivePrice(greenShare), site.effectiveCo2(greenShare))
 		site.Health.Update()
