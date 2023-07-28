@@ -113,6 +113,11 @@ type CurrentLimiter interface {
 	MaxCurrent(current int64) error
 }
 
+// CurrentGetter provides getting charging maximum charging current for validation
+type CurrentGetter interface {
+	GetMaxCurrent() (float64, error)
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
