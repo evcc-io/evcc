@@ -637,19 +637,30 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	if (enabled != lp.enabled) && (!lp.enabled || lp.phaseSwitchCommandTimeoutElapsed()) {
+	// in sync
+	if enabled == lp.enabled {
+		return nil
+	}
+
+	// out of sync
+	defer func() {
+		lp.enabled = enabled
+		lp.publish("enabled", lp.enabled)
+	}()
+
+	if enabled || lp.phaseSwitchCommandTimeoutElapsed() {
 		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
-		if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (!lp.enabled || lp.connected()) {
+		if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		}
-		return lp.charger.Enable(lp.enabled)
+		return nil
 	}
 
 	if !enabled && lp.charging() {
 		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
-		return lp.charger.Enable(false)
+		return nil
 	}
 
 	if charger, ok := lp.charger.(api.CurrentGetter); ok {
@@ -1465,9 +1476,6 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	lp.processTasks()
 
-	mode := lp.GetMode()
-	lp.publish("mode", mode)
-
 	// read and publish meters first- charge power has already been updated by the site
 	lp.updateChargeVoltages()
 	lp.updateChargeCurrents()
@@ -1489,7 +1497,6 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging())
-	lp.publish("enabled", lp.enabled)
 
 	// identify connected vehicle
 	if lp.connected() && !lp.chargerHasFeature(api.IntegratedDevice) {
@@ -1517,6 +1524,9 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// track if remote disabled is actually active
 	remoteDisabled := loadpoint.RemoteEnable
+
+	mode := lp.GetMode()
+	lp.publish("mode", mode)
 
 	// execute loading strategy
 	switch {
