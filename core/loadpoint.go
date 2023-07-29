@@ -1518,7 +1518,6 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		lp.log.ERROR.Printf("charger: %v", err)
 		return
 	}
-	lp.publish("enabled", lp.enabled)
 
 	// check if car connected and ready for charging
 	var err error
