@@ -570,6 +570,15 @@ func (c *Easee) MaxCurrent(current int64) error {
 	return nil
 }
 
+var _ api.CurrentGetter = (*Easee)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (c *Easee) GetMaxCurrent() (float64, error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	return c.dynamicChargerCurrent, nil
+}
+
 var _ api.PhaseSwitcher = (*Easee)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
