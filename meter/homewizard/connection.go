@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -15,10 +17,12 @@ type Connection struct {
 	*request.Helper
 	URI         string
 	ProductType string
+	Cache       time.Duration
+	dataCache   provider.Cacheable[DataResponse]
 }
 
 // NewConnection creates a homewizard connection
-func NewConnection(uri string) (*Connection, error) {
+func NewConnection(uri string, cache time.Duration) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
@@ -27,6 +31,7 @@ func NewConnection(uri string) (*Connection, error) {
 	c := &Connection{
 		Helper: request.NewHelper(log),
 		URI:    fmt.Sprintf("%s/api", util.DefaultScheme(strings.TrimRight(uri, "/"), "http")),
+		Cache:  cache,
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -43,19 +48,29 @@ func NewConnection(uri string) (*Connection, error) {
 	c.URI = c.URI + "/" + res.ApiVersion
 	c.ProductType = res.ProductType
 
+	c.dataCache = provider.ResettableCached(func() (DataResponse, error) {
+		var res DataResponse
+		err := c.GetJSON(fmt.Sprintf("%s/data", c.URI), &res)
+		return res, err
+	}, c.Cache)
+
 	return c, nil
 }
 
 // CurrentPower implements the api.Meter interface
 func (d *Connection) CurrentPower() (float64, error) {
-	var res DataResponse
-	err := d.GetJSON(fmt.Sprintf("%s/data", d.URI), &res)
+	res, err := d.dataCache.Get()
+	if err != nil {
+		return 0, err
+	}
 	return res.ActivePowerW, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (d *Connection) TotalEnergy() (float64, error) {
-	var res DataResponse
-	err := d.GetJSON(fmt.Sprintf("%s/data", d.URI), &res)
+	res, err := d.dataCache.Get()
+	if err != nil {
+		return 0, err
+	}
 	return res.TotalPowerImportT1kWh + res.TotalPowerImportT2kWh + res.TotalPowerImportT3kWh + res.TotalPowerImportT4kWh, err
 }
