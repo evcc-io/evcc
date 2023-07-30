@@ -418,23 +418,16 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	noop, err := c.postJSONAndWait(uri, nil)
+	_, err := c.postJSONAndWait(uri, nil)
 	if err != nil {
 		return err
 	}
 
-	if noop {
-		enabled := c.inEnabledOpMode()
-		if expectedEnabledState != enabled {
-			return api.ErrMustRetry
-		}
-	} else {
-		if err := c.waitForChargerEnabledState(expectedEnabledState); err != nil {
-			return err
-		}
-		if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
-			return err
-		}
+	if err := c.waitForChargerEnabledState(expectedEnabledState); err != nil {
+		return err
+	}
+	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
+		return err
 	}
 
 	if enable {
