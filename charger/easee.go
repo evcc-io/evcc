@@ -377,13 +377,10 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
+	enabled := c.inEnabledOpMode()
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
-
-	enabled := c.opMode == easee.ModeCharging ||
-		c.opMode == easee.ModeCompleted ||
-		c.opMode == easee.ModeReadyToCharge
-
 	return enabled && c.dynamicChargerCurrent > 0, nil
 }
 
