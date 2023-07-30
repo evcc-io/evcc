@@ -296,8 +296,8 @@ price = "Σ Preis"
 reallyDelete = "Möchtest du diesen Ladevorgang wirklich löschen?"
 solar = "Sonne"
 title = "Ladevorgänge"
+total = "Insgesamt"
 vehicle = "Fahrzeug"
-total = Insgesamt
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"

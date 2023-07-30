@@ -295,8 +295,8 @@ price = "Σ cijena"
 reallyDelete = "Stvarno želiš izbrisati ovu sesiju?"
 solar = "Solarno"
 title = "Sesije napajanja"
-vehicle = "Vozilo"
 total = "Ukupno"
+vehicle = "Vozilo"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
