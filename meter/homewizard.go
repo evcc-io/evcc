@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/homewizard"
 	"github.com/evcc-io/evcc/util"
@@ -19,19 +21,22 @@ func init() {
 // NewHomeWizardFromConfig creates a HomeWizard meter from generic config
 func NewHomeWizardFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI string
-	}{}
+		URI   string
+		Cache time.Duration
+	}{
+		Cache: time.Second,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewHomeWizard(cc.URI)
+	return NewHomeWizard(cc.URI, cc.Cache)
 }
 
 // NewHomeWizard creates HomeWizard meter
-func NewHomeWizard(uri string) (*HomeWizard, error) {
-	conn, err := homewizard.NewConnection(uri)
+func NewHomeWizard(uri string, cache time.Duration) (*HomeWizard, error) {
+	conn, err := homewizard.NewConnection(uri, cache)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +45,7 @@ func NewHomeWizard(uri string) (*HomeWizard, error) {
 		conn: conn,
 	}
 
-	return c, err
+	return c, nil
 }
 
 var _ api.Meter = (*HomeWizard)(nil)
