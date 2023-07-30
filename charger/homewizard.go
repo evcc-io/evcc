@@ -2,13 +2,11 @@ package charger
 
 import (
 	"errors"
-	"fmt"
-	"net/http"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/homewizard"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 )
 
 // HomeWizard project homepage
@@ -26,22 +24,25 @@ func init() {
 
 // NewHomeWizardFromConfig creates a HomeWizard charger from generic config
 func NewHomeWizardFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc = struct {
+	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string
 		StandbyPower float64
-	}{}
+		Cache        time.Duration
+	}{
+		Cache: time.Second,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewHomeWizard(cc.embed, cc.URI, cc.StandbyPower)
+	return NewHomeWizard(cc.embed, cc.URI, cc.StandbyPower, cc.Cache)
 }
 
 // NewHomeWizard creates HomeWizard charger
-func NewHomeWizard(embed embed, uri string, standbypower float64) (*HomeWizard, error) {
-	conn, err := homewizard.NewConnection(uri)
+func NewHomeWizard(embed embed, uri string, standbypower float64, cache time.Duration) (*HomeWizard, error) {
+	conn, err := homewizard.NewConnection(uri, cache)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +53,7 @@ func NewHomeWizard(embed embed, uri string, standbypower float64) (*HomeWizard, 
 
 	// Check compatible product type
 	if c.conn.ProductType != "HWE-SKT" {
-		return nil, errors.New("not supported product type: " + c.conn.ProductType)
+		return nil, errors.New("unsupported product type: " + c.conn.ProductType)
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
@@ -62,34 +63,12 @@ func NewHomeWizard(embed embed, uri string, standbypower float64) (*HomeWizard, 
 
 // Enabled implements the api.Charger interface
 func (c *HomeWizard) Enabled() (bool, error) {
-	var res homewizard.StateResponse
-	err := c.conn.GetJSON(fmt.Sprintf("%s/data", c.conn.URI), &res)
-	return res.PowerOn, err
+	return c.conn.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *HomeWizard) Enable(enable bool) error {
-	var res homewizard.StateResponse
-	data := map[string]interface{}{
-		"power_on": enable,
-	}
-
-	req, err := request.New(http.MethodPut, fmt.Sprintf("%s/state", c.conn.URI), request.MarshalJSON(data), request.JSONEncoding)
-	if err != nil {
-		return err
-	}
-	if err := c.conn.DoJSON(req, &res); err != nil {
-		return err
-	}
-
-	switch {
-	case enable && !res.PowerOn:
-		return errors.New("switchOn failed")
-	case !enable && res.PowerOn:
-		return errors.New("switchOff failed")
-	default:
-		return nil
-	}
+	return c.conn.Enable(enable)
 }
 
 var _ api.MeterEnergy = (*HomeWizard)(nil)
