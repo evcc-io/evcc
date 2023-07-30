@@ -65,7 +65,7 @@ optInMoreDetailsLink = "hier"
 optInSponsorship = "Sponsoring erforderlich."
 
 [footer.version]
-availableLong = "Neue Version verfügbar"
+availableLong = "neue Version verfügbar"
 modalCancel = "Abbrechen"
 modalDownload = "Download"
 modalInstalledVersion = "Installierte Version"
@@ -106,7 +106,7 @@ modalTitle = "Hilfe benötigt?"
 primaryActions = "Funktioniert etwas nicht so, wie es soll? Dies sind gute Anlaufstellen, um Hilfe zu erhalten."
 restartButton = "Neu starten"
 restartDescription = "Schon versucht, das Gerät aus- und wieder einzuschalten?"
-secondaryActions = "Noch keine Lösung gefunden? Hier noch ein paar weitere Möglichkeiten."
+secondaryActions = "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
 
 [help.restart]
 cancel = "Abbrechen"
@@ -296,6 +296,7 @@ price = "Σ Preis"
 reallyDelete = "Möchtest du diesen Ladevorgang wirklich löschen?"
 solar = "Sonne"
 title = "Ladevorgänge"
+total = "Insgesamt"
 vehicle = "Fahrzeug"
 
 [sessions.csv]

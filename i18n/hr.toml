@@ -107,7 +107,7 @@ modalTitle = "Trebaš pomoć?"
 primaryActions = "Nešto ne radi onako kako bi trebalo? Ovo su dobra mjesta za pomoć."
 restartButton = "Pokreni ponovo"
 restartDescription = "Jesi li pokušao/la isključiti i ponovo uključiti aplikaciju?"
-secondaryActions = "Još uvijek ne možeš riješiti svoj problem? Evo još nekih opcija."
+secondaryActions = "Još uvijek ne možeš riješiti problem? Evo još nekih opcija."
 
 [help.restart]
 cancel = "Odustani"
@@ -286,7 +286,7 @@ avgPrice = "⌀ cijena"
 co2 = "⌀ CO₂"
 csvMonth = "Preuzmi CSV za {month}"
 csvTotal = "Preuzmi CSV za ukupno"
-date = "Gotovo"
+date = "Početak"
 downloadCsv = "Preuzmi kao CSV"
 energy = "Napojeno"
 loadpoint = "Mjesto napajanja"
@@ -295,6 +295,7 @@ price = "Σ cijena"
 reallyDelete = "Stvarno želiš izbrisati ovu sesiju?"
 solar = "Solarno"
 title = "Sesije napajanja"
+total = "Ukupno"
 vehicle = "Vozilo"
 
 [sessions.csv]
@@ -311,7 +312,7 @@ vehicle = "Vozilo"
 [sessions.filter]
 allLoadpoints = "sva mjesta napajanja"
 allVehicles = "sva vozila"
-filter = "filtar"
+filter = "Filtar"
 
 [settings]
 title = "Postavke"
