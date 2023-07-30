@@ -381,7 +381,6 @@ func (c *Easee) Enabled() (bool, error) {
 	defer c.mux.Unlock()
 
 	enabled := c.opMode == easee.ModeCharging ||
-		c.opMode == easee.ModeAwaitingStart ||
 		c.opMode == easee.ModeCompleted ||
 		c.opMode == easee.ModeReadyToCharge
 
@@ -413,8 +412,8 @@ func (c *Easee) Enable(enable bool) error {
 
 	// resume/stop charger
 	action := easee.ChargePause
-	expectedEnabledState := false
-	targetCurrent := 0.0
+	var expectedEnabledState bool
+	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
 		expectedEnabledState = true
@@ -428,15 +427,10 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	if noop {
-		c.mux.Lock()
 		enabled := c.inEnabledOpMode()
 		if expectedEnabledState != enabled {
 			return api.ErrMustRetry
 		}
-		if c.dynamicChargerCurrent != targetCurrent {
-			return api.ErrMustRetry
-		}
-		c.mux.Unlock()
 	} else {
 		if err := c.waitForChargerEnabledState(expectedEnabledState); err != nil {
 			return err
@@ -593,17 +587,10 @@ func (c *Easee) MaxCurrent(current int64) error {
 		return err
 	}
 
-	if noop {
-		c.mux.Lock()
-		defer c.mux.Unlock()
-		if c.dynamicChargerCurrent != cur {
-			return api.ErrMustRetry
+	if !noop {
+		if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
+			return err
 		}
-		return nil
-	}
-
-	if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
-		return err
 	}
 
 	c.mux.Lock()
