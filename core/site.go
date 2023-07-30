@@ -767,18 +767,20 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
-		greenShare := site.greenShare()
-
-		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShare, site.effectivePrice(greenShare), site.effectiveCo2(greenShare))
-
-		site.Health.Update()
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
 		homePower = math.Max(homePower, 0)
 		site.publish("homePower", homePower)
 
-		site.publishTariffs(site.greenShareMarginal(homePower))
+		greenShare := site.greenShare()
+		greenShareLoadpoints := site.greenShareMarginal(homePower)
+
+		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
+
+		site.Health.Update()
+
+		site.publishTariffs(greenShareLoadpoints)
 
 		// TODO: use energy instead of current power for better results
 		deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
