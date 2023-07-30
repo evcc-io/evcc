@@ -413,11 +413,11 @@ func (c *Easee) Enable(enable bool) error {
 
 	// resume/stop charger
 	action := easee.ChargePause
-	targetOpMode := easee.ModeAwaitingStart
+	expectedEnabledState := false
 	targetCurrent := 0.0
 	if enable {
 		action = easee.ChargeResume
-		targetOpMode = easee.ModeCharging
+		expectedEnabledState = true
 		targetCurrent = 32
 	}
 
@@ -428,14 +428,17 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	if noop {
-		if err := c.confirmChargerOpMode(targetOpMode); err != nil {
-			return err
+		c.mux.Lock()
+		enabled := c.inEnabledOpMode()
+		if expectedEnabledState != enabled {
+			return api.ErrMustRetry
 		}
-		if err := c.confirmChargerCurrent(targetCurrent); err != nil {
-			return err
+		if c.dynamicChargerCurrent != targetCurrent {
+			return api.ErrMustRetry
 		}
+		c.mux.Unlock()
 	} else {
-		if err := c.waitForChargerOpMode(targetOpMode); err != nil {
+		if err := c.waitForChargerEnabledState(expectedEnabledState); err != nil {
 			return err
 		}
 		if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
@@ -451,24 +454,12 @@ func (c *Easee) Enable(enable bool) error {
 	return nil
 }
 
-// ensures that DCC matches expectation
-func (c *Easee) confirmChargerCurrent(cur float64) error {
+func (c *Easee) inEnabledOpMode() bool {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	if c.dynamicChargerCurrent != cur {
-		return api.ErrMustRetry
-	}
-	return nil
-}
-
-// ensures that OP_MODE matches expectations
-func (c *Easee) confirmChargerOpMode(opMode int) error {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-	if c.opMode != opMode {
-		return api.ErrMustRetry
-	}
-	return nil
+	return c.opMode == easee.ModeCharging ||
+		c.opMode == easee.ModeCompleted ||
+		c.opMode == easee.ModeReadyToCharge
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
@@ -529,14 +520,11 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 }
 
 // wait for opMode become expected op mode
-func (c *Easee) waitForChargerOpMode(expOpMode int) error {
+func (c *Easee) waitForChargerEnabledState(expEnabled bool) error {
 	// check any updates received meanwhile
-	c.mux.Lock()
-	if c.opMode == expOpMode {
-		c.mux.Unlock()
+	if expEnabled == c.inEnabledOpMode() {
 		return nil
 	}
-	c.mux.Unlock()
 
 	timer := time.NewTimer(10 * time.Second)
 	for {
@@ -545,17 +533,11 @@ func (c *Easee) waitForChargerOpMode(expOpMode int) error {
 			if obs.ID != easee.CHARGER_OP_MODE {
 				continue
 			}
-			value, err := obs.TypedValue()
-			if err != nil {
-				continue
-			}
-			if value.(int) == expOpMode {
+			if expEnabled == c.inEnabledOpMode() {
 				return nil
 			}
 		case <-timer.C: // time is up, bail after one final check
-			c.mux.Lock()
-			defer c.mux.Unlock()
-			if c.opMode == expOpMode {
+			if expEnabled == c.inEnabledOpMode() {
 				return nil
 			}
 			return api.ErrTimeout
@@ -612,7 +594,12 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	if noop {
-		return c.confirmChargerCurrent(float64(current))
+		c.mux.Lock()
+		defer c.mux.Unlock()
+		if c.dynamicChargerCurrent != cur {
+			return api.ErrMustRetry
+		}
+		return nil
 	}
 
 	if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
