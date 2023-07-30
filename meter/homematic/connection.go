@@ -142,7 +142,7 @@ func (c *Connection) XmlCmd(method, channel string, values ...Param) (MethodResp
 		return hmr, err
 	}
 
-	// correct Homematic IP Legacy API (CCU port 2010) and XML-RPC-Schnittstelle (CCU port 2001) method response encoding value
+	// correct Homematic IP Legacy API (CCU port 2010) and XML-RPC-Schnittstelle (CCU port 2001) response encoding
 	re := regexp.MustCompile("(?i)iso-8859-1")
 	res = re.ReplaceAll(res, []byte("UTF-8"))
 
