@@ -36,13 +36,13 @@ func NewConnection(uri string, cache time.Duration) (*Connection, error) {
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 
-	// Check and set API version + product type
+	// check and set API version + product type
 	var res ApiResponse
 	if err := c.GetJSON(c.uri, &res); err != nil {
 		return c, err
 	}
 	if res.ApiVersion != "v1" {
-		return nil, errors.New("not supported api version: " + res.ApiVersion)
+		return nil, errors.New("unsupported api version: " + res.ApiVersion)
 	}
 
 	c.uri = c.uri + "/" + res.ApiVersion
