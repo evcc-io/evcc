@@ -45,7 +45,7 @@ func NewHomeWizard(uri string, cache time.Duration) (*HomeWizard, error) {
 		conn: conn,
 	}
 
-	return c, err
+	return c, nil
 }
 
 var _ api.Meter = (*HomeWizard)(nil)

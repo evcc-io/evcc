@@ -16,9 +16,8 @@ import (
 // Connection is the homewizard connection
 type Connection struct {
 	*request.Helper
-	URI         string
+	uri         string
 	ProductType string
-	Cache       time.Duration
 	dataCache   provider.Cacheable[DataResponse]
 	stateCache  provider.Cacheable[StateResponse]
 }
@@ -32,35 +31,34 @@ func NewConnection(uri string, cache time.Duration) (*Connection, error) {
 	log := util.NewLogger("homewizard")
 	c := &Connection{
 		Helper: request.NewHelper(log),
-		URI:    fmt.Sprintf("%s/api", util.DefaultScheme(strings.TrimRight(uri, "/"), "http")),
-		Cache:  cache,
+		uri:    fmt.Sprintf("%s/api", util.DefaultScheme(strings.TrimRight(uri, "/"), "http")),
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 	// Check and set API version + product type
 	var res ApiResponse
-	if err := c.GetJSON(c.URI, &res); err != nil {
+	if err := c.GetJSON(c.uri, &res); err != nil {
 		return c, err
 	}
 	if res.ApiVersion != "v1" {
 		return nil, errors.New("not supported api version: " + res.ApiVersion)
 	}
 
-	c.URI = c.URI + "/" + res.ApiVersion
+	c.uri = c.uri + "/" + res.ApiVersion
 	c.ProductType = res.ProductType
 
 	c.dataCache = provider.ResettableCached(func() (DataResponse, error) {
 		var res DataResponse
-		err := c.GetJSON(fmt.Sprintf("%s/data", c.URI), &res)
+		err := c.GetJSON(fmt.Sprintf("%s/data", c.uri), &res)
 		return res, err
-	}, c.Cache)
+	}, cache)
 
 	c.stateCache = provider.ResettableCached(func() (StateResponse, error) {
 		var res StateResponse
-		err := c.GetJSON(fmt.Sprintf("%s/state", c.URI), &res)
+		err := c.GetJSON(fmt.Sprintf("%s/state", c.uri), &res)
 		return res, err
-	}, c.Cache)
+	}, cache)
 
 	return c, nil
 }
@@ -72,7 +70,7 @@ func (c *Connection) Enable(enable bool) error {
 		"power_on": enable,
 	}
 
-	req, err := request.New(http.MethodPut, fmt.Sprintf("%s/state", c.URI), request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPut, fmt.Sprintf("%s/state", c.uri), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
@@ -98,26 +96,17 @@ func (c *Connection) Enable(enable bool) error {
 // Enabled reads the homewizard switch state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
 	res, err := c.stateCache.Get()
-	if err != nil {
-		return false, err
-	}
 	return res.PowerOn, err
 }
 
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
 	res, err := c.dataCache.Get()
-	if err != nil {
-		return 0, err
-	}
 	return res.ActivePowerW, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.dataCache.Get()
-	if err != nil {
-		return 0, err
-	}
 	return res.TotalPowerImportT1kWh + res.TotalPowerImportT2kWh + res.TotalPowerImportT3kWh + res.TotalPowerImportT4kWh, err
 }
