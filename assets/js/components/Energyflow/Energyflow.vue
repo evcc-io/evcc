@@ -241,7 +241,7 @@ export default {
 			return Math.max(0, this.gridPower * -1);
 		},
 		powerInKw: function () {
-			return this.gridImport + this.selfConsumption + this.pvExport > 1000;
+			return Math.max(this.gridImport, this.selfConsumption, this.pvExport) >= 1000;
 		},
 		inPower: function () {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
