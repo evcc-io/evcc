@@ -80,7 +80,7 @@ export default {
 			}
 		},
 		powerInKw(newVal, oldVal) {
-			// force update if unit changes but but not the value
+			// force update if unit changes but not the value
 			if (newVal !== oldVal) {
 				this.$refs.powerNumber.forceUpdate();
 			}
