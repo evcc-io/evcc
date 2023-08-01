@@ -484,7 +484,7 @@ export default {
 		},
 		headline() {
 			const date = new Date();
-			date.setMonth(this.month - 1);
+			date.setMonth(this.month - 1, 1);
 			date.setFullYear(this.year);
 			return this.fmtMonthYear(date);
 		},
@@ -497,7 +497,7 @@ export default {
 		prevDate() {
 			const date = new Date();
 			date.setFullYear(this.year);
-			date.setMonth(this.month - 2);
+			date.setMonth(this.month - 2, 1);
 			return date;
 		},
 		prevYearMonth() {
@@ -512,7 +512,7 @@ export default {
 		nextDate() {
 			const date = new Date();
 			date.setFullYear(this.year);
-			date.setMonth(this.month);
+			date.setMonth(this.month, 1);
 			return date;
 		},
 		nextYearMonth() {
