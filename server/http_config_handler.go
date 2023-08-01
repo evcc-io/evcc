@@ -81,6 +81,35 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
+func deviceConfigMap[T any](devices []config.Device[T]) []map[string]any {
+	var res []map[string]any
+
+	// omit name from config
+	for _, dev := range devices {
+		conf := dev.Config()
+
+		dc := map[string]any{
+			"name": conf.Name,
+			"type": conf.Type,
+		}
+
+		if _, ok := dev.(config.ConfigurableDevice[T]); ok {
+			// from database
+			dc["id"] = conf.ID
+			dc["config"] = conf.Other
+		} else if title := dev.Other["title"]; title != nil {
+			// from yaml- add title only
+			if s, ok := title.(string); ok {
+				dc["config"] = map[string]any{"title": s}
+			}
+		}
+
+		res = append(res, dc)
+	}
+
+	return res
+}
+
 // devicesHandler tests a configuration by class
 func devicesHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -91,47 +120,15 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var named []config.Named
+	var res []map[string]any
 
 	switch class {
 	case config.Meter:
-		named = config.MetersConfig()
+		res = deviceConfigMap[api.Meter](config.Meters())
 	case config.Charger:
-		named = config.ChargersConfig()
+		res = deviceConfigMap[api.Charger](config.Chargers())
 	case config.Vehicle:
-		named = config.VehiclesConfig()
-	}
-
-	type deviceConfig map[string]any
-	res := make([]deviceConfig, 0, len(named))
-
-	// omit name from config
-	for _, v := range named {
-		conf := deviceConfig{
-			"name": v.Name,
-			"type": v.Type,
-		}
-
-		// convert name to id
-		var id int
-		if sid, ok := strings.CutPrefix(v.Name, "db:"); ok {
-			if i, err := strconv.Atoi(sid); err == nil {
-				id = i
-			}
-		}
-
-		if id > 0 {
-			// from database
-			conf["id"] = id
-			conf["config"] = v.Other
-		} else if title := v.Other["title"]; title != nil {
-			// from yaml- add title only
-			if s, ok := title.(string); ok {
-				conf["config"] = map[string]any{"title": s}
-			}
-		}
-
-		res = append(res, conf)
+		res = deviceConfigMap[api.Vehicle](config.Vehicles())
 	}
 
 	jsonResult(w, res)
@@ -170,48 +167,50 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var id int
-	named := namedConfig(&req)
+	var conf config.Config
 
 	switch class {
 	case config.Charger:
-		var c api.Charger
-		if c, err = charger.NewFromConfig(named.Type, req); err != nil {
+		var instance api.Charger
+		if instance, err = charger.NewFromConfig(typeTemplate, req); err != nil {
 			break
 		}
 
-		if id, err = config.AddDevice(config.Charger, named.Type, req); err != nil {
+		if conf, err = config.AddConfig(config.Charger, typeTemplate, req); err != nil {
 			break
 		}
 
-		named.Name = config.NameForID(id)
-		err = config.AddCharger(named, c)
+		dev := config.NewConfigurableDevice[api.Charger](conf)
+		dev.Connect(instance)
+		err = config.AddCharger(dev)
 
 	case config.Meter:
-		var m api.Meter
-		if m, err = meter.NewFromConfig(named.Type, req); err != nil {
+		var instance api.Meter
+		if instance, err = meter.NewFromConfig(typeTemplate, req); err != nil {
 			break
 		}
 
-		if id, err = config.AddDevice(config.Meter, named.Type, req); err != nil {
+		if conf, err = config.AddConfig(config.Meter, typeTemplate, req); err != nil {
 			break
 		}
 
-		named.Name = config.NameForID(id)
-		err = config.AddMeter(named, m)
+		dev := config.NewConfigurableDevice[api.Meter](conf)
+		dev.Connect(instance)
+		err = config.AddMeter(dev)
 
 	case config.Vehicle:
-		var v api.Vehicle
-		if v, err = vehicle.NewFromConfig(named.Type, req); err != nil {
+		var instance api.Vehicle
+		if instance, err = vehicle.NewFromConfig(typeTemplate, req); err != nil {
 			break
 		}
 
-		if id, err = config.AddDevice(config.Vehicle, named.Type, req); err != nil {
+		if conf, err = config.AddConfig(config.Vehicle, typeTemplate, req); err != nil {
 			break
 		}
 
-		named.Name = config.NameForID(id)
-		err = config.AddVehicle(named, v)
+		dev := config.NewConfigurableDevice[api.Vehicle](conf)
+		dev.Connect(instance)
+		err = config.AddVehicle(dev)
 	}
 
 	if err != nil {
@@ -222,7 +221,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	res := struct {
 		ID int `json:"id"`
 	}{
-		ID: id,
+		ID: conf.ID,
 	}
 
 	jsonResult(w, res)
@@ -250,46 +249,45 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	named := namedConfig(&req)
-	named.Name = config.NameForID(id)
-	named.Type = "template"
+	// named := namedConfig(&req)
+	// named.Name = config.NameForID(id)
 
 	switch class {
 	case config.Charger:
-		var c api.Charger
-		if c, err = charger.NewFromConfig(named.Type, req); err != nil {
+		var instance api.Charger
+		if instance, err = charger.NewFromConfig(typeTemplate, req); err != nil {
 			break
 		}
 
-		if err = config.UpdateDevice(config.Charger, id, named.Other); err != nil {
+		if err = dev.Update(named.Other); err != nil {
 			break
 		}
 
-		err = config.UpdateCharger(named, c)
+		dev.Connect(instance)
 
 	case config.Meter:
-		var m api.Meter
-		if m, err = meter.NewFromConfig(named.Type, req); err != nil {
+		var instance api.Meter
+		if instance, err = meter.NewFromConfig(typeTemplate, req); err != nil {
 			break
 		}
 
-		if err = config.UpdateDevice(config.Meter, id, named.Other); err != nil {
+		if err = dev.Update(named.Other); err != nil {
 			break
 		}
 
-		err = config.UpdateMeter(named, m)
+		dev.Connect(instance)
 
 	case config.Vehicle:
-		var v api.Vehicle
-		if v, err = vehicle.NewFromConfig(named.Type, req); err != nil {
+		var instance api.Vehicle
+		if instance, err = vehicle.NewFromConfig(typeTemplate, req); err != nil {
 			break
 		}
 
-		if err = config.UpdateDevice(config.Vehicle, id, named.Other); err != nil {
+		if err = dev.Update(named.Other); err != nil {
 			break
 		}
 
-		err = config.UpdateVehicle(named, v)
+		dev.Connect(instance)
 	}
 
 	if err != nil {

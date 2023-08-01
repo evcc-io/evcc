@@ -5,9 +5,9 @@ type Device[T any] interface {
 	Connect(instance T)
 	Instance() T
 }
-type DynamicDevice[T any] interface {
+type ConfigurableDevice[T any] interface {
 	Device[T]
-	Update(Named, T)
+	Update(map[string]any, T) error
 }
 
 type configurableDevice[T any] struct {
@@ -15,7 +15,7 @@ type configurableDevice[T any] struct {
 	instance T
 }
 
-func NewConfigurableDevice[T any](config Config) DynamicDevice[T] {
+func NewConfigurableDevice[T any](config Config) ConfigurableDevice[T] {
 	return &configurableDevice[T]{config: config}
 }
 
@@ -31,7 +31,12 @@ func (d *configurableDevice[T]) Instance() T {
 	return d.instance
 }
 
-func (d *configurableDevice[T]) Update(Named, T) {
+func (d *configurableDevice[T]) Update(config map[string]any, instance T) error {
+	if err := d.config.Update(config); err != nil {
+		return err
+	}
+	d.Connect(instance)
+	return nil
 }
 
 type staticDevice[T any] struct {

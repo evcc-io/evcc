@@ -56,6 +56,23 @@ func (d *Config) mapAsDetails(config map[string]any) []ConfigDetail {
 	return res
 }
 
+// Update updates a config's details to the database
+func (d *Config) Update(conf map[string]any) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		var config Config
+		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Delete(new(ConfigDetail), ConfigDetail{ConfigID: d.ID}).Error; err != nil {
+			return err
+		}
+
+		details := config.mapAsDetails(conf)
+		return tx.Save(&details).Error
+	})
+}
+
 var db *gorm.DB
 
 func Init(instance *gorm.DB) error {
@@ -90,43 +107,43 @@ func ConfigurationsByClass(class Class) ([]Config, error) {
 
 // ConfigByID returns device by id from the database
 func ConfigByID(id int) (Config, error) {
-	var device Config
-	tx := db.Where(&Config{ID: id}).Preload("Details").First(&device)
-	return device, tx.Error
+	var config Config
+	tx := db.Where(&Config{ID: id}).Preload("Details").First(&config)
+	return config, tx.Error
 }
 
-// AddConfig adds a new device to the database
-func AddConfig(class Class, typ string, config map[string]any) (int, error) {
-	device := Config{Class: class, Type: typ}
+// AddConfig adds a new config to the database
+func AddConfig(class Class, typ string, newConf map[string]any) (Config, error) {
+	config := Config{Class: class, Type: typ}
 
 	err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(&device).Error; err != nil {
+		if err := tx.Create(&config).Error; err != nil {
 			return err
 		}
 
-		details := device.mapAsDetails(config)
+		details := config.mapAsDetails(newConf)
 		return tx.Create(&details).Error
 	})
 
-	return device.ID, err
+	return config, err
 }
 
-// UpdateConfig updates a device's details to the database
-func UpdateConfig(class Class, id int, config map[string]any) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		var device Config
-		if err := tx.Where(Config{Class: class, ID: id}).First(&device).Error; err != nil {
-			return err
-		}
+// // UpdateConfig updates a config's details to the database
+// func UpdateConfig(class Class, id int, newConf map[string]any) error {
+// 	return db.Transaction(func(tx *gorm.DB) error {
+// 		var config Config
+// 		if err := tx.Where(Config{Class: class, ID: id}).First(&config).Error; err != nil {
+// 			return err
+// 		}
 
-		if err := tx.Delete(new(ConfigDetail), ConfigDetail{ConfigID: id}).Error; err != nil {
-			return err
-		}
+// 		if err := tx.Delete(new(ConfigDetail), ConfigDetail{ConfigID: id}).Error; err != nil {
+// 			return err
+// 		}
 
-		details := device.mapAsDetails(config)
-		return tx.Save(&details).Error
-	})
-}
+// 		details := config.mapAsDetails(newConf)
+// 		return tx.Save(&details).Error
+// 	})
+// }
 
 // DeleteConfig deletes a device from the database
 func DeleteConfig(class Class, id int) error {

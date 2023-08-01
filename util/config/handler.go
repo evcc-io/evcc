@@ -59,5 +59,5 @@ func (cp *handler[T]) ByName(name string) (Device[T], int, error) {
 		}
 	}
 
-	return empty, 0, fmt.Errorf("does not exist: %s", name)
+	return empty, 0, fmt.Errorf("not found: %s", name)
 }
