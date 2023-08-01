@@ -40,7 +40,11 @@ export default {
 	unmounted() {
 		this.instance = null;
 	},
+	methods: {
+		forceUpdate() {
+			this.instance?.reset();
+			this.instance?.update(this.to);
+		},
+	},
 };
 </script>
-
-<style lang="less" scoped></style>

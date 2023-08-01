@@ -10,6 +10,26 @@ const fmt = mount({
   mixins: [formatter],
 }).componentVM;
 
+describe("fmtkW", () => {
+  test("should format kW and W", () => {
+    expect(fmt.fmtKw(0, true)).eq("0,0 kW");
+    expect(fmt.fmtKw(1200, true)).eq("1,2 kW");
+    expect(fmt.fmtKw(0, false)).eq("0 W");
+    expect(fmt.fmtKw(1200, false)).eq("1.200 W");
+  });
+  test("should format without unit", () => {
+    expect(fmt.fmtKw(0, true, false)).eq("0,0");
+    expect(fmt.fmtKw(1200, true, false)).eq("1,2");
+    expect(fmt.fmtKw(0, false, false)).eq("0");
+    expect(fmt.fmtKw(1200, false, false)).eq("1.200");
+  });
+  test("should format a given number of digits", () => {
+    expect(fmt.fmtKw(12345, true, true, 0)).eq("12 kW");
+    expect(fmt.fmtKw(12345, true, true, 1)).eq("12,3 kW");
+    expect(fmt.fmtKw(12345, true, true, 2)).eq("12,35 kW");
+  });
+});
+
 describe("fmtKWh", () => {
   test("should format with units", () => {
     expect(fmt.fmtKWh(1200)).eq("1,2 kWh");
