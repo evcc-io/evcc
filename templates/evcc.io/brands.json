@@ -67,6 +67,7 @@
  "SmartPlugs": [
   "AVM",
   "Homematic / Homematic IP",
+  "HomeWizard",
   "myStrom",
   "Shelly",
   "Tasmota",
@@ -85,6 +86,7 @@
   "E3/DC",
   "Eastron",
   "Enphase",
+  "ESPHome",
   "FENECON",
   "FoxESS",
   "Fronius",
@@ -128,7 +130,8 @@
   "Victron",
   "Volkszähler",
   "Youless",
-  "ZCS Azzurro"
+  "ZCS Azzurro",
+  "Zuidwijk"
  ],
  "PVBattery": [
   "Alpha ESS",
@@ -144,6 +147,7 @@
   "GoodWe",
   "Growatt",
   "Homematic IP",
+  "HomeWizard",
   "Hoymiles",
   "Huawei",
   "IGEN Tech",
@@ -174,6 +178,7 @@
   "TP-Link",
   "VARTA",
   "Victron",
+  "Youless",
   "ZCS Azzurro"
  ],
  "Vehicles": [
@@ -187,6 +192,7 @@
   "Ford",
   "Hyundai",
   "Jaguar",
+  "Jeep",
   "Kia",
   "Land Rover",
   "Mini",

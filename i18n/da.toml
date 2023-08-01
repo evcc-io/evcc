@@ -7,6 +7,16 @@ legendMiddleName = "Bil først"
 legendMiddleSubline = "Hjem efterfølgende"
 legendTitle = "Hvordan skal solenergi benyttes?"
 legendTopAutostart = "starter automatisk"
+legendTopName = "batterie understøtted opladning"
+legendTopSubline = "uden afbrydelser"
+modalTitle = "batterie indstillinger"
+note = "OBS: Disse indstillinger gælder kun for solar modus. Indstillingerne ændres tilsvarende."
+
+[batterySettings.bufferStart]
+full = "næsten fuld"
+low = "en smule fyld"
+medium = "halv fuld"
+never = "kun med nok solar overskuld"
 
 [footer]
 
@@ -23,8 +33,8 @@ powerSub2 = "opladning ..."
 tabTitle = "Live fællesskab"
 
 [footer.savings]
-footerLong = "{percent}% solenergi"
-footerShort = "{percent}% solenergi"
+footerLong = "{percent}% Fotovoltaisk energi"
+footerShort = "{percent}% Fotovoltaisk energi"
 modalTitle = "Oversigt over ladeenergi"
 percentGrid = "{grid} kWh Net"
 percentSelf = "{self} kWh solenergi"
@@ -83,8 +93,27 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Logins til køretøjer"
+needHelp = "Brug for hjælp?"
 sessions = "Opladning sessioner"
 settings = "Indstillinger"
+
+[help]
+discussionsButton = "GitHub diskussioner"
+documentationButton = "Dokumentation"
+issueButton = "Meld en fejl"
+issueDescription = "Fær en mærkelig eller forkert adfærd?"
+modalTitle = "Brug for hjælp?"
+primaryActions = "Noget fungerer ikke, som det skulle? Det er gode steder at få hjælp."
+restartButton = "Genstart"
+restartDescription = "Har du prøvet at slukke og tænde den igen?"
+secondaryActions = "Stadig ikke i stand til at løse dit problem? Her er nogle mere ekstreme muligheder."
+
+[help.restart]
+cancel = "Afbryd"
+confirm = "Ja, genstart!"
+description = "Under normale omstændigheder bør genstart ikke være nødvendig. Overvej at indsende en fejlmelding, hvis du har brug for at genstarte evcc regelmæssigt."
+disclaimer = "Bemærk: evcc afsluttes og har brug for at operativsystemet genstarter tjenesten."
+modalTitle = "Er du sikker på, at du vil genstarte?"
 
 [main]
 vehicles = "Parkering"
@@ -113,10 +142,14 @@ pvProduction = "Produktion"
 selfConsumption = "Self-konsumption"
 
 [main.loadpoint]
+avgPrice = "⌀ pris"
 charged = "Opladt"
+co2 = "⌀ CO₂"
 duration = "Varighed"
 fallbackName = "Ladepunkt"
 power = "Strøm"
+price = "Σ Pris"
+solar = "solenergi"
 
 [main.loadpointSettings]
 currents = "Ladestrøm"
@@ -209,6 +242,7 @@ vehicleTarget = "Køretøjsgrænse: {soc}%"
 charging = "Opladning..."
 cheapEnergyCharging = "Billig energi tilgængelig. Oplader..."
 cleanEnergyCharging = "Ren energi tilgængelig. Oplader..."
+climating = "Forkonditionering registreret."
 connected = "Forbundet."
 disconnected = "Afbrudt."
 guard = "Starter om {remaining}…"
@@ -234,21 +268,33 @@ reload = "Genindlæs?"
 
 [session]
 cancel = "Afbryd"
+co2 = "CO2"
+date = "Tidsrum"
 delete = "Slet"
 finished = "Fuldført"
-meterstart = "Meter start"
+meter = "Kilometertælller"
+meterstart = "kilometertælleraflæsning"
 meterstop = "Meter slut"
 odometer = "Kilometerstand"
+price = "Pris"
 started = "Startet"
 title = "Lade session"
 
 [sessions]
-date = "Periode"
+avgPrice = "⌀ pris"
+co2 = "⌀ CO₂"
+csvMonth = "Download {month} CSV"
+csvTotal = "Download total CSV"
+date = "Start"
 downloadCsv = "Download som CSV"
 energy = "Opladt"
 loadpoint = "Ladepunkt"
+noData = "Ingen opladninger i denne måned."
+price = "Σ pris"
 reallyDelete = "Er du sikker på at du vil slette denne session?"
+solar = "solenergi"
 title = "Opladning Sessioner"
+total = "Total"
 vehicle = "Køretøj"
 
 [sessions.csv]
@@ -261,6 +307,11 @@ meterstart = "Målerstart (kWh)"
 meterstop = "Målerstop (kWh)"
 odometer = "Kilometertal (km)"
 vehicle = "Køretøj"
+
+[sessions.filter]
+allLoadpoints = "alle ladepunkter"
+allVehicles = "alle køretøjer"
+filter = "Filter"
 
 [settings]
 title = "Indstillinger"
@@ -290,7 +341,7 @@ light = "lys"
 [settings.unit]
 km = "km"
 label = "Enheder"
-mi = "miles"
+mi = "mil"
 
 [startupError]
 configFile = "Konfigurationsfil brugt:"

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/energinet"
 	"github.com/evcc-io/evcc/util"
@@ -59,6 +60,7 @@ func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Energinet) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
+	bo := newBackoff()
 
 	for ; true; <-time.Tick(time.Hour) {
 		var res energinet.Prices
@@ -69,7 +71,9 @@ func (t *Energinet) run(done chan error) {
 			ts.Add(24*time.Hour).Format(time.RFC3339),
 			t.region)
 
-		if err := client.GetJSON(uri, &res); err != nil {
+		if err := backoff.Retry(func() error {
+			return client.GetJSON(uri, &res)
+		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -103,7 +107,7 @@ func (t *Energinet) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *Energinet) Type() api.TariffType {
 	return api.TariffTypePriceDynamic
 }

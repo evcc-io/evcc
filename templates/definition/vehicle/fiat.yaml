@@ -1,6 +1,7 @@
 template: fiat
 products:
   - brand: Fiat
+  - brand: Jeep
 params:
   - preset: vehicle-base
   - name: vin

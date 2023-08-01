@@ -24,8 +24,6 @@ const (
 
 type Identity struct {
 	*request.Helper
-	oauth2.TokenSource
-	user, password string
 }
 
 // NewIdentity creates BMW identity
@@ -37,60 +35,7 @@ func NewIdentity(log *util.Logger) *Identity {
 	return v
 }
 
-func (v *Identity) Login(user, password string) error {
-	v.user = user
-	v.password = password
-
-	token, err := v.RefreshToken(nil)
-
-	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource(token, v)
-	}
-
-	return err
-}
-
-func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
-	var tok struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		ExpiresIn    int    `json:"expires_in"`
-	}
-
-	uri := fmt.Sprintf("%s/token", AuthURI)
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  request.FormContent,
-		"Authorization": "Basic MzFjMzU3YTAtN2ExZC00NTkwLWFhOTktMzNiOTcyNDRkMDQ4OmMwZTMzOTNkLTcwYTItNGY2Zi05ZDNjLTg1MzBhZjY0ZDU1Mg==",
-	})
-
-	if err == nil {
-		err = v.DoJSON(req, &tok)
-	}
-
-	token := &oauth2.Token{
-		AccessToken:  tok.AccessToken,
-		RefreshToken: tok.RefreshToken,
-		Expiry:       time.Now().Add(time.Duration(tok.ExpiresIn) * time.Second),
-	}
-
-	return token, err
-}
-
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	if token == nil || token.RefreshToken == "" {
-		return v.login()
-	}
-
-	data := url.Values{
-		"redirect_uri":  []string{RedirectURI},
-		"refresh_token": []string{token.RefreshToken},
-		"grant_type":    []string{"refresh_token"},
-	}
-
-	return v.retrieveToken(data)
-}
-
-func (v *Identity) login() (*oauth2.Token, error) {
+func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 	v.Client.CheckRedirect = request.DontFollow
 	defer func() { v.Client.CheckRedirect = nil }()
 
@@ -115,8 +60,8 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"nonce":                 {"login_nonce"},
 		"code_challenge_method": {"S256"},
 		"code_challenge":        {cv.CodeChallengeS256()},
-		"username":              {v.user},
-		"password":              {v.password},
+		"username":              {user},
+		"password":              {password},
 		"grant_type":            {"authorization_code"},
 	}
 
@@ -175,6 +120,38 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"redirect_uri":  {RedirectURI},
 		"grant_type":    {"authorization_code"},
 		"code_verifier": {cv.CodeChallengePlain()},
+	}
+
+	token, err := v.retrieveToken(data)
+	if err != nil {
+		return nil, err
+	}
+
+	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v), 15*time.Minute)
+
+	return ts, nil
+}
+
+func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
+	uri := fmt.Sprintf("%s/token", AuthURI)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type":  request.FormContent,
+		"Authorization": "Basic MzFjMzU3YTAtN2ExZC00NTkwLWFhOTktMzNiOTcyNDRkMDQ4OmMwZTMzOTNkLTcwYTItNGY2Zi05ZDNjLTg1MzBhZjY0ZDU1Mg==",
+	})
+
+	var tok oauth.Token
+	if err == nil {
+		err = v.DoJSON(req, &tok)
+	}
+
+	return (*oauth2.Token)(&tok), err
+}
+
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	data := url.Values{
+		"redirect_uri":  []string{RedirectURI},
+		"refresh_token": []string{token.RefreshToken},
+		"grant_type":    []string{"refresh_token"},
 	}
 
 	return v.retrieveToken(data)

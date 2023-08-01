@@ -9,6 +9,7 @@ import (
 
 	xj "github.com/basgys/goxml2json"
 	"github.com/evcc-io/evcc/provider/javascript"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/itchyny/gojq"
 	"github.com/robertkrimen/otto"
@@ -16,6 +17,7 @@ import (
 )
 
 type Pipeline struct {
+	log    *util.Logger
 	re     *regexp.Regexp
 	jq     *gojq.Query
 	dflt   string
@@ -35,8 +37,10 @@ type Settings struct {
 	Script  string
 }
 
-func New(cc Settings) (*Pipeline, error) {
-	p := new(Pipeline)
+func New(log *util.Logger, cc Settings) (*Pipeline, error) {
+	p := &Pipeline{
+		log: log,
+	}
 
 	var err error
 	if err == nil && cc.Regex != "" {
@@ -135,6 +139,10 @@ func (p *Pipeline) transformXML(value []byte) []byte {
 	out := new(bytes.Buffer)
 	if err := xj.NewEncoder(out).Encode(root); err != nil {
 		return value
+	}
+
+	if p.log != nil {
+		p.log.TRACE.Println(out.String())
 	}
 
 	return out.Bytes()

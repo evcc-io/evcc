@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/maps"
 )
 
 // vehicleCmd represents the vehicle command
@@ -52,7 +53,15 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.FATAL.Fatal(err)
 		}
+
 		vehicles = map[string]api.Vehicle{name: vehicle}
+	}
+
+	// check single vehicle for error
+	if len(vehicles) == 1 {
+		if err, ok := maps.Values(vehicles)[0].(error); ok {
+			fatal(err)
+		}
 	}
 
 	var flagUsed bool
