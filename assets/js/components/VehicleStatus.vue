@@ -1,5 +1,5 @@
 <template>
-	<div class="d-block evcc-gray">{{ message }}&nbsp;</div>
+	<div class="d-block evcc-gray" data-testid="vehicle-status">{{ message }}&nbsp;</div>
 </template>
 
 <script>

@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"golang.org/x/exp/slices"
 )
 
@@ -148,6 +150,7 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(vehicleTitle, vehicle.Title())
 		lp.publish(vehicleIcon, vehicle.Icon())
 		lp.publish(vehicleCapacity, vehicle.Capacity())
+		lp.restoreVehicleSettings()
 
 		lp.applyAction(vehicle.OnIdentified())
 		lp.addTask(lp.vehicleOdometer)
@@ -221,6 +224,40 @@ func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
 // publishVehicleFeature availability of vehicle features
 func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
 	lp.publish("vehicleFeature"+f.String(), lp.vehicleHasFeature(f))
+}
+
+// persistVehicleSettings stores user configuration (via UI/API) for the current vehicle
+func (lp *Loadpoint) persistVehicleSettings() {
+	idx := lp.coordinator.GetVehicleIndex(lp.GetVehicle())
+	if idx == -1 {
+		return
+	}
+	settings.SetInt(fmt.Sprintf("vehicle.%d.targetSoc", idx), int64(lp.Soc.target))
+	settings.SetFloat(fmt.Sprintf("vehicle.%d.targetEnergy", idx), lp.targetEnergy)
+	settings.SetInt(fmt.Sprintf("vehicle.%d.minSoc", idx), int64(lp.Soc.min))
+	settings.SetTime(fmt.Sprintf("vehicle.%d.targetTime", idx), lp.targetTime)
+}
+
+// restoreVehicleSettings restores user configuration (via UI/API) for the current vehicle
+func (lp *Loadpoint) restoreVehicleSettings() {
+	idx := lp.coordinator.GetVehicleIndex(lp.GetVehicle())
+	if idx == -1 {
+		return
+	}
+	if v, err := settings.Int(fmt.Sprintf("vehicle.%d.targetSoc", idx)); err == nil {
+		lp.setTargetSoc(int(v))
+	}
+	if v, err := settings.Float(fmt.Sprintf("vehicle.%d.targetEnergy", idx)); err == nil {
+		lp.setTargetEnergy(v)
+	}
+	if v, err := settings.Int(fmt.Sprintf("vehicle.%d.minSoc", idx)); err == nil {
+		lp.setMinSoc(int(v))
+	}
+	if v, err := settings.Time(fmt.Sprintf("vehicle.%d.targetTime", idx)); err == nil {
+		if v.After(time.Now()) {
+			lp.setTargetTime(v)
+		}
+	}
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.

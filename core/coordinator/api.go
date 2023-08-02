@@ -8,4 +8,5 @@ type API interface {
 	Acquire(api.Vehicle)
 	Release(api.Vehicle)
 	IdentifyVehicleByStatus() api.Vehicle
+	GetVehicleIndex(api.Vehicle) int
 }

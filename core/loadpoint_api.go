@@ -94,6 +94,7 @@ func (lp *Loadpoint) SetTargetEnergy(energy float64) {
 	if lp.targetEnergy != energy {
 		lp.setTargetEnergy(energy)
 		lp.requestUpdate()
+		lp.persistVehicleSettings()
 	}
 }
 
@@ -141,6 +142,7 @@ func (lp *Loadpoint) SetTargetSoc(soc int) {
 	if lp.Soc.target != soc {
 		lp.setTargetSoc(soc)
 		lp.requestUpdate()
+		lp.persistVehicleSettings()
 	}
 }
 
@@ -168,6 +170,7 @@ func (lp *Loadpoint) SetMinSoc(soc int) {
 	if lp.Soc.min != soc {
 		lp.setMinSoc(soc)
 		lp.requestUpdate()
+		lp.persistVehicleSettings()
 	}
 }
 
@@ -219,6 +222,7 @@ func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.setTargetTime(finishAt)
+	lp.persistVehicleSettings()
 
 	return nil
 }
