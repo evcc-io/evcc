@@ -4,6 +4,7 @@
 			class="root flex-grow-1"
 			:label="title"
 			:class="disabled ? 'opacity-25' : 'opacity-100'"
+			data-testid="charging-plan"
 		>
 			<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-center">
 				<button

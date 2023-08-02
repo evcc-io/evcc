@@ -3,7 +3,7 @@
 		<div class="mt-4">
 			<div class="form-group d-lg-flex align-items-baseline mb-2 justify-content-between">
 				<!-- eslint-disable vue/no-v-html -->
-				<label for="targetTimeLabel" class="mb-3 me-3">
+				<label :for="`targetTimeLabel${id}`" class="mb-3 me-3">
 					<span v-if="socBasedCharging">
 						{{
 							$t("main.targetCharge.descriptionSoc", {
@@ -21,7 +21,12 @@
 				</label>
 				<!-- eslint-enable vue/no-v-html -->
 				<div class="d-flex justify-content-between date-selection">
-					<select v-model="selectedDay" class="form-select me-2">
+					<select
+						:id="`targetTimeLabel${id}`"
+						v-model="selectedDay"
+						class="form-select me-2"
+						data-testid="target-day"
+					>
 						<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
 							{{ opt.name }}
 						</option>
@@ -32,6 +37,7 @@
 						class="form-control ms-2 time-selection"
 						:step="60 * 5"
 						required
+						data-testid="target-time"
 					/>
 				</div>
 			</div>
@@ -117,6 +123,7 @@ export default {
 			plan: {},
 			tariff: {},
 			activeTab: "time",
+			loading: false,
 		};
 	},
 	computed: {
@@ -207,9 +214,11 @@ export default {
 			if (
 				!this.timeInThePast &&
 				(this.targetEnergy || this.targetSoc) &&
-				!isNaN(this.selectedTargetTime)
+				!isNaN(this.selectedTargetTime) &&
+				!this.loading
 			) {
 				try {
+					this.loading = true;
 					this.plan = (
 						await api.get(`loadpoints/${this.id}/target/plan`, {
 							params: { targetTime: this.selectedTargetTime },
@@ -224,6 +233,8 @@ export default {
 					this.tariff = tariffRes.status === 404 ? { rates: [] } : tariffRes.data.result;
 				} catch (e) {
 					console.error(e);
+				} finally {
+					this.loading = false;
 				}
 			}
 		},

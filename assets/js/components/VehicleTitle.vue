@@ -1,5 +1,5 @@
 <template>
-	<div class="d-flex justify-content-between mb-3 align-items-center">
+	<div class="d-flex justify-content-between mb-3 align-items-center" data-testid="vehicle-title">
 		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
 			<shopicon-regular-refresh
 				v-if="icon === 'refresh'"
