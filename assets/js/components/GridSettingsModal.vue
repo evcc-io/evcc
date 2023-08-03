@@ -305,7 +305,7 @@ export default {
 			const fmtMax = this.isCo2
 				? this.fmtCo2Short(max)
 				: this.fmtPricePerKWh(max, this.currency, true);
-			return `${fmtMin} - ${fmtMax}`;
+			return `${fmtMin} – ${fmtMax}`;
 		},
 		slotHovered(index) {
 			this.activeIndex = index;
