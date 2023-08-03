@@ -78,7 +78,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		var res discovergy.Reading
 		uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergy.API, meterID)
 		err := client.GetJSON(uri, &res)
-		if err == nil && time.Since(time.Unix(res.Time, 0)) > cc.Timeout {
+		if err == nil && time.Since(time.UnixMilli(res.Time)) > cc.Timeout {
 			err = api.ErrTimeout
 		}
 		return res, err
