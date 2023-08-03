@@ -640,6 +640,7 @@ func (lp *Loadpoint) syncCharger() error {
 	defer func() {
 		lp.enabled = enabled
 		lp.publish("enabled", lp.enabled)
+		lp.publish("enabled", lp.enabled)
 	}()
 
 	// in sync
@@ -742,6 +743,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 
 		lp.log.DEBUG.Printf("charger %s", status[enabled])
 		lp.enabled = enabled
+		lp.publish("enabled", lp.enabled)
 		lp.guardUpdated = lp.clock.Now()
 
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
