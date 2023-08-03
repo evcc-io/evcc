@@ -66,7 +66,7 @@ require (
 	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/mlnoga/rct v0.1.2-0.20230227143934-71af1fb7dfa1
+	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
 	github.com/muka/go-bluetooth v0.0.0-20221213043340-85dc80edc4e1
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
