@@ -174,7 +174,7 @@ label = "Courant de charge max."
 label = "Courant de charge min."
 
 [main.loadpointSettings.minSoc]
-description = "Pour les urgences. Le véhicule est chargé en mode „Rapide” à {0} %, puis avec le surplus solaire."
+description = "Le véhicule est chargé en mode „Rapide” à {0}% en mode solaire, puis avec le surplus solaire. Utile pour s'assurer d'un minimum d'autonomie, même pour les jours plus sombres."
 label = "Recharge min. %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -217,6 +217,7 @@ title = "Temps visé"
 today = "aujourd'hui"
 tomorrow = "demain"
 update = "Mettre à jour"
+targetEnergyRequired = "Vous devez aussi régler une limite d'énergie."
 
 [main.targetChargePlan]
 chargeDuration = "Durée de charge"
@@ -304,6 +305,7 @@ reallyDelete = "Voulez-vous vraiment supprimer cette session?"
 solar = "Solaire"
 title = "Sessions de charge"
 vehicle = "Véhicule"
+total = "Total"
 
 [sessions.csv]
 chargedenergy = "Énergie (kWh)"
@@ -319,7 +321,7 @@ vehicle = "Véhicule"
 [sessions.filter]
 allLoadpoints = "tous les points de chargement"
 allVehicles = "tous les véhicules"
-filter = "filtrer"
+filter = "Filtrer"
 
 [settings]
 title = "Réglages"
