@@ -166,7 +166,7 @@ label = "Maksimivirta"
 label = "Minimivirta"
 
 [main.loadpointSettings.minSoc]
-description = "Hätätapauksia varten. Ajoneuvo ladataan nopeasti kaikella saatavilla olevalla aurinkoenergialla {0}% tämän jälkeen vain auringosta saatavalla muun kulutuksen jälkeen jäävällä ylijäämäenergialla."
+description = "Ajoneuvo ladataan nopeasti {0}% asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä."
 label = "Min. lataustaso %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -208,6 +208,8 @@ title = "Tavoiteaika"
 today = "tänään"
 tomorrow = "huomenna"
 update = "Päivittää"
+onlyInPvMode = "Lataussuunnitelma toimii ainoastaan aurinkoenergiatilassa."
+targetEnergyRequired = "Sinun on myös asetettava energia määrälle raja"
 
 [main.targetChargePlan]
 chargeDuration = "Latausaika"
@@ -283,7 +285,7 @@ title = "Latausistunto"
 [sessions]
 avgPrice = "⌀ Hinta"
 co2 = "⌀ CO₂"
-date = "Valmis"
+date = "Aloita"
 downloadCsv = "Lataa CSV muodossa"
 energy = "Ladattu"
 loadpoint = "Latauspiste"
@@ -292,6 +294,10 @@ reallyDelete = "Haluatko varmasti poistaa tämän istunnon?"
 solar = "Aurinkoenergia"
 title = "Lataustapahtumat"
 vehicle = "Ajoneuvo"
+total = "Kokonais"
+csvMonth = "Lataa {month} CSV"
+csvTotal = "Lataa kaikki CSV"
+noData = "Ei lataustapahtumia tässä kuussa."
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -356,3 +362,9 @@ title = "Virhe käynnistyksessä"
 cancel = "Peruuta"
 template = "Valmistaja"
 test = "Testi"
+
+
+[sessions.filter]
+allLoadpoints = "kaikki latauspisteet"
+allVehicles = "kaikki ajoneuvot"
+filter = "Suodatin"
