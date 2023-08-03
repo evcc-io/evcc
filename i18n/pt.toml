@@ -174,7 +174,7 @@ label = "Corrente de carga máxima"
 label = "Corrente de carga mínima"
 
 [main.loadpointSettings.minSoc]
-description = "Para emergências. O veículo é carregado „rápido” para {0}% de toda a energia solar disponível e, em seguida, continua com apenas o excedente solar."
+description = "O veículo é carregado „rápido" até {0}% no modo solar. Em seguida, continua com excedente solar. Útil para garantir um alcance mínimo mesmo em dias mais escuros."
 label = "Mín. de carga %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -217,6 +217,8 @@ title = "Tempo alvo"
 today = "hoje"
 tomorrow = "amanhã"
 update = "Atualizar"
+targetEnergyRequired = "Você também precisa definir um limite de energia."
+onlyInPvMode = "O plano de carregamento só funciona no modo solar."
 
 [main.targetChargePlan]
 chargeDuration = "Tempo de carga"
