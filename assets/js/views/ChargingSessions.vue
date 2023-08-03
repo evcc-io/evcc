@@ -269,6 +269,7 @@
 			<ChargingSessionModal
 				:session="selectedSession"
 				:vehicles="vehiclesObjects"
+				:currency="currency"
 				@session-changed="loadSessions"
 			/>
 		</div>
