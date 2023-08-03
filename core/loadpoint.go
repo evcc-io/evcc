@@ -640,7 +640,6 @@ func (lp *Loadpoint) syncCharger() error {
 	defer func() {
 		lp.enabled = enabled
 		lp.publish("enabled", lp.enabled)
-		lp.publish("enabled", lp.enabled)
 	}()
 
 	// in sync
