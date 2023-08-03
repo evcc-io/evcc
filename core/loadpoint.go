@@ -637,16 +637,15 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	// in sync
-	if enabled == lp.enabled {
-		return nil
-	}
-
-	// out of sync
 	defer func() {
 		lp.enabled = enabled
 		lp.publish("enabled", lp.enabled)
 	}()
+
+	// in sync
+	if enabled == lp.enabled {
+		return nil
+	}
 
 	if enabled || lp.phaseSwitchCommandTimeoutElapsed() {
 		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
