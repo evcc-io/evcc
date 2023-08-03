@@ -191,6 +191,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		session: Object,
+		currency: String,
 		vehicles: [Object],
 	},
 	emits: ["session-changed"],
