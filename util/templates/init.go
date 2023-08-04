@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"io/fs"
 	"path"
+	"slices"
 	"sync"
 	"text/template"
 
 	"github.com/evcc-io/evcc/templates/definition"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 

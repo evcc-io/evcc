@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"errors"
+	"slices"
 	"sync"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/tariff/octopus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/exp/slices"
 )
 
 type Octopus struct {

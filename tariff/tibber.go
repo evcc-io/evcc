@@ -3,6 +3,7 @@ package tariff
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/shurcooL/graphql"
-	"golang.org/x/exp/slices"
 )
 
 type Tibber struct {

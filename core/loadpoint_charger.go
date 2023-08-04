@@ -1,8 +1,9 @@
 package core
 
 import (
+	"slices"
+
 	"github.com/evcc-io/evcc/api"
-	"golang.org/x/exp/slices"
 )
 
 // chargerHasFeature checks availability of charger feature

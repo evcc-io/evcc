@@ -2,10 +2,10 @@ package templates
 
 import (
 	"os"
+	"slices"
 	"testing"
 
 	"github.com/jinzhu/copier"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/db/settings"
-	"golang.org/x/exp/slices"
 )
 
 const (

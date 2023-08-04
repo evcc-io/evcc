@@ -1,13 +1,13 @@
 package planner
 
 import (
+	"slices"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/copier"
-	"golang.org/x/exp/slices"
 )
 
 // Planner plans a series of charging slots for a given (variable) tariff
