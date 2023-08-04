@@ -10,7 +10,7 @@ VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
 LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -s -w
-BUILD_ARGS := -ldflags='$(LD_FLAGS)'
+BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := evcc/evcc
