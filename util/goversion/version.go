@@ -1,5 +1,5 @@
-//go:build go1.20
+//go:build go1.21
 
 package goversion
 
-const __EVCC_REQUIRES_GO_VERSION_1_20__ = uint8(0)
+const __EVCC_REQUIRES_GO_VERSION_1_21__ = uint8(0)
