@@ -151,7 +151,7 @@ func (wb *OpenWBPro) TotalEnergy() (float64, error) {
 
 var _ api.PhaseCurrents = (*OpenWBPro)(nil)
 
-// Currents implements the api.PhaseCurrentss interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
 	res, err := wb.statusCache.Get()
 	if err != nil {
@@ -163,6 +163,22 @@ func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
 	}
 
 	return res.Currents[0], res.Currents[1], res.Currents[2], err
+}
+
+var _ api.Battery = (*OpenWBPro)(nil)
+
+// Soc implements the api.Battery interface
+func (wb *OpenWBPro) Soc() (float64, error) {
+	res, err := wb.statusCache.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	if time.Since(time.Unix(res.SocTimestamp, 0)) > 5*time.Minute {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(res.Soc), nil
 }
 
 var _ api.PhaseSwitcher = (*OpenWBPro)(nil)
