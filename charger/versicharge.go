@@ -40,8 +40,8 @@ const (
 	versiRegTemp           = 1602 //  1 RO INT16
 //	versiRegChargeStatus   = 1601 //  1 RO INT16
 	versiRegChargeStatus   = 1599 //  1 RO INT16 (EVSE Status)
-	versiRegPause          = 1629 //  1 RW UNIT16
-	versiRegMaxCurrent     = 1633 //  1 RW UNIT16
+//	versiRegPause          = 1629 //  1 RW UNIT16 -> seit FW2.128 nicht mehr verfügbar
+	versiRegMaxCurrent     = 1633 //  1 RW UNIT16 -> Seit FW2.128 Pause an -> MaxCurrent = 0 
 	versiRegCurrents       = 1647 //  3 RO UINT16
 	versiRegVoltages       = 1651 //  3 RO UINT16
 	versiRegPowers         = 1662 //  3 RO UINT16
@@ -137,35 +137,39 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Versicharge) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(versiRegPause, 1)
+	b, err := wb.conn.ReadHoldingRegisters(versiRegMaxCurrent, 1)
 	if err != nil {
 		return false, err
 	}
 
-//	// Print Abfrage Enable
-//	currentTime := time.Now()
-//	fmt.Printf("[VERSI ] INFO ")
-//	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-//	fmt.Printf(" Abfrage Enabled: %d \n", b)
-//	
-	return binary.BigEndian.Uint16(b) == 2, nil
+	// Print Abfrage Enable
+	currentTime := time.Now()
+	fmt.Printf("[VERSI ] INFO ")
+	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+	fmt.Printf(" Abfrage Enabled: %d \n", binary.BigEndian.Uint16(b))
+	
+	return binary.BigEndian.Uint16(b) != 0, nil  // Enabled, if MaxCurrent != 0A
 }
 
 // Enable implements the api.Charger interface
 func (wb *Versicharge) Enable(enable bool) error {
-	var u uint16 = 1
-	if enable {
-		u = 2
+	b, err := wb.conn.ReadHoldingRegisters(versiRegMaxCurrent, 1)
+	if err != nil {
+		return err
 	}
 
-//	// Print Umschalten Enable
-//	currentTime := time.Now()
-//	fmt.Printf("[VERSI ] INFO ")
-//	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-//	fmt.Printf(" Umschalten Enabled: %d \n", u)
-//	
-//
-	_, err := wb.conn.WriteSingleRegister(versiRegPause, u)
+	var u uint16 = 0
+	if binary.BigEndian.Uint16(b) == 0 {
+		u = 7  //kleinster MaxCurrent -> Globale Variable verfügbar???
+	}
+
+	// Print Umschalten Enable
+	currentTime := time.Now()
+	fmt.Printf("[VERSI ] INFO ")
+	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+	fmt.Printf(" Umschalten Enable: %d \n", u)
+	
+	b, err = wb.conn.WriteSingleRegister(versiRegMaxCurrent, u)
 
 	return err
 }
