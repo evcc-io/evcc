@@ -775,7 +775,7 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 
 // remainingChargeEnergy returns missing energy amount in kWh if vehicle has a valid energy target
 func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
-	return math.Max(0, lp.targetEnergy-lp.getChargedEnergy()/1e3),
+	return max(0, lp.targetEnergy-lp.getChargedEnergy()/1e3),
 		!lp.vehicleHasSoc() && lp.targetEnergy > 0
 }
 
@@ -903,8 +903,8 @@ func (lp *Loadpoint) effectiveCurrent() float64 {
 
 	// adjust actual current for vehicles like Zoe where it remains below target
 	if lp.chargeCurrents != nil {
-		cur := max(lp.chargeCurrents)
-		return math.Min(cur+2.0, lp.chargeCurrent)
+		cur := max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+		return min(cur+2.0, lp.chargeCurrent)
 	}
 
 	return lp.chargeCurrent
@@ -1122,7 +1122,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	effectiveCurrent := lp.effectiveCurrent()
 	activePhases := lp.activePhases()
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
-	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
+	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
 
@@ -1198,7 +1198,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	lp.resetPVTimer()
 
 	// cap at maximum current
-	targetCurrent = math.Min(targetCurrent, maxCurrent)
+	targetCurrent = min(targetCurrent, maxCurrent)
 
 	return targetCurrent
 }

@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.20
+go 1.21
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
