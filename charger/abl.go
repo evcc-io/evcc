@@ -80,24 +80,33 @@ func init() {
 
 // NewABLeMHFromConfig creates a ABLeMH charger from generic config
 func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
-		ID: 1,
+	cc := struct {
+		modbus.Settings `mapstructure:",squash"`
+		Timeout         time.Duration
+	}{
+		Settings: modbus.Settings{
+			ID: 1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewABLeMH(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewABLeMH(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewABLeMH creates ABLeMH charger
-func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
+func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Ascii, slaveID)
 	if err != nil {
 		return nil, err
+	}
+
+	if timeout > 0 {
+		conn.Timeout(timeout)
 	}
 
 	if !sponsor.IsAuthorized() {
