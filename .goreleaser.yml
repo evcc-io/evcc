@@ -6,8 +6,9 @@ release:
 
 builds:
   - id: evcc
-    main: main.go
+    main: .
     flags:
+      - -trimpath
       - -tags=release
     ldflags:
       - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w
