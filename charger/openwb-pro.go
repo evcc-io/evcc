@@ -151,7 +151,7 @@ func (wb *OpenWBPro) TotalEnergy() (float64, error) {
 
 var _ api.PhaseCurrents = (*OpenWBPro)(nil)
 
-// Currents implements the api.PhaseCurrentss interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
 	res, err := wb.statusCache.Get()
 	if err != nil {
