@@ -128,13 +128,12 @@ title = "Plán"
 titleMinSoc = "Min. nabíjení"
 titleTargetCharge = "Odjezd"
 
-
 [main.energyflow]
 battery = "Baterie"
+batteryCharge = "Nabijení baterie"
 batteryDischarge = "Vybíjení baterie"
 batteryTooltip = "{energy} z {total} ({soc})"
 gridImport = "Používaní sítě"
-batteryCharge = "Nabijení baterie"
 homePower = "Spotřeba"
 loadpoints = "Nabíječka | Nabíješka | {count} Nabíječek"
 noEnergy = "Žádné data měřiče"
@@ -167,4 +166,4 @@ label = "Max. Proud"
 label = "Min. Proud"
 
 [main.loadpointSettings.minSoc]
-description = „Vozidlo se „rychle“ nabije na {0} % v solárním režimu. Poté pokračuje solárním přebytkem. Užitečné pro zajištění minimálního dojezdu i pro temnější dny.“
+description = "Vozidlo se “rychle” nabije na {0} % v solárním režimu. Poté pokračuje solárním přebytkem. Užitečné pro zajištění minimálního dojezdu i pro temnější dny."
