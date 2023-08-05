@@ -44,15 +44,17 @@ export default {
 		return { activeIndex: null, startTime: new Date() };
 	},
 	computed: {
-		maxPrice() {
-			let result = 0;
+		priceInfo() {
+			let max = Number.MIN_VALUE;
+			let min = 0;
 			this.slots
 				.map((s) => s.price)
 				.filter((price) => price !== undefined)
 				.forEach((price) => {
-					result = Math.max(result, price);
+					max = Math.max(max, price);
+					min = Math.min(min, price);
 				});
-			return result;
+			return { min, range: max - min };
 		},
 		avgPrice() {
 			let sum = 0;
@@ -89,7 +91,10 @@ export default {
 		},
 		priceStyle(price) {
 			const value = price === undefined ? this.avgPrice : price;
-			const height = value !== undefined ? `${5 + (95 / this.maxPrice) * value}%` : "100%";
+			const height =
+				value !== undefined
+					? `${10 + (90 / this.priceInfo.range) * (value - this.priceInfo.min)}%`
+					: "100%";
 			return { height };
 		},
 	},
