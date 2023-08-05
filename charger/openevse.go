@@ -1,33 +1,106 @@
 package charger
 
 import (
-	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/deepmap/oapi-codegen/pkg/securityprovider"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/openevse"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 // OpenEVSE charger implementation
 type OpenEVSE struct {
-	uri     string
-	api     *openevse.ClientWithResponses
-	helper  *request.Helper
-	timeout time.Duration
+	*request.Helper
+	uri         string
+	statusCache provider.Cacheable[Status]
+	current     int
+	enabled     bool
 }
 
 func init() {
 	registry.Add("openevse", NewOpenEVSEFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateOpenEVSE -b "*OpenEVSE" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+const (
+	wbEnabled  string = "active"
+	wbDisabled string = "disabled"
+)
+
+// go:generate go run ../cmd/tools/decorate.go -f decorateOpenEVSE -b ""*OpenEVSE" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+
+// Only keep the interesting properties from the status endpoint
+type Status struct {
+	Amp            *float64 `json:"amp,omitempty"`             // the value of the charge current in mA
+	Elapsed        *float64 `json:"elapsed,omitempty"`         // current session duration in seconds
+	ManualOverride *int     `json:"manual_override,omitempty"` // 1 = active, 0 = default
+	Mode           *string  `json:"mode,omitempty"`            // The current mode of the EVSE
+	Pilot          *int     `json:"pilot,omitempty"`           // the pilot value, in amps
+	Power          *float64 `json:"power,omitempty"`           // apparent power in watts
+	SessionEnergy  *float64 `json:"session_energy"`            // The total amount of energy accumulated for current session (in wh)
+	SessionElapsed *int     `json:"session_elapsed"`           // duration of this charging session in seconds
+	State          *int     `json:"state,omitempty"`           // evse state 1=A 2=B 3=C 4=D 5-11=F 254=sleeping 255=disabled
+	Status         *string  `json:"status,omitempty"`          // active, disabled, none, unknown
+	TotalEnergy    *float64 `json:"total_energy"`              // The total amount of energy accumulated (in kwh)
+	Vehicle        *int     `json:"vehicle,omitempty"`         // 0=not connected, 1=connected
+	Voltage        *float64 `json:"voltage,omitempty"`         // supplied via MQTT/Tesla/HTTP or assume a default
+}
+
+type Override struct {
+	State         *string `json:"state,omitempty"`          // Either enable charging (active) or block charging (disabled)
+	ChargeCurrent *int    `json:"charge_current,omitempty"` // Specify the active charge current in Amps >= 0
+	MaxCurrent    *int    `json:"max_current,omitempty"`    // Maximum current, primarily for load sharing situations
+	AutoRelease   *bool   `json:"auto_release,omitempty"`
+}
+
+func (c *OpenEVSE) setOverride() error {
+	var data Override
+	uri := fmt.Sprintf("%s/override", c.uri)
+
+	err := c.GetJSON(uri, &data)
+	if err != nil {
+		return err
+	}
+
+	state := wbDisabled
+	if c.enabled {
+		state = wbEnabled
+	}
+	data.State = &state
+	data.MaxCurrent = &c.current
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		_, err = c.DoBody(req)
+	}
+
+	return err
+}
+
+func (c *OpenEVSE) rapiCommand(command string) error {
+	var res struct {
+		Cmd, Ret string
+	}
+
+	uri := fmt.Sprintf("%s/r?json=1&rapi=%s", c.uri, url.QueryEscape(command))
+
+	err := c.GetJSON(uri, &res)
+	if err == nil && !strings.HasPrefix(res.Ret, "$OK") {
+		err = fmt.Errorf("rapi command failed: %s", res.Ret)
+	}
+
+	return err
+}
+
+func (c *OpenEVSE) hasPhaseSwitchCapabilities() error {
+	return c.rapiCommand("$G7")
+}
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
 func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -35,9 +108,9 @@ func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		URI      string
 		User     string
 		Password string
-		Timeout  time.Duration
+		Cache    time.Duration
 	}{
-		Timeout: request.Timeout,
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -48,34 +121,37 @@ func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	return NewOpenEVSE(cc.URI, cc.User, cc.Password, cc.Timeout)
+	return NewOpenEVSE(cc.URI, cc.User, cc.Password, cc.Cache)
 }
 
 // NewOpenEVSE creates OpenEVSE charger
-func NewOpenEVSE(uri, user, password string, timeout time.Duration) (api.Charger, error) {
-	log := util.NewLogger("openevse").Redact(user, password)
+func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, error) {
+	basicAuth := transport.BasicAuthHeader(user, password)
+	log := util.NewLogger("openevse").Redact(user, password, basicAuth)
+
 	c := &OpenEVSE{
-		helper:  request.NewHelper(log),
-		uri:     uri,
-		timeout: timeout,
+		Helper: request.NewHelper(log),
+		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 	}
 
-	options := []openevse.ClientOption{openevse.WithHTTPClient(c.helper.Client)}
-
 	if user != "" && password != "" {
-		basicAuthProvider, err := securityprovider.NewSecurityProviderBasicAuth(user, password)
-		if err != nil {
-			return c, err
+		c.Client.Transport = &transport.Decorator{
+			Base: c.Client.Transport,
+			Decorator: transport.DecorateHeaders(map[string]string{
+				"Authorization": basicAuth,
+			}),
 		}
-
-		options = append(options, openevse.WithRequestEditorFn(basicAuthProvider.Intercept))
 	}
 
 	var err error
-	c.api, err = openevse.NewClientWithResponses(uri, options...)
-	if err != nil {
-		return c, err
-	}
+	c.statusCache = provider.ResettableCached(func() (Status, error) {
+		var res Status
+
+		uri := fmt.Sprintf("%s/status", c.uri)
+		err := c.GetJSON(uri, &res)
+
+		return res, err
+	}, cache)
 
 	var phases1p3p func(int) error
 	if err := c.hasPhaseSwitchCapabilities(); err == nil {
@@ -90,56 +166,9 @@ func NewOpenEVSE(uri, user, password string, timeout time.Duration) (api.Charger
 	return decorateOpenEVSE(c, phases1p3p), err
 }
 
-func (c *OpenEVSE) requestContextWithTimeout() (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	return ctx, cancel
-}
-
-func (c *OpenEVSE) hasPhaseSwitchCapabilities() error {
-	return c.rapiCommand("$G7")
-}
-
-func (c *OpenEVSE) rapiCommand(command string) error {
-	var res struct {
-		Cmd, Ret string
-	}
-
-	uri := fmt.Sprintf("%s/r?json=1&rapi=%s", c.uri, url.QueryEscape(command))
-
-	err := c.helper.GetJSON(uri, &res)
-	if err == nil && !strings.HasPrefix(res.Ret, "$OK") {
-		err = fmt.Errorf("rapi command failed: %s", res.Ret)
-	}
-
-	return err
-}
-
-func (c *OpenEVSE) SetManualOverride(enable bool) error {
-	state := "disabled"
-	if enable {
-		state = "active"
-	}
-
-	data := openevse.SetManualOverrideJSONRequestBody{
-		State: &state,
-	}
-
-	ctx, cancel := c.requestContextWithTimeout()
-	defer cancel()
-	_, err := c.api.SetManualOverrideWithResponse(ctx, data)
-
-	return err
-}
-
+// Status implements the api.Charger interface
 func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
-	ctx, cancel := c.requestContextWithTimeout()
-	defer cancel()
-
-	res, err := c.api.GetStatusWithResponse(ctx)
-	if err != nil {
-		return api.StatusNone, err
-	}
-
+	res, err := c.statusCache.Get()
 	/*
 		0: "unknown",
 		1: "not connected",
@@ -157,20 +186,20 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 		255: "disabled"
 	*/
 
-	switch state := *res.JSON200.State; state {
+	switch state := *res.State; state {
 	case 1:
-		return api.StatusA, nil
+		return api.StatusA, err
 	case 2, 254, 255:
-		if connected := *res.JSON200.Vehicle != 0; connected {
-			return api.StatusB, nil
+		if *res.Vehicle == 1 {
+			return api.StatusB, err
 		}
-		return api.StatusA, nil
+		return api.StatusA, err
 	case 3:
-		return api.StatusC, nil
+		return api.StatusC, err
 	case 4:
-		return api.StatusD, nil
+		return api.StatusD, err
 	case 5, 6, 7, 8, 9, 10, 11:
-		return api.StatusF, nil
+		return api.StatusF, err
 	default:
 		return api.StatusNone, fmt.Errorf("unknown EVSE state: %d", state)
 	}
@@ -178,79 +207,64 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OpenEVSE) Enabled() (bool, error) {
-	ctx, cancel := c.requestContextWithTimeout()
-	defer cancel()
-	overrideResp, err := c.api.GetStatusWithResponse(ctx)
-
-	if err != nil {
-		return false, err
-	}
-
-	if overrideResp.JSON200 != nil && overrideResp.JSON200.State != nil {
-		status := *overrideResp.JSON200.Status
-
-		switch status {
-		case "disabled":
-			return false, nil
-		case "enabled", "active":
-			return true, nil
-		default:
-			return false, fmt.Errorf("unknown EVSE status: %s", status)
-		}
-	}
-
-	// no override:
-	return false, fmt.Errorf("invalid EVSE status")
+	res, err := c.statusCache.Get()
+	return *res.Status == wbEnabled, err
 }
 
 // Enable implements the api.Charger interface
 func (c *OpenEVSE) Enable(enable bool) error {
-	return c.SetManualOverride(enable)
+	c.enabled = enable
+	return c.setOverride()
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *OpenEVSE) MaxCurrent(current int64) error {
-	cur := int(current)
-	data := openevse.SetManualOverrideJSONRequestBody{
-		ChargeCurrent: &cur,
-	}
-
-	ctx, cancel := c.requestContextWithTimeout()
-	defer cancel()
-
-	_, err := c.api.SetManualOverrideWithResponse(ctx, data)
-
-	return err
+	c.current = int(current)
+	return c.setOverride()
 }
 
 var _ api.ChargeRater = (*OpenEVSE)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *OpenEVSE) ChargedEnergy() (float64, error) {
-	ctx, cancel := c.requestContextWithTimeout()
-	defer cancel()
-
-	resp, err := c.api.GetStatusWithResponse(ctx)
+	res, err := c.statusCache.Get()
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(*resp.JSON200.Wattsec) / 3600 / 1e3, nil
+	return *res.SessionEnergy / 1e3, err
+}
+
+var _ api.ChargeTimer = (*OpenEVSE)(nil)
+
+func (c *OpenEVSE) ChargingTime() (time.Duration, error) {
+	res, err := c.statusCache.Get()
+	if err != nil {
+		return 0, err
+	}
+	return time.Duration(*res.SessionElapsed) * time.Second, err
 }
 
 var _ api.MeterEnergy = (*OpenEVSE)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *OpenEVSE) TotalEnergy() (float64, error) {
-	ctx, cancel := c.requestContextWithTimeout()
-	defer cancel()
-
-	resp, err := c.api.GetStatusWithResponse(ctx)
+	res, err := c.statusCache.Get()
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(*resp.JSON200.Watthour) / 1e3, nil
+	return *res.TotalEnergy, err
+}
+
+var _ api.Meter = (*OpenEVSE)(nil)
+
+func (c *OpenEVSE) CurrentPower() (float64, error) {
+	res, err := c.statusCache.Get()
+	if err != nil {
+		return 0, err
+	}
+	return *res.Power, err
 }
 
 // phases1p3p implements the api.ChargePhases interface
