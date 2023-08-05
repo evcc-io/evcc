@@ -121,7 +121,6 @@ func configureDatabase(conf dbConfig) error {
 	}
 
 	persistSettings := func() {
-		log.DEBUG.Println("persisting settings")
 		if err := settings.Persist(); err != nil {
 			log.ERROR.Println("cannot save settings:", err)
 		}
@@ -131,9 +130,8 @@ func configureDatabase(conf dbConfig) error {
 	shutdown.Register(persistSettings)
 
 	// persist unsaved settings every 30 minutes
-	ticker := time.NewTicker(30 * time.Minute)
 	go func() {
-		for range ticker.C {
+		for range time.Tick(30 * time.Minute) {
 			persistSettings()
 		}
 	}()
