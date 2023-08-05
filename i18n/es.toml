@@ -168,13 +168,13 @@ title = "Configuraciones {0}"
 vehicle = "Vehículo"
 
 [main.loadpointSettings.maxCurrent]
-label = "Corriente de carga máxima "
+label = "Corriente de carga máxima"
 
 [main.loadpointSettings.minCurrent]
 label = "Corriente de carga mínima"
 
 [main.loadpointSettings.minSoc]
-description = "Rango para emergencias. El vehículo se carga „rápidamente” a {0}% en modo solar. Luego continua con el excedente fotovoltaico."
+description = "El vehículo se carga “rápido” al {0}% en modo energía solar. Luego continúa con el excedente de la energía solar. Útil para asegurar una autonomía mínima incluso en los días más oscuros"
 label = "Carga de min. %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -204,6 +204,7 @@ descriptionEnergy = "¿Hasta cuándo deben haberse cargado {targetEnergy} al veh
 descriptionSoc = "¿Hasta cuándo debe haberse cargarse el vehículo al {targetSoc}%?"
 inactiveLabel = "Tiempo objetivo"
 modalTitle = "Establecer el tiempo objetivo"
+onlyInPvMode = "El plan de carga sólo funciona en modo solar"
 planDuration = "Tiempo de carga"
 planPeriodLabel = "Período"
 planPeriodValue = "de {start} a {end}"
@@ -211,6 +212,7 @@ planUnknown = "aún no se sabe"
 priceLimit = "límite en el precio de {price}"
 remove = "retirar"
 setTargetTime = "niguno"
+targetEnergyRequired = "También hay que fijar un límite de energía"
 targetIsInThePast = "Elige un tiempo en el futuro, Marty."
 targetIsTooFarInTheFuture = "Ajustaremos el plan en cuanto sepamos más sobre el futuro."
 title = "Tiempo objetivo"

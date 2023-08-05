@@ -174,7 +174,7 @@ label = "Max. Srovė"
 label = "Min. Srovė"
 
 [main.loadpointSettings.minSoc]
-description = "Minimali įkrova. Automobilis įkraunamas „Greitai” iki {0}% nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi."
+description = "Automobilis įkraunamas „Greitai” iki {0}% nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi. Padeda užtikrinti minimalią įkrovą dienomis, kai mažai saulės."
 label = "Minimali įkrova %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -204,6 +204,7 @@ descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobi
 descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
 inactiveLabel = "Suplanuotas laikas"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
+onlyInPvMode = "Įkrovimo planas veikia tik nustatyme Saulė."
 planDuration = "Įkrovimo laikas"
 planPeriodLabel = "Periodas"
 planPeriodValue = "{start} iki {end}"
@@ -211,6 +212,7 @@ planUnknown = "dar nežinome"
 priceLimit = "kainos limitas {price}"
 remove = "Panaikinti"
 setTargetTime = "nesuplanuotas"
+targetEnergyRequired = "Taipogi turite nustatyti energijos limitą."
 targetIsInThePast = "Pasirinkite laiką ateityje."
 targetIsTooFarInTheFuture = "Pakoreguosime planą, kai tik gausime naujų duomenų."
 title = "Planinis Įkrovimas"
