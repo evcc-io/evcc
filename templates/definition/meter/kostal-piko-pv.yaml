@@ -1,0 +1,26 @@
+template: kostal-piko-pv
+products:
+  - brand: Kostal
+    description:
+      generic: Piko, Piko BA
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+render: |
+  type: custom
+  power:
+  {{- if eq .usage "grid" }}
+    # Grid
+    source: http
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886336&dxsEntries=83886848&dxsEntries=83886592&dxsEntries=67109120 # Home PV Power + Home Grid Power + Home Bat Power - PV/Bat Inverter Power
+    #   | ----------------------------- Home PV W -------- | + | --------------------------- Home Grid W -------- | + | --------------------------- Home Bat W --------- | - | --------------------------- PV/BAT Inv W ------- |
+    jq: (.dxsEntries[] | select(.dxsId==83886336) | .value ) + (.dxsEntries[] | select(.dxsId==83886848) | .value ) + (.dxsEntries[] | select(.dxsId==83886592) | .value ) - (.dxsEntries[] | select(.dxsId==67109120) | .value )
+  {{- end -}}
+  {{- if eq .usage "pv" }}
+    # PV
+    source: http
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # total AC output
+    #   | ---------------------------- PAC W ------------- |
+    jq: (.dxsEntries[] | select(.dxsId==67109120) | .value )
+  {{- end -}}

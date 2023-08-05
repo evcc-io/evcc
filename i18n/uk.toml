@@ -29,7 +29,7 @@ greenShareSub1 = "енергія надається"
 greenShareSub2 = "сонячна енергія та батарея"
 power = "Потужність заряджання"
 powerSub1 = "{activeClients} з {totalClients} учасників"
-powerSub2 = "зарядка"
+powerSub2 = "зарядка…"
 tabTitle = "Жива спільнота"
 
 [footer.savings]
@@ -107,7 +107,7 @@ modalTitle = "Потрібна допомога?"
 primaryActions = "Щось не працює так, як повинно? Це хороші місця, де можна отримати допомогу."
 restartButton = "Перезапустити"
 restartDescription = "Спробували вимкнути і знову увімкнути?"
-secondaryActions = "Все ще не можете вирішити свою проблему? Ось кілька більш жорстких варіантів."
+secondaryActions = "Все ще не можете вирішити свою проблему? Ось кілька жорсткіших варіантів."
 
 [help.restart]
 cancel = "Скасувати"
@@ -143,9 +143,9 @@ pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
 
 [main.loadpoint]
-avgPrice = "Ø Ціна"
+avgPrice = "⌀ Ціна"
 charged = "Заряджено"
-co2 = "Ø CO₂"
+co2 = "⌀ CO₂"
 duration = "Тривалість"
 fallbackName = "Точка зарядки"
 power = "Потужність"
@@ -213,7 +213,7 @@ update = "Оновлення"
 
 [main.targetChargePlan]
 chargeDuration = "Час зарядки"
-co2Label = "Викиди CO₂ Ø"
+co2Label = "Викиди CO₂ ⌀"
 priceLabel = "Ціна на енергію"
 timeRange = "{day} {range} год"
 unknownPrice = "ще невідомо"
@@ -285,16 +285,20 @@ started = "Розпочато"
 title = "Сеанс зарядки"
 
 [sessions]
-avgPrice = "Ø Ціна"
-co2 = "Ø CO₂"
-date = "Завершено"
+avgPrice = "⌀ Ціна"
+co2 = "⌀ CO₂"
+csvMonth = "Завантажити {month} CSV"
+csvTotal = "Завантажити повний CSV"
+date = "Почати"
 downloadCsv = "Завантажити як CSV"
 energy = "Заряджено"
 loadpoint = "Точка зарядки"
+noData = "Ніяких зарядних сесій цього місяця"
 price = "Σ Ціна"
 reallyDelete = "Ви дійсно хочете видалити цей сеанс?"
 solar = "Сонячна"
 title = "Сеанси зарядки"
+total = "Всього"
 vehicle = "Транспортний засіб"
 
 [sessions.csv]
@@ -307,6 +311,11 @@ meterstart = "Лічильник пуску (кВт/год)"
 meterstop = "Лічильник зупинки (кВт/год)"
 odometer = "Пробіг (км)"
 vehicle = "Транспортний засіб"
+
+[sessions.filter]
+allLoadpoints = "всі точки зарядки"
+allVehicles = "всі транспортні засоби"
+filter = "Фільтр"
 
 [settings]
 title = "Налаштування"

@@ -147,9 +147,9 @@ pvProduction = "Produção"
 selfConsumption = "Consumo próprio"
 
 [main.loadpoint]
-avgPrice = "Preço Ø"
+avgPrice = "Preço ⌀"
 charged = "Carregado"
-co2 = "CO₂ Ø"
+co2 = "CO₂ ⌀"
 duration = "Duração"
 fallbackName = "Ponto de carga"
 power = "Desempenho"
@@ -174,7 +174,7 @@ label = "Corrente de carga máxima"
 label = "Corrente de carga mínima"
 
 [main.loadpointSettings.minSoc]
-description = "Para emergências. O veículo é carregado „rápido” para {0}% de toda a energia solar disponível e, em seguida, continua com apenas o excedente solar."
+description = "O veículo é carregado “rápido” até {0}% no modo solar. Em seguida, continua com excedente solar. Útil para garantir um alcance mínimo mesmo em dias mais escuros."
 label = "Mín. de carga %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -204,6 +204,7 @@ descriptionEnergy = "Até quando {targetEnergy} deve ser carregado no veículo?"
 descriptionSoc = "Quando o veículo deve ser carregado até {targetSoc}%?"
 inactiveLabel = "Tempo alvo"
 modalTitle = "Definir hora-alvo"
+onlyInPvMode = "O plano de carregamento só funciona no modo solar."
 planDuration = "Tempo de carga"
 planPeriodLabel = "Período"
 planPeriodValue = "{start} até {end}"
@@ -211,6 +212,7 @@ planUnknown = "desconhecido"
 priceLimit = "limite de preço de {preço}"
 remove = "Remover"
 setTargetTime = "sem"
+targetEnergyRequired = "Você também precisa definir um limite de energia."
 targetIsInThePast = "Escolha um momento no futuro, Marty."
 targetIsTooFarInTheFuture = "Vamos ajustar o plano assim que soubermos mais sobre o futuro."
 title = "Tempo alvo"
@@ -220,7 +222,7 @@ update = "Atualizar"
 
 [main.targetChargePlan]
 chargeDuration = "Tempo de carga"
-co2Label = "Emissão de CO₂ Ø"
+co2Label = "Emissão de CO₂ ⌀"
 priceLabel = "Preço da energia"
 timeRange = "{day} {range} h"
 unknownPrice = "ainda desconhecido"
@@ -292,17 +294,21 @@ started = "Começado"
 title = "Sessão de carga"
 
 [sessions]
-avgPrice = "Preço Ø"
-co2 = "CO₂ Ø"
-date = "Período"
+avgPrice = "Preço ⌀"
+co2 = "CO₂ ⌀"
+csvMonth = "Download {month} CSV"
+csvTotal = "Download tudo CSV"
+date = "Início"
 downloadCsv = "Download como CSV"
 energy = "Carregado"
 loadpoint = "Ponto de carga"
+noData = "Nenhuma sessão de carregamento este mês."
 odometer = "Quilometragem"
 price = "Preço Σ"
 reallyDelete = "Você realmente quer excluir esta sessão?"
 solar = "Sol"
 title = "Sessões de carga"
+total = "Total"
 vehicle = "Veículo"
 
 [sessions.csv]
@@ -315,6 +321,11 @@ meterstart = "Início do contador (kWh)"
 meterstop = "Contagem final (kWh)"
 odometer = "Quilometragem (km)"
 vehicle = "Veículo"
+
+[sessions.filter]
+allLoadpoints = "todos pontos de carregamento"
+allVehicles = "todos veículos"
+filter = "Filtro"
 
 [settings]
 title = "Configuração"

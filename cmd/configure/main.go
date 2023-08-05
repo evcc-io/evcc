@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/exp/maps"
@@ -70,6 +71,14 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	c.localizer = i18n.NewLocalizer(bundle, c.lang)
 
 	c.setDefaultTexts()
+
+	// Assign random plant id. Don't use actual machine-id as file might
+	// be copied around to a different machine.
+	c.configuration.config.Plant = machine.RandomID()
+
+	if err = machine.CustomID(c.configuration.config.Plant); err != nil {
+		panic(err)
+	}
 
 	fmt.Println()
 	fmt.Println(c.localizedString("Intro"))

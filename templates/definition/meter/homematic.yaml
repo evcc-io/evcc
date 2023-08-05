@@ -32,10 +32,19 @@ params:
     help:
       en: Homematic meter channel number like shown in the CCU web user interface.
       de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
+  - name: cache
+    advanced: true
+    default: 1s
+    description:
+      en: XML-RPC api cache duration - Default 1s. (valid units are s,m,h)
+      de: XML-RPC API Cache Zeitraum - Default 1s. (gültige Einheiten s,m,h)
+    help:
+      en: In case of duty cycle problems try a cache setting of 30s.
+      de: Bei Problemen mit dem Duty Cycle setze den Cache auf bspw 30s.
 render: |
   type: homematic
   usage: {{ .usage }}
-  uri: {{ .host }}:{{- if (eq .usage "grid") }}2001{{ else }}2010{{ end }}
+  uri: {{ .host }}:{{- if (eq .usage "grid") }}2001{{- else }}2010{{- end }}
   device: {{ .device }}
   meterchannel: {{ if (eq .usage "grid") }}1{{ else }}{{ .meterchannel }}{{ end }}
   {{- if .user }}
@@ -43,4 +52,7 @@ render: |
   {{- end }}
   {{- if .password }}
   password: {{ .password }}
+  {{- end }}
+  {{- if .cache }}
+  cache: {{ .cache }}
   {{- end }}

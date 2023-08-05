@@ -175,9 +175,8 @@ export default {
 			return Math.round(this.selfConsumptionPercent) || 0;
 		},
 		effectivePriceFormatted() {
-			const [value, unit] = this.fmtPricePerKWh(this.effectivePrice, this.currency).split(
-				" "
-			);
+			const value = this.fmtPricePerKWh(this.effectivePrice, this.currency, false, false);
+			const unit = this.pricePerKWhUnit(this.currency);
 			return { value, unit };
 		},
 		startDate() {

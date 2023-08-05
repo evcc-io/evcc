@@ -147,9 +147,9 @@ pvProduction = "Produksjon"
 selfConsumption = "Eget forbruk"
 
 [main.loadpoint]
-avgPrice = "Ø-pris"
+avgPrice = "⌀-pris"
 charged = "Oppladet"
-co2 = "Ø-CO₂"
+co2 = "⌀-CO₂"
 duration = "Varighet"
 fallbackName = "Ladepunkt"
 power = "Effekt"
@@ -216,7 +216,7 @@ update = "Oppdater"
 
 [main.targetChargePlan]
 chargeDuration = "Ladetid"
-co2Label = "CO₂-utslipp Ø"
+co2Label = "CO₂-utslipp ⌀"
 priceLabel = "Energipris"
 timeRange = "{day} {range} t"
 unknownPrice = "fremdeles ukjent"
@@ -286,16 +286,20 @@ started = "Startet"
 title = "Ladeøkt"
 
 [sessions]
-avgPrice = "Ø-pris"
-co2 = "Ø-CO₂"
+avgPrice = "⌀-pris"
+co2 = "⌀-CO₂"
+csvMonth = "Last ned (måned) CSV"
+csvTotal = "Last ned total CSV"
 date = "Start"
 downloadCsv = "Last ned som CSV"
 energy = "Oppladet"
 loadpoint = "Ladepunkt"
+noData = "Ingen ladeøkter denne måneden."
 price = "Σ-pris"
 reallyDelete = "Slett denne økten?"
 solar = "Solenergi"
 title = "Ladeøkter"
+total = "Totalt"
 vehicle = "Kjøretøy"
 
 [sessions.csv]
@@ -308,6 +312,11 @@ meterstart = "Start-målerstand (kWh)"
 meterstop = "Stopp-målerstand (kWh)"
 odometer = "Kilometerstand"
 vehicle = "Kjøretøy"
+
+[sessions.filter]
+allLoadpoints = "alle ladepunkter"
+allVehicles = "alle kjøretøy"
+filter = "filter"
 
 [settings]
 title = "Innstillinger"

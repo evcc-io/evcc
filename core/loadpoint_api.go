@@ -18,11 +18,6 @@ func (lp *Loadpoint) Title() string {
 	return lp.Title_
 }
 
-// Priority returns the loadpoint priority
-func (lp *Loadpoint) Priority() int {
-	return lp.Priority_
-}
-
 // GetStatus returns the charging status
 func (lp *Loadpoint) GetStatus() api.ChargeStatus {
 	lp.Lock()
@@ -99,6 +94,27 @@ func (lp *Loadpoint) SetTargetEnergy(energy float64) {
 	if lp.targetEnergy != energy {
 		lp.setTargetEnergy(energy)
 		lp.requestUpdate()
+		lp.persistVehicleSettings()
+	}
+}
+
+// GetPriority returns the loadpoint priority
+func (lp *Loadpoint) GetPriority() int {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.Priority_
+}
+
+// SetPriority sets the loadpoint priority
+func (lp *Loadpoint) SetPriority(prio int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set priority:", prio)
+
+	if lp.Priority_ != prio {
+		lp.Priority_ = prio
+		lp.publish("priority", prio)
 	}
 }
 
@@ -126,6 +142,7 @@ func (lp *Loadpoint) SetTargetSoc(soc int) {
 	if lp.Soc.target != soc {
 		lp.setTargetSoc(soc)
 		lp.requestUpdate()
+		lp.persistVehicleSettings()
 	}
 }
 
@@ -153,6 +170,7 @@ func (lp *Loadpoint) SetMinSoc(soc int) {
 	if lp.Soc.min != soc {
 		lp.setMinSoc(soc)
 		lp.requestUpdate()
+		lp.persistVehicleSettings()
 	}
 }
 
@@ -204,6 +222,7 @@ func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.setTargetTime(finishAt)
+	lp.persistVehicleSettings()
 
 	return nil
 }

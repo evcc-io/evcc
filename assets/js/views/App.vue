@@ -1,5 +1,5 @@
 <template>
-	<div class="app overflow-hidden">
+	<div class="app">
 		<metainfo>
 			<template #title="{ content }">{{ content ? `${content} | evcc` : `evcc` }}</template>
 		</metainfo>

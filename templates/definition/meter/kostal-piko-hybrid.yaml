@@ -1,8 +1,9 @@
-template: kostal-piko
+template: kostal-piko-hybrid
+covers: ["kostal-piko"]
 products:
   - brand: Kostal
     description:
-      generic: Piko, Piko BA
+      generic: Piko Hybrid
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

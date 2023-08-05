@@ -419,3 +419,7 @@ input::-webkit-datetime-edit {
 input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
 }
+
+.table {
+	--bs-table-bg: transparent;
+}

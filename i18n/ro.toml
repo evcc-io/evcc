@@ -3,6 +3,20 @@ batteryLevel = "Nivelul bateriei"
 capacity = "{energy} din {total}"
 legendBottomName = "prioritate casa"
 legendBottomSubline = "neutilizat pentru incarcare"
+legendMiddleName = "in primul rand vehiculul"
+legendMiddleSubline = "in al doilea rand casa"
+legendTitle = "Cum ar trebui utilizata energia solara?"
+legendTopAutostart = "porneste automat"
+legendTopName = "Incarcare ajutata de baterie"
+legendTopSubline = "fara intreruperi"
+modalTitle = "Setari baterie"
+note = "Nota: Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
+
+[batterySettings.bufferStart]
+full = "cand este aproape plin"
+low = "cand este destul de plin"
+medium = "cand este pe jumatate plin"
+never = "numai cand exista surplus suficient"
 
 [footer]
 
@@ -70,7 +84,7 @@ co2Limit = "limita CO₂"
 costLimitDescription = "Activeaza temporar Incarcarea Rapida in mod Solar."
 modalTitle = "Incarcare Smart Grid"
 none = "nimic"
-priceLabel = "Pretul curentului"
+priceLabel = "Pretul energiei"
 priceLimit = "Limita de pret"
 
 [header]
@@ -79,8 +93,19 @@ blog = "Blog"
 docs = "Documentație"
 github = "GitHub"
 login = "Login Vehicul"
+needHelp = "Ai nevoie de Ajutor ?"
 sessions = "Sesiuni de încărcare"
 settings = "Configurare"
+
+[help]
+discussionsButton = "Discutii GitHub"
+documentationButton = "Documentatie"
+issueButton = "Raporteaza un Bug"
+issueDescription = "Functionare bizara sau gresita ?"
+modalTitle = "Ai nevoie de ajutor ?"
+primaryActions = "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit sa primesti ajutor."
+restartButton = "Restart"
+restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "
 
 [main]
 vehicles = "Parcare"
@@ -174,7 +199,7 @@ update = "Actualizare"
 
 [main.targetChargePlan]
 chargeDuration = "Timp de încărcare"
-co2Label = "Emisie CO₂ Ø"
+co2Label = "Emisie CO₂ ⌀"
 priceLabel = "Prețul energiei"
 timeRange = "{day} {range} h"
 unknownPrice = "încă necunoscut"

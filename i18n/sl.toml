@@ -142,9 +142,9 @@ pvProduction = "Proizvodnja"
 selfConsumption = "Samoporaba"
 
 [main.loadpoint]
-avgPrice = "Ø Cena"
+avgPrice = "⌀ Cena"
 charged = "Napolnjeno"
-co2 = "Ø CO₂"
+co2 = "⌀ CO₂"
 duration = "Trajanje"
 fallbackName = "Polnilno mesto"
 power = "Moč"
@@ -211,7 +211,7 @@ update = "Posodobitev"
 
 [main.targetChargePlan]
 chargeDuration = "Čas polnjenja"
-co2Label = "Emisije CO₂ Ø"
+co2Label = "Emisije CO₂ ⌀"
 priceLabel = "Cena energije"
 timeRange = "{day} {range} h"
 unknownPrice = "še vedno neznano"
@@ -281,8 +281,8 @@ started = "Začetek"
 title = "Seja polnjenja"
 
 [sessions]
-avgPrice = "Ø Cena"
-co2 = "Ø CO₂"
+avgPrice = "⌀ Cena"
+co2 = "⌀ CO₂"
 date = "Končano"
 downloadCsv = "Prenesi kot CSV"
 energy = "Napolnjeno"

@@ -1,12 +1,15 @@
 package bluelink
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/api"
@@ -14,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -35,6 +39,8 @@ type Config struct {
 	BasicToken        string
 	CCSPServiceID     string
 	CCSPApplicationID string
+	PushType          string
+	Cfb               string
 }
 
 // Identity implements the Kia/Hyundai bluelink identity.
@@ -59,15 +65,16 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 }
 
 func (v *Identity) getDeviceID() (string, error) {
-	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	// stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	stamp, err := v.stamp()
 	if err != nil {
 		return "", err
 	}
 
 	uuid := uuid.NewString()
 	data := map[string]interface{}{
-		"pushRegId": "1",
-		"pushType":  "GCM",
+		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
+		"pushType":  v.config.PushType,
 		"uuid":      uuid,
 	}
 
@@ -79,7 +86,7 @@ func (v *Identity) getDeviceID() (string, error) {
 		"Stamp":               stamp,
 	}
 
-	var resp struct {
+	var res struct {
 		RetCode string
 		ResMsg  struct {
 			DeviceID string
@@ -88,10 +95,14 @@ func (v *Identity) getDeviceID() (string, error) {
 
 	req, err := request.New(http.MethodPost, v.config.URI+DeviceIdURL, request.MarshalJSON(data), headers)
 	if err == nil {
-		err = v.DoJSON(req, &resp)
+		err = v.DoJSON(req, &res)
 	}
 
-	return resp.ResMsg.DeviceID, err
+	if res.ResMsg.DeviceID == "" {
+		err = errors.New("deviceid not found")
+	}
+
+	return res.ResMsg.DeviceID, err
 }
 
 func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
@@ -181,7 +192,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 		req, err = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
 		if err == nil {
-			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
+			cookieClient.CheckRedirect = request.DontFollow
 			if resp, err = cookieClient.Do(req); err == nil {
 				defer resp.Body.Close()
 
@@ -217,7 +228,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		req, err = request.New(http.MethodPost, v.config.URI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)
 		if err == nil {
 			req.Header.Set("ccsp-service-id", v.config.CCSPServiceID)
-			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
+			cookieClient.CheckRedirect = request.DontFollow
 
 			var res struct {
 				RedirectUrl string `json:"redirectUrl"`
@@ -353,7 +364,8 @@ func (v *Identity) Login(user, password, language string) (err error) {
 
 // Request decorates requests with authorization headers
 func (v *Identity) Request(req *http.Request) error {
-	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	// stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	stamp, err := v.stamp()
 	if err != nil {
 		return err
 	}
@@ -375,4 +387,25 @@ func (v *Identity) Request(req *http.Request) error {
 	}
 
 	return nil
+}
+
+// stamp creates a stamp locally according to https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/371
+func (v *Identity) stamp() (string, error) {
+	cfb, err := base64.StdEncoding.DecodeString(v.config.Cfb)
+	if err != nil {
+		return "", err
+	}
+
+	raw := v.config.CCSPApplicationID + ":" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+
+	if len(cfb) != len(raw) {
+		return "", fmt.Errorf("cfb and raw length not equal")
+	}
+
+	enc := make([]byte, 0, 50)
+	for i := 0; i < len(cfb); i++ {
+		enc = append(enc, cfb[i]^raw[i])
+	}
+
+	return base64.StdEncoding.EncodeToString(enc), nil
 }

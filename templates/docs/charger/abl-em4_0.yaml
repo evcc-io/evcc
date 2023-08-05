@@ -1,0 +1,25 @@
+product:
+  brand: ABL
+  description: eM4 (SBCx)
+capabilities: ["mA"]
+requirements: ["sponsorship"]
+render:
+  - default: |
+      type: template
+      template: abl-em4
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 255
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+    advanced: |
+      type: template
+      template: abl-em4
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 255
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
+      connector: 1 # Optional

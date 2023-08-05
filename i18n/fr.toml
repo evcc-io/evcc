@@ -22,8 +22,8 @@ never = "seulement quand surplus suffisant"
 
 [footer.community]
 greenEnergy = "Solaire"
-greenEnergySub1 = "chargé avec evcc"
-greenEnergySub2 = "depuis le octobre 2022"
+greenEnergySub1 = "chargés avec evcc"
+greenEnergySub2 = "depuis octobre 2022"
 greenShare = "Part solaire"
 greenShareSub1 = "puissance fournie par"
 greenShareSub2 = "solaire et stockage de batterie"
@@ -147,9 +147,9 @@ pvProduction = "Production"
 selfConsumption = "Consommation propre"
 
 [main.loadpoint]
-avgPrice = "Prix Ø"
+avgPrice = "Prix ⌀"
 charged = "Chargé"
-co2 = "CO₂ Ø"
+co2 = "CO₂ ⌀"
 duration = "Durée"
 fallbackName = "Point de chargement"
 power = "Puissance"
@@ -174,7 +174,7 @@ label = "Courant de charge max."
 label = "Courant de charge min."
 
 [main.loadpointSettings.minSoc]
-description = "Pour les urgences. Le véhicule est chargé en mode „Rapide” à {0} %, puis avec le surplus solaire."
+description = "Le véhicule est chargé en mode „Rapide” à {0}% en mode solaire, puis avec le surplus solaire. Utile pour s'assurer d'un minimum d'autonomie, même pour les jours plus sombres."
 label = "Recharge min. %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -211,6 +211,7 @@ planUnknown = "encore inconnu"
 priceLimit = "limite de prix : {price}"
 remove = "Ôter"
 setTargetTime = "aucun"
+targetEnergyRequired = "Vous devez aussi régler une limite d'énergie."
 targetIsInThePast = "Choisis une période dans le futur, Marty."
 targetIsTooFarInTheFuture = "Nous ajusterons le plan dès qu'on en saura plus sur le futur."
 title = "Temps visé"
@@ -220,7 +221,7 @@ update = "Mettre à jour"
 
 [main.targetChargePlan]
 chargeDuration = "Durée de charge"
-co2Label = "Émissions de CO₂ Ø"
+co2Label = "Émissions de CO₂ ⌀"
 priceLabel = "Prix de l'énergie"
 timeRange = "{day} {range} h"
 unknownPrice = "encore inconnu"
@@ -290,16 +291,20 @@ started = "Début"
 title = "Session de charge"
 
 [sessions]
-avgPrice = "Prix Ø"
-co2 = "CO₂ Ø"
-date = "Fin"
+avgPrice = "Prix ⌀"
+co2 = "CO₂ ⌀"
+csvMonth = "Télécharger CSV {month}"
+csvTotal = "Télécharger CSV total"
+date = "Début session"
 downloadCsv = "Télécharger au format CSV"
 energy = "Chargé"
 loadpoint = "Point de chargement"
+noData = "Pas de session de charge ce mois-ci"
 price = "Σ Prix"
 reallyDelete = "Voulez-vous vraiment supprimer cette session?"
 solar = "Solaire"
 title = "Sessions de charge"
+total = "Total"
 vehicle = "Véhicule"
 
 [sessions.csv]
@@ -312,6 +317,11 @@ meterstart = "Compteur début (kWh)"
 meterstop = "Compteur fin (kWh)"
 odometer = "Kilométrage (km)"
 vehicle = "Véhicule"
+
+[sessions.filter]
+allLoadpoints = "tous les points de chargement"
+allVehicles = "tous les véhicules"
+filter = "Filtrer"
 
 [settings]
 title = "Réglages"

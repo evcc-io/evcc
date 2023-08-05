@@ -22,3 +22,7 @@ func (a *dummy) Release(v api.Vehicle) {}
 func (a *dummy) IdentifyVehicleByStatus() api.Vehicle {
 	return nil
 }
+
+func (a *dummy) GetVehicleIndex(v api.Vehicle) int {
+	return -1
+}

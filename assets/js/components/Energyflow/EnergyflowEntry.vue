@@ -5,7 +5,7 @@
 			<VehicleIcon v-else-if="isVehicle" :names="vehicleIcons" />
 			<component :is="`shopicon-regular-${icon}`" v-else></component>
 		</span>
-		<span class="text-nowrap flex-grow-1 ms-3">
+		<span class="text-nowrap flex-grow-1 ms-3 text-truncate">
 			{{ name }}
 		</span>
 		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
@@ -20,7 +20,7 @@
 				<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
 			</div>
 			<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
-				<AnimatedNumber :to="power" :format="kw" />
+				<AnimatedNumber ref="powerNumber" :to="power" :format="kw" />
 			</div>
 		</span>
 	</div>
@@ -77,6 +77,12 @@ export default {
 		detailsTooltip(newVal, oldVal) {
 			if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
 				this.updateDetailsTooltip();
+			}
+		},
+		powerInKw(newVal, oldVal) {
+			// force update if unit changes but not the value
+			if (newVal !== oldVal) {
+				this.$refs.powerNumber.forceUpdate();
 			}
 		},
 	},

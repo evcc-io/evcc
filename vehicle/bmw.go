@@ -54,12 +54,12 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := bmw.NewIdentity(log)
 
-	err := identity.Login(cc.User, cc.Password)
+	ts, err := identity.Login(cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	api := bmw.NewAPI(log, brand, identity)
+	api := bmw.NewAPI(log, brand, ts)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 

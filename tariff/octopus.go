@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/octopus"
 	"github.com/evcc-io/evcc/util"
@@ -60,10 +61,14 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Octopus) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
+	bo := newBackoff()
 
 	for ; true; <-time.Tick(time.Hour) {
 		var res octopus.UnitRates
-		if err := client.GetJSON(t.uri, &res); err != nil {
+
+		if err := backoff.Retry(func() error {
+			return client.GetJSON(t.uri, &res)
+		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -103,7 +108,7 @@ func (t *Octopus) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *Octopus) Type() api.TariffType {
 	return api.TariffTypePriceDynamic
 }

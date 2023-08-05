@@ -138,12 +138,12 @@ modalTitle = "Need help?"
 primaryActions = "Something does not work the way it supposed to do? These are good places to get help."
 restartButton = "Restart"
 restartDescription = "Tried turning it off and on again?"
-secondaryActions = "Still not able to solve your problem? Here are some more heavy handed options."
+secondaryActions = "Still not able to solve your problem? Here are some more heavy-handed options."
 
 [help.restart]
 cancel = "Cancel"
 confirm = "Yes, restart!"
-description = "Under normal circumsances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
+description = "Under normal circumstances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
 disclaimer = "Note: evcc will terminate and rely on the operating system to restart the service."
 modalTitle = "Are you sure you want to restart?"
 
@@ -158,7 +158,7 @@ modalTitle = "Charging Plan"
 none = "none"
 title = "Plan"
 titleMinSoc = "Min charge"
-titleTargetCharge = "Depature"
+titleTargetCharge = "Departure"
 
 [main.energyflow]
 battery = "Battery"
@@ -174,9 +174,9 @@ pvProduction = "Production"
 selfConsumption = "Self-consumption"
 
 [main.loadpoint]
-avgPrice = "Ø Price"
+avgPrice = "⌀ Price"
 charged = "Charged"
-co2 = "Ø CO₂"
+co2 = "⌀ CO₂"
 duration = "Duration"
 fallbackName = "Charging point"
 power = "Power"
@@ -201,7 +201,7 @@ label = "Max. Current"
 label = "Min. Current"
 
 [main.loadpointSettings.minSoc]
-description = "For emergencies. The vehicle gets „fast” charged to {0}% from all available solar, and then continues with only the solar surplus."
+description = "The vehicle gets „fast” charged to {0}% in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days."
 label = "Min. charge %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -229,6 +229,7 @@ costLimitIgnore = "The configured {limit} will be ignored during this period."
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
 descriptionSoc = "When should the vehicle be charged to {targetSoc}%?"
 inactiveLabel = "Target time"
+onlyInPvMode = "Charging plan only works in solar mode."
 planDuration = "Charging time"
 planPeriodLabel = "Period"
 planPeriodValue = "{start} to {end}"
@@ -236,6 +237,7 @@ planUnknown = "not known yet"
 priceLimit = "price limit of {price}"
 remove = "Remove"
 setTargetTime = "none"
+targetEnergyRequired = "You also need to set an energy limit."
 targetIsInThePast = "Pick a time in the future, Marty."
 targetIsTooFarInTheFuture = "We will adjust the plan as soon as we know more about the future."
 title = "Target Time"
@@ -245,7 +247,7 @@ update = "Update"
 
 [main.targetChargePlan]
 chargeDuration = "Charging time"
-co2Label = "CO₂ emission Ø"
+co2Label = "CO₂ emission ⌀"
 priceLabel = "Energy price"
 timeRange = "{day} {range} h"
 unknownPrice = "still unknown"
@@ -315,11 +317,11 @@ started = "Started"
 title = "Charging Session"
 
 [sessions]
-avgPrice = "Ø Price"
-co2 = "Ø CO₂"
+avgPrice = "⌀ Price"
+co2 = "⌀ CO₂"
 csvMonth = "Download {month} CSV"
 csvTotal = "Download total CSV"
-date = "Finished"
+date = "Start"
 downloadCsv = "Download as CSV"
 energy = "Charged"
 loadpoint = "Charging point"
@@ -328,6 +330,7 @@ price = "Σ Price"
 reallyDelete = "Do you really want to delete this session?"
 solar = "Solar"
 title = "Charging Sessions"
+total = "Total"
 vehicle = "Vehicle"
 
 [sessions.csv]
@@ -344,7 +347,7 @@ vehicle = "Vehicle"
 [sessions.filter]
 allLoadpoints = "all charging points"
 allVehicles = "all vehicles"
-filter = "filter"
+filter = "Filter"
 
 [settings]
 title = "Settings"

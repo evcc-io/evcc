@@ -65,12 +65,12 @@ optInMoreDetailsLink = "aquí"
 optInSponsorship = "Se requiere patrocinio."
 
 [footer.version]
-availableLong = "Actualizaciones disponibles"
+availableLong = "nueva versión disponible"
 modalCancel = "Cancelar"
 modalDownload = "Descargar"
 modalInstalledVersion = "Versión instalada"
 modalNoReleaseNotes = "No hay notas de lanzamiento disponibles. Puedes encontrar más información sobre la nueva versión aquí:"
-modalTitle = "Actualizaciones disponibles"
+modalTitle = "Nueva versión disponible"
 modalUpdate = "Instalar"
 modalUpdateNow = "Instalar ahora"
 modalUpdateStarted = "Después de la actualización, evcc se reiniciará."
@@ -111,12 +111,12 @@ modalTitle = "¿Necesitas ayuda?"
 primaryActions = "Si algo no funciona como debería, puedes obtener ayuda aqui."
 restartButton = "Reiniciar"
 restartDescription = "¿Has probado de apagar y volver a encender"
-secondaryActions = "¿Sigues sin poder resolver tu problema? Aquí tienes otras opciones más contundentes"
+secondaryActions = "¿Sigues sin poder resolver tu problema? Aquí tienes otras opciones más contundentes."
 
 [help.restart]
 cancel = "Cancelar"
 confirm = "¡Sí, reinicia!"
-description = "Bajo circunstancias normales no debería ser necesario reiniciar. Por favor, considera la posibilidad de reportar un error si necesitas reiniciar evcc regularmente."
+description = "En circunstancias normales no debería ser necesario reiniciar. Por favor, considera la posibilidad de presentar un error si necesita reiniciar evcc de forma regular."
 disclaimer = "Nota: evcc terminará y dependerá del sistema operativo para reiniciar el servicio"
 modalTitle = "¿Seguro que quieres volver a empezar?"
 
@@ -131,7 +131,7 @@ modalTitle = "Plan de carga"
 none = "ninguno"
 title = "Plan"
 titleMinSoc = "Carga mínima"
-titleTargetCharge = "Salidas"
+titleTargetCharge = "Partida"
 
 [main.energyflow]
 battery = "Batería"
@@ -147,9 +147,9 @@ pvProduction = "Producción"
 selfConsumption = "Autoconsumo"
 
 [main.loadpoint]
-avgPrice = "Precio Ø"
+avgPrice = "Precio ⌀"
 charged = "Cargado"
-co2 = "CO₂ Ø "
+co2 = "CO₂ ⌀ "
 duration = "Duración"
 fallbackName = "Punto de carga"
 power = "Potencia"
@@ -168,13 +168,13 @@ title = "Configuraciones {0}"
 vehicle = "Vehículo"
 
 [main.loadpointSettings.maxCurrent]
-label = "Corriente de carga máxima "
+label = "Corriente de carga máxima"
 
 [main.loadpointSettings.minCurrent]
 label = "Corriente de carga mínima"
 
 [main.loadpointSettings.minSoc]
-description = "Rango para emergencias. El vehículo se carga „rápidamente” a {0}% en modo solar. Luego continua con el excedente fotovoltaico."
+description = "El vehículo se carga “rápido” al {0}% en modo energía solar. Luego continúa con el excedente de la energía solar. Útil para asegurar una autonomía mínima incluso en los días más oscuros"
 label = "Carga de min. %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -202,8 +202,9 @@ co2Limit = "Límite de CO₂ del {co2}"
 costLimitIgnore = "El {limit} configurado será ignorado durante este periodo."
 descriptionEnergy = "¿Hasta cuándo deben haberse cargado {targetEnergy} al vehículo?"
 descriptionSoc = "¿Hasta cuándo debe haberse cargarse el vehículo al {targetSoc}%?"
-inactiveLabel = "hora objetivo"
+inactiveLabel = "Tiempo objetivo"
 modalTitle = "Establecer el tiempo objetivo"
+onlyInPvMode = "El plan de carga sólo funciona en modo solar"
 planDuration = "Tiempo de carga"
 planPeriodLabel = "Período"
 planPeriodValue = "de {start} a {end}"
@@ -211,16 +212,17 @@ planUnknown = "aún no se sabe"
 priceLimit = "límite en el precio de {price}"
 remove = "retirar"
 setTargetTime = "niguno"
+targetEnergyRequired = "También hay que fijar un límite de energía"
 targetIsInThePast = "Elige un tiempo en el futuro, Marty."
 targetIsTooFarInTheFuture = "Ajustaremos el plan en cuanto sepamos más sobre el futuro."
-title = "hora objetivo"
+title = "Tiempo objetivo"
 today = "hoy"
 tomorrow = "mañana"
 update = "Actualizar"
 
 [main.targetChargePlan]
 chargeDuration = "Tiempo de carga"
-co2Label = "Emisión de CO₂ Ø"
+co2Label = "Emisión de CO₂ ⌀"
 priceLabel = "Precio de la energía"
 timeRange = "{day} {range} hora"
 unknownPrice = "aún desconocido"
@@ -292,16 +294,20 @@ started = "Comenzó"
 title = "Cargando la sesión"
 
 [sessions]
-avgPrice = "Precio Ø"
-co2 = "CO₂ Ø"
-date = "Acabado"
+avgPrice = "Precio ⌀"
+co2 = "CO₂ ⌀"
+csvMonth = "Descargar el {month} CSV"
+csvTotal = "Descargar todos los CSV"
+date = "Comenzar"
 downloadCsv = "Descargar como CSV"
 energy = "Cargado"
 loadpoint = "Punto de carga"
+noData = "No hay sesiones de carga este mes."
 price = "Σ Precio"
 reallyDelete = "¿De verdad quieres eliminar esta sesión?"
 solar = "Solar"
 title = "Sesiones de carga"
+total = "Total"
 vehicle = "Vehículo"
 
 [sessions.csv]
@@ -314,6 +320,11 @@ meterstart = "Inicio de metro (kWh)"
 meterstop = "Parón de metro (kWh)"
 odometer = "Kilometraje (km)"
 vehicle = "Vehículo"
+
+[sessions.filter]
+allLoadpoints = "todos los puntos de recarga"
+allVehicles = "todos los vehiculos"
+filter = "Filtrar"
 
 [settings]
 title = "Ajustes"

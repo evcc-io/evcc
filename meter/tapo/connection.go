@@ -104,6 +104,10 @@ func (d *Connection) Login() error {
 		return err
 	}
 
+	if err := d.CheckErrorCode(res.ErrorCode); err != nil {
+		return err
+	}
+
 	d.Token = res.Result.Token
 
 	deviceResponse, err := d.ExecMethod("get_device_info", false)
@@ -290,6 +294,17 @@ func (d *Connection) DoSecureRequest(uri string, taporequest map[string]interfac
 	var res *DeviceResponse
 	if err := d.DoJSON(req, &res); err != nil {
 		return nil, err
+	}
+
+	// Login atempt in case of tapo switch connection hicups
+	if res.ErrorCode == 9999 {
+		if err := d.Login(); err != nil {
+			return nil, err
+		}
+
+		if err := d.DoJSON(req, &res); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := d.CheckErrorCode(res.ErrorCode); err != nil {

@@ -1,0 +1,58 @@
+site:
+  title: Hello World
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: js
+      script: |
+        1000
+
+loadpoints:
+  - title: Carport
+    charger: charger
+    mode: pv
+    vehicle: golf
+
+chargers:
+  - name: charger
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        false
+    status:
+      source: js
+      script: |
+        "A"
+    maxcurrent:
+      source: js
+      script:
+
+vehicles:
+  - name: golf
+    title: blauer e-Golf
+    type: custom
+    soc:
+      source: js
+      vm: shared
+      script: |
+        35
+    capacity: 20
+  - name: honda
+    type: template
+    template: offline
+    title: grüner Honda e
+    capacity: 28.5
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.20

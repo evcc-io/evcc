@@ -7,7 +7,7 @@
 [![OSS hosting by cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith)](https://cloudsmith.io/~evcc/packages/)
 [![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)
 
-evcc is an extensible EV Charge Controller with PV integration implemented in [Go][2]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
+evcc is an extensible EV Charge Controller with PV integration implemented in [Go][1]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
 ![Screenshot](docs/screenshot.png)
 
@@ -48,6 +48,7 @@ To build evcc from source, [Go][1] 1.20 and [Node][2] 18 are required.
 Build and run go backend. The UI becomes available at http://127.0.0.1:7070/
 
 ```sh
+make install-ui
 make ui
 make install
 make

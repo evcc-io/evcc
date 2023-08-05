@@ -125,3 +125,45 @@ departureTab = "Odchod"
 modalTitle = "Plán nabíjení"
 none = "Žádný"
 title = "Plán"
+titleMinSoc = "Min. nabíjení"
+titleTargetCharge = "Odjezd"
+
+[main.energyflow]
+battery = "Baterie"
+batteryCharge = "Nabijení baterie"
+batteryDischarge = "Vybíjení baterie"
+batteryTooltip = "{energy} z {total} ({soc})"
+gridImport = "Používaní sítě"
+homePower = "Spotřeba"
+loadpoints = "Nabíječka | Nabíješka | {count} Nabíječek"
+noEnergy = "Žádné data měřiče"
+pvExport = "Export do sítě"
+pvProduction = "Produkce"
+selfConsumption = "Vlastní spotřeba"
+
+[main.loadpoint]
+avgPrice = "⌀ Cena"
+charged = "Nabito"
+co2 = "⌀ CO₂"
+duration = "Doba trvání"
+fallbackName = "Nabíjecí bod"
+power = "Výkon"
+price = "Σ Cena"
+solar = "Slunce"
+
+[main.loadpointSettings]
+currents = "Nabíjecí proud"
+default = "výchozí"
+disclaimerHint = "Poznámka:"
+disclaimerText = "Po restartovaní serveru budou zmeny ztraceny"
+title = "Nastavení {0}"
+vehicle = "Vozidlo"
+
+[main.loadpointSettings.maxCurrent]
+label = "Max. Proud"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. Proud"
+
+[main.loadpointSettings.minSoc]
+description = "Vozidlo se “rychle” nabije na {0} % v solárním režimu. Poté pokračuje solárním přebytkem. Užitečné pro zajištění minimálního dojezdu i pro temnější dny."

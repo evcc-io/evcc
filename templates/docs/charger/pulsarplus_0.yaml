@@ -1,6 +1,13 @@
 product:
   brand: wallbox
-  description: Pulsar Plus/ Commander 2/ Copper SB
+  description: Pulsar Plus / Commander 2 / Copper SB
+description: |
+  Anleitung: https://support.wallbox.com/en/knowledge-base/ocpp-activation-and-setup-guide/
+  * “OCPP aktivieren” (myWallbox app) bzw. den “OCPP-WebSocket-Verbindung” Schalter (myWallbox Portal) aktivieren
+  * URL: ws://[evcc-adresse]:8887/ (Verbindung über das lokale Netzwerk)
+  * Ladepunktidentität: beliebiger Wert (z.B. die Seriennummer der Box), der als *stationid* verwendet wird
+  * Passwort: leer lassen
+
 render:
   - default: |
       type: template

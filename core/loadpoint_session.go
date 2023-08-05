@@ -13,11 +13,11 @@ func (lp *Loadpoint) chargeMeterTotal() float64 {
 
 	f, err := m.TotalEnergy()
 	if err != nil {
-		lp.log.ERROR.Printf("charge meter total import: %v", err)
+		lp.log.ERROR.Printf("charge total import: %v", err)
 		return 0
 	}
 
-	lp.log.DEBUG.Printf("charge meter total import: %.3fkWh", f)
+	lp.log.DEBUG.Printf("charge total import: %.3fkWh", f)
 
 	return f
 }

@@ -28,7 +28,7 @@ render: |
   {{- end }}
   soc:
     source: http
-    uri: https://app.evnotify.de/soc?akey={{ .akey }}&token={{ .token }} # evNotify Server + AKEY
+    uri: https://app.evnotify.de/soc?akey={{ urlEncode .akey }}&token={{ urlEncode .token }} # evNotify Server + AKEY
     method: GET
     jq: .soc_display
   {{ include "vehicle-identify" . }}

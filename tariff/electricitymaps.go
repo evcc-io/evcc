@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -78,11 +79,15 @@ func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, err
 
 func (t *ElectricityMaps) run(done chan error) {
 	var once sync.Once
+	bo := newBackoff()
 	uri := fmt.Sprintf("%s/carbon-intensity/forecast?zone=%s", t.uri, t.zone)
 
 	for ; true; <-time.Tick(time.Hour) {
 		var res CarbonIntensity
-		if err := t.GetJSON(uri, &res); err != nil {
+
+		if err := backoff.Retry(func() error {
+			return t.GetJSON(uri, &res)
+		}, bo); err != nil {
 			if res.Error != "" {
 				err = errors.New(res.Error)
 			}
@@ -119,7 +124,7 @@ func (t *ElectricityMaps) Rates() (api.Rates, error) {
 	return res, outdatedError(t.updated, time.Hour)
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *ElectricityMaps) Type() api.TariffType {
 	return api.TariffTypeCo2
 }

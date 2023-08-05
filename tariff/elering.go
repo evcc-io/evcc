@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/elering"
 	"github.com/evcc-io/evcc/util"
@@ -19,7 +20,6 @@ type Elering struct {
 	*embed
 	mux     sync.Mutex
 	log     *util.Logger
-	unit    string
 	region  string
 	data    api.Rates
 	updated time.Time
@@ -33,9 +33,8 @@ func init() {
 
 func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		embed    `mapstructure:",squash"`
-		Currency string // TODO deprecated
-		Region   string
+		embed  `mapstructure:",squash"`
+		Region string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -49,7 +48,6 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Elering{
 		embed:  &cc.embed,
 		log:    util.NewLogger("Elering"),
-		unit:   cc.Currency,
 		region: strings.ToLower(cc.Region),
 	}
 
@@ -63,6 +61,7 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Elering) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
+	bo := newBackoff()
 
 	for ; true; <-time.Tick(time.Hour) {
 		var res elering.NpsPrice
@@ -72,7 +71,9 @@ func (t *Elering) run(done chan error) {
 			url.QueryEscape(ts.Format(time.RFC3339)),
 			url.QueryEscape(ts.Add(48*time.Hour).Format(time.RFC3339)))
 
-		if err := client.GetJSON(uri, &res); err != nil {
+		if err := backoff.Retry(func() error {
+			return client.GetJSON(uri, &res)
+		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -109,7 +110,7 @@ func (t *Elering) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *Elering) Type() api.TariffType {
 	return api.TariffTypePriceDynamic
 }

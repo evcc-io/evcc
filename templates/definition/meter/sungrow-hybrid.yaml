@@ -6,8 +6,8 @@ products:
       generic: SH Series Hybrid Inverter
 requirements:
   description:
-    de: Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.
-    en: Communication is either serial (RS485) or via TCP (WiNet-S-Dongle).
+    de: Die Verbindung ist seriell (RS485) oder über die native (hintere) LAN-Buchse am Wechselrichter möglich. Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren NICHT korrekt.
+    en: The connection can be serial (RS485) or via the native (rear) LAN socket on the inverter. Connections via the WiNet-S dongle (WiFi or LAN) do NOT work correctly.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
