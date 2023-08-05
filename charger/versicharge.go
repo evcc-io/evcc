@@ -21,6 +21,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"sync"
 	"time"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -53,6 +54,8 @@ const (
 
 type Versicharge struct {
 	conn *modbus.Connection
+	mu      sync.Mutex
+	curr    uint16
 }
 
 func init() {
@@ -146,30 +149,37 @@ func (wb *Versicharge) Enabled() (bool, error) {
 	currentTime := time.Now()
 	fmt.Printf("[VERSI ] INFO ")
 	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-	fmt.Printf(" Abfrage Enabled: %d \n", binary.BigEndian.Uint16(b))
+	fmt.Printf(" Abfrage Enabled: %d (gespeicherter Wert: %d) \n", binary.BigEndian.Uint16(b), wb.curr)
 	
 	return binary.BigEndian.Uint16(b) != 0, nil  // Enabled, if MaxCurrent != 0A
 }
 
 // Enable implements the api.Charger interface
 func (wb *Versicharge) Enable(enable bool) error {
-	b, err := wb.conn.ReadHoldingRegisters(versiRegMaxCurrent, 1)
-	if err != nil {
-		return err
-	}
-
 	var u uint16 = 0
-	if binary.BigEndian.Uint16(b) == 0 {
-		u = 7  //kleinster MaxCurrent -> Globale Variable verfügbar???
+	if enable {
+		wb.mu.Lock()
+		u = wb.curr  //gespeicherter Wert zum Anschalten auslesen
+		wb.mu.Unlock()
+	} else {
+		b, err := wb.conn.ReadHoldingRegisters(versiRegMaxCurrent, 1)
+		if err != nil {
+			return err
+		}
+		if binary.BigEndian.Uint16(b) != 0 {
+			wb.mu.Lock()
+			wb.curr = binary.BigEndian.Uint16(b)  //Wert beim Ausschalten speichern
+			wb.mu.Unlock()
+		}
 	}
 
 	// Print Umschalten Enable
 	currentTime := time.Now()
 	fmt.Printf("[VERSI ] INFO ")
 	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-	fmt.Printf(" Umschalten Enable: %d \n", u)
+	fmt.Printf(" Umschalten Enable: %d (gespeicherter Wert: %d) \n", u, wb.curr)
 	
-	b, err = wb.conn.WriteSingleRegister(versiRegMaxCurrent, u)
+	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, u)
 
 	return err
 }
@@ -179,12 +189,16 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
+//	curr := unit16(current)
+	wb.mu.Lock()
+	wb.curr = uint16(current)  //Stromwert abspeichern
+	wb.mu.Unlock()
 
-//	// Print Setzen MaxCurrent
-//	currentTime := time.Now()
-//	fmt.Printf("[VERSI ] INFO ")
-//	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-//	fmt.Printf(" Setze MaxCurrent auf %d \n", current)
+	// Print Setzen MaxCurrent
+	currentTime := time.Now()
+	fmt.Printf("[VERSI ] INFO ")
+	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
+	fmt.Printf(" Setze MaxCurrent auf %d (gespeicherter Wert: %d)  \n", current, wb.curr)
 
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, uint16(current))
 
