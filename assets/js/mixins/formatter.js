@@ -94,7 +94,7 @@ export default {
         unit = "s";
       }
       if (withUnit) {
-        result += ` ${unit}`;
+        result += `\u202F${unit}`;
       }
       return result;
     },
