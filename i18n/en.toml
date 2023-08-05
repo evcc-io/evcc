@@ -286,6 +286,7 @@ title = "Charging Session"
 
 [sessions]
 avgPrice = "⌀ Price"
+chargeDuration = "Duration"
 co2 = "⌀ CO₂"
 csvMonth = "Download {month} CSV"
 csvTotal = "Download total CSV"

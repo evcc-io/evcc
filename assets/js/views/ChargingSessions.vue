@@ -332,6 +332,13 @@ export default {
 					format: (value) => this.fmtKWh(value * 1e3, true, false),
 				},
 				{
+					name: "chargeDuration",
+					unit: "h:mm",
+					total: this.chargeDuration,
+					value: (session) => session.chargeDuration,
+					format: (value) => this.fmtDuration(value, false, "h"),
+				},
+				{
 					name: "solar",
 					unit: "%",
 					total: this.solarPercentage,
@@ -408,6 +415,9 @@ export default {
 		},
 		chargedEnergy() {
 			return this.filteredSessions.reduce((total, s) => total + s.chargedEnergy, 0);
+		},
+		chargeDuration() {
+			return this.filteredSessions.reduce((total, s) => total + s.chargeDuration, 0);
 		},
 		price() {
 			return this.filteredSessions.reduce((total, s) => total + s.price, 0);

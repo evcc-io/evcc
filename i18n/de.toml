@@ -286,6 +286,7 @@ title = "Ladevorgang"
 
 [sessions]
 avgPrice = "⌀ Preis"
+chargeDuration = "Dauer"
 co2 = "⌀ CO₂"
 csvMonth = "Download {month} CSV"
 csvTotal = "Gesamte CSV herunterladen"
