@@ -408,7 +408,7 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	// do not send pause/resume if disconnected or unauthenticated
-	if c.opMode == easee.ModeDisconnected || c.opMode == easee.ModeAwaitingAuthentication {
+	if c.opMode == easee.ModeDisconnected || (c.opMode == easee.ModeAwaitingAuthentication && !enable) {
 		return nil
 	}
 
@@ -418,6 +418,9 @@ func (c *Easee) Enable(enable bool) error {
 	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
+		if c.opMode == easee.ModeAwaitingAuthentication {
+			action = easee.ChargeStart
+		}
 		expectedEnabledState = true
 		targetCurrent = 32
 	}
