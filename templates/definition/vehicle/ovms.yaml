@@ -23,6 +23,9 @@ params:
   - name: icon
     default: car
     advanced: true
+  - name: server
+    default: dexters-web.de
+    advanced: true
   - preset: vehicle-identify
 render: |
   type: ovms
@@ -39,5 +42,5 @@ render: |
   {{- if .phases }}
   phases: {{ .phases }}
   {{- end }}
-  server: dexters-web.de # used ovms server [dexters-web.de or api.openvehicles.com]
+  server: {{ .server }} # used ovms server [dexters-web.de or api.openvehicles.com]
   {{ include "vehicle-identify" . }}
