@@ -134,23 +134,6 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-// namedConfig strips the config of type and name
-func namedConfig(req *map[string]any) config.Named {
-	res := config.Named{
-		Type:  typeTemplate,
-		Other: *req,
-	}
-	if (*req)["type"] != nil {
-		res.Type = (*req)["type"].(string)
-		delete(*req, "type")
-	}
-	if (*req)["name"] != nil {
-		res.Name = (*req)["name"].(string)
-		delete(*req, "name")
-	}
-	return res
-}
-
 func newDevice[T any](class config.Class, req map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) error {
 	instance, err := newFromConf(typeTemplate, req)
 	if err != nil {
