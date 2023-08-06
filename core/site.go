@@ -182,6 +182,7 @@ func NewSiteFromConfig(
 	}
 
 	if len(site.batteryMeters) > 0 && site.ResidualPower <= 0 {
+		site.log.WARN.Println("ResidualPower is set to 100, because battery is configured and residualPower is missing or <= 0.")   
 		site.ResidualPower = 100
 	}
 
