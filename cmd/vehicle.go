@@ -46,14 +46,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
-	vehicles := config.Vehicles()
-
-	// check single vehicle for error
-	if len(vehicles) == 1 {
-		if err, ok := vehicles[0].(error); ok {
-			fatal(err)
-		}
-	}
+	vehicles := config.Vehicles().Devices()
 
 	var flagUsed bool
 	for _, v := range config.Instances(vehicles) {

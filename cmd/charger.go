@@ -71,7 +71,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	chargers := config.Chargers()
+	chargers := config.Chargers().Devices()
 
 	var flagUsed bool
 	for _, v := range config.Instances(chargers) {

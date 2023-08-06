@@ -11,6 +11,14 @@ type handler[T any] struct {
 	devices []Device[T]
 }
 
+// Devices returns the handlers devices
+func (cp *handler[T]) Devices() []Device[T] {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	return cp.devices
+}
+
 // Add adds device and config
 func (cp *handler[T]) Add(dev Device[T]) error {
 	conf := dev.Config()
@@ -19,7 +27,7 @@ func (cp *handler[T]) Add(dev Device[T]) error {
 		return errors.New("missing name")
 	}
 
-	if _, _, err := cp.ByName(conf.Name); err == nil {
+	if _, err := cp.ByName(conf.Name); err == nil {
 		return fmt.Errorf("duplicate name: %s already defined and must be unique", conf.Name)
 	}
 
@@ -33,31 +41,29 @@ func (cp *handler[T]) Add(dev Device[T]) error {
 
 // Delete deletes device
 func (cp *handler[T]) Delete(name string) error {
-	_, i, err := cp.ByName(name)
-	if err != nil {
-		return err
-	}
-
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
-	cp.devices = append(cp.devices[:i], cp.devices[i+1:]...)
-
-	return nil
-}
-
-// ByName provides device by name
-func (cp *handler[T]) ByName(name string) (Device[T], int, error) {
-	var empty Device[T]
-
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
 	for i, dev := range cp.devices {
 		if name == dev.Config().Name {
-			return dev, i, nil
+			cp.devices = append(cp.devices[:i], cp.devices[i+1:]...)
+			return nil
 		}
 	}
 
-	return empty, 0, fmt.Errorf("not found: %s", name)
+	return fmt.Errorf("not found: %s", name)
+}
+
+// ByName provides device by name
+func (cp *handler[T]) ByName(name string) (Device[T], error) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	for _, dev := range cp.devices {
+		if name == dev.Config().Name {
+			return dev, nil
+		}
+	}
+
+	return nil, fmt.Errorf("not found: %s", name)
 }

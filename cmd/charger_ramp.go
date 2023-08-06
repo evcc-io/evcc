@@ -95,7 +95,7 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		log.ERROR.Fatalln(err)
 	}
 
-	chargers := config.Chargers()
+	chargers := config.Chargers().Devices()
 
 	for _, v := range config.Instances(chargers) {
 		if _, ok := v.(api.ChargerEx); digits > 0 && !ok {

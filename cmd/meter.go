@@ -38,7 +38,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	meters := config.Meters()
+	meters := config.Meters().Devices()
 
 	d := dumper{len: len(meters)}
 	for _, dev := range meters {
