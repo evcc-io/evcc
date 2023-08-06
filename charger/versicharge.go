@@ -22,7 +22,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"sync"
-	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -39,9 +39,7 @@ const (
 	versiRegMeterType      = 30   //  1 RO UINT16
 	versiRegErrorCode      = 1600 //  1 RO INT16
 	versiRegTemp           = 1602 //  1 RO INT16
-//	versiRegChargeStatus   = 1601 //  1 RO INT16
 	versiRegChargeStatus   = 1599 //  1 RO INT16 (EVSE Status)
-//	versiRegPause          = 1629 //  1 RW UNIT16 -> seit FW2.128 nicht mehr verfügbar
 	versiRegMaxCurrent     = 1633 //  1 RW UNIT16 -> Seit FW2.128 Pause an -> MaxCurrent = 0 
 	versiRegCurrents       = 1647 //  3 RO UINT16
 	versiRegVoltages       = 1651 //  3 RO UINT16
@@ -105,27 +103,6 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 
 	s := binary.BigEndian.Uint16(b)
 
-	// Abfrage OCPP State Reg 1601
-	c, err := wb.conn.ReadHoldingRegisters(1601, 1)
-
-	// Abfrage Pause von Reg 1629 
-	d, err := wb.conn.ReadHoldingRegisters(1629, 1)
-
-	switch s {
-	case 65, 66, 67, 16945: // bekannte Stati A, B, C, B1
-//		currentTime := time.Now()
-//		fmt.Printf("[VERSI ] INFO ")
-//		fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-//		fmt.Printf(" (EVSE - 1599) bekannt: %d \n", s)
-	default: // Neuer Status EVSE
-		currentTime := time.Now()
-		fmt.Printf("[VERSI ] INFO ")
-		fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-		fmt.Printf(" Charging State (OCPP - 1601): %d ", binary.BigEndian.Uint16(c))
-		fmt.Printf(" (EVSE Neu - 1599): %d ", s)
-		fmt.Printf(" Pause: %d \n", binary.BigEndian.Uint16(d))
-	}
-
 	switch s {
 	case 65: // Status A
 		return api.StatusA, nil
@@ -145,12 +122,6 @@ func (wb *Versicharge) Enabled() (bool, error) {
 		return false, err
 	}
 
-	// Print Abfrage Enable
-	currentTime := time.Now()
-	fmt.Printf("[VERSI ] INFO ")
-	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-	fmt.Printf(" Abfrage Enabled: %d (gespeicherter Wert: %d) \n", binary.BigEndian.Uint16(b), wb.curr)
-	
 	return binary.BigEndian.Uint16(b) != 0, nil  // Enabled, if MaxCurrent != 0A
 }
 
@@ -159,7 +130,7 @@ func (wb *Versicharge) Enable(enable bool) error {
 	var u uint16 = 0
 	if enable {
 		wb.mu.Lock()
-		u = wb.curr  //gespeicherter Wert zum Anschalten auslesen
+		u = wb.curr
 		wb.mu.Unlock()
 	} else {
 		b, err := wb.conn.ReadHoldingRegisters(versiRegMaxCurrent, 1)
@@ -168,16 +139,10 @@ func (wb *Versicharge) Enable(enable bool) error {
 		}
 		if binary.BigEndian.Uint16(b) != 0 {
 			wb.mu.Lock()
-			wb.curr = binary.BigEndian.Uint16(b)  //Wert beim Ausschalten speichern
+			wb.curr = binary.BigEndian.Uint16(b)  //Aktuellen Strom Wert beim Ausschalten speichern
 			wb.mu.Unlock()
 		}
 	}
-
-	// Print Umschalten Enable
-	currentTime := time.Now()
-	fmt.Printf("[VERSI ] INFO ")
-	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-	fmt.Printf(" Umschalten Enable: %d (gespeicherter Wert: %d) \n", u, wb.curr)
 	
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, u)
 
@@ -189,16 +154,9 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
-//	curr := unit16(current)
 	wb.mu.Lock()
-	wb.curr = uint16(current)  //Stromwert abspeichern
+	wb.curr = uint16(current)  //Neuen Stromwert abspeichern für Enable Funktion
 	wb.mu.Unlock()
-
-	// Print Setzen MaxCurrent
-	currentTime := time.Now()
-	fmt.Printf("[VERSI ] INFO ")
-	fmt.Printf(currentTime.Format("2006/01/02 15:04:02"))
-	fmt.Printf(" Setze MaxCurrent auf %d (gespeicherter Wert: %d)  \n", current, wb.curr)
 
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, uint16(current))
 
