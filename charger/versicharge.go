@@ -101,18 +101,7 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	s := binary.BigEndian.Uint16(b)
-
-	switch s {
-	case 65: // Status A
-		return api.StatusA, nil
-	case 66, 16945: // Status B, B1
-		return api.StatusB, nil
-	case 67, 17201: // Status C, C1
-		return api.StatusC, nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
-	}
+	return api.ChargeStatusString(string(b))
 }
 
 // Enabled implements the api.Charger interface
@@ -139,7 +128,7 @@ func (wb *Versicharge) Enable(enable bool) error {
 		}
 		if binary.BigEndian.Uint16(b) != 0 {
 			wb.mu.Lock()
-			wb.curr = binary.BigEndian.Uint16(b) //Aktuellen Strom Wert beim Ausschalten speichern
+			wb.curr = binary.BigEndian.Uint16(b) // Aktuellen Strom Wert beim Ausschalten speichern
 			wb.mu.Unlock()
 		}
 	}
@@ -155,7 +144,7 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 	wb.mu.Lock()
-	wb.curr = uint16(current) //Neuen Stromwert abspeichern für Enable Funktion
+	wb.curr = uint16(current) // Neuen Stromwert abspeichern für Enable Funktion
 	wb.mu.Unlock()
 
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, uint16(current))
