@@ -40,7 +40,7 @@ const (
 	versiRegErrorCode      = 1600 //  1 RO INT16
 	versiRegTemp           = 1602 //  1 RO INT16
 	versiRegChargeStatus   = 1599 //  1 RO INT16 (EVSE Status)
-	versiRegMaxCurrent     = 1633 //  1 RW UNIT16 -> Seit FW2.128 Pause an -> MaxCurrent = 0 
+	versiRegMaxCurrent     = 1633 //  1 RW UNIT16 -> Seit FW2.128 Pause an -> MaxCurrent = 0
 	versiRegCurrents       = 1647 //  3 RO UINT16
 	versiRegVoltages       = 1651 //  3 RO UINT16
 	versiRegPowers         = 1662 //  3 RO UINT16
@@ -52,8 +52,8 @@ const (
 
 type Versicharge struct {
 	conn *modbus.Connection
-	mu      sync.Mutex
-	curr    uint16
+	mu   sync.Mutex
+	curr uint16
 }
 
 func init() {
@@ -122,7 +122,7 @@ func (wb *Versicharge) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != 0, nil  // Enabled, if MaxCurrent != 0A
+	return binary.BigEndian.Uint16(b) != 0, nil // Enabled, if MaxCurrent != 0A
 }
 
 // Enable implements the api.Charger interface
@@ -139,11 +139,11 @@ func (wb *Versicharge) Enable(enable bool) error {
 		}
 		if binary.BigEndian.Uint16(b) != 0 {
 			wb.mu.Lock()
-			wb.curr = binary.BigEndian.Uint16(b)  //Aktuellen Strom Wert beim Ausschalten speichern
+			wb.curr = binary.BigEndian.Uint16(b) //Aktuellen Strom Wert beim Ausschalten speichern
 			wb.mu.Unlock()
 		}
 	}
-	
+
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, u)
 
 	return err
@@ -155,7 +155,7 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 	wb.mu.Lock()
-	wb.curr = uint16(current)  //Neuen Stromwert abspeichern für Enable Funktion
+	wb.curr = uint16(current) //Neuen Stromwert abspeichern für Enable Funktion
 	wb.mu.Unlock()
 
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, uint16(current))
