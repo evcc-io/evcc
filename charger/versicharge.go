@@ -21,7 +21,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"sync"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -51,9 +50,8 @@ const (
 // It uses Modbus TCP to communicate with the wallbox at id 2 (default).
 
 type Versicharge struct {
-	conn *modbus.Connection
-	mu   sync.Mutex
-	curr uint16
+	conn    *modbus.Connection
+	current uint16
 }
 
 func init() {
@@ -118,19 +116,7 @@ func (wb *Versicharge) Enabled() (bool, error) {
 func (wb *Versicharge) Enable(enable bool) error {
 	var u uint16 = 0
 	if enable {
-		wb.mu.Lock()
-		u = wb.curr
-		wb.mu.Unlock()
-	} else {
-		b, err := wb.conn.ReadHoldingRegisters(versiRegMaxCurrent, 1)
-		if err != nil {
-			return err
-		}
-		if binary.BigEndian.Uint16(b) != 0 {
-			wb.mu.Lock()
-			wb.curr = binary.BigEndian.Uint16(b) // Aktuellen Strom Wert beim Ausschalten speichern
-			wb.mu.Unlock()
-		}
+		u = wb.current
 	}
 
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, u)
@@ -143,11 +129,11 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
-	wb.mu.Lock()
-	wb.curr = uint16(current) // Neuen Stromwert abspeichern für Enable Funktion
-	wb.mu.Unlock()
 
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, uint16(current))
+	if err == nil {
+		wb.current = uint16(current) // Neuen Stromwert abspeichern für Enable Funktion
+	}
 
 	return err
 }
