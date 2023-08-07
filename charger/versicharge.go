@@ -99,7 +99,18 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatusString(string(b))
+	s := binary.BigEndian.Uint16(b)
+
+	switch s {
+	case 65: // Status A
+		return api.StatusA, nil
+	case 66, 16945, 17201: // Status B, B1, C1
+		return api.StatusB, nil
+	case 67: // Status C
+		return api.StatusC, nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+	}
 }
 
 // Enabled implements the api.Charger interface
