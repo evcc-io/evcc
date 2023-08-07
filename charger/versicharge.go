@@ -114,7 +114,7 @@ func (wb *Versicharge) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Versicharge) Enable(enable bool) error {
-	var u uint16 = 0
+	var u uint16
 	if enable {
 		u = wb.current
 	}
