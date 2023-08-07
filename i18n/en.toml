@@ -285,8 +285,8 @@ started = "Started"
 title = "Charging Session"
 
 [sessions]
+avgPower = "⌀ Power"
 avgPrice = "⌀ Price"
-avgPower="⌀ Power"
 chargeDuration = "Duration"
 co2 = "⌀ CO₂"
 csvMonth = "Download {month} CSV"

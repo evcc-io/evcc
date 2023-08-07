@@ -285,6 +285,7 @@ started = "Startzeit"
 title = "Ladevorgang"
 
 [sessions]
+avgPower = "⌀ Leistung"
 avgPrice = "⌀ Preis"
 chargeDuration = "Ladezeit"
 co2 = "⌀ CO₂"
