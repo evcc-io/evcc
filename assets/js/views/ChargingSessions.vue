@@ -320,13 +320,6 @@ export default {
 					format: (value) => this.fmtKWh(value * 1e3, true, false),
 				},
 				{
-					name: "chargeDuration",
-					unit: "h:mm",
-					total: this.chargeDuration,
-					value: (session) => session.chargeDuration,
-					format: (value) => this.fmtDuration(value, false, "h"),
-				},
-				{
 					name: "solar",
 					unit: "%",
 					total: this.solarPercentage,
@@ -353,6 +346,26 @@ export default {
 					total: this.co2PerKWh,
 					value: (session) => session.co2PerKWh,
 					format: (value) => this.fmtNumber(value, 0),
+				},
+				{
+					name: "chargeDuration",
+					unit: "h:mm",
+					total: this.chargeDuration,
+					value: (session) => session.chargeDuration,
+					format: (value) => this.fmtDuration(value, false, "h"),
+				},
+				{
+					name: "avgPower",
+					unit: "kW",
+					total: this.avgPower,
+					value: (session) => {
+						if (session.chargedEnergy && session.chargeDuration) {
+							return session.chargedEnergy / (session.chargeDuration / 3600);
+						}
+						return null;
+					},
+					format: (value) =>
+						value ? this.fmtKw(value * 1e3, true, false, 1) : undefined,
 				},
 			];
 			// only columns with values are shown
@@ -428,6 +441,22 @@ export default {
 		price() {
 			return this.filteredSessions.reduce((total, s) => total + s.price, 0);
 		},
+		avgPower() {
+			const { energy, duration } = this.filteredSessions
+				.filter((s) => s.chargedEnergy && s.chargeDuration)
+				.reduce(
+					(total, s) => {
+						total.energy += s.chargedEnergy;
+						total.duration += s.chargeDuration;
+						return total;
+					},
+					{ energy: 0, duration: 0 }
+				);
+			if (energy && duration) {
+				return energy / (duration / 3600);
+			}
+			return null;
+		},
 		showVehicles() {
 			return this.hasMultipleVehicles || this.vehicleFilter;
 		},
@@ -464,7 +493,10 @@ export default {
 					}),
 					{ emittedCo2: 0, chargedEnergy: 0 }
 				);
-			return total.emittedCo2 / total.chargedEnergy;
+			if (total.chargedEnergy && total.emittedCo2) {
+				return total.emittedCo2 / total.chargedEnergy;
+			}
+			return null;
 		},
 		solarPercentage() {
 			const total = this.filteredSessions

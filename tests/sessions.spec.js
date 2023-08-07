@@ -33,6 +33,7 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-nodata")).toHaveCount(0);
     await expect(page.getByRole("table")).toBeVisible();
     await expect(page.getByTestId("sessions-head")).toHaveCount(1);
+    await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(9);
 
     await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
     await expect(page.getByTestId("sessions-foot-energy")).toBeVisible("20.0");
@@ -46,6 +47,16 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-head-avgPrice")).toContainText("⌀ Pricect/kWh");
     await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible("27.5");
 
+    await expect(page.getByTestId("sessions-head-chargeDuration")).toContainText("Durationh:mm");
+    await expect(page.getByTestId("sessions-foot-chargeDuration")).toBeVisible("1:30");
+
+    await page
+      .getByTestId("sessions-head-chargeDuration")
+      .getByRole("combobox")
+      .selectOption("⌀ Power");
+    await expect(page.getByTestId("sessions-head-avgPower")).toContainText("⌀ PowerkW");
+    await expect(page.getByTestId("sessions-foot-avgPower")).toBeVisible("1:30");
+
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
   });
 });
@@ -55,40 +66,32 @@ test.describe("mobile basics", async () => {
     await page.setViewportSize(mobile);
     await page.goto("/#/sessions?year=2023&month=5");
 
-    // hidden columns
-    await expect(page.getByTestId("sessions-head-energy")).not.toBeVisible();
-    await expect(page.getByTestId("sessions-foot-energy")).not.toBeVisible();
-    await expect(page.getByTestId("sessions-head-solar")).not.toBeVisible();
-    await expect(page.getByTestId("sessions-foot-solar")).not.toBeVisible();
-    await expect(page.getByTestId("sessions-head-price")).not.toBeVisible();
-    await expect(page.getByTestId("sessions-foot-price")).not.toBeVisible();
-    await expect(page.getByTestId("sessions-head-avgPrice")).not.toBeVisible();
-    await expect(page.getByTestId("sessions-foot-avgPrice")).not.toBeVisible();
+    await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(5);
 
-    await expect(page.getByTestId("sessions-head-mobile")).toContainText("ChargedkWh");
-    await expect(page.getByTestId("sessions-foot-mobile")).toBeVisible("20.0");
+    await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
+    await expect(page.getByTestId("sessions-foot-energy")).toBeVisible("20.0");
 
-    await page.getByTestId("mobile-column").selectOption("Solar");
-    await expect(page.getByTestId("sessions-head-mobile")).toContainText("Solar%");
-    await expect(page.getByTestId("sessions-foot-mobile")).toBeVisible("67.3");
+    await page.getByTestId("sessions-head-energy").getByRole("combobox").selectOption("Solar");
+    await expect(page.getByTestId("sessions-head-solar")).toContainText("Solar%");
+    await expect(page.getByTestId("sessions-foot-solar")).toBeVisible("67.3");
 
-    await page.getByTestId("mobile-column").selectOption("Σ Price");
-    await expect(page.getByTestId("sessions-head-mobile")).toContainText("Σ Price€");
-    await expect(page.getByTestId("sessions-foot-mobile")).toBeVisible("5.50");
+    await page.getByTestId("sessions-head-solar").getByRole("combobox").selectOption("Σ Price");
+    await expect(page.getByTestId("sessions-head-price")).toContainText("Σ Price€");
+    await expect(page.getByTestId("sessions-foot-price")).toBeVisible("5.50");
 
-    await page.getByTestId("mobile-column").selectOption("⌀ Price");
-    await expect(page.getByTestId("sessions-head-mobile")).toContainText("⌀ Pricect/kWh");
-    await expect(page.getByTestId("sessions-foot-mobile")).toBeVisible("27.5");
+    await page.getByTestId("sessions-head-price").getByRole("combobox").selectOption("⌀ Price");
+    await expect(page.getByTestId("sessions-head-avgPrice")).toContainText("⌀ Pricect/kWh");
+    await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible("27.5");
   });
 
   test("keep selection when paging", async ({ page }) => {
     await page.setViewportSize(mobile);
     await page.goto("/#/sessions?year=2023&month=5");
 
-    await page.getByTestId("mobile-column").selectOption("Solar");
+    await page.getByTestId("sessions-head-energy").getByRole("combobox").selectOption("Solar");
     await page.getByRole("link", { name: "Apr" }).click();
     await page.getByRole("link", { name: "May" }).click();
-    await expect(page.getByTestId("sessions-head-mobile")).toContainText("Solar%");
+    await expect(page.getByTestId("sessions-head-solar")).toContainText("Solar%");
   });
 });
 
