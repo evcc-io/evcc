@@ -109,7 +109,7 @@ func (wb *Versicharge) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != 0, nil // Enabled, if MaxCurrent != 0A
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -132,7 +132,7 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, uint16(current))
 	if err == nil {
-		wb.current = uint16(current) // Neuen Stromwert abspeichern für Enable Funktion
+		wb.current = uint16(current)
 	}
 
 	return err
