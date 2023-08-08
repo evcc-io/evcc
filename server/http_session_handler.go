@@ -52,7 +52,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		push("STRFTIME('%Y', created) LIKE ?", year)
 
 		if month := fmt.Sprintf("%02s", r.URL.Query().Get("month")); month != "00" {
-			filename += "." + month
+			filename += "-" + month
 			push("STRFTIME('%m', created) LIKE ?", month)
 		}
 	}
