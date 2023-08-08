@@ -35,25 +35,23 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var res db.Sessions
-	year := r.URL.Query().Get("year")
-	month := r.URL.Query().Get("month")
-
-	filename := "session"
-
-	var cond []string
-	var args []any
+	var (
+		res  db.Sessions
+		cond []string
+		args []any
+	)
 
 	push := func(field, val string) {
 		cond = append(cond, field)
 		args = append(args, val)
 	}
 
-	if year != "" {
+	filename := "session"
+	if year := r.URL.Query().Get("year"); year != "" {
 		filename += "-" + year
 		push("STRFTIME('%Y', created) LIKE ?", year)
 
-		if month != "" {
+		if month := r.URL.Query().Get("month"); month != "" {
 			month = fmt.Sprintf("%02s", month)
 			filename += "." + month
 			push("STRFTIME('%m', created) LIKE ?", month)
