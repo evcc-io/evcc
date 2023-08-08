@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/andig/go-powerwall"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/foogod/go-powerwall"
 )
 
 // PowerWall is the tesla powerwall meter
