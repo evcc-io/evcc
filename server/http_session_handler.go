@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"strconv"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/db"
@@ -41,28 +41,28 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	filename := "session"
 
-	fmtYear := "%"
-	fmtMonth := "%"
+	var cond []string
+	var args []any
+
+	push := func(field, val string) {
+		cond = append(cond, field)
+		args = append(args, val)
+	}
 
 	if year != "" {
-		fmtYear = year
-		filename += "-" + fmtYear
+		filename += "-" + year
+		push("STRFTIME('%Y', created)", year)
 
 		if month != "" {
-			iMonth, err := strconv.Atoi(month)
-			if err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
-
-			fmtMonth = fmt.Sprintf("%02d", iMonth)
-			filename += "." + fmtMonth
+			month = fmt.Sprintf("%02s", month)
+			filename += "." + month
+			push("STRFTIME('%m', created)", month)
 		}
 	}
 
 	// TODO support other databases than Sqlite
-	whereQuery := "charged_kwh>=0.05 AND strftime('%Y', created) LIKE ? AND strftime('%m', created) LIKE ?"
-	if txn := dbserver.Instance.Where(whereQuery, fmtYear, fmtMonth).Order("created DESC").Find(&res); txn.Error != nil {
+	query := strings.Join(append([]string{"charged_kwh>=0.05"}, cond...), " AND ") + " LIKE ?"
+	if txn := dbserver.Instance.Where(query, args...).Order("created DESC").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
 	}

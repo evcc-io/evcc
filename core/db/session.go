@@ -57,7 +57,6 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) error {
 		caption, err := localizer.Localize(&locale.Config{
 			MessageID: "sessions.csv." + strings.ToLower(f.Name()),
 		})
-
 		if err != nil {
 			if csv != "" {
 				caption = csv
@@ -79,28 +78,24 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 			continue
 		}
 
-		var val string
 		digits := 3
 		if format := f.Tag("format"); format == "int" {
 			digits = 0
 		}
 
-		switch v := f.Value().(type) {
-		case float64:
-			val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(digits)))
-		case time.Time:
-			if !v.IsZero() {
-				val = v.Local().Format("2006-01-02 15:04:05")
-			}
-		default:
-			if rv := reflect.ValueOf(v); rv.Kind() == reflect.Ptr {
-				if pv := reflect.Indirect(rv); pv.CanFloat() && !rv.IsNil() {
-					val = mp.Sprint(number.Decimal(pv.Float(), number.NoSeparator(), number.MaxFractionDigits(digits)))
-				}
-				break
-			}
+		var val string
 
-			val = fmt.Sprintf("%v", f.Value())
+		if rv := reflect.ValueOf(f.Value()); !(rv.Kind() == reflect.Pointer && rv.IsNil()) {
+			switch v := f.Value().(type) {
+			case float64, *float64:
+				val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(digits)))
+			case time.Time:
+				if !v.IsZero() {
+					val = v.Local().Format("2006-01-02 15:04:05")
+				}
+			default:
+				val = fmt.Sprintf("%v", f.Value())
+			}
 		}
 
 		row = append(row, val)
