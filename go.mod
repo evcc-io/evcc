@@ -7,6 +7,7 @@ require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/PuerkitoBio/goquery v1.8.1
+	github.com/andig/go-powerwall v0.2.1-0.20230808193218-8a882f7e4dc6
 	github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
@@ -30,7 +31,6 @@ require (
 	github.com/enbility/cemd v0.2.2
 	github.com/enbility/eebus-go v0.2.0
 	github.com/fatih/structs v1.1.0
-	github.com/foogod/go-powerwall v0.2.0
 	github.com/glebarez/sqlite v1.8.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
@@ -207,7 +207,5 @@ require (
 	modernc.org/memory v1.6.0 // indirect
 	modernc.org/sqlite v1.23.1 // indirect
 )
-
-replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230525091927-777196024a18
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3
