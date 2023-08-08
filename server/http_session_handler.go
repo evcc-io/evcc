@@ -51,17 +51,17 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	if year != "" {
 		filename += "-" + year
-		push("STRFTIME('%Y', created)", year)
+		push("STRFTIME('%Y', created) LIKE ?", year)
 
 		if month != "" {
 			month = fmt.Sprintf("%02s", month)
 			filename += "." + month
-			push("STRFTIME('%m', created)", month)
+			push("STRFTIME('%m', created) LIKE ?", month)
 		}
 	}
 
 	// TODO support other databases than Sqlite
-	query := strings.Join(append([]string{"charged_kwh>=0.05"}, cond...), " AND ") + " LIKE ?"
+	query := strings.Join(append([]string{"charged_kwh>=0.05"}, cond...), " AND ")
 	if txn := dbserver.Instance.Where(query, args...).Order("created DESC").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
