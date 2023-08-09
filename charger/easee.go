@@ -54,6 +54,7 @@ type Easee struct {
 	chargerEnabled        bool
 	smartCharging         bool
 	opMode                int
+	reasonForNoCurrent    int
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -315,6 +316,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
 		c.opMode = value.(int)
+	case easee.REASON_FOR_NO_CURRENT:
+		c.reasonForNoCurrent = value.(int)
 	}
 
 	select {
@@ -443,7 +446,20 @@ func (c *Easee) inEnabledOpMode() bool {
 	defer c.mux.Unlock()
 	return c.opMode == easee.ModeCharging ||
 		c.opMode == easee.ModeCompleted ||
+		(c.opMode == easee.ModeAwaitingStart && !c.isEnabledReasonForNoCurrent(c.reasonForNoCurrent)) ||
 		c.opMode == easee.ModeReadyToCharge
+}
+
+// indicates wether the given reason represents a state in which
+// the charger is capable to start, but is limited externally (cable, loadbalancing, EV)
+func (c *Easee) isEnabledReasonForNoCurrent(reason int) bool {
+	knownGood := []int{0, 1, 2, 3, 4, 5, 6, 51, 52, 54, 75, 76, 77, 78, 79, 80, 81}
+	for _, x := range knownGood {
+		if x == reason {
+			return true
+		}
+	}
+	return false
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
