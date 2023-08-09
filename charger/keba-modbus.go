@@ -120,8 +120,8 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if timeout := binary.BigEndian.Uint32(b); timeout > 0 {
-		go wb.heartbeat(900 * time.Millisecond * time.Duration(timeout))
+	if u := binary.BigEndian.Uint32(b); u > 0 {
+		go wb.heartbeat(time.Duration(u) * time.Second / 2)
 	}
 
 	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, phases), nil
