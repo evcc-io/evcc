@@ -117,7 +117,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	// failsafe
 	b, err = wb.conn.ReadHoldingRegisters(kebaRegFailsafeTimeout, 2)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 
 	if u := binary.BigEndian.Uint32(b); u > 0 {
