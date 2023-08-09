@@ -93,19 +93,38 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 
 	// disable standby to prevent comm loss
 	err = wb.set(hecRegStandbyConfig, hecStandbyDisabled)
+	if err != nil {
+		return wb, err
+	}
 
-	go wb.heartbeat(log)
-
+	err = wb.heartbeat(log)
 	return wb, err
 }
 
-func (wb *HeidelbergEC) heartbeat(log *util.Logger) {
-	for range time.Tick(10 * time.Second) {
-		_, err := wb.Status()
-		if err != nil {
-			log.ERROR.Println("heartbeat:", err)
-		}
+func (wb *HeidelbergEC) heartbeat(log *util.Logger) error {
+	b, err := wb.conn.ReadHoldingRegisters(hecRegTimeoutConfig, 1)
+	if err != nil {
+		return err
 	}
+
+	watchDogTimeout := binary.BigEndian.Uint16(b)
+	if watchDogTimeout == 0 {
+		return nil
+	}
+
+	// take 80% of the set duration to call before the timeout
+	watchDogTimeoutSec := (float64(watchDogTimeout) * 0.8) / 1000
+	d := time.Duration(watchDogTimeoutSec) * time.Second
+
+	go func() {
+		for range time.Tick(d) {
+			_, err := wb.Status()
+			if err != nil {
+				log.ERROR.Println("heartbeat:", err)
+			}
+		}
+	}()
+	return nil
 }
 
 func (wb *HeidelbergEC) set(reg, val uint16) error {
