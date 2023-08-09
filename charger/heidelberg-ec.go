@@ -21,6 +21,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -93,7 +94,18 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 	// disable standby to prevent comm loss
 	err = wb.set(hecRegStandbyConfig, hecStandbyDisabled)
 
+	go wb.heartbeat(log)
+
 	return wb, err
+}
+
+func (wb *HeidelbergEC) heartbeat(log *util.Logger) {
+	for range time.Tick(10 * time.Second) {
+		_, err := wb.Status()
+		if err != nil {
+			log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 func (wb *HeidelbergEC) set(reg, val uint16) error {
