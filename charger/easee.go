@@ -380,17 +380,15 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
-	enabled := c.inEnabledOpMode()
-
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	return enabled && c.dynamicChargerCurrent > 0, nil
+	return c.chargerEnabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (c *Easee) Enable(enable bool) error {
 	c.mux.Lock()
-	enablingRequired := enable && !c.chargerEnabled
+	enablingRequired := enable != c.chargerEnabled
 	c.mux.Unlock()
 
 	// enable charger once if it's switched off
