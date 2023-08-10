@@ -6,12 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error) api.Charger {
+func decorateCustom(base *Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error) api.Charger {
 	switch {
-	case identifier == nil && phaseSwitcher == nil && resurrector == nil:
+	case chargerEx == nil && identifier == nil && phaseSwitcher == nil && resurrector == nil:
 		return base
 
-	case identifier != nil && phaseSwitcher == nil && resurrector == nil:
+	case chargerEx != nil && identifier == nil && phaseSwitcher == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+		}
+
+	case chargerEx == nil && identifier != nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -22,7 +33,22 @@ func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitc
 			},
 		}
 
-	case identifier == nil && phaseSwitcher != nil && resurrector == nil:
+	case chargerEx != nil && identifier != nil && phaseSwitcher == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.Identifier
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case chargerEx == nil && identifier == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.PhaseSwitcher
@@ -33,7 +59,22 @@ func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitc
 			},
 		}
 
-	case identifier != nil && phaseSwitcher != nil && resurrector == nil:
+	case chargerEx != nil && identifier == nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case chargerEx == nil && identifier != nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -48,7 +89,26 @@ func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitc
 			},
 		}
 
-	case identifier == nil && phaseSwitcher == nil && resurrector != nil:
+	case chargerEx != nil && identifier != nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case chargerEx == nil && identifier == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Resurrector
@@ -59,7 +119,22 @@ func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitc
 			},
 		}
 
-	case identifier != nil && phaseSwitcher == nil && resurrector != nil:
+	case chargerEx != nil && identifier == nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.Resurrector
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case chargerEx == nil && identifier != nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -74,7 +149,26 @@ func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitc
 			},
 		}
 
-	case identifier == nil && phaseSwitcher != nil && resurrector != nil:
+	case chargerEx != nil && identifier != nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.Identifier
+			api.Resurrector
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case chargerEx == nil && identifier == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.PhaseSwitcher
@@ -89,7 +183,26 @@ func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitc
 			},
 		}
 
-	case identifier != nil && phaseSwitcher != nil && resurrector != nil:
+	case chargerEx != nil && identifier == nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case chargerEx == nil && identifier != nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -97,6 +210,29 @@ func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitc
 			api.Resurrector
 		}{
 			Charger: base,
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case chargerEx != nil && identifier != nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.Identifier
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
@@ -110,6 +246,14 @@ func decorateCustom(base *Charger, identifier func() (string, error), phaseSwitc
 	}
 
 	return nil
+}
+
+type decorateCustomChargerExImpl struct {
+	chargerEx func(float64) error
+}
+
+func (impl *decorateCustomChargerExImpl) MaxCurrentMillis(current float64) error {
+	return impl.chargerEx(current)
 }
 
 type decorateCustomIdentifierImpl struct {
