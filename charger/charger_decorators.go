@@ -249,10 +249,10 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 }
 
 type decorateCustomChargerExImpl struct {
-	chargerEx func(float64) (error)
+	chargerEx func(float64) error
 }
 
-func (impl *decorateCustomChargerExImpl) MaxCurrentMillis(current float64) (error) {
+func (impl *decorateCustomChargerExImpl) MaxCurrentMillis(current float64) error {
 	return impl.chargerEx(current)
 }
 
