@@ -41,7 +41,7 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-     jq: .meters.pv.agg_p_mw
+    jq: .meters.pv.agg_p_mw
     scale: 0.001
   energy:
     source: http
