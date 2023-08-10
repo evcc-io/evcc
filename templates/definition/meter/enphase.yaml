@@ -26,7 +26,6 @@ render: |
       type: bearer
       password: {{ .token }}
     insecure: true
-    cache: 4s
     {{- end }}
     jq: .meters.grid.agg_p_mw
     scale: 0.001
@@ -41,7 +40,6 @@ render: |
       type: bearer
       password: {{ .token }}
     insecure: true
-    cache: 4s
     {{- end }}
      jq: .meters.pv.agg_p_mw
     scale: 0.001
@@ -54,7 +52,6 @@ render: |
       type: bearer
       password: {{ .token }}
     insecure: true
-    cache: 4s
     {{- end }}
     jq: .production[] | select(.measurementType == "production").whLifetime
     scale: 0.001
@@ -69,7 +66,6 @@ render: |
       type: bearer
       password: {{ .token }}
     insecure: true
-    cache: 4s
     {{- end }}
     jq: .meters.storage.agg_p_mw
     scale: 0.001
@@ -82,7 +78,6 @@ render: |
       type: bearer
       password: {{ .token }}
     insecure: true
-    cache: 4s
     {{- end }}
     jq: .meters.soc
   {{- if .capacity }}
