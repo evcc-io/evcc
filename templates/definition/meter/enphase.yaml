@@ -19,15 +19,17 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: http://{{ .host }}/ivp/livedata/status
     method: GET
     {{- if .token }}
     auth:
       type: bearer
       password: {{ .token }}
     insecure: true
+    cache: 4s
     {{- end }}
-    jq: .consumption[] | select(.measurementType == "net-consumption").wNow
+    jq: .meters.grid.agg_p_mw
+    scale: 0.001
   energy:
     source: http
     uri: http://{{ .host }}/production.json
@@ -37,6 +39,7 @@ render: |
       type: bearer
       password: {{ .token }}
     insecure: true
+    cache: 4s
     {{- end }}
     jq: .consumption[] | select(.measurementType == "net-consumption").whLifetime
     scale: 0.001
@@ -44,15 +47,17 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: http://{{ .host }}/ivp/livedata/status
     method: GET
     {{- if .token }}
     auth:
       type: bearer
       password: {{ .token }}
     insecure: true
+    cache: 4s
     {{- end }}
-    jq: .production[] | select(.measurementType == "production").wNow
+     jq: .meters.pv.agg_p_mw
+    scale: 0.001
   energy:
     source: http
     uri: http://{{ .host }}/production.json
@@ -62,6 +67,7 @@ render: |
       type: bearer
       password: {{ .token }}
     insecure: true
+    cache: 4s
     {{- end }}
     jq: .production[] | select(.measurementType == "production").whLifetime
     scale: 0.001
@@ -69,26 +75,29 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json?details=1
+    uri: http://{{ .host }}/ivp/livedata/status
     method: GET
     {{- if .token }}
     auth:
       type: bearer
       password: {{ .token }}
     insecure: true
+    cache: 4s
     {{- end }}
-    jq: .storage[] | select(.type == "acb").wNow
+    jq: .meters.storage.agg_p_mw
+    scale: 0.001
   soc:
     source: http
-    uri: http://{{ .host }}/ivp/ensemble/inventory
+    uri: http://{{ .host }}/ivp/livedata/status
     method: GET
     {{- if .token }}
     auth:
       type: bearer
       password: {{ .token }}
     insecure: true
+    cache: 4s
     {{- end }}
-    jq: .[].devices | map(.percentFull) | add / length
+    jq: .meters.soc
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
