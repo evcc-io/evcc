@@ -117,11 +117,11 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	// failsafe
 	b, err = wb.conn.ReadHoldingRegisters(kebaRegFailsafeTimeout, 2)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 
-	if timeout := binary.BigEndian.Uint32(b); timeout > 0 {
-		go wb.heartbeat(900 * time.Millisecond * time.Duration(timeout))
+	if u := binary.BigEndian.Uint32(b); u > 0 {
+		go wb.heartbeat(time.Duration(u) * time.Second / 2)
 	}
 
 	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, phases), nil

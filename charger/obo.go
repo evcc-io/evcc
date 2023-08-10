@@ -63,7 +63,7 @@ func NewObo(uri, device, comset string, baudrate int, proto modbus.Protocol, sla
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(time.Duration(u/2) * time.Millisecond)
+		go wb.heartbeat(time.Duration(u) * time.Millisecond / 2)
 	}
 
 	// lightshow

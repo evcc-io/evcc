@@ -104,7 +104,7 @@ func NewDaheimLadenMB(uri string, id uint8) (api.Charger, error) {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(time.Duration(u/2) * time.Second)
+		go wb.heartbeat(time.Duration(u) * time.Second / 2)
 	}
 
 	return wb, err
