@@ -121,7 +121,7 @@ func (wb *Salia) heartbeat() {
 	bo.InitialInterval = 5 * time.Second
 	bo.MaxElapsedTime = time.Minute
 
-	for ; true; <-time.Tick(30 * time.Second) {
+	for range time.Tick(30 * time.Second) {
 		if err := backoff.Retry(func() error {
 			return wb.post(salia.HeartBeat, "alive")
 		}, bo); err != nil {

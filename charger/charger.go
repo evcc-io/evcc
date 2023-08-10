@@ -22,13 +22,14 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)" -t "api.Resurrector,WakeUp,func() (error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error"
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed                               `mapstructure:",squash"`
 		Status, Enable, Enabled, MaxCurrent provider.Config
+		MaxCurrentMillis                    *provider.Config
 		Identify, Phases1p3p                *provider.Config
 		Wakeup                              *provider.Config
 		Tos                                 bool
@@ -64,6 +65,14 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	}
 
 	c.embed = &cc.embed
+
+	var maxcurrentmillis func(float64) error
+	if cc.MaxCurrentMillis != nil {
+		maxcurrentmillis, err = provider.NewFloatSetterFromConfig("maxcurrentmillis", *cc.MaxCurrentMillis)
+		if err != nil {
+			return nil, fmt.Errorf("maxcurrentmillis: %w", err)
+		}
+	}
 
 	// decorate phases
 	var phases1p3p func(int) error
@@ -104,7 +113,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		}
 	}
 
-	return decorateCustom(c, identify, phases1p3p, wakeup), nil
+	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup), nil
 }
 
 // NewConfigurable creates a new charger
