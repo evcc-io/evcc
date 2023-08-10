@@ -446,14 +446,15 @@ func (c *Easee) inEnabledOpMode() bool {
 	defer c.mux.Unlock()
 	return c.opMode == easee.ModeCharging ||
 		c.opMode == easee.ModeCompleted ||
-		(c.opMode == easee.ModeAwaitingStart && !c.isEnabledReasonForNoCurrent(c.reasonForNoCurrent)) ||
+		(c.opMode == easee.ModeAwaitingStart && c.isEnabledReasonForNoCurrent(c.reasonForNoCurrent)) ||
 		c.opMode == easee.ModeReadyToCharge
 }
 
 // indicates wether the given reason represents a state in which
 // the charger is capable to start, but is limited externally (cable, loadbalancing, EV)
+// see https://github.com/evcc-io/evcc/pull/9314#issuecomment-1671997064
 func (c *Easee) isEnabledReasonForNoCurrent(reason int) bool {
-	knownGood := []int{0, 1, 2, 3, 4, 5, 6, 51, 52, 54, 75, 76, 77, 78, 79, 80, 81}
+	knownGood := []int{0, 1, 2, 3, 4, 5, 6, 54, 75, 76, 77, 78, 79, 80, 81, 100}
 	for _, x := range knownGood {
 		if x == reason {
 			return true
