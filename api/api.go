@@ -42,6 +42,8 @@ const (
 	StatusF    ChargeStatus = "F" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fehler EVSE oder Abstecken simulieren (CP-Wake-up, -12V)
 )
 
+var StatusEasA = map[ChargeStatus]ChargeStatus{StatusE: StatusA}
+
 // ChargeStatusString converts a string to ChargeStatus
 func ChargeStatusString(s string) (ChargeStatus, error) {
 	status := strings.ToUpper(strings.TrimSpace(strings.Trim(s, "\x00")))
