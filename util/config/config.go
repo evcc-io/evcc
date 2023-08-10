@@ -47,13 +47,12 @@ func (d *Config) detailsAsMap() map[string]any {
 	return res
 }
 
-// mapAsDetails converts map to device details
-func (d *Config) mapAsDetails(config map[string]any) []ConfigDetail {
-	res := make([]ConfigDetail, 0, len(config))
+// detailsFromMap converts map to device details
+func (d *Config) detailsFromMap(config map[string]any) {
+	d.Details = make([]ConfigDetail, 0, len(config))
 	for k, v := range config {
-		res = append(res, ConfigDetail{ConfigID: d.ID, Key: k, Value: fmt.Sprintf("%v", v)})
+		d.Details = append(d.Details, ConfigDetail{ConfigID: d.ID, Key: k, Value: fmt.Sprintf("%v", v)})
 	}
-	return res
 }
 
 // Update updates a config's details to the database
@@ -68,8 +67,8 @@ func (d *Config) Update(conf map[string]any) error {
 			return err
 		}
 
-		details := config.mapAsDetails(conf)
-		return tx.Save(&details).Error
+		config.detailsFromMap(conf)
+		return tx.Save(&config.Details).Error
 	})
 }
 
@@ -144,8 +143,8 @@ func AddConfig(class Class, typ string, newConf map[string]any) (Config, error) 
 			return err
 		}
 
-		details := config.mapAsDetails(newConf)
-		return tx.Create(&details).Error
+		config.detailsFromMap(newConf)
+		return tx.Create(&config.Details).Error
 	})
 
 	return config, err

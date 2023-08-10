@@ -134,18 +134,18 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func newDevice[T any](class config.Class, req map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) error {
+func newDevice[T any](class config.Class, req map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (*config.Config, error) {
 	instance, err := newFromConf(typeTemplate, req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	conf, err := config.AddConfig(class, typeTemplate, req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return h.Add(config.NewConfigurableDevice[T](conf, instance))
+	return &conf, h.Add(config.NewConfigurableDevice[T](conf, instance))
 }
 
 // newDeviceHandler creates a new device by class
@@ -164,17 +164,17 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var conf config.Config
+	var conf *config.Config
 
 	switch class {
 	case config.Charger:
-		err = newDevice(class, req, charger.NewFromConfig, config.Chargers())
+		conf, err = newDevice(class, req, charger.NewFromConfig, config.Chargers())
 
 	case config.Meter:
-		err = newDevice(class, req, meter.NewFromConfig, config.Meters())
+		conf, err = newDevice(class, req, meter.NewFromConfig, config.Meters())
 
 	case config.Vehicle:
-		err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
+		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	}
 
