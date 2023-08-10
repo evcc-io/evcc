@@ -30,19 +30,6 @@ render: |
     {{- end }}
     jq: .meters.grid.agg_p_mw
     scale: 0.001
-  energy:
-    source: http
-    uri: http://{{ .host }}/production.json
-    method: GET
-    {{- if .token }}
-    auth:
-      type: bearer
-      password: {{ .token }}
-    insecure: true
-    cache: 4s
-    {{- end }}
-    jq: .consumption[] | select(.measurementType == "net-consumption").whLifetime
-    scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
