@@ -11,7 +11,7 @@ products:
 capabilities: ["mA", "1p3p"]
 requirements:
   description:
-    en: Firmware v2 required. The WARP Energy Manager is also required for automatic phase switching.
+    en: Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
     de: Firmware v2 erforderlich. Für automatische Phasenumschaltung wird zusätzlich der WARP Energy Manager benötigt.
   uri: https://docs.evcc.io/docs/devices/chargers#tinkerforge
 params:
