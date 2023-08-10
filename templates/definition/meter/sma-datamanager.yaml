@@ -24,7 +24,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    id: 2
     register:
       address: 30775 # Aktuelle PV-Einspeisewirkleistung über alle Außenleiter, W
       type: holding
@@ -32,7 +31,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    id: 2
     register:
       address: 30513 # Total eingespeiste Energie auf allen Außenleitern, Wh
       type: holding
@@ -43,7 +41,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    id: 2
     register:
       address: 31249 # Grid, W
       type: holding
@@ -78,7 +75,6 @@ render: |
     add:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      id: 2
       register:
         address: 31393 # Momentane Batterieladung, W
         type: holding
@@ -86,7 +82,6 @@ render: |
       scale: -1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      id: 2
       register:
         address: 31395 # Momentane Batterieentladung, W
         type: holding
@@ -94,7 +89,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    id: 2
     register:
       address: 31401 # Batterieentladung, Wh
       type: holding
@@ -103,7 +97,6 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    id: 2
     register:
       address: 30845 # Battery Soc, %
       type: holding
