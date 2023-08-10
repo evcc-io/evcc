@@ -33,49 +33,75 @@ render: |
       type: holding
       decode: int32
     scale: 0.01
-  {{- if ne .usage "pv" }}
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 26 # Electricity of A phase
       type: holding
-      decode: int16
+      decode: uint16
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 27 # Electricity of B phase
       type: holding
-      decode: int16
+      decode: uint16
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 28 # Electricity of C phase
       type: holding
-      decode: int16
+      decode: uint16
     scale: 0.01
-  {{- end }}
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 20 # Voltage of A phase
       type: holding
-      decode: int16
+      decode: uint16
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 21 # Voltage of B phase
       type: holding
-      decode: int16
+      decode: uint16
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 22 # Voltage of C phase
       type: holding
-      decode: int16
+      decode: uint16
     scale: 0.1
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30 # Active power of A phase
+      type: holding
+      decode: int32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 32 # Active power of B phase
+      type: holding
+      decode: int32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 34 # Active power of C phase
+      type: holding
+      decode: int32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
