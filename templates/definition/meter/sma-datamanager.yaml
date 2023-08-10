@@ -32,29 +32,14 @@ render: |
   {{- end }}
   {{- if eq .usage "grid" }}
   power:
-    source: calc
-    add:
-    - source: modbus
-      uri: {{ .host }}:{{ .port }} # Port 502
-      id: 2
-      register:
-        address: 31503 # L1, W
-        type: holding
-        decode: int32nan
-    - source: modbus
-      uri: {{ .host }}:{{ .port }} # Port 502
-      id: 2
-      register:
-        address: 31505 # L2, W
-        type: holding
-        decode: int32nan
-    - source: modbus
-      uri: {{ .host }}:{{ .port }} # Port 502
-      id: 2
-      register:
-        address: 31507 # L3, W
-        type: holding
-        decode: int32nan
+    source: modbus
+    uri: {{ .host }}:{{ .port }} # Port 502
+    id: 2
+    register:
+      address: 31249 # Grid, W
+      type: holding
+      decode: int32nan
+    scale: -1
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
