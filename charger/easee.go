@@ -439,26 +439,20 @@ func (c *Easee) Enable(enable bool) error {
 	return nil
 }
 
-func (c *Easee) inEnabledOpMode() bool {
+func (c *Easee) inExpectedOpMode(enable bool) bool {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	return c.opMode == easee.ModeCharging ||
-		c.opMode == easee.ModeCompleted ||
-		(c.opMode == easee.ModeAwaitingStart && c.isEnabledReasonForNoCurrent(c.reasonForNoCurrent)) ||
-		c.opMode == easee.ModeReadyToCharge
-}
 
-// indicates wether the given reason represents a state in which
-// the charger is capable to start, but is limited externally (cable, loadbalancing, EV)
-// see https://github.com/evcc-io/evcc/pull/9314#issuecomment-1671997064
-func (c *Easee) isEnabledReasonForNoCurrent(reason int) bool {
-	knownGood := []int{0, 1, 2, 3, 4, 5, 6, 54, 75, 76, 77, 78, 79, 80, 81, 100}
-	for _, x := range knownGood {
-		if x == reason {
-			return true
-		}
+	//start/resume
+	if enable {
+		return c.opMode == easee.ModeCharging ||
+			c.opMode == easee.ModeCompleted ||
+			c.opMode == easee.ModeAwaitingStart ||
+			c.opMode == easee.ModeReadyToCharge
 	}
-	return false
+
+	//paused/stopped
+	return c.opMode == easee.ModeAwaitingStart || c.opMode == easee.ModeAwaitingAuthentication
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
@@ -521,7 +515,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 // wait for opMode become expected op mode
 func (c *Easee) waitForChargerEnabledState(expEnabled bool) error {
 	// check any updates received meanwhile
-	if expEnabled == c.inEnabledOpMode() {
+	if c.inExpectedOpMode(expEnabled) {
 		return nil
 	}
 
@@ -532,11 +526,11 @@ func (c *Easee) waitForChargerEnabledState(expEnabled bool) error {
 			if obs.ID != easee.CHARGER_OP_MODE {
 				continue
 			}
-			if expEnabled == c.inEnabledOpMode() {
+			if c.inExpectedOpMode(expEnabled) {
 				return nil
 			}
 		case <-timer.C: // time is up, bail after one final check
-			if expEnabled == c.inEnabledOpMode() {
+			if c.inExpectedOpMode(expEnabled) {
 				return nil
 			}
 			return api.ErrTimeout
