@@ -1,9 +1,9 @@
 product:
   brand: TinkerForge
   description: WARP Charger Pro
-capabilities: ["mA"]
+capabilities: ["mA", "1p3p"]
 description: |
-  Firmware v2 erforderlich.
+  Firmware v2 erforderlich. Für automatische Phasenumschaltung wird zusätzlich der WARP Energy Manager benötigt.
 render:
   - default: |
       type: template

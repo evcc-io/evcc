@@ -8,11 +8,11 @@ products:
   - brand: TinkerForge
     description:
       generic: WARP Charger Pro
-capabilities: ["mA"]
+capabilities: ["mA", "1p3p"]
 requirements:
   description:
-    en: Firmware v2 required.
-    de: Firmware v2 erforderlich.
+    en: Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
+    de: Firmware v2 erforderlich. Für automatische Phasenumschaltung wird zusätzlich der WARP Energy Manager benötigt.
   uri: https://docs.evcc.io/docs/devices/chargers#tinkerforge
 params:
   - preset: mqtt
