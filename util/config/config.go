@@ -48,17 +48,16 @@ func (d *Config) detailsAsMap() map[string]any {
 }
 
 // detailsFromMap converts map to device details
-func (d *Config) detailsFromMap(config map[string]any) {
-	d.Details = make([]ConfigDetail, 0, len(config))
+func detailsFromMap(config map[string]any) []ConfigDetail {
+	res := make([]ConfigDetail, 0, len(config))
 	for k, v := range config {
-		d.Details = append(d.Details, ConfigDetail{ConfigID: d.ID, Key: k, Value: fmt.Sprintf("%v", v)})
+		res = append(res, ConfigDetail{Key: k, Value: fmt.Sprintf("%v", v)})
 	}
+	return res
 }
 
 // Update updates a config's details to the database
 func (d *Config) Update(conf map[string]any) error {
-	d.detailsFromMap(conf)
-
 	return db.Transaction(func(tx *gorm.DB) error {
 		var config Config
 		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
@@ -68,6 +67,8 @@ func (d *Config) Update(conf map[string]any) error {
 		if err := tx.Delete(new(ConfigDetail), ConfigDetail{ConfigID: d.ID}).Error; err != nil {
 			return err
 		}
+
+		d.Details = detailsFromMap(conf)
 
 		return tx.Save(&d.Details).Error
 	})
@@ -137,15 +138,14 @@ func ConfigByID(id int) (Config, error) {
 
 // AddConfig adds a new config to the database
 func AddConfig(class Class, typ string, conf map[string]any) (Config, error) {
-	config := Config{Class: class, Type: typ}
-	config.detailsFromMap(conf)
+	config := Config{
+		Class:   class,
+		Type:    typ,
+		Details: detailsFromMap(conf),
+	}
 
 	err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(&config).Error; err != nil {
-			return err
-		}
-
-		return tx.Create(&config.Details).Error
+		return tx.Create(&config).Error
 	})
 
 	return config, err
