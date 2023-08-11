@@ -57,6 +57,8 @@ func (d *Config) detailsFromMap(config map[string]any) {
 
 // Update updates a config's details to the database
 func (d *Config) Update(conf map[string]any) error {
+	d.detailsFromMap(conf)
+
 	return db.Transaction(func(tx *gorm.DB) error {
 		var config Config
 		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
@@ -67,8 +69,7 @@ func (d *Config) Update(conf map[string]any) error {
 			return err
 		}
 
-		config.detailsFromMap(conf)
-		return tx.Save(&config.Details).Error
+		return tx.Save(&d.Details).Error
 	})
 }
 
@@ -135,15 +136,15 @@ func ConfigByID(id int) (Config, error) {
 }
 
 // AddConfig adds a new config to the database
-func AddConfig(class Class, typ string, newConf map[string]any) (Config, error) {
+func AddConfig(class Class, typ string, conf map[string]any) (Config, error) {
 	config := Config{Class: class, Type: typ}
+	config.detailsFromMap(conf)
 
 	err := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&config).Error; err != nil {
 			return err
 		}
 
-		config.detailsFromMap(newConf)
 		return tx.Create(&config.Details).Error
 	})
 

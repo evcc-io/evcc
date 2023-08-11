@@ -163,6 +163,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+	delete(req, "type")
 
 	var conf *config.Config
 
@@ -175,7 +176,6 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case config.Vehicle:
 		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
-
 	}
 
 	if err != nil {
@@ -232,6 +232,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+	delete(req, "type")
 
 	switch class {
 	case config.Charger:
@@ -242,7 +243,6 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case config.Vehicle:
 		err = updateDevice(id, req, vehicle.NewFromConfig, config.Vehicles())
-
 	}
 
 	if err != nil {
