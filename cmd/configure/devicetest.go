@@ -7,7 +7,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"gopkg.in/yaml.v3"
@@ -37,13 +36,13 @@ func (d *DeviceTest) Test() (DeviceTestResult, error) {
 	}
 
 	switch DeviceCategories[d.DeviceCategory].class {
-	case config.Charger:
+	case templates.Charger:
 		return d.testCharger(v)
 
-	case config.Meter:
+	case templates.Meter:
 		return d.testMeter(d.DeviceCategory, v)
 
-	case config.Vehicle:
+	case templates.Vehicle:
 		return d.testVehicle(v)
 
 	default:
@@ -70,11 +69,11 @@ func (d *DeviceTest) configure() (interface{}, error) {
 	var v interface{}
 
 	switch DeviceCategories[d.DeviceCategory].class {
-	case config.Meter:
+	case templates.Meter:
 		v, err = meter.NewFromConfig(instance.Type, instance.Other)
-	case config.Charger:
+	case templates.Charger:
 		v, err = charger.NewFromConfig(instance.Type, instance.Other)
-	case config.Vehicle:
+	case templates.Vehicle:
 		v, err = vehicle.NewFromConfig(instance.Type, instance.Other)
 	}
 

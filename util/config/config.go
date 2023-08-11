@@ -3,12 +3,13 @@ package config
 import (
 	"fmt"
 
+	"github.com/evcc-io/evcc/util/templates"
 	"gorm.io/gorm"
 )
 
 type Config struct {
 	ID      int `gorm:"primarykey"`
-	Class   Class
+	Class   templates.Class
 	Type    string
 	Details []ConfigDetail `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
@@ -110,7 +111,7 @@ func NameForID(id int) string {
 }
 
 // ConfigurationsByClass returns devices by class from the database
-func ConfigurationsByClass(class Class) ([]Config, error) {
+func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 	var devices []Config
 	tx := db.Where(&Config{Class: class}).Preload("Details").Order("id").Find(&devices)
 
@@ -137,7 +138,7 @@ func ConfigByID(id int) (Config, error) {
 }
 
 // AddConfig adds a new config to the database
-func AddConfig(class Class, typ string, conf map[string]any) (Config, error) {
+func AddConfig(class templates.Class, typ string, conf map[string]any) (Config, error) {
 	config := Config{
 		Class:   class,
 		Type:    typ,

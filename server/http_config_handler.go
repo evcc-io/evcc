@@ -24,7 +24,7 @@ const typeTemplate = "template"
 func templatesHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	class, err := config.ClassString(vars["class"])
+	class, err := templates.ClassString(vars["class"])
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -54,7 +54,7 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 func productsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	class, err := config.ClassString(vars["class"])
+	class, err := templates.ClassString(vars["class"])
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -114,7 +114,7 @@ func devicesConfig[T any](h config.Handler[T]) []map[string]any {
 func devicesHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	class, err := config.ClassString(vars["class"])
+	class, err := templates.ClassString(vars["class"])
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -123,18 +123,18 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 	var res []map[string]any
 
 	switch class {
-	case config.Meter:
+	case templates.Meter:
 		res = devicesConfig(config.Meters())
-	case config.Charger:
+	case templates.Charger:
 		res = devicesConfig(config.Chargers())
-	case config.Vehicle:
+	case templates.Vehicle:
 		res = devicesConfig(config.Vehicles())
 	}
 
 	jsonResult(w, res)
 }
 
-func newDevice[T any](class config.Class, req map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (*config.Config, error) {
+func newDevice[T any](class templates.Class, req map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (*config.Config, error) {
 	instance, err := newFromConf(typeTemplate, req)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func newDevice[T any](class config.Class, req map[string]any, newFromConf func(s
 func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	class, err := config.ClassString(vars["class"])
+	class, err := templates.ClassString(vars["class"])
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -168,13 +168,13 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	var conf *config.Config
 
 	switch class {
-	case config.Charger:
+	case templates.Charger:
 		conf, err = newDevice(class, req, charger.NewFromConfig, config.Chargers())
 
-	case config.Meter:
+	case templates.Meter:
 		conf, err = newDevice(class, req, meter.NewFromConfig, config.Meters())
 
-	case config.Vehicle:
+	case templates.Vehicle:
 		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
 	}
 
@@ -215,7 +215,7 @@ func updateDevice[T any](id int, conf map[string]any, newFromConf func(string, m
 func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	class, err := config.ClassString(vars["class"])
+	class, err := templates.ClassString(vars["class"])
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -235,13 +235,13 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	delete(req, "type")
 
 	switch class {
-	case config.Charger:
+	case templates.Charger:
 		err = updateDevice(id, req, charger.NewFromConfig, config.Chargers())
 
-	case config.Meter:
+	case templates.Meter:
 		err = updateDevice(id, req, meter.NewFromConfig, config.Meters())
 
-	case config.Vehicle:
+	case templates.Vehicle:
 		err = updateDevice(id, req, vehicle.NewFromConfig, config.Vehicles())
 	}
 
@@ -283,7 +283,7 @@ func deleteDevice[T any](id int, h config.Handler[T]) error {
 func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	class, err := config.ClassString(vars["class"])
+	class, err := templates.ClassString(vars["class"])
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -296,13 +296,13 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch class {
-	case config.Charger:
+	case templates.Charger:
 		err = deleteDevice(id, config.Chargers())
 
-	case config.Meter:
+	case templates.Meter:
 		err = deleteDevice(id, config.Meters())
 
-	case config.Vehicle:
+	case templates.Vehicle:
 		err = deleteDevice(id, config.Vehicles())
 	}
 
@@ -324,7 +324,7 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	class, err := config.ClassString(vars["class"])
+	class, err := templates.ClassString(vars["class"])
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -345,11 +345,11 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	var dev any
 
 	switch class {
-	case config.Charger:
+	case templates.Charger:
 		dev, err = charger.NewFromConfig(typ, req)
-	case config.Meter:
+	case templates.Meter:
 		dev, err = meter.NewFromConfig(typ, req)
-	case config.Vehicle:
+	case templates.Vehicle:
 		dev, err = vehicle.NewFromConfig(typ, req)
 	}
 

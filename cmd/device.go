@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 )
@@ -31,7 +32,7 @@ func runDevice(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	for _, class := range []config.Class{config.Meter, config.Charger, config.Vehicle} {
+	for _, class := range []templates.Class{templates.Meter, templates.Charger, templates.Vehicle} {
 		devs, err := config.ConfigurationsByClass(class)
 		if err != nil {
 			log.FATAL.Fatal(err)

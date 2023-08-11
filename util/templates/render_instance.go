@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/config"
 	"gopkg.in/yaml.v3"
 )
 
@@ -15,7 +14,7 @@ type Instance struct {
 }
 
 // RenderInstance renders an actual configuration instance
-func RenderInstance(class config.Class, other map[string]interface{}) (Instance, error) {
+func RenderInstance(class Class, other map[string]interface{}) (Instance, error) {
 	var cc struct {
 		Template string
 		Other    map[string]interface{} `mapstructure:",remain"`

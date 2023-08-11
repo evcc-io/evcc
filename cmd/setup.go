@@ -36,6 +36,7 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 	"github.com/gorilla/handlers"
@@ -188,7 +189,7 @@ func configureMeters(static []config.Named) error {
 	}
 
 	// append devices from database
-	configurable, err := config.ConfigurationsByClass(config.Meter)
+	configurable, err := config.ConfigurationsByClass(templates.Meter)
 	if err != nil {
 		return err
 	}
@@ -229,7 +230,7 @@ func configureChargers(static []config.Named) error {
 	}
 
 	// append devices from database
-	configurable, err := config.ConfigurationsByClass(config.Charger)
+	configurable, err := config.ConfigurationsByClass(templates.Charger)
 	if err != nil {
 		return err
 	}
@@ -292,7 +293,7 @@ func configureVehicles(static []config.Named) error {
 	}
 
 	// append devices from database
-	configurable, err := config.ConfigurationsByClass(config.Vehicle)
+	configurable, err := config.ConfigurationsByClass(templates.Vehicle)
 	if err != nil {
 		return err
 	}
