@@ -28,10 +28,12 @@
 import LabelAndValue from "./LabelAndValue.vue";
 import AnimatedNumber from "./AnimatedNumber.vue";
 import { distanceUnit } from "../units";
+import formatter from "../mixins/formatter";
 
 export default {
 	name: "TargetSocSelect",
 	components: { LabelAndValue, AnimatedNumber },
+	mixins: [formatter],
 	props: {
 		targetSoc: Number,
 		rangePerSoc: Number,
@@ -69,7 +71,7 @@ export default {
 			return `${Math.round(value)}%`;
 		},
 		formatKm: function (value) {
-			return `${Math.round(value)} ${distanceUnit()}`;
+			return `${this.fmtNumber(value, 0)} ${distanceUnit()}`;
 		},
 	},
 };

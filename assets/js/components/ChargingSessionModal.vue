@@ -217,7 +217,7 @@ export default {
 			modal.show();
 		},
 		formatKm: function (value) {
-			return `${distanceValue(value)} ${distanceUnit()}`;
+			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
 		async changeVehicle(index) {
 			await this.updateSession({
