@@ -17,8 +17,13 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// typeTemplate is the updatable configuration type
-const typeTemplate = "template"
+const (
+	// typeTemplate is the updatable configuration type
+	typeTemplate = "template"
+
+	// masked indicates a masked config parameter value
+	masked = "***"
+)
 
 // templatesHandler returns the list of templates by class
 func templatesHandler(w http.ResponseWriter, r *http.Request) {
@@ -30,24 +35,20 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := templates.ByClass(class)
-
 	lang := r.URL.Query().Get("lang")
 	templates.EncoderLanguage(lang)
 
 	if name := r.URL.Query().Get("name"); name != "" {
-		for _, t := range res {
-			if t.TemplateDefinition.Template == name {
-				jsonResult(w, t)
-				return
-			}
+		res, err := templates.ByName(class, name)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
 		}
 
-		jsonError(w, http.StatusBadRequest, errors.New("template not found"))
-		return
+		jsonResult(w, res)
 	}
 
-	jsonResult(w, res)
+	jsonResult(w, templates.ByClass(class))
 }
 
 // productsHandler returns the list of products by class
@@ -81,7 +82,54 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func devicesConfig[T any](h config.Handler[T]) []map[string]any {
+func templateForConfig(class templates.Class, conf map[string]any) (templates.Template, error) {
+	typ, ok := conf[typeTemplate].(string)
+	if !ok {
+		return templates.Template{}, errors.New("config template not found")
+	}
+
+	return templates.ByName(class, typ)
+}
+
+func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any, error) {
+	tmpl, err := templateForConfig(class, conf)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]any, len(conf))
+
+	for k, v := range conf {
+		if i, p := tmpl.ParamByName(k); i >= 0 && p.IsMasked() {
+			v = masked
+		}
+
+		res[k] = v
+	}
+
+	return res, nil
+}
+
+func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]any, error) {
+	tmpl, err := templateForConfig(class, conf)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]any, len(conf))
+
+	for k, v := range conf {
+		if i, p := tmpl.ParamByName(k); i >= 0 && p.IsMasked() && v == masked {
+			v = old[k]
+		}
+
+		res[k] = v
+	}
+
+	return res, nil
+}
+
+func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
 	var res []map[string]any
 
 	// omit name from config
@@ -95,8 +143,13 @@ func devicesConfig[T any](h config.Handler[T]) []map[string]any {
 
 		if configurable, ok := dev.(config.ConfigurableDevice[T]); ok {
 			// from database
+			params, err := sanitizeMasked(class, conf.Other)
+			if err != nil {
+				return nil, err
+			}
+
 			dc["id"] = configurable.ID()
-			dc["config"] = conf.Other
+			dc["config"] = params
 		} else if title := conf.Other["title"]; title != nil {
 			// from yaml- add title only
 			if s, ok := title.(string); ok {
@@ -107,7 +160,7 @@ func devicesConfig[T any](h config.Handler[T]) []map[string]any {
 		res = append(res, dc)
 	}
 
-	return res
+	return res, nil
 }
 
 // devicesHandler tests a configuration by class
@@ -124,11 +177,18 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch class {
 	case templates.Meter:
-		res = devicesConfig(config.Meters())
+		res, err = devicesConfig(class, config.Meters())
+
 	case templates.Charger:
-		res = devicesConfig(config.Chargers())
+		res, err = devicesConfig(class, config.Chargers())
+
 	case templates.Vehicle:
-		res = devicesConfig(config.Vehicles())
+		res, err = devicesConfig(class, config.Vehicles())
+	}
+
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	jsonResult(w, res)
@@ -192,13 +252,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func updateDevice[T any](id int, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) error {
+func updateDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) error {
 	dev, err := h.ByName(config.NameForID(id))
-	if err != nil {
-		return err
-	}
-
-	instance, err := newFromConf(typeTemplate, conf)
 	if err != nil {
 		return err
 	}
@@ -206,6 +261,16 @@ func updateDevice[T any](id int, conf map[string]any, newFromConf func(string, m
 	configurable, ok := dev.(config.ConfigurableDevice[T])
 	if !ok {
 		return errors.New("not configurable")
+	}
+
+	merged, err := mergeMasked(class, conf, dev.Config().Other)
+	if err != nil {
+		return err
+	}
+
+	instance, err := newFromConf(typeTemplate, merged)
+	if err != nil {
+		return err
 	}
 
 	return configurable.Update(conf, instance)
@@ -236,13 +301,13 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch class {
 	case templates.Charger:
-		err = updateDevice(id, req, charger.NewFromConfig, config.Chargers())
+		err = updateDevice(id, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		err = updateDevice(id, req, meter.NewFromConfig, config.Meters())
+		err = updateDevice(id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		err = updateDevice(id, req, vehicle.NewFromConfig, config.Vehicles())
+		err = updateDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
 	}
 
 	if err != nil {
