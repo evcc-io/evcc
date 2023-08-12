@@ -7,11 +7,10 @@ import (
 
 // meterCmd represents the meter command
 var meterCmd = &cobra.Command{
-	Use:       "meter [name]",
-	Short:     "Query configured meters",
-	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: []string{"name"},
-	Run:       runMeter,
+	Use:   "meter [name]",
+	Short: "Query configured meters",
+	Args:  cobra.MaximumNArgs(1),
+	Run:   runMeter,
 }
 
 func init() {

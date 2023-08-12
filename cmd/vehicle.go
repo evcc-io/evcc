@@ -10,11 +10,10 @@ import (
 
 // vehicleCmd represents the vehicle command
 var vehicleCmd = &cobra.Command{
-	Use:       "vehicle [name]",
-	Short:     "Query configured vehicles",
-	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: []string{"name"},
-	Run:       runVehicle,
+	Use:   "vehicle [name]",
+	Short: "Query configured vehicles",
+	Args:  cobra.MaximumNArgs(1),
+	Run:   runVehicle,
 }
 
 func init() {

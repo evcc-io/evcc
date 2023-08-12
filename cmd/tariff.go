@@ -12,11 +12,10 @@ import (
 
 // tariffCmd represents the vehicle command
 var tariffCmd = &cobra.Command{
-	Use:       "tariff [name]",
-	Short:     "Query configured tariff",
-	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: []string{"name"},
-	Run:       runTariff,
+	Use:   "tariff [name]",
+	Short: "Query configured tariff",
+	Args:  cobra.MaximumNArgs(1),
+	Run:   runTariff,
 }
 
 func init() {

@@ -13,11 +13,10 @@ import (
 
 // chargerRampCmd represents the charger command
 var chargerRampCmd = &cobra.Command{
-	Use:       "ramp [name]",
-	Short:     "Ramp current from 6..16A in configurable steps",
-	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: []string{"name"},
-	Run:       runChargerRamp,
+	Use:   "ramp [name]",
+	Short: "Ramp current from 6..16A in configurable steps",
+	Args:  cobra.MaximumNArgs(1),
+	Run:   runChargerRamp,
 }
 
 func init() {

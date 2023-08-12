@@ -11,11 +11,10 @@ import (
 
 // chargerCmd represents the charger command
 var chargerCmd = &cobra.Command{
-	Use:       "charger [name]",
-	Short:     "Query configured chargers",
-	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: []string{"name"},
-	Run:       runCharger,
+	Use:   "charger [name]",
+	Short: "Query configured chargers",
+	Args:  cobra.MaximumNArgs(1),
+	Run:   runCharger,
 }
 
 const noCurrent = -1
