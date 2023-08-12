@@ -14,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/hems/semp"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -333,7 +332,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		vehicles := c.configuration.DevicesOfClass(config.Vehicle)
+		vehicles := c.configuration.DevicesOfClass(templates.Vehicle)
 		if len(vehicles) > 0 {
 			fmt.Println()
 			if c.askYesNo(c.localizedString("Loadpoint_VehicleDisableAutoDetection")) {

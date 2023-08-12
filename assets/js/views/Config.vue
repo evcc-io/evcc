@@ -10,11 +10,12 @@
 			<TopNavigation />
 		</header>
 
-		<div class="alert alert-danger" role="alert">
+		<div class="alert alert-danger mb-5" role="alert">
 			<strong>Highly experimental!</strong> Only play around with this settings if you know
 			what your doing. Otherwise you might have to reset or manually repair you database.
 		</div>
 
+		<!--
 		<h2 class="d-flex align-items-center text-evcc">
 			<shopicon-regular-powersupply size="m" class="me-2"></shopicon-regular-powersupply>
 			Grid
@@ -98,39 +99,77 @@
 		</h2>
 		<div>Bar</div>
 		<hr />
+		-->
 
-		<h2 class="d-flex align-items-center text-evcc">
-			<shopicon-regular-car3 size="m" class="me-2"></shopicon-regular-car3>
-			Vehicles
-		</h2>
+		<h2 class="my-4">My Vehicles</h2>
 		<div>
-			<ul class="p-0">
+			<ul class="p-0 config-list">
 				<li
 					v-for="(vehicle, index) in vehicles"
 					:key="index"
-					class="d-flex align-items-center"
+					class="config-entry"
+					data-testid="vehicle"
 				>
-					<VehicleIcon :name="vehicle.icon" class="me-2" /> {{ vehicle.title }}
-					<button class="btn btn-sm btn-link text-gray" @click="editVehicle(index + 1)">
-						edit
-					</button>
-				</li>
-				<li class="d-flex align-items-center">
-					<button class="btn btn-sm btn-link text-gray px-0" @click="addVehicle">
-						+ add vehicle
-					</button>
+					<div class="d-flex align-items-center mb-2">
+						<VehicleIcon :name="vehicle.config?.icon" class="me-2" />
+						<span class="flex-grow-1 text-nowrap text-truncate">{{
+							vehicle.config?.title || vehicle.name
+						}}</span>
+						<button
+							v-if="vehicle.id"
+							class="btn btn-sm btn-link text-gray"
+							@click="editVehicle(vehicle.id)"
+						>
+							{{ $t("config.main.edit") }}
+						</button>
+						<span v-else class="text-gray opacity-50 px-2 py-1" disabled>yaml</span>
+					</div>
+					<div class="d-flex mb-2" @click="todo">
+						<span
+							v-if="index > 1 && index < 6"
+							title="Charge"
+							class="badge text-bg-secondary me-1 mb-1"
+							>33%</span
+						>
+						<span
+							v-if="index > 2"
+							title="Capacity"
+							class="badge text-bg-secondary me-1 mb-1"
+							>42 kWh</span
+						>
+						<span
+							v-if="index < 4"
+							title="Power"
+							class="badge text-bg-secondary me-1 mb-1"
+							>+4,3 kW</span
+						>
+						<span title="Odometer" class="badge text-bg-secondary me-1 mb-1"
+							>23.123 km</span
+						>
+						<span
+							v-if="index == 2"
+							title="Climate"
+							class="badge text-bg-secondary me-1 mb-1"
+							>climate</span
+						>
+					</div>
 				</li>
 			</ul>
+			<button class="btn btn-outline-secondary" @click="addVehicle">
+				{{ $t("config.main.addVehicle") }}
+			</button>
 			<VehicleModal :id="vehicleId" @vehicle-changed="vehicleChanged" />
 		</div>
-		<hr />
+		<hr class="my-5" />
 
+		<!--
 		<h2 class="d-flex align-items-center text-evcc">
 			<shopicon-regular-megaphone size="m" class="me-2"></shopicon-regular-megaphone>
 			Notifications
 		</h2>
 		<div>Bar</div>
 		<hr />
+	-->
 	</div>
 </template>
 
@@ -187,7 +226,7 @@ export default {
 			this.grid = meters[0];
 		},
 		vehicleModal() {
-			return Modal.getOrCreateInstance(document.getElementById("vehicleSettingsModal"));
+			return Modal.getOrCreateInstance(document.getElementById("vehicleModal"));
 		},
 		editVehicle(id) {
 			this.vehicleId = id;
@@ -217,5 +256,18 @@ export default {
 }
 .container {
 	max-width: 700px;
+}
+.config-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-gap: 1rem;
+}
+.config-entry {
+	border-radius: 1rem;
+	color: var(--evcc-default-text);
+	background: var(--evcc-box);
+	padding: 1rem 1rem 0.5rem;
+	display: block;
+	list-style-type: none;
 }
 </style>

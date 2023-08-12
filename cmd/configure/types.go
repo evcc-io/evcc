@@ -1,6 +1,8 @@
 package configure
 
-import "github.com/evcc-io/evcc/util/config"
+import (
+	"github.com/evcc-io/evcc/util/templates"
+)
 
 const (
 	DefaultConfigFilename string = "evcc.yaml"
@@ -39,40 +41,40 @@ const (
 
 type DeviceCategoryData struct {
 	title, article, additional string
-	class                      config.Class
+	class                      templates.Class
 	categoryFilter             DeviceCategory
 	defaultName                string
 }
 
 var DeviceCategories = map[DeviceCategory]DeviceCategoryData{
 	DeviceCategoryCharger: {
-		class:       config.Charger,
+		class:       templates.Charger,
 		defaultName: defaultNameCharger,
 	},
 	DeviceCategoryGuidedSetup: {
-		class: config.Meter,
+		class: templates.Meter,
 	},
 	DeviceCategoryGridMeter: {
-		class:          config.Meter,
+		class:          templates.Meter,
 		categoryFilter: DeviceCategoryGridMeter,
 		defaultName:    defaultNameGridMeter,
 	},
 	DeviceCategoryPVMeter: {
-		class:          config.Meter,
+		class:          templates.Meter,
 		categoryFilter: DeviceCategoryPVMeter,
 		defaultName:    defaultNamePVMeter,
 	},
 	DeviceCategoryBatteryMeter: {
-		class:          config.Meter,
+		class:          templates.Meter,
 		categoryFilter: DeviceCategoryBatteryMeter,
 		defaultName:    defaultNameBatteryMeter,
 	},
 	DeviceCategoryVehicle: {
-		class:       config.Vehicle,
+		class:       templates.Vehicle,
 		defaultName: defaultNameVehicle,
 	},
 	DeviceCategoryChargeMeter: {
-		class:          config.Meter,
+		class:          templates.Meter,
 		categoryFilter: DeviceCategoryChargeMeter,
 		defaultName:    defaultNameChargeMeter,
 	},

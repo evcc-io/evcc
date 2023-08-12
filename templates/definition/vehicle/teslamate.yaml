@@ -9,6 +9,9 @@ requirements:
     de: Open Source Tesla Datenlogger https://github.com/adriankumpf/teslamate. Voraussetzung ist konfigurierter MQTT Broker.
 params:
   - name: title
+  - name: icon
+    default: car
+    advanced: true
   - name: id
     description:
       de: Fahrzeug-ID
@@ -16,9 +19,6 @@ params:
     default: 1
   - name: capacity
   - name: phases
-    advanced: true
-  - name: icon
-    default: car
     advanced: true
   - preset: vehicle-identify
 render: |

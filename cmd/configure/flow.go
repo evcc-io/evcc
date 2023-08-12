@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"golang.org/x/exp/slices"
 )
@@ -105,7 +104,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			continue
 		}
 
-		linkedTemplateItem, err := templates.ByName(config.Meter, linkedTemplate.Template)
+		linkedTemplateItem, err := templates.ByName(templates.Meter, linkedTemplate.Template)
 		if err != nil {
 			fmt.Println("Error: " + err.Error())
 			return

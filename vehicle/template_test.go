@@ -3,7 +3,6 @@ package vehicle
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
 )
@@ -26,7 +25,7 @@ var acceptable = []string{
 }
 
 func TestTemplates(t *testing.T) {
-	templates.TestClass(t, config.Vehicle, func(t *testing.T, values map[string]any) {
+	templates.TestClass(t, templates.Vehicle, func(t *testing.T, values map[string]any) {
 		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
 			t.Log(values)
 			t.Error(err)

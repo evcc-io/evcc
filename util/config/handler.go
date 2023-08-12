@@ -3,82 +3,67 @@ package config
 import (
 	"errors"
 	"fmt"
+	"sync"
 )
 
 type handler[T any] struct {
-	container []container[T]
-	visited   map[string]bool
+	mu      sync.Mutex
+	devices []Device[T]
 }
 
-// TrackVisitors tracks visited devices
-func (cp *handler[T]) TrackVisitors() {
-	cp.visited = make(map[string]bool)
+// Devices returns the handlers devices
+func (cp *handler[T]) Devices() []Device[T] {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	return cp.devices
 }
 
 // Add adds device and config
-func (cp *handler[T]) Add(conf Named, device T) error {
+func (cp *handler[T]) Add(dev Device[T]) error {
+	conf := dev.Config()
+
 	if conf.Name == "" {
 		return errors.New("missing name")
 	}
 
-	if _, _, err := cp.ByName(conf.Name); err == nil {
+	if _, err := cp.ByName(conf.Name); err == nil {
 		return fmt.Errorf("duplicate name: %s already defined and must be unique", conf.Name)
 	}
 
-	cp.container = append(cp.container, container[T]{device: device, config: conf})
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	cp.devices = append(cp.devices, dev)
+
 	return nil
 }
 
-// ByName provides device by name
-func (cp *handler[T]) ByName(name string) (T, int, error) {
-	var empty T
+// Delete deletes device
+func (cp *handler[T]) Delete(name string) error {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 
-	for i, container := range cp.container {
-		if name == container.config.Name {
-			// track duplicate usage https://github.com/evcc-io/evcc/issues/1744
-			if cp.visited != nil {
-				if _, ok := cp.visited[name]; ok {
-					return empty, 0, fmt.Errorf("duplicate usage: %s", name)
-				}
-				cp.visited[name] = true
-			}
-
-			return container.device, i, nil
+	for i, dev := range cp.devices {
+		if name == dev.Config().Name {
+			cp.devices = append(cp.devices[:i], cp.devices[i+1:]...)
+			return nil
 		}
 	}
 
-	return empty, 0, fmt.Errorf("does not exist: %s", name)
+	return fmt.Errorf("not found: %s", name)
 }
 
-// Slice returns the slice of devices
-func (cp *handler[T]) Slice() []T {
-	res := make([]T, 0, len(cp.container))
+// ByName provides device by name
+func (cp *handler[T]) ByName(name string) (Device[T], error) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 
-	for _, container := range cp.container {
-		res = append(res, container.device)
+	for _, dev := range cp.devices {
+		if name == dev.Config().Name {
+			return dev, nil
+		}
 	}
 
-	return res
-}
-
-// Map returns the map of devices
-func (cp *handler[T]) Map() map[string]T {
-	res := make(map[string]T, len(cp.container))
-
-	for _, container := range cp.container {
-		res[container.config.Name] = container.device
-	}
-
-	return res
-}
-
-// Config returns the configuration
-func (cp *handler[T]) Config() []Named {
-	res := make([]Named, 0, len(cp.container))
-
-	for _, container := range cp.container {
-		res = append(res, container.config)
-	}
-
-	return res
+	return nil, fmt.Errorf("not found: %s", name)
 }

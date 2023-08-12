@@ -4,8 +4,6 @@ products:
 params:
   - preset: vehicle-base
   - preset: vehicle-identify
-  - name: capacity
-    default: 27.4
 render: |
   type: dacia
   {{ include "vehicle-base" . }}

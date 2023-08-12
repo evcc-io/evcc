@@ -292,6 +292,13 @@ export default {
 	name: "ChargingSessions",
 	components: { TopNavigation, ChargingSessionModal, CustomSelect },
 	mixins: [formatter],
+	props: {
+		notifications: Array,
+		month: { type: Number, default: () => new Date().getMonth() + 1 },
+		year: { type: Number, default: () => new Date().getFullYear() },
+		loadpointFilter: { type: String, default: "" },
+		vehicleFilter: { type: String, default: "" },
+	},
 	data() {
 		return {
 			sessions: [],
@@ -642,5 +649,44 @@ export default {
 }
 .container {
 	max-width: 700px;
+}
+.table {
+	border-collapse: separate;
+	border-spacing: 0;
+}
+.table thead,
+.table tfoot {
+	background: var(--evcc-background);
+}
+.table tfoot th {
+	border-top-width: 2px;
+}
+.table thead th {
+	border-bottom-width: 2px;
+}
+.table tbody tr:last-child td {
+	border-bottom-width: 0;
+}
+
+.sticky-top,
+.sticky-bottom {
+	z-index: 1;
+}
+@media (max-width: 576px) {
+	.table td,
+	.table th {
+		width: 50%;
+	}
+	.table td:first-child,
+	.table th:first-child,
+	.table td:last-child,
+	.table th:last-child {
+		width: 25%;
+	}
+
+	.table td.text-truncate,
+	.table th.text-truncate {
+		max-width: 1px;
+	}
 }
 </style>

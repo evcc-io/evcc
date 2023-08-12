@@ -12,6 +12,30 @@
 		/>
 		<span :id="id + '_unit'" class="input-group-text">{{ unit }}</span>
 	</div>
+	<div v-else-if="icons" :id="id" class="d-flex flex-wrap">
+		<div v-for="{ key } in selectOptions" :key="key" class="me-2 mb-2">
+			<input
+				:id="`icon_${key}`"
+				v-model="value"
+				type="radio"
+				class="btn-check"
+				:name="property"
+				autocomplete="off"
+				:required="required"
+				:value="key"
+			/>
+			<label class="btn btn-outline-secondary" :for="`icon_${key}`" :aria-label="key">
+				<VehicleIcon :name="key" />
+			</label>
+		</div>
+	</div>
+	<select v-else-if="select" :id="id" v-model="value" class="form-select">
+		<option v-if="!required" value="">---</option>
+		<option v-for="{ key, name } in selectOptions" :key="key" :value="key">
+			{{ name }}
+		</option>
+	</select>
+
 	<textarea
 		v-else-if="textarea"
 		:id="id"
@@ -34,15 +58,18 @@
 </template>
 
 <script>
+import VehicleIcon from "../VehicleIcon";
+
 export default {
-	name: "InputField",
+	name: "PropertyField",
+	components: { VehicleIcon },
 	props: {
 		id: String,
 		property: String,
 		masked: Boolean,
-		optional: Boolean,
 		placeholder: String,
 		required: Boolean,
+		validValues: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],
@@ -56,8 +83,20 @@ export default {
 			}
 			return null;
 		},
+		icons() {
+			return this.property === "icon";
+		},
 		textarea() {
 			return ["accessToken", "refreshToken"].includes(this.property);
+		},
+		select() {
+			return this.validValues.length > 0;
+		},
+		selectOptions() {
+			return this.validValues.map((value) => ({
+				key: value,
+				name: this.$t(`config.options.${this.property}.${value}`),
+			}));
 		},
 		value: {
 			get() {

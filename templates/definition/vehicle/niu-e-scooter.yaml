@@ -6,6 +6,8 @@ products:
 group: scooter
 params:
   - name: title
+  - name: icon
+    default: scooter
   - name: user
     required: true
   - name: password
@@ -18,8 +20,6 @@ params:
     required: true
   - name: capacity
     default: 4
-  - name: icon
-    default: scooter
   - preset: vehicle-identify
 render: |
   type: niu

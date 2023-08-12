@@ -1,4 +1,4 @@
-package config
+package templates
 
 type Class int
 

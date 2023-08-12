@@ -85,8 +85,6 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	chargers := config.Chargers()
-
 	digits, err := strconv.Atoi(cmd.Flags().Lookup(flagDigits).Value.String())
 	if err != nil {
 		log.ERROR.Fatalln(err)
@@ -97,11 +95,13 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		log.ERROR.Fatalln(err)
 	}
 
-	for _, c := range chargers {
-		if _, ok := c.(api.ChargerEx); digits > 0 && !ok {
+	chargers := config.Chargers().Devices()
+
+	for _, v := range config.Instances(chargers) {
+		if _, ok := v.(api.ChargerEx); digits > 0 && !ok {
 			log.ERROR.Fatalln("charger does not support mA control")
 		}
-		ramp(c, digits, delay)
+		ramp(v, digits, delay)
 	}
 
 	// wait for shutdown

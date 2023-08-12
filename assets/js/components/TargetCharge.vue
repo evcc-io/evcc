@@ -208,14 +208,6 @@ export default {
 	mounted() {
 		this.initInputFields();
 		this.updatePlan();
-		// TODO @naltatis
-		// 	this.modal = Modal.getOrCreateInstance(this.$refs.modal);
-		// 	this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		// 	this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
-		// },
-		// unmounted() {
-		// 	this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		// 	this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
 	},
 	methods: {
 		updatePlan: async function () {
