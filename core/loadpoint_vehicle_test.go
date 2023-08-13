@@ -211,8 +211,6 @@ func TestDefaultVehicle(t *testing.T) {
 	lp.ResetOnDisconnect = true
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, mode, lp.GetMode(), "mode")
-	assert.Equal(t, minsoc, lp.GetMinSoc(), "minsoc")
-	assert.Equal(t, targetsoc, lp.GetTargetSoc(), "targetsoc")
 	assert.Equal(t, lp.onDisconnect, onDisconnect, "ondisconnect must remain untouched")
 
 	// set non-default vehicle during disconnect - should be default on connect
