@@ -642,8 +642,28 @@ func (lp *Loadpoint) syncCharger() error {
 		lp.publish("enabled", lp.enabled)
 	}()
 
-	// in sync
+	// status in sync
 	if enabled == lp.enabled {
+		// sync max current
+		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
+			current, err := charger.GetMaxCurrent()
+			if err != nil {
+				return err
+			}
+
+			if lp.chargeCurrent != current {
+				if lp.guardGracePeriodElapsed() {
+					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
+				}
+
+				if charger, ok := lp.charger.(api.ChargerEx); ok {
+					return charger.MaxCurrentMillis(lp.chargeCurrent)
+				}
+
+				return lp.charger.MaxCurrent(int64(lp.chargeCurrent))
+			}
+		}
+
 		return nil
 	}
 
@@ -660,24 +680,6 @@ func (lp *Loadpoint) syncCharger() error {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
 		return nil
-	}
-
-	if charger, ok := lp.charger.(api.CurrentGetter); ok {
-		current, err := charger.GetMaxCurrent()
-		if err != nil {
-			return err
-		}
-
-		if enabled && lp.chargeCurrent != current {
-			if lp.guardGracePeriodElapsed() {
-				lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
-			}
-
-			if charger, ok := lp.charger.(api.ChargerEx); ok {
-				return charger.MaxCurrentMillis(lp.chargeCurrent)
-			}
-			return lp.charger.MaxCurrent(int64(lp.chargeCurrent))
-		}
 	}
 
 	return nil
