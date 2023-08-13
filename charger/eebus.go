@@ -192,6 +192,7 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 		if timeDiff.Seconds() >= 10 {
 			c.lastIsChargingCheck = time.Now()
 			c.lastIsChargingResult = false
+			// compare charge power for all phases to 0.6 * min. charge power of a single phase
 			if c.lp.GetChargePower() > c.lp.GetMinPower()*idleFactor {
 				c.lastIsChargingResult = true
 				return true
@@ -207,21 +208,20 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 		return false
 	}
 	limitsMin, _, _, err := c.emobility.EVCurrentLimits()
-	if err != nil {
+	if err != nil || limitsMin == nil || len(limitsMin) == 0 {
 		return false
 	}
 
-	for index, phaseCurrent := range currents {
-		if len(limitsMin) <= index {
-			break
-		}
-		limitMin := limitsMin[index]
-		if phaseCurrent > limitMin*idleFactor {
-			return true
-		}
+	var phasesCurrent float64
+	for _, phaseCurrent := range currents {
+		phasesCurrent += phaseCurrent
 	}
 
-	return false
+	// require sum of all phase currents to be > 0.6 * a single phase minimum
+	// in some scenarions, e.g. Cayenne Hybrid, sometimes the meter of a PMCC device
+	// reported 600W, even tough the car was not charging
+	limitMin := limitsMin[0]
+	return phasesCurrent > limitMin*idleFactor
 }
 
 func (c *EEBus) updateState() (api.ChargeStatus, error) {
