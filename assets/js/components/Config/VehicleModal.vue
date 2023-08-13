@@ -129,7 +129,11 @@
 									:disabled="testRunning"
 									@click="isNew ? create() : update()"
 								>
-									{{ $t(`config.vehicle.update`) }}
+									{{
+										testUnknown
+											? $t("config.vehicle.validateSave")
+											: $t("config.vehicle.save")
+									}}
 								</button>
 								<button
 									type="button"
@@ -203,7 +207,7 @@ export default {
 		},
 		templateOptions() {
 			return {
-				online: this.products.filter((p) => p.group === "" && p.template !== "offline"),
+				online: this.products.filter((p) => !p.group && p.template !== "offline"),
 				generic: this.products.filter((p) => p.group === "generic"),
 				scooter: this.products.filter((p) => p.group === "scooter"),
 			};
@@ -329,25 +333,31 @@ export default {
 			return false;
 		},
 		async create() {
-			if (!(await this.test())) return;
-			await sleep(500);
+			if (this.testUnknown) {
+				const success = await this.test();
+				if (!success) return;
+				await sleep(500);
+			}
 			try {
 				await api.post("config/devices/vehicle", this.apiData);
 				this.$emit("vehicle-changed");
 			} catch (e) {
 				console.error(e);
-				this.testState = TEST_FAILED;
+				alert("create failed");
 			}
 		},
 		async update() {
-			if (!(await this.test())) return;
-			await sleep(500);
+			if (this.testUnknown) {
+				const success = await this.test();
+				if (!success) return;
+				await sleep(500);
+			}
 			try {
 				await api.put(`config/devices/vehicle/${this.id}`, this.apiData);
 				this.$emit("vehicle-changed");
 			} catch (e) {
 				console.error(e);
-				this.testState = TEST_FAILED;
+				alert("update failed");
 			}
 		},
 		async remove() {

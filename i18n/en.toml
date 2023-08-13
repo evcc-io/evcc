@@ -44,11 +44,12 @@ delete = "Delete vehicle"
 generic = "Other integrations"
 offline = "Generic vehicle"
 online = "Vehicles with online API"
+save = "Save"
 scooter = "Scooter"
 template = "Manufacturer"
 titleAdd = "Add Vehicle"
 titleEdit = "Edit Vehicle"
-update = "Validate & save"
+validateSave = "Validate & save"
 
 [footer]
 

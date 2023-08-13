@@ -124,7 +124,8 @@
 						</button>
 						<span v-else class="text-gray opacity-50 px-2 py-1" disabled>yaml</span>
 					</div>
-					<div class="d-flex mb-2" @click="todo">
+					<div v-if="false" class="d-flex mb-2" @click="todo">
+						<!-- example for later -->
 						<span
 							v-if="index > 1 && index < 6"
 							title="Charge"

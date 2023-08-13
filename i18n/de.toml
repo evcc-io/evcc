@@ -34,9 +34,11 @@ vehicles = "Meine Fahrzeuge"
 failed = "fehlgeschlagen"
 label = "Status"
 running = "prüfe…"
+save = "Speichern"
 success = "erfolgreich"
 unknown = "unbekannt"
 validate = "prüfen"
+validateSave = "Prüfen & speichern"
 
 [config.vehicle]
 cancel = "Abbrechen"
