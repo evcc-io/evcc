@@ -416,6 +416,7 @@ input::-webkit-datetime-edit {
 	background-color: var(--evcc-box);
 	color: var(--evcc-default-text);
 }
+
 input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
 }
