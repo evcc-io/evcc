@@ -131,11 +131,7 @@ type CurrentLimiter interface {
 	MaxCurrent(current int64) error
 }
 
-// CurrentGetter provides getting charging maximum charging current for validation
-type CurrentGetter interface {
-	GetMaxCurrent() (float64, error)
-}
-
+// TODO rename to CurrentLimiterEx/MaxCurrentFloat
 // ChargerEx provides milli-amp precision charger current control
 type ChargerEx interface {
 	MaxCurrentMillis(current float64) error
@@ -144,6 +140,11 @@ type ChargerEx interface {
 // PowerLimiter limits maximum charging power
 type PowerLimiter interface {
 	MaxPower(power float64) (float64, error)
+}
+
+// CurrentGetter provides getting charging maximum charging current for validation
+type CurrentGetter interface {
+	GetMaxCurrent() (float64, error)
 }
 
 // Charger provides current charging status and enable/disable charging
