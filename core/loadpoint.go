@@ -643,23 +643,22 @@ func (lp *Loadpoint) syncCharger() error {
 	}()
 
 	// in sync
-	if enabled == lp.enabled {
-		return nil
-	}
+	if enabled != lp.enabled {
 
-	if enabled || lp.phaseSwitchCommandTimeoutElapsed() {
-		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
-		if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
-			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
+		if enabled || lp.phaseSwitchCommandTimeoutElapsed() {
+			// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
+			if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
+				lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
+			}
+			return nil
 		}
-		return nil
-	}
 
-	if !enabled && lp.charging() {
-		if lp.guardGracePeriodElapsed() {
-			lp.log.WARN.Println("charger logic error: disabled but charging")
+		if !enabled && lp.charging() {
+			if lp.guardGracePeriodElapsed() {
+				lp.log.WARN.Println("charger logic error: disabled but charging")
+			}
+			return nil
 		}
-		return nil
 	}
 
 	if charger, ok := lp.charger.(api.CurrentGetter); ok {
