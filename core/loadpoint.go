@@ -642,7 +642,7 @@ func (lp *Loadpoint) syncCharger() error {
 		lp.publish("enabled", lp.enabled)
 	}()
 
-	// in sync
+	// enabled out of sync
 	if enabled != lp.enabled {
 
 		if enabled || lp.phaseSwitchCommandTimeoutElapsed() {
