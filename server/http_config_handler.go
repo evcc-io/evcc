@@ -46,6 +46,7 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		jsonResult(w, res)
+		return
 	}
 
 	jsonResult(w, templates.ByClass(class))
@@ -80,53 +81,6 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	jsonResult(w, res)
-}
-
-func templateForConfig(class templates.Class, conf map[string]any) (templates.Template, error) {
-	typ, ok := conf[typeTemplate].(string)
-	if !ok {
-		return templates.Template{}, errors.New("config template not found")
-	}
-
-	return templates.ByName(class, typ)
-}
-
-func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any, error) {
-	tmpl, err := templateForConfig(class, conf)
-	if err != nil {
-		return nil, err
-	}
-
-	res := make(map[string]any, len(conf))
-
-	for k, v := range conf {
-		if i, p := tmpl.ParamByName(k); i >= 0 && p.IsMasked() {
-			v = masked
-		}
-
-		res[k] = v
-	}
-
-	return res, nil
-}
-
-func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]any, error) {
-	tmpl, err := templateForConfig(class, conf)
-	if err != nil {
-		return nil, err
-	}
-
-	res := make(map[string]any, len(conf))
-
-	for k, v := range conf {
-		if i, p := tmpl.ParamByName(k); i >= 0 && p.IsMasked() && v == masked {
-			v = old[k]
-		}
-
-		res[k] = v
-	}
-
-	return res, nil
 }
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
@@ -253,7 +207,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) error {
-	dev, err := h.ByName(config.NameForID(id))
+	dev, instance, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
 	if err != nil {
 		return err
 	}
@@ -261,16 +215,6 @@ func updateDevice[T any](id int, class templates.Class, conf map[string]any, new
 	configurable, ok := dev.(config.ConfigurableDevice[T])
 	if !ok {
 		return errors.New("not configurable")
-	}
-
-	merged, err := mergeMasked(class, conf, dev.Config().Other)
-	if err != nil {
-		return err
-	}
-
-	instance, err := newFromConf(typeTemplate, merged)
-	if err != nil {
-		return err
 	}
 
 	return configurable.Update(conf, instance)
@@ -385,6 +329,16 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
+func testDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (T, error) {
+	if id == 0 {
+		return newFromConf(typeTemplate, conf)
+	}
+
+	_, instance, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
+
+	return instance, err
+}
+
 // testHandler tests a configuration by class
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -395,27 +349,34 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var id int
+	if vars["id"] != "" {
+		// test existing device with updated config
+		id, err = strconv.Atoi(vars["id"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+	}
+
 	var req map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+	delete(req, "type")
 
-	typ := typeTemplate
-	if req["type"] != nil {
-		typ = req["type"].(string)
-		delete(req, "type")
-	}
-
-	var dev any
+	var instance any
 
 	switch class {
 	case templates.Charger:
-		dev, err = charger.NewFromConfig(typ, req)
+		instance, err = testDevice(id, class, req, charger.NewFromConfig, config.Chargers())
+
 	case templates.Meter:
-		dev, err = meter.NewFromConfig(typ, req)
+		instance, err = testDevice(id, class, req, meter.NewFromConfig, config.Meters())
+
 	case templates.Vehicle:
-		dev, err = vehicle.NewFromConfig(typ, req)
+		instance, err = testDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
 	}
 
 	if err != nil {
@@ -430,17 +391,17 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 
 	res := make(map[string]result)
 
-	if dev, ok := dev.(api.Meter); ok {
+	if dev, ok := instance.(api.Meter); ok {
 		val, err := dev.CurrentPower()
 		res["CurrentPower"] = result{val, err}
 	}
 
-	if dev, ok := dev.(api.MeterEnergy); ok {
+	if dev, ok := instance.(api.MeterEnergy); ok {
 		val, err := dev.TotalEnergy()
 		res["TotalEnergy"] = result{val, err}
 	}
 
-	if dev, ok := dev.(api.Battery); ok {
+	if dev, ok := instance.(api.Battery); ok {
 		val, err := dev.Soc()
 		res["Soc"] = result{val, err}
 	}
